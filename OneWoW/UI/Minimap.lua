@@ -31,12 +31,12 @@ local function ShowContextMenu(anchorFrame)
 
     local visibleItems = {}
     if oneWoWEntry then
-        tinsert(visibleItems, { label = oneWoWEntry.label, global = "OneWoW", always = true, action = oneWoWEntry.callback or (function() if OneWoW.GUI then OneWoW.GUI:Show() end end) })
+        tinsert(visibleItems, { label = oneWoWEntry.label, global = "OneWoW", always = true, action = oneWoWEntry.callback or (function() if OneWoW.UI then OneWoW.UI:Show() end end) })
     end
     for _, item in ipairs(otherEntries) do
         local action = item.callback
         if not action and item.tabKey then
-            action = function() if OneWoW.GUI then OneWoW.GUI:Show(item.tabKey) end end
+            action = function() if OneWoW.UI then OneWoW.UI:Show(item.tabKey) end end
         end
         if action then
             tinsert(visibleItems, { label = item.label, global = item.addon, action = action })
@@ -207,8 +207,8 @@ local function CreateMinimapButton()
     end)
     minimapBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     minimapBtn:SetScript("OnClick", function(self, button)
-        if button == "LeftButton" and OneWoW.GUI then
-            OneWoW.GUI:Toggle()
+        if button == "LeftButton" and OneWoW.UI then
+            OneWoW.UI:Toggle()
         elseif button == "RightButton" then
             ShowContextMenu(self)
         end
@@ -254,8 +254,8 @@ function MinimapMod:Initialize()
             type = "launcher",
             icon = GetCurrentIcon(),
             OnClick = function(myself, button)
-                if button == "LeftButton" and OneWoW.GUI then
-                    OneWoW.GUI:Toggle()
+                if button == "LeftButton" and OneWoW.UI then
+                    OneWoW.UI:Toggle()
                 elseif button == "RightButton" then
                     ShowContextMenu(myself)
                 end

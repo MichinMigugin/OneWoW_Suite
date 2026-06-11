@@ -1,6 +1,6 @@
 local _, OneWoW = ...
 
-local GUI = OneWoW.GUI
+local UI = OneWoW.UI
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -138,10 +138,10 @@ function OneWoW.Profiles.ApplySettings(snapshot, profileName)
         OneWoW.db.global.activeProfile = profileName
     end
 
-    GUI:FullReset()
+    UI:FullReset()
     C_Timer.After(0.1, function()
-        GUI:Show()
-        GUI:SelectSubTab("settings", "profiles")
+        UI:Show()
+        UI:SelectSubTab("settings", "profiles")
     end)
 end
 
@@ -167,7 +167,7 @@ function OneWoW.Profiles.SerializeProfile(profileName, profile)
         end
     end
     exportable._exportName = profileName
-    local body = GUI.SerializeVal(exportable, 0)
+    local body = UI.SerializeVal(exportable, 0)
     if not body then return nil end
     return "-- OneWoW Settings Profile\n-- Version: 1\n" .. body
 end
@@ -221,7 +221,7 @@ end)
 -- Export / Import Dialogs
 -- ============================================================
 
-function GUI:ShowSettingsProfileExportDialog(profileName, serializedStr)
+function UI:ShowSettingsProfileExportDialog(profileName, serializedStr)
     local eb
     local result = OneWoW_GUI:CreateDialog({
         name   = "OneWoW_SettingsProfileExportDialog",
@@ -248,7 +248,7 @@ function GUI:ShowSettingsProfileExportDialog(profileName, serializedStr)
     textBG:SetPoint("TOPLEFT",     cf, "TOPLEFT",     10, -28)
     textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
 
-    eb = GUI.CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
+    eb = UI.CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
     eb:SetAutoFocus(true)
 
     result.frame:Show()
@@ -258,7 +258,7 @@ function GUI:ShowSettingsProfileExportDialog(profileName, serializedStr)
     end)
 end
 
-function GUI:ShowSettingsProfileImportDialog(onImported)
+function UI:ShowSettingsProfileImportDialog(onImported)
     local eb
     local result = OneWoW_GUI:CreateDialog({
         name   = "OneWoW_SettingsProfileImportDialog",
@@ -295,7 +295,7 @@ function GUI:ShowSettingsProfileImportDialog(onImported)
     textBG:SetPoint("TOPLEFT",     cf, "TOPLEFT",     10, -28)
     textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
 
-    eb = GUI.CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
+    eb = UI.CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
     eb:SetAutoFocus(true)
 
     result.frame:Show()
@@ -331,7 +331,7 @@ end
 -- Profiles Tab
 -- ============================================================
 
-function GUI:CreateProfilesTab(parent)
+function UI:CreateProfilesTab(parent)
 
     local panelA = CreateFrame("Frame", nil, parent)
     local panelB = CreateFrame("Frame", nil, parent)
@@ -359,8 +359,8 @@ function GUI:CreateProfilesTab(parent)
     panelB:SetPoint("TOPLEFT",     parent, "TOPLEFT",     0, contentTop)
     panelB:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
-    if GUI.CreateCharProfilesPanel then
-        GUI:CreateCharProfilesPanel(panelB)
+    if UI.CreateCharProfilesPanel then
+        UI:CreateCharProfilesPanel(panelB)
     end
 
     -- ── Panel A: UI & Addon Settings Profiles ─────────────────
@@ -535,7 +535,7 @@ function GUI:CreateProfilesTab(parent)
                 exportBtn:SetPoint("RIGHT", delBtn, "LEFT", -6, 0)
                 exportBtn:SetScript("OnClick", function()
                     local serialized = OneWoW.Profiles.SerializeProfile(capturedName, data)
-                    if serialized then GUI:ShowSettingsProfileExportDialog(capturedName, serialized) end
+                    if serialized then UI:ShowSettingsProfileExportDialog(capturedName, serialized) end
                 end)
 
                 local loadBtn = OneWoW_GUI:CreateFitTextButton(card, { text = "Load", height = 26 })
@@ -548,7 +548,7 @@ function GUI:CreateProfilesTab(parent)
                 exportBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, btnY)
                 exportBtn:SetScript("OnClick", function()
                     local serialized = OneWoW.Profiles.SerializeProfile(RESERVED_DEFAULT, data)
-                    if serialized then GUI:ShowSettingsProfileExportDialog(RESERVED_DEFAULT, serialized) end
+                    if serialized then UI:ShowSettingsProfileExportDialog(RESERVED_DEFAULT, serialized) end
                 end)
 
                 local restoreBtn = OneWoW_GUI:CreateFitTextButton(card, { text = "Restore Now", height = 26 })
@@ -586,7 +586,7 @@ function GUI:CreateProfilesTab(parent)
     end)
 
     importBtn:SetScript("OnClick", function()
-        GUI:ShowSettingsProfileImportDialog(RefreshListing)
+        UI:ShowSettingsProfileImportDialog(RefreshListing)
     end)
 
     C_Timer.After(0.05, function()

@@ -83,10 +83,10 @@ function Navigation:OpenNPC(npcID, npcInfo)
     -- SelectSubTab (its create path consumes it); the direct SelectNPC covers a
     -- tab that already exists.
     notes.pendingNPCSelect = npcID
-    OneWoW.GUI:Show("notes")
-    OneWoW.GUI:SelectSubTab("notes", "npcs")
+    OneWoW.UI:Show("notes")
+    OneWoW.UI:SelectSubTab("notes", "npcs")
 
-    local tabFrame = OneWoW.GUI:GetContentFrame("notes", "npcs")
+    local tabFrame = OneWoW.UI:GetContentFrame("notes", "npcs")
     if tabFrame and tabFrame.SelectNPC then
         tabFrame.SelectNPC(npcID)
         notes.pendingNPCSelect = nil
@@ -114,10 +114,10 @@ function Navigation:OpenItemNote(itemID, itemInfo)
     end
 
     notes.pendingItemSelect = itemID
-    OneWoW.GUI:Show("notes")
-    OneWoW.GUI:SelectSubTab("notes", "items")
+    OneWoW.UI:Show("notes")
+    OneWoW.UI:SelectSubTab("notes", "items")
 
-    local tabFrame = OneWoW.GUI:GetContentFrame("notes", "items")
+    local tabFrame = OneWoW.UI:GetContentFrame("notes", "items")
     if tabFrame and tabFrame.SelectItem then
         tabFrame.SelectItem(itemID)
         notes.pendingItemSelect = nil

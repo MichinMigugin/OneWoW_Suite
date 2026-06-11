@@ -3,7 +3,7 @@ local _, OneWoW = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local GUI = OneWoW.GUI
+local UI = OneWoW.UI
 local L    = OneWoW.L
 
 local SOUND_OPTIONS = {
@@ -365,7 +365,7 @@ local function BuildFeatureList(split, tabName)
     split.leftStatusText:SetText(string.format("Features: %d/%d", enabledCount, #features))
 end
 
-function GUI:CreateToastAlertsTab(parent)
+function UI:CreateToastAlertsTab(parent)
     local split = OneWoW_GUI:CreateSplitPanel(parent, {
         showSearch = true,
         searchPlaceholder = L["SEARCH_PLACEHOLDER"] or "Search...",

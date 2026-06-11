@@ -92,7 +92,7 @@ end
 
 function addon:SlashCommandHandler()
     if ns.oneWoWHubActive then
-        OneWoW.GUI:Show("catalog")
+        OneWoW.UI:Show("catalog")
         return
     end
     if ns.UI and ns.UI.Toggle then

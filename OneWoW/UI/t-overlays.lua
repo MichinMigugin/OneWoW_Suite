@@ -1,6 +1,6 @@
 local _, OneWoW = ...
 
-local GUI = OneWoW.GUI
+local UI = OneWoW.UI
 local L    = OneWoW.L
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
@@ -1826,7 +1826,7 @@ end
 -- an overlay feature's full detail panel as a 1:1 mirror. The caller passes a
 -- feature table with the overlays-side id (e.g. id = "upgrade") but may
 -- override title/description locale keys for tab-specific wording.
-function GUI:ShowOverlayFeatureDetail(split, feature, selectedRow)
+function UI:ShowOverlayFeatureDetail(split, feature, selectedRow)
     ShowOverlayDetail(split, feature, selectedRow)
 end
 
@@ -1915,7 +1915,7 @@ local function BuildFeatureList(split, tabName)
     end
 end
 
-function GUI:CreateOverlaysTab(parent)
+function UI:CreateOverlaysTab(parent)
     local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_PLACEHOLDER"] or "Search..." })
     split.listTitle:SetText(L["OVERLAYS_LIST_TITLE"])
     split.detailTitle:SetText(L["OVERLAYS_DETAIL_TITLE"])

@@ -445,12 +445,12 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, 
 						notesAddon.Zones:AddZone(targetZone, zoneData)
 					end
 				end
-				if OneWoW.GUI then
-					OneWoW.GUI:Show("notes")
+				if OneWoW.UI then
+					OneWoW.UI:Show("notes")
 					C_Timer.After(0.1, function()
-						OneWoW.GUI:SelectSubTab("notes", "zones")
+						OneWoW.UI:SelectSubTab("notes", "zones")
 						C_Timer.After(0.15, function()
-							local zonesFrame = OneWoW.GUI:GetContentFrame("notes", "zones")
+							local zonesFrame = OneWoW.UI:GetContentFrame("notes", "zones")
 							if zonesFrame and zonesFrame.SelectZone then
 								zonesFrame.SelectZone(targetZone)
 							end

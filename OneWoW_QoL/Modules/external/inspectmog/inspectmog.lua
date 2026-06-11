@@ -73,9 +73,9 @@ local function StripGearBlock(content, header, footer)
 end
 
 local function RefreshNotesTab(subTab, refreshName)
-    -- OneWoW is a RequiredDep, so OneWoW.GUI exists; the tab frame is nil until
+    -- OneWoW is a RequiredDep, so OneWoW.UI exists; the tab frame is nil until
     -- the Notes UI has been built/opened, hence the value nil check.
-    local tab = OneWoW.GUI:GetContentFrame("notes", subTab)
+    local tab = OneWoW.UI:GetContentFrame("notes", subTab)
     if tab and tab[refreshName] then
         tab[refreshName]()
     end

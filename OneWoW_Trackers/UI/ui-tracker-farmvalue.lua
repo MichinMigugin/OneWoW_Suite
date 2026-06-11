@@ -536,8 +536,8 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     local openOwBtn = OneWoW_GUI:CreateFitTextButton(box, { text = L["FARM_OPEN_ONEWOW"] or "OneWoW", height = 22 })
     openOwBtn:SetPoint("LEFT", ahSrcBtn, "RIGHT", 8, 0)
     openOwBtn:SetScript("OnClick", function()
-        if OneWoW and OneWoW.GUI and OneWoW.GUI.Show then
-            OneWoW.GUI:Show()
+        if OneWoW and OneWoW.UI and OneWoW.UI.Show then
+            OneWoW.UI:Show()
         end
     end)
     openOwBtn:SetScript("OnEnter", function(myself)

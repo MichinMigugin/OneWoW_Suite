@@ -362,8 +362,8 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, _, registerRefresh
     viewBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
     if coreLoaded then
         viewBtn:SetScript("OnClick", function()
-            OneWoW.GUI:Show("settings")
-            OneWoW.GUI:SelectSubTab("settings", "tooltips")
+            OneWoW.UI:Show("settings")
+            OneWoW.UI:SelectSubTab("settings", "tooltips")
         end)
     else
         viewBtn:EnableMouse(false)

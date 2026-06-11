@@ -625,7 +625,7 @@ function EscMenu:CreateOpenHubButton(parent, xOffset, yOffset, iconSize, growLef
 	button:SetScript("OnClick", function()
 		HideUIPanel(GameMenuFrame)
 		C_Timer.After(0.15, function()
-			if OneWoW.GUI then
+			if OneWoW.UI then
 				local moduleKey = "settings"
 				if OneWoW.ModuleRegistry and OneWoW.ModuleRegistry:IsRegistered("qol") then
 					moduleKey = "qol"
@@ -633,7 +633,7 @@ function EscMenu:CreateOpenHubButton(parent, xOffset, yOffset, iconSize, growLef
 				if OneWoW.db and OneWoW.db.global then
 					OneWoW.db.global.lastSubTabs[moduleKey] = "portals"
 				end
-				OneWoW.GUI:Show(moduleKey)
+				OneWoW.UI:Show(moduleKey)
 			end
 		end)
 	end)

@@ -1275,8 +1275,8 @@ function ns.UI.OpenToInstance(mapID)
     if not instData then return end
 
     if ns.oneWoWHubActive then
-        OneWoW.GUI:Show("catalog")
-        OneWoW.GUI:SelectSubTab("catalog", "journal")
+        OneWoW.UI:Show("catalog")
+        OneWoW.UI:SelectSubTab("catalog", "journal")
     else
         ns.UI:Show("journal")
     end

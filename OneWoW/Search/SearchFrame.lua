@@ -28,8 +28,8 @@ local function NavigateTo(entry)
     end
 
     if entry.navType == "module" then
-        if not OneWoW.GUI then return end
-        local gui = OneWoW.GUI
+        if not OneWoW.UI then return end
+        local gui = OneWoW.UI
         gui:Show()
         C_Timer.After(0.05, function()
             gui:SelectModuleTab(entry.module)

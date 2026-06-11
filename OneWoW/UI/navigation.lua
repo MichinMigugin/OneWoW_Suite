@@ -1,6 +1,6 @@
 local _, OneWoW = ...
 
-local GUI = OneWoW.GUI
+local UI = OneWoW.UI
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -9,15 +9,15 @@ local CreateFrame = CreateFrame
 local SetCursor = SetCursor
 local ResetCursor = ResetCursor
 
-function GUI:OpenManageFeatures()
-    GUI:SelectModuleTab("settings")
-    GUI:SelectSubTab("settings", "managefeatures")
+function UI:OpenManageFeatures()
+    UI:SelectModuleTab("settings")
+    UI:SelectSubTab("settings", "managefeatures")
 end
 
 --- Pointer text + accent link that opens Settings > Manage Features.
 ---@param parent Frame row container (sized/positioned by caller)
 ---@param opts table? { pointerKey?: string, center?: boolean }
-function GUI:CreateManageFeaturesLinkRow(parent, opts)
+function UI:CreateManageFeaturesLinkRow(parent, opts)
     opts = opts or {}
     local L = OneWoW.L or {}
     local pointerKey = opts.pointerKey or "HOME_MANAGE_POINTER"
@@ -58,7 +58,7 @@ function GUI:CreateManageFeaturesLinkRow(parent, opts)
         ResetCursor()
     end)
     manageLink:SetScript("OnClick", function()
-        GUI:OpenManageFeatures()
+        UI:OpenManageFeatures()
     end)
 
     return manageText, manageLink

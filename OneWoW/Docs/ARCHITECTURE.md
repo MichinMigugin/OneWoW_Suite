@@ -441,7 +441,7 @@ Manage Features' `FirstRun.CATALOG[].datastores` (consumer graph) and
 
 ### 4.2 Home tab live refresh
 
-`GUI/t-home.lua` builds module rows once; each row's `ApplyState()` re-reads
+`UI/t-home.lua` builds module rows once; each row's `ApplyState()` re-reads
 `GetFeatureUnitState`. `MainWindow` registers `EventRegistry` on
 `OneWoW.FeatureStateChanged` (fired from `SetFeatureOptOut` and post-`LoadAddOn` hook)
 to call `GUI:RefreshHomeStatus()` while Home is visible.
@@ -584,7 +584,7 @@ Hub runs `GUI:FullReset()` on theme change.
 
 ### 8.3 Profile apply
 
-`GUI/t-profiles.lua` reapplies theme and language via `SyncSettingToChildAddons` —
+`UI/t-profiles.lua` reapplies theme and language via `SyncSettingToChildAddons` —
 iterates integrated addons and calls `ApplyTheme()` / `ApplyLanguage()` where present,
 then `GUI:FullReset()`. Font/size not part of profile sync.
 
@@ -669,8 +669,8 @@ relocated by a versioned `DB:RunMigrations` step in `Core/Database.lua`.
 | `OneWoW/Core/ModuleRegistry.lua` | Hub tab/module registration |
 | `OneWoW/Core/SettingsFeatureRegistry.lua` | Settings funnel: catalog, storage-path resolution, change notification (§8.5) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
-| `OneWoW/GUI/t-home.lua` | Home tab: read-only status + live refresh |
-| `OneWoW/GUI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |
+| `OneWoW/UI/t-home.lua` | Home tab: read-only status + live refresh |
+| `OneWoW/UI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |
 | `OneWoW/Docs/MIGRATION.md` | Remaining migration checklist (steps 7–11) |
 | `.cursor/rules/OneWoW-Suite-Architecture.mdc` | Scoped agent rule for suite load-unit patterns |
 | `.cursor/skills/onewow-suite-architecture/SKILL.md` | On-demand lifecycle / integration authoring guide |

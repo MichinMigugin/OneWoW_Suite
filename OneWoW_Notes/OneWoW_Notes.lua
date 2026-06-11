@@ -225,8 +225,8 @@ function ns:UpdateWindowLayering()
 end
 
 function ns:SlashCommandHandler()
-    if ns.oneWoWHubActive and OneWoW and OneWoW.GUI then
-        OneWoW.GUI:Show("notes")
+    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
+        OneWoW.UI:Show("notes")
         return
     end
     if ns.UI and ns.UI.Toggle then

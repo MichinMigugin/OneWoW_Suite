@@ -1,5 +1,5 @@
 -- ============================================================================
--- OneWoW/GUI/Framework.lua
+-- OneWoW/UI/Framework.lua
 -- INTERNAL BRIDGE ONLY - Do NOT add UI creation code here.
 -- All shared UI functions belong in the OneWoW_GUI Library (OneWoW_GUI-1.0).
 -- Font functions (ApplyFont, ApplyFontToFrame, SafeSetFont, CreateFS) are
@@ -7,12 +7,12 @@
 -- ============================================================================
 local _, OneWoW = ...
 
-OneWoW.GUI = OneWoW.GUI or {}
+OneWoW.UI = OneWoW.UI or {}
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-function OneWoW.GUI.SerializeVal(val, depth)
+function OneWoW.UI.SerializeVal(val, depth)
     local t = type(val)
     if t == "string" then
         return string.format("%q", val)
@@ -23,7 +23,7 @@ function OneWoW.GUI.SerializeVal(val, depth)
         local inner = string.rep("  ", depth + 1)
         local outer = string.rep("  ", depth)
         for k, v in pairs(val) do
-            local vStr = OneWoW.GUI.SerializeVal(v, depth + 1)
+            local vStr = OneWoW.UI.SerializeVal(v, depth + 1)
             if vStr ~= nil then
                 local keyStr
                 if type(k) == "string" and k:match("^[%a_][%a%d_]*$") then
@@ -42,7 +42,7 @@ function OneWoW.GUI.SerializeVal(val, depth)
     return nil
 end
 
-function OneWoW.GUI.CreateScrollableEditBox(parent, onEscape)
+function OneWoW.UI.CreateScrollableEditBox(parent, onEscape)
     local sf = CreateFrame("ScrollFrame", nil, parent, "UIPanelScrollFrameTemplate")
     sf:SetPoint("TOPLEFT",     parent, "TOPLEFT",     4,  -4)
     sf:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -20, 4)

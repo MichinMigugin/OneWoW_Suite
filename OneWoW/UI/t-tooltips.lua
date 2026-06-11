@@ -1,6 +1,6 @@
 local _, OneWoW = ...
 
-local GUI = OneWoW.GUI
+local UI = OneWoW.UI
 local L    = OneWoW.L
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
@@ -10,7 +10,7 @@ local Registry = OneWoW.SettingsFeatureRegistry
 
 local activePlayermountsRow = nil
 
-function GUI:RefreshTooltipsFeatureDot(featureId, value)
+function UI:RefreshTooltipsFeatureDot(featureId, value)
     if featureId == "playermounts" and activePlayermountsRow and activePlayermountsRow.dot then
         activePlayermountsRow.dot:SetStatus(value)
     end
@@ -1587,7 +1587,7 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
             title       = feature.title,
             description = feature.description,
         }
-        OneWoW.GUI:ShowOverlayFeatureDetail(split, overlayFeature, selectedRow)
+        OneWoW.UI:ShowOverlayFeatureDetail(split, overlayFeature, selectedRow)
         return
     end
 
@@ -1725,7 +1725,7 @@ local function BuildFeatureList(split, tabName)
     end
 end
 
-function GUI:CreateTooltipsTab(parent)
+function UI:CreateTooltipsTab(parent)
     local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_PLACEHOLDER"] or "Search..." })
     split.listTitle:SetText(L["TOOLTIPS_LIST_TITLE"])
     split.detailTitle:SetText(L["TOOLTIPS_DETAIL_TITLE"])

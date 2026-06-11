@@ -1,13 +1,13 @@
 local _, OneWoW = ...
 
-local GUI = OneWoW.GUI
+local UI = OneWoW.UI
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
-function GUI:CreateSettingsMainTab(parent)
+function UI:CreateSettingsMainTab(parent)
     local L = OneWoW.L or {}
 
     local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_SettingsScroll" })
@@ -43,30 +43,30 @@ function GUI:CreateSettingsMainTab(parent)
     local resetBtn = OneWoW_GUI:CreateFitTextButton(resetContainer, { text = L["RESET_UI_BTN"] or "Reset Window", height = 28 })
     resetBtn:SetPoint("TOPLEFT", resetContainer, "TOPLEFT", 15, -58)
     resetBtn:SetScript("OnClick", function()
-        GUI:ResetUIToDefaults()
+        UI:ResetUIToDefaults()
     end)
 
     content:SetHeight(math.abs(yOffset) + 110)
 end
 
 local coreSettingsTabs = {
-    { name = "settings",       displayName = function() return (OneWoW.L and OneWoW.L["SETTINGS_SUBTAB"] or "Settings") end, create = function(parent) GUI:CreateSettingsMainTab(parent) end },
-    { name = "profiles",       displayName = function() return OneWoW.L["PROFILES_SUBTAB"] end, create = function(parent) GUI:CreateProfilesTab(parent) end },
-    { name = "managefeatures", displayName = function() return OneWoW.L["MANAGE_FEATURES_SUBTAB"] end, create = function(parent) GUI:CreateManageFeaturesTab(parent) end },
+    { name = "settings",       displayName = function() return (OneWoW.L and OneWoW.L["SETTINGS_SUBTAB"] or "Settings") end, create = function(parent) UI:CreateSettingsMainTab(parent) end },
+    { name = "profiles",       displayName = function() return OneWoW.L["PROFILES_SUBTAB"] end, create = function(parent) UI:CreateProfilesTab(parent) end },
+    { name = "managefeatures", displayName = function() return OneWoW.L["MANAGE_FEATURES_SUBTAB"] end, create = function(parent) UI:CreateManageFeaturesTab(parent) end },
 }
 
 local qolFeatureTabs = {
-    { name = "overlays",    displayName = function() return (OneWoW.L and OneWoW.L["OVERLAYS_SUBTAB"]    or "Overlays")     end, create = function(parent) GUI:CreateOverlaysTab(parent)    end },
-    { name = "toastalerts", displayName = function() return (OneWoW.L and OneWoW.L["TOAST_ALERTS_SUBTAB"] or "Toast Alerts") end, create = function(parent) GUI:CreateToastAlertsTab(parent) end },
-    { name = "tooltips",    displayName = function() return (OneWoW.L and OneWoW.L["TOOLTIPS_SUBTAB"]    or "Tooltips")     end, create = function(parent) GUI:CreateTooltipsTab(parent)    end },
-    { name = "portals",     displayName = function() return (OneWoW.L and OneWoW.L["PORTALS_SUBTAB"]     or "Portals")      end, create = function(parent) GUI:CreatePortalsTab(parent)     end },
+    { name = "overlays",    displayName = function() return (OneWoW.L and OneWoW.L["OVERLAYS_SUBTAB"]    or "Overlays")     end, create = function(parent) UI:CreateOverlaysTab(parent)    end },
+    { name = "toastalerts", displayName = function() return (OneWoW.L and OneWoW.L["TOAST_ALERTS_SUBTAB"] or "Toast Alerts") end, create = function(parent) UI:CreateToastAlertsTab(parent) end },
+    { name = "tooltips",    displayName = function() return (OneWoW.L and OneWoW.L["TOOLTIPS_SUBTAB"]    or "Tooltips")     end, create = function(parent) UI:CreateTooltipsTab(parent)    end },
+    { name = "portals",     displayName = function() return (OneWoW.L and OneWoW.L["PORTALS_SUBTAB"]     or "Portals")      end, create = function(parent) UI:CreatePortalsTab(parent)     end },
 }
 
-function GUI:GetQoLFeatureTabs()
+function UI:GetQoLFeatureTabs()
     return qolFeatureTabs
 end
 
-function GUI:BuildSettingsTabs()
+function UI:BuildSettingsTabs()
     local tabs = {}
     for _, tab in ipairs(coreSettingsTabs) do
         table.insert(tabs, tab)
@@ -85,5 +85,5 @@ function GUI:BuildSettingsTabs()
             create      = capturedCreate,
         })
     end
-    GUI.settingsTabs = tabs
+    UI.settingsTabs = tabs
 end

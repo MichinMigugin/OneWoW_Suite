@@ -29,7 +29,7 @@ to dedicated load units needs no SavedVariables migration.
 | **ItemPrices** | `Core/ItemPrices.lua` + `OneWoW_ItemPricesAPI` | Tooltip providers, other units |
 | **SettingsFeatureRegistry** | `Core/SettingsFeatureRegistry.lua` | All feature settings reads/writes (step 6) |
 
-Also stays in core: hub UI (`GUI/`), Search, Minimap, lifecycle/orchestrator
+Also stays in core: hub UI (`UI/`), Search, Minimap, lifecycle/orchestrator
 (`Core/AddonLoader.lua`, `Core/Lifecycle.lua`, …), `ContextMenus`, bag-addon
 integration shims, `ExternalTooltipSync`.
 
@@ -37,10 +37,10 @@ integration shims, `ExternalTooltipSync`.
 
 | Area | Files to move |
 |---|---|
-| **Toast types** | `Features/toast-loot.lua`, `toast-notes.lua`, `toast-instance.lua`, `toastalerts.lua`, `GUI/t-toastalerts.lua` |
-| **Tooltip providers** | All 14 `Tooltips/tp-*.lua`, `Tooltips/tooltips.lua` (provider bootstrap), `GUI/t-tooltips.lua` |
-| **Portal Hub** | All of `Portals/` (data + modules), `GUI/t-portals.lua` |
-| **Overlays settings** | `GUI/t-overlays.lua` minimum; audit `Features/overlays.lua`, `overlay-icons.lua` for type logic vs. engine (step 9d) |
+| **Toast types** | `Features/toast-loot.lua`, `toast-notes.lua`, `toast-instance.lua`, `toastalerts.lua`, `UI/t-toastalerts.lua` |
+| **Tooltip providers** | All 14 `Tooltips/tp-*.lua`, `Tooltips/tooltips.lua` (provider bootstrap), `UI/t-tooltips.lua` |
+| **Portal Hub** | All of `Portals/` (data + modules), `UI/t-portals.lua` |
+| **Overlays settings** | `UI/t-overlays.lua` minimum; audit `Features/overlays.lua`, `overlay-icons.lua` for type logic vs. engine (step 9d) |
 
 ### Step ordering
 
@@ -101,7 +101,7 @@ Prep for steps 8–9. No dependency on step 7.
 - [x] Replace direct `OneWoW.db and OneWoW.db.global and ...` guards in feature
   code with registry calls (kills ~60 defensive nil-chains; insulates from SV
   migration and QoL move).
-- [x] Primary touch surfaces: `GUI/t-tooltips.lua`, `GUI/t-overlays.lua`,
+- [x] Primary touch surfaces: `UI/t-tooltips.lua`, `UI/t-overlays.lua`,
   `Features/*`, `Tooltips/tp-*`, `Tooltips/tooltip-engine.lua`,
   `Core/ItemPrices.lua`, the 6 bag-integration shims.
 - [x] Discovered additions: `OneWoW_Trackers/UI/ui-tracker-farmvalue.lua` was a
@@ -115,7 +115,7 @@ Prep for steps 8–9. No dependency on step 7.
   (`bin/check_no_settings_bypass.py`) forbids the `db.global.settings` suffix
   pattern outside `SettingsFeatureRegistry.lua`/`Database.lua`.
 - Out of scope (separate DB roots, follow-up before step 9): `portalHub`,
-  `toasts` — `GUI/t-portals.lua`, `GUI/t-toastalerts.lua`, `Portals/*`.
+  `toasts` — `UI/t-portals.lua`, `UI/t-toastalerts.lua`, `Portals/*`.
 
 ---
 
@@ -237,7 +237,7 @@ shippable unless noted.
    dedicated load units).
 2. **Locale strings stay in core `OneWoW.L`** for now (QoL feature code reads
    `OneWoW.L[...]` cross-unit; avoids locale churn on a potential second move).
-3. **Settings tab** leaves `qolFeatureTabs` in `GUI/t-settings.lua` and registers
+3. **Settings tab** leaves `qolFeatureTabs` in `UI/t-settings.lua` and registers
    natively in QoL's `RegisterModule` row-2 tabs (`OneWoW_QoL.lua`).
 4. **Lifecycle:** feature `Initialize()` moves from core `RegisterCoreLoginHandler`
    (step 5) to QoL `OnPlayerLogin` / `RegisterLoginHandler`.
@@ -251,7 +251,7 @@ Validates the move pattern end-to-end. Zero external consumers today.
 **Move:**
 - `Features/toast-loot.lua`, `toast-notes.lua`, `toast-instance.lua`
 - `Features/toastalerts.lua`
-- `GUI/t-toastalerts.lua`
+- `UI/t-toastalerts.lua`
 
 **Stay in core:**
 - `Features/toast-engine.lua` — promote to `OneWoW.Toast` service (anchor,
@@ -266,7 +266,7 @@ Validates the move pattern end-to-end. Zero external consumers today.
 **Move:**
 - All 14 `Tooltips/tp-*.lua` files (see `OneWoW.toc` lines 71–83)
 - `Tooltips/tooltips.lua` (provider registration bootstrap)
-- `GUI/t-tooltips.lua`
+- `UI/t-tooltips.lua`
 
 **Stay in core:**
 - `Tooltips/tooltip-engine.lua` — `TooltipEngine:RegisterProvider` API unchanged;
@@ -285,7 +285,7 @@ Consolidates existing QoL coupling (`OneWoW_QoL/Modules/external/escpanel.lua`,
 
 **Move:**
 - `Portals/Data/*.lua`, all `Portals/portalhub*.lua`
-- `GUI/t-portals.lua`
+- `UI/t-portals.lua`
 
 **Stay in core:**
 - Nothing portal-specific in core services roster (Portal Hub is feature content).
@@ -306,7 +306,7 @@ Consolidates existing QoL coupling (`OneWoW_QoL/Modules/external/escpanel.lua`,
 ### 9d. Overlays settings (audit-first)
 
 **Minimum move:**
-- `GUI/t-overlays.lua`
+- `UI/t-overlays.lua`
 
 **Audit before move** (overlay type detection may be engine-embedded):
 - `Features/overlay-engine.lua` — service; stays.
@@ -321,7 +321,7 @@ Consolidates existing QoL coupling (`OneWoW_QoL/Modules/external/escpanel.lua`,
 
 ### 9 closeout
 
-When `qolFeatureTabs` in `GUI/t-settings.lua` is empty:
+When `qolFeatureTabs` in `UI/t-settings.lua` is empty:
 
 - [ ] Delete `qolFeatureTabs` and `GUI:GetQoLFeatureTabs()`.
 - [ ] Delete `GetQoLFeatureTabs` consumption in `OneWoW_QoL.lua` (~21–24).
@@ -381,7 +381,7 @@ roster documentation.
   detection (`ItemStatus`, `UpgradeDetection`, `RecipeKnownUtil`, `ItemPrices`)
   are core services; feature content registers in from QoL.
 - [ ] Audit for other `ModuleRegistry:IsRegistered(...)`-conditional UI placement
-  (known: `GUI/t-settings.lua`, `Portals/portalhub-esc.lua`, `GUI/MainWindow.lua`
+  (known: `UI/t-settings.lua`, `Portals/portalhub-esc.lua`, `UI/MainWindow.lua`
   placeholder tabs).
 
 ### `DataManager` enforcement ramp

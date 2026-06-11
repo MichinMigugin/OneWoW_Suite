@@ -18,8 +18,8 @@ local function RegisterWithOneWoW()
         { name = "features", displayName = function() return ns.L["TAB_FEATURES"] end, create = function(p) ns.UI.CreateFeaturesTab(p) end },
         { name = "toggles",  displayName = function() return ns.L["TAB_TOGGLES"]  end, create = function(p) ns.UI.CreateTogglesTab(p) end },
     }
-    if OneWoW.GUI and OneWoW.GUI.GetQoLFeatureTabs then
-        for _, tab in ipairs(OneWoW.GUI:GetQoLFeatureTabs()) do
+    if OneWoW.UI and OneWoW.UI.GetQoLFeatureTabs then
+        for _, tab in ipairs(OneWoW.UI:GetQoLFeatureTabs()) do
             table.insert(tabs, tab)
         end
     end
@@ -95,8 +95,8 @@ local function OnEnable()
 end
 
 function addon:SlashCommandHandler()
-    if ns.oneWoWHubActive and OneWoW and OneWoW.GUI then
-        OneWoW.GUI:Show("qol")
+    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
+        OneWoW.UI:Show("qol")
         return
     end
     if ns.UI and ns.UI.Toggle then

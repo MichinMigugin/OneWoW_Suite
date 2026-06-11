@@ -942,8 +942,8 @@ function ns.UI.OpenToQuest(questID)
     if not questID then return end
 
     if ns.oneWoWHubActive then
-        OneWoW.GUI:Show("catalog")
-        OneWoW.GUI:SelectSubTab("catalog", "quests")
+        OneWoW.UI:Show("catalog")
+        OneWoW.UI:SelectSubTab("catalog", "quests")
     else
         ns.UI:Show("quests")
     end

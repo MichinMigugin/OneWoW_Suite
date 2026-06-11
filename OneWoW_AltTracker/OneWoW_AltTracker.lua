@@ -115,8 +115,8 @@ local function OnEnable()
 end
 
 function OneWoWAltTracker:SlashCommandHandler()
-    if ns.oneWoWHubActive and OneWoW and OneWoW.GUI then
-        OneWoW.GUI:Show("alttracker")
+    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
+        OneWoW.UI:Show("alttracker")
         return
     end
     if ns.UI and ns.UI.Toggle then

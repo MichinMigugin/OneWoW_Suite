@@ -1,6 +1,6 @@
 local _, OneWoW = ...
 
-local GUI = OneWoW.GUI
+local UI = OneWoW.UI
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -11,7 +11,7 @@ local portalButtons = {}
 local headerFrames = {}
 local portalButtonPool = {}
 
-function GUI:CreatePortalsTab(parent)
+function UI:CreatePortalsTab(parent)
 	local L = OneWoW.L or {}
 
 	local split = OneWoW_GUI:CreateSplitPanel(parent, {

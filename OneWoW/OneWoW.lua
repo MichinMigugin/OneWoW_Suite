@@ -16,7 +16,7 @@ OneWoW._minimapEntries = {}
 function OneWoW:RegisterMinimap(addon, label, tabKey, callback)
     -- addon: global name (e.g. "OneWoW_AltTracker")
     -- label: display string for context menu
-    -- tabKey: for OneWoW.GUI:Show(tabKey) or nil if callback used
+    -- tabKey: for OneWoW.UI:Show(tabKey) or nil if callback used
     -- callback: optional function() for custom open logic
     tinsert(self._minimapEntries, { addon = addon, label = label, tabKey = tabKey, callback = callback })
 end
@@ -72,8 +72,8 @@ local function RegisterSlashCommands()
     SLASH_ONEWOW3 = "/onewow"
     SLASH_ONEWOW4 = "/1w"
     SlashCmdList["ONEWOW"] = function()
-        if OneWoW.GUI then
-            OneWoW.GUI:Toggle()
+        if OneWoW.UI then
+            OneWoW.UI:Toggle()
         end
     end
 
@@ -207,8 +207,8 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 end)
 
 _G["1WoW_OnAddonCompartmentClick"] = function()
-    if OneWoW.GUI then
-        OneWoW.GUI:Toggle()
+    if OneWoW.UI then
+        OneWoW.UI:Toggle()
     end
 end
 

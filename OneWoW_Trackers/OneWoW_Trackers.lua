@@ -123,8 +123,8 @@ end
 
 function ns:SlashCommandHandler()
     if ns.mode == "notes_subtab" then
-        if ns.oneWoWHubActive and OneWoW and OneWoW.GUI then
-            OneWoW.GUI:Show("notes", "tracker")
+        if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
+            OneWoW.UI:Show("notes", "tracker")
         elseif OneWoW_Notes then
             if OneWoW_Notes.SlashCommandHandler then
                 OneWoW_Notes:SlashCommandHandler("")
@@ -133,8 +133,8 @@ function ns:SlashCommandHandler()
         return
     end
 
-    if ns.oneWoWHubActive and OneWoW and OneWoW.GUI then
-        OneWoW.GUI:Show("trackers")
+    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
+        OneWoW.UI:Show("trackers")
         return
     end
 

@@ -100,26 +100,26 @@ Portals\portalhub.lua
 Portals\portalhub-esc.lua
 Portals\portalhub-esc-panels.lua
 
-# GUI Framework
-GUI\Framework.lua
+# Hub UI Framework
+UI\Framework.lua
 
 # Search
 Search\SearchData.lua
 Search\SearchFrame.lua
 
-# GUI
-GUI\navigation.lua
-GUI\MainWindow.lua
-GUI\Minimap.lua
-GUI\t-home.lua
-GUI\t-settings.lua
-GUI\t-overlays.lua
-GUI\t-toastalerts.lua
-GUI\t-tooltips.lua
-GUI\t-portals.lua
-GUI\t-profiles.lua
-GUI\t-charprofiles.lua
-GUI\t-managefeatures.lua
+# Hub UI
+UI\navigation.lua
+UI\MainWindow.lua
+UI\Minimap.lua
+UI\t-home.lua
+UI\t-settings.lua
+UI\t-overlays.lua
+UI\t-toastalerts.lua
+UI\t-tooltips.lua
+UI\t-portals.lua
+UI\t-profiles.lua
+UI\t-charprofiles.lua
+UI\t-managefeatures.lua
 
 # Main
 OneWoW.lua

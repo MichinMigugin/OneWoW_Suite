@@ -3,7 +3,7 @@ local _, OneWoW = ...
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
 
-local GUI = OneWoW.GUI
+local UI = OneWoW.UI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
@@ -433,7 +433,7 @@ function Module:GetCurrentCounts()
 end
 
 function Module:SerializeProfile(profile)
-    local body = GUI.SerializeVal(profile, 0)
+    local body = UI.SerializeVal(profile, 0)
     if not body then return nil end
     return "-- OneWoW Character Profile\n-- Version: 1\n" .. body
 end
@@ -473,7 +473,7 @@ end
 -- Dialogs
 -- ============================================================
 
-function GUI:ShowCharProfileRestoreDialog(profileName, profile, onRestored)
+function UI:ShowCharProfileRestoreDialog(profileName, profile, onRestored)
     local restoreChecks = {}
     local yOff = -10
 
@@ -626,7 +626,7 @@ function GUI:ShowCharProfileRestoreDialog(profileName, profile, onRestored)
     result.frame:Show()
 end
 
-function GUI:ShowCharProfileExportDialog(profileName, serializedStr)
+function UI:ShowCharProfileExportDialog(profileName, serializedStr)
     local eb
 
     local result = OneWoW_GUI:CreateDialog({
@@ -657,7 +657,7 @@ function GUI:ShowCharProfileExportDialog(profileName, serializedStr)
     textBG:SetPoint("TOPLEFT",     cf, "TOPLEFT",     10, -28)
     textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
 
-    eb = GUI.CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
+    eb = UI.CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
     eb:SetAutoFocus(true)
 
     result.frame:Show()
@@ -667,7 +667,7 @@ function GUI:ShowCharProfileExportDialog(profileName, serializedStr)
     end)
 end
 
-function GUI:ShowCharProfileImportDialog(onImported)
+function UI:ShowCharProfileImportDialog(onImported)
     local eb
 
     local result = OneWoW_GUI:CreateDialog({
@@ -705,7 +705,7 @@ function GUI:ShowCharProfileImportDialog(onImported)
     textBG:SetPoint("TOPLEFT",     cf, "TOPLEFT",     10, -28)
     textBG:SetPoint("BOTTOMRIGHT", cf, "BOTTOMRIGHT", -10, 4)
 
-    eb = GUI.CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
+    eb = UI.CreateScrollableEditBox(textBG, function() result.frame:Hide() end)
     eb:SetAutoFocus(true)
 
     result.frame:Show()
@@ -715,7 +715,7 @@ end
 -- Section UI Builder
 -- ============================================================
 
-function GUI:CreateCharProfilesPanel(parent)
+function UI:CreateCharProfilesPanel(parent)
     local M = OneWoW.CharProfiles
 
     local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_CharProfilesScroll" })
@@ -871,14 +871,14 @@ function GUI:CreateCharProfilesPanel(parent)
                 end
                 local serialized = OneWoW.CharProfiles:SerializeProfile(exportData)
                 if serialized then
-                    GUI:ShowCharProfileExportDialog(name, serialized)
+                    UI:ShowCharProfileExportDialog(name, serialized)
                 end
             end)
 
             local restoreBtn = OneWoW_GUI:CreateFitTextButton(card, { text = "Restore", height = 26 })
             restoreBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -96, 6)
             restoreBtn:SetScript("OnClick", function()
-                GUI:ShowCharProfileRestoreDialog(name, data, RefreshListing)
+                UI:ShowCharProfileRestoreDialog(name, data, RefreshListing)
             end)
 
             local capturedName = name
@@ -948,7 +948,7 @@ function GUI:CreateCharProfilesPanel(parent)
     local importBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "Import Profile", height = 24 })
     importBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset - 187)
     importBtn:SetScript("OnClick", function()
-        GUI:ShowCharProfileImportDialog(RefreshListing)
+        UI:ShowCharProfileImportDialog(RefreshListing)
     end)
 
     yOffset = yOffset - 230

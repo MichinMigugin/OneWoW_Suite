@@ -1,6 +1,6 @@
 local _, OneWoW = ...
 
-local GUI = OneWoW.GUI
+local UI = OneWoW.UI
 
 local OneWoW_GUI = LibStub("OneWoW_GUI-1.0", true)
 if not OneWoW_GUI then return end
@@ -35,7 +35,7 @@ local function MapFeatureUnitState(unitState)
     else return STATE_MISSING end
 end
 
-function GUI:CreateHomeTab(parent)
+function UI:CreateHomeTab(parent)
     local L = OneWoW.L
     local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_HomeScroll" })
 
@@ -226,7 +226,7 @@ function GUI:CreateHomeTab(parent)
     manageRow:SetPoint("TOPLEFT", content, "TOPLEFT", 15, yOffset)
     manageRow:SetPoint("TOPRIGHT", content, "TOPRIGHT", -15, yOffset)
 
-    GUI:CreateManageFeaturesLinkRow(manageRow, { pointerKey = "HOME_MANAGE_POINTER" })
+    UI:CreateManageFeaturesLinkRow(manageRow, { pointerKey = "HOME_MANAGE_POINTER" })
 
     yOffset = yOffset - 28
 
