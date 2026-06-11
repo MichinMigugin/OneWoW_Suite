@@ -163,7 +163,8 @@ local function SyncDragHitOverlay()
     if not dragHitFrame or not BattlefieldMapFrame or not BattlefieldMapFrame.ScrollContainer then
         return
     end
-    if GetToggle("unlockBattlefield") and NeedsBattlefieldFeatures() then
+    if GetToggle("unlockBattlefield") and NeedsBattlefieldFeatures()
+        and BattlefieldMapFrame:IsShown() then
         dragHitFrame:SetPoint("TOPLEFT", BattlefieldMapFrame.ScrollContainer, "TOPLEFT")
         dragHitFrame:SetPoint("BOTTOMRIGHT", BattlefieldMapFrame.ScrollContainer, "BOTTOMRIGHT")
         dragHitFrame:Show()
@@ -238,6 +239,11 @@ local function DoBattleInstall()
             end
             SyncDragHitOverlay()
         end)
+    end
+
+    if not M._battleHideHooked then
+        M._battleHideHooked = true
+        hooksecurefunc(BattlefieldMapFrame, "Hide", SyncDragHitOverlay)
     end
 
     EnsureBattleDriver()
