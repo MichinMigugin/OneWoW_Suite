@@ -1,4 +1,4 @@
-local _, OneWoW = ...
+local OneWoW = OneWoW
 
 local _, playerClass = UnitClass("player")
 local classColor = RAID_CLASS_COLORS[playerClass]
@@ -210,14 +210,10 @@ local function OnSpellTooltip(tooltip, data)
 
 end
 
-C_Timer.After(2, function()
-    if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall then
-        TooltipDataProcessor.AddTooltipPostCall(TooltipDataProcessor.AllTypes, OnSpellTooltip)
-    end
+TooltipDataProcessor.AddTooltipPostCall(TooltipDataProcessor.AllTypes, OnSpellTooltip)
 
-    local frame = CreateFrame("Frame")
-    frame:RegisterEvent("SPELLS_CHANGED")
-    frame:SetScript("OnEvent", function()
-        wipe(spellModifierCache)
-    end)
+local frame = CreateFrame("Frame")
+frame:RegisterEvent("SPELLS_CHANGED")
+frame:SetScript("OnEvent", function()
+    wipe(spellModifierCache)
 end)

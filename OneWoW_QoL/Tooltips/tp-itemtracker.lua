@@ -1,4 +1,6 @@
-local _, OneWoW = ...
+local _, ns = ...
+
+local OneWoW = OneWoW
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -59,7 +61,7 @@ local function GetClassColor(class)
     return 0.9, 0.9, 0.9
 end
 
-OneWoW.GetClassColor = GetClassColor
+ns.GetClassColor = GetClassColor
 
 -- Aggregate a flat family-location list into one row per (owner, location[, rank])
 -- bucket. Owner is the character (by charKey), the warband, or a guild bank.

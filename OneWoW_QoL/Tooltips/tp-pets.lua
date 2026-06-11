@@ -1,4 +1,4 @@
-local _, OneWoW = ...
+local OneWoW = OneWoW
 
 local function FormatMoneyLine(copper)
     return OneWoW.Format.FormatGold(copper)

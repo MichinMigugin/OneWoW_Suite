@@ -1,4 +1,4 @@
-local _, OneWoW = ...
+local OneWoW = OneWoW
 
 local function ItemStatusProvider(_, context)
     if not context.itemID then return nil end

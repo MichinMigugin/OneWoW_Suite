@@ -47,6 +47,26 @@ Features\toast-loot.lua
 Features\toast-instance.lua
 UI\t-toastalerts.lua
 
+# Tooltip feature content (engine stays in core as OneWoW.TooltipEngine; these
+# are the providers + settings catalog + settings tab moved from core in
+# MIGRATION step 9b). Order matters: tp-collections before tp-itemtypes and
+# tp-itemtracker before tp-recipeknowledge (file-scope ns captures).
+Tooltips\tooltips.lua
+Tooltips\tp-collections.lua
+Tooltips\tp-itemtypes.lua
+Tooltips\tp-itemtracker.lua
+Tooltips\tp-recipeknowledge.lua
+Tooltips\tp-customnotes.lua
+Tooltips\tp-technicalids.lua
+Tooltips\tp-enhancements.lua
+Tooltips\tp-talentmods.lua
+Tooltips\tp-notewarning.lua
+Tooltips\tp-itemstatus.lua
+Tooltips\tp-gearupgrades.lua
+Tooltips\tp-value.lua
+Tooltips\tp-pets.lua
+UI\t-tooltips.lua
+
 # ==============================================================
 # EXTERNAL MODULES
 # To add a module:

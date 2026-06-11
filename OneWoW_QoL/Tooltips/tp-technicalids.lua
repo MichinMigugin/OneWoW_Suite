@@ -1,4 +1,4 @@
-local _, OneWoW = ...
+local OneWoW = OneWoW
 
 local OneWoW_GUI = OneWoW_GUI
 

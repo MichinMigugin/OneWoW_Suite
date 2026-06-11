@@ -1,7 +1,6 @@
-local _, OneWoW = ...
+local OneWoW = OneWoW
 
--- TooltipDataLineType.SellPrice == 11 (Mainline API docs). Fallback if Enum not ready at register time.
-local LINE_TYPE_SELL_PRICE = (Enum.TooltipDataLineType and Enum.TooltipDataLineType.SellPrice) or 11
+local LINE_TYPE_SELL_PRICE = Enum.TooltipDataLineType.SellPrice
 
 local function GetSettings()
     return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "enhancements")
@@ -19,7 +18,7 @@ local BORDER_PIECES = {
 }
 
 local function ShouldSuppressBlizzardVendorSellLine()
-    if not OneWoW.TooltipEngine or not OneWoW.TooltipEngine:IsEnabled() then return false end
+    if not OneWoW.TooltipEngine:IsEnabled() then return false end
     if GetSettings().removeBlizzardVendorValue == false then return false end
     return true
 end
@@ -32,21 +31,12 @@ local function OnTooltipSellPriceLine(tooltip, lineData)
     return true
 end
 
-function OneWoW.TooltipEnhancements_RegisterSellPriceSuppress()
-    if OneWoW._sellPriceSuppressRegistered then return end
-    if not (TooltipDataProcessor and TooltipDataProcessor.AddLinePreCall) then return end
-    TooltipDataProcessor.AddLinePreCall(LINE_TYPE_SELL_PRICE, OnTooltipSellPriceLine)
-    OneWoW._sellPriceSuppressRegistered = true
-end
-
-local enhancementsInitialized = false
+-- Registered at file scope: the pre-call re-checks feature enablement on
+-- every SellPrice line, so hooking unconditionally is safe and keeps working
+-- for mid-session enables (the engine's login-time hook pass has already run).
+TooltipDataProcessor.AddLinePreCall(LINE_TYPE_SELL_PRICE, OnTooltipSellPriceLine)
 
 local function InitEnhancements()
-    if enhancementsInitialized then return end
-    enhancementsInitialized = true
-
-    if not OneWoW.TooltipEngine then return end
-
     hooksecurefunc("GameTooltip_SetDefaultAnchor", function(tooltip, parent)
         if not OneWoW.TooltipEngine:IsFeatureEnabled("enhancements") then return end
         if not IsSettingEnabled("anchorEnabled") then return end
@@ -297,16 +287,12 @@ local function EnhancementsUnitProvider(tooltip, context)
     return lines
 end
 
-C_Timer.After(2, function()
-    if OneWoW.TooltipEngine then
-        InitEnhancements()
+InitEnhancements()
 
-        OneWoW.TooltipEngine:RegisterProvider({
-            id = "enhancements",
-            order = 5,
-            featureId = "enhancements",
-            tooltipTypes = {"unit"},
-            callback = EnhancementsUnitProvider,
-        })
-    end
-end)
+OneWoW.TooltipEngine:RegisterProvider({
+    id = "enhancements",
+    order = 5,
+    featureId = "enhancements",
+    tooltipTypes = {"unit"},
+    callback = EnhancementsUnitProvider,
+})

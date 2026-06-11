@@ -1,4 +1,6 @@
-local _, OneWoW = ...
+local _, ns = ...
+
+local OneWoW = OneWoW
 
 local function IsNoteWarningEnabled()
     -- showNoteWarning is a dynamic key (not in the defaults table); absent means on.
@@ -13,24 +15,24 @@ local function HasNoteContent(noteData)
 end
 
 local function CheckItemNote(itemID)
-    local noteData = OneWoW.NoteLookup.FindNoteData("items", itemID)
+    local noteData = ns.NoteLookup.FindNoteData("items", itemID)
     return noteData and HasNoteContent(noteData) or false
 end
 
 local function CheckPlayerNote(unit)
-    local fullName = OneWoW.NoteLookup.GetPlayerFullName(unit)
+    local fullName = ns.NoteLookup.GetPlayerFullName(unit)
     if not fullName then return false end
-    local noteData = OneWoW.NoteLookup.FindNoteData("players", fullName)
+    local noteData = ns.NoteLookup.FindNoteData("players", fullName)
     return noteData and HasNoteContent(noteData) or false
 end
 
 local function CheckNPCNote(npcID)
-    local noteData = OneWoW.NoteLookup.FindNoteData("npcs", npcID)
+    local noteData = ns.NoteLookup.FindNoteData("npcs", npcID)
     return noteData and HasNoteContent(noteData) or false
 end
 
 local function NoteWarningProvider(_, context)
-    if not OneWoW.NoteLookup.GetNotesAddon() then return nil end
+    if not ns.NoteLookup.GetNotesAddon() then return nil end
     if not IsNoteWarningEnabled() then return nil end
 
     local hasNote = false

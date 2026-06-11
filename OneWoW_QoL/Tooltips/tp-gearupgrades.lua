@@ -1,4 +1,4 @@
-local _, OneWoW = ...
+local OneWoW = OneWoW
 
 local function GetClassColoredName(name, class)
     if class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] then

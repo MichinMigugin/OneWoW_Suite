@@ -1,4 +1,6 @@
-local _, OneWoW = ...
+local _, ns = ...
+
+local OneWoW = OneWoW
 
 local PROFESSION_SKILL_IDS = {
     171, 164, 333, 202, 182,
@@ -75,7 +77,7 @@ local function FindRecipes(charData, profName)
     return nil
 end
 
-local GetClassColor = OneWoW.GetClassColor
+local GetClassColor = ns.GetClassColor
 
 local function DetectProfession(itemID)
     local td = C_TooltipInfo.GetItemByID(itemID)

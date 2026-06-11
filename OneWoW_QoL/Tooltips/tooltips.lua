@@ -1,5 +1,8 @@
-local _, OneWoW = ...
+local OneWoW = OneWoW
 
+-- Settings catalog for the tooltips tab. Storage stays in core OneWoW_DB
+-- under settings.tooltips (MIGRATION step 9 shared rules) — only the
+-- feature content registers from QoL.
 local reg = OneWoW.SettingsFeatureRegistry
 
 reg:Register("tooltips", { id = "general",       title = "TIPS_GENERAL_TITLE",       description = "TIPS_GENERAL_DESC" })

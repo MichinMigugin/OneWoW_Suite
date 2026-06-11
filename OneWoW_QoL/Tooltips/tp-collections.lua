@@ -1,4 +1,6 @@
-local _, OneWoW = ...
+local _, ns = ...
+
+local OneWoW = OneWoW
 
 local BATTLE_PET_CAGE_ID = 82800
 
@@ -27,7 +29,7 @@ local ITEM_TYPE_COLORS = {
     [19] = {0.32, 0.73, 0.91},
 }
 
-OneWoW.ITEM_TYPE_COLORS = ITEM_TYPE_COLORS
+ns.ITEM_TYPE_COLORS = ITEM_TYPE_COLORS
 
 local COLLECTED_STRING = COLLECTED or "Collected"
 local NOT_COLLECTED_STRING = NOT_COLLECTED or "Not Collected"

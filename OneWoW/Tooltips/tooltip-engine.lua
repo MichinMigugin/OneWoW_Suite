@@ -57,9 +57,6 @@ function TooltipEngine:IsFeatureEnabled(featureId)
 end
 
 function TooltipEngine:HookTooltips()
-    if OneWoW.TooltipEnhancements_RegisterSellPriceSuppress then
-        OneWoW.TooltipEnhancements_RegisterSellPriceSuppress()
-    end
     local HANDLED_TYPES = {
         Enum.TooltipDataType.Unit,
         Enum.TooltipDataType.Item,

@@ -1,12 +1,14 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-OneWoW.NoteLookup = {}
+local OneWoW = OneWoW
 
-function OneWoW.NoteLookup.GetNotesAddon()
+ns.NoteLookup = {}
+
+function ns.NoteLookup.GetNotesAddon()
     return OneWoW_Notes
 end
 
-function OneWoW.NoteLookup.GetPlayerFullName(unit)
+function ns.NoteLookup.GetPlayerFullName(unit)
     if not unit then return nil end
     local name, realm = UnitName(unit)
     if not name then return nil end
@@ -14,8 +16,8 @@ function OneWoW.NoteLookup.GetPlayerFullName(unit)
     return name .. "-" .. realm
 end
 
-function OneWoW.NoteLookup.FindNoteData(category, key)
-    local notesAddon = OneWoW.NoteLookup.GetNotesAddon()
+function ns.NoteLookup.FindNoteData(category, key)
+    local notesAddon = ns.NoteLookup.GetNotesAddon()
     if not notesAddon or not notesAddon.db then return nil end
 
     local charData = notesAddon.db.char and notesAddon.db.char[category]
@@ -55,24 +57,24 @@ local function GetTooltipLines(noteData)
 end
 
 local function LookupItemNote(itemID)
-    local noteData = OneWoW.NoteLookup.FindNoteData("items", itemID)
+    local noteData = ns.NoteLookup.FindNoteData("items", itemID)
     return noteData and GetTooltipLines(noteData) or nil
 end
 
 local function LookupPlayerNote(unit)
-    local fullName = OneWoW.NoteLookup.GetPlayerFullName(unit)
+    local fullName = ns.NoteLookup.GetPlayerFullName(unit)
     if not fullName then return nil end
-    local noteData = OneWoW.NoteLookup.FindNoteData("players", fullName)
+    local noteData = ns.NoteLookup.FindNoteData("players", fullName)
     return noteData and GetTooltipLines(noteData) or nil
 end
 
 local function LookupNPCNote(npcID)
-    local noteData = OneWoW.NoteLookup.FindNoteData("npcs", npcID)
+    local noteData = ns.NoteLookup.FindNoteData("npcs", npcID)
     return noteData and GetTooltipLines(noteData) or nil
 end
 
 local function CustomNotesProvider(_, context)
-    if not OneWoW.NoteLookup.GetNotesAddon() then return nil end
+    if not ns.NoteLookup.GetNotesAddon() then return nil end
 
     local config = OneWoW.TooltipEngine.TOOLTIP_CONFIG
     local noteLines = nil

@@ -38,7 +38,7 @@ integration shims, `ExternalTooltipSync`.
 | Area | Files to move |
 |---|---|
 | **Toast types** | ~~`Features/toast-loot.lua`, `toast-instance.lua`, `toastalerts.lua`, `UI/t-toastalerts.lua`~~ — **done** (step 9a; `toast-notes.lua` folded into the core engine instead) |
-| **Tooltip providers** | All 14 `Tooltips/tp-*.lua`, `Tooltips/tooltips.lua` (provider bootstrap), `UI/t-tooltips.lua` |
+| **Tooltip providers** | ~~All 13 `Tooltips/tp-*.lua`, `Tooltips/tooltips.lua` (settings catalog bootstrap), `UI/t-tooltips.lua`~~ — **done** (step 9b) |
 | **Portal Hub** | All of `Portals/` (data + modules), `UI/t-portals.lua` |
 | **Overlays settings** | `UI/t-overlays.lua` minimum; audit `Features/overlays.lua`, `overlay-icons.lua` for type logic vs. engine (step 9d) |
 
@@ -329,21 +329,52 @@ original assumptions:
 - [x] Register `toastalerts` settings tab in QoL `RegisterModule` tabs.
 - [x] Remove `toastalerts` from `qolFeatureTabs`.
 
-### 9b. Tooltip providers
+### 9b. Tooltip providers — DONE
 
-**Move:**
-- All 14 `Tooltips/tp-*.lua` files (see `OneWoW.toc` lines 71–83)
-- `Tooltips/tooltips.lua` (provider registration bootstrap)
-- `UI/t-tooltips.lua`
+Re-verification corrections to the original assumptions:
 
-**Stay in core:**
-- `Tooltips/tooltip-engine.lua` — `TooltipEngine:RegisterProvider` API unchanged;
-  Bags, QoL, DirectDeposit already register from their own load units.
+- **13 `tp-*.lua` files, not 14**; `Tooltips/tooltips.lua` is the **settings
+  catalog** bootstrap (`SettingsFeatureRegistry:Register("tooltips", ...)`),
+  not provider registration. Both moved.
+- **No login-handler conversion**: providers register at **file scope** (the
+  planned "register on QoL login" pattern was dropped — registration is
+  declaration, lifecycle is arming; `RegisterProvider` is order-independent
+  and the engine is dep-guaranteed present when QoL files load). Gameplay
+  event frames (`MODIFIER_STATE_CHANGED`, `SPELLS_CHANGED`) stay as direct
+  `RegisterEvent`.
+- **Hidden engine→provider coupling dissolved**: `TooltipEngine:HookTooltips`
+  called `OneWoW.TooltipEnhancements_RegisterSellPriceSuppress()` (defined in
+  `tp-enhancements.lua`). The export is gone; `tp-enhancements.lua` registers
+  its SellPrice `AddLinePreCall` at file scope (the pre-call re-checks
+  enablement per line, so mid-session enables work).
+- **Legacy `C_Timer.After(2, ...)` init hacks removed** from
+  `tp-enhancements.lua` and `tp-talentmods.lua` — both now register at file
+  scope.
+- **Intra-set namespace exports relocated** from core `OneWoW.*` to QoL `ns`:
+  `NoteLookup` (tp-customnotes → tp-notewarning), `GetClassColor`
+  (tp-itemtracker → tp-recipeknowledge), `ITEM_TYPE_COLORS` (tp-collections →
+  tp-itemtypes). Two are file-scope local captures, so the relative TOC order
+  is load-bearing.
+- **QoL↔core dot-refresh coupling now in-unit**: `t-features.lua` calls
+  `ns.UI.RefreshTooltipsFeatureDot` directly (was a guarded `OneWoW.UI` call);
+  `t-tooltips.lua`'s playmounts toggle uses `ns.ModuleRegistry` / `ns.UI`
+  directly. The `gearupgrades` mirror detail still calls core
+  `OneWoW.UI:ShowOverlayFeatureDetail` cross-unit (t-overlays stays in core).
+- With QoL opted out, all OneWoW tooltip content (incl. SellPrice suppression
+  and anchor/scale enhancements) is gone by design; only external providers
+  (Bags, DirectDeposit) render through the resident engine.
 
-- [ ] Move files; providers call `OneWoW.TooltipEngine:RegisterProvider` on QoL
-  login (same pattern as `OneWoW_Bags/Integrations/OneWoWTooltips.lua`).
-- [ ] Register `tooltips` settings tab in QoL.
-- [ ] Remove `tooltips` from `qolFeatureTabs`.
+**Moved** (`OneWoW_QoL/Tooltips/`, `OneWoW_QoL/UI/`):
+- `Tooltips/tooltips.lua` (catalog) + all 13 `Tooltips/tp-*.lua`
+- `UI/t-tooltips.lua` (now `ns.UI.CreateTooltipsTab`)
+
+**Stayed in core:**
+- `Tooltips/tooltip-engine.lua` — `TooltipEngine:RegisterProvider` API
+  unchanged; Bags, QoL, DirectDeposit already register from their own units.
+
+- [x] Move files; providers register at file scope from QoL.
+- [x] Register `tooltips` settings tab in QoL `RegisterModule` tabs.
+- [x] Remove `tooltips` from `qolFeatureTabs`.
 
 ### 9c. Portal Hub
 

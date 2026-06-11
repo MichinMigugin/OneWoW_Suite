@@ -93,22 +93,8 @@ Integrations\BetterBags.lua
 Integrations\OneWoW_Bags.lua
 Integrations\ElvUI.lua
 
-# Tooltips
-Tooltips\tooltips.lua
+# Tooltips (engine only — providers moved to OneWoW_QoL, MIGRATION step 9b)
 Tooltips\tooltip-engine.lua
-Tooltips\tp-collections.lua
-Tooltips\tp-itemtypes.lua
-Tooltips\tp-itemtracker.lua
-Tooltips\tp-recipeknowledge.lua
-Tooltips\tp-customnotes.lua
-Tooltips\tp-technicalids.lua
-Tooltips\tp-enhancements.lua
-Tooltips\tp-talentmods.lua
-Tooltips\tp-notewarning.lua
-Tooltips\tp-itemstatus.lua
-Tooltips\tp-gearupgrades.lua
-Tooltips\tp-value.lua
-Tooltips\tp-pets.lua
 
 # Portal Hub - Data
 Portals\Data\Hearthstones.lua
@@ -139,7 +125,6 @@ UI\Minimap.lua
 UI\t-home.lua
 UI\t-settings.lua
 UI\t-overlays.lua
-UI\t-tooltips.lua
 UI\t-portals.lua
 UI\t-profiles.lua
 UI\t-charprofiles.lua

@@ -1,15 +1,17 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-local UI = OneWoW.UI
-local L    = OneWoW.L
-
+local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
+
+-- Locale strings stay in core OneWoW.L during the QoL transition
+-- (MIGRATION step 9 shared rules).
+local L = OneWoW.L
 
 local Registry = OneWoW.SettingsFeatureRegistry
 
 local activePlayermountsRow = nil
 
-function UI:RefreshTooltipsFeatureDot(featureId, value)
+function ns.UI.RefreshTooltipsFeatureDot(featureId, value)
     if featureId == "playermounts" and activePlayermountsRow and activePlayermountsRow.dot then
         activePlayermountsRow.dot:SetStatus(value)
     end
@@ -526,11 +528,9 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
         isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
         onToggle = function(newState)
             OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
-            if feature.id == "playermounts" and OneWoW_QoL and OneWoW_QoL.ModuleRegistry then
-                OneWoW_QoL.ModuleRegistry:SetEnabled("playmounts", newState)
-                if OneWoW_QoL.UI and OneWoW_QoL.UI.RefreshModuleDot then
-                    OneWoW_QoL.UI.RefreshModuleDot("playmounts", newState)
-                end
+            if feature.id == "playermounts" then
+                ns.ModuleRegistry:SetEnabled("playmounts", newState)
+                ns.UI.RefreshModuleDot("playmounts", newState)
             end
             if selectedRow and selectedRow.dot then
                 selectedRow.dot:SetStatus(newState)
@@ -1724,7 +1724,7 @@ local function BuildFeatureList(split, tabName)
     end
 end
 
-function UI:CreateTooltipsTab(parent)
+function ns.UI.CreateTooltipsTab(parent)
     local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_PLACEHOLDER"] or "Search..." })
     split.listTitle:SetText(L["TOOLTIPS_LIST_TITLE"])
     split.detailTitle:SetText(L["TOOLTIPS_DETAIL_TITLE"])

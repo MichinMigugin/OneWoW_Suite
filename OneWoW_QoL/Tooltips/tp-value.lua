@@ -1,4 +1,4 @@
-local _, OneWoW = ...
+local OneWoW = OneWoW
 local format = string.format
 
 local function FormatMoneyLine(copper)

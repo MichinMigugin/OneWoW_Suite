@@ -1,6 +1,8 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-local ITEM_TYPE_COLORS = OneWoW.ITEM_TYPE_COLORS
+local OneWoW = OneWoW
+
+local ITEM_TYPE_COLORS = ns.ITEM_TYPE_COLORS
 
 local function ItemTypeProvider(_, context)
     if not context.itemID then return nil end
