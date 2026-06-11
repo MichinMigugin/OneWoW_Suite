@@ -1119,7 +1119,7 @@ function Addon.UI:CreateTextureTab(parent)
         Addon.UI.TextureTab_RefreshToolbarButtons(tab)
     end)
 
-    -- Copy row: LibCopyPaste-style label + short buttons (matches Fonts tab)
+    -- Copy row: CopyPaste-dialog-style label + short buttons (matches Fonts tab)
     local copyRowLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     copyRowLabel:SetText(L["FONT_COPY_ROW_LABEL"])
     copyRowLabel:SetTextColor(1, 0.82, 0)

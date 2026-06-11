@@ -381,7 +381,7 @@ function Addon:SearchFramesByName(searchText)
 end
 
 function Addon:CopyToClipboard(text, title)
-    local lib = LibStub("LibCopyPaste-1.0")
+    local lib = OneWoW.CopyPaste
     -- Omit readOnly: when true, SetReadOnly captures GetText() from a hidden EditBox (which can return ""), then OnTextChanged overwrites with that empty value
     lib:Copy(title or self.L["COPY_DEFAULT_TITLE"], text)
     self:Print(self.L["MSG_PRESS_CTRL_C"])

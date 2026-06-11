@@ -168,14 +168,11 @@ local function SingleLinePreview(text)
 end
 
 local function ShowSavedSearchPredicate(name, query)
-    local LibCopyPaste = LibStub and LibStub("LibCopyPaste-1.0", true)
-    if not LibCopyPaste then return end
-
     local title = L["SAVED_SEARCH_COPY_TITLE"]
     if name and name ~= "" then
         title = title .. ": " .. name
     end
-    LibCopyPaste:Copy(title, query or "", { readOnly = true, frameStrata = "FULLSCREEN_DIALOG" })
+    OneWoW.CopyPaste:Copy(title, query or "", { readOnly = true, frameStrata = "FULLSCREEN_DIALOG" })
 end
 
 local function SetMainSearchText(text)

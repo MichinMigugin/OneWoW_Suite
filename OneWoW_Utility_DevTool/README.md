@@ -189,8 +189,7 @@ In-game **Lua snippet workspace** for experiments and small scripts:
 
 - **Secret values** — Frame properties that return secret values (e.g., in instanced content) are safely masked
 - **SavedVariables** — `OneWoW_UtilityDevTool_DB` stores window position, theme, language, minimap, monitor (including pinned addon), error logger settings, globals browser bookmarks and pane width, texture bookmarks and list column width, font preview background and bookmarks, editor snippets and layout options, and related UI preferences
-- **Clipboard** — Copy actions use the embedded **LibCopyPaste** library where applicable
-- **Embedded libraries** — LibStub, LibCopyPaste (vendored under `Libs/`; do not modify vendored libs when contributing)
+- **Clipboard** — Copy actions use the core **`OneWoW.CopyPaste`** dialog service where applicable
 
 ---
 

@@ -1,5 +1,12 @@
-local LibCopyPaste = LibStub:NewLibrary("LibCopyPaste-1.0", 9)
-if not LibCopyPaste then return end
+-- ============================================================================
+-- OneWoW.CopyPaste — copy/paste dialog service (formerly LibCopyPaste-1.0).
+-- Method API unchanged: :Copy(title, text, options) / :Paste(title, callback,
+-- options). Follow-up (MIGRATION step 7.1): restyle with OneWoW_GUI helpers.
+-- ============================================================================
+local _, OneWoW = ...
+
+OneWoW.CopyPaste = {}
+local CopyPaste = OneWoW.CopyPaste
 
 local IsControlKeyDown = IsControlKeyDown
 
@@ -175,7 +182,7 @@ end
 
 local frame
 
-function LibCopyPaste:Copy(title, text, options)
+function CopyPaste:Copy(title, text, options)
 	assert(type(title) == "string" and type(text) == "string",
 		"title and text are required and must be strings. Usage: Copy(title, text)")
 	if not frame then frame = CopyPasteFrame:Create() end
@@ -188,7 +195,7 @@ function LibCopyPaste:Copy(title, text, options)
 	frame:Show()
 end
 
-function LibCopyPaste:Paste(title, callback, options)
+function CopyPaste:Paste(title, callback, options)
 	assert(type(title) == "string" and type(callback) == "function",
 		"title and callback are required. title must be a string and callback must be a function. Usage: Copy(title, callback)")
 	if not frame then frame = CopyPasteFrame:Create() end

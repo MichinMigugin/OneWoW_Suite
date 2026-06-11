@@ -215,14 +215,17 @@ transition window.)
 
 Ship immediately after step 7 (same PR or follow-up).
 
-- [ ] Move into the `OneWoW` core addon (after GUI files in TOC — `CopyPaste` may
-  use GUI helpers after restyle).
-- [ ] Drop LibStub + version: `OneWoW.CopyPaste = {}`. Method API (`:Copy`,
+- [x] Move into the `OneWoW` core addon (`Core/CopyPaste.lua`, loaded after the
+  GUI toolkit in the TOC — `CopyPaste` may use GUI helpers after restyle).
+- [x] Drop LibStub + version: `OneWoW.CopyPaste = {}`. Method API (`:Copy`,
   `:Paste`) unchanged.
-- [ ] Repoint consumers (`OneWoW_Bags` ×3, `OneWoW_Utility_DevTool`, QoL
-  copytext/coords).
+- [x] Repoint consumers (`OneWoW_Bags` ×3, `OneWoW_Utility_DevTool`, QoL
+  copytext/coords). QoL copytext's hand-rolled fallback dialog (dead once the
+  service is dep-guaranteed) removed with it.
 - [ ] **Follow-up:** restyle UI with `OneWoW_GUI` helpers and localized strings
-  (replace hardcoded backdrop/colors and literal `"Close"`).
+  (replace hardcoded backdrop/colors and literal `"Close"`; also retire the
+  stale `LibCopyPaste` mention in Bags' `EXPORT_UNAVAILABLE_SERIALIZER`
+  locale strings).
 
 ---
 

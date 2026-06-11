@@ -507,8 +507,9 @@ Modules cannot share core's private `ns`. Sharing uses globals:
   `_DB` globals.
 
 LibStub is retained only for vendored Ace libs (`LibStub`, `CallbackHandler-1.0`,
-`LibDataBroker-1.1`, `LibDBIcon-1.0`, `LibSharedMedia-3.0`, `LibCopyPaste-1.0` —
-CopyPaste converts to `OneWoW.CopyPaste` in `MIGRATION.md` step 7.1).
+`LibDataBroker-1.1`, `LibDBIcon-1.0`, `LibSharedMedia-3.0`). The copy/paste
+dialog service is `OneWoW.CopyPaste` (`Core/CopyPaste.lua` — `MIGRATION.md`
+step 7.1).
 
 ### Cross-addon references
 
