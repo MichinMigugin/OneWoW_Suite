@@ -1,5 +1,6 @@
-local _, OneWoW = ...
+local _, ns = ...
 
+local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 
 local PE = OneWoW_GUI.PredicateEngine
@@ -22,18 +23,16 @@ local TITLE_KEYS = {
     tmog   = "TOAST_NEW_TMOG",
 }
 
-local function GetDB()
-    return OneWoW.db and OneWoW.db.global and OneWoW.db.global.toasts
+local function GetCfg()
+    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("toastalerts", "detectiontypes")
 end
 
 local function LootEnabled()
-    local db = GetDB()
-    return db and db.loot and db.loot.enabled ~= false
+    return OneWoW.SettingsFeatureRegistry:IsEnabled("toastalerts", "detectiontypes")
 end
 
 local function CategoryEnabled(category)
-    local db = GetDB()
-    return db and db.loot and db.loot[category] ~= false
+    return GetCfg()[category] ~= false
 end
 
 local function GetL(key, fallback)
@@ -135,9 +134,8 @@ local function ScanBagsForCollectibles()
     end
 
     if recipesEnabled then
-        local dbLoot = GetDB() and GetDB().loot
         local expr = "#recipe&!#alreadyknown"
-        if dbLoot and dbLoot.recipesOnlyMyProfessions then
+        if GetCfg().recipesOnlyMyProfessions then
             expr = expr .. "&#myprofs"
         end
         recipeCompiled = PE:Compile(expr)
@@ -191,8 +189,7 @@ end
 local NATIVE_ALERT_EVENTS = { "NEW_MOUNT_ADDED", "NEW_PET_ADDED", "NEW_TOY_ADDED" }
 
 local function ApplyBlizzardSuppression()
-    local db = GetDB()
-    local should = db and db.loot and db.loot.suppressBlizzardAlerts == true
+    local should = GetCfg().suppressBlizzardAlerts == true
     for _, ev in ipairs(NATIVE_ALERT_EVENTS) do
         if should then
             AlertFrame:UnregisterEvent(ev)
@@ -204,10 +201,14 @@ end
 
 Toasts.ApplyBlizzardSuppression = ApplyBlizzardSuppression
 
-OneWoW:RegisterCoreLoginHandler("toast-loot", function()
+-- Login arming, registered by OneWoW_QoL.lua via RegisterLoginHandler (the
+-- handler registry only exists once OnAddonLoaded has run, so file-scope
+-- registration is not possible here).
+ns.ToastLoot = {}
+function ns.ToastLoot.OnLogin()
     C_Timer.After(3, BuildBagCache)
     ApplyBlizzardSuppression()
-end)
+end
 
 local lootFrame = CreateFrame("Frame")
 lootFrame:RegisterEvent("BAG_UPDATE_DELAYED")

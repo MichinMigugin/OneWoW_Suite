@@ -22,7 +22,7 @@ to dedicated load units needs no SavedVariables migration.
 |---|---|---|
 | **TooltipEngine** | `Tooltips/tooltip-engine.lua` | Bags, QoL, DirectDeposit (`RegisterProvider`) |
 | **OverlayEngine** | `Features/overlay-engine.lua` | Bags; external bag-addon integrations in `Integrations/*.lua` |
-| **Toast engine** | `Features/toast-engine.lua` (~600 lines) | Promote to `OneWoW.Toast`; toast *types* move to QoL (step 9a) |
+| **Toast engine** | `Features/toast-engine.lua` (`OneWoW.Toasts`) | OneWoW_Notes (`FireZoneAlert`, `FireItemLootAlert`); toast *types* moved to QoL (step 9a) |
 | **ItemStatus** | `Features/itemstatus.lua` | Bags (`ItemButton.lua`, `Data/Categories.lua`) |
 | **UpgradeDetection** | `Features/upgrade-detection.lua` | Bags (`ItemButton.lua`, `Data/Categories.lua`) |
 | **RecipeKnownUtil** | `Core/RecipeKnownUtil.lua` | Trackers, QoL, CatalogData_Journal, GUI PredicateEngine |
@@ -37,7 +37,7 @@ integration shims, `ExternalTooltipSync`.
 
 | Area | Files to move |
 |---|---|
-| **Toast types** | `Features/toast-loot.lua`, `toast-notes.lua`, `toast-instance.lua`, `toastalerts.lua`, `UI/t-toastalerts.lua` |
+| **Toast types** | ~~`Features/toast-loot.lua`, `toast-instance.lua`, `toastalerts.lua`, `UI/t-toastalerts.lua`~~ — **done** (step 9a; `toast-notes.lua` folded into the core engine instead) |
 | **Tooltip providers** | All 14 `Tooltips/tp-*.lua`, `Tooltips/tooltips.lua` (provider bootstrap), `UI/t-tooltips.lua` |
 | **Portal Hub** | All of `Portals/` (data + modules), `UI/t-portals.lua` |
 | **Overlays settings** | `UI/t-overlays.lua` minimum; audit `Features/overlays.lua`, `overlay-icons.lua` for type logic vs. engine (step 9d) |
@@ -114,8 +114,9 @@ Prep for steps 8–9. No dependency on step 7.
 - [x] Enforcement: `no-settings-bypass` pre-commit hook
   (`bin/check_no_settings_bypass.py`) forbids the `db.global.settings` suffix
   pattern outside `SettingsFeatureRegistry.lua`/`Database.lua`.
-- Out of scope (separate DB roots, follow-up before step 9): `portalHub`,
-  `toasts` — `UI/t-portals.lua`, `UI/t-toastalerts.lua`, `Portals/*`.
+- Out of scope (separate DB roots, follow-up before step 9): `portalHub` —
+  `UI/t-portals.lua`, `Portals/*`. (`toasts` was folded into
+  `settings.toastalerts` as part of step 9a — migration v5.)
 
 ---
 
@@ -294,22 +295,39 @@ shippable unless noted.
 5. **TOC:** remove moved files from `OneWoW.toc`; add to `OneWoW_QoL.toc` in
    sensible load order (after QoL core, before or with other external modules).
 
-### 9a. Toast types (pilot)
+### 9a. Toast types (pilot) — DONE
 
-Validates the move pattern end-to-end. Zero external consumers today.
+Validated the move pattern end-to-end. Re-verification corrections to the
+original assumptions:
 
-**Move:**
-- `Features/toast-loot.lua`, `toast-notes.lua`, `toast-instance.lua`
-- `Features/toastalerts.lua`
-- `UI/t-toastalerts.lua`
+- **Not zero external consumers**: `OneWoW_Notes` calls
+  `OneWoW.Toasts.FireZoneAlert` / `FireItemLootAlert`. The thin `Fire*Alert`
+  wrappers (`toast-notes.lua`, 81 lines) were folded into the resident engine
+  instead of moving to QoL, so Notes works with QoL disabled.
+- **Engine name kept as `OneWoW.Toasts`** (plural) — the planned `OneWoW.Toast`
+  rename was cosmetic churn with no consumers gained.
+- **Settings-funnel fold-in shipped with this step** (was a deferred step-6
+  follow-up): the `db.global.toasts` root relocated under
+  `settings.toastalerts.*` via migration v5 (`toasts_settings_relocation`) —
+  `enabled` → `general.enabled`, `loot` → `detectiontypes`, `notes` →
+  `notealerts`, `instance` → `instances`, `anchor` → storage-only `anchor` id.
+  The enable-flag dual-write died with it; stored profile / char-profile
+  snapshots are rewritten by the migration; `toasts` dropped from the
+  profile snapshot maps (`UI/t-profiles.lua`, `UI/t-charprofiles.lua`).
 
-**Stay in core:**
-- `Features/toast-engine.lua` — promote to `OneWoW.Toast` service (anchor,
-  queue, render).
+**Moved** (`OneWoW_QoL/Features/`, `OneWoW_QoL/UI/`):
+- `Features/toast-loot.lua`, `toast-instance.lua`, `toastalerts.lua` (catalog)
+- `UI/t-toastalerts.lua` (now `ns.UI.CreateToastAlertsTab`)
 
-- [ ] Move files; wire QoL lifecycle init for toast types.
-- [ ] Register `toastalerts` settings tab in QoL `RegisterModule` tabs.
-- [ ] Remove `toastalerts` from `qolFeatureTabs`.
+**Stayed in core:**
+- `Features/toast-engine.lua` — `OneWoW.Toasts` service (anchor, queue,
+  render, sounds) + the notes `Fire*Alert` wrappers.
+
+- [x] Move files; wire QoL lifecycle init for toast types (`ns.ToastLoot.OnLogin`
+  / `ns.ToastInstance.OnEnteringWorld`, registered in `OnAddonLoaded` after
+  `CreateHandlerRegistry` — the registry doesn't exist at file scope).
+- [x] Register `toastalerts` settings tab in QoL `RegisterModule` tabs.
+- [x] Remove `toastalerts` from `qolFeatureTabs`.
 
 ### 9b. Tooltip providers
 

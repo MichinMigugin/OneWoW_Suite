@@ -1,5 +1,8 @@
-local _, OneWoW = ...
+local OneWoW = OneWoW
 
+-- Settings catalog for the toastalerts tab. Storage stays in core OneWoW_DB
+-- under settings.toastalerts (MIGRATION step 9 shared rules) — only the
+-- feature content registers from QoL.
 local reg = OneWoW.SettingsFeatureRegistry
 
 reg:Register("toastalerts", { id = "general",        title = "TOAST_GENERAL_TITLE",        description = "TOAST_GENERAL_DESC" })

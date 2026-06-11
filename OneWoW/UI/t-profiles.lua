@@ -68,7 +68,6 @@ function OneWoW.Profiles.CaptureSettings()
             theme     = g.theme,
             minimap   = DeepCopy(g.minimap),
             settings  = DeepCopy(g.settings),
-            toasts    = DeepCopy(g.toasts),
             portalHub = DeepCopy(g.portalHub),
         }
     end
@@ -107,7 +106,6 @@ function OneWoW.Profiles.ApplySettings(snapshot, profileName)
             if snapshot.core.minimap.theme       then g.minimap.theme  = snapshot.core.minimap.theme end
         end
         if snapshot.core.settings then DeepMerge(g.settings,  snapshot.core.settings)  end
-        if snapshot.core.toasts   then DeepMerge(g.toasts,    snapshot.core.toasts)    end
         if snapshot.core.portalHub then DeepMerge(g.portalHub, snapshot.core.portalHub) end
     end
 

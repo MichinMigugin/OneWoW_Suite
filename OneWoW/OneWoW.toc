@@ -83,11 +83,7 @@ Features\overlay-icons.lua
 Features\upgrade-detection.lua
 Features\overlay-engine.lua
 Features\itemstatus.lua
-Features\toastalerts.lua
 Features\toast-engine.lua
-Features\toast-loot.lua
-Features\toast-notes.lua
-Features\toast-instance.lua
 Features\ContextMenus.lua
 
 # Integrations
@@ -143,7 +139,6 @@ UI\Minimap.lua
 UI\t-home.lua
 UI\t-settings.lua
 UI\t-overlays.lua
-UI\t-toastalerts.lua
 UI\t-tooltips.lua
 UI\t-portals.lua
 UI\t-profiles.lua

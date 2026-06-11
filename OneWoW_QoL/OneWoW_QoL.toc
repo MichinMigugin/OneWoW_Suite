@@ -40,6 +40,13 @@ UI\t-features.lua
 UI\t-toggles.lua
 UI\t-settings.lua
 
+# Toast feature content (engine stays in core as OneWoW.Toasts; these are the
+# toast types + settings tab moved from core in MIGRATION step 9a)
+Features\toastalerts.lua
+Features\toast-loot.lua
+Features\toast-instance.lua
+UI\t-toastalerts.lua
+
 # ==============================================================
 # EXTERNAL MODULES
 # To add a module:

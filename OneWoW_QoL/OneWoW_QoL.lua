@@ -14,8 +14,11 @@ local function RegisterWithOneWoW()
     if not OneWoW.RegisterModule then return false end
 
     local tabs = {
-        { name = "features", displayName = function() return ns.L["TAB_FEATURES"] end, create = function(p) ns.UI.CreateFeaturesTab(p) end },
-        { name = "toggles",  displayName = function() return ns.L["TAB_TOGGLES"]  end, create = function(p) ns.UI.CreateTogglesTab(p) end },
+        { name = "features",    displayName = function() return ns.L["TAB_FEATURES"] end, create = function(p) ns.UI.CreateFeaturesTab(p) end },
+        { name = "toggles",     displayName = function() return ns.L["TAB_TOGGLES"]  end, create = function(p) ns.UI.CreateTogglesTab(p) end },
+        -- Feature settings tab moved from core (MIGRATION step 9a); locale key
+        -- stays in core OneWoW.L per the step-9 shared rules.
+        { name = "toastalerts", displayName = function() return OneWoW.L["TOAST_ALERTS_SUBTAB"] end, create = function(p) ns.UI.CreateToastAlertsTab(p) end },
     }
     if OneWoW.UI and OneWoW.UI.GetQoLFeatureTabs then
         for _, tab in ipairs(OneWoW.UI:GetQoLFeatureTabs()) do
@@ -122,6 +125,10 @@ function addon:OnAddonLoaded()
     if didInit then return end
     didInit = true
     OneWoW.Lifecycle:CreateHandlerRegistry(addon)
+    -- Toast types (moved from core, MIGRATION step 9a) export their arming
+    -- functions on ns; the handler registry doesn't exist at their file scope.
+    addon:RegisterLoginHandler("toast-loot", ns.ToastLoot.OnLogin)
+    addon:RegisterEnteringWorldHandler("toast-instance", ns.ToastInstance.OnEnteringWorld)
     OnInitialize()
 end
 

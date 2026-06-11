@@ -1,19 +1,17 @@
-local _, OneWoW = ...
+local _, ns = ...
 
+local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 
-local UI = OneWoW.UI
-local L    = OneWoW.L
+-- Locale strings stay in core OneWoW.L during the QoL transition
+-- (MIGRATION step 9 shared rules).
+local L = OneWoW.L
 
 local SOUND_OPTIONS = {
     { labelKey = "TOAST_SOUND_NONE",      id = 0 },
     { labelKey = "TOAST_SOUND_RAIDALERT", id = SOUNDKIT.READY_CHECK },
     { labelKey = "TOAST_SOUND_CHIME",     id = SOUNDKIT.ACHIEVEMENT_MENU_OPEN },
 }
-
-local function GetToastsDB()
-    return OneWoW.db and OneWoW.db.global and OneWoW.db.global.toasts
-end
 
 local function GetSoundLabel(soundId)
     for _, opt in ipairs(SOUND_OPTIONS) do
@@ -24,15 +22,12 @@ local function GetSoundLabel(soundId)
     return L["TOAST_SOUND_NONE"] or "No Sound"
 end
 
-local function CreateSoundDropdown(dsc, dbSection, yOffset)
-    local db = GetToastsDB()
-    if not db then return yOffset end
-    local section = db[dbSection]
-    if not section then return yOffset end
+local function CreateSoundDropdown(dsc, featureId, yOffset)
+    local reg = OneWoW.SettingsFeatureRegistry
 
     local dropBtn = OneWoW_GUI:CreateDropdown(dsc, {
         width = 200,
-        text = GetSoundLabel(section.sound),
+        text = GetSoundLabel(reg:GetSetting("toastalerts", featureId, "sound")),
     })
     dropBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
 
@@ -46,16 +41,16 @@ local function CreateSoundDropdown(dsc, dbSection, yOffset)
             return items
         end,
         onSelect = function(value, text)
-            section.sound = value
+            reg:SetSetting("toastalerts", featureId, "sound", value)
             dropBtn._text:SetText(text)
         end,
-        getActiveValue = function() return section.sound end,
+        getActiveValue = function() return reg:GetSetting("toastalerts", featureId, "sound") end,
     })
 
     local playBtn = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["TOAST_SOUND_PLAY_BTN"] or "Play", height = 26 })
     playBtn:SetPoint("LEFT", dropBtn, "RIGHT", 6, 0)
     playBtn:SetScript("OnClick", function()
-        local soundId = section.sound or 0
+        local soundId = reg:GetSetting("toastalerts", featureId, "sound") or 0
         if soundId > 0 then
             PlaySound(soundId, "Master")
         end
@@ -80,7 +75,6 @@ local function AddGeneralExtras(dsc, yOffset)
     showAnchorBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     showAnchorBtn:SetScript("OnClick", function(self)
         local Toasts = OneWoW.Toasts
-        if not Toasts then return end
         if Toasts.anchorVisible then
             Toasts.HideAnchor()
             self.text:SetText(L["TOAST_ANCHOR_SHOW_BTN"] or "Show Anchor")
@@ -97,8 +91,8 @@ end
 local function AddDetectionExtras(dsc, yOffset)
     yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_LOOT_TYPES_HEADER"] or "Collection Types", yOffset = yOffset })
 
-    local db   = GetToastsDB()
-    local loot = db and db.loot or {}
+    local reg = OneWoW.SettingsFeatureRegistry
+    local cfg = reg:GetFeatureSettings("toastalerts", "detectiontypes")
 
     local types = {
         { key = "mounts",  label = L["TOAST_LOOT_MOUNTS"]  or "Mounts" },
@@ -112,7 +106,7 @@ local function AddDetectionExtras(dsc, yOffset)
         local capturedKey = entry.key
         local cb = OneWoW_GUI:CreateCheckbox(dsc, { label = entry.label })
         cb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        cb:SetChecked(loot[capturedKey] ~= false)
+        cb:SetChecked(cfg[capturedKey] ~= false)
 
         local recipesOnlyCb = nil
         if capturedKey == "recipes" then
@@ -121,23 +115,17 @@ local function AddDetectionExtras(dsc, yOffset)
                 label = L["TOAST_LOOT_RECIPES_ONLY_MY_PROFESSIONS"] or "Only my professions",
             })
             recipesOnlyCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 32, yOffset)
-            recipesOnlyCb:SetChecked(loot.recipesOnlyMyProfessions == true)
-            recipesOnlyCb:SetEnabled(loot.recipes ~= false)
+            recipesOnlyCb:SetChecked(cfg.recipesOnlyMyProfessions == true)
+            recipesOnlyCb:SetEnabled(cfg.recipes ~= false)
             recipesOnlyCb:SetScript("OnClick", function(self)
-                local tdb = GetToastsDB()
-                if tdb and tdb.loot then
-                    tdb.loot.recipesOnlyMyProfessions = self:GetChecked()
-                end
+                reg:SetSetting("toastalerts", "detectiontypes", "recipesOnlyMyProfessions", self:GetChecked())
             end)
         end
 
         cb:SetScript("OnClick", function(self)
-            local tdb = GetToastsDB()
-            if tdb and tdb.loot then
-                tdb.loot[capturedKey] = self:GetChecked()
-                if recipesOnlyCb then
-                    recipesOnlyCb:SetEnabled(self:GetChecked())
-                end
+            reg:SetSetting("toastalerts", "detectiontypes", capturedKey, self:GetChecked())
+            if recipesOnlyCb then
+                recipesOnlyCb:SetEnabled(self:GetChecked())
             end
         end)
 
@@ -154,19 +142,16 @@ local function AddDetectionExtras(dsc, yOffset)
         label = L["TOAST_LOOT_SUPPRESS_BLIZZARD"] or "Hide Blizzard's default mount, pet, and toy alerts",
     })
     suppressCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    suppressCb:SetChecked(loot.suppressBlizzardAlerts == true)
+    suppressCb:SetChecked(cfg.suppressBlizzardAlerts == true)
     suppressCb:SetScript("OnClick", function(self)
-        local tdb = GetToastsDB()
-        if tdb and tdb.loot then
-            tdb.loot.suppressBlizzardAlerts = self:GetChecked()
-            OneWoW.Toasts.ApplyBlizzardSuppression()
-        end
+        reg:SetSetting("toastalerts", "detectiontypes", "suppressBlizzardAlerts", self:GetChecked())
+        OneWoW.Toasts.ApplyBlizzardSuppression()
     end)
     yOffset = yOffset - 32
 
     yOffset = yOffset - 8
     yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_SOUND_HEADER"] or "Alert Sound", yOffset = yOffset })
-    yOffset = CreateSoundDropdown(dsc, "loot", yOffset)
+    yOffset = CreateSoundDropdown(dsc, "detectiontypes", yOffset)
 
     return yOffset
 end
@@ -191,8 +176,8 @@ end
 local function AddItemAlertsExtras(dsc, yOffset)
     yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_NOTES_TYPES_HEADER"] or "Alert Types", yOffset = yOffset })
 
-    local db    = GetToastsDB()
-    local notes = db and db.notes or {}
+    local reg = OneWoW.SettingsFeatureRegistry
+    local cfg = reg:GetFeatureSettings("toastalerts", "notealerts")
 
     local types = {
         { key = "npcs",    label = L["TOAST_NOTES_NPCS"]    or "NPC Alerts" },
@@ -205,19 +190,16 @@ local function AddItemAlertsExtras(dsc, yOffset)
         local capturedKey = entry.key
         local cb = OneWoW_GUI:CreateCheckbox(dsc, { label = entry.label })
         cb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        cb:SetChecked(notes[capturedKey] ~= false)
+        cb:SetChecked(cfg[capturedKey] ~= false)
         cb:SetScript("OnClick", function(self)
-            local tdb = GetToastsDB()
-            if tdb and tdb.notes then
-                tdb.notes[capturedKey] = self:GetChecked()
-            end
+            reg:SetSetting("toastalerts", "notealerts", capturedKey, self:GetChecked())
         end)
         yOffset = yOffset - 32
     end
 
     yOffset = yOffset - 8
     yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_SOUND_HEADER"] or "Alert Sound", yOffset = yOffset })
-    yOffset = CreateSoundDropdown(dsc, "notes", yOffset)
+    yOffset = CreateSoundDropdown(dsc, "notealerts", yOffset)
 
     return yOffset
 end
@@ -259,18 +241,6 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
         isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id) end,
         onToggle = function(newState)
             OneWoW.SettingsFeatureRegistry:SetEnabled(tabName, feature.id, newState)
-            local tdb = GetToastsDB()
-            if tdb then
-                if feature.id == "general" then
-                    tdb.enabled = newState
-                elseif feature.id == "detectiontypes" and tdb.loot then
-                    tdb.loot.enabled = newState
-                elseif feature.id == "notealerts" and tdb.notes then
-                    tdb.notes.enabled = newState
-                elseif feature.id == "instances" and tdb.instance then
-                    tdb.instance.enabled = newState
-                end
-            end
             if selectedRow and selectedRow.dot then
                 selectedRow.dot:SetStatus(newState)
             end
@@ -364,7 +334,7 @@ local function BuildFeatureList(split, tabName)
     split.leftStatusText:SetText(string.format("Features: %d/%d", enabledCount, #features))
 end
 
-function UI:CreateToastAlertsTab(parent)
+function ns.UI.CreateToastAlertsTab(parent)
     local split = OneWoW_GUI:CreateSplitPanel(parent, {
         showSearch = true,
         searchPlaceholder = L["SEARCH_PLACEHOLDER"] or "Search...",

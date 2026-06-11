@@ -56,7 +56,6 @@ local coreSettingsTabs = {
 
 local qolFeatureTabs = {
     { name = "overlays",    displayName = function() return (OneWoW.L and OneWoW.L["OVERLAYS_SUBTAB"]    or "Overlays")     end, create = function(parent) UI:CreateOverlaysTab(parent)    end },
-    { name = "toastalerts", displayName = function() return (OneWoW.L and OneWoW.L["TOAST_ALERTS_SUBTAB"] or "Toast Alerts") end, create = function(parent) UI:CreateToastAlertsTab(parent) end },
     { name = "tooltips",    displayName = function() return (OneWoW.L and OneWoW.L["TOOLTIPS_SUBTAB"]    or "Tooltips")     end, create = function(parent) UI:CreateTooltipsTab(parent)    end },
     { name = "portals",     displayName = function() return (OneWoW.L and OneWoW.L["PORTALS_SUBTAB"]     or "Portals")      end, create = function(parent) UI:CreatePortalsTab(parent)     end },
 }

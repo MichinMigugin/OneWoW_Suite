@@ -607,8 +607,15 @@ All reads and writes of `OneWoW.db.global.settings.*` (tooltips, overlays,
 toastalerts) route through `OneWoW.SettingsFeatureRegistry`
 (`Core/SettingsFeatureRegistry.lua`). Only that file and `Core/Database.lua`
 (defaults, migrations) touch the tree directly — enforced by the
-`no-settings-bypass` pre-commit hook (§3.10). `portalHub` / `toasts` are
-separate DB roots outside the funnel (follow-up before MIGRATION step 9).
+`no-settings-bypass` pre-commit hook (§3.10). `portalHub` is a separate DB
+root outside the funnel (follow-up before MIGRATION step 9c); the former
+`toasts` root was folded into `settings.toastalerts` in MIGRATION step 9a
+(migration v5), including the storage-only `anchor` id (no catalog row).
+
+The toast engine (`Features/toast-engine.lua`, `OneWoW.Toasts`) stays resident
+in core; its surface includes the notes `Fire*Alert` wrappers consumed
+cross-unit by `OneWoW_Notes`. Toast *types* (loot, instance), the settings
+catalog, and the toastalerts tab live in `OneWoW_QoL`.
 
 Three responsibilities:
 

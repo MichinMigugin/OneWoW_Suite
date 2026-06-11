@@ -116,7 +116,7 @@ local ADDON_SETTINGS_MAP = {
         dbName = "OneWoW_DB",
         displayName = "OneWoW",
         globalWrap = true,
-        keys = {"language", "theme", "minimap", "mainFrameSize", "mainFramePosition", "portalHub", "settings", "toasts"},
+        keys = {"language", "theme", "minimap", "mainFrameSize", "mainFramePosition", "portalHub", "settings"},
     },
     {
         dbName = "OneWoW_AltTracker_DB",

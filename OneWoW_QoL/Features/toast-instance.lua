@@ -1,4 +1,6 @@
-local _, OneWoW = ...
+local _, ns = ...
+
+local OneWoW = OneWoW
 
 local Toasts = OneWoW.Toasts
 
@@ -19,13 +21,8 @@ local TOTAL_ONLY = {
 
 local EJ_INSTANCES = nil
 
-local function GetDB()
-    return OneWoW.db and OneWoW.db.global and OneWoW.db.global.toasts
-end
-
 local function InstanceEnabled()
-    local db = GetDB()
-    return db and db.instance and db.instance.enabled ~= false
+    return OneWoW.SettingsFeatureRegistry:IsEnabled("toastalerts", "instances")
 end
 
 local function GetCatalogData(mapID)
@@ -96,7 +93,11 @@ local function BuildGrid(catalogData)
     return grid
 end
 
-OneWoW:RegisterCoreEnteringWorldHandler("toast-instance", function()
+-- Entering-world arming, registered by OneWoW_QoL.lua via
+-- RegisterEnteringWorldHandler (the handler registry only exists once
+-- OnAddonLoaded has run, so file-scope registration is not possible here).
+ns.ToastInstance = {}
+function ns.ToastInstance.OnEnteringWorld()
     if not InstanceEnabled() then return end
 
     local inInstance, instanceType = IsInInstance()
@@ -148,4 +149,4 @@ OneWoW:RegisterCoreEnteringWorldHandler("toast-instance", function()
             instanceMapID = instanceID,
         })
     end)
-end)
+end
