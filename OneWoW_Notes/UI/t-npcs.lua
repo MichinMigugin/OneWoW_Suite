@@ -747,12 +747,8 @@ function ns.UI.CreateNPCsTab(parent)
                             row:SetScript("OnEnter", function() fs:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT")) end)
                             row:SetScript("OnLeave", function() fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end)
                             row:SetScript("OnClick", function()
-                                if OneWoW and OneWoW.GUI then
-                                    OneWoW.GUI:Show("catalog")
-                                    if OneWoW.GUI.SelectSubTab then
-                                        OneWoW.GUI:SelectSubTab("catalog", "quests")
-                                    end
-                                end
+                                OneWoW.UI:Show("catalog")
+                                OneWoW.UI:SelectSubTab("catalog", "quests")
 
                                 C_Timer.After(0.05, function()
                                     if OneWoW_Catalog and OneWoW_Catalog.UI and OneWoW_Catalog.UI.OpenQuest then

@@ -325,7 +325,8 @@ local function GetStockFontPath()
 end
 
 local function TrySetFont(fontString, path, size, flags)
-    return fontString:SetFont(path, size, flags)
+    local ok, success = pcall(fontString.SetFont, fontString, path, size, flags)
+    return ok, success
 end
 
 local fontMetadata = setmetatable({}, { __mode = "k" })
@@ -363,13 +364,13 @@ function OneWoW_GUI:SafeSetFont(fontString, fontPath, size, flags)
 
     local target = fontPath or stockPath
     if target then
-        local success = TrySetFont(fontString, target, adjustedSize, f)
-        if success ~= false then
+        local ok, success = TrySetFont(fontString, target, adjustedSize, f)
+        if ok and success ~= false then
             return
         end
-        if success == false then
-            local success2 = TrySetFont(fontString, target, adjustedSize, f)
-            if success2 ~= false then
+        if ok and success == false then
+            local ok2, success2 = TrySetFont(fontString, target, adjustedSize, f)
+            if ok2 and success2 ~= false then
                 return
             end
         end
@@ -378,8 +379,8 @@ function OneWoW_GUI:SafeSetFont(fontString, fontPath, size, flags)
     -- Target font is unusable (missing file, bad args, etc.). Apply the stock
     -- font at the caller's size so the fontstring is never left without a font.
     if stockPath and stockPath ~= target then
-        TrySetFont(fontString, stockPath, adjustedSize, f)
-        return
+        local ok = TrySetFont(fontString, stockPath, adjustedSize, f)
+        if ok then return end
     end
     fontString:SetFontObject(GameFontNormal)
 end
@@ -393,7 +394,7 @@ local function PrewarmFonts()
     f:Hide()
     for _, entry in ipairs(FONTS) do
         if entry.file then
-            f:SetFont(entry.file, 12, "")
+            pcall(f.SetFont, f, entry.file, 12, "")
         end
     end
 end
@@ -424,7 +425,9 @@ function OneWoW_GUI:ApplyFontCapped(fs, size, maxOffset)
     local offset = self:GetFontSizeOffset() or 0
     local cappedSize = math.max(6, size + math.min(offset, maxOffset))
     if fontPath then
-        fs:SetFont(fontPath, cappedSize, "")
+        -- See SafeSetFont: don't distrust SetFont's return value; only the pcall error.
+        local ok = pcall(fs.SetFont, fs, fontPath, cappedSize, "")
+        if not ok then fs:SetFontObject(GameFontNormal) end
     else
         fs:SetFontObject(GameFontNormal)
     end

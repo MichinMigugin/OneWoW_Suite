@@ -825,13 +825,8 @@ function UI:Initialize()
         return
     end
 
-    local loader = CreateFrame("Frame")
-    loader:RegisterEvent("ADDON_LOADED")
-    loader:SetScript("OnEvent", function(_, _, loadedAddon)
-        if loadedAddon == "Blizzard_InspectUI" then
-            InstallInspectGuildFrameGuard()
-            HookInspectFrame()
-            loader:UnregisterAllEvents()
-        end
+    OneWoW:RegisterAddonLoadedWatcher("Blizzard_InspectUI", function()
+        InstallInspectGuildFrameGuard()
+        HookInspectFrame()
     end)
 end

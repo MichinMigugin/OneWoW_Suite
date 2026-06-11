@@ -834,11 +834,11 @@ local function ResolveLoadedRewardItemName(itemID)
         itemName = GetItemInfo(itemID)
     end
 
-    if not itemName and C_Item and C_Item.GetItemInfo then
+    if not itemName then
         itemName = NormalizeItemInfoName(C_Item.GetItemInfo(itemID))
     end
 
-    if not itemName and C_Item and C_Item.GetItemNameByID then
+    if not itemName then
         itemName = C_Item.GetItemNameByID(itemID)
     end
 
@@ -998,11 +998,7 @@ local function ProcessRewardItemRequestQueue()
             queuedRewardItemIDs[itemID] = nil
             pendingRewardItemIDs[itemID] = true
 
-            if C_Item and C_Item.RequestLoadItemDataByID then
-                C_Item.RequestLoadItemDataByID(itemID)
-            elseif GetItemInfo then
-                GetItemInfo(itemID)
-            end
+            C_Item.RequestLoadItemDataByID(itemID)
 
             processed = processed + 1
             RequestRewardItemObjectLoad(itemID, selectedQuest)
@@ -1418,9 +1414,7 @@ local function ResolveQuestName(questID)
 
     local questName
 
-    if C_QuestLog and C_QuestLog.GetTitleForQuestID then
-        questName = C_QuestLog.GetTitleForQuestID(questID)
-    end
+    questName = C_QuestLog.GetTitleForQuestID(questID)
 
     if (not questName or questName == "") and QuestUtils_GetQuestName then
         questName = QuestUtils_GetQuestName(questID)
@@ -1552,11 +1546,9 @@ local function GetClassDisplayName(value)
     local classID = tonumber(value)
 
     if classID then
-        if C_CreatureInfo and C_CreatureInfo.GetClassInfo then
-            local info = C_CreatureInfo.GetClassInfo(classID)
-            if info and info.className then
-                return info.className
-            end
+        local info = C_CreatureInfo.GetClassInfo(classID)
+        if info and info.className then
+            return info.className
         end
 
         if GetClassInfo then
@@ -1576,11 +1568,9 @@ local function GetRaceDisplayName(value)
     local raceID = tonumber(value)
 
     if raceID then
-        if C_CreatureInfo and C_CreatureInfo.GetRaceInfo then
-            local info = C_CreatureInfo.GetRaceInfo(raceID)
-            if info and info.raceName then
-                return info.raceName
-            end
+        local info = C_CreatureInfo.GetRaceInfo(raceID)
+        if info and info.raceName then
+            return info.raceName
         end
 
         return RACE_NAMES[raceID] or ("Race " .. tostring(raceID))
@@ -1698,7 +1688,7 @@ local function GetQuestChainIDs(questData)
 end
 
 local function GetQuestChainColor(questID, tracker)
-    if C_QuestLog and C_QuestLog.IsOnQuest and C_QuestLog.IsOnQuest(questID) then
+    if C_QuestLog.IsOnQuest(questID) then
         return 0.3, 1, 0.3
     end
 
@@ -1745,22 +1735,28 @@ local function HandleItemPreviewClick(itemID, itemLink)
     return false
 end
 
-local function AddRewardItemToNotes(itemID)
+local function AddRewardItemToNotes(itemID, itemName, itemLink, itemTexture, itemQuality)
     itemID = tonumber(itemID)
     if not itemID then
         return false
     end
 
-    local notes = OneWoW_Notes
-    if not notes or not notes.Items then
-        return false
+    if itemName == ("Item #" .. tostring(itemID)) then
+        itemName = nil
     end
 
-    if not notes.Items:GetItem(itemID) then
-        notes.Items:AddItem(itemID, { category = "Quest" })
+    if ns.Navigation and ns.Navigation.OpenItemNote then
+        return ns.Navigation:OpenItemNote(itemID, {
+            name = itemName,
+            link = itemLink,
+            icon = itemTexture,
+            quality = itemQuality,
+            category = "Quest",
+            storage = "account",
+        })
     end
 
-    return true
+    return false
 end
 
 local function OpenRewardItemInItemSearch(itemID, itemName)
@@ -1769,15 +1765,8 @@ local function OpenRewardItemInItemSearch(itemID, itemName)
         return false
     end
 
-    if OneWoW and OneWoW.GUI and OneWoW.GUI.Show then
-        OneWoW.GUI:Show("catalog")
-
-        if OneWoW.GUI.SelectSubTab then
-            OneWoW.GUI:SelectSubTab("catalog", "itemsearch")
-        end
-    elseif ns.UI and ns.UI.Show then
-        ns.UI:Show("itemsearch")
-    end
+    OneWoW.UI:Show("catalog")
+    OneWoW.UI:SelectSubTab("catalog", "itemsearch")
 
     C_Timer.After(0.05, function()
         if ns.UI and ns.UI.OpenItemSearch then
@@ -2718,11 +2707,7 @@ function ShowQuestDetail(panels, questData)
                         or ("Item #" .. tostring(itemID))
 
                     if not itemTexture then
-                        if C_Item and C_Item.GetItemInfoInstant then
-                            itemTexture = select(5, C_Item.GetItemInfoInstant(itemID))
-                        elseif GetItemInfoInstant then
-                            itemTexture = select(5, GetItemInfoInstant(itemID))
-                        end
+                        itemTexture = select(5, C_Item.GetItemInfoInstant(itemID))
                     end
 
                     itemTexture =
@@ -2865,7 +2850,13 @@ function ShowQuestDetail(panels, questData)
                         end
 
                         if IsShiftKeyDown and IsShiftKeyDown() then
-                            AddRewardItemToNotes(itemID)
+                            AddRewardItemToNotes(
+                                itemID,
+                                itemName,
+                                itemLink,
+                                itemTexture,
+                                itemQuality
+                            )
                             return
                         end
 
@@ -3039,7 +3030,7 @@ function ShowQuestDetail(panels, questData)
             local allCompleted = true
 
             for _, groupQuestID in ipairs(segment.ids) do
-                if C_QuestLog and C_QuestLog.IsOnQuest and C_QuestLog.IsOnQuest(groupQuestID) then
+                if C_QuestLog.IsOnQuest(groupQuestID) then
                     hasActive = true
                 end
 
@@ -3314,7 +3305,7 @@ local function UpdateQuestListEntry(btn, quest, panels)
             groupStatus = { isCompleted = true, hasActive = false }
 
             for _, childQuest in ipairs(entry.quests or {}) do
-                if C_QuestLog and C_QuestLog.IsOnQuest and C_QuestLog.IsOnQuest(childQuest.id) then
+                if C_QuestLog.IsOnQuest(childQuest.id) then
                     groupStatus.hasActive = true
                 end
 
@@ -3850,10 +3841,8 @@ local function RefreshQuestListViewport(panels, requestedScroll, listVersion)
 
     repaint()
 
-    if C_Timer and C_Timer.After then
-        C_Timer.After(0, repaint)
-        C_Timer.After(0.05, repaint)
-    end
+    C_Timer.After(0, repaint)
+    C_Timer.After(0.05, repaint)
 end
 
 local function SelectQuestFromList(panels, quest, questIndex)
@@ -4130,15 +4119,8 @@ function OpenQuestByID(questID, panels)
     questID = tonumber(questID)
     if not questID then return false end
 
-    if OneWoW and OneWoW.GUI and OneWoW.GUI.Show then
-        OneWoW.GUI:Show("catalog")
-
-        if OneWoW.GUI.SelectSubTab then
-            OneWoW.GUI:SelectSubTab("catalog", "quests")
-        end
-    elseif ns.UI and ns.UI.Show then
-        ns.UI:Show("quests")
-    end
+    OneWoW.UI:Show("catalog")
+    OneWoW.UI:SelectSubTab("catalog", "quests")
 
     panels = panels or ns.UI.questsPanels
 

@@ -105,12 +105,23 @@ function Navigation:OpenItemNote(itemID, itemInfo)
     itemID = tonumber(itemID)
     if not itemID then return false end
 
+    OneWoW:BringUp("OneWoW_Notes")
+
     local notes = OneWoW_Notes
     if not notes then return false end
 
     if not notes.Items:GetItem(itemID) then
         itemInfo = itemInfo or {}
-        notes.Items:AddItem(itemID, { category = itemInfo.category or "Quest" })
+        notes.Items:AddItem(itemID, {
+            name     = itemInfo.name,
+            link     = itemInfo.link,
+            icon     = itemInfo.icon,
+            quality  = itemInfo.quality,
+            rarity   = itemInfo.rarity or itemInfo.quality,
+            category = itemInfo.category or "Quest",
+            storage  = itemInfo.storage or "account",
+            content  = itemInfo.content,
+        })
     end
 
     notes.pendingItemSelect = itemID

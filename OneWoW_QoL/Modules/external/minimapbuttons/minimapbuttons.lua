@@ -843,9 +843,7 @@ local function FindMinimapEntryAction(compName)
             elseif entry.tabKey then
                 local tabKey = entry.tabKey
                 return function()
-                    if OneWoW and OneWoW.UI then
-                        OneWoW.UI:Show(tabKey)
-                    end
+                    OneWoW.UI:Show(tabKey)
                 end
             end
             return nil
@@ -865,9 +863,7 @@ local function GetCompanionAction(compName)
             -- mis-resolve "/1w" on some clients, leaving the Core tile dead).
             if comp.name == "Core" or comp.name == "GUI" then
                 return function()
-                    if OneWoW and OneWoW.UI then
-                        OneWoW.UI:Toggle()
-                    end
+                    OneWoW.UI:Toggle()
                 end
             end
             local entryAction = FindMinimapEntryAction(comp.name)
@@ -945,7 +941,7 @@ local function BuildEnhancedRow()
 
             if action then
                 btn:SetScript("OnClick", function() action() end)
-            elseif OneWoW and OneWoW.UI then
+            else
                 btn:SetScript("OnClick", function()
                     OneWoW.UI:Toggle()
                 end)
