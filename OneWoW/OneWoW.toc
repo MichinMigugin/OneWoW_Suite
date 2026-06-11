@@ -96,21 +96,6 @@ Integrations\ElvUI.lua
 # Tooltips (engine only — providers moved to OneWoW_QoL, MIGRATION step 9b)
 Tooltips\tooltip-engine.lua
 
-# Portal Hub - Data
-Portals\Data\Hearthstones.lua
-Portals\Data\ShortNames.lua
-Portals\Data\Portals.lua
-
-# Portal Hub - Modules
-Portals\portalhub-detection.lua
-Portals\portalhub-items.lua
-Portals\portalhub-equip.lua
-Portals\portalhub-flyouts.lua
-Portals\portalhub-flyouts-nested.lua
-Portals\portalhub.lua
-Portals\portalhub-esc.lua
-Portals\portalhub-esc-panels.lua
-
 # Hub UI Framework
 UI\Framework.lua
 
@@ -125,7 +110,6 @@ UI\Minimap.lua
 UI\t-home.lua
 UI\t-settings.lua
 UI\t-overlays.lua
-UI\t-portals.lua
 UI\t-profiles.lua
 UI\t-charprofiles.lua
 UI\t-managefeatures.lua

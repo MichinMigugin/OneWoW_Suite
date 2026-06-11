@@ -1,8 +1,11 @@
-local _, OneWoW = ...
+local _, ns = ...
+
+local OneWoW = OneWoW
+
 local L = OneWoW.L
 
-OneWoW.PortalHubModule = OneWoW.PortalHubModule or {}
-local PortalHub = OneWoW.PortalHubModule
+ns.PortalHubModule = ns.PortalHubModule or {}
+local PortalHub = ns.PortalHubModule
 
 function PortalHub:Initialize()
 	self:InitializeDatabase()
@@ -13,7 +16,7 @@ function PortalHub:InitializeDatabase()
 end
 
 local function CategorizePortal(portalData)
-	local hearthstones = OneWoW.PortalData_Hearthstones and OneWoW.PortalData_Hearthstones.List or {}
+	local hearthstones = ns.PortalData_Hearthstones and ns.PortalData_Hearthstones.List or {}
 
 	if hearthstones[portalData.id] then
 		return "hearth"
@@ -142,7 +145,7 @@ function PortalHub:GetFavorites()
 			type = fav.type,
 			id = fav.id,
 			name = fav.name,
-			available = OneWoW.PortalHubDetection:IsPortalUsable(fav.type, fav.id)
+			available = ns.PortalHubDetection:IsPortalUsable(fav.type, fav.id)
 		})
 	end
 
@@ -215,21 +218,21 @@ function PortalHub:GetPortalsForCategory(categoryID, showAll)
 	if categoryID == "favorites" then
 		return self:GetFavorites()
 	elseif categoryID == "hearth" then
-		local hearthstones = OneWoW.PortalData_Hearthstones:GetAvailable(showAll)
+		local hearthstones = ns.PortalData_Hearthstones:GetAvailable(showAll)
 		for _, h in ipairs(hearthstones) do
 			table.insert(portals, h)
 		end
 		table.insert(portals, {type = "header", name = L["Special"]})
-		local specials = OneWoW.PortalHubDetection:GetSpecialPortals(showAll)
+		local specials = ns.PortalHubDetection:GetSpecialPortals(showAll)
 		for _, s in ipairs(specials) do
 			table.insert(portals, s)
 		end
 		return portals
 	elseif categoryID == "professions" then
-		local wormholes = OneWoW.PortalHubDetection:GetWormholes(showAll)
-		local rippers = OneWoW.PortalHubDetection:GetDimensionalRippers(showAll)
-		local transporters = OneWoW.PortalHubDetection:GetUltrasafeTransporters(showAll)
-		local engOther = OneWoW.PortalHubDetection:GetEngineeringOtherItems(showAll)
+		local wormholes = ns.PortalHubDetection:GetWormholes(showAll)
+		local rippers = ns.PortalHubDetection:GetDimensionalRippers(showAll)
+		local transporters = ns.PortalHubDetection:GetUltrasafeTransporters(showAll)
+		local engOther = ns.PortalHubDetection:GetEngineeringOtherItems(showAll)
 
 		table.insert(portals, {type = "header", name = L["Wormhole Generators"]})
 		for _, w in ipairs(wormholes) do
@@ -252,13 +255,13 @@ function PortalHub:GetPortalsForCategory(categoryID, showAll)
 		return portals
 	elseif categoryID == "abilities" then
 		local allAbilities = {}
-		local mageT = OneWoW.PortalHubDetection:GetMageTeleports(showAll)
-		local mageP = OneWoW.PortalHubDetection:GetMagePortals(showAll)
-		local druid = OneWoW.PortalHubDetection:GetDruidPortals(showAll)
-		local dk = OneWoW.PortalHubDetection:GetDeathKnightPortals(showAll)
-		local monk = OneWoW.PortalHubDetection:GetMonkPortals(showAll)
-		local shaman = OneWoW.PortalHubDetection:GetShamanPortals(showAll)
-		local racial = OneWoW.PortalHubDetection:GetRacePortals(showAll)
+		local mageT = ns.PortalHubDetection:GetMageTeleports(showAll)
+		local mageP = ns.PortalHubDetection:GetMagePortals(showAll)
+		local druid = ns.PortalHubDetection:GetDruidPortals(showAll)
+		local dk = ns.PortalHubDetection:GetDeathKnightPortals(showAll)
+		local monk = ns.PortalHubDetection:GetMonkPortals(showAll)
+		local shaman = ns.PortalHubDetection:GetShamanPortals(showAll)
+		local racial = ns.PortalHubDetection:GetRacePortals(showAll)
 		for _, p in ipairs(mageT) do table.insert(allAbilities, p) end
 		for _, p in ipairs(mageP) do table.insert(allAbilities, p) end
 		for _, p in ipairs(druid) do table.insert(allAbilities, p) end
@@ -271,11 +274,11 @@ function PortalHub:GetPortalsForCategory(categoryID, showAll)
 		local allPortals = {}
 		local expansions = {"tww", "df", "sl", "bfa", "legion", "wod", "mop", "cata", "wotlk"}
 		for _, exp in ipairs(expansions) do
-			local dungeons = OneWoW.PortalHubDetection:GetDungeonPortals(exp, showAll)
+			local dungeons = ns.PortalHubDetection:GetDungeonPortals(exp, showAll)
 			for _, d in ipairs(dungeons) do
 				table.insert(allPortals, d)
 			end
-			local raids = OneWoW.PortalHubDetection:GetRaidPortals(exp, showAll)
+			local raids = ns.PortalHubDetection:GetRaidPortals(exp, showAll)
 			for _, r in ipairs(raids) do
 				table.insert(allPortals, r)
 			end
@@ -285,8 +288,8 @@ function PortalHub:GetPortalsForCategory(categoryID, showAll)
 		   categoryID == "bfa" or categoryID == "legion" or categoryID == "wod" or
 		   categoryID == "mop" or categoryID == "cata" or categoryID == "wotlk" then
 		local allPortals = {}
-		local dungeons = OneWoW.PortalHubDetection:GetDungeonPortals(categoryID, showAll)
-		local raids = OneWoW.PortalHubDetection:GetRaidPortals(categoryID, showAll)
+		local dungeons = ns.PortalHubDetection:GetDungeonPortals(categoryID, showAll)
+		local raids = ns.PortalHubDetection:GetRaidPortals(categoryID, showAll)
 
 		for _, d in ipairs(dungeons) do
 			table.insert(allPortals, d)
@@ -296,21 +299,17 @@ function PortalHub:GetPortalsForCategory(categoryID, showAll)
 		end
 		return allPortals
 	elseif categoryID == "items" then
-		if OneWoW.PortalHubItems then
-			return OneWoW.PortalHubItems:GetAllItems(showAll)
+		if ns.PortalHubItems then
+			return ns.PortalHubItems:GetAllItems(showAll)
 		end
 		return portals
 	elseif categoryID == "rings" or categoryID == "cloaks" or categoryID == "tabards" or
 		   categoryID == "consumables" or categoryID == "special" then
-		if OneWoW.PortalHubItems then
-			return OneWoW.PortalHubItems:GetItemsBySubcategory(categoryID, showAll)
+		if ns.PortalHubItems then
+			return ns.PortalHubItems:GetItemsBySubcategory(categoryID, showAll)
 		end
 		return portals
 	end
 
 	return portals
 end
-
-OneWoW:RegisterCoreLoginHandler("PortalHubModule", function()
-	PortalHub:Initialize()
-end, "early")

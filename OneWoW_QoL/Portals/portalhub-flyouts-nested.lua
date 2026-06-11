@@ -1,9 +1,12 @@
-local _, OneWoW = ...
-local L = OneWoW.L
+local _, ns = ...
+
+local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 
-OneWoW.NestedFlyouts = OneWoW.NestedFlyouts or {}
-local Nested = OneWoW.NestedFlyouts
+local L = OneWoW.L
+
+ns.NestedFlyouts = ns.NestedFlyouts or {}
+local Nested = ns.NestedFlyouts
 
 local activeNested = {}
 
@@ -69,13 +72,13 @@ local function CreateInstanceButton(_, parent, iconSize, yOffset, expansions, sh
 
 			local portalButtons = {}
 			for j, portal in ipairs(expData.portals) do
-				if OneWoW.PortalHubFlyouts then
-					local btn = OneWoW.PortalHubFlyouts:CreateFlyoutButton(portalFlyout, portal, 0, -(j-1) * iconSize, iconSize)
+				if ns.PortalHubFlyouts then
+					local btn = ns.PortalHubFlyouts:CreateFlyoutButton(portalFlyout, portal, 0, -(j-1) * iconSize, iconSize)
 					if btn then
 						btn:HookScript("PostClick", function(_, mouseButton)
 							if mouseButton == "LeftButton" then
-								if OneWoW.NestedFlyouts then OneWoW.NestedFlyouts:RecycleAll() end
-								if OneWoW.PortalHubFlyouts then OneWoW.PortalHubFlyouts:RecycleAll() end
+								if ns.NestedFlyouts then ns.NestedFlyouts:RecycleAll() end
+								if ns.PortalHubFlyouts then ns.PortalHubFlyouts:RecycleAll() end
 								if GameMenuFrame then
 									C_Timer.After(0.1, function() HideUIPanel(GameMenuFrame) end)
 								end

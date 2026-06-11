@@ -1,9 +1,12 @@
-local _, OneWoW = ...
-local L = OneWoW.L
+local _, ns = ...
+
+local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 
-OneWoW.PortalHubFlyouts = OneWoW.PortalHubFlyouts or {}
-local Flyouts = OneWoW.PortalHubFlyouts
+local L = OneWoW.L
+
+ns.PortalHubFlyouts = ns.PortalHubFlyouts or {}
+local Flyouts = ns.PortalHubFlyouts
 
 local flyoutFramesPool = {}
 local flyoutButtonsPool = {}
@@ -114,18 +117,18 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 			button.icon:SetTexture(icon)
 		end
 
-		if OneWoW.PortalData and OneWoW.PortalData:GetShortName(portalData.id) then
-			button.text:SetText(OneWoW.PortalData:GetShortName(portalData.id))
+		if ns.PortalData and ns.PortalData:GetShortName(portalData.id) then
+			button.text:SetText(ns.PortalData:GetShortName(portalData.id))
 		end
 	end
 
 	button:SetScript("PostClick", function(_, mouseButton)
 		if mouseButton == "LeftButton" then
-			if OneWoW.PortalHubFlyouts then
-				OneWoW.PortalHubFlyouts:RecycleAll()
+			if ns.PortalHubFlyouts then
+				ns.PortalHubFlyouts:RecycleAll()
 			end
-			if OneWoW.NestedFlyouts then
-				OneWoW.NestedFlyouts:RecycleAll()
+			if ns.NestedFlyouts then
+				ns.NestedFlyouts:RecycleAll()
 			end
 			if GameMenuFrame and GameMenuFrame:IsShown() then
 				C_Timer.After(0.1, function()

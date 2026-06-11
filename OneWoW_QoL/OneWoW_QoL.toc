@@ -67,6 +67,21 @@ Tooltips\tp-value.lua
 Tooltips\tp-pets.lua
 UI\t-tooltips.lua
 
+# Portal Hub (moved from core in MIGRATION step 9c). Same relative order as
+# the core TOC: Data first, then modules, settings tab last.
+Portals\Data\Hearthstones.lua
+Portals\Data\ShortNames.lua
+Portals\Data\Portals.lua
+Portals\portalhub-detection.lua
+Portals\portalhub-items.lua
+Portals\portalhub-equip.lua
+Portals\portalhub-flyouts.lua
+Portals\portalhub-flyouts-nested.lua
+Portals\portalhub.lua
+Portals\portalhub-esc.lua
+Portals\portalhub-esc-panels.lua
+UI\t-portals.lua
+
 # ==============================================================
 # EXTERNAL MODULES
 # To add a module:

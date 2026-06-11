@@ -1,15 +1,15 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-OneWoW.PortalHubItems = OneWoW.PortalHubItems or {}
-local ItemDetection = OneWoW.PortalHubItems
+ns.PortalHubItems = ns.PortalHubItems or {}
+local ItemDetection = ns.PortalHubItems
 
 function ItemDetection:GetRings(showAll)
 	local portals = {}
-	if not OneWoW.PortalData then return portals end
+	if not ns.PortalData then return portals end
 
-	local rings = OneWoW.PortalData:GetItemsByCategory(OneWoW.PortalData.Categories.RINGS)
+	local rings = ns.PortalData:GetItemsByCategory(ns.PortalData.Categories.RINGS)
 	for _, ring in ipairs(rings) do
-		if showAll or OneWoW.PortalData:IsItemAvailable(ring) then
+		if showAll or ns.PortalData:IsItemAvailable(ring) then
 			table.insert(portals, {type = ring.type, id = ring.id, name = ring.name, category = "rings"})
 		end
 	end
@@ -19,11 +19,11 @@ end
 
 function ItemDetection:GetCloaks(showAll)
 	local portals = {}
-	if not OneWoW.PortalData then return portals end
+	if not ns.PortalData then return portals end
 
-	local cloaks = OneWoW.PortalData:GetItemsByCategory(OneWoW.PortalData.Categories.CLOAKS)
+	local cloaks = ns.PortalData:GetItemsByCategory(ns.PortalData.Categories.CLOAKS)
 	for _, cloak in ipairs(cloaks) do
-		if showAll or OneWoW.PortalData:IsItemAvailable(cloak) then
+		if showAll or ns.PortalData:IsItemAvailable(cloak) then
 			table.insert(portals, {type = cloak.type, id = cloak.id, name = cloak.name, category = "cloaks"})
 		end
 	end
@@ -33,11 +33,11 @@ end
 
 function ItemDetection:GetTabards(showAll)
 	local portals = {}
-	if not OneWoW.PortalData then return portals end
+	if not ns.PortalData then return portals end
 
-	local tabards = OneWoW.PortalData:GetItemsByCategory(OneWoW.PortalData.Categories.TABARDS)
+	local tabards = ns.PortalData:GetItemsByCategory(ns.PortalData.Categories.TABARDS)
 	for _, tabard in ipairs(tabards) do
-		if showAll or OneWoW.PortalData:IsItemAvailable(tabard) then
+		if showAll or ns.PortalData:IsItemAvailable(tabard) then
 			table.insert(portals, {type = tabard.type, id = tabard.id, name = tabard.name, category = "tabards"})
 		end
 	end
@@ -47,30 +47,30 @@ end
 
 function ItemDetection:GetEngineeringItems(showAll)
 	local portals = {}
-	if not OneWoW.PortalData then return portals end
+	if not ns.PortalData then return portals end
 
-	if not OneWoW.PortalHubDetection:HasProfession("Engineering") and not showAll then
+	if not ns.PortalHubDetection:HasProfession("Engineering") and not showAll then
 		return portals
 	end
 
-	if OneWoW.PortalData.Items.engineering.wormholes then
-		for _, wormhole in ipairs(OneWoW.PortalData.Items.engineering.wormholes) do
+	if ns.PortalData.Items.engineering.wormholes then
+		for _, wormhole in ipairs(ns.PortalData.Items.engineering.wormholes) do
 			if showAll or (PlayerHasToy(wormhole.id) and C_ToyBox.IsToyUsable(wormhole.id)) then
 				table.insert(portals, {type = "toy", id = wormhole.id, name = wormhole.name, category = "wormholes"})
 			end
 		end
 	end
 
-	if OneWoW.PortalData.Items.engineering.rippers then
-		for _, ripper in ipairs(OneWoW.PortalData.Items.engineering.rippers) do
+	if ns.PortalData.Items.engineering.rippers then
+		for _, ripper in ipairs(ns.PortalData.Items.engineering.rippers) do
 			if showAll or (PlayerHasToy(ripper.id) and C_ToyBox.IsToyUsable(ripper.id)) then
 				table.insert(portals, {type = "toy", id = ripper.id, name = ripper.name, category = "rippers"})
 			end
 		end
 	end
 
-	if OneWoW.PortalData.Items.engineering.transporters then
-		for _, transporter in ipairs(OneWoW.PortalData.Items.engineering.transporters) do
+	if ns.PortalData.Items.engineering.transporters then
+		for _, transporter in ipairs(ns.PortalData.Items.engineering.transporters) do
 			if transporter.type == "toy" then
 				if showAll or (PlayerHasToy(transporter.id) and C_ToyBox.IsToyUsable(transporter.id)) then
 					table.insert(portals, {type = "toy", id = transporter.id, name = transporter.name, category = "transporters"})
@@ -83,8 +83,8 @@ function ItemDetection:GetEngineeringItems(showAll)
 		end
 	end
 
-	if OneWoW.PortalData.Items.engineering.other then
-		for _, other in ipairs(OneWoW.PortalData.Items.engineering.other) do
+	if ns.PortalData.Items.engineering.other then
+		for _, other in ipairs(ns.PortalData.Items.engineering.other) do
 			if showAll or C_Item.GetItemCount(other.id) > 0 then
 				table.insert(portals, {type = "item", id = other.id, name = other.name, category = "engineering_other"})
 			end
@@ -96,9 +96,9 @@ end
 
 function ItemDetection:GetConsumables(showAll)
 	local portals = {}
-	if not OneWoW.PortalData then return portals end
+	if not ns.PortalData then return portals end
 
-	local consumables = OneWoW.PortalData:GetItemsByCategory(OneWoW.PortalData.Categories.CONSUMABLES)
+	local consumables = ns.PortalData:GetItemsByCategory(ns.PortalData.Categories.CONSUMABLES)
 	for _, consumable in ipairs(consumables) do
 		if showAll or C_Item.GetItemCount(consumable.id) > 0 then
 			table.insert(portals, {type = "item", id = consumable.id, name = consumable.name, category = "consumables"})
@@ -110,11 +110,11 @@ end
 
 function ItemDetection:GetSpecialItems(showAll)
 	local portals = {}
-	if not OneWoW.PortalData then return portals end
+	if not ns.PortalData then return portals end
 
-	local specials = OneWoW.PortalData:GetItemsByCategory(OneWoW.PortalData.Categories.SPECIAL_ITEMS)
+	local specials = ns.PortalData:GetItemsByCategory(ns.PortalData.Categories.SPECIAL_ITEMS)
 	for _, special in ipairs(specials) do
-		if showAll or OneWoW.PortalData:IsItemAvailable(special) then
+		if showAll or ns.PortalData:IsItemAvailable(special) then
 			table.insert(portals, {type = special.type, id = special.id, name = special.name, category = "special"})
 		end
 	end

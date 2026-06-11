@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local Hearthstones = {}
-OneWoW.PortalData_Hearthstones = Hearthstones
+ns.PortalData_Hearthstones = Hearthstones
 
 local function GetCovenantData(id)
 	local _, _, completed = GetAchievementCriteriaInfo(15646, id)

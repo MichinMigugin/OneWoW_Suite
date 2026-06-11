@@ -20,6 +20,7 @@ local function RegisterWithOneWoW()
         -- locale keys stay in core OneWoW.L per the step-9 shared rules.
         { name = "toastalerts", displayName = function() return OneWoW.L["TOAST_ALERTS_SUBTAB"] end, create = function(p) ns.UI.CreateToastAlertsTab(p) end },
         { name = "tooltips",    displayName = function() return OneWoW.L["TOOLTIPS_SUBTAB"]     end, create = function(p) ns.UI.CreateTooltipsTab(p) end },
+        { name = "portals",     displayName = function() return OneWoW.L["PORTALS_SUBTAB"]      end, create = function(p) ns.UI.CreatePortalsTab(p) end },
     }
     if OneWoW.UI and OneWoW.UI.GetQoLFeatureTabs then
         for _, tab in ipairs(OneWoW.UI:GetQoLFeatureTabs()) do
@@ -130,6 +131,10 @@ function addon:OnAddonLoaded()
     -- functions on ns; the handler registry doesn't exist at their file scope.
     addon:RegisterLoginHandler("toast-loot", ns.ToastLoot.OnLogin)
     addon:RegisterEnteringWorldHandler("toast-instance", ns.ToastInstance.OnEnteringWorld)
+    -- Portal Hub (moved from core, MIGRATION step 9c); same order as the
+    -- original core registrations (module before esc-menu integration).
+    addon:RegisterLoginHandler("portalhub", function() ns.PortalHubModule:Initialize() end)
+    addon:RegisterLoginHandler("portalhub-esc", function() ns.PortalHubEsc:Initialize() end)
     OnInitialize()
 end
 

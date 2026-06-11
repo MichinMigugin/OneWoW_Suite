@@ -1,7 +1,6 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-local UI = OneWoW.UI
-
+local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
@@ -10,7 +9,7 @@ local portalButtons = {}
 local headerFrames = {}
 local portalButtonPool = {}
 
-function UI:CreatePortalsTab(parent)
+function ns.UI.CreatePortalsTab(parent)
 	local L = OneWoW.L or {}
 
 	local split = OneWoW_GUI:CreateSplitPanel(parent, {
@@ -58,8 +57,8 @@ function UI:CreatePortalsTab(parent)
 	escCheckbox:SetChecked(OneWoW.db.global.portalHub.escPortalsEnabled)
 	escCheckbox:SetScript("OnClick", function(checkbox)
 		OneWoW.db.global.portalHub.escPortalsEnabled = checkbox:GetChecked()
-		if OneWoW.PortalHubEsc and GameMenuFrame and GameMenuFrame:IsShown() then
-			OneWoW.PortalHubEsc:ShowPortalFrames()
+		if ns.PortalHubEsc and GameMenuFrame and GameMenuFrame:IsShown() then
+			ns.PortalHubEsc:ShowPortalFrames()
 		end
 	end)
 
@@ -70,8 +69,8 @@ function UI:CreatePortalsTab(parent)
 	randomHearthCheckbox:SetChecked(OneWoW.db.global.portalHub.randomHearthstone)
 	randomHearthCheckbox:SetScript("OnClick", function(checkbox)
 		OneWoW.db.global.portalHub.randomHearthstone = checkbox:GetChecked()
-		if OneWoW.PortalHubEsc and OneWoW.PortalHubEsc.Reload then
-			OneWoW.PortalHubEsc:Reload()
+		if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+			ns.PortalHubEsc:Reload()
 		end
 	end)
 
@@ -86,8 +85,8 @@ function UI:CreatePortalsTab(parent)
 	showAllEscCheckbox:SetChecked(OneWoW.db.global.portalHub.showAllOnEsc or false)
 	showAllEscCheckbox:SetScript("OnClick", function(checkbox)
 		OneWoW.db.global.portalHub.showAllOnEsc = checkbox:GetChecked()
-		if OneWoW.PortalHubEsc and OneWoW.PortalHubEsc.Reload then
-			OneWoW.PortalHubEsc:Reload()
+		if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+			ns.PortalHubEsc:Reload()
 		end
 	end)
 
@@ -98,8 +97,8 @@ function UI:CreatePortalsTab(parent)
 	showSeasonalCheckbox:SetChecked(OneWoW.db.global.portalHub.showSeasonal)
 	showSeasonalCheckbox:SetScript("OnClick", function(checkbox)
 		OneWoW.db.global.portalHub.showSeasonal = checkbox:GetChecked()
-		if OneWoW.PortalHubEsc and OneWoW.PortalHubEsc.Reload then
-			OneWoW.PortalHubEsc:Reload()
+		if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+			ns.PortalHubEsc:Reload()
 		end
 	end)
 
@@ -113,8 +112,8 @@ function UI:CreatePortalsTab(parent)
 	showDalaranCheckbox:SetChecked(ph.showDalaranHearth ~= false)
 	showDalaranCheckbox:SetScript("OnClick", function(checkbox)
 		OneWoW.db.global.portalHub.showDalaranHearth = checkbox:GetChecked()
-		if OneWoW.PortalHubEsc and OneWoW.PortalHubEsc.Reload then
-			OneWoW.PortalHubEsc:Reload()
+		if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+			ns.PortalHubEsc:Reload()
 		end
 	end)
 
@@ -125,8 +124,8 @@ function UI:CreatePortalsTab(parent)
 	showGarrisonCheckbox:SetChecked(ph.showGarrisonHearth ~= false)
 	showGarrisonCheckbox:SetScript("OnClick", function(checkbox)
 		OneWoW.db.global.portalHub.showGarrisonHearth = checkbox:GetChecked()
-		if OneWoW.PortalHubEsc and OneWoW.PortalHubEsc.Reload then
-			OneWoW.PortalHubEsc:Reload()
+		if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+			ns.PortalHubEsc:Reload()
 		end
 	end)
 
@@ -137,8 +136,8 @@ function UI:CreatePortalsTab(parent)
 	showWhistleCheckbox:SetChecked(ph.showFlightWhistle ~= false)
 	showWhistleCheckbox:SetScript("OnClick", function(checkbox)
 		OneWoW.db.global.portalHub.showFlightWhistle = checkbox:GetChecked()
-		if OneWoW.PortalHubEsc and OneWoW.PortalHubEsc.Reload then
-			OneWoW.PortalHubEsc:Reload()
+		if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+			ns.PortalHubEsc:Reload()
 		end
 	end)
 
@@ -149,8 +148,8 @@ function UI:CreatePortalsTab(parent)
 	showHousingCheckbox:SetChecked(ph.showHousingPortal ~= false)
 	showHousingCheckbox:SetScript("OnClick", function(checkbox)
 		OneWoW.db.global.portalHub.showHousingPortal = checkbox:GetChecked()
-		if OneWoW.PortalHubEsc and OneWoW.PortalHubEsc.Reload then
-			OneWoW.PortalHubEsc:Reload()
+		if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+			ns.PortalHubEsc:Reload()
 		end
 	end)
 
@@ -339,7 +338,7 @@ function UI:CreatePortalsTab(parent)
 			end
 		elseif portal.type == "housing" then
 			if isAvailable then
-				OneWoW.PortalHubDetection:ApplyHousingTeleportAttributes(button, "1")
+				ns.PortalHubDetection:ApplyHousingTeleportAttributes(button, "1")
 			end
 			local icon = C_Spell.GetSpellTexture(1263273)
 			if icon then
@@ -354,7 +353,7 @@ function UI:CreatePortalsTab(parent)
 			button:SetAlpha(1.0)
 		end
 
-		local isFavorite = OneWoW.PortalHubModule:IsFavorite(portal.type, portal.id)
+		local isFavorite = ns.PortalHubModule:IsFavorite(portal.type, portal.id)
 		if isFavorite then
 			button.favoriteIcon:Show()
 		else
@@ -379,7 +378,7 @@ function UI:CreatePortalsTab(parent)
 					spellName = C_Spell.GetSpellName(portal.id)
 				end
 
-				local added = OneWoW.PortalHubModule:ToggleFavorite(portal.type, portal.id, spellName or "Unknown")
+				local added = ns.PortalHubModule:ToggleFavorite(portal.type, portal.id, spellName or "Unknown")
 				if added then
 					portalButton.favoriteIcon:Show()
 				else
@@ -389,8 +388,8 @@ function UI:CreatePortalsTab(parent)
 				local favCount = #OneWoW.db.global.portalHub.escFavorites or 0
 				leftStatusText:SetText(string.format(L["Favorites: %d/%d"], favCount, 15))
 
-				if OneWoW.PortalHubEsc then
-					OneWoW.PortalHubEsc:Reload()
+				if ns.PortalHubEsc then
+					ns.PortalHubEsc:Reload()
 				end
 			end
 		end)
@@ -457,7 +456,7 @@ function UI:CreatePortalsTab(parent)
 		headerFrames = {}
 
 		local showAll = OneWoW.db.global.portalHub.showAll
-		local allPortals = OneWoW.PortalHubModule:GetPortalsForCategory(categoryID, showAll)
+		local allPortals = ns.PortalHubModule:GetPortalsForCategory(categoryID, showAll)
 
 		local available = {}
 		local unavailable = {}
@@ -466,7 +465,7 @@ function UI:CreatePortalsTab(parent)
 			if portal.type == "header" then
 				table.insert(available, portal)
 			else
-				local isAvailable = OneWoW.PortalHubDetection:IsPortalUsable(portal.type, portal.id)
+				local isAvailable = ns.PortalHubDetection:IsPortalUsable(portal.type, portal.id)
 				portal.available = isAvailable
 
 				if isAvailable then
@@ -578,9 +577,9 @@ function UI:CreatePortalsTab(parent)
 		end
 
 		if category.id == "professions" then
-			local wormholes = OneWoW.PortalHubDetection:GetWormholes(true)
-			local rippers = OneWoW.PortalHubDetection:GetDimensionalRippers(true)
-			local transporters = OneWoW.PortalHubDetection:GetUltrasafeTransporters(true)
+			local wormholes = ns.PortalHubDetection:GetWormholes(true)
+			local rippers = ns.PortalHubDetection:GetDimensionalRippers(true)
+			local transporters = ns.PortalHubDetection:GetUltrasafeTransporters(true)
 			for _, w in ipairs(wormholes) do
 				if PlayerHasToy(w.id) then
 					return true
@@ -599,9 +598,9 @@ function UI:CreatePortalsTab(parent)
 			return false
 		end
 
-		local portals = OneWoW.PortalHubModule:GetPortalsForCategory(category.id, false)
+		local portals = ns.PortalHubModule:GetPortalsForCategory(category.id, false)
 		for _, portal in ipairs(portals) do
-			if portal.type ~= "header" and OneWoW.PortalHubDetection:IsPortalUsable(portal.type, portal.id) then
+			if portal.type ~= "header" and ns.PortalHubDetection:IsPortalUsable(portal.type, portal.id) then
 				return true
 			end
 		end
@@ -659,7 +658,7 @@ function UI:CreatePortalsTab(parent)
 		favoritesRow = nil
 		selectedCategoryRow = nil
 
-		local categories = OneWoW.PortalHubModule:GetCategories()
+		local categories = ns.PortalHubModule:GetCategories()
 		local showAll = OneWoW.db.global.portalHub.showAll
 		local filter = (filterText or ""):lower()
 

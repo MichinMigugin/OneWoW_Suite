@@ -1,9 +1,12 @@
-local _, OneWoW = ...
-local L = OneWoW.L
+local _, ns = ...
+
+local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 
-OneWoW.EscPanels = OneWoW.EscPanels or {}
-local EscPanels = OneWoW.EscPanels
+local L = OneWoW.L
+
+ns.EscPanels = ns.EscPanels or {}
+local EscPanels = ns.EscPanels
 
 local PANEL_WIDTH = 350
 EscPanels.PANEL_WIDTH = PANEL_WIDTH

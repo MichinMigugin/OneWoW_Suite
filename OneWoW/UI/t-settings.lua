@@ -56,7 +56,6 @@ local coreSettingsTabs = {
 
 local qolFeatureTabs = {
     { name = "overlays",    displayName = function() return (OneWoW.L and OneWoW.L["OVERLAYS_SUBTAB"]    or "Overlays")     end, create = function(parent) UI:CreateOverlaysTab(parent)    end },
-    { name = "portals",     displayName = function() return (OneWoW.L and OneWoW.L["PORTALS_SUBTAB"]     or "Portals")      end, create = function(parent) UI:CreatePortalsTab(parent)     end },
 }
 
 function UI:GetQoLFeatureTabs()

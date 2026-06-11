@@ -43,8 +43,8 @@ function ESCPanelModule:OnEnable()
             ns.ModuleRegistry:SetToggleValue(self.id, toggleId, ph[dbKey])
         end
     end
-    if OneWoW and OneWoW.PortalHubEsc and GameMenuFrame and GameMenuFrame:IsShown() then
-        OneWoW.PortalHubEsc:ShowPortalFrames()
+    if GameMenuFrame and GameMenuFrame:IsShown() then
+        ns.PortalHubEsc:ShowPortalFrames()
     end
 end
 
@@ -52,9 +52,7 @@ function ESCPanelModule:OnDisable()
     local ph = GetPortalHubDB()
     if not ph then return end
     ph.escEnabled = false
-    if OneWoW and OneWoW.PortalHubEsc then
-        OneWoW.PortalHubEsc:HidePortalFrames()
-    end
+    ns.PortalHubEsc:HidePortalFrames()
 end
 
 function ESCPanelModule:OnToggle(toggleId, value)
@@ -114,9 +112,7 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
         onChange   = function(val)
             local p = GetPortalHubDB()
             if p then p.escIconSize = val end
-            if OneWoW and OneWoW.PortalHubEsc then
-                OneWoW.PortalHubEsc:Reload()
-            end
+            ns.PortalHubEsc:Reload()
         end,
     })
     iconSizeSlider:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
@@ -144,9 +140,7 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
             panelsDDText:SetText(text)
             local p = GetPortalHubDB()
             if p then p.escPanelsSide = value end
-            if OneWoW and OneWoW.PortalHubEsc then
-                OneWoW.PortalHubEsc:Reload()
-            end
+            ns.PortalHubEsc:Reload()
         end,
         getActiveValue = function()
             local p = GetPortalHubDB()
@@ -178,9 +172,7 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
             portalsDDText:SetText(text)
             local p = GetPortalHubDB()
             if p then p.escPortalsSide = value end
-            if OneWoW and OneWoW.PortalHubEsc then
-                OneWoW.PortalHubEsc:Reload()
-            end
+            ns.PortalHubEsc:Reload()
         end,
         getActiveValue = function()
             local p = GetPortalHubDB()

@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local ShortNames = {}
-OneWoW.PortalData_ShortNames = ShortNames
+ns.PortalData_ShortNames = ShortNames
 
 ShortNames.Map = {
 	[1254572] = "Magisters' Terrace",

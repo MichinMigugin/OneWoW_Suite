@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-OneWoW.PortalHubDetection = OneWoW.PortalHubDetection or {}
-local Detection = OneWoW.PortalHubDetection
+ns.PortalHubDetection = ns.PortalHubDetection or {}
+local Detection = ns.PortalHubDetection
 
 local ENGINEERING_TOYS = {
 	[18984] = true,
@@ -131,7 +131,7 @@ function Detection:IsAvailable(type, id)
 end
 
 local function IsKnownItemPortalUsable(portalType, id)
-	local itemData = OneWoW.PortalData.Items
+	local itemData = ns.PortalData.Items
 	local groups = {
 		itemData.rings,
 		itemData.cloaks,
@@ -168,7 +168,7 @@ function Detection:IsPortalUsable(portalType, id)
 		return self:HasProfession("Engineering") and C_Item.GetItemCount(id) > 0
 	end
 
-	local hearthstoneCondition = OneWoW.PortalData_Hearthstones.List[id]
+	local hearthstoneCondition = ns.PortalData_Hearthstones.List[id]
 	if hearthstoneCondition then
 		if id == 6948 then
 			return C_Item.GetItemCount(id) > 0
@@ -531,8 +531,8 @@ function Detection:GetEngineeringOtherItems(showAll)
 		return portals
 	end
 
-	if OneWoW.PortalData and OneWoW.PortalData.Items.engineering.other then
-		for _, item in ipairs(OneWoW.PortalData.Items.engineering.other) do
+	if ns.PortalData and ns.PortalData.Items.engineering.other then
+		for _, item in ipairs(ns.PortalData.Items.engineering.other) do
 			if showAll or C_Item.GetItemCount(item.id) > 0 then
 				table.insert(portals, {type = "item", id = item.id, name = item.name})
 			end

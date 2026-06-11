@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local Portals = {}
-OneWoW.PortalData = Portals
+ns.PortalData = Portals
 
 Portals.Categories = {
 	RINGS = "rings",

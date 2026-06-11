@@ -39,7 +39,7 @@ integration shims, `ExternalTooltipSync`.
 |---|---|
 | **Toast types** | ~~`Features/toast-loot.lua`, `toast-instance.lua`, `toastalerts.lua`, `UI/t-toastalerts.lua`~~ — **done** (step 9a; `toast-notes.lua` folded into the core engine instead) |
 | **Tooltip providers** | ~~All 13 `Tooltips/tp-*.lua`, `Tooltips/tooltips.lua` (settings catalog bootstrap), `UI/t-tooltips.lua`~~ — **done** (step 9b) |
-| **Portal Hub** | All of `Portals/` (data + modules), `UI/t-portals.lua` |
+| **Portal Hub** | ~~All of `Portals/` (data + modules), `UI/t-portals.lua`~~ — **done** (step 9c) |
 | **Overlays settings** | `UI/t-overlays.lua` minimum; audit `Features/overlays.lua`, `overlay-icons.lua` for type logic vs. engine (step 9d) |
 
 ### Step ordering
@@ -114,8 +114,9 @@ Prep for steps 8–9. No dependency on step 7.
 - [x] Enforcement: `no-settings-bypass` pre-commit hook
   (`bin/check_no_settings_bypass.py`) forbids the `db.global.settings` suffix
   pattern outside `SettingsFeatureRegistry.lua`/`Database.lua`.
-- Out of scope (separate DB roots, follow-up before step 9): `portalHub` —
-  `UI/t-portals.lua`, `Portals/*`. (`toasts` was folded into
+- Out of scope (separate DB roots): `portalHub` — kept as its own root by
+  explicit decision in step 9c (more user data/state than feature toggles;
+  accessed directly via the global `OneWoW.db`). (`toasts` was folded into
   `settings.toastalerts` as part of step 9a — migration v5.)
 
 ---
@@ -376,31 +377,62 @@ Re-verification corrections to the original assumptions:
 - [x] Register `tooltips` settings tab in QoL `RegisterModule` tabs.
 - [x] Remove `tooltips` from `qolFeatureTabs`.
 
-### 9c. Portal Hub
+### 9c. Portal Hub — DONE
 
-Consolidates existing QoL coupling (`OneWoW_QoL/Modules/external/escpanel.lua`,
-`framemover-core.lua` already read/write `OneWoW.db.global.portalHub` and call
-`OneWoW.PortalHubEsc`).
+Consolidated the existing QoL coupling (`escpanel.lua`, `framemover-core.lua`
+already read/wrote `OneWoW.db.global.portalHub` and called
+`OneWoW.PortalHubEsc`). Re-verification corrections to the original assumptions:
 
-**Move:**
-- `Portals/Data/*.lua`, all `Portals/portalhub*.lua`
-- `UI/t-portals.lua`
+- **All 11 namespace exports relocated** from core `OneWoW.*` to QoL `ns.*`
+  (`PortalHubModule`, `PortalHubEsc`, `PortalHubDetection`, `PortalHubEquip`,
+  `PortalHubItems`, `PortalHubFlyouts`, `NestedFlyouts`, `EscPanels`,
+  `PortalData`, `PortalData_Hearthstones`, `PortalData_ShortNames`). The only
+  consumers outside the moving set were already in QoL (`escpanel.lua`,
+  `framemover-core.lua`) — their legacy cross-unit guards
+  (`if OneWoW and OneWoW.PortalHubEsc then`) collapsed to direct `ns.*` calls.
+- **Three lifecycle registrations, not two**: besides the
+  `RegisterCoreLoginHandler` pair (`PortalHubModule`, `PortalHubEsc` →
+  `addon:RegisterLoginHandler` in `OnAddonLoaded`, original order preserved),
+  `portalhub-esc.lua` also registered a core entering-world handler for
+  instance auto-update — converted to QoL's own
+  `OneWoW_QoL:RegisterEnteringWorldHandler` (registered at login from
+  `Initialize`, when the core-attached registry exists). Gameplay event frames
+  (`PLAYER_EQUIPMENT_CHANGED`, `PLAYER_REGEN_ENABLED`,
+  `PLAYER_HOUSE_LIST_UPDATED`) stay as direct `RegisterEvent`.
+- **`ModuleRegistry:IsRegistered("qol")` branch simplified** in
+  `CreateOpenHubButton` — the code only runs from the QoL unit, so the
+  `"settings"` fallback and DB guards are gone (`OneWoW.UI:Show("qol")`).
+- **DB scope kept minimal (user decision)**: the `portalHub` root stays in
+  `OneWoW_DB` with direct `OneWoW.db` access (no `SettingsFeatureRegistry`
+  funnel); same for `instanceStatsEsc`, `instanceStatsPosition`,
+  `lastSubTabs`. Defaults in `Core/Database.lua` unchanged. Profile snapshots
+  (`t-profiles.lua`, `t-charprofiles.lua`) reference the root, not the files —
+  untouched.
+- `OneWoW.JournalModule` (guarded optional integration in `portalhub-esc.lua`)
+  is defined nowhere in the suite — the nil guards make it inert; left as-is.
+- Cross-family reads in `portalhub-esc-panels.lua` (`OneWoW_Notes`,
+  `OneWoW_CatalogData_Journal`) moved with the file (DataManager Phase 1 is
+  warn-only). Its core hub navigation (`OneWoW.UI:Show("notes")`) stays a
+  legitimate cross-unit call.
+- `Bindings.xml` confirmed clean; Search nav already targeted
+  `module="qol", subtab="portals"` — no changes.
+- Behavior change by design: with QoL opted out, the entire esc-menu
+  integration (portal frames, instance stats, CHARACTER INFO / ALERTS /
+  ZONE NOTES panels) is gone.
 
-**Stay in core:**
-- Nothing portal-specific in core services roster (Portal Hub is feature content).
+**Moved** (`OneWoW_QoL/Portals/`, `OneWoW_QoL/UI/`):
+- `Portals/Data/*.lua` (3) + all 8 `Portals/portalhub*.lua`
+- `UI/t-portals.lua` (now `ns.UI.CreatePortalsTab`)
 
-**Audit before move:**
-- `Portals/portalhub-esc.lua` ~631: `ModuleRegistry:IsRegistered("qol")` branch —
-  may simplify once portals live in QoL.
-- Core `Bindings.xml` has hub bindings only (toggle, reload, junk/protected) — no
-  portal-specific bindings to move.
-- `portalHub` settings block in `Core/Database.lua` defaults stays in `OneWoW_DB`.
+**Stayed in core:**
+- Nothing portal-specific (Portal Hub is feature content); `portalHub` /
+  `instanceStats*` defaults in `Core/Database.lua`.
 
-- [ ] Move files; wire QoL lifecycle for `PortalHubModule` / `PortalHubEsc`
-  init (currently early-phase `RegisterCoreLoginHandler` registrations in the
+- [x] Move files; wire QoL lifecycle for `PortalHubModule` / `PortalHubEsc`
+  init (was early-phase `RegisterCoreLoginHandler` registrations in the
   portal files).
-- [ ] Register `portals` settings tab in QoL.
-- [ ] Remove `portals` from `qolFeatureTabs`.
+- [x] Register `portals` settings tab in QoL `RegisterModule` tabs.
+- [x] Remove `portals` from `qolFeatureTabs`.
 
 ### 9d. Overlays settings (audit-first)
 
@@ -480,8 +512,8 @@ roster documentation.
   detection (`ItemStatus`, `UpgradeDetection`, `RecipeKnownUtil`, `ItemPrices`)
   are core services; feature content registers in from QoL.
 - [ ] Audit for other `ModuleRegistry:IsRegistered(...)`-conditional UI placement
-  (known: `UI/t-settings.lua`, `Portals/portalhub-esc.lua`, `UI/MainWindow.lua`
-  placeholder tabs).
+  (known: `UI/t-settings.lua`, `UI/MainWindow.lua` placeholder tabs;
+  `portalhub-esc.lua`'s branch was removed in step 9c).
 
 ### `DataManager` enforcement ramp
 

@@ -1,9 +1,12 @@
-local _, OneWoW = ...
-local L = OneWoW.L
+local _, ns = ...
+
+local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 
-OneWoW.PortalHubEsc = OneWoW.PortalHubEsc or {}
-local EscMenu = OneWoW.PortalHubEsc
+local L = OneWoW.L
+
+ns.PortalHubEsc = ns.PortalHubEsc or {}
+local EscMenu = ns.PortalHubEsc
 
 local leftFrame = nil
 local rightFrame = nil
@@ -25,7 +28,9 @@ end
 function EscMenu:RegisterAutoUpdateEvents()
 	if autoUpdateRegistered then return end
 	autoUpdateRegistered = true
-	OneWoW:RegisterCoreEnteringWorldHandler("portalhub-esc", function()
+	-- QoL's own entering-world registry (was core's RegisterCoreEnteringWorldHandler);
+	-- registered at login from Initialize, when the core-attached registry exists.
+	OneWoW_QoL:RegisterEnteringWorldHandler("portalhub-esc", function()
 		C_Timer.After(2, function()
 			EscMenu:AutoUpdateCurrentInstance()
 		end)
@@ -77,10 +82,10 @@ local PADDING_MENU_RIGHT = 10
 function EscMenu:GetPortalEdgeOffsetFromMenu(portalsSide, panelsSide)
 	local gm = GameMenuFrame
 	if not gm then return portalsSide == "left" and -PADDING_MENU_LEFT or PADDING_MENU_RIGHT end
-	local pc = OneWoW.EscPanels:GetPanelsContainer()
+	local pc = ns.EscPanels:GetPanelsContainer()
 	local sameSide = (portalsSide == "left" and panelsSide == "left")
 		or (portalsSide == "right" and panelsSide == "right")
-	local panelsVisible = OneWoW.EscPanels:HasVisiblePanelStack()
+	local panelsVisible = ns.EscPanels:HasVisiblePanelStack()
 	local pcReady = pc and pc:IsShown()
 
 	if portalsSide == "left" then
@@ -101,8 +106,8 @@ function EscMenu:SyncEscLayout()
 	local ph = OneWoW.db and OneWoW.db.global and OneWoW.db.global.portalHub
 	if not ph or not ph.escEnabled then return end
 
-	if OneWoW.EscPanels then
-		OneWoW.EscPanels:SyncPanelsContainerPosition(ph)
+	if ns.EscPanels then
+		ns.EscPanels:SyncPanelsContainerPosition(ph)
 	end
 
 	local portalsSide = ph.escPortalsSide == "left" and "left" or "right"
@@ -123,14 +128,14 @@ function EscMenu:SyncEscLayout()
 end
 
 function EscMenu:HidePortalFrames()
-	if OneWoW.PortalHubFlyouts then
-		OneWoW.PortalHubFlyouts:RecycleAll()
+	if ns.PortalHubFlyouts then
+		ns.PortalHubFlyouts:RecycleAll()
 	end
-	if OneWoW.NestedFlyouts then
-		OneWoW.NestedFlyouts:RecycleAll()
+	if ns.NestedFlyouts then
+		ns.NestedFlyouts:RecycleAll()
 	end
-	if OneWoW.EscPanels then
-		OneWoW.EscPanels:HideAll()
+	if ns.EscPanels then
+		ns.EscPanels:HideAll()
 	end
 	if leftFrame then leftFrame:Hide() end
 	if rightFrame then rightFrame:Hide() end
@@ -148,11 +153,11 @@ function EscMenu:ShowPortalFrames()
 	secureButtons = {}
 	flyoutButtons = {}
 
-	if OneWoW.PortalHubFlyouts then
-		OneWoW.PortalHubFlyouts:RecycleAll()
+	if ns.PortalHubFlyouts then
+		ns.PortalHubFlyouts:RecycleAll()
 	end
-	if OneWoW.NestedFlyouts then
-		OneWoW.NestedFlyouts:RecycleAll()
+	if ns.NestedFlyouts then
+		ns.NestedFlyouts:RecycleAll()
 	end
 
 	if not leftFrame then
@@ -207,8 +212,8 @@ function EscMenu:ShowPortalFrames()
 end
 
 function EscMenu:BuildLeftSide()
-	if OneWoW.EscPanels then
-		OneWoW.EscPanels:Build()
+	if ns.EscPanels then
+		ns.EscPanels:Build()
 	end
 end
 
@@ -220,7 +225,7 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 	local yOffset = 0
 	local xOffset = 0
 
-	if not OneWoW.PortalHubFlyouts then return end
+	if not ns.PortalHubFlyouts then return end
 
 	local hearthButtons = {}
 	if ph.showHearthstone ~= false or showAll then
@@ -243,7 +248,7 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 		end
 	end
 	if ph.showHousingPortal ~= false then
-		local housingPortal = OneWoW.PortalHubDetection:GetHousingPortal(showAll)
+		local housingPortal = ns.PortalHubDetection:GetHousingPortal(showAll)
 		if housingPortal then
 			table.insert(hearthButtons, housingPortal)
 		end
@@ -258,7 +263,7 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 	yOffset = yOffset - (iconSize + iconGap)
 	xOffset = 0
 
-	local favorites = OneWoW.PortalHubModule:GetFavorites()
+	local favorites = ns.PortalHubModule:GetFavorites()
 	local favAvailable = {}
 	for _, fav in ipairs(favorites) do
 		if fav.available then
@@ -267,19 +272,19 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 	end
 	if #favAvailable > 0 or showAll then
 		local displayFav = #favAvailable > 0 and favAvailable or {{type = "spell", id = 6948}}
-		local button = OneWoW.PortalHubFlyouts:CreateFlyoutParentButton(
+		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
 			parent, 1506458, iconSize, 0, yOffset, displayFav, flyoutOrient, "Fav", growLeft
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)
 	end
 
-	local druid = OneWoW.PortalHubDetection:GetDruidPortals(showAll)
-	local dk = OneWoW.PortalHubDetection:GetDeathKnightPortals(showAll)
-	local monk = OneWoW.PortalHubDetection:GetMonkPortals(showAll)
-	local shaman = OneWoW.PortalHubDetection:GetShamanPortals(showAll)
-	local covenant = OneWoW.PortalHubDetection:GetCovenantPortals(showAll)
-	local racial = OneWoW.PortalHubDetection:GetRacePortals(showAll)
+	local druid = ns.PortalHubDetection:GetDruidPortals(showAll)
+	local dk = ns.PortalHubDetection:GetDeathKnightPortals(showAll)
+	local monk = ns.PortalHubDetection:GetMonkPortals(showAll)
+	local shaman = ns.PortalHubDetection:GetShamanPortals(showAll)
+	local covenant = ns.PortalHubDetection:GetCovenantPortals(showAll)
+	local racial = ns.PortalHubDetection:GetRacePortals(showAll)
 
 	local allAbilities = {}
 	for _, p in ipairs(druid) do table.insert(allAbilities, p) end
@@ -291,17 +296,17 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 
 	if #allAbilities > 0 or showAll then
 		local displayAbilities = #allAbilities > 0 and allAbilities or {{type = "spell", id = 556}}
-		local button = OneWoW.PortalHubFlyouts:CreateFlyoutParentButton(
+		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
 			parent, "Interface\\Icons\\Achievement_BG_winAB_underXminutes", iconSize, 0, yOffset, displayAbilities, flyoutOrient, "Abilities", growLeft
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)
 	end
 
-	local wormholes = OneWoW.PortalHubDetection:GetWormholes(showAll)
-	local rippers = OneWoW.PortalHubDetection:GetDimensionalRippers(showAll)
-	local transporters = OneWoW.PortalHubDetection:GetUltrasafeTransporters(showAll)
-	local engOther = OneWoW.PortalHubDetection:GetEngineeringOtherItems(showAll)
+	local wormholes = ns.PortalHubDetection:GetWormholes(showAll)
+	local rippers = ns.PortalHubDetection:GetDimensionalRippers(showAll)
+	local transporters = ns.PortalHubDetection:GetUltrasafeTransporters(showAll)
+	local engOther = ns.PortalHubDetection:GetEngineeringOtherItems(showAll)
 	local allEng = {}
 	for _, w in ipairs(wormholes) do table.insert(allEng, w) end
 	for _, r in ipairs(rippers) do table.insert(allEng, r) end
@@ -309,22 +314,22 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 	for _, o in ipairs(engOther) do table.insert(allEng, o) end
 	if #allEng > 0 or showAll then
 		local displayEng = #allEng > 0 and allEng or {{type = "toy", id = 48933}}
-		local button = OneWoW.PortalHubFlyouts:CreateFlyoutParentButton(
+		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
 			parent, "Interface\\Icons\\Trade_Engineering", iconSize, 0, yOffset, displayEng, flyoutOrient, "Prof", growLeft
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)
 	end
 
-	local mageT = OneWoW.PortalHubDetection:GetMageTeleports(showAll)
-	local mageP = OneWoW.PortalHubDetection:GetMagePortals(showAll)
+	local mageT = ns.PortalHubDetection:GetMageTeleports(showAll)
+	local mageP = ns.PortalHubDetection:GetMagePortals(showAll)
 	local allMage = {}
 	for _, t in ipairs(mageT) do table.insert(allMage, t) end
 	for _, p in ipairs(mageP) do table.insert(allMage, p) end
 	if #allMage > 0 or showAll then
 		local icon = C_Spell.GetSpellTexture(3561) or 237509
 		local displayMage = #allMage > 0 and allMage or {{type = "spell", id = 3561}}
-		local button = OneWoW.PortalHubFlyouts:CreateFlyoutParentButton(
+		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
 			parent, icon, iconSize, 0, yOffset, displayMage, flyoutOrient, "Mage", growLeft
 		)
 		table.insert(flyoutButtons, button)
@@ -333,17 +338,17 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 
 	yOffset = yOffset - (iconSize + iconGap)
 
-	if OneWoW.NestedFlyouts then
+	if ns.NestedFlyouts then
 		local dungeonExpansions = {
-			{id = "mid", label = "MID", icon = "Interface\\Icons\\Spell_Arcane_Portal_Silvermoon", portals = OneWoW.PortalHubDetection:GetDungeonPortals("mid", showAll)},
-			{id = "tww", label = "TWW", icon = 5872031, portals = OneWoW.PortalHubDetection:GetDungeonPortals("tww", showAll)},
-			{id = "df", label = "DF", icon = 4640496, portals = OneWoW.PortalHubDetection:GetDungeonPortals("df", showAll)},
-			{id = "sl", label = "SL", icon = 236798, portals = OneWoW.PortalHubDetection:GetDungeonPortals("sl", showAll)},
-			{id = "bfa", label = "BFA", icon = 1869493, portals = OneWoW.PortalHubDetection:GetDungeonPortals("bfa", showAll)},
-			{id = "legion", label = "LEG", icon = 1260827, portals = OneWoW.PortalHubDetection:GetDungeonPortals("legion", showAll)},
-			{id = "wod", label = "WoD", icon = 1413856, portals = OneWoW.PortalHubDetection:GetDungeonPortals("wod", showAll)},
-			{id = "mop", label = "MoP", icon = 328269, portals = OneWoW.PortalHubDetection:GetDungeonPortals("mop", showAll)},
-			{id = "cata", label = "CAT", icon = 574788, portals = OneWoW.PortalHubDetection:GetDungeonPortals("cata", showAll)},
+			{id = "mid", label = "MID", icon = "Interface\\Icons\\Spell_Arcane_Portal_Silvermoon", portals = ns.PortalHubDetection:GetDungeonPortals("mid", showAll)},
+			{id = "tww", label = "TWW", icon = 5872031, portals = ns.PortalHubDetection:GetDungeonPortals("tww", showAll)},
+			{id = "df", label = "DF", icon = 4640496, portals = ns.PortalHubDetection:GetDungeonPortals("df", showAll)},
+			{id = "sl", label = "SL", icon = 236798, portals = ns.PortalHubDetection:GetDungeonPortals("sl", showAll)},
+			{id = "bfa", label = "BFA", icon = 1869493, portals = ns.PortalHubDetection:GetDungeonPortals("bfa", showAll)},
+			{id = "legion", label = "LEG", icon = 1260827, portals = ns.PortalHubDetection:GetDungeonPortals("legion", showAll)},
+			{id = "wod", label = "WoD", icon = 1413856, portals = ns.PortalHubDetection:GetDungeonPortals("wod", showAll)},
+			{id = "mop", label = "MoP", icon = 328269, portals = ns.PortalHubDetection:GetDungeonPortals("mop", showAll)},
+			{id = "cata", label = "CAT", icon = 574788, portals = ns.PortalHubDetection:GetDungeonPortals("cata", showAll)},
 		}
 
 		local hasDungeons = false
@@ -355,21 +360,21 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 		end
 
 		if hasDungeons then
-			local dungeonButton = OneWoW.NestedFlyouts:CreateDungeonsButton(parent, iconSize, yOffset, dungeonExpansions, showAll, growLeft)
+			local dungeonButton = ns.NestedFlyouts:CreateDungeonsButton(parent, iconSize, yOffset, dungeonExpansions, showAll, growLeft)
 			table.insert(flyoutButtons, dungeonButton)
 			yOffset = yOffset - (iconSize + iconGap)
 		end
 
 		local raidExpansions = {
-			{id = "mid", label = "MID", icon = "Interface\\Icons\\Spell_Arcane_Portal_Silvermoon", portals = OneWoW.PortalHubDetection:GetRaidPortals("mid", showAll)},
-			{id = "tww", label = "TWW", icon = 5872031, portals = OneWoW.PortalHubDetection:GetRaidPortals("tww", showAll)},
-			{id = "df", label = "DF", icon = 4640496, portals = OneWoW.PortalHubDetection:GetRaidPortals("df", showAll)},
-			{id = "sl", label = "SL", icon = 236798, portals = OneWoW.PortalHubDetection:GetRaidPortals("sl", showAll)},
-			{id = "bfa", label = "BFA", icon = 1869493, portals = OneWoW.PortalHubDetection:GetRaidPortals("bfa", showAll)},
-			{id = "legion", label = "LEG", icon = 1260827, portals = OneWoW.PortalHubDetection:GetRaidPortals("legion", showAll)},
-			{id = "wod", label = "WoD", icon = 1413856, portals = OneWoW.PortalHubDetection:GetRaidPortals("wod", showAll)},
-			{id = "mop", label = "MoP", icon = 328269, portals = OneWoW.PortalHubDetection:GetRaidPortals("mop", showAll)},
-			{id = "cata", label = "CAT", icon = 574788, portals = OneWoW.PortalHubDetection:GetRaidPortals("cata", showAll)},
+			{id = "mid", label = "MID", icon = "Interface\\Icons\\Spell_Arcane_Portal_Silvermoon", portals = ns.PortalHubDetection:GetRaidPortals("mid", showAll)},
+			{id = "tww", label = "TWW", icon = 5872031, portals = ns.PortalHubDetection:GetRaidPortals("tww", showAll)},
+			{id = "df", label = "DF", icon = 4640496, portals = ns.PortalHubDetection:GetRaidPortals("df", showAll)},
+			{id = "sl", label = "SL", icon = 236798, portals = ns.PortalHubDetection:GetRaidPortals("sl", showAll)},
+			{id = "bfa", label = "BFA", icon = 1869493, portals = ns.PortalHubDetection:GetRaidPortals("bfa", showAll)},
+			{id = "legion", label = "LEG", icon = 1260827, portals = ns.PortalHubDetection:GetRaidPortals("legion", showAll)},
+			{id = "wod", label = "WoD", icon = 1413856, portals = ns.PortalHubDetection:GetRaidPortals("wod", showAll)},
+			{id = "mop", label = "MoP", icon = 328269, portals = ns.PortalHubDetection:GetRaidPortals("mop", showAll)},
+			{id = "cata", label = "CAT", icon = 574788, portals = ns.PortalHubDetection:GetRaidPortals("cata", showAll)},
 		}
 
 		local hasRaids = false
@@ -381,29 +386,29 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 		end
 
 		if hasRaids then
-			local raidButton = OneWoW.NestedFlyouts:CreateRaidsButton(parent, iconSize, yOffset, raidExpansions, showAll, growLeft)
+			local raidButton = ns.NestedFlyouts:CreateRaidsButton(parent, iconSize, yOffset, raidExpansions, showAll, growLeft)
 			table.insert(flyoutButtons, raidButton)
 			yOffset = yOffset - (iconSize + iconGap)
 		end
 	end
 
 	local showSeasonal = OneWoW.db.global.portalHub.showSeasonal ~= false
-	local seasonPortals = OneWoW.PortalHubDetection:GetCurrentSeasonPortals(showAll or showSeasonal)
+	local seasonPortals = ns.PortalHubDetection:GetCurrentSeasonPortals(showAll or showSeasonal)
 	if (#seasonPortals > 0) then
 		local displaySeason = #seasonPortals > 0 and seasonPortals or {{type = "spell", id = 1254400}}
 		local seasonIcon = C_Spell.GetSpellTexture(1254400) or "Interface\\Icons\\Achievement_Boss_Archaedas"
-		local button = OneWoW.PortalHubFlyouts:CreateFlyoutParentButton(
+		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
 			parent, seasonIcon, iconSize, 0, yOffset, displaySeason, flyoutOrient, "S.1", growLeft
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)
 	end
 
-	if OneWoW.PortalHubItems then
-		local allItems = OneWoW.PortalHubItems:GetAllItems(showAll, true)
+	if ns.PortalHubItems then
+		local allItems = ns.PortalHubItems:GetAllItems(showAll, true)
 		if #allItems > 0 or showAll then
 			local displayItems = #allItems > 0 and allItems or {{type = "item", id = 6948}}
-			local button = OneWoW.PortalHubFlyouts:CreateFlyoutParentButton(
+			local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
 				parent, "Interface\\Icons\\INV_Misc_Bag_10", iconSize, 0, yOffset, displayItems, flyoutOrient, "Items", growLeft
 			)
 			table.insert(flyoutButtons, button)
@@ -443,7 +448,7 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 	if portalData.type == "randomhearth" then
 		local hasHearthstoneItem = C_Item.GetItemCount(6948) > 0
 		local randomEnabled = OneWoW.db.global.portalHub.randomHearthstone
-		local hearthstones = OneWoW.PortalData_Hearthstones and OneWoW.PortalData_Hearthstones.List or {}
+		local hearthstones = ns.PortalData_Hearthstones and ns.PortalData_Hearthstones.List or {}
 		local availableToys = {}
 
 		for id, condition in pairs(hearthstones) do
@@ -508,9 +513,9 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 			end)
 		end
 	elseif portalData.type == "item" then
-		if OneWoW.PortalHubEquip and OneWoW.PortalHubEquip:IsItemEquippable(portalData.id) then
+		if ns.PortalHubEquip and ns.PortalHubEquip:IsItemEquippable(portalData.id) then
 			button:SetAttribute("type", "macro")
-			if OneWoW.PortalHubEquip:IsItemEquipped(portalData.id) then
+			if ns.PortalHubEquip:IsItemEquipped(portalData.id) then
 				button:SetAttribute("macrotext", "/use " .. portalData.id)
 			else
 				button:SetAttribute("macrotext", "/equip " .. portalData.id)
@@ -529,19 +534,19 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 		button:SetAttribute("spell", portalData.id)
 		local icon = C_Spell.GetSpellTexture(portalData.id)
 		if icon then button:SetNormalTexture(icon) end
-		if OneWoW.PortalData and OneWoW.PortalData:GetShortName(portalData.id) then
-			button.text:SetText(OneWoW.PortalData:GetShortName(portalData.id))
+		if ns.PortalData and ns.PortalData:GetShortName(portalData.id) then
+			button.text:SetText(ns.PortalData:GetShortName(portalData.id))
 		end
 	elseif portalData.type == "housing" then
-		OneWoW.PortalHubDetection:ApplyHousingTeleportAttributes(button)
+		ns.PortalHubDetection:ApplyHousingTeleportAttributes(button)
 		local icon = C_Spell.GetSpellTexture(1263273)
 		if icon then button:SetNormalTexture(icon) end
 	end
 
 	button:SetScript("PostClick", function(_, mouseButton)
 		if mouseButton == "LeftButton" then
-			if portalData.type == "item" and OneWoW.PortalHubEquip then
-				if OneWoW.PortalHubEquip:IsItemEquippable(portalData.id) and not OneWoW.PortalHubEquip:IsItemEquipped(portalData.id) then
+			if portalData.type == "item" and ns.PortalHubEquip then
+				if ns.PortalHubEquip:IsItemEquippable(portalData.id) and not ns.PortalHubEquip:IsItemEquipped(portalData.id) then
 					return
 				end
 			end
@@ -625,16 +630,9 @@ function EscMenu:CreateOpenHubButton(parent, xOffset, yOffset, iconSize, growLef
 	button:SetScript("OnClick", function()
 		HideUIPanel(GameMenuFrame)
 		C_Timer.After(0.15, function()
-			if OneWoW.UI then
-				local moduleKey = "settings"
-				if OneWoW.ModuleRegistry and OneWoW.ModuleRegistry:IsRegistered("qol") then
-					moduleKey = "qol"
-				end
-				if OneWoW.db and OneWoW.db.global then
-					OneWoW.db.global.lastSubTabs[moduleKey] = "portals"
-				end
-				OneWoW.UI:Show(moduleKey)
-			end
+			-- This code only runs from the QoL unit, so the qol module tab exists.
+			OneWoW.db.global.lastSubTabs.qol = "portals"
+			OneWoW.UI:Show("qol")
 		end)
 	end)
 
@@ -840,7 +838,3 @@ function EscMenu:RestoreInstanceStatsPosition()
 		instanceStatsFrame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -10, -10)
 	end
 end
-
-OneWoW:RegisterCoreLoginHandler("PortalHubEsc", function()
-	EscMenu:Initialize()
-end, "early")

@@ -1,24 +1,24 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-OneWoW.PortalHubEquip = OneWoW.PortalHubEquip or {}
-local EquipManager = OneWoW.PortalHubEquip
+ns.PortalHubEquip = ns.PortalHubEquip or {}
+local EquipManager = ns.PortalHubEquip
 
 local equippedItems = {}
 local pendingEquip = {}
 
 function EquipManager:IsItemEquippable(itemId)
-	if not OneWoW.PortalData then return false end
-	return OneWoW.PortalData:IsItemEquippable(itemId)
+	if not ns.PortalData then return false end
+	return ns.PortalData:IsItemEquippable(itemId)
 end
 
 function EquipManager:IsItemEquipped(itemId)
-	if not OneWoW.PortalData then return false end
-	return OneWoW.PortalData:IsItemEquipped(itemId)
+	if not ns.PortalData then return false end
+	return ns.PortalData:IsItemEquipped(itemId)
 end
 
 function EquipManager:GetItemSlot(itemId)
-	if not OneWoW.PortalData then return nil end
-	return OneWoW.PortalData:GetItemSlot(itemId)
+	if not ns.PortalData then return nil end
+	return ns.PortalData:GetItemSlot(itemId)
 end
 
 function EquipManager:EquipItem(itemId)
