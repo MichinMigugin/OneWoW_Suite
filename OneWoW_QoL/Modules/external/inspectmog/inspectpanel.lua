@@ -785,15 +785,6 @@ end
 function UI:Initialize()
     self:EnsureFrame()
 
-    local function LoadInspectUI()
-        if C_AddOns.IsAddOnLoaded("Blizzard_InspectUI") then
-            return true
-        end
-
-        C_AddOns.LoadAddOn("Blizzard_InspectUI")
-        return C_AddOns.IsAddOnLoaded("Blizzard_InspectUI")
-    end
-
     local function HookInspectFrame()
         if self.inspectHooked or not InspectFrame then
             return
@@ -817,16 +808,17 @@ function UI:Initialize()
         end
     end
 
-    LoadInspectUI()
-    InstallInspectGuildFrameGuard()
-    HookInspectFrame()
-
+    -- Never raw-load Blizzard_InspectUI here: OnEnable's EnsureLoaded (or
+    -- Blizzard itself, on first inspect) brings it in. The watcher fires on
+    -- both load paths and catches up immediately if it is already loaded.
     if InspectFrame then
-        return
-    end
-
-    OneWoW:RegisterAddonLoadedWatcher("Blizzard_InspectUI", function()
         InstallInspectGuildFrameGuard()
         HookInspectFrame()
-    end)
+    elseif not self.inspectWatcherRegistered then
+        self.inspectWatcherRegistered = true
+        OneWoW:RegisterAddonLoadedWatcher("Blizzard_InspectUI", function()
+            InstallInspectGuildFrameGuard()
+            HookInspectFrame()
+        end)
+    end
 end

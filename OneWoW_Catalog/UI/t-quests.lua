@@ -565,26 +565,12 @@ local RACE_NAMES = {
 }
 
 local detailRenderVersion = 0
-local missingRewardItemRefreshAttempts = {}
 local pendingRewardItemIDs = {}
-local queuedRewardItemIDs = {}
-local rewardItemRequestQueue = {}
-local rewardItemRequestCursor = 1
-local rewardItemRequestQueueRunning = false
-local rewardItemEventFrame = nil
-local rewardItemDataLoader = nil
-local rewardItemScanTooltip = nil
-local rewardItemPollAttempts = {}
-local rewardItemLoadCallbackPending = {}
 local rewardItemSearchWarmQueue = {}
 local rewardItemSearchWarmSeen = {}
 local rewardItemSearchWarmRunning = false
 local rewardItemSearchWarmToken = 0
 local rewardItemSearchRefreshQueued = false
-local REWARD_ITEM_REQUESTS_PER_TICK = 1
-local REWARD_ITEM_REQUEST_DELAY = 0.2
-local REWARD_ITEM_POLL_INTERVAL = 0.1
-local REWARD_ITEM_POLL_ATTEMPTS = 100
 local REWARD_ITEM_SEARCH_WARM_PER_TICK = 3
 local REWARD_ITEM_SEARCH_WARM_DELAY = 0.1
 local REWARD_ITEM_SEARCH_WARM_MAX = 900
@@ -596,7 +582,9 @@ local function RememberRewardItemName(itemID, itemName)
 
     itemName = tostring(itemName)
 
-    if itemName:find("Retrieving", 1, true) then
+    -- RETRIEVING_ITEM_INFO is the locale-correct placeholder Blizzard shows
+    -- while an item is uncached; never memorize it as a real name.
+    if itemName == RETRIEVING_ITEM_INFO then
         return false
     end
 
@@ -656,124 +644,6 @@ local function RememberAndApplyRewardItemName(itemID, itemName)
     return true
 end
 
-local function GetRewardItemDataLoader()
-    if rewardItemDataLoader ~= nil then
-        return rewardItemDataLoader or nil
-    end
-
-    rewardItemDataLoader = false
-
-    if not OneWoW_Catalog
-        or not OneWoW_Catalog.CreateItemDataLoader
-    then
-        return nil
-    end
-
-    local catalogDB =
-        OneWoW_Catalog.db
-        and OneWoW_Catalog.db.global
-
-    if not catalogDB and OneWoW_Catalog_DB then
-        OneWoW_Catalog_DB.global = OneWoW_Catalog_DB.global or {}
-        catalogDB = OneWoW_Catalog_DB.global
-    end
-
-    if not catalogDB then
-        return nil
-    end
-
-    rewardItemDataLoader = OneWoW_Catalog:CreateItemDataLoader(catalogDB)
-
-    if rewardItemDataLoader
-        and rewardItemDataLoader.Initialize
-    then
-        rewardItemDataLoader:Initialize()
-    end
-
-    return rewardItemDataLoader
-end
-
-local function GetTooltipItemName(itemID)
-    itemID = tonumber(itemID)
-    if not itemID or not C_TooltipInfo then
-        return nil
-    end
-
-    local tooltipData
-
-    if C_TooltipInfo.GetItemByID then
-        tooltipData = C_TooltipInfo.GetItemByID(itemID)
-    elseif C_TooltipInfo.GetHyperlink then
-        tooltipData = C_TooltipInfo.GetHyperlink("item:" .. tostring(itemID))
-    end
-
-    if not tooltipData or not tooltipData.lines then
-        return nil
-    end
-
-    for _, line in ipairs(tooltipData.lines) do
-        local text = line.leftText
-        if text and text ~= "" and not text:find("Retrieving", 1, true) then
-            return text
-        end
-    end
-
-    return nil
-end
-
-local function GetScanTooltipItemName(itemID)
-    itemID = tonumber(itemID)
-    if not itemID or not CreateFrame then
-        return nil
-    end
-
-    if not rewardItemScanTooltip then
-        rewardItemScanTooltip = CreateFrame(
-            "GameTooltip",
-            "OneWoWQuestRewardItemScanTooltip",
-            UIParent,
-            "GameTooltipTemplate"
-        )
-        rewardItemScanTooltip:SetOwner(UIParent, "ANCHOR_NONE")
-    end
-
-    rewardItemScanTooltip:ClearLines()
-    rewardItemScanTooltip:SetOwner(UIParent, "ANCHOR_NONE")
-    rewardItemScanTooltip:SetItemByID(itemID)
-
-    local tooltipTitleLineName = rewardItemScanTooltip:GetName() .. "TextLeft1"
-    local titleLine = _G[tooltipTitleLineName]
-    local text =
-        titleLine
-        and titleLine.GetText
-        and titleLine:GetText()
-
-    rewardItemScanTooltip:Hide()
-
-    if text and text ~= "" and not text:find("Retrieving", 1, true) then
-        return text
-    end
-
-    if rewardItemScanTooltip.SetHyperlink then
-        rewardItemScanTooltip:ClearLines()
-        rewardItemScanTooltip:SetOwner(UIParent, "ANCHOR_NONE")
-        rewardItemScanTooltip:SetHyperlink("item:" .. tostring(itemID))
-
-        text =
-            titleLine
-            and titleLine.GetText
-            and titleLine:GetText()
-
-        rewardItemScanTooltip:Hide()
-
-        if text and text ~= "" and not text:find("Retrieving", 1, true) then
-            return text
-        end
-    end
-
-    return nil
-end
-
 local function GetVisibleTooltipItemName()
     local tooltipTitle = GameTooltip.TextLeft1
     local text =
@@ -781,296 +651,42 @@ local function GetVisibleTooltipItemName()
         and tooltipTitle.GetText
         and tooltipTitle:GetText()
 
-    if text and text ~= "" and not text:find("Retrieving", 1, true) then
+    if text and text ~= "" and text ~= RETRIEVING_ITEM_INFO then
         return text
     end
 
     return nil
 end
 
-local function NormalizeItemInfoName(itemInfo)
-    if type(itemInfo) == "table" then
-        return itemInfo.itemName
-            or itemInfo.name
-            or itemInfo.itemLink
-    elseif type(itemInfo) == "string" then
-        return itemInfo
-    end
-
-    return nil
-end
-
-local function GetItemObjectName(itemID)
-    if not itemID
-        or not Item
-        or not Item.CreateFromItemID
-    then
-        return nil
-    end
-
-    local itemObject = Item:CreateFromItemID(itemID)
-
-    if itemObject and itemObject.GetItemName then
-        local itemName = itemObject:GetItemName()
-
-        if itemName and itemName ~= "" and not itemName:find("Retrieving", 1, true) then
-            return itemName
-        end
-    end
-
-    return nil
-end
-
-local function ResolveLoadedRewardItemName(itemID)
-    local loader = GetRewardItemDataLoader()
-    local cachedItem =
-        loader
-        and loader.GetCachedItem
-        and loader:GetCachedItem(itemID)
-
-    local itemName = cachedItem and cachedItem.name
-
-    if not itemName and GetItemInfo then
-        itemName = GetItemInfo(itemID)
-    end
-
-    if not itemName then
-        itemName = NormalizeItemInfoName(C_Item.GetItemInfo(itemID))
-    end
-
-    if not itemName then
-        itemName = C_Item.GetItemNameByID(itemID)
-    end
-
-    if not itemName then
-        itemName = GetTooltipItemName(itemID)
-    end
-
-    if not itemName then
-        itemName = GetItemObjectName(itemID)
-    end
-
-    if not itemName then
-        itemName = GetScanTooltipItemName(itemID)
-    end
-
-    return itemName
-end
-
-local function RequestRewardItemObjectLoad(itemID, questData)
-    itemID = tonumber(itemID)
-
-    if not itemID
-        or rewardItemLoadCallbackPending[itemID]
-        or not Item
-        or not Item.CreateFromItemID
-    then
-        return
-    end
-
-    local itemObject = Item:CreateFromItemID(itemID)
-    if not itemObject or not itemObject.ContinueOnItemLoad then
-        return
-    end
-
-    rewardItemLoadCallbackPending[itemID] = true
-
-    itemObject:ContinueOnItemLoad(function()
-        rewardItemLoadCallbackPending[itemID] = nil
-
-        if not selectedQuest
-            or not questData
-            or selectedQuest.id ~= questData.id
-        then
-            return
-        end
-
-        local itemName =
-            ResolveLoadedRewardItemName(itemID)
-            or (itemObject.GetItemName and itemObject:GetItemName())
-
-        if itemName
-            and RememberAndApplyRewardItemName(itemID, itemName)
-        then
-            missingRewardItemRefreshAttempts[itemID] = nil
-            pendingRewardItemIDs[itemID] = nil
-            queuedRewardItemIDs[itemID] = nil
-            rewardItemPollAttempts[itemID] = nil
-        end
-    end)
-end
-
-local function ScheduleRewardItemNamePoll(itemID, questData, attempt)
-    itemID = tonumber(itemID)
-    attempt = attempt or 1
-
-    if not itemID then
-        return
-    end
-
-    if attempt > REWARD_ITEM_POLL_ATTEMPTS then
-        pendingRewardItemIDs[itemID] = nil
-        queuedRewardItemIDs[itemID] = nil
-        rewardItemPollAttempts[itemID] = nil
-        rewardItemLoadCallbackPending[itemID] = nil
-        missingRewardItemRefreshAttempts[itemID] = nil
-        return
-    end
-
-    rewardItemPollAttempts[itemID] = attempt
-
-    C_Timer.After(REWARD_ITEM_POLL_INTERVAL, function()
-        if not selectedQuest
-            or not questData
-            or selectedQuest.id ~= questData.id
-        then
-            pendingRewardItemIDs[itemID] = nil
-            queuedRewardItemIDs[itemID] = nil
-            rewardItemPollAttempts[itemID] = nil
-            return
-        end
-
-        local itemName = ResolveLoadedRewardItemName(itemID)
-
-        if itemName
-            and RememberAndApplyRewardItemName(itemID, itemName)
-        then
-            missingRewardItemRefreshAttempts[itemID] = nil
-            pendingRewardItemIDs[itemID] = nil
-            queuedRewardItemIDs[itemID] = nil
-            rewardItemPollAttempts[itemID] = nil
-            return
-        end
-
-        ScheduleRewardItemNamePoll(itemID, questData, attempt + 1)
-    end)
-end
-
-local function EnsureRewardItemEventFrame()
-    if rewardItemEventFrame or not CreateFrame then
-        return
-    end
-
-    rewardItemEventFrame = CreateFrame("Frame")
-    rewardItemEventFrame:RegisterEvent("ITEM_DATA_LOAD_RESULT")
-    rewardItemEventFrame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
-    rewardItemEventFrame:SetScript("OnEvent", function(_, event, itemID, success)
-        itemID = tonumber(itemID)
-        if not itemID or not pendingRewardItemIDs[itemID] then
-            return
-        end
-
-        pendingRewardItemIDs[itemID] = nil
-
-        local itemName = ResolveLoadedRewardItemName(itemID)
-
-        if itemName then
-            RememberAndApplyRewardItemName(itemID, itemName)
-        elseif success then
-            return
-        elseif event == "GET_ITEM_INFO_RECEIVED" then
-            C_Timer.After(0.6, function()
-                local retryName = ResolveLoadedRewardItemName(itemID)
-
-                if retryName
-                    and RememberAndApplyRewardItemName(itemID, retryName)
-                then
-                    return
-                end
-            end)
-        end
-    end)
-end
-
-local function ProcessRewardItemRequestQueue()
-    local processed = 0
-
-    EnsureRewardItemEventFrame()
-
-    while rewardItemRequestCursor <= #rewardItemRequestQueue
-        and processed < REWARD_ITEM_REQUESTS_PER_TICK
-    do
-        local itemID = rewardItemRequestQueue[rewardItemRequestCursor]
-        rewardItemRequestQueue[rewardItemRequestCursor] = nil
-        rewardItemRequestCursor = rewardItemRequestCursor + 1
-
-        if itemID and queuedRewardItemIDs[itemID] then
-            queuedRewardItemIDs[itemID] = nil
-            pendingRewardItemIDs[itemID] = true
-
-            C_Item.RequestLoadItemDataByID(itemID)
-
-            processed = processed + 1
-            RequestRewardItemObjectLoad(itemID, selectedQuest)
-            ScheduleRewardItemNamePoll(itemID, selectedQuest, 1)
-        end
-    end
-
-    if rewardItemRequestCursor <= #rewardItemRequestQueue then
-        C_Timer.After(REWARD_ITEM_REQUEST_DELAY, ProcessRewardItemRequestQueue)
-    else
-        wipe(rewardItemRequestQueue)
-        rewardItemRequestCursor = 1
-        rewardItemRequestQueueRunning = false
-    end
-end
-
-local function RequestVisibleRewardItem(itemID, questData)
+local function RequestVisibleRewardItem(itemID)
     itemID = tonumber(itemID)
     if not itemID then
         return
     end
 
-    if pendingRewardItemIDs[itemID] or queuedRewardItemIDs[itemID] then
+    if pendingRewardItemIDs[itemID] then
         return
     end
 
-    local loader = GetRewardItemDataLoader()
+    local loader = ns.GetItemDataLoader()
 
-    if loader and loader.LoadItemData then
-        local cachedItem =
-            loader.GetCachedItem
-            and loader:GetCachedItem(itemID)
+    local cachedItem = loader:GetCachedItem(itemID)
+    if cachedItem and cachedItem.name then
+        RememberAndApplyRewardItemName(itemID, cachedItem.name)
+        return
+    end
 
-        if cachedItem and cachedItem.name then
-            RememberAndApplyRewardItemName(itemID, cachedItem.name)
+    pendingRewardItemIDs[itemID] = true
+
+    loader:LoadItemData(itemID, function(_, itemData)
+        pendingRewardItemIDs[itemID] = nil
+
+        if not itemData or not itemData.name then
             return
         end
 
-        pendingRewardItemIDs[itemID] = true
-
-        loader:LoadItemData(itemID, function(_, itemData)
-            pendingRewardItemIDs[itemID] = nil
-            queuedRewardItemIDs[itemID] = nil
-            rewardItemPollAttempts[itemID] = nil
-            rewardItemLoadCallbackPending[itemID] = nil
-            missingRewardItemRefreshAttempts[itemID] = nil
-
-            if not itemData or not itemData.name then
-                return
-            end
-
-            RememberAndApplyRewardItemName(itemID, itemData.name)
-
-        end)
-
-        return
-    end
-
-    missingRewardItemRefreshAttempts[itemID] =
-        (missingRewardItemRefreshAttempts[itemID] or 0) + 1
-
-    if missingRewardItemRefreshAttempts[itemID] > 60 then
-        return
-    end
-
-    queuedRewardItemIDs[itemID] = true
-    table.insert(rewardItemRequestQueue, itemID)
-
-    if not rewardItemRequestQueueRunning then
-        rewardItemRequestQueueRunning = true
-        C_Timer.After(0, ProcessRewardItemRequestQueue)
-    end
+        RememberAndApplyRewardItemName(itemID, itemData.name)
+    end)
 end
 
 local function GetRewardItemID(entry)
@@ -1089,20 +705,8 @@ local function CatalogItemCacheHasName(itemID)
         return false
     end
 
-    local itemCache =
-        OneWoW_Catalog_DB
-        and OneWoW_Catalog_DB.global
-        and OneWoW_Catalog_DB.global.itemCache
-
-    local cached = itemCache and itemCache[itemID]
-
-    if type(cached) == "table" then
-        return cached.name ~= nil and cached.name ~= ""
-    elseif type(cached) == "string" then
-        return cached ~= ""
-    end
-
-    return false
+    local cached = ns.GetItemDataLoader():GetCachedItem(itemID)
+    return cached ~= nil and cached.name ~= nil and cached.name ~= ""
 end
 
 local function QueueRewardItemSearchRefresh(panels, token)
@@ -1138,11 +742,7 @@ local function ProcessRewardItemSearchWarmQueue(panels, token)
         return
     end
 
-    local loader = GetRewardItemDataLoader()
-    if not loader or not loader.LoadItemData then
-        rewardItemSearchWarmRunning = false
-        return
-    end
+    local loader = ns.GetItemDataLoader()
 
     local processed = 0
 
@@ -1205,11 +805,6 @@ local function StartRewardItemSearchWarmup(panels, addon, resultCount)
         or not addon.QuestData
         or not addon.QuestData.GetQuestsForExpansion
     then
-        return
-    end
-
-    local loader = GetRewardItemDataLoader()
-    if not loader or not loader.LoadItemData then
         return
     end
 
@@ -1292,7 +887,7 @@ local function ResolveNPCName(npcID, knownName)
 
     if tooltipData and tooltipData.lines then
         for _, line in ipairs(tooltipData.lines) do
-            if line.leftText and line.leftText ~= "" and not line.leftText:find("Retrieving") then
+            if line.leftText and line.leftText ~= "" and line.leftText ~= RETRIEVING_ITEM_INFO then
                 npcNameCache[npcID] = line.leftText
                 return line.leftText
             end
@@ -1739,10 +1334,6 @@ local function AddRewardItemToNotes(itemID, itemName, itemLink, itemTexture, ite
     itemID = tonumber(itemID)
     if not itemID then
         return false
-    end
-
-    if itemName == ("Item #" .. tostring(itemID)) then
-        itemName = nil
     end
 
     if ns.Navigation and ns.Navigation.OpenItemNote then
@@ -2237,7 +1828,7 @@ function ShowQuestDetail(panels, questData)
     local starterData = GetQuestStarterData(questData)
     local enderData = GetQuestEnderData(questData)
 
-    addNPCNavigationRow(L["QUESTS_GIVER"] or "Quest Giver", starterData)
+    addNPCNavigationRow(L["QUESTS_QUEST_GIVER"], starterData)
 
     if enderData
         and enderData.npcID
@@ -2246,7 +1837,7 @@ function ShowQuestDetail(panels, questData)
             or starterData.npcID ~= enderData.npcID
         )
     then
-        addNPCNavigationRow(L["QUESTS_TURNIN"] or "Quest Turn-in", enderData)
+        addNPCNavigationRow(L["QUESTS_TURN_IN"], enderData)
     end
 
     local metaFrame = track(CreateFrame("Frame", nil, parent))
@@ -2272,7 +1863,7 @@ function ShowQuestDetail(panels, questData)
     local metaParts = {
         string.format("%s: %s", L["QUESTS_EXPANSION"], expName),
         string.format("%s: %s", L["QUESTS_ZONE"], zoneName),
-        string.format("%s: %s", L["QUESTS_PROGRESS_LABEL"] or "Progress", progressName),
+        string.format("%s: %s", L["QUESTS_PROGRESS_LABEL"], progressName),
         string.format("%s: %s", L["QUESTS_REWARDS"] or "Rewards", rewardSummary),
         string.format("Faction: %s", factionName),
         string.format("Category: %s", categoryName),
@@ -2382,7 +1973,7 @@ function ShowQuestDetail(panels, questData)
     local descLabel = track(OneWoW_GUI:CreateFS(parent, 10))
 
     descLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
-    descLabel:SetText(L["QUESTS_DESCRIPTION"] or "Description")
+    descLabel:SetText(L["QUESTS_DESCRIPTION"])
 
     descLabel:SetTextColor(
         OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
@@ -2652,15 +2243,10 @@ function ShowQuestDetail(panels, questData)
                         and addon.QuestData:GetCachedItemName(itemID)
 
                     local itemLink, itemQuality, itemTexture
-                    local itemIsQueued =
-                        pendingRewardItemIDs[itemID]
-                        or queuedRewardItemIDs[itemID]
+                    local itemIsQueued = pendingRewardItemIDs[itemID]
 
-                    local loader = GetRewardItemDataLoader()
-                    local cachedItem =
-                        loader
-                        and loader.GetCachedItem
-                        and loader:GetCachedItem(itemID)
+                    local loader = ns.GetItemDataLoader()
+                    local cachedItem = loader:GetCachedItem(itemID)
 
                     if cachedItem then
                         itemName = itemName or cachedItem.name
@@ -2669,12 +2255,12 @@ function ShowQuestDetail(panels, questData)
                         itemTexture = itemTexture or cachedItem.icon
                     end
 
-                    if not itemIsQueued and GetItemInfo and immediateItemInfoBudget > 0 then
+                    if not itemIsQueued and immediateItemInfoBudget > 0 then
                         immediateItemInfoBudget = immediateItemInfoBudget - 1
 
                         local fetchedName
                         fetchedName, itemLink, itemQuality, _, _, _, _, _, _, itemTexture =
-                            GetItemInfo(itemID)
+                            C_Item.GetItemInfo(itemID)
 
                         if fetchedName then
                             itemName = fetchedName
@@ -2686,25 +2272,21 @@ function ShowQuestDetail(panels, questData)
                         and immediateTooltipInfoBudget > 0
                     then
                         immediateTooltipInfoBudget = immediateTooltipInfoBudget - 1
-                        itemName =
-                            GetTooltipItemName(itemID)
-                            or GetScanTooltipItemName(itemID)
+                        itemName = loader:GetTooltipItemName(itemID)
                     end
 
-    if itemName and addon.QuestData and addon.QuestData.RememberItemName then
-        missingRewardItemRefreshAttempts[itemID] = nil
-        pendingRewardItemIDs[itemID] = nil
-        queuedRewardItemIDs[itemID] = nil
-        RememberAndApplyRewardItemName(itemID, itemName)
-    elseif not itemName then
-        RequestVisibleRewardItem(itemID, questData)
-    end
+                    if itemName and addon.QuestData and addon.QuestData.RememberItemName then
+                        pendingRewardItemIDs[itemID] = nil
+                        RememberAndApplyRewardItemName(itemID, itemName)
+                    elseif not itemName then
+                        RequestVisibleRewardItem(itemID)
+                    end
 
                     local itemNameUnresolved = not itemName
 
                     itemName =
                         itemName
-                        or ("Item #" .. tostring(itemID))
+                        or string.format(L["QUESTS_ITEM_UNNAMED"], itemID)
 
                     if not itemTexture then
                         itemTexture = select(5, C_Item.GetItemInfoInstant(itemID))
@@ -2787,12 +2369,10 @@ function ShowQuestDetail(panels, questData)
                                 itemNameUnresolved = false
                                 itemText:SetText(HighlightSearchText(itemName) .. countStr)
 
-                                if GetItemInfo then
-                                    local _, _, resolvedQuality = GetItemInfo(itemID)
-                                    if resolvedQuality then
-                                        local r, g, b = GetItemQualityColor(resolvedQuality)
-                                        itemText:SetTextColor(r, g, b)
-                                    end
+                                local _, _, resolvedQuality = C_Item.GetItemInfo(itemID)
+                                if resolvedQuality then
+                                    local r, g, b = GetItemQualityColor(resolvedQuality)
+                                    itemText:SetTextColor(r, g, b)
                                 end
                             end,
                         })
@@ -2819,17 +2399,14 @@ function ShowQuestDetail(panels, questData)
 
                         local tooltipName =
                             GetVisibleTooltipItemName()
-                            or GetTooltipItemName(itemID)
-                            or GetScanTooltipItemName(itemID)
+                            or ns.GetItemDataLoader():GetTooltipItemName(itemID)
 
                         if tooltipName
                             and tooltipName ~= itemName
                             and RememberAndApplyRewardItemName(itemID, tooltipName)
                         then
                             itemName = tooltipName
-                            missingRewardItemRefreshAttempts[itemID] = nil
                             pendingRewardItemIDs[itemID] = nil
-                            queuedRewardItemIDs[itemID] = nil
                             itemText:SetText(HighlightSearchText(itemName) .. countStr)
                         end
 
@@ -2849,10 +2426,14 @@ function ShowQuestDetail(panels, questData)
                             return
                         end
 
+                        -- Pass nil rather than the localized "Item #N"
+                        -- placeholder when the real name never resolved.
+                        local resolvedName = not itemNameUnresolved and itemName or nil
+
                         if IsShiftKeyDown and IsShiftKeyDown() then
                             AddRewardItemToNotes(
                                 itemID,
-                                itemName,
+                                resolvedName,
                                 itemLink,
                                 itemTexture,
                                 itemQuality
@@ -2860,7 +2441,7 @@ function ShowQuestDetail(panels, questData)
                             return
                         end
 
-                        OpenRewardItemInItemSearch(itemID, itemName)
+                        OpenRewardItemInItemSearch(itemID, resolvedName)
                     end)
                 end
             end
@@ -4686,7 +4267,7 @@ function ns.UI.CreateQuestsTab(parent)
 
     local searchBox = OneWoW_GUI:CreateEditBox(leftHeader, {
         height = 26,
-        placeholderText = L["QUESTS_SEARCH_ADVANCED"] or L["QUESTS_SEARCH"] or "Search quests, NPCs, cached rewards...",
+        placeholderText = L["QUESTS_SEARCH_ADVANCED"],
         onTextChanged = function(text)
             searchText = text
             CancelRewardItemSearchWarmup()

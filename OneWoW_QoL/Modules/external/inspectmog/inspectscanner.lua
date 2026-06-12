@@ -1,6 +1,4 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/inspectmog/inspectscanner.lua
-local addonName, ns = ...
+local _, ns = ...
 
 local function GetInspectMogDb()
     local addon = OneWoW_QoL
@@ -143,7 +141,7 @@ function Scanner:BuildInspectSnapshot(unit)
         local appearanceSourceID = GetSlotAppearanceSource(transmogList, slot.id)
 
         if itemLink or settings.showEmptySlots then
-            local itemName = itemLink and GetItemInfo(itemLink) or nil
+            local itemName = itemLink and C_Item.GetItemInfo(itemLink) or nil
             local appearanceSource = GetSourceData(appearanceSourceID)
             local baseSource = GetSourceData(baseSourceID)
             local mogName = appearanceSource and appearanceSource.name
@@ -184,6 +182,10 @@ function Scanner:BuildInspectSnapshot(unit)
     }
 end
 
+-- Blizzard's InspectFrame_Show already calls NotifyInspect; extra requests
+-- fire additional INSPECT_READY cycles and aggravate the Blizzard
+-- InspectGuildFrame nil-guild error (see InstallInspectGuildFrameGuard in
+-- inspectpanel.lua). Only call Request while the panel is actually shown.
 function Scanner:Request(unit)
     unit = unit or GetInspectedUnit()
     if not unit or not UnitExists(unit) or not CanInspect(unit) then
@@ -196,29 +198,30 @@ function Scanner:Request(unit)
 end
 
 function Scanner:Initialize()
-    if self.frame then
-        return
+    if not self.frame then
+        self.frame = CreateFrame("Frame")
+        self.frame:SetScript("OnEvent", function(_, event, guid)
+            if event == "PLAYER_TARGET_CHANGED" then
+                if ns.Panel and ns.Panel:IsShownForInspect() then
+                    C_Timer.After(0.1, function()
+                        Scanner:Request()
+                    end)
+                end
+                return
+            end
+
+            if guid and Scanner.pendingGUID and guid ~= Scanner.pendingGUID then
+                return
+            end
+
+            if ns.Panel and ns.Panel.Refresh then
+                ns.Panel:Refresh(Scanner.pendingUnit)
+            end
+        end)
     end
 
-    self.frame = CreateFrame("Frame")
+    -- Always (re)register: OnDisable unregisters the frame's events, and a
+    -- later re-enable must arm them again even though the frame survives.
     self.frame:RegisterEvent("INSPECT_READY")
     self.frame:RegisterEvent("PLAYER_TARGET_CHANGED")
-    self.frame:SetScript("OnEvent", function(_, event, guid)
-        if event == "PLAYER_TARGET_CHANGED" then
-            if ns.Panel and ns.Panel:IsShownForInspect() then
-                C_Timer.After(0.1, function()
-                    Scanner:Request()
-                end)
-            end
-            return
-        end
-
-        if guid and Scanner.pendingGUID and guid ~= Scanner.pendingGUID then
-            return
-        end
-
-        if ns.Panel and ns.Panel.Refresh then
-            ns.Panel:Refresh(Scanner.pendingUnit)
-        end
-    end)
 end

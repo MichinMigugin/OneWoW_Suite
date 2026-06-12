@@ -1,3 +1,5 @@
+local _, ns = ...
+
 local OneWoW_GUI = OneWoW_GUI
 
 local DB = OneWoW_GUI.DB
@@ -23,12 +25,17 @@ function OneWoW_Catalog:CreateItemDataLoader(dbTable)
         _pending = {}
     }
 
+    -- Deferred on purpose: callers register callbacks while building UI rows
+    -- (CreateItemRow / ShowItemDetail) and the callbacks rebuild those same
+    -- regions; firing synchronously would recurse into the row constructors.
     function loader:FireCallbacks(callbacks, itemID, result)
         if not callbacks then return end
 
         C_Timer.After(0, function()
             for _, cb in ipairs(callbacks) do
-                cb(itemID, result)
+                -- Isolate registrants: one failing callback must not abort the
+                -- rest, and the error still reaches the global error handler.
+                xpcall(cb, CallErrorHandler, itemID, result)
             end
         end)
     end
@@ -41,7 +48,9 @@ function OneWoW_Catalog:CreateItemDataLoader(dbTable)
 
         for _, line in ipairs(tooltipData.lines) do
             local text = line.leftText
-            if text and text ~= "" and not text:find("Retrieving", 1, true) then
+            -- RETRIEVING_ITEM_INFO is the locale-correct placeholder Blizzard
+            -- shows on the first tooltip line while an item is uncached.
+            if text and text ~= "" and text ~= RETRIEVING_ITEM_INFO then
                 return text
             end
         end
@@ -71,6 +80,14 @@ function OneWoW_Catalog:CreateItemDataLoader(dbTable)
         return self._db.itemCache[itemID] or nil
     end
 
+    -- Cache entries are persisted to SavedVariables and short-circuit every
+    -- future LoadItemData call, so only fully-resolved data may be written.
+    -- Partial resolutions (name via GetItemNameByID / tooltip scan, but no
+    -- link or quality) would otherwise be frozen in permanently.
+    local function IsCompleteItemData(name, link, quality, icon)
+        return name ~= nil and link ~= nil and quality ~= nil and icon ~= nil
+    end
+
     function loader:CacheItem(itemID, name, quality, icon, link)
         self._db.itemCache[itemID] = {
             name    = name,
@@ -90,10 +107,18 @@ function OneWoW_Catalog:CreateItemDataLoader(dbTable)
         end
 
         local name, link, quality, icon = self:ResolveItemData(itemID)
-        if name then
+        if IsCompleteItemData(name, link, quality, icon) then
             local result = self:CacheItem(itemID, name, quality, icon, link)
             if callback then self:FireCallbacks({ callback }, itemID, result) end
             return result
+        end
+
+        -- Partial resolution: surface what we have for display now, but keep
+        -- the request pending so the callback fires again (and the cache is
+        -- written) once the full data arrives.
+        if name and callback then
+            self:FireCallbacks({ callback }, itemID,
+                { name = name, quality = quality, icon = icon, link = link })
         end
 
         if not self._pending[itemID] then
@@ -109,6 +134,15 @@ function OneWoW_Catalog:CreateItemDataLoader(dbTable)
     end
 
     function loader:Initialize()
+        -- One-time self-heal: drop incomplete entries persisted before the
+        -- completeness guard existed (name-only resolutions have no link).
+        local cache = self._db.itemCache
+        for itemID, entry in pairs(cache) do
+            if type(entry) ~= "table" or not entry.name or not entry.link then
+                cache[itemID] = nil
+            end
+        end
+
         local frame = CreateFrame("Frame")
         frame:RegisterEvent("ITEM_DATA_LOAD_RESULT")
         frame:SetScript("OnEvent", function(_, _, loadedItemID, success)
@@ -116,13 +150,33 @@ function OneWoW_Catalog:CreateItemDataLoader(dbTable)
             local callbacks = self._pending[loadedItemID]
             if not callbacks then return end
             local name, link, quality, icon = self:ResolveItemData(loadedItemID)
-            if name then
+            if IsCompleteItemData(name, link, quality, icon) then
                 local result = self:CacheItem(loadedItemID, name, quality, icon, link)
                 self:FireCallbacks(callbacks, loadedItemID, result)
+            elseif name then
+                -- Loaded but still missing fields: deliver for display without
+                -- persisting a partial entry.
+                self:FireCallbacks(callbacks, loadedItemID,
+                    { name = name, quality = quality, icon = icon, link = link })
             end
             self._pending[loadedItemID] = nil
         end)
     end
 
     return loader
+end
+
+local sharedLoader = nil
+
+--- Catalog's shared loader instance, backed by the addon db handle.
+--- Lazily created: the db handle only exists after OnAddonLoaded, and UI code
+--- runs strictly after that. CatalogData store addons keep their own loader
+--- instances on their own DBs; this one serves Catalog's own tabs.
+---@return ItemDataLoader
+function ns.GetItemDataLoader()
+    if not sharedLoader then
+        sharedLoader = OneWoW_Catalog:CreateItemDataLoader(OneWoW_Catalog.db.global)
+        sharedLoader:Initialize()
+    end
+    return sharedLoader
 end

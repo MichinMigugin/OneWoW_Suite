@@ -1,4 +1,5 @@
 local _, ns = ...
+local L = ns.L
 
 -- ============================================================================
 -- Navigation
@@ -105,10 +106,15 @@ function Navigation:OpenItemNote(itemID, itemInfo)
     itemID = tonumber(itemID)
     if not itemID then return false end
 
+    -- Full mid-session bring-up (load + lifecycle catch-up); respects soft
+    -- opt-out via EnsureLoaded, in which case OneWoW_Notes stays nil.
     OneWoW:BringUp("OneWoW_Notes")
 
     local notes = OneWoW_Notes
-    if not notes then return false end
+    if not notes then
+        print("|cFFFFD100OneWoW:|r " .. L["NAV_NOTES_UNAVAILABLE"])
+        return false
+    end
 
     if not notes.Items:GetItem(itemID) then
         itemInfo = itemInfo or {}

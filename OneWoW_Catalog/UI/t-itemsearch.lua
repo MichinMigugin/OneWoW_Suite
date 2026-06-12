@@ -39,7 +39,6 @@ local SOURCE_DEFS = {
 
 local RefreshItemList
 local ShowItemDetail
-local itemSearchDataLoader = nil
 
 local function SelectVisibleItemResult(itemID)
     itemID = tonumber(itemID)
@@ -58,17 +57,6 @@ local function SelectVisibleItemResult(itemID)
     end
 
     return false
-end
-
-local function GetItemSearchDataLoader()
-    if itemSearchDataLoader then
-        return itemSearchDataLoader
-    end
-
-    OneWoW_GUI.DB:Ensure(OneWoW_Catalog_DB, "global")
-    itemSearchDataLoader = OneWoW_Catalog:CreateItemDataLoader(OneWoW_Catalog_DB.global)
-    itemSearchDataLoader:Initialize()
-    return itemSearchDataLoader
 end
 
 local function ApplyLoadedItemData(result, itemData)
@@ -262,21 +250,21 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
     end
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
-    nameText:SetText(result.name or ("Item #" .. result.itemID))
+    nameText:SetText(result.name or string.format(L["QUESTS_ITEM_UNNAMED"], result.itemID))
     nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(result.quality))
 
     row.result = result
     row.rowIdx = rowIdx
 
     if result.itemID and (not result.name or not result.icon) then
-        GetItemSearchDataLoader():LoadItemData(result.itemID, function(_, itemData)
+        ns.GetItemDataLoader():LoadItemData(result.itemID, function(_, itemData)
             if row.result ~= result then
                 return
             end
 
             ApplyLoadedItemData(result, itemData)
             icon:SetTexture(result.icon or 134400)
-            nameText:SetText(result.name or ("Item #" .. result.itemID))
+            nameText:SetText(result.name or string.format(L["QUESTS_ITEM_UNNAMED"], result.itemID))
             nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(result.quality))
 
             if selectedItem and selectedItem.itemID == result.itemID then
@@ -360,7 +348,7 @@ ShowItemDetail = function(result)
     itemName:SetPoint("RIGHT", headerFrame, "RIGHT", -8, 0)
     itemName:SetJustifyH("LEFT")
     itemName:SetWordWrap(false)
-    itemName:SetText(result.name or ("Item #" .. result.itemID))
+    itemName:SetText(result.name or string.format(L["QUESTS_ITEM_UNNAMED"], result.itemID))
     itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(result.quality))
 
     local itemIDText = OneWoW_GUI:CreateFS(headerFrame, 10)
@@ -369,7 +357,7 @@ ShowItemDetail = function(result)
     itemIDText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     if needsItemRefresh then
-        GetItemSearchDataLoader():LoadItemData(result.itemID, function(_, itemData)
+        ns.GetItemDataLoader():LoadItemData(result.itemID, function(_, itemData)
             if not selectedItem or selectedItem.itemID ~= result.itemID then
                 return
             end
@@ -377,7 +365,7 @@ ShowItemDetail = function(result)
             ApplyLoadedItemData(result, itemData)
             ApplyLoadedItemData(selectedItem, itemData)
             hIcon:SetTexture(result.icon or 134400)
-            itemName:SetText(result.name or ("Item #" .. result.itemID))
+            itemName:SetText(result.name or string.format(L["QUESTS_ITEM_UNNAMED"], result.itemID))
             itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(result.quality))
             RefreshItemList()
         end)
@@ -756,6 +744,19 @@ function ns.UI.CreateItemSearchTab(parent)
                     emptyDetail:Show()
                 end
                 RefreshItemList()
+
+                -- An ID search can race the item cache: Query's exact-ID
+                -- injection requires GetItemNameByID, which returns nil until
+                -- the async item data arrives. Re-run the search once it does
+                -- (mirrors the OpenItemSearch path below).
+                local typedItemID = tonumber(text)
+                if typedItemID then
+                    ns.GetItemDataLoader():LoadItemData(typedItemID, function()
+                        if currentSearch == text then
+                            RefreshItemList()
+                        end
+                    end)
+                end
             end)
         end,
     })
@@ -803,6 +804,9 @@ function ns.UI.CreateItemSearchTab(parent)
             return
         end
 
+        -- Pull the Auctions store on demand (explicit user action — see
+        -- OneWoW/Docs/ARCHITECTURE.md §3.8 lazy cross-module data).
+        OneWoW:EnsureLoaded("OneWoW_AltTracker_Auctions")
         local Auctions = OneWoW_AltTracker_Auctions
         if not Auctions or not Auctions.FullAHScanner then
             print("|cFFFFD100OneWoW:|r " .. L["ITEMSEARCH_ALTTRACKER_AUCTIONS_REQUIRED"])
@@ -887,11 +891,16 @@ function ns.UI.CreateItemSearchTab(parent)
 
     ns.UI.RefreshItemSearchList = RefreshItemList
 
-    function ns.UI.OpenItemSearch(itemID, itemName)
+    function ns.UI.OpenItemSearch(itemID, itemName, retryCount)
         if not searchBox or not panels then
-            C_Timer.After(0.05, function()
-                ns.UI.OpenItemSearch(itemID, itemName)
-            end)
+            -- The tab can be mid-construction when another tab links here;
+            -- retry briefly, then give up rather than polling forever.
+            retryCount = (retryCount or 0) + 1
+            if retryCount <= 10 then
+                C_Timer.After(0.05, function()
+                    ns.UI.OpenItemSearch(itemID, itemName, retryCount)
+                end)
+            end
             return
         end
 
@@ -914,7 +923,7 @@ function ns.UI.CreateItemSearchTab(parent)
 
         if itemID then
             SelectVisibleItemResult(itemID)
-            GetItemSearchDataLoader():LoadItemData(itemID, function(_, itemData)
+            ns.GetItemDataLoader():LoadItemData(itemID, function(_, itemData)
                 if currentSearch ~= tostring(itemID) then
                     return
                 end

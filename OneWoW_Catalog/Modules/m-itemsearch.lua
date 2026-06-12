@@ -226,6 +226,7 @@ function ItemSearch:Query(searchTerm, sourceFilter)
             isCrafted = false,
             isOwned   = false,
             isQuestReward = false,
+            isExactMatch  = false,
         }
         entry[sourceKey] = true
         results[count] = entry
@@ -244,13 +245,10 @@ function ItemSearch:Query(searchTerm, sourceFilter)
             sourceKey = "isOwned"
         end
 
-        addOrAnnotate(
-            exactItemID,
-            C_Item.GetItemNameByID(exactItemID),
-            nil,
-            nil,
-            sourceKey
-        )
+        local exactName = C_Item.GetItemNameByID(exactItemID)
+        if exactName then
+            addOrAnnotate(exactItemID, exactName, nil, nil, sourceKey)
+        end
     end
 
     if doJournal then
