@@ -39,6 +39,7 @@ Only `OneWoW/OneWoW.lua` may register them.
 
 ## Load units and integration
 
+- **Never call `C_AddOns.LoadAddOn` / `UIParentLoadAddOn` directly** — only `OneWoW/Core/AddonLoader.lua` and `OneWoW/Core/Lifecycle.lua` may. Raw loads bypass soft opt-out, combat deferral, and load tracing. Use `OneWoW:EnsureLoaded` / `WithAddon` / `BringUp`; this applies to Blizzard LoD addons too (e.g. `EnsureLoaded("Blizzard_InspectUI")`).
 - No suite-internal `## OptionalDeps` on TOCs — use nil-guards + `OneWoW:EnsureLoaded` / `WithAddon` for explicit user actions only.
 - Cross-unit reads: prefer `_API` over `_DB`; route new reads through `DataManager:Query` when available.
 - Hub tab order: hub manifest entries require `module` + `tabOrder`; modules register with `order = OneWoW:GetModuleTabOrder("name")` (reads `tabOrder`, not array position).
@@ -46,5 +47,6 @@ Only `OneWoW/OneWoW.lua` may register them.
 ## Pre-commit enforcement
 
 - `no-suite-lifecycle-events` — lifecycle `RegisterEvent` ban
+- `no-raw-loadaddon` — raw `LoadAddOn` ban outside the core loader funnel
 - `no-suite-internal-optionaldeps` — TOC OptionalDeps policy
 - `no-data-manager-bypass` — cross-family store reads (phased)

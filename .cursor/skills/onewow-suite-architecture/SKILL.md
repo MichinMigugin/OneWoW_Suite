@@ -97,6 +97,8 @@ OneWoW:GetLoadFailureText(reason)
 
 Use `WithAddon` / `EnsureLoaded` for **explicit user actions** only (e.g. AH scan pulling `OneWoW_AltTracker_Auctions`), not speculative tab opens.
 
+**Raw `C_AddOns.LoadAddOn` / `UIParentLoadAddOn` is banned** outside `OneWoW/Core/AddonLoader.lua` and `OneWoW/Core/Lifecycle.lua` — it bypasses soft opt-out, combat deferral, and load tracing (pre-commit `no-raw-loadaddon`). The funnel also handles Blizzard LoD addons: `EnsureLoaded("Blizzard_InspectUI")`.
+
 ## Hub UI
 
 **Load order** is manifest array order (`RunStartupPhase`). **Row-1 tab display
@@ -134,6 +136,7 @@ Placeholder tabs when unloaded: `OneWoW:GetAlwaysShowModules()`.
 
 1. `python -m pre_commit run --all-files`
 2. No lifecycle `RegisterEvent` in orchestrated units (`no-suite-lifecycle-events`)
-3. No suite-internal `OptionalDeps` in changed TOCs
-4. No new cross-family store reads (data-manager hook; Phase 1 warns)
-5. Stores use `BootStore` + `onEnteringWorld` for PEW collection work
+3. No raw `C_AddOns.LoadAddOn` / `UIParentLoadAddOn` outside core (`no-raw-loadaddon`)
+4. No suite-internal `OptionalDeps` in changed TOCs
+5. No new cross-family store reads (data-manager hook; Phase 1 warns)
+6. Stores use `BootStore` + `onEnteringWorld` for PEW collection work

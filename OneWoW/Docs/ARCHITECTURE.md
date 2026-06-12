@@ -297,6 +297,12 @@ OneWoW:GetLoadFailureText(reason)               -> localized string
   Catalog AH scan → `OneWoW_AltTracker_Auctions`), not speculative tab opens.
 - **Trackers → Notes migration** uses `WithAddon("OneWoW_Notes", …)` when Notes is
   wanted but not loaded; defers when Notes is soft-opted-out.
+- **The funnel is mandatory.** Raw `C_AddOns.LoadAddOn` / `UIParentLoadAddOn` calls
+  are forbidden everywhere except `Core/AddonLoader.lua` and `Core/Lifecycle.lua` —
+  they bypass soft opt-out and combat deferral, and skip load tracing. This applies
+  to Blizzard LoD addons too (`EnsureLoaded("Blizzard_InspectUI")` works for them;
+  opt-out policy simply never matches). Enforced by pre-commit `no-raw-loadaddon`
+  (§3.10); rare legitimate exceptions use `-- noqa: loadaddon` on the line.
 
 ### 3.9 Load phases
 
@@ -313,6 +319,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 | Rule | Mechanism |
 |---|---|
 | No lifecycle `RegisterEvent` in orchestrated units | `bin/check_suite_lifecycle.py` (pre-commit `no-suite-lifecycle-events`) |
+| No raw `LoadAddOn` outside the loader funnel (§3.8) | `bin/check_no_raw_loadaddon.py` (pre-commit `no-raw-loadaddon`) |
 | No suite-internal `OptionalDeps` | `bin/check_toc_optional_deps.py` (pre-commit `no-suite-internal-optionaldeps`) |
 | No direct `db.global.settings` access (§8.5) | `bin/check_no_settings_bypass.py` (pre-commit `no-settings-bypass`) |
 | No cross-family store global reads | `bin/check_no_data_manager_bypass.py` (phased; see MIGRATION step 11) |

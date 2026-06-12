@@ -112,6 +112,32 @@ repos:
             | OneWoW_Bags/API/Examples/
           )
 
+      - id: no-raw-loadaddon
+        name: No raw LoadAddOn outside the core loader funnel
+        description: |
+          Forbids C_AddOns.LoadAddOn / UIParentLoadAddOn outside
+          OneWoW/Core/AddonLoader.lua and OneWoW/Core/Lifecycle.lua.
+          Raw loads bypass soft opt-out, combat deferral, and lifecycle
+          dispatch. Use EnsureLoaded / WithAddon / BringUp. See
+          OneWoW/Docs/ARCHITECTURE.md.
+        entry: python bin/check_no_raw_loadaddon.py
+        language: python
+        types: [lua]
+        # Same reference / vendored / generated trees as no-g-literal-access.
+        # OneWoW_Utility_DevTool/Data/LuaSyntax.lua is a TEMPORARY exclusion:
+        # its raw pcall(C_AddOns.LoadAddOn, ...) is being fixed in the DevTool
+        # rework — remove that line once it lands.
+        exclude: |
+          (?x)^(
+            Libs/
+            | \.lua-defs/
+            | \.wow_docs/
+            | \.vscode/
+            | \.releases/
+            | OneWoW_Bags/API/Examples/
+            | OneWoW_Utility_DevTool/Data/LuaSyntax\.lua
+          )
+
       - id: no-suite-internal-optionaldeps
         name: No suite-internal OptionalDeps in TOC files
         description: |
