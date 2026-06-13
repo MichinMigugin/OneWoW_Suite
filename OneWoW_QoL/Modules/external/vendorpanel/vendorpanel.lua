@@ -208,9 +208,9 @@ local function IsAlreadyKnown(itemLink)
     if itemID then
         local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(itemID)
         if classID == Enum.ItemClass.Recipe then
-            local Util = OneWoW_RecipeKnownUtil
+            local Util = OneWoW.RecipeKnownUtil
             if Util then
-                local result = Util:IsRecipeKnown(itemID, itemLink)
+                local result = Util:IsRecipeKnown(itemID)
                 if result ~= nil then return result end
             end
         end

@@ -158,9 +158,9 @@ Each group resolves all of its fields on the first read of any field in that gro
 
 | Hook | Used by | Effect if missing |
 |---|---|---|
-| `_G.OneWoW.ItemStatus:IsItemJunk(itemID)` | `props.isJunk` (in addition to `quality == Poor`) | `isJunk` reflects only the quality check. |
-| `_G.TransmogUpgradeMaster_API.IsAppearanceMissing(hyperlink)` | `props.isCatalyst`, `props.isCatalystUpgrade` (and the `#catalyst` / `#catalystupgrade` keywords that read them) | Both fields stay `false`; the keywords therefore never match. |
-| `_G.OneWoW_RecipeKnownUtil:IsRecipeKnown(itemID, hyperlink)` | `props.isAlreadyKnown` for recipe items, when the tooltip's `ITEM_SPELL_KNOWN` line is absent | Falls back to tooltip-text detection only. |
+| `OneWoW.ItemStatus:IsItemJunk(itemID)` | `props.isJunk` (in addition to `quality == Poor`) | `isJunk` reflects only the quality check. |
+| `TransmogUpgradeMaster_API.IsAppearanceMissing(hyperlink)` | `props.isCatalyst`, `props.isCatalystUpgrade` (and the `#catalyst` / `#catalystupgrade` keywords that read them) | Both fields stay `false`; the keywords therefore never match. |
+| `OneWoW.RecipeKnownUtil:IsRecipeKnown(itemID)` | `props.isAlreadyKnown` for recipe items, when the tooltip's `ITEM_SPELL_KNOWN` line is absent | Falls back to tooltip-text detection only. |
 
 ### Keywords registered by external modules
 

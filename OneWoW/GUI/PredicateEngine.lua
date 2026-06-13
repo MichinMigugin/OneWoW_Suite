@@ -1484,7 +1484,7 @@ local function ResolveTooltipFields(props)
 
     local alreadyKnown = strfind(tt, ITEM_SPELL_KNOWN, 1, true) ~= nil
     if not alreadyKnown and rawget(props, "classID") == Enum.ItemClass.Recipe then
-        local Util = OneWoW_RecipeKnownUtil
+        local Util = OneWoW.RecipeKnownUtil
         if Util then
             local result = Util:IsRecipeKnown(rawget(props, "id"), rawget(props, "hyperlink"))
             if result ~= nil then
