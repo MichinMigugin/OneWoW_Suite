@@ -70,19 +70,25 @@ Core\AddonLoader.lua
 Core\Lifecycle.lua
 Core\StoreBootstrap.lua
 Core\SettingsFeatureRegistry.lua
-Core\ItemPrices.lua
-Core\RecipeKnownUtil.lua
 Core\FirstRunWizard.lua
+
+# Services (shared OneWoW.* engines/utilities consumed cross-unit — see ARCHITECTURE §6).
+# DO NOT reorder within this block: ItemPrices + RecipeKnownUtil load before the
+# overlay engine that consumes them; overlay-icons + upgrade-detection before
+# overlay-engine; overlay-engine before itemstatus.
+Services\ItemPrices.lua
+Services\RecipeKnownUtil.lua
+Services\overlay-icons.lua
+Services\upgrade-detection.lua
+Services\overlay-engine.lua
+Services\itemstatus.lua
+Services\toast-engine.lua
+Services\tooltip-engine.lua
 
 # Integrations
 Integrations\ExternalTooltipSync.lua
 
 # Features
-Features\overlay-icons.lua
-Features\upgrade-detection.lua
-Features\overlay-engine.lua
-Features\itemstatus.lua
-Features\toast-engine.lua
 Features\ContextMenus.lua
 
 # Integrations
@@ -91,9 +97,6 @@ Integrations\Baganator.lua
 Integrations\BetterBags.lua
 Integrations\OneWoW_Bags.lua
 Integrations\ElvUI.lua
-
-# Tooltips (engine only — providers moved to OneWoW_QoL, MIGRATION step 9b)
-Tooltips\tooltip-engine.lua
 
 # Hub UI Framework
 UI\Framework.lua

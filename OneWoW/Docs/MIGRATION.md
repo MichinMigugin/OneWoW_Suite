@@ -20,14 +20,21 @@ to dedicated load units needs no SavedVariables migration.
 
 | Service | Location | External consumers |
 |---|---|---|
-| **TooltipEngine** | `Tooltips/tooltip-engine.lua` | Bags, QoL, DirectDeposit (`RegisterProvider`) |
-| **OverlayEngine** | `Features/overlay-engine.lua` | Bags; external bag-addon integrations in `Integrations/*.lua` |
-| **Toast engine** | `Features/toast-engine.lua` (`OneWoW.Toasts`) | OneWoW_Notes (`FireZoneAlert`, `FireItemLootAlert`); toast *types* moved to QoL (step 9a) |
-| **ItemStatus** | `Features/itemstatus.lua` | Bags (`ItemButton.lua`, `Data/Categories.lua`) |
-| **UpgradeDetection** | `Features/upgrade-detection.lua` | Bags (`ItemButton.lua`, `Data/Categories.lua`) |
-| **RecipeKnownUtil** | `Core/RecipeKnownUtil.lua` | Trackers, QoL, CatalogData_Journal, GUI PredicateEngine |
-| **ItemPrices** | `Core/ItemPrices.lua` + `OneWoW_ItemPricesAPI` | Tooltip providers, other units |
+| **TooltipEngine** | `Services/tooltip-engine.lua` | Bags, QoL, DirectDeposit (`RegisterProvider`) |
+| **OverlayEngine** | `Services/overlay-engine.lua` | Bags; external bag-addon integrations in `Integrations/*.lua` |
+| **Toast engine** | `Services/toast-engine.lua` (`OneWoW.Toasts`) | OneWoW_Notes (`FireZoneAlert`, `FireItemLootAlert`); toast *types* moved to QoL (step 9a) |
+| **ItemStatus** | `Services/itemstatus.lua` | Bags (`ItemButton.lua`, `Data/Categories.lua`) |
+| **UpgradeDetection** | `Services/upgrade-detection.lua` | Bags (`ItemButton.lua`, `Data/Categories.lua`) |
+| **RecipeKnownUtil** | `Services/RecipeKnownUtil.lua` | Trackers, QoL, CatalogData_Journal, GUI PredicateEngine |
+| **ItemPrices** | `Services/ItemPrices.lua` + `OneWoW_ItemPricesAPI` | Tooltip providers, other units |
 | **SettingsFeatureRegistry** | `Core/SettingsFeatureRegistry.lua` | All feature settings reads/writes (step 6) |
+
+> **Note:** the eight service files above were relocated into a single
+> `OneWoW/Services/` TOC block after step 9 (they were previously scattered
+> across `Core/`, `Features/`, and `Tooltips/` — the old paths in the completed
+> 9a/9b/9d narratives below reflect their location *at the time of that step*).
+> `SettingsFeatureRegistry` stayed in `Core/` as the settings funnel. Globals
+> (`OneWoW.*`) are unchanged — consumers were not touched.
 
 Also stays in core: hub UI (`UI/`), Search, Minimap, lifecycle/orchestrator
 (`Core/AddonLoader.lua`, `Core/Lifecycle.lua`, …), `ContextMenus`, bag-addon

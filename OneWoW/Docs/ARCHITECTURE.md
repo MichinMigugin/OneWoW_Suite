@@ -538,18 +538,20 @@ stores opportunistically (tooltips, overlays) — never as a load trigger.
 
 Engines and shared detection are **core services** on `_G.OneWoW`; **feature
 content registers in from QoL** (or other units). With QoL opted out, the
-services stay resident — only the QoL-registered content disappears.
+services stay resident — only the QoL-registered content disappears. All service
+files live under `OneWoW/Services/` (a single TOC block; consumers reference the
+`OneWoW.*` table, never the path).
 
 | Service | File | Consumed by |
 |---|---|---|
-| `OneWoW.OverlayEngine` | `Features/overlay-engine.lua` | Bag integrations (core `Integrations/*`), `OneWoW_Bags` |
-| `OneWoW.OverlayIcons` | `Features/overlay-icons.lua` | Overlay engine rendering, QoL overlays tab |
-| `OneWoW.TooltipEngine` | `Tooltips/tooltip-engine.lua` | Provider registration from QoL, Bags, DirectDeposit |
-| `OneWoW.Toasts` | `Features/toast-engine.lua` | Toast types from QoL, `OneWoW_Notes` `Fire*Alert` |
-| `OneWoW.ItemStatus` | `Features/itemstatus.lua` | Overlay engine, Bags |
-| `OneWoW.UpgradeDetection` | `Features/upgrade-detection.lua` | Overlay engine, Bags |
-| `OneWoW.RecipeKnownUtil` | `Core/RecipeKnownUtil.lua` | Overlay engine, tooltip providers |
-| `OneWoW.ItemPrices` | `Core/ItemPrices.lua` | Tooltip providers, overlay engine |
+| `OneWoW.OverlayEngine` | `Services/overlay-engine.lua` | Bag integrations (core `Integrations/*`), `OneWoW_Bags` |
+| `OneWoW.OverlayIcons` | `Services/overlay-icons.lua` | Overlay engine rendering, QoL overlays tab |
+| `OneWoW.TooltipEngine` | `Services/tooltip-engine.lua` | Provider registration from QoL, Bags, DirectDeposit |
+| `OneWoW.Toasts` | `Services/toast-engine.lua` | Toast types from QoL, `OneWoW_Notes` `Fire*Alert` |
+| `OneWoW.ItemStatus` | `Services/itemstatus.lua` | Overlay engine, Bags |
+| `OneWoW.UpgradeDetection` | `Services/upgrade-detection.lua` | Overlay engine, Bags |
+| `OneWoW.RecipeKnownUtil` | `Services/RecipeKnownUtil.lua` | Overlay engine, tooltip providers |
+| `OneWoW.ItemPrices` | `Services/ItemPrices.lua` | Tooltip providers, overlay engine |
 
 Feature content that registers in from QoL: settings catalogs
 (`SettingsFeatureRegistry:Register`, e.g. `tooltips`, `overlays`), tooltip
@@ -644,7 +646,7 @@ root outside the funnel (follow-up before MIGRATION step 9c); the former
 `toasts` root was folded into `settings.toastalerts` in MIGRATION step 9a
 (migration v5), including the storage-only `anchor` id (no catalog row).
 
-The toast engine (`Features/toast-engine.lua`, `OneWoW.Toasts`) stays resident
+The toast engine (`Services/toast-engine.lua`, `OneWoW.Toasts`) stays resident
 in core; its surface includes the notes `Fire*Alert` wrappers consumed
 cross-unit by `OneWoW_Notes`. Toast *types* (loot, instance), the settings
 catalog, and the toastalerts tab live in `OneWoW_QoL`.
