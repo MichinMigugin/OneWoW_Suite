@@ -120,6 +120,7 @@ function Items:Initialize()
     Items._lootFrame = f
     f:SetScript("OnEvent", function(_, _, msg)
         if not msg then return end
+        if OneWoW.Restriction.IsSecret(msg) then return end
 
         local isSelf = false
         for _, prefix in ipairs(selfPrefixes) do
