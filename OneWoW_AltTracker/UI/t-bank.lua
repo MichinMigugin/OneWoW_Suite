@@ -1,8 +1,8 @@
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
-local PE = OneWoW_GUI.PredicateEngine
+local PE = OneWoW.PredicateEngine
 
 ns.UI = ns.UI or {}
 
@@ -324,7 +324,7 @@ function ns.UI.CreateBankTab(parent)
     local guildBankEventFrame = CreateFrame("Frame")
     guildBankEventFrame:RegisterEvent("GUILDBANKBAGSLOTS_CHANGED")
     guildBankEventFrame:RegisterEvent("GUILDBANK_UPDATE_TABS")
-    guildBankEventFrame:SetScript("OnEvent", function(self, event)
+    guildBankEventFrame:SetScript("OnEvent", function()
         local now = GetTime()
         if (now - parent.lastGuildBankUpdate) > 2 then
             parent.lastGuildBankUpdate = now
@@ -509,7 +509,7 @@ function ns.UI.RefreshBankDisplay(parent)
     end
 end
 
-function ns.UI.GetBankData(characterKey, bankType, guildName)
+function ns.UI.GetBankData(characterKey, _, guildName)
     if not OneWoW_AltTracker_Storage_DB then return nil end
     if not characterKey then return nil end
 

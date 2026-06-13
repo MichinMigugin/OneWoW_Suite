@@ -1,11 +1,9 @@
 local _, OneWoW_Bags = ...
 
-local OneWoW_GUI = OneWoW_GUI
-
 local Constants = OneWoW_Bags.Constants
 local CategoryManager = OneWoW_Bags.CategoryManager
 local H = OneWoW_Bags.CategoryViewHelpers
-local PE = OneWoW_GUI.PredicateEngine
+local PE = OneWoW.PredicateEngine
 
 local floor, max = math.floor, math.max
 OneWoW_Bags.CategoryView = {}

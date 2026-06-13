@@ -1,11 +1,10 @@
 local _, OneWoW_Bags = ...
 
 local OneWoW_GUI = OneWoW_GUI
-
 local DB = OneWoW_GUI.DB
 
 local Constants = OneWoW_Bags.Constants
-local PE = OneWoW_GUI.PredicateEngine
+local PE = OneWoW.PredicateEngine
 
 local tinsert, sort, wipe = tinsert, sort, wipe
 local ipairs, pairs = ipairs, pairs

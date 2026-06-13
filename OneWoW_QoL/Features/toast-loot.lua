@@ -1,10 +1,8 @@
 local _, ns = ...
 
 local OneWoW = OneWoW
-local OneWoW_GUI = OneWoW_GUI
 
-local PE = OneWoW_GUI.PredicateEngine
-
+local PE = OneWoW.PredicateEngine
 local Toasts = OneWoW.Toasts
 
 local TYPE_COLORS = {

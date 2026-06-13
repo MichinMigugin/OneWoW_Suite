@@ -217,7 +217,7 @@ Shared by both `CategoryView` (bags) and `BankCategoryView` (bank) via `H.Layout
 
 ## PredicateEngine
 
-The engine lives in `OneWoW_GUI` (`OneWoW_GUI.PredicateEngine`) and is acquired in Bags via `local PE = OneWoW_GUI.PredicateEngine`. Full reference: [`OneWoW/Docs/PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
+The engine is a core service (`OneWoW.PredicateEngine`) and is acquired in Bags via `local PE = OneWoW.PredicateEngine`. Full reference: [`OneWoW/Docs/PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
 
 Search strings use its expression language (`#keyword`, operators, etc.). `BuildProps` enriches items using **bag-slot context** (`bagID`, `slotID`) so tooltip-backed predicates match the search bar (via `C_TooltipInfo.GetBagItem` where applicable). `CheckItem(expr, ...)` evaluates membership. Both custom `searchExpression` categories and builtin search categories use this engine. Custom category expressions expand `SAVED(Name)` shortcuts before calling the engine; built-in category searches are static and do not use saved searches.
 
@@ -291,6 +291,6 @@ Both views are thin wrappers that delegate to the shared pipeline in `CategoryVi
 | `Views/CategoryView.lua` | Bags category view (thin wrapper over shared pipeline) |
 | `Views/BankCategoryView.lua` | Bank category view (thin wrapper over shared pipeline) |
 | `Data/Sorting.lua` | `SortButtons` |
-| `OneWoW/GUI/PredicateEngine.lua` | Shared expression engine and item props (see [`PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md)) |
+| `OneWoW/Services/PredicateEngine.lua` | Shared expression engine and item props (see [`PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md)) |
 | `Core/SectionDefaults.lua` | Section IDs, builtin ordering, OneWoW Bags section sync |
 | `Controllers/CategoryController.lua` | CRUD, import maps, UI refresh orchestration, `appliesIn` / `showHeaderBank` setters |

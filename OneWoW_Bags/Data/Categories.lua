@@ -1,9 +1,7 @@
 local _, OneWoW_Bags = ...
 
-local OneWoW_GUI = OneWoW_GUI
-
 local L = OneWoW_Bags.L
-local PE = OneWoW_GUI.PredicateEngine
+local PE = OneWoW.PredicateEngine
 local BagTypes = OneWoW_Bags.BagTypes
 local Constants = OneWoW_Bags.Constants
 

@@ -25,7 +25,7 @@ to dedicated load units needs no SavedVariables migration.
 | **Toast engine** | `Services/toast-engine.lua` (`OneWoW.Toasts`) | OneWoW_Notes (`FireZoneAlert`, `FireItemLootAlert`); toast *types* moved to QoL (step 9a) |
 | **ItemStatus** | `Services/itemstatus.lua` | Bags (`ItemButton.lua`, `Data/Categories.lua`) |
 | **UpgradeDetection** | `Services/upgrade-detection.lua` | Bags (`ItemButton.lua`, `Data/Categories.lua`) |
-| **RecipeKnownUtil** | `Services/RecipeKnownUtil.lua` | Trackers, QoL, CatalogData_Journal, GUI PredicateEngine |
+| **RecipeKnownUtil** | `Services/RecipeKnownUtil.lua` | Trackers, QoL, CatalogData_Journal, PredicateEngine |
 | **ItemPrices** | `Services/ItemPrices.lua` + `OneWoW_ItemPricesAPI` | Tooltip providers, other units |
 | **SettingsFeatureRegistry** | `Core/SettingsFeatureRegistry.lua` | All feature settings reads/writes (step 6) |
 

@@ -41,7 +41,6 @@ GUI\Core.lua
 GUI\Database.lua
 GUI\Constants.lua
 GUI\OneWoW_GUI.lua
-GUI\PredicateEngine.lua
 GUI\Buttons.lua
 GUI\Display.lua
 GUI\Controls.lua
@@ -73,9 +72,11 @@ Core\SettingsFeatureRegistry.lua
 Core\FirstRunWizard.lua
 
 # Services (shared OneWoW.* engines/utilities consumed cross-unit — see ARCHITECTURE §6).
-# DO NOT reorder within this block: ItemPrices + RecipeKnownUtil load before the
+# DO NOT reorder within this block: PredicateEngine first (upgrade-detection +
+# tooltip-engine capture it at file scope); ItemPrices + RecipeKnownUtil before the
 # overlay engine that consumes them; overlay-icons + upgrade-detection before
 # overlay-engine; overlay-engine before itemstatus.
+Services\PredicateEngine.lua
 Services\ItemPrices.lua
 Services\RecipeKnownUtil.lua
 Services\overlay-icons.lua

@@ -1,8 +1,8 @@
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
-local PE = OneWoW_GUI.PredicateEngine
+local PE = OneWoW.PredicateEngine
 
 ns.UI = ns.UI or {}
 

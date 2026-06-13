@@ -1,9 +1,7 @@
 local _, OneWoW_DirectDeposit = ...
+
 local L = OneWoW_DirectDeposit.L
-
-local OneWoW_GUI = OneWoW_GUI
-
-local PE = OneWoW_GUI.PredicateEngine
+local PE = OneWoW.PredicateEngine
 
 OneWoW_DirectDeposit.DirectDeposit = {}
 local DirectDeposit = OneWoW_DirectDeposit.DirectDeposit

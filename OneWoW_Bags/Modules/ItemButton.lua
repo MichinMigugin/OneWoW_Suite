@@ -4,7 +4,7 @@ local OneWoW_GUI = OneWoW_GUI
 
 local BagTypes = OneWoW_Bags.BagTypes
 local ItemPool = OneWoW_Bags.ItemPool
-local PE = OneWoW_GUI.PredicateEngine
+local PE = OneWoW.PredicateEngine
 
 local pairs = pairs
 

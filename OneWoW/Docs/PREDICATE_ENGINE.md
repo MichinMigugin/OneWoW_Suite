@@ -1,8 +1,8 @@
 # PredicateEngine
 
-PredicateEngine is a shared expression engine published on the `OneWoW_GUI` global as `OneWoW_GUI.PredicateEngine`. It turns textual expressions such as `#epic & ilvl>=600` or `haste>=200` into compiled predicate functions over a rich per-item property table. Any OneWoW addon that has `OneWoW` as a dependency can use it.
+PredicateEngine is a shared expression engine published on the `OneWoW` global as `OneWoW.PredicateEngine` (a core service in `OneWoW/Services/`). It turns textual expressions such as `#epic & ilvl>=600` or `haste>=200` into compiled predicate functions over a rich per-item property table. Any OneWoW addon that has `OneWoW` as a dependency can use it.
 
-Source: [`OneWoW/GUI/PredicateEngine.lua`](../GUI/PredicateEngine.lua).
+Source: [`OneWoW/Services/PredicateEngine.lua`](../Services/PredicateEngine.lua).
 
 For the user-facing expression syntax (the full keyword catalog, operator semantics, examples), see [`OneWoW_Bags/Docs/SEARCH_SYNTAX.md`](../../OneWoW_Bags/Docs/SEARCH_SYNTAX.md). This document is the **developer reference** for the API surface, caches, and extension points.
 
@@ -11,11 +11,10 @@ For the user-facing expression syntax (the full keyword catalog, operator semant
 ## Acquiring the engine
 
 ```lua
-local OneWoW_GUI = OneWoW_GUI
-local PE = OneWoW_GUI.PredicateEngine
+local PE = OneWoW.PredicateEngine
 ```
 
-Every suite unit has `## RequiredDeps: OneWoW`, so the engine is guaranteed to be available by the time your file loads.
+Every suite unit has `## RequiredDeps: OneWoW`, so the engine is guaranteed to be available by the time your file loads. (Inside the `OneWoW` core addon itself, take the namespace from the file vararg first: `local _, OneWoW = ...`.)
 
 ---
 

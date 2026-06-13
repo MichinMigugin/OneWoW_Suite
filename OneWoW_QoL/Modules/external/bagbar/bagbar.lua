@@ -2,7 +2,7 @@ local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local PE = OneWoW_GUI.PredicateEngine
+local PE = OneWoW.PredicateEngine
 
 local strtrim = strtrim
 local tinsert, sort = tinsert, sort

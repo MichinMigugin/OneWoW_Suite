@@ -40,7 +40,7 @@ Core\Events.lua                    ← event router (dirtyBags, RuntimeEvents)
 
 Data\SavedSearches.lua             ← user-defined SAVED(Name) search shortcuts
 Data\Sorting.lua                   ← item sort comparators (SortButtons)
-Data\Categories.lua                ← builtin category defs, classification engine (consumes OneWoW_GUI.PredicateEngine)
+Data\Categories.lua                ← builtin category defs, classification engine (consumes OneWoW.PredicateEngine)
 Data\BaganatorDefaultMap.lua       ← Baganator default category name map
 
 Modules\ItemPool.lua               ← frame object pool (ItemButton recycling)
@@ -154,7 +154,7 @@ OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some o
 │                      Data Layer                              │
 │  SavedSearches, Categories, Sorting, BagTypes, BankTypes     │
 │  ─ Search shortcuts, classification, sort comparators        │
-│  ─ Categories uses OneWoW_GUI.PredicateEngine for search     │
+│  ─ Categories uses OneWoW.PredicateEngine for search     │
 └────────────────────────────┬─────────────────────────────────┘
                              │ reads
 ┌────────────────────────────▼─────────────────────────────────┐
@@ -176,7 +176,7 @@ The root object provides:
 - **State flags:** `bankOpen`, `guildBankOpen`, `oneWoWHubActive`, `inventoryPresentationState` (contains `altShowActive`), `activeExpansionFilter` (bags search bar expansion filter), `activeBankExpansionFilter`
 - **Lifecycle:** `OnAddonLoaded`, `OnPlayerLogin`, `InitializeControllers`, `InitializeDatabase`
 - **Refresh orchestration:** `RequestLayoutRefresh(target)`, `RequestVisualRefresh(target)`, `RequestWindowReset(target)`
-- **Cache invalidation:** `InvalidateCategorization(scope)` — refreshes `Categories` from `customCategoriesV2` / `recentItemDuration` / `recentItems`, clears category caches (`categoryCache` + `baseCategoryCache`); if `scope == "props"` then `OneWoW_GUI.PredicateEngine:InvalidatePropsCache()`, else full `OneWoW_GUI.PredicateEngine:InvalidateCache()`. **`InvalidateItemIDs(idSet)`** — surgical eviction after coalesced `GET_ITEM_INFO_RECEIVED` so identity-tier caches survive for unrelated items while streaming completes.
+- **Cache invalidation:** `InvalidateCategorization(scope)` — refreshes `Categories` from `customCategoriesV2` / `recentItemDuration` / `recentItems`, clears category caches (`categoryCache` + `baseCategoryCache`); if `scope == "props"` then `OneWoW.PredicateEngine:InvalidatePropsCache()`, else full `OneWoW.PredicateEngine:InvalidateCache()`. **`InvalidateItemIDs(idSet)`** — surgical eviction after coalesced `GET_ITEM_INFO_RECEIVED` so identity-tier caches survive for unrelated items while streaming completes.
 - **Blizzard hooks:** `HookBlizzardBags`, `SuppressBankFrame`, `RestoreBankFrame`, `SuppressGuildBankFrame`, `RestoreGuildBankFrame`
 - **Guild bank orchestration:** `RefreshGuildBankContents`, `QueueGuildBankRefresh`, `TrackGuildBankTransferTab`, `TrackGuildBankTransferSource`, `ProcessPendingGuildBankTransferTabs`, `PurgeClearSource`, plus internal coalescing state for cross-tab moves
 - **Helpers:** `GetDB`, `GetItemSortMode`, `SortButtons`, `ShouldShowItemQuality`, `ShouldDimJunkItem`, `ShouldStripJunkOverlays`, `EnsureCategoryModification`, `EnsureBuiltinCategoryAddedItems`, `IsAltShowActive`, `SetAltShowActive`, `IsBankUIEnabled`, `ReinitForLanguage`, `ApplyItemButtonMixin`, `HookPetCageTooltip`, `GetMoneyDialog`, `ShowMoneyDialog`, `UpdateSlotsForItemIDs`
@@ -224,7 +224,7 @@ Game event: BAG_UPDATE (per bag, may repeat same frame)
 
 Game event: BAG_UPDATE_DELAYED (once after coalesced updates)
   └─→ Events:OnBagUpdateDelayed
-       ├─→ InvalidateCategorization("props")  ← Categories refresh + OneWoW_GUI.PredicateEngine:InvalidatePropsCache
+       ├─→ InvalidateCategorization("props")  ← Categories refresh + OneWoW.PredicateEngine:InvalidatePropsCache
        └─→ OneWoW_Bags:ProcessBagUpdate(dirtyBags)
             ├─→ Categories:OnPlayerBagDirtySnapshot(dirtyBags) (expire GUID map; stamp GUIDs for Blizzard-new slots in player bags)
             ├─→ BagSet:UpdateDirtyBags(dirtyBags)
@@ -330,7 +330,7 @@ CategoryManager:AssignCategories()
 
 ### 5. Search Pipeline
 
-Search uses `OneWoW_GUI.PredicateEngine` (tokenizer, AST, evaluation). For full engine internals and public API, see [`OneWoW/Docs/PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
+Search uses `OneWoW.PredicateEngine` (tokenizer, AST, evaluation). For full engine internals and public API, see [`OneWoW/Docs/PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
 
 - Keywords, properties, operators (`&` `|` `!`), parentheses, bare name text
 - `SAVED(Name)` shortcuts are expanded by `Data\SavedSearches.lua` before PredicateEngine evaluation. Saved searches are stored as `db.global.savedSearches[displayName] = predicate`.
@@ -413,7 +413,7 @@ Acquire/release pool for `ContainerFrameItemButtonTemplate` buttons. `Preallocat
 Applied with `OneWoW_Bags:ApplyItemButtonMixin` (copies `OneWoW_Bags.ItemButtonMixin` methods onto the button once).
 
 - `OWB_SetSlot`, `OWB_MarkDirty`, `OWB_IsDirty`, `OWB_FullUpdate`
-- `OWB_UpdateNewItemGlow` — player bags only (`BagTypes:IsPlayerBag`); uses `OneWoW_GUI.PredicateEngine:BuildProps(...).isNew` + template overlays; respects Masque (`Integrations\Masque.lua`) for border/glow ownership when Masque is active
+- `OWB_UpdateNewItemGlow` — player bags only (`BagTypes:IsPlayerBag`); uses `OneWoW.PredicateEngine:BuildProps(...).isNew` + template overlays; respects Masque (`Integrations\Masque.lua`) for border/glow ownership when Masque is active
 - `OWB_UpdateJunkDim`, `OWB_UpdateUnusableOverlay` — junk from `BuildProps(...).isJunk`
 - `OWB_RefreshCooldown`, `OWB_RefreshLock`, `OWB_SetIconSize`, `OWB_GetLink`
 
@@ -489,7 +489,7 @@ category search expressions.
 
 ### PredicateEngine
 
-Lives in the core GUI toolkit as `OneWoW_GUI.PredicateEngine` (`OneWoW/GUI/PredicateEngine.lua`, published on the `OneWoW_GUI` global). Bags consumes it via `local PE = OneWoW_GUI.PredicateEngine`. Full reference: [`OneWoW/Docs/PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
+Lives in OneWoW core as the service `OneWoW.PredicateEngine` (`OneWoW/Services/PredicateEngine.lua`, published on the `OneWoW` global). Bags consumes it via `local PE = OneWoW.PredicateEngine`. Full reference: [`OneWoW/Docs/PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
 
 Used by Bags for: search filtering (`WH:FilterBySearch` after saved-search expansion), custom category expressions and builtin category search strings in `Data/Categories.lua`, item button state (`ItemButton` junk / new / upgrade flags), and keyword tooltips in `Integrations/OneWoWTooltips.lua`.
 

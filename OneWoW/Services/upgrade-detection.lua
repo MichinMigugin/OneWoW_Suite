@@ -1,7 +1,6 @@
 local _, OneWoW = ...
 
-local OneWoW_GUI = OneWoW_GUI
-local PE = OneWoW_GUI.PredicateEngine
+local PE = OneWoW.PredicateEngine
 
 local UpgradeDetection = {}
 OneWoW.UpgradeDetection = UpgradeDetection

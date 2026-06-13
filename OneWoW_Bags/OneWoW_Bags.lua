@@ -2,8 +2,7 @@ local ADDON_NAME, OneWoW_Bags = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local PE = OneWoW_GUI.PredicateEngine
-
+local PE = OneWoW.PredicateEngine
 local L = OneWoW_Bags.L
 local Events = OneWoW_Bags.Events
 

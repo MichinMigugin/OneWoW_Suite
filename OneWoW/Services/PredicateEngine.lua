@@ -13,10 +13,10 @@
 --   - Lazy tooltip metatable for the few remaining tooltip-only fields
 -- ============================================================================
 
-local OneWoW_GUI = OneWoW_GUI
+local _, OneWoW = ...
 
-OneWoW_GUI.PredicateEngine = {}
-local PE = OneWoW_GUI.PredicateEngine
+OneWoW.PredicateEngine = {}
+local PE = OneWoW.PredicateEngine
 
 local tconcat, tinsert, wipe = table.concat, tinsert, wipe
 local ipairs, pairs, tonumber, tostring = ipairs, pairs, tonumber, tostring
@@ -1895,7 +1895,7 @@ local function PopulateBaseProps(props, itemID, hyperlink)
 
     -- ---- Junk (quality + OneWoW hook) ----
     props.isJunk = (props.quality == IQ.Poor)
-    if not props.isJunk and OneWoW and OneWoW.ItemStatus then
+    if not props.isJunk and OneWoW.ItemStatus then
         props.isJunk = OneWoW.ItemStatus:IsItemJunk(itemID) or false
     end
 

@@ -6,11 +6,11 @@ OneWoW Bags uses a single expression engine for the search bar, custom category
 rules, and (in the future) vendor sell rules. Everything described here works in
 all three contexts.
 
-The engine itself is published by `OneWoW_GUI` as `OneWoW_GUI.PredicateEngine`.
+The engine itself is published by `OneWoW` as `OneWoW.PredicateEngine`.
 The canonical set of **built-in** `#` keywords, property names, and verbose
 `Is…` flags is defined in
-[`OneWoW/GUI/PredicateEngine.lua`](../../OneWoW/GUI/PredicateEngine.lua) (use
-`OneWoW_GUI.PredicateEngine:GetAllKeywords()` at runtime to list every keyword
+[`OneWoW/Services/PredicateEngine.lua`](../../OneWoW/Services/PredicateEngine.lua) (use
+`OneWoW.PredicateEngine:GetAllKeywords()` at runtime to list every keyword
 currently registered, including any added via `RegisterKeyword` from other
 addons). For the public API, caches, and extension points, see
 [`OneWoW/Docs/PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
@@ -63,7 +63,7 @@ SAVED(Collected Toys)
 ```
 
 If `Collected Toys` is saved as `#toy & #collected`, the expression above is
-expanded to that predicate string before `OneWoW_GUI.PredicateEngine` compiles
+expanded to that predicate string before `OneWoW.PredicateEngine` compiles
 or evaluates it. Nested saved searches are supported with a small recursion
 limit.
 
@@ -373,7 +373,7 @@ uses the **Profession** item class).
 | `#myprofs` | `#myprofession`, `#myprofessions` | Profession-class **tools** and **recipes** whose profession matches a trade skill the current character has learned (skill line IDs from `GetProfessions` / `GetProfessionInfo`). Other item types do not match. |
 
 The known-profession set is cached until
-`OneWoW_GUI.PredicateEngine:InvalidateKnownProfessions()` runs. OneWoW Bags listens for
+`OneWoW.PredicateEngine:InvalidateKnownProfessions()` runs. OneWoW Bags listens for
 `SKILL_LINES_CHANGED` and calls it automatically.
 
 ### Miscellaneous Subtypes
@@ -1014,7 +1014,7 @@ quality>=${EPIC} & expansion==${WARWITHIN}
 ## PredicateEngine.lua (file map)
 
 This is a structural index of
-[`OneWoW/GUI/PredicateEngine.lua`](../../OneWoW/GUI/PredicateEngine.lua) for
+[`OneWoW/Services/PredicateEngine.lua`](../../OneWoW/Services/PredicateEngine.lua) for
 anyone cross-checking behavior or diffs. User-facing behavior is also summarized
 in this document; full API and extension notes are in
 [`PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
