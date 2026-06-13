@@ -1,7 +1,4 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/preybar/Locales/enUS.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 local L_enUS = ns.L_enUS
 
 L_enUS["PREYBAR_TITLE"]                   = "Prey Hunt Bar"
@@ -40,4 +37,5 @@ L_enUS["PREYBAR_ADVICE_READY"]            = "Prey is ready - hunt it!"
 L_enUS["PREYBAR_STATE_LABEL"]             = "%s  %d%%"
 L_enUS["PREYBAR_DEMO_BOSS"]               = "Sample Prey"
 L_enUS["PREYBAR_DRAG_HINT"]               = "Unlock to drag  -  Prey Hunt Bar"
+L_enUS["PREYBAR_OPACITY_FMT"]             = "Opacity: %d%%"
 L_enUS["PREYBAR_SETTINGS_HINT"]           = "A sample bar is shown while this panel is open so you can position it. Turn off Lock Position to drag it, then lock it again. Outside of this panel the bar only appears during an active prey hunt."

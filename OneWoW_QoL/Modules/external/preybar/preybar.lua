@@ -1,19 +1,23 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/preybar/preybar.lua
--- Created by MichinMuggin (Ricky)
 -- ============================================================================
 -- Prey Hunt Bar
 -- ============================================================================
 -- Movable HUD bar for the Midnight "prey hunt" lure mechanic.
 --
 -- Data sources (all live Blizzard APIs, no new collectors):
---   - Progress state (Cold/Warm/Hot/Ready) comes from the prey-hunt-progress
+--   - Progress state (Cold/Warm/Hot/Final) comes from the prey-hunt-progress
 --     UI widget via C_UIWidgetManager.GetPreyHuntProgressWidgetVisualizationInfo.
---     The widget ID is discovered at runtime (probed from the power-bar widget
---     container and from UPDATE_UI_WIDGET), never hardcoded.
+--     Widget IDs are discovered at runtime through GetPowerBarWidgetSetID +
+--     GetAllWidgetsBySetID (filter PreyHuntProgress), with a widgetFrames
+--     container fallback. Visibility filtering mirrors Blizzard's template
+--     (.wow_docs/preyhunt/Blizzard_UIWidgetTemplatePreyHuntProgress.lua):
+--     discard entries where shownState == Hidden. UPDATE_UI_WIDGET /
+--     UPDATE_ALL_UI_WIDGETS drive refresh; IDs are never hardcoded.
 --   - Active hunt boss/difficulty comes from C_QuestLog.GetActivePreyQuest +
 --     GetTitleForQuestID. Difficulty is classified by quest-ID range, which is
---     locale-independent (parsing the title's difficulty word is not).
+--     locale-independent (parsing the title's difficulty word is not). Quest
+--     titles include a localized "Tag: " prefix and trailing " (Difficulty)"
+--     suffix from Blizzard; both are stripped for the boss line because difficulty
+--     has its own display row and the bar context already implies prey.
 --   - Affixes are a function of difficulty only (every Normal hunt shares the
 --     same affix set, etc.), so no per-boss table is needed.
 --
@@ -31,6 +35,8 @@ local KILL_SOMETHING_SPELL_ID = 1245767
 local AMBUSH_WHISPER_MATCH     = "ambush"
 local AMBUSH_HOLD_SECONDS      = 5
 local POLL_INTERVAL            = 2
+local PEW_DELAY_SECONDS        = 0.5
+local PREY_WIDGET_TYPE         = Enum.UIWidgetVisualizationType.PreyHuntProgress
 
 local PreyBarModule = {
     id          = "preybar",
@@ -60,6 +66,7 @@ local PreyBarModule = {
     _previewTicker = nil,
     _isAmbushed    = false,
     _ambushToken   = 0,
+    _pewDelayTimer = nil,
 }
 
 -- ---- Toggle / storage helpers ----
@@ -68,15 +75,37 @@ local function GetToggle(id)
 end
 PreyBarModule.GetToggle = GetToggle
 
-local function GetPositionStorage()
+local function GetModuleStorage()
     local addon = OneWoW_QoL
     if not addon or not addon.db then return nil end
     local mods = addon.db.global.modules
     if not mods["preybar"] then mods["preybar"] = {} end
-    if not mods["preybar"].position then mods["preybar"].position = {} end
-    return mods["preybar"].position
+    return mods["preybar"]
+end
+
+local function GetPositionStorage()
+    local mod = GetModuleStorage()
+    if not mod then return nil end
+    if not mod.position then mod.position = {} end
+    return mod.position
 end
 PreyBarModule.GetPositionStorage = GetPositionStorage
+
+function PreyBarModule:GetOpacity()
+    local mod = GetModuleStorage()
+    return mod.opacity or 1.0
+end
+
+function PreyBarModule:SetOpacity(opacity)
+    local mod = GetModuleStorage()
+    mod.opacity = opacity
+    self:ApplyOpacity()
+end
+
+function PreyBarModule:ApplyOpacity()
+    if not self._frame then return end
+    self._frame:SetAlpha(self:GetOpacity())
+end
 
 -- ---- Difficulty classification ----
 -- Prey hunt weekly quest IDs split cleanly into difficulty bands. The 91210-91242
@@ -95,6 +124,37 @@ function PreyBarModule:ClassifyDifficulty(questID)
     return nil
 end
 
+--- Normalize a prey quest title into the boss display name.
+--- Strips Blizzard's localized "Tag: " prefix (tag metadata, then ^.-: fallback)
+--- and trailing " (Difficulty)" suffix.
+---@param questID number
+---@param title string|nil
+---@return string|nil
+local function NormalizePreyQuestBossName(questID, title)
+    if not title or title == "" then return title end
+
+    local bossName = title:gsub(" %b()$", "")
+    if bossName == "" then bossName = title end
+
+    local tagInfo = C_QuestLog.GetQuestTagInfo(questID)
+    if tagInfo and tagInfo.tagName ~= "" then
+        local prefix = tagInfo.tagName .. ": "
+        if bossName:sub(1, #prefix) == prefix then
+            bossName = bossName:sub(#prefix + 1)
+        end
+    end
+
+    -- Fallback when tag metadata is missing or tagName does not match the title
+    -- (prey titles embed a localized "Tag: boss" prefix in the quest string).
+    local tagStripped = bossName:gsub("^.-:%s*", "")
+    if tagStripped ~= "" then
+        bossName = tagStripped
+    end
+
+    if bossName == "" then return title end
+    return bossName
+end
+
 --- Resolve the active prey hunt's difficulty and boss name from the quest log.
 ---@return string|nil difficultyKey
 ---@return string|nil bossName
@@ -102,42 +162,74 @@ function PreyBarModule:GetActiveHunt()
     local questID = C_QuestLog.GetActivePreyQuest()
     if not questID then return nil, nil end
     local difficultyKey = self:ClassifyDifficulty(questID)
-    local bossName = C_QuestLog.GetTitleForQuestID(questID)
+    local bossName = NormalizePreyQuestBossName(questID, C_QuestLog.GetTitleForQuestID(questID))
     return difficultyKey, bossName
 end
 
 -- ---- Widget resolution ----
--- The prey widget ID is not stable across patches, so it is discovered rather
--- than hardcoded: probe a candidate ID with the prey-specific visualization
--- getter; a non-nil return means it really is the prey widget.
+-- Mirrors Blizzard_UIWidgetTemplatePreyHuntProgress GetPreyHuntProgressVisInfoData:
+-- return visualization info only when shownState is not Hidden.
 ---@param widgetID number|nil
 ---@return table|nil widgetInfo
 local function ProbePreyWidget(widgetID)
     if not widgetID then return nil end
-    return C_UIWidgetManager.GetPreyHuntProgressWidgetVisualizationInfo(widgetID)
+    local widgetInfo = C_UIWidgetManager.GetPreyHuntProgressWidgetVisualizationInfo(widgetID)
+    if widgetInfo and widgetInfo.shownState ~= Enum.WidgetShownState.Hidden then
+        return widgetInfo
+    end
 end
 
---- Return the current prey-hunt-progress widget info, caching the resolved ID.
+--- Among Shown prey widgets, prefer the highest progressState.
+---@param candidates table<number, table>
+---@return number|nil widgetID
+---@return table|nil widgetInfo
+local function PickBestPreyWidget(candidates)
+    local bestID, bestInfo
+    for widgetID, info in pairs(candidates) do
+        if not bestInfo or info.progressState > bestInfo.progressState then
+            bestID = widgetID
+            bestInfo = info
+        end
+    end
+    return bestID, bestInfo
+end
+
+function PreyBarModule:InvalidateWidgetCache()
+    self._widgetID = nil
+end
+
+--- Resolve the current Shown prey-hunt-progress widget; updates _widgetID for suppression.
+--- Always scans fresh — _widgetID is not used as a lookup short-circuit.
 ---@return table|nil widgetInfo
 function PreyBarModule:GetWidgetInfo()
-    if self._widgetID then
-        local info = ProbePreyWidget(self._widgetID)
-        if info then return info end
-        self._widgetID = nil
-    end
+    local candidates = {}
 
-    local container = UIWidgetPowerBarContainerFrame
-    if container and container.widgetFrames then
-        for widgetID in pairs(container.widgetFrames) do
-            local info = ProbePreyWidget(widgetID)
+    local setID = C_UIWidgetManager.GetPowerBarWidgetSetID()
+    local widgets = C_UIWidgetManager.GetAllWidgetsBySetID(setID)
+    for _, entry in ipairs(widgets) do
+        if entry.widgetType == PREY_WIDGET_TYPE then
+            local info = ProbePreyWidget(entry.widgetID)
             if info then
-                self._widgetID = widgetID
-                return info
+                candidates[entry.widgetID] = info
             end
         end
     end
 
-    return nil
+    if not next(candidates) then
+        local container = UIWidgetPowerBarContainerFrame
+        if container and container.widgetFrames then
+            for widgetID in pairs(container.widgetFrames) do
+                local info = ProbePreyWidget(widgetID)
+                if info then
+                    candidates[widgetID] = info
+                end
+            end
+        end
+    end
+
+    local widgetID, info = PickBestPreyWidget(candidates)
+    self._widgetID = widgetID
+    return info
 end
 
 -- ---- Blizzard widget suppression ----
@@ -249,10 +341,17 @@ function PreyBarModule:ScheduleRefresh()
 end
 
 -- ---- Events ----
+local WIDGET_CACHE_INVALIDATE_EVENTS = {
+    ZONE_CHANGED_NEW_AREA = true,
+    QUEST_ACCEPTED        = true,
+    QUEST_TURNED_IN       = true,
+}
+
 function PreyBarModule:RegisterEvents()
     if self._eventFrame then return end
     local ef = CreateFrame("Frame")
     ef:RegisterEvent("UPDATE_UI_WIDGET")
+    ef:RegisterEvent("UPDATE_ALL_UI_WIDGETS")
     ef:RegisterEvent("ZONE_CHANGED_NEW_AREA")
     ef:RegisterEvent("QUEST_LOG_UPDATE")
     ef:RegisterEvent("QUEST_ACCEPTED")
@@ -261,15 +360,18 @@ function PreyBarModule:RegisterEvents()
     ef:RegisterUnitEvent("UNIT_AURA", "player")
     ef:SetScript("OnEvent", function(_, event, arg1)
         if event == "UPDATE_UI_WIDGET" then
-            local widgetID = type(arg1) == "table" and arg1.widgetID or arg1
-            if widgetID and ProbePreyWidget(widgetID) then
-                self._widgetID = widgetID
+            if type(arg1) == "table" and arg1.widgetType == PREY_WIDGET_TYPE then
+                self._widgetID = arg1.widgetID
             end
+        elseif event == "UPDATE_ALL_UI_WIDGETS" then
+            self:InvalidateWidgetCache()
         elseif event == "RAID_BOSS_WHISPER" then
             if type(arg1) == "string" and string.find(string.lower(arg1), AMBUSH_WHISPER_MATCH, 1, true) then
                 self:TriggerAmbush()
             end
             return
+        elseif WIDGET_CACHE_INVALIDATE_EVENTS[event] then
+            self:InvalidateWidgetCache()
         end
         self:ScheduleRefresh()
     end)
@@ -306,6 +408,13 @@ function PreyBarModule:OnEnable()
     self:RegisterEvents()
     OneWoW_QoL:RegisterEnteringWorldHandler("preybar", function()
         self:ScheduleRefresh()
+        if self._pewDelayTimer then
+            self._pewDelayTimer:Cancel()
+        end
+        self._pewDelayTimer = C_Timer.After(PEW_DELAY_SECONDS, function()
+            self._pewDelayTimer = nil
+            self:Refresh()
+        end)
     end)
 
     -- Poll fallback so the fill % stays correct even if a widget update event
@@ -324,6 +433,11 @@ function PreyBarModule:OnDisable()
     OneWoW_QoL:UnregisterEnteringWorldHandler("preybar")
     self:StopPreview()
     self:UnsuppressBlizzWidget()
+    self:InvalidateWidgetCache()
+    if self._pewDelayTimer then
+        self._pewDelayTimer:Cancel()
+        self._pewDelayTimer = nil
+    end
     if self._pollTicker then
         self._pollTicker:Cancel()
         self._pollTicker = nil

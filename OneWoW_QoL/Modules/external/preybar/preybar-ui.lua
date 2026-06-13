@@ -1,6 +1,3 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/preybar/preybar-ui.lua
--- Created by MichinMuggin (Ricky)
 -- ============================================================================
 -- Prey Hunt Bar — UI layer
 -- ============================================================================
@@ -8,7 +5,7 @@
 -- CreateProgressBar, CreateSkinnedIcon, theme colors, font helpers). The module
 -- table, data resolution, and events live in preybar.lua.
 -- ============================================================================
-local addonName, ns = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -26,6 +23,8 @@ local AFFIX_GAP   = 4
 local BOSS_FONT   = 13
 local DIFF_FONT   = 11
 local ADVICE_FONT = 12
+local BAR_FONT    = 10
+local FONT_OUTLINE = "OUTLINE"
 
 -- ---- Display data ----
 -- Progress states map the widget's Enum.PreyHuntProgressState (0..3) onto a fill
@@ -40,7 +39,7 @@ local PROGRESS_STATES = {
 local DIFFICULTY_INFO = {
     NORMAL    = { nameKey = "PREYBAR_DIFFICULTY_NORMAL",    colorKey = "TEXT_SECONDARY" },
     HARD      = { nameKey = "PREYBAR_DIFFICULTY_HARD",      colorKey = "TEXT_WARNING" },
-    NIGHTMARE = { nameKey = "PREYBAR_DIFFICULTY_NIGHTMARE", colorKey = "BTN_DANGER_NORMAL" },
+    NIGHTMARE = { nameKey = "PREYBAR_DIFFICULTY_NIGHTMARE", colorKey = "BTN_DANGER_BORDER_HOVER" },
 }
 
 -- Affix data is factual game data: icon fileIDs plus the affix spell ID per
@@ -76,10 +75,10 @@ end
 function PreyBarModule:ApplyFonts()
     local fontPath = OneWoW_GUI:GetFont()
     if self._bossText then OneWoW_GUI:SafeSetFont(self._bossText, fontPath, BOSS_FONT, "") end
-    if self._diffText then OneWoW_GUI:SafeSetFont(self._diffText, fontPath, DIFF_FONT, "") end
-    if self._adviceText then OneWoW_GUI:SafeSetFont(self._adviceText, fontPath, ADVICE_FONT, "OUTLINE") end
+    if self._diffText then OneWoW_GUI:SafeSetFont(self._diffText, fontPath, DIFF_FONT, FONT_OUTLINE) end
+    if self._adviceText then OneWoW_GUI:SafeSetFont(self._adviceText, fontPath, ADVICE_FONT, FONT_OUTLINE) end
     if self._bar and self._bar._text then
-        OneWoW_GUI:SafeSetFont(self._bar._text, fontPath, 10, "")
+        OneWoW_GUI:SafeSetFont(self._bar._text, fontPath, BAR_FONT, "")
     end
 end
 
@@ -149,6 +148,7 @@ function PreyBarModule:CreateFrame()
 
     self:ApplyFonts()
     self:ApplyThemeColors()
+    self:ApplyOpacity()
 end
 
 -- ---- Affix icon pool ----
@@ -210,6 +210,8 @@ function PreyBarModule:Populate(info, isDemo)
     bar:SetValue(stateData.pct)
     bar:SetStatusBarColor(OneWoW_GUI:GetThemeColor(stateData.colorKey))
     bar._text:SetText(format(L["PREYBAR_STATE_LABEL"], L[stateData.nameKey], stateData.pct))
+    local barTextOutline = (stateIndex >= 3) and FONT_OUTLINE or ""
+    OneWoW_GUI:SafeSetFont(bar._text, OneWoW_GUI:GetFont(), BAR_FONT, barTextOutline)
 
     local showBoss = self.GetToggle("show_boss") and bossName and bossName ~= ""
     if showBoss then
@@ -232,7 +234,7 @@ function PreyBarModule:Populate(info, isDemo)
     local affixKeys = difficultyKey and AFFIX_BY_DIFFICULTY[difficultyKey]
     local affixCount = 0
     if self.GetToggle("show_affixes") and affixKeys then
-        for i, affixKey in ipairs(affixKeys) do
+        for _, affixKey in ipairs(affixKeys) do
             local def = AFFIX_DEFS[affixKey]
             if def then
                 affixCount = affixCount + 1
@@ -269,9 +271,9 @@ function PreyBarModule:Populate(info, isDemo)
     -- Advice line — highest-urgency actionable hint for the current hunt state.
     local adviceText, adviceColorKey
     if isDemo then
-        adviceText, adviceColorKey = L["PREYBAR_ADVICE_AMBUSHED"], "BTN_DANGER_NORMAL"
+        adviceText, adviceColorKey = L["PREYBAR_ADVICE_AMBUSHED"], "BTN_DANGER_BORDER_HOVER"
     elseif self:IsAmbushed() then
-        adviceText, adviceColorKey = L["PREYBAR_ADVICE_AMBUSHED"], "BTN_DANGER_NORMAL"
+        adviceText, adviceColorKey = L["PREYBAR_ADVICE_AMBUSHED"], "BTN_DANGER_BORDER_HOVER"
     elseif self:IsKillSomethingActive() then
         adviceText, adviceColorKey = L["PREYBAR_ADVICE_KILL"], "TEXT_WARNING"
     elseif stateIndex >= 3 then
@@ -335,16 +337,14 @@ function PreyBarModule:LayoutBar(affixCount)
 end
 
 -- ---- Refresh (visibility decision) ----
--- Real hunt always wins. A sample bar shows only while the QoL settings panel
--- for this module is open (preview), so the bar never appears in town with no
--- prey data. Otherwise the bar is hidden — matching Blizzard's own behavior.
+-- Real hunt always wins. Bar shows only when the prey widget reports Shown
+-- (matching Blizzard's icon visibility). A sample bar shows only while the QoL
+-- settings panel for this module is open (preview).
 function PreyBarModule:Refresh()
     if not self._frame then return end
 
     local info = self:GetWidgetInfo()
-    -- The prey widget frame only exists in the power-bar container during an
-    -- active hunt, so a non-nil info that is not explicitly Hidden means "show".
-    local huntActive = info and info.shownState ~= Enum.WidgetShownState.Hidden
+    local huntActive = info and info.shownState == Enum.WidgetShownState.Shown
 
     if self:WantHideBlizzard() then
         self:SuppressBlizzWidget()
@@ -355,9 +355,11 @@ function PreyBarModule:Refresh()
     if huntActive then
         self:Populate(info, false)
         self._frame:Show()
+        self:ApplyOpacity()
     elseif self._previewActive then
         self:Populate(nil, true)
         self._frame:Show()
+        self:ApplyOpacity()
     else
         self._frame:Hide()
     end
@@ -369,7 +371,7 @@ end
 ---@param parent table detail scroll child
 ---@param yOffset number
 ---@return number yOffset
-function PreyBarModule:CreateCustomDetail(parent, yOffset, _isEnabled, _registerRefresh, _rightStatusBar)
+function PreyBarModule:CreateCustomDetail(parent, yOffset)
     local L = ns.L
 
     local hint = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -381,6 +383,28 @@ function PreyBarModule:CreateCustomDetail(parent, yOffset, _isEnabled, _register
     hint:SetText(L["PREYBAR_SETTINGS_HINT"])
     hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     yOffset = yOffset - hint:GetStringHeight() - 10
+
+    local opacityPct = math.floor(self:GetOpacity() * 100 + 0.5)
+    local opacityLabel = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    opacityLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
+    opacityLabel:SetText(string.format(L["PREYBAR_OPACITY_FMT"], opacityPct))
+    opacityLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    yOffset = yOffset - opacityLabel:GetStringHeight() - 4
+
+    local opacitySlider = OneWoW_GUI:CreateSlider(parent, {
+        width      = 220,
+        minVal     = 10,
+        maxVal     = 100,
+        step       = 5,
+        currentVal = opacityPct,
+        fmt        = "%d%%",
+        onChange   = function(val)
+            self:SetOpacity(val / 100)
+            opacityLabel:SetText(string.format(L["PREYBAR_OPACITY_FMT"], val))
+        end,
+    })
+    opacitySlider:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
+    yOffset = yOffset - 36 - 10
 
     self:StartPreview(parent)
 
