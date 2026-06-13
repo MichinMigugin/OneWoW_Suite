@@ -223,11 +223,14 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
                 local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef)
 
-                local p1 = grid:AddPanel(L["EXPANDED_TOTAL_PLAYTIME"])
+                local p1 = grid:AddPanel(L["EXPANDED_BASIC_INFO"])
+                local playTimeColor = {OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")}
                 local totalTime = (cData.playTime and cData.playTime.total) or 0
-                local days = math.floor(totalTime / 86400)
-                local hours = math.floor((totalTime % 86400) / 3600)
-                grid:AddLine(p1, L["EXPANDED_TOTAL_PLAYTIME"], string.format("%dd %dh", days, hours), {OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")})
+                grid:AddLine(p1, L["EXPANDED_TOTAL_PLAYTIME"], ns.UI.FormatPlaytimeCompact(totalTime), playTimeColor)
+
+                if cData.playTime and cData.playTime.thisLevel ~= nil then
+                    grid:AddLine(p1, L["EXPANDED_LEVEL_PLAYTIME"], ns.UI.FormatPlaytimeCompact(cData.playTime.thisLevel), playTimeColor)
+                end
 
                 local restedPercent = 0
                 local eFmt = ns.AltTrackerFormatters
@@ -246,14 +249,14 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                 grid:AddLine(p1, L["EXPANDED_RESTED_XP"], restedPercent .. "%", restedColor)
 
                 if cData.location and cData.location.bindLocation then
-                    grid:AddLine(p1, L["COL_HEARTH"], cData.location.bindLocation)
+                    grid:AddLine(p1, L["EXPANDED_HEARTH"], cData.location.bindLocation)
                 end
 
                 if cData.location and cData.location.zone then
-                    grid:AddLine(p1, L["COL_LAST_SEEN"], cData.location.zone, {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+                    grid:AddLine(p1, L["EXPANDED_LAST_SEEN"], cData.location.zone, {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
                 end
 
-                local p2 = grid:AddPanel(L["EXPANDED_GUILD"])
+                local p2 = grid:AddPanel(L["EXPANDED_COMMUNITY_INFO"])
                 local guildName = L["EXPANDED_NO_GUILD"]
                 local guildRank = ""
                 if cData.guild and cData.guild.name then
@@ -266,7 +269,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                 end
 
                 if cData.race or cData.raceName then
-                    grid:AddLine(p2, "", cData.race or cData.raceName, {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+                    grid:AddLine(p2, L["EXPANDED_RACE"], cData.race or cData.raceName, {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
                 end
 
                 grid:Finish()
