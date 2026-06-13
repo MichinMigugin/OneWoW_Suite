@@ -165,6 +165,9 @@ OneWoW_Bags.Locales["enUS"] = {
     ["SHOPPING_LIST"] = "Shopping List",
     ["SHOPPING_LIST_DESC"] = "Open the Shopping List",
 
+    ["DIRECT_DEPOSIT"] = "Direct Deposit",
+    ["DIRECT_DEPOSIT_DESC"] = "Open Direct Deposit",
+
     ["BUILTIN_CATEGORIES"] = "Built-in Categories",
     ["CATEGORY_DRAG_HINT"] = "Drop item here to assign",
 

@@ -87,7 +87,7 @@ function GuildBankGUI:InitMainWindow()
             end
         end,
     })
-    WH:AttachShoppingListCartButton(titleBar, guildBankSettingsBtn)
+    WH:AttachSuiteTitleBarButtons(titleBar, guildBankSettingsBtn)
     contentArea = WH:CreateContentArea(MainWindow)
 
     local infoBar = GuildBankInfoBar:Create(contentArea)

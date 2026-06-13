@@ -69,6 +69,26 @@ function OneWoW_GUI:CreateAtlasIconButton(parent, options)
     return btn
 end
 
+function OneWoW_GUI:CreateTextureIconButton(parent, options)
+    options = options or {}
+    local iconTexture = options.iconTexture
+    if not iconTexture then
+        return nil
+    end
+    local width = options.width or 20
+    local height = options.height or 20
+    local inset = options.iconInset or 2
+    local name = options.name
+    local btn = self:CreateButton(parent, { name = name, text = " ", width = width, height = height })
+    btn.text:Hide()
+    local icon = btn:CreateTexture(nil, "ARTWORK")
+    icon:SetPoint("TOPLEFT", btn, "TOPLEFT", inset, -inset)
+    icon:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -inset, inset)
+    icon:SetTexture(iconTexture)
+    btn.icon = icon
+    return btn
+end
+
 function OneWoW_GUI:CreateFitTextButton(parent, options)
     options = options or {}
     local text = options.text or ""

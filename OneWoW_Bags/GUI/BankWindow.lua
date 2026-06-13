@@ -178,7 +178,7 @@ function BankGUI:InitMainWindow()
             end
         end,
     })
-    WH:AttachShoppingListCartButton(titleBar, bankSettingsBtn)
+    WH:AttachSuiteTitleBarButtons(titleBar, bankSettingsBtn)
     contentArea = WH:CreateContentArea(MainWindow)
 
     local infoBar = BankInfoBar:Create(contentArea)

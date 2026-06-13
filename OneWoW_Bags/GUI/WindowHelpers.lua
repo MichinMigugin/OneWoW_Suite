@@ -20,6 +20,62 @@ local ITEM_GRID_H_PADDING = 2
 local SCROLLBAR_RESERVE_WIDTH = 12
 local scratchTables = {}
 
+local SUITE_TITLE_BAR_ADDONS = {
+    "OneWoW_ShoppingList",
+    "OneWoW_DirectDeposit",
+}
+local titleBarRefreshRegistry = {}
+local titleBarRefreshRegistered = false
+local ICON_SIZE = 20
+
+local function IsSuiteTitleBarAddon(addonName)
+    for _, name in ipairs(SUITE_TITLE_BAR_ADDONS) do
+        if name == addonName then return true end
+    end
+    return false
+end
+
+local function GetSuiteTitleBarFeatureConfigs(L)
+    return {
+        {
+            addonName = "OneWoW_ShoppingList",
+            storageKey = "_owbShoppingCartBtn",
+            atlas = "Perks-ShoppingCart",
+            tooltipTitle = L["SHOPPING_LIST"],
+            tooltipDesc = L["SHOPPING_LIST_DESC"],
+            onReady = function()
+                OneWoW_ShoppingList.MainWindow:Toggle()
+            end,
+        },
+        {
+            addonName = "OneWoW_DirectDeposit",
+            storageKey = "_owbDirectDepositBtn",
+            iconTexture = "Interface\\Icons\\INV_Misc_Coin_02",
+            tooltipTitle = L["DIRECT_DEPOSIT"],
+            tooltipDesc = L["DIRECT_DEPOSIT_DESC"],
+            onReady = function()
+                OneWoW_DirectDeposit.GUI:Toggle()
+            end,
+        },
+    }
+end
+
+local function RegisterTitleBarForRefresh(titleBar, settingsBtn)
+    for _, entry in ipairs(titleBarRefreshRegistry) do
+        if entry.titleBar == titleBar then return end
+    end
+    tinsert(titleBarRefreshRegistry, { titleBar = titleBar, settingsBtn = settingsBtn })
+
+    if titleBarRefreshRegistered then return end
+    titleBarRefreshRegistered = true
+    EventRegistry:RegisterCallback("OneWoW.FeatureStateChanged", function(_, addonName)
+        if not IsSuiteTitleBarAddon(addonName) then return end
+        for _, entry in ipairs(titleBarRefreshRegistry) do
+            WH:SyncSuiteTitleBarButtons(entry.titleBar, entry.settingsBtn)
+        end
+    end)
+end
+
 --- Run a layout refresh body with reentrancy guard and pcall so _layoutInProgress cannot stick.
 ---@param owner table GUI module (GUI, BankGUI, GuildBankGUI)
 ---@param targetKey "bags"|"bank"|"guild"
@@ -213,51 +269,82 @@ function WH:CreateWindowTitleBar(mainWindow, config)
     return titleBar, settingsBtn
 end
 
-function WH:AttachShoppingListCartButton(titleBar, settingsBtn)
+function WH:AttachSuiteTitleBarButtons(titleBar, settingsBtn)
     if not titleBar or not settingsBtn then return end
-    if titleBar._owbShoppingCartBtn then return end
+    RegisterTitleBarForRefresh(titleBar, settingsBtn)
+    self:SyncSuiteTitleBarButtons(titleBar, settingsBtn)
+end
+
+function WH:SyncSuiteTitleBarButtons(titleBar, settingsBtn)
+    if not titleBar or not settingsBtn then return end
 
     local L = OneWoW_Bags.L
-    local function createCart()
-        if titleBar._owbShoppingCartBtn then return end
-        local cartBtn = CreateFrame("Button", nil, titleBar)
-        cartBtn:SetSize(22, 22)
-        cartBtn:SetPoint("RIGHT", settingsBtn, "LEFT", -2, 0)
-        cartBtn:SetNormalAtlas("Perks-ShoppingCart")
-        cartBtn:SetPushedAtlas("Perks-ShoppingCart")
-        cartBtn:SetHighlightAtlas("Perks-ShoppingCart")
-        cartBtn:GetHighlightTexture():SetAlpha(0.5)
-        cartBtn:SetScript("OnClick", function()
-            if OneWoW_ShoppingList and OneWoW_ShoppingList.MainWindow then
-                OneWoW_ShoppingList.MainWindow:Toggle()
-            end
-        end)
-        cartBtn:SetScript("OnEnter", function(myself)
-            GameTooltip:SetOwner(myself, "ANCHOR_TOP")
-            GameTooltip:SetText(L["SHOPPING_LIST"], 1, 1, 1)
-            GameTooltip:AddLine(L["SHOPPING_LIST_DESC"], 0.8, 0.8, 0.8, true)
-            GameTooltip:Show()
-        end)
-        cartBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        titleBar._owbShoppingCartBtn = cartBtn
-        local waitFrame = titleBar._owbShoppingListEventFrame
-        if waitFrame then
-            waitFrame:UnregisterAllEvents()
-            waitFrame:SetScript("OnEvent", nil)
-            titleBar._owbShoppingListEventFrame = nil
-        end
+    local configs = GetSuiteTitleBarFeatureConfigs(L)
+    local shoppingConfig = configs[1]
+    local ddConfig = configs[2]
+
+    local shoppingBtn = self:_SyncFeatureButton(titleBar, settingsBtn, shoppingConfig)
+    local ddAnchor = shoppingBtn or settingsBtn
+    self:_SyncFeatureButton(titleBar, ddAnchor, ddConfig)
+end
+
+function WH:_SyncFeatureButton(titleBar, anchorBtn, config)
+    if not titleBar or not anchorBtn or not config then return nil end
+
+    local existing = titleBar[config.storageKey]
+    local wanted = OneWoW:IsFeatureWanted(config.addonName, true)
+
+    if not wanted then
+        if existing then existing:Hide() end
+        return nil
     end
 
-    if OneWoW_ShoppingList then
-        createCart()
-    elseif not titleBar._owbShoppingListWatcherRegistered then
-        titleBar._owbShoppingListWatcherRegistered = true
-        local register = OneWoW_Bags.RegisterAddonLoadedWatcher and OneWoW_Bags.RegisterAddonLoadedWatcher
-            or OneWoW.RegisterAddonLoadedWatcher
-        register("OneWoW_ShoppingList", function()
-            createCart()
-        end)
+    if existing then
+        existing:Show()
+        existing:ClearAllPoints()
+        existing:SetPoint("RIGHT", anchorBtn, "LEFT", -2, 0)
+        return existing
     end
+
+    return self:_CreateFeatureButton(titleBar, anchorBtn, config)
+end
+
+function WH:_CreateFeatureButton(titleBar, anchorBtn, config)
+    if not titleBar or not anchorBtn or not config then return nil end
+    if titleBar[config.storageKey] then return titleBar[config.storageKey] end
+
+    local btn
+    if config.atlas then
+        btn = OneWoW_GUI:CreateAtlasIconButton(titleBar, {
+            atlas = config.atlas,
+            width = ICON_SIZE,
+            height = ICON_SIZE,
+        })
+    else
+        btn = OneWoW_GUI:CreateTextureIconButton(titleBar, {
+            iconTexture = config.iconTexture,
+            width = ICON_SIZE,
+            height = ICON_SIZE,
+        })
+    end
+    if not btn then return nil end
+
+    btn:SetPoint("RIGHT", anchorBtn, "LEFT", -2, 0)
+    btn:SetScript("OnClick", function()
+        OneWoW:WithAddon(config.addonName, config.onReady)
+    end)
+    btn:HookScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_TOP")
+        GameTooltip:SetText(config.tooltipTitle, 1, 1, 1)
+        GameTooltip:AddLine(config.tooltipDesc, 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    btn:HookScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+
+    titleBar[config.storageKey] = btn
+    return btn
 end
 
 function WH:CreateContentArea(mainWindow)
