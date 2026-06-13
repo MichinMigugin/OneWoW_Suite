@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -26,7 +26,7 @@ local function RegisterWithOneWoW()
     OneWoW:RegisterModule({
         name = "qol",
         displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
-        addonName = "OneWoW_QoL",
+        addonName = ADDON_NAME,
         order = OneWoW:GetModuleTabOrder("qol"),
         tabs = tabs,
     })
@@ -62,10 +62,7 @@ local function OnInitialize()
         end)
     end
 
-    local _ver = C_AddOns.GetAddOnMetadata(addonName, "Version") or ""
-    if OneWoW and OneWoW.RegisterLoadComponent then
-        OneWoW:RegisterLoadComponent("QoL", _ver, "/1wqol")
-    end
+    OneWoW:RegisterLoadComponent("QoL", OneWoW:GetAddonVersion(ADDON_NAME), "/1wqol")
 end
 
 function addon:ApplyTheme()

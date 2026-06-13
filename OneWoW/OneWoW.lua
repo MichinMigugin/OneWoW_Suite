@@ -173,8 +173,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 
         for _, comp in ipairs(OneWoW.ModuleManifest or {}) do
             if not OneWoW._registeredAddons[comp.display] and C_AddOns.IsAddOnLoaded(comp.addon) then
-                local ver = C_AddOns.GetAddOnMetadata(comp.addon, "Version") or ""
-                OneWoW:RegisterLoadComponent(comp.display, ver, comp.cmd)
+                OneWoW:RegisterLoadComponent(comp.display, OneWoW:GetAddonVersion(comp.addon), comp.cmd)
             end
         end
 
