@@ -1,0 +1,60 @@
+local _, OneWoW = ...
+
+OneWoW.Locale:RegisterShared("koKR", {
+    -- Language picker
+    ["LANGUAGE_SELECTION"] = "언어 선택",
+    ["LANGUAGE_DESC"] = "애드온 인터페이스에 사용할 언어를 선택하세요. 변경 사항은 즉시 적용됩니다.",
+    ["CURRENT_LANGUAGE"] = "현재 언어",
+    ["SELECT_LANGUAGE"] = "언어 선택",
+    ["ENGLISH"] = "English",
+    ["SPANISH"] = "Español",
+    ["KOREAN"] = "한국어",
+    ["FRENCH"] = "Français",
+    ["RUSSIAN"] = "Русский",
+    ["GERMAN"] = "Deutsch",
+
+    -- Themes
+    ["THEME_SECTION"] = "색상 테마",
+    ["THEME_DESC"] = "애드온 인터페이스의 색상 테마를 선택하세요. 재시작 없이 즉시 적용됩니다.",
+    ["THEME_CURRENT"] = "현재 테마",
+    ["THEME_GREEN"] = "숲의 녹색",
+    ["THEME_BLUE"] = "바다의 파랑",
+    ["THEME_PURPLE"] = "왕실의 보라",
+    ["THEME_GOLD"] = "클래식 골드",
+    ["THEME_RED"] = "진홍색",
+    ["THEME_SLATE"] = "슬레이트 회색",
+    ["THEME_ORANGE"] = "노을의 주황",
+    ["THEME_TEAL"] = "신비의 청록",
+    ["THEME_CYAN"] = "북극의 시안",
+    ["THEME_PINK"] = "장미색",
+    ["THEME_DARK"] = "한밤의 어둠",
+    ["THEME_AMBER"] = "호박색 불꽃",
+    ["THEME_VOIDBLACK"] = "공허의 검정",
+    ["THEME_CHARCOAL"] = "깊은 숯색",
+    ["THEME_FORESTNIGHT"] = "숲의 밤",
+    ["THEME_OBSIDIAN"] = "흑요석 미니멀",
+    ["THEME_MONOCHROME"] = "모노크롬 프로",
+    ["THEME_TWILIGHT"] = "황혼 컴팩트",
+    ["THEME_NEON"] = "네온 신스웨이브",
+    ["THEME_GLASSMORPHIC"] = "글래스모피즘",
+    ["THEME_LIGHTMODE"] = "미니멀 화이트",
+    ["THEME_RETRO"] = "레트로 클래식",
+    ["THEME_FANTASY"] = "RPG 판타지",
+    ["THEME_NIGHTFAE"] = "맹세단 황혼",
+
+    -- Minimap section labels
+    ["MINIMAP_SECTION"] = "미니맵 버튼",
+    ["MINIMAP_SECTION_DESC"] = "미니맵 버튼을 표시하거나 숨깁니다.",
+    ["MINIMAP_SHOW_BTN"] = "미니맵 버튼 표시",
+    ["MINIMAP_ICON_SECTION"] = "아이콘 테마",
+    ["MINIMAP_ICON_DESC"] = "미니맵 버튼과 제목 표시줄에 사용할 진영 아이콘을 선택하세요.",
+    ["MINIMAP_ICON_CURRENT"] = "현재 아이콘",
+    ["MINIMAP_ICON_HORDE"] = "호드",
+    ["MINIMAP_ICON_ALLIANCE"] = "얼라이언스",
+    ["MINIMAP_ICON_NEUTRAL"] = "중립",
+
+    -- Common buttons
+    ["OK"] = "확인",
+    ["CANCEL"] = "취소",
+    ["CLOSE"] = "닫기",
+})

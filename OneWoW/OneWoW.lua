@@ -40,18 +40,9 @@ end
 local function ApplyLanguage()
     local lang = OneWoW_GUI:GetSetting("language")
     lang = lang or (OneWoW.db and OneWoW.db.global.language) or "enUS"
-    if lang == "esMX" then lang = "esES" end
-    local localeData = OneWoW.Locales[lang] or OneWoW.Locales["enUS"]
-    local fallback = OneWoW.Locales["enUS"]
-    for k, v in pairs(fallback) do
-        OneWoW.L[k] = localeData[k] or v
-    end
-    L = OneWoW.L
-    for k, v in pairs(L) do
-        if k:find("^BINDING_") then
-            _G[k] = v
-        end
-    end
+    -- Locale service folds enUS <- selected language, refolds the stable OneWoW.L
+    -- view in place, and pushes BINDING_* globals. esMX->esES is normalized inside.
+    OneWoW.Locale:SetLanguage(lang)
 end
 
 local function ResetGUIOnSettingChange(self2)

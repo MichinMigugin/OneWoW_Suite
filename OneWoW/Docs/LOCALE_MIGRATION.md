@@ -143,8 +143,9 @@ time without risk to the load chain.
 
 ## Shared-key catalog (centralize into `shared` scope)
 
-Define these **once** via `RegisterShared`. Finalize the exact list in Phase 1 by
-diffing against the live files; the cluster below is the confirmed overlap.
+Define these **once** via `RegisterShared`, in `OneWoW/Locales/Shared/<locale>.lua`
+(separate from the OneWoW-scoped `Locales/<locale>.lua`). The cluster below is the
+confirmed overlap (49 keys).
 
 - **Themes:** all `THEME_*` (~24 keys) + `THEME_SECTION`, `THEME_DESC`,
   `THEME_CURRENT`.
@@ -181,23 +182,30 @@ phase until the previous one is verified in-game.
 - [x] Implement the `/owlocale` command backing `Audit()` (`shared ∩ scope` +
       scope/key/lang context). On-demand only, reports as text, never throws.
 - [x] List it in `OneWoW.toc` **before** `Locales/enUS.lua` and before any reader.
-- [ ] Unit-sanity in-game: register a throwaway scope, confirm
+- [x] Unit-sanity in-game: register a throwaway scope, confirm
       scope→shared→keyname resolution and that writes are no-ops.
-- [ ] Confirm view identity survives a `SetLanguage` call (cache a ref, switch
+- [x] Confirm view identity survives a `SetLanguage` call (cache a ref, switch
       language, ref still resolves).
 
 ### Phase 1 — Migrate core `OneWoW` onto the service
 
-- [ ] Move the shared-key catalog out of `OneWoW/Locales/enUS.lua` (and `koKR`)
-      into `RegisterShared("enUS"/"koKR", {...})`.
-- [ ] Register the remaining core keys under scope `"OneWoW"`.
-- [ ] Replace `OneWoW.L = {}` + `ApplyLanguage()` in [`OneWoW.lua`](../OneWoW.lua)
+- [x] Move the shared-key catalog out of `OneWoW/Locales/enUS.lua` (and `koKR`)
+      into `RegisterShared("enUS"/"koKR", {...})`. (49 shared keys.) Shared lives in
+      its own files `Locales/Shared/{enUS,koKR}.lua`, loaded before the
+      OneWoW-scoped `Locales/{enUS,koKR}.lua` (load order is for clarity — the view
+      resolves scope→shared live regardless).
+- [x] Register the remaining core keys under scope `"OneWoW"`. (989 keys each.)
+- [x] Replace `OneWoW.L = {}` + `ApplyLanguage()` in [`OneWoW.lua`](../OneWoW.lua)
       with `OneWoW.L = OneWoW.Locale:GetTable("OneWoW")` and route the language
       setting to `OneWoW.Locale:SetLanguage()`.
-- [ ] Keep the `BINDING_*` → `_G` push inside `SetLanguage`.
-- [ ] Normalize language-name encoding to raw UTF-8 here (decision 2).
-- [ ] Verify: every core UI string renders unchanged; language switch works;
-      `BINDING_*` keys still reach `_G`; missing key shows key-name not `nil`.
+- [x] Keep the `BINDING_*` → `_G` push inside `SetLanguage` (handled by the
+      service's `_resolveScope`, fired on every refold).
+- [x] Normalize language-name encoding to raw UTF-8 here (decision 2). (5 escaped
+      values converted: SPANISH/KOREAN/FRENCH/RUSSIAN + the `MANAGE_FEATURES_DESC`
+      em-dash.)
+- [ ] Verify in-game: every core UI string renders unchanged; language switch
+      works; `BINDING_*` keys still reach `_G`; missing key shows key-name not
+      `nil`; `/owlocale` shows `OneWoW` + `shared` scopes, zero collisions.
 
 ### Phase 2 — Standalone localized addons (Pattern D)
 
@@ -319,3 +327,6 @@ additive. The service itself (Phase 0) is inert until something registers.
 | _2026-06-13_ | — | — | Plan created. No code changes yet. |
 | _2026-06-13_ | — | — | Decisions locked: key-name miss, raw UTF-8, per-module QoL scopes, Register API. |
 | _2026-06-13_ | 0 | OneWoW | `Services/LocaleService.lua` + `/owlocale` added; TOC line before Locales. Code complete, all suite lint checks pass. In-game sanity checks pending. |
+| _2026-06-14_ | 0 | OneWoW | In-game sanity checks passed. Phase 0 complete. |
+| _2026-06-14_ | 1 | OneWoW | `Locales/enUS.lua` + `koKR.lua` converted to `RegisterShared` + `Register("OneWoW", ...)` (49 shared / 989 scoped); `OneWoW.L` now a service view; `ApplyLanguage` routes to `SetLanguage`; `OneWoW.Locales` table removed; lang-name + em-dash escapes → UTF-8. Lint passes; in-game verify pending. |
+| _2026-06-14_ | 1 | OneWoW | Shared scope split into `Locales/Shared/{enUS,koKR}.lua`; OneWoW-scoped strings stay in `Locales/{enUS,koKR}.lua`. TOC loads Shared first. Lint passes. |

@@ -58,7 +58,12 @@ GUI\Minimap.lua
 # that reason. See Docs/LOCALE_MIGRATION.md.
 Services\LocaleService.lua
 
-# Locales
+# Shared locale (suite-wide vocab: themes, languages, minimap labels, buttons).
+# Loaded before the OneWoW-scoped files; the view resolves scope -> shared.
+Locales\Shared\enUS.lua
+Locales\Shared\koKR.lua
+
+# OneWoW-scoped locale
 Locales\enUS.lua
 Locales\koKR.lua
 

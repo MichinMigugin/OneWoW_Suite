@@ -1,0 +1,60 @@
+local _, OneWoW = ...
+
+OneWoW.Locale:RegisterShared("enUS", {
+    -- Language picker
+    ["LANGUAGE_SELECTION"] = "Language Selection",
+    ["LANGUAGE_DESC"] = "Choose your preferred language for the addon interface. Changes apply instantly.",
+    ["CURRENT_LANGUAGE"] = "Current Language",
+    ["SELECT_LANGUAGE"] = "Select Language",
+    ["ENGLISH"] = "English",
+    ["SPANISH"] = "Español",
+    ["KOREAN"] = "한국어",
+    ["FRENCH"] = "Français",
+    ["RUSSIAN"] = "Русский",
+    ["GERMAN"] = "Deutsch",
+
+    -- Themes
+    ["THEME_SECTION"] = "Color Theme",
+    ["THEME_DESC"] = "Choose a color theme for the addon interface. Changes apply instantly without reloading.",
+    ["THEME_CURRENT"] = "Current Theme",
+    ["THEME_GREEN"] = "Forest Green",
+    ["THEME_BLUE"] = "Ocean Blue",
+    ["THEME_PURPLE"] = "Royal Purple",
+    ["THEME_GOLD"] = "Classic Gold",
+    ["THEME_RED"] = "Crimson Red",
+    ["THEME_SLATE"] = "Slate Gray",
+    ["THEME_ORANGE"] = "Sunset Orange",
+    ["THEME_TEAL"] = "Mystic Teal",
+    ["THEME_CYAN"] = "Arctic Cyan",
+    ["THEME_PINK"] = "Rose Pink",
+    ["THEME_DARK"] = "Midnight Dark",
+    ["THEME_AMBER"] = "Amber Fire",
+    ["THEME_VOIDBLACK"] = "Void Black",
+    ["THEME_CHARCOAL"] = "Charcoal Deep",
+    ["THEME_FORESTNIGHT"] = "Forest Night",
+    ["THEME_OBSIDIAN"] = "Obsidian Minimal",
+    ["THEME_MONOCHROME"] = "Monochrome Pro",
+    ["THEME_TWILIGHT"] = "Twilight Compact",
+    ["THEME_NEON"] = "Neon Synthwave",
+    ["THEME_GLASSMORPHIC"] = "Glassmorphic",
+    ["THEME_LIGHTMODE"] = "Minimal White",
+    ["THEME_RETRO"] = "Retro Classic",
+    ["THEME_FANTASY"] = "RPG Fantasy",
+    ["THEME_NIGHTFAE"] = "Covenant Twilight",
+
+    -- Minimap section labels
+    ["MINIMAP_SECTION"] = "Minimap Button",
+    ["MINIMAP_SECTION_DESC"] = "Show or hide the minimap button.",
+    ["MINIMAP_SHOW_BTN"] = "Show Minimap Button",
+    ["MINIMAP_ICON_SECTION"] = "Icon Theme",
+    ["MINIMAP_ICON_DESC"] = "Choose your faction icon for the minimap button and title bar.",
+    ["MINIMAP_ICON_CURRENT"] = "Current Icon",
+    ["MINIMAP_ICON_HORDE"] = "Horde",
+    ["MINIMAP_ICON_ALLIANCE"] = "Alliance",
+    ["MINIMAP_ICON_NEUTRAL"] = "Neutral",
+
+    -- Common buttons
+    ["OK"] = "OK",
+    ["CANCEL"] = "Cancel",
+    ["CLOSE"] = "Close",
+})
