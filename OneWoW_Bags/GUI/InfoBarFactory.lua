@@ -27,7 +27,7 @@ local function SaveSearch(name, query)
     if not SS then return end
 
     local ok, err = SS:Set(name, query)
-    if not ok and err and L[err] then
+    if not ok and err then
         print(L[err])
     end
 end
@@ -58,7 +58,7 @@ local function RegisterSavedSearchPopups()
             local name = dialog.EditBox:GetText()
             local normalized, err = SS:NormalizeName(name)
             if not normalized then
-                if err and L[err] then print(L[err]) end
+                if err then print(L[err]) end
                 C_Timer.After(0, function()
                     local reopened = StaticPopup_Show("ONEWOW_BAGS_SAVE_SEARCH", nil, nil, dialog.data)
                     if reopened and reopened.EditBox then
@@ -430,10 +430,10 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
     local function viewModeLabel(mode)
         for _, vm in ipairs(config.viewModes) do
             if vm.mode == mode then
-                return L[vm.labelKey] or vm.labelKey
+                return L[vm.labelKey]
             end
         end
-        return L[config.viewModes[1].labelKey] or config.viewModes[1].labelKey
+        return L[config.viewModes[1].labelKey]
     end
 
     function bar:CreateViewBtn(parent, label)
@@ -484,7 +484,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
             buildItems = function()
                 local items = {}
                 for _, vm in ipairs(config.viewModes) do
-                    tinsert(items, { text = L[vm.labelKey] or vm.labelKey, value = vm.mode })
+                    tinsert(items, { text = L[vm.labelKey], value = vm.mode })
                 end
                 return items
             end,

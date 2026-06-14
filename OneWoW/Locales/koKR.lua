@@ -53,6 +53,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["CTX_OPEN_BAGS"] = "Bags 열기",
     ["CTX_OPEN_DEVTOOLS"] = "DevTools 열기",
     ["CTX_OPEN_CATALOG"] = "Catalog 열기",
+    ["CTX_OPEN_TRACKERS"] = "Trackers 열기",
     ["COPYPASTE_HINT_COPY"] = "Ctrl+C를 눌러 복사하세요",
     ["COPYPASTE_HINT_COPY_MAC"] = "Cmd+C를 눌러 복사하세요",
     ["WIZARD_TITLE"] = "OneWoW에 오신 것을 환영합니다",

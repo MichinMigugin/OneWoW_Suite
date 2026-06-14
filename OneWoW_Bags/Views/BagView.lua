@@ -64,7 +64,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
             section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
             local bagName = BagTypes:GetBagName(bagID)
-            local displayName = L[bagName] or bagName
+            local displayName = L[bagName]
             section.title:SetText(displayName)
             section.title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             section.count:SetText(tostring(#buttons))

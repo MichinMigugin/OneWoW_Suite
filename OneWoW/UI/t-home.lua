@@ -144,7 +144,7 @@ function UI:CreateHomeTab(parent)
 
     local versionLabel = OneWoW_GUI:CreateFS(content, 16)
     versionLabel:SetPoint("TOP", content, "TOP", 0, yOffset)
-    versionLabel:SetText("OneWoW " .. (L["HOME_VERSION"] or "Version") .. " " .. (OneWoW:GetAddonVersion("OneWoW") or ""))
+    versionLabel:SetText("OneWoW " .. (L["HOME_VERSION"]) .. " " .. (OneWoW:GetAddonVersion("OneWoW") or ""))
     versionLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - 35
 
@@ -188,13 +188,13 @@ function UI:CreateHomeTab(parent)
     end
 
     local discordBtn = CreateLinkButton(linksRow,
-        L["HOME_DISCORD"] or "Discord",
-        L["HOME_DISCORD_LINK"] or "https://discord.gg/6vnabDVnDu")
+        L["HOME_DISCORD"],
+        L["HOME_DISCORD_LINK"])
     discordBtn:SetPoint("LEFT", linksRow, "CENTER", -160, 0)
 
     local supportBtn = CreateLinkButton(linksRow,
-        L["HOME_SUPPORT"] or "Support OneWoW",
-        L["HOME_SUPPORT_LINK"] or "https://buymeacoffee.com/migugin")
+        L["HOME_SUPPORT"],
+        L["HOME_SUPPORT_LINK"])
     supportBtn:SetPoint("LEFT", linksRow, "CENTER", 20, 0)
 
     yOffset = yOffset - 34
@@ -209,12 +209,12 @@ function UI:CreateHomeTab(parent)
 
     local thanksTitle = OneWoW_GUI:CreateFS(thanksBar, 12)
     thanksTitle:SetPoint("LEFT", thanksBar, "LEFT", 15, 0)
-    thanksTitle:SetText(L["HOME_SPECIAL_THANKS"] or "Special Thanks")
+    thanksTitle:SetText(L["HOME_SPECIAL_THANKS"])
     thanksTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local thanksNames = OneWoW_GUI:CreateFS(thanksBar, 12)
     thanksNames:SetPoint("LEFT", thanksTitle, "RIGHT", 12, 0)
-    thanksNames:SetText(L["HOME_THANKS_NAMES"] or "Name 1, Name 2, Name 3")
+    thanksNames:SetText(L["HOME_THANKS_NAMES"])
     thanksNames:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     yOffset = yOffset - 42
@@ -453,7 +453,7 @@ function UI:CreateHomeTab(parent)
 
     local cmdTitle = OneWoW_GUI:CreateFS(cmdContainer, 16)
     cmdTitle:SetPoint("TOPLEFT", cmdContainer, "TOPLEFT", 15, -12)
-    cmdTitle:SetText(L["HOME_COMMANDS"] or "Available Commands")
+    cmdTitle:SetText(L["HOME_COMMANDS"])
     cmdTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local cmdHDiv = cmdContainer:CreateTexture(nil, "ARTWORK")
@@ -486,7 +486,7 @@ function UI:CreateHomeTab(parent)
                 hdr:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 local soon = OneWoW_GUI:CreateFS(panel, 10)
                 soon:SetPoint("LEFT", hdr, "RIGHT", 6, 0)
-                soon:SetText("(" .. (L["HOME_MINIMAP_PLACEHOLDER"] or "Coming Soon") .. ")")
+                soon:SetText("(" .. (L["HOME_MINIMAP_PLACEHOLDER"]) .. ")")
                 soon:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 pY = pY - 26
             else
@@ -520,22 +520,22 @@ function UI:CreateHomeTab(parent)
             always = true,
             header = "OneWoW",
             commands = {
-                { cmd = "/1w, /ow, /one, /onewow", desc = L["CMD_TOGGLE_ONEWOW"] or "Toggle OneWoW" },
-                { cmd = "/1wkeys, /owkeys", desc = L["CMD_KEYWORD_HELP"] or "Open Search Keywords help" },
+                { cmd = "/1w, /ow, /one, /onewow", desc = L["CMD_TOGGLE_ONEWOW"] },
+                { cmd = "/1wkeys, /owkeys", desc = L["CMD_KEYWORD_HELP"] },
             },
         },
         {
             global = "OneWoW_Notes",
             header = "Notes",
             commands = {
-                { cmd = "/1wn, /own, /onewownotes", desc = L["CMD_OPEN_NOTES"] or "Open Notes" },
+                { cmd = "/1wn, /own, /onewownotes", desc = L["CMD_OPEN_NOTES"] },
             },
         },
         {
             global = "OneWoW_AltTracker",
             header = "AltTracker",
             commands = {
-                { cmd = "/1wat, /owat, /onewowat", desc = L["CMD_OPEN_ALTTRACKER"] or "Open AltTracker" },
+                { cmd = "/1wat, /owat, /onewowat", desc = L["CMD_OPEN_ALTTRACKER"] },
             },
         },
         {
@@ -546,7 +546,7 @@ function UI:CreateHomeTab(parent)
             global = "OneWoW_QoL",
             header = "QoL",
             commands = {
-                { cmd = "/1wqol, /owqol, /onewowqol", desc = L["CMD_OPEN_QOL"] or "Toggle QoL" },
+                { cmd = "/1wqol, /owqol, /onewowqol", desc = L["CMD_OPEN_QOL"] },
             },
         },
     }
@@ -556,25 +556,25 @@ function UI:CreateHomeTab(parent)
             global = "OneWoW_DirectDeposit",
             header = "Direct Deposit",
             commands = {
-                { cmd = "/1wdd, /dd, /directdeposit, /directdep", desc = L["CMD_OPEN_DD"]       or "Open Direct Deposit" },
-                { cmd = "  /ddeposit",                             desc = L["CMD_MANUAL_DEPOSIT"] or "Manual deposit" },
-                { cmd = "  /ddeposit pause|stop",                  desc = L["CMD_DEPOSIT_PAUSE"]  or "Pause deposit" },
-                { cmd = "  /ddeposit clean",                       desc = L["CMD_DEPOSIT_CLEAN"]  or "Clean item list" },
+                { cmd = "/1wdd, /dd, /directdeposit, /directdep", desc = L["CMD_OPEN_DD"] },
+                { cmd = "  /ddeposit",                             desc = L["CMD_MANUAL_DEPOSIT"] },
+                { cmd = "  /ddeposit pause|stop",                  desc = L["CMD_DEPOSIT_PAUSE"] },
+                { cmd = "  /ddeposit clean",                       desc = L["CMD_DEPOSIT_CLEAN"] },
             },
         },
         {
             global = "OneWoW_ShoppingList",
             header = "Shopping List",
             commands = {
-                { cmd = "/1wsl, /owsl, /shoppinglist", desc = L["CMD_OPEN_SL"] or "Open Shopping List" },
-                { cmd = "  /owsl add <id>",            desc = L["CMD_SL_ADD"]  or "Add item to active list" },
+                { cmd = "/1wsl, /owsl, /shoppinglist", desc = L["CMD_OPEN_SL"] },
+                { cmd = "  /owsl add <id>",            desc = L["CMD_SL_ADD"] },
             },
         },
         {
             global = "OneWoW_Utility_DevTool",
             header = "DevTools",
             commands = {
-                { cmd = "/1wdt, /dt, /devtool, /devtools", desc = L["CMD_OPEN_DEVTOOLS"] or "Open DevTools" },
+                { cmd = "/1wdt, /dt, /devtool, /devtools", desc = L["CMD_OPEN_DEVTOOLS"] },
             },
         },
     }

@@ -90,6 +90,8 @@ Scope keys are the addon's `ADDON_NAME` (e.g. `"OneWoW"`, `"OneWoW_DirectDeposit
 | `OneWoW.Locale:SetLanguage(lang)` | Re-fold every scope in place, push `BINDING_*` globals, fire callbacks. |
 | `OneWoW.Locale:OnApply(fn)` | Register a listener for addons that must rebuild cached UI strings on language change. Replaces the per-addon `ApplyLanguage` hook. |
 | `OneWoW.Locale:Audit()` | Run the collision-validation pass (`shared ∩ scope`) and return violations. Backs the `/owlocale` command; not called automatically. |
+| `OneWoW.Locale:GetStore(scope)` | Raw `{ [locale] = { KEY=value } }` for a scope — for consumers needing a *specific* locale's strings (import/export cross-locale maps, DB-migration defaults), not the folded view. Read-only by convention. |
+| `OneWoW.Locale:GetOptional(scope, key)` | Resolved value (scope → shared) if registered, else **nil**. For *genuinely optional* localization where a translation may legitimately not exist (e.g. localize a built-in name, else use a dynamic value). The complement to the view's key-name-on-miss. |
 
 ### View metatable (mirrors `ACTIVE_THEME`)
 
@@ -107,6 +109,35 @@ __newindex = noop,        -- read-only, like the theme wrapper
 
 Resolution order per lookup: **scope (active lang ⊕ enUS) → shared (active lang ⊕
 enUS) → key name**.
+
+### Lookup contract — `L[key]` vs `GetOptional`, and the banned fallback
+
+> **TODO (architecture docs):** fold this contract into `ARCHITECTURE.md` (and the
+> localization skill / cursorrules) when the migration completes — it is a
+> suite-wide rule, not just a migration detail. Tracked in Phase 6.
+
+Two lookups, two intents — pick by whether the key is *required* or *optional*:
+
+- **`L[key]` (the view) — for keys that MUST exist.** On a miss it returns the
+  **key name** (e.g. `"SETTINGS_TAB"`), which renders visibly on screen so the
+  missing key is caught and added. This is deliberate.
+- **`OneWoW.Locale:GetOptional(scope, key)` — for genuinely optional localization.**
+  Returns the value or **nil**, so a dynamic fallback can take over. Use it only
+  when a translation may *legitimately* be absent — e.g. a built-in category
+  localizes via `CAT_*`, but a custom (SavedVariables) category has no entry and
+  must show its raw user string.
+
+**Banned: `L["LITERAL_KEY"] or "Hardcoded String"`.** A hardcoded English
+duplicate of a key that should just exist in the locale. With key-name-on-miss it
+also silently breaks (the truthy key name defeats the `or`). If the key must
+exist, register it and use `L[key]`. If it's optional, use `GetOptional`. The
+`L[key] or sameVarThatIsTheKey` form is a redundant no-op (the miss already
+returns the key) — drop the `or`.
+
+> Real example that motivated this: after Bags migrated, `ResolveCategoryName` did
+> `L["CAT_"..upper(name)] or categoryName`. Custom categories (no `CAT_*` entry)
+> rendered as `CAT_MY_HERBS` instead of "My Herbs", because the view returned the
+> key name. Fixed by switching to `GetOptional(...) or categoryName`.
 
 ### Two hard rules (where locales differ from `ApplyTheme`)
 
@@ -274,7 +305,15 @@ outright.
       (koKR: 3 visible section-description strings now use core's wording —
       intended). esMX alias dropped (service normalizes). Lint passes; in-game
       verify pending.
-- [ ] **OneWoW_Bags** (524 keys, 6 locales)
+- [x] **OneWoW_Bags** (524 keys, 6 locales). Scope `OneWoW_Bags` (479 enUS / 467
+      other). Harvested its shared translations into core `Locales/Shared/`
+      (es/fr/de/ru: +12 keys each — the MINIMAP labels DD lacked — now 39/locale;
+      9–17 drift kept as DD canonical, which had proper diacritics vs Bags'
+      accent-stripped text). enUS drops verified value-identical bar one dead theme
+      key (`THEME_NIGHTFAE`). Two raw readers (`Core/Database.lua`,
+      `ImportExport/Applier.lua`) keep working via
+      `OneWoW_Bags.Locales = OneWoW.Locale:GetStore(ADDON_NAME)`. Lint passes;
+      in-game verify pending.
 - [ ] **OneWoW_ShoppingList** (263 keys, 6 locales — 0 shared today, but adopt
       the service for consistency + future shared keys)
 - [ ] **OneWoW_Utility_DevTool** (579 keys, 6 locales)
@@ -333,7 +372,34 @@ colliding. Convert each module's `L_enUS["KEY"]=v` block to a per-module
       `ApplyLanguage`.
 - [ ] Grep the suite for stray `\.Locales`, `ApplyLanguage`, `L_enUS`,
       `LocaleManager` references; confirm none remain outside the service.
-- [ ] Fold target-state into `ARCHITECTURE.md`; delete this file.
+- [x] Sweep the **migrated** addons (core, DD, Bags) for `L[key] or fallback`:
+      removed 35 dead `L["KEY"] or "literal"` (all keys verified registered);
+      converted genuine optionals to `GetOptional` (`ResolveCategoryName`,
+      `MainWindow` module name, `navigation` pointer, `BagsBar` bag-filter); dropped
+      no-op `L[x] or x`. **Left intentionally:** ternaries (`cond and L[a] or L[b]`)
+      and nil-guards (`(OneWoW.L and OneWoW.L["K"]) or "lit"` — defensive; could be
+      simplified to `OneWoW.L["K"]` since the view is always set post-load).
+- [x] Simplified the defensive nil-guards in migrated addons:
+      `(OneWoW.L and OneWoW.L["K"]) or "lit"` → `OneWoW.L["K"]` (the view is always
+      set post-load), and the `if L and L["K"] then …` minimap existence-guards →
+      unconditional. Fixed a real key-name-on-miss bug in `GetLoadFailureText`
+      (dynamic `L["LOAD_FAIL_"..reason]` was always truthy → unknown reasons skipped
+      Blizzard's `ADDON_*` constant) using `GetOptional`.
+- [x] **Existence-check pattern resolved:** traced `err` at all 7
+      `if err and L[err] then …` sites (`Bags/GUI/CategoryManager.lua` ×4,
+      `InfoBarFactory.lua` ×2, `Settings.lua`). Every `err` is a registered locale
+      key (`DUPLICATE_CATEGORY_NAME`, `DUPLICATE_SECTION_NAME`, `SAVED_SEARCH_*`),
+      so nothing was broken — the `and L[err]` was dead defensive code. Simplified
+      all to `if err then` (a future un-translated error key now surfaces via
+      key-name, the intended behavior). (`Categories.lua:1161` `key and L[key] or nil`
+      left as-is — already correct; `key` is nil for the no-key case.)
+- [ ] Sweep the remaining addons for `L[key] or fallback` **as each migrates**
+      (un-migrated addons still use nil-returning tables, so the pattern isn't a
+      live bug there yet).
+- [ ] **Fold the *Lookup contract* (`L[key]` must-exist vs `GetOptional`, banned
+      `L[key] or "literal"`) into `ARCHITECTURE.md` and the localization
+      skill/cursorrules** — it's a suite-wide rule, not a migration detail.
+- [ ] Fold remaining target-state into `ARCHITECTURE.md`; delete this file.
 
 ---
 
@@ -394,3 +460,10 @@ additive. The service itself (Phase 0) is inert until something registers.
 | _2026-06-14_ | — | OneWoW | Adopted `ADDON_NAME` as the scope key (no magic strings) for core + DirectDeposit locale files, after a header-binding bug crashed `/1wdd`. |
 | _2026-06-14_ | — | OneWoW | Added `Locale.SUPPORTED` + `Locale.ALIASES` registry; GUI picker now reads it (fixes stale escaped-byte labels); `NormalizeLocale` uses `ALIASES`; `/owlocale` shows supported + flags unknown locales. Lint passes; in-game verify pending. |
 | _2026-06-14_ | — | OneWoW | Dead-key audit: only `CANCEL`/`CLOSE` of the shared scope have callers; themes/minimap/language-picker keys are unused (GUI hardcodes titles). Decision: keep as GUI-localization scaffolding (no removal). Documented in Shared-key catalog. |
+| _2026-06-14_ | 2 | Bags | Migrated to scope `OneWoW_Bags` + service view; fold→`SetLanguage` shim. Added `Locale:GetStore` for two raw per-locale readers (aliased `OneWoW_Bags.Locales`). Harvested shared translations into core Shared (es/fr/de/ru now 39; +12 from Bags, drift kept DD canonical). enUS transparent (1 dead-key diff). Lint passes; in-game verify pending. |
+| _2026-06-14_ | 2 | Bags | Key-name-on-miss surfaced a pre-existing anti-pattern: `ResolveCategoryName` showed `CAT_*` keys for custom categories. Added `Locale:GetOptional` (optional, nil-on-miss); fixed `ResolveCategoryName`; removed no-op `L[x] or x` in BagView/BagsBar/BagEquip/InfoBarFactory. Documented the lookup contract + Phase 6 task to fold into ARCHITECTURE.md. Lint passes. |
+| _2026-06-14_ | 2 | Bags | Fixed Bag View showing `BACKPACK`/`REAGENT_BAG`: `BagTypes.bagNames` used those literals but the locale keys are `BAG_BACKPACK`/`BAG_REAGENT` (numbered bags already used `BAG_N`). Aligned `bagNames` to the `BAG_*` keys; collapsed the now-redundant backpack/reagent special-cases in `BagsBar`/`BagEquip`. Values verified only used as display keys. Lint passes. |
+| _2026-06-14_ | — | core/DD/Bags | Anti-pattern sweep of migrated addons: 35 dead `L["KEY"] or "literal"` removed (keys all registered, 0 missing); 4 genuine optionals → `GetOptional`; no-op `L[x] or x` dropped. Ternaries + defensive nil-guards left. Lint passes; in-game verify pending. |
+| _2026-06-14_ | — | core/DD/Bags | Simplified defensive nil-guards (`(OneWoW.L and L["K"]) or "lit"` → `L["K"]`; minimap `if L and L["K"]` → unconditional). Fixed `GetLoadFailureText` key-name-on-miss bug via `GetOptional`. Flagged remaining `if err and L[err]` error-display existence-checks. Lint passes; in-game verify pending. |
+| _2026-06-14_ | — | OneWoW | Key-name-on-miss surfaced a genuinely missing key: `CTX_OPEN_TRACKERS` (right-click minimap menu) was never added to core while every other `CTX_OPEN_*` was; old `or "Open Trackers"` fallback hid it. Added to core enUS + koKR. |
+| _2026-06-14_ | — | Bags | Resolved the flagged `if err and L[err]` sites: traced all 7 — every `err` is a registered key (DUPLICATE_*/SAVED_SEARCH_*), so none were broken. Simplified to `if err then`. Lint passes. |

@@ -489,9 +489,9 @@ end
 function UpgradeDetection:ShowPawnModePrompt()
     local L = OneWoW.L or {}
     StaticPopupDialogs["ONEWOW_ENABLE_PAWN_MODE"] = {
-        text = "|cFF00FF00OneWoW - Upgrade Detection|r\n\n" .. (L["OVR_UPGRADE_PAWN_DETECTED_TEXT"] or "Pawn has been detected. Would you like OneWoW to use Pawn for upgrade detection instead of item level comparison?"),
-        button1 = L["OVR_UPGRADE_PAWN_ENABLE"] or "Enable Pawn Mode",
-        button2 = L["OVR_UPGRADE_PAWN_NO_THANKS"] or "No Thanks",
+        text = "|cFF00FF00OneWoW - Upgrade Detection|r\n\n" .. (L["OVR_UPGRADE_PAWN_DETECTED_TEXT"]),
+        button1 = L["OVR_UPGRADE_PAWN_ENABLE"],
+        button2 = L["OVR_UPGRADE_PAWN_NO_THANKS"],
         OnAccept = function()
             local reg = OneWoW.SettingsFeatureRegistry
             reg:SetOverlaySetting("upgrade", "mode", "PAWN")

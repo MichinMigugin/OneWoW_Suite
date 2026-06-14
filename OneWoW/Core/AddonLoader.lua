@@ -1,7 +1,7 @@
 -- Centralized on-demand addon loader. One loader serves both the login orchestrator
 -- and lazy point-of-use loads, so no addon hand-rolls its own LoadAddOn wrapper.
 -- GUI-free on purpose: it loads early, before anything that consumes it.
-local _, OneWoW = ...
+local ADDON_NAME, OneWoW = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -43,14 +43,17 @@ end)
 ---@param reason string|nil LoadAddOn failure token (e.g. "DISABLED", "MISSING", "COMBAT")
 ---@return string text localized failure description
 function OneWoW:GetLoadFailureText(reason)
-    local L = OneWoW.L
-    if reason and L and L["LOAD_FAIL_" .. reason] then
-        return L["LOAD_FAIL_" .. reason]
+    if reason then
+        -- Optional: only some tokens have a LOAD_FAIL_<reason> string. GetOptional
+        -- returns nil (not the key name) when absent, so we fall through to
+        -- Blizzard's ADDON_<reason> constant, then the raw token.
+        local text = OneWoW.Locale:GetOptional(ADDON_NAME, "LOAD_FAIL_" .. reason)
+        if text then return text end
+        if _G["ADDON_" .. reason] then
+            return _G["ADDON_" .. reason]
+        end
     end
-    if reason and _G["ADDON_" .. reason] then
-        return _G["ADDON_" .. reason]
-    end
-    return reason or (L and L["LOAD_FAIL_UNKNOWN"]) or "unknown error"
+    return reason or OneWoW.L["LOAD_FAIL_UNKNOWN"]
 end
 
 -- Shared addon enable-state API. Both settings surfaces (the Home tab and the
@@ -111,12 +114,11 @@ local FEATURE_UNIT_STATUS_KEYS = {
 ---@param state string return value from GetFeatureUnitState
 ---@return string label localized short status
 function OneWoW:GetFeatureUnitStatusLabel(state)
-    local L = OneWoW.L or {}
     local key = FEATURE_UNIT_STATUS_KEYS[state]
-    if key and L[key] then
-        return L[key]
+    if key then
+        return OneWoW.L[key]
     end
-    return L["FEATURE_UNIT_STATUS_MISSING"] or "Not detected"
+    return OneWoW.L["FEATURE_UNIT_STATUS_MISSING"]
 end
 
 --- When a unit is enabled but not in memory, returns a load-failure token if

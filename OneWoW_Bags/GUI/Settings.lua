@@ -203,7 +203,7 @@ local function RegisterSavedSearchSettingsPopups()
 
             local newName = self.EditBox:GetText()
             local ok, err = SS:Rename(oldName, newName)
-            if not ok and err and L[err] then
+            if not ok and err then
                 print(L[err])
                 C_Timer.After(0, function()
                     local reopened = StaticPopup_Show("ONEWOW_BAGS_RENAME_SAVED_SEARCH", nil, nil, oldName)

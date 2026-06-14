@@ -1,4 +1,4 @@
-local _, OneWoW = ...
+local ADDON_NAME, OneWoW = ...
 
 local UI = OneWoW.UI
 local L = OneWoW.L
@@ -557,7 +557,7 @@ function UI:InitMainWindow()
     MainWindow:Hide()
 
     local titleBar = OneWoW_GUI:CreateTitleBar(MainWindow, {
-        title = L["ADDON_TITLE"] or "OneWoW",
+        title = L["ADDON_TITLE"],
         height = 20,
         showBrand = true,
         onClose = function() UI:Hide() end,
@@ -588,7 +588,7 @@ function UI:InitMainWindow()
     contentArea = CreateFrame("Frame", nil, MainWindow)
     UpdateContentAreaAnchors()
 
-    local homeBtn = CreateRow1TabButton(row1Container, L["HOME_TAB"] or "OneWoW", "home")
+    local homeBtn = CreateRow1TabButton(row1Container, L["HOME_TAB"], "home")
     table.insert(row1Buttons, homeBtn)
 
     for _, mod in ipairs(BuildDisplayModules()) do
@@ -597,7 +597,7 @@ function UI:InitMainWindow()
         table.insert(row1Buttons, btn)
     end
 
-    local settingsBtn = CreateRow1TabButton(row1Container, L["SETTINGS_TAB"] or "Settings", "settings")
+    local settingsBtn = CreateRow1TabButton(row1Container, L["SETTINGS_TAB"], "settings")
     table.insert(row1Buttons, settingsBtn)
 
     row1Container:SetScript("OnSizeChanged", function()
@@ -692,7 +692,7 @@ function UI:CreateAddonPlaceholderFrame(parent, info)
 
     local nameText = OneWoW_GUI:CreateFS(parent, 16)
     nameText:SetPoint("TOP", icon, "BOTTOM", 0, -16)
-    nameText:SetText(L[info.localeKey] or info.name)
+    nameText:SetText(OneWoW.Locale:GetOptional(ADDON_NAME, info.localeKey) or info.name)
     nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local statusText = OneWoW_GUI:CreateFS(parent, 12)

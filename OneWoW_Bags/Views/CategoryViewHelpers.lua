@@ -1,4 +1,4 @@
-local _, OneWoW_Bags = ...
+local ADDON_NAME, OneWoW_Bags = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -48,8 +48,13 @@ function H.CreateLabelPool()
 end
 
 function H.ResolveCategoryName(categoryName)
+    -- Built-in categories localize via a CAT_* key; custom categories are
+    -- user-authored SavedVariables names with no locale entry. GetOptional returns
+    -- nil (not the key name) when there's no translation, so custom names fall
+    -- through to the raw stored string. Do NOT use L[localeKey] here -- its
+    -- key-name-on-miss would render "CAT_MY_HERBS" for custom categories.
     local localeKey = "CAT_" .. string.upper(string.gsub(categoryName, "%s+", "_"))
-    return L[localeKey] or categoryName
+    return OneWoW.Locale:GetOptional(ADDON_NAME, localeKey) or categoryName
 end
 
 function H.ApplyCategoryColor(fontString, catMods, categoryName)

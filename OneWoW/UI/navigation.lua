@@ -1,4 +1,4 @@
-local _, OneWoW = ...
+local ADDON_NAME, OneWoW = ...
 
 local UI = OneWoW.UI
 
@@ -22,7 +22,7 @@ function UI:CreateManageFeaturesLinkRow(parent, opts)
     local pointerKey = opts.pointerKey or "HOME_MANAGE_POINTER"
 
     local manageText = OneWoW_GUI:CreateFS(parent, 12)
-    manageText:SetText(L[pointerKey] or "")
+    manageText:SetText(OneWoW.Locale:GetOptional(ADDON_NAME, pointerKey) or "")
     manageText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local manageLink = CreateFrame("Button", nil, parent)
@@ -32,7 +32,7 @@ function UI:CreateManageFeaturesLinkRow(parent, opts)
     local manageLinkLabel = manageLink:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     OneWoW_GUI:SafeSetFont(manageLinkLabel, OneWoW_GUI:GetFont(), 12)
     manageLinkLabel:SetPoint("LEFT", manageLink, "LEFT", 0, 0)
-    manageLinkLabel:SetText(L["HOME_MANAGE_LINK"] or "Manage Features")
+    manageLinkLabel:SetText(L["HOME_MANAGE_LINK"])
     manageLinkLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     manageLink:SetWidth((manageLinkLabel:GetStringWidth() or 120) + 4)
 

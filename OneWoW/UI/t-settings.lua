@@ -28,18 +28,18 @@ function UI:CreateSettingsMainTab(parent)
 
     local resetTitle = OneWoW_GUI:CreateFS(resetContainer, 16)
     resetTitle:SetPoint("TOPLEFT", resetContainer, "TOPLEFT", 15, -12)
-    resetTitle:SetText(L["RESET_UI_SECTION"] or "Window Layout")
+    resetTitle:SetText(L["RESET_UI_SECTION"])
     resetTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local resetDesc = OneWoW_GUI:CreateFS(resetContainer, 12)
     resetDesc:SetPoint("TOPLEFT", resetContainer, "TOPLEFT", 15, -38)
     resetDesc:SetPoint("TOPRIGHT", resetContainer, "TOPRIGHT", -15, -38)
-    resetDesc:SetText(L["RESET_UI_DESC"] or "Reset the OneWoW window to its default size and position.")
+    resetDesc:SetText(L["RESET_UI_DESC"])
     resetDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     resetDesc:SetJustifyH("LEFT")
     resetDesc:SetWordWrap(true)
 
-    local resetBtn = OneWoW_GUI:CreateFitTextButton(resetContainer, { text = L["RESET_UI_BTN"] or "Reset Window", height = 28 })
+    local resetBtn = OneWoW_GUI:CreateFitTextButton(resetContainer, { text = L["RESET_UI_BTN"], height = 28 })
     resetBtn:SetPoint("TOPLEFT", resetContainer, "TOPLEFT", 15, -58)
     resetBtn:SetScript("OnClick", function()
         UI:ResetUIToDefaults()
@@ -49,7 +49,7 @@ function UI:CreateSettingsMainTab(parent)
 end
 
 local coreSettingsTabs = {
-    { name = "settings",       displayName = function() return (OneWoW.L and OneWoW.L["SETTINGS_SUBTAB"] or "Settings") end, create = function(parent) UI:CreateSettingsMainTab(parent) end },
+    { name = "settings",       displayName = function() return OneWoW.L["SETTINGS_SUBTAB"] end, create = function(parent) UI:CreateSettingsMainTab(parent) end },
     { name = "profiles",       displayName = function() return OneWoW.L["PROFILES_SUBTAB"] end, create = function(parent) UI:CreateProfilesTab(parent) end },
     { name = "managefeatures", displayName = function() return OneWoW.L["MANAGE_FEATURES_SUBTAB"] end, create = function(parent) UI:CreateManageFeaturesTab(parent) end },
 }

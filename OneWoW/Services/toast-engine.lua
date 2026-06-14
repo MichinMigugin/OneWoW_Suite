@@ -371,7 +371,7 @@ local function BuildLargeToastAnimations(toast)
         if self._instanceMapID then
             GameTooltip:SetOwner(self, "ANCHOR_LEFT")
             local L = OneWoW.L
-            GameTooltip:SetText(L and L["TOAST_INSTANCE_CLICK"] or "Click to view in Journal", 1, 1, 1)
+            GameTooltip:SetText(L["TOAST_INSTANCE_CLICK"], 1, 1, 1)
             GameTooltip:Show()
         end
     end)
@@ -544,7 +544,7 @@ local function BuildAnchor()
     anchor:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         local L = OneWoW.L
-        GameTooltip:SetText(L and L["TOAST_ANCHOR_TOOLTIP"] or "Toast Anchor")
+        GameTooltip:SetText(L["TOAST_ANCHOR_TOOLTIP"])
         GameTooltip:AddLine("Alt+Drag: Move", 0.80, 0.80, 0.80)
         GameTooltip:AddLine("Shift+Click: Lock / Unlock", 0.80, 0.80, 0.80)
         GameTooltip:AddLine("Ctrl+Alt+Click: Hide", 0.80, 0.80, 0.80)

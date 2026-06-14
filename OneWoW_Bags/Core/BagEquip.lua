@@ -1,7 +1,5 @@
 local _, OneWoW_Bags = ...
 
-local OneWoW_GUI = OneWoW_GUI
-
 local BagTypes = OneWoW_Bags.BagTypes
 local L = OneWoW_Bags.L
 local C_Container = C_Container
@@ -261,14 +259,7 @@ end
 ---@param bagIndex number
 ---@return string
 function BagEquip:GetBagDisplayLabel(bagIndex)
-    if bagIndex == Enum.BagIndex.Backpack then
-        return L["BAG_BACKPACK"]
-    end
-    if BagTypes:IsReagentBag(bagIndex) then
-        return L["BAG_REAGENT"]
-    end
-    local nameKey = BagTypes:GetBagName(bagIndex)
-    return L[nameKey] or nameKey
+    return L[BagTypes:GetBagName(bagIndex)]
 end
 
 ---@param itemID number

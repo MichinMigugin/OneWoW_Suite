@@ -285,7 +285,7 @@ function OneWoW_DirectDeposit:OnPlayerLogin()
         OneWoW_DirectDeposit:InitTooltipHook()
     end)
     if OneWoW then
-        OneWoW:RegisterMinimap("OneWoW_DirectDeposit", (OneWoW.L and OneWoW.L["CTX_OPEN_DD"]) or "Open Direct Deposit", nil, function()
+        OneWoW:RegisterMinimap("OneWoW_DirectDeposit", OneWoW.L["CTX_OPEN_DD"], nil, function()
             if OneWoW_DirectDeposit.GUI then OneWoW_DirectDeposit.GUI:Toggle() end
         end)
     end

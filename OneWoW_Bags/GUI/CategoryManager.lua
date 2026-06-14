@@ -646,7 +646,7 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_CATEGORY"] = {
         local prevSel = selectedCatKey
         local id, err = controller:CreateCategory(name)
         if not id then
-            if err and L[err] then
+            if err then
                 UIErrorsFrame:AddMessage(L[err], 1, 0, 0)
             end
             C_Timer.After(0, function()
@@ -711,7 +711,7 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_CATEGORY"] = {
         if not controller or not controller.RenameCategory then return end
         local ok, err = controller:RenameCategory(data, name)
         if not ok then
-            if err and L[err] then
+            if err then
                 UIErrorsFrame:AddMessage(L[err], 1, 0, 0)
             end
             C_Timer.After(0, function()
@@ -764,7 +764,7 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
         if not controller or not controller.CreateSection then return end
         local id, err = controller:CreateSection(name)
         if not id then
-            if err and L[err] then
+            if err then
                 UIErrorsFrame:AddMessage(L[err], 1, 0, 0)
             end
             C_Timer.After(0, function()
@@ -804,7 +804,7 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_SECTION"] = {
         if not controller or not controller.RenameSection then return end
         local ok, err = controller:RenameSection(data, name)
         if not ok then
-            if err and L[err] then
+            if err then
                 UIErrorsFrame:AddMessage(L[err], 1, 0, 0)
             end
             C_Timer.After(0, function()

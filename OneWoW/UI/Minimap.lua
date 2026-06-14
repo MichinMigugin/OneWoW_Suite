@@ -196,12 +196,8 @@ local function CreateMinimapButton()
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         GameTooltip:AddLine("|cFFFFD1001WoW|r", 1, 0.82, 0, 1)
         local L = OneWoW.L
-        if L and L["MINIMAP_TOOLTIP_HINT"] then
-            GameTooltip:AddLine(L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, 1)
-        end
-        if L and L["MINIMAP_RIGHT_CLICK"] then
-            GameTooltip:AddLine(L["MINIMAP_RIGHT_CLICK"], 0.5, 0.5, 0.6, 1)
-        end
+        GameTooltip:AddLine(L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, 1)
+        GameTooltip:AddLine(L["MINIMAP_RIGHT_CLICK"], 0.5, 0.5, 0.6, 1)
         GameTooltip:Show()
     end)
     minimapBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -263,12 +259,8 @@ function MinimapMod:Initialize()
                 GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
                 GameTooltip:AddLine("|cFFFFD1001WoW|r", 1, 0.82, 0, 1)
                 local L = OneWoW.L
-                if L and L["MINIMAP_TOOLTIP_HINT"] then
-                    GameTooltip:AddLine(L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, 1)
-                end
-                if L and L["MINIMAP_RIGHT_CLICK"] then
-                    GameTooltip:AddLine(L["MINIMAP_RIGHT_CLICK"], 0.5, 0.5, 0.6, 1)
-                end
+                GameTooltip:AddLine(L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, 1)
+                GameTooltip:AddLine(L["MINIMAP_RIGHT_CLICK"], 0.5, 0.5, 0.6, 1)
                 GameTooltip:Show()
             end,
             OnLeave = function()

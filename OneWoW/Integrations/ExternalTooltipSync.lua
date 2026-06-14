@@ -39,14 +39,14 @@ function Sync:EnsurePopups()
     self._popups = true
     local L = OneWoW.L
     StaticPopupDialogs["ONEWOW_AUCTIONATOR_AH_SOURCE"] = {
-        text = L["VALUE_AUCTIONATOR_POPUP_TEXT"] or "Auctionator is now the source for Auction House prices in OneWoW tooltips. Use Auctionator to scan the AH. The OneWoW AH scanner is hidden where this setting applies.",
+        text = L["VALUE_AUCTIONATOR_POPUP_TEXT"],
         button1 = OKAY,
         timeout = 0,
         whileDead = true,
         hideOnEscape = true,
     }
     StaticPopupDialogs["ONEWOW_TSM_TOOLTIP_NOTICE"] = {
-        text = L["VALUE_TSM_POPUP_TEXT"] or "OneWoW can show a TSM price line in tooltips. To avoid duplicate lines, open TSM Settings > Tooltip Settings and disable \"Enable TSM tooltips\", or clear all TSM tooltip line options you also show in OneWoW.",
+        text = L["VALUE_TSM_POPUP_TEXT"],
         button1 = OKAY,
         timeout = 0,
         whileDead = true,

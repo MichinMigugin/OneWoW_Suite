@@ -35,13 +35,13 @@ local function ApplyTheme()
 end
 
 local function ApplyLanguage()
+    -- Localization lives in the OneWoW Locale service now (scope = ADDON_NAME;
+    -- shared vocab in the "shared" scope). SetLanguage refolds every scope in place,
+    -- pushes BINDING_* globals, and fires OnApply; OneWoW_Bags.L is a stable view.
+    -- esMX->esES is normalized inside. Kept as a thin shim for the profile-sync loop
+    -- (t-profiles SyncSettingToChildAddons) until Phase 6.
     local lang = OneWoW_GUI:GetSetting("language") or "enUS"
-    if lang == "esMX" then lang = "esES" end
-    local localeData = OneWoW_Bags.Locales[lang] or OneWoW_Bags.Locales["enUS"]
-    local fallback = OneWoW_Bags.Locales["enUS"]
-    for k, v in pairs(fallback) do
-        L[k] = localeData[k] or v
-    end
+    OneWoW.Locale:SetLanguage(lang)
 end
 
 OneWoW_Bags.ApplyTheme = ApplyTheme
@@ -738,7 +738,7 @@ function OneWoW_Bags:OnPlayerLogin()
     DetectOneWoW()
 
     if OneWoW and OneWoW.RegisterMinimap then
-        OneWoW:RegisterMinimap("OneWoW_Bags", (OneWoW.L and OneWoW.L["CTX_OPEN_BAGS"]), nil, function()
+        OneWoW:RegisterMinimap("OneWoW_Bags", OneWoW.L["CTX_OPEN_BAGS"], nil, function()
             if self.GUI then self.GUI:Toggle() end
         end)
     end

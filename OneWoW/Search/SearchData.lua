@@ -1,6 +1,6 @@
 local _, OneWoW = ...
 
-local function L(key) return OneWoW.L and OneWoW.L[key] or key end
+local function L(key) return OneWoW.L[key] end
 
 OneWoW.SearchData = {
 

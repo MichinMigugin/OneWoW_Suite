@@ -21,6 +21,7 @@ OneWoW.Locale:RegisterShared("deDE", {
     ["THEME_BLUE"] = "Ozeanblau",
     ["THEME_PURPLE"] = "Königslila",
     ["THEME_GOLD"] = "Klassisches Gold",
+    ["THEME_RED"] = "Karmesinrot",
     ["THEME_SLATE"] = "Schiefergrau",
     ["THEME_ORANGE"] = "Sonnenuntergang Orange",
     ["THEME_TEAL"] = "Mystisches Blaugrün",
@@ -28,6 +29,19 @@ OneWoW.Locale:RegisterShared("deDE", {
     ["THEME_PINK"] = "Rosen Rosa",
     ["THEME_DARK"] = "Mitternacht Dunkel",
     ["THEME_AMBER"] = "Bernstein Feuer",
+    ["THEME_GLASSMORPHIC"] = "Glasmorphismus",
+    ["THEME_NIGHTFAE"] = "Nachtfae",
+
+    -- Minimap section labels
+    ["MINIMAP_SECTION"] = "Minikarten-Schaltflache",
+    ["MINIMAP_SECTION_DESC"] = "Minikarten-Schaltflache anzeigen oder ausblenden.",
+    ["MINIMAP_SHOW_BTN"] = "Minikarten-Schaltflache Anzeigen",
+    ["MINIMAP_ICON_SECTION"] = "Symbolthema",
+    ["MINIMAP_ICON_DESC"] = "Wahlen Sie Ihr Fraktionssymbol fur die Minikarten-Schaltflache und Titelleiste.",
+    ["MINIMAP_ICON_CURRENT"] = "Aktuelles Symbol",
+    ["MINIMAP_ICON_HORDE"] = "Horde",
+    ["MINIMAP_ICON_ALLIANCE"] = "Allianz",
+    ["MINIMAP_ICON_NEUTRAL"] = "Neutral",
 
     -- Common buttons
     ["OK"] = "OK",

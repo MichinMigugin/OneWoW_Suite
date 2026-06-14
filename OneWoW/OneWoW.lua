@@ -133,7 +133,7 @@ function OneWoW:OnAddonLoaded(loadedAddon)
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     self:RegisterLoadComponent("Core", _ver, "/1w")
 
-    self:RegisterMinimap("OneWoW", L["CTX_OPEN_ONEWOW"] or "Open OneWoW", nil, function()
+    self:RegisterMinimap("OneWoW", L["CTX_OPEN_ONEWOW"], nil, function()
         if self.UI then self.UI:Show() end
     end)
 
@@ -210,7 +210,7 @@ _G["1WoW_OnAddonCompartmentEnter"] = function(_, button)
     if modCount > 0 then
         GameTooltip:AddLine(modCount .. " modules loaded", 0.7, 0.7, 0.7)
     end
-    GameTooltip:AddLine(OneWoW.L and OneWoW.L["MINIMAP_TOOLTIP_HINT"] or "Click to toggle", 0.7, 0.7, 0.7)
+    GameTooltip:AddLine(OneWoW.L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.7)
     GameTooltip:Show()
 end
 

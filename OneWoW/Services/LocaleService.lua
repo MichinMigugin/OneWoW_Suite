@@ -163,6 +163,28 @@ function Locale:GetLanguage()
     return self._activeLang
 end
 
+-- Raw registered store for a scope: { [locale] = { KEY = value } }. For the rare
+-- consumer that needs a SPECIFIC locale's raw strings (e.g. import/export
+-- cross-locale maps, a DB-migration default in a fixed locale) rather than the
+-- folded active-language view. Read-only by convention.
+function Locale:GetStore(scope)
+    return self.store[scope]
+end
+
+-- Optional lookup: the resolved value for `key` (scope, then shared) if it was
+-- registered, else nil. Unlike the view `L[key]` -- which returns the key name on a
+-- miss to surface missing-key bugs -- this is for GENUINELY OPTIONAL localization:
+-- "use a translation if one exists, otherwise a dynamic fallback" (e.g. localize a
+-- built-in category name, else show the user's raw SavedVariables name). Do NOT use
+-- it to paper over keys that should always exist -- use the view for those so the
+-- miss is visible.
+function Locale:GetOptional(scope, key)
+    local r = self.resolved
+    if r[scope] and r[scope][key] ~= nil then return r[scope][key] end
+    if r[SHARED_SCOPE] and r[SHARED_SCOPE][key] ~= nil then return r[SHARED_SCOPE][key] end
+    return nil
+end
+
 -- Register a listener fired after each SetLanguage (rebuild cached UI strings).
 -- Replaces the per-addon ApplyLanguage hook.
 function Locale:OnApply(fn)

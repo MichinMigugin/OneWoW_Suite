@@ -21,6 +21,7 @@ OneWoW.Locale:RegisterShared("frFR", {
     ["THEME_BLUE"] = "Bleu Océan",
     ["THEME_PURPLE"] = "Violet Royal",
     ["THEME_GOLD"] = "Or Classique",
+    ["THEME_RED"] = "Rouge Cramoisi",
     ["THEME_SLATE"] = "Gris Ardoise",
     ["THEME_ORANGE"] = "Orange Crépuscule",
     ["THEME_TEAL"] = "Sarcelle Mystique",
@@ -28,6 +29,19 @@ OneWoW.Locale:RegisterShared("frFR", {
     ["THEME_PINK"] = "Rose Rose",
     ["THEME_DARK"] = "Sombre Minuit",
     ["THEME_AMBER"] = "Feu Ambre",
+    ["THEME_GLASSMORPHIC"] = "Glassmorphic",
+    ["THEME_NIGHTFAE"] = "Faenuit",
+
+    -- Minimap section labels
+    ["MINIMAP_SECTION"] = "Bouton de la Minicarte",
+    ["MINIMAP_SECTION_DESC"] = "Afficher ou masquer le bouton de la minicarte.",
+    ["MINIMAP_SHOW_BTN"] = "Afficher le Bouton de la Minicarte",
+    ["MINIMAP_ICON_SECTION"] = "Theme d'Icone",
+    ["MINIMAP_ICON_DESC"] = "Choisissez l'icone de votre faction pour le bouton de la minicarte et la barre de titre.",
+    ["MINIMAP_ICON_CURRENT"] = "Icone Actuelle",
+    ["MINIMAP_ICON_HORDE"] = "Horde",
+    ["MINIMAP_ICON_ALLIANCE"] = "Alliance",
+    ["MINIMAP_ICON_NEUTRAL"] = "Neutre",
 
     -- Common buttons
     ["OK"] = "OK",

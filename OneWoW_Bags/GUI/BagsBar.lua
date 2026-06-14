@@ -1,4 +1,4 @@
-local _, OneWoW_Bags = ...
+local ADDON_NAME, OneWoW_Bags = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -714,14 +714,7 @@ function BagsBar:UpdateTrackers()
 end
 
 local function GetBagLabel(bagIndex)
-    if bagIndex == Enum.BagIndex.Backpack then
-        return L["BAG_BACKPACK"]
-    end
-    if BagTypes:IsReagentBag(bagIndex) then
-        return L["BAG_REAGENT"]
-    end
-    local nameKey = BagTypes:GetBagName(bagIndex)
-    return L[nameKey] or nameKey
+    return L[BagTypes:GetBagName(bagIndex)]
 end
 
 local function GetCompatibleBagEntries(targetBagIndex)
@@ -878,7 +871,7 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
         end
         if BagTypes:IsBagEquipped(myself.bagIndex) then
             if selected == myself.bagIndex then
-                GameTooltip:AddLine(L["BAG_FILTER_ACTIVE"]:format(L["BAG_" .. myself.bagIndex] or ("Bag " .. myself.bagIndex)), 0.5, 1, 0.5, true)
+                GameTooltip:AddLine(L["BAG_FILTER_ACTIVE"]:format(OneWoW.Locale:GetOptional(ADDON_NAME, "BAG_" .. myself.bagIndex) or ("Bag " .. myself.bagIndex)), 0.5, 1, 0.5, true)
                 GameTooltip:AddLine(L["BAG_SHOW_ALL"], 0.7, 0.7, 0.7, true)
             else
                 GameTooltip:AddLine(L["BAG_SHOW_ONLY"], 0.7, 0.7, 0.7, true)

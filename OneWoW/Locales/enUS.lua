@@ -60,6 +60,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["CTX_OPEN_BAGS"] = "Open Bags",
     ["CTX_OPEN_DEVTOOLS"] = "Open DevTools",
     ["CTX_OPEN_CATALOG"] = "Open Catalog",
+    ["CTX_OPEN_TRACKERS"] = "Open Trackers",
 
     -- CopyPaste dialog (OneWoW.CopyPaste)
     ["COPYPASTE_HINT_COPY"] = "Press Ctrl+C to copy",
