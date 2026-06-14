@@ -34,7 +34,6 @@ function OneWoW_GUI:CreateMinimapLauncher(addonName, options)
         return CreateStub()
     end
 
-    local label = options.label or addonName
     local onClick = options.onClick or noop
     local onRightClick = options.onRightClick or noop
     local onTooltip = options.onTooltip or noop

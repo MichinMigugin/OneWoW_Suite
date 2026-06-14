@@ -123,21 +123,21 @@ function OneWoW_GUI:CreateListRowBasic(parent, options)
         end
     end
 
-    row:SetScript("OnEnter", function(self)
-        if not self.isActive then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-            self.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    row:SetScript("OnEnter", function(myself)
+        if not myself.isActive then
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+            myself.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         end
     end)
-    row:SetScript("OnLeave", function(self)
-        if not self.isActive then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            self.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    row:SetScript("OnLeave", function(myself)
+        if not myself.isActive then
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            myself.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     end)
 
     if onClick then
-        row:SetScript("OnClick", function(self) onClick(self) end)
+        row:SetScript("OnClick", function(myself) onClick(myself) end)
     end
 
     if row.favoriteBtn and row.valueText then
