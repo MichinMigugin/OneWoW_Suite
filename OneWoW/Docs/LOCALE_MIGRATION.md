@@ -254,9 +254,10 @@ phase until the previous one is verified in-game.
 - [x] Normalize language-name encoding to raw UTF-8 here (decision 2). (5 escaped
       values converted: SPANISH/KOREAN/FRENCH/RUSSIAN + the `MANAGE_FEATURES_DESC`
       em-dash.)
-- [ ] Verify in-game: every core UI string renders unchanged; language switch
+- [x] Verify in-game: every core UI string renders unchanged; language switch
       works; `BINDING_*` keys still reach `_G`; missing key shows key-name not
       `nil`; `/owlocale` shows `OneWoW` + `shared` scopes, zero collisions.
+      (Verified — `/owlocale`: 989 + 49 keys, no collisions. Committed.)
 
 ### Phase 2 — Standalone localized addons (Pattern D)
 
@@ -303,8 +304,8 @@ outright.
       `OneWoW_DirectDeposit` (via `ADDON_NAME`; 76 enUS / ~39 other). Harvested 27 shared keys × es/fr/de/ru into core
       `Locales/Shared/`. enUS/koKR drops verified byte-identical to canonical
       (koKR: 3 visible section-description strings now use core's wording —
-      intended). esMX alias dropped (service normalizes). Lint passes; in-game
-      verify pending.
+      intended). esMX alias dropped (service normalizes). Lint passes; verified
+      in-game and committed.
 - [x] **OneWoW_Bags** (524 keys, 6 locales). Scope `OneWoW_Bags` (479 enUS / 467
       other). Harvested its shared translations into core `Locales/Shared/`
       (es/fr/de/ru: +12 keys each — the MINIMAP labels DD lacked — now 39/locale;
@@ -313,15 +314,15 @@ outright.
       key (`THEME_NIGHTFAE`). Two raw readers (`Core/Database.lua`,
       `ImportExport/Applier.lua`) keep working via
       `OneWoW_Bags.Locales = OneWoW.Locale:GetStore(ADDON_NAME)`. Lint passes;
-      in-game verify pending.
+      verified in-game and committed.
 - [x] **OneWoW_ShoppingList** (263 keys, 6 locales). Scope `OneWoW_ShoppingList`
       (263 enUS / 259 other). 0 shared keys → no drops, no harvest. **Aligned to
       the DD/Bags shape:** deleted the `RegisterLocale`/`SetLocale` fold helper
       from `Core/Constants.lua`; enUS sets the view; `ApplyLanguage` is the
       `SetLanguage` shim. Anti-pattern sweep done (14 `(L and L["K"]) or "lit"`
       guards in `OrdersUI.lua` + the minimap `CTX_OPEN_SL` guard simplified; all
-      keys verified registered). Lint clean on touched files. In-game verify
-      pending. (Pre-existing `_G.<name>` violations in `BagOverlays.lua` /
+      keys verified registered). Lint clean on touched files. Verified in-game and
+      committed. (Pre-existing `_G.<name>` violations in `BagOverlays.lua` /
       `ShoppingList.lua` noted separately — unrelated to locale work.)
 - [x] **OneWoW_Utility_DevTool** (579 keys, 6 locales). Scope
       `OneWoW_Utility_DevTool` (570 enUS / 292 other). Dropped 9 shared `MINIMAP_*`
@@ -333,7 +334,9 @@ outright.
       sweep: ~51 sites — pervasive `Addon.L or {}` guards → `Addon.L`, `L[var] or
       var` no-ops, minimap fallback, and `rcLabel` (`ErrorAnalyzer`) → `GetOptional`
       (it has a code-side default). All keys verified registered. Lint clean
-      (excl. generated `Data/`). In-game verify pending.
+      (excl. generated `Data/`). Verified in-game and committed (incl. the two
+      follow-up notes: `L`-capture standardization and the missing
+      language/font settings callbacks).
 
 ### Phase 3 — LocaleManager addons (Pattern B)
 
@@ -487,3 +490,4 @@ additive. The service itself (Phase 0) is inert until something registers.
 | _2026-06-14_ | 2 | ShoppingList | Migrated to scope `OneWoW_ShoppingList` + service view; aligned to DD/Bags (removed `RegisterLocale`/`SetLocale` from Constants.lua; `ApplyLanguage`→`SetLanguage` shim). 0 shared → no harvest. Anti-pattern sweep: 14 dead `(L and L["K"]) or "lit"` guards simplified, all keys verified registered. Touched files lint clean; in-game verify pending. |
 | _2026-06-14_ | 2 | DevTool | Migrated to scope `OneWoW_Utility_DevTool` + service view; `GetStore` alias for Database raw readers; `ApplyLanguage`→`SetLanguage` shim (service pushes BINDING_*). 9 shared MINIMAP_* dropped (harvest no-op). Anti-pattern sweep ~51 sites (`Addon.L or {}` guards, no-ops, minimap fallback, `rcLabel`→`GetOptional`). Lint clean; in-game verify pending. **Phase 2 complete** (DD, Bags, ShoppingList, DevTool). |
 | _2026-06-14_ | — | DevTool | Code-quality notes (user-reported, pre-existing): (1) standardized `L` capture — one top-level `local L = Addon.L` per file, removed `getL()`/`loc`/`LL` aliases, all reads use `L` (~90 sites). (2) Fixed live settings updates — DevTool only had `OnThemeChanged`; added `OnLanguageChanged`/`OnFontChanged`/`OnFontSizeChanged` (via new `Addon:RebuildUI()`), so language/font now apply without forcing a theme change. |
+| _2026-06-14_ | 0–2 | — | **Phases 0, 1, 2 complete and verified in-game + committed.** Service + `/owlocale` + `SUPPORTED` registry; core split onto the service; all 4 Pattern-D addons (DirectDeposit, Bags, ShoppingList, DevTool) migrated, with their anti-pattern sweeps. Earlier log lines marked "verify pending" reflect state when written; current truth is the Phase checklists. Next: Phase 3 (LocaleManager addons). |
