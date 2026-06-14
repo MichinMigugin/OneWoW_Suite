@@ -59,28 +59,28 @@ function ns.UI.CreateZonesTab(parent)
 
     local controlTitle = OneWoW_GUI:CreateFS(controlPanel, 10)
     controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
-    controlTitle:SetText(L["ZONES_CONTROLS"] or "Zones Controls")
+    controlTitle:SetText(L["ZONES_CONTROLS"])
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local addZoneBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_MANUAL_ENTRY"] or "Manual Add", height = 25, minWidth = 80 })
+    local addZoneBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_MANUAL_ENTRY"], height = 25, minWidth = 80 })
     addZoneBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
     addZoneBtn:SetScript("OnClick", function()
         ns.UI.ShowManualZoneEntryDialog(parent)
     end)
 
-    local detectBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_CURRENT_ZONE"] or "Add Sub", height = 25, minWidth = 80 })
+    local detectBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_CURRENT_ZONE"], height = 25, minWidth = 80 })
     detectBtn:SetPoint("LEFT", addZoneBtn, "RIGHT", 6, 0)
     detectBtn:SetScript("OnClick", function()
         if not ns.Zones then return end
         local zoneName = ns.Zones:GetCurrentZoneName()
         if not zoneName or zoneName == "" then
-            print("|cFFFFD100OneWoW - Zones:|r " .. (L["ZONE_DETECT_FAIL"] or "Could not detect zone."))
+            print("|cFFFFD100OneWoW - Zones:|r " .. (L["ZONE_DETECT_FAIL"]))
             return
         end
         if ns.Zones:GetZone(zoneName) then
             selectedZone = zoneName
             if parent.SelectZone then parent.SelectZone(zoneName) end
-            print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_EXISTS"] or "Zone exists: %s", zoneName))
+            print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_EXISTS"], zoneName))
             return
         end
         local mapInfo = ns.Zones:GetCurrentMapInfo()
@@ -93,22 +93,22 @@ function ns.UI.CreateZonesTab(parent)
         selectedZone = zoneName
         parent.RefreshZonesList()
         if parent.SelectZone then parent.SelectZone(zoneName) end
-        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"] or "Added: %s", zoneName))
+        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"], zoneName))
     end)
 
-    local addParentBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["ZONE_ADD_PARENT"] or "Add Parent", height = 25, minWidth = 80 })
+    local addParentBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["ZONE_ADD_PARENT"], height = 25, minWidth = 80 })
     addParentBtn:SetPoint("LEFT", detectBtn, "RIGHT", 6, 0)
     addParentBtn:SetScript("OnClick", function()
         if not ns.Zones then return end
         local parentZoneName = ns.Zones:GetParentZoneName()
         if not parentZoneName or parentZoneName == "" then
-            print("|cFFFFD100OneWoW - Zones:|r " .. (L["MSG_NO_PARENT_ZONE"] or "Could not detect parent zone."))
+            print("|cFFFFD100OneWoW - Zones:|r " .. (L["MSG_NO_PARENT_ZONE"]))
             return
         end
         if ns.Zones:GetZone(parentZoneName) then
             selectedZone = parentZoneName
             if parent.SelectZone then parent.SelectZone(parentZoneName) end
-            print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_EXISTS"] or "Zone exists: %s", parentZoneName))
+            print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_EXISTS"], parentZoneName))
             return
         end
         local mapInfo = ns.Zones:GetCurrentMapInfo()
@@ -127,13 +127,13 @@ function ns.UI.CreateZonesTab(parent)
         selectedZone = parentZoneName
         parent.RefreshZonesList()
         if parent.SelectZone then parent.SelectZone(parentZoneName) end
-        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"] or "Added: %s", parentZoneName))
+        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"], parentZoneName))
     end)
 
     local categoryDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_CATEGORY"], 140, 25)
     categoryDropdown:SetPoint("LEFT", addParentBtn, "RIGHT", 8, 0)
     local function RefreshCatOpts()
-        local catOpts = {{text = L["UI_ALL"] or "All", value = "All"}}
+        local catOpts = {{text = L["UI_ALL"], value = "All"}}
         if ns.Zones then
             for _, c in ipairs(ns.Zones:GetCategories()) do
                 catOpts[#catOpts + 1] = {text = c, value = c}
@@ -163,8 +163,8 @@ function ns.UI.CreateZonesTab(parent)
     end)
     manageCategoriesBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["UI_MANAGE_CATEGORIES"] or "Manage Categories", 1, 1, 1)
-        GameTooltip:AddLine(L["UI_MANAGE_CATEGORIES_DESC"] or "Add, remove, and organize categories.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["UI_MANAGE_CATEGORIES"], 1, 1, 1)
+        GameTooltip:AddLine(L["UI_MANAGE_CATEGORIES_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     manageCategoriesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -172,9 +172,9 @@ function ns.UI.CreateZonesTab(parent)
     local storageDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storageDropdown:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
     storageDropdown:SetOptions({
-        {text = L["UI_ALL"] or "All",                     value = "All"},
-        {text = L["UI_STORAGE_ACCOUNT"] or "Account",     value = "account"},
-        {text = L["UI_STORAGE_CHARACTER"] or "Character", value = "character"},
+        {text = L["UI_ALL"],                     value = "All"},
+        {text = L["UI_STORAGE_ACCOUNT"],     value = "account"},
+        {text = L["UI_STORAGE_CHARACTER"], value = "character"},
     })
     storageDropdown:SetSelected("All")
     storageDropdown.onSelect = function(value)
@@ -223,8 +223,8 @@ function ns.UI.CreateZonesTab(parent)
     end)
     helpButton:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(L["UI_ZONES_HELP_TITLE"] or "Zones Help", 1, 1, 1)
-        GameTooltip:AddLine(L["UI_ZONES_HELP_HINT"] or "Click for zones help.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["UI_ZONES_HELP_TITLE"], 1, 1, 1)
+        GameTooltip:AddLine(L["UI_ZONES_HELP_HINT"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     helpButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -236,7 +236,7 @@ function ns.UI.CreateZonesTab(parent)
 
     local listingTitle = OneWoW_GUI:CreateFS(listingPanel, 16)
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
-    listingTitle:SetText(L["TAB_ZONES"] or "Zones")
+    listingTitle:SetText(L["TAB_ZONES"])
     listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local searchBox = OneWoW_GUI:CreateEditBox(listingPanel, {
@@ -260,7 +260,7 @@ function ns.UI.CreateZonesTab(parent)
 
     emptyMessage = OneWoW_GUI:CreateFS(detailPanel, 16)
     emptyMessage:SetPoint("CENTER", detailPanel, "CENTER")
-    emptyMessage:SetText(L["ZONES_SELECT_PROMPT"] or "Select a zone to view its content")
+    emptyMessage:SetText(L["ZONES_SELECT_PROMPT"])
     emptyMessage:SetTextColor(0.6, 0.6, 0.7, 1)
 
     local leftStatusBar = CreateThemedBar(nil, parent)
@@ -316,11 +316,11 @@ function ns.UI.CreateZonesTab(parent)
                     local zName = selectedZone
                     local confirmResult = OneWoW_GUI:CreateConfirmDialog({
                         name = "OneWoW_NotesDeleteZoneConfirm",
-                        title = L["DIALOG_CONFIRM_DELETE"] or "Confirm Delete",
-                        message = string.format(L["ZONE_CONFIRM_DELETE"] or "Delete zone: %s?", zName),
+                        title = L["DIALOG_CONFIRM_DELETE"],
+                        message = string.format(L["ZONE_CONFIRM_DELETE"], zName),
                         buttons = {
                             {
-                                text = L["BUTTON_DELETE"] or "Delete",
+                                text = L["BUTTON_DELETE"],
                                 color = {0.8, 0.2, 0.2},
                                 onClick = function(dlg)
                                     if ns.ZonePins then ns.ZonePins:DestroyZonePin(zName) end
@@ -336,7 +336,7 @@ function ns.UI.CreateZonesTab(parent)
                                     dlg:Hide()
                                 end,
                             },
-                            { text = L["BUTTON_CANCEL"] or "Cancel", onClick = function(dlg) dlg:Hide() end },
+                            { text = L["BUTTON_CANCEL"], onClick = function(dlg) dlg:Hide() end },
                         },
                     })
                     confirmResult.frame:Show()
@@ -344,8 +344,8 @@ function ns.UI.CreateZonesTab(parent)
             end)
             deleteBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NOTE_DELETE"] or "Delete", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NOTE_DELETE_DESC"] or "Delete this zone.", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_NOTE_DELETE"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_NOTE_DELETE_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             deleteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -364,8 +364,8 @@ function ns.UI.CreateZonesTab(parent)
             end)
             propertiesBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NOTE_PROPERTIES"] or "Properties", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NOTE_PROPERTIES_DESC"] or "Edit zone properties.", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_NOTE_PROPERTIES"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_NOTE_PROPERTIES_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             propertiesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -410,8 +410,8 @@ function ns.UI.CreateZonesTab(parent)
             end)
             pinBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NOTE_PIN"] or "Pin", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NOTE_PIN_DESC"] or "Pin this zone.", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_NOTE_PIN"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_NOTE_PIN_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             pinBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -456,8 +456,8 @@ function ns.UI.CreateZonesTab(parent)
             end)
             alertHeaderBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_ZONE_ALERT"] or "Zone Alert", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_ZONE_ALERT_DESC"] or "Toggle zone entry alert.", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_ZONE_ALERT"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_ZONE_ALERT_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             alertHeaderBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -506,8 +506,8 @@ function ns.UI.CreateZonesTab(parent)
             end)
             favoriteBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NOTE_FAVORITE"] or "Favorite", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NOTE_FAVORITE_DESC"] or "Mark as favorite.", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_NOTE_FAVORITE"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_NOTE_FAVORITE_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             favoriteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -624,7 +624,7 @@ function ns.UI.CreateZonesTab(parent)
 
             local todoLabel = OneWoW_GUI:CreateFS(todoHeader, 12)
             todoLabel:SetPoint("LEFT", todoHeader, "LEFT", 5, 0)
-            todoLabel:SetText(L["ZONE_TODO_HEADER"] or "Checklist")
+            todoLabel:SetText(L["ZONE_TODO_HEADER"])
             todoLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local resetTasksBtn = CreateFrame("Button", nil, todoHeader)
@@ -648,8 +648,8 @@ function ns.UI.CreateZonesTab(parent)
             end)
             resetTasksBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_TOP")
-                GameTooltip:SetText(L["NOTE_RESET_TODOS"] or "Reset Tasks", 1, 1, 1)
-                GameTooltip:AddLine(L["NOTE_RESET_TODOS_DESC"] or "Uncheck all tasks.", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["NOTE_RESET_TODOS"], 1, 1, 1)
+                GameTooltip:AddLine(L["NOTE_RESET_TODOS_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             resetTasksBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -768,7 +768,7 @@ function ns.UI.CreateZonesTab(parent)
                     if header.categoryLine then
                         header.categoryLine:SetTextColor(textColor[1], textColor[2], textColor[3])
                         local catText = zoneData.category or "General"
-                        local storeText = zoneData.storage == "character" and (L["STORAGE_TYPE_CHARACTER"] or "Character") or (L["STORAGE_ACCOUNT_WIDE"] or "Account")
+                        local storeText = zoneData.storage == "character" and (L["STORAGE_TYPE_CHARACTER"]) or (L["STORAGE_ACCOUNT_WIDE"])
                         header.categoryLine:SetText(catText .. "  |  " .. storeText)
                     end
 
@@ -1015,7 +1015,7 @@ function ns.UI.CreateZonesTab(parent)
 
             local storageFS = OneWoW_GUI:CreateFS(row, 10)
             storageFS:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 12, 6)
-            local stText = zone.data.storage == "character" and (L["STORAGE_TYPE_CHARACTER"] or "Char") or (L["STORAGE_ACCOUNT_WIDE"] or "Acct")
+            local stText = zone.data.storage == "character" and (L["STORAGE_TYPE_CHARACTER"]) or (L["STORAGE_ACCOUNT_WIDE"])
             storageFS:SetText(stText)
             storageFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
@@ -1043,8 +1043,8 @@ function ns.UI.CreateZonesTab(parent)
             end)
             alertBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_ZONE_ALERT"] or "Zone Alert", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_ZONE_ALERT_DESC"] or "Toggle zone entry alert.", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_ZONE_ALERT"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_ZONE_ALERT_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             alertBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -1080,8 +1080,8 @@ function ns.UI.CreateZonesTab(parent)
             end)
             pinListBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NOTE_PIN"] or "Pin", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NOTE_PIN_DESC"] or "Pin this zone.", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_NOTE_PIN"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_NOTE_PIN_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             pinListBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -1188,13 +1188,13 @@ function ns.UI.CreateZonesTab(parent)
         local yOffset = 0
 
         if #newZones > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_NEW"] or "New", yOffset)
+            CreateSectionHeader(L["NOTES_SECTION_NEW"], yOffset)
             yOffset = yOffset - 30
         end
         for i, zone in ipairs(newZones) do BuildZoneRow(zone, yOffset, newZones, i) yOffset = yOffset - 55 end
 
         if #favorites > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_FAVORITES"] or "Favorites", yOffset)
+            CreateSectionHeader(L["NOTES_SECTION_FAVORITES"], yOffset)
             yOffset = yOffset - 30
         end
         for i, zone in ipairs(favorites) do BuildZoneRow(zone, yOffset, favorites, i) yOffset = yOffset - 55 end
@@ -1269,22 +1269,22 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
 
     local dialog = ns.UI.CreateThemedDialog({
         name            = "OneWoW_NotesManualZoneEntry",
-        title           = L["ZONE_MANUAL_ENTRY_TITLE"] or "Add Zone",
+        title           = L["ZONE_MANUAL_ENTRY_TITLE"],
         width           = 580,
         height          = 610,
         destroyOnClose  = true,
         buttons = {
             {
-                text = L["BUTTON_ADD_NOTE"] or "Add",
+                text = L["BUTTON_ADD_NOTE"],
                 onClick = function(dlg)
                     local name = dlg._nameInput and dlg._nameInput:GetText() or ""
                     if name == "" then
-                        print("|cFFFFD100OneWoW - Zones:|r " .. (L["ZONE_ERROR_NAME_REQUIRED"] or "Zone name is required."))
+                        print("|cFFFFD100OneWoW - Zones:|r " .. (L["ZONE_ERROR_NAME_REQUIRED"]))
                         return
                     end
 
                     if ns.Zones and ns.Zones:GetZone(name) then
-                        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_EXISTS"] or "Zone exists: %s", name))
+                        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_EXISTS"], name))
                         return
                     end
 
@@ -1307,7 +1307,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
                             fontSize = fontSize, opacity = opacity,
                             mapID = mapID,
                         })
-                        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"] or "Added: %s", name))
+                        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"], name))
                         dlg:Hide()
                         if refreshParent and refreshParent.RefreshZonesList then refreshParent.RefreshZonesList() end
                         if refreshParent and refreshParent.SelectZone then refreshParent.SelectZone(name) end
@@ -1324,28 +1324,28 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     local content = dialog.content
     local yPos = -10
 
-    MakeZoneLabel(content, L["LABEL_ZONE_NAME"] or "Zone Name:", COL1_X, yPos)
+    MakeZoneLabel(content, L["LABEL_ZONE_NAME"], COL1_X, yPos)
     dialog._nameInput = MakeZoneInput(content, COL1_X, yPos - LBL_GAP, COL_W * 2 + (COL2_X - COL1_X - COL_W))
     dialog._nameInput:SetAutoFocus(true)
     yPos = yPos - ROW_H
 
-    MakeZoneLabel(content, L["LABEL_MAP_ID_OPTIONAL"] or "Map ID (optional):", COL1_X, yPos)
+    MakeZoneLabel(content, L["LABEL_MAP_ID_OPTIONAL"], COL1_X, yPos)
     local mapIDInput = MakeZoneInput(content, COL1_X, yPos - LBL_GAP, 120)
     mapIDInput:SetNumeric(true)
     dialog._validatedMapID = nil
 
-    local validateBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["BUTTON_VALIDATE"] or "Validate", height = 26, minWidth = 70 })
+    local validateBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["BUTTON_VALIDATE"], height = 26, minWidth = 70 })
     validateBtn:SetPoint("LEFT", mapIDInput, "RIGHT", 6, 0)
 
     local validationFS = OneWoW_GUI:CreateFS(content, 10)
     validationFS:SetPoint("LEFT", validateBtn, "RIGHT", 8, 0)
-    validationFS:SetText(L["ZONE_VALIDATE_HINT"] or "Enter ID & click Validate")
+    validationFS:SetText(L["ZONE_VALIDATE_HINT"])
     validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     validateBtn:SetScript("OnClick", function()
         local mapID = tonumber(mapIDInput:GetText())
         if not mapID or mapID <= 0 then
-            validationFS:SetText(L["ZONE_INVALID_MAP_ID"] or "Enter a valid number.")
+            validationFS:SetText(L["ZONE_INVALID_MAP_ID"])
             validationFS:SetTextColor(0.8, 0.2, 0.2, 1)
             dialog._validatedMapID = nil
             return
@@ -1357,7 +1357,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
             dialog._nameInput:SetText(mapInfo.name)
             dialog._validatedMapID = mapID
         else
-            validationFS:SetText(L["ZONE_MAP_NOT_FOUND"] or "Map ID not found.")
+            validationFS:SetText(L["ZONE_MAP_NOT_FOUND"])
             validationFS:SetTextColor(0.8, 0.2, 0.2, 1)
             dialog._validatedMapID = nil
         end
@@ -1489,7 +1489,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     end
     yPos = yPos - ROW_H
 
-    MakeZoneLabel(content, L["LABEL_NOTE_CONTENT"] or "Note:", COL1_X, yPos)
+    MakeZoneLabel(content, L["LABEL_NOTE_CONTENT"], COL1_X, yPos)
     yPos = yPos - LBL_GAP
 
     local noteBg = CreateFrame("Frame", nil, content, "BackdropTemplate")
@@ -1532,7 +1532,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
 
     local dialog = ns.UI.CreateThemedDialog({
         name            = "OneWoW_NotesZoneProperties",
-        title           = (L["DIALOG_ZONE_PROPERTIES"] or "Zone Properties") .. ": " .. zoneName,
+        title           = (L["DIALOG_ZONE_PROPERTIES"]) .. ": " .. zoneName,
         width           = 580,
         height          = 600,
         destroyOnClose  = true,
@@ -1565,7 +1565,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
         end
     end
 
-    MakeZoneLabel(content, L["LABEL_ZONE_NAME"] or "Zone Name:", COL1_X, yPos)
+    MakeZoneLabel(content, L["LABEL_ZONE_NAME"], COL1_X, yPos)
     local nameInput = MakeZoneInput(content, COL1_X, yPos - LBL_GAP, COL_W * 2 + (COL2_X - COL1_X - COL_W))
     nameInput:SetText(zoneName)
     nameInput:SetScript("OnEnterPressed", function(self)
@@ -1584,12 +1584,12 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     end)
     yPos = yPos - ROW_H
 
-    MakeZoneLabel(content, L["LABEL_MAP_ID_OPTIONAL"] or "Map ID:", COL1_X, yPos)
+    MakeZoneLabel(content, L["LABEL_MAP_ID_OPTIONAL"], COL1_X, yPos)
     local mapIDInput = MakeZoneInput(content, COL1_X, yPos - LBL_GAP, 120)
     mapIDInput:SetNumeric(true)
     mapIDInput:SetText(zoneData.mapID and tostring(zoneData.mapID) or "")
 
-    local validateBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["BUTTON_VALIDATE"] or "Validate", height = 26, minWidth = 70 })
+    local validateBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["BUTTON_VALIDATE"], height = 26, minWidth = 70 })
     validateBtn:SetPoint("LEFT", mapIDInput, "RIGHT", 6, 0)
 
     local validationFS = OneWoW_GUI:CreateFS(content, 10)
@@ -1600,18 +1600,18 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
             validationFS:SetText(mapInfo.name)
             validationFS:SetTextColor(0.2, 1.0, 0.2, 1)
         else
-            validationFS:SetText(L["ZONE_MAP_NOT_FOUND"] or "Map ID not found.")
+            validationFS:SetText(L["ZONE_MAP_NOT_FOUND"])
             validationFS:SetTextColor(0.8, 0.2, 0.2, 1)
         end
     else
-        validationFS:SetText(L["ZONE_VALIDATE_HINT"] or "Enter ID & click Validate")
+        validationFS:SetText(L["ZONE_VALIDATE_HINT"])
         validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
 
     validateBtn:SetScript("OnClick", function()
         local mapID = tonumber(mapIDInput:GetText())
         if not mapID or mapID <= 0 then
-            validationFS:SetText(L["ZONE_INVALID_MAP_ID"] or "Enter a valid number.")
+            validationFS:SetText(L["ZONE_INVALID_MAP_ID"])
             validationFS:SetTextColor(0.8, 0.2, 0.2, 1)
             return
         end
@@ -1630,7 +1630,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
                 RefreshEditor()
             end
         else
-            validationFS:SetText(L["ZONE_MAP_NOT_FOUND"] or "Map ID not found.")
+            validationFS:SetText(L["ZONE_MAP_NOT_FOUND"])
             validationFS:SetTextColor(0.8, 0.2, 0.2, 1)
         end
     end)
@@ -1773,7 +1773,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     end
     yPos = yPos - ROW_H
 
-    MakeZoneLabel(content, L["LABEL_NOTE_PREVIEW"] or "Note:", COL1_X, yPos)
+    MakeZoneLabel(content, L["LABEL_NOTE_PREVIEW"], COL1_X, yPos)
     yPos = yPos - LBL_GAP
 
     local noteBg = CreateFrame("Frame", nil, content, "BackdropTemplate")

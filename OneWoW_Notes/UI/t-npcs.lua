@@ -93,37 +93,37 @@ function ns.UI.CreateNPCsTab(parent)
 
     local controlTitle = OneWoW_GUI:CreateFS(controlPanel, 10)
     controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
-    controlTitle:SetText(L["NPCS_CONTROLS"] or "NPCs Controls")
+    controlTitle:SetText(L["NPCS_CONTROLS"])
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local addTargetBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_TARGET"] or "Add Target", height = 25, minWidth = 80 })
+    local addTargetBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_TARGET"], height = 25, minWidth = 80 })
     addTargetBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
     addTargetBtn:SetScript("OnClick", function()
         if ns.NPCs then
             local npcInfo = ns.NPCs:GetTargetNPCInfo()
             if not npcInfo then
-                print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_TARGET_NPC_FIRST"] or "Target an NPC first."))
+                print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_TARGET_NPC_FIRST"]))
                 return
             end
             if ns.NPCs:GetNPC(npcInfo.id) then
-                print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_EXISTS"] or "NPC note already exists."))
+                print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_EXISTS"]))
                 return
             end
             ns.NPCs:AddNPC(npcInfo.id, npcInfo)
-            print("|cFFFFD100OneWoW - NPCs:|r " .. string.format(L["MSG_NPC_ADDED"] or "Added: %s", npcInfo.name or npcInfo.id))
+            print("|cFFFFD100OneWoW - NPCs:|r " .. string.format(L["MSG_NPC_ADDED"], npcInfo.name or npcInfo.id))
             parent.RefreshNPCsList()
             if parent.SelectNPC then parent.SelectNPC(npcInfo.id) end
         end
     end)
     addTargetBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["TOOLTIP_BUTTON_ADD_TARGET"] or "Add Target", 1, 1, 1)
-        GameTooltip:AddLine(L["TOOLTIP_BUTTON_ADD_TARGET_NPC_DESC"] or "Add a note for your current NPC target.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["TOOLTIP_BUTTON_ADD_TARGET"], 1, 1, 1)
+        GameTooltip:AddLine(L["TOOLTIP_BUTTON_ADD_TARGET_NPC_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     addTargetBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local addManualBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_MANUAL_ENTRY"] or "Manual", height = 25, minWidth = 70 })
+    local addManualBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_MANUAL_ENTRY"], height = 25, minWidth = 70 })
     addManualBtn:SetPoint("LEFT", addTargetBtn, "RIGHT", 5, 0)
     addManualBtn:SetScript("OnClick", function()
         if ns.UI and ns.UI.ShowManualNPCEntryDialog then
@@ -132,8 +132,8 @@ function ns.UI.CreateNPCsTab(parent)
     end)
     addManualBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["BUTTON_MANUAL_ENTRY"] or "Manual Entry", 1, 1, 1)
-        GameTooltip:AddLine(L["TOOLTIP_BUTTON_MANUAL_ENTRY_NPC_DESC"] or "Enter an NPC ID manually.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["BUTTON_MANUAL_ENTRY"], 1, 1, 1)
+        GameTooltip:AddLine(L["TOOLTIP_BUTTON_MANUAL_ENTRY_NPC_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     addManualBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -242,7 +242,7 @@ function ns.UI.CreateNPCsTab(parent)
 
     local listingTitle = OneWoW_GUI:CreateFS(listingPanel, 16)
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
-    listingTitle:SetText(L["NPCS_LIST"] or "NPCs")
+    listingTitle:SetText(L["NPCS_LIST"])
     listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local searchBox = OneWoW_GUI:CreateEditBox(listingPanel, {
@@ -267,7 +267,7 @@ function ns.UI.CreateNPCsTab(parent)
 
     emptyMessage = OneWoW_GUI:CreateFS(detailPanel, 16)
     emptyMessage:SetPoint("CENTER", detailPanel, "CENTER")
-    emptyMessage:SetText(L["NPCS_SELECT"] or "Select an NPC to view their note.")
+    emptyMessage:SetText(L["NPCS_SELECT"])
     emptyMessage:SetTextColor(0.6, 0.6, 0.7, 1)
 
     local leftStatusBar = CreateThemedBar(nil, parent)
@@ -347,7 +347,7 @@ function ns.UI.CreateNPCsTab(parent)
             if ignoreIfDeadCheck.Text then
                 ignoreIfDeadCheck.Text:ClearAllPoints()
                 ignoreIfDeadCheck.Text:SetPoint("RIGHT", ignoreIfDeadCheck, "LEFT", -2, 0)
-                ignoreIfDeadCheck.Text:SetText(L["NPC_IGNORE_IF_DEAD"] or "Ignore if dead")
+                ignoreIfDeadCheck.Text:SetText(L["NPC_IGNORE_IF_DEAD"])
                 ignoreIfDeadCheck.Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                 ignoreIfDeadCheck.Text:SetJustifyH("RIGHT")
             end
@@ -370,7 +370,7 @@ function ns.UI.CreateNPCsTab(parent)
             deleteBtn:SetScript("OnClick", function()
                 if selectedNPC then
                     StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_NPC"] = {
-                        text = string.format(L["POPUP_DELETE_NPC"] or "Delete NPC note?"),
+                        text = string.format(L["POPUP_DELETE_NPC"]),
                         button1 = L["BUTTON_DELETE"], button2 = L["BUTTON_CANCEL"],
                         OnAccept = function()
                             if ns.NPCs then
@@ -392,8 +392,8 @@ function ns.UI.CreateNPCsTab(parent)
             end)
             deleteBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NPC_DELETE"] or "Delete NPC", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NPC_DELETE_DESC"] or "Remove this NPC note", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_NPC_DELETE"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_NPC_DELETE_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             deleteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -413,8 +413,8 @@ function ns.UI.CreateNPCsTab(parent)
             end)
             propertiesBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NPC_PROPERTIES"] or "NPC Properties", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NPC_PROPERTIES_DESC"] or "Edit NPC settings", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_NPC_PROPERTIES"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_NPC_PROPERTIES_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             propertiesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -433,14 +433,14 @@ function ns.UI.CreateNPCsTab(parent)
                     if nd and nd.mapID and nd.coords then
                         ns.NPCs:CreateWaypoint(selectedNPC, nd)
                     else
-                        print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_NO_LOCATION"] or "No location stored for this NPC."))
+                        print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_NO_LOCATION"]))
                     end
                 end
             end)
             gotoBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["UI_NPC_GOTO_TITLE"] or "Create Waypoint", 1, 1, 1)
-                GameTooltip:AddLine(L["UI_NPC_CREATE_WAYPOINT"] or "Set a TomTom/map waypoint for this NPC.", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["UI_NPC_GOTO_TITLE"], 1, 1, 1)
+                GameTooltip:AddLine(L["UI_NPC_CREATE_WAYPOINT"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             gotoBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -475,8 +475,8 @@ function ns.UI.CreateNPCsTab(parent)
             end)
             alertBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NPC_SOUND"] or "Alert on Target", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NPC_SOUND_DESC"] or "Alert when you target this NPC.", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_NPC_SOUND"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_NPC_SOUND_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             alertBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -510,8 +510,8 @@ function ns.UI.CreateNPCsTab(parent)
             end)
             favoriteBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NPC_FAVORITE"] or "Favorite", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NPC_FAVORITE_DESC"] or "Mark as favorite", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_NPC_FAVORITE"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_NPC_FAVORITE_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             favoriteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -573,7 +573,7 @@ function ns.UI.CreateNPCsTab(parent)
 
             local ttLabel = OneWoW_GUI:CreateFS(tooltipSection, 12)
             ttLabel:SetPoint("TOPLEFT", tooltipSection, "TOPLEFT", 10, -8)
-            ttLabel:SetText(L["UI_TOOLTIP_LINES"] or "Tooltip Lines:")
+            ttLabel:SetText(L["UI_TOOLTIP_LINES"])
             ttLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
             local tooltipEdits = {}
@@ -622,7 +622,7 @@ function ns.UI.CreateNPCsTab(parent)
 
             local assocLabel = OneWoW_GUI:CreateFS(associatedSection, 12)
             assocLabel:SetPoint("TOPLEFT", associatedSection, "TOPLEFT", 10, -8)
-            assocLabel:SetText(L["NOTES_NPC_ASSOC_QUESTS"] or "Associated Quests:")
+            assocLabel:SetText(L["NOTES_NPC_ASSOC_QUESTS"])
             assocLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             associatedSection.label = assocLabel
             associatedSection.questRows = {}
@@ -671,7 +671,7 @@ function ns.UI.CreateNPCsTab(parent)
                         header.locationText:SetText(string.format("Map %d  %.1f, %.1f", nd.mapID, nd.coords.x, nd.coords.y))
                         header.locationText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
                     else
-                        header.locationText:SetText(L["MSG_NPC_NO_LOCATION"] or "Location not recorded")
+                        header.locationText:SetText(L["MSG_NPC_NO_LOCATION"])
                         header.locationText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                     end
                 end
@@ -891,7 +891,7 @@ function ns.UI.CreateNPCsTab(parent)
             deleteBtn:GetHighlightTexture():SetAlpha(0.5)
             deleteBtn:SetScript("OnClick", function()
                 StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_NPC"] = {
-                    text = L["POPUP_DELETE_NPC"] or "Delete NPC note?",
+                    text = L["POPUP_DELETE_NPC"],
                     button1 = L["BUTTON_DELETE"], button2 = L["BUTTON_CANCEL"],
                     OnAccept = function()
                         if ns.NPCs then
@@ -937,7 +937,7 @@ function ns.UI.CreateNPCsTab(parent)
                     if nd and nd.mapID and nd.coords then
                         ns.NPCs:CreateWaypoint(npc.id, nd)
                     else
-                        print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_NO_LOCATION"] or "No location stored."))
+                        print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_NO_LOCATION"]))
                     end
                 end
             end)
@@ -1064,14 +1064,14 @@ function ns.UI.CreateNPCsTab(parent)
         local yOffset = 0
 
         if #newNPCs > 0 then
-            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["NOTES_SECTION_NEW"] or "New", yOffset = yOffset })
+            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["NOTES_SECTION_NEW"], yOffset = yOffset })
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
         for i, n in ipairs(newNPCs) do BuildNPCRow(n, yOffset, newNPCs, i) yOffset = yOffset - 69 end
 
         if #favorites > 0 then
-            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["NOTES_SECTION_FAVORITES"] or "Favorites", yOffset = yOffset })
+            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["NOTES_SECTION_FAVORITES"], yOffset = yOffset })
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
@@ -1132,20 +1132,20 @@ function ns.UI.ShowManualNPCEntryDialog(refreshParent)
 
     local dialog = ns.UI.CreateThemedDialog({
         name           = "OneWoW_NotesManualNPCEntry",
-        title          = L["NPC_MANUAL_ENTRY_TITLE"] or "Add NPC",
+        title          = L["NPC_MANUAL_ENTRY_TITLE"],
         width          = 500,
         height         = 420,
         destroyOnClose = true,
         buttons = {
             {
-                text = L["BUTTON_ADD_NOTE"] or "Add",
+                text = L["BUTTON_ADD_NOTE"],
                 onClick = function(dlg)
                     local npcName = dlg._nameInput and dlg._nameInput:GetText() or ""
                     local npcIDText = dlg._idInput and dlg._idInput:GetText() or ""
                     local npcID = tonumber(npcIDText)
 
                     if npcName == "" then
-                        print("|cFFFFD100OneWoW - NPCs:|r " .. (L["NPC_ERROR_NAME_REQUIRED"] or "NPC name is required."))
+                        print("|cFFFFD100OneWoW - NPCs:|r " .. (L["NPC_ERROR_NAME_REQUIRED"]))
                         return
                     end
 
@@ -1154,7 +1154,7 @@ function ns.UI.ShowManualNPCEntryDialog(refreshParent)
                     end
 
                     if ns.NPCs and ns.NPCs:GetNPC(npcID) then
-                        print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_EXISTS"] or "NPC note already exists."))
+                        print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_EXISTS"]))
                         return
                     end
 
@@ -1167,7 +1167,7 @@ function ns.UI.ShowManualNPCEntryDialog(refreshParent)
                             name = npcName, category = cat, storage = store,
                             content = noteContent,
                         })
-                        print("|cFFFFD100OneWoW - NPCs:|r " .. string.format(L["MSG_NPC_ADDED"] or "Added NPC: %s", npcName))
+                        print("|cFFFFD100OneWoW - NPCs:|r " .. string.format(L["MSG_NPC_ADDED"], npcName))
                         dlg:Hide()
                         if refreshParent and refreshParent.RefreshNPCsList then refreshParent.RefreshNPCsList() end
                         if refreshParent and refreshParent.SelectNPC then refreshParent.SelectNPC(npcID) end
@@ -1184,17 +1184,17 @@ function ns.UI.ShowManualNPCEntryDialog(refreshParent)
     local content = dialog.content
     local yPos = -10
 
-    MakeNPCLabel(content, L["NPC_LABEL_NAME"] or "NPC Name:", COL1_X, yPos)
+    MakeNPCLabel(content, L["NPC_LABEL_NAME"], COL1_X, yPos)
     dialog._nameInput = MakeNPCInput(content, COL1_X, yPos - LBL_GAP, COL_W)
     dialog._nameInput:SetAutoFocus(true)
 
-    MakeNPCLabel(content, L["LABEL_NPC_ID"] or "NPC ID:", COL2_X, yPos)
+    MakeNPCLabel(content, L["LABEL_NPC_ID"], COL2_X, yPos)
     dialog._idInput = MakeNPCInput(content, COL2_X, yPos - LBL_GAP, COL_W)
     dialog._idInput:SetNumeric(true)
     dialog._idInput:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["LABEL_NPC_ID"] or "NPC ID", 1, 1, 1)
-        GameTooltip:AddLine(L["NPC_ID_TOOLTIP"] or "Leave blank to auto-generate. Find IDs on WoWHead.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["LABEL_NPC_ID"], 1, 1, 1)
+        GameTooltip:AddLine(L["NPC_ID_TOOLTIP"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     dialog._idInput:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -1224,7 +1224,7 @@ function ns.UI.ShowManualNPCEntryDialog(refreshParent)
     dialog._storeDD = storeDD
     yPos = yPos - ROW_H
 
-    MakeNPCLabel(content, L["LABEL_NOTE_CONTENT"] or "Note:", COL1_X, yPos)
+    MakeNPCLabel(content, L["LABEL_NOTE_CONTENT"], COL1_X, yPos)
     yPos = yPos - LBL_GAP
 
     local noteBg = CreateThemedBar(nil, content)
@@ -1290,7 +1290,7 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
 
     local zoneDisplay
 
-    MakeNPCLabel(content, L["NPC_LABEL_NAME"] or "NPC Name:", COL1_X, yPos)
+    MakeNPCLabel(content, L["NPC_LABEL_NAME"], COL1_X, yPos)
     local nameInput = MakeNPCInput(content, COL1_X, yPos - LBL_GAP, COL_W)
     nameInput:SetText(nd.name or "")
     nameInput:SetScript("OnEnterPressed", function(self)
@@ -1299,7 +1299,7 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
         self:ClearFocus()
     end)
 
-    MakeNPCLabel(content, L["LABEL_NPC_ID"] or "NPC ID:", COL2_X, yPos)
+    MakeNPCLabel(content, L["LABEL_NPC_ID"], COL2_X, yPos)
     local idInput = MakeNPCInput(content, COL2_X, yPos - LBL_GAP, 120)
     idInput:SetNumeric(true)
     idInput:SetText(tostring(npcID))
@@ -1312,7 +1312,7 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
         end
         if newID == npcID then self:ClearFocus() return end
         if ns.NPCs:GetNPC(newID) then
-            print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_ID_EXISTS"] or "An NPC with that ID already exists."))
+            print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_ID_EXISTS"]))
             self:SetText(tostring(npcID))
             self:ClearFocus()
             return
@@ -1328,20 +1328,20 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
     end)
     idInput:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["LABEL_NPC_ID"] or "NPC ID", 1, 1, 1)
-        GameTooltip:AddLine(L["NPC_ID_EDIT_TOOLTIP"] or "Change the NPC ID. Find correct IDs on WoWHead.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["LABEL_NPC_ID"], 1, 1, 1)
+        GameTooltip:AddLine(L["NPC_ID_EDIT_TOOLTIP"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     idInput:SetScript("OnLeave", function() GameTooltip:Hide() end)
     yPos = yPos - ROW_H
 
-    MakeNPCLabel(content, L["NPC_LABEL_ZONE"] or "Zone:", COL1_X, yPos)
+    MakeNPCLabel(content, L["NPC_LABEL_ZONE"], COL1_X, yPos)
     zoneDisplay = OneWoW_GUI:CreateFS(content, 12)
     zoneDisplay:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - 20)
     zoneDisplay:SetText(nd.zone or "?")
     zoneDisplay:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    MakeNPCLabel(content, L["NPC_LABEL_MAP_ID"] or "Map ID:", COL2_X, yPos)
+    MakeNPCLabel(content, L["NPC_LABEL_MAP_ID"], COL2_X, yPos)
     local mapIDInput = MakeNPCInput(content, COL2_X, yPos - LBL_GAP, 100)
     mapIDInput:SetNumeric(true)
     mapIDInput:SetText(nd.mapID and tostring(nd.mapID) or "")
@@ -1359,7 +1359,7 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
     end)
     yPos = yPos - ROW_H
 
-    MakeNPCLabel(content, L["NPC_LABEL_COORD_X"] or "Coord X:", COL1_X, yPos)
+    MakeNPCLabel(content, L["NPC_LABEL_COORD_X"], COL1_X, yPos)
     local xInput = MakeNPCInput(content, COL1_X, yPos - LBL_GAP, 100)
     xInput:SetText(nd.coords and string.format("%.1f", nd.coords.x) or "")
     xInput:SetScript("OnEnterPressed", function(self)
@@ -1377,7 +1377,7 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
         self:ClearFocus()
     end)
 
-    MakeNPCLabel(content, L["NPC_LABEL_COORD_Y"] or "Coord Y:", COL2_X, yPos)
+    MakeNPCLabel(content, L["NPC_LABEL_COORD_Y"], COL2_X, yPos)
     local yInput = MakeNPCInput(content, COL2_X, yPos - LBL_GAP, 100)
     yInput:SetText(nd.coords and string.format("%.1f", nd.coords.y) or "")
     yInput:SetScript("OnEnterPressed", function(self)
@@ -1395,15 +1395,15 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
         self:ClearFocus()
     end)
 
-    local setLocBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["NPC_SET_CURRENT"] or "Set Current", height = 25, minWidth = 80 })
+    local setLocBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["NPC_SET_CURRENT"], height = 25, minWidth = 80 })
     setLocBtn:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X + 110, yPos - LBL_GAP)
     setLocBtn:SetScript("OnEnter", function(self)
         self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
         self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
         self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["NPC_SET_CURRENT"] or "Set Current", 1, 1, 1)
-        GameTooltip:AddLine(L["NPC_SET_CURRENT_DESC"] or "Set location to your current position.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["NPC_SET_CURRENT"], 1, 1, 1)
+        GameTooltip:AddLine(L["NPC_SET_CURRENT_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     setLocBtn:SetScript("OnLeave", function(self)
@@ -1470,7 +1470,7 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
     local alertCB = CreateFrame("CheckButton", nil, content, "UICheckButtonTemplate")
     alertCB:SetSize(22, 22)
     alertCB:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
-    alertCB.Text:SetText(L["TOOLTIP_NPC_SOUND"] or "Alert on Target")
+    alertCB.Text:SetText(L["TOOLTIP_NPC_SOUND"])
     alertCB.Text:SetFontObject("GameFontNormal")
     alertCB:SetChecked(nd.alertOnFound or false)
     alertCB:SetScript("OnClick", function(self)
@@ -1478,8 +1478,8 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
     end)
     alertCB:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["TOOLTIP_NPC_SOUND"] or "Alert on Target", 1, 1, 1)
-        GameTooltip:AddLine(L["TOOLTIP_NPC_SOUND_DESC"] or "Play a sound alert when you target this NPC.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["TOOLTIP_NPC_SOUND"], 1, 1, 1)
+        GameTooltip:AddLine(L["TOOLTIP_NPC_SOUND_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     alertCB:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -1487,7 +1487,7 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
     local ignoreCB = CreateFrame("CheckButton", nil, content, "UICheckButtonTemplate")
     ignoreCB:SetSize(22, 22)
     ignoreCB:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos)
-    ignoreCB.Text:SetText(L["NPC_IGNORE_IF_DEAD"] or "Ignore if dead")
+    ignoreCB.Text:SetText(L["NPC_IGNORE_IF_DEAD"])
     ignoreCB.Text:SetFontObject("GameFontNormal")
     ignoreCB:SetChecked(nd.ignoreIfDead or false)
     ignoreCB:SetScript("OnClick", function(self)
@@ -1495,14 +1495,14 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
     end)
     ignoreCB:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["NPC_IGNORE_IF_DEAD"] or "Ignore if dead", 1, 1, 1)
-        GameTooltip:AddLine(L["NPC_IGNORE_IF_DEAD_DESC"] or "Do not alert if this NPC is dead when targeted.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["NPC_IGNORE_IF_DEAD"], 1, 1, 1)
+        GameTooltip:AddLine(L["NPC_IGNORE_IF_DEAD_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     ignoreCB:SetScript("OnLeave", function() GameTooltip:Hide() end)
     yPos = yPos - 30
 
-    MakeNPCLabel(content, L["LABEL_NOTE_PREVIEW"] or "Note:", COL1_X, yPos)
+    MakeNPCLabel(content, L["LABEL_NOTE_PREVIEW"], COL1_X, yPos)
     yPos = yPos - LBL_GAP
 
     local noteBg = CreateThemedBar(nil, content)

@@ -345,7 +345,16 @@ Replace each `Locales/LocaleManager.lua` with service registration; delete
 
 - [ ] **OneWoW_AltTracker**
 - [ ] **OneWoW_Catalog**
-- [ ] **OneWoW_Notes**
+- [x] **OneWoW_Notes** (450→477 keys; 34 shared/theme dropped, all dead theme
+      color names — live shared keys matched canonical). Accumulation format
+      (`local L = ns.Locales["enUS"]; L["K"]=v`) → `Register` table literal; enUS
+      sets the view. koKR is a `"TEST"` placeholder → rewired via `GetStore`.
+      `LocaleManager.lua` reduced to the `ns.ApplyLanguage` **shim** (kept — Notes
+      is in profile-sync; called by OnInitialize/OnLanguageChanged too). Constants
+      had no locale block. **Added 28 missing keys** (surfaced by key-name-on-miss;
+      values from the code's own fallbacks, except `MSG_CANNOT_SET_WAYPOINT` which
+      had none — gave it a sensible message). Anti-pattern sweep: 256 dead fallbacks
+      + 1 dynamic-key optional → `GetOptional`. Lint clean; in-game verify pending.
 - [x] **OneWoW_Trackers** (174→182 keys; 0 shared-49 — `MINIMAP_TOOLTIP_HINT` stays
       scoped). Structurally like ShoppingList (RegisterLocale + Constants `SetLocale`):
       locale files → `Register(ADDON_NAME, …)`, enUS sets the view, removed the
@@ -500,5 +509,6 @@ additive. The service itself (Phase 0) is inert until something registers.
 | _2026-06-14_ | 2 | ShoppingList | Migrated to scope `OneWoW_ShoppingList` + service view; aligned to DD/Bags (removed `RegisterLocale`/`SetLocale` from Constants.lua; `ApplyLanguage`→`SetLanguage` shim). 0 shared → no harvest. Anti-pattern sweep: 14 dead `(L and L["K"]) or "lit"` guards simplified, all keys verified registered. Touched files lint clean; in-game verify pending. |
 | _2026-06-14_ | 2 | DevTool | Migrated to scope `OneWoW_Utility_DevTool` + service view; `GetStore` alias for Database raw readers; `ApplyLanguage`→`SetLanguage` shim (service pushes BINDING_*). 9 shared MINIMAP_* dropped (harvest no-op). Anti-pattern sweep ~51 sites (`Addon.L or {}` guards, no-ops, minimap fallback, `rcLabel`→`GetOptional`). Lint clean; in-game verify pending. **Phase 2 complete** (DD, Bags, ShoppingList, DevTool). |
 | _2026-06-14_ | — | DevTool | Code-quality notes (user-reported, pre-existing): (1) standardized `L` capture — one top-level `local L = Addon.L` per file, removed `getL()`/`loc`/`LL` aliases, all reads use `L` (~90 sites). (2) Fixed live settings updates — DevTool only had `OnThemeChanged`; added `OnLanguageChanged`/`OnFontChanged`/`OnFontSizeChanged` (via new `Addon:RebuildUI()`), so language/font now apply without forcing a theme change. |
+| _2026-06-14_ | 3 | Notes | Accumulation-format LocaleManager addon. Scope `OneWoW_Notes`; `L["K"]=v` accumulation → service `Register`; LocaleManager → `ns.ApplyLanguage` shim (kept for profile-sync); koKR `"TEST"` placeholder via `GetStore`. Dropped 34 shared/theme (dead). Added 28 missing keys. Swept 256 fallbacks + 1 `GetOptional`. Lint clean; in-game verify pending. |
 | _2026-06-14_ | 3 | Trackers | First Phase-3 (LocaleManager) addon. Scope `OneWoW_Trackers`; locale files → service `Register`; deleted dead `LocaleManager.lua`; removed `SetLocale` from Constants; `ApplyLanguage`→`SetLanguage` shim. koKR `"TEST"` placeholder rewired through `GetStore`. Added 8 missing keys (surfaced by key-name-on-miss). Swept 173 dead fallbacks + 2 `GetOptional`. Lint clean; in-game verify pending. |
 | _2026-06-14_ | 0–2 | — | **Phases 0, 1, 2 complete and verified in-game + committed.** Service + `/owlocale` + `SUPPORTED` registry; core split onto the service; all 4 Pattern-D addons (DirectDeposit, Bags, ShoppingList, DevTool) migrated, with their anti-pattern sweeps. Earlier log lines marked "verify pending" reflect state when written; current truth is the Phase checklists. Next: Phase 3 (LocaleManager addons). |

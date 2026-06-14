@@ -132,7 +132,7 @@ function NPCs:Initialize()
             local existing = NPCs:GetNPC(entityID)
             if existing and existing.alertOnFound then
                 if existing.ignoreIfDead and UnitIsDead("target") then return end
-                print("|cFFFFD100OneWoW - NPCs:|r " .. string.format(L["NOTES_NPC_ALERT_FOUND"] or "Targeted NPC with note: %s", (existing.name or entityID)))
+                print("|cFFFFD100OneWoW - NPCs:|r " .. string.format(L["NOTES_NPC_ALERT_FOUND"], (existing.name or entityID)))
                 PlaySound(SOUNDKIT.RAID_WARNING)
             end
         end)

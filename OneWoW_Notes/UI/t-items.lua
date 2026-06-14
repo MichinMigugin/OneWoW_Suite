@@ -64,17 +64,17 @@ function ns.UI.CreateItemsTab(parent)
             if ns.Items then
                 local itemName = C_Item.GetItemNameByID(itemID)
                 if ns.Items:GetItem(itemID) then
-                    print("|cFFFFD100OneWoW - Items:|r " .. string.format(L["MSG_ITEM_EXISTS"] or "Item exists: %s", (itemName or itemID)))
+                    print("|cFFFFD100OneWoW - Items:|r " .. string.format(L["MSG_ITEM_EXISTS"], (itemName or itemID)))
                     ClearCursor()
                     return
                 end
                 ns.Items:AddItem(itemID, { category = "General", storage = "account" })
-                print("|cFFFFD100OneWoW - Items:|r " .. string.format(L["MSG_ITEM_ADDED"] or "Added: %s", (itemName or itemID)))
+                print("|cFFFFD100OneWoW - Items:|r " .. string.format(L["MSG_ITEM_ADDED"], (itemName or itemID)))
                 parent.RefreshItemsList()
                 ClearCursor()
             end
         else
-            print("|cFFFFD100OneWoW - Items:|r " .. (L["MSG_DRAG_ITEM"] or "Drag an item here to add it."))
+            print("|cFFFFD100OneWoW - Items:|r " .. (L["MSG_DRAG_ITEM"]))
         end
     end)
     addItemBtn:SetScript("OnReceiveDrag", function()
@@ -87,8 +87,8 @@ function ns.UI.CreateItemsTab(parent)
     end)
     addItemBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["TOOLTIP_BUTTON_ADD_ITEM"] or "Add Item", 1, 1, 1)
-        GameTooltip:AddLine(L["TOOLTIP_BUTTON_ADD_ITEM_DESC"] or "Drag an item onto this button or the panel to add it.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["TOOLTIP_BUTTON_ADD_ITEM"], 1, 1, 1)
+        GameTooltip:AddLine(L["TOOLTIP_BUTTON_ADD_ITEM_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     addItemBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -111,7 +111,7 @@ function ns.UI.CreateItemsTab(parent)
         controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     end)
 
-    local addByIDBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_BY_ID"] or "Add by ID", height = 25, minWidth = 70 })
+    local addByIDBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_BY_ID"], height = 25, minWidth = 70 })
     addByIDBtn:SetPoint("LEFT", addItemBtn, "RIGHT", 5, 0)
     addByIDBtn:SetScript("OnClick", function()
         if ns.UI and ns.UI.ShowAddItemByIDDialog then
@@ -120,8 +120,8 @@ function ns.UI.CreateItemsTab(parent)
     end)
     addByIDBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["TOOLTIP_BUTTON_ADD_BY_ID"] or "Add by Item ID", 1, 1, 1)
-        GameTooltip:AddLine(L["TOOLTIP_BUTTON_ADD_BY_ID_DESC"] or "Enter an item ID to add a note.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["TOOLTIP_BUTTON_ADD_BY_ID"], 1, 1, 1)
+        GameTooltip:AddLine(L["TOOLTIP_BUTTON_ADD_BY_ID_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     addByIDBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -230,7 +230,7 @@ function ns.UI.CreateItemsTab(parent)
 
     local listingTitle = OneWoW_GUI:CreateFS(listingPanel, 16)
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
-    listingTitle:SetText(L["ITEMS_LIST"] or "Items")
+    listingTitle:SetText(L["ITEMS_LIST"])
     listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local searchBox = OneWoW_GUI:CreateEditBox(listingPanel, {
@@ -255,7 +255,7 @@ function ns.UI.CreateItemsTab(parent)
 
     emptyMessage = OneWoW_GUI:CreateFS(detailPanel, 16)
     emptyMessage:SetPoint("CENTER", detailPanel, "CENTER")
-    emptyMessage:SetText(L["ITEMS_SELECT"] or "Select an item to view its note.")
+    emptyMessage:SetText(L["ITEMS_SELECT"])
     emptyMessage:SetTextColor(0.6, 0.6, 0.7, 1)
 
     local leftStatusBar = CreateThemedBar(nil, parent)
@@ -327,7 +327,7 @@ function ns.UI.CreateItemsTab(parent)
             deleteBtn:SetScript("OnClick", function()
                 if selectedItem then
                     StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_ITEM"] = {
-                        text = string.format(L["POPUP_DELETE_ITEM"] or "Delete item note?"),
+                        text = string.format(L["POPUP_DELETE_ITEM"]),
                         button1 = L["BUTTON_DELETE"], button2 = L["BUTTON_CANCEL"],
                         OnAccept = function()
                             if ns.Items then
@@ -349,8 +349,8 @@ function ns.UI.CreateItemsTab(parent)
             end)
             deleteBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_ITEM_DELETE"] or "Delete Item", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_ITEM_DELETE_DESC"] or "Remove this item note", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_ITEM_DELETE"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_ITEM_DELETE_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             deleteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -370,8 +370,8 @@ function ns.UI.CreateItemsTab(parent)
             end)
             propertiesBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_ITEM_PROPERTIES"] or "Item Properties", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_ITEM_PROPERTIES_DESC"] or "Edit item settings", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_ITEM_PROPERTIES"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_ITEM_PROPERTIES_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             propertiesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -409,8 +409,8 @@ function ns.UI.CreateItemsTab(parent)
             end)
             alertBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["ITEM_ALERT_ON_LOOT"] or "Alert on Loot", 1, 1, 1)
-                GameTooltip:AddLine(L["ITEM_ALERT_ON_LOOT_DESC"] or "Show an alert when this item is looted.", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["ITEM_ALERT_ON_LOOT"], 1, 1, 1)
+                GameTooltip:AddLine(L["ITEM_ALERT_ON_LOOT_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             alertBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -453,8 +453,8 @@ function ns.UI.CreateItemsTab(parent)
             end)
             favoriteBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_ITEM_FAVORITE"] or "Favorite", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_ITEM_FAVORITE_DESC"] or "Mark as favorite", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_ITEM_FAVORITE"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_ITEM_FAVORITE_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             favoriteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -522,7 +522,7 @@ function ns.UI.CreateItemsTab(parent)
 
             local ttLabel = OneWoW_GUI:CreateFS(tooltipSection, 12)
             ttLabel:SetPoint("TOPLEFT", tooltipSection, "TOPLEFT", 10, -8)
-            ttLabel:SetText(L["UI_TOOLTIP_LINES"] or "Tooltip Lines:")
+            ttLabel:SetText(L["UI_TOOLTIP_LINES"])
             ttLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
             local tooltipEdits = {}
@@ -734,7 +734,7 @@ function ns.UI.CreateItemsTab(parent)
             deleteBtn:GetHighlightTexture():SetAlpha(0.5)
             deleteBtn:SetScript("OnClick", function()
                 StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_ITEM"] = {
-                    text = string.format(L["POPUP_DELETE_ITEM"] or "Delete item note?"),
+                    text = string.format(L["POPUP_DELETE_ITEM"]),
                     button1 = L["BUTTON_DELETE"], button2 = L["BUTTON_CANCEL"],
                     OnAccept = function()
                         if ns.Items then
@@ -848,13 +848,13 @@ function ns.UI.CreateItemsTab(parent)
         local yOffset = 0
 
         if #newItems > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_NEW"] or "New", yOffset)
+            CreateSectionHeader(L["NOTES_SECTION_NEW"], yOffset)
             yOffset = yOffset - 30
         end
         for _, item in ipairs(newItems) do BuildItemRow(item, yOffset) yOffset = yOffset - 55 end
 
         if #favorites > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_FAVORITES"] or "Favorites", yOffset)
+            CreateSectionHeader(L["NOTES_SECTION_FAVORITES"], yOffset)
             yOffset = yOffset - 30
         end
         for _, item in ipairs(favorites) do BuildItemRow(item, yOffset) yOffset = yOffset - 55 end
@@ -917,16 +917,16 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
 
     local dialog = ns.UI.CreateThemedDialog({
         name            = "OneWoW_NotesAddItemByID",
-        title           = L["DIALOG_ADD_ITEM_BY_ID"] or "Add Item by ID",
+        title           = L["DIALOG_ADD_ITEM_BY_ID"],
         width           = 450,
         height          = 340,
         destroyOnClose  = true,
         buttons = {
             {
-                text = L["BUTTON_ADD_NOTE"] or "Add",
+                text = L["BUTTON_ADD_NOTE"],
                 onClick = function(dlg)
                     if not dlg._validated then
-                        print("|cFFFFD100OneWoW - Items:|r " .. (L["ITEM_VALIDATE_FIRST"] or "Validate the item first."))
+                        print("|cFFFFD100OneWoW - Items:|r " .. (L["ITEM_VALIDATE_FIRST"]))
                         return
                     end
 
@@ -944,7 +944,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
                                 refreshParent.RefreshItemsList()
                             end
                         else
-                            print("|cFFFFD100OneWoW - Items:|r " .. (err or L["NOTES_ITEM_INVALID_ID"] or "Invalid item ID"))
+                            print("|cFFFFD100OneWoW - Items:|r " .. (err or L["NOTES_ITEM_INVALID_ID"]))
                         end
                     end
                 end,
@@ -961,7 +961,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
     dialog._validated = false
     dialog._validatedID = nil
 
-    MakeItemLabel(content, L["LABEL_ITEM_ID"] or "Item ID:", COL1_X, yPos)
+    MakeItemLabel(content, L["LABEL_ITEM_ID"], COL1_X, yPos)
 
     local idInput = OneWoW_GUI:CreateEditBox(content, {
         width = 160,
@@ -975,7 +975,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
     idInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     dialog._idInput = idInput
 
-    local validateBtn = OneWoW_GUI:CreateButton(content, { text = L["ITEM_VALIDATE"] or "Validate", width = 80, height = 26 })
+    local validateBtn = OneWoW_GUI:CreateButton(content, { text = L["ITEM_VALIDATE"], width = 80, height = 26 })
     validateBtn:SetPoint("LEFT", idInput, "RIGHT", 6, 0)
 
     local resultFrame = CreateThemedBar(nil, content)
@@ -1010,7 +1010,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
         local idText = idInput:GetText()
         local id = tonumber(idText)
         if not id or id <= 0 then
-            statusFS:SetText(L["NOTES_ITEM_INVALID_ID"] or "Invalid item ID.")
+            statusFS:SetText(L["NOTES_ITEM_INVALID_ID"])
             statusFS:SetTextColor(0.8, 0.2, 0.2, 1)
             resultFrame:Hide()
             dialog._validated = false
@@ -1018,14 +1018,14 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
         end
 
         if ns.Items and ns.Items:GetItem(id) then
-            statusFS:SetText(string.format(L["MSG_ITEM_EXISTS"] or "Item already exists: %s", id))
+            statusFS:SetText(string.format(L["MSG_ITEM_EXISTS"], id))
             statusFS:SetTextColor(0.8, 0.6, 0.1, 1)
             resultFrame:Hide()
             dialog._validated = false
             return
         end
 
-        statusFS:SetText(L["ITEM_LOADING"] or "Loading...")
+        statusFS:SetText(L["ITEM_LOADING"])
         statusFS:SetTextColor(0.8, 0.8, 0.2, 1)
 
         local itemName, _, itemRarity, _, _, _, _, _, _, itemTexture = C_Item.GetItemInfo(id)
@@ -1039,7 +1039,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
             dialog._validated = true
             dialog._validatedID = id
         else
-            statusFS:SetText(L["ITEM_LOADING"] or "Loading...")
+            statusFS:SetText(L["ITEM_LOADING"])
             statusFS:SetTextColor(0.8, 0.8, 0.2, 1)
             resultFrame:Hide()
             dialog._validated = false
@@ -1056,7 +1056,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
                     dialog._validated = true
                     dialog._validatedID = id
                 else
-                    statusFS:SetText(L["NOTES_ITEM_INVALID_ID"] or "Invalid item ID.")
+                    statusFS:SetText(L["NOTES_ITEM_INVALID_ID"])
                     statusFS:SetTextColor(0.8, 0.2, 0.2, 1)
                     resultFrame:Hide()
                     dialog._validated = false
@@ -1106,7 +1106,7 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
 
     local dialog = ns.UI.CreateThemedDialog({
         name            = "OneWoW_NotesItemProperties",
-        title           = (L["DIALOG_ITEM_PROPERTIES"] or "Item Properties") .. ": " .. (itemData.name or ""),
+        title           = (L["DIALOG_ITEM_PROPERTIES"]) .. ": " .. (itemData.name or ""),
         width           = 450,
         height          = 420,
         destroyOnClose  = true,
@@ -1198,7 +1198,7 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
     end
     yPos = yPos - ROW_H - 8
 
-    local alertCB = OneWoW_GUI:CreateCheckbox(content, { label = L["ITEM_ALERT_ON_LOOT"] or "Alert on Loot" })
+    local alertCB = OneWoW_GUI:CreateCheckbox(content, { label = L["ITEM_ALERT_ON_LOOT"] })
     alertCB:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
     alertCB:SetChecked(itemData.alertOnLoot or false)
     alertCB:SetScript("OnClick", function(self)
@@ -1206,14 +1206,14 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
     end)
     alertCB:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["ITEM_ALERT_ON_LOOT"] or "Alert on Loot", 1, 1, 1)
-        GameTooltip:AddLine(L["ITEM_ALERT_ON_LOOT_DESC"] or "Play a sound alert when this item is looted.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["ITEM_ALERT_ON_LOOT"], 1, 1, 1)
+        GameTooltip:AddLine(L["ITEM_ALERT_ON_LOOT_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     alertCB:SetScript("OnLeave", function() GameTooltip:Hide() end)
     yPos = yPos - 30
 
-    MakeItemLabel(content, L["LABEL_NOTE_PREVIEW"] or "Note:", COL1_X, yPos)
+    MakeItemLabel(content, L["LABEL_NOTE_PREVIEW"], COL1_X, yPos)
     yPos = yPos - LBL_GAP
 
     local noteBg = CreateThemedBar(nil, content)

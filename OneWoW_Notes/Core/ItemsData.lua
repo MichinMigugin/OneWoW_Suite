@@ -41,7 +41,7 @@ function Items:AddItem(itemID, itemData)
     itemSubType = itemSubType or itemData.subType
 
     if not itemName then
-        return false, L["NOTES_ITEM_INVALID_ID"] or "Invalid item ID"
+        return false, L["NOTES_ITEM_INVALID_ID"]
     end
 
     local newItemData = {

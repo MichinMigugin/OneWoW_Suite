@@ -268,7 +268,7 @@ function ns.UI.ShowAddNoteDialog()
     autoPinSection:SetSize(COL_W, 35)
     autoPinSection:Hide()
 
-    local autoPinCheckbox = OneWoW_GUI:CreateCheckbox(autoPinSection, { label = L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete" })
+    local autoPinCheckbox = OneWoW_GUI:CreateCheckbox(autoPinSection, { label = L["NOTE_AUTOPIN_WHEN_COMPLETE"] })
     autoPinCheckbox:SetPoint("LEFT", autoPinSection, "LEFT", 5, 0)
     dialog.autoPinCheckbox = autoPinCheckbox
     dialog.autoPinSection  = autoPinSection
@@ -617,7 +617,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     propAutoPinSection:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - 4)
     propAutoPinSection:SetSize(COL_W, 35)
 
-    local propAutoPinCheckbox = OneWoW_GUI:CreateCheckbox(propAutoPinSection, { label = L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete" })
+    local propAutoPinCheckbox = OneWoW_GUI:CreateCheckbox(propAutoPinSection, { label = L["NOTE_AUTOPIN_WHEN_COMPLETE"] })
     propAutoPinCheckbox:SetPoint("LEFT", propAutoPinSection, "LEFT", 5, 0)
     propAutoPinCheckbox:SetChecked(noteData.autoPinEnabled == true)
     propAutoPinCheckbox:SetScript("OnClick", function(self)

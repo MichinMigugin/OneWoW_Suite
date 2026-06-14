@@ -141,7 +141,7 @@ function Zones:CheckZoneAlerts()
                 if not (lastAlertedZone == key and (now - lastAlertTime) < 30) then
                     lastAlertTime   = now
                     lastAlertedZone = key
-                    print("|cFFFFD100OneWoW - Zones:|r " .. (L["NOTES_ZONE_ALERT_ARRIVED"] or "Zone:") .. " " .. key)
+                    print("|cFFFFD100OneWoW - Zones:|r " .. (L["NOTES_ZONE_ALERT_ARRIVED"]) .. " " .. key)
                     PlaySound(SOUNDKIT.RAID_WARNING)
                     if OneWoW and OneWoW.Toasts and OneWoW.Toasts.FireZoneAlert then
                         local preview = (zoneData.content and zoneData.content ~= "") and zoneData.content:sub(1, 60) or nil

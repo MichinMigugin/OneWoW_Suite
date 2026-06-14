@@ -113,7 +113,7 @@ function Players:Initialize()
                 if not UnitExists("target") or not UnitIsPlayer("target") or UnitIsUnit("target", "player") then return end
                 for fullName, playerData in pairs(Players:GetAll()) do
                     if playerData.soundEnabled and UnitIsUnit("target", fullName) then
-                        print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["NOTES_PLAYER_ALERT_FOUND"] or "Targeted player with note: %s", fullName))
+                        print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["NOTES_PLAYER_ALERT_FOUND"], fullName))
                         PlaySound(SOUNDKIT.RAID_WARNING)
                         break
                     end

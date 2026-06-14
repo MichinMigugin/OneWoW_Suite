@@ -1,537 +1,532 @@
-local _, ns = ...
-ns.Locales = ns.Locales or {}
-ns.Locales["enUS"] = {}
-local L = ns.Locales["enUS"]
+local ADDON_NAME, ns = ...
+
+OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
 -- Addon
-L["ADDON_LOADED"]          = "Loaded!"
-L["ADDON_TITLE_FRAME"]     = "OneWoW Notes"
+    ["ADDON_LOADED"] = "Loaded!",
+    ["ADDON_TITLE_FRAME"] = "OneWoW Notes",
 
 -- Minimap
-L["MINIMAP_TOOLTIP_TITLE"]  = "OneWoW Notes"
-L["MINIMAP_TOOLTIP_HINT"]   = "Click to open"
-L["MINIMAP_RIGHT_CLICK"]    = "Right-click for options"
-L["MINIMAP_OPEN"]           = "Open OneWoW Notes"
-L["MINIMAP_SECTION"]        = "Minimap Button"
-L["MINIMAP_SECTION_DESC"]   = "Show or hide the minimap button."
-L["MINIMAP_SHOW_BTN"]       = "Show Minimap Button"
-L["MINIMAP_ICON_SECTION"]   = "Icon Theme"
-L["MINIMAP_ICON_DESC"]      = "Choose your faction icon for the minimap button and title bar."
-L["MINIMAP_ICON_CURRENT"]   = "Current Icon"
-L["MINIMAP_ICON_HORDE"]     = "Horde"
-L["MINIMAP_ICON_ALLIANCE"]  = "Alliance"
-L["MINIMAP_ICON_NEUTRAL"]   = "Neutral"
+    ["MINIMAP_TOOLTIP_TITLE"] = "OneWoW Notes",
+    ["MINIMAP_TOOLTIP_HINT"] = "Click to open",
+    ["MINIMAP_RIGHT_CLICK"] = "Right-click for options",
+    ["MINIMAP_OPEN"] = "Open OneWoW Notes",
 
 -- Tabs
-L["TAB_NOTES"]    = "Notes"
-L["TAB_PLAYERS"]  = "Players"
-L["TAB_NPCS"]     = "NPCs"
-L["TAB_ZONES"]    = "Zones"
-L["TAB_ITEMS"]    = "Items"
-L["TAB_SETTINGS"] = "Settings"
+    ["TAB_NOTES"] = "Notes",
+    ["TAB_PLAYERS"] = "Players",
+    ["TAB_NPCS"] = "NPCs",
+    ["TAB_ZONES"] = "Zones",
+    ["TAB_ITEMS"] = "Items",
+    ["TAB_SETTINGS"] = "Settings",
 
 -- Notes Tab
-L["NOTES_LIST_TITLE"]       = "Notes"
-L["NOTES_DETAIL_TITLE"]     = "Note"
-L["NOTES_NEW"]              = "New Note"
-L["NOTES_DELETE"]           = "Delete"
-L["NOTES_SAVE"]             = "Save"
-L["NOTES_TITLE_PLACEHOLDER"]= "Title..."
-L["NOTES_BODY_PLACEHOLDER"] = "Write your note here..."
-L["NOTES_EMPTY"]            = "No notes yet. Click 'New Note' to add one."
-L["NOTES_SELECT"]           = "Select a note to view."
-L["NOTES_DELETE_CONFIRM"]   = "Delete this note?"
-L["NOTES_UNTITLED"]         = "Untitled Note"
+    ["NOTES_LIST_TITLE"] = "Notes",
+    ["NOTES_DETAIL_TITLE"] = "Note",
+    ["NOTES_NEW"] = "New Note",
+    ["NOTES_DELETE"] = "Delete",
+    ["NOTES_SAVE"] = "Save",
+    ["NOTES_TITLE_PLACEHOLDER"] = "Title...",
+    ["NOTES_BODY_PLACEHOLDER"] = "Write your note here...",
+    ["NOTES_EMPTY"] = "No notes yet. Click 'New Note' to add one.",
+    ["NOTES_SELECT"] = "Select a note to view.",
+    ["NOTES_DELETE_CONFIRM"] = "Delete this note?",
+    ["NOTES_UNTITLED"] = "Untitled Note",
 
 -- Players Tab
-L["PLAYERS_LIST_TITLE"]      = "Players"
-L["PLAYERS_DETAIL_TITLE"]    = "Player Note"
-L["PLAYERS_NEW"]             = "New Player Note"
-L["PLAYERS_DELETE"]          = "Delete"
-L["PLAYERS_SAVE"]            = "Save"
-L["PLAYERS_NAME_PLACEHOLDER"]= "Player name..."
-L["PLAYERS_NOTE_PLACEHOLDER"]= "Write your note about this player..."
-L["PLAYERS_EMPTY"]           = "No player notes yet. Click 'New Player Note' to add one."
-L["PLAYERS_SELECT"]          = "Select a player to view their note."
-L["PLAYERS_UNKNOWN"]         = "Unknown Player"
+    ["PLAYERS_LIST_TITLE"] = "Players",
+    ["PLAYERS_DETAIL_TITLE"] = "Player Note",
+    ["PLAYERS_NEW"] = "New Player Note",
+    ["PLAYERS_DELETE"] = "Delete",
+    ["PLAYERS_SAVE"] = "Save",
+    ["PLAYERS_NAME_PLACEHOLDER"] = "Player name...",
+    ["PLAYERS_NOTE_PLACEHOLDER"] = "Write your note about this player...",
+    ["PLAYERS_EMPTY"] = "No player notes yet. Click 'New Player Note' to add one.",
+    ["PLAYERS_SELECT"] = "Select a player to view their note.",
+    ["PLAYERS_UNKNOWN"] = "Unknown Player",
 
 -- NPCs Tab
-L["NPCS_LIST_TITLE"]       = "NPCs"
-L["NPCS_DETAIL_TITLE"]     = "NPC Note"
-L["NPCS_NEW"]              = "New NPC Note"
-L["NPCS_DELETE"]           = "Delete"
-L["NPCS_SAVE"]             = "Save"
-L["NPCS_NAME_PLACEHOLDER"] = "NPC name..."
-L["NPCS_NOTE_PLACEHOLDER"] = "Write your note about this NPC..."
-L["NPCS_EMPTY"]            = "No NPC notes yet. Click 'New NPC Note' to add one."
-L["NPCS_SELECT"]           = "Select an NPC to view their note."
-L["NPCS_UNKNOWN"]          = "Unknown NPC"
+    ["NPCS_LIST_TITLE"] = "NPCs",
+    ["NPCS_DETAIL_TITLE"] = "NPC Note",
+    ["NPCS_NEW"] = "New NPC Note",
+    ["NPCS_DELETE"] = "Delete",
+    ["NPCS_SAVE"] = "Save",
+    ["NPCS_NAME_PLACEHOLDER"] = "NPC name...",
+    ["NPCS_NOTE_PLACEHOLDER"] = "Write your note about this NPC...",
+    ["NPCS_EMPTY"] = "No NPC notes yet. Click 'New NPC Note' to add one.",
+    ["NPCS_SELECT"] = "Select an NPC to view their note.",
+    ["NPCS_UNKNOWN"] = "Unknown NPC",
 
 -- Zones Tab
-L["ZONES_LIST_TITLE"]       = "Zones"
-L["ZONES_DETAIL_TITLE"]     = "Zone Note"
-L["ZONES_NEW"]              = "New Zone Note"
-L["ZONES_DELETE"]           = "Delete"
-L["ZONES_SAVE"]             = "Save"
-L["ZONES_NAME_PLACEHOLDER"] = "Zone name..."
-L["ZONES_NOTE_PLACEHOLDER"] = "Write your note about this zone..."
-L["ZONES_EMPTY"]            = "No zone notes yet. Click 'New Zone Note' to add one."
-L["ZONES_SELECT"]           = "Select a zone to view its note."
-L["ZONES_UNKNOWN"]          = "Unknown Zone"
+    ["ZONES_LIST_TITLE"] = "Zones",
+    ["ZONES_DETAIL_TITLE"] = "Zone Note",
+    ["ZONES_NEW"] = "New Zone Note",
+    ["ZONES_DELETE"] = "Delete",
+    ["ZONES_SAVE"] = "Save",
+    ["ZONES_NAME_PLACEHOLDER"] = "Zone name...",
+    ["ZONES_NOTE_PLACEHOLDER"] = "Write your note about this zone...",
+    ["ZONES_EMPTY"] = "No zone notes yet. Click 'New Zone Note' to add one.",
+    ["ZONES_SELECT"] = "Select a zone to view its note.",
+    ["ZONES_UNKNOWN"] = "Unknown Zone",
 
 -- Items Tab
-L["ITEMS_LIST_TITLE"]       = "Items"
-L["ITEMS_DETAIL_TITLE"]     = "Item Note"
-L["ITEMS_NEW"]              = "New Item Note"
-L["ITEMS_DELETE"]           = "Delete"
-L["ITEMS_SAVE"]             = "Save"
-L["ITEMS_NAME_PLACEHOLDER"] = "Item name or ID..."
-L["ITEMS_NOTE_PLACEHOLDER"] = "Write your note about this item..."
-L["ITEMS_EMPTY"]            = "No item notes yet. Click 'New Item Note' to add one."
-L["ITEMS_SELECT"]           = "Select an item to view its note."
-L["ITEMS_UNKNOWN"]          = "Unknown Item"
+    ["ITEMS_LIST_TITLE"] = "Items",
+    ["ITEMS_DETAIL_TITLE"] = "Item Note",
+    ["ITEMS_NEW"] = "New Item Note",
+    ["ITEMS_DELETE"] = "Delete",
+    ["ITEMS_SAVE"] = "Save",
+    ["ITEMS_NAME_PLACEHOLDER"] = "Item name or ID...",
+    ["ITEMS_NOTE_PLACEHOLDER"] = "Write your note about this item...",
+    ["ITEMS_EMPTY"] = "No item notes yet. Click 'New Item Note' to add one.",
+    ["ITEMS_SELECT"] = "Select an item to view its note.",
+    ["ITEMS_UNKNOWN"] = "Unknown Item",
 
 -- Settings Tab
-L["SETTINGS_THEME"]            = "Theme"
-L["SETTINGS_THEME_DESC"]       = "Choose a color theme. Changes apply instantly."
-L["SETTINGS_LANGUAGE"]         = "Language"
-L["SETTINGS_LANGUAGE_DESC"]    = "Choose your preferred language. Changes apply instantly."
-L["SETTINGS_MINIMAP"]          = "Minimap Button"
+    ["SETTINGS_THEME"] = "Theme",
+    ["SETTINGS_THEME_DESC"] = "Choose a color theme. Changes apply instantly.",
+    ["SETTINGS_LANGUAGE"] = "Language",
+    ["SETTINGS_LANGUAGE_DESC"] = "Choose your preferred language. Changes apply instantly.",
+    ["SETTINGS_MINIMAP"] = "Minimap Button",
 
 -- Theme Names
-L["THEME_GREEN"]   = "Green"
-L["THEME_BLUE"]    = "Blue"
-L["THEME_PURPLE"]  = "Purple"
-L["THEME_RED"]     = "Red"
-L["THEME_ORANGE"]  = "Orange"
-L["THEME_TEAL"]    = "Teal"
-L["THEME_GOLD"]    = "Gold"
-L["THEME_PINK"]    = "Pink"
-L["THEME_GRAY"]    = "Gray"
-L["THEME_BROWN"]   = "Brown"
-L["THEME_DARK"]    = "Dark"
-L["THEME_AMBER"]   = "Amber"
-L["THEME_CYAN"]    = "Cyan"
-L["THEME_VOID_BLACK"]        = "Void Black"
-L["THEME_CHARCOAL_DEEP"]     = "Charcoal Deep"
-L["THEME_FOREST_NIGHT"]      = "Forest Night"
-L["THEME_OBSIDIAN_MINIMAL"]  = "Obsidian Minimal"
-L["THEME_MONOCHROME_PRO"]    = "Monochrome Pro"
-L["THEME_TWILIGHT_COMPACT"]  = "Twilight Compact"
-L["THEME_NEON_SYNTHWAVE"]    = "Neon Synthwave"
-L["THEME_GLASSMORPHIC"]      = "Glassmorphic"
-L["THEME_MINIMAL_WHITE"]     = "Minimal White"
-L["THEME_RETRO_CLASSIC"]     = "Retro Classic"
-L["THEME_RPG_FANTASY"]       = "RPG Fantasy"
-L["THEME_COVENANT_TWILIGHT"] = "Covenant Twilight"
 
 -- Language Names
-L["LANG_ENUS"] = "English"
-L["LANG_KOKR"] = "Korean"
+    ["LANG_ENUS"] = "English",
+    ["LANG_KOKR"] = "Korean",
 
 -- Context Menu
-L["CTX_INSERT_TARGET"]             = "Insert Target"
-L["CTX_NO_TARGET"]                 = "No target selected."
-L["CTX_INSERT_DATETIME"]           = "Insert Date/Time"
-L["CTX_INSERT_SELF"]               = "Insert My Name"
-L["CTX_INSERT_HYPERLINK"]          = "Insert Hyperlink"
-L["CTX_INSERT_WAYPOINT"]           = "Insert Waypoint"
-L["CTX_ADD_CURRENT_LOCATION"]      = "Add Current Location"
-L["CTX_CANNOT_DETERMINE_LOCATION"] = "Cannot determine your location."
-L["CTX_CANNOT_GET_POSITION"]       = "Cannot get map position."
-L["CTX_LOCATION_INSERTED"]         = "Location inserted (Map: %d, X: %.1f, Y: %.1f)"
-L["CTX_CANNOT_DETERMINE_ZONE"]     = "Cannot determine current zone."
-L["CTX_COORDS_OUT_OF_RANGE"]       = "Coordinates must be between 0 and 100."
+    ["CTX_INSERT_TARGET"] = "Insert Target",
+    ["CTX_NO_TARGET"] = "No target selected.",
+    ["CTX_INSERT_DATETIME"] = "Insert Date/Time",
+    ["CTX_INSERT_SELF"] = "Insert My Name",
+    ["CTX_INSERT_HYPERLINK"] = "Insert Hyperlink",
+    ["CTX_INSERT_WAYPOINT"] = "Insert Waypoint",
+    ["CTX_ADD_CURRENT_LOCATION"] = "Add Current Location",
+    ["CTX_CANNOT_DETERMINE_LOCATION"] = "Cannot determine your location.",
+    ["CTX_CANNOT_GET_POSITION"] = "Cannot get map position.",
+    ["CTX_LOCATION_INSERTED"] = "Location inserted (Map: %d, X: %.1f, Y: %.1f)",
+    ["CTX_CANNOT_DETERMINE_ZONE"] = "Cannot determine current zone.",
+    ["CTX_COORDS_OUT_OF_RANGE"] = "Coordinates must be between 0 and 100.",
 
 -- Hyperlink Dialog
-L["CTX_BUTTON_INSERT"]      = "Insert"
-L["CTX_BUTTON_CANCEL"]      = "Cancel"
-L["CTX_LINK_TYPE_LABEL"]    = "Link Type:"
-L["CTX_ID_OR_VALUE"]        = "ID or Value:"
-L["CTX_LINK_TYPE_ITEM"]     = "Item"
-L["CTX_LINK_TYPE_SPELL"]    = "Spell"
-L["CTX_LINK_TYPE_QUEST"]    = "Quest"
-L["CTX_LINK_TYPE_ACHIEVEMENT"] = "Achievement"
-L["CTX_LINK_TYPE_CURRENCY"] = "Currency"
-L["CTX_LINK_TYPE_TOY"]      = "Toy"
-L["CTX_LINK_TYPE_BATTLEPET"]= "Battle Pet"
-L["CTX_LINK_TYPE_MOUNT"]    = "Mount"
-L["CTX_HELP_ITEM"]          = "Enter an item ID  (e.g. 19019)"
-L["CTX_HELP_SPELL"]         = "Enter a spell ID  (e.g. 1459)"
-L["CTX_HELP_QUEST"]         = "Enter a quest ID  (e.g. 1234)"
-L["CTX_HELP_ACHIEVEMENT"]   = "Enter an achievement ID  (e.g. 1234)"
-L["CTX_HELP_CURRENCY"]      = "Enter a currency ID  (e.g. 1234)"
-L["CTX_HELP_TOY"]           = "Enter a toy ID  (e.g. 1234)"
-L["CTX_HELP_BATTLEPET"]     = "Enter a battle pet species ID  (e.g. 1234)"
-L["CTX_HELP_MOUNT"]         = "Enter a mount ID  (e.g. 1234)"
+    ["CTX_BUTTON_INSERT"] = "Insert",
+    ["CTX_BUTTON_CANCEL"] = "Cancel",
+    ["CTX_LINK_TYPE_LABEL"] = "Link Type:",
+    ["CTX_ID_OR_VALUE"] = "ID or Value:",
+    ["CTX_LINK_TYPE_ITEM"] = "Item",
+    ["CTX_LINK_TYPE_SPELL"] = "Spell",
+    ["CTX_LINK_TYPE_QUEST"] = "Quest",
+    ["CTX_LINK_TYPE_ACHIEVEMENT"] = "Achievement",
+    ["CTX_LINK_TYPE_CURRENCY"] = "Currency",
+    ["CTX_LINK_TYPE_TOY"] = "Toy",
+    ["CTX_LINK_TYPE_BATTLEPET"] = "Battle Pet",
+    ["CTX_LINK_TYPE_MOUNT"] = "Mount",
+    ["CTX_HELP_ITEM"] = "Enter an item ID  (e.g. 19019)",
+    ["CTX_HELP_SPELL"] = "Enter a spell ID  (e.g. 1459)",
+    ["CTX_HELP_QUEST"] = "Enter a quest ID  (e.g. 1234)",
+    ["CTX_HELP_ACHIEVEMENT"] = "Enter an achievement ID  (e.g. 1234)",
+    ["CTX_HELP_CURRENCY"] = "Enter a currency ID  (e.g. 1234)",
+    ["CTX_HELP_TOY"] = "Enter a toy ID  (e.g. 1234)",
+    ["CTX_HELP_BATTLEPET"] = "Enter a battle pet species ID  (e.g. 1234)",
+    ["CTX_HELP_MOUNT"] = "Enter a mount ID  (e.g. 1234)",
 
 -- Waypoint Dialog
-L["CTX_MAP_ID"]           = "Map ID (0 = current map):"
-L["CTX_MAP_HELP"]         = "Enter 0 to use your current map."
-L["CTX_X_COORDINATE"]     = "X Coordinate (0-100):"
-L["CTX_Y_COORDINATE"]     = "Y Coordinate (0-100):"
-L["CTX_DESCRIPTION"]      = "Label:"
+    ["CTX_MAP_ID"] = "Map ID (0 = current map):",
+    ["CTX_MAP_HELP"] = "Enter 0 to use your current map.",
+    ["CTX_X_COORDINATE"] = "X Coordinate (0-100):",
+    ["CTX_Y_COORDINATE"] = "Y Coordinate (0-100):",
+    ["CTX_DESCRIPTION"] = "Label:",
 
 -- Notes controls and list
-L["NOTES_CONTROLS"]             = "Notes Controls"
-L["NOTES_LIST"]                 = "Notes List"
-L["MESSAGE_SELECT_NOTE"]        = "Select a note to edit"
-L["NOTE_UNTITLED"]              = "Untitled"
-L["NOTES_SECTION_NEW"]          = "New"
-L["NOTES_SECTION_FAVORITES"]    = "Favorites"
+    ["NOTES_CONTROLS"] = "Notes Controls",
+    ["NOTES_LIST"] = "Notes List",
+    ["MESSAGE_SELECT_NOTE"] = "Select a note to edit",
+    ["NOTE_UNTITLED"] = "Untitled",
+    ["NOTES_SECTION_NEW"] = "New",
+    ["NOTES_SECTION_FAVORITES"] = "Favorites",
 
 -- Notes sort
-L["NOTE_SORT_BY"]               = "Sort: %s"
-L["NOTE_SORT_TITLE"]            = "Title"
-L["NOTE_SORT_CREATED"]          = "Created"
-L["NOTE_SORT_MODIFIED"]         = "Modified"
-L["NOTE_SORT_CATEGORY"]         = "Category"
-L["NOTE_SORT_COLOR"]            = "Color"
-L["NOTE_SORT_TYPE"]             = "Type"
-L["NOTE_SORT_MANUAL"]           = "Manual"
-L["NOTE_SORT_NAME"]             = "Name"
-L["NOTE_SORT_ZONE"]             = "Zone"
-L["NOTE_SORT_CLASS"]            = "Class"
-L["NOTE_SORT_FACTION"]          = "Faction"
-L["NOTE_SORT_LEVEL"]            = "Level"
+    ["NOTE_SORT_BY"] = "Sort: %s",
+    ["NOTE_SORT_TITLE"] = "Title",
+    ["NOTE_SORT_CREATED"] = "Created",
+    ["NOTE_SORT_MODIFIED"] = "Modified",
+    ["NOTE_SORT_CATEGORY"] = "Category",
+    ["NOTE_SORT_COLOR"] = "Color",
+    ["NOTE_SORT_TYPE"] = "Type",
+    ["NOTE_SORT_MANUAL"] = "Manual",
+    ["NOTE_SORT_NAME"] = "Name",
+    ["NOTE_SORT_ZONE"] = "Zone",
+    ["NOTE_SORT_CLASS"] = "Class",
+    ["NOTE_SORT_FACTION"] = "Faction",
+    ["NOTE_SORT_LEVEL"] = "Level",
 
 -- Notes UI labels
-L["UI_SEARCH_PLACEHOLDER"]      = "Search..."
-L["UI_ALL"]                     = "All"
-L["UI_CATEGORY_WITH_VALUE"]     = "Category: %s"
-L["UI_STORAGE_WITH_VALUE"]      = "Storage: %s"
-L["UI_STORAGE_ACCOUNT"]         = "Account"
-L["UI_STORAGE_CHARACTER"]       = "Character"
-L["UI_COUNT_FORMAT"]            = "%s: %d"
-L["UI_TYPE_FORMAT"]             = "Type: %s"
-L["UI_GENERAL"]                 = "General"
-L["UI_TASKS"]                   = "Tasks:"
-L["UI_MANAGE_CATEGORIES"]       = "Manage Categories"
-L["UI_MANAGE_CATEGORIES_DESC"]  = "Add or remove custom categories"
-L["UI_NOTES_HYPERLINK_TITLE"]   = "Hyperlink Help"
-L["UI_NOTES_HYPERLINK_HINT"]    = "Click to show/hide help about using hyperlinks in notes"
-L["UI_NOTE_REMOVE_FLAG_HINT"]   = "Click to remove new flag"
+    ["UI_SEARCH_PLACEHOLDER"] = "Search...",
+    ["UI_ALL"] = "All",
+    ["UI_CATEGORY_WITH_VALUE"] = "Category: %s",
+    ["UI_STORAGE_WITH_VALUE"] = "Storage: %s",
+    ["UI_STORAGE_ACCOUNT"] = "Account",
+    ["UI_STORAGE_CHARACTER"] = "Character",
+    ["UI_COUNT_FORMAT"] = "%s: %d",
+    ["UI_TYPE_FORMAT"] = "Type: %s",
+    ["UI_GENERAL"] = "General",
+    ["UI_TASKS"] = "Tasks:",
+    ["UI_MANAGE_CATEGORIES"] = "Manage Categories",
+    ["UI_MANAGE_CATEGORIES_DESC"] = "Add or remove custom categories",
+    ["UI_NOTES_HYPERLINK_TITLE"] = "Hyperlink Help",
+    ["UI_NOTES_HYPERLINK_HINT"] = "Click to show/hide help about using hyperlinks in notes",
+    ["UI_NOTE_REMOVE_FLAG_HINT"] = "Click to remove new flag",
 
 -- Note types
-L["NOTE_TYPE_STANDARD"]         = "Standard"
-L["NOTE_TYPE_STANDARD_DESC"]    = "Normal note with no automatic reset"
-L["NOTE_TYPE_DAILY"]            = "Daily"
-L["NOTE_TYPE_DAILY_DESC"]       = "TODOs reset at daily server reset time"
-L["NOTE_TYPE_WEEKLY"]           = "Weekly"
-L["NOTE_TYPE_WEEKLY_DESC"]      = "TODOs reset at weekly server reset time"
-L["NOTE_TYPE_LABEL_FORMAT"]     = "%s Note"
+    ["NOTE_TYPE_STANDARD"] = "Standard",
+    ["NOTE_TYPE_STANDARD_DESC"] = "Normal note with no automatic reset",
+    ["NOTE_TYPE_DAILY"] = "Daily",
+    ["NOTE_TYPE_DAILY_DESC"] = "TODOs reset at daily server reset time",
+    ["NOTE_TYPE_WEEKLY"] = "Weekly",
+    ["NOTE_TYPE_WEEKLY_DESC"] = "TODOs reset at weekly server reset time",
+    ["NOTE_TYPE_LABEL_FORMAT"] = "%s Note",
 
 -- Note todo
-L["NOTE_RESET_TODOS"]           = "Reset All TODOs"
-L["NOTE_RESET_TODOS_DESC"]      = "Uncheck all completed tasks"
+    ["NOTE_RESET_TODOS"] = "Reset All TODOs",
+    ["NOTE_RESET_TODOS_DESC"] = "Uncheck all completed tasks",
 
 -- Status bar
-L["STATUS_READY"]               = "Ready"
+    ["STATUS_READY"] = "Ready",
 
 -- Buttons
-L["BUTTON_ADD_NOTE"]            = "Add Note"
-L["BUTTON_CANCEL"]              = "Cancel"
-L["BUTTON_CLOSE"]               = "Close"
-L["BUTTON_DELETE"]              = "Delete"
+    ["BUTTON_ADD_NOTE"] = "Add Note",
+    ["BUTTON_CANCEL"] = "Cancel",
+    ["BUTTON_CLOSE"] = "Close",
+    ["BUTTON_DELETE"] = "Delete",
 
 -- Dialogs
-L["DIALOG_ADD_NOTE_TITLE"]          = "Add New Note"
-L["DIALOG_NOTE_PROPERTIES_TITLE"]   = "Note Properties: %s"
-L["POPUP_DELETE_NOTE"]              = "Delete note '%s'?"
+    ["DIALOG_ADD_NOTE_TITLE"] = "Add New Note",
+    ["DIALOG_NOTE_PROPERTIES_TITLE"] = "Note Properties: %s",
+    ["POPUP_DELETE_NOTE"] = "Delete note '%s'?",
 
 -- Success / Error
-L["SUCCESS_NOTE_ADDED"]         = "Note '%s' added successfully!"
-L["ERROR_ENTER_NOTE_TITLE"]     = "Please enter a note title"
+    ["SUCCESS_NOTE_ADDED"] = "Note '%s' added successfully!",
+    ["ERROR_ENTER_NOTE_TITLE"] = "Please enter a note title",
 
 -- Tooltips for list item buttons
-L["TOOLTIP_BUTTON_ADD_NOTE"]        = "Add Note"
-L["TOOLTIP_BUTTON_ADD_NOTE_DESC"]   = "Create a new note"
-L["TOOLTIP_NOTE_DELETE"]            = "Delete Note"
-L["TOOLTIP_NOTE_DELETE_DESC"]       = "Remove this note"
-L["TOOLTIP_NOTE_FAVORITE"]          = "Favorite"
-L["TOOLTIP_NOTE_FAVORITE_DESC"]     = "Mark note as favorite"
-L["TOOLTIP_NOTE_NEW"]               = "New Note"
-L["TOOLTIP_NOTE_PIN"]               = "Pin Note"
-L["TOOLTIP_NOTE_PIN_DESC"]          = "Pins Note to Screen"
-L["TOOLTIP_NOTE_PROPERTIES"]        = "Note Properties"
-L["TOOLTIP_NOTE_PROPERTIES_DESC"]   = "Edit note settings"
+    ["TOOLTIP_BUTTON_ADD_NOTE"] = "Add Note",
+    ["TOOLTIP_BUTTON_ADD_NOTE_DESC"] = "Create a new note",
+    ["TOOLTIP_NOTE_DELETE"] = "Delete Note",
+    ["TOOLTIP_NOTE_DELETE_DESC"] = "Remove this note",
+    ["TOOLTIP_NOTE_FAVORITE"] = "Favorite",
+    ["TOOLTIP_NOTE_FAVORITE_DESC"] = "Mark note as favorite",
+    ["TOOLTIP_NOTE_NEW"] = "New Note",
+    ["TOOLTIP_NOTE_PIN"] = "Pin Note",
+    ["TOOLTIP_NOTE_PIN_DESC"] = "Pins Note to Screen",
+    ["TOOLTIP_NOTE_PROPERTIES"] = "Note Properties",
+    ["TOOLTIP_NOTE_PROPERTIES_DESC"] = "Edit note settings",
 
 -- Storage / Category labels
-L["STORAGE_ACCOUNT_WIDE"]       = "Account-wide"
-L["STORAGE_TYPE_CHARACTER"]     = "Character"
-L["CATEGORY_GENERAL"]           = "General"
+    ["STORAGE_ACCOUNT_WIDE"] = "Account-wide",
+    ["STORAGE_TYPE_CHARACTER"] = "Character",
+    ["CATEGORY_GENERAL"] = "General",
 
 -- Label fields (for dialogs)
-L["LABEL_NOTE_TITLE"]           = "Note Title"
-L["LABEL_CATEGORY"]             = "Category"
-L["LABEL_STORAGE"]              = "Storage"
-L["LABEL_NOTE_COLOR"]           = "Note Color"
-L["LABEL_FONT_COLOR"]           = "Font Color"
-L["LABEL_FONT_SIZE"]            = "Font Size"
-L["LABEL_NOTE_FONT"]            = "Font"
-L["LABEL_OPACITY"]              = "Opacity"
-L["LABEL_NOTE_TYPE"]            = "Note Type"
-L["LABEL_NOTE_CONTENT"]         = "Note Content"
-L["LABEL_NOTE_PREVIEW"]         = "Note Preview"
+    ["LABEL_NOTE_TITLE"] = "Note Title",
+    ["LABEL_CATEGORY"] = "Category",
+    ["LABEL_STORAGE"] = "Storage",
+    ["LABEL_NOTE_COLOR"] = "Note Color",
+    ["LABEL_FONT_COLOR"] = "Font Color",
+    ["LABEL_FONT_SIZE"] = "Font Size",
+    ["LABEL_NOTE_FONT"] = "Font",
+    ["LABEL_OPACITY"] = "Opacity",
+    ["LABEL_NOTE_TYPE"] = "Note Type",
+    ["LABEL_NOTE_CONTENT"] = "Note Content",
 
 -- Color names
-L["COLOR_HUNTER_GREEN"]         = "Hunter Green"
-L["FONT_DEFAULT"]               = "Default (Friz Quadrata)"
-L["FONT_COLOR_MATCHING"]        = "Default - Matching"
-L["FONT_COLOR_WHITE"]           = "Priest White"
-L["FONT_COLOR_BLACK"]           = "Midnight Black"
+    ["COLOR_HUNTER_GREEN"] = "Hunter Green",
+    ["FONT_DEFAULT"] = "Default (Friz Quadrata)",
+    ["FONT_COLOR_MATCHING"] = "Default - Matching",
+    ["FONT_COLOR_WHITE"] = "Priest White",
+    ["FONT_COLOR_BLACK"] = "Midnight Black",
 
 -- Pin color names
-L["NOTES_PIN_COLOR_HUNTER_GREEN"]       = "Hunter Green"
-L["NOTES_PIN_COLOR_WARRIOR_TAN"]        = "Warrior Tan"
-L["NOTES_PIN_COLOR_PRIEST_WHITE"]       = "Priest White"
-L["NOTES_PIN_COLOR_WARLOCK_PURPLE"]     = "Warlock Purple"
-L["NOTES_PIN_COLOR_MAGE_BLUE"]          = "Mage Blue"
-L["NOTES_PIN_COLOR_ROGUE_YELLOW"]       = "Rogue Yellow"
-L["NOTES_PIN_COLOR_DRUID_ORANGE"]       = "Druid Orange"
-L["NOTES_PIN_COLOR_PALADIN_PINK"]       = "Paladin Pink"
-L["NOTES_PIN_COLOR_SHAMAN_BLUE"]        = "Shaman Blue"
-L["NOTES_PIN_COLOR_DEATHKNIGHT_RED"]    = "Death Knight Red"
-L["NOTES_PIN_COLOR_MONK_JADE"]          = "Monk Jade"
-L["NOTES_PIN_COLOR_DEMONHUNTER_PURPLE"] = "Demon Hunter Purple"
-L["NOTES_PIN_COLOR_EVOKER_TEAL"]        = "Evoker Teal"
-L["NOTES_PIN_COLOR_DARKIRON"]           = "Dark Iron"
+    ["NOTES_PIN_COLOR_HUNTER_GREEN"] = "Hunter Green",
+    ["NOTES_PIN_COLOR_WARRIOR_TAN"] = "Warrior Tan",
+    ["NOTES_PIN_COLOR_PRIEST_WHITE"] = "Priest White",
+    ["NOTES_PIN_COLOR_WARLOCK_PURPLE"] = "Warlock Purple",
+    ["NOTES_PIN_COLOR_MAGE_BLUE"] = "Mage Blue",
+    ["NOTES_PIN_COLOR_ROGUE_YELLOW"] = "Rogue Yellow",
+    ["NOTES_PIN_COLOR_DRUID_ORANGE"] = "Druid Orange",
+    ["NOTES_PIN_COLOR_PALADIN_PINK"] = "Paladin Pink",
+    ["NOTES_PIN_COLOR_SHAMAN_BLUE"] = "Shaman Blue",
+    ["NOTES_PIN_COLOR_DEATHKNIGHT_RED"] = "Death Knight Red",
+    ["NOTES_PIN_COLOR_MONK_JADE"] = "Monk Jade",
+    ["NOTES_PIN_COLOR_DEMONHUNTER_PURPLE"] = "Demon Hunter Purple",
+    ["NOTES_PIN_COLOR_EVOKER_TEAL"] = "Evoker Teal",
+    ["NOTES_PIN_COLOR_DARKIRON"] = "Dark Iron",
 
 -- Category management
-L["NOTES_CATEGORY_EMPTY"]           = "Category name cannot be empty"
-L["NOTES_CATEGORY_EXISTS"]          = "Category already exists"
-L["NOTES_CATEGORY_NOT_FOUND"]       = "No custom categories found"
-L["NOTES_CATEGORY_BUILTIN"]         = "Cannot remove built-in category"
-L["NOTES_CATEGORY_NOT_IN_CUSTOM"]   = "Category not found in custom categories"
+    ["NOTES_CATEGORY_EMPTY"] = "Category name cannot be empty",
+    ["NOTES_CATEGORY_EXISTS"] = "Category already exists",
+    ["NOTES_CATEGORY_NOT_FOUND"] = "No custom categories found",
+    ["NOTES_CATEGORY_BUILTIN"] = "Cannot remove built-in category",
+    ["NOTES_CATEGORY_NOT_IN_CUSTOM"] = "Category not found in custom categories",
 
 -- Pinned window strings
-L["CORE_PIN_NOTE_PREFIX"]       = "Note:"
-L["CORE_PIN_UNTITLED"]          = "Untitled"
-L["CORE_PIN_OPACITY"]           = "Opacity"
-L["CORE_PIN_LOCK_MOVE"]         = "Lock Move"
-L["CORE_PIN_LOCK_RESIZE"]       = "Lock Resize"
-L["CORE_PIN_RESET_TODOS"]       = "Reset All TODOs"
-L["CORE_PIN_RESET_TODOS_DESC"]  = "Uncheck all completed tasks"
-L["CORE_PIN_TITLE_COLLAPSE_HINT"] = "Double-click or Shift+click to collapse or expand"
-L["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER"] = "Hide pinned tasks until hover"
-L["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER_DESC"] = "When pinned, show the task list only while the mouse is over the note."
-L["CORE_PIN_HOVER_TASKS"] = "Hover tasks"
+    ["CORE_PIN_NOTE_PREFIX"] = "Note:",
+    ["CORE_PIN_UNTITLED"] = "Untitled",
+    ["CORE_PIN_OPACITY"] = "Opacity",
+    ["CORE_PIN_LOCK_MOVE"] = "Lock Move",
+    ["CORE_PIN_LOCK_RESIZE"] = "Lock Resize",
+    ["CORE_PIN_RESET_TODOS"] = "Reset All TODOs",
+    ["CORE_PIN_RESET_TODOS_DESC"] = "Uncheck all completed tasks",
+    ["CORE_PIN_TITLE_COLLAPSE_HINT"] = "Double-click or Shift+click to collapse or expand",
+    ["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER"] = "Hide pinned tasks until hover",
+    ["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER_DESC"] = "When pinned, show the task list only while the mouse is over the note.",
+    ["CORE_PIN_HOVER_TASKS"] = "Hover tasks",
 
 -- Items tab
-L["ITEMS_CONTROLS"]                  = "Items Controls"
-L["ITEMS_LIST"]                      = "Items List"
-L["BUTTON_ADD_ITEM"]                 = "Add Item"
-L["BUTTON_ADD_BY_ID"]                = "Add by ID"
-L["TOOLTIP_BUTTON_ADD_ITEM"]         = "Add Item"
-L["TOOLTIP_BUTTON_ADD_ITEM_DESC"]    = "Drag an item here to add a note for it."
-L["TOOLTIP_BUTTON_ADD_BY_ID"]        = "Add by Item ID"
-L["TOOLTIP_BUTTON_ADD_BY_ID_DESC"]   = "Enter an item ID to create a note."
-L["MSG_ITEM_EXISTS"]                 = "Item already exists: %s"
-L["MSG_ITEM_ADDED"]                  = "Added item: %s"
-L["MSG_DRAG_ITEM"]                   = "Drag an item here to add it."
-L["NOTES_ITEM_INVALID_ID"]           = "Invalid item ID."
-L["TOOLTIP_ITEM_DELETE"]             = "Delete Item"
-L["TOOLTIP_ITEM_DELETE_DESC"]        = "Remove this item note"
-L["TOOLTIP_ITEM_PROPERTIES"]         = "Item Properties"
-L["TOOLTIP_ITEM_PROPERTIES_DESC"]    = "Edit item settings"
-L["TOOLTIP_ITEM_FAVORITE"]           = "Favorite"
-L["TOOLTIP_ITEM_FAVORITE_DESC"]      = "Mark as favorite"
-L["ITEM_ALERT_ON_LOOT"]              = "Alert on Loot"
-L["ITEM_ALERT_ON_LOOT_DESC"]         = "Show an alert when this item is looted."
-L["POPUP_DELETE_ITEM"]               = "Delete item note?"
-L["DIALOG_ADD_ITEM_BY_ID"]           = "Add Item by ID"
-L["DIALOG_ITEM_PROPERTIES"]          = "Item Properties"
-L["LABEL_ITEM_ID"]                   = "Item ID:"
-L["ITEM_VALIDATE"]                   = "Validate"
-L["ITEM_VALIDATE_FIRST"]             = "Validate the item first."
-L["ITEM_LOADING"]                    = "Loading..."
+    ["ITEMS_CONTROLS"] = "Items Controls",
+    ["ITEMS_LIST"] = "Items List",
+    ["BUTTON_ADD_ITEM"] = "Add Item",
+    ["BUTTON_ADD_BY_ID"] = "Add by ID",
+    ["TOOLTIP_BUTTON_ADD_ITEM"] = "Add Item",
+    ["TOOLTIP_BUTTON_ADD_ITEM_DESC"] = "Drag an item here to add a note for it.",
+    ["TOOLTIP_BUTTON_ADD_BY_ID"] = "Add by Item ID",
+    ["TOOLTIP_BUTTON_ADD_BY_ID_DESC"] = "Enter an item ID to create a note.",
+    ["MSG_ITEM_EXISTS"] = "Item already exists: %s",
+    ["MSG_ITEM_ADDED"] = "Added item: %s",
+    ["MSG_DRAG_ITEM"] = "Drag an item here to add it.",
+    ["NOTES_ITEM_INVALID_ID"] = "Invalid item ID.",
+    ["TOOLTIP_ITEM_DELETE"] = "Delete Item",
+    ["TOOLTIP_ITEM_DELETE_DESC"] = "Remove this item note",
+    ["TOOLTIP_ITEM_PROPERTIES"] = "Item Properties",
+    ["TOOLTIP_ITEM_PROPERTIES_DESC"] = "Edit item settings",
+    ["TOOLTIP_ITEM_FAVORITE"] = "Favorite",
+    ["TOOLTIP_ITEM_FAVORITE_DESC"] = "Mark as favorite",
+    ["ITEM_ALERT_ON_LOOT"] = "Alert on Loot",
+    ["ITEM_ALERT_ON_LOOT_DESC"] = "Show an alert when this item is looted.",
+    ["POPUP_DELETE_ITEM"] = "Delete item note?",
+    ["DIALOG_ADD_ITEM_BY_ID"] = "Add Item by ID",
+    ["DIALOG_ITEM_PROPERTIES"] = "Item Properties",
+    ["LABEL_ITEM_ID"] = "Item ID:",
+    ["ITEM_VALIDATE"] = "Validate",
+    ["ITEM_VALIDATE_FIRST"] = "Validate the item first.",
+    ["ITEM_LOADING"] = "Loading...",
 
 -- Zones tab
-L["ZONES_CONTROLS"]                      = "Zones Controls"
-L["ZONES_LIST"]                          = "Zones List"
-L["BUTTON_ADD_CURRENT_ZONE"]             = "Add Zone"
-L["ZONE_ADD_PARENT"]                     = "Add Parent"
-L["ZONE_ADD_PARENT_DESC"]                = "Add a note for the parent/region zone."
-L["BUTTON_MANUAL_ENTRY"]                 = "Manual"
-L["TOOLTIP_BUTTON_ADD_CURRENT_ZONE"]     = "Add Current Zone"
-L["TOOLTIP_BUTTON_ADD_CURRENT_ZONE_DESC"] = "Add a note for your current zone."
-L["TOOLTIP_BUTTON_MANUAL_ENTRY_ZONE_DESC"] = "Enter a zone name manually."
-L["MSG_NO_ZONE_DETECTED"]               = "Cannot determine current zone."
-L["MSG_NO_PARENT_ZONE"]                 = "Cannot determine parent zone."
-L["MSG_ZONE_EXISTS"]                    = "Zone note already exists: %s"
-L["MSG_ZONE_ADDED"]                     = "Added zone: %s"
-L["NOTES_ZONE_ALERT_ARRIVED"]           = "Zone:"
-L["TOOLTIP_ZONE_DELETE"]                = "Delete Zone"
-L["TOOLTIP_ZONE_DELETE_DESC"]           = "Remove this zone note"
-L["TOOLTIP_ZONE_PROPERTIES"]            = "Zone Properties"
-L["TOOLTIP_ZONE_PROPERTIES_DESC"]       = "Edit zone settings"
-L["TOOLTIP_ZONE_SOUND"]                 = "Zone Alert"
-L["TOOLTIP_ZONE_SOUND_DESC"]            = "Alert when entering this zone."
-L["TOOLTIP_ZONE_FAVORITE"]              = "Favorite"
-L["TOOLTIP_ZONE_FAVORITE_DESC"]         = "Mark as favorite"
-L["POPUP_DELETE_ZONE"]                  = "Delete zone note?"
-L["DIALOG_ZONE_PROPERTIES"]             = "Zone Properties"
-L["LABEL_ZONE_NAME"]                    = "Zone Name:"
-L["ZONE_MANUAL_ENTRY_TITLE"]            = "Add Zone"
-L["ZONE_ERROR_NAME_REQUIRED"]           = "Zone name is required."
+    ["ZONES_CONTROLS"] = "Zones Controls",
+    ["ZONES_LIST"] = "Zones List",
+    ["BUTTON_ADD_CURRENT_ZONE"] = "Add Zone",
+    ["ZONE_ADD_PARENT"] = "Add Parent",
+    ["ZONE_ADD_PARENT_DESC"] = "Add a note for the parent/region zone.",
+    ["BUTTON_MANUAL_ENTRY"] = "Manual",
+    ["TOOLTIP_BUTTON_ADD_CURRENT_ZONE"] = "Add Current Zone",
+    ["TOOLTIP_BUTTON_ADD_CURRENT_ZONE_DESC"] = "Add a note for your current zone.",
+    ["TOOLTIP_BUTTON_MANUAL_ENTRY_ZONE_DESC"] = "Enter a zone name manually.",
+    ["MSG_NO_ZONE_DETECTED"] = "Cannot determine current zone.",
+    ["MSG_NO_PARENT_ZONE"] = "Cannot determine parent zone.",
+    ["MSG_ZONE_EXISTS"] = "Zone note already exists: %s",
+    ["MSG_ZONE_ADDED"] = "Added zone: %s",
+    ["NOTES_ZONE_ALERT_ARRIVED"] = "Zone:",
+    ["TOOLTIP_ZONE_DELETE"] = "Delete Zone",
+    ["TOOLTIP_ZONE_DELETE_DESC"] = "Remove this zone note",
+    ["TOOLTIP_ZONE_PROPERTIES"] = "Zone Properties",
+    ["TOOLTIP_ZONE_PROPERTIES_DESC"] = "Edit zone settings",
+    ["TOOLTIP_ZONE_SOUND"] = "Zone Alert",
+    ["TOOLTIP_ZONE_SOUND_DESC"] = "Alert when entering this zone.",
+    ["TOOLTIP_ZONE_FAVORITE"] = "Favorite",
+    ["TOOLTIP_ZONE_FAVORITE_DESC"] = "Mark as favorite",
+    ["POPUP_DELETE_ZONE"] = "Delete zone note?",
+    ["DIALOG_ZONE_PROPERTIES"] = "Zone Properties",
+    ["LABEL_ZONE_NAME"] = "Zone Name:",
+    ["ZONE_MANUAL_ENTRY_TITLE"] = "Add Zone",
+    ["ZONE_ERROR_NAME_REQUIRED"] = "Zone name is required.",
 
 -- Notes dialog extras
-L["NOTE_AUTOPIN_WHEN_COMPLETE"]         = "Auto-hide when tasks complete"
-L["LABEL_NOTE_PREVIEW"]                 = "Note Content Preview:"
-L["UI_TOOLTIP_LINES"]                   = "Tooltip Lines:"
+    ["NOTE_AUTOPIN_WHEN_COMPLETE"] = "Auto-hide when tasks complete",
+    ["LABEL_NOTE_PREVIEW"] = "Note Content Preview:",
+    ["UI_TOOLTIP_LINES"] = "Tooltip Lines:",
 
 -- Players tab
-L["PLAYERS_CONTROLS"]                      = "Players Controls"
-L["PLAYERS_LIST"]                          = "Players List"
-L["BUTTON_ADD_TARGET"]                     = "Add Target"
-L["TOOLTIP_BUTTON_ADD_TARGET"]             = "Add Target"
-L["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"] = "Add a note for your current player target."
-L["TOOLTIP_BUTTON_MANUAL_ENTRY_PLAYER_DESC"] = "Enter a player name manually."
-L["MSG_TARGET_PLAYER_FIRST"]               = "Target a player first."
-L["MSG_PLAYER_EXISTS"]                     = "Player note already exists."
-L["MSG_PLAYER_ADDED"]                      = "Added player: %s"
-L["NOTES_PLAYER_ALERT_FOUND"]              = "Targeted player with note: %s"
-L["TOOLTIP_PLAYER_DELETE"]                 = "Delete Player"
-L["TOOLTIP_PLAYER_DELETE_DESC"]            = "Remove this player note"
-L["TOOLTIP_PLAYER_PROPERTIES"]             = "Player Properties"
-L["TOOLTIP_PLAYER_PROPERTIES_DESC"]        = "Edit player settings"
-L["TOOLTIP_PLAYER_SOUND"]                  = "Alert on Sight"
-L["TOOLTIP_PLAYER_SOUND_DESC"]             = "Alert when you target this player."
-L["TOOLTIP_PLAYER_FAVORITE"]               = "Favorite"
-L["TOOLTIP_PLAYER_FAVORITE_DESC"]          = "Mark as favorite"
-L["POPUP_DELETE_PLAYER"]                   = "Delete player note?"
-L["DIALOG_PLAYER_PROPERTIES"]              = "Player Properties"
-L["LABEL_NAME"]                            = "Player Name:"
-L["LABEL_SERVER"]                          = "Realm:"
-L["UI_GUILD_NONE"]                         = "<No Guild>"
-L["PLAYER_MANUAL_ENTRY_TITLE"]             = "Add Player"
-L["PLAYER_LABEL_LEVEL"]                    = "Level:"
-L["PLAYER_LABEL_GUILD"]                    = "Guild:"
-L["PLAYER_LABEL_RACE"]                     = "Race:"
-L["PLAYER_LABEL_CLASS"]                    = "Class:"
-L["PLAYER_ERROR_NAME_REQUIRED"]            = "Player name is required."
-L["PLAYER_ADD_ALTS"]                       = "Add Alts"
-L["PLAYER_ADD_ALTS_DESC"]                  = "Add your alts from AltTracker data."
-L["PLAYER_ADD_ALTS_TITLE"]                 = "Add Alts"
-L["PLAYER_ALTS_NO_DATA"]                   = "AltTracker data not found."
-L["PLAYER_ALTS_NONE_NEW"]                  = "No new alts found to add."
-L["PLAYER_ALTS_ADDED_COUNT"]               = "Added %d alts."
-L["PLAYER_ADD_GUILD"]                      = "Add Guild"
-L["PLAYER_ADD_GUILD_DESC"]                 = "Add guild members to player notes."
-L["PLAYER_ADD_GUILD_TITLE"]                = "Add Guild Members"
-L["PLAYER_GUILD_NOT_IN"]                   = "You are not in a guild."
-L["PLAYER_GUILD_NONE_NEW"]                 = "No new guild members to add."
-L["PLAYER_GUILD_ADDED_COUNT"]              = "Added %d guild members."
-L["PLAYER_ADD_SELECTED"]                   = "Add Selected"
+    ["PLAYERS_CONTROLS"] = "Players Controls",
+    ["PLAYERS_LIST"] = "Players List",
+    ["BUTTON_ADD_TARGET"] = "Add Target",
+    ["TOOLTIP_BUTTON_ADD_TARGET"] = "Add Target",
+    ["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"] = "Add a note for your current player target.",
+    ["TOOLTIP_BUTTON_MANUAL_ENTRY_PLAYER_DESC"] = "Enter a player name manually.",
+    ["MSG_TARGET_PLAYER_FIRST"] = "Target a player first.",
+    ["MSG_PLAYER_EXISTS"] = "Player note already exists.",
+    ["MSG_PLAYER_ADDED"] = "Added player: %s",
+    ["NOTES_PLAYER_ALERT_FOUND"] = "Targeted player with note: %s",
+    ["TOOLTIP_PLAYER_DELETE"] = "Delete Player",
+    ["TOOLTIP_PLAYER_DELETE_DESC"] = "Remove this player note",
+    ["TOOLTIP_PLAYER_PROPERTIES"] = "Player Properties",
+    ["TOOLTIP_PLAYER_PROPERTIES_DESC"] = "Edit player settings",
+    ["TOOLTIP_PLAYER_SOUND"] = "Alert on Sight",
+    ["TOOLTIP_PLAYER_SOUND_DESC"] = "Alert when you target this player.",
+    ["TOOLTIP_PLAYER_FAVORITE"] = "Favorite",
+    ["TOOLTIP_PLAYER_FAVORITE_DESC"] = "Mark as favorite",
+    ["POPUP_DELETE_PLAYER"] = "Delete player note?",
+    ["DIALOG_PLAYER_PROPERTIES"] = "Player Properties",
+    ["LABEL_NAME"] = "Player Name:",
+    ["LABEL_SERVER"] = "Realm:",
+    ["UI_GUILD_NONE"] = "<No Guild>",
+    ["PLAYER_MANUAL_ENTRY_TITLE"] = "Add Player",
+    ["PLAYER_LABEL_LEVEL"] = "Level:",
+    ["PLAYER_LABEL_GUILD"] = "Guild:",
+    ["PLAYER_LABEL_RACE"] = "Race:",
+    ["PLAYER_LABEL_CLASS"] = "Class:",
+    ["PLAYER_ERROR_NAME_REQUIRED"] = "Player name is required.",
+    ["PLAYER_ADD_ALTS"] = "Add Alts",
+    ["PLAYER_ADD_ALTS_DESC"] = "Add your alts from AltTracker data.",
+    ["PLAYER_ADD_ALTS_TITLE"] = "Add Alts",
+    ["PLAYER_ALTS_NO_DATA"] = "AltTracker data not found.",
+    ["PLAYER_ALTS_NONE_NEW"] = "No new alts found to add.",
+    ["PLAYER_ALTS_ADDED_COUNT"] = "Added %d alts.",
+    ["PLAYER_ADD_GUILD"] = "Add Guild",
+    ["PLAYER_ADD_GUILD_DESC"] = "Add guild members to player notes.",
+    ["PLAYER_ADD_GUILD_TITLE"] = "Add Guild Members",
+    ["PLAYER_GUILD_NOT_IN"] = "You are not in a guild.",
+    ["PLAYER_GUILD_NONE_NEW"] = "No new guild members to add.",
+    ["PLAYER_GUILD_ADDED_COUNT"] = "Added %d guild members.",
+    ["PLAYER_ADD_SELECTED"] = "Add Selected",
 
 -- NPCs tab
-L["NPCS_CONTROLS"]                         = "NPCs Controls"
-L["NPCS_LIST"]                             = "NPCs List"
-L["TOOLTIP_BUTTON_ADD_TARGET_NPC_DESC"]    = "Add a note for your current NPC target."
-L["TOOLTIP_BUTTON_MANUAL_ENTRY_NPC_DESC"]  = "Enter an NPC ID manually."
-L["MSG_TARGET_NPC_FIRST"]                  = "Target an NPC first."
-L["MSG_NPC_EXISTS"]                        = "NPC note already exists."
-L["MSG_NPC_ADDED"]                         = "Added NPC: %s"
-L["MSG_NPC_NO_LOCATION"]                   = "No location recorded for this NPC."
-L["NOTES_NPC_ALERT_FOUND"]                 = "Targeted NPC with note: %s"
-L["NOTES_NPC_ASSOC_QUESTS"]                = "Associated Quests:"
-L["TOOLTIP_NPC_DELETE"]                    = "Delete NPC"
-L["TOOLTIP_NPC_DELETE_DESC"]               = "Remove this NPC note"
-L["TOOLTIP_NPC_PROPERTIES"]                = "NPC Properties"
-L["TOOLTIP_NPC_PROPERTIES_DESC"]           = "Edit NPC settings"
-L["TOOLTIP_NPC_SOUND"]                     = "Alert on Target"
-L["TOOLTIP_NPC_SOUND_DESC"]                = "Alert when you target this NPC."
-L["TOOLTIP_NPC_FAVORITE"]                  = "Favorite"
-L["TOOLTIP_NPC_FAVORITE_DESC"]             = "Mark as favorite"
-L["POPUP_DELETE_NPC"]                      = "Delete NPC note?"
-L["DIALOG_NPC_PROPERTIES"]                 = "NPC Properties"
-L["LABEL_NPC_ID"]                          = "NPC ID:"
-L["NPC_IGNORE_IF_DEAD"]                    = "Ignore if dead"
-L["NPC_IGNORE_IF_DEAD_DESC"]               = "Do not alert when this NPC is dead."
-L["UI_NPC_GOTO_TITLE"]                     = "Create Waypoint"
-L["UI_NPC_CREATE_WAYPOINT"]                = "Set a waypoint to this NPC's location."
-L["NPC_MANUAL_ENTRY_TITLE"]                = "Add NPC"
-L["NPC_LABEL_NAME"]                        = "NPC Name:"
-L["NPC_LABEL_ZONE"]                        = "Zone:"
-L["NPC_LABEL_LOCATION"]                    = "Location:"
-L["NPC_ERROR_NAME_REQUIRED"]               = "NPC name is required."
+    ["NPCS_CONTROLS"] = "NPCs Controls",
+    ["NPCS_LIST"] = "NPCs List",
+    ["TOOLTIP_BUTTON_ADD_TARGET_NPC_DESC"] = "Add a note for your current NPC target.",
+    ["TOOLTIP_BUTTON_MANUAL_ENTRY_NPC_DESC"] = "Enter an NPC ID manually.",
+    ["MSG_TARGET_NPC_FIRST"] = "Target an NPC first.",
+    ["MSG_NPC_EXISTS"] = "NPC note already exists.",
+    ["MSG_NPC_ADDED"] = "Added NPC: %s",
+    ["MSG_NPC_NO_LOCATION"] = "No location recorded for this NPC.",
+    ["NOTES_NPC_ALERT_FOUND"] = "Targeted NPC with note: %s",
+    ["NOTES_NPC_ASSOC_QUESTS"] = "Associated Quests:",
+    ["TOOLTIP_NPC_DELETE"] = "Delete NPC",
+    ["TOOLTIP_NPC_DELETE_DESC"] = "Remove this NPC note",
+    ["TOOLTIP_NPC_PROPERTIES"] = "NPC Properties",
+    ["TOOLTIP_NPC_PROPERTIES_DESC"] = "Edit NPC settings",
+    ["TOOLTIP_NPC_SOUND"] = "Alert on Target",
+    ["TOOLTIP_NPC_SOUND_DESC"] = "Alert when you target this NPC.",
+    ["TOOLTIP_NPC_FAVORITE"] = "Favorite",
+    ["TOOLTIP_NPC_FAVORITE_DESC"] = "Mark as favorite",
+    ["POPUP_DELETE_NPC"] = "Delete NPC note?",
+    ["DIALOG_NPC_PROPERTIES"] = "NPC Properties",
+    ["LABEL_NPC_ID"] = "NPC ID:",
+    ["NPC_IGNORE_IF_DEAD"] = "Ignore if dead",
+    ["NPC_IGNORE_IF_DEAD_DESC"] = "Do not alert when this NPC is dead.",
+    ["UI_NPC_GOTO_TITLE"] = "Create Waypoint",
+    ["UI_NPC_CREATE_WAYPOINT"] = "Set a waypoint to this NPC's location.",
+    ["NPC_MANUAL_ENTRY_TITLE"] = "Add NPC",
+    ["NPC_LABEL_NAME"] = "NPC Name:",
+    ["NPC_LABEL_ZONE"] = "Zone:",
+    ["NPC_LABEL_LOCATION"] = "Location:",
+    ["NPC_ERROR_NAME_REQUIRED"] = "NPC name is required.",
 
 -- Settings - Detection
-L["SETTINGS_DETECTION"]              = "Detection & Alerts"
-L["SETTINGS_ENABLED"]                = "On"
-L["SETTINGS_DISABLED"]               = "Off"
-L["SETTINGS_NPC_DETECTION"]          = "NPC Detection"
-L["SETTINGS_NPC_DETECTION_DESC"]     = "Alert with a chat message and sound when you target an NPC that has a note with alerting enabled."
-L["SETTINGS_PLAYER_DETECTION"]       = "Player Detection"
-L["SETTINGS_PLAYER_DETECTION_DESC"]  = "Alert with a chat message and sound when you target a player that has a note with alerting enabled."
-L["SETTINGS_ZONE_ALERTS"]            = "Zone Alerts"
-L["SETTINGS_ZONE_ALERTS_DESC"]       = "Alert with a chat message and sound when you enter a zone that has a note with alerting enabled."
+    ["SETTINGS_DETECTION"] = "Detection & Alerts",
+    ["SETTINGS_ENABLED"] = "On",
+    ["SETTINGS_DISABLED"] = "Off",
+    ["SETTINGS_NPC_DETECTION"] = "NPC Detection",
+    ["SETTINGS_NPC_DETECTION_DESC"] = "Alert with a chat message and sound when you target an NPC that has a note with alerting enabled.",
+    ["SETTINGS_PLAYER_DETECTION"] = "Player Detection",
+    ["SETTINGS_PLAYER_DETECTION_DESC"] = "Alert with a chat message and sound when you target a player that has a note with alerting enabled.",
+    ["SETTINGS_ZONE_ALERTS"] = "Zone Alerts",
+    ["SETTINGS_ZONE_ALERTS_DESC"] = "Alert with a chat message and sound when you enter a zone that has a note with alerting enabled.",
 
 -- Zone pin button
-L["TOOLTIP_ZONE_PIN"]      = "Pin Zone Window"
-L["TOOLTIP_ZONE_PIN_DESC"] = "Show a floating note window when you enter this zone."
+    ["TOOLTIP_ZONE_PIN"] = "Pin Zone Window",
+    ["TOOLTIP_ZONE_PIN_DESC"] = "Show a floating note window when you enter this zone.",
 
 -- Category Manager
-L["CATMGR_TITLE"]   = "Manage Categories"
-L["CATMGR_ADD"]     = "Add"
-L["CATMGR_ADDED"]   = "Added category: %s"
-L["CATMGR_REMOVED"] = "Removed category: %s"
-L["CATMGR_ERROR"]   = "An error occurred."
+    ["CATMGR_TITLE"] = "Manage Categories",
+    ["CATMGR_ADD"] = "Add",
+    ["CATMGR_ADDED"] = "Added category: %s",
+    ["CATMGR_REMOVED"] = "Removed category: %s",
+    ["CATMGR_ERROR"] = "An error occurred.",
 
 -- Hyperlink Help Panel
-L["UI_HELP_PANEL_TITLE"]            = "Hyperlink Help"
-L["UI_HELP_TAB_LINKS"]              = "Links"
-L["UI_HELP_TAB_PINS"]               = "Pins"
-L["UI_HELP_LINKS_HINT"]             = "Type a shorthand then close ) to auto-convert"
-L["UI_HELP_FROM_GAME"]              = "From Game"
-L["UI_HELP_FROM_GAME_DESC"]         = "Drag items or spells from your bags or spellbook directly into any note text box."
-L["UI_HELP_DETAIL_INSTRUCTION"]     = "Type the shorthand and close ) to auto-convert:"
-L["UI_HELP_DETAIL_EXAMPLE"]         = "Example: %s"
-L["UI_HELP_PASTE_BUTTON"]           = "Paste"
-L["UI_HELP_LINK_ITEM_NAME"]         = "Item"
-L["UI_HELP_LINK_ITEM_SYNTAX"]       = "(item=ID)"
-L["UI_HELP_LINK_ITEM_EXAMPLE"]      = "(item=19019)"
-L["UI_HELP_LINK_SPELL_NAME"]        = "Spell"
-L["UI_HELP_LINK_SPELL_SYNTAX"]      = "(spell=ID)"
-L["UI_HELP_LINK_SPELL_EXAMPLE"]     = "(spell=1459)"
-L["UI_HELP_LINK_QUEST_NAME"]        = "Quest"
-L["UI_HELP_LINK_QUEST_SYNTAX"]      = "(quest=ID)"
-L["UI_HELP_LINK_QUEST_EXAMPLE"]     = "(quest=1234)"
-L["UI_HELP_LINK_ACHV_NAME"]         = "Achievement"
-L["UI_HELP_LINK_ACHV_SYNTAX"]       = "(ach=ID)"
-L["UI_HELP_LINK_ACHV_EXAMPLE"]      = "(ach=1234)"
-L["UI_HELP_LINK_CURRENCY_NAME"]     = "Currency"
-L["UI_HELP_LINK_CURRENCY_SYNTAX"]   = "(cur=ID)"
-L["UI_HELP_LINK_CURRENCY_EXAMPLE"]  = "(cur=1234)"
-L["UI_HELP_LINK_TOY_NAME"]          = "Toy"
-L["UI_HELP_LINK_TOY_SYNTAX"]        = "(toy=ID)"
-L["UI_HELP_LINK_TOY_EXAMPLE"]       = "(toy=1234)"
-L["UI_HELP_LINK_PET_NAME"]          = "Battle Pet"
-L["UI_HELP_LINK_PET_SYNTAX"]        = "(battlepet=ID)"
-L["UI_HELP_LINK_PET_EXAMPLE"]       = "(battlepet=1234)"
-L["UI_HELP_LINK_MOUNT_NAME"]        = "Mount"
-L["UI_HELP_LINK_MOUNT_SYNTAX"]      = "(mount=ID)"
-L["UI_HELP_LINK_MOUNT_EXAMPLE"]     = "(mount=1234)"
-L["UI_HELP_LINK_WAYPOINT_NAME"]     = "Waypoint"
-L["UI_HELP_LINK_WAYPOINT_SYNTAX"]   = "(/way X Y Label)"
-L["UI_HELP_LINK_WAYPOINT_EXAMPLE"]  = "(/way 52.3 41.7 Boss)"
-L["UI_HELP_PIN_REGULAR_TITLE"]      = "Regular Notes"
-L["UI_HELP_PIN_REGULAR_LINE1"]      = "Click the pin icon in the editor to pin a note to your screen."
-L["UI_HELP_PIN_REGULAR_LINE2"]      = "Pinned notes can be moved, resized, and locked."
-L["UI_HELP_PIN_REGULAR_LINE3"]      = "Right-click a pinned note for display options."
-L["UI_HELP_PIN_DAILY_TITLE"]        = "Daily / Weekly Notes"
-L["UI_HELP_PIN_DAILY_LINE1"]        = "Set a note type to Daily or Weekly in its properties."
-L["UI_HELP_PIN_DAILY_LINE2"]        = "Tasks reset automatically at the server reset time."
-L["UI_HELP_PIN_DAILY_LINE3"]        = "Enable auto-hide to collapse the note when all tasks are done."
-L["UI_HELP_PIN_ZONE_TITLE"]         = "Zone Notes"
-L["UI_HELP_PIN_ZONE_LINE1"]         = "Add a zone note and enable the zone pin to show it on entry."
-L["UI_HELP_PIN_ZONE_LINE2"]         = "The note appears automatically when you enter that zone."
-L["UI_HELP_PIN_ZONE_LINE3"]         = "Right-click the zone pin for display options."
+    ["UI_HELP_PANEL_TITLE"] = "Hyperlink Help",
+    ["UI_HELP_TAB_LINKS"] = "Links",
+    ["UI_HELP_TAB_PINS"] = "Pins",
+    ["UI_HELP_LINKS_HINT"] = "Type a shorthand then close ) to auto-convert",
+    ["UI_HELP_FROM_GAME"] = "From Game",
+    ["UI_HELP_FROM_GAME_DESC"] = "Drag items or spells from your bags or spellbook directly into any note text box.",
+    ["UI_HELP_DETAIL_INSTRUCTION"] = "Type the shorthand and close ) to auto-convert:",
+    ["UI_HELP_DETAIL_EXAMPLE"] = "Example: %s",
+    ["UI_HELP_PASTE_BUTTON"] = "Paste",
+    ["UI_HELP_LINK_ITEM_NAME"] = "Item",
+    ["UI_HELP_LINK_ITEM_SYNTAX"] = "(item=ID)",
+    ["UI_HELP_LINK_ITEM_EXAMPLE"] = "(item=19019)",
+    ["UI_HELP_LINK_SPELL_NAME"] = "Spell",
+    ["UI_HELP_LINK_SPELL_SYNTAX"] = "(spell=ID)",
+    ["UI_HELP_LINK_SPELL_EXAMPLE"] = "(spell=1459)",
+    ["UI_HELP_LINK_QUEST_NAME"] = "Quest",
+    ["UI_HELP_LINK_QUEST_SYNTAX"] = "(quest=ID)",
+    ["UI_HELP_LINK_QUEST_EXAMPLE"] = "(quest=1234)",
+    ["UI_HELP_LINK_ACHV_NAME"] = "Achievement",
+    ["UI_HELP_LINK_ACHV_SYNTAX"] = "(ach=ID)",
+    ["UI_HELP_LINK_ACHV_EXAMPLE"] = "(ach=1234)",
+    ["UI_HELP_LINK_CURRENCY_NAME"] = "Currency",
+    ["UI_HELP_LINK_CURRENCY_SYNTAX"] = "(cur=ID)",
+    ["UI_HELP_LINK_CURRENCY_EXAMPLE"] = "(cur=1234)",
+    ["UI_HELP_LINK_TOY_NAME"] = "Toy",
+    ["UI_HELP_LINK_TOY_SYNTAX"] = "(toy=ID)",
+    ["UI_HELP_LINK_TOY_EXAMPLE"] = "(toy=1234)",
+    ["UI_HELP_LINK_PET_NAME"] = "Battle Pet",
+    ["UI_HELP_LINK_PET_SYNTAX"] = "(battlepet=ID)",
+    ["UI_HELP_LINK_PET_EXAMPLE"] = "(battlepet=1234)",
+    ["UI_HELP_LINK_MOUNT_NAME"] = "Mount",
+    ["UI_HELP_LINK_MOUNT_SYNTAX"] = "(mount=ID)",
+    ["UI_HELP_LINK_MOUNT_EXAMPLE"] = "(mount=1234)",
+    ["UI_HELP_LINK_WAYPOINT_NAME"] = "Waypoint",
+    ["UI_HELP_LINK_WAYPOINT_SYNTAX"] = "(/way X Y Label)",
+    ["UI_HELP_LINK_WAYPOINT_EXAMPLE"] = "(/way 52.3 41.7 Boss)",
+    ["UI_HELP_PIN_REGULAR_TITLE"] = "Regular Notes",
+    ["UI_HELP_PIN_REGULAR_LINE1"] = "Click the pin icon in the editor to pin a note to your screen.",
+    ["UI_HELP_PIN_REGULAR_LINE2"] = "Pinned notes can be moved, resized, and locked.",
+    ["UI_HELP_PIN_REGULAR_LINE3"] = "Right-click a pinned note for display options.",
+    ["UI_HELP_PIN_DAILY_TITLE"] = "Daily / Weekly Notes",
+    ["UI_HELP_PIN_DAILY_LINE1"] = "Set a note type to Daily or Weekly in its properties.",
+    ["UI_HELP_PIN_DAILY_LINE2"] = "Tasks reset automatically at the server reset time.",
+    ["UI_HELP_PIN_DAILY_LINE3"] = "Enable auto-hide to collapse the note when all tasks are done.",
+    ["UI_HELP_PIN_ZONE_TITLE"] = "Zone Notes",
+    ["UI_HELP_PIN_ZONE_LINE1"] = "Add a zone note and enable the zone pin to show it on entry.",
+    ["UI_HELP_PIN_ZONE_LINE2"] = "The note appears automatically when you enter that zone.",
+    ["UI_HELP_PIN_ZONE_LINE3"] = "Right-click the zone pin for display options.",
 
-L["ADDON_TITLE_SHORT"]              = "Notes"
+    ["ADDON_TITLE_SHORT"] = "Notes",
 
-L["BINDING_HEADER_ONEWOW_NOTES"] = "|cFF00FF00OneWoW|r Notes"
-L["BINDING_NAME_ONEWOW_NOTES_QUICKNOTE"] = "Quick Note"
+    ["BINDING_HEADER_ONEWOW_NOTES"] = "|cFF00FF00OneWoW|r Notes",
+    ["BINDING_NAME_ONEWOW_NOTES_QUICKNOTE"] = "Quick Note",
 
-ns.L = {}
-for k, v in pairs(ns.Locales["enUS"]) do ns.L[k] = v end
+    -- Keys referenced in code but previously missing from the locale
+    -- (surfaced by key-name-on-miss; values are the code-side fallbacks).
+    ["BUTTON_DESELECT_ALL"] = "Deselect All",
+    ["BUTTON_SELECT_ALL"] = "Select All",
+    ["BUTTON_VALIDATE"] = "Validate",
+    ["DIALOG_CONFIRM_DELETE"] = "Confirm Delete",
+    ["LABEL_MAP_ID_OPTIONAL"] = "Map ID (optional):",
+    ["LABEL_PROFESSION_1"] = "Profession 1:",
+    ["LABEL_PROFESSION_2"] = "Profession 2:",
+    ["MSG_NPC_ID_EXISTS"] = "An NPC with that ID already exists.",
+    ["MSG_CANNOT_SET_WAYPOINT"] = "Could not set waypoint.",
+    ["NPC_ID_EDIT_TOOLTIP"] = "Change the NPC ID. Find correct IDs on WoWHead.",
+    ["NPC_ID_TOOLTIP"] = "Leave blank to auto-generate. Find IDs on WoWHead.",
+    ["NPC_LABEL_COORD_X"] = "Coord X:",
+    ["NPC_LABEL_COORD_Y"] = "Coord Y:",
+    ["NPC_LABEL_MAP_ID"] = "Map ID:",
+    ["NPC_SET_CURRENT"] = "Set Current",
+    ["NPC_SET_CURRENT_DESC"] = "Set location to your current position.",
+    ["PLAYER_ALTS_NOT_INSTALLED"] = "Requires OneWoW AltTracker to be installed.",
+    ["TOOLTIP_ZONE_ALERT"] = "Zone Alert",
+    ["TOOLTIP_ZONE_ALERT_DESC"] = "Toggle zone entry alert.",
+    ["UI_ZONES_HELP_HINT"] = "Click for zones help.",
+    ["UI_ZONES_HELP_TITLE"] = "Zones Help",
+    ["ZONES_SELECT_PROMPT"] = "Select a zone to view its content",
+    ["ZONE_CONFIRM_DELETE"] = "Delete zone: %s?",
+    ["ZONE_DETECT_FAIL"] = "Could not detect zone.",
+    ["ZONE_INVALID_MAP_ID"] = "Enter a valid number.",
+    ["ZONE_MAP_NOT_FOUND"] = "Map ID not found.",
+    ["ZONE_TODO_HEADER"] = "Checklist",
+    ["ZONE_VALIDATE_HINT"] = "Enter ID & click Validate",
+})
+
+ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

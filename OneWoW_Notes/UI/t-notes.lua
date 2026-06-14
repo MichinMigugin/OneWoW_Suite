@@ -448,7 +448,7 @@ function ns.UI.CreateNotesTab(parent)
             local autoPinCheckbox = CreateFrame("CheckButton", nil, editorHeader, "UICheckButtonTemplate")
             autoPinCheckbox:SetSize(20, 20)
             autoPinCheckbox:SetPoint("BOTTOMLEFT", editorHeader, "BOTTOMLEFT", 8, 4)
-            autoPinCheckbox.Text:SetText(L["NOTE_AUTOPIN_WHEN_COMPLETE"] or "Auto-hide when tasks complete")
+            autoPinCheckbox.Text:SetText(L["NOTE_AUTOPIN_WHEN_COMPLETE"])
             autoPinCheckbox.Text:SetFontObject("GameFontNormalSmall")
             autoPinCheckbox:Hide()
             autoPinCheckbox:SetScript("OnClick", function(self)
@@ -1264,7 +1264,7 @@ function ns.UI.CreateNotesTab(parent)
 
             local storageFS = OneWoW_GUI:CreateFS(noteFrame, 10)
             storageFS:SetPoint("BOTTOMLEFT", noteFrame, "BOTTOMLEFT", 12, 6)
-            local stText = note.data.storage == "character" and (L["STORAGE_TYPE_CHARACTER"] or "Char") or (L["STORAGE_ACCOUNT_WIDE"] or "Acct")
+            local stText = note.data.storage == "character" and (L["STORAGE_TYPE_CHARACTER"]) or (L["STORAGE_ACCOUNT_WIDE"])
             storageFS:SetText(stText)
             storageFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
@@ -1343,7 +1343,7 @@ function ns.UI.CreateNotesTab(parent)
         local yOffset = 0
 
         if #newNotes > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_NEW"] or "New", yOffset)
+            CreateSectionHeader(L["NOTES_SECTION_NEW"], yOffset)
             yOffset = yOffset - 30
         end
         for i, note in ipairs(newNotes) do
@@ -1352,7 +1352,7 @@ function ns.UI.CreateNotesTab(parent)
         end
 
         if #favorites > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_FAVORITES"] or "Favorites", yOffset)
+            CreateSectionHeader(L["NOTES_SECTION_FAVORITES"], yOffset)
             yOffset = yOffset - 30
         end
         for i, note in ipairs(favorites) do

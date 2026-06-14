@@ -1,4 +1,4 @@
-local _, ns = ...
+local ADDON_NAME, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
@@ -32,12 +32,12 @@ local function CreateDetectionRow(parent, labelKey, descKey, isEnabled, onToggle
         if enabled then
             toggleBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
             toggleBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            toggleLabel:SetText(L["SETTINGS_ENABLED"] or "On")
+            toggleLabel:SetText(L["SETTINGS_ENABLED"])
             toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         else
             toggleBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
             toggleBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            toggleLabel:SetText(L["SETTINGS_DISABLED"] or "Off")
+            toggleLabel:SetText(L["SETTINGS_DISABLED"])
             toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
     end
@@ -59,7 +59,7 @@ local function CreateDetectionRow(parent, labelKey, descKey, isEnabled, onToggle
     label:SetPoint("TOPLEFT",  rowFrame, "TOPLEFT", 90, -12)
     label:SetPoint("TOPRIGHT", rowFrame, "TOPRIGHT", -10, -12)
     label:SetJustifyH("LEFT")
-    label:SetText(L[labelKey] or labelKey)
+    label:SetText(L[labelKey])
     label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local desc = OneWoW_GUI:CreateFS(rowFrame, 10)
@@ -67,7 +67,7 @@ local function CreateDetectionRow(parent, labelKey, descKey, isEnabled, onToggle
     desc:SetPoint("TOPRIGHT", rowFrame, "TOPRIGHT", -10, 0)
     desc:SetJustifyH("LEFT")
     desc:SetWordWrap(true)
-    desc:SetText(L[descKey] or "")
+    desc:SetText(OneWoW.Locale:GetOptional(ADDON_NAME, descKey) or "")
     desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     return rowFrame
@@ -89,7 +89,7 @@ function ns.UI.CreateSettingsTab(parent)
     end
 
     yOffset = yOffset - 20
-    local detectionSection = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["SETTINGS_DETECTION"] or "Detection & Alerts", yOffset = yOffset })
+    local detectionSection = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["SETTINGS_DETECTION"], yOffset = yOffset })
     yOffset = detectionSection.bottomY - 16
 
     CreateDetectionRow(

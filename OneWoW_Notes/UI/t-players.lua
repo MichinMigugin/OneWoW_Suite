@@ -52,37 +52,37 @@ function ns.UI.CreatePlayersTab(parent)
 
     local controlTitle = OneWoW_GUI:CreateFS(controlPanel, 10)
     controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
-    controlTitle:SetText(L["PLAYERS_CONTROLS"] or "Players Controls")
+    controlTitle:SetText(L["PLAYERS_CONTROLS"])
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local addTargetBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_TARGET"] or "Add Target", height = 25, minWidth = 80 })
+    local addTargetBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_TARGET"], height = 25, minWidth = 80 })
     addTargetBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
     addTargetBtn:SetScript("OnClick", function()
         if ns.Players then
             local playerInfo = ns.Players:GetTargetPlayerInfo()
             if not playerInfo then
-                print("|cFFFFD100OneWoW - Players:|r " .. (L["MSG_TARGET_PLAYER_FIRST"] or "Target a player first."))
+                print("|cFFFFD100OneWoW - Players:|r " .. (L["MSG_TARGET_PLAYER_FIRST"]))
                 return
             end
             if ns.Players:GetPlayer(playerInfo.fullName) then
-                print("|cFFFFD100OneWoW - Players:|r " .. (L["MSG_PLAYER_EXISTS"] or "Player note already exists."))
+                print("|cFFFFD100OneWoW - Players:|r " .. (L["MSG_PLAYER_EXISTS"]))
                 return
             end
             local fullName = ns.Players:AddPlayer(playerInfo.fullName, playerInfo)
-            print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["MSG_PLAYER_ADDED"] or "Added: %s", playerInfo.name or fullName))
+            print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["MSG_PLAYER_ADDED"], playerInfo.name or fullName))
             parent.RefreshPlayersList()
             if parent.SelectPlayer and fullName then parent.SelectPlayer(fullName) end
         end
     end)
     addTargetBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["TOOLTIP_BUTTON_ADD_TARGET"] or "Add Target", 1, 1, 1)
-        GameTooltip:AddLine(L["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"] or "Add a note for your current target.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["TOOLTIP_BUTTON_ADD_TARGET"], 1, 1, 1)
+        GameTooltip:AddLine(L["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     addTargetBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local addManualBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_MANUAL_ENTRY"] or "Manual", height = 25, minWidth = 70 })
+    local addManualBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_MANUAL_ENTRY"], height = 25, minWidth = 70 })
     addManualBtn:SetPoint("LEFT", addTargetBtn, "RIGHT", 5, 0)
     addManualBtn:SetScript("OnClick", function()
         if ns.UI and ns.UI.ShowManualPlayerEntryDialog then
@@ -91,14 +91,14 @@ function ns.UI.CreatePlayersTab(parent)
     end)
     addManualBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["BUTTON_MANUAL_ENTRY"] or "Manual Entry", 1, 1, 1)
-        GameTooltip:AddLine(L["TOOLTIP_BUTTON_MANUAL_ENTRY_PLAYER_DESC"] or "Enter a player name manually.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["BUTTON_MANUAL_ENTRY"], 1, 1, 1)
+        GameTooltip:AddLine(L["TOOLTIP_BUTTON_MANUAL_ENTRY_PLAYER_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     addManualBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     local altTrackerLoaded = C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("OneWoW_AltTracker_Character")
-    local addAltsBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["PLAYER_ADD_ALTS"] or "Add Alts", height = 25, minWidth = 70 })
+    local addAltsBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["PLAYER_ADD_ALTS"], height = 25, minWidth = 70 })
     addAltsBtn:SetPoint("LEFT", addManualBtn, "RIGHT", 5, 0)
     if not altTrackerLoaded then
         addAltsBtn:Disable()
@@ -106,7 +106,7 @@ function ns.UI.CreatePlayersTab(parent)
     end
     addAltsBtn:SetScript("OnClick", function()
         if not altTrackerLoaded and not OneWoW_AltTracker_Character_DB then
-            print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_ALTS_NO_DATA"] or "AltTracker not detected."))
+            print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_ALTS_NO_DATA"]))
             return
         end
         if ns.UI and ns.UI.ShowAddAltsDialog then
@@ -115,17 +115,17 @@ function ns.UI.CreatePlayersTab(parent)
     end)
     addAltsBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["PLAYER_ADD_ALTS"] or "Add Alts", 1, 1, 1)
+        GameTooltip:SetText(L["PLAYER_ADD_ALTS"], 1, 1, 1)
         if altTrackerLoaded then
-            GameTooltip:AddLine(L["PLAYER_ADD_ALTS_DESC"] or "Add your alts from AltTracker data.", 0.8, 0.8, 0.8, true)
+            GameTooltip:AddLine(L["PLAYER_ADD_ALTS_DESC"], 0.8, 0.8, 0.8, true)
         else
-            GameTooltip:AddLine(L["PLAYER_ALTS_NOT_INSTALLED"] or "Requires OneWoW AltTracker to be installed.", 1.0, 0.3, 0.3, true)
+            GameTooltip:AddLine(L["PLAYER_ALTS_NOT_INSTALLED"], 1.0, 0.3, 0.3, true)
         end
         GameTooltip:Show()
     end)
     addAltsBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local addGuildBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["PLAYER_ADD_GUILD"] or "Add Guild", height = 25, minWidth = 70 })
+    local addGuildBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["PLAYER_ADD_GUILD"], height = 25, minWidth = 70 })
     addGuildBtn:SetPoint("LEFT", addAltsBtn, "RIGHT", 5, 0)
     addGuildBtn:SetScript("OnClick", function()
         if ns.UI and ns.UI.ShowAddGuildDialog then
@@ -134,8 +134,8 @@ function ns.UI.CreatePlayersTab(parent)
     end)
     addGuildBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["PLAYER_ADD_GUILD"] or "Add Guild Members", 1, 1, 1)
-        GameTooltip:AddLine(L["PLAYER_ADD_GUILD_DESC"] or "Add guild members to player notes.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["PLAYER_ADD_GUILD"], 1, 1, 1)
+        GameTooltip:AddLine(L["PLAYER_ADD_GUILD_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     addGuildBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -248,7 +248,7 @@ function ns.UI.CreatePlayersTab(parent)
 
     local listingTitle = OneWoW_GUI:CreateFS(listingPanel, 16)
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
-    listingTitle:SetText(L["PLAYERS_LIST"] or "Players")
+    listingTitle:SetText(L["PLAYERS_LIST"])
     listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local searchBox = OneWoW_GUI:CreateEditBox(listingPanel, {
@@ -273,7 +273,7 @@ function ns.UI.CreatePlayersTab(parent)
 
     emptyMessage = OneWoW_GUI:CreateFS(detailPanel, 16)
     emptyMessage:SetPoint("CENTER", detailPanel, "CENTER")
-    emptyMessage:SetText(L["PLAYERS_SELECT"] or "Select a player to view their note.")
+    emptyMessage:SetText(L["PLAYERS_SELECT"])
     emptyMessage:SetTextColor(0.6, 0.6, 0.7, 1)
 
     local leftStatusBar = CreateThemedBar(nil, parent)
@@ -345,7 +345,7 @@ function ns.UI.CreatePlayersTab(parent)
             deleteBtn:SetScript("OnClick", function()
                 if selectedPlayer then
                     StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_PLAYER"] = {
-                        text = string.format(L["POPUP_DELETE_PLAYER"] or "Delete player note?"),
+                        text = string.format(L["POPUP_DELETE_PLAYER"]),
                         button1 = L["BUTTON_DELETE"], button2 = L["BUTTON_CANCEL"],
                         OnAccept = function()
                             if ns.Players then
@@ -367,8 +367,8 @@ function ns.UI.CreatePlayersTab(parent)
             end)
             deleteBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_PLAYER_DELETE"] or "Delete Player", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_PLAYER_DELETE_DESC"] or "Remove this player note", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_PLAYER_DELETE"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_PLAYER_DELETE_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             deleteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -388,8 +388,8 @@ function ns.UI.CreatePlayersTab(parent)
             end)
             propertiesBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_PLAYER_PROPERTIES"] or "Player Properties", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_PLAYER_PROPERTIES_DESC"] or "Edit player settings", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_PLAYER_PROPERTIES"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_PLAYER_PROPERTIES_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             propertiesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -424,8 +424,8 @@ function ns.UI.CreatePlayersTab(parent)
             end)
             alertBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_PLAYER_SOUND"] or "Alert on Sight", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_PLAYER_SOUND_DESC"] or "Alert when you target this player.", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_PLAYER_SOUND"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_PLAYER_SOUND_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             alertBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -464,8 +464,8 @@ function ns.UI.CreatePlayersTab(parent)
             end)
             favoriteBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_PLAYER_FAVORITE"] or "Favorite", 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_PLAYER_FAVORITE_DESC"] or "Mark as favorite", 0.8, 0.8, 0.8, true)
+                GameTooltip:SetText(L["TOOLTIP_PLAYER_FAVORITE"], 1, 1, 1)
+                GameTooltip:AddLine(L["TOOLTIP_PLAYER_FAVORITE_DESC"], 0.8, 0.8, 0.8, true)
                 GameTooltip:Show()
             end)
             favoriteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -527,7 +527,7 @@ function ns.UI.CreatePlayersTab(parent)
 
             local ttLabel = OneWoW_GUI:CreateFS(tooltipSection, 12)
             ttLabel:SetPoint("TOPLEFT", tooltipSection, "TOPLEFT", 10, -8)
-            ttLabel:SetText(L["UI_TOOLTIP_LINES"] or "Tooltip Lines:")
+            ttLabel:SetText(L["UI_TOOLTIP_LINES"])
             ttLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
             local tooltipEdits = {}
@@ -612,7 +612,7 @@ function ns.UI.CreatePlayersTab(parent)
                         header.guildLine:SetText("<" .. pd.guild .. ">")
                         header.guildLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
                     else
-                        header.guildLine:SetText(L["UI_GUILD_NONE"] or "<No Guild>")
+                        header.guildLine:SetText(L["UI_GUILD_NONE"])
                         header.guildLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                     end
                 end
@@ -775,7 +775,7 @@ function ns.UI.CreatePlayersTab(parent)
             deleteBtn:GetHighlightTexture():SetAlpha(0.5)
             deleteBtn:SetScript("OnClick", function()
                 StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_PLAYER"] = {
-                    text = string.format(L["POPUP_DELETE_PLAYER"] or "Delete player note?"),
+                    text = string.format(L["POPUP_DELETE_PLAYER"]),
                     button1 = L["BUTTON_DELETE"], button2 = L["BUTTON_CANCEL"],
                     OnAccept = function()
                         if ns.Players then
@@ -932,12 +932,12 @@ function ns.UI.CreatePlayersTab(parent)
         local yOffset = 0
 
         if #newPlayers > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_NEW"] or "New", yOffset) yOffset = yOffset - 30
+            CreateSectionHeader(L["NOTES_SECTION_NEW"], yOffset) yOffset = yOffset - 30
         end
         for i, p in ipairs(newPlayers) do BuildPlayerRow(p, yOffset, newPlayers, i) yOffset = yOffset - 55 end
 
         if #favorites > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_FAVORITES"] or "Favorites", yOffset) yOffset = yOffset - 30
+            CreateSectionHeader(L["NOTES_SECTION_FAVORITES"], yOffset) yOffset = yOffset - 30
         end
         for i, p in ipairs(favorites) do BuildPlayerRow(p, yOffset, favorites, i) yOffset = yOffset - 55 end
 
@@ -1010,25 +1010,25 @@ function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
 
     local dialog = ns.UI.CreateThemedDialog({
         name           = "OneWoW_NotesManualPlayerEntry",
-        title          = L["PLAYER_MANUAL_ENTRY_TITLE"] or "Add Player",
+        title          = L["PLAYER_MANUAL_ENTRY_TITLE"],
         width          = 580,
         height         = 580,
         destroyOnClose = true,
         buttons = {
             {
-                text = L["BUTTON_ADD_NOTE"] or "Add",
+                text = L["BUTTON_ADD_NOTE"],
                 onClick = function(dlg)
                     local name  = dlg._nameInput  and dlg._nameInput:GetText()  or ""
                     local realm = dlg._realmInput and dlg._realmInput:GetText() or ""
                     if name == "" then
-                        print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_ERROR_NAME_REQUIRED"] or "Player name is required."))
+                        print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_ERROR_NAME_REQUIRED"]))
                         return
                     end
                     if realm == "" then realm = GetRealmName() or "Unknown" end
                     local fullName = name .. "-" .. realm
 
                     if ns.Players and ns.Players:GetPlayer(fullName) then
-                        print("|cFFFFD100OneWoW - Players:|r " .. (L["MSG_PLAYER_EXISTS"] or "Player note already exists."))
+                        print("|cFFFFD100OneWoW - Players:|r " .. (L["MSG_PLAYER_EXISTS"]))
                         return
                     end
 
@@ -1052,7 +1052,7 @@ function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
                             profession2 = prof2 ~= "None" and prof2 or nil,
                             content = noteContent,
                         })
-                        print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["MSG_PLAYER_ADDED"] or "Added: %s", name))
+                        print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["MSG_PLAYER_ADDED"], name))
                         dlg:Hide()
                         if refreshParent and refreshParent.RefreshPlayersList then
                             refreshParent.RefreshPlayersList()
@@ -1073,25 +1073,25 @@ function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
     local content = dialog.content
     local yPos = -10
 
-    MakeDialogLabel(content, L["LABEL_NAME"] or "Name:", COL1_X, yPos)
+    MakeDialogLabel(content, L["LABEL_NAME"], COL1_X, yPos)
     dialog._nameInput = MakeDialogInput(content, COL1_X, yPos - LBL_GAP, COL_W)
     dialog._nameInput:SetAutoFocus(true)
 
-    MakeDialogLabel(content, L["PLAYER_LABEL_LEVEL"] or "Level:", COL2_X, yPos)
+    MakeDialogLabel(content, L["PLAYER_LABEL_LEVEL"], COL2_X, yPos)
     dialog._levelInput = MakeDialogInput(content, COL2_X, yPos - LBL_GAP, COL_W)
     dialog._levelInput:SetNumeric(true)
     dialog._levelInput:SetText("1")
     yPos = yPos - ROW_H
 
-    MakeDialogLabel(content, L["LABEL_SERVER"] or "Server:", COL1_X, yPos)
+    MakeDialogLabel(content, L["LABEL_SERVER"], COL1_X, yPos)
     dialog._realmInput = MakeDialogInput(content, COL1_X, yPos - LBL_GAP, COL_W)
     dialog._realmInput:SetText(GetRealmName() or "")
 
-    MakeDialogLabel(content, L["PLAYER_LABEL_GUILD"] or "Guild:", COL2_X, yPos)
+    MakeDialogLabel(content, L["PLAYER_LABEL_GUILD"], COL2_X, yPos)
     dialog._guildInput = MakeDialogInput(content, COL2_X, yPos - LBL_GAP, COL_W)
     yPos = yPos - ROW_H
 
-    MakeDialogLabel(content, L["PLAYER_LABEL_RACE"] or "Race:", COL1_X, yPos)
+    MakeDialogLabel(content, L["PLAYER_LABEL_RACE"], COL1_X, yPos)
     local raceDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     raceDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     local raceOpts = {{text = "", value = ""}}
@@ -1102,7 +1102,7 @@ function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
     raceDD:SetSelected("")
     dialog._raceDD = raceDD
 
-    MakeDialogLabel(content, L["PLAYER_LABEL_CLASS"] or "Class:", COL2_X, yPos)
+    MakeDialogLabel(content, L["PLAYER_LABEL_CLASS"], COL2_X, yPos)
     local classDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     classDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     local classOpts = {{text = "", value = ""}}
@@ -1138,7 +1138,7 @@ function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
     dialog._storeDD = storeDD
     yPos = yPos - ROW_H
 
-    MakeDialogLabel(content, L["LABEL_PROFESSION_1"] or "Profession 1:", COL1_X, yPos)
+    MakeDialogLabel(content, L["LABEL_PROFESSION_1"], COL1_X, yPos)
     local prof1DD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     prof1DD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     local profOpts = {}
@@ -1149,7 +1149,7 @@ function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
     prof1DD:SetSelected("None")
     dialog._prof1DD = prof1DD
 
-    MakeDialogLabel(content, L["LABEL_PROFESSION_2"] or "Profession 2:", COL2_X, yPos)
+    MakeDialogLabel(content, L["LABEL_PROFESSION_2"], COL2_X, yPos)
     local prof2DD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     prof2DD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     prof2DD:SetOptions(profOpts)
@@ -1157,7 +1157,7 @@ function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
     dialog._prof2DD = prof2DD
     yPos = yPos - ROW_H
 
-    MakeDialogLabel(content, L["LABEL_NOTE_CONTENT"] or "Note:", COL1_X, yPos)
+    MakeDialogLabel(content, L["LABEL_NOTE_CONTENT"], COL1_X, yPos)
     yPos = yPos - LBL_GAP
 
     local noteBg = CreateThemedBar(nil, content)
@@ -1195,7 +1195,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
 
     local dialog = ns.UI.CreateThemedDialog({
         name           = "OneWoW_NotesPlayerProperties",
-        title          = (L["DIALOG_PLAYER_PROPERTIES"] or "Player Properties") .. ": " .. (pd.name or fullName),
+        title          = (L["DIALOG_PLAYER_PROPERTIES"]) .. ": " .. (pd.name or fullName),
         width          = 580,
         height         = 580,
         destroyOnClose = true,
@@ -1219,7 +1219,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
         if refreshParent and refreshParent.RefreshPlayersList then refreshParent.RefreshPlayersList() end
     end
 
-    MakeDialogLabel(content, L["LABEL_NAME"] or "Name:", COL1_X, yPos)
+    MakeDialogLabel(content, L["LABEL_NAME"], COL1_X, yPos)
     local nameInput = MakeDialogInput(content, COL1_X, yPos - LBL_GAP, COL_W)
     nameInput:SetText(pd.name or "")
     nameInput:SetScript("OnEnterPressed", function(self)
@@ -1232,7 +1232,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
         self:ClearFocus()
     end)
 
-    MakeDialogLabel(content, L["PLAYER_LABEL_LEVEL"] or "Level:", COL2_X, yPos)
+    MakeDialogLabel(content, L["PLAYER_LABEL_LEVEL"], COL2_X, yPos)
     local levelInput = MakeDialogInput(content, COL2_X, yPos - LBL_GAP, COL_W)
     levelInput:SetNumeric(true)
     levelInput:SetText(tostring(pd.level or 0))
@@ -1242,7 +1242,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
     end)
     yPos = yPos - ROW_H
 
-    MakeDialogLabel(content, L["LABEL_SERVER"] or "Server:", COL1_X, yPos)
+    MakeDialogLabel(content, L["LABEL_SERVER"], COL1_X, yPos)
     local realmInput = MakeDialogInput(content, COL1_X, yPos - LBL_GAP, COL_W)
     realmInput:SetText(pd.realm or "")
     realmInput:SetScript("OnEnterPressed", function(self)
@@ -1250,7 +1250,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
         self:ClearFocus()
     end)
 
-    MakeDialogLabel(content, L["PLAYER_LABEL_GUILD"] or "Guild:", COL2_X, yPos)
+    MakeDialogLabel(content, L["PLAYER_LABEL_GUILD"], COL2_X, yPos)
     local guildInput = MakeDialogInput(content, COL2_X, yPos - LBL_GAP, COL_W)
     guildInput:SetText(pd.guild or "")
     guildInput:SetScript("OnEnterPressed", function(self)
@@ -1259,7 +1259,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
     end)
     yPos = yPos - ROW_H
 
-    MakeDialogLabel(content, L["PLAYER_LABEL_RACE"] or "Race:", COL1_X, yPos)
+    MakeDialogLabel(content, L["PLAYER_LABEL_RACE"], COL1_X, yPos)
     local raceDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     raceDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     local raceOpts = {{text = "", value = ""}}
@@ -1270,7 +1270,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
     raceDD:SetSelected(pd.race or "")
     raceDD.onSelect = function(value) SaveField("race", value) end
 
-    MakeDialogLabel(content, L["PLAYER_LABEL_CLASS"] or "Class:", COL2_X, yPos)
+    MakeDialogLabel(content, L["PLAYER_LABEL_CLASS"], COL2_X, yPos)
     local classDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     classDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     local classOpts = {{text = "", value = ""}}
@@ -1315,7 +1315,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
     end
     yPos = yPos - ROW_H
 
-    MakeDialogLabel(content, L["LABEL_PROFESSION_1"] or "Profession 1:", COL1_X, yPos)
+    MakeDialogLabel(content, L["LABEL_PROFESSION_1"], COL1_X, yPos)
     local prof1DD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     prof1DD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     local profOpts = {}
@@ -1328,7 +1328,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
         SaveField("profession1", value ~= "None" and value or nil)
     end
 
-    MakeDialogLabel(content, L["LABEL_PROFESSION_2"] or "Profession 2:", COL2_X, yPos)
+    MakeDialogLabel(content, L["LABEL_PROFESSION_2"], COL2_X, yPos)
     local prof2DD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     prof2DD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     prof2DD:SetOptions(profOpts)
@@ -1338,7 +1338,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
     end
     yPos = yPos - ROW_H
 
-    local alertCB = OneWoW_GUI:CreateCheckbox(content, { label = L["TOOLTIP_PLAYER_SOUND"] or "Alert on Target" })
+    local alertCB = OneWoW_GUI:CreateCheckbox(content, { label = L["TOOLTIP_PLAYER_SOUND"] })
     alertCB:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
     alertCB:SetChecked(pd.soundEnabled or false)
     alertCB:SetScript("OnClick", function(self)
@@ -1346,14 +1346,14 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
     end)
     alertCB:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["TOOLTIP_PLAYER_SOUND"] or "Alert on Target", 1, 1, 1)
-        GameTooltip:AddLine(L["TOOLTIP_PLAYER_SOUND_DESC"] or "Play a sound alert when you target this player.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["TOOLTIP_PLAYER_SOUND"], 1, 1, 1)
+        GameTooltip:AddLine(L["TOOLTIP_PLAYER_SOUND_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     alertCB:SetScript("OnLeave", function() GameTooltip:Hide() end)
     yPos = yPos - 30
 
-    MakeDialogLabel(content, L["LABEL_NOTE_PREVIEW"] or "Note:", COL1_X, yPos)
+    MakeDialogLabel(content, L["LABEL_NOTE_PREVIEW"], COL1_X, yPos)
     yPos = yPos - LBL_GAP
 
     local noteBg = CreateThemedBar(nil, content)
@@ -1382,7 +1382,7 @@ end
 function ns.UI.ShowAddAltsDialog(refreshParent)
     local altDB = OneWoW_AltTracker_Character_DB
     if not altDB or not altDB.characters then
-        print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_ALTS_NO_DATA"] or "AltTracker data not found."))
+        print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_ALTS_NO_DATA"]))
         return
     end
 
@@ -1423,7 +1423,7 @@ function ns.UI.ShowAddAltsDialog(refreshParent)
     end
 
     if #altsToAdd == 0 then
-        print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_ALTS_NONE_NEW"] or "No new alts found to add."))
+        print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_ALTS_NONE_NEW"]))
         return
     end
 
@@ -1431,13 +1431,13 @@ function ns.UI.ShowAddAltsDialog(refreshParent)
 
     local dialog = ns.UI.CreateThemedDialog({
         name           = "OneWoW_NotesAddAlts",
-        title          = L["PLAYER_ADD_ALTS_TITLE"] or "Add Alts from AltTracker",
+        title          = L["PLAYER_ADD_ALTS_TITLE"],
         width          = 520,
         height         = 480,
         destroyOnClose = true,
         buttons = {
             {
-                text = L["PLAYER_ADD_SELECTED"] or "Add Selected",
+                text = L["PLAYER_ADD_SELECTED"],
                 onClick = function(dlg)
                     local count = 0
                     for _, alt in ipairs(altsToAdd) do
@@ -1452,7 +1452,7 @@ function ns.UI.ShowAddAltsDialog(refreshParent)
                         end
                     end
                     if count > 0 then
-                        print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["PLAYER_ALTS_ADDED_COUNT"] or "Added %d alts.", count))
+                        print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["PLAYER_ALTS_ADDED_COUNT"], count))
                         if refreshParent and refreshParent.RefreshPlayersList then
                             refreshParent.RefreshPlayersList()
                         end
@@ -1470,14 +1470,14 @@ function ns.UI.ShowAddAltsDialog(refreshParent)
     local content = dialog.content
     local allCheckboxes = {}
 
-    local selectAllBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_SELECT_ALL"] or "Select All", width = 100, height = 25 })
+    local selectAllBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_SELECT_ALL"], width = 100, height = 25 })
     selectAllBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 8, -8)
     selectAllBtn:SetScript("OnClick", function()
         for _, entry in ipairs(altsToAdd) do entry.checked = true end
         for _, cb in ipairs(allCheckboxes) do cb:SetChecked(true) end
     end)
 
-    local deselectAllBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_DESELECT_ALL"] or "Deselect All", width = 100, height = 25 })
+    local deselectAllBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_DESELECT_ALL"], width = 100, height = 25 })
     deselectAllBtn:SetPoint("LEFT", selectAllBtn, "RIGHT", 6, 0)
     deselectAllBtn:SetScript("OnClick", function()
         for _, entry in ipairs(altsToAdd) do entry.checked = false end
@@ -1539,7 +1539,7 @@ end
 
 function ns.UI.ShowAddGuildDialog(refreshParent)
     if not IsInGuild() then
-        print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_GUILD_NOT_IN"] or "You are not in a guild."))
+        print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_GUILD_NOT_IN"]))
         return
     end
 
@@ -1567,7 +1567,7 @@ function ns.UI.ShowAddGuildDialog(refreshParent)
     end
 
     if #guildMembers == 0 then
-        print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_GUILD_NONE_NEW"] or "No new guild members to add."))
+        print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_GUILD_NONE_NEW"]))
         return
     end
 
@@ -1575,13 +1575,13 @@ function ns.UI.ShowAddGuildDialog(refreshParent)
 
     local dialog = ns.UI.CreateThemedDialog({
         name           = "OneWoW_NotesAddGuild",
-        title          = L["PLAYER_ADD_GUILD_TITLE"] or "Add Guild Members",
+        title          = L["PLAYER_ADD_GUILD_TITLE"],
         width          = 520,
         height         = 480,
         destroyOnClose = true,
         buttons = {
             {
-                text = L["PLAYER_ADD_SELECTED"] or "Add Selected",
+                text = L["PLAYER_ADD_SELECTED"],
                 onClick = function(dlg)
                     local count = 0
                     for _, member in ipairs(guildMembers) do
@@ -1596,7 +1596,7 @@ function ns.UI.ShowAddGuildDialog(refreshParent)
                         end
                     end
                     if count > 0 then
-                        print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["PLAYER_GUILD_ADDED_COUNT"] or "Added %d guild members.", count))
+                        print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["PLAYER_GUILD_ADDED_COUNT"], count))
                         if refreshParent and refreshParent.RefreshPlayersList then
                             refreshParent.RefreshPlayersList()
                         end
@@ -1614,14 +1614,14 @@ function ns.UI.ShowAddGuildDialog(refreshParent)
     local content = dialog.content
     local allCheckboxes = {}
 
-    local selectAllBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_SELECT_ALL"] or "Select All", width = 100, height = 25 })
+    local selectAllBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_SELECT_ALL"], width = 100, height = 25 })
     selectAllBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 8, -8)
     selectAllBtn:SetScript("OnClick", function()
         for _, entry in ipairs(guildMembers) do entry.checked = true end
         for _, cb in ipairs(allCheckboxes) do cb:SetChecked(true) end
     end)
 
-    local deselectAllBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_DESELECT_ALL"] or "Deselect All", width = 100, height = 25 })
+    local deselectAllBtn = OneWoW_GUI:CreateButton(content, { text = L["BUTTON_DESELECT_ALL"], width = 100, height = 25 })
     deselectAllBtn:SetPoint("LEFT", selectAllBtn, "RIGHT", 6, 0)
     deselectAllBtn:SetScript("OnClick", function()
         for _, entry in ipairs(guildMembers) do entry.checked = false end
