@@ -246,8 +246,10 @@ function ItemSearch:Query(searchTerm, sourceFilter)
         end
 
         local exactName = C_Item.GetItemNameByID(exactItemID)
-        if exactName then
-            addOrAnnotate(exactItemID, exactName, nil, nil, sourceKey)
+        local _, _, _, _, exactIcon = C_Item.GetItemInfoInstant(exactItemID)
+        addOrAnnotate(exactItemID, exactName, exactIcon, nil, sourceKey)
+        if resultMap[exactItemID] then
+            results[resultMap[exactItemID]].isExactMatch = true
         end
     end
 

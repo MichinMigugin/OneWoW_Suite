@@ -2,6 +2,7 @@
 -- OneWoW_QoL/Modules/external/inspectmog/inspectpanel.lua
 -- Ported from standalone OneWoW_InspectMog (transmog-aware inspect side panel).
 local addonName, ns = ...
+local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -334,11 +335,47 @@ local function HandleItemPreviewClick(itemID, itemLink)
     return false
 end
 
+local function OpenItemInNotes(itemID)
+    itemID = tonumber(itemID)
+    if not itemID then
+        return false
+    end
+
+    local function SelectItemWhenReady(attempt)
+        attempt = attempt or 1
+
+        local notesUI = OneWoW_Notes.UI
+        if notesUI and notesUI.OpenNotesItem and notesUI.OpenNotesItem(itemID) then
+            OneWoW_Notes.pendingItemSelect = nil
+            return true
+        end
+
+        if attempt < 12 then
+            C_Timer.After(0.05, function()
+                SelectItemWhenReady(attempt + 1)
+            end)
+        end
+
+        return false
+    end
+
+    OneWoW:BringUp("OneWoW_Notes")
+    OneWoW.UI:Show("notes")
+    OneWoW.UI:SelectSubTab("notes", "items")
+
+    OneWoW_Notes.pendingItemSelect = itemID
+    SelectItemWhenReady()
+
+    return true
+end
+
 local function AddItemToNotes(itemID, itemName, itemLink, icon, quality, quiet)
     itemID = tonumber(itemID)
     if not itemID then
         return false
     end
+
+    OneWoW:BringUp("OneWoW_Notes")
 
     local notesItems = OneWoW_Notes and OneWoW_Notes.Items
     if not notesItems or not notesItems.AddItem then
@@ -351,7 +388,6 @@ local function AddItemToNotes(itemID, itemName, itemLink, icon, quality, quiet)
         existing.link = existing.link or itemLink
         existing.icon = existing.icon or icon
         existing.name = existing.name or itemName
-        existing.content = existing.content or "Added from Inspect Mog."
         notesItems:SaveItem(itemID, existing)
     else
         notesItems:AddItem(itemID, {
@@ -362,12 +398,11 @@ local function AddItemToNotes(itemID, itemName, itemLink, icon, quality, quiet)
             rarity = quality,
             category = "Transmog",
             storage = "account",
-            content = "Added from Inspect Mog.",
         })
     end
 
-    if OneWoW_Notes and OneWoW_Notes.UI and OneWoW_Notes.UI.RefreshItemsList then
-        OneWoW_Notes.UI.RefreshItemsList()
+    if not quiet then
+        OpenItemInNotes(itemID)
     end
 
     return true
@@ -440,16 +475,22 @@ local function AddAllVisibleAppearancesToNotes(frame)
 
     local seen = {}
     local count = 0
+    local firstAddedItemID = nil
     for _, row in ipairs(frame.rows) do
         if row:IsShown() and row.data then
             local itemID = tonumber(GetAddAllAppearanceItemID(row.data))
             if itemID and not seen[itemID] then
                 seen[itemID] = true
                 if AddAppearanceToNotes(row.data, true) then
+                    firstAddedItemID = firstAddedItemID or itemID
                     count = count + 1
                 end
             end
         end
+    end
+
+    if firstAddedItemID then
+        OpenItemInNotes(firstAddedItemID)
     end
 end
 
@@ -466,7 +507,7 @@ local function ShowInspectMogTooltip(owner, itemID, itemLink, sourceID, clickTex
     end
     if sourceID then
         GameTooltip:AddLine(" ")
-        GameTooltip:AddLine("Appearance source: " .. tostring(sourceID), 0.4, 1, 0.45)
+        GameTooltip:AddLine(string.format(L["INSPECTMOG_APPEARANCE_SOURCE_FORMAT"], sourceID), 0.4, 1, 0.45)
     end
     GameTooltip:AddLine(" ")
     if hiddenText then
@@ -479,15 +520,15 @@ local function ShowInspectMogTooltip(owner, itemID, itemLink, sourceID, clickTex
 end
 
 local function SetRowText(row, snapshotRow)
-    local itemName = snapshotRow.itemName or snapshotRow.itemLink or "Empty"
+    local itemName = snapshotRow.itemName or snapshotRow.itemLink or L["INSPECTMOG_EMPTY_SLOT"]
     local appearanceName =
         snapshotRow.appearanceName
         or snapshotRow.appearanceItemName
         or (
             snapshotRow.appearanceSourceID
-            and ("Source #" .. tostring(snapshotRow.appearanceSourceID))
+            and string.format(L["INSPECTMOG_SOURCE_FORMAT"], snapshotRow.appearanceSourceID)
         )
-        or "Native appearance"
+        or L["INSPECTMOG_NATIVE_APPEARANCE"]
 
     row.slot:SetText(snapshotRow.slotName)
     row.item:SetText(itemName)
@@ -533,7 +574,7 @@ function UI:EnsureFrame()
     frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
 
     local titleBar = OneWoW_GUI:CreateTitleBar(frame, {
-        title = "Inspect Transmog Tool",
+        title = L["INSPECTMOG_PANEL_TITLE"],
         height = HEADER_HEIGHT,
         showBrand = true,
         onClose = function()
@@ -553,19 +594,19 @@ function UI:EnsureFrame()
     frame.closeBtn = titleBar._closeBtn
 
     local addAllBtn = OneWoW_GUI:CreateFitTextButton(frame, {
-        text = "Add All",
+        text = L["INSPECTMOG_ADD_ALL"],
         height = 22,
         minWidth = 72,
     })
-    addAllBtn:SetText("Add All")
+    addAllBtn:SetText(L["INSPECTMOG_ADD_ALL"])
     addAllBtn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -PAD, -(HEADER_HEIGHT + 6))
     addAllBtn:SetScript("OnClick", function()
         AddAllVisibleAppearancesToNotes(frame)
     end)
     addAllBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:SetText("Add All Transmog", 1, 1, 1)
-        GameTooltip:AddLine("Add all visible transmog appearance items to Notes > Items.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["INSPECTMOG_TT_ADD_ALL_TITLE"], 1, 1, 1)
+        GameTooltip:AddLine(L["INSPECTMOG_TT_ADD_ALL_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     addAllBtn:SetScript("OnLeave", function()
@@ -631,12 +672,14 @@ function UI:GetRow(index)
     row.appearance:SetWordWrap(false)
 
     row.itemHit = CreateFrame("Button", nil, row)
-    row.itemHit:SetPoint("TOPLEFT", row.item, "TOPLEFT", 0, 2)
-    row.itemHit:SetPoint("BOTTOMRIGHT", row.item, "BOTTOMRIGHT", 0, -2)
+    row.itemHit:SetPoint("TOPLEFT", row.item, "TOPLEFT", 0, 4)
+    row.itemHit:SetPoint("BOTTOMRIGHT", row, "RIGHT", -4, 1)
+    row.itemHit:RegisterForClicks("LeftButtonUp")
 
     row.appearanceHit = CreateFrame("Button", nil, row)
-    row.appearanceHit:SetPoint("TOPLEFT", row.appearance, "TOPLEFT", 0, 2)
-    row.appearanceHit:SetPoint("BOTTOMRIGHT", row.appearance, "BOTTOMRIGHT", 0, -2)
+    row.appearanceHit:SetPoint("TOPLEFT", row.appearance, "TOPLEFT", 0, 4)
+    row.appearanceHit:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -4, 1)
+    row.appearanceHit:RegisterForClicks("LeftButtonUp")
 
     frame.rows[index] = row
     return row
@@ -678,9 +721,9 @@ end
 function UI:Refresh(unit)
     self:EnsureFrame()
     AnchorToInspect(self.frame)
-    self.frame.title:SetText("Inspect Transmog Tool")
+    self.frame.title:SetText(L["INSPECTMOG_PANEL_TITLE"])
     if self.frame.addAllBtn then
-        self.frame.addAllBtn:SetText("Add All")
+        self.frame.addAllBtn:SetText(L["INSPECTMOG_ADD_ALL"])
     end
 
     local snapshot =
@@ -689,14 +732,14 @@ function UI:Refresh(unit)
         and ns.Scanner:BuildInspectSnapshot(unit)
 
     if not snapshot then
-        self.frame.subtitle:SetText("No inspect data available.")
+        self.frame.subtitle:SetText(L["INSPECTMOG_NO_DATA"])
         for _, row in ipairs(self.frame.rows) do
             row:Hide()
         end
         return
     end
 
-    self.frame.subtitle:SetText(snapshot.name or "Inspected player")
+    self.frame.subtitle:SetText(snapshot.name or L["INSPECTMOG_UNKNOWN_PLAYER"])
 
     for i, data in ipairs(snapshot.rows) do
         local row = self:GetRow(i)
@@ -716,8 +759,8 @@ function UI:Refresh(unit)
                 GetEquippedItemID(rowData),
                 GetEquippedItemLink(rowData),
                 nil,
-                "Click to add equipped item to Item Notes",
-                "Ctrl-click to preview equipped item"
+                L["INSPECTMOG_TT_SHIFT_ADD_EQUIPPED"],
+                L["INSPECTMOG_TT_PREVIEW_EQUIPPED"]
             )
         end)
         row.itemHit:SetScript("OnLeave", function()
@@ -728,21 +771,23 @@ function UI:Refresh(unit)
             if HandleItemPreviewClick(GetEquippedItemID(rowData), GetEquippedItemLink(rowData)) then
                 return
             end
-            AddEquippedItemToNotes(rowData)
+            if IsShiftKeyDown() then
+                AddEquippedItemToNotes(rowData)
+            end
         end)
 
         row.appearanceHit:SetScript("OnEnter", function(self)
             local rowData = self:GetParent().data
             local hiddenText = IsHiddenAppearance(rowData)
-                and "Hidden appearances are not added to Item Notes"
+                and L["INSPECTMOG_TT_HIDDEN_APPEARANCE"]
                 or nil
             ShowInspectMogTooltip(
                 self,
                 GetAppearanceItemID(rowData),
                 GetAppearanceItemLink(rowData),
                 rowData.appearanceSourceID,
-                "Click to add transmog appearance to Item Notes",
-                "Ctrl-click to preview transmog appearance",
+                L["INSPECTMOG_TT_SHIFT_ADD_APPEARANCE"],
+                L["INSPECTMOG_TT_PREVIEW_APPEARANCE"],
                 hiddenText
             )
         end)
@@ -754,7 +799,9 @@ function UI:Refresh(unit)
             if HandleItemPreviewClick(GetAppearanceItemID(rowData), GetAppearanceItemLink(rowData)) then
                 return
             end
-            AddAppearanceToNotes(rowData)
+            if IsShiftKeyDown() then
+                AddAppearanceToNotes(rowData)
+            end
         end)
         row:Show()
     end

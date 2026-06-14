@@ -243,6 +243,11 @@ function ns.UI.CreateItemsTab(parent)
     searchBox:SetPoint("TOPLEFT",  listingPanel, "TOPLEFT",  8, -30)
     searchBox:SetPoint("TOPRIGHT", listingPanel, "TOPRIGHT", -8, -30)
 
+    function parent.ClearItemSearch()
+        searchFilter = ""
+        searchBox:SetText("")
+    end
+
     local listScroll = ns.UI.CreateCustomScroll(listingPanel)
     scrollChild = listScroll.scrollChild
     listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -62)
@@ -871,8 +876,24 @@ function ns.UI.CreateItemsTab(parent)
         end
     end
 
-    -- Opens a specific item's editor; used by cross-addon navigation (e.g. the
-    -- Catalog quest tab "open note" action) via OneWoW_Notes.pendingItemSelect.
+    local function OpenItemEditor(itemID)
+        itemID = tonumber(itemID)
+        if not itemID or not ns.Items:GetItem(itemID) then
+            return false
+        end
+
+        selectedItem = itemID
+        searchFilter = ""
+        categoryFilter = "All"
+        storageFilter = "All"
+        searchBox:SetText("")
+        parent.RefreshItemsList()
+        ShowEditor()
+        parent.RefreshItemsList()
+        return true
+    end
+
+    -- Opens a specific item's editor; used by cross-addon navigation.
     function parent.SelectItem(itemID)
         itemID = tonumber(itemID)
         if not itemID then return end
@@ -881,12 +902,30 @@ function ns.UI.CreateItemsTab(parent)
         parent.RefreshItemsList()
     end
 
+    ns.UI.RefreshItemsList = parent.RefreshItemsList
+
+    ns.UI.OpenNotesItem = function(itemID)
+        itemID = tonumber(itemID)
+        if not itemID then return false end
+        return OpenItemEditor(itemID)
+    end
+
+    function parent.Activate()
+        if OneWoW_Notes.pendingItemSelect then
+            local id = OneWoW_Notes.pendingItemSelect
+            OneWoW_Notes.pendingItemSelect = nil
+            OpenItemEditor(id)
+        else
+            parent.RefreshItemsList()
+        end
+    end
+
     parent.RefreshItemsList()
 
     if OneWoW_Notes.pendingItemSelect then
         local id = OneWoW_Notes.pendingItemSelect
         OneWoW_Notes.pendingItemSelect = nil
-        parent.SelectItem(id)
+        OpenItemEditor(id)
     end
 end
 

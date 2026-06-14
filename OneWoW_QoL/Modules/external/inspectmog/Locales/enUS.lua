@@ -4,15 +4,29 @@ local addonName, ns = ...
 local L_enUS = ns.L_enUS
 
 L_enUS["INSPECTMOG_TITLE"] = "Inspect Gear"
-L_enUS["INSPECTMOG_DESC"]  = "Adds a side panel to the inspect window listing the equipped gear of the player you are inspecting. Save the whole list to a OneWoW Notes player note, or Ctrl-click any item to add it to your Item Notes."
+L_enUS["INSPECTMOG_DESC"]  = "Adds a side panel to the inspect window listing the equipped gear of the player you are inspecting. Save the whole list to a OneWoW Notes player note, or Shift-click any item to add it to your Item Notes."
 
 L_enUS["INSPECTMOG_ADD_NOTE"] = "Add to Player Note"
+L_enUS["INSPECTMOG_ADD_ALL"]  = "Add All"
 L_enUS["INSPECTMOG_EMPTY"]    = "No inspectable gear yet."
+L_enUS["INSPECTMOG_PANEL_TITLE"] = "Inspect Transmog Tool"
+L_enUS["INSPECTMOG_NO_DATA"]     = "No inspect data available."
+L_enUS["INSPECTMOG_UNKNOWN_PLAYER"] = "Inspected player"
+L_enUS["INSPECTMOG_EMPTY_SLOT"]      = "Empty"
+L_enUS["INSPECTMOG_NATIVE_APPEARANCE"] = "Native appearance"
+L_enUS["INSPECTMOG_SOURCE_FORMAT"] = "Source #%d"
+L_enUS["INSPECTMOG_APPEARANCE_SOURCE_FORMAT"] = "Appearance source: %d"
 
 -- Row hover help
-L_enUS["INSPECTMOG_TT_PREVIEW"] = "Click to preview in the Dressing Room"
-L_enUS["INSPECTMOG_TT_CHAT"]    = "Shift-click to link in chat"
-L_enUS["INSPECTMOG_TT_NOTES"]   = "Ctrl-click to add to Item Notes"
+L_enUS["INSPECTMOG_TT_PREVIEW"] = "Ctrl-click to preview in the Dressing Room"
+L_enUS["INSPECTMOG_TT_NOTES"]   = "Shift-click to add to Notes > Items"
+L_enUS["INSPECTMOG_TT_SHIFT_ADD_EQUIPPED"]    = "Shift-click to add equipped item to Notes > Items"
+L_enUS["INSPECTMOG_TT_SHIFT_ADD_APPEARANCE"]  = "Shift-click to add transmog appearance to Notes > Items"
+L_enUS["INSPECTMOG_TT_PREVIEW_EQUIPPED"]      = "Ctrl-click to preview equipped item"
+L_enUS["INSPECTMOG_TT_PREVIEW_APPEARANCE"]    = "Ctrl-click to preview transmog appearance"
+L_enUS["INSPECTMOG_TT_HIDDEN_APPEARANCE"]     = "Hidden appearances are not added to Item Notes"
+L_enUS["INSPECTMOG_TT_ADD_ALL_TITLE"]         = "Add All Transmog"
+L_enUS["INSPECTMOG_TT_ADD_ALL_DESC"]          = "Add all visible transmog appearance items to Notes > Items."
 
 -- Add-to-note button help
 L_enUS["INSPECTMOG_TT_ADD_NOTE_TITLE"] = "Save Gear to Player Note"
