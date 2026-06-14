@@ -1,7 +1,6 @@
-local _, OneWoW_DirectDeposit = ...
+local ADDON_NAME = ...
 
-OneWoW_DirectDeposit.Locales = OneWoW_DirectDeposit.Locales or {}
-OneWoW_DirectDeposit.Locales["frFR"] = {
+OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["ADDON_TITLE"] = "Dépôt Direct",
     ["ADDON_SUBTITLE"] = "Gestion Automatique de l'Or de la Banque de Groupe de Guerre",
 
@@ -49,38 +48,8 @@ OneWoW_DirectDeposit.Locales["frFR"] = {
     ["ITEM_DEPOSIT_PERSONAL"] = "Personnel",
     ["ITEM_DEPOSIT_GUILD"] = "Guilde",
 
-    ["OK"] = "OK",
-    ["CLOSE"] = "Fermer",
     ["CLEAR"] = "Effacer",
-    ["CANCEL"] = "Annuler",
-
-    ["LANGUAGE_SELECTION"] = "Sélection de la Langue",
-    ["CURRENT_LANGUAGE"] = "Langue Actuelle",
-    ["SELECT_LANGUAGE"] = "Sélectionner la Langue",
-    ["LANGUAGE_DESC"] = "Choisissez votre langue préférée pour l'interface de l'addon. Les changements s'appliquent instantanément.",
-    ["ENGLISH"] = "English",
-    ["SPANISH"] = "Español",
-    ["KOREAN"] = "한국어",
-    ["FRENCH"] = "Français",
-    ["RUSSIAN"] = "Русский",
-    ["GERMAN"] = "Deutsch",
 
     ["ABOUT_SECTION"] = "À propos de Dépôt Direct",
     ["ABOUT_TEXT"] = "Dépôt Direct est un addon de qualité de vie de la suite OneWoW. Cet addon est également disponible dans le cadre de la suite complète OneWoW Suite, qui comprend de nombreux autres addons utiles pour améliorer votre expérience World of Warcraft. Découvrez d'autres addons qui peuvent vous aider à organiser vos aventures et à améliorer votre gameplay !",
-
-    ["THEME_SECTION"] = "Thème de Couleur",
-    ["THEME_DESC"] = "Choisissez un thème de couleur pour l'interface de l'addon. Les modifications s'appliquent instantanément sans rechargement.",
-    ["THEME_CURRENT"] = "Thème Actuel",
-    ["THEME_GREEN"] = "Vert Forêt",
-    ["THEME_BLUE"] = "Bleu Océan",
-    ["THEME_PURPLE"] = "Violet Royal",
-    ["THEME_GOLD"] = "Or Classique",
-    ["THEME_SLATE"] = "Gris Ardoise",
-    ["THEME_ORANGE"] = "Orange Crépuscule",
-    ["THEME_TEAL"] = "Sarcelle Mystique",
-    ["THEME_CYAN"] = "Cyan Arctique",
-    ["THEME_PINK"] = "Rose Rose",
-    ["THEME_DARK"] = "Sombre Minuit",
-    ["THEME_AMBER"] = "Feu Ambre",
-
-}
+})

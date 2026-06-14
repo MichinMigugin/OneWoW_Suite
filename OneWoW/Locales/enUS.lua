@@ -1,6 +1,6 @@
-local _, OneWoW = ...
+local ADDON_NAME, OneWoW = ...
 
-OneWoW.Locale:Register("OneWoW", "enUS", {
+OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_TITLE"] = "OneWoW",
 
     -- Addon loader (OneWoW:GetLoadFailureText); other tokens use Blizzard ADDON_* constants
@@ -1043,4 +1043,4 @@ OneWoW.Locale:Register("OneWoW", "enUS", {
     ["BINDING_NAME_ONEWOW_MARK_ITEM_PROTECTED"] = "Mark Item as Protected",
 })
 
-OneWoW.L = OneWoW.Locale:GetTable("OneWoW")
+OneWoW.L = OneWoW.Locale:GetTable(ADDON_NAME)

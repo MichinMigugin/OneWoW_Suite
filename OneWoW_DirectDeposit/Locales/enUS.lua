@@ -1,7 +1,6 @@
-local _, OneWoW_DirectDeposit = ...
+local ADDON_NAME, OneWoW_DirectDeposit = ...
 
-OneWoW_DirectDeposit.Locales = OneWoW_DirectDeposit.Locales or {}
-OneWoW_DirectDeposit.Locales["enUS"] = {
+OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_TITLE"] = "Direct Deposit",
     ["ADDON_SUBTITLE"] = "Automatic Warband Bank Gold Management",
 
@@ -49,62 +48,11 @@ OneWoW_DirectDeposit.Locales["enUS"] = {
     ["ITEM_DEPOSIT_PERSONAL"] = "Personal",
     ["ITEM_DEPOSIT_GUILD"] = "Guild",
 
-    ["OK"] = "OK",
-    ["CLOSE"] = "Close",
     ["CLEAR"] = "Clear",
-    ["CANCEL"] = "Cancel",
-
-    ["LANGUAGE_SELECTION"] = "Language Selection",
-    ["CURRENT_LANGUAGE"] = "Current Language",
-    ["SELECT_LANGUAGE"] = "Select Language",
-    ["LANGUAGE_DESC"] = "Choose your preferred language for the addon interface. Changes apply instantly.",
-    ["ENGLISH"] = "English",
-    ["SPANISH"] = "Español",
-    ["KOREAN"] = "한국어",
-    ["FRENCH"] = "Français",
-    ["RUSSIAN"] = "Русский",
-    ["GERMAN"] = "Deutsch",
 
     ["ABOUT_SECTION"] = "About Direct Deposit",
     ["ABOUT_TEXT"] = "Direct Deposit is a quality-of-life addon from the OneWoW Suite. This addon is also available as part of the complete OneWoW Suite, which includes many other useful addons to enhance your World of Warcraft experience. Discover more addons that can help you organize your adventures and improve your gameplay!",
 
-    ["THEME_SECTION"] = "Color Theme",
-    ["THEME_DESC"] = "Choose a color theme for the addon interface. Changes apply instantly without reloading.",
-    ["THEME_CURRENT"] = "Current Theme",
-    ["THEME_GREEN"] = "Forest Green",
-    ["THEME_BLUE"] = "Ocean Blue",
-    ["THEME_PURPLE"] = "Royal Purple",
-    ["THEME_RED"] = "Crimson Red",
-    ["THEME_GOLD"] = "Classic Gold",
-    ["THEME_SLATE"] = "Slate Gray",
-    ["THEME_ORANGE"] = "Sunset Orange",
-    ["THEME_TEAL"] = "Mystic Teal",
-    ["THEME_CYAN"] = "Arctic Cyan",
-    ["THEME_PINK"] = "Rose Pink",
-    ["THEME_DARK"] = "Midnight Dark",
-    ["THEME_AMBER"] = "Amber Fire",
-    ["THEME_VOID_BLACK"] = "Void Black",
-    ["THEME_CHARCOAL_DEEP"] = "Charcoal Deep",
-    ["THEME_FOREST_NIGHT"] = "Forest Night",
-    ["THEME_OBSIDIAN_MINIMAL"] = "Obsidian Minimal",
-    ["THEME_MONOCHROME_PRO"] = "Monochrome Pro",
-    ["THEME_TWILIGHT_COMPACT"] = "Twilight Compact",
-    ["THEME_NEON_SYNTHWAVE"] = "Neon Synthwave",
-    ["THEME_GLASSMORPHIC"] = "Glassmorphic",
-    ["THEME_MINIMAL_WHITE"] = "Minimal White",
-    ["THEME_RETRO_CLASSIC"] = "Retro Classic",
-    ["THEME_RPG_FANTASY"] = "RPG Fantasy",
-    ["THEME_COVENANT_TWILIGHT"] = "Covenant Twilight",
-
-    ["MINIMAP_SECTION"] = "Minimap Button",
-    ["MINIMAP_SECTION_DESC"] = "Show or hide the minimap button.",
-    ["MINIMAP_SHOW_BTN"] = "Show Minimap Button",
-    ["MINIMAP_ICON_SECTION"] = "Icon Theme",
-    ["MINIMAP_ICON_DESC"] = "Choose your faction icon for the minimap button and title bar.",
-    ["MINIMAP_ICON_CURRENT"] = "Current Icon",
-    ["MINIMAP_ICON_HORDE"] = "Horde",
-    ["MINIMAP_ICON_ALLIANCE"] = "Alliance",
-    ["MINIMAP_ICON_NEUTRAL"] = "Neutral",
     ["MINIMAP_TOOLTIP_HINT"] = "Click to toggle settings",
 
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
@@ -149,9 +97,6 @@ OneWoW_DirectDeposit.Locales["enUS"] = {
     ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_PERSONAL"] = "Quick Add: Personal Bank",
     ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_WARBAND"] = "Quick Add: Warband Bank",
     ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_GUILD"] = "Quick Add: Guild Bank",
-}
+})
 
-OneWoW_DirectDeposit.L = {}
-for k, v in pairs(OneWoW_DirectDeposit.Locales["enUS"]) do
-    OneWoW_DirectDeposit.L[k] = v
-end
+OneWoW_DirectDeposit.L = OneWoW.Locale:GetTable(ADDON_NAME)

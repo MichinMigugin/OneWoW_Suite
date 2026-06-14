@@ -67,11 +67,18 @@ reads `OneWoW.L`, and listed in the TOC ahead of `Locales/enUS.lua`). Exposes
 `OneWoW.Locale`.
 
 ```
-OneWoW.Locale.store[scope][locale]  -- raw registered entries (e.g. store["Bags"]["enUS"])
+OneWoW.Locale.store[scope][locale]  -- raw registered entries (e.g. store["OneWoW_Bags"]["enUS"])
 OneWoW.Locale.resolved[scope]       -- folded enUS ⊕ activeLang, mutated in place
 OneWoW.Locale._views[scope]         -- cached metatable view, identity-stable
 OneWoW.Locale._callbacks            -- listeners fired after each Apply
+OneWoW.Locale.SUPPORTED             -- ordered { code, native } — single source for the picker
+OneWoW.Locale.ALIASES               -- client-locale aliases (e.g. esMX -> esES), used by NormalizeLocale
 ```
+
+`SUPPORTED` is the canonical supported-locale registry: the GUI language picker
+reads it (no more hardcoded list), `NormalizeLocale` resolves `ALIASES`, and
+`/owlocale` lists the supported codes and flags any registered locale not in it.
+Scope keys are the addon's `ADDON_NAME` (e.g. `"OneWoW"`, `"OneWoW_DirectDeposit"`).
 
 ### API surface
 
@@ -167,6 +174,19 @@ While centralizing, normalize the language-name encoding to **one** form (pick
 escaped-bytes or raw UTF-8; raw UTF-8 is more readable if the build tooling
 preserves it).
 
+> **Most shared keys are intentionally retained scaffolding — do NOT dead-code
+> sweep them.** Audit (2026-06-14): of the 49 shared keys, only `CANCEL` and
+> `CLOSE` are currently referenced via `L` in code (DD MainWindow, QoL dialogs;
+> even `OK` is unused). The `THEME_*`, `MINIMAP_*` labels, and the whole
+> language-picker group have **no callers** — the GUI toolkit hardcodes its
+> section titles in English (e.g. `Settings.lua` `SetText("Color Theme")`), the
+> theme picker uses `Constants.THEMES[key].name`, and the language picker uses
+> `OneWoW.Locale.SUPPORTED.native`. Decision (2026-06-14): **keep them as
+> groundwork for a future pass that localizes the GUI toolkit's hardcoded titles**,
+> with their harvested es/fr/de/ru translations. They are dead-by-design until that
+> pass, not accidental. The language-name keys (`ENGLISH`…`GERMAN`) also duplicate
+> `SUPPORTED.native`; if GUI localization never happens, prune the lot then.
+
 ---
 
 ## Phased rollout
@@ -210,11 +230,50 @@ phase until the previous one is verified in-game.
 ### Phase 2 — Standalone localized addons (Pattern D)
 
 Smallest first as the proof of concept. Per addon: register its non-shared keys
-under its own scope, point its `L` at `GetTable(scope)`, delete its local
-`Locales` fold and `ApplyLanguage`, drop the now-shared cluster, convert its
-`addon:ApplyLanguage` hook usage to `OnApply` if it rebuilds cached strings.
+under its own scope, point its `L` at `GetTable(scope)`, replace its local
+`Locales` fold, drop the now-shared cluster, and react to language changes.
 
-- [ ] **OneWoW_DirectDeposit** (125 keys, 6 locales — POC)
+**Prerequisite discovered during the POC — core's shared scope must hold all 6
+languages.** Phase 1 only created shared `enUS`/`koKR` (core never shipped more).
+The Pattern-D addons carry the shared cluster in 6 languages, so before dropping
+those keys, harvest the `esES`/`frFR`/`deDE`/`ruRU` translations into core
+`Locales/Shared/<locale>.lua` (decision: *core owns full shared*). Otherwise a
+non-en/ko user loses those translations to the enUS fallback. The first addon to
+need a language seeds it; later addons whose values match are transparent, drifted
+values resolve to the canonical (intended dedup — surfaced via `/owlocale`/diff).
+
+**Scope name = `ADDON_NAME`.** Pass the addon's name (the first `...` vararg, e.g.
+`"OneWoW"`, `"OneWoW_DirectDeposit"`) as the scope to `Register`/`GetTable` instead
+of a string literal — no magic-string drift between the two calls. Header:
+`local ADDON_NAME, OneWoW_<Addon> = ...` in the file that sets `<Addon>.L`,
+`local ADDON_NAME = ...` in the rest. (QoL external modules are the exception —
+they share one `ADDON_NAME` (`OneWoW_QoL`) yet need per-module scopes per decision
+3, so they pass explicit `"OneWoW_QoL.<module>"` strings.)
+
+**Header gotcha — which `OneWoW` to reference.** A locale file's `...` vararg binds
+the *addon's own* private table. In a **non-core** addon, reference the **global**
+`OneWoW` for the service calls (`OneWoW.Locale:…`) — core is loaded first
+(`RequiredDeps`) so the global exists. Do **not** write `local _, OneWoW = ...` in
+a non-core addon — that shadows the global with the addon's private table,
+`OneWoW.Locale` is nil, and the file errors at `Register`. **Core itself** must use
+the private table from the vararg (`local ADDON_NAME, OneWoW = ...`), because core's
+locale files load before `OneWoW.lua` publishes the `_G.OneWoW` global.
+
+**`ApplyLanguage` is kept as a thin shim**, not deleted: it now calls
+`OneWoW.Locale:SetLanguage(...)`. The profile-apply path
+(`t-profiles.lua` `SyncSettingToChildAddons`) still calls `addon:ApplyLanguage()`,
+so the shim stays until that path moves to the service in Phase 6. The addon's
+existing UI-rebuild-on-language-change wiring is preserved (refold happens inside
+`SetLanguage` before the rebuild). Theme **color-name** keys (`THEME_GREEN`, …) are
+dead — the picker uses `Constants.THEMES[key].name`, not `L` — so they're dropped
+outright.
+
+- [x] **OneWoW_DirectDeposit** (125 keys, 6 locales — POC). Scope
+      `OneWoW_DirectDeposit` (via `ADDON_NAME`; 76 enUS / ~39 other). Harvested 27 shared keys × es/fr/de/ru into core
+      `Locales/Shared/`. enUS/koKR drops verified byte-identical to canonical
+      (koKR: 3 visible section-description strings now use core's wording —
+      intended). esMX alias dropped (service normalizes). Lint passes; in-game
+      verify pending.
 - [ ] **OneWoW_Bags** (524 keys, 6 locales)
 - [ ] **OneWoW_ShoppingList** (263 keys, 6 locales — 0 shared today, but adopt
       the service for consistency + future shared keys)
@@ -330,3 +389,8 @@ additive. The service itself (Phase 0) is inert until something registers.
 | _2026-06-14_ | 0 | OneWoW | In-game sanity checks passed. Phase 0 complete. |
 | _2026-06-14_ | 1 | OneWoW | `Locales/enUS.lua` + `koKR.lua` converted to `RegisterShared` + `Register("OneWoW", ...)` (49 shared / 989 scoped); `OneWoW.L` now a service view; `ApplyLanguage` routes to `SetLanguage`; `OneWoW.Locales` table removed; lang-name + em-dash escapes → UTF-8. Lint passes; in-game verify pending. |
 | _2026-06-14_ | 1 | OneWoW | Shared scope split into `Locales/Shared/{enUS,koKR}.lua`; OneWoW-scoped strings stay in `Locales/{enUS,koKR}.lua`. TOC loads Shared first. Lint passes. |
+| _2026-06-14_ | 1 | OneWoW | Phase 1 verified in-game (`/owlocale`: 989 + 49, no collisions). |
+| _2026-06-14_ | 2 | DirectDeposit | Migrated to scope `OneWoW_DirectDeposit` (via `ADDON_NAME`) + service view; fold replaced by `SetLanguage` shim. Harvested es/fr/de/ru shared translations into core `Locales/Shared/` (decision: core owns full shared). Drops verified value-identical to canonical (enUS) / 3 intended koKR wording changes. Lint passes; in-game verify pending. |
+| _2026-06-14_ | — | OneWoW | Adopted `ADDON_NAME` as the scope key (no magic strings) for core + DirectDeposit locale files, after a header-binding bug crashed `/1wdd`. |
+| _2026-06-14_ | — | OneWoW | Added `Locale.SUPPORTED` + `Locale.ALIASES` registry; GUI picker now reads it (fixes stale escaped-byte labels); `NormalizeLocale` uses `ALIASES`; `/owlocale` shows supported + flags unknown locales. Lint passes; in-game verify pending. |
+| _2026-06-14_ | — | OneWoW | Dead-key audit: only `CANCEL`/`CLOSE` of the shared scope have callers; themes/minimap/language-picker keys are unused (GUI hardcodes titles). Decision: keep as GUI-localization scaffolding (no removal). Documented in Shared-key catalog. |

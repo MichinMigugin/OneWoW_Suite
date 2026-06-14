@@ -60,8 +60,13 @@ Services\LocaleService.lua
 
 # Shared locale (suite-wide vocab: themes, languages, minimap labels, buttons).
 # Loaded before the OneWoW-scoped files; the view resolves scope -> shared.
+# es/fr/de/ru harvested from standalone addons (Phase 2+); missing keys fall back to enUS.
 Locales\Shared\enUS.lua
 Locales\Shared\koKR.lua
+Locales\Shared\esES.lua
+Locales\Shared\frFR.lua
+Locales\Shared\deDE.lua
+Locales\Shared\ruRU.lua
 
 # OneWoW-scoped locale
 Locales\enUS.lua

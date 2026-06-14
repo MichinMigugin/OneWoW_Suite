@@ -19,18 +19,13 @@ local function ApplyTheme()
 end
 
 local function ApplyLanguage()
+    -- Localization lives in the OneWoW Locale service now (scope "DirectDeposit";
+    -- shared vocab in the "shared" scope). SetLanguage refolds every scope in place,
+    -- pushes BINDING_* globals, and fires OnApply; OneWoW_DirectDeposit.L is a stable
+    -- view. esMX->esES is normalized inside the service. Kept as a thin shim for the
+    -- profile-sync loop (t-profiles SyncSettingToChildAddons) until Phase 6.
     local lang = OneWoW_GUI:GetSetting("language") or "enUS"
-    if lang == "esMX" then lang = "esES" end
-    local localeData = OneWoW_DirectDeposit.Locales[lang] or OneWoW_DirectDeposit.Locales["enUS"]
-    local fallback = OneWoW_DirectDeposit.Locales["enUS"]
-    for k, v in pairs(fallback) do
-        L[k] = localeData[k] or v
-    end
-    for k, v in pairs(L) do
-        if k:find("^BINDING_") then
-            _G[k] = v
-        end
-    end
+    OneWoW.Locale:SetLanguage(lang)
 end
 
 

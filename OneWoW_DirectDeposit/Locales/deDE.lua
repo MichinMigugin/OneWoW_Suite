@@ -1,7 +1,6 @@
-local _, OneWoW_DirectDeposit = ...
+local ADDON_NAME = ...
 
-OneWoW_DirectDeposit.Locales = OneWoW_DirectDeposit.Locales or {}
-OneWoW_DirectDeposit.Locales["deDE"] = {
+OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ADDON_TITLE"] = "Direkte Einzahlung",
     ["ADDON_SUBTITLE"] = "Automatische Warband-Bank Gold-Verwaltung",
 
@@ -49,38 +48,8 @@ OneWoW_DirectDeposit.Locales["deDE"] = {
     ["ITEM_DEPOSIT_PERSONAL"] = "Persönlich",
     ["ITEM_DEPOSIT_GUILD"] = "Gilde",
 
-    ["OK"] = "OK",
-    ["CLOSE"] = "Schließen",
     ["CLEAR"] = "Löschen",
-    ["CANCEL"] = "Abbrechen",
-
-    ["LANGUAGE_SELECTION"] = "Sprachauswahl",
-    ["CURRENT_LANGUAGE"] = "Aktuelle Sprache",
-    ["SELECT_LANGUAGE"] = "Sprache Wählen",
-    ["LANGUAGE_DESC"] = "Wählen Sie Ihre bevorzugte Sprache für die Addon-Oberfläche. Änderungen werden sofort angewendet.",
-    ["ENGLISH"] = "English",
-    ["SPANISH"] = "Español",
-    ["KOREAN"] = "한국어",
-    ["FRENCH"] = "Français",
-    ["RUSSIAN"] = "Русский",
-    ["GERMAN"] = "Deutsch",
 
     ["ABOUT_SECTION"] = "Über Direkte Einzahlung",
     ["ABOUT_TEXT"] = "Direkte Einzahlung ist ein Quality-of-Life-Addon aus der OneWoW Suite. Dieses Addon ist auch als Teil der vollständigen OneWoW Suite erhältlich, die viele andere nützliche Addons enthält, um Ihr World of Warcraft-Erlebnis zu verbessern. Entdecken Sie weitere Addons, die Ihnen helfen können, Ihre Abenteuer zu organisieren und Ihr Gameplay zu verbessern!",
-
-    ["THEME_SECTION"] = "Farbthema",
-    ["THEME_DESC"] = "Wählen Sie ein Farbthema für die Addon-Oberfläche. Änderungen werden sofort ohne Neuladen angewendet.",
-    ["THEME_CURRENT"] = "Aktuelles Thema",
-    ["THEME_GREEN"] = "Waldgrün",
-    ["THEME_BLUE"] = "Ozeanblau",
-    ["THEME_PURPLE"] = "Königslila",
-    ["THEME_GOLD"] = "Klassisches Gold",
-    ["THEME_SLATE"] = "Schiefergrau",
-    ["THEME_ORANGE"] = "Sonnenuntergang Orange",
-    ["THEME_TEAL"] = "Mystisches Blaugrün",
-    ["THEME_CYAN"] = "Arktisches Cyan",
-    ["THEME_PINK"] = "Rosen Rosa",
-    ["THEME_DARK"] = "Mitternacht Dunkel",
-    ["THEME_AMBER"] = "Bernstein Feuer",
-
-}
+})

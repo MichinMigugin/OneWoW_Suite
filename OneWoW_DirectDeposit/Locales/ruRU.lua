@@ -1,7 +1,6 @@
-local _, OneWoW_DirectDeposit = ...
+local ADDON_NAME = ...
 
-OneWoW_DirectDeposit.Locales = OneWoW_DirectDeposit.Locales or {}
-OneWoW_DirectDeposit.Locales["ruRU"] = {
+OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["ADDON_TITLE"] = "Прямой депозит",
     ["ADDON_SUBTITLE"] = "Автоматическое управление золотом в банке отряда",
 
@@ -49,38 +48,8 @@ OneWoW_DirectDeposit.Locales["ruRU"] = {
     ["ITEM_DEPOSIT_PERSONAL"] = "Личный",
     ["ITEM_DEPOSIT_GUILD"] = "Гильдия",
 
-    ["OK"] = "OK",
-    ["CLOSE"] = "Закрыть",
     ["CLEAR"] = "Очистить",
-    ["CANCEL"] = "Отмена",
-
-    ["LANGUAGE_SELECTION"] = "Выбор языка",
-    ["CURRENT_LANGUAGE"] = "Текущий язык",
-    ["SELECT_LANGUAGE"] = "Выбрать язык",
-    ["LANGUAGE_DESC"] = "Выберите предпочитаемый язык для интерфейса аддона. Изменения применяются мгновенно.",
-    ["ENGLISH"] = "English",
-    ["SPANISH"] = "Español",
-    ["KOREAN"] = "한국어",
-    ["FRENCH"] = "Français",
-    ["RUSSIAN"] = "Русский",
-    ["GERMAN"] = "Deutsch",
 
     ["ABOUT_SECTION"] = "О прямом депозите",
     ["ABOUT_TEXT"] = "Прямой депозит - это аддон для улучшения качества жизни из набора OneWoW Suite. Этот аддон также доступен как часть полного набора OneWoW Suite, который включает множество других полезных аддонов для улучшения вашего опыта в World of Warcraft. Откройте для себя больше аддонов, которые помогут вам организовать свои приключения и улучшить игровой процесс!",
-
-    ["THEME_SECTION"] = "Цветовая тема",
-    ["THEME_DESC"] = "Выберите цветовую тему для интерфейса аддона. Изменения применяются мгновенно без перезагрузки.",
-    ["THEME_CURRENT"] = "Текущая тема",
-    ["THEME_GREEN"] = "Лесной зеленый",
-    ["THEME_BLUE"] = "Океанский синий",
-    ["THEME_PURPLE"] = "Королевский фиолетовый",
-    ["THEME_GOLD"] = "Классическое золото",
-    ["THEME_SLATE"] = "Сланцевый серый",
-    ["THEME_ORANGE"] = "Закатный оранжевый",
-    ["THEME_TEAL"] = "Мистический бирюзовый",
-    ["THEME_CYAN"] = "Арктический голубой",
-    ["THEME_PINK"] = "Розовый розовый",
-    ["THEME_DARK"] = "Полночная тьма",
-    ["THEME_AMBER"] = "Янтарный огонь",
-
-}
+})

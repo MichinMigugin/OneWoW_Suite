@@ -35,9 +35,26 @@ Locale._views     = {}
 Locale._callbacks = {}
 Locale._activeLang = DEFAULT_LOCALE
 
+-- Supported locales (ordered) — the single source for the language picker and for
+-- normalization. `native` is each language in its own script (the picker shows the
+-- native name regardless of the active UI language).
+Locale.SUPPORTED = {
+    { code = "enUS", native = "English"  },
+    { code = "esES", native = "Español"  },
+    { code = "koKR", native = "한국어"    },
+    { code = "frFR", native = "Français" },
+    { code = "ruRU", native = "Русский"  },
+    { code = "deDE", native = "Deutsch"  },
+}
+
+-- Client-locale aliases resolved by NormalizeLocale (WoW locale -> our locale).
+Locale.ALIASES = { esMX = "esES" }
+
+local KNOWN_LOCALE = {}
+for _, e in ipairs(Locale.SUPPORTED) do KNOWN_LOCALE[e.code] = true end
+
 local function NormalizeLocale(locale)
-    if locale == "esMX" then return "esES" end
-    return locale
+    return Locale.ALIASES[locale] or locale
 end
 
 -- Fold DEFAULT_LOCALE then the active language into resolved[scope], in place, and
@@ -196,6 +213,10 @@ end
 function Locale:PrintReport()
     print(Hex("OneWoW Locale", "ffd100") .. " — active language: " .. tostring(self._activeLang or "(none)"))
 
+    local codes = {}
+    for _, e in ipairs(self.SUPPORTED) do tinsert(codes, e.code) end
+    print("  supported: " .. tconcat(codes, ", "))
+
     local scopes = {}
     for scope in pairs(self.store) do
         tinsert(scopes, scope)
@@ -229,6 +250,20 @@ function Locale:PrintReport()
         for _, c in ipairs(collisions) do
             print(string.format("    %s defines shared key %s", c.scope, Hex(c.key, "ffd100")))
         end
+    end
+
+    -- registered locales not in SUPPORTED (typo'd locale file, or unsupported code)
+    local unknown = {}
+    for _, locales in pairs(self.store) do
+        for loc in pairs(locales) do
+            if not KNOWN_LOCALE[loc] then unknown[loc] = true end
+        end
+    end
+    local unknownList = {}
+    for loc in pairs(unknown) do tinsert(unknownList, loc) end
+    if #unknownList > 0 then
+        sort(unknownList)
+        print("  " .. Hex("Unknown locales (not in SUPPORTED): ", "ffaa00") .. tconcat(unknownList, ", "))
     end
 end
 

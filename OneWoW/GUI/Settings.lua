@@ -105,18 +105,14 @@ function OneWoW_GUI:MigrateSettings(sourceGlobal)
     end
 end
 
-local LANGUAGES = {
-    { key = "enUS", label = "English" },
-    { key = "esES", label = "Español" },
-    { key = "koKR", label = "\237\149\156\234\181\173\236\150\180" },
-    { key = "frFR", label = "Français" },
-    { key = "ruRU", label = "\208\160\209\131\209\129\209\129\208\186\208\184\208\185" },
-    { key = "deDE", label = "Deutsch" },
-}
-
-local LANG_LOOKUP = {}
-for _, lang in ipairs(LANGUAGES) do
-    LANG_LOOKUP[lang.key] = lang.label
+-- Language list comes from the Locale service (OneWoW.Locale.SUPPORTED), the single
+-- source of supported locales + native names. The service loads after this GUI file,
+-- so resolve it lazily at runtime (these helpers only run from button handlers).
+local function LangNative(code)
+    for _, e in ipairs(OneWoW.Locale.SUPPORTED) do
+        if e.code == code then return e.native end
+    end
+    return code
 end
 
 local ICON_THEMES = {
@@ -732,7 +728,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local currentLangLabel = langPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     currentLangLabel:SetPoint("TOPLEFT", langPanel, "TOPLEFT", 15, -90)
-    currentLangLabel:SetText("Current: " .. (LANG_LOOKUP[currentLang] or currentLang))
+    currentLangLabel:SetText("Current: " .. LangNative(currentLang))
     currentLangLabel:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
     local langDropdown = CreateFrame("Button", nil, langPanel, "BackdropTemplate")
@@ -744,7 +740,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local langDropText = langDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     langDropText:SetPoint("LEFT", 10, 0)
-    langDropText:SetText(LANG_LOOKUP[currentLang] or currentLang)
+    langDropText:SetText(LangNative(currentLang))
     langDropText:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
 
     local langArrow = langDropdown:CreateTexture(nil, "OVERLAY")
@@ -759,8 +755,8 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
             return
         end
         local items = {}
-        for _, lang in ipairs(LANGUAGES) do
-            tinsert(items, { label = lang.label, value = lang.key })
+        for _, lang in ipairs(OneWoW.Locale.SUPPORTED) do
+            tinsert(items, { label = lang.native, value = lang.code })
         end
         langMenu = CreateDropdownMenu(btn, items, function(value)
             OneWoW_GUI:SetSetting("language", value)

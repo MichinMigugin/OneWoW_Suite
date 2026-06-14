@@ -1,6 +1,6 @@
-local _, OneWoW = ...
+local ADDON_NAME, OneWoW = ...
 
-OneWoW.Locale:Register("OneWoW", "koKR", {
+OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ADDON_TITLE"] = "OneWoW",
     -- Addon loader (OneWoW:GetLoadFailureText); other tokens use Blizzard ADDON_* constants
     ["LOAD_FAIL_COMBAT"] = "전투 중에는 해당 애드온을 불러올 수 없습니다. 전투 종료 후 다시 시도하세요.",

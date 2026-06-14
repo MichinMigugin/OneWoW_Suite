@@ -1,7 +1,6 @@
-local _, OneWoW_DirectDeposit = ...
+local ADDON_NAME = ...
 
-OneWoW_DirectDeposit.Locales = OneWoW_DirectDeposit.Locales or {}
-OneWoW_DirectDeposit.Locales["esES"] = {
+OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["ADDON_TITLE"] = "Depósito Directo",
     ["ADDON_SUBTITLE"] = "Gestión Automática de Oro del Banco de Grupo de Guerra",
 
@@ -49,40 +48,8 @@ OneWoW_DirectDeposit.Locales["esES"] = {
     ["ITEM_DEPOSIT_PERSONAL"] = "Personal",
     ["ITEM_DEPOSIT_GUILD"] = "Hermandad",
 
-    ["OK"] = "OK",
-    ["CLOSE"] = "Cerrar",
     ["CLEAR"] = "Limpiar",
-    ["CANCEL"] = "Cancelar",
-
-    ["LANGUAGE_SELECTION"] = "Selección de Idioma",
-    ["CURRENT_LANGUAGE"] = "Idioma Actual",
-    ["SELECT_LANGUAGE"] = "Seleccionar Idioma",
-    ["LANGUAGE_DESC"] = "Elige tu idioma preferido para la interfaz del addon. Los cambios se aplican instantáneamente.",
-    ["ENGLISH"] = "English",
-    ["SPANISH"] = "Español",
-    ["KOREAN"] = "한국어",
-    ["FRENCH"] = "Français",
-    ["RUSSIAN"] = "Русский",
-    ["GERMAN"] = "Deutsch",
 
     ["ABOUT_SECTION"] = "Acerca de Depósito Directo",
     ["ABOUT_TEXT"] = "Depósito Directo es un addon de calidad de vida del conjunto OneWoW. Este addon también está disponible como parte del conjunto completo OneWoW Suite, que incluye muchos otros addons útiles para mejorar tu experiencia en World of Warcraft. ¡Descubre más addons que pueden ayudarte a organizar tus aventuras y mejorar tu juego!",
-
-    ["THEME_SECTION"] = "Tema de Color",
-    ["THEME_DESC"] = "Elige un tema de color para la interfaz del addon. Los cambios se aplican instantáneamente sin recargar.",
-    ["THEME_CURRENT"] = "Tema Actual",
-    ["THEME_GREEN"] = "Verde Bosque",
-    ["THEME_BLUE"] = "Azul Océano",
-    ["THEME_PURPLE"] = "Púrpura Real",
-    ["THEME_GOLD"] = "Oro Clásico",
-    ["THEME_SLATE"] = "Gris Pizarra",
-    ["THEME_ORANGE"] = "Naranja Atardecer",
-    ["THEME_TEAL"] = "Verde Azulado Místico",
-    ["THEME_CYAN"] = "Cian Ártico",
-    ["THEME_PINK"] = "Rosa Rosado",
-    ["THEME_DARK"] = "Oscuro Medianoche",
-    ["THEME_AMBER"] = "Fuego Ámbar",
-
-}
-
-OneWoW_DirectDeposit.Locales["esMX"] = OneWoW_DirectDeposit.Locales["esES"]
+})
