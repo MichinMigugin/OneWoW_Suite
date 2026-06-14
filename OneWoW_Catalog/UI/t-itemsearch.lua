@@ -22,6 +22,22 @@ local searchTimer    = nil
 local scanAHButtonRef = nil
 local suppressSearchBoxChange = false
 
+local function OpenItemNoteFromResult(result)
+    if not result or not result.itemID or not ns.Navigation or not ns.Navigation.OpenItemNote then
+        return false
+    end
+
+    return ns.Navigation:OpenItemNote(result.itemID, {
+        name     = result.name,
+        link     = result.link,
+        icon     = result.icon,
+        quality  = result.quality,
+        rarity   = result.rarity or result.quality,
+        category = "General",
+        storage  = "account",
+    })
+end
+
 local ITEM_ROW_HEIGHT  = 30
 local SOURCE_BTN_H     = 22
 local SOURCE_BTN_PAD_X = 10
@@ -279,6 +295,7 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
         self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetItemByID(result.itemID)
+        GameTooltip:AddLine(L["QUESTS_TT_ITEM_ADD_NOTES"], 0, 1, 0)
         GameTooltip:Show()
     end)
     row:SetScript("OnLeave", function(self)
@@ -295,6 +312,9 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
         GameTooltip:Hide()
     end)
     row:SetScript("OnClick", function(self)
+        if IsShiftKeyDown() and OpenItemNoteFromResult(self.result) then
+            return
+        end
         if onClick then onClick(self.result) end
     end)
 

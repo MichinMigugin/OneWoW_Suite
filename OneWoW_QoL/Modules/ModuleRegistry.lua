@@ -61,7 +61,7 @@ function Registry:HasModules()
 end
 
 function Registry:IsEnabled(moduleId)
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if addon and addon.db and addon.db.global.modules then
         local modData = addon.db.global.modules[moduleId]
         if modData and modData.enabled ~= nil then
@@ -76,7 +76,7 @@ function Registry:IsEnabled(moduleId)
 end
 
 function Registry:SetEnabled(moduleId, enabled)
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if not addon or not addon.db or not addon.db.global.modules then return end
     if not addon.db.global.modules[moduleId] then
         addon.db.global.modules[moduleId] = {}
@@ -93,7 +93,7 @@ function Registry:SetEnabled(moduleId, enabled)
 end
 
 function Registry:GetToggleValue(moduleId, toggleId)
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if addon and addon.db and addon.db.global.modules then
         local modData = addon.db.global.modules[moduleId]
         if modData and modData.toggles and modData.toggles[toggleId] ~= nil then
@@ -112,7 +112,7 @@ function Registry:GetToggleValue(moduleId, toggleId)
 end
 
 function Registry:SetToggleValue(moduleId, toggleId, value)
-    local addon = _G.OneWoW_QoL
+    local addon = OneWoW_QoL
     if not addon or not addon.db or not addon.db.global.modules then return end
     if not addon.db.global.modules[moduleId] then
         addon.db.global.modules[moduleId] = {}

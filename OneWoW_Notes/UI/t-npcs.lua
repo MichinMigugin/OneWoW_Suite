@@ -265,6 +265,15 @@ function ns.UI.CreateNPCsTab(parent)
     detailPanel:SetPoint("BOTTOMRIGHT", parent,       "BOTTOMRIGHT",  0, 35)
     detailPanel:SetClipsChildren(true)
 
+    local detailScroll, detailContent = OneWoW_GUI:CreateScrollFrame(detailPanel, {
+        name = "OneWoWNotesNPCDetailScroll",
+    })
+    detailScroll:ClearAllPoints()
+    detailScroll:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 0, 0)
+    detailScroll:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -4, 4)
+    detailPanel.detailScroll = detailScroll
+    detailPanel.detailContent = detailContent
+
     emptyMessage = OneWoW_GUI:CreateFS(detailPanel, 16)
     emptyMessage:SetPoint("CENTER", detailPanel, "CENTER")
     emptyMessage:SetText(L["NPCS_SELECT"])
@@ -293,13 +302,15 @@ function ns.UI.CreateNPCsTab(parent)
     local function ShowEditor()
         emptyMessage:Hide()
         for _, child in ipairs({detailPanel:GetChildren()}) do
-            if child ~= emptyMessage then child:Hide() end
+            if child ~= emptyMessage and child ~= detailPanel.detailScroll then child:Hide() end
         end
+        detailPanel.detailScroll:Show()
 
         if not detailPanel.editorContent then
-            local editorHeader = CreateThemedBar(nil, detailPanel)
-            editorHeader:SetPoint("TOPLEFT",  detailPanel, "TOPLEFT",  10, -10)
-            editorHeader:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
+            local editorParent = detailPanel.detailContent
+            local editorHeader = CreateThemedBar(nil, editorParent)
+            editorHeader:SetPoint("TOPLEFT",  editorParent, "TOPLEFT",  10, -10)
+            editorHeader:SetPoint("TOPRIGHT", editorParent, "TOPRIGHT", -10, -10)
             editorHeader:SetHeight(85)
 
             local portraitFrame = CreateFrame("Frame", nil, editorHeader, "BackdropTemplate")
@@ -517,7 +528,7 @@ function ns.UI.CreateNPCsTab(parent)
             favoriteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.favoriteBtn = favoriteBtn
 
-            local contentBg = CreateThemedBar(nil, detailPanel)
+            local contentBg = CreateThemedBar(nil, editorParent)
             contentBg:SetPoint("TOPLEFT",  editorHeader, "BOTTOMLEFT",  0, -10)
             contentBg:SetPoint("TOPRIGHT", editorHeader, "BOTTOMRIGHT", 0, -10)
             contentBg:SetHeight(160)
@@ -567,7 +578,7 @@ function ns.UI.CreateNPCsTab(parent)
                 end
             end)
 
-            local tooltipSection = CreateThemedBar(nil, detailPanel)
+            local tooltipSection = CreateThemedBar(nil, editorParent)
             tooltipSection:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -10)
             tooltipSection:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -10)
 
@@ -615,7 +626,7 @@ function ns.UI.CreateNPCsTab(parent)
 
             -- Associated quests (from OneWoW_CatalogData_Quests, optional) - quests
             -- this NPC gives or turns in, clickable to open in the Catalog.
-            local associatedSection = CreateThemedBar(nil, detailPanel)
+            local associatedSection = CreateThemedBar(nil, editorParent)
             associatedSection:SetPoint("TOPLEFT",  tooltipSection, "BOTTOMLEFT",  0, -10)
             associatedSection:SetPoint("TOPRIGHT", tooltipSection, "BOTTOMRIGHT", 0, -10)
             associatedSection:SetHeight(1)
@@ -624,10 +635,19 @@ function ns.UI.CreateNPCsTab(parent)
             assocLabel:SetPoint("TOPLEFT", associatedSection, "TOPLEFT", 10, -8)
             assocLabel:SetText(L["NOTES_NPC_ASSOC_QUESTS"])
             assocLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+            local associatedScroll, associatedContent = OneWoW_GUI:CreateScrollFrame(associatedSection, {})
+            associatedScroll:ClearAllPoints()
+            associatedScroll:SetPoint("TOPLEFT", associatedSection, "TOPLEFT", 8, -28)
+            associatedScroll:SetPoint("BOTTOMRIGHT", associatedSection, "BOTTOMRIGHT", -8, 8)
+
             associatedSection.label = assocLabel
             associatedSection.questRows = {}
+            associatedSection.scroll = associatedScroll
+            associatedSection.content = associatedContent
 
             detailPanel.editorContent = {
+                parent             = editorParent,
                 header             = editorHeader,
                 contentBg          = contentBg,
                 contentScroll      = contentScroll,
@@ -729,15 +749,16 @@ function ns.UI.CreateNPCsTab(parent)
                         and OneWoW_CatalogData_Quests_API.GetQuestsForNPC(selectedNPC)
 
                     if questIDs and #questIDs > 0 then
-                        local y = -28
+                        local content = assoc.content or assoc
+                        local y = -2
                         for _, qid in ipairs(questIDs) do
                             local q = OneWoW_CatalogData_Quests_API.GetQuest(qid)
                             local qname = (q and q.name) or ("Quest " .. qid)
 
-                            local row = CreateFrame("Button", nil, assoc)
+                            local row = CreateFrame("Button", nil, content)
                             row:SetHeight(18)
-                            row:SetPoint("TOPLEFT",  assoc, "TOPLEFT", 16, y)
-                            row:SetPoint("TOPRIGHT", assoc, "TOPRIGHT", -10, y)
+                            row:SetPoint("TOPLEFT",  content, "TOPLEFT", 8, y)
+                            row:SetPoint("TOPRIGHT", content, "TOPRIGHT", -8, y)
 
                             local fs = OneWoW_GUI:CreateFS(row, 11)
                             fs:SetPoint("LEFT", 0, 0)
@@ -760,13 +781,24 @@ function ns.UI.CreateNPCsTab(parent)
                             assoc.questRows[#assoc.questRows + 1] = row
                             y = y - 20
                         end
+                        if assoc.content then
+                            assoc.content:SetHeight(math.max(1, 6 + #questIDs * 20))
+                        end
                         assoc.label:Show()
-                        assoc:SetHeight(30 + #questIDs * 20)
+                        if assoc.scroll then assoc.scroll:Show() end
+                        assoc:SetHeight(math.min(230, 36 + #questIDs * 20))
                         assoc:Show()
+                        if detailPanel.detailContent then
+                            detailPanel.detailContent:SetHeight(85 + 10 + 160 + 10 + (38 + 4 * 28) + 10 + assoc:GetHeight() + 20)
+                        end
                     else
                         assoc.label:Hide()
+                        if assoc.scroll then assoc.scroll:Hide() end
                         assoc:SetHeight(1)
                         assoc:Hide()
+                        if detailPanel.detailContent then
+                            detailPanel.detailContent:SetHeight(85 + 10 + 160 + 10 + (38 + 4 * 28) + 20)
+                        end
                     end
                 end
             end
