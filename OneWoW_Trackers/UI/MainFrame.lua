@@ -67,7 +67,7 @@ function UI:Create()
     tinsert(UISpecialFrames, "OneWoW_Trackers_MainFrame")
 
     local titleBar = OneWoW_GUI:CreateTitleBar(mainFrame, {
-        title = L["ADDON_TITLE_FRAME"] or "OneWoW Trackers",
+        title = L["ADDON_TITLE_FRAME"],
         showBrand = true,
         onClose = function() mainFrame:Hide() end,
     })
@@ -131,7 +131,7 @@ function UI:Create()
 
     local tabDefs = {
         { name = "tracker",  label = L["TAB_TRACKER"]  or "Tracker"  },
-        { name = "settings", label = L["TAB_SETTINGS"] or "Settings" },
+        { name = "settings", label = L["TAB_SETTINGS"] },
     }
 
     local prevBtn

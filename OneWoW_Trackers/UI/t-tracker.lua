@@ -51,25 +51,25 @@ function ns.UI.CreateTrackerTab(parent)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
 
     local newBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, {
-        text = L["TRACKER_NEW"] or "New",
+        text = L["TRACKER_NEW"],
         height = 26,
     })
     newBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -10)
 
     local importBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, {
-        text = L["TRACKER_IMPORT"] or "Import",
+        text = L["TRACKER_IMPORT"],
         height = 26,
     })
     importBtn:SetPoint("LEFT", newBtn, "RIGHT", 6, 0)
 
     local presetBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, {
-        text = L["TRACKER_PRESET"] or "Preset",
+        text = L["TRACKER_PRESET"],
         height = 26,
     })
     presetBtn:SetPoint("LEFT", importBtn, "RIGHT", 6, 0)
 
     local restoreBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, {
-        text = L["TRACKER_RESTORE"] or "Restore Examples",
+        text = L["TRACKER_RESTORE"],
         height = 26,
     })
     restoreBtn:SetPoint("LEFT", presetBtn, "RIGHT", 6, 0)
@@ -77,14 +77,14 @@ function ns.UI.CreateTrackerTab(parent)
     local typeDropdown, typeText = OneWoW_GUI:CreateDropdown(controlPanel, {
         width = 120,
         height = 26,
-        text = L["TRACKER_ALL_TYPES"] or "All Types",
+        text = L["TRACKER_ALL_TYPES"],
     })
     typeDropdown:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -42)
 
     OneWoW_GUI:AttachFilterMenu(typeDropdown, {
         buildItems = function()
             local items = {
-                { text = L["TRACKER_ALL_TYPES"] or "All Types", value = "all" },
+                { text = L["TRACKER_ALL_TYPES"], value = "all" },
             }
             local types = TD:GetListTypes()
             for _, lt in ipairs(types) do
@@ -94,7 +94,7 @@ function ns.UI.CreateTrackerTab(parent)
         end,
         onSelect = function(value)
             filterType = value
-            typeText:SetText(value == "all" and (L["TRACKER_ALL_TYPES"] or "All Types") or TE:GetListTypeDisplayName(value))
+            typeText:SetText(value == "all" and (L["TRACKER_ALL_TYPES"]) or TE:GetListTypeDisplayName(value))
             parent.RefreshList()
         end,
         getActiveValue = function() return filterType end,
@@ -103,14 +103,14 @@ function ns.UI.CreateTrackerTab(parent)
     local catDropdown, catText = OneWoW_GUI:CreateDropdown(controlPanel, {
         width = 140,
         height = 26,
-        text = L["TRACKER_ALL_CATEGORIES"] or "All Categories",
+        text = L["TRACKER_ALL_CATEGORIES"],
     })
     catDropdown:SetPoint("LEFT", typeDropdown, "RIGHT", 6, 0)
 
     OneWoW_GUI:AttachFilterMenu(catDropdown, {
         buildItems = function()
             local items = {
-                { text = L["TRACKER_ALL_CATEGORIES"] or "All Categories", value = "All" },
+                { text = L["TRACKER_ALL_CATEGORIES"], value = "All" },
             }
             local cats = TD:GetCategories()
             for _, cat in ipairs(cats) do
@@ -120,7 +120,7 @@ function ns.UI.CreateTrackerTab(parent)
         end,
         onSelect = function(value)
             filterCategory = value
-            catText:SetText(value == "All" and (L["TRACKER_ALL_CATEGORIES"] or "All Categories") or value)
+            catText:SetText(value == "All" and (L["TRACKER_ALL_CATEGORIES"]) or value)
             parent.RefreshList()
         end,
         getActiveValue = function() return filterCategory end,
@@ -129,7 +129,7 @@ function ns.UI.CreateTrackerTab(parent)
     local searchBox = OneWoW_GUI:CreateEditBox(controlPanel, {
         width = 180,
         height = 26,
-        placeholderText = L["TRACKER_SEARCH"] or "Search...",
+        placeholderText = L["TRACKER_SEARCH"],
     })
     searchBox:SetPoint("LEFT", catDropdown, "RIGHT", 6, 0)
     searchBox:SetScript("OnTextChanged", function(self)
@@ -137,7 +137,7 @@ function ns.UI.CreateTrackerTab(parent)
         parent.RefreshList()
     end)
 
-    local hideCompletedCheck = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["TRACKER_HIDE_DONE"] or "Hide Done" })
+    local hideCompletedCheck = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["TRACKER_HIDE_DONE"] })
     hideCompletedCheck:SetPoint("LEFT", searchBox, "RIGHT", 10, 0)
     hideCompletedCheck:SetScript("OnClick", function(self)
         hideCompleted = self:GetChecked()
@@ -160,7 +160,7 @@ function ns.UI.CreateTrackerTab(parent)
 
     local listTitle = OneWoW_GUI:CreateFS(listPanel, 12)
     listTitle:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 10, -8)
-    listTitle:SetText(L["TRACKER_LIST_TITLE"] or "Lists")
+    listTitle:SetText(L["TRACKER_LIST_TITLE"])
     listTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
     local listScrollFrame, listScrollChild = OneWoW_GUI:CreateScrollFrame(listPanel, {})
@@ -176,7 +176,7 @@ function ns.UI.CreateTrackerTab(parent)
 
     local detailTitle = OneWoW_GUI:CreateFS(detailPanel, 12)
     detailTitle:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 10, -8)
-    detailTitle:SetText(L["TRACKER_DETAIL_TITLE"] or "Details")
+    detailTitle:SetText(L["TRACKER_DETAIL_TITLE"])
     detailTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
     local detailScrollFrame, detailScrollChild = OneWoW_GUI:CreateScrollFrame(detailPanel, {})
@@ -185,7 +185,7 @@ function ns.UI.CreateTrackerTab(parent)
 
     local emptyLabel = OneWoW_GUI:CreateFS(detailPanel, 12)
     emptyLabel:SetPoint("CENTER", detailPanel, "CENTER", 0, 0)
-    emptyLabel:SetText(L["TRACKER_SELECT"] or "Select a list to view its details.")
+    emptyLabel:SetText(L["TRACKER_SELECT"])
     emptyLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local function CreateListRow(listData, yOffset)
@@ -242,8 +242,8 @@ function ns.UI.CreateTrackerTab(parent)
         local listFavBtn = OneWoW_GUI:CreateFavoriteToggleButton(row, {
             size     = 18,
             favorite = listData.favorite == true,
-            tooltipTitle = L["TRACKER_FAV"] or "Favorite",
-            tooltipText  = L["TRACKER_FAV_TT"] or "Mark or unmark this list as a favorite.",
+            tooltipTitle = L["TRACKER_FAV"],
+            tooltipText  = L["TRACKER_FAV_TT"],
             onClick = function(_, isFav)
                 TD:UpdateList(listData.id, { favorite = isFav })
                 parent.RefreshList()
@@ -312,7 +312,7 @@ function ns.UI.CreateTrackerTab(parent)
                 listPanel.emptyText:SetWidth(LEFT_PANEL_WIDTH - 40)
                 listPanel.emptyText:SetWordWrap(true)
             end
-            listPanel.emptyText:SetText(L["TRACKER_EMPTY"] or "No lists yet. Click 'New' to create one, or 'Preset' for quick setup.")
+            listPanel.emptyText:SetText(L["TRACKER_EMPTY"])
             listPanel.emptyText:Show()
         elseif listPanel.emptyText then
             listPanel.emptyText:Hide()
@@ -431,7 +431,7 @@ function ns.UI.CreateTrackerTab(parent)
         wipe(detailRows)
         wipe(dragRows)
         emptyLabel:Show()
-        detailTitle:SetText(L["TRACKER_DETAIL_TITLE"] or "Details")
+        detailTitle:SetText(L["TRACKER_DETAIL_TITLE"])
     end
 
     function parent.ShowDetail(listID)
@@ -469,7 +469,7 @@ function ns.UI.CreateTrackerTab(parent)
             (list.author or "")
         )
         if list.accountWide then
-            metaParts = metaParts .. "  |  " .. OneWoW_GUI:WrapThemeColor(L["TRACKER_ACCOUNT_WIDE"] or "Account-wide", "ACCENT_PRIMARY")
+            metaParts = metaParts .. "  |  " .. OneWoW_GUI:WrapThemeColor(L["TRACKER_ACCOUNT_WIDE"], "ACCENT_PRIMARY")
         end
         authorText:SetText(metaParts)
         authorText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -497,7 +497,7 @@ function ns.UI.CreateTrackerTab(parent)
         local btnY = -54
         local btnX = 10
 
-        local editBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_EDIT"] or "Edit", height = 22 })
+        local editBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_EDIT"], height = 22 })
         editBtn:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", btnX, btnY)
         editBtn:SetScript("OnClick", function()
             if ns.TrackerEditor then
@@ -509,7 +509,7 @@ function ns.UI.CreateTrackerTab(parent)
         end)
 
         local pinBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, {
-            text = list.pinned and (L["TRACKER_UNPIN"] or "Unpin") or (L["TRACKER_PIN"] or "Pin"),
+            text = list.pinned and (L["TRACKER_UNPIN"]) or (L["TRACKER_PIN"]),
             height = 22,
         })
         pinBtn:SetPoint("LEFT", editBtn, "RIGHT", 4, 0)
@@ -523,7 +523,7 @@ function ns.UI.CreateTrackerTab(parent)
             parent.ShowDetail(list.id)
         end)
 
-        local exportBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_EXPORT"] or "Export", height = 22 })
+        local exportBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_EXPORT"], height = 22 })
         exportBtn:SetPoint("LEFT", pinBtn, "RIGHT", 4, 0)
         exportBtn:SetScript("OnClick", function()
             if ns.TrackerEditor then
@@ -531,7 +531,7 @@ function ns.UI.CreateTrackerTab(parent)
             end
         end)
 
-        local dupeBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_DUPLICATE"] or "Duplicate", height = 22 })
+        local dupeBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_DUPLICATE"], height = 22 })
         dupeBtn:SetPoint("LEFT", exportBtn, "RIGHT", 4, 0)
         dupeBtn:SetScript("OnClick", function()
             local copy = TD:DuplicateList(list.id)
@@ -542,7 +542,7 @@ function ns.UI.CreateTrackerTab(parent)
             end
         end)
 
-        local resetBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_RESET"] or "Reset", height = 22 })
+        local resetBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_RESET"], height = 22 })
         resetBtn:SetPoint("LEFT", dupeBtn, "RIGHT", 4, 0)
         resetBtn:SetScript("OnClick", function()
             TD:ResetProgress(list.id)
@@ -551,7 +551,7 @@ function ns.UI.CreateTrackerTab(parent)
             parent.ShowDetail(list.id)
         end)
 
-        local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_DELETE"] or "Delete", height = 22 })
+        local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_DELETE"], height = 22 })
         deleteBtn:SetPoint("LEFT", resetBtn, "RIGHT", 4, 0)
         deleteBtn:SetScript("OnClick", function()
             if list._bundledID and TP then
@@ -874,7 +874,7 @@ function ns.UI.CreateTrackerTab(parent)
                     if #rosterCompleters == 0 then
                         local emptyFS = OneWoW_GUI:CreateFS(stepRow, 10)
                         emptyFS:SetPoint("TOPLEFT", stepRow, "TOPLEFT", 30, rosterY)
-                        emptyFS:SetText(L["TRACKER_ROSTER_NOBODY"] or "No characters yet")
+                        emptyFS:SetText(L["TRACKER_ROSTER_NOBODY"])
                         emptyFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                         rowHeight = rowHeight + 18
                     else
@@ -909,7 +909,7 @@ function ns.UI.CreateTrackerTab(parent)
 
                 stepRow:SetHeight(math.max(30, rowHeight))
 
-                local stepEditBtn = OneWoW_GUI:CreateFitTextButton(stepRow, { text = L["TRACKER_EDIT"] or "Edit", height = 18 })
+                local stepEditBtn = OneWoW_GUI:CreateFitTextButton(stepRow, { text = L["TRACKER_EDIT"], height = 18 })
                 stepEditBtn:SetPoint("TOPRIGHT", stepRow, "TOPRIGHT", -4, -4)
                 stepEditBtn:SetScript("OnClick", function()
                     if ns.TrackerEditor then
@@ -940,7 +940,7 @@ function ns.UI.CreateTrackerTab(parent)
                             local mapPoint = UiMapPoint.CreateFromCoordinates(mid, cx, cy)
                             C_Map.SetUserWaypoint(mapPoint)
                             C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                            print(format("%s Waypoint set for %s (%.1f, %.1f)", L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW Trackers:|r", step.label or "Step", tonumber(step.coordX), tonumber(step.coordY)))
+                            print(format("%s Waypoint set for %s (%.1f, %.1f)", L["ADDON_CHAT_PREFIX"], step.label or "Step", tonumber(step.coordX), tonumber(step.coordY)))
                         elseif not step.optional and step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
                             TD:ToggleStepComplete(list.id, sec.key, step.key)
                             parent.RefreshList()
@@ -950,7 +950,7 @@ function ns.UI.CreateTrackerTab(parent)
                     elseif button == "RightButton" then
                         MenuUtil.CreateContextMenu(stepRow, function(_, rootDescription)
                             rootDescription:CreateTitle(step.label or "Step")
-                            rootDescription:CreateButton(L["TRACKER_EDIT"] or "Edit", function()
+                            rootDescription:CreateButton(L["TRACKER_EDIT"], function()
                                 if ns.TrackerEditor then
                                     ns.TrackerEditor:ShowStepEditor(list.id, sec.key, step.key, function()
                                         TE:RebuildIndices()
@@ -961,19 +961,19 @@ function ns.UI.CreateTrackerTab(parent)
                                 end
                             end)
                             rootDescription:CreateDivider()
-                            rootDescription:CreateButton(L["TRACKER_MOVE_UP"] or "Move Up", function()
+                            rootDescription:CreateButton(L["TRACKER_MOVE_UP"], function()
                                 TD:MoveStep(list.id, sec.key, step.key, "up")
                                 parent.RefreshList()
                                 parent.ShowDetail(list.id)
                             end)
-                            rootDescription:CreateButton(L["TRACKER_MOVE_DOWN"] or "Move Down", function()
+                            rootDescription:CreateButton(L["TRACKER_MOVE_DOWN"], function()
                                 TD:MoveStep(list.id, sec.key, step.key, "down")
                                 parent.RefreshList()
                                 parent.ShowDetail(list.id)
                             end)
                             if not step.optional and step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
                                 rootDescription:CreateDivider()
-                                rootDescription:CreateButton(isComplete and (L["TRACKER_MARK_INCOMPLETE"] or "Mark Incomplete") or (L["TRACKER_MARK_COMPLETE"] or "Mark Complete"), function()
+                                rootDescription:CreateButton(isComplete and (L["TRACKER_MARK_INCOMPLETE"]) or (L["TRACKER_MARK_COMPLETE"]), function()
                                     TD:ToggleStepComplete(list.id, sec.key, step.key)
                                     parent.RefreshList()
                                     parent.ShowDetail(list.id)
@@ -981,7 +981,7 @@ function ns.UI.CreateTrackerTab(parent)
                                 end)
                             end
                             rootDescription:CreateDivider()
-                            rootDescription:CreateButton("|cFFFF4444" .. (L["TRACKER_DELETE"] or "Delete") .. "|r", function()
+                            rootDescription:CreateButton("|cFFFF4444" .. (L["TRACKER_DELETE"]) .. "|r", function()
                                 TD:RemoveStep(list.id, sec.key, step.key)
                                 TE:RebuildIndices()
                                 parent.RefreshList()

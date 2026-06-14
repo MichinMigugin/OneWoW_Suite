@@ -792,7 +792,7 @@ end
 ---@return string
 function ns:GetWeeklyResetRegionLabel(value)
     local key = RESET_REGION_LABEL_KEY[value or self:GetWeeklyResetRegion()] or "RESET_REGION_AUTO"
-    return ns.L[key] or key
+    return ns.L[key]
 end
 
 --- Ordered { value, label } list for building a region dropdown.
@@ -808,9 +808,9 @@ end
 --- Localized title/description/current-format strings for the region picker UI.
 ---@return string title, string desc, string currentFmt
 function ns:GetWeeklyResetUIText()
-    return ns.L["SETTINGS_RESET_TITLE"] or "Weekly Reset Day",
-        ns.L["SETTINGS_RESET_DESC"] or "",
-        ns.L["SETTINGS_RESET_CURRENT"] or "Current: %s"
+    return ns.L["SETTINGS_RESET_TITLE"],
+        ns.L["SETTINGS_RESET_DESC"],
+        ns.L["SETTINGS_RESET_CURRENT"]
 end
 
 --- Set the weekly reset region and immediately reconcile any pending resets.

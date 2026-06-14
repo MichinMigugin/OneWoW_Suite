@@ -69,7 +69,7 @@ function TMU:ShowWaypointList(listID)
     end
 
     if #waypoints == 0 then
-        print((L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW Trackers:|r") .. " No waypoints found in this list.")
+        print((L["ADDON_CHAT_PREFIX"]) .. " No waypoints found in this list.")
         return
     end
 
@@ -80,7 +80,7 @@ function TMU:ShowWaypointList(listID)
         height = 500,
         destroyOnClose = true,
         buttons = {
-            { text = L["BUTTON_CLOSE"] or "Close", onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
+            { text = L["BUTTON_CLOSE"], onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
         },
     })
     if not dialog then return end

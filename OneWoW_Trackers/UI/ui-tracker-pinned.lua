@@ -370,7 +370,7 @@ function TP:Create(listID)
                         local mapPoint = UiMapPoint.CreateFromCoordinates(mid, cx, cy)
                         C_Map.SetUserWaypoint(mapPoint)
                         C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-                        print(format("%s Waypoint set for %s (%.1f, %.1f)", L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW Trackers:|r", step.label or "Step", tonumber(step.coordX), tonumber(step.coordY)))
+                        print(format("%s Waypoint set for %s (%.1f, %.1f)", L["ADDON_CHAT_PREFIX"], step.label or "Step", tonumber(step.coordX), tonumber(step.coordY)))
                     end)
                 elseif not step.rosterMode and step.trackType == "manual" and (not step.objectives or #step.objectives == 0) then
                     stepRow:RegisterForClicks("AnyDown", "AnyUp")
@@ -447,7 +447,7 @@ function TP:Create(listID)
                         addRow._label:ClearAllPoints()
                         addRow._label:SetPoint("LEFT", addRow._dot, "RIGHT", 4, 0)
                         addRow._label:SetPoint("RIGHT", addRow, "RIGHT", -4, 0)
-                        addRow._label:SetText(L["TRACKER_ROSTER_ADD_ME"] or "+ Add me")
+                        addRow._label:SetText(L["TRACKER_ROSTER_ADD_ME"])
                         addRow._label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
                         addRow:SetScript("OnClick", function()
@@ -588,7 +588,7 @@ function TP:Create(listID)
     end)
     titleBar:SetScript("OnEnter", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_BOTTOM")
-        GameTooltip:SetText(L["TRACKER_PIN_TITLE_COLLAPSE_HINT"] or "Double-click or Shift+click to collapse or expand", 1, 1, 1)
+        GameTooltip:SetText(L["TRACKER_PIN_TITLE_COLLAPSE_HINT"], 1, 1, 1)
         GameTooltip:Show()
     end)
     titleBar:SetScript("OnLeave", GameTooltip_Hide)
@@ -627,7 +627,7 @@ function TP:Create(listID)
     opacitySlider:SetPoint("TOPRIGHT", hoverControlsPanel, "TOPRIGHT", -10, -4)
 
     local lockMoveCB = OneWoW_GUI:CreateCheckbox(hoverControlsPanel, {
-        label   = L["TRACKER_PIN_LOCK_MOVE"] or "Lock Move",
+        label   = L["TRACKER_PIN_LOCK_MOVE"],
         checked = list.pinnedLockMove,
         onClick = function(myself)
             list.pinnedLockMove = myself:GetChecked() and true or false
@@ -637,7 +637,7 @@ function TP:Create(listID)
     lockMoveCB:SetPoint("BOTTOMLEFT", hoverControlsPanel, "BOTTOMLEFT", 10, 28)
 
     local lockResizeCB = OneWoW_GUI:CreateCheckbox(hoverControlsPanel, {
-        label   = L["TRACKER_PIN_LOCK_RESIZE"] or "Lock Resize",
+        label   = L["TRACKER_PIN_LOCK_RESIZE"],
         checked = list.pinnedLockResize,
         onClick = function(myself)
             list.pinnedLockResize = myself:GetChecked() and true or false
@@ -647,7 +647,7 @@ function TP:Create(listID)
     lockResizeCB:SetPoint("LEFT", lockMoveCB, "RIGHT", 90, 0)
 
     local hideCompletedCB = OneWoW_GUI:CreateCheckbox(hoverControlsPanel, {
-        label   = L["TRACKER_PIN_HIDE_COMPLETED"] or "Hide completed",
+        label   = L["TRACKER_PIN_HIDE_COMPLETED"],
         checked = list.pinnedHideCompleted,
         onClick = function(myself)
             list.pinnedHideCompleted = myself:GetChecked() and true or false
@@ -657,7 +657,7 @@ function TP:Create(listID)
     hideCompletedCB:SetPoint("BOTTOMLEFT", hoverControlsPanel, "BOTTOMLEFT", 10, 4)
     local function HideCompletedTooltip(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["TRACKER_PIN_HIDE_COMPLETED"] or "Hide completed", 1, 1, 1)
+        GameTooltip:SetText(L["TRACKER_PIN_HIDE_COMPLETED"], 1, 1, 1)
         GameTooltip:AddLine(L["TRACKER_PIN_HIDE_COMPLETED_DESC"]
             or "Hide completed steps and any section with nothing left to do.", 0.8, 0.8, 0.8, true)
         GameTooltip:Show()

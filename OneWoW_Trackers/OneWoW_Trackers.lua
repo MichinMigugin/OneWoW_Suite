@@ -19,13 +19,11 @@ local function ApplyTheme()
 end
 
 local function ApplyLanguage()
-    local selectedLang
-    if OneWoW_GUI and OneWoW_GUI.GetSetting then
-        selectedLang = OneWoW_GUI:GetSetting("language")
-    end
-    selectedLang = selectedLang or GetLocale()
-    if selectedLang == "esMX" then selectedLang = "esES" end
-    ns.SetLocale(selectedLang)
+    -- Localization lives in the OneWoW Locale service now (scope = ADDON_NAME).
+    -- SetLanguage refolds every scope in place, pushes BINDING_* globals, and fires
+    -- OnApply; ns.L is a stable view. esMX->esES is normalized inside.
+    local lang = OneWoW_GUI:GetSetting("language") or GetLocale()
+    OneWoW.Locale:SetLanguage(lang)
 end
 
 local function RegisterAsOneWoWModule()

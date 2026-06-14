@@ -1,11 +1,14 @@
-local _, ns = ...
+local ADDON_NAME = ...
 
-local enUS = ns.Locales and ns.Locales["enUS"]
+-- Dev placeholder: every enUS key set to "TEST" (no Korean translations yet). Source
+-- the key set from the registered enUS store instead of the old ns.Locales table.
+local store = OneWoW.Locale:GetStore(ADDON_NAME)
+local enUS = store and store["enUS"]
 if not enUS then return end
 
 local koKR = {}
-for k, _ in pairs(enUS) do
+for k in pairs(enUS) do
     koKR[k] = "TEST"
 end
 
-ns.RegisterLocale("koKR", koKR)
+OneWoW.Locale:Register(ADDON_NAME, "koKR", koKR)

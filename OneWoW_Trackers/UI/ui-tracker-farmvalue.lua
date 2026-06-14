@@ -349,19 +349,19 @@ local function EnsurePinnedHeader(hostFrame, scrollChild)
         })
         hostFrame._pinnedFarmHeader = h
         local h1 = OneWoW_GUI:CreateFS(h, 9)
-        h1:SetText(L["FARM_COL_ITEM"] or "Item")
+        h1:SetText(L["FARM_COL_ITEM"])
         h1:SetWordWrap(false)
         h1:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         local h2 = OneWoW_GUI:CreateFS(h, 9)
-        h2:SetText(L["FARM_COL_QTY"] or "Qty")
+        h2:SetText(L["FARM_COL_QTY"])
         h2:SetWordWrap(false)
         h2:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         local h3 = OneWoW_GUI:CreateFS(h, 9)
-        h3:SetText(L["FARM_COL_UNIT"] or "Unit")
+        h3:SetText(L["FARM_COL_UNIT"])
         h3:SetWordWrap(false)
         h3:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         local h4 = OneWoW_GUI:CreateFS(h, 9)
-        h4:SetText(L["FARM_COL_TOTAL"] or "Total")
+        h4:SetText(L["FARM_COL_TOTAL"])
         h4:SetWordWrap(false)
         h4:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         h._h1, h._h2, h._h3, h._h4 = h1, h2, h3, h4
@@ -434,9 +434,9 @@ function TFV:RenderPinned(list, scrollChild, hostFrame)
                 end
             end
             if fp.mode == "watchlist" then
-                GameTooltip:AddLine(L["FARM_PIN_RIGHT_REMOVE"] or "", 0.65, 0.65, 0.65, true)
+                GameTooltip:AddLine(L["FARM_PIN_RIGHT_REMOVE"], 0.65, 0.65, 0.65, true)
             else
-                GameTooltip:AddLine(L["FARM_PIN_ALLBAGS_NO_REMOVE"] or "", 0.55, 0.55, 0.55, true)
+                GameTooltip:AddLine(L["FARM_PIN_ALLBAGS_NO_REMOVE"], 0.55, 0.55, 0.55, true)
             end
             GameTooltip:Show()
         end)
@@ -502,10 +502,10 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     warn:SetJustifyH("LEFT")
     warn:SetWordWrap(true)
     if not (OneWoW and OneWoW.ItemPrices) then
-        warn:SetText(L["FARM_NEED_ONEWOW"] or "")
+        warn:SetText(L["FARM_NEED_ONEWOW"])
         warn:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
     else
-        warn:SetText(L["FARM_HINT"] or "")
+        warn:SetText(L["FARM_HINT"])
         warn:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     end
 
@@ -523,16 +523,16 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     srcLine2:SetWordWrap(true)
     srcLine2:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local cbShowAH = OneWoW_GUI:CreateCheckbox(box, { label = L["FARM_SHOW_AH"] or "AH" })
+    local cbShowAH = OneWoW_GUI:CreateCheckbox(box, { label = L["FARM_SHOW_AH"] })
     cbShowAH:SetPoint("TOPLEFT", srcLine2, "BOTTOMLEFT", -4, -10)
 
-    local cbUseTSM = OneWoW_GUI:CreateCheckbox(box, { label = L["FARM_USE_TSM"] or "TSM" })
+    local cbUseTSM = OneWoW_GUI:CreateCheckbox(box, { label = L["FARM_USE_TSM"] })
     cbUseTSM:SetPoint("TOPLEFT", cbShowAH, "BOTTOMLEFT", 0, -2)
 
-    local ahSrcBtn = OneWoW_GUI:CreateFitTextButton(box, { text = L["FARM_AH_SOURCE"] or "AH", height = 22 })
+    local ahSrcBtn = OneWoW_GUI:CreateFitTextButton(box, { text = L["FARM_AH_SOURCE"], height = 22 })
     ahSrcBtn:SetPoint("TOPLEFT", cbUseTSM, "BOTTOMLEFT", 0, -6)
 
-    local openOwBtn = OneWoW_GUI:CreateFitTextButton(box, { text = L["FARM_OPEN_ONEWOW"] or "OneWoW", height = 22 })
+    local openOwBtn = OneWoW_GUI:CreateFitTextButton(box, { text = L["FARM_OPEN_ONEWOW"], height = 22 })
     openOwBtn:SetPoint("LEFT", ahSrcBtn, "RIGHT", 8, 0)
     openOwBtn:SetScript("OnClick", function()
         if OneWoW and OneWoW.UI and OneWoW.UI.Show then
@@ -541,16 +541,16 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     end)
     openOwBtn:SetScript("OnEnter", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["FARM_OPEN_ONEWOW_TT"] or "")
+        GameTooltip:SetText(L["FARM_OPEN_ONEWOW_TT"])
         GameTooltip:Show()
     end)
     openOwBtn:SetScript("OnLeave", GameTooltip_Hide)
 
     OneWoW_GUI:AttachFilterMenu(ahSrcBtn, {
         buildItems = function()
-            local t = { { value = "onewow", text = L["FARM_AH_ONEWOW"] or "OneWoW" } }
+            local t = { { value = "onewow", text = L["FARM_AH_ONEWOW"] } }
             if C_AddOns.IsAddOnLoaded("Auctionator") then
-                tinsert(t, { value = "auctionator", text = L["FARM_AH_AUCTIONATOR"] or "Auctionator" })
+                tinsert(t, { value = "auctionator", text = L["FARM_AH_AUCTIONATOR"] })
             end
             return t
         end,
@@ -567,7 +567,7 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     })
 
     local cbHeaders = OneWoW_GUI:CreateCheckbox(box, {
-        label = L["FARM_PIN_HEADERS"] or "Headers",
+        label = L["FARM_PIN_HEADERS"],
         checked = fp.showPinnedHeaders and true or false,
         onClick = function(myself)
             fp.showPinnedHeaders = myself:GetChecked() and true or false
@@ -586,11 +586,11 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     sessionNote:SetWordWrap(true)
     sessionNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local snapBtn = OneWoW_GUI:CreateFitTextButton(box, { text = L["FARM_SNAPSHOT"] or "Count", height = 22 })
+    local snapBtn = OneWoW_GUI:CreateFitTextButton(box, { text = L["FARM_SNAPSHOT"], height = 22 })
     snapBtn:SetPoint("TOPLEFT", cbHeaders, "BOTTOMLEFT", -4, -8)
     snapBtn:SetScript("OnEnter", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["FARM_SNAPSHOT_TT"] or "")
+        GameTooltip:SetText(L["FARM_SNAPSHOT_TT"])
         GameTooltip:Show()
     end)
     snapBtn:SetScript("OnLeave", GameTooltip_Hide)
@@ -601,11 +601,11 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
         RefreshAllFarmWindows()
     end)
 
-    local resetSessionBtn = OneWoW_GUI:CreateFitTextButton(box, { text = L["FARM_RESET_TOTALS"] or "Reset", height = 22 })
+    local resetSessionBtn = OneWoW_GUI:CreateFitTextButton(box, { text = L["FARM_RESET_TOTALS"], height = 22 })
     resetSessionBtn:SetPoint("LEFT", snapBtn, "RIGHT", 8, 0)
     resetSessionBtn:SetScript("OnEnter", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["FARM_RESET_TOTALS_TT"] or "")
+        GameTooltip:SetText(L["FARM_RESET_TOTALS_TT"])
         GameTooltip:Show()
     end)
     resetSessionBtn:SetScript("OnLeave", GameTooltip_Hide)
@@ -627,32 +627,32 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
 
     local modeText = OneWoW_GUI:CreateFS(toolbar, 11)
     modeText:SetPoint("LEFT", toolbar, "LEFT", 8, 0)
-    modeText:SetText(fp.mode == "allbags" and (L["FARM_MODE_ALL"] or "") or (L["FARM_MODE_WATCH"] or ""))
+    modeText:SetText(fp.mode == "allbags" and (L["FARM_MODE_ALL"]) or (L["FARM_MODE_WATCH"]))
     modeText:SetScript("OnEnter", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-        GameTooltip:AddLine(L["FARM_MODE_WATCH"] or "", 1, 1, 1)
-        GameTooltip:AddLine(L["FARM_MODE_WATCH_TT"] or "", 1, 1, 1, true)
+        GameTooltip:AddLine(L["FARM_MODE_WATCH"], 1, 1, 1)
+        GameTooltip:AddLine(L["FARM_MODE_WATCH_TT"], 1, 1, 1, true)
         GameTooltip:AddLine(" ")
-        GameTooltip:AddLine(L["FARM_MODE_ALL"] or "", 1, 1, 1)
-        GameTooltip:AddLine(L["FARM_MODE_ALL_TT"] or "", 1, 1, 1, true)
+        GameTooltip:AddLine(L["FARM_MODE_ALL"], 1, 1, 1)
+        GameTooltip:AddLine(L["FARM_MODE_ALL_TT"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
     modeText:SetScript("OnLeave", GameTooltip_Hide)
 
-    local modeBtn = OneWoW_GUI:CreateFitTextButton(toolbar, { text = L["FARM_MODE_CHANGE"] or "Mode", height = 22 })
+    local modeBtn = OneWoW_GUI:CreateFitTextButton(toolbar, { text = L["FARM_MODE_CHANGE"], height = 22 })
     modeBtn:SetPoint("LEFT", modeText, "RIGHT", 10, 0)
     modeBtn:SetScript("OnEnter", modeText:GetScript("OnEnter"))
     modeBtn:SetScript("OnLeave", GameTooltip_Hide)
     OneWoW_GUI:AttachFilterMenu(modeBtn, {
         buildItems = function()
             return {
-                { value = "watchlist", text = L["FARM_MODE_WATCH"] or "Watchlist" },
-                { value = "allbags", text = L["FARM_MODE_ALL"] or "All unbound in bags" },
+                { value = "watchlist", text = L["FARM_MODE_WATCH"] },
+                { value = "allbags", text = L["FARM_MODE_ALL"] },
             }
         end,
         onSelect = function(value)
             fp.mode = value
-            modeText:SetText(value == "allbags" and (L["FARM_MODE_ALL"] or "") or (L["FARM_MODE_WATCH"] or ""))
+            modeText:SetText(value == "allbags" and (L["FARM_MODE_ALL"]) or (L["FARM_MODE_WATCH"]))
             parent.RefreshList()
             parent.ShowDetail(list.id)
             RefreshAllFarmWindows()
@@ -660,7 +660,7 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
         getActiveValue = function() return fp.mode end,
     })
 
-    local addCursor = OneWoW_GUI:CreateFitTextButton(toolbar, { text = L["FARM_ADD_CURSOR"] or "Add cursor", height = 22 })
+    local addCursor = OneWoW_GUI:CreateFitTextButton(toolbar, { text = L["FARM_ADD_CURSOR"], height = 22 })
     addCursor:SetPoint("LEFT", modeBtn, "RIGHT", 10, 0)
     addCursor:SetScript("OnClick", function()
         local id = TFV.ResolveItemIDFromCursor()
@@ -675,7 +675,7 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
         end
     end)
 
-    local removeBtn = OneWoW_GUI:CreateFitTextButton(toolbar, { text = L["FARM_REMOVE"] or "Remove", height = 22 })
+    local removeBtn = OneWoW_GUI:CreateFitTextButton(toolbar, { text = L["FARM_REMOVE"], height = 22 })
     removeBtn:SetPoint("LEFT", addCursor, "RIGHT", 8, 0)
     removeBtn:SetScript("OnClick", function()
         local sel = box._farmSelected
@@ -705,16 +705,16 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     header:SetPoint("TOPLEFT", child, "TOPLEFT", 0, 0)
     header:SetPoint("TOPRIGHT", child, "TOPRIGHT", 0, 0)
     local h1 = OneWoW_GUI:CreateFS(header, 10)
-    h1:SetText(L["FARM_COL_ITEM"] or "Item")
+    h1:SetText(L["FARM_COL_ITEM"])
     h1:SetWordWrap(false)
     local h2 = OneWoW_GUI:CreateFS(header, 10)
-    h2:SetText(L["FARM_COL_QTY"] or "Qty")
+    h2:SetText(L["FARM_COL_QTY"])
     h2:SetWordWrap(false)
     local h3 = OneWoW_GUI:CreateFS(header, 10)
-    h3:SetText(L["FARM_COL_UNIT"] or "Unit")
+    h3:SetText(L["FARM_COL_UNIT"])
     h3:SetWordWrap(false)
     local h4 = OneWoW_GUI:CreateFS(header, 10)
-    h4:SetText(L["FARM_COL_TOTAL"] or "Total")
+    h4:SetText(L["FARM_COL_TOTAL"])
     h4:SetWordWrap(false)
     header._h1, header._h2, header._h3, header._h4 = h1, h2, h3, h4
     ApplyPinnedHeaderLayout(header, 300)
@@ -723,7 +723,7 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
 
     RefreshSessionNote = function()
         if fp.useSessionDelta then
-            sessionNote:SetText(L["FARM_SESSION_ACTIVE"] or "")
+            sessionNote:SetText(L["FARM_SESSION_ACTIVE"])
             sessionNote:Show()
             snapBtn:ClearAllPoints()
             resetSessionBtn:ClearAllPoints()
@@ -753,24 +753,24 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
 
         local summary
         if not showAH and not useTSM then
-            summary = L["FARM_VAL_NONE"] or ""
+            summary = L["FARM_VAL_NONE"]
         elseif useTSM and not showAH and tsmOk then
-            summary = format(L["FARM_VAL_TSM_ONLY"] or "%s", tsmStr)
+            summary = format(L["FARM_VAL_TSM_ONLY"], tsmStr)
         elseif useTSM and not tsmOk then
-            summary = L["FARM_VAL_TSM_MISSING"] or ""
+            summary = L["FARM_VAL_TSM_MISSING"]
         elseif useTSM and showAH and tsmOk then
-            summary = format(L["FARM_VAL_TSM_FIRST"] or "%s", tsmStr)
+            summary = format(L["FARM_VAL_TSM_FIRST"], tsmStr)
         else
-            summary = L["FARM_VAL_AH_ONLY"] or ""
+            summary = L["FARM_VAL_AH_ONLY"]
         end
 
-        srcLine1:SetText(format(L["FARM_VAL_LINE1"] or "%s", summary))
+        srcLine1:SetText(format(L["FARM_VAL_LINE1"], summary))
         if showAH then
-            local supplier = (v.ahPriceSource == "auctionator") and (L["FARM_AH_AUCTIONATOR"] or "Auctionator") or (L["FARM_AH_ONEWOW"] or "OneWoW")
-            srcLine2:SetText(format(L["FARM_VAL_LINE2"] or "%s", supplier))
+            local supplier = (v.ahPriceSource == "auctionator") and (L["FARM_AH_AUCTIONATOR"]) or (L["FARM_AH_ONEWOW"])
+            srcLine2:SetText(format(L["FARM_VAL_LINE2"], supplier))
             srcLine2:Show()
         elseif useTSM then
-            srcLine2:SetText(L["FARM_VAL_NO_AH_TSM"] or "")
+            srcLine2:SetText(L["FARM_VAL_NO_AH_TSM"])
             srcLine2:Show()
         else
             srcLine2:SetText("")
@@ -779,8 +779,8 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
 
         cbShowAH:SetChecked(showAH)
         cbUseTSM:SetChecked(useTSM)
-        local ahLbl = (v.ahPriceSource == "auctionator") and (L["FARM_AH_AUCTIONATOR"] or "Auctionator") or (L["FARM_AH_ONEWOW"] or "OneWoW")
-        ahSrcBtn:SetFitText(format("%s: %s", L["FARM_AH_SOURCE"] or "AH", ahLbl))
+        local ahLbl = (v.ahPriceSource == "auctionator") and (L["FARM_AH_AUCTIONATOR"]) or (L["FARM_AH_ONEWOW"])
+        ahSrcBtn:SetFitText(format("%s: %s", L["FARM_AH_SOURCE"], ahLbl))
     end
 
     RedrawDetailRows = function()

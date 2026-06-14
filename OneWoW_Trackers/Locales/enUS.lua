@@ -1,6 +1,6 @@
-local _, ns = ...
+local ADDON_NAME, ns = ...
 
-ns.RegisterLocale("enUS", {
+OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_TITLE_SHORT"]               = "Trackers",
     ["ADDON_TITLE_FRAME"]               = "OneWoW Trackers",
     ["MINIMAP_TOOLTIP_HINT"]            = "Click to open Trackers",
@@ -119,6 +119,10 @@ ns.RegisterLocale("enUS", {
     ["TRACKER_TYPE_QUEST"]              = "Quest",
     ["TRACKER_TYPE_QUEST_ACTIVE"]       = "Quest Active",
     ["TRACKER_TYPE_QUEST_WORLD"]        = "World Quest",
+    ["TRACKER_TYPE_QUEST_ACCOUNT"]      = "Quest (Account)",
+    ["TRACKER_TYPE_QUEST_POOL"]         = "Quest Pool",
+    ["TRACKER_TYPE_QUEST_POOL_ACCOUNT"] = "Quest Pool (Account)",
+    ["TRACKER_TYPE_QUEST_PROGRESS"]     = "Quest Progress",
     ["TRACKER_TYPE_LEVEL"]              = "Level",
     ["TRACKER_TYPE_ITEM"]               = "Item",
     ["TRACKER_TYPE_CURRENCY"]           = "Currency",
@@ -151,6 +155,11 @@ ns.RegisterLocale("enUS", {
     ["TRACKER_TYPE_PROF_CATCHUP"]       = "Catchup Currency",
     ["TRACKER_TYPE_RARE_QUEST"]         = "Rare Quest",
     ["TRACKER_TYPE_CUSTOM_TIMER"]       = "Custom Timer",
+    ["TRACKER_TYPE_CAMPAIGN"]           = "Campaign",
+
+    ["BUTTON_CANCEL"]                   = "Cancel",
+    ["BUTTON_CLOSE"]                    = "Close",
+    ["NOTES_SAVE"]                      = "Save",
 
     ["TRACKER_HIDE_DONE"]               = "Hide Done",
     ["TRACKER_TRACK_AS_TASK"]           = "Track as task",
@@ -190,3 +199,5 @@ ns.RegisterLocale("enUS", {
     ["RESET_REGION_EU"]                 = "Europe — Wednesday",
     ["RESET_REGION_ASIA"]               = "Asia / KR / TW — Thursday",
 })
+
+ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

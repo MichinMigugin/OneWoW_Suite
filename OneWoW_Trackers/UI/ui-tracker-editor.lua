@@ -1,4 +1,4 @@
-local _, ns = ...
+local ADDON_NAME, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
@@ -21,7 +21,7 @@ local function MakeLabel(parent, text, x, y)
 end
 
 local function FillMsg(key)
-    print((ns.L["ADDON_CHAT_PREFIX"] or "OneWoW Trackers:") .. " " .. (ns.L[key] or ""))
+    print(ns.L["ADDON_CHAT_PREFIX"] .. " " .. (OneWoW.Locale:GetOptional(ADDON_NAME, key) or ""))
 end
 
 local function GetTargetCreatureID()
@@ -42,7 +42,7 @@ end
 local function UpdateTitleFromTarget(nameBox)
     local name = UnitName("target")
     if not name or issecretvalue(name) then FillMsg("TRACKER_FILL_NO_TARGET"); return end
-    nameBox:SetText(format(ns.L["TRACKER_TALK_TO_FORMAT"] or "Talk to %s", name))
+    nameBox:SetText(format(ns.L["TRACKER_TALK_TO_FORMAT"], name))
 end
 
 local function FillCoordsFromPosition(card)
@@ -333,7 +333,7 @@ function TE_UI:ShowNewListDialog(callback)
         height = 600,
         destroyOnClose = true,
         buttons = {
-            { text = L["BUTTON_CANCEL"] or "Cancel", onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
+            { text = L["BUTTON_CANCEL"], onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
         },
     })
     if not dialog then return end
@@ -496,7 +496,7 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
                 end,
             },
             {
-                text = L["BUTTON_CANCEL"] or "Cancel",
+                text = L["BUTTON_CANCEL"],
                 onClick = function(frame) frame:Hide(); frame:SetParent(nil) end,
             },
         },
@@ -547,13 +547,13 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
     dialog._catDD = catDD
     yOfs = yOfs - 36
 
-    local accountWideCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_ACCOUNT_WIDE"] or "Account-wide progress" })
+    local accountWideCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_ACCOUNT_WIDE"] })
     accountWideCheck:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOfs)
     dialog._accountWideCheck = accountWideCheck
 
     local accountWideHint = OneWoW_GUI:CreateFS(content, 10)
     accountWideHint:SetPoint("TOPLEFT", accountWideCheck, "BOTTOMLEFT", 18, -2)
-    accountWideHint:SetText(L["TRACKER_ACCOUNT_WIDE_HINT"] or "Checked tasks are shared across all characters")
+    accountWideHint:SetText(L["TRACKER_ACCOUNT_WIDE_HINT"])
     accountWideHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     dialog:Show()
@@ -587,7 +587,7 @@ function TE_UI:ShowProfessionPicker(callback)
                 end,
             },
             {
-                text = L["BUTTON_CANCEL"] or "Cancel",
+                text = L["BUTTON_CANCEL"],
                 onClick = function(frame) frame:Hide(); frame:SetParent(nil) end,
             },
         },
@@ -639,7 +639,7 @@ function TE_UI:ShowListEditor(listID, callback)
         destroyOnClose = true,
         buttons = {
             {
-                text = L["NOTES_SAVE"] or "Save",
+                text = L["NOTES_SAVE"],
                 onClick = function(frame)
                     TD:UpdateList(listID, {
                         title = strtrim(frame._titleBox:GetText() or "Untitled"),
@@ -653,7 +653,7 @@ function TE_UI:ShowListEditor(listID, callback)
                 end,
             },
             {
-                text = L["BUTTON_CANCEL"] or "Cancel",
+                text = L["BUTTON_CANCEL"],
                 onClick = function(frame) frame:Hide(); frame:SetParent(nil) end,
             },
         },
@@ -706,14 +706,14 @@ function TE_UI:ShowListEditor(listID, callback)
     dialog._catDD = catDD
     yOfs = yOfs - 36
 
-    local accountWideCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_ACCOUNT_WIDE"] or "Account-wide progress" })
+    local accountWideCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_ACCOUNT_WIDE"] })
     accountWideCheck:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOfs)
     accountWideCheck:SetChecked(list.accountWide or false)
     dialog._accountWideCheck = accountWideCheck
 
     local accountWideHint = OneWoW_GUI:CreateFS(content, 10)
     accountWideHint:SetPoint("TOPLEFT", accountWideCheck, "BOTTOMLEFT", 18, -2)
-    accountWideHint:SetText(L["TRACKER_ACCOUNT_WIDE_HINT"] or "Checked tasks are shared across all characters")
+    accountWideHint:SetText(L["TRACKER_ACCOUNT_WIDE_HINT"])
     accountWideHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     dialog:Show()
@@ -734,7 +734,7 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
         destroyOnClose = true,
         buttons = {
             {
-                text = L["NOTES_SAVE"] or "Save",
+                text = L["NOTES_SAVE"],
                 onClick = function(frame)
                     local name = strtrim(frame._nameBox:GetText() or "")
                     if name == "" then name = "Section" end
@@ -751,7 +751,7 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
                 end,
             },
             {
-                text = L["BUTTON_CANCEL"] or "Cancel",
+                text = L["BUTTON_CANCEL"],
                 onClick = function(frame) frame:Hide(); frame:SetParent(nil) end,
             },
         },
@@ -772,10 +772,10 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
     local resetDD = ns.UI.CreateThemedDropdown(content, "", 220, 26)
     resetDD:SetPoint("TOPLEFT", content, "TOPLEFT", 60, yOfs)
     resetDD:SetOptions({
-        { text = L["TRACKER_RESET_DEFAULT"] or "Same as list (default)", value = "none" },
-        { text = L["TRACKER_RESET_DAILY"] or "Daily - resets every day", value = "daily" },
-        { text = L["TRACKER_RESET_WEEKLY"] or "Weekly - resets on region reset day", value = "weekly" },
-        { text = L["TRACKER_RESET_NEVER"] or "Never - manual only", value = "todo" },
+        { text = L["TRACKER_RESET_DEFAULT"], value = "none" },
+        { text = L["TRACKER_RESET_DAILY"], value = "daily" },
+        { text = L["TRACKER_RESET_WEEKLY"], value = "weekly" },
+        { text = L["TRACKER_RESET_NEVER"], value = "todo" },
     })
     resetDD:SetSelected(existing and existing.resetOverride or "none")
     dialog._resetDD = resetDD
@@ -799,7 +799,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         destroyOnClose = true,
         buttons = {
             {
-                text = L["NOTES_SAVE"] or "Save",
+                text = L["NOTES_SAVE"],
                 onClick = function(frame)
                     -- Route through the selected category card so its track type
                     -- and fields are saved, not a blank checkbox.
@@ -829,7 +829,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                     if callback then callback() end
                 end,
             },
-            { text = L["BUTTON_CANCEL"] or "Cancel", onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
+            { text = L["BUTTON_CANCEL"], onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
         },
     })
     if not dialog then return end
@@ -845,17 +845,17 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     if existing then nameBox:SetText(existing.label or "") end
     dialog._nameBox = nameBox
 
-    local trackCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_TRACK_AS_TASK"] or "Track as task" })
+    local trackCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_TRACK_AS_TASK"] })
     trackCheck:SetPoint("TOPLEFT", nameBox, "BOTTOMLEFT", 0, -8)
     trackCheck:SetChecked(not existing or not existing.optional)
     dialog._trackCheck = trackCheck
 
     local trackHint = OneWoW_GUI:CreateFS(content, 10)
     trackHint:SetPoint("TOPLEFT", trackCheck, "BOTTOMLEFT", 18, -2)
-    trackHint:SetText(L["TRACKER_TRACK_HINT"] or "Uncheck for info-only (no checkbox, won't count toward completion)")
+    trackHint:SetText(L["TRACKER_TRACK_HINT"])
     trackHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local rosterCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_ROSTER_MODE"] or "Per-character roster" })
+    local rosterCheck = OneWoW_GUI:CreateCheckbox(content, { label = L["TRACKER_ROSTER_MODE"] })
     rosterCheck:SetPoint("TOPLEFT", trackHint, "BOTTOMLEFT", -18, -8)
     rosterCheck:SetChecked(existing and existing.rosterMode or false)
     dialog._rosterCheck = rosterCheck
@@ -865,28 +865,28 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
     rosterHint:SetPoint("RIGHT", content, "RIGHT", -10, 0)
     rosterHint:SetJustifyH("LEFT")
     rosterHint:SetWordWrap(true)
-    rosterHint:SetText(L["TRACKER_ROSTER_HINT"] or "Auto-lists each character that completes this step's trigger this reset. You can also add or remove yourself manually.")
+    rosterHint:SetText(L["TRACKER_ROSTER_HINT"])
     rosterHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local resetLabel = OneWoW_GUI:CreateFS(content, 10)
     resetLabel:SetPoint("TOPLEFT", rosterHint, "BOTTOMLEFT", -18, -8)
-    resetLabel:SetText(L["TRACKER_RESET_LABEL"] or "Reset:")
+    resetLabel:SetText(L["TRACKER_RESET_LABEL"])
     resetLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local resetDD = ns.UI.CreateThemedDropdown(content, "", 220, 26)
     resetDD:SetPoint("LEFT", resetLabel, "RIGHT", 8, 0)
     resetDD:SetOptions({
-        { text = L["TRACKER_RESET_DEFAULT"] or "Same as list (default)", value = "none" },
-        { text = L["TRACKER_RESET_DAILY"] or "Daily - resets every day", value = "daily" },
-        { text = L["TRACKER_RESET_WEEKLY"] or "Weekly - resets on region reset day", value = "weekly" },
-        { text = L["TRACKER_RESET_NEVER"] or "Never - manual only", value = "todo" },
+        { text = L["TRACKER_RESET_DEFAULT"], value = "none" },
+        { text = L["TRACKER_RESET_DAILY"], value = "daily" },
+        { text = L["TRACKER_RESET_WEEKLY"], value = "weekly" },
+        { text = L["TRACKER_RESET_NEVER"], value = "todo" },
     })
     resetDD:SetSelected(existing and existing.resetOverride or "none")
     dialog._resetDD = resetDD
 
     local notesLabel = OneWoW_GUI:CreateFS(content, 10)
     notesLabel:SetPoint("TOPLEFT", resetLabel, "TOPLEFT", 0, -36)
-    notesLabel:SetText(L["TRACKER_NOTES_LABEL"] or "Notes (shown on hover):")
+    notesLabel:SetText(L["TRACKER_NOTES_LABEL"])
     notesLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local notesContainer = OneWoW_GUI:CreateFrame(content, { width = 1, height = 1, backdrop = BACKDROP_SOFT })
@@ -1031,7 +1031,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
             local fillBtn
             if cat.onFill then
-                fillBtn = OneWoW_GUI:CreateFitTextButton(card, { text = L[cat.fillKey] or "Fill", height = 22 })
+                fillBtn = OneWoW_GUI:CreateFitTextButton(card, { text = OneWoW.Locale:GetOptional(ADDON_NAME, cat.fillKey) or "Fill", height = 22 })
                 fillBtn:SetPoint("LEFT", saveFieldBtn, "RIGHT", 8, 0)
                 fillBtn:SetScript("OnClick", function() cat.onFill(card) end)
                 card._fillBtn = fillBtn
@@ -1039,7 +1039,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
 
             local titleBtn
             if cat.trackType == "npc_interact" then
-                titleBtn = OneWoW_GUI:CreateFitTextButton(card, { text = L["TRACKER_UPDATE_TITLE"] or "Update title", height = 22 })
+                titleBtn = OneWoW_GUI:CreateFitTextButton(card, { text = L["TRACKER_UPDATE_TITLE"], height = 22 })
                 titleBtn:SetPoint("LEFT", fillBtn or saveFieldBtn, "RIGHT", 8, 0)
                 titleBtn:SetScript("OnClick", function() UpdateTitleFromTarget(nameBox) end)
                 card._titleBtn = titleBtn
@@ -1218,7 +1218,7 @@ function TE_UI:ShowExportDialog(listID)
         height = 350,
         destroyOnClose = true,
         buttons = {
-            { text = L["BUTTON_CLOSE"] or "Close", onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
+            { text = L["BUTTON_CLOSE"], onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
         },
     })
     if not dialog then return end
@@ -1275,7 +1275,7 @@ function TE_UI:ShowImportDialog(callback)
                 end,
             },
             {
-                text = L["BUTTON_CANCEL"] or "Cancel",
+                text = L["BUTTON_CANCEL"],
                 onClick = function(frame) frame:Hide(); frame:SetParent(nil) end,
             },
         },
