@@ -16,7 +16,7 @@
 ## X-Category: |cFFFFD100OneWoW|r
 ## X-BugGrabber-Display: OneWow
 
-# Core (must load before locales)
+# Core
 Core\Constants.lua
 
 # Locales

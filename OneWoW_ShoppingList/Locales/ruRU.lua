@@ -1,6 +1,6 @@
-local _, ns = ...
+local ADDON_NAME = ...
 
-ns.RegisterLocale("ruRU", {
+OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["OWSL_MAIN_LIST"] = "Основной список",
     ["OWSL_LIST_EXISTS"] = "Список уже существует",
     ["OWSL_LIST_NOT_FOUND"] = "Список не найден",

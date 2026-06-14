@@ -21,9 +21,13 @@ local function ApplyTheme()
 end
 
 local function ApplyLanguage()
-    local lang = OneWoW_GUI:GetSetting("language")
-    if lang == "esMX" then lang = "esES" end
-    ns.SetLocale(lang)
+    -- Localization lives in the OneWoW Locale service now (scope = ADDON_NAME;
+    -- shared vocab in the "shared" scope). SetLanguage refolds every scope in place,
+    -- pushes BINDING_* globals, and fires OnApply; OneWoW_ShoppingList.L is a stable
+    -- view. esMX->esES is normalized inside. Kept as a thin shim for the profile-sync
+    -- loop (t-profiles SyncSettingToChildAddons) until Phase 6.
+    local lang = OneWoW_GUI:GetSetting("language") or "enUS"
+    OneWoW.Locale:SetLanguage(lang)
 end
 
 ns.ApplyTheme = ApplyTheme
@@ -69,7 +73,7 @@ function ns:OnPlayerLogin()
     DetectOneWoW()
 
     if OneWoW then
-        OneWoW:RegisterMinimap("OneWoW_ShoppingList", (OneWoW.L and OneWoW.L["CTX_OPEN_SL"]), nil, function()
+        OneWoW:RegisterMinimap("OneWoW_ShoppingList", OneWoW.L["CTX_OPEN_SL"], nil, function()
             if ns.MainWindow then ns.MainWindow:Toggle() end
         end)
     end
@@ -138,7 +142,7 @@ function ns:OnAddonLoaded()
     end)
 
     OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", ns, function(_, langCode)
-        ns.SetLocale(langCode)
+        OneWoW.Locale:SetLanguage(langCode)
         if ns.MainWindow then
             local wasShown = ns.MainWindow:IsShown()
             ns.MainWindow:Rebuild()

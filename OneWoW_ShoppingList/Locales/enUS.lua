@@ -1,6 +1,6 @@
-local _, ns = ...
+local ADDON_NAME, OneWoW_ShoppingList = ...
 
-ns.RegisterLocale("enUS", {
+OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["OWSL_MAIN_LIST"] = "Main List",
     ["OWSL_LIST_EXISTS"] = "List already exists",
     ["OWSL_LIST_NOT_FOUND"] = "List not found",
@@ -287,4 +287,4 @@ ns.RegisterLocale("enUS", {
     ["BINDING_NAME_ONEWOW_SHOPPING_LIST_ADD_ITEM"] = "Add Item to Default List",
 })
 
-ns.SetLocale("enUS")
+OneWoW_ShoppingList.L = OneWoW.Locale:GetTable(ADDON_NAME)

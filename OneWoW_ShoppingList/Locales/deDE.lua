@@ -1,6 +1,6 @@
-local _, ns = ...
+local ADDON_NAME = ...
 
-ns.RegisterLocale("deDE", {
+OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["OWSL_MAIN_LIST"] = "Hauptliste",
     ["OWSL_LIST_EXISTS"] = "Liste existiert bereits",
     ["OWSL_LIST_NOT_FOUND"] = "Liste nicht gefunden",

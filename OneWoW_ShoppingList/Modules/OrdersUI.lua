@@ -439,14 +439,14 @@ local function AddMissingToList(listName)
     if orderID then
         local orderInfo = GetCrafterOrderByID(orderID)
         if not orderInfo then
-            print((L and L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW|r:") .. " Could not read crafting order details.")
+            print(L["ADDON_CHAT_PREFIX"] .. " Could not read crafting order details.")
             return
         end
         reagents = BuildMissingBasicReagents(orderInfo)
     else
         local recipeID = TryReadRecipeIDFromOrdersSchematic()
         if not recipeID then
-            print((L and L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW|r:") .. " No crafting order selected.")
+            print(L["ADDON_CHAT_PREFIX"] .. " No crafting order selected.")
             return
         end
         reagents = BuildMissingBasicReagentsFromOrdersUI()
@@ -456,7 +456,7 @@ local function AddMissingToList(listName)
     end
 
     if #reagents == 0 then
-        print((L and L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW|r:") .. " No missing basic reagents for this order.")
+        print(L["ADDON_CHAT_PREFIX"] .. " No missing basic reagents for this order.")
         return
     end
 
@@ -468,7 +468,7 @@ local function AddMissingToList(listName)
         end
     end
 
-    print(string.format((L and L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW|r:") .. " Added %d reagent%s to %s.",
+    print(string.format(L["ADDON_CHAT_PREFIX"] .. " Added %d reagent%s to %s.",
         added, added ~= 1 and "s" or "", tostring(listName)))
 
     if ns.MainWindow and ns.MainWindow.RefreshSidebar then
@@ -499,7 +499,7 @@ local function MakeNewListAndAddMissing()
     else
         local recipeID, recipeInfo = TryReadRecipeIDFromOrdersSchematic()
         if not recipeID then
-            print((L and L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW|r:") .. " No crafting order selected.")
+            print(L["ADDON_CHAT_PREFIX"] .. " No crafting order selected.")
             return
         end
         local recipeName = recipeInfo and recipeInfo.name
@@ -516,7 +516,7 @@ local function MakeNewListAndAddMissing()
     if ns.ShoppingList and ns.ShoppingList.CreateList then
         local ok = ns.ShoppingList:CreateList(listName)
         if not ok then
-            print((L and L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW|r:") .. " Could not create list.")
+            print(L["ADDON_CHAT_PREFIX"] .. " Could not create list.")
             return
         end
         ns.ShoppingList:SetActiveList(listName)
@@ -540,26 +540,26 @@ local function CreateButtons(details)
     end)
     openBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:SetText((L and L["OWSL_TT_OPEN_LIST_TITLE"]) or "Open Shopping List", 1, 1, 1)
-        GameTooltip:AddLine((L and L["OWSL_TT_OPEN_LIST_DESC"]) or "Open the Shopping List window.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["OWSL_TT_OPEN_LIST_TITLE"], 1, 1, 1)
+        GameTooltip:AddLine(L["OWSL_TT_OPEN_LIST_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     openBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    makeListBtn = CreateTextButton(details, 90, (L and L["OWSL_PROF_BTN_MAKE_LIST"]) or "Make List")
+    makeListBtn = CreateTextButton(details, 90, L["OWSL_PROF_BTN_MAKE_LIST"])
     makeListBtn:SetPoint("RIGHT", openBtn, "LEFT", -5, 0)
     makeListBtn:SetScript("OnClick", function()
         MakeNewListAndAddMissing()
     end)
     makeListBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:SetText((L and L["OWSL_TT_MAKE_LIST_TITLE"]) or "Make List", 1, 1, 1)
-        GameTooltip:AddLine((L and L["OWSL_TT_MAKE_LIST_DESC"]) or "Creates a new list for this order's reagents.", 0.8, 0.8, 0.8, true)
+        GameTooltip:SetText(L["OWSL_TT_MAKE_LIST_TITLE"], 1, 1, 1)
+        GameTooltip:AddLine(L["OWSL_TT_MAKE_LIST_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     makeListBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    addToActiveBtn = CreateTextButton(details, 130, (L and L["OWSL_PROF_BTN_ADD_TO_ACTIVE"]) or "Add to * List")
+    addToActiveBtn = CreateTextButton(details, 130, L["OWSL_PROF_BTN_ADD_TO_ACTIVE"])
     addToActiveBtn:SetPoint("RIGHT", makeListBtn, "LEFT", -5, 0)
     addToActiveBtn:SetScript("OnClick", function()
         AddMissingToList(GetActiveOrDefaultListName())
@@ -572,7 +572,7 @@ local function CreateButtons(details)
     end)
     addToActiveBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    addToListBtn = CreateTextButton(details, 110, (L and L["OWSL_PROF_BTN_ADD_TO_LIST"]) or "Add to List")
+    addToListBtn = CreateTextButton(details, 110, L["OWSL_PROF_BTN_ADD_TO_LIST"])
     addToListBtn:SetPoint("RIGHT", addToActiveBtn, "LEFT", -5, 0)
     addToListBtn:SetScript("OnClick", function()
         local parentLists = ns.ShoppingList:GetParentLists()

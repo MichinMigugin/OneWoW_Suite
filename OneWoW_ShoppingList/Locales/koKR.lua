@@ -1,6 +1,6 @@
-local _, ns = ...
+local ADDON_NAME = ...
 
-ns.RegisterLocale("koKR", {
+OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["OWSL_MAIN_LIST"] = "주요 목록",
     ["OWSL_LIST_EXISTS"] = "목록이 이미 존재합니다.",
     ["OWSL_LIST_NOT_FOUND"] = "목록을 찾을 수 없습니다",

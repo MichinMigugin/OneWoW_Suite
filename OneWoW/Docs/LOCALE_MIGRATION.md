@@ -314,8 +314,15 @@ outright.
       `ImportExport/Applier.lua`) keep working via
       `OneWoW_Bags.Locales = OneWoW.Locale:GetStore(ADDON_NAME)`. Lint passes;
       in-game verify pending.
-- [ ] **OneWoW_ShoppingList** (263 keys, 6 locales — 0 shared today, but adopt
-      the service for consistency + future shared keys)
+- [x] **OneWoW_ShoppingList** (263 keys, 6 locales). Scope `OneWoW_ShoppingList`
+      (263 enUS / 259 other). 0 shared keys → no drops, no harvest. **Aligned to
+      the DD/Bags shape:** deleted the `RegisterLocale`/`SetLocale` fold helper
+      from `Core/Constants.lua`; enUS sets the view; `ApplyLanguage` is the
+      `SetLanguage` shim. Anti-pattern sweep done (14 `(L and L["K"]) or "lit"`
+      guards in `OrdersUI.lua` + the minimap `CTX_OPEN_SL` guard simplified; all
+      keys verified registered). Lint clean on touched files. In-game verify
+      pending. (Pre-existing `_G.<name>` violations in `BagOverlays.lua` /
+      `ShoppingList.lua` noted separately — unrelated to locale work.)
 - [ ] **OneWoW_Utility_DevTool** (579 keys, 6 locales)
 
 ### Phase 3 — LocaleManager addons (Pattern B)
@@ -467,3 +474,4 @@ additive. The service itself (Phase 0) is inert until something registers.
 | _2026-06-14_ | — | core/DD/Bags | Simplified defensive nil-guards (`(OneWoW.L and L["K"]) or "lit"` → `L["K"]`; minimap `if L and L["K"]` → unconditional). Fixed `GetLoadFailureText` key-name-on-miss bug via `GetOptional`. Flagged remaining `if err and L[err]` error-display existence-checks. Lint passes; in-game verify pending. |
 | _2026-06-14_ | — | OneWoW | Key-name-on-miss surfaced a genuinely missing key: `CTX_OPEN_TRACKERS` (right-click minimap menu) was never added to core while every other `CTX_OPEN_*` was; old `or "Open Trackers"` fallback hid it. Added to core enUS + koKR. |
 | _2026-06-14_ | — | Bags | Resolved the flagged `if err and L[err]` sites: traced all 7 — every `err` is a registered key (DUPLICATE_*/SAVED_SEARCH_*), so none were broken. Simplified to `if err then`. Lint passes. |
+| _2026-06-14_ | 2 | ShoppingList | Migrated to scope `OneWoW_ShoppingList` + service view; aligned to DD/Bags (removed `RegisterLocale`/`SetLocale` from Constants.lua; `ApplyLanguage`→`SetLanguage` shim). 0 shared → no harvest. Anti-pattern sweep: 14 dead `(L and L["K"]) or "lit"` guards simplified, all keys verified registered. Touched files lint clean; in-game verify pending. |
