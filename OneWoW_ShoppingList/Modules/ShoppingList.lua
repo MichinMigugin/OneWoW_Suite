@@ -650,7 +650,7 @@ function ShoppingList:IsItemCraftable(itemID)
         return craftableCache[itemID].result, craftableCache[itemID].recipes
     end
 
-    local profAddon = _G.OneWoW_CatalogData_Tradeskills
+    local profAddon = OneWoW_CatalogData_Tradeskills
     if not profAddon then
         craftableCache[itemID] = { result = false }
         return false
@@ -681,7 +681,7 @@ end
 function ShoppingList:CalculateCraftIngredients(recipeID, quantity)
     if not recipeID or not quantity then return {} end
 
-    local profAddon = _G.OneWoW_CatalogData_Tradeskills
+    local profAddon = OneWoW_CatalogData_Tradeskills
     if not profAddon then return {} end
 
     local profNS = profAddon.GetNamespace and profAddon:GetNamespace()
@@ -705,7 +705,7 @@ end
 function ShoppingList:GetRecipeKnownBy(recipeID)
     if not recipeID then return {} end
 
-    local profAddon = _G.OneWoW_CatalogData_Tradeskills
+    local profAddon = OneWoW_CatalogData_Tradeskills
     if not profAddon then return {} end
 
     local profNS = profAddon.GetNamespace and profAddon:GetNamespace()

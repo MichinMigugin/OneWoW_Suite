@@ -127,9 +127,9 @@ function BagOverlays:DoRefresh()
         return
     end
 
-    if _G.ContainerFrameCombinedBags and _G.ContainerFrameCombinedBags:IsVisible() then
-        if _G.ContainerFrameCombinedBags.EnumerateValidItems then
-            for _, button in _G.ContainerFrameCombinedBags:EnumerateValidItems() do
+    if ContainerFrameCombinedBags and ContainerFrameCombinedBags:IsVisible() then
+        if ContainerFrameCombinedBags.EnumerateValidItems then
+            for _, button in ContainerFrameCombinedBags:EnumerateValidItems() do
                 if button and button.GetBagID and button.GetID then
                     UpdateButtonOverlay(button, button:GetBagID(), button:GetID())
                 end
