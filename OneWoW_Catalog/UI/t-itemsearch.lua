@@ -560,7 +560,7 @@ ShowItemDetail = function(result)
                 ageText = math.floor(ageSeconds / 86400) .. "d " .. L["ITEMSEARCH_AH_AGO"]
             end
         elseif ahMeta and ahMeta.ageDays ~= nil then
-            ageText = string.format(L["ITEMSEARCH_AH_AGE_DAYS"] or "%d d", ahMeta.ageDays) .. " " .. L["ITEMSEARCH_AH_AGO"]
+            ageText = string.format(L["ITEMSEARCH_AH_AGE_DAYS"], ahMeta.ageDays) .. " " .. L["ITEMSEARCH_AH_AGO"]
         end
         local row = L["ITEMSEARCH_AH_PRICE"] .. ":  " .. OneWoW.Format.FormatGold(ahPrice)
         if ageText then

@@ -1,7 +1,4 @@
--- OneWoW Addon File
--- OneWoW_Catalog/UI/t-quests.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
@@ -370,20 +367,20 @@ end
 
 local function GetQuestProgressLabel(questID)
     if questID and C_QuestLog.IsOnQuest(questID) then
-        return L["QUESTS_PROGRESS_ACTIVE"] or "Active"
+        return L["QUESTS_PROGRESS_ACTIVE"]
     end
 
     if questID and C_QuestLog.IsQuestFlaggedCompleted(questID) then
-        return L["QUESTS_PROGRESS_COMPLETED"] or "Completed"
+        return L["QUESTS_PROGRESS_COMPLETED"]
     end
 
     if questID and C_QuestLog.IsQuestFlaggedCompletedOnAccount
         and C_QuestLog.IsQuestFlaggedCompletedOnAccount(questID)
     then
-        return L["QUESTS_PROGRESS_WARBAND"] or "Completed (Warband)"
+        return L["QUESTS_PROGRESS_WARBAND"]
     end
 
-    return L["QUESTS_PROGRESS_NOT_COMPLETED"] or "Not Completed"
+    return L["QUESTS_PROGRESS_NOT_COMPLETED"]
 end
 
 local function GetQuestRewardSummary(quest)
@@ -1864,7 +1861,7 @@ function ShowQuestDetail(panels, questData)
         string.format("%s: %s", L["QUESTS_EXPANSION"], expName),
         string.format("%s: %s", L["QUESTS_ZONE"], zoneName),
         string.format("%s: %s", L["QUESTS_PROGRESS_LABEL"], progressName),
-        string.format("%s: %s", L["QUESTS_REWARDS"] or "Rewards", rewardSummary),
+        string.format("%s: %s", L["QUESTS_REWARDS"], rewardSummary),
         string.format("Faction: %s", factionName),
         string.format("Category: %s", categoryName),
     }
@@ -2551,7 +2548,7 @@ function ShowQuestDetail(panels, questData)
 
         local chainLabel = track(OneWoW_GUI:CreateFS(parent, 10))
         chainLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
-        chainLabel:SetText(L["QUESTS_CHAIN"] or "Quest Chain")
+        chainLabel:SetText(L["QUESTS_CHAIN"])
         chainLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
         yOffset = yOffset - 20
@@ -4360,11 +4357,11 @@ function ns.UI.CreateQuestsTab(parent)
         end
     end
 
-    rightHeader:SetScript("OnSizeChanged", function(self, w)
+    rightHeader:SetScript("OnSizeChanged", function(_, w)
         LayoutFilterDropdowns(w)
     end)
 
-    advancedDrawer:SetScript("OnSizeChanged", function(self, w)
+    advancedDrawer:SetScript("OnSizeChanged", function(_, w)
         LayoutAdvancedDrawer(w)
     end)
 

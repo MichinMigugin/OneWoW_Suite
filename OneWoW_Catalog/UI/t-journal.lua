@@ -54,7 +54,7 @@ local function GetItemTypeFilterLabel()
     if count == 1 then
         for _, def in ipairs(ITEM_TYPE_DEFS) do
             if filterItemTypes[def.key] then
-                return L[def.labelKey] or def.key
+                return L[def.labelKey]
             end
         end
     end
@@ -184,7 +184,7 @@ local function FormatDifficulties(difficulties)
     for _, diff in ipairs(difficulties) do
         local key = diffAbbrev[diff.name]
         if key then
-            table.insert(parts, L[key] or diff.name)
+            table.insert(parts, L[key])
         else
             table.insert(parts, diff.name or "?")
         end
@@ -938,7 +938,7 @@ local function InitializeDropdowns(panels)
                     local capKey = def.key
                     table.insert(items, {
                         type    = "checkbox",
-                        text    = L[def.labelKey] or def.key,
+                        text    = L[def.labelKey],
                         checked = filterItemTypes[capKey] == true,
                         onToggle = function(checked)
                             filterItemTypes[capKey] = checked and true or nil
