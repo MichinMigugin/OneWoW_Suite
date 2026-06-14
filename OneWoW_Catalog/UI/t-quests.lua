@@ -342,7 +342,9 @@ end
 local function ClearQuestList()
     for _, btn in ipairs(questListButtons) do
         btn:Hide()
+        btn:SetParent(nil)
     end
+    wipe(questListButtons)
 end
 
 local function GetQuestTypeLabel(quest)
@@ -3267,12 +3269,6 @@ local function EnsureQuestListRows(panels, onClick)
         )
         btn:Hide()
         table.insert(questListButtons, btn)
-    end
-
-    for _, btn in ipairs(questListButtons) do
-        if rowParent and btn:GetParent() ~= rowParent then
-            btn:SetParent(rowParent)
-        end
     end
 
     return capacity
