@@ -706,7 +706,7 @@ function ns.UI.BuildActionBarSetsList(split, filterText)
         favLabel:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 8, yOffset)
         favLabel:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -8, yOffset)
         favLabel:SetJustifyH("LEFT")
-        favLabel:SetText(L["AB_FAVORITES_SECTION"] or "Favorites")
+        favLabel:SetText(L["AB_FAVORITES_SECTION"])
         favLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
         yOffset = yOffset - favLabel:GetStringHeight() - 4
 
@@ -723,8 +723,8 @@ function ns.UI.BuildActionBarSetsList(split, filterText)
                 favoriteToggle = {
                     isFavorite = true,
                     size = 16,
-                    tooltipTitle = L["AB_FAVORITE_SET_TT"] or L["TT_COL_STAR"],
-                    tooltipText = L["AB_FAVORITE_SET_TT_DESC"] or "",
+                    tooltipTitle = L["AB_FAVORITE_SET_TT"],
+                    tooltipText = L["AB_FAVORITE_SET_TT_DESC"],
                     onChange = function(isFav)
                         ns.SetFavoriteBarSet(capturedName, isFav)
                         ns.UI.BuildActionBarSetsList(split, split.searchBox and split.searchBox:GetSearchText() or "")
@@ -811,8 +811,8 @@ function ns.UI.BuildActionBarSetsList(split, filterText)
                         favoriteToggle = {
                             isFavorite = false,
                             size = 16,
-                            tooltipTitle = L["AB_FAVORITE_SET_TT"] or L["TT_COL_STAR"],
-                            tooltipText = L["AB_FAVORITE_SET_TT_DESC"] or "",
+                            tooltipTitle = L["AB_FAVORITE_SET_TT"],
+                            tooltipText = L["AB_FAVORITE_SET_TT_DESC"],
                             onChange = function(isFav)
                                 ns.SetFavoriteBarSet(capturedName, isFav)
                                 ns.UI.BuildActionBarSetsList(split, split.searchBox and split.searchBox:GetSearchText() or "")

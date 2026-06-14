@@ -322,7 +322,7 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
     end
 
     scanButton.isAHScanning = true
-    scanButton:SetText(L["ITEMS_SCAN_STOPPED"] or "Stop")
+    scanButton:SetText(L["ITEMS_SCAN_STOPPED"])
 
     local progressBar = itemsTab.scanProgressBar
     local progressContainer = itemsTab.scanBarContainer
@@ -361,13 +361,13 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
             ShowProgress(true)
             if progressBar then
                 progressBar:UpdateProgress(0, total)
-                progressBar._text:SetText("0/" .. total .. " - " .. (L["ITEMS_SCANNING_STATUS"] or "Scanning..."))
+                progressBar._text:SetText("0/" .. total .. " - " .. (L["ITEMS_SCANNING_STATUS"]))
             end
         elseif status == "itemScanned" then
             if progressBar then
                 progressBar:UpdateProgress(current, total)
                 local pricesFound = extra or 0
-                progressBar._text:SetText(current .. "/" .. total .. "  (" .. pricesFound .. " " .. (L["ITEMS_PRICES_FOUND"] or "prices found") .. ")")
+                progressBar._text:SetText(current .. "/" .. total .. "  (" .. pricesFound .. " " .. (L["ITEMS_PRICES_FOUND"]) .. ")")
             end
             if current - lastRefreshIndex >= 25 then
                 lastRefreshIndex = current
@@ -379,7 +379,7 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
             local pricesFound = extra or 0
             if progressBar then
                 progressBar:UpdateProgress(total, total)
-                progressBar._text:SetText(L["ITEMS_SCAN_COMPLETE"] .. "  (" .. pricesFound .. " " .. (L["ITEMS_PRICES_FOUND"] or "prices found") .. ")")
+                progressBar._text:SetText(L["ITEMS_SCAN_COMPLETE"] .. "  (" .. pricesFound .. " " .. (L["ITEMS_PRICES_FOUND"]) .. ")")
             end
             C_Timer.After(3, function()
                 ScanDone(pricesFound)
@@ -395,7 +395,7 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
 end
 
 local function FormatLastSeen(timestamp)
-    if not timestamp or timestamp == 0 then return L["FMT_NEVER"] or "Never" end
+    if not timestamp or timestamp == 0 then return L["FMT_NEVER"] end
     local hours = (time() - timestamp) / 3600
     if hours < 24 then
         return math.max(1, math.floor(hours)) .. " hr"
@@ -461,9 +461,9 @@ function ns.UI.RefreshItemsTab(itemsTab)
         if itemsTab.noticeText then
             local notice = L["ITEMS_NOTICE"]
             if auctionatorActive then
-                notice = L["ITEMS_NOTICE_AUCTIONATOR"] or notice
+                notice = L["ITEMS_NOTICE_AUCTIONATOR"]
             elseif tsmActive then
-                notice = L["ITEMS_NOTICE_TSM"] or notice
+                notice = L["ITEMS_NOTICE_TSM"]
             end
             itemsTab.noticeText:SetText(notice)
         end

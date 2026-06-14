@@ -634,7 +634,7 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
                     grid:AddLine(panel, line)
                 end
             else
-                grid:AddLine(panel, L["PROGRESS_RAID_NO_DATA"] or "No data - log in to scan.", {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
+                grid:AddLine(panel, L["PROGRESS_RAID_NO_DATA"], {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
             end
         end
 
@@ -646,7 +646,7 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
                 return
             end
             local total = GetVaultTrackTotal(list)
-            local parts = {(L["PROGRESS_VAULT_TOTAL"] or "T:") .. total}
+            local parts = {(L["PROGRESS_VAULT_TOTAL"]) .. total}
             for j = 1, 3 do
                 local act = list[j]
                 if act then
@@ -688,7 +688,7 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
             local hours = math.floor((resetSec % 86400) / 3600)
             local mins = math.floor((resetSec % 3600) / 60)
             local resetStr = string.format("%dd %dh %dm", days, hours, mins)
-            grid:AddLine(p1, (L["PROGRESS_WEEKLY_RESET"] or "Reset in:") .. " " .. resetStr, {OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")})
+            grid:AddLine(p1, (L["PROGRESS_WEEKLY_RESET"]) .. " " .. resetStr, {OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")})
         end
 
         local p2 = grid:AddPanel(L["PROGRESS_WEEKLY_ACTIVITIES"])
@@ -861,7 +861,7 @@ end
 
 local function CreateMythicPlusColumns()
     local cols = BuildCommonColumns()
-    table.insert(cols, {key = "bestTime", label = L["PROGRESS_COL_BEST_RUN"] or "Best Run", width = 55, minWidth = 55, flexWeight = 1, align = "left", ttTitle = L["TT_COL_BEST_TIME"], ttDesc = L["TT_COL_BEST_TIME_DESC"]})
+    table.insert(cols, {key = "bestTime", label = L["PROGRESS_COL_BEST_RUN"], width = 55, minWidth = 55, flexWeight = 1, align = "left", ttTitle = L["TT_COL_BEST_TIME"], ttDesc = L["TT_COL_BEST_TIME_DESC"]})
     table.insert(cols, {key = "keystone", label = L["PROGRESS_COL_KEYSTONE"],               width = 65, minWidth = 65, flexWeight = 1, align = "left", ttTitle = L["TT_COL_KEYSTONE"],  ttDesc = L["TT_COL_KEYSTONE_DESC"]})
     for _, dung in ipairs(GetSeasonDungeons()) do
         table.insert(cols, {
@@ -944,7 +944,7 @@ local function CreateVaultTrackCell(parent, list)
     cell:SetSize(110, 18)
 
     local total = GetVaultTrackTotal(list)
-    local tPrefix = (L["PROGRESS_VAULT_TOTAL"] or "T:") .. total
+    local tPrefix = (L["PROGRESS_VAULT_TOTAL"]) .. total
     local tText = cell:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     tText:SetPoint("LEFT", cell, "LEFT", 2, 0)
     tText:SetText(tPrefix)
@@ -992,10 +992,10 @@ end
 
 local function CreateWeeklyColumns()
     local cols = BuildCommonColumns()
-    table.insert(cols, {key = "vaultRaid",    label = L["PROGRESS_COL_VAULT_R"] or "Vault-R", width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = L["PROGRESS_VAULT_RAID"],    ttDesc = L["TT_COL_VAULT_R_DESC"] or "Great Vault raid track"})
-    table.insert(cols, {key = "vaultDungeon", label = L["PROGRESS_COL_VAULT_D"] or "Vault-D", width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = L["PROGRESS_VAULT_DUNGEON"], ttDesc = L["TT_COL_VAULT_D_DESC"] or "Great Vault dungeon track"})
-    table.insert(cols, {key = "vaultWorld",   label = L["PROGRESS_COL_VAULT_W"] or "Vault-W", width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = L["PROGRESS_VAULT_WORLD"],   ttDesc = L["TT_COL_VAULT_W_DESC"] or "Great Vault world track"})
-    table.insert(cols, {key = "worldBoss",    label = L["PROGRESS_COL_WORLD_BOSS"] or "W.Boss", width = 65, minWidth = 65, flexWeight = 1, align = "left", ttTitle = L["TT_COL_WORLD_BOSS"], ttDesc = L["TT_COL_WORLD_BOSS_DESC"]})
+    table.insert(cols, {key = "vaultRaid",    label = L["PROGRESS_COL_VAULT_R"], width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = L["PROGRESS_VAULT_RAID"],    ttDesc = L["TT_COL_VAULT_R_DESC"]})
+    table.insert(cols, {key = "vaultDungeon", label = L["PROGRESS_COL_VAULT_D"], width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = L["PROGRESS_VAULT_DUNGEON"], ttDesc = L["TT_COL_VAULT_D_DESC"]})
+    table.insert(cols, {key = "vaultWorld",   label = L["PROGRESS_COL_VAULT_W"], width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = L["PROGRESS_VAULT_WORLD"],   ttDesc = L["TT_COL_VAULT_W_DESC"]})
+    table.insert(cols, {key = "worldBoss",    label = L["PROGRESS_COL_WORLD_BOSS"], width = 65, minWidth = 65, flexWeight = 1, align = "left", ttTitle = L["TT_COL_WORLD_BOSS"], ttDesc = L["TT_COL_WORLD_BOSS_DESC"]})
     for _, entry in ipairs(GetWeeklyActivitiesList()) do
         local label = ns.ShortNames:GetShortName(entry.name or "", 8)
         table.insert(cols, {
@@ -1357,7 +1357,7 @@ local function BuildWeeklyTooltip(self, edg, chd, chk, contentFrame)
         local list = GetVaultActivities(edg, vaultType)
         if list and (list[1] or list[2] or list[3]) then
             local total = GetVaultTrackTotal(list)
-            GameTooltip:AddLine((L["PROGRESS_VAULT_TOTAL"] or "T:") .. total, 0.9, 0.9, 0.9)
+            GameTooltip:AddLine((L["PROGRESS_VAULT_TOTAL"]) .. total, 0.9, 0.9, 0.9)
             GameTooltip:AddLine(" ")
 
             local unlockVerb
@@ -1495,10 +1495,10 @@ function ns.UI.CreateProgressTab(parent)
     local subTabFrames = {}
     local subTabOrder = {"mythicplus", "raids", "weekly", "currencies"}
     local subTabNames = {
-        mythicplus = L["SUBTAB_MYTHICPLUS"] or "Mythic+",
-        raids      = L["SUBTAB_RAIDS"] or "Raids",
-        weekly     = L["SUBTAB_WEEKLY"] or "Weekly",
-        currencies = L["SUBTAB_CURRENCIES"] or "Currencies",
+        mythicplus = L["SUBTAB_MYTHICPLUS"],
+        raids      = L["SUBTAB_RAIDS"],
+        weekly     = L["SUBTAB_WEEKLY"],
+        currencies = L["SUBTAB_CURRENCIES"],
     }
 
     local status = OneWoW_GUI:CreateStatusBar(parent, nil, {

@@ -181,7 +181,7 @@ end
 
 function Formatters:FormatClassName(className)
     if not className then
-        return L and L["Unknown"] or "Unknown"
+        return L["Unknown"]
     end
 
     local upperClassName = string.upper(className)

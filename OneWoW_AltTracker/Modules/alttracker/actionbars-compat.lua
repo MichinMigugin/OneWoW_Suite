@@ -6,6 +6,6 @@ function ns.SetupActionBarsCompat()
     else
         ns.ActionBarsModule = nil
         local L = ns.L
-        print((L and L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW - AltTracker:|r") .. " " .. (L and L["MSG_CHAR_ADDON_NOT_LOADED"] or "Character data addon not loaded."))
+        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["MSG_CHAR_ADDON_NOT_LOADED"])
     end
 end

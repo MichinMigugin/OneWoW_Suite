@@ -47,7 +47,7 @@ end
 
 function ns.UI:CreateMainFrame(defaultTab)
     if not OneWoWAltTracker or not OneWoWAltTracker.db or not OneWoWAltTracker.db.global then
-        print((L and L["ADDON_CHAT_PREFIX"] or "|cFFFFD100OneWoW - AltTracker:|r") .. " " .. (L and L["ADDON_MSG_DB_NOT_READY"] or "Database not ready."))
+        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["ADDON_MSG_DB_NOT_READY"])
         return nil
     end
 
@@ -244,25 +244,25 @@ function ns.UI:CreateMainFrame(defaultTab)
         return tabFrame
     end
 
-    local summaryTab = CreateTab("summary", L["SUBTAB_SUMMARY"] or "Summary")
+    local summaryTab = CreateTab("summary", L["SUBTAB_SUMMARY"])
     ns.UI.CreateSummaryTab(summaryTab)
 
-    local progressTab = CreateTab("progress", L["SUBTAB_PROGRESS"] or "Progress")
+    local progressTab = CreateTab("progress", L["SUBTAB_PROGRESS"])
     ns.UI.CreateProgressTab(progressTab)
 
-    local bankTab = CreateTab("bank", L["SUBTAB_BANK"] or "Bank")
+    local bankTab = CreateTab("bank", L["SUBTAB_BANK"])
     ns.UI.CreateBankTab(bankTab)
 
-    local equipmentTab = CreateTab("equipment", L["SUBTAB_EQUIPMENT"] or "Equipment")
+    local equipmentTab = CreateTab("equipment", L["SUBTAB_EQUIPMENT"])
     ns.UI.CreateEquipmentTab(equipmentTab)
 
-    local professionsTab = CreateTab("professions", L["SUBTAB_PROFESSIONS"] or "Professions")
+    local professionsTab = CreateTab("professions", L["SUBTAB_PROFESSIONS"])
     ns.UI.CreateProfessionsTab(professionsTab)
 
-    local auctionsTab = CreateTab("auctions", L["SUBTAB_AUCTIONS"] or "Auctions")
+    local auctionsTab = CreateTab("auctions", L["SUBTAB_AUCTIONS"])
     ns.UI.CreateAuctionsTab(auctionsTab)
 
-    local financialsTab = CreateTab("financials", L["SUBTAB_FINANCIALS"] or "Financials")
+    local financialsTab = CreateTab("financials", L["SUBTAB_FINANCIALS"])
     ns.UI.CreateFinancialsTab(financialsTab)
     financialsTab:SetScript("OnShow", function()
         if ns.UI.RefreshFinancialsTab then
@@ -270,7 +270,7 @@ function ns.UI:CreateMainFrame(defaultTab)
         end
     end)
 
-    local itemsTab = CreateTab("items", L["SUBTAB_ITEMS"] or "Items")
+    local itemsTab = CreateTab("items", L["SUBTAB_ITEMS"])
     ns.UI.CreateItemsTab(itemsTab)
     itemsTab:SetScript("OnShow", function()
         if ns.UI.RefreshItemsTab then
@@ -278,13 +278,13 @@ function ns.UI:CreateMainFrame(defaultTab)
         end
     end)
 
-    local profilesTab = CreateTab("actionbars", L["SUBTAB_ACTIONBARS"] or "Action Bars")
+    local profilesTab = CreateTab("actionbars", L["SUBTAB_ACTIONBARS"])
     ns.UI.CreateActionBarsTab(profilesTab)
 
-    local lockoutsTab = CreateTab("lockouts", L["SUBTAB_LOCKOUTS"] or "Lockouts")
+    local lockoutsTab = CreateTab("lockouts", L["SUBTAB_LOCKOUTS"])
     ns.UI.CreateLockoutsTab(lockoutsTab)
 
-    local settingsTab = CreateTab("settings", L["TAB_SETTINGS"] or "Settings")
+    local settingsTab = CreateTab("settings", L["TAB_SETTINGS"])
     ns.UI.CreateSettingsTab(settingsTab)
 
     C_Timer.After(0.1, function() UpdateTabLayout() end)

@@ -101,7 +101,7 @@ function ns.UI.CreateAuctionsTab(parent)
 
         local hasAnyMail = false
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(L["MAIL_PENDING_PICKUP"] or "Mail Pending Pickup", 1, 1, 1)
+        GameTooltip:SetText(L["MAIL_PENDING_PICKUP"], 1, 1, 1)
 
         for charKey, storageData in pairs(OneWoW_AltTracker_Storage_DB.characters) do
             if storageData.mail and storageData.mail.mails then
@@ -139,7 +139,7 @@ function ns.UI.CreateAuctionsTab(parent)
         end
 
         if not hasAnyMail then
-            GameTooltip:AddLine(L["NO_AUCTION_MAIL"] or "No auction gold waiting", 0.5, 0.5, 0.5)
+            GameTooltip:AddLine(L["NO_AUCTION_MAIL"], 0.5, 0.5, 0.5)
         end
 
         GameTooltip:Show()
@@ -155,17 +155,17 @@ function ns.UI.CreateAuctionsTab(parent)
     parent.UpdateMailIcon = UpdateMailIcon
 
     local altDropdown, altDropdownText = OneWoW_GUI:CreateDropdown(filterPanel, {
-        width = 150, height = 28, text = L["AUCTIONS_ALL_ALTS"] or "All Alts"
+        width = 150, height = 28, text = L["AUCTIONS_ALL_ALTS"]
     })
     altDropdown:SetPoint("LEFT", mailIconButton, "RIGHT", 4, 0)
 
     local filterButtons = {}
     local filterOptions = {
-        {key = "all", label = L["AUCTIONS_FILTER_ALL"] or "All", tooltip = L["AUCTIONS_FILTER_ALL_DESC"] or "Show all auctions and bids"},
-        {key = "auctions", label = L["AUCTIONS_FILTER_AUCTIONS"] or "My Auctions", tooltip = L["AUCTIONS_FILTER_AUCTIONS_DESC"] or "Show only items you are selling"},
-        {key = "bids", label = L["AUCTIONS_FILTER_BIDS"] or "My Bids", tooltip = L["AUCTIONS_FILTER_BIDS_DESC"] or "Show only items you are bidding on"},
-        {key = "expiring", label = L["AUCTIONS_FILTER_EXPIRING"] or "Expiring Soon", tooltip = L["AUCTIONS_FILTER_EXPIRING_DESC"] or "Show auctions expiring within 2 hours"},
-        {key = "history", label = L["AUCTIONS_FILTER_HISTORY"] or "History", tooltip = L["AUCTIONS_FILTER_HISTORY_DESC"] or "Show auction history (sold, expired, canceled)"},
+        {key = "all", label = L["AUCTIONS_FILTER_ALL"], tooltip = L["AUCTIONS_FILTER_ALL_DESC"]},
+        {key = "auctions", label = L["AUCTIONS_FILTER_AUCTIONS"], tooltip = L["AUCTIONS_FILTER_AUCTIONS_DESC"]},
+        {key = "bids", label = L["AUCTIONS_FILTER_BIDS"], tooltip = L["AUCTIONS_FILTER_BIDS_DESC"]},
+        {key = "expiring", label = L["AUCTIONS_FILTER_EXPIRING"], tooltip = L["AUCTIONS_FILTER_EXPIRING_DESC"]},
+        {key = "history", label = L["AUCTIONS_FILTER_HISTORY"], tooltip = L["AUCTIONS_FILTER_HISTORY_DESC"]},
     }
 
     for i, option in ipairs(filterOptions) do
@@ -226,7 +226,7 @@ function ns.UI.CreateAuctionsTab(parent)
 
     local function InitializeAltDropdown()
         if not OneWoW_AltTracker_Auctions_DB or not OneWoW_AltTracker_Auctions_DB.characters then
-            altDropdownText:SetText(L["AUCTIONS_ALL_ALTS"] or "All Alts")
+            altDropdownText:SetText(L["AUCTIONS_ALL_ALTS"])
             return
         end
 
@@ -248,7 +248,7 @@ function ns.UI.CreateAuctionsTab(parent)
         table.sort(altList, function(a, b) return a.name < b.name end)
 
         if not selectedAltKey then
-            altDropdownText:SetText(L["AUCTIONS_ALL_ALTS"] or "All Alts")
+            altDropdownText:SetText(L["AUCTIONS_ALL_ALTS"])
         else
             local found = false
             for _, alt in ipairs(altList) do
@@ -260,7 +260,7 @@ function ns.UI.CreateAuctionsTab(parent)
             end
             if not found then
                 selectedAltKey = nil
-                altDropdownText:SetText(L["AUCTIONS_ALL_ALTS"] or "All Alts")
+                altDropdownText:SetText(L["AUCTIONS_ALL_ALTS"])
             end
         end
 
@@ -270,7 +270,7 @@ function ns.UI.CreateAuctionsTab(parent)
             buildItems = function()
                 local items = {}
                 table.insert(items, {
-                    text = L["AUCTIONS_ALL_ALTS"] or "All Alts",
+                    text = L["AUCTIONS_ALL_ALTS"],
                     value = nil,
                 })
                 for _, alt in ipairs(altList) do
@@ -429,7 +429,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
 
     if #allAuctions == 0 then
         if auctionsTab.statusText then
-            auctionsTab.statusText:SetText(L["NO_AUCTIONS_FOUND"] or "No auctions found")
+            auctionsTab.statusText:SetText(L["NO_AUCTIONS_FOUND"])
         end
         return
     end

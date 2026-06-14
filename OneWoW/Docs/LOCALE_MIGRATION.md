@@ -343,7 +343,23 @@ outright.
 Replace each `Locales/LocaleManager.lua` with service registration; delete
 `ns.ApplyLanguage`; point `ns.L` at `GetTable(scope)`.
 
-- [ ] **OneWoW_AltTracker**
+- [x] **OneWoW_AltTracker** (1182→1142 keys; 40 dropped: the Language/Theme/Minimap-section
+      blocks, dead here — settings tab uses the shared `CreateSettingsPanel`). Largest
+      addon; **real koKR translations**. Accumulation format with named vars
+      (`local L_enUS = ns.Locales["enUS"]; L_enUS["K"]=v`, koKR `L_koKR`) → `Register`
+      table literals; enUS sets the view. **`_G["BINDING_*"]` direct assigns** (3, in
+      the enUS tail) folded into the scope table as normal keys — the service's
+      `_resolveScope` pushes `BINDING_*` to `_G` on every refold, so `Bindings.xml`
+      labels stay correct and update on language change (replaces both the file-load
+      `_G[...]=` block and `LocaleManager.ApplyBindingGlobals`). LocaleManager → shim
+      (kept — AltTracker is in profile-sync; called by OnInitialize/OnLanguageChanged).
+      **Added 2 missing keys** (`BANK_SEARCH`, `BANK_NO_CHARACTERS`) surfaced by
+      key-name-on-miss once their `or "Search..."`/`or "No Characters"` fallbacks were
+      swept; values from the old fallbacks (koKR: "검색...", "캐릭터 없음").
+      Anti-pattern sweep: 58 `L["K"] or "lit"` (bulk) + 8 manual
+      (`or L["K2"]`, `or var`, own-`L`-nil guards) removed; the dynamic `BANK_<type>`
+      lookup → `GetOptional` (not every type has a key); genuine `cond and L["K1"] or
+      L["K2"]` ternaries left intact. Lint clean; in-game verify pending.
 - [x] **OneWoW_Catalog** (397→358 keys; 39 dropped: the whole Language picker,
       Theme picker, and Minimap-section blocks — Catalog's settings tab only has the
       Data Manager; the language/theme/minimap UI is built by the shared `OneWoW_GUI`
@@ -523,6 +539,7 @@ additive. The service itself (Phase 0) is inert until something registers.
 | _2026-06-14_ | 2 | ShoppingList | Migrated to scope `OneWoW_ShoppingList` + service view; aligned to DD/Bags (removed `RegisterLocale`/`SetLocale` from Constants.lua; `ApplyLanguage`→`SetLanguage` shim). 0 shared → no harvest. Anti-pattern sweep: 14 dead `(L and L["K"]) or "lit"` guards simplified, all keys verified registered. Touched files lint clean; in-game verify pending. |
 | _2026-06-14_ | 2 | DevTool | Migrated to scope `OneWoW_Utility_DevTool` + service view; `GetStore` alias for Database raw readers; `ApplyLanguage`→`SetLanguage` shim (service pushes BINDING_*). 9 shared MINIMAP_* dropped (harvest no-op). Anti-pattern sweep ~51 sites (`Addon.L or {}` guards, no-ops, minimap fallback, `rcLabel`→`GetOptional`). Lint clean; in-game verify pending. **Phase 2 complete** (DD, Bags, ShoppingList, DevTool). |
 | _2026-06-14_ | — | DevTool | Code-quality notes (user-reported, pre-existing): (1) standardized `L` capture — one top-level `local L = Addon.L` per file, removed `getL()`/`loc`/`LL` aliases, all reads use `L` (~90 sites). (2) Fixed live settings updates — DevTool only had `OnThemeChanged`; added `OnLanguageChanged`/`OnFontChanged`/`OnFontSizeChanged` (via new `Addon:RebuildUI()`), so language/font now apply without forcing a theme change. |
+| _2026-06-14_ | 3 | AltTracker | Largest, most complex Phase-3 addon. Scope `OneWoW_AltTracker`; named-var accumulation (`L_enUS`/`L_koKR`) → service `Register`; real koKR. **3 `_G["BINDING_*"]` direct assigns folded into the scope** (service refold pushes `BINDING_*` to `_G`; `Bindings.xml` labels localize on language change). LocaleManager → shim (profile-sync); `ApplyBindingGlobals` dropped. Dropped 40 (Language/Theme/Minimap-section, dead). Added 2 missing keys (`BANK_SEARCH`, `BANK_NO_CHARACTERS`) surfaced by the sweep. Swept 58 bulk + 8 manual fallbacks; dynamic `BANK_<type>` → `GetOptional`; ternaries intact. Post-sweep fixes: restored an inner `cond and ".." .. L["K"] or ""` ternary the bulk pass over-stripped at t-progress.lua:1850-1851 (boolean-concat crash). Lint clean; in-game verify pending. |
 | _2026-06-14_ | 3 | Catalog | Accumulation-format LocaleManager addon, **first Phase-3 with real koKR translations**. Scope `OneWoW_Catalog`; `L["K"]=v` → service `Register`; LocaleManager → `ns.ApplyLanguage` shim (kept for profile-sync; `ApplyBindingGlobals` dropped — service refold pushes `BINDING_*`). Dropped 39 keys (entire Language/Theme/Minimap-section blocks — dead here; built by shared GUI panel from `shared` scope). koKR migrated as a normal scope (3 trailing self-ref patches folded to plain keys). No missing keys. Swept 7 `or "lit"` + 3 must-exist dynamic-key fallbacks; ternaries left intact. Lint clean; in-game verify pending. |
 | _2026-06-14_ | 3 | Notes | Accumulation-format LocaleManager addon. Scope `OneWoW_Notes`; `L["K"]=v` accumulation → service `Register`; LocaleManager → `ns.ApplyLanguage` shim (kept for profile-sync); koKR `"TEST"` placeholder via `GetStore`. Dropped 34 shared/theme (dead). Added 28 missing keys. Swept 256 fallbacks + 1 `GetOptional`. Lint clean; in-game verify pending. |
 | _2026-06-14_ | 3 | Trackers | First Phase-3 (LocaleManager) addon. Scope `OneWoW_Trackers`; locale files → service `Register`; deleted dead `LocaleManager.lua`; removed `SetLocale` from Constants; `ApplyLanguage`→`SetLanguage` shim. koKR `"TEST"` placeholder rewired through `GetStore`. Added 8 missing keys (surfaced by key-name-on-miss). Swept 173 dead fallbacks + 2 `GetOptional`. Lint clean; in-game verify pending. |

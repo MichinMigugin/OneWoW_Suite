@@ -1,4 +1,4 @@
-local _, ns = ...
+local ADDON_NAME, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
@@ -141,7 +141,7 @@ function ns.UI.CreateBankTab(parent)
     personalBtn.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local searchBox = OneWoW_GUI:CreateEditBox(controlPanel, {
-        placeholderText = L["BANK_SEARCH"] or "Search...",
+        placeholderText = L["BANK_SEARCH"],
         onTextChanged = function(text)
             ns.UI.FilterBankItems(parent, text)
         end,
@@ -193,7 +193,7 @@ function ns.UI.CreateBankTab(parent)
 
     local function InitializeCharacterDropdown()
         if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then
-            charDropdownText:SetText(L["BANK_NO_CHARACTERS"] or "No Characters")
+            charDropdownText:SetText(L["BANK_NO_CHARACTERS"])
             return
         end
 
@@ -398,7 +398,7 @@ function ns.UI.RefreshBankDisplay(parent)
     if not parent or not parent.bankViewPanel then return end
 
     local charName = selectedCharacterKey:match("([^-]+)") or selectedCharacterKey
-    local bankTypeName = L["BANK_" .. currentBankType:upper()] or currentBankType
+    local bankTypeName = OneWoW.Locale:GetOptional(ADDON_NAME, "BANK_" .. currentBankType:upper()) or currentBankType
 
     if parent.bagScrollFrame then parent.bagScrollFrame:Show() end
     if parent.bagScrollBar then parent.bagScrollBar:Show() end
@@ -542,7 +542,7 @@ function ns.UI.FilterBankItems(parent, searchText)
     ns.UI.DisplayOneBagGrid(parent, items)
 
     local charName = selectedCharacterKey:match("([^-]+)") or selectedCharacterKey
-    local bankTypeName = L["BANK_" .. currentBankType:upper()] or currentBankType
+    local bankTypeName = OneWoW.Locale:GetOptional(ADDON_NAME, "BANK_" .. currentBankType:upper()) or currentBankType
     if parent.statusText then
         parent.statusText:SetText(L["BANK_VIEWING"] .. ": " .. charName .. " - " .. bankTypeName .. " - " .. #items .. " " .. L["BANK_ITEMS"])
     end
