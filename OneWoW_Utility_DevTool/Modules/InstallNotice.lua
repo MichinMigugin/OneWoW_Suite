@@ -1,6 +1,7 @@
 local _, Addon = ...
 
 local OneWoW_GUI = OneWoW_GUI
+local L = Addon.L
 
 local InstallNotice = {}
 Addon.InstallNotice = InstallNotice
@@ -34,22 +35,21 @@ function InstallNotice:Show(force)
         return
     end
 
-    local L = Addon.L or {}
     local result
     result = OneWoW_GUI:CreateConfirmDialog({
         name       = "OneWoW_DevTool_InstallNotice",
-        addonTitle = L["INSTALL_NOTICE_ADDON_TITLE"] or L["ADDON_TOOLTIP_TITLE"] or "OneWoW DevTool",
-        title      = L["INSTALL_NOTICE_TITLE"] or "Heads up - this is a developer addon",
-        message    = L["INSTALL_NOTICE_MESSAGE"] or "OneWoW DevTool is not commonly installed. It exists to assist with addon development and troubleshooting.",
+        addonTitle = L["INSTALL_NOTICE_ADDON_TITLE"],
+        title      = L["INSTALL_NOTICE_TITLE"],
+        message    = L["INSTALL_NOTICE_MESSAGE"],
         width      = 460,
         showBrand  = true,
         checkbox   = {
-            label = L["INSTALL_NOTICE_DONT_SHOW"] or "Don't show this again",
+            label = L["INSTALL_NOTICE_DONT_SHOW"],
             wrap = true,
         },
         buttons    = {
             {
-                text    = L["INSTALL_NOTICE_BTN_OK"] or "Got it",
+                text    = L["INSTALL_NOTICE_BTN_OK"],
                 color   = { 0.2, 0.6, 0.2 },
                 onClick = function(dialog)
                     local checked = result and result.checkbox and result.checkbox:GetChecked()

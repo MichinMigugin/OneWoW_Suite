@@ -1,7 +1,7 @@
 local _, Addon = ...
 
 local OneWoW_GUI = OneWoW_GUI
-local L = Addon.L or {}
+local L = Addon.L
 
 local function formatArgForDisplay(arg)
     if OneWoW.Restriction.IsSecret(arg) then return "[secret]" end
@@ -199,12 +199,12 @@ function EventMonitor:UpdateUI()
 
     if tab.startStopBtn then
         if self.monitoring then
-            tab.startStopBtn.text:SetText(Addon.L["BTN_STOP"])
+            tab.startStopBtn.text:SetText(L["BTN_STOP"])
             tab.startStopBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
             tab.startStopBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
             tab.startStopBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
-            tab.startStopBtn.text:SetText(Addon.L["BTN_START"])
+            tab.startStopBtn.text:SetText(L["BTN_START"])
             tab.startStopBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
             tab.startStopBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
             tab.startStopBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -215,18 +215,18 @@ function EventMonitor:UpdateUI()
         if self.monitoring then
             tab.pauseBtn:Enable()
             if self.paused then
-                tab.pauseBtn.text:SetText(Addon.L["BTN_UNPAUSE"])
+                tab.pauseBtn.text:SetText(L["BTN_UNPAUSE"])
                 tab.pauseBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                 tab.pauseBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
                 tab.pauseBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             else
-                tab.pauseBtn.text:SetText(Addon.L["BTN_PAUSE"])
+                tab.pauseBtn.text:SetText(L["BTN_PAUSE"])
                 tab.pauseBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
                 tab.pauseBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
                 tab.pauseBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         else
-            tab.pauseBtn.text:SetText(Addon.L["BTN_PAUSE"])
+            tab.pauseBtn.text:SetText(L["BTN_PAUSE"])
             tab.pauseBtn:Disable()
             tab.pauseBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
             tab.pauseBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))

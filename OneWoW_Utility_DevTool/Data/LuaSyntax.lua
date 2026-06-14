@@ -1,7 +1,5 @@
 local _, Addon = ...
 
-local OneWoW_GUI = OneWoW_GUI
-
 Addon.EditorSyntaxData = {}
 
 local D = Addon.EditorSyntaxData

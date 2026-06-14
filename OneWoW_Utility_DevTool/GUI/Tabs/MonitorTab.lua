@@ -4,13 +4,13 @@ local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local L = Addon.L or {}
+local L = Addon.L
 
 local function BindHeaderTooltip(btn, titleKey, bodyKey)
     btn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L[titleKey] or titleKey, 1, 1, 1)
-        GameTooltip:AddLine(L[bodyKey] or bodyKey, 1, 1, 1, true)
+        GameTooltip:SetText(L[titleKey], 1, 1, 1)
+        GameTooltip:AddLine(L[bodyKey], 1, 1, 1, true)
         GameTooltip:Show()
     end)
     btn:SetScript("OnLeave", GameTooltip_Hide)
@@ -28,8 +28,8 @@ local function CreateTotalsBarSegment(parent, tooltipTitleKey, tooltipBodyKey, t
     if tooltipTitleKey and tooltipBodyKey then
         seg:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT")
-            GameTooltip:SetText(L[tooltipTitleKey] or tooltipTitleKey, 1, 1, 1)
-            GameTooltip:AddLine(L[tooltipBodyKey] or tooltipBodyKey, 1, 1, 1, true)
+            GameTooltip:SetText(L[tooltipTitleKey], 1, 1, 1)
+            GameTooltip:AddLine(L[tooltipBodyKey], 1, 1, 1, true)
             GameTooltip:Show()
         end)
         seg:SetScript("OnLeave", GameTooltip_Hide)

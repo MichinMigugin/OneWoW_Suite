@@ -1,6 +1,6 @@
 local ADDON_NAME, Addon = ...
 
-local OneWoW_GUI = OneWoW_GUI
+local L = Addon.L
 
 local ErrorAnalyzer = {}
 Addon.ErrorAnalyzer = ErrorAnalyzer
@@ -10,7 +10,6 @@ local strmatch = string.match
 local strlower = string.lower
 local strfind = string.find
 local tinsert = tinsert
-local tostring = tostring
 local type = type
 
 local ROOT_CAUSES = {
@@ -49,15 +48,14 @@ local RC_LABEL_DEFAULTS = {
     UNKNOWN        = "Unknown",
 }
 
-local function getL()
-    return Addon.L or {}
-end
-
 local function rcLabel(rc)
-    local L = getL()
+    -- Optional: a return-code label may have a locale string or only a code-side
+    -- default. GetOptional returns nil (not the key name) when untranslated, so we
+    -- fall through to RC_LABEL_DEFAULTS.
     local key = RC_LABEL_KEYS[rc]
-    if key and L[key] then
-        return L[key]
+    if key then
+        local text = OneWoW.Locale:GetOptional(ADDON_NAME, key)
+        if text then return text end
     end
     return RC_LABEL_DEFAULTS[rc] or rc
 end
@@ -300,9 +298,7 @@ local function attributeAddons(frames, messageReportedAddon, taintSource)
     return reportedAddon, offendingAddon, triggerLocation
 end
 
-local function buildRecommendation(rootCause, detail, errorType, protectedAction, offendingAddon, taintSource)
-    local L = getL()
-
+local function buildRecommendation(rootCause, detail, _, protectedAction, offendingAddon, taintSource)
     if rootCause == ROOT_CAUSES.NIL_REFERENCE then
         local fieldName = strmatch(detail or "", "%(global '([^']+)'%)") or strmatch(detail or "", "%(field '([^']+)'%)")
         if fieldName then

@@ -1,7 +1,7 @@
 local _, Addon = ...
 
 local OneWoW_GUI = OneWoW_GUI
-local L = Addon.L or {}
+local L = Addon.L
 
 local FramePicker = {}
 Addon.FramePicker = FramePicker
@@ -19,14 +19,14 @@ function FramePicker:Initialize()
     self.currentFrame = nil
     self.lastMouseState = false
 
-    self.overlay:SetScript("OnUpdate", function(self, elapsed)
+    self.overlay:SetScript("OnUpdate", function(_, elapsed)
         FramePicker:OnUpdate(elapsed)
     end)
 
     self.frameIndex = 1
     self.allFrames = {}
 
-    self.overlay:SetScript("OnKeyDown", function(self, key)
+    self.overlay:SetScript("OnKeyDown", function(_, key)
         if key == "ESCAPE" then
             FramePicker:Cancel()
         elseif key == "TAB" then

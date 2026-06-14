@@ -1,6 +1,7 @@
 local ADDON_NAME, Addon = ...
 
 local OneWoW_GUI = OneWoW_GUI
+local L = Addon.L
 
 local format = string.format
 
@@ -54,7 +55,6 @@ local function keepSessionsDropdownText(L, n)
 end
 
 local function refreshDropdownLabels(tab)
-    local L = Addon.L or {}
     local db = getErrorDB()
     if not db then
         return
@@ -78,7 +78,6 @@ function Addon.UI:CreateErrorsTab(parent)
     tab:SetAllPoints(parent)
     tab:Hide()
 
-    local L = Addon.L or {}
 
     local bugGrabberNotice = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     bugGrabberNotice:SetWordWrap(true)
@@ -89,7 +88,7 @@ function Addon.UI:CreateErrorsTab(parent)
     tab.bugGrabberNotice = bugGrabberNotice
 
     local clearBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = Addon.L["BTN_CLEAR"],
+        text = L["BTN_CLEAR"],
         height = 22,
         minWidth = 72,
     })
@@ -103,7 +102,7 @@ function Addon.UI:CreateErrorsTab(parent)
 
     local countLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     countLabel:SetPoint("LEFT", clearBtn, "RIGHT", 12, 0)
-    countLabel:SetText((Addon.L["LABEL_ERRORS"]) .. " 0")
+    countLabel:SetText((L["LABEL_ERRORS"]) .. " 0")
     countLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     -- Checkbox hit box is only CHECKBOX_SIZE wide; label is cb.label — do not anchor siblings to cb:RIGHT or they overlap the label text.
@@ -130,13 +129,12 @@ function Addon.UI:CreateErrorsTab(parent)
             return getErrorDB() and getErrorDB().soundChoice or "off"
         end,
         buildItems = function()
-            local loc = Addon.L or {}
             return {
-                { value = "off", text = loc["ERR_SOUND_OFF"] },
-                { value = "devtools_error", text = loc["ERR_SOUND_DEVTOOL"] },
-                { value = "raid_warning", text = loc["ERR_SOUND_RAID_WARNING"] },
-                { value = "tell_message", text = loc["ERR_SOUND_TELL"] },
-                { value = "map_ping", text = loc["ERR_SOUND_MAP_PING"] },
+                { value = "off", text = L["ERR_SOUND_OFF"] },
+                { value = "devtools_error", text = L["ERR_SOUND_DEVTOOL"] },
+                { value = "raid_warning", text = L["ERR_SOUND_RAID_WARNING"] },
+                { value = "tell_message", text = L["ERR_SOUND_TELL"] },
+                { value = "map_ping", text = L["ERR_SOUND_MAP_PING"] },
             }
         end,
         onSelect = function(value)
@@ -158,11 +156,10 @@ function Addon.UI:CreateErrorsTab(parent)
             return getErrorDB() and getErrorDB().copyFormat or "plain"
         end,
         buildItems = function()
-            local loc = Addon.L or {}
             return {
-                { value = "plain", text = loc["ERR_COPY_FMT_PLAIN"] },
-                { value = "curseforge", text = loc["ERR_COPY_FMT_CURSEFORGE"] },
-                { value = "discord", text = loc["ERR_COPY_FMT_DISCORD"] },
+                { value = "plain", text = L["ERR_COPY_FMT_PLAIN"] },
+                { value = "curseforge", text = L["ERR_COPY_FMT_CURSEFORGE"] },
+                { value = "discord", text = L["ERR_COPY_FMT_DISCORD"] },
             }
         end,
         onSelect = function(value)
@@ -190,8 +187,7 @@ function Addon.UI:CreateErrorsTab(parent)
             return normalizeKeepSessions(getErrorDB() and getErrorDB().keepLastSessions)
         end,
         buildItems = function()
-            local loc = Addon.L or {}
-            local fmt = loc["ERR_KEEP_SESSIONS_VALUE"]
+            local fmt = L["ERR_KEEP_SESSIONS_VALUE"]
             local items = {}
             for i = 1, 20 do
                 tinsert(items, { value = i, text = format(fmt, i) })

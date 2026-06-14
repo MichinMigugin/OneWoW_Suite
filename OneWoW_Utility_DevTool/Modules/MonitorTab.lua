@@ -1,6 +1,7 @@
 local _, Addon = ...
 
 local OneWoW_GUI = OneWoW_GUI
+local L = Addon.L
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
@@ -369,10 +370,10 @@ end
 function MonitorTab:ToggleCPUProfiling()
     if profilingCPU then
         SetCVar("scriptProfile", "0")
-        Addon:Print(Addon.L["MON_MSG_CPU_DISABLED"])
+        Addon:Print(L["MON_MSG_CPU_DISABLED"])
     else
         SetCVar("scriptProfile", "1")
-        Addon:Print(Addon.L["MON_MSG_CPU_ENABLED"])
+        Addon:Print(L["MON_MSG_CPU_ENABLED"])
     end
     ReloadUI()
 end
@@ -606,22 +607,21 @@ function MonitorTab:CreatePinnedPopupFrame(slot, addonTitle)
         MonitorTab:ClosePinnedPopupByAddon(addonName)
     end)
 
-    local LL = Addon.L or {}
     local yPos = -30
     local memLabel, memValue
-    memLabel, memValue, yPos = CreateRow(popup, LL["MON_PIN_MEMORY"], yPos, OneWoW_GUI)
+    memLabel, memValue, yPos = CreateRow(popup, L["MON_PIN_MEMORY"], yPos, OneWoW_GUI)
     local memTickLabel, memTickValue
-    memTickLabel, memTickValue, yPos = CreateRow(popup, LL["MON_PIN_MEM_TICK"], yPos, OneWoW_GUI)
+    memTickLabel, memTickValue, yPos = CreateRow(popup, L["MON_PIN_MEM_TICK"], yPos, OneWoW_GUI)
     local deltaLabel, deltaValue
-    deltaLabel, deltaValue, yPos = CreateRow(popup, LL["MON_PIN_DELTA_OPEN"], yPos, OneWoW_GUI)
+    deltaLabel, deltaValue, yPos = CreateRow(popup, L["MON_PIN_DELTA_OPEN"], yPos, OneWoW_GUI)
     local rateLabel, rateValue
-    rateLabel, rateValue, yPos = CreateRow(popup, LL["MON_PIN_RATE"], yPos, OneWoW_GUI)
+    rateLabel, rateValue, yPos = CreateRow(popup, L["MON_PIN_RATE"], yPos, OneWoW_GUI)
     local peakLabel, peakValue
-    peakLabel, peakValue, yPos = CreateRow(popup, LL["MON_PIN_PEAK"], yPos, OneWoW_GUI)
+    peakLabel, peakValue, yPos = CreateRow(popup, L["MON_PIN_PEAK"], yPos, OneWoW_GUI)
     local minLabel, minValue
-    minLabel, minValue, yPos = CreateRow(popup, LL["MON_PIN_MIN"], yPos, OneWoW_GUI)
+    minLabel, minValue, yPos = CreateRow(popup, L["MON_PIN_MIN"], yPos, OneWoW_GUI)
     local pctLabel, pctValue
-    pctLabel, pctValue, yPos = CreateRow(popup, LL["MON_PIN_PCT_MEM"], yPos, OneWoW_GUI)
+    pctLabel, pctValue, yPos = CreateRow(popup, L["MON_PIN_PCT_MEM"], yPos, OneWoW_GUI)
 
     local cpuMsValue, cpuSessionValue, cpuRecentValue, cpuPctValue
     if useCPU then
@@ -634,10 +634,10 @@ function MonitorTab:CreatePinnedPopupFrame(slot, addonTitle)
         memCpuDiv:SetColorTexture(dr, dg, db, (da or 1) * 0.4)
         yPos = yPos - 6
         local cpuMsLabel, cpuSessionLabel, cpuRecentLabel, cpuPctLabel
-        cpuMsLabel, cpuMsValue, yPos = CreateRow(popup, LL["MON_PIN_CPU_MS"], yPos, OneWoW_GUI)
-        cpuSessionLabel, cpuSessionValue, yPos = CreateRow(popup, LL["MON_PIN_CPU_SESSION"], yPos, OneWoW_GUI)
-        cpuRecentLabel, cpuRecentValue, yPos = CreateRow(popup, LL["MON_PIN_CPU_RECENT"], yPos, OneWoW_GUI)
-        cpuPctLabel, cpuPctValue, yPos = CreateRow(popup, LL["MON_PIN_PCT_CPU"], yPos, OneWoW_GUI)
+        cpuMsLabel, cpuMsValue, yPos = CreateRow(popup, L["MON_PIN_CPU_MS"], yPos, OneWoW_GUI)
+        cpuSessionLabel, cpuSessionValue, yPos = CreateRow(popup, L["MON_PIN_CPU_SESSION"], yPos, OneWoW_GUI)
+        cpuRecentLabel, cpuRecentValue, yPos = CreateRow(popup, L["MON_PIN_CPU_RECENT"], yPos, OneWoW_GUI)
+        cpuPctLabel, cpuPctValue, yPos = CreateRow(popup, L["MON_PIN_PCT_CPU"], yPos, OneWoW_GUI)
     end
 
     yPos = yPos - 4
@@ -649,18 +649,18 @@ function MonitorTab:CreatePinnedPopupFrame(slot, addonTitle)
     apDiv:SetColorTexture(adr, adg, adb, (ada or 1) * 0.4)
     yPos = yPos - 6
     local apPeakLabel, apPeakValue
-    apPeakLabel, apPeakValue, yPos = CreateRow(popup, LL["MON_PIN_AP_PEAK"], yPos, OneWoW_GUI)
+    apPeakLabel, apPeakValue, yPos = CreateRow(popup, L["MON_PIN_AP_PEAK"], yPos, OneWoW_GUI)
     local apSessionLabel, apSessionValue
-    apSessionLabel, apSessionValue, yPos = CreateRow(popup, LL["MON_PIN_AP_SESSION"], yPos, OneWoW_GUI)
+    apSessionLabel, apSessionValue, yPos = CreateRow(popup, L["MON_PIN_AP_SESSION"], yPos, OneWoW_GUI)
     local apOver50Label, apOver50Value
-    apOver50Label, apOver50Value, yPos = CreateRow(popup, LL["MON_PIN_AP_OVER50"], yPos, OneWoW_GUI)
+    apOver50Label, apOver50Value, yPos = CreateRow(popup, L["MON_PIN_AP_OVER50"], yPos, OneWoW_GUI)
     local apSpikeLabel, apSpikeValue
-    apSpikeLabel, apSpikeValue, yPos = CreateRow(popup, LL["MON_PIN_AP_SPIKE"], yPos, OneWoW_GUI)
+    apSpikeLabel, apSpikeValue, yPos = CreateRow(popup, L["MON_PIN_AP_SPIKE"], yPos, OneWoW_GUI)
 
     local elapsedLabel, elapsedValue
-    elapsedLabel, elapsedValue, yPos = CreateRow(popup, LL["MON_PIN_ELAPSED"], yPos, OneWoW_GUI)
+    elapsedLabel, elapsedValue, yPos = CreateRow(popup, L["MON_PIN_ELAPSED"], yPos, OneWoW_GUI)
     local samplesLabel, samplesValue
-    samplesLabel, samplesValue, yPos = CreateRow(popup, LL["MON_PIN_SAMPLES"], yPos, OneWoW_GUI)
+    samplesLabel, samplesValue, yPos = CreateRow(popup, L["MON_PIN_SAMPLES"], yPos, OneWoW_GUI)
 
     yPos = yPos - 10
     local reopenCheck = CreateFrame("CheckButton", nil, popup, "UICheckButtonTemplate")
@@ -668,7 +668,7 @@ function MonitorTab:CreatePinnedPopupFrame(slot, addonTitle)
     reopenCheck:SetPoint("TOPLEFT", popup, "TOPLEFT", 6, yPos)
     local reopenLabel = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     reopenLabel:SetPoint("LEFT", reopenCheck, "RIGHT", 2, 0)
-    reopenLabel:SetText(LL["MON_PIN_REOPEN"])
+    reopenLabel:SetText(L["MON_PIN_REOPEN"])
     reopenLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local totalHeight = math.abs(yPos) + 32
@@ -727,8 +727,7 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle, existingDbEntry)
     end
 
     if #pinnedSlots >= maxPins then
-        local L = Addon.L
-        local msg = L and L["MON_MSG_PIN_MAX"]
+        local msg = L["MON_MSG_PIN_MAX"]
         Addon:Print(msg and string.format(msg, maxPins) or ("You can pin up to " .. tostring(maxPins) .. " addon monitors at once."))
         return
     end

@@ -1,7 +1,6 @@
-local _, Addon = ...
+local ADDON_NAME, Addon = ...
 
-Addon.Locales = Addon.Locales or {}
-Addon.Locales["enUS"] = {
+OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_TITLE"] = "DevTool",
     ["ADDON_SUBTITLE"] = "Frame Inspector & Development Utilities",
     ["LOADED"] = "Loaded v{version} - Use /devtools to open",
@@ -528,15 +527,6 @@ Addon.Locales["enUS"] = {
 
     -- Minimap
     ["MINIMAP_TOOLTIP_HINT"] = "Left-Click to toggle DevTool",
-    ["MINIMAP_SECTION"] = "Minimap Button",
-    ["MINIMAP_SECTION_DESC"] = "Show or hide the minimap button.",
-    ["MINIMAP_SHOW_BTN"] = "Show Minimap Button",
-    ["MINIMAP_ICON_SECTION"] = "Icon Theme",
-    ["MINIMAP_ICON_DESC"] = "Choose your faction icon for the minimap button and title bar.",
-    ["MINIMAP_ICON_CURRENT"] = "Current Icon",
-    ["MINIMAP_ICON_HORDE"] = "Horde",
-    ["MINIMAP_ICON_ALLIANCE"] = "Alliance",
-    ["MINIMAP_ICON_NEUTRAL"] = "Neutral",
 
     ["TAB_EDITOR"] = "Editor",
     ["EDITOR_BTN_RUN"] = "Run",
@@ -619,9 +609,9 @@ Addon.Locales["enUS"] = {
     ["EDITOR_SHORTCUT_CLOSE_FIND"] = "Escape — Close find bar",
     ["EDITOR_STATUS_RUN_COMPLETED"] = "%s run: Completed successfully.",
     ["EDITOR_BTN_CODE_OPTIONS"] = "Code Options",
-}
+})
 
-Addon.L = {}
-for k, v in pairs(Addon.Locales["enUS"]) do
-    Addon.L[k] = v
-end
+Addon.L = OneWoW.Locale:GetTable(ADDON_NAME)
+-- Raw per-locale store for the editor-default-category readers in
+-- Core/Database.lua (they read a specific locale's strings).
+Addon.Locales = OneWoW.Locale:GetStore(ADDON_NAME)

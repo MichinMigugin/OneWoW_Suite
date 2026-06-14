@@ -323,7 +323,17 @@ outright.
       keys verified registered). Lint clean on touched files. In-game verify
       pending. (Pre-existing `_G.<name>` violations in `BagOverlays.lua` /
       `ShoppingList.lua` noted separately — unrelated to locale work.)
-- [ ] **OneWoW_Utility_DevTool** (579 keys, 6 locales)
+- [x] **OneWoW_Utility_DevTool** (579 keys, 6 locales). Scope
+      `OneWoW_Utility_DevTool` (570 enUS / 292 other). Dropped 9 shared `MINIMAP_*`
+      (harvest a no-op — already canonical from Bags); `MINIMAP_CTX_FALLBACK`,
+      `MINIMAP_TOOLTIP_HINT`, `LANG_*`, `ADDON_TITLE` stay scoped. enUS sets view +
+      `Addon.Locales = GetStore(ADDON_NAME)` for the editor-default-category raw
+      readers in `Core/Database.lua`. `ApplyLanguage`→`SetLanguage` shim (service
+      now pushes the `BINDING_*` keys the old code pushed explicitly). Anti-pattern
+      sweep: ~51 sites — pervasive `Addon.L or {}` guards → `Addon.L`, `L[var] or
+      var` no-ops, minimap fallback, and `rcLabel` (`ErrorAnalyzer`) → `GetOptional`
+      (it has a code-side default). All keys verified registered. Lint clean
+      (excl. generated `Data/`). In-game verify pending.
 
 ### Phase 3 — LocaleManager addons (Pattern B)
 
@@ -475,3 +485,5 @@ additive. The service itself (Phase 0) is inert until something registers.
 | _2026-06-14_ | — | OneWoW | Key-name-on-miss surfaced a genuinely missing key: `CTX_OPEN_TRACKERS` (right-click minimap menu) was never added to core while every other `CTX_OPEN_*` was; old `or "Open Trackers"` fallback hid it. Added to core enUS + koKR. |
 | _2026-06-14_ | — | Bags | Resolved the flagged `if err and L[err]` sites: traced all 7 — every `err` is a registered key (DUPLICATE_*/SAVED_SEARCH_*), so none were broken. Simplified to `if err then`. Lint passes. |
 | _2026-06-14_ | 2 | ShoppingList | Migrated to scope `OneWoW_ShoppingList` + service view; aligned to DD/Bags (removed `RegisterLocale`/`SetLocale` from Constants.lua; `ApplyLanguage`→`SetLanguage` shim). 0 shared → no harvest. Anti-pattern sweep: 14 dead `(L and L["K"]) or "lit"` guards simplified, all keys verified registered. Touched files lint clean; in-game verify pending. |
+| _2026-06-14_ | 2 | DevTool | Migrated to scope `OneWoW_Utility_DevTool` + service view; `GetStore` alias for Database raw readers; `ApplyLanguage`→`SetLanguage` shim (service pushes BINDING_*). 9 shared MINIMAP_* dropped (harvest no-op). Anti-pattern sweep ~51 sites (`Addon.L or {}` guards, no-ops, minimap fallback, `rcLabel`→`GetOptional`). Lint clean; in-game verify pending. **Phase 2 complete** (DD, Bags, ShoppingList, DevTool). |
+| _2026-06-14_ | — | DevTool | Code-quality notes (user-reported, pre-existing): (1) standardized `L` capture — one top-level `local L = Addon.L` per file, removed `getL()`/`loc`/`LL` aliases, all reads use `L` (~90 sites). (2) Fixed live settings updates — DevTool only had `OnThemeChanged`; added `OnLanguageChanged`/`OnFontChanged`/`OnFontSizeChanged` (via new `Addon:RebuildUI()`), so language/font now apply without forcing a theme change. |

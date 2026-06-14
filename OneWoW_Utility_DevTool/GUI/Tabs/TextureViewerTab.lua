@@ -3,7 +3,7 @@ local ADDON_NAME, Addon = ...
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local L = Addon.L or {}
+local L = Addon.L
 
 local format = format
 local abs = math.abs
@@ -452,7 +452,7 @@ local function updateDetailPanel(tab)
             tab._cachedAtlasInfo = info
             tab._cachedAtlasName = atlasName
         end
-        for _, line in ipairs(BR:FormatDetailLines(atlasName, info, texKey, L)) do
+        for _, line in ipairs(BR:FormatDetailLines(atlasName, info, texKey)) do
             tinsert(lines, line)
         end
 

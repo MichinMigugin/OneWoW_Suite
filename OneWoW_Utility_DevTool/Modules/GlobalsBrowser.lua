@@ -2,7 +2,7 @@ local _, Addon = ...
 
 local GB = {}
 Addon.GlobalsBrowser = GB
-local L = Addon.L or {}
+local L = Addon.L
 
 local format = format
 local gsub = string.gsub

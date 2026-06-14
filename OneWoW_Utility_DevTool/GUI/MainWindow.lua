@@ -1,6 +1,7 @@
-local _, Addon = ...
+local ADDON_NAME, Addon = ...
 
 local OneWoW_GUI = OneWoW_GUI
+local L = Addon.L
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local DEFAULT_THEME_ICON = OneWoW_GUI.Constants.DEFAULT_THEME_ICON
@@ -316,7 +317,7 @@ function UI:GetTabLabel(tabKey)
     if not definition then
         return tabKey
     end
-    return (Addon.L and Addon.L[definition.labelKey]) or tabKey
+    return OneWoW.Locale:GetOptional(ADDON_NAME, definition.labelKey) or tabKey
 end
 
 function UI:IsTabEnabled(tabKey)
@@ -605,7 +606,7 @@ function UI:Initialize()
     frame:Hide()
 
     local titleBar = OneWoW_GUI:CreateTitleBar(frame, {
-        title = Addon.L["ADDON_TITLE"],
+        title = L["ADDON_TITLE"],
         height = 20,
         showBrand = true,
         factionTheme = factionTheme,

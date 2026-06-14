@@ -3,7 +3,7 @@ local _, Addon = ...
 local OneWoW_GUI = OneWoW_GUI
 
 local C = OneWoW_GUI.Constants
-local L = Addon.L or {}
+local L = Addon.L
 
 local function updateColor(tab)
     local r = tab.rSlider:GetValue() / 255
@@ -220,7 +220,7 @@ function Addon.UI:CreateColorToolsTab(parent)
     local commonList = Addon.Constants and Addon.Constants.COLOR_TOOLS_COMMON or {}
     for _, entry in ipairs(commonList) do
         local hex = entry.hex
-        local name = L[entry.nameKey] or entry.nameKey
+        local name = L[entry.nameKey]
         local r, g, b = 1, 1, 1
         if ColorTools and ColorTools.HexToRGB then
             r, g, b = ColorTools:HexToRGB(hex)

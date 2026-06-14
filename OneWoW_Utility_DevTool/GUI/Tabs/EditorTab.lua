@@ -3,7 +3,7 @@ local _, Addon = ...
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local L = Addon.L or {}
+local L = Addon.L
 local format = string.format
 local max = math.max
 local tinsert, wipe = tinsert, wipe

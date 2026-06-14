@@ -1,6 +1,7 @@
 local _, Addon = ...
 
 local OneWoW_GUI = OneWoW_GUI
+local L = Addon.L
 
 local ErrorLogger = {}
 Addon.ErrorLogger = ErrorLogger
@@ -158,7 +159,6 @@ function ErrorLogger:UpdateLuaTabBugGrabberNotice()
         return
     end
     if self:IsBugGrabberBridgeActive() then
-        local L = Addon.L or {}
         notice:SetText(L["LUA_TAB_BUGGRABBER_NOTICE"])
         notice:ClearAllPoints()
         notice:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
@@ -267,12 +267,10 @@ function ErrorLogger:_importFromBugGrabber(bgErr)
     local rawMsg = bgErr.message
     local msgStr
     if OneWoW.Restriction.IsSecret(rawMsg) then
-        local L = Addon.L or {}
         msgStr = L["ERR_MSG_SECRET"]
     else
         msgStr = tostring(rawMsg)
         if OneWoW.Restriction.IsSecret(msgStr) then
-            local L = Addon.L or {}
             msgStr = L["ERR_MSG_SECRET"]
         end
     end
@@ -377,7 +375,6 @@ function ErrorLogger:_applyErrorThrottle()
     if self._msgsAllowed < 1 then
         if not self._paused then
             if GetTime() > (self._lastThrottleWarn or 0) + 10 then
-                local L = Addon.L or {}
                 Addon:Print(L["ERR_THROTTLE_PAUSED"])
                 self._lastThrottleWarn = GetTime()
             end
@@ -479,7 +476,6 @@ function ErrorLogger:_registerAuxEvents()
 end
 
 function ErrorLogger:_onAuxEvent(event, a1, a2)
-    local L = Addon.L or {}
     if event == "ADDON_ACTION_BLOCKED" or event == "ADDON_ACTION_FORBIDDEN" then
         local addonName = a1 or "<name>"
         local fn = a2 or "<func>"
@@ -525,12 +521,10 @@ function ErrorLogger:_captureFromHandler(msg, isSimple)
 
     local msgStr
     if OneWoW.Restriction.IsSecret(msg) then
-        local L = Addon.L or {}
         msgStr = L["ERR_MSG_SECRET"]
     else
         msgStr = tostring(msg)
         if OneWoW.Restriction.IsSecret(msgStr) then
-            local L = Addon.L or {}
             msgStr = L["ERR_MSG_SECRET"]
         end
     end
@@ -676,7 +670,6 @@ function ErrorLogger:UpdateUI()
     self:UpdateLuaTabBugGrabberNotice()
 
     local tab = Addon.LuaConsoleTab
-    local L = Addon.L or {}
     local errors = self:GetErrors()
     local currentSession = self:GetSessionId()
 
@@ -733,7 +726,6 @@ function ErrorLogger:ShowErrorDetails(errorData)
 
     self.currentError = errorData
     local tab = Addon.LuaConsoleTab
-    local L = Addon.L or {}
     local currentSession = self:GetSessionId()
     local SC = Addon.StackColorizer
 
@@ -855,13 +847,12 @@ end
 
 function ErrorLogger:CopyCurrentError()
     if not self.currentError then
-        Addon:Print(Addon.L["ERR_MSG_NONE_SELECTED"])
+        Addon:Print(L["ERR_MSG_NONE_SELECTED"])
         return
     end
 
     local db = getErrorDB()
     local fmt = db and db.copyFormat or "plain"
-    local L = Addon.L or {}
     local text
     if Addon.ErrorExport and Addon.ErrorExport.GetCopyText then
         text = Addon.ErrorExport.GetCopyText(self.currentError, fmt, L)
@@ -883,13 +874,13 @@ function ErrorLogger:ClearErrors()
     self:UpdateErrorBadge()
 
     if Addon.LuaConsoleTab then
-        local noErr = Addon.L["LABEL_NO_ERROR"]
+        local noErr = L["LABEL_NO_ERROR"]
         Addon.LuaConsoleTab.detailsText._lastSetText = noErr
         Addon.LuaConsoleTab.detailsText:SetText(noErr)
         if Addon.LuaConsoleTab.analysisText then
-            Addon.LuaConsoleTab.analysisText:SetText(Addon.L["ERR_ANALYSIS_NONE"])
+            Addon.LuaConsoleTab.analysisText:SetText(L["ERR_ANALYSIS_NONE"])
         end
     end
 
-    Addon:Print(Addon.L["ERR_MSG_CLEARED"])
+    Addon:Print(L["ERR_MSG_CLEARED"])
 end

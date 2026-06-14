@@ -1,11 +1,11 @@
-local AddonName, Addon = ...
+local _, Addon = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local FrameTree = {}
 Addon.FrameTree = FrameTree
 
-local safeGet, safeGetMulti
+local safeGet
 local NODE_HEIGHT = 20
 local INDENT_PX = 15
 local MAX_DEPTH = 20
@@ -13,7 +13,6 @@ local MAX_DEPTH = 20
 local function ensureHelpers()
     if not safeGet then
         safeGet = Addon.safeGet
-        safeGetMulti = Addon.safeGetMulti
     end
 end
 
@@ -224,42 +223,42 @@ function FrameTree:Create(parentContent, scrollFrame)
         nf.label:SetPoint("RIGHT", nf, "RIGHT", -2, 0)
         nf.label:SetJustifyH("LEFT")
 
-        nf:SetScript("OnEnter", function(self)
-            self.bg:Show()
-            if self.nodeData and self.nodeData.data then
-                Addon.FrameInspector:HighlightFrame(self.nodeData.data)
+        nf:SetScript("OnEnter", function(myself)
+            myself.bg:Show()
+            if myself.nodeData and myself.nodeData.data then
+                Addon.FrameInspector:HighlightFrame(myself.nodeData.data)
             end
         end)
 
-        nf:SetScript("OnLeave", function(self)
-            if not self.isSelectedStyle then
-                self.bg:Hide()
+        nf:SetScript("OnLeave", function(myself)
+            if not myself.isSelectedStyle then
+                myself.bg:Hide()
             end
             Addon.FrameInspector:ClearHighlight()
         end)
 
-        nf:SetScript("OnClick", function(self, button)
-            if not self.nodeData then return end
+        nf:SetScript("OnClick", function(myself, button)
+            if not myself.nodeData then return end
             if button == "RightButton" then
-                Addon:CopyToClipboard(getNodeName(self.nodeData.data))
+                Addon:CopyToClipboard(getNodeName(myself.nodeData.data))
                 return
             end
-            if self.isToggleHit then
-                tree:ToggleNode(self.nodeData)
+            if myself.isToggleHit then
+                tree:ToggleNode(myself.nodeData)
             else
-                if self.nodeData.data then
-                    Addon.FrameInspector:InspectFrame(self.nodeData.data)
+                if myself.nodeData.data then
+                    Addon.FrameInspector:InspectFrame(myself.nodeData.data)
                 end
             end
         end)
 
-        nf:SetScript("OnMouseDown", function(self, button)
+        nf:SetScript("OnMouseDown", function(myself, button)
             if button == "LeftButton" then
                 local cursorX = GetCursorPosition()
-                local scale = self:GetEffectiveScale()
-                local frameLeft = self:GetLeft() * scale
-                local toggleEnd = frameLeft + (self.nodeData and self.nodeData.depth or 0) * INDENT_PX * scale + 14 * scale
-                self.isToggleHit = cursorX < toggleEnd
+                local scale = myself:GetEffectiveScale()
+                local frameLeft = myself:GetLeft() * scale
+                local toggleEnd = frameLeft + (myself.nodeData and myself.nodeData.depth or 0) * INDENT_PX * scale + 14 * scale
+                myself.isToggleHit = cursorX < toggleEnd
             end
         end)
 

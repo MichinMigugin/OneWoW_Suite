@@ -1,6 +1,7 @@
 local ADDON_NAME, Addon = ...
 
 local OneWoW_GUI = OneWoW_GUI
+local L = Addon.L
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local abs = math.abs
@@ -57,7 +58,7 @@ function Addon.UI:CreateSettingsTab(parent)
 
     local title = section:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", section, "TOPLEFT", 15, -12)
-    title:SetText(Addon.L["SETTINGS_DEVTOOL_TABS_SECTION"])
+    title:SetText(L["SETTINGS_DEVTOOL_TABS_SECTION"])
     title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local description = section:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -65,7 +66,7 @@ function Addon.UI:CreateSettingsTab(parent)
     description:SetPoint("TOPRIGHT", section, "TOPRIGHT", -15, -38)
     description:SetJustifyH("LEFT")
     description:SetWordWrap(true)
-    description:SetText(Addon.L["SETTINGS_DEVTOOL_TABS_DESC"])
+    description:SetText(L["SETTINGS_DEVTOOL_TABS_DESC"])
     description:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local rowHeight = 28
@@ -83,7 +84,6 @@ function Addon.UI:CreateSettingsTab(parent)
         end
     end
 
-    local L = Addon.L or {}
     local unloadTipTitle = L["SETTINGS_TAB_UNLOAD_ASSETS_TOOLTIP_TITLE"]
     local unloadTipBody = L["SETTINGS_TAB_UNLOAD_ASSETS_TOOLTIP"]
 

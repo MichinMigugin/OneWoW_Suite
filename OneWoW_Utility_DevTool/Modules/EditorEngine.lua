@@ -1,6 +1,6 @@
 local _, Addon = ...
 
-local OneWoW_GUI = OneWoW_GUI
+local L = Addon.L
 
 local format = string.format
 local tinsert, tremove = tinsert, tremove
@@ -19,7 +19,6 @@ end
 
 local function getDefaultCategory()
     local db = getDB()
-    local L = Addon.L or {}
     return (db and db.defaultCategory) or L["EDITOR_CATEGORY_DEFAULT"]
 end
 
@@ -41,7 +40,6 @@ end
 function EE:CreateSnippet(name, category)
     local db = getDB()
     if not db then return end
-    local L = Addon.L
 
     local untitled = false
     name = normalizeSnippetName(name)
@@ -134,7 +132,6 @@ end
 function EE:DuplicateSnippet(id)
     local snippet = self:GetSnippet(id)
     if not snippet then return end
-    local L = Addon.L
     local newName = format(L["EDITOR_COPY_OF"], snippet.name)
     local newId, newSnippet = self:CreateSnippet(newName, snippet.category)
     if newSnippet then

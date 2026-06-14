@@ -1,7 +1,5 @@
 local _, Addon = ...
 
-local OneWoW_GUI = OneWoW_GUI
-
 local format = format
 local tinsert = tinsert
 local sort = sort

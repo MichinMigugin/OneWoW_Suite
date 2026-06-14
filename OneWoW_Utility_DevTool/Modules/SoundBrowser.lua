@@ -1,4 +1,5 @@
 local _, Addon = ...
+local L = Addon.L
 
 local SB = {}
 Addon.SoundBrowser = SB
@@ -384,7 +385,6 @@ function SB:GetPlaySoundFileSnippet(entryRef, channel)
     if not id then
         return ""
     end
-    local L = Addon.L or {}
     local fmt = L["SOUND_SNIPPET_PLAY_SOUND_FILE"]
     return format(fmt, id, channel)
 end
@@ -394,7 +394,6 @@ function SB:GetPlaySoundSnippet(soundKitId, channel)
     if type(soundKitId) ~= "number" then
         return ""
     end
-    local L = Addon.L or {}
     local fmt = L["SOUND_SNIPPET_PLAY_SOUND"]
     return format(fmt, soundKitId, channel)
 end

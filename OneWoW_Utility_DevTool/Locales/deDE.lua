@@ -1,7 +1,6 @@
-local _, Addon = ...
+local ADDON_NAME = ...
 
-Addon.Locales = Addon.Locales or {}
-Addon.Locales["deDE"] = {
+OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ADDON_TITLE"] = "DevTool",
     ["ADDON_SUBTITLE"] = "Frame-Inspektor & Entwicklungs-Tools",
     ["LOADED"] = "Geladen v{version} - /devtools zum Öffnen",
@@ -315,4 +314,4 @@ Addon.Locales["deDE"] = {
     ["ERR_REC_STACK_OVERFLOW"] = "Infinite recursion detected. Check for circular function calls in this code path.",
     ["ERR_REC_LUA_WARNING"] = "WoW flagged suspicious content. Review the warned file for unsupported attributes or syntax.",
     ["ERR_REC_GENERIC"] = "Check the values feeding this line. An input is invalid when this code path runs.",
-}
+})

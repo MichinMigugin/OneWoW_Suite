@@ -1,4 +1,5 @@
 local _, Addon = ...
+local L = Addon.L
 
 local TextureAtlasBrowser = {}
 Addon.TextureAtlasBrowser = TextureAtlasBrowser
@@ -315,7 +316,6 @@ function TextureAtlasBrowser:GetViewMode()
 end
 
 function TextureAtlasBrowser:GetSetAtlasSnippet(atlasName)
-    local L = Addon.L or {}
     local fmt = L["TEXTURE_SNIPPET_SETATLAS"]
     return format(fmt, atlasName)
 end
@@ -333,8 +333,7 @@ function TextureAtlasBrowser:GetCoordsCopyLine(info)
     )
 end
 
-function TextureAtlasBrowser:FormatDetailLines(atlasName, info, textureKey, L)
-    L = L or Addon.L or {}
+function TextureAtlasBrowser:FormatDetailLines(atlasName, info, textureKey)
     local lines = {}
     if not info then
         tinsert(lines, L["TEXTURE_MSG_NO_INFO"])

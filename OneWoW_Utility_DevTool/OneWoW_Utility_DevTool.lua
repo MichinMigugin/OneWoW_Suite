@@ -3,6 +3,7 @@ local ADDON_NAME, Addon = ...
 OneWoW_Utility_DevTool = Addon
 
 local OneWoW_GUI = OneWoW_GUI
+local L = Addon.L
 
 local pcall = pcall
 local type = type
@@ -40,7 +41,6 @@ Addon.safeGet = safeGet
 Addon.safeGetMulti = safeGetMulti
 
 function Addon:Print(msg)
-    local L = self.L or {}
     print("|cFFFFD100OneWoW|r - " .. L["ADDON_TITLE"] .. ": " .. tostring(msg))
 end
 
@@ -381,8 +381,8 @@ function Addon:SearchFramesByName(searchText)
 end
 
 function Addon:CopyToClipboard(text, title)
-    OneWoW.CopyPaste:Copy(title or self.L["COPY_DEFAULT_TITLE"], text, { readOnly = true })
-    self:Print(self.L["MSG_PRESS_CTRL_C"])
+    OneWoW.CopyPaste:Copy(title or L["COPY_DEFAULT_TITLE"], text, { readOnly = true })
+    self:Print(L["MSG_PRESS_CTRL_C"])
 end
 
 function Addon:ToggleMainWindow()
@@ -440,17 +440,19 @@ function Addon:OnInitialize()
     self:ApplyLanguage()
     self:NormalizeEditorDatabase()
 
-    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function()
-        self:ApplyTheme()
-        if self.UI and self.UI.FullReset then
-            local wasShown = self.UI.mainFrame and self.UI.mainFrame:IsShown()
-            self.UI:FullReset()
-            if wasShown then
-                C_Timer.After(0.1, function()
-                    if self.UI and self.UI.Show then self.UI:Show() end
-                end)
-            end
-        end
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(owner)
+        owner:ApplyTheme()
+        owner:RebuildUI()
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(owner)
+        owner:ApplyLanguage()
+        owner:RebuildUI()
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(owner)
+        owner:RebuildUI()
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", self, function(owner)
+        owner:RebuildUI()
     end)
 
     OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, hidden)
@@ -471,19 +473,26 @@ function Addon:ApplyTheme()
 end
 
 function Addon:ApplyLanguage()
+    -- Localization lives in the OneWoW Locale service now (scope = ADDON_NAME;
+    -- shared vocab in the "shared" scope). SetLanguage refolds every scope in place,
+    -- pushes BINDING_* globals (incl. our BINDING_HEADER/NAME_ONEWOW_DEVTOOL keys),
+    -- and fires OnApply; Addon.L is a stable view. esMX->esES is normalized inside.
+    -- Kept as a thin shim for the profile-sync loop (t-profiles) until Phase 6.
     local lang = OneWoW_GUI:GetSetting("language") or "enUS"
-    if lang == "esMX" then lang = "esES" end
-    local localeData = self.Locales and (self.Locales[lang] or self.Locales["enUS"])
-    local fallback = self.Locales and self.Locales["enUS"]
-    if localeData and fallback then
-        for k, v in pairs(fallback) do
-            self.L[k] = localeData[k] or v
+    OneWoW.Locale:SetLanguage(lang)
+end
+
+-- Rebuild the window in place (preserving shown state) so a settings change —
+-- theme, language, or font — takes effect without forcing another change.
+function Addon:RebuildUI()
+    if self.UI and self.UI.FullReset then
+        local wasShown = self.UI.mainFrame and self.UI.mainFrame:IsShown()
+        self.UI:FullReset()
+        if wasShown then
+            C_Timer.After(0.1, function()
+                if self.UI and self.UI.Show then self.UI:Show() end
+            end)
         end
-    end
-    local L = self.L
-    if L then
-        _G["BINDING_HEADER_ONEWOW_DEVTOOL"] = L["BINDING_HEADER_ONEWOW_DEVTOOL"]
-        _G["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"] = L["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"]
     end
 end
 
@@ -502,7 +511,7 @@ local didLogin = false
 function Addon:OnPlayerLogin()
     if didLogin then return end
     didLogin = true
-    OneWoW:RegisterMinimap("OneWoW_Utility_DevTool", (OneWoW.L and OneWoW.L["CTX_OPEN_DEVTOOLS"]) or Addon.L["MINIMAP_CTX_FALLBACK"], nil, function()
+    OneWoW:RegisterMinimap("OneWoW_Utility_DevTool", OneWoW.L["CTX_OPEN_DEVTOOLS"], nil, function()
         Addon:ToggleMainWindow()
     end)
     if Addon.db.global.monitor.showOnLoad then
@@ -548,7 +557,7 @@ SlashCmdList["ONEWOW_DEVTOOL"] = function(msg)
     end
 
     if not Addon.UI then
-        Addon:Print(Addon.L["MSG_UI_NOT_LOADED"])
+        Addon:Print(L["MSG_UI_NOT_LOADED"])
         return
     end
 
@@ -561,8 +570,8 @@ end
 
 _G["1WoW_UtilityDevTool_OnAddonCompartmentEnter"] = function(_, button)
     GameTooltip:SetOwner(button, "ANCHOR_LEFT")
-    GameTooltip:SetText(Addon.L["ADDON_TOOLTIP_TITLE"], 1, 1, 1)
-    GameTooltip:AddLine(Addon.L["ADDON_COMPARTMENT_HINT"], 0.7, 0.7, 0.7)
+    GameTooltip:SetText(L["ADDON_TOOLTIP_TITLE"], 1, 1, 1)
+    GameTooltip:AddLine(L["ADDON_COMPARTMENT_HINT"], 0.7, 0.7, 0.7)
     GameTooltip:Show()
 end
 

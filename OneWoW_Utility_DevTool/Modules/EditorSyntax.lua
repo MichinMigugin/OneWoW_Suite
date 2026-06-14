@@ -1,6 +1,4 @@
-local ADDON_NAME, Addon = ...
-
-local OneWoW_GUI = OneWoW_GUI
+local _, Addon = ...
 
 local stringsub = string.sub
 local stringbyte = string.byte
@@ -10,7 +8,6 @@ local stringfind = string.find
 local stringgsub = string.gsub
 local tableconcat = table.concat
 local wipe = wipe
-local GetTime = GetTime
 
 Addon.EditorSyntax = {}
 local ES = Addon.EditorSyntax
@@ -458,7 +455,6 @@ function ES.encode(code)
     return code or ""
 end
 
-local noEffect = {0, 0}
 local indentLeft = {-1, 0}
 local indentRight = {0, 1}
 local indentBoth = {-1, 1}

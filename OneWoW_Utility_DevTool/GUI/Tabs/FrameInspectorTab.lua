@@ -3,7 +3,7 @@ local _, Addon = ...
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local L = Addon.L or {}
+local L = Addon.L
 
 function Addon.UI:CreateFrameInspectorTab(parent)
     local DU = Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
@@ -13,17 +13,17 @@ function Addon.UI:CreateFrameInspectorTab(parent)
     tab:SetAllPoints(parent)
     tab:Hide()
 
-    local pickBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L["BTN_PICK_FRAME"], width = 100, height = 22 })
+    local pickBtn = OneWoW_GUI:CreateButton(tab, { text = L["BTN_PICK_FRAME"], width = 100, height = 22 })
     pickBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
 
     local searchBox = OneWoW_GUI:CreateEditBox(tab, {
         width = 150,
         height = 22,
-        placeholderText = Addon.L["LABEL_FRAME_NAME"],
+        placeholderText = L["LABEL_FRAME_NAME"],
     })
     searchBox:SetPoint("LEFT", pickBtn, "RIGHT", 10, 0)
 
-    local searchBtn = OneWoW_GUI:CreateButton(tab, { text = Addon.L["BTN_SEARCH"], width = 70, height = 22 })
+    local searchBtn = OneWoW_GUI:CreateButton(tab, { text = L["BTN_SEARCH"], width = 70, height = 22 })
     searchBtn:SetPoint("LEFT", searchBox, "RIGHT", 5, 0)
 
     pickBtn:SetScript("OnClick", function()
@@ -69,10 +69,10 @@ function Addon.UI:CreateFrameInspectorTab(parent)
 
     local leftTitle = leftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     leftTitle:SetPoint("TOP", leftPanel, "TOP", 0, -5)
-    leftTitle:SetText(Addon.L["LABEL_FRAME_HIERARCHY"])
+    leftTitle:SetText(L["LABEL_FRAME_HIERARCHY"])
     leftTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local copyHierarchyBtn = OneWoW_GUI:CreateButton(leftPanel, { text = Addon.L["BTN_COPY_HIERARCHY"], width = 70, height = 18 })
+    local copyHierarchyBtn = OneWoW_GUI:CreateButton(leftPanel, { text = L["BTN_COPY_HIERARCHY"], width = 70, height = 18 })
     copyHierarchyBtn:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -25, -3)
     copyHierarchyBtn:SetScript("OnClick", function()
         if tab.frameTree then
@@ -123,10 +123,10 @@ function Addon.UI:CreateFrameInspectorTab(parent)
 
     local rightTitle = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     rightTitle:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 5, -5)
-    rightTitle:SetText(Addon.L["LABEL_FRAME_DETAILS"])
+    rightTitle:SetText(L["LABEL_FRAME_DETAILS"])
     rightTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local copyDetailsBtn = OneWoW_GUI:CreateButton(rightPanel, { text = Addon.L["BTN_COPY_DETAILS"], width = 70, height = 18 })
+    local copyDetailsBtn = OneWoW_GUI:CreateButton(rightPanel, { text = L["BTN_COPY_DETAILS"], width = 70, height = 18 })
     copyDetailsBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -25, -3)
 
     local parentGoBtn = OneWoW_GUI:CreateButton(rightPanel, { text = (L["FRAME_INSPECTOR_PARENT_PREFIX"]) .. (L["FRAME_INSPECTOR_PARENT_TARGET"]), height = 18 })
@@ -158,7 +158,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
     tab.detailsText:SetPoint("TOPLEFT", 2, -2)
     tab.detailsText:SetPoint("RIGHT", rightContent, "RIGHT", -2, 0)
     tab.detailsText:SetJustifyH("LEFT")
-    tab.detailsText:SetText(Addon.L["LABEL_NO_FRAME"])
+    tab.detailsText:SetText(L["LABEL_NO_FRAME"])
     tab.detailsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     tab.leftScroll = leftScroll
