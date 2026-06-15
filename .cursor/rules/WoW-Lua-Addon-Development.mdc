@@ -13,6 +13,7 @@ Load on demand for deep references — these replace what used to live in this r
 
 - `onewow-database-api` — `OneWoW_GUI.DB`, defaults, migrations, scope resolution
 - `onewow-suite-architecture` — load units, lifecycle hooks, BootStore, enable model, OptionalDeps
+- `onewow-qol-modules` — OneWoW_QoL external modules: module.lua/Define, ModuleRegistry, Current(), per-module locale scope
 - `wow-tooltip-system` — TooltipDataProcessor, C_TooltipInfo, line types, bind detection
 - `onewow-gui-ui` — component API, theme colors, backdrops, constants/localization
 - `wow-api-specialist` — broader WoW/Blizzard API verification via Cursor's indexed docs
