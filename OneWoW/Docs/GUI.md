@@ -61,7 +61,8 @@ OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", myAddon, function(self, ne
 end)
 
 OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", myAddon, function(self, newLangKey)
-    -- re-apply your locale tables here, rebuild UI
+    -- ns.L (your OneWoW.Locale view) refolds automatically; only rebuild any
+    -- standalone UI you own (hub tabs are rebuilt for you on a language change)
 end)
 
 OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", myAddon, function(self, isHidden)
@@ -210,7 +211,7 @@ function addon:OnInitialize()
         -- rebuild UI
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
-        -- re-apply locale, rebuild UI
+        -- locale view auto-updates; rebuild standalone UI you own
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(self2, hidden)
         -- show/hide minimap button

@@ -1,6 +1,7 @@
 local _, OneWoW = ...
 
--- OneWoW Locale service (Phase 0 — see Docs/LOCALE_MIGRATION.md).
+-- OneWoW Locale service. Contract documented in Docs/ARCHITECTURE.md
+-- (§6 "Localization (OneWoW.Locale)").
 --
 -- One service owns localization for the whole suite. Core fills the shared and
 -- "OneWoW" scopes; every other addon registers its own scope and reads back a
