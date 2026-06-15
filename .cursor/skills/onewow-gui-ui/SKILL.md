@@ -177,7 +177,7 @@ Theme, language, minimap state — owned by the suite. Use `OneWoW_GUI:GetSettin
 
 4. **Framework / shim wrappers around OneWoW_GUI helpers.** `Addon.UI:Button(...)` that calls `OneWoW_GUI:CreateButton` is duplicated indirection. Call OneWoW_GUI directly.
 
-5. **Hardcoded user-facing strings.** `text = "Save"` in Lua source. Pull from `ns.L.SAVE` (translations) or `Addon.Constants.X`. This includes `ns.L.KEY or "Save"` fallbacks — the Locale view already returns the key name on a miss; use `OneWoW.Locale:GetOptional` for genuinely optional text.
+5. **Hardcoded user-facing strings.** `text = "Save"` in Lua source. Pull from `ns.L.SAVE` (translations) or `Addon.Constants.X`. This includes `ns.L.KEY or "Save"` fallbacks — the Locale view already returns the key name on a miss; use `OneWoW.Locale:GetOptional` for genuinely optional text. **Exception:** a bare all-caps Blizzard global string (`text = CLOSE`, `text = SETTINGS`) is sanctioned — it's already localized by Blizzard. These must be whitelisted in `.luarc.json` `diagnostics.globals`; never write them as `_G.CLOSE` / `_G["CLOSE"]`.
 
 6. **Hardcoded color literals.** `SetTextColor(1, 1, 1)`, `SetColorTexture(0.2, 0.6, 0.4)`, RGB constants in Lua source. Use `GetThemeColor` keys. Pure black/white for utility cases (overlays, masks) is the rare exception.
 

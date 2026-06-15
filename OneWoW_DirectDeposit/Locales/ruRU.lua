@@ -4,14 +4,10 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["ADDON_TITLE"] = "Прямой депозит",
     ["ADDON_SUBTITLE"] = "Автоматическое управление золотом в банке отряда",
 
-    ["SETTINGS"] = "Настройки",
-    ["STATUS"] = "Статус",
     ["ENABLED"] = "Включено",
     ["DISABLED"] = "Отключено",
 
     ["TAB_GOLD"] = "Золото",
-    ["TAB_ITEMS"] = "Предметы",
-    ["TAB_SETTINGS"] = "Настройки",
 
     ["DIRECT_DEPOSIT_TITLE"] = "Прямой депозит",
     ["DIRECT_DEPOSIT_DESCRIPTION"] = "Автоматически управляйте золотом между вашим персонажем и банком отряда. Установите целевую сумму для хранения на персонаже, и система будет вносить излишки золота или снимать при нехватке. Идеально подходит для управления золотом между несколькими персонажами.",
@@ -43,10 +39,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["ITEM_DEPOSIT_LIST"] = "Список предметов для автоматического внесения",
     ["ITEM_DEPOSIT_ADD"] = "Добавить предмет",
     ["ITEM_DEPOSIT_ADD_PROMPT"] = "Введите ID предмета или shift+щелчок по предмету, чтобы добавить:",
-    ["ITEM_DEPOSIT_REMOVE"] = "Удалить",
     ["ITEM_DEPOSIT_WARBAND"] = "Отряд",
     ["ITEM_DEPOSIT_PERSONAL"] = "Личный",
-    ["ITEM_DEPOSIT_GUILD"] = "Гильдия",
 
     ["CLEAR"] = "Очистить",
 

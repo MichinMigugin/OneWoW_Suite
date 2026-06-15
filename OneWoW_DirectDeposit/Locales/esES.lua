@@ -4,14 +4,10 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["ADDON_TITLE"] = "Depósito Directo",
     ["ADDON_SUBTITLE"] = "Gestión Automática de Oro del Banco de Grupo de Guerra",
 
-    ["SETTINGS"] = "Configuración",
-    ["STATUS"] = "Estado",
     ["ENABLED"] = "Habilitado",
     ["DISABLED"] = "Deshabilitado",
 
     ["TAB_GOLD"] = "Oro",
-    ["TAB_ITEMS"] = "Objetos",
-    ["TAB_SETTINGS"] = "Configuración",
 
     ["DIRECT_DEPOSIT_TITLE"] = "Depósito Directo",
     ["DIRECT_DEPOSIT_DESCRIPTION"] = "Gestiona automáticamente el oro entre tu personaje y el Banco de Grupo de Guerra. Establece una cantidad objetivo para mantener en tu personaje, y el sistema depositará el exceso de oro o retirará cuando te falte. Perfecto para gestionar oro entre múltiples personajes.",
@@ -43,10 +39,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["ITEM_DEPOSIT_LIST"] = "Lista de Objetos para Auto-Depósito",
     ["ITEM_DEPOSIT_ADD"] = "Añadir Objeto",
     ["ITEM_DEPOSIT_ADD_PROMPT"] = "Ingresa el ID del objeto o shift-clic en un objeto para añadir:",
-    ["ITEM_DEPOSIT_REMOVE"] = "Eliminar",
     ["ITEM_DEPOSIT_WARBAND"] = "Grupo de Guerra",
     ["ITEM_DEPOSIT_PERSONAL"] = "Personal",
-    ["ITEM_DEPOSIT_GUILD"] = "Hermandad",
 
     ["CLEAR"] = "Limpiar",
 

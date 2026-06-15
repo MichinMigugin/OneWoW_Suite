@@ -99,8 +99,13 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
 - [ ] Add each adopted global to `.luarc.json` `diagnostics.globals` (verify it
   exists first; `UNKNOWN` is already listed).
 - [ ] `/owlocale` clean + in-game verify the screens; commit.
-- [ ] After the first addon: add the carve-out to the `onewow-gui-ui` skill
+- [x] After the first addon: add the carve-out to the `onewow-gui-ui` skill
   anti-pattern #5 so `text = CLOSE` (bare whitelisted global) isn't misflagged.
+
+**Sub-phase progress:**
+- [x] `OneWoW_DirectDeposit` — 5 used keys swapped to bare globals (`GUILD`,
+  `ITEMS`, `SETTINGS`, `STATUS`); 2 dead keys (`SETTINGS`, `ITEM_DEPOSIT_REMOVE`)
+  dropped. 7 keys removed across all 6 locale files; globals added to `.luarc.json`.
 
 ### Phase 3 — Consolidate to shared (pending)
 Baseline: **430 strings**. Per-addon sub-phases. For each value group:

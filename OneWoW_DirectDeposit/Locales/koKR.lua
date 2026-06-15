@@ -4,14 +4,10 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ADDON_TITLE"] = "자동 입금",
     ["ADDON_SUBTITLE"] = "워밴드 은행 골드 자동 관리",
 
-    ["SETTINGS"] = "설정",
-    ["STATUS"] = "상태",
     ["ENABLED"] = "활성화됨",
     ["DISABLED"] = "비활성화됨",
 
     ["TAB_GOLD"] = "골드",
-    ["TAB_ITEMS"] = "아이템",
-    ["TAB_SETTINGS"] = "설정",
 
     ["DIRECT_DEPOSIT_TITLE"] = "자동 입금",
     ["DIRECT_DEPOSIT_DESCRIPTION"] = "캐릭터와 워밴드 은행 사이의 골드를 자동으로 관리합니다. 캐릭터에 유지할 목표 금액을 설정하면 시스템이 초과 골드를 입금하거나 부족할 때 인출합니다. 여러 캐릭터 간 골드 관리에 완벽합니다.",
@@ -43,10 +39,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ITEM_DEPOSIT_LIST"] = "자동 입금 아이템 목록",
     ["ITEM_DEPOSIT_ADD"] = "아이템 추가",
     ["ITEM_DEPOSIT_ADD_PROMPT"] = "아이템 ID를 입력하거나 Shift+클릭하여 추가:",
-    ["ITEM_DEPOSIT_REMOVE"] = "제거",
     ["ITEM_DEPOSIT_WARBAND"] = "워밴드",
     ["ITEM_DEPOSIT_PERSONAL"] = "개인",
-    ["ITEM_DEPOSIT_GUILD"] = "길드",
 
     ["CLEAR"] = "지우기",
 

@@ -145,7 +145,7 @@ function OneWoW_DirectDeposit:AddHoveredItemToList(bankType)
     local function bankName(bt)
         return bt == "personal" and L["ITEM_DEPOSIT_PERSONAL"]
             or bt == "warband"  and L["ITEM_DEPOSIT_WARBAND"]
-            or L["ITEM_DEPOSIT_GUILD"]
+            or GUILD
     end
 
     if existing then
@@ -177,7 +177,7 @@ function OneWoW_DirectDeposit:InitTooltipHook()
         elseif bankType == "warband" then
             return L["TOOLTIP_WARBAND"], 0.4, 0.8, 1.0
         elseif bankType == "guild" then
-            return L["TOOLTIP_GUILD"], 1.0, 0.82, 0.0
+            return GUILD, 1.0, 0.82, 0.0
         end
         return nil
     end

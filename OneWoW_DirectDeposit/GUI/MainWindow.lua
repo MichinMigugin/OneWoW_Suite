@@ -99,8 +99,8 @@ function GUI:CreateTabSystem(parent)
 
     local tabDefs = {
         { text = L["TAB_GOLD"],     id = 1 },
-        { text = L["TAB_ITEMS"],    id = 2 },
-        { text = L["TAB_SETTINGS"], id = 3 },
+        { text = ITEMS,             id = 2 },
+        { text = SETTINGS,          id = 3 },
         { text = L["TAB_KEYBINDS"], id = 4 },
     }
 
@@ -766,7 +766,7 @@ function GUI:RefreshItemList(panel, preserveScrollPos)
 
             local guildLabel = OneWoW_GUI:CreateFS(itemRow, 10)
             guildLabel:SetPoint("LEFT", guildRadio, "RIGHT", 3, 0)
-            guildLabel:SetText(L["ITEM_DEPOSIT_GUILD"])
+            guildLabel:SetText(GUILD)
             if canGuild then
                 guildLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
             else
@@ -1076,7 +1076,7 @@ end
 function GUI:UpdateStatusText()
     if not MainWindow or not MainWindow.statusText then return end
     local status = OneWoW_DirectDeposit.db.global.directDeposit.enabled and L["ENABLED"] or L["DISABLED"]
-    MainWindow.statusText:SetText(L["STATUS"] .. ": " .. status)
+    MainWindow.statusText:SetText(STATUS .. ": " .. status)
 end
 
 function GUI:Show()

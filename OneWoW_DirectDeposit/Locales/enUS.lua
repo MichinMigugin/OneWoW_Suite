@@ -4,14 +4,10 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_TITLE"] = "Direct Deposit",
     ["ADDON_SUBTITLE"] = "Automatic Warband Bank Gold Management",
 
-    ["SETTINGS"] = "Settings",
-    ["STATUS"] = "Status",
     ["ENABLED"] = "Enabled",
     ["DISABLED"] = "Disabled",
 
     ["TAB_GOLD"] = "Gold",
-    ["TAB_ITEMS"] = "Items",
-    ["TAB_SETTINGS"] = "Settings",
 
     ["DIRECT_DEPOSIT_TITLE"] = "Direct Deposit",
     ["DIRECT_DEPOSIT_DESCRIPTION"] = "Automatically manage gold between your character and Warband Bank. Set a target amount to keep on your character, and the system will deposit excess gold or withdraw when you're short. Perfect for managing gold across multiple characters.",
@@ -43,10 +39,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ITEM_DEPOSIT_LIST"] = "Auto-Deposit Item List",
     ["ITEM_DEPOSIT_ADD"] = "Add Item",
     ["ITEM_DEPOSIT_ADD_PROMPT"] = "Enter Item ID or shift-click an item to add:",
-    ["ITEM_DEPOSIT_REMOVE"] = "Remove",
     ["ITEM_DEPOSIT_WARBAND"] = "Warband",
     ["ITEM_DEPOSIT_PERSONAL"] = "Personal",
-    ["ITEM_DEPOSIT_GUILD"] = "Guild",
 
     ["CLEAR"] = "Clear",
 
@@ -89,7 +83,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TOOLTIP_LABEL"] = "DirectDepositing:",
     ["TOOLTIP_PERSONAL"] = "Personal",
     ["TOOLTIP_WARBAND"] = "Warband",
-    ["TOOLTIP_GUILD"] = "Guild",
 
     ["BINDING_HEADER_ONEWOW_DIRECTDEPOSIT"] = "|cFF00FF00OneWoW|r Direct Deposit",
     ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_TOGGLE"] = "Toggle Direct Deposit Window",

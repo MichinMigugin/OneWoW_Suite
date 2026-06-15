@@ -4,14 +4,10 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ADDON_TITLE"] = "Direkte Einzahlung",
     ["ADDON_SUBTITLE"] = "Automatische Warband-Bank Gold-Verwaltung",
 
-    ["SETTINGS"] = "Einstellungen",
-    ["STATUS"] = "Status",
     ["ENABLED"] = "Aktiviert",
     ["DISABLED"] = "Deaktiviert",
 
     ["TAB_GOLD"] = "Gold",
-    ["TAB_ITEMS"] = "Gegenstände",
-    ["TAB_SETTINGS"] = "Einstellungen",
 
     ["DIRECT_DEPOSIT_TITLE"] = "Direkte Einzahlung",
     ["DIRECT_DEPOSIT_DESCRIPTION"] = "Verwalten Sie automatisch Gold zwischen Ihrem Charakter und der Warband-Bank. Legen Sie einen Zielbetrag fest, den Sie auf Ihrem Charakter behalten möchten, und das System wird überschüssiges Gold einzahlen oder abheben, wenn Sie zu wenig haben. Perfekt für die Verwaltung von Gold über mehrere Charaktere hinweg.",
@@ -43,10 +39,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ITEM_DEPOSIT_LIST"] = "Liste der Auto-Einzahlungs-Gegenstände",
     ["ITEM_DEPOSIT_ADD"] = "Gegenstand Hinzufügen",
     ["ITEM_DEPOSIT_ADD_PROMPT"] = "Geben Sie die Gegenstands-ID ein oder Shift+Klick auf einen Gegenstand zum Hinzufügen:",
-    ["ITEM_DEPOSIT_REMOVE"] = "Entfernen",
     ["ITEM_DEPOSIT_WARBAND"] = "Warband",
     ["ITEM_DEPOSIT_PERSONAL"] = "Persönlich",
-    ["ITEM_DEPOSIT_GUILD"] = "Gilde",
 
     ["CLEAR"] = "Löschen",
 
