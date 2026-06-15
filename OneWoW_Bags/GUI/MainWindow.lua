@@ -67,7 +67,7 @@ function GUI:InitMainWindow()
         title = L["ADDON_TITLE"],
         factionTheme = factionTheme,
         onClose = function() MainWindow:Hide() end,
-        settingsText = L["SETTINGS"],
+        settingsText = SETTINGS,
         onSettings = function()
             Settings:Toggle()
         end,

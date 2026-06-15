@@ -1,4 +1,4 @@
-local _, OneWoW_Bags = ...
+local ADDON_NAME, OneWoW_Bags = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -528,7 +528,7 @@ BuildSectionMemberRows = function(secRow, section, sectionID, startY)
                 if reorder:IsActive() then return end
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                 local locKey = BUILTIN_LOCALE_KEYS[captName]
-                GameTooltip:SetText((locKey and L[locKey]) or captName, 1, 1, 1)
+                GameTooltip:SetText((locKey and OneWoW.Locale:GetOptional(ADDON_NAME, locKey)) or captName, 1, 1, 1)
                 GameTooltip:AddLine(" ")
                 local tr, tg, tb = OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
                 GameTooltip:AddLine(L["CATEGORY_REORDER_HINT"], tr, tg, tb, true)
@@ -558,7 +558,7 @@ BuildSectionMemberRows = function(secRow, section, sectionID, startY)
             nTxt:SetPoint("LEFT",  row,  "LEFT",  nameX, 0)
             nTxt:SetPoint("RIGHT", row,  "RIGHT", -6, 0)
             nTxt:SetJustifyH("LEFT")
-            nTxt:SetText((locKey2 and L[locKey2]) or catName)
+            nTxt:SetText((locKey2 and OneWoW.Locale:GetOptional(ADDON_NAME, locKey2)) or catName)
             if isSelCat then
                 nTxt:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             else
@@ -633,7 +633,7 @@ end
 StaticPopupDialogs["ONEWOW_BAGS_CREATE_CATEGORY"] = {
     text = "", hasEditBox = true,
     button1 = L["POPUP_CREATE"],
-    button2 = L["POPUP_CANCEL"],
+    button2 = CANCEL,
     OnShow = function(self)
         self.Text:SetText(L["CATEGORY_CREATE_ENTER"])
         self.EditBox:SetFocus()
@@ -697,7 +697,7 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_CATEGORY"] = {
 StaticPopupDialogs["ONEWOW_BAGS_RENAME_CATEGORY"] = {
     text = "", hasEditBox = true,
     button1 = L["POPUP_RENAME"],
-    button2 = L["POPUP_CANCEL"],
+    button2 = CANCEL,
     OnShow = function(self, data)
         self.Text:SetText(L["CATEGORY_RENAME_ENTER"])
         local cat = data and db.global.customCategoriesV2[data]
@@ -734,8 +734,8 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_CATEGORY"] = {
 
 StaticPopupDialogs["ONEWOW_BAGS_DELETE_CATEGORY"] = {
     text = "",
-    button1 = L["POPUP_DELETE"],
-    button2 = L["POPUP_CANCEL"],
+    button1 = DELETE,
+    button2 = CANCEL,
     OnShow = function(self) self.Text:SetText(L["CATEGORY_DELETE_CONFIRM"]) end,
     OnAccept = function(_, data)
         if data then
@@ -752,7 +752,7 @@ StaticPopupDialogs["ONEWOW_BAGS_DELETE_CATEGORY"] = {
 StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
     text = "", hasEditBox = true,
     button1 = L["POPUP_CREATE"],
-    button2 = L["POPUP_CANCEL"],
+    button2 = CANCEL,
     OnShow = function(self)
         self.Text:SetText(L["SECTION_CREATE_ENTER"])
         self.EditBox:SetFocus()
@@ -790,7 +790,7 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
 StaticPopupDialogs["ONEWOW_BAGS_RENAME_SECTION"] = {
     text = "", hasEditBox = true,
     button1 = L["POPUP_RENAME"],
-    button2 = L["POPUP_CANCEL"],
+    button2 = CANCEL,
     OnShow = function(self, data)
         self.Text:SetText(L["SECTION_RENAME_ENTER"])
         local sec = data and db.global.categorySections[data]
@@ -827,8 +827,8 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_SECTION"] = {
 
 StaticPopupDialogs["ONEWOW_BAGS_DELETE_SECTION"] = {
     text = "",
-    button1 = L["POPUP_DELETE"],
-    button2 = L["POPUP_CANCEL"],
+    button1 = DELETE,
+    button2 = CANCEL,
     OnShow = function(self) self.Text:SetText(L["SECTION_DELETE_CONFIRM"]) end,
     OnAccept = function(_, data)
         if data then
@@ -917,7 +917,7 @@ function CatMgrUI:RefreshRight()
         header:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
         local captID = sectionID
-        local delBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["CATEGORY_DELETE"], height=22 })
+        local delBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=DELETE, height=22 })
         delBtn:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -6, -10)
         delBtn:SetScript("OnClick", function()
             StaticPopup_Show("ONEWOW_BAGS_DELETE_SECTION", section.name, nil, captID)
@@ -992,16 +992,16 @@ function CatMgrUI:RefreshRight()
     end
 
     local locKey = BUILTIN_LOCALE_KEYS[catName]
-    local dispName = (locKey and L[locKey]) or catName
+    local dispName = (locKey and OneWoW.Locale:GetOptional(ADDON_NAME, locKey)) or catName
 
     local catMod = OneWoW_Bags:EnsureCategoryModification(catName)
 
     local SORT_OPTIONS = { "none", "default", "name", "rarity", "ilvl", "type", "expansion" }
-    local SORT_LABELS = { L["SORT_OFF"], L["SORT_DEFAULT"], L["SORT_NAME"], L["SORT_RARITY"], L["SORT_ITEM_LEVEL"], L["SORT_TYPE"], L["SORT_EXPANSION"] }
+    local SORT_LABELS = { OFF, L["SORT_DEFAULT"], NAME, RARITY, L["SORT_ITEM_LEVEL"], TYPE, L["SORT_EXPANSION"] }
     local GROUP_OPTIONS = { "none", "expansion", "type", "slot", "quality", "equipmentset" }
-    local GROUP_LABELS = { L["GROUP_NONE"], L["GROUP_EXPANSION"], L["GROUP_TYPE"], L["GROUP_SLOT"], L["GROUP_QUALITY"], L["GROUP_EQUIPMENT_SET"] }
+    local GROUP_LABELS = { NONE, L["GROUP_EXPANSION"], TYPE, L["GROUP_SLOT"], QUALITY, L["GROUP_EQUIPMENT_SET"] }
     local PRIORITY_OPTIONS = { -2, -1, 0, 1, 2, 3 }
-    local PRIORITY_LABELS = { L["PRIORITY_LOWEST"], L["PRIORITY_LOW"], L["PRIORITY_NORMAL"], L["PRIORITY_HIGH"], L["PRIORITY_HIGHEST"], L["PRIORITY_MAX"] }
+    local PRIORITY_LABELS = { L["PRIORITY_LOWEST"], LOW, L["PRIORITY_NORMAL"], HIGH, L["PRIORITY_HIGHEST"], L["PRIORITY_MAX"] }
 
     local LABEL_X   = 16
     local CONTROL_X = 140
@@ -1035,12 +1035,12 @@ function CatMgrUI:RefreshRight()
     elseif catData and catData.isTSM then
         typeLabel:SetText("[" .. (L["CATEGORY_TYPE_TSM"]) .. "]")
     else
-        typeLabel:SetText("[" .. (L["CATEGORY_TYPE_CUSTOM"]) .. "]")
+        typeLabel:SetText("[" .. (CUSTOM) .. "]")
     end
     typeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     if isCustom then
-        local delBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["CATEGORY_DELETE"], height=22 })
+        local delBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=DELETE, height=22 })
         delBtn:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -6, yPos)
         delBtn:SetScript("OnClick", function()
             StaticPopup_Show("ONEWOW_BAGS_DELETE_CATEGORY", catData.name, nil, capturedID)

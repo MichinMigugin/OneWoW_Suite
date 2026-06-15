@@ -3,8 +3,6 @@ local ADDON_NAME, OneWoW_Bags = ...
 OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_TITLE"] = "Bags",
 
-    ["SETTINGS"] = "Settings",
-    ["STATUS"] = "Status",
     ["ENABLED"] = "Enabled",
     ["DISABLED"] = "Disabled",
 
@@ -63,9 +61,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["SETTING_RECENT_DURATION"] = "Recent Item Duration (seconds)",
     ["SETTING_CATEGORY_SORT"] = "Category Sort",
 
-    ["ICON_SIZE_S"] = "Small",
     ["ICON_SIZE_M"] = "Medium",
-    ["ICON_SIZE_L"] = "Large",
     ["ICON_SIZE_XL"] = "Extra Large",
 
     ["BAG_BACKPACK"] = "Backpack",
@@ -93,7 +89,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_HINT_DRAG_REORDER"] = "Drag left to reorder.",
     ["TRACKER_ALREADY_TRACKED"] = "That item or currency is already being tracked.",
 
-    ["CATEGORY_MANAGER_BTN"] = "Categories",
     ["CATEGORY_MANAGER_TITLE"] = "Custom Category Manager",
     ["CATEGORY_MANAGER_INFO"] = "Create custom categories and assign items to them. Drag an item onto a category or add by Item ID.",
     ["CATEGORY_BADGE_TOOLTIP_TITLE"] = "Category indicators",
@@ -102,7 +97,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["CATEGORY_CREATE_ENTER"] = "Enter category name:",
     ["CATEGORY_RENAME"] = "Rename",
     ["CATEGORY_RENAME_ENTER"] = "Enter new name:",
-    ["CATEGORY_DELETE"] = "Delete",
     ["CATEGORY_DELETE_CONFIRM"] = "Delete this category and all its items?",
     ["CATEGORY_NO_CATEGORIES"] = "No custom categories yet.",
     ["CATEGORY_GET_STARTED"] = "Click 'New Category' to get started.",
@@ -142,10 +136,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["BAG_SWAP_NONE"] = "No compatible bags",
     ["BAG_MENU_EMPTY"] = "Empty bag...",
     ["BAG_MENU_EMPTY_AUTO"] = "All other bags",
-    ["POPUP_ADD"] = "Add",
-    ["POPUP_CANCEL"] = "Cancel",
     ["POPUP_CREATE"] = "Create",
-    ["POPUP_DELETE"] = "Delete",
     ["POPUP_RENAME"] = "Rename",
     ["DUPLICATE_CATEGORY_NAME"] = "A category with that name already exists.",
     ["DUPLICATE_SECTION_NAME"] = "A section with that name already exists.",
@@ -156,13 +147,11 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TOGGLE_OFF"] = "Off",
 
     ["SECTION_PERSONAL_BANK"] = "Personal Bank",
-    ["SECTION_GUILD_BANK"] = "Guild Bank",
     ["SETTING_ENABLE_BANK"] = "Enable Bank UI",
     ["DESC_ENABLE_BANK"] = "Replace the default bank window with the OneWoW Bags interface.",
     ["SETTING_BANK_OVERLAYS"] = "Bank Item Overlays",
     ["DESC_BANK_OVERLAYS"] = "Show item overlays on default bank item slots.",
 
-    ["SECTION_DISPLAY"] = "Display",
     ["DESC_RARITY_COLOR"] = "Color item slot borders based on item rarity.",
     ["DESC_SHOW_NEW"] = "Show a highlight on newly obtained items.",
     ["SETTING_SHOW_SCROLLBAR"] = "Show Scroll Bar",
@@ -173,14 +162,9 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["SETTING_BANK_COLUMNS"] = "Bank Columns",
 
     ["SETTING_ITEM_SORT"] = "Item Sort",
-    ["SORT_OFF"] = "Off",
     ["SORT_DEFAULT"] = "Slot#",
-    ["SORT_NAME"] = "Name",
-    ["SORT_RARITY"] = "Rarity",
     ["SORT_ITEM_LEVEL"] = "Item Level",
-    ["SORT_TYPE"] = "Type",
 
-    ["SECTION_SEARCH"] = "Search",
     ["SETTING_SEARCH_HISTORY_LIMIT"] = "Search History",
     ["DESC_SEARCH_HISTORY_LIMIT"] = "Keep the last 0-10 searches. Set to 0 to disable.",
     ["SECTION_SAVED_SEARCHES"] = "Saved Searches",
@@ -192,7 +176,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["SEARCH_TRANSFER_TO_BANK_DISABLED"] = "Open the bank to deposit matching items",
     ["SEARCH_TRANSFER_FROM_BANK"] = "Withdraw all matching items to your bags",
     ["SEARCH_TRANSFER_FROM_BANK_EMPTY"] = "Enter a search before transferring",
-    ["SAVED_SEARCH_SAVE"] = "Save",
     ["SAVED_SEARCH_OVERWRITE"] = "Overwrite",
     ["SAVED_SEARCH_NAME_TITLE"] = "Save Search",
     ["SAVED_SEARCH_NAME_PROMPT"] = "Enter a name for this saved search:",
@@ -204,13 +187,11 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["SAVED_SEARCH_MENU_USE"] = "Use Search",
     ["SAVED_SEARCH_MENU_SHOW"] = "Show Search",
     ["SAVED_SEARCH_MENU_RENAME"] = "Rename",
-    ["SAVED_SEARCH_MENU_DELETE"] = "Delete",
     ["SAVED_SEARCH_INVALID_NAME"] = "Saved search names can only use letters, numbers, spaces, -, _, and +.",
     ["SAVED_SEARCH_DUPLICATE_NAME"] = "A saved search with that name already exists.",
     ["SAVED_SEARCH_EMPTY_QUERY"] = "Enter a search before saving.",
     ["SAVED_SEARCH_NOT_FOUND"] = "Saved search not found.",
 
-    ["SECTION_CATEGORIES"] = "Categories",
     ["SETTING_INVENTORY_SLOTS"] = "Split by Equipment Slot",
     ["DESC_INVENTORY_SLOTS"] = "Split Weapons and Armor into individual equipment slots (Head, Chest, Hands, etc.)",
 
@@ -234,7 +215,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["GOLD_TOOLTIP_OTHERS"] = "+%d Others",
     ["GOLD_TOOLTIP_NO_ALTTRACKER"] = "Install AltTracker for alt gold details",
 
-    ["GUILD_BANK_ITEMS_LOG"] = "Items",
     ["GUILD_BANK_MONEY_LOG"] = "Gold",
     ["GUILD_BANK_NO_LOG"] = "No transactions available.",
 
@@ -328,11 +308,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["SORT_EXPANSION"] = "Expansion",
     ["GROUP_BY"] = "Group By",
-    ["GROUP_NONE"] = "None",
     ["GROUP_EXPANSION"] = "Expansion",
-    ["GROUP_TYPE"] = "Type",
     ["GROUP_SLOT"] = "Slot",
-    ["GROUP_QUALITY"] = "Quality",
     ["GROUP_EQUIPMENT_SET"] = "Equipment Set",
     ["EQUIPMENT_SET_MULTIPLE"] = "Multiple",
     ["EQUIPMENT_SET_NONE"] = "No Set",
@@ -358,9 +335,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["PRIORITY"] = "Priority",
     ["PRIORITY_LOWEST"] = "Lowest",
-    ["PRIORITY_LOW"] = "Low",
     ["PRIORITY_NORMAL"] = "Normal",
-    ["PRIORITY_HIGH"] = "High",
     ["PRIORITY_HIGHEST"] = "Highest",
     ["PRIORITY_MAX"] = "Max",
 
@@ -378,7 +353,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDED_ITEMS_NONE"] = "No items manually added.",
 
     ["CATEGORY_TYPE_BUILTIN"] = "Built-in",
-    ["CATEGORY_TYPE_CUSTOM"] = "Custom",
     ["CATEGORY_TYPE_TSM"] = "TSM",
 
     ["CATEGORY_RULE"] = "Rule:",
@@ -500,7 +474,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["IMPORT_PREVIEW_UNMAPPED_TITLE"] = "Baganator default categories without an equivalent",
     ["IMPORT_PREVIEW_UNMAPPED_HINT"] = "These Baganator default categories have no OneWoW equivalent. Kept entries go into a dedicated 'Baganator Import' section.",
     ["IMPORT_PREVIEW_KEEP"] = "Keep",
-    ["IMPORT_PREVIEW_IGNORE"] = "Ignore",
     ["IMPORT_PREVIEW_RESOLUTION"] = "Resolution",
     ["IMPORT_PREVIEW_RES_SKIP"] = "Skip",
     ["IMPORT_PREVIEW_RES_RENAME"] = "Rename",
@@ -510,15 +483,12 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["IMPORT_PREVIEW_RULE_SNAPSHOT"] = "Snapshot items",
     ["IMPORT_PREVIEW_RULE_DROP"] = "Drop rules",
     ["IMPORT_PREVIEW_CONFIRM"] = "Import",
-    ["IMPORT_PREVIEW_CANCEL"] = "Cancel",
     ["IMPORT_PREVIEW_RENAME_PREFIX"] = "Prefix:",
     ["IMPORT_PREVIEW_RENAME_SUFFIX"] = "Suffix:",
     ["IMPORT_PREVIEW_RES_CREATE"] = "Create",
     ["IMPORT_PREVIEW_RULE_SKIP"] = "Skip rule",
     ["IMPORT_PREVIEW_RULE_USE_TRANSLATED"] = "Use translated",
     ["IMPORT_PREVIEW_STAT_SECTIONS"] = "Sections",
-    ["IMPORT_PREVIEW_STAT_CATEGORIES"] = "Categories",
-    ["IMPORT_PREVIEW_STAT_ITEMS"] = "Items",
     ["IMPORT_PREVIEW_UNMAPPED_KEEP_ALL"] = "Keep all",
     ["IMPORT_PREVIEW_UNMAPPED_IGNORE_ALL"] = "Ignore all",
     ["IMPORT_PREVIEW_TREE_TITLE"] = "Sections & categories",

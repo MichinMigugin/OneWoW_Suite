@@ -62,9 +62,23 @@ CONSOLIDATE / TRANSLATE — the unit of work for Phases 2–4.
 
 ## Curation rules (the judgment calls the tool can't make)
 
+- **Adopt/consolidate ONLY keys referenced purely via literal `L["KEY"]`.** Before
+  removing any key, audit the code for *dynamic* references — the swap can only
+  redirect literal call sites, and removal of a dynamically-referenced key is a
+  regression (the view returns the key name on a miss, so an `L[var] or fallback`
+  shows the raw key; a `GetOptional(...) or x` silently drops to English). Two
+  forms to grep for, both excluded from adoption:
+  - **Stored key strings:** the key appears quoted in a map/list/arg, e.g.
+    `BUILTIN_LOCALE_KEYS = { ["Armor"] = "CAT_ARMOR" }`, `BuildLabelRow("COLOR")`,
+    `SETTINGS_SECTION_KEYS = { "TAB_GENERAL", ... }`, `labelKey = "SORT_X"`.
+    Audit: `grep -rnE '"KEY"' <addon> --include=*.lua | grep -v Locales`.
+  - **Constructed keys:** the key is built at runtime, e.g.
+    `"CAT_" .. upper(name)` (Bags `ResolveCategoryName`). No literal to grep — find
+    the construction site and exclude every key it can produce.
 - **Semantic check before adopting a global (B).** Confirm the global means the
   same thing in context; its translation must be right in all 11 languages, not
   just match English. Verify the value against `.wow_docs/general/GlobalStrings.lua`.
+  (e.g. `RESOLUTION` = screen resolution, wrong for an import-conflict "Resolution".)
 - **Proper nouns never translate.** Addon/brand names — `"OneWoW"`, `"Notes"`,
   `"Shopping List"`, `"Direct Deposit"` — consolidate to one `shared` key but are
   left identical across every locale.
@@ -92,6 +106,8 @@ CONSOLIDATE / TRANSLATE — the unit of work for Phases 2–4.
 Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
 - [ ] `python bin/locale_keydiff.py --scope <addon>` → review the **BLIZZARD** bucket.
 - [ ] Curate: confirm each global is the semantically-correct one (drop any wrong fit).
+- [ ] **Audit each candidate for dynamic references** (see Curation rules) and drop
+  any key referenced as a stored/constructed key string, not just literal `L["KEY"]`.
 - [ ] Replace `L["KEY"]` call sites with the **bare global** (`CLOSE`, not
   `_G["CLOSE"]` / `_G.CLOSE` — `check_no_g_literal.py` + Lua-Conventions). Use
   `local CLOSE = CLOSE` at file top for heavy users. No nil guards (Retail 12+).
@@ -111,6 +127,21 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
   `CURRENCY`, `LEVEL`, `ZONE`, `MOUNT`, `REPUTATION`, `TOY`; 29 call sites); dead
   key `TRACKER_PIN_OPACITY` dropped. 18 keys removed from enUS (koKR had none);
   11 new globals added to `.luarc.json`.
+- [x] `OneWoW_Bags` — 30 keys adopted (49 call sites across 9 files); 16 new
+  globals whitelisted. **Curation exclusions (kept in locale):**
+  - `IMPORT_PREVIEW_RESOLUTION` — conflict- not screen-resolution → would mistranslate.
+  - `TOGGLE_OFF` — paired with `TOGGLE_ON` (no global); keep the pair for Phase 3.
+  - `CAT_ARMOR`/`CAT_EMPTY`/`CAT_MISCELLANEOUS`/`CAT_OTHER`/`COLOR`/`TAB_GENERAL`/
+    `TAB_GUILD_BANK` — **dynamic references** (`"CAT_"..upper(name)` construction,
+    `BUILTIN_LOCALE_KEYS` map, `BuildLabelRow("COLOR")`, `SETTINGS_SECTION_KEYS`
+    list). Adopting them broke category names on the first pass; reverted + redone.
+  Dead key `STATUS` dropped. `.luarc.json` globals array also normalized (one-time
+  case-insensitive sort) so future inserts stay clean. (`OneWoW_DirectDeposit` and
+  `OneWoW_Trackers` re-audited for the same dynamic-ref issue — both clean.) Also
+  fixed a latent bug exposed by the investigation: `CategoryManager` resolved
+  built-in category names with `(locKey and L[locKey]) or name`, where the
+  key-name-on-miss defeats the fallback — switched the 3 sites to
+  `OneWoW.Locale:GetOptional(ADDON_NAME, locKey)` to match the view's idiom.
 
 ### Phase 3 — Consolidate to shared (pending)
 Baseline: **430 strings**. Per-addon sub-phases. For each value group:

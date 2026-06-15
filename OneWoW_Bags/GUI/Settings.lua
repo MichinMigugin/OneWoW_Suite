@@ -193,7 +193,7 @@ local function RegisterSavedSearchSettingsPopups()
         text = L["SAVED_SEARCH_RENAME_PROMPT"],
         hasEditBox = true,
         button1 = L["POPUP_RENAME"],
-        button2 = L["POPUP_CANCEL"],
+        button2 = CANCEL,
         timeout = 0,
         whileDead = true,
         hideOnEscape = true,
@@ -226,8 +226,8 @@ local function RegisterSavedSearchSettingsPopups()
 
     StaticPopupDialogs["ONEWOW_BAGS_DELETE_SAVED_SEARCH"] = {
         text = L["SAVED_SEARCH_DELETE_CONFIRM"],
-        button1 = L["POPUP_DELETE"],
-        button2 = L["POPUP_CANCEL"],
+        button1 = DELETE,
+        button2 = CANCEL,
         timeout = 0,
         whileDead = true,
         hideOnEscape = true,
@@ -299,7 +299,7 @@ function Settings:RefreshSavedSearchRows()
                             popup.EditBox:SetFocus()
                         end
                     end)
-                    rootDescription:CreateButton(L["SAVED_SEARCH_MENU_DELETE"], function()
+                    rootDescription:CreateButton(DELETE, function()
                         StaticPopup_Show("ONEWOW_BAGS_DELETE_SAVED_SEARCH", rowName, nil, rowName)
                     end)
                 end)
@@ -366,7 +366,7 @@ local function BuildSavedSearchList(container, yOffset)
 end
 
 local function BuildSearchSettingsSection(sc, db, yOffset)
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_SEARCH"], yOffset = yOffset })
+    yOffset = OneWoW_GUI:CreateSection(sc, { title = SEARCH, yOffset = yOffset })
     local searchContainer = BuildContainer(sc, yOffset)
     local searchY = -10
 
@@ -393,9 +393,9 @@ local function BuildGeneralTab(sc, db)
     local sizeContainer = BuildContainer(sc, yOffset)
     local sizeY = -12
     local sizeItems = {
-        { text = L["ICON_SIZE_S"],  value = 1, isActive = (db.global.iconSize == 1) },
+        { text = SMALL,  value = 1, isActive = (db.global.iconSize == 1) },
         { text = L["ICON_SIZE_M"],  value = 2, isActive = (db.global.iconSize == 2) },
-        { text = L["ICON_SIZE_L"],  value = 3, isActive = (db.global.iconSize == 3) },
+        { text = LARGE,  value = 3, isActive = (db.global.iconSize == 3) },
         { text = L["ICON_SIZE_XL"], value = 4, isActive = (db.global.iconSize == 4) },
     }
     local sizeBtns, sizeFinalY = OneWoW_GUI:CreateFitFrameButtons(sizeContainer, {
@@ -414,12 +414,12 @@ local function BuildGeneralTab(sc, db)
     local sortContainer = BuildContainer(sc, yOffset)
     local sortY = -12
     local itemSortItems = {
-        { text = L["SORT_OFF"],        value = "none",    isActive = (db.global.itemSort == "none") },
+        { text = OFF,        value = "none",    isActive = (db.global.itemSort == "none") },
         { text = L["SORT_DEFAULT"],    value = "default", isActive = (db.global.itemSort == "default") },
-        { text = L["SORT_NAME"],       value = "name",    isActive = (db.global.itemSort == "name") },
-        { text = L["SORT_RARITY"],     value = "rarity",  isActive = (db.global.itemSort == "rarity") },
+        { text = NAME,       value = "name",    isActive = (db.global.itemSort == "name") },
+        { text = RARITY,     value = "rarity",  isActive = (db.global.itemSort == "rarity") },
         { text = L["SORT_ITEM_LEVEL"], value = "ilvl",    isActive = (db.global.itemSort == "ilvl") },
-        { text = L["SORT_TYPE"],       value = "type",    isActive = (db.global.itemSort == "type") },
+        { text = TYPE,       value = "type",    isActive = (db.global.itemSort == "type") },
     }
     local itemSortBtns, itemSortFinalY = OneWoW_GUI:CreateFitFrameButtons(sortContainer, {
         yOffset = sortY,
@@ -555,7 +555,7 @@ end
 local function BuildBagsTab(sc, db)
     local yOffset = -15
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_DISPLAY"], yOffset = yOffset })
+    yOffset = OneWoW_GUI:CreateSection(sc, { title = DISPLAY, yOffset = yOffset })
     local dispContainer = BuildContainer(sc, yOffset)
     local dispY = -10
 
@@ -738,7 +738,7 @@ local function BuildBagsTab(sc, db)
 
     yOffset = FinalizeContainer(dispContainer, dispY, yOffset)
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_CATEGORIES"], yOffset = yOffset })
+    yOffset = OneWoW_GUI:CreateSection(sc, { title = CATEGORIES, yOffset = yOffset })
     local catContainer = BuildContainer(sc, yOffset)
     local catY = -10
 
@@ -1096,7 +1096,7 @@ local function BuildBankTabFor(mode, sc, db)
 
     yOffset = FinalizeContainer(bankTopContainer, topY, yOffset)
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_DISPLAY"], yOffset = yOffset })
+    yOffset = OneWoW_GUI:CreateSection(sc, { title = DISPLAY, yOffset = yOffset })
     local dispContainer = BuildContainer(sc, yOffset)
     local dispY = -10
 
@@ -1316,7 +1316,7 @@ end
 local function BuildGuildBankTab(sc, db)
     local yOffset = -15
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_GUILD_BANK"], yOffset = yOffset })
+    yOffset = OneWoW_GUI:CreateSection(sc, { title = GUILD_BANK, yOffset = yOffset })
     local dispContainer = BuildContainer(sc, yOffset)
     local dispY = -10
 

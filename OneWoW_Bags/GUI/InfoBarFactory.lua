@@ -45,8 +45,8 @@ local function RegisterSavedSearchPopups()
     StaticPopupDialogs["ONEWOW_BAGS_SAVE_SEARCH"] = {
         text = L["SAVED_SEARCH_NAME_PROMPT"],
         hasEditBox = true,
-        button1 = L["SAVED_SEARCH_SAVE"],
-        button2 = L["POPUP_CANCEL"],
+        button1 = SAVE,
+        button2 = CANCEL,
         timeout = 0,
         whileDead = true,
         hideOnEscape = true,
@@ -90,7 +90,7 @@ local function RegisterSavedSearchPopups()
     StaticPopupDialogs["ONEWOW_BAGS_OVERWRITE_SAVED_SEARCH"] = {
         text = L["SAVED_SEARCH_OVERWRITE_CONFIRM"],
         button1 = L["SAVED_SEARCH_OVERWRITE"],
-        button2 = L["POPUP_CANCEL"],
+        button2 = CANCEL,
         timeout = 0,
         whileDead = true,
         hideOnEscape = true,
@@ -564,7 +564,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
             end)
             categoriesBtn:HookScript("OnEnter", function(myself)
                 GameTooltip:SetOwner(myself, "ANCHOR_TOP")
-                GameTooltip:SetText(L["CATEGORY_MANAGER_BTN"], 1, 1, 1)
+                GameTooltip:SetText(CATEGORIES, 1, 1, 1)
                 GameTooltip:Show()
             end)
             categoriesBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)

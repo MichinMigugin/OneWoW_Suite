@@ -171,7 +171,7 @@ function BankGUI:InitMainWindow()
         title = BANK,
         factionTheme = factionTheme,
         onClose = function() MainWindow:Hide() end,
-        settingsText = L["SETTINGS"],
+        settingsText = SETTINGS,
         onSettings = function()
             if OneWoW_Bags.Settings then
                 OneWoW_Bags.Settings:Toggle()

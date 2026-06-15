@@ -109,8 +109,8 @@ local function ShowTrackerDialog()
             movable = false,
             escClose = true,
             buttons = {
-                { text = L["POPUP_ADD"], onClick = function() doAdd() end },
-                { text = L["POPUP_CANCEL"], onClick = function(frame) frame:Hide() end },
+                { text = ADD, onClick = function() doAdd() end },
+                { text = CANCEL, onClick = function(frame) frame:Hide() end },
             },
         })
 

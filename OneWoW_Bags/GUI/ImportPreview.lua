@@ -100,7 +100,7 @@ end
 
 local function unmappedLabel(r)
     if r == "keep" then return L["IMPORT_PREVIEW_KEEP"] end
-    return L["IMPORT_PREVIEW_IGNORE"]
+    return IGNORE
 end
 
 local function clearChildren(parent)
@@ -164,8 +164,8 @@ renderContent = function(state)
     local stats = makeText(scrollContent,
         format("%s: %d | %s: %d | %s: %d",
             L["IMPORT_PREVIEW_STAT_SECTIONS"],   counts.sectionsNew + counts.sectionsMerge,
-            L["IMPORT_PREVIEW_STAT_CATEGORIES"], counts.catsNew + counts.renamed + counts.merged,
-            L["IMPORT_PREVIEW_STAT_ITEMS"],      counts.itemsTotal),
+            CATEGORIES, counts.catsNew + counts.renamed + counts.merged,
+            ITEMS,      counts.itemsTotal),
         11, { 0.9, 0.9, 0.9 })
     stats:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 8, y)
     addChild(scrollContent, stats)
@@ -424,7 +424,7 @@ function ImportPreview:Show(plan, controller, db)
             height = 520,
             showScrollFrame = true,
             buttons = {
-                { text = L["IMPORT_PREVIEW_CANCEL"], onClick = function(f) f:Hide() end },
+                { text = CANCEL, onClick = function(f) f:Hide() end },
                 { text = L["IMPORT_PREVIEW_CONFIRM"],
                   color = { 0.2, 0.6, 0.2 },
                   onClick = function(f)

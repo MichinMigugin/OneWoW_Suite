@@ -58,7 +58,7 @@ function GuildBankLog:Init()
     filterArea:SetPoint("TOPLEFT", logFrame, "TOPLEFT", OneWoW_GUI:GetSpacing("XS"), -(OneWoW_GUI:GetSpacing("XS") + TITLEBAR_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
     filterArea:SetPoint("TOPRIGHT", logFrame, "TOPRIGHT", -OneWoW_GUI:GetSpacing("XS"), -(OneWoW_GUI:GetSpacing("XS") + TITLEBAR_HEIGHT + OneWoW_GUI:GetSpacing("XS")))
 
-    local itemsBtn = OneWoW_GUI:CreateFitTextButton(filterArea, { text = L["GUILD_BANK_ITEMS_LOG"], height = 22, minWidth = 50 })
+    local itemsBtn = OneWoW_GUI:CreateFitTextButton(filterArea, { text = ITEMS, height = 22, minWidth = 50 })
     itemsBtn:SetPoint("TOPLEFT", filterArea, "TOPLEFT", 0, 0)
     itemsBtn:SetScript("OnClick", function()
         GuildBankLog:ShowItems()
