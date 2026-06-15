@@ -181,6 +181,14 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
   `NOT_BOUND`, `OWSL_SETTINGS_TITLE` → `SETTINGS`. 2 new globals (`BACK`,
   `NOT_BOUND`). 3 dead keys stripped. No dynamic refs; full 6-language coverage.
 
+- [x] **Data sub-addons** (11 scopes) — almost nothing to do (mostly 0 candidates).
+  `OneWoW_CatalogData_Journal`: adopted 2 (`JOURNAL_STATUS_COLLECTED`→`COLLECTED`,
+  `JOURNAL_STATUS_NOT_COLLECTED`→`NOT_COLLECTED` at `JournalData.lua:167`), stripped
+  dead `JOURNAL_LIVE_EJ_TAG`. `OneWoW_CatalogData_Tradeskills`: stripped 3 dead
+  (`PROF_INSCRIPTION`, `REAGENT_QUALITY`, `TYPE_SECONDARY`). Construction-audited
+  first (these data addons looked constructible — `EXP_*`/`PROF_*`/`TYPE_*` — but
+  none are constructed). Both globals already whitelisted. Other 9 sub-addons: none.
+
 ### Phase 3 — Consolidate to shared (pending)
 Baseline: **430 strings**. Per-addon sub-phases. For each value group:
 - [ ] Pick the canonical key name (often the simplest existing one) and value.

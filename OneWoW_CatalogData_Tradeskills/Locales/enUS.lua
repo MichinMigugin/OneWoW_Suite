@@ -9,7 +9,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["PROF_ENGINEERING"] = "Engineering",
     ["PROF_FISHING"] = "Fishing",
     ["PROF_HERBALISM"] = "Herbalism",
-    ["PROF_INSCRIPTION"] = "Inscription",
     ["PROF_JEWELCRAFTING"] = "Jewelcrafting",
     ["PROF_LEATHERWORKING"] = "Leatherworking",
     ["PROF_MINING"] = "Mining",
@@ -17,7 +16,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["PROF_TAILORING"] = "Tailoring",
     ["REAGENT_REQUIRED"] = "Required",
     ["REAGENT_OPTIONAL"] = "Optional",
-    ["REAGENT_QUALITY"] = "Quality",
     ["SCAN_COMPLETE"] = "Scan complete: %d recipes found.",
     ["RECIPE_KNOWN"] = "Known",
     ["RECIPE_UNKNOWN"] = "Not Known",
@@ -35,7 +33,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["EXP_MIDNIGHT"] = "Midnight",
     ["TYPE_CRAFTING"] = "Crafting",
     ["TYPE_GATHERING"] = "Gathering",
-    ["TYPE_SECONDARY"] = "Secondary",
 })
 
 ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

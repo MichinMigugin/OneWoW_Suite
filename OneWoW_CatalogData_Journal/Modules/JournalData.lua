@@ -164,7 +164,7 @@ function JournalData:DetermineItemStatus(itemID, itemData, specialType)
     end
 
     if specialType == "TMog" then
-        return collected and L["JOURNAL_STATUS_COLLECTED"] or L["JOURNAL_STATUS_NOT_COLLECTED"]
+        return collected and COLLECTED or NOT_COLLECTED
     end
 
     if specialType == "Mount" or specialType == "Pet" or specialType == "Toy" or specialType == "Recipe" then
