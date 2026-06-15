@@ -252,7 +252,7 @@ local function EnhancementsUnitProvider(tooltip, context)
                 local L = OneWoW.L
                 table.insert(lines, {
                     type = "double",
-                    left = "  |cFFFFDD00" .. (L["TIPS_ENHANCEMENTS_TARGET_LABEL"] or "Target") .. "|r",
+                    left = "  |cFFFFDD00" .. (L["TIPS_ENHANCEMENTS_TARGET_LABEL"]) .. "|r",
                     right = "|cFFFFFFFF" .. target .. "|r",
                     lr = 1, lg = 1, lb = 1,
                     rr = 1, rg = 1, rb = 1,
@@ -275,7 +275,7 @@ local function EnhancementsUnitProvider(tooltip, context)
             local L = OneWoW.L
             table.insert(lines, {
                 type = "double",
-                left = "  |cFFFFDD00" .. (L["TIPS_ENHANCEMENTS_MPLUS_LABEL"] or "M+ Score") .. "|r",
+                left = "  |cFFFFDD00" .. (L["TIPS_ENHANCEMENTS_MPLUS_LABEL"]) .. "|r",
                 right = scoreText,
                 lr = 1, lg = 1, lb = 1,
                 rr = 1, rg = 1, rb = 1,

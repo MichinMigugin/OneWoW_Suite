@@ -251,7 +251,7 @@ local function ShowToggleDetail(split, entry)
     nameLabel:SetPoint("TOPLEFT",  child, "TOPLEFT",  12, yOfs)
     nameLabel:SetPoint("TOPRIGHT", child, "TOPRIGHT", -12, yOfs)
     nameLabel:SetJustifyH("LEFT")
-    nameLabel:SetText(L[entry.name] or entry.name)
+    nameLabel:SetText(L[entry.name])
     nameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOfs = yOfs - nameLabel:GetStringHeight() - 6
 
@@ -274,7 +274,7 @@ local function ShowToggleDetail(split, entry)
     descText:SetJustifyH("LEFT")
     descText:SetWordWrap(true)
     descText:SetSpacing(3)
-    descText:SetText(L[entry.desc] or entry.desc)
+    descText:SetText(L[entry.desc])
     descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOfs = yOfs - descText:GetStringHeight() - 12
 
@@ -402,7 +402,7 @@ local function BuildTogglesList(split, filterText)
 
         local rowOptions = {
             height = rowH,
-            label = L[entry.name] or entry.name,
+            label = L[entry.name],
             onClick = function(self)
                 if selectedRow and selectedRow ~= self then
                     selectedRow:SetActive(false)
@@ -422,7 +422,7 @@ local function BuildTogglesList(split, filterText)
                             end
                         end
                     end
-                    split.rightStatusText:SetText((L[capturedEntry.name] or capturedEntry.name) .. ": " .. display)
+                    split.rightStatusText:SetText((L[capturedEntry.name]) .. ": " .. display)
                 end
             end,
             favoriteToggle = {
@@ -455,13 +455,13 @@ local function BuildTogglesList(split, filterText)
     local favEntries = {}
     for _, entry in ipairs(CVAR_DATA) do
         if IsQoLToggleFavorite(entry) then
-            if not filter or (L[entry.name] or entry.name):lower():find(filter, 1, true) then
+            if not filter or (L[entry.name]):lower():find(filter, 1, true) then
                 table.insert(favEntries, entry)
             end
         end
     end
     table.sort(favEntries, function(a, b)
-        return (L[a.name] or a.name or "") < (L[b.name] or b.name or "")
+        return (L[a.name]) < (L[b.name])
     end)
 
     if #favEntries > 0 then
@@ -484,7 +484,7 @@ local function BuildTogglesList(split, filterText)
         local catEntries = {}
         for _, entry in ipairs(CVAR_DATA) do
             if entry.cat == cat and not IsQoLToggleFavorite(entry) then
-                if not filter or (L[entry.name] or entry.name):lower():find(filter, 1, true) then
+                if not filter or (L[entry.name]):lower():find(filter, 1, true) then
                     table.insert(catEntries, entry)
                 end
             end
@@ -495,7 +495,7 @@ local function BuildTogglesList(split, filterText)
             catLabel:SetPoint("TOPLEFT",  child, "TOPLEFT",  8, yOfs)
             catLabel:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOfs)
             catLabel:SetJustifyH("LEFT")
-            catLabel:SetText(L["TOGGLE_CAT_" .. cat] or cat)
+            catLabel:SetText(L["TOGGLE_CAT_" .. cat])
             catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
             yOfs = yOfs - catLabel:GetStringHeight() - 4
 

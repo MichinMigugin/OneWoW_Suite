@@ -191,7 +191,7 @@ function CoordsModule:UpdateDisplay()
     if GetToggle("show_map_id") and mapID then
         if cache.mapID ~= mapID then
             cache.mapID = mapID
-            self._texts.mapID:SetText(format(L["COORDS_MAP"] or "Map: %d", mapID))
+            self._texts.mapID:SetText(format(L["COORDS_MAP"], mapID))
         end
     end
 
@@ -333,8 +333,8 @@ function CoordsModule:CopyCoordinates()
     local x, y = position:GetXY()
     if x and y then
         local coordString = format("%.2f %.2f", x * 100, y * 100)
-        OneWoW.CopyPaste:Copy(L["COORDS_COPY_TITLE"] or "Coordinates", coordString)
-        print("|cFFFFD100OneWoW QoL:|r " .. format(L["COORDS_COPIED"] or "Coordinates copied: %s", coordString))
+        OneWoW.CopyPaste:Copy(L["COORDS_COPY_TITLE"], coordString)
+        print("|cFFFFD100OneWoW QoL:|r " .. format(L["COORDS_COPIED"], coordString))
     end
 end
 

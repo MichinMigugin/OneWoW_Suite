@@ -56,7 +56,7 @@ function CE:CreateColorSwatch(parent, dbKey, colorLabel)
 
     swatch:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:AddLine(L[colorLabel] or colorLabel)
+        GameTooltip:AddLine(L[colorLabel])
         GameTooltip:Show()
     end)
 

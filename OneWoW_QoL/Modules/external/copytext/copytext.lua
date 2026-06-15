@@ -11,18 +11,18 @@ function CopyTextModule:Capture()
 
     if GetToggle("mode_tooltips") then
         text = self:ExtractTooltipText()
-        title = L["COPYTEXT_TOOLTIP_CONTENT"] or "Tooltip Content"
+        title = L["COPYTEXT_TOOLTIP_CONTENT"]
     end
 
     if (not text or #text == 0) and GetToggle("mode_anything") then
         text = self:ExtractAnything()
-        title = L["COPYTEXT_UI_CONTENT"] or "UI Text"
+        title = L["COPYTEXT_UI_CONTENT"]
     end
 
     if text and #text > 0 then
         self:ShowCopyDialog(title, text)
     else
-        print("|cFFFFD100OneWoW QoL:|r " .. (L["COPYTEXT_NO_TEXT"] or "No text found under cursor."))
+        print("|cFFFFD100OneWoW QoL:|r " .. (L["COPYTEXT_NO_TEXT"]))
     end
 end
 

@@ -52,7 +52,7 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
 
     local header = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     header:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    header:SetText(L["ESCPANEL_LAYOUT_HEADER"] or "Layout")
+    header:SetText(L["ESCPANEL_LAYOUT_HEADER"])
     header:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - header:GetStringHeight() - 8
 
@@ -66,7 +66,7 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
     local descText = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     descText:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
     descText:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-    descText:SetText(L["ESCPANEL_LAYOUT_DESC"] or "")
+    descText:SetText(L["ESCPANEL_LAYOUT_DESC"])
     descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     descText:SetJustifyH("LEFT")
     descText:SetWordWrap(true)
@@ -79,7 +79,7 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
 
     local iconSizeLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     iconSizeLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    iconSizeLabel:SetText(L["ESCPANEL_ICON_SIZE_LABEL"] or "Portal icon size")
+    iconSizeLabel:SetText(L["ESCPANEL_ICON_SIZE_LABEL"])
     iconSizeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - iconSizeLabel:GetStringHeight() - 4
 
@@ -101,20 +101,20 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
 
     local panelsRowLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     panelsRowLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    panelsRowLabel:SetText(L["ESCPANEL_PANELS_SIDE_LABEL"] or "Info panels side")
+    panelsRowLabel:SetText(L["ESCPANEL_PANELS_SIDE_LABEL"])
     panelsRowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - panelsRowLabel:GetStringHeight() - 4
 
     local panelsDD, panelsDDText = OneWoW_GUI:CreateDropdown(detailScrollChild, {
         width = 220,
-        text = panelsSide == "right" and (L["ESCPANEL_SIDE_RIGHT"] or "Right") or (L["ESCPANEL_SIDE_LEFT"] or "Left"),
+        text = panelsSide == "right" and (L["ESCPANEL_SIDE_RIGHT"]) or (L["ESCPANEL_SIDE_LEFT"]),
     })
     OneWoW_GUI:AttachFilterMenu(panelsDD, {
         searchable = false,
         buildItems = function()
             return {
-                { text = L["ESCPANEL_SIDE_LEFT"] or "Left", value = "left" },
-                { text = L["ESCPANEL_SIDE_RIGHT"] or "Right", value = "right" },
+                { text = L["ESCPANEL_SIDE_LEFT"], value = "left" },
+                { text = L["ESCPANEL_SIDE_RIGHT"], value = "right" },
             }
         end,
         onSelect = function(value, text)
@@ -133,20 +133,20 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
 
     local portalsRowLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     portalsRowLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    portalsRowLabel:SetText(L["ESCPANEL_PORTALS_SIDE_LABEL"] or "Portals side")
+    portalsRowLabel:SetText(L["ESCPANEL_PORTALS_SIDE_LABEL"])
     portalsRowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - portalsRowLabel:GetStringHeight() - 4
 
     local portalsDD, portalsDDText = OneWoW_GUI:CreateDropdown(detailScrollChild, {
         width = 220,
-        text = portalsSide == "left" and (L["ESCPANEL_SIDE_LEFT"] or "Left") or (L["ESCPANEL_SIDE_RIGHT"] or "Right"),
+        text = portalsSide == "left" and (L["ESCPANEL_SIDE_LEFT"]) or (L["ESCPANEL_SIDE_RIGHT"]),
     })
     OneWoW_GUI:AttachFilterMenu(portalsDD, {
         searchable = false,
         buildItems = function()
             return {
-                { text = L["ESCPANEL_SIDE_LEFT"] or "Left", value = "left" },
-                { text = L["ESCPANEL_SIDE_RIGHT"] or "Right", value = "right" },
+                { text = L["ESCPANEL_SIDE_LEFT"], value = "left" },
+                { text = L["ESCPANEL_SIDE_RIGHT"], value = "right" },
             }
         end,
         onSelect = function(value, text)
@@ -168,8 +168,8 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
             local p = GetPortalHubDB()
             local ps = (p and p.escPanelsSide == "right") and "right" or "left"
             local pr = (p and p.escPortalsSide == "left") and "left" or "right"
-            panelsDDText:SetText(ps == "right" and (L["ESCPANEL_SIDE_RIGHT"] or "Right") or (L["ESCPANEL_SIDE_LEFT"] or "Left"))
-            portalsDDText:SetText(pr == "left" and (L["ESCPANEL_SIDE_LEFT"] or "Left") or (L["ESCPANEL_SIDE_RIGHT"] or "Right"))
+            panelsDDText:SetText(ps == "right" and (L["ESCPANEL_SIDE_RIGHT"]) or (L["ESCPANEL_SIDE_LEFT"]))
+            portalsDDText:SetText(pr == "left" and (L["ESCPANEL_SIDE_LEFT"]) or (L["ESCPANEL_SIDE_RIGHT"]))
             local sz = (p and p.escIconSize) or 32
             if iconSizeSlider.slider:GetValue() ~= sz then
                 iconSizeSlider.slider:SetValue(sz)

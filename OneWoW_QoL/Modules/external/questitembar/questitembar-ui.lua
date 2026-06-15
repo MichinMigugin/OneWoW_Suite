@@ -438,7 +438,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
         local statusText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         statusText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
         statusText:SetJustifyH("RIGHT")
-        statusText:SetText(L[entry.status] or entry.status)
+        statusText:SetText(L[entry.status])
         if entry.included then
             statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         else

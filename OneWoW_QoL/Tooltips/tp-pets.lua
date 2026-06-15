@@ -48,11 +48,11 @@ local function FormatAge(timestamp)
     local age = time() - timestamp
     local L = OneWoW.L
     if age < 3600 then
-        return string.format(L["TIPS_TIME_MINUTES_AGO"] or "%dm ago", math.floor(age / 60))
+        return string.format(L["TIPS_TIME_MINUTES_AGO"], math.floor(age / 60))
     elseif age < 86400 then
-        return string.format(L["TIPS_TIME_HOURS_AGO"] or "%dh ago", math.floor(age / 3600))
+        return string.format(L["TIPS_TIME_HOURS_AGO"], math.floor(age / 3600))
     else
-        return string.format(L["TIPS_TIME_DAYS_AGO"] or "%dd ago", math.floor(age / 86400))
+        return string.format(L["TIPS_TIME_DAYS_AGO"], math.floor(age / 86400))
     end
 end
 
@@ -99,9 +99,9 @@ local function FillPetTooltip(tip, speciesID)
         local collected = numCollected > 0
         local statusText
         if collected then
-            statusText = string.format("|cFF66CC66%s|r | %s", L["TIPS_COLLECTIONS_COLLECTED"] or "Collected", battlePetsLabel)
+            statusText = string.format("|cFF66CC66%s|r | %s", L["TIPS_COLLECTIONS_COLLECTED"], battlePetsLabel)
         else
-            statusText = string.format("|cFFCC6666%s|r | %s", L["TIPS_COLLECTIONS_NOT_COLLECTED"] or "Not Collected", battlePetsLabel)
+            statusText = string.format("|cFFCC6666%s|r | %s", L["TIPS_COLLECTIONS_NOT_COLLECTED"], battlePetsLabel)
         end
         tip:AddDoubleLine(
             addonIcon .. " OneWoW",
@@ -122,16 +122,16 @@ local function FillPetTooltip(tip, speciesID)
     if cfg.showPetInfo ~= false then
         local typeName = GetPetTypeName(petType)
         tip:AddDoubleLine(
-            "  " .. (L["TIPS_PETS_TYPE"] or "Type"),
+            "  " .. (L["TIPS_PETS_TYPE"]),
             typeName,
             0.4, 0.8, 1.0,
             1.0, 1.0, 1.0
         )
 
         local traits = {}
-        if canBattle then table.insert(traits, L["TIPS_PETS_CAN_BATTLE"] or "Can Battle") end
-        if isTradeable then table.insert(traits, L["TIPS_PETS_TRADEABLE"] or "Tradeable") end
-        if isUnique then table.insert(traits, L["TIPS_PETS_UNIQUE"] or "Unique") end
+        if canBattle then table.insert(traits, L["TIPS_PETS_CAN_BATTLE"]) end
+        if isTradeable then table.insert(traits, L["TIPS_PETS_TRADEABLE"]) end
+        if isUnique then table.insert(traits, L["TIPS_PETS_UNIQUE"]) end
         if #traits > 0 then
             tip:AddLine("  " .. table.concat(traits, " | "), 0.7, 0.7, 0.7)
         end
@@ -145,7 +145,7 @@ local function FillPetTooltip(tip, speciesID)
             countColor = {0.8, 0.4, 0.4}
         end
         tip:AddDoubleLine(
-            "  " .. (L["TIPS_PETS_OWNED"] or "Owned"),
+            "  " .. (L["TIPS_PETS_OWNED"]),
             string.format("%d / %d", numCollected, limit or 3),
             0.4, 0.8, 1.0,
             countColor[1], countColor[2], countColor[3]
@@ -153,7 +153,7 @@ local function FillPetTooltip(tip, speciesID)
     end
 
     if cfg.showSource ~= false and tooltipSource and tooltipSource ~= "" then
-        tip:AddLine("  " .. (L["TIPS_PETS_SOURCE"] or "Source") .. ": |cFFFFFFFF" .. tooltipSource .. "|r", 0.4, 0.8, 1.0)
+        tip:AddLine("  " .. (L["TIPS_PETS_SOURCE"]) .. ": |cFFFFFFFF" .. tooltipSource .. "|r", 0.4, 0.8, 1.0)
     end
 
     if cfg.showDescription ~= false and tooltipDescription and tooltipDescription ~= "" then
@@ -165,7 +165,7 @@ local function FillPetTooltip(tip, speciesID)
         local sellPrice = GetVendorPrice()
         if sellPrice and sellPrice > 0 then
             tip:AddDoubleLine(
-                "  " .. (L["TIPS_VALUE_VENDOR_PRICE"] or "Vendor Price"),
+                "  " .. (L["TIPS_VALUE_VENDOR_PRICE"]),
                 FormatMoneyLine(sellPrice),
                 0.4, 0.8, 1.0,
                 1.0, 1.0, 1.0
@@ -189,15 +189,15 @@ local function FillPetTooltip(tip, speciesID)
             if meta and meta.timestamp then
                 ageText = FormatAge(meta.timestamp)
             elseif meta and meta.ageDays ~= nil then
-                ageText = string.format(L["TIPS_VALUE_AH_AGE_DAYS"] or "%d d ago", meta.ageDays)
+                ageText = string.format(L["TIPS_VALUE_AH_AGE_DAYS"], meta.ageDays)
             end
             local rightText = FormatMoneyLine(ahPrice)
             if ageText then
                 rightText = rightText .. "  |cFF888888(" .. ageText .. ")|r"
             end
-            local leftAH = L["TIPS_VALUE_AH_PRICE"] or "AH Price"
+            local leftAH = L["TIPS_VALUE_AH_PRICE"]
             if meta and meta.source == "auctionator" then
-                leftAH = L["TIPS_VALUE_AH_PRICE_AUCTIONATOR"] or leftAH
+                leftAH = L["TIPS_VALUE_AH_PRICE_AUCTIONATOR"]
             end
             tip:AddDoubleLine("  " .. leftAH, rightText, 0.4, 0.8, 1.0, 1.0, 1.0, 1.0)
         end
@@ -208,9 +208,9 @@ local function FillPetTooltip(tip, speciesID)
         local tsmPrice, srcStr = OneWoW.ItemPrices:GetTSMUnitPriceForSpecies(speciesID, name)
         if tsmPrice and tsmPrice > 0 then
             local tsmRight = FormatMoneyLine(tsmPrice)
-            local leftT = L["TIPS_VALUE_TSM_PRICE"] or "TSM"
+            local leftT = L["TIPS_VALUE_TSM_PRICE"]
             if srcStr and srcStr ~= "" then
-                leftT = string.format(L["TIPS_VALUE_TSM_PRICE_FMT"] or "TSM (%s)", srcStr)
+                leftT = string.format(L["TIPS_VALUE_TSM_PRICE_FMT"], srcStr)
             end
             tip:AddDoubleLine("  " .. leftT, tsmRight, 0.4, 0.8, 1.0, 1.0, 1.0, 1.0)
         end
@@ -219,13 +219,13 @@ local function FillPetTooltip(tip, speciesID)
     if cfg.showItemStatus ~= false and OneWoW.ItemStatus then
         if OneWoW.ItemStatus:IsItemProtected(BATTLE_PET_CAGE_ID) then
             tip:AddLine(
-                L["ITEMSTATUS_TOOLTIP_PROTECTED"] or "Protected Item",
+                L["ITEMSTATUS_TOOLTIP_PROTECTED"],
                 TOOLTIP_CONFIG.protectedColor[1], TOOLTIP_CONFIG.protectedColor[2], TOOLTIP_CONFIG.protectedColor[3]
             )
         end
         if OneWoW.ItemStatus:IsItemJunk(BATTLE_PET_CAGE_ID) then
             tip:AddLine(
-                L["ITEMSTATUS_TOOLTIP_JUNK"] or "Junk Item",
+                L["ITEMSTATUS_TOOLTIP_JUNK"],
                 TOOLTIP_CONFIG.junkColor[1], TOOLTIP_CONFIG.junkColor[2], TOOLTIP_CONFIG.junkColor[3]
             )
         end

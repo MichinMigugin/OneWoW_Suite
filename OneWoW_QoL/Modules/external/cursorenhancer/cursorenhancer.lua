@@ -500,7 +500,7 @@ function CE:CreateColorSwatch(parent, dbKey, colorLabel)
     swatch:SetScript("OnClick", function() OpenColorPicker(dbKey) end)
     swatch:SetScript("OnEnter", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-        GameTooltip:AddLine(L[colorLabel] or colorLabel)
+        GameTooltip:AddLine(L[colorLabel])
         GameTooltip:Show()
     end)
     swatch:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -520,7 +520,7 @@ function CursorEnhancerModule:CreateCustomDetail(detailScrollChild, yOffset, isE
     local headerHeight = 20
     local colorHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     colorHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    colorHeader:SetText(L["CURSORENHANCER_COLORS_HEADER"] or "Colors")
+    colorHeader:SetText(L["CURSORENHANCER_COLORS_HEADER"])
     colorHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - headerHeight - 8
 
@@ -534,7 +534,7 @@ function CursorEnhancerModule:CreateCustomDetail(detailScrollChild, yOffset, isE
     for _, colorSetting in ipairs(CE.COLOR_SETTINGS or {}) do
         local label = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         label:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-        label:SetText(L[colorSetting.colorLabel] or colorSetting.colorLabel)
+        label:SetText(L[colorSetting.colorLabel])
         if isEnabled then
             label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         else

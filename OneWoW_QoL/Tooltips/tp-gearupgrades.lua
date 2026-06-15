@@ -45,9 +45,9 @@ local function BuildRightText(colorCode, endIcon, diffVal, equipVal, thisVal, is
             return colorCode .. string.format("%+d", diffVal) .. " (" .. string.format("%+.0f", percent) .. "%%)" .. endIcon .. "|r"
         end
     else
-        local thisLabel  = L["TIPS_GEARCOMP_THIS"]  or "This"
-        local equipLabel = L["TIPS_GEARCOMP_EQUIP"] or "Equip"
-        local diffLabel  = L["TIPS_GEARCOMP_DIFF"]  or "Diff"
+        local thisLabel  = L["TIPS_GEARCOMP_THIS"]
+        local equipLabel = L["TIPS_GEARCOMP_EQUIP"]
+        local diffLabel  = L["TIPS_GEARCOMP_DIFF"]
         if isDecimal then
             return colorCode .. thisLabel .. ":" .. string.format("%.1f", thisVal) .. " " .. equipLabel .. ":" .. string.format("%.1f", equipVal) .. " " .. diffLabel .. ":" .. string.format("%+.1f", diffVal) .. " (" .. string.format("%+.0f", percent) .. "%%)" .. endIcon .. "|r"
         else
@@ -194,7 +194,7 @@ local function DoGearUpgrade(tooltip, context, onlyUpgrade, detail, showAlts, al
     elseif mode == "PAWN>ILVL" then methodText = "Pawn > iLvL"
     end
 
-    local headerLabel = L["TIPS_GEARCOMP_HEADER"] or "Gear Comparison"
+    local headerLabel = L["TIPS_GEARCOMP_HEADER"]
     local lines = {
         {
             type = "text",

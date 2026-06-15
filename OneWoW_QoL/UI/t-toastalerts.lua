@@ -16,10 +16,10 @@ local SOUND_OPTIONS = {
 local function GetSoundLabel(soundId)
     for _, opt in ipairs(SOUND_OPTIONS) do
         if opt.id == soundId then
-            return L[opt.labelKey] or opt.labelKey
+            return L[opt.labelKey]
         end
     end
-    return L["TOAST_SOUND_NONE"] or "No Sound"
+    return L["TOAST_SOUND_NONE"]
 end
 
 local function CreateSoundDropdown(dsc, featureId, yOffset)
@@ -36,7 +36,7 @@ local function CreateSoundDropdown(dsc, featureId, yOffset)
         buildItems = function()
             local items = {}
             for _, opt in ipairs(SOUND_OPTIONS) do
-                table.insert(items, { text = L[opt.labelKey] or opt.labelKey, value = opt.id })
+                table.insert(items, { text = L[opt.labelKey], value = opt.id })
             end
             return items
         end,
@@ -47,7 +47,7 @@ local function CreateSoundDropdown(dsc, featureId, yOffset)
         getActiveValue = function() return reg:GetSetting("toastalerts", featureId, "sound") end,
     })
 
-    local playBtn = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["TOAST_SOUND_PLAY_BTN"] or "Play", height = 26 })
+    local playBtn = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["TOAST_SOUND_PLAY_BTN"], height = 26 })
     playBtn:SetPoint("LEFT", dropBtn, "RIGHT", 6, 0)
     playBtn:SetScript("OnClick", function()
         local soundId = reg:GetSetting("toastalerts", featureId, "sound") or 0
@@ -67,20 +67,20 @@ local function AddGeneralExtras(dsc, yOffset)
     infoText:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     infoText:SetJustifyH("LEFT")
     infoText:SetWordWrap(true)
-    infoText:SetText(L["TOAST_ANCHOR_INFO"] or "The anchor is visible on screen. Drag it to reposition where toasts appear.")
+    infoText:SetText(L["TOAST_ANCHOR_INFO"])
     infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - infoText:GetStringHeight() - 10
 
-    local showAnchorBtn = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["TOAST_ANCHOR_SHOW_BTN"] or "Show Anchor", height = 28 })
+    local showAnchorBtn = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["TOAST_ANCHOR_SHOW_BTN"], height = 28 })
     showAnchorBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     showAnchorBtn:SetScript("OnClick", function(self)
         local Toasts = OneWoW.Toasts
         if Toasts.anchorVisible then
             Toasts.HideAnchor()
-            self.text:SetText(L["TOAST_ANCHOR_SHOW_BTN"] or "Show Anchor")
+            self.text:SetText(L["TOAST_ANCHOR_SHOW_BTN"])
         else
             Toasts.ShowAnchor()
-            self.text:SetText(L["TOAST_ANCHOR_HIDE_BTN"] or "Hide Anchor")
+            self.text:SetText(L["TOAST_ANCHOR_HIDE_BTN"])
         end
     end)
     yOffset = yOffset - 28 - 10
@@ -89,17 +89,17 @@ local function AddGeneralExtras(dsc, yOffset)
 end
 
 local function AddDetectionExtras(dsc, yOffset)
-    yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_LOOT_TYPES_HEADER"] or "Collection Types", yOffset = yOffset })
+    yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_LOOT_TYPES_HEADER"], yOffset = yOffset })
 
     local reg = OneWoW.SettingsFeatureRegistry
     local cfg = reg:GetFeatureSettings("toastalerts", "detectiontypes")
 
     local types = {
-        { key = "mounts",  label = L["TOAST_LOOT_MOUNTS"]  or "Mounts" },
-        { key = "pets",    label = L["TOAST_LOOT_PETS"]    or "Battle Pets" },
-        { key = "toys",    label = L["TOAST_LOOT_TOYS"]    or "Toys" },
-        { key = "recipes", label = L["TOAST_LOOT_RECIPES"] or "Recipes" },
-        { key = "tmogs",   label = L["TOAST_LOOT_TMOGS"]   or "Transmog" },
+        { key = "mounts",  label = L["TOAST_LOOT_MOUNTS"] },
+        { key = "pets",    label = L["TOAST_LOOT_PETS"] },
+        { key = "toys",    label = L["TOAST_LOOT_TOYS"] },
+        { key = "recipes", label = L["TOAST_LOOT_RECIPES"] },
+        { key = "tmogs",   label = L["TOAST_LOOT_TMOGS"] },
     }
 
     for _, entry in ipairs(types) do
@@ -112,7 +112,7 @@ local function AddDetectionExtras(dsc, yOffset)
         if capturedKey == "recipes" then
             yOffset = yOffset - 32
             recipesOnlyCb = OneWoW_GUI:CreateCheckbox(dsc, {
-                label = L["TOAST_LOOT_RECIPES_ONLY_MY_PROFESSIONS"] or "Only my professions",
+                label = L["TOAST_LOOT_RECIPES_ONLY_MY_PROFESSIONS"],
             })
             recipesOnlyCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 32, yOffset)
             recipesOnlyCb:SetChecked(cfg.recipesOnlyMyProfessions == true)
@@ -134,12 +134,12 @@ local function AddDetectionExtras(dsc, yOffset)
 
     yOffset = yOffset - 8
     yOffset = OneWoW_GUI:CreateSection(dsc, {
-        title = L["TOAST_LOOT_SUPPRESS_BLIZZARD_HEADER"] or "Native Blizzard Alerts",
+        title = L["TOAST_LOOT_SUPPRESS_BLIZZARD_HEADER"],
         yOffset = yOffset,
     })
 
     local suppressCb = OneWoW_GUI:CreateCheckbox(dsc, {
-        label = L["TOAST_LOOT_SUPPRESS_BLIZZARD"] or "Hide Blizzard's default mount, pet, and toy alerts",
+        label = L["TOAST_LOOT_SUPPRESS_BLIZZARD"],
     })
     suppressCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     suppressCb:SetChecked(cfg.suppressBlizzardAlerts == true)
@@ -150,7 +150,7 @@ local function AddDetectionExtras(dsc, yOffset)
     yOffset = yOffset - 32
 
     yOffset = yOffset - 8
-    yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_SOUND_HEADER"] or "Alert Sound", yOffset = yOffset })
+    yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_SOUND_HEADER"], yOffset = yOffset })
     yOffset = CreateSoundDropdown(dsc, "detectiontypes", yOffset)
 
     return yOffset
@@ -174,16 +174,16 @@ local function AddInstanceExtras(dsc, yOffset)
 end
 
 local function AddItemAlertsExtras(dsc, yOffset)
-    yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_NOTES_TYPES_HEADER"] or "Alert Types", yOffset = yOffset })
+    yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_NOTES_TYPES_HEADER"], yOffset = yOffset })
 
     local reg = OneWoW.SettingsFeatureRegistry
     local cfg = reg:GetFeatureSettings("toastalerts", "notealerts")
 
     local types = {
-        { key = "npcs",    label = L["TOAST_NOTES_NPCS"]    or "NPC Alerts" },
-        { key = "players", label = L["TOAST_NOTES_PLAYERS"] or "Player Alerts" },
-        { key = "zones",   label = L["TOAST_NOTES_ZONES"]   or "Zone Alerts" },
-        { key = "items",   label = L["TOAST_NOTES_ITEMS"]   or "Item Loot Alerts" },
+        { key = "npcs",    label = L["TOAST_NOTES_NPCS"] },
+        { key = "players", label = L["TOAST_NOTES_PLAYERS"] },
+        { key = "zones",   label = L["TOAST_NOTES_ZONES"] },
+        { key = "items",   label = L["TOAST_NOTES_ITEMS"] },
     }
 
     for _, entry in ipairs(types) do
@@ -198,7 +198,7 @@ local function AddItemAlertsExtras(dsc, yOffset)
     end
 
     yOffset = yOffset - 8
-    yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_SOUND_HEADER"] or "Alert Sound", yOffset = yOffset })
+    yOffset = OneWoW_GUI:CreateSection(dsc, { title = L["TOAST_SOUND_HEADER"], yOffset = yOffset })
     yOffset = CreateSoundDropdown(dsc, "notealerts", yOffset)
 
     return yOffset
@@ -214,7 +214,7 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     titleLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetText(L[feature.title])
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
@@ -227,7 +227,7 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     descLabel:SetJustifyH("LEFT")
     descLabel:SetWordWrap(true)
     descLabel:SetSpacing(3)
-    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
@@ -278,7 +278,7 @@ local function BuildFeatureList(split, tabName)
         local filter = (filterText or ""):lower()
 
         for _, feature in ipairs(features) do
-            local displayName = L[feature.title] or feature.title
+            local displayName = L[feature.title]
             if filter == "" or displayName:lower():find(filter, 1, true) then
                 local capturedFeature = feature
                 local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id)
@@ -337,7 +337,7 @@ end
 function ns.UI.CreateToastAlertsTab(parent)
     local split = OneWoW_GUI:CreateSplitPanel(parent, {
         showSearch = true,
-        searchPlaceholder = L["SEARCH_PLACEHOLDER"] or "Search...",
+        searchPlaceholder = L["SEARCH_PLACEHOLDER"],
     })
     split.listTitle:SetText(L["TOAST_ALERTS_LIST_TITLE"])
     split.detailTitle:SetText(L["TOAST_ALERTS_DETAIL_TITLE"])

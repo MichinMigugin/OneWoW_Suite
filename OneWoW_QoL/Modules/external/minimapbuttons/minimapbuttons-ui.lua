@@ -28,9 +28,9 @@ local TOGGLE_BTN_W    = 70
 local TOGGLE_BTN_H    = 20
 
 local function LabelForPref(L, pref)
-    if pref == "mini" then return L["MMBTNS_ICONS_MINI_STATE"] or "Collector" end
-    if pref == "map"  then return L["MMBTNS_ICONS_MAP_STATE"]  or "Map"       end
-    if pref == "hide" then return L["MMBTNS_ICONS_HIDE_STATE"] or "Hide"      end
+    if pref == "mini" then return L["MMBTNS_ICONS_MINI_STATE"] end
+    if pref == "map"  then return L["MMBTNS_ICONS_MAP_STATE"]       end
+    if pref == "hide" then return L["MMBTNS_ICONS_HIDE_STATE"]      end
     return tostring(pref)
 end
 
@@ -69,7 +69,7 @@ local function BuildIconRow(parent, info, yOffset, refreshFn)
         removeBtn:SetHighlightTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Highlight")
         removeBtn:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText(L["MMBTNS_ICONS_REMOVE_TT"] or "Remove this entry from the list")
+            GameTooltip:SetText(L["MMBTNS_ICONS_REMOVE_TT"])
             GameTooltip:Show()
         end)
         removeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -87,7 +87,7 @@ local function BuildIconRow(parent, info, yOffset, refreshFn)
 
     -- Right-to-left: Hide, Map, Mini, then the status text.
     local hideBtn = OneWoW_GUI:CreateFitTextButton(row, {
-        text       = L["MMBTNS_ICONS_HIDE"] or "Hide",
+        text       = L["MMBTNS_ICONS_HIDE"],
         height     = TOGGLE_BTN_H,
         minWidth   = TOGGLE_BTN_W,
         toggleable = true,
@@ -95,7 +95,7 @@ local function BuildIconRow(parent, info, yOffset, refreshFn)
     hideBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
 
     local mapBtn = OneWoW_GUI:CreateFitTextButton(row, {
-        text       = L["MMBTNS_ICONS_MAP"] or "Map",
+        text       = L["MMBTNS_ICONS_MAP"],
         height     = TOGGLE_BTN_H,
         minWidth   = TOGGLE_BTN_W,
         toggleable = true,
@@ -103,7 +103,7 @@ local function BuildIconRow(parent, info, yOffset, refreshFn)
     mapBtn:SetPoint("RIGHT", hideBtn, "LEFT", -3, 0)
 
     local miniBtn = OneWoW_GUI:CreateFitTextButton(row, {
-        text       = L["MMBTNS_ICONS_MINI"] or "Collector",
+        text       = L["MMBTNS_ICONS_MINI"],
         height     = TOGGLE_BTN_H,
         minWidth   = TOGGLE_BTN_W,
         toggleable = true,
@@ -122,8 +122,8 @@ local function BuildIconRow(parent, info, yOffset, refreshFn)
         hideBtn:SetActive(pref == "hide")
 
         local seenLbl = info.seen
-            and (L["MMBTNS_ICONS_ENABLED"]  or "Enabled")
-            or  (L["MMBTNS_ICONS_DISABLED"] or "Disabled")
+            and (L["MMBTNS_ICONS_ENABLED"])
+            or  (L["MMBTNS_ICONS_DISABLED"])
         statusText:SetText(seenLbl .. " : " .. LabelForPref(L, pref))
 
         local color = info.seen and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED"
@@ -152,7 +152,7 @@ local function BuildMinimapIconsSection(parent, yOffset, refreshFn)
 
     local sectionLabel = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     sectionLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", ROW_PADDING_X, yOffset)
-    sectionLabel:SetText(L["MMBTNS_ICONS_HEADER"] or "Detected Minimap Icons")
+    sectionLabel:SetText(L["MMBTNS_ICONS_HEADER"])
     sectionLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - sectionLabel:GetStringHeight() - 4
 
@@ -245,17 +245,17 @@ local function BuildContent(container, isEnabled)
     -- ═══════════════════════════════════════════════════════════════════════
     -- Behavior Section
     -- ═══════════════════════════════════════════════════════════════════════
-    cy = OneWoW_GUI:CreateSection(container, { title = L["MMBTNS_BEHAVIOR_HEADER"] or "Behavior", yOffset = cy })
+    cy = OneWoW_GUI:CreateSection(container, { title = L["MMBTNS_BEHAVIOR_HEADER"], yOffset = cy })
 
     -- Close mode label
-    local _, newCy = AddLabel(container, cy, L["MMBTNS_CLOSE_MODE"] or "Close Behavior")
+    local _, newCy = AddLabel(container, cy, L["MMBTNS_CLOSE_MODE"])
     cy = newCy
 
     -- Close mode radios (manual mutual exclusion)
     local radioStay, radioAuto
 
     radioStay = OneWoW_GUI:CreateCheckbox(container, {
-        label  = L["MMBTNS_STAY_OPEN"] or "Stay Open",
+        label  = L["MMBTNS_STAY_OPEN"],
         checked = s.closeMode == "stayopen",
         onClick = function(self)
             s.closeMode = "stayopen"
@@ -268,7 +268,7 @@ local function BuildContent(container, isEnabled)
     radioStay:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
 
     radioAuto = OneWoW_GUI:CreateCheckbox(container, {
-        label  = L["MMBTNS_AUTO_CLOSE"] or "Auto Close",
+        label  = L["MMBTNS_AUTO_CLOSE"],
         checked = s.closeMode == "autoclose",
         onClick = function(self)
             s.closeMode = "autoclose"
@@ -284,7 +284,7 @@ local function BuildContent(container, isEnabled)
     if s.closeMode == "autoclose" then
         local delayLabel
         delayLabel, cy = AddLabel(container, cy,
-            string.format("%s: %d", L["MMBTNS_AUTO_CLOSE_DELAY"] or "Delay", s.autoCloseDelay or 3))
+            string.format("%s: %d", L["MMBTNS_AUTO_CLOSE_DELAY"], s.autoCloseDelay or 3))
 
         local delaySlider = OneWoW_GUI:CreateSlider(container, {
             minVal     = 1,
@@ -295,7 +295,7 @@ local function BuildContent(container, isEnabled)
             fmt        = "%d",
             onChange    = function(val)
                 s.autoCloseDelay = val
-                delayLabel:SetText(string.format("%s: %d", L["MMBTNS_AUTO_CLOSE_DELAY"] or "Delay", val))
+                delayLabel:SetText(string.format("%s: %d", L["MMBTNS_AUTO_CLOSE_DELAY"], val))
             end,
         })
         delaySlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
@@ -304,7 +304,7 @@ local function BuildContent(container, isEnabled)
 
     -- Enhanced OneWoW Menu
     local enhCB = OneWoW_GUI:CreateCheckbox(container, {
-        label  = L["MMBTNS_ENHANCED_MENU"] or "Enhanced OneWoW Menu",
+        label  = L["MMBTNS_ENHANCED_MENU"],
         checked = s.enhancedMenu,
         onClick = function(self)
             s.enhancedMenu = self:GetChecked()
@@ -314,12 +314,12 @@ local function BuildContent(container, isEnabled)
     enhCB:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     cy = cy - ROW_HEIGHT
 
-    local _, descCy = AddDescription(container, cy, L["MMBTNS_ENHANCED_MENU_DESC"] or "")
+    local _, descCy = AddDescription(container, cy, L["MMBTNS_ENHANCED_MENU_DESC"])
     cy = descCy
 
     -- Lock position
     local lockCB = OneWoW_GUI:CreateCheckbox(container, {
-        label   = L["MMBTNS_LOCK_POSITION"] or "Lock Position",
+        label   = L["MMBTNS_LOCK_POSITION"],
         checked = s.locked,
         onClick = function(self)
             s.locked = self:GetChecked()
@@ -330,7 +330,7 @@ local function BuildContent(container, isEnabled)
 
     -- Hide collected from minimap
     local hideCB = OneWoW_GUI:CreateCheckbox(container, {
-        label   = L["MMBTNS_HIDE_COLLECTED"] or "Hide Collected from Minimap",
+        label   = L["MMBTNS_HIDE_COLLECTED"],
         checked = s.hideCollected,
         onClick = function(self)
             s.hideCollected = self:GetChecked()
@@ -342,7 +342,7 @@ local function BuildContent(container, isEnabled)
 
     -- Show tooltips
     local tipCB = OneWoW_GUI:CreateCheckbox(container, {
-        label   = L["MMBTNS_SHOW_TOOLTIPS"] or "Show Tooltips",
+        label   = L["MMBTNS_SHOW_TOOLTIPS"],
         checked = s.showTooltips,
         onClick = function(self)
             s.showTooltips = self:GetChecked()
@@ -353,7 +353,7 @@ local function BuildContent(container, isEnabled)
 
     -- Grow direction (4-way radio: Down / Up / Left / Right)
     local growLabel
-    growLabel, cy = AddLabel(container, cy, L["MMBTNS_GROW_DIRECTION"] or "Grow Direction")
+    growLabel, cy = AddLabel(container, cy, L["MMBTNS_GROW_DIRECTION"])
 
     local growDown, growUp, growLeft, growRight
 
@@ -366,28 +366,28 @@ local function BuildContent(container, isEnabled)
     end
 
     growDown = OneWoW_GUI:CreateCheckbox(container, {
-        label   = L["MMBTNS_GROW_DOWN"] or "Down",
+        label   = L["MMBTNS_GROW_DOWN"],
         checked = s.growDirection == "down",
         onClick = function(self) SetGrowDir("down", self) end,
     })
     growDown:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
 
     growUp = OneWoW_GUI:CreateCheckbox(container, {
-        label   = L["MMBTNS_GROW_UP"] or "Up",
+        label   = L["MMBTNS_GROW_UP"],
         checked = s.growDirection == "up",
         onClick = function(self) SetGrowDir("up", self) end,
     })
     growUp:SetPoint("TOPLEFT", container, "TOPLEFT", 110, cy)
 
     growLeft = OneWoW_GUI:CreateCheckbox(container, {
-        label   = L["MMBTNS_GROW_LEFT"] or "Left",
+        label   = L["MMBTNS_GROW_LEFT"],
         checked = s.growDirection == "left",
         onClick = function(self) SetGrowDir("left", self) end,
     })
     growLeft:SetPoint("TOPLEFT", container, "TOPLEFT", 190, cy)
 
     growRight = OneWoW_GUI:CreateCheckbox(container, {
-        label   = L["MMBTNS_GROW_RIGHT"] or "Right",
+        label   = L["MMBTNS_GROW_RIGHT"],
         checked = s.growDirection == "right",
         onClick = function(self) SetGrowDir("right", self) end,
     })
@@ -397,12 +397,12 @@ local function BuildContent(container, isEnabled)
     -- ═══════════════════════════════════════════════════════════════════════
     -- Layout Section
     -- ═══════════════════════════════════════════════════════════════════════
-    cy = OneWoW_GUI:CreateSection(container, { title = L["MMBTNS_LAYOUT_HEADER"] or "Layout", yOffset = cy })
+    cy = OneWoW_GUI:CreateSection(container, { title = L["MMBTNS_LAYOUT_HEADER"], yOffset = cy })
 
     -- Max Columns
     local colsLabel
     colsLabel, cy = AddLabel(container, cy,
-        string.format("%s: %d", L["MMBTNS_MAX_COLUMNS"] or "Max Columns", s.maxColumns))
+        string.format("%s: %d", L["MMBTNS_MAX_COLUMNS"], s.maxColumns))
 
     local colsSlider = OneWoW_GUI:CreateSlider(container, {
         minVal     = 1,
@@ -413,7 +413,7 @@ local function BuildContent(container, isEnabled)
         fmt        = "%d",
         onChange    = function(val)
             s.maxColumns = val
-            colsLabel:SetText(string.format("%s: %d", L["MMBTNS_MAX_COLUMNS"] or "Max Columns", val))
+            colsLabel:SetText(string.format("%s: %d", L["MMBTNS_MAX_COLUMNS"], val))
             MinimapButtonsModule:LayoutContainer()
         end,
     })
@@ -424,7 +424,7 @@ local function BuildContent(container, isEnabled)
     local rowsDisplay = s.maxRows == 0 and "∞" or tostring(s.maxRows)
     local rowsLabel
     rowsLabel, cy = AddLabel(container, cy,
-        string.format("%s: %s", L["MMBTNS_MAX_ROWS"] or "Max Rows", rowsDisplay))
+        string.format("%s: %s", L["MMBTNS_MAX_ROWS"], rowsDisplay))
 
     local rowsSlider = OneWoW_GUI:CreateSlider(container, {
         minVal     = 0,
@@ -436,7 +436,7 @@ local function BuildContent(container, isEnabled)
         onChange    = function(val)
             s.maxRows = val
             local display = val == 0 and "∞" or tostring(val)
-            rowsLabel:SetText(string.format("%s: %s", L["MMBTNS_MAX_ROWS"] or "Max Rows", display))
+            rowsLabel:SetText(string.format("%s: %s", L["MMBTNS_MAX_ROWS"], display))
             MinimapButtonsModule:LayoutContainer()
         end,
     })
@@ -445,14 +445,14 @@ local function BuildContent(container, isEnabled)
 
     local rowsDesc = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     rowsDesc:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
-    rowsDesc:SetText(L["MMBTNS_MAX_ROWS_DESC"] or "0 = unlimited.")
+    rowsDesc:SetText(L["MMBTNS_MAX_ROWS_DESC"])
     rowsDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     cy = cy - rowsDesc:GetStringHeight() - 10
 
     -- Button Size
     local sizeLabel
     sizeLabel, cy = AddLabel(container, cy,
-        string.format("%s: %d", L["MMBTNS_BUTTON_SIZE"] or "Button Size", s.buttonSize))
+        string.format("%s: %d", L["MMBTNS_BUTTON_SIZE"], s.buttonSize))
 
     local sizeSlider = OneWoW_GUI:CreateSlider(container, {
         minVal     = 24,
@@ -463,7 +463,7 @@ local function BuildContent(container, isEnabled)
         fmt        = "%d",
         onChange    = function(val)
             s.buttonSize = val
-            sizeLabel:SetText(string.format("%s: %d", L["MMBTNS_BUTTON_SIZE"] or "Button Size", val))
+            sizeLabel:SetText(string.format("%s: %d", L["MMBTNS_BUTTON_SIZE"], val))
             MinimapButtonsModule:LayoutContainer()
         end,
     })
@@ -473,7 +473,7 @@ local function BuildContent(container, isEnabled)
     -- Collected icon scale (MinimapButtonButton-style: stored as tenths, e.g. 10 = 1.0 scale)
     local scaleLabel
     scaleLabel, cy = AddLabel(container, cy,
-        string.format("%s: %.1f", L["MMBTNS_BUTTON_SCALE"] or "Collected icon scale", (s.buttonScale or 10) / 10))
+        string.format("%s: %.1f", L["MMBTNS_BUTTON_SCALE"], (s.buttonScale or 10) / 10))
 
     local scaleSlider = OneWoW_GUI:CreateSlider(container, {
         minVal     = 1,
@@ -484,7 +484,7 @@ local function BuildContent(container, isEnabled)
         fmt        = "%d",
         onChange    = function(val)
             s.buttonScale = val
-            scaleLabel:SetText(string.format("%s: %.1f", L["MMBTNS_BUTTON_SCALE"] or "Collected icon scale", val / 10))
+            scaleLabel:SetText(string.format("%s: %.1f", L["MMBTNS_BUTTON_SCALE"], val / 10))
             MinimapButtonsModule:ApplyButtonScale()
         end,
     })
@@ -494,7 +494,7 @@ local function BuildContent(container, isEnabled)
     -- Button Spacing
     local spacingLabel
     spacingLabel, cy = AddLabel(container, cy,
-        string.format("%s: %d", L["MMBTNS_BUTTON_SPACING"] or "Spacing", s.buttonSpacing))
+        string.format("%s: %d", L["MMBTNS_BUTTON_SPACING"], s.buttonSpacing))
 
     local spacingSlider = OneWoW_GUI:CreateSlider(container, {
         minVal     = 0,
@@ -505,7 +505,7 @@ local function BuildContent(container, isEnabled)
         fmt        = "%d",
         onChange    = function(val)
             s.buttonSpacing = val
-            spacingLabel:SetText(string.format("%s: %d", L["MMBTNS_BUTTON_SPACING"] or "Spacing", val))
+            spacingLabel:SetText(string.format("%s: %d", L["MMBTNS_BUTTON_SPACING"], val))
             MinimapButtonsModule:LayoutContainer()
         end,
     })
@@ -515,7 +515,7 @@ local function BuildContent(container, isEnabled)
     -- ═══════════════════════════════════════════════════════════════════════
     -- Detected Minimap Icons Section
     -- ═══════════════════════════════════════════════════════════════════════
-    cy = OneWoW_GUI:CreateSection(container, { title = L["MMBTNS_ICONS_HEADER"] or "Minimap Icons", yOffset = cy })
+    cy = OneWoW_GUI:CreateSection(container, { title = L["MMBTNS_ICONS_HEADER"], yOffset = cy })
 
     cy = BuildMinimapIconsSection(container, cy, function()
         MinimapButtonsModule._refreshCustomDetail()

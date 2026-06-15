@@ -152,9 +152,9 @@ end
 function LFGPanel:GetDifficultyLabel(difficultyId)
     local key = DIFFICULTY_NAMES[difficultyId]
     if key then
-        return L[key] or key
+        return L[key]
     end
-    return L["UNKNOWN"] or "?"
+    return L["UNKNOWN"]
 end
 
 function LFGPanel:SetFilter(difficultyId)

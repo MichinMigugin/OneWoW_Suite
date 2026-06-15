@@ -14,10 +14,10 @@ function ns.UI.CreatePortalsTab(parent)
 
 	local split = OneWoW_GUI:CreateSplitPanel(parent, {
 		showSearch = true,
-		searchPlaceholder = L["SEARCH_PLACEHOLDER"] or "Search...",
+		searchPlaceholder = L["SEARCH_PLACEHOLDER"],
 	})
-	split.listTitle:SetText(L["PORTALS_LIST_TITLE"] or L["Categories"])
-	split.detailTitle:SetText(L["PORTALS_DETAIL_TITLE"] or L["PORTALS_SUBTAB"] or "Portals")
+	split.listTitle:SetText(L["PORTALS_LIST_TITLE"])
+	split.detailTitle:SetText(L["PORTALS_DETAIL_TITLE"])
 
 	local categoryScrollChild = split.listScrollChild
 	local portalPanel = split.detailPanel
@@ -49,7 +49,7 @@ function ns.UI.CreatePortalsTab(parent)
 
 	local optionsTitle = OneWoW_GUI:CreateFS(controlPanel, 12)
 	optionsTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 12, -10)
-	optionsTitle:SetText(L["PORTAL_DISPLAY_OPTIONS"] or L["Show Unavailable"])
+	optionsTitle:SetText(L["PORTAL_DISPLAY_OPTIONS"])
 	optionsTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
 	local escCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Show Portals on ESC"] })
@@ -558,9 +558,9 @@ function ns.UI.CreatePortalsTab(parent)
 		end
 
 		local favCount = #OneWoW.db.global.portalHub.escFavorites or 0
-		local statusMsg = string.format(L["PORTAL_STATUS_AVAILABLE"] or "%s (%d available)", categoryName, availableCount)
+		local statusMsg = string.format(L["PORTAL_STATUS_AVAILABLE"], categoryName, availableCount)
 		if showAll then
-			statusMsg = string.format(L["PORTAL_STATUS_AVAILABLE_UNAVAILABLE"] or "%s (%d available, %d unavailable)", categoryName, availableCount, unavailableCount)
+			statusMsg = string.format(L["PORTAL_STATUS_AVAILABLE_UNAVAILABLE"], categoryName, availableCount, unavailableCount)
 		end
 		rightStatusText:SetText(statusMsg)
 		leftStatusText:SetText(string.format(L["Favorites: %d/%d"], favCount, 15))

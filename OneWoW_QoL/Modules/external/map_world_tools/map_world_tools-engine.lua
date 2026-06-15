@@ -347,22 +347,22 @@ local function UpdateCoordOverlay()
 
     local x, y = sc:GetNormalizedCursorPosition()
     if x and y and x > 0 and y > 0 and MouseIsOver(sc) then
-        cCursor.x:SetFormattedText("%s: %.1f, %.1f", L and L["MAPWORLD_CURSOR"] or "Cursor",
+        cCursor.x:SetFormattedText("%s: %.1f, %.1f", L["MAPWORLD_CURSOR"],
             (math.floor(x * 1000 + 0.5)) / 10, (math.floor(y * 1000 + 0.5)) / 10)
     else
-        cCursor.x:SetFormattedText("%s:", L and L["MAPWORLD_CURSOR"] or "Cursor")
+        cCursor.x:SetFormattedText("%s:", L["MAPWORLD_CURSOR"])
     end
 
     local mapID = C_Map.GetBestMapForUnit("player")
     if not mapID then
-        cPlayer.x:SetFormattedText("%s:", L and L["MAPWORLD_PLAYER"] or "Player")
+        cPlayer.x:SetFormattedText("%s:", L["MAPWORLD_PLAYER"])
     else
         local position = C_Map.GetPlayerMapPosition(mapID, "player")
         if position and position.x ~= 0 and position.y ~= 0 then
-            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", L and L["MAPWORLD_PLAYER"] or "Player",
+            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", L["MAPWORLD_PLAYER"],
                 position.x * 100, position.y * 100)
         else
-            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", L and L["MAPWORLD_PLAYER"] or "Player", 0, 0)
+            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", L["MAPWORLD_PLAYER"], 0, 0)
         end
     end
 end
@@ -464,9 +464,9 @@ local function OnWorldMapAddonLoaded()
         pcall(function()
             Menu.ModifyMenu("MENU_WORLD_MAP_TRACKING", function(_, rootDescription)
                 rootDescription:CreateDivider()
-                rootDescription:CreateTitle(L and L["MAPWORLD_TITLE"] or "Map Tools")
+                rootDescription:CreateTitle(L["MAPWORLD_TITLE"])
                 local btn = MenuUtil.CreateCheckbox(
-                    L and L["MAPWORLD_TINT_UNEXPLORED"] or "Tint unexplored",
+                    L["MAPWORLD_TINT_UNEXPLORED"],
                     function() return GetToggle("tintUnexplored") end,
                     function()
                         local on = GetToggle("tintUnexplored")

@@ -115,7 +115,7 @@ local function CreateSettingToggleRows(dsc, toggleList, toggleBtnSets, isEnabled
         toggleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset - 3)
         toggleLabel:SetPoint("RIGHT", statusPfx, "LEFT", -8, 0)
         toggleLabel:SetJustifyH("LEFT")
-        toggleLabel:SetText(L[toggle.localeKey] or toggle.localeKey)
+        toggleLabel:SetText(L[toggle.localeKey])
 
         if isEnabled then
             toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -139,7 +139,7 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetText(L[feature.title])
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
@@ -152,7 +152,7 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     descLabel:SetJustifyH("LEFT")
     descLabel:SetWordWrap(true)
     descLabel:SetSpacing(3)
-    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
@@ -298,7 +298,7 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetText(L[feature.title])
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
@@ -311,7 +311,7 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
     descLabel:SetJustifyH("LEFT")
     descLabel:SetWordWrap(true)
     descLabel:SetSpacing(3)
-    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
@@ -378,7 +378,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetText(L[feature.title])
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
@@ -391,7 +391,7 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     descLabel:SetJustifyH("LEFT")
     descLabel:SetWordWrap(true)
     descLabel:SetSpacing(3)
-    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
@@ -501,7 +501,7 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetText(L[feature.title])
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
@@ -514,7 +514,7 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     descLabel:SetJustifyH("LEFT")
     descLabel:SetWordWrap(true)
     descLabel:SetSpacing(3)
-    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
@@ -582,7 +582,7 @@ local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetText(L[feature.title])
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
@@ -595,7 +595,7 @@ local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
     descLabel:SetJustifyH("LEFT")
     descLabel:SetWordWrap(true)
     descLabel:SetSpacing(3)
-    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
@@ -680,7 +680,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetText(L[feature.title])
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
@@ -693,7 +693,7 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     descLabel:SetJustifyH("LEFT")
     descLabel:SetWordWrap(true)
     descLabel:SetSpacing(3)
-    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
@@ -1172,7 +1172,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetText(L[feature.title])
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
@@ -1185,7 +1185,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     descLabel:SetJustifyH("LEFT")
     descLabel:SetWordWrap(true)
     descLabel:SetSpacing(3)
-    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
@@ -1219,7 +1219,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     local fontOffset = math.max(0, OneWoW_GUI:GetFontSizeOffset() or 0)
 
     local secDisplay = OneWoW_GUI:CreateSectionHeader(dsc, {
-        title = L["TIPS_VALUE_SECTION_DISPLAY"] or L["TIPS_VALUE_OPTIONS_SECTION"],
+        title = L["TIPS_VALUE_SECTION_DISPLAY"],
         yOffset = yOffset,
     })
     yOffset = secDisplay.bottomY - 12
@@ -1230,7 +1230,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     dispDesc:SetJustifyH("LEFT")
     dispDesc:SetWordWrap(true)
     dispDesc:SetSpacing(2)
-    dispDesc:SetText(L["TIPS_VALUE_SECTION_DISPLAY_DESC"] or L["TIPS_VALUE_OPTIONS_DESC"])
+    dispDesc:SetText(L["TIPS_VALUE_SECTION_DISPLAY_DESC"])
     dispDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - dispDesc:GetStringHeight() - 10
 
@@ -1263,7 +1263,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     yOffset = yOffset - 16
 
     local secAH = OneWoW_GUI:CreateSectionHeader(dsc, {
-        title = L["TIPS_VALUE_SECTION_AH"] or "Auction House data",
+        title = L["TIPS_VALUE_SECTION_AH"],
         yOffset = yOffset,
     })
     yOffset = secAH.bottomY - 12
@@ -1274,24 +1274,24 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     ahIntro:SetJustifyH("LEFT")
     ahIntro:SetWordWrap(true)
     ahIntro:SetSpacing(2)
-    ahIntro:SetText(L["TIPS_VALUE_SECTION_AH_DESC"] or "")
+    ahIntro:SetText(L["TIPS_VALUE_SECTION_AH_DESC"])
     ahIntro:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - ahIntro:GetStringHeight() - 8
 
     local ahSource = valSettings.ahPriceSource or "onewow"
     local ahSourceLabel
     if ahSource == "auctionator" then
-        ahSourceLabel = L["TIPS_VALUE_AH_SOURCE_AUCTIONATOR"] or "Auctionator"
+        ahSourceLabel = L["TIPS_VALUE_AH_SOURCE_AUCTIONATOR"]
     elseif ahSource == "tsm" then
-        ahSourceLabel = L["TIPS_VALUE_AH_SOURCE_TSM"] or "TradeSkillMaster"
+        ahSourceLabel = L["TIPS_VALUE_AH_SOURCE_TSM"]
     else
-        ahSourceLabel = L["TIPS_VALUE_AH_SOURCE_ONEWOW"] or "OneWoW AH scan"
+        ahSourceLabel = L["TIPS_VALUE_AH_SOURCE_ONEWOW"]
     end
 
     local ahSrcLabel = OneWoW_GUI:CreateFS(dsc, 12)
     ahSrcLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     ahSrcLabel:SetJustifyH("LEFT")
-    ahSrcLabel:SetText(L["TIPS_VALUE_AH_SOURCE_LABEL"] or "AH price data")
+    ahSrcLabel:SetText(L["TIPS_VALUE_AH_SOURCE_LABEL"])
     ahSrcLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - ahSrcLabel:GetStringHeight() - 4
 
@@ -1305,9 +1305,9 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
         searchable = false,
         buildItems = function()
             return {
-                { value = "onewow", text = L["TIPS_VALUE_AH_SOURCE_ONEWOW"] or "OneWoW AH scan" },
-                { value = "auctionator", text = L["TIPS_VALUE_AH_SOURCE_AUCTIONATOR"] or "Auctionator" },
-                { value = "tsm", text = L["TIPS_VALUE_AH_SOURCE_TSM"] or "TradeSkillMaster" },
+                { value = "onewow", text = L["TIPS_VALUE_AH_SOURCE_ONEWOW"] },
+                { value = "auctionator", text = L["TIPS_VALUE_AH_SOURCE_AUCTIONATOR"] },
+                { value = "tsm", text = L["TIPS_VALUE_AH_SOURCE_TSM"] },
             }
         end,
         onSelect = function(value, text)
@@ -1324,7 +1324,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     ahSrcDesc:SetJustifyH("LEFT")
     ahSrcDesc:SetWordWrap(true)
     ahSrcDesc:SetSpacing(2)
-    ahSrcDesc:SetText(L["TIPS_VALUE_AH_SOURCE_DESC"] or "")
+    ahSrcDesc:SetText(L["TIPS_VALUE_AH_SOURCE_DESC"])
     ahSrcDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     yOffset = yOffset - ahSrcDesc:GetStringHeight() - 10
 
@@ -1344,7 +1344,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     yOffset = yOffset - 14
 
     local secTSM = OneWoW_GUI:CreateSectionHeader(dsc, {
-        title = L["TIPS_VALUE_SECTION_TSM"] or "TradeSkillMaster",
+        title = L["TIPS_VALUE_SECTION_TSM"],
         yOffset = yOffset,
     })
     yOffset = secTSM.bottomY - 12
@@ -1355,14 +1355,14 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     tsmIntro:SetJustifyH("LEFT")
     tsmIntro:SetWordWrap(true)
     tsmIntro:SetSpacing(2)
-    tsmIntro:SetText(L["TIPS_VALUE_SECTION_TSM_DESC"] or "")
+    tsmIntro:SetText(L["TIPS_VALUE_SECTION_TSM_DESC"])
     tsmIntro:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - tsmIntro:GetStringHeight() - 8
 
     local newY3, refresh3 = OneWoW_GUI:CreateToggleRow(dsc, {
         yOffset = yOffset,
-        label = L["TIPS_VALUE_SHOW_TSM"] or "TSM price",
-        description = L["TIPS_VALUE_SHOW_TSM_DESC"] or "",
+        label = L["TIPS_VALUE_SHOW_TSM"],
+        description = L["TIPS_VALUE_SHOW_TSM_DESC"],
         value = valSettings.showTSMValue == true,
         isEnabled = isEnabled,
         onValueChange = function(newVal)
@@ -1375,7 +1375,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     local tsmStrLabel = OneWoW_GUI:CreateFS(dsc, 12)
     tsmStrLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     tsmStrLabel:SetJustifyH("LEFT")
-    tsmStrLabel:SetText(L["TIPS_VALUE_TSM_STRING_LABEL"] or "TSM price string")
+    tsmStrLabel:SetText(L["TIPS_VALUE_TSM_STRING_LABEL"])
     tsmStrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - tsmStrLabel:GetStringHeight() - 4
 
@@ -1402,7 +1402,7 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     tsmStrDesc:SetJustifyH("LEFT")
     tsmStrDesc:SetWordWrap(true)
     tsmStrDesc:SetSpacing(2)
-    tsmStrDesc:SetText(L["TIPS_VALUE_TSM_STRING_DESC"] or "")
+    tsmStrDesc:SetText(L["TIPS_VALUE_TSM_STRING_DESC"])
     tsmStrDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     yOffset = yOffset - tsmStrDesc:GetStringHeight() - 10
 
@@ -1465,7 +1465,7 @@ local function ShowPetsDetail(split, dsc, feature, selectedRow)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetText(L[feature.title])
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
@@ -1478,7 +1478,7 @@ local function ShowPetsDetail(split, dsc, feature, selectedRow)
     descLabel:SetJustifyH("LEFT")
     descLabel:SetWordWrap(true)
     descLabel:SetSpacing(3)
-    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
@@ -1510,7 +1510,7 @@ local function ShowPetsDetail(split, dsc, feature, selectedRow)
 
     local toggleHeader = OneWoW_GUI:CreateFS(dsc, 12)
     toggleHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    toggleHeader:SetText(L["TIPS_MODULE_TOGGLES"] or "Module Toggles")
+    toggleHeader:SetText(L["TIPS_MODULE_TOGGLES"])
     toggleHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - toggleHeader:GetStringHeight() - 8
 
@@ -1596,7 +1596,7 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetText(L[feature.title])
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
@@ -1609,7 +1609,7 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     descLabel:SetJustifyH("LEFT")
     descLabel:SetWordWrap(true)
     descLabel:SetSpacing(3)
-    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
@@ -1662,7 +1662,7 @@ local function BuildFeatureList(split, tabName)
         local filter = (filterText or ""):lower()
 
         for _, feature in ipairs(features) do
-            local displayName = L[feature.title] or feature.title
+            local displayName = L[feature.title]
             if filter == "" or displayName:lower():find(filter, 1, true) then
                 local capturedFeature = feature
                 local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id)
@@ -1725,7 +1725,7 @@ local function BuildFeatureList(split, tabName)
 end
 
 function ns.UI.CreateTooltipsTab(parent)
-    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_PLACEHOLDER"] or "Search..." })
+    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_PLACEHOLDER"] })
     split.listTitle:SetText(L["TOOLTIPS_LIST_TITLE"])
     split.detailTitle:SetText(L["TOOLTIPS_DETAIL_TITLE"])
 

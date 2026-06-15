@@ -40,7 +40,7 @@ function UI:Build(detailScrollChild, yOffset, isEnabled, registerRefresh)
     -- Header --------------------------------------------------
     local header = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     header:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    header:SetText(L["FRAMEMOVER_FRAMES_HEADER"] or "Movable Frames")
+    header:SetText(L["FRAMEMOVER_FRAMES_HEADER"])
     header:SetTextColor(ThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - 22
 
@@ -51,24 +51,24 @@ function UI:Build(detailScrollChild, yOffset, isEnabled, registerRefresh)
     local resetPosBtn = CreateFrame("Button", nil, detailScrollChild, "UIPanelButtonTemplate")
     resetPosBtn:SetSize(150, 22)
     resetPosBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    resetPosBtn:SetText(L["FRAMEMOVER_RESET_POSITIONS"] or "Reset All Positions")
+    resetPosBtn:SetText(L["FRAMEMOVER_RESET_POSITIONS"])
     resetPosBtn:SetEnabled(isEnabled)
     resetPosBtn:SetScript("OnClick", function()
         if FM then
             FM:ResetAllPositions()
-            print("|cFF00FF00OneWoW QoL:|r " .. (L["FRAMEMOVER_RESET_POS_DONE"] or "Positions reset."))
+            print("|cFF00FF00OneWoW QoL:|r " .. (L["FRAMEMOVER_RESET_POS_DONE"]))
         end
     end)
 
     local resetScaleBtn = CreateFrame("Button", nil, detailScrollChild, "UIPanelButtonTemplate")
     resetScaleBtn:SetSize(150, 22)
     resetScaleBtn:SetPoint("LEFT", resetPosBtn, "RIGHT", 6, 0)
-    resetScaleBtn:SetText(L["FRAMEMOVER_RESET_SCALES"] or "Reset All Scales")
+    resetScaleBtn:SetText(L["FRAMEMOVER_RESET_SCALES"])
     resetScaleBtn:SetEnabled(isEnabled)
     resetScaleBtn:SetScript("OnClick", function()
         if FM then
             FM:ResetAllScales()
-            print("|cFF00FF00OneWoW QoL:|r " .. (L["FRAMEMOVER_RESET_SCALE_DONE"] or "Scales reset."))
+            print("|cFF00FF00OneWoW QoL:|r " .. (L["FRAMEMOVER_RESET_SCALE_DONE"]))
         end
     end)
 
@@ -83,15 +83,15 @@ function UI:Build(detailScrollChild, yOffset, isEnabled, registerRefresh)
     yOffset = yOffset - 32
 
     -- Per-category frame lists --------------------------------
-    local onLabel  = L["FEATURES_ON"]  or "On"
-    local offLabel = L["FEATURES_OFF"] or "Off"
+    local onLabel  = L["FEATURES_ON"]
+    local offLabel = L["FEATURES_OFF"]
 
     for _, cat in ipairs(REG.CATEGORIES) do
         local frames = REG:GetFramesByCategory(cat.id)
         if #frames > 0 then
             local catHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             catHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-            catHeader:SetText(L[cat.label] or cat.id)
+            catHeader:SetText(L[cat.label])
             if isEnabled then
                 catHeader:SetTextColor(ThemeColor("ACCENT_SECONDARY"))
             else

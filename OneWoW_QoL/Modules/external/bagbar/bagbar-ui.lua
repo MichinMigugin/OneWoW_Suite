@@ -18,7 +18,7 @@ StaticPopupDialogs["ONEWOW_QOL_CLEAR_BAGBAR_BLACKLIST"] = {
         if ns.ModuleRegistry:IsEnabled("bagbar") then
             BagBarModule:ScheduleUpdate()
         end
-        print("|cFF00FF00" .. (L["BAGBAR_BLACKLIST_CLEARED"] or "Bag Bar blacklist cleared.") .. "|r")
+        print("|cFF00FF00" .. (L["BAGBAR_BLACKLIST_CLEARED"]) .. "|r")
         if BagBarModule._refreshCustomDetail then
             BagBarModule._refreshCustomDetail()
         end

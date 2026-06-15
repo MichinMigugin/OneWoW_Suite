@@ -15,11 +15,11 @@ local function FormatAge(timestamp)
     local age = time() - timestamp
     local L = OneWoW.L
     if age < 3600 then
-        return format(L["TIPS_TIME_MINUTES_AGO"] or "%dm ago", math.floor(age / 60))
+        return format(L["TIPS_TIME_MINUTES_AGO"], math.floor(age / 60))
     elseif age < 86400 then
-        return format(L["TIPS_TIME_HOURS_AGO"] or "%dh ago", math.floor(age / 3600))
+        return format(L["TIPS_TIME_HOURS_AGO"], math.floor(age / 3600))
     else
-        return format(L["TIPS_TIME_DAYS_AGO"] or "%dd ago", math.floor(age / 86400))
+        return format(L["TIPS_TIME_DAYS_AGO"], math.floor(age / 86400))
     end
 end
 
@@ -30,7 +30,7 @@ local function FormatAHMeta(meta)
         return FormatAge(meta.timestamp)
     end
     if meta.ageDays ~= nil then
-        return format(L["TIPS_VALUE_AH_AGE_DAYS"] or "%d d ago", meta.ageDays)
+        return format(L["TIPS_VALUE_AH_AGE_DAYS"], meta.ageDays)
     end
     return nil
 end
@@ -69,9 +69,9 @@ local function ValueProvider(_, context)
             end
             local leftLabel = L["TIPS_VALUE_AH_PRICE"]
             if meta and meta.source == "auctionator" then
-                leftLabel = L["TIPS_VALUE_AH_PRICE_AUCTIONATOR"] or leftLabel
+                leftLabel = L["TIPS_VALUE_AH_PRICE_AUCTIONATOR"]
             elseif meta and meta.source == "tsm" then
-                leftLabel = L["TIPS_VALUE_AH_PRICE_TSM"] or leftLabel
+                leftLabel = L["TIPS_VALUE_AH_PRICE_TSM"]
             end
             table.insert(lines, {
                 type  = "double",
@@ -87,9 +87,9 @@ local function ValueProvider(_, context)
         local tsmPrice, srcStr = OneWoW.ItemPrices:GetTSMUnitPrice(context.itemLink)
         if tsmPrice and tsmPrice > 0 then
             local tsmRight = FormatMoneyLine(tsmPrice)
-            local leftT = L["TIPS_VALUE_TSM_PRICE"] or "TSM"
+            local leftT = L["TIPS_VALUE_TSM_PRICE"]
             if srcStr and srcStr ~= "" then
-                leftT = format(L["TIPS_VALUE_TSM_PRICE_FMT"] or "TSM (%s)", srcStr)
+                leftT = format(L["TIPS_VALUE_TSM_PRICE_FMT"], srcStr)
             end
             table.insert(lines, {
                 type  = "double",

@@ -488,8 +488,8 @@ function CharInfoModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
             onValueChange = function(newVal)
                 ns.ModuleRegistry:SetToggleValue("charinfo", "enchant_slot_" .. capturedSlotId, newVal)
             end,
-            onLabel = L["FEATURES_ON"] or "On",
-            offLabel = L["FEATURES_OFF"] or "Off",
+            onLabel = L["FEATURES_ON"],
+            offLabel = L["FEATURES_OFF"],
             buttonWidth = 40,
         })
         if rowRefresh then
@@ -510,8 +510,8 @@ function CharInfoModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
             onValueChange = function(newVal)
                 ns.ModuleRegistry:SetToggleValue("charinfo", "enchant_slot_" .. capturedSlotId, newVal)
             end,
-            onLabel = L["FEATURES_ON"] or "On",
-            offLabel = L["FEATURES_OFF"] or "Off",
+            onLabel = L["FEATURES_ON"],
+            offLabel = L["FEATURES_OFF"],
             buttonWidth = 40,
         })
         if rowRefresh then

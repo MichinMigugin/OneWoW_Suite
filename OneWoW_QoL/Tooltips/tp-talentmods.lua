@@ -198,7 +198,7 @@ local function OnSpellTooltip(tooltip, data)
                     local baseSpellInfo = C_Spell.GetSpellInfo(baseSpellID)
                     local baseSpellName = baseSpellInfo and baseSpellInfo.name
                     if baseSpellName then
-                        local fromFmt = OneWoW.L and OneWoW.L["TIPS_TALENTMODS_FROM"] or "From %s:"
+                        local fromFmt = OneWoW.L["TIPS_TALENTMODS_FROM"]
                         tooltip:AddLine("\n" .. string.format(fromFmt, colorText(baseSpellName, SPELL_NAME_COLOR)))
                     end
                     hasInherited = true

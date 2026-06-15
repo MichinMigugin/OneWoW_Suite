@@ -199,7 +199,7 @@ local function CreateIconPicker(parent, initialIcon, onChange)
 
         local hdrLabel = OneWoW_GUI:CreateFS(hdr, 10)
         hdrLabel:SetPoint("LEFT", hdr, "LEFT", 20, 0)
-        hdrLabel:SetText(L[cat.nameKey] or cat.nameKey)
+        hdrLabel:SetText(L[cat.nameKey])
         hdrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
         local catRows = {}
@@ -680,7 +680,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     titleLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
     titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
     titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title] or feature.title)
+    titleLabel:SetText(L[feature.title])
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - titleLabel:GetStringHeight() - 8
 
@@ -693,7 +693,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
     descLabel:SetJustifyH("LEFT")
     descLabel:SetWordWrap(true)
     descLabel:SetSpacing(3)
-    descLabel:SetText(L[feature.description] or feature.description)
+    descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
@@ -1409,7 +1409,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
 
         local fontLabel = OneWoW_GUI:CreateFS(dsc, 12)
         fontLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-        fontLabel:SetText(L["OVR_FONT_LABEL"] or "Font")
+        fontLabel:SetText(L["OVR_FONT_LABEL"])
         fontLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         rightY = rightY - fontLabel:GetStringHeight() - 6
 
@@ -1857,7 +1857,7 @@ local function BuildFeatureList(split, tabName)
         local filter = (filterText or ""):lower()
 
         for _, feature in ipairs(features) do
-            local displayName = L[feature.title] or feature.title
+            local displayName = L[feature.title]
             if filter == "" or displayName:lower():find(filter, 1, true) then
                 local capturedFeature = feature
                 local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id)
@@ -1917,7 +1917,7 @@ local function BuildFeatureList(split, tabName)
 end
 
 function ns.UI.CreateOverlaysTab(parent)
-    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_PLACEHOLDER"] or "Search..." })
+    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_PLACEHOLDER"] })
     split.listTitle:SetText(L["OVERLAYS_LIST_TITLE"])
     split.detailTitle:SetText(L["OVERLAYS_DETAIL_TITLE"])
 

@@ -68,19 +68,19 @@ local function RegisterTooltipProvider()
         if mountInfo.isMovementForm then
             table.insert(lines, {
                 type  = "double",
-                left  = L["PLAYMOUNTS_MOUNT"] or "Mount",
+                left  = L["PLAYMOUNTS_MOUNT"],
                 right = mountInfo.name,
                 lr = 0.9, lg = 0.9, lb = 0.9,
                 rr = 1.0, rg = 1.0, rb = 1.0,
             })
         else
             local collected = mountInfo.isCollected
-                and ("|cFF00FF00" .. (L["PLAYMOUNTS_COLLECTED"] or "(Collected)") .. "|r")
-                or  ("|cFFFF0000" .. (L["PLAYMOUNTS_NOT_COLLECTED"] or "(Not Collected)") .. "|r")
+                and ("|cFF00FF00" .. (L["PLAYMOUNTS_COLLECTED"]) .. "|r")
+                or  ("|cFFFF0000" .. (L["PLAYMOUNTS_NOT_COLLECTED"]) .. "|r")
 
             table.insert(lines, {
                 type  = "double",
-                left  = L["PLAYMOUNTS_MOUNT"] or "Mount",
+                left  = L["PLAYMOUNTS_MOUNT"],
                 right = mountInfo.name .. " " .. collected,
                 lr = 0.9, lg = 0.9, lb = 0.9,
                 rr = 1.0, rg = 1.0, rb = 1.0,
@@ -89,7 +89,7 @@ local function RegisterTooltipProvider()
             if displayMode ~= "name" and mountInfo.mountTypeName then
                 table.insert(lines, {
                     type = "text",
-                    text = string.format(L["PLAYMOUNTS_TYPE"] or "Type: %s", mountInfo.mountTypeName),
+                    text = string.format(L["PLAYMOUNTS_TYPE"], mountInfo.mountTypeName),
                     r = 0.7, g = 0.7, b = 0.7,
                 })
             end
@@ -97,7 +97,7 @@ local function RegisterTooltipProvider()
             if displayMode == "all" and mountInfo.sourceText and mountInfo.sourceText ~= "" then
                 table.insert(lines, {
                     type = "text",
-                    text = string.format(L["PLAYMOUNTS_SOURCE"] or "Source: %s", mountInfo.sourceText),
+                    text = string.format(L["PLAYMOUNTS_SOURCE"], mountInfo.sourceText),
                     r = 0.7, g = 0.7, b = 0.7,
                 })
             end
@@ -186,7 +186,7 @@ function PlayMountsModule:OnTargetChanged()
 
     local unitName = UnitName(unit)
 
-    local prefix = "|cFFFFD100[QoL - " .. (L["PLAYMOUNTS_MOUNT"] or "Mount") .. "]|r "
+    local prefix = "|cFFFFD100[QoL - " .. (L["PLAYMOUNTS_MOUNT"]) .. "]|r "
     local playerLink = "|Hplayer:" .. unitName .. "|h|cFFFFFFFF[" .. unitName .. "]|r|h"
 
     local _, classFilename = UnitClass(unit)
@@ -200,21 +200,21 @@ function PlayMountsModule:OnTargetChanged()
     local displayMode = GetDisplayMode()
 
     if mountInfo.isMovementForm then
-        print(prefix .. string.format(L["PLAYMOUNTS_USING"] or "%s is using %s", playerLink, mountInfo.name))
+        print(prefix .. string.format(L["PLAYMOUNTS_USING"], playerLink, mountInfo.name))
     else
         local statusText
         if mountInfo.isCollected then
-            statusText = " |cFF00FF00" .. (L["PLAYMOUNTS_COLLECTED"] or "(Collected)") .. "|r"
+            statusText = " |cFF00FF00" .. (L["PLAYMOUNTS_COLLECTED"]) .. "|r"
         else
-            statusText = " |cFFFF0000" .. (L["PLAYMOUNTS_NOT_COLLECTED"] or "(Not Collected)") .. "|r"
+            statusText = " |cFFFF0000" .. (L["PLAYMOUNTS_NOT_COLLECTED"]) .. "|r"
         end
         local mountLink = C_Spell.GetSpellLink(mountInfo.spellID) or mountInfo.name
-        print(prefix .. string.format(L["PLAYMOUNTS_USING"] or "%s is using %s", playerLink, mountLink .. statusText))
+        print(prefix .. string.format(L["PLAYMOUNTS_USING"], playerLink, mountLink .. statusText))
         if displayMode ~= "name" and mountInfo.mountTypeName then
-            print(prefix .. string.format(L["PLAYMOUNTS_TYPE"] or "Type: %s", mountInfo.mountTypeName))
+            print(prefix .. string.format(L["PLAYMOUNTS_TYPE"], mountInfo.mountTypeName))
         end
         if displayMode == "all" and mountInfo.sourceText and mountInfo.sourceText ~= "" then
-            print(prefix .. string.format(L["PLAYMOUNTS_SOURCE"] or "Source: %s", mountInfo.sourceText))
+            print(prefix .. string.format(L["PLAYMOUNTS_SOURCE"], mountInfo.sourceText))
         end
     end
 end
@@ -279,7 +279,7 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, _, registerRefresh
     for _, mode in ipairs(modes) do
         local capturedMode = mode
         local isActive = (currentMode == mode.id)
-        local btn = OneWoW_GUI:CreateFitTextButton(parent, { text = L[mode.labelKey] or mode.id, height = 22 })
+        local btn = OneWoW_GUI:CreateFitTextButton(parent, { text = L[mode.labelKey], height = 22 })
         if prevModeBtn then
             btn:SetPoint("TOPLEFT", prevModeBtn, "TOPRIGHT", 6, 0)
         else

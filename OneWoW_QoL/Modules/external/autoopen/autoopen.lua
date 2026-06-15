@@ -56,7 +56,7 @@ function AutoOpenModule:ScanAndOpen()
                 if info and info.hasLoot and not info.isLocked then
                     local itemLink = C_Container.GetContainerItemLink(bag, slot)
                     if itemLink then
-                        print(string.format(L["AUTOOPEN_OPENING"] or "Auto-opening: %s", itemLink))
+                        print(string.format(L["AUTOOPEN_OPENING"], itemLink))
                     end
                     C_Container.UseContainerItem(bag, slot)
                     return
@@ -187,7 +187,7 @@ function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
         if not itemID or itemID <= 0 then return end
         AO:AddToBlacklist(itemID, true)
         local itemName = C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
-        print(string.format("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_ADDED"] or "Added to blacklist: %s"), itemName))
+        print(string.format("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_ADDED"]), itemName))
     end
 
     addBtn:SetScript("OnClick", function()
@@ -277,7 +277,7 @@ function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
         removeBtn:SetScript("OnClick", function()
             AO:RemoveFromBlacklist(capturedID)
             local rName = C_Item.GetItemNameByID(capturedID) or ("Item " .. capturedID)
-            print(string.format("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_REMOVED"] or "Removed from blacklist: %s"), rName))
+            print(string.format("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_REMOVED"]), rName))
         end)
         tinsert(removeBtns, removeBtn)
 
@@ -300,7 +300,7 @@ function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
     clearBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
     clearBtn:SetScript("OnClick", function()
         AO:ClearBlacklist()
-        print("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_CLEARED"] or "Blacklist cleared."))
+        print("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_CLEARED"]))
     end)
     yOffset = yOffset - 30
 

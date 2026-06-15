@@ -242,7 +242,7 @@ local function ShowModuleDetail(split, module)
 
     local catText = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     catText:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    catText:SetText(L["FEATURES_CATEGORY_LABEL"] .. " " .. (ns.L["CATEGORY_" .. (module.category or "UTILITY")] or module.category))
+    catText:SetText(L["FEATURES_CATEGORY_LABEL"] .. " " .. ns.L["CATEGORY_" .. (module.category or "UTILITY")])
     catText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - catText:GetStringHeight() - 12
 
@@ -496,7 +496,7 @@ local function BuildFeaturesList(split, filterText)
             catLabel:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 8, yOffset)
             catLabel:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -8, yOffset)
             catLabel:SetJustifyH("LEFT")
-            catLabel:SetText(ns.L["CATEGORY_" .. category] or category)
+            catLabel:SetText(ns.L["CATEGORY_" .. category])
             catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
             yOffset = yOffset - catLabel:GetStringHeight() - 4
 
