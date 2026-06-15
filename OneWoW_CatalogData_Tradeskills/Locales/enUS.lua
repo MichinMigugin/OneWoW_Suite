@@ -1,7 +1,6 @@
-local _, ns = ...
+local ADDON_NAME, ns = ...
 
-ns.Locales = ns.Locales or {}
-ns.Locales["enUS"] = {
+OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_LOADED"] = "OneWoW CatalogData: Tradeskills loaded.",
     ["PROF_ALCHEMY"] = "Alchemy",
     ["PROF_BLACKSMITHING"] = "Blacksmithing",
@@ -37,9 +36,6 @@ ns.Locales["enUS"] = {
     ["TYPE_CRAFTING"] = "Crafting",
     ["TYPE_GATHERING"] = "Gathering",
     ["TYPE_SECONDARY"] = "Secondary",
-}
+})
 
-ns.L = {}
-for k, v in pairs(ns.Locales["enUS"]) do
-    ns.L[k] = v
-end
+ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

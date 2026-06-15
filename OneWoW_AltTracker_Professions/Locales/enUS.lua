@@ -1,6 +1,6 @@
-local addonName, ns = ...
+local ADDON_NAME, ns = ...
 
-ns.L = {
+OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_LOADED"] = "OneWoW AltTracker: Professions data tracking enabled",
     ["DATA_COLLECTED"] = "Profession data collected",
     ["DATA_COLLECTION_FAILED"] = "Failed to collect profession data",
@@ -8,4 +8,6 @@ ns.L = {
     ["TRAINER_OPENED"] = "Trainer window opened - recording location",
     ["RECIPES_SCANNED"] = "Recipes scanned for %s",
     ["EQUIPMENT_SCANNED"] = "Profession equipment scanned",
-}
+})
+
+ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

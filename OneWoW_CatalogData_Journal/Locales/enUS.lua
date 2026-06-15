@@ -1,7 +1,6 @@
-local _, ns = ...
+local ADDON_NAME, ns = ...
 
-ns.Locales = ns.Locales or {}
-ns.Locales["enUS"] = {
+OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_LOADED"] = "OneWoW CatalogData: Journal data loaded.",
 
     ["JOURNAL_STATUS_COLLECTED"]     = "Collected",
@@ -17,7 +16,6 @@ ns.Locales["enUS"] = {
     ["JOURNAL_UNKNOWN_INST"]  = "Unknown Instance",
     ["JOURNAL_LOADING"]       = "Loading...",
     ["JOURNAL_LIVE_EJ_TAG"]   = "Guide",
-}
+})
 
-ns.L = {}
-for k, v in pairs(ns.Locales["enUS"]) do ns.L[k] = v end
+ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

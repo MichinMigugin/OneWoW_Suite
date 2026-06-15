@@ -1,10 +1,12 @@
-local addonName, ns = ...
+local ADDON_NAME, ns = ...
 
-ns.L = {
+OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_LOADED"] = "OneWoW AltTracker: Storage data tracking enabled",
     ["DATA_COLLECTED"] = "Storage data collected",
     ["DATA_COLLECTION_FAILED"] = "Failed to collect storage data",
     ["BANK_OPENED"] = "Personal bank opened - collecting data",
     ["GUILD_BANK_OPENED"] = "Guild bank opened - collecting data",
     ["MAIL_OPENED"] = "Mailbox opened - collecting data",
-}
+})
+
+ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

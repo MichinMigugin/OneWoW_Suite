@@ -8,11 +8,6 @@ OneWoW:BootStore(ns, {
     savedVar = "OneWoW_CatalogData_Tradeskills_DB",
     withScanCallbacks = true,
     onLogin = function()
-        local locale = GetLocale()
-        if ns.Locales and ns.Locales[locale] then
-            ns.L = ns.Locales[locale]
-        end
-
         ns.DataLoader = OneWoW_Catalog:CreateItemDataLoader(ns:GetDB())
         ns.DataLoader:Initialize()
 

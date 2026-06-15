@@ -1,6 +1,6 @@
-local addonName, ns = ...
+local ADDON_NAME, ns = ...
 
-ns.L = {
+OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_LOADED"] = "OneWoW AltTracker: Auctions data tracking enabled",
     ["DATA_COLLECTED"] = "Auction data collected",
     ["DATA_COLLECTION_FAILED"] = "Failed to collect auction data",
@@ -9,4 +9,6 @@ ns.L = {
     ["NO_BIDS"] = "No active bids",
     ["AH_SCAN_COOLDOWN"] = "AH full scan available in %d minutes.",
     ["AH_SCAN_REQUIRED"] = "AltTracker Auctions addon required for AH scanning.",
-}
+})
+
+ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

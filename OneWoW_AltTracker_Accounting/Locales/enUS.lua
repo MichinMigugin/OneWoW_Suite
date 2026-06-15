@@ -1,3 +1,5 @@
-local _, ns = ...
+local ADDON_NAME, ns = ...
 
-ns.L = {}
+OneWoW.Locale:Register(ADDON_NAME, "enUS", {})
+
+ns.L = OneWoW.Locale:GetTable(ADDON_NAME)
