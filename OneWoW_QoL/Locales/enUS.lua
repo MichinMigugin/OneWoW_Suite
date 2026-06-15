@@ -142,7 +142,6 @@ complete working example.]],
     ["LANG_KOREAN"] = "Korean",
 
     ["UNKNOWN"] = "Unknown",
-    ["CLOSE"] = "Close",
     ["ENABLE"] = "Enable",
     ["DISABLE"] = "Disable",
 

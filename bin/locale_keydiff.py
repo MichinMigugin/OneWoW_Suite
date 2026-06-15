@@ -1,55 +1,77 @@
 #!/usr/bin/env python3
-"""Locale key-diff analysis for the localization rollout (Phase 0 tooling).
+"""Locale key/value analysis for the localization rollout (Phase 0 tooling).
 
 Scans every `*/Locales/**/enUS.lua` in the suite, extracts the registered keys
-and their English values, and classifies them against two reference sets:
+and their English values, and classifies them so the rollout can (1) replace
+strings with Blizzard globals, (2) consolidate duplicates into the shared scope,
+and (3) translate only what remains into all 11 locales.
+
+The primary unit of analysis is the VALUE, not the key name: two different keys
+holding the same string (e.g. CLOSE = "Close" and CLOSE_IT = "Close") are the
+same translatable string and should collapse to one home. Reference sets:
 
   * the core `shared` scope  (OneWoW/Locales/Shared/enUS.lua)
-  * Blizzard's global strings (.wow_docs/general/GlobalStrings.lua)
+  * Blizzard's global strings (.wow_docs/general/GlobalStrings.lua), inverted to
+    value -> [global names].
 
-Output drives the rollout plan:
-  A. SHARED COLLISIONS    — a scope re-defines a key shared already owns -> delete it.
-  B. BLIZZARD CANDIDATES  — key NAME matches a Blizzard global -> Phase 2 (bare global).
-                            Split into exact-value matches vs name-only (value differs).
-  C. CROSS-SCOPE DUPES    — key defined in >=2 scopes, not covered by A/B -> Phase 1
-                            (promote to shared). Flags value disagreement.
-  D. PER-SCOPE TOTALS     — keys per scope and the must-translate remainder
-                            (total minus shared/blizzard-covered) -> Phase 3 baseline.
+Suite report (no args) sections:
+  A. SHARED COLLISIONS  — a scope re-defines a key name shared owns -> delete (contract).
+  B. BLIZZARD BY VALUE  — a string equals a canonically-named Blizzard global ->
+                          Phase 2: replace all sites with the bare global.
+  C. CONSOLIDATE BY VALUE — a string with no usable global appears at >=2 sites ->
+                          Phase 1: collapse to one shared key.
+  D. TRANSLATE REMAINDER — per scope, keys left after routing B/C -> Phase 4 baseline.
+  E. NAME-MATCH TRAPS   — a global shares a key's NAME but holds a different value.
 
-Read-only. No arguments; run from the repo root:  python bin/locale_keydiff.py
+Per-addon worklist (`--scope OneWoW_Bags`) buckets that scope's own keys into
+DELETE / BLIZZARD / CONSOLIDATE / TRANSLATE for curation one addon at a time.
+
+IMPORTANT: identical enUS value does NOT guarantee identical translation in other
+languages (Close=verb vs Close=adjacent). Treat B/C as candidates needing a
+meaning check before collapsing; Blizzard-by-value (B) is safest. Proper nouns
+(addon names: "OneWoW", "Notes", ...) consolidate but must NOT be translated.
+
+Read-only. Run from the repo root.
 """
 
 from __future__ import annotations
 
+import argparse
 import re
 import sys
 from collections import defaultdict
 from pathlib import Path
 
 # ["KEY"] = "value"  /  ['KEY'] = "value"  /  bareword  KEY = "value"
-# Value capture is best-effort: only a simple double/single-quoted literal; keys
-# whose value is an expression (a global, concatenation) capture value = None.
 KEY_RE = re.compile(
     r"""^\s*
-        (?:\[\s*(["'])(?P<bk>[A-Za-z0-9_]+)\1\s*\]   # ["KEY"] bracket form
-          |(?P<wk>[A-Za-z_][A-Za-z0-9_]*))            # bareword KEY
+        (?:\[\s*(["'])(?P<bk>[A-Za-z0-9_]+)\1\s*\]
+          |(?P<wk>[A-Za-z_][A-Za-z0-9_]*))
         \s*=\s*
-        (?:(["'])(?P<val>(?:\\.|(?!\4).)*)\4)?         # optional "value"
+        (?:(["'])(?P<val>(?:\\.|(?!\4).)*)\4)?
     """,
     re.VERBOSE,
 )
 # Blizzard global:  NAME = "value";
 GLOBAL_RE = re.compile(r'^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*"((?:\\.|[^"])*)"\s*;?\s*$')
 
+# Values too trivial/ambiguous to treat as a consolidation or global-adoption signal.
+TRIVIAL_RE = re.compile(r"^[\d\s%.\-:/|()]+$")
+
+MAX_SITES_SHOWN = 15
+
+
+def is_meaningful(v: str) -> bool:
+    s = v.strip()
+    return len(s) >= 2 and not TRIVIAL_RE.match(s)
+
 
 def scope_for(path: Path, root: Path) -> str:
-    """Derive the registration scope name from a locale file path."""
     rel = path.relative_to(root).as_posix()
     parts = rel.split("/")
     addon = parts[0]
     if addon == "OneWoW" and "Shared" in parts:
         return "shared"
-    # OneWoW_QoL/Modules/external/<id>/Locales/enUS.lua -> OneWoW_QoL.<id>
     if "Modules" in parts and "external" in parts:
         i = parts.index("external")
         return f"{addon}.{parts[i + 1]}"
@@ -75,125 +97,215 @@ def parse_keys(path: Path) -> dict[str, str | None]:
         if not m:
             continue
         key = m.group("bk") or m.group("wk")
-        if not key:
-            continue
-        out[key] = m.group("val")
+        if key:
+            out[key] = m.group("val")
     return out
 
 
 def load_globals(root: Path) -> dict[str, str]:
     gpath = root / ".wow_docs" / "general" / "GlobalStrings.lua"
-    globals_map: dict[str, str] = {}
+    out: dict[str, str] = {}
     if not gpath.exists():
         print(f"WARNING: {gpath} not found — Blizzard analysis skipped.", file=sys.stderr)
-        return globals_map
+        return out
     for line in gpath.read_text(encoding="utf-8", errors="replace").splitlines():
         m = GLOBAL_RE.match(line)
         if m:
-            globals_map.setdefault(m.group(1), m.group(2))
-    return globals_map
+            out.setdefault(m.group(1), m.group(2))
+    return out
 
 
-def main() -> int:
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")  # scope/value text may be non-ASCII
-    except AttributeError:
-        pass
-    root = Path.cwd()
-    blizz = load_globals(root)
+def fmt_sites(st, limit: int = MAX_SITES_SHOWN) -> str:
+    ordered = sorted(st)
+    shown = ", ".join(f"{s}.{k}" for s, k in ordered[:limit])
+    if len(ordered) > limit:
+        shown += f", ... (+{len(ordered) - limit} more)"
+    return shown
 
-    # scope -> { key: value }
+
+def build_indexes(root: Path):
+    """Parse every enUS locale file into scope/value indices."""
     scopes: dict[str, dict[str, str | None]] = defaultdict(dict)
     files = sorted(root.glob("**/Locales/**/enUS.lua")) + sorted(root.glob("**/Locales/enUS.lua"))
-    seen_files = set()
+    seen = set()
     for f in files:
-        if f in seen_files or ".wow_docs" in f.parts:
+        if f in seen or ".wow_docs" in f.parts:
             continue
-        seen_files.add(f)
+        seen.add(f)
         scopes[scope_for(f, root)].update(parse_keys(f))
 
-    shared = scopes.get("shared", {})
-    shared_keys = set(shared)
-
-    # key -> scopes that define it (non-shared); key -> distinct values
-    key_scopes: dict[str, set[str]] = defaultdict(set)
-    key_vals: dict[str, set[str]] = defaultdict(set)
+    sites: dict[str, set[tuple[str, str]]] = defaultdict(set)   # value -> {(scope, key)}
     for scope, kv in scopes.items():
-        if scope == "shared":
-            continue
         for k, v in kv.items():
-            key_scopes[k].add(scope)
             if v is not None:
-                key_vals[k].add(v)
+                sites[v].add((scope, k))
 
-    print(f"Parsed {len(seen_files)} enUS locale files into {len(scopes)} scopes "
-          f"({len(shared_keys)} shared keys, {len(blizz)} Blizzard globals).\n")
+    blizz = load_globals(root)
+    glob_by_val: dict[str, list[str]] = defaultdict(list)       # value -> [global names]
+    for name, val in blizz.items():
+        glob_by_val[val].append(name)
+    for v in glob_by_val:
+        glob_by_val[v].sort()
+
+    return scopes, sites, blizz, glob_by_val, len(seen)
+
+
+def make_canonical(glob_by_val):
+    """Return canonical(value) -> the global whose NAME is the value's upper-snake, or None.
+
+    Gates out incidental same-value globals (KEY_NUMLOCK_MAC = "Clear").
+    """
+    def canonical(v: str) -> str | None:
+        base = re.sub(r"[^0-9A-Za-z]+", "_", v.strip()).strip("_").upper()
+        return next((n for n in glob_by_val.get(v, ()) if n == base), None)
+    return canonical
+
+
+def full_report(scopes, sites, blizz, glob_by_val, n_files) -> int:
+    canonical = make_canonical(glob_by_val)
+    shared_keys = set(scopes.get("shared", {}))
+    key_scopes: dict[str, set[str]] = defaultdict(set)
+    for scope, kv in scopes.items():
+        if scope != "shared":
+            for k in kv:
+                key_scopes[k].add(scope)
+
+    scoped_total = sum(len(kv) for sc, kv in scopes.items() if sc != "shared")
+    print(f"Parsed {n_files} enUS files: {len(scopes)} scopes, {len(shared_keys)} shared "
+          f"keys, {scoped_total} scoped keys, {len(blizz)} Blizzard globals.")
+    print("NOTE: identical enUS value != identical translation — review meaning before "
+          "collapsing (B safest).\n")
 
     # ---- A. Shared collisions ----
     collisions = sorted(k for k in key_scopes if k in shared_keys)
-    print(f"== A. SHARED COLLISIONS ({len(collisions)}) -> delete from scope ==")
+    print(f"== A. SHARED COLLISIONS ({len(collisions)}) -> delete from scope (contract) ==")
     for k in collisions:
-        print(f"  {k}: defined in {', '.join(sorted(key_scopes[k]))}")
+        print(f"  {k}: also defined in {', '.join(sorted(key_scopes[k]))}")
     print()
 
-    # ---- B. Blizzard-global candidates (name match), excluding shared collisions ----
-    blizz_exact, blizz_namebrk = [], []
+    # ---- B. Blizzard adoption BY VALUE ----
+    routed_b: set[tuple[str, str]] = set()
+    b_hits = sorted((v for v in sites if canonical(v) and is_meaningful(v)),
+                    key=lambda v: (-len(sites[v]), v.lower()))
+    for v in b_hits:
+        routed_b |= sites[v]
+    print(f"== B. BLIZZARD BY VALUE ({len(b_hits)} strings, "
+          f"{sum(len(sites[v]) for v in b_hits)} sites) -> Phase 2 bare global ==")
+    for v in b_hits:
+        print(f'  {canonical(v)} = "{v}"   [{len(sites[v])} sites]')
+        print(f"       {fmt_sites(sites[v])}")
+    print()
+
+    # ---- C. Consolidation BY VALUE (no usable global) ----
+    routed_c: set[tuple[str, str]] = set()
+    consol = sorted((v for v, st in sites.items()
+                     if not canonical(v) and len(st) >= 2 and is_meaningful(v)),
+                    key=lambda v: (-len(sites[v]), v.lower()))
+    print(f"== C. CONSOLIDATE BY VALUE ({len(consol)} strings) -> Phase 1 promote/normalize ==")
+    for v in consol:
+        st = sites[v]
+        routed_c |= st
+        names = sorted({k for _, k in st})
+        tag = f"{len(names)} key names (rename)" if len(names) > 1 else "1 key name"
+        hint = ""
+        if v in glob_by_val:
+            hint = f"  [incidental global, IGNORE unless apt: {'/'.join(glob_by_val[v][:3])}]"
+        print(f'  "{v}"   [{len(st)} sites; {tag}]{hint}')
+        print(f"       {fmt_sites(st)}")
+    print()
+
+    # ---- D. Per-scope translate remainder ----
+    removed = defaultdict(int)
+    for scope, _ in (routed_b | routed_c):
+        removed[scope] += 1
+    rows = [(sc, len(scopes[sc]), removed.get(sc, 0)) for sc in sorted(scopes)]
+    width = max(len(r[0]) for r in rows)
+    print("== D. PER-SCOPE TRANSLATE REMAINDER (total - routed to global/shared) ==")
+    print(f"  {'scope'.ljust(width)}  total  routed  =translate")
+    for sc, total, rem in rows:
+        print(f"  {sc.ljust(width)}  {total:5d}  {rem:6d}  {total - rem:9d}")
+    g_total = sum(r[1] for r in rows)
+    g_routed = sum(r[2] for r in rows)
+    print(f"  {'-' * (width + 26)}")
+    print(f"  all keys: {g_total} | routed to global/shared: {g_routed} | "
+          f"remaining: {g_total - g_routed}")
+    print(f"  Phase-2 (global) strings translate 0x; ~{len(consol)} consolidated strings "
+          f"translate 1x in shared.")
+    print()
+
+    # ---- E. Name-match traps ----
+    traps = []
     for k in sorted(key_scopes):
-        if k in shared_keys or k not in blizz:
-            continue
-        vals = key_vals.get(k, set())
-        if vals and all(v == blizz[k] for v in vals):
-            blizz_exact.append(k)
-        else:
-            blizz_namebrk.append(k)
-    print(f"== B. BLIZZARD CANDIDATES -> Phase 2 (bare global) ==")
-    print(f"  -- exact value match ({len(blizz_exact)}) --")
-    for k in blizz_exact:
-        print(f"    {k} = \"{blizz[k]}\"  [{len(key_scopes[k])} scope(s)]")
-    print(f"  -- name match, VALUE DIFFERS ({len(blizz_namebrk)}) -- review before adopting --")
-    for k in blizz_namebrk:
-        ours = " | ".join(sorted(key_vals.get(k, set()))) or "(expr)"
-        print(f"    {k}: Blizzard=\"{blizz[k]}\"  ours=\"{ours}\"")
-    print()
-
-    # ---- C. Cross-scope duplicates not covered by A/B ----
-    # Same NAME in >=2 scopes splits two ways: values AGREE (one real string ->
-    # genuine promote-to-shared) vs values DIFFER (same name, per-addon meaning ->
-    # NOT shared; promoting would force one wrong value).
-    covered = set(collisions) | set(blizz_exact)
-    dupes = [k for k, sc in key_scopes.items() if len(sc) >= 2 and k not in covered]
-    agree = sorted((k for k in dupes if len(key_vals.get(k, set())) <= 1),
-                   key=lambda k: (-len(key_scopes[k]), k))
-    differ = sorted((k for k in dupes if len(key_vals.get(k, set())) > 1),
-                    key=lambda k: (-len(key_scopes[k]), k))
-
-    print(f"== C. CROSS-SCOPE DUPLICATES ({len(dupes)}) ==")
-    print(f"  -- C1: values AGREE ({len(agree)}) -> Phase 1 promote candidates --")
-    for k in agree:
-        val = next(iter(key_vals.get(k, {"(expr)"})))
-        print(f"    {k}: {len(key_scopes[k])} scopes = \"{val}\"")
-    print(f"  -- C2: values DIFFER ({len(differ)}) -> per-addon, do NOT promote --")
-    for k in differ:
-        print(f"    {k}: {len(key_scopes[k])} scopes, {len(key_vals[k])} distinct values")
-    print()
-
-    # ---- D. Per-scope totals + must-translate remainder ----
-    print("== D. PER-SCOPE TOTALS (remainder = must-translate for Phase 3) ==")
-    removable = set(collisions) | set(blizz_exact)
-    rows = []
-    for scope in sorted(scopes):
-        if scope == "shared":
-            continue
-        total = len(scopes[scope])
-        remove = sum(1 for k in scopes[scope] if k in removable)
-        rows.append((scope, total, remove, total - remove))
-    width = max((len(s) for s, *_ in rows), default=10)
-    print(f"  {'scope'.ljust(width)}  total  -covered  =translate")
-    for scope, total, remove, rem in rows:
-        print(f"  {scope.ljust(width)}  {total:5d}  {remove:8d}  {rem:9d}")
-    grand = sum(r[3] for r in rows)
-    print(f"  {'TOTAL'.ljust(width)}  {'':5}  {'':8}  {grand:9d}")
+        if k in blizz and k not in shared_keys:
+            ours = {scopes[s].get(k) for s in key_scopes[k]}
+            ours.discard(None)
+            if ours and blizz[k] not in ours:
+                traps.append((k, blizz[k], sorted(ours)))
+    print(f"== E. NAME-MATCH TRAPS ({len(traps)}) -- global shares the NAME, different "
+          f"value; never route by name ==")
+    for k, gval, ours in traps:
+        print(f'  {k}: global="{gval}"  ours={" | ".join(chr(34) + o + chr(34) for o in ours)}')
     return 0
+
+
+def scope_report(scopes, sites, glob_by_val, target: str) -> int:
+    canonical = make_canonical(glob_by_val)
+    shared_keys = set(scopes.get("shared", {}))
+    kv = scopes.get(target)
+    if kv is None:
+        print(f"Unknown scope '{target}'. Available scopes:")
+        for s in sorted(scopes):
+            print(f"  {s}")
+        return 1
+
+    coll, blz, cons, uniq = [], [], [], []
+    for key in sorted(kv):
+        val = kv[key]
+        if key in shared_keys:
+            coll.append((key, val))
+        elif val is not None and canonical(val):
+            blz.append((key, val, canonical(val)))
+        elif val is not None and is_meaningful(val) and len(sites[val]) >= 2:
+            cons.append((key, val, sorted(sites[val] - {(target, key)})))
+        else:
+            uniq.append((key, val))
+
+    print(f"== SCOPE WORKLIST: {target} ({len(kv)} keys) ==")
+    print(f"   delete={len(coll)}  blizzard={len(blz)}  consolidate={len(cons)}  "
+          f"translate={len(uniq)}\n")
+
+    print(f"-- A. DELETE (shared already owns) ({len(coll)}) --")
+    for k, v in coll:
+        print(f'  {k} = "{v}"')
+    print(f"\n-- B. BLIZZARD GLOBAL ({len(blz)}) -> replace L[key] with bare global --")
+    for k, v, g in blz:
+        print(f'  {k} = "{v}"  ->  {g}')
+    print(f"\n-- C. CONSOLIDATE ({len(cons)}) -> one shared key (also used elsewhere) --")
+    for k, v, others in cons:
+        print(f'  {k} = "{v}"')
+        if others:
+            print(f"       also: {fmt_sites(others)}")
+    print(f"\n-- D. TRANSLATE (unique to this scope) ({len(uniq)}) --")
+    for k, v in uniq:
+        print(f'  {k} = "{v if v is not None else "(expr)"}"')
+    return 0
+
+
+def main(argv=None) -> int:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except AttributeError:
+        pass
+    ap = argparse.ArgumentParser(description="Locale key/value rollout analysis.")
+    ap.add_argument("--scope", metavar="NAME",
+                    help="print a per-key worklist for one scope (e.g. OneWoW_Bags)")
+    args = ap.parse_args(argv)
+
+    root = Path.cwd()
+    scopes, sites, blizz, glob_by_val, n_files = build_indexes(root)
+    if args.scope:
+        return scope_report(scopes, sites, glob_by_val, args.scope)
+    return full_report(scopes, sites, blizz, glob_by_val, n_files)
 
 
 if __name__ == "__main__":
