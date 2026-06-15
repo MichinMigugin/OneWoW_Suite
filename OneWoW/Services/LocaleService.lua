@@ -16,6 +16,7 @@ local _, OneWoW = ...
 --     PLACE so cached `local L = OneWoW.Locale:GetTable(scope)` never goes stale.
 --   * A missing key resolves to its own name (never nil).
 
+---@class OneWoW.Locale
 local Locale = {}
 OneWoW.Locale = Locale
 
@@ -87,8 +88,12 @@ function Locale:_resolveScope(scope)
     end
 end
 
--- Register a table of KEY=value into store[scope][locale]. Safe at file-load.
--- Folds the scope immediately so reads work without waiting for SetLanguage.
+--- Register a table of KEY=value into store[scope][locale]. Safe at file-load.
+--- Folds the scope immediately so reads work without waiting for SetLanguage.
+---@param scope string registration scope (ADDON_NAME, or "shared" via RegisterShared)
+---@param locale string WoW locale code (enUS, koKR, …); esMX is aliased to esES
+---@param entries table { KEY = value } pairs merged into the scope/locale store
+---@return OneWoW.Locale self for chaining
 function Locale:Register(scope, locale, entries)
     assert(type(scope) == "string", "Locale:Register - scope must be a string")
     assert(type(locale) == "string", "Locale:Register - locale must be a string")
@@ -115,13 +120,20 @@ function Locale:Register(scope, locale, entries)
     return self
 end
 
--- Sugar for the shared scope (THEME_*, language names, MINIMAP_* labels, buttons).
+--- Sugar for the shared scope (THEME_*, language names, MINIMAP_* labels, buttons).
+---@param locale string WoW locale code
+---@param entries table { KEY = value } pairs merged into the shared scope
+---@return OneWoW.Locale self for chaining
 function Locale:RegisterShared(locale, entries)
     return self:Register(SHARED_SCOPE, locale, entries)
 end
 
--- Identity-stable, read-only view for a scope. Cache it once at file scope.
--- Resolution order: scope -> shared -> key name.
+--- Identity-stable, read-only view for a scope. Cache it once at file scope; it
+--- survives SetLanguage (the underlying resolved table mutates in place, the view
+--- table is never replaced). Resolution order: scope -> shared -> key name, so a
+--- miss returns the key string itself (never nil) to surface missing-key bugs.
+---@param scope string
+---@return table view read-only (__newindex is a noop); index it as `L.KEY`
 function Locale:GetTable(scope)
     local view = self._views[scope]
     if view then return view end
@@ -147,7 +159,10 @@ function Locale:GetTable(scope)
     return view
 end
 
--- Set the active language, refold every scope in place, fire OnApply listeners.
+--- Set the active language, refold every scope in place, fire OnApply listeners.
+--- Cached GetTable views stay valid (resolved tables mutate, not replaced).
+---@param lang string locale code; nil/unknown falls back to enUS
+---@return OneWoW.Locale self for chaining
 function Locale:SetLanguage(lang)
     self._activeLang = NormalizeLocale(lang) or DEFAULT_LOCALE
     for scope in pairs(self.store) do
@@ -160,25 +175,32 @@ function Locale:SetLanguage(lang)
     return self
 end
 
+--- The active language code (defaults to enUS until SetLanguage runs).
+---@return string activeLang
 function Locale:GetLanguage()
     return self._activeLang
 end
 
--- Raw registered store for a scope: { [locale] = { KEY = value } }. For the rare
--- consumer that needs a SPECIFIC locale's raw strings (e.g. import/export
--- cross-locale maps, a DB-migration default in a fixed locale) rather than the
--- folded active-language view. Read-only by convention.
+--- Raw registered store for a scope: { [locale] = { KEY = value } }. For the rare
+--- consumer that needs a SPECIFIC locale's raw strings (e.g. import/export
+--- cross-locale maps, a DB-migration default in a fixed locale) rather than the
+--- folded active-language view. Read-only by convention.
+---@param scope string
+---@return table<string, table<string, any>>|nil store nil if the scope was never registered
 function Locale:GetStore(scope)
     return self.store[scope]
 end
 
--- Optional lookup: the resolved value for `key` (scope, then shared) if it was
--- registered, else nil. Unlike the view `L[key]` -- which returns the key name on a
--- miss to surface missing-key bugs -- this is for GENUINELY OPTIONAL localization:
--- "use a translation if one exists, otherwise a dynamic fallback" (e.g. localize a
--- built-in category name, else show the user's raw SavedVariables name). Do NOT use
--- it to paper over keys that should always exist -- use the view for those so the
--- miss is visible.
+--- Optional lookup: the resolved value for `key` (scope, then shared) if it was
+--- registered, else nil. Unlike the view `L[key]` -- which returns the key name on a
+--- miss to surface missing-key bugs -- this is for GENUINELY OPTIONAL localization:
+--- "use a translation if one exists, otherwise a dynamic fallback" (e.g. localize a
+--- built-in category name, else show the user's raw SavedVariables name). Do NOT use
+--- it to paper over keys that should always exist -- use the view for those so the
+--- miss is visible.
+---@param scope string
+---@param key string
+---@return any|nil value the registered value, or nil if absent in both scope and shared
 function Locale:GetOptional(scope, key)
     local r = self.resolved
     if r[scope] and r[scope][key] ~= nil then return r[scope][key] end
@@ -186,18 +208,22 @@ function Locale:GetOptional(scope, key)
     return nil
 end
 
--- Register a listener fired after each SetLanguage (rebuild cached UI strings).
--- Replaces the per-addon ApplyLanguage hook.
+--- Register a listener fired after each SetLanguage (rebuild cached UI strings).
+--- Replaces the per-addon ApplyLanguage hook. Listeners run under pcall, so a
+--- throwing listener routes to geterrorhandler() without blocking the others.
+---@param fn fun(activeLang: string)
+---@return OneWoW.Locale self for chaining
 function Locale:OnApply(fn)
     assert(type(fn) == "function", "Locale:OnApply - fn must be a function")
     tinsert(self._callbacks, fn)
     return self
 end
 
--- Collision audit: any key present in BOTH the shared scope and a non-shared scope
--- is a contract violation (it should have been one or the other, not both). Checks
--- the full key set across all registered locales, so a collision in an inactive
--- language is still caught. Returns an array of { scope = , key = }.
+--- Collision audit: any key present in BOTH the shared scope and a non-shared scope
+--- is a contract violation (it should have been one or the other, not both). Checks
+--- the full key set across all registered locales, so a collision in an inactive
+--- language is still caught.
+---@return { scope: string, key: string }[] collisions one entry per offending scope/key
 function Locale:Audit()
     local sharedKeys = {}
     local sharedStore = self.store[SHARED_SCOPE]
@@ -233,6 +259,10 @@ local function Hex(text, hex)
     return "|cff" .. hex .. text .. "|r"
 end
 
+--- Print the locale report to chat: active language, supported codes, per-scope key
+--- counts + registered locales, shared/scope collisions, and any unknown locales.
+--- Backs /owlocale; on-demand only (never auto-prints, never throws).
+---@return nil
 function Locale:PrintReport()
     print(Hex("OneWoW Locale", "ffd100") .. " — active language: " .. tostring(self._activeLang or "(none)"))
 
