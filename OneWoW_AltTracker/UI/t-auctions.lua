@@ -15,13 +15,13 @@ local columnsConfig = {
     {key = "item", label = L["AUCTIONS_COL_ITEM"], width = 150, fixed = false, align = "left", ttTitle = L["TT_COL_ITEM"], ttDesc = L["TT_COL_ITEM_DESC"]},
     {key = "qty", label = L["AUCTIONS_COL_QTY"], width = 40, fixed = true, align = "center", ttTitle = L["TT_COL_QTY"], ttDesc = L["TT_COL_QTY_DESC"]},
     {key = "each", label = L["AUCTIONS_COL_EACH"], width = 60, fixed = false, align = "left", ttTitle = L["TT_COL_EACH"], ttDesc = L["TT_COL_EACH_DESC"]},
-    {key = "total", label = L["AUCTIONS_COL_TOTAL"], width = 70, fixed = false, align = "left", ttTitle = L["TT_COL_TOTAL"], ttDesc = L["TT_COL_TOTAL_DESC"]},
-    {key = "bid", label = L["AUCTIONS_COL_BID"], width = 60, fixed = false, align = "left", ttTitle = L["TT_COL_BID"], ttDesc = L["TT_COL_BID_DESC"]},
+    {key = "total", label = TOTAL, width = 70, fixed = false, align = "left", ttTitle = TOTAL, ttDesc = L["TT_COL_TOTAL_DESC"]},
+    {key = "bid", label = BID, width = 60, fixed = false, align = "left", ttTitle = BID, ttDesc = L["TT_COL_BID_DESC"]},
     {key = "time", label = L["AUCTIONS_COL_TIME"], width = 50, fixed = true, align = "center", ttTitle = L["TT_COL_TIME"], ttDesc = L["TT_COL_TIME_DESC"]},
-    {key = "character", label = L["COL_CHARACTER"], width = 100, fixed = false, align = "left", ttTitle = L["TT_COL_CHARACTER_AUCTION"], ttDesc = L["TT_COL_CHARACTER_AUCTION_DESC"]},
-    {key = "faction", label = L["COL_FACTION"], width = 25, fixed = true, align = "icon", sortable = false, ttTitle = L["TT_COL_FACTION"], ttDesc = L["TT_COL_FACTION_DESC"]},
-    {key = "status", label = L["AUCTIONS_COL_STATUS"], width = 60, fixed = false, align = "left", ttTitle = L["TT_COL_AUCTION_STATUS"], ttDesc = L["TT_COL_AUCTION_STATUS_DESC"]},
-    {key = "delete", label = L["AUCTIONS_COL_DELETE"], width = 50, fixed = true, align = "center", sortable = false, ttTitle = L["TT_COL_DELETE"], ttDesc = L["TT_COL_DELETE_DESC"]}
+    {key = "character", label = CHARACTER, width = 100, fixed = false, align = "left", ttTitle = CHARACTER, ttDesc = L["TT_COL_CHARACTER_AUCTION_DESC"]},
+    {key = "faction", label = L["COL_FACTION"], width = 25, fixed = true, align = "icon", sortable = false, ttTitle = FACTION, ttDesc = L["TT_COL_FACTION_DESC"]},
+    {key = "status", label = STATUS, width = 60, fixed = false, align = "left", ttTitle = STATUS, ttDesc = L["TT_COL_AUCTION_STATUS_DESC"]},
+    {key = "delete", label = L["AUCTIONS_COL_DELETE"], width = 50, fixed = true, align = "center", sortable = false, ttTitle = DELETE, ttDesc = L["TT_COL_DELETE_DESC"]}
 }
 
 local onHeaderCreate = function(btn, col, index)
@@ -161,11 +161,11 @@ function ns.UI.CreateAuctionsTab(parent)
 
     local filterButtons = {}
     local filterOptions = {
-        {key = "all", label = L["AUCTIONS_FILTER_ALL"], tooltip = L["AUCTIONS_FILTER_ALL_DESC"]},
+        {key = "all", label = ALL, tooltip = L["AUCTIONS_FILTER_ALL_DESC"]},
         {key = "auctions", label = L["AUCTIONS_FILTER_AUCTIONS"], tooltip = L["AUCTIONS_FILTER_AUCTIONS_DESC"]},
         {key = "bids", label = L["AUCTIONS_FILTER_BIDS"], tooltip = L["AUCTIONS_FILTER_BIDS_DESC"]},
         {key = "expiring", label = L["AUCTIONS_FILTER_EXPIRING"], tooltip = L["AUCTIONS_FILTER_EXPIRING_DESC"]},
-        {key = "history", label = L["AUCTIONS_FILTER_HISTORY"], tooltip = L["AUCTIONS_FILTER_HISTORY_DESC"]},
+        {key = "history", label = HISTORY, tooltip = L["AUCTIONS_FILTER_HISTORY_DESC"]},
     }
 
     for i, option in ipairs(filterOptions) do

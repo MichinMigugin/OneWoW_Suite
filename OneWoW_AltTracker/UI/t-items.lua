@@ -35,7 +35,7 @@ local columnsConfig = {
     {key = "expand", label = "",                      width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],          ttDesc = L["TT_COL_EXPAND_DESC"]},
     {key = "favorite", label = L["ITEMS_COL_FAVORITE"], width = 28, fixed = true, align = "center", sortable = false, ttTitle = L["TT_ITEMS_COL_FAVORITE"], ttDesc = L["TT_ITEMS_COL_FAVORITE_DESC"]},
     {key = "item",   label = L["ITEMS_COL_ITEM"],     width = 150, fixed = false, align = "left",                     ttTitle = L["TT_ITEMS_COL_ITEM"],     ttDesc = L["TT_ITEMS_COL_ITEM_DESC"]},
-    {key = "total",  label = L["ITEMS_COL_TOTAL"],    width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_ITEMS_COL_TOTAL"],    ttDesc = L["TT_ITEMS_COL_TOTAL_DESC"]},
+    {key = "total",  label = TOTAL,    width = 45,  fixed = true,  align = "center",                   ttTitle = TOTAL,    ttDesc = L["TT_ITEMS_COL_TOTAL_DESC"]},
     {key = "vendor", label = L["ITEMS_COL_VENDOR"],   width = 80,  fixed = false, align = "right",                    ttTitle = L["TT_ITEMS_COL_VENDOR"],   ttDesc = L["TT_ITEMS_COL_VENDOR_DESC"]},
     {key = "ah",     label = L["ITEMS_COL_AH"],       width = 80,  fixed = false, align = "right",                    ttTitle = L["TT_ITEMS_COL_AH"],       ttDesc = L["TT_ITEMS_COL_AH_DESC"]},
     {key = "lastseen", label = L["ITEMS_COL_LAST_SEEN"], width = 85, fixed = true, align = "center",                  ttTitle = L["TT_ITEMS_COL_LAST_SEEN"], ttDesc = L["TT_ITEMS_COL_LAST_SEEN_DESC"]},
@@ -395,7 +395,7 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
 end
 
 local function FormatLastSeen(timestamp)
-    if not timestamp or timestamp == 0 then return L["FMT_NEVER"] end
+    if not timestamp or timestamp == 0 then return NEVER end
     local hours = (time() - timestamp) / 3600
     if hours < 24 then
         return math.max(1, math.floor(hours)) .. " hr"
@@ -640,7 +640,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
                                 end
                                 items[itemID].totalQty = items[itemID].totalQty + (itemData.stackCount or 1)
                                 if ts > (items[itemID].lastSeenTime or 0) then items[itemID].lastSeenTime = ts end
-                                AddToLocation(items[itemID], guildName, L["BANK_GUILD"], itemData.stackCount or 1)
+                                AddToLocation(items[itemID], guildName, GUILD, itemData.stackCount or 1)
                             end
                         end
                     end

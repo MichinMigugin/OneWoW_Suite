@@ -29,7 +29,7 @@ local function ComputeRemaining(mail)
 end
 
 local function FormatExpiry(seconds)
-    if not seconds then return L["FMT_NEVER"], { 0.6, 0.6, 0.6 } end
+    if not seconds then return NEVER, { 0.6, 0.6, 0.6 } end
     if seconds <= 0 then return L["FMT_LESS_THAN_MINUTE"], { 1, 0.3, 0.3 } end
     local days = math.floor(seconds / SECONDS_PER_DAY)
     local hours = math.floor((seconds % SECONDS_PER_DAY) / 3600)
@@ -51,7 +51,7 @@ local function FormatExpiry(seconds)
 end
 
 local function FormatAgo(epoch)
-    if not epoch or epoch <= 0 then return L["FMT_NEVER"] end
+    if not epoch or epoch <= 0 then return NEVER end
     local diff = time() - epoch
     if diff < 60 then return L["FMT_NOW"] end
     local days = math.floor(diff / SECONDS_PER_DAY)
@@ -177,7 +177,7 @@ local function EnsureDialog()
         showScrollFrame = true,
         escClose = true,
         buttons = {
-            { text = L["MAIL_DETAIL_CLOSE"], onClick = function(dialog) dialog:Hide() end },
+            { text = CLOSE, onClick = function(dialog) dialog:Hide() end },
         },
     })
 
@@ -202,7 +202,7 @@ function ns.UI.ShowMailDetail(charKey)
     dialog.titleBar._titleText:SetText(string.format(L["MAIL_DETAIL_TITLE"], charName))
 
     local summary = ns.UI.GetMailSummaryForChar and ns.UI.GetMailSummaryForChar(charKey)
-    local lastScanText = summary and summary.lastScan and FormatAgo(summary.lastScan) or L["FMT_NEVER"]
+    local lastScanText = summary and summary.lastScan and FormatAgo(summary.lastScan) or NEVER
     if summary and summary.count > 0 then
         local oldestText = summary.oldestExpirySeconds and (select(1, FormatExpiry(summary.oldestExpirySeconds))) or "-"
         dialog._subtitle:SetText(string.format(L["MAIL_DETAIL_SUBTITLE"], summary.count, oldestText, lastScanText))

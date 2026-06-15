@@ -162,6 +162,13 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
   exclude]` / `[dead -> strip only]` by scanning the addon's code — the dynamic-ref
   audit is now built in (still manually confirm `dead` keys aren't runtime-constructed).
 
+- [x] `OneWoW_AltTracker` — 81 keys adopted (145 call sites); 22 new globals
+  (incl. stat abbreviations `AGI`/`INT`/`STA`/`STR`, `HEALER`/`TANK`,
+  `SPECIALIZATION`, `DURABILITY`, `ENCHANTS`, `BID`, `RATING`, …). 2 dynamic
+  excluded (`FIN_CAT_VENDOR_BUYBACK`, `Unknown`); 26 dead keys stripped. Worklist
+  driven by parsing the tool's auto-classified output (109 candidates). Construction
+  audit confirmed clean before trusting `dead` tags.
+
 ### Phase 3 — Consolidate to shared (pending)
 Baseline: **430 strings**. Per-addon sub-phases. For each value group:
 - [ ] Pick the canonical key name (often the simplest existing one) and value.

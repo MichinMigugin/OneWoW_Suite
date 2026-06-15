@@ -97,7 +97,7 @@ local function FormatRemaining(seconds)
 end
 
 local function FormatAgo(epoch)
-    if not epoch or epoch <= 0 then return ns.L["FMT_NEVER"] end
+    if not epoch or epoch <= 0 then return NEVER end
     local diff = time() - epoch
     if diff < 60 then return ns.L["FMT_NOW"] end
     return FormatRemaining(diff)

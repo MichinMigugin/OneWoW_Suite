@@ -887,7 +887,7 @@ function ns.UI.CreateSettingsTab(parent)
             RebuildBossList()
         end)
 
-        local closeBtn2 = OneWoW_GUI:CreateFitTextButton(overrideDialog, { text = L["OVERRIDE_CLOSE"], height = 30 })
+        local closeBtn2 = OneWoW_GUI:CreateFitTextButton(overrideDialog, { text = CLOSE, height = 30 })
         closeBtn2:ClearAllPoints()
         closeBtn2:SetPoint("BOTTOMRIGHT", overrideDialog, "BOTTOMRIGHT", -10, 10)
         closeBtn2:SetScript("OnClick", function() overrideDialog:Hide() end)
@@ -1143,7 +1143,7 @@ function ns.UI.CreateSettingsTab(parent)
 
         sc2:SetHeight(math.abs(cdy) + 20)
 
-        local clearBtn = OneWoW_GUI:CreateFitTextButton(checklistDialog, { text = L["SEASON_CHECKLIST_CLEAR"], height = 30 })
+        local clearBtn = OneWoW_GUI:CreateFitTextButton(checklistDialog, { text = CLEAR_ALL, height = 30 })
         clearBtn:ClearAllPoints()
         clearBtn:SetPoint("BOTTOMLEFT", checklistDialog, "BOTTOMLEFT", 10, 10)
         clearBtn:SetScript("OnClick", function()
@@ -1159,7 +1159,7 @@ function ns.UI.CreateSettingsTab(parent)
             end
         end)
 
-        local closeBtnCL = OneWoW_GUI:CreateFitTextButton(checklistDialog, { text = L["OVERRIDE_CLOSE"], height = 30 })
+        local closeBtnCL = OneWoW_GUI:CreateFitTextButton(checklistDialog, { text = CLOSE, height = 30 })
         closeBtnCL:ClearAllPoints()
         closeBtnCL:SetPoint("BOTTOMRIGHT", checklistDialog, "BOTTOMRIGHT", -10, 10)
         closeBtnCL:SetScript("OnClick", function() checklistDialog:Hide() end)

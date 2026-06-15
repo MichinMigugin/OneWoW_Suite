@@ -26,7 +26,7 @@ end
 
 function Formatters:FormatRelativeTime(timestamp)
     if not timestamp then
-        return L["FMT_NEVER"]
+        return NEVER
     end
 
     local now = time()

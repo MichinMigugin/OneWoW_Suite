@@ -55,7 +55,7 @@ local function ShowRestoreBarDialog(setName, sourceBarNumber, parent)
                 end
                 dialog:Hide()
             end },
-            { text = L["AB_LABEL_CANCEL"], onClick = function(dialog) dialog:Hide() end },
+            { text = CANCEL, onClick = function(dialog) dialog:Hide() end },
         },
     })
 
@@ -108,7 +108,7 @@ local function ShowRestoreAllDialog(setName)
                 end
                 dialog:Hide()
             end },
-            { text = L["AB_LABEL_CANCEL"], onClick = function(dialog) dialog:Hide() end },
+            { text = CANCEL, onClick = function(dialog) dialog:Hide() end },
         },
     })
     result.frame:Show()
@@ -180,7 +180,7 @@ local function ShowRestoreMacrosDialog(setName, setData)
         result.frame:Hide()
     end)
 
-    local cancelBtn = OneWoW_GUI:CreateFitTextButton(cf, { text = L["AB_LABEL_CANCEL"], height = 30 })
+    local cancelBtn = OneWoW_GUI:CreateFitTextButton(cf, { text = CANCEL, height = 30 })
     cancelBtn:SetPoint("TOP", charBtn, "BOTTOM", 0, -8)
     cancelBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     cancelBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
@@ -207,7 +207,7 @@ local function ShowBackupDialog(split)
         height = 200,
         movable = false,
         buttons = {
-            { text = L["AB_BACKUP_SET_SAVE"], color = {OneWoW_GUI:GetThemeColor("BTN_NORMAL")}, onClick = function(dialog)
+            { text = SAVE, color = {OneWoW_GUI:GetThemeColor("BTN_NORMAL")}, onClick = function(dialog)
                 local nameBox = dialog.nameEditBox
                 if nameBox then
                     local setName = strtrim(nameBox:GetText())
@@ -228,7 +228,7 @@ local function ShowBackupDialog(split)
                 end
                 dialog:Hide()
             end },
-            { text = L["AB_LABEL_CANCEL"], onClick = function(dialog) dialog:Hide() end },
+            { text = CANCEL, onClick = function(dialog) dialog:Hide() end },
         },
     })
 
@@ -295,7 +295,7 @@ local function ShowRenameDialog(split, oldName)
                 end
                 dialog:Hide()
             end },
-            { text = L["AB_LABEL_CANCEL"], onClick = function(dialog) dialog:Hide() end },
+            { text = CANCEL, onClick = function(dialog) dialog:Hide() end },
         },
     })
 
@@ -330,7 +330,7 @@ local function ShowDeleteDialog(split, setName)
         title = L["AB_DELETE_SET_TITLE"],
         message = string.format(L["AB_DELETE_SET_MESSAGE"], setName),
         buttons = {
-            { text = L["AB_DELETE_SET_CONFIRM"], color = {OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL")}, onClick = function(dialog)
+            { text = DELETE, color = {OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL")}, onClick = function(dialog)
                 if ns.ActionBarsModule then
                     ns.ActionBarsModule:DeleteActionBarSet(setName)
                     selectedSetName = nil
@@ -347,7 +347,7 @@ local function ShowDeleteDialog(split, setName)
                 end
                 dialog:Hide()
             end },
-            { text = L["AB_LABEL_CANCEL"], onClick = function(dialog) dialog:Hide() end },
+            { text = CANCEL, onClick = function(dialog) dialog:Hide() end },
         },
     })
     OneWoW_GUI:ApplyFontToFrame(result.frame)
@@ -425,7 +425,7 @@ function ns.UI.ShowSetDetails(split, setName)
         ShowRenameDialog(split, setName)
     end)
 
-    local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = L["AB_DELETE_SET"], height = 24 })
+    local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = DELETE, height = 24 })
     deleteBtn:SetPoint("RIGHT", renameBtn, "LEFT", -6, 0)
     deleteBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
     deleteBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
@@ -706,7 +706,7 @@ function ns.UI.BuildActionBarSetsList(split, filterText)
         favLabel:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 8, yOffset)
         favLabel:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -8, yOffset)
         favLabel:SetJustifyH("LEFT")
-        favLabel:SetText(L["AB_FAVORITES_SECTION"])
+        favLabel:SetText(FAVORITES)
         favLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
         yOffset = yOffset - favLabel:GetStringHeight() - 4
 
@@ -873,7 +873,7 @@ function ns.UI.CreateActionBarsTab(parent)
 
     local controlTitle = OneWoW_GUI:CreateFS(controlPanel, 12)
     controlTitle:SetPoint("LEFT", controlPanel, "LEFT", 10, 0)
-    local currentSpec = select(2, GetSpecializationInfo(GetSpecialization())) or L["AB_UNKNOWN_SPEC"]
+    local currentSpec = select(2, GetSpecializationInfo(GetSpecialization())) or UNKNOWN
     controlTitle:SetText(UnitName("player") .. " - " .. currentSpec)
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
@@ -907,14 +907,14 @@ function ns.UI.CreateActionBarsTab(parent)
     local filterDropdown, filterDropdownText = OneWoW_GUI:CreateDropdown(controlPanel, {
         width = 160,
         height = 28,
-        text = L["AB_FILTER_ALL"],
+        text = ALL_CLASSES,
     })
     filterDropdown:SetPoint("RIGHT", backupBtn, "LEFT", -10, 0)
 
     OneWoW_GUI:AttachFilterMenu(filterDropdown, {
         searchable = false,
         buildItems = function()
-            local items = {{ value = nil, text = L["AB_FILTER_ALL"] }}
+            local items = {{ value = nil, text = ALL_CLASSES }}
             local sets = ns.ActionBarsModule and ns.ActionBarsModule:GetActionBarSets() or {}
             local classesFound = {}
             for _, data in pairs(sets) do

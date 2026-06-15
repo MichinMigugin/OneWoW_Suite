@@ -250,7 +250,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     local progressTab = CreateTab("progress", L["SUBTAB_PROGRESS"])
     ns.UI.CreateProgressTab(progressTab)
 
-    local bankTab = CreateTab("bank", L["SUBTAB_BANK"])
+    local bankTab = CreateTab("bank", BANK)
     ns.UI.CreateBankTab(bankTab)
 
     local equipmentTab = CreateTab("equipment", L["SUBTAB_EQUIPMENT"])
@@ -259,7 +259,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     local professionsTab = CreateTab("professions", L["SUBTAB_PROFESSIONS"])
     ns.UI.CreateProfessionsTab(professionsTab)
 
-    local auctionsTab = CreateTab("auctions", L["SUBTAB_AUCTIONS"])
+    local auctionsTab = CreateTab("auctions", AUCTIONS)
     ns.UI.CreateAuctionsTab(auctionsTab)
 
     local financialsTab = CreateTab("financials", L["SUBTAB_FINANCIALS"])
@@ -270,7 +270,7 @@ function ns.UI:CreateMainFrame(defaultTab)
         end
     end)
 
-    local itemsTab = CreateTab("items", L["SUBTAB_ITEMS"])
+    local itemsTab = CreateTab("items", ITEMS)
     ns.UI.CreateItemsTab(itemsTab)
     itemsTab:SetScript("OnShow", function()
         if ns.UI.RefreshItemsTab then
@@ -284,7 +284,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     local lockoutsTab = CreateTab("lockouts", L["SUBTAB_LOCKOUTS"])
     ns.UI.CreateLockoutsTab(lockoutsTab)
 
-    local settingsTab = CreateTab("settings", L["TAB_SETTINGS"])
+    local settingsTab = CreateTab("settings", SETTINGS)
     ns.UI.CreateSettingsTab(settingsTab)
 
     C_Timer.After(0.1, function() UpdateTabLayout() end)

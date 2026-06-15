@@ -111,7 +111,7 @@ function ns.UI.CreateBankTab(parent)
 
     local personalBtn = CreateBankTypeButton(L["BANK_PERSONAL"], "personal", 1)
     local warbandBtn = CreateBankTypeButton(L["BANK_WARBAND"], "warband", 2)
-    local guildBtn = CreateBankTypeButton(L["BANK_GUILD"], "guild", 3)
+    local guildBtn = CreateBankTypeButton(GUILD, "guild", 3)
     local bagsBtn = CreateBankTypeButton(L["BANK_BAGS"], "bags", 4)
 
     parent.bankTypeButtons = { personalBtn, warbandBtn, guildBtn, bagsBtn }
@@ -498,14 +498,14 @@ function ns.UI.RefreshBankDisplay(parent)
 
     if parent.controlTitle then
         if currentBankType == "guild" and selectedGuildName then
-            parent.controlTitle:SetText(selectedGuildName .. " - " .. L["BANK_GUILD"])
+            parent.controlTitle:SetText(selectedGuildName .. " - " .. GUILD)
         else
             parent.controlTitle:SetText(charName .. " - " .. bankTypeName)
         end
     end
 
     if parent.statusText then
-        parent.statusText:SetText(L["BANK_VIEWING"] .. ": " .. charName .. " - " .. bankTypeName .. " - " .. #sortedItems .. " " .. L["BANK_ITEMS"])
+        parent.statusText:SetText(L["BANK_VIEWING"] .. ": " .. charName .. " - " .. bankTypeName .. " - " .. #sortedItems .. " " .. ITEMS)
     end
 end
 
@@ -544,7 +544,7 @@ function ns.UI.FilterBankItems(parent, searchText)
     local charName = selectedCharacterKey:match("([^-]+)") or selectedCharacterKey
     local bankTypeName = OneWoW.Locale:GetOptional(ADDON_NAME, "BANK_" .. currentBankType:upper()) or currentBankType
     if parent.statusText then
-        parent.statusText:SetText(L["BANK_VIEWING"] .. ": " .. charName .. " - " .. bankTypeName .. " - " .. #items .. " " .. L["BANK_ITEMS"])
+        parent.statusText:SetText(L["BANK_VIEWING"] .. ": " .. charName .. " - " .. bankTypeName .. " - " .. #items .. " " .. ITEMS)
     end
 end
 

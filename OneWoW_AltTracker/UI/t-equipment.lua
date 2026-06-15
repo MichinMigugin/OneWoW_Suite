@@ -74,26 +74,26 @@ function ns.UI.CreateEquipmentTab(parent)
     local columnsConfig = {
         {key = "expand",    label = "",                          width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],            ttDesc = L["TT_COL_EXPAND_DESC"]},
         {key = "star",      label = "",                          width = 30,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_STAR"],              ttDesc = L["TT_COL_STAR_DESC"]},
-        {key = "faction",   label = L["COL_FACTION"],            width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_FACTION"],           ttDesc = L["TT_COL_FACTION_DESC"]},
+        {key = "faction",   label = L["COL_FACTION"],            width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = FACTION,           ttDesc = L["TT_COL_FACTION_DESC"]},
         {key = "mail",      label = L["COL_MAIL"],               width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_MAIL"],              ttDesc = L["TT_COL_MAIL_DESC"]},
-        {key = "name",      label = L["COL_CHARACTER"],          width = 135, fixed = false, align = "left",                     ttTitle = L["TT_COL_CHARACTER"],         ttDesc = L["TT_COL_CHARACTER_DESC"]},
-        {key = "level",     label = L["COL_LEVEL"],              width = 40,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_LEVEL"],             ttDesc = L["TT_COL_LEVEL_DESC"]},
+        {key = "name",      label = CHARACTER,          width = 135, fixed = false, align = "left",                     ttTitle = CHARACTER,         ttDesc = L["TT_COL_CHARACTER_DESC"]},
+        {key = "level",     label = L["COL_LEVEL"],              width = 40,  fixed = true,  align = "center",                   ttTitle = LEVEL,             ttDesc = L["TT_COL_LEVEL_DESC"]},
         {key = "itemLevel", label = L["EQUIPMENT_COL_ILVL"],     width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_ILVL"],             ttDesc = L["TT_COL_ILVL_DESC"]},
-        {key = "durability", label = L["EQUIPMENT_COL_DURABILITY"], width = 50, fixed = false, align = "center",                  ttTitle = L["TT_COL_DURABILITY"],       ttDesc = L["TT_COL_DURABILITY_DESC"]},
-        {key = "enchants",  label = L["EQUIPMENT_COL_ENCHANTS"], width = 55,  fixed = false, align = "center",                   ttTitle = L["TT_COL_ENCHANTS"],         ttDesc = L["TT_COL_ENCHANTS_DESC"]},
+        {key = "durability", label = L["EQUIPMENT_COL_DURABILITY"], width = 50, fixed = false, align = "center",                  ttTitle = DURABILITY,       ttDesc = L["TT_COL_DURABILITY_DESC"]},
+        {key = "enchants",  label = L["EQUIPMENT_COL_ENCHANTS"], width = 55,  fixed = false, align = "center",                   ttTitle = ENCHANTS,         ttDesc = L["TT_COL_ENCHANTS_DESC"]},
         {key = "gems",      label = L["EQUIPMENT_COL_GEMS"],    width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_GEMS"],             ttDesc = L["TT_COL_GEMS_DESC"]},
         {key = "tierSet",   label = L["EQUIPMENT_COL_TIER_SET"], width = 45,  fixed = false, align = "center",                   ttTitle = L["TT_COL_TIER_SET"],         ttDesc = L["TT_COL_TIER_SET_DESC"]},
-        {key = "str",       label = L["EQUIPMENT_COL_STR"],      width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_STR"],              ttDesc = L["TT_COL_STR_DESC"]},
-        {key = "agi",       label = L["EQUIPMENT_COL_AGI"],      width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_AGI"],              ttDesc = L["TT_COL_AGI_DESC"]},
-        {key = "sta",       label = L["EQUIPMENT_COL_STA"],      width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_STA"],              ttDesc = L["TT_COL_STA_DESC"]},
-        {key = "int",       label = L["EQUIPMENT_COL_INT"],      width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_INT"],              ttDesc = L["TT_COL_INT_DESC"]},
-        {key = "armor",     label = L["EQUIPMENT_COL_ARMOR"],    width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_ARMOR"],            ttDesc = L["TT_COL_ARMOR_DESC"]},
+        {key = "str",       label = STR,      width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_STR"],              ttDesc = L["TT_COL_STR_DESC"]},
+        {key = "agi",       label = AGI,      width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_AGI"],              ttDesc = L["TT_COL_AGI_DESC"]},
+        {key = "sta",       label = STA,      width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_STA"],              ttDesc = L["TT_COL_STA_DESC"]},
+        {key = "int",       label = INT,      width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_INT"],              ttDesc = L["TT_COL_INT_DESC"]},
+        {key = "armor",     label = ARMOR,    width = 50,  fixed = true,  align = "center",                   ttTitle = ARMOR,            ttDesc = L["TT_COL_ARMOR_DESC"]},
         {key = "ap",        label = L["EQUIPMENT_COL_AP"],       width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_AP"],               ttDesc = L["TT_COL_AP_DESC"]},
         {key = "crit",      label = L["EQUIPMENT_COL_CRIT"],     width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_CRIT"],             ttDesc = L["TT_COL_CRIT_DESC"]},
         {key = "haste",     label = L["EQUIPMENT_COL_HASTE"],    width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_HASTE"],            ttDesc = L["TT_COL_HASTE_DESC"]},
         {key = "mastery",   label = L["EQUIPMENT_COL_MASTERY"],  width = 60,  fixed = false, align = "center",                   ttTitle = L["TT_COL_MASTERY"],          ttDesc = L["TT_COL_MASTERY_DESC"]},
         {key = "vers",      label = L["EQUIPMENT_COL_VERS"],     width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_VERS"],             ttDesc = L["TT_COL_VERS_DESC"]},
-        {key = "status",    label = L["EQUIPMENT_COL_STATUS"],   width = 40,  fixed = false, align = "center",                   ttTitle = L["TT_COL_STATUS"],           ttDesc = L["TT_COL_STATUS_DESC"]}
+        {key = "status",    label = STATUS,   width = 40,  fixed = false, align = "center",                   ttTitle = STATUS,           ttDesc = L["TT_COL_STATUS_DESC"]}
     }
 
     local onHeaderCreate = function(btn, col, index)

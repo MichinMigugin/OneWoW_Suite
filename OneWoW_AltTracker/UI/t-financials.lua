@@ -144,7 +144,7 @@ end
 local function BuildCategoryMenuItems(includeAll)
     local items = {}
     if includeAll then
-        table.insert(items, { value = "all", text = L["FIN_CAT_ALL"] })
+        table.insert(items, { value = "all", text = ALL })
         table.insert(items, { type = "divider" })
     end
     table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_VENDOR"] })
@@ -180,7 +180,7 @@ local function BuildCategoryMenuItems(includeAll)
     table.insert(items, { value = "money_transfer_in", text = L["FIN_CAT_MONEY_IN"] })
     table.insert(items, { value = "money_transfer_out", text = L["FIN_CAT_MONEY_OUT"] })
     table.insert(items, { type = "divider" })
-    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_REWARD"] })
+    table.insert(items, { type = "header", text = REWARDS })
     table.insert(items, { value = "quest_reward", text = L["FIN_CAT_QUEST_REWARD"] })
     table.insert(items, { value = "loot_money", text = L["FIN_CAT_LOOT_MONEY"] })
     table.insert(items, { value = "mythicplus_reward", text = L["FIN_CAT_MYTHICPLUS"] })
@@ -190,7 +190,7 @@ local function BuildCategoryMenuItems(includeAll)
     table.insert(items, { value = "crafting_order_placed", text = L["FIN_CAT_ORDER_PLACED"] })
     table.insert(items, { value = "crafting_order_refund", text = L["FIN_CAT_ORDER_REFUND"] })
     table.insert(items, { type = "divider" })
-    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_OTHER"] })
+    table.insert(items, { type = "header", text = OTHER })
     table.insert(items, { value = "death_cost", text = L["FIN_CAT_DEATH_COST"] })
     table.insert(items, { value = "uncategorized", text = L["FIN_CAT_UNCATEGORIZED"] })
     return items
@@ -247,7 +247,7 @@ local function ShowDeleteConfirmation(tx)
         message = L["FIN_DELETE_CONFIRM"],
         buttons = {
             {
-                text = L["FIN_DELETE_ACCEPT"],
+                text = DELETE,
                 onClick = function(dialog)
                     local AccountingAddon = OneWoW_AltTracker_Accounting
                     if AccountingAddon and AccountingAddon.Transactions then
@@ -362,8 +362,8 @@ end
 local columnsConfig = {
     {key = "expand",    label = "",                      width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],         ttDesc = L["TT_COL_EXPAND_DESC"]},
     {key = "date",      label = L["FIN_COL_DATE"],      width = 100, fixed = false, align = "left",  ttTitle = L["TT_FIN_COL_DATE"],      ttDesc = L["TT_FIN_COL_DATE_DESC"]},
-    {key = "character", label = L["FIN_COL_CHARACTER"],  width = 90,  fixed = false, align = "left",  ttTitle = L["TT_FIN_COL_CHARACTER"],  ttDesc = L["TT_FIN_COL_CHARACTER_DESC"]},
-    {key = "category",  label = L["FIN_COL_CATEGORY"],   width = 100, fixed = false, align = "left",  ttTitle = L["TT_FIN_COL_CATEGORY"],  ttDesc = L["TT_FIN_COL_CATEGORY_DESC"]},
+    {key = "character", label = CHARACTER,  width = 90,  fixed = false, align = "left",  ttTitle = CHARACTER,  ttDesc = L["TT_FIN_COL_CHARACTER_DESC"]},
+    {key = "category",  label = CATEGORY,   width = 100, fixed = false, align = "left",  ttTitle = CATEGORY,  ttDesc = L["TT_FIN_COL_CATEGORY_DESC"]},
     {key = "item",      label = L["FIN_COL_ITEM"],       width = 130, fixed = false, align = "left",  ttTitle = L["TT_FIN_COL_ITEM"],      ttDesc = L["TT_FIN_COL_ITEM_DESC"]},
     {key = "amount",    label = L["FIN_COL_AMOUNT"],     width = 80,  fixed = false, align = "right", ttTitle = L["TT_FIN_COL_AMOUNT"],    ttDesc = L["TT_FIN_COL_AMOUNT_DESC"]},
 }
@@ -405,8 +405,8 @@ function ns.UI.CreateFinancialsTab(parent)
         {key = "today",  label = L["FIN_PERIOD_TODAY"],   tooltip = L["FIN_PERIOD_TODAY_TT"]},
         {key = "week",   label = L["FIN_PERIOD_WEEK"],    tooltip = L["FIN_PERIOD_WEEK_TT"]},
         {key = "month",  label = L["FIN_PERIOD_MONTH"],   tooltip = L["FIN_PERIOD_MONTH_TT"]},
-        {key = "reset",  label = L["FIN_PERIOD_CUSTOM"],  tooltip = L["FIN_PERIOD_CUSTOM_TT"]},
-        {key = "all",    label = L["FIN_PERIOD_ALL"],     tooltip = L["FIN_PERIOD_ALL_TT"]},
+        {key = "reset",  label = CUSTOM,  tooltip = L["FIN_PERIOD_CUSTOM_TT"]},
+        {key = "all",    label = ALL,     tooltip = L["FIN_PERIOD_ALL_TT"]},
     }
 
     local periodDropdown = OneWoW_GUI:CreateDropdown(filterPanel, {
@@ -443,7 +443,7 @@ function ns.UI.CreateFinancialsTab(parent)
     })
 
     local typeFilters = {
-        {key = "all",     label = L["FIN_FILTER_ALL"]},
+        {key = "all",     label = ALL},
         {key = "income",  label = L["FIN_FILTER_INCOME"]},
         {key = "expense", label = L["FIN_FILTER_EXPENSE"]},
     }
@@ -493,13 +493,13 @@ function ns.UI.CreateFinancialsTab(parent)
     charLabel:SetText(L["FIN_CHAR_LABEL"])
     charLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local charBtn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = L["FIN_CHAR_ALL"], height = 24 })
+    local charBtn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = ALL, height = 24 })
     charBtn:SetPoint("LEFT", charLabel, "RIGHT", 2, 0)
 
     charBtn:SetScript("OnClick", function(self)
         if parent.characterFilter then
             parent.characterFilter = nil
-            self.text:SetText(L["FIN_CHAR_ALL"])
+            self.text:SetText(ALL)
         else
             local charKey = ns.AltTrackerFormatters:GetCurrentCharacterKey()
             parent.characterFilter = charKey
@@ -516,7 +516,7 @@ function ns.UI.CreateFinancialsTab(parent)
     catLabel:SetText(L["FIN_CAT_LABEL"])
     catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local catDropdown = OneWoW_GUI:CreateDropdown(filterPanel, { width = 140, height = 24, text = L["FIN_CAT_ALL"] })
+    local catDropdown = OneWoW_GUI:CreateDropdown(filterPanel, { width = 140, height = 24, text = ALL })
     catDropdown:SetPoint("LEFT", catLabel, "RIGHT", 2, 0)
 
     OneWoW_GUI:AttachFilterMenu(catDropdown, {
@@ -531,7 +531,7 @@ function ns.UI.CreateFinancialsTab(parent)
         onSelect = function(value, text)
             if value == "all" then
                 parent.categoryFilter = nil
-                catDropdown._text:SetText(L["FIN_CAT_ALL"])
+                catDropdown._text:SetText(ALL)
             else
                 parent.categoryFilter = value
                 catDropdown._text:SetText(text)

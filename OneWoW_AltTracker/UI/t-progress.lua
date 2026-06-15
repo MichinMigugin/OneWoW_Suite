@@ -545,13 +545,13 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
         local p1 = grid:AddPanel(L["PROGRESS_GREAT_VAULT_DETAIL"])
         if endgameData and endgameData.greatVault and endgameData.greatVault.activities then
             local acts = endgameData.greatVault.activities
-            VaultTypeStr(grid, p1, acts.raid, L["PROGRESS_VAULT_RAID"])
+            VaultTypeStr(grid, p1, acts.raid, RAID)
             VaultTypeStr(grid, p1, acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
-            VaultTypeStr(grid, p1, acts.world, L["PROGRESS_VAULT_WORLD"])
+            VaultTypeStr(grid, p1, acts.world, WORLD)
         else
-            grid:AddLine(p1, L["PROGRESS_VAULT_RAID"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            grid:AddLine(p1, RAID .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
             grid:AddLine(p1, L["PROGRESS_VAULT_DUNGEON"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
-            grid:AddLine(p1, L["PROGRESS_VAULT_WORLD"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            grid:AddLine(p1, WORLD .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
         end
 
         local p2 = grid:AddPanel(L["PROGRESS_MPLUS_SEASON_BEST"])
@@ -673,13 +673,13 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
         end
         if endgameData and endgameData.greatVault and endgameData.greatVault.activities then
             local acts = endgameData.greatVault.activities
-            VaultRow(acts.raid, L["PROGRESS_VAULT_RAID"])
+            VaultRow(acts.raid, RAID)
             VaultRow(acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
-            VaultRow(acts.world, L["PROGRESS_VAULT_WORLD"])
+            VaultRow(acts.world, WORLD)
         else
-            grid:AddLine(p1, L["PROGRESS_VAULT_RAID"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            grid:AddLine(p1, RAID .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
             grid:AddLine(p1, L["PROGRESS_VAULT_DUNGEON"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
-            grid:AddLine(p1, L["PROGRESS_VAULT_WORLD"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            grid:AddLine(p1, WORLD .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
         end
 
         local resetSec = C_DateAndTime.GetSecondsUntilWeeklyReset()
@@ -697,7 +697,7 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
             for _, entry in ipairs(activities) do
                 local done = GetWeeklyActivityCompleted(endgameData, entry.questID)
                 local label = entry.name or C_QuestLog.GetTitleForQuestID(entry.questID) or ("Quest " .. entry.questID)
-                local text = label .. ": " .. (done and L["PROGRESS_WEEKLY_COMPLETED"] or L["PROGRESS_WEEKLY_NOT_DONE"])
+                local text = label .. ": " .. (done and DONE or L["PROGRESS_WEEKLY_NOT_DONE"])
                 local color = done
                     and {OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")}
                     or  {OneWoW_GUI:GetThemeColor("TEXT_MUTED")}
@@ -712,7 +712,7 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
             if bossName then bossStr = bossStr .. ": " .. bossName end
             grid:AddLine(p2, "Boss: " .. bossStr, {OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")})
         else
-            grid:AddLine(p2, "Boss: " .. L["PROGRESS_BOSS_NONE"], {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
+            grid:AddLine(p2, "Boss: " .. NONE, {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
         end
 
     elseif subTabKey == "currencies" then
@@ -734,13 +734,13 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
         local p2 = grid:AddPanel(L["PROGRESS_GREAT_VAULT_DETAIL"])
         if endgameData and endgameData.greatVault and endgameData.greatVault.activities then
             local acts = endgameData.greatVault.activities
-            VaultTypeStr(grid, p2, acts.raid, L["PROGRESS_VAULT_RAID"])
+            VaultTypeStr(grid, p2, acts.raid, RAID)
             VaultTypeStr(grid, p2, acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
-            VaultTypeStr(grid, p2, acts.world, L["PROGRESS_VAULT_WORLD"])
+            VaultTypeStr(grid, p2, acts.world, WORLD)
         else
-            grid:AddLine(p2, L["PROGRESS_VAULT_RAID"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            grid:AddLine(p2, RAID .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
             grid:AddLine(p2, L["PROGRESS_VAULT_DUNGEON"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
-            grid:AddLine(p2, L["PROGRESS_VAULT_WORLD"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            grid:AddLine(p2, WORLD .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
         end
     end
 
@@ -849,13 +849,13 @@ local function BuildCommonColumns()
     return {
         {key = "expand",  label = "",                  width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],    ttDesc = L["TT_COL_EXPAND_DESC"]},
         {key = "star",    label = "",                  width = 30,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_STAR"],      ttDesc = L["TT_COL_STAR_DESC"]},
-        {key = "faction", label = "F",                 width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_FACTION"],   ttDesc = L["TT_COL_FACTION_DESC"]},
+        {key = "faction", label = "F",                 width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = FACTION,   ttDesc = L["TT_COL_FACTION_DESC"]},
         {key = "mail",    label = "",                  width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_MAIL"],      ttDesc = L["TT_COL_MAIL_DESC"]},
-        {key = "name",    label = L["COL_CHARACTER"],  width = 135, minWidth = 135, flexWeight = 4, align = "left",                  ttTitle = L["TT_COL_CHARACTER"], ttDesc = L["TT_COL_CHARACTER_DESC"]},
+        {key = "name",    label = CHARACTER,  width = 135, minWidth = 135, flexWeight = 4, align = "left",                  ttTitle = CHARACTER, ttDesc = L["TT_COL_CHARACTER_DESC"]},
         {key = "server",  label = L["COL_SERVER"],     width = 50,  minWidth = 50,  flexWeight = 3, align = "left",                  ttTitle = L["TT_COL_SERVER"],    ttDesc = L["TT_COL_SERVER_DESC"]},
-        {key = "level",   label = L["COL_LEVEL"],      width = 40,  minWidth = 40,  flexWeight = 1, align = "center",                ttTitle = L["TT_COL_LEVEL"],     ttDesc = L["TT_COL_LEVEL_DESC"]},
+        {key = "level",   label = L["COL_LEVEL"],      width = 40,  minWidth = 40,  flexWeight = 1, align = "center",                ttTitle = LEVEL,     ttDesc = L["TT_COL_LEVEL_DESC"]},
         {key = "ilvl",    label = L["PROGRESS_COL_ILVL"], width = 55, minWidth = 55, flexWeight = 1, align = "center",              ttTitle = L["TT_COL_ILVL"],      ttDesc = L["TT_COL_ILVL_DESC"]},
-        {key = "rating",  label = L["PROGRESS_COL_RATING"], width = 50, minWidth = 50, flexWeight = 1, align = "center",            ttTitle = L["TT_COL_RATING"],    ttDesc = L["TT_COL_RATING_DESC"]},
+        {key = "rating",  label = RATING, width = 50, minWidth = 50, flexWeight = 1, align = "center",            ttTitle = RATING,    ttDesc = L["TT_COL_RATING_DESC"]},
     }
 end
 
@@ -992,9 +992,9 @@ end
 
 local function CreateWeeklyColumns()
     local cols = BuildCommonColumns()
-    table.insert(cols, {key = "vaultRaid",    label = L["PROGRESS_COL_VAULT_R"], width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = L["PROGRESS_VAULT_RAID"],    ttDesc = L["TT_COL_VAULT_R_DESC"]})
+    table.insert(cols, {key = "vaultRaid",    label = L["PROGRESS_COL_VAULT_R"], width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = RAID,    ttDesc = L["TT_COL_VAULT_R_DESC"]})
     table.insert(cols, {key = "vaultDungeon", label = L["PROGRESS_COL_VAULT_D"], width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = L["PROGRESS_VAULT_DUNGEON"], ttDesc = L["TT_COL_VAULT_D_DESC"]})
-    table.insert(cols, {key = "vaultWorld",   label = L["PROGRESS_COL_VAULT_W"], width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = L["PROGRESS_VAULT_WORLD"],   ttDesc = L["TT_COL_VAULT_W_DESC"]})
+    table.insert(cols, {key = "vaultWorld",   label = L["PROGRESS_COL_VAULT_W"], width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = WORLD,   ttDesc = L["TT_COL_VAULT_W_DESC"]})
     table.insert(cols, {key = "worldBoss",    label = L["PROGRESS_COL_WORLD_BOSS"], width = 65, minWidth = 65, flexWeight = 1, align = "left", ttTitle = L["TT_COL_WORLD_BOSS"], ttDesc = L["TT_COL_WORLD_BOSS_DESC"]})
     for _, entry in ipairs(GetWeeklyActivitiesList()) do
         local label = ns.ShortNames:GetShortName(entry.name or "", 8)
@@ -1085,7 +1085,7 @@ local function BuildMythicPlusTooltip(self, edg, chd, chk, contentFrame)
         GameTooltip:SetText(L["TT_COL_ILVL"], 1, 1, 1)
         GameTooltip:AddLine(tostring(chd.itemLevel or 0), 0.9, 0.9, 0.9)
     elseif colKey == "rating" then
-        GameTooltip:SetText(L["TT_COL_RATING"], 1, 1, 1)
+        GameTooltip:SetText(RATING, 1, 1, 1)
         GameTooltip:AddLine(tostring((edg and edg.mythicPlus and edg.mythicPlus.overallScore) or 0), 0.9, 0.9, 0.9)
     elseif colKey == "bestTime" then
         GameTooltip:SetText(L["TT_COL_BEST_TIME"], 1, 1, 1)
@@ -1180,7 +1180,7 @@ local function BuildRaidsTooltip(self, edg, chd, chk, contentFrame)
         if chd.class then GameTooltip:AddLine(chd.class, 1, 1, 1) end
         if chd.guild and chd.guild.name then GameTooltip:AddLine("<" .. chd.guild.name .. ">", 0.8, 0.8, 0.8) end
     elseif colKey == "rating" then
-        GameTooltip:SetText(L["TT_COL_RATING"], 1, 1, 1)
+        GameTooltip:SetText(RATING, 1, 1, 1)
         GameTooltip:AddLine(tostring((edg and edg.mythicPlus and edg.mythicPlus.overallScore) or 0), 0.9, 0.9, 0.9)
     elseif colKey == "ilvl" then
         GameTooltip:SetText(L["TT_COL_ILVL"], 1, 1, 1)
@@ -1348,11 +1348,11 @@ local function BuildWeeklyTooltip(self, edg, chd, chk, contentFrame)
         if killed then
             GameTooltip:AddLine(L["PROGRESS_BOSS_KILLED"] .. ": " .. (bossName or ""), 0.2, 0.9, 0.2)
         else
-            GameTooltip:AddLine(L["PROGRESS_BOSS_NONE"], 0.5, 0.5, 0.5)
+            GameTooltip:AddLine(NONE, 0.5, 0.5, 0.5)
         end
     elseif colKey == "vaultRaid" or colKey == "vaultDungeon" or colKey == "vaultWorld" then
         local vaultType = (colKey == "vaultRaid" and "raid") or (colKey == "vaultDungeon" and "dungeon") or "world"
-        local headerL = (vaultType == "raid" and L["PROGRESS_VAULT_RAID"]) or (vaultType == "dungeon" and L["PROGRESS_VAULT_DUNGEON"]) or L["PROGRESS_VAULT_WORLD"]
+        local headerL = (vaultType == "raid" and RAID) or (vaultType == "dungeon" and L["PROGRESS_VAULT_DUNGEON"]) or WORLD
         GameTooltip:SetText(headerL, 1, 1, 1)
         local list = GetVaultActivities(edg, vaultType)
         if list and (list[1] or list[2] or list[3]) then
@@ -1428,7 +1428,7 @@ local function BuildWeeklyTooltip(self, edg, chd, chk, contentFrame)
         GameTooltip:SetText(label, 1, 1, 1)
         local completed = qid and GetWeeklyActivityCompleted(edg, qid)
         if completed then
-            GameTooltip:AddLine(L["PROGRESS_WEEKLY_COMPLETED"], 0.2, 0.9, 0.2)
+            GameTooltip:AddLine(DONE, 0.2, 0.9, 0.2)
         else
             GameTooltip:AddLine(L["PROGRESS_WEEKLY_NOT_DONE"], 0.5, 0.5, 0.5)
         end
@@ -1436,7 +1436,7 @@ local function BuildWeeklyTooltip(self, edg, chd, chk, contentFrame)
             GameTooltip:AddLine("Quest ID: " .. qid, 0.6, 0.6, 0.6)
         end
     elseif colKey == "rating" then
-        GameTooltip:SetText(L["TT_COL_RATING"], 1, 1, 1)
+        GameTooltip:SetText(RATING, 1, 1, 1)
         GameTooltip:AddLine(tostring((edg and edg.mythicPlus and edg.mythicPlus.overallScore) or 0), 0.9, 0.9, 0.9)
     elseif colKey == "ilvl" then
         GameTooltip:SetText(L["TT_COL_ILVL"], 1, 1, 1)
@@ -1496,8 +1496,8 @@ function ns.UI.CreateProgressTab(parent)
     local subTabOrder = {"mythicplus", "raids", "weekly", "currencies"}
     local subTabNames = {
         mythicplus = L["SUBTAB_MYTHICPLUS"],
-        raids      = L["SUBTAB_RAIDS"],
-        weekly     = L["SUBTAB_WEEKLY"],
+        raids      = RAIDS,
+        weekly     = WEEKLY,
         currencies = L["SUBTAB_CURRENCIES"],
     }
 

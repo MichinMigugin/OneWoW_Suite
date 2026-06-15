@@ -12,10 +12,10 @@ local characterRows = {}
 local columnsConfig = {
     {key = "expand", label = "", width = 25, fixed = true, align = "icon", sortable = false, ttTitle = L["TT_COL_EXPAND"], ttDesc = L["TT_COL_EXPAND_DESC"]},
     {key = "star", label = "", width = 30, fixed = true, align = "icon", sortable = false, ttTitle = L["TT_COL_STAR"], ttDesc = L["TT_COL_STAR_DESC"]},
-    {key = "faction", label = L["COL_FACTION"], width = 25, fixed = true, align = "icon", sortable = false, ttTitle = L["TT_COL_FACTION"], ttDesc = L["PROF_TT_FACTION_DESC"]},
+    {key = "faction", label = L["COL_FACTION"], width = 25, fixed = true, align = "icon", sortable = false, ttTitle = FACTION, ttDesc = L["PROF_TT_FACTION_DESC"]},
     {key = "mail", label = L["COL_MAIL"], width = 35, fixed = true, align = "icon", sortable = false, ttTitle = L["TT_COL_MAIL"], ttDesc = L["PROF_TT_MAIL_DESC"]},
-    {key = "name", label = L["COL_CHARACTER"], width = 135, fixed = false, align = "left", ttTitle = L["TT_COL_CHARACTER"], ttDesc = L["PROF_TT_CHAR_NAME_DESC"]},
-    {key = "level", label = L["COL_LEVEL"], width = 40, fixed = true, align = "center", ttTitle = L["TT_COL_LEVEL"], ttDesc = L["PROF_TT_CHAR_LEVEL_DESC"]},
+    {key = "name", label = CHARACTER, width = 135, fixed = false, align = "left", ttTitle = CHARACTER, ttDesc = L["PROF_TT_CHAR_NAME_DESC"]},
+    {key = "level", label = L["COL_LEVEL"], width = 40, fixed = true, align = "center", ttTitle = LEVEL, ttDesc = L["PROF_TT_CHAR_LEVEL_DESC"]},
     {key = "primary1", label = L["PROF_COL_PRIMARY_1"], width = 90, fixed = false, align = "left", ttTitle = L["PROF_COL_PRIMARY_1"], ttDesc = L["PROF_TT_PRIMARY_1_DESC"]},
     {key = "conc1", label = L["PROF_COL_CONC"], width = 40, fixed = true, align = "center", ttTitle = L["PROF_COL_CONC"], ttDesc = L["PROF_TT_CONC_DESC"]},
     {key = "primary2", label = L["PROF_COL_PRIMARY_2"], width = 90, fixed = false, align = "left", ttTitle = L["PROF_COL_PRIMARY_2"], ttDesc = L["PROF_TT_PRIMARY_2_DESC"]},
@@ -202,7 +202,7 @@ local function AddProfessionTooltip(frame, profData, profRecipes)
                 local maxSkill = expansion.maxSkill or 0
                 local expR, expG, expB = GetSkillColor(curSkill, maxSkill)
                 GameTooltip:AddDoubleLine(
-                    expansion.name or L["PROF_VALUE_UNKNOWN"],
+                    expansion.name or UNKNOWN,
                     string.format("%d / %d", curSkill, maxSkill),
                     1, 1, 1,
                     expR, expG, expB
@@ -338,7 +338,7 @@ local function BuildExpandedPanels(ef, data, row)
                 local curSkill = expansion.currentSkill or 0
                 local maxSkill = expansion.maxSkill or 0
                 local er, eg, eb = GetSkillColor(curSkill, maxSkill)
-                grid:AddLine(pSkills, "    " .. (expansion.name or L["PROF_VALUE_UNKNOWN"]) .. ": " .. string.format("%d / %d", curSkill, maxSkill), {er, eg, eb})
+                grid:AddLine(pSkills, "    " .. (expansion.name or UNKNOWN) .. ": " .. string.format("%d / %d", curSkill, maxSkill), {er, eg, eb})
             end
         elseif hasExpansions then
             grid:AddLine(pSkills, "  " .. L["PROF_SHIFT_FOR_EXPANSION"], {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
@@ -347,7 +347,7 @@ local function BuildExpandedPanels(ef, data, row)
     end
 
     local function AddEquipLink(panel, label, itemData)
-        local display = itemData.itemLink or itemData.itemName or L["PROF_VALUE_UNKNOWN"]
+        local display = itemData.itemLink or itemData.itemName or UNKNOWN
         local fs = grid:AddLine(panel, "  " .. label .. " " .. display)
         if itemData.itemLink then
             local btn = CreateFrame("Button", nil, panel)
@@ -381,14 +381,14 @@ local function BuildExpandedPanels(ef, data, row)
             if firstAccData then
                 AddEquipLink(pEquip, accLabelText, firstAccData)
             else
-                grid:AddLine(pEquip, "  " .. accLabelText .. " " .. L["PROF_VALUE_NONE"], {1, 0.34, 0.13})
+                grid:AddLine(pEquip, "  " .. accLabelText .. " " .. NONE, {1, 0.34, 0.13})
             end
 
             if profData.name ~= "Cooking" then
                 if profEquipData and profEquipData.accessory1 then
                     AddEquipLink(pEquip, L["PROF_LABEL_ACC_2"], profEquipData.accessory1)
                 else
-                    grid:AddLine(pEquip, "  " .. L["PROF_LABEL_ACC_2"] .. " " .. L["PROF_VALUE_NONE"], {1, 0.34, 0.13})
+                    grid:AddLine(pEquip, "  " .. L["PROF_LABEL_ACC_2"] .. " " .. NONE, {1, 0.34, 0.13})
                 end
             end
         end
@@ -396,7 +396,7 @@ local function BuildExpandedPanels(ef, data, row)
         if profEquipData and profEquipData.tool then
             AddEquipLink(pEquip, L["PROF_LABEL_TOOL"], profEquipData.tool)
         else
-            grid:AddLine(pEquip, "  " .. L["PROF_LABEL_TOOL"] .. " " .. L["PROF_VALUE_NONE"], {1, 0.34, 0.13})
+            grid:AddLine(pEquip, "  " .. L["PROF_LABEL_TOOL"] .. " " .. NONE, {1, 0.34, 0.13})
         end
         grid:AddLine(pEquip, " ")
     end

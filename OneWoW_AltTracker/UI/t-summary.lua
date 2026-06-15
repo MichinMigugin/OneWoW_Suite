@@ -21,10 +21,10 @@ function ns.UI.CreateSummaryTab(parent)
             {label = L["FACTIONS"],             value = "0/0",  ttTitle = L["TT_FACTIONS"],             ttDesc = L["TT_FACTIONS_DESC"]},
             {label = L["RESTED"],               value = "0",    ttTitle = L["TT_RESTED"],               ttDesc = L["TT_RESTED_DESC"]},
             {label = L["PLAYTIME"],             value = "0h",   ttTitle = L["TT_PLAYTIME"],             ttDesc = L["TT_PLAYTIME_DESC"]},
-            {label = L["MOUNTS"],               value = "0/0",  ttTitle = L["TT_MOUNTS"],               ttDesc = L["TT_MOUNTS_DESC"]},
-            {label = L["PETS"],                 value = "0/0",  ttTitle = L["TT_PETS"],                 ttDesc = L["TT_PETS_DESC"]},
+            {label = MOUNTS,               value = "0/0",  ttTitle = MOUNTS,               ttDesc = L["TT_MOUNTS_DESC"]},
+            {label = PETS,                 value = "0/0",  ttTitle = PETS,                 ttDesc = L["TT_PETS_DESC"]},
             {label = L["PRIMARY_PROFESSIONS"],  value = "0/11", ttTitle = L["TT_PRIMARY_PROFESSIONS"],  ttDesc = L["TT_PRIMARY_PROFESSIONS_DESC"]},
-            {label = L["ACHIEVEMENTS"],         value = "0",    ttTitle = L["TT_ACHIEVEMENTS"],         ttDesc = L["TT_ACHIEVEMENTS_DESC"]},
+            {label = ACHIEVEMENTS,         value = "0",    ttTitle = ACHIEVEMENTS,         ttDesc = L["TT_ACHIEVEMENTS_DESC"]},
         },
     })
 
@@ -35,13 +35,13 @@ function ns.UI.CreateSummaryTab(parent)
     local columns = {
         {key = "expand",    label = "",                  width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],     ttDesc = L["TT_COL_EXPAND_DESC"]},
         {key = "star",      label = "",                  width = 30,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_STAR"],       ttDesc = L["TT_COL_STAR_DESC"]},
-        {key = "faction",   label = L["COL_FACTION"],    width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_FACTION"],    ttDesc = L["TT_COL_FACTION_DESC"]},
+        {key = "faction",   label = L["COL_FACTION"],    width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = FACTION,    ttDesc = L["TT_COL_FACTION_DESC"]},
         {key = "mail",      label = L["COL_MAIL"],       width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_MAIL"],       ttDesc = L["TT_COL_MAIL_DESC"]},
-        {key = "name",      label = L["COL_CHARACTER"],  width = 101, fixed = false, align = "left",                     ttTitle = L["TT_COL_CHARACTER"],  ttDesc = L["TT_COL_CHARACTER_DESC"]},
+        {key = "name",      label = CHARACTER,  width = 101, fixed = false, align = "left",                     ttTitle = CHARACTER,  ttDesc = L["TT_COL_CHARACTER_DESC"]},
         {key = "server",    label = L["COL_SERVER"],     width = 50,  fixed = false, align = "left",                     ttTitle = L["TT_COL_SERVER"],     ttDesc = L["TT_COL_SERVER_DESC"]},
-        {key = "level",     label = L["COL_LEVEL"],      width = 40,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_LEVEL"],      ttDesc = L["TT_COL_LEVEL_DESC"]},
-        {key = "class",     label = L["COL_CLASS"],      width = 60,  fixed = false, align = "left",                     ttTitle = L["TT_COL_CLASS"],      ttDesc = L["TT_COL_CLASS_DESC"]},
-        {key = "spec",      label = L["COL_SPEC"],       width = 70,  fixed = false, align = "left",                     ttTitle = L["TT_COL_SPEC"],       ttDesc = L["TT_COL_SPEC_DESC"]},
+        {key = "level",     label = L["COL_LEVEL"],      width = 40,  fixed = true,  align = "center",                   ttTitle = LEVEL,      ttDesc = L["TT_COL_LEVEL_DESC"]},
+        {key = "class",     label = CLASS,      width = 60,  fixed = false, align = "left",                     ttTitle = CLASS,      ttDesc = L["TT_COL_CLASS_DESC"]},
+        {key = "spec",      label = L["COL_SPEC"],       width = 70,  fixed = false, align = "left",                     ttTitle = SPECIALIZATION,       ttDesc = L["TT_COL_SPEC_DESC"]},
         {key = "rested",    label = L["COL_RESTED_XP"],  width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_RESTED_XP"],  ttDesc = L["TT_COL_RESTED_XP_DESC"]},
         {key = "itemLevel", label = L["COL_ITEM_LEVEL"], width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_ITEM_LEVEL"], ttDesc = L["TT_COL_ITEM_LEVEL_DESC"]},
         {key = "bags",      label = L["COL_BAGS"],       width = 40,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_BAGS"],       ttDesc = L["TT_COL_BAGS_DESC"]},
@@ -416,9 +416,9 @@ function ns.UI.RefreshSummaryTab(summaryTab)
             if charData.stats and charData.stats.specRole then
                 local roleText = charData.stats.specRole
                 if roleText == "TANK" then
-                    GameTooltip:AddLine(L["TT_SPEC_ROLE"] .. " " .. L["TT_SPEC_ROLE_TANK"], 0.5, 0.8, 1)
+                    GameTooltip:AddLine(L["TT_SPEC_ROLE"] .. " " .. TANK, 0.5, 0.8, 1)
                 elseif roleText == "HEALER" then
-                    GameTooltip:AddLine(L["TT_SPEC_ROLE"] .. " " .. L["TT_SPEC_ROLE_HEALER"], 0.3, 1, 0.3)
+                    GameTooltip:AddLine(L["TT_SPEC_ROLE"] .. " " .. HEALER, 0.3, 1, 0.3)
                 elseif roleText == "DAMAGER" then
                     GameTooltip:AddLine(L["TT_SPEC_ROLE"] .. " " .. L["TT_SPEC_ROLE_DAMAGER"], 1, 0.5, 0.5)
                 end
@@ -870,7 +870,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
 
     local totalText = OneWoW_GUI:CreateFS(totalFrame, 16)
     totalText:SetPoint("LEFT", totalFrame, "LEFT", 10, 0)
-    totalText:SetText(L["TOTAL"] .. ": " .. ns.UI.FormatPlaytimeCompact(accountTotal))
+    totalText:SetText(TOTAL .. ": " .. ns.UI.FormatPlaytimeCompact(accountTotal))
     totalText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     OneWoW_GUI:ApplyFontToFrame(result.frame)
