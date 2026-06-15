@@ -312,7 +312,7 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     favBtn:SetPoint("TOPRIGHT", card, "TOPRIGHT", -6, -4)
     favBtn:SetFrameLevel((card:GetFrameLevel() or 0) + 10)
 
-    local typeStr = instData.instanceType == "raid" and L["JOURNAL_CARD_RAID"]
+    local typeStr = instData.instanceType == "raid" and RAID
                  or instData.instanceType == "party" and L["JOURNAL_CARD_DUNGEON"]
                  or ""
     local infoText = OneWoW_GUI:CreateFS(card, 10)
@@ -331,8 +331,8 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     countText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
 
     local row1 = {
-        { flag = instData.hasMounts,  label = L["JOURNAL_CARD_MOUNTS"],  color = SPECIAL_COLORS.Mount },
-        { flag = instData.hasPets,    label = L["JOURNAL_CARD_PETS"],    color = SPECIAL_COLORS.Pet },
+        { flag = instData.hasMounts,  label = MOUNTS,  color = SPECIAL_COLORS.Mount },
+        { flag = instData.hasPets,    label = PETS,    color = SPECIAL_COLORS.Pet },
         { flag = instData.hasToys,    label = L["JOURNAL_CARD_TOYS"],    color = SPECIAL_COLORS.Toy },
     }
     local row2 = {
@@ -506,7 +506,7 @@ local function RefreshDetailView(isSecondRefresh)
     table.insert(detailElements, nameHeader)
     yOffset = yOffset - 22
 
-    local typeStr = instData.instanceType == "raid" and L["JOURNAL_CARD_RAID"]
+    local typeStr = instData.instanceType == "raid" and RAID
                  or instData.instanceType == "party" and L["JOURNAL_CARD_DUNGEON"]
                  or ""
     local infoLine = OneWoW_GUI:CreateFS(parent, 12)
@@ -515,7 +515,7 @@ local function RefreshDetailView(isSecondRefresh)
     infoLine:SetJustifyH("LEFT")
     local infoParts = {}
     table.insert(infoParts, L["JOURNAL_DETAIL_EXPANSION"] .. ": " .. instData.expansionName)
-    table.insert(infoParts, L["JOURNAL_DETAIL_TYPE"] .. ": " .. typeStr)
+    table.insert(infoParts, TYPE .. ": " .. typeStr)
     table.insert(infoParts, L["JOURNAL_DETAIL_INST_ID"] .. ": " .. instData.instanceID)
     if instData.mapID then
         table.insert(infoParts, L["JOURNAL_DETAIL_MAP_ID"] .. ": " .. instData.mapID)
@@ -561,13 +561,13 @@ local function RefreshDetailView(isSecondRefresh)
 
     local hdrSpecial = OneWoW_GUI:CreateFS(colHdrFrame, 10)
     hdrSpecial:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_SPECIAL_RIGHT, 0)
-    hdrSpecial:SetText(L["JOURNAL_COL_HDR_SPECIAL"])
+    hdrSpecial:SetText(SPECIAL)
     hdrSpecial:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     hdrSpecial:SetJustifyH("RIGHT")
 
     local hdrStatus = OneWoW_GUI:CreateFS(colHdrFrame, 10)
     hdrStatus:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_STATUS_RIGHT, 0)
-    hdrStatus:SetText(L["JOURNAL_COL_HDR_STATUS"])
+    hdrStatus:SetText(STATUS)
     hdrStatus:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     hdrStatus:SetJustifyH("RIGHT")
 
@@ -663,7 +663,7 @@ local function RefreshDetailView(isSecondRefresh)
                 itemName:SetWordWrap(false)
                 local displayName = item.name
                 if item.fromLiveEJ then
-                    displayName = displayName .. " |cff888888(" .. L["JOURNAL_LIVE_EJ_TAG"] .. ")|r"
+                    displayName = displayName .. " |cff888888(" .. GUIDE .. ")|r"
                 end
                 itemName:SetText(displayName)
                 itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(item.quality))
@@ -952,7 +952,7 @@ local function InitializeDropdowns(panels)
                 table.insert(items, { type = "divider" })
                 table.insert(items, {
                     value = "__reset__",
-                    text  = L["JOURNAL_FILTER_RESET"],
+                    text  = RESET,
                 })
                 return items
             end,
@@ -1048,8 +1048,8 @@ function ns.UI.CreateJournalTab(parent)
 
     local typeButtonDefs = {
         { text = L["JOURNAL_TYPE_ALL"],      value = "all"   },
-        { text = L["JOURNAL_TYPE_RAIDS"],    value = "raid"  },
-        { text = L["JOURNAL_TYPE_DUNGEONS"], value = "party" },
+        { text = RAIDS,    value = "raid"  },
+        { text = DUNGEONS, value = "party" },
     }
     local typeButtons = {}
     local BTN_PAD_X = 8

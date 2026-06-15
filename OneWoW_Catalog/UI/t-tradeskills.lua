@@ -425,7 +425,7 @@ ShowRecipeDetail = function(recipe)
     AddInfoRow(L["TRADESKILLS_EXPANSION"], expDisplay)
 
     if recipe.qual then
-        AddInfoRow(L["TRADESKILLS_QUALITY"], string.format(L["TRADESKILLS_QUALITY_FMT"], recipe.maxQ or 3))
+        AddInfoRow(QUALITY, string.format(L["TRADESKILLS_QUALITY_FMT"], recipe.maxQ or 3))
     end
     if recipe.rank then
         AddInfoRow(L["TRADESKILLS_RANK"], string.format(L["TRADESKILLS_RANK"], recipe.rank))

@@ -143,6 +143,15 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
   key-name-on-miss defeats the fallback — switched the 3 sites to
   `OneWoW.Locale:GetOptional(ADDON_NAME, locKey)` to match the view's idiom.
 
+- [x] `OneWoW_Catalog` — 31 keys adopted (48 call sites across 8 files; includes an
+  `ns.L["KEY"]` form handled before `L["KEY"]`); 12 new globals whitelisted. **8
+  dynamic-ref keys excluded** (kept in locale): `JOURNAL_FILTER_MOUNTS`/`_PETS`
+  (`labelKey` fields), `JOURNAL_SPECIAL_MOUNT`/`_PET`/`_TOY` and
+  `VENDORS_CATEGORY_BMAH`/`_OTHER`/`_VOID_STORAGE` (map values resolved via `L[var]`).
+  9 dead keys (`JOURNAL_COL_HDR_TYPE`, `JOURNAL_STATUS_COLLECTED`/`_NOT_COLLECTED`,
+  `QUESTS_FILTER_CLASS_ALL`, `QUESTS_GROUP_TYPE`, `QUESTS_TYPE_LABEL`,
+  `TRADESKILLS_BACK`/`_REAGENT_QUAL`/`_TYPE_SECONDARY`) stripped as cleanup.
+
 ### Phase 3 — Consolidate to shared (pending)
 Baseline: **430 strings**. Per-addon sub-phases. For each value group:
 - [ ] Pick the canonical key name (often the simplest existing one) and value.

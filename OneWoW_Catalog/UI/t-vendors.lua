@@ -37,7 +37,7 @@ local function FormatCost(itemData)
                 name = currInfo and currInfo.name
             end
             if not name or name == "" then
-                name = L["VENDORS_CURRENCY"]
+                name = CURRENCY
             end
 
             local icon = curr.texture
@@ -419,7 +419,7 @@ local function ShowVendorDetail(panels, vendor)
     local infoParts = {}
     tinsert(infoParts, L["VENDORS_NPC_ID"] .. ": " .. (vendor.npcID or "?"))
     if vendor.level and vendor.level > 0 then
-        tinsert(infoParts, L["VENDORS_LEVEL"] .. ": " .. vendor.level)
+        tinsert(infoParts, LEVEL .. ": " .. vendor.level)
     end
     if vendor.creatureType and vendor.creatureType ~= "" then
         tinsert(infoParts, vendor.creatureType)
@@ -431,7 +431,7 @@ local function ShowVendorDetail(panels, vendor)
 
     -- Type setter row: label + dropdown.
     local typeLabel = OneWoW_GUI:CreateFS(parent, 12)
-    typeLabel:SetText(L["VENDORS_CATEGORY_LABEL"] .. ":")
+    typeLabel:SetText(TYPE .. ":")
     typeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     typeLabel:SetJustifyH("LEFT")
     tinsert(detailElements, typeLabel)

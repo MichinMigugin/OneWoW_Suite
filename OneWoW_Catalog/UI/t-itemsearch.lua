@@ -510,10 +510,10 @@ ShowItemDetail = function(result)
 
     local locLabels = {
         bags    = L["ITEMSEARCH_LOC_BAGS"],
-        bank    = L["ITEMSEARCH_LOC_BANK"],
+        bank    = BANK,
         mail    = L["ITEMSEARCH_LOC_MAIL"],
         warband = L["ITEMSEARCH_LOC_WARBAND"],
-        guild   = L["ITEMSEARCH_LOC_GUILD"],
+        guild   = GUILD_BANK,
         ah      = L["ITEMSEARCH_LOC_AH"],
     }
 

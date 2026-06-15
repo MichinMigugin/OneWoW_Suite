@@ -97,7 +97,7 @@ function ns.UI.CreateSettingsTab(parent)
         end
         UpdateSize()
 
-        local resetBtn = OneWoW_GUI:CreateFitTextButton(container, { text = L["SETTINGS_DB_RESET"], height = 28, minWidth = 75 })
+        local resetBtn = OneWoW_GUI:CreateFitTextButton(container, { text = RESET, height = 28, minWidth = 75 })
         resetBtn:SetPoint("TOPRIGHT", -12, -16)
         ApplyDangerResetVisual(resetBtn, false)
         resetBtn:SetScript("OnEnter", function(myself) ApplyDangerResetVisual(myself, true) end)
@@ -107,8 +107,8 @@ function ns.UI.CreateSettingsTab(parent)
             OneWoW_GUI:CreateConfirmDialog({
                 title = string.format(L["SETTINGS_DB_RESET_TITLE"], displayName),
                 text = string.format(L["SETTINGS_DB_RESET_TEXT"], displayName),
-                confirmText = L["SETTINGS_DB_RESET"],
-                cancelText = L["SETTINGS_DIALOG_CANCEL"],
+                confirmText = RESET,
+                cancelText = CANCEL,
                 showBrand = true,
                 onConfirm = function()
                     _G[dbData.key .. "_DB"] = nil

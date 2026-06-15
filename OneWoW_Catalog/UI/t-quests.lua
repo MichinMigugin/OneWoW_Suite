@@ -349,8 +349,8 @@ end
 
 local function GetQuestTypeLabel(quest)
     if not quest then return L["QUESTS_TYPE_NORMAL"] end
-    if quest.isDaily   then return L["QUESTS_TYPE_DAILY"]   end
-    if quest.isWeekly  then return L["QUESTS_TYPE_WEEKLY"]  end
+    if quest.isDaily   then return DAILY   end
+    if quest.isWeekly  then return WEEKLY  end
     if quest.isCampaign then return L["QUESTS_TYPE_CAMPAIGN"] end
     if quest.isWorldQuest then return L["QUESTS_TYPE_WORLDQUEST"] end
     local cls = quest.classification
@@ -360,11 +360,11 @@ local function GetQuestTypeLabel(quest)
 end
 
 local function GetGroupTypeLabel(quest)
-    if not quest then return L["QUESTS_TYPE_SOLO"] end
+    if not quest then return SOLO end
     local sg = quest.suggestedGroup or 0
-    if sg >= 10 then return L["QUESTS_TYPE_RAID"]  end
-    if sg >= 2  then return L["QUESTS_TYPE_GROUP"] end
-    return L["QUESTS_TYPE_SOLO"]
+    if sg >= 10 then return RAID  end
+    if sg >= 2  then return GROUP end
+    return SOLO
 end
 
 local function GetQuestProgressLabel(questID)
@@ -472,7 +472,7 @@ end
 
 local function ResolveQuestZoneName(quest)
     if not quest then
-        return L["QUESTS_UNKNOWN"]
+        return UNKNOWN
     end
 
     if quest.zoneName and quest.zoneName ~= "" then
@@ -487,7 +487,7 @@ local function ResolveQuestZoneName(quest)
         end
     end
 
-    return L["QUESTS_UNKNOWN"]
+    return UNKNOWN
 end
 
 local function CreateSeparatorLine(parent, yOffset)
@@ -1674,7 +1674,7 @@ function ShowQuestDetail(panels, questData)
     local expName  =
         (questData.expansion ~= nil)
         and addon.QuestData:GetExpansionName(questData.expansion)
-        or L["QUESTS_UNKNOWN"]
+        or UNKNOWN
 
     local zoneName = ResolveQuestZoneName(questData)
     local progressName = GetQuestProgressLabel(questData.id)
@@ -1861,9 +1861,9 @@ function ShowQuestDetail(panels, questData)
 
     local metaParts = {
         string.format("%s: %s", L["QUESTS_EXPANSION"], expName),
-        string.format("%s: %s", L["QUESTS_ZONE"], zoneName),
+        string.format("%s: %s", ZONE, zoneName),
         string.format("%s: %s", L["QUESTS_PROGRESS_LABEL"], progressName),
-        string.format("%s: %s", L["QUESTS_REWARDS"], rewardSummary),
+        string.format("%s: %s", REWARDS, rewardSummary),
         string.format("Faction: %s", factionName),
         string.format("Category: %s", categoryName),
     }
@@ -1972,7 +1972,7 @@ function ShowQuestDetail(panels, questData)
     local descLabel = track(OneWoW_GUI:CreateFS(parent, 10))
 
     descLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
-    descLabel:SetText(L["QUESTS_DESCRIPTION"])
+    descLabel:SetText(DESCRIPTION)
 
     descLabel:SetTextColor(
         OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
@@ -2104,7 +2104,7 @@ function ShowQuestDetail(panels, questData)
         )
 
         rwdLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
-        rwdLabel:SetText(L["QUESTS_REWARDS"])
+        rwdLabel:SetText(REWARDS)
 
         rwdLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
@@ -2195,7 +2195,7 @@ function ShowQuestDetail(panels, questData)
 
             itemHdr:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
 
-            itemHdr:SetText(L["QUESTS_ITEMS"] .. ":")
+            itemHdr:SetText(ITEMS .. ":")
 
             itemHdr:SetTextColor(
                 OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
@@ -3797,9 +3797,9 @@ local function SetupTypeDropdown(panels)
         buildItems = function()
             return {
                 { value = "all",   text = L["QUESTS_TYPE_ALL"]   },
-                { value = "solo",  text = L["QUESTS_TYPE_SOLO"]  },
-                { value = "group", text = L["QUESTS_TYPE_GROUP"] },
-                { value = "raid",  text = L["QUESTS_TYPE_RAID"]  },
+                { value = "solo",  text = SOLO  },
+                { value = "group", text = GROUP },
+                { value = "raid",  text = RAID  },
             }
         end,
         onSelect = function(value, text)
@@ -3818,8 +3818,8 @@ local function SetupQuestTypeDropdown(panels)
             return {
                 { value = "all",        text = L["QUESTS_QTYPE_ALL"]       },
                 { value = "normal",     text = L["QUESTS_TYPE_NORMAL"]     },
-                { value = "daily",      text = L["QUESTS_TYPE_DAILY"]      },
-                { value = "weekly",     text = L["QUESTS_TYPE_WEEKLY"]     },
+                { value = "daily",      text = DAILY      },
+                { value = "weekly",     text = WEEKLY     },
                 { value = "campaign",   text = L["QUESTS_TYPE_CAMPAIGN"]   },
                 { value = "worldquest", text = L["QUESTS_TYPE_WORLDQUEST"] },
             }
@@ -3958,9 +3958,9 @@ local function SetupAdvancedDropdowns(panels)
         buildItems = function()
             return {
                 { value = "all",   text = L["QUESTS_TYPE_ALL"]   },
-                { value = "solo",  text = L["QUESTS_TYPE_SOLO"]  },
-                { value = "group", text = L["QUESTS_TYPE_GROUP"] },
-                { value = "raid",  text = L["QUESTS_TYPE_RAID"]  },
+                { value = "solo",  text = SOLO  },
+                { value = "group", text = GROUP },
+                { value = "raid",  text = RAID  },
             }
         end,
         onSelect = function(value, text)
@@ -3978,8 +3978,8 @@ local function SetupAdvancedDropdowns(panels)
             return {
                 { value = "all",        text = L["QUESTS_QTYPE_ALL"]       },
                 { value = "normal",     text = L["QUESTS_TYPE_NORMAL"]     },
-                { value = "daily",      text = L["QUESTS_TYPE_DAILY"]      },
-                { value = "weekly",     text = L["QUESTS_TYPE_WEEKLY"]     },
+                { value = "daily",      text = DAILY      },
+                { value = "weekly",     text = WEEKLY     },
                 { value = "campaign",   text = L["QUESTS_TYPE_CAMPAIGN"]   },
                 { value = "worldquest", text = L["QUESTS_TYPE_WORLDQUEST"] },
                 { value = "repeatable", text = "Repeatable" },
@@ -4141,7 +4141,7 @@ function ns.UI.CreateQuestsTab(parent)
 
     local panels = OneWoW_GUI:CreateSplitPanel(contentArea)
     panels.listTitle:SetText(L["QUESTS_LIST_TITLE"])
-    panels.detailTitle:SetText(L["QUESTS_DETAIL_TITLE"])
+    panels.detailTitle:SetText(QUEST_DETAILS)
 
     if panels.listScrollFrame then
         local questListViewport = CreateFrame("Frame", nil, panels.listScrollFrame)

@@ -201,7 +201,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     local vendorsTab = CreateTab("vendors", L["TAB_VENDORS"])
     ns.UI.CreateVendorsTab(vendorsTab)
 
-    local tradeskillsTab = CreateTab("tradeskills", L["TAB_TRADESKILLS"])
+    local tradeskillsTab = CreateTab("tradeskills", TRADESKILLS)
     ns.UI.CreateTradeskillsTab(tradeskillsTab)
 
     local questsTab = CreateTab("quests", L["TAB_QUESTS"])
@@ -210,7 +210,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     local itemsearchTab = CreateTab("itemsearch", L["TAB_ITEMSEARCH"])
     ns.UI.CreateItemSearchTab(itemsearchTab)
 
-    local settingsTab = CreateTab("settings", L["TAB_SETTINGS"])
+    local settingsTab = CreateTab("settings", SETTINGS)
     ns.UI.CreateSettingsTab(settingsTab)
 
     C_Timer.After(0.1, function() UpdateTabLayout() end)

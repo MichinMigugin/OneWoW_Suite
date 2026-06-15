@@ -18,7 +18,7 @@ local function RegisterWithOneWoW()
         tabs = {
             { name = "journal",     displayName = function() return ns.L["TAB_JOURNAL"]     end, create = function(p) ns.UI.CreateJournalTab(p)    end },
             { name = "vendors",     displayName = function() return ns.L["TAB_VENDORS"]     end, create = function(p) ns.UI.CreateVendorsTab(p)    end },
-            { name = "tradeskills", displayName = function() return ns.L["TAB_TRADESKILLS"] end, create = function(p) ns.UI.CreateTradeskillsTab(p) end },
+            { name = "tradeskills", displayName = function() return TRADESKILLS end, create = function(p) ns.UI.CreateTradeskillsTab(p) end },
             { name = "quests",      displayName = function() return ns.L["TAB_QUESTS"]      end, create = function(p) ns.UI.CreateQuestsTab(p)     end },
             { name = "itemsearch",  displayName = function() return ns.L["TAB_ITEMSEARCH"]  end, create = function(p) ns.UI.CreateItemSearchTab(p) end },
         },
