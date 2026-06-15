@@ -1,27 +1,12 @@
-local addonName, ns = ...
+local _, ns = ...
 
-ns.Locales = ns.Locales or {}
-
-local function ApplyBindingGlobals(L)
-    for k, v in pairs(L) do
-        if k:find("^BINDING_") then
-            _G[k] = v
-        end
-    end
-end
-
+-- Thin shim over the OneWoW Locale service. `ns.ApplyLanguage` is still called by
+-- OnInitialize, the OnLanguageChanged settings callback, and the profile-sync method
+-- (addon:ApplyLanguage via t-profiles), so it is kept (not deleted) until Phase 6.
+-- SetLanguage refolds every scope in place (core "OneWoW_QoL" + each "QoL.<module>"),
+-- pushes BINDING_* globals, and fires OnApply; views are stable (core ns.L set in
+-- Locales/enUS.lua, each module captures its own GetTable). esMX->esES inside.
 function ns.ApplyLanguage()
-    local OneWoW_GUI = OneWoW_GUI
-    local selectedLang
-    if OneWoW_GUI and OneWoW_GUI.GetSetting then
-        selectedLang = OneWoW_GUI:GetSetting("language")
-    end
-    selectedLang = selectedLang or GetLocale()
-    if selectedLang == "esMX" then selectedLang = "esES" end
-    local localeData = ns.Locales[selectedLang] or ns.Locales["enUS"]
-    local fallback = ns.Locales["enUS"]
-    for k, v in pairs(fallback) do
-        ns.L[k] = localeData[k] or v
-    end
-    ApplyBindingGlobals(ns.L)
+    local lang = OneWoW_GUI:GetSetting("language") or GetLocale()
+    OneWoW.Locale:SetLanguage(lang)
 end

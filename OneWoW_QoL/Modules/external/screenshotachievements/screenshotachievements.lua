@@ -1,22 +1,6 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/screenshotachievements/screenshotachievements.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
-
-local ScreenshotAchievementsModule = {
-    id          = "screenshotachievements",
-    title       = "SCREENSHOTACH_TITLE",
-    category    = "AUTOMATION",
-    description = "SCREENSHOTACH_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles     = {},
-    preview     = true,
-    defaultEnabled = false,
-    _frame      = nil,
-}
+local _, ns = ...
+local ScreenshotAchievementsModule = ns.ModuleRegistry:Current()
+if not ScreenshotAchievementsModule then return end
 
 -- Delay before the screenshot so the achievement toast and surrounding UI have
 -- time to render. Tuned to match the default Blizzard alert timing.
@@ -25,7 +9,7 @@ local SCREENSHOT_DELAY = 1.5
 function ScreenshotAchievementsModule:OnEnable()
     if not self._frame then
         self._frame = CreateFrame("Frame", "OneWoW_QoL_ScreenshotAchievements")
-        self._frame:SetScript("OnEvent", function(_, event, ...)
+        self._frame:SetScript("OnEvent", function(_, event)
             if event == "ACHIEVEMENT_EARNED" then
                 self:ACHIEVEMENT_EARNED()
             end
@@ -47,5 +31,3 @@ function ScreenshotAchievementsModule:ACHIEVEMENT_EARNED()
         Screenshot()
     end)
 end
-
-ns.ScreenshotAchievementsModule = ScreenshotAchievementsModule

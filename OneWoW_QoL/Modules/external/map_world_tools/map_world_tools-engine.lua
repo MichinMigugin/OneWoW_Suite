@@ -1,5 +1,6 @@
 local addonName, ns = ...
-local M = ns.MapWorldToolsModule
+local MapWorldToolsModule, L = ns.ModuleRegistry:Current()
+local M = MapWorldToolsModule
 
 local canvasOverlay
 local hooksInstalled
@@ -346,22 +347,22 @@ local function UpdateCoordOverlay()
 
     local x, y = sc:GetNormalizedCursorPosition()
     if x and y and x > 0 and y > 0 and MouseIsOver(sc) then
-        cCursor.x:SetFormattedText("%s: %.1f, %.1f", ns.L and ns.L["MAPWORLD_CURSOR"] or "Cursor",
+        cCursor.x:SetFormattedText("%s: %.1f, %.1f", L and L["MAPWORLD_CURSOR"] or "Cursor",
             (math.floor(x * 1000 + 0.5)) / 10, (math.floor(y * 1000 + 0.5)) / 10)
     else
-        cCursor.x:SetFormattedText("%s:", ns.L and ns.L["MAPWORLD_CURSOR"] or "Cursor")
+        cCursor.x:SetFormattedText("%s:", L and L["MAPWORLD_CURSOR"] or "Cursor")
     end
 
     local mapID = C_Map.GetBestMapForUnit("player")
     if not mapID then
-        cPlayer.x:SetFormattedText("%s:", ns.L and ns.L["MAPWORLD_PLAYER"] or "Player")
+        cPlayer.x:SetFormattedText("%s:", L and L["MAPWORLD_PLAYER"] or "Player")
     else
         local position = C_Map.GetPlayerMapPosition(mapID, "player")
         if position and position.x ~= 0 and position.y ~= 0 then
-            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", ns.L and ns.L["MAPWORLD_PLAYER"] or "Player",
+            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", L and L["MAPWORLD_PLAYER"] or "Player",
                 position.x * 100, position.y * 100)
         else
-            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", ns.L and ns.L["MAPWORLD_PLAYER"] or "Player", 0, 0)
+            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", L and L["MAPWORLD_PLAYER"] or "Player", 0, 0)
         end
     end
 end
@@ -463,9 +464,9 @@ local function OnWorldMapAddonLoaded()
         pcall(function()
             Menu.ModifyMenu("MENU_WORLD_MAP_TRACKING", function(_, rootDescription)
                 rootDescription:CreateDivider()
-                rootDescription:CreateTitle(ns.L and ns.L["MAPWORLD_TITLE"] or "Map Tools")
+                rootDescription:CreateTitle(L and L["MAPWORLD_TITLE"] or "Map Tools")
                 local btn = MenuUtil.CreateCheckbox(
-                    ns.L and ns.L["MAPWORLD_TINT_UNEXPLORED"] or "Tint unexplored",
+                    L and L["MAPWORLD_TINT_UNEXPLORED"] or "Tint unexplored",
                     function() return GetToggle("tintUnexplored") end,
                     function()
                         local on = GetToggle("tintUnexplored")

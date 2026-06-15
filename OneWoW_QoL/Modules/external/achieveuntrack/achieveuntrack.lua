@@ -1,18 +1,6 @@
 local _, ns = ...
-
-local AchieveUntrackModule = {
-    id          = "achieveuntrack",
-    title       = "ACHIEVEUNTRACK_TITLE",
-    category    = "AUTOMATION",
-    description = "ACHIEVEUNTRACK_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles     = {},
-    preview     = false,
-    _frame      = nil,
-}
+local AchieveUntrackModule = ns.ModuleRegistry:Current()
+if not AchieveUntrackModule then return end
 
 local ACHIEVE = Enum.ContentTrackingType.Achievement
 local COLLECTED = Enum.ContentTrackingStopType.Collected
@@ -36,5 +24,3 @@ end
 function AchieveUntrackModule:OnDisable()
     OneWoW_QoL:UnregisterEnteringWorldHandler("achieveuntrack")
 end
-
-ns.AchieveUntrackModule = AchieveUntrackModule

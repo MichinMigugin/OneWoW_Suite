@@ -25,6 +25,8 @@
 -- owns the module table, data resolution, events, and lifecycle.
 -- ============================================================================
 local _, ns = ...
+local PreyBarModule = ns.ModuleRegistry:Current()
+if not PreyBarModule then return end
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -37,37 +39,6 @@ local AMBUSH_HOLD_SECONDS      = 5
 local POLL_INTERVAL            = 2
 local PEW_DELAY_SECONDS        = 0.5
 local PREY_WIDGET_TYPE         = Enum.UIWidgetVisualizationType.PreyHuntProgress
-
-local PreyBarModule = {
-    id          = "preybar",
-    title       = "PREYBAR_TITLE",
-    category    = "INTERFACE",
-    description = "PREYBAR_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles = {
-        { id = "show_boss",       label = "PREYBAR_TOGGLE_BOSS",          description = "PREYBAR_TOGGLE_BOSS_DESC",          default = true  },
-        { id = "show_difficulty", label = "PREYBAR_TOGGLE_DIFFICULTY",    description = "PREYBAR_TOGGLE_DIFFICULTY_DESC",    default = true  },
-        { id = "show_affixes",    label = "PREYBAR_TOGGLE_AFFIXES",       description = "PREYBAR_TOGGLE_AFFIXES_DESC",       default = true  },
-        { id = "hide_blizzard",   label = "PREYBAR_TOGGLE_HIDE_BLIZZARD", description = "PREYBAR_TOGGLE_HIDE_BLIZZARD_DESC", default = true  },
-        { id = "lock",            label = "PREYBAR_TOGGLE_LOCK",          description = "PREYBAR_TOGGLE_LOCK_DESC",          default = false },
-    },
-    preview        = false,
-    defaultEnabled = true,
-    _frame         = nil,
-    _eventFrame    = nil,
-    _widgetID      = nil,
-    _refreshTimer  = nil,
-    _pollTicker    = nil,
-    _previewActive = false,
-    _previewMarker = nil,
-    _previewTicker = nil,
-    _isAmbushed    = false,
-    _ambushToken   = 0,
-    _pewDelayTimer = nil,
-}
 
 -- ---- Toggle / storage helpers ----
 local function GetToggle(id)
@@ -453,5 +424,3 @@ function PreyBarModule:OnToggle(toggleId, value)
     end
     self:Refresh()
 end
-
-ns.PreyBarModule = PreyBarModule

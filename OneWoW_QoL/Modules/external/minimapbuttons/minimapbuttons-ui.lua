@@ -1,11 +1,12 @@
-local addonName, ns = ...
+local _, ns = ...
+local MinimapButtonsModule, L = ns.ModuleRegistry:Current()
 
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI and OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 local function GetSettings()
-    return ns.MinimapButtonsModule.GetSettings()
+    return MinimapButtonsModule.GetSettings()
 end
 
 -- ─── Detected minimap icons (per-button Mini / Map / Hide) ─────────────────
@@ -34,7 +35,6 @@ local function LabelForPref(L, pref)
 end
 
 local function BuildIconRow(parent, info, yOffset, refreshFn)
-    local L = ns.L
     local capturedName = info.name
 
     local row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
@@ -74,7 +74,7 @@ local function BuildIconRow(parent, info, yOffset, refreshFn)
         end)
         removeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
         removeBtn:SetScript("OnClick", function()
-            ns.MinimapButtonsModule.RemoveKnownButton(capturedName)
+            MinimapButtonsModule.RemoveKnownButton(capturedName)
             if refreshFn then refreshFn() end
         end)
     end
@@ -131,15 +131,15 @@ local function BuildIconRow(parent, info, yOffset, refreshFn)
     end
 
     miniBtn:SetScript("OnClick", function()
-        ns.MinimapButtonsModule:ApplyButtonPref(capturedName, "mini")
+        MinimapButtonsModule:ApplyButtonPref(capturedName, "mini")
         refresh("mini")
     end)
     mapBtn:SetScript("OnClick", function()
-        ns.MinimapButtonsModule:ApplyButtonPref(capturedName, "map")
+        MinimapButtonsModule:ApplyButtonPref(capturedName, "map")
         refresh("map")
     end)
     hideBtn:SetScript("OnClick", function()
-        ns.MinimapButtonsModule:ApplyButtonPref(capturedName, "hide")
+        MinimapButtonsModule:ApplyButtonPref(capturedName, "hide")
         refresh("hide")
     end)
 
@@ -149,7 +149,6 @@ local function BuildIconRow(parent, info, yOffset, refreshFn)
 end
 
 local function BuildMinimapIconsSection(parent, yOffset, refreshFn)
-    local L = ns.L
 
     local sectionLabel = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     sectionLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", ROW_PADDING_X, yOffset)
@@ -170,9 +169,9 @@ local function BuildMinimapIconsSection(parent, yOffset, refreshFn)
     -- Re-scan every time the settings panel is rebuilt so the Enabled /
     -- Disabled status reflects the current addon state, not whatever was
     -- cached at module load time.
-    ns.MinimapButtonsModule:DiscoverButtons()
+    MinimapButtonsModule:DiscoverButtons()
 
-    local buttons = ns.MinimapButtonsModule:GetKnownButtons()
+    local buttons = MinimapButtonsModule:GetKnownButtons()
 
     -- IMPORTANT: never anchor the next element with yOffset arithmetic off a
     -- wrapped FontString — GetStringHeight() can return the unwrapped (single
@@ -240,7 +239,6 @@ end
 -- ─── Main settings content builder ─────────────────────────────────────────
 
 local function BuildContent(container, isEnabled)
-    local L = ns.L
     local s = GetSettings()
     local cy = 0
 
@@ -263,8 +261,8 @@ local function BuildContent(container, isEnabled)
             s.closeMode = "stayopen"
             self:SetChecked(true)
             if radioAuto then radioAuto:SetChecked(false) end
-            ns.MinimapButtonsModule:CancelAutoCloseTimer()
-            ns.MinimapButtonsModule._refreshCustomDetail()
+            MinimapButtonsModule:CancelAutoCloseTimer()
+            MinimapButtonsModule._refreshCustomDetail()
         end,
     })
     radioStay:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
@@ -276,7 +274,7 @@ local function BuildContent(container, isEnabled)
             s.closeMode = "autoclose"
             self:SetChecked(true)
             if radioStay then radioStay:SetChecked(false) end
-            ns.MinimapButtonsModule._refreshCustomDetail()
+            MinimapButtonsModule._refreshCustomDetail()
         end,
     })
     radioAuto:SetPoint("TOPLEFT", container, "TOPLEFT", 160, cy)
@@ -310,7 +308,7 @@ local function BuildContent(container, isEnabled)
         checked = s.enhancedMenu,
         onClick = function(self)
             s.enhancedMenu = self:GetChecked()
-            ns.MinimapButtonsModule:Refresh()
+            MinimapButtonsModule:Refresh()
         end,
     })
     enhCB:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
@@ -336,7 +334,7 @@ local function BuildContent(container, isEnabled)
         checked = s.hideCollected,
         onClick = function(self)
             s.hideCollected = self:GetChecked()
-            ns.MinimapButtonsModule:Refresh()
+            MinimapButtonsModule:Refresh()
         end,
     })
     hideCB:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
@@ -416,7 +414,7 @@ local function BuildContent(container, isEnabled)
         onChange    = function(val)
             s.maxColumns = val
             colsLabel:SetText(string.format("%s: %d", L["MMBTNS_MAX_COLUMNS"] or "Max Columns", val))
-            ns.MinimapButtonsModule:LayoutContainer()
+            MinimapButtonsModule:LayoutContainer()
         end,
     })
     colsSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
@@ -439,7 +437,7 @@ local function BuildContent(container, isEnabled)
             s.maxRows = val
             local display = val == 0 and "∞" or tostring(val)
             rowsLabel:SetText(string.format("%s: %s", L["MMBTNS_MAX_ROWS"] or "Max Rows", display))
-            ns.MinimapButtonsModule:LayoutContainer()
+            MinimapButtonsModule:LayoutContainer()
         end,
     })
     rowsSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
@@ -466,7 +464,7 @@ local function BuildContent(container, isEnabled)
         onChange    = function(val)
             s.buttonSize = val
             sizeLabel:SetText(string.format("%s: %d", L["MMBTNS_BUTTON_SIZE"] or "Button Size", val))
-            ns.MinimapButtonsModule:LayoutContainer()
+            MinimapButtonsModule:LayoutContainer()
         end,
     })
     sizeSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
@@ -487,7 +485,7 @@ local function BuildContent(container, isEnabled)
         onChange    = function(val)
             s.buttonScale = val
             scaleLabel:SetText(string.format("%s: %.1f", L["MMBTNS_BUTTON_SCALE"] or "Collected icon scale", val / 10))
-            ns.MinimapButtonsModule:ApplyButtonScale()
+            MinimapButtonsModule:ApplyButtonScale()
         end,
     })
     scaleSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
@@ -508,7 +506,7 @@ local function BuildContent(container, isEnabled)
         onChange    = function(val)
             s.buttonSpacing = val
             spacingLabel:SetText(string.format("%s: %d", L["MMBTNS_BUTTON_SPACING"] or "Spacing", val))
-            ns.MinimapButtonsModule:LayoutContainer()
+            MinimapButtonsModule:LayoutContainer()
         end,
     })
     spacingSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, cy)
@@ -520,7 +518,7 @@ local function BuildContent(container, isEnabled)
     cy = OneWoW_GUI:CreateSection(container, { title = L["MMBTNS_ICONS_HEADER"] or "Minimap Icons", yOffset = cy })
 
     cy = BuildMinimapIconsSection(container, cy, function()
-        ns.MinimapButtonsModule._refreshCustomDetail()
+        MinimapButtonsModule._refreshCustomDetail()
     end)
 
     container:SetHeight(math.abs(cy))
@@ -529,7 +527,7 @@ end
 
 -- ─── CreateCustomDetail (called by the module feature panel framework) ──────
 
-function ns.MinimapButtonsModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled)
+function MinimapButtonsModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled)
     if detailScrollChild._mmbtnContainer then
         OneWoW_GUI:ClearFrame(detailScrollChild._mmbtnContainer)
     end

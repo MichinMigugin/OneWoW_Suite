@@ -4,6 +4,17 @@
 local addonName, ns = ...
 local L = ns.L
 
+-- Each external module's locale strings live in its own scope (per-module locale
+-- migration via module.lua/Define), not core ns.L. Resolve module-owned keys (module
+-- title/description and toggle label/description/group) against that module's cached
+-- scope view (`_view`, set by ModuleRegistry:Define).
+local function ML(id, key)
+    if not key then return key end
+    local m = ns.ModuleRegistry:GetById(id)
+    if not m then return key end
+    return m._view[key]
+end
+
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
@@ -118,7 +129,7 @@ local function ShowModuleDetailsDialog(module)
     modName:SetPoint("TOPLEFT", modDetailsContent, "TOPLEFT", 0, yOffset)
     modName:SetPoint("TOPRIGHT", modDetailsContent, "TOPRIGHT", 0, yOffset)
     modName:SetJustifyH("CENTER")
-    modName:SetText(ns.L[module.title] or module.title)
+    modName:SetText(ML(module.id, module.title) or module.title)
     modName:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - modName:GetStringHeight() - 12
 
@@ -217,7 +228,7 @@ local function ShowModuleDetail(split, module)
         titleLabel:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
     end
     titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(ns.L[module.title] or module.title)
+    titleLabel:SetText(ML(module.id, module.title) or module.title)
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     if hasDetails then
@@ -249,7 +260,7 @@ local function ShowModuleDetail(split, module)
         descText:SetJustifyH("LEFT")
         descText:SetWordWrap(true)
         descText:SetSpacing(3)
-        descText:SetText(ns.L[module.description] or module.description)
+        descText:SetText(ML(module.id, module.description) or module.description)
         descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         yOffset = yOffset - descText:GetStringHeight() - 16
     end
@@ -277,7 +288,7 @@ local function ShowModuleDetail(split, module)
             end
 
             if split.rightStatusText then
-                local modName = ns.L[module.title] or module.title
+                local modName = ML(module.id, module.title) or module.title
                 split.rightStatusText:SetText(modName .. (newVal and " (" .. L["FEATURES_ENABLED"] .. ")" or " (" .. L["FEATURES_DISABLED"] .. ")"))
             end
             if split.leftStatusText then
@@ -333,7 +344,7 @@ local function ShowModuleDetail(split, module)
                     end
                     local groupHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                     groupHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-                    groupHeader:SetText(ns.L[toggle.group] or toggle.group)
+                    groupHeader:SetText(ML(module.id, toggle.group) or toggle.group)
                     groupHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
                     yOffset = yOffset - groupHeader:GetStringHeight() - 8
 
@@ -352,8 +363,8 @@ local function ShowModuleDetail(split, module)
                 local rowRefresh
                 yOffset, rowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
                     yOffset = yOffset,
-                    label = ns.L[toggle.label] or toggle.label,
-                    description = toggle.description and (ns.L[toggle.description] or toggle.description) or nil,
+                    label = ML(module.id, toggle.label) or toggle.label,
+                    description = toggle.description and (ML(module.id, toggle.description) or toggle.description) or nil,
                     value = currentVal,
                     isEnabled = isEnabled,
                     onValueChange = function(newVal)
@@ -408,13 +419,13 @@ local function BuildFeaturesList(split, filterText)
     local favModules = {}
     for _, module in ipairs(allModules) do
         if IsQoLFeatureFavorite(module.id) then
-            if not filter or (ns.L[module.title] or module.title):lower():find(filter, 1, true) then
+            if not filter or (ML(module.id, module.title) or module.title):lower():find(filter, 1, true) then
                 table.insert(favModules, module)
             end
         end
     end
     table.sort(favModules, function(a, b)
-        return (ns.L[a.title] or a.title or "") < (ns.L[b.title] or b.title or "")
+        return (ML(a.id, a.title) or a.title or "") < (ML(b.id, b.title) or b.title or "")
     end)
 
     if #favModules > 0 then
@@ -431,7 +442,7 @@ local function BuildFeaturesList(split, filterText)
             shownCount = shownCount + 1
             local row = OneWoW_GUI:CreateListRowBasic(listScrollChild, {
                 height = rowHeight,
-                label = ns.L[module.title] or module.title,
+                label = ML(module.id, module.title) or module.title,
                 showDot = true,
                 dotEnabled = ns.ModuleRegistry:IsEnabled(module.id),
                 favoriteToggle = {
@@ -454,7 +465,7 @@ local function BuildFeaturesList(split, filterText)
                     self:SetActive(true)
                     if split.rightStatusText then
                         local isEnabled = ns.ModuleRegistry:IsEnabled(capturedModule.id)
-                        local modName = ns.L[capturedModule.title] or capturedModule.title
+                        local modName = ML(capturedModule.id, capturedModule.title) or capturedModule.title
                         split.rightStatusText:SetText(modName .. (isEnabled and " (" .. L["FEATURES_ENABLED"] .. ")" or " (" .. L["FEATURES_DISABLED"] .. ")"))
                     end
                 end,
@@ -474,7 +485,7 @@ local function BuildFeaturesList(split, filterText)
         local filteredModules = {}
         for _, module in ipairs(catModules) do
             if not IsQoLFeatureFavorite(module.id) then
-                if not filter or (ns.L[module.title] or module.title):lower():find(filter, 1, true) then
+                if not filter or (ML(module.id, module.title) or module.title):lower():find(filter, 1, true) then
                     table.insert(filteredModules, module)
                 end
             end
@@ -494,7 +505,7 @@ local function BuildFeaturesList(split, filterText)
                 shownCount = shownCount + 1
                 local row = OneWoW_GUI:CreateListRowBasic(listScrollChild, {
                     height = rowHeight,
-                    label = ns.L[module.title] or module.title,
+                    label = ML(module.id, module.title) or module.title,
                     showDot = true,
                     dotEnabled = ns.ModuleRegistry:IsEnabled(module.id),
                     favoriteToggle = {
@@ -517,7 +528,7 @@ local function BuildFeaturesList(split, filterText)
                         self:SetActive(true)
                         if split.rightStatusText then
                             local isEnabled = ns.ModuleRegistry:IsEnabled(capturedModule.id)
-                            local modName = ns.L[capturedModule.title] or capturedModule.title
+                            local modName = ML(capturedModule.id, capturedModule.title) or capturedModule.title
                             split.rightStatusText:SetText(modName .. (isEnabled and " (" .. L["FEATURES_ENABLED"] .. ")" or " (" .. L["FEATURES_DISABLED"] .. ")"))
                         end
                     end,
@@ -622,7 +633,7 @@ function ns.UI.SelectFeature(moduleId)
 
             if split.rightStatusText then
                 local isEnabled = ns.ModuleRegistry:IsEnabled(module.id)
-                local modName = ns.L[module.title] or module.title
+                local modName = ML(module.id, module.title) or module.title
                 split.rightStatusText:SetText(modName .. (isEnabled and " (" .. L["FEATURES_ENABLED"] .. ")" or " (" .. L["FEATURES_DISABLED"] .. ")"))
             end
         end

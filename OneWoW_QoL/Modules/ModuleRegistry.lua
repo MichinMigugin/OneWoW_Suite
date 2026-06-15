@@ -1,13 +1,17 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/ModuleRegistry.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 
 ns.ModuleRegistry = {}
 local Registry = ns.ModuleRegistry
 
 local modules = {}
 local moduleOrder = {}
+
+-- Transient pointer to the module whose files are currently loading. Set by Define()
+-- (called from each module's module.lua -- the first file in its TOC block) and read
+-- once via Current() at the top of that module's other files. It is NOT exposed on
+-- `ns`, so it cannot be misread at runtime: capture what you need into a file-local
+-- at load time.
+local loading
 
 local VALID_CATEGORIES = {
     AUTOMATION = true,
@@ -19,6 +23,25 @@ local VALID_CATEGORIES = {
 }
 
 local CATEGORY_ORDER = { "AUTOMATION", "INTERFACE", "SOCIAL", "COMBAT", "ECONOMY", "UTILITY" }
+
+-- Module SDK entry point. Called from <module>/module.lua (the FIRST file in the
+-- module's TOC block). Derives the module's locale scope (ADDON_NAME .. "." .. id),
+-- caches its read-only locale view, marks it as the currently-loading module, and
+-- registers it. The module's other files retrieve it via Current().
+function Registry:Define(addonName, def)
+    def._scope = addonName .. "." .. def.id
+    def._view  = OneWoW.Locale:GetTable(def._scope)
+    loading    = def
+    self:Register(def)
+    return def
+end
+
+-- Returns the currently-loading module and its locale view. Call ONCE at the top of
+-- each of a module's files (locale + code), after its module.lua has run, and capture
+-- the results into file-locals. Do not call at runtime.
+function Registry:Current()
+    return loading, loading and loading._view
+end
 
 function Registry:Register(moduleData)
     if not moduleData or not moduleData.id then return end

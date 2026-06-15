@@ -1,5 +1,6 @@
-local addonName, ns = ...
-local M = ns.MapWorldToolsModule
+local _, ns = ...
+local MapWorldToolsModule, L = ns.ModuleRegistry:Current()
+local M = MapWorldToolsModule
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -25,7 +26,6 @@ local function AddLabelIndented(parent, cy, text, color)
 end
 
 local function BuildContent(container)
-    local L = ns.L
     local s = M.GetSettings()
     local cy = 0
 

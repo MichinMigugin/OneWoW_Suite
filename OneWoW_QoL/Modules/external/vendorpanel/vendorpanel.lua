@@ -1,6 +1,8 @@
 -- OneWoW_QoL Addon File
 -- OneWoW_QoL/Modules/external/vendorpanel/vendorpanel.lua
-local addonName, ns = ...
+local _, ns = ...
+local VendorPanelModule, L = ns.ModuleRegistry:Current()
+if not VendorPanelModule then return end
 
 local function GetDB()
     local addon = OneWoW_QoL
@@ -720,7 +722,7 @@ function VendorPanel:AddToNeverSellList(itemID, itemLink)
     if not itemID then return end
     if GetItemStatus():IsItemJunk(itemID) then GetItemStatus():RemoveItemStatus(itemID) end
     GetItemStatus():MarkAsProtected(itemID, itemLink)
-    print("OneWoW QoL: " .. ns.L["VENDOR_ITEM_PROTECTED"])
+    print("OneWoW QoL: " .. L["VENDOR_ITEM_PROTECTED"])
     C_Timer.After(0.1, function()
         VendorPanel:UpdatePreviewPanel()
         VendorPanel:UpdateButton()
@@ -736,7 +738,7 @@ end
 function VendorPanel:RemoveFromNeverSellList(itemID)
     if not itemID then return end
     GetItemStatus():RemoveItemStatus(itemID)
-    print("OneWoW QoL: " .. ns.L["VENDOR_PROTECTION_REMOVED"])
+    print("OneWoW QoL: " .. L["VENDOR_PROTECTION_REMOVED"])
     C_Timer.After(0.1, function()
         VendorPanel:UpdatePreviewPanel()
         VendorPanel:UpdateButton()
@@ -761,7 +763,7 @@ function VendorPanel:UpdateNeverSellButtonCount()
     if not state.filtersDialog or not state.filtersDialog.neverSellBtnText then return end
     local count = 0
     for _ in pairs(self:GetNeverSellList()) do count = count + 1 end
-    state.filtersDialog.neverSellBtnText:SetText(string.format(ns.L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", count))
+    state.filtersDialog.neverSellBtnText:SetText(string.format(L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", count))
 end
 
 function VendorPanel:GetOneTimeItems()
@@ -820,7 +822,7 @@ function VendorPanel:SellJunkItems()
     end
 
     if #itemsToSell == 0 then
-        print("OneWoW QoL: " .. ns.L["VENDOR_NO_JUNK"])
+        print("OneWoW QoL: " .. L["VENDOR_NO_JUNK"])
         return
     end
 
@@ -849,7 +851,7 @@ function VendorPanel:SellJunkItems()
                 state.activeSellTicker = nil
                 state.activeSellConfirmTicker = nil
             end
-            print("OneWoW QoL: " .. ns.L["VENDOR_DOES_NOT_BUY"])
+            print("OneWoW QoL: " .. L["VENDOR_DOES_NOT_BUY"])
         end
     end)
 
@@ -891,12 +893,12 @@ function VendorPanel:SellJunkItems()
             if actualSoldCount > 0 then
                 local moneyStr = VPFilters.FormatMoney(actualGold)
                 local categoryParts = {}
-                if grayCount > 0 then table.insert(categoryParts, grayCount .. " " .. ns.L["VENDOR_SOLD_GRAY"]) end
-                if markedCount > 0 then table.insert(categoryParts, markedCount .. " " .. ns.L["VENDOR_SOLD_MARKED"]) end
-                if ilvlGearCount > 0 then table.insert(categoryParts, ilvlGearCount .. " " .. ns.L["VENDOR_SOLD_ILVL"]) end
-                if reagentsCount > 0 then table.insert(categoryParts, reagentsCount .. " " .. ns.L["VENDOR_SOLD_REAGENT"]) end
+                if grayCount > 0 then table.insert(categoryParts, grayCount .. " " .. L["VENDOR_SOLD_GRAY"]) end
+                if markedCount > 0 then table.insert(categoryParts, markedCount .. " " .. L["VENDOR_SOLD_MARKED"]) end
+                if ilvlGearCount > 0 then table.insert(categoryParts, ilvlGearCount .. " " .. L["VENDOR_SOLD_ILVL"]) end
+                if reagentsCount > 0 then table.insert(categoryParts, reagentsCount .. " " .. L["VENDOR_SOLD_REAGENT"]) end
                 local categoryStr = table.concat(categoryParts, ", ")
-                print("OneWoW QoL: " .. string.format(ns.L["VENDOR_SOLD"], actualSoldCount, categoryStr, moneyStr))
+                print("OneWoW QoL: " .. string.format(L["VENDOR_SOLD"], actualSoldCount, categoryStr, moneyStr))
             end
         end
     end)
@@ -1253,11 +1255,11 @@ function VendorPanel:UpdateButton()
     ---@diagnostic disable-next-line: undefined-field
     local btnText = state.vendorButton.text
     if junkCount > 0 or destroyCount > 0 then
-        btnText:SetText(string.format(ns.L["VENDOR_SELL_COUNTS"], junkCount, destroyCount))
+        btnText:SetText(string.format(L["VENDOR_SELL_COUNTS"], junkCount, destroyCount))
         state.vendorButton:Enable()
         state.vendorButton:SetAlpha(1.0)
     else
-        btnText:SetText(string.format(ns.L["VENDOR_SELL_COUNTS"], 0, 0))
+        btnText:SetText(string.format(L["VENDOR_SELL_COUNTS"], 0, 0))
         state.vendorButton:Disable()
         state.vendorButton:SetAlpha(0.6)
     end
@@ -1320,7 +1322,7 @@ function VendorPanel:ToggleFiltersDialog()
     local neverSellCount = 0
     for _ in pairs(self:GetNeverSellList()) do neverSellCount = neverSellCount + 1 end
     if state.filtersDialog.neverSellBtnText then
-        state.filtersDialog.neverSellBtnText:SetText(string.format(ns.L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", neverSellCount))
+        state.filtersDialog.neverSellBtnText:SetText(string.format(L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", neverSellCount))
     end
     local screenWidth = GetScreenWidth() * UIParent:GetEffectiveScale()
     local panelRight = state.junkPreviewPanel:GetRight()
@@ -1463,24 +1465,6 @@ end
 -- ============================================================
 -- Module
 -- ============================================================
-local VendorPanelModule = {}
-ns.VendorPanelModule = VendorPanelModule
-
-VendorPanelModule.id = "vendorpanel"
-VendorPanelModule.title = "VENDORPANEL_TITLE"
-VendorPanelModule.category = "ECONOMY"
-VendorPanelModule.description = "VENDORPANEL_DESC"
-VendorPanelModule.version = "1.0"
-VendorPanelModule.author = "MichinMuggin / Ricky"
-VendorPanelModule.contact = "https://wow2.xyz/"
-VendorPanelModule.link = "https://wow2.xyz/"
-VendorPanelModule.toggles = {
-    { id = "show_panel", label = "VENDORPANEL_SHOW_PANEL", description = "VENDORPANEL_SHOW_PANEL_DESC", default = true },
-    { id = "show_blizz_junk", label = "VENDORPANEL_SHOW_BLIZZ_JUNK", description = "VENDORPANEL_SHOW_BLIZZ_JUNK_DESC", default = false },
-}
-VendorPanelModule.preview = true
-VendorPanelModule.defaultEnabled = true
-
 function VendorPanelModule:OnEnable()
     local db = GetDB()
     if not db then return end
@@ -1539,7 +1523,7 @@ function VendorPanelModule:OnEnable()
         if not settings.vfNotified then
             settings.vfNotified = true
             C_Timer.After(5, function()
-                print("|cFF00FF00OneWoW QoL|r: " .. ns.L["VENDOR_VF_DETECTED"])
+                print("|cFF00FF00OneWoW QoL|r: " .. L["VENDOR_VF_DETECTED"])
             end)
         end
     end

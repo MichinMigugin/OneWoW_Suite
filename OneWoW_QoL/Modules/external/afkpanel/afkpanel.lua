@@ -1,38 +1,9 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/afkpanel/afkpanel.lua
-local addonName, ns = ...
+local _, ns = ...
 
-local AFKPanelModule = {
-    id          = "afkpanel",
-    title       = "AFKPANEL_TITLE",
-    category    = "INTERFACE",
-    description = "AFKPANEL_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles     = {
-        { id = "camera_spin",     label = "AFKPANEL_CAMERA_SPIN", default = true },
-        { id = "show_daily",      label = "AFKPANEL_SHOW_DAILY",  default = true  },
-        { id = "show_weekly",     label = "AFKPANEL_SHOW_WEEKLY", default = true  },
-    },
-    preview        = true,
-    defaultEnabled = true,
-    isAFK       = false,
-    _initialized = false,
-    _eventFrame  = nil,
-    _afkFrame    = nil,
-    _model       = nil,
-    _infoPanel   = nil,
-    _alertsPanel = nil,
-    _dailyPanel  = nil,
-    _weeklyPanel = nil,
-    _timer       = nil,
-    _animTimer   = nil,
-    _startTime   = nil,
-}
-
-local L = ns.L
+-- Metadata table lives in module.lua (loaded first); grab it + this module's locale
+-- view here. Capture into file-locals at load -- never read Current() at runtime.
+local AFKPanelModule, L = ns.ModuleRegistry:Current()
+if not AFKPanelModule then return end
 
 local CAMERA_SPEED = 0.035
 
@@ -55,7 +26,7 @@ local printKeys = {
     PRINTSCREEN = true,
 }
 if IsMacClient() then
-    printKeys[_G.KEY_PRINTSCREEN_MAC or "PRINT"] = true
+    printKeys[KEY_PRINTSCREEN_MAC or "PRINT"] = true
 end
 
 -- ============================================================
@@ -92,7 +63,7 @@ end
 
 local function GetNotesByType(noteType)
     local notes = {}
-    local notesAddon = _G.OneWoW_Notes
+    local notesAddon = OneWoW_Notes
     if not notesAddon then return notes end
     local notesData = notesAddon.NotesData
     if not notesData or not notesData.GetAllNotes then return notes end
@@ -100,7 +71,7 @@ local function GetNotesByType(noteType)
     local allNotes = notesData:GetAllNotes()
     if not allNotes then return notes end
 
-    for noteID, note in pairs(allNotes) do
+    for _, note in pairs(allNotes) do
         if type(note) == "table" and note.noteType == noteType and note.todos and #note.todos > 0 then
             local incompleteTodos = {}
             for _, todo in ipairs(note.todos) do
@@ -438,7 +409,7 @@ function AFKPanelModule:SetupFrames()
     afkFrame:SetScale(UIParent:GetEffectiveScale())
     afkFrame:SetAllPoints(UIParent)
     afkFrame:EnableKeyboard(true)
-    afkFrame:SetScript("OnKeyDown", function(frame, key)
+    afkFrame:SetScript("OnKeyDown", function(_, key)
         AFKPanelModule:OnKeyDown(key)
     end)
     afkFrame:Hide()
@@ -522,8 +493,8 @@ function AFKPanelModule:SetAFK(status)
         model.idleDuration = 40
         model:SetUnit("player")
         model:SetAnimation(67)
-        model:SetScript("OnUpdate", function(self)
-            AFKPanelModule:Model_OnUpdate(self)
+        model:SetScript("OnUpdate", function(myself)
+            AFKPanelModule:Model_OnUpdate(myself)
         end)
 
         self._startTime = GetTime()
@@ -624,7 +595,7 @@ function AFKPanelModule:OnEnable()
         self._eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
         self._eventFrame:RegisterEvent("LFG_PROPOSAL_SHOW")
         self._eventFrame:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
-        self._eventFrame:SetScript("OnEvent", function(frame, event, arg1)
+        self._eventFrame:SetScript("OnEvent", function(_, event, arg1)
             AFKPanelModule:OnEvent(event, arg1)
         end)
     end
@@ -683,5 +654,3 @@ function AFKPanelModule:OnToggle(toggleId, value)
         end
     end
 end
-
-ns.AFKPanelModule = AFKPanelModule

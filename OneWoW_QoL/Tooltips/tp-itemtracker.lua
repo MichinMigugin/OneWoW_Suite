@@ -2,8 +2,6 @@ local _, ns = ...
 
 local OneWoW = OneWoW
 
-local OneWoW_GUI = OneWoW_GUI
-
 local JOURNAL_EXPANSIONS = {
     "Classic", "BurningCrusade", "WrathoftheLichKing", "Cataclysm",
     "MistsofPandaria", "WarlordsofDraenor", "Legion", "BattleforAzeroth",

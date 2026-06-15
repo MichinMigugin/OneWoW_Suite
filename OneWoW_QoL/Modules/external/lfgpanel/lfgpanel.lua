@@ -1,6 +1,8 @@
 -- OneWoW_QoL Addon File
 -- OneWoW_QoL/Modules/external/lfgpanel/lfgpanel.lua
-local addonName, ns = ...
+local _, ns = ...
+local LFGPanelModule, L = ns.ModuleRegistry:Current()
+if not LFGPanelModule then return end
 
 local function GetDB()
     local addon = OneWoW_QoL
@@ -114,7 +116,6 @@ function LFGPanel:ShouldShowLockout(lockout)
 end
 
 function LFGPanel:FormatTimeRemaining(seconds)
-    local L = ns.L
     if seconds <= 0 then
         return L["LFGPANEL_EXPIRED"]
     end
@@ -149,7 +150,6 @@ function LFGPanel:GetDifficultyColor(difficultyId)
 end
 
 function LFGPanel:GetDifficultyLabel(difficultyId)
-    local L = ns.L
     local key = DIFFICULTY_NAMES[difficultyId]
     if key then
         return L[key] or key
@@ -244,24 +244,6 @@ function LFGPanel:SetManuallyHidden(hidden)
         self:Toggle()
     end
 end
-
-local LFGPanelModule = {}
-ns.LFGPanelModule = LFGPanelModule
-
-LFGPanelModule.id = "lfgpanel"
-LFGPanelModule.title = "LFGPANEL_TITLE"
-LFGPanelModule.category = "INTERFACE"
-LFGPanelModule.description = "LFGPANEL_DESC"
-LFGPanelModule.version = "1.0"
-LFGPanelModule.author = "MichinMuggin / Ricky"
-LFGPanelModule.contact = "https://wow2.xyz/"
-LFGPanelModule.link = "https://wow2.xyz/"
-LFGPanelModule.toggles = {
-    { id = "show_panel", label = "LFGPANEL_SHOW_PANEL", description = "LFGPANEL_SHOW_PANEL_DESC", default = true },
-    { id = "filter_results", label = "LFGPANEL_FILTER_RESULTS", description = "LFGPANEL_FILTER_RESULTS_DESC", default = true },
-}
-LFGPanelModule.preview = true
-LFGPanelModule.defaultEnabled = true
 
 function LFGPanelModule:OnEnable()
     local db = GetDB()

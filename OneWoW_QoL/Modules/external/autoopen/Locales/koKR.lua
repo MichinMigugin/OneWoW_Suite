@@ -1,21 +1,19 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/autoopen/Locales/koKR.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
+local M = ns.ModuleRegistry:Current()
 
-if GetLocale() ~= "koKR" then return end
+OneWoW.Locale:Register(M._scope, "koKR", {
 
-local L_enUS = ns.L_enUS
-L_enUS["AUTOOPEN_TITLE"]       = "TEST"
-L_enUS["AUTOOPEN_DESC"]        = "TEST"
-L_enUS["AUTOOPEN_OPENING"]     = "TEST"
-L_enUS["AUTOOPEN_BLACKLIST"]          = "TEST"
-L_enUS["AUTOOPEN_BLACKLIST_DESC"]     = "TEST"
-L_enUS["AUTOOPEN_BLACKLIST_ADD"]      = "TEST"
-L_enUS["AUTOOPEN_BLACKLIST_DRAG"]     = "TEST"
-L_enUS["AUTOOPEN_BLACKLIST_CLEAR"]    = "TEST"
-L_enUS["AUTOOPEN_BLACKLIST_EMPTY"]    = "TEST"
-L_enUS["AUTOOPEN_BLACKLIST_REMOVED"]  = "TEST"
-L_enUS["AUTOOPEN_BLACKLIST_ADDED"]    = "TEST"
-L_enUS["AUTOOPEN_BLACKLIST_CLEARED"]  = "TEST"
-L_enUS["AUTOOPEN_ADD"]               = "TEST"
+    ["AUTOOPEN_TITLE"] = "TEST",
+    ["AUTOOPEN_DESC"] = "TEST",
+    ["AUTOOPEN_OPENING"] = "TEST",
+    ["AUTOOPEN_BLACKLIST"] = "TEST",
+    ["AUTOOPEN_BLACKLIST_DESC"] = "TEST",
+    ["AUTOOPEN_BLACKLIST_ADD"] = "TEST",
+    ["AUTOOPEN_BLACKLIST_DRAG"] = "TEST",
+    ["AUTOOPEN_BLACKLIST_CLEAR"] = "TEST",
+    ["AUTOOPEN_BLACKLIST_EMPTY"] = "TEST",
+    ["AUTOOPEN_BLACKLIST_REMOVED"] = "TEST",
+    ["AUTOOPEN_BLACKLIST_ADDED"] = "TEST",
+    ["AUTOOPEN_BLACKLIST_CLEARED"] = "TEST",
+    ["AUTOOPEN_ADD"] = "TEST",
+})

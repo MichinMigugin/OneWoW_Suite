@@ -1,36 +1,35 @@
-local addonName, ns = ...
-local L = ns.L or {}
-ns.L = L
+local _, ns = ...
+local M = ns.ModuleRegistry:Current()
 
--- Module info
-L["FRAMEMOVER_TITLE"]       = "Frame Mover"
-L["FRAMEMOVER_DESC"]        = "Drag Blizzard UI frames to reposition them. Use Ctrl+Scroll to scale. Positions and scales can persist across sessions."
+OneWoW.Locale:Register(M._scope, "enUS", {
 
--- Toggle labels
-L["FRAMEMOVER_TOGGLE_REQUIRE_SHIFT"]  = "Require Shift to Drag"
-L["FRAMEMOVER_TOGGLE_ENABLE_SCALING"] = "Ctrl+Scroll Scaling"
-L["FRAMEMOVER_TOGGLE_SAVE_POSITIONS"] = "Remember Positions"
-L["FRAMEMOVER_TOGGLE_SAVE_SCALES"]    = "Remember Scales"
-L["FRAMEMOVER_TOGGLE_CLAMP_SCREEN"]   = "Clamp to Screen"
+    ["FRAMEMOVER_TITLE"] = "Frame Mover",
+    ["FRAMEMOVER_DESC"] = "Drag Blizzard UI frames to reposition them. Use Ctrl+Scroll to scale. Positions and scales can persist across sessions.",
 
--- Toggle groups
-L["FRAMEMOVER_GROUP_BEHAVIOR"] = "Behavior"
-L["FRAMEMOVER_GROUP_SAVING"]   = "Persistence"
+    ["FRAMEMOVER_TOGGLE_REQUIRE_SHIFT"] = "Require Shift to Drag",
+    ["FRAMEMOVER_TOGGLE_ENABLE_SCALING"] = "Ctrl+Scroll Scaling",
+    ["FRAMEMOVER_TOGGLE_SAVE_POSITIONS"] = "Remember Positions",
+    ["FRAMEMOVER_TOGGLE_SAVE_SCALES"] = "Remember Scales",
+    ["FRAMEMOVER_TOGGLE_CLAMP_SCREEN"] = "Clamp to Screen",
 
--- Frame categories
-L["FRAMEMOVER_CAT_CORE"]        = "Core UI"
-L["FRAMEMOVER_CAT_COLLECTIONS"] = "Collections & Journals"
-L["FRAMEMOVER_CAT_PROFESSIONS"] = "Professions & Economy"
-L["FRAMEMOVER_CAT_GROUP"]       = "Group Content"
-L["FRAMEMOVER_CAT_CHARACTER"]   = "Character & Talents"
-L["FRAMEMOVER_CAT_SOCIAL"]      = "Social & Guilds"
-L["FRAMEMOVER_CAT_MISC"]        = "Miscellaneous"
-L["FRAMEMOVER_CAT_HOUSING"]     = "Housing"
+    ["FRAMEMOVER_GROUP_BEHAVIOR"] = "Behavior",
+    ["FRAMEMOVER_GROUP_SAVING"] = "Persistence",
 
--- Custom detail UI
-L["FRAMEMOVER_FRAMES_HEADER"]     = "Movable Frames"
-L["FRAMEMOVER_RESET_POSITIONS"]   = "Reset All Positions"
-L["FRAMEMOVER_RESET_SCALES"]      = "Reset All Scales"
-L["FRAMEMOVER_RESET_POS_DONE"]    = "Positions reset. Reopen frames to see defaults."
-L["FRAMEMOVER_RESET_SCALE_DONE"]  = "Scales reset. Reopen frames to see defaults."
-L["FRAMEMOVER_ENABLED_TOOLTIP"]   = "Left-click to toggle. Ctrl+Scroll over a frame to scale it."
+    ["FRAMEMOVER_CAT_CORE"] = "Core UI",
+    ["FRAMEMOVER_CAT_COLLECTIONS"] = "Collections & Journals",
+    ["FRAMEMOVER_CAT_PROFESSIONS"] = "Professions & Economy",
+    ["FRAMEMOVER_CAT_GROUP"] = "Group Content",
+    ["FRAMEMOVER_CAT_CHARACTER"] = "Character & Talents",
+    ["FRAMEMOVER_CAT_SOCIAL"] = "Social & Guilds",
+    ["FRAMEMOVER_CAT_MISC"] = "Miscellaneous",
+    ["FRAMEMOVER_CAT_HOUSING"] = "Housing",
+
+    ["FRAMEMOVER_FRAMES_HEADER"] = "Movable Frames",
+    ["FRAMEMOVER_RESET_POSITIONS"] = "Reset All Positions",
+    ["FRAMEMOVER_RESET_SCALES"] = "Reset All Scales",
+    ["FRAMEMOVER_RESET_POS_DONE"] = "Positions reset. Reopen frames to see defaults.",
+    ["FRAMEMOVER_RESET_SCALE_DONE"] = "Scales reset. Reopen frames to see defaults.",
+    ["FRAMEMOVER_ENABLED_TOOLTIP"] = "Left-click to toggle. Ctrl+Scroll over a frame to scale it.",
+    ["FEATURES_ON"] = "On",
+    ["FEATURES_OFF"] = "Off",
+})

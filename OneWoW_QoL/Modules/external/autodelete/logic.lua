@@ -1,9 +1,7 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/autodelete/logic.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
+local AutoDeleteModule = ns.ModuleRegistry:Current()
 
-local M = ns.AutoDeleteModule
+local M = AutoDeleteModule
 
 local function HandleDeleteConfirm(self)
     if not ns.ModuleRegistry:IsEnabled("autodelete") then return end
@@ -45,7 +43,7 @@ function M:OnEnable()
     end
 
     self._frame:RegisterEvent("DELETE_ITEM_CONFIRM")
-    self._frame:SetScript("OnEvent", function(frame, event)
+    self._frame:SetScript("OnEvent", function(_, event)
         if event == "DELETE_ITEM_CONFIRM" then
             HandleDeleteConfirm(self)
         end

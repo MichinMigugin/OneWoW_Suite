@@ -1,24 +1,8 @@
 local _, ns = ...
+local PlayMountsModule, L = ns.ModuleRegistry:Current()
+if not PlayMountsModule then return end
 
 local OneWoW_GUI = OneWoW_GUI
-
-local PlayMountsModule = {
-    id          = "playmounts",
-    title       = "PLAYMOUNTS_TITLE",
-    category    = "INTERFACE",
-    description = "PLAYMOUNTS_DESC",
-    version     = "1.1",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles = {
-        { id = "announce_chat",    label = "PLAYMOUNTS_TOGGLE_CHAT",       description = "PLAYMOUNTS_TOGGLE_CHAT_DESC",       default = false },
-        { id = "enableMatchMount", label = "PLAYMOUNTS_TOGGLE_MATCHMOUNT", description = "PLAYMOUNTS_TOGGLE_MATCHMOUNT_DESC", default = true  },
-    },
-    preview        = true,
-    defaultEnabled = true,
-    _frame = nil,
-}
 
 local MAXIMUM_BUFF_COUNT = 40
 
@@ -78,7 +62,6 @@ local function RegisterTooltipProvider()
         local mountInfo = PlayMountsModule:DetectMountOnUnit(context.unit)
         if not mountInfo then return nil end
 
-        local L = ns.L
         local displayMode = GetDisplayMode()
         local lines = {}
 
@@ -202,7 +185,6 @@ function PlayMountsModule:OnTargetChanged()
     if not mountInfo then return end
 
     local unitName = UnitName(unit)
-    local L = ns.L
 
     local prefix = "|cFFFFD100[QoL - " .. (L["PLAYMOUNTS_MOUNT"] or "Mount") .. "]|r "
     local playerLink = "|Hplayer:" .. unitName .. "|h|cFFFFFFFF[" .. unitName .. "]|r|h"
@@ -238,7 +220,6 @@ function PlayMountsModule:OnTargetChanged()
 end
 
 function PlayMountsModule:CreateCustomDetail(parent, yOffset, _, registerRefresh)
-    local L = ns.L
 
     local divider = parent:CreateTexture(nil, "ARTWORK")
     divider:SetHeight(1)
@@ -401,5 +382,3 @@ function PlayMountsModule:OnDisable()
         self._frame:UnregisterAllEvents()
     end
 end
-
-ns.PlayMountsModule = PlayMountsModule

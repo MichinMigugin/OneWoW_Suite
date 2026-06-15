@@ -1,5 +1,6 @@
 local _, ns = ...
-local M = ns.MapMiniToolsModule
+local MapMiniToolsModule, L = ns.ModuleRegistry:Current()
+local M = MapMiniToolsModule
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -38,7 +39,6 @@ local function AddLabelIndented(parent, cy, text, color)
 end
 
 local function GetFontLabel(fontKey)
-    local L = ns.L
     if not fontKey or fontKey == "global" then
         return L["MMSKIN_FONT_GLOBAL"]
     end
@@ -52,7 +52,6 @@ local function GetFontLabel(fontKey)
 end
 
 local function BuildFontItems()
-    local L = ns.L
     local items = {
         { value = "global",      text = L["MMSKIN_FONT_GLOBAL"] },
         { value = "wow_default", text = L["MMSKIN_FONT_WOW_DEFAULT"] },
@@ -64,7 +63,6 @@ local function BuildFontItems()
 end
 
 local function BuildAlignItems()
-    local L = ns.L
     return {
         { value = "LEFT",   text = L["MMSKIN_ALIGN_LEFT"]   },
         { value = "CENTER", text = L["MMSKIN_ALIGN_CENTER"] },
@@ -73,7 +71,6 @@ local function BuildAlignItems()
 end
 
 local function GetAlignLabel(val)
-    local L = ns.L
     if val == "LEFT"  then return L["MMSKIN_ALIGN_LEFT"]  end
     if val == "RIGHT" then return L["MMSKIN_ALIGN_RIGHT"] end
     return L["MMSKIN_ALIGN_CENTER"]
@@ -98,7 +95,6 @@ end
 -- ─── Content Builder ────────────────────────────────────────────────────────
 
 local function BuildContent(container)
-    local L = ns.L
     local s = M.GetSettings()
     local cy = 0
     local isEnabled = ns.ModuleRegistry:IsEnabled("map_mini_tools")

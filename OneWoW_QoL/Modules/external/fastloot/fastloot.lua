@@ -1,27 +1,11 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/fastloot/fastloot.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
-
-local FastLootModule = {
-    id          = "fastloot",
-    title       = "FASTLOOT_TITLE",
-    category    = "AUTOMATION",
-    description = "FASTLOOT_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles     = {},
-    preview     = true,
-    _frame      = nil,
-    _epoch      = 0,
-}
+local _, ns = ...
+local FastLootModule = ns.ModuleRegistry:Current()
+if not FastLootModule then return end
 
 function FastLootModule:OnEnable()
     if not self._frame then
         self._frame = CreateFrame("Frame", "OneWoW_QoL_FastLoot")
-        self._frame:SetScript("OnEvent", function(frame, event, ...)
+        self._frame:SetScript("OnEvent", function(_, event)
             if event == "LOOT_READY" then
                 self:LOOT_READY()
             end
@@ -47,5 +31,3 @@ function FastLootModule:LOOT_READY()
         end
     end
 end
-
-ns.FastLootModule = FastLootModule

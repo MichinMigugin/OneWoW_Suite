@@ -1,25 +1,6 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/copytext/copytext.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
-
-local CopyTextModule = {
-    id          = "copytext",
-    title       = "COPYTEXT_TITLE",
-    category    = "UTILITY",
-    description = "COPYTEXT_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles = {
-        { id = "mode_tooltips", label = "COPYTEXT_TOGGLE_TOOLTIPS", description = "COPYTEXT_TOGGLE_TOOLTIPS_DESC", default = true  },
-        { id = "mode_anything", label = "COPYTEXT_TOGGLE_ANYTHING", description = "COPYTEXT_TOGGLE_ANYTHING_DESC", default = false },
-        { id = "fast_copy",     label = "COPYTEXT_TOGGLE_FAST",     description = "COPYTEXT_TOGGLE_FAST_DESC",     default = false },
-    },
-    preview        = true,
-    defaultEnabled = true,
-}
+local _, ns = ...
+local CopyTextModule, L = ns.ModuleRegistry:Current()
+if not CopyTextModule then return end
 
 local function GetToggle(id)
     return ns.ModuleRegistry:GetToggleValue("copytext", id)
@@ -30,18 +11,18 @@ function CopyTextModule:Capture()
 
     if GetToggle("mode_tooltips") then
         text = self:ExtractTooltipText()
-        title = ns.L["COPYTEXT_TOOLTIP_CONTENT"] or "Tooltip Content"
+        title = L["COPYTEXT_TOOLTIP_CONTENT"] or "Tooltip Content"
     end
 
     if (not text or #text == 0) and GetToggle("mode_anything") then
         text = self:ExtractAnything()
-        title = ns.L["COPYTEXT_UI_CONTENT"] or "UI Text"
+        title = L["COPYTEXT_UI_CONTENT"] or "UI Text"
     end
 
     if text and #text > 0 then
         self:ShowCopyDialog(title, text)
     else
-        print("|cFFFFD100OneWoW QoL:|r " .. (ns.L["COPYTEXT_NO_TEXT"] or "No text found under cursor."))
+        print("|cFFFFD100OneWoW QoL:|r " .. (L["COPYTEXT_NO_TEXT"] or "No text found under cursor."))
     end
 end
 
@@ -123,5 +104,3 @@ function CopyTextModule:OnDisable()
     _G["SLASH_OWCOPYTEXT1"] = nil
     _G["SLASH_OWCOPYTEXT2"] = nil
 end
-
-ns.CopyTextModule = CopyTextModule

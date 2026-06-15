@@ -1,7 +1,6 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/hideerrors/hideerrors.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
+local HideErrorsModule = ns.ModuleRegistry:Current()
+if not HideErrorsModule then return end
 
 -- ============================================================================
 -- HideErrors
@@ -16,23 +15,6 @@ local addonName, ns = ...
 -- maintenance here. Strings containing %s format markers are skipped (those
 -- error variants vary at runtime and aren't reliable to match exactly).
 -- ============================================================================
-
-local HideErrorsModule = {
-    id          = "hideerrors",
-    title       = "HIDEERRORS_TITLE",
-    category    = "INTERFACE",
-    description = "HIDEERRORS_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles     = {},
-    preview     = true,
-    defaultEnabled = false,
-    _hooked     = false,
-    _origAddMessage = nil,
-    _filterSet  = nil,
-}
 
 local FILTERED_GLOBALS = {
     "ERR_OUT_OF_RAGE",
@@ -113,5 +95,3 @@ function HideErrorsModule:OnDisable()
     -- pass-through behavior. Leave the wrapper installed so re-enable is instant
     -- and we don't fight other addons that may have hooked AddMessage after us.
 end
-
-ns.HideErrorsModule = HideErrorsModule

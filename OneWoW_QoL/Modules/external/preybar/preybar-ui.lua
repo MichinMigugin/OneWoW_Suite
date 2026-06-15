@@ -6,11 +6,11 @@
 -- table, data resolution, and events live in preybar.lua.
 -- ============================================================================
 local _, ns = ...
+local PreyBarModule, L = ns.ModuleRegistry:Current()
 
 local OneWoW_GUI = OneWoW_GUI
-
-local PreyBarModule = ns.PreyBarModule
 local C = OneWoW_GUI.Constants
+
 local format = string.format
 
 -- ---- Layout constants ----
@@ -111,7 +111,7 @@ function PreyBarModule:CreateFrame()
     f:SetScript("OnEnter", function(frame)
         if PreyBarModule.GetToggle("lock") then return end
         GameTooltip:SetOwner(frame, "ANCHOR_TOP")
-        GameTooltip:SetText(ns.L["PREYBAR_DRAG_HINT"], 1, 1, 1)
+        GameTooltip:SetText(L["PREYBAR_DRAG_HINT"], 1, 1, 1)
         GameTooltip:Show()
     end)
     f:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -192,7 +192,6 @@ end
 ---@param info table|nil prey widget visualization info
 ---@param isDemo boolean
 function PreyBarModule:Populate(info, isDemo)
-    local L = ns.L
 
     local stateIndex = isDemo and 1 or (info and info.progressState) or 0
     if not PROGRESS_STATES[stateIndex] then stateIndex = 0 end
@@ -372,7 +371,6 @@ end
 ---@param yOffset number
 ---@return number yOffset
 function PreyBarModule:CreateCustomDetail(parent, yOffset)
-    local L = ns.L
 
     local hint = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hint:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)

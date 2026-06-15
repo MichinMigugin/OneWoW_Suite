@@ -1,4 +1,5 @@
-local addonName, ns = ...
+local _, ns = ...
+local _, L = ns.ModuleRegistry:Current()
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -32,7 +33,6 @@ end
 -- ============================================================
 
 function UI:Build(detailScrollChild, yOffset, isEnabled, registerRefresh)
-    local L   = ns.L
     local FM  = ns.FrameMoverCore
     local REG = ns.FrameMoverFrames
     if not REG or not OneWoW_GUI then return yOffset end

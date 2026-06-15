@@ -1,20 +1,8 @@
-local addonName, ns = ...
+local _, ns = ...
+local MinimapButtonsModule, L = ns.ModuleRegistry:Current()
+if not MinimapButtonsModule then return end
 
 local OneWoW_GUI = OneWoW_GUI
-
-local MinimapButtonsModule = {
-    id             = "minimapbuttons",
-    title          = "MMBTNS_TITLE",
-    category       = "INTERFACE",
-    description    = "MMBTNS_DESC",
-    version        = "1.0",
-    author         = "Ricky",
-    contact        = "ricky@wow2.xyz",
-    link           = "https://www.wow2.xyz",
-    toggles        = {},
-    preview        = false,
-    defaultEnabled = true,
-}
 
 -- ─── Raw UIParent methods (bypass noop overrides when positioning buttons) ──
 
@@ -156,7 +144,7 @@ local function ShowDisableReloadDialog()
             button2 = CANCEL,
             OnAccept = ReloadUI,
             OnCancel = function()
-                print("|cFFFFD100OneWoW QoL:|r " .. (ns.L["MMBTNS_DISABLE_RELOAD_CHAT"] or "Reload later with /reload to fully restore minimap buttons."))
+                print("|cFFFFD100OneWoW QoL:|r " .. (L["MMBTNS_DISABLE_RELOAD_CHAT"] or "Reload later with /reload to fully restore minimap buttons."))
             end,
             timeout = 0,
             whileDead = true,
@@ -165,9 +153,9 @@ local function ShowDisableReloadDialog()
         }
         d = StaticPopupDialogs["ONEWOW_MMBTNS_RELOAD"]
     end
-    d.text = ns.L["MMBTNS_DISABLE_RELOAD_TEXT"]
+    d.text = L["MMBTNS_DISABLE_RELOAD_TEXT"]
         or "Disabling this feature requires a UI reload to restore minimap buttons.\n\nReload now?"
-    d.button1 = ns.L["MMBTNS_DISABLE_RELOAD_BTN"] or ACCEPT
+    d.button1 = L["MMBTNS_DISABLE_RELOAD_BTN"] or ACCEPT
     StaticPopup_Show("ONEWOW_MMBTNS_RELOAD")
 end
 
@@ -991,7 +979,7 @@ function MinimapButtonsModule:LayoutContainer()
     if maxRows == 1 and maxCols == 1 and totalCount > 1 then
         s.maxRows = 0
         maxRows = 0
-        print("|cFFFFD100OneWoW QoL:|r " .. (ns.L["MMBTNS_1X1_WARNING"] or "1x1 guard triggered."))
+        print("|cFFFFD100OneWoW QoL:|r " .. (L["MMBTNS_1X1_WARNING"] or "1x1 guard triggered."))
     end
 
     local yOff = 0
@@ -1065,7 +1053,7 @@ function MinimapButtonsModule:LayoutContainer()
 
             searchBox._placeholder = searchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
             searchBox._placeholder:SetPoint("LEFT", 6, 0)
-            searchBox._placeholder:SetText(ns.L["MMBTNS_SEARCH_PLACEHOLDER"] or "Search...")
+            searchBox._placeholder:SetText(L["MMBTNS_SEARCH_PLACEHOLDER"] or "Search...")
 
             searchBox:SetScript("OnTextChanged", function(self)
                 local text = self:GetText() or ""
@@ -1258,13 +1246,13 @@ local function CreateHubButton()
 
     hubButton:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:AddLine(ns.L["MMBTNS_TOOLTIP_LINE1"] or "OneWoW Button Collector", 1, 0.82, 0)
+        GameTooltip:AddLine(L["MMBTNS_TOOLTIP_LINE1"] or "OneWoW Button Collector", 1, 0.82, 0)
         local count = #collectedButtons
-        GameTooltip:AddLine(string.format(ns.L["MMBTNS_TOOLTIP_BUTTONS"] or "%d buttons", count), 0.7, 0.7, 0.8)
-        GameTooltip:AddLine(ns.L["MMBTNS_TOOLTIP_HINT"] or "Left-click to toggle", 0.5, 0.5, 0.6)
-        GameTooltip:AddLine(ns.L["MMBTNS_TOOLTIP_HINT_RIGHT"] or "Right-click for menu", 0.5, 0.5, 0.6)
+        GameTooltip:AddLine(string.format(L["MMBTNS_TOOLTIP_BUTTONS"] or "%d buttons", count), 0.7, 0.7, 0.8)
+        GameTooltip:AddLine(L["MMBTNS_TOOLTIP_HINT"] or "Left-click to toggle", 0.5, 0.5, 0.6)
+        GameTooltip:AddLine(L["MMBTNS_TOOLTIP_HINT_RIGHT"] or "Right-click for menu", 0.5, 0.5, 0.6)
         if not GetSettings().locked then
-            GameTooltip:AddLine(ns.L["MMBTNS_TOOLTIP_DRAG"] or "Drag to move", 0.5, 0.5, 0.6)
+            GameTooltip:AddLine(L["MMBTNS_TOOLTIP_DRAG"] or "Drag to move", 0.5, 0.5, 0.6)
         end
         GameTooltip:Show()
     end)
@@ -1313,17 +1301,17 @@ function MinimapButtonsModule:ShowContextMenu(anchor)
     if MenuUtil and MenuUtil.CreateContextMenu then
         MenuUtil.CreateContextMenu(anchor, function(_, rootDescription)
             local s = GetSettings()
-            rootDescription:CreateTitle(ns.L["MMBTNS_TITLE"] or "Button Collector")
+            rootDescription:CreateTitle(L["MMBTNS_TITLE"] or "Button Collector")
             local lockLabel = s.locked
-                and (ns.L["MMBTNS_CONTEXT_UNLOCK"] or "Unlock")
-                or  (ns.L["MMBTNS_CONTEXT_LOCK"]   or "Lock")
+                and (L["MMBTNS_CONTEXT_UNLOCK"] or "Unlock")
+                or  (L["MMBTNS_CONTEXT_LOCK"]   or "Lock")
             rootDescription:CreateButton(lockLabel, function()
                 s.locked = not s.locked
             end)
-            rootDescription:CreateButton(ns.L["MMBTNS_CONTEXT_REFRESH"] or "Refresh", function()
+            rootDescription:CreateButton(L["MMBTNS_CONTEXT_REFRESH"] or "Refresh", function()
                 MinimapButtonsModule:CollectAll()
             end)
-            rootDescription:CreateButton(ns.L["MMBTNS_CONTEXT_SETTINGS"] or "Settings", function()
+            rootDescription:CreateButton(L["MMBTNS_CONTEXT_SETTINGS"] or "Settings", function()
                 MinimapButtonsModule:OpenSettings()
             end)
         end)
@@ -1478,5 +1466,3 @@ function MinimapButtonsModule:ApplyMinimapShapeToLibDBIcons()
         RefreshAllLibDBIcons()
     end)
 end
-
-ns.MinimapButtonsModule = MinimapButtonsModule

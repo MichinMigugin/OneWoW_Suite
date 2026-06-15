@@ -1,5 +1,6 @@
 local addonName, ns = ...
-local M = ns.MapWorldToolsModule
+local MapWorldToolsModule = ns.ModuleRegistry:Current()
+local M = MapWorldToolsModule
 
 --- Map exploration overlays: show undiscovered art from ns.MapWorldRevealData and optional tint.
 --- Logic follows Blizzard MapExploration chunk layout; implementation is OneWoW-original.

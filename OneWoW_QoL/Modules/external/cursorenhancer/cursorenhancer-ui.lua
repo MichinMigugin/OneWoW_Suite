@@ -1,16 +1,6 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/cursorenhancer/cursorenhancer-ui.lua
-local addonName, ns = ...
-local L = ns.L
-local CursorEnhancerModule = ns.CursorEnhancerModule
+local _, ns = ...
+local CursorEnhancerModule, L = ns.ModuleRegistry:Current()
 local CE = CursorEnhancerModule.CE
-
-local COLOR_SETTINGS = {
-    { toggleId = "outer_ring",      dbKey = "outerRingColor",      colorLabel = "CURSORENHANCER_OUTER_RING_COLOR" },
-    { toggleId = "middle_ring",     dbKey = "middleRingColor",     colorLabel = "CURSORENHANCER_MIDDLE_RING_COLOR" },
-    { toggleId = "center_marker",   dbKey = "centerMarkerColor",   colorLabel = "CURSORENHANCER_CENTER_MARKER_COLOR" },
-    { toggleId = "mouse_trail",     dbKey = "trailColor",          colorLabel = "CURSORENHANCER_TRAIL_COLOR" },
-}
 
 local colorSwatches = {}
 

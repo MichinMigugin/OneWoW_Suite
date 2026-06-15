@@ -1,26 +1,6 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/charinfo/charinfo.lua
-local addonName, ns = ...
-
-local CharInfoModule = {
-    id          = "charinfo",
-    title       = "CHARINFO_TITLE",
-    category    = "INTERFACE",
-    description = "CHARINFO_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles     = {
-        { id = "show_durability", label = "CHARINFO_TOGGLE_DURABILITY", description = "CHARINFO_TOGGLE_DURABILITY_DESC", default = true },
-        { id = "show_sockets",    label = "CHARINFO_TOGGLE_SOCKETS",    description = "CHARINFO_TOGGLE_SOCKETS_DESC",    default = true },
-    },
-    preview        = true,
-    defaultEnabled = true,
-    _eventFrame = nil,
-    _hooked     = false,
-}
-local CI = CharInfoModule
+local _, ns = ...
+local CharInfoModule, L = ns.ModuleRegistry:Current()
+if not CharInfoModule then return end
 
 local SECONDARY_HAND_SLOT = GetInventorySlotInfo("SECONDARYHANDSLOT")
 
@@ -153,7 +133,6 @@ local function HidePanel(button)
 end
 
 local function UpdateInfoPanel(button, itemLink, slotId, item)
-    local L = ns.L
     local showDurability = ns.ModuleRegistry:GetToggleValue("charinfo", "show_durability")
     local showSockets = ns.ModuleRegistry:GetToggleValue("charinfo", "show_sockets")
 
@@ -457,7 +436,6 @@ local enchantSlotLabels = {
 }
 
 function CharInfoModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh)
-    local L = ns.L
     local OneWoW_GUI = OneWoW_GUI
     if not OneWoW_GUI then return yOffset end
 
@@ -559,5 +537,3 @@ function CharInfoModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
 
     return yOffset
 end
-
-ns.CharInfoModule = CharInfoModule

@@ -1,51 +1,52 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/lfgpanel/Locales/enUS.lua
-local addonName, ns = ...
-if not ns.L_enUS then ns.L_enUS = {} end
-local L = ns.L_enUS
+local _, ns = ...
+local M = ns.ModuleRegistry:Current()
 
-L["LFGPANEL_TITLE"] = "LFG Lockouts"
-L["LFGPANEL_DESC"] = "Shows your current raid and dungeon lockouts in a side panel when the Group Finder is open."
-L["LFGPANEL_SHOW_PANEL"] = "Show Lockouts Panel"
-L["LFGPANEL_SHOW_PANEL_DESC"] = "Show the lockouts panel when the Group Finder opens."
-L["LFGPANEL_FILTER_RESULTS"] = "Filter LFG Results"
-L["LFGPANEL_FILTER_RESULTS_DESC"] = "Filter the LFG search results by the selected difficulty."
+OneWoW.Locale:Register(M._scope, "enUS", {
 
-L["LFGPANEL_DIALOG_TITLE"] = "Lockouts"
-L["LFGPANEL_REFRESH"] = "Refresh"
-L["LFGPANEL_TT_REFRESH"] = "Refresh Lockouts"
-L["LFGPANEL_TT_REFRESH_DESC"] = "Request the latest lockout data from the server."
-L["LFGPANEL_TT_TOGGLE"] = "Show Lockouts Panel"
-L["LFGPANEL_TT_TOGGLE_DESC"] = "Click to show the lockouts panel."
+    ["LFGPANEL_TITLE"] = "LFG Lockouts",
+    ["LFGPANEL_DESC"] = "Shows your current raid and dungeon lockouts in a side panel when the Group Finder is open.",
+    ["LFGPANEL_SHOW_PANEL"] = "Show Lockouts Panel",
+    ["LFGPANEL_SHOW_PANEL_DESC"] = "Show the lockouts panel when the Group Finder opens.",
+    ["LFGPANEL_FILTER_RESULTS"] = "Filter LFG Results",
+    ["LFGPANEL_FILTER_RESULTS_DESC"] = "Filter the LFG search results by the selected difficulty.",
 
-L["LFGPANEL_FILTER_DIFFICULTY"] = "Difficulty"
-L["LFGPANEL_DIFFICULTY_ALL"] = "All Difficulties"
-L["LFGPANEL_DIFFICULTY_NORMAL"] = "Normal"
-L["LFGPANEL_DIFFICULTY_HEROIC"] = "Heroic"
-L["LFGPANEL_DIFFICULTY_MYTHIC"] = "Mythic"
-L["LFGPANEL_DIFFICULTY_MYTHICPLUS"] = "Mythic+"
-L["LFGPANEL_DIFFICULTY_LFR"] = "LFR"
+    ["LFGPANEL_DIALOG_TITLE"] = "Lockouts",
+    ["LFGPANEL_REFRESH"] = "Refresh",
+    ["LFGPANEL_TT_REFRESH"] = "Refresh Lockouts",
+    ["LFGPANEL_TT_REFRESH_DESC"] = "Request the latest lockout data from the server.",
+    ["LFGPANEL_TT_TOGGLE"] = "Show Lockouts Panel",
+    ["LFGPANEL_TT_TOGGLE_DESC"] = "Click to show the lockouts panel.",
 
-L["LFGPANEL_CATEGORY_RAIDS"] = "Raids"
-L["LFGPANEL_CATEGORY_DUNGEONS"] = "Dungeons"
+    ["LFGPANEL_FILTER_DIFFICULTY"] = "Difficulty",
+    ["LFGPANEL_DIFFICULTY_ALL"] = "All Difficulties",
+    ["LFGPANEL_DIFFICULTY_NORMAL"] = "Normal",
+    ["LFGPANEL_DIFFICULTY_HEROIC"] = "Heroic",
+    ["LFGPANEL_DIFFICULTY_MYTHIC"] = "Mythic",
+    ["LFGPANEL_DIFFICULTY_MYTHICPLUS"] = "Mythic+",
+    ["LFGPANEL_DIFFICULTY_LFR"] = "LFR",
 
-L["LFGPANEL_NO_LOCKOUTS"] = "No active lockouts."
-L["LFGPANEL_NO_LOCKOUTS_FILTERED"] = "No lockouts match the selected difficulty."
-L["LFGPANEL_EXPIRED"] = "Expired"
-L["LFGPANEL_EXTENDED"] = "Extended"
-L["LFGPANEL_TT_EXTENDED"] = "Extended Lockout"
-L["LFGPANEL_TT_EXTENDED_DESC"] = "This lockout has been manually extended past its normal reset."
+    ["LFGPANEL_CATEGORY_RAIDS"] = "Raids",
+    ["LFGPANEL_CATEGORY_DUNGEONS"] = "Dungeons",
 
-L["LFGPANEL_TIME_DAYS"] = "%dd %dh"
-L["LFGPANEL_TIME_HOURS"] = "%dh %dm"
-L["LFGPANEL_TIME_MINUTES"] = "%dm"
-L["LFGPANEL_PROGRESS"] = "%d/%d"
+    ["LFGPANEL_NO_LOCKOUTS"] = "No active lockouts.",
+    ["LFGPANEL_NO_LOCKOUTS_FILTERED"] = "No lockouts match the selected difficulty.",
+    ["LFGPANEL_EXPIRED"] = "Expired",
+    ["LFGPANEL_EXTENDED"] = "Extended",
+    ["LFGPANEL_TT_EXTENDED"] = "Extended Lockout",
+    ["LFGPANEL_TT_EXTENDED_DESC"] = "This lockout has been manually extended past its normal reset.",
 
-L["LFGPANEL_TT_LOCKOUT"] = "Instance Lockout"
-L["LFGPANEL_TT_LOCKOUT_PROGRESS"] = "Boss Progress: %d/%d"
-L["LFGPANEL_TT_LOCKOUT_TIME"] = "Resets in: %s"
-L["LFGPANEL_TT_LOCKOUT_DIFFICULTY"] = "Difficulty: %s"
+    ["LFGPANEL_TIME_DAYS"] = "%dd %dh",
+    ["LFGPANEL_TIME_HOURS"] = "%dh %dm",
+    ["LFGPANEL_TIME_MINUTES"] = "%dm",
+    ["LFGPANEL_PROGRESS"] = "%d/%d",
 
-L["LFGPANEL_OPT_FILTER_LFG"] = "Filter LFG Results"
-L["LFGPANEL_TT_FILTER_LFG"] = "Filter LFG Results"
-L["LFGPANEL_TT_FILTER_LFG_DESC"] = "When enabled, the LFG search results will be filtered to match your selected difficulty."
+    ["LFGPANEL_TT_LOCKOUT"] = "Instance Lockout",
+    ["LFGPANEL_TT_LOCKOUT_PROGRESS"] = "Boss Progress: %d/%d",
+    ["LFGPANEL_TT_LOCKOUT_TIME"] = "Resets in: %s",
+    ["LFGPANEL_TT_LOCKOUT_DIFFICULTY"] = "Difficulty: %s",
+
+    ["LFGPANEL_OPT_FILTER_LFG"] = "Filter LFG Results",
+    ["LFGPANEL_TT_FILTER_LFG"] = "Filter LFG Results",
+    ["LFGPANEL_TT_FILTER_LFG_DESC"] = "When enabled, the LFG search results will be filtered to match your selected difficulty.",
+    ["UNKNOWN"] = "Unknown",
+})

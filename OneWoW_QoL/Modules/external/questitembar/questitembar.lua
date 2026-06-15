@@ -1,20 +1,8 @@
 local _, ns = ...
+local QuestItemBarModule, L = ns.ModuleRegistry:Current()
+if not QuestItemBarModule then return end
 
 local OneWoW_GUI = OneWoW_GUI
-
-local QuestItemBarModule = {
-    id          = "questitembar",
-    title       = "QUESTITEMBAR_TITLE",
-    category    = "INTERFACE",
-    description = "QUESTITEMBAR_DESC",
-    version     = "1.0",
-    author      = "Clew",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles     = {},
-    preview     = true,
-    defaultEnabled = true,
-}
 
 local barFrame      = nil
 local buttons       = {}
@@ -124,10 +112,10 @@ function QuestItemBarModule:GetSortLabel(mode)
     mode = mode or GetSettings().sortMode or defaultSortMode
     for _, m in ipairs(SORT_MODES) do
         if m.value == mode then
-            return (ns.L and ns.L[m.labelKey]) or m.labelKey
+            return (L and L[m.labelKey]) or m.labelKey
         end
     end
-    return (ns.L and ns.L[SORT_MODES[1].labelKey]) or SORT_MODES[1].labelKey
+    return (L and L[SORT_MODES[1].labelKey]) or SORT_MODES[1].labelKey
 end
 
 local function GetItemSortName(itemLink)
@@ -376,7 +364,7 @@ local function BuildQuestItemDebugList()
 
     -- Synthetic row when Supertracked filter is on but no quest is super-tracked
     if s.showOnlySupertracked and not C_SuperTrack.GetSuperTrackedQuestID() then
-        local msg = (ns.L and ns.L[STATUS_KEYS.NO_SUPERTRACKED]) or STATUS_KEYS.NO_SUPERTRACKED
+        local msg = (L and L[STATUS_KEYS.NO_SUPERTRACKED]) or STATUS_KEYS.NO_SUPERTRACKED
         tinsert(entries, {
             link         = nil,
             itemID       = nil,
@@ -511,9 +499,9 @@ local function EnsureButton(i)
         GameTooltip:SetHyperlink(self.itemLink)
         if self.questTitle and self.questTitle ~= "" then
             GameTooltip:AddLine(" ")
-            GameTooltip:AddLine(ns.L["QUESTITEMBAR_QUEST_LABEL"] .. " " .. self.questTitle, 1, 0.82, 0)
+            GameTooltip:AddLine(L["QUESTITEMBAR_QUEST_LABEL"] .. " " .. self.questTitle, 1, 0.82, 0)
         end
-        GameTooltip:AddLine(ns.L["QUESTITEMBAR_LEFT_CLICK_USE"], 1, 1, 1)
+        GameTooltip:AddLine(L["QUESTITEMBAR_LEFT_CLICK_USE"], 1, 1, 1)
         GameTooltip:Show()
     end)
 
@@ -861,8 +849,8 @@ function QuestItemBarModule:CreateBar()
         local dir = st.growDirection or "RIGHT"
         local tooltipAnchor = (dir == "LEFT") and "ANCHOR_RIGHT" or "ANCHOR_LEFT"
         GameTooltip:SetOwner(myself, tooltipAnchor)
-        GameTooltip:SetText(ns.L["QUESTITEMBAR_TITLE"], 1, 1, 1)
-        GameTooltip:AddLine(ns.L["QUESTITEMBAR_DRAG_TOOLTIP"], 0.7, 0.7, 0.7)
+        GameTooltip:SetText(L["QUESTITEMBAR_TITLE"], 1, 1, 1)
+        GameTooltip:AddLine(L["QUESTITEMBAR_DRAG_TOOLTIP"], 0.7, 0.7, 0.7)
         GameTooltip:Show()
     end)
     dragHandle:SetScript("OnLeave", function(myself)
@@ -1064,16 +1052,14 @@ function QuestItemBarModule:ShowContextMenu(anchor)
     if MenuUtil and MenuUtil.CreateContextMenu then
         MenuUtil.CreateContextMenu(anchor, function(_, rootDescription)
             local s = GetSettings()
-            rootDescription:CreateTitle(ns.L["QUESTITEMBAR_TITLE"])
-            local lockLabel = s.locked and ns.L["QUESTITEMBAR_CONTEXT_UNLOCK"] or ns.L["QUESTITEMBAR_CONTEXT_LOCK"]
+            rootDescription:CreateTitle(L["QUESTITEMBAR_TITLE"])
+            local lockLabel = s.locked and L["QUESTITEMBAR_CONTEXT_UNLOCK"] or L["QUESTITEMBAR_CONTEXT_LOCK"]
             rootDescription:CreateButton(lockLabel, function()
                 QuestItemBarModule:SetLocked(not s.locked)
             end)
-            rootDescription:CreateButton(ns.L["QUESTITEMBAR_CONTEXT_SETTINGS"], function()
+            rootDescription:CreateButton(L["QUESTITEMBAR_CONTEXT_SETTINGS"], function()
                 QuestItemBarModule:OpenSettings()
             end)
         end)
     end
 end
-
-ns.QuestItemBarModule = QuestItemBarModule

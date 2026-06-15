@@ -1,12 +1,10 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/autoreadycheck/Locales/koKR.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
+local M = ns.ModuleRegistry:Current()
 
-if GetLocale() ~= "koKR" then return end
+OneWoW.Locale:Register(M._scope, "koKR", {
 
-local L_enUS = ns.L_enUS
-L_enUS["AUTOREADYCHECK_TITLE"]              = "TEST"
-L_enUS["AUTOREADYCHECK_DESC"]               = "TEST"
-L_enUS["AUTOREADYCHECK_TOGGLE_DEAD"]        = "TEST"
-L_enUS["AUTOREADYCHECK_TOGGLE_DEAD_DESC"]   = "TEST"
+    ["AUTOREADYCHECK_TITLE"] = "TEST",
+    ["AUTOREADYCHECK_DESC"] = "TEST",
+    ["AUTOREADYCHECK_TOGGLE_DEAD"] = "TEST",
+    ["AUTOREADYCHECK_TOGGLE_DEAD_DESC"] = "TEST",
+})

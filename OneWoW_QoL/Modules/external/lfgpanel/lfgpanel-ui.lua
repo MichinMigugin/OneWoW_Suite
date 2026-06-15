@@ -1,6 +1,5 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/lfgpanel/lfgpanel-ui.lua
-local addonName, ns = ...
+local _, ns = ...
+local _, L = ns.ModuleRegistry:Current()
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -31,7 +30,6 @@ function LFGPanelUI:CreateDialog()
     if state.dialog then return state.dialog end
     if not PVEFrame then return nil end
 
-    local L = ns.L
 
     local panel = OneWoW_GUI:CreateFrame(PVEFrame, {
         name = "OneWoW_QoL_LFGDialog", width = 300, height = 500, backdrop = BACKDROP_INNER
@@ -195,7 +193,6 @@ function LFGPanelUI:CreateToggleButton()
     if state.toggleButton then return state.toggleButton end
     if not PVEFrame then return nil end
 
-    local L = ns.L
 
     local btn = OneWoW_GUI:CreateFitTextButton(PVEFrame, {
         text = "L",
@@ -232,7 +229,6 @@ function LFGPanelUI:CreateToggleButton()
 end
 
 function LFGPanelUI:CreateLockoutRow(parent, lockout, yOffset)
-    local L = ns.L
 
     local topRow = OneWoW_GUI:CreateListRowBasic(parent, {
         height = LOCKOUT_HEIGHT,
@@ -323,7 +319,6 @@ end
 function LFGPanelUI:UpdateDisplay()
     if not state.dialog or not state.dialog:IsShown() then return end
 
-    local L = ns.L
     local scrollContent = state.dialog.scrollContent
     if not scrollContent then return end
 

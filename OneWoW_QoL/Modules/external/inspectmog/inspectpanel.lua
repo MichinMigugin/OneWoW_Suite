@@ -1,8 +1,6 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/inspectmog/inspectpanel.lua
 -- Ported from standalone OneWoW_InspectMog (transmog-aware inspect side panel).
-local addonName, ns = ...
-local L = ns.L
+local _, ns = ...
+local _, L = ns.ModuleRegistry:Current()
 
 local OneWoW_GUI = OneWoW_GUI
 

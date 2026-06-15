@@ -1,8 +1,8 @@
 local addonName, ns = ...
+local ProfPanelModule, L = ns.ModuleRegistry:Current()
 
 local OneWoW_GUI = OneWoW_GUI
 
-local L = ns.L
 local Helpers = ns.ProfPanelHelpers
 local ProfPanelUI = {}
 ns.ProfPanelUI = ProfPanelUI
@@ -52,13 +52,13 @@ function ProfPanelUI:CreatePanel()
         showBrand = true,
         factionTheme = "neutral",
         onClose = function()
-            if ns.ProfPanelModule then
-                ns.ProfPanelModule._panel.manuallyHidden = true
-                ns.ProfPanelModule._panel:Hide()
-                if ns.ProfPanelModule._toggleTab then
-                    ns.ProfPanelModule._toggleTab:SetChecked(false)
-                    ns.ProfPanelModule._toggleTab.Icon:SetTexture(ns.ProfPanelModule:GetCurrentIcon())
-                    ns.ProfPanelModule._toggleTab.Icon:SetSize(24, 24)
+            if ProfPanelModule then
+                ProfPanelModule._panel.manuallyHidden = true
+                ProfPanelModule._panel:Hide()
+                if ProfPanelModule._toggleTab then
+                    ProfPanelModule._toggleTab:SetChecked(false)
+                    ProfPanelModule._toggleTab.Icon:SetTexture(ProfPanelModule:GetCurrentIcon())
+                    ProfPanelModule._toggleTab.Icon:SetSize(24, 24)
                 end
                 if ProfessionsFrameTabSideBar then
                     ProfessionsFrameTabSideBar.selTab = 0

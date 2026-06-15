@@ -1,18 +1,16 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/fastforward/Locales/koKR.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
+local M = ns.ModuleRegistry:Current()
 
-if GetLocale() ~= "koKR" then return end
+OneWoW.Locale:Register(M._scope, "koKR", {
 
-local L_enUS = ns.L_enUS
-L_enUS["FASTFORWARD_TITLE"]                          = "TEST"
-L_enUS["FASTFORWARD_DESC"]                           = "TEST"
-L_enUS["FASTFORWARD_TOGGLE_MOVIES"]                  = "TEST"
-L_enUS["FASTFORWARD_TOGGLE_MOVIES_DESC"]             = "TEST"
-L_enUS["FASTFORWARD_TOGGLE_CINEMATICS"]              = "TEST"
-L_enUS["FASTFORWARD_TOGGLE_CINEMATICS_DESC"]         = "TEST"
-L_enUS["FASTFORWARD_TOGGLE_INSTANCE"]                = "TEST"
-L_enUS["FASTFORWARD_TOGGLE_INSTANCE_DESC"]           = "TEST"
-L_enUS["FASTFORWARD_TOGGLE_UNCANCELLABLE"]           = "TEST"
-L_enUS["FASTFORWARD_TOGGLE_UNCANCELLABLE_DESC"]      = "TEST"
+    ["FASTFORWARD_TITLE"] = "TEST",
+    ["FASTFORWARD_DESC"] = "TEST",
+    ["FASTFORWARD_TOGGLE_MOVIES"] = "TEST",
+    ["FASTFORWARD_TOGGLE_MOVIES_DESC"] = "TEST",
+    ["FASTFORWARD_TOGGLE_CINEMATICS"] = "TEST",
+    ["FASTFORWARD_TOGGLE_CINEMATICS_DESC"] = "TEST",
+    ["FASTFORWARD_TOGGLE_INSTANCE"] = "TEST",
+    ["FASTFORWARD_TOGGLE_INSTANCE_DESC"] = "TEST",
+    ["FASTFORWARD_TOGGLE_UNCANCELLABLE"] = "TEST",
+    ["FASTFORWARD_TOGGLE_UNCANCELLABLE_DESC"] = "TEST",
+})

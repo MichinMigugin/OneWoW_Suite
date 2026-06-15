@@ -86,7 +86,7 @@ local function OnEnable()
         OneWoW:RegisterMinimap("OneWoW_QoL", (OneWoW.L and OneWoW.L["CTX_OPEN_QOL"]) or "Open QoL", "qol", nil)
     end
 
-    addon.PlayMountsModule = ns.PlayMountsModule
+    addon.PlayMountsModule = ns.ModuleRegistry:GetById("playmounts")
     addon.ModuleRegistry = ns.ModuleRegistry
     addon.UI = ns.UI
 end
@@ -102,8 +102,9 @@ function addon:SlashCommandHandler()
 end
 
 function addon:CopyTextKeybind()
-    if ns.CopyTextModule then
-        ns.CopyTextModule:Capture()
+    local ct = ns.ModuleRegistry:GetById("copytext")
+    if ct then
+        ct:Capture()
     end
 end
 

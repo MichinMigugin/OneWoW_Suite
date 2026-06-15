@@ -1,4 +1,6 @@
 local _, ns = ...
+local CoordsModule, L = ns.ModuleRegistry:Current()
+if not CoordsModule then return end
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -16,35 +18,6 @@ local LINE_GAP       = 2
 
 local CARDINAL = {
     [0] = "N", "NE", "E", "SE", "S", "SW", "W", "NW",
-}
-
-local CoordsModule = {
-    id          = "coords",
-    title       = "COORDS_TITLE",
-    category    = "INTERFACE",
-    description = "COORDS_DESC",
-    version     = "1.1",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles = {
-        { id = "show_map_id",      label = "COORDS_TOGGLE_MAPID",         description = "COORDS_TOGGLE_MAPID_DESC",         default = true  },
-        { id = "show_zone",        label = "COORDS_TOGGLE_ZONE",          description = "COORDS_TOGGLE_ZONE_DESC",          default = false },
-        { id = "show_subzone",     label = "COORDS_TOGGLE_SUBZONE",       description = "COORDS_TOGGLE_SUBZONE_DESC",       default = false },
-        { id = "show_facing",      label = "COORDS_TOGGLE_FACING",        description = "COORDS_TOGGLE_FACING_DESC",        default = false },
-        { id = "show_speed",       label = "COORDS_TOGGLE_SPEED",         description = "COORDS_TOGGLE_SPEED_DESC",         default = false },
-        { id = "hide_in_instance", label = "COORDS_TOGGLE_HIDE_INSTANCE", description = "COORDS_TOGGLE_HIDE_INSTANCE_DESC", default = true  },
-    },
-    preview     = true,
-    defaultEnabled = true,
-    _frame     = nil,
-    _texts     = nil,
-    _ticker    = nil,
-    _eventFrame = nil,
-    _cache     = nil,
-    _hidden    = false,
-    _inCombat  = false,
-    _layout    = nil,
 }
 
 local function GetToggle(id)
@@ -214,7 +187,6 @@ function CoordsModule:UpdateDisplay()
 
     local mapID = C_Map.GetBestMapForUnit("player")
     local cache = self._cache
-    local L = ns.L
 
     if GetToggle("show_map_id") and mapID then
         if cache.mapID ~= mapID then
@@ -361,8 +333,8 @@ function CoordsModule:CopyCoordinates()
     local x, y = position:GetXY()
     if x and y then
         local coordString = format("%.2f %.2f", x * 100, y * 100)
-        OneWoW.CopyPaste:Copy(ns.L["COORDS_COPY_TITLE"] or "Coordinates", coordString)
-        print("|cFFFFD100OneWoW QoL:|r " .. format(ns.L["COORDS_COPIED"] or "Coordinates copied: %s", coordString))
+        OneWoW.CopyPaste:Copy(L["COORDS_COPY_TITLE"] or "Coordinates", coordString)
+        print("|cFFFFD100OneWoW QoL:|r " .. format(L["COORDS_COPIED"] or "Coordinates copied: %s", coordString))
     end
 end
 
@@ -474,5 +446,3 @@ function CoordsModule:OnToggle()
         self:UpdateDisplay()
     end
 end
-
-ns.CoordsModule = CoordsModule

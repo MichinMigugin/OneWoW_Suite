@@ -1,31 +1,6 @@
-local addonName, ns = ...
-
-local ProfPanelModule = {
-    id          = "professionspanel",
-    title       = "PROFPANEL_TITLE",
-    category    = "INTERFACE",
-    description = "PROFPANEL_DESC",
-    version     = "2.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles     = {
-        { id = "auto_show", label = "PROFPANEL_AUTO_SHOW", default = true },
-    },
-    preview        = true,
-    defaultEnabled = true,
-    _panel           = nil,
-    _toggleTab       = nil,
-    _sidebarIndex    = nil,
-    _toggleHandler   = nil,
-    _eventFrame      = nil,
-    _currentProf     = nil,
-    _cachedData      = nil,
-    _lastScanTime    = 0,
-    _scanThrottle    = 2,
-}
-
-local L = ns.L
+local _, ns = ...
+local ProfPanelModule = ns.ModuleRegistry:Current()
+if not ProfPanelModule then return end
 
 local EXPANSION_KEYWORDS = {
     { pattern = "Midnight",         order = 12 },
@@ -581,7 +556,6 @@ function ProfPanelModule:OnToggle(toggleId, value)
     end
 end
 
-ns.ProfPanelModule = ProfPanelModule
 ns.ProfPanelHelpers = {
     GetRecipeCountColor = GetRecipeCountColor,
     GetProgressColor    = GetProgressColor,

@@ -1,6 +1,5 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/vendorpanel/vendorpanel-ui.lua
-local addonName, ns = ...
+local _, ns = ...
+local _, L = ns.ModuleRegistry:Current()
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -23,14 +22,12 @@ local backdropIconEdge = {
 }
 
 local function GetBrandIcon()
-    local OneWoW_GUI = OneWoW_GUI
     local factionTheme = (OneWoW_GUI and OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
     return OneWoW_GUI:GetBrandIcon(factionTheme)
 end
 
 local function GetFactionTheme()
-    local OneWoW_GUI = OneWoW_GUI
-    return (OneWoW_GUI and OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
+    return (OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
 end
 
 function VendorPanel:CreateVendorButton()
@@ -67,11 +64,11 @@ function VendorPanel:CreateVendorButton()
         self.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
         local junkCount, destroyCount = VendorPanel:GetJunkCounts()
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:SetText(ns.L["VENDOR_JUNK_MANAGER"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(ns.L["VENDOR_SELL_JUNK"], 1, 1, 1, true)
-        GameTooltip:AddLine(ns.L["VENDOR_TOGGLE_PANEL"], 1, 1, 1, true)
+        GameTooltip:SetText(L["VENDOR_JUNK_MANAGER"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        GameTooltip:AddLine(L["VENDOR_SELL_JUNK"], 1, 1, 1, true)
+        GameTooltip:AddLine(L["VENDOR_TOGGLE_PANEL"], 1, 1, 1, true)
         GameTooltip:AddLine(" ", 1, 1, 1)
-        GameTooltip:AddLine(string.format(ns.L["VENDOR_COUNTS_LABEL"], junkCount, destroyCount), OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        GameTooltip:AddLine(string.format(L["VENDOR_COUNTS_LABEL"], junkCount, destroyCount), OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         GameTooltip:Show()
     end)
     state.vendorButton:SetScript("OnLeave", function(self)
@@ -233,10 +230,10 @@ function VendorPanel:CreateReplacementSellButton()
         local junkCount, destroyCount = VendorPanel:GetJunkCounts()
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:AddTexture(GetBrandIcon())
-        GameTooltip:AddLine(ns.L["VENDOR_JUNK_MANAGER"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(ns.L["VENDOR_SELL_JUNK"], 1, 1, 1, true)
+        GameTooltip:AddLine(L["VENDOR_JUNK_MANAGER"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        GameTooltip:AddLine(L["VENDOR_SELL_JUNK"], 1, 1, 1, true)
         GameTooltip:AddLine(" ", 1, 1, 1)
-        GameTooltip:AddLine(string.format(ns.L["VENDOR_COUNTS_LABEL"], junkCount, destroyCount), OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        GameTooltip:AddLine(string.format(L["VENDOR_COUNTS_LABEL"], junkCount, destroyCount), OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         GameTooltip:Show()
     end)
 
@@ -267,7 +264,7 @@ function VendorPanel:CreatePreviewPanel()
     state.junkPreviewPanel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local titleBar = OneWoW_GUI:CreateTitleBar(state.junkPreviewPanel, {
-        title = ns.L["VENDOR_TOOLS_TITLE"],
+        title = L["VENDOR_TOOLS_TITLE"],
         showBrand = true,
         factionTheme = GetFactionTheme(),
         onClose = function()
@@ -310,7 +307,7 @@ function VendorPanel:CreatePreviewPanel()
 
     local filterLabel = filterRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     filterLabel:SetPoint("LEFT", filterRow, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
-    filterLabel:SetText(ns.L["VENDOR_FILTER_LABEL"])
+    filterLabel:SetText(L["VENDOR_FILTER_LABEL"])
     filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local vendorDropdown, dropText = OneWoW_GUI:CreateDropdown(filterRow, {
@@ -331,10 +328,10 @@ function VendorPanel:CreatePreviewPanel()
             end
         end
 
-        table.insert(items, { type = "header", text = ns.L["VENDOR_OPT_HEADER"] })
+        table.insert(items, { type = "header", text = L["VENDOR_OPT_HEADER"] })
         table.insert(items, {
             type = "checkbox",
-            text = ns.L["VENDOR_HIDE_KNOWN"],
+            text = L["VENDOR_HIDE_KNOWN"],
             checked = panelSettings.hideKnownEntirely,
             onToggle = function(checked)
                 panelSettings.hideKnownEntirely = checked
@@ -343,7 +340,7 @@ function VendorPanel:CreatePreviewPanel()
         })
         table.insert(items, {
             type = "checkbox",
-            text = ns.L["VENDOR_DIM_KNOWN"],
+            text = L["VENDOR_DIM_KNOWN"],
             checked = state.dimKnownItems,
             onToggle = function(checked)
                 state.dimKnownItems = checked
@@ -356,7 +353,7 @@ function VendorPanel:CreatePreviewPanel()
         if state.availableFilters["Equipable"] then
             table.insert(items, {
                 type = "checkbox",
-                text = ns.L["VENDOR_ALL_SPECS_TYPES"],
+                text = L["VENDOR_ALL_SPECS_TYPES"],
                 checked = state.showAllArmor,
                 onToggle = function(checked)
                     state.showAllArmor = checked
@@ -427,15 +424,15 @@ function VendorPanel:CreatePreviewPanel()
 
         local exclusions = GetExclusions()
         local exclusionDefs = {
-            { key = "Mounts",    text = ns.L["VENDOR_EX_MOUNTS"] },
-            { key = "Pets",      text = ns.L["VENDOR_EX_PETS"] },
-            { key = "Toys",      text = ns.L["VENDOR_EX_TOYS"] },
-            { key = "Cosmetics", text = ns.L["VENDOR_EX_COSMETICS"] },
-            { key = "Decor",     text = ns.L["VENDOR_EX_DECOR"] },
-            { key = "Housing",   text = ns.L["VENDOR_EX_HOUSING"] },
+            { key = "Mounts",    text = L["VENDOR_EX_MOUNTS"] },
+            { key = "Pets",      text = L["VENDOR_EX_PETS"] },
+            { key = "Toys",      text = L["VENDOR_EX_TOYS"] },
+            { key = "Cosmetics", text = L["VENDOR_EX_COSMETICS"] },
+            { key = "Decor",     text = L["VENDOR_EX_DECOR"] },
+            { key = "Housing",   text = L["VENDOR_EX_HOUSING"] },
         }
         table.insert(items, { type = "divider" })
-        table.insert(items, { type = "header", text = ns.L["VENDOR_ALWAYS_HIDE"] })
+        table.insert(items, { type = "header", text = L["VENDOR_ALWAYS_HIDE"] })
         for _, def in ipairs(exclusionDefs) do
             table.insert(items, {
                 type = "checkbox",
@@ -473,14 +470,14 @@ function VendorPanel:CreatePreviewPanel()
 
     state.junkPreviewPanel.vendorDropdown = vendorDropdown
 
-    local quickAddBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = ns.L["VENDOR_QUICK_ADD"], height = 26, minWidth = panelWidth - 16 })
+    local quickAddBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = L["VENDOR_QUICK_ADD"], height = 26, minWidth = panelWidth - 16 })
     quickAddBtn:SetPoint("TOPLEFT", filterRow, "BOTTOMLEFT", OneWoW_GUI:GetSpacing("SM"), -OneWoW_GUI:GetSpacing("XS"))
     quickAddBtn:SetPoint("TOPRIGHT", filterRow, "BOTTOMRIGHT", -OneWoW_GUI:GetSpacing("SM"), -OneWoW_GUI:GetSpacing("XS"))
     quickAddBtn:SetScript("OnClick", function() VendorPanel:ToggleFiltersDialog() end)
     quickAddBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(ns.L["VENDOR_QUICK_ADD_FILTERS"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(ns.L["UI_VENDOR_FILTER_HINT"], 1, 1, 1, true)
+        GameTooltip:SetText(L["VENDOR_QUICK_ADD_FILTERS"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        GameTooltip:AddLine(L["UI_VENDOR_FILTER_HINT"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
     quickAddBtn:HookScript("OnLeave", function()
@@ -500,7 +497,7 @@ function VendorPanel:CreatePreviewPanel()
     scrollFrame:SetScrollChild(scrollChild)
     state.junkPreviewPanel.scrollChild = scrollChild
 
-    local bottomCloseBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = ns.L["VENDOR_CLOSE"], height = 28 })
+    local bottomCloseBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = L["VENDOR_CLOSE"], height = 28 })
     bottomCloseBtn:SetPoint("BOTTOMLEFT", state.junkPreviewPanel, "BOTTOMLEFT", OneWoW_GUI:GetSpacing("SM"), 12)
     bottomCloseBtn:SetScript("OnClick", function()
         state.junkPreviewPanel.manuallyHidden = true
@@ -511,9 +508,9 @@ function VendorPanel:CreatePreviewPanel()
     end)
     bottomCloseBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(ns.L["VENDOR_CLOSE_PANEL"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(ns.L["VENDOR_HIDES_PANEL"], 1, 1, 1, true)
-        GameTooltip:AddLine(ns.L["VENDOR_USE_TOGGLE"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        GameTooltip:SetText(L["VENDOR_CLOSE_PANEL"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        GameTooltip:AddLine(L["VENDOR_HIDES_PANEL"], 1, 1, 1, true)
+        GameTooltip:AddLine(L["VENDOR_USE_TOGGLE"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         GameTooltip:Show()
     end)
     bottomCloseBtn:HookScript("OnLeave", function()
@@ -522,7 +519,7 @@ function VendorPanel:CreatePreviewPanel()
 
     local helpText = state.junkPreviewPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     helpText:SetPoint("BOTTOM", state.junkPreviewPanel, "BOTTOM", 0, 48)
-    helpText:SetText(ns.L["VENDOR_RIGHT_CLICK_REMOVE"])
+    helpText:SetText(L["VENDOR_RIGHT_CLICK_REMOVE"])
     helpText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local totalValueText = state.junkPreviewPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -531,15 +528,15 @@ function VendorPanel:CreatePreviewPanel()
     totalValueText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     state.junkPreviewPanel.totalValueText = totalValueText
 
-    local destroyButton = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = string.format(ns.L["VENDOR_DESTROY_COUNT"], 0), height = 28 })
+    local destroyButton = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = string.format(L["VENDOR_DESTROY_COUNT"], 0), height = 28 })
     destroyButton:SetPoint("LEFT", bottomCloseBtn, "RIGHT", 3, 0)
     destroyButton.text:SetTextColor(1, 0.5, 0.5, 1)
     destroyButton.fontString = destroyButton.text
     destroyButton:SetScript("OnClick", function() VendorPanel:DestroyNextJunkItem() end)
     destroyButton:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(ns.L["VENDOR_DESTROY_NEXT"], 1, 0.3, 0.3)
-        GameTooltip:AddLine(ns.L["VENDOR_DESTROY_NO_PRICE"], 1, 1, 1, true)
+        GameTooltip:SetText(L["VENDOR_DESTROY_NEXT"], 1, 0.3, 0.3)
+        GameTooltip:AddLine(L["VENDOR_DESTROY_NO_PRICE"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
     destroyButton:HookScript("OnLeave", function(self)
@@ -548,7 +545,7 @@ function VendorPanel:CreatePreviewPanel()
     end)
     state.junkPreviewPanel.destroyButton = destroyButton
 
-    local sellJunkButton = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = string.format(ns.L["VENDOR_SELL_COUNT"], 0), height = 28 })
+    local sellJunkButton = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = string.format(L["VENDOR_SELL_COUNT"], 0), height = 28 })
     sellJunkButton:SetPoint("LEFT", destroyButton, "RIGHT", 3, 0)
     sellJunkButton.fontString = sellJunkButton.text
     sellJunkButton:SetScript("OnClick", function()
@@ -557,8 +554,8 @@ function VendorPanel:CreatePreviewPanel()
     end)
     sellJunkButton:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(ns.L["VENDOR_SELL_JUNK_ITEMS"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(ns.L["VENDOR_SELL_WITH_PRICE"], 1, 1, 1, true)
+        GameTooltip:SetText(L["VENDOR_SELL_JUNK_ITEMS"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        GameTooltip:AddLine(L["VENDOR_SELL_WITH_PRICE"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
     sellJunkButton:HookScript("OnLeave", function()
@@ -596,7 +593,7 @@ function VendorPanel:CreateFiltersDialog()
 
     local result = OneWoW_GUI:CreateDialog({
         name = "OneWoW_QoL_FiltersDialog",
-        title = ns.L["VENDOR_QUICK_ADD_FILTERS"],
+        title = L["VENDOR_QUICK_ADD_FILTERS"],
         width = 200,
         height = 346,
         strata = "MEDIUM",
@@ -611,14 +608,14 @@ function VendorPanel:CreateFiltersDialog()
     local content = result.contentFrame
     local yOffset = 0
 
-    local reagentsBtn = OneWoW_GUI:CreateFitTextButton(content, { text = ns.L["VENDOR_REAGENTS"], height = 26 })
+    local reagentsBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["VENDOR_REAGENTS"], height = 26 })
     reagentsBtn:SetPoint("TOP", content, "TOP", 0, yOffset)
     reagentsBtn:SetScript("OnClick", function() VendorPanel:AddNonSoulboundReagents() end)
     reagentsBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(ns.L["UI_VENDOR_REAGENTS_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(ns.L["UI_VENDOR_REAGENTS"], 1, 1, 1, true)
-        GameTooltip:AddLine(ns.L["UI_VENDOR_EXCLUDES"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        GameTooltip:SetText(L["UI_VENDOR_REAGENTS_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        GameTooltip:AddLine(L["UI_VENDOR_REAGENTS"], 1, 1, 1, true)
+        GameTooltip:AddLine(L["UI_VENDOR_EXCLUDES"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         GameTooltip:Show()
     end)
     reagentsBtn:HookScript("OnLeave", function()
@@ -626,13 +623,13 @@ function VendorPanel:CreateFiltersDialog()
     end)
     yOffset = yOffset - 28
 
-    local consumablesBtn = OneWoW_GUI:CreateFitTextButton(content, { text = ns.L["UI_VENDOR_CONSUMABLES_TITLE"], height = 26 })
+    local consumablesBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["UI_VENDOR_CONSUMABLES_TITLE"], height = 26 })
     consumablesBtn:SetPoint("TOP", content, "TOP", 0, yOffset)
     consumablesBtn:SetScript("OnClick", function() VendorPanel:AddConsumables() end)
     consumablesBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(ns.L["UI_VENDOR_CONSUMABLES_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(ns.L["UI_VENDOR_CONSUMABLES"], 1, 1, 1, true)
+        GameTooltip:SetText(L["UI_VENDOR_CONSUMABLES_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        GameTooltip:AddLine(L["UI_VENDOR_CONSUMABLES"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
     consumablesBtn:HookScript("OnLeave", function()
@@ -640,13 +637,13 @@ function VendorPanel:CreateFiltersDialog()
     end)
     yOffset = yOffset - 28
 
-    local whiteBtn = OneWoW_GUI:CreateFitTextButton(content, { text = ns.L["UI_VENDOR_WHITES_TITLE"], height = 26 })
+    local whiteBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["UI_VENDOR_WHITES_TITLE"], height = 26 })
     whiteBtn:SetPoint("TOP", content, "TOP", 0, yOffset)
     whiteBtn:SetScript("OnClick", function() VendorPanel:AddWhiteQuality() end)
     whiteBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(ns.L["UI_VENDOR_WHITES_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(ns.L["UI_VENDOR_COMMONS"], 1, 1, 1, true)
+        GameTooltip:SetText(L["UI_VENDOR_WHITES_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        GameTooltip:AddLine(L["UI_VENDOR_COMMONS"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
     whiteBtn:HookScript("OnLeave", function()
@@ -654,7 +651,7 @@ function VendorPanel:CreateFiltersDialog()
     end)
     yOffset = yOffset - 28
 
-    local clearAllBtn = OneWoW_GUI:CreateFitTextButton(content, { text = ns.L["UI_VENDOR_CLEAR_TITLE"], height = 26 })
+    local clearAllBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["UI_VENDOR_CLEAR_TITLE"], height = 26 })
     clearAllBtn:SetPoint("TOP", content, "TOP", 0, yOffset)
     clearAllBtn:SetScript("OnClick", function()
         state.oneTimeItems.ilvlGear = {}; state.oneTimeItems.reagents = {}
@@ -663,8 +660,8 @@ function VendorPanel:CreateFiltersDialog()
     end)
     clearAllBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(ns.L["UI_VENDOR_CLEAR_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(ns.L["UI_VENDOR_REMOVE_CATEGORIES"], 1, 1, 1, true)
+        GameTooltip:SetText(L["UI_VENDOR_CLEAR_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        GameTooltip:AddLine(L["UI_VENDOR_REMOVE_CATEGORIES"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
     clearAllBtn:HookScript("OnLeave", function()
@@ -712,7 +709,7 @@ function VendorPanel:CreateFiltersDialog()
     state.filtersDialog.excludeIlvl1 = excludeIlvl1
     yOffset = yOffset - 26
 
-    local showBlizzJunk = OneWoW_GUI:CreateCheckbox(content, { label = ns.L["VENDOR_SHOW_BLIZZ_JUNK"] })
+    local showBlizzJunk = OneWoW_GUI:CreateCheckbox(content, { label = L["VENDOR_SHOW_BLIZZ_JUNK"] })
     showBlizzJunk:SetPoint("TOP", content, "TOP", -45, yOffset)
     showBlizzJunk:SetSize(20, 20)
     showBlizzJunk:SetChecked(GetShowBlizzJunk())
@@ -726,8 +723,8 @@ function VendorPanel:CreateFiltersDialog()
 
     showBlizzJunk:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(ns.L["VENDOR_SHOW_BLIZZ_JUNK"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(ns.L["VENDOR_SHOW_BLIZZ_JUNK_TT"], 1, 1, 1, true)
+        GameTooltip:SetText(L["VENDOR_SHOW_BLIZZ_JUNK"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        GameTooltip:AddLine(L["VENDOR_SHOW_BLIZZ_JUNK_TT"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
     showBlizzJunk:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -738,13 +735,13 @@ function VendorPanel:CreateFiltersDialog()
 
     local neverSellBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "", height = 26, minWidth = 176 })
     neverSellBtn:SetPoint("TOP", content, "TOP", 0, yOffset)
-    neverSellBtn.text:SetText(string.format(ns.L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", 0))
+    neverSellBtn.text:SetText(string.format(L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", 0))
     state.filtersDialog.neverSellBtnText = neverSellBtn.text
     neverSellBtn:SetScript("OnClick", function() VendorPanel:ToggleNeverSellDialog() end)
     neverSellBtn:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(ns.L["VENDOR_PROTECTED_ITEMS"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(ns.L["VENDOR_VIEW_PROTECTED"], 1, 1, 1, true)
+        GameTooltip:SetText(L["VENDOR_PROTECTED_ITEMS"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        GameTooltip:AddLine(L["VENDOR_VIEW_PROTECTED"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
     neverSellBtn:HookScript("OnLeave", function()
@@ -759,7 +756,7 @@ function VendorPanel:CreateNeverSellDialog()
 
     local result = OneWoW_GUI:CreateDialog({
         name = "OneWoW_QoL_NeverSellDialog",
-        title = ns.L["VENDOR_PROTECTED_ITEMS"],
+        title = L["VENDOR_PROTECTED_ITEMS"],
         width = 350,
         height = 400,
         strata = "MEDIUM",
@@ -767,7 +764,7 @@ function VendorPanel:CreateNeverSellDialog()
         factionTheme = GetFactionTheme(),
         onClose = function(frame) frame:Hide() end,
         buttons = {
-            { text = ns.L["VENDOR_CLOSE"], onClick = function(frame) frame:Hide() end },
+            { text = L["VENDOR_CLOSE"], onClick = function(frame) frame:Hide() end },
         },
     })
     state.neverSellDialog = result.frame
@@ -791,7 +788,7 @@ function VendorPanel:CreateNeverSellDialog()
 
     local helpText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     helpText:SetPoint("BOTTOM", content, "BOTTOM", 0, 4)
-    helpText:SetText(ns.L["VENDOR_CLICK_UNPROTECT"])
+    helpText:SetText(L["VENDOR_CLICK_UNPROTECT"])
     helpText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     state.neverSellDialog:Hide()
@@ -848,7 +845,7 @@ function VendorPanel:UpdateNeverSellDialog()
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             if type(itemLink) == "string" then GameTooltip:SetHyperlink(itemLink) else GameTooltip:SetItemByID(itemID) end
             GameTooltip:AddLine(" ", 1, 1, 1)
-            GameTooltip:AddLine(ns.L["VENDOR_CLICK_UNPROTECT"], 1, 0.5, 0.5)
+            GameTooltip:AddLine(L["VENDOR_CLICK_UNPROTECT"], 1, 0.5, 0.5)
             GameTooltip:Show()
         end)
         itemFrame:SetScript("OnLeave", function(self)
@@ -861,7 +858,7 @@ function VendorPanel:UpdateNeverSellDialog()
     if count == 0 then
         local emptyText = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         emptyText:SetPoint("CENTER", scrollChild, "CENTER", 0, -20)
-        emptyText:SetText(ns.L["VENDOR_NO_PROTECTED"])
+        emptyText:SetText(L["VENDOR_NO_PROTECTED"])
         emptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
 
@@ -964,14 +961,14 @@ function VendorPanel:UpdatePreviewPanel()
     for _, item in ipairs(noValueJunkItems) do totalValue = totalValue + item.totalValue end
 
     local yOffset = 0
-    if #grayItems > 0 then yOffset = self:CreateCategory(scrollChild, grayItems, yOffset, ns.L["VENDOR_GRAY_ITEMS"], {r=0.7, g=0.7, b=0.7}, "gray", false, false) end
-    if #markedItems > 0 then yOffset = self:CreateCategory(scrollChild, markedItems, yOffset, ns.L["VENDOR_MARKED_JUNK"], {r=1, g=0.82, b=0}, "marked", true, false) end
-    if #ilvlGearItems > 0 then yOffset = self:CreateCategory(scrollChild, ilvlGearItems, yOffset, ns.L["VENDOR_LOW_ILVL"], {r=0.5, g=1, b=0.5}, "ilvlGear", false, true) end
-    if #reagentItems > 0 then yOffset = self:CreateCategory(scrollChild, reagentItems, yOffset, ns.L["VENDOR_REAGENTS"], {r=0.5, g=1, b=0.5}, "reagents", false, true) end
-    if #noValueJunkItems > 0 then yOffset = self:CreateCategory(scrollChild, noValueJunkItems, yOffset, ns.L["VENDOR_JUNK_NO_VALUE"], {r=1, g=0.4, b=0.4}, "noValueJunk", false, false, true) end
+    if #grayItems > 0 then yOffset = self:CreateCategory(scrollChild, grayItems, yOffset, L["VENDOR_GRAY_ITEMS"], {r=0.7, g=0.7, b=0.7}, "gray", false, false) end
+    if #markedItems > 0 then yOffset = self:CreateCategory(scrollChild, markedItems, yOffset, L["VENDOR_MARKED_JUNK"], {r=1, g=0.82, b=0}, "marked", true, false) end
+    if #ilvlGearItems > 0 then yOffset = self:CreateCategory(scrollChild, ilvlGearItems, yOffset, L["VENDOR_LOW_ILVL"], {r=0.5, g=1, b=0.5}, "ilvlGear", false, true) end
+    if #reagentItems > 0 then yOffset = self:CreateCategory(scrollChild, reagentItems, yOffset, L["VENDOR_REAGENTS"], {r=0.5, g=1, b=0.5}, "reagents", false, true) end
+    if #noValueJunkItems > 0 then yOffset = self:CreateCategory(scrollChild, noValueJunkItems, yOffset, L["VENDOR_JUNK_NO_VALUE"], {r=1, g=0.4, b=0.4}, "noValueJunk", false, false, true) end
 
     scrollChild:SetHeight(math.max(yOffset, 1))
-    state.junkPreviewPanel.totalValueText:SetText(string.format(ns.L["VENDOR_TOTAL"], VPFilters.FormatMoney(totalValue)))
+    state.junkPreviewPanel.totalValueText:SetText(string.format(L["VENDOR_TOTAL"], VPFilters.FormatMoney(totalValue)))
 
     local sellableCount, destroyableCount = 0, 0
     for _, list in ipairs({grayItems, markedItems, ilvlGearItems, reagentItems}) do
@@ -982,11 +979,11 @@ function VendorPanel:UpdatePreviewPanel()
     for _, item in ipairs(noValueJunkItems) do destroyableCount = destroyableCount + 1 end
 
     if state.junkPreviewPanel.sellJunkButton and state.junkPreviewPanel.sellJunkButton.fontString then
-        state.junkPreviewPanel.sellJunkButton.fontString:SetText(string.format(ns.L["VENDOR_SELL_COUNT"], sellableCount))
+        state.junkPreviewPanel.sellJunkButton.fontString:SetText(string.format(L["VENDOR_SELL_COUNT"], sellableCount))
     end
     if state.junkPreviewPanel.destroyButton then
         if state.junkPreviewPanel.destroyButton.fontString then
-            state.junkPreviewPanel.destroyButton.fontString:SetText(string.format(ns.L["VENDOR_DESTROY_COUNT"], destroyableCount))
+            state.junkPreviewPanel.destroyButton.fontString:SetText(string.format(L["VENDOR_DESTROY_COUNT"], destroyableCount))
         end
         state.junkPreviewPanel.destroyButton:SetAlpha(destroyableCount > 0 and 1.0 or 0.5)
     end
@@ -1018,10 +1015,10 @@ function VendorPanel:CreateCategory(parent, items, yOffset, title, color, catego
     if isOneTime then
         local oneTimeLabel = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         oneTimeLabel:SetPoint("LEFT", headerText, "RIGHT", 5, 0)
-        oneTimeLabel:SetText(ns.L["VENDOR_ONETIME_LABEL"])
+        oneTimeLabel:SetText(L["VENDOR_ONETIME_LABEL"])
         oneTimeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
-        local clearBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = ns.L["VENDOR_CLEAR_ALL"], height = 20 })
+        local clearBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["VENDOR_CLEAR_ALL"], height = 20 })
         clearBtn:SetPoint("RIGHT", headerFrame, "RIGHT", -3, 0)
         clearBtn:SetScript("OnClick", function(self, button)
             if button == "LeftButton" then
@@ -1041,17 +1038,17 @@ function VendorPanel:CreateCategory(parent, items, yOffset, title, color, catego
         deleteAllBtn:SetBackdropBorderColor(0.7, 0.2, 0.2, 1)
         local deleteFS = deleteAllBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         deleteFS:SetPoint("CENTER", deleteAllBtn, "CENTER", 0, 0)
-        deleteFS:SetText(ns.L["VENDOR_DESTROY_ALL"])
+        deleteFS:SetText(L["VENDOR_DESTROY_ALL"])
         deleteFS:SetTextColor(1, 0.5, 0.5, 1)
         deleteAllBtn:SetScript("OnClick", function(self, button) if button == "LeftButton" then VendorPanel:DeleteAllNoValueJunk() end end)
         deleteAllBtn:SetScript("OnEnter", function(self)
             self:SetBackdropColor(0.3, 0.08, 0.08, 0.95)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText(ns.L["VENDOR_DESTROY_ALL_TOOLTIP"], 1, 0.3, 0.3)
-            GameTooltip:AddLine(ns.L["VENDOR_WARNING_NOT_JUNK"], 1, 0.5, 0.5, true)
-            GameTooltip:AddLine(ns.L["VENDOR_CHECK_BEFORE_DESTROY"], 1, 1, 1, true)
+            GameTooltip:SetText(L["VENDOR_DESTROY_ALL_TOOLTIP"], 1, 0.3, 0.3)
+            GameTooltip:AddLine(L["VENDOR_WARNING_NOT_JUNK"], 1, 0.5, 0.5, true)
+            GameTooltip:AddLine(L["VENDOR_CHECK_BEFORE_DESTROY"], 1, 1, 1, true)
             GameTooltip:AddLine(" ", 1, 1, 1)
-            GameTooltip:AddLine(ns.L["VENDOR_CTRL_PROTECT"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            GameTooltip:AddLine(L["VENDOR_CTRL_PROTECT"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             GameTooltip:Show()
         end)
         deleteAllBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.2, 0.05, 0.05, 0.9); GameTooltip:Hide() end)
@@ -1111,7 +1108,7 @@ function VendorPanel:CreateCategory(parent, items, yOffset, title, color, catego
                 totalPriceBox:SetBackdropBorderColor(0.7, 0.2, 0.2, 1)
                 local deleteText = totalPriceBox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 deleteText:SetPoint("CENTER", totalPriceBox, "CENTER", 0, 0)
-                deleteText:SetText(ns.L["VENDOR_DESTROY_ALL"])
+                deleteText:SetText(L["VENDOR_DESTROY_ALL"])
                 deleteText:SetTextColor(1, 0.5, 0.5, 1)
                 totalPriceBox:SetScript("OnClick", function(self, btn)
                     if btn == "LeftButton" then
@@ -1133,8 +1130,8 @@ function VendorPanel:CreateCategory(parent, items, yOffset, title, color, catego
                 totalPriceBox:SetScript("OnEnter", function(self)
                     self:SetBackdropColor(0.35, 0.08, 0.08, 0.95)
                     GameTooltip:SetOwner(self, "ANCHOR_TOP")
-                    GameTooltip:SetText(ns.L["VENDOR_DESTROY_THIS"], 1, 0.3, 0.3)
-                    GameTooltip:AddLine(ns.L["VENDOR_CLICK_DESTROY"], 1, 1, 1, true)
+                    GameTooltip:SetText(L["VENDOR_DESTROY_THIS"], 1, 0.3, 0.3)
+                    GameTooltip:AddLine(L["VENDOR_CLICK_DESTROY"], 1, 1, 1, true)
                     GameTooltip:Show()
                 end)
                 totalPriceBox:SetScript("OnLeave", function(self) self:SetBackdropColor(0.25, 0.05, 0.05, 0.95); GameTooltip:Hide() end)
@@ -1207,15 +1204,15 @@ function VendorPanel:CreateCategory(parent, items, yOffset, title, color, catego
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                 GameTooltip:SetHyperlink(item.link)
                 GameTooltip:AddLine(" ", 1, 1, 1)
-                if not item.noSellPrice then GameTooltip:AddLine(ns.L["VENDOR_SHIFT_SELL"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end
-                if isNoValueJunk then GameTooltip:AddLine(ns.L["VENDOR_MARK_PROTECTED"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                if not item.noSellPrice then GameTooltip:AddLine(L["VENDOR_SHIFT_SELL"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end
+                if isNoValueJunk then GameTooltip:AddLine(L["VENDOR_MARK_PROTECTED"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
                 elseif isOneTime then
-                    GameTooltip:AddLine(ns.L["VENDOR_REMOVE_ONETIME"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                    GameTooltip:AddLine(ns.L["VENDOR_MARK_PROTECTED"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                    GameTooltip:AddLine(L["VENDOR_REMOVE_ONETIME"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                    GameTooltip:AddLine(L["VENDOR_MARK_PROTECTED"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
                 elseif isMarkedJunk then
-                    GameTooltip:AddLine(ns.L["VENDOR_REMOVE_JUNK"], 0, 1, 0)
-                    GameTooltip:AddLine(ns.L["VENDOR_MARK_PROTECTED"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                else GameTooltip:AddLine(ns.L["VENDOR_MARK_PROTECTED"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end
+                    GameTooltip:AddLine(L["VENDOR_REMOVE_JUNK"], 0, 1, 0)
+                    GameTooltip:AddLine(L["VENDOR_MARK_PROTECTED"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                else GameTooltip:AddLine(L["VENDOR_MARK_PROTECTED"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end
                 GameTooltip:Show()
             end)
             itemFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)

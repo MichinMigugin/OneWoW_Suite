@@ -1,31 +1,6 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/questtools/questtools.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
-
-local QuestToolsModule = {
-    id          = "questtools",
-    title       = "QUESTTOOLS_TITLE",
-    category    = "AUTOMATION",
-    description = "QUESTTOOLS_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles = {
-        { id = "auto_accept",  label = "QUESTTOOLS_TOGGLE_ACCEPT",  description = "QUESTTOOLS_TOGGLE_ACCEPT_DESC",  default = true  },
-        { id = "auto_turnin",  label = "QUESTTOOLS_TOGGLE_TURNIN",  description = "QUESTTOOLS_TOGGLE_TURNIN_DESC",  default = true  },
-        { id = "reward_picker",label = "QUESTTOOLS_TOGGLE_REWARDS", description = "QUESTTOOLS_TOGGLE_REWARDS_DESC", default = true  },
-        { id = "auto_gossip",  label = "QUESTTOOLS_TOGGLE_GOSSIP",  description = "QUESTTOOLS_TOGGLE_GOSSIP_DESC",  default = false },
-    },
-    preview       = true,
-    _acceptFrame  = nil,
-    _turninFrame  = nil,
-    _gossipFrame  = nil,
-    _gossipHooked = false,
-    _gossipRetryToken = 0,
-    _goldIcon     = nil,
-}
+local _, ns = ...
+local QuestToolsModule = ns.ModuleRegistry:Current()
+if not QuestToolsModule then return end
 
 local function GetToggle(id)
     return ns.ModuleRegistry:GetToggleValue("questtools", id)
@@ -469,8 +444,6 @@ function QuestToolsModule:OnToggle(toggleId, value)
     end
 end
 
-ns.QuestToolsModule = QuestToolsModule
-
-_G.OneWoW_QoL_DebugGossipDisplayed = function()
+OneWoW_QoL_DebugGossipDisplayed = function()
     QuestToolsModule:DebugPrintGossipApiVsUi()
 end

@@ -1,6 +1,3 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Core/Constants.lua
--- Created by MichinMuggin (Ricky)
 local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI

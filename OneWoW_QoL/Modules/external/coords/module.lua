@@ -1,0 +1,30 @@
+local ADDON_NAME, ns = ...
+
+ns.ModuleRegistry:Define(ADDON_NAME, {
+    id          = "coords",
+    title       = "COORDS_TITLE",
+    category    = "INTERFACE",
+    description = "COORDS_DESC",
+    version     = "1.1",
+    author      = "Ricky",
+    contact     = "ricky@wow2.xyz",
+    link        = "https://www.wow2.xyz",
+    toggles = {
+        { id = "show_map_id",      label = "COORDS_TOGGLE_MAPID",         description = "COORDS_TOGGLE_MAPID_DESC",         default = true  },
+        { id = "show_zone",        label = "COORDS_TOGGLE_ZONE",          description = "COORDS_TOGGLE_ZONE_DESC",          default = false },
+        { id = "show_subzone",     label = "COORDS_TOGGLE_SUBZONE",       description = "COORDS_TOGGLE_SUBZONE_DESC",       default = false },
+        { id = "show_facing",      label = "COORDS_TOGGLE_FACING",        description = "COORDS_TOGGLE_FACING_DESC",        default = false },
+        { id = "show_speed",       label = "COORDS_TOGGLE_SPEED",         description = "COORDS_TOGGLE_SPEED_DESC",         default = false },
+        { id = "hide_in_instance", label = "COORDS_TOGGLE_HIDE_INSTANCE", description = "COORDS_TOGGLE_HIDE_INSTANCE_DESC", default = true  },
+    },
+    preview     = true,
+    defaultEnabled = true,
+    _frame     = nil,
+    _texts     = nil,
+    _ticker    = nil,
+    _eventFrame = nil,
+    _cache     = nil,
+    _hidden    = false,
+    _inCombat  = false,
+    _layout    = nil,
+})

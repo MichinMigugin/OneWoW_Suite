@@ -1,4 +1,6 @@
 local _, ns = ...
+local AutoMountModule, L = ns.ModuleRegistry:Current()
+if not AutoMountModule then return end
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -8,20 +10,6 @@ local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local sort = sort
 local tinsert = tinsert
 
-local AutoMountModule = {
-    id          = "automount",
-    title       = "AUTOMOUNT_TITLE",
-    category    = "AUTOMATION",
-    description = "AUTOMOUNT_DESC",
-    version     = "1.1",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles     = {},
-    preview     = true,
-    _ticker     = nil,
-    _eventFrame = nil,
-}
 local AM = AutoMountModule
 
 local lastCombatTime          = 0
@@ -513,7 +501,6 @@ function AutoMountModule:OnToggle()
 end
 
 function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh, rightStatusBar)
-    local L = ns.L
 
     if rightStatusBar then
         if not AM._mountStatusLabel then
@@ -888,7 +875,6 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
 end
 
 function AutoMountModule:ShowMountPicker(mountType, onSelect)
-    local L = ns.L
 
     local matchingMounts = {}
     local otherMounts    = {}
@@ -1135,5 +1121,3 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
     popup:Show()
     popup:Raise()
 end
-
-ns.AutoMountModule = AutoMountModule

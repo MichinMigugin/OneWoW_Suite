@@ -1,10 +1,8 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/fastloot/Locales/koKR.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
+local M = ns.ModuleRegistry:Current()
 
-if GetLocale() ~= "koKR" then return end
+OneWoW.Locale:Register(M._scope, "koKR", {
 
-local L_enUS = ns.L_enUS
-L_enUS["FASTLOOT_TITLE"]       = "TEST"
-L_enUS["FASTLOOT_DESC"]        = "TEST"
+    ["FASTLOOT_TITLE"] = "TEST",
+    ["FASTLOOT_DESC"] = "TEST",
+})

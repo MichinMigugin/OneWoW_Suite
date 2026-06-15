@@ -1,3 +1,0 @@
-local _, ns = ...
-
-ns.ModuleRegistry:Register(ns.PreyBarModule)

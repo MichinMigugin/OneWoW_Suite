@@ -1,4 +1,6 @@
 local _, ns = ...
+local BagBarModule, L = ns.ModuleRegistry:Current()
+if not BagBarModule then return end
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -6,20 +8,6 @@ local PE = OneWoW.PredicateEngine
 
 local strtrim = strtrim
 local tinsert, sort = tinsert, sort
-
-local BagBarModule = {
-    id          = "bagbar",
-    title       = "BAGBAR_TITLE",
-    category    = "INTERFACE",
-    description = "BAGBAR_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles     = {},
-    preview     = true,
-    defaultEnabled = true,
-}
 
 local BAGBAR_MAX_SLOTS = 24
 
@@ -212,8 +200,8 @@ function BagBarModule:CreateBar()
         local dir = st.growDirection or "RIGHT"
         local tooltipAnchor = (dir == "LEFT") and "ANCHOR_RIGHT" or "ANCHOR_LEFT"
         GameTooltip:SetOwner(myself, tooltipAnchor)
-        GameTooltip:SetText(ns.L["BAGBAR_TITLE"], 1, 1, 1)
-        GameTooltip:AddLine(ns.L["BAGBAR_DRAG_TOOLTIP"], 0.7, 0.7, 0.7)
+        GameTooltip:SetText(L["BAGBAR_TITLE"], 1, 1, 1)
+        GameTooltip:AddLine(L["BAGBAR_DRAG_TOOLTIP"], 0.7, 0.7, 0.7)
         GameTooltip:Show()
     end)
     dragHandle:SetScript("OnLeave", function(myself)
@@ -291,7 +279,7 @@ function BagBarModule:CreateButton(index)
                 GameTooltip:AddLine(strtrim(body), 0.7, 0.7, 0.7, true)
             end
             GameTooltip:AddLine(" ")
-            GameTooltip:AddLine(ns.L["BAGBAR_MACRO_LEFT_CLICK_TO_RUN"], 1, 1, 1)
+            GameTooltip:AddLine(L["BAGBAR_MACRO_LEFT_CLICK_TO_RUN"], 1, 1, 1)
             GameTooltip:Show()
             return
         end
@@ -302,9 +290,9 @@ function BagBarModule:CreateButton(index)
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
         GameTooltip:SetHyperlink(myself.owb_itemLink or ("item:" .. myself.owb_itemID))
         GameTooltip:AddLine(" ")
-        GameTooltip:AddLine(ns.L["BAGBAR_LEFT_CLICK_TO_USE"], 1, 1, 1)
-        GameTooltip:AddLine(ns.L["BAGBAR_SHIFT_RIGHT_CLICK_TO_SKIP"], 0.7, 0.7, 0.7)
-        GameTooltip:AddLine(ns.L["BAGBAR_ALT_RIGHT_CLICK_TO_BLACKLIST"], 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(L["BAGBAR_LEFT_CLICK_TO_USE"], 1, 1, 1)
+        GameTooltip:AddLine(L["BAGBAR_SHIFT_RIGHT_CLICK_TO_SKIP"], 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(L["BAGBAR_ALT_RIGHT_CLICK_TO_BLACKLIST"], 0.7, 0.7, 0.7)
         GameTooltip:Show()
     end)
 
@@ -776,19 +764,17 @@ function BagBarModule:ShowContextMenu(anchor)
     if MenuUtil and MenuUtil.CreateContextMenu then
         MenuUtil.CreateContextMenu(anchor, function(_, rootDescription)
             local s = GetSettings()
-            rootDescription:CreateTitle(ns.L["BAGBAR_TITLE"])
-            local lockLabel = s.locked and ns.L["BAGBAR_CONTEXT_UNLOCK"] or ns.L["BAGBAR_CONTEXT_LOCK"]
+            rootDescription:CreateTitle(L["BAGBAR_TITLE"])
+            local lockLabel = s.locked and L["BAGBAR_CONTEXT_UNLOCK"] or L["BAGBAR_CONTEXT_LOCK"]
             rootDescription:CreateButton(lockLabel, function()
                 BagBarModule:SetLocked(not s.locked)
             end)
-            rootDescription:CreateButton(ns.L["BAGBAR_CONTEXT_SETTINGS"], function()
+            rootDescription:CreateButton(L["BAGBAR_CONTEXT_SETTINGS"], function()
                 BagBarModule:OpenSettings()
             end)
         end)
     end
 end
-
-ns.BagBarModule = BagBarModule
 
 -- ============================================================================
 -- Slash command: /bagbar  /owbb

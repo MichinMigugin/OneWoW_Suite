@@ -397,7 +397,13 @@ Replace each `Locales/LocaleManager.lua` with service registration; delete
       key-name-on-miss. Anti-pattern sweep: 173 dead `L["K"] or "lit"` removed
       (ternaries' inner fallbacks too), 1 no-op, 2 dynamic-key optionals →
       `GetOptional`. Lint clean; in-game verify pending.
-- [ ] **OneWoW_QoL** (core of the QoL namespace; see Phase 5 for its externals)
+- [x] **OneWoW_QoL** (done together with Phase 5 — see below; core 371→337 keys to
+      scope `OneWoW_QoL`, `ns.L` = view, BINDING_* folded into scope). **Note:** the
+      Overlays/Tooltips/Portals/ToastAlerts subsystems read `local L = OneWoW.L` (core
+      "OneWoW" scope) by design — their keys were intentionally left in OneWoW core
+      during the QoL feature transition ("Locale strings stay in core OneWoW.L"). Those
+      are untouched here; they migrate when those features fully move (later phase).
+      Anti-pattern sweep deferred (pending in-game verify).
 
 ### Phase 4 — Data sub-addons (Pattern B, mostly enUS-only)
 
@@ -423,16 +429,28 @@ or `"autorepair"`) so two modules can reuse a key with different values without
 colliding. Convert each module's `L_enUS["KEY"]=v` block to a per-module
 `Register(scope, locale, {...})` call (decision 4 — no shared-table shim).
 
-- [ ] Settle the scope-naming convention for externals (`"QoL.<module>"` vs
-      bare `"<module>"`) and apply consistently.
-- [ ] achieveuntrack, afkpanel, auctionhouse, autodelete, autoinvite, automount,
-      autoopen, autoreadycheck, autorepair, autoresurrect, autosummon, bagbar,
-      charinfo, coords, copytext, cursorenhancer, declineduel, escpanel,
-      fastforward, fastloot, framemover, hideerrors, inspectmog, lfgpanel,
-      map_mini_tools (+ minimapskin), map_world_tools, minimapbuttons, playmounts,
-      preybar, professionspanel, questitembar, questtools, screenshotachievements,
-      vendorpanel
-      <br>*(one scope per module; check each box as converted)*
+- [x] **Scope-naming convention (final): `ADDON_NAME .. "." .. id`** (e.g.
+      `OneWoW_QoL.afkpanel`), derived — no magic `"QoL."` literal. (Superseded an
+      interim `"QoL.<module>"` string approach.) Achieved via a **`module.lua`** per
+      module + a tiny `ModuleRegistry:Define`/`Current()` API: `module.lua` (first in
+      the TOC block) holds the metadata literal — the single home of the module `id` —
+      and `Define(ADDON_NAME, def)` computes `def._scope`/`def._view`, sets a transient
+      `loading` pointer (file-local in the registry, never on `ns`), and registers.
+      Every other file does `local M[, L] = ns.ModuleRegistry:Current()` at load and
+      captures. `data.lua` deleted (Define registers); core `t-features.lua` reads each
+      module's cached `_view` via `GetById`. Cross-scope deps: 3 generic core keys
+      (`FEATURES_ON`/`FEATURES_OFF`→charinfo,framemover; `UNKNOWN`→lfgpanel) duplicated
+      per decision 3; cross-**module** references go through `GetById("<id>")`
+      (fixed 3: map_mini_tools→minimapbuttons, core→playmounts/copytext).
+- [x] **All 34 external modules converted** (POC afkpanel → 19 single-file → 11
+      multi-file → 3 hand-converts: lfgpanel/vendorpanel incremental metadata, inspectmog
+      `ns.InspectMog`/no-koKR). `map_mini_tools/minimapskin/` is **dead** (not in TOC) —
+      left untouched. LocaleManager → shim (QoL in profile-sync). Validated: balanced
+      braces, no residual `ns.<X>Module`/`GetTable("QoL.")`, clean per-scope missing-key
+      scan, no dangling cross-refs, lint clean. In-game verified.
+      <br>*Pending: `L["K"] or "lit"` sweep across externals; rewrite the QoL drop-in
+      SDK docs (`DEVHELP_BODY` + `DEVELOPERS.md`) for the module.lua/Current convention
+      (incl. the `GetById` cross-module rule + load-order rule).*
 
 ### Phase 6 — Cleanup
 
@@ -539,6 +557,7 @@ additive. The service itself (Phase 0) is inert until something registers.
 | _2026-06-14_ | 2 | ShoppingList | Migrated to scope `OneWoW_ShoppingList` + service view; aligned to DD/Bags (removed `RegisterLocale`/`SetLocale` from Constants.lua; `ApplyLanguage`→`SetLanguage` shim). 0 shared → no harvest. Anti-pattern sweep: 14 dead `(L and L["K"]) or "lit"` guards simplified, all keys verified registered. Touched files lint clean; in-game verify pending. |
 | _2026-06-14_ | 2 | DevTool | Migrated to scope `OneWoW_Utility_DevTool` + service view; `GetStore` alias for Database raw readers; `ApplyLanguage`→`SetLanguage` shim (service pushes BINDING_*). 9 shared MINIMAP_* dropped (harvest no-op). Anti-pattern sweep ~51 sites (`Addon.L or {}` guards, no-ops, minimap fallback, `rcLabel`→`GetOptional`). Lint clean; in-game verify pending. **Phase 2 complete** (DD, Bags, ShoppingList, DevTool). |
 | _2026-06-14_ | — | DevTool | Code-quality notes (user-reported, pre-existing): (1) standardized `L` capture — one top-level `local L = Addon.L` per file, removed `getL()`/`loc`/`LL` aliases, all reads use `L` (~90 sites). (2) Fixed live settings updates — DevTool only had `OnThemeChanged`; added `OnLanguageChanged`/`OnFontChanged`/`OnFontSizeChanged` (via new `Addon:RebuildUI()`), so language/font now apply without forcing a theme change. |
+| _2026-06-14_ | 3+5 | QoL | Done as one pass (core + all 34 externals) — the shared `ns.L` made a core-only step impossible. Core → `OneWoW_QoL` scope (337 keys, BINDING_* folded). Each external → own `QoL.<module>` scope; code switched from shared `ns.L` to per-module `GetTable`. Only cross-deps were 3 generic core keys (FEATURES_ON/OFF, UNKNOWN), duplicated into the 3 modules that read them. Discovered: Overlays/Tooltips/Portals/ToastAlerts read `OneWoW.L` (core scope) by design — keys deliberately kept in OneWoW during the feature transition; left untouched. `minimapskin/` is dead (not in TOC). LocaleManager → shim. Validated clean (braces, no stale refs, per-scope missing-key scan, lint). Anti-pattern sweep + DEVHELP SDK text deferred; in-game verify pending. |
 | _2026-06-14_ | 3 | AltTracker | Largest, most complex Phase-3 addon. Scope `OneWoW_AltTracker`; named-var accumulation (`L_enUS`/`L_koKR`) → service `Register`; real koKR. **3 `_G["BINDING_*"]` direct assigns folded into the scope** (service refold pushes `BINDING_*` to `_G`; `Bindings.xml` labels localize on language change). LocaleManager → shim (profile-sync); `ApplyBindingGlobals` dropped. Dropped 40 (Language/Theme/Minimap-section, dead). Added 2 missing keys (`BANK_SEARCH`, `BANK_NO_CHARACTERS`) surfaced by the sweep. Swept 58 bulk + 8 manual fallbacks; dynamic `BANK_<type>` → `GetOptional`; ternaries intact. Post-sweep fixes: restored an inner `cond and ".." .. L["K"] or ""` ternary the bulk pass over-stripped at t-progress.lua:1850-1851 (boolean-concat crash). Lint clean; in-game verify pending. |
 | _2026-06-14_ | 3 | Catalog | Accumulation-format LocaleManager addon, **first Phase-3 with real koKR translations**. Scope `OneWoW_Catalog`; `L["K"]=v` → service `Register`; LocaleManager → `ns.ApplyLanguage` shim (kept for profile-sync; `ApplyBindingGlobals` dropped — service refold pushes `BINDING_*`). Dropped 39 keys (entire Language/Theme/Minimap-section blocks — dead here; built by shared GUI panel from `shared` scope). koKR migrated as a normal scope (3 trailing self-ref patches folded to plain keys). No missing keys. Swept 7 `or "lit"` + 3 must-exist dynamic-key fallbacks; ternaries left intact. Lint clean; in-game verify pending. |
 | _2026-06-14_ | 3 | Notes | Accumulation-format LocaleManager addon. Scope `OneWoW_Notes`; `L["K"]=v` accumulation → service `Register`; LocaleManager → `ns.ApplyLanguage` shim (kept for profile-sync); koKR `"TEST"` placeholder via `GetStore`. Dropped 34 shared/theme (dead). Added 28 missing keys. Swept 256 fallbacks + 1 `GetOptional`. Lint clean; in-game verify pending. |

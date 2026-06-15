@@ -1,11 +1,12 @@
 local addonName, ns = ...
+local QuestItemBarModule, L = ns.ModuleRegistry:Current()
 
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
 local function GetSettings()
-    return ns.QuestItemBarModule.GetSettings()
+    return QuestItemBarModule.GetSettings()
 end
 
 local LIST_SCROLL_HEIGHT = 180
@@ -34,26 +35,25 @@ local function OpenMapWithQuest(questID)
 end
 
 local function BuildContent(container, isEnabled, contentYOffset)
-    local L = ns.L
     local s = GetSettings()
     local cy = 0
 
     cy = OneWoW_GUI:CreateSection(container, { title = L["QUESTITEMBAR_SETTINGS_HEADER"], yOffset = cy })
 
     -- Row 1: Show Bar | Lock Position | Sort: [Button]
-    local previewing = ns.QuestItemBarModule:IsPreviewActive()
+    local previewing = QuestItemBarModule:IsPreviewActive()
     local previewBtn = OneWoW_GUI:CreateFitTextButton(container, {
         text = previewing and L["QUESTITEMBAR_HIDE_BAR"] or L["QUESTITEMBAR_SHOW_BAR"],
         height = 26,
     })
     previewBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     previewBtn:SetScript("OnClick", function()
-        if ns.QuestItemBarModule:IsPreviewActive() then
-            ns.QuestItemBarModule:HidePreview()
+        if QuestItemBarModule:IsPreviewActive() then
+            QuestItemBarModule:HidePreview()
         else
-            ns.QuestItemBarModule:ShowPreview()
+            QuestItemBarModule:ShowPreview()
         end
-        ns.QuestItemBarModule._refreshCustomDetail()
+        QuestItemBarModule._refreshCustomDetail()
     end)
 
     local lockBtn = OneWoW_GUI:CreateFitTextButton(container, {
@@ -62,8 +62,8 @@ local function BuildContent(container, isEnabled, contentYOffset)
     })
     lockBtn:SetPoint("LEFT", previewBtn, "RIGHT", 8, 0)
     lockBtn:SetScript("OnClick", function()
-        ns.QuestItemBarModule:SetLocked(not GetSettings().locked)
-        ns.QuestItemBarModule._refreshCustomDetail()
+        QuestItemBarModule:SetLocked(not GetSettings().locked)
+        QuestItemBarModule._refreshCustomDetail()
     end)
 
     local sortLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -71,13 +71,13 @@ local function BuildContent(container, isEnabled, contentYOffset)
     sortLabel:SetText(L["QUESTITEMBAR_SORT"])
     sortLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local sortBtn = OneWoW_GUI:CreateFitTextButton(container, { text = ns.QuestItemBarModule:GetSortLabel(), height = 26 })
+    local sortBtn = OneWoW_GUI:CreateFitTextButton(container, { text = QuestItemBarModule:GetSortLabel(), height = 26 })
     sortBtn:SetPoint("LEFT", sortLabel, "RIGHT", 8, 0)
     sortBtn:SetScript("OnClick", function()
         local cur = GetSettings()
-        local modes = ns.QuestItemBarModule.SORT_MODES
+        local modes = QuestItemBarModule.SORT_MODES
         local numModes = #modes
-        local current = cur.sortMode or ns.QuestItemBarModule.defaultSortMode
+        local current = cur.sortMode or QuestItemBarModule.defaultSortMode
         local currentIdx = 1
         for i, m in ipairs(modes) do
             if m.value == current then
@@ -86,8 +86,8 @@ local function BuildContent(container, isEnabled, contentYOffset)
             end
         end
         cur.sortMode = modes[(currentIdx % numModes) + 1].value
-        ns.QuestItemBarModule:ScheduleUpdate()
-        ns.QuestItemBarModule._refreshCustomDetail()
+        QuestItemBarModule:ScheduleUpdate()
+        QuestItemBarModule._refreshCustomDetail()
     end)
 
     local hideCheck = CreateFrame("CheckButton", nil, container, "InterfaceOptionsCheckButtonTemplate")
@@ -97,7 +97,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
     hideCheck:SetChecked(s.hideWhenEmpty)
     hideCheck:SetScript("OnClick", function(self)
         GetSettings().hideWhenEmpty = self:GetChecked()
-        ns.QuestItemBarModule:ScheduleUpdate()
+        QuestItemBarModule:ScheduleUpdate()
     end)
     cy = cy - 36
 
@@ -109,7 +109,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
     hideAnchorCheck:SetChecked(s.hideAnchor)
     hideAnchorCheck:SetScript("OnClick", function(self)
         GetSettings().hideAnchor = self:GetChecked()
-        ns.QuestItemBarModule:ScheduleUpdate()
+        QuestItemBarModule:ScheduleUpdate()
     end)
     cy = cy - 28
 
@@ -151,7 +151,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
         onSelect = function(value, text)
             GetSettings().growDirection = value
             growDirDropdown._text:SetText(text)
-            ns.QuestItemBarModule:ScheduleUpdate()
+            QuestItemBarModule:ScheduleUpdate()
         end,
     })
     cy = cy - 32
@@ -175,8 +175,8 @@ local function BuildContent(container, isEnabled, contentYOffset)
     superCheck:SetChecked(s.showOnlySupertracked)
     superCheck:SetScript("OnClick", function(self)
         GetSettings().showOnlySupertracked = self:GetChecked()
-        ns.QuestItemBarModule:ScheduleUpdate()
-        ns.QuestItemBarModule._refreshCustomDetail()
+        QuestItemBarModule:ScheduleUpdate()
+        QuestItemBarModule._refreshCustomDetail()
     end)
     superCheck:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -193,8 +193,8 @@ local function BuildContent(container, isEnabled, contentYOffset)
     zoneCheck:SetChecked(s.showOnlyCurrentZone)
     zoneCheck:SetScript("OnClick", function(self)
         GetSettings().showOnlyCurrentZone = self:GetChecked()
-        ns.QuestItemBarModule:ScheduleUpdate()
-        ns.QuestItemBarModule._refreshCustomDetail()
+        QuestItemBarModule:ScheduleUpdate()
+        QuestItemBarModule._refreshCustomDetail()
     end)
 
     local trackedCheck = CreateFrame("CheckButton", nil, row2, "InterfaceOptionsCheckButtonTemplate")
@@ -205,8 +205,8 @@ local function BuildContent(container, isEnabled, contentYOffset)
     trackedCheck:SetChecked(s.showOnlyTracked)
     trackedCheck:SetScript("OnClick", function(self)
         GetSettings().showOnlyTracked = self:GetChecked()
-        ns.QuestItemBarModule:ScheduleUpdate()
-        ns.QuestItemBarModule._refreshCustomDetail()
+        QuestItemBarModule:ScheduleUpdate()
+        QuestItemBarModule._refreshCustomDetail()
     end)
     cy = cy - 34
 
@@ -225,7 +225,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
         orderLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         cy = cy - (orderLabel:GetStringHeight() + 4)
 
-        local order = ns.QuestItemBarModule:GetDynamicOrder()
+        local order = QuestItemBarModule:GetDynamicOrder()
         for i = 1, #order do
             local key = order[i]
             local row = CreateFrame("Frame", nil, container)
@@ -257,8 +257,8 @@ local function BuildContent(container, isEnabled, contentYOffset)
             upBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             upBtn:SetScript("OnClick", function()
                 if not canMoveUp then return end
-                ns.QuestItemBarModule:SwapDynamicOrder(i, -1)
-                ns.QuestItemBarModule._refreshCustomDetail()
+                QuestItemBarModule:SwapDynamicOrder(i, -1)
+                QuestItemBarModule._refreshCustomDetail()
             end)
 
             local downBtn = CreateFrame("Button", nil, row)
@@ -277,8 +277,8 @@ local function BuildContent(container, isEnabled, contentYOffset)
             downBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             downBtn:SetScript("OnClick", function()
                 if not canMoveDown then return end
-                ns.QuestItemBarModule:SwapDynamicOrder(i, 1)
-                ns.QuestItemBarModule._refreshCustomDetail()
+                QuestItemBarModule:SwapDynamicOrder(i, 1)
+                QuestItemBarModule._refreshCustomDetail()
             end)
 
             cy = cy - (DYNAMIC_ROW_HEIGHT + 2)
@@ -290,46 +290,46 @@ local function BuildContent(container, isEnabled, contentYOffset)
     local sliderRowY = cy
     local sizeLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     sizeLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, sliderRowY)
-    sizeLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_BUTTON_SIZE"], s.buttonSize or ns.QuestItemBarModule.defaultButtonSize))
+    sizeLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_BUTTON_SIZE"], s.buttonSize or QuestItemBarModule.defaultButtonSize))
     sizeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local sizeSlider = CreateFrame("Slider", "OneWoW_QoL_QIBarSizeSlider", container, "OptionsSliderTemplate")
     sizeSlider:SetPoint("TOPLEFT", container, "TOPLEFT", 24, sliderRowY - sizeLabel:GetStringHeight() - 4)
     sizeSlider:SetWidth(170)
-    sizeSlider:SetMinMaxValues(ns.QuestItemBarModule.MIN_BUTTON_SIZE, ns.QuestItemBarModule.MAX_BUTTON_SIZE)
-    sizeSlider:SetValue(s.buttonSize or ns.QuestItemBarModule.defaultButtonSize)
+    sizeSlider:SetMinMaxValues(QuestItemBarModule.MIN_BUTTON_SIZE, QuestItemBarModule.MAX_BUTTON_SIZE)
+    sizeSlider:SetValue(s.buttonSize or QuestItemBarModule.defaultButtonSize)
     sizeSlider:SetValueStep(2)
     sizeSlider:SetObeyStepOnDrag(true)
-    OneWoW_GUI:ConfigureOptionsSliderEnds(sizeSlider, tostring(ns.QuestItemBarModule.MIN_BUTTON_SIZE),
-        tostring(ns.QuestItemBarModule.MAX_BUTTON_SIZE))
+    OneWoW_GUI:ConfigureOptionsSliderEnds(sizeSlider, tostring(QuestItemBarModule.MIN_BUTTON_SIZE),
+        tostring(QuestItemBarModule.MAX_BUTTON_SIZE))
     sizeSlider:SetScript("OnValueChanged", function(self, value)
         local v = math.floor(value + 0.5)
         GetSettings().buttonSize = v
         sizeLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_BUTTON_SIZE"], v))
-        ns.QuestItemBarModule:ScheduleUpdate()
+        QuestItemBarModule:ScheduleUpdate()
     end)
 
     local colsLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     colsLabel:SetPoint("TOP", sizeLabel, "TOP")
     colsLabel:SetPoint("LEFT", sizeSlider, "RIGHT", 24, 0)
-    colsLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_COLUMNS"], s.columns or ns.QuestItemBarModule.defaultColumns))
+    colsLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_COLUMNS"], s.columns or QuestItemBarModule.defaultColumns))
     colsLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local colsSlider = CreateFrame("Slider", "OneWoW_QoL_QIBarColsSlider", container, "OptionsSliderTemplate")
     colsSlider:SetPoint("TOP", sizeSlider, "TOP")
     colsSlider:SetPoint("LEFT", sizeSlider, "RIGHT", 24, 0)
     colsSlider:SetWidth(170)
-    colsSlider:SetMinMaxValues(ns.QuestItemBarModule.MIN_COLUMNS, ns.QuestItemBarModule.MAX_COLUMNS)
-    colsSlider:SetValue(s.columns or ns.QuestItemBarModule.defaultColumns)
+    colsSlider:SetMinMaxValues(QuestItemBarModule.MIN_COLUMNS, QuestItemBarModule.MAX_COLUMNS)
+    colsSlider:SetValue(s.columns or QuestItemBarModule.defaultColumns)
     colsSlider:SetValueStep(1)
     colsSlider:SetObeyStepOnDrag(true)
-    OneWoW_GUI:ConfigureOptionsSliderEnds(colsSlider, tostring(ns.QuestItemBarModule.MIN_COLUMNS),
-        tostring(ns.QuestItemBarModule.MAX_COLUMNS))
+    OneWoW_GUI:ConfigureOptionsSliderEnds(colsSlider, tostring(QuestItemBarModule.MIN_COLUMNS),
+        tostring(QuestItemBarModule.MAX_COLUMNS))
     colsSlider:SetScript("OnValueChanged", function(self, value)
         local v = math.floor(value + 0.5)
         GetSettings().columns = v
         colsLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_COLUMNS"], v))
-        ns.QuestItemBarModule:ScheduleUpdate()
+        QuestItemBarModule:ScheduleUpdate()
     end)
     cy = cy - 50
 
@@ -351,7 +351,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
         local v = math.floor(value + 0.5)
         GetSettings().iconSpacing = v
         spacingLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_ICON_SPACING"], v))
-        ns.QuestItemBarModule:ScheduleUpdate()
+        QuestItemBarModule:ScheduleUpdate()
     end)
     cy = cy - 50
 
@@ -424,7 +424,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
     scrollFrame:SetPoint("TOPLEFT", colHeader, "BOTTOMLEFT", 0, -2)
     scrollFrame:SetPoint("BOTTOMRIGHT", listScrollWrap, "BOTTOMRIGHT", -(4 + SCROLLBAR_WIDTH), 4)
 
-    local entries = ns.QuestItemBarModule.BuildQuestItemDebugList()
+    local entries = QuestItemBarModule.BuildQuestItemDebugList()
     local rowY = -2
     for _, entry in ipairs(entries) do
         local row = CreateFrame("Frame", nil, scrollContent, "BackdropTemplate")
@@ -538,7 +538,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
     return cy
 end
 
-function ns.QuestItemBarModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled)
+function QuestItemBarModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled)
     self._detailScrollChild = detailScrollChild
     if detailScrollChild._qibContainer then
         OneWoW_GUI:ClearFrame(detailScrollChild._qibContainer)
@@ -569,8 +569,8 @@ function ns.QuestItemBarModule:CreateCustomDetail(detailScrollChild, yOffset, is
             C_Timer.After(0, function()
                 if container:GetParent() ~= detailScrollChild then return end
                 local w = (container:GetWidth() or 0) - 16
-                if w >= TIGHT_LAYOUT_THRESHOLD and ns.QuestItemBarModule._refreshCustomDetail then
-                    ns.QuestItemBarModule._refreshCustomDetail()
+                if w >= TIGHT_LAYOUT_THRESHOLD and QuestItemBarModule._refreshCustomDetail then
+                    QuestItemBarModule._refreshCustomDetail()
                 end
             end)
         end
@@ -582,8 +582,8 @@ function ns.QuestItemBarModule:CreateCustomDetail(detailScrollChild, yOffset, is
     if detailScrollFrame and not detailScrollChild._qibResizeHooked then
         detailScrollChild._qibResizeHooked = true
         local function onResize()
-            if container:GetParent() == detailScrollChild and ns.QuestItemBarModule._refreshCustomDetail then
-                ns.QuestItemBarModule._refreshCustomDetail()
+            if container:GetParent() == detailScrollChild and QuestItemBarModule._refreshCustomDetail then
+                QuestItemBarModule._refreshCustomDetail()
             end
         end
         detailScrollFrame:HookScript("OnSizeChanged", onResize)

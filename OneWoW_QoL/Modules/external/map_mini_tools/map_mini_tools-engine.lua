@@ -1,6 +1,7 @@
 local _, ns = ...
+local MapMiniToolsModule, L = ns.ModuleRegistry:Current()
 
-local M = ns.MapMiniToolsModule
+local M = MapMiniToolsModule
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -100,7 +101,7 @@ local function EnsureExpansionPlumberHook()
         local origSetTooltip = b.SetTooltip
         b.SetTooltip = function(self)
             if not self.title then
-                self.title = ns.L["MMSKIN_ACTION_MISSIONS"]
+                self.title = L["MMSKIN_ACTION_MISSIONS"]
             end
             if not self.description then
                 self.description = ""
@@ -208,7 +209,7 @@ end
 -- Leatrix_Plus solves this by requiring a UI reload.
 -- We take the Leatrix_Plus approach: going back to round requires a reload.
 
--- text is resolved at show time (ns.L is still being built when this file
+-- text is resolved at show time (L is still being built when this file
 -- loads; ns.ApplyLanguage() runs later in the startup sequence).
 StaticPopupDialogs["ONEWOW_MMSKIN_RELOAD"] = {
     text = "%s",
@@ -222,8 +223,9 @@ StaticPopupDialogs["ONEWOW_MMSKIN_RELOAD"] = {
 }
 
 local function NotifyLibDBIconShapeChanged()
-    if ns.MinimapButtonsModule.ApplyMinimapShapeToLibDBIcons then
-        ns.MinimapButtonsModule:ApplyMinimapShapeToLibDBIcons()
+    local mbm = ns.ModuleRegistry:GetById("minimapbuttons")
+    if mbm and mbm.ApplyMinimapShapeToLibDBIcons then
+        mbm:ApplyMinimapShapeToLibDBIcons()
         return
     end
     -- LibDBIcon is optional at runtime, so keep the soft LibStub.
@@ -993,7 +995,7 @@ local function CreateClock()
             SecondsToTime(C_DateAndTime.GetSecondsUntilWeeklyReset()),
             nR, nG, nB, wR, wG, wB)
         tt:AddLine(" ")
-        tt:AddLine(ns.L["MMSKIN_CLOCK_TT_TOGGLE"], 0.5, 0.5, 0.6)
+        tt:AddLine(L["MMSKIN_CLOCK_TT_TOGGLE"], 0.5, 0.5, 0.6)
         tt:Show()
     end)
     clockFrame:SetScript("OnLeave", function() GetTooltip():Hide() end)
@@ -1610,9 +1612,9 @@ local function ShowDebugOverlays()
                 local s = GetSettings()
                 local pos = s.iconPositions and s.iconPositions[d.id]
                 if pos and pos.cx ~= nil and pos.cy ~= nil then
-                    tt:AddLine(ns.L["MMSKIN_DEBUG_TT_POS_FMT"]:format(pos.cx, pos.cy), 0.7, 0.7, 0.7)
+                    tt:AddLine(L["MMSKIN_DEBUG_TT_POS_FMT"]:format(pos.cx, pos.cy), 0.7, 0.7, 0.7)
                 end
-                tt:AddLine(ns.L["MMSKIN_DEBUG_TT_DRAG_HINT"], 0.5, 0.8, 1, true)
+                tt:AddLine(L["MMSKIN_DEBUG_TT_DRAG_HINT"], 0.5, 0.8, 1, true)
                 tt:Show()
             end)
             ov:SetScript("OnLeave", function() GetTooltip():Hide() end)
@@ -1989,7 +1991,7 @@ function M:OnDisable()
     -- Reload only if the square mask was actually applied this session;
     -- disabling the module without ever applying the mask needs no reload.
     if M._squareMaskApplied then
-        StaticPopup_Show("ONEWOW_MMSKIN_RELOAD", ns.L["MMSKIN_RELOAD_PROMPT"])
+        StaticPopup_Show("ONEWOW_MMSKIN_RELOAD", L["MMSKIN_RELOAD_PROMPT"])
     end
 
     RestoreLayout()
@@ -2065,7 +2067,7 @@ function M:OnToggle(toggleId, value)
         if value then
             ApplySquareMask()
         else
-            StaticPopup_Show("ONEWOW_MMSKIN_RELOAD", ns.L["MMSKIN_RELOAD_PROMPT"])
+            StaticPopup_Show("ONEWOW_MMSKIN_RELOAD", L["MMSKIN_RELOAD_PROMPT"])
         end
         UpdateBorder()
         ApplyAddonCompartmentSquareLayout()

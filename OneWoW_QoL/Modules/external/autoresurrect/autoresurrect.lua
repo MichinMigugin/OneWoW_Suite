@@ -1,24 +1,6 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/autoresurrect/autoresurrect.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
-
-local AutoResurrectModule = {
-    id          = "autoresurrect",
-    title       = "AUTORESURRECT_TITLE",
-    category    = "SOCIAL",
-    description = "AUTORESURRECT_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles = {
-        { id = "skip_in_instance", label = "AUTORESURRECT_TOGGLE_SKIP_INSTANCE", description = "AUTORESURRECT_TOGGLE_SKIP_INSTANCE_DESC", default = false },
-    },
-    preview = true,
-    defaultEnabled = false,
-    _frame = nil,
-}
+local _, ns = ...
+local AutoResurrectModule = ns.ModuleRegistry:Current()
+if not AutoResurrectModule then return end
 
 function AutoResurrectModule:OnEnable()
     if not self._frame then
@@ -55,5 +37,3 @@ function AutoResurrectModule:RESURRECT_REQUEST()
     StaticPopup_Hide("RESURRECT_NO_SICKNESS")
     StaticPopup_Hide("RESURRECT_NO_TIMER")
 end
-
-ns.AutoResurrectModule = AutoResurrectModule

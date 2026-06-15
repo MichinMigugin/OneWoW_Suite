@@ -1,28 +1,8 @@
 local _, ns = ...
+local CursorEnhancerModule, L = ns.ModuleRegistry:Current()
+if not CursorEnhancerModule then return end
 
 local OneWoW_GUI = OneWoW_GUI
-
-local CursorEnhancerModule = {
-    id          = "cursorenhancer",
-    title       = "CURSORENHANCER_TITLE",
-    category    = "INTERFACE",
-    description = "CURSORENHANCER_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles     = {
-        { id = "show_out_of_combat", label = "CURSORENHANCER_SHOW_OOC",      default = true,  group = "CURSORENHANCER_MODULE_TOGGLES" },
-        { id = "show_in_instance",   label = "CURSORENHANCER_SHOW_INSTANCE", default = true,  group = "CURSORENHANCER_MODULE_TOGGLES" },
-        { id = "outer_ring",         label = "CURSORENHANCER_OUTER_RING",    default = true,  group = "CURSORENHANCER_MARKER_TOGGLES" },
-        { id = "middle_ring",        label = "CURSORENHANCER_MIDDLE_RING",   default = false, group = "CURSORENHANCER_MARKER_TOGGLES" },
-        { id = "center_marker",      label = "CURSORENHANCER_CENTER_MARKER", default = true,  group = "CURSORENHANCER_MARKER_TOGGLES" },
-        { id = "mouse_trail",        label = "CURSORENHANCER_MOUSE_TRAIL",   default = false, group = "CURSORENHANCER_MARKER_TOGGLES" },
-    },
-    preview        = true,
-    _moduleEnabled = false,
-    _eventFrame    = nil,
-}
 
 local CE = {}
 
@@ -508,7 +488,6 @@ local function OpenColorPicker(dbKey)
 end
 
 function CE:CreateColorSwatch(parent, dbKey, colorLabel)
-    local L = ns.L
     local swatch = CreateFrame("Button", nil, parent, "BackdropTemplate")
     swatch:SetSize(24, 24)
     swatch:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
@@ -537,7 +516,6 @@ function CE:UpdateColorSwatches()
 end
 
 function CursorEnhancerModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled)
-    local L = ns.L
 
     local headerHeight = 20
     local colorHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -576,4 +554,3 @@ function CursorEnhancerModule:CreateCustomDetail(detailScrollChild, yOffset, isE
 end
 
 CursorEnhancerModule.CE = CE
-ns.CursorEnhancerModule = CursorEnhancerModule

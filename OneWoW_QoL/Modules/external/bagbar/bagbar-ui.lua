@@ -1,4 +1,5 @@
 local _, ns = ...
+local BagBarModule, L = ns.ModuleRegistry:Current()
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -13,13 +14,13 @@ StaticPopupDialogs["ONEWOW_QOL_CLEAR_BAGBAR_BLACKLIST"] = {
         if addon and addon.db and addon.db.global.modules and addon.db.global.modules["bagbar"] then
             wipe(addon.db.global.modules["bagbar"].blacklist)
         end
-        ns.BagBarModule:ClearTempBlacklist()
+        BagBarModule:ClearTempBlacklist()
         if ns.ModuleRegistry:IsEnabled("bagbar") then
-            ns.BagBarModule:ScheduleUpdate()
+            BagBarModule:ScheduleUpdate()
         end
-        print("|cFF00FF00" .. (ns.L["BAGBAR_BLACKLIST_CLEARED"] or "Bag Bar blacklist cleared.") .. "|r")
-        if ns.BagBarModule._refreshCustomDetail then
-            ns.BagBarModule._refreshCustomDetail()
+        print("|cFF00FF00" .. (L["BAGBAR_BLACKLIST_CLEARED"] or "Bag Bar blacklist cleared.") .. "|r")
+        if BagBarModule._refreshCustomDetail then
+            BagBarModule._refreshCustomDetail()
         end
     end,
     timeout = 0,
@@ -29,7 +30,7 @@ StaticPopupDialogs["ONEWOW_QOL_CLEAR_BAGBAR_BLACKLIST"] = {
 }
 
 local function GetSettings()
-    return ns.BagBarModule.GetSettings()
+    return BagBarModule.GetSettings()
 end
 
 local function MakeItemDropZone(parent, label, yOffset, onReceive)
@@ -58,7 +59,7 @@ local function MakeItemDropZone(parent, label, yOffset, onReceive)
         self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
 
-    local addBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = ns.L["BAGBAR_ADD_BUTTON"], height = 24 })
+    local addBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = L["BAGBAR_ADD_BUTTON"], height = 24 })
     addBtn:SetPoint("LEFT", itemIDBox, "RIGHT", 6, 0)
     addBtn:SetScript("OnClick", function()
         local id = tonumber(itemIDBox:GetText())
@@ -78,7 +79,7 @@ local function MakeItemDropZone(parent, label, yOffset, onReceive)
 
     local dropText = dropZone:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     dropText:SetPoint("CENTER")
-    dropText:SetText(ns.L["BAGBAR_DRAG_ITEM_HERE"])
+    dropText:SetText(L["BAGBAR_DRAG_ITEM_HERE"])
     dropText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local function handleDrop()
@@ -192,7 +193,7 @@ local function MakeMacroDropZone(parent, label, yOffset, onReceive)
         self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end)
 
-    local addBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = ns.L["BAGBAR_ADD_BUTTON"], height = 24 })
+    local addBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = L["BAGBAR_ADD_BUTTON"], height = 24 })
     addBtn:SetPoint("LEFT", nameBox, "RIGHT", 6, 0)
     addBtn:SetScript("OnClick", function()
         local text = strtrim(nameBox:GetText() or "")
@@ -215,7 +216,7 @@ local function MakeMacroDropZone(parent, label, yOffset, onReceive)
 
     local dropText = dropZone:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     dropText:SetPoint("CENTER")
-    dropText:SetText(ns.L["BAGBAR_DRAG_MACRO_HERE"])
+    dropText:SetText(L["BAGBAR_DRAG_MACRO_HERE"])
     dropText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local function handleDrop()
@@ -282,7 +283,7 @@ local function MakeMacroList(parent, macroTable, yOffset, onRemove, uiEnabled)
             nameText:SetText(mName)
             nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         else
-            nameText:SetText(macroName .. " " .. ns.L["BAGBAR_MACRO_MISSING"])
+            nameText:SetText(macroName .. " " .. L["BAGBAR_MACRO_MISSING"])
             nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
 
@@ -316,26 +317,25 @@ local function MakeMacroList(parent, macroTable, yOffset, onRemove, uiEnabled)
 end
 
 local function BuildContent(container, _)
-    local L = ns.L
     local s = GetSettings()
     local uiEnabled = ns.ModuleRegistry:IsEnabled("bagbar")
     local cy = 0
 
     cy = OneWoW_GUI:CreateSection(container, { title = L["BAGBAR_SETTINGS_HEADER"], yOffset = cy })
 
-    local previewing = ns.BagBarModule:IsPreviewActive()
+    local previewing = BagBarModule:IsPreviewActive()
     local previewBtn = OneWoW_GUI:CreateFitTextButton(container, {
         text = previewing and L["BAGBAR_HIDE_BAR"] or L["BAGBAR_SHOW_BAR"],
         height = 26,
     })
     previewBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     previewBtn:SetScript("OnClick", function()
-        if ns.BagBarModule:IsPreviewActive() then
-            ns.BagBarModule:HidePreview()
+        if BagBarModule:IsPreviewActive() then
+            BagBarModule:HidePreview()
         else
-            ns.BagBarModule:ShowPreview()
+            BagBarModule:ShowPreview()
         end
-        ns.BagBarModule._refreshCustomDetail()
+        BagBarModule._refreshCustomDetail()
     end)
 
     local lockBtn = OneWoW_GUI:CreateFitTextButton(container, {
@@ -344,8 +344,8 @@ local function BuildContent(container, _)
     })
     lockBtn:SetPoint("TOPLEFT", previewBtn, "TOPRIGHT", 12, 0)
     lockBtn:SetScript("OnClick", function()
-        ns.BagBarModule:SetLocked(not GetSettings().locked)
-        ns.BagBarModule._refreshCustomDetail()
+        BagBarModule:SetLocked(not GetSettings().locked)
+        BagBarModule._refreshCustomDetail()
     end)
     cy = cy - 32 - 12
 
@@ -386,7 +386,7 @@ local function BuildContent(container, _)
         onSelect = function(value, text)
             GetSettings().growDirection = value
             growDirDropdown._text:SetText(text)
-            ns.BagBarModule:ScheduleUpdate()
+            BagBarModule:ScheduleUpdate()
         end,
     })
 
@@ -395,7 +395,7 @@ local function BuildContent(container, _)
         checked = s.hideAnchor,
         onClick = function(self)
             GetSettings().hideAnchor = self:GetChecked()
-            ns.BagBarModule:ScheduleUpdate()
+            BagBarModule:ScheduleUpdate()
         end,
     })
     hideAnchorCheck:SetPoint("LEFT", growDirDropdown, "RIGHT", 20, 0)
@@ -423,7 +423,7 @@ local function BuildContent(container, _)
         local v = math.min(math.floor(value + 0.5), 24)
         GetSettings().maxButtons = v
         maxLabel:SetText(string.format("%s: %d", L["BAGBAR_MAX_BUTTONS"], v))
-        ns.BagBarModule:ScheduleUpdate()
+        BagBarModule:ScheduleUpdate()
     end)
 
     local colsLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -445,7 +445,7 @@ local function BuildContent(container, _)
         local v = math.min(math.floor(value + 0.5), 24)
         GetSettings().columns = v
         colsLabel:SetText(string.format("%s: %d", L["BAGBAR_COLUMNS"], v))
-        ns.BagBarModule:ScheduleUpdate()
+        BagBarModule:ScheduleUpdate()
     end)
     cy = cy - 46
 
@@ -467,7 +467,7 @@ local function BuildContent(container, _)
         local v = math.floor(value + 0.5)
         GetSettings().buttonSize = v
         sizeLabel:SetText(string.format("%s: %d", L["BAGBAR_BUTTON_SIZE"], v))
-        ns.BagBarModule:ScheduleUpdate()
+        BagBarModule:ScheduleUpdate()
     end)
 
     local spacingLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -489,7 +489,7 @@ local function BuildContent(container, _)
         local v = math.floor(value + 0.5)
         GetSettings().iconSpacing = v
         spacingLabel:SetText(string.format("%s: %d", L["BAGBAR_ICON_SPACING"], v))
-        ns.BagBarModule:ScheduleUpdate()
+        BagBarModule:ScheduleUpdate()
     end)
     cy = cy - 50
 
@@ -512,7 +512,7 @@ local function BuildContent(container, _)
         onTextChanged = function(text)
             local cur = GetSettings()
             cur.expressionFilter = text or ""
-            ns.BagBarModule:ScheduleUpdate()
+            BagBarModule:ScheduleUpdate()
         end,
     })
     exprBox:SetPoint("TOPLEFT", exprDesc, "BOTTOMLEFT", 0, -exprDescToBoxGap)
@@ -549,15 +549,15 @@ local function BuildContent(container, _)
             local cur = GetSettings()
             cur.manualItems[itemID] = true
             C_Item.RequestLoadItemDataByID(itemID)
-            ns.BagBarModule:ScheduleUpdate()
-            C_Timer.After(0.5, function() ns.BagBarModule._refreshCustomDetail() end)
+            BagBarModule:ScheduleUpdate()
+            C_Timer.After(0.5, function() BagBarModule._refreshCustomDetail() end)
         end)
 
     cy = MakeItemList(container, s.manualItems, cy,
         function(itemID)
             GetSettings().manualItems[itemID] = nil
-            ns.BagBarModule:ScheduleUpdate()
-            ns.BagBarModule._refreshCustomDetail()
+            BagBarModule:ScheduleUpdate()
+            BagBarModule._refreshCustomDetail()
         end, uiEnabled)
 
     cy = OneWoW_GUI:CreateSection(container, { title = L["BAGBAR_MACROS_HEADER"], yOffset = cy })
@@ -577,15 +577,15 @@ local function BuildContent(container, _)
         function(macroName)
             local cur = GetSettings()
             cur.manualMacros[macroName] = true
-            ns.BagBarModule:ScheduleUpdate()
-            C_Timer.After(0.2, function() ns.BagBarModule._refreshCustomDetail() end)
+            BagBarModule:ScheduleUpdate()
+            C_Timer.After(0.2, function() BagBarModule._refreshCustomDetail() end)
         end)
 
     cy = MakeMacroList(container, s.manualMacros, cy,
         function(macroName)
             GetSettings().manualMacros[macroName] = nil
-            ns.BagBarModule:ScheduleUpdate()
-            ns.BagBarModule._refreshCustomDetail()
+            BagBarModule:ScheduleUpdate()
+            BagBarModule._refreshCustomDetail()
         end, uiEnabled)
 
     cy = OneWoW_GUI:CreateSection(container, { title = L["BAGBAR_BLACKLIST_HEADER"], yOffset = cy })
@@ -606,15 +606,15 @@ local function BuildContent(container, _)
             local cur = GetSettings()
             cur.blacklist[itemID] = true
             C_Item.RequestLoadItemDataByID(itemID)
-            ns.BagBarModule:ScheduleUpdate()
-            C_Timer.After(0.5, function() ns.BagBarModule._refreshCustomDetail() end)
+            BagBarModule:ScheduleUpdate()
+            C_Timer.After(0.5, function() BagBarModule._refreshCustomDetail() end)
         end)
 
     cy = MakeItemList(container, s.blacklist, cy,
         function(itemID)
             GetSettings().blacklist[itemID] = nil
-            ns.BagBarModule:ScheduleUpdate()
-            ns.BagBarModule._refreshCustomDetail()
+            BagBarModule:ScheduleUpdate()
+            BagBarModule._refreshCustomDetail()
         end, uiEnabled)
 
     local clearBtn = OneWoW_GUI:CreateFitTextButton(container, { text = L["BAGBAR_CLEAR_BLACKLIST"], height = 26 })
@@ -652,7 +652,7 @@ local function BuildContent(container, _)
     return cy
 end
 
-function ns.BagBarModule:CreateCustomDetail(detailScrollChild, yOffset, _, registerRefresh)
+function BagBarModule:CreateCustomDetail(detailScrollChild, yOffset, _, registerRefresh)
     if detailScrollChild._bagbarContainer then
         OneWoW_GUI:ClearFrame(detailScrollChild._bagbarContainer)
     end

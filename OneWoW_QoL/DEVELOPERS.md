@@ -13,49 +13,39 @@ OneWoW_QoL/
   Modules/
     external/
       yourmodule/
+        module.lua        (required - metadata + registration; loads FIRST)
         Locales/
           enUS.lua        (optional - English strings)
           koKR.lua        (optional - Korean strings)
-        yourmodule.lua    (required - module table and lifecycle functions)
+        yourmodule.lua    (required - lifecycle functions and logic)
         logic.lua         (optional - additional logic files, as many as you need)
         ui.lua            (optional - split UI code into its own file if you prefer)
-        data.lua          (required - registration call, must load last)
 ```
 
-There is no file count limit. A simple module may need only two files. A complex module may need ten or twenty. Keep all files inside your module folder and list them all in the TOC. The only hard rules are that locale files load first and `data.lua` loads last.
+There is no file count limit. A simple module needs `module.lua`, one locale file, and one code file. A complex module may have a dozen code files. Keep everything inside your folder and list it all in the TOC. The one hard rule is that **`module.lua` loads first** - it defines your module and its locale scope, which every other file relies on.
 
-Use the `autodelete` module as a working reference for everything described here.
+Use the `autodelete` module as a working reference.
 
 ---
 
-## Step 1 - Add Your Files to the TOC
+## How It Works
 
-Open `OneWoW_QoL.toc` and find the `EXTERNAL MODULES` section near the bottom. List all of your files in load order - locale files first, then all your logic files in whatever order makes sense, then `data.lua` last:
+- `module.lua` calls `ns.ModuleRegistry:Define(ADDON_NAME, { ... })` with your metadata. This is the single home of your module `id`. `Define` registers the module, derives its locale scope (`ADDON_NAME .. "." .. id`, e.g. `OneWoW_QoL.yourmodule`), and caches a read-only locale view.
+- Every other file in your module grabs the module and its locale view at load with `local M, L = ns.ModuleRegistry:Current()` and captures them into file-locals.
+- Locale files register their strings into your scope with `OneWoW.Locale:Register(M._scope, locale, { ... })`.
+- The hub renders the UI, manages toggles and saved state, and switches language automatically.
 
-```
-Modules\external\yourmodule\Locales\enUS.lua
-Modules\external\yourmodule\Locales\koKR.lua
-Modules\external\yourmodule\yourmodule.lua
-Modules\external\yourmodule\ui.lua
-Modules\external\yourmodule\someotherfile.lua
-Modules\external\yourmodule\data.lua
-```
-
-You can have as many files as your module needs. There is no limit. Split logic across files however works best for your code. The only ordering requirements are: locale files must load before any file that uses locale strings, and `data.lua` must be last because it calls `Register()`, which requires your module table to already exist.
-
-If you are not supporting Korean, you can skip the `koKR.lua` line.
+> **`Current()` is load-time only.** It returns "the module currently loading." Call it once at the top of each file and capture the result into a local. Never call it at runtime - by then a different module may be the one loading.
 
 ---
 
-## Step 2 - Define Your Module Table (yourmodule.lua)
-
-Your module is a Lua table that holds its metadata and lifecycle functions. The table must be defined in one file and exported to the namespace so your other files and `data.lua` can reference it. Your actual logic, UI, and helper code can live in as many additional files as you want.
+## Step 1 - module.lua (metadata, loads first)
 
 ```lua
-local addonName, ns = ...
+local ADDON_NAME, ns = ...
 
-local YourModule = {
-    id          = "yourmodule",
+ns.ModuleRegistry:Define(ADDON_NAME, {
+    id          = "yourmodule",   -- the ONLY place the id appears
     title       = "MY_MODULE_TITLE",
     category    = "AUTOMATION",
     description = "MY_MODULE_DESC",
@@ -68,45 +58,62 @@ local YourModule = {
 
     -- Toggles the user can flip on/off in the UI
     toggles = {
-        {
-            id          = "myToggle",
-            label       = "MY_TOGGLE_LABEL",
-            description = "MY_TOGGLE_DESC",
-            default     = true,
-        },
+        { id = "myToggle", label = "MY_TOGGLE_LABEL", description = "MY_TOGGLE_DESC", default = true },
     },
-}
 
--- Called when the module is enabled (or when the addon first loads if it is enabled)
-function YourModule:OnEnable()
-end
-
--- Called when the user disables the module
-function YourModule:OnDisable()
-end
-
--- Called when the user flips one of your toggles
--- toggleId is the id string, value is true/false
-function YourModule:OnToggle(toggleId, value)
-end
-
--- Export to the shared namespace so data.lua can find it
-ns.YourModule = YourModule
+    defaultEnabled = true,
+})
 ```
+
+`module.lua` holds metadata only - no logic, no frames. Runtime state and methods live in your code files.
 
 ---
 
-## Step 3 - Register Your Module (data.lua)
+## Step 2 - yourmodule.lua (logic)
 
-`data.lua` is one line:
+Grab your module table and locale view at the top, then attach lifecycle functions:
 
 ```lua
-local addonName, ns = ...
+local _, ns = ...
+local YourModule, L = ns.ModuleRegistry:Current()
+if not YourModule then return end
 
-ns.ModuleRegistry:Register(ns.YourModule)
+function YourModule:OnEnable()
+end
+
+function YourModule:OnDisable()
+end
+
+function YourModule:OnToggle(toggleId, value)
+end
 ```
 
-That is all. The registry validates the category, assigns a fallback of `UTILITY` if the category is unknown, and handles everything else.
+Split logic across as many files as you like - each starts the same way:
+
+```lua
+local _, ns = ...
+local YourModule, L = ns.ModuleRegistry:Current()
+```
+
+If a file only needs strings (not the module table), use `local _, L = ns.ModuleRegistry:Current()`. If it needs neither, it does not need to call `Current()` at all.
+
+---
+
+## Step 3 - Add Your Files to the TOC
+
+Open `OneWoW_QoL.toc`, find the `EXTERNAL MODULES` section, and list your files. **`module.lua` first**, then locale files, then your code files:
+
+```
+Modules\external\yourmodule\module.lua
+Modules\external\yourmodule\Locales\enUS.lua
+Modules\external\yourmodule\Locales\koKR.lua
+Modules\external\yourmodule\yourmodule.lua
+Modules\external\yourmodule\ui.lua
+```
+
+`module.lua` must come before everything else so `Current()` returns your module while your other files load. There is no `data.lua` - `Define` handles registration.
+
+If you are not supporting Korean, skip the `koKR.lua` line.
 
 ---
 
@@ -116,58 +123,53 @@ That is all. The registry validates the category, assigns a fallback of `UTILITY
 
 | Field | Type | Description |
 |---|---|---|
-| `id` | string | Unique identifier. Use lowercase letters and no spaces. Must be unique across all loaded modules. |
-| `title` | string | A locale key (e.g. `"MY_MODULE_TITLE"`). Displayed as the module name in the list and detail panel. |
-| `category` | string | One of the six valid categories listed below. |
-| `description` | string | A locale key. Shown in the detail panel below the divider. |
+| `id` | string | Unique identifier. Lowercase, no spaces. Must be unique across all loaded modules. Should match your folder name. |
+| `title` | string | A locale key (e.g. `"MY_MODULE_TITLE"`). Displayed as the module name. |
+| `category` | string | One of the six valid categories below. |
+| `description` | string | A locale key. Shown in the detail panel. |
 
 ### Recommended
 
 | Field | Type | Description |
 |---|---|---|
 | `version` | string | Version string shown in the Details dialog (e.g. `"1.0"`). |
-| `toggles` | table | Array of toggle definitions. See the Toggle Fields section below. |
+| `toggles` | table | Array of toggle definitions. See Toggle Fields below. |
+| `defaultEnabled` | boolean | Whether the module is on by default. |
 
 ### Optional Contact Info
 
 | Field | Type | Description |
 |---|---|---|
 | `author` | string | Your name. Shown as plain text in the Details dialog. |
-| `contact` | string | Email address or Discord. Shown as a copyable text box in the Details dialog. |
-| `link` | string | Website URL. Shown as a copyable text box in the Details dialog. |
+| `contact` | string | Email/Discord. Shown as a copyable text box. |
+| `link` | string | Website URL. Shown as a copyable text box. |
 
-If none of `author`, `contact`, or `link` are set, the `Details` button does not appear in the UI.
+If none of `author`, `contact`, or `link` are set, the `Details` button does not appear.
 
 ---
 
 ## Toggle Fields
 
-Each entry in the `toggles` array is a table with these fields:
+Each entry in the `toggles` array is a table:
 
 | Field | Type | Description |
 |---|---|---|
-| `id` | string | Unique within this module. Used to read and save the value. |
+| `id` | string | Unique within this module. Used to read/save the value. |
 | `label` | string | A locale key. Shown as the toggle name. |
-| `description` | string | A locale key. Shown below the toggle row in small muted text. Optional but recommended. |
-| `default` | boolean | The value used when the player has never changed this toggle. |
+| `description` | string | A locale key. Shown below the toggle row. Optional but recommended. |
+| `default` | boolean | Value used when the player has never changed this toggle. |
 
-Toggles are automatically rendered in the detail panel. The user sees On/Off buttons for each one. You read the current value in your code using `ns.ModuleRegistry:GetToggleValue(moduleId, toggleId)`.
-
-When the master enable/disable toggle is turned off, all sub-toggles are visually grayed out and non-interactive. They become active again when the module is re-enabled.
+Toggles render automatically in the detail panel with On/Off buttons. Read the current value with `ns.ModuleRegistry:GetToggleValue(moduleId, toggleId)`. When the master enable is off, sub-toggles gray out.
 
 ---
 
 ## Lifecycle Callbacks
 
-These three functions are called automatically by the registry. Define them on your module table using the colon syntax so `self` refers to your module.
+Define these on your module table (the one returned by `Current()`), using colon syntax so `self` is your module.
 
 ### `OnEnable()`
 
-Called when:
-- The addon loads and this module is enabled (default state)
-- The user clicks Enable in the UI
-
-This is where you register events, create frames, hook functions, or start any background logic.
+Called when the addon loads with this module enabled, or when the user clicks Enable. Register events, create frames, hook functions here.
 
 ```lua
 function YourModule:OnEnable()
@@ -183,29 +185,16 @@ end
 
 ### `OnDisable()`
 
-Called when the user clicks Disable in the UI. Clean up everything you started in `OnEnable`. Unregister events, hide frames, remove hooks.
-
-```lua
-function YourModule:OnDisable()
-    if self._frame then
-        self._frame:UnregisterAllEvents()
-        self._frame:SetScript("OnEvent", nil)
-    end
-end
-```
+Called when the user clicks Disable. Reverse everything from `OnEnable` - unregister events, hide frames, remove hooks.
 
 ### `OnToggle(toggleId, value)`
 
-Called when the user flips one of your named toggles. `toggleId` is the `id` string from your toggles array. `value` is `true` (On) or `false` (Off).
+Called when the user flips one of your named toggles. `toggleId` is the `id` string; `value` is `true`/`false`.
 
 ```lua
 function YourModule:OnToggle(toggleId, value)
     if toggleId == "myToggle" then
-        if value then
-            -- user turned it on
-        else
-            -- user turned it off
-        end
+        -- react to the change
     end
 end
 ```
@@ -213,8 +202,6 @@ end
 ---
 
 ## Categories
-
-Choose the category that best fits your feature:
 
 | Key | Display Name | Use for |
 |---|---|---|
@@ -231,62 +218,68 @@ Invalid categories default to `UTILITY`.
 
 ## Locale System
 
-All text shown in the UI must go through the locale system. You do not hardcode English strings directly into your module table or UI code. Instead you store a key name, and the locale file maps keys to display strings.
-
-### How it works
-
-The addon maintains `ns.L_enUS` as a shared table. Every locale file adds its keys to this table. When the addon starts, `ns.ApplyLanguage()` copies `ns.L_enUS` into `ns.L`, which is the active language table used at runtime.
-
-Because this copy happens after all files load, your module's locale file just needs to add its keys to `ns.L_enUS` and they will be available automatically.
+All UI text goes through the OneWoW Locale service. You store key names; locale files map keys to display strings, registered into your module's own scope.
 
 ### Locales/enUS.lua
 
 ```lua
-local addonName, ns = ...
-local L_enUS = ns.L_enUS
+local _, ns = ...
+local M = ns.ModuleRegistry:Current()
 
-L_enUS["MY_MODULE_TITLE"]  = "My Module Name"
-L_enUS["MY_MODULE_DESC"]   = "What this module does, in plain language."
-L_enUS["MY_TOGGLE_LABEL"]  = "My Toggle Name"
-L_enUS["MY_TOGGLE_DESC"]   = "What this toggle does when on or off."
+OneWoW.Locale:Register(M._scope, "enUS", {
+    ["MY_MODULE_TITLE"] = "My Module Name",
+    ["MY_MODULE_DESC"]  = "What this module does, in plain language.",
+    ["MY_TOGGLE_LABEL"] = "My Toggle Name",
+    ["MY_TOGGLE_DESC"]  = "What this toggle does.",
+})
 ```
 
 ### Locales/koKR.lua
 
 ```lua
-local addonName, ns = ...
+local _, ns = ...
+local M = ns.ModuleRegistry:Current()
 
-if GetLocale() ~= "koKR" then return end
-
-local L_enUS = ns.L_enUS
-L_enUS["MY_MODULE_TITLE"]  = "Korean translation here"
-L_enUS["MY_MODULE_DESC"]   = "Korean translation here"
-L_enUS["MY_TOGGLE_LABEL"]  = "Korean translation here"
-L_enUS["MY_TOGGLE_DESC"]   = "Korean translation here"
+OneWoW.Locale:Register(M._scope, "koKR", {
+    ["MY_MODULE_TITLE"] = "...",
+    ["MY_MODULE_DESC"]  = "...",
+})
 ```
 
-Korean overrides write back into `ns.L_enUS` before `ApplyLanguage()` runs, so the final `ns.L` reflects the correct language.
+Your scope (`M._scope`) is `ADDON_NAME .. "." .. id`, e.g. `OneWoW_QoL.yourmodule`. The service folds English first, then the active language on top, so any koKR key you omit falls back to English. A missing key resolves to the **key name itself** (so missing strings are visible, never `nil`) - do not write `L[key] or "fallback"`.
 
 ### Using strings at runtime
 
 ```lua
--- In your module code, read the active language string like this:
-local title = ns.L["MY_MODULE_TITLE"]
-
--- Or let the UI do it automatically - title, description, toggle label,
--- and toggle description fields are all resolved via ns.L automatically
--- by the detail panel renderer. You only need to store the key string.
+local title = L["MY_MODULE_TITLE"]
 ```
+
+`L` is the locale view you captured from `Current()`. The Features UI also resolves `title`/`description`/toggle labels from your scope automatically, so for those you only store the key.
 
 ---
 
-## Reading Toggle Values in Your Code
+## Referencing Another Module
 
-You should always read toggle values through the registry rather than caching them, so you always get the current saved state:
+Never reach into another module through a global. Look it up by id through the registry:
 
 ```lua
-local skipTyping = ns.ModuleRegistry:GetToggleValue("yourmodule", "myToggle")
-if skipTyping then
+local mb = ns.ModuleRegistry:GetById("minimapbuttons")
+if mb and mb.ApplyMinimapShapeToLibDBIcons then
+    mb:ApplyMinimapShapeToLibDBIcons()
+end
+```
+
+There is no `ns.YourModule` global - the registry is the single source of truth. (Within your own module's files, use the local you captured from `Current()`.)
+
+---
+
+## Reading Toggle Values
+
+Always read through the registry so you get the current saved state:
+
+```lua
+local on = ns.ModuleRegistry:GetToggleValue("yourmodule", "myToggle")
+if on then
     -- toggle is on
 end
 ```
@@ -295,34 +288,31 @@ end
 
 ## SavedVariables
 
-The addon uses the `OneWoW_GUI.DB` API (see `OneWoW/GUI/Database.lua` and `OneWoW/Docs/DATABASE.md`). The SavedVariable `OneWoW_QoL_DB` is initialized in `single` mode by `Core/Database.lua`. Your module's data is automatically available under:
+`OneWoW_QoL_DB` is initialized by `Core/Database.lua` via the `OneWoW_GUI.DB` API. Your module's enable state and toggle values are managed automatically under:
 
 ```
 OneWoW_QoL_DB.global.modules.yourmodule
 ```
 
-The registry handles enable/disable state and toggle values in this space automatically. You do not need to read or write there directly unless you want to store additional per-module data.
-
-If you need your own saved data, access the global scope through `addon.db`:
+For your own saved data, access the global scope through `addon.db` (only after init - e.g. inside `OnEnable`, never at file load):
 
 ```lua
 local addon = _G.OneWoW_QoL
 local db = addon.db.global.modules["yourmodule"]
--- db.enabled and db.toggles are managed by the registry
--- you can add your own keys here
+-- db.enabled and db.toggles are managed by the registry; add your own keys here
 ```
 
 ---
 
-## Checking Enable State in Your Own Event Handlers
+## Checking Enable State in Your Own Handlers
 
-If your module registers events directly, guard the handler by checking the registry:
+If your module registers events directly, guard the handler:
 
 ```lua
 function YourModule:OnEnable()
     self._frame:SetScript("OnEvent", function(frame, event, ...)
         if not ns.ModuleRegistry:IsEnabled("yourmodule") then return end
-        -- your logic here
+        -- your logic
     end)
 end
 ```
@@ -331,34 +321,29 @@ end
 
 ## Complete Working Example
 
-The `autodelete` module in `Modules/external/autodelete/` is a complete working module that you can copy as a starting point. It uses three Lua files to show how a split looks in practice:
+`autodelete` in `Modules/external/autodelete/` is a complete module split across files:
 
-- `autodelete.lua` - module table definition and namespace export only
-- `logic.lua` - all lifecycle functions (`OnEnable`, `OnDisable`, `OnToggle`) and the event handler; opens with `local M = ns.AutoDeleteModule` to attach functions to the already-exported table
-- `data.lua` - registration call, loads last
+- `module.lua` - metadata + `Define`
+- `autodelete.lua` - `local AutoDeleteModule = ns.ModuleRegistry:Current()`, lifecycle functions
+- `logic.lua` - more logic; also opens with `local AutoDeleteModule = ns.ModuleRegistry:Current()`
+- `Locales/enUS.lua` + `koKR.lua` - strings registered into the module's scope
 
-It demonstrates:
-
-- Module table definition separated from implementation
-- How `logic.lua` references the module via `ns.AutoDeleteModule` after it has been exported
-- Locale files for English and Korean
-- Two toggles, each with a description
-- Author, contact, and link fields
-- `OnEnable` registering a WoW event
-- `OnDisable` cleaning up
-- `OnToggle` reacting to user changes
-- Reading toggle values at runtime
+It demonstrates metadata in `module.lua`, logic captured via `Current()`, locale registration into the module scope, two toggles with descriptions, contact fields, and event setup/cleanup in `OnEnable`/`OnDisable`.
 
 ---
 
 ## Common Mistakes
 
-**Wrong load order in TOC** - `data.lua` must be last. If it loads before `yourmodule.lua`, `ns.YourModule` will be nil and registration will silently fail.
+**`module.lua` not first** - if it does not load before your other files, `Current()` returns the wrong module (or nil) and your files bail at the `if not M then return end` guard. Keep `module.lua` at the top of your TOC block.
 
-**Duplicate module id** - If two modules share the same `id`, the second one is silently ignored by the registry. Keep ids unique.
+**Calling `Current()` at runtime** - capture it into a file-local at load. At runtime it points at whatever module loaded last.
 
-**Hardcoded strings** - Do not put English text directly into `title`, `description`, `label`, or `description` fields. Always use a locale key string. The UI reads `ns.L[yourkey]` and falls back to the raw string if the key is missing, but that means your text will not translate.
+**Referencing `ns.YourModule`** - that global no longer exists. Within your module use the local from `Current()`; for another module use `ns.ModuleRegistry:GetById("id")`.
 
-**Not cleaning up in OnDisable** - If you register events or create hooks in `OnEnable`, you must reverse them in `OnDisable`. Otherwise the module keeps running even when the user disables it.
+**Duplicate module id** - if two modules share an `id`, the second registration is ignored. Keep ids unique (match the folder name).
 
-**Accessing `addon.db` before PLAYER_LOGIN** - The `addon.db` handle is created during `ADDON_LOADED` by `OneWoW_GUI.DB:Init` and is not available until after that. The registry's `OnEnable` callback is called after initialization, so accessing `addon.db` inside `OnEnable` is safe. Do not access it at file load time (module table definition time).
+**Hardcoded strings** - store locale keys, not English text, in `title`/`description`/`label`/`description`. And do not write `L[key] or "fallback"` - a missing key already resolves to its own name.
+
+**Not cleaning up in `OnDisable`** - reverse anything you set up in `OnEnable`.
+
+**Accessing `addon.db` at file load** - it is not ready until after `ADDON_LOADED`. Use it inside `OnEnable` or later.

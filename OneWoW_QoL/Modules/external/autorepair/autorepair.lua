@@ -1,28 +1,11 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/autorepair/autorepair.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
-
-local AutoRepairModule = {
-    id          = "autorepair",
-    title       = "AUTOREPAIR_TITLE",
-    category    = "AUTOMATION",
-    description = "AUTOREPAIR_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles = {
-        { id = "use_guild_bank", label = "AUTOREPAIR_TOGGLE_GUILD", description = "AUTOREPAIR_TOGGLE_GUILD_DESC", default = true },
-    },
-    preview = true,
-    _frame = nil,
-}
+local _, ns = ...
+local AutoRepairModule = ns.ModuleRegistry:Current()
+if not AutoRepairModule then return end
 
 function AutoRepairModule:OnEnable()
     if not self._frame then
         self._frame = CreateFrame("Frame", "OneWoW_QoL_AutoRepair")
-        self._frame:SetScript("OnEvent", function(frame, event, ...)
+        self._frame:SetScript("OnEvent", function(_, event)
             if event == "MERCHANT_SHOW" then
                 self:MERCHANT_SHOW()
             end
@@ -55,5 +38,3 @@ function AutoRepairModule:MERCHANT_SHOW()
         print("|cFFFFD100OneWoW QoL:|r Insufficient funds for auto-repair")
     end
 end
-
-ns.AutoRepairModule = AutoRepairModule

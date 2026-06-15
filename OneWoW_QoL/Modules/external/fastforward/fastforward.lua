@@ -1,23 +1,6 @@
 local _, ns = ...
-
-local FastForwardModule = {
-    id          = "fastforward",
-    title       = "FASTFORWARD_TITLE",
-    category    = "AUTOMATION",
-    description = "FASTFORWARD_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles = {
-        { id = "skip_movies",           label = "FASTFORWARD_TOGGLE_MOVIES",           description = "FASTFORWARD_TOGGLE_MOVIES_DESC",           default = true  },
-        { id = "skip_cinematics",       label = "FASTFORWARD_TOGGLE_CINEMATICS",       description = "FASTFORWARD_TOGGLE_CINEMATICS_DESC",       default = true  },
-        { id = "instance_only",         label = "FASTFORWARD_TOGGLE_INSTANCE",         description = "FASTFORWARD_TOGGLE_INSTANCE_DESC",         default = false },
-        { id = "respect_uncancellable", label = "FASTFORWARD_TOGGLE_UNCANCELLABLE",    description = "FASTFORWARD_TOGGLE_UNCANCELLABLE_DESC",    default = false },
-    },
-    preview = true,
-    _frame = nil,
-}
+local FastForwardModule = ns.ModuleRegistry:Current()
+if not FastForwardModule then return end
 
 local function ShouldSkip()
     if IsModifierKeyDown() then return false end
@@ -96,5 +79,3 @@ function FastForwardModule:CINEMATIC_START(canBeCancelled)
     end
     C_Timer.After(0.01, CancelCinematicSafe)
 end
-
-ns.FastForwardModule = FastForwardModule

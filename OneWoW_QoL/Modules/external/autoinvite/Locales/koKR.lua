@@ -1,16 +1,14 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/Modules/external/autoinvite/Locales/koKR.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
+local M = ns.ModuleRegistry:Current()
 
-if GetLocale() ~= "koKR" then return end
+OneWoW.Locale:Register(M._scope, "koKR", {
 
-local L_enUS = ns.L_enUS
-L_enUS["AUTOINVITE_TITLE"]                = "TEST"
-L_enUS["AUTOINVITE_DESC"]                 = "TEST"
-L_enUS["AUTOINVITE_TOGGLE_FRIENDS"]       = "TEST"
-L_enUS["AUTOINVITE_TOGGLE_FRIENDS_DESC"]  = "TEST"
-L_enUS["AUTOINVITE_TOGGLE_GUILD"]         = "TEST"
-L_enUS["AUTOINVITE_TOGGLE_GUILD_DESC"]    = "TEST"
-L_enUS["AUTOINVITE_TOGGLE_ALL"]           = "TEST"
-L_enUS["AUTOINVITE_TOGGLE_ALL_DESC"]      = "TEST"
+    ["AUTOINVITE_TITLE"] = "TEST",
+    ["AUTOINVITE_DESC"] = "TEST",
+    ["AUTOINVITE_TOGGLE_FRIENDS"] = "TEST",
+    ["AUTOINVITE_TOGGLE_FRIENDS_DESC"] = "TEST",
+    ["AUTOINVITE_TOGGLE_GUILD"] = "TEST",
+    ["AUTOINVITE_TOGGLE_GUILD_DESC"] = "TEST",
+    ["AUTOINVITE_TOGGLE_ALL"] = "TEST",
+    ["AUTOINVITE_TOGGLE_ALL_DESC"] = "TEST",
+})

@@ -1,27 +1,11 @@
 local _, ns = ...
+local AutoOpenModule, L = ns.ModuleRegistry:Current()
+if not AutoOpenModule then return end
 
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
-local AutoOpenModule = {
-    id          = "autoopen",
-    title       = "AUTOOPEN_TITLE",
-    category    = "AUTOMATION",
-    description = "AUTOOPEN_DESC",
-    version     = "1.0",
-    author      = "Ricky",
-    contact     = "ricky@wow2.xyz",
-    link        = "https://www.wow2.xyz",
-    toggles     = {},
-    preview     = true,
-    _frame      = nil,
-    _atBank     = false,
-    _atMail     = false,
-    _atMerchant = false,
-    _atCrafting = false,
-    _tempBlacklist = {},
-}
 local AO = AutoOpenModule
 
 local function GetBlacklist()
@@ -72,7 +56,7 @@ function AutoOpenModule:ScanAndOpen()
                 if info and info.hasLoot and not info.isLocked then
                     local itemLink = C_Container.GetContainerItemLink(bag, slot)
                     if itemLink then
-                        print(string.format(ns.L["AUTOOPEN_OPENING"] or "Auto-opening: %s", itemLink))
+                        print(string.format(L["AUTOOPEN_OPENING"] or "Auto-opening: %s", itemLink))
                     end
                     C_Container.UseContainerItem(bag, slot)
                     return
@@ -138,7 +122,6 @@ function AutoOpenModule:OnToggle()
 end
 
 function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, _, registerRefresh)
-    local L = ns.L
 
     local blHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     blHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
@@ -294,7 +277,7 @@ function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
         removeBtn:SetScript("OnClick", function()
             AO:RemoveFromBlacklist(capturedID)
             local rName = C_Item.GetItemNameByID(capturedID) or ("Item " .. capturedID)
-            print(string.format("|cFFFFD700OneWoW QoL:|r " .. (ns.L["AUTOOPEN_BLACKLIST_REMOVED"] or "Removed from blacklist: %s"), rName))
+            print(string.format("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_REMOVED"] or "Removed from blacklist: %s"), rName))
         end)
         tinsert(removeBtns, removeBtn)
 
@@ -317,7 +300,7 @@ function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
     clearBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
     clearBtn:SetScript("OnClick", function()
         AO:ClearBlacklist()
-        print("|cFFFFD700OneWoW QoL:|r " .. (ns.L["AUTOOPEN_BLACKLIST_CLEARED"] or "Blacklist cleared."))
+        print("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_CLEARED"] or "Blacklist cleared."))
     end)
     yOffset = yOffset - 30
 
@@ -354,5 +337,3 @@ function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
 
     return yOffset
 end
-
-ns.AutoOpenModule = AutoOpenModule

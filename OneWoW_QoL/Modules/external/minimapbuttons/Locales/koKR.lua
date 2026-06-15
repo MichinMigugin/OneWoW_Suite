@@ -1,2 +1,5 @@
-local addonName, ns = ...
-if not ns.L_koKR then ns.L_koKR = {} end
+local _, ns = ...
+local M = ns.ModuleRegistry:Current()
+
+OneWoW.Locale:Register(M._scope, "koKR", {
+})
