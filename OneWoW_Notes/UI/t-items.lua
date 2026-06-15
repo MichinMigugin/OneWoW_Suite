@@ -126,10 +126,10 @@ function ns.UI.CreateItemsTab(parent)
     end)
     addByIDBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local catDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_CATEGORY"], 140, 25)
+    local catDD = ns.UI.CreateThemedDropdown(controlPanel, CATEGORY, 140, 25)
     catDD:SetPoint("LEFT", addByIDBtn, "RIGHT", 8, 0)
     local function RefreshCatOptions()
-        local opts = {{text = L["UI_ALL"], value = "All"}}
+        local opts = {{text = ALL, value = "All"}}
         if ns.Items then
             for _, c in ipairs(ns.Items:GetCategories()) do
                 table.insert(opts, {text = c, value = c})
@@ -168,9 +168,9 @@ function ns.UI.CreateItemsTab(parent)
     local storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
     storeDD:SetOptions({
-        {text = L["UI_ALL"],               value = "All"},
+        {text = ALL,               value = "All"},
         {text = L["UI_STORAGE_ACCOUNT"],   value = "account"},
-        {text = L["UI_STORAGE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected("All")
     storeDD.onSelect = function(value)
@@ -180,8 +180,8 @@ function ns.UI.CreateItemsTab(parent)
 
     local itemSortHandle = OneWoW_GUI:CreateSortControls(controlPanel, {
         sortFields = {
-            {key = "name",     label = L["NOTE_SORT_NAME"]},
-            {key = "category", label = L["NOTE_SORT_CATEGORY"]},
+            {key = "name",     label = NAME},
+            {key = "category", label = CATEGORY},
         },
         defaultField  = currentSort.by,
         defaultAsc    = currentSort.ascending,
@@ -281,7 +281,7 @@ function ns.UI.CreateItemsTab(parent)
     local rightStatusText = OneWoW_GUI:CreateFS(rightStatusBar, 10)
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
     rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    rightStatusText:SetText(L["STATUS_READY"])
+    rightStatusText:SetText(READY)
 
     local function ShowEditor()
         emptyMessage:Hide()
@@ -317,7 +317,7 @@ function ns.UI.CreateItemsTab(parent)
 
             local categoryLine = OneWoW_GUI:CreateFS(editorHeader, 10)
             categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
-            categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], L["UI_GENERAL"]))
+            categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], GENERAL))
             categoryLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             categoryLine:SetJustifyH("RIGHT")
             editorHeader.categoryLine = categoryLine
@@ -333,7 +333,7 @@ function ns.UI.CreateItemsTab(parent)
                 if selectedItem then
                     StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_ITEM"] = {
                         text = string.format(L["POPUP_DELETE_ITEM"]),
-                        button1 = L["BUTTON_DELETE"], button2 = L["BUTTON_CANCEL"],
+                        button1 = DELETE, button2 = CANCEL,
                         OnAccept = function()
                             if ns.Items then
                                 ns.Items:RemoveItem(selectedItem)
@@ -594,7 +594,7 @@ function ns.UI.CreateItemsTab(parent)
                     header.nameText:SetText(itemData.name or ("Item " .. selectedItem))
                 end
                 if header.categoryLine then
-                    header.categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], itemData.category or L["UI_GENERAL"]))
+                    header.categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], itemData.category or GENERAL))
                 end
                 if header.itemIconFrame then
                     header.itemIconFrame:SetScript("OnEnter", function(self)
@@ -740,7 +740,7 @@ function ns.UI.CreateItemsTab(parent)
             deleteBtn:SetScript("OnClick", function()
                 StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_ITEM"] = {
                     text = string.format(L["POPUP_DELETE_ITEM"]),
-                    button1 = L["BUTTON_DELETE"], button2 = L["BUTTON_CANCEL"],
+                    button1 = DELETE, button2 = CANCEL,
                     OnAccept = function()
                         if ns.Items then
                             ns.Items:RemoveItem(item.id)
@@ -853,13 +853,13 @@ function ns.UI.CreateItemsTab(parent)
         local yOffset = 0
 
         if #newItems > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_NEW"], yOffset)
+            CreateSectionHeader(NEW, yOffset)
             yOffset = yOffset - 30
         end
         for _, item in ipairs(newItems) do BuildItemRow(item, yOffset) yOffset = yOffset - 55 end
 
         if #favorites > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_FAVORITES"], yOffset)
+            CreateSectionHeader(FAVORITES, yOffset)
             yOffset = yOffset - 30
         end
         for _, item in ipairs(favorites) do BuildItemRow(item, yOffset) yOffset = yOffset - 55 end
@@ -988,7 +988,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
                     end
                 end,
             },
-            { text = L["BUTTON_CANCEL"], onClick = function(dlg) dlg:Hide() end },
+            { text = CANCEL, onClick = function(dlg) dlg:Hide() end },
         },
     })
 
@@ -1106,7 +1106,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
 
     yPos = yPos - 110
 
-    MakeItemLabel(content, L["LABEL_CATEGORY"], COL1_X, yPos)
+    MakeItemLabel(content, CATEGORY, COL1_X, yPos)
     local catDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     catDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - 18)
     local catOpts = {}
@@ -1124,7 +1124,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - 18)
     storeDD:SetOptions({
         {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
-        {text = L["STORAGE_TYPE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected("account")
     dialog._storeDD = storeDD
@@ -1150,7 +1150,7 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
         height          = 420,
         destroyOnClose  = true,
         buttons = {
-            { text = L["BUTTON_CLOSE"], onClick = function(dlg) dlg:Hide() end },
+            { text = CLOSE, onClick = function(dlg) dlg:Hide() end },
         },
     })
 
@@ -1204,7 +1204,7 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
 
     yPos = yPos - 54
 
-    MakeItemLabel(content, L["LABEL_CATEGORY"], COL1_X, yPos)
+    MakeItemLabel(content, CATEGORY, COL1_X, yPos)
     local catDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     catDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - 18)
     local catOpts = {}
@@ -1222,7 +1222,7 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - 18)
     storeDD:SetOptions({
         {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
-        {text = L["STORAGE_TYPE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected(itemData.storage or "account")
     storeDD.onSelect = function(value)

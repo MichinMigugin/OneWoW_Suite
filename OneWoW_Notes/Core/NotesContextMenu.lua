@@ -85,10 +85,10 @@ local function GetHyperlinkDialog()
         { key = "spell",       label = L["CTX_LINK_TYPE_SPELL"],       help = L["CTX_HELP_SPELL"] },
         { key = "quest",       label = L["CTX_LINK_TYPE_QUEST"],       help = L["CTX_HELP_QUEST"] },
         { key = "achievement", label = L["CTX_LINK_TYPE_ACHIEVEMENT"], help = L["CTX_HELP_ACHIEVEMENT"] },
-        { key = "currency",    label = L["CTX_LINK_TYPE_CURRENCY"],    help = L["CTX_HELP_CURRENCY"] },
-        { key = "toy",         label = L["CTX_LINK_TYPE_TOY"],         help = L["CTX_HELP_TOY"] },
+        { key = "currency",    label = CURRENCY,    help = L["CTX_HELP_CURRENCY"] },
+        { key = "toy",         label = TOY,         help = L["CTX_HELP_TOY"] },
         { key = "battlepet",   label = L["CTX_LINK_TYPE_BATTLEPET"],   help = L["CTX_HELP_BATTLEPET"] },
-        { key = "mount",       label = L["CTX_LINK_TYPE_MOUNT"],       help = L["CTX_HELP_MOUNT"] },
+        { key = "mount",       label = MOUNT,       help = L["CTX_HELP_MOUNT"] },
     }
 
     dlg.selectedLinkType = "item"
@@ -194,7 +194,7 @@ local function GetHyperlinkDialog()
         end
     end)
 
-    local cancelBtn = OneWoW_GUI:CreateButton(dlg, { text = L["CTX_BUTTON_CANCEL"], width = 100, height = 28 })
+    local cancelBtn = OneWoW_GUI:CreateButton(dlg, { text = CANCEL, width = 100, height = 28 })
     cancelBtn:SetPoint("LEFT", insertBtn, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
     cancelBtn:SetScript("OnClick", function()
         dlg:Hide()
@@ -291,7 +291,7 @@ local function GetWaypointDialog()
         end
     end)
 
-    local cancelBtn = OneWoW_GUI:CreateButton(dlg, { text = L["CTX_BUTTON_CANCEL"], width = 100, height = 28 })
+    local cancelBtn = OneWoW_GUI:CreateButton(dlg, { text = CANCEL, width = 100, height = 28 })
     cancelBtn:SetPoint("LEFT", insertBtn, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
     cancelBtn:SetScript("OnClick", function()
         dlg:Hide()

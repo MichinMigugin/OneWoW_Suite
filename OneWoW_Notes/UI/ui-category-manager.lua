@@ -118,7 +118,7 @@ function ns.UI.ShowCategoryManager(initialSection)
         height         = 500,
         destroyOnClose = true,
         buttons        = {
-            { text = L["BUTTON_CLOSE"], onClick = function(dlg) dlg:Hide() end },
+            { text = CLOSE, onClick = function(dlg) dlg:Hide() end },
         },
     })
 
@@ -158,7 +158,7 @@ function ns.UI.ShowCategoryManager(initialSection)
     addInput:SetTextInsets(6, 6, 2, 2)
     addInput:SetAutoFocus(false)
 
-    local addBtn = OneWoW_GUI:CreateButton(addContainer, { text = L["CATMGR_ADD"], width = 76, height = 24 })
+    local addBtn = OneWoW_GUI:CreateButton(addContainer, { text = ADD, width = 76, height = 24 })
     addBtn:SetPoint("RIGHT", addContainer, "RIGHT", -3, 0)
 
     local statusLabel = OneWoW_GUI:CreateFS(content, 10)

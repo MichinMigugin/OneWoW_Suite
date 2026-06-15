@@ -205,7 +205,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     local itemsTab = CreateTab("items", L["TAB_ITEMS"])
     ns.UI.CreateItemsTab(itemsTab)
 
-    local settingsTab = CreateTab("settings", L["TAB_SETTINGS"])
+    local settingsTab = CreateTab("settings", SETTINGS)
     ns.UI.CreateSettingsTab(settingsTab)
 
     C_Timer.After(0.1, function() UpdateTabLayout() end)

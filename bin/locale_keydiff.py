@@ -248,7 +248,38 @@ def full_report(scopes, sites, blizz, glob_by_val, n_files) -> int:
     return 0
 
 
-def scope_report(scopes, sites, glob_by_val, target: str) -> int:
+def load_scope_code(root: Path, target: str) -> str:
+    """Concatenate the scope's non-locale Lua (for reference classification)."""
+    addon = target.split(".")[0]
+    if addon == "shared":
+        addon = "OneWoW"
+    parts = []
+    for f in (root / addon).rglob("*.lua"):
+        if "Locales" in f.parts:
+            continue
+        parts.append(f.read_text(encoding="utf-8", errors="replace"))
+    return "\n".join(parts)
+
+
+def classify_refs(code: str, key: str) -> str:
+    """How a key is referenced in code: 'literal' (L["KEY"]/L.KEY only),
+    'dynamic' (stored as a bare "KEY" string for L[var] lookup), or 'dead'.
+
+    Does NOT detect runtime-constructed keys (`"PREFIX_"..x`) — a constructed key
+    appears as 'dead'; sanity-check dead keys for a nearby construction site.
+    """
+    lit = code.count(f'L["{key}"]') + code.count(f"L['{key}']")
+    quoted = len(re.findall(r'["\']' + re.escape(key) + r'["\']', code))
+    bare = quoted - lit
+    dotted = re.search(r'\bL\.' + re.escape(key) + r'\b', code) is not None
+    if bare > 0:
+        return "dynamic"
+    if lit > 0 or dotted:
+        return "literal"
+    return "dead"
+
+
+def scope_report(scopes, sites, glob_by_val, target: str, root: Path) -> int:
     canonical = make_canonical(glob_by_val)
     shared_keys = set(scopes.get("shared", {}))
     kv = scopes.get(target)
@@ -277,9 +308,13 @@ def scope_report(scopes, sites, glob_by_val, target: str) -> int:
     print(f"-- A. DELETE (shared already owns) ({len(coll)}) --")
     for k, v in coll:
         print(f'  {k} = "{v}"')
-    print(f"\n-- B. BLIZZARD GLOBAL ({len(blz)}) -> replace L[key] with bare global --")
+    code = load_scope_code(root, target)
+    MARK = {"literal": "", "dynamic": "  [DYNAMIC -> exclude]", "dead": "  [dead -> strip only]"}
+    n_lit = sum(classify_refs(code, k) == "literal" for k, _, _ in blz)
+    print(f"\n-- B. BLIZZARD GLOBAL ({len(blz)}; {n_lit} adoptable) -> replace L[key] "
+          f"with bare global --")
     for k, v, g in blz:
-        print(f'  {k} = "{v}"  ->  {g}')
+        print(f'  {k} = "{v}"  ->  {g}{MARK[classify_refs(code, k)]}')
     print(f"\n-- C. CONSOLIDATE ({len(cons)}) -> one shared key (also used elsewhere) --")
     for k, v, others in cons:
         print(f'  {k} = "{v}"')
@@ -304,7 +339,7 @@ def main(argv=None) -> int:
     root = Path.cwd()
     scopes, sites, blizz, glob_by_val, n_files = build_indexes(root)
     if args.scope:
-        return scope_report(scopes, sites, glob_by_val, args.scope)
+        return scope_report(scopes, sites, glob_by_val, args.scope, root)
     return full_report(scopes, sites, blizz, glob_by_val, n_files)
 
 

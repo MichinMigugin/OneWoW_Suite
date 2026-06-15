@@ -18,14 +18,11 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TAB_NPCS"] = "NPCs",
     ["TAB_ZONES"] = "Zones",
     ["TAB_ITEMS"] = "Items",
-    ["TAB_SETTINGS"] = "Settings",
 
 -- Notes Tab
     ["NOTES_LIST_TITLE"] = "Notes",
     ["NOTES_DETAIL_TITLE"] = "Note",
     ["NOTES_NEW"] = "New Note",
-    ["NOTES_DELETE"] = "Delete",
-    ["NOTES_SAVE"] = "Save",
     ["NOTES_TITLE_PLACEHOLDER"] = "Title...",
     ["NOTES_BODY_PLACEHOLDER"] = "Write your note here...",
     ["NOTES_EMPTY"] = "No notes yet. Click 'New Note' to add one.",
@@ -37,8 +34,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["PLAYERS_LIST_TITLE"] = "Players",
     ["PLAYERS_DETAIL_TITLE"] = "Player Note",
     ["PLAYERS_NEW"] = "New Player Note",
-    ["PLAYERS_DELETE"] = "Delete",
-    ["PLAYERS_SAVE"] = "Save",
     ["PLAYERS_NAME_PLACEHOLDER"] = "Player name...",
     ["PLAYERS_NOTE_PLACEHOLDER"] = "Write your note about this player...",
     ["PLAYERS_EMPTY"] = "No player notes yet. Click 'New Player Note' to add one.",
@@ -49,8 +44,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["NPCS_LIST_TITLE"] = "NPCs",
     ["NPCS_DETAIL_TITLE"] = "NPC Note",
     ["NPCS_NEW"] = "New NPC Note",
-    ["NPCS_DELETE"] = "Delete",
-    ["NPCS_SAVE"] = "Save",
     ["NPCS_NAME_PLACEHOLDER"] = "NPC name...",
     ["NPCS_NOTE_PLACEHOLDER"] = "Write your note about this NPC...",
     ["NPCS_EMPTY"] = "No NPC notes yet. Click 'New NPC Note' to add one.",
@@ -61,8 +54,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ZONES_LIST_TITLE"] = "Zones",
     ["ZONES_DETAIL_TITLE"] = "Zone Note",
     ["ZONES_NEW"] = "New Zone Note",
-    ["ZONES_DELETE"] = "Delete",
-    ["ZONES_SAVE"] = "Save",
     ["ZONES_NAME_PLACEHOLDER"] = "Zone name...",
     ["ZONES_NOTE_PLACEHOLDER"] = "Write your note about this zone...",
     ["ZONES_EMPTY"] = "No zone notes yet. Click 'New Zone Note' to add one.",
@@ -70,11 +61,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ZONES_UNKNOWN"] = "Unknown Zone",
 
 -- Items Tab
-    ["ITEMS_LIST_TITLE"] = "Items",
     ["ITEMS_DETAIL_TITLE"] = "Item Note",
     ["ITEMS_NEW"] = "New Item Note",
-    ["ITEMS_DELETE"] = "Delete",
-    ["ITEMS_SAVE"] = "Save",
     ["ITEMS_NAME_PLACEHOLDER"] = "Item name or ID...",
     ["ITEMS_NOTE_PLACEHOLDER"] = "Write your note about this item...",
     ["ITEMS_EMPTY"] = "No item notes yet. Click 'New Item Note' to add one.",
@@ -84,7 +72,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 -- Settings Tab
     ["SETTINGS_THEME"] = "Theme",
     ["SETTINGS_THEME_DESC"] = "Choose a color theme. Changes apply instantly.",
-    ["SETTINGS_LANGUAGE"] = "Language",
     ["SETTINGS_LANGUAGE_DESC"] = "Choose your preferred language. Changes apply instantly.",
     ["SETTINGS_MINIMAP"] = "Minimap Button",
 
@@ -110,17 +97,13 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
 -- Hyperlink Dialog
     ["CTX_BUTTON_INSERT"] = "Insert",
-    ["CTX_BUTTON_CANCEL"] = "Cancel",
     ["CTX_LINK_TYPE_LABEL"] = "Link Type:",
     ["CTX_ID_OR_VALUE"] = "ID or Value:",
     ["CTX_LINK_TYPE_ITEM"] = "Item",
     ["CTX_LINK_TYPE_SPELL"] = "Spell",
     ["CTX_LINK_TYPE_QUEST"] = "Quest",
     ["CTX_LINK_TYPE_ACHIEVEMENT"] = "Achievement",
-    ["CTX_LINK_TYPE_CURRENCY"] = "Currency",
-    ["CTX_LINK_TYPE_TOY"] = "Toy",
     ["CTX_LINK_TYPE_BATTLEPET"] = "Battle Pet",
-    ["CTX_LINK_TYPE_MOUNT"] = "Mount",
     ["CTX_HELP_ITEM"] = "Enter an item ID  (e.g. 19019)",
     ["CTX_HELP_SPELL"] = "Enter a spell ID  (e.g. 1459)",
     ["CTX_HELP_QUEST"] = "Enter a quest ID  (e.g. 1234)",
@@ -142,34 +125,21 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["NOTES_LIST"] = "Notes List",
     ["MESSAGE_SELECT_NOTE"] = "Select a note to edit",
     ["NOTE_UNTITLED"] = "Untitled",
-    ["NOTES_SECTION_NEW"] = "New",
-    ["NOTES_SECTION_FAVORITES"] = "Favorites",
 
 -- Notes sort
     ["NOTE_SORT_BY"] = "Sort: %s",
     ["NOTE_SORT_TITLE"] = "Title",
     ["NOTE_SORT_CREATED"] = "Created",
     ["NOTE_SORT_MODIFIED"] = "Modified",
-    ["NOTE_SORT_CATEGORY"] = "Category",
-    ["NOTE_SORT_COLOR"] = "Color",
-    ["NOTE_SORT_TYPE"] = "Type",
     ["NOTE_SORT_MANUAL"] = "Manual",
-    ["NOTE_SORT_NAME"] = "Name",
-    ["NOTE_SORT_ZONE"] = "Zone",
-    ["NOTE_SORT_CLASS"] = "Class",
-    ["NOTE_SORT_FACTION"] = "Faction",
-    ["NOTE_SORT_LEVEL"] = "Level",
 
 -- Notes UI labels
     ["UI_SEARCH_PLACEHOLDER"] = "Search...",
-    ["UI_ALL"] = "All",
     ["UI_CATEGORY_WITH_VALUE"] = "Category: %s",
     ["UI_STORAGE_WITH_VALUE"] = "Storage: %s",
     ["UI_STORAGE_ACCOUNT"] = "Account",
-    ["UI_STORAGE_CHARACTER"] = "Character",
     ["UI_COUNT_FORMAT"] = "%s: %d",
     ["UI_TYPE_FORMAT"] = "Type: %s",
-    ["UI_GENERAL"] = "General",
     ["UI_TASKS"] = "Tasks:",
     ["UI_MANAGE_CATEGORIES"] = "Manage Categories",
     ["UI_MANAGE_CATEGORIES_DESC"] = "Add or remove custom categories",
@@ -180,9 +150,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 -- Note types
     ["NOTE_TYPE_STANDARD"] = "Standard",
     ["NOTE_TYPE_STANDARD_DESC"] = "Normal note with no automatic reset",
-    ["NOTE_TYPE_DAILY"] = "Daily",
     ["NOTE_TYPE_DAILY_DESC"] = "TODOs reset at daily server reset time",
-    ["NOTE_TYPE_WEEKLY"] = "Weekly",
     ["NOTE_TYPE_WEEKLY_DESC"] = "TODOs reset at weekly server reset time",
     ["NOTE_TYPE_LABEL_FORMAT"] = "%s Note",
 
@@ -191,13 +159,9 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["NOTE_RESET_TODOS_DESC"] = "Uncheck all completed tasks",
 
 -- Status bar
-    ["STATUS_READY"] = "Ready",
 
 -- Buttons
     ["BUTTON_ADD_NOTE"] = "Add Note",
-    ["BUTTON_CANCEL"] = "Cancel",
-    ["BUTTON_CLOSE"] = "Close",
-    ["BUTTON_DELETE"] = "Delete",
 
 -- Dialogs
     ["DIALOG_ADD_NOTE_TITLE"] = "Add New Note",
@@ -223,18 +187,13 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
 -- Storage / Category labels
     ["STORAGE_ACCOUNT_WIDE"] = "Account-wide",
-    ["STORAGE_TYPE_CHARACTER"] = "Character",
-    ["CATEGORY_GENERAL"] = "General",
 
 -- Label fields (for dialogs)
     ["LABEL_NOTE_TITLE"] = "Note Title",
-    ["LABEL_CATEGORY"] = "Category",
     ["LABEL_STORAGE"] = "Storage",
     ["LABEL_NOTE_COLOR"] = "Note Color",
     ["LABEL_FONT_COLOR"] = "Font Color",
-    ["LABEL_FONT_SIZE"] = "Font Size",
     ["LABEL_NOTE_FONT"] = "Font",
-    ["LABEL_OPACITY"] = "Opacity",
     ["LABEL_NOTE_TYPE"] = "Note Type",
     ["LABEL_NOTE_CONTENT"] = "Note Content",
 
@@ -271,7 +230,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 -- Pinned window strings
     ["CORE_PIN_NOTE_PREFIX"] = "Note:",
     ["CORE_PIN_UNTITLED"] = "Untitled",
-    ["CORE_PIN_OPACITY"] = "Opacity",
     ["CORE_PIN_LOCK_MOVE"] = "Lock Move",
     ["CORE_PIN_LOCK_RESIZE"] = "Lock Resize",
     ["CORE_PIN_RESET_TODOS"] = "Reset All TODOs",
@@ -437,7 +395,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
 -- Category Manager
     ["CATMGR_TITLE"] = "Manage Categories",
-    ["CATMGR_ADD"] = "Add",
     ["CATMGR_ADDED"] = "Added category: %s",
     ["CATMGR_REMOVED"] = "Removed category: %s",
     ["CATMGR_ERROR"] = "An error occurred.",
@@ -464,16 +421,13 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["UI_HELP_LINK_ACHV_NAME"] = "Achievement",
     ["UI_HELP_LINK_ACHV_SYNTAX"] = "(ach=ID)",
     ["UI_HELP_LINK_ACHV_EXAMPLE"] = "(ach=1234)",
-    ["UI_HELP_LINK_CURRENCY_NAME"] = "Currency",
     ["UI_HELP_LINK_CURRENCY_SYNTAX"] = "(cur=ID)",
     ["UI_HELP_LINK_CURRENCY_EXAMPLE"] = "(cur=1234)",
-    ["UI_HELP_LINK_TOY_NAME"] = "Toy",
     ["UI_HELP_LINK_TOY_SYNTAX"] = "(toy=ID)",
     ["UI_HELP_LINK_TOY_EXAMPLE"] = "(toy=1234)",
     ["UI_HELP_LINK_PET_NAME"] = "Battle Pet",
     ["UI_HELP_LINK_PET_SYNTAX"] = "(battlepet=ID)",
     ["UI_HELP_LINK_PET_EXAMPLE"] = "(battlepet=1234)",
-    ["UI_HELP_LINK_MOUNT_NAME"] = "Mount",
     ["UI_HELP_LINK_MOUNT_SYNTAX"] = "(mount=ID)",
     ["UI_HELP_LINK_MOUNT_EXAMPLE"] = "(mount=1234)",
     ["UI_HELP_LINK_WAYPOINT_NAME"] = "Waypoint",

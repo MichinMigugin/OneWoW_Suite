@@ -87,7 +87,7 @@ function ns.UI.ShowAddNoteDialog()
                     end
                 end,
             },
-            { text = L["BUTTON_CANCEL"], onClick = function(dlg) dlg:Hide() end },
+            { text = CANCEL, onClick = function(dlg) dlg:Hide() end },
         },
     })
 
@@ -112,10 +112,10 @@ function ns.UI.ShowAddNoteDialog()
     dialog.titleInput = titleInput
     yPos = yPos - ROW_H - 4
 
-    MakeLabel(content, L["LABEL_CATEGORY"], COL1_X, yPos)
+    MakeLabel(content, CATEGORY, COL1_X, yPos)
     local catDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     catDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
-    local catOpts = {{text = L["CATEGORY_GENERAL"], value = "General"}}
+    local catOpts = {{text = GENERAL, value = "General"}}
     if ns.NotesCategories then
         for _, c in ipairs(ns.NotesCategories:GetCategories()) do
             catOpts[#catOpts + 1] = {text = c, value = c}
@@ -130,7 +130,7 @@ function ns.UI.ShowAddNoteDialog()
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     storeDD:SetOptions({
         {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
-        {text = L["STORAGE_TYPE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected("account")
     dialog.storeDD = storeDD
@@ -190,7 +190,7 @@ function ns.UI.ShowAddNoteDialog()
     dialog.fontColorDD = fontColorDD
     yPos = yPos - ROW_H
 
-    MakeLabel(content, L["LABEL_FONT_SIZE"], COL1_X, yPos)
+    MakeLabel(content, FONT_SIZE, COL1_X, yPos)
     dialog.selectedFontSize = 12
     local fontSizeContainer = OneWoW_GUI:CreateSlider(content, {
         minVal = 10,
@@ -219,7 +219,7 @@ function ns.UI.ShowAddNoteDialog()
     dialog.fontFamilyDD = fontFamilyDD
     yPos = yPos - ROW_H
 
-    MakeLabel(content, L["LABEL_OPACITY"], COL1_X, yPos)
+    MakeLabel(content, OPACITY, COL1_X, yPos)
     dialog.selectedOpacity = 0.9
     local opacityContainer = OneWoW_GUI:CreateSlider(content, {
         minVal = 50,
@@ -257,8 +257,8 @@ function ns.UI.ShowAddNoteDialog()
     noteTypeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     noteTypeDD:SetOptions({
         {text = L["NOTE_TYPE_STANDARD"], value = "standard"},
-        {text = L["NOTE_TYPE_DAILY"],    value = "daily"},
-        {text = L["NOTE_TYPE_WEEKLY"],   value = "weekly"},
+        {text = DAILY,    value = "daily"},
+        {text = WEEKLY,   value = "weekly"},
     })
     noteTypeDD:SetSelected("standard")
     dialog.noteTypeDD = noteTypeDD
@@ -354,7 +354,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
         destroyOnClose  = true,
         buttons = {
             {
-                text = L["BUTTON_CLOSE"],
+                text = CLOSE,
                 onClick = function(dlg)
                     if pinOpenedByDialog and ns.NotesPins then
                         ns.NotesPins:HideNotePin(noteID)
@@ -396,7 +396,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     end)
     yPos = yPos - ROW_H - 4
 
-    MakeLabel(content, L["LABEL_CATEGORY"], COL1_X, yPos)
+    MakeLabel(content, CATEGORY, COL1_X, yPos)
     local catDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     catDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     local catOpts = {}
@@ -423,7 +423,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     storeDD:SetOptions({
         {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
-        {text = L["STORAGE_TYPE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected(noteData.storage or "account")
     storeDD.onSelect = function(value)
@@ -514,7 +514,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     end
     yPos = yPos - ROW_H
 
-    MakeLabel(content, L["LABEL_FONT_SIZE"], COL1_X, yPos)
+    MakeLabel(content, FONT_SIZE, COL1_X, yPos)
     local fontSizeContainer = OneWoW_GUI:CreateSlider(content, {
         minVal = 10,
         maxVal = 20,
@@ -560,7 +560,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     end
     yPos = yPos - ROW_H
 
-    MakeLabel(content, L["LABEL_OPACITY"], COL1_X, yPos)
+    MakeLabel(content, OPACITY, COL1_X, yPos)
     local opacityContainer = OneWoW_GUI:CreateSlider(content, {
         minVal = 50,
         maxVal = 100,
@@ -608,8 +608,8 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     noteTypeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     noteTypeDD:SetOptions({
         {text = L["NOTE_TYPE_STANDARD"], value = "standard"},
-        {text = L["NOTE_TYPE_DAILY"],    value = "daily"},
-        {text = L["NOTE_TYPE_WEEKLY"],   value = "weekly"},
+        {text = DAILY,    value = "daily"},
+        {text = WEEKLY,   value = "weekly"},
     })
     noteTypeDD:SetSelected(noteData.noteType or "standard")
 

@@ -138,10 +138,10 @@ function ns.UI.CreateNPCsTab(parent)
     end)
     addManualBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local catDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_CATEGORY"], 140, 25)
+    local catDD = ns.UI.CreateThemedDropdown(controlPanel, CATEGORY, 140, 25)
     catDD:SetPoint("LEFT", addManualBtn, "RIGHT", 8, 0)
     local function RefreshCatOpts()
-        local opts = {{text = L["UI_ALL"], value = "All"}}
+        local opts = {{text = ALL, value = "All"}}
         if ns.NPCs then
             for _, c in ipairs(ns.NPCs:GetCategories()) do opts[#opts + 1] = {text = c, value = c} end
         end
@@ -178,9 +178,9 @@ function ns.UI.CreateNPCsTab(parent)
     local storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
     storeDD:SetOptions({
-        {text = L["UI_ALL"],               value = "All"},
+        {text = ALL,               value = "All"},
         {text = L["UI_STORAGE_ACCOUNT"],   value = "account"},
-        {text = L["UI_STORAGE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected("All")
     storeDD.onSelect = function(value)
@@ -190,9 +190,9 @@ function ns.UI.CreateNPCsTab(parent)
 
     local npcSortHandle = OneWoW_GUI:CreateSortControls(controlPanel, {
         sortFields = {
-            {key = "name",     label = L["NOTE_SORT_NAME"]},
-            {key = "zone",     label = L["NOTE_SORT_ZONE"]},
-            {key = "category", label = L["NOTE_SORT_CATEGORY"]},
+            {key = "name",     label = NAME},
+            {key = "zone",     label = ZONE},
+            {key = "category", label = CATEGORY},
             {key = "manual",   label = L["NOTE_SORT_MANUAL"]},
         },
         defaultField  = currentSort.by,
@@ -297,7 +297,7 @@ function ns.UI.CreateNPCsTab(parent)
     local rightStatusText = OneWoW_GUI:CreateFS(rightStatusBar, 10)
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
     rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    rightStatusText:SetText(L["STATUS_READY"])
+    rightStatusText:SetText(READY)
 
     local function ShowEditor()
         emptyMessage:Hide()
@@ -382,7 +382,7 @@ function ns.UI.CreateNPCsTab(parent)
                 if selectedNPC then
                     StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_NPC"] = {
                         text = string.format(L["POPUP_DELETE_NPC"]),
-                        button1 = L["BUTTON_DELETE"], button2 = L["BUTTON_CANCEL"],
+                        button1 = DELETE, button2 = CANCEL,
                         OnAccept = function()
                             if ns.NPCs then
                                 ns.NPCs:RemoveNPC(selectedNPC)
@@ -924,7 +924,7 @@ function ns.UI.CreateNPCsTab(parent)
             deleteBtn:SetScript("OnClick", function()
                 StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_NPC"] = {
                     text = L["POPUP_DELETE_NPC"],
-                    button1 = L["BUTTON_DELETE"], button2 = L["BUTTON_CANCEL"],
+                    button1 = DELETE, button2 = CANCEL,
                     OnAccept = function()
                         if ns.NPCs then
                             ns.NPCs:RemoveNPC(npc.id)
@@ -1096,14 +1096,14 @@ function ns.UI.CreateNPCsTab(parent)
         local yOffset = 0
 
         if #newNPCs > 0 then
-            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["NOTES_SECTION_NEW"], yOffset = yOffset })
+            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = NEW, yOffset = yOffset })
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
         for i, n in ipairs(newNPCs) do BuildNPCRow(n, yOffset, newNPCs, i) yOffset = yOffset - 69 end
 
         if #favorites > 0 then
-            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["NOTES_SECTION_FAVORITES"], yOffset = yOffset })
+            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = FAVORITES, yOffset = yOffset })
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
@@ -1206,7 +1206,7 @@ function ns.UI.ShowManualNPCEntryDialog(refreshParent)
                     end
                 end,
             },
-            { text = L["BUTTON_CANCEL"], onClick = function(dlg) dlg:Hide() end },
+            { text = CANCEL, onClick = function(dlg) dlg:Hide() end },
         },
     })
 
@@ -1232,7 +1232,7 @@ function ns.UI.ShowManualNPCEntryDialog(refreshParent)
     dialog._idInput:SetScript("OnLeave", function() GameTooltip:Hide() end)
     yPos = yPos - ROW_H
 
-    MakeNPCLabel(content, L["LABEL_CATEGORY"], COL1_X, yPos)
+    MakeNPCLabel(content, CATEGORY, COL1_X, yPos)
     local catDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     catDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     local catOpts = {}
@@ -1250,7 +1250,7 @@ function ns.UI.ShowManualNPCEntryDialog(refreshParent)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     storeDD:SetOptions({
         {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
-        {text = L["STORAGE_TYPE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected("account")
     dialog._storeDD = storeDD
@@ -1301,7 +1301,7 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
         height         = 520,
         destroyOnClose = true,
         buttons = {
-            { text = L["BUTTON_CLOSE"], onClick = function(dlg) dlg:Hide() end },
+            { text = CLOSE, onClick = function(dlg) dlg:Hide() end },
         },
     })
 
@@ -1466,7 +1466,7 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
     end)
     yPos = yPos - ROW_H
 
-    MakeNPCLabel(content, L["LABEL_CATEGORY"], COL1_X, yPos)
+    MakeNPCLabel(content, CATEGORY, COL1_X, yPos)
     local catDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     catDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     local catOpts = {}
@@ -1484,7 +1484,7 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     storeDD:SetOptions({
         {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
-        {text = L["STORAGE_TYPE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected(nd.storage or "account")
     storeDD.onSelect = function(value)

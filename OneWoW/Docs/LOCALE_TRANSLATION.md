@@ -152,6 +152,16 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
   `QUESTS_FILTER_CLASS_ALL`, `QUESTS_GROUP_TYPE`, `QUESTS_TYPE_LABEL`,
   `TRADESKILLS_BACK`/`_REAGENT_QUAL`/`_TYPE_SECONDARY`) stripped as cleanup.
 
+- [x] `OneWoW_Notes` — 33 keys adopted (136 call sites across 10 files; recurring
+  `NOTE_SORT_*`/`CTX_*`/`UI_HELP_LINK_*` across 5 entity tabs); 11 new globals. **2
+  excluded:** `TAB_ITEMS` (dynamic `label="TAB_ITEMS"`), `SETTINGS_DISABLED` (paired
+  with `SETTINGS_ENABLED="On"`, no global). 13 dead keys stripped (per-entity
+  `*_DELETE`/`*_SAVE` superseded by generic `BUTTON_*`; `CORE_PIN_OPACITY` etc.).
+  koKR defined none of the 46. **Tooling:** `bin/locale_keydiff.py --scope` now
+  auto-classifies each Blizzard candidate as `[literal]` (adoptable) / `[DYNAMIC ->
+  exclude]` / `[dead -> strip only]` by scanning the addon's code — the dynamic-ref
+  audit is now built in (still manually confirm `dead` keys aren't runtime-constructed).
+
 ### Phase 3 — Consolidate to shared (pending)
 Baseline: **430 strings**. Per-addon sub-phases. For each value group:
 - [ ] Pick the canonical key name (often the simplest existing one) and value.

@@ -130,10 +130,10 @@ function ns.UI.CreateZonesTab(parent)
         print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"], parentZoneName))
     end)
 
-    local categoryDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_CATEGORY"], 140, 25)
+    local categoryDropdown = ns.UI.CreateThemedDropdown(controlPanel, CATEGORY, 140, 25)
     categoryDropdown:SetPoint("LEFT", addParentBtn, "RIGHT", 8, 0)
     local function RefreshCatOpts()
-        local catOpts = {{text = L["UI_ALL"], value = "All"}}
+        local catOpts = {{text = ALL, value = "All"}}
         if ns.Zones then
             for _, c in ipairs(ns.Zones:GetCategories()) do
                 catOpts[#catOpts + 1] = {text = c, value = c}
@@ -172,9 +172,9 @@ function ns.UI.CreateZonesTab(parent)
     local storageDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storageDropdown:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
     storageDropdown:SetOptions({
-        {text = L["UI_ALL"],                     value = "All"},
+        {text = ALL,                     value = "All"},
         {text = L["UI_STORAGE_ACCOUNT"],     value = "account"},
-        {text = L["UI_STORAGE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storageDropdown:SetSelected("All")
     storageDropdown.onSelect = function(value)
@@ -184,9 +184,9 @@ function ns.UI.CreateZonesTab(parent)
 
     local zoneSortHandle = OneWoW_GUI:CreateSortControls(controlPanel, {
         sortFields = {
-            {key = "name",     label = L["NOTE_SORT_NAME"]},
-            {key = "category", label = L["NOTE_SORT_CATEGORY"]},
-            {key = "color",    label = L["NOTE_SORT_COLOR"]},
+            {key = "name",     label = NAME},
+            {key = "category", label = CATEGORY},
+            {key = "color",    label = COLOR},
             {key = "manual",   label = L["NOTE_SORT_MANUAL"]},
         },
         defaultField  = currentSort.by,
@@ -281,7 +281,7 @@ function ns.UI.CreateZonesTab(parent)
     rightStatusText = OneWoW_GUI:CreateFS(rightStatusBar, 10)
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
     rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    rightStatusText:SetText(L["STATUS_READY"])
+    rightStatusText:SetText(READY)
 
     local function ShowEditor()
         emptyMessage:Hide()
@@ -320,7 +320,7 @@ function ns.UI.CreateZonesTab(parent)
                         message = string.format(L["ZONE_CONFIRM_DELETE"], zName),
                         buttons = {
                             {
-                                text = L["BUTTON_DELETE"],
+                                text = DELETE,
                                 color = {0.8, 0.2, 0.2},
                                 onClick = function(dlg)
                                     if ns.ZonePins then ns.ZonePins:DestroyZonePin(zName) end
@@ -336,7 +336,7 @@ function ns.UI.CreateZonesTab(parent)
                                     dlg:Hide()
                                 end,
                             },
-                            { text = L["BUTTON_CANCEL"], onClick = function(dlg) dlg:Hide() end },
+                            { text = CANCEL, onClick = function(dlg) dlg:Hide() end },
                         },
                     })
                     confirmResult.frame:Show()
@@ -768,7 +768,7 @@ function ns.UI.CreateZonesTab(parent)
                     if header.categoryLine then
                         header.categoryLine:SetTextColor(textColor[1], textColor[2], textColor[3])
                         local catText = zoneData.category or "General"
-                        local storeText = zoneData.storage == "character" and (L["STORAGE_TYPE_CHARACTER"]) or (L["STORAGE_ACCOUNT_WIDE"])
+                        local storeText = zoneData.storage == "character" and (CHARACTER) or (L["STORAGE_ACCOUNT_WIDE"])
                         header.categoryLine:SetText(catText .. "  |  " .. storeText)
                     end
 
@@ -1015,7 +1015,7 @@ function ns.UI.CreateZonesTab(parent)
 
             local storageFS = OneWoW_GUI:CreateFS(row, 10)
             storageFS:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 12, 6)
-            local stText = zone.data.storage == "character" and (L["STORAGE_TYPE_CHARACTER"]) or (L["STORAGE_ACCOUNT_WIDE"])
+            local stText = zone.data.storage == "character" and (CHARACTER) or (L["STORAGE_ACCOUNT_WIDE"])
             storageFS:SetText(stText)
             storageFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
@@ -1188,13 +1188,13 @@ function ns.UI.CreateZonesTab(parent)
         local yOffset = 0
 
         if #newZones > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_NEW"], yOffset)
+            CreateSectionHeader(NEW, yOffset)
             yOffset = yOffset - 30
         end
         for i, zone in ipairs(newZones) do BuildZoneRow(zone, yOffset, newZones, i) yOffset = yOffset - 55 end
 
         if #favorites > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_FAVORITES"], yOffset)
+            CreateSectionHeader(FAVORITES, yOffset)
             yOffset = yOffset - 30
         end
         for i, zone in ipairs(favorites) do BuildZoneRow(zone, yOffset, favorites, i) yOffset = yOffset - 55 end
@@ -1314,7 +1314,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
                     end
                 end,
             },
-            { text = L["BUTTON_CANCEL"], onClick = function(dlg) dlg:Hide() end },
+            { text = CANCEL, onClick = function(dlg) dlg:Hide() end },
         },
     })
 
@@ -1364,7 +1364,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     end)
     yPos = yPos - ROW_H
 
-    MakeZoneLabel(content, L["LABEL_CATEGORY"], COL1_X, yPos)
+    MakeZoneLabel(content, CATEGORY, COL1_X, yPos)
     local catDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     catDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     local catOpts = {}
@@ -1382,7 +1382,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     storeDD:SetOptions({
         {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
-        {text = L["STORAGE_TYPE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected("account")
     dialog._storeDD = storeDD
@@ -1413,7 +1413,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     dialog._fontColDD = fontColDD
     yPos = yPos - ROW_H
 
-    MakeZoneLabel(content, L["LABEL_FONT_SIZE"], COL1_X, yPos)
+    MakeZoneLabel(content, FONT_SIZE, COL1_X, yPos)
     dialog._fontSize = 12
     local fontSizeSlider, fontSizeTxt, fontSizeContainer = MakeZoneSlider(content, "OneWoW_ZoneAddFontSize", COL1_X, yPos - LBL_GAP, COL_W, 10, 20, 12, "int")
     if fontSizeContainer then
@@ -1470,7 +1470,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     end
     dialog._outlineDD = addOutlineDD
 
-    MakeZoneLabel(content, L["LABEL_OPACITY"], COL1_X, yPos)
+    MakeZoneLabel(content, OPACITY, COL1_X, yPos)
     dialog._opacity = 0.9
     local opacitySlider, opacityTxt, opacityContainer = MakeZoneSlider(content, "OneWoW_ZoneAddOpacity", COL1_X, yPos - LBL_GAP, COL_W, 0.5, 1.0, 0.9, "pct")
     if opacityContainer then
@@ -1537,7 +1537,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
         height          = 600,
         destroyOnClose  = true,
         buttons = {
-            { text = L["BUTTON_CLOSE"], onClick = function(dlg) dlg:Hide() end },
+            { text = CLOSE, onClick = function(dlg) dlg:Hide() end },
         },
     })
 
@@ -1636,7 +1636,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     end)
     yPos = yPos - ROW_H
 
-    MakeZoneLabel(content, L["LABEL_CATEGORY"], COL1_X, yPos)
+    MakeZoneLabel(content, CATEGORY, COL1_X, yPos)
     local catDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     catDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     local catOpts = {}
@@ -1654,7 +1654,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     storeDD:SetOptions({
         {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
-        {text = L["STORAGE_TYPE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected(zoneData.storage or "account")
     storeDD.onSelect = function(value)
@@ -1695,7 +1695,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     end
     yPos = yPos - ROW_H
 
-    MakeZoneLabel(content, L["LABEL_FONT_SIZE"], COL1_X, yPos)
+    MakeZoneLabel(content, FONT_SIZE, COL1_X, yPos)
     local propFontSizeSlider, propFontSizeTxt, propFontSizeContainer = MakeZoneSlider(content, "OneWoW_ZonePropFontSize", COL1_X, yPos - LBL_GAP, COL_W, 10, 20, zoneData.fontSize or 12, "int")
     if propFontSizeContainer then
         local sliderChild = select(1, propFontSizeContainer:GetChildren())
@@ -1753,7 +1753,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
         end
     end
 
-    MakeZoneLabel(content, L["LABEL_OPACITY"], COL1_X, yPos)
+    MakeZoneLabel(content, OPACITY, COL1_X, yPos)
     local propOpacitySlider, propOpacityTxt, propOpacityContainer = MakeZoneSlider(content, "OneWoW_ZonePropOpacity", COL1_X, yPos - LBL_GAP, COL_W, 0.5, 1.0, zoneData.opacity or 0.9, "pct")
     if propOpacityContainer then
         local sliderChild = select(1, propOpacityContainer:GetChildren())

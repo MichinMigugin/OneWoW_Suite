@@ -140,10 +140,10 @@ function ns.UI.CreatePlayersTab(parent)
     end)
     addGuildBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local catDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_CATEGORY"], 140, 25)
+    local catDD = ns.UI.CreateThemedDropdown(controlPanel, CATEGORY, 140, 25)
     catDD:SetPoint("LEFT", addGuildBtn, "RIGHT", 8, 0)
     local function RefreshCatOpts()
-        local opts = {{text = L["UI_ALL"], value = "All"}}
+        local opts = {{text = ALL, value = "All"}}
         if ns.Players then
             for _, c in ipairs(ns.Players:GetCategories()) do
                 opts[#opts + 1] = {text = c, value = c}
@@ -182,9 +182,9 @@ function ns.UI.CreatePlayersTab(parent)
     local storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
     storeDD:SetOptions({
-        {text = L["UI_ALL"],               value = "All"},
+        {text = ALL,               value = "All"},
         {text = L["UI_STORAGE_ACCOUNT"],   value = "account"},
-        {text = L["UI_STORAGE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected("All")
     storeDD.onSelect = function(value)
@@ -194,11 +194,11 @@ function ns.UI.CreatePlayersTab(parent)
 
     local playerSortHandle = OneWoW_GUI:CreateSortControls(controlPanel, {
         sortFields = {
-            {key = "name",     label = L["NOTE_SORT_NAME"]},
-            {key = "class",    label = L["NOTE_SORT_CLASS"]},
-            {key = "faction",  label = L["NOTE_SORT_FACTION"]},
-            {key = "level",    label = L["NOTE_SORT_LEVEL"]},
-            {key = "category", label = L["NOTE_SORT_CATEGORY"]},
+            {key = "name",     label = NAME},
+            {key = "class",    label = CLASS},
+            {key = "faction",  label = FACTION},
+            {key = "level",    label = LEVEL},
+            {key = "category", label = CATEGORY},
             {key = "manual",   label = L["NOTE_SORT_MANUAL"]},
         },
         defaultField  = currentSort.by,
@@ -294,7 +294,7 @@ function ns.UI.CreatePlayersTab(parent)
     local rightStatusText = OneWoW_GUI:CreateFS(rightStatusBar, 10)
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
     rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    rightStatusText:SetText(L["STATUS_READY"])
+    rightStatusText:SetText(READY)
 
     local function ShowEditor()
         emptyMessage:Hide()
@@ -330,7 +330,7 @@ function ns.UI.CreatePlayersTab(parent)
 
             local categoryLine = OneWoW_GUI:CreateFS(editorHeader, 10)
             categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
-            categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], L["UI_GENERAL"]))
+            categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], GENERAL))
             categoryLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             categoryLine:SetJustifyH("RIGHT")
             editorHeader.categoryLine = categoryLine
@@ -346,7 +346,7 @@ function ns.UI.CreatePlayersTab(parent)
                 if selectedPlayer then
                     StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_PLAYER"] = {
                         text = string.format(L["POPUP_DELETE_PLAYER"]),
-                        button1 = L["BUTTON_DELETE"], button2 = L["BUTTON_CANCEL"],
+                        button1 = DELETE, button2 = CANCEL,
                         OnAccept = function()
                             if ns.Players then
                                 ns.Players:RemovePlayer(selectedPlayer)
@@ -617,7 +617,7 @@ function ns.UI.CreatePlayersTab(parent)
                     end
                 end
                 if header.categoryLine then
-                    header.categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], pd.category or L["UI_GENERAL"]))
+                    header.categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], pd.category or GENERAL))
                     header.categoryLine:SetTextColor(borderColor[1], borderColor[2], borderColor[3])
                 end
                 if header.alertBtn then
@@ -776,7 +776,7 @@ function ns.UI.CreatePlayersTab(parent)
             deleteBtn:SetScript("OnClick", function()
                 StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_PLAYER"] = {
                     text = string.format(L["POPUP_DELETE_PLAYER"]),
-                    button1 = L["BUTTON_DELETE"], button2 = L["BUTTON_CANCEL"],
+                    button1 = DELETE, button2 = CANCEL,
                     OnAccept = function()
                         if ns.Players then
                             ns.Players:RemovePlayer(player.fullName)
@@ -932,12 +932,12 @@ function ns.UI.CreatePlayersTab(parent)
         local yOffset = 0
 
         if #newPlayers > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_NEW"], yOffset) yOffset = yOffset - 30
+            CreateSectionHeader(NEW, yOffset) yOffset = yOffset - 30
         end
         for i, p in ipairs(newPlayers) do BuildPlayerRow(p, yOffset, newPlayers, i) yOffset = yOffset - 55 end
 
         if #favorites > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_FAVORITES"], yOffset) yOffset = yOffset - 30
+            CreateSectionHeader(FAVORITES, yOffset) yOffset = yOffset - 30
         end
         for i, p in ipairs(favorites) do BuildPlayerRow(p, yOffset, favorites, i) yOffset = yOffset - 55 end
 
@@ -1063,7 +1063,7 @@ function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
                     end
                 end,
             },
-            { text = L["BUTTON_CANCEL"], onClick = function(dlg) dlg:Hide() end },
+            { text = CANCEL, onClick = function(dlg) dlg:Hide() end },
         },
     })
 
@@ -1114,7 +1114,7 @@ function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
     dialog._classDD = classDD
     yPos = yPos - ROW_H
 
-    MakeDialogLabel(content, L["LABEL_CATEGORY"], COL1_X, yPos)
+    MakeDialogLabel(content, CATEGORY, COL1_X, yPos)
     local catDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     catDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     local catOpts = {}
@@ -1132,7 +1132,7 @@ function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     storeDD:SetOptions({
         {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
-        {text = L["STORAGE_TYPE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected("account")
     dialog._storeDD = storeDD
@@ -1200,7 +1200,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
         height         = 580,
         destroyOnClose = true,
         buttons = {
-            { text = L["BUTTON_CLOSE"], onClick = function(dlg) dlg:Hide() end },
+            { text = CLOSE, onClick = function(dlg) dlg:Hide() end },
         },
     })
 
@@ -1282,7 +1282,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
     classDD.onSelect = function(value) SaveField("class", value) end
     yPos = yPos - ROW_H
 
-    MakeDialogLabel(content, L["LABEL_CATEGORY"], COL1_X, yPos)
+    MakeDialogLabel(content, CATEGORY, COL1_X, yPos)
     local catDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     catDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     local catOpts = {}
@@ -1300,7 +1300,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     storeDD:SetOptions({
         {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
-        {text = L["STORAGE_TYPE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected(pd.storage or "account")
     storeDD.onSelect = function(value)
@@ -1460,7 +1460,7 @@ function ns.UI.ShowAddAltsDialog(refreshParent)
                     dlg:Hide()
                 end,
             },
-            { text = L["BUTTON_CANCEL"], onClick = function(dlg) dlg:Hide() end },
+            { text = CANCEL, onClick = function(dlg) dlg:Hide() end },
         },
     })
 
@@ -1604,7 +1604,7 @@ function ns.UI.ShowAddGuildDialog(refreshParent)
                     dlg:Hide()
                 end,
             },
-            { text = L["BUTTON_CANCEL"], onClick = function(dlg) dlg:Hide() end },
+            { text = CANCEL, onClick = function(dlg) dlg:Hide() end },
         },
     })
 

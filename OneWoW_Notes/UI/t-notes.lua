@@ -83,10 +83,10 @@ function ns.UI.CreateNotesTab(parent)
     end)
     addNoteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local categoryDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_CATEGORY"], 140, 25)
+    local categoryDropdown = ns.UI.CreateThemedDropdown(controlPanel, CATEGORY, 140, 25)
     categoryDropdown:SetPoint("LEFT", addNoteBtn, "RIGHT", 8, 0)
     local function RefreshCatOpts()
-        local catOpts = {{text = L["UI_ALL"], value = "All"}}
+        local catOpts = {{text = ALL, value = "All"}}
         if ns.NotesCategories then
             for _, category in ipairs(ns.NotesCategories:GetCategories()) do
                 catOpts[#catOpts + 1] = {text = category, value = category}
@@ -125,9 +125,9 @@ function ns.UI.CreateNotesTab(parent)
     local storageDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storageDropdown:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
     storageDropdown:SetOptions({
-        {text = L["UI_ALL"],               value = "All"},
+        {text = ALL,               value = "All"},
         {text = L["UI_STORAGE_ACCOUNT"],   value = "account"},
-        {text = L["UI_STORAGE_CHARACTER"], value = "character"},
+        {text = CHARACTER, value = "character"},
     })
     storageDropdown:SetSelected("All")
     storageDropdown.onSelect = function(value)
@@ -139,9 +139,9 @@ function ns.UI.CreateNotesTab(parent)
         sortFields = {
             {key = "title",    label = L["NOTE_SORT_TITLE"]},
             {key = "created",  label = L["NOTE_SORT_CREATED"]},
-            {key = "category", label = L["NOTE_SORT_CATEGORY"]},
-            {key = "color",    label = L["NOTE_SORT_COLOR"]},
-            {key = "type",     label = L["NOTE_SORT_TYPE"]},
+            {key = "category", label = CATEGORY},
+            {key = "color",    label = COLOR},
+            {key = "type",     label = TYPE},
             {key = "manual",   label = L["NOTE_SORT_MANUAL"]},
         },
         defaultField  = currentSort.by,
@@ -238,7 +238,7 @@ function ns.UI.CreateNotesTab(parent)
     rightStatusText = OneWoW_GUI:CreateFS(rightStatusBar, 10)
     rightStatusText:SetPoint("LEFT", rightStatusBar, "LEFT", 10, 0)
     rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    rightStatusText:SetText(L["STATUS_READY"])
+    rightStatusText:SetText(READY)
 
     local function ShowEditor()
         emptyMessage:Hide()
@@ -287,8 +287,8 @@ function ns.UI.CreateNotesTab(parent)
                 if selectedNote then
                     StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE"] = {
                         text = string.format(L["POPUP_DELETE_NOTE"], selectedNote),
-                        button1 = L["BUTTON_DELETE"],
-                        button2 = L["BUTTON_CANCEL"],
+                        button1 = DELETE,
+                        button2 = CANCEL,
                         OnAccept = function()
                             if ns.NotesData then
                                 ns.NotesData:RemoveNote(selectedNote)
@@ -440,7 +440,7 @@ function ns.UI.CreateNotesTab(parent)
 
             local categoryLine = OneWoW_GUI:CreateFS(editorHeader, 10)
             categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
-            categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], L["UI_GENERAL"]))
+            categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], GENERAL))
             categoryLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             categoryLine:SetJustifyH("RIGHT")
             editorHeader.categoryLine = categoryLine
@@ -726,11 +726,11 @@ function ns.UI.CreateNotesTab(parent)
                     end
                     if header.categoryLine then
                         header.categoryLine:SetTextColor(textColor[1], textColor[2], textColor[3])
-                        header.categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], note.category or L["UI_GENERAL"]))
+                        header.categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], note.category or GENERAL))
                     end
                     if header.noteTypeLine then
                         local noteType = note.noteType or "standard"
-                        local noteTypeText = noteType == "daily" and L["NOTE_TYPE_DAILY"] or noteType == "weekly" and L["NOTE_TYPE_WEEKLY"] or L["NOTE_TYPE_STANDARD"]
+                        local noteTypeText = noteType == "daily" and DAILY or noteType == "weekly" and WEEKLY or L["NOTE_TYPE_STANDARD"]
                         header.noteTypeLine:SetText(string.format(L["UI_TYPE_FORMAT"], noteTypeText))
                     end
                     if header.autoPinCheckbox then
@@ -1069,8 +1069,8 @@ function ns.UI.CreateNotesTab(parent)
             deleteBtn:SetScript("OnClick", function()
                 StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE"] = {
                     text = string.format(L["POPUP_DELETE_NOTE"], note.data.title or "Untitled"),
-                    button1 = L["BUTTON_DELETE"],
-                    button2 = L["BUTTON_CANCEL"],
+                    button1 = DELETE,
+                    button2 = CANCEL,
                     OnAccept = function()
                         NotesData:RemoveNote(note.id)
                         if selectedNote == note.id then
@@ -1264,7 +1264,7 @@ function ns.UI.CreateNotesTab(parent)
 
             local storageFS = OneWoW_GUI:CreateFS(noteFrame, 10)
             storageFS:SetPoint("BOTTOMLEFT", noteFrame, "BOTTOMLEFT", 12, 6)
-            local stText = note.data.storage == "character" and (L["STORAGE_TYPE_CHARACTER"]) or (L["STORAGE_ACCOUNT_WIDE"])
+            local stText = note.data.storage == "character" and (CHARACTER) or (L["STORAGE_ACCOUNT_WIDE"])
             storageFS:SetText(stText)
             storageFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
@@ -1343,7 +1343,7 @@ function ns.UI.CreateNotesTab(parent)
         local yOffset = 0
 
         if #newNotes > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_NEW"], yOffset)
+            CreateSectionHeader(NEW, yOffset)
             yOffset = yOffset - 30
         end
         for i, note in ipairs(newNotes) do
@@ -1352,7 +1352,7 @@ function ns.UI.CreateNotesTab(parent)
         end
 
         if #favorites > 0 then
-            CreateSectionHeader(L["NOTES_SECTION_FAVORITES"], yOffset)
+            CreateSectionHeader(FAVORITES, yOffset)
             yOffset = yOffset - 30
         end
         for i, note in ipairs(favorites) do
