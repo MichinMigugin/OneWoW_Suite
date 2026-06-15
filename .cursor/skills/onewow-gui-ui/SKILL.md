@@ -127,17 +127,39 @@ Common overridable keys: `WINDOW_WIDTH`, `WINDOW_HEIGHT`, `MIN_WIDTH`, `MIN_HEIG
 
 **No static strings in code.** All user-facing text — labels, tooltips, titles, button text, error messages — references either:
 
-- `Addon.Locales/<locale>.lua` translations via the addon's `L.KEY` table (preferred for displayed text)
+- the addon's `ns.L` translation view (preferred for displayed text)
 - `Addon.Constants.X` (preferred for non-translated values: keys, numeric defaults, table data)
 
-```lua
--- Locales/enUS.lua
-L.SAVE = "Save"
-L.BUTTON_CANCEL = "Cancel"
+Localization runs through the suite-wide **Locale service** (`OneWoW.Locale`). Each
+addon registers its own scope (keyed by `ADDON_NAME`) and caches a read-only view
+once at file scope. Locale files **register**, they do not assign a table directly:
 
--- usage
-OneWoW_GUI:CreateFitTextButton(parent, { text = L.SAVE })
+```lua
+-- Locales/enUS.lua  (ADDON_NAME, ns = ...)
+OneWoW.Locale:Register(ADDON_NAME, "enUS", {
+    SAVE          = "Save",
+    BUTTON_CANCEL = "Cancel",
+})
+ns.L = OneWoW.Locale:GetTable(ADDON_NAME)  -- identity-stable, read-only
+
+-- usage (call sites unchanged)
+OneWoW_GUI:CreateFitTextButton(parent, { text = ns.L.SAVE })
 ```
+
+Contract you must follow (full detail: `OneWoW/Docs/ARCHITECTURE.md` §6 "Localization"):
+
+- **A miss returns the key name, never nil.** Missing keys show up as `BUTTON_CANCEL`
+  on screen, which is the point — it surfaces the bug instead of hiding it.
+- **No `L[key] or "fallback"` literals.** The key-name-on-miss already self-documents;
+  an `or "literal"` just re-hardcodes a string and masks the missing key. For
+  *genuinely* optional localization ("translate if a key exists, else use a dynamic
+  value") use `OneWoW.Locale:GetOptional(scope, key)`, which returns value-or-nil.
+  A real `cond and L.A or L.B` ternary (both branches localized) is fine.
+- **The view refolds in place** on language change, so a cached `ns.L` never goes
+  stale — never re-fetch it per call. Language switching is centralized through
+  `OneWoW.Locale:SetLanguage`; register `OneWoW.Locale:OnApply(fn)` only if you cache
+  built strings in standalone UI that needs an explicit rebuild (hub tabs rebuild
+  themselves).
 
 Every addon should have `Addon/Core/Constants.lua` and `Addon/Locales/<locale>.lua`. Create them if missing.
 
@@ -155,7 +177,7 @@ Theme, language, minimap state — owned by the suite. Use `OneWoW_GUI:GetSettin
 
 4. **Framework / shim wrappers around OneWoW_GUI helpers.** `Addon.UI:Button(...)` that calls `OneWoW_GUI:CreateButton` is duplicated indirection. Call OneWoW_GUI directly.
 
-5. **Hardcoded user-facing strings.** `text = "Save"` in Lua source. Pull from `L.SAVE` (translations) or `Addon.Constants.X`.
+5. **Hardcoded user-facing strings.** `text = "Save"` in Lua source. Pull from `ns.L.SAVE` (translations) or `Addon.Constants.X`. This includes `ns.L.KEY or "Save"` fallbacks — the Locale view already returns the key name on a miss; use `OneWoW.Locale:GetOptional` for genuinely optional text.
 
 6. **Hardcoded color literals.** `SetTextColor(1, 1, 1)`, `SetColorTexture(0.2, 0.6, 0.4)`, RGB constants in Lua source. Use `GetThemeColor` keys. Pure black/white for utility cases (overlays, masks) is the rare exception.
 
