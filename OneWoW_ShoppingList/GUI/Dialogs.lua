@@ -27,7 +27,7 @@ function Dialogs:InputDialog(labelText, defaultVal, onConfirm, confirmLabel)
         onClose   = function() activeDialogResult = nil end,
         buttons   = {
             { text = confirmLabel or L["OWSL_BTN_CREATE"] },
-            { text = L["OWSL_BTN_CANCEL"], onClick = function(f)
+            { text = CANCEL, onClick = function(f)
                 f:Hide()
                 activeDialogResult = nil
             end },
@@ -78,7 +78,7 @@ function Dialogs:ConfirmDialog(titleText, bodyText, onConfirm, confirmLabel, _, 
         width      = 420,
         checkbox   = showDontAsk and { label = L["OWSL_DIALOG_DONT_ASK_AGAIN"] } or nil,
         buttons    = {
-            { text = confirmLabel or L["OWSL_BTN_DELETE"],
+            { text = confirmLabel or DELETE,
               color = { 0.7, 0.15, 0.15 },
               onClick = function(f)
                   local checked = result.checkbox and result.checkbox:GetChecked()
@@ -89,7 +89,7 @@ function Dialogs:ConfirmDialog(titleText, bodyText, onConfirm, confirmLabel, _, 
                   end
                   if onConfirm then onConfirm() end
               end },
-            { text = L["OWSL_BTN_CANCEL"], onClick = function(f)
+            { text = CANCEL, onClick = function(f)
                   f:Hide()
                   activeDialogResult = nil
               end },
@@ -112,7 +112,7 @@ function Dialogs:ExportDialog(title, exportText, _)
         strata    = "FULLSCREEN_DIALOG",
         onClose   = function() activeDialogResult = nil end,
         buttons   = {
-            { text = L["OWSL_BTN_CLOSE"], onClick = function(f)
+            { text = CLOSE, onClick = function(f)
                 f:Hide()
                 activeDialogResult = nil
             end },
@@ -160,7 +160,7 @@ function Dialogs:ImportDialog(onImport, _)
         onClose   = function() activeDialogResult = nil end,
         buttons   = {
             { text = L["OWSL_BTN_IMPORT"] },
-            { text = L["OWSL_BTN_CANCEL"], onClick = function(f)
+            { text = CANCEL, onClick = function(f)
                 f:Hide()
                 activeDialogResult = nil
             end },
@@ -220,7 +220,7 @@ function Dialogs:RecipeSelectDialog(recipes, knownByData, onSelect, _)
         strata    = "FULLSCREEN_DIALOG",
         onClose   = function() activeDialogResult = nil end,
         buttons   = {
-            { text = L["OWSL_BTN_CANCEL"], onClick = function(f)
+            { text = CANCEL, onClick = function(f)
                 f:Hide()
                 activeDialogResult = nil
             end },
@@ -304,7 +304,7 @@ function Dialogs:CraftablesDialog(craftableItems, listName, onCraft, _)
         strata    = "FULLSCREEN_DIALOG",
         onClose   = function() activeDialogResult = nil end,
         buttons   = {
-            { text = L["OWSL_BTN_CLOSE"], onClick = function(f)
+            { text = CLOSE, onClick = function(f)
                 f:Hide()
                 activeDialogResult = nil
             end },

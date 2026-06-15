@@ -246,7 +246,7 @@ function MainWindow:Create()
     titleBar:SetScript("OnDragStart", function() mainFrame:StartMoving() end)
     titleBar:SetScript("OnDragStop",  function() mainFrame:StopMovingOrSizing() end)
 
-    local settingsToggleBtn = OneWoW_GUI:CreateFitTextButton(titleBar, { text = L["OWSL_BTN_SETTINGS"], height = 16 })
+    local settingsToggleBtn = OneWoW_GUI:CreateFitTextButton(titleBar, { text = SETTINGS, height = 16 })
     settingsToggleBtn:SetPoint("RIGHT", titleBar._closeBtn, "LEFT", -6, 0)
     settingsToggleBtn:SetScript("OnClick", function() MainWindow:ToggleSettings() end)
 
@@ -499,10 +499,10 @@ function MainWindow:BuildSettingsPanel()
 
     local settingsTitle = OneWoW_GUI:CreateFS(settingsPanel, 16)
     settingsTitle:SetPoint("TOPLEFT", settingsPanel, "TOPLEFT", 12, -12)
-    settingsTitle:SetText(L["OWSL_SETTINGS_TITLE"])
+    settingsTitle:SetText(SETTINGS)
     settingsTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local backBtn = OneWoW_GUI:CreateFitTextButton(settingsPanel, { text = L["OWSL_BTN_BACK"], height = 24 })
+    local backBtn = OneWoW_GUI:CreateFitTextButton(settingsPanel, { text = BACK, height = 24 })
     backBtn:SetPoint("TOPRIGHT", settingsPanel, "TOPRIGHT", -12, -12)
     backBtn:SetScript("OnClick", function() MainWindow:ToggleSettings() end)
 
@@ -653,7 +653,7 @@ function MainWindow:BuildSettingsPanel()
         local binding = GetBindingKey(bindingName)
         local bVal = OneWoW_GUI:CreateFS(scrollContent, 12)
         bVal:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 220, y)
-        bVal:SetText(binding or L["OWSL_SETTINGS_NO_KEYBIND"])
+        bVal:SetText(binding or NOT_BOUND)
         if binding then
             bVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
@@ -836,7 +836,7 @@ function MainWindow:RefreshSidebar()
                         MainWindow:RefreshSidebar()
                         MainWindow:RefreshItemList()
                     end,
-                    L["OWSL_BTN_DELETE"],
+                    DELETE,
                     mainFrame,
                     {
                         showDontAskAgain = true,
@@ -1226,7 +1226,7 @@ function MainWindow:RefreshItemList()
                         ns.ShoppingList:RemoveItemFromList(capturedListN, capturedData.itemID)
                         MainWindow:RefreshItemList()
                     end,
-                    L["OWSL_BTN_DELETE"],
+                    DELETE,
                     mainFrame,
                     {
                         showDontAskAgain = true,
@@ -1427,7 +1427,7 @@ function MainWindow:ShowListContextMenu(listName)
                         MainWindow:RefreshSidebar()
                         MainWindow:RefreshItemList()
                     end,
-                    L["OWSL_BTN_DELETE"],
+                    DELETE,
                     mainFrame,
                     {
                         showDontAskAgain = true,

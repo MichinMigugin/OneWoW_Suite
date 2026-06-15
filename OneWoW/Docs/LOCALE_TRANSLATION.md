@@ -176,6 +176,11 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
   blind spot, caught by the still-required manual check). 6 dead keys stripped.
   6 locale files (non-English had partial coverage, ~17 keys each).
 
+- [x] `OneWoW_ShoppingList` — 7 keys adopted (14 call sites): `OWSL_BTN_*` →
+  `BACK`/`CANCEL`/`CLOSE`/`DELETE`/`SETTINGS`, `OWSL_SETTINGS_NO_KEYBIND` →
+  `NOT_BOUND`, `OWSL_SETTINGS_TITLE` → `SETTINGS`. 2 new globals (`BACK`,
+  `NOT_BOUND`). 3 dead keys stripped. No dynamic refs; full 6-language coverage.
+
 ### Phase 3 — Consolidate to shared (pending)
 Baseline: **430 strings**. Per-addon sub-phases. For each value group:
 - [ ] Pick the canonical key name (often the simplest existing one) and value.
