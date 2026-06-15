@@ -41,16 +41,23 @@ Locale._activeLang = DEFAULT_LOCALE
 -- normalization. `native` is each language in its own script (the picker shows the
 -- native name regardless of the active UI language).
 Locale.SUPPORTED = {
-    { code = "enUS", native = "English"  },
-    { code = "esES", native = "Español"  },
-    { code = "koKR", native = "한국어"    },
-    { code = "frFR", native = "Français" },
-    { code = "ruRU", native = "Русский"  },
-    { code = "deDE", native = "Deutsch"  },
+    { code = "enUS", native = "English"      },
+    { code = "koKR", native = "한국어"        },
+    { code = "frFR", native = "Français"     },
+    { code = "deDE", native = "Deutsch"      },
+    { code = "zhCN", native = "简体中文"      },
+    { code = "esES", native = "Español (EU)" },
+    { code = "zhTW", native = "繁體中文"      },
+    { code = "esMX", native = "Español (AL)" },
+    { code = "ruRU", native = "Русский"      },
+    { code = "ptBR", native = "Português"    },
+    { code = "itIT", native = "Italiano"     },
 }
 
--- Client-locale aliases resolved by NormalizeLocale (WoW locale -> our locale).
-Locale.ALIASES = { esMX = "esES" }
+-- Client-locale aliases resolved by NormalizeLocale (WoW client locale -> our locale).
+-- enGB is a real GetLocale() value (British English) that shares enUS strings; all
+-- other Blizzard client locales now map 1:1 to a SUPPORTED entry (esMX is its own).
+Locale.ALIASES = { enGB = "enUS" }
 
 local KNOWN_LOCALE = {}
 for _, e in ipairs(Locale.SUPPORTED) do KNOWN_LOCALE[e.code] = true end
