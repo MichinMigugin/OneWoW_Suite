@@ -37,17 +37,13 @@ local function SyncSettingToChildAddons(settingType, value)
         "OneWoW_Catalog", "OneWoW_DirectDeposit",
         "OneWoW_ShoppingList", "OneWoW_Utility_DevTool",
     }
+    -- Themes are applied per child addon (each owns its theme). Language is NOT looped
+    -- here: it lives in one central scope-folded view, so the caller applies it once via
+    -- OneWoW.Locale:SetLanguage(). (settingType is always "theme" now.)
     for _, globalName in ipairs(integratedAddons) do
         local addon = _G[globalName]
-        if addon then
-            if settingType == "theme" and addon.ApplyTheme then
-                addon:ApplyTheme()
-            elseif settingType == "language" and addon.ApplyLanguage then
-                if addon.db and addon.db.global then
-                    addon.db.global.language = value
-                end
-                addon:ApplyLanguage()
-            end
+        if addon and settingType == "theme" and addon.ApplyTheme then
+            addon:ApplyTheme()
         end
     end
 end
@@ -128,8 +124,8 @@ function OneWoW.Profiles.ApplySettings(snapshot, profileName)
         end
     end
 
-    if snapshot.core and snapshot.core.theme    then SyncSettingToChildAddons("theme",    snapshot.core.theme)    end
-    if snapshot.core and snapshot.core.language then SyncSettingToChildAddons("language", snapshot.core.language) end
+    if snapshot.core and snapshot.core.theme    then SyncSettingToChildAddons("theme", snapshot.core.theme) end
+    if snapshot.core and snapshot.core.language then OneWoW.Locale:SetLanguage(snapshot.core.language) end
 
     if profileName then
         OneWoW.db.global.activeProfile = profileName

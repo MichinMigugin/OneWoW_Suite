@@ -553,6 +553,7 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | `OneWoW.UpgradeDetection` | `Services/upgrade-detection.lua` | Overlay engine, Bags |
 | `OneWoW.RecipeKnownUtil` | `Services/RecipeKnownUtil.lua` | Overlay engine, tooltip providers |
 | `OneWoW.ItemPrices` | `Services/ItemPrices.lua` | Tooltip providers, overlay engine |
+| `OneWoW.Locale` | `Services/LocaleService.lua` | Every addon (each registers its own scope, reads back a view) — see Localization below |
 
 Feature content that registers in from QoL: settings catalogs
 (`SettingsFeatureRegistry:Register`, e.g. `tooltips`, `overlays`), tooltip
@@ -561,6 +562,42 @@ the hub settings tabs (`RegisterModule` row-2 tabs). Settings **storage** stays
 in core `OneWoW_DB` (`settings.*` defaults in `Core/Database.lua`);
 `SettingsFeatureRegistry` resolves storage without a catalog entry, so core
 services keep reading feature settings with QoL opted out.
+
+### Localization (`OneWoW.Locale`)
+
+One service owns localization for the whole suite (`Services/LocaleService.lua`),
+modeled on `OneWoW_GUI:ApplyTheme` / `Constants.ACTIVE_THEME` (a metatable
+`__index` fallback chain with `__newindex = noop`).
+
+- **Scopes.** Core fills the `shared` scope (suite-wide keys: themes, language
+  names, common buttons) and its own `OneWoW` scope. Every other addon registers
+  its **own scope keyed by `ADDON_NAME`** (the file's first vararg — no magic
+  strings): `OneWoW.Locale:Register(ADDON_NAME, locale, { ... })` at locale-file
+  load, then `ns.L = OneWoW.Locale:GetTable(ADDON_NAME)`. The view is
+  **identity-stable** (same table for the session) and **read-only**, so a cached
+  `local L = ns.L` never goes stale across a language change.
+- **Resolution order:** scope → `shared` → **the key name itself** (a miss returns
+  its own name, never `nil`, so missing keys are visible in-game). Therefore **do
+  not write `L[key] or "fallback"`** — that masks misses. For genuinely optional
+  strings (localize if present, else a dynamic value) use
+  `OneWoW.Locale:GetOptional(scope, key)` (returns the value or `nil`).
+- **Disjoint contract:** a key is EITHER shared OR scoped, never both. `/owlocale`
+  (the sole locale-debug command — no debug builds) reports per-scope key counts,
+  shared/scope collisions, and locales not in `SUPPORTED`.
+- **Language switching is centralized.** `OneWoW.Locale:SetLanguage(lang)` refolds
+  every scope **in place** (so cached views update), fires `OnApply` listeners
+  (for UI rebuilds), and pushes any `BINDING_*` keys to `_G` (keybinding labels).
+  Core calls it once on `OnLanguageChanged` (then `FullReset`s the hub) and once on
+  profile apply (`t-profiles`) — addons must **not** loop their own `SetLanguage`.
+  `Locale.SUPPORTED` (ordered code+native) drives the picker; `Locale.ALIASES`
+  normalizes client locales (e.g. `esMX`→`esES`).
+- **`GetStore(scope)`** returns the raw `{[locale]={K=v}}` for consumers needing a
+  specific locale's strings (import/export, or the koKR dev `"TEST"` placeholders
+  that source their key set from the registered enUS store).
+- **QoL external modules** use a per-module scope `ADDON_NAME .. "." .. id` (e.g.
+  `OneWoW_QoL.afkpanel`), set up by `ModuleRegistry:Define`/`Current()` — see the
+  QoL `DEVELOPERS.md`. Cross-module string access goes through
+  `ModuleRegistry:GetById("<id>")`, never a shared global.
 
 ---
 

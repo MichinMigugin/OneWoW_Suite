@@ -469,11 +469,24 @@ colliding. Convert each module's `L_enUS["KEY"]=v` block to a per-module
 
 ### Phase 6 — Cleanup
 
-- [ ] Remove the `addon:ApplyLanguage()` loop from
-      [`t-profiles.lua`](../UI/t-profiles.lua) lines 45–49 once no addon defines
-      `ApplyLanguage`.
-- [ ] Grep the suite for stray `\.Locales`, `ApplyLanguage`, `L_enUS`,
-      `LocaleManager` references; confirm none remain outside the service.
+- [x] **Centralized the `t-profiles` language sync.** Replaced the per-addon
+      `SyncSettingToChildAddons("language", …)` loop (which set each child's dead
+      `db.global.language` and called `addon:ApplyLanguage()`) with a single
+      `OneWoW.Locale:SetLanguage(snapshot.core.language)`; the theme loop
+      (`addon:ApplyTheme`) stays (themes are per-addon, not centralized). This removes
+      the cross-addon coupling — the doc's actual deliverable.
+      <br>*Decision: the per-addon `ns.ApplyLanguage`/`addon:ApplyLanguage` shims +
+      LocaleManagers are **kept** as harmless thin wrappers. They're now only reached
+      from each addon's own `OnLanguageChanged`/`OnInitialize` (redundant with core's
+      central `SetLanguage`, but several of those callbacks also do real standalone-UI
+      refreshes — Bags `RefreshGUI`, DevTool `RebuildUI`, ShoppingList `Rebuild`, DD
+      `ReinitForLanguage`). Ripping the shims out across 9 addons is high-blast-radius
+      with marginal benefit (avoiding an N× redundant refold), so it's deferred as an
+      optional refinement, not done here.*
+- [x] Stray-ref grep: no stray **code** references to `L_enUS`/`ns.Locales` remain
+      (only a descriptive comment in `OneWoW_Trackers/Locales/koKR.lua` and the dead
+      `map_mini_tools/minimapskin/`). `LocaleManager.lua` (×4) and `ApplyLanguage`
+      definitions remain **by intent** (the kept shims, above).
 - [x] Sweep the **migrated** addons (core, DD, Bags) for `L[key] or fallback`:
       removed 35 dead `L["KEY"] or "literal"` (all keys verified registered);
       converted genuine optionals to `GetOptional` (`ResolveCategoryName`,
@@ -495,13 +508,17 @@ colliding. Convert each module's `L_enUS["KEY"]=v` block to a per-module
       all to `if err then` (a future un-translated error key now surfaces via
       key-name, the intended behavior). (`Categories.lua:1161` `key and L[key] or nil`
       left as-is — already correct; `key` is nil for the no-key case.)
-- [ ] Sweep the remaining addons for `L[key] or fallback` **as each migrates**
-      (un-migrated addons still use nil-returning tables, so the pattern isn't a
-      live bug there yet).
-- [ ] **Fold the *Lookup contract* (`L[key]` must-exist vs `GetOptional`, banned
-      `L[key] or "literal"`) into `ARCHITECTURE.md` and the localization
-      skill/cursorrules** — it's a suite-wide rule, not a migration detail.
-- [ ] Fold remaining target-state into `ARCHITECTURE.md`; delete this file.
+- [x] Anti-pattern sweep across all remaining migrated addons done as each phase
+      landed (Trackers, Notes, Catalog, AltTracker, QoL externals+core, data
+      sub-addons). Genuine `cond and L[a] or L[b]` ternaries left intact throughout.
+- [x] **Folded the locale contract into `ARCHITECTURE.md`** (§6 "Localization
+      (`OneWoW.Locale`)": scopes keyed by `ADDON_NAME`, the identity-stable read-only
+      view, key-name-on-miss + banned `L[key] or "literal"` + `GetOptional`, the
+      disjoint shared/scope contract + `/owlocale`, centralized `SetLanguage`,
+      `GetStore`, and the QoL per-module `Define`/`Current` convention). Added
+      `OneWoW.Locale` to the core service roster.
+- [ ] *(optional)* Delete this file once its remaining historical detail is no longer
+      useful — the live contract now lives in `ARCHITECTURE.md`.
 
 ---
 
