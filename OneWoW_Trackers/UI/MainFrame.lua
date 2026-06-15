@@ -131,7 +131,7 @@ function UI:Create()
 
     local tabDefs = {
         { name = "tracker",  label = L["TAB_TRACKER"]  or "Tracker"  },
-        { name = "settings", label = L["TAB_SETTINGS"] },
+        { name = "settings", label = SETTINGS },
     }
 
     local prevBtn

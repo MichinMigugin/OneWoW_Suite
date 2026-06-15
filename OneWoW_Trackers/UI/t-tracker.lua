@@ -51,7 +51,7 @@ function ns.UI.CreateTrackerTab(parent)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
 
     local newBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, {
-        text = L["TRACKER_NEW"],
+        text = NEW,
         height = 26,
     })
     newBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -10)
@@ -497,7 +497,7 @@ function ns.UI.CreateTrackerTab(parent)
         local btnY = -54
         local btnX = 10
 
-        local editBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_EDIT"], height = 22 })
+        local editBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = EDIT, height = 22 })
         editBtn:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", btnX, btnY)
         editBtn:SetScript("OnClick", function()
             if ns.TrackerEditor then
@@ -542,7 +542,7 @@ function ns.UI.CreateTrackerTab(parent)
             end
         end)
 
-        local resetBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_RESET"], height = 22 })
+        local resetBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = RESET, height = 22 })
         resetBtn:SetPoint("LEFT", dupeBtn, "RIGHT", 4, 0)
         resetBtn:SetScript("OnClick", function()
             TD:ResetProgress(list.id)
@@ -551,7 +551,7 @@ function ns.UI.CreateTrackerTab(parent)
             parent.ShowDetail(list.id)
         end)
 
-        local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_DELETE"], height = 22 })
+        local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = DELETE, height = 22 })
         deleteBtn:SetPoint("LEFT", resetBtn, "RIGHT", 4, 0)
         deleteBtn:SetScript("OnClick", function()
             if list._bundledID and TP then
@@ -909,7 +909,7 @@ function ns.UI.CreateTrackerTab(parent)
 
                 stepRow:SetHeight(math.max(30, rowHeight))
 
-                local stepEditBtn = OneWoW_GUI:CreateFitTextButton(stepRow, { text = L["TRACKER_EDIT"], height = 18 })
+                local stepEditBtn = OneWoW_GUI:CreateFitTextButton(stepRow, { text = EDIT, height = 18 })
                 stepEditBtn:SetPoint("TOPRIGHT", stepRow, "TOPRIGHT", -4, -4)
                 stepEditBtn:SetScript("OnClick", function()
                     if ns.TrackerEditor then
@@ -950,7 +950,7 @@ function ns.UI.CreateTrackerTab(parent)
                     elseif button == "RightButton" then
                         MenuUtil.CreateContextMenu(stepRow, function(_, rootDescription)
                             rootDescription:CreateTitle(step.label or "Step")
-                            rootDescription:CreateButton(L["TRACKER_EDIT"], function()
+                            rootDescription:CreateButton(EDIT, function()
                                 if ns.TrackerEditor then
                                     ns.TrackerEditor:ShowStepEditor(list.id, sec.key, step.key, function()
                                         TE:RebuildIndices()
@@ -981,7 +981,7 @@ function ns.UI.CreateTrackerTab(parent)
                                 end)
                             end
                             rootDescription:CreateDivider()
-                            rootDescription:CreateButton("|cFFFF4444" .. (L["TRACKER_DELETE"]) .. "|r", function()
+                            rootDescription:CreateButton("|cFFFF4444" .. (DELETE) .. "|r", function()
                                 TD:RemoveStep(list.id, sec.key, step.key)
                                 TE:RebuildIndices()
                                 parent.RefreshList()

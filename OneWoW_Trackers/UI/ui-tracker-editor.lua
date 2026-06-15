@@ -103,7 +103,7 @@ local QUICK_START = {
         key = "vault",
         title = "Great Vault Tracker",
         desc = "Track your raid, dungeon, and world content progress for the weekly vault.",
-        icon = "Interface\\Icons\\INV_Misc_QuestionMark",
+        atlas = "greatVault-whole-normal",
         listType = "weekly",
         category = "Weeklies",
         preset = "great_vault",
@@ -333,7 +333,7 @@ function TE_UI:ShowNewListDialog(callback)
         height = 600,
         destroyOnClose = true,
         buttons = {
-            { text = L["BUTTON_CANCEL"], onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
+            { text = CANCEL, onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
         },
     })
     if not dialog then return end
@@ -369,7 +369,12 @@ function TE_UI:ShowNewListDialog(callback)
         local icon = card:CreateTexture(nil, "ARTWORK")
         icon:SetSize(36, 36)
         icon:SetPoint("LEFT", card, "LEFT", 12, 0)
-        icon:SetTexture(qs.icon)
+        -- atlas takes precedence over a texture path; both stretch to the 36x36 slot.
+        if qs.atlas then
+            icon:SetAtlas(qs.atlas)
+        else
+            icon:SetTexture(qs.icon)
+        end
 
         local titleFS = OneWoW_GUI:CreateFS(card, 12)
         titleFS:SetPoint("TOPLEFT", icon, "TOPRIGHT", 10, -4)
@@ -496,7 +501,7 @@ function TE_UI:ShowCustomListForm(defaultType, defaultCategory, callback)
                 end,
             },
             {
-                text = L["BUTTON_CANCEL"],
+                text = CANCEL,
                 onClick = function(frame) frame:Hide(); frame:SetParent(nil) end,
             },
         },
@@ -587,7 +592,7 @@ function TE_UI:ShowProfessionPicker(callback)
                 end,
             },
             {
-                text = L["BUTTON_CANCEL"],
+                text = CANCEL,
                 onClick = function(frame) frame:Hide(); frame:SetParent(nil) end,
             },
         },
@@ -639,7 +644,7 @@ function TE_UI:ShowListEditor(listID, callback)
         destroyOnClose = true,
         buttons = {
             {
-                text = L["NOTES_SAVE"],
+                text = SAVE,
                 onClick = function(frame)
                     TD:UpdateList(listID, {
                         title = strtrim(frame._titleBox:GetText() or "Untitled"),
@@ -653,7 +658,7 @@ function TE_UI:ShowListEditor(listID, callback)
                 end,
             },
             {
-                text = L["BUTTON_CANCEL"],
+                text = CANCEL,
                 onClick = function(frame) frame:Hide(); frame:SetParent(nil) end,
             },
         },
@@ -734,7 +739,7 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
         destroyOnClose = true,
         buttons = {
             {
-                text = L["NOTES_SAVE"],
+                text = SAVE,
                 onClick = function(frame)
                     local name = strtrim(frame._nameBox:GetText() or "")
                     if name == "" then name = "Section" end
@@ -751,7 +756,7 @@ function TE_UI:ShowSectionEditor(listID, sectionKey, callback)
                 end,
             },
             {
-                text = L["BUTTON_CANCEL"],
+                text = CANCEL,
                 onClick = function(frame) frame:Hide(); frame:SetParent(nil) end,
             },
         },
@@ -799,7 +804,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
         destroyOnClose = true,
         buttons = {
             {
-                text = L["NOTES_SAVE"],
+                text = SAVE,
                 onClick = function(frame)
                     -- Route through the selected category card so its track type
                     -- and fields are saved, not a blank checkbox.
@@ -829,7 +834,7 @@ function TE_UI:ShowStepEditor(listID, sectionKey, stepKey, callback)
                     if callback then callback() end
                 end,
             },
-            { text = L["BUTTON_CANCEL"], onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
+            { text = CANCEL, onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
         },
     })
     if not dialog then return end
@@ -1218,7 +1223,7 @@ function TE_UI:ShowExportDialog(listID)
         height = 350,
         destroyOnClose = true,
         buttons = {
-            { text = L["BUTTON_CLOSE"], onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
+            { text = CLOSE, onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
         },
     })
     if not dialog then return end
@@ -1275,7 +1280,7 @@ function TE_UI:ShowImportDialog(callback)
                 end,
             },
             {
-                text = L["BUTTON_CANCEL"],
+                text = CANCEL,
                 onClick = function(frame) frame:Hide(); frame:SetParent(nil) end,
             },
         },

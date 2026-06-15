@@ -80,7 +80,7 @@ function TMU:ShowWaypointList(listID)
         height = 500,
         destroyOnClose = true,
         buttons = {
-            { text = L["BUTTON_CLOSE"], onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
+            { text = CLOSE, onClick = function(frame) frame:Hide(); frame:SetParent(nil) end },
         },
     })
     if not dialog then return end

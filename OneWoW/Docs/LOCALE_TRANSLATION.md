@@ -106,6 +106,11 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
 - [x] `OneWoW_DirectDeposit` — 5 used keys swapped to bare globals (`GUILD`,
   `ITEMS`, `SETTINGS`, `STATUS`); 2 dead keys (`SETTINGS`, `ITEM_DEPOSIT_REMOVE`)
   dropped. 7 keys removed across all 6 locale files; globals added to `.luarc.json`.
+- [x] `OneWoW_Trackers` — 17 used keys swapped to bare globals (`CANCEL`, `CLOSE`,
+  `SAVE`, `SETTINGS`, `DELETE`, `EDIT`, `DAILY`, `GUIDE`, `WEEKLY`, `NEW`, `RESET`,
+  `CURRENCY`, `LEVEL`, `ZONE`, `MOUNT`, `REPUTATION`, `TOY`; 29 call sites); dead
+  key `TRACKER_PIN_OPACITY` dropped. 18 keys removed from enUS (koKR had none);
+  11 new globals added to `.luarc.json`.
 
 ### Phase 3 — Consolidate to shared (pending)
 Baseline: **430 strings**. Per-addon sub-phases. For each value group:
