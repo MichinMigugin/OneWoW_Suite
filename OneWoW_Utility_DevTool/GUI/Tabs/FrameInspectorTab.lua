@@ -23,7 +23,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
     })
     searchBox:SetPoint("LEFT", pickBtn, "RIGHT", 10, 0)
 
-    local searchBtn = OneWoW_GUI:CreateButton(tab, { text = L["BTN_SEARCH"], width = 70, height = 22 })
+    local searchBtn = OneWoW_GUI:CreateButton(tab, { text = SEARCH, width = 70, height = 22 })
     searchBtn:SetPoint("LEFT", searchBox, "RIGHT", 5, 0)
 
     pickBtn:SetScript("OnClick", function()

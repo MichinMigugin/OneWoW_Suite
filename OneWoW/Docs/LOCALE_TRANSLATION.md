@@ -169,6 +169,13 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
   driven by parsing the tool's auto-classified output (109 candidates). Construction
   audit confirmed clean before trusting `dead` tags.
 
+- [x] `OneWoW_Utility_DevTool` — 30 keys adopted (51 call sites); 10 new globals.
+  5 excluded: 4 dynamic (`ERR_RC_UNKNOWN`, `TAB_COLORS`/`_ERRORS`/`_SETTINGS` —
+  tab-list label keys) + **`FONT_WIDGET_SIZE_NONE`** (tool tagged it literal, but a
+  manual construction audit found `L["FONT_WIDGET_SIZE_"..n]` — the tool's known
+  blind spot, caught by the still-required manual check). 6 dead keys stripped.
+  6 locale files (non-English had partial coverage, ~17 keys each).
+
 ### Phase 3 — Consolidate to shared (pending)
 Baseline: **430 strings**. Per-addon sub-phases. For each value group:
 - [ ] Pick the canonical key name (often the simplest existing one) and value.

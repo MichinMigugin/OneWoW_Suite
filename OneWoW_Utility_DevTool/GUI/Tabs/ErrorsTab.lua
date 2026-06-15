@@ -24,7 +24,7 @@ local function soundChoiceLabel(L, value)
     if value == "map_ping" then
         return L["ERR_SOUND_MAP_PING"]
     end
-    return L["ERR_SOUND_OFF"]
+    return OFF
 end
 
 local function copyFormatLabel(L, value)
@@ -130,7 +130,7 @@ function Addon.UI:CreateErrorsTab(parent)
         end,
         buildItems = function()
             return {
-                { value = "off", text = L["ERR_SOUND_OFF"] },
+                { value = "off", text = OFF },
                 { value = "devtools_error", text = L["ERR_SOUND_DEVTOOL"] },
                 { value = "raid_warning", text = L["ERR_SOUND_RAID_WARNING"] },
                 { value = "tell_message", text = L["ERR_SOUND_TELL"] },

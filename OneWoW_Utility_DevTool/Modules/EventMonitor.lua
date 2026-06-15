@@ -204,7 +204,7 @@ function EventMonitor:UpdateUI()
             tab.startStopBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
             tab.startStopBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
-            tab.startStopBtn.text:SetText(L["BTN_START"])
+            tab.startStopBtn.text:SetText(START)
             tab.startStopBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
             tab.startStopBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
             tab.startStopBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))

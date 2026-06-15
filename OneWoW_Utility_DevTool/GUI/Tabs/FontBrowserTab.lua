@@ -291,7 +291,7 @@ function Addon.UI.FontTab_UpdateDetails(tab)
     if info then
         tinsert(lines, (L["LABEL_FILE"]) .. " " .. (info.path or "?"))
         tinsert(lines, (L["FONT_LABEL_FONT_HEIGHT"]) .. " " .. tostring(info.height or "?"))
-        tinsert(lines, (L["FONT_LABEL_FONT_FLAGS"]) .. " " .. (info.flags ~= "" and info.flags or (L["FONT_LABEL_NONE"])))
+        tinsert(lines, (L["FONT_LABEL_FONT_FLAGS"]) .. " " .. (info.flags ~= "" and info.flags or (NONE)))
     end
 
     -- Inheritance chain
@@ -588,7 +588,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     tab.searchBox = searchBox
 
     local favsBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["BTN_FAVORITES"],
+        text = FAVORITES,
         height = 22,
         minWidth = 64,
     })
@@ -817,7 +817,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
 
     -- Preview label (compare mode right half)
     tab.previewLabel = previewClip:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    tab.previewLabel:SetText(L["FONT_COMPARE_PREVIEW"])
+    tab.previewLabel:SetText(PREVIEW)
     tab.previewLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     tab.previewLabel:Hide()
 
@@ -1212,7 +1212,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     copyRowLabel:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 6, 8)
 
     local copyNameBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["FONT_BTN_COPY_NAME"],
+        text = NAME,
         height = 22,
         minWidth = 44,
     })

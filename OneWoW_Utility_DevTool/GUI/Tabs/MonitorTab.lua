@@ -115,10 +115,10 @@ function Addon.UI:CreateMonitorTab(parent)
     local playBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["MON_BTN_PLAY"], height = 22, minWidth = 64 })
     playBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
 
-    local updateBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["MON_BTN_UPDATE"], height = 22, minWidth = 64 })
+    local updateBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = UPDATE, height = 22, minWidth = 64 })
     updateBtn:SetPoint("LEFT", playBtn, "RIGHT", 5, 0)
 
-    local resetBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["MON_BTN_RESET"], height = 22, minWidth = 64 })
+    local resetBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = RESET, height = 22, minWidth = 64 })
     resetBtn:SetPoint("LEFT", updateBtn, "RIGHT", 5, 0)
 
     local cpuCheck = OneWoW_GUI:CreateCheckbox(tab, { label = L["MON_LABEL_CPU_PROFILING"] })

@@ -159,7 +159,7 @@ function Addon.UI:CreateEditorTab(parent)
     local btnGap = 4
     local sectionGap = 14
 
-    local newBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_NEW"], height = btnHeight })
+    local newBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = NEW, height = btnHeight })
     newBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
 
     local renameBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_RENAME"], height = btnHeight })
@@ -168,10 +168,10 @@ function Addon.UI:CreateEditorTab(parent)
     local dupBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_DUPLICATE"], height = btnHeight })
     dupBtn:SetPoint("LEFT", renameBtn, "RIGHT", btnGap, 0)
 
-    local saveBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_SAVE"], height = btnHeight })
+    local saveBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = SAVE, height = btnHeight })
     saveBtn:SetPoint("LEFT", dupBtn, "RIGHT", btnGap, 0)
 
-    local deleteBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_DELETE"], height = btnHeight })
+    local deleteBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = DELETE, height = btnHeight })
     deleteBtn:SetPoint("LEFT", saveBtn, "RIGHT", btnGap, 0)
 
 
@@ -426,19 +426,19 @@ function Addon.UI:CreateEditorTab(parent)
     local findBox = OneWoW_GUI:CreateEditBox(findBar, { width = 150, height = 22, placeholderText = L["EDITOR_FIND_PLACEHOLDER"] })
     findBox:SetPoint("LEFT", findBar, "LEFT", 4, 0)
 
-    local findNextBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_NEXT"], height = 22 })
+    local findNextBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = NEXT, height = 22 })
     findNextBtn:SetPoint("LEFT", findBox, "RIGHT", 2, 0)
 
-    local findPrevBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_PREV"], height = 22 })
+    local findPrevBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = PREV, height = 22 })
     findPrevBtn:SetPoint("LEFT", findNextBtn, "RIGHT", 2, 0)
 
     local replaceBox = OneWoW_GUI:CreateEditBox(findBar, { width = 120, height = 22, placeholderText = L["EDITOR_REPLACE_PLACEHOLDER"] })
     replaceBox:SetPoint("LEFT", findPrevBtn, "RIGHT", 6, 0)
 
-    local replaceBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_REPLACE"], height = 22 })
+    local replaceBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = REPLACE, height = 22 })
     replaceBtn:SetPoint("LEFT", replaceBox, "RIGHT", 2, 0)
 
-    local replaceAllBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = L["EDITOR_BTN_REPLACE_ALL"], height = 22 })
+    local replaceAllBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = ALL, height = 22 })
     replaceAllBtn:SetPoint("LEFT", replaceBtn, "RIGHT", 2, 0)
 
     local findCloseBtn = OneWoW_GUI:CreateFitTextButton(findBar, { text = "X", height = 22, minWidth = 22 })
@@ -893,7 +893,7 @@ function Addon.UI:CreateEditorTab(parent)
                         end)
                     end
                 end
-                root:CreateButton(L["EDITOR_CTX_DELETE"], function()
+                root:CreateButton(DELETE, function()
                     tab:ShowDeleteConfirm(myself.snippetId)
                 end)
             end)
@@ -1109,9 +1109,9 @@ function Addon.UI:CreateEditorTab(parent)
             title = L["EDITOR_UNSAVED_TITLE"],
             message = L["EDITOR_UNSAVED_MESSAGE"],
             buttons = {
-                { text = L["EDITOR_BTN_SAVE_CHANGES"], onClick = function(d) d:Hide(); if onSave then onSave() end end },
+                { text = SAVE, onClick = function(d) d:Hide(); if onSave then onSave() end end },
                 { text = L["EDITOR_BTN_DISCARD"], onClick = function(d) d:Hide(); if onDiscard then onDiscard() end end },
-                { text = L["EDITOR_BTN_CANCEL"], onClick = function(d) d:Hide() end },
+                { text = CANCEL, onClick = function(d) d:Hide() end },
             },
         })
         trackDialog(dialog)
@@ -1127,7 +1127,7 @@ function Addon.UI:CreateEditorTab(parent)
             title = L["EDITOR_RENAME_TITLE"],
             message = "",
             buttons = {
-                { text = L["EDITOR_BTN_SAVE"], onClick = function(d)
+                { text = SAVE, onClick = function(d)
                     local box = dialog and dialog.renameBox
                     local err, newName = getSnippetRenameError(snippetId, box and box:GetText())
                     if not err and newName ~= (box and box.placeholderText or "") then
@@ -1142,7 +1142,7 @@ function Addon.UI:CreateEditorTab(parent)
                         box:SetFocus()
                     end
                 end },
-                { text = L["EDITOR_BTN_CANCEL"], onClick = function(d) d:Hide() end },
+                { text = CANCEL, onClick = function(d) d:Hide() end },
             },
         })
 
@@ -1187,7 +1187,7 @@ function Addon.UI:CreateEditorTab(parent)
             title = L["EDITOR_CATEGORY_RENAME_TITLE"],
             message = "",
             buttons = {
-                { text = L["EDITOR_BTN_SAVE"], onClick = function(d)
+                { text = SAVE, onClick = function(d)
                     local box = dialog and dialog.renameBox
                     local err, newName = getCategoryNameError(catName, box and box:GetText())
                     if not err and newName ~= (box and box.placeholderText or "") and EE:RenameCategory(catName, newName) then
@@ -1200,7 +1200,7 @@ function Addon.UI:CreateEditorTab(parent)
                         box:SetFocus()
                     end
                 end },
-                { text = L["EDITOR_BTN_CANCEL"], onClick = function(d) d:Hide() end },
+                { text = CANCEL, onClick = function(d) d:Hide() end },
             },
         })
 
@@ -1240,7 +1240,7 @@ function Addon.UI:CreateEditorTab(parent)
             title = L["EDITOR_NEW_CATEGORY_TITLE"],
             message = "",
             buttons = {
-                { text = L["EDITOR_BTN_SAVE"], onClick = function(d)
+                { text = SAVE, onClick = function(d)
                     local box = dialog and dialog.renameBox
                     local err, newName = getCategoryNameError(nil, box and box:GetText())
                     if not err and newName ~= (box and box.placeholderText or "") and EE:CreateCategory(newName) then
@@ -1253,7 +1253,7 @@ function Addon.UI:CreateEditorTab(parent)
                         box:SetFocus()
                     end
                 end },
-                { text = L["EDITOR_BTN_CANCEL"], onClick = function(d) d:Hide() end },
+                { text = CANCEL, onClick = function(d) d:Hide() end },
             },
         })
 
@@ -1290,10 +1290,10 @@ function Addon.UI:CreateEditorTab(parent)
         if not snippet then return end
         local deleteName = snippet.name
         local dialog = OneWoW_GUI:CreateConfirmDialog({
-            title = L["EDITOR_BTN_DELETE"],
+            title = DELETE,
             message = format(L["EDITOR_SNIPPET_DELETE_CONFIRM"], deleteName),
             buttons = {
-                { text = L["EDITOR_BTN_DELETE"], onClick = function(d)
+                { text = DELETE, onClick = function(d)
                     d:Hide()
                     EE:DeleteSnippet(snippetId)
                     if activeSnippetId == snippetId then
@@ -1312,7 +1312,7 @@ function Addon.UI:CreateEditorTab(parent)
                     updateStatusMessage(format(L["EDITOR_STATUS_DELETED"], deleteName))
                     refreshSnippetList()
                 end },
-                { text = L["EDITOR_BTN_CANCEL"], onClick = function(d) d:Hide() end },
+                { text = CANCEL, onClick = function(d) d:Hide() end },
             },
         })
         trackDialog(dialog)
@@ -1324,13 +1324,13 @@ function Addon.UI:CreateEditorTab(parent)
             title = L["EDITOR_CTX_DELETE_CATEGORY"],
             message = format(L["EDITOR_CATEGORY_DELETE_CONFIRM"], catName),
             buttons = {
-                { text = L["EDITOR_BTN_DELETE"], onClick = function(d)
+                { text = DELETE, onClick = function(d)
                     d:Hide()
                     EE:DeleteCategory(catName)
                     updateStatusMessage(format(L["EDITOR_STATUS_CATEGORY_DELETED"], catName))
                     refreshSnippetList()
                 end },
-                { text = L["EDITOR_BTN_CANCEL"], onClick = function(d) d:Hide() end },
+                { text = CANCEL, onClick = function(d) d:Hide() end },
             },
         })
         trackDialog(dialog)

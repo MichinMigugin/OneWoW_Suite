@@ -352,7 +352,7 @@ end
 local function refreshTopDropdownLabel(tab)
     local dd = tab.topDropdown
     if not dd or not dd._text then return end
-    local t = SB.selectedTop or (L["SOUND_DD_PICK_CATEGORY"])
+    local t = SB.selectedTop or (CATEGORY)
     dd._text:SetText(t)
 end
 
@@ -922,7 +922,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     tab.copySnippetBtn = copySnippetBtn
 
     local favsBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["BTN_FAVORITES"],
+        text = FAVORITES,
         height = 22,
         minWidth = 64,
     })

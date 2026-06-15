@@ -707,7 +707,7 @@ function Addon.UI:CreateTextureTab(parent)
     end)
 
     local favsBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["BTN_FAVORITES"],
+        text = FAVORITES,
         height = 22,
         minWidth = 72,
     })
@@ -884,7 +884,7 @@ function Addon.UI:CreateTextureTab(parent)
         end
     end)
 
-    local resetBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, { text = L["BTN_RESET_ZOOM"], height = 22, minWidth = 56 })
+    local resetBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, { text = RESET, height = 22, minWidth = 56 })
     resetBtn:SetPoint("RIGHT", zoomOutBtn, "LEFT", -4, 0)
     resetBtn:SetScript("OnClick", function()
         if BR:GetViewMode() == BR.VIEW_TEXTURE then
@@ -1037,7 +1037,7 @@ function Addon.UI:CreateTextureTab(parent)
     manualEdit:SetPoint("RIGHT", tab.manualPanel, "RIGHT", -90, 0)
 
     local manualApply = OneWoW_GUI:CreateFitTextButton(tab.manualPanel, {
-        text = L["TEXTURE_MANUAL_APPLY"],
+        text = APPLY,
         height = 22,
         minWidth = 72,
     })
@@ -1126,7 +1126,7 @@ function Addon.UI:CreateTextureTab(parent)
     copyRowLabel:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 6, 8)
 
     local copyNameBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["FONT_BTN_COPY_NAME"],
+        text = NAME,
         height = 22,
         minWidth = 44,
     })

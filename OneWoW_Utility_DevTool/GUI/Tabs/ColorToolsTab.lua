@@ -153,7 +153,7 @@ function Addon.UI:CreateColorToolsTab(parent)
     local ROW_LEFT_PADDING = OneWoW_GUI:GetSpacing("SM")
     classColorsPanel.title = classColorsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     classColorsPanel.title:SetPoint("TOPLEFT", ROW_LEFT_PADDING, -10)
-    classColorsPanel.title:SetText(L["COLOR_TOOLS_TITLE_CLASS"])
+    classColorsPanel.title:SetText(CLASS_COLORS)
     classColorsPanel.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(classColorsPanel, {})

@@ -641,7 +641,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
         end,
         buildItems = function()
             return {
-                { value = GB.CATEGORY_ALL, text = L["GLOBALS_FILTER_ALL"] },
+                { value = GB.CATEGORY_ALL, text = ALL },
                 { value = GB.CATEGORY_GLOBALS, text = L["GLOBALS_FILTER_GLOBALS"] },
                 { value = GB.CATEGORY_ENUM, text = L["GLOBALS_FILTER_ENUM"] },
                 { value = GB.CATEGORY_ADDON_DATA, text = L["GLOBALS_FILTER_ADDON_DATA"] },
@@ -653,7 +653,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
                 categoryDropdown._text:SetText((value == GB.CATEGORY_GLOBALS and (L["GLOBALS_FILTER_GLOBALS"]))
                     or (value == GB.CATEGORY_ENUM and (L["GLOBALS_FILTER_ENUM"]))
                     or (value == GB.CATEGORY_ADDON_DATA and (L["GLOBALS_FILTER_ADDON_DATA"]))
-                    or (L["GLOBALS_FILTER_ALL"]))
+                    or (ALL))
             end
             local noisyRelevant = (value == GB.CATEGORY_ALL or value == GB.CATEGORY_GLOBALS)
             if tab.noisyRootsCheck then
@@ -676,11 +676,11 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     })
     tab.categoryDropdown = categoryDropdown
     if categoryDropdown._text then
-        categoryDropdown._text:SetText(L["GLOBALS_FILTER_ALL"])
+        categoryDropdown._text:SetText(ALL)
     end
 
     local refreshBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["GLOBALS_BTN_REFRESH"],
+        text = REFRESH,
         height = 22,
         minWidth = 60,
     })
@@ -694,7 +694,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     end)
 
     local favoritesBtn = OneWoW_GUI:CreateFitTextButton(tab, {
-        text = L["BTN_FAVORITES"],
+        text = FAVORITES,
         height = 22,
         minWidth = 70,
     })
@@ -824,7 +824,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     tab.rightToolbar = rightToolbar
 
     local homeBtn = OneWoW_GUI:CreateFitTextButton(rightToolbar, {
-        text = L["GLOBALS_NAV_HOME"],
+        text = HOME,
         height = 22,
         minWidth = 44,
     })
@@ -1014,7 +1014,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
 
     GB:ResetFilterState()
     if categoryDropdown._text then
-        categoryDropdown._text:SetText(L["GLOBALS_FILTER_ALL"])
+        categoryDropdown._text:SetText(ALL)
     end
     if noisyRootsCheck then
         noisyRootsCheck:SetChecked(GB.includeNoisyRoots and true or false)
