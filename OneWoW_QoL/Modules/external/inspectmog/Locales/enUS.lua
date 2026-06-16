@@ -12,7 +12,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["INSPECTMOG_PANEL_TITLE"] = "Inspect Transmog Tool",
     ["INSPECTMOG_NO_DATA"] = "No inspect data available.",
     ["INSPECTMOG_UNKNOWN_PLAYER"] = "Inspected player",
-    ["INSPECTMOG_EMPTY_SLOT"] = "Empty",
     ["INSPECTMOG_NATIVE_APPEARANCE"] = "Native appearance",
     ["INSPECTMOG_SOURCE_FORMAT"] = "Source #%d",
     ["INSPECTMOG_APPEARANCE_SOURCE_FORMAT"] = "Appearance source: %d",

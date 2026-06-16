@@ -88,8 +88,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["MAPWORLD_RED"] = "Red",
     ["MAPWORLD_GREEN"] = "Green",
     ["MAPWORLD_BLUE"] = "Blue",
-    ["MAPWORLD_ALPHA"] = "Opacity",
 
     ["MAPWORLD_CURSOR"] = "Cursor",
-    ["MAPWORLD_PLAYER"] = "Player",
 })

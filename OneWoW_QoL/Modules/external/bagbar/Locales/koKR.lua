@@ -16,7 +16,6 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["BAGBAR_MANUAL_ITEMS_HEADER"] = "수동 아이템",
     ["BAGBAR_MANUAL_DESC"] = "특정 아이템을 고정하면 바에서 우선 표시됩니다. 여전히 표현식 필터와 바 사용 규칙을 만족해야 합니다.",
     ["BAGBAR_ITEM_ID_LABEL"] = "아이템 ID:",
-    ["BAGBAR_ADD_BUTTON"] = "추가",
     ["BAGBAR_DRAG_ITEM_HERE"] = "아이템을 여기로 끌어다 놓기",
     ["BAGBAR_BLACKLIST_HEADER"] = "차단 목록",
     ["BAGBAR_BLACKLIST_DESC"] = "바 위 아이템을 Shift+오른쪽 클릭하면 이번 접속 동안 건너뛰고, Alt+오른쪽 클릭하면 영구 차단합니다.",

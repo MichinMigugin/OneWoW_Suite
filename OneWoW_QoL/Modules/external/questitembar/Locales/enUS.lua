@@ -41,7 +41,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["QUESTITEMBAR_QUEST_ITEM_STATUS"] = "Quest Item Status",
     ["QUESTITEMBAR_DEBUG_COL_QUEST"] = "Quest",
     ["QUESTITEMBAR_DEBUG_COL_ITEM"] = "Item",
-    ["QUESTITEMBAR_DEBUG_COL_STATUS"] = "Status",
     ["QUESTITEMBAR_DEBUG_CLICK_QUEST"] = "Click to open map with quest details",
     ["QUESTITEMBAR_DEBUG_INCLUDED"] = "Included",
     ["QUESTITEMBAR_DEBUG_NOT_TRACKED"] = "Quest not tracked",

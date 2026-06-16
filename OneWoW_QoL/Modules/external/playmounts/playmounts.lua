@@ -68,7 +68,7 @@ local function RegisterTooltipProvider()
         if mountInfo.isMovementForm then
             table.insert(lines, {
                 type  = "double",
-                left  = L["PLAYMOUNTS_MOUNT"],
+                left  = MOUNT,
                 right = mountInfo.name,
                 lr = 0.9, lg = 0.9, lb = 0.9,
                 rr = 1.0, rg = 1.0, rb = 1.0,
@@ -80,7 +80,7 @@ local function RegisterTooltipProvider()
 
             table.insert(lines, {
                 type  = "double",
-                left  = L["PLAYMOUNTS_MOUNT"],
+                left  = MOUNT,
                 right = mountInfo.name .. " " .. collected,
                 lr = 0.9, lg = 0.9, lb = 0.9,
                 rr = 1.0, rg = 1.0, rb = 1.0,
@@ -186,7 +186,7 @@ function PlayMountsModule:OnTargetChanged()
 
     local unitName = UnitName(unit)
 
-    local prefix = "|cFFFFD100[QoL - " .. (L["PLAYMOUNTS_MOUNT"]) .. "]|r "
+    local prefix = "|cFFFFD100[QoL - " .. (MOUNT) .. "]|r "
     local playerLink = "|Hplayer:" .. unitName .. "|h|cFFFFFFFF[" .. unitName .. "]|r|h"
 
     local _, classFilename = UnitClass(unit)
@@ -230,7 +230,7 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, _, registerRefresh
 
     local modeHeader = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     modeHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    modeHeader:SetText(L["PLAYMOUNTS_DISPLAYMODE_HEADER"])
+    modeHeader:SetText(DISPLAY_MODE)
     modeHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - modeHeader:GetStringHeight() - 8
 

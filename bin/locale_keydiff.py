@@ -249,13 +249,24 @@ def full_report(scopes, sites, blizz, glob_by_val, n_files) -> int:
 
 
 def load_scope_code(root: Path, target: str) -> str:
-    """Concatenate the scope's non-locale Lua (for reference classification)."""
-    addon = target.split(".")[0]
-    if addon == "shared":
-        addon = "OneWoW"
+    """Concatenate the scope's non-locale Lua (for reference classification).
+
+    A dotted scope (OneWoW_QoL.afkpanel) is a QoL external module — scan only that
+    module's folder. A bare QoL/other scope scans the addon but EXCLUDES
+    Modules/external/ (those are separate module scopes that reuse the `L` name).
+    """
+    if "." in target:
+        base, mod = target.split(".", 1)
+        code_dir = root / base / "Modules" / "external" / mod
+        dotted = True
+    else:
+        code_dir = root / ("OneWoW" if target == "shared" else target)
+        dotted = False
     parts = []
-    for f in (root / addon).rglob("*.lua"):
+    for f in code_dir.rglob("*.lua"):
         if "Locales" in f.parts:
+            continue
+        if not dotted and "external" in f.parts:
             continue
         parts.append(f.read_text(encoding="utf-8", errors="replace"))
     return "\n".join(parts)

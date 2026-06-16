@@ -518,7 +518,7 @@ local function ShowInspectMogTooltip(owner, itemID, itemLink, sourceID, clickTex
 end
 
 local function SetRowText(row, snapshotRow)
-    local itemName = snapshotRow.itemName or snapshotRow.itemLink or L["INSPECTMOG_EMPTY_SLOT"]
+    local itemName = snapshotRow.itemName or snapshotRow.itemLink or EMPTY
     local appearanceName =
         snapshotRow.appearanceName
         or snapshotRow.appearanceItemName

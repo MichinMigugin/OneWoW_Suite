@@ -16,7 +16,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["AUTOMOUNT_SEARCH"] = "Search...",
     ["AUTOMOUNT_SELECT_TOOLTIP"] = "Click to select a mount",
     ["AUTOMOUNT_SELECT_TOOLTIP_DESC"] = "Choose a specific mount or let auto-select pick the fastest available.",
-    ["AUTOMOUNT_CLOSE"] = "Close",
     ["AUTOMOUNT_DRUID_SECTION"] = "Druid",
     ["AUTOMOUNT_DRUID_MODE_LABEL"] = "Druid Mode:",
     ["AUTOMOUNT_DRUID_MODE_DESC"] = "When enabled, auto-mounting is skipped so you can shift into Travel Form manually after gathering.",
@@ -31,7 +30,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["AUTOMOUNT_FISHING_DELAY_DESC"] = "How long after fishing before auto-mount resumes.",
     ["AUTOMOUNT_GATHER_DELAY"] = "Gather Remount Delay",
     ["AUTOMOUNT_GATHER_DELAY_DESC"] = "How quickly to remount after gathering.",
-    ["AUTOMOUNT_DISABLE"] = "Disable",
     ["AUTOMOUNT_DRUID_CANCEL_LABEL"] = "Auto-cancel Travel Form:",
     ["AUTOMOUNT_DRUID_CANCEL_DESC"] = "Automatically cancels Travel Form when you enter a flyable area, allowing you to mount a flying mount instead.",
 })

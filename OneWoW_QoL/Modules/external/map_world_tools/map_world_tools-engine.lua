@@ -355,14 +355,14 @@ local function UpdateCoordOverlay()
 
     local mapID = C_Map.GetBestMapForUnit("player")
     if not mapID then
-        cPlayer.x:SetFormattedText("%s:", L["MAPWORLD_PLAYER"])
+        cPlayer.x:SetFormattedText("%s:", PLAYER)
     else
         local position = C_Map.GetPlayerMapPosition(mapID, "player")
         if position and position.x ~= 0 and position.y ~= 0 then
-            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", L["MAPWORLD_PLAYER"],
+            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", PLAYER,
                 position.x * 100, position.y * 100)
         else
-            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", L["MAPWORLD_PLAYER"], 0, 0)
+            cPlayer.x:SetFormattedText("%s: %.1f, %.1f", PLAYER, 0, 0)
         end
     end
 end

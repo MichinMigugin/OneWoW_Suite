@@ -11,7 +11,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["LFGPANEL_FILTER_RESULTS_DESC"] = "Filter the LFG search results by the selected difficulty.",
 
     ["LFGPANEL_DIALOG_TITLE"] = "Lockouts",
-    ["LFGPANEL_REFRESH"] = "Refresh",
     ["LFGPANEL_TT_REFRESH"] = "Refresh Lockouts",
     ["LFGPANEL_TT_REFRESH_DESC"] = "Request the latest lockout data from the server.",
     ["LFGPANEL_TT_TOGGLE"] = "Show Lockouts Panel",
@@ -25,8 +24,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["LFGPANEL_DIFFICULTY_MYTHICPLUS"] = "Mythic+",
     ["LFGPANEL_DIFFICULTY_LFR"] = "LFR",
 
-    ["LFGPANEL_CATEGORY_RAIDS"] = "Raids",
-    ["LFGPANEL_CATEGORY_DUNGEONS"] = "Dungeons",
 
     ["LFGPANEL_NO_LOCKOUTS"] = "No active lockouts.",
     ["LFGPANEL_NO_LOCKOUTS_FILTERED"] = "No lockouts match the selected difficulty.",
@@ -48,5 +45,4 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["LFGPANEL_OPT_FILTER_LFG"] = "Filter LFG Results",
     ["LFGPANEL_TT_FILTER_LFG"] = "Filter LFG Results",
     ["LFGPANEL_TT_FILTER_LFG_DESC"] = "When enabled, the LFG search results will be filtered to match your selected difficulty.",
-    ["UNKNOWN"] = "Unknown",
 })

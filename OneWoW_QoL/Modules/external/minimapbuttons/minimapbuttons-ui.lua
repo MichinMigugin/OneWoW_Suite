@@ -30,7 +30,7 @@ local TOGGLE_BTN_H    = 20
 local function LabelForPref(L, pref)
     if pref == "mini" then return L["MMBTNS_ICONS_MINI_STATE"] end
     if pref == "map"  then return L["MMBTNS_ICONS_MAP_STATE"]       end
-    if pref == "hide" then return L["MMBTNS_ICONS_HIDE_STATE"]      end
+    if pref == "hide" then return HIDE      end
     return tostring(pref)
 end
 
@@ -87,7 +87,7 @@ local function BuildIconRow(parent, info, yOffset, refreshFn)
 
     -- Right-to-left: Hide, Map, Mini, then the status text.
     local hideBtn = OneWoW_GUI:CreateFitTextButton(row, {
-        text       = L["MMBTNS_ICONS_HIDE"],
+        text       = HIDE,
         height     = TOGGLE_BTN_H,
         minWidth   = TOGGLE_BTN_W,
         toggleable = true,

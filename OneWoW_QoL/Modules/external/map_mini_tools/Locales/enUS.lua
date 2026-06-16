@@ -118,9 +118,7 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["MMSKIN_UNCLAMP"] = "Unclamp from Screen",
 
     ["MMSKIN_ZONE_FONT_LABEL"] = "Font",
-    ["MMSKIN_ZONE_FONT_SIZE"] = "Font Size",
     ["MMSKIN_CLOCK_FONT_LABEL"] = "Font",
-    ["MMSKIN_CLOCK_FONT_SIZE"] = "Font Size",
     ["MMSKIN_FONT_GLOBAL"] = "Global Font",
     ["MMSKIN_FONT_WOW_DEFAULT"] = "WoW default (small)",
 

@@ -140,7 +140,7 @@ function LFGPanelUI:CreateDialog()
     scrollFrame:SetPoint("BOTTOMRIGHT", scrollContainer, "BOTTOMRIGHT", 0, 0)
 
     local refreshBtn = OneWoW_GUI:CreateFitTextButton(panel, {
-        text = L["LFGPANEL_REFRESH"],
+        text = REFRESH,
         height = 22,
         minWidth = 80,
         padding = 16,
@@ -365,7 +365,7 @@ function LFGPanelUI:UpdateDisplay()
     local yOffset = -5
 
     if #raids > 0 then
-        local header = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["LFGPANEL_CATEGORY_RAIDS"], yOffset = yOffset })
+        local header = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = RAIDS, yOffset = yOffset })
         table.insert(state.dialog.lockoutFrames, header)
         yOffset = yOffset - (HEADER_HEIGHT + 4)
 
@@ -379,7 +379,7 @@ function LFGPanelUI:UpdateDisplay()
     end
 
     if #dungeons > 0 then
-        local header = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = L["LFGPANEL_CATEGORY_DUNGEONS"], yOffset = yOffset })
+        local header = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = DUNGEONS, yOffset = yOffset })
         table.insert(state.dialog.lockoutFrames, header)
         yOffset = yOffset - (HEADER_HEIGHT + 4)
 

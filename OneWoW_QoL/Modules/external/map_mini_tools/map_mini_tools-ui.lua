@@ -364,14 +364,14 @@ local function BuildContent(container)
 
         local zfSizeLabel
         zfSizeLabel, cy = AddLabelIndented(container, cy,
-            string.format("%s: %d", L["MMSKIN_ZONE_FONT_SIZE"], s.zoneFontSize))
+            string.format("%s: %d", FONT_SIZE, s.zoneFontSize))
 
         local zfSizeSlider = OneWoW_GUI:CreateSlider(container, {
             minVal = 8, maxVal = 24, step = 1,
             currentVal = s.zoneFontSize, width = 240, fmt = "%d",
             onChange = function(val)
                 s.zoneFontSize = val
-                zfSizeLabel:SetText(string.format("%s: %d", L["MMSKIN_ZONE_FONT_SIZE"], val))
+                zfSizeLabel:SetText(string.format("%s: %d", FONT_SIZE, val))
                 if ns.ModuleRegistry:IsEnabled("map_mini_tools") and M.RefreshZoneFont then
                     M.RefreshZoneFont()
                 end
@@ -439,14 +439,14 @@ local function BuildContent(container)
 
         local cfSizeLabel
         cfSizeLabel, cy = AddLabelIndented(container, cy,
-            string.format("%s: %d", L["MMSKIN_CLOCK_FONT_SIZE"], s.clockFontSize))
+            string.format("%s: %d", FONT_SIZE, s.clockFontSize))
 
         local cfSizeSlider = OneWoW_GUI:CreateSlider(container, {
             minVal = 8, maxVal = 24, step = 1,
             currentVal = s.clockFontSize, width = 240, fmt = "%d",
             onChange = function(val)
                 s.clockFontSize = val
-                cfSizeLabel:SetText(string.format("%s: %d", L["MMSKIN_CLOCK_FONT_SIZE"], val))
+                cfSizeLabel:SetText(string.format("%s: %d", FONT_SIZE, val))
                 if ns.ModuleRegistry:IsEnabled("map_mini_tools") and M.RefreshClockFont then
                     M.RefreshClockFont()
                 end

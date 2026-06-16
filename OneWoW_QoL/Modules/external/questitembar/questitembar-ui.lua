@@ -415,7 +415,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
 
     local hdrStatus = colHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hdrStatus:SetPoint("RIGHT", colHeader, "RIGHT", -8, 0)
-    hdrStatus:SetText(L["QUESTITEMBAR_DEBUG_COL_STATUS"])
+    hdrStatus:SetText(STATUS)
     hdrStatus:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     hdrStatus:SetJustifyH("RIGHT")
 

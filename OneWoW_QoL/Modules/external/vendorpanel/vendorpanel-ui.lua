@@ -328,7 +328,7 @@ function VendorPanel:CreatePreviewPanel()
             end
         end
 
-        table.insert(items, { type = "header", text = L["VENDOR_OPT_HEADER"] })
+        table.insert(items, { type = "header", text = OPTIONS })
         table.insert(items, {
             type = "checkbox",
             text = L["VENDOR_HIDE_KNOWN"],
@@ -424,8 +424,8 @@ function VendorPanel:CreatePreviewPanel()
 
         local exclusions = GetExclusions()
         local exclusionDefs = {
-            { key = "Mounts",    text = L["VENDOR_EX_MOUNTS"] },
-            { key = "Pets",      text = L["VENDOR_EX_PETS"] },
+            { key = "Mounts",    text = MOUNTS },
+            { key = "Pets",      text = PETS },
             { key = "Toys",      text = L["VENDOR_EX_TOYS"] },
             { key = "Cosmetics", text = L["VENDOR_EX_COSMETICS"] },
             { key = "Decor",     text = L["VENDOR_EX_DECOR"] },
@@ -497,7 +497,7 @@ function VendorPanel:CreatePreviewPanel()
     scrollFrame:SetScrollChild(scrollChild)
     state.junkPreviewPanel.scrollChild = scrollChild
 
-    local bottomCloseBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = L["VENDOR_CLOSE"], height = 28 })
+    local bottomCloseBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = CLOSE, height = 28 })
     bottomCloseBtn:SetPoint("BOTTOMLEFT", state.junkPreviewPanel, "BOTTOMLEFT", OneWoW_GUI:GetSpacing("SM"), 12)
     bottomCloseBtn:SetScript("OnClick", function()
         state.junkPreviewPanel.manuallyHidden = true
@@ -764,7 +764,7 @@ function VendorPanel:CreateNeverSellDialog()
         factionTheme = GetFactionTheme(),
         onClose = function(frame) frame:Hide() end,
         buttons = {
-            { text = L["VENDOR_CLOSE"], onClick = function(frame) frame:Hide() end },
+            { text = CLOSE, onClick = function(frame) frame:Hide() end },
         },
     })
     state.neverSellDialog = result.frame
@@ -1038,7 +1038,7 @@ function VendorPanel:CreateCategory(parent, items, yOffset, title, color, catego
         deleteAllBtn:SetBackdropBorderColor(0.7, 0.2, 0.2, 1)
         local deleteFS = deleteAllBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         deleteFS:SetPoint("CENTER", deleteAllBtn, "CENTER", 0, 0)
-        deleteFS:SetText(L["VENDOR_DESTROY_ALL"])
+        deleteFS:SetText(DELETE)
         deleteFS:SetTextColor(1, 0.5, 0.5, 1)
         deleteAllBtn:SetScript("OnClick", function(self, button) if button == "LeftButton" then VendorPanel:DeleteAllNoValueJunk() end end)
         deleteAllBtn:SetScript("OnEnter", function(self)
@@ -1108,7 +1108,7 @@ function VendorPanel:CreateCategory(parent, items, yOffset, title, color, catego
                 totalPriceBox:SetBackdropBorderColor(0.7, 0.2, 0.2, 1)
                 local deleteText = totalPriceBox:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
                 deleteText:SetPoint("CENTER", totalPriceBox, "CENTER", 0, 0)
-                deleteText:SetText(L["VENDOR_DESTROY_ALL"])
+                deleteText:SetText(DELETE)
                 deleteText:SetTextColor(1, 0.5, 0.5, 1)
                 totalPriceBox:SetScript("OnClick", function(self, btn)
                     if btn == "LeftButton" then

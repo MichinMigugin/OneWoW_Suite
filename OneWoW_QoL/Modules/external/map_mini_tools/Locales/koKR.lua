@@ -105,9 +105,7 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["MMSKIN_UNCLAMP"] = "화면 가장자리 제한 해제",
 
     ["MMSKIN_ZONE_FONT_LABEL"] = "글꼴",
-    ["MMSKIN_ZONE_FONT_SIZE"] = "글꼴 크기",
     ["MMSKIN_CLOCK_FONT_LABEL"] = "글꼴",
-    ["MMSKIN_CLOCK_FONT_SIZE"] = "글꼴 크기",
     ["MMSKIN_FONT_GLOBAL"] = "전역 글꼴",
     ["MMSKIN_FONT_WOW_DEFAULT"] = "와우 기본(작음)",
 

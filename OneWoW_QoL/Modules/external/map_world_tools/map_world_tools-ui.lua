@@ -241,7 +241,7 @@ local function BuildContent(container)
 
         local alphaLbl
         alphaLbl, cy = AddLabelIndented(container, cy,
-            string.format("%s: %.0f%%", L["MAPWORLD_ALPHA"], s.canvasA * 100),
+            string.format("%s: %.0f%%", OPACITY, s.canvasA * 100),
             "TEXT_SECONDARY")
 
         local alphaSlider = OneWoW_GUI:CreateSlider(container, {
@@ -250,7 +250,7 @@ local function BuildContent(container)
             width = 240, fmt = "%d%%",
             onChange = function(val)
                 s.canvasA = val / 100
-                alphaLbl:SetText(string.format("%s: %.0f%%", L["MAPWORLD_ALPHA"], val))
+                alphaLbl:SetText(string.format("%s: %.0f%%", OPACITY, val))
                 if ns.ModuleRegistry:IsEnabled("map_world_tools") and M.RefreshCanvasOverlay then
                     M.RefreshCanvasOverlay()
                 end

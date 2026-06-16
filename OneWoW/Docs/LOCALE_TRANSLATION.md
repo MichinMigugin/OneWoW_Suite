@@ -199,6 +199,21 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
   bound to different scopes. Globals already whitelisted. Module scopes handled
   separately (next).
 
+- [x] `OneWoW_QoL` **34 external modules** — 11 had candidates (24 keys, 38 call
+  sites): automount, autoopen, bagbar, inspectmog, lfgpanel, map_mini_tools,
+  map_world_tools, minimapbuttons, playmounts, questitembar, vendorpanel. 6 new
+  globals (`DISABLE`, `DISPLAY_MODE`, `EMPTY`, `HIDE`, `OPTIONS`, `PLAYER`). Excluded
+  by pairing: `AUTOMOUNT_CAT_OFF`, `charinfo`/`framemover` `FEATURES_OFF` (paired
+  with `*_ON`) — which left charinfo/framemover with nothing to adopt. Other 23
+  modules: no candidates. **Tooling:** `load_scope_code` fixed so a dotted scope
+  (`OneWoW_QoL.<mod>`) classifies against only that module's folder, and a bare QoL
+  scope excludes `Modules/external/` — per-module swaps stay correctly isolated
+  (core and module files share the `L` name bound to different scopes).
+
+**Phase 2 remaining:** `OneWoW` core hub scope (969 keys) and the `shared` scope
+(49 keys — handle carefully: shared keys are the suite-wide fallback, removing one
+breaks every scope that resolves it).
+
 ### Phase 3 — Consolidate to shared (pending)
 Baseline: **430 strings**. Per-addon sub-phases. For each value group:
 - [ ] Pick the canonical key name (often the simplest existing one) and value.

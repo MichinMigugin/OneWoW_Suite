@@ -745,7 +745,7 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
 
             local disableLabel = disableCheck:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
             disableLabel:SetPoint("LEFT", disableCheck, "RIGHT", 2, 0)
-            disableLabel:SetText(L["AUTOMOUNT_DISABLE"])
+            disableLabel:SetText(DISABLE)
             disableLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             local capturedDisableKey = def.disableKey
@@ -1019,7 +1019,7 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
         btnDiv:SetPoint("BOTTOMRIGHT", popupContent, "BOTTOMRIGHT", -1, 42)
         btnDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-        local closeBtn = OneWoW_GUI:CreateFitTextButton(popupContent, { text = L["AUTOMOUNT_CLOSE"], height = 32 })
+        local closeBtn = OneWoW_GUI:CreateFitTextButton(popupContent, { text = CLOSE, height = 32 })
         closeBtn:SetPoint("BOTTOM", popupContent, "BOTTOM", 0, 6)
         closeBtn:SetScript("OnClick", function() popup:Hide() end)
 

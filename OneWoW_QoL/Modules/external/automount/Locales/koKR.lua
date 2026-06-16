@@ -16,7 +16,6 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["AUTOMOUNT_SEARCH"] = "검색...",
     ["AUTOMOUNT_SELECT_TOOLTIP"] = "클릭하여 탈것 선택",
     ["AUTOMOUNT_SELECT_TOOLTIP_DESC"] = "특정 탈것을 고르거나 자동 선택이 가장 빠른 탈것을 고르도록 할 수 있습니다.",
-    ["AUTOMOUNT_CLOSE"] = "닫기",
     ["AUTOMOUNT_DRUID_SECTION"] = "드루이드",
     ["AUTOMOUNT_DRUID_MODE_LABEL"] = "드루이드 모드:",
     ["AUTOMOUNT_DRUID_MODE_DESC"] = "켜면 자동 탑승을 하지 않아, 채집 후 여행 형상으로 직접 변신할 수 있습니다.",
@@ -31,7 +30,6 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["AUTOMOUNT_FISHING_DELAY_DESC"] = "낚시 후 자동 탑승이 다시 시작되기까지의 시간입니다.",
     ["AUTOMOUNT_GATHER_DELAY"] = "채집 후 재탑승 지연",
     ["AUTOMOUNT_GATHER_DELAY_DESC"] = "채집 후 다시 탈것에 올라타기까지의 시간입니다.",
-    ["AUTOMOUNT_DISABLE"] = "끄기",
     ["AUTOMOUNT_DRUID_CANCEL_LABEL"] = "여행 형상 자동 해제:",
     ["AUTOMOUNT_DRUID_CANCEL_DESC"] = "비행 가능 구역에 들어가면 여행 형상을 자동으로 해제하여 비행 탈것을 탈 수 있게 합니다.",
 })

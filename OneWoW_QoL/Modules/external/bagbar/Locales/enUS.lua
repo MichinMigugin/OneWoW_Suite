@@ -22,7 +22,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["BAGBAR_MACRO_LEFT_CLICK_TO_RUN"] = "Left-click to run macro",
     ["BAGBAR_MACRO_MISSING"] = "(missing)",
     ["BAGBAR_ITEM_ID_LABEL"] = "Item ID:",
-    ["BAGBAR_ADD_BUTTON"] = "Add",
     ["BAGBAR_DRAG_ITEM_HERE"] = "Drag Item Here",
     ["BAGBAR_BLACKLIST_HEADER"] = "Blacklist",
     ["BAGBAR_BLACKLIST_DESC"] = "Shift+Right-click items in the bar to skip for this session. Alt+Right-click to permanently blacklist.",
