@@ -272,18 +272,16 @@ candidates left.
 
 ---
 
-## Pre-Phase-4 assessment (2026-06-15)
+## Post-Phase-2 assessment (2026-06-15)
 
-A full re-run of `bin/locale_keydiff.py` + a locale-file coverage scan, to confirm
-nothing was missed before translation. Findings:
+A full re-run of `bin/locale_keydiff.py` + a locale-file coverage scan, taken before
+starting Phase 3, to confirm nothing was missed in Phase 2. Findings:
 
 1. **Phase 2 is complete** — 0 adoptable Blizzard candidates remain (verified above).
-2. **Phase 3 (consolidate) has NOT been started.** Section C still reports **425
-   strings** that hold the same enUS value across ≥2 scopes (e.g. `OFF`-less duplicates,
-   shared section titles). Going straight to Phase 4 would translate each of these
-   ~425 strings in every scope that owns a copy instead of once in `shared` — the exact
-   duplication the rollout exists to avoid. **Decision needed: run Phase 3 before
-   Phase 4** (recommended, per "best outcome, not shortcuts").
+2. **Phase 3 (consolidate) is next.** Section C reports **425 strings** that hold the
+   same enUS value across ≥2 scopes (e.g. duplicated section titles, status labels).
+   Consolidating each to a single `shared` key means translating it once instead of
+   per-scope — the core point of the rollout. This is the immediate next phase.
 3. **OneWoW-core dead-key sweep still owed.** Core's B bucket is 32 keys, **0
    adoptable**: ~24 tagged `[dead -> strip only]` + 8 `[DYNAMIC]`. Core uses pervasive
    runtime-constructed locale access, so a `dead` tag is untrustworthy without tracing
