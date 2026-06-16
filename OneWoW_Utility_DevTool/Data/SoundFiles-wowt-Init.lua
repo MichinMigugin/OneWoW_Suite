@@ -2,8 +2,7 @@
 -- https://wago.tools/
 local _, Addon = ...
 
-Addon.soundDataVersionPTR = { "12.0.7.67344" }
-
+Addon.soundDataVersionPTR = { "12.0.7.68182" }
 if not Addon.ValidateDataBuildGameBuild("Sound PTR", Addon.soundDataVersionPTR) then
 	return
 end

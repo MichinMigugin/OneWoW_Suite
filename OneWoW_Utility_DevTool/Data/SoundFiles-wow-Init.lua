@@ -2,7 +2,7 @@
 -- https://wago.tools/
 local _, Addon = ...
 
-Addon.soundDataVersionLIVE = { "12.0.5.67314" }
+Addon.soundDataVersionLIVE = { "12.0.7.68182" }
 if not Addon.ValidateDataBuildGameBuild("Sound", Addon.soundDataVersionLIVE) then
 	return
 end
