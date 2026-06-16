@@ -1,12 +1,19 @@
 local _, ns = ...
+
 local AutoOpenModule, L = ns.ModuleRegistry:Current()
 if not AutoOpenModule then return end
 
+local Restriction = OneWoW.Restriction
 local OneWoW_GUI = OneWoW_GUI
+local PE = OneWoW.PredicateEngine
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 local AO = AutoOpenModule
+
+-- #openable reads the bag tooltip; hasLoot/isLocked alone cannot detect lockpicking-locked lockboxes.
+local OPEN_PREDICATE_EXPR = "#hasloot&!#locked& #openable"
+local openPredicate = PE:Compile(OPEN_PREDICATE_EXPR)
 
 local function GetBlacklist()
     local addon = OneWoW_QoL
@@ -43,23 +50,26 @@ end
 
 function AutoOpenModule:ScanAndOpen()
     if self._atBank or self._atMail or self._atMerchant or self._atCrafting then return end
-    if InCombatLockdown() then return end
+    if Restriction.IsAddonRestricted() then return end
 
     local items = ns.AutoOpenItems
     if not items then return end
 
     for bag = 0, 4 do
-        for slot = 0, C_Container.GetContainerNumSlots(bag) do
+        local numSlots = C_Container.GetContainerNumSlots(bag)
+        for slot = 1, numSlots do
             local itemID = C_Container.GetContainerItemID(bag, slot)
             if itemID and items[itemID] and not self:IsBlacklisted(itemID) then
-                local info = C_Container.GetContainerItemInfo(bag, slot)
-                if info and info.hasLoot and not info.isLocked then
-                    local itemLink = C_Container.GetContainerItemLink(bag, slot)
-                    if itemLink then
-                        print(string.format(L["AUTOOPEN_OPENING"], itemLink))
+                if openPredicate then
+                    local props = PE:BuildProps(itemID, bag, slot)
+                    if PE:SafeEvaluate(openPredicate, props) then
+                        local itemLink = props.hyperlink or C_Container.GetContainerItemLink(bag, slot)
+                        if itemLink then
+                            print(string.format(L["AUTOOPEN_OPENING"], itemLink))
+                        end
+                        C_Container.UseContainerItem(bag, slot)
+                        return
                     end
-                    C_Container.UseContainerItem(bag, slot)
-                    return
                 end
             end
         end
