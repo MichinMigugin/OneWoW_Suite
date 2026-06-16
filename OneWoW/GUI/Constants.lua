@@ -822,22 +822,24 @@ OneWoW_GUI.Constants = {
     },
 
     -- Virtual options (not keys in THEMES). Shown first under "Special".
+    -- `label` is the enUS fallback; `labelKey` resolves via the shared locale scope.
     THEME_SPECIAL_OPTIONS = {
-        { key = "random", label = "Random (new each reload)" },
+        { key = "random", label = "Random (new each reload)", labelKey = "THEME_RANDOM" },
     },
 
     -- Every key in THEMES_ORDER must appear exactly once (validated at load).
+    -- `title` is the enUS fallback; `titleKey` resolves via the shared locale scope.
     THEME_MENU_GROUPS = {
-        { title = "Classic accents", keys = {
+        { title = "Classic accents", titleKey = "THEME_GROUP_CLASSIC", keys = {
             "green", "blue", "purple", "red", "orange", "teal", "gold", "pink", "cyan", "amber", "slate",
         } },
-        { title = "Dark & minimal", keys = {
+        { title = "Dark & minimal", titleKey = "THEME_GROUP_DARK", keys = {
             "dark", "voidblack", "obsidian", "monochrome", "charcoal", "forestnight", "twilight",
         } },
-        { title = "Bold & stylized", keys = {
+        { title = "Bold & stylized", titleKey = "THEME_GROUP_BOLD", keys = {
             "neon", "glassmorphic", "retro", "fantasy", "nightfae",
         } },
-        { title = "Light & accessibility", keys = {
+        { title = "Light & accessibility", titleKey = "THEME_GROUP_LIGHT", keys = {
             "lightmode", "highcontrast",
         } },
     },

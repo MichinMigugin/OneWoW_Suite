@@ -1,7 +1,4 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/UI/t-features.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
 -- Each external module's locale strings live in its own scope (per-module locale
@@ -112,7 +109,7 @@ local function ShowModuleDetailsDialog(module)
             height = DETAILS_HEIGHT_DEFAULT,
             showScrollFrame = true,
             buttons = {
-                { text = L["CLOSE"], onClick = function(dialog) dialog:Hide() end },
+                { text = CLOSE, onClick = function(dialog) dialog:Hide() end },
             },
         })
 

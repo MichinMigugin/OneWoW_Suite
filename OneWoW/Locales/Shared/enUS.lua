@@ -1,22 +1,23 @@
 local _, OneWoW = ...
 
 OneWoW.Locale:RegisterShared("enUS", {
-    -- Language picker
+    -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "Language Selection",
     ["LANGUAGE_DESC"] = "Choose your preferred language for the addon interface. Changes apply instantly.",
-    ["CURRENT_LANGUAGE"] = "Current Language",
-    ["SELECT_LANGUAGE"] = "Select Language",
-    ["ENGLISH"] = "English",
-    ["SPANISH"] = "Español",
-    ["KOREAN"] = "한국어",
-    ["FRENCH"] = "Français",
-    ["RUSSIAN"] = "Русский",
-    ["GERMAN"] = "Deutsch",
 
-    -- Themes
+    -- Theme picker
     ["THEME_SECTION"] = "Color Theme",
-    ["THEME_DESC"] = "Choose a color theme for the addon interface. Changes apply instantly without reloading.",
-    ["THEME_CURRENT"] = "Current Theme",
+    ["THEME_DESC"] = "Themes are grouped below. Random picks one palette each reload; reopen the menu and choose Random again to reroll this session.",
+    ["THEME_RANDOM"] = "Random (new each reload)",
+    ["THEME_RANDOM_CURRENT"] = "Random (%s)",
+
+    -- Theme menu group titles
+    ["THEME_GROUP_CLASSIC"] = "Classic accents",
+    ["THEME_GROUP_DARK"] = "Dark & minimal",
+    ["THEME_GROUP_BOLD"] = "Bold & stylized",
+    ["THEME_GROUP_LIGHT"] = "Light & accessibility",
+
+    -- Theme display names (keyed THEME_<UPPER themeKey>; resolved at runtime)
     ["THEME_GREEN"] = "Forest Green",
     ["THEME_BLUE"] = "Ocean Blue",
     ["THEME_PURPLE"] = "Royal Purple",
@@ -41,20 +42,31 @@ OneWoW.Locale:RegisterShared("enUS", {
     ["THEME_RETRO"] = "Retro Classic",
     ["THEME_FANTASY"] = "RPG Fantasy",
     ["THEME_NIGHTFAE"] = "Covenant Twilight",
+    ["THEME_HIGHCONTRAST"] = "High Contrast",
 
-    -- Minimap section labels
+    -- Font section (font family names are proper nouns; "Font Size" uses FONT_SIZE global)
+    ["FONT_SECTION"] = "Font",
+    ["FONT_DESC"] = "Choose the font used across all OneWoW addons. SharedMedia fonts from other addons are also supported and will appear in the list.",
+    ["FONT_SIZE_DESC"] = "Adjust font size across all addons.",
+    ["FONT_SIZE_WARNING"] = "EXPERIMENTAL: Not all OneWoW addons are compatible or adapted for font size adjustments yet.",
+
+    -- Value display section
+    ["VALUE_DISPLAY_SECTION"] = "Value display",
+    ["VALUE_DISPLAY_DESC"] = "How gold and prices are shown across OneWoW (bags, AltTracker, Catalog, tooltips, farm value tracker, etc.).",
+    ["VALUE_DISPLAY_LETTERS"] = "Show letters g, s, c (instead of coin icons)",
+    ["VALUE_DISPLAY_REGIONAL"] = "Use regional number grouping (client locale)",
+    ["VALUE_DISPLAY_WHITE"] = "Use white values (letter mode; classic look when off)",
+
+    -- Footer links (Discord / OneWoW are proper nouns)
+    ["LINK_DONATE"] = "Donate",
+
+    -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "Minimap Button",
     ["MINIMAP_SECTION_DESC"] = "Show or hide the minimap button.",
     ["MINIMAP_SHOW_BTN"] = "Show Minimap Button",
     ["MINIMAP_ICON_SECTION"] = "Icon Theme",
     ["MINIMAP_ICON_DESC"] = "Choose your faction icon for the minimap button and title bar.",
-    ["MINIMAP_ICON_CURRENT"] = "Current Icon",
-    ["MINIMAP_ICON_HORDE"] = "Horde",
-    ["MINIMAP_ICON_ALLIANCE"] = "Alliance",
-    ["MINIMAP_ICON_NEUTRAL"] = "Neutral",
 
-    -- Common buttons
-    ["OK"] = "OK",
-    ["CANCEL"] = "Cancel",
-    ["CLOSE"] = "Close",
+    -- Common
+    ["CURRENT_VALUE"] = "Current: %s",
 })

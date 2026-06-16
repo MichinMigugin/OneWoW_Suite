@@ -88,16 +88,28 @@ function OneWoW_GUI:GetEffectiveThemeKey()
     return raw
 end
 
+-- Localized display name for a theme key. Theme names live in the shared locale
+-- scope as THEME_<UPPER themeKey> (e.g. green -> THEME_GREEN); resolved at runtime
+-- because the locale files load after this GUI block. Falls back to the English
+-- Constants.THEMES[key].name when no translation is registered.
+function OneWoW_GUI:GetThemeName(themeKey)
+    local data = Constants.THEMES[themeKey]
+    if themeKey then
+        local v = OneWoW.Locale:GetOptional("OneWoW", "THEME_" .. string.upper(themeKey))
+        if v then return v end
+    end
+    return (data and data.name) or themeKey or Constants.DEFAULT_THEME_NAME
+end
+
 -- Human-readable label for the settings UI (includes Random → resolved name).
 function OneWoW_GUI:GetThemeDisplayName()
     local raw = GetRawThemeKeyFromSources(self, nil)
     if raw == "random" then
         local eff = self:GetEffectiveThemeKey()
-        local data = Constants.THEMES[eff]
-        return string.format("Random (%s)", data and data.name or eff)
+        local fmt = OneWoW.Locale:GetOptional("OneWoW", "THEME_RANDOM_CURRENT") or "Random (%s)"
+        return string.format(fmt, self:GetThemeName(eff))
     end
-    local data = Constants.THEMES[raw]
-    return data and data.name or Constants.DEFAULT_THEME_NAME
+    return self:GetThemeName(raw)
 end
 
 function OneWoW_GUI:ApplyTheme(addon)

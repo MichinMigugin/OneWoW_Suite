@@ -223,11 +223,47 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
   `L["K"]` site and no stored/wrapped/constructed form. (Note: tool's substring count
   correctly treats `OneWoW.L["K"]` as literal.)
 
-**Phase 2 remaining:** the `shared` scope (49 keys). Handle carefully — shared keys
-are the suite-wide fallback resolved by EVERY scope, so removing one (e.g. `CLOSE`)
-breaks every `L["CLOSE"]` call site suite-wide unless all are converted first.
-Also: a dedicated dead-key sweep (incl. OneWoW core's 26 deferred) could be a
-separate cleanup pass with proper dynamic-index tracing.
+- [x] `shared` **scope** (was 49 keys → 41). The audit found 46/49 keys *unused*:
+  `OneWoW/GUI/Settings.lua` (the General panel) hardcoded its English labels instead
+  of reading the shared keys — a localization gap, not just dead keys. Fixed by
+  wiring the panel to the locale view (`local L = OneWoW.L` at runtime inside
+  `CreateSettingsPanel`, which builds post-login; the GUI block itself loads before
+  the locale files so file-scope capture is impossible). Scope of this pass = the
+  **Language / Theme / Minimap** sections + theme names:
+  - **Adopted Blizzard globals:** `CLOSE`, `CANCEL` (dropped from shared; 3 call
+    sites swapped — `OneWoW_QoL/UI/t-features.lua`, `t-overlays.lua`,
+    `OneWoW_DirectDeposit/GUI/MainWindow.lua`), `SPECIAL` (theme-menu header),
+    `FACTION_HORDE`/`FACTION_ALLIANCE`/`FACTION_NEUTRAL` (minimap icon labels — the
+    whole trio has globals, set at file scope in `ICON_THEMES`). Only `FACTION_NEUTRAL`
+    was new to `.luarc.json`.
+  - **Dropped as dead:** `OK` (no exact global — `OKAY`="Okay" differs), the six
+    language-name keys `ENGLISH`/`SPANISH`/`KOREAN`/`FRENCH`/`RUSSIAN`/`GERMAN` (picker
+    uses `Locale.SUPPORTED[].native`), `SELECT_LANGUAGE`, and the three redundant
+    `CURRENT_LANGUAGE`/`THEME_CURRENT`/`MINIMAP_ICON_CURRENT` (replaced by one
+    `CURRENT_VALUE="Current: %s"` format used at all 6 "Current:" sites).
+  - **Added:** `THEME_HIGHCONTRAST` (coverage gap — 25th theme had no key),
+    `THEME_RANDOM`, `THEME_RANDOM_CURRENT` (`"Random (%s)"`), 4 `THEME_GROUP_*`
+    titles, `CURRENT_VALUE`.
+  - **Theme names** resolve at runtime via new `OneWoW_GUI:GetThemeName(key)` →
+    `THEME_<UPPER key>` (e.g. `green`→`THEME_GREEN`), English `Constants.THEMES[key].name`
+    as fallback. `GetThemeDisplayName` routes through it. Group titles / random label
+    resolve via new `titleKey`/`labelKey` fields on `THEME_MENU_GROUPS` /
+    `THEME_SPECIAL_OPTIONS` (greppable, not runtime-constructed).
+  - **Full-panel follow-up (done same pass):** the **Font**, **Font Size**, **Value
+    display**, and **Donate link** sections too — 10 new keys (`FONT_SECTION`,
+    `FONT_DESC`, `FONT_SIZE_DESC`, `FONT_SIZE_WARNING`, `VALUE_DISPLAY_SECTION`/`_DESC`/
+    `_LETTERS`/`_REGIONAL`/`_WHITE`, `LINK_DONATE`); `"Font Size"` uses the existing
+    `FONT_SIZE` global. **Left as-is:** font family names (proper nouns + `LSM_NAME_TO_KEY`
+    lookup identifiers — `"WoW Default"` included), the `"AaBbCc 123"` glyph sample, and
+    the `Discord`/`OneWoW Home` link labels (proper nouns). The entire General settings
+    panel is now localized (shared scope total: 51 keys).
+  - **Phase 4 note:** the 5 translated shared files (koKR/deDE/esES/frFR/ruRU) now
+    carry stale keys and miss the ~8 new ones; missing keys fall back to enUS in-game.
+    They get regenerated wholesale in Phase 4 — left untouched here.
+
+**Phase 2 remaining:** none for call-site swaps. Optional: the deferred Font/Value/
+Link labels of the General panel, and a dedicated dead-key sweep (incl. OneWoW core's
+26 deferred) with proper dynamic-index tracing.
 
 ### Phase 3 — Consolidate to shared (pending)
 Baseline: **430 strings**. Per-addon sub-phases. For each value group:

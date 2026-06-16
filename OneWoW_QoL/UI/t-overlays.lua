@@ -724,7 +724,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                         reg:SetOverlaySetting("warbound", "includeWUE", false)
                         ShowOverlayDetail(split, feature, selectedRow)
                     end },
-                    { text = L["CANCEL"], onClick = function(d) d:Hide() end },
+                    { text = CANCEL, onClick = function(d) d:Hide() end },
                 },
             })
             dialog.frame:Show()

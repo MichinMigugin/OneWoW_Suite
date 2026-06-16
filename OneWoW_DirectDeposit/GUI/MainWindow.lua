@@ -175,7 +175,7 @@ function GUI:CreateTabSystem(parent)
     statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     MainWindow.statusText = statusText
 
-    local closeBtn = OneWoW_GUI:CreateFitTextButton(bottomBar, { text = L["CLOSE"], height = Constants.GUI.BUTTON_HEIGHT })
+    local closeBtn = OneWoW_GUI:CreateFitTextButton(bottomBar, { text = CLOSE, height = Constants.GUI.BUTTON_HEIGHT })
     closeBtn:SetPoint("RIGHT", bottomBar, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
     closeBtn:SetScript("OnClick", function()
         MainWindow:Hide()

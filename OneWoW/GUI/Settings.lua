@@ -115,10 +115,12 @@ local function LangNative(code)
     return code
 end
 
+-- Faction icon labels reuse Blizzard's localized FACTION_* globals (loaded before
+-- addon code), so the dropdown matches the client language at zero translation cost.
 local ICON_THEMES = {
-    { key = "horde",    label = "Horde" },
-    { key = "alliance", label = "Alliance" },
-    { key = "neutral",  label = "Neutral" },
+    { key = "horde",    label = FACTION_HORDE },
+    { key = "alliance", label = FACTION_ALLIANCE },
+    { key = "neutral",  label = FACTION_NEUTRAL },
 }
 
 local ICON_LOOKUP = {}
@@ -577,6 +579,13 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     options = options or {}
     local yOffset = options.yOffset or -10
 
+    -- Resolve the locale view at call time; this panel is built post-login, after
+    -- the locale files have loaded (the GUI block itself loads before them).
+    local L = OneWoW.L
+    local function Current(value)
+        return string.format(L["CURRENT_VALUE"], value)
+    end
+
     local settingLang = self:GetSetting("language")
     local currentLang = type(settingLang) == "string" and settingLang or "enUS"
     local currentIconTheme = self:GetSetting("minimap.theme") or DEFAULT_THEME_ICON
@@ -715,20 +724,20 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local langTitle = langPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     langTitle:SetPoint("TOPLEFT", langPanel, "TOPLEFT", 15, -12)
-    langTitle:SetText("Language Selection")
+    langTitle:SetText(L["LANGUAGE_SELECTION"])
     langTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
     local langDesc = langPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     langDesc:SetPoint("TOPLEFT", langPanel, "TOPLEFT", 15, -38)
     langDesc:SetPoint("TOPRIGHT", langPanel, "TOPRIGHT", -15, -38)
-    langDesc:SetText("Choose your preferred language.")
+    langDesc:SetText(L["LANGUAGE_DESC"])
     langDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
     langDesc:SetJustifyH("LEFT")
     langDesc:SetWordWrap(true)
 
     local currentLangLabel = langPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     currentLangLabel:SetPoint("TOPLEFT", langPanel, "TOPLEFT", 15, -90)
-    currentLangLabel:SetText("Current: " .. LangNative(currentLang))
+    currentLangLabel:SetText(Current(LangNative(currentLang)))
     currentLangLabel:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
     local langDropdown = CreateFrame("Button", nil, langPanel, "BackdropTemplate")
@@ -766,13 +775,13 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local themeTitle = themePanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     themeTitle:SetPoint("TOPLEFT", themePanel, "TOPLEFT", 15, -12)
-    themeTitle:SetText("Color Theme")
+    themeTitle:SetText(L["THEME_SECTION"])
     themeTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
     local themeDesc = themePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     themeDesc:SetPoint("TOPLEFT", themePanel, "TOPLEFT", 15, -38)
     themeDesc:SetPoint("TOPRIGHT", themePanel, "TOPRIGHT", -15, -38)
-    themeDesc:SetText("Themes are grouped below. Random picks one palette each reload; reopen the menu and choose Random again to reroll this session.")
+    themeDesc:SetText(L["THEME_DESC"])
     themeDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
     themeDesc:SetJustifyH("LEFT")
     themeDesc:SetWordWrap(true)
@@ -784,7 +793,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local currentThemeLabel = themePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     currentThemeLabel:SetPoint("TOPLEFT", themePanel, "TOPLEFT", 15, -90)
-    currentThemeLabel:SetText("Current: " .. currentThemeName)
+    currentThemeLabel:SetText(Current(currentThemeName))
     currentThemeLabel:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
     local themeDropdown = CreateFrame("Button", nil, themePanel, "BackdropTemplate")
@@ -902,7 +911,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
                     Constants.SESSION_RANDOM_THEME_KEY = nil
                 end
                 OneWoW_GUI:SetSetting("theme", capturedKey)
-                currentThemeLabel:SetText("Current: " .. OneWoW_GUI:GetThemeDisplayName())
+                currentThemeLabel:SetText(Current(OneWoW_GUI:GetThemeDisplayName()))
                 themeDropText:SetText(OneWoW_GUI:GetThemeDisplayName())
                 local eff = OneWoW_GUI:GetEffectiveThemeKey()
                 local td = THEMES[eff]
@@ -913,17 +922,17 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
             y = y - rowH - 2
         end
 
-        addSectionHeader("Special")
+        addSectionHeader(SPECIAL)
         for _, opt in ipairs(THEME_SPECIAL_OPTIONS or {}) do
-            addThemePickRow(opt.key, opt.label, 0.55, 0.45, 0.95)
+            addThemePickRow(opt.key, (opt.labelKey and L[opt.labelKey]) or opt.label, 0.55, 0.45, 0.95)
         end
         for _, group in ipairs(THEME_MENU_GROUPS or {}) do
-            addSectionHeader(group.title)
+            addSectionHeader((group.titleKey and L[group.titleKey]) or group.title)
             for _, themeKey in ipairs(group.keys) do
                 local themeData = THEMES[themeKey]
                 if themeData then
                     local ap = themeData.ACCENT_PRIMARY
-                    addThemePickRow(themeKey, themeData.name, ap[1], ap[2], ap[3])
+                    addThemePickRow(themeKey, OneWoW_GUI:GetThemeName(themeKey), ap[1], ap[2], ap[3])
                 end
             end
         end
@@ -956,20 +965,20 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local fontTitle = fontPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     fontTitle:SetPoint("TOPLEFT", fontPanel, "TOPLEFT", 15, -12)
-    fontTitle:SetText("Font")
+    fontTitle:SetText(L["FONT_SECTION"])
     fontTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
     local fontDesc = fontPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     fontDesc:SetPoint("TOPLEFT", fontPanel, "TOPLEFT", 15, -38)
     fontDesc:SetPoint("TOPRIGHT", fontPanel, "TOPRIGHT", -15, -38)
-    fontDesc:SetText("Choose the font used across all OneWoW addons. SharedMedia fonts from other addons are also supported and will appear in the list.")
+    fontDesc:SetText(L["FONT_DESC"])
     fontDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
     fontDesc:SetJustifyH("LEFT")
     fontDesc:SetWordWrap(true)
 
     local fontCurrentLabel = fontPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     fontCurrentLabel:SetPoint("TOPLEFT", fontPanel, "TOPLEFT", 15, -90)
-    fontCurrentLabel:SetText("Current: " .. currentFontLabel)
+    fontCurrentLabel:SetText(Current(currentFontLabel))
     fontCurrentLabel:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
     local fontDropdown = self:CreateDropdown(fontPanel, {
@@ -981,7 +990,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local fsTitle = fontSizePanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     fsTitle:SetPoint("TOPLEFT", fontSizePanel, "TOPLEFT", 15, -12)
-    fsTitle:SetText("Font Size")
+    fsTitle:SetText(FONT_SIZE)
     fsTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
     local fontPreview = fontSizePanel:CreateFontString(nil, "OVERLAY")
@@ -993,7 +1002,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     local fsDesc = fontSizePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     fsDesc:SetPoint("TOPLEFT", fontSizePanel, "TOPLEFT", 15, -38)
     fsDesc:SetPoint("TOPRIGHT", fontSizePanel, "TOPRIGHT", -15, -38)
-    fsDesc:SetText("Adjust font size across all addons.")
+    fsDesc:SetText(L["FONT_SIZE_DESC"])
     fsDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
     fsDesc:SetJustifyH("LEFT")
     fsDesc:SetWordWrap(true)
@@ -1001,7 +1010,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     local fsWarning = fontSizePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     fsWarning:SetPoint("TOPLEFT", fsDesc, "BOTTOMLEFT", 0, -6)
     fsWarning:SetPoint("TOPRIGHT", fsDesc, "BOTTOMRIGHT", 0, -6)
-    fsWarning:SetText("EXPERIMENTAL: Not all OneWoW addons are compatible or adapted for font size adjustments yet.")
+    fsWarning:SetText(L["FONT_SIZE_WARNING"])
     fsWarning:SetTextColor(1.0, 0.4, 0.1)
     fsWarning:SetJustifyH("LEFT")
     fsWarning:SetWordWrap(true)
@@ -1014,7 +1023,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local fsCurrentLabel = fontSizePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     fsCurrentLabel:SetPoint("TOPLEFT", fsWarning, "BOTTOMLEFT", 0, -10)
-    fsCurrentLabel:SetText("Current: " .. FormatOffset(currentOffset))
+    fsCurrentLabel:SetText(Current(FormatOffset(currentOffset)))
     fsCurrentLabel:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
     local stepperMinusBtn = CreateFrame("Button", nil, fontSizePanel, "BackdropTemplate")
@@ -1052,7 +1061,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local function UpdateStepperState(val)
         stepperValueText:SetText(FormatOffset(val))
-        fsCurrentLabel:SetText("Current: " .. FormatOffset(val))
+        fsCurrentLabel:SetText(Current(FormatOffset(val)))
         if val <= -3 then
             stepperMinusBtn:Disable()
             minusText:SetTextColor(self:GetThemeColor("TEXT_MUTED"))
@@ -1128,7 +1137,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
         end,
         onSelect = function(value, text)
             fontDropdown._text:SetText(text)
-            fontCurrentLabel:SetText("Current: " .. text)
+            fontCurrentLabel:SetText(Current(text))
             local info = OneWoW_GUI:GetFontInfoByKey(value)
             OneWoW_GUI:SafeSetFont(fontPreview, info and info.file, 14)
             fontPreview:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -1146,18 +1155,18 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local mmTitle = mmLeftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     mmTitle:SetPoint("TOPLEFT", mmLeftPanel, "TOPLEFT", 15, -12)
-    mmTitle:SetText("Minimap Button")
+    mmTitle:SetText(L["MINIMAP_SECTION"])
     mmTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
     local mmDesc = mmLeftPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     mmDesc:SetPoint("TOPLEFT", mmLeftPanel, "TOPLEFT", 15, -38)
     mmDesc:SetPoint("TOPRIGHT", mmLeftPanel, "TOPRIGHT", -15, -38)
-    mmDesc:SetText("Show or hide the minimap button.")
+    mmDesc:SetText(L["MINIMAP_SECTION_DESC"])
     mmDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
     mmDesc:SetJustifyH("LEFT")
     mmDesc:SetWordWrap(true)
 
-    local mmCheckbox = self:CreateCheckbox(mmLeftPanel, { label = "Show Minimap Button" })
+    local mmCheckbox = self:CreateCheckbox(mmLeftPanel, { label = L["MINIMAP_SHOW_BTN"] })
     mmCheckbox:SetPoint("TOPLEFT", mmLeftPanel, "TOPLEFT", 12, -80)
     mmCheckbox:SetChecked(not isMinimapHidden)
     mmCheckbox:SetScript("OnClick", function(cb)
@@ -1172,20 +1181,20 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local mmIconTitle = mmRightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     mmIconTitle:SetPoint("TOPLEFT", mmRightPanel, "TOPLEFT", 15, -12)
-    mmIconTitle:SetText("Icon Theme")
+    mmIconTitle:SetText(L["MINIMAP_ICON_SECTION"])
     mmIconTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
     local mmIconDesc = mmRightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     mmIconDesc:SetPoint("TOPLEFT", mmRightPanel, "TOPLEFT", 15, -38)
     mmIconDesc:SetPoint("TOPRIGHT", mmRightPanel, "TOPRIGHT", -15, -38)
-    mmIconDesc:SetText("Choose your faction icon.")
+    mmIconDesc:SetText(L["MINIMAP_ICON_DESC"])
     mmIconDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
     mmIconDesc:SetJustifyH("LEFT")
     mmIconDesc:SetWordWrap(true)
 
     local mmCurrentLabel = mmRightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     mmCurrentLabel:SetPoint("TOPLEFT", mmRightPanel, "TOPLEFT", 15, -90)
-    mmCurrentLabel:SetText("Current: " .. (ICON_LOOKUP[currentIconTheme] or "Horde"))
+    mmCurrentLabel:SetText(Current(ICON_LOOKUP[currentIconTheme] or FACTION_HORDE))
     mmCurrentLabel:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
     local iconDropdown = CreateFrame("Button", nil, mmRightPanel, "BackdropTemplate")
@@ -1202,7 +1211,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local iconDropText = iconDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     iconDropText:SetPoint("LEFT", iconDropIcon, "RIGHT", 4, 0)
-    iconDropText:SetText(ICON_LOOKUP[currentIconTheme] or "Horde")
+    iconDropText:SetText(ICON_LOOKUP[currentIconTheme] or FACTION_HORDE)
     iconDropText:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
 
     local iconArrow = iconDropdown:CreateTexture(nil, "OVERLAY")
@@ -1222,8 +1231,8 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
         end
         iconMenu = CreateDropdownMenu(btn, items, function(value, label)
             iconDropIcon:SetTexture(ICON_TEXTURES[value] or ICON_TEXTURES.horde)
-            iconDropText:SetText(label or ICON_LOOKUP[value] or "Horde")
-            mmCurrentLabel:SetText("Current: " .. (label or ICON_LOOKUP[value] or "Horde"))
+            iconDropText:SetText(label or ICON_LOOKUP[value] or FACTION_HORDE)
+            mmCurrentLabel:SetText(Current(label or ICON_LOOKUP[value] or FACTION_HORDE))
             OneWoW_GUI:SetSetting("minimap.theme", value)
         end)
         iconMenu:Show()
@@ -1244,13 +1253,13 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     local valueTitle = valuePanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     valueTitle:SetPoint("TOPLEFT", valuePanel, "TOPLEFT", 15, -12)
-    valueTitle:SetText("Value display")
+    valueTitle:SetText(L["VALUE_DISPLAY_SECTION"])
     valueTitle:SetTextColor(self:GetThemeColor("ACCENT_PRIMARY"))
 
     local valueDesc = valuePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     valueDesc:SetPoint("TOPLEFT", valuePanel, "TOPLEFT", 15, -38)
     valueDesc:SetPoint("TOPRIGHT", valuePanel, "TOPRIGHT", -15, -38)
-    valueDesc:SetText("How gold and prices are shown across OneWoW (bags, AltTracker, Catalog, tooltips, farm value tracker, etc.).")
+    valueDesc:SetText(L["VALUE_DISPLAY_DESC"])
     valueDesc:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
     valueDesc:SetJustifyH("LEFT")
     valueDesc:SetWordWrap(true)
@@ -1260,7 +1269,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     local whiteValuesChecked = self:GetSetting("moneyDisplay.useWhiteValues") ~= false
 
     local lettersCb = self:CreateCheckbox(valuePanel, {
-        label = "Show letters g, s, c (instead of coin icons)",
+        label = L["VALUE_DISPLAY_LETTERS"],
     })
     lettersCb:SetPoint("TOPLEFT", valuePanel, "TOPLEFT", 12, -72)
     lettersCb:SetChecked(lettersChecked)
@@ -1269,7 +1278,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     end)
 
     local regionalCb = self:CreateCheckbox(valuePanel, {
-        label = "Use regional number grouping (client locale)",
+        label = L["VALUE_DISPLAY_REGIONAL"],
     })
     regionalCb:SetPoint("TOPLEFT", lettersCb, "BOTTOMLEFT", 0, -6)
     regionalCb:SetChecked(regionalChecked)
@@ -1278,7 +1287,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     end)
 
     local whiteValuesCb = self:CreateCheckbox(valuePanel, {
-        label = "Use white values (letter mode; classic look when off)",
+        label = L["VALUE_DISPLAY_WHITE"],
     })
     whiteValuesCb:SetPoint("TOPLEFT", regionalCb, "BOTTOMLEFT", 0, -6)
     whiteValuesCb:SetChecked(whiteValuesChecked)
@@ -1296,7 +1305,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     local _, discordPanel, donatePanel, homePanel = CreateThreeColumnRow(36)
 
     CreateLinkPanel(discordPanel, "Discord", "https://discord.gg/6vnabDVnDu")
-    CreateLinkPanel(donatePanel, "Donate", "https://buymeacoffee.com/migugin")
+    CreateLinkPanel(donatePanel, L["LINK_DONATE"], "https://buymeacoffee.com/migugin")
     CreateLinkPanel(homePanel, "OneWoW Home", "https://wow2.xyz/")
 
     yOffset = yOffset - 56
@@ -1304,7 +1313,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     local function refreshThemePickerLabels()
         OneWoW_GUI:ApplyTheme()
         local name = OneWoW_GUI:GetThemeDisplayName()
-        currentThemeLabel:SetText("Current: " .. name)
+        currentThemeLabel:SetText(Current(name))
         themeDropText:SetText(name)
         local eff = OneWoW_GUI:GetEffectiveThemeKey()
         local td = THEMES[eff]
