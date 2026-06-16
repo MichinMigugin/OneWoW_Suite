@@ -188,7 +188,7 @@ local function HandleAddMountInfo(unit)
             mountText = mountText .. "\n" .. string.format(L["UNIT_CTX_MOUNT_SOURCE"], mountInfo.sourceText)
         end
         if mountInfo.isCollected ~= nil then
-            local status = mountInfo.isCollected and L["UNIT_CTX_MOUNT_COLLECTED"] or L["UNIT_CTX_MOUNT_NOT_COLLECTED_STATUS"]
+            local status = mountInfo.isCollected and COLLECTED or NOT_COLLECTED
             mountText = mountText .. "\n" .. string.format(L["UNIT_CTX_MOUNT_STATUS"], status)
         end
     end

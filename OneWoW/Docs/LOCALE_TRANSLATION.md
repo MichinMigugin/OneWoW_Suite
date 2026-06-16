@@ -210,9 +210,24 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
   scope excludes `Modules/external/` — per-module swaps stay correctly isolated
   (core and module files share the `L` name bound to different scopes).
 
-**Phase 2 remaining:** `OneWoW` core hub scope (969 keys) and the `shared` scope
-(49 keys — handle carefully: shared keys are the suite-wide fallback, removing one
-breaks every scope that resolves it).
+- [x] `OneWoW` **core hub scope** — 8 keys adopted (`SETTINGS_SUBTAB`/`SETTINGS_TAB`
+  →`SETTINGS`, `UNIT_CTX_MOUNT_COLLECTED`/`_NOT_COLLECTED_STATUS`→`COLLECTED`/
+  `NOT_COLLECTED`, `WIZARD_APPLY`→`APPLY`, `WIZARD_PRESET_RECOMMENDED`→`RECOMMENDED`,
+  `WIZARD_RELOAD_LATER`→`LATER`, `WIZARD_SUMMARY_READY`→`READY`); 2 new globals
+  (`LATER`, `RECOMMENDED`). 6 dynamic excluded. **26 "dead" tags DEFERRED, not
+  stripped** — core has pervasive dynamic locale access (`OneWoW.L[key]`,
+  `L[localeKey]`/`L[info.localeKey]`, `L[entry.labelKey]`/`[summaryKey]`,
+  `GetOptional(scope,"LOAD_FAIL_"..reason)`, and a `local function L(key)` wrapper in
+  SearchData), so a "dead" tag can't be trusted without tracing each dynamic index.
+  The 8 adoptions were each confirmed to have exactly one literal `OneWoW.L["K"]`/
+  `L["K"]` site and no stored/wrapped/constructed form. (Note: tool's substring count
+  correctly treats `OneWoW.L["K"]` as literal.)
+
+**Phase 2 remaining:** the `shared` scope (49 keys). Handle carefully — shared keys
+are the suite-wide fallback resolved by EVERY scope, so removing one (e.g. `CLOSE`)
+breaks every `L["CLOSE"]` call site suite-wide unless all are converted first.
+Also: a dedicated dead-key sweep (incl. OneWoW core's 26 deferred) could be a
+separate cleanup pass with proper dynamic-index tracing.
 
 ### Phase 3 — Consolidate to shared (pending)
 Baseline: **430 strings**. Per-addon sub-phases. For each value group:

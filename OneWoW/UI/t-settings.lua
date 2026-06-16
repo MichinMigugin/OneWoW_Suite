@@ -49,7 +49,7 @@ function UI:CreateSettingsMainTab(parent)
 end
 
 local coreSettingsTabs = {
-    { name = "settings",       displayName = function() return OneWoW.L["SETTINGS_SUBTAB"] end, create = function(parent) UI:CreateSettingsMainTab(parent) end },
+    { name = "settings",       displayName = function() return SETTINGS end, create = function(parent) UI:CreateSettingsMainTab(parent) end },
     { name = "profiles",       displayName = function() return OneWoW.L["PROFILES_SUBTAB"] end, create = function(parent) UI:CreateProfilesTab(parent) end },
     { name = "managefeatures", displayName = function() return OneWoW.L["MANAGE_FEATURES_SUBTAB"] end, create = function(parent) UI:CreateManageFeaturesTab(parent) end },
 }

@@ -138,7 +138,7 @@ function FirstRun:Apply(selections, perCharacter, hard)
         StaticPopupDialogs["ONEWOW_MANAGE_FEATURES_RELOAD"] = {
             text = L["WIZARD_RELOAD_TEXT"],
             button1 = L["WIZARD_RELOAD_NOW"],
-            button2 = L["WIZARD_RELOAD_LATER"],
+            button2 = LATER,
             OnAccept = function() ReloadUI() end,
             timeout = 0,
             whileDead = true,
@@ -263,7 +263,7 @@ function FirstRun:BuildPanel(parent, opts)
     })
 
     local presetItems = {
-        { text = L["WIZARD_PRESET_RECOMMENDED"], value = "recommended" },
+        { text = RECOMMENDED, value = "recommended" },
         { text = L["WIZARD_PRESET_MINIMAL"],     value = "minimal" },
         { text = L["WIZARD_PRESET_MANUAL"],      value = "manual", isActive = true },
     }
@@ -357,7 +357,7 @@ function FirstRun:BuildPanel(parent, opts)
     hardApplyBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
 
     local softApplyBtn = OneWoW_GUI:CreateFitTextButton(actionBar.right, {
-        text = L["WIZARD_APPLY"],
+        text = APPLY,
         height = 26,
         minWidth = 80,
     })
@@ -440,7 +440,7 @@ function FirstRun:BuildPanel(parent, opts)
     local function RefreshSummary()
         summary:SetItemValue(1, format(L["WIZARD_SUMMARY_SELECTED_FORMAT"], CountSelected(), #FirstRun.CATALOG))
         summary:SetItemValue(2, format(L["WIZARD_SUMMARY_DATA_FORMAT"], CountWantedDatastores()))
-        summary:SetItemValue(3, HasChanges() and L["WIZARD_SUMMARY_PENDING"] or L["WIZARD_SUMMARY_READY"])
+        summary:SetItemValue(3, HasChanges() and L["WIZARD_SUMMARY_PENDING"] or READY)
     end
 
     local function ApplyPreset(preset)

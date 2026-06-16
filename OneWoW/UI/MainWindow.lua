@@ -597,7 +597,7 @@ function UI:InitMainWindow()
         table.insert(row1Buttons, btn)
     end
 
-    local settingsBtn = CreateRow1TabButton(row1Container, L["SETTINGS_TAB"], "settings")
+    local settingsBtn = CreateRow1TabButton(row1Container, SETTINGS, "settings")
     table.insert(row1Buttons, settingsBtn)
 
     row1Container:SetScript("OnSizeChanged", function()
