@@ -102,8 +102,13 @@ CONSOLIDATE / TRANSLATE — the unit of work for Phases 2–4.
 - [x] Removed redundant `["CLOSE"]` from `OneWoW_QoL` (inherits from `shared`).
   `/owlocale` and section A now report 0 collisions.
 
-### Phase 2 — Blizzard global adoption (pending)
-Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
+### Phase 2 — Blizzard global adoption ✅ (done 2026-06-15)
+Baseline: **145 strings / 424 sites**. **Verified complete:** a full
+`bin/locale_keydiff.py` re-run reports **0 adoptable candidates remaining** in any
+of the 56 scopes — the residual B bucket (59 strings) is entirely (a) OneWoW-core
+dead/dynamic keys deferred below, (b) `*_OFF` keys kept for `*_ON` pairing, or
+(c) dynamic/constructed refs excluded by the curation rules. Nothing clean was
+missed. Per-addon sub-phases (template). For each addon:
 - [ ] `python bin/locale_keydiff.py --scope <addon>` → review the **BLIZZARD** bucket.
 - [ ] Curate: confirm each global is the semantically-correct one (drop any wrong fit).
 - [ ] **Audit each candidate for dynamic references** (see Curation rules) and drop
@@ -223,7 +228,8 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
   `L["K"]` site and no stored/wrapped/constructed form. (Note: tool's substring count
   correctly treats `OneWoW.L["K"]` as literal.)
 
-- [x] `shared` **scope** (was 49 keys → 41). The audit found 46/49 keys *unused*:
+- [x] `shared` **scope** (was 49 keys → **51** after fully localizing the General
+  panel). The audit found 46/49 keys *unused*:
   `OneWoW/GUI/Settings.lua` (the General panel) hardcoded its English labels instead
   of reading the shared keys — a localization gap, not just dead keys. Fixed by
   wiring the panel to the locale view (`local L = OneWoW.L` at runtime inside
@@ -261,9 +267,38 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
     carry stale keys and miss the ~8 new ones; missing keys fall back to enUS in-game.
     They get regenerated wholesale in Phase 4 — left untouched here.
 
-**Phase 2 remaining:** none for call-site swaps. Optional: the deferred Font/Value/
-Link labels of the General panel, and a dedicated dead-key sweep (incl. OneWoW core's
-26 deferred) with proper dynamic-index tracing.
+**Phase 2 remaining:** none. All call-site swaps done; tool confirms 0 adoptable
+candidates left.
+
+---
+
+## Pre-Phase-4 assessment (2026-06-15)
+
+A full re-run of `bin/locale_keydiff.py` + a locale-file coverage scan, to confirm
+nothing was missed before translation. Findings:
+
+1. **Phase 2 is complete** — 0 adoptable Blizzard candidates remain (verified above).
+2. **Phase 3 (consolidate) has NOT been started.** Section C still reports **425
+   strings** that hold the same enUS value across ≥2 scopes (e.g. `OFF`-less duplicates,
+   shared section titles). Going straight to Phase 4 would translate each of these
+   ~425 strings in every scope that owns a copy instead of once in `shared` — the exact
+   duplication the rollout exists to avoid. **Decision needed: run Phase 3 before
+   Phase 4** (recommended, per "best outcome, not shortcuts").
+3. **OneWoW-core dead-key sweep still owed.** Core's B bucket is 32 keys, **0
+   adoptable**: ~24 tagged `[dead -> strip only]` + 8 `[DYNAMIC]`. Core uses pervasive
+   runtime-constructed locale access, so a `dead` tag is untrustworthy without tracing
+   each dynamic index. These must be resolved (strip true-dead, keep live) *before*
+   Phase 4 so we neither translate dead keys nor drop dynamically-used ones.
+4. **Locale-file coverage is sparse — Phase 4 is a large fill.** Only 3 scopes
+   (`OneWoW`, `OneWoW_Bags`, `OneWoW_DirectDeposit`) have the original 6 languages;
+   every other scope has just 1–2 (enUS, sometimes koKR). **No scope has all 11.**
+   Phase 4 must add koKR/frFR/deDE/zhCN/esES/zhTW/esMX/ruRU/ptBR/itIT to every scope.
+5. **5 stale `shared` translations** (koKR/deDE/esES/frFR/ruRU) carry pre-rebuild keys
+   (`CANCEL`/`CLOSE`/`ENGLISH`/`THEME_CURRENT`/`MINIMAP_ICON_*`) and miss the new ones;
+   they fall back to enUS in-game and get regenerated in Phase 4.
+6. **E. name-match traps (4)** confirmed informational, not misses —
+   `GUILD_BANK_MONEY_LOG`/`NO_BIDS`/`RESETS_IN`/`SETTINGS_TITLE` share a global's *name*
+   but mean something different; they stay scoped and translate normally.
 
 ### Phase 3 — Consolidate to shared (pending)
 Baseline: **430 strings**. Per-addon sub-phases. For each value group:
