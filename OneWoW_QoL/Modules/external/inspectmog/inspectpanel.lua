@@ -596,7 +596,7 @@ function UI:EnsureFrame()
         height = 22,
         minWidth = 72,
     })
-    addAllBtn:SetText(L["INSPECTMOG_ADD_ALL"])
+
     addAllBtn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -PAD, -(HEADER_HEIGHT + 6))
     addAllBtn:SetScript("OnClick", function()
         AddAllVisibleAppearancesToNotes(frame)
@@ -721,7 +721,7 @@ function UI:Refresh(unit)
     AnchorToInspect(self.frame)
     self.frame.title:SetText(L["INSPECTMOG_PANEL_TITLE"])
     if self.frame.addAllBtn then
-        self.frame.addAllBtn:SetText(L["INSPECTMOG_ADD_ALL"])
+        self.frame.addAllBtn:SetFitText(L["INSPECTMOG_ADD_ALL"])
     end
 
     local snapshot =
