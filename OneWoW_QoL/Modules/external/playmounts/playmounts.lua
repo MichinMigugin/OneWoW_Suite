@@ -52,70 +52,6 @@ local function SetDisplayMode(mode)
     addon.db.global.modules["playmounts"].displayMode = mode
 end
 
-local function RegisterTooltipProvider()
-    if not OneWoW or not OneWoW.TooltipEngine then return end
-
-    local function PlayerMountsTooltipProvider(_, context)
-        if not ns.ModuleRegistry:IsEnabled("playmounts") then return nil end
-        if not context.isPlayer or not context.unit then return nil end
-
-        local mountInfo = PlayMountsModule:DetectMountOnUnit(context.unit)
-        if not mountInfo then return nil end
-
-        local displayMode = GetDisplayMode()
-        local lines = {}
-
-        if mountInfo.isMovementForm then
-            table.insert(lines, {
-                type  = "double",
-                left  = MOUNT,
-                right = mountInfo.name,
-                lr = 0.9, lg = 0.9, lb = 0.9,
-                rr = 1.0, rg = 1.0, rb = 1.0,
-            })
-        else
-            local collected = mountInfo.isCollected
-                and ("|cFF00FF00" .. (L["PLAYMOUNTS_COLLECTED"]) .. "|r")
-                or  ("|cFFFF0000" .. (L["PLAYMOUNTS_NOT_COLLECTED"]) .. "|r")
-
-            table.insert(lines, {
-                type  = "double",
-                left  = MOUNT,
-                right = mountInfo.name .. " " .. collected,
-                lr = 0.9, lg = 0.9, lb = 0.9,
-                rr = 1.0, rg = 1.0, rb = 1.0,
-            })
-
-            if displayMode ~= "name" and mountInfo.mountTypeName then
-                table.insert(lines, {
-                    type = "text",
-                    text = string.format(L["TYPE_S"], mountInfo.mountTypeName),
-                    r = 0.7, g = 0.7, b = 0.7,
-                })
-            end
-
-            if displayMode == "all" and mountInfo.sourceText and mountInfo.sourceText ~= "" then
-                table.insert(lines, {
-                    type = "text",
-                    text = string.format(L["PLAYMOUNTS_SOURCE"], mountInfo.sourceText),
-                    r = 0.7, g = 0.7, b = 0.7,
-                })
-            end
-        end
-
-        if #lines == 0 then return nil end
-        return lines
-    end
-
-    OneWoW.TooltipEngine:RegisterProvider({
-        id           = "playermounts",
-        order        = 50,
-        featureId    = "playermounts",
-        tooltipTypes = {"unit"},
-        callback     = PlayerMountsTooltipProvider,
-    })
-end
-
 function PlayMountsModule:GetMountTypeName(mountTypeID)
     return MOUNT_TYPES[mountTypeID] or "Unknown"
 end
@@ -173,6 +109,57 @@ function PlayMountsModule:DetectMountOnUnit(unit)
     end
 
     return nil
+end
+
+local function PlayerMountsTooltipProvider(_, context)
+    if not context.isPlayer or not context.unit then return nil end
+
+    local mountInfo = PlayMountsModule:DetectMountOnUnit(context.unit)
+    if not mountInfo then return nil end
+
+    local displayMode = GetDisplayMode()
+    local lines = {}
+
+    if mountInfo.isMovementForm then
+        table.insert(lines, {
+            type  = "double",
+            left  = MOUNT,
+            right = mountInfo.name,
+            lr = 0.9, lg = 0.9, lb = 0.9,
+            rr = 1.0, rg = 1.0, rb = 1.0,
+        })
+    else
+        local collected = mountInfo.isCollected
+            and ("|cFF00FF00" .. (L["PLAYMOUNTS_COLLECTED"]) .. "|r")
+            or  ("|cFFFF0000" .. (L["PLAYMOUNTS_NOT_COLLECTED"]) .. "|r")
+
+        table.insert(lines, {
+            type  = "double",
+            left  = MOUNT,
+            right = mountInfo.name .. " " .. collected,
+            lr = 0.9, lg = 0.9, lb = 0.9,
+            rr = 1.0, rg = 1.0, rb = 1.0,
+        })
+
+        if displayMode ~= "name" and mountInfo.mountTypeName then
+            table.insert(lines, {
+                type = "text",
+                text = string.format(L["TYPE_S"], mountInfo.mountTypeName),
+                r = 0.7, g = 0.7, b = 0.7,
+            })
+        end
+
+        if displayMode == "all" and mountInfo.sourceText and mountInfo.sourceText ~= "" then
+            table.insert(lines, {
+                type = "text",
+                text = string.format(L["PLAYMOUNTS_SOURCE"], mountInfo.sourceText),
+                r = 0.7, g = 0.7, b = 0.7,
+            })
+        end
+    end
+
+    if #lines == 0 then return nil end
+    return lines
 end
 
 function PlayMountsModule:OnTargetChanged()
@@ -374,7 +361,6 @@ function PlayMountsModule:OnEnable()
         end)
     end
     self._frame:RegisterEvent("PLAYER_TARGET_CHANGED")
-    RegisterTooltipProvider()
 end
 
 function PlayMountsModule:OnDisable()
@@ -382,3 +368,11 @@ function PlayMountsModule:OnDisable()
         self._frame:UnregisterAllEvents()
     end
 end
+
+OneWoW.TooltipEngine:RegisterProvider({
+    id           = "playermounts",
+    order        = 50,
+    featureId    = "playermounts",
+    tooltipTypes = {"unit"},
+    callback     = PlayerMountsTooltipProvider,
+})

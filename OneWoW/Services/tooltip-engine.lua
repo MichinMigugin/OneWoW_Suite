@@ -31,11 +31,35 @@ local TOOLTIP_CONFIG = {
 
 TooltipEngine.TOOLTIP_CONFIG = TOOLTIP_CONFIG
 
-function TooltipEngine:RegisterProvider(provider)
-    table.insert(sectionProviders, provider)
+local function sortProviders()
     table.sort(sectionProviders, function(a, b)
         return (a.order or 100) < (b.order or 100)
     end)
+end
+
+function TooltipEngine:RegisterProvider(provider)
+    if not provider or not provider.id then
+        error("TooltipEngine:RegisterProvider requires provider.id")
+    end
+    for i, existing in ipairs(sectionProviders) do
+        if existing.id == provider.id then
+            sectionProviders[i] = provider
+            sortProviders()
+            return
+        end
+    end
+    table.insert(sectionProviders, provider)
+    sortProviders()
+end
+
+function TooltipEngine:UnregisterProvider(id)
+    if not id then return end
+    for i = #sectionProviders, 1, -1 do
+        if sectionProviders[i].id == id then
+            tremove(sectionProviders, i)
+            return
+        end
+    end
 end
 
 function TooltipEngine:Initialize()
