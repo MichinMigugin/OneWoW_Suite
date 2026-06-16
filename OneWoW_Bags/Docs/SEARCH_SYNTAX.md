@@ -583,7 +583,8 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 | `#usable` | Items you can use (alias: `#use`) |
 | `#unusable` | Items you cannot use |
 | `#new` | Items Blizzard marks as new in the bag slot (`C_NewItems.IsNewItem`), via the shared PredicateEngine `BuildProps` (may lag real client state until the props cache is invalidated) |
-| `#locked` | Locked items |
+| `#locked` | Bag slot is server-locked (`ContainerItemInfo.isLocked`) — item on cursor, in trade/mail/AH, or pending a move; **not** lockbox lockpicking state |
+| `#hasloot` | Loot containers (`ContainerItemInfo.hasLoot`) — lockboxes, junk boxes, clam shells, etc.; true for locked and unlocked lockboxes; requires bag/slot context (false without it) |
 | `#socket` | Items with gem sockets |
 | `#equipped` | Items currently equipped |
 | `#refundable` | Items still eligible for a full vendor refund (same window as the in-game refund indicator) |
@@ -650,7 +651,13 @@ These keywords scan the item's tooltip text (or tooltip-derived fields filled by
 | `#uniqueequipped` | Unique-equipped items |
 | `#reputation` | Items with "Reputation" in the tooltip |
 | `#tradeableloot` | Loot still in the trade window |
-| `#openable` | Containers you can right-click to open |
+| `#openable` | Containers you can right-click to open now (bag tooltip includes `ITEM_OPENABLE`); subset of `#hasloot` — excludes locked lockboxes and other containers you cannot open yet |
+
+> **`#hasloot` vs `#openable` vs `#locked`:** `#hasloot` is API-based (`hasLoot` on the
+> container slot). `#openable` is tooltip-based and means *openable right now* (see
+> `#openable` above). `#locked` is the unrelated inventory-slot lock flag, not
+> “Requires Lockpicking”. Example: `#hasloot & !#openable` finds lockboxes still
+> needing lockpicking; `#hasloot & #openable` finds containers ready to loot.
 
 ### Shop / battle.net item
 
@@ -923,6 +930,7 @@ read more like natural conditions.
 | `IsPetTradeable` | `#pettradeable` |
 | `IsCosmetic` | `#cosmetic` |
 | `IsLocked` | `#locked` |
+| `HasLoot` | `#hasloot` |
 | `IsUnsellable` | `#unsellable` |
 | `HasCharges` | `#charges` |
 | `IsUnique` | `#unique` |

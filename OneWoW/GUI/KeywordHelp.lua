@@ -86,7 +86,7 @@ local CATEGORY_RULES = {
     stat    = { intellect = true, agility = true, strength = true, stamina = true, crit = true, haste = true, mastery = true, versatility = true, speed = true, leech = true, avoidance = true },
     socket  = { prismatic = true, metasocket = true, redsocket = true, yellowsocket = true, bluesocket = true, primordial = true },
     context = { raid = true, dungeon = true, delves = true, worldquest = true, pvp = true, store = true },
-    state   = { usable = true, unusable = true, locked = true, new = true, socket = true, equipped = true, refundable = true, enchanted = true, charges = true, onuse = true, onequip = true, unique = true, uniqueequipped = true, reputation = true, tradeableloot = true, openable = true, sellable = true, unsellable = true, quest = true, questitem = true },
+    state   = { usable = true, unusable = true, locked = true, hasloot = true, new = true, socket = true, equipped = true, refundable = true, enchanted = true, charges = true, onuse = true, onequip = true, unique = true, uniqueequipped = true, reputation = true, tradeableloot = true, openable = true, sellable = true, unsellable = true, quest = true, questitem = true },
     special = { hearthstone = true, keystone = true, tierset = true, battlepay = true, wowtoken = true, housing = true, decor = true, dye = true, room = true, recent = true },
 }
 

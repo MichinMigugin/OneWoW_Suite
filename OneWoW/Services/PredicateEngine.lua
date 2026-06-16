@@ -352,6 +352,7 @@ local FLAG_REGISTRY = {
     ispettradeable          = "isPetTradeable",
     iscosmetic              = "isCosmetic",
     islocked                = "isLocked",
+    hasloot                 = "hasLoot",
     isunsellable            = "isUnsellable",
     hascharges              = "hasCharges",
     isunique                = "isUnique",
@@ -933,6 +934,7 @@ RegisterKeyword("catalystupgrade",  function(p) return p.isCatalystUpgrade end)
 RegisterKeyword({"usable", "use"},  function(p) return p.isUsable end)
 RegisterKeyword("unusable",         function(p) return not p.isUsable end)
 RegisterKeyword("locked",           function(p) return p.isLocked end)
+RegisterKeyword("hasloot",          function(p) return p.hasLoot end)
 RegisterKeyword("new",              function(p) return p.isNew end)
 RegisterKeyword("socket",           function(p) return p.hasSocket end)
 RegisterKeyword("equipped",         function(p) return p.isEquipped end)
@@ -2020,7 +2022,7 @@ end
 --
 -- Cache strategy:
 --   - When bagID/slotID are present, cached by "bagID:slotID" so slot-state
---     fields (durability, isNew, isLocked, equipment-set membership, current
+--     fields (durability, isNew, isLocked, hasLoot, equipment-set membership, current
 --     bind state) can vary per slot.
 --   - Otherwise cached by item identity (hyperlink for normal items, itemID
 --     plus pet stats for caged battle pets) so independent calls for the same
@@ -2164,6 +2166,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
     props.count    = containerInfo and containerInfo.stackCount or 1
     props.isLocked = containerInfo and containerInfo.isLocked or false
+    props.hasLoot = containerInfo and containerInfo.hasLoot or false
 
     -- ---- Computed value ----
     props.totalValue = props.vendorPrice * props.count
