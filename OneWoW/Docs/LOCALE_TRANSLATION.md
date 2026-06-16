@@ -189,6 +189,16 @@ Baseline: **145 strings / 424 sites**. Per-addon sub-phases. For each addon:
   first (these data addons looked constructible — `EXP_*`/`PROF_*`/`TYPE_*` — but
   none are constructed). Both globals already whitelisted. Other 9 sub-addons: none.
 
+- [x] `OneWoW_QoL` **core scope** — 4 keys adopted (`DEVHELP_CLOSE`→`CLOSE`,
+  `FEATURES_FAVORITES_SECTION`/`TOGGLES_FAVORITES_SECTION`→`FAVORITES`,
+  `TAB_SETTINGS`→`SETTINGS`); 5 dead stripped. **Kept:** `CATEGORY_COMBAT`
+  (constructed via `ns.L["CATEGORY_"..cat]` — tool mis-tagged it dead; manual
+  construction audit caught it), `FEATURES_OFF`/`TOGGLES_OFF` (paired with `*_ON`),
+  8 dynamic `TOGGLE_NAME_*`/`TOGGLE_OPT_*`. **Swap restricted to core files**
+  (excludes `Modules/external/`) since core and module files share the `L` variable
+  bound to different scopes. Globals already whitelisted. Module scopes handled
+  separately (next).
+
 ### Phase 3 — Consolidate to shared (pending)
 Baseline: **430 strings**. Per-addon sub-phases. For each value group:
 - [ ] Pick the canonical key name (often the simplest existing one) and value.

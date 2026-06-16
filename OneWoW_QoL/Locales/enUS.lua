@@ -9,10 +9,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["TAB_FEATURES"] = "QoL Features",
     ["TAB_TOGGLES"] = "Toggles",
-    ["TAB_SETTINGS"] = "Settings",
 
     ["FEATURES_LIST_TITLE"] = "Features",
-    ["FEATURES_FAVORITES_SECTION"] = "Favorites",
     ["FEATURES_FAVORITE_TT_TITLE"] = "Favorite",
     ["FEATURES_FAVORITE_TT_DESC"] = "Pin this feature to the Favorites section at the top. Click again to remove it from Favorites.",
     ["FEATURES_DETAIL_TITLE"] = "Details",
@@ -20,7 +18,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["FEATURES_NO_SELECTION"] = "Select a feature from the list.",
     ["FEATURES_ENABLED"] = "Enabled",
     ["FEATURES_DISABLED"] = "Disabled",
-    ["FEATURES_ENABLE_LABEL"] = "Enable",
     ["FEATURES_CATEGORY_LABEL"] = "Category:",
     ["FEATURES_VERSION_LABEL"] = "Version:",
     ["FEATURES_AUTHOR_LABEL"] = "Author:",
@@ -41,7 +38,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["CATEGORY_UTILITY"] = "Utility",
 
     ["TOGGLES_LIST_TITLE"] = "Game Flags",
-    ["TOGGLES_FAVORITES_SECTION"] = "Favorites",
     ["TOGGLES_FAVORITE_TT_TITLE"] = "Favorite",
     ["TOGGLES_FAVORITE_TT_DESC"] = "Pin this toggle to the Favorites section at the top. Click again to remove it from Favorites.",
     ["TOGGLES_DETAIL_TITLE"] = "Flag Details",
@@ -50,7 +46,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["SETTINGS_THEME_HEADER"] = "Color Theme",
     ["SETTINGS_THEME_DESC"] = "Choose a color theme. Changes apply instantly.",
-    ["SETTINGS_LANGUAGE_HEADER"] = "Language",
     ["SETTINGS_LANGUAGE_DESC"] = "Choose your preferred language. Changes apply instantly.",
     ["SETTINGS_DEVELOPER_HEADER"] = "Developer Information",
     ["SETTINGS_DEVELOPER_DESC"] = "This addon supports external modules. Add QoL features by creating a module folder in Modules\\external\\. Use the Developer Help button for complete documentation.",
@@ -131,7 +126,6 @@ SavedVariables database space:
 
 See Modules\external\autodelete\ for a
 complete working example.]],
-    ["DEVHELP_CLOSE"] = "Close",
 
     ["MINIMAP_TOOLTIP_TITLE"] = "OneWoW - QoL",
     ["MINIMAP_TOOLTIP_HINT"] = "Click to open",
@@ -141,9 +135,6 @@ complete working example.]],
     ["LANG_ENGLISH"] = "English",
     ["LANG_KOREAN"] = "Korean",
 
-    ["UNKNOWN"] = "Unknown",
-    ["ENABLE"] = "Enable",
-    ["DISABLE"] = "Disable",
 
     ["SEARCH_HINT"] = "Filter...",
     ["TOGGLES_STATUS_ALL"] = "Showing %d CVars",

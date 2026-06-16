@@ -433,7 +433,7 @@ local function BuildFeaturesList(split, filterText)
         favLabel:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 8, yOffset)
         favLabel:SetPoint("TOPRIGHT", listScrollChild, "TOPRIGHT", -8, yOffset)
         favLabel:SetJustifyH("LEFT")
-        favLabel:SetText(L["FEATURES_FAVORITES_SECTION"])
+        favLabel:SetText(FAVORITES)
         favLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
         yOffset = yOffset - favLabel:GetStringHeight() - 4
 

@@ -66,7 +66,7 @@ local function ShowDevHelpDialog()
         width = 520,
         height = 560,
         buttons = {
-            { text = L["DEVHELP_CLOSE"], onClick = function(dialog) dialog:Hide() end },
+            { text = CLOSE, onClick = function(dialog) dialog:Hide() end },
         },
     })
 

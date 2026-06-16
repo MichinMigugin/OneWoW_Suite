@@ -469,7 +469,7 @@ local function BuildTogglesList(split, filterText)
         favLabel:SetPoint("TOPLEFT",  child, "TOPLEFT",  8, yOfs)
         favLabel:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOfs)
         favLabel:SetJustifyH("LEFT")
-        favLabel:SetText(L["TOGGLES_FAVORITES_SECTION"])
+        favLabel:SetText(FAVORITES)
         favLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
         yOfs = yOfs - favLabel:GetStringHeight() - 4
 
