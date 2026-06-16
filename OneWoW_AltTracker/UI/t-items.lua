@@ -76,7 +76,7 @@ function ns.UI.CreateItemsTab(parent)
 
     local searchBox = OneWoW_GUI:CreateEditBox(filterBar, {
         height = 20,
-        placeholderText = L["ITEMS_SEARCH_HINT"],
+        placeholderText = L["SEARCH_ITEMS"],
         onTextChanged = function(text)
             filterText = text
             if ns.UI.RefreshItemsTab then
@@ -118,7 +118,7 @@ function ns.UI.CreateItemsTab(parent)
         end
     end)
 
-    local scanAHButton = OneWoW_GUI:CreateFitTextButton(filterBar, { text = L["ITEMS_SCAN_AH"], height = 20 })
+    local scanAHButton = OneWoW_GUI:CreateFitTextButton(filterBar, { text = L["SCAN_AH"], height = 20 })
     scanAHButton:SetPoint("RIGHT", filterBar, "RIGHT", -8, 0)
     scanAHButton.isAHScanning = false
     scanAHButton:SetScript("OnClick", function(self)
@@ -130,7 +130,7 @@ function ns.UI.CreateItemsTab(parent)
             return
         end
         if not AuctionHouseFrame or not AuctionHouseFrame:IsShown() then
-            print(L["ADDON_CHAT_PREFIX"] .. " " .. L["ITEMS_AH_NOT_OPEN"])
+            print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OPEN_THE_AUCTION_HOUSE_FIRST_TO_SCAN_PRICES"])
             return
         end
         ns.UI:StartAHScan(parent, scanAHButton)
@@ -346,7 +346,7 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
 
     local function ScanDone(pricesFound)
         scanButton.isAHScanning = false
-        scanButton:SetText(L["ITEMS_SCAN_AH"])
+        scanButton:SetText(L["SCAN_AH"])
         scanButton:SetEnabled(true)
         ShowProgress(false)
         if ns.UI.RefreshItemsTab then
@@ -367,7 +367,7 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
             if progressBar then
                 progressBar:UpdateProgress(current, total)
                 local pricesFound = extra or 0
-                progressBar._text:SetText(current .. "/" .. total .. "  (" .. pricesFound .. " " .. (L["ITEMS_PRICES_FOUND"]) .. ")")
+                progressBar._text:SetText(current .. "/" .. total .. "  (" .. pricesFound .. " " .. (L["PRICES_FOUND"]) .. ")")
             end
             if current - lastRefreshIndex >= 25 then
                 lastRefreshIndex = current
@@ -379,7 +379,7 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
             local pricesFound = extra or 0
             if progressBar then
                 progressBar:UpdateProgress(total, total)
-                progressBar._text:SetText(L["ITEMS_SCAN_COMPLETE"] .. "  (" .. pricesFound .. " " .. (L["ITEMS_PRICES_FOUND"]) .. ")")
+                progressBar._text:SetText(L["ITEMS_SCAN_COMPLETE"] .. "  (" .. pricesFound .. " " .. (L["PRICES_FOUND"]) .. ")")
             end
             C_Timer.After(3, function()
                 ScanDone(pricesFound)
@@ -983,7 +983,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
             totalCount = totalCount + 1
         end
         if totalCount > #filteredItems then
-            itemsTab.statusText:SetText(string.format(L["ITEMS_STATUS_FILTERED"], #filteredItems, totalCount) .. filterState)
+            itemsTab.statusText:SetText(string.format(L["D_OF_D_ITEMS"], #filteredItems, totalCount) .. filterState)
         else
             itemsTab.statusText:SetText(string.format(L["ITEMS_STATUS"], #filteredItems) .. filterState)
         end

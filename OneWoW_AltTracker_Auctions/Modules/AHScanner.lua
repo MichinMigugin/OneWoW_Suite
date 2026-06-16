@@ -214,7 +214,7 @@ function AHScanner:OnSearchResults(isCommodity)
         if numResults and numResults > 0 then
             local resultInfo = C_AuctionHouse.GetCommoditySearchResultInfo(itemData.itemID, 1)
             if resultInfo and resultInfo.unitPrice then
-                _G.OneWoW_AHPrices[itemData.itemID] = {
+                OneWoW_AHPrices[itemData.itemID] = {
                     price = resultInfo.unitPrice,
                     timestamp = GetServerTime(),
                 }
@@ -230,7 +230,7 @@ function AHScanner:OnSearchResults(isCommodity)
             local resultInfo = C_AuctionHouse.GetItemSearchResultInfo(itemKey, 1)
             if resultInfo and resultInfo.buyoutAmount then
                 local pricePerUnit = math.floor(resultInfo.buyoutAmount / math.max(1, resultInfo.quantity or 1))
-                _G.OneWoW_AHPrices[itemData.itemID] = {
+                OneWoW_AHPrices[itemData.itemID] = {
                     price = pricePerUnit,
                     timestamp = GetServerTime(),
                 }
@@ -258,8 +258,8 @@ function AHScanner:CompleteScan()
 end
 
 function AHScanner:GetPrice(itemID)
-    if _G.OneWoW_AHPrices then
-        local data = _G.OneWoW_AHPrices[itemID]
+    if OneWoW_AHPrices then
+        local data = OneWoW_AHPrices[itemID]
         if data then
             return data.price, data.timestamp
         end

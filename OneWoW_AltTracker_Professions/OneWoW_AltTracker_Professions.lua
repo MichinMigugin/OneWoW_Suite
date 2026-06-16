@@ -1,6 +1,6 @@
-local addonName, ns = ...
+local _, ns = ...
 
-_G.OneWoW_AltTracker_Professions = ns
+OneWoW_AltTracker_Professions = ns
 
 if OneWoW_AltTracker_Professions_API then
     OneWoW_AltTracker_Professions_API = nil

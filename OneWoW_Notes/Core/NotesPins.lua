@@ -679,7 +679,7 @@ function NotesPins:CreateNotePin(noteID, note)
     titleBar:EnableMouse(true)
     titleBar:SetScript("OnEnter", function()
         GameTooltip:SetOwner(titleBar, "ANCHOR_BOTTOM")
-        GameTooltip:SetText(L["CORE_PIN_TITLE_COLLAPSE_HINT"], 1, 1, 1)
+        GameTooltip:SetText(L["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"], 1, 1, 1)
         GameTooltip:Show()
     end)
     titleBar:SetScript("OnLeave", function()
@@ -770,7 +770,7 @@ function NotesPins:CreateNotePin(noteID, note)
     pin.alphaSlider = alphaSlider
 
     local lockMoveCB = OneWoW_GUI:CreateCheckbox(hoverControlsPanel, {
-        label = L["CORE_PIN_LOCK_MOVE"],
+        label = L["LOCK_MOVE"],
         checked = note.lockMove,
         onClick = function(myself)
             note.lockMove = myself:GetChecked()
@@ -818,7 +818,7 @@ function NotesPins:CreateNotePin(noteID, note)
     pin.hoverTasksCB = hoverTasksCB
 
     local lockResizeCB = OneWoW_GUI:CreateCheckbox(hoverControlsPanel, {
-        label = L["CORE_PIN_LOCK_RESIZE"],
+        label = L["LOCK_RESIZE"],
         checked = note.lockResize,
         onClick = function(myself)
             note.lockResize = myself:GetChecked()

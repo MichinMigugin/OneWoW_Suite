@@ -188,7 +188,7 @@ function UI:CreateHomeTab(parent)
     end
 
     local discordBtn = CreateLinkButton(linksRow,
-        L["HOME_DISCORD"],
+        L["DISCORD"],
         L["HOME_DISCORD_LINK"])
     discordBtn:SetPoint("LEFT", linksRow, "CENTER", -160, 0)
 

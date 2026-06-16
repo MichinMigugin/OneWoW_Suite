@@ -608,7 +608,7 @@ local function RefreshDetailView(isSecondRefresh)
 
         local itemCountStr = string.format(L["JOURNAL_ITEMS_COUNT"], #filteredItems)
         if #filteredItems ~= #encounter.items then
-            itemCountStr = string.format(L["JOURNAL_ITEMS_FILTERED"], #filteredItems, #encounter.items)
+            itemCountStr = string.format(L["D_OF_D_ITEMS"], #filteredItems, #encounter.items)
         end
         local encCount = OneWoW_GUI:CreateFS(encBtn, 10)
         encCount:SetPoint("RIGHT", encBtn, "RIGHT", -8, 0)
@@ -760,13 +760,13 @@ local function ShowInstanceDetail(panels, instData)
         local diffs = GetUniqueDifficulties(instData)
         if #diffs > 0 then
             panels.diffDropdown:Show()
-            panels.diffText:SetText(L["JOURNAL_DIFF_ALL"])
+            panels.diffText:SetText(L["ALL_DIFFICULTIES"])
 
             OneWoW_GUI:AttachFilterMenu(panels.diffDropdown, {
                 searchable = false,
                 getActiveValue = function() return selectedDifficulty end,
                 buildItems = function()
-                    local items = { { value = "all", text = L["JOURNAL_DIFF_ALL"] } }
+                    local items = { { value = "all", text = L["ALL_DIFFICULTIES"] } }
                     local curDiffs = GetUniqueDifficulties(selectedInstance)
                     for _, diff in ipairs(curDiffs) do
                         table.insert(items, {
@@ -778,7 +778,7 @@ local function ShowInstanceDetail(panels, instData)
                 end,
                 onSelect = function(value, text)
                     selectedDifficulty = value
-                    panels.diffText:SetText(value == "all" and L["JOURNAL_DIFF_ALL"] or text)
+                    panels.diffText:SetText(value == "all" and L["ALL_DIFFICULTIES"] or text)
                     RefreshDetailView(false)
                 end,
             })
@@ -1193,7 +1193,7 @@ function ns.UI.CreateJournalTab(parent)
     panels.emptyDetail = emptyDetail
 
     -- Difficulty dropdown stays in detail panel
-    local diffDropdown, diffText = OneWoW_GUI:CreateDropdown(panels.detailPanel, { width = 180, text = L["JOURNAL_DIFF_ALL"] })
+    local diffDropdown, diffText = OneWoW_GUI:CreateDropdown(panels.detailPanel, { width = 180, text = L["ALL_DIFFICULTIES"] })
     diffDropdown:SetPoint("TOPLEFT", panels.detailPanel, "TOPLEFT", 8, -28)
     diffDropdown:Hide()
     panels.diffDropdown = diffDropdown

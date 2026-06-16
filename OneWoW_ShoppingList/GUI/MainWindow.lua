@@ -432,7 +432,7 @@ function MainWindow:Create()
     statusLabel:SetPoint("LEFT", addButtonRow, "LEFT", 8, 0)
     statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local dragBtn = OneWoW_GUI:CreateFitTextButton(addButtonRow, { text = L["OWSL_BTN_DRAG_ITEM"], height = 24 })
+    local dragBtn = OneWoW_GUI:CreateFitTextButton(addButtonRow, { text = L["DRAG_ITEM_HERE"], height = 24 })
     dragBtn:SetPoint("RIGHT", addButtonRow, "RIGHT", -4, 0)
 
     local function HandleDrop()
@@ -452,7 +452,7 @@ function MainWindow:Create()
     dragBtn:SetScript("OnReceiveDrag", HandleDrop)
     dragBtn:SetScript("OnClick",       HandleDrop)
 
-    local addByIdBtn = OneWoW_GUI:CreateFitTextButton(addButtonRow, { text = L["OWSL_BTN_ADD_BY_ID"], height = 24 })
+    local addByIdBtn = OneWoW_GUI:CreateFitTextButton(addButtonRow, { text = L["ADD_BY_ID"], height = 24 })
     addByIdBtn:SetPoint("RIGHT", dragBtn, "LEFT", -4, 0)
     addByIdBtn:SetScript("OnClick", function()
         ns.Dialogs:InputDialog(L["OWSL_DIALOG_ADD_BY_ID"], "", function(val)

@@ -490,7 +490,7 @@ function GUI:CreateItemsPanel(parent)
 
     local excludeAddLabel = OneWoW_GUI:CreateFS(excludeBox, 12)
     excludeAddLabel:SetPoint("TOPLEFT", excludeBox, "TOPLEFT", 10, -10)
-    excludeAddLabel:SetText(L["ITEM_ID_LABEL"])
+    excludeAddLabel:SetText(L["ITEM_ID"])
     excludeAddLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local excludeInputBox = OneWoW_GUI:CreateEditBox(excludeBox, { width = 100, height = 26 })
@@ -590,14 +590,14 @@ function GUI:CreateItemsPanel(parent)
 
     local addItemLabel = OneWoW_GUI:CreateFS(dropZoneFrame, 12)
     addItemLabel:SetPoint("TOPLEFT", dropZoneFrame, "TOPLEFT", 10, -10)
-    addItemLabel:SetText(L["ITEM_ID_LABEL"])
+    addItemLabel:SetText(L["ITEM_ID"])
     addItemLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local itemInputBox = OneWoW_GUI:CreateEditBox(dropZoneFrame, { width = 100, height = 26 })
     itemInputBox:SetPoint("LEFT", addItemLabel, "RIGHT", 10, 0)
     itemInputBox:SetNumeric(true)
 
-    local addBtn = OneWoW_GUI:CreateFitTextButton(dropZoneFrame, { text = L["ITEM_DEPOSIT_ADD"], height = 26 })
+    local addBtn = OneWoW_GUI:CreateFitTextButton(dropZoneFrame, { text = L["ADD_ITEM"], height = 26 })
     addBtn:SetPoint("LEFT", itemInputBox, "RIGHT", 10, 0)
     addBtn:SetScript("OnClick", function()
         local itemIDText = itemInputBox:GetText()

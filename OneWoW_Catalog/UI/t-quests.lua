@@ -352,7 +352,7 @@ local function GetQuestTypeLabel(quest)
     if quest.isDaily   then return DAILY   end
     if quest.isWeekly  then return WEEKLY  end
     if quest.isCampaign then return L["QUESTS_TYPE_CAMPAIGN"] end
-    if quest.isWorldQuest then return L["QUESTS_TYPE_WORLDQUEST"] end
+    if quest.isWorldQuest then return L["WORLD_QUEST"] end
     local cls = quest.classification
     if cls == 1 then return L["QUESTS_TYPE_LEGENDARY"] end
     if cls == 5 then return L["QUESTS_TYPE_REPEATABLE"] end
@@ -3821,7 +3821,7 @@ local function SetupQuestTypeDropdown(panels)
                 { value = "daily",      text = DAILY      },
                 { value = "weekly",     text = WEEKLY     },
                 { value = "campaign",   text = L["QUESTS_TYPE_CAMPAIGN"]   },
-                { value = "worldquest", text = L["QUESTS_TYPE_WORLDQUEST"] },
+                { value = "worldquest", text = L["WORLD_QUEST"] },
             }
         end,
         onSelect = function(value, text)
@@ -3981,7 +3981,7 @@ local function SetupAdvancedDropdowns(panels)
                 { value = "daily",      text = DAILY      },
                 { value = "weekly",     text = WEEKLY     },
                 { value = "campaign",   text = L["QUESTS_TYPE_CAMPAIGN"]   },
-                { value = "worldquest", text = L["QUESTS_TYPE_WORLDQUEST"] },
+                { value = "worldquest", text = L["WORLD_QUEST"] },
                 { value = "repeatable", text = "Repeatable" },
             }
         end,

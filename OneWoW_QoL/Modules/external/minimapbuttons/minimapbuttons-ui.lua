@@ -353,7 +353,7 @@ local function BuildContent(container, isEnabled)
 
     -- Grow direction (4-way radio: Down / Up / Left / Right)
     local growLabel
-    growLabel, cy = AddLabel(container, cy, L["MMBTNS_GROW_DIRECTION"])
+    growLabel, cy = AddLabel(container, cy, L["GROW_DIRECTION"])
 
     local growDown, growUp, growLeft, growRight
 
@@ -452,7 +452,7 @@ local function BuildContent(container, isEnabled)
     -- Button Size
     local sizeLabel
     sizeLabel, cy = AddLabel(container, cy,
-        string.format("%s: %d", L["MMBTNS_BUTTON_SIZE"], s.buttonSize))
+        string.format("%s: %d", L["BUTTON_SIZE"], s.buttonSize))
 
     local sizeSlider = OneWoW_GUI:CreateSlider(container, {
         minVal     = 24,
@@ -463,7 +463,7 @@ local function BuildContent(container, isEnabled)
         fmt        = "%d",
         onChange    = function(val)
             s.buttonSize = val
-            sizeLabel:SetText(string.format("%s: %d", L["MMBTNS_BUTTON_SIZE"], val))
+            sizeLabel:SetText(string.format("%s: %d", L["BUTTON_SIZE"], val))
             MinimapButtonsModule:LayoutContainer()
         end,
     })

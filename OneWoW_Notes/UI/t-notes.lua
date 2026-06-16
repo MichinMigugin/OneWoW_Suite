@@ -433,7 +433,7 @@ function ns.UI.CreateNotesTab(parent)
 
             local noteTypeLine = OneWoW_GUI:CreateFS(editorHeader, 10)
             noteTypeLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 24)
-            noteTypeLine:SetText(string.format(L["UI_TYPE_FORMAT"], L["NOTE_TYPE_STANDARD"]))
+            noteTypeLine:SetText(string.format(L["TYPE_S"], L["NOTE_TYPE_STANDARD"]))
             noteTypeLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             noteTypeLine:SetJustifyH("RIGHT")
             editorHeader.noteTypeLine = noteTypeLine
@@ -731,7 +731,7 @@ function ns.UI.CreateNotesTab(parent)
                     if header.noteTypeLine then
                         local noteType = note.noteType or "standard"
                         local noteTypeText = noteType == "daily" and DAILY or noteType == "weekly" and WEEKLY or L["NOTE_TYPE_STANDARD"]
-                        header.noteTypeLine:SetText(string.format(L["UI_TYPE_FORMAT"], noteTypeText))
+                        header.noteTypeLine:SetText(string.format(L["TYPE_S"], noteTypeText))
                     end
                     if header.autoPinCheckbox then
                         local noteType = note.noteType or "standard"

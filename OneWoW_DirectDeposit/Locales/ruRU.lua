@@ -37,7 +37,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["ITEM_DEPOSIT_ENABLE"] = "Включить автоматическое внесение предметов",
     ["ITEM_DEPOSIT_ENABLE_DESC"] = "Автоматически вносить определенные предметы в выбранный банк при открытии банка.",
     ["ITEM_DEPOSIT_LIST"] = "Список предметов для автоматического внесения",
-    ["ITEM_DEPOSIT_ADD"] = "Добавить предмет",
     ["ITEM_DEPOSIT_ADD_PROMPT"] = "Введите ID предмета или shift+щелчок по предмету, чтобы добавить:",
     ["ITEM_DEPOSIT_WARBAND"] = "Отряд",
     ["ITEM_DEPOSIT_PERSONAL"] = "Личный",

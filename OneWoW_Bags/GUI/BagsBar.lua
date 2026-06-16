@@ -340,7 +340,7 @@ function BagsBar:ShowGoldTooltip()
 
     GameTooltip:SetText(L["GOLD_TOOLTIP_PERSONAL"] .. " - " .. OneWoW.Format.FormatGold(personalCopper), 1, 0.82, 0)
     GameTooltip:AddLine(" ")
-    GameTooltip:AddLine(L["GOLD_TOOLTIP_TOTAL"] .. " - " .. OneWoW.Format.FormatGold(totalGold), 0.2, 1, 0.2)
+    GameTooltip:AddLine(L["GOLD_TOTAL"] .. " - " .. OneWoW.Format.FormatGold(totalGold), 0.2, 1, 0.2)
     GameTooltip:AddLine(" ")
 
     if warbandGold > 0 then
@@ -879,9 +879,9 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
             if BagTypes:IsSwappableBag(myself.bagIndex) then
                 GameTooltip:AddLine(L["BAG_HINT_DRAG_PICKUP"], 0.7, 0.7, 0.7, true)
             end
-            GameTooltip:AddLine(L["BAG_HINT_RIGHT_CLICK"], 0.7, 0.7, 0.7, true)
+            GameTooltip:AddLine(L["RIGHT_CLICK_FOR_MORE_OPTIONS"], 0.7, 0.7, 0.7, true)
         elseif BagTypes:IsSwappableBag(myself.bagIndex) then
-            GameTooltip:AddLine(L["BAG_HINT_RIGHT_CLICK"], 0.7, 0.7, 0.7, true)
+            GameTooltip:AddLine(L["RIGHT_CLICK_FOR_MORE_OPTIONS"], 0.7, 0.7, 0.7, true)
         end
         if BagTypes:IsSwappableBag(myself.bagIndex) or not BagTypes:IsBagEquipped(myself.bagIndex) then
             GameTooltip:AddLine(L["BAG_HINT_DRAG_EQUIP"], 0.7, 0.7, 0.7, true)

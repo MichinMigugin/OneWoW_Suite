@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.ProfessionAdvanced = {}
 local Module = ns.ProfessionAdvanced
@@ -32,7 +32,7 @@ function Module:CollectData(charKey, charData, professionName)
 
     local recipes = {}
 
-    local profsDB = _G.OneWoW_AltTracker_Professions_DB
+    local profsDB = OneWoW_AltTracker_Professions_DB
     if profsDB and not profsDB.recipeItemMap then
         profsDB.recipeItemMap = {}
     end

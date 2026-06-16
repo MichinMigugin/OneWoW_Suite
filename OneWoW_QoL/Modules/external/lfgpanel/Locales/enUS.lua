@@ -17,7 +17,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["LFGPANEL_TT_TOGGLE_DESC"] = "Click to show the lockouts panel.",
 
     ["LFGPANEL_FILTER_DIFFICULTY"] = "Difficulty",
-    ["LFGPANEL_DIFFICULTY_ALL"] = "All Difficulties",
     ["LFGPANEL_DIFFICULTY_NORMAL"] = "Normal",
     ["LFGPANEL_DIFFICULTY_HEROIC"] = "Heroic",
     ["LFGPANEL_DIFFICULTY_MYTHIC"] = "Mythic",

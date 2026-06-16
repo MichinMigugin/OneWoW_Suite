@@ -31,7 +31,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["JOURNAL_EXPANSION_ALL"] = "모든 확장팩",
     ["JOURNAL_TYPE_ALL"] = "모든 유형",
 
-    ["JOURNAL_DIFF_ALL"] = "모든 난이도",
     ["JOURNAL_DIFF_N"] = "일반",
     ["JOURNAL_DIFF_H"] = "영웅",
     ["JOURNAL_DIFF_M"] = "신화",
@@ -78,7 +77,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
     ["JOURNAL_GENERAL_LOOT"] = "일반 전리품",
     ["JOURNAL_ITEMS_COUNT"] = "아이템 %d개",
-    ["JOURNAL_ITEMS_FILTERED"] = "아이템 %d/%d개",
 
     ["JOURNAL_COL_HDR_ITEM"] = "아이템",
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "난이도",
@@ -257,7 +255,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["QUESTS_TYPE_CAMPAIGN"] = "캠페인",
     ["QUESTS_TYPE_REPEATABLE"] = "반복",
     ["QUESTS_TYPE_NORMAL"] = "일반",
-    ["QUESTS_TYPE_WORLDQUEST"] = "필드 퀘스트",
     ["QUESTS_TYPE_LEGENDARY"] = "전설",
     ["QUESTS_UNNAMED"] = "퀘스트 #%d",
     ["QUESTS_ITEM_UNNAMED"] = "아이템 #%d",
@@ -322,14 +319,11 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ITEMSEARCH_AH_PRICE"] = "경매가",
     ["ITEMSEARCH_NOT_SELLABLE"] = "판매 불가",
     ["ITEMSEARCH_NO_AH_DATA"] = "경매 데이터 없음 - 경매장을 열고 스캔하세요",
-    ["ITEMSEARCH_SCAN_AH"] = "경매장 스캔",
     ["ITEMSEARCH_SCAN_STOP"] = "중지",
     ["ITEMSEARCH_SCAN_COMPLETE"] = "스캔 완료",
     ["ITEMSEARCH_SCANNING"] = "스캔 중...",
     ["ITEMSEARCH_SCAN_WAITING"] = "경매 서버 대기 중...",
     ["ITEMSEARCH_SCAN_PROCESSING"] = "처리 중 %d%% ...",
-    ["ITEMSEARCH_PRICES_FOUND"] = "가격 수집됨",
-    ["ITEMSEARCH_AH_NOT_OPEN"] = "가격을 스캔하려면 먼저 경매장을 여세요.",
     ["ITEMSEARCH_AH_AGO"] = "전",
     ["ITEMSEARCH_AH_AGE_DAYS"] = "%d일",
     ["ITEMSEARCH_AH_AUCTIONS"] = "경매",

@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.ItemIndex = {}
 local ItemIndex = ns.ItemIndex
@@ -303,7 +303,7 @@ function ItemIndex:Initialize()
     f:RegisterEvent("GUILDBANKFRAME_CLOSED")
     f:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
     f:RegisterEvent("PLAYER_ACCOUNT_BANK_TAB_SLOTS_CHANGED")
-    f:SetScript("OnEvent", function(_, event)
+    f:SetScript("OnEvent", function()
         ScheduleRebuild()
     end)
 end

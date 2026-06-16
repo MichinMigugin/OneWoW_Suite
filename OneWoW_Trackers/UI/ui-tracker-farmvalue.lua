@@ -532,7 +532,7 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     local ahSrcBtn = OneWoW_GUI:CreateFitTextButton(box, { text = L["FARM_AH_SOURCE"], height = 22 })
     ahSrcBtn:SetPoint("TOPLEFT", cbUseTSM, "BOTTOMLEFT", 0, -6)
 
-    local openOwBtn = OneWoW_GUI:CreateFitTextButton(box, { text = L["FARM_OPEN_ONEWOW"], height = 22 })
+    local openOwBtn = OneWoW_GUI:CreateFitTextButton(box, { text = L["OPEN_ONEWOW"], height = 22 })
     openOwBtn:SetPoint("LEFT", ahSrcBtn, "RIGHT", 8, 0)
     openOwBtn:SetScript("OnClick", function()
         if OneWoW and OneWoW.UI and OneWoW.UI.Show then

@@ -17,8 +17,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
     ["OWSL_BTN_NEW_LIST"] = "+ Neue Liste",
     ["OWSL_BTN_SCAN_ALL"] = "Alle scannen",
-    ["OWSL_BTN_DRAG_ITEM"] = "Gegenstand hierher ziehen",
-    ["OWSL_BTN_ADD_BY_ID"] = "Per ID hinzufügen",
     ["OWSL_BTN_IMPORT"] = "Importieren",
     ["OWSL_BTN_ADD"] = "HINZUFÜGEN",
     ["OWSL_BTN_CRAFT"] = "HERSTELLEN",

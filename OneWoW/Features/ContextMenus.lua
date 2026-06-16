@@ -140,7 +140,7 @@ local function HandlePlayerAdd(unit)
     }
 
     notes.Players:AddPlayer(fullName, playerData)
-    print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_PLAYER_ADDED"], playerName))
+    print("|cFFFFD100OneWoW:|r " .. string.format(L["ADDED_PLAYER_S"], playerName))
 end
 
 local function HandleAddMountInfo(unit)
@@ -182,7 +182,7 @@ local function HandleAddMountInfo(unit)
         local mountLink = C_Spell.GetSpellLink(mountInfo.spellID or mountInfo.spellId) or mountInfo.name
         mountText = string.format(L["UNIT_CTX_MOUNT_LABEL"], mountLink)
         if mountInfo.mountTypeName then
-            mountText = mountText .. "\n" .. string.format(L["UNIT_CTX_MOUNT_TYPE"], mountInfo.mountTypeName)
+            mountText = mountText .. "\n" .. string.format(L["TYPE_S"], mountInfo.mountTypeName)
         end
         if mountInfo.sourceText and mountInfo.sourceText ~= "" then
             mountText = mountText .. "\n" .. string.format(L["UNIT_CTX_MOUNT_SOURCE"], mountInfo.sourceText)
@@ -339,7 +339,7 @@ local function HandleNPCAdd(unit, npcIDNum)
 
     local existing = notes.NPCs:GetNPC(npcIDNum)
     if existing then
-        print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_NPC_EXISTS"])
+        print("|cFFFFD100OneWoW:|r " .. L["NPC_NOTE_ALREADY_EXISTS"])
         NavigateToNPC(npcIDNum)
         return
     end
@@ -371,7 +371,7 @@ local function HandleNPCAdd(unit, npcIDNum)
     }
 
     notes.NPCs:AddNPC(npcIDNum, npcData)
-    print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_NPC_ADDED"], npcName))
+    print("|cFFFFD100OneWoW:|r " .. string.format(L["ADDED_NPC_S"], npcName))
     NavigateToNPC(npcIDNum)
 end
 

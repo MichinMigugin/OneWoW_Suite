@@ -967,7 +967,7 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
 
         txRow:HookScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:SetText(L["FIN_ROW_TT"], 1, 1, 1)
+            GameTooltip:SetText(L["RIGHT_CLICK_FOR_MORE_OPTIONS"], 1, 1, 1)
             GameTooltip:Show()
         end)
         txRow:HookScript("OnLeave", function()

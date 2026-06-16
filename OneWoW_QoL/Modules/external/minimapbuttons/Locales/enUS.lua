@@ -23,12 +23,10 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["MMBTNS_MAX_COLUMNS"] = "Max Columns",
     ["MMBTNS_MAX_ROWS"] = "Max Rows",
     ["MMBTNS_MAX_ROWS_DESC"] = "0 = unlimited. Cannot be 1x1 if multiple buttons exist.",
-    ["MMBTNS_BUTTON_SIZE"] = "Button Size",
     ["MMBTNS_BUTTON_SCALE"] = "Collected icon scale",
     ["MMBTNS_BUTTON_SPACING"] = "Button Spacing",
 
     ["MMBTNS_LOCK_POSITION"] = "Lock Position",
-    ["MMBTNS_GROW_DIRECTION"] = "Grow Direction",
     ["MMBTNS_GROW_DOWN"] = "Down",
     ["MMBTNS_GROW_UP"] = "Up",
     ["MMBTNS_GROW_LEFT"] = "Left",
@@ -58,8 +56,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["MMBTNS_SEARCH_PLACEHOLDER"] = "Search...",
 
     ["MMBTNS_CONTEXT_LOCK"] = "Lock Position",
-    ["MMBTNS_CONTEXT_UNLOCK"] = "Unlock Position",
-    ["MMBTNS_CONTEXT_SETTINGS"] = "Open Settings",
     ["MMBTNS_CONTEXT_REFRESH"] = "Refresh Buttons",
 
     ["MMBTNS_1X1_WARNING"] = "Cannot set 1x1 layout with multiple buttons. Max rows reset to unlimited.",

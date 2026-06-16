@@ -1,7 +1,5 @@
 local _, ns = ...
 
-local OneWoW_GUI = OneWoW_GUI
-
 ns.TrackerPresets = {}
 local TP = ns.TrackerPresets
 

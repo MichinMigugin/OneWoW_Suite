@@ -326,7 +326,7 @@ function ns.UI.CreateNotesHelpPanel()
         { name = L["UI_HELP_LINK_ACHV_NAME"],     syntax = L["UI_HELP_LINK_ACHV_SYNTAX"],     example = L["UI_HELP_LINK_ACHV_EXAMPLE"],     icon = "Interface\\Icons\\Achievement_General" },
         { name = CURRENCY, syntax = L["UI_HELP_LINK_CURRENCY_SYNTAX"], example = L["UI_HELP_LINK_CURRENCY_EXAMPLE"], icon = "Interface\\Icons\\INV_Misc_Coin_01" },
         { name = TOY,      syntax = L["UI_HELP_LINK_TOY_SYNTAX"],      example = L["UI_HELP_LINK_TOY_EXAMPLE"],      icon = "Interface\\Icons\\INV_Misc_Toy_10" },
-        { name = L["UI_HELP_LINK_PET_NAME"],      syntax = L["UI_HELP_LINK_PET_SYNTAX"],      example = L["UI_HELP_LINK_PET_EXAMPLE"],      icon = "Interface\\Icons\\INV_Box_PetCarrier_01" },
+        { name = L["BATTLE_PET"],      syntax = L["UI_HELP_LINK_PET_SYNTAX"],      example = L["UI_HELP_LINK_PET_EXAMPLE"],      icon = "Interface\\Icons\\INV_Box_PetCarrier_01" },
         { name = MOUNT,    syntax = L["UI_HELP_LINK_MOUNT_SYNTAX"],    example = L["UI_HELP_LINK_MOUNT_EXAMPLE"],    icon = "Interface\\Icons\\Ability_Mount_RidingHorse" },
         { name = L["UI_HELP_LINK_WAYPOINT_NAME"], syntax = L["UI_HELP_LINK_WAYPOINT_SYNTAX"], example = L["UI_HELP_LINK_WAYPOINT_EXAMPLE"], icon = "Interface\\Icons\\Taxi_Flight_Path_Unfriendly" },
     }

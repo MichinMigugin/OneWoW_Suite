@@ -9,7 +9,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["AUTOOPEN_BLACKLIST"] = "Blacklist",
     ["AUTOOPEN_BLACKLIST_DESC"] = "Add items to prevent Auto Open from opening them.",
     ["AUTOOPEN_BLACKLIST_ADD"] = "Add Item ID:",
-    ["AUTOOPEN_BLACKLIST_DRAG"] = "Drag Item Here",
     ["AUTOOPEN_BLACKLIST_EMPTY"] = "No blacklisted items",
     ["AUTOOPEN_BLACKLIST_REMOVED"] = "Removed from blacklist: %s",
     ["AUTOOPEN_BLACKLIST_ADDED"] = "Added to blacklist: %s",

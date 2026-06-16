@@ -810,7 +810,7 @@ end
 function ns:GetWeeklyResetUIText()
     return ns.L["SETTINGS_RESET_TITLE"],
         ns.L["SETTINGS_RESET_DESC"],
-        ns.L["SETTINGS_RESET_CURRENT"]
+        ns.L["CURRENT_VALUE"]
 end
 
 --- Set the weekly reset region and immediately reconcile any pending resets.

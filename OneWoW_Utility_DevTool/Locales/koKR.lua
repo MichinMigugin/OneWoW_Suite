@@ -255,7 +255,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ERR_SOUND_MAP_PING"] = "지도 핑",
     ["ERR_COPY_FMT_PLAIN"] = "일반 텍스트",
     ["ERR_COPY_FMT_CURSEFORGE"] = "CurseForge",
-    ["ERR_COPY_FMT_DISCORD"] = "Discord",
     ["ERR_CLEAR_ON_RELOAD"] = "/reload 시 오류 지우기",
     ["ERR_KEEP_SESSIONS_LABEL"] = "세션 유지:",
     ["ERR_KEEP_SESSIONS_VALUE"] = "%d",

@@ -37,7 +37,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ITEM_DEPOSIT_ENABLE"] = "Automatische Gegenstands-Einzahlung Aktivieren",
     ["ITEM_DEPOSIT_ENABLE_DESC"] = "Zahlen Sie beim Öffnen der Bank automatisch bestimmte Gegenstände in Ihre ausgewählte Bank ein.",
     ["ITEM_DEPOSIT_LIST"] = "Liste der Auto-Einzahlungs-Gegenstände",
-    ["ITEM_DEPOSIT_ADD"] = "Gegenstand Hinzufügen",
     ["ITEM_DEPOSIT_ADD_PROMPT"] = "Geben Sie die Gegenstands-ID ein oder Shift+Klick auf einen Gegenstand zum Hinzufügen:",
     ["ITEM_DEPOSIT_WARBAND"] = "Warband",
     ["ITEM_DEPOSIT_PERSONAL"] = "Persönlich",

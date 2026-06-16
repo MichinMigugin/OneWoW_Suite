@@ -106,11 +106,11 @@ function ns.UI.CreateNPCsTab(parent)
                 return
             end
             if ns.NPCs:GetNPC(npcInfo.id) then
-                print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_EXISTS"]))
+                print("|cFFFFD100OneWoW - NPCs:|r " .. (L["NPC_NOTE_ALREADY_EXISTS"]))
                 return
             end
             ns.NPCs:AddNPC(npcInfo.id, npcInfo)
-            print("|cFFFFD100OneWoW - NPCs:|r " .. string.format(L["MSG_NPC_ADDED"], npcInfo.name or npcInfo.id))
+            print("|cFFFFD100OneWoW - NPCs:|r " .. string.format(L["ADDED_NPC_S"], npcInfo.name or npcInfo.id))
             parent.RefreshNPCsList()
             if parent.SelectNPC then parent.SelectNPC(npcInfo.id) end
         end
@@ -1186,7 +1186,7 @@ function ns.UI.ShowManualNPCEntryDialog(refreshParent)
                     end
 
                     if ns.NPCs and ns.NPCs:GetNPC(npcID) then
-                        print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_EXISTS"]))
+                        print("|cFFFFD100OneWoW - NPCs:|r " .. (L["NPC_NOTE_ALREADY_EXISTS"]))
                         return
                     end
 
@@ -1199,7 +1199,7 @@ function ns.UI.ShowManualNPCEntryDialog(refreshParent)
                             name = npcName, category = cat, storage = store,
                             content = noteContent,
                         })
-                        print("|cFFFFD100OneWoW - NPCs:|r " .. string.format(L["MSG_NPC_ADDED"], npcName))
+                        print("|cFFFFD100OneWoW - NPCs:|r " .. string.format(L["ADDED_NPC_S"], npcName))
                         dlg:Hide()
                         if refreshParent and refreshParent.RefreshNPCsList then refreshParent.RefreshNPCsList() end
                         if refreshParent and refreshParent.SelectNPC then refreshParent.SelectNPC(npcID) end

@@ -65,14 +65,14 @@ function LFGPanelUI:CreateDialog()
 
     local filterDropdown, dropText = OneWoW_GUI:CreateDropdown(controlBar, {
         height = 22,
-        text = L["LFGPANEL_DIFFICULTY_ALL"],
+        text = L["ALL_DIFFICULTIES"],
     })
     filterDropdown:SetPoint("LEFT", filterLabel, "RIGHT", 6, 0)
     filterDropdown:SetPoint("RIGHT", controlBar, "RIGHT", -8, 0)
 
     local function buildDifficultyItems()
         local items = {}
-        table.insert(items, { type = "item", text = L["LFGPANEL_DIFFICULTY_ALL"], value = "all" })
+        table.insert(items, { type = "item", text = L["ALL_DIFFICULTIES"], value = "all" })
         for _, opt in ipairs(ns.LFGDifficultyOptions) do
             table.insert(items, { type = "item", text = L[opt.label], value = opt.key })
         end
@@ -93,7 +93,7 @@ function LFGPanelUI:CreateDialog()
         onSelect = function(value, text)
             if value == "all" then
                 LFGPanel:ClearFilter()
-                dropText:SetText(L["LFGPANEL_DIFFICULTY_ALL"])
+                dropText:SetText(L["ALL_DIFFICULTIES"])
             else
                 LFGPanel:SetFilter(value)
                 dropText:SetText(text)

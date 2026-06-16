@@ -1,7 +1,5 @@
 local _, OneWoW_Bags = ...
 
-local OneWoW_GUI = OneWoW_GUI
-
 local BagTypes = OneWoW_Bags.BagTypes
 local BankTypes = OneWoW_Bags.BankTypes
 
@@ -205,7 +203,7 @@ function BankController:NormalizeSearchText(searchText)
     searchText = strtrim(searchText or "")
     if searchText == "" then return nil end
     local L = OneWoW_Bags.L
-    if L and searchText == L["SEARCH_PLACEHOLDER"] then return nil end
+    if L and searchText == L["SEARCH_ITEMS"] then return nil end
     return searchText
 end
 

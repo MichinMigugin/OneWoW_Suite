@@ -87,7 +87,7 @@ local function GetHyperlinkDialog()
         { key = "achievement", label = L["CTX_LINK_TYPE_ACHIEVEMENT"], help = L["CTX_HELP_ACHIEVEMENT"] },
         { key = "currency",    label = CURRENCY,    help = L["CTX_HELP_CURRENCY"] },
         { key = "toy",         label = TOY,         help = L["CTX_HELP_TOY"] },
-        { key = "battlepet",   label = L["CTX_LINK_TYPE_BATTLEPET"],   help = L["CTX_HELP_BATTLEPET"] },
+        { key = "battlepet",   label = L["BATTLE_PET"],   help = L["CTX_HELP_BATTLEPET"] },
         { key = "mount",       label = MOUNT,       help = L["CTX_HELP_MOUNT"] },
     }
 

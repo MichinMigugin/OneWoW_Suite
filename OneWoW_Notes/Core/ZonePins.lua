@@ -492,7 +492,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     alphaSlider:SetPoint("TOPRIGHT", hoverPanel, "TOPRIGHT", -10, -5)
 
     local lockMoveCB = OneWoW_GUI:CreateCheckbox(hoverPanel, {
-        label = L["CORE_PIN_LOCK_MOVE"],
+        label = L["LOCK_MOVE"],
         checked = zoneData.lockMove,
         onClick = function(myself)
             zoneData.lockMove = myself:GetChecked()

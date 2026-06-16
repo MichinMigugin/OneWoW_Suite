@@ -133,7 +133,7 @@ function OneWoW:OnAddonLoaded(loadedAddon)
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     self:RegisterLoadComponent("Core", _ver, "/1w")
 
-    self:RegisterMinimap("OneWoW", L["CTX_OPEN_ONEWOW"], nil, function()
+    self:RegisterMinimap("OneWoW", L["OPEN_ONEWOW"], nil, function()
         if self.UI then self.UI:Show() end
     end)
 

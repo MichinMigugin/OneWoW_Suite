@@ -17,7 +17,7 @@ function ns.UI.CreateSummaryTab(parent)
         stats = {
             {label = L["ATTENTION"],            value = "0",    ttTitle = L["TT_ATTENTION"],            ttDesc = L["TT_ATTENTION_DESC"]},
             {label = L["CHARACTERS"],           value = "0",    ttTitle = L["TT_CHARACTERS"],           ttDesc = L["TT_CHARACTERS_DESC"]},
-            {label = L["TOTAL_GOLD"],           value = "0g",   ttTitle = L["TT_TOTAL_GOLD"],           ttDesc = L["TT_TOTAL_GOLD_DESC"]},
+            {label = L["TOTAL_GOLD"],           value = "0g",   ttTitle = L["GOLD_TOTAL"],           ttDesc = L["TT_TOTAL_GOLD_DESC"]},
             {label = L["FACTIONS"],             value = "0/0",  ttTitle = L["TT_FACTIONS"],             ttDesc = L["TT_FACTIONS_DESC"]},
             {label = L["RESTED"],               value = "0",    ttTitle = L["TT_RESTED"],               ttDesc = L["TT_RESTED_DESC"]},
             {label = L["PLAYTIME"],             value = "0h",   ttTitle = L["TT_PLAYTIME"],             ttDesc = L["TT_PLAYTIME_DESC"]},
@@ -1006,7 +1006,7 @@ function ns.UI.RefreshSummaryStats(summaryTab)
                 local grandTotal = stats.totalGold + warbandGold
                 local grandFormatted = ns.AltTrackerFormatters and ns.AltTrackerFormatters.FormatGold and ns.AltTrackerFormatters:FormatGold(grandTotal)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TT_TOTAL_GOLD"] .. ": " .. (grandFormatted or "0g"), 1, 0.82, 0)
+                GameTooltip:SetText(L["GOLD_TOTAL"] .. ": " .. (grandFormatted or "0g"), 1, 0.82, 0)
                 GameTooltip:AddLine("----------------------------", 0.4, 0.4, 0.4)
                 local charsFormatted = ns.AltTrackerFormatters and ns.AltTrackerFormatters.FormatGold and ns.AltTrackerFormatters:FormatGold(stats.totalGold)
                 GameTooltip:AddDoubleLine(L["TT_GOLD_CHARS_LABEL"], charsFormatted or "0g", 0.8, 0.8, 0.8, 1, 0.82, 0)

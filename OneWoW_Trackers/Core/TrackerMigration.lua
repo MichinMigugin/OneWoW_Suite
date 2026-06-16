@@ -1,7 +1,5 @@
 local _, ns = ...
 
-local OneWoW_GUI = OneWoW_GUI
-
 ns.TrackerMigration = {}
 local TM = ns.TrackerMigration
 

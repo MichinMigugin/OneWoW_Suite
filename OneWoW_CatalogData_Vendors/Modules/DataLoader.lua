@@ -1,8 +1,6 @@
 -- Adds vendor-specific NPC name resolution to the ItemDataLoader.
 local _, ns = ...
 
-local OneWoW_GUI = OneWoW_GUI
-
 local tremove = tremove
 local pairs = pairs
 local C_Timer = C_Timer

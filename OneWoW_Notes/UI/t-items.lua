@@ -55,7 +55,7 @@ function ns.UI.CreateItemsTab(parent)
     controlTitle:SetText(L["ITEMS_CONTROLS"])
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local addItemBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_ITEM"], height = 25, minWidth = 80 })
+    local addItemBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["ADD_ITEM"], height = 25, minWidth = 80 })
     addItemBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
     addItemBtn:RegisterForDrag("LeftButton")
     addItemBtn:SetScript("OnClick", function()
@@ -87,7 +87,7 @@ function ns.UI.CreateItemsTab(parent)
     end)
     addItemBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["TOOLTIP_BUTTON_ADD_ITEM"], 1, 1, 1)
+        GameTooltip:SetText(L["ADD_ITEM"], 1, 1, 1)
         GameTooltip:AddLine(L["TOOLTIP_BUTTON_ADD_ITEM_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
@@ -111,7 +111,7 @@ function ns.UI.CreateItemsTab(parent)
         controlPanel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     end)
 
-    local addByIDBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_BY_ID"], height = 25, minWidth = 70 })
+    local addByIDBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["ADD_BY_ID"], height = 25, minWidth = 70 })
     addByIDBtn:SetPoint("LEFT", addItemBtn, "RIGHT", 5, 0)
     addByIDBtn:SetScript("OnClick", function()
         if ns.UI and ns.UI.ShowAddItemByIDDialog then
@@ -1000,7 +1000,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
     dialog._validated = false
     dialog._validatedID = nil
 
-    MakeItemLabel(content, L["LABEL_ITEM_ID"], COL1_X, yPos)
+    MakeItemLabel(content, L["ITEM_ID"], COL1_X, yPos)
 
     local idInput = OneWoW_GUI:CreateEditBox(content, {
         width = 160,

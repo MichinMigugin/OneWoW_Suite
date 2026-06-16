@@ -17,8 +17,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
     ["OWSL_BTN_NEW_LIST"] = "+ 새 목록",
     ["OWSL_BTN_SCAN_ALL"] = "모두 스캔",
-    ["OWSL_BTN_DRAG_ITEM"] = "여기에 항목을 드래그하세요.",
-    ["OWSL_BTN_ADD_BY_ID"] = "ID로 추가",
     ["OWSL_BTN_IMPORT"] = "가져오기",
     ["OWSL_BTN_ADD"] = "추가",
     ["OWSL_BTN_CRAFT"] = "제작",

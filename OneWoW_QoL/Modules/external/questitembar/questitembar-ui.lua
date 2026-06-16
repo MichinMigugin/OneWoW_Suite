@@ -38,12 +38,12 @@ local function BuildContent(container, isEnabled, contentYOffset)
     local s = GetSettings()
     local cy = 0
 
-    cy = OneWoW_GUI:CreateSection(container, { title = L["QUESTITEMBAR_SETTINGS_HEADER"], yOffset = cy })
+    cy = OneWoW_GUI:CreateSection(container, { title = L["BAR_SETTINGS"], yOffset = cy })
 
     -- Row 1: Show Bar | Lock Position | Sort: [Button]
     local previewing = QuestItemBarModule:IsPreviewActive()
     local previewBtn = OneWoW_GUI:CreateFitTextButton(container, {
-        text = previewing and L["QUESTITEMBAR_HIDE_BAR"] or L["QUESTITEMBAR_SHOW_BAR"],
+        text = previewing and L["HIDE_BAR"] or L["SHOW_BAR"],
         height = 26,
     })
     previewBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
@@ -104,7 +104,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
     -- Hide anchor toggle
     local hideAnchorCheck = CreateFrame("CheckButton", nil, container, "InterfaceOptionsCheckButtonTemplate")
     hideAnchorCheck:SetPoint("TOPLEFT", container, "TOPLEFT", 8, cy)
-    hideAnchorCheck.Text:SetText(L["QUESTITEMBAR_HIDE_ANCHOR"])
+    hideAnchorCheck.Text:SetText(L["HIDE_ANCHOR_SHOW_ON_HOVER"])
     hideAnchorCheck.Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     hideAnchorCheck:SetChecked(s.hideAnchor)
     hideAnchorCheck:SetScript("OnClick", function(self)
@@ -125,7 +125,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
 
     local growDirLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     growDirLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
-    growDirLabel:SetText(L["QUESTITEMBAR_GROW_DIRECTION"] .. ":")
+    growDirLabel:SetText(L["GROW_DIRECTION"] .. ":")
     growDirLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local growDirDropdown = OneWoW_GUI:CreateDropdown(container, {
@@ -290,7 +290,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
     local sliderRowY = cy
     local sizeLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     sizeLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, sliderRowY)
-    sizeLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_BUTTON_SIZE"], s.buttonSize or QuestItemBarModule.defaultButtonSize))
+    sizeLabel:SetText(string.format("%s: %d", L["BUTTON_SIZE"], s.buttonSize or QuestItemBarModule.defaultButtonSize))
     sizeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local sizeSlider = CreateFrame("Slider", "OneWoW_QoL_QIBarSizeSlider", container, "OptionsSliderTemplate")
@@ -305,7 +305,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
     sizeSlider:SetScript("OnValueChanged", function(self, value)
         local v = math.floor(value + 0.5)
         GetSettings().buttonSize = v
-        sizeLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_BUTTON_SIZE"], v))
+        sizeLabel:SetText(string.format("%s: %d", L["BUTTON_SIZE"], v))
         QuestItemBarModule:ScheduleUpdate()
     end)
 
@@ -335,7 +335,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
 
     local spacingLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     spacingLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
-    spacingLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_ICON_SPACING"], s.iconSpacing or 4))
+    spacingLabel:SetText(string.format("%s: %d", L["ICON_SPACING"], s.iconSpacing or 4))
     spacingLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     cy = cy - spacingLabel:GetStringHeight() - 4
 
@@ -350,7 +350,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
     spacingSlider:SetScript("OnValueChanged", function(self, value)
         local v = math.floor(value + 0.5)
         GetSettings().iconSpacing = v
-        spacingLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_ICON_SPACING"], v))
+        spacingLabel:SetText(string.format("%s: %d", L["ICON_SPACING"], v))
         QuestItemBarModule:ScheduleUpdate()
     end)
     cy = cy - 50

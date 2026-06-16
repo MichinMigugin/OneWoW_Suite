@@ -1993,7 +1993,7 @@ function CatMgrUI:Show()
     sectionBtn:SetPoint("LEFT", actionBar, "LEFT", 6, 0)
     sectionBtn:SetScript("OnClick", function() StaticPopup_Show("ONEWOW_BAGS_CREATE_SECTION") end)
 
-    local createBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["CATEGORY_CREATE"], height=24 })
+    local createBtn = OneWoW_GUI:CreateFitTextButton(actionBar, { text=L["NEW_CATEGORY"], height=24 })
     createBtn:SetPoint("LEFT", sectionBtn, "RIGHT", 6, 0)
     createBtn:SetScript("OnClick", function() StaticPopup_Show("ONEWOW_BAGS_CREATE_CATEGORY") end)
 

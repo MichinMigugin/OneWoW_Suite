@@ -783,7 +783,7 @@ function ns.UI.CreateItemSearchTab(parent)
     searchBox:SetPoint("TOPLEFT", searchHeader, "TOPLEFT", 8, -8)
     searchBox:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -118, -8)
 
-    local scanAHButton = OneWoW_GUI:CreateFitTextButton(searchHeader, { text = L["ITEMSEARCH_SCAN_AH"], height = 26, minWidth = 100 })
+    local scanAHButton = OneWoW_GUI:CreateFitTextButton(searchHeader, { text = L["SCAN_AH"], height = 26, minWidth = 100 })
     scanAHButton:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -8)
     scanAHButton.isScanning = false
     scanAHButtonRef = scanAHButton
@@ -820,7 +820,7 @@ function ns.UI.CreateItemSearchTab(parent)
         end
 
         if not AuctionHouseFrame or not AuctionHouseFrame:IsShown() then
-            print("|cFFFFD100OneWoW:|r " .. L["ITEMSEARCH_AH_NOT_OPEN"])
+            print("|cFFFFD100OneWoW:|r " .. L["OPEN_THE_AUCTION_HOUSE_FIRST_TO_SCAN_PRICES"])
             return
         end
 
@@ -866,9 +866,9 @@ function ns.UI.CreateItemSearchTab(parent)
             elseif status == "scanCompleted" then
                 local found = extra or 0
                 scanProgressBar:UpdateProgress(1, 1)
-                scanProgressBar._text:SetText(L["ITEMSEARCH_SCAN_COMPLETE"] .. "  (" .. found .. " " .. L["ITEMSEARCH_PRICES_FOUND"] .. ")")
+                scanProgressBar._text:SetText(L["ITEMSEARCH_SCAN_COMPLETE"] .. "  (" .. found .. " " .. L["PRICES_FOUND"] .. ")")
                 self.isScanning = false
-                self:SetText(L["ITEMSEARCH_SCAN_AH"])
+                self:SetText(L["SCAN_AH"])
                 if selectedItem then
                     ShowItemDetail(selectedItem)
                 end
@@ -878,7 +878,7 @@ function ns.UI.CreateItemSearchTab(parent)
                 end)
             elseif status == "scanStopped" then
                 self.isScanning = false
-                self:SetText(L["ITEMSEARCH_SCAN_AH"])
+                self:SetText(L["SCAN_AH"])
                 scanBarContainer:Hide()
                 UpdateContentAnchor()
                 if selectedItem then
@@ -886,7 +886,7 @@ function ns.UI.CreateItemSearchTab(parent)
                 end
             elseif status == "scanFailed" then
                 self.isScanning = false
-                self:SetText(L["ITEMSEARCH_SCAN_AH"])
+                self:SetText(L["SCAN_AH"])
                 scanBarContainer:Hide()
                 UpdateContentAnchor()
                 print("|cFFFFD100OneWoW:|r AH closed during scan.")

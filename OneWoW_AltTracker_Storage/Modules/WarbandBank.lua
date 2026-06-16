@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.WarbandBank = {}
 local Module = ns.WarbandBank
@@ -83,7 +83,7 @@ function Module:CollectData(charKey, charData)
     warbandBank.lastUpdateTime = time()
     warbandBank.lastUpdatedBy = charKey
 
-    _G.OneWoW_AltTracker_Storage_DB.warbandBank = warbandBank
+    OneWoW_AltTracker_Storage_DB.warbandBank = warbandBank
 
     return true
 end

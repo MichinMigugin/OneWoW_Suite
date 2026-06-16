@@ -298,13 +298,46 @@ starting Phase 3, to confirm nothing was missed in Phase 2. Findings:
    `GUILD_BANK_MONEY_LOG`/`NO_BIDS`/`RESETS_IN`/`SETTINGS_TITLE` share a global's *name*
    but mean something different; they stay scoped and translate normally.
 
-### Phase 3 — Consolidate to shared (pending)
-Baseline: **430 strings**. Per-addon sub-phases. For each value group:
-- [ ] Pick the canonical key name (often the simplest existing one) and value.
-- [ ] Register it once in `shared` (`OneWoW/Locales/Shared/*.lua`), all locales.
-- [ ] Delete every per-scope copy; update call sites to the canonical key.
-- [ ] Proper nouns: consolidate but mark do-not-translate.
-- [ ] `/owlocale` audit (no new collisions); in-game verify; commit.
+### Phase 3 — Consolidate to shared (in progress)
+**Tooling:** `python bin/locale_keydiff.py --consolidate` classifies every value-group
+(value at ≥2 sites, no usable global) by each site's ref-type and buckets them:
+`ALREADY-IN-SHARED` (redirect to the existing shared key), `CROSS-SCOPE SAFE`
+(→ new shared key), `INTRA-SCOPE SAFE` (dedupe within one scope), `BLOCKED`
+(≥1 dynamic/dead site — can't redirect, same rule as Phase 2). Initial split:
+1 already-shared / 69 cross-scope / 90 intra-scope / 265 blocked (the blocked set is
+mostly OneWoW-core's dynamic locale access). Decisions (locked): **cross-scope first**,
+then intra-scope; **consolidate unambiguous phrases + proper nouns first, flag bare
+single words** for review before collapsing.
+
+**Curation rule learned (collision):** a new canonical key name must not equal an
+existing key in any *surviving* non-shared scope that holds a *different* value — else
+that scope shadows shared and the swapped sites silently show the wrong string. Hit on
+`TOTAL_GOLD`: `AltTracker.TOTAL_GOLD`="Gold" already existed, so consolidating "Total
+Gold" under that name made AltTracker's swapped sites resolve to "Gold". Fixed by
+renaming the shared key to `GOLD_TOTAL`; the driver's collision guard now checks
+existing scope keys too.
+
+**Sub-phase progress:**
+- [x] **Cross-scope batch 1 — phrases + proper nouns (36 groups).** 35 new shared keys
+  + 1 redirect (`Current: %s`→`CURRENT_VALUE`). Multi-word phrases, format strings, and
+  the proper noun `Discord`. Applied via a driver that reuses `--consolidate`'s
+  classification (only touches verified-safe groups): add-to-shared + swap
+  `L["old"]`→`L["CANON"]` + strip the old key from every locale of each owning scope.
+  Verified: 0 collisions, 0 orphaned refs, cross-scope-safe 69→34. Shared scope 51→86.
+  (`TOTAL_GOLD`→`GOLD_TOTAL` rename per the collision rule above.)
+
+**Remaining (cross-scope):**
+- [ ] **Bare single-word groups (33)** — flagged for meaning review before collapse:
+  `Item Rename Active Expansion Manual Search... Expired Mail Personal Up Achievement
+  Create Down Duplicate Filter: Keep Pause Progress Stop Blacklist Campaign Decor
+  Discard File: Guild: ID: Lockouts Minimal Pin Race: Session Slot Summary`.
+  (`"%d"` excluded — format placeholder, not translatable.)
+- [ ] **Intra-scope dedup (90 groups)** — dedupe within each scope (AltTracker-heavy:
+  `Attention`/`Characters`/`Expanded Details - Coming Soon`, etc.).
+
+Per value group: pick canonical key + value, register once in `shared`, delete every
+per-scope copy + repoint call sites, proper nouns marked do-not-translate, `/owlocale`
+audit (0 new collisions), in-game verify, commit.
 
 ### Phase 4 — Translate the minimized set (pending)
 Baseline: ~4,117 unique + ~430 shared canonicals. Per-addon sub-phases:

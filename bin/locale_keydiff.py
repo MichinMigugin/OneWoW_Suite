@@ -337,6 +337,65 @@ def scope_report(scopes, sites, glob_by_val, target: str, root: Path) -> int:
     return 0
 
 
+def consolidate_report(scopes, sites, glob_by_val, root: Path) -> int:
+    """Phase-3 worklist: every consolidation group (value at >=2 sites, no usable
+    global) with each site's reference type, split into actionable buckets.
+
+    A group is consolidatable only if every site is a literal `L["KEY"]` ref — a
+    dynamic/dead site cannot be redirected (same rule as Phase 2). Buckets:
+      ALREADY-IN-SHARED — value already has a shared key; redirect scope sites to it.
+      CROSS-SCOPE SAFE  — spans >=2 scopes, all literal -> new shared key.
+      INTRA-SCOPE SAFE  — one scope, all literal -> dedupe to a single local key.
+      BLOCKED           — >=1 dynamic/dead site -> manual handling.
+    """
+    canonical = make_canonical(glob_by_val)
+
+    code_cache: dict[str, str] = {}
+    def ref_of(scope: str, key: str) -> str:
+        if scope not in code_cache:
+            code_cache[scope] = load_scope_code(root, scope)
+        return classify_refs(code_cache[scope], key)
+
+    buckets: dict[str, list] = {"already": [], "cross": [], "intra": [], "blocked": []}
+    for v, st in sites.items():
+        if canonical(v) or len(st) < 2 or not is_meaningful(v):
+            continue
+        refs = sorted((s, k, ref_of(s, k)) for s, k in st)
+        shared_key = next((k for s, k in st if s == "shared"), None)
+        nonshared = [(s, k, r) for s, k, r in refs if s != "shared"]
+        nonshared_literal = bool(nonshared) and all(r == "literal" for *_, r in nonshared)
+        site_scopes = {s for s, _ in st}
+        canon = re.sub(r"[^0-9A-Za-z]+", "_", v.strip()).strip("_").upper()
+        rec = {"v": v, "refs": refs, "canon": shared_key or canon,
+               "incidental": glob_by_val.get(v), "nsites": len(st)}
+        if shared_key:
+            buckets["already" if nonshared_literal else "blocked"].append(rec)
+        elif all(r == "literal" for *_, r in refs):
+            buckets["cross" if len(site_scopes) >= 2 else "intra"].append(rec)
+        else:
+            buckets["blocked"].append(rec)
+
+    def emit(title, items):
+        print(f"== {title} ({len(items)}) ==")
+        for e in sorted(items, key=lambda e: (-e["nsites"], e["v"].lower())):
+            inc = f"  [global NAME exists: {'/'.join(e['incidental'][:3])}]" if e["incidental"] else ""
+            print(f'  "{e["v"]}"  -> {e["canon"]}  [{e["nsites"]} sites]{inc}')
+            for s, k, r in e["refs"]:
+                mark = {"literal": "", "dynamic": " [DYNAMIC]", "dead": " [dead]"}[r]
+                print(f"       {s}.{k}{mark}")
+        print()
+
+    total = sum(len(b) for b in buckets.values())
+    print(f"== PHASE 3 CONSOLIDATION WORKLIST ({total} value-groups) ==")
+    print("SAFE = every site is a literal L[\"KEY\"] ref (redirectable).")
+    print("Always meaning-check before collapsing; proper nouns: consolidate, do-not-translate.\n")
+    emit("ALREADY-IN-SHARED -> redirect scope sites to the existing shared key", buckets["already"])
+    emit("CROSS-SCOPE SAFE -> consolidate to a new shared key", buckets["cross"])
+    emit("INTRA-SCOPE SAFE -> dedupe to one local key within the scope", buckets["intra"])
+    emit("BLOCKED -> manual (>=1 dynamic/dead site, or mixed shared)", buckets["blocked"])
+    return 0
+
+
 def main(argv=None) -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -345,10 +404,14 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Locale key/value rollout analysis.")
     ap.add_argument("--scope", metavar="NAME",
                     help="print a per-key worklist for one scope (e.g. OneWoW_Bags)")
+    ap.add_argument("--consolidate", action="store_true",
+                    help="print the Phase-3 consolidation worklist (ref-classified)")
     args = ap.parse_args(argv)
 
     root = Path.cwd()
     scopes, sites, blizz, glob_by_val, n_files = build_indexes(root)
+    if args.consolidate:
+        return consolidate_report(scopes, sites, glob_by_val, root)
     if args.scope:
         return scope_report(scopes, sites, glob_by_val, args.scope, root)
     return full_report(scopes, sites, blizz, glob_by_val, n_files)

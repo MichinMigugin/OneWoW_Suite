@@ -11,7 +11,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["VIEW_BAG"] = "Bag View",
     ["CLEANUP"] = "Cleanup",
 
-    ["SEARCH_PLACEHOLDER"] = "Search items...",
     ["FREE_SLOTS"] = "Free Slots",
     ["FREE_SLOTS_FORMAT"] = "%d Free Slots",
 
@@ -75,7 +74,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["CUSTOM_CATEGORIES"] = "Custom Categories",
     ["CREATE_CATEGORY"] = "Create Category",
     ["DELETE_CATEGORY"] = "Delete Category",
-    ["ADD_ITEM"] = "Add Item",
     ["REMOVE_ITEM"] = "Remove Item",
     ["CATEGORY_NAME"] = "Category Name",
 
@@ -93,7 +91,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["CATEGORY_MANAGER_INFO"] = "Create custom categories and assign items to them. Drag an item onto a category or add by Item ID.",
     ["CATEGORY_BADGE_TOOLTIP_TITLE"] = "Category indicators",
     ["CATEGORY_BADGE_TOOLTIP_BODY"] = "S — Custom sort mode\nG — Group by\n+ — Manually added items\nH — Hidden in some bag views\nP — Non-default priority\nE — Search expression filter",
-    ["CATEGORY_CREATE"] = "New Category",
     ["CATEGORY_CREATE_ENTER"] = "Enter category name:",
     ["CATEGORY_RENAME"] = "Rename",
     ["CATEGORY_RENAME_ENTER"] = "Enter new name:",
@@ -128,7 +125,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["BAG_SHOW_ONLY"] = "Click to show only this bag",
     ["BAG_HINT_DRAG_PICKUP"] = "Drag to pick up bag (must be empty)",
     ["BAG_HINT_DRAG_EQUIP"] = "Click or drop a bag here to equip",
-    ["BAG_HINT_RIGHT_CLICK"] = "Right-click for more options",
     ["BAG_MENU_SHOW_ALL"] = "Show all bags",
     ["BAG_MENU_SHOW_ONLY"] = "Show only this bag",
     ["BAG_MENU_PICKUP"] = "Pick up bag",
@@ -210,7 +206,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["DESC_USE_MASQUE"] = "Let Masque skin the OneWoW Bags item buttons (bags, bank, warband bank, guild bank, and bag-bar slots). Configure individual skins in Masque's own settings.",
 
     ["GOLD_TOOLTIP_PERSONAL"] = "Personal",
-    ["GOLD_TOOLTIP_TOTAL"] = "Total Gold",
     ["GOLD_TOOLTIP_WARBAND"] = "Warband Bank",
     ["GOLD_TOOLTIP_OTHERS"] = "+%d Others",
     ["GOLD_TOOLTIP_NO_ALTTRACKER"] = "Install AltTracker for alt gold details",

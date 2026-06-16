@@ -1,6 +1,6 @@
-local addonName, ns = ...
+local _, ns = ...
 
-_G.OneWoW_AltTracker_Collections = ns
+OneWoW_AltTracker_Collections = ns
 
 if OneWoW_AltTracker_Collections_API then
     OneWoW_AltTracker_Collections_API = nil

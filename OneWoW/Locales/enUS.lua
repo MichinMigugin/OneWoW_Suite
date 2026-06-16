@@ -16,7 +16,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TOOLTIPS_SUBTAB"] = "Tooltips",
 
     ["HOME_VERSION"] = "Version",
-    ["HOME_DISCORD"] = "Discord",
     ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
     ["HOME_REQUIRED_ADDONS"] = "Required Addons",
     ["HOME_DETECTED_MODULES"] = "Detected Modules",
@@ -49,7 +48,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["MINIMAP_TOOLTIP_HINT"] = "Click to toggle OneWoW",
     ["MINIMAP_RIGHT_CLICK"] = "Right-click for options",
 
-    ["CTX_OPEN_ONEWOW"] = "Open OneWoW",
     ["CTX_OPEN_ALTTRACKER"] = "Open AltTracker",
     ["CTX_OPEN_NOTES"] = "Open Notes",
     ["CTX_OPEN_DD"] = "Open Direct Deposit",
@@ -709,10 +707,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["UNIT_CTX_NOTES_NOT_LOADED"] = "OneWoW Notes is not loaded.",
     ["UNIT_CTX_PLAYMOUNTS_NOT_LOADED"] = "QoL Player Mounts is not loaded.",
     ["UNIT_CTX_TARGET_NOT_PLAYER"] = "Target is not a player.",
-    ["UNIT_CTX_PLAYER_ADDED"] = "Added player: %s",
     ["UNIT_CTX_PLAYER_EXISTS"] = "Player note already exists: %s",
-    ["UNIT_CTX_NPC_ADDED"] = "Added NPC: %s",
-    ["UNIT_CTX_NPC_EXISTS"] = "NPC note already exists.",
     ["UNIT_CTX_NPC_LOC_UPDATED"] = "Updated location for %s (%.1f, %.1f) in %s",
     ["UNIT_CTX_NPC_LOC_FAILED"] = "Could not determine current location.",
     ["UNIT_CTX_PLAYER_NOT_MOUNTED"] = "%s is not on a mount.",
@@ -724,7 +719,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["UNIT_CTX_MOUNT_INFO_CREATED"] = "Created note with mount info for %s.",
     ["UNIT_CTX_MOUNT_MOVEMENT_FORM"] = "Movement Form: %s",
     ["UNIT_CTX_MOUNT_LABEL"] = "Mount: %s",
-    ["UNIT_CTX_MOUNT_TYPE"] = "Type: %s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "Source: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Status: %s",
 

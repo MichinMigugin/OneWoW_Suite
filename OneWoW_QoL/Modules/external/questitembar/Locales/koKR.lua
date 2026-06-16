@@ -5,13 +5,10 @@ OneWoW.Locale:Register(M._scope, "koKR", {
 
     ["QUESTITEMBAR_TITLE"] = "퀘스트 아이템 바",
     ["QUESTITEMBAR_DESC"] = "퀘스트 로그의 특수 퀘스트 아이템을 클릭 가능한 버튼으로 표시하는 이동 가능한 바입니다. 재사용 대기시간, 사용 횟수, 퀘스트/아이템 이름별 정렬을 지원합니다.",
-    ["QUESTITEMBAR_DRAG_TOOLTIP"] = "클릭하고 드래그하여 이동",
-    ["QUESTITEMBAR_SETTINGS_HEADER"] = "바 설정",
     ["QUESTITEMBAR_LOCK_BAR"] = "바 잠금",
     ["QUESTITEMBAR_LOCK_ON"] = " (켜짐)",
     ["QUESTITEMBAR_LOCK_OFF"] = " (꺼짐)",
     ["QUESTITEMBAR_HIDE_IF_EMPTY"] = "비어 있으면 숨기기",
-    ["QUESTITEMBAR_BUTTON_SIZE"] = "버튼 크기",
     ["QUESTITEMBAR_COLUMNS"] = "열",
     ["QUESTITEMBAR_SORT"] = "정렬:",
     ["QUESTITEMBAR_SORT_MODE"] = "정렬 모드:",
@@ -32,10 +29,7 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["QUESTITEMBAR_TIER_TRACKED"] = "추적됨",
     ["QUESTITEMBAR_MOVE_UP"] = "위로 이동",
     ["QUESTITEMBAR_MOVE_DOWN"] = "아래로 이동",
-    ["QUESTITEMBAR_LEFT_CLICK_USE"] = "클릭하여 사용",
     ["QUESTITEMBAR_QUEST_LABEL"] = "퀘스트:",
-    ["QUESTITEMBAR_SHOW_BAR"] = "바 표시",
-    ["QUESTITEMBAR_HIDE_BAR"] = "바 숨기기",
 
     ["QUESTITEMBAR_ALL_USABLE_ITEMS"] = "사용 가능한 퀘스트 아이템",
     ["QUESTITEMBAR_QUEST_ITEM_STATUS"] = "퀘스트 아이템 상태",
@@ -50,8 +44,5 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["QUESTITEMBAR_DEBUG_NO_USABLE_ITEMS"] = "사용 가능한 아이템 없음",
     ["QUESTITEMBAR_DEBUG_NO_SUPERTRACKED"] = "초추적된 퀘스트 없음 — 바가 비어 있음",
     ["QUESTITEMBAR_UNKNOWN_QUEST"] = "?",
-    ["QUESTITEMBAR_ICON_SPACING"] = "TEST",
     ["QUESTITEMBAR_CONTEXT_LOCK"] = "TEST",
-    ["QUESTITEMBAR_CONTEXT_UNLOCK"] = "TEST",
-    ["QUESTITEMBAR_CONTEXT_SETTINGS"] = "TEST",
 })

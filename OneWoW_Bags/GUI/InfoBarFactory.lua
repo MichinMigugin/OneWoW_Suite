@@ -573,7 +573,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
 
         if config.cleanupCallback then
             local cleanupBtn = OneWoW_GUI:CreateAtlasIconButton(infoBarFrame, {
-                atlas = "crosshair_ui-cursor-broom_32",
+                atlas = "crosshair_broom_32",
                 width = 20,
                 height = 20,
             })
@@ -597,7 +597,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         local searchBox = OneWoW_GUI:CreateEditBox(infoBarFrame, {
             name = config.searchName,
             height = 22,
-            placeholderText = L["SEARCH_PLACEHOLDER"],
+            placeholderText = L["SEARCH_ITEMS"],
             onTextChanged = function(text)
                 UpdateSaveSearchButton(infoBarFrame and infoBarFrame.searchBox)
                 UpdateSearchTransferButton(infoBarFrame and infoBarFrame.searchBox)

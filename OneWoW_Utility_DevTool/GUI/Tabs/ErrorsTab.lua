@@ -32,7 +32,7 @@ local function copyFormatLabel(L, value)
         return L["ERR_COPY_FMT_CURSEFORGE"]
     end
     if value == "discord" then
-        return L["ERR_COPY_FMT_DISCORD"]
+        return L["DISCORD"]
     end
     return L["ERR_COPY_FMT_PLAIN"]
 end
@@ -159,7 +159,7 @@ function Addon.UI:CreateErrorsTab(parent)
             return {
                 { value = "plain", text = L["ERR_COPY_FMT_PLAIN"] },
                 { value = "curseforge", text = L["ERR_COPY_FMT_CURSEFORGE"] },
-                { value = "discord", text = L["ERR_COPY_FMT_DISCORD"] },
+                { value = "discord", text = L["DISCORD"] },
             }
         end,
         onSelect = function(value)

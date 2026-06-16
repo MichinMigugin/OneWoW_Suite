@@ -89,7 +89,7 @@ local function RegisterTooltipProvider()
             if displayMode ~= "name" and mountInfo.mountTypeName then
                 table.insert(lines, {
                     type = "text",
-                    text = string.format(L["PLAYMOUNTS_TYPE"], mountInfo.mountTypeName),
+                    text = string.format(L["TYPE_S"], mountInfo.mountTypeName),
                     r = 0.7, g = 0.7, b = 0.7,
                 })
             end
@@ -211,7 +211,7 @@ function PlayMountsModule:OnTargetChanged()
         local mountLink = C_Spell.GetSpellLink(mountInfo.spellID) or mountInfo.name
         print(prefix .. string.format(L["PLAYMOUNTS_USING"], playerLink, mountLink .. statusText))
         if displayMode ~= "name" and mountInfo.mountTypeName then
-            print(prefix .. string.format(L["PLAYMOUNTS_TYPE"], mountInfo.mountTypeName))
+            print(prefix .. string.format(L["TYPE_S"], mountInfo.mountTypeName))
         end
         if displayMode == "all" and mountInfo.sourceText and mountInfo.sourceText ~= "" then
             print(prefix .. string.format(L["PLAYMOUNTS_SOURCE"], mountInfo.sourceText))

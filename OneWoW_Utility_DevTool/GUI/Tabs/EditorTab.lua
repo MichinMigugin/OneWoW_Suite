@@ -337,7 +337,7 @@ function Addon.UI:CreateEditorTab(parent)
     leftPanel:SetWidth(db and db.leftPaneWidth or LEFT_DEFAULT)
     self:StyleContentPanel(leftPanel)
 
-    local newCatBtn = OneWoW_GUI:CreateFitTextButton(leftPanel, { text = L["EDITOR_BTN_NEW_CATEGORY"], height = 18 })
+    local newCatBtn = OneWoW_GUI:CreateFitTextButton(leftPanel, { text = L["NEW_CATEGORY"], height = 18 })
     newCatBtn:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 4, -3)
 
     local helpBtn = OneWoW_GUI:CreateFitTextButton(leftPanel, { text = "?", height = 18, minWidth = 24 })
@@ -1237,7 +1237,7 @@ function Addon.UI:CreateEditorTab(parent)
     function tab:ShowNewCategoryDialog()
         local dialog
         dialog = OneWoW_GUI:CreateConfirmDialog({
-            title = L["EDITOR_NEW_CATEGORY_TITLE"],
+            title = L["NEW_CATEGORY"],
             message = "",
             buttons = {
                 { text = SAVE, onClick = function(d)

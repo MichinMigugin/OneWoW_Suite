@@ -37,7 +37,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["ITEM_DEPOSIT_ENABLE"] = "Habilitar Auto-Depósito de Objetos",
     ["ITEM_DEPOSIT_ENABLE_DESC"] = "Deposita automáticamente objetos específicos a tu banco elegido al abrir el banco.",
     ["ITEM_DEPOSIT_LIST"] = "Lista de Objetos para Auto-Depósito",
-    ["ITEM_DEPOSIT_ADD"] = "Añadir Objeto",
     ["ITEM_DEPOSIT_ADD_PROMPT"] = "Ingresa el ID del objeto o shift-clic en un objeto para añadir:",
     ["ITEM_DEPOSIT_WARBAND"] = "Grupo de Guerra",
     ["ITEM_DEPOSIT_PERSONAL"] = "Personal",

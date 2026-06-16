@@ -37,7 +37,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ITEM_DEPOSIT_ENABLE"] = "아이템 자동 입금 활성화",
     ["ITEM_DEPOSIT_ENABLE_DESC"] = "은행을 열 때 선택한 은행에 특정 아이템을 자동으로 입금합니다.",
     ["ITEM_DEPOSIT_LIST"] = "자동 입금 아이템 목록",
-    ["ITEM_DEPOSIT_ADD"] = "아이템 추가",
     ["ITEM_DEPOSIT_ADD_PROMPT"] = "아이템 ID를 입력하거나 Shift+클릭하여 추가:",
     ["ITEM_DEPOSIT_WARBAND"] = "워밴드",
     ["ITEM_DEPOSIT_PERSONAL"] = "개인",

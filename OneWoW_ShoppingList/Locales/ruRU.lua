@@ -17,8 +17,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
     ["OWSL_BTN_NEW_LIST"] = "+ Новый список",
     ["OWSL_BTN_SCAN_ALL"] = "Сканировать все",
-    ["OWSL_BTN_DRAG_ITEM"] = "Перетащите элемент сюда",
-    ["OWSL_BTN_ADD_BY_ID"] = "Добавить по идентификатору",
     ["OWSL_BTN_IMPORT"] = "Импорт",
     ["OWSL_BTN_ADD"] = "ДОБАВЛЯТЬ",
     ["OWSL_BTN_CRAFT"] = "РЕМЕСЛО",

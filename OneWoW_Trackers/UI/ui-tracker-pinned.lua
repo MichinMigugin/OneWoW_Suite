@@ -588,7 +588,7 @@ function TP:Create(listID)
     end)
     titleBar:SetScript("OnEnter", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_BOTTOM")
-        GameTooltip:SetText(L["TRACKER_PIN_TITLE_COLLAPSE_HINT"], 1, 1, 1)
+        GameTooltip:SetText(L["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"], 1, 1, 1)
         GameTooltip:Show()
     end)
     titleBar:SetScript("OnLeave", GameTooltip_Hide)
@@ -627,7 +627,7 @@ function TP:Create(listID)
     opacitySlider:SetPoint("TOPRIGHT", hoverControlsPanel, "TOPRIGHT", -10, -4)
 
     local lockMoveCB = OneWoW_GUI:CreateCheckbox(hoverControlsPanel, {
-        label   = L["TRACKER_PIN_LOCK_MOVE"],
+        label   = L["LOCK_MOVE"],
         checked = list.pinnedLockMove,
         onClick = function(myself)
             list.pinnedLockMove = myself:GetChecked() and true or false
@@ -637,7 +637,7 @@ function TP:Create(listID)
     lockMoveCB:SetPoint("BOTTOMLEFT", hoverControlsPanel, "BOTTOMLEFT", 10, 28)
 
     local lockResizeCB = OneWoW_GUI:CreateCheckbox(hoverControlsPanel, {
-        label   = L["TRACKER_PIN_LOCK_RESIZE"],
+        label   = L["LOCK_RESIZE"],
         checked = list.pinnedLockResize,
         onClick = function(myself)
             list.pinnedLockResize = myself:GetChecked() and true or false

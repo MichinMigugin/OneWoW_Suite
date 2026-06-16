@@ -255,7 +255,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["ERR_SOUND_MAP_PING"] = "Сигнал на карте",
     ["ERR_COPY_FMT_PLAIN"] = "Простой текст",
     ["ERR_COPY_FMT_CURSEFORGE"] = "CurseForge",
-    ["ERR_COPY_FMT_DISCORD"] = "Discord",
     ["ERR_CLEAR_ON_RELOAD"] = "Очищать ошибки при /reload",
     ["ERR_KEEP_SESSIONS_LABEL"] = "Хранить сессий:",
     ["ERR_KEEP_SESSIONS_VALUE"] = "%d",

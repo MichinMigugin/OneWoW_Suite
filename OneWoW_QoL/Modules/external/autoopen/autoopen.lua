@@ -191,7 +191,7 @@ function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
 
     local dropText = dropZone:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     dropText:SetPoint("CENTER")
-    dropText:SetText(L["AUTOOPEN_BLACKLIST_DRAG"])
+    dropText:SetText(L["DRAG_ITEM_HERE"])
 
     local function AddItemToBlacklist(itemID)
         if not itemID or itemID <= 0 then return end

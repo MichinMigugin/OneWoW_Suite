@@ -13,7 +13,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["PLAYMOUNTS_NOT_COLLECTED"] = "(Not Collected)",
     ["PLAYMOUNTS_USING"] = "%s is using %s",
     ["PLAYMOUNTS_SOURCE"] = "Source: %s",
-    ["PLAYMOUNTS_TYPE"] = "Type: %s",
     ["PLAYMOUNTS_DISPLAYMODE_DESC"] = "Controls how much mount information is shown in tooltips and chat output.",
     ["PLAYMOUNTS_MODE_NAME"] = "Name",
     ["PLAYMOUNTS_MODE_NAMETYPE"] = "Name + Type",

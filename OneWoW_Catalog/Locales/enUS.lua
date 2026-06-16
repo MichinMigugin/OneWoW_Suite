@@ -31,7 +31,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["JOURNAL_EXPANSION_ALL"] = "All Expansions",
     ["JOURNAL_TYPE_ALL"] = "All Types",
 
-    ["JOURNAL_DIFF_ALL"] = "All Difficulties",
     ["JOURNAL_DIFF_N"] = "N",
     ["JOURNAL_DIFF_H"] = "H",
     ["JOURNAL_DIFF_M"] = "M",
@@ -78,7 +77,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["JOURNAL_GENERAL_LOOT"] = "General Loot",
     ["JOURNAL_ITEMS_COUNT"] = "%d items",
-    ["JOURNAL_ITEMS_FILTERED"] = "%d of %d items",
 
     ["JOURNAL_COL_HDR_ITEM"] = "Item",
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Difficulty",
@@ -259,7 +257,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["QUESTS_TYPE_CAMPAIGN"] = "Campaign",
     ["QUESTS_TYPE_REPEATABLE"] = "Repeatable",
     ["QUESTS_TYPE_NORMAL"] = "Normal",
-    ["QUESTS_TYPE_WORLDQUEST"] = "World Quest",
     ["QUESTS_TYPE_LEGENDARY"] = "Legendary",
     ["QUESTS_UNNAMED"] = "Quest #%d",
     ["QUESTS_ITEM_UNNAMED"] = "Item #%d",
@@ -324,14 +321,11 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ITEMSEARCH_AH_PRICE"] = "AH Price",
     ["ITEMSEARCH_NOT_SELLABLE"] = "Not Sellable",
     ["ITEMSEARCH_NO_AH_DATA"] = "No AH data - open AH and scan",
-    ["ITEMSEARCH_SCAN_AH"] = "SCAN AH",
     ["ITEMSEARCH_SCAN_STOP"] = "Stop",
     ["ITEMSEARCH_SCAN_COMPLETE"] = "Scan Complete",
     ["ITEMSEARCH_SCANNING"] = "Scanning...",
     ["ITEMSEARCH_SCAN_WAITING"] = "Waiting for AH server...",
     ["ITEMSEARCH_SCAN_PROCESSING"] = "Processing %d%% ...",
-    ["ITEMSEARCH_PRICES_FOUND"] = "prices found",
-    ["ITEMSEARCH_AH_NOT_OPEN"] = "Open the Auction House first to scan prices.",
     ["ITEMSEARCH_AH_AGO"] = "ago",
     ["ITEMSEARCH_AH_AGE_DAYS"] = "%d d",
     ["ITEMSEARCH_AH_AUCTIONS"] = "auctions",

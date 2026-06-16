@@ -255,7 +255,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["ERR_SOUND_MAP_PING"] = "Ping carte",
     ["ERR_COPY_FMT_PLAIN"] = "Texte brut",
     ["ERR_COPY_FMT_CURSEFORGE"] = "CurseForge",
-    ["ERR_COPY_FMT_DISCORD"] = "Discord",
     ["ERR_CLEAR_ON_RELOAD"] = "Effacer les erreurs au /reload",
     ["ERR_KEEP_SESSIONS_LABEL"] = "Conserver les sessions :",
     ["ERR_KEEP_SESSIONS_VALUE"] = "%d",

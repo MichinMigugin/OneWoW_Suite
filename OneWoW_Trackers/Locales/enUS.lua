@@ -44,7 +44,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["FARM_SHOW_AH"]                    = "Use Auction House price",
     ["FARM_USE_TSM"]                    = "Prefer TSM price when available",
     ["FARM_AH_SOURCE"]                  = "AH data:",
-    ["FARM_OPEN_ONEWOW"]                = "Open OneWoW",
     ["FARM_OPEN_ONEWOW_TT"]             = "Open the main OneWoW window (Tooltips section has full Value options, e.g. TSM price string).",
 
     ["TRACKER_IMPORT"]                  = "Import",
@@ -53,11 +52,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_PIN"]                     = "Pin",
     ["TRACKER_UNPIN"]                   = "Unpin",
 
-    ["TRACKER_PIN_LOCK_MOVE"]                = "Lock Move",
-    ["TRACKER_PIN_LOCK_RESIZE"]              = "Lock Resize",
     ["TRACKER_PIN_HIDE_COMPLETED"]           = "Hide completed",
     ["TRACKER_PIN_HIDE_COMPLETED_DESC"]      = "Hide completed steps and any section with nothing left to do.",
-    ["TRACKER_PIN_TITLE_COLLAPSE_HINT"]      = "Double-click or Shift+click to collapse or expand",
     ["TRACKER_EXPORT"]                  = "Export",
     ["TRACKER_DUPLICATE"]               = "Duplicate",
     ["TRACKER_FAV"]                     = "Favorite",
@@ -110,7 +106,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_TYPE_MANUAL"]             = "Manual",
     ["TRACKER_TYPE_QUEST"]              = "Quest",
     ["TRACKER_TYPE_QUEST_ACTIVE"]       = "Quest Active",
-    ["TRACKER_TYPE_QUEST_WORLD"]        = "World Quest",
     ["TRACKER_TYPE_QUEST_ACCOUNT"]      = "Quest (Account)",
     ["TRACKER_TYPE_QUEST_POOL"]         = "Quest Pool",
     ["TRACKER_TYPE_QUEST_POOL_ACCOUNT"] = "Quest Pool (Account)",
@@ -127,7 +122,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_TYPE_KILL_CREATURE"]      = "Kill Creature",
     ["TRACKER_TYPE_KILL_COUNT"]         = "Kill Count",
     ["TRACKER_TYPE_LOOT_ITEM"]          = "Loot Item",
-    ["TRACKER_TYPE_PET"]                = "Battle Pet",
     ["TRACKER_TYPE_TRANSMOG"]           = "Transmog",
     ["TRACKER_TYPE_BUFF"]               = "Buff",
     ["TRACKER_TYPE_EXPLORATION"]        = "Exploration",
@@ -175,7 +169,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["SETTINGS_RESET_TITLE"]            = "Weekly Reset Day",
     ["SETTINGS_RESET_DESC"]             = "Weekly trackers reset on your region's reset day, detected automatically from your realm. If detection is ever wrong, force your region here.",
-    ["SETTINGS_RESET_CURRENT"]          = "Current: %s",
     ["RESET_REGION_AUTO"]               = "Auto-detect (recommended)",
     ["RESET_REGION_US"]                 = "North America — Tuesday",
     ["RESET_REGION_EU"]                 = "Europe — Wednesday",

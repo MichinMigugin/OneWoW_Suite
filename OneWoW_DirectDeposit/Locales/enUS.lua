@@ -37,7 +37,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ITEM_DEPOSIT_ENABLE"] = "Enable Item Auto-Deposit",
     ["ITEM_DEPOSIT_ENABLE_DESC"] = "Automatically deposit specific items to your chosen bank when opening the bank.",
     ["ITEM_DEPOSIT_LIST"] = "Auto-Deposit Item List",
-    ["ITEM_DEPOSIT_ADD"] = "Add Item",
     ["ITEM_DEPOSIT_ADD_PROMPT"] = "Enter Item ID or shift-click an item to add:",
     ["ITEM_DEPOSIT_WARBAND"] = "Warband",
     ["ITEM_DEPOSIT_PERSONAL"] = "Personal",
@@ -52,7 +51,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
     ["DEPOSIT_NOW"] = "Deposit Now",
     ["PAUSE"] = "Pause",
-    ["ITEM_ID_LABEL"] = "Item ID:",
     ["ITEM_DRAG_HINT"] = "Drag items here to add",
     ["ITEM_EMPTY_LIST"] = "No items in auto-deposit list.\nDrag items here to add them.",
 

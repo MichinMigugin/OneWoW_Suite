@@ -3,7 +3,6 @@ local _, OneWoW_Bags = ...
 local OneWoW_GUI = OneWoW_GUI
 
 local Constants = OneWoW_Bags.Constants
-local L = OneWoW_Bags.L
 local WH = OneWoW_Bags.WindowHelpers
 local GuildBankInfoBar = OneWoW_Bags.GuildBankInfoBar
 local GuildBankBar = OneWoW_Bags.GuildBankBar
