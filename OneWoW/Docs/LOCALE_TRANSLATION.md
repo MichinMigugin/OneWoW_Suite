@@ -325,13 +325,22 @@ existing scope keys too.
   `L["old"]`→`L["CANON"]` + strip the old key from every locale of each owning scope.
   Verified: 0 collisions, 0 orphaned refs, cross-scope-safe 69→34. Shared scope 51→86.
   (`TOTAL_GOLD`→`GOLD_TOTAL` rename per the collision rule above.)
+- [x] **Cross-scope batch 2 — bare-word terms (27 groups).** After reviewing all 33
+  bare words by part-of-speech, collapsed the 27 with a single consistent sense
+  (nouns/verbs/directions/field labels): `Item Rename Expansion Search... Mail Up Down
+  Achievement Create Duplicate Filter: Keep Pause Progress Stop Blacklist Campaign Decor
+  Discard File: Guild: ID: Lockouts Race: Session Slot Summary`. Verified: 0 collisions,
+  0 orphaned refs, no leftover scope defs. Shared scope 86→113; cross-scope-safe 34→7.
+  **6 kept per-scope** (`Active Expired Personal Minimal Manual Pin`) — adjectives that
+  need gender/number agreement, or `Pin` (noun "map pin" vs verb). Reason recorded as a
+  comment block in `OneWoW/Locales/Shared/enUS.lua` so a later pass doesn't re-collapse
+  them. (`"%d"` excluded — format placeholder.)
 
-**Remaining (cross-scope):**
-- [ ] **Bare single-word groups (33)** — flagged for meaning review before collapse:
-  `Item Rename Active Expansion Manual Search... Expired Mail Personal Up Achievement
-  Create Down Duplicate Filter: Keep Pause Progress Stop Blacklist Campaign Decor
-  Discard File: Guild: ID: Lockouts Minimal Pin Race: Session Slot Summary`.
-  (`"%d"` excluded — format placeholder, not translatable.)
+**Remaining (cross-scope):** none actionable — the 7 still flagged by `--consolidate`
+are the 6 intentionally-kept adjectives/`Pin` + `"%d"` (all documented in the shared
+ledger). Cross-scope track is **complete**.
+
+**Remaining (intra-scope):**
 - [ ] **Intra-scope dedup (90 groups)** — dedupe within each scope (AltTracker-heavy:
   `Attention`/`Characters`/`Expanded Details - Coming Soon`, etc.).
 

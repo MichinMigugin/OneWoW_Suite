@@ -34,7 +34,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["QUESTITEMBAR_ALL_USABLE_ITEMS"] = "All Usable Quest Items",
     ["QUESTITEMBAR_QUEST_ITEM_STATUS"] = "Quest Item Status",
     ["QUESTITEMBAR_DEBUG_COL_QUEST"] = "Quest",
-    ["QUESTITEMBAR_DEBUG_COL_ITEM"] = "Item",
     ["QUESTITEMBAR_DEBUG_CLICK_QUEST"] = "Click to open map with quest details",
     ["QUESTITEMBAR_DEBUG_INCLUDED"] = "Included",
     ["QUESTITEMBAR_DEBUG_NOT_TRACKED"] = "Quest not tracked",
@@ -47,6 +46,4 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["QUESTITEMBAR_CONTEXT_LOCK"] = "Lock Position",
     ["QUESTITEMBAR_GROW_RIGHT"] = "Right",
     ["QUESTITEMBAR_GROW_LEFT"] = "Left",
-    ["QUESTITEMBAR_GROW_DOWN"] = "Down",
-    ["QUESTITEMBAR_GROW_UP"] = "Up",
 })

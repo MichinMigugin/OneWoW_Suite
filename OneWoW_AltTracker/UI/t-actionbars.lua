@@ -265,7 +265,7 @@ local function ShowRenameDialog(split, oldName)
         height = 200,
         movable = false,
         buttons = {
-            { text = L["AB_RENAME_SET_CONFIRM"], color = {OneWoW_GUI:GetThemeColor("BTN_NORMAL")}, onClick = function(dialog)
+            { text = L["RENAME"], color = {OneWoW_GUI:GetThemeColor("BTN_NORMAL")}, onClick = function(dialog)
                 local nameBox = dialog.nameEditBox
                 if nameBox then
                     local newName = strtrim(nameBox:GetText())
@@ -419,7 +419,7 @@ function ns.UI.ShowSetDetails(split, setName)
         updatedText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     end
 
-    local renameBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = L["AB_RENAME_SET"], height = 24 })
+    local renameBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = L["RENAME"], height = 24 })
     renameBtn:SetPoint("TOPRIGHT", headerBox, "TOPRIGHT", -10, -8)
     renameBtn:SetScript("OnClick", function()
         ShowRenameDialog(split, setName)

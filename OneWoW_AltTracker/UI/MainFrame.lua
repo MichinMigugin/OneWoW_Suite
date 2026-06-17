@@ -244,10 +244,10 @@ function ns.UI:CreateMainFrame(defaultTab)
         return tabFrame
     end
 
-    local summaryTab = CreateTab("summary", L["SUBTAB_SUMMARY"])
+    local summaryTab = CreateTab("summary", L["SUMMARY"])
     ns.UI.CreateSummaryTab(summaryTab)
 
-    local progressTab = CreateTab("progress", L["SUBTAB_PROGRESS"])
+    local progressTab = CreateTab("progress", L["PROGRESS"])
     ns.UI.CreateProgressTab(progressTab)
 
     local bankTab = CreateTab("bank", BANK)
@@ -281,7 +281,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     local profilesTab = CreateTab("actionbars", L["SUBTAB_ACTIONBARS"])
     ns.UI.CreateActionBarsTab(profilesTab)
 
-    local lockoutsTab = CreateTab("lockouts", L["SUBTAB_LOCKOUTS"])
+    local lockoutsTab = CreateTab("lockouts", L["LOCKOUTS"])
     ns.UI.CreateLockoutsTab(lockoutsTab)
 
     local settingsTab = CreateTab("settings", SETTINGS)

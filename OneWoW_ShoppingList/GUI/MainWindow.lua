@@ -1065,7 +1065,7 @@ function MainWindow:RefreshItemList()
 
             local idLabel = OneWoW_GUI:CreateFS(row, 10)
             idLabel:SetPoint("LEFT", qtyBox, "RIGHT", 6, 0)
-            idLabel:SetText(L["OWSL_LABEL_ID"])
+            idLabel:SetText(L["ID"])
             idLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             local idBox = OneWoW_GUI:CreateEditBox(row, { width = 55, height = 20 })
@@ -1385,7 +1385,7 @@ function MainWindow:ShowListContextMenu(listName)
                             MainWindow:RefreshItemList()
                         end
                     end,
-                    L["OWSL_BTN_RENAME"]
+                    L["RENAME"]
                 )
             end)
         end

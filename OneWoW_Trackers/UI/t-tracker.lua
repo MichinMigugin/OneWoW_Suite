@@ -129,7 +129,7 @@ function ns.UI.CreateTrackerTab(parent)
     local searchBox = OneWoW_GUI:CreateEditBox(controlPanel, {
         width = 180,
         height = 26,
-        placeholderText = L["TRACKER_SEARCH"],
+        placeholderText = L["SEARCH"],
     })
     searchBox:SetPoint("LEFT", catDropdown, "RIGHT", 6, 0)
     searchBox:SetScript("OnTextChanged", function(self)
@@ -531,7 +531,7 @@ function ns.UI.CreateTrackerTab(parent)
             end
         end)
 
-        local dupeBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["TRACKER_DUPLICATE"], height = 22 })
+        local dupeBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = L["DUPLICATE"], height = 22 })
         dupeBtn:SetPoint("LEFT", exportBtn, "RIGHT", 4, 0)
         dupeBtn:SetScript("OnClick", function()
             local copy = TD:DuplicateList(list.id)

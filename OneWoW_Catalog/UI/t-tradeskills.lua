@@ -422,7 +422,7 @@ ShowRecipeDetail = function(recipe)
         AddInfoRow(L["TRADESKILLS_ITEM_ID"], tostring(recipe.item))
     end
     AddInfoRow(L["TRADESKILLS_PROFESSION"], recipe.prof)
-    AddInfoRow(L["TRADESKILLS_EXPANSION"], expDisplay)
+    AddInfoRow(L["EXPANSION"], expDisplay)
 
     if recipe.qual then
         AddInfoRow(QUALITY, string.format(L["TRADESKILLS_QUALITY_FMT"], recipe.maxQ or 3))

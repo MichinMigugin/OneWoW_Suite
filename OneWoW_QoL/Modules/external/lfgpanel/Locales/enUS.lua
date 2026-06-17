@@ -10,7 +10,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["LFGPANEL_FILTER_RESULTS"] = "Filter LFG Results",
     ["LFGPANEL_FILTER_RESULTS_DESC"] = "Filter the LFG search results by the selected difficulty.",
 
-    ["LFGPANEL_DIALOG_TITLE"] = "Lockouts",
     ["LFGPANEL_TT_REFRESH"] = "Refresh Lockouts",
     ["LFGPANEL_TT_REFRESH_DESC"] = "Request the latest lockout data from the server.",
     ["LFGPANEL_TT_TOGGLE"] = "Show Lockouts Panel",

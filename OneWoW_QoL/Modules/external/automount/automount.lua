@@ -919,7 +919,7 @@ function AutoMountModule:ShowMountPicker(mountType, onSelect)
         popup._titleBar = result.titleBar
         local popupContent = result.contentFrame
 
-        popup._searchBox = OneWoW_GUI:CreateEditBox(popupContent, { width = 220, height = 24, placeholderText = L["AUTOMOUNT_SEARCH"], maxLetters = 50 })
+        popup._searchBox = OneWoW_GUI:CreateEditBox(popupContent, { width = 220, height = 24, placeholderText = L["SEARCH"], maxLetters = 50 })
         popup._searchBox:SetPoint("TOPLEFT",  popupContent, "TOPLEFT",  15, -10)
         popup._searchBox:SetPoint("TOPRIGHT", popupContent, "TOPRIGHT", -15, -10)
 

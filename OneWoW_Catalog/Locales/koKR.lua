@@ -64,7 +64,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
     ["JOURNAL_DETAIL_INST_ID"] = "인스턴스 ID",
     ["JOURNAL_DETAIL_MAP_ID"] = "지도 ID",
-    ["JOURNAL_DETAIL_EXPANSION"] = "확장팩",
 
     ["JOURNAL_COLLECTIONS"] = "수집",
     ["JOURNAL_COL_TMOG"] = "형상변환: %d/%d",
@@ -78,7 +77,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["JOURNAL_GENERAL_LOOT"] = "일반 전리품",
     ["JOURNAL_ITEMS_COUNT"] = "아이템 %d개",
 
-    ["JOURNAL_COL_HDR_ITEM"] = "아이템",
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "난이도",
 
     ["JOURNAL_SPECIAL_TMOG"] = "형상",
@@ -92,7 +90,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["JOURNAL_STATUS_KNOWN"] = "습득",
     ["JOURNAL_STATUS_UNKNOWN"] = "미습득",
 
-    ["JOURNAL_LABEL_EXPANSION"] = "확장팩",
     ["JOURNAL_LABEL_INST_TYPE"] = "인스턴스 유형",
     ["JOURNAL_LABEL_ITEM_TYPE"] = "아이템 유형",
     ["JOURNAL_LABEL_COLLECTION"] = "수집",
@@ -183,7 +180,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRADESKILLS_RECIPE_ID"] = "도안 ID",
     ["TRADESKILLS_ITEM_ID"] = "아이템 ID",
     ["TRADESKILLS_PROFESSION"] = "전문 기술",
-    ["TRADESKILLS_EXPANSION"] = "확장팩",
     ["TRADESKILLS_DIFFICULTY"] = "난이도",
     ["TRADESKILLS_QUALITY_FMT"] = "최대 품질: %d",
     ["TRADESKILLS_RANK"] = "숙련 %d",
@@ -245,14 +241,12 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["QUESTS_DATA_HAS_TURNIN"] = "완료 NPC 있음",
     ["QUESTS_DATA_HAS_REWARDS"] = "보상 있음",
     ["QUESTS_STATUS_COUNT"] = "퀘스트 %d개",
-    ["QUESTS_EXPANSION"] = "확장팩",
     ["QUESTS_QUESTID"] = "퀘스트 ID",
     ["QUESTS_MAPID"] = "지도 ID",
     ["QUESTS_COMPLETION"] = "완료",
     ["QUESTS_GOLD"] = "골드",
     ["QUESTS_XP"] = "경험치",
     ["QUESTS_OBJECTIVES"] = "목표",
-    ["QUESTS_TYPE_CAMPAIGN"] = "캠페인",
     ["QUESTS_TYPE_REPEATABLE"] = "반복",
     ["QUESTS_TYPE_NORMAL"] = "일반",
     ["QUESTS_TYPE_LEGENDARY"] = "전설",
@@ -310,7 +304,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ITEMSEARCH_ITEM_ID"] = "아이템 ID",
 
     ["ITEMSEARCH_LOC_BAGS"] = "가방",
-    ["ITEMSEARCH_LOC_MAIL"] = "우편",
     ["ITEMSEARCH_LOC_WARBAND"] = "전쟁대 은행",
     ["ITEMSEARCH_LOC_AH"] = "경매장",
 
@@ -319,7 +312,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ITEMSEARCH_AH_PRICE"] = "경매가",
     ["ITEMSEARCH_NOT_SELLABLE"] = "판매 불가",
     ["ITEMSEARCH_NO_AH_DATA"] = "경매 데이터 없음 - 경매장을 열고 스캔하세요",
-    ["ITEMSEARCH_SCAN_STOP"] = "중지",
     ["ITEMSEARCH_SCAN_COMPLETE"] = "스캔 완료",
     ["ITEMSEARCH_SCANNING"] = "스캔 중...",
     ["ITEMSEARCH_SCAN_WAITING"] = "경매 서버 대기 중...",
@@ -350,6 +342,5 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["BINDING_HEADER_ONEWOW_CATALOG"] = "|cFF00FF00OneWoW|r 도감",
     ["BINDING_NAME_ONEWOW_CATALOG_OPEN"] = "도감 열기",
     ["BINDING_NAME_ONEWOW_CATALOG_ITEM_SEARCH"] = "아이템 검색",
-    ["QUESTS_PROGRESS_LABEL"] = "진행 상황",
     ["QUESTS_SEARCH_ADVANCED"] = "퀘스트를 찾아보려면 검색하거나 필터를 조정하세요.",
 })

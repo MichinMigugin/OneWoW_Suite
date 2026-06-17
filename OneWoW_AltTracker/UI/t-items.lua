@@ -34,7 +34,7 @@ local currentSortAscending = true
 local columnsConfig = {
     {key = "expand", label = "",                      width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],          ttDesc = L["TT_COL_EXPAND_DESC"]},
     {key = "favorite", label = L["ITEMS_COL_FAVORITE"], width = 28, fixed = true, align = "center", sortable = false, ttTitle = L["TT_ITEMS_COL_FAVORITE"], ttDesc = L["TT_ITEMS_COL_FAVORITE_DESC"]},
-    {key = "item",   label = L["ITEMS_COL_ITEM"],     width = 150, fixed = false, align = "left",                     ttTitle = L["TT_ITEMS_COL_ITEM"],     ttDesc = L["TT_ITEMS_COL_ITEM_DESC"]},
+    {key = "item",   label = L["ITEM"],     width = 150, fixed = false, align = "left",                     ttTitle = L["ITEM"],     ttDesc = L["TT_ITEMS_COL_ITEM_DESC"]},
     {key = "total",  label = TOTAL,    width = 45,  fixed = true,  align = "center",                   ttTitle = TOTAL,    ttDesc = L["TT_ITEMS_COL_TOTAL_DESC"]},
     {key = "vendor", label = L["ITEMS_COL_VENDOR"],   width = 80,  fixed = false, align = "right",                    ttTitle = L["TT_ITEMS_COL_VENDOR"],   ttDesc = L["TT_ITEMS_COL_VENDOR_DESC"]},
     {key = "ah",     label = L["ITEMS_COL_AH"],       width = 80,  fixed = false, align = "right",                    ttTitle = L["TT_ITEMS_COL_AH"],       ttDesc = L["TT_ITEMS_COL_AH_DESC"]},
@@ -322,7 +322,7 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
     end
 
     scanButton.isAHScanning = true
-    scanButton:SetText(L["ITEMS_SCAN_STOPPED"])
+    scanButton:SetText(L["STOP"])
 
     local progressBar = itemsTab.scanProgressBar
     local progressContainer = itemsTab.scanBarContainer
@@ -575,7 +575,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
                             if itemData.canUse == false then
                                 items[itemID].isBound = true
                             end
-                            AddToLocation(items[itemID], charName, L["ITEMS_LOCATION_MAIL"], itemData.count or 1)
+                            AddToLocation(items[itemID], charName, L["MAIL"], itemData.count or 1)
                         end
                     end
                 end

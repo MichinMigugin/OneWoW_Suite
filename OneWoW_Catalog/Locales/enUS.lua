@@ -64,7 +64,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["JOURNAL_DETAIL_INST_ID"] = "Instance ID",
     ["JOURNAL_DETAIL_MAP_ID"] = "Map ID",
-    ["JOURNAL_DETAIL_EXPANSION"] = "Expansion",
 
     ["JOURNAL_COLLECTIONS"] = "Collections",
     ["JOURNAL_COL_TMOG"] = "Transmog: %d/%d",
@@ -78,7 +77,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["JOURNAL_GENERAL_LOOT"] = "General Loot",
     ["JOURNAL_ITEMS_COUNT"] = "%d items",
 
-    ["JOURNAL_COL_HDR_ITEM"] = "Item",
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Difficulty",
 
     ["JOURNAL_SPECIAL_TMOG"] = "TMog",
@@ -92,7 +90,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["JOURNAL_STATUS_KNOWN"] = "Known",
     ["JOURNAL_STATUS_UNKNOWN"] = "Not Known",
 
-    ["JOURNAL_LABEL_EXPANSION"] = "Expansion",
     ["JOURNAL_LABEL_INST_TYPE"] = "Instance Type",
     ["JOURNAL_LABEL_ITEM_TYPE"] = "Item Type",
     ["JOURNAL_LABEL_COLLECTION"] = "Collection",
@@ -183,7 +180,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRADESKILLS_RECIPE_ID"] = "Recipe ID",
     ["TRADESKILLS_ITEM_ID"] = "Item ID",
     ["TRADESKILLS_PROFESSION"] = "Profession",
-    ["TRADESKILLS_EXPANSION"] = "Expansion",
     ["TRADESKILLS_DIFFICULTY"] = "Difficulty",
     ["TRADESKILLS_QUALITY_FMT"] = "Max Quality: %d",
     ["TRADESKILLS_RANK"] = "Rank %d",
@@ -216,7 +212,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["QUESTS_STATUS_CAPPED"] = "Showing %d of %d - search or filter to see more",
     ["QUESTS_SHOW_ON_MAP"] = "Show on Map",
     ["QUESTS_CHAIN"] = "Quest Chain",
-    ["QUESTS_PROGRESS_LABEL"] = "Progress",
     ["QUESTS_SEARCH_ADVANCED"] = "Search or adjust filters to browse quests.",
     ["QUESTS_QUEST_GIVER"] = "Quest Giver",
     ["QUESTS_TURN_IN"] = "Turn In",
@@ -247,14 +242,12 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["QUESTS_DATA_HAS_GIVER"] = "Has Quest Giver",
     ["QUESTS_DATA_HAS_TURNIN"] = "Has Turn-in",
     ["QUESTS_DATA_HAS_REWARDS"] = "Has Rewards",
-    ["QUESTS_EXPANSION"] = "Expansion",
     ["QUESTS_QUESTID"] = "Quest ID",
     ["QUESTS_MAPID"] = "Map ID",
     ["QUESTS_COMPLETION"] = "Completion",
     ["QUESTS_GOLD"] = "Gold",
     ["QUESTS_XP"] = "Experience",
     ["QUESTS_OBJECTIVES"] = "Objectives",
-    ["QUESTS_TYPE_CAMPAIGN"] = "Campaign",
     ["QUESTS_TYPE_REPEATABLE"] = "Repeatable",
     ["QUESTS_TYPE_NORMAL"] = "Normal",
     ["QUESTS_TYPE_LEGENDARY"] = "Legendary",
@@ -312,7 +305,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ITEMSEARCH_ITEM_ID"] = "Item ID",
 
     ["ITEMSEARCH_LOC_BAGS"] = "Bags",
-    ["ITEMSEARCH_LOC_MAIL"] = "Mail",
     ["ITEMSEARCH_LOC_WARBAND"] = "Warband Bank",
     ["ITEMSEARCH_LOC_AH"] = "Auction House",
 
@@ -321,7 +313,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ITEMSEARCH_AH_PRICE"] = "AH Price",
     ["ITEMSEARCH_NOT_SELLABLE"] = "Not Sellable",
     ["ITEMSEARCH_NO_AH_DATA"] = "No AH data - open AH and scan",
-    ["ITEMSEARCH_SCAN_STOP"] = "Stop",
     ["ITEMSEARCH_SCAN_COMPLETE"] = "Scan Complete",
     ["ITEMSEARCH_SCANNING"] = "Scanning...",
     ["ITEMSEARCH_SCAN_WAITING"] = "Waiting for AH server...",

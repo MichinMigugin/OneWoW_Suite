@@ -162,10 +162,10 @@ function Addon.UI:CreateEditorTab(parent)
     local newBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = NEW, height = btnHeight })
     newBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
 
-    local renameBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_RENAME"], height = btnHeight })
+    local renameBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["RENAME"], height = btnHeight })
     renameBtn:SetPoint("LEFT", newBtn, "RIGHT", btnGap, 0)
 
-    local dupBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["EDITOR_BTN_DUPLICATE"], height = btnHeight })
+    local dupBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["DUPLICATE"], height = btnHeight })
     dupBtn:SetPoint("LEFT", renameBtn, "RIGHT", btnGap, 0)
 
     local saveBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = SAVE, height = btnHeight })
@@ -869,10 +869,10 @@ function Addon.UI:CreateEditorTab(parent)
             local snippet = EE:GetSnippet(myself.snippetId)
             if not snippet then return end
             MenuUtil.CreateContextMenu(myself, function(_, root)
-                root:CreateButton(L["EDITOR_CTX_RENAME"], function()
+                root:CreateButton(L["RENAME"], function()
                     tab:ShowRenameDialog(myself.snippetId)
                 end)
-                root:CreateButton(L["EDITOR_CTX_DUPLICATE"], function()
+                root:CreateButton(L["DUPLICATE"], function()
                     local newId = EE:DuplicateSnippet(myself.snippetId)
                     if newId then
                         local duplicatedSnippet = EE:GetSnippet(newId)
@@ -1110,7 +1110,7 @@ function Addon.UI:CreateEditorTab(parent)
             message = L["EDITOR_UNSAVED_MESSAGE"],
             buttons = {
                 { text = SAVE, onClick = function(d) d:Hide(); if onSave then onSave() end end },
-                { text = L["EDITOR_BTN_DISCARD"], onClick = function(d) d:Hide(); if onDiscard then onDiscard() end end },
+                { text = L["DISCARD"], onClick = function(d) d:Hide(); if onDiscard then onDiscard() end end },
                 { text = CANCEL, onClick = function(d) d:Hide() end },
             },
         })

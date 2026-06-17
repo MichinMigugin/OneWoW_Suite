@@ -13,7 +13,6 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["AUTOMOUNT_CAT_OFF"] = "꺼짐",
     ["AUTOMOUNT_RANDOM_FAVORITE"] = "즐겨찾기 무작위",
     ["AUTOMOUNT_SELECT_TITLE"] = "%s 탈것 선택",
-    ["AUTOMOUNT_SEARCH"] = "검색...",
     ["AUTOMOUNT_SELECT_TOOLTIP"] = "클릭하여 탈것 선택",
     ["AUTOMOUNT_SELECT_TOOLTIP_DESC"] = "특정 탈것을 고르거나 자동 선택이 가장 빠른 탈것을 고르도록 할 수 있습니다.",
     ["AUTOMOUNT_DRUID_SECTION"] = "드루이드",

@@ -141,7 +141,7 @@ function ns.UI.CreateBankTab(parent)
     personalBtn.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local searchBox = OneWoW_GUI:CreateEditBox(controlPanel, {
-        placeholderText = L["BANK_SEARCH"],
+        placeholderText = L["SEARCH"],
         onTextChanged = function(text)
             ns.UI.FilterBankItems(parent, text)
         end,
@@ -627,7 +627,7 @@ local function SetupItemTooltipScripts(frame)
             end
         else
             GameTooltip:SetText(L["BANK_EMPTY_SLOT"], 1, 1, 1)
-            GameTooltip:AddLine(L["BANK_SLOT"] .. " " .. (self._slotIndex or 0), 0.7, 0.7, 0.7, true)
+            GameTooltip:AddLine(L["SLOT"] .. " " .. (self._slotIndex or 0), 0.7, 0.7, 0.7, true)
         end
         GameTooltip:Show()
     end)

@@ -12,7 +12,7 @@ local selectedAltKey = nil
 
 local columnsConfig = {
     {key = "expand", label = "", width = 25, fixed = true, align = "icon", sortable = false, ttTitle = L["TT_COL_EXPAND"], ttDesc = L["TT_COL_EXPAND_DESC"]},
-    {key = "item", label = L["AUCTIONS_COL_ITEM"], width = 150, fixed = false, align = "left", ttTitle = L["TT_COL_ITEM"], ttDesc = L["TT_COL_ITEM_DESC"]},
+    {key = "item", label = L["ITEM"], width = 150, fixed = false, align = "left", ttTitle = L["ITEM"], ttDesc = L["TT_COL_ITEM_DESC"]},
     {key = "qty", label = L["AUCTIONS_COL_QTY"], width = 40, fixed = true, align = "center", ttTitle = L["TT_COL_QTY"], ttDesc = L["TT_COL_QTY_DESC"]},
     {key = "each", label = L["AUCTIONS_COL_EACH"], width = 60, fixed = false, align = "left", ttTitle = L["TT_COL_EACH"], ttDesc = L["TT_COL_EACH_DESC"]},
     {key = "total", label = TOTAL, width = 70, fixed = false, align = "left", ttTitle = TOTAL, ttDesc = L["TT_COL_TOTAL_DESC"]},

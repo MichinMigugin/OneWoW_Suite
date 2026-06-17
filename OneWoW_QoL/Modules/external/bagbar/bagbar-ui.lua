@@ -353,8 +353,8 @@ local function BuildContent(container, _)
     local growDirLabels = {
         RIGHT = L["BAGBAR_GROW_RIGHT"],
         LEFT  = L["BAGBAR_GROW_LEFT"],
-        DOWN  = L["BAGBAR_GROW_DOWN"],
-        UP    = L["BAGBAR_GROW_UP"],
+        DOWN  = L["DOWN"],
+        UP    = L["UP"],
     }
     local curDir = s.growDirection or "RIGHT"
 
@@ -588,7 +588,7 @@ local function BuildContent(container, _)
             BagBarModule._refreshCustomDetail()
         end, uiEnabled)
 
-    cy = OneWoW_GUI:CreateSection(container, { title = L["BAGBAR_BLACKLIST_HEADER"], yOffset = cy })
+    cy = OneWoW_GUI:CreateSection(container, { title = L["BLACKLIST"], yOffset = cy })
 
     local blDesc = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     blDesc:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)

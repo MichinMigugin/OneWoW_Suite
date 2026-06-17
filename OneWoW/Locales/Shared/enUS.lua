@@ -106,4 +106,42 @@ OneWoW.Locale:RegisterShared("enUS", {
     ["SHOW_BAR"] = "Show Bar",
     ["GOLD_TOTAL"] = "Total Gold",
     ["WORLD_QUEST"] = "World Quest",
+
+    -- Phase 3 consolidated (cross-scope bare-word terms)
+    ["ITEM"] = "Item",
+    ["RENAME"] = "Rename",
+    ["EXPANSION"] = "Expansion",
+    ["SEARCH"] = "Search...",
+    ["MAIL"] = "Mail",
+    ["UP"] = "Up",
+    ["ACHIEVEMENT"] = "Achievement",
+    ["CREATE"] = "Create",
+    ["DOWN"] = "Down",
+    ["DUPLICATE"] = "Duplicate",
+    ["FILTER"] = "Filter:",
+    ["KEEP"] = "Keep",
+    ["PAUSE"] = "Pause",
+    ["PROGRESS"] = "Progress",
+    ["STOP"] = "Stop",
+    ["BLACKLIST"] = "Blacklist",
+    ["CAMPAIGN"] = "Campaign",
+    ["DECOR"] = "Decor",
+    ["DISCARD"] = "Discard",
+    ["FILE"] = "File:",
+    ["GUILD"] = "Guild:",
+    ["ID"] = "ID:",
+    ["LOCKOUTS"] = "Lockouts",
+    ["RACE"] = "Race:",
+    ["SESSION"] = "Session",
+    ["SLOT"] = "Slot",
+    ["SUMMARY"] = "Summary",
+
+    -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
+    -- in during a future consolidation pass. Each is one English word whose
+    -- translation diverges by grammatical context, so a single shared value can't fit:
+    --   Active, Expired, Personal, Minimal, Manual — adjectives that must agree in
+    --     gender/number with the noun they describe (e.g. fr actif/active,
+    --     es mínimo/mínima), which differs per call site.
+    --   Pin — two distinct senses: noun "map pin" (Catalog) vs verb "pin" (Trackers).
+    -- ("%d" is a bare format placeholder, also intentionally left scoped.)
 })

@@ -286,10 +286,10 @@ function Addon.UI.FontTab_UpdateDetails(tab)
     local info = FB:GetFontInfo(name)
 
     -- Summary section
-    tinsert(lines, "|cffffd100" .. (L["FONT_SECTION_SUMMARY"]) .. "|r")
+    tinsert(lines, "|cffffd100" .. (L["SUMMARY"]) .. "|r")
     tinsert(lines, (L["FONT_LABEL_FONT_NAME"]) .. " " .. name)
     if info then
-        tinsert(lines, (L["LABEL_FILE"]) .. " " .. (info.path or "?"))
+        tinsert(lines, (L["FILE"]) .. " " .. (info.path or "?"))
         tinsert(lines, (L["FONT_LABEL_FONT_HEIGHT"]) .. " " .. tostring(info.height or "?"))
         tinsert(lines, (L["FONT_LABEL_FONT_FLAGS"]) .. " " .. (info.flags ~= "" and info.flags or (NONE)))
     end

@@ -81,10 +81,10 @@ local function GetHyperlinkDialog()
     typeLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local typeData = {
-        { key = "item",        label = L["CTX_LINK_TYPE_ITEM"],        help = L["CTX_HELP_ITEM"] },
+        { key = "item",        label = L["ITEM"],        help = L["CTX_HELP_ITEM"] },
         { key = "spell",       label = L["CTX_LINK_TYPE_SPELL"],       help = L["CTX_HELP_SPELL"] },
         { key = "quest",       label = L["CTX_LINK_TYPE_QUEST"],       help = L["CTX_HELP_QUEST"] },
-        { key = "achievement", label = L["CTX_LINK_TYPE_ACHIEVEMENT"], help = L["CTX_HELP_ACHIEVEMENT"] },
+        { key = "achievement", label = L["ACHIEVEMENT"], help = L["CTX_HELP_ACHIEVEMENT"] },
         { key = "currency",    label = CURRENCY,    help = L["CTX_HELP_CURRENCY"] },
         { key = "toy",         label = TOY,         help = L["CTX_HELP_TOY"] },
         { key = "battlepet",   label = L["BATTLE_PET"],   help = L["CTX_HELP_BATTLEPET"] },

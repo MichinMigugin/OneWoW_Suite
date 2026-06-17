@@ -307,7 +307,7 @@ function VendorPanel:CreatePreviewPanel()
 
     local filterLabel = filterRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     filterLabel:SetPoint("LEFT", filterRow, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
-    filterLabel:SetText(L["VENDOR_FILTER_LABEL"])
+    filterLabel:SetText(L["FILTER"])
     filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local vendorDropdown, dropText = OneWoW_GUI:CreateDropdown(filterRow, {
@@ -428,7 +428,7 @@ function VendorPanel:CreatePreviewPanel()
             { key = "Pets",      text = PETS },
             { key = "Toys",      text = L["VENDOR_EX_TOYS"] },
             { key = "Cosmetics", text = L["VENDOR_EX_COSMETICS"] },
-            { key = "Decor",     text = L["VENDOR_EX_DECOR"] },
+            { key = "Decor",     text = L["DECOR"] },
             { key = "Housing",   text = L["VENDOR_EX_HOUSING"] },
         }
         table.insert(items, { type = "divider" })

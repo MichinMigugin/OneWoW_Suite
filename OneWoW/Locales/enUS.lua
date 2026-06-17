@@ -63,7 +63,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["COPYPASTE_HINT_COPY_MAC"] = "Press Cmd+C to copy",
 
     ["WIZARD_TITLE"] = "Welcome to OneWoW",
-    ["KEEP"] = "Keep",
     ["MANAGE_SCOPE_LABEL"] = "Apply to:",
     ["MANAGE_SCOPE_ALL"] = "All characters",
     ["MANAGE_SCOPE_SWITCH_TITLE"] = "Switch Scope",
@@ -602,7 +601,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellewic, kellzilla, and to all our Beta testers - Thank you!",
 
     ["HOME_SAVE_RELOAD"] = "Save & Reload",
-    ["HOME_DISCARD"] = "Discard",
     ["HOME_PENDING_CHANGES"] = "%d pending change(s)",
     ["HOME_UNSAVED_TITLE"] = "Unsaved Changes",
     ["HOME_UNSAVED_CONFIRM"] = "You have unsaved addon changes.\nSave and reload the UI now?",

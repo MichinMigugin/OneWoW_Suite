@@ -1102,7 +1102,7 @@ function ns.UI.CreateSettingsTab(parent)
                 fileText:SetPoint("TOPLEFT", row, "TOPLEFT", 34, -37)
                 fileText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -6, -37)
                 fileText:SetJustifyH("LEFT")
-                fileText:SetText(L["SEASON_FILE"] .. " " .. item.file)
+                fileText:SetText(L["FILE"] .. " " .. item.file)
                 fileText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
                 if not isAuto then

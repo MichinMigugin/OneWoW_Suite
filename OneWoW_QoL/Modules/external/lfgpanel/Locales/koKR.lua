@@ -10,7 +10,6 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["LFGPANEL_FILTER_RESULTS"] = "TEST",
     ["LFGPANEL_FILTER_RESULTS_DESC"] = "TEST",
 
-    ["LFGPANEL_DIALOG_TITLE"] = "TEST",
     ["LFGPANEL_TT_REFRESH"] = "TEST",
     ["LFGPANEL_TT_REFRESH_DESC"] = "TEST",
     ["LFGPANEL_TT_TOGGLE"] = "TEST",

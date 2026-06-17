@@ -623,7 +623,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     local searchBox = OneWoW_GUI:CreateEditBox(tab, {
         width = 180,
         height = 22,
-        placeholderText = L["LABEL_FILTER"],
+        placeholderText = L["FILTER"],
         onTextChanged = function()
             scheduleFilterRefresh(tab)
         end,
@@ -838,7 +838,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     tab.homeBtn = homeBtn
 
     local upBtn = OneWoW_GUI:CreateFitTextButton(rightToolbar, {
-        text = L["GLOBALS_NAV_UP"],
+        text = L["UP"],
         height = 22,
         minWidth = 36,
     })

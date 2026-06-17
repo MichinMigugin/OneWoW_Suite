@@ -22,8 +22,8 @@ local function RegisterWithOneWoW()
         addonName = "OneWoW_AltTracker",
         order = OneWoW:GetModuleTabOrder("alttracker"),
         tabs = {
-            { name = "summary",     displayName = function() return ns.L["SUBTAB_SUMMARY"]     end, create = function(p) ns.UI.CreateSummaryTab(p) end },
-            { name = "progress",    displayName = function() return ns.L["SUBTAB_PROGRESS"]    end, create = function(p) ns.UI.CreateProgressTab(p) end },
+            { name = "summary",     displayName = function() return ns.L["SUMMARY"]     end, create = function(p) ns.UI.CreateSummaryTab(p) end },
+            { name = "progress",    displayName = function() return ns.L["PROGRESS"]    end, create = function(p) ns.UI.CreateProgressTab(p) end },
             { name = "bank",        displayName = function() return BANK        end, create = function(p) ns.UI.CreateBankTab(p) end },
             { name = "equipment",   displayName = function() return ns.L["SUBTAB_EQUIPMENT"]   end, create = function(p) ns.UI.CreateEquipmentTab(p) end },
             { name = "professions", displayName = function() return ns.L["SUBTAB_PROFESSIONS"] end, create = function(p) ns.UI.CreateProfessionsTab(p) end },
@@ -31,7 +31,7 @@ local function RegisterWithOneWoW()
             { name = "financials",  displayName = function() return ns.L["SUBTAB_FINANCIALS"]  end, create = function(p) ns.UI.CreateFinancialsTab(p) end },
             { name = "items",       displayName = function() return ITEMS       end, create = function(p) ns.UI.CreateItemsTab(p) end },
             { name = "actionbars",  displayName = function() return ns.L["SUBTAB_ACTIONBARS"]  end, create = function(p) ns.UI.CreateActionBarsTab(p) end },
-            { name = "lockouts",    displayName = function() return ns.L["SUBTAB_LOCKOUTS"]    end, create = function(p) ns.UI.CreateLockoutsTab(p) end },
+            { name = "lockouts",    displayName = function() return ns.L["LOCKOUTS"]    end, create = function(p) ns.UI.CreateLockoutsTab(p) end },
         },
     })
     OneWoW:RegisterSettingsPanel({

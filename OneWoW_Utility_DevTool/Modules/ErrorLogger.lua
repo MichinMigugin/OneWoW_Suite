@@ -689,7 +689,7 @@ function ErrorLogger:UpdateUI()
             if isCurrentSession then
                 sessionLabel = L["ERR_SESSION_CURRENT"]
             else
-                sessionLabel = (L["ERR_SESSION_PREFIX"]) .. " " .. (err.session or "?")
+                sessionLabel = (L["SESSION"]) .. " " .. (err.session or "?")
             end
 
             local countStr = ""
@@ -733,7 +733,7 @@ function ErrorLogger:ShowErrorDetails(errorData)
     if errorData.session == currentSession then
         sessionLabel = L["ERR_SESSION_CURRENT_FULL"]
     else
-        sessionLabel = (L["ERR_SESSION_PREFIX"]) .. " " .. (errorData.session or "?")
+        sessionLabel = (L["SESSION"]) .. " " .. (errorData.session or "?")
     end
 
     local details = {}

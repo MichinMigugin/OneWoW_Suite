@@ -88,8 +88,8 @@ end
 local function resolutionLabel(r)
     if r == "skip"   then return L["IMPORT_PREVIEW_RES_SKIP"] end
     if r == "merge"  then return L["IMPORT_PREVIEW_RES_MERGE"] end
-    if r == "rename" then return L["IMPORT_PREVIEW_RES_RENAME"] end
-    return L["IMPORT_PREVIEW_RES_CREATE"]
+    if r == "rename" then return L["RENAME"] end
+    return L["CREATE"]
 end
 
 local function ruleLabel(r)
@@ -99,7 +99,7 @@ local function ruleLabel(r)
 end
 
 local function unmappedLabel(r)
-    if r == "keep" then return L["IMPORT_PREVIEW_KEEP"] end
+    if r == "keep" then return L["KEEP"] end
     return IGNORE
 end
 

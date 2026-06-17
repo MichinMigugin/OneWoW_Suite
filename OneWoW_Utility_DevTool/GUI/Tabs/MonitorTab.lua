@@ -131,13 +131,13 @@ function Addon.UI:CreateMonitorTab(parent)
 
     local filterLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     filterLabel:SetPoint("TOPLEFT", playBtn, "BOTTOMLEFT", 0, -14)
-    filterLabel:SetText(L["MON_LABEL_FILTER"])
+    filterLabel:SetText(L["FILTER"])
     filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local filterBox = OneWoW_GUI:CreateEditBox(tab, {
         width = 150,
         height = 22,
-        placeholderText = L["MON_LABEL_FILTER"],
+        placeholderText = L["FILTER"],
         onTextChanged = function(text)
             if Monitor then
                 Monitor:SetFilter(text)
@@ -733,7 +733,7 @@ function Addon.UI:CreateMonitorTab(parent)
         if not Monitor then return end
         Monitor:ToggleMonitoring()
         if Monitor:IsMonitoring() then
-            playBtn.text:SetText(L["MON_BTN_PAUSE"])
+            playBtn.text:SetText(L["PAUSE"])
             DoUpdate()
         else
             playBtn.text:SetText(L["MON_BTN_PLAY"])

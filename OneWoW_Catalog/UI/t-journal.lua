@@ -514,7 +514,7 @@ local function RefreshDetailView(isSecondRefresh)
     infoLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     infoLine:SetJustifyH("LEFT")
     local infoParts = {}
-    table.insert(infoParts, L["JOURNAL_DETAIL_EXPANSION"] .. ": " .. instData.expansionName)
+    table.insert(infoParts, L["EXPANSION"] .. ": " .. instData.expansionName)
     table.insert(infoParts, TYPE .. ": " .. typeStr)
     table.insert(infoParts, L["JOURNAL_DETAIL_INST_ID"] .. ": " .. instData.instanceID)
     if instData.mapID then
@@ -550,7 +550,7 @@ local function RefreshDetailView(isSecondRefresh)
 
     local hdrItem = OneWoW_GUI:CreateFS(colHdrFrame, 10)
     hdrItem:SetPoint("LEFT", colHdrFrame, "LEFT", 8, 0)
-    hdrItem:SetText(L["JOURNAL_COL_HDR_ITEM"])
+    hdrItem:SetText(L["ITEM"])
     hdrItem:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local hdrDiff = OneWoW_GUI:CreateFS(colHdrFrame, 10)
@@ -1034,7 +1034,7 @@ function ns.UI.CreateJournalTab(parent)
     -- LEFT HEADER: Row 2 - Expansion label + dropdown
     local expLabel = OneWoW_GUI:CreateFS(leftHeader, 10)
     expLabel:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -38)
-    expLabel:SetText(L["JOURNAL_LABEL_EXPANSION"])
+    expLabel:SetText(L["EXPANSION"])
     expLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local expDropdown, expText = OneWoW_GUI:CreateDropdown(leftHeader, { width = LEFT_W - 16, text = L["JOURNAL_EXPANSION_ALL"] })

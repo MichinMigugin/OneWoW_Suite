@@ -75,7 +75,7 @@ function ns.UI.CreateEquipmentTab(parent)
         {key = "expand",    label = "",                          width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],            ttDesc = L["TT_COL_EXPAND_DESC"]},
         {key = "star",      label = "",                          width = 30,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_STAR"],              ttDesc = L["TT_COL_STAR_DESC"]},
         {key = "faction",   label = L["COL_FACTION"],            width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = FACTION,           ttDesc = L["TT_COL_FACTION_DESC"]},
-        {key = "mail",      label = L["COL_MAIL"],               width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["TT_COL_MAIL"],              ttDesc = L["TT_COL_MAIL_DESC"]},
+        {key = "mail",      label = L["COL_MAIL"],               width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["MAIL"],              ttDesc = L["TT_COL_MAIL_DESC"]},
         {key = "name",      label = CHARACTER,          width = 135, fixed = false, align = "left",                     ttTitle = CHARACTER,         ttDesc = L["TT_COL_CHARACTER_DESC"]},
         {key = "level",     label = L["COL_LEVEL"],              width = 40,  fixed = true,  align = "center",                   ttTitle = LEVEL,             ttDesc = L["TT_COL_LEVEL_DESC"]},
         {key = "itemLevel", label = L["EQUIPMENT_COL_ILVL"],     width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_ILVL"],             ttDesc = L["TT_COL_ILVL_DESC"]},

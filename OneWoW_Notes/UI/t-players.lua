@@ -252,7 +252,7 @@ function ns.UI.CreatePlayersTab(parent)
     listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local searchBox = OneWoW_GUI:CreateEditBox(listingPanel, {
-        placeholderText = L["UI_SEARCH_PLACEHOLDER"],
+        placeholderText = L["SEARCH"],
         onTextChanged = function(text)
             searchFilter = text
             if parent.RefreshPlayersList then parent.RefreshPlayersList() end
@@ -1087,11 +1087,11 @@ function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
     dialog._realmInput = MakeDialogInput(content, COL1_X, yPos - LBL_GAP, COL_W)
     dialog._realmInput:SetText(GetRealmName() or "")
 
-    MakeDialogLabel(content, L["PLAYER_LABEL_GUILD"], COL2_X, yPos)
+    MakeDialogLabel(content, L["GUILD"], COL2_X, yPos)
     dialog._guildInput = MakeDialogInput(content, COL2_X, yPos - LBL_GAP, COL_W)
     yPos = yPos - ROW_H
 
-    MakeDialogLabel(content, L["PLAYER_LABEL_RACE"], COL1_X, yPos)
+    MakeDialogLabel(content, L["RACE"], COL1_X, yPos)
     local raceDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     raceDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     local raceOpts = {{text = "", value = ""}}
@@ -1250,7 +1250,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
         self:ClearFocus()
     end)
 
-    MakeDialogLabel(content, L["PLAYER_LABEL_GUILD"], COL2_X, yPos)
+    MakeDialogLabel(content, L["GUILD"], COL2_X, yPos)
     local guildInput = MakeDialogInput(content, COL2_X, yPos - LBL_GAP, COL_W)
     guildInput:SetText(pd.guild or "")
     guildInput:SetScript("OnEnterPressed", function(self)
@@ -1259,7 +1259,7 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
     end)
     yPos = yPos - ROW_H
 
-    MakeDialogLabel(content, L["PLAYER_LABEL_RACE"], COL1_X, yPos)
+    MakeDialogLabel(content, L["RACE"], COL1_X, yPos)
     local raceDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     raceDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
     local raceOpts = {{text = "", value = ""}}

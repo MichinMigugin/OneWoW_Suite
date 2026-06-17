@@ -442,7 +442,7 @@ local function updateDetailPanel(tab)
     if BR:GetViewMode() == BR.VIEW_TEXTURE and texKey and not atlasName then
         tinsert(lines, L["TEXTURE_MSG_CLICK_REGION"])
         tinsert(lines, "")
-        tinsert(lines, (L["LABEL_FILE"]) .. " " .. tostring(texKey))
+        tinsert(lines, (L["FILE"]) .. " " .. tostring(texKey))
         local w, h = BR:ComputeSheetPixelSize(texKey)
         tinsert(lines, (L["TEXTURE_LABEL_SHEET_SIZE"]) .. " " .. format("%.0f x %.0f", w, h))
     elseif atlasName then
@@ -625,7 +625,7 @@ function Addon.UI:CreateTextureTab(parent)
     local searchBox = OneWoW_GUI:CreateEditBox(tab, {
         width = 160,
         height = 22,
-        placeholderText = L["LABEL_FILTER"],
+        placeholderText = L["FILTER"],
         onTextChanged = function()
             scheduleFilterRefresh(tab)
         end,

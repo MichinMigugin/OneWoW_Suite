@@ -13,7 +13,7 @@ local columnsConfig = {
     {key = "expand", label = "", width = 25, fixed = true, align = "icon", sortable = false, ttTitle = L["TT_COL_EXPAND"], ttDesc = L["TT_COL_EXPAND_DESC"]},
     {key = "star", label = "", width = 30, fixed = true, align = "icon", sortable = false, ttTitle = L["TT_COL_STAR"], ttDesc = L["TT_COL_STAR_DESC"]},
     {key = "faction", label = L["COL_FACTION"], width = 25, fixed = true, align = "icon", sortable = false, ttTitle = FACTION, ttDesc = L["PROF_TT_FACTION_DESC"]},
-    {key = "mail", label = L["COL_MAIL"], width = 35, fixed = true, align = "icon", sortable = false, ttTitle = L["TT_COL_MAIL"], ttDesc = L["PROF_TT_MAIL_DESC"]},
+    {key = "mail", label = L["COL_MAIL"], width = 35, fixed = true, align = "icon", sortable = false, ttTitle = L["MAIL"], ttDesc = L["PROF_TT_MAIL_DESC"]},
     {key = "name", label = CHARACTER, width = 135, fixed = false, align = "left", ttTitle = CHARACTER, ttDesc = L["PROF_TT_CHAR_NAME_DESC"]},
     {key = "level", label = L["COL_LEVEL"], width = 40, fixed = true, align = "center", ttTitle = LEVEL, ttDesc = L["PROF_TT_CHAR_LEVEL_DESC"]},
     {key = "primary1", label = L["PROF_COL_PRIMARY_1"], width = 90, fixed = false, align = "left", ttTitle = L["PROF_COL_PRIMARY_1"], ttDesc = L["PROF_TT_PRIMARY_1_DESC"]},

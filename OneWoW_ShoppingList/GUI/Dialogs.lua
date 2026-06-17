@@ -26,7 +26,7 @@ function Dialogs:InputDialog(labelText, defaultVal, onConfirm, confirmLabel)
         strata    = "FULLSCREEN_DIALOG",
         onClose   = function() activeDialogResult = nil end,
         buttons   = {
-            { text = confirmLabel or L["OWSL_BTN_CREATE"] },
+            { text = confirmLabel or L["CREATE"] },
             { text = CANCEL, onClick = function(f)
                 f:Hide()
                 activeDialogResult = nil

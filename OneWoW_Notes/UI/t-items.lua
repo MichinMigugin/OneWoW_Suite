@@ -234,7 +234,7 @@ function ns.UI.CreateItemsTab(parent)
     listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local searchBox = OneWoW_GUI:CreateEditBox(listingPanel, {
-        placeholderText = L["UI_SEARCH_PLACEHOLDER"],
+        placeholderText = L["SEARCH"],
         onTextChanged = function(text)
             searchFilter = text
             if parent.RefreshItemsList then parent.RefreshItemsList() end

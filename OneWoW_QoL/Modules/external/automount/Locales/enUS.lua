@@ -13,7 +13,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["AUTOMOUNT_CAT_OFF"] = "Off",
     ["AUTOMOUNT_RANDOM_FAVORITE"] = "Random Favorite",
     ["AUTOMOUNT_SELECT_TITLE"] = "Select %s Mount",
-    ["AUTOMOUNT_SEARCH"] = "Search...",
     ["AUTOMOUNT_SELECT_TOOLTIP"] = "Click to select a mount",
     ["AUTOMOUNT_SELECT_TOOLTIP_DESC"] = "Choose a specific mount or let auto-select pick the fastest available.",
     ["AUTOMOUNT_DRUID_SECTION"] = "Druid",

@@ -632,7 +632,7 @@ end
 
 StaticPopupDialogs["ONEWOW_BAGS_CREATE_CATEGORY"] = {
     text = "", hasEditBox = true,
-    button1 = L["POPUP_CREATE"],
+    button1 = L["CREATE"],
     button2 = CANCEL,
     OnShow = function(self)
         self.Text:SetText(L["CATEGORY_CREATE_ENTER"])
@@ -696,7 +696,7 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_CATEGORY"] = {
 
 StaticPopupDialogs["ONEWOW_BAGS_RENAME_CATEGORY"] = {
     text = "", hasEditBox = true,
-    button1 = L["POPUP_RENAME"],
+    button1 = L["RENAME"],
     button2 = CANCEL,
     OnShow = function(self, data)
         self.Text:SetText(L["CATEGORY_RENAME_ENTER"])
@@ -751,7 +751,7 @@ StaticPopupDialogs["ONEWOW_BAGS_DELETE_CATEGORY"] = {
 
 StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
     text = "", hasEditBox = true,
-    button1 = L["POPUP_CREATE"],
+    button1 = L["CREATE"],
     button2 = CANCEL,
     OnShow = function(self)
         self.Text:SetText(L["SECTION_CREATE_ENTER"])
@@ -789,7 +789,7 @@ StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
 
 StaticPopupDialogs["ONEWOW_BAGS_RENAME_SECTION"] = {
     text = "", hasEditBox = true,
-    button1 = L["POPUP_RENAME"],
+    button1 = L["RENAME"],
     button2 = CANCEL,
     OnShow = function(self, data)
         self.Text:SetText(L["SECTION_RENAME_ENTER"])
@@ -922,7 +922,7 @@ function CatMgrUI:RefreshRight()
         delBtn:SetScript("OnClick", function()
             StaticPopup_Show("ONEWOW_BAGS_DELETE_SECTION", section.name, nil, captID)
         end)
-        local renBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["CATEGORY_RENAME"], height=22 })
+        local renBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["RENAME"], height=22 })
         renBtn:SetPoint("RIGHT", delBtn, "LEFT", -4, 0)
         renBtn:SetScript("OnClick", function()
             StaticPopup_Show("ONEWOW_BAGS_RENAME_SECTION", section.name, nil, captID)
@@ -997,9 +997,9 @@ function CatMgrUI:RefreshRight()
     local catMod = OneWoW_Bags:EnsureCategoryModification(catName)
 
     local SORT_OPTIONS = { "none", "default", "name", "rarity", "ilvl", "type", "expansion" }
-    local SORT_LABELS = { OFF, L["SORT_DEFAULT"], NAME, RARITY, L["SORT_ITEM_LEVEL"], TYPE, L["SORT_EXPANSION"] }
+    local SORT_LABELS = { OFF, L["SORT_DEFAULT"], NAME, RARITY, L["SORT_ITEM_LEVEL"], TYPE, L["EXPANSION"] }
     local GROUP_OPTIONS = { "none", "expansion", "type", "slot", "quality", "equipmentset" }
-    local GROUP_LABELS = { NONE, L["GROUP_EXPANSION"], TYPE, L["GROUP_SLOT"], QUALITY, L["GROUP_EQUIPMENT_SET"] }
+    local GROUP_LABELS = { NONE, L["EXPANSION"], TYPE, L["SLOT"], QUALITY, L["GROUP_EQUIPMENT_SET"] }
     local PRIORITY_OPTIONS = { -2, -1, 0, 1, 2, 3 }
     local PRIORITY_LABELS = { L["PRIORITY_LOWEST"], LOW, L["PRIORITY_NORMAL"], HIGH, L["PRIORITY_HIGHEST"], L["PRIORITY_MAX"] }
 
@@ -1045,7 +1045,7 @@ function CatMgrUI:RefreshRight()
         delBtn:SetScript("OnClick", function()
             StaticPopup_Show("ONEWOW_BAGS_DELETE_CATEGORY", catData.name, nil, capturedID)
         end)
-        local renBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["CATEGORY_RENAME"], height=22 })
+        local renBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["RENAME"], height=22 })
         renBtn:SetPoint("RIGHT", delBtn, "LEFT", -4, 0)
         renBtn:SetScript("OnClick", function()
             StaticPopup_Show("ONEWOW_BAGS_RENAME_CATEGORY", catData.name, nil, capturedID)
@@ -1133,7 +1133,7 @@ function CatMgrUI:RefreshRight()
             sLbl:SetText(L["CAT_ITEM_SUBTYPE"])
             sLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             local sBox = MakeEditBoxWithSave(parent,
-                { width=160, height=22, placeholderText = L["PLACEHOLDER_ITEM_SUBTYPE"] },
+                { width=160, height=22, placeholderText = L["DECOR"] },
                 function() return catData.itemSubType end,
                 function(v)
                     local controller = GetController()

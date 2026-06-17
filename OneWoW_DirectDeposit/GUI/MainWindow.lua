@@ -497,7 +497,7 @@ function GUI:CreateItemsPanel(parent)
     excludeInputBox:SetPoint("LEFT", excludeAddLabel, "RIGHT", 10, 0)
     excludeInputBox:SetNumeric(true)
 
-    local excludeAddBtn = OneWoW_GUI:CreateFitTextButton(excludeBox, { text = L["WARBOUND_EXCLUDE_ADD"], height = 26 })
+    local excludeAddBtn = OneWoW_GUI:CreateFitTextButton(excludeBox, { text = L["KEEP"], height = 26 })
     excludeAddBtn:SetPoint("LEFT", excludeInputBox, "RIGHT", 10, 0)
     excludeAddBtn:SetScript("OnClick", function()
         local itemIDText = excludeInputBox:GetText()

@@ -996,9 +996,9 @@ function TE:GetTrackTypeDisplayName(trackType)
         quest_active    = L["TRACKER_TYPE_QUEST_ACTIVE"],
         quest_world     = L["WORLD_QUEST"],
         level           = LEVEL,
-        item            = L["TRACKER_TYPE_ITEM"],
+        item            = L["ITEM"],
         currency        = CURRENCY,
-        achievement     = L["TRACKER_TYPE_ACHIEVEMENT"],
+        achievement     = L["ACHIEVEMENT"],
         reputation      = REPUTATION,
         renown          = L["TRACKER_TYPE_RENOWN"],
         spell_known     = L["TRACKER_TYPE_SPELL_KNOWN"],
@@ -1024,7 +1024,7 @@ function TE:GetTrackTypeDisplayName(trackType)
         prof_catchup    = L["TRACKER_TYPE_PROF_CATCHUP"],
         rare_quest      = L["TRACKER_TYPE_RARE_QUEST"],
         custom_timer    = L["TRACKER_TYPE_CUSTOM_TIMER"],
-        campaign        = L["TRACKER_TYPE_CAMPAIGN"],
+        campaign        = L["CAMPAIGN"],
     }
     return names[trackType] or trackType
 end

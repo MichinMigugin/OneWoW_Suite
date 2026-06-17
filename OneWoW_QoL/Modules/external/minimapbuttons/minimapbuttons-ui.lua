@@ -366,14 +366,14 @@ local function BuildContent(container, isEnabled)
     end
 
     growDown = OneWoW_GUI:CreateCheckbox(container, {
-        label   = L["MMBTNS_GROW_DOWN"],
+        label   = L["DOWN"],
         checked = s.growDirection == "down",
         onClick = function(self) SetGrowDir("down", self) end,
     })
     growDown:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
 
     growUp = OneWoW_GUI:CreateCheckbox(container, {
-        label   = L["MMBTNS_GROW_UP"],
+        label   = L["UP"],
         checked = s.growDirection == "up",
         onClick = function(self) SetGrowDir("up", self) end,
     })

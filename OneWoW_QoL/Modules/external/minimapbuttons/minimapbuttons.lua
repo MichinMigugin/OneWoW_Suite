@@ -1053,7 +1053,7 @@ function MinimapButtonsModule:LayoutContainer()
 
             searchBox._placeholder = searchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
             searchBox._placeholder:SetPoint("LEFT", 6, 0)
-            searchBox._placeholder:SetText(L["MMBTNS_SEARCH_PLACEHOLDER"])
+            searchBox._placeholder:SetText(L["SEARCH"])
 
             searchBox:SetScript("OnTextChanged", function(self)
                 local text = self:GetText() or ""

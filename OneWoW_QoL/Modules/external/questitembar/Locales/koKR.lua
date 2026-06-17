@@ -34,7 +34,6 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["QUESTITEMBAR_ALL_USABLE_ITEMS"] = "사용 가능한 퀘스트 아이템",
     ["QUESTITEMBAR_QUEST_ITEM_STATUS"] = "퀘스트 아이템 상태",
     ["QUESTITEMBAR_DEBUG_COL_QUEST"] = "퀘스트",
-    ["QUESTITEMBAR_DEBUG_COL_ITEM"] = "아이템",
     ["QUESTITEMBAR_DEBUG_CLICK_QUEST"] = "클릭하여 퀘스트 상세 지도 열기",
     ["QUESTITEMBAR_DEBUG_INCLUDED"] = "포함됨",
     ["QUESTITEMBAR_DEBUG_NOT_TRACKED"] = "퀘스트 추적 안 함",

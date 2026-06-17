@@ -135,7 +135,7 @@ function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
 
     local blHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     blHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    blHeader:SetText(L["AUTOOPEN_BLACKLIST"])
+    blHeader:SetText(L["BLACKLIST"])
     blHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     yOffset = yOffset - blHeader:GetStringHeight() - 8
 

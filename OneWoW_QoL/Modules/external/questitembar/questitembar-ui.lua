@@ -118,8 +118,8 @@ local function BuildContent(container, isEnabled, contentYOffset)
     local growDirLabels = {
         RIGHT = L["QUESTITEMBAR_GROW_RIGHT"],
         LEFT  = L["QUESTITEMBAR_GROW_LEFT"],
-        DOWN  = L["QUESTITEMBAR_GROW_DOWN"],
-        UP    = L["QUESTITEMBAR_GROW_UP"],
+        DOWN  = L["DOWN"],
+        UP    = L["UP"],
     }
     local curDir = s.growDirection or "RIGHT"
 
@@ -410,7 +410,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
 
     local hdrItem = colHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hdrItem:SetPoint("LEFT", colHeader, "RIGHT", -(STATUS_COL_WIDTH + itemColWidth + 8), 0)
-    hdrItem:SetText(L["QUESTITEMBAR_DEBUG_COL_ITEM"])
+    hdrItem:SetText(L["ITEM"])
     hdrItem:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local hdrStatus = colHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")

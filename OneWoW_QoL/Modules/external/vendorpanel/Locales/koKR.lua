@@ -18,7 +18,6 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["VENDOR_HIDE_PANEL"] = "TEST",
     ["VENDOR_SHOW_PANEL"] = "TEST",
     ["VENDOR_TOOLS_TITLE"] = "TEST",
-    ["VENDOR_FILTER_LABEL"] = "TEST",
     ["VENDOR_QUICK_ADD"] = "TEST",
     ["VENDOR_QUICK_ADD_FILTERS"] = "TEST",
     ["UI_VENDOR_FILTER_HINT"] = "TEST",

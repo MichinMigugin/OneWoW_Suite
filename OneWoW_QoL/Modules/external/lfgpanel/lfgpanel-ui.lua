@@ -43,7 +43,7 @@ function LFGPanelUI:CreateDialog()
     panel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
     local titleBar = OneWoW_GUI:CreateTitleBar(panel, {
-        title = L["LFGPANEL_DIALOG_TITLE"],
+        title = L["LOCKOUTS"],
         showBrand = true,
         factionTheme = GetFactionTheme(),
         onClose = function()

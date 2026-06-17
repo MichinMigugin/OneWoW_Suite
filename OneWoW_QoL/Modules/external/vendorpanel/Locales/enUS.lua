@@ -19,7 +19,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["VENDOR_HIDE_PANEL"] = "Click to hide the junk panel",
     ["VENDOR_SHOW_PANEL"] = "Click to show the junk panel",
     ["VENDOR_TOOLS_TITLE"] = "Vendor Tools",
-    ["VENDOR_FILTER_LABEL"] = "Filter:",
     ["VENDOR_QUICK_ADD"] = "Quick Add Items",
     ["VENDOR_QUICK_ADD_FILTERS"] = "Quick Add Filters",
     ["UI_VENDOR_FILTER_HINT"] = "Add items to your sell list based on type",
@@ -87,7 +86,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["VENDOR_ALWAYS_HIDE"] = "Always Hide (all vendors)",
     ["VENDOR_EX_TOYS"] = "Toys",
     ["VENDOR_EX_COSMETICS"] = "Cosmetics",
-    ["VENDOR_EX_DECOR"] = "Decor",
     ["VENDOR_EX_HOUSING"] = "Housing",
     ["VENDOR_VF_DETECTED"] = "VendorFilter detected. The Vendor Panel now includes the same vendor filtering, hide-known, and category exclusions \226\128\148 you can safely disable VendorFilter to avoid conflicts.",
 })

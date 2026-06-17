@@ -668,7 +668,7 @@ function FirstRun:BuildPanel(parent, opts)
     StaticPopupDialogs["ONEWOW_MANAGE_SCOPE_SWITCH"] = {
         text = L["MANAGE_SCOPE_SWITCH_TEXT"],
         button1 = L["KEEP"],
-        button2 = L["HOME_DISCARD"],
+        button2 = L["DISCARD"],
         OnAccept = function()
             if pendingScopePC ~= nil then SwitchScope(pendingScopePC, true) end
             pendingScopePC = nil

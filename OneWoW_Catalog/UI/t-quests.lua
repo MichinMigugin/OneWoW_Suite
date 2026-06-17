@@ -351,7 +351,7 @@ local function GetQuestTypeLabel(quest)
     if not quest then return L["QUESTS_TYPE_NORMAL"] end
     if quest.isDaily   then return DAILY   end
     if quest.isWeekly  then return WEEKLY  end
-    if quest.isCampaign then return L["QUESTS_TYPE_CAMPAIGN"] end
+    if quest.isCampaign then return L["CAMPAIGN"] end
     if quest.isWorldQuest then return L["WORLD_QUEST"] end
     local cls = quest.classification
     if cls == 1 then return L["QUESTS_TYPE_LEGENDARY"] end
@@ -1860,9 +1860,9 @@ function ShowQuestDetail(panels, questData)
     metaLeft:SetWidth(W)
 
     local metaParts = {
-        string.format("%s: %s", L["QUESTS_EXPANSION"], expName),
+        string.format("%s: %s", L["EXPANSION"], expName),
         string.format("%s: %s", ZONE, zoneName),
-        string.format("%s: %s", L["QUESTS_PROGRESS_LABEL"], progressName),
+        string.format("%s: %s", L["PROGRESS"], progressName),
         string.format("%s: %s", REWARDS, rewardSummary),
         string.format("Faction: %s", factionName),
         string.format("Category: %s", categoryName),
@@ -3820,7 +3820,7 @@ local function SetupQuestTypeDropdown(panels)
                 { value = "normal",     text = L["QUESTS_TYPE_NORMAL"]     },
                 { value = "daily",      text = DAILY      },
                 { value = "weekly",     text = WEEKLY     },
-                { value = "campaign",   text = L["QUESTS_TYPE_CAMPAIGN"]   },
+                { value = "campaign",   text = L["CAMPAIGN"]   },
                 { value = "worldquest", text = L["WORLD_QUEST"] },
             }
         end,
@@ -3980,7 +3980,7 @@ local function SetupAdvancedDropdowns(panels)
                 { value = "normal",     text = L["QUESTS_TYPE_NORMAL"]     },
                 { value = "daily",      text = DAILY      },
                 { value = "weekly",     text = WEEKLY     },
-                { value = "campaign",   text = L["QUESTS_TYPE_CAMPAIGN"]   },
+                { value = "campaign",   text = L["CAMPAIGN"]   },
                 { value = "worldquest", text = L["WORLD_QUEST"] },
                 { value = "repeatable", text = "Repeatable" },
             }

@@ -320,10 +320,10 @@ function ns.UI.CreateNotesHelpPanel()
     local linksScrollContent = linksScrollObj.scrollChild
 
     local linkTypes = {
-        { name = L["UI_HELP_LINK_ITEM_NAME"],     syntax = L["UI_HELP_LINK_ITEM_SYNTAX"],     example = L["UI_HELP_LINK_ITEM_EXAMPLE"],     icon = "Interface\\Icons\\INV_Misc_Note_01" },
+        { name = L["ITEM"],     syntax = L["UI_HELP_LINK_ITEM_SYNTAX"],     example = L["UI_HELP_LINK_ITEM_EXAMPLE"],     icon = "Interface\\Icons\\INV_Misc_Note_01" },
         { name = L["UI_HELP_LINK_SPELL_NAME"],    syntax = L["UI_HELP_LINK_SPELL_SYNTAX"],    example = L["UI_HELP_LINK_SPELL_EXAMPLE"],    icon = "Interface\\Icons\\INV_Misc_Book_09" },
         { name = L["UI_HELP_LINK_QUEST_NAME"],    syntax = L["UI_HELP_LINK_QUEST_SYNTAX"],    example = L["UI_HELP_LINK_QUEST_EXAMPLE"],    icon = "Interface\\Icons\\INV_Misc_Note_02" },
-        { name = L["UI_HELP_LINK_ACHV_NAME"],     syntax = L["UI_HELP_LINK_ACHV_SYNTAX"],     example = L["UI_HELP_LINK_ACHV_EXAMPLE"],     icon = "Interface\\Icons\\Achievement_General" },
+        { name = L["ACHIEVEMENT"],     syntax = L["UI_HELP_LINK_ACHV_SYNTAX"],     example = L["UI_HELP_LINK_ACHV_EXAMPLE"],     icon = "Interface\\Icons\\Achievement_General" },
         { name = CURRENCY, syntax = L["UI_HELP_LINK_CURRENCY_SYNTAX"], example = L["UI_HELP_LINK_CURRENCY_EXAMPLE"], icon = "Interface\\Icons\\INV_Misc_Coin_01" },
         { name = TOY,      syntax = L["UI_HELP_LINK_TOY_SYNTAX"],      example = L["UI_HELP_LINK_TOY_EXAMPLE"],      icon = "Interface\\Icons\\INV_Misc_Toy_10" },
         { name = L["BATTLE_PET"],      syntax = L["UI_HELP_LINK_PET_SYNTAX"],      example = L["UI_HELP_LINK_PET_EXAMPLE"],      icon = "Interface\\Icons\\INV_Box_PetCarrier_01" },

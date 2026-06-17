@@ -199,7 +199,7 @@ function EventMonitor:UpdateUI()
 
     if tab.startStopBtn then
         if self.monitoring then
-            tab.startStopBtn.text:SetText(L["BTN_STOP"])
+            tab.startStopBtn.text:SetText(L["STOP"])
             tab.startStopBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
             tab.startStopBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
             tab.startStopBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
@@ -220,13 +220,13 @@ function EventMonitor:UpdateUI()
                 tab.pauseBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
                 tab.pauseBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             else
-                tab.pauseBtn.text:SetText(L["BTN_PAUSE"])
+                tab.pauseBtn.text:SetText(L["PAUSE"])
                 tab.pauseBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
                 tab.pauseBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
                 tab.pauseBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         else
-            tab.pauseBtn.text:SetText(L["BTN_PAUSE"])
+            tab.pauseBtn.text:SetText(L["PAUSE"])
             tab.pauseBtn:Disable()
             tab.pauseBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
             tab.pauseBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))

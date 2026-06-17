@@ -27,8 +27,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["MMBTNS_BUTTON_SPACING"] = "Button Spacing",
 
     ["MMBTNS_LOCK_POSITION"] = "Lock Position",
-    ["MMBTNS_GROW_DOWN"] = "Down",
-    ["MMBTNS_GROW_UP"] = "Up",
     ["MMBTNS_GROW_LEFT"] = "Left",
     ["MMBTNS_GROW_RIGHT"] = "Right",
 
@@ -53,7 +51,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["MMBTNS_LAYOUT_HEADER"] = "Layout",
     ["MMBTNS_BEHAVIOR_HEADER"] = "Behavior",
 
-    ["MMBTNS_SEARCH_PLACEHOLDER"] = "Search...",
 
     ["MMBTNS_CONTEXT_LOCK"] = "Lock Position",
     ["MMBTNS_CONTEXT_REFRESH"] = "Refresh Buttons",

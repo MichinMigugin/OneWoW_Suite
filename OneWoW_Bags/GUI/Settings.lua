@@ -192,7 +192,7 @@ local function RegisterSavedSearchSettingsPopups()
     StaticPopupDialogs["ONEWOW_BAGS_RENAME_SAVED_SEARCH"] = {
         text = L["SAVED_SEARCH_RENAME_PROMPT"],
         hasEditBox = true,
-        button1 = L["POPUP_RENAME"],
+        button1 = L["RENAME"],
         button2 = CANCEL,
         timeout = 0,
         whileDead = true,
@@ -292,7 +292,7 @@ function Settings:RefreshSavedSearchRows()
                     rootDescription:CreateButton(L["SAVED_SEARCH_MENU_SHOW"], function()
                         ShowSavedSearchPredicate(rowName, rowQuery)
                     end)
-                    rootDescription:CreateButton(L["SAVED_SEARCH_MENU_RENAME"], function()
+                    rootDescription:CreateButton(L["RENAME"], function()
                         local popup = StaticPopup_Show("ONEWOW_BAGS_RENAME_SAVED_SEARCH", nil, nil, rowName)
                         if popup and popup.EditBox then
                             popup.EditBox:SetText(rowName)

@@ -165,7 +165,7 @@ local function BuildCategoryMenuItems(includeAll)
     table.insert(items, { value = "trade_buy", text = L["FIN_CAT_TRADE_BUY"] })
     table.insert(items, { value = "trade_sale", text = L["FIN_CAT_TRADE_SALE"] })
     table.insert(items, { type = "divider" })
-    table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_MAIL"] })
+    table.insert(items, { type = "header", text = L["MAIL"] })
     table.insert(items, { value = "mail_send", text = L["FIN_CAT_MAIL_SEND"] })
     table.insert(items, { value = "mail_cod_send", text = L["FIN_CAT_MAIL_COD"] })
     table.insert(items, { value = "mail_postage", text = L["FIN_CAT_POSTAGE"] })
@@ -401,7 +401,7 @@ function ns.UI.CreateFinancialsTab(parent)
     parent.categoryFilter = nil
 
     local timePeriods = {
-        {key = "login",  label = L["FIN_PERIOD_SESSION"], tooltip = L["FIN_PERIOD_SESSION_TT"]},
+        {key = "login",  label = L["SESSION"], tooltip = L["FIN_PERIOD_SESSION_TT"]},
         {key = "today",  label = L["FIN_PERIOD_TODAY"],   tooltip = L["FIN_PERIOD_TODAY_TT"]},
         {key = "week",   label = L["FIN_PERIOD_WEEK"],    tooltip = L["FIN_PERIOD_WEEK_TT"]},
         {key = "month",  label = L["FIN_PERIOD_MONTH"],   tooltip = L["FIN_PERIOD_MONTH_TT"]},
@@ -888,7 +888,7 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
             createDetails = function(ef, d)
                 local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef)
                 local p1 = grid:AddPanel(L["FIN_COL_DATE"])
-                grid:AddLine(p1, L["FIN_EXPANDED_ID"] .. " " .. (d.tx.id or "?") .. "  |  " .. date("%Y-%m-%d %H:%M:%S", d.tx.timestamp or 0))
+                grid:AddLine(p1, L["ID"] .. " " .. (d.tx.id or "?") .. "  |  " .. date("%Y-%m-%d %H:%M:%S", d.tx.timestamp or 0))
                 if d.tx.quantity and d.tx.quantity > 1 then
                     grid:AddLine(p1, L["FIN_EXPANDED_QTY"] .. " " .. d.tx.quantity)
                 end

@@ -22,7 +22,7 @@ function Addon.UI:CreateEventMonitorTab(parent)
         end
     end)
 
-    local pauseBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_PAUSE"], height = 22, minWidth = 70 })
+    local pauseBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["PAUSE"], height = 22, minWidth = 70 })
     pauseBtn:SetPoint("LEFT", startStopBtn, "RIGHT", 5, 0)
     pauseBtn:SetScript("OnClick", function()
         if Addon.EventMonitor then
@@ -60,13 +60,13 @@ function Addon.UI:CreateEventMonitorTab(parent)
 
     local filterLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     filterLabel:SetPoint("TOPLEFT", startStopBtn, "BOTTOMLEFT", 0, -14)
-    filterLabel:SetText(L["LABEL_FILTER"])
+    filterLabel:SetText(L["FILTER"])
     filterLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local filterBox = OneWoW_GUI:CreateEditBox(tab, {
         width = 150,
         height = 22,
-        placeholderText = L["LABEL_FILTER"],
+        placeholderText = L["FILTER"],
         onTextChanged = function()
             if Addon.EventMonitor then
                 Addon.EventMonitor:UpdateUI()
@@ -229,13 +229,13 @@ function Addon.UI:ShowEventSelector()
 
         local searchLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         searchLabel:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -215, -37)
-        searchLabel:SetText((L["LABEL_FILTER"]))
+        searchLabel:SetText((L["FILTER"]))
         searchLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
         local searchBox = OneWoW_GUI:CreateEditBox(frame, {
             width = 180,
             height = 25,
-            placeholderText = L["LABEL_FILTER"],
+            placeholderText = L["FILTER"],
             onTextChanged = function()
                 Addon.UI:UpdateEventSelector()
             end,

@@ -511,7 +511,7 @@ ShowItemDetail = function(result)
     local locLabels = {
         bags    = L["ITEMSEARCH_LOC_BAGS"],
         bank    = BANK,
-        mail    = L["ITEMSEARCH_LOC_MAIL"],
+        mail    = L["MAIL"],
         warband = L["ITEMSEARCH_LOC_WARBAND"],
         guild   = GUILD_BANK,
         ah      = L["ITEMSEARCH_LOC_AH"],
@@ -840,7 +840,7 @@ function ns.UI.CreateItemSearchTab(parent)
         end
 
         self.isScanning = true
-        self:SetText(L["ITEMSEARCH_SCAN_STOP"])
+        self:SetText(L["STOP"])
 
         scanBarContainer:Show()
         UpdateContentAnchor()

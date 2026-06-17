@@ -50,7 +50,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
     ["DEPOSIT_NOW"] = "Deposit Now",
-    ["PAUSE"] = "Pause",
     ["ITEM_DRAG_HINT"] = "Drag items here to add",
     ["ITEM_EMPTY_LIST"] = "No items in auto-deposit list.\nDrag items here to add them.",
 
@@ -72,7 +71,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["WARBOUND_EXCLUDE_KEYWORD_PLACEHOLDER"] = "e.g. #potion | #flask",
     ["WARBOUND_EXCLUDE_ITEMS_LABEL"] = "Keep Specific Items",
     ["WARBOUND_EXCLUDE_ITEMS_DESC"] = "These items are always kept in your bags, even when warbound. Drag an item here or enter its Item ID.",
-    ["WARBOUND_EXCLUDE_ADD"] = "Keep",
     ["WARBOUND_EXCLUDE_EMPTY"] = "No kept items.\nDrag items here to keep them in your bags.",
 
     ["TOOLTIP_SECTION"] = "Tooltip Overlay",

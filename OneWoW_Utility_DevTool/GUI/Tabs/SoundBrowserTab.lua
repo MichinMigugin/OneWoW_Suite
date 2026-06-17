@@ -553,7 +553,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     local searchBox = OneWoW_GUI:CreateEditBox(tab, {
         width = 132,
         height = 22,
-        placeholderText = L["LABEL_FILTER"],
+        placeholderText = L["FILTER"],
         onTextChanged = function()
             scheduleFilterRefresh(tab)
         end,
@@ -724,7 +724,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     end)
 
     local stopBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["BTN_STOP"],
+        text = L["STOP"],
         height = 22,
         minWidth = 48,
     })

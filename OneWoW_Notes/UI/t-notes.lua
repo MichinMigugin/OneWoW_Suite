@@ -195,7 +195,7 @@ function ns.UI.CreateNotesTab(parent)
     listingTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local searchBox = OneWoW_GUI:CreateEditBox(listingPanel, {
-        placeholderText = L["UI_SEARCH_PLACEHOLDER"],
+        placeholderText = L["SEARCH"],
         onTextChanged = function(text)
             currentFilters.search = text
             if parent.RefreshNotesList then parent.RefreshNotesList() end
