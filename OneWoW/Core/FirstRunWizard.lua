@@ -22,47 +22,114 @@ OneWoW.FirstRun = OneWoW.FirstRun or {}
 local FirstRun = OneWoW.FirstRun
 
 -- Authoritative feature catalog. Each entry:
---   addonName   - the WoW addon folder / TOC name (what DisableAddOn sees)
---   labelKey    - localized display name key
---   summaryKey  - localized short description key
---   group       - "feature" | "standalone" | "utility" - grouping in the UI
---   iconTexture - card icon texture path
---   datastores  - list of sibling data addons this feature needs loaded
+--   addonName      - the WoW addon folder / TOC name (what DisableAddOn sees)
+--   labelKey       - localized display name key
+--   summaryKey     - localized short description key
+--   group          - "feature" | "standalone" | "utility" - grouping in the UI
+--   iconTexture    - card icon texture path (fallback when iconAtlas is absent)
+--   iconAtlas      - optional atlas name; takes precedence over iconTexture
+--   iconTextCoords - coordinates for cropping or transforming the texture
+--   datastores     - list of sibling data addons this feature needs loaded
 -- Datastores are "pulled in" if any checked feature needs them.
 FirstRun.CATALOG = {
-    { addonName = "OneWoW_AltTracker", labelKey = "WIZARD_FEATURE_ALTTRACKER", summaryKey = "WIZARD_FEATURE_ALTTRACKER_DESC", group = "feature",
-      iconTexture = "Interface\\Icons\\Achievement_Guild_ClassyDwarf",
-      datastores = { "OneWoW_AltTracker_Storage", "OneWoW_AltTracker_Character",
-                     "OneWoW_AltTracker_Collections", "OneWoW_AltTracker_Endgame",
-                     "OneWoW_AltTracker_Accounting", "OneWoW_AltTracker_Professions",
-                     "OneWoW_AltTracker_Auctions" } },
-    { addonName = "OneWoW_Catalog", labelKey = "WIZARD_FEATURE_CATALOG", summaryKey = "WIZARD_FEATURE_CATALOG_DESC", group = "feature",
-      iconTexture = "Interface\\Icons\\INV_Misc_Book_11",
-      datastores = { "OneWoW_CatalogData_Journal", "OneWoW_CatalogData_Quests",
-                     "OneWoW_CatalogData_Vendors", "OneWoW_CatalogData_Tradeskills" } },
-    { addonName = "OneWoW_Notes", labelKey = "WIZARD_FEATURE_NOTES", summaryKey = "WIZARD_FEATURE_NOTES_DESC", group = "feature",
-      iconTexture = "Interface\\Icons\\INV_Inscription_Scroll",
-      datastores = {} },
-    { addonName = "OneWoW_Trackers", labelKey = "WIZARD_FEATURE_TRACKERS", summaryKey = "WIZARD_FEATURE_TRACKERS_DESC", group = "feature",
-      iconTexture = "Interface\\Icons\\Ability_Hunter_MarkedForDeath",
-      datastores = {} },
-    { addonName = "OneWoW_QoL", labelKey = "WIZARD_FEATURE_QOL", summaryKey = "WIZARD_FEATURE_QOL_DESC", group = "feature",
-      iconTexture = "Interface\\Icons\\INV_Gizmo_RocketBoot_01",
-      datastores = {} },
+    -- Core features
+    {
+        addonName   = "OneWoW_AltTracker",
+        labelKey    = "WIZARD_FEATURE_ALTTRACKER",
+        summaryKey  = "WIZARD_FEATURE_ALTTRACKER_DESC",
+        group       = "feature",
+        iconTexture = "Interface\\Icons\\Achievement_Guild_ClassyDwarf",
+        iconAtlas   = "plunderstorm-glues-queueselector-trio",
+        iconTexCoords = {0.27, 0.74, 0.27, 0.70},
+        datastores  = {
+            "OneWoW_AltTracker_Storage",
+            "OneWoW_AltTracker_Character",
+            "OneWoW_AltTracker_Collections",
+            "OneWoW_AltTracker_Endgame",
+            "OneWoW_AltTracker_Accounting",
+            "OneWoW_AltTracker_Professions",
+            "OneWoW_AltTracker_Auctions",
+        },
+    },
+    {
+        addonName   = "OneWoW_Catalog",
+        labelKey    = "WIZARD_FEATURE_CATALOG",
+        summaryKey  = "WIZARD_FEATURE_CATALOG_DESC",
+        group       = "feature",
+        iconTexture = "Interface\\Icons\\INV_Misc_Book_11",
+        datastores  = {
+            "OneWoW_CatalogData_Journal",
+            "OneWoW_CatalogData_Quests",
+            "OneWoW_CatalogData_Vendors",
+            "OneWoW_CatalogData_Tradeskills",
+        },
+    },
+    {
+        addonName   = "OneWoW_Notes",
+        labelKey    = "WIZARD_FEATURE_NOTES",
+        summaryKey  = "WIZARD_FEATURE_NOTES_DESC",
+        group       = "feature",
+        iconTexture = "Interface\\Icons\\INV_Inscription_Scroll",
+        datastores  = {},
+    },
+    {
+        addonName   = "OneWoW_Trackers",
+        labelKey    = "WIZARD_FEATURE_TRACKERS",
+        summaryKey  = "WIZARD_FEATURE_TRACKERS_DESC",
+        group       = "feature",
+        iconTexture = "Interface\\Icons\\Ability_Hunter_MarkedForDeath",
+        datastores  = {},
+    },
+    {
+        addonName   = "OneWoW_QoL",
+        labelKey    = "WIZARD_FEATURE_QOL",
+        summaryKey  = "WIZARD_FEATURE_QOL_DESC",
+        group       = "feature",
+        iconTexture = "Interface\\Icons\\INV_Gizmo_RocketBoot_01",
+        datastores  = {},
+    },
 
-    { addonName = "OneWoW_Bags", labelKey = "WIZARD_FEATURE_BAGS", summaryKey = "WIZARD_FEATURE_BAGS_DESC", group = "standalone",
-      iconTexture = "Interface\\Icons\\INV_Misc_Bag_08",
-      datastores = { "OneWoW_AltTracker_Storage", "OneWoW_AltTracker_Character" } },
-    { addonName = "OneWoW_ShoppingList", labelKey = "WIZARD_FEATURE_SHOPPINGLIST", summaryKey = "WIZARD_FEATURE_SHOPPINGLIST_DESC", group = "standalone",
-      iconTexture = "Interface\\Icons\\INV_Misc_Coin_01",
-      datastores = { "OneWoW_AltTracker_Storage", "OneWoW_CatalogData_Tradeskills" } },
-    { addonName = "OneWoW_DirectDeposit", labelKey = "WIZARD_FEATURE_DIRECTDEPOSIT", summaryKey = "WIZARD_FEATURE_DIRECTDEPOSIT_DESC", group = "standalone",
-      iconTexture = "Interface\\Icons\\INV_Misc_Coin_02",
-      datastores = {} },
+    -- Standalone addons
+    {
+        addonName   = "OneWoW_Bags",
+        labelKey    = "WIZARD_FEATURE_BAGS",
+        summaryKey  = "WIZARD_FEATURE_BAGS_DESC",
+        group       = "standalone",
+        iconTexture = "Interface\\Icons\\INV_Misc_Bag_08",
+        datastores  = {
+            "OneWoW_AltTracker_Storage",
+            "OneWoW_AltTracker_Character",
+        },
+    },
+    {
+        addonName   = "OneWoW_ShoppingList",
+        labelKey    = "WIZARD_FEATURE_SHOPPINGLIST",
+        summaryKey  = "WIZARD_FEATURE_SHOPPINGLIST_DESC",
+        group       = "standalone",
+        iconTexture = "Interface\\Icons\\INV_Misc_Coin_01",
+        datastores  = {
+            "OneWoW_AltTracker_Storage",
+            "OneWoW_CatalogData_Tradeskills",
+        },
+    },
+    {
+        addonName   = "OneWoW_DirectDeposit",
+        labelKey    = "WIZARD_FEATURE_DIRECTDEPOSIT",
+        summaryKey  = "WIZARD_FEATURE_DIRECTDEPOSIT_DESC",
+        group       = "standalone",
+        iconTexture = "Interface\\Icons\\INV_Misc_Coin_02",
+        datastores  = {},
+    },
 
-    { addonName = "OneWoW_Utility_DevTool", labelKey = "WIZARD_FEATURE_DEVTOOL", summaryKey = "WIZARD_FEATURE_DEVTOOL_DESC", group = "utility",
-      iconTexture = "Interface\\Icons\\INV_Gizmo_02",
-      datastores = {} },
+    -- Utilities
+    {
+        addonName   = "OneWoW_Utility_DevTool",
+        labelKey    = "WIZARD_FEATURE_DEVTOOL",
+        summaryKey  = "WIZARD_FEATURE_DEVTOOL_DESC",
+        group       = "utility",
+        iconTexture = "Interface\\Icons\\INV_Gizmo_02",
+        datastores  = {},
+    },
 }
 
 local DATASTORE_ADDONS = {
@@ -482,6 +549,9 @@ function FirstRun:BuildPanel(parent, opts)
                     title = L[entry.labelKey],
                     summary = L[entry.summaryKey],
                     iconTexture = entry.iconTexture,
+                    iconAtlas = entry.iconAtlas,
+                    iconSize = entry.iconSize,
+                    iconTexCoords = entry.iconTexCoords,
                     checked = selections[addon],
                     onToggle = function(_, checked)
                         selections[addon] = checked and true or false

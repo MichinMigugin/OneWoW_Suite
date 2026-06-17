@@ -363,13 +363,52 @@ Per value group: pick canonical key + value, register once in `shared`, delete e
 per-scope copy + repoint call sites, proper nouns marked do-not-translate, `/owlocale`
 audit (0 new collisions), in-game verify, commit.
 
-### Phase 4 — Translate the minimized set (pending)
-Baseline: ~4,117 unique + ~430 shared canonicals. Per-addon sub-phases:
-- [ ] For each scope, the tool's **TRANSLATE** bucket is the must-do list.
-- [ ] Fill every missing locale file for the scope (and for `shared`). Source of
-  truth for existing Blizzard terms: `.wow_docs/general/GlobalStrings.lua`.
+### Phase 4 — Translate the minimized set (in progress)
+**Approach (decided):** I draft all 11 locales as a reviewable baseline — reuse
+Blizzard `GlobalStrings.lua` terms for established WoW terminology, keep proper nouns
+in English, preserve `%s`/`%d`/`|c…|r` escapes; files flagged machine-drafted for later
+native/community review. Target locales: enUS koKR frFR deDE zhCN esES zhTW esMX ruRU
+ptBR itIT.
+
+**Pre-steps ✅ (done 2026-06-16):**
+- [x] **OneWoW-core dead-key sweep.** Stripped **63 truly-dead keys** (zero quoted
+  occurrence anywhere in suite `.lua`/`.xml`/`.toc`). Method: scan the *whole suite*,
+  not just core code (core keys are referenced cross-addon via `OneWoW.L["…"]`, so the
+  per-scope `classify_refs` over-reports — it flagged 540 "dead", of which only 63 are
+  real). Excluded from the strip: `LOAD_FAIL_*` (constructed `"LOAD_FAIL_"..reason`,
+  AddonLoader.lua) and `BINDING_NAME_ONEWOW_*` (consumed via `_G` by Blizzard's
+  keybinding UI). Validated against the live `t-home.lua` (it uses a *different*
+  `HOME_STATUS_*` set; the stripped ones are the orphaned old scheme). Core 950→887.
+- [x] **Reconciled the 5 stale `shared` translations** (koKR/deDE/esES/frFR/ruRU):
+  removed 19 stale keys each (no longer in the 113-key set) + the 3 Phase-2 value-changed
+  desc keys (`LANGUAGE_DESC`/`THEME_DESC`/`MINIMAP_ICON_DESC`); kept valid surviving
+  translations (koKR 30, others 20). The rest fill during the shared-scope translation.
+
+**Per-scope sub-phases:**
+- [x] **`shared` scope (pilot) — all 11 locales, 113 keys each (1,130 translations).**
+  Created the 5 missing locale files (zhCN/zhTW/esMX/ptBR/itIT) + completed the 5
+  partials (koKR/frFR/deDE/esES/ruRU), all registered in `OneWoW.toc` (load order
+  matches `SUPPORTED`). Reused existing translations, corrected dropped diacritics in
+  the old deDE/esES/frFR files (e.g. `Schaltflache`→`Schaltfläche`). Each file headed
+  `-- Machine-drafted (Phase 4) — pending native review`. Verified: every locale has
+  exact 113-key parity with enUS and matching `%s`/`%d` specifiers (0 missing/extra/
+  mismatch). **Known draft caveats for review:** money-letter labels
+  (`VALUE_DISPLAY_LETTERS`, e.g. fr `p, a, c`) should be checked against the actual
+  money formatter output per locale; theme names like `Glassmorphic`/`Synthwave` kept
+  as loanwords where no natural translation; `esMX` mirrors `esES` pending LatAm tweaks.
+- [x] **`OneWoW_Trackers` — all 11 locales, 151 keys each.** koKR was a `TEST` stub;
+  all 10 non-enUS drafted fresh + registered in the toc. Verified 151/151 parity +
+  matching `%s`/`%d` across every locale.
+- [ ] Remaining scopes, **player-facing value order** (decided): Catalog 300 → Bags 432 →
+  Notes 364 → QoL 338 → AltTracker 910 → OneWoW core 887 → DevTool 501 →
+  ShoppingList 246 → then data/QoL-module sub-addons (2–105 keys each).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
-- [ ] In-game spot-check per language where feasible; commit.
+- [ ] In-game spot-check per language where feasible; commit per scope.
+
+**`esMX` automation (decided):** `esMX` is auto-generated from each scope's `esES`
+(UI text is ~identical) via `bin`-side helper `gen_esmx.py` — swaps the locale literal,
+re-headers `esMX mirrored from esES, pending Latin-American review`. Flagged for a LatAm
+review pass at the end. Saves ~10% of per-scope volume.
 
 ---
 

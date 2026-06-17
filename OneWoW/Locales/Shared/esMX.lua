@@ -1,7 +1,8 @@
 local _, OneWoW = ...
 
--- Machine-drafted (Phase 4) — pending native review.
-OneWoW.Locale:RegisterShared("esES", {
+-- Machine-drafted (Phase 4) — pending native review. Mirrors esES for these UI
+-- strings; refine for Latin-American usage where it diverges.
+OneWoW.Locale:RegisterShared("esMX", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "Selección de idioma",
     ["LANGUAGE_DESC"] = "Elige el idioma de la interfaz del addon. Los cambios se aplican al instante.",
@@ -91,7 +92,7 @@ OneWoW.Locale:RegisterShared("esES", {
     ["CLICK_AND_DRAG_TO_MOVE"] = "Haz clic y arrastra para mover",
     ["DISCORD"] = "Discord",
     ["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"] = "Doble clic o Mayús+clic para contraer o expandir",
-    ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "Ocultar ancla (mostrar al pasar el ratón)",
+    ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "Ocultar ancla (mostrar al pasar el cursor)",
     ["HIDE_BAR"] = "Ocultar barra",
     ["ICON_SPACING"] = "Espaciado de iconos",
     ["LEFT_CLICK_TO_USE"] = "Clic izquierdo para usar",

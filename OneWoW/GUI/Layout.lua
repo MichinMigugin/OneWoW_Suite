@@ -835,9 +835,12 @@ function OneWoW_GUI:CreateSelectableCard(parent, options)
     icon:SetSize(iconSize, iconSize)
     icon:SetPoint("CENTER", iconFrame, "CENTER", 0, 0)
     if options.iconAtlas then
-        icon:SetAtlas(options.iconAtlas)
+        icon:SetAtlas(options.iconAtlas, false)
     else
         icon:SetTexture(options.iconTexture or self:GetBrandIcon())
+    end
+    if options.iconTexCoords then
+        icon:SetTexCoord(unpack(options.iconTexCoords))
     end
     card.icon = icon
 
