@@ -151,7 +151,9 @@ OneWoWInstances_BurningCrusade = {
 	},
 	[77] = {
 		instanceID = 77,
-		name = "|cffFF7D01Zul'Aman|r",
+		name = "Zul'Aman",
+		mapID = 333,
+		instanceType = "party",
 		expansionID = 2,
 	},
 	[247] = {

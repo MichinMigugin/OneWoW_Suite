@@ -726,10 +726,4 @@ OneWoWEncounters_BattleforAzeroth = {
 		instanceID = 1023,
 		expansionID = 8,
 	},
-	[2133] = {
-		encounterID = 2133,
-		name = "|cffcc6666Sergeant Bainbridge|r",
-		instanceID = 1023,
-		expansionID = 8,
-	},
 }

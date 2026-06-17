@@ -484,6 +484,140 @@ local function InvalidateJournalFilterCache()
     journalBaseList = nil
 end
 
+-- Opens the WoWHead / Open Quest popup for a quest-reward item. Each source
+-- quest gets a copyable WoWHead URL plus an "Open Quest" button when that quest
+-- exists in the Quests catalog.
+local function ShowQuestLinks(item)
+    local links = {}
+    local questAddon = ns.Catalog and ns.Catalog.GetDataAddon and ns.Catalog:GetDataAddon("quests")
+    for _, qs in ipairs(item.questSources or {}) do
+        local action
+        if questAddon and questAddon.QuestData and questAddon.QuestData:GetQuest(qs.id) then
+            local qid = qs.id
+            action = {
+                text = L["JOURNAL_OPEN_QUEST"],
+                onClick = function()
+                    if ns.UI and ns.UI.OpenToQuest then ns.UI.OpenToQuest(qid) end
+                end,
+            }
+        end
+        table.insert(links, {
+            label = qs.faction or L["JOURNAL_QUEST_PREFIX"],
+            url = "https://www.wowhead.com/quest=" .. qs.id,
+            action = action,
+        })
+    end
+    OneWoW_GUI:ShowCopyLinksDialog(item.name .. "  (" .. item.itemID .. ")", L["JOURNAL_QUEST_LINK_INSTRUCT"], links)
+end
+
+-- Which source quest the row's [Open] button jumps to: prefer the player's
+-- faction, otherwise the first source quest. Returns a questID or nil.
+local function ResolveOpenQuestID(item)
+    local faction = UnitFactionGroup("player")
+    local fallback
+    for _, qs in ipairs(item.questSources or {}) do
+        if not fallback then fallback = qs.id end
+        if qs.faction == faction then return qs.id end
+    end
+    return fallback
+end
+
+-- Renders one row in the "Quest Related / Quest Drop" encounter:
+-- {icon} {name}   {itemID}  Quest: (faction: id ...)   [Click For Link]
+local function BuildQuestItemRow(parent, item, yOffset)
+    local itemRow = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    itemRow:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, yOffset)
+    itemRow:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -8, yOffset)
+    itemRow:SetHeight(ITEM_ROW_HEIGHT)
+    itemRow:SetBackdrop(BACKDROP_SIMPLE)
+    itemRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    itemRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    table.insert(detailElements, itemRow)
+
+    local iconFrame = CreateFrame("Frame", nil, itemRow, "BackdropTemplate")
+    iconFrame:SetSize(26, 26)
+    iconFrame:SetPoint("LEFT", itemRow, "LEFT", 6, 0)
+    iconFrame:SetBackdrop(BACKDROP_EDGE)
+    iconFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetItemQualityColor(item.quality))
+    table.insert(detailElements, iconFrame)
+
+    local iconTex = iconFrame:CreateTexture(nil, "ARTWORK")
+    iconTex:SetPoint("TOPLEFT", iconFrame, "TOPLEFT", 1, -1)
+    iconTex:SetPoint("BOTTOMRIGHT", iconFrame, "BOTTOMRIGHT", -1, 1)
+    iconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    iconTex:SetTexture(item.icon or 134400)
+
+    -- [View Quest] jumps straight to the quest in the Quests catalog; shown only
+    -- when that quest exists there. The row also shows the quest's completion
+    -- status, pulled from the Quests addon's CompletionTracker.
+    local relevantQuestID = ResolveOpenQuestID(item)
+    local questAddon = ns.Catalog and ns.Catalog.GetDataAddon and ns.Catalog:GetDataAddon("quests")
+    local openInDB = relevantQuestID and questAddon and questAddon.QuestData and questAddon.QuestData:GetQuest(relevantQuestID)
+
+    local openBtn
+    if openInDB then
+        openBtn = OneWoW_GUI:CreateButton(itemRow, { text = L["JOURNAL_OPEN"], width = 88, height = 22 })
+        openBtn:SetPoint("RIGHT", itemRow, "RIGHT", -6, 0)
+        table.insert(detailElements, openBtn)
+        openBtn:SetScript("OnClick", function()
+            if ns.UI and ns.UI.OpenToQuest then ns.UI.OpenToQuest(relevantQuestID) end
+        end)
+    end
+
+    local linkBtn = OneWoW_GUI:CreateButton(itemRow, { text = L["JOURNAL_CLICK_FOR_LINK"], width = 110, height = 22 })
+    if openBtn then
+        linkBtn:SetPoint("RIGHT", openBtn, "LEFT", -6, 0)
+    else
+        linkBtn:SetPoint("RIGHT", itemRow, "RIGHT", -6, 0)
+    end
+    table.insert(detailElements, linkBtn)
+    linkBtn:SetScript("OnClick", function() ShowQuestLinks(item) end)
+
+    local infoText = OneWoW_GUI:CreateFS(itemRow, 10)
+    infoText:SetPoint("RIGHT", linkBtn, "LEFT", -10, 0)
+    infoText:SetJustifyH("RIGHT")
+    if relevantQuestID then
+        local completed
+        if questAddon and questAddon.CompletionTracker then
+            completed = questAddon.CompletionTracker:IsCompletedByCurrentChar(relevantQuestID)
+        else
+            completed = C_QuestLog.IsQuestFlaggedCompleted(relevantQuestID) == true
+        end
+        local statusStr = completed and L["JOURNAL_QUEST_COMPLETED"] or L["JOURNAL_QUEST_NOT_COMPLETED"]
+        local statusHex = completed and "ff40ff40" or "ffff8040"
+        infoText:SetText(string.format("%s:%d    %s:%d    |c%s%s|r",
+            L["JOURNAL_ITEMID"], item.itemID, L["JOURNAL_QUEST_PREFIX"], relevantQuestID, statusHex, statusStr))
+    else
+        infoText:SetText(string.format("%s:%d", L["JOURNAL_ITEMID"], item.itemID))
+    end
+    infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local itemName = OneWoW_GUI:CreateFS(itemRow, 12)
+    itemName:SetPoint("LEFT", iconFrame, "RIGHT", 8, 0)
+    itemName:SetPoint("RIGHT", infoText, "LEFT", -10, 0)
+    itemName:SetJustifyH("LEFT")
+    itemName:SetWordWrap(false)
+    itemName:SetText(item.name)
+    itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(item.quality))
+
+    itemRow:EnableMouse(true)
+    itemRow:SetScript("OnEnter", function(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+        GameTooltip:SetItemByID(item.itemID)
+        GameTooltip:Show()
+    end)
+    itemRow:SetScript("OnLeave", function(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        GameTooltip:Hide()
+    end)
+
+    return yOffset - (ITEM_ROW_HEIGHT + 2)
+end
+
 local function RefreshDetailView(isSecondRefresh)
     if not panels_ref or not selectedInstance then return end
 
@@ -548,8 +682,34 @@ local function RefreshDetailView(isSecondRefresh)
     local COL_SPECIAL_RIGHT = -130
     local COL_STATUS_RIGHT  = -8
 
+    -- Header toggle: collapses/expands every encounter at once. Shows minus when
+    -- all encounters are already open, plus otherwise, mirroring the per-encounter icons.
+    local allExpanded = true
+    for _, encounter in ipairs(instData.encounters) do
+        if expandedEncounters[encounter.encounterID] ~= true then
+            allExpanded = false
+            break
+        end
+    end
+
+    local expandAllBtn = CreateFrame("Button", nil, colHdrFrame)
+    expandAllBtn:SetSize(16, 16)
+    expandAllBtn:SetPoint("LEFT", colHdrFrame, "LEFT", 6, 0)
+    local expandAllIcon = expandAllBtn:CreateTexture(nil, "ARTWORK")
+    expandAllIcon:SetSize(14, 14)
+    expandAllIcon:SetPoint("CENTER")
+    expandAllIcon:SetAtlas(allExpanded and "Gamepad_Rev_Minus_64" or "Gamepad_Rev_Plus_64")
+    table.insert(detailElements, expandAllBtn)
+    expandAllBtn:SetScript("OnClick", function()
+        local expand = not allExpanded
+        for _, encounter in ipairs(instData.encounters) do
+            expandedEncounters[encounter.encounterID] = expand or nil
+        end
+        RefreshDetailView(false)
+    end)
+
     local hdrItem = OneWoW_GUI:CreateFS(colHdrFrame, 10)
-    hdrItem:SetPoint("LEFT", colHdrFrame, "LEFT", 8, 0)
+    hdrItem:SetPoint("LEFT", expandAllBtn, "RIGHT", 4, 0)
     hdrItem:SetText(L["ITEM"])
     hdrItem:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
@@ -574,11 +734,7 @@ local function RefreshDetailView(isSecondRefresh)
     yOffset = yOffset - 24
 
     for _, encounter in ipairs(instData.encounters) do
-        local isExpanded = expandedEncounters[encounter.encounterID]
-        if isExpanded == nil then
-            expandedEncounters[encounter.encounterID] = true
-            isExpanded = true
-        end
+        local isExpanded = expandedEncounters[encounter.encounterID] == true
 
         local filteredItems = {}
         for _, item in ipairs(encounter.items) do
@@ -596,13 +752,13 @@ local function RefreshDetailView(isSecondRefresh)
         encBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         table.insert(detailElements, encBtn)
 
-        local arrowText = OneWoW_GUI:CreateFS(encBtn, 12)
-        arrowText:SetPoint("LEFT", encBtn, "LEFT", 8, 0)
-        arrowText:SetText(isExpanded and "v" or ">")
-        arrowText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        local expandIcon = encBtn:CreateTexture(nil, "ARTWORK")
+        expandIcon:SetSize(14, 14)
+        expandIcon:SetPoint("LEFT", encBtn, "LEFT", 8, 0)
+        expandIcon:SetAtlas(isExpanded and "Gamepad_Rev_Minus_64" or "Gamepad_Rev_Plus_64")
 
         local encName = OneWoW_GUI:CreateFS(encBtn, 12)
-        encName:SetPoint("LEFT", arrowText, "RIGHT", 6, 0)
+        encName:SetPoint("LEFT", expandIcon, "RIGHT", 6, 0)
         encName:SetText(encounter.name)
         encName:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
@@ -620,18 +776,30 @@ local function RefreshDetailView(isSecondRefresh)
             expandedEncounters[capturedEncID] = not expandedEncounters[capturedEncID]
             RefreshDetailView(false)
         end)
-        encBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+        local isQuestCategory = encounter.questCategory
+        encBtn:SetScript("OnEnter", function(myself)
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+            if isQuestCategory then
+                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                GameTooltip:AddLine(L["JOURNAL_QUEST_CAT_TT"], 1, 1, 1, true)
+                GameTooltip:Show()
+            end
         end)
-        encBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        encBtn:SetScript("OnLeave", function(myself)
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            GameTooltip:Hide()
         end)
 
         yOffset = yOffset - 30
 
         if isExpanded and #filteredItems > 0 then
+            if encounter.questCategory then
+                for _, item in ipairs(filteredItems) do
+                    yOffset = BuildQuestItemRow(parent, item, yOffset)
+                end
+            else
             for _, item in ipairs(filteredItems) do
                 local itemRow = CreateFrame("Frame", nil, parent, "BackdropTemplate")
                 itemRow:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, yOffset)
@@ -728,6 +896,7 @@ local function RefreshDetailView(isSecondRefresh)
                 end)
 
                 yOffset = yOffset - (ITEM_ROW_HEIGHT + 2)
+            end
             end
         end
 

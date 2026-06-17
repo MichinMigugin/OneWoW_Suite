@@ -329,6 +329,106 @@ function OneWoW_GUI:ShowCopyURLDialog(title, url)
     _urlBox:HighlightText()
 end
 
+-- Shared dialog + reusable row pool for ShowCopyLinksDialog.
+local _linksDialog
+local _linkRows = {}
+local _LINK_ROW_H = 30
+
+--- Show a modal listing one or more labeled, copy-friendly links.
+--- Addons cannot write the OS clipboard, so each URL sits in a highlighted
+--- editbox: clicking it (or focusing) selects the text for Ctrl+C. An optional
+--- per-link action button is shown to the right (used for e.g. "Open Quest").
+---@param title string Title bar text.
+---@param instructions string|nil Line shown above the links.
+---@param links table[] Array of { label=string, url=string, action={ text=string, onClick=fun() }|nil }.
+function OneWoW_GUI:ShowCopyLinksDialog(title, instructions, links)
+    title = title or ""
+    links = links or {}
+
+    if not _linksDialog then
+        _linksDialog = self:CreateDialog({
+            name = "OneWoW_GUI_CopyLinksDialog",
+            title = title,
+            width = 540,
+            height = 200,
+            movable = true,
+            escClose = true,
+            showBrand = false,
+            buttons = {
+                { text = CLOSE, onClick = function(frame) frame:Hide() end },
+            },
+        })
+        _linksDialog._instr = self:CreateFS(_linksDialog.contentFrame, 12)
+        _linksDialog._instr:SetPoint("TOPLEFT", _linksDialog.contentFrame, "TOPLEFT", 15, -12)
+        _linksDialog._instr:SetPoint("TOPRIGHT", _linksDialog.contentFrame, "TOPRIGHT", -15, -12)
+        _linksDialog._instr:SetJustifyH("LEFT")
+        _linksDialog._instr:SetTextColor(self:GetThemeColor("TEXT_SECONDARY"))
+    end
+
+    if _linksDialog.titleBar and _linksDialog.titleBar._titleText then
+        _linksDialog.titleBar._titleText:SetText(title)
+    end
+    _linksDialog._instr:SetText(instructions or "Click a link to highlight it, then press Ctrl+C to copy:")
+
+    for _, row in ipairs(_linkRows) do row.frame:Hide() end
+
+    local topOffset = -36
+    for i, link in ipairs(links) do
+        local row = _linkRows[i]
+        if not row then
+            row = {}
+            row.frame = CreateFrame("Frame", nil, _linksDialog.contentFrame)
+            row.frame:SetHeight(_LINK_ROW_H)
+
+            row.label = self:CreateFS(row.frame, 12)
+            row.label:SetPoint("LEFT", row.frame, "LEFT", 0, 0)
+            row.label:SetWidth(64)
+            row.label:SetJustifyH("LEFT")
+
+            row.box = self:CreateEditBox(row.frame, { height = 24 })
+            row.box:SetAutoFocus(false)
+            row.box:SetScript("OnEditFocusGained", function(myself) myself:HighlightText() end)
+            row.box:SetScript("OnMouseDown", function(myself) myself:SetFocus(); myself:HighlightText() end)
+            row.box:SetScript("OnEscapePressed", function(myself) myself:ClearFocus() end)
+
+            row.action = self:CreateButton(row.frame, { text = "", width = 96, height = 22 })
+
+            _linkRows[i] = row
+        end
+
+        row.frame:ClearAllPoints()
+        row.frame:SetPoint("TOPLEFT", _linksDialog.contentFrame, "TOPLEFT", 15, topOffset)
+        row.frame:SetPoint("TOPRIGHT", _linksDialog.contentFrame, "TOPRIGHT", -15, topOffset)
+        row.frame:Show()
+
+        row.label:SetText((link.label or "") .. (link.label and link.label ~= "" and ":" or ""))
+
+        if link.action and link.action.onClick then
+            row.action.text:SetText(link.action.text or "")
+            row.action:SetScript("OnClick", function() link.action.onClick() end)
+            row.action:Show()
+            row.box:ClearAllPoints()
+            row.box:SetPoint("LEFT", row.label, "RIGHT", 6, 0)
+            row.box:SetPoint("RIGHT", row.action, "LEFT", -8, 0)
+            row.action:ClearAllPoints()
+            row.action:SetPoint("RIGHT", row.frame, "RIGHT", 0, 0)
+        else
+            row.action:Hide()
+            row.box:ClearAllPoints()
+            row.box:SetPoint("LEFT", row.label, "RIGHT", 6, 0)
+            row.box:SetPoint("RIGHT", row.frame, "RIGHT", 0, 0)
+        end
+
+        row.box:SetText(link.url or "")
+        row.box:SetCursorPosition(0)
+
+        topOffset = topOffset - (_LINK_ROW_H + 4)
+    end
+
+    _linksDialog.frame:SetHeight(70 + (#links * (_LINK_ROW_H + 4)) + 36)
+    _linksDialog.frame:Show()
+end
+
 local SCROLL_FRAME_CHILD_RIGHT_GUTTER = 24
 
 function OneWoW_GUI:CreateScrollFrame(parent, options)

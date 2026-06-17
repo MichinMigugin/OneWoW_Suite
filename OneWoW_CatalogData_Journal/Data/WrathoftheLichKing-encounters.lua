@@ -67,7 +67,7 @@ OneWoWEncounters_WrathoftheLichKing = {
 	},
 	[1621] = {
 		encounterID = 1621,
-		name = "|cff407fbfChampions of the Horde|r",
+		name = "Champions of the Horde",
 		instanceID = 757,
 		expansionID = 3,
 	},
@@ -390,6 +390,12 @@ OneWoWEncounters_WrathoftheLichKing = {
 		instanceID = 281,
 		expansionID = 3,
 		bossIndex = 5,
+	},
+	[833] = {
+		encounterID = 833,
+		name = "Commander Kolurg",
+		instanceID = 281,
+		expansionID = 3,
 	},
 	[618] = {
 		encounterID = 618,
