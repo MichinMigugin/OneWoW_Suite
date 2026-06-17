@@ -399,7 +399,14 @@ ptBR itIT.
 - [x] **`OneWoW_Trackers` — all 11 locales, 151 keys each.** koKR was a `TEST` stub;
   all 10 non-enUS drafted fresh + registered in the toc. Verified 151/151 parity +
   matching `%s`/`%d` across every locale.
-- [ ] Remaining scopes, **player-facing value order** (decided): Catalog 300 → Bags 432 →
+- [x] **`OneWoW_Catalog` — all 11 locales, 301 keys each.** koKR already real Korean;
+  9 non-esMX locales drafted fresh (frFR/deDE/esES/itIT/ptBR/zhCN/zhTW/ruRU) + esMX
+  via `gen_esmx.py`, all registered in the toc. Verified 301/301 parity + matching
+  `%s`/`%d`/`%d%%` across every locale via `bin/locale_verify.py`. **Draft caveats:**
+  difficulty badges (`JOURNAL_DIFF_*`) use per-locale short forms (e.g. ru `О/Г/Э`,
+  zhCN `普/英/史`, zhTW `普/英/傳`) — confirm against community conventions; Mythic is
+  `史` in zhCN but `傳` in zhTW per Blizzard difficulty naming.
+- [ ] Remaining scopes, **player-facing value order** (decided): Bags 432 →
   Notes 364 → QoL 338 → AltTracker 910 → OneWoW core 887 → DevTool 501 →
   ShoppingList 246 → then data/QoL-module sub-addons (2–105 keys each).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
@@ -409,6 +416,11 @@ ptBR itIT.
 (UI text is ~identical) via `bin`-side helper `gen_esmx.py` — swaps the locale literal,
 re-headers `esMX mirrored from esES, pending Latin-American review`. Flagged for a LatAm
 review pass at the end. Saves ~10% of per-scope volume.
+
+**Parity verification (tooling):** `bin/locale_verify.py <path/to/Locales>` checks every
+non-enUS file against `enUS.lua` for key parity (missing/extra) and matching printf-style
+specifiers (`%s`/`%d`/`%d%%`…); exits non-zero on any failure so it can gate a commit.
+Run it after drafting each scope. (`bin/gen_esmx.py` + this are the two Phase-4 helpers.)
 
 ---
 
