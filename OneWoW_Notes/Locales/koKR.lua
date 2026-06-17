@@ -1,13 +1,446 @@
 local ADDON_NAME = ...
 
--- Dev placeholder: every enUS key set to "TEST" (no Korean translations yet).
-local store = OneWoW.Locale:GetStore(ADDON_NAME)
-local enUS = store and store["enUS"]
-if not enUS then return end
+-- Machine-drafted (Phase 4) — pending native review
+OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
-local koKR = {}
-for k in pairs(enUS) do
-    koKR[k] = "TEST"
-end
+-- Addon
+    ["ADDON_LOADED"] = "불러왔습니다!",
+    ["ADDON_TITLE_FRAME"] = "OneWoW Notes",
 
-OneWoW.Locale:Register(ADDON_NAME, "koKR", koKR)
+-- Minimap
+    ["MINIMAP_TOOLTIP_TITLE"] = "OneWoW Notes",
+    ["MINIMAP_TOOLTIP_HINT"] = "클릭하여 열기",
+    ["MINIMAP_RIGHT_CLICK"] = "우클릭하여 옵션 보기",
+    ["MINIMAP_OPEN"] = "OneWoW Notes 열기",
+
+-- Tabs
+    ["TAB_NOTES"] = "메모",
+    ["TAB_PLAYERS"] = "플레이어",
+    ["TAB_NPCS"] = "NPC",
+    ["TAB_ZONES"] = "지역",
+    ["TAB_ITEMS"] = "아이템",
+
+-- Notes Tab
+    ["NOTES_LIST_TITLE"] = "메모",
+    ["NOTES_DETAIL_TITLE"] = "메모",
+    ["NOTES_NEW"] = "새 메모",
+    ["NOTES_TITLE_PLACEHOLDER"] = "제목...",
+    ["NOTES_BODY_PLACEHOLDER"] = "여기에 메모를 작성하세요...",
+    ["NOTES_EMPTY"] = "아직 메모가 없습니다. '새 메모'를 클릭하여 추가하세요.",
+    ["NOTES_SELECT"] = "볼 메모를 선택하세요.",
+    ["NOTES_DELETE_CONFIRM"] = "이 메모를 삭제하시겠습니까?",
+    ["NOTES_UNTITLED"] = "제목 없는 메모",
+
+-- Players Tab
+    ["PLAYERS_LIST_TITLE"] = "플레이어",
+    ["PLAYERS_DETAIL_TITLE"] = "플레이어 메모",
+    ["PLAYERS_NEW"] = "새 플레이어 메모",
+    ["PLAYERS_NAME_PLACEHOLDER"] = "플레이어 이름...",
+    ["PLAYERS_NOTE_PLACEHOLDER"] = "이 플레이어에 대한 메모를 작성하세요...",
+    ["PLAYERS_EMPTY"] = "아직 플레이어 메모가 없습니다. '새 플레이어 메모'를 클릭하여 추가하세요.",
+    ["PLAYERS_SELECT"] = "메모를 볼 플레이어를 선택하세요.",
+    ["PLAYERS_UNKNOWN"] = "알 수 없는 플레이어",
+
+-- NPCs Tab
+    ["NPCS_LIST_TITLE"] = "NPC",
+    ["NPCS_DETAIL_TITLE"] = "NPC 메모",
+    ["NPCS_NEW"] = "새 NPC 메모",
+    ["NPCS_NAME_PLACEHOLDER"] = "NPC 이름...",
+    ["NPCS_NOTE_PLACEHOLDER"] = "이 NPC에 대한 메모를 작성하세요...",
+    ["NPCS_EMPTY"] = "아직 NPC 메모가 없습니다. '새 NPC 메모'를 클릭하여 추가하세요.",
+    ["NPCS_SELECT"] = "메모를 볼 NPC를 선택하세요.",
+    ["NPCS_UNKNOWN"] = "알 수 없는 NPC",
+
+-- Zones Tab
+    ["ZONES_LIST_TITLE"] = "지역",
+    ["ZONES_DETAIL_TITLE"] = "지역 메모",
+    ["ZONES_NEW"] = "새 지역 메모",
+    ["ZONES_NAME_PLACEHOLDER"] = "지역 이름...",
+    ["ZONES_NOTE_PLACEHOLDER"] = "이 지역에 대한 메모를 작성하세요...",
+    ["ZONES_EMPTY"] = "아직 지역 메모가 없습니다. '새 지역 메모'를 클릭하여 추가하세요.",
+    ["ZONES_SELECT"] = "메모를 볼 지역을 선택하세요.",
+    ["ZONES_UNKNOWN"] = "알 수 없는 지역",
+
+-- Items Tab
+    ["ITEMS_DETAIL_TITLE"] = "아이템 메모",
+    ["ITEMS_NEW"] = "새 아이템 메모",
+    ["ITEMS_NAME_PLACEHOLDER"] = "아이템 이름 또는 ID...",
+    ["ITEMS_NOTE_PLACEHOLDER"] = "이 아이템에 대한 메모를 작성하세요...",
+    ["ITEMS_EMPTY"] = "아직 아이템 메모가 없습니다. '새 아이템 메모'를 클릭하여 추가하세요.",
+    ["ITEMS_SELECT"] = "메모를 볼 아이템을 선택하세요.",
+    ["ITEMS_UNKNOWN"] = "알 수 없는 아이템",
+
+-- Settings Tab
+    ["SETTINGS_THEME"] = "테마",
+    ["SETTINGS_THEME_DESC"] = "색상 테마를 선택하세요. 변경 사항은 즉시 적용됩니다.",
+    ["SETTINGS_LANGUAGE_DESC"] = "선호하는 언어를 선택하세요. 변경 사항은 즉시 적용됩니다.",
+    ["SETTINGS_MINIMAP"] = "미니맵 버튼",
+
+-- Language Names
+    ["LANG_ENUS"] = "영어",
+    ["LANG_KOKR"] = "한국어",
+
+-- Context Menu
+    ["CTX_INSERT_TARGET"] = "대상 삽입",
+    ["CTX_NO_TARGET"] = "선택된 대상이 없습니다.",
+    ["CTX_INSERT_DATETIME"] = "날짜/시간 삽입",
+    ["CTX_INSERT_SELF"] = "내 이름 삽입",
+    ["CTX_INSERT_HYPERLINK"] = "하이퍼링크 삽입",
+    ["CTX_INSERT_WAYPOINT"] = "길 표시 삽입",
+    ["CTX_ADD_CURRENT_LOCATION"] = "현재 위치 추가",
+    ["CTX_CANNOT_DETERMINE_LOCATION"] = "위치를 확인할 수 없습니다.",
+    ["CTX_CANNOT_GET_POSITION"] = "지도 위치를 가져올 수 없습니다.",
+    ["CTX_LOCATION_INSERTED"] = "위치 삽입됨 (지도: %d, X: %.1f, Y: %.1f)",
+    ["CTX_CANNOT_DETERMINE_ZONE"] = "현재 지역을 확인할 수 없습니다.",
+    ["CTX_COORDS_OUT_OF_RANGE"] = "좌표는 0에서 100 사이여야 합니다.",
+
+-- Hyperlink Dialog
+    ["CTX_BUTTON_INSERT"] = "삽입",
+    ["CTX_LINK_TYPE_LABEL"] = "링크 유형:",
+    ["CTX_ID_OR_VALUE"] = "ID 또는 값:",
+    ["CTX_LINK_TYPE_SPELL"] = "주문",
+    ["CTX_LINK_TYPE_QUEST"] = "퀘스트",
+    ["CTX_HELP_ITEM"] = "아이템 ID를 입력하세요  (예: 19019)",
+    ["CTX_HELP_SPELL"] = "주문 ID를 입력하세요  (예: 1459)",
+    ["CTX_HELP_QUEST"] = "퀘스트 ID를 입력하세요  (예: 1234)",
+    ["CTX_HELP_ACHIEVEMENT"] = "업적 ID를 입력하세요  (예: 1234)",
+    ["CTX_HELP_CURRENCY"] = "화폐 ID를 입력하세요  (예: 1234)",
+    ["CTX_HELP_TOY"] = "장난감 ID를 입력하세요  (예: 1234)",
+    ["CTX_HELP_BATTLEPET"] = "전투 애완동물 종 ID를 입력하세요  (예: 1234)",
+    ["CTX_HELP_MOUNT"] = "탈것 ID를 입력하세요  (예: 1234)",
+
+-- Waypoint Dialog
+    ["CTX_MAP_ID"] = "지도 ID (0 = 현재 지도):",
+    ["CTX_MAP_HELP"] = "현재 지도를 사용하려면 0을 입력하세요.",
+    ["CTX_X_COORDINATE"] = "X 좌표 (0-100):",
+    ["CTX_Y_COORDINATE"] = "Y 좌표 (0-100):",
+    ["CTX_DESCRIPTION"] = "이름표:",
+
+-- Notes controls and list
+    ["NOTES_CONTROLS"] = "메모 제어",
+    ["NOTES_LIST"] = "메모 목록",
+    ["MESSAGE_SELECT_NOTE"] = "편집할 메모를 선택하세요",
+    ["NOTE_UNTITLED"] = "제목 없음",
+
+-- Notes sort
+    ["NOTE_SORT_BY"] = "정렬: %s",
+    ["NOTE_SORT_TITLE"] = "제목",
+    ["NOTE_SORT_CREATED"] = "생성일",
+    ["NOTE_SORT_MODIFIED"] = "수정일",
+    ["NOTE_SORT_MANUAL"] = "수동",
+
+-- Notes UI labels
+    ["UI_CATEGORY_WITH_VALUE"] = "분류: %s",
+    ["UI_STORAGE_WITH_VALUE"] = "저장소: %s",
+    ["UI_STORAGE_ACCOUNT"] = "계정",
+    ["UI_COUNT_FORMAT"] = "%s: %d",
+    ["UI_TASKS"] = "작업:",
+    ["UI_MANAGE_CATEGORIES_DESC"] = "사용자 지정 분류 추가 또는 제거",
+    ["UI_NOTES_HYPERLINK_HINT"] = "클릭하여 메모에서 하이퍼링크 사용에 대한 도움말 표시/숨기기",
+    ["UI_NOTE_REMOVE_FLAG_HINT"] = "클릭하여 '신규' 표시 제거",
+
+-- Note types
+    ["NOTE_TYPE_STANDARD"] = "표준",
+    ["NOTE_TYPE_STANDARD_DESC"] = "자동 초기화가 없는 일반 메모",
+    ["NOTE_TYPE_DAILY_DESC"] = "작업이 일일 서버 초기화 시간에 초기화됩니다",
+    ["NOTE_TYPE_WEEKLY_DESC"] = "작업이 주간 서버 초기화 시간에 초기화됩니다",
+    ["NOTE_TYPE_LABEL_FORMAT"] = "%s 메모",
+
+-- Note todo
+    ["NOTE_RESET_TODOS"] = "모든 작업 초기화",
+    ["NOTE_RESET_TODOS_DESC"] = "완료된 모든 작업 체크 해제",
+
+-- Buttons
+    ["BUTTON_ADD_NOTE"] = "메모 추가",
+
+-- Dialogs
+    ["DIALOG_ADD_NOTE_TITLE"] = "새 메모 추가",
+    ["DIALOG_NOTE_PROPERTIES_TITLE"] = "메모 속성: %s",
+    ["POPUP_DELETE_NOTE"] = "'%s' 메모를 삭제하시겠습니까?",
+
+-- Success / Error
+    ["SUCCESS_NOTE_ADDED"] = "'%s' 메모가 성공적으로 추가되었습니다!",
+    ["ERROR_ENTER_NOTE_TITLE"] = "메모 제목을 입력하세요",
+
+-- Tooltips for list item buttons
+    ["TOOLTIP_BUTTON_ADD_NOTE"] = "메모 추가",
+    ["TOOLTIP_BUTTON_ADD_NOTE_DESC"] = "새 메모 만들기",
+    ["TOOLTIP_NOTE_DELETE"] = "메모 삭제",
+    ["TOOLTIP_NOTE_DELETE_DESC"] = "이 메모 제거",
+    ["TOOLTIP_NOTE_FAVORITE"] = "즐겨찾기",
+    ["TOOLTIP_NOTE_FAVORITE_DESC"] = "메모를 즐겨찾기로 표시",
+    ["TOOLTIP_NOTE_NEW"] = "새 메모",
+    ["TOOLTIP_NOTE_PIN"] = "메모 고정",
+    ["TOOLTIP_NOTE_PIN_DESC"] = "메모를 화면에 고정합니다",
+    ["TOOLTIP_NOTE_PROPERTIES"] = "메모 속성",
+    ["TOOLTIP_NOTE_PROPERTIES_DESC"] = "메모 설정 편집",
+
+-- Storage / Category labels
+    ["STORAGE_ACCOUNT_WIDE"] = "계정 전체",
+
+-- Label fields (for dialogs)
+    ["LABEL_NOTE_TITLE"] = "메모 제목",
+    ["LABEL_STORAGE"] = "저장소",
+    ["LABEL_NOTE_COLOR"] = "메모 색상",
+    ["LABEL_FONT_COLOR"] = "글꼴 색상",
+    ["LABEL_NOTE_FONT"] = "글꼴",
+    ["LABEL_NOTE_TYPE"] = "메모 유형",
+    ["LABEL_NOTE_CONTENT"] = "메모 내용",
+
+-- Color names
+    ["COLOR_HUNTER_GREEN"] = "사냥꾼 초록",
+    ["FONT_DEFAULT"] = "기본 (Friz Quadrata)",
+    ["FONT_COLOR_MATCHING"] = "기본 - 일치",
+    ["FONT_COLOR_WHITE"] = "사제 흰색",
+    ["FONT_COLOR_BLACK"] = "자정 검정",
+
+-- Pin color names
+    ["NOTES_PIN_COLOR_HUNTER_GREEN"] = "사냥꾼 초록",
+    ["NOTES_PIN_COLOR_WARRIOR_TAN"] = "전사 황갈색",
+    ["NOTES_PIN_COLOR_PRIEST_WHITE"] = "사제 흰색",
+    ["NOTES_PIN_COLOR_WARLOCK_PURPLE"] = "흑마법사 보라",
+    ["NOTES_PIN_COLOR_MAGE_BLUE"] = "마법사 파랑",
+    ["NOTES_PIN_COLOR_ROGUE_YELLOW"] = "도적 노랑",
+    ["NOTES_PIN_COLOR_DRUID_ORANGE"] = "드루이드 주황",
+    ["NOTES_PIN_COLOR_PALADIN_PINK"] = "성기사 분홍",
+    ["NOTES_PIN_COLOR_SHAMAN_BLUE"] = "주술사 파랑",
+    ["NOTES_PIN_COLOR_DEATHKNIGHT_RED"] = "죽음의 기사 빨강",
+    ["NOTES_PIN_COLOR_MONK_JADE"] = "수도사 옥색",
+    ["NOTES_PIN_COLOR_DEMONHUNTER_PURPLE"] = "악마사냥꾼 보라",
+    ["NOTES_PIN_COLOR_EVOKER_TEAL"] = "기원사 청록",
+    ["NOTES_PIN_COLOR_DARKIRON"] = "검은무쇠",
+
+-- Category management
+    ["NOTES_CATEGORY_EMPTY"] = "분류 이름은 비워 둘 수 없습니다",
+    ["NOTES_CATEGORY_EXISTS"] = "분류가 이미 존재합니다",
+    ["NOTES_CATEGORY_NOT_FOUND"] = "사용자 지정 분류를 찾을 수 없습니다",
+    ["NOTES_CATEGORY_BUILTIN"] = "기본 제공 분류는 제거할 수 없습니다",
+    ["NOTES_CATEGORY_NOT_IN_CUSTOM"] = "사용자 지정 분류에서 분류를 찾을 수 없습니다",
+
+-- Pinned window strings
+    ["CORE_PIN_NOTE_PREFIX"] = "메모:",
+    ["CORE_PIN_UNTITLED"] = "제목 없음",
+    ["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER"] = "마우스를 올릴 때까지 고정된 작업 숨기기",
+    ["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER_DESC"] = "고정되었을 때 마우스가 메모 위에 있을 동안만 작업 목록을 표시합니다.",
+    ["CORE_PIN_HOVER_TASKS"] = "마우스 오버 작업",
+
+-- Items tab
+    ["ITEMS_CONTROLS"] = "아이템 제어",
+    ["ITEMS_LIST"] = "아이템 목록",
+    ["TOOLTIP_BUTTON_ADD_ITEM_DESC"] = "아이템을 여기에 끌어다 놓아 메모를 추가하세요.",
+    ["TOOLTIP_BUTTON_ADD_BY_ID"] = "아이템 ID로 추가",
+    ["TOOLTIP_BUTTON_ADD_BY_ID_DESC"] = "메모를 만들 아이템 ID를 입력하세요.",
+    ["MSG_ITEM_EXISTS"] = "아이템이 이미 존재합니다: %s",
+    ["MSG_ITEM_ADDED"] = "아이템 추가됨: %s",
+    ["MSG_DRAG_ITEM"] = "아이템을 여기에 끌어다 놓아 추가하세요.",
+    ["NOTES_ITEM_INVALID_ID"] = "잘못된 아이템 ID입니다.",
+    ["TOOLTIP_ITEM_DELETE"] = "아이템 삭제",
+    ["TOOLTIP_ITEM_DELETE_DESC"] = "이 아이템 메모 제거",
+    ["TOOLTIP_ITEM_PROPERTIES_DESC"] = "아이템 설정 편집",
+    ["TOOLTIP_ITEM_FAVORITE"] = "즐겨찾기",
+    ["TOOLTIP_ITEM_FAVORITE_DESC"] = "즐겨찾기로 표시",
+    ["ITEM_ALERT_ON_LOOT"] = "획득 시 알림",
+    ["ITEM_ALERT_ON_LOOT_DESC"] = "이 아이템을 획득할 때 알림을 표시합니다.",
+    ["POPUP_DELETE_ITEM"] = "아이템 메모를 삭제하시겠습니까?",
+    ["DIALOG_ADD_ITEM_BY_ID"] = "ID로 아이템 추가",
+    ["DIALOG_ITEM_PROPERTIES"] = "아이템 속성",
+    ["ITEM_VALIDATE"] = "확인",
+    ["ITEM_VALIDATE_FIRST"] = "먼저 아이템을 확인하세요.",
+    ["ITEM_LOADING"] = "불러오는 중...",
+
+-- Zones tab
+    ["ZONES_CONTROLS"] = "지역 제어",
+    ["ZONES_LIST"] = "지역 목록",
+    ["BUTTON_ADD_CURRENT_ZONE"] = "지역 추가",
+    ["ZONE_ADD_PARENT"] = "상위 지역 추가",
+    ["ZONE_ADD_PARENT_DESC"] = "상위/광역 지역에 대한 메모를 추가합니다.",
+    ["BUTTON_MANUAL_ENTRY"] = "수동",
+    ["TOOLTIP_BUTTON_ADD_CURRENT_ZONE"] = "현재 지역 추가",
+    ["TOOLTIP_BUTTON_ADD_CURRENT_ZONE_DESC"] = "현재 지역에 대한 메모를 추가합니다.",
+    ["TOOLTIP_BUTTON_MANUAL_ENTRY_ZONE_DESC"] = "지역 이름을 수동으로 입력합니다.",
+    ["MSG_NO_ZONE_DETECTED"] = "현재 지역을 확인할 수 없습니다.",
+    ["MSG_NO_PARENT_ZONE"] = "상위 지역을 확인할 수 없습니다.",
+    ["MSG_ZONE_EXISTS"] = "지역 메모가 이미 존재합니다: %s",
+    ["MSG_ZONE_ADDED"] = "지역 추가됨: %s",
+    ["TOOLTIP_ZONE_DELETE"] = "지역 삭제",
+    ["TOOLTIP_ZONE_DELETE_DESC"] = "이 지역 메모 제거",
+    ["TOOLTIP_ZONE_PROPERTIES"] = "지역 속성",
+    ["TOOLTIP_ZONE_PROPERTIES_DESC"] = "지역 설정 편집",
+    ["TOOLTIP_ZONE_SOUND"] = "지역 알림",
+    ["TOOLTIP_ZONE_SOUND_DESC"] = "이 지역에 들어갈 때 알립니다.",
+    ["TOOLTIP_ZONE_FAVORITE"] = "즐겨찾기",
+    ["TOOLTIP_ZONE_FAVORITE_DESC"] = "즐겨찾기로 표시",
+    ["POPUP_DELETE_ZONE"] = "지역 메모를 삭제하시겠습니까?",
+    ["DIALOG_ZONE_PROPERTIES"] = "지역 속성",
+    ["LABEL_ZONE_NAME"] = "지역 이름:",
+    ["ZONE_ERROR_NAME_REQUIRED"] = "지역 이름이 필요합니다.",
+
+-- Notes dialog extras
+    ["NOTE_AUTOPIN_WHEN_COMPLETE"] = "작업 완료 시 자동 숨기기",
+    ["LABEL_NOTE_PREVIEW"] = "메모 내용 미리보기:",
+    ["UI_TOOLTIP_LINES"] = "툴팁 줄 수:",
+
+-- Players tab
+    ["PLAYERS_CONTROLS"] = "플레이어 제어",
+    ["PLAYERS_LIST"] = "플레이어 목록",
+    ["BUTTON_ADD_TARGET"] = "대상 추가",
+    ["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"] = "현재 플레이어 대상에 대한 메모를 추가합니다.",
+    ["TOOLTIP_BUTTON_MANUAL_ENTRY_PLAYER_DESC"] = "플레이어 이름을 수동으로 입력합니다.",
+    ["MSG_TARGET_PLAYER_FIRST"] = "먼저 플레이어를 대상으로 지정하세요.",
+    ["MSG_PLAYER_EXISTS"] = "플레이어 메모가 이미 존재합니다.",
+    ["NOTES_PLAYER_ALERT_FOUND"] = "메모가 있는 플레이어를 대상으로 지정함: %s",
+    ["TOOLTIP_PLAYER_DELETE"] = "플레이어 삭제",
+    ["TOOLTIP_PLAYER_DELETE_DESC"] = "이 플레이어 메모 제거",
+    ["TOOLTIP_PLAYER_PROPERTIES_DESC"] = "플레이어 설정 편집",
+    ["TOOLTIP_PLAYER_SOUND"] = "발견 시 알림",
+    ["TOOLTIP_PLAYER_SOUND_DESC"] = "이 플레이어를 대상으로 지정할 때 알립니다.",
+    ["TOOLTIP_PLAYER_FAVORITE"] = "즐겨찾기",
+    ["TOOLTIP_PLAYER_FAVORITE_DESC"] = "즐겨찾기로 표시",
+    ["POPUP_DELETE_PLAYER"] = "플레이어 메모를 삭제하시겠습니까?",
+    ["DIALOG_PLAYER_PROPERTIES"] = "플레이어 속성",
+    ["LABEL_NAME"] = "플레이어 이름:",
+    ["LABEL_SERVER"] = "서버:",
+    ["UI_GUILD_NONE"] = "<길드 없음>",
+    ["PLAYER_MANUAL_ENTRY_TITLE"] = "플레이어 추가",
+    ["PLAYER_LABEL_LEVEL"] = "레벨:",
+    ["PLAYER_LABEL_CLASS"] = "직업:",
+    ["PLAYER_ERROR_NAME_REQUIRED"] = "플레이어 이름이 필요합니다.",
+    ["PLAYER_ADD_ALTS"] = "부캐 추가",
+    ["PLAYER_ADD_ALTS_DESC"] = "AltTracker 데이터에서 부캐를 추가합니다.",
+    ["PLAYER_ALTS_NO_DATA"] = "AltTracker 데이터를 찾을 수 없습니다.",
+    ["PLAYER_ALTS_NONE_NEW"] = "추가할 새 부캐가 없습니다.",
+    ["PLAYER_ALTS_ADDED_COUNT"] = "부캐 %d명 추가됨.",
+    ["PLAYER_ADD_GUILD"] = "길드 추가",
+    ["PLAYER_ADD_GUILD_DESC"] = "길드원을 플레이어 메모에 추가합니다.",
+    ["PLAYER_ADD_GUILD_TITLE"] = "길드원 추가",
+    ["PLAYER_GUILD_NOT_IN"] = "길드에 속해 있지 않습니다.",
+    ["PLAYER_GUILD_NONE_NEW"] = "추가할 새 길드원이 없습니다.",
+    ["PLAYER_GUILD_ADDED_COUNT"] = "길드원 %d명 추가됨.",
+    ["PLAYER_ADD_SELECTED"] = "선택 항목 추가",
+
+-- NPCs tab
+    ["NPCS_CONTROLS"] = "NPC 제어",
+    ["NPCS_LIST"] = "NPC 목록",
+    ["TOOLTIP_BUTTON_ADD_TARGET_NPC_DESC"] = "현재 NPC 대상에 대한 메모를 추가합니다.",
+    ["TOOLTIP_BUTTON_MANUAL_ENTRY_NPC_DESC"] = "NPC ID를 수동으로 입력합니다.",
+    ["MSG_TARGET_NPC_FIRST"] = "먼저 NPC를 대상으로 지정하세요.",
+    ["MSG_NPC_NO_LOCATION"] = "이 NPC에 대해 기록된 위치가 없습니다.",
+    ["NOTES_NPC_ALERT_FOUND"] = "메모가 있는 NPC를 대상으로 지정함: %s",
+    ["NOTES_NPC_ASSOC_QUESTS"] = "연관 퀘스트:",
+    ["TOOLTIP_NPC_DELETE"] = "NPC 삭제",
+    ["TOOLTIP_NPC_DELETE_DESC"] = "이 NPC 메모 제거",
+    ["TOOLTIP_NPC_PROPERTIES_DESC"] = "NPC 설정 편집",
+    ["TOOLTIP_NPC_SOUND"] = "대상 지정 시 알림",
+    ["TOOLTIP_NPC_SOUND_DESC"] = "이 NPC를 대상으로 지정할 때 알립니다.",
+    ["TOOLTIP_NPC_FAVORITE"] = "즐겨찾기",
+    ["TOOLTIP_NPC_FAVORITE_DESC"] = "즐겨찾기로 표시",
+    ["POPUP_DELETE_NPC"] = "NPC 메모를 삭제하시겠습니까?",
+    ["DIALOG_NPC_PROPERTIES"] = "NPC 속성",
+    ["LABEL_NPC_ID"] = "NPC ID:",
+    ["NPC_IGNORE_IF_DEAD"] = "죽었으면 무시",
+    ["NPC_IGNORE_IF_DEAD_DESC"] = "이 NPC가 죽었을 때 알리지 않습니다.",
+    ["UI_NPC_GOTO_TITLE"] = "길 표시 만들기",
+    ["UI_NPC_CREATE_WAYPOINT"] = "이 NPC의 위치로 길 표시를 설정합니다.",
+    ["NPC_MANUAL_ENTRY_TITLE"] = "NPC 추가",
+    ["NPC_LABEL_NAME"] = "NPC 이름:",
+    ["NPC_LABEL_ZONE"] = "지역:",
+    ["NPC_LABEL_LOCATION"] = "위치:",
+    ["NPC_ERROR_NAME_REQUIRED"] = "NPC 이름이 필요합니다.",
+
+-- Settings - Detection
+    ["SETTINGS_DETECTION"] = "감지 및 알림",
+    ["SETTINGS_ENABLED"] = "켜기",
+    ["SETTINGS_DISABLED"] = "끄기",
+    ["SETTINGS_NPC_DETECTION"] = "NPC 감지",
+    ["SETTINGS_NPC_DETECTION_DESC"] = "알림이 켜진 메모가 있는 NPC를 대상으로 지정하면 대화 메시지와 소리로 알립니다.",
+    ["SETTINGS_PLAYER_DETECTION"] = "플레이어 감지",
+    ["SETTINGS_PLAYER_DETECTION_DESC"] = "알림이 켜진 메모가 있는 플레이어를 대상으로 지정하면 대화 메시지와 소리로 알립니다.",
+    ["SETTINGS_ZONE_ALERTS"] = "지역 알림",
+    ["SETTINGS_ZONE_ALERTS_DESC"] = "알림이 켜진 메모가 있는 지역에 들어가면 대화 메시지와 소리로 알립니다.",
+
+-- Zone pin button
+    ["TOOLTIP_ZONE_PIN"] = "지역 창 고정",
+    ["TOOLTIP_ZONE_PIN_DESC"] = "이 지역에 들어갈 때 떠 있는 메모 창을 표시합니다.",
+
+-- Category Manager
+    ["CATMGR_TITLE"] = "분류 관리",
+    ["CATMGR_ADDED"] = "분류 추가됨: %s",
+    ["CATMGR_REMOVED"] = "분류 제거됨: %s",
+    ["CATMGR_ERROR"] = "오류가 발생했습니다.",
+
+-- Hyperlink Help Panel
+    ["UI_HELP_PANEL_TITLE"] = "하이퍼링크 도움말",
+    ["UI_HELP_TAB_LINKS"] = "링크",
+    ["UI_HELP_TAB_PINS"] = "고정",
+    ["UI_HELP_LINKS_HINT"] = "약식을 입력한 다음 )로 닫으면 자동 변환됩니다",
+    ["UI_HELP_FROM_GAME"] = "게임에서",
+    ["UI_HELP_FROM_GAME_DESC"] = "가방이나 주문서에서 아이템이나 주문을 메모 텍스트 상자로 직접 끌어다 놓으세요.",
+    ["UI_HELP_DETAIL_INSTRUCTION"] = "약식을 입력하고 )로 닫으면 자동 변환됩니다:",
+    ["UI_HELP_DETAIL_EXAMPLE"] = "예시: %s",
+    ["UI_HELP_PASTE_BUTTON"] = "붙여넣기",
+    ["UI_HELP_LINK_ITEM_SYNTAX"] = "(item=ID)",
+    ["UI_HELP_LINK_ITEM_EXAMPLE"] = "(item=19019)",
+    ["UI_HELP_LINK_SPELL_SYNTAX"] = "(spell=ID)",
+    ["UI_HELP_LINK_SPELL_EXAMPLE"] = "(spell=1459)",
+    ["UI_HELP_LINK_QUEST_NAME"] = "퀘스트",
+    ["UI_HELP_LINK_QUEST_SYNTAX"] = "(quest=ID)",
+    ["UI_HELP_LINK_QUEST_EXAMPLE"] = "(quest=1234)",
+    ["UI_HELP_LINK_ACHV_SYNTAX"] = "(ach=ID)",
+    ["UI_HELP_LINK_ACHV_EXAMPLE"] = "(ach=1234)",
+    ["UI_HELP_LINK_CURRENCY_SYNTAX"] = "(cur=ID)",
+    ["UI_HELP_LINK_CURRENCY_EXAMPLE"] = "(cur=1234)",
+    ["UI_HELP_LINK_TOY_SYNTAX"] = "(toy=ID)",
+    ["UI_HELP_LINK_TOY_EXAMPLE"] = "(toy=1234)",
+    ["UI_HELP_LINK_PET_SYNTAX"] = "(battlepet=ID)",
+    ["UI_HELP_LINK_PET_EXAMPLE"] = "(battlepet=1234)",
+    ["UI_HELP_LINK_MOUNT_SYNTAX"] = "(mount=ID)",
+    ["UI_HELP_LINK_MOUNT_EXAMPLE"] = "(mount=1234)",
+    ["UI_HELP_LINK_WAYPOINT_NAME"] = "길 표시",
+    ["UI_HELP_LINK_WAYPOINT_SYNTAX"] = "(/way X Y 이름표)",
+    ["UI_HELP_LINK_WAYPOINT_EXAMPLE"] = "(/way 52.3 41.7 Boss)",
+    ["UI_HELP_PIN_REGULAR_TITLE"] = "일반 메모",
+    ["UI_HELP_PIN_REGULAR_LINE1"] = "편집기의 고정 아이콘을 클릭하여 메모를 화면에 고정하세요.",
+    ["UI_HELP_PIN_REGULAR_LINE2"] = "고정된 메모는 이동, 크기 조절, 잠금이 가능합니다.",
+    ["UI_HELP_PIN_REGULAR_LINE3"] = "고정된 메모를 우클릭하면 표시 옵션이 나옵니다.",
+    ["UI_HELP_PIN_DAILY_TITLE"] = "일일 / 주간 메모",
+    ["UI_HELP_PIN_DAILY_LINE1"] = "메모 속성에서 메모 유형을 일일 또는 주간으로 설정하세요.",
+    ["UI_HELP_PIN_DAILY_LINE2"] = "작업은 서버 초기화 시간에 자동으로 초기화됩니다.",
+    ["UI_HELP_PIN_DAILY_LINE3"] = "자동 숨기기를 활성화하면 모든 작업이 완료될 때 메모가 접힙니다.",
+    ["UI_HELP_PIN_ZONE_TITLE"] = "지역 메모",
+    ["UI_HELP_PIN_ZONE_LINE1"] = "지역 메모를 추가하고 지역 고정을 활성화하면 들어갈 때 표시됩니다.",
+    ["UI_HELP_PIN_ZONE_LINE2"] = "그 지역에 들어가면 메모가 자동으로 나타납니다.",
+    ["UI_HELP_PIN_ZONE_LINE3"] = "지역 고정을 우클릭하면 표시 옵션이 나옵니다.",
+
+    ["ADDON_TITLE_SHORT"] = "Notes",
+
+    ["BINDING_HEADER_ONEWOW_NOTES"] = "|cFF00FF00OneWoW|r Notes",
+    ["BINDING_NAME_ONEWOW_NOTES_QUICKNOTE"] = "빠른 메모",
+
+    ["BUTTON_DESELECT_ALL"] = "모두 선택 해제",
+    ["BUTTON_SELECT_ALL"] = "모두 선택",
+    ["DIALOG_CONFIRM_DELETE"] = "삭제 확인",
+    ["LABEL_MAP_ID_OPTIONAL"] = "지도 ID (선택 사항):",
+    ["LABEL_PROFESSION_1"] = "전문기술 1:",
+    ["LABEL_PROFESSION_2"] = "전문기술 2:",
+    ["MSG_NPC_ID_EXISTS"] = "해당 ID의 NPC가 이미 존재합니다.",
+    ["MSG_CANNOT_SET_WAYPOINT"] = "길 표시를 설정할 수 없습니다.",
+    ["NPC_ID_EDIT_TOOLTIP"] = "NPC ID를 변경합니다. 올바른 ID는 WoWHead에서 찾으세요.",
+    ["NPC_ID_TOOLTIP"] = "자동 생성하려면 비워 두세요. ID는 WoWHead에서 찾으세요.",
+    ["NPC_LABEL_COORD_X"] = "좌표 X:",
+    ["NPC_LABEL_COORD_Y"] = "좌표 Y:",
+    ["NPC_LABEL_MAP_ID"] = "지도 ID:",
+    ["NPC_SET_CURRENT"] = "현재로 설정",
+    ["NPC_SET_CURRENT_DESC"] = "위치를 현재 위치로 설정합니다.",
+    ["PLAYER_ALTS_NOT_INSTALLED"] = "OneWoW AltTracker 설치가 필요합니다.",
+    ["TOOLTIP_ZONE_ALERT"] = "지역 알림",
+    ["TOOLTIP_ZONE_ALERT_DESC"] = "지역 진입 알림 켜기/끄기.",
+    ["UI_ZONES_HELP_HINT"] = "클릭하여 지역 도움말 보기.",
+    ["UI_ZONES_HELP_TITLE"] = "지역 도움말",
+    ["ZONES_SELECT_PROMPT"] = "내용을 볼 지역을 선택하세요",
+    ["ZONE_CONFIRM_DELETE"] = "지역 삭제: %s?",
+    ["ZONE_DETECT_FAIL"] = "지역을 감지할 수 없습니다.",
+    ["ZONE_INVALID_MAP_ID"] = "유효한 숫자를 입력하세요.",
+    ["ZONE_MAP_NOT_FOUND"] = "지도 ID를 찾을 수 없습니다.",
+    ["ZONE_TODO_HEADER"] = "체크리스트",
+    ["ZONE_VALIDATE_HINT"] = "ID를 입력하고 확인을 클릭하세요",
+})
