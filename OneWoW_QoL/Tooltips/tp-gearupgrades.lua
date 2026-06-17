@@ -1,3 +1,4 @@
+local _, ns = ...
 local OneWoW = OneWoW
 
 local function GetClassColoredName(name, class)
@@ -120,7 +121,7 @@ local function DoGearUpgrade(tooltip, context, onlyUpgrade, detail, showAlts, al
     local UD = OneWoW.UpgradeDetection
     if not UD then return nil, "no UD" end
 
-    local L = OneWoW.L
+    local L = ns.L
     local comparison = UD:GetItemComparison(itemLink)
 
     local selfLine

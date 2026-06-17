@@ -1,3 +1,4 @@
+local _, ns = ...
 local OneWoW = OneWoW
 local format = string.format
 
@@ -13,7 +14,7 @@ end
 local function FormatAge(timestamp)
     if not timestamp or timestamp == 0 then return nil end
     local age = time() - timestamp
-    local L = OneWoW.L
+    local L = ns.L
     if age < 3600 then
         return format(L["TIPS_TIME_MINUTES_AGO"], math.floor(age / 60))
     elseif age < 86400 then
@@ -25,7 +26,7 @@ end
 
 local function FormatAHMeta(meta)
     if not meta then return nil end
-    local L = OneWoW.L
+    local L = ns.L
     if meta.timestamp then
         return FormatAge(meta.timestamp)
     end
@@ -38,7 +39,7 @@ end
 local function ValueProvider(_, context)
     if not context.itemID then return nil end
 
-    local L   = OneWoW.L
+    local L   = ns.L
     local cfg = OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "value")
 
     local showVendorPrice = cfg.showVendorPrice ~= false

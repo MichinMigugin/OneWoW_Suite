@@ -1,3 +1,4 @@
+local _, ns = ...
 local OneWoW = OneWoW
 
 local function FormatMoneyLine(copper)
@@ -46,7 +47,7 @@ end
 local function FormatAge(timestamp)
     if not timestamp or timestamp == 0 then return nil end
     local age = time() - timestamp
-    local L = OneWoW.L
+    local L = ns.L
     if age < 3600 then
         return string.format(L["TIPS_TIME_MINUTES_AGO"], math.floor(age / 60))
     elseif age < 86400 then
@@ -79,7 +80,7 @@ local function FillPetTooltip(tip, speciesID)
     if not speciesID or speciesID == 0 then return false end
 
     local cfg = GetPetSettings()
-    local L = OneWoW.L
+    local L = ns.L
     local TOOLTIP_CONFIG = OneWoW.TooltipEngine.TOOLTIP_CONFIG
 
     local name, _, petType, _, tooltipSource, tooltipDescription, _, canBattle, isTradeable, isUnique =

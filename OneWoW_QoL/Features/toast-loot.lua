@@ -34,7 +34,7 @@ local function CategoryEnabled(category)
 end
 
 local function GetL(key, fallback)
-    return (OneWoW.L and OneWoW.L[key]) or fallback
+    return (ns.L and ns.L[key]) or fallback
 end
 
 local function FireLootToast(category, itemName, itemTexture, _)

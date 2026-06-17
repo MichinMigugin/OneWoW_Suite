@@ -112,7 +112,7 @@ local function RecipeKnowledgeProvider(_, context)
     if not profsDB or not profsDB.characters then return nil end
 
     local Util           = OneWoW.RecipeKnownUtil
-    local L              = OneWoW.L
+    local L              = ns.L
     local OneWoW_GUI     = OneWoW_GUI
     local currentCharKey = OneWoW_GUI and OneWoW_GUI:BuildCharKey()
     local currentKnows   = Util and Util:IsRecipeKnown(context.itemID)

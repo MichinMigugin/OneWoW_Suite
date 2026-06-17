@@ -3,9 +3,8 @@ local _, ns = ...
 local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 
--- Locale strings stay in core OneWoW.L during the QoL transition
 -- (MIGRATION step 9 shared rules).
-local L = OneWoW.L
+local L = ns.L
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE

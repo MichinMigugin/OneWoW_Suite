@@ -10,7 +10,7 @@ local headerFrames = {}
 local portalButtonPool = {}
 
 function ns.UI.CreatePortalsTab(parent)
-	local L = OneWoW.L or {}
+	local L = ns.L or {}
 
 	local split = OneWoW_GUI:CreateSplitPanel(parent, {
 		showSearch = true,

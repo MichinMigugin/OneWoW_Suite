@@ -457,6 +457,24 @@ ptBR itIT.
   Overlays = fr *Incrustations* / de *Overlays* / es *Superposiciones* / it *Sovrapposizioni* /
   pt *Sobreposições* / ru *Наложения* / zhCN 覆盖层 / zhTW 覆蓋層 / ko 오버레이-context; zhTW uses
   Taiwan terms (巨集=macro, 套用=apply, 整合=integration, 滑鼠提示=tooltip, 伺服器=server).
+- [x] **Scope-leak cleanup — QoL feature strings relocated out of core (2026-06-17).**
+  A new audit tool (`bin/locale_usage.py`) found that when QoL features were split out of the
+  core addon their UI moved to `OneWoW_QoL` but their strings were left in the core `OneWoW`
+  scope, still read via `local L = OneWoW.L`. (`SEARCH_HINT` was the only key that had moved to
+  the QoL scope, so it was the only one rendering as a raw key — the reported bug.) Relocated
+  with a new `bin/locale_migrate.py`: **190 engine-shared keys** (`OVR_/TOAST_/FEATURE_/
+  ITEMSTATUS_`, read by core services *and* the QoL UI) → `shared`; **312 QoL-only keys**
+  (`TIPS_/TOOLTIPS_/OVERLAYS_/PORTAL(S)_/UI_PORTAL_/ESCPANEL_/SETTINGS_PORTALHUB_` + portal
+  category/expansion labels) → the `OneWoW_QoL` scope. Repointed 21 QoL files `OneWoW.L`→`ns.L`.
+  Net: core 908→406, shared 113→303, QoL 325→637 real keys; all three pass `bin/locale_verify.py`
+  and `locale_usage.py` reports **zero QoL leaks**. (The exact moves are in git history; the
+  one-shot key-list inputs to `locale_migrate.py` were not kept.) **Tool fixes made during this
+  cleanup:** `locale_migrate.py` now inserts after the Register table's *opening* line — matching
+  the closing `})` wrongly hit a `})` inside the `DEVHELP_BODY` `[[ ]]` long-string and buried the
+  keys in that string; `locale_verify.py`/`locale_usage.py` now strip `[[ ]]` long-strings before
+  counting (the old count of 327 had silently included 2 example keys — `MY_TITLE`/`MY_DESC` —
+  living inside that help block). **Deferred (same pattern, separate cleanup):** 8
+  `CTX_OPEN_<addon>` context-menu labels still sit in core, one per sibling addon.
 - [ ] Remaining scopes, **player-facing value order** (decided):
   DevTool 501 → ShoppingList 246 → then data/QoL-module sub-addons (2–105 keys each).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).

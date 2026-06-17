@@ -3,7 +3,7 @@ local _, ns = ...
 local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 
-local L = OneWoW.L
+local L = ns.L
 
 ns.NestedFlyouts = ns.NestedFlyouts or {}
 local Nested = ns.NestedFlyouts

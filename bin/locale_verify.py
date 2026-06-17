@@ -25,9 +25,17 @@ KEY_RE = re.compile(r'\[\s*"((?:[^"\\]|\\.)*)"\s*\]\s*=\s*"((?:[^"\\]|\\.)*)"')
 SPEC_RE = re.compile(r'%[-+#0]*[0-9]*\.?[0-9]*[sdfgxXc%]')
 
 
+# Lua [[ ... ]] long-string (e.g. a DEVHELP_BODY help block). Its contents must be
+# stripped before key extraction: example code inside it can contain literal
+# `["KEY"] = "value"` lines that would otherwise be miscounted as real keys (this
+# masked a migration bug that inserted keys *inside* such a string).
+LONGSTRING_RE = re.compile(r'\[\[.*?\]\]', re.S)
+
+
 def parse(path):
     """Return {key: sorted_specs} for one locale file."""
     text = path.read_text(encoding="utf-8")
+    text = LONGSTRING_RE.sub("", text)
     out = {}
     for m in KEY_RE.finditer(text):
         key, val = m.group(1), m.group(2)

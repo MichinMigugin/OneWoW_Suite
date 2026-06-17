@@ -161,13 +161,13 @@ local function CollectionsProvider(_, context)
             {type = "headerRight", text = typeString, r = typeColor[1], g = typeColor[2], b = typeColor[3]}
         }
     elseif status == true then
-        local L = OneWoW.L
+        local L = ns.L
         local text = "|cFF66CC66" .. L["TIPS_COLLECTIONS_COLLECTED"] .. "|r | " .. typeString
         return {
             {type = "headerRight", text = text, r = typeColor[1], g = typeColor[2], b = typeColor[3]}
         }
     else
-        local L = OneWoW.L
+        local L = ns.L
         local text = "|cFFCC6666" .. L["TIPS_COLLECTIONS_NOT_COLLECTED"] .. "|r | " .. typeString
         return {
             {type = "headerRight", text = text, r = typeColor[1], g = typeColor[2], b = typeColor[3]}

@@ -1,3 +1,4 @@
+local _, ns = ...
 local OneWoW = OneWoW
 
 local LINE_TYPE_SELL_PRICE = Enum.TooltipDataLineType.SellPrice
@@ -249,7 +250,7 @@ local function EnhancementsUnitProvider(tooltip, context)
         if not UnitIsUnit("player", unit) then
             local target = UnitName(unit .. "target")
             if target then
-                local L = OneWoW.L
+                local L = ns.L
                 table.insert(lines, {
                     type = "double",
                     left = "  |cFFFFDD00" .. (L["TIPS_ENHANCEMENTS_TARGET_LABEL"]) .. "|r",
@@ -272,7 +273,7 @@ local function EnhancementsUnitProvider(tooltip, context)
             else
                 scoreText = string.format("|cFFFFFFFF%d|r", score)
             end
-            local L = OneWoW.L
+            local L = ns.L
             table.insert(lines, {
                 type = "double",
                 left = "  |cFFFFDD00" .. (L["TIPS_ENHANCEMENTS_MPLUS_LABEL"]) .. "|r",

@@ -30,6 +30,9 @@ from pathlib import Path
 
 # Reuse the same key matcher idea as locale_verify: [ "KEY" ] = "value"
 DEF_RE = re.compile(r'\[\s*"((?:[^"\\]|\\.)*)"\s*\]\s*=')
+# Strip Lua [[ ... ]] long-strings before parsing keys: example code inside a
+# DEVHELP_BODY block can hold literal ["KEY"] = "value" lines that aren't real keys.
+LONGSTRING_RE = re.compile(r'\[\[.*?\]\]', re.S)
 # References in source: L["KEY"] / L['KEY'] / OneWoW.L["KEY"] / ns.L["KEY"]
 REF_BRACKET_RE = re.compile(r'\bL\s*\[\s*["\']([A-Za-z0-9_]+)["\']\s*\]')
 # Dot form L.KEY (filtered against the known key set to avoid matching methods).
@@ -37,7 +40,7 @@ REF_DOT_RE = re.compile(r'\bL\.([A-Za-z0-9_]+)\b')
 
 
 def parse_keys(path):
-    text = path.read_text(encoding="utf-8")
+    text = LONGSTRING_RE.sub("", path.read_text(encoding="utf-8"))
     return {m.group(1) for m in DEF_RE.finditer(text)}
 
 
@@ -61,8 +64,10 @@ def main(argv):
     shared_keys = set()
     scope_keys = {}          # addon_root -> set(keys)   (top-level scope only)
     core_keys = set()
-    for enus in root.glob("**/Locales/enUS.lua"):
+    for enus in root.glob("**/enUS.lua"):
         parts = enus.relative_to(root).parts
+        if "Locales" not in parts:
+            continue
         if "Shared" in parts:
             shared_keys |= parse_keys(enus)
             continue

@@ -1,3 +1,4 @@
+local _, ns = ...
 local OneWoW = OneWoW
 
 local function ItemStatusProvider(_, context)
@@ -5,7 +6,7 @@ local function ItemStatusProvider(_, context)
     if not OneWoW.ItemStatus then return nil end
 
     local config = OneWoW.TooltipEngine.TOOLTIP_CONFIG
-    local L = OneWoW.L
+    local L = ns.L
     local reg = OneWoW.SettingsFeatureRegistry
     local lines = {}
 

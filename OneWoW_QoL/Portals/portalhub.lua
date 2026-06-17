@@ -2,7 +2,7 @@ local _, ns = ...
 
 local OneWoW = OneWoW
 
-local L = OneWoW.L
+local L = ns.L
 
 ns.PortalHubModule = ns.PortalHubModule or {}
 local PortalHub = ns.PortalHubModule

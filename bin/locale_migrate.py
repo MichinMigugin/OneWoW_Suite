@@ -25,7 +25,13 @@ import re
 import sys
 from pathlib import Path
 
-CLOSE_RE = re.compile(r'^\s*\}\)\s*$')
+# The opening line of a Register table, e.g.
+#   OneWoW.Locale:Register(ADDON_NAME, "enUS", {
+#   OneWoW.Locale:RegisterShared("enUS", {
+# Inserting right AFTER this line is unambiguous; matching the closing `})`
+# is not, because a `})` can appear inside a [[ ]] long-string (e.g. a
+# DEVHELP_BODY help block that shows example code) and be matched first.
+OPEN_RE = re.compile(r':Register(?:Shared)?\s*\(.*\{\s*$')
 
 
 def load_keys(path):
@@ -67,15 +73,16 @@ def process_locale(src_path, dst_path, keys, apply):
     block += [moved[k] for k in found]
 
     dst_lines = dst_path.read_text(encoding="utf-8").splitlines(keepends=True)
-    insert_at = None
+    open_at = None
     for i, ln in enumerate(dst_lines):
-        if CLOSE_RE.match(ln):
-            insert_at = i
+        if OPEN_RE.search(ln):
+            open_at = i
             break
-    if insert_at is None:
-        raise RuntimeError(f"no closing '}})' found in {dst_path}")
+    if open_at is None:
+        raise RuntimeError(f"no Register(...{{ opening found in {dst_path}")
 
-    new_dst = dst_lines[:insert_at] + block + dst_lines[insert_at:]
+    # insert immediately after the opening `{` line (top of the table)
+    new_dst = dst_lines[:open_at + 1] + block + dst_lines[open_at + 1:]
 
     if apply and found:
         src_path.write_text("".join(kept), encoding="utf-8")

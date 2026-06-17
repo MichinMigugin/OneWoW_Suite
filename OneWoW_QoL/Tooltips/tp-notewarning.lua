@@ -50,7 +50,7 @@ local function NoteWarningProvider(_, context)
     if not hasNote then return nil end
 
     local config = OneWoW.TooltipEngine.TOOLTIP_CONFIG
-    local L = OneWoW.L
+    local L = ns.L
 
     return {
         {type = "text", text = L["TIPS_NOTEWARNING_LINE"], r = config.noteWarningColor[1], g = config.noteWarningColor[2], b = config.noteWarningColor[3]}

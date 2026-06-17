@@ -228,7 +228,7 @@ end
 local function ItemTrackerProvider(_, context)
     if not context.itemID then return nil end
 
-    local L   = OneWoW.L
+    local L   = ns.L
     local cfg = OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "itemtracker")
 
     local showAlts      = cfg.showAlts      ~= false

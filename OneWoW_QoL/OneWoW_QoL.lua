@@ -16,12 +16,12 @@ local function RegisterWithOneWoW()
     local tabs = {
         { name = "features",    displayName = function() return ns.L["TAB_FEATURES"] end, create = function(p) ns.UI.CreateFeaturesTab(p) end },
         { name = "toggles",     displayName = function() return ns.L["TAB_TOGGLES"]  end, create = function(p) ns.UI.CreateTogglesTab(p) end },
-        -- Feature settings tabs moved from core (MIGRATION step 9);
-        -- locale keys stay in core OneWoW.L per the step-9 shared rules.
-        { name = "toastalerts", displayName = function() return OneWoW.L["TOAST_ALERTS_SUBTAB"] end, create = function(p) ns.UI.CreateToastAlertsTab(p) end },
-        { name = "tooltips",    displayName = function() return OneWoW.L["TOOLTIPS_SUBTAB"]     end, create = function(p) ns.UI.CreateTooltipsTab(p) end },
-        { name = "portals",     displayName = function() return OneWoW.L["PORTALS_SUBTAB"]      end, create = function(p) ns.UI.CreatePortalsTab(p) end },
-        { name = "overlays",    displayName = function() return OneWoW.L["OVERLAYS_SUBTAB"]     end, create = function(p) ns.UI.CreateOverlaysTab(p) end },
+        -- Feature settings tabs migrated from core; strings live in the QoL scope
+        -- (TOAST_ALERTS_SUBTAB resolves via the shared scope).
+        { name = "toastalerts", displayName = function() return ns.L["TOAST_ALERTS_SUBTAB"] end, create = function(p) ns.UI.CreateToastAlertsTab(p) end },
+        { name = "tooltips",    displayName = function() return ns.L["TOOLTIPS_SUBTAB"]     end, create = function(p) ns.UI.CreateTooltipsTab(p) end },
+        { name = "portals",     displayName = function() return ns.L["PORTALS_SUBTAB"]      end, create = function(p) ns.UI.CreatePortalsTab(p) end },
+        { name = "overlays",    displayName = function() return ns.L["OVERLAYS_SUBTAB"]     end, create = function(p) ns.UI.CreateOverlaysTab(p) end },
     }
     OneWoW:RegisterModule({
         name = "qol",
@@ -83,7 +83,7 @@ local function OnEnable()
     RegisterWithOneWoW()
 
     if OneWoW then
-        OneWoW:RegisterMinimap("OneWoW_QoL", (OneWoW.L and OneWoW.L["CTX_OPEN_QOL"]) or "Open QoL", "qol", nil)
+        OneWoW:RegisterMinimap("OneWoW_QoL", ns.L["CTX_OPEN_QOL"], "qol", nil)
     end
 
     addon.PlayMountsModule = ns.ModuleRegistry:GetById("playmounts")
