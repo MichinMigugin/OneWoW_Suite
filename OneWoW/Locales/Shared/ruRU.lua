@@ -3,20 +3,9 @@ local _, OneWoW = ...
 OneWoW.Locale:RegisterShared("ruRU", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "Выбор языка",
-    ["LANGUAGE_DESC"] = "Выберите предпочитаемый язык для интерфейса аддона. Изменения применяются мгновенно.",
-    ["CURRENT_LANGUAGE"] = "Текущий язык",
-    ["SELECT_LANGUAGE"] = "Выбрать язык",
-    ["ENGLISH"] = "English",
-    ["SPANISH"] = "Español",
-    ["KOREAN"] = "한국어",
-    ["FRENCH"] = "Français",
-    ["RUSSIAN"] = "Русский",
-    ["GERMAN"] = "Deutsch",
 
     -- Themes
     ["THEME_SECTION"] = "Цветовая тема",
-    ["THEME_DESC"] = "Выберите цветовую тему для интерфейса аддона. Изменения применяются мгновенно без перезагрузки.",
-    ["THEME_CURRENT"] = "Текущая тема",
     ["THEME_GREEN"] = "Лесной зеленый",
     ["THEME_BLUE"] = "Океанский синий",
     ["THEME_PURPLE"] = "Королевский фиолетовый",
@@ -37,14 +26,6 @@ OneWoW.Locale:RegisterShared("ruRU", {
     ["MINIMAP_SECTION_DESC"] = "Показать или скрыть кнопку миникарты.",
     ["MINIMAP_SHOW_BTN"] = "Показывать Кнопку Миникарты",
     ["MINIMAP_ICON_SECTION"] = "Тема Иконки",
-    ["MINIMAP_ICON_DESC"] = "Выберите иконку фракции для кнопки миникарты и заголовка.",
-    ["MINIMAP_ICON_CURRENT"] = "Текущая Иконка",
-    ["MINIMAP_ICON_HORDE"] = "Орда",
-    ["MINIMAP_ICON_ALLIANCE"] = "Альянс",
-    ["MINIMAP_ICON_NEUTRAL"] = "Нейтральный",
 
     -- Common buttons
-    ["OK"] = "OK",
-    ["CANCEL"] = "Отмена",
-    ["CLOSE"] = "Закрыть",
 })

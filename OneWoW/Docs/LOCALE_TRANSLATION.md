@@ -363,13 +363,33 @@ Per value group: pick canonical key + value, register once in `shared`, delete e
 per-scope copy + repoint call sites, proper nouns marked do-not-translate, `/owlocale`
 audit (0 new collisions), in-game verify, commit.
 
-### Phase 4 — Translate the minimized set (pending)
-Baseline: ~4,117 unique + ~430 shared canonicals. Per-addon sub-phases:
-- [ ] For each scope, the tool's **TRANSLATE** bucket is the must-do list.
-- [ ] Fill every missing locale file for the scope (and for `shared`). Source of
-  truth for existing Blizzard terms: `.wow_docs/general/GlobalStrings.lua`.
+### Phase 4 — Translate the minimized set (in progress)
+**Approach (decided):** I draft all 11 locales as a reviewable baseline — reuse
+Blizzard `GlobalStrings.lua` terms for established WoW terminology, keep proper nouns
+in English, preserve `%s`/`%d`/`|c…|r` escapes; files flagged machine-drafted for later
+native/community review. Target locales: enUS koKR frFR deDE zhCN esES zhTW esMX ruRU
+ptBR itIT.
+
+**Pre-steps ✅ (done 2026-06-16):**
+- [x] **OneWoW-core dead-key sweep.** Stripped **63 truly-dead keys** (zero quoted
+  occurrence anywhere in suite `.lua`/`.xml`/`.toc`). Method: scan the *whole suite*,
+  not just core code (core keys are referenced cross-addon via `OneWoW.L["…"]`, so the
+  per-scope `classify_refs` over-reports — it flagged 540 "dead", of which only 63 are
+  real). Excluded from the strip: `LOAD_FAIL_*` (constructed `"LOAD_FAIL_"..reason`,
+  AddonLoader.lua) and `BINDING_NAME_ONEWOW_*` (consumed via `_G` by Blizzard's
+  keybinding UI). Validated against the live `t-home.lua` (it uses a *different*
+  `HOME_STATUS_*` set; the stripped ones are the orphaned old scheme). Core 950→887.
+- [x] **Reconciled the 5 stale `shared` translations** (koKR/deDE/esES/frFR/ruRU):
+  removed 19 stale keys each (no longer in the 113-key set) + the 3 Phase-2 value-changed
+  desc keys (`LANGUAGE_DESC`/`THEME_DESC`/`MINIMAP_ICON_DESC`); kept valid surviving
+  translations (koKR 30, others 20). The rest fill during the shared-scope translation.
+
+**Per-scope sub-phases (remaining):**
+- [ ] For each scope: fill all 11 locale files. Start with **shared** (113 keys — the
+  common base), then by size. Source of truth for established terms:
+  `.wow_docs/general/GlobalStrings.lua`.
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
-- [ ] In-game spot-check per language where feasible; commit.
+- [ ] In-game spot-check per language where feasible; commit per scope.
 
 ---
 

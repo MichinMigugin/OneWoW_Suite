@@ -3,20 +3,9 @@ local _, OneWoW = ...
 OneWoW.Locale:RegisterShared("frFR", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "Sélection de la Langue",
-    ["LANGUAGE_DESC"] = "Choisissez votre langue préférée pour l'interface de l'addon. Les changements s'appliquent instantanément.",
-    ["CURRENT_LANGUAGE"] = "Langue Actuelle",
-    ["SELECT_LANGUAGE"] = "Sélectionner la Langue",
-    ["ENGLISH"] = "English",
-    ["SPANISH"] = "Español",
-    ["KOREAN"] = "한국어",
-    ["FRENCH"] = "Français",
-    ["RUSSIAN"] = "Русский",
-    ["GERMAN"] = "Deutsch",
 
     -- Themes
     ["THEME_SECTION"] = "Thème de Couleur",
-    ["THEME_DESC"] = "Choisissez un thème de couleur pour l'interface de l'addon. Les modifications s'appliquent instantanément sans rechargement.",
-    ["THEME_CURRENT"] = "Thème Actuel",
     ["THEME_GREEN"] = "Vert Forêt",
     ["THEME_BLUE"] = "Bleu Océan",
     ["THEME_PURPLE"] = "Violet Royal",
@@ -37,14 +26,6 @@ OneWoW.Locale:RegisterShared("frFR", {
     ["MINIMAP_SECTION_DESC"] = "Afficher ou masquer le bouton de la minicarte.",
     ["MINIMAP_SHOW_BTN"] = "Afficher le Bouton de la Minicarte",
     ["MINIMAP_ICON_SECTION"] = "Theme d'Icone",
-    ["MINIMAP_ICON_DESC"] = "Choisissez l'icone de votre faction pour le bouton de la minicarte et la barre de titre.",
-    ["MINIMAP_ICON_CURRENT"] = "Icone Actuelle",
-    ["MINIMAP_ICON_HORDE"] = "Horde",
-    ["MINIMAP_ICON_ALLIANCE"] = "Alliance",
-    ["MINIMAP_ICON_NEUTRAL"] = "Neutre",
 
     -- Common buttons
-    ["OK"] = "OK",
-    ["CANCEL"] = "Annuler",
-    ["CLOSE"] = "Fermer",
 })
