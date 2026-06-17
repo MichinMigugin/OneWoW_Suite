@@ -431,8 +431,21 @@ ptBR itIT.
   *Namensplaketten* / es-pt *Placas de identificación* / it *Targhette* / ru *Индикаторы*
   / zhCN 姓名板 / zhTW 名條 / ko 이름표); the `DEVHELP_BODY` help block has prose localized
   but code/paths/identifiers kept literal.
+- [x] **`OneWoW_AltTracker` — all 11 locales, 911 keys each.** koKR was already a full
+  real Korean translation (only a verifier false positive blocked it — see below). 9 others
+  drafted fresh (frFR/deDE/esES/itIT/ptBR/zhCN/zhTW/ruRU) + `esMX` via `gen_esmx.py`; all
+  registered in the toc. Verified 911/911 via `bin/locale_verify.py`. **Draft notes:** WoW
+  domain terms applied per language (Warband = fr *Bataillon* / de *Kriegsmeute* / es *banda
+  de guerra* / it *Squadra di guerra* / pt *Tropa* / ru *Отряд* / zhCN 战团 / zhTW 戰隊 / ko
+  전쟁부대-context; Great Vault, Hearthstone, Auction House, Mythic+ likewise); Blizzard class
+  names per language (zhTW uses 盜賊/惡魔獵人/喚能師, Mythic difficulty 傳 not 史); proper nouns
+  (OneWoW, AltTracker, Auctionator, TSM, Dornogal, GUID) and `iLvl`/`DPS`/`ROI` kept literal.
+  **Verifier note:** the `% d` in `TT_EQUIPMENT_LOW_DURABILITY_DESC` ("below 30% durability")
+  is a literal percent, not a directive — `bin/locale_verify.py` was hardened to stop treating
+  the printf space-flag as a spec (it's never used in addon strings) so "X% word" no longer
+  false-positives.
 - [ ] Remaining scopes, **player-facing value order** (decided):
-  AltTracker 910 → OneWoW core 887 → DevTool 501 →
+  OneWoW core 887 → DevTool 501 →
   ShoppingList 246 → then data/QoL-module sub-addons (2–105 keys each).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
 - [ ] In-game spot-check per language where feasible; commit per scope.

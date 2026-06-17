@@ -20,6 +20,15 @@
 Locales\LocaleManager.lua
 Locales\enUS.lua
 Locales\koKR.lua
+Locales\frFR.lua
+Locales\deDE.lua
+Locales\zhCN.lua
+Locales\esES.lua
+Locales\zhTW.lua
+Locales\esMX.lua
+Locales\ruRU.lua
+Locales\ptBR.lua
+Locales\itIT.lua
 
 # Core (load before everything else)
 Core\Constants.lua
