@@ -3,6 +3,9 @@ local ADDON_NAME = ...
 -- Machine-drafted (Phase 4) — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_ALTTRACKER"] = "開啟 AltTracker",
+
     ["AB_PAGE_1"] = "第 1 頁",
     ["AB_PAGE_2"] = "第 2 頁",
     ["AB_ACTION_BAR_2"] = "動作條 2",

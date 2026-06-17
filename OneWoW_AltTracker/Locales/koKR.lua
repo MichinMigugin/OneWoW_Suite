@@ -2,6 +2,9 @@ local ADDON_NAME = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_ALTTRACKER"] = "AltTracker 열기",
+
     ["AB_PAGE_1"] = "페이지 1",
     ["AB_PAGE_2"] = "페이지 2",
     ["AB_ACTION_BAR_2"] = "행동 단축바 2",

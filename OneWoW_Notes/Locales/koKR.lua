@@ -3,6 +3,9 @@ local ADDON_NAME = ...
 -- Machine-drafted (Phase 4) — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_NOTES"] = "Notes 열기",
+
 -- Addon
     ["ADDON_LOADED"] = "불러왔습니다!",
     ["ADDON_TITLE_FRAME"] = "OneWoW Notes",

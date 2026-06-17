@@ -3,6 +3,9 @@ local ADDON_NAME = ...
 -- Machine-drafted (Phase 4) — esMX mirrored from esES, pending Latin-American review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_NOTES"] = "Abrir Notes",
+
 -- Addon
     ["ADDON_LOADED"] = "¡Cargado!",
     ["ADDON_TITLE_FRAME"] = "OneWoW Notes",

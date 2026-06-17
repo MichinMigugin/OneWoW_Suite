@@ -109,7 +109,7 @@ local function OnEnable()
     RegisterWithOneWoW()
 
     if OneWoW then
-        OneWoW:RegisterMinimap("OneWoW_AltTracker", (OneWoW.L and OneWoW.L["CTX_OPEN_ALTTRACKER"]) or "Open AltTracker", "alttracker", nil)
+        OneWoW:RegisterMinimap("OneWoW_AltTracker", ns.L["CTX_OPEN_ALTTRACKER"], "alttracker", nil)
     end
 end
 

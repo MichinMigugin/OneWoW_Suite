@@ -1,6 +1,9 @@
 local ADDON_NAME = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
+
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_BAGS"] = "Открыть Bags",
     ["ADDON_TITLE"] = "Сумки",
     ["ENABLED"] = "Включено",
     ["DISABLED"] = "Выключено",

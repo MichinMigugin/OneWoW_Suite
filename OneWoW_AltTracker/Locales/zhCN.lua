@@ -3,6 +3,9 @@ local ADDON_NAME = ...
 -- Machine-drafted (Phase 4) — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_ALTTRACKER"] = "打开 AltTracker",
+
     ["AB_PAGE_1"] = "第 1 页",
     ["AB_PAGE_2"] = "第 2 页",
     ["AB_ACTION_BAR_2"] = "动作条 2",

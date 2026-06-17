@@ -3,6 +3,9 @@ local ADDON_NAME = ...
 -- Machine-drafted (Phase 4) — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_ALTTRACKER"] = "AltTracker öffnen",
+
     ["AB_PAGE_1"] = "Seite 1",
     ["AB_PAGE_2"] = "Seite 2",
     ["AB_ACTION_BAR_2"] = "Aktionsleiste 2",

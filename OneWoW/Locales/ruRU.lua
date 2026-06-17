@@ -36,14 +36,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["MINIMAP_TOOLTIP_HINT"] = "Нажмите, чтобы переключить OneWoW",
     ["MINIMAP_RIGHT_CLICK"] = "Правый клик для настроек",
 
-    ["CTX_OPEN_ALTTRACKER"] = "Открыть AltTracker",
-    ["CTX_OPEN_NOTES"] = "Открыть Notes",
-    ["CTX_OPEN_DD"] = "Открыть Direct Deposit",
-    ["CTX_OPEN_SL"] = "Открыть Shopping List",
-    ["CTX_OPEN_BAGS"] = "Открыть Bags",
-    ["CTX_OPEN_DEVTOOLS"] = "Открыть DevTools",
-    ["CTX_OPEN_CATALOG"] = "Открыть Catalog",
-    ["CTX_OPEN_TRACKERS"] = "Открыть Trackers",
 
     ["COPYPASTE_HINT_COPY"] = "Нажмите Ctrl+C для копирования",
     ["COPYPASTE_HINT_COPY_MAC"] = "Нажмите Cmd+C для копирования",

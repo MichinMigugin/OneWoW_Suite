@@ -738,7 +738,7 @@ function OneWoW_Bags:OnPlayerLogin()
     DetectOneWoW()
 
     if OneWoW and OneWoW.RegisterMinimap then
-        OneWoW:RegisterMinimap("OneWoW_Bags", OneWoW.L["CTX_OPEN_BAGS"], nil, function()
+        OneWoW:RegisterMinimap("OneWoW_Bags", L["CTX_OPEN_BAGS"], nil, function()
             if self.GUI then self.GUI:Toggle() end
         end)
     end

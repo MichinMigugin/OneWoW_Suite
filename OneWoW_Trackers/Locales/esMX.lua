@@ -2,6 +2,9 @@ local ADDON_NAME, ns = ...
 
 -- Machine-drafted (Phase 4) — esMX mirrored from esES, pending Latin-American review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
+
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_TRACKERS"] = "Abrir Trackers",
     ["ADDON_TITLE_SHORT"]               = "Trackers",
     ["ADDON_TITLE_FRAME"]               = "OneWoW Trackers",
     ["MINIMAP_TOOLTIP_HINT"]            = "Clic para abrir Trackers",

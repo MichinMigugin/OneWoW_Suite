@@ -1,6 +1,9 @@
 local ADDON_NAME, OneWoW_DirectDeposit = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "enUS", {
+
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_DD"] = "Open Direct Deposit",
     ["ADDON_TITLE"] = "Direct Deposit",
     ["ADDON_SUBTITLE"] = "Automatic Warband Bank Gold Management",
 

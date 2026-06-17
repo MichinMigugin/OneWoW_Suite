@@ -1,6 +1,9 @@
 local ADDON_NAME = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
+
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_SL"] = "Открыть Shopping List",
     ["OWSL_MAIN_LIST"] = "Основной список",
     ["OWSL_LIST_EXISTS"] = "Список уже существует",
     ["OWSL_LIST_NOT_FOUND"] = "Список не найден",

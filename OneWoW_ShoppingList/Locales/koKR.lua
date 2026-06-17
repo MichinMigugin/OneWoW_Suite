@@ -1,6 +1,9 @@
 local ADDON_NAME = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "koKR", {
+
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_SL"] = "Shopping List 열기",
     ["OWSL_MAIN_LIST"] = "주요 목록",
     ["OWSL_LIST_EXISTS"] = "목록이 이미 존재합니다.",
     ["OWSL_LIST_NOT_FOUND"] = "목록을 찾을 수 없습니다",

@@ -1,6 +1,9 @@
 local ADDON_NAME = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "koKR", {
+
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_BAGS"] = "Bags 열기",
     ["ADDON_TITLE"] = "가방",
     ["ENABLED"] = "켜짐",
     ["DISABLED"] = "꺼짐",

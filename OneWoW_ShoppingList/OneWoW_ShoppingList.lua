@@ -73,7 +73,7 @@ function ns:OnPlayerLogin()
     DetectOneWoW()
 
     if OneWoW then
-        OneWoW:RegisterMinimap("OneWoW_ShoppingList", OneWoW.L["CTX_OPEN_SL"], nil, function()
+        OneWoW:RegisterMinimap("OneWoW_ShoppingList", L["CTX_OPEN_SL"], nil, function()
             if ns.MainWindow then ns.MainWindow:Toggle() end
         end)
     end

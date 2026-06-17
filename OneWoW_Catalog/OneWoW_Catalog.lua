@@ -77,7 +77,7 @@ local function OnEnable()
     RegisterWithOneWoW()
 
     OneWoW:RegisterMinimap("OneWoW_Catalog",
-        (OneWoW.L and OneWoW.L["CTX_OPEN_CATALOG"]) or "Open Catalog",
+        ns.L["CTX_OPEN_CATALOG"],
         "catalog", nil)
 end
 

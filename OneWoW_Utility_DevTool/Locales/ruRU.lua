@@ -1,6 +1,9 @@
 local ADDON_NAME = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
+
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_DEVTOOLS"] = "Открыть DevTools",
     ["ADDON_TITLE"] = "DevTool",
     ["ADDON_SUBTITLE"] = "Инспектор фреймов и утилиты разработчика",
     ["LOADED"] = "Загружено v{version} - Используйте /devtools для открытия",

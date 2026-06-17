@@ -36,14 +36,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["MINIMAP_TOOLTIP_HINT"] = "點擊切換 OneWoW",
     ["MINIMAP_RIGHT_CLICK"] = "右鍵點擊查看選項",
 
-    ["CTX_OPEN_ALTTRACKER"] = "開啟 AltTracker",
-    ["CTX_OPEN_NOTES"] = "開啟 Notes",
-    ["CTX_OPEN_DD"] = "開啟 Direct Deposit",
-    ["CTX_OPEN_SL"] = "開啟 Shopping List",
-    ["CTX_OPEN_BAGS"] = "開啟 Bags",
-    ["CTX_OPEN_DEVTOOLS"] = "開啟 DevTools",
-    ["CTX_OPEN_CATALOG"] = "開啟 Catalog",
-    ["CTX_OPEN_TRACKERS"] = "開啟 Trackers",
 
     ["COPYPASTE_HINT_COPY"] = "按 Ctrl+C 複製",
     ["COPYPASTE_HINT_COPY_MAC"] = "按 Cmd+C 複製",

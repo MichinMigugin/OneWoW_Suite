@@ -36,14 +36,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["MINIMAP_TOOLTIP_HINT"] = "Click to toggle OneWoW",
     ["MINIMAP_RIGHT_CLICK"] = "Right-click for options",
 
-    ["CTX_OPEN_ALTTRACKER"] = "Open AltTracker",
-    ["CTX_OPEN_NOTES"] = "Open Notes",
-    ["CTX_OPEN_DD"] = "Open Direct Deposit",
-    ["CTX_OPEN_SL"] = "Open Shopping List",
-    ["CTX_OPEN_BAGS"] = "Open Bags",
-    ["CTX_OPEN_DEVTOOLS"] = "Open DevTools",
-    ["CTX_OPEN_CATALOG"] = "Open Catalog",
-    ["CTX_OPEN_TRACKERS"] = "Open Trackers",
 
     -- CopyPaste dialog (OneWoW.CopyPaste)
     ["COPYPASTE_HINT_COPY"] = "Press Ctrl+C to copy",

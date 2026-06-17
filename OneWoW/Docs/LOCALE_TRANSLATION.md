@@ -473,8 +473,16 @@ ptBR itIT.
   the closing `})` wrongly hit a `})` inside the `DEVHELP_BODY` `[[ ]]` long-string and buried the
   keys in that string; `locale_verify.py`/`locale_usage.py` now strip `[[ ]]` long-strings before
   counting (the old count of 327 had silently included 2 example keys — `MY_TITLE`/`MY_DESC` —
-  living inside that help block). **Deferred (same pattern, separate cleanup):** 8
-  `CTX_OPEN_<addon>` context-menu labels still sit in core, one per sibling addon.
+  living inside that help block).
+- [x] **`CTX_OPEN_<addon>` cleanup (2026-06-17).** The 8 per-addon minimap context-menu labels
+  (`CTX_OPEN_ALTTRACKER/BAGS/CATALOG/DD/NOTES/SL/TRACKERS/DEVTOOLS`) were defined in core but each
+  read by a different addon via `OneWoW.L` (cross-scope leak; `CTX_OPEN_QOL` was fixed earlier).
+  Moved each into its owning addon's scope (via `locale_migrate.py`, now removing from *all* src
+  locales while inserting into the dst's existing ones) and repointed each read to the addon's own
+  `L`/`ns.L`. AltTracker/Bags/Catalog/Notes/Trackers (11 locales) moved fully; DirectDeposit/
+  ShoppingList/DevTool only have 6 locales so the other 5 languages' values were dropped (regenerate
+  when those scopes are translated). `locale_usage.py` now reports **zero leaks suite-wide**.
+  (`UNIT_CTX_OPEN_VENDOR_DETAILS` is core's own context-menu key — correctly left in core.)
 - [ ] Remaining scopes, **player-facing value order** (decided):
   DevTool 501 → ShoppingList 246 → then data/QoL-module sub-addons (2–105 keys each).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).

@@ -511,7 +511,7 @@ local didLogin = false
 function Addon:OnPlayerLogin()
     if didLogin then return end
     didLogin = true
-    OneWoW:RegisterMinimap("OneWoW_Utility_DevTool", OneWoW.L["CTX_OPEN_DEVTOOLS"], nil, function()
+    OneWoW:RegisterMinimap("OneWoW_Utility_DevTool", L["CTX_OPEN_DEVTOOLS"], nil, function()
         Addon:ToggleMainWindow()
     end)
     if Addon.db.global.monitor.showOnLoad then

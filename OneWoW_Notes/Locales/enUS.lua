@@ -2,6 +2,9 @@ local ADDON_NAME, ns = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_NOTES"] = "Open Notes",
+
 -- Addon
     ["ADDON_LOADED"] = "Loaded!",
     ["ADDON_TITLE_FRAME"] = "OneWoW Notes",

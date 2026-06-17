@@ -99,7 +99,7 @@ local function OnEnable()
 
     if OneWoW then
         OneWoW:RegisterMinimap("OneWoW_Trackers",
-            (OneWoW.L and OneWoW.L["CTX_OPEN_TRACKERS"]) or "Open Trackers",
+            ns.L["CTX_OPEN_TRACKERS"],
             "trackers",
             nil
         )

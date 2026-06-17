@@ -36,14 +36,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["MINIMAP_TOOLTIP_HINT"] = "Cliquez pour basculer OneWoW",
     ["MINIMAP_RIGHT_CLICK"] = "Clic droit pour les options",
 
-    ["CTX_OPEN_ALTTRACKER"] = "Ouvrir AltTracker",
-    ["CTX_OPEN_NOTES"] = "Ouvrir Notes",
-    ["CTX_OPEN_DD"] = "Ouvrir Direct Deposit",
-    ["CTX_OPEN_SL"] = "Ouvrir Shopping List",
-    ["CTX_OPEN_BAGS"] = "Ouvrir Bags",
-    ["CTX_OPEN_DEVTOOLS"] = "Ouvrir DevTools",
-    ["CTX_OPEN_CATALOG"] = "Ouvrir Catalog",
-    ["CTX_OPEN_TRACKERS"] = "Ouvrir Trackers",
 
     ["COPYPASTE_HINT_COPY"] = "Appuyez sur Ctrl+C pour copier",
     ["COPYPASTE_HINT_COPY_MAC"] = "Appuyez sur Cmd+C pour copier",

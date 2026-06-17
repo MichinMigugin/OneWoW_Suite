@@ -111,7 +111,7 @@ local function OnEnable()
     RegisterWithOneWoW()
 
     if OneWoW then
-        OneWoW:RegisterMinimap("OneWoW_Notes", (OneWoW.L and OneWoW.L["CTX_OPEN_NOTES"]) or "Open Notes", "notes", nil)
+        OneWoW:RegisterMinimap("OneWoW_Notes", ns.L["CTX_OPEN_NOTES"], "notes", nil)
     end
 
     if ns.ZonePins and ns.ZonePins.Initialize then

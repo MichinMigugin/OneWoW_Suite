@@ -3,6 +3,9 @@ local ADDON_NAME = ...
 -- Machine-drafted (Phase 4) — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_ALTTRACKER"] = "Открыть AltTracker",
+
     ["AB_PAGE_1"] = "Страница 1",
     ["AB_PAGE_2"] = "Страница 2",
     ["AB_ACTION_BAR_2"] = "Панель команд 2",

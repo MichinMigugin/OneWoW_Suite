@@ -2,6 +2,9 @@ local ADDON_NAME = ...
 
 -- Machine-drafted (Phase 4) — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "deDE", {
+
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_BAGS"] = "Bags öffnen",
     ["ADDON_TITLE"] = "Taschen",
 
     ["ENABLED"] = "Aktiviert",

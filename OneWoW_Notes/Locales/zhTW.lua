@@ -3,6 +3,9 @@ local ADDON_NAME = ...
 -- Machine-drafted (Phase 4) — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_NOTES"] = "開啟 Notes",
+
 -- Addon
     ["ADDON_LOADED"] = "已載入！",
     ["ADDON_TITLE_FRAME"] = "OneWoW Notes",

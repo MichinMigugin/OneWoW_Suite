@@ -2,6 +2,9 @@ local ADDON_NAME = ...
 
 -- Machine-drafted (Phase 4) — esMX mirrored from esES, pending Latin-American review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
+
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_BAGS"] = "Abrir Bags",
     ["ADDON_TITLE"] = "Bolsas",
 
     ["ENABLED"] = "Activado",

@@ -2,6 +2,9 @@ local ADDON_NAME, ns = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_ALTTRACKER"] = "Open AltTracker",
+
     ["AB_PAGE_1"] = "Page 1",
     ["AB_PAGE_2"] = "Page 2",
     ["AB_ACTION_BAR_2"] = "Action Bar 2",

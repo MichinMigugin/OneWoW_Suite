@@ -3,6 +3,9 @@ local ADDON_NAME = ...
 -- Machine-drafted (Phase 4) — esMX mirrored from esES, pending Latin-American review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_ALTTRACKER"] = "Abrir AltTracker",
+
     ["AB_PAGE_1"] = "Página 1",
     ["AB_PAGE_2"] = "Página 2",
     ["AB_ACTION_BAR_2"] = "Barra de acción 2",

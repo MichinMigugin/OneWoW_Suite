@@ -3,6 +3,9 @@ local ADDON_NAME = ...
 -- Machine-drafted (Phase 4) — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_NOTES"] = "Открыть Notes",
+
 -- Addon
     ["ADDON_LOADED"] = "Загружено!",
     ["ADDON_TITLE_FRAME"] = "OneWoW Notes",

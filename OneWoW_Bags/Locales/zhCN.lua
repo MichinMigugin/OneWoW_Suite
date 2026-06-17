@@ -2,6 +2,9 @@ local ADDON_NAME = ...
 
 -- Machine-drafted (Phase 4) — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
+
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_BAGS"] = "打开 Bags",
     ["ADDON_TITLE"] = "背包",
 
     ["ENABLED"] = "启用",

@@ -36,14 +36,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["MINIMAP_TOOLTIP_HINT"] = "Clicca per attivare/disattivare OneWoW",
     ["MINIMAP_RIGHT_CLICK"] = "Clic destro per le opzioni",
 
-    ["CTX_OPEN_ALTTRACKER"] = "Apri AltTracker",
-    ["CTX_OPEN_NOTES"] = "Apri Notes",
-    ["CTX_OPEN_DD"] = "Apri Direct Deposit",
-    ["CTX_OPEN_SL"] = "Apri Shopping List",
-    ["CTX_OPEN_BAGS"] = "Apri Bags",
-    ["CTX_OPEN_DEVTOOLS"] = "Apri DevTools",
-    ["CTX_OPEN_CATALOG"] = "Apri Catalog",
-    ["CTX_OPEN_TRACKERS"] = "Apri Trackers",
 
     ["COPYPASTE_HINT_COPY"] = "Premi Ctrl+C per copiare",
     ["COPYPASTE_HINT_COPY_MAC"] = "Premi Cmd+C per copiare",

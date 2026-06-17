@@ -3,6 +3,9 @@ local ADDON_NAME = ...
 -- Machine-drafted (Phase 4) — esMX mirrored from esES, pending Latin-American review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_CATALOG"] = "Abrir Catalog",
+
     ["ADDON_TITLE_FRAME"] = "OneWoW Catalog",
     ["ADDON_TITLE_SHORT"] = "Catalog",
 

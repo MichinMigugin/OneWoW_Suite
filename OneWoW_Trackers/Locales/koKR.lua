@@ -2,6 +2,9 @@ local ADDON_NAME, ns = ...
 
 -- Machine-drafted (Phase 4) — pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "koKR", {
+
+    -- migrated from OneWoW scope
+    ["CTX_OPEN_TRACKERS"] = "Trackers 열기",
     ["ADDON_TITLE_SHORT"]               = "Trackers",
     ["ADDON_TITLE_FRAME"]               = "OneWoW Trackers",
     ["MINIMAP_TOOLTIP_HINT"]            = "클릭하여 Trackers 열기",
