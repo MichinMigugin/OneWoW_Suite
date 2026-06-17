@@ -229,7 +229,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["DESC_SHOW_BANK_BAGS_BAR"] = "Muestra la barra de selección de bolsas en la parte inferior de la ventana del banco.",
     ["DESC_SHOW_BANK_SCROLLBAR"] = "Muestra u oculta la barra de desplazamiento en la ventana del banco.",
     ["DESC_BANK_RARITY_COLOR"] = "Colorea los bordes de las ranuras del banco según la rareza del objeto.",
-    ["SETTING_BANK_LOCK"] = "Bloquear posición de la ventana",
     ["DESC_BANK_LOCK"] = "Evita mover la ventana del banco.",
     ["CAT_1W_JUNK"] = "Chatarra 1W",
     ["CAT_1W_UPGRADES"] = "Mejoras 1W",

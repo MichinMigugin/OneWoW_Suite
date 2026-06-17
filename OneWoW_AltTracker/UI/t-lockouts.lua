@@ -18,9 +18,9 @@ local columnsConfig = {
     {key = "level", label = L["COL_LEVEL"], width = 40, fixed = true, align = "center", ttTitle = LEVEL, ttDesc = L["TT_COL_LEVEL_DESC"]},
     {key = "lockout1", label = L["LOCKOUTS_COL_LOCKOUT_1"], width = 120, fixed = false, align = "left", ttTitle = L["TT_COL_LOCKOUT_1"], ttDesc = L["TT_COL_LOCKOUT_1_DESC"]},
     {key = "lockout2", label = L["LOCKOUTS_COL_LOCKOUT_2"], width = 120, fixed = false, align = "left", ttTitle = L["TT_COL_LOCKOUT_2"], ttDesc = L["TT_COL_LOCKOUT_2_DESC"]},
-    {key = "lockout3", label = L["LOCKOUTS_COL_LOCKOUT_3"], width = 120, fixed = false, align = "left", ttTitle = L["TT_COL_LOCKOUT_3"], ttDesc = L["TT_COL_LOCKOUT_3_DESC"]},
-    {key = "lockout4", label = L["LOCKOUTS_COL_LOCKOUT_4"], width = 120, fixed = false, align = "left", ttTitle = L["TT_COL_LOCKOUT_4"], ttDesc = L["TT_COL_LOCKOUT_4_DESC"]},
-    {key = "expires", label = L["LOCKOUTS_COL_EXPIRES"], width = 80, fixed = false, align = "left", ttTitle = L["TT_COL_EXPIRES"], ttDesc = L["TT_COL_EXPIRES_DESC"]}
+    {key = "lockout3", label = L["TT_COL_LOCKOUT_3"], width = 120, fixed = false, align = "left", ttTitle = L["TT_COL_LOCKOUT_3"], ttDesc = L["TT_COL_LOCKOUT_3_DESC"]},
+    {key = "lockout4", label = L["TT_COL_LOCKOUT_4"], width = 120, fixed = false, align = "left", ttTitle = L["TT_COL_LOCKOUT_4"], ttDesc = L["TT_COL_LOCKOUT_4_DESC"]},
+    {key = "expires", label = L["TT_COL_EXPIRES"], width = 80, fixed = false, align = "left", ttTitle = L["TT_COL_EXPIRES"], ttDesc = L["TT_COL_EXPIRES_DESC"]}
 }
 
 local onHeaderCreate = function(btn, col, index)
@@ -56,11 +56,11 @@ function ns.UI.CreateLockoutsTab(parent)
         height = 70,
         columns = 5,
         stats = {
-            { label = L["LOCKOUTS_ATTENTION"], value = "0", ttTitle = L["TT_LOCKOUTS_ATTENTION"], ttDesc = L["TT_LOCKOUTS_ATTENTION_DESC"] },
+            { label = L["ATTENTION"], value = "0", ttTitle = L["ATTENTION"], ttDesc = L["TT_LOCKOUTS_ATTENTION_DESC"] },
             { label = L["LOCKOUTS_ACTIVE"], value = "0", ttTitle = L["TT_LOCKOUTS_ACTIVE"], ttDesc = L["TT_LOCKOUTS_ACTIVE_DESC"] },
             { label = DUNGEONS, value = "0", ttTitle = DUNGEONS, ttDesc = L["TT_LOCKOUTS_DUNGEONS_DESC"] },
             { label = RAIDS, value = "0", ttTitle = RAIDS, ttDesc = L["TT_LOCKOUTS_RAIDS_DESC"] },
-            { label = L["LOCKOUTS_NEXT_IN"], value = "0m", ttTitle = L["TT_LOCKOUTS_NEXT_IN"], ttDesc = L["TT_LOCKOUTS_NEXT_IN_DESC"] },
+            { label = L["LOCKOUTS_NEXT_IN"], value = "0m", ttTitle = L["LOCKOUTS_NEXT_IN"], ttDesc = L["TT_LOCKOUTS_NEXT_IN_DESC"] },
         },
     })
 

@@ -1140,7 +1140,7 @@ function Addon.UI:CreateTextureTab(parent)
     end)
 
     local copySnippetBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["TEXTURE_BTN_COPY_SNIPPET"],
+        text = L["FONT_BTN_COPY_SNIPPET"],
         height = 22,
         minWidth = 52,
     })

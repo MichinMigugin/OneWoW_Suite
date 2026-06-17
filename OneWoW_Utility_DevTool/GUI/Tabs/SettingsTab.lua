@@ -84,7 +84,7 @@ function Addon.UI:CreateSettingsTab(parent)
         end
     end
 
-    local unloadTipTitle = L["SETTINGS_TAB_UNLOAD_ASSETS_TOOLTIP_TITLE"]
+    local unloadTipTitle = L["SETTINGS_TAB_UNLOAD_ASSETS"]
     local unloadTipBody = L["SETTINGS_TAB_UNLOAD_ASSETS_TOOLTIP"]
 
     local i = 1

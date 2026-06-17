@@ -63,7 +63,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["JOURNAL_CARD_HOUSING"] = "주거",
 
     ["JOURNAL_DETAIL_INST_ID"] = "인스턴스 ID",
-    ["JOURNAL_DETAIL_MAP_ID"] = "지도 ID",
 
     ["JOURNAL_COLLECTIONS"] = "수집",
     ["JOURNAL_COL_TMOG"] = "형상변환: %d/%d",
@@ -117,7 +116,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["VENDORS_STATS"] = "상인 %d명, 고유 아이템 %d개",
     ["VENDORS_STATS_SHOWING"] = "상인 %d/%d명 표시 중",
     ["VENDORS_LOADING"] = "불러오는 중...",
-    ["VENDORS_ZONE_ALL"] = "모든 지역",
     ["VENDORS_ZONE_CURRENT"] = "현재 지역만",
     ["VENDORS_ZONE_SEARCH"] = "지역 검색...",
     ["VENDORS_FILTER_CLEAR"] = "지우기",

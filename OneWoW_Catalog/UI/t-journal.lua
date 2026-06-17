@@ -518,7 +518,7 @@ local function RefreshDetailView(isSecondRefresh)
     table.insert(infoParts, TYPE .. ": " .. typeStr)
     table.insert(infoParts, L["JOURNAL_DETAIL_INST_ID"] .. ": " .. instData.instanceID)
     if instData.mapID then
-        table.insert(infoParts, L["JOURNAL_DETAIL_MAP_ID"] .. ": " .. instData.mapID)
+        table.insert(infoParts, L["QUESTS_MAPID"] .. ": " .. instData.mapID)
     end
     infoLine:SetText(table.concat(infoParts, "  |  "))
     infoLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))

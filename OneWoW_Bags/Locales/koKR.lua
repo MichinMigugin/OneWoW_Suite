@@ -229,7 +229,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["DESC_SHOW_BANK_BAGS_BAR"] = "은행 창 하단에 가방 선택 바를 표시합니다.",
     ["DESC_SHOW_BANK_SCROLLBAR"] = "은행 창 스크롤 막대를 표시하거나 숨깁니다.",
     ["DESC_BANK_RARITY_COLOR"] = "은행에서 아이템 칸 테두리를 등급색으로 칠합니다.",
-    ["SETTING_BANK_LOCK"] = "창 위치 고정",
     ["DESC_BANK_LOCK"] = "은행 창 이동을 막습니다.",
     ["CAT_1W_JUNK"] = "1W 잡동사니",
     ["CAT_1W_UPGRADES"] = "1W 업그레이드",

@@ -291,7 +291,7 @@ function Addon.UI:CreateEditorTab(parent)
                         end
                     end)
             end
-            local sizeSub = root:CreateButton(L["EDITOR_LABEL_FONT_SIZE"], noop)
+            local sizeSub = root:CreateButton(L["FONT_LABEL_SIZE"], noop)
             for _, sz in ipairs({10, 12, 14, 16, 18}) do
                 sizeSub:CreateRadio(tostring(sz),
                     function() return getFontSize() == sz end,
@@ -518,7 +518,7 @@ function Addon.UI:CreateEditorTab(parent)
     local clearOutputBtn = OneWoW_GUI:CreateFitTextButton(outputPanel, { text = L["EDITOR_BTN_CLEAR_OUTPUT"], height = 18 })
     clearOutputBtn:SetPoint("TOPRIGHT", outputPanel, "TOPRIGHT", -4, -2)
 
-    local copyOutputBtn = OneWoW_GUI:CreateFitTextButton(outputPanel, { text = L["EDITOR_BTN_COPY_OUTPUT"], height = 18 })
+    local copyOutputBtn = OneWoW_GUI:CreateFitTextButton(outputPanel, { text = L["COPY_DEFAULT_TITLE"], height = 18 })
     copyOutputBtn:SetPoint("RIGHT", clearOutputBtn, "LEFT", -4, 0)
 
     local outputLabel = outputPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1184,7 +1184,7 @@ function Addon.UI:CreateEditorTab(parent)
     function tab:ShowCategoryRenameDialog(catName)
         local dialog
         dialog = OneWoW_GUI:CreateConfirmDialog({
-            title = L["EDITOR_CATEGORY_RENAME_TITLE"],
+            title = L["EDITOR_CTX_RENAME_CATEGORY"],
             message = "",
             buttons = {
                 { text = SAVE, onClick = function(d)
@@ -1207,7 +1207,7 @@ function Addon.UI:CreateEditorTab(parent)
         local renameBox = OneWoW_GUI:CreateEditBox(dialog.contentFrame, {
             width = 250,
             height = 24,
-            placeholderText = L["EDITOR_CATEGORY_RENAME_PLACEHOLDER"],
+            placeholderText = L["EDITOR_NEW_CATEGORY_PLACEHOLDER"],
         })
         renameBox:SetPoint("TOP", dialog.titleLabel, "BOTTOM", 0, -16)
         renameBox:SetText(catName or "")

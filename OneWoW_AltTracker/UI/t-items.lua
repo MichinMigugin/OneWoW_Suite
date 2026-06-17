@@ -34,11 +34,11 @@ local currentSortAscending = true
 local columnsConfig = {
     {key = "expand", label = "",                      width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],          ttDesc = L["TT_COL_EXPAND_DESC"]},
     {key = "favorite", label = L["ITEMS_COL_FAVORITE"], width = 28, fixed = true, align = "center", sortable = false, ttTitle = L["TT_ITEMS_COL_FAVORITE"], ttDesc = L["TT_ITEMS_COL_FAVORITE_DESC"]},
-    {key = "item",   label = L["ITEM"],     width = 150, fixed = false, align = "left",                     ttTitle = L["ITEM"],     ttDesc = L["TT_ITEMS_COL_ITEM_DESC"]},
+    {key = "item",   label = L["ITEM"],     width = 150, fixed = false, align = "left",                     ttTitle = L["ITEM"],     ttDesc = L["TT_COL_ITEM_DESC"]},
     {key = "total",  label = TOTAL,    width = 45,  fixed = true,  align = "center",                   ttTitle = TOTAL,    ttDesc = L["TT_ITEMS_COL_TOTAL_DESC"]},
     {key = "vendor", label = L["ITEMS_COL_VENDOR"],   width = 80,  fixed = false, align = "right",                    ttTitle = L["TT_ITEMS_COL_VENDOR"],   ttDesc = L["TT_ITEMS_COL_VENDOR_DESC"]},
     {key = "ah",     label = L["ITEMS_COL_AH"],       width = 80,  fixed = false, align = "right",                    ttTitle = L["TT_ITEMS_COL_AH"],       ttDesc = L["TT_ITEMS_COL_AH_DESC"]},
-    {key = "lastseen", label = L["ITEMS_COL_LAST_SEEN"], width = 85, fixed = true, align = "center",                  ttTitle = L["TT_ITEMS_COL_LAST_SEEN"], ttDesc = L["TT_ITEMS_COL_LAST_SEEN_DESC"]},
+    {key = "lastseen", label = L["COL_LAST_SEEN"], width = 85, fixed = true, align = "center",                  ttTitle = L["COL_LAST_SEEN"], ttDesc = L["TT_ITEMS_COL_LAST_SEEN_DESC"]},
 }
 
 local onHeaderCreate = function(btn, col, index)
@@ -64,11 +64,11 @@ function ns.UI.CreateItemsTab(parent)
         height = 70,
         columns = 5,
         stats = {
-            {label = L["ITEMS_STAT_UNIQUE"],       value = "0", ttTitle = L["TT_ITEMS_STAT_UNIQUE"],       ttDesc = L["TT_ITEMS_STAT_UNIQUE_DESC"]},
+            {label = L["ITEMS_STAT_UNIQUE"],       value = "0", ttTitle = L["ITEMS_STAT_UNIQUE"],       ttDesc = L["TT_ITEMS_STAT_UNIQUE_DESC"]},
             {label = L["ITEMS_STAT_TOTAL_QTY"],    value = "0", ttTitle = L["TT_ITEMS_STAT_TOTAL_QTY"],    ttDesc = L["TT_ITEMS_STAT_TOTAL_QTY_DESC"]},
             {label = L["ITEMS_STAT_VENDOR_VALUE"],  value = "0", ttTitle = L["TT_ITEMS_STAT_VENDOR_VALUE"], ttDesc = L["TT_ITEMS_STAT_VENDOR_VALUE_DESC"]},
-            {label = L["ITEMS_STAT_AH_VALUE"],     value = "0", ttTitle = L["TT_ITEMS_STAT_AH_VALUE"],     ttDesc = L["TT_ITEMS_STAT_AH_VALUE_DESC"]},
-            {label = L["ITEMS_STAT_BOUND"],        value = "0", ttTitle = L["TT_ITEMS_STAT_BOUND"],        ttDesc = L["TT_ITEMS_STAT_BOUND_DESC"]},
+            {label = L["ITEMS_STAT_AH_VALUE"],     value = "0", ttTitle = L["ITEMS_STAT_AH_VALUE"],     ttDesc = L["TT_ITEMS_STAT_AH_VALUE_DESC"]},
+            {label = L["ITEMS_STAT_BOUND"],        value = "0", ttTitle = L["ITEMS_STAT_BOUND"],        ttDesc = L["TT_ITEMS_STAT_BOUND_DESC"]},
         },
     })
 

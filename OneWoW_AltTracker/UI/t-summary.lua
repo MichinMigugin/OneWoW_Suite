@@ -15,15 +15,15 @@ function ns.UI.CreateSummaryTab(parent)
         height = 110,
         columns = 5,
         stats = {
-            {label = L["ATTENTION"],            value = "0",    ttTitle = L["TT_ATTENTION"],            ttDesc = L["TT_ATTENTION_DESC"]},
-            {label = L["CHARACTERS"],           value = "0",    ttTitle = L["TT_CHARACTERS"],           ttDesc = L["TT_CHARACTERS_DESC"]},
+            {label = L["ATTENTION"],            value = "0",    ttTitle = L["ATTENTION"],            ttDesc = L["TT_ATTENTION_DESC"]},
+            {label = L["CHARACTERS"],           value = "0",    ttTitle = L["CHARACTERS"],           ttDesc = L["TT_CHARACTERS_DESC"]},
             {label = L["TOTAL_GOLD"],           value = "0g",   ttTitle = L["GOLD_TOTAL"],           ttDesc = L["TT_TOTAL_GOLD_DESC"]},
-            {label = L["FACTIONS"],             value = "0/0",  ttTitle = L["TT_FACTIONS"],             ttDesc = L["TT_FACTIONS_DESC"]},
+            {label = L["FACTIONS"],             value = "0/0",  ttTitle = L["FACTIONS"],             ttDesc = L["TT_FACTIONS_DESC"]},
             {label = L["RESTED"],               value = "0",    ttTitle = L["TT_RESTED"],               ttDesc = L["TT_RESTED_DESC"]},
-            {label = L["PLAYTIME"],             value = "0h",   ttTitle = L["TT_PLAYTIME"],             ttDesc = L["TT_PLAYTIME_DESC"]},
+            {label = L["PLAYTIME"],             value = "0h",   ttTitle = L["PLAYTIME"],             ttDesc = L["TT_PLAYTIME_DESC"]},
             {label = MOUNTS,               value = "0/0",  ttTitle = MOUNTS,               ttDesc = L["TT_MOUNTS_DESC"]},
             {label = PETS,                 value = "0/0",  ttTitle = PETS,                 ttDesc = L["TT_PETS_DESC"]},
-            {label = L["PRIMARY_PROFESSIONS"],  value = "0/11", ttTitle = L["TT_PRIMARY_PROFESSIONS"],  ttDesc = L["TT_PRIMARY_PROFESSIONS_DESC"]},
+            {label = L["PRIMARY_PROFESSIONS"],  value = "0/11", ttTitle = L["PRIMARY_PROFESSIONS"],  ttDesc = L["TT_PRIMARY_PROFESSIONS_DESC"]},
             {label = ACHIEVEMENTS,         value = "0",    ttTitle = ACHIEVEMENTS,         ttDesc = L["TT_ACHIEVEMENTS_DESC"]},
         },
     })
@@ -38,7 +38,7 @@ function ns.UI.CreateSummaryTab(parent)
         {key = "faction",   label = L["COL_FACTION"],    width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = FACTION,    ttDesc = L["TT_COL_FACTION_DESC"]},
         {key = "mail",      label = L["COL_MAIL"],       width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["MAIL"],       ttDesc = L["TT_COL_MAIL_DESC"]},
         {key = "name",      label = CHARACTER,  width = 101, fixed = false, align = "left",                     ttTitle = CHARACTER,  ttDesc = L["TT_COL_CHARACTER_DESC"]},
-        {key = "server",    label = L["COL_SERVER"],     width = 50,  fixed = false, align = "left",                     ttTitle = L["TT_COL_SERVER"],     ttDesc = L["TT_COL_SERVER_DESC"]},
+        {key = "server",    label = L["COL_SERVER"],     width = 50,  fixed = false, align = "left",                     ttTitle = L["COL_SERVER"],     ttDesc = L["TT_COL_SERVER_DESC"]},
         {key = "level",     label = L["COL_LEVEL"],      width = 40,  fixed = true,  align = "center",                   ttTitle = LEVEL,      ttDesc = L["TT_COL_LEVEL_DESC"]},
         {key = "class",     label = CLASS,      width = 60,  fixed = false, align = "left",                     ttTitle = CLASS,      ttDesc = L["TT_COL_CLASS_DESC"]},
         {key = "spec",      label = L["COL_SPEC"],       width = 70,  fixed = false, align = "left",                     ttTitle = SPECIALIZATION,       ttDesc = L["TT_COL_SPEC_DESC"]},
@@ -47,7 +47,7 @@ function ns.UI.CreateSummaryTab(parent)
         {key = "bags",      label = L["COL_BAGS"],       width = 40,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_BAGS"],       ttDesc = L["TT_COL_BAGS_DESC"]},
         {key = "money",     label = L["COL_GOLD"],       width = 90,  fixed = false, align = "right",                    ttTitle = L["TT_COL_GOLD"],       ttDesc = L["TT_COL_GOLD_DESC"]},
         {key = "hearth",    label = L["COL_HEARTH"],     width = 80,  fixed = false, align = "left",                     ttTitle = L["TT_COL_HEARTH"],     ttDesc = L["TT_COL_HEARTH_DESC"]},
-        {key = "lastSeen",  label = L["COL_LAST_SEEN"],  width = 80,  fixed = false, align = "left",                     ttTitle = L["TT_COL_LAST_SEEN"],  ttDesc = L["TT_COL_LAST_SEEN_DESC"]},
+        {key = "lastSeen",  label = L["COL_LAST_SEEN"],  width = 80,  fixed = false, align = "left",                     ttTitle = L["COL_LAST_SEEN"],  ttDesc = L["TT_COL_LAST_SEEN_DESC"]},
     }
 
     local function onHeaderCreate(btn, col, i)
@@ -246,7 +246,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                 elseif restedPercent >= 60 then restedColor = {OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY")}
                 elseif restedPercent >= 30 then restedColor = {OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")}
                 end
-                grid:AddLine(p1, L["EXPANDED_RESTED_XP"], restedPercent .. "%", restedColor)
+                grid:AddLine(p1, L["TT_RESTED_AMOUNT"], restedPercent .. "%", restedColor)
 
                 if cData.location and cData.location.bindLocation then
                     grid:AddLine(p1, L["EXPANDED_HEARTH"], cData.location.bindLocation)
@@ -1032,7 +1032,7 @@ function ns.UI.RefreshSummaryStats(summaryTab)
             statBoxes[6]:SetScript("OnEnter", function(self)
                 self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TT_PLAYTIME"], 1, 1, 1)
+                GameTooltip:SetText(L["PLAYTIME"], 1, 1, 1)
                 GameTooltip:AddLine(L["TT_PLAYTIME_DESC"], nil, nil, nil, true)
                 GameTooltip:AddLine(L["TT_PLAYTIME_CLICK"], 0.5, 0.8, 1, true)
                 GameTooltip:Show()

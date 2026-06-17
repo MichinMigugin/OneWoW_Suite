@@ -297,7 +297,7 @@ local function PlayerContextMenuHandler(_, rootDescription, contextData)
         local fullName = playerName .. "-" .. realm
         local buttonText = L["UNIT_CTX_ADD_PLAYER_NOTE"]
         if notes.Players and notes.Players:GetPlayer(fullName) then
-            buttonText = L["UNIT_CTX_EDIT_PLAYER_NOTE"]
+            buttonText = L["UNIT_CTX_EDIT_NPC_NOTE"]
         end
         rootDescription:CreateButton(buttonText, function()
             HandlePlayerAdd(contextData.unit)

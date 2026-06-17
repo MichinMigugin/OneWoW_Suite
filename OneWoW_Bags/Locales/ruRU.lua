@@ -229,7 +229,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["DESC_SHOW_BANK_BAGS_BAR"] = "Показывает панель выбора сумок внизу окна банка.",
     ["DESC_SHOW_BANK_SCROLLBAR"] = "Показывает или скрывает полосу прокрутки окна банка.",
     ["DESC_BANK_RARITY_COLOR"] = "Окрашивает рамки ячеек банка по редкости предмета.",
-    ["SETTING_BANK_LOCK"] = "Блокировать положение окна",
     ["DESC_BANK_LOCK"] = "Запрещает перемещение окна банка.",
     ["CAT_1W_JUNK"] = "1W Хлам",
     ["CAT_1W_UPGRADES"] = "1W Улучшения",

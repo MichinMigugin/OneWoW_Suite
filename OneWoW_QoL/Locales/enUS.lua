@@ -140,7 +140,6 @@ complete working example.]],
     ["TOGGLES_STATUS_ALL"] = "Showing %d CVars",
     ["TOGGLES_STATUS_FILTERED"] = "Showing %d of %d",
     ["FEATURES_STATUS_ENABLED"] = "%d of %d enabled",
-    ["FEATURES_STATUS_FILTERED"] = "Showing %d of %d",
 
     ["TOGGLES_CVAR_LABEL"] = "CVar:",
     ["TOGGLES_ON"] = "On",

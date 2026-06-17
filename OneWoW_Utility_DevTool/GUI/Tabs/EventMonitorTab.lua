@@ -463,7 +463,7 @@ function Addon.UI:ShowEventImportDialog()
         statusLabel:SetText("")
         statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
-        local importBtn = OneWoW_GUI:CreateFitTextButton(frame, { text = L["EVENT_IMPORT_BTN_IMPORT"], height = 26, minWidth = 100 })
+        local importBtn = OneWoW_GUI:CreateFitTextButton(frame, { text = L["BTN_IMPORT_EVENTS"], height = 26, minWidth = 100 })
         importBtn:SetPoint("BOTTOMRIGHT", -100, 8)
         importBtn:SetScript("OnClick", function()
             local text = editBox:GetText()

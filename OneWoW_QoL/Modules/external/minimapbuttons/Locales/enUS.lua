@@ -40,7 +40,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["MMBTNS_ICONS_EMPTY"] = "No minimap icons detected yet. Open the collector once so it can scan, then reopen Settings.",
     ["MMBTNS_ICONS_MINI"] = "Collector",
     ["MMBTNS_ICONS_MAP"] = "Map",
-    ["MMBTNS_ICONS_MINI_STATE"] = "Collector",
     ["MMBTNS_ICONS_MAP_STATE"] = "Map",
     ["MMBTNS_ICONS_ENABLED"] = "Enabled",
     ["MMBTNS_ICONS_DISABLED"] = "Disabled",

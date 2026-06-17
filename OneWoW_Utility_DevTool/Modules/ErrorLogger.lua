@@ -847,7 +847,7 @@ end
 
 function ErrorLogger:CopyCurrentError()
     if not self.currentError then
-        Addon:Print(L["ERR_MSG_NONE_SELECTED"])
+        Addon:Print(L["LABEL_NO_ERROR"])
         return
     end
 

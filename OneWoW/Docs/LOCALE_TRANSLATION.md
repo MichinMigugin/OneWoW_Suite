@@ -298,7 +298,7 @@ starting Phase 3, to confirm nothing was missed in Phase 2. Findings:
    `GUILD_BANK_MONEY_LOG`/`NO_BIDS`/`RESETS_IN`/`SETTINGS_TITLE` share a global's *name*
    but mean something different; they stay scoped and translate normally.
 
-### Phase 3 — Consolidate to shared (in progress)
+### Phase 3 — Consolidate to shared ✅ (done 2026-06-16)
 **Tooling:** `python bin/locale_keydiff.py --consolidate` classifies every value-group
 (value at ≥2 sites, no usable global) by each site's ref-type and buckets them:
 `ALREADY-IN-SHARED` (redirect to the existing shared key), `CROSS-SCOPE SAFE`
@@ -340,9 +340,24 @@ existing scope keys too.
 are the 6 intentionally-kept adjectives/`Pin` + `"%d"` (all documented in the shared
 ledger). Cross-scope track is **complete**.
 
-**Remaining (intra-scope):**
-- [ ] **Intra-scope dedup (90 groups)** — dedupe within each scope (AltTracker-heavy:
-  `Attention`/`Characters`/`Expanded Details - Coming Soon`, etc.).
+**Intra-scope track:**
+- [x] **Intra-scope dedup (87 groups, 113 keys removed).** Each addon's duplicate
+  values folded to one local key (canonical = the existing key whose name matches the
+  value's upper-snake, else the most-generic existing name); the dominant pattern was a
+  column label + its `TT_` tooltip-title + sub-view variants of the same string
+  (AltTracker `Attention`/`Characters`/etc.). Per scope: AltTracker 50, Notes 13,
+  DevTool 14, OneWoW 3, Catalog/ShoppingList 2 each, Bags/QoL/QoL.minimapbuttons 1 each.
+  Verified: 0 collisions, 0 dangling refs (all 113 removed keys have zero remaining code
+  references). **3 kept un-folded** (commented at the key in their scoped enUS):
+  `AltTracker.Rested` + `Notes.Untitled` (gendered adjectives) and `Notes."Priest White"`
+  (`FONT_COLOR_WHITE` vs `NOTES_PIN_COLOR_PRIEST_WHITE` — two independent UIs, folding
+  would couple them). The driver's `INTRA_KEEP` records these so a re-run skips them.
+
+**Phase 3 complete.** Cross-scope: 63 groups → shared (shared scope 51→113).
+Intra-scope: 87 groups deduped (113 keys removed). The 265 `--consolidate` BLOCKED
+groups are not consolidatable by definition (≥1 dynamic/dead site — mostly OneWoW-core
+runtime-constructed access) and roll into Phase 4 as-is. Remaining flagged-but-kept:
+the 6 cross-scope adjectives/`Pin` + 3 intra keeps + `%d`, all documented in-locale.
 
 Per value group: pick canonical key + value, register once in `shared`, delete every
 per-scope copy + repoint call sites, proper nouns marked do-not-translate, `/owlocale`

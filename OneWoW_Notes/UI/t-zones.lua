@@ -163,7 +163,7 @@ function ns.UI.CreateZonesTab(parent)
     end)
     manageCategoriesBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["UI_MANAGE_CATEGORIES"], 1, 1, 1)
+        GameTooltip:SetText(L["CATMGR_TITLE"], 1, 1, 1)
         GameTooltip:AddLine(L["UI_MANAGE_CATEGORIES_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
@@ -1269,7 +1269,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
 
     local dialog = ns.UI.CreateThemedDialog({
         name            = "OneWoW_NotesManualZoneEntry",
-        title           = L["ZONE_MANUAL_ENTRY_TITLE"],
+        title           = L["BUTTON_ADD_CURRENT_ZONE"],
         width           = 580,
         height          = 610,
         destroyOnClose  = true,
@@ -1334,7 +1334,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     mapIDInput:SetNumeric(true)
     dialog._validatedMapID = nil
 
-    local validateBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["BUTTON_VALIDATE"], height = 26, minWidth = 70 })
+    local validateBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["ITEM_VALIDATE"], height = 26, minWidth = 70 })
     validateBtn:SetPoint("LEFT", mapIDInput, "RIGHT", 6, 0)
 
     local validationFS = OneWoW_GUI:CreateFS(content, 10)
@@ -1589,7 +1589,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     mapIDInput:SetNumeric(true)
     mapIDInput:SetText(zoneData.mapID and tostring(zoneData.mapID) or "")
 
-    local validateBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["BUTTON_VALIDATE"], height = 26, minWidth = 70 })
+    local validateBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["ITEM_VALIDATE"], height = 26, minWidth = 70 })
     validateBtn:SetPoint("LEFT", mapIDInput, "RIGHT", 6, 0)
 
     local validationFS = OneWoW_GUI:CreateFS(content, 10)

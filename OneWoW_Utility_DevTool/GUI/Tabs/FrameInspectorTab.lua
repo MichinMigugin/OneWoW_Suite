@@ -72,7 +72,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
     leftTitle:SetText(L["LABEL_FRAME_HIERARCHY"])
     leftTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local copyHierarchyBtn = OneWoW_GUI:CreateButton(leftPanel, { text = L["BTN_COPY_HIERARCHY"], width = 70, height = 18 })
+    local copyHierarchyBtn = OneWoW_GUI:CreateButton(leftPanel, { text = L["BTN_COPY_DETAILS"], width = 70, height = 18 })
     copyHierarchyBtn:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -25, -3)
     copyHierarchyBtn:SetScript("OnClick", function()
         if tab.frameTree then

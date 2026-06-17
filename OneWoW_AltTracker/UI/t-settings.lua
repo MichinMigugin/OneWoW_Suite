@@ -653,7 +653,7 @@ function ns.UI.CreateSettingsTab(parent)
         local result = OneWoW_GUI:CreateDialog({
             name = "OneWoWOverrideDialog",
             showBrand = true,
-            title = L["OVERRIDE_SYSTEM_TITLE"],
+            title = L["OVERRIDE_BTN"],
             width = 600,
             height = 660,
             titleHeight = 26,

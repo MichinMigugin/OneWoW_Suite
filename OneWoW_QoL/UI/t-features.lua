@@ -546,7 +546,7 @@ local function BuildFeaturesList(split, filterText)
 
     if split.leftStatusText then
         if filter then
-            split.leftStatusText:SetText(string.format(L["FEATURES_STATUS_FILTERED"], shownCount, totalCount))
+            split.leftStatusText:SetText(string.format(L["TOGGLES_STATUS_FILTERED"], shownCount, totalCount))
         else
             local enabledCount = 0
             for _, m in ipairs(allModules) do

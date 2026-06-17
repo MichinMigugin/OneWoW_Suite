@@ -85,8 +85,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["WIZARD_LOAD_ADDON_TOOLTIP"] = "Load this feature now, no reload.",
     ["WIZARD_DONT_SHOW_AGAIN"] = "Do not show again",
     ["WIZARD_GROUP_FEATURES"] = "Core Features",
-    ["WIZARD_GROUP_STANDALONE"] = "Stand-alone Addons",
-    ["WIZARD_GROUP_UTILITY"] = "Utilities",
     ["WIZARD_SUMMARY_SELECTED"] = "Selected addons",
     ["WIZARD_SUMMARY_SELECTED_FORMAT"] = "%d / %d",
     ["WIZARD_SUMMARY_DATA"] = "Data modules",
@@ -695,7 +693,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["UNIT_CTX_HEADER"] = "OneWoW",
     ["UNIT_CTX_ADD_PLAYER_NOTE"] = "Add Note",
-    ["UNIT_CTX_EDIT_PLAYER_NOTE"] = "Edit Note",
     ["UNIT_CTX_ADD_MOUNT_INFO"] = "Add Mount Info",
     ["UNIT_CTX_MATCH_MOUNT"] = "Match Mount",
     ["UNIT_CTX_ADD_NPC_NOTE"] = "Add Note",

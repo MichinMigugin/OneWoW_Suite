@@ -59,16 +59,16 @@ function ns.UI.CreateProfessionsTab(parent)
         height = 110,
         columns = 5,
         stats = {
-            { label = L["PROF_ATTENTION"], value = "0", ttTitle = L["TT_PROF_ATTENTION"], ttDesc = L["TT_PROF_ATTENTION_DESC"] },
-            { label = L["PROF_CHARACTERS"], value = "0", ttTitle = L["TT_PROF_CHARACTERS"], ttDesc = L["TT_PROF_CHARACTERS_DESC"] },
-            { label = L["PROF_PRIMARY_PROFS"], value = "0/11", ttTitle = L["TT_PROF_PRIMARY_PROFS"], ttDesc = L["TT_PROF_PRIMARY_PROFS_DESC"] },
+            { label = L["ATTENTION"], value = "0", ttTitle = L["ATTENTION"], ttDesc = L["TT_PROF_ATTENTION_DESC"] },
+            { label = L["CHARACTERS"], value = "0", ttTitle = L["CHARACTERS"], ttDesc = L["TT_PROF_CHARACTERS_DESC"] },
+            { label = L["PROF_PRIMARY_PROFS"], value = "0/11", ttTitle = L["PRIMARY_PROFESSIONS"], ttDesc = L["TT_PROF_PRIMARY_PROFS_DESC"] },
             { label = L["PROF_SECONDARY_PROFS"], value = "0/3", ttTitle = L["TT_PROF_SECONDARY_PROFS"], ttDesc = L["TT_PROF_SECONDARY_PROFS_DESC"] },
-            { label = L["PROF_MAX_LEVEL"], value = "0", ttTitle = L["TT_PROF_MAX_LEVEL"], ttDesc = L["TT_PROF_MAX_LEVEL_DESC"] },
-            { label = L["PROF_NO_PROFESSIONS"], value = "0", ttTitle = L["TT_PROF_NO_PROFESSIONS"], ttDesc = L["TT_PROF_NO_PROFESSIONS_DESC"] },
-            { label = L["PROF_INCOMPLETE_SECONDARY"], value = "0", ttTitle = L["TT_PROF_INCOMPLETE_SECONDARY"], ttDesc = L["TT_PROF_INCOMPLETE_SECONDARY_DESC"] },
-            { label = L["PROF_MISSING_EQUIPMENT"], value = "0", ttTitle = L["TT_PROF_MISSING_EQUIPMENT"], ttDesc = L["TT_PROF_MISSING_EQUIPMENT_DESC"] },
+            { label = L["PROF_MAX_LEVEL"], value = "0", ttTitle = L["PROF_MAX_LEVEL"], ttDesc = L["TT_PROF_MAX_LEVEL_DESC"] },
+            { label = L["PROF_NO_PROFESSIONS"], value = "0", ttTitle = L["PROF_NO_PROFESSIONS"], ttDesc = L["TT_PROF_NO_PROFESSIONS_DESC"] },
+            { label = L["PROF_INCOMPLETE_SECONDARY"], value = "0", ttTitle = L["PROF_INCOMPLETE_SECONDARY"], ttDesc = L["TT_PROF_INCOMPLETE_SECONDARY_DESC"] },
+            { label = L["PROF_MISSING_EQUIPMENT"], value = "0", ttTitle = L["PROF_MISSING_EQUIPMENT"], ttDesc = L["TT_PROF_MISSING_EQUIPMENT_DESC"] },
             { label = L["PROF_RECIPES"], value = "0/0", ttTitle = L["TT_PROF_RECIPES"], ttDesc = L["TT_PROF_RECIPES_DESC"] },
-            { label = L["PROF_TOOLS_MISSING"], value = "0", ttTitle = L["TT_PROF_TOOLS_MISSING"], ttDesc = L["TT_PROF_TOOLS_MISSING_DESC"] },
+            { label = L["PROF_TOOLS_MISSING"], value = "0", ttTitle = L["PROF_TOOLS_MISSING"], ttDesc = L["TT_PROF_TOOLS_MISSING_DESC"] },
         },
     })
 
@@ -151,7 +151,7 @@ local function AddConcentrationTooltip(frame, concData, profName, L)
         if concData and concData.value then
             local current, max, stored, ts = GetEstimatedConcentration(concData)
             local r, g, b = GetSkillColor(current, max)
-            GameTooltip:AddDoubleLine(L["PROF_TT_CONC_CURRENT"], string.format("%d / %d", current, max), 1, 1, 1, r, g, b)
+            GameTooltip:AddDoubleLine(L["SEASON_CURRENT"], string.format("%d / %d", current, max), 1, 1, 1, r, g, b)
             if current < max then
                 local remaining = (max - current) / CONCENTRATION_RATE
                 GameTooltip:AddDoubleLine(L["PROF_TT_CONC_TIME_TO_FULL"], SecondsToTime(remaining), 1, 1, 1, 0.8, 0.8, 0.8)

@@ -271,7 +271,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["DESC_BANK_RARITY_COLOR"] = "Color item slot borders based on item rarity in the bank.",
 
-    ["SETTING_BANK_LOCK"] = "Lock Window Position",
     ["DESC_BANK_LOCK"] = "Prevent the bank window from being moved.",
 
     ["CAT_1W_JUNK"] = "1W Junk",

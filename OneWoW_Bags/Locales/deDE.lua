@@ -229,7 +229,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["DESC_SHOW_BANK_BAGS_BAR"] = "Zeigt die Taschenauswahlleiste unten im Bankfenster.",
     ["DESC_SHOW_BANK_SCROLLBAR"] = "Blendet die Scrollleiste im Bankfenster ein oder aus.",
     ["DESC_BANK_RARITY_COLOR"] = "Färbt Gegenstandsränder in der Bank nach Seltenheit ein.",
-    ["SETTING_BANK_LOCK"] = "Fensterposition sperren",
     ["DESC_BANK_LOCK"] = "Verhindert das Verschieben des Bankfensters.",
     ["CAT_1W_JUNK"] = "1W-Ramsch",
     ["CAT_1W_UPGRADES"] = "1W-Aufwertungen",

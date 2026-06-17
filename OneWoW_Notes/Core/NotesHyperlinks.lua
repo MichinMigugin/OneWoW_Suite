@@ -321,7 +321,7 @@ function ns.UI.CreateNotesHelpPanel()
 
     local linkTypes = {
         { name = L["ITEM"],     syntax = L["UI_HELP_LINK_ITEM_SYNTAX"],     example = L["UI_HELP_LINK_ITEM_EXAMPLE"],     icon = "Interface\\Icons\\INV_Misc_Note_01" },
-        { name = L["UI_HELP_LINK_SPELL_NAME"],    syntax = L["UI_HELP_LINK_SPELL_SYNTAX"],    example = L["UI_HELP_LINK_SPELL_EXAMPLE"],    icon = "Interface\\Icons\\INV_Misc_Book_09" },
+        { name = L["CTX_LINK_TYPE_SPELL"],    syntax = L["UI_HELP_LINK_SPELL_SYNTAX"],    example = L["UI_HELP_LINK_SPELL_EXAMPLE"],    icon = "Interface\\Icons\\INV_Misc_Book_09" },
         { name = L["UI_HELP_LINK_QUEST_NAME"],    syntax = L["UI_HELP_LINK_QUEST_SYNTAX"],    example = L["UI_HELP_LINK_QUEST_EXAMPLE"],    icon = "Interface\\Icons\\INV_Misc_Note_02" },
         { name = L["ACHIEVEMENT"],     syntax = L["UI_HELP_LINK_ACHV_SYNTAX"],     example = L["UI_HELP_LINK_ACHV_EXAMPLE"],     icon = "Interface\\Icons\\Achievement_General" },
         { name = CURRENCY, syntax = L["UI_HELP_LINK_CURRENCY_SYNTAX"], example = L["UI_HELP_LINK_CURRENCY_EXAMPLE"], icon = "Interface\\Icons\\INV_Misc_Coin_01" },

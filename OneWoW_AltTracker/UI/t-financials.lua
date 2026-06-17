@@ -361,11 +361,11 @@ end
 
 local columnsConfig = {
     {key = "expand",    label = "",                      width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],         ttDesc = L["TT_COL_EXPAND_DESC"]},
-    {key = "date",      label = L["FIN_COL_DATE"],      width = 100, fixed = false, align = "left",  ttTitle = L["TT_FIN_COL_DATE"],      ttDesc = L["TT_FIN_COL_DATE_DESC"]},
+    {key = "date",      label = L["FIN_COL_DATE"],      width = 100, fixed = false, align = "left",  ttTitle = L["FIN_COL_DATE"],      ttDesc = L["TT_FIN_COL_DATE_DESC"]},
     {key = "character", label = CHARACTER,  width = 90,  fixed = false, align = "left",  ttTitle = CHARACTER,  ttDesc = L["TT_FIN_COL_CHARACTER_DESC"]},
     {key = "category",  label = CATEGORY,   width = 100, fixed = false, align = "left",  ttTitle = CATEGORY,  ttDesc = L["TT_FIN_COL_CATEGORY_DESC"]},
-    {key = "item",      label = L["FIN_COL_ITEM"],       width = 130, fixed = false, align = "left",  ttTitle = L["TT_FIN_COL_ITEM"],      ttDesc = L["TT_FIN_COL_ITEM_DESC"]},
-    {key = "amount",    label = L["FIN_COL_AMOUNT"],     width = 80,  fixed = false, align = "right", ttTitle = L["TT_FIN_COL_AMOUNT"],    ttDesc = L["TT_FIN_COL_AMOUNT_DESC"]},
+    {key = "item",      label = L["FIN_COL_ITEM"],       width = 130, fixed = false, align = "left",  ttTitle = L["FIN_COL_ITEM"],      ttDesc = L["TT_FIN_COL_ITEM_DESC"]},
+    {key = "amount",    label = L["FIN_COL_AMOUNT"],     width = 80,  fixed = false, align = "right", ttTitle = L["FIN_COL_AMOUNT"],    ttDesc = L["TT_FIN_COL_AMOUNT_DESC"]},
 }
 
 local onHeaderCreate = function(btn, col)
@@ -385,11 +385,11 @@ function ns.UI.CreateFinancialsTab(parent)
         height = 70,
         columns = 5,
         stats = {
-            {label = L["FIN_INCOME"],       value = "0", ttTitle = L["TT_FIN_INCOME"],       ttDesc = L["TT_FIN_INCOME_DESC"]},
-            {label = L["FIN_EXPENSE"],      value = "0", ttTitle = L["TT_FIN_EXPENSE"],      ttDesc = L["TT_FIN_EXPENSE_DESC"]},
-            {label = L["FIN_PROFIT"],       value = "0", ttTitle = L["TT_FIN_PROFIT"],       ttDesc = L["TT_FIN_PROFIT_DESC"]},
+            {label = L["FIN_INCOME"],       value = "0", ttTitle = L["FIN_INCOME"],       ttDesc = L["TT_FIN_INCOME_DESC"]},
+            {label = L["FIN_EXPENSE"],      value = "0", ttTitle = L["FIN_EXPENSE"],      ttDesc = L["TT_FIN_EXPENSE_DESC"]},
+            {label = L["FIN_PROFIT"],       value = "0", ttTitle = L["FIN_PROFIT"],       ttDesc = L["TT_FIN_PROFIT_DESC"]},
             {label = L["FIN_SUCCESS_RATE"], value = "0", ttTitle = L["TT_FIN_ROI"],          ttDesc = L["TT_FIN_ROI_DESC"]},
-            {label = L["FIN_TRANSACTIONS"], value = "0", ttTitle = L["TT_FIN_TRANSACTIONS"], ttDesc = L["TT_FIN_TRANSACTIONS_DESC"]},
+            {label = L["FIN_TRANSACTIONS"], value = "0", ttTitle = L["FIN_TRANSACTIONS"], ttDesc = L["TT_FIN_TRANSACTIONS_DESC"]},
         },
     })
 
@@ -444,8 +444,8 @@ function ns.UI.CreateFinancialsTab(parent)
 
     local typeFilters = {
         {key = "all",     label = ALL},
-        {key = "income",  label = L["FIN_FILTER_INCOME"]},
-        {key = "expense", label = L["FIN_FILTER_EXPENSE"]},
+        {key = "income",  label = L["FIN_INCOME"]},
+        {key = "expense", label = L["FIN_EXPENSE"]},
     }
 
     local typeButtons = {}

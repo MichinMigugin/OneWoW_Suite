@@ -160,7 +160,7 @@ local function BuildHeader(scrollContent)
     local expires = OneWoW_GUI:CreateFS(header, 12)
     expires:SetPoint("RIGHT", header, "RIGHT", -8, 0)
     expires:SetWidth(80); expires:SetJustifyH("RIGHT")
-    expires:SetText(L["MAIL_DETAIL_COL_EXPIRES"])
+    expires:SetText(L["TT_COL_EXPIRES"])
     expires:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
     return header
@@ -207,7 +207,7 @@ function ns.UI.ShowMailDetail(charKey)
         local oldestText = summary.oldestExpirySeconds and (select(1, FormatExpiry(summary.oldestExpirySeconds))) or "-"
         dialog._subtitle:SetText(string.format(L["MAIL_DETAIL_SUBTITLE"], summary.count, oldestText, lastScanText))
     else
-        dialog._subtitle:SetText(L["MAIL_DETAIL_SUBTITLE_EMPTY"])
+        dialog._subtitle:SetText(L["TT_MAIL_NONE"])
     end
 
     ReleaseAllRows()

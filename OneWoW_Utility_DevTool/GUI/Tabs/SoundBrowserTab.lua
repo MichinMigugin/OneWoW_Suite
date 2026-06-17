@@ -874,7 +874,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     tab.infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local copyRowLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    copyRowLabel:SetText(L["SOUND_COPY_ROW_LABEL"])
+    copyRowLabel:SetText(L["FONT_COPY_ROW_LABEL"])
     copyRowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     copyRowLabel:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 6, 8)
 
@@ -908,7 +908,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     tab.copyPathBtn = copyPathBtn
 
     local copySnippetBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
-        text = L["SOUND_BTN_COPY_SNIPPET"],
+        text = L["FONT_BTN_COPY_SNIPPET"],
         height = 22,
         minWidth = 52,
     })

@@ -941,7 +941,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     tab.tree = createGlobalsTree(treeContent, treeScroll, tab)
 
     local copyRowLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    copyRowLabel:SetText(L["GLOBALS_COPY_ROW_LABEL"])
+    copyRowLabel:SetText(L["FONT_COPY_ROW_LABEL"])
     copyRowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     copyRowLabel:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 6, 8)
 

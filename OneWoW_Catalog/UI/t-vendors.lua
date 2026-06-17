@@ -91,7 +91,7 @@ local function ClearVendorFilters(panels)
         panels.searchBox:SetText("")
     end
     if panels.zoneDropdownText then
-        panels.zoneDropdownText:SetText(L["VENDORS_ZONE_ALL"])
+        panels.zoneDropdownText:SetText(L["QUESTS_ZONE_ALL"])
     end
     if panels.currencyDropdownText then
         panels.currencyDropdownText:SetText(L["VENDORS_CURRENCY_ALL"])
@@ -888,7 +888,7 @@ function ns.UI.CreateVendorsTab(parent)
     local zoneDropdown, zoneDropdownText = OneWoW_GUI:CreateDropdown(headerBar, {
         width = 200,
         height = 26,
-        text = L["VENDORS_ZONE_ALL"],
+        text = L["QUESTS_ZONE_ALL"],
     })
     zoneDropdown:SetPoint("RIGHT", chkBox, "LEFT", -10, 0)
     panels.zoneDropdownText = zoneDropdownText
@@ -898,7 +898,7 @@ function ns.UI.CreateVendorsTab(parent)
         getActiveValue = function() return zoneFilter end,
         buildItems = function()
             local items = {}
-            tinsert(items, { value = nil, text = L["VENDORS_ZONE_ALL"] })
+            tinsert(items, { value = nil, text = L["QUESTS_ZONE_ALL"] })
             for _, zone in ipairs(BuildZoneList()) do
                 tinsert(items, { value = zone, text = zone })
             end
@@ -991,7 +991,7 @@ function ns.UI.CreateVendorsTab(parent)
         currentZoneOnly = self:GetChecked()
         if currentZoneOnly then
             zoneFilter = nil
-            zoneDropdownText:SetText(L["VENDORS_ZONE_ALL"])
+            zoneDropdownText:SetText(L["QUESTS_ZONE_ALL"])
         end
         RefreshVendorList(panels)
     end)
@@ -1004,7 +1004,7 @@ function ns.UI.CreateVendorsTab(parent)
         categoryFilter = nil
         searchBox:SetText(searchBox.placeholderText)
         searchBox:ClearFocus()
-        zoneDropdownText:SetText(L["VENDORS_ZONE_ALL"])
+        zoneDropdownText:SetText(L["QUESTS_ZONE_ALL"])
         currencyDropdownText:SetText(L["VENDORS_CURRENCY_ALL"])
         categoryDropdownText:SetText(L["VENDORS_CATEGORY_ALL"])
         chkBox:SetChecked(false)

@@ -28,7 +28,7 @@ local TOGGLE_BTN_W    = 70
 local TOGGLE_BTN_H    = 20
 
 local function LabelForPref(L, pref)
-    if pref == "mini" then return L["MMBTNS_ICONS_MINI_STATE"] end
+    if pref == "mini" then return L["MMBTNS_ICONS_MINI"] end
     if pref == "map"  then return L["MMBTNS_ICONS_MAP_STATE"]       end
     if pref == "hide" then return HIDE      end
     return tostring(pref)

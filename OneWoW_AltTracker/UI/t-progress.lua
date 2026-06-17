@@ -852,9 +852,9 @@ local function BuildCommonColumns()
         {key = "faction", label = "F",                 width = 25,  fixed = true,  align = "center", sortable = false, ttTitle = FACTION,   ttDesc = L["TT_COL_FACTION_DESC"]},
         {key = "mail",    label = "",                  width = 35,  fixed = true,  align = "center", sortable = false, ttTitle = L["MAIL"],      ttDesc = L["TT_COL_MAIL_DESC"]},
         {key = "name",    label = CHARACTER,  width = 135, minWidth = 135, flexWeight = 4, align = "left",                  ttTitle = CHARACTER, ttDesc = L["TT_COL_CHARACTER_DESC"]},
-        {key = "server",  label = L["COL_SERVER"],     width = 50,  minWidth = 50,  flexWeight = 3, align = "left",                  ttTitle = L["TT_COL_SERVER"],    ttDesc = L["TT_COL_SERVER_DESC"]},
+        {key = "server",  label = L["COL_SERVER"],     width = 50,  minWidth = 50,  flexWeight = 3, align = "left",                  ttTitle = L["COL_SERVER"],    ttDesc = L["TT_COL_SERVER_DESC"]},
         {key = "level",   label = L["COL_LEVEL"],      width = 40,  minWidth = 40,  flexWeight = 1, align = "center",                ttTitle = LEVEL,     ttDesc = L["TT_COL_LEVEL_DESC"]},
-        {key = "ilvl",    label = L["PROGRESS_COL_ILVL"], width = 55, minWidth = 55, flexWeight = 1, align = "center",              ttTitle = L["TT_COL_ILVL"],      ttDesc = L["TT_COL_ILVL_DESC"]},
+        {key = "ilvl",    label = L["COL_ITEM_LEVEL"], width = 55, minWidth = 55, flexWeight = 1, align = "center",              ttTitle = L["TT_COL_ILVL"],      ttDesc = L["TT_COL_ILVL_DESC"]},
         {key = "rating",  label = RATING, width = 50, minWidth = 50, flexWeight = 1, align = "center",            ttTitle = RATING,    ttDesc = L["TT_COL_RATING_DESC"]},
     }
 end
@@ -1456,11 +1456,11 @@ function ns.UI.CreateProgressTab(parent)
         height = 70,
         columns = 7,
         stats = {
-            {label = L["PROGRESS_CHARACTERS"],   value = "0", ttTitle = L["TT_PROGRESS_CHARACTERS"],   ttDesc = L["TT_PROGRESS_CHARACTERS_DESC"]},
-            {label = L["PROGRESS_KEYS"],         value = "0", ttTitle = L["TT_PROGRESS_KEYS"],         ttDesc = L["TT_PROGRESS_KEYS_DESC"]},
-            {label = L["PROGRESS_VAULT"],        value = "0", ttTitle = L["TT_PROGRESS_VAULT"],        ttDesc = L["TT_PROGRESS_VAULT_DESC"]},
+            {label = L["CHARACTERS"],   value = "0", ttTitle = L["CHARACTERS"],   ttDesc = L["TT_PROGRESS_CHARACTERS_DESC"]},
+            {label = L["PROGRESS_KEYS"],         value = "0", ttTitle = L["PROGRESS_KEYS"],         ttDesc = L["TT_PROGRESS_KEYS_DESC"]},
+            {label = L["PROGRESS_VAULT"],        value = "0", ttTitle = L["PROGRESS_VAULT"],        ttDesc = L["TT_PROGRESS_VAULT_DESC"]},
             {label = L["PROGRESS_HIGHEST_KEY"],  value = "0", ttTitle = L["TT_PROGRESS_HIGHEST_KEY"],  ttDesc = L["TT_PROGRESS_HIGHEST_KEY_DESC"]},
-            {label = L["PROGRESS_AVG_RATING"],   value = "0", ttTitle = L["TT_PROGRESS_AVG_RATING"],   ttDesc = L["TT_PROGRESS_AVG_RATING_DESC"]},
+            {label = L["PROGRESS_AVG_RATING"],   value = "0", ttTitle = L["PROGRESS_AVG_RATING"],   ttDesc = L["TT_PROGRESS_AVG_RATING_DESC"]},
             {label = L["PROGRESS_AVG_ILVL"],     value = "0", ttTitle = L["TT_PROGRESS_AVG_ILVL"],     ttDesc = L["TT_PROGRESS_AVG_ILVL_DESC"]},
             {label = L["PROGRESS_WORLD_BOSSES"], value = "0", ttTitle = L["TT_PROGRESS_WORLD_BOSSES"], ttDesc = L["TT_PROGRESS_WORLD_BOSSES_DESC"]},
         },

@@ -121,6 +121,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["NOTES_CONTROLS"] = "Notes Controls",
     ["NOTES_LIST"] = "Notes List",
     ["MESSAGE_SELECT_NOTE"] = "Select a note to edit",
+    -- Phase 3: "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
+    -- adjective default-name whose form can vary by locale; leave scoped.
     ["NOTE_UNTITLED"] = "Untitled",
 
 -- Notes sort
@@ -136,9 +138,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["UI_STORAGE_ACCOUNT"] = "Account",
     ["UI_COUNT_FORMAT"] = "%s: %d",
     ["UI_TASKS"] = "Tasks:",
-    ["UI_MANAGE_CATEGORIES"] = "Manage Categories",
     ["UI_MANAGE_CATEGORIES_DESC"] = "Add or remove custom categories",
-    ["UI_NOTES_HYPERLINK_TITLE"] = "Hyperlink Help",
     ["UI_NOTES_HYPERLINK_HINT"] = "Click to show/hide help about using hyperlinks in notes",
     ["UI_NOTE_REMOVE_FLAG_HINT"] = "Click to remove new flag",
 
@@ -196,6 +196,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["COLOR_HUNTER_GREEN"] = "Hunter Green",
     ["FONT_DEFAULT"] = "Default (Friz Quadrata)",
     ["FONT_COLOR_MATCHING"] = "Default - Matching",
+    -- Phase 3: "Priest White" intentionally NOT deduped with NOTES_PIN_COLOR_PRIEST_WHITE —
+    -- two independent UIs (font-color picker vs pin-color set); keep separate.
     ["FONT_COLOR_WHITE"] = "Priest White",
     ["FONT_COLOR_BLACK"] = "Midnight Black",
 
@@ -225,8 +227,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 -- Pinned window strings
     ["CORE_PIN_NOTE_PREFIX"] = "Note:",
     ["CORE_PIN_UNTITLED"] = "Untitled",
-    ["CORE_PIN_RESET_TODOS"] = "Reset All TODOs",
-    ["CORE_PIN_RESET_TODOS_DESC"] = "Uncheck all completed tasks",
     ["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER"] = "Hide pinned tasks until hover",
     ["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER_DESC"] = "When pinned, show the task list only while the mouse is over the note.",
     ["CORE_PIN_HOVER_TASKS"] = "Hover tasks",
@@ -243,7 +243,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["NOTES_ITEM_INVALID_ID"] = "Invalid item ID.",
     ["TOOLTIP_ITEM_DELETE"] = "Delete Item",
     ["TOOLTIP_ITEM_DELETE_DESC"] = "Remove this item note",
-    ["TOOLTIP_ITEM_PROPERTIES"] = "Item Properties",
     ["TOOLTIP_ITEM_PROPERTIES_DESC"] = "Edit item settings",
     ["TOOLTIP_ITEM_FAVORITE"] = "Favorite",
     ["TOOLTIP_ITEM_FAVORITE_DESC"] = "Mark as favorite",
@@ -270,7 +269,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["MSG_NO_PARENT_ZONE"] = "Cannot determine parent zone.",
     ["MSG_ZONE_EXISTS"] = "Zone note already exists: %s",
     ["MSG_ZONE_ADDED"] = "Added zone: %s",
-    ["NOTES_ZONE_ALERT_ARRIVED"] = "Zone:",
     ["TOOLTIP_ZONE_DELETE"] = "Delete Zone",
     ["TOOLTIP_ZONE_DELETE_DESC"] = "Remove this zone note",
     ["TOOLTIP_ZONE_PROPERTIES"] = "Zone Properties",
@@ -282,7 +280,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["POPUP_DELETE_ZONE"] = "Delete zone note?",
     ["DIALOG_ZONE_PROPERTIES"] = "Zone Properties",
     ["LABEL_ZONE_NAME"] = "Zone Name:",
-    ["ZONE_MANUAL_ENTRY_TITLE"] = "Add Zone",
     ["ZONE_ERROR_NAME_REQUIRED"] = "Zone name is required.",
 
 -- Notes dialog extras
@@ -294,7 +291,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["PLAYERS_CONTROLS"] = "Players Controls",
     ["PLAYERS_LIST"] = "Players List",
     ["BUTTON_ADD_TARGET"] = "Add Target",
-    ["TOOLTIP_BUTTON_ADD_TARGET"] = "Add Target",
     ["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"] = "Add a note for your current player target.",
     ["TOOLTIP_BUTTON_MANUAL_ENTRY_PLAYER_DESC"] = "Enter a player name manually.",
     ["MSG_TARGET_PLAYER_FIRST"] = "Target a player first.",
@@ -302,7 +298,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["NOTES_PLAYER_ALERT_FOUND"] = "Targeted player with note: %s",
     ["TOOLTIP_PLAYER_DELETE"] = "Delete Player",
     ["TOOLTIP_PLAYER_DELETE_DESC"] = "Remove this player note",
-    ["TOOLTIP_PLAYER_PROPERTIES"] = "Player Properties",
     ["TOOLTIP_PLAYER_PROPERTIES_DESC"] = "Edit player settings",
     ["TOOLTIP_PLAYER_SOUND"] = "Alert on Sight",
     ["TOOLTIP_PLAYER_SOUND_DESC"] = "Alert when you target this player.",
@@ -319,7 +314,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["PLAYER_ERROR_NAME_REQUIRED"] = "Player name is required.",
     ["PLAYER_ADD_ALTS"] = "Add Alts",
     ["PLAYER_ADD_ALTS_DESC"] = "Add your alts from AltTracker data.",
-    ["PLAYER_ADD_ALTS_TITLE"] = "Add Alts",
     ["PLAYER_ALTS_NO_DATA"] = "AltTracker data not found.",
     ["PLAYER_ALTS_NONE_NEW"] = "No new alts found to add.",
     ["PLAYER_ALTS_ADDED_COUNT"] = "Added %d alts.",
@@ -342,7 +336,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["NOTES_NPC_ASSOC_QUESTS"] = "Associated Quests:",
     ["TOOLTIP_NPC_DELETE"] = "Delete NPC",
     ["TOOLTIP_NPC_DELETE_DESC"] = "Remove this NPC note",
-    ["TOOLTIP_NPC_PROPERTIES"] = "NPC Properties",
     ["TOOLTIP_NPC_PROPERTIES_DESC"] = "Edit NPC settings",
     ["TOOLTIP_NPC_SOUND"] = "Alert on Target",
     ["TOOLTIP_NPC_SOUND_DESC"] = "Alert when you target this NPC.",
@@ -394,7 +387,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["UI_HELP_PASTE_BUTTON"] = "Paste",
     ["UI_HELP_LINK_ITEM_SYNTAX"] = "(item=ID)",
     ["UI_HELP_LINK_ITEM_EXAMPLE"] = "(item=19019)",
-    ["UI_HELP_LINK_SPELL_NAME"] = "Spell",
     ["UI_HELP_LINK_SPELL_SYNTAX"] = "(spell=ID)",
     ["UI_HELP_LINK_SPELL_EXAMPLE"] = "(spell=1459)",
     ["UI_HELP_LINK_QUEST_NAME"] = "Quest",
@@ -435,7 +427,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     -- (surfaced by key-name-on-miss; values are the code-side fallbacks).
     ["BUTTON_DESELECT_ALL"] = "Deselect All",
     ["BUTTON_SELECT_ALL"] = "Select All",
-    ["BUTTON_VALIDATE"] = "Validate",
     ["DIALOG_CONFIRM_DELETE"] = "Confirm Delete",
     ["LABEL_MAP_ID_OPTIONAL"] = "Map ID (optional):",
     ["LABEL_PROFESSION_1"] = "Profession 1:",

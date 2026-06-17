@@ -63,7 +63,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["JOURNAL_CARD_HOUSING"] = "Housing",
 
     ["JOURNAL_DETAIL_INST_ID"] = "Instance ID",
-    ["JOURNAL_DETAIL_MAP_ID"] = "Map ID",
 
     ["JOURNAL_COLLECTIONS"] = "Collections",
     ["JOURNAL_COL_TMOG"] = "Transmog: %d/%d",
@@ -117,7 +116,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["VENDORS_STATS"] = "%d vendors, %d unique items",
     ["VENDORS_STATS_SHOWING"] = "Showing %d of %d vendors",
     ["VENDORS_LOADING"] = "Loading...",
-    ["VENDORS_ZONE_ALL"] = "All Zones",
     ["VENDORS_ZONE_CURRENT"] = "Current Zone Only",
     ["VENDORS_ZONE_SEARCH"] = "Search zones...",
     ["VENDORS_FILTER_CLEAR"] = "Clear",

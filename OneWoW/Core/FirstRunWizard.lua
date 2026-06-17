@@ -427,8 +427,8 @@ function FirstRun:BuildPanel(parent, opts)
 
     local groupLabels = {
         feature = L["WIZARD_GROUP_FEATURES"],
-        standalone = L["WIZARD_GROUP_STANDALONE"],
-        utility = L["WIZARD_GROUP_UTILITY"],
+        standalone = L["HOME_STANDALONE_ADDONS"],
+        utility = L["HOME_UTILITIES"],
     }
     local groupOrder  = { "feature", "standalone", "utility" }
 

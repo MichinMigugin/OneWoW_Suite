@@ -290,8 +290,8 @@ function Addon.UI.FontTab_UpdateDetails(tab)
     tinsert(lines, (L["FONT_LABEL_FONT_NAME"]) .. " " .. name)
     if info then
         tinsert(lines, (L["FILE"]) .. " " .. (info.path or "?"))
-        tinsert(lines, (L["FONT_LABEL_FONT_HEIGHT"]) .. " " .. tostring(info.height or "?"))
-        tinsert(lines, (L["FONT_LABEL_FONT_FLAGS"]) .. " " .. (info.flags ~= "" and info.flags or (NONE)))
+        tinsert(lines, (L["LABEL_HEIGHT"]) .. " " .. tostring(info.height or "?"))
+        tinsert(lines, (L["FONT_LABEL_FLAGS"]) .. " " .. (info.flags ~= "" and info.flags or (NONE)))
     end
 
     -- Inheritance chain

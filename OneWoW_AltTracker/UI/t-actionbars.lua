@@ -129,7 +129,7 @@ local function ShowRestoreMacrosDialog(setName, setData)
     local result = OneWoW_GUI:CreateDialog({
         name = "OneWoW_AT_RestoreMacrosDialog",
         showBrand = true,
-        title = L["AB_DIALOG_RESTORE_MACROS_TITLE"],
+        title = L["AB_RESTORE_MACROS"],
         width = 420,
         height = 240,
         movable = false,

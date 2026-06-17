@@ -229,7 +229,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["DESC_SHOW_BANK_BAGS_BAR"] = "Affiche la barre de sélection des sacs en bas de la fenêtre de banque.",
     ["DESC_SHOW_BANK_SCROLLBAR"] = "Affiche ou masque la barre de défilement de la fenêtre de banque.",
     ["DESC_BANK_RARITY_COLOR"] = "Colore les bords des emplacements de la banque selon la rareté de l'objet.",
-    ["SETTING_BANK_LOCK"] = "Verrouiller la position de la fenêtre",
     ["DESC_BANK_LOCK"] = "Empêche le déplacement de la fenêtre de banque.",
     ["CAT_1W_JUNK"] = "Camelote 1W",
     ["CAT_1W_UPGRADES"] = "Améliorations 1W",

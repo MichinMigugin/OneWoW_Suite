@@ -1081,7 +1081,7 @@ local function BuildBankTabFor(mode, sc, db)
     local lockRefresh
     topY, lockRefresh = OneWoW_GUI:CreateToggleRow(bankTopContainer, {
         yOffset = topY,
-        label = L["SETTING_BANK_LOCK"],
+        label = L["SETTING_LOCK"],
         description = L["DESC_BANK_LOCK"],
         isEnabled = true,
         value = db.global.bankLocked,
