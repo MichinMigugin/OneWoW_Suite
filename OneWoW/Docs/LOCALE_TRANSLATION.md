@@ -396,10 +396,19 @@ ptBR itIT.
   (`VALUE_DISPLAY_LETTERS`, e.g. fr `p, a, c`) should be checked against the actual
   money formatter output per locale; theme names like `Glassmorphic`/`Synthwave` kept
   as loanwords where no natural translation; `esMX` mirrors `esES` pending LatAm tweaks.
-- [ ] Remaining scopes by size: OneWoW 887, AltTracker 910, DevTool 501, Bags 432,
-  Notes 364, QoL 338, Catalog 300, ShoppingList 246, Trackers 151, + data/QoL modules.
+- [x] **`OneWoW_Trackers` — all 11 locales, 151 keys each.** koKR was a `TEST` stub;
+  all 10 non-enUS drafted fresh + registered in the toc. Verified 151/151 parity +
+  matching `%s`/`%d` across every locale.
+- [ ] Remaining scopes, **player-facing value order** (decided): Catalog 300 → Bags 432 →
+  Notes 364 → QoL 338 → AltTracker 910 → OneWoW core 887 → DevTool 501 →
+  ShoppingList 246 → then data/QoL-module sub-addons (2–105 keys each).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
 - [ ] In-game spot-check per language where feasible; commit per scope.
+
+**`esMX` automation (decided):** `esMX` is auto-generated from each scope's `esES`
+(UI text is ~identical) via `bin`-side helper `gen_esmx.py` — swaps the locale literal,
+re-headers `esMX mirrored from esES, pending Latin-American review`. Flagged for a LatAm
+review pass at the end. Saves ~10% of per-scope volume.
 
 ---
 
