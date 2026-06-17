@@ -18,7 +18,11 @@ from pathlib import Path
 KEY_RE = re.compile(r'\[\s*"((?:[^"\\]|\\.)*)"\s*\]\s*=\s*"((?:[^"\\]|\\.)*)"')
 # printf-style directive: %, optional flags/width/precision, conversion char.
 # %% is a literal percent and is captured so it is compared too.
-SPEC_RE = re.compile(r'%[-+ #0]*[0-9]*\.?[0-9]*[sdfgxXc%]')
+# NOTE: the space flag (`% d`) is intentionally excluded. It is effectively never
+# used in WoW addon strings, whereas literal "30% durability" / "5% chance" text
+# (a percent sign followed by a space and a word starting with s/d/f/g/x/c) is
+# common — keeping the space flag made those literals match as bogus directives.
+SPEC_RE = re.compile(r'%[-+#0]*[0-9]*\.?[0-9]*[sdfgxXc%]')
 
 
 def parse(path):

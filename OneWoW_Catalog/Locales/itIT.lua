@@ -77,6 +77,16 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["JOURNAL_GENERAL_LOOT"] = "Bottino generale",
     ["JOURNAL_ITEMS_COUNT"] = "%d oggetti",
 
+    ["JOURNAL_QUEST_PREFIX"] = "Missione",
+    ["JOURNAL_ITEMID"] = "ID oggetto",
+    ["JOURNAL_QUEST_COMPLETED"] = "Completata",
+    ["JOURNAL_QUEST_NOT_COMPLETED"] = "Non completata",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Link WoWHead",
+    ["JOURNAL_OPEN"] = "Vedi missione",
+    ["JOURNAL_OPEN_QUEST"] = "Vedi missione",
+    ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Clicca su un link per evidenziarlo, poi premi Ctrl+C per copiarlo. Usa «Vedi missione» per aprirla nel catalogo delle Missioni.",
+    ["JOURNAL_QUEST_CAT_TT"] = "Gli oggetti elencati qui possono essere ottenuti tramite una missione di qualche tipo.",
+
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Difficoltà",
 
     ["JOURNAL_SPECIAL_TMOG"] = "Trasmog.",

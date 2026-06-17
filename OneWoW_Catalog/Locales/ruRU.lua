@@ -77,6 +77,16 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["JOURNAL_GENERAL_LOOT"] = "Общая добыча",
     ["JOURNAL_ITEMS_COUNT"] = "%d предметов",
 
+    ["JOURNAL_QUEST_PREFIX"] = "Задание",
+    ["JOURNAL_ITEMID"] = "ID предмета",
+    ["JOURNAL_QUEST_COMPLETED"] = "Выполнено",
+    ["JOURNAL_QUEST_NOT_COMPLETED"] = "Не выполнено",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Ссылка WoWHead",
+    ["JOURNAL_OPEN"] = "Открыть задание",
+    ["JOURNAL_OPEN_QUEST"] = "Открыть задание",
+    ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Нажмите на ссылку, чтобы выделить её, затем нажмите Ctrl+C для копирования. Используйте «Открыть задание», чтобы просмотреть его в каталоге заданий.",
+    ["JOURNAL_QUEST_CAT_TT"] = "Перечисленные здесь предметы можно получить тем или иным образом за задание.",
+
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Сложность",
 
     ["JOURNAL_SPECIAL_TMOG"] = "Трансмог.",

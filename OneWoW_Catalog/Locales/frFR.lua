@@ -77,6 +77,16 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["JOURNAL_GENERAL_LOOT"] = "Butin général",
     ["JOURNAL_ITEMS_COUNT"] = "%d objets",
 
+    ["JOURNAL_QUEST_PREFIX"] = "Quête",
+    ["JOURNAL_ITEMID"] = "ID d'objet",
+    ["JOURNAL_QUEST_COMPLETED"] = "Terminée",
+    ["JOURNAL_QUEST_NOT_COMPLETED"] = "Non terminée",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Lien WoWHead",
+    ["JOURNAL_OPEN"] = "Voir la quête",
+    ["JOURNAL_OPEN_QUEST"] = "Voir la quête",
+    ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Cliquez sur un lien pour le surligner, puis appuyez sur Ctrl+C pour le copier. Utilisez « Voir la quête » pour l'ouvrir dans le catalogue des Quêtes.",
+    ["JOURNAL_QUEST_CAT_TT"] = "Les objets listés ici peuvent être obtenus via une quête quelconque.",
+
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Difficulté",
 
     ["JOURNAL_SPECIAL_TMOG"] = "TMog",

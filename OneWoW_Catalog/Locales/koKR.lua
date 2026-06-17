@@ -76,6 +76,16 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["JOURNAL_GENERAL_LOOT"] = "일반 전리품",
     ["JOURNAL_ITEMS_COUNT"] = "아이템 %d개",
 
+    ["JOURNAL_QUEST_PREFIX"] = "퀘스트",
+    ["JOURNAL_ITEMID"] = "아이템 ID",
+    ["JOURNAL_QUEST_COMPLETED"] = "완료",
+    ["JOURNAL_QUEST_NOT_COMPLETED"] = "미완료",
+    ["JOURNAL_CLICK_FOR_LINK"] = "WoWHead 링크",
+    ["JOURNAL_OPEN"] = "퀘스트 보기",
+    ["JOURNAL_OPEN_QUEST"] = "퀘스트 보기",
+    ["JOURNAL_QUEST_LINK_INSTRUCT"] = "링크를 눌러 강조한 다음 Ctrl+C를 눌러 복사하세요. '퀘스트 보기'를 사용하면 퀘스트 도감에서 볼 수 있습니다.",
+    ["JOURNAL_QUEST_CAT_TT"] = "여기에 나열된 아이템은 어떤 형태로든 퀘스트를 통해 얻을 수 있는 아이템입니다.",
+
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "난이도",
 
     ["JOURNAL_SPECIAL_TMOG"] = "형상",

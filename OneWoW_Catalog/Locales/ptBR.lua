@@ -77,6 +77,16 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["JOURNAL_GENERAL_LOOT"] = "Despojo geral",
     ["JOURNAL_ITEMS_COUNT"] = "%d itens",
 
+    ["JOURNAL_QUEST_PREFIX"] = "Missão",
+    ["JOURNAL_ITEMID"] = "ID do item",
+    ["JOURNAL_QUEST_COMPLETED"] = "Concluída",
+    ["JOURNAL_QUEST_NOT_COMPLETED"] = "Não concluída",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Link da WoWHead",
+    ["JOURNAL_OPEN"] = "Ver missão",
+    ["JOURNAL_OPEN_QUEST"] = "Ver missão",
+    ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Clique em um link para destacá-lo e pressione Ctrl+C para copiar. Use «Ver missão» para abri-la no catálogo de Missões.",
+    ["JOURNAL_QUEST_CAT_TT"] = "Os itens listados aqui podem ser obtidos por meio de algum tipo de missão.",
+
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Dificuldade",
 
     ["JOURNAL_SPECIAL_TMOG"] = "Transmog.",

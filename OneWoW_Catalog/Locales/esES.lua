@@ -77,6 +77,16 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["JOURNAL_GENERAL_LOOT"] = "Botín general",
     ["JOURNAL_ITEMS_COUNT"] = "%d objetos",
 
+    ["JOURNAL_QUEST_PREFIX"] = "Misión",
+    ["JOURNAL_ITEMID"] = "ID de objeto",
+    ["JOURNAL_QUEST_COMPLETED"] = "Completada",
+    ["JOURNAL_QUEST_NOT_COMPLETED"] = "No completada",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Enlace de WoWHead",
+    ["JOURNAL_OPEN"] = "Ver misión",
+    ["JOURNAL_OPEN_QUEST"] = "Ver misión",
+    ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Haz clic en un enlace para resaltarlo y luego pulsa Ctrl+C para copiarlo. Usa «Ver misión» para abrirla en el catálogo de Misiones.",
+    ["JOURNAL_QUEST_CAT_TT"] = "Los objetos que aparecen aquí se pueden conseguir mediante algún tipo de misión.",
+
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Dificultad",
 
     ["JOURNAL_SPECIAL_TMOG"] = "Transfig.",

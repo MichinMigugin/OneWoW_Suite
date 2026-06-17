@@ -77,6 +77,16 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["JOURNAL_GENERAL_LOOT"] = "Allgemeine Beute",
     ["JOURNAL_ITEMS_COUNT"] = "%d Gegenstände",
 
+    ["JOURNAL_QUEST_PREFIX"] = "Quest",
+    ["JOURNAL_ITEMID"] = "Gegenstands-ID",
+    ["JOURNAL_QUEST_COMPLETED"] = "Abgeschlossen",
+    ["JOURNAL_QUEST_NOT_COMPLETED"] = "Nicht abgeschlossen",
+    ["JOURNAL_CLICK_FOR_LINK"] = "WoWHead-Link",
+    ["JOURNAL_OPEN"] = "Quest anzeigen",
+    ["JOURNAL_OPEN_QUEST"] = "Quest anzeigen",
+    ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Klickt auf einen Link, um ihn hervorzuheben, und drückt dann Strg+C zum Kopieren. Nutzt „Quest anzeigen“, um sie im Quest-Katalog zu öffnen.",
+    ["JOURNAL_QUEST_CAT_TT"] = "Die hier aufgeführten Gegenstände lassen sich auf irgendeine Weise über eine Quest erlangen.",
+
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Schwierigkeit",
 
     ["JOURNAL_SPECIAL_TMOG"] = "TMog",

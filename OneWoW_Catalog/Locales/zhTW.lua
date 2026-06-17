@@ -77,6 +77,16 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["JOURNAL_GENERAL_LOOT"] = "一般戰利品",
     ["JOURNAL_ITEMS_COUNT"] = "%d 件物品",
 
+    ["JOURNAL_QUEST_PREFIX"] = "任務",
+    ["JOURNAL_ITEMID"] = "物品 ID",
+    ["JOURNAL_QUEST_COMPLETED"] = "已完成",
+    ["JOURNAL_QUEST_NOT_COMPLETED"] = "未完成",
+    ["JOURNAL_CLICK_FOR_LINK"] = "WoWHead 連結",
+    ["JOURNAL_OPEN"] = "檢視任務",
+    ["JOURNAL_OPEN_QUEST"] = "檢視任務",
+    ["JOURNAL_QUEST_LINK_INSTRUCT"] = "點擊連結將其反白，然後按 Ctrl+C 複製。使用「檢視任務」可在任務圖鑑中檢視它。",
+    ["JOURNAL_QUEST_CAT_TT"] = "此處列出的物品是可以透過某種任務獲得的物品。",
+
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "難度",
 
     ["JOURNAL_SPECIAL_TMOG"] = "幻化",
