@@ -1,11 +1,24 @@
 local _, OneWoW = ...
 
+-- Machine-drafted (Phase 4) — pending native review.
 OneWoW.Locale:RegisterShared("koKR", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "언어 선택",
+    ["LANGUAGE_DESC"] = "애드온 인터페이스에 사용할 언어를 선택하세요. 변경 사항은 즉시 적용됩니다.",
 
-    -- Themes
+    -- Theme picker
     ["THEME_SECTION"] = "색상 테마",
+    ["THEME_DESC"] = "테마는 아래에 그룹으로 정리되어 있습니다. 무작위는 다시 불러올 때마다 팔레트를 하나 고릅니다. 메뉴를 다시 열고 무작위를 선택하면 이번 세션에서 다시 추첨합니다.",
+    ["THEME_RANDOM"] = "무작위 (다시 불러올 때마다 새로 선택)",
+    ["THEME_RANDOM_CURRENT"] = "무작위 (%s)",
+
+    -- Theme menu group titles
+    ["THEME_GROUP_CLASSIC"] = "클래식 강조색",
+    ["THEME_GROUP_DARK"] = "다크 & 미니멀",
+    ["THEME_GROUP_BOLD"] = "강렬 & 스타일",
+    ["THEME_GROUP_LIGHT"] = "라이트 & 접근성",
+
+    -- Theme display names
     ["THEME_GREEN"] = "숲의 녹색",
     ["THEME_BLUE"] = "바다의 파랑",
     ["THEME_PURPLE"] = "왕실의 보라",
@@ -30,12 +43,97 @@ OneWoW.Locale:RegisterShared("koKR", {
     ["THEME_RETRO"] = "레트로 클래식",
     ["THEME_FANTASY"] = "RPG 판타지",
     ["THEME_NIGHTFAE"] = "맹세단 황혼",
+    ["THEME_HIGHCONTRAST"] = "고대비",
+
+    -- Font section
+    ["FONT_SECTION"] = "글꼴",
+    ["FONT_DESC"] = "모든 OneWoW 애드온에서 사용할 글꼴을 선택하세요. 다른 애드온의 SharedMedia 글꼴도 지원되며 목록에 표시됩니다.",
+    ["FONT_SIZE_DESC"] = "모든 애드온의 글꼴 크기를 조정합니다.",
+    ["FONT_SIZE_WARNING"] = "실험적: 아직 모든 OneWoW 애드온이 글꼴 크기 조정을 지원하거나 적용한 것은 아닙니다.",
+
+    -- Value display section
+    ["VALUE_DISPLAY_SECTION"] = "재화 표시",
+    ["VALUE_DISPLAY_DESC"] = "OneWoW 전반에서 골드와 가격이 표시되는 방식입니다 (가방, AltTracker, Catalog, 툴팁, 농사 가치 추적기 등).",
+    ["VALUE_DISPLAY_LETTERS"] = "동전 아이콘 대신 g, s, c 문자 표시",
+    ["VALUE_DISPLAY_REGIONAL"] = "지역 숫자 구분 사용 (클라이언트 로캘)",
+    ["VALUE_DISPLAY_WHITE"] = "흰색 수치 사용 (문자 모드, 끄면 클래식 모양)",
+
+    -- Footer links
+    ["LINK_DONATE"] = "후원",
 
     -- Minimap section labels
     ["MINIMAP_SECTION"] = "미니맵 버튼",
     ["MINIMAP_SECTION_DESC"] = "미니맵 버튼을 표시하거나 숨깁니다.",
     ["MINIMAP_SHOW_BTN"] = "미니맵 버튼 표시",
     ["MINIMAP_ICON_SECTION"] = "아이콘 테마",
+    ["MINIMAP_ICON_DESC"] = "미니맵 버튼과 제목 표시줄에 사용할 진영 아이콘을 선택하세요.",
 
-    -- Common buttons
+    -- Common
+    ["CURRENT_VALUE"] = "현재: %s",
+
+    -- Phase 3 consolidated
+    ["ADD_ITEM"] = "아이템 추가",
+    ["BATTLE_PET"] = "전투 애완동물",
+    ["BUTTON_SIZE"] = "버튼 크기",
+    ["DRAG_ITEM_HERE"] = "여기로 아이템을 끌어다 놓으세요",
+    ["GROW_DIRECTION"] = "확장 방향",
+    ["ITEM_ID"] = "아이템 ID:",
+    ["NEW_CATEGORY"] = "새 분류",
+    ["OPEN_SETTINGS"] = "설정 열기",
+    ["TYPE_S"] = "유형: %s",
+    ["UNLOCK_POSITION"] = "위치 잠금 해제",
+    ["D_OF_D_ITEMS"] = "%d / %d 아이템",
+    ["ADD_BY_ID"] = "ID로 추가",
+    ["ADDED_NPC_S"] = "NPC 추가됨: %s",
+    ["ADDED_PLAYER_S"] = "플레이어 추가됨: %s",
+    ["ALL_DIFFICULTIES"] = "모든 난이도",
+    ["BAR_SETTINGS"] = "바 설정",
+    ["CLICK_AND_DRAG_TO_MOVE"] = "클릭한 채 끌어서 이동",
+    ["DISCORD"] = "Discord",
+    ["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"] = "두 번 클릭 또는 Shift+클릭으로 접거나 펼치기",
+    ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "고정점 숨기기 (마우스를 올리면 표시)",
+    ["HIDE_BAR"] = "바 숨기기",
+    ["ICON_SPACING"] = "아이콘 간격",
+    ["LEFT_CLICK_TO_USE"] = "왼쪽 클릭하여 사용",
+    ["LOCK_MOVE"] = "이동 잠금",
+    ["LOCK_RESIZE"] = "크기 조정 잠금",
+    ["NPC_NOTE_ALREADY_EXISTS"] = "NPC 메모가 이미 있습니다.",
+    ["OPEN_ONEWOW"] = "OneWoW 열기",
+    ["OPEN_THE_AUCTION_HOUSE_FIRST_TO_SCAN_PRICES"] = "가격을 검색하려면 먼저 경매장을 여세요.",
+    ["PRICES_FOUND"] = "개의 가격을 찾음",
+    ["RIGHT_CLICK_FOR_MORE_OPTIONS"] = "더 많은 옵션을 보려면 오른쪽 클릭",
+    ["SCAN_AH"] = "경매장 검색",
+    ["SEARCH_ITEMS"] = "아이템 검색...",
+    ["SHOW_BAR"] = "바 표시",
+    ["GOLD_TOTAL"] = "총 골드",
+    ["WORLD_QUEST"] = "전역 퀘스트",
+
+    -- Phase 3 consolidated (bare-word terms)
+    ["ITEM"] = "아이템",
+    ["RENAME"] = "이름 변경",
+    ["EXPANSION"] = "확장팩",
+    ["SEARCH"] = "검색...",
+    ["MAIL"] = "우편",
+    ["UP"] = "위로",
+    ["ACHIEVEMENT"] = "업적",
+    ["CREATE"] = "생성",
+    ["DOWN"] = "아래로",
+    ["DUPLICATE"] = "복제",
+    ["FILTER"] = "필터:",
+    ["KEEP"] = "유지",
+    ["PAUSE"] = "일시 정지",
+    ["PROGRESS"] = "진행도",
+    ["STOP"] = "중지",
+    ["BLACKLIST"] = "차단 목록",
+    ["CAMPAIGN"] = "캠페인",
+    ["DECOR"] = "장식",
+    ["DISCARD"] = "버리기",
+    ["FILE"] = "파일:",
+    ["GUILD"] = "길드:",
+    ["ID"] = "ID:",
+    ["LOCKOUTS"] = "잠금",
+    ["RACE"] = "종족:",
+    ["SESSION"] = "세션",
+    ["SLOT"] = "슬롯",
+    ["SUMMARY"] = "요약",
 })

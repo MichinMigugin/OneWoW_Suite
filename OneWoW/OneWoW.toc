@@ -63,10 +63,15 @@ Services\LocaleService.lua
 # es/fr/de/ru harvested from standalone addons (Phase 2+); missing keys fall back to enUS.
 Locales\Shared\enUS.lua
 Locales\Shared\koKR.lua
-Locales\Shared\esES.lua
 Locales\Shared\frFR.lua
 Locales\Shared\deDE.lua
+Locales\Shared\zhCN.lua
+Locales\Shared\esES.lua
+Locales\Shared\zhTW.lua
+Locales\Shared\esMX.lua
 Locales\Shared\ruRU.lua
+Locales\Shared\ptBR.lua
+Locales\Shared\itIT.lua
 
 # OneWoW-scoped locale
 Locales\enUS.lua

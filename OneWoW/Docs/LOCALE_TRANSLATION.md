@@ -384,10 +384,20 @@ ptBR itIT.
   desc keys (`LANGUAGE_DESC`/`THEME_DESC`/`MINIMAP_ICON_DESC`); kept valid surviving
   translations (koKR 30, others 20). The rest fill during the shared-scope translation.
 
-**Per-scope sub-phases (remaining):**
-- [ ] For each scope: fill all 11 locale files. Start with **shared** (113 keys — the
-  common base), then by size. Source of truth for established terms:
-  `.wow_docs/general/GlobalStrings.lua`.
+**Per-scope sub-phases:**
+- [x] **`shared` scope (pilot) — all 11 locales, 113 keys each (1,130 translations).**
+  Created the 5 missing locale files (zhCN/zhTW/esMX/ptBR/itIT) + completed the 5
+  partials (koKR/frFR/deDE/esES/ruRU), all registered in `OneWoW.toc` (load order
+  matches `SUPPORTED`). Reused existing translations, corrected dropped diacritics in
+  the old deDE/esES/frFR files (e.g. `Schaltflache`→`Schaltfläche`). Each file headed
+  `-- Machine-drafted (Phase 4) — pending native review`. Verified: every locale has
+  exact 113-key parity with enUS and matching `%s`/`%d` specifiers (0 missing/extra/
+  mismatch). **Known draft caveats for review:** money-letter labels
+  (`VALUE_DISPLAY_LETTERS`, e.g. fr `p, a, c`) should be checked against the actual
+  money formatter output per locale; theme names like `Glassmorphic`/`Synthwave` kept
+  as loanwords where no natural translation; `esMX` mirrors `esES` pending LatAm tweaks.
+- [ ] Remaining scopes by size: OneWoW 887, AltTracker 910, DevTool 501, Bags 432,
+  Notes 364, QoL 338, Catalog 300, ShoppingList 246, Trackers 151, + data/QoL modules.
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
 - [ ] In-game spot-check per language where feasible; commit per scope.
 
