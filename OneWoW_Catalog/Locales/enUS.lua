@@ -76,6 +76,16 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["JOURNAL_GENERAL_LOOT"] = "General Loot",
     ["JOURNAL_ITEMS_COUNT"] = "%d items",
 
+    ["JOURNAL_QUEST_PREFIX"] = "Quest",
+    ["JOURNAL_ITEMID"] = "ItemID",
+    ["JOURNAL_QUEST_COMPLETED"] = "Completed",
+    ["JOURNAL_QUEST_NOT_COMPLETED"] = "Not Completed",
+    ["JOURNAL_CLICK_FOR_LINK"] = "WoWHead Link",
+    ["JOURNAL_OPEN"] = "View Quest",
+    ["JOURNAL_OPEN_QUEST"] = "View Quest",
+    ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Click a link to highlight it, then press Ctrl+C to copy. Use 'Open Quest' to view it in the Quests catalog.",
+    ["JOURNAL_QUEST_CAT_TT"] = "Items listed here are items that can be obtained via a Quest of some sort.",
+
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Difficulty",
 
     ["JOURNAL_SPECIAL_TMOG"] = "TMog",

@@ -9,6 +9,13 @@ OneWoWInstances_Midnight = {
 		instanceType = "raid",
 		expansionID = 12,
 	},
+	[1315] = {
+		instanceID = 1315,
+		name = "Maisara Caverns",
+		mapID = 2874,
+		instanceType = "party",
+		expansionID = 12,
+	},
 	[1307] = {
 		instanceID = 1307,
 		name = "The Voidspire",
@@ -58,11 +65,11 @@ OneWoWInstances_Midnight = {
 		instanceType = "party",
 		expansionID = 12,
 	},
-	[1315] = {
-		instanceID = 1315,
-		name = "Maisara Caverns",
-		mapID = 2874,
-		instanceType = "party",
+	[1305] = {
+		instanceID = 1305,
+		name = "Sporefall",
+		mapID = 1592,
+		instanceType = "raid",
 		expansionID = 12,
 	},
 	[1309] = {

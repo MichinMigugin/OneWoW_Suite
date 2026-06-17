@@ -21,6 +21,31 @@ local expansionList = {
 JournalData.journalCache = nil
 JournalData.initialized = false
 
+-- Synthetic encounters that pull achievement-tied and quest-obtained loot out of
+-- the General bucket, so "General" only holds items not tied to a boss,
+-- achievement, or quest.
+local ACHIEVEMENT_ENC_ID = -2
+local QUEST_ENC_ID = -3
+JournalData.ACHIEVEMENT_ENC_ID = ACHIEVEMENT_ENC_ID
+JournalData.QUEST_ENC_ID = QUEST_ENC_ID
+
+-- Encounter display order: bosses (by bossIndex) -> Achievement -> Quest -> General.
+local function EncounterSortRank(enc)
+    if enc.encounterID == 0 then return 4 end
+    if enc.encounterID == QUEST_ENC_ID then return 3 end
+    if enc.encounterID == ACHIEVEMENT_ENC_ID then return 2 end
+    return 1
+end
+
+local function SortEncounters(a, b)
+    local ra, rb = EncounterSortRank(a), EncounterSortRank(b)
+    if ra ~= rb then return ra < rb end
+    local ai = a.bossIndex or 999
+    local bi = b.bossIndex or 999
+    if ai ~= bi then return ai < bi end
+    return (a.name or "") < (b.name or "")
+end
+
 function JournalData:DetermineItemSpecial(idata)
     -- Achievement-gated items are tagged first so they can be excluded from
     -- regular loot counts and shown with achievement info in the UI.
@@ -213,56 +238,96 @@ function JournalData:BuildJournalCache()
                 local encByID = itemsByEncByInst[instanceID] or {}
                 local encounters = {}
 
-                for encID, entries in pairs(encByID) do
-                    local encInfo = encountersGlobal[encID]
-                    local encName
-                    local bossIndex = 0
-
-                    if encID == 0 then
-                        encName = L["JOURNAL_GENERAL_LOOT"]
-                    elseif encInfo then
-                        encName = encInfo.name or L["JOURNAL_UNKNOWN_INST"]
-                        bossIndex = encInfo.bossIndex or 0
-                    else
-                        encName = L["JOURNAL_UNKNOWN_INST"]
-                    end
-
-                    local items = {}
-                    for _, entry in ipairs(entries) do
-                        local idata = entry.itemData
-                        local itemRow = {
-                            itemID       = entry.itemID,
-                            itemData     = idata,
-                            name         = idata.name or L["JOURNAL_UNKNOWN_ITEM"],
-                            icon         = idata.icon or 134400,
-                            quality      = idata.quality or 1,
-                            special      = self:DetermineItemSpecial(idata),
-                            difficulties = entry.difficulties or {},
-                            source       = entry.source,
-                        }
-                        table.insert(items, itemRow)
-                    end
-
-                    table.sort(items, function(a, b)
-                        return a.name < b.name
-                    end)
-
-                    table.insert(encounters, {
-                        encounterID = encID,
-                        name        = encName,
-                        bossIndex   = bossIndex,
-                        items       = items,
-                    })
+                local function MakeItemRow(entry)
+                    local idata = entry.itemData
+                    return {
+                        itemID       = entry.itemID,
+                        itemData     = idata,
+                        name         = idata.name or L["JOURNAL_UNKNOWN_ITEM"],
+                        icon         = idata.icon or 134400,
+                        quality      = idata.quality or 1,
+                        special      = self:DetermineItemSpecial(idata),
+                        difficulties = entry.difficulties or {},
+                        source       = entry.source,
+                        questSources = idata.questSources,
+                    }
                 end
 
-                table.sort(encounters, function(a, b)
-                    if a.encounterID == 0 then return false end
-                    if b.encounterID == 0 then return true end
-                    local ai = a.bossIndex or 999
-                    local bi = b.bossIndex or 999
-                    if ai ~= bi then return ai < bi end
+                local function ByName(a, b)
                     return a.name < b.name
-                end)
+                end
+
+                for encID, entries in pairs(encByID) do
+                    if encID == 0 then
+                        -- General loot: pull quest-obtained and achievement-tied items
+                        -- into their own encounters so true general loot stays clean.
+                        -- Priority: a quest source (how you obtain it) wins over an
+                        -- achievement tag.
+                        local generalItems, achievementItems, questItems = {}, {}, {}
+                        for _, entry in ipairs(entries) do
+                            local itemRow = MakeItemRow(entry)
+                            if itemRow.questSources and #itemRow.questSources > 0 then
+                                table.insert(questItems, itemRow)
+                            elseif itemRow.special == "Achievement" then
+                                table.insert(achievementItems, itemRow)
+                            else
+                                table.insert(generalItems, itemRow)
+                            end
+                        end
+
+                        if #generalItems > 0 then
+                            table.sort(generalItems, ByName)
+                            table.insert(encounters, {
+                                encounterID = 0,
+                                name        = L["JOURNAL_GENERAL_LOOT"],
+                                bossIndex   = 0,
+                                items       = generalItems,
+                            })
+                        end
+                        if #achievementItems > 0 then
+                            table.sort(achievementItems, ByName)
+                            table.insert(encounters, {
+                                encounterID = ACHIEVEMENT_ENC_ID,
+                                name        = L["JOURNAL_ACHIEVEMENT_LOOT"],
+                                bossIndex   = 0,
+                                items       = achievementItems,
+                            })
+                        end
+                        if #questItems > 0 then
+                            table.sort(questItems, ByName)
+                            table.insert(encounters, {
+                                encounterID  = QUEST_ENC_ID,
+                                name         = L["JOURNAL_QUEST_LOOT"],
+                                bossIndex    = 0,
+                                items        = questItems,
+                                questCategory = true,
+                            })
+                        end
+                    else
+                        local encInfo = encountersGlobal[encID]
+                        local encName = L["JOURNAL_UNKNOWN_INST"]
+                        local bossIndex = 0
+                        if encInfo then
+                            encName = encInfo.name or L["JOURNAL_UNKNOWN_INST"]
+                            bossIndex = encInfo.bossIndex or 0
+                        end
+
+                        local items = {}
+                        for _, entry in ipairs(entries) do
+                            table.insert(items, MakeItemRow(entry))
+                        end
+                        table.sort(items, ByName)
+
+                        table.insert(encounters, {
+                            encounterID = encID,
+                            name        = encName,
+                            bossIndex   = bossIndex,
+                            items       = items,
+                        })
+                    end
+                end
+
+                table.sort(encounters, SortEncounters)
 
                 local hasMounts, hasPets, hasToys, hasRecipes, hasQuest, hasHousing = false, false, false, false, false, false
                 local totalItems = 0
@@ -314,14 +379,7 @@ end
 
 function JournalData:SortEncountersInPlace(inst)
     if not inst or not inst.encounters then return end
-    table.sort(inst.encounters, function(a, b)
-        if a.encounterID == 0 then return false end
-        if b.encounterID == 0 then return true end
-        local ai = a.bossIndex or 999
-        local bi = b.bossIndex or 999
-        if ai ~= bi then return ai < bi end
-        return (a.name or "") < (b.name or "")
-    end)
+    table.sort(inst.encounters, SortEncounters)
 end
 
 function JournalData:RecalculateInstanceTotals(inst)

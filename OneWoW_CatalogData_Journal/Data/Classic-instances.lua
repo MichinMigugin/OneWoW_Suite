@@ -79,10 +79,10 @@ OneWoWInstances_Classic = {
 		instanceType = "party",
 		expansionID = 1,
 	},
-	[241] = {
-		instanceID = 241,
-		name = "Zul'Farrak",
-		mapID = 209,
+	[76] = {
+		instanceID = 76,
+		name = "Zul'Gurub",
+		mapID = 233,
 		instanceType = "party",
 		expansionID = 1,
 	},
@@ -137,7 +137,9 @@ OneWoWInstances_Classic = {
 	},
 	[760] = {
 		instanceID = 760,
-		name = "|cffFF7D01Onyxia's Lair|r",
+		name = "Onyxia's Lair",
+		mapID = 248,
+		instanceType = "raid",
 		expansionID = 1,
 	},
 	[246] = {
@@ -191,12 +193,16 @@ OneWoWInstances_Classic = {
 	},
 	[754] = {
 		instanceID = 754,
-		name = "|cffFF7D01Naxxramas|r",
+		name = "Naxxramas",
+		mapID = 162,
+		instanceType = "raid",
 		expansionID = 1,
 	},
-	[76] = {
-		instanceID = 76,
-		name = "|cffFF7D01Zul'Gurub|r",
+	[232] = {
+		instanceID = 232,
+		name = "Maraudon",
+		mapID = 349,
+		instanceType = "party",
 		expansionID = 1,
 	},
 	[1292] = {
@@ -206,10 +212,10 @@ OneWoWInstances_Classic = {
 		instanceType = "party",
 		expansionID = 1,
 	},
-	[232] = {
-		instanceID = 232,
-		name = "Maraudon",
-		mapID = 349,
+	[241] = {
+		instanceID = 241,
+		name = "Zul'Farrak",
+		mapID = 209,
 		instanceType = "party",
 		expansionID = 1,
 	},
