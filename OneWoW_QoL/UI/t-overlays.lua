@@ -1917,7 +1917,7 @@ local function BuildFeatureList(split, tabName)
 end
 
 function ns.UI.CreateOverlaysTab(parent)
-    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_PLACEHOLDER"] })
+    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_HINT"] })
     split.listTitle:SetText(L["OVERLAYS_LIST_TITLE"])
     split.detailTitle:SetText(L["OVERLAYS_DETAIL_TITLE"])
 

@@ -14,7 +14,7 @@ function ns.UI.CreatePortalsTab(parent)
 
 	local split = OneWoW_GUI:CreateSplitPanel(parent, {
 		showSearch = true,
-		searchPlaceholder = L["SEARCH_PLACEHOLDER"],
+		searchPlaceholder = L["SEARCH_HINT"],
 	})
 	split.listTitle:SetText(L["PORTALS_LIST_TITLE"])
 	split.detailTitle:SetText(L["PORTALS_DETAIL_TITLE"])

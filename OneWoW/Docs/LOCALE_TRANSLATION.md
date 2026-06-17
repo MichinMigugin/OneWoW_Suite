@@ -444,9 +444,21 @@ ptBR itIT.
   is a literal percent, not a directive — `bin/locale_verify.py` was hardened to stop treating
   the printf space-flag as a spec (it's never used in addon strings) so "X% word" no longer
   false-positives.
+- [x] **`OneWoW` core scope — all 11 locales, 908 keys each.** koKR was already full real
+  Korean; 9 others drafted fresh (frFR/deDE/esES/itIT/ptBR/zhCN/zhTW/ruRU) + `esMX` via
+  `gen_esmx.py`; all registered in the toc. Verified 908/908 via `bin/locale_verify.py`. The
+  `Locales/Shared` scope (113 keys) was already fully localized across all 11 — untouched.
+  **Draft notes:** core uses the private-vararg header (`local ADDON_NAME, OneWoW = ...`).
+  WoW **expansion names kept English** (The War Within, Dragonflight, … — Blizzard brand names,
+  never localized); third-party addons (Pawn, Auctionator, TSM, Baganator, Bagnon, ArkInventory)
+  and OneWoW sibling **module/product names** (Catalog, Notes, Bags, QoL, Direct Deposit,
+  Trackers, DevTools, Shopping List) kept as English brand names — descriptive UI around them is
+  localized. `SRCH_PATH_*` breadcrumbs localize the section words but keep those product names.
+  Overlays = fr *Incrustations* / de *Overlays* / es *Superposiciones* / it *Sovrapposizioni* /
+  pt *Sobreposições* / ru *Наложения* / zhCN 覆盖层 / zhTW 覆蓋層 / ko 오버레이-context; zhTW uses
+  Taiwan terms (巨集=macro, 套用=apply, 整合=integration, 滑鼠提示=tooltip, 伺服器=server).
 - [ ] Remaining scopes, **player-facing value order** (decided):
-  OneWoW core 887 → DevTool 501 →
-  ShoppingList 246 → then data/QoL-module sub-addons (2–105 keys each).
+  DevTool 501 → ShoppingList 246 → then data/QoL-module sub-addons (2–105 keys each).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
 - [ ] In-game spot-check per language where feasible; commit per scope.
 

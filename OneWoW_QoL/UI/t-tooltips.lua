@@ -1725,7 +1725,7 @@ local function BuildFeatureList(split, tabName)
 end
 
 function ns.UI.CreateTooltipsTab(parent)
-    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_PLACEHOLDER"] })
+    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_HINT"] })
     split.listTitle:SetText(L["TOOLTIPS_LIST_TITLE"])
     split.detailTitle:SetText(L["TOOLTIPS_DETAIL_TITLE"])
 
