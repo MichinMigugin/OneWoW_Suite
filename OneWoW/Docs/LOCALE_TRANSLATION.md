@@ -422,8 +422,17 @@ ptBR itIT.
   pin colors localized per class+color (e.g. zhTW uses 盜賊/惡魔獵人/喚能師, ru genitive
   "Зеленый охотника"); hyperlink **syntax tokens** (`(item=ID)`, `(/way X Y …)`) kept
   literal — only descriptive words localized.
+- [x] **`OneWoW_QoL` core scope — all 11 locales, 327 keys each.** koKR was a 10-key
+  stub (only the `BINDING_*` keybind names); completed to full Korean. 9 others drafted
+  fresh (frFR/deDE/esES/itIT/ptBR/zhCN/zhTW/ruRU) + `esMX` via `gen_esmx.py`; all
+  registered in the toc. Verified 327/327 via `bin/locale_verify.py`. **Draft notes:**
+  the bulk is WoW game-setting/CVar names + descriptions, so drafts reuse Blizzard's own
+  Interface Options terminology per language (nameplates = fr *Barres d'unité* / de
+  *Namensplaketten* / es-pt *Placas de identificación* / it *Targhette* / ru *Индикаторы*
+  / zhCN 姓名板 / zhTW 名條 / ko 이름표); the `DEVHELP_BODY` help block has prose localized
+  but code/paths/identifiers kept literal.
 - [ ] Remaining scopes, **player-facing value order** (decided):
-  QoL 338 → AltTracker 910 → OneWoW core 887 → DevTool 501 →
+  AltTracker 910 → OneWoW core 887 → DevTool 501 →
   ShoppingList 246 → then data/QoL-module sub-addons (2–105 keys each).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
 - [ ] In-game spot-check per language where feasible; commit per scope.
