@@ -19,11 +19,16 @@
 
 # Locales
 Locales\enUS.lua
-Locales\esES.lua
 Locales\koKR.lua
 Locales\frFR.lua
-Locales\ruRU.lua
 Locales\deDE.lua
+Locales\zhCN.lua
+Locales\esES.lua
+Locales\zhTW.lua
+Locales\esMX.lua
+Locales\ruRU.lua
+Locales\ptBR.lua
+Locales\itIT.lua
 
 # Core
 Core\Profile.lua

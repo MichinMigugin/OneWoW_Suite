@@ -406,7 +406,16 @@ ptBR itIT.
   difficulty badges (`JOURNAL_DIFF_*`) use per-locale short forms (e.g. ru `О/Г/Э`,
   zhCN `普/英/史`, zhTW `普/英/傳`) — confirm against community conventions; Mythic is
   `史` in zhCN but `傳` in zhTW per Blizzard difficulty naming.
-- [ ] Remaining scopes, **player-facing value order** (decided): Bags 432 →
+- [x] **`OneWoW_Bags` — all 11 locales, 432 keys each.** 5 pre-existing locales had
+  only 420 keys (missing a 12-key `IMPORT_WARN_*`/`IMPORT_INFO_LOCALE_MISMATCH` block)
+  **and** quality defects: `frFR`/`deDE`/`esES` were rebuilt to fix systematically
+  dropped diacritics in their older keys, an 8-backslash `\n` corruption (rendered as
+  literal backslashes), two stray-English Masque keys, `esES` `CAT_TRADE_GOODS`
+  duplicating `CAT_MATS`, and inconsistent Warband terms (deDE unified to *Kriegsmeute*).
+  `koKR`/`ruRU` were clean (just +12 keys). Created `zhCN`/`zhTW`/`ptBR`/`itIT` fresh +
+  `esMX` via `gen_esmx.py`; all registered in the toc. Verified 432/432 via
+  `bin/locale_verify.py`.
+- [ ] Remaining scopes, **player-facing value order** (decided):
   Notes 364 → QoL 338 → AltTracker 910 → OneWoW core 887 → DevTool 501 →
   ShoppingList 246 → then data/QoL-module sub-addons (2–105 keys each).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
