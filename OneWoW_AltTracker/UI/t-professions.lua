@@ -372,21 +372,15 @@ local function BuildExpandedPanels(ef, data, row)
 
         if profData.name ~= "Fishing" and profData.name ~= "Archaeology" then
             local accLabelText = (profData.name == "Cooking") and L["PROF_LABEL_ACC"] or L["PROF_LABEL_ACC_1"]
-            local firstAccData
-            if profData.name == "Cooking" then
-                firstAccData = profEquipData and profEquipData.accessory1
-            else
-                firstAccData = profEquipData and profEquipData.accessory2
-            end
-            if firstAccData then
-                AddEquipLink(pEquip, accLabelText, firstAccData)
+            if profEquipData and profEquipData.accessory1 then
+                AddEquipLink(pEquip, accLabelText, profEquipData.accessory1)
             else
                 grid:AddLine(pEquip, "  " .. accLabelText .. " " .. NONE, {1, 0.34, 0.13})
             end
 
             if profData.name ~= "Cooking" then
-                if profEquipData and profEquipData.accessory1 then
-                    AddEquipLink(pEquip, L["PROF_LABEL_ACC_2"], profEquipData.accessory1)
+                if profEquipData and profEquipData.accessory2 then
+                    AddEquipLink(pEquip, L["PROF_LABEL_ACC_2"], profEquipData.accessory2)
                 else
                     grid:AddLine(pEquip, "  " .. L["PROF_LABEL_ACC_2"] .. " " .. NONE, {1, 0.34, 0.13})
                 end

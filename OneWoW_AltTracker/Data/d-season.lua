@@ -6,6 +6,7 @@ ns.SeasonData.raids = {
     {key = "dreamrift",  label = "The Dreamrift",        short = "Dream"},
     {key = "voidspire",  label = "The Voidspire",         short = "Void"},
     {key = "marchquel",  label = "March on Quel'Danas",  short = "March"},
+    {key = "sporefall",  label = "Sporefall",             short = "Spore"},
 }
 
 ns.SeasonData.raidDifficulties = {

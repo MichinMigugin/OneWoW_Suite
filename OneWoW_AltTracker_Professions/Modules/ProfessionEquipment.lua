@@ -3,26 +3,20 @@ local _, ns = ...
 ns.ProfessionEquipment = {}
 local Module = ns.ProfessionEquipment
 
-local PROF_SLOTS = {
-    Primary1 = {
-        tool = 20,
-        accessory1 = 21,
-        accessory2 = 22,
-    },
-    Primary2 = {
-        tool = 23,
-        accessory1 = 24,
-        accessory2 = 25,
-    },
-    Cooking = {
-        tool = 26,
-        accessory1 = 27,
-    },
-    Fishing = {
-        tool = 28,
-        accessory1 = 29,
-        accessory2 = 30,
-    },
+-- Inventory slot ID -> equipment field. Slot ownership is resolved at scan time
+-- via C_TradeSkillUI.GetProfessionByInventorySlot, not GetProfessions order.
+local SLOT_FIELDS = {
+    [20] = "tool",
+    [21] = "accessory1",
+    [22] = "accessory2",
+    [23] = "tool",
+    [24] = "accessory1",
+    [25] = "accessory2",
+    [26] = "tool",
+    [27] = "accessory1",
+    [28] = "tool",
+    [29] = "accessory1",
+    [30] = "accessory2",
 }
 
 local function NameFromLink(itemLink)
@@ -58,6 +52,23 @@ local function CollectSlot(slotID)
     }
 end
 
+local function BuildSkillLineToName(charData)
+    local skillLineToName = {}
+    for _, profData in pairs(charData.professions) do
+        if profData.name and profData.skillLine then
+            skillLineToName[profData.skillLine] = profData.name
+        end
+    end
+    return skillLineToName
+end
+
+local function ProfessionNameForSlot(slotID, skillLineToName)
+    local professionEnum = C_TradeSkillUI.GetProfessionByInventorySlot(slotID)
+    if not professionEnum then return nil end
+    local skillLine = C_TradeSkillUI.GetProfessionSkillLineID(professionEnum)
+    return skillLineToName[skillLine]
+end
+
 function Module:CollectData(charKey, charData)
     if not charKey or not charData then return false end
 
@@ -66,45 +77,33 @@ function Module:CollectData(charKey, charData)
     end
 
     local existing = charData.professionEquipment or {}
+    local skillLineToName = BuildSkillLineToName(charData)
     local equipment = {}
     local hasMissing = false
 
-    for slotName, profData in pairs(charData.professions) do
-        if PROF_SLOTS[slotName] then
-            local slotConfig = PROF_SLOTS[slotName]
-            local oldEquip = existing[profData.name]
-            local profEquip = {
+    for _, profData in pairs(charData.professions) do
+        if profData.name and profData.name ~= "Archaeology" then
+            equipment[profData.name] = {
                 professionName = profData.name,
                 tool = nil,
                 accessory1 = nil,
                 accessory2 = nil,
             }
+        end
+    end
 
-            if slotConfig.tool then
-                profEquip.tool = CollectSlot(slotConfig.tool)
-                if not profEquip.tool and oldEquip then
-                    profEquip.tool = oldEquip.tool
-                end
-                if not profEquip.tool then hasMissing = true end
+    for slotID, field in pairs(SLOT_FIELDS) do
+        local profName = ProfessionNameForSlot(slotID, skillLineToName)
+        local profEquip = profName and equipment[profName]
+        if profEquip then
+            local oldEquip = existing[profName]
+            profEquip[field] = CollectSlot(slotID)
+            if not profEquip[field] and oldEquip then
+                profEquip[field] = oldEquip[field]
             end
-
-            if slotConfig.accessory1 then
-                profEquip.accessory1 = CollectSlot(slotConfig.accessory1)
-                if not profEquip.accessory1 and oldEquip then
-                    profEquip.accessory1 = oldEquip.accessory1
-                end
-                if not profEquip.accessory1 then hasMissing = true end
+            if not profEquip[field] then
+                hasMissing = true
             end
-
-            if slotConfig.accessory2 then
-                profEquip.accessory2 = CollectSlot(slotConfig.accessory2)
-                if not profEquip.accessory2 and oldEquip then
-                    profEquip.accessory2 = oldEquip.accessory2
-                end
-                if not profEquip.accessory2 then hasMissing = true end
-            end
-
-            equipment[profData.name] = profEquip
         end
     end
 
@@ -123,24 +122,14 @@ end
 function Module:RetryMissing(charKey, charData)
     if not charData or not charData.professions or not charData.professionEquipment then return end
 
-    for slotName, profData in pairs(charData.professions) do
-        if PROF_SLOTS[slotName] then
-            local slotConfig = PROF_SLOTS[slotName]
-            local profEquip = charData.professionEquipment[profData.name]
-            if not profEquip then break end
+    local skillLineToName = BuildSkillLineToName(charData)
 
-            if slotConfig.tool and (not profEquip.tool or not profEquip.tool.itemName) then
-                local data = CollectSlot(slotConfig.tool)
-                if data then profEquip.tool = data end
-            end
-            if slotConfig.accessory1 and (not profEquip.accessory1 or not profEquip.accessory1.itemName) then
-                local data = CollectSlot(slotConfig.accessory1)
-                if data then profEquip.accessory1 = data end
-            end
-            if slotConfig.accessory2 and (not profEquip.accessory2 or not profEquip.accessory2.itemName) then
-                local data = CollectSlot(slotConfig.accessory2)
-                if data then profEquip.accessory2 = data end
-            end
+    for slotID, field in pairs(SLOT_FIELDS) do
+        local profName = ProfessionNameForSlot(slotID, skillLineToName)
+        local profEquip = profName and charData.professionEquipment[profName]
+        if profEquip and (not profEquip[field] or not profEquip[field].itemName) then
+            local data = CollectSlot(slotID)
+            if data then profEquip[field] = data end
         end
     end
 end

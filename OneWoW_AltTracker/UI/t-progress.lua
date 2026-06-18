@@ -268,6 +268,8 @@ local KNOWN_BOSS_NAMES = {
     [92560] = "Lu'ashal",
     [92636] = "Predaxas",
     [92034] = "Thorm'belan",
+    [96472] = "Nexus-Captain Leth'ir",
+    [96473] = "Imperator Pertinax",
 }
 
 local function GetRaidProgString(endgameData)
@@ -538,6 +540,198 @@ local function CreateCommonCells(charRow, charData, charKey, endgameData, rowHei
     table.insert(charRow.cells, ratingText)
 end
 
+local EXPAND_LINE_H = 14
+local EXPAND_PAD = 6
+
+local RAID_EXPAND_DIFF_COL = 18
+
+local VAULT_EXPAND_SLOT_COL = 54
+local VAULT_EXPAND_TOTAL_COL = 28
+local VAULT_EXPAND_SLOTS = 3
+
+local EXPAND_VALUE_COL = 44
+
+local function ExpandVaultReservedWidth()
+    return EXPAND_PAD + VAULT_EXPAND_TOTAL_COL + VAULT_EXPAND_SLOTS * VAULT_EXPAND_SLOT_COL
+end
+
+local function ExpandVaultSlotRightOffset(slotIndex)
+    return EXPAND_PAD + (VAULT_EXPAND_SLOTS - slotIndex) * VAULT_EXPAND_SLOT_COL
+end
+
+local function ExpandVaultTotalRightOffset()
+    return EXPAND_PAD + VAULT_EXPAND_SLOTS * VAULT_EXPAND_SLOT_COL + VAULT_EXPAND_TOTAL_COL
+end
+
+local function AddExpandMutedLine(panel, text)
+    local fs = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    OneWoW_GUI:SafeSetFont(fs, OneWoW_GUI:GetFont(), 10)
+    fs:SetPoint("TOPLEFT", panel, "TOPLEFT", 6, panel.dy)
+    fs:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -6, panel.dy)
+    fs:SetJustifyH("LEFT")
+    fs:SetText(text)
+    fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    panel.dy = panel.dy - EXPAND_LINE_H
+end
+
+local function AddExpandLabelValueRow(panel, label, value, color, valueColWidth)
+    local valueWidth = valueColWidth or EXPAND_VALUE_COL
+    local labelFS = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    OneWoW_GUI:SafeSetFont(labelFS, OneWoW_GUI:GetFont(), 10)
+    labelFS:SetPoint("TOPLEFT", panel, "TOPLEFT", 6, panel.dy)
+    labelFS:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -(EXPAND_PAD + valueWidth), panel.dy)
+    labelFS:SetJustifyH("LEFT")
+    labelFS:SetWordWrap(false)
+    labelFS:SetText(label)
+    labelFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local valueFS = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    OneWoW_GUI:SafeSetFont(valueFS, OneWoW_GUI:GetFont(), 10)
+    valueFS:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -EXPAND_PAD, panel.dy)
+    valueFS:SetWidth(valueWidth)
+    valueFS:SetJustifyH("RIGHT")
+    valueFS:SetText(value)
+    if color then
+        if type(color) == "table" then
+            valueFS:SetTextColor(unpack(color))
+        else
+            valueFS:SetTextColor(color)
+        end
+    else
+        valueFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end
+    panel.dy = panel.dy - EXPAND_LINE_H
+end
+
+local function FormatVaultSlotDisplay(act)
+    if not act then return "-", false end
+    local prog = act.progress or 0
+    local thresh = act.threshold or 0
+    if thresh <= 0 then return "-", false end
+    local met = prog >= thresh
+    local itemLevel = act.itemLevel
+    if met and itemLevel then
+        return "[" .. thresh .. "=" .. itemLevel .. "]", true
+    elseif met then
+        return "[" .. thresh .. "]", true
+    end
+    return "[" .. prog .. "/" .. thresh .. "]", false
+end
+
+local function AddExpandVaultTrackHeader(panel)
+    local headers = {
+        {text = "T", offset = ExpandVaultTotalRightOffset(), width = VAULT_EXPAND_TOTAL_COL},
+        {text = "1", offset = ExpandVaultSlotRightOffset(1), width = VAULT_EXPAND_SLOT_COL},
+        {text = "2", offset = ExpandVaultSlotRightOffset(2), width = VAULT_EXPAND_SLOT_COL},
+        {text = "3", offset = ExpandVaultSlotRightOffset(3), width = VAULT_EXPAND_SLOT_COL},
+    }
+    for _, hdr in ipairs(headers) do
+        local fs = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        OneWoW_GUI:SafeSetFont(fs, OneWoW_GUI:GetFont(), 10)
+        fs:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -hdr.offset, panel.dy)
+        fs:SetWidth(hdr.width)
+        fs:SetJustifyH("CENTER")
+        fs:SetText(hdr.text)
+        fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    end
+    panel.dy = panel.dy - EXPAND_LINE_H
+end
+
+local function AddExpandVaultTrackRow(panel, label, list)
+    local reserved = ExpandVaultReservedWidth()
+    local labelFS = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    OneWoW_GUI:SafeSetFont(labelFS, OneWoW_GUI:GetFont(), 10)
+    labelFS:SetPoint("TOPLEFT", panel, "TOPLEFT", 6, panel.dy)
+    labelFS:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -reserved, panel.dy)
+    labelFS:SetJustifyH("LEFT")
+    labelFS:SetWordWrap(false)
+    labelFS:SetText(label)
+    labelFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    if not list or not (list[1] or list[2] or list[3]) then
+        local emptyFS = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        OneWoW_GUI:SafeSetFont(emptyFS, OneWoW_GUI:GetFont(), 10)
+        emptyFS:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -EXPAND_PAD, panel.dy)
+        emptyFS:SetWidth(reserved - EXPAND_PAD)
+        emptyFS:SetJustifyH("RIGHT")
+        emptyFS:SetText("--")
+        emptyFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        panel.dy = panel.dy - EXPAND_LINE_H
+        return
+    end
+
+    local totalFS = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    OneWoW_GUI:SafeSetFont(totalFS, OneWoW_GUI:GetFont(), 10)
+    totalFS:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -ExpandVaultTotalRightOffset(), panel.dy)
+    totalFS:SetWidth(VAULT_EXPAND_TOTAL_COL)
+    totalFS:SetJustifyH("CENTER")
+    totalFS:SetText(tostring(GetVaultTrackTotal(list)))
+    totalFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    for j = 1, VAULT_EXPAND_SLOTS do
+        local text, met = FormatVaultSlotDisplay(list[j])
+        local slotFS = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        OneWoW_GUI:SafeSetFont(slotFS, OneWoW_GUI:GetFont(), 10)
+        slotFS:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -ExpandVaultSlotRightOffset(j), panel.dy)
+        slotFS:SetWidth(VAULT_EXPAND_SLOT_COL)
+        slotFS:SetJustifyH("CENTER")
+        slotFS:SetText(text)
+        if met then
+            slotFS:SetTextColor(DOT_COLOR_ALL[1], DOT_COLOR_ALL[2], DOT_COLOR_ALL[3], DOT_COLOR_ALL[4] or 1)
+        else
+            slotFS:SetTextColor(DOT_COLOR_NONE[1], DOT_COLOR_NONE[2], DOT_COLOR_NONE[3], DOT_COLOR_NONE[4] or 1)
+        end
+    end
+    panel.dy = panel.dy - EXPAND_LINE_H
+end
+
+local function RaidExpandDiffRightOffset(diffIndex, numDiffs)
+    return EXPAND_PAD + (numDiffs - diffIndex) * RAID_EXPAND_DIFF_COL
+end
+
+local function AddRaidExpandDifficultyHeader(panel, difficulties)
+    local numDiffs = #difficulties
+    for i, diff in ipairs(difficulties) do
+        local fs = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        OneWoW_GUI:SafeSetFont(fs, OneWoW_GUI:GetFont(), 10)
+        fs:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -RaidExpandDiffRightOffset(i, numDiffs), panel.dy)
+        fs:SetWidth(RAID_EXPAND_DIFF_COL)
+        fs:SetJustifyH("CENTER")
+        fs:SetText(diff.label)
+        fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    end
+    panel.dy = panel.dy - EXPAND_LINE_H
+end
+
+local function AddRaidExpandBossRow(panel, enc, difficulties)
+    local numDiffs = #difficulties
+    local nameFS = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    OneWoW_GUI:SafeSetFont(nameFS, OneWoW_GUI:GetFont(), 10)
+    nameFS:SetPoint("TOPLEFT", panel, "TOPLEFT", 6, panel.dy)
+    nameFS:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -(EXPAND_PAD + numDiffs * RAID_EXPAND_DIFF_COL), panel.dy)
+    nameFS:SetJustifyH("LEFT")
+    nameFS:SetWordWrap(false)
+    nameFS:SetText(enc.name or UNKNOWN)
+    nameFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    for i, diff in ipairs(difficulties) do
+        local killed = enc.killed and enc.killed[diff.id]
+        local markFS = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        OneWoW_GUI:SafeSetFont(markFS, OneWoW_GUI:GetFont(), 10)
+        markFS:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -RaidExpandDiffRightOffset(i, numDiffs), panel.dy)
+        markFS:SetWidth(RAID_EXPAND_DIFF_COL)
+        markFS:SetJustifyH("CENTER")
+        if killed then
+            markFS:SetText("X")
+            markFS:SetTextColor(DOT_COLOR_ALL[1], DOT_COLOR_ALL[2], DOT_COLOR_ALL[3], DOT_COLOR_ALL[4] or 1)
+        else
+            markFS:SetText("-")
+            markFS:SetTextColor(DOT_COLOR_EMPTY[1], DOT_COLOR_EMPTY[2], DOT_COLOR_EMPTY[3], DOT_COLOR_EMPTY[4] or 1)
+        end
+    end
+    panel.dy = panel.dy - EXPAND_LINE_H
+end
+
 local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
     local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef)
 
@@ -605,81 +799,36 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
             local header = raid.label .. "  " .. bestKilled .. "/" .. total
             local panel = grid:AddPanel(header)
 
-            local diffHeaderParts = {"                                           "}
-            for _, diff in ipairs(difficulties) do
-                table.insert(diffHeaderParts, diff.label)
-            end
-            grid:AddLine(panel, table.concat(diffHeaderParts, "    "), {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            AddRaidExpandDifficultyHeader(panel, difficulties)
 
             if raidBlock and raidBlock.encounters then
                 local ordered = {}
                 for _, enc in pairs(raidBlock.encounters) do
-                    table.insert(ordered, enc)
+                    tinsert(ordered, enc)
                 end
-                table.sort(ordered, function(a, b)
+                sort(ordered, function(a, b)
                     return (a.journalEncounterID or 0) < (b.journalEncounterID or 0)
                 end)
                 for _, enc in ipairs(ordered) do
-                    local marks = {}
-                    for _, diff in ipairs(difficulties) do
-                        local killed = enc.killed and enc.killed[diff.id]
-                        if killed then
-                            table.insert(marks, "|cFF33CC33[X]|r")
-                        else
-                            table.insert(marks, "|cFF666666[ ]|r")
-                        end
-                    end
-                    local name = enc.name or "Unknown"
-                    local line = name .. "    " .. table.concat(marks, "   ")
-                    grid:AddLine(panel, line)
+                    AddRaidExpandBossRow(panel, enc, difficulties)
                 end
             else
-                grid:AddLine(panel, L["PROGRESS_RAID_NO_DATA"], {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
+                AddExpandMutedLine(panel, L["PROGRESS_RAID_NO_DATA"])
             end
         end
 
     elseif subTabKey == "weekly" then
         local p1 = grid:AddPanel(L["PROGRESS_GREAT_VAULT_DETAIL"])
-        local function VaultRow(list, label)
-            if not list or not (list[1] or list[2] or list[3]) then
-                grid:AddLine(p1, label .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
-                return
-            end
-            local total = GetVaultTrackTotal(list)
-            local parts = {(L["PROGRESS_VAULT_TOTAL"]) .. total}
-            for j = 1, 3 do
-                local act = list[j]
-                if act then
-                    local prog = act.progress or 0
-                    local thresh = act.threshold or 0
-                    local met = thresh > 0 and prog >= thresh
-                    local itemLevel = act.itemLevel
-                    local disp
-                    if met and itemLevel then
-                        disp = "[" .. thresh .. "=ilvl " .. itemLevel .. "]"
-                    elseif met then
-                        disp = "[" .. thresh .. "]"
-                    else
-                        disp = "[" .. prog .. "/" .. thresh .. "]"
-                    end
-                    if met then
-                        table.insert(parts, "|cFF33CC33" .. disp .. "|r")
-                    else
-                        table.insert(parts, "|cFFCC3333" .. disp .. "|r")
-                    end
-                end
-            end
-            grid:AddLine(p1, label .. ": " .. table.concat(parts, "  "))
-        end
+        AddExpandVaultTrackHeader(p1)
         if endgameData and endgameData.greatVault and endgameData.greatVault.activities then
             local acts = endgameData.greatVault.activities
-            VaultRow(acts.raid, RAID)
-            VaultRow(acts.dungeon, L["PROGRESS_VAULT_DUNGEON"])
-            VaultRow(acts.world, WORLD)
+            AddExpandVaultTrackRow(p1, RAID, acts.raid)
+            AddExpandVaultTrackRow(p1, L["PROGRESS_VAULT_DUNGEON"], acts.dungeon)
+            AddExpandVaultTrackRow(p1, WORLD, acts.world)
         else
-            grid:AddLine(p1, RAID .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
-            grid:AddLine(p1, L["PROGRESS_VAULT_DUNGEON"] .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
-            grid:AddLine(p1, WORLD .. ": --", {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            AddExpandVaultTrackRow(p1, RAID, nil)
+            AddExpandVaultTrackRow(p1, L["PROGRESS_VAULT_DUNGEON"], nil)
+            AddExpandVaultTrackRow(p1, WORLD, nil)
         end
 
         local resetSec = C_DateAndTime.GetSecondsUntilWeeklyReset()
@@ -697,22 +846,20 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
             for _, entry in ipairs(activities) do
                 local done = GetWeeklyActivityCompleted(endgameData, entry.questID)
                 local label = entry.name or C_QuestLog.GetTitleForQuestID(entry.questID) or ("Quest " .. entry.questID)
-                local text = label .. ": " .. (done and DONE or L["PROGRESS_WEEKLY_NOT_DONE"])
+                local value = done and DONE or L["PROGRESS_WEEKLY_NOT_DONE"]
                 local color = done
                     and {OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")}
                     or  {OneWoW_GUI:GetThemeColor("TEXT_MUTED")}
-                grid:AddLine(p2, text, color)
+                AddExpandLabelValueRow(p2, label, value, color)
             end
         else
-            grid:AddLine(p2, "--", {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
+            AddExpandMutedLine(p2, "--")
         end
         local bossKilled, bossName = GetWorldBossKilled(endgameData)
         if bossKilled then
-            local bossStr = L["PROGRESS_BOSS_KILLED"]
-            if bossName then bossStr = bossStr .. ": " .. bossName end
-            grid:AddLine(p2, "Boss: " .. bossStr, {OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")})
+            AddExpandLabelValueRow(p2, L["TT_COL_WORLD_BOSS"], bossName or L["PROGRESS_BOSS_KILLED"], {OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")}, 120)
         else
-            grid:AddLine(p2, "Boss: " .. NONE, {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
+            AddExpandLabelValueRow(p2, L["TT_COL_WORLD_BOSS"], NONE, {OneWoW_GUI:GetThemeColor("TEXT_MUTED")})
         end
 
     elseif subTabKey == "currencies" then

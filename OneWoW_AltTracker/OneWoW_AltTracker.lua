@@ -183,9 +183,20 @@ function OneWoWAltTracker:InitializeDatabase()
             if not found then table.insert(ids, reqID) end
         end
     end
-    if not self.db.global.overrides.progress.worldBossQuestIDs or #self.db.global.overrides.progress.worldBossQuestIDs == 0 then
-        self.db.global.overrides.progress.worldBossQuestIDs = {92123, 92560, 92636, 92034}
-        self.db.global.overrides.progress.worldBossQuestID = nil
+    do
+        local ids = self.db.global.overrides.progress.worldBossQuestIDs
+        if not ids or #ids == 0 then
+            self.db.global.overrides.progress.worldBossQuestIDs = {92123, 92560, 92636, 92034, 96472, 96473}
+            self.db.global.overrides.progress.worldBossQuestID = nil
+        else
+            for _, reqID in ipairs({96472, 96473}) do
+                local found = false
+                for _, id in ipairs(ids) do
+                    if id == reqID then found = true; break end
+                end
+                if not found then tinsert(ids, reqID) end
+            end
+        end
     end
     if not self.db.global.overrides.progress.weeklyActivityQuests then
         self.db.global.overrides.progress.weeklyActivityQuests = {

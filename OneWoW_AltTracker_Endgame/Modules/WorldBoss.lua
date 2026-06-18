@@ -11,6 +11,8 @@ local DEFAULT_BOSS_QUEST_IDS = {
     92560,
     92636,
     92034,
+    96472,
+    96473,
 }
 
 local KNOWN_BOSS_NAMES = {
@@ -18,6 +20,8 @@ local KNOWN_BOSS_NAMES = {
     [92560] = "Lu'ashal",
     [92636] = "Predaxas",
     [92034] = "Thorm'belan",
+    [96472] = "Nexus-Captain Leth'ir",
+    [96473] = "Imperator Pertinax",
 }
 
 function Module:CollectData(charKey, charData)
