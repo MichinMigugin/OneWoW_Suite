@@ -554,10 +554,16 @@ ptBR itIT.
       `professionspanel` (11) — all 11/11 (2026-06-17). koKR were TEST placeholders (replaced). Authored
       via per-language megadicts (one JSON per lang spanning all 6 modules; locale_gen ignores keys not
       in each template).
-    - [ ] remaining: `copytext` (11), `questtools` (10), `fastforward` (10), `autoopen` (9), `autoinvite`
-      (8), `autodelete` (6), and the ≤4-key tail (declineduel, autosummon, autoresurrect, autorepair,
-      autoreadycheck, screenshotachievements, hideerrors, fastloot, auctionhouse, achieveuntrack).
-      Mostly TEST-placeholder koKR.
+    - [x] **Final sweep — all 16 remaining micro-modules done, 11/11 each** (2026-06-17): `copytext`,
+      `questtools`, `fastforward`, `autoopen`, `autoinvite`, `autodelete`, `declineduel`, `autosummon`,
+      `autoresurrect`, `autorepair`, `autoreadycheck`, `screenshotachievements`, `hideerrors`, `fastloot`,
+      `auctionhouse`, `achieveuntrack`. koKR mostly TEST placeholders (replaced); `auctionhouse` koKR was
+      real (preserved), `achieveuntrack` koKR was an English copy (translated). Authored via per-language
+      megadicts. Commands (`/copytext`, `/ct`), API names (`C_GossipInfo`, `QuestLabelPrepend`,
+      `FlagsUtil`, `Enum.GossipOptionRecFlags`), and the screenshot path/filename kept literal.
+  - **✅ ALL QoL external modules complete** (34 localized + `minimapskin` skipped as dead code). With the
+    9 big scopes, DevTool, ShoppingList, DirectDeposit, all `CatalogData_*`, and all `AltTracker_*`, the
+    Phase-4 11-locale rollout is effectively done. Remaining = end-of-phase native/LatAm review passes.
   Skip `OneWoW_Utility_Extractor` + `OneWoW_AccountSync` (internal tools).
   **Do NOT localize** `OneWoW_Utility_Extractor` or `OneWoW_AccountSync` (internal tools).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
