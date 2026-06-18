@@ -66,10 +66,7 @@ UPSTREAM_URLS = [
 # Keys: paths relative to .wow_docs/. Values: manifest entry form — a string path
 # relative to default_source, or {"source": "<name>", "path": "<rel>"}.
 MANUAL_OVERRIDES: dict[str, str | dict[str, str]] = {
-    "general/GlobalStrings.lua": {
-        "source": "blizzard-interface-resources",
-        "path": "Resources/GlobalStrings/enUS.lua",
-    },
+
 }
 
 SCRIPT_DIR = Path(__file__).parent.parent.resolve()

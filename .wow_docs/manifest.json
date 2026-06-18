@@ -1,15 +1,6 @@
 {
   "wow_docs_root": ".",
   "sources": {
-    "blizzard-interface-resources": {
-      "url": "https://github.com/Ketho/BlizzardInterfaceResources.git",
-      "branch": "live",
-      "scan_roots": [
-        "Resources"
-      ],
-      "last_synced_commit": "c8d1f943caa7a66ed42b6a74153008c29b76b395",
-      "last_synced_date": "2026-06-18"
-    },
     "wow-ui-source": {
       "url": "https://github.com/Gethe/wow-ui-source.git",
       "branch": "live",
@@ -17,6 +8,15 @@
         "Interface/AddOns"
       ],
       "last_synced_commit": "dea5bd5d5f7adbbedcfa835738a7902da89cfe8c",
+      "last_synced_date": "2026-06-18"
+    },
+    "blizzard-interface-resources": {
+      "url": "https://github.com/Ketho/BlizzardInterfaceResources.git",
+      "branch": "live",
+      "scan_roots": [
+        "Resources"
+      ],
+      "last_synced_commit": "c8d1f943caa7a66ed42b6a74153008c29b76b395",
       "last_synced_date": "2026-06-18"
     }
   },
@@ -46,6 +46,94 @@
     "bags_bank_container/MainMenuBarBagButtons.lua": "Interface/AddOns/Blizzard_MainMenuBarBagButtons/Mainline/MainMenuBarBagButtons.lua",
     "bags_bank_container/MainMenuBarBagButtons.xml": "Interface/AddOns/Blizzard_MainMenuBarBagButtons/Mainline/MainMenuBarBagButtons.xml",
     "bags_bank_container/MainMenuBarBagManager.lua": "Interface/AddOns/Blizzard_MainMenuBarBagButtons/Shared/MainMenuBarBagManager.lua",
+    "blizzard-interface-resources/Resources/AtlasInfo.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/AtlasInfo.lua"
+    },
+    "blizzard-interface-resources/Resources/CVars.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/CVars.lua"
+    },
+    "blizzard-interface-resources/Resources/Events.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/Events.lua"
+    },
+    "blizzard-interface-resources/Resources/FrameXML.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/FrameXML.lua"
+    },
+    "blizzard-interface-resources/Resources/Frames.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/Frames.lua"
+    },
+    "blizzard-interface-resources/Resources/GlobalAPI.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/GlobalAPI.lua"
+    },
+    "blizzard-interface-resources/Resources/GlobalStrings/deDE.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/GlobalStrings/deDE.lua"
+    },
+    "blizzard-interface-resources/Resources/GlobalStrings/enUS.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/GlobalStrings/enUS.lua"
+    },
+    "blizzard-interface-resources/Resources/GlobalStrings/esES.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/GlobalStrings/esES.lua"
+    },
+    "blizzard-interface-resources/Resources/GlobalStrings/esMX.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/GlobalStrings/esMX.lua"
+    },
+    "blizzard-interface-resources/Resources/GlobalStrings/frFR.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/GlobalStrings/frFR.lua"
+    },
+    "blizzard-interface-resources/Resources/GlobalStrings/itIT.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/GlobalStrings/itIT.lua"
+    },
+    "blizzard-interface-resources/Resources/GlobalStrings/koKR.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/GlobalStrings/koKR.lua"
+    },
+    "blizzard-interface-resources/Resources/GlobalStrings/ptBR.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/GlobalStrings/ptBR.lua"
+    },
+    "blizzard-interface-resources/Resources/GlobalStrings/ruRU.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/GlobalStrings/ruRU.lua"
+    },
+    "blizzard-interface-resources/Resources/GlobalStrings/zhCN.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/GlobalStrings/zhCN.lua"
+    },
+    "blizzard-interface-resources/Resources/GlobalStrings/zhTW.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/GlobalStrings/zhTW.lua"
+    },
+    "blizzard-interface-resources/Resources/LuaEnum.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/LuaEnum.lua"
+    },
+    "blizzard-interface-resources/Resources/Mixins.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/Mixins.lua"
+    },
+    "blizzard-interface-resources/Resources/ScriptObjectAPI.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/ScriptObjectAPI.lua"
+    },
+    "blizzard-interface-resources/Resources/Templates.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/Templates.lua"
+    },
+    "blizzard-interface-resources/Resources/WidgetAPI.lua": {
+      "source": "blizzard-interface-resources",
+      "path": "Resources/WidgetAPI.lua"
+    },
     "chat_combatlog/ChatConstantsDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/ChatConstantsDocumentation.lua",
     "chat_combatlog/ChatInfoDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/ChatInfoDocumentation.lua",
     "chat_combatlog/ChatSharedDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/ChatSharedDocumentation.lua",
@@ -134,10 +222,6 @@
     "general/FunctionUtil.lua": "Interface/AddOns/Blizzard_SharedXMLBase/FunctionUtil.lua",
     "general/GameCursorDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/GameCursorDocumentation.lua",
     "general/GlobalCallbackRegistry.lua": "Interface/AddOns/Blizzard_SharedXMLBase/GlobalCallbackRegistry.lua",
-    "general/GlobalStrings.lua": {
-      "source": "blizzard-interface-resources",
-      "path": "Resources/GlobalStrings/enUS.lua"
-    },
     "general/KeyBindingsDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/KeyBindingsDocumentation.lua",
     "general/LocaleDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/LocaleDocumentation.lua",
     "general/LocalizationDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/LocalizationDocumentation.lua",
