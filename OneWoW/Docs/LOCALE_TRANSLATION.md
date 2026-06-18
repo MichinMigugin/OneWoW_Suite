@@ -508,8 +508,14 @@ ptBR itIT.
   NOTE: the pre-existing 5 locales use a Warband term that drifts from the rest of the suite
   (Bags/core/AltTracker use Blizzard-official Kriegsmeute/bataillon/banda de guerra); left as-is
   for self-consistency — flag for a normalization pass.
-- [ ] Remaining scopes, **player-facing value order** (decided): all `CatalogData_*`, then all
-  `AltTracker_*` data sub-addons, then reassess (QoL external modules, map tools).
+- [x] **`CatalogData_*` family — all 4 fully translated, 11/11 each** (Phase 4, 2026-06-17):
+  `Tradeskills` (32), `Journal` (12), `Vendors` (2), `Quests` (1). Each `koKR.lua` was a `"TEST"`
+  GetStore placeholder — replaced with real Korean. Tradeskills uses official Blizzard profession
+  + expansion names; **expansion names stay English in deDE/frFR/esES/ruRU/ptBR/itIT** (the live
+  clients show them as English product titles), translated only in zhCN/zhTW/koKR. `esMX` from
+  `esES`; all machine drafts headed with the pending-review comment.
+- [ ] Remaining scopes, **player-facing value order** (decided): all `AltTracker_*` data
+  sub-addons next, then reassess (QoL external modules, map tools).
   **Do NOT localize** `OneWoW_Utility_Extractor` or `OneWoW_AccountSync` (internal tools).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
 - [ ] In-game spot-check per language where feasible; commit per scope.
