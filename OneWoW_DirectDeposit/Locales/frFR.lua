@@ -48,4 +48,45 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
 
     ["ABOUT_SECTION"] = "À propos de Dépôt Direct",
     ["ABOUT_TEXT"] = "Dépôt Direct est un addon de qualité de vie de la suite OneWoW. Cet addon est également disponible dans le cadre de la suite complète OneWoW Suite, qui comprend de nombreux autres addons utiles pour améliorer votre expérience World of Warcraft. Découvrez d'autres addons qui peuvent vous aider à organiser vos aventures et à améliorer votre gameplay !",
+
+    ["MINIMAP_TOOLTIP_HINT"] = "Cliquez pour afficher les paramètres",
+
+    ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
+    ["DEPOSIT_NOW"] = "Déposer Maintenant",
+    ["ITEM_DRAG_HINT"] = "Glissez des objets ici pour les ajouter",
+    ["ITEM_EMPTY_LIST"] = "Aucun objet dans la liste de dépôt automatique.\nGlissez des objets ici pour les ajouter.",
+
+    ["TAB_KEYBINDS"] = "Raccourcis",
+
+    ["KEYBIND_SECTION"] = "Raccourcis d'Ajout Rapide",
+    ["KEYBIND_DESC"] = "Survolez un objet et appuyez sur un raccourci pour l'ajouter instantanément à la liste de dépôt. Assignez les touches dans Menu du Jeu > Raccourcis Clavier > OneWoW Direct Deposit.",
+    ["KEYBIND_ADD_PERSONAL"] = "Ajouter l'Objet Survolé - Banque Personnelle",
+    ["KEYBIND_ADD_WARBAND"] = "Ajouter l'Objet Survolé - Banque de Groupe de Guerre",
+    ["KEYBIND_ADD_GUILD"] = "Ajouter l'Objet Survolé - Banque de Guilde",
+    ["KEYBIND_NO_ITEM"] = "Aucun objet trouvé - survolez d'abord un objet.",
+
+    ["WARBOUND_SECTION"] = "Dépôt Automatique de Groupe de Guerre",
+    ["WARBOUND_ENABLE"] = "Déposer Automatiquement Tous les Objets de Groupe de Guerre",
+    ["WARBOUND_ENABLE_DESC"] = "À l'ouverture de n'importe quelle banque, dépose automatiquement tous les objets liés au groupe de guerre (liés au compte) de vos sacs dans la Banque de Groupe de Guerre. Les objets déjà présents dans votre liste de dépôt ci-dessus sont exclus.",
+
+    ["WARBOUND_EXCLUDE_KEYWORD_LABEL"] = "Conserver par Mot-Clé",
+    ["WARBOUND_EXCLUDE_KEYWORD_DESC"] = "Les objets correspondant à cette expression de mot-clé sont conservés dans vos sacs et ne sont jamais déposés automatiquement. Utilisez des mots-clés comme #potion, #flask, #elixir, #consumable, séparés par | pour \"ou\". Exemple : #potion | #flask",
+    ["WARBOUND_EXCLUDE_KEYWORD_PLACEHOLDER"] = "p. ex. #potion | #flask",
+    ["WARBOUND_EXCLUDE_ITEMS_LABEL"] = "Conserver des Objets Spécifiques",
+    ["WARBOUND_EXCLUDE_ITEMS_DESC"] = "Ces objets sont toujours conservés dans vos sacs, même s'ils sont liés au groupe de guerre. Glissez un objet ici ou saisissez son ID d'objet.",
+    ["WARBOUND_EXCLUDE_EMPTY"] = "Aucun objet conservé.\nGlissez des objets ici pour les conserver dans vos sacs.",
+
+    ["TOOLTIP_SECTION"] = "Superposition d'Infobulle",
+    ["TOOLTIP_ENABLE"] = "Afficher l'État de Dépôt dans les Infobulles",
+    ["TOOLTIP_ENABLE_DESC"] = "Les objets en attente de dépôt affichent leur banque de destination en bas de leur infobulle.",
+    ["TOOLTIP_LABEL"] = "Dépôt en cours :",
+    ["TOOLTIP_PERSONAL"] = "Personnel",
+    ["TOOLTIP_WARBAND"] = "Groupe de Guerre",
+
+    ["BINDING_HEADER_ONEWOW_DIRECTDEPOSIT"] = "|cFF00FF00OneWoW|r Direct Deposit",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_TOGGLE"] = "Afficher/Masquer la Fenêtre Direct Deposit",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_DEPOSIT"] = "Déposer les Objets Maintenant",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_PERSONAL"] = "Ajout Rapide : Banque Personnelle",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_WARBAND"] = "Ajout Rapide : Banque de Groupe de Guerre",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_GUILD"] = "Ajout Rapide : Banque de Guilde",
 })

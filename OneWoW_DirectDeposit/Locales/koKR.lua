@@ -50,4 +50,43 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ABOUT_TEXT"] = "자동 입금은 OneWoW Suite의 편의성 애드온입니다. 이 애드온은 또한 World of Warcraft 경험을 향상시키는 많은 다른 유용한 애드온을 포함하는 완전한 OneWoW Suite의 일부로 제공됩니다. 모험을 정리하고 게임 플레이를 개선하는 데 도움이 되는 더 많은 애드온을 찾아보세요!",
 
     ["MINIMAP_TOOLTIP_HINT"] = "클릭하여 설정 전환",
+
+    ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
+    ["DEPOSIT_NOW"] = "지금 입금",
+    ["ITEM_DRAG_HINT"] = "여기로 아이템을 끌어와 추가",
+    ["ITEM_EMPTY_LIST"] = "자동 입금 목록에 아이템이 없습니다.\n여기로 아이템을 끌어와 추가하세요.",
+
+    ["TAB_KEYBINDS"] = "단축키",
+
+    ["KEYBIND_SECTION"] = "빠른 추가 단축키",
+    ["KEYBIND_DESC"] = "아무 아이템 위에 마우스를 올리고 단축키를 누르면 즉시 입금 목록에 추가됩니다. 게임 메뉴 > 키 설정 > OneWoW Direct Deposit에서 키를 지정하세요.",
+    ["KEYBIND_ADD_PERSONAL"] = "지정한 아이템 추가 - 개인 은행",
+    ["KEYBIND_ADD_WARBAND"] = "지정한 아이템 추가 - 워밴드 은행",
+    ["KEYBIND_ADD_GUILD"] = "지정한 아이템 추가 - 길드 은행",
+    ["KEYBIND_NO_ITEM"] = "아이템을 찾을 수 없습니다 - 먼저 아이템 위에 마우스를 올리세요.",
+
+    ["WARBOUND_SECTION"] = "워밴드 자동 입금",
+    ["WARBOUND_ENABLE"] = "모든 워밴드 귀속 아이템 자동 입금",
+    ["WARBOUND_ENABLE_DESC"] = "은행을 열 때 가방에 있는 모든 워밴드 귀속(계정 귀속) 아이템을 워밴드 은행에 자동으로 입금합니다. 위의 입금 목록에 이미 있는 아이템은 제외됩니다.",
+
+    ["WARBOUND_EXCLUDE_KEYWORD_LABEL"] = "키워드로 보관",
+    ["WARBOUND_EXCLUDE_KEYWORD_DESC"] = "이 키워드 식과 일치하는 아이템은 가방에 보관되며 자동으로 입금되지 않습니다. #potion, #flask, #elixir, #consumable 같은 키워드를 \"또는\"을 뜻하는 |로 구분해 사용하세요. 예: #potion | #flask",
+    ["WARBOUND_EXCLUDE_KEYWORD_PLACEHOLDER"] = "예: #potion | #flask",
+    ["WARBOUND_EXCLUDE_ITEMS_LABEL"] = "특정 아이템 보관",
+    ["WARBOUND_EXCLUDE_ITEMS_DESC"] = "이 아이템은 워밴드 귀속이더라도 항상 가방에 보관됩니다. 아이템을 여기로 끌어오거나 아이템 ID를 입력하세요.",
+    ["WARBOUND_EXCLUDE_EMPTY"] = "보관 중인 아이템이 없습니다.\n여기로 아이템을 끌어와 가방에 보관하세요.",
+
+    ["TOOLTIP_SECTION"] = "툴팁 오버레이",
+    ["TOOLTIP_ENABLE"] = "툴팁에 입금 상태 표시",
+    ["TOOLTIP_ENABLE_DESC"] = "입금 대기 중인 아이템은 툴팁 하단에 대상 은행을 표시합니다.",
+    ["TOOLTIP_LABEL"] = "입금 예정:",
+    ["TOOLTIP_PERSONAL"] = "개인",
+    ["TOOLTIP_WARBAND"] = "워밴드",
+
+    ["BINDING_HEADER_ONEWOW_DIRECTDEPOSIT"] = "|cFF00FF00OneWoW|r Direct Deposit",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_TOGGLE"] = "Direct Deposit 창 켜기/끄기",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_DEPOSIT"] = "지금 아이템 입금",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_PERSONAL"] = "빠른 추가: 개인 은행",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_WARBAND"] = "빠른 추가: 워밴드 은행",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_GUILD"] = "빠른 추가: 길드 은행",
 })

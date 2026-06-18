@@ -498,8 +498,19 @@ ptBR itIT.
   locales authored (zhCN/zhTW/ptBR/itIT) + `esMX` from `esES`; same `bin/locale_gen.py` workflow.
   Per-locale 4 keys stay English by design: 2 brand markup (`ADDON_CHAT_PREFIX`,
   `BINDING_HEADER_*`) + 2 paste-format examples (`OWSL_TT_IMPORT_FORMAT1/2`).
-- [ ] Remaining scopes, **player-facing value order** (decided):
-  data/QoL-module sub-addons (2–105 keys each).
+- [x] **`OneWoW_DirectDeposit` — fully translated, 11/11 locales at 66/66** (Phase 4, 2026-06-17).
+  The 5 pre-existing locales were only ~half complete (each missing the 32–33-key Keybinds /
+  Warbound / Tooltip / Bindings blocks added to enUS later); those were filled matching each
+  file's own in-file Warband term (deDE "Warband-Bank", esES "Grupo de Guerra", frFR "Groupe de
+  Guerre", koKR "워밴드", ruRU "отряд"). 4 new locales authored (zhCN/zhTW/ptBR/itIT) using the
+  canonical suite Warband terms (战团/戰隊/Tropa/Squadra di guerra) + `esMX` from `esES`. Per-locale
+  2 keys stay English by design: `ADDON_CHAT_PREFIX` + `BINDING_HEADER_*` (brand markup).
+  NOTE: the pre-existing 5 locales use a Warband term that drifts from the rest of the suite
+  (Bags/core/AltTracker use Blizzard-official Kriegsmeute/bataillon/banda de guerra); left as-is
+  for self-consistency — flag for a normalization pass.
+- [ ] Remaining scopes, **player-facing value order** (decided): all `CatalogData_*`, then all
+  `AltTracker_*` data sub-addons, then reassess (QoL external modules, map tools).
+  **Do NOT localize** `OneWoW_Utility_Extractor` or `OneWoW_AccountSync` (internal tools).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
 - [ ] In-game spot-check per language where feasible; commit per scope.
 

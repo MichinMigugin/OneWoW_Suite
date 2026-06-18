@@ -48,4 +48,45 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
     ["ABOUT_SECTION"] = "Über Direkte Einzahlung",
     ["ABOUT_TEXT"] = "Direkte Einzahlung ist ein Quality-of-Life-Addon aus der OneWoW Suite. Dieses Addon ist auch als Teil der vollständigen OneWoW Suite erhältlich, die viele andere nützliche Addons enthält, um Ihr World of Warcraft-Erlebnis zu verbessern. Entdecken Sie weitere Addons, die Ihnen helfen können, Ihre Abenteuer zu organisieren und Ihr Gameplay zu verbessern!",
+
+    ["MINIMAP_TOOLTIP_HINT"] = "Klicken, um Einstellungen umzuschalten",
+
+    ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
+    ["DEPOSIT_NOW"] = "Jetzt einzahlen",
+    ["ITEM_DRAG_HINT"] = "Gegenstände hierher ziehen zum Hinzufügen",
+    ["ITEM_EMPTY_LIST"] = "Keine Gegenstände in der Auto-Einzahlungsliste.\nGegenstände hierher ziehen, um sie hinzuzufügen.",
+
+    ["TAB_KEYBINDS"] = "Tastenbelegung",
+
+    ["KEYBIND_SECTION"] = "Schnellzuweisungs-Tasten",
+    ["KEYBIND_DESC"] = "Fahren Sie über einen Gegenstand und drücken Sie eine Taste, um ihn sofort zur Einzahlungsliste hinzuzufügen. Tasten zuweisen unter Spielmenü > Tastaturbelegung > OneWoW Direct Deposit.",
+    ["KEYBIND_ADD_PERSONAL"] = "Anvisierten Gegenstand hinzufügen – Persönliche Bank",
+    ["KEYBIND_ADD_WARBAND"] = "Anvisierten Gegenstand hinzufügen – Warband-Bank",
+    ["KEYBIND_ADD_GUILD"] = "Anvisierten Gegenstand hinzufügen – Gildenbank",
+    ["KEYBIND_NO_ITEM"] = "Kein Gegenstand gefunden – fahren Sie zuerst über einen Gegenstand.",
+
+    ["WARBOUND_SECTION"] = "Warband-Auto-Einzahlung",
+    ["WARBOUND_ENABLE"] = "Alle Warband-gebundenen Gegenstände automatisch einzahlen",
+    ["WARBOUND_ENABLE_DESC"] = "Beim Öffnen einer Bank werden automatisch alle Warband-gebundenen (accountgebundenen) Gegenstände aus Ihren Taschen in die Warband-Bank eingezahlt. Gegenstände, die bereits in Ihrer obigen Einzahlungsliste stehen, werden ausgeschlossen.",
+
+    ["WARBOUND_EXCLUDE_KEYWORD_LABEL"] = "Nach Schlüsselwort behalten",
+    ["WARBOUND_EXCLUDE_KEYWORD_DESC"] = "Gegenstände, die diesem Schlüsselwort-Ausdruck entsprechen, werden in Ihren Taschen behalten und niemals automatisch eingezahlt. Verwenden Sie Schlüsselwörter wie #potion, #flask, #elixir, #consumable, getrennt durch | für \"oder\". Beispiel: #potion | #flask",
+    ["WARBOUND_EXCLUDE_KEYWORD_PLACEHOLDER"] = "z. B. #potion | #flask",
+    ["WARBOUND_EXCLUDE_ITEMS_LABEL"] = "Bestimmte Gegenstände behalten",
+    ["WARBOUND_EXCLUDE_ITEMS_DESC"] = "Diese Gegenstände werden immer in Ihren Taschen behalten, auch wenn sie warbandgebunden sind. Ziehen Sie einen Gegenstand hierher oder geben Sie seine Gegenstands-ID ein.",
+    ["WARBOUND_EXCLUDE_EMPTY"] = "Keine behaltenen Gegenstände.\nGegenstände hierher ziehen, um sie in Ihren Taschen zu behalten.",
+
+    ["TOOLTIP_SECTION"] = "Tooltip-Overlay",
+    ["TOOLTIP_ENABLE"] = "Einzahlungsstatus in Tooltips anzeigen",
+    ["TOOLTIP_ENABLE_DESC"] = "Für die Einzahlung vorgemerkte Gegenstände zeigen ihre Zielbank am unteren Rand ihres Tooltips an.",
+    ["TOOLTIP_LABEL"] = "Direkteinzahlung:",
+    ["TOOLTIP_PERSONAL"] = "Persönlich",
+    ["TOOLTIP_WARBAND"] = "Warband",
+
+    ["BINDING_HEADER_ONEWOW_DIRECTDEPOSIT"] = "|cFF00FF00OneWoW|r Direct Deposit",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_TOGGLE"] = "Direct-Deposit-Fenster umschalten",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_DEPOSIT"] = "Gegenstände jetzt einzahlen",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_PERSONAL"] = "Schnell hinzufügen: Persönliche Bank",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_WARBAND"] = "Schnell hinzufügen: Warband-Bank",
+    ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_GUILD"] = "Schnell hinzufügen: Gildenbank",
 })
