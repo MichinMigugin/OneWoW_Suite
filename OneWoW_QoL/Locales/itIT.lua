@@ -462,7 +462,6 @@ esempio completo e funzionante.]],
     ["LANG_ENGLISH"] = "Inglese",
     ["LANG_KOREAN"] = "Coreano",
 
-
     ["SEARCH_HINT"] = "Filtra...",
     ["TOGGLES_STATUS_ALL"] = "%d CVar mostrate",
     ["TOGGLES_STATUS_FILTERED"] = "%d di %d mostrate",

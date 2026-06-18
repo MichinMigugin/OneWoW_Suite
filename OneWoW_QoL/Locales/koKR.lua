@@ -460,7 +460,6 @@ Modules\external\autodelete\ 를 참고하세요.]],
     ["LANG_ENGLISH"] = "영어",
     ["LANG_KOREAN"] = "한국어",
 
-
     ["SEARCH_HINT"] = "필터...",
     ["TOGGLES_STATUS_ALL"] = "CVar %d개 표시 중",
     ["TOGGLES_STATUS_FILTERED"] = "%d / %d개 표시 중",

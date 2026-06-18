@@ -51,7 +51,6 @@ OneWoW.Locale:Register(M._scope, "deDE", {
     ["MMBTNS_LAYOUT_HEADER"] = "Anordnung",
     ["MMBTNS_BEHAVIOR_HEADER"] = "Verhalten",
 
-
     ["MMBTNS_CONTEXT_LOCK"] = "Position sperren",
     ["MMBTNS_CONTEXT_REFRESH"] = "Buttons aktualisieren",
 

@@ -23,7 +23,6 @@ OneWoW.Locale:Register(M._scope, "zhTW", {
     ["LFGPANEL_DIFFICULTY_MYTHICPLUS"] = "史詩+",
     ["LFGPANEL_DIFFICULTY_LFR"] = "LFR",
 
-
     ["LFGPANEL_NO_LOCKOUTS"] = "沒有作用中的入場限制。",
     ["LFGPANEL_NO_LOCKOUTS_FILTERED"] = "沒有符合所選難度的入場限制。",
     ["LFGPANEL_EXPIRED"] = "已過期",

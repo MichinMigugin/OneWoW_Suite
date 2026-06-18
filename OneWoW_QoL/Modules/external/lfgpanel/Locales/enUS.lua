@@ -22,7 +22,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["LFGPANEL_DIFFICULTY_MYTHICPLUS"] = "Mythic+",
     ["LFGPANEL_DIFFICULTY_LFR"] = "LFR",
 
-
     ["LFGPANEL_NO_LOCKOUTS"] = "No active lockouts.",
     ["LFGPANEL_NO_LOCKOUTS_FILTERED"] = "No lockouts match the selected difficulty.",
     ["LFGPANEL_EXPIRED"] = "Expired",

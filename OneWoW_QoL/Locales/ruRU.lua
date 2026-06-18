@@ -462,7 +462,6 @@ Modules\external\autodelete\.]],
     ["LANG_ENGLISH"] = "Английский",
     ["LANG_KOREAN"] = "Корейский",
 
-
     ["SEARCH_HINT"] = "Фильтр...",
     ["TOGGLES_STATUS_ALL"] = "Показано переменных: %d",
     ["TOGGLES_STATUS_FILTERED"] = "Показано %d из %d",

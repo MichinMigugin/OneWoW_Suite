@@ -461,7 +461,6 @@ Modules\external\autodelete\。]],
     ["LANG_ENGLISH"] = "英文",
     ["LANG_KOREAN"] = "韓文",
 
-
     ["SEARCH_HINT"] = "篩選...",
     ["TOGGLES_STATUS_ALL"] = "顯示 %d 個 CVar",
     ["TOGGLES_STATUS_FILTERED"] = "顯示 %d 個，共 %d 個",

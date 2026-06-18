@@ -23,7 +23,6 @@ OneWoW.Locale:Register(M._scope, "deDE", {
     ["LFGPANEL_DIFFICULTY_MYTHICPLUS"] = "Mythisch+",
     ["LFGPANEL_DIFFICULTY_LFR"] = "LFR",
 
-
     ["LFGPANEL_NO_LOCKOUTS"] = "Keine aktiven Sperrungen.",
     ["LFGPANEL_NO_LOCKOUTS_FILTERED"] = "Keine Sperrungen entsprechen der gewählten Schwierigkeit.",
     ["LFGPANEL_EXPIRED"] = "Abgelaufen",

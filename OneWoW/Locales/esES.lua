@@ -36,7 +36,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["MINIMAP_TOOLTIP_HINT"] = "Haz clic para alternar OneWoW",
     ["MINIMAP_RIGHT_CLICK"] = "Clic derecho para opciones",
 
-
     ["COPYPASTE_HINT_COPY"] = "Pulsa Ctrl+C para copiar",
     ["COPYPASTE_HINT_COPY_MAC"] = "Pulsa Cmd+C para copiar",
 
@@ -105,25 +104,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["RESET_UI_DESC"] = "Restablece la ventana de OneWoW a su tamaño y posición predeterminados.",
     ["RESET_UI_BTN"] = "Restablecer ventana",
 
-
-
-
-
-
-
-
-
-
-
-
-
     ["VALUE_AUCTIONATOR_POPUP_TEXT"] = "Auctionator es ahora la fuente de los precios de la casa de subastas en los tooltips de OneWoW. OneWoW ha desactivado las líneas de tooltip de Auctionator que se solapaban. Escanea la CS con Auctionator para actualizar los precios. Los botones del escáner completo de CS de OneWoW están ocultos mientras esta opción está activada.",
     ["VALUE_TSM_POPUP_TEXT"] = "OneWoW mostrará una línea de precio de TSM en los tooltips. Para evitar información duplicada, abre TSM > Settings > Tooltip Settings y desactiva «Enable TSM tooltips», o borra las líneas de tooltip de TSM individuales que no necesites.",
-
-
-
-
-
 
     ["HOME_DETECTED_DATA_MODULES"] = "Módulos de datos detectados",
     ["HOME_STATUS_ALL"] = "Activado para todos los personajes",
@@ -135,8 +117,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["HOME_PENDING_DISABLE_TAG"] = "(desactivado en la próxima recarga)",
     ["HOME_MANAGE_POINTER"] = "Activa o desactiva funciones en",
     ["HOME_MANAGE_LINK"] = "Gestionar funciones",
-
-
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",
@@ -159,12 +139,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["HOME_SPECIAL_THANKS"] = "Agradecimientos especiales",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellewic, kellzilla, y a todos nuestros probadores Beta - ¡Gracias!",
 
-
     ["MODULE_ONEWOW"] = "OneWoW",
-
-
-
-
 
     ["UNIT_CTX_HEADER"] = "OneWoW",
     ["UNIT_CTX_ADD_PLAYER_NOTE"] = "Añadir nota",
@@ -191,7 +166,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["UNIT_CTX_MOUNT_LABEL"] = "Montura: %s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "Fuente: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Estado: %s",
-
 
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Ajustes",
     ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Ajustes > Idioma",
@@ -440,7 +414,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["SRCH_DESC_SL_ADD"] = "Añadir objetos a tu lista de compras para seguir lo que necesitas",
     ["SRCH_DESC_SL_REAGENTS"] = "Vincular recetas de profesión a tu lista de compras para seguir los componentes requeridos",
     ["SRCH_DESC_SL_OVERLAYS"] = "Resaltar los objetos de tus bolsas que están en tu lista de compras",
-
 
     ["BINDING_HEADER_ONEWOW"] = "|cFF00FF00OneWoW|r",
     ["BINDING_NAME_ONEWOW_TOGGLE"] = "Alternar la ventana de OneWoW",

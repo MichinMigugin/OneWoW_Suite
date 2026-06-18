@@ -50,7 +50,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["MMBTNS_LAYOUT_HEADER"] = "Layout",
     ["MMBTNS_BEHAVIOR_HEADER"] = "Behavior",
 
-
     ["MMBTNS_CONTEXT_LOCK"] = "Lock Position",
     ["MMBTNS_CONTEXT_REFRESH"] = "Refresh Buttons",
 

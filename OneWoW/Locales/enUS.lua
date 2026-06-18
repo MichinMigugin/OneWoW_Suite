@@ -36,7 +36,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["MINIMAP_TOOLTIP_HINT"] = "Click to toggle OneWoW",
     ["MINIMAP_RIGHT_CLICK"] = "Right-click for options",
 
-
     -- CopyPaste dialog (OneWoW.CopyPaste)
     ["COPYPASTE_HINT_COPY"] = "Press Ctrl+C to copy",
     ["COPYPASTE_HINT_COPY_MAC"] = "Press Cmd+C to copy",
@@ -106,25 +105,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["RESET_UI_DESC"] = "Reset the OneWoW window to its default size and position.",
     ["RESET_UI_BTN"] = "Reset Window",
 
-
-
-
-
-
-
-
-
-
-
-
-
     ["VALUE_AUCTIONATOR_POPUP_TEXT"] = "Auctionator is now the source for Auction House prices in OneWoW tooltips. OneWoW has turned off overlapping Auctionator tooltip lines. Scan the AH with Auctionator to refresh prices. The OneWoW full AH scanner buttons are hidden while this option is on.",
     ["VALUE_TSM_POPUP_TEXT"] = "OneWoW will show a TSM price line in tooltips. To avoid duplicate information, open TSM > Settings > Tooltip Settings and turn off \"Enable TSM tooltips\", or clear the individual TSM tooltip lines you do not need.",
-
-
-
-
-
 
     ["HOME_DETECTED_DATA_MODULES"] = "Detected Data Modules",
     ["HOME_STATUS_ALL"] = "Enabled for all characters",
@@ -136,8 +118,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["HOME_PENDING_DISABLE_TAG"] = "(off next reload)",
     ["HOME_MANAGE_POINTER"] = "Enable or disable features in",
     ["HOME_MANAGE_LINK"] = "Manage Features",
-
-
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",
@@ -160,12 +140,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["HOME_SPECIAL_THANKS"] = "Special Thanks",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellewic, kellzilla, and to all our Beta testers - Thank you!",
 
-
     ["MODULE_ONEWOW"] = "OneWoW",
-
-
-
-
 
     ["UNIT_CTX_HEADER"] = "OneWoW",
     ["UNIT_CTX_ADD_PLAYER_NOTE"] = "Add Note",
@@ -192,7 +167,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["UNIT_CTX_MOUNT_LABEL"] = "Mount: %s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "Source: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Status: %s",
-
 
     -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Settings",
@@ -443,7 +417,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["SRCH_DESC_SL_ADD"] = "Add items to your shopping list to track what you need",
     ["SRCH_DESC_SL_REAGENTS"] = "Link profession recipes to your shopping list to track required reagents",
     ["SRCH_DESC_SL_OVERLAYS"] = "Highlight items in your bags that are on your shopping list",
-
 
     ["BINDING_HEADER_ONEWOW"] = "|cFF00FF00OneWoW|r",
     ["BINDING_NAME_ONEWOW_TOGGLE"] = "Toggle OneWoW Window",

@@ -51,7 +51,6 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["MMBTNS_LAYOUT_HEADER"] = "배치",
     ["MMBTNS_BEHAVIOR_HEADER"] = "동작",
 
-
     ["MMBTNS_CONTEXT_LOCK"] = "위치 잠금",
     ["MMBTNS_CONTEXT_REFRESH"] = "버튼 새로 고침",
 

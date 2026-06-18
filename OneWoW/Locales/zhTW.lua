@@ -36,7 +36,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["MINIMAP_TOOLTIP_HINT"] = "點擊切換 OneWoW",
     ["MINIMAP_RIGHT_CLICK"] = "右鍵點擊查看選項",
 
-
     ["COPYPASTE_HINT_COPY"] = "按 Ctrl+C 複製",
     ["COPYPASTE_HINT_COPY_MAC"] = "按 Cmd+C 複製",
 
@@ -105,25 +104,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["RESET_UI_DESC"] = "將 OneWoW 視窗重設為預設大小和位置。",
     ["RESET_UI_BTN"] = "重設視窗",
 
-
-
-
-
-
-
-
-
-
-
-
-
     ["VALUE_AUCTIONATOR_POPUP_TEXT"] = "Auctionator 現在是 OneWoW 滑鼠提示中拍賣場價格的來源。OneWoW 已關閉重疊的 Auctionator 滑鼠提示行。用 Auctionator 掃描拍賣場以重新整理價格。此選項開啟期間，OneWoW 的完整拍賣場掃描按鈕將被隱藏。",
     ["VALUE_TSM_POPUP_TEXT"] = "OneWoW 將在滑鼠提示中顯示一條 TSM 價格行。為避免資訊重複，請開啟 TSM > Settings > Tooltip Settings 並關閉「Enable TSM tooltips」，或清除你不需要的單條 TSM 滑鼠提示行。",
-
-
-
-
-
 
     ["HOME_DETECTED_DATA_MODULES"] = "偵測到的資料模組",
     ["HOME_STATUS_ALL"] = "對所有角色啟用",
@@ -135,8 +117,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["HOME_PENDING_DISABLE_TAG"] = "（下次重載時關閉）",
     ["HOME_MANAGE_POINTER"] = "在此處啟用或停用功能",
     ["HOME_MANAGE_LINK"] = "管理功能",
-
-
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",
@@ -159,12 +139,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["HOME_SPECIAL_THANKS"] = "特別鳴謝",
     ["HOME_THANKS_NAMES"] = "MacMode、SnerkDevil、tiradox、kellewic、kellzilla，以及所有的 Beta 測試者 - 謝謝你們！",
 
-
     ["MODULE_ONEWOW"] = "OneWoW",
-
-
-
-
 
     ["UNIT_CTX_HEADER"] = "OneWoW",
     ["UNIT_CTX_ADD_PLAYER_NOTE"] = "新增筆記",
@@ -191,7 +166,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["UNIT_CTX_MOUNT_LABEL"] = "坐騎：%s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "來源：%s",
     ["UNIT_CTX_MOUNT_STATUS"] = "狀態：%s",
-
 
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > 設定",
     ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > 設定 > 語言",
@@ -440,7 +414,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["SRCH_DESC_SL_ADD"] = "將物品加入你的購物清單以追蹤你的需求",
     ["SRCH_DESC_SL_REAGENTS"] = "將專業配方關聯到你的購物清單以追蹤所需材料",
     ["SRCH_DESC_SL_OVERLAYS"] = "反白你背包中在購物清單上的物品",
-
 
     ["BINDING_HEADER_ONEWOW"] = "|cFF00FF00OneWoW|r",
     ["BINDING_NAME_ONEWOW_TOGGLE"] = "切換 OneWoW 視窗",

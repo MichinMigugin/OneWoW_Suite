@@ -51,7 +51,6 @@ OneWoW.Locale:Register(M._scope, "ruRU", {
     ["MMBTNS_LAYOUT_HEADER"] = "Раскладка",
     ["MMBTNS_BEHAVIOR_HEADER"] = "Поведение",
 
-
     ["MMBTNS_CONTEXT_LOCK"] = "Зафиксировать положение",
     ["MMBTNS_CONTEXT_REFRESH"] = "Обновить кнопки",
 

@@ -51,7 +51,6 @@ OneWoW.Locale:Register(M._scope, "esES", {
     ["MMBTNS_LAYOUT_HEADER"] = "Disposición",
     ["MMBTNS_BEHAVIOR_HEADER"] = "Comportamiento",
 
-
     ["MMBTNS_CONTEXT_LOCK"] = "Bloquear posición",
     ["MMBTNS_CONTEXT_REFRESH"] = "Actualizar botones",
 

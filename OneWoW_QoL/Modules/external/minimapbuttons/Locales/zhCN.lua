@@ -51,7 +51,6 @@ OneWoW.Locale:Register(M._scope, "zhCN", {
     ["MMBTNS_LAYOUT_HEADER"] = "布局",
     ["MMBTNS_BEHAVIOR_HEADER"] = "行为",
 
-
     ["MMBTNS_CONTEXT_LOCK"] = "锁定位置",
     ["MMBTNS_CONTEXT_REFRESH"] = "刷新按钮",
 

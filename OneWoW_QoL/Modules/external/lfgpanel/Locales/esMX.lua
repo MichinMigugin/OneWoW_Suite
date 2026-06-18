@@ -23,7 +23,6 @@ OneWoW.Locale:Register(M._scope, "esMX", {
     ["LFGPANEL_DIFFICULTY_MYTHICPLUS"] = "Mítico+",
     ["LFGPANEL_DIFFICULTY_LFR"] = "LFR",
 
-
     ["LFGPANEL_NO_LOCKOUTS"] = "No hay bloqueos activos.",
     ["LFGPANEL_NO_LOCKOUTS_FILTERED"] = "Ningún bloqueo coincide con la dificultad seleccionada.",
     ["LFGPANEL_EXPIRED"] = "Caducado",

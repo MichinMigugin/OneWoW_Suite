@@ -23,7 +23,6 @@ OneWoW.Locale:Register(M._scope, "ruRU", {
     ["LFGPANEL_DIFFICULTY_MYTHICPLUS"] = "Эпохальный+",
     ["LFGPANEL_DIFFICULTY_LFR"] = "LFR",
 
-
     ["LFGPANEL_NO_LOCKOUTS"] = "Нет активных блокировок.",
     ["LFGPANEL_NO_LOCKOUTS_FILTERED"] = "Нет блокировок, соответствующих выбранной сложности.",
     ["LFGPANEL_EXPIRED"] = "Истекло",

@@ -134,7 +134,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_TYPE_RARE_QUEST"]         = "Rare Quest",
     ["TRACKER_TYPE_CUSTOM_TIMER"]       = "Custom Timer",
 
-
     ["TRACKER_HIDE_DONE"]               = "Hide Done",
     ["TRACKER_TRACK_AS_TASK"]           = "Track as task",
     ["TRACKER_TRACK_HINT"]              = "Uncheck for info-only (no checkbox, won't count toward completion)",

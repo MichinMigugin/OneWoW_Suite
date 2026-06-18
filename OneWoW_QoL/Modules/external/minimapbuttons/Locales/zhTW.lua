@@ -51,7 +51,6 @@ OneWoW.Locale:Register(M._scope, "zhTW", {
     ["MMBTNS_LAYOUT_HEADER"] = "佈局",
     ["MMBTNS_BEHAVIOR_HEADER"] = "行為",
 
-
     ["MMBTNS_CONTEXT_LOCK"] = "鎖定位置",
     ["MMBTNS_CONTEXT_REFRESH"] = "重新整理按鈕",
 

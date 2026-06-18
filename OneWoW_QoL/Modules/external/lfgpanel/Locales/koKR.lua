@@ -23,7 +23,6 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["LFGPANEL_DIFFICULTY_MYTHICPLUS"] = "신화+",
     ["LFGPANEL_DIFFICULTY_LFR"] = "LFR",
 
-
     ["LFGPANEL_NO_LOCKOUTS"] = "활성 입장 제한이 없습니다.",
     ["LFGPANEL_NO_LOCKOUTS_FILTERED"] = "선택한 난이도에 맞는 입장 제한이 없습니다.",
     ["LFGPANEL_EXPIRED"] = "만료됨",

@@ -36,7 +36,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["MINIMAP_TOOLTIP_HINT"] = "Нажмите, чтобы переключить OneWoW",
     ["MINIMAP_RIGHT_CLICK"] = "Правый клик для настроек",
 
-
     ["COPYPASTE_HINT_COPY"] = "Нажмите Ctrl+C для копирования",
     ["COPYPASTE_HINT_COPY_MAC"] = "Нажмите Cmd+C для копирования",
 
@@ -105,25 +104,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["RESET_UI_DESC"] = "Сбрасывает окно OneWoW к размеру и положению по умолчанию.",
     ["RESET_UI_BTN"] = "Сбросить окно",
 
-
-
-
-
-
-
-
-
-
-
-
-
     ["VALUE_AUCTIONATOR_POPUP_TEXT"] = "Auctionator теперь является источником цен аукциона в подсказках OneWoW. OneWoW отключил перекрывающиеся строки подсказок Auctionator. Сканируйте аукцион через Auctionator, чтобы обновить цены. Кнопки полного сканера аукциона OneWoW скрыты, пока эта опция включена.",
     ["VALUE_TSM_POPUP_TEXT"] = "OneWoW будет показывать строку цены TSM в подсказках. Чтобы избежать дублирования информации, откройте TSM > Settings > Tooltip Settings и отключите «Enable TSM tooltips», или очистите ненужные вам отдельные строки подсказок TSM.",
-
-
-
-
-
 
     ["HOME_DETECTED_DATA_MODULES"] = "Обнаруженные модули данных",
     ["HOME_STATUS_ALL"] = "Включено для всех персонажей",
@@ -135,8 +117,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["HOME_PENDING_DISABLE_TAG"] = "(выкл. при следующей перезагрузке)",
     ["HOME_MANAGE_POINTER"] = "Включайте или отключайте функции в",
     ["HOME_MANAGE_LINK"] = "Управление функциями",
-
-
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",
@@ -159,12 +139,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["HOME_SPECIAL_THANKS"] = "Особая благодарность",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellewic, kellzilla и всем нашим бета-тестерам - спасибо!",
 
-
     ["MODULE_ONEWOW"] = "OneWoW",
-
-
-
-
 
     ["UNIT_CTX_HEADER"] = "OneWoW",
     ["UNIT_CTX_ADD_PLAYER_NOTE"] = "Добавить заметку",
@@ -191,7 +166,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["UNIT_CTX_MOUNT_LABEL"] = "Средство передвижения: %s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "Источник: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Статус: %s",
-
 
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Настройки",
     ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Настройки > Язык",
@@ -440,7 +414,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["SRCH_DESC_SL_ADD"] = "Добавлять предметы в список покупок, чтобы отслеживать, что вам нужно",
     ["SRCH_DESC_SL_REAGENTS"] = "Связывать рецепты профессий со списком покупок для отслеживания необходимых реагентов",
     ["SRCH_DESC_SL_OVERLAYS"] = "Выделять предметы в ваших сумках, которые есть в вашем списке покупок",
-
 
     ["BINDING_HEADER_ONEWOW"] = "|cFF00FF00OneWoW|r",
     ["BINDING_NAME_ONEWOW_TOGGLE"] = "Переключить окно OneWoW",
