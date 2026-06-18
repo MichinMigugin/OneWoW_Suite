@@ -1,6 +1,6 @@
-local addonName, ns = ...
-local QuestItemBarModule, L = ns.ModuleRegistry:Current()
+local _, ns = ...
 
+local QuestItemBarModule, L = ns.ModuleRegistry:Current()
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
@@ -16,7 +16,6 @@ local ROW_GAP = 2
 local SCROLLBAR_WIDTH = 18
 local STATUS_COL_WIDTH = 100
 local ITEM_ICON_WIDTH = 28
-local ITEM_ICON_AND_NAME_WIDTH = 108
 local ITEM_COL_MIN_WIDTH = 108
 local QUEST_COL_MIN_WIDTH = 120
 local TIGHT_LAYOUT_THRESHOLD = 280
@@ -34,7 +33,7 @@ local function OpenMapWithQuest(questID)
     end
 end
 
-local function BuildContent(container, isEnabled, contentYOffset)
+local function BuildContent(container, _, contentYOffset)
     local s = GetSettings()
     local cy = 0
 
@@ -302,7 +301,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
     sizeSlider:SetObeyStepOnDrag(true)
     OneWoW_GUI:ConfigureOptionsSliderEnds(sizeSlider, tostring(QuestItemBarModule.MIN_BUTTON_SIZE),
         tostring(QuestItemBarModule.MAX_BUTTON_SIZE))
-    sizeSlider:SetScript("OnValueChanged", function(self, value)
+    sizeSlider:SetScript("OnValueChanged", function(_, value)
         local v = math.floor(value + 0.5)
         GetSettings().buttonSize = v
         sizeLabel:SetText(string.format("%s: %d", L["BUTTON_SIZE"], v))
@@ -325,7 +324,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
     colsSlider:SetObeyStepOnDrag(true)
     OneWoW_GUI:ConfigureOptionsSliderEnds(colsSlider, tostring(QuestItemBarModule.MIN_COLUMNS),
         tostring(QuestItemBarModule.MAX_COLUMNS))
-    colsSlider:SetScript("OnValueChanged", function(self, value)
+    colsSlider:SetScript("OnValueChanged", function(_, value)
         local v = math.floor(value + 0.5)
         GetSettings().columns = v
         colsLabel:SetText(string.format("%s: %d", L["QUESTITEMBAR_COLUMNS"], v))
@@ -347,7 +346,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
     spacingSlider:SetValueStep(1)
     spacingSlider:SetObeyStepOnDrag(true)
     OneWoW_GUI:ConfigureOptionsSliderEnds(spacingSlider, "0", "12")
-    spacingSlider:SetScript("OnValueChanged", function(self, value)
+    spacingSlider:SetScript("OnValueChanged", function(_, value)
         local v = math.floor(value + 0.5)
         GetSettings().iconSpacing = v
         spacingLabel:SetText(string.format("%s: %d", L["ICON_SPACING"], v))
@@ -480,7 +479,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
                     GameTooltip:Show()
                 end
             end)
-            itemCol:SetScript("OnLeave", function(self)
+            itemCol:SetScript("OnLeave", function()
                 row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
                 GameTooltip:Hide()
             end)
@@ -512,7 +511,7 @@ local function BuildContent(container, isEnabled, contentYOffset)
                 GameTooltip:Show()
             end
         end)
-        questBtn:SetScript("OnLeave", function(self)
+        questBtn:SetScript("OnLeave", function()
             row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
             questText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             GameTooltip:Hide()

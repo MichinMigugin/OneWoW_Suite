@@ -1,4 +1,5 @@
 local _, ns = ...
+
 local ProfPanelModule = ns.ModuleRegistry:Current()
 if not ProfPanelModule then return end
 
@@ -508,7 +509,7 @@ function ProfPanelModule:OnEnable()
         self._eventFrame:RegisterEvent("TRADE_SKILL_SHOW")
         self._eventFrame:RegisterEvent("TRADE_SKILL_CLOSE")
         self._eventFrame:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
-        self._eventFrame:SetScript("OnEvent", function(frame, event)
+        self._eventFrame:SetScript("OnEvent", function(_, event)
             if event == "TRADE_SKILL_SHOW" then
                 ProfPanelModule:OnProfessionWindowOpened()
             elseif event == "TRADE_SKILL_CLOSE" then

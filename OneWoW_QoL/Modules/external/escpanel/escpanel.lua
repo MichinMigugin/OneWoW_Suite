@@ -46,7 +46,7 @@ function ESCPanelModule:OnToggle(toggleId, value)
     end
 end
 
-function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh)
+function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, _, registerRefresh)
     local OneWoW_GUI = OneWoW_GUI
     if not OneWoW_GUI then return yOffset end
 

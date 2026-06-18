@@ -390,7 +390,7 @@ function CharInfoModule:OnEnable()
 
     if not self._eventFrame then
         self._eventFrame = CreateFrame("Frame", "OneWoW_QoL_CharInfo")
-        self._eventFrame:SetScript("OnEvent", function(frame, event)
+        self._eventFrame:SetScript("OnEvent", function()
             if ns.ModuleRegistry:IsEnabled("charinfo") then
                 RefreshAllSlots()
             end
@@ -409,7 +409,7 @@ function CharInfoModule:OnDisable()
     HideAllSlots()
 end
 
-function CharInfoModule:OnToggle(toggleId, value)
+function CharInfoModule:OnToggle()
     RefreshAllSlots()
 end
 

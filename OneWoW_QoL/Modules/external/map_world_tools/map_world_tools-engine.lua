@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 local MapWorldToolsModule, L = ns.ModuleRegistry:Current()
 local M = MapWorldToolsModule
 
@@ -529,7 +529,7 @@ function M:OnDisable()
     SafeRefreshWorldMap()
 end
 
-function M:OnToggle(toggleId, _value)
+function M:OnToggle(toggleId, _)
     if toggleId == "removeBattleFog" or toggleId == "fogTint" or toggleId == "revealMap"
         or toggleId == "tintUnexplored" then
         M.RefreshFogAppearance()

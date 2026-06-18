@@ -30,5 +30,5 @@ function AH:OnDisable()
     end
 end
 
-function AH:OnToggle(toggleId, value)
+function AH:OnToggle()
 end

@@ -1,57 +1,9 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/UI/t-settings.lua
--- Created by MichinMuggin (Ricky)
-local _, ns = ...
+local ADDON_NAME, ns = ...
 local L = ns.L
-
-local addon = OneWoW_QoL
 
 local OneWoW_GUI = OneWoW_GUI
 
-local THEME_LOCALE_KEYS = {
-    green  = "THEME_NAME_GREEN",
-    blue   = "THEME_NAME_BLUE",
-    purple = "THEME_NAME_PURPLE",
-    red    = "THEME_NAME_RED",
-    orange = "THEME_NAME_ORANGE",
-    teal   = "THEME_NAME_TEAL",
-    gold   = "THEME_NAME_GOLD",
-    pink   = "THEME_NAME_PINK",
-    dark   = "THEME_NAME_DARK",
-    amber  = "THEME_NAME_AMBER",
-    cyan   = "THEME_NAME_CYAN",
-    slate  = "THEME_NAME_SLATE",
-    voidblack   = "THEME_NAME_VOID_BLACK",
-    charcoal    = "THEME_NAME_CHARCOAL_DEEP",
-    forestnight = "THEME_NAME_FOREST_NIGHT",
-    obsidian    = "THEME_NAME_OBSIDIAN_MINIMAL",
-    monochrome  = "THEME_NAME_MONOCHROME_PRO",
-    twilight    = "THEME_NAME_TWILIGHT_COMPACT",
-    neon        = "THEME_NAME_NEON_SYNTHWAVE",
-    glassmorphic = "THEME_NAME_GLASSMORPHIC",
-    lightmode   = "THEME_NAME_MINIMAL_WHITE",
-    retro       = "THEME_NAME_RETRO_CLASSIC",
-    fantasy     = "THEME_NAME_RPG_FANTASY",
-    nightfae    = "THEME_NAME_COVENANT_TWILIGHT",
-}
-
-local LANGUAGES = {
-    { key = "enUS", labelKey = "LANG_ENGLISH" },
-    { key = "koKR", labelKey = "LANG_KOREAN" },
-}
-
-local THEMES = OneWoW_GUI.Constants.THEMES
-local THEMES_ORDER = OneWoW_GUI.Constants.THEMES_ORDER
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
-local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-
-local backdrop = {
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = false,
-    edgeSize = 12,
-    insets = { left = 2, right = 2, top = 2, bottom = 2 }
-}
 
 local function ShowDevHelpDialog()
     if OneWoW_QoLDevHelpDialog then
@@ -122,7 +74,7 @@ local function ShowDevHelpDialog()
         self:SetVerticalScroll(delta > 0 and math.max(0, current - 30) or math.min(maxScroll, current + 30))
         UpdateThumb()
     end)
-    scrollFrame:HookScript("OnSizeChanged", function(self, width)
+    scrollFrame:HookScript("OnSizeChanged", function(_, width)
         scrollChild:SetWidth(width)
         UpdateThumb()
     end)
@@ -231,7 +183,7 @@ function ns.UI.CreateSettingsTab(parent)
         self:SetVerticalScroll(delta > 0 and math.max(0, current - 40) or math.min(maxScroll, current + 40))
         UpdateThumb()
     end)
-    scrollFrame:HookScript("OnSizeChanged", function(self, width)
+    scrollFrame:HookScript("OnSizeChanged", function(_, width)
         scrollChild:SetWidth(width)
         UpdateThumb()
     end)
@@ -262,7 +214,7 @@ function ns.UI.CreateSettingsTab(parent)
     local yOffset = -20
 
     if not OneWoW then
-        yOffset = OneWoW_GUI:CreateSettingsPanel(scrollChild, { yOffset = yOffset, addonName = "OneWoW_QoL" })
+        yOffset = OneWoW_GUI:CreateSettingsPanel(scrollChild, { yOffset = yOffset, addonName = ADDON_NAME })
     end
 
     -- Relative-anchored layout: each block is anchored to the bottom of the

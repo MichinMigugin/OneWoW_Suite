@@ -44,9 +44,9 @@ function CE:CreateColorSwatch(parent, dbKey, colorLabel)
     swatch:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
 
     swatch.dbKey = dbKey
-    swatch.UpdateColor = function(self)
+    swatch.UpdateColor = function(myself)
         local settings = CE:GetSettings()
-        local color = settings[self.dbKey] or {1, 1, 1}
+        local color = settings[myself.dbKey] or {1, 1, 1}
         swatch:SetBackdropColor(color[1], color[2], color[3], 1)
     end
 
@@ -54,8 +54,8 @@ function CE:CreateColorSwatch(parent, dbKey, colorLabel)
         OpenColorPicker(dbKey)
     end)
 
-    swatch:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    swatch:SetScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
         GameTooltip:AddLine(L[colorLabel])
         GameTooltip:Show()
     end)
@@ -70,7 +70,7 @@ function CE:CreateColorSwatch(parent, dbKey, colorLabel)
 end
 
 function CE:UpdateColorSwatches()
-    for dbKey, swatch in pairs(colorSwatches) do
+    for _, swatch in pairs(colorSwatches) do
         if swatch then swatch:UpdateColor() end
     end
 end

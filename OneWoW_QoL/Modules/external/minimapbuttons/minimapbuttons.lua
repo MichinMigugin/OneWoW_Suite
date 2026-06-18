@@ -862,7 +862,7 @@ local function GetCompanionAction(compName)
                 return function()
                     local cmd = comp.cmd:gsub("^/", "")
                     local slashKey
-                    for k, v in pairs(SlashCmdList) do
+                    for k, _ in pairs(SlashCmdList) do
                         for i = 1, 10 do
                             local s = _G["SLASH_" .. k .. i]
                             if s and s:lower() == ("/" .. cmd):lower() then
@@ -1055,17 +1055,17 @@ function MinimapButtonsModule:LayoutContainer()
             searchBox._placeholder:SetPoint("LEFT", 6, 0)
             searchBox._placeholder:SetText(L["SEARCH"])
 
-            searchBox:SetScript("OnTextChanged", function(self)
-                local text = self:GetText() or ""
+            searchBox:SetScript("OnTextChanged", function(myself)
+                local text = myself:GetText() or ""
                 searchFilter = text
-                if self._placeholder then
-                    self._placeholder:SetShown(text == "")
+                if myself._placeholder then
+                    myself._placeholder:SetShown(text == "")
                 end
                 MinimapButtonsModule:LayoutContainer()
             end)
-            searchBox:SetScript("OnEscapePressed", function(self)
-                self:SetText("")
-                self:ClearFocus()
+            searchBox:SetScript("OnEscapePressed", function(myself)
+                myself:SetText("")
+                myself:ClearFocus()
             end)
         end
 
@@ -1413,7 +1413,7 @@ function MinimapButtonsModule:OnDisable()
     C_Timer.After(0, ShowDisableReloadDialog)
 end
 
-function MinimapButtonsModule:OnToggle(toggleId, value)
+function MinimapButtonsModule:OnToggle()
 end
 
 function MinimapButtonsModule:RegisterAddonCompartmentHooks()

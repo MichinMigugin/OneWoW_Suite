@@ -1,4 +1,5 @@
-local addonName, ns = ...
+local _, ns = ...
+
 local MapWorldToolsModule = ns.ModuleRegistry:Current()
 local M = MapWorldToolsModule
 

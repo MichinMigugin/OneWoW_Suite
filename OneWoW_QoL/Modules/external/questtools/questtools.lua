@@ -1,4 +1,5 @@
 local _, ns = ...
+
 local QuestToolsModule = ns.ModuleRegistry:Current()
 if not QuestToolsModule then return end
 
@@ -249,7 +250,7 @@ end
 function QuestToolsModule:InitAccept()
     if self._acceptFrame then return end
     self._acceptFrame = CreateFrame("Frame", "OneWoW_QoL_QuestAccept")
-    self._acceptFrame:SetScript("OnEvent", function(frame, event, ...)
+    self._acceptFrame:SetScript("OnEvent", function(_, event)
         if event == "QUEST_DETAIL" then
             if not GetToggle("auto_accept") then return end
             if IsShiftKeyDown() then return end
@@ -269,7 +270,7 @@ end
 function QuestToolsModule:InitTurnin()
     if self._turninFrame then return end
     self._turninFrame = CreateFrame("Frame", "OneWoW_QoL_QuestTurnin")
-    self._turninFrame:SetScript("OnEvent", function(frame, event, ...)
+    self._turninFrame:SetScript("OnEvent", function(_, event)
         if event == "QUEST_PROGRESS" then
             if not GetToggle("auto_turnin") then return end
             if IsQuestCompletable() then CompleteQuest() end

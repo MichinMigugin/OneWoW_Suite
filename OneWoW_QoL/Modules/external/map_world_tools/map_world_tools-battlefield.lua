@@ -1,8 +1,6 @@
 local _, ns = ...
+
 local MapWorldToolsModule = ns.ModuleRegistry:Current()
-
-local OneWoW_GUI = OneWoW_GUI
-
 local M = MapWorldToolsModule
 
 local centerTime = -1

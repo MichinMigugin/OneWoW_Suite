@@ -31,7 +31,7 @@ local function DeepMerge(dst, src)
     end
 end
 
-local function SyncSettingToChildAddons(settingType, value)
+local function SyncSettingToChildAddons(settingType, _)
     local integratedAddons = {
         "OneWoW_AltTracker", "OneWoW_Notes", "OneWoW_QoL",
         "OneWoW_Catalog", "OneWoW_DirectDeposit",

@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.GuildBank = {}
 local Module = ns.GuildBank
@@ -76,11 +76,11 @@ function Module:CollectData(charKey, charData)
         end
     end
 
-    if not _G.OneWoW_AltTracker_Storage_DB.guildBanks then
-        _G.OneWoW_AltTracker_Storage_DB.guildBanks = {}
+    if not OneWoW_AltTracker_Storage_DB.guildBanks then
+        OneWoW_AltTracker_Storage_DB.guildBanks = {}
     end
 
-    _G.OneWoW_AltTracker_Storage_DB.guildBanks[guildName] = guildBank
+    OneWoW_AltTracker_Storage_DB.guildBanks[guildName] = guildBank
 
     return true
 end

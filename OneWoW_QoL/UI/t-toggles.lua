@@ -1,7 +1,4 @@
--- OneWoW_QoL Addon File
--- OneWoW_QoL/UI/t-toggles.lua
--- Created by MichinMuggin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
@@ -161,7 +158,6 @@ ns.GetCVarList = function() return CVAR_DATA end
 
 local selectedEntry = nil
 local selectedRow   = nil
-local split_ref     = nil
 
 local function QoLToggleFavStore()
     local db = OneWoW_QoL and OneWoW_QoL.db and OneWoW_QoL.db.global
@@ -291,7 +287,7 @@ local function ShowToggleDetail(split, entry)
         local isOn = (curVal == "1")
         local capturedEntry = entry
 
-        local onBtn, offBtn, refresh = OneWoW_GUI:CreateOnOffToggleButtons(child, {
+        OneWoW_GUI:CreateOnOffToggleButtons(child, {
             yOffset = yOfs,
             onLabel = L["TOGGLES_ON"],
             offLabel = L["TOGGLES_OFF"],
@@ -333,7 +329,7 @@ local function ShowToggleDetail(split, entry)
         trackBg:SetPoint("BOTTOMRIGHT", slider, "BOTTOMRIGHT", -8, 6)
 
         local capturedEntry = entry
-        slider:SetScript("OnValueChanged", function(self, value)
+        slider:SetScript("OnValueChanged", function(_, value)
             local fmt = FormatSliderVal(value, capturedEntry.step)
             valLabel:SetText(L["TOGGLES_VALUE_LABEL"] .. " " .. fmt)
             C_CVar.SetCVar(capturedEntry.cvar, fmt)
@@ -365,7 +361,7 @@ local function ShowToggleDetail(split, entry)
             })
         end
 
-        local optBtns, finalY = OneWoW_GUI:CreateFitFrameButtons(child, {
+        local _, finalY = OneWoW_GUI:CreateFitFrameButtons(child, {
             yOffset = yOfs,
             items = items,
             height = 26,
@@ -524,7 +520,6 @@ function ns.UI.CreateTogglesTab(parent)
         showSearch = true,
         searchPlaceholder = L["SEARCH_HINT"],
     })
-    split_ref = split
 
     split.listTitle:SetText(L["TOGGLES_LIST_TITLE"])
     split.detailTitle:SetText(L["TOGGLES_DETAIL_TITLE"])

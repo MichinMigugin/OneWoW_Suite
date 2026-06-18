@@ -1,4 +1,5 @@
 local _, ns = ...
+
 local MapWorldToolsModule, L = ns.ModuleRegistry:Current()
 local M = MapWorldToolsModule
 
@@ -8,14 +9,6 @@ local ROW_HEIGHT    = 28
 local SLIDER_HEIGHT = 42
 local INDENT_LABEL  = 24
 local INDENT_SLIDER = 36
-
-local function AddLabel(parent, cy, text, color)
-    local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    fs:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, cy)
-    fs:SetText(text)
-    fs:SetTextColor(OneWoW_GUI:GetThemeColor(color or "TEXT_SECONDARY"))
-    return fs, cy - fs:GetStringHeight() - 4
-end
 
 local function AddLabelIndented(parent, cy, text, color)
     local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -29,7 +22,7 @@ local function BuildContent(container)
     local s = M.GetSettings()
     local cy = 0
 
-    local function InlineCB(id, labelKey, fallback)
+    local function InlineCB(id, labelKey, _)
         local cb = OneWoW_GUI:CreateCheckbox(container, {
             label   = L[labelKey],
             checked = ns.ModuleRegistry:GetToggleValue("map_world_tools", id),
@@ -291,7 +284,7 @@ local function BuildContent(container)
     return cy
 end
 
-function M:CreateCustomDetail(detailScrollChild, yOffset, isEnabled)
+function M:CreateCustomDetail(detailScrollChild, yOffset, _)
     if detailScrollChild._mapworldContainer then
         OneWoW_GUI:ClearFrame(detailScrollChild._mapworldContainer)
     end
