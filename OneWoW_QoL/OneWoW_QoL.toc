@@ -161,6 +161,15 @@ Modules\external\questtools\questtools.lua
 Modules\external\playmounts\module.lua
 Modules\external\playmounts\Locales\enUS.lua
 Modules\external\playmounts\Locales\koKR.lua
+Modules\external\playmounts\Locales\frFR.lua
+Modules\external\playmounts\Locales\deDE.lua
+Modules\external\playmounts\Locales\zhCN.lua
+Modules\external\playmounts\Locales\esES.lua
+Modules\external\playmounts\Locales\zhTW.lua
+Modules\external\playmounts\Locales\esMX.lua
+Modules\external\playmounts\Locales\ruRU.lua
+Modules\external\playmounts\Locales\ptBR.lua
+Modules\external\playmounts\Locales\itIT.lua
 Modules\external\playmounts\playmounts.lua
 
 Modules\external\copytext\module.lua
@@ -171,6 +180,15 @@ Modules\external\copytext\copytext.lua
 Modules\external\coords\module.lua
 Modules\external\coords\Locales\enUS.lua
 Modules\external\coords\Locales\koKR.lua
+Modules\external\coords\Locales\frFR.lua
+Modules\external\coords\Locales\deDE.lua
+Modules\external\coords\Locales\zhCN.lua
+Modules\external\coords\Locales\esES.lua
+Modules\external\coords\Locales\zhTW.lua
+Modules\external\coords\Locales\esMX.lua
+Modules\external\coords\Locales\ruRU.lua
+Modules\external\coords\Locales\ptBR.lua
+Modules\external\coords\Locales\itIT.lua
 Modules\external\coords\coords.lua
 
 Modules\external\automount\module.lua
@@ -190,22 +208,58 @@ Modules\external\automount\automount.lua
 Modules\external\cursorenhancer\module.lua
 Modules\external\cursorenhancer\Locales\enUS.lua
 Modules\external\cursorenhancer\Locales\koKR.lua
+Modules\external\cursorenhancer\Locales\frFR.lua
+Modules\external\cursorenhancer\Locales\deDE.lua
+Modules\external\cursorenhancer\Locales\zhCN.lua
+Modules\external\cursorenhancer\Locales\esES.lua
+Modules\external\cursorenhancer\Locales\zhTW.lua
+Modules\external\cursorenhancer\Locales\esMX.lua
+Modules\external\cursorenhancer\Locales\ruRU.lua
+Modules\external\cursorenhancer\Locales\ptBR.lua
+Modules\external\cursorenhancer\Locales\itIT.lua
 Modules\external\cursorenhancer\cursorenhancer.lua
 
 Modules\external\professionspanel\module.lua
 Modules\external\professionspanel\Locales\enUS.lua
 Modules\external\professionspanel\Locales\koKR.lua
+Modules\external\professionspanel\Locales\frFR.lua
+Modules\external\professionspanel\Locales\deDE.lua
+Modules\external\professionspanel\Locales\zhCN.lua
+Modules\external\professionspanel\Locales\esES.lua
+Modules\external\professionspanel\Locales\zhTW.lua
+Modules\external\professionspanel\Locales\esMX.lua
+Modules\external\professionspanel\Locales\ruRU.lua
+Modules\external\professionspanel\Locales\ptBR.lua
+Modules\external\professionspanel\Locales\itIT.lua
 Modules\external\professionspanel\professionspanel.lua
 Modules\external\professionspanel\professionspanel-ui.lua
 
 Modules\external\afkpanel\module.lua
 Modules\external\afkpanel\Locales\enUS.lua
 Modules\external\afkpanel\Locales\koKR.lua
+Modules\external\afkpanel\Locales\frFR.lua
+Modules\external\afkpanel\Locales\deDE.lua
+Modules\external\afkpanel\Locales\zhCN.lua
+Modules\external\afkpanel\Locales\esES.lua
+Modules\external\afkpanel\Locales\zhTW.lua
+Modules\external\afkpanel\Locales\esMX.lua
+Modules\external\afkpanel\Locales\ruRU.lua
+Modules\external\afkpanel\Locales\ptBR.lua
+Modules\external\afkpanel\Locales\itIT.lua
 Modules\external\afkpanel\afkpanel.lua
 
 Modules\external\escpanel\module.lua
 Modules\external\escpanel\Locales\enUS.lua
 Modules\external\escpanel\Locales\koKR.lua
+Modules\external\escpanel\Locales\frFR.lua
+Modules\external\escpanel\Locales\deDE.lua
+Modules\external\escpanel\Locales\zhCN.lua
+Modules\external\escpanel\Locales\esES.lua
+Modules\external\escpanel\Locales\zhTW.lua
+Modules\external\escpanel\Locales\esMX.lua
+Modules\external\escpanel\Locales\ruRU.lua
+Modules\external\escpanel\Locales\ptBR.lua
+Modules\external\escpanel\Locales\itIT.lua
 Modules\external\escpanel\escpanel.lua
 
 Modules\external\vendorpanel\module.lua

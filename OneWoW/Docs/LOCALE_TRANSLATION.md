@@ -550,9 +550,14 @@ ptBR itIT.
     - **NOTE:** some koKR files marked "present" are actually English copies (framemover whole, bagbar
       partial), not just literal `"TEST"`. Always run the identical-to-enUS leftover scan on koKR, not
       just a parity check.
-    - [ ] remaining: `playmounts` (20), `coords` (17), `cursorenhancer` (15), `escpanel` (14), `afkpanel`
-      (14), `professionspanel` (11), `copytext` (11), `questtools` (10), `fastforward` (10), … down to
-      many ≤9-key modules. Mixed koKR states; a few enUS-only.
+    - [x] `playmounts` (20), `coords` (17), `cursorenhancer` (15), `escpanel` (14), `afkpanel` (14),
+      `professionspanel` (11) — all 11/11 (2026-06-17). koKR were TEST placeholders (replaced). Authored
+      via per-language megadicts (one JSON per lang spanning all 6 modules; locale_gen ignores keys not
+      in each template).
+    - [ ] remaining: `copytext` (11), `questtools` (10), `fastforward` (10), `autoopen` (9), `autoinvite`
+      (8), `autodelete` (6), and the ≤4-key tail (declineduel, autosummon, autoresurrect, autorepair,
+      autoreadycheck, screenshotachievements, hideerrors, fastloot, auctionhouse, achieveuntrack).
+      Mostly TEST-placeholder koKR.
   Skip `OneWoW_Utility_Extractor` + `OneWoW_AccountSync` (internal tools).
   **Do NOT localize** `OneWoW_Utility_Extractor` or `OneWoW_AccountSync` (internal tools).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).

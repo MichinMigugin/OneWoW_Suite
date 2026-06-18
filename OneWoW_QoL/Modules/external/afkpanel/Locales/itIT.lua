@@ -1,0 +1,21 @@
+local _, ns = ...
+local M = ns.ModuleRegistry:Current()
+
+-- Machine-drafted (Phase 4) — itIT (no official IT client), pending native review.
+OneWoW.Locale:Register(M._scope, "itIT", {
+
+    ["AFKPANEL_TITLE"] = "Pannello AFK",
+    ["AFKPANEL_DESC"] = "Mostra una sovrapposizione AFK a schermo intero con le info del personaggio, gli avvisi e le note quando vai in AFK.",
+    ["AFKPANEL_CAMERA_SPIN"] = "Rotazione della telecamera",
+    ["AFKPANEL_SHOW_DAILY"] = "Mostra note giornaliere",
+    ["AFKPANEL_SHOW_WEEKLY"] = "Mostra note settimanali",
+    ["AFKPANEL_MODE_TITLE"] = "OneWoW QoL - Modalità AFK",
+    ["AFKPANEL_CHARACTER_INFO"] = "INFO PERSONAGGIO",
+    ["AFKPANEL_ALERTS"] = "AVVISI",
+    ["AFKPANEL_NO_ALERTS"] = "Nessun avviso al momento",
+    ["AFKPANEL_AFK_TIME"] = "AFK: %s",
+    ["AFKPANEL_DAILY_NOTES"] = "NOTE GIORNALIERE",
+    ["AFKPANEL_WEEKLY_NOTES"] = "NOTE SETTIMANALI",
+    ["AFKPANEL_NO_NOTES"] = "Nessuna nota da mostrare",
+    ["AFKPANEL_NO_GUILD"] = "Nessuna gilda",
+})
