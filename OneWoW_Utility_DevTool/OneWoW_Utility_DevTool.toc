@@ -22,11 +22,12 @@
 
 # Locales
 Locales\enUS.lua
-Locales\esES.lua
 Locales\koKR.lua
 Locales\frFR.lua
-Locales\ruRU.lua
 Locales\deDE.lua
+Locales\esES.lua
+Locales\esMX.lua
+Locales\ruRU.lua
 
 # Core
 Core\Constants.lua
