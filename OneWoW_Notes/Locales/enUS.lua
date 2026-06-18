@@ -124,7 +124,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["NOTES_CONTROLS"] = "Notes Controls",
     ["NOTES_LIST"] = "Notes List",
     ["MESSAGE_SELECT_NOTE"] = "Select a note to edit",
-    -- Phase 3: "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
+    -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
     -- adjective default-name whose form can vary by locale; leave scoped.
     ["NOTE_UNTITLED"] = "Untitled",
 
@@ -199,7 +199,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["COLOR_HUNTER_GREEN"] = "Hunter Green",
     ["FONT_DEFAULT"] = "Default (Friz Quadrata)",
     ["FONT_COLOR_MATCHING"] = "Default - Matching",
-    -- Phase 3: "Priest White" intentionally NOT deduped with NOTES_PIN_COLOR_PRIEST_WHITE —
+    -- "Priest White" intentionally NOT deduped with NOTES_PIN_COLOR_PRIEST_WHITE —
     -- two independent UIs (font-color picker vs pin-color set); keep separate.
     ["FONT_COLOR_WHITE"] = "Priest White",
     ["FONT_COLOR_BLACK"] = "Midnight Black",

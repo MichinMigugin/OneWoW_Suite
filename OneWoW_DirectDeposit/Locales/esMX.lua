@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — esMX mirrored from esES, pending Latin-American review.
+-- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
     -- migrated from OneWoW scope
@@ -60,7 +60,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["TAB_KEYBINDS"] = "Atajos de Teclado",
 
     ["KEYBIND_SECTION"] = "Atajos de Añadido Rápido",
-    ["KEYBIND_DESC"] = "Pasa el cursor sobre cualquier objeto y pulsa un atajo para añadirlo al instante a la lista de depósito. Asigna teclas en Menú del Juego > Asignación de Teclas > OneWoW Direct Deposit.",
+    ["KEYBIND_DESC"] = "Pasa el cursor sobre cualquier objeto y presiona un atajo para añadirlo al instante a la lista de depósito. Asigna teclas en Menú del Juego > Asignación de Teclas > OneWoW Direct Deposit.",
     ["KEYBIND_ADD_PERSONAL"] = "Añadir Objeto Señalado - Banco Personal",
     ["KEYBIND_ADD_WARBAND"] = "Añadir Objeto Señalado - Banco de Grupo de Guerra",
     ["KEYBIND_ADD_GUILD"] = "Añadir Objeto Señalado - Banco de Hermandad",

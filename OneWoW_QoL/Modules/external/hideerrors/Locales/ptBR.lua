@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — ptBR, pending native review.
+-- Machine-drafted — ptBR, pending native review.
 OneWoW.Locale:Register(M._scope, "ptBR", {
 
     ["HIDEERRORS_TITLE"] = "Ocultar spam de erros de combate",

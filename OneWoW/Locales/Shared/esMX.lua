@@ -1,7 +1,6 @@
 local _, OneWoW = ...
 
--- Machine-drafted (Phase 4) — pending native review. Mirrors esES for these UI
--- strings; refine for Latin-American usage where it diverges.
+-- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
 OneWoW.Locale:RegisterShared("esMX", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "Selección de idioma",
@@ -72,7 +71,7 @@ OneWoW.Locale:RegisterShared("esMX", {
     -- Common
     ["CURRENT_VALUE"] = "Actual: %s",
 
-    -- Phase 3 consolidated
+    -- consolidated
     ["ADD_ITEM"] = "Añadir objeto",
     ["BATTLE_PET"] = "Mascota de batalla",
     ["BUTTON_SIZE"] = "Tamaño de botón",
@@ -92,7 +91,7 @@ OneWoW.Locale:RegisterShared("esMX", {
     ["CLICK_AND_DRAG_TO_MOVE"] = "Haz clic y arrastra para mover",
     ["DISCORD"] = "Discord",
     ["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"] = "Doble clic o Mayús+clic para contraer o expandir",
-    ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "Ocultar ancla (mostrar al pasar el cursor)",
+    ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "Ocultar ancla (mostrar al pasar el mouse)",
     ["HIDE_BAR"] = "Ocultar barra",
     ["ICON_SPACING"] = "Espaciado de iconos",
     ["LEFT_CLICK_TO_USE"] = "Clic izquierdo para usar",
@@ -109,7 +108,7 @@ OneWoW.Locale:RegisterShared("esMX", {
     ["GOLD_TOTAL"] = "Oro total",
     ["WORLD_QUEST"] = "Misión mundial",
 
-    -- Phase 3 consolidated (bare-word terms)
+    -- consolidated (bare-word terms)
     ["ITEM"] = "Objeto",
     ["RENAME"] = "Renombrar",
     ["EXPANSION"] = "Expansión",
@@ -162,7 +161,7 @@ OneWoW.Locale:RegisterShared("esMX", {
     ["OVR_QUALITY_COLORS_LABEL"] = "Usar colores de calidad de objeto",
     ["OVR_JUNK_TITLE"] = "Superposición de objetos basura",
     ["OVR_JUNK_DESC"] = "Muestra un icono de superposición en los objetos que has marcado manualmente como basura en tus bolsas.",
-    ["OVR_JUNK_NOTE"] = "Para marcar un objeto como basura, pasa el ratón por encima en tus bolsas y pulsa tu atajo Marcar objeto como basura. Puedes asignar este atajo en Menú del juego > Asignación de teclas. Los objetos basura también aparecen resaltados en la pestaña Vendedor de Bags para venderlos rápido.",
+    ["OVR_JUNK_NOTE"] = "Para marcar un objeto como basura, pasa el mouse por encima en tus bolsas y presiona tu atajo Marcar objeto como basura. Puedes asignar este atajo en Menú del juego > Asignación de teclas. Los objetos basura también aparecen resaltados en la pestaña Vendedor de Bags para venderlos rápido.",
     ["OVR_JUNK_GREY_LABEL"] = "Incluir objetos grises (calidad pobre)",
     ["OVR_KNOWNITEMS_TITLE"] = "Superposición de objetos conocidos",
     ["OVR_KNOWNITEMS_DESC"] = "Muestra un icono en los objetos de colección que ya posees — mascotas, monturas, juguetes, recetas y apariencias de transfiguración que ya has obtenido.",
@@ -290,13 +289,13 @@ OneWoW.Locale:RegisterShared("esMX", {
     ["OVR_ILVL_CONTAINER_SLOTS"] = "Mostrar espacios de contenedor",
     ["OVR_PROTECTED_TITLE"] = "Superposición de objetos protegidos",
     ["OVR_PROTECTED_DESC"] = "Muestra un icono de superposición en los objetos que has marcado manualmente como protegidos en tus bolsas.",
-    ["OVR_PROTECTED_NOTE"] = "Para marcar un objeto como protegido, pasa el ratón por encima en tus bolsas y pulsa tu atajo Marcar objeto como protegido. Puedes asignar este atajo en Menú del juego > Asignación de teclas. Los objetos protegidos no se pueden vender a vendedores ni eliminar con ninguna función de venta automática.",
+    ["OVR_PROTECTED_NOTE"] = "Para marcar un objeto como protegido, pasa el mouse por encima en tus bolsas y presiona tu atajo Marcar objeto como protegido. Puedes asignar este atajo en Menú del juego > Asignación de teclas. Los objetos protegidos no se pueden vender a vendedores ni eliminar con ninguna función de venta automática.",
     ["OVR_TOOLTIP_LABEL"] = "Mostrar estado del objeto en el tooltip",
     ["ITEMSTATUS_MARKED_JUNK"] = "Marcado como basura: %s",
     ["ITEMSTATUS_MARKED_PROTECTED"] = "Marcado como protegido: %s",
     ["ITEMSTATUS_REMOVED_JUNK"] = "Estado de basura eliminado: %s",
     ["ITEMSTATUS_REMOVED_PROTECTED"] = "Estado de protegido eliminado: %s",
-    ["ITEMSTATUS_HOVER_HINT"] = "Pasa el ratón o coge primero un objeto",
+    ["ITEMSTATUS_HOVER_HINT"] = "Pasa el mouse o coge primero un objeto",
     ["ITEMSTATUS_TOOLTIP_JUNK"] = "Objeto basura",
     ["ITEMSTATUS_TOOLTIP_PROTECTED"] = "Objeto protegido",
     ["TOAST_ANCHOR_SHOW_BTN"] = "Mostrar ancla",

@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — deDE, pending native review.
+-- Machine-drafted — deDE, pending native review.
 OneWoW.Locale:Register(M._scope, "deDE", {
 
     ["AUTODELETE_TITLE"] = "Auto-Löschen",

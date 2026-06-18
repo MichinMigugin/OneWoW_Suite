@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — frFR (expansion names kept English per Blizzard client), pending native review.
+-- Machine-drafted — frFR (expansion names kept English per Blizzard client), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["ADDON_LOADED"] = "OneWoW CatalogData: Tradeskills chargé.",
     ["PROF_ALCHEMY"] = "Alchimie",

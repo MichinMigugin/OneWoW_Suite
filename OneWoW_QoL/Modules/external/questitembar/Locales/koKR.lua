@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — koKR (replaces TEST placeholder), pending native review.
+-- Machine-drafted — koKR (replaces TEST placeholder), pending native review.
 OneWoW.Locale:Register(M._scope, "koKR", {
 
     ["QUESTITEMBAR_TITLE"] = "퀘스트 아이템 바",

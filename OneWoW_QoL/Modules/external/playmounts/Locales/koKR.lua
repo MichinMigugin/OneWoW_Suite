@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — koKR (replaces TEST placeholder), pending native review.
+-- Machine-drafted — koKR (replaces TEST placeholder), pending native review.
 OneWoW.Locale:Register(M._scope, "koKR", {
 
     ["PLAYMOUNTS_TITLE"] = "플레이어 탈것",

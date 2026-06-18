@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — zhTW, pending native review.
+-- Machine-drafted — zhTW, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
     -- migrated from OneWoW scope

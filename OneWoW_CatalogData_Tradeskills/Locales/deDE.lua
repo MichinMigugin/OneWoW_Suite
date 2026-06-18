@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — deDE (expansion names kept English per Blizzard client), pending native review.
+-- Machine-drafted — deDE (expansion names kept English per Blizzard client), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ADDON_LOADED"] = "OneWoW CatalogData: Tradeskills geladen.",
     ["PROF_ALCHEMY"] = "Alchimie",

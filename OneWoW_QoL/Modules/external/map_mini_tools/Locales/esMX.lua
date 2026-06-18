@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — esMX mirrored from esES, pending Latin-American review.
+-- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
 OneWoW.Locale:Register(M._scope, "esMX", {
 
     ["MMSKIN_TITLE"] = "Herramientas de mapa (mini)",
@@ -47,13 +47,13 @@ OneWoW.Locale:Register(M._scope, "esMX", {
     ["MMSKIN_ZONE_CLOCK_ANCHOR_MM"] = "Anclar zona y reloj al minimapa",
     ["MMSKIN_ZONE_CLOCK_ANCHOR_MM_DESC"] = "Mientras el arrastre está activado, ancla el nombre de zona y el reloj al minimapa para que lo acompañen cuando se mueva. Si los apilas uno sobre otro, se mueven como uno solo.",
 
-    ["MMSKIN_WHEEL_ZOOM"] = "Zoom con la rueda del ratón",
-    ["MMSKIN_WHEEL_ZOOM_DESC"] = "Acerca y aleja el minimapa con la rueda del ratón.",
+    ["MMSKIN_WHEEL_ZOOM"] = "Zoom con la rueda del mouse",
+    ["MMSKIN_WHEEL_ZOOM_DESC"] = "Acerca y aleja el minimapa con la rueda del mouse.",
     ["MMSKIN_AUTO_ZOOM"] = "Alejar automáticamente",
     ["MMSKIN_AUTO_ZOOM_DESC"] = "Aleja automáticamente el minimapa después de acercarlo.",
 
     ["MMSKIN_CLICK_ACTIONS"] = "Acciones de clic",
-    ["MMSKIN_CLICK_ACTIONS_DESC"] = "Activa las acciones de clic derecho, clic central y botones adicionales del ratón en el minimapa.",
+    ["MMSKIN_CLICK_ACTIONS_DESC"] = "Activa las acciones de clic derecho, clic central y botones adicionales del mouse en el minimapa.",
 
     ["MMSKIN_MAIL"] = "Indicador de correo",
     ["MMSKIN_MAIL_DESC"] = "Muestra el indicador de correo en el minimapa.",

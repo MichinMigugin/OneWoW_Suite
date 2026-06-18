@@ -1,6 +1,6 @@
 local _, OneWoW = ...
 
--- Machine-drafted (Phase 4) — pending native review.
+-- Machine-drafted — pending native review.
 OneWoW.Locale:RegisterShared("esES", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "Selección de idioma",
@@ -71,7 +71,7 @@ OneWoW.Locale:RegisterShared("esES", {
     -- Common
     ["CURRENT_VALUE"] = "Actual: %s",
 
-    -- Phase 3 consolidated
+    -- consolidated
     ["ADD_ITEM"] = "Añadir objeto",
     ["BATTLE_PET"] = "Mascota de batalla",
     ["BUTTON_SIZE"] = "Tamaño de botón",
@@ -108,7 +108,7 @@ OneWoW.Locale:RegisterShared("esES", {
     ["GOLD_TOTAL"] = "Oro total",
     ["WORLD_QUEST"] = "Misión mundial",
 
-    -- Phase 3 consolidated (bare-word terms)
+    -- consolidated (bare-word terms)
     ["ITEM"] = "Objeto",
     ["RENAME"] = "Renombrar",
     ["EXPANSION"] = "Expansión",

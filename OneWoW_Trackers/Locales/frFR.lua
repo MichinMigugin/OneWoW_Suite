@@ -1,6 +1,6 @@
 local ADDON_NAME, ns = ...
 
--- Machine-drafted (Phase 4) — pending native review.
+-- Machine-drafted — pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "frFR", {
 
     -- migrated from OneWoW scope

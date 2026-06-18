@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — ptBR (expansion names kept English per Blizzard client), pending native review.
+-- Machine-drafted — ptBR (expansion names kept English per Blizzard client), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["ADDON_LOADED"] = "OneWoW CatalogData: Tradeskills carregado.",
     ["PROF_ALCHEMY"] = "Alquimia",

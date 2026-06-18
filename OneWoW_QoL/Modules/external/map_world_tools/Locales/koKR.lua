@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — koKR, pending native review.
+-- Machine-drafted — koKR, pending native review.
 OneWoW.Locale:Register(M._scope, "koKR", {
 
     ["MAPWORLD_TITLE"] = "지도(전체) 도구",

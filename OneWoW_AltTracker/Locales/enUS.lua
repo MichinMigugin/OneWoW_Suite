@@ -410,7 +410,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["PROGRESS_NO_DATA"] = "No Data",
     ["PROGRESS_OVERVIEW"] = "Progress Overview",
     ["PROGRESS_VAULT"] = "Vault",
-    -- Phase 3: "Rested" (COL_RESTED_XP / RESTED / TT_RESTED) intentionally NOT deduped
+    -- "Rested" (COL_RESTED_XP / RESTED / TT_RESTED) intentionally NOT deduped
     -- into one key — gendered participle adjective (fr reposé/ée, es descansado/a) that
     -- can need a per-context form; leave the trio scoped.
     ["RESTED"] = "Rested",

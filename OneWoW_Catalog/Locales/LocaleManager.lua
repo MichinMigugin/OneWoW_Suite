@@ -2,7 +2,7 @@ local _, ns = ...
 
 -- Thin shim over the OneWoW Locale service. `ns.ApplyLanguage` is still called by
 -- OnInitialize, the OnLanguageChanged settings callback, and the profile-sync loop
--- (t-profiles SyncSettingToChildAddons), so it is kept (not deleted) until Phase 6.
+-- (t-profiles SyncSettingToChildAddons), so it is kept (not deleted) until those legacy callers are removed.
 -- SetLanguage refolds every scope in place, pushes BINDING_* globals, and fires
 -- OnApply; ns.L is a stable view (set in Locales/enUS.lua). esMX->esES normalized inside.
 function ns.ApplyLanguage()

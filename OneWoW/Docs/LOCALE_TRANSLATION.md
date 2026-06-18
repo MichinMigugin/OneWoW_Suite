@@ -563,16 +563,25 @@ ptBR itIT.
       `FlagsUtil`, `Enum.GossipOptionRecFlags`), and the screenshot path/filename kept literal.
   - **✅ ALL QoL external modules complete** (34 localized + `minimapskin` skipped as dead code). With the
     9 big scopes, DevTool, ShoppingList, DirectDeposit, all `CatalogData_*`, and all `AltTracker_*`, the
-    Phase-4 11-locale rollout is effectively done. Remaining = end-of-phase native/LatAm review passes.
+    Phase-4 11-locale rollout is effectively done. Remaining = end-of-phase native review passes.
+  - **✅ esMX LatAm review complete** (2026-06-18). LatAm term conventions baked into `bin/gen_esmx.py`
+    and all 55 `esMX.lua` regenerated: `pulsar/pulsa`→`presionar/presiona` (the official es_MX client
+    verb) and `ratón`→`mouse` (LatAm-standard), whole-word/case-preserving, value-only. No high-risk
+    Castilianisms were present (`coger`/`ordenador`/`vídeo`/`móvil`/`fichero`/`vosotros` — none).
+    All 55 esMX verify `miss 0 extra 0 spec 0 OK`; `esES` sources left untouched. Still machine-drafted —
+    a native LatAm speaker review is still welcome, but the obvious Castilian→LatAm swaps are done.
   Skip `OneWoW_Utility_Extractor` + `OneWoW_AccountSync` (internal tools).
   **Do NOT localize** `OneWoW_Utility_Extractor` or `OneWoW_AccountSync` (internal tools).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
 - [ ] In-game spot-check per language where feasible; commit per scope.
 
-**`esMX` automation (decided):** `esMX` is auto-generated from each scope's `esES`
+**`esMX` automation (done):** `esMX` is auto-generated from each scope's `esES`
 (UI text is ~identical) via `bin`-side helper `gen_esmx.py` — swaps the locale literal,
-re-headers `esMX mirrored from esES, pending Latin-American review`. Flagged for a LatAm
-review pass at the end. Saves ~10% of per-scope volume.
+applies the LatAm term map (`presionar`, `mouse` — see `LATAM_SUBS` in the script), and
+re-headers `esMX (LatAm terms applied: presionar, mouse), pending native review`. The LatAm
+review pass is complete (2026-06-18); re-running the generator preserves the LatAm terms
+because they live in the tool. To add future LatAm normalizations, extend `LATAM_SUBS`
+and re-run `gen_esmx.py` over the `Locales` dirs. Saves ~10% of per-scope volume.
 
 **Parity verification (tooling):** `bin/locale_verify.py <path/to/Locales>` checks every
 non-enUS file against `enUS.lua` for key parity (missing/extra) and matching printf-style

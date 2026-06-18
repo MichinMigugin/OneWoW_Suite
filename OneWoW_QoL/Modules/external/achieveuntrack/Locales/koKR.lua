@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — koKR (was English; now translated), pending native review.
+-- Machine-drafted — koKR (was English; now translated), pending native review.
 OneWoW.Locale:Register(M._scope, "koKR", {
 
     ["ACHIEVEUNTRACK_TITLE"] = "완료한 업적 추적 해제",

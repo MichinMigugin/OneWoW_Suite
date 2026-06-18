@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — koKR (replaces TEST placeholder), pending native review.
+-- Machine-drafted — koKR (replaces TEST placeholder), pending native review.
 OneWoW.Locale:Register(M._scope, "koKR", {
 
     ["HIDEERRORS_TITLE"] = "전투 오류 도배 숨기기",

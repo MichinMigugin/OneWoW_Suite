@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — zhTW (Taiwan terms), pending native review.
+-- Machine-drafted — zhTW (Taiwan terms), pending native review.
 OneWoW.Locale:Register(M._scope, "zhTW", {
 
     ["CHARINFO_TITLE"] = "角色資訊表",

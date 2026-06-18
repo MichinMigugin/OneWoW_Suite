@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — zhTW (Taiwan terms), pending native review.
+-- Machine-drafted — zhTW (Taiwan terms), pending native review.
 OneWoW.Locale:Register(M._scope, "zhTW", {
 
     ["ESCPANEL_TITLE"] = "ESC 選單面板",

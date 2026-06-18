@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — esMX mirrored from esES, pending Latin-American review.
+-- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
     -- migrated from OneWoW scope
@@ -99,7 +99,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["CATEGORY_RENAME_ENTER"] = "Nuevo nombre:",
     ["CATEGORY_DELETE_CONFIRM"] = "¿Eliminar esta categoría y todos sus objetos?",
     ["CATEGORY_NO_CATEGORIES"] = "Aún no hay categorías personalizadas.",
-    ["CATEGORY_GET_STARTED"] = "Pulsa «Nueva categoría» para empezar.",
+    ["CATEGORY_GET_STARTED"] = "Presiona «Nueva categoría» para empezar.",
     ["CATEGORY_ADD_BY_ID"] = "Añadir objeto por ID:",
     ["CATEGORY_NO_ITEMS"] = "Sin objetos asignados.",
     ["CATEGORY_ITEMS_COUNT"] = "(%d objetos)",

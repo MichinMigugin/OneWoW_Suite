@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — koKR (replaces TEST placeholder), pending native review.
+-- Machine-drafted — koKR (replaces TEST placeholder), pending native review.
 OneWoW.Locale:Register(M._scope, "koKR", {
 
     ["SCREENSHOTACH_TITLE"] = "업적 달성 시 스크린샷",

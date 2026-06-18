@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — esMX mirrored from esES, pending Latin-American review.
+-- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
     -- migrated from OneWoW scope
@@ -87,7 +87,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["JOURNAL_CLICK_FOR_LINK"] = "Enlace de WoWHead",
     ["JOURNAL_OPEN"] = "Ver misión",
     ["JOURNAL_OPEN_QUEST"] = "Ver misión",
-    ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Haz clic en un enlace para resaltarlo y luego pulsa Ctrl+C para copiarlo. Usa «Ver misión» para abrirla en el catálogo de Misiones.",
+    ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Haz clic en un enlace para resaltarlo y luego presiona Ctrl+C para copiarlo. Usa «Ver misión» para abrirla en el catálogo de Misiones.",
     ["JOURNAL_QUEST_CAT_TT"] = "Los objetos que aparecen aquí se pueden conseguir mediante algún tipo de misión.",
 
     ["JOURNAL_COL_HDR_DIFFICULTY"] = "Dificultad",

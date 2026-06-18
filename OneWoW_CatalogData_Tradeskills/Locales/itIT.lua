@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — itIT (no official IT client; expansion names kept English), pending native review.
+-- Machine-drafted — itIT (no official IT client; expansion names kept English), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["ADDON_LOADED"] = "OneWoW CatalogData: Tradeskills caricato.",
     ["PROF_ALCHEMY"] = "Alchimia",

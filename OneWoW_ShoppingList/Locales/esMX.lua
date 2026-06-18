@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — esMX mirrored from esES, pending Latin-American review.
+-- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
     -- migrated from OneWoW scope
@@ -44,9 +44,9 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["OWSL_TT_SCAN_ALL_TITLE"] = "Escanear todos los objetos sin resolver",
     ["OWSL_TT_SCAN_ALL_DESC"] = "Busca en tus objetos y en más de 20 000 entradas de la base de datos",
     ["OWSL_TT_SCAN_ALL_AUTO"] = "Resuelve automáticamente coincidencias exactas de nombre",
-    ["OWSL_TT_SCAN_ALL_IMPORTANT"] = "IMPORTANTE: pulsa 2–3 veces para mejores resultados",
+    ["OWSL_TT_SCAN_ALL_IMPORTANT"] = "IMPORTANTE: presiona 2–3 veces para mejores resultados",
     ["OWSL_TT_SCAN_ALL_API"] = "Los retrasos de la API pueden requerir varios escaneos",
-    ["OWSL_TT_SCAN_NOTICE"] = "(Pulsa 2–3 veces por retraso de la API)",
+    ["OWSL_TT_SCAN_NOTICE"] = "(Presiona 2–3 veces por retraso de la API)",
     ["OWSL_TT_IMPORT_TITLE"] = "Importar objetos",
     ["OWSL_TT_IMPORT_DESC"] = "Pega materiales de artesanía en estos formatos:",
     ["OWSL_TT_IMPORT_FORMAT1"] = "16x Madera de pino dragón  O  16x",
@@ -54,7 +54,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["OWSL_TT_SEARCH_ALTS_DESC"] = "Si está activo, busca en todos los personajes (mochilas, bancos, banco de banda, equipo, etc.)",
     ["OWSL_TT_EXPAND_COLLAPSE"] = "Clic para expandir o contraer detalles",
     ["OWSL_TT_UNRESOLVED_TITLE"] = "Objeto sin resolver",
-    ["OWSL_TT_UNRESOLVED_DESC"] = "Introduce ID de objeto o pulsa Escanear para resolver",
+    ["OWSL_TT_UNRESOLVED_DESC"] = "Introduce ID de objeto o presiona Escanear para resolver",
     ["OWSL_TT_ITEM_TITLE"] = "Objeto de la lista de compras",
     ["OWSL_TT_RIGHT_CLICK_MOVE"] = "Clic derecho: mover a otra lista",
     ["OWSL_TT_SHIFT_CLICK_AH"] = "Mayús+Clic: añadir a la búsqueda de subastas",
@@ -62,7 +62,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["OWSL_TT_ADD_QTY_DESC"] = "Introduce un número para sumar a la cantidad actual",
     ["OWSL_TT_ADD_QTY_EXAMPLE"] = "Ejemplo: actual 50, +98 = 148",
     ["OWSL_TT_ENTER_ID_TITLE"] = "Introduce ID de objeto",
-    ["OWSL_TT_ENTER_ID_DESC"] = "Escribe la ID y pulsa Entrar para activar el seguimiento",
+    ["OWSL_TT_ENTER_ID_DESC"] = "Escribe la ID y presiona Entrar para activar el seguimiento",
     ["OWSL_TT_ENTER_ID_FIND"] = "IDs en wowhead.com o en enlaces del juego",
     ["OWSL_TT_CRAFT_TITLE"] = "Fabricar este objeto",
     ["OWSL_TT_CRAFT_DESC"] = "Añade ingredientes a una lista de compras",
@@ -115,7 +115,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["OWSL_DIALOG_KNOWN_BY_MULTI"] = " (Conocida por: %s +%d más)",
     ["OWSL_DIALOG_KNOWN_BY"] = " (Conocida por: %s)",
     ["OWSL_DIALOG_UNKNOWN"] = " (Desconocida por todos)",
-    ["OWSL_DIALOG_FOUND_CRAFTABLES"] = "Se encontraron %d objetos fabricables. Pulsa FABRICAR para desglosar:",
+    ["OWSL_DIALOG_FOUND_CRAFTABLES"] = "Se encontraron %d objetos fabricables. Presiona FABRICAR para desglosar:",
     ["OWSL_DIALOG_QTY_NEEDED"] = "Cantidad necesaria: %d",
     ["OWSL_DIALOG_ONE_RECIPE"] = "1 receta: %s",
     ["OWSL_DIALOG_RECIPES"] = "%d recetas disponibles",
@@ -165,7 +165,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["OWSL_MSG_EXACT_MATCH"] = "¡Coincidencia exacta! Resuelto a %s (ID: %d)",
     ["OWSL_MSG_FOUND_PARTIAL"] = "Se encontraron %d coincidencias parciales:",
     ["OWSL_MSG_PARTIAL_MATCHES"] = " - Coincidencias parciales:",
-    ["OWSL_MSG_COPY_ID_TIP"] = "Copia un ID, pégalo en el campo y pulsa Entrar",
+    ["OWSL_MSG_COPY_ID_TIP"] = "Copia un ID, pégalo en el campo y presiona Entrar",
     ["OWSL_MSG_NO_MATCHES"] = "Sin coincidencias en posesión o en la base de datos.",
     ["OWSL_MSG_ENTER_ID_TIP"] = "Introduce el ID manualmente desde wowhead.com",
 
@@ -174,7 +174,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["OWSL_ALERT_DISMISS"] = "Clic derecho: descartar",
 
     ["OWSL_SETTINGS_ENABLE_TOOLTIP"] = "Activar tooltips de objetos",
-    ["OWSL_SETTINGS_TOOLTIP_DESC"] = "Mostrar información de la lista al pasar el ratón",
+    ["OWSL_SETTINGS_TOOLTIP_DESC"] = "Mostrar información de la lista al pasar el mouse",
     ["OWSL_SETTINGS_GENERAL"] = "GENERAL",
     ["OWSL_SETTINGS_LANGUAGE"] = "Idioma:",
     ["OWSL_SETTINGS_LANGUAGE_TITLE"] = "Selección de idioma",
@@ -195,7 +195,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["OWSL_SETTINGS_TOGGLE_KEY"] = "Alternar lista de compras:",
     ["OWSL_SETTINGS_ADD_ITEM_KEY"] = "Añadir objeto a la lista predeterminada:",
     ["OWSL_SETTINGS_KEYBIND_INFO"] = "Configura en Teclas > categoría OneWoW",
-    ["OWSL_SETTINGS_ADD_ITEM_INFO"] = "Pasa el ratón sobre un objeto y pulsa la tecla para añadirlo a tu lista predeterminada",
+    ["OWSL_SETTINGS_ADD_ITEM_INFO"] = "Pasa el mouse sobre un objeto y presiona la tecla para añadirlo a tu lista predeterminada",
     ["OWSL_SETTINGS_DETECTED"] = "Detectado",
     ["OWSL_SETTINGS_NOT_DETECTED"] = "No detectado",
     ["OWSL_SETTINGS_SHOW_MINIMAP"] = "Mostrar botón del minimapa",

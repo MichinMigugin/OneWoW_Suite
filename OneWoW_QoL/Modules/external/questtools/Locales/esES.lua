@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — esES, pending native review.
+-- Machine-drafted — esES, pending native review.
 OneWoW.Locale:Register(M._scope, "esES", {
 
     ["QUESTTOOLS_TITLE"] = "Herramientas de misión",

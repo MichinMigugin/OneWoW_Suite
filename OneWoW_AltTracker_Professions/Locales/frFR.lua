@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — frFR, pending native review.
+-- Machine-drafted — frFR, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["ADDON_LOADED"] = "OneWoW AltTracker : suivi des données de métiers activé",
     ["DATA_COLLECTED"] = "Données de métiers collectées",

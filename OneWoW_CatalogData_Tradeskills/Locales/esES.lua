@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — esES (expansion names kept English per Blizzard client), pending native review.
+-- Machine-drafted — esES (expansion names kept English per Blizzard client), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["ADDON_LOADED"] = "OneWoW CatalogData: Tradeskills cargado.",
     ["PROF_ALCHEMY"] = "Alquimia",

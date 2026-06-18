@@ -70,7 +70,7 @@ OneWoW.Locale:RegisterShared("enUS", {
     -- Common
     ["CURRENT_VALUE"] = "Current: %s",
 
-    -- Phase 3 consolidated (cross-scope duplicates)
+    -- consolidated (cross-scope duplicates)
     ["ADD_ITEM"] = "Add Item",
     ["BATTLE_PET"] = "Battle Pet",
     ["BUTTON_SIZE"] = "Button Size",
@@ -107,7 +107,7 @@ OneWoW.Locale:RegisterShared("enUS", {
     ["GOLD_TOTAL"] = "Total Gold",
     ["WORLD_QUEST"] = "World Quest",
 
-    -- Phase 3 consolidated (cross-scope bare-word terms)
+    -- consolidated (cross-scope bare-word terms)
     ["ITEM"] = "Item",
     ["RENAME"] = "Rename",
     ["EXPANSION"] = "Expansion",

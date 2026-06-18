@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — esMX mirrored from esES, pending Latin-American review.
+-- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
     -- migrated from OneWoW scope
@@ -818,7 +818,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["OVERRIDE_RAID_HINT"] = "p. ej. Palacio de Nerub-ar",
     ["OVERRIDE_BOSS_HINT"] = "p. ej. Zekvir",
     ["OVERRIDE_CURRENCY_LOGIN_NOTE"] = "Los cambios de moneda se aplican en el siguiente inicio de sesión de cada personaje",
-    ["OVERRIDE_TEXT_FIELD_HINT"] = "Escribe y pulsa Intro",
+    ["OVERRIDE_TEXT_FIELD_HINT"] = "Escribe y presiona Intro",
     ["TRACKING_BAR_RAID"] = "Banda:",
     ["TRACKING_BAR_BOSS"] = "Jefe:",
     ["TRACKING_BAR_CURRENCIES"] = "Siguiendo:",

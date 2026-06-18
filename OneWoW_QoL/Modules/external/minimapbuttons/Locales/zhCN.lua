@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — zhCN, pending native review.
+-- Machine-drafted — zhCN, pending native review.
 OneWoW.Locale:Register(M._scope, "zhCN", {
 
     ["MMBTNS_TITLE"] = "小地图按钮收集器",

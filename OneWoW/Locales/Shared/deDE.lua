@@ -1,6 +1,6 @@
 local _, OneWoW = ...
 
--- Machine-drafted (Phase 4) — pending native review.
+-- Machine-drafted — pending native review.
 OneWoW.Locale:RegisterShared("deDE", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "Sprachauswahl",
@@ -71,7 +71,7 @@ OneWoW.Locale:RegisterShared("deDE", {
     -- Common
     ["CURRENT_VALUE"] = "Aktuell: %s",
 
-    -- Phase 3 consolidated
+    -- consolidated
     ["ADD_ITEM"] = "Gegenstand hinzufügen",
     ["BATTLE_PET"] = "Kampfhaustier",
     ["BUTTON_SIZE"] = "Schaltflächengröße",
@@ -108,7 +108,7 @@ OneWoW.Locale:RegisterShared("deDE", {
     ["GOLD_TOTAL"] = "Gold gesamt",
     ["WORLD_QUEST"] = "Weltquest",
 
-    -- Phase 3 consolidated (bare-word terms)
+    -- consolidated (bare-word terms)
     ["ITEM"] = "Gegenstand",
     ["RENAME"] = "Umbenennen",
     ["EXPANSION"] = "Erweiterung",

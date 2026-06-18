@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — esMX mirrored from esES, pending Latin-American review.
+-- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
     -- migrated from OneWoW scope
@@ -223,9 +223,9 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 -- Pinned window strings
     ["CORE_PIN_NOTE_PREFIX"] = "Nota:",
     ["CORE_PIN_UNTITLED"] = "Sin título",
-    ["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER"] = "Ocultar tareas fijadas hasta pasar el ratón",
-    ["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER_DESC"] = "Cuando está fijada, muestra la lista de tareas solo mientras el ratón está sobre la nota.",
-    ["CORE_PIN_HOVER_TASKS"] = "Tareas al pasar el ratón",
+    ["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER"] = "Ocultar tareas fijadas hasta pasar el mouse",
+    ["NOTE_PIN_HIDE_TASKS_UNTIL_HOVER_DESC"] = "Cuando está fijada, muestra la lista de tareas solo mientras el mouse está sobre la nota.",
+    ["CORE_PIN_HOVER_TASKS"] = "Tareas al pasar el mouse",
 
 -- Items tab
     ["ITEMS_CONTROLS"] = "Controles de objetos",

@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — zhTW (Taiwan terms), pending native review.
+-- Machine-drafted — zhTW (Taiwan terms), pending native review.
 OneWoW.Locale:Register(M._scope, "zhTW", {
 
     ["HIDEERRORS_TITLE"] = "隱藏戰鬥錯誤洗版",

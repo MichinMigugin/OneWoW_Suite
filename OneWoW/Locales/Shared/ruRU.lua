@@ -1,6 +1,6 @@
 local _, OneWoW = ...
 
--- Machine-drafted (Phase 4) — pending native review.
+-- Machine-drafted — pending native review.
 OneWoW.Locale:RegisterShared("ruRU", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "Выбор языка",
@@ -71,7 +71,7 @@ OneWoW.Locale:RegisterShared("ruRU", {
     -- Common
     ["CURRENT_VALUE"] = "Текущее: %s",
 
-    -- Phase 3 consolidated
+    -- consolidated
     ["ADD_ITEM"] = "Добавить предмет",
     ["BATTLE_PET"] = "Боевой питомец",
     ["BUTTON_SIZE"] = "Размер кнопок",
@@ -108,7 +108,7 @@ OneWoW.Locale:RegisterShared("ruRU", {
     ["GOLD_TOTAL"] = "Всего золота",
     ["WORLD_QUEST"] = "Локальное задание",
 
-    -- Phase 3 consolidated (bare-word terms)
+    -- consolidated (bare-word terms)
     ["ITEM"] = "Предмет",
     ["RENAME"] = "Переименовать",
     ["EXPANSION"] = "Дополнение",

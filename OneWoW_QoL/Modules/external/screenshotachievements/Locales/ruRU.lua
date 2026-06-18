@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — ruRU, pending native review.
+-- Machine-drafted — ruRU, pending native review.
 OneWoW.Locale:Register(M._scope, "ruRU", {
 
     ["SCREENSHOTACH_TITLE"] = "Снимок экрана при достижении",

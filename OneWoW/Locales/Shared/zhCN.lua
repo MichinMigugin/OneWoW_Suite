@@ -1,6 +1,6 @@
 local _, OneWoW = ...
 
--- Machine-drafted (Phase 4) — pending native review.
+-- Machine-drafted — pending native review.
 OneWoW.Locale:RegisterShared("zhCN", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "语言选择",
@@ -71,7 +71,7 @@ OneWoW.Locale:RegisterShared("zhCN", {
     -- Common
     ["CURRENT_VALUE"] = "当前：%s",
 
-    -- Phase 3 consolidated
+    -- consolidated
     ["ADD_ITEM"] = "添加物品",
     ["BATTLE_PET"] = "战斗宠物",
     ["BUTTON_SIZE"] = "按钮大小",
@@ -108,7 +108,7 @@ OneWoW.Locale:RegisterShared("zhCN", {
     ["GOLD_TOTAL"] = "金币总计",
     ["WORLD_QUEST"] = "世界任务",
 
-    -- Phase 3 consolidated (bare-word terms)
+    -- consolidated (bare-word terms)
     ["ITEM"] = "物品",
     ["RENAME"] = "重命名",
     ["EXPANSION"] = "资料片",

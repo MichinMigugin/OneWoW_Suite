@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — itIT, pending native review.
+-- Machine-drafted — itIT, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
     -- migrated from OneWoW scope

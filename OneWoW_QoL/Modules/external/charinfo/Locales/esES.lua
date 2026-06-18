@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — esES, pending native review.
+-- Machine-drafted — esES, pending native review.
 OneWoW.Locale:Register(M._scope, "esES", {
 
     ["CHARINFO_TITLE"] = "Hoja de info del personaje",

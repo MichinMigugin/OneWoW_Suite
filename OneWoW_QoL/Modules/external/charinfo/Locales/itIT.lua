@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — itIT (no official IT client), pending native review.
+-- Machine-drafted — itIT (no official IT client), pending native review.
 OneWoW.Locale:Register(M._scope, "itIT", {
 
     ["CHARINFO_TITLE"] = "Scheda info personaggio",

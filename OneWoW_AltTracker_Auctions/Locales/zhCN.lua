@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — zhCN, pending native review.
+-- Machine-drafted — zhCN, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["ADDON_LOADED"] = "OneWoW AltTracker: 已启用拍卖数据追踪",
     ["DATA_COLLECTED"] = "已收集拍卖数据",

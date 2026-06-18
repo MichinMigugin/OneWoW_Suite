@@ -1,6 +1,6 @@
 local _, OneWoW = ...
 
--- Machine-drafted (Phase 4) — pending native review.
+-- Machine-drafted — pending native review.
 OneWoW.Locale:RegisterShared("koKR", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "언어 선택",
@@ -71,7 +71,7 @@ OneWoW.Locale:RegisterShared("koKR", {
     -- Common
     ["CURRENT_VALUE"] = "현재: %s",
 
-    -- Phase 3 consolidated
+    -- consolidated
     ["ADD_ITEM"] = "아이템 추가",
     ["BATTLE_PET"] = "전투 애완동물",
     ["BUTTON_SIZE"] = "버튼 크기",
@@ -108,7 +108,7 @@ OneWoW.Locale:RegisterShared("koKR", {
     ["GOLD_TOTAL"] = "총 골드",
     ["WORLD_QUEST"] = "전역 퀘스트",
 
-    -- Phase 3 consolidated (bare-word terms)
+    -- consolidated (bare-word terms)
     ["ITEM"] = "아이템",
     ["RENAME"] = "이름 변경",
     ["EXPANSION"] = "확장팩",

@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — frFR, pending native review.
+-- Machine-drafted — frFR, pending native review.
 OneWoW.Locale:Register(M._scope, "frFR", {
 
     ["AUCTIONHOUSE_TITLE"] = "Hôtel des ventes - Extension actuelle",

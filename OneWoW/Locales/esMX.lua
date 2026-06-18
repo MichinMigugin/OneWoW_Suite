@@ -1,6 +1,6 @@
 local ADDON_NAME, OneWoW = ...
 
--- Machine-drafted (Phase 4) — esMX mirrored from esES, pending Latin-American review.
+-- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["ADDON_TITLE"] = "OneWoW",
 
@@ -37,8 +37,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["MINIMAP_RIGHT_CLICK"] = "Clic derecho para opciones",
 
 
-    ["COPYPASTE_HINT_COPY"] = "Pulsa Ctrl+C para copiar",
-    ["COPYPASTE_HINT_COPY_MAC"] = "Pulsa Cmd+C para copiar",
+    ["COPYPASTE_HINT_COPY"] = "Presiona Ctrl+C para copiar",
+    ["COPYPASTE_HINT_COPY_MAC"] = "Presiona Cmd+C para copiar",
 
     ["WIZARD_TITLE"] = "Bienvenido a OneWoW",
     ["MANAGE_SCOPE_LABEL"] = "Aplicar a:",

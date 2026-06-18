@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — esMX mirrored from esES, pending Latin-American review.
+-- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
     -- migrated from OneWoW scope
@@ -169,7 +169,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["LABEL_NAME"] = "NOMBRE:",
     ["LABEL_TYPE"] = "TIPO:",
     ["LABEL_SHOWN"] = "VISIBLE:",
-    ["LABEL_MOUSE"] = "RATÓN:",
+    ["LABEL_MOUSE"] = "MOUSE:",
     ["LABEL_SIZE"] = "TAMAÑO:",
     ["LABEL_STRATA"] = "ESTRATO:",
     ["LABEL_LEVEL"] = "NIVEL:",
@@ -331,7 +331,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     -- Messages
     ["COPY_DEFAULT_TITLE"] = "Copiar",
     ["MINIMAP_CTX_FALLBACK"] = "Abrir DevTools",
-    ["MSG_PRESS_CTRL_C"] = "Pulsa Ctrl+C para copiar y luego cierra la ventana.",
+    ["MSG_PRESS_CTRL_C"] = "Presiona Ctrl+C para copiar y luego cierra la ventana.",
     ["MSG_UI_NOT_LOADED"] = "La interfaz aún no se ha cargado",
     ["ADDON_COMPARTMENT_HINT"] = "Haz clic para alternar la ventana",
     ["ADDON_TOOLTIP_TITLE"] = "|cFFFFD100OneWoW|r - Utility: DevTool",

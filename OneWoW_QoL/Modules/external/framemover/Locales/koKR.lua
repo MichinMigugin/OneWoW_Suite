@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — koKR (was English; now translated), pending native review.
+-- Machine-drafted — koKR (was English; now translated), pending native review.
 OneWoW.Locale:Register(M._scope, "koKR", {
 
     ["FRAMEMOVER_TITLE"] = "프레임 이동기",

@@ -1,6 +1,6 @@
 local ADDON_NAME = ...
 
--- Machine-drafted (Phase 4) — ruRU (expansion names kept English per Blizzard client), pending native review.
+-- Machine-drafted — ruRU (expansion names kept English per Blizzard client), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["ADDON_LOADED"] = "OneWoW CatalogData: Tradeskills загружен.",
     ["PROF_ALCHEMY"] = "Алхимия",

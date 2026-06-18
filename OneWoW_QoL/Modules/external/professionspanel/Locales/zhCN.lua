@@ -1,7 +1,7 @@
 local _, ns = ...
 local M = ns.ModuleRegistry:Current()
 
--- Machine-drafted (Phase 4) — zhCN, pending native review.
+-- Machine-drafted — zhCN, pending native review.
 OneWoW.Locale:Register(M._scope, "zhCN", {
 
     ["PROFPANEL_TITLE"] = "专业面板",
