@@ -248,6 +248,15 @@ Modules\external\auctionhouse\auctionhouse.lua
 Modules\external\lfgpanel\module.lua
 Modules\external\lfgpanel\Locales\enUS.lua
 Modules\external\lfgpanel\Locales\koKR.lua
+Modules\external\lfgpanel\Locales\frFR.lua
+Modules\external\lfgpanel\Locales\deDE.lua
+Modules\external\lfgpanel\Locales\zhCN.lua
+Modules\external\lfgpanel\Locales\esES.lua
+Modules\external\lfgpanel\Locales\zhTW.lua
+Modules\external\lfgpanel\Locales\esMX.lua
+Modules\external\lfgpanel\Locales\ruRU.lua
+Modules\external\lfgpanel\Locales\ptBR.lua
+Modules\external\lfgpanel\Locales\itIT.lua
 Modules\external\lfgpanel\lfgpanel.lua
 Modules\external\lfgpanel\lfgpanel-ui.lua
 
@@ -352,11 +361,30 @@ Modules\external\autoreadycheck\autoreadycheck.lua
 Modules\external\preybar\module.lua
 Modules\external\preybar\Locales\enUS.lua
 Modules\external\preybar\Locales\koKR.lua
+Modules\external\preybar\Locales\frFR.lua
+Modules\external\preybar\Locales\deDE.lua
+Modules\external\preybar\Locales\zhCN.lua
+Modules\external\preybar\Locales\esES.lua
+Modules\external\preybar\Locales\zhTW.lua
+Modules\external\preybar\Locales\esMX.lua
+Modules\external\preybar\Locales\ruRU.lua
+Modules\external\preybar\Locales\ptBR.lua
+Modules\external\preybar\Locales\itIT.lua
 Modules\external\preybar\preybar.lua
 Modules\external\preybar\preybar-ui.lua
 
 Modules\external\inspectmog\module.lua
 Modules\external\inspectmog\Locales\enUS.lua
+Modules\external\inspectmog\Locales\koKR.lua
+Modules\external\inspectmog\Locales\frFR.lua
+Modules\external\inspectmog\Locales\deDE.lua
+Modules\external\inspectmog\Locales\zhCN.lua
+Modules\external\inspectmog\Locales\esES.lua
+Modules\external\inspectmog\Locales\zhTW.lua
+Modules\external\inspectmog\Locales\esMX.lua
+Modules\external\inspectmog\Locales\ruRU.lua
+Modules\external\inspectmog\Locales\ptBR.lua
+Modules\external\inspectmog\Locales\itIT.lua
 Modules\external\inspectmog\inspectmog.lua
 Modules\external\inspectmog\inspectpanel.lua
 Modules\external\inspectmog\inspectscanner.lua

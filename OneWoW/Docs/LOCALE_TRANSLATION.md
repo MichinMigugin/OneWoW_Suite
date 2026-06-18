@@ -538,9 +538,14 @@ ptBR itIT.
       locales + esMX authored.
     - [x] `questitembar` — 11/11 @ 42/42 (2026-06-17). koKR was a TEST placeholder (replaced); 8 new
       locales + esMX authored.
-    - [ ] remaining: `lfgpanel` (33), `preybar` (32), `inspectmog` (32, enUS-only), `charinfo` (31),
-      `automount` (28), `framemover` (25), `bagbar` (25), … down to many ≤20-key modules. Several koKR
-      files are TEST placeholders; a few modules are enUS-only.
+    - [x] `lfgpanel` — 11/11 @ 33/33 (2026-06-17). koKR was TEST placeholder (replaced). LFR acronym +
+      `%d/%d` kept; compact `%dd %dh` time codes localized for ru/ko/zh, kept for Latin.
+    - [x] `preybar` — 11/11 @ 32/32 (2026-06-17). koKR was real & complete (preserved); 8 new + esMX.
+    - [x] `inspectmog` — 11/11 @ 32/32 (2026-06-17). Was enUS-only; all 10 + esMX. Note markers
+      `[OneWoW Inspect Mog]`/`[/...]` kept identical (parser delimiters).
+    - [ ] remaining: `charinfo` (31), `automount` (28), `framemover` (25), `bagbar` (25), `playmounts`
+      (20), `coords` (17), `cursorenhancer` (15), … down to many ≤15-key modules. Several koKR files
+      are TEST placeholders; a few enUS-only.
   Skip `OneWoW_Utility_Extractor` + `OneWoW_AccountSync` (internal tools).
   **Do NOT localize** `OneWoW_Utility_Extractor` or `OneWoW_AccountSync` (internal tools).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
