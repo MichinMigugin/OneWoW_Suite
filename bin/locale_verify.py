@@ -5,6 +5,9 @@ For every <locale>.lua next to enUS.lua, checks:
   * key parity   - same set of keys as enUS (reports missing / extra)
   * format specs - each shared key has the same multiset of printf-style
                    directives (%s, %d, %d%%, ...) as the enUS value
+  * duplicate keys - no key is assigned twice in the same table (Lua keeps the
+                   last assignment; the linter flags the earlier one as
+                   `duplicate-index`). enUS is checked for this too.
 
 Usage:
     python bin/locale_verify.py <path/to/Locales> [more/Locales ...]
@@ -43,6 +46,21 @@ def parse(path):
     return out
 
 
+def find_dupes(path):
+    """Return {key: count} for keys assigned more than once in the table.
+
+    Lua's table constructor keeps the LAST assignment, so an earlier duplicate is
+    dead code the linter flags as `duplicate-index`. Long-strings are stripped first
+    so example `["K"] = "v"` lines inside a help block are not miscounted.
+    """
+    text = path.read_text(encoding="utf-8")
+    text = LONGSTRING_RE.sub("", text)
+    counts = {}
+    for m in KEY_RE.finditer(text):
+        counts[m.group(1)] = counts.get(m.group(1), 0) + 1
+    return {k: c for k, c in counts.items() if c > 1}
+
+
 def verify_dir(locales_dir):
     locales_dir = Path(locales_dir)
     ref_path = locales_dir / "enUS.lua"
@@ -55,6 +73,14 @@ def verify_dir(locales_dir):
     ok_all = True
     print(f"== {locales_dir}  (enUS = {len(ref)} keys)")
 
+    # enUS is the reference for key parity, but still check it for duplicate keys.
+    ref_dupes = find_dupes(ref_path)
+    if ref_dupes:
+        ok_all = False
+        print(f"   {'enUS':6} {len(ref)}/{len(ref)} | dup {len(ref_dupes)} FAIL")
+        for k in sorted(ref_dupes):
+            print(f"        * dup-key: {k} (x{ref_dupes[k]})")
+
     for path in sorted(locales_dir.glob("*.lua")):
         if path.name == "enUS.lua":
             continue
@@ -66,17 +92,21 @@ def verify_dir(locales_dir):
         missing = ref_keys - loc_keys
         extra = loc_keys - ref_keys
         spec = sorted(k for k in (ref_keys & loc_keys) if ref[k] != loc[k])
-        status = "OK" if not (missing or extra or spec) else "FAIL"
+        dupes = find_dupes(path)
+        status = "OK" if not (missing or extra or spec or dupes) else "FAIL"
         if status == "FAIL":
             ok_all = False
         print(f"   {path.stem:6} {len(loc)}/{len(ref)} | "
-              f"miss {len(missing)} extra {len(extra)} spec {len(spec)} {status}")
+              f"miss {len(missing)} extra {len(extra)} spec {len(spec)} "
+              f"dup {len(dupes)} {status}")
         for k in sorted(missing):
             print(f"        - missing: {k}")
         for k in sorted(extra):
             print(f"        + extra:   {k}")
         for k in spec:
             print(f"        ~ spec:    {k}  enUS={ref[k]} vs {loc[k]}")
+        for k in sorted(dupes):
+            print(f"        * dup-key: {k} (x{dupes[k]})")
     return ok_all
 
 
