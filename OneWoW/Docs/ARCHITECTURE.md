@@ -590,14 +590,19 @@ modeled on `OneWoW_GUI:ApplyTheme` / `Constants.ACTIVE_THEME` (a metatable
   Core calls it once on `OnLanguageChanged` (then `FullReset`s the hub) and once on
   profile apply (`t-profiles`) — addons must **not** loop their own `SetLanguage`.
   `Locale.SUPPORTED` (ordered code+native) drives the picker; `Locale.ALIASES`
-  normalizes client locales (e.g. `esMX`→`esES`).
+  normalizes client locales (`enGB`→`enUS`; esMX is its own SUPPORTED locale, not aliased).
 - **`GetStore(scope)`** returns the raw `{[locale]={K=v}}` for consumers needing a
-  specific locale's strings (import/export, or the koKR dev `"TEST"` placeholders
-  that source their key set from the registered enUS store).
+  specific locale's strings (import/export, or dev `"TEST"` GetStore placeholders that
+  source their key set from the registered enUS store).
 - **QoL external modules** use a per-module scope `ADDON_NAME .. "." .. id` (e.g.
   `OneWoW_QoL.afkpanel`), set up by `ModuleRegistry:Define`/`Current()` — see the
   QoL `DEVELOPERS.md`. Cross-module string access goes through
   `ModuleRegistry:GetById("<id>")`, never a shared global.
+
+This is the **contract**. For the day-to-day practitioner guide — the locale tooling
+(`bin/locale_*`, `/owlocale`), the routing decision (Blizzard global → shared → scoped),
+what is intentionally *not* translated and why, and Blizzard-term alignment — see
+[`LOCALES.md`](LOCALES.md).
 
 ---
 

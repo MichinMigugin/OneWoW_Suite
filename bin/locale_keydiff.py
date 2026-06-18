@@ -11,8 +11,9 @@ holding the same string (e.g. CLOSE = "Close" and CLOSE_IT = "Close") are the
 same translatable string and should collapse to one home. Reference sets:
 
   * the core `shared` scope  (OneWoW/Locales/Shared/enUS.lua)
-  * Blizzard's global strings (.wow_docs/general/GlobalStrings.lua), inverted to
-    value -> [global names].
+  * Blizzard's global strings
+    (.wow_docs/blizzard-interface-resources/Resources/GlobalStrings/enUS.lua),
+    inverted to value -> [global names].
 
 Suite report (no args) sections:
   A. SHARED COLLISIONS  — a scope re-defines a key name shared owns -> delete (contract).
@@ -103,7 +104,8 @@ def parse_keys(path: Path) -> dict[str, str | None]:
 
 
 def load_globals(root: Path) -> dict[str, str]:
-    gpath = root / ".wow_docs" / "general" / "GlobalStrings.lua"
+    gpath = (root / ".wow_docs" / "blizzard-interface-resources"
+             / "Resources" / "GlobalStrings" / "enUS.lua")
     out: dict[str, str] = {}
     if not gpath.exists():
         print(f"WARNING: {gpath} not found — Blizzard analysis skipped.", file=sys.stderr)

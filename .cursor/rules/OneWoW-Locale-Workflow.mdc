@@ -9,16 +9,16 @@ alwaysApply: false
 Applies whenever you add, change, or remove keys under any `Locales/` folder, or when
 you add user-facing UI text that needs a new translation key.
 
-Full history and tooling detail: `OneWoW/Docs/LOCALE_TRANSLATION.md`. This rule is the
-checklist agents must follow.
+Reference: `OneWoW/Docs/LOCALES.md` (durable — tools, routing rationale, what's not
+translated, Blizzard-term alignment). This rule is the checklist agents must follow.
 
 ## Before creating a new key — check in this order
 
 1. **Blizzard bare global** — if the English text exactly matches a Retail global
    (`ADD`, `REMOVE`, `CANCEL`, `CLOSE`, `CUSTOM`, `SETTINGS`, `DELETE`, …), use it at
    the call site (`text = ADD`). **No locale key.** Verify the name and value in
-   `.wow_docs/general/GlobalStrings.lua`. Whitelist new globals in `.luarc.json`
-   `diagnostics.globals`. Never `_G.CLOSE` / `_G["CLOSE"]`.
+   `.wow_docs/blizzard-interface-resources/Resources/GlobalStrings/enUS.lua`. Whitelist
+   new globals in `.luarc.json` `diagnostics.globals`. Never `_G.CLOSE` / `_G["CLOSE"]`.
 
 2. **`shared` scope** — grep `OneWoW/Locales/Shared/enUS.lua` for the same phrase
    (`ITEM_ID`, `ADD_ITEM`, `CURRENT_VALUE`, …). Reuse via `L["KEY"]` on the addon's
@@ -35,8 +35,16 @@ checklist agents must follow.
 - Add to **`enUS.lua` first**, beside related keys (same section as neighbors).
 - Add the **same keys to all 11 locales** in that scope:
   `enUS`, `koKR`, `frFR`, `deDE`, `zhCN`, `esES`, `zhTW`, `esMX`, `ruRU`, `ptBR`, `itIT`.
-- Machine-draft non-enUS text (Blizzard game terms per language). **`esMX` mirrors `esES`.**
+- Machine-draft non-enUS text. For established WoW terms, use the **official Blizzard term
+  per language** — look it up in `.wow_docs/blizzard-interface-resources/Resources/GlobalStrings/<loc>.lua`
+  (indexed in `.wow_docs/manifest.json`); find the English value's key in `enUS.lua`, then read
+  that key in each locale. **Do not assume an existing suite translation is canonical — verify.**
+- **Don't hand-author `esMX`** — run `python bin/gen_esmx.py <Locales>` (mirrors `esES` + LatAm terms).
 - Keep `%s`, `%d`, `|c…|r`, and `\n` identical across every locale file.
+- **Mind different meanings per language** (value identity ≠ translation identity): a word that's
+  one English string can need different translations by sense (`Close` verb vs adjective) or
+  gender/number (`Rested`, color names). Don't fold distinct senses onto one key; keep matched
+  pairs (`ON`/`OFF`) and verb-vs-state (`ENABLE` vs `ENABLED`) as separate keys.
 
 ## Before marking the task done — run both tools
 

@@ -98,7 +98,7 @@ end
 --- Register a table of KEY=value into store[scope][locale]. Safe at file-load.
 --- Folds the scope immediately so reads work without waiting for SetLanguage.
 ---@param scope string registration scope (ADDON_NAME, or "shared" via RegisterShared)
----@param locale string WoW locale code (enUS, koKR, …); esMX is aliased to esES
+---@param locale string WoW locale code (enUS, koKR, …); esMX is its own locale (only enGB aliases to enUS)
 ---@param entries table { KEY = value } pairs merged into the scope/locale store
 ---@return OneWoW.Locale self for chaining
 function Locale:Register(scope, locale, entries)

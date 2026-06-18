@@ -27,8 +27,10 @@ python bin/locale_keydiff.py --scope OneWoW_QoL
 python bin/locale_verify.py OneWoW_QoL/Locales
 ```
 
-Global name lookup: `.wow_docs/general/GlobalStrings.lua` (canonical upper-snake must
-match the value — e.g. `ADD = "Add"`).
+Global name lookup: `.wow_docs/blizzard-interface-resources/Resources/GlobalStrings/enUS.lua`
+(canonical upper-snake must match the value — e.g. `ADD = "Add"`). The same folder holds all
+11 locales — use them as the source of truth for official translated terms (see "Blizzard
+terms" below); they're indexed in `.wow_docs/manifest.json`.
 
 ## Scopes (where keys live)
 
@@ -46,8 +48,25 @@ Every new key goes into **every** file in the scope's `Locales/` folder:
 
 `enUS`, `koKR`, `frFR`, `deDE`, `zhCN`, `esES`, `zhTW`, `esMX`, `ruRU`, `ptBR`, `itIT`
 
-Draft translations for the 10 non-enUS files in the same edit. Flag as machine-drafted;
-`esMX` copies from `esES` unless LatAm wording is known.
+Draft translations for the 10 non-enUS files in the same edit. Flag as machine-drafted.
+**Don't hand-author `esMX`** — run `python bin/gen_esmx.py <Locales>` (mirrors `esES` + applies
+LatAm terms).
+
+## Blizzard terms (align, don't guess)
+
+For established WoW terminology (Warband, Auction House, professions, difficulties, slots, …) use
+the **official Blizzard term per language**, not a plausible alternative. Source of truth:
+`.wow_docs/blizzard-interface-resources/Resources/GlobalStrings/<loc>.lua` (all 11 locales, indexed
+in `.wow_docs/manifest.json`). Find the English value's key in `enUS.lua`, then read that key in each
+locale. **Verify — do not assume an existing suite translation is canonical** (the suite's pre-rollout
+terms were partly non-official). Mind per-language grammar (articles, gender, compounds).
+
+## Different meanings per language
+
+Value identity ≠ translation identity. A single English string can need different translations by
+sense (`Close` verb vs adjective) or agreement (`Rested`, color names — gender/number). Don't fold
+distinct senses onto one shared key; keep matched pairs (`ON`/`OFF`) and verb-vs-state
+(`ENABLE` vs `ENABLED`) as separate keys.
 
 ## Call-site patterns
 
@@ -93,7 +112,8 @@ touch often (tool exits non-zero on failure by design).
 
 ## Deep reference
 
-`OneWoW/Docs/LOCALE_TRANSLATION.md` — Phase history, dynamic-key audit rules, `locale_gen.py`,
-`locale_migrate.py`, esMX automation.
+`OneWoW/Docs/LOCALES.md` — durable guide: full tooling catalog (`locale_gen`, `locale_migrate`,
+`locale_usage`, `gen_esmx`, `/owlocale`), routing rationale, what's-not-translated-and-why,
+Blizzard-term alignment + Warband table, dynamic-key audit rules.
 
 Related: `onewow-gui-ui` skill (anti-pattern #5 — bare globals vs `L["KEY"]`).
