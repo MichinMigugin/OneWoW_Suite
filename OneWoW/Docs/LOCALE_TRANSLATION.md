@@ -533,9 +533,10 @@ ptBR itIT.
     - [~] `minimapskin` (86, enUS-only) — **DEAD CODE, skipped**: not referenced in `OneWoW_QoL.toc`
       (never loaded), superseded by `map_mini_tools` via the `rename_minimapskin_to_map_mini_tools`
       DB migration. Flagged for folder removal (separate task).
-    - [ ] remaining: `map_world_tools` (63, enUS-only), `minimapbuttons` (44), `questitembar` (42),
-      `lfgpanel` (33), `preybar` (32), `inspectmog` (32, enUS-only), `charinfo` (31), … down to many
-      ≤15-key modules. Several koKR files are TEST placeholders; a few modules are enUS-only.
+    - [x] `map_world_tools` — 11/11 @ 63/63 (2026-06-17). Was enUS-only; all 10 locales + esMX authored.
+    - [ ] remaining: `minimapbuttons` (44), `questitembar` (42), `lfgpanel` (33), `preybar` (32),
+      `inspectmog` (32, enUS-only), `charinfo` (31), … down to many ≤15-key modules. Several koKR
+      files are TEST placeholders; a few modules are enUS-only.
   Skip `OneWoW_Utility_Extractor` + `OneWoW_AccountSync` (internal tools).
   **Do NOT localize** `OneWoW_Utility_Extractor` or `OneWoW_AccountSync` (internal tools).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).

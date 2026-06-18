@@ -279,6 +279,16 @@ Modules\external\map_mini_tools\map_mini_tools-ui.lua
 
 Modules\external\map_world_tools\module.lua
 Modules\external\map_world_tools\Locales\enUS.lua
+Modules\external\map_world_tools\Locales\koKR.lua
+Modules\external\map_world_tools\Locales\frFR.lua
+Modules\external\map_world_tools\Locales\deDE.lua
+Modules\external\map_world_tools\Locales\zhCN.lua
+Modules\external\map_world_tools\Locales\esES.lua
+Modules\external\map_world_tools\Locales\zhTW.lua
+Modules\external\map_world_tools\Locales\esMX.lua
+Modules\external\map_world_tools\Locales\ruRU.lua
+Modules\external\map_world_tools\Locales\ptBR.lua
+Modules\external\map_world_tools\Locales\itIT.lua
 Modules\external\map_world_tools\map_world_tools.lua
 Modules\external\map_world_tools\map_world_reveal_data.lua
 Modules\external\map_world_tools\map_world_tools-explore.lua
