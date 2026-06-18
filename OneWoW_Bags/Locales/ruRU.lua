@@ -176,7 +176,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
     ["SECTION_MASQUE"] = "Masque",
     ["SETTING_USE_MASQUE"] = "Use Masque Skins",
-    ["DESC_USE_MASQUE"] = "Let Masque skin the OneWoW Bags item buttons (bags, bank, warband bank, guild bank, and bag-bar slots). Configure individual skins in Masque's own settings.",
+    ["DESC_USE_MASQUE"] = "Позволяет Masque оформлять кнопки предметов OneWoW Bags (сумки, банк, банк отряда, банк гильдии и ячейки панели сумок). Настройте отдельные скины в параметрах самого Masque.",
     ["GOLD_TOOLTIP_PERSONAL"] = "Личное",
     ["GOLD_TOOLTIP_WARBAND"] = "Банк отряда",
     ["GOLD_TOOLTIP_OTHERS"] = "+%d других",
@@ -205,7 +205,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TAB_GENERAL"] = "Общие",
     ["TAB_BAGS"] = "Сумки",
     ["TAB_PERSONAL_BANK"] = "Личный банк",
-    ["TAB_WARBAND_BANK"] = "Банк боевого отряда",
+    ["TAB_WARBAND_BANK"] = "Банк отряда",
     ["TAB_GUILD_BANK"] = "Банк гильдии",
     ["SETTING_SHOW_EMPTY_SLOTS"] = "Показывать пустые ячейки",
     ["DESC_SHOW_EMPTY_SLOTS"] = "Показывает пустые ячейки инвентаря в режимах «Список» и «Вкладка». В режимах «Сумка» и «Категория» отображаются все ячейки.",

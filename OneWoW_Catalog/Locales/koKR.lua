@@ -281,7 +281,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["QUESTS_PROGRESS_ACTIVE"] = "진행 중",
     ["QUESTS_PROGRESS_ACTIVE_CURRENT"] = "진행 중 (현재 캐릭터)",
     ["QUESTS_PROGRESS_ACTIVE_ALL"] = "진행 중 (모든 캐릭터)",
-    ["QUESTS_PROGRESS_WARBAND"] = "완료 (전쟁대)",
+    ["QUESTS_PROGRESS_WARBAND"] = "완료 (전투부대)",
 
     ["ITEMSEARCH_TITLE"] = "아이템 검색",
     ["ITEMSEARCH_PLACEHOLDER"] = "아이템 이름 검색...",
@@ -327,7 +327,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ITEMSEARCH_ITEM_ID"] = "아이템 ID",
 
     ["ITEMSEARCH_LOC_BAGS"] = "가방",
-    ["ITEMSEARCH_LOC_WARBAND"] = "전쟁대 은행",
+    ["ITEMSEARCH_LOC_WARBAND"] = "전투부대 은행",
     ["ITEMSEARCH_LOC_AH"] = "경매장",
 
     ["ITEMSEARCH_SECTION_VALUE"] = "가치",

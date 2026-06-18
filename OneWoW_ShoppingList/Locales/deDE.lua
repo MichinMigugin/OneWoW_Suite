@@ -183,7 +183,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["OWSL_SETTINGS_THEME_DESC"] = "Farbschema wählen. Änderungen sofort aktiv.",
     ["OWSL_SETTINGS_ADDON_STATUS"] = "ADDON-STATUS",
     ["OWSL_SETTINGS_ALT_ACCESS"] = "Twink-/Bankzugriff",
-    ["OWSL_SETTINGS_WARBAND_ACCESS"] = "Kriegsmeer-Bank-Zugriff",
+    ["OWSL_SETTINGS_WARBAND_ACCESS"] = "Kriegsmeutenbank-Zugriff",
     ["OWSL_SETTINGS_RECIPE_DATA"] = "Herstellbarkeit & Rezeptdaten",
     ["OWSL_SETTINGS_OVERLAY"] = "OVERLAY-EINSTELLUNGEN",
     ["OWSL_SETTINGS_ENABLE_OVERLAY"] = "Einkaufswagen-Overlay aktivieren",

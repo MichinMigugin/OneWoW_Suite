@@ -183,7 +183,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["OWSL_SETTINGS_THEME_DESC"] = "Choisissez un thème de couleur. Les modifications s'appliquent instantanément.",
     ["OWSL_SETTINGS_ADDON_STATUS"] = "STATUT DE L'ADDON",
     ["OWSL_SETTINGS_ALT_ACCESS"] = "Accès Alt/Banque",
-    ["OWSL_SETTINGS_WARBAND_ACCESS"] = "Accès à la banque Warband",
+    ["OWSL_SETTINGS_WARBAND_ACCESS"] = "Accès à la banque de bataillon",
     ["OWSL_SETTINGS_RECIPE_DATA"] = "Données de fabrication et de recette des objets",
     ["OWSL_SETTINGS_OVERLAY"] = "PARAMÈTRES DE SUPERPOSITION",
     ["OWSL_SETTINGS_ENABLE_OVERLAY"] = "Activer la superposition du panier",

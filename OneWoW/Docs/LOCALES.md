@@ -116,6 +116,13 @@ non-official for several languages; everything was normalized to the table below
 Note the per-language grammar: Spanish takes the article (*la* banda guerrera), Portuguese
 "Bando" is masculine (so `da`→`do`, `à`→`ao`), German builds compounds (`Kriegsmeuten-`).
 
+**Auditing for term drift:** translator synonyms slip past a source-string find/replace (e.g.
+koKR `전역 은행`/`전쟁대`, ruRU `Банк боевого отряда`, a German `Kriegsmeer` typo, a stray English
+`Warband`). To catch them, scan every key whose **name** contains the concept (`*WARBAND*`,
+`*WARBOUND*`) and confirm each value carries the official stem for its locale (`전투부대`, `отряд`,
+`Kriegsmeute`, `Bataillon`, `guerrera`, `Bando`, `Brigata`, `战团`, `戰隊`) — skipping keys whose
+enUS value is descriptive and doesn't use the term (e.g. "Completed on a tracked alt").
+
 ---
 
 ## 5. Different meanings in different languages
@@ -182,7 +189,5 @@ string is invisible to a literal grep and breaks silently if removed:
 
 ## 8. Known gaps
 
-- `OneWoW_Bags` `DESC_USE_MASQUE` is still raw **English** in `koKR` and `ruRU` (an untranslated
-  string, not a term issue) — fill during native review.
 - Machine-drafted locales (zhCN/zhTW/ptBR/itIT, plus machine-drafted koKR/EU and the esMX LatAm
   pass) await native-speaker review; files carry a `-- Machine-drafted … pending native review.` header.
