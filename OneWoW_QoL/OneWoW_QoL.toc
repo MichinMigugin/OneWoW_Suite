@@ -258,6 +258,15 @@ Modules\external\framemover\framemover-ui.lua
 Modules\external\minimapbuttons\module.lua
 Modules\external\minimapbuttons\Locales\enUS.lua
 Modules\external\minimapbuttons\Locales\koKR.lua
+Modules\external\minimapbuttons\Locales\frFR.lua
+Modules\external\minimapbuttons\Locales\deDE.lua
+Modules\external\minimapbuttons\Locales\zhCN.lua
+Modules\external\minimapbuttons\Locales\esES.lua
+Modules\external\minimapbuttons\Locales\zhTW.lua
+Modules\external\minimapbuttons\Locales\esMX.lua
+Modules\external\minimapbuttons\Locales\ruRU.lua
+Modules\external\minimapbuttons\Locales\ptBR.lua
+Modules\external\minimapbuttons\Locales\itIT.lua
 Modules\external\minimapbuttons\minimapbuttons.lua
 Modules\external\minimapbuttons\minimapbuttons-ui.lua
 
