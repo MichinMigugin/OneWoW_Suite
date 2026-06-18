@@ -354,6 +354,7 @@
     "READY",
     "RECOMMENDED",
     "REFRESH",
+    "REMOVE",
     "REPLACE",
     "REPUTATION",
     "RESET",

@@ -119,10 +119,10 @@ function FramePicker:GetGeometricFramesAtCursor()
     while frame do
         checkedCount = checkedCount + 1
 
-        if frame:IsVisible() and frame:IsShown() then
-            visibleCount = visibleCount + 1
+        pcall(function()
+            if frame:IsVisible() and frame:IsShown() then
+                visibleCount = visibleCount + 1
 
-            local hitResult = pcall(function()
                 local l, b, w, h = frame:GetRect()
                 if l and w and h and w > 0 and h > 0 then
                     hasRectCount = hasRectCount + 1
@@ -132,8 +132,9 @@ function FramePicker:GetGeometricFramesAtCursor()
                         tinsert(framesAtCursor, frame)
                     end
                 end
-            end)
-        end
+            end
+        end)
+
         frame = EnumerateFrames(frame)
     end
 

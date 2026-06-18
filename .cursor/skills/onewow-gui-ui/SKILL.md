@@ -163,6 +163,8 @@ Contract you must follow (full detail: `OneWoW/Docs/ARCHITECTURE.md` §6 "Locali
 
 Every addon should have `Addon/Core/Constants.lua` and `Addon/Locales/<locale>.lua`. Create them if missing.
 
+**Adding new keys:** load the `onewow-locale-workflow` skill first — check Blizzard globals and `shared` before inventing scoped keys; update all 11 locale files; run `bin/locale_keydiff.py` and `bin/locale_verify.py` before finishing.
+
 ## Shared suite settings
 
 Theme, language, minimap state — owned by the suite. Use `OneWoW_GUI:GetSetting(key)` / `OneWoW_GUI:SetSetting(key, value)` rather than per-addon storage.
@@ -195,6 +197,7 @@ Theme, language, minimap state — owned by the suite. Use `OneWoW_GUI:GetSettin
 
 ## Related rules
 
+- `.cursor/rules/OneWoW-Locale-Workflow.mdc` — mandatory when editing `Locales/` or adding translation keys.
 - `.cursor/rules/WoW-Lua-Addon-Development.mdc` — sections 2.3, 2.3.1, 2.3.2, 2.4, 2.5 live in the big rule today; this skill replaces them on extraction.
 - `.cursor/rules/No-Defensive-Guards.mdc` — overlaps with item #10.
 - `wow-database-api` skill — overlaps with item #11 (shared settings).

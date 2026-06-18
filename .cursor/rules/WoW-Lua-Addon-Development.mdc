@@ -16,6 +16,7 @@ Load on demand for deep references — these replace what used to live in this r
 - `onewow-qol-modules` — OneWoW_QoL external modules: module.lua/Define, ModuleRegistry, Current(), per-module locale scope
 - `wow-tooltip-system` — TooltipDataProcessor, C_TooltipInfo, line types, bind detection
 - `onewow-gui-ui` — component API, theme colors, backdrops, constants/localization
+- `onewow-locale-workflow` — adding/changing locale keys: Blizzard globals vs shared vs scoped, all 11 locales, locale_keydiff / locale_verify
 - `wow-api-specialist` — broader WoW/Blizzard API verification via Cursor's indexed docs
 - `wow-frame-script-pitfalls` — frame scripts, event handlers, or widget callbacks
 
@@ -68,7 +69,7 @@ Call `OneWoW_GUI.SomeMethod(...)` directly. When something fails (e.g. missing m
 
 ### 2.3.1 OneWoW_GUI UI Policy (Mandatory)
 
-For OneWoW_GUI component creation, theme colors, backdrops, GUI dimensions, button auto-sizing, and the no-static-strings rule, load the `onewow-gui-ui` skill.
+For OneWoW_GUI component creation, theme colors, backdrops, GUI dimensions, button auto-sizing, and the no-static-strings rule, load the `onewow-gui-ui` skill. When adding **new** user-facing strings or locale keys, also load `onewow-locale-workflow`.
 
 ### 2.4 OneWoW Suite — Database API (Mandatory)
 
