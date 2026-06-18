@@ -176,6 +176,15 @@ Modules\external\coords\coords.lua
 Modules\external\automount\module.lua
 Modules\external\automount\Locales\enUS.lua
 Modules\external\automount\Locales\koKR.lua
+Modules\external\automount\Locales\frFR.lua
+Modules\external\automount\Locales\deDE.lua
+Modules\external\automount\Locales\zhCN.lua
+Modules\external\automount\Locales\esES.lua
+Modules\external\automount\Locales\zhTW.lua
+Modules\external\automount\Locales\esMX.lua
+Modules\external\automount\Locales\ruRU.lua
+Modules\external\automount\Locales\ptBR.lua
+Modules\external\automount\Locales\itIT.lua
 Modules\external\automount\automount.lua
 
 Modules\external\cursorenhancer\module.lua
@@ -217,11 +226,29 @@ Modules\external\vendorpanel\vendorpanel-ui.lua
 Modules\external\charinfo\module.lua
 Modules\external\charinfo\Locales\enUS.lua
 Modules\external\charinfo\Locales\koKR.lua
+Modules\external\charinfo\Locales\frFR.lua
+Modules\external\charinfo\Locales\deDE.lua
+Modules\external\charinfo\Locales\zhCN.lua
+Modules\external\charinfo\Locales\esES.lua
+Modules\external\charinfo\Locales\zhTW.lua
+Modules\external\charinfo\Locales\esMX.lua
+Modules\external\charinfo\Locales\ruRU.lua
+Modules\external\charinfo\Locales\ptBR.lua
+Modules\external\charinfo\Locales\itIT.lua
 Modules\external\charinfo\charinfo.lua
 
 Modules\external\bagbar\module.lua
 Modules\external\bagbar\Locales\enUS.lua
 Modules\external\bagbar\Locales\koKR.lua
+Modules\external\bagbar\Locales\frFR.lua
+Modules\external\bagbar\Locales\deDE.lua
+Modules\external\bagbar\Locales\zhCN.lua
+Modules\external\bagbar\Locales\esES.lua
+Modules\external\bagbar\Locales\zhTW.lua
+Modules\external\bagbar\Locales\esMX.lua
+Modules\external\bagbar\Locales\ruRU.lua
+Modules\external\bagbar\Locales\ptBR.lua
+Modules\external\bagbar\Locales\itIT.lua
 Modules\external\bagbar\bagbar.lua
 Modules\external\bagbar\bagbar-ui.lua
 
@@ -268,6 +295,15 @@ Modules\external\achieveuntrack\achieveuntrack.lua
 Modules\external\framemover\module.lua
 Modules\external\framemover\Locales\enUS.lua
 Modules\external\framemover\Locales\koKR.lua
+Modules\external\framemover\Locales\frFR.lua
+Modules\external\framemover\Locales\deDE.lua
+Modules\external\framemover\Locales\zhCN.lua
+Modules\external\framemover\Locales\esES.lua
+Modules\external\framemover\Locales\zhTW.lua
+Modules\external\framemover\Locales\esMX.lua
+Modules\external\framemover\Locales\ruRU.lua
+Modules\external\framemover\Locales\ptBR.lua
+Modules\external\framemover\Locales\itIT.lua
 Modules\external\framemover\framemover.lua
 Modules\external\framemover\framemover-core.lua
 Modules\external\framemover\framemover-frames.lua

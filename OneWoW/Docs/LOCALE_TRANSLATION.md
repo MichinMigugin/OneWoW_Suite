@@ -543,9 +543,16 @@ ptBR itIT.
     - [x] `preybar` — 11/11 @ 32/32 (2026-06-17). koKR was real & complete (preserved); 8 new + esMX.
     - [x] `inspectmog` — 11/11 @ 32/32 (2026-06-17). Was enUS-only; all 10 + esMX. Note markers
       `[OneWoW Inspect Mog]`/`[/...]` kept identical (parser delimiters).
-    - [ ] remaining: `charinfo` (31), `automount` (28), `framemover` (25), `bagbar` (25), `playmounts`
-      (20), `coords` (17), `cursorenhancer` (15), … down to many ≤15-key modules. Several koKR files
-      are TEST placeholders; a few enUS-only.
+    - [x] `charinfo` — 11/11 @ 31/31; koKR was TEST placeholder (replaced). Official Blizzard slot names.
+    - [x] `automount` — 11/11 @ 28/28; koKR was real & complete (preserved). Druid/Travel Form official terms.
+    - [x] `framemover` — 11/11 @ 25/25; koKR was a full **English copy** (not real Korean) — translated.
+    - [x] `bagbar` — 11/11 @ 25/25; koKR was real Korean but missing the 6 Macro keys (English) — filled.
+    - **NOTE:** some koKR files marked "present" are actually English copies (framemover whole, bagbar
+      partial), not just literal `"TEST"`. Always run the identical-to-enUS leftover scan on koKR, not
+      just a parity check.
+    - [ ] remaining: `playmounts` (20), `coords` (17), `cursorenhancer` (15), `escpanel` (14), `afkpanel`
+      (14), `professionspanel` (11), `copytext` (11), `questtools` (10), `fastforward` (10), … down to
+      many ≤9-key modules. Mixed koKR states; a few enUS-only.
   Skip `OneWoW_Utility_Extractor` + `OneWoW_AccountSync` (internal tools).
   **Do NOT localize** `OneWoW_Utility_Extractor` or `OneWoW_AccountSync` (internal tools).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
