@@ -29,14 +29,23 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["MMSKIN_ZONE_TEXT_DESC"] = "미니맵 위에 현재 지역 이름을 표시하고 PvP 종류에 따라 색을 입힙니다.",
     ["MMSKIN_CLOCK"] = "시계",
     ["MMSKIN_CLOCK_DESC"] = "미니맵 아래에 시계를 표시합니다. 도움말에 서버/지역 시간과 일일·주간 초기화 시간이 나옵니다.",
+    ["MMSKIN_CLASS_CLOCK_COLOR"] = "직업 색상 시계",
+    ["MMSKIN_CLASS_CLOCK_COLOR_DESC"] = "시계 글자에 테마 색상 대신 직업 색상을 사용합니다.",
+    ["MMSKIN_ZONE_ALIGN_LABEL"] = "지역 이름 정렬",
+    ["MMSKIN_CLOCK_ALIGN_LABEL"] = "시계 정렬",
+    ["MMSKIN_ALIGN_LEFT"] = "왼쪽",
+    ["MMSKIN_ALIGN_CENTER"] = "가운데",
+    ["MMSKIN_ALIGN_RIGHT"] = "오른쪽",
 
     ["MMSKIN_ZONE_CLOCK_INSIDE"] = "지역 이름·시계를 미니맵 안에",
     ["MMSKIN_ZONE_CLOCK_INSIDE_DESC"] = "지역 이름과 시계를 미니맵 바깥 위·아래가 아니라 안쪽 가장자리에 붙입니다.",
 
     ["MMSKIN_ZONE_CLOCK_DRAG"] = "지역 이름·시계 끌기(Shift)",
     ["MMSKIN_ZONE_CLOCK_DRAG_DESC"] = "지역 이름이나 시계를 움직이려면 Shift를 누른 채로 드래그해야 합니다. 위치는 저장됩니다. Shift를 떼면 일반 클릭으로 동작합니다(시계는 여전히 시간 관리 창을 엽니다).",
+
     ["MMSKIN_ZONE_CLOCK_ANCHOR_MM"] = "지역 이름·시계를 미니맵에 고정",
     ["MMSKIN_ZONE_CLOCK_ANCHOR_MM_DESC"] = "끌기가 켜져 있을 때 지역 이름과 시계를 미니맵에 고정해 미니맵과 함께 움직이게 합니다. 둘을 겹쳐 두면 한 덩어리로 함께 이동합니다.",
+
     ["MMSKIN_WHEEL_ZOOM"] = "마우스 휠 확대/축소",
     ["MMSKIN_WHEEL_ZOOM_DESC"] = "마우스 휠로 미니맵을 확대·축소합니다.",
     ["MMSKIN_AUTO_ZOOM"] = "자동 축소",
@@ -56,6 +65,8 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["MMSKIN_TRACKING_DESC"] = "미니맵 추적 필터(자원·약초·광석 등 드롭다운)를 표시합니다. 끄면 미니맵 옆의 작은 고리/조작 부분이 사라집니다.",
     ["MMSKIN_MISSIONS"] = "임무 단추",
     ["MMSKIN_MISSIONS_DESC"] = "확장 랜딩/임무 단추를 표시합니다.",
+    ["MMSKIN_GAMETIME"] = "달력 아이콘",
+    ["MMSKIN_GAMETIME_DESC"] = "미니맵에 달력(GameTime) 버튼을 표시합니다.",
 
     ["MMSKIN_PLUMBER_HIDE_BLIZZARD"] = "Plumber 사용 시 중복 블리자드 확장 단추 숨김",
     ["MMSKIN_PLUMBER_HIDE_BLIZZARD_DESC"] = "Plumber가 있으면 블리자드 확장 미니맵 단추를 숨겨 Plumber의 확장 요약만 보이게 합니다. 둘 다 보이게 하려면 끄세요(권장하지 않음).",
@@ -101,7 +112,9 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["MMSKIN_ACTION_MAP"] = "지도",
 
     ["MMSKIN_SHOW_COMPARTMENT"] = "애드온 칸",
+
     ["MMSKIN_CLOCK_TT_TOGGLE"] = "클릭: 시간 관리 창 켜기/끄기",
+
     ["MMSKIN_UNCLAMP"] = "화면 가장자리 제한 해제",
 
     ["MMSKIN_ZONE_FONT_LABEL"] = "글꼴",
@@ -118,5 +131,6 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["MMSKIN_DEBUG_DESC"] = "추적 중인 아이콘을 색 라벨과 함께 모두 보이게 합니다. 라벨을 끌면 해당 아이콘의 미니맵 위치가 저장됩니다. 디버그를 끄면 아이콘이 다시 묶음으로 돌아갑니다(미니맵을 떼어 놓은 경우는 예외). 우편함에 우편이 없을 때처럼 아이콘이 바로 나타나지 않을 때 확인하기에 좋습니다.",
     ["MMSKIN_DEBUG_TT_DRAG_HINT"] = "왼쪽 클릭으로 끌어서 미니맵에 배치합니다.",
     ["MMSKIN_DEBUG_TT_POS_FMT"] = "저장된 오프셋: %.0f, %.0f",
+
     ["MMSKIN_RELOAD_PROMPT"] = "미니맵 모양을 바꾸려면 UI를 다시 불러와야 합니다.\n지금 다시 불러올까요?",
 })

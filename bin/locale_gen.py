@@ -4,7 +4,10 @@
 Walks the enUS reference file line by line and rewrites it for a target locale:
   * header `local ADDON_NAME, X = ...`  -> `local ADDON_NAME = ...`
     (the enUS file owns the `X.L = GetTable(...)` view binding; other locales
-     only Register their table, so the second upvalue is dropped)
+     only Register their table, so the second upvalue is dropped).
+    Module-style headers (`local _, ns = ...` + `local M = ns.ModuleRegistry:Current()`
+    + `:Register(M._scope, ...)`, as used by OneWoW_QoL external modules) are kept
+    verbatim — only the locale tag on the Register line is swapped.
   * the `:Register(ADDON_NAME, "enUS", {` tag is swapped to the target locale
   * every `["KEY"] = "value"` line keeps its key/indent/comment layout; the
     value is replaced from the merged translation map
@@ -78,7 +81,16 @@ def main(argv):
     todo, in_table, done = [], False, False
     for i, line in enumerate(src_lines):
         if i == 0:
-            out_lines.append("local ADDON_NAME = ...")
+            # Addon-table header `local ADDON_NAME, <tbl> = ...` -> drop the 2nd
+            # upvalue (its `<tbl>.L = GetTable()` footer is enUS-only and is
+            # excluded anyway by the `})` break below). Module-style headers
+            # (e.g. `local _, ns = ...` with a following
+            # `local M = ns.ModuleRegistry:Current()` and `:Register(M._scope,…)`)
+            # are preserved verbatim so the scope expression keeps working.
+            if re.match(r'\s*local\s+ADDON_NAME\s*,', line):
+                out_lines.append("local ADDON_NAME = ...")
+            else:
+                out_lines.append(line)
             continue
         if not in_table and REGISTER_RE.search(line):
             in_table = True

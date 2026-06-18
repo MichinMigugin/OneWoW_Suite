@@ -521,8 +521,15 @@ ptBR itIT.
   Auction House / Guild Bank / Mailbox / professions. `AltTracker Auctions` brand kept English in
   `AH_SCAN_REQUIRED`. `OneWoW_AltTracker_Accounting` has 0 keys (empty table) → nothing to
   translate, left enUS-only.
-- [ ] Remaining scopes, **player-facing value order** (decided): reassess the QoL external
-  modules + map tools (the enUS/koKR-only `OneWoW_QoL/Modules/external/*` set, 2–105 keys each).
+- [ ] **QoL external modules** (`OneWoW_QoL/Modules/external/*`, 35 modules, ~804 keys, locale
+  files listed in the main `OneWoW_QoL.toc`; module-style header `local _, ns = ...` +
+  `M = ns.ModuleRegistry:Current()` + `:Register(M._scope, …)` — `bin/locale_gen.py` now handles
+  this header form, keeping it verbatim). Many koKR files are `"TEST"` GetStore placeholders or
+  incomplete (enUS grew); replace/fill them.
+    - [x] `map_mini_tools` — 11/11 @ 105/105 (2026-06-17). koKR was real but missing 9 keys (filled);
+      8 new locales + esMX authored.
+    - [ ] remaining 34: `minimapskin` (86, enUS-only), `vendorpanel` (83), `map_world_tools` (63,
+      enUS-only), `minimapbuttons` (44), `questitembar` (42), … down to many ≤15-key modules.
   Skip `OneWoW_Utility_Extractor` + `OneWoW_AccountSync` (internal tools).
   **Do NOT localize** `OneWoW_Utility_Extractor` or `OneWoW_AccountSync` (internal tools).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
