@@ -1,3 +1,0 @@
-local addonName, ns = ...
-
-ns.ModuleRegistry:Register(ns.MinimapSkinModule)
