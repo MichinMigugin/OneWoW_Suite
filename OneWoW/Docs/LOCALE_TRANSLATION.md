@@ -514,8 +514,16 @@ ptBR itIT.
   + expansion names; **expansion names stay English in deDE/frFR/esES/ruRU/ptBR/itIT** (the live
   clients show them as English product titles), translated only in zhCN/zhTW/koKR. `esMX` from
   `esES`; all machine drafts headed with the pending-review comment.
-- [ ] Remaining scopes, **player-facing value order** (decided): all `AltTracker_*` data
-  sub-addons next, then reassess (QoL external modules, map tools).
+- [x] **`AltTracker_*` data sub-addons — all translated, 11/11 each** (Phase 4, 2026-06-17):
+  `Auctions` (8), `Professions` (7), `Storage` (6), `Endgame`/`Collections`/`Character` (3 each).
+  All were enUS-only (no koKR even) — authored all 10 locales each + `esMX`. Content is
+  data-tracking status/debug chat lines; translated naturally with official Blizzard terms for
+  Auction House / Guild Bank / Mailbox / professions. `AltTracker Auctions` brand kept English in
+  `AH_SCAN_REQUIRED`. `OneWoW_AltTracker_Accounting` has 0 keys (empty table) → nothing to
+  translate, left enUS-only.
+- [ ] Remaining scopes, **player-facing value order** (decided): reassess the QoL external
+  modules + map tools (the enUS/koKR-only `OneWoW_QoL/Modules/external/*` set, 2–105 keys each).
+  Skip `OneWoW_Utility_Extractor` + `OneWoW_AccountSync` (internal tools).
   **Do NOT localize** `OneWoW_Utility_Extractor` or `OneWoW_AccountSync` (internal tools).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
 - [ ] In-game spot-check per language where feasible; commit per scope.
