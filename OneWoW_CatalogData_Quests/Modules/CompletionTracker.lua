@@ -137,6 +137,50 @@ function CompletionTracker:IsCompletedByAny(questID)
     return #chars > 0
 end
 
+function CompletionTracker:GetActiveCharacters(questID)
+    if not questID then return {} end
+
+    local result = {}
+    local seen   = {}
+
+    local currentKey = OneWoW_GUI:BuildCharKey()
+    if currentKey and C_QuestLog.IsOnQuest(questID) then
+        local charName = currentKey:match("^(.-)%-") or currentKey
+        tinsert(result, { key = currentKey, name = charName })
+        seen[currentKey] = true
+    end
+
+    local altApi = OneWoW_AltTracker_Collections_API
+    if altApi and altApi.GetAllCharacters then
+        local chars = altApi.GetAllCharacters()
+        if chars then
+            for charKey in pairs(chars) do
+                if not seen[charKey] then
+                    local charData = altApi.GetCharacterData(charKey)
+                    local activeList =
+                        charData
+                        and charData.quests
+                        and charData.quests.active
+
+                    if activeList then
+                        for _, activeEntry in ipairs(activeList) do
+                            if activeEntry.questID == questID then
+                                local charName = charKey:match("^(.-)%-") or charKey
+                                tinsert(result, { key = charKey, name = charName })
+                                seen[charKey] = true
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    sort(result, function(a, b) return a.name < b.name end)
+    return result
+end
+
 function CompletionTracker:GetAllTrackedCharacters()
     local result = {}
     local seen   = {}
