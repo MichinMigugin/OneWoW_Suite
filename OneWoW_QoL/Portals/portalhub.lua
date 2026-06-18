@@ -134,6 +134,109 @@ function PortalHub:ToggleFavorite(type, id, name)
 	end
 end
 
+-- ============================================================================
+-- Custom (user-added) teleport items
+-- ============================================================================
+-- Account-wide list at OneWoW.db.global.portalHub.customItems. Each entry is a
+-- flat record { id, type, category = "custom", name, addedAt } so the Account
+-- Sync tool can read it straight out of SavedVariables. Type is auto-detected
+-- from the item ID (toy if the toybox knows it, otherwise a plain item).
+
+--- Returns the raw account-wide custom item list (live table, do not mutate externally).
+---@return table[]
+function PortalHub:GetCustomItems()
+	return OneWoW.db.global.portalHub.customItems
+end
+
+--- Auto-detects whether an item ID is a toy or a regular item.
+---@param id number
+---@return "toy"|"item"|nil
+function PortalHub:DetectItemType(id)
+	if C_ToyBox.GetToyInfo(id) then
+		return "toy"
+	end
+	if C_Item.GetItemInfoInstant(id) then
+		return "item"
+	end
+	return nil
+end
+
+--- True if the ID is already in the custom list.
+---@param id number
+---@return boolean
+function PortalHub:IsCustomItem(id)
+	for _, entry in ipairs(OneWoW.db.global.portalHub.customItems) do
+		if entry.id == id then
+			return true
+		end
+	end
+	return false
+end
+
+--- Adds a user-supplied item/toy to the custom list. Validates the ID, rejects
+--- duplicates, auto-detects the type, and resolves a display name.
+---@param id number|string item ID (numeric, or a string the caller typed)
+---@return boolean success
+---@return string|nil detectedType on success, or an error message key on failure
+function PortalHub:AddCustomItem(id)
+	id = tonumber(id)
+	if not id or id <= 0 then
+		return false, L["PORTAL_CUSTOM_ERR_INVALID_ID"]
+	end
+	if self:IsCustomItem(id) then
+		return false, L["PORTAL_CUSTOM_ERR_DUPLICATE"]
+	end
+
+	local itemType = self:DetectItemType(id)
+	if not itemType then
+		return false, L["PORTAL_CUSTOM_ERR_NOT_FOUND"]
+	end
+
+	local name
+	if itemType == "toy" then
+		name = select(2, C_ToyBox.GetToyInfo(id))
+	else
+		name = C_Item.GetItemNameByID(id)
+	end
+
+	tinsert(OneWoW.db.global.portalHub.customItems, {
+		id = id,
+		type = itemType,
+		category = "custom",
+		name = name or tostring(id),
+		addedAt = time(),
+	})
+	return true, itemType
+end
+
+--- Removes a custom item by ID.
+---@param id number|string
+---@return boolean removed
+function PortalHub:RemoveCustomItem(id)
+	id = tonumber(id)
+	local items = OneWoW.db.global.portalHub.customItems
+	for i = #items, 1, -1 do
+		if items[i].id == id then
+			tremove(items, i)
+			return true
+		end
+	end
+	return false
+end
+
+--- Returns the custom items as portal entries for the "custom" category.
+---@param showAll boolean when false, only owned/usable items are returned
+---@return table[]
+function PortalHub:GetCustomPortals(showAll)
+	local portals = {}
+	for _, entry in ipairs(OneWoW.db.global.portalHub.customItems) do
+		if showAll or ns.PortalHubDetection:IsPortalUsable(entry.type, entry.id) then
+			tinsert(portals, {type = entry.type, id = entry.id, name = entry.name, category = "custom", isCustom = true})
+		end
+	end
+	return portals
+end
+
 function PortalHub:GetFavorites()
 	local favorites = {}
 	if not OneWoW.db.global.portalHub.escFavorites then
@@ -207,6 +310,12 @@ function PortalHub:GetCategories()
 			{id = "consumables", name = L["Consumables"]},
 			{id = "special", name = L["Special Items"]},
 		}
+	})
+
+	table.insert(categories, {
+		id = "custom",
+		name = CUSTOM,
+		icon = "Interface\\Icons\\Spell_arcane_portalstormwind",
 	})
 
 	return categories
@@ -309,6 +418,8 @@ function PortalHub:GetPortalsForCategory(categoryID, showAll)
 			return ns.PortalHubItems:GetItemsBySubcategory(categoryID, showAll)
 		end
 		return portals
+	elseif categoryID == "custom" then
+		return self:GetCustomPortals(showAll)
 	end
 
 	return portals

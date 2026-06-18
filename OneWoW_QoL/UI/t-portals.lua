@@ -712,6 +712,225 @@ function ns.UI.CreatePortalsTab(parent)
 		end)
 	end
 
+	-- ---- Custom (user-added) items: Add/Manage dialog ----
+	local customDialog
+	local customRows = {}
+	local previewIcon, previewName, previewType, idBox, listEmptyFS, listContent
+
+	local function RefreshAfterCustomChange()
+		local filterText = split.searchBox and split.searchBox:GetSearchText() or ""
+		RefreshCategories(filterText)
+	end
+
+	local function ResolvePreview(text)
+		local id = tonumber(text)
+		if not id or id <= 0 then
+			previewIcon:SetTexture(nil)
+			previewName:SetText("")
+			previewType:SetText("")
+			return
+		end
+
+		local itemType = ns.PortalHubModule:DetectItemType(id)
+		if not itemType then
+			previewIcon:SetTexture(nil)
+			previewName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+			previewName:SetText(L["PORTAL_CUSTOM_NOT_FOUND_PREVIEW"])
+			previewType:SetText("")
+			return
+		end
+
+		previewName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+		if itemType == "toy" then
+			local _, toyName, toyIcon = C_ToyBox.GetToyInfo(id)
+			previewIcon:SetTexture(toyIcon)
+			previewName:SetText(toyName or tostring(id))
+			previewType:SetText(L["PORTAL_CUSTOM_TYPE_TOY"])
+		else
+			previewIcon:SetTexture((select(5, C_Item.GetItemInfoInstant(id))))
+			previewName:SetText(C_Item.GetItemNameByID(id) or tostring(id))
+			previewType:SetText(L["PORTAL_CUSTOM_TYPE_ITEM"])
+			local item = Item:CreateFromItemID(id)
+			item:ContinueOnItemLoad(function()
+				previewIcon:SetTexture(item:GetItemIcon())
+				previewName:SetText(item:GetItemName())
+			end)
+		end
+	end
+
+	local function RefreshCustomList()
+		for _, r in ipairs(customRows) do
+			r:Hide()
+			r:SetParent(nil)
+		end
+		wipe(customRows)
+
+		local items = ns.PortalHubModule:GetCustomItems()
+		if #items == 0 then
+			listEmptyFS:Show()
+		else
+			listEmptyFS:Hide()
+		end
+
+		local y = -4
+		for _, entry in ipairs(items) do
+			local row = OneWoW_GUI:CreateListRowBasic(listContent, {
+				height = 30,
+				label = entry.name or tostring(entry.id),
+			})
+			row:SetPoint("TOPLEFT", listContent, "TOPLEFT", 4, y)
+			row:SetPoint("TOPRIGHT", listContent, "TOPRIGHT", -4, y)
+			if row.label then
+				row.label:ClearAllPoints()
+				row.label:SetPoint("LEFT", row, "LEFT", 34, 0)
+				row.label:SetPoint("RIGHT", row, "RIGHT", -64, 0)
+			end
+
+			local icon = row:CreateTexture(nil, "ARTWORK")
+			icon:SetSize(24, 24)
+			icon:SetPoint("LEFT", row, "LEFT", 5, 0)
+			if entry.type == "toy" then
+				icon:SetTexture((select(3, C_ToyBox.GetToyInfo(entry.id))))
+			else
+				icon:SetTexture((select(5, C_Item.GetItemInfoInstant(entry.id))))
+			end
+
+			local removeBtn = OneWoW_GUI:CreateFitTextButton(row, {
+				text = REMOVE,
+				height = 20,
+				minWidth = 50,
+			})
+			removeBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+			local thisId = entry.id
+			removeBtn:SetScript("OnClick", function()
+				ns.PortalHubModule:RemoveCustomItem(thisId)
+				RefreshCustomList()
+				RefreshAfterCustomChange()
+			end)
+
+			tinsert(customRows, row)
+			y = y - 34
+		end
+
+		listContent:SetHeight(math.max(1, math.abs(y) + 10))
+	end
+
+	local function ShowCustomItemsDialog()
+		if not customDialog then
+			customDialog = OneWoW_GUI:CreateDialog({
+				name = "OneWoW_PortalCustomItemsDialog",
+				title = L["PORTAL_CUSTOM_TITLE"],
+				width = 460,
+				height = 500,
+				showBrand = true,
+				buttons = {
+					{ text = CLOSE, onClick = function(frame) frame:Hide() end },
+				},
+			})
+			local content = customDialog.contentFrame
+
+			local intro = OneWoW_GUI:CreateFS(content, 12)
+			intro:SetPoint("TOPLEFT", content, "TOPLEFT", 15, -12)
+			intro:SetPoint("TOPRIGHT", content, "TOPRIGHT", -15, -12)
+			intro:SetJustifyH("LEFT")
+			intro:SetText(L["PORTAL_CUSTOM_INTRO"])
+			intro:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+			local idLabel = OneWoW_GUI:CreateFS(content, 12)
+			idLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 15, -52)
+			idLabel:SetText(L["ITEM_ID"])
+			idLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+			idBox = OneWoW_GUI:CreateEditBox(content, {
+				width = 120,
+				height = 26,
+				placeholderText = L["PORTAL_CUSTOM_ID_HINT"],
+				maxLetters = 12,
+			})
+			idBox:SetPoint("LEFT", idLabel, "RIGHT", 10, 0)
+
+			local addBtn = OneWoW_GUI:CreateFitTextButton(content, {
+				text = ADD,
+				height = 26,
+				minWidth = 70,
+			})
+			addBtn:SetPoint("LEFT", idBox, "RIGHT", 10, 0)
+
+			previewIcon = content:CreateTexture(nil, "ARTWORK")
+			previewIcon:SetSize(28, 28)
+			previewIcon:SetPoint("TOPLEFT", content, "TOPLEFT", 15, -86)
+
+			previewName = OneWoW_GUI:CreateFS(content, 13)
+			previewName:SetPoint("LEFT", previewIcon, "RIGHT", 8, 6)
+			previewName:SetJustifyH("LEFT")
+
+			previewType = OneWoW_GUI:CreateFS(content, 10)
+			previewType:SetPoint("TOPLEFT", previewName, "BOTTOMLEFT", 0, -2)
+			previewType:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+			local statusFS = OneWoW_GUI:CreateFS(content, 11)
+			statusFS:SetPoint("TOPLEFT", content, "TOPLEFT", 15, -122)
+			statusFS:SetPoint("TOPRIGHT", content, "TOPRIGHT", -15, -122)
+			statusFS:SetJustifyH("LEFT")
+			customDialog.statusFS = statusFS
+
+			idBox:SetScript("OnTextChanged", function(box)
+				statusFS:SetText("")
+				ResolvePreview(box:GetSearchText())
+			end)
+
+			addBtn:SetScript("OnClick", function()
+				local ok, result = ns.PortalHubModule:AddCustomItem(idBox:GetSearchText())
+				if ok then
+					idBox:SetText("")
+					idBox:RestorePlaceholder()
+					ResolvePreview("")
+					statusFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+					statusFS:SetText(L["PORTAL_CUSTOM_ADDED"])
+					RefreshCustomList()
+					RefreshAfterCustomChange()
+				else
+					statusFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+					statusFS:SetText(result)
+				end
+			end)
+
+			local divider = content:CreateTexture(nil, "ARTWORK")
+			divider:SetHeight(1)
+			divider:SetPoint("TOPLEFT", content, "TOPLEFT", 12, -144)
+			divider:SetPoint("TOPRIGHT", content, "TOPRIGHT", -12, -144)
+			divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+			local listHeader = OneWoW_GUI:CreateFS(content, 12)
+			listHeader:SetPoint("TOPLEFT", content, "TOPLEFT", 15, -154)
+			listHeader:SetText(L["PORTAL_CUSTOM_LIST_HEADER"])
+			listHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+			local listScroll
+			listScroll, listContent = OneWoW_GUI:CreateScrollFrame(content, {})
+			listScroll:ClearAllPoints()
+			listScroll:SetPoint("TOPLEFT", content, "TOPLEFT", 8, -178)
+			listScroll:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -8, 8)
+
+			listEmptyFS = OneWoW_GUI:CreateFS(content, 12)
+			listEmptyFS:SetPoint("TOPLEFT", content, "TOPLEFT", 20, -188)
+			listEmptyFS:SetText(L["PORTAL_CUSTOM_EMPTY"])
+			listEmptyFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+		end
+
+		RefreshCustomList()
+		customDialog.statusFS:SetText("")
+		customDialog.frame:Show()
+	end
+
+	local manageCustomBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, {
+		text = L["ADD_ITEM"],
+		height = 24,
+		minWidth = 90,
+	})
+	manageCustomBtn:SetPoint("TOPRIGHT", controlPanel, "TOPRIGHT", -12, -8)
+	manageCustomBtn:SetScript("OnClick", ShowCustomItemsDialog)
+
 	local function RefreshPortalView()
 		ShowSecureOverlay()
 		SchedulePortalLayoutRefresh()

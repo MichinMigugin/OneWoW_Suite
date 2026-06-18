@@ -46,6 +46,7 @@ local DEFAULTS = {
         escPortalsSide = "right",
         allFavorites = {},
         escFavorites = {},
+        customItems = {},
         iconSize = 36,
         escIconSize = 32,
         gridColumns = 8,
