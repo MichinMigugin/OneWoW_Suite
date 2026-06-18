@@ -29,6 +29,7 @@ Locales\esES.lua
 Locales\zhTW.lua
 Locales\esMX.lua
 Locales\ruRU.lua
+Locales\ptBR.lua
 
 # Core (continued)
 Core\Database.lua
