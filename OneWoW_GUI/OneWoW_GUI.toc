@@ -1,5 +1,5 @@
 ## Interface: 120005, 120007
-## Version: R6.2606.1022
+## Version: R6.2606.1822
 ## Title: |cFFFFD100OneWoW|r - |cFF00FF00GUI|r
 ## Notes: SavedVariables handoff stub. The GUI toolkit now lives inside the OneWoW core addon; this shell only loads the legacy OneWoW_GUI_DB saved-variables file so user settings survive the move. Safe to delete two releases after MIGRATION step 8 ships.
 ## Author: OneWoW Dev Team
