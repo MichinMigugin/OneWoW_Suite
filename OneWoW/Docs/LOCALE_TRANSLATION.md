@@ -530,9 +530,10 @@ ptBR itIT.
       8 new locales + esMX authored.
     - [x] `vendorpanel` — 11/11 @ 83/83 (2026-06-17). koKR was a TEST placeholder (replaced); 8 new
       locales + esMX authored.
-    - [~] `minimapskin` (86, enUS-only) — **DEAD CODE, skipped**: not referenced in `OneWoW_QoL.toc`
-      (never loaded), superseded by `map_mini_tools` via the `rename_minimapskin_to_map_mini_tools`
-      DB migration. Flagged for folder removal (separate task).
+    - [x] `minimapskin` — **DEAD CODE, DELETED** (2026-06-18, dev-confirmed): was never referenced in
+      `OneWoW_QoL.toc` (never loaded), superseded by `map_mini_tools` via the
+      `rename_minimapskin_to_map_mini_tools` DB migration (which stays — it migrates old saved-variable
+      keys, independent of the folder). Folder `map_mini_tools/minimapskin/` removed.
     - [x] `map_world_tools` — 11/11 @ 63/63 (2026-06-17). Was enUS-only; all 10 locales + esMX authored.
     - [x] `minimapbuttons` — 11/11 @ 44/44 (2026-06-17). koKR was a TEST placeholder (replaced); 8 new
       locales + esMX authored.
@@ -561,7 +562,7 @@ ptBR itIT.
       real (preserved), `achieveuntrack` koKR was an English copy (translated). Authored via per-language
       megadicts. Commands (`/copytext`, `/ct`), API names (`C_GossipInfo`, `QuestLabelPrepend`,
       `FlagsUtil`, `Enum.GossipOptionRecFlags`), and the screenshot path/filename kept literal.
-  - **✅ ALL QoL external modules complete** (34 localized + `minimapskin` skipped as dead code). With the
+  - **✅ ALL QoL external modules complete** (34 localized + `minimapskin` deleted as dead code). With the
     9 big scopes, DevTool, ShoppingList, DirectDeposit, all `CatalogData_*`, and all `AltTracker_*`, the
     Phase-4 11-locale rollout is effectively done. Remaining = end-of-phase native review passes.
   - **✅ esMX LatAm review complete** (2026-06-18). LatAm term conventions baked into `bin/gen_esmx.py`
