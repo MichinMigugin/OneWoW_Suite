@@ -1,0 +1,38 @@
+# Manifest for bin/sync_agent_context.py — the only hand-input for cross-agent
+# stub generation. Everything else is derived from .cursor/ frontmatter.
+#
+# claude_paths: glob patterns for the Claude stub's `paths:` frontmatter
+#   (conditional activation). Use null to omit `paths:` so the skill stays in the
+#   startup catalog and activates from its description. Codex stubs never get
+#   `paths:` (not in the Codex spec).
+#
+# Every skill under .cursor/skills/ MUST have an entry here (the generator fails
+# on any missing or unknown skill).
+
+skills:
+  onewow-database-api:
+    claude_paths: null
+  onewow-gui-ui:
+    claude_paths:
+      - "OneWoW/GUI/**/*.lua"
+      - "**/GUI/**/*.lua"
+      - "**/UI/**/*.lua"
+  onewow-locale-workflow:
+    claude_paths:
+      - "**/Locales/**/*.lua"
+  onewow-qol-modules:
+    claude_paths:
+      - "OneWoW_QoL/Modules/external/**/*.lua"
+  onewow-suite-architecture:
+    claude_paths:
+      - "OneWoW*/**/*.lua"
+      - "OneWoW/**/*.lua"
+      - "OneWoW*/**/*.toc"
+  wow-api-specialist:
+    claude_paths: null
+  wow-frame-script-pitfalls:
+    claude_paths:
+      - "**/UI/**/*.lua"
+      - "**/GUI/**/*.lua"
+  wow-tooltip-system:
+    claude_paths: null

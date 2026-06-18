@@ -9,6 +9,9 @@ __pycache__
 .cursor/rules/1W-Ricky-*.mdc
 .cursor/rules/Git-Commit-Rules.mdc
 
+# Claude Code local permissions (personal)
+.claude/settings.local.json
+
 # Local secrets (never commit)
 .env
 .env.*
