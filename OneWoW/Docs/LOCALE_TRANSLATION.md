@@ -536,9 +536,11 @@ ptBR itIT.
     - [x] `map_world_tools` — 11/11 @ 63/63 (2026-06-17). Was enUS-only; all 10 locales + esMX authored.
     - [x] `minimapbuttons` — 11/11 @ 44/44 (2026-06-17). koKR was a TEST placeholder (replaced); 8 new
       locales + esMX authored.
-    - [ ] remaining: `questitembar` (42), `lfgpanel` (33), `preybar` (32), `inspectmog` (32, enUS-only),
-      `charinfo` (31), … down to many ≤15-key modules. Several koKR files are TEST placeholders; a few
-      modules are enUS-only.
+    - [x] `questitembar` — 11/11 @ 42/42 (2026-06-17). koKR was a TEST placeholder (replaced); 8 new
+      locales + esMX authored.
+    - [ ] remaining: `lfgpanel` (33), `preybar` (32), `inspectmog` (32, enUS-only), `charinfo` (31),
+      `automount` (28), `framemover` (25), `bagbar` (25), … down to many ≤20-key modules. Several koKR
+      files are TEST placeholders; a few modules are enUS-only.
   Skip `OneWoW_Utility_Extractor` + `OneWoW_AccountSync` (internal tools).
   **Do NOT localize** `OneWoW_Utility_Extractor` or `OneWoW_AccountSync` (internal tools).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).

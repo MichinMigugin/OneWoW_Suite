@@ -228,6 +228,15 @@ Modules\external\bagbar\bagbar-ui.lua
 Modules\external\questitembar\module.lua
 Modules\external\questitembar\Locales\enUS.lua
 Modules\external\questitembar\Locales\koKR.lua
+Modules\external\questitembar\Locales\frFR.lua
+Modules\external\questitembar\Locales\deDE.lua
+Modules\external\questitembar\Locales\zhCN.lua
+Modules\external\questitembar\Locales\esES.lua
+Modules\external\questitembar\Locales\zhTW.lua
+Modules\external\questitembar\Locales\esMX.lua
+Modules\external\questitembar\Locales\ruRU.lua
+Modules\external\questitembar\Locales\ptBR.lua
+Modules\external\questitembar\Locales\itIT.lua
 Modules\external\questitembar\questitembar.lua
 Modules\external\questitembar\questitembar-ui.lua
 
