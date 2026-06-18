@@ -147,3 +147,14 @@ repos:
         entry: python bin/check_toc_optional_deps.py
         language: python
         files: \.toc$
+
+      - id: locale-parity
+        name: Locale key parity, format specifiers, and duplicate keys
+        description: |
+          For each changed Locales/ scope, verifies every locale against its
+          enUS.lua: key parity (missing/extra), matching printf specifiers
+          (%s/%d/%d%%), and no duplicate keys (duplicate-index). A changed
+          enUS.lua re-checks all siblings. See OneWoW/Docs/LOCALES.md.
+        entry: python bin/locale_verify.py
+        language: python
+        files: (^|/)Locales/.*\.lua$

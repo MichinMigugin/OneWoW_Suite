@@ -141,7 +141,7 @@ All under `bin/` unless noted; run from the repo root.
 
 | Tool | Purpose | When |
 |---|---|---|
-| `locale_verify.py <Locales…>` | **Parity gate.** Per locale vs `enUS`: key parity (missing/extra), matching printf specifiers (`%s`/`%d`/`%d%%`), and duplicate keys (checks `enUS` too). Exits non-zero. | After every locale edit; as a commit gate. |
+| `locale_verify.py [Locales… \| files… \| (none)]` | **Parity gate.** Per locale vs `enUS`: key parity (missing/extra), matching printf specifiers (`%s`/`%d`/`%d%%`), and duplicate keys (checks `enUS` too). Accepts Locales dirs, individual locale files (mapped to their scope), or no args (scans every scope). Exits non-zero. | After every locale edit. **Wired as the `locale-parity` pre-commit hook** (runs on changed locale files; a changed `enUS.lua` re-checks all siblings). |
 | `locale_keydiff.py [--scope X] [--consolidate]` | **Value analysis.** Flags Blizzard-global adoption candidates (B), cross-scope consolidation (C), and name-match traps (E); `--scope` prints a delete/blizzard/consolidate/translate worklist. Reads the enUS GlobalStrings (§4). | Before adding keys; when auditing a scope. |
 | `locale_gen.py --enus … --locale … [--existing …] [--dict …] --out …` | Regenerate a locale file from the `enUS` template, overlaying existing translations + a `--dict` JSON; preserves layout/comments/escapes; handles addon-table **and** module-style headers; unmapped keys fall back to `enUS` (reported as TODO). | Authoring/refilling a whole locale. |
 | `gen_esmx.py <Locales…>` | Generate `esMX` from `esES` + apply the Latin-American term map (`LATAM_SUBS`: `presionar`, `mouse`) + machine-draft header. Re-runnable (terms live in the tool). | After any `esES` change. |

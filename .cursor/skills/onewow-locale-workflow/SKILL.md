@@ -107,8 +107,10 @@ Task is **not done** until:
 1. `python bin/locale_keydiff.py --scope <Scope>` — no new keys in BLIZZARD/CONSOLIDATE buckets.
 2. `python bin/locale_verify.py <Locales/path>` — exit 0, all locales `N/N OK`.
 
-Optional human gate: add `python bin/locale_verify.py …` to pre-commit for the paths you
-touch often (tool exits non-zero on failure by design).
+`locale_verify.py` is also wired as the **`locale-parity` pre-commit hook** — it runs
+automatically on changed locale files and blocks the commit on any parity/spec/duplicate
+failure. Still run it yourself before marking the task done; don't rely on the hook to catch
+problems late.
 
 ## Deep reference
 

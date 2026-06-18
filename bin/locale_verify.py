@@ -10,7 +10,13 @@ For every <locale>.lua next to enUS.lua, checks:
                    `duplicate-index`). enUS is checked for this too.
 
 Usage:
-    python bin/locale_verify.py <path/to/Locales> [more/Locales ...]
+    python bin/locale_verify.py                       # no args: scan every Locales/ scope
+    python bin/locale_verify.py <path/to/Locales> ... # one or more Locales dirs
+    python bin/locale_verify.py <path/to/foo.lua> ... # locale files -> their parent scope(s)
+
+Args may be Locales directories OR individual locale files (each file is mapped to its
+parent Locales dir, deduped). With no args, every Locales/ scope in the repo is checked.
+This lets it run both standalone and as a pre-commit hook (which passes changed files).
 
 Exit code is non-zero if any locale fails, so it can gate a commit.
 """
@@ -110,12 +116,37 @@ def verify_dir(locales_dir):
     return ok_all
 
 
+def scope_dirs_from_args(args):
+    """Map each arg (a Locales dir, or a file inside one) to its scope dir; dedupe, keep order."""
+    dirs = []
+    for a in args:
+        p = Path(a)
+        d = p if p.is_dir() else p.parent
+        if d not in dirs:
+            dirs.append(d)
+    return dirs
+
+
+def all_scope_dirs(root=Path(".")):
+    """Every Locales/ scope in the repo (excludes vendored/cached reference trees)."""
+    refs = sorted(root.glob("**/Locales/**/enUS.lua")) + sorted(root.glob("**/Locales/enUS.lua"))
+    dirs = []
+    for ref in refs:
+        if ".cache" in ref.parts or ".wow_docs" in ref.parts:
+            continue
+        d = ref.parent
+        if d not in dirs:
+            dirs.append(d)
+    return dirs
+
+
 def main(argv):
-    if len(argv) < 2:
-        print(__doc__)
-        return 2
+    dirs = scope_dirs_from_args(argv[1:]) if len(argv) > 1 else all_scope_dirs()
+    if not dirs:
+        print("locale_verify: no Locales scopes to check")
+        return 0
     ok = True
-    for d in argv[1:]:
+    for d in dirs:
         ok = verify_dir(d) and ok
     return 0 if ok else 1
 
