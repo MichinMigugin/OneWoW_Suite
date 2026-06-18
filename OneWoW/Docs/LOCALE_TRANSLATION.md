@@ -492,8 +492,14 @@ ptBR itIT.
   the enUS template (preserves layout/section comments, escapes, single-quote snippet style),
   carrying existing translations + a `--dict` JSON overlay; unmapped keys fall back to enUS. TOC
   reordered to the canonical 11-locale sequence.
+- [x] **`OneWoW_ShoppingList` — fully translated, 11/11 locales at 247/247** (Phase 4, 2026-06-17).
+  The 5 pre-existing locales were nearly complete (only the 2 `BINDING_NAME_*` keys +
+  `OWSL_SETTINGS_SHOW_ORDERS_BUTTONS` needed translating, matched to in-file terminology). 4 new
+  locales authored (zhCN/zhTW/ptBR/itIT) + `esMX` from `esES`; same `bin/locale_gen.py` workflow.
+  Per-locale 4 keys stay English by design: 2 brand markup (`ADDON_CHAT_PREFIX`,
+  `BINDING_HEADER_*`) + 2 paste-format examples (`OWSL_TT_IMPORT_FORMAT1/2`).
 - [ ] Remaining scopes, **player-facing value order** (decided):
-  ShoppingList 246 → then data/QoL-module sub-addons (2–105 keys each).
+  data/QoL-module sub-addons (2–105 keys each).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
 - [ ] In-game spot-check per language where feasible; commit per scope.
 
