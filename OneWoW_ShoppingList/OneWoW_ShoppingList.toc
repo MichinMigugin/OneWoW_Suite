@@ -21,11 +21,12 @@ Core\Constants.lua
 
 # Locales
 Locales\enUS.lua
-Locales\esES.lua
 Locales\koKR.lua
-Locales\ruRU.lua
 Locales\frFR.lua
 Locales\deDE.lua
+Locales\esES.lua
+Locales\esMX.lua
+Locales\ruRU.lua
 
 # Core (continued)
 Core\Database.lua
