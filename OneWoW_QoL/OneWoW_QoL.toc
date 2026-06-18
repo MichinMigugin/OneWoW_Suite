@@ -202,6 +202,15 @@ Modules\external\escpanel\escpanel.lua
 Modules\external\vendorpanel\module.lua
 Modules\external\vendorpanel\Locales\enUS.lua
 Modules\external\vendorpanel\Locales\koKR.lua
+Modules\external\vendorpanel\Locales\frFR.lua
+Modules\external\vendorpanel\Locales\deDE.lua
+Modules\external\vendorpanel\Locales\zhCN.lua
+Modules\external\vendorpanel\Locales\esES.lua
+Modules\external\vendorpanel\Locales\zhTW.lua
+Modules\external\vendorpanel\Locales\esMX.lua
+Modules\external\vendorpanel\Locales\ruRU.lua
+Modules\external\vendorpanel\Locales\ptBR.lua
+Modules\external\vendorpanel\Locales\itIT.lua
 Modules\external\vendorpanel\vendorpanel.lua
 Modules\external\vendorpanel\vendorpanel-ui.lua
 
