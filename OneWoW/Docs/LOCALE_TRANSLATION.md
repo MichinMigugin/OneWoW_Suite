@@ -483,8 +483,17 @@ ptBR itIT.
   ShoppingList/DevTool only have 6 locales so the other 5 languages' values were dropped (regenerate
   when those scopes are translated). `locale_usage.py` now reports **zero leaks suite-wide**.
   (`UNIT_CTX_OPEN_VENDOR_DETAILS` is core's own context-menu key — correctly left in core.)
+- [x] **`OneWoW_Utility_DevTool` — fully translated, 11/11 locales at 498/498** (Phase 4,
+  2026-06-17). The 5 pre-existing locales (deDE/esES/frFR/koKR/ruRU) were only ~256/498 by parity
+  *and* carried English-leftover values in "present" keys (e.g. the whole `ERR_REC_*`/`EDITOR_*`
+  blocks); each was regenerated to full coverage. 4 new locales authored from scratch
+  (zhCN/zhTW/ptBR/itIT, machine drafts headed `-- Machine-drafted (Phase 4) — <loc>, pending
+  native review.`), plus `esMX` from `esES`. New tool `bin/locale_gen.py` rebuilds a locale from
+  the enUS template (preserves layout/section comments, escapes, single-quote snippet style),
+  carrying existing translations + a `--dict` JSON overlay; unmapped keys fall back to enUS. TOC
+  reordered to the canonical 11-locale sequence.
 - [ ] Remaining scopes, **player-facing value order** (decided):
-  DevTool 501 → ShoppingList 246 → then data/QoL-module sub-addons (2–105 keys each).
+  ShoppingList 246 → then data/QoL-module sub-addons (2–105 keys each).
 - [ ] `BINDING_*` keys translate normally (the service pushes them to `_G`).
 - [ ] In-game spot-check per language where feasible; commit per scope.
 
