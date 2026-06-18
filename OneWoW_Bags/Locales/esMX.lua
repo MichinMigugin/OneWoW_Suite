@@ -203,10 +203,10 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
     ["SECTION_MASQUE"] = "Masque",
     ["SETTING_USE_MASQUE"] = "Usar máscaras de Masque",
-    ["DESC_USE_MASQUE"] = "Deja que Masque dé estilo a los botones de objeto de OneWoW Bags (bolsas, banco, banco de banda de guerra, banco de hermandad y ranuras de la barra de bolsas). Configura las máscaras individuales en los ajustes de Masque.",
+    ["DESC_USE_MASQUE"] = "Deja que Masque dé estilo a los botones de objeto de OneWoW Bags (bolsas, banco, banco de la banda guerrera, banco de hermandad y ranuras de la barra de bolsas). Configura las máscaras individuales en los ajustes de Masque.",
 
     ["GOLD_TOOLTIP_PERSONAL"] = "Personal",
-    ["GOLD_TOOLTIP_WARBAND"] = "Banco de banda de guerra",
+    ["GOLD_TOOLTIP_WARBAND"] = "Banco de la banda guerrera",
     ["GOLD_TOOLTIP_OTHERS"] = "+%d más",
     ["GOLD_TOOLTIP_NO_ALTTRACKER"] = "Instala AltTracker para ver el oro de otros personajes",
 
@@ -238,7 +238,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["TAB_GENERAL"] = "General",
     ["TAB_BAGS"] = "Bolsas",
     ["TAB_PERSONAL_BANK"] = "Banco personal",
-    ["TAB_WARBAND_BANK"] = "Banco de banda de guerra",
+    ["TAB_WARBAND_BANK"] = "Banco de la banda guerrera",
     ["TAB_GUILD_BANK"] = "Banco de hermandad",
 
     ["SETTING_SHOW_EMPTY_SLOTS"] = "Mostrar huecos vacíos",
@@ -337,7 +337,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["CAT_FORCE_OWN_LINE"] = "En su propia línea:",
     ["APPLIES_BACKPACK"] = "Bolsas",
     ["APPLIES_CHAR_BANK"] = "Banco del personaje",
-    ["APPLIES_WARBAND_BANK"] = "Banco de banda de guerra",
+    ["APPLIES_WARBAND_BANK"] = "Banco de la banda guerrera",
 
     ["ADDED_ITEMS"] = "Objetos añadidos",
     ["ADDED_ITEMS_DESC"] = "Los objetos asignados manualmente a esta categoría sustituyen la clasificación normal.",

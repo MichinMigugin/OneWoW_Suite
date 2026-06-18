@@ -283,7 +283,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["QUESTS_PROGRESS_ACTIVE"] = "Ativa",
     ["QUESTS_PROGRESS_ACTIVE_CURRENT"] = "Ativa (alt atual)",
     ["QUESTS_PROGRESS_ACTIVE_ALL"] = "Ativa (todos os alts)",
-    ["QUESTS_PROGRESS_WARBAND"] = "Concluída (Tropa)",
+    ["QUESTS_PROGRESS_WARBAND"] = "Concluída (Bando de Guerra)",
 
     ["ITEMSEARCH_TITLE"] = "Busca de itens",
     ["ITEMSEARCH_PLACEHOLDER"] = "Buscar um item...",
@@ -329,7 +329,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["ITEMSEARCH_ITEM_ID"] = "ID do item",
 
     ["ITEMSEARCH_LOC_BAGS"] = "Bolsas",
-    ["ITEMSEARCH_LOC_WARBAND"] = "Banco da Tropa",
+    ["ITEMSEARCH_LOC_WARBAND"] = "Banco do Bando de Guerra",
     ["ITEMSEARCH_LOC_AH"] = "Casa de Leilões",
 
     ["ITEMSEARCH_SECTION_VALUE"] = "Valor",

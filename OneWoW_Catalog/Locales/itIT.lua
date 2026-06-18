@@ -283,7 +283,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["QUESTS_PROGRESS_ACTIVE"] = "Attiva",
     ["QUESTS_PROGRESS_ACTIVE_CURRENT"] = "Attiva (alt attuale)",
     ["QUESTS_PROGRESS_ACTIVE_ALL"] = "Attiva (tutti gli alt)",
-    ["QUESTS_PROGRESS_WARBAND"] = "Completata (Squadra di guerra)",
+    ["QUESTS_PROGRESS_WARBAND"] = "Completata (Brigata)",
 
     ["ITEMSEARCH_TITLE"] = "Ricerca oggetti",
     ["ITEMSEARCH_PLACEHOLDER"] = "Cerca un oggetto...",
@@ -329,7 +329,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["ITEMSEARCH_ITEM_ID"] = "ID oggetto",
 
     ["ITEMSEARCH_LOC_BAGS"] = "Borse",
-    ["ITEMSEARCH_LOC_WARBAND"] = "Banca della Squadra di guerra",
+    ["ITEMSEARCH_LOC_WARBAND"] = "Banca della Brigata",
     ["ITEMSEARCH_LOC_AH"] = "Casa d'aste",
 
     ["ITEMSEARCH_SECTION_VALUE"] = "Valore",

@@ -203,10 +203,10 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
     ["SECTION_MASQUE"] = "Masque",
     ["SETTING_USE_MASQUE"] = "Usa skin di Masque",
-    ["DESC_USE_MASQUE"] = "Lascia che Masque dia uno stile ai pulsanti oggetto di OneWoW Bags (borse, banca, banca della squadra di guerra, banca di gilda e spazi della barra delle borse). Configura le singole skin nelle impostazioni di Masque.",
+    ["DESC_USE_MASQUE"] = "Lascia che Masque dia uno stile ai pulsanti oggetto di OneWoW Bags (borse, banca, banca della brigata, banca di gilda e spazi della barra delle borse). Configura le singole skin nelle impostazioni di Masque.",
 
     ["GOLD_TOOLTIP_PERSONAL"] = "Personale",
-    ["GOLD_TOOLTIP_WARBAND"] = "Banca della Squadra di guerra",
+    ["GOLD_TOOLTIP_WARBAND"] = "Banca della Brigata",
     ["GOLD_TOOLTIP_OTHERS"] = "+%d altri",
     ["GOLD_TOOLTIP_NO_ALTTRACKER"] = "Installa AltTracker per i dettagli sull'oro degli altri personaggi",
 
@@ -238,7 +238,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["TAB_GENERAL"] = "Generale",
     ["TAB_BAGS"] = "Borse",
     ["TAB_PERSONAL_BANK"] = "Banca personale",
-    ["TAB_WARBAND_BANK"] = "Banca della Squadra di guerra",
+    ["TAB_WARBAND_BANK"] = "Banca della Brigata",
     ["TAB_GUILD_BANK"] = "Banca di gilda",
 
     ["SETTING_SHOW_EMPTY_SLOTS"] = "Mostra spazi vuoti",
@@ -337,7 +337,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["CAT_FORCE_OWN_LINE"] = "Su una riga propria:",
     ["APPLIES_BACKPACK"] = "Borse",
     ["APPLIES_CHAR_BANK"] = "Banca del personaggio",
-    ["APPLIES_WARBAND_BANK"] = "Banca della Squadra di guerra",
+    ["APPLIES_WARBAND_BANK"] = "Banca della Brigata",
 
     ["ADDED_ITEMS"] = "Oggetti aggiunti",
     ["ADDED_ITEMS_DESC"] = "Gli oggetti assegnati manualmente a questa categoria sostituiscono la classificazione normale.",

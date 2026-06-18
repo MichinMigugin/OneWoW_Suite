@@ -363,7 +363,7 @@ Per value group: pick canonical key + value, register once in `shared`, delete e
 per-scope copy + repoint call sites, proper nouns marked do-not-translate, `/owlocale`
 audit (0 new collisions), in-game verify, commit.
 
-### Phase 4 — Translate the minimized set (in progress)
+### Phase 4 — Translate the minimized set ✅ drafting complete (native review + in-game QA pending)
 **Approach (decided):** I draft all 11 locales as a reviewable baseline — reuse
 Blizzard `GlobalStrings.lua` terms for established WoW terminology, keep proper nouns
 in English, preserve `%s`/`%d`/`|c…|r` escapes; files flagged machine-drafted for later
@@ -502,12 +502,24 @@ ptBR itIT.
   The 5 pre-existing locales were only ~half complete (each missing the 32–33-key Keybinds /
   Warbound / Tooltip / Bindings blocks added to enUS later); those were filled matching each
   file's own in-file Warband term (deDE "Warband-Bank", esES "Grupo de Guerra", frFR "Groupe de
-  Guerre", koKR "워밴드", ruRU "отряд"). 4 new locales authored (zhCN/zhTW/ptBR/itIT) using the
-  canonical suite Warband terms (战团/戰隊/Tropa/Squadra di guerra) + `esMX` from `esES`. Per-locale
-  2 keys stay English by design: `ADDON_CHAT_PREFIX` + `BINDING_HEADER_*` (brand markup).
-  NOTE: the pre-existing 5 locales use a Warband term that drifts from the rest of the suite
-  (Bags/core/AltTracker use Blizzard-official Kriegsmeute/bataillon/banda de guerra); left as-is
-  for self-consistency — flag for a normalization pass.
+  Guerre", koKR "워밴드", ruRU "отряд"). 4 new locales authored (zhCN/zhTW/ptBR/itIT) + `esMX` from
+  `esES`. Per-locale 2 keys stay English by design: `ADDON_CHAT_PREFIX` + `BINDING_HEADER_*` (brand
+  markup). (All Warband terms were superseded by the suite-wide Blizzard-official normalization below.)
+- [x] **Suite-wide Warband-term normalization to Blizzard-official (2026-06-18).** A full audit
+  against Blizzard's per-locale `GlobalStrings` (`ACCOUNT_QUEST_LABEL` = "Warband", `ACCOUNT_BANK_PANEL_TITLE`
+  = "Warband Bank", `ITEM_ACCOUNTBOUND` = "Warbound") found the suite was **inconsistent and partly
+  non-official**: not only did DirectDeposit drift (deDE "Warband-Bank", esES "Grupo de Guerra", frFR
+  "Groupe de Guerre", koKR "워밴드"), but the *rest of the suite itself* used non-Blizzard terms for
+  es/pt/it/ko (`banda de guerra`, `Tropa`, `Squadra di guerra`, plus stray `Bandada de guerra`,
+  `Tropa de Guerra`, `Brigata di Guerra`). Normalized **everything** (suite + DD + ShoppingList) to the
+  official terms: **de** Kriegsmeute / Kriegsmeutenbank / kriegsmeutengebunden; **fr** Bataillon / Banque
+  de bataillon; **es** banda guerrera / *la* banda guerrera (Blizzard uses the article); **pt** Bando de
+  Guerra (masc — contractions flipped da→do, à→ao); **it** Brigata; **ko** 전투부대 / 전투부대 은행.
+  Already-official and untouched: **ru** Отряд, **zhCN** 战团, **zhTW** 戰隊. 209 value-only lines across
+  ~25 files; all 56 scopes verify `0 FAIL 0 dup-key`. Decided with the user: "Blizzard-official everywhere"
+  (not merely DD-matches-suite). **Known gap (separate):** `OneWoW_Bags` `DESC_USE_MASQUE` is still raw
+  English in `koKR` and `ruRU` (untranslated string, contains "warband bank") — a translation gap, not a
+  term issue; left for a fill pass.
 - [x] **`CatalogData_*` family — all 4 fully translated, 11/11 each** (Phase 4, 2026-06-17):
   `Tradeskills` (32), `Journal` (12), `Vendors` (2), `Quests` (1). Each `koKR.lua` was a `"TEST"`
   GetStore placeholder — replaced with real Korean. Tradeskills uses official Blizzard profession
@@ -521,7 +533,7 @@ ptBR itIT.
   Auction House / Guild Bank / Mailbox / professions. `AltTracker Auctions` brand kept English in
   `AH_SCAN_REQUIRED`. `OneWoW_AltTracker_Accounting` has 0 keys (empty table) → nothing to
   translate, left enUS-only.
-- [ ] **QoL external modules** (`OneWoW_QoL/Modules/external/*`, 35 modules, ~804 keys, locale
+- [x] **QoL external modules** (`OneWoW_QoL/Modules/external/*`, 34 modules, ~804 keys, locale
   files listed in the main `OneWoW_QoL.toc`; module-style header `local _, ns = ...` +
   `M = ns.ModuleRegistry:Current()` + `:Register(M._scope, …)` — `bin/locale_gen.py` now handles
   this header form, keeping it verbatim). Many koKR files are `"TEST"` GetStore placeholders or

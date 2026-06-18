@@ -283,7 +283,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["QUESTS_PROGRESS_ACTIVE"] = "Activa",
     ["QUESTS_PROGRESS_ACTIVE_CURRENT"] = "Activa (personaje actual)",
     ["QUESTS_PROGRESS_ACTIVE_ALL"] = "Activa (todos los personajes)",
-    ["QUESTS_PROGRESS_WARBAND"] = "Completada (Bandada de guerra)",
+    ["QUESTS_PROGRESS_WARBAND"] = "Completada (Banda guerrera)",
 
     ["ITEMSEARCH_TITLE"] = "Búsqueda de objetos",
     ["ITEMSEARCH_PLACEHOLDER"] = "Buscar un objeto...",
@@ -329,7 +329,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["ITEMSEARCH_ITEM_ID"] = "ID de objeto",
 
     ["ITEMSEARCH_LOC_BAGS"] = "Bolsas",
-    ["ITEMSEARCH_LOC_WARBAND"] = "Banco de bandada de guerra",
+    ["ITEMSEARCH_LOC_WARBAND"] = "Banco de la banda guerrera",
     ["ITEMSEARCH_LOC_AH"] = "Casa de subastas",
 
     ["ITEMSEARCH_SECTION_VALUE"] = "Valor",
