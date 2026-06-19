@@ -34,6 +34,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["MODULE_EXTRACTOR"] = "Extractor",
 
     ["MINIMAP_TOOLTIP_HINT"] = "Click to toggle OneWoW",
+    ["MINIMAP_MODULES_LOADED"] = "%d modules loaded",
     ["MINIMAP_RIGHT_CLICK"] = "Right-click for options",
 
     -- CopyPaste dialog (OneWoW.CopyPaste)

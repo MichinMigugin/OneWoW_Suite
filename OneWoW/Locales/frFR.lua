@@ -34,6 +34,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["MODULE_EXTRACTOR"] = "Extractor",
 
     ["MINIMAP_TOOLTIP_HINT"] = "Cliquez pour basculer OneWoW",
+    ["MINIMAP_MODULES_LOADED"] = "%d modules chargés",
     ["MINIMAP_RIGHT_CLICK"] = "Clic droit pour les options",
 
     ["COPYPASTE_HINT_COPY"] = "Appuyez sur Ctrl+C pour copier",

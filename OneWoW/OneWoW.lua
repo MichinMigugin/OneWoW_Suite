@@ -206,9 +206,9 @@ end
 _G["1WoW_OnAddonCompartmentEnter"] = function(_, button)
     GameTooltip:SetOwner(button, "ANCHOR_LEFT")
     GameTooltip:SetText("|cFFFFD1001WoW|r", 1, 1, 1)
-    local modCount = OneWoW.ModuleRegistry and OneWoW.ModuleRegistry:GetModuleCount() or 0
+    local modCount = OneWoW:GetLoadedModuleCount()
     if modCount > 0 then
-        GameTooltip:AddLine(modCount .. " modules loaded", 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(format(OneWoW.L["MINIMAP_MODULES_LOADED"], modCount), 0.7, 0.7, 0.7)
     end
     GameTooltip:AddLine(OneWoW.L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.7)
     GameTooltip:Show()

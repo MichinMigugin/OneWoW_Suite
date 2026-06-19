@@ -34,6 +34,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["MODULE_EXTRACTOR"] = "Extractor",
 
     ["MINIMAP_TOOLTIP_HINT"] = "點擊切換 OneWoW",
+    ["MINIMAP_MODULES_LOADED"] = "已載入 %d 個模組",
     ["MINIMAP_RIGHT_CLICK"] = "右鍵點擊查看選項",
 
     ["COPYPASTE_HINT_COPY"] = "按 Ctrl+C 複製",

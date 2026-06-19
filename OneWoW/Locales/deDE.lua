@@ -34,6 +34,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["MODULE_EXTRACTOR"] = "Extractor",
 
     ["MINIMAP_TOOLTIP_HINT"] = "Klicken, um OneWoW umzuschalten",
+    ["MINIMAP_MODULES_LOADED"] = "%d Module geladen",
     ["MINIMAP_RIGHT_CLICK"] = "Rechtsklick für Optionen",
 
     ["COPYPASTE_HINT_COPY"] = "Strg+C drücken zum Kopieren",

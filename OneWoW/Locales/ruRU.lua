@@ -34,6 +34,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["MODULE_EXTRACTOR"] = "Extractor",
 
     ["MINIMAP_TOOLTIP_HINT"] = "Нажмите, чтобы переключить OneWoW",
+    ["MINIMAP_MODULES_LOADED"] = "Загружено модулей: %d",
     ["MINIMAP_RIGHT_CLICK"] = "Правый клик для настроек",
 
     ["COPYPASTE_HINT_COPY"] = "Нажмите Ctrl+C для копирования",

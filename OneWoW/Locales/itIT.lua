@@ -34,6 +34,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["MODULE_EXTRACTOR"] = "Extractor",
 
     ["MINIMAP_TOOLTIP_HINT"] = "Clicca per attivare/disattivare OneWoW",
+    ["MINIMAP_MODULES_LOADED"] = "%d moduli caricati",
     ["MINIMAP_RIGHT_CLICK"] = "Clic destro per le opzioni",
 
     ["COPYPASTE_HINT_COPY"] = "Premi Ctrl+C per copiare",

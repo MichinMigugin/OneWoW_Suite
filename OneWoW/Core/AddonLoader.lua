@@ -603,9 +603,8 @@ end
 
 -- Authoritative list of suite load units the core knows about. Single source of
 -- truth for both the startup orchestrator (loads `loadPhase`-tagged entries) and
--- the load banner (reports any that are present). Detect-only entries carry no
--- `loadPhase`, so the orchestrator skips them: OneWoW_Utility_DevTool stays a
--- normal opt-in addon until migration step 5.
+-- the load banner (reports any that are present). Entries without a `loadPhase`
+-- are skipped by the orchestrator.
 -- `module` is the RegisterModule name for hub modules (used by the lazy-tab hook).
 -- `tabOrder` is the row-1 hub tab sort key (required on hub entries; load order
 -- remains array-driven). `stores` lists a parent's data-store load units; the
@@ -635,7 +634,7 @@ OneWoW.ModuleManifest = {
     { addon = "OneWoW_DirectDeposit",   display = "DirectDeposit", cmd = "/1wdd",  loadPhase = "login" },
     { addon = "OneWoW_ShoppingList",    display = "ShoppingList",  cmd = "/1wsl",  loadPhase = "login" },
     { addon = "OneWoW_Bags",            display = "Bags",          cmd = "/1wb",   loadPhase = "login" },
-    { addon = "OneWoW_Utility_DevTool", display = "DevTools",      cmd = "/1wdt" },
+    { addon = "OneWoW_Utility_DevTool", display = "DevTools",      cmd = "/1wdt",  loadPhase = "login" },
 }
 local Manifest = OneWoW.ModuleManifest
 
@@ -676,6 +675,21 @@ function OneWoW:GetAlwaysShowModules()
         end
     end
     return result
+end
+
+--- Count of currently-loaded suite root modules. Iterates ModuleManifest roots
+--- only, so it excludes core (`OneWoW`, not in the manifest) and every data-store
+--- unit (those live under a root's `stores`). Reflects live opt-out / LoD state.
+--- Drives the addon-compartment tooltip count.
+---@return number
+function OneWoW:GetLoadedModuleCount()
+    local n = 0
+    for _, m in ipairs(OneWoW.ModuleManifest) do
+        if m.addon and m.addon ~= "" and C_AddOns.IsAddOnLoaded(m.addon) then
+            n = n + 1
+        end
+    end
+    return n
 end
 
 -- Startup orchestrator. Tier-2 modules and data stores are `LoadOnDemand: 1`

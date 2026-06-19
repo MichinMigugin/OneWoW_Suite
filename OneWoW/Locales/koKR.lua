@@ -28,6 +28,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["MODULE_DEVTOOLS"] = "DevTools",
     ["MODULE_EXTRACTOR"] = "Extractor",
     ["MINIMAP_TOOLTIP_HINT"] = "클릭하여 OneWoW 전환",
+    ["MINIMAP_MODULES_LOADED"] = "%d개 모듈 로드됨",
     ["MINIMAP_RIGHT_CLICK"] = "우클릭하여 옵션 열기",
     ["COPYPASTE_HINT_COPY"] = "Ctrl+C를 눌러 복사하세요",
     ["COPYPASTE_HINT_COPY_MAC"] = "Cmd+C를 눌러 복사하세요",
