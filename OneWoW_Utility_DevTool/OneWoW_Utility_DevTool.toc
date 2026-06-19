@@ -6,14 +6,12 @@
 
 ## RequiredDeps: OneWoW
 ## OptionalDeps: !BugGrabber
+## LoadOnDemand: 1
 ## Category: OneWoW
 ## Group: OneWoW
 
 ## SavedVariables: OneWoW_UtilityDevTool_DB
 
-## AddonCompartmentFunc: 1WoW_UtilityDevTool_OnAddonCompartmentClick
-## AddonCompartmentFuncOnEnter: 1WoW_UtilityDevTool_OnAddonCompartmentEnter
-## AddonCompartmentFuncOnLeave: 1WoW_UtilityDevTool_OnAddonCompartmentLeave
 ## IconTexture: Interface\AddOns\OneWoW\Media\neutral-mini.png
 
 ## X-Website: https://wow2.xyz/

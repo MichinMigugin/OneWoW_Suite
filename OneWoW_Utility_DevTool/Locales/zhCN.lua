@@ -333,9 +333,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["MINIMAP_CTX_FALLBACK"] = "打开 DevTools",
     ["MSG_PRESS_CTRL_C"] = "按 Ctrl+C 复制，然后关闭窗口。",
     ["MSG_UI_NOT_LOADED"] = "界面尚未加载",
-    ["ADDON_COMPARTMENT_HINT"] = "点击以切换窗口",
-    ["ADDON_TOOLTIP_TITLE"] = "|cFFFFD100OneWoW|r - Utility: DevTool",
-
     -- Install Notice (shown on first load to remind users this is a developer addon)
     ["INSTALL_NOTICE_ADDON_TITLE"] = "|cFFFFD100OneWoW|r - Utility: |cFFFF0000DevTool|r",
     ["INSTALL_NOTICE_TITLE"] = "提示 - 这是一个开发者插件",

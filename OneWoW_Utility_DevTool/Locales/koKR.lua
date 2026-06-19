@@ -332,9 +332,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["MINIMAP_CTX_FALLBACK"] = "DevTools 열기",
     ["MSG_PRESS_CTRL_C"] = "Ctrl+C를 눌러 복사한 다음 창을 닫으세요.",
     ["MSG_UI_NOT_LOADED"] = "UI가 아직 로드되지 않았습니다",
-    ["ADDON_COMPARTMENT_HINT"] = "클릭하여 창 켜기/끄기",
-    ["ADDON_TOOLTIP_TITLE"] = "|cFFFFD100OneWoW|r - Utility: DevTool",
-
     -- Install Notice (shown on first load to remind users this is a developer addon)
     ["INSTALL_NOTICE_ADDON_TITLE"] = "|cFFFFD100OneWoW|r - Utility: |cFFFF0000DevTool|r",
     ["INSTALL_NOTICE_TITLE"] = "알림 - 이것은 개발자용 애드온입니다",

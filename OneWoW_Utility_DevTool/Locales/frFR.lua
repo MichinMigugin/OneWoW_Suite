@@ -332,9 +332,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["MINIMAP_CTX_FALLBACK"] = "Ouvrir DevTools",
     ["MSG_PRESS_CTRL_C"] = "Appuyez sur Ctrl+C pour copier, puis fermez la fenêtre.",
     ["MSG_UI_NOT_LOADED"] = "Interface pas encore chargée",
-    ["ADDON_COMPARTMENT_HINT"] = "Cliquez pour afficher/masquer la fenêtre",
-    ["ADDON_TOOLTIP_TITLE"] = "|cFFFFD100OneWoW|r - Utility: DevTool",
-
     -- Install Notice (shown on first load to remind users this is a developer addon)
     ["INSTALL_NOTICE_ADDON_TITLE"] = "|cFFFFD100OneWoW|r - Utility: |cFFFF0000DevTool|r",
     ["INSTALL_NOTICE_TITLE"] = "Attention – ceci est un addon pour développeurs",

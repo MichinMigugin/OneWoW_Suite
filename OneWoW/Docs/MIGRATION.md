@@ -14,7 +14,8 @@ folded into `ARCHITECTURE.md`.
 > Idempotent SV shape bridges kept where noted in code
 > (flat→`.global`, `BridgeLegacyDatabase`, Notes char-key consolidate,
 > Trackers Notes/CharDB drain). Assumes users have logged in on a recent build.
-> DevTool, AltTracker — still open below.
+> AltTracker — still open below. DevTool's in-repo work is done (step 10); only
+> the external CurseForge packaging items remain.
 
 ---
 
@@ -506,26 +507,36 @@ only 2 files moved):
 
 ---
 
-## 10. DevTool (partial)
+## 10. DevTool (in-repo done; external packaging remains)
 
 No ordering constraint. Can ship any time.
 
 **Done:** `RequiredDeps: OneWoW` (no longer `OneWoW_GUI` only). Lifecycle hooks
-from core when loaded.
+from core when loaded. Now `LoadOnDemand: 1` with `loadPhase = "login"` in the
+manifest, exactly like the other feature modules (orchestrator force-loads it
+when enabled and not opted out; soft opt-out / Recommended preset skip it
+reload-free). Its standalone AddonCompartment was removed so it matches the
+other modules — reachable via slash (`/1wdt`, `/dt`, …) and the OneWoW minimap
+right-click menu.
 
-**Remaining:**
+- [x] Tag `utility` in Manage Features so the recommended preset keeps it off
+  (`FirstRun.CATALOG` group `"utility"`; `ApplyRecommended` / the preset exclude
+  utilities).
+- [x] Convert to `LoadOnDemand: 1` like feature modules.
 
-- [ ] Fold into the suite package branding (single distributable).
-- [ ] Tag `utility` in Manage Features so the recommended preset keeps it off.
+**Remaining (external — CurseForge-side, not in this repo):**
+
+- [ ] Fold into the suite package branding (single distributable). In-repo TOC
+  branding (`X-Website`, `X-Category`, `IconTexture` -> core media) already
+  matches the suite; there is no in-repo packaging manifest to change.
 - [ ] Retire standalone CurseForge page.
-- [ ] **Decide:** convert to `LoadOnDemand: 1` like feature modules (orchestrator
-  skip, explicit enable) vs. stay auto-load when Blizzard-enabled.
 
 **Current TOC:**
 
 ```
 ## RequiredDeps: OneWoW
 ## OptionalDeps: !BugGrabber
+## LoadOnDemand: 1
 ```
 
 ---
@@ -542,10 +553,7 @@ roster documentation.
 - [x] `.cursor/rules/OneWoW-Suite-Architecture.mdc`
 - [x] `.cursor/skills/onewow-suite-architecture/SKILL.md`
 - [x] `WoW-Lua-Addon-Development.mdc` suite override blurb (§4.2) + specialist skill entry
-
-### Remaining (after step 7)
-
-- [ ] Revise `.cursor/rules/WoW-Lua-Addon-Development.mdc` §2.3 and the
+- [x] Revise `.cursor/rules/WoW-Lua-Addon-Development.mdc` §2.3 and the
   `onewow-gui-ui` / `onewow-database-api` skills: `local OneWoW_GUI = OneWoW_GUI`
   instead of the LibStub block.
 

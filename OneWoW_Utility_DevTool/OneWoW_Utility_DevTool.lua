@@ -563,18 +563,3 @@ SlashCmdList["ONEWOW_DEVTOOL"] = function(msg)
 
     Addon:ToggleMainWindow()
 end
-
-_G["1WoW_UtilityDevTool_OnAddonCompartmentClick"] = function()
-    Addon:ToggleMainWindow()
-end
-
-_G["1WoW_UtilityDevTool_OnAddonCompartmentEnter"] = function(_, button)
-    GameTooltip:SetOwner(button, "ANCHOR_LEFT")
-    GameTooltip:SetText(L["ADDON_TOOLTIP_TITLE"], 1, 1, 1)
-    GameTooltip:AddLine(L["ADDON_COMPARTMENT_HINT"], 0.7, 0.7, 0.7)
-    GameTooltip:Show()
-end
-
-_G["1WoW_UtilityDevTool_OnAddonCompartmentLeave"] = function()
-    GameTooltip:Hide()
-end
