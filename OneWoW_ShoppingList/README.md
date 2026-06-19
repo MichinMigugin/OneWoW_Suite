@@ -126,13 +126,13 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 OneWoW_ShoppingList works with these addons:
 
-- **OneWoW** — Core hub (required)
-- **OneWoW_QoL** — Quality of life features
-- **OneWoW_AltTracker** — Cross-character data
-- **OneWoW_Notes** — Note-taking system
-- **OneWoW_Bags** — Inventory management
-- **OneWoW_DirectDeposit** — Automatic gold management
-- **OneWoW_Catalog** — Game data reference (recommended for crafting features)
+- [OneWoW](../OneWoW/README.md) — Core hub (required)
+- [OneWoW_QoL](../OneWoW_QoL/README.md) — Quality of life features
+- [OneWoW_AltTracker](../OneWoW_AltTracker/README.md) — Cross-character data
+- [OneWoW_Notes](../OneWoW_Notes/README.md) — Note-taking system
+- [OneWoW_Bags](../OneWoW_Bags/README.md) — Inventory management
+- [OneWoW_DirectDeposit](../OneWoW_DirectDeposit/README.md) — Automatic gold management
+- [OneWoW_Catalog](../OneWoW_Catalog/README.md) — Game data reference (recommended for crafting features)
 
 See [TODO.md](TODO.md) for features that are planned or partially scaffolded but not yet exposed in the UI.
 

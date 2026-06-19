@@ -54,10 +54,10 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Part of the OneWoW Suite
 
-- **OneWoW_Catalog** — Main Catalog addon (required)
-- **OneWoW_CatalogData_Journal** — Instance and encounter data
-- **OneWoW_CatalogData_Tradeskills** — Profession and recipe data
-- **OneWoW_CatalogData_Vendors** — Vendor and item data
+- [OneWoW_Catalog](../OneWoW_Catalog/README.md) — Main Catalog addon (required)
+- [OneWoW_CatalogData_Journal](../OneWoW_CatalogData_Journal/README.md) — Instance and encounter data
+- [OneWoW_CatalogData_Tradeskills](../OneWoW_CatalogData_Tradeskills/README.md) — Profession and recipe data
+- [OneWoW_CatalogData_Vendors](../OneWoW_CatalogData_Vendors/README.md) — Vendor and item data
 
 ---
 

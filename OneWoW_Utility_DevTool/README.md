@@ -197,6 +197,10 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for translation and code contribution 
 - **Website:** https://wow2.xyz/
 - **Report issues:** Through Discord community or website
 
+## Part of the OneWoW Suite
+
+- [OneWoW](../OneWoW/README.md) — Core hub (required)
+
 ---
 
 **Authors:** OneWoW Dev Team (ricky, kellewic)  

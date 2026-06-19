@@ -119,13 +119,13 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md).
 ## Part of the OneWoW Suite
 
 OneWoW_QoL is designed to work alongside other OneWoW addons:
-- **OneWoW** - Core hub (required)
-- **OneWoW_AltTracker** - Track all your characters
-- **OneWoW_Notes** - Note-taking system
-- **OneWoW_Bags** - Inventory management
-- **OneWoW_ShoppingList** - Shopping and crafting lists
-- **OneWoW_DirectDeposit** - Automatic gold management
-- **OneWoW_Catalog** - Game data reference
+- [OneWoW](../OneWoW/README.md) - Core hub (required)
+- [OneWoW_AltTracker](../OneWoW_AltTracker/README.md) - Track all your characters
+- [OneWoW_Notes](../OneWoW_Notes/README.md) - Note-taking system
+- [OneWoW_Bags](../OneWoW_Bags/README.md) - Inventory management
+- [OneWoW_ShoppingList](../OneWoW_ShoppingList/README.md) - Shopping and crafting lists
+- [OneWoW_DirectDeposit](../OneWoW_DirectDeposit/README.md) - Automatic gold management
+- [OneWoW_Catalog](../OneWoW_Catalog/README.md) - Game data reference
 
 ---
 

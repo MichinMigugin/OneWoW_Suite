@@ -102,13 +102,13 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md).
 ## Part of the OneWoW Suite
 
 OneWoW_Bags works with these addons:
-- **OneWoW** - Core hub (required)
-- **OneWoW_QoL** - Quality of life features
-- **OneWoW_AltTracker** - Track all your characters
-- **OneWoW_Notes** - Note-taking system
-- **OneWoW_ShoppingList** - Shopping and crafting lists
-- **OneWoW_DirectDeposit** - Automatic gold management
-- **OneWoW_Catalog** - Game data reference
+- [OneWoW](../OneWoW/README.md) - Core hub (required)
+- [OneWoW_QoL](../OneWoW_QoL/README.md) - Quality of life features
+- [OneWoW_AltTracker](../OneWoW_AltTracker/README.md) - Track all your characters
+- [OneWoW_Notes](../OneWoW_Notes/README.md) - Note-taking system
+- [OneWoW_ShoppingList](../OneWoW_ShoppingList/README.md) - Shopping and crafting lists
+- [OneWoW_DirectDeposit](../OneWoW_DirectDeposit/README.md) - Automatic gold management
+- [OneWoW_Catalog](../OneWoW_Catalog/README.md) - Game data reference
 
 ---
 

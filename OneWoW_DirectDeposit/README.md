@@ -84,6 +84,11 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Part of the OneWoW Suite
 
+- [OneWoW](../OneWoW/README.md) - Core hub (required)
+- [OneWoW_AltTracker](../OneWoW_AltTracker/README.md) - Warband bank integration
+- [OneWoW_Bags](../OneWoW_Bags/README.md) - Inventory management
+- [OneWoW_ShoppingList](../OneWoW_ShoppingList/README.md) - Shopping and crafting lists
+- [OneWoW_Catalog](../OneWoW_Catalog/README.md) - Game data reference
 
 **Author:** MichinMuggin / Ricky
 

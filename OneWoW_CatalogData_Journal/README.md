@@ -67,10 +67,10 @@ This addon requires:
 ## Part of the OneWoW Suite
 
 This data addon is part of the OneWoW Catalog system:
-- **OneWoW_Catalog** - Main Catalog addon (required)
-- **OneWoW_CatalogData_Tradeskills** - Profession and recipe data
-- **OneWoW_CatalogData_Vendors** - Vendor and item data
-- **OneWoW_CatalogData_Quests** - Quest database and completion tracking
+- [OneWoW_Catalog](../OneWoW_Catalog/README.md) - Main Catalog addon (required)
+- [OneWoW_CatalogData_Tradeskills](../OneWoW_CatalogData_Tradeskills/README.md) - Profession and recipe data
+- [OneWoW_CatalogData_Vendors](../OneWoW_CatalogData_Vendors/README.md) - Vendor and item data
+- [OneWoW_CatalogData_Quests](../OneWoW_CatalogData_Quests/README.md) - Quest database and completion tracking
 
 ## Contributing
 
