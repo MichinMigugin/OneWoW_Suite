@@ -122,19 +122,9 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 **Report issues:** Through the Discord community or the website above.
 
-## Part of the OneWoW Suite
+## OneWoW Suite
 
-OneWoW_ShoppingList works with these addons:
-
-- [OneWoW](../OneWoW/README.md) — Core hub (required)
-- [OneWoW_QoL](../OneWoW_QoL/README.md) — Quality of life features
-- [OneWoW_AltTracker](../OneWoW_AltTracker/README.md) — Cross-character data
-- [OneWoW_Notes](../OneWoW_Notes/README.md) — Note-taking system
-- [OneWoW_Bags](../OneWoW_Bags/README.md) — Inventory management
-- [OneWoW_DirectDeposit](../OneWoW_DirectDeposit/README.md) — Automatic gold management
-- [OneWoW_Catalog](../OneWoW_Catalog/README.md) — Game data reference (recommended for crafting features)
-
-See [TODO.md](TODO.md) for features that are planned or partially scaffolded but not yet exposed in the UI.
+Part of the [OneWoW Suite](../README.md). See the suite README for the full addon catalog and install guide.
 
 ---
 
@@ -142,4 +132,4 @@ See [TODO.md](TODO.md) for features that are planned or partially scaffolded but
 
 **Website:** https://wow2.xyz/
 
-**All rights reserved. Part of the OneWoW Suite.**
+**All rights reserved.**

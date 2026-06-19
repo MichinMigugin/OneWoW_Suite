@@ -1,5 +1,7 @@
 # OneWoW Suite — Documentation Index
 
+Player-facing suite overview and addon catalog: [README.md](../../README.md) (repo root).
+
 Contributor and integrator documentation for the suite.
 
 ## Core hub (`OneWoW`)
@@ -26,12 +28,14 @@ Contributor and integrator documentation for the suite.
 
 | Document | Contents |
 |----------|----------|
+| [README.md](../../README.md) | Suite overview, addon catalog, quick start |
 | [CONTRIBUTING.md](../../CONTRIBUTING.md) | Suite-wide contribution guide (code, locales, PR process) |
 
 ## Conventions
 
 | Location | Audience | Content |
 |----------|----------|---------|
+| Repo `README.md` | Players | Suite overview, addon catalog, quick start |
 | `ADDON/README.md` | Players | What the addon does, install, slash commands |
 | `ADDON/Docs/` | Contributors | Architecture, APIs, data models |
 | Repo `CONTRIBUTING.md` | Contributors | How to contribute to any load unit |

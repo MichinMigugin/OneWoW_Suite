@@ -82,16 +82,14 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 **Report issues:** Through Discord community or our website
 
-## Part of the OneWoW Suite
+## OneWoW Suite
 
-- [OneWoW](../OneWoW/README.md) - Core hub (required)
-- [OneWoW_AltTracker](../OneWoW_AltTracker/README.md) - Warband bank integration
-- [OneWoW_Bags](../OneWoW_Bags/README.md) - Inventory management
-- [OneWoW_ShoppingList](../OneWoW_ShoppingList/README.md) - Shopping and crafting lists
-- [OneWoW_Catalog](../OneWoW_Catalog/README.md) - Game data reference
+Part of the [OneWoW Suite](../README.md). See the suite README for the full addon catalog and install guide.
+
+---
 
 **Author:** MichinMuggin / Ricky
 
 **Website:** https://wow2.xyz/
 
-**All rights reserved. Part of the OneWoW Suite.**
+**All rights reserved.**

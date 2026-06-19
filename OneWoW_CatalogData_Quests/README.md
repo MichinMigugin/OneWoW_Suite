@@ -52,12 +52,9 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 **Report issues:** Through Discord community or our website
 
-## Part of the OneWoW Suite
+## OneWoW Suite
 
-- [OneWoW_Catalog](../OneWoW_Catalog/README.md) — Main Catalog addon (required)
-- [OneWoW_CatalogData_Journal](../OneWoW_CatalogData_Journal/README.md) — Instance and encounter data
-- [OneWoW_CatalogData_Tradeskills](../OneWoW_CatalogData_Tradeskills/README.md) — Profession and recipe data
-- [OneWoW_CatalogData_Vendors](../OneWoW_CatalogData_Vendors/README.md) — Vendor and item data
+Part of the [OneWoW Suite](../README.md). See the suite README for the full addon catalog and install guide.
 
 ---
 
@@ -65,4 +62,4 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 **Website:** https://wow2.xyz/
 
-**All rights reserved. Part of the OneWoW Suite.**
+**All rights reserved.**

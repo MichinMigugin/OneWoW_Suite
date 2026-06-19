@@ -19,10 +19,9 @@ Technical reference: [Docs/ARCHITECTURE.md](Docs/ARCHITECTURE.md). Suite store r
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
-## Part of the OneWoW Suite
+## OneWoW Suite
 
-- [OneWoW_AltTracker](../OneWoW_AltTracker/README.md) — Main UI
-- [OneWoW](../OneWoW/README.md) — Core hub
+Part of the [OneWoW Suite](../README.md). See the suite README for the full addon catalog and install guide.
 
 ---
 
@@ -30,4 +29,4 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 **Website:** https://wow2.xyz/
 
-**All rights reserved. Part of the OneWoW Suite.**
+**All rights reserved.**

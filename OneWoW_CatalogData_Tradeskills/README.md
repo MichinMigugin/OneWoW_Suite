@@ -66,13 +66,9 @@ This addon requires:
 
 **Report issues:** Through Discord community or our website
 
-## Part of the OneWoW Suite
+## OneWoW Suite
 
-This data addon is part of the OneWoW Catalog system:
-- [OneWoW_Catalog](../OneWoW_Catalog/README.md) - Main Catalog addon (required)
-- [OneWoW_CatalogData_Journal](../OneWoW_CatalogData_Journal/README.md) - Instance and encounter data
-- [OneWoW_CatalogData_Vendors](../OneWoW_CatalogData_Vendors/README.md) - Vendor and item data
-- [OneWoW_CatalogData_Quests](../OneWoW_CatalogData_Quests/README.md) - Quest database
+Part of the [OneWoW Suite](../README.md). See the suite README for the full addon catalog and install guide.
 
 ## Contributing
 
@@ -84,4 +80,4 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 **Website:** https://wow2.xyz/
 
-**All rights reserved. Part of the OneWoW Suite.**
+**All rights reserved.**

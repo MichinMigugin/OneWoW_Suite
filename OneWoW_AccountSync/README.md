@@ -54,3 +54,11 @@ fyne-cross darwin -icon icon.png
 5. Check which SavedVariables files to include
 6. Choose Merge or Copy mode
 7. Click **Sync Now**
+
+## OneWoW Suite
+
+Desktop companion for the [OneWoW Suite](../README.md) — syncs in-game addon SavedVariables across Battle.net accounts. See the suite README for WoW addons in this package.
+
+---
+
+**All rights reserved.**

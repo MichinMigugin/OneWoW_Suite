@@ -1,6 +1,6 @@
 # OneWoW - Utility: DevTool
 
-**Developer tools for World of Warcraft addon development.** Inspect frames, debug events, monitor performance, browse globals and enums, browse textures and fonts, edit Lua snippets, and explore the game's UI structure. Part of the OneWoW Suite.
+**Developer tools for World of Warcraft addon development.** Inspect frames, debug events, monitor performance, browse globals and enums, browse textures and fonts, edit Lua snippets, and explore the game's UI structure. Part of the [OneWoW Suite](../README.md).
 
 ---
 
@@ -197,11 +197,11 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for translation and code contribution 
 - **Website:** https://wow2.xyz/
 - **Report issues:** Through Discord community or website
 
-## Part of the OneWoW Suite
+## OneWoW Suite
 
-- [OneWoW](../OneWoW/README.md) — Core hub (required)
+Part of the [OneWoW Suite](../README.md). See the suite README for the full addon catalog and install guide.
 
 ---
 
 **Authors:** OneWoW Dev Team (ricky, kellewic)  
-**Part of the OneWoW Suite**
+**All rights reserved.**
