@@ -65,27 +65,5 @@ function ns:InitializeDatabase()
         defaults = ns.DatabaseDefaults,
     })
 
-    DB:RunMigrations(db, {
-        { version = 1, name = "cleanup_legacy_root_keys", run = function(d)
-            local keepRootKeys = {
-                global = true,
-                chars = true,
-                realms = true,
-                factions = true,
-                classes = true,
-                specs = true,
-                presets = true,
-                _activePreset = true,
-            }
-            local root = d.root
-            if not root then return end
-            for key in pairs(root) do
-                if not keepRootKeys[key] then
-                    root[key] = nil
-                end
-            end
-        end },
-    })
-
     ns.addon.db = db
 end

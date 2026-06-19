@@ -40,7 +40,6 @@ Core\TrackerData.lua
 Core\TrackerEngine.lua
 Core\TrackerPresets.lua
 Core\TrackerMap.lua
-Core\TrackerMigration.lua
 
 # Main
 OneWoW_Trackers.lua

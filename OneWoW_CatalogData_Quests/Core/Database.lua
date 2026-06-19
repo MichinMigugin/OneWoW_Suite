@@ -55,37 +55,6 @@ function ns:InitializeDatabase()
         defaults = ns.DatabaseDefaults,
     })
 
-    DB:RunMigrations(ns.db, {
-        { version = 1, name = "cleanup_legacy_root_keys", run = function(d)
-            local keepRootKeys = {
-                global = true,
-                chars = true,
-                realms = true,
-                factions = true,
-                classes = true,
-                specs = true,
-                presets = true,
-                _activePreset = true,
-            }
-            local root = d.root
-            if not root then return end
-            for key in pairs(root) do
-                if not keepRootKeys[key] then
-                    root[key] = nil
-                end
-            end
-        end },
-        { version = 2, name = "consolidate_character_keys", run = function(d)
-            local migrated = DB:ConsolidateCharacterKeys(d.global.completion)
-            if migrated > 0 then
-                C_Timer.After(5, function()
-                    print("|cFFFFD100OneWoW Catalog (Quests):|r canonicalized "
-                        .. migrated .. " legacy character key(s).")
-                end)
-            end
-        end },
-    })
-
     function ns.GetDB()
         return ns.db.global
     end

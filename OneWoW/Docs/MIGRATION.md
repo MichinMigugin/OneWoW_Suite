@@ -6,6 +6,16 @@ Active checklist for work not yet complete. **Implemented architecture** lives i
 Delete this file when all steps below are done and their target-state details are
 folded into `ARCHITECTURE.md`.
 
+> **Note (migration cleanup, not a checklist step):** Completed `RunMigrations`
+> collapse for **OneWoW** (core v1–v5), **OneWoW_QoL** (4), **OneWoW_Notes**
+> (6), **OneWoW_Trackers** (5 + deleted `TrackerMigration.lua`), and
+> **OneWoW_Bags** (18). Also **Catalog** + **CatalogData** ×4 (1–3 steps each)
+> and **DirectDeposit** (4).
+> Idempotent SV shape bridges kept where noted in code
+> (flat→`.global`, `BridgeLegacyDatabase`, Notes char-key consolidate,
+> Trackers Notes/CharDB drain). Assumes users have logged in on a recent build.
+> **7.2**, DevTool, AltTracker — still open below.
+
 ---
 
 ## Target state: core services vs. movable content
