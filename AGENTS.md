@@ -53,7 +53,10 @@ Condensed from [`.cursor/rules/WoW-Lua-Addon-Development.mdc`](.cursor/rules/WoW
   pass them to display APIs but cannot branch on them, concatenate them, or call
   `tonumber()` on them from addon (tainted) code.
 - **Taint:** all addon code is tainted. Never overwrite Blizzard globals — use
-  `hooksecurefunc`. Gate secure-frame changes behind `not InCombatLockdown()`.
+  `hooksecurefunc`. Gate secure-frame changes behind
+  `not OneWoW.Restriction.IsAddonRestricted()` — never call `InCombatLockdown` /
+  `C_RestrictedActions.*` directly (use `OneWoW.Restriction.IsInCombat()` for
+  combat-only UX/perf gates). Enforced by the `restriction-funnel` hook.
 - **Timers:** prefer `C_Timer.After` / `C_Timer.NewTicker` over `OnUpdate`.
 - **Menus:** use `MenuUtil` (12.0+), not the deprecated `UIDropDownMenu`.
 - **Tooltips:** the 10.0.2 rewrite removed `OnTooltipSetItem`/`OnTooltipSetSpell`

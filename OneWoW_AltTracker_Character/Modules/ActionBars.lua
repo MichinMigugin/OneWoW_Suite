@@ -650,7 +650,7 @@ function Module:GetAllSetNames()
 end
 
 local function RestoreBars(mod, barsData, petBarData, options)
-    if InCombatLockdown() then
+    if OneWoW.Restriction.IsAddonRestricted() then
         print("|cFFFFD100OneWoW|r AltTracker: Cannot restore action bars while in combat")
         return false
     end
@@ -1238,7 +1238,7 @@ local function PickupActionTable(actionData, flyouts, mountCache)
 end
 
 function Module:RestoreActionSlot(slotID, actionData, flyouts, mountCache, spellOverride)
-    if InCombatLockdown() then
+    if OneWoW.Restriction.IsAddonRestricted() then
         return false, "In combat"
     end
 
@@ -1259,7 +1259,7 @@ function Module:RestoreActionSlot(slotID, actionData, flyouts, mountCache, spell
 end
 
 function Module:RestorePetActionSlot(slotID, actionData)
-    if InCombatLockdown() then
+    if OneWoW.Restriction.IsAddonRestricted() then
         return false, "In combat"
     end
 

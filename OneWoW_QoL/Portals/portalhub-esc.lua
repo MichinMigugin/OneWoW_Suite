@@ -54,7 +54,7 @@ end
 
 function EscMenu:HookGameMenu()
 	hooksecurefunc("ToggleGameMenu", function()
-		if not GameMenuFrame:IsShown() or InCombatLockdown() then return end
+		if not GameMenuFrame:IsShown() or OneWoW.Restriction.IsAddonRestricted() then return end
 		if OneWoW.db.global.portalHub and OneWoW.db.global.portalHub.escEnabled then
 			EscMenu:ShowPortalFrames()
 		else
@@ -201,7 +201,7 @@ function EscMenu:ShowPortalFrames()
 
 	local function deferredSync()
 		if not GameMenuFrame or not GameMenuFrame:IsShown() then return end
-		if InCombatLockdown() then return end
+		if OneWoW.Restriction.IsAddonRestricted() then return end
 		local hub = OneWoW.db and OneWoW.db.global and OneWoW.db.global.portalHub
 		if not hub or not hub.escEnabled then return end
 		EscMenu:SyncEscLayout()

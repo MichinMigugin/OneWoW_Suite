@@ -16,7 +16,6 @@ local BagView = OneWoW_Bags.BagView
 local CategoryView = OneWoW_Bags.CategoryView
 
 local print, pcall = print, pcall
-local InCombatLockdown = InCombatLockdown
 
 OneWoW_Bags.GUI = OneWoW_Bags.GUI or {}
 local GUI = OneWoW_Bags.GUI
@@ -110,7 +109,7 @@ function GUI:InitMainWindow()
 end
 
 function GUI:CleanupAllViews()
-    if InCombatLockdown() then
+    if OneWoW.Restriction.IsAddonRestricted() then
         needsCleanupAfterCombat = true
         return
     end

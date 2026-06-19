@@ -10,7 +10,7 @@ ns.UI.Dialog.openDialogs = ns.UI.Dialog.openDialogs or {}
 ns.UI.Dialog.currentFrameLevel = ns.UI.Dialog.currentFrameLevel or 100
 
 function ns.UI.Dialog.BringToFront(dialog)
-    if not dialog or InCombatLockdown() then return end
+    if not dialog or OneWoW.Restriction.IsInCombat() then return end
     local strata = dialog:GetFrameStrata()
     if strata == "MEDIUM" or strata == "HIGH" then
         dialog:Raise()
@@ -70,13 +70,13 @@ function ns.UI.Dialog.Create(config)
     end
 
     if cachedDialog and cachedDialog:IsShown() then
-        if not InCombatLockdown() then cachedDialog:Raise() end
+        if not OneWoW.Restriction.IsInCombat() then cachedDialog:Raise() end
         return cachedDialog
     end
 
     if cachedDialog then
         cachedDialog:Show()
-        if not InCombatLockdown() then cachedDialog:Raise() end
+        if not OneWoW.Restriction.IsInCombat() then cachedDialog:Raise() end
         return cachedDialog
     end
 

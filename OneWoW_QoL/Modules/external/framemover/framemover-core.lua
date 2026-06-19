@@ -170,7 +170,7 @@ function FM:RestorePosition(frameName)
     if not db.centerX or not db.centerY then return false end
 
     local frame = state.frame
-    if InCombatLockdown() and frame:IsProtected() then
+    if OneWoW.Restriction.IsAddonRestricted() and frame:IsProtected() then
         self:QueueForCombatEnd(function() FM:RestorePosition(frameName) end)
         return false
     end
@@ -199,7 +199,7 @@ function FM:RestoreScale(frameName)
     if not db.scale then return false end
 
     local frame = state.frame
-    if InCombatLockdown() and frame:IsProtected() then
+    if OneWoW.Restriction.IsAddonRestricted() and frame:IsProtected() then
         self:QueueForCombatEnd(function() FM:RestoreScale(frameName) end)
         return false
     end
@@ -211,7 +211,7 @@ end
 function FM:AdjustScale(frameName, frame, delta)
     if not self.active then return end
     if not self:IsFrameEnabled(frameName) then return end
-    if InCombatLockdown() and frame:IsProtected() then return end
+    if OneWoW.Restriction.IsAddonRestricted() and frame:IsProtected() then return end
 
     local oldScale = frame:GetScale()
     local newScale = oldScale + (delta > 0 and SCALE_STEP or -SCALE_STEP)
@@ -256,7 +256,7 @@ function FM:ResetAllScales()
         fdb.scale = nil
         local state = self.frameStates[frameName]
         if state and state.frame then
-            if not (InCombatLockdown() and state.frame:IsProtected()) then
+            if not (OneWoW.Restriction.IsAddonRestricted() and state.frame:IsProtected()) then
                 state.frame:SetScale(1.0)
             end
         end
@@ -271,7 +271,7 @@ function FM:ResetFrame(frameName)
     local state = self.frameStates[frameName]
     if state then
         state.dragged = false
-        if state.frame and not (InCombatLockdown() and state.frame:IsProtected()) then
+        if state.frame and not (OneWoW.Restriction.IsAddonRestricted() and state.frame:IsProtected()) then
             state.frame:SetScale(1.0)
         end
     end
@@ -314,7 +314,7 @@ function FM:MakeMovable(frame, frameName)
         if (special and special.forceShift) or FM:RequireShift() then
             if not IsShiftKeyDown() then return end
         end
-        if InCombatLockdown() and f:IsProtected() then return end
+        if OneWoW.Restriction.IsAddonRestricted() and f:IsProtected() then return end
         if special and special.onDragStart then special.onDragStart() end
         f:StartMoving()
         state.dragging = true
@@ -480,7 +480,7 @@ function FM:ProcessFrame(frameName)
     local frame = self:ResolveFrame(frameName)
     if not frame then return false end
 
-    if InCombatLockdown() and frame:IsProtected() then
+    if OneWoW.Restriction.IsAddonRestricted() and frame:IsProtected() then
         self:QueueForCombatEnd(function() FM:ProcessFrame(frameName) end)
         return false
     end

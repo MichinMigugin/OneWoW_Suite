@@ -324,6 +324,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 | No raw `LoadAddOn` outside the loader funnel (§3.8) | `bin/check_no_raw_loadaddon.py` (pre-commit `no-raw-loadaddon`) |
 | No suite-internal `OptionalDeps` | `bin/check_toc_optional_deps.py` (pre-commit `no-suite-internal-optionaldeps`) |
 | No direct `db.global.settings` access (§8.5) | `bin/check_no_settings_bypass.py` (pre-commit `no-settings-bypass`) |
+| No direct combat/restriction API calls (§8.6) | `bin/check_no_restriction_bypass.py` (pre-commit `restriction-funnel`) |
 | No cross-family store global reads | `bin/check_no_data_manager_bypass.py` (phased; warn-only — see hook docstring) |
 | No `_G.literal` access | `bin/check_no_g_literal.py` |
 | Agent guidance | `.cursor/rules/OneWoW-Suite-Architecture.mdc`, `onewow-suite-architecture` skill |
@@ -736,6 +737,32 @@ obtained from `GetFeatureSettings`.
 flags) lives in its own `db.global.externalTooltipSync` root, not in settings —
 relocated by a versioned `DB:RunMigrations` step in `Core/Database.lua`.
 
+### 8.6 Restriction funnel (`OneWoW.Restriction`)
+
+Every combat-lockdown and addon-restriction check routes through
+`OneWoW.Restriction` (`Core/Restriction.lua`). Calling `InCombatLockdown`,
+`C_RestrictedActions.GetAddOnRestrictionState`, or
+`C_RestrictedActions.IsAddOnRestrictionActive` directly is banned everywhere
+except `Restriction.lua` itself — enforced by the `restriction-funnel`
+pre-commit hook (§3.10; escape hatch `-- noqa: restriction-funnel`).
+
+Two methods, picked by intent:
+
+- **`IsAddonRestricted()`** — true in combat lockdown **or** while any reviewed
+  restriction type is active/activating. Gate secure-frame mutations and other
+  protected actions behind this.
+- **`IsInCombat()`** — true in combat lockdown only. For combat-only UX/perf
+  gates (fade, deferral, suppression) that are not about secure-frame safety.
+
+The restriction-type set is an **explicit, reviewed allowlist**
+(`RESTRICTED_ACTION_TYPES`: `Combat`, `Encounter`, `ChallengeMode`, `PvPMatch`,
+`Map`), listed by name rather than iterated over `Enum.AddOnRestrictionType` so
+a type added by a future patch is **not** silently inherited — it must be opted
+in on purpose. `Chat` (addon comms, added 12.0.5) is intentionally excluded.
+
+`Restriction.IsSecret(value)` (the Midnight secret-value guard) lives in the
+same module.
+
 ---
 
 ## 9. Caveats
@@ -760,6 +787,7 @@ relocated by a versioned `DB:RunMigrations` step in `Core/Database.lua`.
 | `OneWoW/Core/StoreBootstrap.lua` | `OneWoW:BootStore` for data stores |
 | `OneWoW/Core/ModuleRegistry.lua` | Hub tab/module registration |
 | `OneWoW/Core/SettingsFeatureRegistry.lua` | Settings funnel: catalog, storage-path resolution, change notification (§8.5) |
+| `OneWoW/Core/Restriction.lua` | Combat/restriction funnel + Midnight secret-value guard (§8.6) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
 | `OneWoW/UI/t-home.lua` | Home tab: read-only status + live refresh |
 | `OneWoW/UI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |
@@ -768,3 +796,4 @@ relocated by a versioned `DB:RunMigrations` step in `Core/Database.lua`.
 | `bin/check_suite_lifecycle.py` | Pre-commit: lifecycle `RegisterEvent` ban |
 | `bin/check_toc_optional_deps.py` | Pre-commit: suite-internal OptionalDeps ban |
 | `bin/check_no_settings_bypass.py` | Pre-commit: direct `db.global.settings` access ban |
+| `bin/check_no_restriction_bypass.py` | Pre-commit: direct combat/restriction API ban (§8.6) |

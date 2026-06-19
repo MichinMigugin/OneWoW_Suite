@@ -308,7 +308,7 @@ end
 
 function CE:ShouldShowAllowedByCombatRules()
     local settings = self:GetSettings()
-    local inCombat = InCombatLockdown() or UnitAffectingCombat("player")
+    local inCombat = OneWoW.Restriction.IsInCombat() or UnitAffectingCombat("player")
     local inInst, t = IsInInstance()
     local inInstance = inInst and (t == "party" or t == "raid" or t == "pvp" or t == "arena" or t == "scenario")
 
@@ -320,7 +320,7 @@ end
 function CE:UpdateAlpha()
     if not mainFrame then return end
     local settings = self:GetSettings()
-    local inCombat = InCombatLockdown()
+    local inCombat = OneWoW.Restriction.IsInCombat()
     local inInst, t = IsInInstance()
     local inInstance = inInst and (t == "party" or t == "raid" or t == "pvp" or t == "arena" or t == "scenario")
     local alpha = (inCombat or inInstance) and (settings.combatAlpha or 1.0) or (settings.outOfCombatAlpha or 1.0)
@@ -329,7 +329,7 @@ end
 
 function CE:GetCursorAlpha()
     local settings = self:GetSettings()
-    local inCombat = InCombatLockdown()
+    local inCombat = OneWoW.Restriction.IsInCombat()
     local inInst, t = IsInInstance()
     local inInstance = inInst and (t == "party" or t == "raid" or t == "pvp" or t == "arena" or t == "scenario")
     return (inCombat or inInstance) and (settings.combatAlpha or 1.0) or (settings.outOfCombatAlpha or 1.0)
@@ -372,7 +372,7 @@ function CE:UpdateMouseTrail()
         trailPointPool[#trailPointPool + 1] = old
     end
 
-    local inCombat = InCombatLockdown()
+    local inCombat = OneWoW.Restriction.IsInCombat()
     local inInst, t = IsInInstance()
     local inInstance = inInst and (t == "party" or t == "raid" or t == "pvp" or t == "arena" or t == "scenario")
     local alpha    = (inCombat or inInstance) and (settings.combatAlpha or 1.0) or (settings.outOfCombatAlpha or 1.0)

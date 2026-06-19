@@ -538,7 +538,7 @@ function BagBarModule:UpdateBar()
         HideChrome()
         return
     end
-    if InCombatLockdown() then
+    if OneWoW.Restriction.IsAddonRestricted() then
         self.needsUpdate = true
         return
     end

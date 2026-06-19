@@ -1339,7 +1339,7 @@ function OneWoW_Bags:HookBlizzardBags()
     self.bindingFrame = bindingFrame
 
     local function SetupBindingOverrides()
-        if InCombatLockdown() then
+        if OneWoW.Restriction.IsAddonRestricted() then
             bindingFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
             return
         end

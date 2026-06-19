@@ -6,7 +6,6 @@ local ADDON_NAME, OneWoW = ...
 local OneWoW_GUI = OneWoW_GUI
 
 local C_AddOns = C_AddOns
-local InCombatLockdown = InCombatLockdown
 local CreateFrame = CreateFrame
 local ipairs = ipairs
 local tinsert = tinsert
@@ -396,7 +395,7 @@ function OneWoW:EnsureLoaded(name, opts)
         self:TraceRecord("ensureLoaded.skip", name, { reason = "OPTED_OUT_PARENT" })
         return false, "OPTED_OUT"
     end
-    if opts and opts.deferInCombat and InCombatLockdown() then
+    if opts and opts.deferInCombat and OneWoW.Restriction.IsInCombat() then
         self:TraceRecord("ensureLoaded.skip", name, { reason = "COMBAT" })
         return false, "COMBAT"
     end

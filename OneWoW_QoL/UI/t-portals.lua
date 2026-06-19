@@ -436,7 +436,7 @@ function ns.UI.CreatePortalsTab(parent)
 	end
 
 	ShowCategory = function(categoryID, categoryName)
-		if InCombatLockdown() then return end
+		if OneWoW.Restriction.IsAddonRestricted() then return end
 		selectedCategory = categoryID
 		selectedCategoryName = categoryName
 		split.detailTitle:SetText(categoryName)

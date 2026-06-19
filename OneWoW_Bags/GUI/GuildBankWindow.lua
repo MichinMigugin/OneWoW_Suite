@@ -14,7 +14,6 @@ local GuildBankLog = OneWoW_Bags.GuildBankLog
 
 local pcall, print = pcall, print
 local ipairs = ipairs
-local InCombatLockdown = InCombatLockdown
 local C_Timer = C_Timer
 local C_PlayerInteractionManager = C_PlayerInteractionManager
 
@@ -121,7 +120,7 @@ function GuildBankGUI:InitMainWindow()
 end
 
 function GuildBankGUI:CleanupAllViews()
-    if InCombatLockdown() then
+    if OneWoW.Restriction.IsAddonRestricted() then
         needsCleanupAfterCombat = true
         return
     end

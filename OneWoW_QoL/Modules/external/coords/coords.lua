@@ -412,7 +412,7 @@ function CoordsModule:OnEnable()
     end)
 
     self._hidden = false
-    self._inCombat = InCombatLockdown()
+    self._inCombat = OneWoW.Restriction.IsInCombat()
     self:RebuildLayout()
     self:RegisterEvents()
     OneWoW_QoL:RegisterEnteringWorldHandler("coords", function()

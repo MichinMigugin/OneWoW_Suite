@@ -244,12 +244,25 @@ end
   btn:SetAttribute("spell", "Flash Heal")
   ```
   You **cannot** call `SetAttribute` on secure frames during combat.
-- Use `InCombatLockdown()` to check before modifying secure frames:
+- **Restriction funnel (mandatory).** Never call `InCombatLockdown`,
+  `C_RestrictedActions.GetAddOnRestrictionState`, or
+  `C_RestrictedActions.IsAddOnRestrictionActive` directly — route every
+  combat/restriction check through `OneWoW.Restriction`:
+  - `OneWoW.Restriction.IsAddonRestricted()` — gate secure-frame mutations and
+    other protected actions (covers combat lockdown **and** the reviewed
+    instanced-content restriction types: Combat/Encounter/ChallengeMode/PvPMatch/Map).
+  - `OneWoW.Restriction.IsInCombat()` — combat-only UX/perf gates (fade,
+    deferral, suppression) that are not about secure-frame safety.
+
   ```lua
-  if not InCombatLockdown() then
+  if not OneWoW.Restriction.IsAddonRestricted() then
       secureFrame:SetAttribute("unit", "target")
   end
   ```
+
+  Enforced by the `restriction-funnel` pre-commit hook (sole exception:
+  `OneWoW/Core/Restriction.lua`; escape hatch `-- noqa: restriction-funnel`).
+  See `OneWoW/Docs/ARCHITECTURE.md`.
 - Use `RegisterAttributeDriver` / `RegisterStateDriver` for combat-safe reactive behavior on secure frames.
 
 ---
@@ -333,6 +346,7 @@ end)
 12. **Fixed-width buttons.** Buttons must auto-size to text for localization. Use `CreateFitTextButton` (or equivalent) — fixed widths cause truncation in other languages.
 13. **Static strings in UI code.** See `onewow-gui-ui` skill.
 14. **Defensive nil-chain guards on DB-initialized keys.** See `onewow-database-api` skill.
+15. **Calling `InCombatLockdown` / `C_RestrictedActions.GetAddOnRestrictionState` / `C_RestrictedActions.IsAddOnRestrictionActive` directly.** Route through `OneWoW.Restriction.IsAddonRestricted()` (secure/protected) or `OneWoW.Restriction.IsInCombat()` (combat-only UX/perf). Enforced by the `restriction-funnel` hook (§5).
 
 ## Reference Links
 

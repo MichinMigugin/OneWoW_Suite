@@ -544,7 +544,7 @@ function AFKPanelModule:OnKeyDown(key)
 end
 
 function AFKPanelModule:CheckAFK()
-    if InCombatLockdown() then return end
+    if OneWoW.Restriction.IsInCombat() then return end
     if CinematicFrame and CinematicFrame:IsShown() then return end
     if MovieFrame and MovieFrame:IsShown() then return end
     if UnitCastingInfo("player") then return end
@@ -616,7 +616,7 @@ function AFKPanelModule:OnEvent(event, arg1)
     end
 
     if event == "PLAYER_FLAGS_CHANGED" and arg1 ~= "player" then return end
-    if InCombatLockdown() then return end
+    if OneWoW.Restriction.IsInCombat() then return end
     if CinematicFrame and CinematicFrame:IsShown() then return end
     if MovieFrame and MovieFrame:IsShown() then return end
 

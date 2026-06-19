@@ -36,7 +36,7 @@ local housingCallbacks = {}
 local housingEventFrame = CreateFrame("Frame")
 
 local function ApplyPendingHousingCallbacks()
-	if InCombatLockdown() then
+	if OneWoW.Restriction.IsAddonRestricted() then
 		housingEventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 		return
 	end
@@ -91,7 +91,7 @@ function Detection:ApplyHousingTeleportAttributes(button, suffix)
 			return
 		end
 
-		if InCombatLockdown() then
+		if OneWoW.Restriction.IsAddonRestricted() then
 			tinsert(housingCallbacks, applyHouse)
 			housingEventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 			return

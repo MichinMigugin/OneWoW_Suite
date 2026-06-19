@@ -311,7 +311,7 @@ local function BuildExpandedPanels(ef, data, row)
         btn:SetAllPoints(fs)
         btn:RegisterForClicks("AnyUp")
         btn:SetScript("OnClick", function()
-            if InCombatLockdown() then return end
+            if OneWoW.Restriction.IsAddonRestricted() then return end
             C_TradeSkillUI.OpenTradeSkill(profData.skillLine)
         end)
         btn:SetScript("OnEnter", function(self)

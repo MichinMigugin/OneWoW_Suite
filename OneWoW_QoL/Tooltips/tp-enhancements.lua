@@ -199,7 +199,7 @@ local function EnhancementsUnitProvider(tooltip, context)
         end
     end
 
-    if UnitAffectingCombat("player") or InCombatLockdown() or IsInInstance() then return nil end
+    if UnitAffectingCombat("player") or OneWoW.Restriction.IsInCombat() or IsInInstance() then return nil end
 
     local lines = {}
 

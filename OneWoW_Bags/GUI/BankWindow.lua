@@ -16,7 +16,6 @@ local ipairs, pcall = ipairs, pcall
 
 local C_Bank = C_Bank
 local C_Timer = C_Timer
-local InCombatLockdown = InCombatLockdown
 local max = math.max
 
 OneWoW_Bags.BankGUI = OneWoW_Bags.BankGUI or {}
@@ -405,7 +404,7 @@ function BankGUI:SyncBuiltTabState()
 end
 
 function BankGUI:CleanupAllViews()
-    if InCombatLockdown() then
+    if OneWoW.Restriction.IsAddonRestricted() then
         needsCleanupAfterCombat = true
         return
     end

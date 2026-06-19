@@ -47,20 +47,34 @@ which `NewCompat`'s last caller is gone and it can be retired separately.
 
 ---
 
-## 3. `InCombatLockdown()` → `OneWoW.Restriction.IsAddonRestricted()`
+## 3. Combat/restriction checks → `OneWoW.Restriction` funnel — done
 
-Independent. `OneWoW.Restriction` is a core service already reachable cross-unit
-(used in `OneWoW_Bags`, `OneWoW_QoL`, `OneWoW_Catalog`,
-`OneWoW_AltTracker_Character`), so no dependency on items 1 or 5.
+`OneWoW.Restriction` is now the single funnel for combat/restriction checks.
+Decisions made:
 
-`IsAddonRestricted()` is **broader** than `InCombatLockdown()` — it is also true
-under instanced-content addon restrictions (Midnight). So this is a judgment
-swap, not a blind find/replace:
+- **Two named helpers over a `combatOnly` flag** (avoids a boolean trap):
+  - `IsAddonRestricted()` — combat lockdown **or** any reviewed restriction type
+    active/activating; gates secure-frame mutations / protected actions.
+  - `IsInCombat()` — combat lockdown only; combat-only UX/perf gates (fade,
+    deferral, suppression) that are not about secure-frame safety.
+- **Explicit reviewed allowlist** (`RESTRICTED_ACTION_TYPES`: Combat / Encounter /
+  ChallengeMode / PvPMatch / Map) instead of iterating `Enum.AddOnRestrictionType`,
+  so a future type is not silently inherited. `Chat` (added 12.0.5) is excluded
+  by default.
 
-- [ ] Replace `InCombatLockdown()` with `OneWoW.Restriction.IsAddonRestricted()`
-  **where the gate protects secure-frame mutations**. Leave raw
-  `InCombatLockdown()` where the check is genuinely combat-only (e.g. perf or
-  combat-state UX, not taint/secure protection).
+- [x] Refactored `Restriction.lua` (allowlist + `IsInCombat()`).
+- [x] Converted every raw `InCombatLockdown()` site: broad
+  `IsAddonRestricted()` for secure/protected gates (Bags binding overrides +
+  bank cleanup, AltTracker_Character action-bar restore, framemover, questitembar,
+  portalhub esc/housing, t-portals, t-professions, map_mini_tools protected
+  toggles, bagbar); `IsInCombat()` for combat-only UX/perf
+  (AddonLoader defer, cursorenhancer, coords, afkpanel, tp-enhancements,
+  vendorpanel, map_mini_tools fade, notes dialog `:Raise()`).
+- [x] Enforced suite-wide by the `restriction-funnel` pre-commit hook
+  (`bin/check_no_restriction_bypass.py`) — bans direct `InCombatLockdown` /
+  `C_RestrictedActions.GetAddOnRestrictionState` /
+  `C_RestrictedActions.IsAddOnRestrictionActive` outside `Restriction.lua`.
+  Documented in `ARCHITECTURE.md` §8.6, the WoW-Lua rule §5, and `AGENTS.md`.
 
 ---
 

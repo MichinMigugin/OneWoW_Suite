@@ -642,7 +642,7 @@ local function HookZoneClockDragScripts()
                 SaveFrameLayoutPos(self, "clockPos")
                 return
             end
-            if button == "LeftButton" and not InCombatLockdown() and TimeManagerFrame then
+            if button == "LeftButton" and not OneWoW.Restriction.IsAddonRestricted() and TimeManagerFrame then
                 TimeManagerFrame:SetShown(not TimeManagerFrame:IsShown())
             end
         end)
@@ -1025,7 +1025,7 @@ end
 
 local CLICK_ACTIONS = {
     calendar = function()
-        if not InCombatLockdown() and GameTimeFrame then
+        if not OneWoW.Restriction.IsAddonRestricted() and GameTimeFrame then
             GameTimeFrame:Click()
         end
     end,
@@ -1039,7 +1039,7 @@ local CLICK_ACTIONS = {
         end
     end,
     map = function()
-        if not InCombatLockdown() then ToggleWorldMap() end
+        if not OneWoW.Restriction.IsAddonRestricted() then ToggleWorldMap() end
     end,
 }
 
@@ -1942,7 +1942,7 @@ function M:OnEnable()
     ApplyMouseWheelZoom()
     SetupAutoZoom()
     ShowClickOverlay()
-    ApplyCombatFadeState(InCombatLockdown())
+    ApplyCombatFadeState(OneWoW.Restriction.IsInCombat())
     RegisterEvents()
 
     C_Timer.After(0, function()
@@ -2105,7 +2105,7 @@ function M:OnToggle(toggleId, value)
     elseif toggleId == "hideAddonIcons" then
         ApplyHideAddonIcons()
     elseif toggleId == "combatFade" then
-        ApplyCombatFadeState(InCombatLockdown())
+        ApplyCombatFadeState(OneWoW.Restriction.IsInCombat())
     elseif toggleId == "petBattleHide" then
         if not value and not MINIMAP:IsShown() then MINIMAP:Show() end
     elseif toggleId == "hideWorldMapButton" then

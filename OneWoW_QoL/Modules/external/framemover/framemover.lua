@@ -18,7 +18,7 @@ function FrameMoverModule:OnToggle(toggleId, value)
 
     if toggleId == "clamp_to_screen" then
         for _, state in pairs(FM.frameStates) do
-            if state.frame and not (InCombatLockdown() and state.frame:IsProtected()) then
+            if state.frame and not (OneWoW.Restriction.IsAddonRestricted() and state.frame:IsProtected()) then
                 state.frame:SetClampedToScreen(value)
             end
         end

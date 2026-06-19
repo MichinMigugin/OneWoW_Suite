@@ -959,7 +959,7 @@ function VendorPanel:GetJunkCounts()
 end
 
 function VendorPanel:DestroyNextJunkItem()
-    if InCombatLockdown() then
+    if OneWoW.Restriction.IsInCombat() then
         print("OneWoW QoL: Cannot destroy items while in combat.")
         return
     end
@@ -1014,7 +1014,7 @@ function VendorPanel:DestroyNextJunkItem()
 end
 
 function VendorPanel:DeleteAllNoValueJunk()
-    if InCombatLockdown() then
+    if OneWoW.Restriction.IsInCombat() then
         print("OneWoW QoL: Cannot delete items while in combat.")
         return
     end
@@ -1351,7 +1351,7 @@ end
 function VendorPanel:StartUpdates()
     if state.updateTicker then return end
     state.updateTicker = C_Timer.NewTicker(5.0, function()
-        if InCombatLockdown() or IsInInstance() then return end
+        if OneWoW.Restriction.IsInCombat() or IsInInstance() then return end
         VendorPanel:UpdateButton()
         VendorPanel:UpdatePreviewPanel()
     end)

@@ -33,7 +33,7 @@ local SORT_MODES = {
 local DYNAMIC_TIER_KEYS = { "supertracked", "proximity", "zone", "tracked" }
 
 local function SyncKeybindings()
-    if InCombatLockdown() then return end
+    if OneWoW.Restriction.IsAddonRestricted() then return end
     if not barFrame then return end
     ClearOverrideBindings(barFrame)
     for i = 1, 4 do
@@ -642,7 +642,7 @@ function QuestItemBarModule:LayoutButtons(count)
 end
 
 function QuestItemBarModule:SecureUpdate(fromProximityTrigger)
-    if InCombatLockdown() then
+    if OneWoW.Restriction.IsAddonRestricted() then
         pendingUpdate = true
         return
     end
@@ -862,7 +862,7 @@ function QuestItemBarModule:CreateBar()
         GameTooltip:Hide()
     end)
     dragHandle:SetScript("OnDragStart", function()
-        if InCombatLockdown() then return end
+        if OneWoW.Restriction.IsAddonRestricted() then return end
         if previewMode or not GetSettings().locked then
             local scale = barFrame:GetEffectiveScale()
             local cx, cy = GetCursorPosition()
