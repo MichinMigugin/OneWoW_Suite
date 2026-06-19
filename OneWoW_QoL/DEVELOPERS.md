@@ -28,6 +28,8 @@ There is no file count limit. A simple module needs `module.lua`, one locale fil
 
 Use the `autodelete` module as a working reference.
 
+Per-module catalog (all 34 external modules): [MODULES.md](MODULES.md). Add a `README.md` in your module folder only when behavior needs more than the in-game description (see `questitembar`).
+
 ---
 
 ## How It Works

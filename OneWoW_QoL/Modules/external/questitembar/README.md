@@ -1,10 +1,8 @@
 # Quest Item Bar Module
 
-Displays a movable bar with clickable buttons for special quest items from your quest log. Shows cooldowns, charges, and supports sorting by quest title, item name, proximity, or dynamic tier order.
+User-facing summary: [MODULES.md](../../../MODULES.md#quest-item-bar). Module authoring: [DEVELOPERS.md](../../../DEVELOPERS.md) · [LOCALES.md](../../../../OneWoW/Docs/LOCALES.md) (scope `OneWoW_QoL.questitembar`)
 
-**Module authoring:** [DEVELOPERS.md](../../../DEVELOPERS.md) · [LOCALES.md](../../../../OneWoW/Docs/LOCALES.md) (scope `OneWoW_QoL.questitembar`)
-
-## Bar Behavior
+Technical reference for sorting, filters, and events:
 
 - Items come from `GetQuestLogSpecialItemInfo` — the game's API for quest-specific usable items
 - Bar shows up to 12 items (keybindings: QUESTITEM_1 through QUESTITEM_4)

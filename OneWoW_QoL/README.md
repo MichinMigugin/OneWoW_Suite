@@ -1,87 +1,95 @@
 # OneWoW - Quality of Life
 
-**Quality of life features and automation tools that make gameplay smoother. Enable or disable each feature independently to suit your playstyle.**
+**Quality of life features and automation tools that make gameplay smoother. Enable or disable each feature independently in the QoL Features UI.**
+
+Open **OneWoW → Quality of Life** or type `/1wqol`. Full module catalog: [MODULES.md](MODULES.md).
 
 ---
 
-## Automation Features
+## Automation
 
-### Auto Repair
-Your gear automatically repairs whenever you visit a merchant. Optionally use your guild bank funds if available. Never worry about broken gear again.
+Hands-off helpers for repairs, looting, mounts, quests, and cinematics.
 
-### Auto Delete
-Skip the "Are you sure?" confirmation when deleting items. Optionally see a link to the deleted item in chat for recovery if needed.
+- **Auto Repair** — repair at merchants (optional guild bank)
+- **Fast Loot** — loot corpses and chests as soon as the window opens
+- **Auto Mount** — mount when you start moving; smart terrain and dismount rules
+- **Auto Open** — open containers from your bags (skips bank/mail/vendor and locked items)
+- **Fast Forward** — skip movies and cinematics (hold a modifier to watch)
+- **Quest Tools** — auto-accept, turn-in, reward highlight, quest gossip (Shift to skip)
+- **Untrack Completed Achievements** — clear stuck achievement tracking slots on login
+- **Screenshot On Achievement** — capture achievement toasts to Screenshots
 
-### Fast Loot
-Speed up looting by automatically opening your loot window and looting faster. Works with your existing auto-loot settings.
+## Interface
 
-### Auto Mount
-Automatically mount your fastest available mount when you start moving. Intelligently chooses the right mount for the terrain (flying mounts for flying zones, water mounts for water, etc.). Automatically dismounts when gathering, in combat, or casting spells.
+UI panels, map tools, bars, and screen customization.
 
-### Auto Open
-Automatically open items and loot containers. Great for opening mail, quest rewards, and other items.
+- **AFK Panel** — full-screen AFK overlay with character info, alerts, and notes
+- **Auto Delete** — skip typing DELETE when destroying items
+- **ESC Menu Panel** — character info, alerts, zone notes, and portal strip beside the ESC menu
+- **Bag Bar** — movable bar of bag items matched by keyword expression
+- **Quest Item Bar** — clickable quest-item buttons with sorting and filters ([details](Modules/external/questitembar/README.md))
+- **Professions Panel** — expansion skills, recipe counts, and first-craft tracking beside the profession window
+- **Character Info Sheet** — ilvl, enchants, gems, and durability on the character sheet
+- **Coords Display** — map coordinates near the minimap (right-click to copy)
+- **Cursor Enhancer** — ring and optional mouse trail
+- **Frame Mover** — reposition Blizzard frames; Ctrl+Scroll to scale
+- **Hide Combat Error Spam** — suppress common red combat error text
+- **Inspect Gear** — gear list on inspect; save to Notes
+- **LFG Lockouts** — raid and dungeon lockouts beside Group Finder
+- **Map (Mini) Tools** — minimap shape, border, clock, zoom, and layout
+- **Map (World) Tools** — world map reveal, tints, coordinates, and comfort options
+- **Minimap Button Collector** — themed container for minimap addon buttons
+- **Player Mounts** — show mounts/forms other players are using
+- **Prey Hunt Bar** — prey hunt progress bar for the current zone
 
-### Fast Forward
-Speed up dialog sequences and NPC interactions. Reduces wait times during conversations.
+## Social
 
-### Quest Tools
-- Auto-accept quests from NPCs
-- Auto-complete and turn in quests
-- Choose your quest reward automatically with the reward picker
+Group and interaction automation.
 
----
+- **Auto-Accept Party Invites** — from trusted sources you configure
+- **Auto-Accept Ready Check** — confirm ready automatically
+- **Auto-Accept Resurrection** — accept rezzes (skipped in combat)
+- **Auto-Accept Summon** — accept warlock and summoning-stone requests
+- **Auto-Decline Duels** — dismiss duel popups
 
-## Interface & Convenience Features
+## Economy
 
-### Coordinate Display
-Shows your exact map coordinates at all times. Great for finding specific locations or helping friends navigate. Fully customizable display options.
+Auction House and vendor convenience.
 
-### Bag Bar
-Quick-access bar for all your bags, letting you expand inventory without the full bag interface.
+- **Auction House - Current Expansion** — filter AH to current-expansion items on open
+- **Vendor Panel** — junk filters and quick sell at vendor windows
 
-### Quest Item Bar
-Instant access to quest items without digging through your bags.
+## Utility
 
-### Professions Panel
-Quick view of your professions and skill levels in a convenient panel.
+Clipboard and text tools.
 
-### Vendor Panel
-See vendor information and pricing at a glance.
+- **Copy Text** — copy tooltip or UI text under the cursor (`/copytext`, `/ct`)
 
-### Character Info
-Display character statistics and information in a customizable panel.
+## Built-in (always available)
 
-### AFK Panel
-Easy AFK (Away From Keyboard) status options and display.
+These ship with QoL core code (not separate external modules):
 
-### ESC Panel
-Customize the ESC menu for quick access to your favorite features.
-
-### Copy Text
-Copy text from game windows for sharing or reference. Includes a keybind for quick access.
-
-### Cursor Enhancer
-Improved cursor visuals and responsiveness for better mouse handling.
-
-### Play Mounts
-Mount voice lines and sound effects (for mounts that have them).
+- **Toast notifications** — loot, collection, and instance alerts (`Features/`)
+- **Portal hub data** — hearthstones, teleports, and custom portals integrated with ESC Panel and the [OneWoW](../OneWoW/README.md) hub (`Portals/`)
 
 ---
 
 ## Customization
 
-### Modular System
-Each feature is completely independent. Enable only what you want - disable features you don't use. Perfect for tailoring the addon to your needs.
+### Modular system
+Each external module toggles independently. See [MODULES.md](MODULES.md) for all 34 modules, folder paths, and module ids.
 
-### Theme Support
-All OneWoW_QoL features integrate with the main OneWoW theme system. Switch themes instantly with no UI reload required.
+### Theme support
+All QoL UI integrates with suite-wide themes via **OneWoW** — switch instantly with no reload.
 
-### Language Support
-Suite-wide themes and localization via **OneWoW** — supports all 11 client locales.
+### Language support
+Supports all 11 suite locales — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
 
 ## Documentation
 
-Module authors: [DEVELOPERS.md](DEVELOPERS.md). Suite docs: [OneWoW/Docs/README.md](../OneWoW/Docs/README.md).
+- [MODULES.md](MODULES.md) — full external module catalog (by category)
+- [DEVELOPERS.md](DEVELOPERS.md) — authoring new modules
+- [OneWoW/Docs/README.md](../OneWoW/Docs/README.md) — suite technical docs
 
 ---
 

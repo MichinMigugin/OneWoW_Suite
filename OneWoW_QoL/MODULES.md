@@ -1,0 +1,223 @@
+# OneWoW QoL — External Modules
+
+Catalog of toggleable features under `Modules/external/`. Each module is independent — enable only what you want in the QoL Features UI (`/1wqol`).
+
+Module authors: [DEVELOPERS.md](DEVELOPERS.md). Suite docs: [OneWoW/Docs/README.md](../OneWoW/Docs/README.md).
+
+**34 modules** across 5 categories (matches `module.lua` `category` values in the Features UI).
+
+---
+
+## Automation
+
+### Auto Mount
+
+Automatically mounts with the fastest available mount when you stop moving in a mountable area. Re-mounts after gathering.
+
+- **Module id:** `automount` · **Folder:** `Modules/external/automount/`
+
+### Auto Open
+
+Automatically opens bags, boxes, and other container items when they appear in your inventory. Does not open items while at a bank, mailbox, or merchant. Items you cannot open yet (locked lockboxes, wrong level/class/profession, or while the slot is busy) are automatically skipped.
+
+- **Module id:** `autoopen` · **Folder:** `Modules/external/autoopen/`
+
+### Auto Repair
+
+Automatically repairs all your equipment when you visit a merchant that supports repairs. Prints the cost to chat.
+
+- **Module id:** `autorepair` · **Folder:** `Modules/external/autorepair/`
+
+### Fast Forward
+
+Automatically skips in-game movies and cinematics. Hold any modifier key while a movie or cinematic starts to watch it instead.
+
+- **Module id:** `fastforward` · **Folder:** `Modules/external/fastforward/`
+
+### Fast Loot
+
+Automatically loots all items from a corpse or chest the moment the loot window is ready. Works alongside the game's auto-loot setting.
+
+- **Module id:** `fastloot` · **Folder:** `Modules/external/fastloot/`
+
+### Quest Tools
+
+Automates quest acceptance, turn-in, reward highlight, and optional quest-labeled gossip. Hold Shift when opening a quest or gossip dialog to skip auto-accept or auto-gossip.
+
+- **Module id:** `questtools` · **Folder:** `Modules/external/questtools/`
+
+### Screenshot On Achievement
+
+Takes a screenshot a moment after you earn an achievement so the toast is captured. Files are saved as 'WoWScrnShot_*.jpg' in your World of Warcraft\\_retail_\\Screenshots folder.
+
+- **Module id:** `screenshotachievements` · **Folder:** `Modules/external/screenshotachievements/`
+
+### Untrack Completed Achievements
+
+Automatically scans for and untracks already-completed achievements when you log in. Frees up hidden tracking slots that can get stuck after a crash or cross-character completion.
+
+- **Module id:** `achieveuntrack` · **Folder:** `Modules/external/achieveuntrack/`
+
+## Interface
+
+### AFK Panel
+
+Displays a full-screen AFK overlay with your character info, alerts, and notes when you go AFK.
+
+- **Module id:** `afkpanel` · **Folder:** `Modules/external/afkpanel/`
+
+### Auto Delete
+
+Skip typing DELETE when destroying items. The confirmation button becomes immediately available without requiring you to type anything.
+
+- **Module id:** `autodelete` · **Folder:** `Modules/external/autodelete/`
+
+### Bag Bar
+
+Shows usable bag items on a movable bar. Items are chosen with a keyword expression (same as Bag search). Equippable gear and quest items are always excluded from the bar (applied automatically, not shown in the editor).
+
+- **Module id:** `bagbar` · **Folder:** `Modules/external/bagbar/`
+
+### Character Info Sheet
+
+Displays a clean info panel next to each equipped item on your character sheet showing item level (colored by quality), enchant status, gem status, and durability percentage.
+
+- **Module id:** `charinfo` · **Folder:** `Modules/external/charinfo/`
+
+### Coords Display
+
+Displays your current map coordinates in a small movable frame near the minimap. Right-click to copy coordinates.
+
+- **Module id:** `coords` · **Folder:** `Modules/external/coords/`
+
+### Cursor Enhancer
+
+Displays a customizable ring around your cursor with optional mouse trail effect.
+
+- **Module id:** `cursorenhancer` · **Folder:** `Modules/external/cursorenhancer/`
+
+### ESC Menu Panel
+
+Display character info, alerts, zone notes, and portal strip alongside the ESC menu. Choose which side each uses below.
+
+- **Module id:** `escpanel` · **Folder:** `Modules/external/escpanel/`
+
+### Frame Mover
+
+Drag Blizzard UI frames to reposition them. Use Ctrl+Scroll to scale. Positions and scales can persist across sessions.
+
+- **Module id:** `framemover` · **Folder:** `Modules/external/framemover/`
+
+### Hide Combat Error Spam
+
+Hides the most common red error messages (out of mana, out of range, target needs to be in front, spell not ready, etc.) so the center of your screen stays clean during fights.
+
+- **Module id:** `hideerrors` · **Folder:** `Modules/external/hideerrors/`
+
+### Inspect Gear
+
+Adds a side panel to the inspect window listing the equipped gear of the player you are inspecting. Save the whole list to a OneWoW Notes player note, or Shift-click any item to add it to your Item Notes.
+
+- **Module id:** `inspectmog` · **Folder:** `Modules/external/inspectmog/`
+
+### LFG Lockouts
+
+Shows your current raid and dungeon lockouts in a side panel when the Group Finder is open.
+
+- **Module id:** `lfgpanel` · **Folder:** `Modules/external/lfgpanel/`
+
+### Map (Mini) Tools
+
+Customize your minimap cluster: shape, border, zone text, clock, click actions, zoom controls, element visibility, and more. Theme-aware and fully configurable.
+
+- **Module id:** `map_mini_tools` · **Folder:** `Modules/external/map_mini_tools/`
+
+### Map (World) Tools
+
+World map: reveal unexplored terrain from client data, optional tints, battlefield map tweaks, coordinates, and small comfort/cleanup options.
+
+- **Module id:** `map_world_tools` · **Folder:** `Modules/external/map_world_tools/`
+
+### Minimap Button Collector
+
+Collects minimap addon buttons into a single themed container. Uses the OneWoW brand icon and supports grid layout, auto-close, and an enhanced OneWoW quick-launch row.
+
+- **Module id:** `minimapbuttons` · **Folder:** `Modules/external/minimapbuttons/`
+
+### Player Mounts
+
+Detects and displays the mount or movement form currently being used by other players.
+
+- **Module id:** `playmounts` · **Folder:** `Modules/external/playmounts/`
+
+### Prey Hunt Bar
+
+Shows a movable bar tracking your prey hunt progress (Cold > Warm > Hot > Ready) for the current zone, with the active hunt's boss, difficulty, and affixes. Unlock it to drag it into place.
+
+- **Module id:** `preybar` · **Folder:** `Modules/external/preybar/`
+
+### Professions Panel
+
+Shows a companion panel alongside the profession window with expansion skill breakdowns, recipe counts, and first craft tracking.
+
+- **Module id:** `professionspanel` · **Folder:** `Modules/external/professionspanel/`
+
+### Quest Item Bar
+
+Displays a movable bar with clickable buttons for special quest items from your quest log. Shows cooldowns, charges, and supports sorting by quest or item name.
+
+- **Module id:** `questitembar` · **Folder:** `Modules/external/questitembar/` — [details](Modules/external/questitembar/README.md)
+
+## Social
+
+### Auto-Accept Party Invites
+
+Automatically accepts party invites that come from people you trust. Choose which sources are allowed below.
+
+- **Module id:** `autoinvite` · **Folder:** `Modules/external/autoinvite/`
+
+### Auto-Accept Ready Check
+
+Automatically confirms ready when a ready check is called in your group.
+
+- **Module id:** `autoreadycheck` · **Folder:** `Modules/external/autoreadycheck/`
+
+### Auto-Accept Resurrection
+
+Automatically accepts resurrection requests when someone casts a rez on you. Skipped while you are in combat.
+
+- **Module id:** `autoresurrect` · **Folder:** `Modules/external/autoresurrect/`
+
+### Auto-Accept Summon
+
+Automatically accepts summon requests from warlocks and summoning stones.
+
+- **Module id:** `autosummon` · **Folder:** `Modules/external/autosummon/`
+
+### Auto-Decline Duels
+
+Automatically declines duel requests so the popup never lingers on your screen.
+
+- **Module id:** `declineduel` · **Folder:** `Modules/external/declineduel/`
+
+## Economy
+
+### Auction House - Current Expansion
+
+Automatically filters the Auction House to show only current expansion items when you open it.
+
+- **Module id:** `auctionhouse` · **Folder:** `Modules/external/auctionhouse/`
+
+### Vendor Panel
+
+Adds a junk management panel to vendor windows with item filtering and quick-sell features.
+
+- **Module id:** `vendorpanel` · **Folder:** `Modules/external/vendorpanel/`
+
+## Utility
+
+### Copy Text
+
+Copies visible text from tooltips or UI elements to your clipboard. Use /copytext (or /ct) to copy what is under your cursor.
+
+- **Module id:** `copytext` · **Folder:** `Modules/external/copytext/`

@@ -18,6 +18,7 @@ Contributor and integrator documentation for the suite.
 |----------|----------|
 | [OneWoW_Bags/Docs/README.md](../../OneWoW_Bags/Docs/README.md) | Bags architecture, categorization, search syntax, import/export, item-button API |
 | [OneWoW_QoL/DEVELOPERS.md](../../OneWoW_QoL/DEVELOPERS.md) | External QoL module authoring (`module.lua`, `ModuleRegistry`, locale scope) |
+| [OneWoW_QoL/MODULES.md](../../OneWoW_QoL/MODULES.md) | QoL external module catalog (34 modules by category) |
 | [OneWoW_Trackers/Docs/ARCHITECTURE.md](../../OneWoW_Trackers/Docs/ARCHITECTURE.md) | Tracker lists, engine, presets, farm value |
 | [OneWoW_CatalogData_Quests/Docs/ARCHITECTURE.md](../../OneWoW_CatalogData_Quests/Docs/ARCHITECTURE.md) | Catalog quest data store and scanner |
 
