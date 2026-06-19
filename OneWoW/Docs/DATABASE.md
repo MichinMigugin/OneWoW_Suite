@@ -21,7 +21,7 @@ Suite storage layout and scope resolution contract: [`ARCHITECTURE.md`](ARCHITEC
 - Long-term, prefer one shared `SavedVariables` root per addon.
 - Defaults are templates only and must never be stored by reference.
 - Blizzard table helpers are internal implementation details, not part of the public API.
-- AceDB addons are wrapped, not blocked. `Init` accepts an `aceDB` handle and returns the standard db shape. AceDB removal happens incrementally per addon.
+- AceDB addons migrate off AceDB via `DB:NewCompat`, a drop-in for `AceDB-3.0:New()` that reads/writes the same SavedVariables format with no storage migration. `DB:Init` itself is `single`/`split` only.
 - `DB` is a stateless utility module. `db` handles are plain tables, not objects with methods.
 - `Set` puts value last: `DB:Set(db, keys..., value)`.
 - Migrations use a versioned integer high-water mark. Defaults application is a normalizer, not a migration.
@@ -53,11 +53,9 @@ Saved variable initialization needs fill-only semantics: fill missing keys, neve
 
 ## AceDB Compatibility
 
-AceDB addons are wrapped, not blocked from adopting the DB API.
+Addons still on the AceDB SavedVariables format adopt the suite API through `DB:NewCompat(savedVarName, defaults, useDefaultProfile)` — a drop-in for `AceDB-3.0:New()` that reads and writes the exact same SavedVariables layout, so existing user data works without a storage migration. It applies `defaults` through `MergeMissing` and returns a handle with `.global` and `.char` matching the AceDB shape.
 
-`DB:Init` accepts an `aceDB` handle. When provided, it takes `.global` and `.char` from the AceDB handle, runs `MergeMissing` against full defaults (because AceDB defaults in current code are often incomplete), and returns the standard normalized db shape.
-
-This means AceDB addons adopt the DB API immediately without a storage migration. When AceDB is eventually removed from a specific addon, only the `Init` configuration changes — runtime code stays the same.
+`NewCompat` is a compatibility shim, not the full scoped handle. It predates the scope/preset model, so `GetResolvedValue`, `SetScopeValue`, and presets are not available on a `NewCompat` handle. Moving an addon onto `DB:Init` (single mode) unlocks those and is the end state; `NewCompat` exists only to bridge addons that have not made that move yet.
 
 ---
 
@@ -75,7 +73,7 @@ Later scopes override earlier ones. This allows large base tables in `Global` wi
 
 ### Physical Storage vs Logical Scopes
 
-Logical scopes (`db.global`, `db.char`, resolved scope lookups) are the public concept. Physical storage (one shared root, split globals, AceDB handle) is an initialization detail hidden from addon code.
+Logical scopes (`db.global`, `db.char`, resolved scope lookups) are the public concept. Physical storage (one shared root, split globals) is an initialization detail hidden from addon code.
 
 Long-term preferred layout: one shared `SavedVariables` root per addon, with character data stored at `MyAddon_DB.chars["Name-Realm"]` and exposed as `db.char`.
 
@@ -105,7 +103,7 @@ Starting with a single active preset avoids preset collision rules, multi-preset
 
 - Creates the root db object
 - Normalizes `global` and `char` logical scopes
-- Three initialization modes: single shared root (`savedVar`), split globals (`savedVar` + `savedVarChar`), AceDB wrapping (`aceDB`)
+- Two initialization modes: single shared root (`savedVar`) and split globals (`savedVar` + `savedVarChar`)
 - Applies defaults via `MergeMissing` without overwriting existing user values
 - Returns a normalized db shape regardless of mode
 
