@@ -14,7 +14,7 @@ folded into `ARCHITECTURE.md`.
 > Idempotent SV shape bridges kept where noted in code
 > (flat→`.global`, `BridgeLegacyDatabase`, Notes char-key consolidate,
 > Trackers Notes/CharDB drain). Assumes users have logged in on a recent build.
-> **7.2**, DevTool, AltTracker — still open below.
+> DevTool, AltTracker — still open below.
 
 ---
 
@@ -207,17 +207,21 @@ No defensive `if not OneWoW_GUI` guard once everything `RequiredDeps: OneWoW`.
 - [x] Note: GUI `PredicateEngine` → `RecipeKnownUtil` upward dependency dissolves
   once GUI and core share one load unit.
 
-### 7.2 Retire the `OneWoW_GUI` SV-handoff stub
+### 7.2 Retire the `OneWoW_GUI` SV-handoff stub — DONE
 
-**Requires step 8** (data folded into `OneWoW_DB`), then wait one or two
-releases so most users have logged out at least once on the new layout.
+The `fold_gui_db` migration was already collapsed out of `Core/Database.lua`
+(no `RunMigrations` step remains; nothing reads `_G.OneWoW_GUI_DB`), so the stub
+no longer served a runtime purpose.
 
-- [ ] Delete the `OneWoW_GUI` folder (TOC-only stub).
-- [ ] Remove `RequiredDeps: OneWoW_GUI` from `OneWoW.toc` (`OneWoW_GUI_DB`
-  already removed from its `SavedVariables` in step 8).
-- [ ] Remove the stub rows/notes from `ARCHITECTURE.md` §1–2.
+- [x] Delete the `OneWoW_GUI` folder (TOC-only stub).
+- [x] Remove `RequiredDeps: OneWoW_GUI` from `OneWoW.toc` (`OneWoW_GUI_DB`
+  already removed from its `SavedVariables` in step 8, and from `.luarc.json`).
+- [x] Remove the stub rows/notes from `ARCHITECTURE.md` §1–2 and the stale
+  `fold_gui_db` comments from `OneWoW.lua`, `GUI/Settings.lua`,
+  `GUI/OneWoW_GUI.lua`, `UI/t-charprofiles.lua`.
 - Users who skip the entire transition window lose theme/profile settings
-  (one-time, defaults apply) — accepted tradeoff.
+  (one-time, defaults apply) — accepted tradeoff. Since the fold code is already
+  gone, those users get defaults today regardless of the stub.
 
 ### Target TOC shape (post-step-7.2)
 
@@ -498,7 +502,7 @@ only 2 files moved):
   — removes settings-tab teleporting between QoL and Settings. With QoL opted
   out, feature settings tabs are simply gone (consistent with 9a–9c content).
 - [x] Fold service roster + "feature content registers from QoL" into
-  `ARCHITECTURE.md` §6 ("Core service roster (post MIGRATION step 9)").
+  `ARCHITECTURE.md` §6 ("Core service roster").
 
 ---
 
@@ -550,7 +554,7 @@ roster documentation.
 - [x] Document core service roster in `ARCHITECTURE.md` §6–7: engines and shared
   detection (`ItemStatus`, `UpgradeDetection`, `RecipeKnownUtil`, `ItemPrices`)
   are core services; feature content registers in from QoL. (Done with the
-  step 9 closeout — §6 "Core service roster (post MIGRATION step 9)".)
+  step 9 closeout — §6 "Core service roster".)
 - [ ] Audit for other `ModuleRegistry:IsRegistered(...)`-conditional UI placement
   (known: `UI/t-settings.lua`, `UI/MainWindow.lua` placeholder tabs;
   `portalhub-esc.lua`'s branch was removed in step 9c).

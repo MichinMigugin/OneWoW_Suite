@@ -80,9 +80,9 @@ end
 function OneWoW:OnAddonLoaded(loadedAddon)
     if loadedAddon ~= ADDON_NAME then return end
 
-    -- Unified DB first (OneWoW_GUI_DB folded into OneWoW_DB in MIGRATION
-    -- step 8), then the toolkit binds its settings handle to it — before any
-    -- theme/font reads or module UI built by the orchestrator below.
+    -- Core DB first, then the toolkit binds its settings handle to core's
+    -- OneWoW_DB — before any theme/font reads or module UI built by the
+    -- orchestrator below.
     self:InitializeDatabase()
     OneWoW_GUI:InitializeSettings(self.db)
 

@@ -3,7 +3,7 @@
 
 All reads/writes of OneWoW.db.global.settings.* must go through
 OneWoW.SettingsFeatureRegistry (the settings funnel) — see
-OneWoW/Docs/MIGRATION.md step 6. The check matches the suffix pattern
+OneWoW/Docs/ARCHITECTURE.md §8.5. The check matches the suffix pattern
 `db.global.settings` so aliased access is caught too
 (e.g. `local ow = OneWoW; ow.db.global.settings`).
 
@@ -129,7 +129,7 @@ def main(argv: list[str]) -> int:
         print("Route all settings reads/writes through OneWoW.SettingsFeatureRegistry:")
         print("  IsEnabled / SetEnabled / GetSetting / SetSetting / GetFeatureSettings")
         print("  IsIntegrationEnabled / SetIntegrationEnabled / ResetTab")
-        print("Reference: OneWoW/Docs/MIGRATION.md step 6")
+        print("Reference: OneWoW/Docs/ARCHITECTURE.md §8.5")
         print("Suppress (rare): add -- noqa: settings-funnel on the line.")
     return rc
 

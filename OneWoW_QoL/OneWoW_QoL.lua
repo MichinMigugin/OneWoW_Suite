@@ -121,12 +121,11 @@ function addon:OnAddonLoaded()
     if didInit then return end
     didInit = true
     OneWoW.Lifecycle:CreateHandlerRegistry(addon)
-    -- Toast types (moved from core, MIGRATION step 9a) export their arming
-    -- functions on ns; the handler registry doesn't exist at their file scope.
+    -- Toast types export their arming functions on ns; the handler registry
+    -- doesn't exist at their file scope.
     addon:RegisterLoginHandler("toast-loot", ns.ToastLoot.OnLogin)
     addon:RegisterEnteringWorldHandler("toast-instance", ns.ToastInstance.OnEnteringWorld)
-    -- Portal Hub (moved from core, MIGRATION step 9c); same order as the
-    -- original core registrations (module before esc-menu integration).
+    -- Portal Hub: module before esc-menu integration.
     addon:RegisterLoginHandler("portalhub", function() ns.PortalHubModule:Initialize() end)
     addon:RegisterLoginHandler("portalhub-esc", function() ns.PortalHubEsc:Initialize() end)
     OnInitialize()

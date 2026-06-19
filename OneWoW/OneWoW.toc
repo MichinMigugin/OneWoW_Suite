@@ -4,11 +4,6 @@
 ## Notes: OneWoW - Central Hub for all OneWoW addons
 ## Author: OneWoW Dev Team
 
-# TRANSITIONAL: OneWoW_GUI is a TOC-only SavedVariables-handoff stub. The dep
-# forces it to load first so the legacy OneWoW_GUI_DB SV file populates _G
-# before InitializeDatabase's fold_gui_db migration reads it. Remove with the
-# stub in MIGRATION step 7.2 (a release or two after step 8).
-## RequiredDeps: OneWoW_GUI
 ## OptionalDeps: Auctionator, TradeSkillMaster
 ## Category: OneWoW
 ## Group: OneWoW

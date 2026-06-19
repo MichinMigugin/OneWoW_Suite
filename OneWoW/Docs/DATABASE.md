@@ -32,8 +32,6 @@ Suite storage layout and scope resolution contract: [`ARCHITECTURE.md`](ARCHITEC
 
 The DB module source is `OneWoW/GUI/Database.lua`, published on the `OneWoW_GUI` global. Every suite addon has `RequiredDeps: OneWoW`, which loads the toolkit. Addon code accesses it as `local DB = OneWoW_GUI.DB` (or `local OneWoW_GUI = OneWoW_GUI` then `OneWoW_GUI.DB`).
 
-The transitional `OneWoW_GUI` TOC-only stub exists solely to load legacy `OneWoW_GUI_DB` SavedVariables during migration — see [`ARCHITECTURE.md`](ARCHITECTURE.md) §1 and §8.1.
-
 ---
 
 ## Core Direction

@@ -62,8 +62,8 @@ function OneWoW_GUI:GetBrandIcon(factionTheme)
 end
 
 local function GetRawThemeKeyFromSources(self, addon)
-    -- _settingsDB is OneWoW.db.global (unified OneWoW_DB since MIGRATION
-    -- step 8); the addon fallback covers calls before InitializeSettings binds.
+    -- _settingsDB is OneWoW.db.global (core's OneWoW_DB); the addon fallback
+    -- covers calls before InitializeSettings binds.
     local themeKey
     if self._settingsDB and self._settingsDB.theme then
         themeKey = self._settingsDB.theme

@@ -40,4 +40,4 @@ Contributor and integrator documentation for the suite.
 | `ADDON/Docs/` | Contributors | Architecture, APIs, data models |
 | Repo `CONTRIBUTING.md` | Contributors | How to contribute to any load unit |
 
-The shared UI toolkit ships inside `OneWoW` (`OneWoW/GUI/`, global `OneWoW_GUI`). The separate `OneWoW_GUI` load unit is a transitional SavedVariables stub for migration only — not a user-facing dependency.
+The shared UI toolkit ships inside `OneWoW` (`OneWoW/GUI/`, global `OneWoW_GUI`).

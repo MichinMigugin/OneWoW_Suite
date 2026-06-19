@@ -6,7 +6,7 @@ read *another* unit's data is `OneWoW.DataManager:Query(...)` (graceful empty wh
 the target is unloaded) or `OneWoW:EnsureLoaded(...)` for explicit user actions.
 Reaching directly into another family's global store (e.g. a Catalog file touching
 `OneWoW_AltTracker_Storage._DB`) couples units that can be enabled/disabled
-independently. See OneWoW/Docs/ARCHITECTURE.md §7 and MIGRATION.md step 8.
+independently. See OneWoW/Docs/ARCHITECTURE.md §7.
 
 What counts as a violation
     A file belonging to family A references a global owned by family B.
@@ -22,7 +22,7 @@ What counts as a violation
     loader). Strings are stripped before matching, so only bareword *global
     access* is flagged.
 
-Enforcement ramp (MIGRATION.md step 8)
+Enforcement ramp
     Phase 1 (now):  WARN_ONLY = True  -> every cross-family read prints, nothing
                     blocks. The §4.1 direct reads are grandfathered implicitly.
     Phase 2:        WARN_ONLY = False -> reads whose `path::symbol` key is in
@@ -43,7 +43,7 @@ from __future__ import annotations
 import re
 import sys
 
-# --- Enforcement phase (see module docstring / MIGRATION.md step 8) ------------
+# --- Enforcement phase (see module docstring) ---------------------------------
 WARN_ONLY: bool = True  # Phase 1: report only, never block.
 
 # Phase 2 seed: `path::symbol` keys grandfathering today's §4.1 direct reads.
@@ -196,7 +196,7 @@ def main(argv: list[str]) -> int:
         print("Cross-family data reads should go through:")
         print("  OneWoW.DataManager:Query(key, ...)   -- passive, degrades to empty")
         print("  OneWoW:EnsureLoaded(name)            -- explicit user actions only")
-        print("Reference: OneWoW/Docs/ARCHITECTURE.md §7 and MIGRATION.md step 8")
+        print("Reference: OneWoW/Docs/ARCHITECTURE.md §7")
         if WARN_ONLY:
             print()
             print("Phase 1 (warn-only): not blocking. Candidate ALLOWLIST seed for"

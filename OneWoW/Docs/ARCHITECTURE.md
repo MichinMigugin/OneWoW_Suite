@@ -3,10 +3,6 @@
 Authoritative reference for how the suite is partitioned, loaded, enabled, and
 integrated. Describes **what is implemented today**.
 
-Remaining migration work (GUI absorption, SV migration, QoL feature moves,
-DevTool packaging, enforcement ramp) lives in [`MIGRATION.md`](MIGRATION.md)
-(steps 7–11).
-
 ## Contents
 
 1. [True-core model](#1-true-core-model)
@@ -31,12 +27,6 @@ Feature modules and data stores are `## LoadOnDemand: 1` with
 `RequiredDeps: OneWoW` — nothing auto-loads except core. The orchestrator
 force-loads enabled units at startup and drives initialization in deterministic
 order (§3).
-
-A transitional `OneWoW_GUI` TOC-only stub remains on disk solely to load the
-legacy `OneWoW_GUI_DB` SavedVariables file (`MIGRATION.md` step 7). Step 8
-folded that data into `OneWoW_DB` (versioned `fold_gui_db` migration); the
-stub ships for a release or two more so late upgraders still migrate, then is
-deleted in step 7.2.
 
 ### Why separate TOCs (not one mega-addon)
 
@@ -90,8 +80,7 @@ Verified against current `.toc` files:
 
 | Load unit | RequiredDeps | OptionalDeps | LoadOnDemand |
 |---|---|---|---|
-| **OneWoW** | OneWoW_GUI *(transitional SV stub — see §1)* | Auctionator, TradeSkillMaster | — |
-| **OneWoW_GUI** *(stub)* | — | — | 0 |
+| **OneWoW** | — | Auctionator, TradeSkillMaster | — |
 | **OneWoW_Notes** | OneWoW | — | 1 |
 | **OneWoW_AltTracker** | OneWoW | — | 1 |
 | **OneWoW_Catalog** | OneWoW | — | 1 |
@@ -335,7 +324,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 | No raw `LoadAddOn` outside the loader funnel (§3.8) | `bin/check_no_raw_loadaddon.py` (pre-commit `no-raw-loadaddon`) |
 | No suite-internal `OptionalDeps` | `bin/check_toc_optional_deps.py` (pre-commit `no-suite-internal-optionaldeps`) |
 | No direct `db.global.settings` access (§8.5) | `bin/check_no_settings_bypass.py` (pre-commit `no-settings-bypass`) |
-| No cross-family store global reads | `bin/check_no_data_manager_bypass.py` (phased; see MIGRATION step 11) |
+| No cross-family store global reads | `bin/check_no_data_manager_bypass.py` (phased; warn-only — see hook docstring) |
 | No `_G.literal` access | `bin/check_no_g_literal.py` |
 | Agent guidance | `.cursor/rules/OneWoW-Suite-Architecture.mdc`, `onewow-suite-architecture` skill |
 
@@ -530,8 +519,7 @@ Modules cannot share core's private `ns`. Sharing uses globals:
 
 LibStub is retained only for vendored Ace libs (`LibStub`, `CallbackHandler-1.0`,
 `LibDataBroker-1.1`, `LibDBIcon-1.0`, `LibSharedMedia-3.0`). The copy/paste
-dialog service is `OneWoW.CopyPaste` (`Core/CopyPaste.lua` — `MIGRATION.md`
-step 7.1).
+dialog service is `OneWoW.CopyPaste` (`Core/CopyPaste.lua`).
 
 ### Cross-addon references
 
@@ -547,7 +535,7 @@ step 7.1).
 Every cross-module store read is nil-guarded. Prefer `_API` over `_DB`. Core reads
 stores opportunistically (tooltips, overlays) — never as a load trigger.
 
-### Core service roster (post MIGRATION step 9)
+### Core service roster
 
 Engines and shared detection are **core services** on `_G.OneWoW`; **feature
 content registers in from QoL** (or other units). With QoL opted out, the
@@ -635,8 +623,8 @@ may register both.
 ### Layering rules
 
 1. **No sub-addon reads another family's store global directly.** Lint:
-   `bin/check_no_data_manager_bypass.py` (phased enforcement — see `MIGRATION.md`
-   step 11).
+   `bin/check_no_data_manager_bypass.py` (phased enforcement — see the hook
+   docstring).
 2. **Inverse dependencies via events/callbacks**, not direct calls — core stays
    consumer-agnostic.
 3. **Cross-unit data** should route through `DataManager:Query` (planned broker in
@@ -698,9 +686,8 @@ toastalerts) route through `OneWoW.SettingsFeatureRegistry`
 (`Core/SettingsFeatureRegistry.lua`). Only that file and `Core/Database.lua`
 (defaults, migrations) touch the tree directly — enforced by the
 `no-settings-bypass` pre-commit hook (§3.10). `portalHub` is a separate DB
-root outside the funnel (follow-up before MIGRATION step 9c); the former
-`toasts` root was folded into `settings.toastalerts` in MIGRATION step 9a
-(migration v5), including the storage-only `anchor` id (no catalog row).
+root outside the funnel; the former `toasts` root was folded into
+`settings.toastalerts` (including the storage-only `anchor` id, no catalog row).
 
 The toast engine (`Services/toast-engine.lua`, `OneWoW.Toasts`) stays resident
 in core; its surface includes the notes `Fire*Alert` wrappers consumed
@@ -776,7 +763,6 @@ relocated by a versioned `DB:RunMigrations` step in `Core/Database.lua`.
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
 | `OneWoW/UI/t-home.lua` | Home tab: read-only status + live refresh |
 | `OneWoW/UI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |
-| `OneWoW/Docs/MIGRATION.md` | Remaining migration checklist (steps 7–11) |
 | `.cursor/rules/OneWoW-Suite-Architecture.mdc` | Scoped agent rule for suite load-unit patterns |
 | `.cursor/skills/onewow-suite-architecture/SKILL.md` | On-demand lifecycle / integration authoring guide |
 | `bin/check_suite_lifecycle.py` | Pre-commit: lifecycle `RegisterEvent` ban |

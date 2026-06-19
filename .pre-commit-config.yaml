@@ -58,7 +58,7 @@ repos:
           (e.g. a Catalog file touching `OneWoW_AltTracker_Storage`).
           Use `OneWoW.DataManager:Query(...)` or `OneWoW:EnsureLoaded(...)`.
           Phase 1 is warn-only (never blocks). See
-          OneWoW/Docs/ARCHITECTURE.md §7 and MIGRATION.md step 8.
+          OneWoW/Docs/ARCHITECTURE.md §7 and the hook docstring.
         entry: python bin/check_no_data_manager_bypass.py
         language: python
         types: [lua]
@@ -98,7 +98,7 @@ repos:
           Forbids reading or writing the OneWoW settings tree
           (`db.global.settings`, including aliased access) outside
           SettingsFeatureRegistry.lua / Database.lua. Use the
-          SettingsFeatureRegistry funnel. See OneWoW/Docs/MIGRATION.md step 6.
+          SettingsFeatureRegistry funnel. See OneWoW/Docs/ARCHITECTURE.md §8.5.
         entry: python bin/check_no_settings_bypass.py
         language: python
         types: [lua]

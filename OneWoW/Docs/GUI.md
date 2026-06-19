@@ -39,8 +39,7 @@ present — no existence guard.
 
 ## Centralized Settings (Settings.lua)
 
-Shared settings live in the unified `OneWoW_DB` SavedVariables (the legacy
-`OneWoW_GUI_DB` was folded in by MIGRATION step 8); the toolkit binds its
+Shared settings live in core's `OneWoW_DB` SavedVariables; the toolkit binds its
 settings handle to core's db via `OneWoW_GUI:InitializeSettings(db)`.
 All ecosystem addons read/write through GUI. No more duplicate theme/language/minimap storage.
 

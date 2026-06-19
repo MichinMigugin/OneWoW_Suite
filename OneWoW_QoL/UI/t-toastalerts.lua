@@ -3,7 +3,6 @@ local _, ns = ...
 local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 
--- (MIGRATION step 9 shared rules).
 local L = ns.L
 
 local SOUND_OPTIONS = {

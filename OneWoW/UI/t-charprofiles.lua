@@ -349,10 +349,10 @@ function Module:RestoreAddonSettings(addonData)
         local db = _G[dbName]
         if db then
             -- Resolve the wrap flags from the current map, not the snapshot:
-            -- a profile captured before a DB changed shape (e.g. OneWoW_DB
-            -- gaining .global in MIGRATION step 8) must restore into the
-            -- DB's current layout. Snapshot flags only cover dbNames that
-            -- have since left the map.
+            -- a profile captured before a DB changed shape (e.g. a flat root
+            -- later gaining a .global subtable) must restore into the DB's
+            -- current layout. Snapshot flags only cover dbNames that have
+            -- since left the map.
             local mapEntry = SETTINGS_MAP_BY_DBNAME[dbName] or entry
             local target = db
             if (mapEntry.acedb or mapEntry.globalWrap) and type(db.global) == "table" then

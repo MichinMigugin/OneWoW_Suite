@@ -50,16 +50,16 @@ UI\t-toggles.lua
 UI\t-settings.lua
 
 # Toast feature content (engine stays in core as OneWoW.Toasts; these are the
-# toast types + settings tab moved from core in MIGRATION step 9a)
+# toast types + settings tab that live in QoL)
 Features\toastalerts.lua
 Features\toast-loot.lua
 Features\toast-instance.lua
 UI\t-toastalerts.lua
 
 # Tooltip feature content (engine stays in core as OneWoW.TooltipEngine; these
-# are the providers + settings catalog + settings tab moved from core in
-# MIGRATION step 9b). Order matters: tp-collections before tp-itemtypes and
-# tp-itemtracker before tp-recipeknowledge (file-scope ns captures).
+# are the providers + settings catalog + settings tab that live in QoL).
+# Order matters: tp-collections before tp-itemtypes and tp-itemtracker before
+# tp-recipeknowledge (file-scope ns captures).
 Tooltips\tooltips.lua
 Tooltips\tp-collections.lua
 Tooltips\tp-itemtypes.lua
@@ -76,8 +76,7 @@ Tooltips\tp-value.lua
 Tooltips\tp-pets.lua
 UI\t-tooltips.lua
 
-# Portal Hub (moved from core in MIGRATION step 9c). Same relative order as
-# the core TOC: Data first, then modules, settings tab last.
+# Portal Hub. Data first, then modules, settings tab last.
 Portals\Data\Hearthstones.lua
 Portals\Data\ShortNames.lua
 Portals\Data\Portals.lua
@@ -93,8 +92,7 @@ UI\t-portals.lua
 
 # Overlay feature content (engine, icons, and detection stay in core as
 # OneWoW.OverlayEngine / OneWoW.OverlayIcons / OneWoW.UpgradeDetection /
-# OneWoW.ItemStatus; the settings catalog + settings tab moved from core in
-# MIGRATION step 9d)
+# OneWoW.ItemStatus; the settings catalog + settings tab live in QoL)
 Features\overlays.lua
 UI\t-overlays.lua
 

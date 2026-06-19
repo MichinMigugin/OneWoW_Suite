@@ -62,8 +62,6 @@ flowchart TB
 
 Shared across the suite: **themes**, **11 locales**, and **SavedVariables** conventions via `OneWoW_GUI.DB`. Technical overview: [OneWoW/Docs/ARCHITECTURE.md](OneWoW/Docs/ARCHITECTURE.md).
 
-> **Note:** `OneWoW_GUI` in this repo is a transitional SavedVariables stub for migration only — not a user-facing addon. See [OneWoW/Docs/README.md](OneWoW/Docs/README.md).
-
 ---
 
 ## Addon catalog

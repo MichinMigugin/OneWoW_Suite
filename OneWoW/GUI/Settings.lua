@@ -1338,8 +1338,8 @@ end
 
 -- Settings DB bootstrap. Called by core's OnAddonLoaded (OneWoW.lua) right
 -- after InitializeDatabase, before any theme/font reads. Shared settings
--- live in the unified OneWoW_DB (MIGRATION step 8 folded OneWoW_GUI_DB into
--- it), so the toolkit binds to core's db handle instead of owning its own.
+-- live in core's OneWoW_DB, so the toolkit binds to core's db handle instead
+-- of owning its own.
 ---@param db table the core OneWoW db handle returned by DB:Init
 function OneWoW_GUI:InitializeSettings(db)
     OneWoW_GUI._settingsDBHandle = db
