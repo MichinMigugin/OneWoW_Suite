@@ -98,6 +98,24 @@ local HIDDEN_FLAGS = {
     removed = true,
 }
 
+local LEGACY_QUEST_TYPE_CATEGORIES = {
+    normal = "standard",
+    world = "world",
+    worldquest = "world",
+    dungeon = "dungeon",
+    raid = "raid",
+    group = "group",
+    pvp = "pvp",
+    professions = "profession",
+    profession = "profession",
+}
+
+local FREQUENCY_CATEGORIES = {
+    daily = true,
+    weekly = true,
+    repeatable = true,
+}
+
 local function HasDNTMarker(text)
     return text
         and tostring(text):upper():find("DNT", 1, true) ~= nil
@@ -485,6 +503,14 @@ local function AddValue(tbl, value)
     end
 end
 
+local function RemoveValue(tbl, value)
+    for index = #tbl, 1, -1 do
+        if tbl[index] == value then
+            tremove(tbl, index)
+        end
+    end
+end
+
 local function GetMapName(mapID)
     if not mapID then
         return nil
@@ -799,6 +825,46 @@ GetQuestSearchBlob = function(quest)
     addPart(quest.questGiverName)
     addPart(quest.questTurnInName)
     addPart(quest.id)
+    addPart(quest.db2QuestInfoName)
+    addPart(quest.db2QuestSortName)
+    addPart(quest.db2VignetteName)
+    addPart(quest.questType)
+
+    if quest.db2Objectives then
+        for _, objective in ipairs(quest.db2Objectives) do
+            if type(objective) == "table" then
+                addPart(objective.text)
+            end
+        end
+    end
+
+    for _, questLine in ipairs(quest.questLines or {}) do
+        addPart(questLine.name)
+    end
+
+    for _, campaign in ipairs(quest.campaigns or {}) do
+        addPart(campaign.title)
+    end
+
+    for _, scenario in ipairs(quest.activities and quest.activities.scenarios or {}) do
+        addPart(scenario.name)
+    end
+
+    for _, activity in ipairs(quest.activities and quest.activities.groupFinder or {}) do
+        addPart(activity.name)
+    end
+
+    for _, worldBoss in ipairs(quest.worldSystems and quest.worldSystems.worldBosses or {}) do
+        addPart(worldBoss.name)
+    end
+
+    for _, invasion in ipairs(quest.worldSystems and quest.worldSystems.invasions or {}) do
+        addPart(invasion.name)
+    end
+
+    for _, reward in ipairs(quest.worldSystems and quest.worldSystems.renownRewards or {}) do
+        addPart(reward.name)
+    end
 
     if (not quest.questGiverName or quest.questGiverName == "")
         and quest.starts
@@ -938,6 +1004,8 @@ local function NormalizeQuest(quest)
     quest.rewardCurrencies = quest.rewardCurrencies or {}
     quest.storyline = quest.storyline or {}
     quest.series = quest.series or {}
+    quest.questLines = quest.questLines or {}
+    quest.campaigns = quest.campaigns or {}
 
     quest.name = StripWoWTextFormatting(quest.name)
 
@@ -975,27 +1043,48 @@ local function NormalizeQuest(quest)
         quest.objectiveDetails = cleanedDetails
     end
 
+    if not quest.questType or quest.questType == "" then
+        for category, resolvedType in pairs(LEGACY_QUEST_TYPE_CATEGORIES) do
+            if HasCategory(quest, category) then
+                quest.questType = resolvedType
+                break
+            end
+        end
+    end
+
+    quest.questType = quest.questType or "standard"
+
+    for category, resolvedType in pairs(LEGACY_QUEST_TYPE_CATEGORIES) do
+        if HasCategory(quest, category) then
+            if quest.questType == "standard" and resolvedType ~= "standard" then
+                quest.questType = resolvedType
+            end
+            RemoveValue(quest.categories, category)
+        end
+    end
+
+    for category in pairs(FREQUENCY_CATEGORIES) do
+        if HasCategory(quest, category) then
+            AddValue(quest.flags, category)
+            RemoveValue(quest.categories, category)
+        end
+    end
+
     if HasFlag(quest, "daily") then
         quest.isDaily = true
-        AddValue(quest.categories, "daily")
     end
 
     if HasFlag(quest, "weekly") then
         quest.isWeekly = true
-        AddValue(quest.categories, "weekly")
     end
 
-    if HasFlag(quest, "repeatable") then
-        AddValue(quest.categories, "repeatable")
-    end
-
-    if HasCategory(quest, "campaign") then
+    if HasCategory(quest, "campaign") or #quest.campaigns > 0 then
         quest.isCampaign = true
+        AddValue(quest.categories, "campaign")
     end
 
-    if HasCategory(quest, "world") then
+    if quest.questType == "world" then
         quest.isWorldQuest = true
-        AddValue(quest.categories, "worldquest")
     end
 
     if HasCategory(quest, "legendary") then
@@ -1334,22 +1423,14 @@ function QuestData:GetSortedQuests(
         end
 
         ----------------------------------------------------
-        -- QUEST CATEGORY
+        -- QUEST TYPE
         ----------------------------------------------------
 
         if include
             and questTypeFilter
             and questTypeFilter ~= "all"
         then
-            if questTypeFilter == "normal" then
-                if quest.isDaily
-                    or quest.isWeekly
-                    or quest.isCampaign
-                    or quest.isWorldQuest
-                then
-                    include = false
-                end
-            elseif not HasCategory(quest, questTypeFilter) then
+            if quest.questType ~= questTypeFilter then
                 include = false
             end
         end
@@ -1395,14 +1476,18 @@ function QuestData:GetSortedQuests(
         end
 
         if include and advancedFilters.story and advancedFilters.story ~= "all" then
-            local hasStoryline = HasAnyValue(quest.storyline)
+            local hasQuestLine = HasAnyValue(quest.questLines)
+            local hasStoryline = HasAnyValue(quest.storyline) or hasQuestLine
             local hasSeries = HasAnyValue(quest.series)
+            local hasCampaign = HasAnyValue(quest.campaigns)
 
-            if advancedFilters.story == "storyline" and not hasStoryline then
+            if advancedFilters.story == "campaign" and not hasCampaign then
                 include = false
-            elseif advancedFilters.story == "chain" and not (hasStoryline or hasSeries) then
+            elseif advancedFilters.story == "storyline" and not hasStoryline then
                 include = false
-            elseif advancedFilters.story == "standalone" and (hasStoryline or hasSeries) then
+            elseif advancedFilters.story == "chain" and not hasSeries then
+                include = false
+            elseif advancedFilters.story == "standalone" and (hasCampaign or hasStoryline or hasSeries) then
                 include = false
             end
         end
