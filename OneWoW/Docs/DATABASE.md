@@ -2,12 +2,14 @@
 
 Design rationale for `OneWoW/GUI/Database.lua` — the shared database layer used by all addons in the OneWoW suite. This document explains the reasoning behind the API, not how to call it. For the API surface, read `Database.lua` directly.
 
+Suite storage layout and scope resolution contract: [`ARCHITECTURE.md`](ARCHITECTURE.md) §6.
+
 ---
 
 ## V1 Decisions
 
 - The suite owns the addon-facing DB API.
-- The DB module lives in `OneWoW_GUI` for now; it moves to `OneWoW` core when that refactor happens.
+- The DB module lives in `OneWoW/GUI/` and is published as the `OneWoW_GUI.DB` global.
 - Addon code works against logical scopes, not storage details.
 - Initial scope set: `Global`, `Realm`, `Faction`, `Class`, `Spec`, `Char`.
 - Scope names are referenced through `DB.Scope.*` constants, not raw strings.
@@ -28,9 +30,9 @@ Design rationale for `OneWoW/GUI/Database.lua` — the shared database layer use
 
 ## DB Module Location
 
-The DB module lives in `OneWoW_GUI` because every addon in the suite already depends on it.
+The DB module source is `OneWoW/GUI/Database.lua`, published on the `OneWoW_GUI` global. Every suite addon has `RequiredDeps: OneWoW`, which loads the toolkit. Addon code accesses it as `local DB = OneWoW_GUI.DB` (or `local OneWoW_GUI = OneWoW_GUI` then `OneWoW_GUI.DB`).
 
-Long-term, it should move to `OneWoW` (core) when that is refactored. Until then, addon code accesses the module as `local DB = OneWoW_GUI.DB`. When it moves, this import changes once per addon; runtime API calls stay the same.
+The transitional `OneWoW_GUI` TOC-only stub exists solely to load legacy `OneWoW_GUI_DB` SavedVariables during migration — see [`ARCHITECTURE.md`](ARCHITECTURE.md) §1 and §8.1.
 
 ---
 

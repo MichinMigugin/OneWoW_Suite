@@ -70,6 +70,11 @@ This data addon is part of the OneWoW Catalog system:
 - **OneWoW_Catalog** - Main Catalog addon (required)
 - **OneWoW_CatalogData_Tradeskills** - Profession and recipe data
 - **OneWoW_CatalogData_Vendors** - Vendor and item data
+- **OneWoW_CatalogData_Quests** - Quest database and completion tracking
+
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ---
 

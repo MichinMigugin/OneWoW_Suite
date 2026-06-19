@@ -16,6 +16,25 @@ local OneWoW_GUI = OneWoW_GUI
 Every suite unit has `RequiredDeps: OneWoW`, so the global is guaranteed
 present — no existence guard.
 
+## Contents
+
+- [How To Get It](#how-to-get-it)
+- [Centralized Settings (Settings.lua)](#centralized-settings-settingslua)
+- [Theme System](#theme-system)
+- [Frames & Layout](#frames--layout)
+- [Buttons & Controls](#buttons--controls)
+- [Text & Dividers](#text--dividers)
+- [Section Headers](#section-headers)
+- [Stacking & Action Bars](#stacking--action-bars)
+- [Scroll Frames](#scroll-frames)
+- [Split Panel (List + Detail Layout)](#split-panel-list--detail-layout)
+- [Dropdowns](#dropdowns)
+- [Icon Skinning System](#icon-skinning-system)
+- [Additional Components](#additional-components)
+- [Utility](#utility)
+- [Available Backdrop Templates](#available-backdrop-templates)
+- [GUI Dimension Defaults](#gui-dimension-defaults)
+
 ---
 
 ## Centralized Settings (Settings.lua)

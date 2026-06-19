@@ -7,6 +7,19 @@ Remaining migration work (GUI absorption, SV migration, QoL feature moves,
 DevTool packaging, enforcement ramp) lives in [`MIGRATION.md`](MIGRATION.md)
 (steps 7–11).
 
+## Contents
+
+1. [True-core model](#1-true-core-model)
+2. [Load-unit tiers and TOC summary](#2-load-unit-tiers-and-toc-summary)
+3. [Load lifecycle](#3-load-lifecycle)
+4. [Enable model](#4-enable-model)
+5. [Hub UI](#5-hub-ui)
+6. [Cross-unit sharing](#6-cross-unit-sharing)
+7. [Taxonomy](#7-taxonomy)
+8. [GUI and settings integration](#8-gui-and-settings-integration)
+9. [Caveats](#9-caveats)
+10. [File reference](#10-file-reference)
+
 ---
 
 ## 1. True-core model

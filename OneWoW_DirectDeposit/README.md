@@ -57,6 +57,25 @@ Bindable from **Game Menu > Key Bindings** under **OneWoW Direct Deposit**:
 
 The in-addon **Keybinds** tab also shows your current assignments at a glance.
 
+## Installation
+
+1. Extract the `OneWoW_DirectDeposit` folder to your `World of Warcraft\_retail_\Interface\AddOns\` directory
+2. Extract the `OneWoW` folder (required dependency) to the same directory
+3. Restart World of Warcraft or type `/reload` in-game
+4. Type `/dd` or `/1wdd` to open the addon
+
+## Requirements
+
+- **OneWoW** — Core hub addon (required)
+
+## Localization
+
+Supports all 11 suite locales — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
+
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
+
 ## Support
 
 **Website:** https://wow2.xyz/

@@ -2,6 +2,8 @@
 
 Features that have been considered or partially scaffolded but are not yet exposed to the user. Moved here from the README so the README only describes what actually ships.
 
+*Last verified against codebase: 2026-06.*
+
 ---
 
 ## Lists

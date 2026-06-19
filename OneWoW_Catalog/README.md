@@ -68,6 +68,11 @@ The Catalog works with companion data addons to provide complete information:
 - Vendor specialties
 - Seasonal vendors
 
+### Data: Quests (OneWoW_CatalogData_Quests)
+- Static quest database with live scanner enrichment
+- Per-character completion tracking
+- All expansions from Classic through Midnight
+
 ---
 
 ## Customization
@@ -79,8 +84,7 @@ Choose from Forest Green, Ocean Blue, Royal Purple, Crimson Red, Sunset Orange, 
 No UI reload required for theme changes. Switch themes on the fly.
 
 ### Multi-Language Support
-- English
-- Korean
+Supports all 11 suite locales via **OneWoW** — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
 
 ### Search & Filter
 - Universal search across all data
@@ -104,6 +108,7 @@ No UI reload required for theme changes. Switch themes on the fly.
 - **OneWoW_CatalogData_Journal** - Recommended for instance and encounter data (optional)
 - **OneWoW_CatalogData_Tradeskills** - Recommended for recipe and profession data (optional)
 - **OneWoW_CatalogData_Vendors** - Recommended for vendor and item data (optional)
+- **OneWoW_CatalogData_Quests** - Recommended for quest database and completion data (optional)
 
 ## Slash Commands
 
@@ -113,8 +118,11 @@ No UI reload required for theme changes. Switch themes on the fly.
 
 ## Localization
 
-- English
-- Korean
+Supports all 11 suite locales — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
+
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Support
 

@@ -2,6 +2,8 @@
 
 Displays a movable bar with clickable buttons for special quest items from your quest log. Shows cooldowns, charges, and supports sorting by quest title, item name, proximity, or dynamic tier order.
 
+**Module authoring:** [DEVELOPERS.md](../../../DEVELOPERS.md) · [LOCALES.md](../../../../OneWoW/Docs/LOCALES.md) (scope `OneWoW_QoL.questitembar`)
+
 ## Bar Behavior
 
 - Items come from `GetQuestLogSpecialItemInfo` — the game's API for quest-specific usable items

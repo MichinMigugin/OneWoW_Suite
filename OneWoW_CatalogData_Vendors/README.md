@@ -52,6 +52,11 @@ This data addon is part of the OneWoW Catalog system:
 - **OneWoW_Catalog** - Main Catalog addon (required)
 - **OneWoW_CatalogData_Journal** - Instance and encounter data
 - **OneWoW_CatalogData_Tradeskills** - Profession and recipe data
+- **OneWoW_CatalogData_Quests** - Quest database
+
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ---
 

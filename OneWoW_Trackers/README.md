@@ -1,0 +1,81 @@
+# OneWoW - Trackers
+
+**Customizable tracker lists for guides, dailies, weeklies, todos, and farm value. Pin lists as overlays, auto-complete steps from game events, and share lists with friends.**
+
+---
+
+## Features
+
+### Tracker Lists
+- Create lists by type: guide, daily, weekly, todo, repeating, or farm value
+- Organize with categories, favorites, and filters (including hide completed)
+- Author sections and steps with rich markup; import, export, and share lists
+- Bundled presets and example lists to get started quickly
+
+### Auto-Tracking
+- Many step types auto-complete from game events: quests, renown, vault slots, professions, transmog, kills/loot, coordinates, exploration, custom timers, and more
+- Daily, weekly, or one-time reset rules; optional account-wide progress
+
+### Pinned Overlays & Map
+- Pin lists as floating progress windows while you play
+- World-map pins for coordinate steps on pinned lists
+
+### Farm Value
+- Track unbound bag items with quantity, unit price, and total value
+- Session snapshot mode ("count from now")
+- Auction House pricing via OneWoW/Auctionator; optional TradeSkillMaster integration
+
+### Settings
+- Weekly reset region override (auto-detect or US/EU/Asia)
+
+---
+
+## Installation
+
+1. Extract the `OneWoW_Trackers` folder to your `World of Warcraft\_retail_\Interface\AddOns\` directory
+2. Extract the `OneWoW` folder (required dependency) to the same directory
+3. Restart World of Warcraft or type `/reload` in-game
+4. Open via the OneWoW hub **Tracker** tab or `/1wt`
+
+## Requirements
+
+- **OneWoW** — Core hub addon (required)
+- **TradeSkillMaster** / **Auctionator** — Optional; farm value pricing
+
+## Slash Commands
+
+- `/1wt` — Open Trackers (hub tab or standalone window)
+- `/owt` — Alias
+- `/tracker` — Alias
+
+## Documentation
+
+Contributor reference: [Docs/ARCHITECTURE.md](Docs/ARCHITECTURE.md). Suite docs: [OneWoW/Docs/README.md](../OneWoW/Docs/README.md).
+
+## Localization
+
+Supports all 11 suite locales — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
+
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
+
+## Support
+
+**Website:** https://wow2.xyz/
+
+**Report issues:** Through Discord community or our website
+
+## Part of the OneWoW Suite
+
+- [OneWoW](../OneWoW/README.md) — Core hub (required)
+- [OneWoW_Catalog](../OneWoW_Catalog/README.md) — Game data reference
+- [OneWoW_AltTracker](../OneWoW_AltTracker/README.md) — Cross-character data
+
+---
+
+**Author:** MichinMuggin / Ricky
+
+**Website:** https://wow2.xyz/
+
+**All rights reserved. Part of the OneWoW Suite.**

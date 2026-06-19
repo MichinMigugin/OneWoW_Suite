@@ -65,8 +65,15 @@ Quickly search through all your items, portals, and data without opening menus.
 
 ## Localization
 
-- English
-- Korean
+Supports all 11 suite locales — see [LOCALES.md](Docs/LOCALES.md).
+
+## Documentation
+
+Contributor and integrator docs: [Docs/README.md](Docs/README.md) (architecture, database, GUI toolkit, locales, predicate engine).
+
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Support
 
@@ -76,12 +83,12 @@ Quickly search through all your items, portals, and data without opening menus.
 
 ## Part of the OneWoW Suite
 
-OneWoW works best alongside these addons:
 - **OneWoW_QoL** - Quality of life features
 - **OneWoW_AltTracker** - Track all your characters
 - **OneWoW_Notes** - Note-taking system
 - **OneWoW_Bags** - Inventory management
 - **OneWoW_ShoppingList** - Shopping and crafting lists
+- **OneWoW_Trackers** - Guide and todo tracker lists
 - **OneWoW_DirectDeposit** - Automatic gold management
 - **OneWoW_Catalog** - Game data reference
 

@@ -72,6 +72,11 @@ This data addon is part of the OneWoW Catalog system:
 - **OneWoW_Catalog** - Main Catalog addon (required)
 - **OneWoW_CatalogData_Journal** - Instance and encounter data
 - **OneWoW_CatalogData_Vendors** - Vendor and item data
+- **OneWoW_CatalogData_Quests** - Quest database
+
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ---
 

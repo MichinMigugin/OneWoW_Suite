@@ -1,16 +1,35 @@
 # OneWoW_Bags — Architecture
 
-> **See also:** [Docs index](README.md) · [Categorization](CATEGORIZATION.md) · [Search syntax](SEARCH_SYNTAX.md) · [Import/export](IMPORT_EXPORT.md) · [Item-button API](ITEM_BUTTON.md)
+> **See also:** [Docs index](README.md) · [Categorization](CATEGORIZATION.md) · [Search syntax](SEARCH_SYNTAX.md) · [Import/export](IMPORT_EXPORT.md) · [Item-button API](ITEM_BUTTON.md) · [Suite architecture](../../OneWoW/Docs/ARCHITECTURE.md)
+
+## Contents
+
+- [Overview](#overview)
+- [File Tree & Load Order](#file-tree--load-order)
+- [Architectural Pattern](#architectural-pattern)
+- [Data Flow](#data-flow)
+- [Key Components In Detail](#key-components-in-detail)
+- [Window Architecture](#window-architecture)
+- [Event System](#event-system)
+- [Database Schema](#database-schema)
+- [Integration Points](#integration-points)
+- [Blizzard Frame Suppression](#blizzard-frame-suppression)
+- [Refresh Targets](#refresh-targets)
+- [Performance Patterns](#performance-patterns)
+- [Custom Category System](#custom-category-system)
+- [View Context Pattern](#view-context-pattern)
 
 ## Overview
 
-OneWoW_Bags is a unified bag/bank/guild bank replacement addon for World of Warcraft. It replaces consolidated Blizzard bag presentation with a single window per context (inventory, bank, guild bank). The addon is part of the OneWoW Suite and depends on `OneWoW` (hub loader, minimap, overlay/junk/upgrade integrations) and `OneWoW_GUI` (UI primitives, database management, theming).
+OneWoW_Bags is a unified bag/bank/guild bank replacement addon for World of Warcraft. It replaces consolidated Blizzard bag presentation with a single window per context (inventory, bank, guild bank). The addon is part of the OneWoW Suite and depends on `OneWoW` (hub loader, minimap, overlay/junk/upgrade integrations, and the `OneWoW_GUI` toolkit in `OneWoW/GUI/`).
 
 **SavedVariable:** `OneWoW_Bags_DB`, initialized via `OneWoW_GUI.DB:Init` in **single** mode (defaults and persisted data under `db.global`).
 
 **TOC:** `## Interface: 120005, 120007` (Retail + compatible build). `## LoadOnDemand: 1` — the suite core force-loads this unit via `OneWoW:EnsureLoaded` when Bags is enabled; lifecycle init runs through `OnAddonLoaded` / `OnPlayerLogin` on the root namespace object (not a per-file `ADDON_LOADED` frame).
 
-**Hard dependencies (`RequiredDeps`):** `OneWoW`, `OneWoW_GUI`.
+**Hard dependencies (`RequiredDeps`):** `OneWoW` (includes `OneWoW_GUI` global).
+
+**Optional integrations (`OptionalDeps`):** `TradeSkillMaster`, `Baganator` (profile import via `CategoryController`), `Masque` (item-icon skinning). Other suite addons (`OneWoW_AltTracker`, `OneWoW_ShoppingList`, etc.) integrate when present but are not TOC dependencies.
 
 **Optional integrations (`OptionalDeps`):** `TradeSkillMaster`, `Baganator` (profile import via `CategoryController`), `Masque` (item-icon skinning). Other suite addons (`OneWoW_AltTracker`, `OneWoW_ShoppingList`, etc.) integrate when present but are not TOC dependencies.
 

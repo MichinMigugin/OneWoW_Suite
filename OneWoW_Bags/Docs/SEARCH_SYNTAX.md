@@ -21,6 +21,20 @@ addons). For the public API, caches, and extension points, see
 > through `Import from...` so they are translated to the canonical form. See
 > [`IMPORT_EXPORT.md`](IMPORT_EXPORT.md) for details.
 
+## Contents
+
+- [Quick Start](#quick-start)
+- [Saved Search Shortcuts](#saved-search-shortcuts)
+- [Text Search](#text-search)
+- [Keywords](#keywords)
+- [Operators](#operators)
+- [Property Comparisons](#property-comparisons)
+- [Shorthand for Item Level](#shorthand-for-item-level)
+- [Boolean Flags (Verbose Syntax)](#boolean-flags-verbose-syntax)
+- [Named Constants](#named-constants)
+- [PredicateEngine.lua (file map)](#predicateenginelua-file-map)
+- [Combining Everything](#combining-everything)
+
 ---
 
 ## Quick Start

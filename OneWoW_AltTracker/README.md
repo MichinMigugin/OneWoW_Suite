@@ -139,7 +139,14 @@ English, Korean, and more coming soon.
 ## Requirements
 
 - **OneWoW** - Core hub addon (required)
-- **OneWoW_AltTracker_*** - All companion addons recommended for full functionality
+- **OneWoW_AltTracker_*** - Companion data stores (recommended for full functionality):
+  - [Storage](../OneWoW_AltTracker_Storage/README.md) — bags, banks, guild/warband storage
+  - [Professions](../OneWoW_AltTracker_Professions/README.md) — profession skills and recipes
+  - [Endgame](../OneWoW_AltTracker_Endgame/README.md) — M+, delves, endgame progress
+  - [Collections](../OneWoW_AltTracker_Collections/README.md) — mounts, pets, toys, transmog
+  - [Auctions](../OneWoW_AltTracker_Auctions/README.md) — auction house data
+  - [Character](../OneWoW_AltTracker_Character/README.md) — character profiles and equipment
+  - [Accounting](../OneWoW_AltTracker_Accounting/README.md) — gold and currencies
 
 ## Slash Commands
 
@@ -150,8 +157,11 @@ English, Korean, and more coming soon.
 
 ## Localization
 
-- English
-- Korean
+Supports all 11 suite locales — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
+
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Support
 
@@ -162,7 +172,7 @@ English, Korean, and more coming soon.
 ## Part of the OneWoW Suite
 
 OneWoW_AltTracker works with these addons:
-- **OneWoW** - Core hub (required)
+- **[OneWoW](../OneWoW/README.md)** - Core hub (required)
 - **OneWoW_QoL** - Quality of life features
 - **OneWoW_Notes** - Note-taking system
 - **OneWoW_Bags** - Inventory management

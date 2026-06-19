@@ -82,7 +82,7 @@ Notes about items and rewards:
 - Adjustable note appearance
 - Pin colors to color-code information
 - Font size options for accessibility
-- Multiple language support
+- Suite-wide themes and all 11 client locales via **OneWoW**
 
 ### Storage Options
 - Save notes to your account (shared across all characters)
@@ -118,8 +118,11 @@ Notes about items and rewards:
 
 ## Localization
 
-- English
-- Korean
+Supports all 11 suite locales — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
+
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Support
 

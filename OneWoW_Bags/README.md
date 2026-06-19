@@ -39,8 +39,7 @@
 - Adjust icon size (small, medium, large, extra large)
 - Adjust number of columns
 - Change window scale
-- 14+ color themes for the UI
-- Multiple language support (English, Spanish, Korean, French, Russian, German)
+- 14+ color themes for the UI (suite-wide via **OneWoW** settings)
 
 ### Convenience Features
 - Auto-open when you visit vendors
@@ -66,8 +65,7 @@
 
 ## Requirements
 
-- **OneWoW** - Core hub addon (required)
-- **OneWoW_GUI** - Shared UI and database layer (required, loaded with the suite)
+- **OneWoW** — Core hub addon (required; includes the shared UI toolkit)
 
 ## Documentation
 
@@ -89,12 +87,11 @@ Addon authors: start with [`API/INTEGRATION_GUIDE.md`](API/INTEGRATION_GUIDE.md)
 
 ## Localization
 
-- English (enUS)
-- Spanish (esES)
-- Korean (koKR)
-- French (frFR)
-- Russian (ruRU)
-- German (deDE)
+Supports all 11 suite locales — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
+
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Support
 

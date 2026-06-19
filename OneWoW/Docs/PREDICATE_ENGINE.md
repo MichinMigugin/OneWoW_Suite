@@ -4,7 +4,7 @@ PredicateEngine is a shared expression engine published on the `OneWoW` global a
 
 Source: [`OneWoW/Services/PredicateEngine.lua`](../Services/PredicateEngine.lua).
 
-For the user-facing expression syntax (the full keyword catalog, operator semantics, examples), see [`OneWoW_Bags/Docs/SEARCH_SYNTAX.md`](../../OneWoW_Bags/Docs/SEARCH_SYNTAX.md). This document is the **developer reference** for the API surface, caches, and extension points.
+For the user-facing expression syntax (the full keyword catalog, operator semantics, examples), see [`OneWoW_Bags/Docs/SEARCH_SYNTAX.md`](../../OneWoW_Bags/Docs/SEARCH_SYNTAX.md). Suite architecture context: [`ARCHITECTURE.md`](ARCHITECTURE.md). This document is the **developer reference** for the API surface, caches, and extension points.
 
 ---
 

@@ -77,7 +77,11 @@ Each feature is completely independent. Enable only what you want - disable feat
 All OneWoW_QoL features integrate with the main OneWoW theme system. Switch themes instantly with no UI reload required.
 
 ### Language Support
-Multiple language translations available. Changes apply instantly.
+Suite-wide themes and localization via **OneWoW** — supports all 11 client locales.
+
+## Documentation
+
+Module authors: [DEVELOPERS.md](DEVELOPERS.md). Suite docs: [OneWoW/Docs/README.md](../OneWoW/Docs/README.md).
 
 ---
 
@@ -100,8 +104,11 @@ Multiple language translations available. Changes apply instantly.
 
 ## Localization
 
-- English
-- Korean
+Supports all 11 suite locales — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
+
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Support
 

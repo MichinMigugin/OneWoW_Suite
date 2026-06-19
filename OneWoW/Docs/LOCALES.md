@@ -6,6 +6,7 @@ Blizzard's own terminology, the semantic traps, and the tooling.
 
 The **contract** (scopes, resolution order, disjoint rule, centralized `SetLanguage`,
 `GetStore`) is authoritative in [`ARCHITECTURE.md`](ARCHITECTURE.md) §6 — read that first.
+Contributor workflow summary: [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
 (The phase-by-phase rollout history that produced this state lives in git history.)
 
 The 11 supported locales, in TOC/registration order:

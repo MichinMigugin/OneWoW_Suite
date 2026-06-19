@@ -2,6 +2,8 @@
 
 OneWoW QoL is a drop-in module hub for World of Warcraft quality-of-life features. You create a self-contained folder, add your files to the TOC, and the addon handles registration, the UI, toggles, saved settings, and language switching automatically.
 
+**See also:** [OneWoW/Docs/ARCHITECTURE.md](../OneWoW/Docs/ARCHITECTURE.md) (suite lifecycle, ModuleRegistry) · [OneWoW/Docs/LOCALES.md](../OneWoW/Docs/LOCALES.md) (locale scopes, QoL module scope `OneWoW_QoL.<id>`) · [CONTRIBUTING.md](../CONTRIBUTING.md)
+
 ---
 
 ## Folder Structure

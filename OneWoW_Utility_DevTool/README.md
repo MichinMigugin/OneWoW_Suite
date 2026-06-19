@@ -7,14 +7,14 @@
 ## Requirements
 
 - **World of Warcraft Retail** with an interface version supported by the addon TOC (currently **120001** and **120005**; Midnight-era retail)
-- **OneWoW_GUI** (required dependency)
+- **OneWoW** — Core hub addon (required; includes the shared UI toolkit)
 - **!BugGrabber** (optional) — if present, DevTool can mirror captured Lua errors into the Errors tab
 
 ---
 
 ## Installation
 
-1. Ensure **OneWoW_GUI** is installed in your AddOns folder
+1. Extract the `OneWoW` folder (required dependency) to your AddOns folder
 2. Extract the `OneWoW_Utility_DevTool` folder to `World of Warcraft\_retail_\Interface\AddOns\`
 3. Restart World of Warcraft or type `/reload` in-game
 4. Open the addon with `/dt` or `/1wdt`
@@ -157,22 +157,15 @@ In-game **Lua snippet workspace** for experiments and small scripts:
 
 ### Settings Tab
 
-- **Theme** — Color theme selection (applies instantly)
-- **Language** — UI language (English, Korean, Spanish, French, Russian, German)
+- **Theme** — Color theme selection (applies instantly; suite-wide via **OneWoW**)
+- **Language** — UI language (all 11 suite locales)
 - **Minimap** — Show/hide minimap button, icon theme (Horde/Alliance/Neutral)
 
 ---
 
 ## Localization
 
-| Locale | Language |
-|--------|----------|
-| enUS   | English  |
-| deDE   | German   |
-| esES   | Spanish  |
-| frFR   | French   |
-| koKR   | Korean   |
-| ruRU   | Russian  |
+Supports all 11 suite locales — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
 
 ---
 
@@ -195,7 +188,7 @@ In-game **Lua snippet workspace** for experiments and small scripts:
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for translation and code contribution guidelines.
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for translation and code contribution guidelines.
 
 ---
 

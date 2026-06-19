@@ -25,7 +25,7 @@
 - Set any list as the default (loaded on open).
 - Favorite lists float to the top of the sidebar.
 - Rename, delete, export, and import lists from the right-click menu.
-- Auto-generated **Craft Order** sub-lists nest under their parent in the sidebar (see Crafting Integration).
+- Auto-generated **Craft Order** sub-lists nest under their parent in the sidebar when you use the green **Craft** button (see Crafting Integration). User-created sub-lists are not exposed in the UI yet — see [TODO.md](TODO.md).
 
 ### Crafting Integration
 
@@ -71,8 +71,7 @@ A chat alert prints when an item from any of your lists drops into your bags, wi
 
 ### Customization
 
-- Suite-wide color themes (managed in **OneWoW_GUI** settings — affects all OneWoW addons together).
-- Six languages: English, Spanish, French, German, Korean, Russian.
+- Suite-wide color themes (managed in **OneWoW** settings — affects all OneWoW addons together).
 - Quick-access minimap button (registered through the **OneWoW** hub).
 - Optional confirmation dialogs for deletes (item delete, list delete) — both can be silenced via "Don't ask again".
 - Optional name wrapping for long item names.
@@ -82,14 +81,13 @@ A chat alert prints when an item from any of your lists drops into your bags, wi
 ## Installation
 
 1. Extract the `OneWoW_ShoppingList` folder to your `World of Warcraft\_retail_\Interface\AddOns\` directory.
-2. Extract the `OneWoW` and `OneWoW_GUI` folders (required dependencies) to the same directory.
+2. Extract the `OneWoW` folder (required dependency) to the same directory.
 3. Restart World of Warcraft or type `/reload` in-game.
 4. Type `/owsl` in-game to open the addon.
 
 ## Requirements
 
 - **OneWoW** — Core hub addon (required).
-- **OneWoW_GUI** — Shared UI library (required).
 - **OneWoW_AltTracker** — Optional. Enables alt / personal-bank / guild-bank scanning.
 - **OneWoW_Catalog** — Optional. Enables the **Craft** button on item rows, alt-recipe-knowledge lookup, and quality-variant reagent matching.
 
@@ -112,12 +110,11 @@ Configurable under WoW's **Key Bindings** menu under the **OneWoW** category:
 
 ## Localization
 
-- English (enUS)
-- Spanish (esES)
-- Korean (koKR)
-- Russian (ruRU)
-- French (frFR)
-- German (deDE)
+Supports all 11 suite locales — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
+
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Support
 
@@ -130,7 +127,6 @@ Configurable under WoW's **Key Bindings** menu under the **OneWoW** category:
 OneWoW_ShoppingList works with these addons:
 
 - **OneWoW** — Core hub (required)
-- **OneWoW_GUI** — Shared UI library (required)
 - **OneWoW_QoL** — Quality of life features
 - **OneWoW_AltTracker** — Cross-character data
 - **OneWoW_Notes** — Note-taking system
