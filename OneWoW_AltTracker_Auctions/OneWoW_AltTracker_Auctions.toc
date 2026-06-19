@@ -1,5 +1,5 @@
 ## Interface: 120005, 120007
-## Version: R6.2606.1822
+## Version: R6.2606.1918
 ## Title: OneWoW - Data: |cFFFFFFFFAuctions|r
 ## Notes: OneWoW Data Addon that: tracks auction house data including active auctions and bids for all your characters.
 ## Author: OneWoW Dev Team
