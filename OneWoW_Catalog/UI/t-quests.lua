@@ -336,7 +336,7 @@ local function IsDatabaseMode()
     return (searchText and NormalizeQuestSearchText(searchText) ~= "")
         or expansionFilter ~= -1
         or zoneFilter ~= ""
-        or completionFilter ~= "all"
+        or (completionFilter ~= "all" and completionFilter ~= "active")
         or typeFilter ~= "all"
         or questTypeFilter ~= "all"
         or categoryFilter ~= "all"
@@ -525,6 +525,31 @@ local function IsVisibleActiveQuestLogInfo(info)
     return true
 end
 
+local function BuildQuestRecord(addon, questID, title, extras)
+    local stored =
+        addon.QuestData
+        and addon.QuestData:GetQuest(questID)
+
+    local quest = {}
+
+    if stored then
+        for key, value in pairs(stored) do
+            quest[key] = value
+        end
+    end
+
+    quest.id = questID
+    quest.name = title or quest.name
+
+    if extras then
+        for key, value in pairs(extras) do
+            quest[key] = value
+        end
+    end
+
+    return quest
+end
+
 local function GetActiveQuestLogQuests(addon)
     local quests = {}
 
@@ -542,35 +567,85 @@ local function GetActiveQuestLogQuests(addon)
                 local questID = info.questID
 
                 if questID
-                    and C_QuestLog.IsOnQuest
                     and C_QuestLog.IsOnQuest(questID)
                     and not IsInternalActiveQuestName(title, questID)
                 then
-                    local stored =
-                        addon.QuestData
-                        and addon.QuestData:GetQuest(questID)
-
-                    local quest = {}
-
-                    if stored then
-                        for key, value in pairs(stored) do
-                            quest[key] = value
-                        end
-                    end
-
-                    quest.id = questID
-                    quest.name = title or quest.name
-                    quest.level = info.level or quest.level
-                    quest.campaign = info.campaign
-                    quest.isTask = info.isTask
-                    quest.isBounty = info.isBounty
-                    quest.isStory = info.isStory
-                    quest.frequency = info.frequency
-
-                    table.insert(quests, quest)
+                    table.insert(quests, BuildQuestRecord(addon, questID, title, {
+                        level = info.level,
+                        campaign = info.campaign,
+                        isTask = info.isTask,
+                        isBounty = info.isBounty,
+                        isStory = info.isStory,
+                        frequency = info.frequency,
+                    }))
                 end
             end
         end
+    end
+
+    table.sort(quests, function(a, b)
+        return (a.name or "") < (b.name or "")
+    end)
+
+    return quests
+end
+
+local function GetAllCharactersActiveQuests(addon)
+    local byID = {}
+
+    for _, quest in ipairs(GetActiveQuestLogQuests(addon)) do
+        if quest.id then
+            byID[quest.id] = quest
+            activeQuestIDsAcrossAlts[quest.id] = true
+        end
+    end
+
+    local altApi = OneWoW_AltTracker_Collections_API
+    local currentKey = OneWoW_GUI:BuildCharKey()
+
+    if altApi and altApi.GetAllCharacters then
+        local characters = altApi.GetAllCharacters()
+        if characters then
+            for characterKey in pairs(characters) do
+                if characterKey ~= currentKey then
+                    local characterData = altApi.GetCharacterData(characterKey)
+                    local activeList =
+                        characterData
+                        and characterData.quests
+                        and characterData.quests.active
+
+                    if activeList then
+                        for _, activeEntry in ipairs(activeList) do
+                            local questID = activeEntry.questID
+                            local title = activeEntry.title
+
+                            if questID
+                                and not byID[questID]
+                                and title
+                                and title ~= ""
+                                and not IsInternalActiveQuestName(title, questID)
+                            then
+                                local extras = {}
+                                if activeEntry.isDaily then
+                                    extras.isDaily = true
+                                end
+                                if activeEntry.isWeekly then
+                                    extras.isWeekly = true
+                                end
+
+                                byID[questID] = BuildQuestRecord(addon, questID, title, extras)
+                                activeQuestIDsAcrossAlts[questID] = true
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    local quests = {}
+    for _, quest in pairs(byID) do
+        table.insert(quests, quest)
     end
 
     table.sort(quests, function(a, b)
@@ -2813,7 +2888,11 @@ function ShowQuestDetail(panels, questData)
             yOffset
         )
 
-        noCharText:SetText(L["QUESTS_NOT_COMPLETED"])
+        if C_QuestLog.IsQuestFlaggedCompletedOnAccount(questData.id) then
+            noCharText:SetText(L["QUESTS_ACCOUNT_COMPLETED_NO_ALTS"])
+        else
+            noCharText:SetText(L["QUESTS_NOT_COMPLETED"])
+        end
 
         noCharText:SetTextColor(
             OneWoW_GUI:GetThemeColor("TEXT_MUTED")
@@ -2873,77 +2952,41 @@ function ShowQuestDetail(panels, questData)
     addSep()
 
     local activeLabel = track(OneWoW_GUI:CreateFS(parent, 10))
-
     activeLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
     activeLabel:SetText(L["QUESTS_ACTIVE_ON"])
-
-    activeLabel:SetTextColor(
-        OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
-    )
+    activeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     yOffset = yOffset - 18
 
-    local activeChars =
+    local activeCharacters =
         tracker and tracker:GetActiveCharacters(questData.id)
         or {}
 
-    if #activeChars == 0 then
+    if #activeCharacters == 0 then
         local noActiveText = track(OneWoW_GUI:CreateFS(parent, 12))
-
-        noActiveText:SetPoint(
-            "TOPLEFT",
-            parent,
-            "TOPLEFT",
-            PAD + 8,
-            yOffset
-        )
-
+        noActiveText:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
         noActiveText:SetText(L["QUESTS_NOT_ACTIVE"])
-
-        noActiveText:SetTextColor(
-            OneWoW_GUI:GetThemeColor("TEXT_MUTED")
-        )
+        noActiveText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         yOffset = yOffset - 18
     else
-        for _, charInfo in ipairs(activeChars) do
-            local rowFrame = track(CreateFrame("Frame", nil, parent))
+        for _, characterInfo in ipairs(activeCharacters) do
+            local rowFrame = track(OneWoW_GUI:CreateLayoutFrame(parent, {
+                height = 18,
+            }))
+            rowFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
+            rowFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -PAD, yOffset)
 
-            rowFrame:SetHeight(18)
+            local activeTexture = rowFrame:CreateTexture(nil, "ARTWORK")
+            activeTexture:SetSize(14, 14)
+            activeTexture:SetPoint("LEFT", rowFrame, "LEFT", 0, 0)
+            activeTexture:SetTexture(QUEST_STATUS_TEXTURE_CHECK)
+            activeTexture:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
 
-            rowFrame:SetPoint(
-                "TOPLEFT",
-                parent,
-                "TOPLEFT",
-                PAD + 8,
-                yOffset
-            )
-
-            rowFrame:SetPoint(
-                "TOPRIGHT",
-                parent,
-                "TOPRIGHT",
-                -PAD,
-                yOffset
-            )
-
-            local checkTex = rowFrame:CreateTexture(nil, "ARTWORK")
-
-            checkTex:SetSize(14, 14)
-            checkTex:SetPoint("LEFT", rowFrame, "LEFT", 0, 0)
-
-            checkTex:SetTexture(
-                "Interface\\Buttons\\UI-CheckBox-Check"
-            )
-
-            checkTex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-
-            local charText = OneWoW_GUI:CreateFS(rowFrame, 12)
-
-            charText:SetPoint("LEFT", checkTex, "RIGHT", 4, 0)
-            charText:SetText(charInfo.name)
-
-            charText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+            local characterText = OneWoW_GUI:CreateFS(rowFrame, 12)
+            characterText:SetPoint("LEFT", activeTexture, "RIGHT", 4, 0)
+            characterText:SetText(characterInfo.name)
+            characterText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
 
             yOffset = yOffset - 20
         end
@@ -3228,6 +3271,7 @@ local function UpdateQuestListEntry(btn, quest, panels)
     if btn.isSection then
         if btn.groupToggle then btn.groupToggle:Hide() end
         if btn.checkTex then btn.checkTex:Hide() end
+        if btn.checkHit then btn.checkHit:Hide() end
         if btn.favBtn then btn.favBtn:Hide() end
         if btn.subText then btn.subText:SetText("") end
 
@@ -3292,30 +3336,19 @@ local function UpdateQuestListEntry(btn, quest, panels)
         btn.subText:SetText(expName)
     end
 
-    local isCompleted = false
-    local hasActive = false
+    local listStatus
 
     if btn.isGroup then
         local groupStatus = questGroupStatusCache[entry.key]
 
         if not groupStatus then
-            groupStatus = { isCompleted = true, hasActive = false }
-
-            for _, childQuest in ipairs(entry.quests or {}) do
-                if C_QuestLog.IsOnQuest(childQuest.id) then
-                    groupStatus.hasActive = true
-                end
-
-                if not (tracker and tracker:IsCompletedByCurrentChar(childQuest.id)) then
-                    groupStatus.isCompleted = false
-                end
-            end
-
+            groupStatus = {
+                status = ResolveGroupListStatus(entry.quests, tracker),
+            }
             questGroupStatusCache[entry.key] = groupStatus
         end
 
-        isCompleted = groupStatus.isCompleted
-        hasActive = groupStatus.hasActive
+        listStatus = groupStatus.status
     else
         local rowStatus =
             quest
@@ -3324,14 +3357,7 @@ local function UpdateQuestListEntry(btn, quest, panels)
 
         if not rowStatus and quest and quest.id then
             rowStatus = {
-                isCompleted =
-                    tracker
-                    and tracker:IsCompletedByCurrentChar(quest.id),
-
-                hasActive =
-                    C_QuestLog
-                    and C_QuestLog.IsOnQuest
-                    and C_QuestLog.IsOnQuest(quest.id),
+                status = ResolveQuestListStatus(quest.id, tracker),
 
                 isFavorite =
                     ns.Favorites
@@ -3342,25 +3368,20 @@ local function UpdateQuestListEntry(btn, quest, panels)
         end
 
         if rowStatus then
-            isCompleted = rowStatus.isCompleted
-            hasActive = rowStatus.hasActive
+            listStatus = rowStatus.status
         end
     end
 
     if btn.checkTex then
         btn.checkTex:ClearAllPoints()
         btn.checkTex:SetPoint("RIGHT", btn, "RIGHT", btn.isGroup and -40 or -28, 0)
+        ApplyQuestListStatusIcon(btn.checkTex, listStatus)
+    end
 
-        if isCompleted or hasActive then
-            if hasActive and not isCompleted then
-                btn.checkTex:SetVertexColor(0.3, 1, 0.3)
-            else
-                btn.checkTex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-            end
-            btn.checkTex:Show()
-        else
-            btn.checkTex:Hide()
-        end
+    if btn.checkHit then
+        btn.checkHit:ClearAllPoints()
+        btn.checkHit:SetPoint("CENTER", btn.checkTex, "CENTER", 0, 0)
+        btn.checkHit:Show()
     end
 
     if btn.favBtn and ns.Favorites then
@@ -3417,6 +3438,21 @@ local function CreateQuestListEntry(parent, quest, yOffset, panels, onClick)
     checkTex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
     checkTex:Hide()
     btn.checkTex = checkTex
+
+    local checkHit = OneWoW_GUI:CreateLayoutFrame(btn, {
+        width = 28,
+        height = 28,
+    })
+    checkHit:SetPoint("CENTER", checkTex, "CENTER", 0, 0)
+    checkHit:EnableMouseMotion(true)
+    checkHit:SetScript("OnEnter", function(self)
+        ShowQuestStatusLegendTooltip(self)
+    end)
+    checkHit:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    checkHit:Hide()
+    btn.checkHit = checkHit
 
     local groupToggle = CreateFrame("Button", nil, btn, "BackdropTemplate")
     groupToggle:SetSize(18, 18)
@@ -3912,6 +3948,7 @@ function RefreshQuestList(panels)
     local listVersion = panels._questListVersion
     wipe(questRowStatusCache)
     wipe(questGroupStatusCache)
+    wipe(activeQuestIDsAcrossAlts)
 
     local addon = GetDataAddon()
     if not addon or not addon.QuestData then
@@ -3927,9 +3964,13 @@ function RefreshQuestList(panels)
 
     local quests
     local favoriteQuests = {}
+    -- "Active" intentionally combines the current quest log with AltTracker snapshots.
+    local activeMode = completionFilter == "active"
     local databaseMode = IsDatabaseMode()
 
-    if databaseMode then
+    if activeMode then
+        quests = GetAllCharactersActiveQuests(addon)
+    elseif databaseMode then
         quests = addon.QuestData:GetSortedQuests(
             expansionFilter,
             zoneFilter,
@@ -3945,15 +3986,13 @@ function RefreshQuestList(panels)
         favoriteQuests = GetFavoriteQuestsOutsideActiveList(addon, quests)
     end
 
-    if completionFilter ~= "all" then
+    if completionFilter ~= "all" and completionFilter ~= "active" then
         local filtered = {}
         for _, quest in ipairs(quests) do
             if completionFilter == "completed" then
                 if C_QuestLog.IsQuestFlaggedCompleted(quest.id) then table.insert(filtered, quest) end
             elseif completionFilter == "not_completed" then
                 if not C_QuestLog.IsQuestFlaggedCompleted(quest.id) then table.insert(filtered, quest) end
-            elseif completionFilter == "active" then
-                if C_QuestLog.IsOnQuest(quest.id) then table.insert(filtered, quest) end
             elseif completionFilter == "warband" then
                 if C_QuestLog.IsQuestFlaggedCompletedOnAccount(quest.id) then table.insert(filtered, quest) end
             end
