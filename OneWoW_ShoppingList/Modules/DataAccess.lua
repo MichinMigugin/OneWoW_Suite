@@ -3,15 +3,13 @@ local _, ns = ...
 ns.DataAccess = {}
 local DataAccess = ns.DataAccess
 
-local altStorage = nil
 local altStorageDB = nil
 local storageAPI = nil
 local qvCache    = {}
 
 function DataAccess:Initialize()
-    altStorage = OneWoW_AltTracker_Storage
     altStorageDB = OneWoW_AltTracker_Storage_DB
-    storageAPI = StorageAPI
+    storageAPI = OneWoW_AltTracker_Storage_API
     qvCache    = {}
 end
 
@@ -20,18 +18,11 @@ function DataAccess:HasAltData()
     if altStorageDB and (altStorageDB.characters or altStorageDB.warbandBank or altStorageDB.guildBanks) then
         return true
     end
-    return altStorage ~= nil and altStorage.db ~= nil
+    return false
 end
 
 local function GetStorageDBGlobal()
-    -- Support both legacy shape (ns.db.global) and current storage addon shape (SavedVariable root).
-    if altStorage and altStorage.db and altStorage.db.global then
-        return altStorage.db.global
-    end
-    if altStorageDB then
-        return altStorageDB
-    end
-    return nil
+    return altStorageDB
 end
 
 local function IterateBagsForCharacter(charData, itemIDs, onCount)

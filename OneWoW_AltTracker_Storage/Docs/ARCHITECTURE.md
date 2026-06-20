@@ -395,20 +395,20 @@ This addon is designed to be used by:
 ```
 OneWoW_AltTracker_Storage/
 ├── Core/
-│   ├── Core.lua           - Addon initialization and event handling
-│   └── Database.lua       - Database structure and access functions
+│   ├── Database.lua       - Database structure and access functions
+│   ├── API.lua            - Public API (global OneWoW_AltTracker_Storage_API)
+│   └── Core.lua           - Addon initialization and event handling
 ├── Modules/
 │   ├── Bags.lua          - Bag data collection
 │   ├── PersonalBank.lua  - Personal bank data collection
 │   ├── WarbandBank.lua   - Warband bank data collection
 │   ├── GuildBank.lua     - Guild bank data collection
 │   ├── Mail.lua          - Mail data collection
+│   ├── ItemIndex.lua     - Inverted item -> location index (tooltips)
 │   └── DataManager.lua   - Orchestrates all data collection
-├── API/
-│   └── StorageAPI.lua    - Public API for external addons
 ├── Locales/
 │   └── enUS.lua          - English localization
-├── OneWoW_AltTracker_Storage.lua  - Main addon file with API setup
+├── OneWoW_AltTracker_Storage.lua  - Main addon file (no public globals; API lives in Core/API.lua)
 └── OneWoW_AltTracker_Storage.toc  - Addon manifest
 ```
 

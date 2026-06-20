@@ -132,6 +132,43 @@ Placeholder tabs when unloaded: `OneWoW:GetAlwaysShowModules()`.
 - Prefer `_API` over `_DB`; new cross-unit reads → `DataManager:Query` when implemented
 - Layering: no direct cross-family store global reads (see `check_no_data_manager_bypass.py`)
 
+### Exposing a public API
+
+A unit's public surface is an **explicit `OneWoW_<Unit>_API` global** of declared
+dot-functions. Never expose internals with a blanket `OneWoW_<Unit> = ns` — that
+leaks the whole namespace, hides what is actually contractual, and is invisible
+to the cross-family hook (its regex only sees `OneWoW_`-prefixed barewords).
+Keep `ns` private to the unit.
+
+```lua
+-- Good: curated, greppable, guard-friendly
+OneWoW_MyUnit_API = {}
+
+--- One-line purpose.
+---@param charKey string
+---@return table|nil data
+function OneWoW_MyUnit_API.GetData(charKey)
+    return ns.DataManager:GetData(charKey)  -- thin wrapper over a private local
+end
+```
+
+- **Declared dot-functions** (`function OneWoW_MyUnit_API.Method(...)`), not a
+  table literal and not colon-methods. No `if X_API then X_API = nil end` reset.
+- **Annotate the public surface only** (LuaCATS `---@param`/`---@return` + short
+  prose; see `OneWoW-Code-Comments.mdc`). Thin wrappers carry the same types as
+  the private locals they delegate to; locals stay unannotated. Use `---@class`
+  for any return shape that recurs.
+- Wrap, don't re-expose: to publish a private module (e.g. a scanner or an index
+  table), add an accessor (`GetItemIndex()` → `ns.ItemIndex`) rather than hanging
+  the module off the global.
+- **Consumer guard = table-presence only** (`if OneWoW_MyUnit_API then`). No
+  per-method checks (a missing method should error in dev, not silently no-op),
+  and no top-of-file capture for optional/LoD providers — the file body would not
+  re-evaluate once the provider loads later, so read the global at call time.
+- When removing a `= ns` export, grep the **whole suite** for bare-namespace
+  readers (`OneWoW_<Unit>.Member` and `= OneWoW_<Unit>`), not just `_API`
+  consumers — in-family hub/compat files and other families both read these.
+
 ## PR checklist
 
 1. `python -m pre_commit run --all-files`

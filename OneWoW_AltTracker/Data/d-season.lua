@@ -103,6 +103,3 @@ function ns.SeasonData:GetRaidEncounters(raidEntry)
     end
     return encounters
 end
-
-OneWoW_AltTracker = OneWoW_AltTracker or {}
-OneWoW_AltTracker.SeasonData = ns.SeasonData

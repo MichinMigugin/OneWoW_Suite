@@ -1,8 +1,8 @@
 local _, ns = ...
 
 function ns.SetupActionBarsCompat()
-    if OneWoW_AltTracker_Character then
-        ns.ActionBarsModule = OneWoW_AltTracker_Character.ActionBars or nil
+    if OneWoW_AltTracker_Character_API then
+        ns.ActionBarsModule = OneWoW_AltTracker_Character_API.GetActionBarsModule()
     else
         ns.ActionBarsModule = nil
         local L = ns.L

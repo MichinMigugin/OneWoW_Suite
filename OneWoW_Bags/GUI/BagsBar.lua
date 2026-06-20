@@ -2,7 +2,7 @@ local ADDON_NAME, OneWoW_Bags = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local StorageAPI = StorageAPI
+local StorageAPI = OneWoW_AltTracker_Storage_API
 
 local Constants = OneWoW_Bags.Constants
 local L = OneWoW_Bags.L
@@ -323,7 +323,7 @@ function BagsBar:ShowGoldTooltip()
 
     local allChars = OneWoW_AltTracker_Character_API.GetAllCharacters()
     local currentKey = OneWoW_AltTracker_Character_API.GetCurrentCharacterKey()
-    local warbandGold = (StorageAPI and StorageAPI.GetWarbandBankGold) and StorageAPI.GetWarbandBankGold() or 0
+    local warbandGold = (StorageAPI and StorageAPI.GetWarbandBankGold()) or 0
 
     local altList = {}
     local totalGold = 0

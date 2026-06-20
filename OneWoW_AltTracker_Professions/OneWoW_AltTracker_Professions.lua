@@ -1,63 +1,90 @@
 local _, ns = ...
 
-OneWoW_AltTracker_Professions = ns
+-- Public, cross-addon read surface for the Professions unit. ns stays private.
+OneWoW_AltTracker_Professions_API = {}
 
-if OneWoW_AltTracker_Professions_API then
-    OneWoW_AltTracker_Professions_API = nil
+--- Stored profession data for a character.
+---@param charKey string
+---@return table|nil charData
+function OneWoW_AltTracker_Professions_API.GetCharacterData(charKey)
+    return ns.DataManager:GetCharacterData(charKey)
 end
 
-OneWoW_AltTracker_Professions_API = {
-    GetCharacterData = function(charKey)
-        return ns.DataManager:GetCharacterData(charKey)
-    end,
+--- All stored characters keyed by character key.
+---@return table characters charKey -> charData
+function OneWoW_AltTracker_Professions_API.GetAllCharacters()
+    return ns.DataManager:GetAllCharacters()
+end
 
-    GetAllCharacters = function()
-        return ns.DataManager:GetAllCharacters()
-    end,
+--- Character key for the logged-in player.
+---@return string|nil charKey
+function OneWoW_AltTracker_Professions_API.GetCurrentCharacterKey()
+    return ns:GetCharacterKey()
+end
 
-    GetCurrentCharacterKey = function()
-        return ns:GetCharacterKey()
-    end,
+--- Delete a character's stored profession data.
+---@param charKey string
+---@return boolean deleted
+function OneWoW_AltTracker_Professions_API.DeleteCharacter(charKey)
+    return ns.DataManager:DeleteCharacter(charKey)
+end
 
-    DeleteCharacter = function(charKey)
-        return ns.DataManager:DeleteCharacter(charKey)
-    end,
+--- Trigger a full rescan of the current character's profession data.
+function OneWoW_AltTracker_Professions_API.ForceFullScan()
+    return ns.DataManager:ForceFullScan()
+end
 
-    ForceFullScan = function()
-        return ns.DataManager:ForceFullScan()
-    end,
+--- Collect basic profession data for the current character.
+function OneWoW_AltTracker_Professions_API.CollectBasicData()
+    return ns.DataManager:CollectAllBasicData()
+end
 
-    CollectBasicData = function()
-        return ns.DataManager:CollectAllBasicData()
-    end,
+--- Stored equipment for a specific profession.
+---@param charKey string
+---@param professionName string
+---@return table|nil equipment
+function OneWoW_AltTracker_Professions_API.GetProfessionEquipment(charKey, professionName)
+    local charData = ns.DataManager:GetCharacterData(charKey)
+    if not charData then return nil end
+    return ns.ProfessionEquipment:GetEquipmentForProfession(charKey, charData, professionName)
+end
 
-    GetProfessionEquipment = function(charKey, professionName)
-        local charData = ns.DataManager:GetCharacterData(charKey)
-        if not charData then return nil end
-        return ns.ProfessionEquipment:GetEquipmentForProfession(charKey, charData, professionName)
-    end,
+--- Active (unexpired) crafting cooldowns for a profession.
+---@param charKey string
+---@param professionName string
+---@return table cooldowns
+function OneWoW_AltTracker_Professions_API.GetActiveCooldowns(charKey, professionName)
+    local charData = ns.DataManager:GetCharacterData(charKey)
+    if not charData then return {} end
+    return ns.ProfessionCooldowns:GetActiveCooldowns(charKey, charData, professionName)
+end
 
-    GetActiveCooldowns = function(charKey, professionName)
-        local charData = ns.DataManager:GetCharacterData(charKey)
-        if not charData then return {} end
-        return ns.ProfessionCooldowns:GetActiveCooldowns(charKey, charData, professionName)
-    end,
+--- Recently visited profession trainers for a character.
+---@param charKey string
+---@param count number|nil maximum entries to return
+---@return table trainers
+function OneWoW_AltTracker_Professions_API.GetRecentTrainers(charKey, count)
+    local charData = ns.DataManager:GetCharacterData(charKey)
+    if not charData then return {} end
+    return ns.ProfessionTrainers:GetRecentTrainers(charKey, charData, count)
+end
 
-    GetRecentTrainers = function(charKey, count)
-        local charData = ns.DataManager:GetCharacterData(charKey)
-        if not charData then return {} end
-        return ns.ProfessionTrainers:GetRecentTrainers(charKey, charData, count)
-    end,
+--- Concentration state for a profession slot.
+---@param charKey string
+---@param slotName string
+---@return table|nil concentration
+function OneWoW_AltTracker_Professions_API.GetConcentration(charKey, slotName)
+    local charData = ns.DataManager:GetCharacterData(charKey)
+    if not charData then return nil end
+    return ns.ProfessionConcentration:GetConcentration(charData, slotName)
+end
 
-    GetConcentration = function(charKey, slotName)
-        local charData = ns.DataManager:GetCharacterData(charKey)
-        if not charData then return nil end
-        return ns.ProfessionConcentration:GetConcentration(charData, slotName)
-    end,
-
-    GetRecipeCount = function(charKey, professionName)
-        local charData = ns.DataManager:GetCharacterData(charKey)
-        if not charData then return 0 end
-        return ns.ProfessionAdvanced:GetRecipeCount(charKey, charData, professionName)
-    end,
-}
+--- Number of known recipes for a profession.
+---@param charKey string
+---@param professionName string
+---@return number count
+function OneWoW_AltTracker_Professions_API.GetRecipeCount(charKey, professionName)
+    local charData = ns.DataManager:GetCharacterData(charKey)
+    if not charData then return 0 end
+    return ns.ProfessionAdvanced:GetRecipeCount(charKey, charData, professionName)
+end

@@ -9,8 +9,8 @@ local JOURNAL_EXPANSIONS = {
 }
 
 local function GetItemIndex()
-    local storage = OneWoW_AltTracker_Storage
-    return storage and storage.ItemIndex or nil
+    local api = OneWoW_AltTracker_Storage_API
+    return api and api.GetItemIndex() or nil
 end
 
 local function GetVendorData(itemID)

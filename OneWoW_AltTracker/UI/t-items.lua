@@ -123,9 +123,8 @@ function ns.UI.CreateItemsTab(parent)
     scanAHButton.isAHScanning = false
     scanAHButton:SetScript("OnClick", function(self)
         if self.isAHScanning then
-            local Auctions = OneWoW_AltTracker_Auctions
-            if Auctions and Auctions.AHScanner then
-                Auctions.AHScanner:StopScan()
+            if OneWoW_AltTracker_Auctions_API then
+                OneWoW_AltTracker_Auctions_API.StopScan()
             end
             return
         end
@@ -206,8 +205,7 @@ function ns.UI.CreateItemsTab(parent)
 end
 
 function ns.UI:StartAHScan(itemsTab, scanButton)
-    local Auctions = OneWoW_AltTracker_Auctions
-    if not Auctions or not Auctions.AHScanner then
+    if not OneWoW_AltTracker_Auctions_API then
         return
     end
 
@@ -356,7 +354,7 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
 
     local lastRefreshIndex = 0
 
-    Auctions.AHScanner:StartScan(itemsToScan, function(status, current, total, extra)
+    OneWoW_AltTracker_Auctions_API.StartScan(itemsToScan, function(status, current, total, extra)
         if status == "scanStarted" then
             ShowProgress(true)
             if progressBar then
@@ -388,7 +386,7 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
             ScanDone(0)
         elseif status == "ahClosed" then
             if scanButton.isAHScanning then
-                Auctions.AHScanner:StopScan()
+                OneWoW_AltTracker_Auctions_API.StopScan()
             end
         end
     end)

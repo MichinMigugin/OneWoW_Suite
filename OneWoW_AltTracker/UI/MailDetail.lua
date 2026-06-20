@@ -4,8 +4,8 @@
 --   mail icon. Built from OneWoW_GUI helpers (CreateDialog +
 --   showScrollFrame); each row is a small horizontal layout of FontStrings.
 --
---   Data source: StorageAPI.GetMail(charKey) -> reads OneWoW_AltTracker_Storage
---   directly (no new collectors). Expiry is computed live from the stored
+--   Data source: OneWoW_AltTracker_Storage_API.GetMail(charKey) -> reads the
+--   Storage unit directly (no new collectors). Expiry is computed live from the stored
 --   `daysLeft` + `collectedAt` fields.
 -- ============================================================================
 local _, ns = ...
@@ -216,7 +216,7 @@ function ns.UI.ShowMailDetail(charKey)
     local scrollContent = dialog.scrollContent
     scrollContent:SetPoint("TOPLEFT", dialog.contentFrame, "TOPLEFT", 0, -32)
 
-    local mailData = StorageAPI and StorageAPI.GetMail and StorageAPI.GetMail(charKey)
+    local mailData = OneWoW_AltTracker_Storage_API and OneWoW_AltTracker_Storage_API.GetMail(charKey)
     if not mailData or not mailData.mails or not next(mailData.mails) then
         local empty = OneWoW_GUI:CreateFS(scrollContent, 13)
         empty:SetPoint("TOP", scrollContent, "TOP", 0, -20)

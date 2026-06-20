@@ -162,8 +162,8 @@ function ns.UI.RefreshSummaryTab(summaryTab)
             return charData.itemLevel or 0
         elseif col == "bags" then
             local free = 0
-            if StorageAPI then
-                local bags = StorageAPI.GetBags(charKey)
+            if OneWoW_AltTracker_Storage_API then
+                local bags = OneWoW_AltTracker_Storage_API.GetBags(charKey)
                 if bags then
                     for bagID = 0, 4 do
                         if bags[bagID] then
@@ -544,8 +544,8 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
         local bagsText = OneWoW_GUI:CreateFS(charRow, 12)
         local bagsFree, bagsTotal = 0, 0
-        if StorageAPI then
-            local bagsData = StorageAPI.GetBags(charKey)
+        if OneWoW_AltTracker_Storage_API then
+            local bagsData = OneWoW_AltTracker_Storage_API.GetBags(charKey)
             if bagsData then
                 for bagID = 0, 4 do
                     if bagsData[bagID] then
@@ -1000,8 +1000,8 @@ function ns.UI.RefreshSummaryStats(summaryTab)
             statBoxes[3]:SetScript("OnEnter", function(self)
                 self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                 local warbandGold = 0
-                if StorageAPI then
-                    warbandGold = StorageAPI.GetWarbandBankGold() or 0
+                if OneWoW_AltTracker_Storage_API then
+                    warbandGold = OneWoW_AltTracker_Storage_API.GetWarbandBankGold() or 0
                 end
                 local grandTotal = stats.totalGold + warbandGold
                 local grandFormatted = ns.AltTrackerFormatters and ns.AltTrackerFormatters.FormatGold and ns.AltTrackerFormatters:FormatGold(grandTotal)

@@ -1,14 +1,11 @@
--- OneWoW AltTracker Addon File
--- OneWoW_AltTracker_Endgame/Modules/Raids.lua
--- Created by MichinMigugin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 
 ns.Raids = {}
 local Module = ns.Raids
 
 local function GetSeasonData()
-    if _G.OneWoW_AltTracker and _G.OneWoW_AltTracker.SeasonData then
-        return _G.OneWoW_AltTracker.SeasonData
+    if OneWoW_AltTracker then
+        return OneWoW_AltTracker:GetSeasonData()
     end
     return nil
 end

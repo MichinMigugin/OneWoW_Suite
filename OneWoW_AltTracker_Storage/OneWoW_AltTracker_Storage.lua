@@ -1,3 +1,4 @@
-local _, ns = ...
-
-OneWoW_AltTracker_Storage = ns
+-- OneWoW_AltTracker_Storage main file.
+-- The public cross-addon API is published in Core/API.lua as the global
+-- OneWoW_AltTracker_Storage_API. This unit exposes no other globals; the addon
+-- namespace (ns) stays private to the unit.

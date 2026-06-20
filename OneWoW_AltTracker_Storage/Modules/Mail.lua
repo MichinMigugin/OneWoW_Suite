@@ -123,8 +123,8 @@ function private.RescanHandler()
 end
 
 function private.RecordMail(index)
-    local AccountingAddon = _G.OneWoW_AltTracker_Accounting
-    if not AccountingAddon or not AccountingAddon.Transactions or not OneWoW_AltTracker_Accounting_DB then
+    local Accounting = OneWoW_AltTracker_Accounting_API
+    if not Accounting or not OneWoW_AltTracker_Accounting_DB then
         return false
     end
 
@@ -134,7 +134,7 @@ function private.RecordMail(index)
 
     if invoiceType == "seller" or invoiceType == "seller_temp_invoice" then
         if not money or money == 0 then return true end
-        return AccountingAddon.Transactions:RecordIncome("auction_sale", money, buyer or "Auction House", nil, itemName, quantity, "Auction sold")
+        return Accounting.RecordIncome("auction_sale", money, buyer or "Auction House", nil, itemName, quantity, "Auction sold")
 
     elseif invoiceType == "buyer" then
         return true
@@ -142,11 +142,11 @@ function private.RecordMail(index)
     elseif money and money > 0 and CODAmount and CODAmount > 0 then
         local itemLink = GetInboxItemLink(index, 1)
         local itemInfoName = itemLink and select(1, C_Item.GetItemInfo(itemLink)) or itemName
-        AccountingAddon.Transactions:RecordExpense("mail_cod_send", CODAmount, sender or "Unknown", itemLink, itemInfoName or "Item", nil, "COD payment")
+        Accounting.RecordExpense("mail_cod_send", CODAmount, sender or "Unknown", itemLink, itemInfoName or "Item", nil, "COD payment")
         return true
 
     elseif money and money > 0 and not invoiceType then
-        AccountingAddon.Transactions:RecordIncome("money_transfer_in", money, sender or "Unknown", nil, "Gold Transfer", nil, "Received via mail")
+        Accounting.RecordIncome("money_transfer_in", money, sender or "Unknown", nil, "Gold Transfer", nil, "Received via mail")
         return true
     end
 

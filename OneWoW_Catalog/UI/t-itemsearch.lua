@@ -812,9 +812,8 @@ function ns.UI.CreateItemSearchTab(parent)
 
     scanAHButton:SetScript("OnClick", function(self)
         if self.isScanning then
-            local Auctions = OneWoW_AltTracker_Auctions
-            if Auctions and Auctions.FullAHScanner then
-                Auctions.FullAHScanner:StopScan()
+            if OneWoW_AltTracker_Auctions_API then
+                OneWoW_AltTracker_Auctions_API.StopFullScan()
             end
             return
         end
@@ -827,13 +826,12 @@ function ns.UI.CreateItemSearchTab(parent)
         -- Pull the Auctions store on demand (explicit user action — see
         -- OneWoW/Docs/ARCHITECTURE.md §3.8 lazy cross-module data).
         OneWoW:EnsureLoaded("OneWoW_AltTracker_Auctions")
-        local Auctions = OneWoW_AltTracker_Auctions
-        if not Auctions or not Auctions.FullAHScanner then
+        if not OneWoW_AltTracker_Auctions_API then
             print("|cFFFFD100OneWoW:|r " .. L["ITEMSEARCH_ALTTRACKER_AUCTIONS_REQUIRED"])
             return
         end
 
-        local canScan, minutesLeft = Auctions.FullAHScanner:CanScan()
+        local canScan, minutesLeft = OneWoW_AltTracker_Auctions_API.CanFullScan()
         if not canScan then
             print("|cFFFFD100OneWoW:|r " .. string.format(L["ITEMSEARCH_AH_SCAN_COOLDOWN"], minutesLeft))
             return
@@ -845,7 +843,7 @@ function ns.UI.CreateItemSearchTab(parent)
         scanBarContainer:Show()
         UpdateContentAnchor()
 
-        Auctions.FullAHScanner:StartScan(function(status, progress, extra)
+        OneWoW_AltTracker_Auctions_API.StartFullScan(function(status, progress, extra)
             if status == "scanStarted" then
                 scanProgressBar:UpdateProgress(0, 1)
                 scanProgressBar._text:SetText(L["ITEMSEARCH_SCAN_WAITING"])

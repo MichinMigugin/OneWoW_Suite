@@ -6,16 +6,24 @@ local DB = OneWoW_GUI.DB
 OneWoW_AltTracker = {}
 local OneWoWAltTracker = OneWoW_AltTracker
 
-OneWoW_AltTracker.SeasonData = ns.SeasonData
-
 ns.OneWoWAltTracker = OneWoWAltTracker
 ns.oneWoWHubActive = false
 
 -- Public cross-addon accessor. AltTracker data units (RequiredDeps:
 -- OneWoW_AltTracker) read the effective progress override lists through this,
 -- so the static baseline lives only in ns.OverrideDefaults (single source).
+---@param key string one of "trackedCurrencyIDs", "worldBossQuestIDs", "weeklyActivityQuests"
+---@return table|nil list effective override list (user customization, else baseline)
 function OneWoWAltTracker:GetProgressList(key)
     return ns:GetProgressList(key)
+end
+
+--- Shared season definition (raids, dungeons, difficulties + raid-cache helpers)
+--- populated in Data/d-season.lua. AltTracker data units read it through this
+--- accessor so the table stays private to the hub namespace.
+---@return table seasonData the ns.SeasonData module
+function OneWoWAltTracker:GetSeasonData()
+    return ns.SeasonData
 end
 
 local function RegisterWithOneWoW()

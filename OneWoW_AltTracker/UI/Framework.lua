@@ -42,8 +42,8 @@ ns.UI.mailIconCells = ns.UI.mailIconCells or setmetatable({}, { __mode = "k" })
 -- the server has deleted.
 function ns.UI.GetMailSummaryForChar(charKey)
     if not charKey then return nil end
-    local api = StorageAPI
-    if api and api.GetMailSummary then
+    local api = OneWoW_AltTracker_Storage_API
+    if api then
         return api.GetMailSummary(charKey)
     end
     return nil

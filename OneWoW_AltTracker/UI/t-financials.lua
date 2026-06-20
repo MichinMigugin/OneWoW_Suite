@@ -58,9 +58,8 @@ local function ShowEditAmountDialog(tx)
     local function doSave()
         local copper = MoneyInputFrame_GetCopper(dialog.moneyBox)
         if copper >= 0 then
-            local AccountingAddon = OneWoW_AltTracker_Accounting
-            if AccountingAddon and AccountingAddon.Transactions then
-                AccountingAddon.Transactions:UpdateTransaction(tx.id, { amount = copper })
+            if OneWoW_AltTracker_Accounting_API then
+                OneWoW_AltTracker_Accounting_API.UpdateTransaction(tx.id, { amount = copper })
                 if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
                     ns.UI.RefreshFinancialsTab(activeFinancialsTab)
                 end
@@ -120,9 +119,8 @@ local function ShowEditItemNameDialog(tx)
     local function doSave()
         local newName = strtrim(dialog.editBox:GetText())
         if newName ~= "" then
-            local AccountingAddon = OneWoW_AltTracker_Accounting
-            if AccountingAddon and AccountingAddon.Transactions then
-                AccountingAddon.Transactions:UpdateTransaction(tx.id, { itemName = newName })
+            if OneWoW_AltTracker_Accounting_API then
+                OneWoW_AltTracker_Accounting_API.UpdateTransaction(tx.id, { itemName = newName })
                 if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
                     ns.UI.RefreshFinancialsTab(activeFinancialsTab)
                 end
@@ -220,9 +218,8 @@ local function ShowChangeCategoryMenu(tx)
             end,
             onSelect = function(value)
                 if categoryChangeTx and categoryChangeTx.id then
-                    local AccountingAddon = OneWoW_AltTracker_Accounting
-                    if AccountingAddon and AccountingAddon.Transactions then
-                        AccountingAddon.Transactions:UpdateTransaction(categoryChangeTx.id, { category = value })
+                    if OneWoW_AltTracker_Accounting_API then
+                        OneWoW_AltTracker_Accounting_API.UpdateTransaction(categoryChangeTx.id, { category = value })
                         if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
                             ns.UI.RefreshFinancialsTab(activeFinancialsTab)
                         end
@@ -249,9 +246,8 @@ local function ShowDeleteConfirmation(tx)
             {
                 text = DELETE,
                 onClick = function(dialog)
-                    local AccountingAddon = OneWoW_AltTracker_Accounting
-                    if AccountingAddon and AccountingAddon.Transactions then
-                        AccountingAddon.Transactions:DeleteTransaction(tx.id)
+                    if OneWoW_AltTracker_Accounting_API then
+                        OneWoW_AltTracker_Accounting_API.DeleteTransaction(tx.id)
                         if activeFinancialsTab and ns.UI.RefreshFinancialsTab then
                             ns.UI.RefreshFinancialsTab(activeFinancialsTab)
                         end
@@ -662,9 +658,9 @@ function ns.UI.CreateFinancialsTab(parent)
     activeFinancialsTab = parent
 
     local function SetupRefreshCallback()
-        if not OneWoW_AltTracker_Accounting then return false end
+        if not OneWoW_AltTracker_Accounting_API then return false end
         local refreshPending = false
-        OneWoW_AltTracker_Accounting.onNewTransaction = function()
+        OneWoW_AltTracker_Accounting_API.SetTransactionListener(function()
             if refreshPending then return end
             refreshPending = true
             C_Timer.After(0.3, function()
@@ -675,7 +671,7 @@ function ns.UI.CreateFinancialsTab(parent)
                     parent.financialsDirty = true
                 end
             end)
-        end
+        end)
         return true
     end
 
@@ -763,8 +759,8 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
         end
     end
 
-    if financialsTab.statBoxes and OneWoW_AltTracker_Accounting then
-        local stats = OneWoW_AltTracker_Accounting:CalculateStatistics(timeStart, now, characterFilter, categoryFilter)
+    if financialsTab.statBoxes and OneWoW_AltTracker_Accounting_API then
+        local stats = OneWoW_AltTracker_Accounting_API.CalculateStatistics(timeStart, now, characterFilter, categoryFilter)
 
         if financialsTab.statBoxes[1] then
             financialsTab.statBoxes[1].value:SetText(ns.AltTrackerFormatters:FormatGold(stats.income))

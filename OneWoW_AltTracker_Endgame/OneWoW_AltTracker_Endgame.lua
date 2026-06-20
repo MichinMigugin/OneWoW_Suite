@@ -1,3 +1,4 @@
-local _, ns = ...
-
-OneWoW_AltTracker_Endgame = ns
+-- OneWoW_AltTracker_Endgame main file.
+-- This unit exposes no public globals: its data is consumed via the hub and
+-- DataManager, not a cross-addon API table. The addon namespace (ns) stays
+-- private to the unit.
