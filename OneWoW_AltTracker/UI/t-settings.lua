@@ -691,7 +691,7 @@ function ns.UI.CreateSettingsTab(parent)
             t2:SetPoint("RIGHT", row, "RIGHT", -90, 0)
             t2:SetJustifyH("LEFT")
             t2:SetText(col2)
-            t2:SetTextColor(r or OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            t2:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             row.nameText = t2
 
             return row

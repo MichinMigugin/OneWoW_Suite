@@ -130,7 +130,7 @@ function DataManager:CollectBags()
     local charData = ns:GetCharacterData(charKey)
     if not charData then return false end
 
-    if ns.DatabaseDefaults.settings.trackBags then
+    if ns.db.settings.trackBags then
         ns.Bags:CollectData(charKey, charData)
     end
 
@@ -153,7 +153,7 @@ function DataManager:CollectPersonalBank()
     local charData = ns:GetCharacterData(charKey)
     if not charData then return false end
 
-    if ns.DatabaseDefaults.settings.trackPersonalBank then
+    if ns.db.settings.trackPersonalBank then
         ns.PersonalBank:CollectData(charKey, charData)
     end
 
@@ -176,7 +176,7 @@ function DataManager:CollectWarbandBank()
     local charData = ns:GetCharacterData(charKey)
     if not charData then return false end
 
-    if ns.DatabaseDefaults.settings.trackWarbandBank then
+    if ns.db.settings.trackWarbandBank then
         ns.WarbandBank:CollectData(charKey, charData)
     end
 
@@ -199,7 +199,7 @@ function DataManager:CollectGuildBank()
     local charData = ns:GetCharacterData(charKey)
     if not charData then return false end
 
-    if ns.DatabaseDefaults.settings.trackGuildBank then
+    if ns.db.settings.trackGuildBank then
         ns.GuildBank:CollectData(charKey, charData)
     end
 
@@ -222,7 +222,7 @@ function DataManager:CollectMail()
     local charData = ns:GetCharacterData(charKey)
     if not charData then return false end
 
-    if ns.DatabaseDefaults.settings.trackMail then
+    if ns.db.settings.trackMail then
         ns.Mail:CollectData(charKey, charData)
     end
 

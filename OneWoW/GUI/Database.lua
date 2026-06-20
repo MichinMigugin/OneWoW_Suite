@@ -7,7 +7,7 @@
 local OneWoW_GUI = OneWoW_GUI
 
 local GetOrCreateTableEntry, CopyTable = GetOrCreateTableEntry, CopyTable
-local type, pairs, select, ipairs, error, tostring, pcall = type, pairs, select, ipairs, error, tostring, pcall
+local type, pairs, select, ipairs, error, tostring = type, pairs, select, ipairs, error, tostring
 local UnitName, UnitClass, GetRealmName, UnitFactionGroup = UnitName, UnitClass, GetRealmName, UnitFactionGroup
 local GetSpecialization, GetSpecializationInfo = C_SpecializationInfo.GetSpecialization, C_SpecializationInfo.GetSpecializationInfo
 

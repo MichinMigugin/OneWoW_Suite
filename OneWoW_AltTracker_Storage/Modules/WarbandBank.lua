@@ -5,7 +5,6 @@ local Module = ns.WarbandBank
 
 function Module:CollectData(charKey, charData)
     if not charKey then return false end
-    if not OneWoW_AltTracker_Storage_DB then return false end
 
     local warbandBank = {
         tabs = {},
@@ -83,7 +82,7 @@ function Module:CollectData(charKey, charData)
     warbandBank.lastUpdateTime = time()
     warbandBank.lastUpdatedBy = charKey
 
-    OneWoW_AltTracker_Storage_DB.warbandBank = warbandBank
+    ns.db.warbandBank = warbandBank
 
     return true
 end

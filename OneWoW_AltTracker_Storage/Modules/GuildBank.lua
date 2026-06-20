@@ -22,7 +22,6 @@ end
 
 function Module:CollectData(charKey, charData)
     if not charKey then return false end
-    if not OneWoW_AltTracker_Storage_DB then return false end
 
     if not IsInGuild() then
         return true
@@ -76,11 +75,7 @@ function Module:CollectData(charKey, charData)
         end
     end
 
-    if not OneWoW_AltTracker_Storage_DB.guildBanks then
-        OneWoW_AltTracker_Storage_DB.guildBanks = {}
-    end
-
-    OneWoW_AltTracker_Storage_DB.guildBanks[guildName] = guildBank
+    ns.db.guildBanks[guildName] = guildBank
 
     return true
 end
