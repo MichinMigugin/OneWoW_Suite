@@ -537,66 +537,21 @@ local function GetRewardItemID(rewardItem)
     return nil
 end
 
+-- Catalog owns the cross-unit item-name cache; delegate to its public API so we
+-- never touch OneWoW_Catalog_DB directly. Both no-op gracefully when Catalog is
+-- not loaded.
 local function GetCatalogCachedItemName(itemID)
-    itemID = tonumber(itemID)
-    if not itemID then
-        return nil
+    if OneWoW_Catalog and OneWoW_Catalog.GetCachedItemName then
+        return OneWoW_Catalog:GetCachedItemName(itemID)
     end
-
-    local catalogCache =
-        OneWoW_Catalog_DB
-        and OneWoW_Catalog_DB.global
-        and OneWoW_Catalog_DB.global.itemCache
-
-    local cached = catalogCache and catalogCache[itemID]
-
-    if type(cached) == "table" then
-        return cached.name
-    elseif type(cached) == "string" then
-        return cached
-    end
-
     return nil
 end
 
 local function RememberCatalogItemName(itemID, itemName)
-    itemID = tonumber(itemID)
-    if not itemID or not itemName or itemName == "" then
-        return false
+    if OneWoW_Catalog and OneWoW_Catalog.RememberItemName then
+        return OneWoW_Catalog:RememberItemName(itemID, itemName)
     end
-
-    if not OneWoW_Catalog_DB then
-        OneWoW_Catalog_DB = {}
-    end
-
-    OneWoW_Catalog_DB.global = OneWoW_Catalog_DB.global or {}
-    OneWoW_Catalog_DB.global.itemCache = OneWoW_Catalog_DB.global.itemCache or {}
-
-    local itemCache = OneWoW_Catalog_DB.global.itemCache
-    local previous = itemCache[itemID]
-    local previousName =
-        type(previous) == "table"
-        and previous.name
-        or previous
-
-    if type(previous) ~= "table" then
-        previous = {}
-        itemCache[itemID] = previous
-    end
-
-    previous.name = itemName
-
-    if not previous.link then
-        local _, link, quality, _, _, _, _, _, _, icon = C_Item.GetItemInfo(itemID)
-        previous.link = link
-        previous.quality = previous.quality or quality or 1
-        previous.icon = previous.icon or icon or 134400
-    else
-        previous.quality = previous.quality or 1
-        previous.icon = previous.icon or 134400
-    end
-
-    return previousName ~= itemName
+    return false
 end
 
 local function GetCachedItemNameLower(itemID)

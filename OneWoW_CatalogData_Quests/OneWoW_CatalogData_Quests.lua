@@ -18,4 +18,10 @@ OneWoW_CatalogData_Quests_API = {
     GetQuestsForNPC = function(npcID)
         return ns.QuestData and ns.QuestData:GetQuestsForNPC(npcID)
     end,
+    GetTrackedCharacterKeys = function()
+        return ns.CompletionTracker and ns.CompletionTracker:GetTrackedCharacterKeys() or {}
+    end,
+    PurgeCharacter = function(charKey)
+        return ns.CompletionTracker and ns.CompletionTracker:PurgeCharacter(charKey) or false
+    end,
 }

@@ -94,8 +94,8 @@ local function CollectAllCharacterKeys()
         end
     end
 
-    if OneWoW_CatalogData_Quests_DB and OneWoW_CatalogData_Quests_DB.completion then
-        for charKey, _ in pairs(OneWoW_CatalogData_Quests_DB.completion) do
+    if OneWoW_CatalogData_Quests_API then
+        for _, charKey in ipairs(OneWoW_CatalogData_Quests_API.GetTrackedCharacterKeys()) do
             if type(charKey) == "string" then
                 if not charMap[charKey] then
                     charMap[charKey] = {
@@ -110,8 +110,8 @@ local function CollectAllCharacterKeys()
         end
     end
 
-    if OneWoW_CatalogData_Tradeskills_DB and OneWoW_CatalogData_Tradeskills_DB.scanCache then
-        for charKey, _ in pairs(OneWoW_CatalogData_Tradeskills_DB.scanCache) do
+    if OneWoW_CatalogData_Tradeskills_API then
+        for _, charKey in ipairs(OneWoW_CatalogData_Tradeskills_API.GetAllCharacters()) do
             local name, realm = strsplit("-", charKey)
             if name and realm then
                 if not charMap[charKey] then
@@ -183,18 +183,12 @@ local function PurgeCharacter(charKey)
         end
     end
 
-    if OneWoW_CatalogData_Quests_DB and OneWoW_CatalogData_Quests_DB.completion then
-        if OneWoW_CatalogData_Quests_DB.completion[charKey] then
-            OneWoW_CatalogData_Quests_DB.completion[charKey] = nil
-            table.insert(purgedFrom, "Quest Completion")
-        end
+    if OneWoW_CatalogData_Quests_API and OneWoW_CatalogData_Quests_API.PurgeCharacter(charKey) then
+        table.insert(purgedFrom, "Quest Completion")
     end
 
-    if OneWoW_CatalogData_Tradeskills_DB and OneWoW_CatalogData_Tradeskills_DB.scanCache then
-        if OneWoW_CatalogData_Tradeskills_DB.scanCache[charKey] then
-            OneWoW_CatalogData_Tradeskills_DB.scanCache[charKey] = nil
-            table.insert(purgedFrom, "Tradeskill Scans")
-        end
+    if OneWoW_CatalogData_Tradeskills_API and OneWoW_CatalogData_Tradeskills_API.PurgeCharacter(charKey) then
+        table.insert(purgedFrom, "Tradeskill Scans")
     end
 
     return purgedFrom

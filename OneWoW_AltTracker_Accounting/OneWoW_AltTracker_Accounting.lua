@@ -77,3 +77,41 @@ end
 function OneWoW_AltTracker_Accounting_API.SetTransactionListener(listener)
     ns.onNewTransaction = listener
 end
+
+--- The full transaction ledger (newest-first list). Empty table if the store has
+--- not initialized yet, so callers can iterate without a nil guard.
+---@return table transactions
+function OneWoW_AltTracker_Accounting_API.GetTransactions()
+    return OneWoW_AltTracker_Accounting_DB and OneWoW_AltTracker_Accounting_DB.transactions or {}
+end
+
+--- Custom reset boundary (epoch seconds) stamped by the last "Reset Data"; 0 if
+--- none has been set.
+---@return number resetDate
+function OneWoW_AltTracker_Accounting_API.GetCustomResetDate()
+    local db = OneWoW_AltTracker_Accounting_DB
+    return (db and db.settings and db.settings.resetDate) or 0
+end
+
+--- Whether guild bank flows are counted as personal income/expense.
+---@return boolean
+function OneWoW_AltTracker_Accounting_API.GetGuildAsPersonal()
+    local db = OneWoW_AltTracker_Accounting_DB
+    return db and db.settings and db.settings.guildAsPersonal == true
+end
+
+--- Count (or stop counting) guild bank flows as personal income/expense.
+---@param enabled boolean
+function OneWoW_AltTracker_Accounting_API.SetGuildAsPersonal(enabled)
+    local db = OneWoW_AltTracker_Accounting_DB
+    if db and db.settings then
+        db.settings.guildAsPersonal = enabled and true or false
+    end
+end
+
+--- Wipe the entire ledger (transactions + cached statistics) and stamp a fresh
+--- reset boundary. Fires the transaction listener.
+---@return boolean reset false if the store is not loaded
+function OneWoW_AltTracker_Accounting_API.ResetAll()
+    return ns.Transactions:ResetAll()
+end

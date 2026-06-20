@@ -174,14 +174,9 @@ local function GetCatalogItemLoader()
 
     if C_AddOns.IsAddOnLoaded("OneWoW_Catalog")
         and OneWoW_Catalog
-        and OneWoW_Catalog.CreateItemDataLoader
-        and OneWoW_Catalog_DB
+        and OneWoW_Catalog.GetItemDataLoader
     then
-        OneWoW_Catalog_DB.global = OneWoW_Catalog_DB.global or {}
-        itemResolver = OneWoW_Catalog:CreateItemDataLoader(OneWoW_Catalog_DB.global)
-        if itemResolver and itemResolver.Initialize then
-            itemResolver:Initialize()
-        end
+        itemResolver = OneWoW_Catalog:GetItemDataLoader()
     end
 
     return itemResolver or nil

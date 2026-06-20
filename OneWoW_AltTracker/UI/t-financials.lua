@@ -552,17 +552,8 @@ function ns.UI.CreateFinancialsTab(parent)
                 {
                     text = L["FIN_RESET_ACCEPT"],
                     onClick = function(dialog)
-                        if OneWoW_AltTracker_Accounting_DB then
-                            OneWoW_AltTracker_Accounting_DB.transactions = {}
-                            if OneWoW_AltTracker_Accounting_DB.statistics then
-                                OneWoW_AltTracker_Accounting_DB.statistics.totalIncome = 0
-                                OneWoW_AltTracker_Accounting_DB.statistics.totalExpense = 0
-                                OneWoW_AltTracker_Accounting_DB.statistics.netProfit = 0
-                                OneWoW_AltTracker_Accounting_DB.statistics.lastCalculated = 0
-                            end
-                            if OneWoW_AltTracker_Accounting_DB.settings then
-                                OneWoW_AltTracker_Accounting_DB.settings.resetDate = GetServerTime()
-                            end
+                        if OneWoW_AltTracker_Accounting_API then
+                            OneWoW_AltTracker_Accounting_API.ResetAll()
                         end
                         parent.timePeriod = "week"
                         if ns.UI.RefreshFinancialsTab then
@@ -599,9 +590,8 @@ function ns.UI.CreateFinancialsTab(parent)
     guildPersonalCheck:SetPoint("RIGHT", filterPanel, "RIGHT", -10 - guildPersonalCheck.label:GetStringWidth(), 0)
 
     C_Timer.After(0.6, function()
-        local val = OneWoW_AltTracker_Accounting_DB and
-                    OneWoW_AltTracker_Accounting_DB.settings and
-                    OneWoW_AltTracker_Accounting_DB.settings.guildAsPersonal == true
+        local val = OneWoW_AltTracker_Accounting_API and
+                    OneWoW_AltTracker_Accounting_API.GetGuildAsPersonal()
         guildPersonalCheck:SetChecked(val)
     end)
 
@@ -613,8 +603,8 @@ function ns.UI.CreateFinancialsTab(parent)
     end)
     guildPersonalCheck:SetScript("OnLeave", function() GameTooltip:Hide() end)
     guildPersonalCheck:SetScript("OnClick", function(self)
-        if OneWoW_AltTracker_Accounting_DB and OneWoW_AltTracker_Accounting_DB.settings then
-            OneWoW_AltTracker_Accounting_DB.settings.guildAsPersonal = self:GetChecked() and true or false
+        if OneWoW_AltTracker_Accounting_API then
+            OneWoW_AltTracker_Accounting_API.SetGuildAsPersonal(self:GetChecked() and true or false)
         end
     end)
 
@@ -696,7 +686,7 @@ end
 function ns.UI.RefreshFinancialsTab(financialsTab)
     if not financialsTab then return end
 
-    if not OneWoW_AltTracker_Accounting_DB then
+    if not OneWoW_AltTracker_Accounting_API then
         if financialsTab.statusText then
             financialsTab.statusText:SetText(L["FIN_INSTALL_ACCOUNTING"])
         end
@@ -712,7 +702,7 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
     wipe(transactionRows)
     if dt then dt:ClearRows() end
 
-    local allTransactions = OneWoW_AltTracker_Accounting_DB.transactions or {}
+    local allTransactions = OneWoW_AltTracker_Accounting_API.GetTransactions()
     local timePeriod = financialsTab.timePeriod or "week"
     local typeFilter = financialsTab.typeFilter or "all"
     local characterFilter = financialsTab.characterFilter
@@ -727,7 +717,7 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
     elseif timePeriod == "week" then
         timeStart = GetLastWeeklyReset()
     elseif timePeriod == "reset" then
-        local customReset = OneWoW_AltTracker_Accounting_DB and OneWoW_AltTracker_Accounting_DB.settings and OneWoW_AltTracker_Accounting_DB.settings.resetDate
+        local customReset = OneWoW_AltTracker_Accounting_API.GetCustomResetDate()
         if customReset and customReset > 0 then
             timeStart = customReset
         else

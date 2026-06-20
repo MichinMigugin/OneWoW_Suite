@@ -86,4 +86,8 @@ OneWoW_CatalogData_Tradeskills_API = {
     GetKnownRecipes = function(charKey, profName)
         return ns.TradeskillScanner:GetKnownRecipes(charKey, profName)
     end,
+
+    PurgeCharacter = function(charKey)
+        return ns.TradeskillScanner:PurgeCharacter(charKey)
+    end,
 }

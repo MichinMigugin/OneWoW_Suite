@@ -180,3 +180,70 @@ function ns.GetItemDataLoader()
     end
     return sharedLoader
 end
+
+--- Public accessor for Catalog's shared item-data loader. Lets other units
+--- resolve item data without reaching into `OneWoW_Catalog_DB` — Catalog owns and
+--- supplies its own storage. Lazily created + initialized on first use.
+---@return ItemDataLoader
+function OneWoW_Catalog:GetItemDataLoader()
+    return ns.GetItemDataLoader()
+end
+
+--- Look up a cached item *name* from Catalog's item cache. Returns nil when
+--- Catalog has no entry (or is not initialized). Tolerates legacy string-valued
+--- cache entries. For cross-unit name sharing without touching `OneWoW_Catalog_DB`.
+---@param itemID number
+---@return string|nil
+function OneWoW_Catalog:GetCachedItemName(itemID)
+    itemID = tonumber(itemID)
+    if not itemID or not self.db then return nil end
+    local itemCache = self.db.global and self.db.global.itemCache
+    local cached = itemCache and itemCache[itemID]
+    if type(cached) == "table" then
+        return cached.name
+    elseif type(cached) == "string" then
+        return cached
+    end
+    return nil
+end
+
+--- Record an item name into Catalog's item cache, filling link/quality/icon from
+--- the game the first time the item is seen. No-op (returns false) when Catalog
+--- is not loaded — its SV would not persist anyway. For cross-unit name sharing
+--- without touching `OneWoW_Catalog_DB`.
+---@param itemID number
+---@param itemName string
+---@return boolean changed true if the stored name differs from before
+function OneWoW_Catalog:RememberItemName(itemID, itemName)
+    itemID = tonumber(itemID)
+    if not itemID or not itemName or itemName == "" or not self.db then
+        return false
+    end
+
+    self.db.global.itemCache = self.db.global.itemCache or {}
+    local itemCache = self.db.global.itemCache
+    local previous = itemCache[itemID]
+    local previousName =
+        type(previous) == "table"
+        and previous.name
+        or previous
+
+    if type(previous) ~= "table" then
+        previous = {}
+        itemCache[itemID] = previous
+    end
+
+    previous.name = itemName
+
+    if not previous.link then
+        local _, link, quality, _, _, _, _, _, _, icon = C_Item.GetItemInfo(itemID)
+        previous.link = link
+        previous.quality = previous.quality or quality or 1
+        previous.icon = previous.icon or icon or 134400
+    else
+        previous.quality = previous.quality or 1
+        previous.icon = previous.icon or 134400
+    end
+
+    return previousName ~= itemName
+end

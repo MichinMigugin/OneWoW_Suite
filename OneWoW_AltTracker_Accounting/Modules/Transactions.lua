@@ -191,3 +191,26 @@ function Transactions:RecordTransfer(category, amount, source, item, itemName, q
         notes = notes,
     })
 end
+
+-- Wipe the whole ledger: transactions and cached statistics, then stamp a fresh
+-- reset boundary. Backs the Financials "Reset Data" action.
+function Transactions:ResetAll()
+    local db = OneWoW_AltTracker_Accounting_DB
+    if not db then return false end
+
+    db.transactions = {}
+    if db.statistics then
+        db.statistics.totalIncome = 0
+        db.statistics.totalExpense = 0
+        db.statistics.netProfit = 0
+        db.statistics.lastCalculated = 0
+    end
+    if db.settings then
+        db.settings.resetDate = GetServerTime()
+    end
+
+    if ns.onNewTransaction then
+        ns.onNewTransaction()
+    end
+    return true
+end

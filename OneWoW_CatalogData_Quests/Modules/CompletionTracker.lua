@@ -127,6 +127,30 @@ function CompletionTracker:GetCompletedCharacters(questID)
     return result
 end
 
+-- Character keys that have any recorded quest completion. Used by the AltTracker
+-- "Manage Alts" roster to attribute a data source per character.
+function CompletionTracker:GetTrackedCharacterKeys()
+    local keys = {}
+    local db = ns:GetDB()
+    if db and db.completion then
+        for charKey, _ in pairs(db.completion) do
+            tinsert(keys, charKey)
+        end
+    end
+    return keys
+end
+
+-- Drop all quest-completion data for one character. Returns true if anything was
+-- removed (drives the "Manage Alts" purge report).
+function CompletionTracker:PurgeCharacter(charKey)
+    local db = ns:GetDB()
+    if db and db.completion and db.completion[charKey] then
+        db.completion[charKey] = nil
+        return true
+    end
+    return false
+end
+
 function CompletionTracker:IsCompletedByCurrentChar(questID)
     return C_QuestLog.IsQuestFlaggedCompleted(questID) == true
 end

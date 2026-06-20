@@ -175,6 +175,17 @@ function Scanner:GetKnownRecipes(charKey, professionName)
     return db.scanCache[charKey][professionName]
 end
 
+-- Drop all cached tradeskill scans for one character. Returns true if anything
+-- was removed (drives the AltTracker "Manage Alts" purge report).
+function Scanner:PurgeCharacter(charKey)
+    local db = ns:GetDB()
+    if db and db.scanCache and db.scanCache[charKey] then
+        db.scanCache[charKey] = nil
+        return true
+    end
+    return false
+end
+
 function Scanner:GetAllCharacters()
     local db = ns:GetDB()
     if not db.scanCache then return {} end
