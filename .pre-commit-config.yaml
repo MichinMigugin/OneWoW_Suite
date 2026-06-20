@@ -52,13 +52,15 @@ repos:
           )
 
       - id: no-data-manager-bypass
-        name: No cross-family sub-addon global reads in Lua
+        name: No cross-load-unit SavedVariables access in Lua
         description: |
-          Forbids reaching into another load unit's global store
-          (e.g. a Catalog file touching `OneWoW_AltTracker_Storage`).
-          Use `OneWoW.DataManager:Query(...)` or `OneWoW:EnsureLoaded(...)`.
-          Phase 1 is warn-only (never blocks). See
-          OneWoW/Docs/ARCHITECTURE.md §7 and the hook docstring.
+          Forbids touching another load unit's SavedVariables global
+          (e.g. a Catalog file reading `OneWoW_AltTracker_Storage_DB`, or
+          the AltTracker hub iterating `OneWoW_AltTracker_Character_DB`).
+          Ownership is derived from each TOC's SavedVariables lines; use the
+          owner unit's public `OneWoW_<Unit>_API` instead. Phase 0 is
+          warn-only (never blocks). See OneWoW/Docs/ARCHITECTURE.md §6/§7
+          and the hook docstring.
         entry: python bin/check_no_data_manager_bypass.py
         language: python
         types: [lua]

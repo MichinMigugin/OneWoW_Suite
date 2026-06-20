@@ -104,21 +104,46 @@ Independent of items 1 and 5. Pure UI/theme hygiene against the
 
 ---
 
-## 5. `DataManager` enforcement ramp (future)
+## 5. Suite-wide SavedVariables encapsulation
 
-`bin/check_no_data_manager_bypass.py` (hook `no-data-manager-bypass`) phases direct
-cross-family store reads toward `DataManager:Query` (see `ARCHITECTURE.md` §7).
-Blocked on `DataManager:Query` actually being implemented and on cross-family
-reads being migrated onto it.
+A load unit may touch only the SavedVariables declared in its **own** TOC; every
+cross-unit access goes through the owner's public `OneWoW_<Unit>_API`.
+`bin/check_no_data_manager_bypass.py` (hook `no-data-manager-bypass`) enforces it —
+ownership is derived from each TOC's `## SavedVariables` lines, so it flags
+cross-*family* reads **and** same-family hub-to-store reads (`ARCHITECTURE.md`
+§6/§7 and the hook docstring). The active call-site migration is tracked in the
+**Suite-wide DB encapsulation** plan; this section records the standing decisions
+that shape it.
 
-| Phase | Lint behavior | Allowlist | Exit code |
+`DataManager:Query` is **out of scope** for this work: nearly all cross-unit reads
+are required (the hub needs its stores), so `_API` getters are the right tool.
+`DataManager` stays a possible later layer for *optional* cross-family reads only.
+
+### Enforcement ramp
+
+| Phase | Lint behavior | `ALLOWED_FOREIGN_SV` | Exit |
 |---|---|---|---|
-| **1 — now** | warn-only on cross-family reads | all grandfathered reads listed | `0` |
-| **2 — migrating** | warn on allowlisted; **fail** on new off-list reads | shrinks per migration PR | `1` for off-list only |
-| **3 — rule** | hard-fail on every cross-family read | empty (removed) | `1` |
+| **0 — now** | warn-only on every cross-load-unit access | seeded: profile manager + documented migrations | `0` |
+| **later — migrating** | warn allowlisted; **fail** off-list | shrinks per migration PR | `1` off-list |
+| **rule** | hard-fail off-list | sanctioned exceptions only | `1` |
 
-- [ ] Phase 2: populate `ALLOWLIST` from warn output, set `WARN_ONLY = False`.
-- [ ] Phase 3: empty allowlist, hard-fail all cross-family reads.
+- [ ] Migrate the warn worklist onto owner `_API` getters/mutators (plan phases 1–4).
+- [ ] When the warn list is empty except allowlisted entries, set
+  `WARN_ONLY = False` (plan phase 5).
 
-Each migration PR deletes allowlist `path::symbol` keys. When the allowlist is
-empty, flip to Phase 3.
+### Decisions
+
+- **Core is not exempt.** `OneWoW` (core) follows the same rule as every other
+  unit — reaching into another unit's SV goes through that unit's `_API`. The two
+  core service reads the hook surfaced migrate rather than getting allowlisted:
+  `Services/ItemPrices.lua` (`OneWoW_AHPrices`) → Auctions `_API` (below), and
+  `Services/RecipeKnownUtil.lua` (`OneWoW_AltTracker_Professions_DB`) → a
+  Professions `_API` getter.
+- **`OneWoW_AHPrices` is accessed by itemID, not as a table.** All four consumers
+  read a single `OneWoW_AHPrices[itemID]` entry (`.price` / `.timestamp`):
+  `Services/ItemPrices.lua`, `OneWoW_Catalog/UI/t-itemsearch.lua`,
+  `OneWoW_AltTracker/UI/t-items.lua`, and `OneWoW_QoL/Tooltips/tp-pets.lua`.
+  Expose `OneWoW_AltTracker_Auctions_API.GetByItemID(itemID)` (standard WoW
+  naming) returning that entry record (`{ price, timestamp }`) or `nil`, rather
+  than handing out the whole `OneWoW_AHPrices` table. Keep the SV name as-is —
+  TOC-derived ownership makes a rename unnecessary.

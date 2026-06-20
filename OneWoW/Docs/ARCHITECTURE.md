@@ -325,7 +325,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 | No suite-internal `OptionalDeps` | `bin/check_toc_optional_deps.py` (pre-commit `no-suite-internal-optionaldeps`) |
 | No direct `db.global.settings` access (§8.5) | `bin/check_no_settings_bypass.py` (pre-commit `no-settings-bypass`) |
 | No direct combat/restriction API calls (§8.6) | `bin/check_no_restriction_bypass.py` (pre-commit `restriction-funnel`) |
-| No cross-family store global reads | `bin/check_no_data_manager_bypass.py` (phased; warn-only — see hook docstring) |
+| No cross-load-unit SavedVariables access (§6/§7) | `bin/check_no_data_manager_bypass.py` (TOC-derived ownership; phased; warn-only — see hook docstring) |
 | No `_G.literal` access | `bin/check_no_g_literal.py` |
 | Agent guidance | `.cursor/rules/OneWoW-Suite-Architecture.mdc`, `onewow-suite-architecture` skill |
 
@@ -623,9 +623,15 @@ may register both.
 
 ### Layering rules
 
-1. **No sub-addon reads another family's store global directly.** Lint:
-   `bin/check_no_data_manager_bypass.py` (phased enforcement — see the hook
-   docstring).
+1. **A load unit touches only its own SavedVariables.** Ownership is derived
+   from each TOC's `## SavedVariables` lines, so this covers cross-*family* reads
+   **and** same-family hub-to-store reads (e.g. the `OneWoW_AltTracker` hub
+   reaching into `OneWoW_AltTracker_Storage_DB`). Any cross-unit access — read or
+   write — goes through the owner unit's public `OneWoW_<Unit>_API`. Shared core
+   surface (`OneWoW`, `OneWoW_GUI`, `OneWoW_DB`) is readable everywhere. Lint:
+   `bin/check_no_data_manager_bypass.py` (phased enforcement; `ALLOWED_FOREIGN_SV`
+   grandfathers the core profile manager and documented one-time migrations — see
+   the hook docstring).
 2. **Inverse dependencies via events/callbacks**, not direct calls — core stays
    consumer-agnostic.
 3. **Cross-unit data** should route through `DataManager:Query` (planned broker in
