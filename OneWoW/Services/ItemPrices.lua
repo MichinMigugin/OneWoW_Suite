@@ -123,9 +123,8 @@ function IP:GetUnitAHPrice(itemID, itemLink)
         return nil, nil
     end
 
-    local db = OneWoW_AHPrices
-    if not db then return nil, nil end
-    local row = db[itemID]
+    local row = OneWoW_AltTracker_Auctions_API
+        and OneWoW_AltTracker_Auctions_API.GetByItemID(itemID)
     if row and row.price and row.price > 0 then
         return row.price, {
             source = "onewow",

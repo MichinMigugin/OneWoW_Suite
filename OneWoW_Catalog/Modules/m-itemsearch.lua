@@ -91,8 +91,11 @@ local EXPANSION_PRIORITY = {
 
 local function GetOwnedItems()
     local owned = {}
-    local sdb = OneWoW_AltTracker_Storage_DB
-    if not sdb then return owned end
+    local storageAPI = OneWoW_AltTracker_Storage_API
+    if not storageAPI then return owned end
+    local characters = storageAPI.GetCharacters()
+    local warbandBank = storageAPI.GetWarbandBank()
+    local guildBanks = storageAPI.GetGuildBanks()
 
     local function addOwned(itemID, count, charName, locLabel)
         if not owned[itemID] then
@@ -102,8 +105,8 @@ local function GetOwnedItems()
         tinsert(owned[itemID].locations, { charName = charName, locLabel = locLabel, count = count })
     end
 
-    if sdb.characters then
-        for charKey, charData in pairs(sdb.characters) do
+    if characters then
+        for charKey, charData in pairs(characters) do
             local charName = charKey:match("^([^%-]+)") or charKey
 
             if charData.bags then
@@ -144,8 +147,8 @@ local function GetOwnedItems()
         end
     end
 
-    if sdb.warbandBank and sdb.warbandBank.tabs then
-        for _, tabInfo in pairs(sdb.warbandBank.tabs) do
+    if warbandBank and warbandBank.tabs then
+        for _, tabInfo in pairs(warbandBank.tabs) do
             if tabInfo.items then
                 for _, slot in pairs(tabInfo.items) do
                     if slot and slot.itemID then
@@ -156,8 +159,8 @@ local function GetOwnedItems()
         end
     end
 
-    if sdb.guildBanks then
-        for guildName, guildBank in pairs(sdb.guildBanks) do
+    if guildBanks then
+        for guildName, guildBank in pairs(guildBanks) do
             if guildBank.tabs then
                 for _, tabInfo in pairs(guildBank.tabs) do
                     if tabInfo.slots then

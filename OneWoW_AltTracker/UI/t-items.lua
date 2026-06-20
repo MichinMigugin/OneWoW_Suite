@@ -724,10 +724,11 @@ function ns.UI.RefreshItemsTab(itemsTab)
                     itemData.ahTime = 0
                 end
             else
-                local priceDB = OneWoW_AHPrices
-                if priceDB and priceDB[itemID] then
-                    itemData.ahPrice = priceDB[itemID].price or 0
-                    itemData.ahTime = priceDB[itemID].timestamp or 0
+                local ahData = OneWoW_AltTracker_Auctions_API
+                    and OneWoW_AltTracker_Auctions_API.GetByItemID(itemID)
+                if ahData then
+                    itemData.ahPrice = ahData.price or 0
+                    itemData.ahTime = ahData.timestamp or 0
                 else
                     itemData.ahPrice = 0
                     itemData.ahTime = 0

@@ -3,26 +3,28 @@ local _, ns = ...
 ns.DataAccess = {}
 local DataAccess = ns.DataAccess
 
-local altStorageDB = nil
 local storageAPI = nil
 local qvCache    = {}
 
 function DataAccess:Initialize()
-    altStorageDB = OneWoW_AltTracker_Storage_DB
     storageAPI = OneWoW_AltTracker_Storage_API
     qvCache    = {}
 end
 
 function DataAccess:HasAltData()
-    if storageAPI then return true end
-    if altStorageDB and (altStorageDB.characters or altStorageDB.warbandBank or altStorageDB.guildBanks) then
-        return true
-    end
-    return false
+    return storageAPI ~= nil
 end
 
-local function GetStorageDBGlobal()
-    return altStorageDB
+-- Read-only view over the Storage unit's data, assembled from its public API so
+-- ShoppingList never touches OneWoW_AltTracker_Storage_DB directly. Shape mirrors
+-- the store globals the iterate helpers below expect.
+local function GetStorageView()
+    if not storageAPI then return nil end
+    return {
+        characters  = storageAPI.GetCharacters(),
+        warbandBank = storageAPI.GetWarbandBank(),
+        guildBanks  = storageAPI.GetGuildBanks(),
+    }
 end
 
 local function IterateBagsForCharacter(charData, itemIDs, onCount)
@@ -199,7 +201,7 @@ function DataAccess:GetItemInventoryData(itemID, list)
 
     -- Warband Bank is account-wide, so include it even when not searching alts.
     if self:HasAltData() then
-        local adb = GetStorageDBGlobal()
+        local adb = GetStorageView()
         if adb then
             local wbCount = 0
             IterateWarbandBank(adb, itemIDs, function(c)
@@ -213,7 +215,7 @@ function DataAccess:GetItemInventoryData(itemID, list)
     end
 
     if searchAlts and self:HasAltData() then
-        local adb = GetStorageDBGlobal()
+        local adb = GetStorageView()
 
         if adb and adb.characters then
             for charKey, charData in pairs(adb.characters) do

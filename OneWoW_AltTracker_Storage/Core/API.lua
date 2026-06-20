@@ -22,10 +22,25 @@ function OneWoW_AltTracker_Storage_API.GetPersonalBank(charKey)
     return charData and charData.personalBank or nil
 end
 
+--- All stored characters, keyed by charKey. Read-only iteration surface for
+--- consumers that aggregate across every tracked character (item search, alt
+--- inventory rollups).
+---@return table characters map of charKey -> stored character data
+function OneWoW_AltTracker_Storage_API.GetCharacters()
+    return OneWoW_AltTracker_Storage_DB.characters
+end
+
 --- Account-wide warband bank contents (shared across all characters).
 ---@return table warbandBank
 function OneWoW_AltTracker_Storage_API.GetWarbandBank()
     return OneWoW_AltTracker_Storage_DB.warbandBank
+end
+
+--- All stored guild banks, keyed by guild name. For cross-guild aggregation;
+--- use GetGuildBank(charKey) for just the current player's guild.
+---@return table guildBanks map of guildName -> stored guild bank
+function OneWoW_AltTracker_Storage_API.GetGuildBanks()
+    return OneWoW_AltTracker_Storage_DB.guildBanks
 end
 
 --- Gold (copper) stored in the account-wide warband bank.

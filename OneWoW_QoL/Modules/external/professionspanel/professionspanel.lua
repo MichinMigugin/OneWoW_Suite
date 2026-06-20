@@ -177,11 +177,11 @@ function ProfPanelModule:GetOtherAlts()
         end
     end
 
-    local catDB = OneWoW_CatalogData_Tradeskills_DB
-    if catDB and catDB.scanCache then
-        for charKey, professions in pairs(catDB.scanCache) do
-            if charKey ~= currentChar and professions[currentProf] then
-                local profData = professions[currentProf]
+    local tsAPI = OneWoW_CatalogData_Tradeskills_API
+    if tsAPI then
+        for _, charKey in ipairs(tsAPI.GetAllCharacters()) do
+            local profData = charKey ~= currentChar and tsAPI.GetKnownRecipes(charKey, currentProf)
+            if profData then
                 local already = false
                 for _, a in ipairs(alts) do
                     if (a.name .. "-" .. a.realm) == charKey then

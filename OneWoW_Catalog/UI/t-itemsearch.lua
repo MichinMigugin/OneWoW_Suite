@@ -561,8 +561,8 @@ ShowItemDetail = function(result)
         ahPrice, ahMeta = ow.ItemPrices:GetUnitAHPrice(result.itemID, itemLink)
     end
     if not ahPrice or ahPrice <= 0 then
-        local priceDB = OneWoW_AHPrices
-        local ahData = priceDB and priceDB[result.itemID]
+        local ahData = OneWoW_AltTracker_Auctions_API
+            and OneWoW_AltTracker_Auctions_API.GetByItemID(result.itemID)
         if ahData and ahData.price and ahData.price > 0 then
             ahPrice = ahData.price
             ahMeta = { source = "onewow", timestamp = ahData.timestamp }

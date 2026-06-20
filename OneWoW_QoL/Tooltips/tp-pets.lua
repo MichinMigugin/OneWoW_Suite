@@ -39,9 +39,8 @@ local function GetVendorPrice()
 end
 
 local function GetAHPrice()
-    local db = OneWoW_AHPrices
-    if not db then return nil end
-    return db[BATTLE_PET_CAGE_ID]
+    return OneWoW_AltTracker_Auctions_API
+        and OneWoW_AltTracker_Auctions_API.GetByItemID(BATTLE_PET_CAGE_ID)
 end
 
 local function FormatAge(timestamp)

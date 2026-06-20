@@ -47,3 +47,13 @@ end
 function OneWoW_AltTracker_Auctions_API.CanFullScan()
     return ns.FullAHScanner:CanScan()
 end
+
+--- Cached auction-house price entry for a single item from OneWoW's own AH scan
+--- (the Auctions unit owns the `OneWoW_AHPrices` store). Returns the raw record
+--- so callers can read both the price and its capture timestamp.
+---@param itemID number
+---@return { price: number, timestamp: number }|nil entry nil if no cached price
+function OneWoW_AltTracker_Auctions_API.GetByItemID(itemID)
+    if not itemID or not OneWoW_AHPrices then return nil end
+    return OneWoW_AHPrices[itemID]
+end
