@@ -875,7 +875,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
 
     local copyRowLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     copyRowLabel:SetText(L["FONT_COPY_ROW_LABEL"])
-    copyRowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    copyRowLabel:SetTextColor(unpack(OneWoW_GUI.Constants.WOW_QUEST_GOLD))
     copyRowLabel:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 6, 8)
 
     local copyFdidBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {

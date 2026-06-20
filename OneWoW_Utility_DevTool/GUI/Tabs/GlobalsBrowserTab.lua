@@ -942,7 +942,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
 
     local copyRowLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     copyRowLabel:SetText(L["FONT_COPY_ROW_LABEL"])
-    copyRowLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    copyRowLabel:SetTextColor(unpack(OneWoW_GUI.Constants.WOW_QUEST_GOLD))
     copyRowLabel:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 6, 8)
 
     local copyReferenceBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
