@@ -62,7 +62,7 @@ end
 --- Re-parses an arbitrary historical character key into the current canonical form.
 --- Handles all three legacy shapes that exist in OneWoW SavedVariables:
 ---   "Name - Realm"           (AceDB-era, space-dash-space, realm spaces kept)
----   "Name-Realm With Space"  (early DB:NewCompat, no padding, realm spaces kept)
+---   "Name-Realm With Space"  (early AceDB-compat layout, no padding, realm spaces kept)
 ---   "Name-RealmNoSpace"      (current GetCharacterKey, realm whitespace stripped)
 --- Returns nil if the input cannot be parsed into a non-empty name+realm pair so
 --- callers can safely skip metadata keys like "_migrated".
@@ -652,44 +652,6 @@ function DB:DeleteChar(savedVarName, charKey)
     if not sv or not sv.characters then return false end
     sv.characters[charKey] = nil
     return true
-end
-
--- Drop-in replacement for AceDB-3.0:New(). Reads and writes the exact same
--- SavedVariables format so existing user data works without migration.
--- Usage: self.db = DB:NewCompat("MyAddon_DB", defaults, true)
--- Returns the .global/.char shape only — not the scoped Init handle, so
--- GetResolvedValue / SetScopeValue / presets do not apply to it.
----@param savedVarName string global SavedVariable name
----@param defaults table|nil { global?, char? } applied via MergeMissing
----@param useDefaultProfile boolean|nil write a "Default" profileKeys entry for the char
----@return table db { global, char } AceDB-shaped handle
-function DB:NewCompat(savedVarName, defaults, useDefaultProfile)
-    if not _G[savedVarName] then _G[savedVarName] = {} end
-    local sv = _G[savedVarName]
-
-    if not sv.global then sv.global = {} end
-    if not sv.char then sv.char = {} end
-    if not sv.profileKeys then sv.profileKeys = {} end
-
-    local charKey = OneWoW_GUI:BuildCharKey()
-
-    if charKey then
-        if not sv.char[charKey] then sv.char[charKey] = {} end
-        if useDefaultProfile then sv.profileKeys[charKey] = "Default" end
-    end
-
-    local charTable = charKey and sv.char[charKey] or {}
-
-    if defaults then
-        if defaults.global then
-            self:MergeMissing(sv.global, defaults.global)
-        end
-        if defaults.char and charKey then
-            self:MergeMissing(sv.char[charKey], defaults.char)
-        end
-    end
-
-    return { global = sv.global, char = charTable }
 end
 
 -- Simple slash command registration without AceConsole.

@@ -32,7 +32,7 @@ local DB = OneWoW_GUI.DB
 - `single` (preferred) — one shared SavedVariable root; char data at `root.chars["Name-Realm"]`
 - `split` — separate `SavedVariables` and `SavedVariablesPerCharacter` globals
 
-AceDB-format addons adopt the API through `DB:NewCompat` (a drop-in for `AceDB-3.0:New()`) without a storage migration; `DB:Init` itself is `single`/`split` only.
+`DB:Init` is `single`/`split` only. The suite is fully off AceDB; the former `DB:NewCompat` bridge has been removed. Account-wide per-character stores use `DB:InitSubModule` instead.
 
 After `Init` returns, `db`, `db.global`, and every key in the defaults table are **guaranteed to exist**.
 
@@ -103,7 +103,7 @@ Theme, language, and minimap are managed by `OneWoW_GUI:GetSetting` / `OneWoW_GU
 
 8. **Defaults stored by reference.** Direct assignment of a defaults sub-table into a live db table creates a reference-sharing bug — mutations to the live table mutate the defaults template. `MergeMissing` handles this via `CopyTable`; manual paths must do the same.
 
-9. **AceDB-specific calls in new code.** `db:RegisterDefaults`, `db:GetProfile`, profile callbacks. Migrate off AceDB — use `DB:NewCompat` (format-compatible drop-in) or `DB:Init`. Do not depend on AceDB APIs unless a feature truly requires them.
+9. **AceDB-specific calls in new code.** `db:RegisterDefaults`, `db:GetProfile`, profile callbacks. The suite is off AceDB — use `DB:Init` or `DB:InitSubModule`. Do not reintroduce AceDB APIs.
 
 10. **Object-oriented calls on `db`.** `db:Read(...)`, `db:Set(...)` won't work — `db` is a plain table, `DB` is the utility module.
 

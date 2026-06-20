@@ -16,31 +16,37 @@ logged in on a recent build). Delete this file once the items below are done.
 
 The last load unit not fully on the DB API. Independent — no ordering constraint.
 
-- [ ] Migrate `OneWoW_AltTracker`'s inline `InitializeDatabase` (~80 lines in
-  `OneWoW_AltTracker.lua`) to the `DB:Init` + defaults-table pattern the other
-  hub modules use; fold any ad-hoc shape fixes into idempotent init bridges.
-- [ ] After AltTracker is migrated, remove `DB:NewCompat` from
-  `OneWoW/GUI/Database.lua` — AltTracker (`OneWoW_AltTracker.lua`) is its only
-  runtime caller, so it goes dead once the migration lands. Also clear the stale
-  `DB:NewCompat` mentions in the `Database.lua` doc comments and the
-  `OneWoW_Notes/Core/Database.lua` bridge comment.
+- [x] Migrated `OneWoW_AltTracker`'s inline `InitializeDatabase` to the
+  `DB:Init` + defaults-table pattern the other hub modules use, relocated into
+  `OneWoW_AltTracker/Core/Database.lua`. The AltTracker data stores stayed on
+  `DB:InitSubModule` (account-wide per-character aggregation). Progress
+  "overrides" moved to a static baseline (`Data/d-overrides.lua`) with SV holding
+  only user customizations behind `ns:GetProgressList` / `ns:EnsureProgressList`,
+  and AltTracker data units read the effective lists via the public
+  `OneWoW_AltTracker:GetProgressList`.
+- [x] Removed `DB:NewCompat` from `OneWoW/GUI/Database.lua` — AltTracker was the
+  last runtime caller and went dead once the migration landed. Cleared the
+  `DB:NewCompat` mention in the `Database.lua` canonicalizer doc comment; the
+  `OneWoW_Notes/Core/Database.lua` bridge comment is historical provenance for an
+  on-disk layout and stays.
 
 ---
 
 ## 2. `OneWoW/GUI/Database.lua` cleanup
 
-Independent of items 1 and 5 — no ordering constraint. **Caveat:** the dead code
-here is the `config.aceDB` *Init mode*, **not** `DB:NewCompat`. `NewCompat` is the
-AceDB-*format* drop-in still used by `OneWoW_AltTracker` (and bridged by
-`OneWoW_Notes`); leave it until item 1 moves AltTracker onto `DB:Init`, after
-which `NewCompat`'s last caller is gone and it can be retired separately.
+Independent of items 1 and 5 — no ordering constraint. Both the `config.aceDB`
+*Init mode* and the AceDB-*format* drop-in `DB:NewCompat` are now gone:
+`config.aceDB` had no callers, and `DB:NewCompat`'s last caller (`OneWoW_AltTracker`)
+was retired by item 1. `DB:Init` is `single`/`split` only.
 
 - [x] Remove AceDB-mode support: the `config.aceDB` branch in `DB:Init`, the
   `acedb` branches in `TryResolveSpec` / `SetActivePreset`, and the
   `DB:Init requires config.savedVar or config.aceDB` error path. Verified no
   caller passes `config.aceDB` (only the definitions reference it), so removal
-  is safe. Docs (`DATABASE.md`, `onewow-database-api` skill) repointed to
-  `DB:NewCompat` as the remaining AceDB-format compat path.
+  is safe.
+- [x] Remove `DB:NewCompat` (AceDB-format drop-in) once item 1 retired its last
+  caller. Docs (`DATABASE.md`, `onewow-database-api` skill) repointed off the
+  AceDB-format compat path.
 - [x] Annotate all public `DB:*` / `OneWoW_GUI:*` functions per
   `.cursor/rules/OneWoW-Code-Comments.mdc` (LuaCATS `---@param` / `---@return` +
   short prose on the API surface; skip trivial getters).

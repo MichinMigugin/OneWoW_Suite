@@ -21,7 +21,7 @@ Suite storage layout and scope resolution contract: [`ARCHITECTURE.md`](ARCHITEC
 - Long-term, prefer one shared `SavedVariables` root per addon.
 - Defaults are templates only and must never be stored by reference.
 - Blizzard table helpers are internal implementation details, not part of the public API.
-- AceDB addons migrate off AceDB via `DB:NewCompat`, a drop-in for `AceDB-3.0:New()` that reads/writes the same SavedVariables format with no storage migration. `DB:Init` itself is `single`/`split` only.
+- `DB:Init` is `single`/`split` only. The AceDB compatibility path (`DB:NewCompat`) has been retired now that the whole suite is on the native API.
 - `DB` is a stateless utility module. `db` handles are plain tables, not objects with methods.
 - `Set` puts value last: `DB:Set(db, keys..., value)`.
 - Migrations use a versioned integer high-water mark. Defaults application is a normalizer, not a migration.
@@ -51,11 +51,11 @@ Saved variable initialization needs fill-only semantics: fill missing keys, neve
 
 ---
 
-## AceDB Compatibility
+## AceDB Compatibility (retired)
 
-Addons still on the AceDB SavedVariables format adopt the suite API through `DB:NewCompat(savedVarName, defaults, useDefaultProfile)` — a drop-in for `AceDB-3.0:New()` that reads and writes the exact same SavedVariables layout, so existing user data works without a storage migration. It applies `defaults` through `MergeMissing` and returns a handle with `.global` and `.char` matching the AceDB shape.
+The suite is fully off AceDB. The former bridge — `DB:NewCompat`, a drop-in for `AceDB-3.0:New()` that read and wrote the same SavedVariables layout — has been removed now that its last caller (`OneWoW_AltTracker`) moved onto `DB:Init` (single mode). New and existing addons use `DB:Init` (`single`/`split`) or `DB:InitSubModule`; there is no AceDB-format compat path.
 
-`NewCompat` is a compatibility shim, not the full scoped handle. It predates the scope/preset model, so `GetResolvedValue`, `SetScopeValue`, and presets are not available on a `NewCompat` handle. Moving an addon onto `DB:Init` (single mode) unlocks those and is the end state; `NewCompat` exists only to bridge addons that have not made that move yet.
+On-disk data written under the old AceDB/compat character-key shapes is still normalized at load by `OneWoW_GUI:CanonicalizeCharacterKey` and the `DB:Consolidate*` passes, so no user data migration is required.
 
 ---
 
