@@ -2,8 +2,6 @@ local _, ns = ...
 local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
-ns.db = DB:InitSubModule("OneWoW_AltTracker_Storage_DB")
-
 ns.DatabaseDefaults = {
     characters = {},
     warbandBank = {
@@ -27,7 +25,7 @@ ns.DatabaseDefaults = {
 -- the ongoing char-key normalizer live here.
 function ns:InitializeDatabase()
     -- Merge legacy "Name - Realm" duplicates into canonical keys. Idempotent.
-    local migrated = DB:ConsolidateCharacterKeys(ns.db.characters)
+    local migrated = DB:ConsolidateCharacterKeys(OneWoW_AltTracker_Storage_DB.characters)
     if migrated > 0 then
         C_Timer.After(5, function()
             print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. migrated .. " duplicate character key(s) in storage data.")
@@ -35,9 +33,9 @@ function ns:InitializeDatabase()
     end
 
     -- One-time cleanup of stale/corrupt mail rows. Flag-gated; runs once.
-    if not ns.db.mailDataCleaned then
+    if not OneWoW_AltTracker_Storage_DB.mailDataCleaned then
         local cleaned = 0
-        for _, charData in pairs(ns.db.characters) do
+        for _, charData in pairs(OneWoW_AltTracker_Storage_DB.characters) do
             if charData.mail and charData.mail.mails then
                 local toRemove = {}
                 for mailID, mailData in pairs(charData.mail.mails) do
@@ -58,7 +56,7 @@ function ns:InitializeDatabase()
                 end
             end
         end
-        ns.db.mailDataCleaned = true
+        OneWoW_AltTracker_Storage_DB.mailDataCleaned = true
         if cleaned > 0 then
             C_Timer.After(5, function()
                 print("|cFFFFD100OneWoW AltTracker:|r Cleaned " .. cleaned .. " corrupted or stale mail entries.")

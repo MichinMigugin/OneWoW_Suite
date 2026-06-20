@@ -75,7 +75,7 @@ function Module:CollectData(charKey, charData)
         end
     end
 
-    ns.db.guildBanks[guildName] = guildBank
+    OneWoW_AltTracker_Storage_DB.guildBanks[guildName] = guildBank
 
     return true
 end

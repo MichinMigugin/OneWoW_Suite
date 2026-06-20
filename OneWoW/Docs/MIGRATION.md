@@ -18,8 +18,10 @@ The last load unit not fully on the DB API. Independent — no ordering constrai
 
 - [x] Migrated `OneWoW_AltTracker`'s inline `InitializeDatabase` to the
   `DB:Init` + defaults-table pattern the other hub modules use, relocated into
-  `OneWoW_AltTracker/Core/Database.lua`. The AltTracker data stores stayed on
-  `DB:InitSubModule` (account-wide per-character aggregation). Progress
+  `OneWoW_AltTracker/Core/Database.lua`. The AltTracker data stores use
+  account-wide per-character aggregation via `OneWoW:BootStore` (shape from
+  `defaults`) and the `DB:GetCharData` helper family, reading/writing the live
+  SavedVariable global directly. Progress
   "overrides" moved to a static baseline (`Data/d-overrides.lua`) with SV holding
   only user customizations behind `ns:GetProgressList` / `ns:EnsureProgressList`,
   and AltTracker data units read the effective lists via the public

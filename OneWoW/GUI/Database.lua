@@ -592,20 +592,11 @@ function DB:SetActivePreset(db, presetName)
 end
 
 -- Lightweight account-wide character store, separate from the scoped `Init`
--- handle: a flat `{ characters = { [charKey] = data }, version }` SavedVariable
--- used by data sub-addons that aggregate every character (e.g. AltTracker
--- stores). InitSubModule/GetCharData/GetAllChars/DeleteChar operate on it.
---- Create or fetch a sub-module SavedVariable, ensuring `characters` and
---- `version` exist.
----@param savedVarName string global SavedVariable name
----@return table sv
-function DB:InitSubModule(savedVarName)
-    if not _G[savedVarName] then _G[savedVarName] = {} end
-    local sv = _G[savedVarName]
-    if not sv.characters then sv.characters = {} end
-    if not sv.version then sv.version = 1 end
-    return sv
-end
+-- handle: a flat `{ characters = { [charKey] = data } }` SavedVariable used by
+-- data sub-addons that aggregate every character (e.g. AltTracker stores). The
+-- store's shape is ensured by its `defaults` (merged via OneWoW:BootStore at
+-- load); stores read/write the live `_G[savedVarName]` global directly, and the
+-- GetCharData/GetAllChars/DeleteChar helpers below operate on it by name.
 
 --- Fetch (creating if absent) the per-character record in a sub-module store.
 --- Defaults to the current character. Returns nil if no character key resolves

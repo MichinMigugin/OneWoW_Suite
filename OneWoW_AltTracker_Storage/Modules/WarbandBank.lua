@@ -82,7 +82,7 @@ function Module:CollectData(charKey, charData)
     warbandBank.lastUpdateTime = time()
     warbandBank.lastUpdatedBy = charKey
 
-    ns.db.warbandBank = warbandBank
+    OneWoW_AltTracker_Storage_DB.warbandBank = warbandBank
 
     return true
 end

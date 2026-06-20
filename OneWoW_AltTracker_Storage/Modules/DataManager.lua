@@ -130,7 +130,7 @@ function DataManager:CollectBags()
     local charData = ns:GetCharacterData(charKey)
     if not charData then return false end
 
-    if ns.db.settings.trackBags then
+    if OneWoW_AltTracker_Storage_DB.settings.trackBags then
         ns.Bags:CollectData(charKey, charData)
     end
 
@@ -153,7 +153,7 @@ function DataManager:CollectPersonalBank()
     local charData = ns:GetCharacterData(charKey)
     if not charData then return false end
 
-    if ns.db.settings.trackPersonalBank then
+    if OneWoW_AltTracker_Storage_DB.settings.trackPersonalBank then
         ns.PersonalBank:CollectData(charKey, charData)
     end
 
@@ -176,7 +176,7 @@ function DataManager:CollectWarbandBank()
     local charData = ns:GetCharacterData(charKey)
     if not charData then return false end
 
-    if ns.db.settings.trackWarbandBank then
+    if OneWoW_AltTracker_Storage_DB.settings.trackWarbandBank then
         ns.WarbandBank:CollectData(charKey, charData)
     end
 
@@ -199,7 +199,7 @@ function DataManager:CollectGuildBank()
     local charData = ns:GetCharacterData(charKey)
     if not charData then return false end
 
-    if ns.db.settings.trackGuildBank then
+    if OneWoW_AltTracker_Storage_DB.settings.trackGuildBank then
         ns.GuildBank:CollectData(charKey, charData)
     end
 
@@ -222,7 +222,7 @@ function DataManager:CollectMail()
     local charData = ns:GetCharacterData(charKey)
     if not charData then return false end
 
-    if ns.db.settings.trackMail then
+    if OneWoW_AltTracker_Storage_DB.settings.trackMail then
         ns.Mail:CollectData(charKey, charData)
     end
 

@@ -53,7 +53,7 @@ Saved variable initialization needs fill-only semantics: fill missing keys, neve
 
 ## AceDB Compatibility (retired)
 
-The suite is fully off AceDB. The former bridge — `DB:NewCompat`, a drop-in for `AceDB-3.0:New()` that read and wrote the same SavedVariables layout — has been removed now that its last caller (`OneWoW_AltTracker`) moved onto `DB:Init` (single mode). New and existing addons use `DB:Init` (`single`/`split`) or `DB:InitSubModule`; there is no AceDB-format compat path.
+The suite is fully off AceDB. The former bridge — `DB:NewCompat`, a drop-in for `AceDB-3.0:New()` that read and wrote the same SavedVariables layout — has been removed now that its last caller (`OneWoW_AltTracker`) moved onto `DB:Init` (single mode). New and existing addons use `DB:Init` (`single`/`split`); account-wide per-character stores are bootstrapped by `OneWoW:BootStore` (shape ensured from `defaults`) and accessed via the `DB:GetCharData` / `DB:GetAllChars` / `DB:DeleteChar` helpers, which read and write the live SavedVariable global directly. There is no AceDB-format compat path.
 
 On-disk data written under the old AceDB/compat character-key shapes is still normalized at load by `OneWoW_GUI:CanonicalizeCharacterKey` and the `DB:Consolidate*` passes, so no user data migration is required.
 

@@ -3,8 +3,6 @@ local _, ns = ...
 local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
-ns.db = DB:InitSubModule("OneWoW_AltTracker_Auctions_DB")
-
 ns.DatabaseDefaults = {
     characters = {},
     settings = {
@@ -19,7 +17,7 @@ local AH_PRICE_MAX_AGE_DAYS = 14
 -- Defaults applied by BootStore (MergeMissing) before this runs. Char-key
 -- normalizer plus the ongoing AH price TTL purge remain here.
 function ns:InitializeDatabase()
-    local migrated = DB:ConsolidateCharacterKeys(ns.db.characters)
+    local migrated = DB:ConsolidateCharacterKeys(OneWoW_AltTracker_Auctions_DB.characters)
     if migrated > 0 then
         C_Timer.After(5, function()
             print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. migrated .. " duplicate character key(s) in auctions data.")

@@ -52,7 +52,7 @@ local function BuildIndex()
     wipe(index)
     wipe(nameIndex)
 
-    local storageDB = ns.db
+    local storageDB = OneWoW_AltTracker_Storage_DB
 
     if storageDB.characters then
         for charKey, charData in pairs(storageDB.characters) do

@@ -58,16 +58,15 @@ function OneWoW:BootStore(ns, config)
         return DB:DeleteChar(savedVar, charKey)
     end
 
-    ns.GetDB = function()
-        return _G[savedVar]
-    end
-
     -- Core DispatchUnitOnAddonLoaded guarantees single dispatch; didInit removable later.
     local didInit = false
     function ns.OnAddonLoaded()
         if didInit then return end
         didInit = true
         if savedVar then
+            -- Ensure the live SavedVariable exists and carries its default shape.
+            -- This runs after C_AddOns.LoadAddOn (so _G[savedVar] is the real
+            -- disk table); stores read/write _G[savedVar] directly by name.
             if not _G[savedVar] then _G[savedVar] = {} end
             if defaults then
                 DB:MergeMissing(_G[savedVar], defaults)

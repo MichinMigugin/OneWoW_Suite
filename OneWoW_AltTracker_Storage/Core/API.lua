@@ -9,7 +9,7 @@ OneWoW_AltTracker_Storage_API = {}
 ---@return table|nil bags nil if no key or the character has no stored bags
 function OneWoW_AltTracker_Storage_API.GetBags(charKey)
     if not charKey then return nil end
-    local charData = ns.db.characters[charKey]
+    local charData = OneWoW_AltTracker_Storage_DB.characters[charKey]
     return charData and charData.bags or nil
 end
 
@@ -18,20 +18,20 @@ end
 ---@return table|nil personalBank nil if no key or no stored bank data
 function OneWoW_AltTracker_Storage_API.GetPersonalBank(charKey)
     if not charKey then return nil end
-    local charData = ns.db.characters[charKey]
+    local charData = OneWoW_AltTracker_Storage_DB.characters[charKey]
     return charData and charData.personalBank or nil
 end
 
 --- Account-wide warband bank contents (shared across all characters).
 ---@return table warbandBank
 function OneWoW_AltTracker_Storage_API.GetWarbandBank()
-    return ns.db.warbandBank
+    return OneWoW_AltTracker_Storage_DB.warbandBank
 end
 
 --- Gold (copper) stored in the account-wide warband bank.
 ---@return number copper
 function OneWoW_AltTracker_Storage_API.GetWarbandBankGold()
-    return ns.db.warbandBank.money or 0
+    return OneWoW_AltTracker_Storage_DB.warbandBank.money or 0
 end
 
 --- Stored guild bank contents for the current player's guild. The character
@@ -40,13 +40,13 @@ end
 ---@return table|nil guildBank nil if no key, unknown character, or no guild
 function OneWoW_AltTracker_Storage_API.GetGuildBank(charKey)
     if not charKey then return nil end
-    local charData = ns.db.characters[charKey]
+    local charData = OneWoW_AltTracker_Storage_DB.characters[charKey]
     if not charData then return nil end
 
     local guildName = GetGuildInfo("player")
     if not guildName then return nil end
 
-    return ns.db.guildBanks[guildName]
+    return OneWoW_AltTracker_Storage_DB.guildBanks[guildName]
 end
 
 --- Gold (copper) stored in the current player's guild bank.
@@ -55,7 +55,7 @@ function OneWoW_AltTracker_Storage_API.GetGuildBankGold()
     local guildName = GetGuildInfo("player")
     if not guildName then return 0 end
 
-    local guildBank = ns.db.guildBanks[guildName]
+    local guildBank = OneWoW_AltTracker_Storage_DB.guildBanks[guildName]
     return guildBank and guildBank.money or 0
 end
 
@@ -64,7 +64,7 @@ end
 ---@return table|nil mail nil if no key or no stored mail data
 function OneWoW_AltTracker_Storage_API.GetMail(charKey)
     if not charKey then return nil end
-    local charData = ns.db.characters[charKey]
+    local charData = OneWoW_AltTracker_Storage_DB.characters[charKey]
     return charData and charData.mail or nil
 end
 
@@ -85,7 +85,7 @@ end
 ---@return OneWoWStorageMailSummary|nil summary nil if the character has no mail data
 function OneWoW_AltTracker_Storage_API.GetMailSummary(charKey)
     if not charKey then return nil end
-    local charData = ns.db.characters[charKey]
+    local charData = OneWoW_AltTracker_Storage_DB.characters[charKey]
     if not charData or not charData.mail then return nil end
 
     local summary = ns.Mail:GetSummary(charData.mail)

@@ -3,8 +3,6 @@ local _, ns = ...
 local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
-ns.db = DB:InitSubModule("OneWoW_AltTracker_Character_DB")
-
 ns.DatabaseDefaults = {
     characters = {},
     settings = {
@@ -17,7 +15,7 @@ ns.DatabaseDefaults = {
 }
 
 local function ConsolidateActionBarSetSourceChars()
-    for _, setData in pairs(ns.db.actionBarSets) do
+    for _, setData in pairs(OneWoW_AltTracker_Character_DB.actionBarSets) do
         if type(setData) == "table" and setData.sourceChar then
             local canonical = OneWoW_GUI:CanonicalizeCharacterKey(setData.sourceChar)
             if canonical then
@@ -32,7 +30,7 @@ end
 function ns:InitializeDatabase()
     -- Merge legacy/duplicate keys (e.g. "Name-Argent Dawn" vs "Name-ArgentDawn").
     -- Idempotent — no-op once all keys are canonical. See DB:ConsolidateCharacterKeys.
-    local migrated = DB:ConsolidateCharacterKeys(ns.db.characters)
+    local migrated = DB:ConsolidateCharacterKeys(OneWoW_AltTracker_Character_DB.characters)
     if migrated > 0 then
         C_Timer.After(5, function()
             print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. migrated .. " duplicate character key(s) in character data.")
@@ -42,5 +40,5 @@ function ns:InitializeDatabase()
 end
 
 function ns:GetSettingsProfiles()
-    return ns.db.settingsProfiles
+    return OneWoW_AltTracker_Character_DB.settingsProfiles
 end

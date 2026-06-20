@@ -3,8 +3,6 @@ local _, ns = ...
 local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
-ns.db = DB:InitSubModule("OneWoW_AltTracker_Endgame_DB")
-
 ns.DatabaseDefaults = {
     characters = {},
     settings = {
@@ -15,7 +13,7 @@ ns.DatabaseDefaults = {
 -- Defaults applied by BootStore (MergeMissing) before this runs, so only the
 -- char-key normalizer remains here.
 function ns:InitializeDatabase()
-    local migrated = DB:ConsolidateCharacterKeys(ns.db.characters)
+    local migrated = DB:ConsolidateCharacterKeys(OneWoW_AltTracker_Endgame_DB.characters)
     if migrated > 0 then
         C_Timer.After(5, function()
             print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. migrated .. " duplicate character key(s) in endgame data.")
