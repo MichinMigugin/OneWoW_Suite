@@ -105,7 +105,7 @@ function Addon:GetPinnedMonitorEntriesInOrder(arr)
     return out
 end
 
-local function migrateMonitorPinned(d)
+local function bridgeLegacyMonitorPinned(d)
     local mon = d.global and d.global.monitor
     if type(mon) ~= "table" then return end
     if type(mon.pinnedMonitors) ~= "table" then
@@ -131,6 +131,9 @@ local function migrateMonitorPinned(d)
         end
     end
     mon.pinnedMonitors = out
+    mon.pinnedAddon = nil
+    mon.pinnedReopenOnReload = nil
+    mon.pinnedPosition = nil
 end
 
 function Addon:InitializeDatabase()
@@ -218,9 +221,14 @@ function Addon:InitializeDatabase()
     end
     g.tabs.settings.enabled = true
 
-    DB:RunMigrations(db, {
-        { version = 1, name = "monitor_pinned", run = migrateMonitorPinned },
-    })
+    -- One-time: legacy single pinned monitor -> pinnedMonitors array.
+    if g._migrationVersion and g._migrationVersion >= 1 then
+        g._monitorPinnedMigrated = true
+    end
+    if not g._monitorPinnedMigrated then
+        bridgeLegacyMonitorPinned(db)
+        g._monitorPinnedMigrated = true
+    end
 
     self:NormalizeEditorDatabase()
 end

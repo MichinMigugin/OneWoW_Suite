@@ -18,7 +18,7 @@ The last load unit not fully on the DB API. Independent — no ordering constrai
 
 - [ ] Migrate `OneWoW_AltTracker`'s inline `InitializeDatabase` (~80 lines in
   `OneWoW_AltTracker.lua`) to the `DB:Init` + defaults-table pattern the other
-  hub modules use; fold any ad-hoc shape fixes into `DB:RunMigrations`.
+  hub modules use; fold any ad-hoc shape fixes into idempotent init bridges.
 - [ ] After AltTracker is migrated, remove `DB:NewCompat` from
   `OneWoW/GUI/Database.lua` — AltTracker (`OneWoW_AltTracker.lua`) is its only
   runtime caller, so it goes dead once the migration lands. Also clear the stale

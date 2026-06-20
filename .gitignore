@@ -16,9 +16,10 @@ __pycache__
 .env
 .env.*
 
-# Local Discord automation (tokens, channel IDs; keep out of repo)
+# Local Discord automation (deprecated — keep local only; use server bot)
 scripts/Load-DiscordEnv.ps1
 scripts/Send-ChangelogToDiscord.ps1
+scripts/Update-DevToolChangelogOnServer.ps1
 
 # Ephemeral Discord API payloads (Send-ChangelogToDiscord.ps1)
 .discord-changelog-send.json*
@@ -30,9 +31,6 @@ dbplanner.md
 
 
 # Local Developer Tools - Never Commit
-OneWoW_Utility_Extractor/
-OneWoW_UI/
-bin/updatefolder/
 ONEWOW_SUITE.code-workspace
 
 # Audit tools: ignore everything EXCEPT the two published report files
@@ -42,11 +40,3 @@ bin/audit-tools/reports/*
 !bin/audit-tools/reports/summary.json
 !bin/audit-tools/reports/AUDIT_SUMMARY.md
 
-# Local game prototypes (Godot - not part of the addon suite) - Never Commit
-games/
-
-# Local reference / archive (R5 Production Files) - Never Commit
-6_Last WN Addons/
-
-# Local R7 Production Folder - Never Commit
-ONEWOW_SUITE_7/
