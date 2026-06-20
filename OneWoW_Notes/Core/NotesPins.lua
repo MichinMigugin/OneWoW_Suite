@@ -598,7 +598,7 @@ function NotesPins:CreateNotePin(noteID, note)
             todoFrame._text:SetText(todo.text or "")
 
             if todo.completed then
-                todoFrame._text:SetTextColor(0.5, 0.5, 0.5)
+                todoFrame._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             else
                 local fc = currentNote.fontColor or "match"
                 local todoColor

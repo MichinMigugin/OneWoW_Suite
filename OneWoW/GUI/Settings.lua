@@ -788,9 +788,6 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     self:ApplyTheme()
     local currentThemeName = self:GetThemeDisplayName()
-    local effThemeKey = self:GetEffectiveThemeKey()
-    local currentThemeData = THEMES[effThemeKey]
-
     local currentThemeLabel = themePanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     currentThemeLabel:SetPoint("TOPLEFT", themePanel, "TOPLEFT", 15, -90)
     currentThemeLabel:SetText(Current(currentThemeName))
@@ -806,7 +803,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     local themeColorPreview = themeDropdown:CreateTexture(nil, "OVERLAY")
     themeColorPreview:SetSize(14, 14)
     themeColorPreview:SetPoint("LEFT", themeDropdown, "LEFT", 6, 0)
-    if currentThemeData then themeColorPreview:SetColorTexture(unpack(currentThemeData.ACCENT_PRIMARY)) end
+    themeColorPreview:SetColorTexture(self:GetThemeColor("ACCENT_PRIMARY"))
 
     local themeDropText = themeDropdown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     themeDropText:SetPoint("LEFT", themeDropdown, "LEFT", 25, 0)
@@ -880,7 +877,13 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
             y = y - headerH
         end
 
-        local function addThemePickRow(capturedKey, label, dotR, dotG, dotB)
+        local function addThemePickRow(capturedKey, label, previewThemeKey)
+            local dotR, dotG, dotB
+            if previewThemeKey == "random" then
+                dotR, dotG, dotB = 0.55, 0.45, 0.95
+            else
+                dotR, dotG, dotB = OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY", previewThemeKey)
+            end
             local tbtn = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
             tbtn:SetHeight(rowH)
             tbtn:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 2, y)
@@ -913,26 +916,20 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
                 OneWoW_GUI:SetSetting("theme", capturedKey)
                 currentThemeLabel:SetText(Current(OneWoW_GUI:GetThemeDisplayName()))
                 themeDropText:SetText(OneWoW_GUI:GetThemeDisplayName())
-                local eff = OneWoW_GUI:GetEffectiveThemeKey()
-                local td = THEMES[eff]
-                if td then
-                    themeColorPreview:SetColorTexture(unpack(td.ACCENT_PRIMARY))
-                end
+                themeColorPreview:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             end)
             y = y - rowH - 2
         end
 
         addSectionHeader(SPECIAL)
         for _, opt in ipairs(THEME_SPECIAL_OPTIONS or {}) do
-            addThemePickRow(opt.key, (opt.labelKey and L[opt.labelKey]) or opt.label, 0.55, 0.45, 0.95)
+            addThemePickRow(opt.key, (opt.labelKey and L[opt.labelKey]) or opt.label, "random")
         end
         for _, group in ipairs(THEME_MENU_GROUPS or {}) do
             addSectionHeader((group.titleKey and L[group.titleKey]) or group.title)
             for _, themeKey in ipairs(group.keys) do
-                local themeData = THEMES[themeKey]
-                if themeData then
-                    local ap = themeData.ACCENT_PRIMARY
-                    addThemePickRow(themeKey, OneWoW_GUI:GetThemeName(themeKey), ap[1], ap[2], ap[3])
+                if THEMES[themeKey] then
+                    addThemePickRow(themeKey, OneWoW_GUI:GetThemeName(themeKey), themeKey)
                 end
             end
         end
@@ -1011,7 +1008,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     fsWarning:SetPoint("TOPLEFT", fsDesc, "BOTTOMLEFT", 0, -6)
     fsWarning:SetPoint("TOPRIGHT", fsDesc, "BOTTOMRIGHT", 0, -6)
     fsWarning:SetText(L["FONT_SIZE_WARNING"])
-    fsWarning:SetTextColor(1.0, 0.4, 0.1)
+    fsWarning:SetTextColor(self:GetThemeColor("TEXT_WARNING"))
     fsWarning:SetJustifyH("LEFT")
     fsWarning:SetWordWrap(true)
 
@@ -1315,10 +1312,8 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
         local name = OneWoW_GUI:GetThemeDisplayName()
         currentThemeLabel:SetText(Current(name))
         themeDropText:SetText(name)
-        local eff = OneWoW_GUI:GetEffectiveThemeKey()
-        local td = THEMES[eff]
-        if td and themeColorPreview then
-            themeColorPreview:SetColorTexture(unpack(td.ACCENT_PRIMARY))
+        if themeColorPreview then
+            themeColorPreview:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         end
     end
     if parent then

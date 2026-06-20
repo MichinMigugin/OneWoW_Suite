@@ -181,7 +181,8 @@ local function EnsureDimOverlay()
 
 		local bg = dimOverlay:CreateTexture(nil, "BACKGROUND")
 		bg:SetAllPoints()
-		bg:SetColorTexture(0, 0, 0, 0.6)
+		local r, g, b = unpack(OneWoW_GUI.Constants.OVERLAY_DIM)
+		bg:SetColorTexture(r, g, b, 0.6)
 	end
 	dimOverlay:Show()
 end

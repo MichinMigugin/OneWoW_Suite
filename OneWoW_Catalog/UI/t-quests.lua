@@ -4,6 +4,7 @@ local L = ns.L
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+local WOW_QUEST_GOLD = OneWoW_GUI.Constants.WOW_QUEST_GOLD
 local QUEST_LIST_ROW_HEIGHT = 48
 local QUEST_LIST_ROW_FRAME_HEIGHT = 44
 local QUEST_LIST_BUFFER_ROWS = 5
@@ -159,22 +160,22 @@ local function ApplyQuestListStatusIcon(tex, status)
         tex:SetSize(14, 14)
         tex:SetAtlas("")
         tex:SetTexture(QUEST_STATUS_TEXTURE_CHECK)
-        tex:SetVertexColor(0.3, 1, 0.3)
+        tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
     elseif status == "completed_warband" then
         tex:SetSize(16, 18)
         tex:SetTexture(nil)
         tex:SetAtlas(QUEST_STATUS_ATLAS_WARBAND)
-        tex:SetVertexColor(1, 1, 1)
+        tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     elseif status == "completed_account" then
         tex:SetSize(18, 18)
         tex:SetTexture(nil)
         tex:SetAtlas(QUEST_STATUS_ATLAS_ACCOUNT)
-        tex:SetVertexColor(1, 1, 1)
+        tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     elseif status == "active_current" then
         tex:SetSize(28, 28)
         tex:SetTexture(nil)
         tex:SetAtlas(QUEST_STATUS_ATLAS_BANG)
-        tex:SetVertexColor(1, 0.82, 0)
+        tex:SetVertexColor(unpack(WOW_QUEST_GOLD))
     elseif status == "active_other" then
         tex:SetSize(28, 28)
         tex:SetTexture(nil)
@@ -2205,7 +2206,7 @@ function ShowQuestDetail(panels, questData)
     metaFrame:SetHeight(metaHeight + 18)
 
     mapBtn:SetScript("OnEnter", function(self)
-        mapText:SetTextColor(1, 0.82, 0)
+        mapText:SetTextColor(unpack(WOW_QUEST_GOLD))
 
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 
@@ -2916,14 +2917,14 @@ function ShowQuestDetail(panels, questData)
                 "Interface\\Buttons\\UI-CheckBox-Check"
             )
 
-            checkTex:SetVertexColor(0.3, 1, 0.3)
+            checkTex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
 
             local charText = OneWoW_GUI:CreateFS(rowFrame, 12)
 
             charText:SetPoint("LEFT", checkTex, "RIGHT", 4, 0)
             charText:SetText(charInfo.name)
 
-            charText:SetTextColor(0.3, 1, 0.3)
+            charText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
 
             yOffset = yOffset - 20
         end
@@ -3033,7 +3034,7 @@ function ShowQuestDetail(panels, questData)
             questBtn:SetSize(btnWidth, 18)
             questBtn:SetScript("OnClick", onClick)
             questBtn:SetScript("OnEnter", function(self)
-                questText:SetTextColor(1, 1, 1)
+                questText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 if onEnter then
                     onEnter(self)
                 end
@@ -3157,7 +3158,7 @@ function ShowQuestDetail(panels, questData)
                         end
                     end)
                     childBtn:SetScript("OnEnter", function(self)
-                        childText:SetTextColor(1, 1, 1)
+                        childText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                         GameTooltip:AddLine(groupQuestName, 1, 0.82, 0)
                         GameTooltip:AddLine("Quest ID: " .. tostring(groupQuestID), 0.6, 0.6, 0.6)
@@ -3243,7 +3244,7 @@ local function UpdateQuestListEntry(btn, quest, panels)
         if selectedQuest and quest and selectedQuest.id == quest.id then
             btn.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         elseif btn.isGroup then
-            btn.nameText:SetTextColor(1, 0.82, 0)
+            btn.nameText:SetTextColor(unpack(WOW_QUEST_GOLD))
         else
             btn.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
@@ -3387,13 +3388,13 @@ local function CreateQuestListEntry(parent, quest, yOffset, panels, onClick)
     groupToggle:SetPoint("RIGHT", btn, "RIGHT", -8, 0)
     groupToggle:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     groupToggle:SetBackdropColor(0.08, 0.06, 0.01, 0.9)
-    groupToggle:SetBackdropBorderColor(1, 0.82, 0)
+    groupToggle:SetBackdropBorderColor(unpack(WOW_QUEST_GOLD))
 
     local groupToggleText = OneWoW_GUI:CreateFS(groupToggle, 16)
     groupToggleText:SetAllPoints()
     groupToggleText:SetJustifyH("CENTER")
     groupToggleText:SetJustifyV("MIDDLE")
-    groupToggleText:SetTextColor(1, 0.82, 0)
+    groupToggleText:SetTextColor(unpack(WOW_QUEST_GOLD))
 
     groupToggle:SetScript("OnClick", function()
         if onClick and btn.entry then
@@ -3440,7 +3441,7 @@ local function CreateQuestListEntry(parent, quest, yOffset, panels, onClick)
         elseif self.isGroup then
             self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
             if self.nameText then
-                self.nameText:SetTextColor(1, 0.82, 0)
+                self.nameText:SetTextColor(unpack(WOW_QUEST_GOLD))
             end
         elseif self.isChild then
             self:SetBackdropColor(0.035, 0.06, 0.04, 0.82)

@@ -18,6 +18,12 @@ OneWoW_GUI.Constants = {
         BG_COLOR = { 0.15, 0.15, 0.15, 0.8 },
     },
 
+    -- Theme-independent UI tokens (not in THEMES — use OneWoW_GUI.Constants, not GetThemeColor).
+    WOW_QUEST_GOLD     = { 1.0, 0.82, 0.0, 1.0 },
+    OVERLAY_DIM        = { 0.0, 0.0, 0.0, 0.7 },
+    ICON_OVERLAY_TEXT  = { 1.0, 1.0, 1.0, 1.0 },
+    REORDER_BTN_HIGHLIGHT = { 1.0, 1.0, 0.0, 0.7 },
+
     -- media
     MEDIA_BASE = MEDIA_BASE,
     FONT_BASE = MEDIA_BASE .. "Fonts\\",

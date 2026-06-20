@@ -277,7 +277,7 @@ function ns.UI.CreateNPCsTab(parent)
     emptyMessage = OneWoW_GUI:CreateFS(detailPanel, 16)
     emptyMessage:SetPoint("CENTER", detailPanel, "CENTER")
     emptyMessage:SetText(L["NPCS_SELECT"])
-    emptyMessage:SetTextColor(0.6, 0.6, 0.7, 1)
+    emptyMessage:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local leftStatusBar = CreateThemedBar(nil, parent)
     leftStatusBar:SetPoint("TOPLEFT",  listingPanel, "BOTTOMLEFT",  0, -5)
@@ -1034,8 +1034,6 @@ function ns.UI.CreateNPCsTab(parent)
             upBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -4, -3)
             upBtn:SetNormalAtlas("common-button-collapseExpand-up")
             upBtn:SetHighlightAtlas("common-button-collapseExpand-up")
-            if upBtn:GetNormalTexture()    then upBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0, 1) end
-            if upBtn:GetHighlightTexture() then upBtn:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.7) end
             if canMoveUp then upBtn:Show() else upBtn:Hide() end
             upBtn:SetScript("OnClick", function()
                 if not canMoveUp then return end
@@ -1056,8 +1054,7 @@ function ns.UI.CreateNPCsTab(parent)
             downBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -4, 3)
             downBtn:SetNormalAtlas("common-button-collapseExpand-down")
             downBtn:SetHighlightAtlas("common-button-collapseExpand-down")
-            if downBtn:GetNormalTexture()    then downBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0, 1) end
-            if downBtn:GetHighlightTexture() then downBtn:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.7) end
+            OneWoW_GUI:TintScrollReorderButtons(upBtn, downBtn)
             if canMoveDown then downBtn:Show() else downBtn:Hide() end
             downBtn:SetScript("OnClick", function()
                 if not canMoveDown then return end

@@ -266,7 +266,46 @@ Checks GUI settings DB first, then OneWoW hub, then addon.db.global.theme, falls
 ```lua
 local r, g, b, a = OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")
 frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+
+-- Preview a non-active palette (settings theme picker rows / swatches):
+local pr, pg, pb = OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY", "blue")
 ```
+
+### Theme-independent constants (`OneWoW_GUI.Constants`)
+Use for colors that must **not** follow the active theme:
+
+| Constant | Use |
+| --- | --- |
+| `WOW_QUEST_GOLD` | Blizzard quest-title gold (`{1, 0.82, 0}`) |
+| `OVERLAY_DIM` | Black dim overlays (`{0, 0, 0, 0.7}`) |
+| `ICON_OVERLAY_TEXT` | White text on item icons / progress bar labels |
+| `REORDER_BTN_HIGHLIGHT` | Yellow highlight on scroll reorder arrows |
+
+Access via `unpack(OneWoW_GUI.Constants.WOW_QUEST_GOLD)` etc. — **not** `GetThemeColor`.
+
+### Scroll reorder arrow tint
+```lua
+OneWoW_GUI:TintScrollReorderButtons(upBtn, downBtn)
+```
+Applies `WOW_QUEST_GOLD` normal + `REORDER_BTN_HIGHLIGHT` on Blizzard collapse/expand atlas buttons.
+
+### Colors intentionally not themed
+Leave as literals, module-local palettes, or Blizzard/data-driven APIs:
+
+- `NotesConfig.PIN_COLORS` — user-selectable pin themes
+- `afkpanel` `PALETTE` — cinematic fullscreen UI (not suite theme)
+- `cursorenhancer` `COLOR_SETTINGS` — user preferences
+- `toast-engine` per-toast `data.color` stripes
+- `PROGRESS_COLORS` / `GetProgressColor`
+- `C_Item.GetItemQualityColor` / class colors
+- `Panels.lua` `def.color` caller-supplied action buttons
+- `(0,0,0,0)` transparent menu/button backdrops
+
+### Deferred follow-ups (per-file / Phase 2)
+- `OneWoW_Catalog/UI/t-quests.lua` — quest-log green-tinted row backdrops
+- `OneWoW_Utility_DevTool` — editor chrome (`DEVTOOL_*` constants table)
+- `minimapbuttons` — dark container vs theme decision
+- Optional `bin/check_theme_color_bypass.py` warn-only hook
 
 ### Wrap text in a theme color (color codes)
 ```lua

@@ -245,8 +245,6 @@ local function BuildContent(container, _, contentYOffset)
             upBtn:SetPoint("RIGHT", row, "RIGHT", -28, 0)
             upBtn:SetNormalAtlas("common-button-collapseExpand-up")
             upBtn:SetHighlightAtlas("common-button-collapseExpand-up")
-            if upBtn:GetNormalTexture() then upBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0, 1) end
-            if upBtn:GetHighlightTexture() then upBtn:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.7) end
             if canMoveUp then upBtn:Show() else upBtn:Hide() end
             upBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -265,8 +263,7 @@ local function BuildContent(container, _, contentYOffset)
             downBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
             downBtn:SetNormalAtlas("common-button-collapseExpand-down")
             downBtn:SetHighlightAtlas("common-button-collapseExpand-down")
-            if downBtn:GetNormalTexture() then downBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0, 1) end
-            if downBtn:GetHighlightTexture() then downBtn:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.7) end
+            OneWoW_GUI:TintScrollReorderButtons(upBtn, downBtn)
             if canMoveDown then downBtn:Show() else downBtn:Hide() end
             downBtn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")

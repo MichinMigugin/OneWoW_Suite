@@ -33,7 +33,16 @@ local themeMetatable = {
     __newindex = noop,
 }
 
-local function GetThemeColor(key)
+---@param key string
+---@param themeKey string|nil When set, resolves from Constants.THEMES[themeKey] instead of ACTIVE_THEME (settings preview).
+local function GetThemeColor(key, themeKey)
+    if themeKey then
+        local theme = Constants.THEMES[themeKey]
+        if theme and theme[key] then
+            return unpack(theme[key])
+        end
+        return unpack(rawget(Constants.FALLBACK_THEME, key) or DEFAULT_THEME_COLOR)
+    end
     if Constants.ACTIVE_THEME and Constants.ACTIVE_THEME[key] then
         return unpack(Constants.ACTIVE_THEME[key])
     end
@@ -44,8 +53,10 @@ local function GetSpacing(key)
     return Constants.SPACING[key] or DEFAULT_THEME_SPACING
 end
 
-function OneWoW_GUI:GetThemeColor(key)
-    return GetThemeColor(key)
+---@param key string
+---@param themeKey string|nil Optional palette key for non-active theme preview (e.g. settings swatches).
+function OneWoW_GUI:GetThemeColor(key, themeKey)
+    return GetThemeColor(key, themeKey)
 end
 
 function OneWoW_GUI:WrapThemeColor(text, themeKey)

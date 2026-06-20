@@ -261,7 +261,7 @@ function ns.UI.CreateZonesTab(parent)
     emptyMessage = OneWoW_GUI:CreateFS(detailPanel, 16)
     emptyMessage:SetPoint("CENTER", detailPanel, "CENTER")
     emptyMessage:SetText(L["ZONES_SELECT_PROMPT"])
-    emptyMessage:SetTextColor(0.6, 0.6, 0.7, 1)
+    emptyMessage:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local leftStatusBar = CreateThemedBar(nil, parent)
     leftStatusBar:SetPoint("TOPLEFT", listingPanel, "BOTTOMLEFT", 0, -5)
@@ -862,9 +862,9 @@ function ns.UI.CreateZonesTab(parent)
             todoEditBox:SetAutoFocus(false)
             todoEditBox:SetText(todo.text or "")
             if todo.done then
-                todoEditBox:SetTextColor(0.5, 0.5, 0.5)
+                todoEditBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             else
-                todoEditBox:SetTextColor(1, 1, 1)
+                todoEditBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
             todoEditBox:SetScript("OnEnterPressed", function(self)
                 local d = ns.Zones:GetZone(selectedZone)
@@ -1116,8 +1116,6 @@ function ns.UI.CreateZonesTab(parent)
             upBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -4, -3)
             upBtn:SetNormalAtlas("common-button-collapseExpand-up")
             upBtn:SetHighlightAtlas("common-button-collapseExpand-up")
-            if upBtn:GetNormalTexture()    then upBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0, 1) end
-            if upBtn:GetHighlightTexture() then upBtn:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.7) end
             if canMoveUp then upBtn:Show() else upBtn:Hide() end
             upBtn:SetScript("OnClick", function()
                 if not canMoveUp then return end
@@ -1138,8 +1136,7 @@ function ns.UI.CreateZonesTab(parent)
             downBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -4, 3)
             downBtn:SetNormalAtlas("common-button-collapseExpand-down")
             downBtn:SetHighlightAtlas("common-button-collapseExpand-down")
-            if downBtn:GetNormalTexture()    then downBtn:GetNormalTexture():SetVertexColor(1, 0.82, 0, 1) end
-            if downBtn:GetHighlightTexture() then downBtn:GetHighlightTexture():SetVertexColor(1, 1, 0, 0.7) end
+            OneWoW_GUI:TintScrollReorderButtons(upBtn, downBtn)
             if canMoveDown then downBtn:Show() else downBtn:Hide() end
             downBtn:SetScript("OnClick", function()
                 if not canMoveDown then return end
@@ -1346,19 +1343,19 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
         local mapID = tonumber(mapIDInput:GetText())
         if not mapID or mapID <= 0 then
             validationFS:SetText(L["ZONE_INVALID_MAP_ID"])
-            validationFS:SetTextColor(0.8, 0.2, 0.2, 1)
+            validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
             dialog._validatedMapID = nil
             return
         end
         local mapInfo = C_Map.GetMapInfo(mapID)
         if mapInfo and mapInfo.name then
             validationFS:SetText(mapInfo.name)
-            validationFS:SetTextColor(0.2, 1.0, 0.2, 1)
+            validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             dialog._nameInput:SetText(mapInfo.name)
             dialog._validatedMapID = mapID
         else
             validationFS:SetText(L["ZONE_MAP_NOT_FOUND"])
-            validationFS:SetTextColor(0.8, 0.2, 0.2, 1)
+            validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
             dialog._validatedMapID = nil
         end
     end)
@@ -1598,10 +1595,10 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
         local mapInfo = C_Map.GetMapInfo(zoneData.mapID)
         if mapInfo then
             validationFS:SetText(mapInfo.name)
-            validationFS:SetTextColor(0.2, 1.0, 0.2, 1)
+            validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         else
             validationFS:SetText(L["ZONE_MAP_NOT_FOUND"])
-            validationFS:SetTextColor(0.8, 0.2, 0.2, 1)
+            validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
     else
         validationFS:SetText(L["ZONE_VALIDATE_HINT"])
@@ -1612,13 +1609,13 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
         local mapID = tonumber(mapIDInput:GetText())
         if not mapID or mapID <= 0 then
             validationFS:SetText(L["ZONE_INVALID_MAP_ID"])
-            validationFS:SetTextColor(0.8, 0.2, 0.2, 1)
+            validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
             return
         end
         local mapInfo = C_Map.GetMapInfo(mapID)
         if mapInfo and mapInfo.name then
             validationFS:SetText(mapInfo.name)
-            validationFS:SetTextColor(0.2, 1.0, 0.2, 1)
+            validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             SaveField("mapID", mapID)
             nameInput:SetText(mapInfo.name)
             local d = ns.Zones:GetZone(zoneName)
@@ -1631,7 +1628,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
             end
         else
             validationFS:SetText(L["ZONE_MAP_NOT_FOUND"])
-            validationFS:SetTextColor(0.8, 0.2, 0.2, 1)
+            validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
     end)
     yPos = yPos - ROW_H

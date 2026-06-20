@@ -821,11 +821,11 @@ function MonitorTab:UpdatePinnedSlot(slot)
     do
         local r, g, b = OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")
         if tickMemDelta > 10 then
-            r, g, b = 1, 0.4, 0.4
+            r, g, b = OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED")
         elseif tickMemDelta > 2 then
-            r, g, b = 1, 0.8, 0.2
+            r, g, b = OneWoW_GUI:GetThemeColor("TEXT_WARNING")
         elseif tickMemDelta < -2 then
-            r, g, b = 0.4, 1, 0.4
+            r, g, b = OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")
         end
         popup.memTickValue:SetTextColor(r, g, b, 1)
     end
@@ -835,15 +835,15 @@ function MonitorTab:UpdatePinnedSlot(slot)
     if delta >= 0 then
         deltaStr = "+" .. deltaStr
         if delta > 100 then
-            popup.deltaValue:SetTextColor(1, 0.4, 0.4, 1)
+            popup.deltaValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         elseif delta > 50 then
-            popup.deltaValue:SetTextColor(1, 0.8, 0.2, 1)
+            popup.deltaValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
         else
-            popup.deltaValue:SetTextColor(0.4, 1, 0.4, 1)
+            popup.deltaValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         end
     else
         deltaStr = "-" .. deltaStr
-        popup.deltaValue:SetTextColor(0.4, 1, 0.4, 1)
+        popup.deltaValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
     end
     popup.deltaValue:SetText(deltaStr)
 
@@ -860,11 +860,11 @@ function MonitorTab:UpdatePinnedSlot(slot)
         rateStr = "-" .. rateStr
     end
     if avgRate > 5 then
-        popup.rateValue:SetTextColor(1, 0.4, 0.4, 1)
+        popup.rateValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     elseif avgRate > 1 then
-        popup.rateValue:SetTextColor(1, 0.8, 0.2, 1)
+        popup.rateValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
     else
-        popup.rateValue:SetTextColor(0.4, 1, 0.4, 1)
+        popup.rateValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
     end
     popup.rateValue:SetText(rateStr)
 

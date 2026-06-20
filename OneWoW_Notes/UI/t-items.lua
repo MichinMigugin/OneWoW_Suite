@@ -261,7 +261,7 @@ function ns.UI.CreateItemsTab(parent)
     emptyMessage = OneWoW_GUI:CreateFS(detailPanel, 16)
     emptyMessage:SetPoint("CENTER", detailPanel, "CENTER")
     emptyMessage:SetText(L["ITEMS_SELECT"])
-    emptyMessage:SetTextColor(0.6, 0.6, 0.7, 1)
+    emptyMessage:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local leftStatusBar = CreateThemedBar(nil, parent)
     leftStatusBar:SetPoint("TOPLEFT",  listingPanel, "BOTTOMLEFT",  0, -5)
@@ -1050,7 +1050,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
         local id = tonumber(idText)
         if not id or id <= 0 then
             statusFS:SetText(L["NOTES_ITEM_INVALID_ID"])
-            statusFS:SetTextColor(0.8, 0.2, 0.2, 1)
+            statusFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
             resultFrame:Hide()
             dialog._validated = false
             return
@@ -1058,14 +1058,14 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
 
         if ns.Items and ns.Items:GetItem(id) then
             statusFS:SetText(string.format(L["MSG_ITEM_EXISTS"], id))
-            statusFS:SetTextColor(0.8, 0.6, 0.1, 1)
+            statusFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
             resultFrame:Hide()
             dialog._validated = false
             return
         end
 
         statusFS:SetText(L["ITEM_LOADING"])
-        statusFS:SetTextColor(0.8, 0.8, 0.2, 1)
+        statusFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
 
         local itemName, _, itemRarity, _, _, _, _, _, _, itemTexture = C_Item.GetItemInfo(id)
         if itemName then
@@ -1079,7 +1079,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
             dialog._validatedID = id
         else
             statusFS:SetText(L["ITEM_LOADING"])
-            statusFS:SetTextColor(0.8, 0.8, 0.2, 1)
+            statusFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
             resultFrame:Hide()
             dialog._validated = false
 
@@ -1096,7 +1096,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
                     dialog._validatedID = id
                 else
                     statusFS:SetText(L["NOTES_ITEM_INVALID_ID"])
-                    statusFS:SetTextColor(0.8, 0.2, 0.2, 1)
+                    statusFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
                     resultFrame:Hide()
                     dialog._validated = false
                 end

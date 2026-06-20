@@ -1208,7 +1208,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     -- Copy row: shared label + action buttons (match CopyPaste dialog title: GameFontNormalLarge + gold)
     local copyRowLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     copyRowLabel:SetText(L["FONT_COPY_ROW_LABEL"])
-    copyRowLabel:SetTextColor(1, 0.82, 0)
+    copyRowLabel:SetTextColor(unpack(OneWoW_GUI.Constants.WOW_QUEST_GOLD))
     copyRowLabel:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 6, 8)
 
     local copyNameBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {

@@ -2,6 +2,8 @@ local _, ns = ...
 local CharInfoModule, L = ns.ModuleRegistry:Current()
 if not CharInfoModule then return end
 
+local OneWoW_GUI = OneWoW_GUI
+
 local SECONDARY_HAND_SLOT = GetInventorySlotInfo("SECONDARYHANDSLOT")
 
 local enchantSlotDefaults = {
@@ -207,7 +209,7 @@ local function UpdateInfoPanel(button, itemLink, slotId, item)
         if enchantID > 0 then
             panel.enchantIcon.texture:SetAtlas("Perks-PreviewOn")
             panel.enchantIcon.texture:SetDesaturated(false)
-            panel.enchantIcon.texture:SetVertexColor(0.2, 1, 0.2, 1)
+            panel.enchantIcon.texture:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             panel.enchantIcon:SetScript("OnEnter", function(ic)
                 GameTooltip:SetOwner(ic, "ANCHOR_RIGHT")
                 GameTooltip:AddLine(L["CHARINFO_ENCHANTED"], 0.2, 1, 0.2)
@@ -216,7 +218,7 @@ local function UpdateInfoPanel(button, itemLink, slotId, item)
         else
             panel.enchantIcon.texture:SetAtlas("Perks-PreviewOff")
             panel.enchantIcon.texture:SetDesaturated(false)
-            panel.enchantIcon.texture:SetVertexColor(1, 0.2, 0.2, 1)
+            panel.enchantIcon.texture:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
             panel.enchantIcon:SetScript("OnEnter", function(ic)
                 GameTooltip:SetOwner(ic, "ANCHOR_RIGHT")
                 GameTooltip:AddLine(L["CHARINFO_MISSING_ENCHANT"], 1, 0.2, 0.2)
@@ -252,7 +254,7 @@ local function UpdateInfoPanel(button, itemLink, slotId, item)
 
         if emptyGems == totalSockets then
             panel.gemIcon.texture:SetDesaturated(false)
-            panel.gemIcon.texture:SetVertexColor(1, 0.2, 0.2, 1)
+            panel.gemIcon.texture:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
             panel.gemIcon:SetScript("OnEnter", function(ic)
                 GameTooltip:SetOwner(ic, "ANCHOR_RIGHT")
                 GameTooltip:AddLine(L["CHARINFO_ALL_SOCKETS_EMPTY"], 1, 0.2, 0.2)
@@ -261,7 +263,7 @@ local function UpdateInfoPanel(button, itemLink, slotId, item)
             end)
         elseif emptyGems > 0 then
             panel.gemIcon.texture:SetDesaturated(false)
-            panel.gemIcon.texture:SetVertexColor(1, 0.7, 0.2, 1)
+            panel.gemIcon.texture:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
             panel.gemIcon:SetScript("OnEnter", function(ic)
                 GameTooltip:SetOwner(ic, "ANCHOR_RIGHT")
                 GameTooltip:AddLine(L["CHARINFO_SOME_SOCKETS_EMPTY"], 1, 0.7, 0.2)
@@ -270,7 +272,7 @@ local function UpdateInfoPanel(button, itemLink, slotId, item)
             end)
         else
             panel.gemIcon.texture:SetDesaturated(false)
-            panel.gemIcon.texture:SetVertexColor(0.2, 1, 0.2, 1)
+            panel.gemIcon.texture:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             panel.gemIcon:SetScript("OnEnter", function(ic)
                 GameTooltip:SetOwner(ic, "ANCHOR_RIGHT")
                 GameTooltip:AddLine(L["CHARINFO_ALL_SOCKETS_FILLED"], 0.2, 1, 0.2)

@@ -92,7 +92,7 @@ function Addon.UI:CreateEditorTab(parent)
         errorLabel:SetPoint("TOPRIGHT", anchor, "BOTTOMRIGHT", 0, -6)
         errorLabel:SetJustifyH("LEFT")
         errorLabel:SetWordWrap(true)
-        errorLabel:SetTextColor(1, 0.3, 0.3, 1)
+        errorLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         errorLabel:SetText("")
         dialog.errorLabel = errorLabel
         return errorLabel
@@ -327,7 +327,7 @@ function Addon.UI:CreateEditorTab(parent)
     syntaxErrFS:SetPoint("RIGHT", lnColFS, "LEFT", -12, 0)
     syntaxErrFS:SetJustifyH("LEFT")
     syntaxErrFS:SetWordWrap(false)
-    syntaxErrFS:SetTextColor(1, 0.3, 0.3, 1)
+    syntaxErrFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
 
     local leftPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = LEFT_DEFAULT, height = 100 })
     leftPanel:ClearAllPoints()
@@ -959,7 +959,7 @@ function Addon.UI:CreateEditorTab(parent)
                     end
 
                     if isModified then
-                        row.indicator:SetColorTexture(0.8, 0.2, 0.2, 0.9)
+                        row.indicator:SetColorTexture(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
                     else
                         local r, g, b, a = OneWoW_GUI:GetThemeColor(isActive and "ACCENT_PRIMARY" or "BG_SECONDARY")
                         row.indicator:SetColorTexture(r, g, b, a)

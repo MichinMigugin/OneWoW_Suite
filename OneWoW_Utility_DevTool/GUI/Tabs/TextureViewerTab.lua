@@ -1122,7 +1122,7 @@ function Addon.UI:CreateTextureTab(parent)
     -- Copy row: CopyPaste-dialog-style label + short buttons (matches Fonts tab)
     local copyRowLabel = rightPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     copyRowLabel:SetText(L["FONT_COPY_ROW_LABEL"])
-    copyRowLabel:SetTextColor(1, 0.82, 0)
+    copyRowLabel:SetTextColor(unpack(OneWoW_GUI.Constants.WOW_QUEST_GOLD))
     copyRowLabel:SetPoint("BOTTOMLEFT", rightPanel, "BOTTOMLEFT", 6, 8)
 
     local copyNameBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {

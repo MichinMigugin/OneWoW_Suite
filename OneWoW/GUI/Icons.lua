@@ -1,4 +1,5 @@
 local OneWoW_GUI = OneWoW_GUI
+local Constants = OneWoW_GUI.Constants
 
 local CreateFrame = CreateFrame
 local unpack = unpack
@@ -107,7 +108,7 @@ function OneWoW_GUI:CreateItemIcon(parent, options)
             edgeSize = 12,
             insets = { left = 2, right = 2, top = 2, bottom = 2 },
         })
-        borderFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 0.8)
+        borderFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end
 
     local ilvlText = nil
@@ -115,7 +116,7 @@ function OneWoW_GUI:CreateItemIcon(parent, options)
         ilvlText = iconFrame:CreateFontString(nil, "OVERLAY")
         ilvlText:SetFont("Fonts\\ARIALN.TTF", 11, "OUTLINE")
         ilvlText:SetPoint("BOTTOMRIGHT", iconFrame, "BOTTOMRIGHT", -2, 2)
-        ilvlText:SetTextColor(1, 1, 1, 1)
+        ilvlText:SetTextColor(unpack(Constants.ICON_OVERLAY_TEXT))
         ilvlText:SetShadowColor(0, 0, 0, 1)
         ilvlText:SetShadowOffset(1, -1)
 
@@ -379,7 +380,7 @@ function OneWoW_GUI:CreateSkinnedIcon(parent, options)
         local ilvlText = iconFrame:CreateFontString(nil, "OVERLAY")
         ilvlText:SetFont("Fonts\\ARIALN.TTF", math.max(9, math.floor(size * 0.24)), "OUTLINE")
         ilvlText:SetPoint("BOTTOMRIGHT", iconFrame, "BOTTOMRIGHT", -2, 2)
-        ilvlText:SetTextColor(1, 1, 1, 1)
+        ilvlText:SetTextColor(unpack(Constants.ICON_OVERLAY_TEXT))
         ilvlText:SetShadowColor(0, 0, 0, 1)
         ilvlText:SetShadowOffset(1, -1)
         if itemLevel and itemLevel > 0 then
@@ -394,7 +395,7 @@ function OneWoW_GUI:CreateSkinnedIcon(parent, options)
         local countText = iconFrame:CreateFontString(nil, "OVERLAY")
         countText:SetFont("Fonts\\ARIALN.TTF", math.max(9, math.floor(size * 0.24)), "OUTLINE")
         countText:SetPoint("BOTTOMRIGHT", iconFrame, "BOTTOMRIGHT", -2, 2)
-        countText:SetTextColor(1, 1, 1, 1)
+        countText:SetTextColor(unpack(Constants.ICON_OVERLAY_TEXT))
         countText:SetShadowColor(0, 0, 0, 1)
         countText:SetShadowOffset(1, -1)
         if count and count > 1 then

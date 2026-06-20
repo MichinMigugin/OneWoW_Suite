@@ -83,16 +83,16 @@ Decisions made:
 Independent of items 1 and 5. Pure UI/theme hygiene against the
 `OneWoW_GUI:GetThemeColor(key)` policy.
 
-- [ ] Replace direct theme-constant access (e.g.
+- [x] Replace direct theme-constant access (e.g.
   `component:SetColorTexture(unpack(themeData.ACCENT_PRIMARY))`) with
-  `OneWoW_GUI:GetThemeColor(key)`. **Caveat:** some `Settings.lua` swatches
-  intentionally preview a *non-active* theme's `td.ACCENT_PRIMARY` — those must
-  keep reading the previewed theme's data, not the active theme, so they are not
-  drop-in conversions.
-- [ ] Audit direct numeric color calls (e.g. `txt:SetTextColor(0.9, 0.9, 0.9)`):
-  decide per-site whether the literal is correct and whether it should become a
-  named theme color instead. Dynamic/data-driven colors (toast stripe colors,
-  caller-supplied `bgColor`) are legitimately not theme constants — leave those.
+  `OneWoW_GUI:GetThemeColor(key)` or `GetThemeColor(key, themeKey)` for
+  non-active preview swatches (`Settings.lua` theme picker).
+- [x] Large-sweep audit of direct numeric color calls: semantic status/muted/danger
+  literals converted to theme keys; structural tokens added to
+  `OneWoW_GUI.Constants` (`WOW_QUEST_GOLD`, `OVERLAY_DIM`, `ICON_OVERLAY_TEXT`);
+  `TintScrollReorderButtons` helper added. **Remaining per-file work** (documented
+  in `GUI.md` §Theme System): `t-quests` row backdrops, DevTool editor chrome,
+  `minimapbuttons` container, optional lint hook.
 
 ---
 

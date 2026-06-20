@@ -280,7 +280,7 @@ function ns.UI.CreatePortalsTab(parent)
 
 			button.dimOverlay = button:CreateTexture(nil, "ARTWORK")
 			button.dimOverlay:SetAllPoints()
-			button.dimOverlay:SetColorTexture(0, 0, 0, 0.7)
+			button.dimOverlay:SetColorTexture(unpack(OneWoW_GUI.Constants.OVERLAY_DIM))
 			button.dimOverlay:Hide()
 		end
 
@@ -292,7 +292,7 @@ function ns.UI.CreatePortalsTab(parent)
 		if not button.dimOverlay then
 			button.dimOverlay = button:CreateTexture(nil, "ARTWORK")
 			button.dimOverlay:SetAllPoints()
-			button.dimOverlay:SetColorTexture(0, 0, 0, 0.7)
+			button.dimOverlay:SetColorTexture(unpack(OneWoW_GUI.Constants.OVERLAY_DIM))
 		end
 		button.dimOverlay:Hide()
 

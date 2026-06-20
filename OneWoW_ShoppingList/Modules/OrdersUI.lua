@@ -1,6 +1,8 @@
 local _, ns = ...
 local L = ns.L
 
+local OneWoW_GUI = OneWoW_GUI
+
 ns.OrdersUI = {}
 local OrdersUI = ns.OrdersUI
 
@@ -82,12 +84,12 @@ local function CreateTextButton(parent, width, label)
         edgeSize = 1,
         insets   = { left = 1, right = 1, top = 1, bottom = 1 },
     })
-    b:SetBackdropColor(0.14, 0.16, 0.14, 1.0)
-    b:SetBackdropBorderColor(0.32, 0.48, 0.35, 0.5)
+    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+    b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
     b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     b.text:SetPoint("CENTER")
     b.text:SetText(label)
-    b.text:SetTextColor(0.88, 0.90, 0.88, 1.0)
+    b.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     return b
 end
 

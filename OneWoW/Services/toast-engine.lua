@@ -502,7 +502,7 @@ local function BuildAnchor()
     divider:SetPoint("TOPLEFT",  anchor, "TOPLEFT",  6, -30)
     divider:SetPoint("TOPRIGHT", anchor, "TOPRIGHT", -6, -30)
     divider:SetTexture("Interface\\Buttons\\WHITE8x8")
-    divider:SetVertexColor(0.85, 0.70, 0.20, 0.4)
+    divider:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_MUTED"))
 
     local controlsText = OneWoW_GUI:CreateFS(anchor, 10)
     controlsText:SetPoint("TOPLEFT",  anchor, "TOPLEFT",  10, -38)

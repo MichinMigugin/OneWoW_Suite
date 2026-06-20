@@ -7,6 +7,19 @@ if not AFKPanelModule then return end
 
 local CAMERA_SPEED = 0.035
 
+-- Intentional cinematic palette; not tied to suite theme.
+local PALETTE = {
+    BAR_DARK_BG     = { 0.05, 0.05, 0.05, 0.95 },
+    BAR_GOLD_BORDER = { 0.8, 0.6, 0.2, 1 },
+    PANEL_BG        = { 0.1, 0.1, 0.12, 0.95 },
+    PANEL_BORDER    = { 0.5, 0.5, 0.55, 1 },
+    HEADER_TEXT     = { 1, 0.82, 0, 1 },
+    BODY_TEXT       = { 1, 1, 1, 1 },
+    GUILD_TEXT      = { 0.7, 0.7, 0.7, 1 },
+    MUTED_TEXT      = { 0.5, 0.5, 0.5, 1 },
+    TASK_TEXT       = { 0.9, 0.9, 0.9, 1 },
+}
+
 local backdrop = {
     bgFile   = "Interface\\ChatFrame\\ChatFrameBackground",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -115,13 +128,13 @@ local function CreateTopBar(parent)
     topBar:SetHeight(60)
     topBar:SetFrameLevel(2)
     topBar:SetBackdrop(backdrop)
-    topBar:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-    topBar:SetBackdropBorderColor(0.8, 0.6, 0.2, 1)
+    topBar:SetBackdropColor(unpack(PALETTE.BAR_DARK_BG))
+    topBar:SetBackdropBorderColor(unpack(PALETTE.BAR_GOLD_BORDER))
 
     local topText = topBar:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
     topText:SetPoint("CENTER", topBar, "CENTER", 0, 0)
     topText:SetText(L["AFKPANEL_MODE_TITLE"])
-    topText:SetTextColor(1, 0.82, 0, 1)
+    topText:SetTextColor(unpack(PALETTE.HEADER_TEXT))
 
     return topBar
 end
@@ -134,13 +147,13 @@ local function CreateCharacterInfoPanel(parent)
     infoPanel:SetSize(panelWidth, 180)
     infoPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 20, -20)
     infoPanel:SetBackdrop(backdrop)
-    infoPanel:SetBackdropColor(0.1, 0.1, 0.12, 0.95)
-    infoPanel:SetBackdropBorderColor(0.5, 0.5, 0.55, 1)
+    infoPanel:SetBackdropColor(unpack(PALETTE.PANEL_BG))
+    infoPanel:SetBackdropBorderColor(unpack(PALETTE.PANEL_BORDER))
 
     local headerText = infoPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     headerText:SetPoint("TOP", infoPanel, "TOP", 0, -12)
     headerText:SetText(L["AFKPANEL_CHARACTER_INFO"])
-    headerText:SetTextColor(1, 0.82, 0, 1)
+    headerText:SetTextColor(unpack(PALETTE.HEADER_TEXT))
 
     local factionIcon = infoPanel:CreateTexture(nil, "ARTWORK")
     factionIcon:SetSize(48, 48)
@@ -149,33 +162,33 @@ local function CreateCharacterInfoPanel(parent)
 
     local nameText = infoPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     nameText:SetPoint("LEFT", factionIcon, "RIGHT", 12, 8)
-    nameText:SetTextColor(1, 1, 1, 1)
+    nameText:SetTextColor(unpack(PALETTE.BODY_TEXT))
     infoPanel.nameText = nameText
 
     local guildText = infoPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     guildText:SetPoint("LEFT", factionIcon, "RIGHT", 12, -10)
-    guildText:SetTextColor(0.7, 0.7, 0.7, 1)
+    guildText:SetTextColor(unpack(PALETTE.GUILD_TEXT))
     infoPanel.guildText = guildText
 
     local iLevelText = infoPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     iLevelText:SetPoint("TOPLEFT", factionIcon, "BOTTOMLEFT", 0, -12)
-    iLevelText:SetTextColor(1, 1, 1, 1)
+    iLevelText:SetTextColor(unpack(PALETTE.BODY_TEXT))
     infoPanel.iLevelText = iLevelText
 
     local mplusText = infoPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     mplusText:SetPoint("TOPLEFT", iLevelText, "BOTTOMLEFT", 0, -6)
-    mplusText:SetTextColor(1, 1, 1, 1)
+    mplusText:SetTextColor(unpack(PALETTE.BODY_TEXT))
     infoPanel.mplusText = mplusText
 
     local goldText = infoPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     goldText:SetPoint("TOPLEFT", mplusText, "BOTTOMLEFT", 0, -6)
-    goldText:SetTextColor(1, 1, 1, 1)
+    goldText:SetTextColor(unpack(PALETTE.BODY_TEXT))
     infoPanel.goldText = goldText
 
     local timerText = infoPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     timerText:SetPoint("TOPRIGHT", infoPanel, "TOPRIGHT", -15, -45)
     timerText:SetText("AFK: 00:00")
-    timerText:SetTextColor(1, 0.82, 0, 1)
+    timerText:SetTextColor(unpack(PALETTE.HEADER_TEXT))
     infoPanel.timerText = timerText
 
     return infoPanel
@@ -188,18 +201,18 @@ local function CreateAlertsPanel(parent, infoPanel)
     alertsPanel:SetSize(panelWidth, 140)
     alertsPanel:SetPoint("TOPLEFT", infoPanel, "BOTTOMLEFT", 0, -10)
     alertsPanel:SetBackdrop(backdrop)
-    alertsPanel:SetBackdropColor(0.1, 0.1, 0.12, 0.95)
-    alertsPanel:SetBackdropBorderColor(0.5, 0.5, 0.55, 1)
+    alertsPanel:SetBackdropColor(unpack(PALETTE.PANEL_BG))
+    alertsPanel:SetBackdropBorderColor(unpack(PALETTE.PANEL_BORDER))
 
     local headerText = alertsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     headerText:SetPoint("TOP", alertsPanel, "TOP", 0, -12)
     headerText:SetText(L["AFKPANEL_ALERTS"])
-    headerText:SetTextColor(1, 0.82, 0, 1)
+    headerText:SetTextColor(unpack(PALETTE.HEADER_TEXT))
 
     local noAlertsText = alertsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     noAlertsText:SetPoint("CENTER", alertsPanel, "CENTER", 0, -5)
     noAlertsText:SetText(L["AFKPANEL_NO_ALERTS"])
-    noAlertsText:SetTextColor(0.5, 0.5, 0.5, 1)
+    noAlertsText:SetTextColor(unpack(PALETTE.MUTED_TEXT))
     alertsPanel.noAlertsText = noAlertsText
 
     alertsPanel.alertTexts = {}
@@ -213,7 +226,7 @@ local function CreateAlertsPanel(parent, infoPanel)
 
         local text = alertsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         text:SetPoint("LEFT", icon, "RIGHT", 12, 0)
-        text:SetTextColor(1, 1, 1, 1)
+        text:SetTextColor(unpack(PALETTE.BODY_TEXT))
         text:Hide()
         alertsPanel.alertTexts[i] = text
     end
@@ -229,13 +242,13 @@ local function CreateNotesPanel(parent, headerKey, anchorPoint, anchorRelative, 
     panel:SetSize(panelWidth, 180)
     panel:SetPoint(anchorPoint, anchorRelative, anchorRelativePoint, anchorX, anchorY)
     panel:SetBackdrop(backdrop)
-    panel:SetBackdropColor(0.1, 0.1, 0.12, 0.95)
-    panel:SetBackdropBorderColor(0.5, 0.5, 0.55, 1)
+    panel:SetBackdropColor(unpack(PALETTE.PANEL_BG))
+    panel:SetBackdropBorderColor(unpack(PALETTE.PANEL_BORDER))
 
     local headerText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     headerText:SetPoint("TOP", panel, "TOP", 0, -12)
     headerText:SetText(L[headerKey])
-    headerText:SetTextColor(1, 0.82, 0, 1)
+    headerText:SetTextColor(unpack(PALETTE.HEADER_TEXT))
     panel.headerText = headerText
 
     local scrollFrame = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
@@ -351,7 +364,7 @@ local function UpdateNotesPanel(panel, notesData)
         local emptyText = GetOrCreateFontString(panel, fsIndex, "GameFontNormalSmall")
         emptyText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 10, yOffset)
         emptyText:SetText(L["AFKPANEL_NO_NOTES"])
-        emptyText:SetTextColor(0.5, 0.5, 0.5, 1)
+        emptyText:SetTextColor(unpack(PALETTE.MUTED_TEXT))
         emptyText:SetJustifyH("LEFT")
         emptyText:SetWidth(480)
         panel.scrollChild:SetHeight(30)
@@ -363,7 +376,7 @@ local function UpdateNotesPanel(panel, notesData)
         fsIndex = fsIndex + 1
         titleText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 10, yOffset)
         titleText:SetText(noteData.title)
-        titleText:SetTextColor(1, 0.82, 0, 1)
+        titleText:SetTextColor(unpack(PALETTE.HEADER_TEXT))
         titleText:SetJustifyH("LEFT")
         titleText:SetWidth(480)
         yOffset = yOffset - 20
@@ -374,7 +387,7 @@ local function UpdateNotesPanel(panel, notesData)
                 fsIndex = fsIndex + 1
                 taskText:SetPoint("TOPLEFT", panel.scrollChild, "TOPLEFT", 25, yOffset)
                 taskText:SetText("  - " .. task)
-                taskText:SetTextColor(0.9, 0.9, 0.9, 1)
+                taskText:SetTextColor(unpack(PALETTE.TASK_TEXT))
                 taskText:SetJustifyH("LEFT")
                 taskText:SetWidth(465)
                 yOffset = yOffset - 18
@@ -423,8 +436,8 @@ function AFKPanelModule:SetupFrames()
     bottomPanel:SetWidth(screenWidth)
     bottomPanel:SetHeight(370)
     bottomPanel:SetBackdrop(backdrop)
-    bottomPanel:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-    bottomPanel:SetBackdropBorderColor(0.8, 0.6, 0.2, 1)
+    bottomPanel:SetBackdropColor(unpack(PALETTE.BAR_DARK_BG))
+    bottomPanel:SetBackdropBorderColor(unpack(PALETTE.BAR_GOLD_BORDER))
     self._bottomPanel = bottomPanel
 
     local modelHolder = CreateFrame("Frame", nil, afkFrame)

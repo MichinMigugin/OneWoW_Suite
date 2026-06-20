@@ -230,9 +230,9 @@ function ns.UI.ShowCategoryManager(initialSection)
                 delX:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
                 delBtn:SetScript("OnEnter", function(self)
-                    self:SetBackdropColor(0.6, 0.1, 0.1, 1)
-                    self:SetBackdropBorderColor(0.8, 0.2, 0.2, 1)
-                    delX:SetTextColor(1, 1, 1, 1)
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
+                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+                    delX:SetTextColor(unpack(OneWoW_GUI.Constants.ICON_OVERLAY_TEXT))
                 end)
                 delBtn:SetScript("OnLeave", function(self)
                     self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
@@ -246,7 +246,7 @@ function ns.UI.ShowCategoryManager(initialSection)
                         statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
                     else
                         statusLabel:SetText(err or L["CATMGR_ERROR"])
-                        statusLabel:SetTextColor(0.8, 0.2, 0.2, 1)
+                        statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
                     end
                     RefreshCategoryList()
                 end)
@@ -322,7 +322,7 @@ function ns.UI.ShowCategoryManager(initialSection)
             RefreshCategoryList()
         else
             statusLabel:SetText(err or L["CATMGR_ERROR"])
-            statusLabel:SetTextColor(0.8, 0.2, 0.2, 1)
+            statusLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
     end
 

@@ -694,6 +694,21 @@ function OneWoW_GUI:GetProgressColor(current, max)
     else return unpack(colors.LOW) end
 end
 
+--- Gold normal + yellow highlight tint for Blizzard collapse/expand reorder arrows.
+function OneWoW_GUI:TintScrollReorderButtons(upBtn, downBtn)
+    local gold = Constants.WOW_QUEST_GOLD
+    local hi = Constants.REORDER_BTN_HIGHLIGHT
+    local function tint(btn)
+        if not btn then return end
+        local normal = btn:GetNormalTexture()
+        if normal then normal:SetVertexColor(unpack(gold)) end
+        local highlight = btn:GetHighlightTexture()
+        if highlight then highlight:SetVertexColor(unpack(hi)) end
+    end
+    tint(upBtn)
+    tint(downBtn)
+end
+
 function OneWoW_GUI:CreateColorSwatch(parent, options)
     options = options or {}
     local size = options.size or 24
@@ -783,7 +798,7 @@ function OneWoW_GUI:CreateProgressBar(parent, options)
     OneWoW_GUI:SafeSetFont(text, OneWoW_GUI:GetFont(), 10)
     text:SetPoint("CENTER", bar, "CENTER", 0, 0)
     text:SetText(string.format("%d/%d", value, max))
-    text:SetTextColor(1, 1, 1, 1)
+    text:SetTextColor(unpack(Constants.ICON_OVERLAY_TEXT))
     text:SetShadowOffset(1, -1)
     text:SetShadowColor(0, 0, 0, 1)
     bar._text = text

@@ -318,10 +318,10 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, _, registerRefresh
     detectedLabel:SetPoint("LEFT", reqLabel, "RIGHT", 8, 0)
     if coreLoaded then
         detectedLabel:SetText(L["PLAYMOUNTS_TOOLTIP_DETECTED"])
-        detectedLabel:SetTextColor(0.2, 1.0, 0.2)
+        detectedLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
     else
         detectedLabel:SetText(L["PLAYMOUNTS_TOOLTIP_NOT_DETECTED"])
-        detectedLabel:SetTextColor(1.0, 0.2, 0.2)
+        detectedLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     end
     yOffset = yOffset - 24
 

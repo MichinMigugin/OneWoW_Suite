@@ -415,7 +415,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
             todoFrame._text:SetFont(todoFontPath, fs, zd.fontOutline or "")
 
             if todo.completed then
-                todoFrame._text:SetTextColor(0.5, 0.5, 0.5)
+                todoFrame._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             else
                 todoFrame._text:SetTextColor(contentTextColor[1], contentTextColor[2], contentTextColor[3], 1)
             end

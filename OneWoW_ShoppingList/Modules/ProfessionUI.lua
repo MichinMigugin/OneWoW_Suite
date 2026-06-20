@@ -1,6 +1,8 @@
 local _, ns = ...
 local L = ns.L
 
+local OneWoW_GUI = OneWoW_GUI
+
 ns.ProfessionUI = {}
 local ProfessionUI = ns.ProfessionUI
 
@@ -148,13 +150,13 @@ local function CreateButtons(schematicForm)
         edgeSize = 1,
         insets   = { left = 1, right = 1, top = 1, bottom = 1 },
     })
-    makeListBtn:SetBackdropColor(0.14, 0.16, 0.14, 1.0)
-    makeListBtn:SetBackdropBorderColor(0.32, 0.48, 0.35, 0.5)
+    makeListBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+    makeListBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
 
     makeListBtn.text = makeListBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     makeListBtn.text:SetPoint("CENTER")
     makeListBtn.text:SetText(L["OWSL_PROF_BTN_MAKE_LIST"])
-    makeListBtn.text:SetTextColor(0.88, 0.90, 0.88, 1.0)
+    makeListBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     makeListBtn:SetScript("OnClick", function()
         local recipeID, recipeInfo = GetCurrentRecipeInfo()
@@ -195,13 +197,13 @@ local function CreateButtons(schematicForm)
         edgeSize = 1,
         insets   = { left = 1, right = 1, top = 1, bottom = 1 },
     })
-    addToActiveBtn:SetBackdropColor(0.14, 0.16, 0.14, 1.0)
-    addToActiveBtn:SetBackdropBorderColor(0.32, 0.48, 0.35, 0.5)
+    addToActiveBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+    addToActiveBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
 
     addToActiveBtn.text = addToActiveBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     addToActiveBtn.text:SetPoint("CENTER")
     addToActiveBtn.text:SetText(L["OWSL_PROF_BTN_ADD_TO_ACTIVE"])
-    addToActiveBtn.text:SetTextColor(0.88, 0.90, 0.88, 1.0)
+    addToActiveBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     addToActiveBtn:SetScript("OnClick", function()
         local recipeID = GetCurrentRecipeInfo()
@@ -234,13 +236,13 @@ local function CreateButtons(schematicForm)
         edgeSize = 1,
         insets   = { left = 1, right = 1, top = 1, bottom = 1 },
     })
-    addToListBtn:SetBackdropColor(0.14, 0.16, 0.14, 1.0)
-    addToListBtn:SetBackdropBorderColor(0.32, 0.48, 0.35, 0.5)
+    addToListBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+    addToListBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
 
     addToListBtn.text = addToListBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     addToListBtn.text:SetPoint("CENTER")
     addToListBtn.text:SetText(L["OWSL_PROF_BTN_ADD_TO_LIST"])
-    addToListBtn.text:SetTextColor(0.88, 0.90, 0.88, 1.0)
+    addToListBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     addToListBtn:SetScript("OnClick", function()
         local recipeID = GetCurrentRecipeInfo()
