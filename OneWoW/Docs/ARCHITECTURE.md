@@ -735,7 +735,7 @@ obtained from `GetFeatureSettings`.
 
 `ExternalTooltipSync` runtime state (Auctionator column backup, one-time popup
 flags) lives in its own `db.global.externalTooltipSync` root, not in settings —
-relocated by a versioned `DB:RunMigrations` step in `Core/Database.lua`.
+relocated during the core migration collapse (formerly a versioned step in `Core/Database.lua`).
 
 ### 8.6 Restriction funnel (`OneWoW.Restriction`)
 

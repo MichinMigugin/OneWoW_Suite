@@ -211,7 +211,7 @@ The root object provides:
 Suite loader force-load (LoadOnDemand) or first enable
   └─→ OnAddonLoaded
        ├─→ Lifecycle:CreateHandlerRegistry
-       ├─→ InitializeDatabase (DB:Init, RunMigrations)
+       ├─→ InitializeDatabase (flat SV bridge + DB:Init)
        ├─→ InitializeControllers (WindowLayoutController, *Controller:Create)
        ├─→ OneWoW_GUI:MigrateSettings(db.global)
        ├─→ Masque:OnLoad (when Masque optional dep is present)
@@ -633,30 +633,14 @@ Shared: `bankShowWarband` (active mode), `bankFramePosition`, `collapsedBankCate
 
 ### Other
 
-`mainFramePosition`, `bankFramePosition`, `guildBankFramePosition`, `trackedCurrencies`, `recentItems`, `recentItemDuration`, `_migrationVersion`
+`mainFramePosition`, `bankFramePosition`, `guildBankFramePosition`, `trackedCurrencies`, `recentItems`, `recentItemDuration`
 
-### Migrations
+### Legacy SV bridge
 
-`_migrationVersion` is advanced by `DB:RunMigrations` up to **18**:
-
-1. `category_system_v2` — split Equipment/Consumables builtins; seed `categorySections` / `sectionOrder`  
-2. `junk_rename` — `OneWoW Junk` / `OneWoW Upgrades` → `1W Junk` / `1W Upgrades` in disabled/collapsed maps  
-3. `display_order` — build `displayOrder` from legacy section graph  
-4. `category_system_v3` — `recentItemDuration` clamp; sections use `SectionDefaults` IDs; rebuild `displayOrder`  
-5. `item_sort_to_none` — default `itemSort` to `none`  
-6. `cleanup_old_flags` — remove legacy `*Migrated` boolean keys from SavedVariables  
-7. `split_collapsed_bank_state` — separate collapsed keys for bank tab/category vs guild bank  
-8. `columns_minimum_10` — raise `bagColumns` / `bankColumns` below 10 up to 10  
-9. `bank_columns_minimum_15` — raise `bankColumns` below 15 up to 15  
-10. `onewow_bags_default_section` — ensure Equipment/Crafting/Housing sections; add/sync **OneWoW Bags** section (`SEC_ONEWOW_BAGS`)  
-11. `display_name_uniqueness` — disambiguate custom category display names that collide with builtins or each other  
-12. `section_category_membership_cleanup` — strip stale names from section `categories` lists (removed custom rows, etc.)  
-13. `rename_move_upgrades_to_top` — rename `moveUpgradesToTop` key to `moveRecentToTop`  
-14. `hide_in_to_applies_in` — convert `categoryModifications[*].hideIn` to `appliesIn` with inverted semantics
-15. `mats_crafting_category` — insert the `Mats` builtin before `Reagents` in all section/member/displayOrder lists so existing saves pick up the new crafting category
-16. `split_warband_bank_settings` — copy legacy `bank*` values into parallel `warbandBank*` keys when the warband key is not already set, preserving user settings during the personal/warband settings split
-17. `cleanup_legacy_root_keys` — remove stray legacy root-level SavedVariable keys while preserving supported root scopes: `global`, `chars`, `realms`, `factions`, `classes`, `specs`, `presets`, and `_activePreset`
-18. `split_empty_slots_settings` — seed `bankShowEmptySlots`, `warbandBankShowEmptySlots`, and `guildBankShowEmptySlots` from legacy `showEmptySlots` when unset
+On first load after the migration collapse, a shape-detected bridge wraps a flat
+`OneWoW_Bags_DB` root into `root.global` before `DB:Init`. The 18 versioned
+`RunMigrations` steps that used to run here were removed (assumes users logged in
+on a recent build). See suite commit *Collapse legacy RunMigrations* for the step list.
 
 ---
 
@@ -672,7 +656,7 @@ TOC hooks: `1WoW_Bags_OnAddonCompartmentClick`, `1WoW_Bags_OnAddonCompartmentEnt
 
 ### OneWoW_GUI
 
-`DB:Init` / `RunMigrations` / `MergeMissing`, frame and scroll factories, `SkinIconFrame`, `UpdateIconQuality`, theme and shared settings APIs, window position helpers. `Core\Constants.lua` calls `RegisterGUIConstants` at load.
+`DB:Init` / `MergeMissing`, frame and scroll factories, `SkinIconFrame`, `UpdateIconQuality`, theme and shared settings APIs, window position helpers. `Core\Constants.lua` calls `RegisterGUIConstants` at load.
 
 ### Item button callbacks (`Integrations\OneWoWBagsIntegration.lua`)
 

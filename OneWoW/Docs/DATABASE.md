@@ -161,18 +161,25 @@ Starting with a single active preset avoids preset collision rules, multi-preset
 - Activates one preset at a time
 - Does not mutate underlying scope values when switching
 
-### `RunMigrations`
+### `RunMigrations` (retired)
 
-- Runs versioned migration steps in order
-- Uses a version high-water mark at `db.global._migrationVersion`
-- Skips already-completed versions
-- Updates the stored version after each successful step
-- If a step errors, execution stops so the next load retries from the failed step
-- Called after `Init` (defaults are already applied)
+Versioned `DB:RunMigrations` was removed from the suite (2026). One-time structural
+transforms now use **idempotent init bridges** in each addon's `InitializeDatabase`:
+shape-detected flat SV wraps, boolean or `_migrationVersion` gates where legacy
+steps already ran, then `DB:Init`. Ongoing shape repair stays in `MergeMissing`.
 
 ---
 
-## Default Reference Safety
+## Migrations vs Normalizers
+
+The codebase separates two concepts:
+
+1. **One-time bridges** — structural data transforms that must run once (rename keys,
+   restructure tables, move data between scopes). Gated by shape detection or a
+   one-shot flag (e.g. `_monitorPinnedMigrated`, `_charDBDrained`).
+
+2. **Normalizers** — idempotent transforms that fill missing defaults or fix data
+   shapes every load. Handled by `MergeMissing` inside `Init`.
 
 The API must never store live db tables by directly assigning template tables from defaults. `MergeMissing` copies tables via `CopyTable` when filling missing keys. This prevents the dangerous pattern where mutating `db.settings` also mutates the defaults template because they share the same table reference.
 
@@ -190,27 +197,14 @@ Recommended: store scopes and presets as normal plain tables, resolve values exp
 
 ---
 
-## Migrations vs Normalizers
+## Migrations vs Normalizers (see above)
 
-The current codebase conflated two distinct concepts:
-
-1. **One-time migrations** — structural data transformations that must run exactly once (rename keys, restructure tables, move data between scopes). These need version gating via `RunMigrations`.
-
-2. **Normalizers** — idempotent transforms that fill missing defaults or fix data shapes. These run every load and are handled by `MergeMissing` inside `Init`.
-
-Separating them is the biggest clarity win. `RunMigrations` handles concept 1. `Init` + `MergeMissing` handles concept 2.
-
-### RunMigrations Format
-
-Steps are an ordered array with `version` (integer, strictly increasing), `name` (string, for diagnostics), and `run` (function receiving the db handle). Steps run in version order; the stored `_migrationVersion` high-water mark gates execution.
-
-### Bridging Legacy Boolean Flags
-
-Existing addons using boolean completion flags (e.g. `categoriesV2Migrated`) need a one-time bridge between `Init` and `RunMigrations`. The bridge checks old flags, computes the correct version number, and sets `_migrationVersion` before `RunMigrations` reads it. After that, old flags are inert and can be cleaned up in a subsequent migration step.
+`Init` + `MergeMissing` handles normalizers. One-time bridges live beside `Init`
+in each addon's `InitializeDatabase` — not a shared versioned runner.
 
 ---
 
-## What the API Eliminates
+## Default Reference Safety
 
 The DB API is designed to kill specific defensive programming patterns that were widespread across the suite. These patterns hid actual initialization bugs and made code harder to maintain.
 
@@ -265,10 +259,11 @@ if not self.db.global.categoriesV2Migrated then
     self.db.global.categoriesV2Migrated = true
 end
 
--- After: versioned integer high-water mark, one migration array
-DB:RunMigrations(db, {
-    { version = 1, name = "category_system_v2", run = function(d) ... end },
-})
+-- After: one-shot bridge flag in InitializeDatabase, then Init
+if not db.global.categoriesV2Migrated then
+    bridgeCategorySystemV2(db)
+    db.global.categoriesV2Migrated = true
+end
 ```
 
 ---
@@ -277,8 +272,8 @@ DB:RunMigrations(db, {
 
 1. Defaults describe as much static schema as possible.
 2. Dynamic values are initialized after `Init`.
-3. Migrations use `RunMigrations` with versioned steps in one place per addon.
-4. Addon code uses the shared DB API for initialization, nested ensure/write, migrations, persistence helpers, resolved scope reads, explicit scoped writes, and preset operations.
+3. One-time SV shape fixes use idempotent bridges in `InitializeDatabase` (before or after `Init` as needed).
+4. Addon code uses the shared DB API for initialization, nested ensure/write, persistence helpers, resolved scope reads, explicit scoped writes, and preset operations.
 5. Addon code does not call Blizzard `TableUtil` functions directly for database logic.
 6. Addon code does not depend on AceDB-specific APIs unless a feature truly requires them.
 7. Scope names are referenced through `DB.Scope.*` constants, not raw strings.

@@ -64,18 +64,22 @@ Sparse overlays applied at read time. Only one active at a time. Do not mutate s
 - `DB:SetPresetValue(db, presetName, ..., value)`
 - `DB:SetActivePreset(db, presetName)`
 
-### Migrations
+### One-time SV bridges (retired `RunMigrations`)
 
-`DB:RunMigrations(db, migrations)` runs versioned, one-time structural transforms. Uses an integer high-water mark at `db.global._migrationVersion`.
+Structural one-time transforms use idempotent bridges in each addon's
+`InitializeDatabase` (shape-detected flat SV wraps, one-shot flags). There is no
+shared versioned migration runner.
 
 ```lua
-DB:RunMigrations(db, {
-    { version = 1, name = "category_system_v2", run = function(d) ... end },
-    { version = 2, name = "rename_old_key",     run = function(d) ... end },
-})
+-- Example: before DB:Init when the SV root is still flat
+if sv and not sv.global and next(sv) ~= nil then
+    -- wrap into sv.global
+end
 ```
 
-Migrations are structural (rename keys, restructure tables, move data between scopes). Defaults application is a normalizer handled by `Init` + `MergeMissing`, not a migration. Legacy boolean completion flags need a one-time bridge: compute the equivalent version and set `_migrationVersion` before `RunMigrations` reads it.
+Migrations are structural (rename keys, restructure tables, move data between scopes).
+Defaults application is a normalizer handled by `Init` + `MergeMissing`, not a migration.
+Legacy `_migrationVersion` or boolean flags gate bridges for saves that already ran old steps.
 
 ## Shared settings
 
@@ -89,7 +93,7 @@ Theme, language, and minimap are managed by `OneWoW_GUI:GetSetting` / `OneWoW_GU
 
 3. **Hand-rolled merge / ensure-if-nil blocks.** `if not db.global.X then db.global.X = {} end`, custom `ApplyDefaults`, `mergeSubTable`, `mergeTabSettings` — replace with defaults + `MergeMissing` (automatic in `Init`) or `DB:Ensure` for dynamic paths.
 
-4. **Boolean migration flags interleaved with init.** `if not db.global.fooMigrated then ... end` should be a versioned `RunMigrations` step.
+4. **Boolean migration flags interleaved with init.** `if not db.global.fooMigrated then ... end` should be a one-shot init bridge with a completion flag, not scattered through consumer code.
 
 5. **Direct Blizzard helpers for SV init.** `MergeTable` overwrites destination values; `SetTablePairsToTable` wipes and replaces — both wrong for fill-only SV semantics. `MergeMissing` is the correct primitive.
 

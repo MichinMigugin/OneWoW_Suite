@@ -378,28 +378,6 @@ function DB:Init(config)
     return db
 end
 
---- Run versioned, one-time structural migrations. Each step runs once when its
---- `version` exceeds the stored high-water mark at `db.global._migrationVersion`,
---- in array order. A failing step errors (level 2) without advancing the mark.
---- Defaults application is a normalizer (handled by `Init`), not a migration.
----@param db table
----@param migrations { version: integer, name: string?, run: fun(db: table) }[]
-function DB:RunMigrations(db, migrations)
-    local g = db.global
-    local currentVersion = g._migrationVersion or 0
-    for _, step in ipairs(migrations) do
-        if step.version > currentVersion then
-            local ok, err = pcall(step.run, db)
-            if not ok then
-                error("DB:RunMigrations failed at version " .. step.version
-                      .. " (" .. (step.name or "unnamed") .. "): " .. tostring(err), 2)
-            end
-            g._migrationVersion = step.version
-            currentVersion = step.version
-        end
-    end
-end
-
 local function TryResolveSpec(db)
     if db._specResolved then return end
     local specIndex = GetSpecialization()
