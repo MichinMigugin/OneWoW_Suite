@@ -2,7 +2,7 @@ local _, ns = ...
 local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
-DB:InitSubModule("OneWoW_AltTracker_Accounting_DB")
+ns.db = DB:InitSubModule("OneWoW_AltTracker_Accounting_DB")
 
 ns.DatabaseDefaults = {
     transactions = {},
@@ -24,31 +24,12 @@ ns.DatabaseDefaults = {
         netProfit = 0,
         lastCalculated = 0,
     },
-    version = 1,
 }
 
+-- Defaults applied by BootStore (MergeMissing) before this runs, so only the
+-- char-key normalizer remains here.
 function ns:InitializeDatabase()
-    if not OneWoW_AltTracker_Accounting_DB.transactions then
-        OneWoW_AltTracker_Accounting_DB.transactions = {}
-    end
-
-    if not OneWoW_AltTracker_Accounting_DB.settings then
-        OneWoW_AltTracker_Accounting_DB.settings = ns.DatabaseDefaults.settings
-    end
-
-    if OneWoW_AltTracker_Accounting_DB.settings.guildAsPersonal == nil then
-        OneWoW_AltTracker_Accounting_DB.settings.guildAsPersonal = false
-    end
-
-    if not OneWoW_AltTracker_Accounting_DB.statistics then
-        OneWoW_AltTracker_Accounting_DB.statistics = ns.DatabaseDefaults.statistics
-    end
-
-    if not OneWoW_AltTracker_Accounting_DB.version then
-        OneWoW_AltTracker_Accounting_DB.version = ns.DatabaseDefaults.version
-    end
-
-    local rewritten = DB:ConsolidateRecordCharacterField(OneWoW_AltTracker_Accounting_DB.transactions, "character")
+    local rewritten = DB:ConsolidateRecordCharacterField(ns.db.transactions, "character")
     if rewritten > 0 then
         C_Timer.After(5, function()
             print("|cFFFFD100OneWoW AltTracker:|r canonicalized character key on " .. rewritten .. " transaction(s).")
@@ -58,7 +39,7 @@ end
 
 function ns:GetNextTransactionID()
     local maxID = 0
-    for _, tx in ipairs(OneWoW_AltTracker_Accounting_DB.transactions) do
+    for _, tx in ipairs(ns.db.transactions) do
         if tx.id and tx.id > maxID then
             maxID = tx.id
         end
@@ -67,16 +48,16 @@ function ns:GetNextTransactionID()
 end
 
 function ns:TrimTransactions()
-    local maxRecords = OneWoW_AltTracker_Accounting_DB.settings.maxRecords or 10000
-    local trimTo = OneWoW_AltTracker_Accounting_DB.settings.trimToRecords or 8000
+    local maxRecords = ns.db.settings.maxRecords
+    local trimTo = ns.db.settings.trimToRecords
 
-    if #OneWoW_AltTracker_Accounting_DB.transactions > maxRecords then
-        table.sort(OneWoW_AltTracker_Accounting_DB.transactions, function(a, b)
+    if #ns.db.transactions > maxRecords then
+        table.sort(ns.db.transactions, function(a, b)
             return (a.timestamp or 0) > (b.timestamp or 0)
         end)
 
-        while #OneWoW_AltTracker_Accounting_DB.transactions > trimTo do
-            table.remove(OneWoW_AltTracker_Accounting_DB.transactions)
+        while #ns.db.transactions > trimTo do
+            table.remove(ns.db.transactions)
         end
     end
 end

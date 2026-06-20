@@ -6,6 +6,7 @@ if not OneWoW or not OneWoW.BootStore then return end
 OneWoW:BootStore(ns, {
     addonName = ADDON_NAME,
     savedVar = "OneWoW_AltTracker_Auctions_DB",
+    defaults = ns.DatabaseDefaults,
     sortField = "lastUpdate",
     onLogin = function()
         if ns.AHScanner then

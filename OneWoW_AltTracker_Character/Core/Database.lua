@@ -1,8 +1,8 @@
-local addonName, ns = ...
+local _, ns = ...
 local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
-DB:InitSubModule("OneWoW_AltTracker_Character_DB")
+ns.db = DB:InitSubModule("OneWoW_AltTracker_Character_DB")
 
 ns.DatabaseDefaults = {
     characters = {},
@@ -11,58 +11,12 @@ ns.DatabaseDefaults = {
         playtimeThrottle = 300,
         enableDataCollection = true,
     },
-    version = 1,
+    settingsProfiles = {},
+    actionBarSets = {},
 }
 
-local function IsProfile(tbl)
-    return type(tbl) == "table" and type(tbl.name) == "string" and type(tbl.timestamp) == "number"
-end
-
-local function MigrateProfilesFlat()
-    local profiles = OneWoW_AltTracker_Character_DB.settingsProfiles
-    if not profiles or profiles._migrated then return end
-
-    local charBuckets = {}
-    local existingProfiles = {}
-
-    for key, value in pairs(profiles) do
-        if type(value) == "table" then
-            if IsProfile(value) then
-                existingProfiles[key] = value
-            else
-                charBuckets[key] = value
-            end
-        end
-    end
-
-    if next(charBuckets) == nil then
-        profiles._migrated = true
-        return
-    end
-
-    for charKey, bucket in pairs(charBuckets) do
-        for profileName, profileData in pairs(bucket) do
-            if IsProfile(profileData) then
-                profileData.savedBy = profileData.savedBy or charKey
-                local targetName = profileName
-                if profiles[targetName] and profiles[targetName] ~= profileData then
-                    local charName = charKey:match("^([^%-]+)")
-                    targetName = profileName .. " (" .. (charName or charKey) .. ")"
-                    profileData.name = targetName
-                end
-                profiles[targetName] = profileData
-            end
-        end
-        profiles[charKey] = nil
-    end
-
-    profiles._migrated = true
-end
-
 local function ConsolidateActionBarSetSourceChars()
-    local sets = OneWoW_AltTracker_Character_DB.actionBarSets
-    if not sets then return end
-    for _, setData in pairs(sets) do
+    for _, setData in pairs(ns.db.actionBarSets) do
         if type(setData) == "table" and setData.sourceChar then
             local canonical = OneWoW_GUI:CanonicalizeCharacterKey(setData.sourceChar)
             if canonical then
@@ -72,47 +26,20 @@ local function ConsolidateActionBarSetSourceChars()
     end
 end
 
+-- Defaults applied by BootStore (MergeMissing) before this runs, so only the
+-- char-key normalizers remain here.
 function ns:InitializeDatabase()
-    if not OneWoW_AltTracker_Character_DB.characters then
-        OneWoW_AltTracker_Character_DB.characters = {}
-    end
-
-    if not OneWoW_AltTracker_Character_DB.settings then
-        OneWoW_AltTracker_Character_DB.settings = ns.DatabaseDefaults.settings
-    end
-
-    if not OneWoW_AltTracker_Character_DB.version then
-        OneWoW_AltTracker_Character_DB.version = ns.DatabaseDefaults.version
-    end
-
-    if not OneWoW_AltTracker_Character_DB.settingsProfiles then
-        OneWoW_AltTracker_Character_DB.settingsProfiles = {}
-    end
-
-    if not OneWoW_AltTracker_Character_DB.actionBarSets then
-        OneWoW_AltTracker_Character_DB.actionBarSets = {}
-    end
-
-    -- Merge legacy/duplicate keys (e.g. "Name-Argent Dawn" vs "Name-ArgentDawn") on every
-    -- login. Idempotent — no-op once all keys are canonical. See DB:ConsolidateCharacterKeys.
-    local migrated = DB:ConsolidateCharacterKeys(OneWoW_AltTracker_Character_DB.characters)
+    -- Merge legacy/duplicate keys (e.g. "Name-Argent Dawn" vs "Name-ArgentDawn").
+    -- Idempotent — no-op once all keys are canonical. See DB:ConsolidateCharacterKeys.
+    local migrated = DB:ConsolidateCharacterKeys(ns.db.characters)
     if migrated > 0 then
         C_Timer.After(5, function()
             print("|cFFFFD100OneWoW AltTracker:|r consolidated " .. migrated .. " duplicate character key(s) in character data.")
         end)
     end
     ConsolidateActionBarSetSourceChars()
-
-    MigrateProfilesFlat()
-
-    if ns.ActionBars and ns.ActionBars.MigrateToNamedSets then
-        ns.ActionBars:MigrateToNamedSets()
-    end
 end
 
 function ns:GetSettingsProfiles()
-    if not OneWoW_AltTracker_Character_DB.settingsProfiles then
-        OneWoW_AltTracker_Character_DB.settingsProfiles = {}
-    end
-    return OneWoW_AltTracker_Character_DB.settingsProfiles
+    return ns.db.settingsProfiles
 end
