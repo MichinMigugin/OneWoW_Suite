@@ -1,4 +1,5 @@
 local _, ns = ...
+
 local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 

@@ -1,15 +1,7 @@
--- OneWoW AltTracker Addon File
--- OneWoW_AltTracker_Endgame/Modules/WeeklyActivities.lua
--- Created by MichinMigugin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 
 ns.WeeklyActivities = {}
 local Module = ns.WeeklyActivities
-
-local DEFAULT_ACTIVITY_QUESTS = {
-    {questID = 95842, key = "voidAssaults", name = "Void Assaults"},
-    {questID = 95843, key = "ritualSites",  name = "Ritual Sites"},
-}
 
 function Module:CollectData(charKey, charData)
     if not charKey or not charData then return false end
@@ -19,15 +11,7 @@ function Module:CollectData(charKey, charData)
         lastUpdated = time(),
     }
 
-    local list = DEFAULT_ACTIVITY_QUESTS
-    if _G.OneWoW_AltTracker_DB and
-       _G.OneWoW_AltTracker_DB.global and
-       _G.OneWoW_AltTracker_DB.global.overrides and
-       _G.OneWoW_AltTracker_DB.global.overrides.progress and
-       _G.OneWoW_AltTracker_DB.global.overrides.progress.weeklyActivityQuests and
-       #_G.OneWoW_AltTracker_DB.global.overrides.progress.weeklyActivityQuests > 0 then
-        list = _G.OneWoW_AltTracker_DB.global.overrides.progress.weeklyActivityQuests
-    end
+    local list = OneWoW_AltTracker:GetProgressList("weeklyActivityQuests")
 
     for _, entry in ipairs(list) do
         local questID = entry.questID
@@ -45,8 +29,4 @@ function Module:CollectData(charKey, charData)
 
     charData.weeklyActivities = weeklyData
     return true
-end
-
-function Module:GetDefaultActivities()
-    return DEFAULT_ACTIVITY_QUESTS
 end

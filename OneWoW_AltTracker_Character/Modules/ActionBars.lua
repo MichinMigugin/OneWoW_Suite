@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -976,7 +976,7 @@ function Module:CreateSpellOverrideMap()
         for pvpTalentSlot = 1, 3 do
             local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(pvpTalentSlot)
             if slotInfo then
-                for i, pvpTalentID in ipairs(slotInfo.availableTalentIDs) do
+                for _, pvpTalentID in ipairs(slotInfo.availableTalentIDs) do
                     local spellId = select(6, GetPvpTalentInfoByID(pvpTalentID))
                     if spellId then
                         local newid = C_Spell.GetOverrideSpell(spellId)

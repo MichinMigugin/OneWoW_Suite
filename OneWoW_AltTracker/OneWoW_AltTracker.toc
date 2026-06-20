@@ -37,6 +37,7 @@ Core\MigrationFix.lua
 Core\Core.lua
 
 # Data Files
+Data\d-overrides.lua
 Data\d-expansions.lua
 Data\d-professions.lua
 Data\d-season.lua

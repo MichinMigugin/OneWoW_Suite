@@ -1,11 +1,8 @@
--- OneWoW AltTracker Addon File
--- OneWoW_AltTracker/UI/t-progress.lua
--- Created by MichinMigugin (Ricky)
-local addonName, ns = ...
-local L = ns.L
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
+local L = ns.L
 ns.UI = ns.UI or {}
 
 local HEADER_HEIGHT = 30
@@ -63,16 +60,7 @@ local subTabState = {
 local currentSubTab = "mythicplus"
 
 local function GetWeeklyActivitiesList()
-    if OneWoW_AltTracker and OneWoW_AltTracker.db and
-       OneWoW_AltTracker.db.global and OneWoW_AltTracker.db.global.overrides and
-       OneWoW_AltTracker.db.global.overrides.progress and
-       OneWoW_AltTracker.db.global.overrides.progress.weeklyActivityQuests then
-        return OneWoW_AltTracker.db.global.overrides.progress.weeklyActivityQuests
-    end
-    return {
-        {questID = 95842, key = "voidAssaults", name = "Void Assaults"},
-        {questID = 95843, key = "ritualSites",  name = "Ritual Sites"},
-    }
+    return ns:GetProgressList("weeklyActivityQuests")
 end
 
 local function GetWeeklyActivityCompleted(endgameData, questID)
@@ -204,39 +192,6 @@ local function GetTrackedCurrencyData(endgameData)
     return lines
 end
 
-local function GetCurrencyCapString(endgameData)
-    local lines = GetTrackedCurrencyData(endgameData)
-    if #lines > 0 then
-        local first = lines[1]
-        return first.name and (ns.ShortNames:GetShortName(first.name, 10) .. ": " .. first.text) or first.text
-    end
-    if endgameData and endgameData.pvp and endgameData.pvp.currencies and endgameData.pvp.currencies.conquest then
-        local c = endgameData.pvp.currencies.conquest
-        local earned = c.quantityEarnedThisWeek or 0
-        local cap = c.maxWeeklyQuantity or 0
-        if cap > 0 then return earned .. "/" .. cap end
-    end
-    return "--"
-end
-
-local function GetVaultCompletedString(endgameData)
-    if not endgameData or not endgameData.greatVault or not endgameData.greatVault.activities then
-        return "0/0/0"
-    end
-    local acts = endgameData.greatVault.activities
-    local function CountCompleted(list)
-        if not list then return 0 end
-        local n = 0
-        for _, act in ipairs(list) do
-            if (act.threshold or 0) > 0 and (act.progress or 0) >= act.threshold then
-                n = n + 1
-            end
-        end
-        return n
-    end
-    return string.format("%d/%d/%d", CountCompleted(acts.raid), CountCompleted(acts.dungeon), CountCompleted(acts.world))
-end
-
 local function GetVaultTypeString(endgameData, vaultType)
     if not endgameData or not endgameData.greatVault or not endgameData.greatVault.activities then
         return "--"
@@ -253,16 +208,6 @@ local function GetVaultTypeString(endgameData, vaultType)
     return completed .. "/" .. total
 end
 
-local function GetDiffAbbr(difficultyName)
-    local dn = difficultyName or ""
-    if dn:find("Mythic") then return "M"
-    elseif dn:find("Heroic") then return "H"
-    elseif dn:find("Normal") then return "N"
-    elseif dn:find("Looking") then return "LFR"
-    end
-    return ""
-end
-
 local KNOWN_BOSS_NAMES = {
     [92123] = "Cragpine",
     [92560] = "Lu'ashal",
@@ -271,26 +216,6 @@ local KNOWN_BOSS_NAMES = {
     [96472] = "Nexus-Captain Leth'ir",
     [96473] = "Imperator Pertinax",
 }
-
-local function GetRaidProgString(endgameData)
-    if not endgameData or not endgameData.raids or not endgameData.raids.lockouts then return "--" end
-    local lockouts = endgameData.raids.lockouts
-    if #lockouts == 0 then return "--" end
-    local best = nil
-    local bestScore = -1
-    for _, l in ipairs(lockouts) do
-        local score = (l.encounterProgress or 0) * 100 + (#(l.difficultyName or "") > 0 and 1 or 0)
-        if score > bestScore then bestScore = score; best = l end
-    end
-    if not best then best = lockouts[1] end
-    if best then
-        local d = GetDiffAbbr(best.difficultyName)
-        local prog = (best.encounterProgress or 0) .. "/" .. (best.numEncounters or 0)
-        local abbr = ns.ShortNames:GetShortName(best.name or "", 8)
-        return abbr .. " " .. prog .. (d ~= "" and d or "")
-    end
-    return "--"
-end
 
 local function GetWorldBossKilled(endgameData)
     if not endgameData or not endgameData.worldBoss then return false, nil end
@@ -917,7 +842,7 @@ local function RefreshSubTabContent(contentFrame, subTabKey, progressTab, buildC
     local rowGap = 2
     local columnsConfig = state.columns
 
-    for charIndex, charInfo in ipairs(allChars) do
+    for _, charInfo in ipairs(allChars) do
         local charKey = charInfo.key
         local charData = charInfo.data
         local endgameData = OneWoW_AltTracker_Endgame_DB.characters and OneWoW_AltTracker_Endgame_DB.characters[charKey]
@@ -936,7 +861,7 @@ local function RefreshSubTabContent(contentFrame, subTabKey, progressTab, buildC
                     buildTooltipFunc(self, endgameData, charData, charKey, contentFrame)
                 end
             end,
-            onLeave = function(self)
+            onLeave = function()
                 GameTooltip:Hide()
             end,
         })
@@ -1962,10 +1887,7 @@ function ns.UI.RefreshTrackingBar(progressTab)
         end
     end
     if bossName == "" then
-        local questIDs = (OneWoW_AltTracker and OneWoW_AltTracker.db and
-                          OneWoW_AltTracker.db.global.overrides and
-                          OneWoW_AltTracker.db.global.overrides.progress and
-                          OneWoW_AltTracker.db.global.overrides.progress.worldBossQuestIDs) or {}
+        local questIDs = ns:GetProgressList("worldBossQuestIDs")
         local names = {}
         for _, qid in ipairs(questIDs) do
             local nm = KNOWN_BOSS_NAMES[qid]

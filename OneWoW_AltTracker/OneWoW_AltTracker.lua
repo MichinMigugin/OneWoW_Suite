@@ -1,7 +1,6 @@
 local addonName, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-
 local DB = OneWoW_GUI.DB
 
 OneWoW_AltTracker = {}
@@ -11,6 +10,13 @@ OneWoW_AltTracker.SeasonData = ns.SeasonData
 
 ns.OneWoWAltTracker = OneWoWAltTracker
 ns.oneWoWHubActive = false
+
+-- Public cross-addon accessor. AltTracker data units (RequiredDeps:
+-- OneWoW_AltTracker) read the effective progress override lists through this,
+-- so the static baseline lives only in ns.OverrideDefaults (single source).
+function OneWoWAltTracker:GetProgressList(key)
+    return ns:GetProgressList(key)
+end
 
 local function RegisterWithOneWoW()
     if not OneWoW then return false end
@@ -45,7 +51,7 @@ local function RegisterWithOneWoW()
 end
 
 local function OnInitialize()
-    OneWoWAltTracker:InitializeDatabase()
+    ns:InitializeDatabase()
     OneWoW_GUI:MigrateSettings(OneWoWAltTracker.db.global)
     OneWoWAltTracker:ApplyTheme()
 
@@ -120,97 +126,6 @@ function OneWoWAltTracker:SlashCommandHandler()
     end
     if ns.UI and ns.UI.Toggle then
         ns.UI:Toggle()
-    end
-end
-
-function OneWoWAltTracker:InitializeDatabase()
-    local defaults = ns.DatabaseDefaults or {}
-
-    self.db = DB:NewCompat("OneWoW_AltTracker_DB", defaults, true)
-
-    if not self.db.global.altTracker then
-        self.db.global.altTracker = {
-            characters = {},
-            lastUpdate = time(),
-            expansionVersion = 11
-        }
-    end
-
-    if not self.db.global.warbandBankData then
-        self.db.global.warbandBankData = {}
-    end
-
-    if not self.db.global.guildBanks then
-        self.db.global.guildBanks = {}
-    end
-
-    if not self.db.global.actionBars then
-        self.db.global.actionBars = {}
-    end
-
-    if not self.db.global.altTrackerSettings then
-        self.db.global.altTrackerSettings = {
-            enablePlaytimeTracking = true,
-            enableDataCollection = true,
-        }
-    end
-
-    if self.db.global.migrationStatus == nil then
-        self.db.global.migrationStatus = {
-            cleanupPerformed = false,
-        }
-    end
-
-    if not self.db.global.overrides then
-        self.db.global.overrides = { progress = { trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310, 3405}, worldBossQuestID = 0 } }
-    end
-    if not self.db.global.overrides.progress then
-        self.db.global.overrides.progress = { trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310, 3405}, worldBossQuestID = 0 }
-    end
-    if not self.db.global.overrides.progress.trackedCurrencyIDs then
-        self.db.global.overrides.progress.trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310, 3405}
-        self.db.global.overrides.progress.currency1ID = nil
-        self.db.global.overrides.progress.currency2ID = nil
-    end
-    do
-        local ids = self.db.global.overrides.progress.trackedCurrencyIDs
-        local required = {3310, 3405}
-        for _, reqID in ipairs(required) do
-            local found = false
-            for _, id in ipairs(ids) do
-                if id == reqID then found = true; break end
-            end
-            if not found then table.insert(ids, reqID) end
-        end
-    end
-    do
-        local ids = self.db.global.overrides.progress.worldBossQuestIDs
-        if not ids or #ids == 0 then
-            self.db.global.overrides.progress.worldBossQuestIDs = {92123, 92560, 92636, 92034, 96472, 96473}
-            self.db.global.overrides.progress.worldBossQuestID = nil
-        else
-            for _, reqID in ipairs({96472, 96473}) do
-                local found = false
-                for _, id in ipairs(ids) do
-                    if id == reqID then found = true; break end
-                end
-                if not found then tinsert(ids, reqID) end
-            end
-        end
-    end
-    if not self.db.global.overrides.progress.weeklyActivityQuests then
-        self.db.global.overrides.progress.weeklyActivityQuests = {
-            {questID = 95842, key = "voidAssaults", name = "Void Assaults"},
-            {questID = 95843, key = "ritualSites",  name = "Ritual Sites"},
-        }
-    end
-    self.db.global.overrides.progress.primaryRaidName = nil
-    self.db.global.overrides.progress.worldBossName = nil
-    if not self.db.global.favorites then
-        self.db.global.favorites = {}
-    end
-    if not self.db.global.seasonChecklist then
-        self.db.global.seasonChecklist = {}
     end
 end
 

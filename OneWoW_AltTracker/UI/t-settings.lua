@@ -1,4 +1,5 @@
-local addonName, ns = ...
+local _, ns = ...
+
 local OneWoWAltTracker = OneWoW_AltTracker
 local L = ns.L
 
@@ -619,22 +620,15 @@ function ns.UI.CreateSettingsTab(parent)
 
     local KNOWN_BOSS_NAMES = {}
 
+    -- Copy-on-write: editing the list materializes a SavedVariables copy seeded
+    -- from the static baseline, so add/remove mutations persist (and never touch
+    -- ns.OverrideDefaults).
     local function GetCurrencyIDs()
-        if OneWoWAltTracker.db.global.overrides and
-           OneWoWAltTracker.db.global.overrides.progress and
-           OneWoWAltTracker.db.global.overrides.progress.trackedCurrencyIDs then
-            return OneWoWAltTracker.db.global.overrides.progress.trackedCurrencyIDs
-        end
-        return {}
+        return ns:EnsureProgressList("trackedCurrencyIDs")
     end
 
     local function GetBossQuestIDs()
-        if OneWoWAltTracker.db.global.overrides and
-           OneWoWAltTracker.db.global.overrides.progress and
-           OneWoWAltTracker.db.global.overrides.progress.worldBossQuestIDs then
-            return OneWoWAltTracker.db.global.overrides.progress.worldBossQuestIDs
-        end
-        return {}
+        return ns:EnsureProgressList("worldBossQuestIDs")
     end
 
     local function GetOrCreateOverrideDialog()
@@ -825,7 +819,7 @@ function ns.UI.CreateSettingsTab(parent)
                 end
             end
         end)
-        addCurrBox:SetScript("OnEnterPressed", function(self) addCurrBtn:Click() end)
+        addCurrBox:SetScript("OnEnterPressed", function() addCurrBtn:Click() end)
         sc.currencyAddRow = addCurrRow
 
         local sec3StartDY = dy
@@ -860,7 +854,7 @@ function ns.UI.CreateSettingsTab(parent)
                 end
             end
         end)
-        addBossBox:SetScript("OnEnterPressed", function(self) addBossBtn:Click() end)
+        addBossBox:SetScript("OnEnterPressed", function() addBossBtn:Click() end)
         sc.bossAddRow = addBossRow
 
         local noteText = OneWoW_GUI:CreateFS(sc, 10)
@@ -877,12 +871,14 @@ function ns.UI.CreateSettingsTab(parent)
         resetBtn:ClearAllPoints()
         resetBtn:SetPoint("BOTTOMLEFT", overrideDialog, "BOTTOMLEFT", 10, 10)
         resetBtn:SetScript("OnClick", function()
-            OneWoWAltTracker.db.global.overrides.progress.trackedCurrencyIDs = {3383, 3341, 3343, 3345, 3347, 3303, 3309, 3378, 3379, 3385, 3316, 3310, 3405}
-            OneWoWAltTracker.db.global.overrides.progress.worldBossQuestIDs = {92123, 92560, 92636, 92034, 96472, 96473}
-            OneWoWAltTracker.db.global.overrides.progress.weeklyActivityQuests = {
-                {questID = 95842, key = "voidAssaults", name = "Void Assaults"},
-                {questID = 95843, key = "ritualSites",  name = "Ritual Sites"},
-            }
+            -- Drop user customizations so the lists fall back to the static
+            -- baseline; the rebuilds below re-materialize editable copies of it.
+            local progress = OneWoWAltTracker.db.global.overrides and OneWoWAltTracker.db.global.overrides.progress
+            if progress then
+                progress.trackedCurrencyIDs = nil
+                progress.worldBossQuestIDs = nil
+                progress.weeklyActivityQuests = nil
+            end
             RebuildCurrencyList()
             RebuildBossList()
         end)
@@ -922,9 +918,7 @@ function ns.UI.CreateSettingsTab(parent)
     local checklistDialog = nil
 
     local function GetCurrencyIDsDisplay()
-        local ids = (OneWoWAltTracker.db.global.overrides and
-                     OneWoWAltTracker.db.global.overrides.progress and
-                     OneWoWAltTracker.db.global.overrides.progress.trackedCurrencyIDs) or {}
+        local ids = ns:GetProgressList("trackedCurrencyIDs")
         local parts = {}
         for _, id in ipairs(ids) do
             local info = C_CurrencyInfo.GetCurrencyInfo(id)
@@ -935,9 +929,7 @@ function ns.UI.CreateSettingsTab(parent)
 
     local function GetBossQuestIDsDisplay()
         local BOSS_NAMES = {}
-        local ids = (OneWoWAltTracker.db.global.overrides and
-                     OneWoWAltTracker.db.global.overrides.progress and
-                     OneWoWAltTracker.db.global.overrides.progress.worldBossQuestIDs) or {}
+        local ids = ns:GetProgressList("worldBossQuestIDs")
         local parts = {}
         for _, id in ipairs(ids) do
             table.insert(parts, (BOSS_NAMES[id] or C_QuestLog.GetTitleForQuestID(id) or "Unknown") .. " (Q:" .. id .. ")")

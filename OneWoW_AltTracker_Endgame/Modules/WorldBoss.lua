@@ -1,19 +1,7 @@
--- OneWoW AltTracker Addon File
--- OneWoW_AltTracker_Endgame/Modules/WorldBoss.lua
--- Created by MichinMigugin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 
 ns.WorldBoss = {}
 local Module = ns.WorldBoss
-
-local DEFAULT_BOSS_QUEST_IDS = {
-    92123,
-    92560,
-    92636,
-    92034,
-    96472,
-    96473,
-}
 
 local KNOWN_BOSS_NAMES = {
     [92123] = "Cragpine",
@@ -47,15 +35,7 @@ function Module:CollectData(charKey, charData)
         end
     end
 
-    local questIDs = DEFAULT_BOSS_QUEST_IDS
-    if _G.OneWoW_AltTracker_DB and
-       _G.OneWoW_AltTracker_DB.global and
-       _G.OneWoW_AltTracker_DB.global.overrides and
-       _G.OneWoW_AltTracker_DB.global.overrides.progress and
-       _G.OneWoW_AltTracker_DB.global.overrides.progress.worldBossQuestIDs and
-       #_G.OneWoW_AltTracker_DB.global.overrides.progress.worldBossQuestIDs > 0 then
-        questIDs = _G.OneWoW_AltTracker_DB.global.overrides.progress.worldBossQuestIDs
-    end
+    local questIDs = OneWoW_AltTracker:GetProgressList("worldBossQuestIDs")
 
     for _, questID in ipairs(questIDs) do
         if C_QuestLog.IsQuestFlaggedCompleted(questID) then
@@ -73,8 +53,4 @@ end
 
 function Module:GetKnownBossNames()
     return KNOWN_BOSS_NAMES
-end
-
-function Module:GetDefaultQuestIDs()
-    return DEFAULT_BOSS_QUEST_IDS
 end
