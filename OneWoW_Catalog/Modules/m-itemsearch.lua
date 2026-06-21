@@ -310,9 +310,8 @@ function ItemSearch:Query(searchTerm, sourceFilter)
 
     if doQuest and not limitReached then
         local questAddon = ns.Catalog and ns.Catalog:GetDataAddon("quests")
-        local qd = questAddon and questAddon.QuestData
-        if qd and qd.GetRewardItemIDs then
-            for _, itemID in ipairs(qd:GetRewardItemIDs()) do
+        if questAddon then
+            for _, itemID in ipairs(questAddon.GetRewardItemIDs()) do
                 local itemName = C_Item.GetItemNameByID(itemID)
                 if itemName and itemName:lower():find(term, 1, true) then
                     addOrAnnotate(itemID, itemName, nil, nil, "isQuestReward")
@@ -496,12 +495,11 @@ function ItemSearch:GetDetail(itemID)
     end
 
     local questAddon = ns.Catalog and ns.Catalog:GetDataAddon("quests")
-    local qd = questAddon and questAddon.QuestData
-    if qd and qd.GetQuestsRewardingItem then
-        local questIDs = qd:GetQuestsRewardingItem(itemID)
+    if questAddon then
+        local questIDs = questAddon.GetQuestsRewardingItem(itemID)
         if questIDs then
             for _, questID in ipairs(questIDs) do
-                local q = qd:GetQuest(questID)
+                local q = questAddon.GetQuest(questID)
                 tinsert(detail.questRewards, { questID = questID, questName = q and q.name })
             end
         end

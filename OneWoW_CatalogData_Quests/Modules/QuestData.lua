@@ -9,7 +9,7 @@ local _, ns = ...
 -- Runtime fields are merged over static per-quest; explicit "cleared" markers
 -- let bad live captures self-heal. Display hygiene (chrome/junk filtering) runs
 -- here as a backstop even though shipped data is already cleaned offline by
--- Tools/clean_questdb.lua.
+-- db2_exports/quest_tools/clean_questdb.lua.
 -- ============================================================================
 
 local pairs, ipairs, next, type = pairs, ipairs, next, type

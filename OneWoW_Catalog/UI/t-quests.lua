@@ -71,7 +71,7 @@ local function IsCompletedByOtherCharacter(questID, tracker)
     end
 
     local currentKey = OneWoW_GUI:BuildCharKey()
-    for _, charInfo in ipairs(tracker:GetCompletedCharacters(questID)) do
+    for _, charInfo in ipairs(tracker.GetCompletedCharacters(questID)) do
         if charInfo.key ~= currentKey then
             return true
         end
@@ -94,7 +94,7 @@ local function IsActiveOnOtherCharacter(questID, tracker)
     end
 
     local currentKey = OneWoW_GUI:BuildCharKey()
-    for _, charInfo in ipairs(tracker:GetActiveCharacters(questID)) do
+    for _, charInfo in ipairs(tracker.GetActiveCharacters(questID)) do
         if charInfo.key ~= currentKey then
             return true
         end
@@ -108,7 +108,7 @@ local function ResolveQuestListStatus(questID, tracker)
         return "pending"
     end
 
-    if tracker and tracker:IsCompletedByCurrentChar(questID) then
+    if tracker and tracker.IsCompletedByCurrentChar(questID) then
         return "completed_current"
     end
 
@@ -527,8 +527,8 @@ end
 
 local function BuildQuestRecord(addon, questID, title, extras)
     local stored =
-        addon.QuestData
-        and addon.QuestData:GetQuest(questID)
+        addon
+        and addon.GetQuest(questID)
 
     local quest = {}
 
@@ -889,11 +889,8 @@ local function RememberRewardItemName(itemID, itemName)
 
     local addon = GetDataAddon()
 
-    if addon
-        and addon.QuestData
-        and addon.QuestData.RememberItemName
-    then
-        addon.QuestData:RememberItemName(itemID, itemName)
+    if addon then
+        addon.RememberItemName(itemID, itemName)
         return true
     end
 
@@ -1100,10 +1097,7 @@ local function StartRewardItemSearchWarmup(panels, addon, resultCount)
         return
     end
 
-    if not addon
-        or not addon.QuestData
-        or not addon.QuestData.GetQuestsForExpansion
-    then
+    if not addon then
         return
     end
 
@@ -1112,7 +1106,7 @@ local function StartRewardItemSearchWarmup(panels, addon, resultCount)
     wipe(rewardItemSearchWarmQueue)
     wipe(rewardItemSearchWarmSeen)
 
-    local quests = addon.QuestData:GetQuestsForExpansion(expansionFilter)
+    local quests = addon.GetQuestsForExpansion(expansionFilter)
     local queued = 0
 
     local function addItems(items)
@@ -1421,8 +1415,7 @@ local function GetQuestDisplayName(questID, questData)
     local addon = GetDataAddon()
     local quest =
         addon
-        and addon.QuestData
-        and addon.QuestData:GetQuest(questID)
+        and addon.GetQuest(questID)
 
     local questName =
         quest
@@ -1588,7 +1581,7 @@ local function GetQuestChainColor(questID, tracker)
         return 0.3, 1, 0.3
     end
 
-    if tracker and tracker.IsCompletedByCurrentChar and tracker:IsCompletedByCurrentChar(questID) then
+    if tracker and tracker.IsCompletedByCurrentChar(questID) then
         return 0.72, 0.72, 0.72
     end
 
@@ -1689,7 +1682,7 @@ function ShowQuestDetail(panels, questData)
     local parent  = panels.detailScrollChild
     local addon   = GetDataAddon()
     if not addon then return end
-    local tracker = addon.CompletionTracker
+    local tracker = addon
 
     local contentWidth = parent:GetWidth()
     if contentWidth < 50 then
@@ -1704,48 +1697,43 @@ function ShowQuestDetail(panels, questData)
         return
     end
 
-    if addon.QuestData then
-        if not questData.mapID then
-            local liveMapID = GetQuestUiMapID(questData.id)
-            if liveMapID and liveMapID ~= 0 then
-                local mapInfo = C_Map.GetMapInfo(liveMapID)
-                questData.mapID    = liveMapID
-                questData.zoneName = mapInfo and mapInfo.name or questData.zoneName
+    if not questData.mapID then
+        local liveMapID = GetQuestUiMapID(questData.id)
+        if liveMapID and liveMapID ~= 0 then
+            local mapInfo = C_Map.GetMapInfo(liveMapID)
+            questData.mapID    = liveMapID
+            questData.zoneName = mapInfo and mapInfo.name or questData.zoneName
 
-                addon.QuestData:StoreQuestInfo(questData.id, {
-                    mapID = liveMapID,
-                    zoneName = questData.zoneName
-                })
-            end
+            addon.StoreQuestInfo(questData.id, {
+                mapID = liveMapID,
+                zoneName = questData.zoneName
+            })
         end
+    end
 
-        if not questData.classification
-            and C_QuestInfoSystem
-            and C_QuestInfoSystem.GetQuestClassification
-        then
-            local cls = C_QuestInfoSystem.GetQuestClassification(questData.id)
+    if not questData.classification then
+        local cls = C_QuestInfoSystem.GetQuestClassification(questData.id)
 
-            if cls then
-                questData.classification = cls
+        if cls then
+            questData.classification = cls
 
-                addon.QuestData:StoreQuestInfo(questData.id, {
-                    classification = cls
-                })
-            end
+            addon.StoreQuestInfo(questData.id, {
+                classification = cls
+            })
         end
+    end
 
-        if not questData.tagName then
-            local tagInfo = C_QuestLog.GetQuestTagInfo(questData.id)
+    if not questData.tagName then
+        local tagInfo = C_QuestLog.GetQuestTagInfo(questData.id)
 
-            if tagInfo and tagInfo.tagName then
-                questData.tagName = tagInfo.tagName
-                questData.isElite = tagInfo.isElite
+        if tagInfo and tagInfo.tagName then
+            questData.tagName = tagInfo.tagName
+            questData.isElite = tagInfo.isElite
 
-                addon.QuestData:StoreQuestInfo(questData.id, {
-                    tagName = tagInfo.tagName,
-                    isElite = tagInfo.isElite
-                })
-            end
+            addon.StoreQuestInfo(questData.id, {
+                tagName = tagInfo.tagName,
+                isElite = tagInfo.isElite
+            })
         end
     end
 
@@ -1993,7 +1981,7 @@ function ShowQuestDetail(panels, questData)
 
     local expName  =
         (questData.expansion ~= nil)
-        and addon.QuestData:GetExpansionName(questData.expansion)
+        and addon.GetExpansionName(questData.expansion)
         or UNKNOWN
 
     local zoneName = ResolveQuestZoneName(questData)
@@ -2638,9 +2626,7 @@ function ShowQuestDetail(panels, questData)
 
                 if itemID then
                     local itemName =
-                        addon.QuestData
-                        and addon.QuestData.GetCachedItemName
-                        and addon.QuestData:GetCachedItemName(itemID)
+                        addon.GetCachedItemName(itemID)
 
                     local itemLink, itemQuality, itemTexture
                     local itemIsQueued = pendingRewardItemIDs[itemID]
@@ -2675,7 +2661,7 @@ function ShowQuestDetail(panels, questData)
                         itemName = loader:GetTooltipItemName(itemID)
                     end
 
-                    if itemName and addon.QuestData and addon.QuestData.RememberItemName then
+                    if itemName then
                         pendingRewardItemIDs[itemID] = nil
                         RememberAndApplyRewardItemName(itemID, itemName)
                     elseif not itemName then
@@ -2874,7 +2860,7 @@ function ShowQuestDetail(panels, questData)
     yOffset = yOffset - 18
 
     local completedChars =
-        tracker and tracker:GetCompletedCharacters(questData.id)
+        tracker and tracker.GetCompletedCharacters(questData.id)
         or {}
 
     if #completedChars == 0 then
@@ -2959,7 +2945,7 @@ function ShowQuestDetail(panels, questData)
     yOffset = yOffset - 18
 
     local activeCharacters =
-        tracker and tracker:GetActiveCharacters(questData.id)
+        tracker and tracker.GetActiveCharacters(questData.id)
         or {}
 
     if #activeCharacters == 0 then
@@ -3021,8 +3007,7 @@ function ShowQuestDetail(panels, questData)
 
         local function getChainName(chainQuestID)
             local chainQuest =
-                addon.QuestData
-                and addon.QuestData:GetQuest(chainQuestID)
+                addon.GetQuest(chainQuestID)
 
             return chainQuest
                 and chainQuest.name
@@ -3074,7 +3059,7 @@ function ShowQuestDetail(panels, questData)
                     hasActive = true
                 end
 
-                if not (tracker and tracker.IsCompletedByCurrentChar and tracker:IsCompletedByCurrentChar(groupQuestID)) then
+                if not (tracker and tracker.IsCompletedByCurrentChar(groupQuestID)) then
                     allCompleted = false
                 end
             end
@@ -3257,7 +3242,7 @@ end
 local function UpdateQuestListEntry(btn, quest, panels)
     local addon   = GetDataAddon()
     if not addon then return end
-    local tracker = addon.CompletionTracker
+    local tracker = addon
 
     local entry = quest
     quest = entry and entry.quest or entry
@@ -3326,7 +3311,7 @@ local function UpdateQuestListEntry(btn, quest, panels)
     if btn.isGroup and entry.expansionName then
         expName = entry.expansionName
     elseif quest and quest.expansion ~= nil then
-        expName = addon.QuestData:GetExpansionName(quest.expansion) or ""
+        expName = addon.GetExpansionName(quest.expansion) or ""
     end
 
     if btn.subText then
@@ -3576,8 +3561,8 @@ local function BuildQuestListEntries(quests)
 
         if #groupQuests >= 3 then
             local expansionName = ""
-            if addon and addon.QuestData and quest.expansion ~= nil then
-                expansionName = addon.QuestData:GetExpansionName(quest.expansion) or ""
+            if addon and quest.expansion ~= nil then
+                expansionName = addon.GetExpansionName(quest.expansion) or ""
             end
 
             table.insert(entries, {
@@ -3616,7 +3601,7 @@ local function BuildQuestListEntries(quests)
 end
 
 local function GetFavoriteQuestsOutsideActiveList(addon, activeQuests)
-    if not (addon and addon.QuestData and ns.Favorites) then
+    if not (addon and ns.Favorites) then
         return {}
     end
 
@@ -3644,7 +3629,7 @@ local function GetFavoriteQuestsOutsideActiveList(addon, activeQuests)
         local quest =
             questID
             and not activeIDs[questID]
-            and addon.QuestData:GetQuest(questID)
+            and addon.GetQuest(questID)
 
         if quest and quest.id then
             table.insert(favorites, quest)
@@ -3951,7 +3936,7 @@ function RefreshQuestList(panels)
     wipe(activeQuestIDsAcrossAlts)
 
     local addon = GetDataAddon()
-    if not addon or not addon.QuestData then
+    if not addon then
         panels._questResults = {}
         panels._questListEntries = {}
         if panels.emptyList then
@@ -3971,7 +3956,7 @@ function RefreshQuestList(panels)
     if activeMode then
         quests = GetAllCharactersActiveQuests(addon)
     elseif databaseMode then
-        quests = addon.QuestData:GetSortedQuests(
+        quests = addon.GetSortedQuests(
             expansionFilter,
             zoneFilter,
             "all",
@@ -4062,7 +4047,7 @@ function RefreshQuestList(panels)
         panels._questListEntries = {}
         if panels.emptyList then
             panels.emptyList:SetText(
-                (addon.QuestData:GetCapturedQuestCount() == 0)
+                (addon.GetCapturedQuestCount() == 0)
                 and L["QUESTS_NONE_YET"]
                 or  L["QUESTS_EMPTY"]
             )
@@ -4141,7 +4126,7 @@ function RefreshQuestList(panels)
     end
 
     if selectedQuest then
-        ShowQuestDetail(panels, addon.QuestData:GetQuest(selectedQuest.id))
+        ShowQuestDetail(panels, addon.GetQuest(selectedQuest.id))
     end
 end
 
@@ -4157,8 +4142,7 @@ function OpenQuestByID(questID, panels)
     local addon = GetDataAddon()
     local quest =
         addon
-        and addon.QuestData
-        and addon.QuestData:GetQuest(questID)
+        and addon.GetQuest(questID)
 
     if not quest then return false end
 
@@ -4193,13 +4177,13 @@ end
 
 local PopulateZoneDropdown = function(panels)
     local addon = GetDataAddon()
-    if not addon or not addon.QuestData then return end
+    if not addon then return end
 
     OneWoW_GUI:AttachFilterMenu(panels.zoneDropdown, {
         searchable = true,
         getActiveValue = function() return zoneFilter end,
         buildItems = function()
-            local zones = addon.QuestData:GetAvailableZones(expansionFilter ~= -1 and expansionFilter or nil)
+            local zones = addon.GetAvailableZones(expansionFilter ~= -1 and expansionFilter or nil)
             local items = { { value = "", text = L["QUESTS_ZONE_ALL"] } }
             for _, zoneName in ipairs(zones) do
                 table.insert(items, {
@@ -4219,14 +4203,14 @@ end
 
 local function PopulateExpansionDropdown(panels)
     local addon = GetDataAddon()
-    if not addon or not addon.QuestData then return end
+    if not addon then return end
 
     OneWoW_GUI:AttachFilterMenu(panels.expDropdown, {
         searchable = false,
         getActiveValue = function() return expansionFilter end,
         buildItems = function()
             local items = { { value = -1, text = L["QUESTS_EXPANSION_ALL"] } }
-            local expansions = addon.QuestData:GetAvailableExpansions()
+            local expansions = addon.GetAvailableExpansions()
             for _, exp in ipairs(expansions) do
                 table.insert(items, {
                     value   = exp.id,
@@ -4314,7 +4298,7 @@ end
 
 local function GetAvailableFilterValues(fieldName)
     local addon = GetDataAddon()
-    if not addon or not addon.QuestData then return {} end
+    if not addon then return {} end
 
     local cacheKey =
         expansionFilter ~= -1
@@ -4339,8 +4323,8 @@ local function GetAvailableFilterValues(fieldName)
 
         local source =
             expansionFilter ~= -1
-            and addon.QuestData:GetQuestsForExpansion(expansionFilter)
-            or addon.QuestData:GetAllQuests()
+            and addon.GetQuestsForExpansion(expansionFilter)
+            or addon.GetAllQuests()
 
         for _, quest in pairs(source) do
             for _, value in ipairs(quest.categories or {}) do
@@ -4552,8 +4536,8 @@ function ns.UI.OpenToQuest(questID)
         local panels = activePanels or ns.UI.questsPanels
         if not panels then return end
         local addon = GetDataAddon()
-        if not addon or not addon.QuestData then return end
-        local quest = addon.QuestData:GetQuest(questID)
+        if not addon then return end
+        local quest = addon.GetQuest(questID)
         if quest then
             ShowQuestDetail(panels, quest)
         end
@@ -4704,8 +4688,7 @@ function ns.UI.CreateQuestsTab(parent)
                     local addon = GetDataAddon()
                     local quest =
                         addon
-                        and addon.QuestData
-                        and addon.QuestData:GetQuest(selectedQuest.id)
+                        and addon.GetQuest(selectedQuest.id)
                         or selectedQuest
 
                     ShowQuestDetail(panels, quest)

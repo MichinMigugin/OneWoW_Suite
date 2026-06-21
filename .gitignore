@@ -41,3 +41,5 @@ bin/audit-tools/reports/*
 !bin/audit-tools/reports/summary.json
 !bin/audit-tools/reports/AUDIT_SUMMARY.md
 
+# Addon-local diagnostic tools belong outside shipped load units.
+OneWoW*/[Tt]ools/

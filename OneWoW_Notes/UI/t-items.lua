@@ -911,9 +911,9 @@ function ns.UI.CreateItemsTab(parent)
     end
 
     function parent.Activate()
-        if OneWoW_Notes.pendingItemSelect then
-            local id = OneWoW_Notes.pendingItemSelect
-            OneWoW_Notes.pendingItemSelect = nil
+        if ns.pendingItemSelect then
+            local id = ns.pendingItemSelect
+            ns.pendingItemSelect = nil
             OpenItemEditor(id)
         else
             parent.RefreshItemsList()
@@ -922,9 +922,9 @@ function ns.UI.CreateItemsTab(parent)
 
     parent.RefreshItemsList()
 
-    if OneWoW_Notes.pendingItemSelect then
-        local id = OneWoW_Notes.pendingItemSelect
-        OneWoW_Notes.pendingItemSelect = nil
+    if ns.pendingItemSelect then
+        local id = ns.pendingItemSelect
+        ns.pendingItemSelect = nil
         OpenItemEditor(id)
     end
 end

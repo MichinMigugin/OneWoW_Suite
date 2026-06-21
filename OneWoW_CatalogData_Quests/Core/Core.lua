@@ -1,7 +1,6 @@
 local ADDON_NAME, ns = ...
 
 local OneWoW = OneWoW
-if not OneWoW or not OneWoW.BootStore then return end
 
 OneWoW:BootStore(ns, {
     addonName = ADDON_NAME,
@@ -9,6 +8,9 @@ OneWoW:BootStore(ns, {
     onLogin = function()
         ns.CompletionTracker:Initialize()
         ns.QuestScanner:Initialize()
-        OneWoW_Catalog.Catalog:RegisterDataAddon("quests", ns)
+        OneWoW_Catalog_API.RegisterDataAddon(
+            "quests",
+            OneWoW_CatalogData_Quests_API
+        )
     end,
 })

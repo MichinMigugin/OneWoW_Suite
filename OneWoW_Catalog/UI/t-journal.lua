@@ -492,7 +492,7 @@ local function ShowQuestLinks(item)
     local questAddon = ns.Catalog and ns.Catalog.GetDataAddon and ns.Catalog:GetDataAddon("quests")
     for _, qs in ipairs(item.questSources or {}) do
         local action
-        if questAddon and questAddon.QuestData and questAddon.QuestData:GetQuest(qs.id) then
+        if questAddon and questAddon.GetQuest(qs.id) then
             local qid = qs.id
             action = {
                 text = L["JOURNAL_OPEN_QUEST"],
@@ -553,7 +553,10 @@ local function BuildQuestItemRow(parent, item, yOffset)
     -- status, pulled from the Quests addon's CompletionTracker.
     local relevantQuestID = ResolveOpenQuestID(item)
     local questAddon = ns.Catalog and ns.Catalog.GetDataAddon and ns.Catalog:GetDataAddon("quests")
-    local openInDB = relevantQuestID and questAddon and questAddon.QuestData and questAddon.QuestData:GetQuest(relevantQuestID)
+    local openInDB =
+        relevantQuestID
+        and questAddon
+        and questAddon.GetQuest(relevantQuestID)
 
     local openBtn
     if openInDB then
@@ -579,8 +582,8 @@ local function BuildQuestItemRow(parent, item, yOffset)
     infoText:SetJustifyH("RIGHT")
     if relevantQuestID then
         local completed
-        if questAddon and questAddon.CompletionTracker then
-            completed = questAddon.CompletionTracker:IsCompletedByCurrentChar(relevantQuestID)
+        if questAddon then
+            completed = questAddon.IsCompletedByCurrentChar(relevantQuestID)
         else
             completed = C_QuestLog.IsQuestFlaggedCompleted(relevantQuestID) == true
         end
