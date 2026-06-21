@@ -107,9 +107,9 @@ local function RecipeKnowledgeProvider(_, context)
     local profName = DetectProfession(context.itemID)
     if not profName then return nil end
 
-    local profsDB = OneWoW_AltTracker_Professions_DB
-    local charDB  = OneWoW_AltTracker_Character_DB
-    if not profsDB or not profsDB.characters then return nil end
+    local profsAPI = OneWoW_AltTracker_Professions_API
+    if not profsAPI then return nil end
+    local profChars = profsAPI.GetAllCharacters()
 
     local Util           = OneWoW.RecipeKnownUtil
     local L              = ns.L
@@ -120,7 +120,7 @@ local function RecipeKnowledgeProvider(_, context)
     local knownBy  = {}
     local unknownBy = {}
 
-    for charKey, charData in pairs(profsDB.characters) do
+    for charKey, charData in pairs(profChars) do
         if charData.professions then
             local hasProfession = false
             for _, profData in pairs(charData.professions) do
@@ -131,7 +131,7 @@ local function RecipeKnowledgeProvider(_, context)
             end
 
             if hasProfession then
-                local meta  = charDB and charDB.characters and charDB.characters[charKey]
+                local meta  = OneWoW_AltTracker_Character_API and OneWoW_AltTracker_Character_API.GetCharacterData(charKey)
                 local name  = meta and meta.name  or charKey
                 local realm = meta and meta.realm or ""
                 local class = meta and meta.class

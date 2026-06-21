@@ -88,3 +88,20 @@ function OneWoW_AltTracker_Professions_API.GetRecipeCount(charKey, professionNam
     if not charData then return 0 end
     return ns.ProfessionAdvanced:GetRecipeCount(charKey, charData, professionName)
 end
+
+--- Shared item -> recipe spell ID map, populated by the core RecipeKnownUtil
+--- service from trade-skill data. Persisted in this unit's SavedVariables.
+---@return table|nil map itemID -> recipeSpellID
+function OneWoW_AltTracker_Professions_API.GetRecipeItemMap()
+    return OneWoW_AltTracker_Professions_DB.recipeItemMap
+end
+
+--- Record a single item -> recipe spell ID mapping.
+---@param itemID number
+---@param recipeSpellID number|nil
+function OneWoW_AltTracker_Professions_API.SetRecipeItemMapEntry(itemID, recipeSpellID)
+    if not itemID then return end
+    local db = OneWoW_AltTracker_Professions_DB
+    db.recipeItemMap = db.recipeItemMap or {}
+    db.recipeItemMap[itemID] = recipeSpellID
+end

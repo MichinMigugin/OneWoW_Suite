@@ -195,9 +195,8 @@ function ns.UI.ShowMailDetail(charKey)
     if not charKey then return end
     local dialog = EnsureDialog()
 
-    local charData = OneWoW_AltTracker_Character_DB
-        and OneWoW_AltTracker_Character_DB.characters
-        and OneWoW_AltTracker_Character_DB.characters[charKey]
+    local charData = OneWoW_AltTracker_Character_API
+        and OneWoW_AltTracker_Character_API.GetCharacterData(charKey)
     local charName = (charData and charData.name) or charKey
     dialog.titleBar._titleText:SetText(string.format(L["MAIL_DETAIL_TITLE"], charName))
 

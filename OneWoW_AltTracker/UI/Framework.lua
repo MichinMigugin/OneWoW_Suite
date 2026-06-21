@@ -60,12 +60,9 @@ function ns.UI.GetHasMailForChar(charKey)
         return summary.hasAnyMail == true or summary.count > 0
     end
 
-    local storageDB = OneWoW_AltTracker_Storage_DB
-    if storageDB and storageDB.characters then
-        local sc = storageDB.characters[charKey]
-        if sc and sc.mail then
-            return sc.mail.hasAnyMail == true or sc.mail.hasNewMail == true
-        end
+    local mail = OneWoW_AltTracker_Storage_API and OneWoW_AltTracker_Storage_API.GetMail(charKey)
+    if mail then
+        return mail.hasAnyMail == true or mail.hasNewMail == true
     end
     return false
 end
@@ -109,9 +106,8 @@ function ns.UI.ShowMailTooltip(anchor, charKey)
     if not anchor or not charKey then return end
     GameTooltip:SetOwner(anchor, "ANCHOR_RIGHT")
 
-    local charData = OneWoW_AltTracker_Character_DB
-        and OneWoW_AltTracker_Character_DB.characters
-        and OneWoW_AltTracker_Character_DB.characters[charKey]
+    local charData = OneWoW_AltTracker_Character_API
+        and OneWoW_AltTracker_Character_API.GetCharacterData(charKey)
     local title = (charData and charData.name) or charKey
     local classColor = charData and charData.class and RAID_CLASS_COLORS[charData.class]
     if classColor then
@@ -203,9 +199,9 @@ OneWoW_AltTracker.UI = OneWoW_AltTracker.UI or {}
 OneWoW_AltTracker.UI.RefreshMailIcons = ns.UI.RefreshMailIcons
 
 function ns.UI.GetSortedCharacters(getSortValue, sortColumn, sortAscending)
-    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then return {} end
+    if not OneWoW_AltTracker_Character_API then return {} end
     local allChars = {}
-    for charKey, charData in pairs(OneWoW_AltTracker_Character_DB.characters) do
+    for charKey, charData in pairs(OneWoW_AltTracker_Character_API.GetAllCharacters()) do
         allChars[#allChars + 1] = { key = charKey, data = charData }
     end
     if #allChars == 0 then return allChars end

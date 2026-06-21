@@ -106,8 +106,8 @@ end
 
 function ns.UI.RefreshLockoutsTab(lockoutsTab)
     if not lockoutsTab then return end
-    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then return end
-    if not OneWoW_AltTracker_Endgame_DB or not OneWoW_AltTracker_Endgame_DB.characters then return end
+    if not OneWoW_AltTracker_Character_API then return end
+    if not OneWoW_AltTracker_Endgame_API then return end
 
     local allChars = ns.UI.GetSortedCharacters(function(charKey, charData, col)
         if col == "name" then
@@ -116,10 +116,10 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
             return charData.level or 0
         elseif col == "lockout1" or col == "lockout2" or col == "lockout3" or col == "lockout4" then
             local lockoutIndex = tonumber(string.match(col, "%d+"))
-            local endgame = OneWoW_AltTracker_Endgame_DB and OneWoW_AltTracker_Endgame_DB.characters and OneWoW_AltTracker_Endgame_DB.characters[charKey]
+            local endgame = OneWoW_AltTracker_Endgame_API and OneWoW_AltTracker_Endgame_API.GetCharacterData(charKey)
             return (endgame and endgame.raids and endgame.raids.lockouts and endgame.raids.lockouts[lockoutIndex] and endgame.raids.lockouts[lockoutIndex].name) or ""
         elseif col == "expires" then
-            local endgame = OneWoW_AltTracker_Endgame_DB and OneWoW_AltTracker_Endgame_DB.characters and OneWoW_AltTracker_Endgame_DB.characters[charKey]
+            local endgame = OneWoW_AltTracker_Endgame_API and OneWoW_AltTracker_Endgame_API.GetCharacterData(charKey)
             local currentTime = time()
             local soonest = 999999999
             if endgame and endgame.raids and endgame.raids.lockouts then
@@ -154,7 +154,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
         local charKey = charInfo.key
         local charData = charInfo.data
 
-        local endgameData = OneWoW_AltTracker_Endgame_DB.characters[charKey]
+        local endgameData = OneWoW_AltTracker_Endgame_API.GetCharacterData(charKey)
         local lockouts = {}
         local currentTime = time()
 
@@ -377,8 +377,8 @@ end
 
 function ns.UI.RefreshLockoutsStats(lockoutsTab)
     if not lockoutsTab or not lockoutsTab.statBoxes then return end
-    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then return end
-    if not OneWoW_AltTracker_Endgame_DB or not OneWoW_AltTracker_Endgame_DB.characters then return end
+    if not OneWoW_AltTracker_Character_API then return end
+    if not OneWoW_AltTracker_Endgame_API then return end
 
     local stats = {
         attention = 0,
@@ -391,8 +391,8 @@ function ns.UI.RefreshLockoutsStats(lockoutsTab)
     local currentTime = time()
     local soonestReset = nil
 
-    for charKey, charData in pairs(OneWoW_AltTracker_Character_DB.characters) do
-        local endgameData = OneWoW_AltTracker_Endgame_DB.characters[charKey]
+    for charKey, charData in pairs(OneWoW_AltTracker_Character_API.GetAllCharacters()) do
+        local endgameData = OneWoW_AltTracker_Endgame_API.GetCharacterData(charKey)
 
         local hasLockouts = false
         if endgameData and endgameData.raids and endgameData.raids.lockouts then

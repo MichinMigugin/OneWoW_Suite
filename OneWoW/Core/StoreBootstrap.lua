@@ -51,8 +51,12 @@ function OneWoW:BootStore(ns, config)
     ns.GetCharacterData = function(_, charKey)
         return DB:GetCharData(savedVar, charKey)
     end
+    -- Returns the live charKey -> charData map (the store's `.characters`
+    -- table), matching the `_API.GetAllCharacters()` contract. Callers that
+    -- want a sorted list build one themselves or use DB:GetAllChars directly.
     ns.GetAllCharacters = function()
-        return DB:GetAllChars(savedVar, config.sortField)
+        local sv = _G[savedVar]
+        return (sv and sv.characters) or {}
     end
     ns.DeleteCharacter = function(_, charKey)
         return DB:DeleteChar(savedVar, charKey)

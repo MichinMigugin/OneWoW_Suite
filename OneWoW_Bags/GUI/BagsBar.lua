@@ -325,11 +325,11 @@ function BagsBar:ShowGoldTooltip()
 
     local altList = {}
     local totalGold = 0
-    for _, entry in ipairs(allChars) do
-        local money = entry.data.money or 0
+    for charKey, charData in pairs(allChars) do
+        local money = charData.money or 0
         totalGold = totalGold + money
-        if entry.key ~= currentKey then
-            tinsert(altList, { name = entry.key:match("^([^%-]+)") or entry.key, money = money })
+        if charKey ~= currentKey then
+            tinsert(altList, { name = charKey:match("^([^%-]+)") or charKey, money = money })
         end
     end
     totalGold = totalGold + warbandGold

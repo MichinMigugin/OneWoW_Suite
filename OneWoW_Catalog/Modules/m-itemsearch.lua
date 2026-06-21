@@ -23,12 +23,14 @@ local MAX_RESULTS = 200
 local DEFAULT_LIMIT = 50
 
 local function GetRecipeKnownByFromAltTracker(itemID)
-    local profsDB = OneWoW_AltTracker_Professions_DB
-    if not profsDB or not profsDB.characters then return nil end
+    local profsAPI = OneWoW_AltTracker_Professions_API
+    if not profsAPI then return nil end
+    local profChars = profsAPI.GetAllCharacters()
 
+    local recipeItemMap = profsAPI.GetRecipeItemMap()
     local recipeSpellID
-    if profsDB.recipeItemMap and profsDB.recipeItemMap[itemID] then
-        recipeSpellID = profsDB.recipeItemMap[itemID]
+    if recipeItemMap and recipeItemMap[itemID] then
+        recipeSpellID = recipeItemMap[itemID]
     end
 
     if not recipeSpellID then
@@ -40,7 +42,7 @@ local function GetRecipeKnownByFromAltTracker(itemID)
     local seen = {}
 
     if recipeSpellID then
-        for charKey, charData in pairs(profsDB.characters) do
+        for charKey, charData in pairs(profChars) do
             if charData.recipes then
                 for _, recipeSet in pairs(charData.recipes) do
                     if recipeSet[recipeSpellID] and not seen[charKey] then
@@ -56,15 +58,13 @@ local function GetRecipeKnownByFromAltTracker(itemID)
         local itemName = C_Item.GetItemNameByID(itemID)
         if itemName then
             local craftedName = itemName:match("^%S+:%s*(.+)$") or itemName
-            for charKey, charData in pairs(profsDB.characters) do
+            for charKey, charData in pairs(profChars) do
                 if charData.recipes and not seen[charKey] then
                     for _, recipeSet in pairs(charData.recipes) do
                         for storedID in pairs(recipeSet) do
                             local info = C_TradeSkillUI.GetRecipeInfo(storedID)
                             if info and info.name == craftedName then
-                                if profsDB.recipeItemMap then
-                                    profsDB.recipeItemMap[itemID] = storedID
-                                end
+                                profsAPI.SetRecipeItemMapEntry(itemID, storedID)
                                 if not seen[charKey] then
                                     seen[charKey] = true
                                     tinsert(knownBy, charKey)
@@ -175,9 +175,9 @@ local function GetOwnedItems()
         end
     end
 
-    local adb = OneWoW_AltTracker_Auctions_DB
-    if adb and adb.characters then
-        for charKey, charData in pairs(adb.characters) do
+    local auctionChars = OneWoW_AltTracker_Auctions_API and OneWoW_AltTracker_Auctions_API.GetCharacters()
+    if auctionChars then
+        for charKey, charData in pairs(auctionChars) do
             local charName = charKey:match("^([^%-]+)") or charKey
             if charData.activeAuctions then
                 for _, auc in ipairs(charData.activeAuctions) do

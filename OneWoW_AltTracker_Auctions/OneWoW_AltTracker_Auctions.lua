@@ -57,3 +57,11 @@ function OneWoW_AltTracker_Auctions_API.GetByItemID(itemID)
     if not itemID or not OneWoW_AHPrices then return nil end
     return OneWoW_AHPrices[itemID]
 end
+
+--- All characters with stored auction data, keyed by character key. Read-only
+--- iteration surface for the hub's item/auction rollups (each entry carries
+--- `activeAuctions`, `lastAuctionUpdate`, …).
+---@return table characters map of charKey -> stored auction data
+function OneWoW_AltTracker_Auctions_API.GetCharacters()
+    return OneWoW_AltTracker_Auctions_DB.characters
+end

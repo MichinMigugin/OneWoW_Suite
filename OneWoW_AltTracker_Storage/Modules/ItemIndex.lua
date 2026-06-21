@@ -14,9 +14,8 @@ local nameIndex = {}
 local rebuildPending = false
 
 local function GetCharMeta(charKey)
-    local charDB = OneWoW_AltTracker_Character_DB
-    if charDB and charDB.characters and charDB.characters[charKey] then
-        local cd = charDB.characters[charKey]
+    local cd = OneWoW_AltTracker_Character_API and OneWoW_AltTracker_Character_API.GetCharacterData(charKey)
+    if cd then
         return cd.name, cd.realm, cd.class, cd.className
     end
     local name, realm = charKey:match("^(.+)-(.+)$")
@@ -143,9 +142,9 @@ local function BuildIndex()
         end
     end
 
-    local charDB = OneWoW_AltTracker_Character_DB
-    if charDB and charDB.characters then
-        for charKey, charData in pairs(charDB.characters) do
+    local charChars = OneWoW_AltTracker_Character_API and OneWoW_AltTracker_Character_API.GetAllCharacters()
+    if charChars then
+        for charKey, charData in pairs(charChars) do
             if charData.equipment then
                 local name, realm, class, className = GetCharMeta(charKey)
                 for _, slotData in pairs(charData.equipment) do
@@ -167,9 +166,9 @@ local function BuildIndex()
         end
     end
 
-    local auctionsDB = OneWoW_AltTracker_Auctions_DB
-    if auctionsDB and auctionsDB.characters then
-        for charKey, charData in pairs(auctionsDB.characters) do
+    local auctionChars = OneWoW_AltTracker_Auctions_API and OneWoW_AltTracker_Auctions_API.GetCharacters()
+    if auctionChars then
+        for charKey, charData in pairs(auctionChars) do
             if charData.activeAuctions then
                 local name, realm, class, className = GetCharMeta(charKey)
                 for _, auction in pairs(charData.activeAuctions) do

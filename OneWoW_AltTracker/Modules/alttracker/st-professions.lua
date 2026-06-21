@@ -12,11 +12,11 @@ function ProfessionsModule:GetCharacterProfessions(characterKey)
         return {professions = {}, professionEquipment = {}, recipeCount = 0, recipesByExpansion = {}}
     end
 
-    if not OneWoW_AltTracker_Professions_DB or not OneWoW_AltTracker_Professions_DB.characters then
+    if not OneWoW_AltTracker_Professions_API then
         return {professions = {}, professionEquipment = {}, recipeCount = 0, recipesByExpansion = {}}
     end
 
-    local charData = OneWoW_AltTracker_Professions_DB.characters[characterKey]
+    local charData = OneWoW_AltTracker_Professions_API.GetCharacterData(characterKey)
     if not charData then
         return {professions = {}, professionEquipment = {}, recipeCount = 0, recipesByExpansion = {}}
     end

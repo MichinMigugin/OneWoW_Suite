@@ -57,78 +57,51 @@ charData.professions = {
 **File:** `Modules/ProfessionAdvanced.lua`
 
 **Collects:**
-- All known recipes for the opened profession
-- Recipe details (name, icon, ID, category)
-- Craftability status (can craft, skill-up potential)
-- Recipe reagents (materials required)
-- Output items and quantities
-- Quality system support (Dragonflight/TWW recipes)
-- Recipe organization by expansion
+- The set of *learned* recipe (spell) IDs for the opened profession
+- An account-level map of item ID → recipe (spell) ID (`recipeItemMap`)
+
+> **Important:** Only learned recipe **spell IDs** are stored, as a
+> `[recipeSpellID] = true` set. No recipe names, icons, reagents, output items,
+> categories, or craftability/quality details are persisted — consumers re-query
+> those live from `C_TradeSkillUI` when needed. "Recipes by expansion" is
+> **derived on demand** by consumers (e.g.
+> `OneWoW_AltTracker/Modules/alttracker/st-professions.lua`); it is **not** stored
+> on `charData`.
 
 **Triggered By:**
-- TRADE_SKILL_SHOW event (0.5s delay, then 1s delay for advanced data)
-- TRADE_SKILL_LIST_UPDATE event (0.3s delay when profession window is open)
+- TRADE_SKILL_SHOW event (when the profession window opens)
+- TRADE_SKILL_LIST_UPDATE event (when the recipe list updates)
 
 **Storage Location:**
-- `charData.recipes[professionName]` (all recipe details)
-- `charData.recipesByExpansion[professionName]` (recipes organized by expansion)
+- `charData.recipes[professionName]` — set of learned recipe spell IDs (`[recipeSpellID] = true`)
+- `OneWoW_AltTracker_Professions_DB.recipeItemMap` — account-level `[itemID] = recipeSpellID` map (not per-character)
 
 **Database Structure:**
 ```lua
+-- Per-character: learned recipe SPELL IDs, keyed by profession name.
+-- The value is simply `true`; no recipe detail is stored.
 charData.recipes = {
     ["Blacksmithing"] = {
-        [12345] = {
-            recipeID = 12345,
-            name = "Hardened Iron Shortsword",
-            learned = true,
-            craftable = true,
-            disabled = false,
-            favorite = false,
-            icon = 135321,
-            categoryID = 1501,
-            canSkillUp = true,
-            numSkillUps = 3,
-            relativeDifficulty = "medium",
-            supportsQualities = false,
-            isRecraft = false,
-            outputItemID = 7913,
-            quantityMin = 1,
-            quantityMax = 1,
-            reagents = {
-                {
-                    itemID = 3575,
-                    currencyID = nil,
-                    quantity = 6,
-                    required = true
-                },
-                -- more reagents...
-            }
-        },
-        -- more recipes...
+        [12345] = true,   -- 12345 = a recipe spell ID from C_TradeSkillUI.GetAllRecipeIDs()
+        [12346] = true,
+        -- more learned recipe spell IDs...
     },
     ["Engineering"] = { ... }
 }
 
-charData.recipesByExpansion = {
-    ["Blacksmithing"] = {
-        [0] = {  -- Classic
-            expansionID = 0,
-            expansionName = "Classic",
-            learnedRecipes = 45,
-            totalRecipes = 150,
-            recipes = { 12345, 12346, 12347, ... }
-        },
-        [9] = {  -- Dragonflight
-            expansionID = 9,
-            expansionName = "Dragonflight",
-            learnedRecipes = 120,
-            totalRecipes = 200,
-            recipes = { ... }
-        },
-        -- other expansions...
-    }
+-- Account-level (DB root, NOT per-character): bridges an item to its recipe.
+-- `itemID` comes from C_TradeSkillUI.GetRecipeItemLink(recipeID); used by callers
+-- that start from an item (tooltips, item search) to find the recipe spell ID,
+-- then check charData.recipes[prof][recipeSpellID].
+OneWoW_AltTracker_Professions_DB.recipeItemMap = {
+    [7913]  = 12345,  -- [craftedItemID] = recipeSpellID
+    -- more item -> recipe mappings...
 }
 ```
+
+> **`recipesByExpansion` is not persisted.** Consumers that need it build it at
+> read time from `charData.recipes` plus live `C_TradeSkillUI.GetRecipeInfo`
+> lookups, grouping by the expansion IDs below.
 
 **Expansion IDs:**
 - 0: Classic
@@ -283,14 +256,9 @@ OneWoW_AltTracker_Professions_DB = {
             -- Equipment
             professionEquipment = { ... },
 
-            -- Recipes (organized by profession)
+            -- Learned recipe spell IDs, keyed by profession name ([spellID] = true)
             recipes = {
-                ["ProfessionName"] = { [recipeID] = {...} }
-            },
-
-            -- Recipes organized by expansion
-            recipesByExpansion = {
-                ["ProfessionName"] = { [expansionID] = {...} }
+                ["ProfessionName"] = { [recipeSpellID] = true }
             },
 
             -- Cooldowns (organized by profession)
@@ -306,15 +274,16 @@ OneWoW_AltTracker_Professions_DB = {
         }
     },
 
+    -- Account-level item -> recipe spell ID map (see ProfessionAdvanced above)
+    recipeItemMap = {
+        [itemID] = recipeSpellID
+    },
+
     settings = {
         enableDataCollection = true,
         trackRecipes = true,
-        trackEquipment = true,
-        trackCooldowns = true,
-        trackTrainers = true
-    },
-
-    version = 1
+        trackEquipment = true
+    }
 }
 ```
 
@@ -376,13 +345,16 @@ The DataManager acts as the central orchestrator that triggers data collection f
 
 ### Accessing Data from Other Addons
 
-The main OneWoW_AltTracker addon reads profession data directly from the `OneWoW_AltTracker_Professions_DB` SavedVariable:
+Other addons must read profession data through the public `OneWoW_AltTracker_Professions_API`
+— **not** by touching `OneWoW_AltTracker_Professions_DB` directly (see the
+store-access rules in [OneWoW/Docs/ARCHITECTURE.md](../../OneWoW/Docs/ARCHITECTURE.md) §6,
+enforced by the `no-data-manager-bypass` pre-commit hook):
 
 ```lua
-local db = OneWoW_AltTracker_Professions_DB
-if db and db.characters then
+local API = OneWoW_AltTracker_Professions_API
+if API then
     local charKey = "CharacterName-RealmName"
-    local charData = db.characters[charKey]
+    local charData = API.GetCharacterData(charKey)
 
     if charData then
         -- Basic profession info
@@ -399,14 +371,12 @@ if db and db.characters then
             end
         end
 
-        -- Recipes
+        -- Recipes: each entry is `[recipeSpellID] = true`, so just count the keys
         if charData.recipes then
             for profName, recipes in pairs(charData.recipes) do
                 local count = 0
-                for recipeID, recipeData in pairs(recipes) do
-                    if recipeData.learned then
-                        count = count + 1
-                    end
+                for _ in pairs(recipes) do
+                    count = count + 1
                 end
                 print(profName .. " recipes known:", count)
             end
@@ -430,10 +400,11 @@ end
 ### Find Characters with Specific Profession
 
 ```lua
+-- GetAllCharacters() returns a charKey -> charData map. Iterate it with pairs.
 local blacksmiths = {}
-local db = OneWoW_AltTracker_Professions_DB
-if db and db.characters then
-    for charKey, charData in pairs(db.characters) do
+local API = OneWoW_AltTracker_Professions_API
+if API then
+    for charKey, charData in pairs(API.GetAllCharacters()) do
         if charData.professions then
             for slotName, profData in pairs(charData.professions) do
                 if profData.name == "Blacksmithing" then
@@ -453,13 +424,11 @@ end
 ```lua
 local allChars = OneWoW_AltTracker_Professions_API.GetAllCharacters()
 
-for _, char in ipairs(allChars) do
-    local charData = char.data
-
+for charKey, charData in pairs(allChars) do
     if charData.professions then
         for slotName, profData in pairs(charData.professions) do
             if profData.name == "Blacksmithing" then
-                print(char.key .. " has Blacksmithing: " ..
+                print(charKey .. " has Blacksmithing: " ..
                       profData.currentSkill .. "/" .. profData.maxSkill)
             end
         end
@@ -470,15 +439,14 @@ end
 ### Example 2: Check Which Characters Can Craft An Item
 ```lua
 local allChars = OneWoW_AltTracker_Professions_API.GetAllCharacters()
-local searchRecipeID = 12345
+local searchRecipeID = 12345  -- a recipe SPELL ID
 
-for _, char in ipairs(allChars) do
-    local charData = char.data
-
+for charKey, charData in pairs(allChars) do
     if charData.recipes then
+        -- charData.recipes[prof] is a [recipeSpellID] = true set (no detail stored)
         for profName, recipes in pairs(charData.recipes) do
-            if recipes[searchRecipeID] and recipes[searchRecipeID].learned then
-                print(char.key .. " can craft " .. recipes[searchRecipeID].name)
+            if recipes[searchRecipeID] then
+                print(charKey .. " knows recipe " .. searchRecipeID .. " (" .. profName .. ")")
             end
         end
     end
@@ -489,10 +457,7 @@ end
 ```lua
 local allChars = OneWoW_AltTracker_Professions_API.GetAllCharacters()
 
-for _, char in ipairs(allChars) do
-    local charKey = char.key
-    local charData = char.data
-
+for charKey, charData in pairs(allChars) do
     if charData.professions then
         for slotName, profData in pairs(charData.professions) do
             local cooldowns = OneWoW_AltTracker_Professions_API.GetActiveCooldowns(charKey, profData.name)

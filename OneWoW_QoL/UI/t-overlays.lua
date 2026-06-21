@@ -1094,7 +1094,11 @@ local function ShowOverlayDetail(split, feature, selectedRow)
             local charAPI = OneWoW_AltTracker_Character_API
             if not charAPI or not charAPI.GetAllCharacters then return {}, nil end
             local currentKey = charAPI.GetCurrentCharacterKey and charAPI.GetCurrentCharacterKey()
-            return charAPI.GetAllCharacters() or {}, currentKey
+            local entries = {}
+            for charKey, charData in pairs(charAPI.GetAllCharacters() or {}) do
+                entries[#entries + 1] = { key = charKey, data = charData }
+            end
+            return entries, currentKey
         end
 
         local function GetClassColoredName(name, class)

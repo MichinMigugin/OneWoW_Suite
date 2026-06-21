@@ -156,9 +156,9 @@ function ProfPanelModule:GetOtherAlts()
     local currentProf = self._currentProf
     if not currentChar or not currentProf then return alts end
 
-    local atDB = OneWoW_AltTracker_Professions_DB
-    if atDB and atDB.characters then
-        for charKey, charData in pairs(atDB.characters) do
+    local profChars = OneWoW_AltTracker_Professions_API and OneWoW_AltTracker_Professions_API.GetAllCharacters()
+    if profChars then
+        for charKey, charData in pairs(profChars) do
             if charKey ~= currentChar and charData.professions then
                 for _, profData in pairs(charData.professions) do
                     if profData.name == currentProf then

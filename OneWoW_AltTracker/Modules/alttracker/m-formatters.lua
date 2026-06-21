@@ -334,9 +334,9 @@ function Formatters:GetMailIcon(mailCount, oldestExpiry, lastCheck, charKey)
         end
     end
 
-    if charKey and OneWoW_AltTracker_Storage_DB and OneWoW_AltTracker_Storage_DB.characters then
-        local storageData = OneWoW_AltTracker_Storage_DB.characters[charKey]
-        if storageData and storageData.mail and storageData.mail.hasNewMail then
+    if charKey and OneWoW_AltTracker_Storage_API then
+        local mail = OneWoW_AltTracker_Storage_API.GetMail(charKey)
+        if mail and mail.hasNewMail then
             hasNewMailFlag = true
         end
     end

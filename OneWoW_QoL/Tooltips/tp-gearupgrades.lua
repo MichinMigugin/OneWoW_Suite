@@ -156,16 +156,14 @@ local function DoGearUpgrade(tooltip, context, onlyUpgrade, detail, showAlts, al
     local charAPI = OneWoW_AltTracker_Character_API
     if effectiveShowAlts and charAPI and charAPI.GetAllCharacters then
         local currentKey = charAPI.GetCurrentCharacterKey and charAPI.GetCurrentCharacterKey()
-        local entries = charAPI.GetAllCharacters() or {}
+        local characters = charAPI.GetAllCharacters() or {}
 
         local limit = (altOptions and altOptions.limit) or 10
         local whitelist = altOptions and altOptions.whitelistEnabled and altOptions.whitelist or nil
 
         local altCount = 0
-        for _, entry in ipairs(entries) do
+        for charKey, charData in pairs(characters) do
             if limit > 0 and altCount >= limit then break end
-            local charKey = entry.key
-            local charData = entry.data
             if charKey and charKey ~= currentKey and type(charData) == "table"
                and (not whitelist or whitelist[charKey]) then
                 local altResult = UD:IsItemUpgradeForAlt(context.itemID, itemLink, charData)

@@ -462,7 +462,7 @@ end
 function ns.UI.RefreshProfessionsTab(professionsTab)
     if not professionsTab then return end
 
-    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then return end
+    if not OneWoW_AltTracker_Character_API then return end
 
     local ProfModule = GetProfessionsModule()
     if not ProfModule then return end
@@ -770,7 +770,7 @@ end
 function ns.UI.RefreshProfessionsStats(professionsTab)
     if not professionsTab or not professionsTab.statBoxes then return end
 
-    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then return end
+    if not OneWoW_AltTracker_Character_API then return end
 
     local ProfModule = GetProfessionsModule()
     if not ProfModule then return end
@@ -790,7 +790,7 @@ function ns.UI.RefreshProfessionsStats(professionsTab)
     }
 
     local allChars = {}
-    for charKey, charData in pairs(OneWoW_AltTracker_Character_DB.characters) do
+    for charKey, charData in pairs(OneWoW_AltTracker_Character_API.GetAllCharacters()) do
         table.insert(allChars, {
             key = charKey,
             data = charData

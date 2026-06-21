@@ -115,3 +115,11 @@ end
 function OneWoW_AltTracker_Accounting_API.ResetAll()
     return ns.Transactions:ResetAll()
 end
+
+--- Remove every ledger entry belonging to one character (the "Manage Alts"
+--- per-character purge).
+---@param charKey string
+---@return number removed count of transactions deleted
+function OneWoW_AltTracker_Accounting_API.PurgeCharacter(charKey)
+    return ns.Transactions:PurgeCharacter(charKey)
+end

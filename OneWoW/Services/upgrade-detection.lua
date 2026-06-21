@@ -428,11 +428,9 @@ function UpgradeDetection:GetAltsWhoNeedItem(itemID, itemLink)
     if not charAPI or not charAPI.GetAllCharacters then return upgrades end
 
     local currentKey = charAPI.GetCurrentCharacterKey and charAPI.GetCurrentCharacterKey()
-    local entries = charAPI.GetAllCharacters() or {}
+    local characters = charAPI.GetAllCharacters() or {}
 
-    for _, entry in ipairs(entries) do
-        local charKey = entry.key
-        local charData = entry.data
+    for charKey, charData in pairs(characters) do
         if charKey and charKey ~= currentKey and type(charData) == "table" then
             local altResult = self:IsItemUpgradeForAlt(itemID, itemLink, charData)
             if altResult then

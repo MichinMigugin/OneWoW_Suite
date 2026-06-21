@@ -10,8 +10,8 @@ ns.UI = ns.UI or {}
 local function CollectAllCharacterKeys()
     local charMap = {}
 
-    if OneWoW_AltTracker_Character_DB and OneWoW_AltTracker_Character_DB.characters then
-        for charKey, data in pairs(OneWoW_AltTracker_Character_DB.characters) do
+    if OneWoW_AltTracker_Character_API then
+        for charKey, data in pairs(OneWoW_AltTracker_Character_API.GetAllCharacters()) do
             if type(charKey) == "string" then
                 if not charMap[charKey] then
                     charMap[charKey] = {
@@ -57,9 +57,10 @@ local function CollectAllCharacterKeys()
         end
     end
 
-    if OneWoW_AltTracker_Accounting_DB and OneWoW_AltTracker_Accounting_DB.transactions then
+    local accountingTx = OneWoW_AltTracker_Accounting_API and OneWoW_AltTracker_Accounting_API.GetTransactions()
+    if accountingTx then
         local seen = {}
-        for _, tx in ipairs(OneWoW_AltTracker_Accounting_DB.transactions) do
+        for _, tx in ipairs(accountingTx) do
             if tx.character and not seen[tx.character] then
                 seen[tx.character] = true
                 if not charMap[tx.character] then
@@ -161,15 +162,8 @@ local function PurgeCharacter(charKey)
         end
     end
 
-    if OneWoW_AltTracker_Accounting_DB and OneWoW_AltTracker_Accounting_DB.transactions then
-        local txs = OneWoW_AltTracker_Accounting_DB.transactions
-        local removed = 0
-        for i = #txs, 1, -1 do
-            if txs[i].character == charKey then
-                table.remove(txs, i)
-                removed = removed + 1
-            end
-        end
+    if OneWoW_AltTracker_Accounting_API then
+        local removed = OneWoW_AltTracker_Accounting_API.PurgeCharacter(charKey)
         if removed > 0 then
             table.insert(purgedFrom, "Accounting (" .. removed .. " transactions)")
         end

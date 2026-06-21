@@ -214,3 +214,24 @@ function Transactions:ResetAll()
     end
     return true
 end
+
+-- Remove every ledger entry belonging to one character. Returns the count
+-- removed (drives the AltTracker "Manage Alts" purge report).
+function Transactions:PurgeCharacter(charKey)
+    local db = OneWoW_AltTracker_Accounting_DB
+    if not db or not db.transactions then return 0 end
+
+    local txs = db.transactions
+    local removed = 0
+    for i = #txs, 1, -1 do
+        if txs[i].character == charKey then
+            tremove(txs, i)
+            removed = removed + 1
+        end
+    end
+
+    if removed > 0 and ns.onNewTransaction then
+        ns.onNewTransaction()
+    end
+    return removed
+end

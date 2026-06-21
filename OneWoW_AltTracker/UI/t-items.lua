@@ -209,14 +209,15 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
         return
     end
 
-    if not OneWoW_AltTracker_Storage_DB or not OneWoW_AltTracker_Storage_DB.characters then
+    local storageAPI = OneWoW_AltTracker_Storage_API
+    if not storageAPI then
         return
     end
 
     local itemsToScan = {}
     local seenItems = {}
 
-    for charKey, charData in pairs(OneWoW_AltTracker_Storage_DB.characters) do
+    for charKey, charData in pairs(storageAPI.GetCharacters()) do
         if charData.bags then
             for bagID, bagInfo in pairs(charData.bags) do
                 if bagInfo.slots then
@@ -276,8 +277,9 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
         end
     end
 
-    if OneWoW_AltTracker_Storage_DB.warbandBank and OneWoW_AltTracker_Storage_DB.warbandBank.tabs then
-        for tabIndex, tabInfo in pairs(OneWoW_AltTracker_Storage_DB.warbandBank.tabs) do
+    local warbandBank = storageAPI.GetWarbandBank()
+    if warbandBank and warbandBank.tabs then
+        for tabIndex, tabInfo in pairs(warbandBank.tabs) do
             if tabInfo.items then
                 for slotIndex, itemData in pairs(tabInfo.items) do
                     if itemData and itemData.itemID and not seenItems[itemData.itemID] then
@@ -293,8 +295,9 @@ function ns.UI:StartAHScan(itemsTab, scanButton)
         end
     end
 
-    if OneWoW_AltTracker_Storage_DB.guildBanks then
-        for guildName, guildBank in pairs(OneWoW_AltTracker_Storage_DB.guildBanks) do
+    local guildBanks = storageAPI.GetGuildBanks()
+    if guildBanks then
+        for guildName, guildBank in pairs(guildBanks) do
             if guildBank.tabs then
                 for tabIndex, tabInfo in pairs(guildBank.tabs) do
                     if tabInfo.slots then
@@ -446,7 +449,8 @@ end
 
 function ns.UI.RefreshItemsTab(itemsTab)
     if not itemsTab then return end
-    if not OneWoW_AltTracker_Storage_DB or not OneWoW_AltTracker_Storage_DB.characters then return end
+    local storageAPI = OneWoW_AltTracker_Storage_API
+    if not storageAPI then return end
 
     do
         local ip = OneWoW and OneWoW.ItemPrices
@@ -479,7 +483,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
 
     local items = {}
 
-    for charKey, charData in pairs(OneWoW_AltTracker_Storage_DB.characters) do
+    for charKey, charData in pairs(storageAPI.GetCharacters()) do
         local charName = charKey:match("^([^%-]+)")
 
         if charData.bags then
@@ -581,9 +585,10 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
     end
 
-    if OneWoW_AltTracker_Storage_DB.warbandBank and OneWoW_AltTracker_Storage_DB.warbandBank.tabs then
-        local ts = OneWoW_AltTracker_Storage_DB.warbandBank.lastUpdateTime or 0
-        for tabIndex, tabInfo in pairs(OneWoW_AltTracker_Storage_DB.warbandBank.tabs) do
+    local warbandBank = storageAPI.GetWarbandBank()
+    if warbandBank and warbandBank.tabs then
+        local ts = warbandBank.lastUpdateTime or 0
+        for tabIndex, tabInfo in pairs(warbandBank.tabs) do
             if tabInfo.items then
                 for slotIndex, itemData in pairs(tabInfo.items) do
                     if itemData and itemData.itemID then
@@ -612,8 +617,9 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
     end
 
-    if OneWoW_AltTracker_Storage_DB.guildBanks then
-        for guildName, guildBank in pairs(OneWoW_AltTracker_Storage_DB.guildBanks) do
+    local guildBanks = storageAPI.GetGuildBanks()
+    if guildBanks then
+        for guildName, guildBank in pairs(guildBanks) do
             local ts = guildBank.lastUpdateTime or 0
             if guildBank.tabs then
                 for tabIndex, tabInfo in pairs(guildBank.tabs) do
@@ -647,8 +653,9 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
     end
 
-    if OneWoW_AltTracker_Auctions_DB and OneWoW_AltTracker_Auctions_DB.characters then
-        for charKey, charData in pairs(OneWoW_AltTracker_Auctions_DB.characters) do
+    local auctionChars = OneWoW_AltTracker_Auctions_API and OneWoW_AltTracker_Auctions_API.GetCharacters()
+    if auctionChars then
+        for charKey, charData in pairs(auctionChars) do
             local charName = charKey:match("^([^%-]+)")
             local ts = charData.lastAuctionUpdate or 0
             if charData.activeAuctions then

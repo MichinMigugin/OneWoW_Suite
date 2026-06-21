@@ -105,7 +105,7 @@ function ns.UI.CreatePlayersTab(parent)
         addAltsBtn:SetAlpha(0.4)
     end
     addAltsBtn:SetScript("OnClick", function()
-        if not altTrackerLoaded and not OneWoW_AltTracker_Character_DB then
+        if not altTrackerLoaded and not OneWoW_AltTracker_Character_API then
             print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_ALTS_NO_DATA"]))
             return
         end
@@ -1377,14 +1377,13 @@ function ns.UI.ShowPlayerPropertiesDialog(fullName, refreshParent)
 end
 
 function ns.UI.ShowAddAltsDialog(refreshParent)
-    local altDB = OneWoW_AltTracker_Character_DB
-    if not altDB or not altDB.characters then
+    if not OneWoW_AltTracker_Character_API then
         print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_ALTS_NO_DATA"]))
         return
     end
 
     local altsToAdd = {}
-    for charKey, charData in pairs(altDB.characters) do
+    for charKey, charData in pairs(OneWoW_AltTracker_Character_API.GetAllCharacters()) do
         if type(charData) == "table" then
             local name  = charData.name
             local realm = charData.realm

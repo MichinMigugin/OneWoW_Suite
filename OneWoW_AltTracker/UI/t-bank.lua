@@ -192,13 +192,13 @@ function ns.UI.CreateBankTab(parent)
     parent.bagItemFramePool = {}
 
     local function InitializeCharacterDropdown()
-        if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then
+        if not OneWoW_AltTracker_Character_API then
             charDropdownText:SetText(L["BANK_NO_CHARACTERS"])
             return
         end
 
         local characterList = {}
-        for charKey, charData in pairs(OneWoW_AltTracker_Character_DB.characters) do
+        for charKey, charData in pairs(OneWoW_AltTracker_Character_API.GetAllCharacters()) do
             table.insert(characterList, {
                 text = charData.name or charKey,
                 key = charKey,
@@ -245,13 +245,13 @@ function ns.UI.CreateBankTab(parent)
     end
 
     local function InitializeGuildDropdown()
-        if not OneWoW_AltTracker_Storage_DB or not OneWoW_AltTracker_Storage_DB.guildBanks then
+        if not OneWoW_AltTracker_Storage_API then
             guildDropdownText:SetText(L["BANK_NO_GUILDS"])
             return
         end
 
         local guildList = {}
-        for guildName, guildData in pairs(OneWoW_AltTracker_Storage_DB.guildBanks) do
+        for guildName, guildData in pairs(OneWoW_AltTracker_Storage_API.GetGuildBanks()) do
             if guildData and guildData.tabs and next(guildData.tabs) then
                 table.insert(guildList, {
                     name = guildName,
@@ -510,17 +510,17 @@ function ns.UI.RefreshBankDisplay(parent)
 end
 
 function ns.UI.GetBankData(characterKey, _, guildName)
-    if not OneWoW_AltTracker_Storage_DB then return nil end
-    if not characterKey then return nil end
+    local storageAPI = OneWoW_AltTracker_Storage_API
+    if not storageAPI or not characterKey then return nil end
 
-    local charData = OneWoW_AltTracker_Storage_DB.characters and OneWoW_AltTracker_Storage_DB.characters[characterKey]
+    local charData = storageAPI.GetCharacters()[characterKey]
     if not charData then return nil end
 
     return {
         bags = charData.bags,
         personalBank = charData.personalBank,
-        warbandBank = OneWoW_AltTracker_Storage_DB.warbandBank,
-        guildBank = guildName and OneWoW_AltTracker_Storage_DB.guildBanks and OneWoW_AltTracker_Storage_DB.guildBanks[guildName] or nil,
+        warbandBank = storageAPI.GetWarbandBank(),
+        guildBank = guildName and storageAPI.GetGuildBanks()[guildName] or nil,
     }
 end
 

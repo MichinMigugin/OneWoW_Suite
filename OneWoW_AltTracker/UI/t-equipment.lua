@@ -191,7 +191,8 @@ function ns.UI.CreateEquipmentTab(parent)
 end
 
 local function GetEquipmentStats(charKey, charData)
-    local equipment = (OneWoW_AltTracker_Character_DB.characters[charKey] and OneWoW_AltTracker_Character_DB.characters[charKey].equipment)
+    local cd = OneWoW_AltTracker_Character_API.GetCharacterData(charKey)
+    local equipment = cd and cd.equipment
     local totalDurability, durabilityItems, missingEnchants, missingGems, tierCount = 0, 0, 0, 0, 0
     local hardMissingEnchants = 0
     if equipment then
@@ -233,7 +234,7 @@ end
 
 function ns.UI.RefreshEquipmentTab(equipmentTab)
     if not equipmentTab then return end
-    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then return end
+    if not OneWoW_AltTracker_Character_API then return end
 
     local allChars = ns.UI.GetSortedCharacters(function(charKey, charData, col)
         if col == "name" then
@@ -309,7 +310,8 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
             charCount = charCount + 1
         end
 
-        local equipment = (OneWoW_AltTracker_Character_DB.characters[charKey] and OneWoW_AltTracker_Character_DB.characters[charKey].equipment)
+        local cd = OneWoW_AltTracker_Character_API.GetCharacterData(charKey)
+        local equipment = cd and cd.equipment
 
         local totalDurability = 0
         local durabilityItems = 0
@@ -369,7 +371,8 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
             data = { charKey = charKey, charData = charData },
             createDetails = function(ef, d)
                 local cKey = d.charKey
-                local eq = (OneWoW_AltTracker_Character_DB.characters[cKey] and OneWoW_AltTracker_Character_DB.characters[cKey].equipment)
+                local cd = OneWoW_AltTracker_Character_API.GetCharacterData(cKey)
+                local eq = cd and cd.equipment
                 if eq then
                     local slotOrder = {1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 4, 19}
                     local iconSize = 48
@@ -690,7 +693,8 @@ function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILe
     for _, charInfo in ipairs(allChars) do
         local charData = charInfo.data
         local charKey = charInfo.key
-        local equipment = (OneWoW_AltTracker_Character_DB.characters[charKey] and OneWoW_AltTracker_Character_DB.characters[charKey].equipment)
+        local cd = OneWoW_AltTracker_Character_API.GetCharacterData(charKey)
+        local equipment = cd and cd.equipment
 
         local ilvl = charData.itemLevel or 0
         if ilvl > 0 then

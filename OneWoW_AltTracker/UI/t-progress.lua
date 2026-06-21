@@ -230,7 +230,7 @@ local function GetWorldBossKilled(endgameData)
 end
 
 local function GetProgressSortValue(charKey, charData, sortColumn)
-    local endgameDB = OneWoW_AltTracker_Endgame_DB and OneWoW_AltTracker_Endgame_DB.characters
+    local endgameDB = OneWoW_AltTracker_Endgame_API and OneWoW_AltTracker_Endgame_API.GetAllCharacters()
     local edg = endgameDB and endgameDB[charKey]
 
     if sortColumn == "name" then
@@ -291,7 +291,7 @@ local function GetProgressSortValue(charKey, charData, sortColumn)
 end
 
 local function GetSortedCharacters(subTabKey)
-    if not OneWoW_AltTracker_Endgame_DB then return {} end
+    if not OneWoW_AltTracker_Endgame_API then return {} end
     local state = subTabState[subTabKey]
     return ns.UI.GetSortedCharacters(GetProgressSortValue, state.sortColumn, state.sortAscending)
 end
@@ -845,7 +845,7 @@ local function RefreshSubTabContent(contentFrame, subTabKey, progressTab, buildC
     for _, charInfo in ipairs(allChars) do
         local charKey = charInfo.key
         local charData = charInfo.data
-        local endgameData = OneWoW_AltTracker_Endgame_DB.characters and OneWoW_AltTracker_Endgame_DB.characters[charKey]
+        local endgameData = OneWoW_AltTracker_Endgame_API and OneWoW_AltTracker_Endgame_API.GetCharacterData(charKey)
 
         local charRow = OneWoW_GUI:CreateDataRow(scrollContent, {
             rowHeight = rowHeight,
@@ -1715,10 +1715,10 @@ end
 
 function ns.UI.RefreshProgressStats(progressTab)
     if not progressTab or not progressTab.statBoxes then return end
-    if not OneWoW_AltTracker_Character_DB or not OneWoW_AltTracker_Character_DB.characters then return end
+    if not OneWoW_AltTracker_Character_API then return end
 
-    local charDB = OneWoW_AltTracker_Character_DB.characters
-    local endgameDB = OneWoW_AltTracker_Endgame_DB and OneWoW_AltTracker_Endgame_DB.characters
+    local charDB = OneWoW_AltTracker_Character_API.GetAllCharacters()
+    local endgameDB = OneWoW_AltTracker_Endgame_API and OneWoW_AltTracker_Endgame_API.GetAllCharacters()
 
     local stats = {
         total = 0,
@@ -1849,8 +1849,8 @@ end
 
 function ns.UI.RefreshTrackingBar(progressTab)
     if not progressTab or not progressTab.trackingText then return end
-    local charDB = OneWoW_AltTracker_Character_DB and OneWoW_AltTracker_Character_DB.characters
-    local endgameDB = OneWoW_AltTracker_Endgame_DB and OneWoW_AltTracker_Endgame_DB.characters
+    local charDB = OneWoW_AltTracker_Character_API and OneWoW_AltTracker_Character_API.GetAllCharacters()
+    local endgameDB = OneWoW_AltTracker_Endgame_API and OneWoW_AltTracker_Endgame_API.GetAllCharacters()
 
     local raidName = ""
     local bossName = ""
