@@ -172,11 +172,9 @@ local function GetCatalogItemLoader()
 
     itemResolver = false
 
-    if C_AddOns.IsAddOnLoaded("OneWoW_Catalog")
-        and OneWoW_Catalog
-        and OneWoW_Catalog.GetItemDataLoader
-    then
-        itemResolver = OneWoW_Catalog:GetItemDataLoader()
+    local catalogAPI = OneWoW_Catalog_API
+    if catalogAPI then
+        itemResolver = catalogAPI.GetItemDataLoader()
     end
 
     return itemResolver or nil
@@ -334,32 +332,13 @@ local function OpenItemInNotes(itemID)
         return false
     end
 
-    local function SelectItemWhenReady(attempt)
-        attempt = attempt or 1
-
-        local notesUI = OneWoW_Notes.UI
-        if notesUI and notesUI.OpenNotesItem and notesUI.OpenNotesItem(itemID) then
-            OneWoW_Notes.pendingItemSelect = nil
-            return true
-        end
-
-        if attempt < 12 then
-            C_Timer.After(0.05, function()
-                SelectItemWhenReady(attempt + 1)
-            end)
-        end
-
+    OneWoW:BringUp("OneWoW_Notes")
+    local notesAPI = OneWoW_Notes_API
+    if not notesAPI then
         return false
     end
 
-    OneWoW:BringUp("OneWoW_Notes")
-    OneWoW.UI:Show("notes")
-    OneWoW.UI:SelectSubTab("notes", "items")
-
-    OneWoW_Notes.pendingItemSelect = itemID
-    SelectItemWhenReady()
-
-    return true
+    return notesAPI.OpenItem(itemID)
 end
 
 local function AddItemToNotes(itemID, itemName, itemLink, icon, quality, quiet)
@@ -370,29 +349,20 @@ local function AddItemToNotes(itemID, itemName, itemLink, icon, quality, quiet)
 
     OneWoW:BringUp("OneWoW_Notes")
 
-    local notesItems = OneWoW_Notes and OneWoW_Notes.Items
-    if not notesItems or not notesItems.AddItem then
+    local notesAPI = OneWoW_Notes_API
+    if not notesAPI then
         return false
     end
 
-    local existing = notesItems.GetItem and notesItems:GetItem(itemID)
-    if existing then
-        existing.category = "Transmog"
-        existing.link = existing.link or itemLink
-        existing.icon = existing.icon or icon
-        existing.name = existing.name or itemName
-        notesItems:SaveItem(itemID, existing)
-    else
-        notesItems:AddItem(itemID, {
-            name = itemName,
-            link = itemLink,
-            icon = icon,
-            quality = quality,
-            rarity = quality,
-            category = "Transmog",
-            storage = "account",
-        })
-    end
+    notesAPI.AddOrUpdateItem(itemID, {
+        name = itemName,
+        link = itemLink,
+        icon = icon,
+        quality = quality,
+        rarity = quality,
+        category = "Transmog",
+        storage = "account",
+    })
 
     if not quiet then
         OpenItemInNotes(itemID)

@@ -50,7 +50,7 @@ end
 
 --- Opens OneWoW_Notes to the given NPC, adding it under "Quest Givers" if it is
 --- not already a saved note. No-op (returns false) when Notes is not installed.
---- OneWoW_Notes is an optional dependency, so its presence is checked here.
+--- OneWoW_Notes is an optional dependency, so its API presence is checked here.
 ---@param npcID number
 ---@param npcInfo table|nil  { name, zone, mapID, coords = { x, y } }
 ---@return boolean opened
@@ -58,13 +58,14 @@ function Navigation:OpenNPC(npcID, npcInfo)
     npcID = tonumber(npcID)
     if not npcID then return false end
 
-    local notes = OneWoW_Notes
-    if not notes then return false end
+    OneWoW:BringUp("OneWoW_Notes")
+    local notesAPI = OneWoW_Notes_API
+    if not notesAPI then return false end
 
     npcInfo = npcInfo or {}
-    local existing = notes.NPCs:GetNPC(npcID)
+    local existing = notesAPI.GetNPC(npcID)
     if not existing then
-        notes.NPCs:AddNPC(npcID, {
+        notesAPI.AddOrUpdateNPC(npcID, {
             name     = npcInfo.name,
             zone     = npcInfo.zone,
             mapID    = npcInfo.mapID,
@@ -72,28 +73,12 @@ function Navigation:OpenNPC(npcID, npcInfo)
             category = "Quest Givers",
         })
     elseif npcInfo.name and npcInfo.name ~= "" then
-        -- Heal a previously-saved placeholder name once a real one is known.
         local cur = existing.name
         if not cur or cur == "" or cur:find("^NPC %d") then
-            existing.name = npcInfo.name
-            notes.NPCs:SaveNPC(npcID, existing)
+            notesAPI.AddOrUpdateNPC(npcID, { name = npcInfo.name })
         end
     end
-
-    -- pendingNPCSelect covers the case where the NPCs tab is created fresh by
-    -- SelectSubTab (its create path consumes it); the direct SelectNPC covers a
-    -- tab that already exists.
-    notes.pendingNPCSelect = npcID
-    OneWoW.UI:Show("notes")
-    OneWoW.UI:SelectSubTab("notes", "npcs")
-
-    local tabFrame = OneWoW.UI:GetContentFrame("notes", "npcs")
-    if tabFrame and tabFrame.SelectNPC then
-        tabFrame.SelectNPC(npcID)
-        notes.pendingNPCSelect = nil
-    end
-
-    return true
+    return notesAPI.OpenNPC(npcID)
 end
 
 --- Opens OneWoW_Notes to the given item's note, creating it under the "Quest"
@@ -107,18 +92,18 @@ function Navigation:OpenItemNote(itemID, itemInfo)
     if not itemID then return false end
 
     -- Full mid-session bring-up (load + lifecycle catch-up); respects soft
-    -- opt-out via EnsureLoaded, in which case OneWoW_Notes stays nil.
+    -- opt-out via EnsureLoaded, in which case the Notes API stays nil.
     OneWoW:BringUp("OneWoW_Notes")
 
-    local notes = OneWoW_Notes
-    if not notes then
+    local notesAPI = OneWoW_Notes_API
+    if not notesAPI then
         print("|cFFFFD100OneWoW:|r " .. L["NAV_NOTES_UNAVAILABLE"])
         return false
     end
 
-    if not notes.Items:GetItem(itemID) then
+    if not notesAPI.GetItem(itemID) then
         itemInfo = itemInfo or {}
-        notes.Items:AddItem(itemID, {
+        notesAPI.AddOrUpdateItem(itemID, {
             name     = itemInfo.name,
             link     = itemInfo.link,
             icon     = itemInfo.icon,
@@ -129,16 +114,5 @@ function Navigation:OpenItemNote(itemID, itemInfo)
             content  = itemInfo.content,
         })
     end
-
-    notes.pendingItemSelect = itemID
-    OneWoW.UI:Show("notes")
-    OneWoW.UI:SelectSubTab("notes", "items")
-
-    local tabFrame = OneWoW.UI:GetContentFrame("notes", "items")
-    if tabFrame and tabFrame.SelectItem then
-        tabFrame.SelectItem(itemID)
-        notes.pendingItemSelect = nil
-    end
-
-    return true
+    return notesAPI.OpenItem(itemID)
 end

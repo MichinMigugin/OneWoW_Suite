@@ -71,7 +71,7 @@ local function IsCompletedByOtherCharacter(questID, tracker)
     end
 
     local currentKey = OneWoW_GUI:BuildCharKey()
-    for _, charInfo in ipairs(tracker:GetCompletedCharacters(questID)) do
+    for _, charInfo in ipairs(tracker.GetCompletedCharacters(questID)) do
         if charInfo.key ~= currentKey then
             return true
         end
@@ -94,7 +94,7 @@ local function IsActiveOnOtherCharacter(questID, tracker)
     end
 
     local currentKey = OneWoW_GUI:BuildCharKey()
-    for _, charInfo in ipairs(tracker:GetActiveCharacters(questID)) do
+    for _, charInfo in ipairs(tracker.GetActiveCharacters(questID)) do
         if charInfo.key ~= currentKey then
             return true
         end
@@ -108,7 +108,7 @@ local function ResolveQuestListStatus(questID, tracker)
         return "pending"
     end
 
-    if tracker and tracker:IsCompletedByCurrentChar(questID) then
+    if tracker and tracker.IsCompletedByCurrentChar(questID) then
         return "completed_current"
     end
 
@@ -252,6 +252,55 @@ local ShowQuestDetail
 local OpenQuestByID
 local UpdateVisibleQuestRows
 
+local QUEST_TYPE_LABELS = {
+    standard = L["QUESTS_TYPE_STANDARD"],
+    world = L["WORLD_QUEST"],
+    dungeon = L["QUESTS_TYPE_DUNGEON"],
+    raid = L["QUESTS_TYPE_RAID"],
+    pvp = L["QUESTS_TYPE_PVP"],
+    profession = L["QUESTS_TYPE_PROFESSION"],
+    scenario = L["QUESTS_TYPE_SCENARIO"],
+    group = L["QUESTS_TYPE_GROUP"],
+}
+
+local QUEST_CATEGORY_LABELS = {
+    campaign = L["CAMPAIGN"],
+    seasonal = L["QUESTS_CATEGORY_SEASONAL"],
+    legendary = L["QUESTS_CATEGORY_LEGENDARY"],
+    emissary = L["QUESTS_CATEGORY_EMISSARY"],
+    calling = L["QUESTS_CATEGORY_CALLING"],
+    bonusobjective = L["QUESTS_CATEGORY_BONUS_OBJECTIVE"],
+    worldboss = L["QUESTS_CATEGORY_WORLD_BOSS"],
+    bounty = L["QUESTS_CATEGORY_BOUNTY"],
+    paragon = L["QUESTS_CATEGORY_PARAGON"],
+    renown = L["QUESTS_CATEGORY_RENOWN"],
+    invasion = L["QUESTS_CATEGORY_INVASION"],
+    story = L["QUESTS_CATEGORY_STORY"],
+    artifact = L["QUESTS_CATEGORY_ARTIFACT"],
+    task = L["QUESTS_CATEGORY_TASK"],
+    meta = L["QUESTS_CATEGORY_META"],
+    threat = L["QUESTS_CATEGORY_THREAT"],
+}
+
+local QUEST_FLAG_LABELS = {
+    daily = DAILY,
+    weekly = WEEKLY,
+    repeatable = L["QUESTS_FLAG_REPEATABLE"],
+    loremaster = L["QUESTS_FLAG_LOREMASTER"],
+    elite = ELITE,
+    rare = L["QUESTS_FLAG_RARE"],
+    important = L["QUESTS_FLAG_IMPORTANT"],
+    meta = L["QUESTS_FLAG_META"],
+    class = L["QUESTS_FLAG_CLASS"],
+    timed = L["QUESTS_FLAG_TIMED"],
+    escort = L["QUESTS_FLAG_ESCORT"],
+    scaling = L["QUESTS_FLAG_SCALING"],
+    auto_complete = L["QUESTS_FLAG_AUTO_COMPLETE"],
+    local_poi = L["QUESTS_FLAG_LOCAL_POI"],
+    on_map = L["QUESTS_FLAG_ON_MAP"],
+    start_event = L["QUESTS_FLAG_START_EVENT"],
+}
+
 local QUEST_SEARCH_STOP_WORDS = {
     a = true,
     an = true,
@@ -283,29 +332,11 @@ local function NormalizeQuestSearchText(value)
     return table.concat(terms, " ")
 end
 
-local function IsActiveCurrentMode()
-    return completionFilter == "active_current"
-end
-
-local function IsActiveAllAltsMode()
-    return completionFilter == "active_all"
-end
-
-local function IsActiveFilterMode()
-    return IsActiveCurrentMode() or IsActiveAllAltsMode()
-end
-
-local function IsActiveAltsMode()
-    return IsActiveAllAltsMode()
-end
-
 local function IsDatabaseMode()
     return (searchText and NormalizeQuestSearchText(searchText) ~= "")
         or expansionFilter ~= -1
         or zoneFilter ~= ""
-        or (completionFilter ~= "all"
-            and completionFilter ~= "active_current"
-            and completionFilter ~= "active_all")
+        or (completionFilter ~= "all" and completionFilter ~= "active")
         or typeFilter ~= "all"
         or questTypeFilter ~= "all"
         or categoryFilter ~= "all"
@@ -496,8 +527,8 @@ end
 
 local function BuildQuestRecord(addon, questID, title, extras)
     local stored =
-        addon.QuestData
-        and addon.QuestData:GetQuest(questID)
+        addon
+        and addon.GetQuest(questID)
 
     local quest = {}
 
@@ -559,7 +590,7 @@ local function GetActiveQuestLogQuests(addon)
     return quests
 end
 
-local function GetAllAltsActiveQuests(addon)
+local function GetAllCharactersActiveQuests(addon)
     local byID = {}
 
     for _, quest in ipairs(GetActiveQuestLogQuests(addon)) do
@@ -573,15 +604,15 @@ local function GetAllAltsActiveQuests(addon)
     local currentKey = OneWoW_GUI:BuildCharKey()
 
     if altApi and altApi.GetAllCharacters then
-        local chars = altApi.GetAllCharacters()
-        if chars then
-            for charKey in pairs(chars) do
-                if charKey ~= currentKey then
-                    local charData = altApi.GetCharacterData(charKey)
+        local characters = altApi.GetAllCharacters()
+        if characters then
+            for characterKey in pairs(characters) do
+                if characterKey ~= currentKey then
+                    local characterData = altApi.GetCharacterData(characterKey)
                     local activeList =
-                        charData
-                        and charData.quests
-                        and charData.quests.active
+                        characterData
+                        and characterData.quests
+                        and characterData.quests.active
 
                     if activeList then
                         for _, activeEntry in ipairs(activeList) do
@@ -651,15 +682,8 @@ local function ClearQuestList()
 end
 
 local function GetQuestTypeLabel(quest)
-    if not quest then return L["QUESTS_TYPE_NORMAL"] end
-    if quest.isDaily   then return DAILY   end
-    if quest.isWeekly  then return WEEKLY  end
-    if quest.isCampaign then return L["CAMPAIGN"] end
-    if quest.isWorldQuest then return L["WORLD_QUEST"] end
-    local cls = quest.classification
-    if cls == 1 then return L["QUESTS_TYPE_LEGENDARY"] end
-    if cls == 5 then return L["QUESTS_TYPE_REPEATABLE"] end
-    return L["QUESTS_TYPE_NORMAL"]
+    if not quest then return QUEST_TYPE_LABELS.standard end
+    return QUEST_TYPE_LABELS[quest.questType] or QUEST_TYPE_LABELS.standard
 end
 
 local function GetGroupTypeLabel(quest)
@@ -668,51 +692,6 @@ local function GetGroupTypeLabel(quest)
     if sg >= 10 then return RAID  end
     if sg >= 2  then return GROUP end
     return SOLO
-end
-
-local function GetQuestProgressLabel(questID)
-    if questID and (activeQuestIDsAcrossAlts[questID] or C_QuestLog.IsOnQuest(questID)) then
-        return L["QUESTS_PROGRESS_ACTIVE"]
-    end
-
-    if questID and C_QuestLog.IsQuestFlaggedCompleted(questID) then
-        return L["QUESTS_PROGRESS_COMPLETED"]
-    end
-
-    if questID and C_QuestLog.IsQuestFlaggedCompletedOnAccount
-        and C_QuestLog.IsQuestFlaggedCompletedOnAccount(questID)
-    then
-        return L["QUESTS_PROGRESS_WARBAND"]
-    end
-
-    return L["QUESTS_PROGRESS_NOT_COMPLETED"]
-end
-
-local function GetQuestRewardSummary(quest)
-    if not quest then
-        return "-"
-    end
-
-    local parts = {}
-
-    if quest.rewardGold and quest.rewardGold > 0 then
-        table.insert(parts, GetCoinTextureString(quest.rewardGold))
-    end
-
-    if quest.rewardXP and quest.rewardXP > 0 then
-        table.insert(parts, tostring(quest.rewardXP) .. " XP")
-    end
-
-    if quest.rewardItems and #quest.rewardItems > 0 then
-        table.insert(parts, tostring(#quest.rewardItems) .. " items")
-    end
-
-    if quest.rewardCurrencies and #quest.rewardCurrencies > 0 then
-        local label = #quest.rewardCurrencies == 1 and "currency" or "currencies"
-        table.insert(parts, tostring(#quest.rewardCurrencies) .. " " .. label)
-    end
-
-    return #parts > 0 and table.concat(parts, ", ") or "-"
 end
 
 local function GetCurrencyRewardInfo(rewardCurrency)
@@ -755,8 +734,12 @@ local function FormatQuestMetadataValue(value)
         return "-"
     end
 
-    value = tostring(value):gsub("_", " ")
-    return value:gsub("^%l", string.upper)
+    value = tostring(value):lower()
+
+    return QUEST_TYPE_LABELS[value]
+        or QUEST_CATEGORY_LABELS[value]
+        or QUEST_FLAG_LABELS[value]
+        or value:gsub("_", " "):gsub("^%l", string.upper)
 end
 
 local function GetFirstMetadataValue(values)
@@ -771,6 +754,20 @@ local function GetFirstMetadataValue(values)
     end
 
     return nil
+end
+
+local function FormatQuestMetadataList(values)
+    if type(values) ~= "table" or #values == 0 then
+        return "-"
+    end
+
+    local labels = {}
+    for _, value in ipairs(values) do
+        table.insert(labels, FormatQuestMetadataValue(value))
+    end
+
+    table.sort(labels)
+    return table.concat(labels, ", ")
 end
 
 local function ResolveQuestZoneName(quest)
@@ -892,11 +889,8 @@ local function RememberRewardItemName(itemID, itemName)
 
     local addon = GetDataAddon()
 
-    if addon
-        and addon.QuestData
-        and addon.QuestData.RememberItemName
-    then
-        addon.QuestData:RememberItemName(itemID, itemName)
+    if addon then
+        addon.RememberItemName(itemID, itemName)
         return true
     end
 
@@ -1103,10 +1097,7 @@ local function StartRewardItemSearchWarmup(panels, addon, resultCount)
         return
     end
 
-    if not addon
-        or not addon.QuestData
-        or not addon.QuestData.GetQuestsForExpansion
-    then
+    if not addon then
         return
     end
 
@@ -1115,7 +1106,7 @@ local function StartRewardItemSearchWarmup(panels, addon, resultCount)
     wipe(rewardItemSearchWarmQueue)
     wipe(rewardItemSearchWarmSeen)
 
-    local quests = addon.QuestData:GetQuestsForExpansion(expansionFilter)
+    local quests = addon.GetQuestsForExpansion(expansionFilter)
     local queued = 0
 
     local function addItems(items)
@@ -1424,8 +1415,7 @@ local function GetQuestDisplayName(questID, questData)
     local addon = GetDataAddon()
     local quest =
         addon
-        and addon.QuestData
-        and addon.QuestData:GetQuest(questID)
+        and addon.GetQuest(questID)
 
     local questName =
         quest
@@ -1515,6 +1505,8 @@ local function GetAdvancedValueText(fieldName, value)
         return GetRaceDisplayName(value)
     elseif fieldName == "faction" then
         return GetFactionDisplayName(value)
+    elseif fieldName == "category" or fieldName == "flag" then
+        return FormatQuestMetadataValue(value)
     end
 
     return tostring(value)
@@ -1589,7 +1581,7 @@ local function GetQuestChainColor(questID, tracker)
         return 0.3, 1, 0.3
     end
 
-    if tracker and tracker.IsCompletedByCurrentChar and tracker:IsCompletedByCurrentChar(questID) then
+    if tracker and tracker.IsCompletedByCurrentChar(questID) then
         return 0.72, 0.72, 0.72
     end
 
@@ -1690,7 +1682,7 @@ function ShowQuestDetail(panels, questData)
     local parent  = panels.detailScrollChild
     local addon   = GetDataAddon()
     if not addon then return end
-    local tracker = addon.CompletionTracker
+    local tracker = addon
 
     local contentWidth = parent:GetWidth()
     if contentWidth < 50 then
@@ -1705,48 +1697,43 @@ function ShowQuestDetail(panels, questData)
         return
     end
 
-    if addon.QuestData then
-        if not questData.mapID then
-            local liveMapID = GetQuestUiMapID(questData.id)
-            if liveMapID and liveMapID ~= 0 then
-                local mapInfo = C_Map.GetMapInfo(liveMapID)
-                questData.mapID    = liveMapID
-                questData.zoneName = mapInfo and mapInfo.name or questData.zoneName
+    if not questData.mapID then
+        local liveMapID = GetQuestUiMapID(questData.id)
+        if liveMapID and liveMapID ~= 0 then
+            local mapInfo = C_Map.GetMapInfo(liveMapID)
+            questData.mapID    = liveMapID
+            questData.zoneName = mapInfo and mapInfo.name or questData.zoneName
 
-                addon.QuestData:StoreQuestInfo(questData.id, {
-                    mapID = liveMapID,
-                    zoneName = questData.zoneName
-                })
-            end
+            addon.StoreQuestInfo(questData.id, {
+                mapID = liveMapID,
+                zoneName = questData.zoneName
+            })
         end
+    end
 
-        if not questData.classification
-            and C_QuestInfoSystem
-            and C_QuestInfoSystem.GetQuestClassification
-        then
-            local cls = C_QuestInfoSystem.GetQuestClassification(questData.id)
+    if not questData.classification then
+        local cls = C_QuestInfoSystem.GetQuestClassification(questData.id)
 
-            if cls then
-                questData.classification = cls
+        if cls then
+            questData.classification = cls
 
-                addon.QuestData:StoreQuestInfo(questData.id, {
-                    classification = cls
-                })
-            end
+            addon.StoreQuestInfo(questData.id, {
+                classification = cls
+            })
         end
+    end
 
-        if not questData.tagName then
-            local tagInfo = C_QuestLog.GetQuestTagInfo(questData.id)
+    if not questData.tagName then
+        local tagInfo = C_QuestLog.GetQuestTagInfo(questData.id)
 
-            if tagInfo and tagInfo.tagName then
-                questData.tagName = tagInfo.tagName
-                questData.isElite = tagInfo.isElite
+        if tagInfo and tagInfo.tagName then
+            questData.tagName = tagInfo.tagName
+            questData.isElite = tagInfo.isElite
 
-                addon.QuestData:StoreQuestInfo(questData.id, {
-                    tagName = tagInfo.tagName,
-                    isElite = tagInfo.isElite
-                })
-            end
+            addon.StoreQuestInfo(questData.id, {
+                tagName = tagInfo.tagName,
+                isElite = tagInfo.isElite
+            })
         end
     end
 
@@ -1931,6 +1918,24 @@ function ShowQuestDetail(panels, questData)
         return fs
     end
 
+    local function FormatNamedRecords(records, nameField, orderField, formatKey)
+        local labels = {}
+
+        for _, record in ipairs(records or {}) do
+            local name = record[nameField]
+            if name and name ~= "" then
+                local order = orderField and tonumber(record[orderField])
+                if order and formatKey then
+                    table.insert(labels, string.format(L[formatKey], name, order + 1))
+                else
+                    table.insert(labels, name)
+                end
+            end
+        end
+
+        return #labels > 0 and table.concat(labels, ", ") or nil
+    end
+
     local titleFrame = track(CreateFrame("Frame", nil, parent))
     titleFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
     titleFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -PAD, yOffset)
@@ -1976,17 +1981,14 @@ function ShowQuestDetail(panels, questData)
 
     local expName  =
         (questData.expansion ~= nil)
-        and addon.QuestData:GetExpansionName(questData.expansion)
+        and addon.GetExpansionName(questData.expansion)
         or UNKNOWN
 
     local zoneName = ResolveQuestZoneName(questData)
-    local progressName = GetQuestProgressLabel(questData.id)
-    local rewardSummary = GetQuestRewardSummary(questData)
-    local categoryName = FormatQuestMetadataValue(
-        GetFirstMetadataValue(questData.categories)
-    )
+    local questTypeName = GetQuestTypeLabel(questData)
+    local categoryName = FormatQuestMetadataList(questData.categories)
     local factionName = GetFactionDisplayName(questData.faction)
-    local flagName = GetFirstMetadataValue(questData.flags)
+    local flagName = FormatQuestMetadataList(questData.flags)
     local mapID    = questData.mapID or 0
     local questID  = questData.id or 0
     local pinMapID, pinX, pinY = GetQuestMapTarget(questData)
@@ -2165,16 +2167,21 @@ function ShowQuestDetail(panels, questData)
     local metaParts = {
         string.format("%s: %s", L["EXPANSION"], expName),
         string.format("%s: %s", ZONE, zoneName),
-        string.format("%s: %s", L["PROGRESS"], progressName),
-        string.format("%s: %s", REWARDS, rewardSummary),
         string.format("Faction: %s", factionName),
-        string.format("Category: %s", categoryName),
+        string.format("%s: %s", L["QUESTS_QUEST_TYPE"], questTypeName),
     }
 
-    if flagName then
+    if categoryName ~= "-" then
         table.insert(
             metaParts,
-            string.format("Flag: %s", FormatQuestMetadataValue(flagName))
+            string.format("%s: %s", CATEGORIES, categoryName)
+        )
+    end
+
+    if flagName ~= "-" then
+        table.insert(
+            metaParts,
+            string.format("%s: %s", L["QUESTS_TRAITS"], flagName)
         )
     end
 
@@ -2269,6 +2276,85 @@ function ShowQuestDetail(panels, questData)
     end)
 
     yOffset = yOffset - metaFrame:GetHeight() - 8
+
+    local relationshipRows = {}
+    local questLineText = FormatNamedRecords(
+        questData.questLines,
+        "name",
+        "orderIndex",
+        "QUESTS_STEP_FORMAT"
+    )
+    local campaignText = FormatNamedRecords(
+        questData.campaigns,
+        "title",
+        "questLineOrder",
+        "QUESTS_CHAPTER_FORMAT"
+    )
+    local activityLabels = {}
+    for _, scenario in ipairs(questData.activities and questData.activities.scenarios or {}) do
+        if scenario.name and scenario.name ~= "" then
+            table.insert(activityLabels, scenario.name)
+        end
+    end
+    for _, activity in ipairs(questData.activities and questData.activities.groupFinder or {}) do
+        if activity.name and activity.name ~= "" then
+            table.insert(activityLabels, activity.name)
+        end
+    end
+    if #activityLabels > 0 then
+        table.insert(
+            relationshipRows,
+            L["QUESTS_ACTIVITIES"] .. ": " .. table.concat(activityLabels, ", ")
+        )
+    end
+
+    local worldLabels = {}
+    for _, worldBoss in ipairs(questData.worldSystems and questData.worldSystems.worldBosses or {}) do
+        if worldBoss.name and worldBoss.name ~= "" then
+            table.insert(worldLabels, worldBoss.name)
+        end
+    end
+    for _, invasion in ipairs(questData.worldSystems and questData.worldSystems.invasions or {}) do
+        if invasion.name and invasion.name ~= "" then
+            table.insert(worldLabels, invasion.name)
+        end
+    end
+    for _, reward in ipairs(questData.worldSystems and questData.worldSystems.renownRewards or {}) do
+        if reward.name and reward.name ~= "" then
+            local rewardName = reward.name
+            if reward.level then
+                rewardName = string.format(L["QUESTS_RENOWN_FORMAT"], rewardName, reward.level)
+            end
+            table.insert(worldLabels, rewardName)
+        end
+    end
+    if #worldLabels > 0 then
+        table.insert(
+            relationshipRows,
+            L["QUESTS_WORLD_SYSTEMS"] .. ": " .. table.concat(worldLabels, ", ")
+        )
+    end
+
+    local startItemLabels = {}
+    for _, itemID in ipairs(questData.startItems or {}) do
+        table.insert(
+            startItemLabels,
+            C_Item.GetItemNameByID(itemID) or string.format(L["QUESTS_ITEM_UNNAMED"], itemID)
+        )
+    end
+    if #startItemLabels > 0 then
+        table.insert(
+            relationshipRows,
+            L["QUESTS_START_ITEMS"] .. ": " .. table.concat(startItemLabels, ", ")
+        )
+    end
+
+    if #relationshipRows > 0 then
+        addSep()
+        for _, relationship in ipairs(relationshipRows) do
+            addWrappedText(relationship, 11)
+        end
+    end
 
     addSep()
 
@@ -2540,9 +2626,7 @@ function ShowQuestDetail(panels, questData)
 
                 if itemID then
                     local itemName =
-                        addon.QuestData
-                        and addon.QuestData.GetCachedItemName
-                        and addon.QuestData:GetCachedItemName(itemID)
+                        addon.GetCachedItemName(itemID)
 
                     local itemLink, itemQuality, itemTexture
                     local itemIsQueued = pendingRewardItemIDs[itemID]
@@ -2577,7 +2661,7 @@ function ShowQuestDetail(panels, questData)
                         itemName = loader:GetTooltipItemName(itemID)
                     end
 
-                    if itemName and addon.QuestData and addon.QuestData.RememberItemName then
+                    if itemName then
                         pendingRewardItemIDs[itemID] = nil
                         RememberAndApplyRewardItemName(itemID, itemName)
                     elseif not itemName then
@@ -2776,7 +2860,7 @@ function ShowQuestDetail(panels, questData)
     yOffset = yOffset - 18
 
     local completedChars =
-        tracker and tracker:GetCompletedCharacters(questData.id)
+        tracker and tracker.GetCompletedCharacters(questData.id)
         or {}
 
     if #completedChars == 0 then
@@ -2854,77 +2938,41 @@ function ShowQuestDetail(panels, questData)
     addSep()
 
     local activeLabel = track(OneWoW_GUI:CreateFS(parent, 10))
-
     activeLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
     activeLabel:SetText(L["QUESTS_ACTIVE_ON"])
-
-    activeLabel:SetTextColor(
-        OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
-    )
+    activeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     yOffset = yOffset - 18
 
-    local activeChars =
-        tracker and tracker:GetActiveCharacters(questData.id)
+    local activeCharacters =
+        tracker and tracker.GetActiveCharacters(questData.id)
         or {}
 
-    if #activeChars == 0 then
+    if #activeCharacters == 0 then
         local noActiveText = track(OneWoW_GUI:CreateFS(parent, 12))
-
-        noActiveText:SetPoint(
-            "TOPLEFT",
-            parent,
-            "TOPLEFT",
-            PAD + 8,
-            yOffset
-        )
-
+        noActiveText:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
         noActiveText:SetText(L["QUESTS_NOT_ACTIVE"])
-
-        noActiveText:SetTextColor(
-            OneWoW_GUI:GetThemeColor("TEXT_MUTED")
-        )
+        noActiveText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         yOffset = yOffset - 18
     else
-        for _, charInfo in ipairs(activeChars) do
-            local rowFrame = track(CreateFrame("Frame", nil, parent))
+        for _, characterInfo in ipairs(activeCharacters) do
+            local rowFrame = track(OneWoW_GUI:CreateLayoutFrame(parent, {
+                height = 18,
+            }))
+            rowFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD + 8, yOffset)
+            rowFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -PAD, yOffset)
 
-            rowFrame:SetHeight(18)
+            local activeTexture = rowFrame:CreateTexture(nil, "ARTWORK")
+            activeTexture:SetSize(14, 14)
+            activeTexture:SetPoint("LEFT", rowFrame, "LEFT", 0, 0)
+            activeTexture:SetTexture(QUEST_STATUS_TEXTURE_CHECK)
+            activeTexture:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
 
-            rowFrame:SetPoint(
-                "TOPLEFT",
-                parent,
-                "TOPLEFT",
-                PAD + 8,
-                yOffset
-            )
-
-            rowFrame:SetPoint(
-                "TOPRIGHT",
-                parent,
-                "TOPRIGHT",
-                -PAD,
-                yOffset
-            )
-
-            local checkTex = rowFrame:CreateTexture(nil, "ARTWORK")
-
-            checkTex:SetSize(14, 14)
-            checkTex:SetPoint("LEFT", rowFrame, "LEFT", 0, 0)
-
-            checkTex:SetTexture(
-                "Interface\\Buttons\\UI-CheckBox-Check"
-            )
-
-            checkTex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-
-            local charText = OneWoW_GUI:CreateFS(rowFrame, 12)
-
-            charText:SetPoint("LEFT", checkTex, "RIGHT", 4, 0)
-            charText:SetText(charInfo.name)
-
-            charText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+            local characterText = OneWoW_GUI:CreateFS(rowFrame, 12)
+            characterText:SetPoint("LEFT", activeTexture, "RIGHT", 4, 0)
+            characterText:SetText(characterInfo.name)
+            characterText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
 
             yOffset = yOffset - 20
         end
@@ -2933,9 +2981,19 @@ function ShowQuestDetail(panels, questData)
     addVSpace(4)
 
     local chainIDs = GetQuestChainIDs(questData)
-    if chainIDs then
+    if questLineText or campaignText or chainIDs then
         addSep()
 
+        if questLineText then
+            addWrappedText(L["QUESTS_QUEST_LINES"] .. ": " .. questLineText, 11)
+        end
+
+        if campaignText then
+            addWrappedText(L["QUESTS_CAMPAIGNS"] .. ": " .. campaignText, 11)
+        end
+    end
+
+    if chainIDs then
         local chainLabel = track(OneWoW_GUI:CreateFS(parent, 10))
         chainLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, yOffset)
         chainLabel:SetText(L["QUESTS_CHAIN"])
@@ -2949,8 +3007,7 @@ function ShowQuestDetail(panels, questData)
 
         local function getChainName(chainQuestID)
             local chainQuest =
-                addon.QuestData
-                and addon.QuestData:GetQuest(chainQuestID)
+                addon.GetQuest(chainQuestID)
 
             return chainQuest
                 and chainQuest.name
@@ -3002,7 +3059,7 @@ function ShowQuestDetail(panels, questData)
                     hasActive = true
                 end
 
-                if not (tracker and tracker.IsCompletedByCurrentChar and tracker:IsCompletedByCurrentChar(groupQuestID)) then
+                if not (tracker and tracker.IsCompletedByCurrentChar(groupQuestID)) then
                     allCompleted = false
                 end
             end
@@ -3185,7 +3242,7 @@ end
 local function UpdateQuestListEntry(btn, quest, panels)
     local addon   = GetDataAddon()
     if not addon then return end
-    local tracker = addon.CompletionTracker
+    local tracker = addon
 
     local entry = quest
     quest = entry and entry.quest or entry
@@ -3254,7 +3311,7 @@ local function UpdateQuestListEntry(btn, quest, panels)
     if btn.isGroup and entry.expansionName then
         expName = entry.expansionName
     elseif quest and quest.expansion ~= nil then
-        expName = addon.QuestData:GetExpansionName(quest.expansion) or ""
+        expName = addon.GetExpansionName(quest.expansion) or ""
     end
 
     if btn.subText then
@@ -3264,7 +3321,7 @@ local function UpdateQuestListEntry(btn, quest, panels)
         btn.subText:SetText(expName)
     end
 
-    local listStatus = nil
+    local listStatus
 
     if btn.isGroup then
         local groupStatus = questGroupStatusCache[entry.key]
@@ -3301,19 +3358,15 @@ local function UpdateQuestListEntry(btn, quest, panels)
     end
 
     if btn.checkTex then
-        ApplyQuestListStatusIcon(btn.checkTex, listStatus)
+        btn.checkTex:ClearAllPoints()
         btn.checkTex:SetPoint("RIGHT", btn, "RIGHT", btn.isGroup and -40 or -28, 0)
+        ApplyQuestListStatusIcon(btn.checkTex, listStatus)
     end
 
     if btn.checkHit then
-        if btn.isSection then
-            btn.checkHit:Hide()
-        else
-            btn.checkHit:Show()
-            btn.checkHit:ClearAllPoints()
-            btn.checkHit:SetPoint("CENTER", btn.checkTex, "CENTER")
-            btn.checkHit:SetSize(28, 28)
-        end
+        btn.checkHit:ClearAllPoints()
+        btn.checkHit:SetPoint("CENTER", btn.checkTex, "CENTER", 0, 0)
+        btn.checkHit:Show()
     end
 
     if btn.favBtn and ns.Favorites then
@@ -3371,16 +3424,19 @@ local function CreateQuestListEntry(parent, quest, yOffset, panels, onClick)
     checkTex:Hide()
     btn.checkTex = checkTex
 
-    local checkHit = CreateFrame("Frame", nil, btn)
-    checkHit:SetSize(28, 28)
-    checkHit:SetPoint("CENTER", checkTex, "CENTER")
-    checkHit:EnableMouse(true)
+    local checkHit = OneWoW_GUI:CreateLayoutFrame(btn, {
+        width = 28,
+        height = 28,
+    })
+    checkHit:SetPoint("CENTER", checkTex, "CENTER", 0, 0)
+    checkHit:EnableMouseMotion(true)
     checkHit:SetScript("OnEnter", function(self)
         ShowQuestStatusLegendTooltip(self)
     end)
     checkHit:SetScript("OnLeave", function()
         GameTooltip:Hide()
     end)
+    checkHit:Hide()
     btn.checkHit = checkHit
 
     local groupToggle = CreateFrame("Button", nil, btn, "BackdropTemplate")
@@ -3505,8 +3561,8 @@ local function BuildQuestListEntries(quests)
 
         if #groupQuests >= 3 then
             local expansionName = ""
-            if addon and addon.QuestData and quest.expansion ~= nil then
-                expansionName = addon.QuestData:GetExpansionName(quest.expansion) or ""
+            if addon and quest.expansion ~= nil then
+                expansionName = addon.GetExpansionName(quest.expansion) or ""
             end
 
             table.insert(entries, {
@@ -3545,7 +3601,7 @@ local function BuildQuestListEntries(quests)
 end
 
 local function GetFavoriteQuestsOutsideActiveList(addon, activeQuests)
-    if not (addon and addon.QuestData and ns.Favorites) then
+    if not (addon and ns.Favorites) then
         return {}
     end
 
@@ -3573,7 +3629,7 @@ local function GetFavoriteQuestsOutsideActiveList(addon, activeQuests)
         local quest =
             questID
             and not activeIDs[questID]
-            and addon.QuestData:GetQuest(questID)
+            and addon.GetQuest(questID)
 
         if quest and quest.id then
             table.insert(favorites, quest)
@@ -3880,7 +3936,7 @@ function RefreshQuestList(panels)
     wipe(activeQuestIDsAcrossAlts)
 
     local addon = GetDataAddon()
-    if not addon or not addon.QuestData then
+    if not addon then
         panels._questResults = {}
         panels._questListEntries = {}
         if panels.emptyList then
@@ -3893,18 +3949,14 @@ function RefreshQuestList(panels)
 
     local quests
     local favoriteQuests = {}
+    -- "Active" intentionally combines the current quest log with AltTracker snapshots.
+    local activeMode = completionFilter == "active"
     local databaseMode = IsDatabaseMode()
-    local activeCurrentMode = IsActiveCurrentMode()
-    local activeAllAltsMode = IsActiveAllAltsMode()
 
-    if activeAllAltsMode then
-        quests = GetAllAltsActiveQuests(addon)
-        favoriteQuests = {}
-    elseif activeCurrentMode then
-        quests = GetActiveQuestLogQuests(addon)
-        favoriteQuests = {}
+    if activeMode then
+        quests = GetAllCharactersActiveQuests(addon)
     elseif databaseMode then
-        quests = addon.QuestData:GetSortedQuests(
+        quests = addon.GetSortedQuests(
             expansionFilter,
             zoneFilter,
             "all",
@@ -3919,9 +3971,7 @@ function RefreshQuestList(panels)
         favoriteQuests = GetFavoriteQuestsOutsideActiveList(addon, quests)
     end
 
-    if completionFilter ~= "all"
-        and not IsActiveFilterMode()
-    then
+    if completionFilter ~= "all" and completionFilter ~= "active" then
         local filtered = {}
         for _, quest in ipairs(quests) do
             if completionFilter == "completed" then
@@ -3929,9 +3979,7 @@ function RefreshQuestList(panels)
             elseif completionFilter == "not_completed" then
                 if not C_QuestLog.IsQuestFlaggedCompleted(quest.id) then table.insert(filtered, quest) end
             elseif completionFilter == "warband" then
-                if C_QuestLog.IsQuestFlaggedCompletedOnAccount(quest.id) then
-                    table.insert(filtered, quest)
-                end
+                if C_QuestLog.IsQuestFlaggedCompletedOnAccount(quest.id) then table.insert(filtered, quest) end
             end
         end
         quests = filtered
@@ -3999,7 +4047,7 @@ function RefreshQuestList(panels)
         panels._questListEntries = {}
         if panels.emptyList then
             panels.emptyList:SetText(
-                (addon.QuestData:GetCapturedQuestCount() == 0)
+                (addon.GetCapturedQuestCount() == 0)
                 and L["QUESTS_NONE_YET"]
                 or  L["QUESTS_EMPTY"]
             )
@@ -4078,7 +4126,7 @@ function RefreshQuestList(panels)
     end
 
     if selectedQuest then
-        ShowQuestDetail(panels, addon.QuestData:GetQuest(selectedQuest.id))
+        ShowQuestDetail(panels, addon.GetQuest(selectedQuest.id))
     end
 end
 
@@ -4094,8 +4142,7 @@ function OpenQuestByID(questID, panels)
     local addon = GetDataAddon()
     local quest =
         addon
-        and addon.QuestData
-        and addon.QuestData:GetQuest(questID)
+        and addon.GetQuest(questID)
 
     if not quest then return false end
 
@@ -4130,13 +4177,13 @@ end
 
 local PopulateZoneDropdown = function(panels)
     local addon = GetDataAddon()
-    if not addon or not addon.QuestData then return end
+    if not addon then return end
 
     OneWoW_GUI:AttachFilterMenu(panels.zoneDropdown, {
         searchable = true,
         getActiveValue = function() return zoneFilter end,
         buildItems = function()
-            local zones = addon.QuestData:GetAvailableZones(expansionFilter ~= -1 and expansionFilter or nil)
+            local zones = addon.GetAvailableZones(expansionFilter ~= -1 and expansionFilter or nil)
             local items = { { value = "", text = L["QUESTS_ZONE_ALL"] } }
             for _, zoneName in ipairs(zones) do
                 table.insert(items, {
@@ -4156,14 +4203,14 @@ end
 
 local function PopulateExpansionDropdown(panels)
     local addon = GetDataAddon()
-    if not addon or not addon.QuestData then return end
+    if not addon then return end
 
     OneWoW_GUI:AttachFilterMenu(panels.expDropdown, {
         searchable = false,
         getActiveValue = function() return expansionFilter end,
         buildItems = function()
             local items = { { value = -1, text = L["QUESTS_EXPANSION_ALL"] } }
-            local expansions = addon.QuestData:GetAvailableExpansions()
+            local expansions = addon.GetAvailableExpansions()
             for _, exp in ipairs(expansions) do
                 table.insert(items, {
                     value   = exp.id,
@@ -4210,11 +4257,14 @@ local function SetupQuestTypeDropdown(panels)
         buildItems = function()
             return {
                 { value = "all",        text = L["QUESTS_QTYPE_ALL"]       },
-                { value = "normal",     text = L["QUESTS_TYPE_NORMAL"]     },
-                { value = "daily",      text = DAILY      },
-                { value = "weekly",     text = WEEKLY     },
-                { value = "campaign",   text = L["CAMPAIGN"]   },
-                { value = "worldquest", text = L["WORLD_QUEST"] },
+                { value = "standard",   text = QUEST_TYPE_LABELS.standard   },
+                { value = "world",      text = QUEST_TYPE_LABELS.world      },
+                { value = "dungeon",    text = QUEST_TYPE_LABELS.dungeon    },
+                { value = "raid",       text = QUEST_TYPE_LABELS.raid       },
+                { value = "pvp",        text = QUEST_TYPE_LABELS.pvp        },
+                { value = "profession", text = QUEST_TYPE_LABELS.profession },
+                { value = "scenario",   text = QUEST_TYPE_LABELS.scenario   },
+                { value = "group",      text = QUEST_TYPE_LABELS.group      },
             }
         end,
         onSelect = function(value, text)
@@ -4234,9 +4284,8 @@ local function SetupProgressDropdown(panels)
                 { value = "all",           text = L["QUESTS_PROGRESS_ALL"]           },
                 { value = "completed",     text = L["QUESTS_PROGRESS_COMPLETED"]     },
                 { value = "not_completed", text = L["QUESTS_PROGRESS_NOT_COMPLETED"] },
-                { value = "active_current",  text = L["QUESTS_PROGRESS_ACTIVE_CURRENT"] },
-                { value = "active_all",      text = L["QUESTS_PROGRESS_ACTIVE_ALL"]     },
-                { value = "warband",         text = L["QUESTS_PROGRESS_WARBAND"]        },
+                { value = "active",        text = L["QUESTS_PROGRESS_ACTIVE"]        },
+                { value = "warband",       text = L["QUESTS_PROGRESS_WARBAND"]       },
             }
         end,
         onSelect = function(value, text)
@@ -4249,7 +4298,7 @@ end
 
 local function GetAvailableFilterValues(fieldName)
     local addon = GetDataAddon()
-    if not addon or not addon.QuestData then return {} end
+    if not addon then return {} end
 
     local cacheKey =
         expansionFilter ~= -1
@@ -4274,8 +4323,8 @@ local function GetAvailableFilterValues(fieldName)
 
         local source =
             expansionFilter ~= -1
-            and addon.QuestData:GetQuestsForExpansion(expansionFilter)
-            or addon.QuestData:GetAllQuests()
+            and addon.GetQuestsForExpansion(expansionFilter)
+            or addon.GetAllQuests()
 
         for _, quest in pairs(source) do
             for _, value in ipairs(quest.categories or {}) do
@@ -4371,12 +4420,14 @@ local function SetupAdvancedDropdowns(panels)
         buildItems = function()
             return {
                 { value = "all",        text = L["QUESTS_QTYPE_ALL"]       },
-                { value = "normal",     text = L["QUESTS_TYPE_NORMAL"]     },
-                { value = "daily",      text = DAILY      },
-                { value = "weekly",     text = WEEKLY     },
-                { value = "campaign",   text = L["CAMPAIGN"]   },
-                { value = "worldquest", text = L["WORLD_QUEST"] },
-                { value = "repeatable", text = "Repeatable" },
+                { value = "standard",   text = QUEST_TYPE_LABELS.standard   },
+                { value = "world",      text = QUEST_TYPE_LABELS.world      },
+                { value = "dungeon",    text = QUEST_TYPE_LABELS.dungeon    },
+                { value = "raid",       text = QUEST_TYPE_LABELS.raid       },
+                { value = "pvp",        text = QUEST_TYPE_LABELS.pvp        },
+                { value = "profession", text = QUEST_TYPE_LABELS.profession },
+                { value = "scenario",   text = QUEST_TYPE_LABELS.scenario   },
+                { value = "group",      text = QUEST_TYPE_LABELS.group      },
             }
         end,
         onSelect = function(value, text)
@@ -4388,9 +4439,9 @@ local function SetupAdvancedDropdowns(panels)
     })
 
     local dynamicDefs = {
-        { frame = panels.advCategory,   field = "category",   allText = "All Categories",  get = function() return categoryFilter end,   set = function(v) categoryFilter = v end },
-        { frame = panels.advFlag,       field = "flag",       allText = "All Flags",       get = function() return flagFilter end,       set = function(v) flagFilter = v end },
-        { frame = panels.advProfession, field = "profession", allText = "All Professions", get = function() return professionFilter end, set = function(v) professionFilter = v end },
+        { frame = panels.advCategory,   field = "category",   allText = L["QUESTS_FILTER_CATEGORY_ALL"], get = function() return categoryFilter end,   set = function(v) categoryFilter = v end },
+        { frame = panels.advFlag,       field = "flag",       allText = L["QUESTS_FILTER_TRAIT_ALL"],    get = function() return flagFilter end,       set = function(v) flagFilter = v end },
+        { frame = panels.advProfession, field = "profession", allText = L["QUESTS_FILTER_PROFESSION_ALL"], get = function() return professionFilter end, set = function(v) professionFilter = v end },
         { frame = panels.advClass,      field = "class",      allText = "All Classes",     get = function() return classFilter end,      set = function(v) classFilter = v end },
         { frame = panels.advRace,       field = "race",       allText = "All Races",       get = function() return raceFilter end,       set = function(v) raceFilter = v end },
         { frame = panels.advFaction,    field = "faction",    allText = "All Factions",    get = function() return factionFilter end,    set = function(v) factionFilter = v end },
@@ -4429,15 +4480,16 @@ local function SetupAdvancedDropdowns(panels)
         getActiveValue = function() return storyFilter end,
         buildItems = function()
             return {
-                { value = "all",        text = "All Story States" },
-                { value = "chain",      text = "In Chain or Storyline" },
-                { value = "storyline",  text = "Storyline" },
-                { value = "standalone", text = "Standalone" },
+                { value = "all",        text = L["QUESTS_FILTER_STORY_ALL"] },
+                { value = "campaign",   text = L["CAMPAIGN"] },
+                { value = "storyline",  text = L["QUESTS_STORY_QUESTLINE"] },
+                { value = "chain",      text = L["QUESTS_STORY_CHAIN"] },
+                { value = "standalone", text = L["QUESTS_STORY_STANDALONE"] },
             }
         end,
         onSelect = function(value, text)
             storyFilter = value
-            panels.advStory.text:SetText(value == "all" and "All Story States" or text)
+            panels.advStory.text:SetText(value == "all" and L["QUESTS_FILTER_STORY_ALL"] or text)
             panels.UpdateAdvancedTexts()
             RefreshQuestList(panels)
         end,
@@ -4448,7 +4500,7 @@ local function SetupAdvancedDropdowns(panels)
         getActiveValue = function() return runtimeFilter end,
         buildItems = function()
             return {
-                { value = "all",              text = "All Runtime States" },
+                { value = "all",              text = L["QUESTS_FILTER_DATA_ALL"] },
                 { value = "favorite",         text = "Favorites" },
                 { value = "has_location",     text = "Has Location" },
                 { value = "missing_location", text = "Missing Location" },
@@ -4460,7 +4512,7 @@ local function SetupAdvancedDropdowns(panels)
         end,
         onSelect = function(value, text)
             runtimeFilter = value
-            panels.advRuntime.text:SetText(value == "all" and "All Runtime States" or text)
+            panels.advRuntime.text:SetText(value == "all" and L["QUESTS_FILTER_DATA_ALL"] or text)
             panels.UpdateAdvancedTexts()
             RefreshQuestList(panels)
         end,
@@ -4484,8 +4536,8 @@ function ns.UI.OpenToQuest(questID)
         local panels = activePanels or ns.UI.questsPanels
         if not panels then return end
         local addon = GetDataAddon()
-        if not addon or not addon.QuestData then return end
-        local quest = addon.QuestData:GetQuest(questID)
+        if not addon then return end
+        local quest = addon.GetQuest(questID)
         if quest then
             ShowQuestDetail(panels, quest)
         end
@@ -4636,8 +4688,7 @@ function ns.UI.CreateQuestsTab(parent)
                     local addon = GetDataAddon()
                     local quest =
                         addon
-                        and addon.QuestData
-                        and addon.QuestData:GetQuest(selectedQuest.id)
+                        and addon.GetQuest(selectedQuest.id)
                         or selectedQuest
 
                     ShowQuestDetail(panels, quest)
@@ -4677,22 +4728,22 @@ function ns.UI.CreateQuestsTab(parent)
 
     local drawerTitle = OneWoW_GUI:CreateFS(advancedDrawer, 11)
     drawerTitle:SetPoint("TOPLEFT", advancedDrawer, "TOPLEFT", 10, -8)
-    drawerTitle:SetText("Advanced Filters")
+    drawerTitle:SetText(L["QUESTS_ADVANCED_FILTERS"])
     drawerTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local drawerClearBtn = OneWoW_GUI:CreateFitTextButton(advancedDrawer, { text = "Clear Advanced", height = 22, minWidth = 105 })
+    local drawerClearBtn = OneWoW_GUI:CreateFitTextButton(advancedDrawer, { text = L["QUESTS_CLEAR_ADVANCED"], height = 22, minWidth = 105 })
     drawerClearBtn:SetPoint("TOPRIGHT", advancedDrawer, "TOPRIGHT", -10, -6)
 
-    local advGroup = CreateAdvancedDropdown(advancedDrawer, "Group", L["QUESTS_TYPE_ALL"])
-    local advQuestType = CreateAdvancedDropdown(advancedDrawer, "Quest Type", L["QUESTS_QTYPE_ALL"])
-    local advCategory = CreateAdvancedDropdown(advancedDrawer, "Category", "All Categories")
-    local advFlag = CreateAdvancedDropdown(advancedDrawer, "Flag", "All Flags")
-    local advProfession = CreateAdvancedDropdown(advancedDrawer, "Profession", "All Professions")
+    local advGroup = CreateAdvancedDropdown(advancedDrawer, L["QUESTS_GROUP_SIZE"], L["QUESTS_TYPE_ALL"])
+    local advQuestType = CreateAdvancedDropdown(advancedDrawer, L["QUESTS_QUEST_TYPE"], L["QUESTS_QTYPE_ALL"])
+    local advCategory = CreateAdvancedDropdown(advancedDrawer, CATEGORY, L["QUESTS_FILTER_CATEGORY_ALL"])
+    local advFlag = CreateAdvancedDropdown(advancedDrawer, L["QUESTS_TRAIT"], L["QUESTS_FILTER_TRAIT_ALL"])
+    local advProfession = CreateAdvancedDropdown(advancedDrawer, "Profession", L["QUESTS_FILTER_PROFESSION_ALL"])
     local advClass = CreateAdvancedDropdown(advancedDrawer, "Class", "All Classes")
     local advRace = CreateAdvancedDropdown(advancedDrawer, "Race", "All Races")
     local advFaction = CreateAdvancedDropdown(advancedDrawer, "Faction", "All Factions")
-    local advStory = CreateAdvancedDropdown(advancedDrawer, "Story", "All Story States")
-    local advRuntime = CreateAdvancedDropdown(advancedDrawer, "Runtime", "All Runtime States")
+    local advStory = CreateAdvancedDropdown(advancedDrawer, L["QUESTS_STORY"], L["QUESTS_FILTER_STORY_ALL"])
+    local advRuntime = CreateAdvancedDropdown(advancedDrawer, L["QUESTS_DATA"], L["QUESTS_FILTER_DATA_ALL"])
 
     local function LayoutFilterDropdowns(w)
         local ddW = math.floor((w - (DD_PAD * 2) - (DD_GAP * 3)) / 4)
@@ -4796,22 +4847,23 @@ function ns.UI.CreateQuestsTab(parent)
     panels.UpdateAdvancedTexts = function()
         SetButtonText(advancedBtn, GetAdvancedButtonText())
         UpdateFavoritesFilterButton(favFilterBtn)
-        advGroup.text:SetText(typeFilter == "all" and L["QUESTS_TYPE_ALL"] or typeFilter)
-        advQuestType.text:SetText(questTypeFilter == "all" and L["QUESTS_QTYPE_ALL"] or questTypeFilter)
-        advCategory.text:SetText(categoryFilter == "all" and "All Categories" or categoryFilter)
-        advFlag.text:SetText(flagFilter == "all" and "All Flags" or flagFilter)
-        advProfession.text:SetText(professionFilter == "all" and "All Professions" or professionFilter)
+        advGroup.text:SetText(typeFilter == "all" and L["QUESTS_TYPE_ALL"] or FormatQuestMetadataValue(typeFilter))
+        advQuestType.text:SetText(questTypeFilter == "all" and L["QUESTS_QTYPE_ALL"] or FormatQuestMetadataValue(questTypeFilter))
+        advCategory.text:SetText(categoryFilter == "all" and L["QUESTS_FILTER_CATEGORY_ALL"] or FormatQuestMetadataValue(categoryFilter))
+        advFlag.text:SetText(flagFilter == "all" and L["QUESTS_FILTER_TRAIT_ALL"] or FormatQuestMetadataValue(flagFilter))
+        advProfession.text:SetText(professionFilter == "all" and L["QUESTS_FILTER_PROFESSION_ALL"] or FormatQuestMetadataValue(professionFilter))
         advClass.text:SetText(classFilter == "all" and "All Classes" or GetClassDisplayName(classFilter))
         advRace.text:SetText(raceFilter == "all" and "All Races" or GetRaceDisplayName(raceFilter))
         advFaction.text:SetText(factionFilter == "all" and "All Factions" or GetFactionDisplayName(factionFilter))
 
-        local storyText = "All Story States"
-        if storyFilter == "chain" then storyText = "In Chain or Storyline"
-        elseif storyFilter == "storyline" then storyText = "Storyline"
-        elseif storyFilter == "standalone" then storyText = "Standalone" end
+        local storyText = L["QUESTS_FILTER_STORY_ALL"]
+        if storyFilter == "campaign" then storyText = L["CAMPAIGN"]
+        elseif storyFilter == "chain" then storyText = L["QUESTS_STORY_CHAIN"]
+        elseif storyFilter == "storyline" then storyText = L["QUESTS_STORY_QUESTLINE"]
+        elseif storyFilter == "standalone" then storyText = L["QUESTS_STORY_STANDALONE"] end
         advStory.text:SetText(storyText)
 
-        local runtimeText = "All Runtime States"
+        local runtimeText = L["QUESTS_FILTER_DATA_ALL"]
         if runtimeFilter == "favorite" then runtimeText = "Favorites"
         elseif runtimeFilter == "has_location" then runtimeText = "Has Location"
         elseif runtimeFilter == "missing_location" then runtimeText = "Missing Location"

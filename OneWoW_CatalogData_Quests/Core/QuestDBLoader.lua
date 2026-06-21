@@ -11,7 +11,7 @@ local _, ns = ...
 --   ns.ExternalQuestDBByExpansion  [expansionID][questID] = questData
 --
 -- The data is pre-cleaned and expansion-normalized offline by
--- Tools/clean_questdb.lua, so the registrar is a plain merge with no runtime
+-- db2_exports/quest_tools/clean_questdb.lua, so the registrar is a plain merge with no runtime
 -- scraping, no _G scanning, and no global pollution.
 -- ============================================================================
 

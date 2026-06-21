@@ -307,12 +307,11 @@ local function CaptureClassification(data, questID, logInfo)
         AddCategory(data, "campaign")
     elseif classification == QC.WorldQuest then
         data.isWorldQuest = true
-        AddCategory(data, "world")
-        AddCategory(data, "worldquest")
+        data.questType = "world"
     elseif classification == QC.Legendary then
         AddCategory(data, "legendary")
     elseif classification == QC.Recurring then
-        AddCategory(data, "repeatable")
+        AddFlag(data, "repeatable")
     elseif classification == QC.Calling then
         AddCategory(data, "calling")
     elseif classification == QC.Meta then
@@ -329,18 +328,33 @@ local function CaptureClassification(data, questID, logInfo)
         data.isElite = tagInfo.isElite or false
         data.tagID = tagInfo.tagID
         if tagInfo.isElite then AddFlag(data, "elite") end
+
+        local tagName = tagInfo.tagName and tagInfo.tagName:lower()
+        if tagName then
+            if tagName:find("raid", 1, true) then
+                data.questType = "raid"
+            elseif tagName:find("dungeon", 1, true) then
+                data.questType = "dungeon"
+            elseif tagName:find("pvp", 1, true) then
+                data.questType = "pvp"
+            elseif tagName:find("profession", 1, true) then
+                data.questType = "profession"
+            end
+        end
     end
 
     if logInfo then
         data.frequency = logInfo.frequency
         if logInfo.frequency == Enum.QuestFrequency.Daily then
             data.isDaily = true
-            AddCategory(data, "daily")
+            AddFlag(data, "daily")
         elseif logInfo.frequency == Enum.QuestFrequency.Weekly then
             data.isWeekly = true
-            AddCategory(data, "weekly")
+            AddFlag(data, "weekly")
         end
     end
+
+    data.questType = data.questType or "standard"
 
     data.sharable = C_QuestLog.IsPushableQuest(questID) and true or false
 

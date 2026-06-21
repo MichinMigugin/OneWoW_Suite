@@ -812,9 +812,9 @@ function ns.UI.CreateNPCsTab(parent)
     end
 
     parent:HookScript("OnShow", function()
-        if OneWoW_Notes and OneWoW_Notes.pendingNPCSelect then
-            local id = OneWoW_Notes.pendingNPCSelect
-            OneWoW_Notes.pendingNPCSelect = nil
+        if ns.pendingNPCSelect then
+            local id = ns.pendingNPCSelect
+            ns.pendingNPCSelect = nil
             parent.SelectNPC(id)
         end
     end)
