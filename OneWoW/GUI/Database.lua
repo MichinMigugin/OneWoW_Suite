@@ -599,13 +599,20 @@ end
 -- GetCharData/GetAllChars/DeleteChar helpers below operate on it by name.
 
 --- Fetch (creating if absent) the per-character record in a sub-module store.
---- Defaults to the current character. Returns nil if no character key resolves
---- or the store is uninitialized.
+--- Omitting charKey defaults to the current character; an explicit charKey is
+--- canonicalized (and validated) so a bad key — e.g. a numeric array index from
+--- iterating GetAllCharacters incorrectly — resolves to nil and returns nil
+--- instead of auto-vivifying a junk record. Returns nil if no character key
+--- resolves or the store is uninitialized.
 ---@param savedVarName string
 ---@param charKey string|nil
 ---@return table|nil charData
 function DB:GetCharData(savedVarName, charKey)
-    charKey = charKey or OneWoW_GUI:GetCharacterKey()
+    if charKey == nil then
+        charKey = OneWoW_GUI:GetCharacterKey()
+    else
+        charKey = OneWoW_GUI:CanonicalizeCharacterKey(charKey)
+    end
     if not charKey then return nil end
     local sv = _G[savedVarName]
     if not sv or not sv.characters then return nil end
@@ -633,11 +640,14 @@ function DB:GetAllChars(savedVarName, sortField)
     return chars
 end
 
---- Remove a character's record from a sub-module store.
+--- Remove a character's record from a sub-module store. The charKey is
+--- canonicalized (and validated) before lookup, so a missing or malformed key
+--- returns false rather than touching the wrong record.
 ---@param savedVarName string
 ---@param charKey string
 ---@return boolean removed false if no key given or the store is uninitialized
 function DB:DeleteChar(savedVarName, charKey)
+    charKey = OneWoW_GUI:CanonicalizeCharacterKey(charKey)
     if not charKey then return false end
     local sv = _G[savedVarName]
     if not sv or not sv.characters then return false end
