@@ -44,9 +44,15 @@ Only `OneWoW/OneWoW.lua` may register them.
 - Cross-unit reads: prefer `_API` over `_DB`; route new reads through `DataManager:Query` when available.
 - Hub tab order: hub manifest entries require `module` + `tabOrder`; modules register with `order = OneWoW:GetModuleTabOrder("name")` (reads `tabOrder`, not array position).
 
+## Namespace exposure (`ns` is private)
+
+- `ns` (`local _, ns = ...`) is reserved for the addon's own files. A unit's public surface is an explicit **`OneWoW_<Unit>_API` global** of declared dot-functions (stores also expose the DB-owned `_DB` global).
+- **Never publish the namespace as a global** — not `OneWoW_<Unit> = ns`, not `_G[ADDON_NAME] = ns` / `_G[addonName] = ns`. It leaks internals and is a back door around the cross-unit hook.
+- Data stores: capture `local ADDON_NAME, ns = ...` and pass `addonName = ADDON_NAME` to `OneWoW:BootStore`. `BootStore` performs the *only* sanctioned namespace publish (the `_G[addonName]` handle the lifecycle dispatcher needs) — a documented stop-gap (see `OneWoW/Docs/MIGRATION.md`). Authors never hand-write it.
+
 ## Pre-commit enforcement
 
 - `no-suite-lifecycle-events` — lifecycle `RegisterEvent` ban
 - `no-raw-loadaddon` — raw `LoadAddOn` ban outside the core loader funnel
 - `no-suite-internal-optionaldeps` — TOC OptionalDeps policy
-- `no-data-manager-bypass` — cross-family store reads (phased)
+- `no-data-manager-bypass` — cross-load-unit SavedVariables access (enforced; hard-fails off the `ALLOWED_FOREIGN_SV` allowlist)

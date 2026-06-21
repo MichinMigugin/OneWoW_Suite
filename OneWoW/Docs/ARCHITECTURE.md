@@ -325,7 +325,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 | No suite-internal `OptionalDeps` | `bin/check_toc_optional_deps.py` (pre-commit `no-suite-internal-optionaldeps`) |
 | No direct `db.global.settings` access (§8.5) | `bin/check_no_settings_bypass.py` (pre-commit `no-settings-bypass`) |
 | No direct combat/restriction API calls (§8.6) | `bin/check_no_restriction_bypass.py` (pre-commit `restriction-funnel`) |
-| No cross-load-unit SavedVariables access (§6/§7) | `bin/check_no_data_manager_bypass.py` (TOC-derived ownership; phased; warn-only — see hook docstring) |
+| No cross-load-unit SavedVariables access (§6/§7) | `bin/check_no_data_manager_bypass.py` (TOC-derived ownership; **enforced** — hard-fails off the `ALLOWED_FOREIGN_SV` allowlist) |
 | No `_G.literal` access | `bin/check_no_g_literal.py` |
 | Agent guidance | `.cursor/rules/OneWoW-Suite-Architecture.mdc`, `onewow-suite-architecture` skill |
 
@@ -518,6 +518,23 @@ Modules cannot share core's private `ns`. Sharing uses globals:
   APIs (`OneWoW_Catalog_TradeskillAPI`, `OneWoW_Trackers_API`), store `_API` /
   `_DB` globals.
 
+#### `ns` is private — never publish it as a global
+
+A unit's public surface is an **explicit `OneWoW_<Unit>_API` global** of declared
+dot-functions (and, for stores, the `_DB` global the DB layer owns). `ns` is
+reserved for the addon's own files (the per-addon table WoW hands to every file
+via `local _, ns = ...`).
+
+**Do not write `_G[ADDON_NAME] = ns` / `OneWoW_<Unit> = ns`.** Publishing the
+whole namespace leaks every internal, hides what is actually contractual, and is
+the bug that silently killed AltTracker store lifecycle when it was *removed* (the
+core dispatcher had been resolving units through that leaked global). The lifecycle
+dispatcher's dependency on a `_G[addonName]` handle is satisfied **once, centrally,
+inside `OneWoW:BootStore`** — that is the *only* sanctioned namespace publish, and
+it is a documented stop-gap slated for replacement by a core unit registry (see
+`MIGRATION.md`). Store/feature authors never hand-publish a namespace; expose an
+`_API` instead.
+
 LibStub is retained only for vendored Ace libs (`LibStub`, `CallbackHandler-1.0`,
 `LibDataBroker-1.1`, `LibDBIcon-1.0`, `LibSharedMedia-3.0`). The copy/paste
 dialog service is `OneWoW.CopyPaste` (`Core/CopyPaste.lua`).
@@ -629,9 +646,9 @@ may register both.
    reaching into `OneWoW_AltTracker_Storage_DB`). Any cross-unit access — read or
    write — goes through the owner unit's public `OneWoW_<Unit>_API`. Shared core
    surface (`OneWoW`, `OneWoW_GUI`, `OneWoW_DB`) is readable everywhere. Lint:
-   `bin/check_no_data_manager_bypass.py` (phased enforcement; `ALLOWED_FOREIGN_SV`
-   grandfathers the core profile manager and documented one-time migrations — see
-   the hook docstring).
+   `bin/check_no_data_manager_bypass.py` (**enforced**; hard-fails off-list;
+   `ALLOWED_FOREIGN_SV` grandfathers the core profile manager and documented
+   one-time migrations — see the hook docstring).
 2. **Inverse dependencies via events/callbacks**, not direct calls — core stays
    consumer-agnostic.
 3. **Cross-unit data** should route through `DataManager:Query` (planned broker in

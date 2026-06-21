@@ -1,173 +1,53 @@
 # OneWoW Suite — Remaining migration
 
 Active checklist for the few items still open. Implemented architecture lives in
-[`ARCHITECTURE.md`](ARCHITECTURE.md) — read that first.
+[`ARCHITECTURE.md`](ARCHITECTURE.md) — read that first. Delete this file once the
+items below are done.
 
-The bulk of the migration is done and folded into `ARCHITECTURE.md`: core
-lifecycle hygiene, the settings-access funnel, absorbing `OneWoW_GUI` into core
-(incl. retiring the SV-handoff stub), the OneWoW half of the SV → `OneWoW_GUI.DB`
-move, all feature moves into `OneWoW_QoL`, and DevTool's in-repo conversion. The
-`RunMigrations` collapse for every unit is also complete (assumes users have
-logged in on a recent build). Delete this file once the items below are done.
-
----
-
-## 1. AltTracker SV → `OneWoW_GUI.DB` API
-
-The last load unit not fully on the DB API. Independent — no ordering constraint.
-
-- [x] Migrated `OneWoW_AltTracker`'s inline `InitializeDatabase` to the
-  `DB:Init` + defaults-table pattern the other hub modules use, relocated into
-  `OneWoW_AltTracker/Core/Database.lua`. The AltTracker data stores use
-  account-wide per-character aggregation via `OneWoW:BootStore` (shape from
-  `defaults`) and the `DB:GetCharData` helper family, reading/writing the live
-  SavedVariable global directly. Progress
-  "overrides" moved to a static baseline (`Data/d-overrides.lua`) with SV holding
-  only user customizations behind `ns:GetProgressList` / `ns:EnsureProgressList`,
-  and AltTracker data units read the effective lists via the public
-  `OneWoW_AltTracker:GetProgressList`.
-- [x] Removed `DB:NewCompat` from `OneWoW/GUI/Database.lua` — AltTracker was the
-  last runtime caller and went dead once the migration landed. Cleared the
-  `DB:NewCompat` mention in the `Database.lua` canonicalizer doc comment; the
-  `OneWoW_Notes/Core/Database.lua` bridge comment is historical provenance for an
-  on-disk layout and stays.
+The bulk of the migration is complete and folded into `ARCHITECTURE.md`: core
+lifecycle hygiene, the settings-access funnel, absorbing `OneWoW_GUI` into core,
+the SV → `OneWoW_GUI.DB` move (incl. AltTracker and the `DB:NewCompat` /
+`config.aceDB` removals), feature moves into `OneWoW_QoL`, DevTool's in-repo
+conversion, the `RunMigrations` collapse, the `OneWoW.Restriction` combat/restriction
+funnel, and the **suite-wide SavedVariables encapsulation** (every cross-unit
+access now routes through the owner's `OneWoW_<Unit>_API`; the
+`no-data-manager-bypass` hook is enforced/hard-failing off its `ALLOWED_FOREIGN_SV`
+allowlist).
 
 ---
 
-## 2. `OneWoW/GUI/Database.lua` cleanup
+## 1. Theme color usage — per-file remainder
 
-Independent of items 1 and 5 — no ordering constraint. Both the `config.aceDB`
-*Init mode* and the AceDB-*format* drop-in `DB:NewCompat` are now gone:
-`config.aceDB` had no callers, and `DB:NewCompat`'s last caller (`OneWoW_AltTracker`)
-was retired by item 1. `DB:Init` is `single`/`split` only.
+The large-sweep theme-color audit is done (semantic literals → theme keys,
+structural tokens added to `OneWoW_GUI.Constants`, `TintScrollReorderButtons`
+helper). A handful of per-file cleanups remain and are **tracked in
+[`GUI.md`](GUI.md) §Theme System** (the source of truth for this list):
 
-- [x] Remove AceDB-mode support: the `config.aceDB` branch in `DB:Init`, the
-  `acedb` branches in `TryResolveSpec` / `SetActivePreset`, and the
-  `DB:Init requires config.savedVar or config.aceDB` error path. Verified no
-  caller passes `config.aceDB` (only the definitions reference it), so removal
-  is safe.
-- [x] Remove `DB:NewCompat` (AceDB-format drop-in) once item 1 retired its last
-  caller. Docs (`DATABASE.md`, `onewow-database-api` skill) repointed off the
-  AceDB-format compat path.
-- [x] Annotate all public `DB:*` / `OneWoW_GUI:*` functions per
-  `.cursor/rules/OneWoW-Code-Comments.mdc` (LuaCATS `---@param` / `---@return` +
-  short prose on the API surface; skip trivial getters).
+- `t-quests` row backdrops
+- DevTool editor chrome
+- `minimapbuttons` container
+- optional theme-literal lint hook
 
 ---
 
-## 3. Combat/restriction checks → `OneWoW.Restriction` funnel — done
+## 2. Retire the `_G[addonName] = ns` lifecycle stop-gap
 
-`OneWoW.Restriction` is now the single funnel for combat/restriction checks.
-Decisions made:
+`OneWoW:BootStore` currently publishes `_G[config.addonName] = ns` so the core
+lifecycle dispatcher (`Lifecycle.RunUnitHook`) can resolve a load unit and call
+its `OnAddonLoaded` / `OnPlayerLogin` / `OnPlayerEnteringWorld` hooks. This is the
+**one sanctioned namespace publish** in the suite (centralized so its removal is a
+single edit) but it still leaks each store's namespace globally — the practice the
+encapsulation work otherwise retired. Authors must never hand-write it; the rule is
+documented in `ARCHITECTURE.md` §6, the `OneWoW-Suite-Architecture.mdc` rule, and
+the `onewow-suite-architecture` skill.
 
-- **Two named helpers over a `combatOnly` flag** (avoids a boolean trap):
-  - `IsAddonRestricted()` — combat lockdown **or** any reviewed restriction type
-    active/activating; gates secure-frame mutations / protected actions.
-  - `IsInCombat()` — combat lockdown only; combat-only UX/perf gates (fade,
-    deferral, suppression) that are not about secure-frame safety.
-- **Explicit reviewed allowlist** (`RESTRICTED_ACTION_TYPES`: Combat / Encounter /
-  ChallengeMode / PvPMatch / Map) instead of iterating `Enum.AddOnRestrictionType`,
-  so a future type is not silently inherited. `Chat` (added 12.0.5) is excluded
-  by default.
+Longer-term replacement:
 
-- [x] Refactored `Restriction.lua` (allowlist + `IsInCombat()`).
-- [x] Converted every raw `InCombatLockdown()` site: broad
-  `IsAddonRestricted()` for secure/protected gates (Bags binding overrides +
-  bank cleanup, AltTracker_Character action-bar restore, framemover, questitembar,
-  portalhub esc/housing, t-portals, t-professions, map_mini_tools protected
-  toggles, bagbar); `IsInCombat()` for combat-only UX/perf
-  (AddonLoader defer, cursorenhancer, coords, afkpanel, tp-enhancements,
-  vendorpanel, map_mini_tools fade, notes dialog `:Raise()`).
-- [x] Enforced suite-wide by the `restriction-funnel` pre-commit hook
-  (`bin/check_no_restriction_bypass.py`) — bans direct `InCombatLockdown` /
-  `C_RestrictedActions.GetAddOnRestrictionState` /
-  `C_RestrictedActions.IsAddOnRestrictionActive` outside `Restriction.lua`.
-  Documented in `ARCHITECTURE.md` §8.6, the WoW-Lua rule §5, and `AGENTS.md`.
-
----
-
-## 4. Theme color usage audit
-
-Independent of items 1 and 5. Pure UI/theme hygiene against the
-`OneWoW_GUI:GetThemeColor(key)` policy.
-
-- [x] Replace direct theme-constant access (e.g.
-  `component:SetColorTexture(unpack(themeData.ACCENT_PRIMARY))`) with
-  `OneWoW_GUI:GetThemeColor(key)` or `GetThemeColor(key, themeKey)` for
-  non-active preview swatches (`Settings.lua` theme picker).
-- [x] Large-sweep audit of direct numeric color calls: semantic status/muted/danger
-  literals converted to theme keys; structural tokens added to
-  `OneWoW_GUI.Constants` (`WOW_QUEST_GOLD`, `OVERLAY_DIM`, `ICON_OVERLAY_TEXT`);
-  `TintScrollReorderButtons` helper added. **Remaining per-file work** (documented
-  in `GUI.md` §Theme System): `t-quests` row backdrops, DevTool editor chrome,
-  `minimapbuttons` container, optional lint hook.
-
----
-
-## 5. Suite-wide SavedVariables encapsulation
-
-A load unit may touch only the SavedVariables declared in its **own** TOC; every
-cross-unit access goes through the owner's public `OneWoW_<Unit>_API`.
-`bin/check_no_data_manager_bypass.py` (hook `no-data-manager-bypass`) enforces it —
-ownership is derived from each TOC's `## SavedVariables` lines, so it flags
-cross-*family* reads **and** same-family hub-to-store reads (`ARCHITECTURE.md`
-§6/§7 and the hook docstring). The active call-site migration is tracked in the
-**Suite-wide DB encapsulation** plan; this section records the standing decisions
-that shape it.
-
-`DataManager:Query` is **out of scope** for this work: nearly all cross-unit reads
-are required (the hub needs its stores), so `_API` getters are the right tool.
-`DataManager` stays a possible later layer for *optional* cross-family reads only.
-
-### Enforcement ramp
-
-| Phase | Lint behavior | `ALLOWED_FOREIGN_SV` | Exit |
-|---|---|---|---|
-| **0 — now** | warn-only on every cross-load-unit access | seeded: profile manager + documented migrations | `0` |
-| **later — migrating** | warn allowlisted; **fail** off-list | shrinks per migration PR | `1` off-list |
-| **rule** | hard-fail off-list | sanctioned exceptions only | `1` |
-
-- [x] Migrate the warn worklist onto owner `_API` getters/mutators (plan phases 1–4).
-  The hook now reports only `[allowed]` entries; the final Phase 4 moves were
-  `m-itemsearch` → Vendors `_API` (`GetAllVendors` / `GetVendorsByItem`) and
-  Storage `Mail.lua` → Accounting `_API.IsReady()`.
-- [ ] When the warn list is empty except allowlisted entries, set
-  `WARN_ONLY = False` (plan phase 5).
-
-### Decisions
-
-- **Core is not exempt.** `OneWoW` (core) follows the same rule as every other
-  unit — reaching into another unit's SV goes through that unit's `_API`. The two
-  core service reads the hook surfaced migrate rather than getting allowlisted:
-  `Services/ItemPrices.lua` (`OneWoW_AHPrices`) → Auctions `_API` (below), and
-  `Services/RecipeKnownUtil.lua` (`OneWoW_AltTracker_Professions_DB`) → a
-  Professions `_API` getter.
-- **Lifecycle dispatch still relies on `_G[addonName] = ns` (stop-gap).** The core
-  dispatcher (`Lifecycle.RunUnitHook`) resolves a load unit by reading
-  `_G[addonName]` and calling the `OnAddonLoaded` / `OnPlayerLogin` /
-  `OnPlayerEnteringWorld` hooks that `BootStore` attaches to `ns`. This collides
-  with the encapsulation goal of keeping `ns` private (commit `d4e67b6` removed the
-  AltTracker stores' `OneWoW_<Unit> = ns` publishes for that reason — and silently
-  killed all 7 stores' lifecycle hooks, so e.g. Accounting stopped recording).
-  **Interim fix:** `BootStore` now publishes `_G[config.addonName] = ns` itself
-  (one place), so stores no longer hand-write `= ns`; the 4 `OneWoW_CatalogData_*`
-  main files dropped their manual publish too. `OneWoW_ShoppingList` still bare-reads
-  `OneWoW_CatalogData_Tradeskills`, which this central publish keeps working.
-  **Longer-term:** replace the `_G[addonName]` lookup with a core-private unit
-  registry (`BootStore`/manifest roots register `addonName → ns`; the dispatcher
-  resolves that), then delete the `_G[config.addonName] = ns` line in `BootStore`
-  and the remaining manifest-root `= ns` publishes, and migrate ShoppingList's bare
-  read to a `_API` getter. Single-edit removal is the reason the publish was
-  centralized into `BootStore`.
-- **Command-line dev tools are exempt.** `OneWoW_CatalogData_Quests/Tools/`
-  (standalone Lua scripts that mock the WoW runtime) is excluded from the
-  `no-data-manager-bypass` hook via `.pre-commit-config.yaml` rather than
-  allowlisted per-symbol — they legitimately poke raw SVs and never run in-game.
-- **`OneWoW_AHPrices` is accessed by itemID, not as a table.** All four consumers
-  read a single `OneWoW_AHPrices[itemID]` entry (`.price` / `.timestamp`):
-  `Services/ItemPrices.lua`, `OneWoW_Catalog/UI/t-itemsearch.lua`,
-  `OneWoW_AltTracker/UI/t-items.lua`, and `OneWoW_QoL/Tooltips/tp-pets.lua`.
-  Expose `OneWoW_AltTracker_Auctions_API.GetByItemID(itemID)` (standard WoW
-  naming) returning that entry record (`{ price, timestamp }`) or `nil`, rather
-  than handing out the whole `OneWoW_AHPrices` table. Keep the SV name as-is —
-  TOC-derived ownership makes a rename unnecessary.
+- Add a core-private unit registry: `BootStore` (and the manifest roots) register
+  `addonName → ns`; `Lifecycle.RunUnitHook` resolves that registry instead of
+  `_G[addonName]`.
+- Delete the `_G[config.addonName] = ns` line in `OneWoW/Core/StoreBootstrap.lua`.
+- Drop the remaining manifest-root `OneWoW_<Root> = ns` / `_G[...]` publishes.
+- Migrate the last bare-namespace reader — `OneWoW_ShoppingList/Modules/DataAccess.lua`
+  reads `OneWoW_CatalogData_Tradeskills` — to a `OneWoW_CatalogData_Tradeskills_API`
+  getter.

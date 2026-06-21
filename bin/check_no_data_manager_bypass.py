@@ -38,14 +38,14 @@ What counts as a violation
     (enumerates every unit's SV for import/export/wipe) and documented, time-boxed
     one-time data migrations.
 
-Enforcement ramp
-    Phase 0 (now): WARN_ONLY = True -> every cross-load-unit access prints,
-                   nothing blocks. The output is the authoritative worklist for
-                   the migration to `_API` getters/mutators.
-    Later:         WARN_ONLY = False -> accesses whose `path::symbol` (or file
-                   path) is in ALLOWED_FOREIGN_SV print as [allowed] and pass;
-                   any other cross-load-unit access fails. Delete migration
-                   entries as their data drains complete.
+Enforcement (now hard-failing)
+    WARN_ONLY = False: accesses whose `path::symbol` (or file path) is in
+    ALLOWED_FOREIGN_SV print as [allowed] and pass; any other cross-load-unit
+    access fails the commit. Delete migration entries as their data drains
+    complete. The call-site migration to `_API` getters/mutators is finished;
+    add a new entry to ALLOWED_FOREIGN_SV only for a genuinely sanctioned case
+    (core profile manager, a documented time-boxed migration), never to dodge
+    building the owner unit's public `_API`.
 
 Allowlist keys are `path::symbol` (NOT path:lineno) so they survive edits that
 shift line numbers; a bare path (no `::`) allowlists the whole file/tree. Only
@@ -62,7 +62,7 @@ import re
 import sys
 
 # --- Enforcement phase (see module docstring) ---------------------------------
-WARN_ONLY: bool = True  # Phase 0: report only, never block.
+WARN_ONLY: bool = False  # Enforced: cross-load-unit SV access off the allowlist blocks.
 
 # Sanctioned cross-load-unit accesses. Each entry is either an exact
 # `path::symbol` key or a bare path prefix (file or directory) allowlisting every
@@ -263,9 +263,10 @@ def main(argv: list[str]) -> int:
         print("  OneWoW_<Unit>_API.Set*/Reset*(...)   -- mutate another unit's data")
         print("Reference: OneWoW/Docs/ARCHITECTURE.md §6/§7")
         if WARN_ONLY and worklist_keys:
+            # Only reachable if WARN_ONLY is temporarily re-enabled for a large
+            # migration; normal operation hard-fails off-list (blocking) above.
             print()
-            print("Phase 0 (warn-only): not blocking. Authoritative migration"
-                  " worklist (path::symbol):")
+            print("Warn-only mode: not blocking. Worklist (path::symbol):")
             for key in sorted(worklist_keys):
                 print(f'    "{key}",')
 

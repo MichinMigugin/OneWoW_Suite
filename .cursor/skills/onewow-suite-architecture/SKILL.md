@@ -60,8 +60,15 @@ end)
 
 ## Data store template
 
+`addonName` is **required** — `BootStore` uses it to publish the `_G[addonName]`
+handle the lifecycle dispatcher resolves (the one sanctioned namespace publish;
+see "Exposing a public API"). Capture it from the vararg, never the global:
+
 ```lua
+local ADDON_NAME, ns = ...   -- NOT `local _, ns = ...`
+
 OneWoW:BootStore(ns, {
+    addonName = ADDON_NAME,
     savedVar = "OneWoW_MyStore_DB",
     onLogin = function()
         ns.DataManager:Initialize()
@@ -135,10 +142,24 @@ Placeholder tabs when unloaded: `OneWoW:GetAlwaysShowModules()`.
 ### Exposing a public API
 
 A unit's public surface is an **explicit `OneWoW_<Unit>_API` global** of declared
-dot-functions. Never expose internals with a blanket `OneWoW_<Unit> = ns` — that
-leaks the whole namespace, hides what is actually contractual, and is invisible
-to the cross-family hook (its regex only sees `OneWoW_`-prefixed barewords).
-Keep `ns` private to the unit.
+dot-functions (stores also expose the `_DB` global the DB layer owns). `ns` is
+**reserved for the addon's own files** — the per-addon table WoW hands to every
+file via `local _, ns = ...`.
+
+**Never publish the namespace as a global** — neither the bareword
+`OneWoW_<Unit> = ns` nor the dynamic `_G[ADDON_NAME] = ns` / `_G[addonName] = ns`.
+It leaks every internal, hides what is actually contractual, and invites
+cross-unit coupling (the cross-family hook only sees `OneWoW_`-prefixed barewords,
+so a leaked namespace becomes an unpoliced back door). It is also fragile: the
+core lifecycle dispatcher historically resolved units through this leaked global,
+so *removing* a `= ns` line silently killed a store's `OnAddonLoaded` /
+`OnPlayerLogin` hooks.
+
+The dispatcher's need for a `_G[addonName]` handle is satisfied **once, centrally,
+inside `OneWoW:BootStore`** (pass `addonName` in the config). That is the *only*
+sanctioned namespace publish in the suite, and it is a documented stop-gap headed
+for a core unit registry (see `OneWoW/Docs/MIGRATION.md`). **Store/feature authors
+never hand-write a namespace publish** — expose an `OneWoW_<Unit>_API` instead.
 
 ```lua
 -- Good: curated, greppable, guard-friendly
@@ -175,5 +196,6 @@ end
 2. No lifecycle `RegisterEvent` in orchestrated units (`no-suite-lifecycle-events`)
 3. No raw `C_AddOns.LoadAddOn` / `UIParentLoadAddOn` outside core (`no-raw-loadaddon`)
 4. No suite-internal `OptionalDeps` in changed TOCs
-5. No new cross-family store reads (data-manager hook; Phase 1 warns)
+5. No cross-load-unit store reads off the allowlist (`no-data-manager-bypass`, enforced/hard-fail) — route through the owner's `_API`
+6. No namespace publishing (`OneWoW_<Unit> = ns` / `_G[addonName] = ns`); `BootStore` is the only sanctioned publish
 6. Stores use `BootStore` + `onEnteringWorld` for PEW collection work
