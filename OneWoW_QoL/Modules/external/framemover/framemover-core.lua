@@ -3,19 +3,30 @@ local _, ns = ...
 local FM = {}
 ns.FrameMoverCore = FM
 
-FM.active       = false
-FM.frameStates  = {}
-FM.combatQueue  = {}
-FM._settingPoint = false
+FM.active            = false
+FM.frameStates       = {}
+FM.pendingWork       = {}
+FM._settingPoint     = false
+FM._restrictionCached = nil
 
-local MIN_SCALE  = 0.5
-local MAX_SCALE  = 2.0
-local SCALE_STEP = 0.05
+local MIN_SCALE       = 0.5
+local MAX_SCALE       = 2.0
+local SCALE_STEP      = 0.05
+local PENDING_PER_TICK = 8
 
 local restoreQueue = {}
 local restoreFrame
+local pendingDrainFrame
 local captureFrame
 local modifierFrame
+
+local function IsProtectedMutationBlocked(frame)
+    local restricted = FM._restrictionCached
+    if restricted == nil then
+        restricted = OneWoW.Restriction.IsAddonRestricted()
+    end
+    return restricted and frame:IsProtected()
+end
 
 -- ============================================================
 -- Special per-frame handlers
@@ -170,8 +181,8 @@ function FM:RestorePosition(frameName)
     if not db.centerX or not db.centerY then return false end
 
     local frame = state.frame
-    if OneWoW.Restriction.IsAddonRestricted() and frame:IsProtected() then
-        self:QueueForCombatEnd(function() FM:RestorePosition(frameName) end)
+    if IsProtectedMutationBlocked(frame) then
+        self:EnqueuePending("restorePos:" .. frameName, function() FM:RestorePosition(frameName) end)
         return false
     end
 
@@ -199,8 +210,8 @@ function FM:RestoreScale(frameName)
     if not db.scale then return false end
 
     local frame = state.frame
-    if OneWoW.Restriction.IsAddonRestricted() and frame:IsProtected() then
-        self:QueueForCombatEnd(function() FM:RestoreScale(frameName) end)
+    if IsProtectedMutationBlocked(frame) then
+        self:EnqueuePending("restoreScale:" .. frameName, function() FM:RestoreScale(frameName) end)
         return false
     end
 
@@ -211,7 +222,7 @@ end
 function FM:AdjustScale(frameName, frame, delta)
     if not self.active then return end
     if not self:IsFrameEnabled(frameName) then return end
-    if OneWoW.Restriction.IsAddonRestricted() and frame:IsProtected() then return end
+    if IsProtectedMutationBlocked(frame) then return end
 
     local oldScale = frame:GetScale()
     local newScale = oldScale + (delta > 0 and SCALE_STEP or -SCALE_STEP)
@@ -256,7 +267,7 @@ function FM:ResetAllScales()
         fdb.scale = nil
         local state = self.frameStates[frameName]
         if state and state.frame then
-            if not (OneWoW.Restriction.IsAddonRestricted() and state.frame:IsProtected()) then
+            if not IsProtectedMutationBlocked(state.frame) then
                 state.frame:SetScale(1.0)
             end
         end
@@ -271,7 +282,7 @@ function FM:ResetFrame(frameName)
     local state = self.frameStates[frameName]
     if state then
         state.dragged = false
-        if state.frame and not (OneWoW.Restriction.IsAddonRestricted() and state.frame:IsProtected()) then
+        if state.frame and not IsProtectedMutationBlocked(state.frame) then
             state.frame:SetScale(1.0)
         end
     end
@@ -314,7 +325,7 @@ function FM:MakeMovable(frame, frameName)
         if (special and special.forceShift) or FM:RequireShift() then
             if not IsShiftKeyDown() then return end
         end
-        if OneWoW.Restriction.IsAddonRestricted() and f:IsProtected() then return end
+        if IsProtectedMutationBlocked(f) then return end
         if special and special.onDragStart then special.onDragStart() end
         f:StartMoving()
         state.dragging = true
@@ -375,6 +386,10 @@ end
 -- ============================================================
 
 function FM:QueueRestore(frameName)
+    local state = self.frameStates[frameName]
+    if state and state.frame and IsProtectedMutationBlocked(state.frame) then
+        return
+    end
     restoreQueue[frameName] = true
     if restoreFrame then restoreFrame:Show() end
 end
@@ -382,7 +397,10 @@ end
 local function ProcessRestoreQueue()
     restoreFrame:Hide()
     for frameName in pairs(restoreQueue) do
-        FM:RestorePosition(frameName)
+        local state = FM.frameStates[frameName]
+        if not (state and state.frame and IsProtectedMutationBlocked(state.frame)) then
+            FM:RestorePosition(frameName)
+        end
     end
     wipe(restoreQueue)
 end
@@ -456,18 +474,38 @@ local function CreateCaptureFrame()
 end
 
 -- ============================================================
--- Combat lockdown queue
+-- Deferred work queue (deduped, incremental drain)
 -- ============================================================
 
-function FM:QueueForCombatEnd(func)
-    table.insert(self.combatQueue, func)
+function FM:EnqueuePending(key, runner)
+    self.pendingWork[key] = runner
+    self:SchedulePendingDrain()
 end
 
-function FM:FlushCombatQueue()
-    for _, func in ipairs(self.combatQueue) do
-        func()
+function FM:SchedulePendingDrain()
+    if self._pendingDrainFrame then self._pendingDrainFrame:Show() end
+end
+
+local function DrainPendingWork()
+    FM._restrictionCached = OneWoW.Restriction.IsAddonRestricted()
+    local n = 0
+    for key, runner in pairs(FM.pendingWork) do
+        FM.pendingWork[key] = nil
+        runner()
+        n = n + 1
+        if n >= PENDING_PER_TICK then break end
     end
-    wipe(self.combatQueue)
+    FM._restrictionCached = nil
+    if not next(FM.pendingWork) then
+        pendingDrainFrame:Hide()
+    end
+end
+
+local function CreatePendingDrainFrame()
+    pendingDrainFrame = CreateFrame("Frame")
+    pendingDrainFrame:Hide()
+    pendingDrainFrame:SetScript("OnUpdate", DrainPendingWork)
+    FM._pendingDrainFrame = pendingDrainFrame
 end
 
 -- ============================================================
@@ -480,8 +518,8 @@ function FM:ProcessFrame(frameName)
     local frame = self:ResolveFrame(frameName)
     if not frame then return false end
 
-    if OneWoW.Restriction.IsAddonRestricted() and frame:IsProtected() then
-        self:QueueForCombatEnd(function() FM:ProcessFrame(frameName) end)
+    if IsProtectedMutationBlocked(frame) then
+        self:EnqueuePending("process:" .. frameName, function() FM:ProcessFrame(frameName) end)
         return false
     end
 
@@ -494,8 +532,7 @@ function FM:ProcessGlobalFrames()
     if not reg then return end
     for _, entry in ipairs(reg.GLOBAL) do
         if not self:ProcessFrame(entry.name) then
-            local name = entry.name
-            C_Timer.After(0, function() FM:ProcessFrame(name) end)
+            self:EnqueuePending("process:" .. entry.name, function() FM:ProcessFrame(entry.name) end)
         end
     end
 end
@@ -507,8 +544,7 @@ function FM:ProcessAddonFrames(loadedAddon)
     if not list then return end
     for _, entry in ipairs(list) do
         if not self:ProcessFrame(entry.name) then
-            local name = entry.name
-            C_Timer.After(0, function() FM:ProcessFrame(name) end)
+            self:EnqueuePending("process:" .. entry.name, function() FM:ProcessFrame(entry.name) end)
         end
     end
 end
@@ -522,15 +558,21 @@ function FM:Initialize()
     self.active = true
 
     CreateRestoreFrame()
+    CreatePendingDrainFrame()
     CreateCaptureFrame()
 
     if not self._eventFrame then
         self._eventFrame = CreateFrame("Frame", "OneWoW_QoL_FM_Events")
     end
     self._eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-    self._eventFrame:SetScript("OnEvent", function(_, event)
+    self._eventFrame:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED")
+    self._eventFrame:SetScript("OnEvent", function(_, event, ...)
         if event == "PLAYER_REGEN_ENABLED" then
-            FM:FlushCombatQueue()
+            FM:SchedulePendingDrain()
+        elseif event == "ADDON_RESTRICTION_STATE_CHANGED" then
+            if select(2, ...) == Enum.AddOnRestrictionState.Inactive then
+                FM:SchedulePendingDrain()
+            end
         end
     end)
 
@@ -556,5 +598,8 @@ end
 function FM:Shutdown()
     self.active = false
     if captureFrame then captureFrame:EnableMouseWheel(false) end
+    if self._pendingDrainFrame then self._pendingDrainFrame:Hide() end
+    wipe(self.pendingWork)
+    self._restrictionCached = nil
     if self._eventFrame then self._eventFrame:UnregisterAllEvents() end
 end
