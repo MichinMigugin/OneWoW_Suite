@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
@@ -27,14 +27,13 @@ function OneWoWAltTracker:GetSeasonData()
 end
 
 local function RegisterWithOneWoW()
-    if not OneWoW then return false end
-    if not OneWoW.RegisterModule then return false end
+    local moduleName = "alttracker"
 
     OneWoW:RegisterModule({
         name = "alttracker",
         displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
-        addonName = "OneWoW_AltTracker",
-        order = OneWoW:GetModuleTabOrder("alttracker"),
+        addonName = ADDON_NAME,
+        order = OneWoW:GetModuleTabOrder(moduleName),
         tabs = {
             { name = "summary",     displayName = function() return ns.L["SUMMARY"]     end, create = function(p) ns.UI.CreateSummaryTab(p) end },
             { name = "progress",    displayName = function() return ns.L["PROGRESS"]    end, create = function(p) ns.UI.CreateProgressTab(p) end },
@@ -49,9 +48,9 @@ local function RegisterWithOneWoW()
         },
     })
     OneWoW:RegisterSettingsPanel({
-        name        = "alttracker",
+        name        = moduleName,
         displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
-        order       = OneWoW:GetModuleTabOrder("alttracker"),
+        order       = OneWoW:GetModuleTabOrder(moduleName),
         create      = function(p) ns.UI.CreateSettingsTab(p) end,
     })
     ns.oneWoWHubActive = true
@@ -72,8 +71,8 @@ local function OnInitialize()
     DB:RegisterSlashCommand("owat", slashHandler)
     DB:RegisterSlashCommand("1wat", slashHandler)
 
-    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoWAltTracker, function(self2)
-        self2:ApplyTheme()
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoWAltTracker, function(self)
+        self:ApplyTheme()
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoWAltTracker, function()
         if ns.ApplyLanguage then ns.ApplyLanguage() end
@@ -99,7 +98,7 @@ local function OnInitialize()
         end
     end)
 
-    local _ver = OneWoW:GetAddonVersion(addonName)
+    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("AltTracker", _ver, "/1wat")
     end
@@ -116,25 +115,18 @@ function OneWoWAltTracker:ApplyLanguage()
 end
 
 local function OnEnable()
-    if ns.Core and ns.Core.Initialize then
-        ns.Core:Initialize()
-    end
-
+    ns.Core:Initialize()
     RegisterWithOneWoW()
-
-    if OneWoW then
-        OneWoW:RegisterMinimap("OneWoW_AltTracker", ns.L["CTX_OPEN_ALTTRACKER"], "alttracker", nil)
-    end
+    OneWoW:RegisterMinimap("OneWoW_AltTracker", ns.L["CTX_OPEN_ALTTRACKER"], "alttracker", nil)
 end
 
 function OneWoWAltTracker:SlashCommandHandler()
-    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
+    if ns.oneWoWHubActive then
         OneWoW.UI:Show("alttracker")
         return
     end
-    if ns.UI and ns.UI.Toggle then
-        ns.UI:Toggle()
-    end
+
+    ns.UI:Toggle()
 end
 
 -- Core-driven init: the suite loader calls _G["OneWoW_AltTracker"]:OnAddonLoaded()
