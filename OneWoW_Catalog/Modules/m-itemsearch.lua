@@ -272,9 +272,10 @@ function ItemSearch:Query(searchTerm, sourceFilter)
     end
 
     if doVendors and not limitReached then
-        local vdb = OneWoW_CatalogData_Vendors_DB
-        if vdb and vdb.vendors then
-            for _, vendor in pairs(vdb.vendors) do
+        local vendorsAPI = OneWoW_CatalogData_Vendors_API
+        local vendors = vendorsAPI and vendorsAPI.GetAllVendors()
+        if vendors then
+            for _, vendor in pairs(vendors) do
                 if vendor.items then
                     for itemID in pairs(vendor.items) do
                         local itemName = C_Item.GetItemNameByID(itemID)
@@ -436,26 +437,26 @@ function ItemSearch:GetDetail(itemID)
         end
     end
 
-    local vdb = OneWoW_CatalogData_Vendors_DB
-    if vdb and vdb.vendors then
-        for npcID, vendor in pairs(vdb.vendors) do
-            if vendor.items and vendor.items[itemID] then
-                local mapID, loc
-                if vendor.locations then
-                    for mID, l in pairs(vendor.locations) do
-                        mapID = mID
-                        loc = l
-                        break
-                    end
+    local vendorsAPI = OneWoW_CatalogData_Vendors_API
+    local sellingVendors = vendorsAPI and vendorsAPI.GetVendorsByItem(itemID)
+    if sellingVendors then
+        for _, vendor in ipairs(sellingVendors) do
+            local mapID, loc
+            if vendor.locations then
+                for mID, l in pairs(vendor.locations) do
+                    mapID = mID
+                    loc = l
+                    break
                 end
-                tinsert(detail.vendors, {
-                    name  = vendor.name,
-                    npcID = npcID,
-                    zone  = loc and loc.zone,
-                    mapID = mapID,
-                    cost  = vendor.items[itemID].cost,
-                })
             end
+            local itemEntry = vendor.items and vendor.items[itemID]
+            tinsert(detail.vendors, {
+                name  = vendor.name,
+                npcID = vendor.npcID,
+                zone  = loc and loc.zone,
+                mapID = mapID,
+                cost  = itemEntry and itemEntry.cost,
+            })
         end
     end
 

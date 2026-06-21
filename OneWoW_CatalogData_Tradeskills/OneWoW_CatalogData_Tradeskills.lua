@@ -1,7 +1,5 @@
 local _, ns = ...
 
-OneWoW_CatalogData_Tradeskills = ns
-
 OneWoW_CatalogData_Tradeskills_API = {
     GetSettings = function()
         return ns:GetSettings()

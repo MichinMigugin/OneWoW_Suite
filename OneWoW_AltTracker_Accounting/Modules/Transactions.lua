@@ -12,7 +12,9 @@ function Transactions:RecordTransaction(txData)
     end
 
     local charKey = ns:GetCharacterKey()
-    if not charKey then return false end
+    if not charKey then
+        return false
+    end
 
     txData.character = txData.character or charKey
     txData.timestamp = txData.timestamp or GetServerTime()

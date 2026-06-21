@@ -17,6 +17,18 @@ function OneWoW:BootStore(ns, config)
     local defaults = config.defaults
     local initDB = config.initDB
 
+    -- STOP-GAP (suite-wide cleanup pending; see OneWoW/Docs/MIGRATION.md):
+    -- the core lifecycle dispatcher (Lifecycle.RunUnitHook) resolves a load unit
+    -- by reading _G[addonName] and calling the OnAddonLoaded / OnPlayerLogin /
+    -- OnPlayerEnteringWorld hooks attached to ns below. Publishing the whole
+    -- namespace as a global is exactly the practice the suite is retiring, but
+    -- centralizing it here (instead of a hand-written "_G[addon] = ns" in every
+    -- store's main file) means all stores wire identically and the eventual
+    -- removal is a single edit. Stores must NOT hand-publish "= ns" anymore.
+    if config.addonName then
+        _G[config.addonName] = ns
+    end
+
     ns.AddonInitialized = false
 
     if OneWoW.Lifecycle then

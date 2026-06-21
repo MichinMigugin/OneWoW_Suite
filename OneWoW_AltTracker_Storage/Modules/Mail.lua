@@ -124,7 +124,7 @@ end
 
 function private.RecordMail(index)
     local Accounting = OneWoW_AltTracker_Accounting_API
-    if not Accounting or not OneWoW_AltTracker_Accounting_DB then
+    if not Accounting or not Accounting.IsReady() then
         return false
     end
 

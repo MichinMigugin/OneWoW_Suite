@@ -1,7 +1,5 @@
 local _, ns = ...
 
-OneWoW_CatalogData_Journal = ns
-
 OneWoW_CatalogData_Journal_API = {
     GetSettings = function()
         return ns:GetSettings()

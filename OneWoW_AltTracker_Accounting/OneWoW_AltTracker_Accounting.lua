@@ -78,6 +78,14 @@ function OneWoW_AltTracker_Accounting_API.SetTransactionListener(listener)
     ns.onNewTransaction = listener
 end
 
+--- Whether the ledger store has finished initializing and is safe to record to.
+--- Lets other units gate recording without reaching into the SV global.
+---@return boolean ready
+function OneWoW_AltTracker_Accounting_API.IsReady()
+    return OneWoW_AltTracker_Accounting_DB ~= nil
+        and OneWoW_AltTracker_Accounting_DB.transactions ~= nil
+end
+
 --- The full transaction ledger (newest-first list). Empty table if the store has
 --- not initialized yet, so callers can iterate without a nil guard.
 ---@return table transactions

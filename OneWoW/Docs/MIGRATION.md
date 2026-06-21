@@ -127,7 +127,10 @@ are required (the hub needs its stores), so `_API` getters are the right tool.
 | **later — migrating** | warn allowlisted; **fail** off-list | shrinks per migration PR | `1` off-list |
 | **rule** | hard-fail off-list | sanctioned exceptions only | `1` |
 
-- [ ] Migrate the warn worklist onto owner `_API` getters/mutators (plan phases 1–4).
+- [x] Migrate the warn worklist onto owner `_API` getters/mutators (plan phases 1–4).
+  The hook now reports only `[allowed]` entries; the final Phase 4 moves were
+  `m-itemsearch` → Vendors `_API` (`GetAllVendors` / `GetVendorsByItem`) and
+  Storage `Mail.lua` → Accounting `_API.IsReady()`.
 - [ ] When the warn list is empty except allowlisted entries, set
   `WARN_ONLY = False` (plan phase 5).
 
@@ -139,6 +142,27 @@ are required (the hub needs its stores), so `_API` getters are the right tool.
   `Services/ItemPrices.lua` (`OneWoW_AHPrices`) → Auctions `_API` (below), and
   `Services/RecipeKnownUtil.lua` (`OneWoW_AltTracker_Professions_DB`) → a
   Professions `_API` getter.
+- **Lifecycle dispatch still relies on `_G[addonName] = ns` (stop-gap).** The core
+  dispatcher (`Lifecycle.RunUnitHook`) resolves a load unit by reading
+  `_G[addonName]` and calling the `OnAddonLoaded` / `OnPlayerLogin` /
+  `OnPlayerEnteringWorld` hooks that `BootStore` attaches to `ns`. This collides
+  with the encapsulation goal of keeping `ns` private (commit `d4e67b6` removed the
+  AltTracker stores' `OneWoW_<Unit> = ns` publishes for that reason — and silently
+  killed all 7 stores' lifecycle hooks, so e.g. Accounting stopped recording).
+  **Interim fix:** `BootStore` now publishes `_G[config.addonName] = ns` itself
+  (one place), so stores no longer hand-write `= ns`; the 4 `OneWoW_CatalogData_*`
+  main files dropped their manual publish too. `OneWoW_ShoppingList` still bare-reads
+  `OneWoW_CatalogData_Tradeskills`, which this central publish keeps working.
+  **Longer-term:** replace the `_G[addonName]` lookup with a core-private unit
+  registry (`BootStore`/manifest roots register `addonName → ns`; the dispatcher
+  resolves that), then delete the `_G[config.addonName] = ns` line in `BootStore`
+  and the remaining manifest-root `= ns` publishes, and migrate ShoppingList's bare
+  read to a `_API` getter. Single-edit removal is the reason the publish was
+  centralized into `BootStore`.
+- **Command-line dev tools are exempt.** `OneWoW_CatalogData_Quests/Tools/`
+  (standalone Lua scripts that mock the WoW runtime) is excluded from the
+  `no-data-manager-bypass` hook via `.pre-commit-config.yaml` rather than
+  allowlisted per-symbol — they legitimately poke raw SVs and never run in-game.
 - **`OneWoW_AHPrices` is accessed by itemID, not as a table.** All four consumers
   read a single `OneWoW_AHPrices[itemID]` entry (`.price` / `.timestamp`):
   `Services/ItemPrices.lua`, `OneWoW_Catalog/UI/t-itemsearch.lua`,

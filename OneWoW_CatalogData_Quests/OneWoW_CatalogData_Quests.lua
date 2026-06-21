@@ -1,7 +1,5 @@
 local _, ns = ...
 
-OneWoW_CatalogData_Quests = ns
-
 OneWoW_CatalogData_Quests_API = {
     GetSettings = function()
         return ns:GetSettings()

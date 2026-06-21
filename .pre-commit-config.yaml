@@ -64,7 +64,9 @@ repos:
         entry: python bin/check_no_data_manager_bypass.py
         language: python
         types: [lua]
-        # Same reference / vendored / generated trees as no-g-literal-access.
+        # Same reference / vendored / generated trees as no-g-literal-access,
+        # plus command-line dev tools (run via standalone Lua, mock runtime) that
+        # legitimately poke raw SavedVariables.
         exclude: |
           (?x)^(
             Libs/
@@ -73,6 +75,7 @@ repos:
             | \.vscode/
             | \.releases/
             | OneWoW_Bags/API/Examples/
+            | OneWoW_CatalogData_Quests/Tools/
           )
 
       - id: no-suite-lifecycle-events
