@@ -76,21 +76,19 @@ local function CollectAllCharacterKeys()
         end
     end
 
-    if OneWoW_AltTracker and OneWoW_AltTracker.db and OneWoW_AltTracker.db.global then
-        local favorites = OneWoW_AltTracker.db.global.favorites
-        if favorites then
-            for charKey, _ in pairs(favorites) do
-                if type(charKey) == "string" then
-                    if not charMap[charKey] then
-                        charMap[charKey] = {
-                            key = charKey,
-                            name = charKey:match("^(.+)-"),
-                            realm = charKey:match("-(.+)$"),
-                            sources = {},
-                        }
-                    end
-                    charMap[charKey].sources["Favorites"] = true
+    local favorites = ns.db.global.favorites
+    if favorites then
+        for charKey, _ in pairs(favorites) do
+            if type(charKey) == "string" then
+                if not charMap[charKey] then
+                    charMap[charKey] = {
+                        key = charKey,
+                        name = charKey:match("^(.+)-"),
+                        realm = charKey:match("-(.+)$"),
+                        sources = {},
+                    }
                 end
+                charMap[charKey].sources["Favorites"] = true
             end
         end
     end
@@ -169,12 +167,10 @@ local function PurgeCharacter(charKey)
         end
     end
 
-    if OneWoW_AltTracker and OneWoW_AltTracker.db and OneWoW_AltTracker.db.global then
-        local favorites = OneWoW_AltTracker.db.global.favorites
-        if favorites and favorites[charKey] then
-            favorites[charKey] = nil
-            table.insert(purgedFrom, "Favorites")
-        end
+    local favorites = ns.db.global.favorites
+    if favorites and favorites[charKey] then
+        favorites[charKey] = nil
+        table.insert(purgedFrom, "Favorites")
     end
 
     if OneWoW_CatalogData_Quests_API and OneWoW_CatalogData_Quests_API.PurgeCharacter(charKey) then
@@ -861,12 +857,10 @@ function ns.UI.CreateSettingsTab(parent)
         resetBtn:SetScript("OnClick", function()
             -- Drop user customizations so the lists fall back to the static
             -- baseline; the rebuilds below re-materialize editable copies of it.
-            local progress = OneWoWAltTracker.db.global.overrides and OneWoWAltTracker.db.global.overrides.progress
-            if progress then
-                progress.trackedCurrencyIDs = nil
-                progress.worldBossQuestIDs = nil
-                progress.weeklyActivityQuests = nil
-            end
+            local progress = ns.db.global.overrides.progress
+            progress.trackedCurrencyIDs = nil
+            progress.worldBossQuestIDs = nil
+            progress.weeklyActivityQuests = nil
             RebuildCurrencyList()
             RebuildBossList()
         end)
@@ -1015,7 +1009,7 @@ function ns.UI.CreateSettingsTab(parent)
                 row:SetPoint("TOPLEFT", 8, cdy)
                 row:SetPoint("TOPRIGHT", -8, cdy)
 
-                local isChecked = OneWoWAltTracker.db.global.seasonChecklist[item.key] == true
+                local isChecked = ns.db.global.seasonChecklist[item.key] == true
                 local isAuto = item.auto == true
 
                 if isChecked then
@@ -1088,8 +1082,8 @@ function ns.UI.CreateSettingsTab(parent)
                 if not isAuto then
                     checkBtn:EnableMouse(true)
                     checkBtn:SetScript("OnClick", function()
-                        local nowChecked = not (OneWoWAltTracker.db.global.seasonChecklist[item.key] == true)
-                        OneWoWAltTracker.db.global.seasonChecklist[item.key] = nowChecked
+                        local nowChecked = not (ns.db.global.seasonChecklist[item.key] == true)
+                        ns.db.global.seasonChecklist[item.key] = nowChecked
                         if nowChecked then
                             checkBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
                             checkBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
@@ -1107,7 +1101,7 @@ function ns.UI.CreateSettingsTab(parent)
                     end)
                     checkBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER")) end)
                     checkBtn:SetScript("OnLeave", function(self)
-                        local c = OneWoWAltTracker.db.global.seasonChecklist[item.key]
+                        local c = ns.db.global.seasonChecklist[item.key]
                         if c then
                             self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
                         else
@@ -1127,7 +1121,7 @@ function ns.UI.CreateSettingsTab(parent)
         clearBtn:ClearAllPoints()
         clearBtn:SetPoint("BOTTOMLEFT", checklistDialog, "BOTTOMLEFT", 10, 10)
         clearBtn:SetScript("OnClick", function()
-            OneWoWAltTracker.db.global.seasonChecklist = {}
+            ns.db.global.seasonChecklist = {}
             for _, entry in ipairs(checkedBoxes) do
                 if not entry.isAuto then
                     entry.btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))

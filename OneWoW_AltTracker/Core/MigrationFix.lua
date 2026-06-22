@@ -1,6 +1,7 @@
 local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
+local DB = OneWoW_GUI.DB
 
 ns.MigrationFix = {}
 local MigrationFix = ns.MigrationFix
@@ -8,14 +9,8 @@ local MigrationFix = ns.MigrationFix
 -- Consolidates cross-reference tables that key by charKey but don't live in any
 -- submodule DB (so they aren't reached by the per-submodule consolidator pass).
 function MigrationFix:ConsolidateCrossReferenceCharKeys()
-    local addon = OneWoW_AltTracker
-    if not addon or not addon.db or not addon.db.global then return 0 end
-    if not OneWoW_GUI or not OneWoW_GUI.DB then return 0 end
-
-    local DB = OneWoW_GUI.DB
     local total = 0
-
-    total = total + DB:ConsolidateCharacterKeys(addon.db.global.favorites)
+    total = total + DB:ConsolidateCharacterKeys(ns.db.global.favorites)
 
     if OneWoW_CatalogData_Quests_DB then
         total = total + DB:ConsolidateCharacterKeys(OneWoW_CatalogData_Quests_DB.completion)

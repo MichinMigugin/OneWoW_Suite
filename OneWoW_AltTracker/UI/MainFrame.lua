@@ -1,9 +1,8 @@
-local addonName, ns = ...
-local OneWoWAltTracker = OneWoW_AltTracker
-local L = ns.L
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
+local L = ns.L
 ns.UI = ns.UI or {}
 
 local MainWindow = nil
@@ -11,7 +10,7 @@ local isInitialized = false
 
 function ns.UI:Show(tabName)
     if not MainWindow then
-        local savedTab = OneWoWAltTracker.db.global.lastTab
+        local savedTab = ns.db.global.lastTab
         local tabToSelect = tabName or savedTab or "summary"
         self:CreateMainFrame(tabToSelect)
         if MainWindow then MainWindow:Show() end
@@ -46,11 +45,6 @@ function ns.UI:Reset()
 end
 
 function ns.UI:CreateMainFrame(defaultTab)
-    if not OneWoWAltTracker or not OneWoWAltTracker.db or not OneWoWAltTracker.db.global then
-        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["ADDON_MSG_DB_NOT_READY"])
-        return nil
-    end
-
     if not L then
         print("|cFFFFD100OneWoW - AltTracker:|r Localization not ready.")
         return nil
@@ -58,13 +52,13 @@ function ns.UI:CreateMainFrame(defaultTab)
 
     local frame = CreateFrame("Frame", "OneWoWAltTrackerMainFrame", UIParent, "BackdropTemplate")
 
-    local savedSize = OneWoWAltTracker.db.global.mainFrameSize
+    local savedSize = ns.db.global.mainFrameSize
     local width = (savedSize and savedSize.width) or ns.Constants.GUI.WINDOW_WIDTH
     local height = (savedSize and savedSize.height) or ns.Constants.GUI.WINDOW_HEIGHT
 
     frame:SetSize(width, height)
 
-    local savedPos = OneWoWAltTracker.db.global.mainFramePosition
+    local savedPos = ns.db.global.mainFramePosition
     if savedPos and savedPos.point then
         frame:SetPoint(savedPos.point, UIParent, savedPos.relativePoint or "CENTER", savedPos.xOfs or 0, savedPos.yOfs or 0)
     else
@@ -89,7 +83,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     frame:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
         local point, relativeTo, relativePoint, xOfs, yOfs = self:GetPoint()
-        OneWoWAltTracker.db.global.mainFramePosition = {
+        ns.db.global.mainFramePosition = {
             point = point,
             relativePoint = relativePoint,
             xOfs = xOfs,
@@ -110,7 +104,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     resizeButton:SetScript("OnDragStop", function(self)
         frame:StopMovingOrSizing()
         local width, height = frame:GetSize()
-        OneWoWAltTracker.db.global.mainFrameSize = {width = width, height = height}
+        ns.db.global.mainFrameSize = {width = width, height = height}
     end)
 
     local titleBg = OneWoW_GUI:CreateTitleBar(frame, {
@@ -127,7 +121,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     titleBg:SetScript("OnDragStop", function()
         frame:StopMovingOrSizing()
         local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint()
-        OneWoWAltTracker.db.global.mainFramePosition = {
+        ns.db.global.mainFramePosition = {
             point = point,
             relativePoint = relativePoint,
             xOfs = xOfs,
@@ -154,9 +148,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     local function SelectTab(tabName)
         currentTabName = tabName
 
-        if OneWoWAltTracker and OneWoWAltTracker.db and OneWoWAltTracker.db.global then
-            OneWoWAltTracker.db.global.lastTab = tabName
-        end
+        ns.db.global.lastTab = tabName
 
         for name, tabFrame in pairs(tabs) do
             if name == tabName then

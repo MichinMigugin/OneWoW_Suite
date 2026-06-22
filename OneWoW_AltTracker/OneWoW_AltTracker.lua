@@ -59,7 +59,7 @@ end
 
 local function OnInitialize()
     ns:InitializeDatabase()
-    OneWoW_GUI:MigrateSettings(OneWoWAltTracker.db.global)
+    OneWoW_GUI:MigrateSettings(ns.db.global)
     OneWoWAltTracker:ApplyTheme()
 
     if ns.ApplyLanguage then
