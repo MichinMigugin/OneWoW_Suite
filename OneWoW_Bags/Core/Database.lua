@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW_Bags = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -119,7 +119,7 @@ local defaults = {
     },
 }
 
-function OneWoW_Bags:InitializeDatabase()
+function ns:InitializeDatabase()
     local sv = OneWoW_Bags_DB
     if sv and not sv.global and next(sv) ~= nil then
         local oldData = {}
@@ -135,5 +135,11 @@ function OneWoW_Bags:InitializeDatabase()
         savedVar = "OneWoW_Bags_DB",
         defaults = defaults,
     })
-    self.db = db
+    ns.db = db
+end
+
+--- Return the addon database handle after initialization.
+---@return table db
+function ns:GetDB()
+    return ns.db
 end

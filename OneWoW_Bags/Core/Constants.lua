@@ -1,8 +1,8 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-OneWoW_Bags.Constants = {
+ns.Constants = {
     GUI = OneWoW_GUI:RegisterGUIConstants({
         WINDOW_WIDTH = 620,
         WINDOW_HEIGHT = 520,

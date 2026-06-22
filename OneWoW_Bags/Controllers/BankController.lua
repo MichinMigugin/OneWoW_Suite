@@ -1,7 +1,7 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-local BagTypes = OneWoW_Bags.BagTypes
-local BankTypes = OneWoW_Bags.BankTypes
+local BagTypes = ns.BagTypes
+local BankTypes = ns.BankTypes
 
 local C_Bank = C_Bank
 local C_Container = C_Container
@@ -12,8 +12,8 @@ local tinsert, ipairs = tinsert, ipairs
 
 local DEPOSIT_INTERVAL_SEC = 0.12
 
-OneWoW_Bags.BankController = {}
-local BankController = OneWoW_Bags.BankController
+ns.BankController = {}
+local BankController = ns.BankController
 
 local PERSONAL_KEYS = {
     viewMode         = "bankViewMode",
@@ -202,7 +202,7 @@ end
 function BankController:NormalizeSearchText(searchText)
     searchText = strtrim(searchText or "")
     if searchText == "" then return nil end
-    local L = OneWoW_Bags.L
+    local L = ns.L
     if L and searchText == L["SEARCH_ITEMS"] then return nil end
     return searchText
 end
@@ -282,7 +282,7 @@ function BankController:CollectMatchingBagSlots(searchText)
 
     local bankType = self:GetActiveBankType()
     local buttons = self.addon.BagSet:GetAllButtons()
-    local WH = OneWoW_Bags.WindowHelpers
+    local WH = ns.WindowHelpers
     local bagsController = self.addon.BagsController
     -- Bag view only: selectedBag scopes layout (BagView). List/category show all bags.
     if bagsController and bagsController:GetViewMode() == "bag" then
@@ -306,7 +306,7 @@ function BankController:CollectMatchingBankSlots(searchText)
 
     local isWarband = self:IsWarbandMode()
     local buttons = self.addon.BankSet:GetAllButtons()
-    local WH = OneWoW_Bags.WindowHelpers
+    local WH = ns.WindowHelpers
     buttons = WH:FilterByTab(buttons, self:Get("selectedTab"), WH:GetScratchTable("transferBankScope"))
     local matched = WH:FilterBySearch(buttons, normalized, WH:GetScratchTable("transferBankSearch"))
 

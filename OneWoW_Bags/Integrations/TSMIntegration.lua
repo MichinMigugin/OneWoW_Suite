@@ -1,11 +1,11 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local DB = OneWoW_GUI.DB
 
-OneWoW_Bags.TSMIntegration = {}
-local TSM = OneWoW_Bags.TSMIntegration
+ns.TSMIntegration = {}
+local TSM = ns.TSMIntegration
 
 local pairs, ipairs, tonumber, tostring = pairs, ipairs, tonumber, tostring
 local tinsert = table.insert
@@ -102,11 +102,11 @@ end
 function TSM:Import()
     if not self:IsAvailable() then return 0 end
 
-    local Planner = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Planner
-    local Applier = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Applier
+    local Planner = ns.ImportExport and ns.ImportExport.Planner
+    local Applier = ns.ImportExport and ns.ImportExport.Applier
     if not Planner or not Applier then return 0 end
 
-    local db = OneWoW_Bags:GetDB()
+    local db = ns:GetDB()
     DB:Ensure(db, "global", "customCategoriesV2")
 
     local plan = Planner:FromTsmDirect(db, { tsmPrefix = true })
@@ -120,7 +120,7 @@ function TSM:Import()
         end
     end
 
-    local controller = OneWoW_Bags.CategoryController
+    local controller = ns.CategoryController
     local result = Applier:Apply(plan, controller, db)
     return result and result.categoriesNew + result.categoriesRenamed or 0
 end

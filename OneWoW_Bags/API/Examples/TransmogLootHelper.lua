@@ -9,7 +9,7 @@ Integrations\OneWoWBags.lua
 ]]
 local _, app = ...
 
-if OneWoW_Bags then
+if OneWoW_Bags_API then
     local function UpdateItemButton(button, bagID, slotID)
         if not button then return end
 
@@ -32,5 +32,5 @@ if OneWoW_Bags then
         end
     end
 
-    OneWoW_Bags:RegisterItemButtonCallback("TransmogLootHelper", UpdateItemButton)
+    OneWoW_Bags_API.RegisterItemButtonCallback("TransmogLootHelper", UpdateItemButton)
 end

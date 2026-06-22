@@ -1,15 +1,15 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local BankTypes = OneWoW_Bags.BankTypes
-local ItemPool = OneWoW_Bags.ItemPool
+local BankTypes = ns.BankTypes
+local ItemPool = ns.ItemPool
 
 local ipairs, pairs, tinsert, wipe = ipairs, pairs, tinsert, wipe
 local C_Bank, C_Container = C_Bank, C_Container
 
-OneWoW_Bags.BankSet = {}
-local BankSet = OneWoW_Bags.BankSet
+ns.BankSet = {}
+local BankSet = ns.BankSet
 
 BankSet.slots = {}
 BankSet.totalSlots = 0
@@ -55,7 +55,7 @@ local function GetOrCreateBankFrame(bagID)
 end
 
 function BankSet:IsWarband()
-    local db = OneWoW_Bags:GetDB()
+    local db = ns:GetDB()
     return db.global.bankShowWarband
 end
 
@@ -97,7 +97,7 @@ end
 -- Materialize item buttons for a single bag tab. Idempotent at the slot
 -- level: existing buttons in the tab are kept, missing slots are filled.
 function BankSet:BuildTab(bagID, masqueKind, numSlots)
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     local bagFrame = GetOrCreateBankFrame(bagID)
     self.bagContainerFrames[bagID] = bagFrame
     if not self.slots[bagID] then
@@ -112,7 +112,7 @@ function BankSet:BuildTab(bagID, masqueKind, numSlots)
             if Profile then Profile:Stop("BankSet:CreateButton.Acquire") end
 
             if Profile then Profile:Start("BankSet:CreateButton.ApplyMixin") end
-            OneWoW_Bags:ApplyItemButtonMixin(button)
+            ns:ApplyItemButtonMixin(button)
             if Profile then Profile:Stop("BankSet:CreateButton.ApplyMixin") end
 
             if Profile then Profile:Start("BankSet:CreateButton.SetSlot") end
@@ -123,9 +123,9 @@ function BankSet:BuildTab(bagID, masqueKind, numSlots)
             self:ApplyBankScripts(button)
             if Profile then Profile:Stop("BankSet:CreateButton.ApplyScripts") end
 
-            if OneWoW_Bags.Masque then
+            if ns.Masque then
                 if Profile then Profile:Start("BankSet:CreateButton.Masque") end
-                OneWoW_Bags.Masque:SkinItemButton(button, masqueKind)
+                ns.Masque:SkinItemButton(button, masqueKind)
                 if Profile then Profile:Stop("BankSet:CreateButton.Masque") end
             end
             self.slots[bagID][slotID] = button
@@ -162,7 +162,7 @@ end
 
 function BankSet:Build()
     self._building = true
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     Profile:Start("BankSet:Build")
 
     local showWarband = self:IsWarband()
@@ -214,7 +214,7 @@ function BankSet:Build()
 
     Profile:Stop("BankSet:Build")
     self._building = false
-    OneWoW_Bags:RequestLayoutRefresh("bank", "build_done")
+    ns:RequestLayoutRefresh("bank", "build_done")
 end
 
 function BankSet:ReleaseAll()
@@ -243,7 +243,7 @@ end
 
 function BankSet:UpdateDirtyBags(dirtyBags)
     if not self.isBuilt then return end
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     for bagID in pairs(dirtyBags) do
         if self.slots[bagID] then
             if Profile then
@@ -291,11 +291,11 @@ function BankSet:RebuildBag(bagID, numSlots)
     for slotID = 1, numSlots do
         local button = ItemPool:Acquire()
         button:SetParent(bagFrame)
-        OneWoW_Bags:ApplyItemButtonMixin(button)
+        ns:ApplyItemButtonMixin(button)
         button:OWB_SetSlot(bagID, slotID)
         self:ApplyBankScripts(button)
-        if OneWoW_Bags.Masque then
-            OneWoW_Bags.Masque:SkinItemButton(button, masqueKind)
+        if ns.Masque then
+            ns.Masque:SkinItemButton(button, masqueKind)
         end
         button:OWB_MarkDirty()
         self.slots[bagID][slotID] = button
@@ -313,7 +313,7 @@ end
 -- call site is driving the bulk of per-button updates without changing
 -- behavior.
 function BankSet:ProcessDirtySlots(cause)
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     local causeKey = cause and ("OWB_FullUpdate.cause." .. cause) or nil
     for _, bagSlots in pairs(self.slots) do
         for _, button in pairs(bagSlots) do
@@ -373,7 +373,7 @@ function BankSet:UpdateQualityColors()
     for _, bagSlots in pairs(self.slots) do
         for _, button in pairs(bagSlots) do
             local quality = button.owb_itemInfo and button.owb_itemInfo.quality
-            if OneWoW_Bags:ShouldShowItemQuality(true, quality) then
+            if ns:ShouldShowItemQuality(true, quality) then
                 OneWoW_GUI:UpdateIconQuality(button, button.owb_itemInfo.quality)
             else
                 OneWoW_GUI:UpdateIconQuality(button, nil)

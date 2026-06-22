@@ -1,15 +1,15 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-OneWoW_Bags.ImportPreview = OneWoW_Bags.ImportPreview or {}
-local ImportPreview = OneWoW_Bags.ImportPreview
+ns.ImportPreview = ns.ImportPreview or {}
+local ImportPreview = ns.ImportPreview
 
 local pairs, ipairs, tostring = pairs, ipairs, tostring
 local tinsert, sort = tinsert, sort
 local format = format
 
-local L = OneWoW_Bags.L
+local L = ns.L
 
 -- ------------------------------------------------------------------
 -- Summary helpers
@@ -407,8 +407,8 @@ end
 
 function ImportPreview:Show(plan, controller, db)
     if not plan then return end
-    if not controller then controller = OneWoW_Bags.CategoryController end
-    if not db then db = OneWoW_Bags:GetDB() end
+    if not controller then controller = ns.CategoryController end
+    if not db then db = ns:GetDB() end
 
     local state = {
         plan = plan,
@@ -439,7 +439,7 @@ function ImportPreview:Show(plan, controller, db)
                               cat.searchExpression = nil
                           end
                       end
-                      local Applier = OneWoW_Bags.ImportExport.Applier
+                      local Applier = ns.ImportExport.Applier
                       local result = Applier:Apply(s.plan, s.controller, s.db)
                       f:Hide()
                       if result then

@@ -1,16 +1,16 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-local Constants = OneWoW_Bags.Constants
-local CategoryManager = OneWoW_Bags.CategoryManager
-local H = OneWoW_Bags.CategoryViewHelpers
+local Constants = ns.Constants
+local CategoryManager = ns.CategoryManager
+local H = ns.CategoryViewHelpers
 local PE = OneWoW.PredicateEngine
 
 local floor, max = math.floor, math.max
-OneWoW_Bags.CategoryView = {}
-local View = OneWoW_Bags.CategoryView
+ns.CategoryView = {}
+local View = ns.CategoryView
 
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 local AcquireLabel, ReleaseAllLabels = H.CreateLabelPool()

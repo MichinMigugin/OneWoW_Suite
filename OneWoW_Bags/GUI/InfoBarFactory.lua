@@ -1,10 +1,10 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local Constants = OneWoW_Bags.Constants
-local L = OneWoW_Bags.L
-local WH = OneWoW_Bags.WindowHelpers
+local Constants = ns.Constants
+local L = ns.L
+local WH = ns.WindowHelpers
 
 local C_Timer = C_Timer
 
@@ -20,10 +20,10 @@ local IsMouseButtonDown = IsMouseButtonDown
 local StaticPopupDialogs = StaticPopupDialogs
 local StaticPopup_Show = StaticPopup_Show
 
-OneWoW_Bags.InfoBarFactory = {}
+ns.InfoBarFactory = {}
 
 local function SaveSearch(name, query)
-    local SS = OneWoW_Bags.SavedSearches
+    local SS = ns.SavedSearches
     if not SS then return end
 
     local ok, err = SS:Set(name, query)
@@ -51,7 +51,7 @@ local function RegisterSavedSearchPopups()
         whileDead = true,
         hideOnEscape = true,
         OnAccept = function(dialog)
-            local SS = OneWoW_Bags.SavedSearches
+            local SS = ns.SavedSearches
             local query = dialog.data and dialog.data.query
             if not SS or not query then return end
 
@@ -104,7 +104,7 @@ end
 
 RegisterSavedSearchPopups()
 
-function OneWoW_Bags.InfoBarFactory:Create(config)
+function ns.InfoBarFactory:Create(config)
     local bar = {}
     local infoBarFrame = nil
     local searchHistoryMenu = nil
@@ -129,17 +129,17 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
             return config.controller
         end
         if config.controllerKey then
-            return OneWoW_Bags[config.controllerKey]
+            return ns[config.controllerKey]
         end
         return nil
     end
 
     local function GetGUI()
-        return OneWoW_Bags[config.guiTargetKey]
+        return ns[config.guiTargetKey]
     end
 
     local function GetSearchHistoryLimit()
-        local db = OneWoW_Bags:GetDB()
+        local db = ns:GetDB()
         if not db then return 0 end
 
         return min(max(floor(db.global.searchHistoryLimit or 0), 0), 10)
@@ -178,7 +178,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
         text = NormalizeSearchText(searchBox, text)
         if not text then return nil end
 
-        local db = OneWoW_Bags:GetDB()
+        local db = ns:GetDB()
         local currentHistory = db.global.searchHistory
         local history = { text }
         for _, entry in ipairs(currentHistory) do
@@ -221,7 +221,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
     local function UpdateSearchTransferButton(searchBox)
         if not infoBarFrame or not infoBarFrame.searchTransferBtn or not config.searchTransfer then return end
 
-        local bankController = OneWoW_Bags.BankController
+        local bankController = ns.BankController
         local canTransfer = bankController
             and bankController.CanTransferSearch
             and bankController:CanTransferSearch(GetRealSearchText(searchBox), config.searchTransfer.direction)
@@ -321,7 +321,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
             return
         end
 
-        local db = OneWoW_Bags:GetDB()
+        local db = ns:GetDB()
         local history = db.global.searchHistory
         if #history == 0 then
             HideSearchHistoryMenu()
@@ -394,7 +394,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
     end
 
     local function GetFactoryChromeInsets()
-        local db = OneWoW_Bags:GetDB()
+        local db = ns:GetDB()
         local hideScroll = false
         if config.hideScrollBarFn then
             hideScroll = config.hideScrollBarFn(db) and true or false
@@ -492,7 +492,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
                 local controller = GetController()
                 local raw = controller and controller.GetViewMode and controller:GetViewMode()
                 if raw == nil then
-                    local d = OneWoW_Bags:GetDB()
+                    local d = ns:GetDB()
                     raw = d and d.global and d.global[config.viewModeDBKey]
                 end
                 return effectiveViewMode(raw)
@@ -531,7 +531,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
                 end,
                 getActiveValue = function()
                     local controller = GetController()
-                    local v = controller and controller.GetExpansionFilter and controller:GetExpansionFilter() or OneWoW_Bags[ef.filterKey]
+                    local v = controller and controller.GetExpansionFilter and controller:GetExpansionFilter() or ns[ef.filterKey]
                     return (v == nil) and "ALL" or v
                 end,
                 onSelect = function(value, text)
@@ -648,11 +648,11 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
             searchTransferBtn:SetScript("OnClick", function(myself)
                 if not myself.canTransfer then return end
                 local query = GetRealSearchText(searchBox)
-                if not query or not OneWoW_Bags.BankController then return end
+                if not query or not ns.BankController then return end
                 if searchTransfer.direction == "toBank" then
-                    OneWoW_Bags.BankController:TransferSearchToBank(query)
+                    ns.BankController:TransferSearchToBank(query)
                 elseif searchTransfer.direction == "fromBank" then
-                    OneWoW_Bags.BankController:TransferSearchFromBank(query)
+                    ns.BankController:TransferSearchFromBank(query)
                 end
             end)
             searchTransferBtn:HookScript("OnEnter", function(myself)
@@ -661,7 +661,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
                     GameTooltip:SetText(L[searchTransfer.tooltipKey], 1, 1, 1)
                 elseif searchTransfer.disabledTooltipKey
                     and searchTransfer.direction == "toBank"
-                    and not OneWoW_Bags.bankOpen then
+                    and not ns.bankOpen then
                     GameTooltip:SetText(L[searchTransfer.disabledTooltipKey], 1, 1, 1)
                 elseif searchTransfer.emptyTooltipKey then
                     GameTooltip:SetText(L[searchTransfer.emptyTooltipKey], 1, 1, 1)
@@ -711,7 +711,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
 
     function bar:UpdateViewButtons()
         if not infoBarFrame then return end
-        local db = OneWoW_Bags:GetDB()
+        local db = ns:GetDB()
         local controller = GetController()
         local rawMode = controller and controller.GetViewMode and controller:GetViewMode() or db.global[config.viewModeDBKey] or config.viewModes[1].mode
         local showHeader = GetShowHeader(db)
@@ -760,7 +760,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
             local showExpac = showHeader and GetExpacEnabled(db)
             infoBarFrame.expacDropdown:SetShown(showExpac == true)
             if showExpac and infoBarFrame.expacText then
-                local activeFilter = controller and controller.GetExpansionFilter and controller:GetExpansionFilter() or OneWoW_Bags[ef.filterKey]
+                local activeFilter = controller and controller.GetExpansionFilter and controller:GetExpansionFilter() or ns[ef.filterKey]
                 if activeFilter == nil then
                     infoBarFrame.expacText:SetText(L["EXPAC_FILTER_BTN"])
                 else
@@ -786,7 +786,7 @@ function OneWoW_Bags.InfoBarFactory:Create(config)
     function bar:UpdateVisibility()
         if not infoBarFrame then return end
 
-        local db = OneWoW_Bags:GetDB()
+        local db = ns:GetDB()
         local showHeader = GetShowHeader(db)
         local showSearch = GetShowSearch(db)
         local searchY = showHeader and -(ROW1_H + floor((ROW2_H - 22) / 2)) or -floor((ROW2_H - 22) / 2)

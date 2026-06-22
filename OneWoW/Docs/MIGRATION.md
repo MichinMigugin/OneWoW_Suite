@@ -88,13 +88,14 @@ until the inventory is drained).
 | `OneWoW_Trackers` | `ns` | `OneWoW_Trackers = {}` + `OneWoW_Trackers_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API` in `Core/API.lua` |
 | `OneWoW_DirectDeposit` | `ns` | `OneWoW_DirectDeposit = {}` + `OneWoW_DirectDeposit_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API` in `Core/API.lua` |
 | `OneWoW_Notes` | `ns` | `OneWoW_Notes = {}` + `OneWoW_Notes_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API` in `Core/API.lua` |
+| `OneWoW_Bags` | `ns` | `OneWoW_Bags = {}` + `OneWoW_Bags_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API` in `Core/API.lua` |
 | `OneWoW_Utility_DevTool` | `Addon` | `OneWoW_Utility_DevTool = Addon` | `renamed_addon_vararg` | DevTool rename |
 
 **Tier D — namespace-as-global (largest)**
 
 | Load unit | Vararg today | Global publish today | Hook / debt | Notes |
 |-----------|--------------|----------------------|-------------|-------|
-| `OneWoW_Bags` | `OneWoW_Bags` (all files) | `_G["OneWoW_Bags"] = …` | root grandfathered; 67 hook entries (vararg + `.db`) | Largest unit |
+| _(none — Bags migrated to Tier C)_ | | | | |
 
 **Tier E — core orchestrator (last; ties to §2)**
 
@@ -109,7 +110,7 @@ until the inventory is drained).
 3. **QoL** — **complete** (hub: `ns.db`, `OneWoW_QoL_API` in `Core/API.lua`, thin lifecycle root; internal `ns.db` sweep in UI/modules).
 4. **ShoppingList / Trackers / DirectDeposit** — **complete** (hub: `ns.db`, `OneWoW_*_API` in `Core/API.lua`, thin lifecycle root, vararg `ns` in DirectDeposit).
 5. **Notes** — **complete** (hub: `ns.db`, `OneWoW_Notes_API` in `Core/API.lua`, thin lifecycle root, internal `ns.*` sweep).
-6. **Bags** — rename vararg suite-wide; split facade vs `ns`; remove root publish last in unit.
+6. **Bags** — **complete** (hub: `ns.db`, `OneWoW_Bags_API` in `Core/API.lua`, thin lifecycle root, internal `ns.*` sweep).
 7. **DevTool** — `Addon` → `ns`; thin root.
 8. **OneWoW core** — `OneWoW/**` → `ns`; curated `OneWoW` facade; pair with §2 unit registry.
 
@@ -176,6 +177,12 @@ modules → root stub — see `OneWoW_AltTracker_Storage`.
 |------|--------------|--------|
 | `OneWoW_Notes` | `Core/API.lua` | done |
 
+**Bags status**
+
+| Unit | API location | Status |
+|------|--------------|--------|
+| `OneWoW_Bags` | `Core/API.lua` | done |
+
 **Backlog (file placement only)**
 
 | Load unit | API location today | Notes |
@@ -217,7 +224,6 @@ Remove each path from `ALLOWED_NAMESPACE_PUBLISH` in
 `bin/check_no_namespace_publish.py` when that unit's migration is complete:
 
 - `OneWoW/Core/StoreBootstrap.lua` (until unit registry — §2)
-- `OneWoW_Bags/OneWoW_Bags.lua` (publish line only; **not** the whole Bags tree)
 
 ### Flip to enforced
 

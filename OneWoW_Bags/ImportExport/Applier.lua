@@ -1,11 +1,11 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-OneWoW_Bags.ImportExport = OneWoW_Bags.ImportExport or {}
-OneWoW_Bags.ImportExport.Applier = OneWoW_Bags.ImportExport.Applier or {}
-local Applier = OneWoW_Bags.ImportExport.Applier
+ns.ImportExport = ns.ImportExport or {}
+ns.ImportExport.Applier = ns.ImportExport.Applier or {}
+local Applier = ns.ImportExport.Applier
 
-local Backup = OneWoW_Bags.ImportExport.Backup
-local Util = OneWoW_Bags.ImportExport.Util
+local Backup = ns.ImportExport.Backup
+local Util = ns.ImportExport.Util
 
 local pairs, ipairs, type = pairs, ipairs, type
 local tinsert = table.insert
@@ -301,7 +301,7 @@ local function buildSkippedNameSet(plan)
 end
 
 local function categoryNameResolvable(finalName, g)
-    local SD = OneWoW_Bags.SectionDefaults
+    local SD = ns.SectionDefaults
     if SD and SD.GetEffectiveBuiltinNames then
         for _, bn in ipairs(SD:GetEffectiveBuiltinNames(g)) do
             if bn == finalName then return true end
@@ -428,7 +428,7 @@ local function applySavedSearches(plan, db)
 
     local g = db.global
     g.savedSearches = g.savedSearches or {}
-    local SS = OneWoW_Bags.SavedSearches
+    local SS = ns.SavedSearches
     local merged = 0
 
     for name, query in pairs(plan.savedSearches) do
@@ -462,7 +462,7 @@ end
 local function applyUnmappedDefaults(plan, controller, result)
     if not plan.unmappedDefaults or #plan.unmappedDefaults == 0 then return end
 
-    local locales = OneWoW_Bags.Locales or {}
+    local locales = ns.Locales or {}
     local loc = locales[GetLocale and GetLocale() or "enUS"] or locales["enUS"] or {}
     local catchAll = loc["IMPORT_BAGANATOR_CATCHALL_SECTION"]
 
@@ -601,14 +601,14 @@ function Applier:Apply(plan, controller, db)
     end
 
     -- 11. Sync ONEWOW BAGS section and refresh
-    local SD = OneWoW_Bags.SectionDefaults
+    local SD = ns.SectionDefaults
     if SD and SD.SyncOnewowSectionCategories then
         SD:SyncOnewowSectionCategories(db.global)
     end
 
     controller:RefreshUI()
-    if OneWoW_Bags.InvalidateCategorization then
-        OneWoW_Bags:InvalidateCategorization()
+    if ns.InvalidateCategorization then
+        ns:InvalidateCategorization()
     end
 
     return result

@@ -1,4 +1,4 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local C_Timer = C_Timer
 
@@ -6,8 +6,8 @@ local floor = math.floor
 local max = math.max
 local min = math.min
 
-OneWoW_Bags.SettingsController = {}
-local SettingsController = OneWoW_Bags.SettingsController
+ns.SettingsController = {}
+local SettingsController = ns.SettingsController
 
 local function CancelTimer(timer)
     if timer then

@@ -1,9 +1,9 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
-local Constants = OneWoW_Bags.Constants
+local Constants = ns.Constants
 local PE = OneWoW.PredicateEngine
 
 local tinsert, sort, wipe = tinsert, sort, wipe
@@ -13,8 +13,8 @@ local floor = math.floor
 local Enum = Enum
 local PixelUtil = PixelUtil
 
-OneWoW_Bags.WindowHelpers = {}
-local WH = OneWoW_Bags.WindowHelpers
+ns.WindowHelpers = {}
+local WH = ns.WindowHelpers
 
 local ITEM_GRID_H_PADDING = 2
 local SCROLLBAR_RESERVE_WIDTH = 12
@@ -81,12 +81,12 @@ end
 ---@param targetKey "bags"|"bank"|"guild"
 ---@param body function
 function WH:RunGuardedLayoutRefresh(owner, targetKey, body)
-    local LD = OneWoW_Bags.LayoutDebug
+    local LD = ns.LayoutDebug
     if owner._layoutInProgress then
         if LD and LD.enabled then
             LD:Record("guard_reentrant", { target = targetKey, inProgress = true })
         end
-        OneWoW_Bags:RequestLayoutRefresh(targetKey, "reentrant_followup")
+        ns:RequestLayoutRefresh(targetKey, "reentrant_followup")
         return
     end
     if LD and LD.enabled then
@@ -112,13 +112,13 @@ end
 function WH:AttachLayoutOnShow(mainWindow, targetKey, isBuiltFn)
     if not mainWindow or not isBuiltFn then return end
     mainWindow:HookScript("OnShow", function()
-        if OneWoW_Bags:IsOnShowLayoutSuppressed(targetKey) then return end
+        if ns:IsOnShowLayoutSuppressed(targetKey) then return end
         if isBuiltFn() then
-            local LD = OneWoW_Bags.LayoutDebug
+            local LD = ns.LayoutDebug
             if LD and LD.enabled then
                 LD:Record("onshow", { target = targetKey })
             end
-            OneWoW_Bags:RequestLayoutRefresh(targetKey, "show_onshow")
+            ns:RequestLayoutRefresh(targetKey, "show_onshow")
         end
     end)
 end
@@ -190,7 +190,7 @@ function WH:SetPointPixelAligned(region, parent, offsetX, offsetY)
 end
 
 function WH:CreateWindowShell(config)
-    local db = OneWoW_Bags:GetDB()
+    local db = ns:GetDB()
     local position = DB:Ensure(db, "global", config.positionDBKey)
     local windowHeight = position.height or config.defaultHeight or Constants.GUI.WINDOW_HEIGHT
 
@@ -278,7 +278,7 @@ end
 function WH:SyncSuiteTitleBarButtons(titleBar, settingsBtn)
     if not titleBar or not settingsBtn then return end
 
-    local L = OneWoW_Bags.L
+    local L = ns.L
     local configs = GetSuiteTitleBarFeatureConfigs(L)
     local shoppingConfig = configs[1]
     local ddConfig = configs[2]
@@ -457,7 +457,7 @@ end
 ---@param expansionID number|nil
 ---@return string
 function WH:GetExpansionDisplayName(expansionID)
-    local L = OneWoW_Bags.L
+    local L = ns.L
     if expansionID == nil or expansionID < 0 then
         return L["EXPAC_UNKNOWN"]
     end
@@ -487,7 +487,7 @@ function WH:GetButtonExpansionID(button)
         return -1
     end
 
-    local props = OneWoW_Bags:GetButtonProps(button)
+    local props = ns:GetButtonProps(button)
     local expansionID = props and props.expansionID
     if expansionID ~= nil and expansionID >= 0 then
         button._owb_expansionID = expansionID
@@ -508,8 +508,8 @@ function WH:FilterBySearch(buttons, searchText, dest)
         return buttons
     end
 
-    if OneWoW_Bags.SavedSearches then
-        searchText = OneWoW_Bags.SavedSearches:Expand(searchText)
+    if ns.SavedSearches then
+        searchText = ns.SavedSearches:Expand(searchText)
     end
 
     local filtered = dest or {}
@@ -521,7 +521,7 @@ function WH:FilterBySearch(buttons, searchText, dest)
 
     for _, button in ipairs(buttons) do
         if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
-            local props = OneWoW_Bags:GetButtonProps(button)
+            local props = ns:GetButtonProps(button)
             if PE:SafeEvaluate(compiled, props) then
                 tinsert(filtered, button)
             end
@@ -580,7 +580,7 @@ end
 ---@return number spacing
 ---@return number contentWidth
 function WH:GetLayoutMetrics(columnsDBKey, defaultCols)
-    local db = OneWoW_Bags:GetDB()
+    local db = ns:GetDB()
     local cols = db.global[columnsDBKey] or defaultCols
     local iconSize = Constants.ICON_SIZES[db.global.iconSize or 3] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
@@ -607,16 +607,16 @@ function WH:SetupResizeButton(mainWindow, gui, positionDBKey)
         end
     end)
     resizeBtn:SetScript("OnMouseUp", function()
-        local db = OneWoW_Bags:GetDB()
+        local db = ns:GetDB()
         mainWindow:StopMovingOrSizing()
         WH:SnapFrameToPixel(mainWindow)
         local pos = DB:Ensure(db, "global", positionDBKey)
         OneWoW_GUI:SaveWindowPosition(mainWindow, pos)
-        local target = (gui == OneWoW_Bags.GUI and "bags")
-            or (gui == OneWoW_Bags.BankGUI and "bank")
-            or (gui == OneWoW_Bags.GuildBankGUI and "guild")
+        local target = (gui == ns.GUI and "bags")
+            or (gui == ns.BankGUI and "bank")
+            or (gui == ns.GuildBankGUI and "guild")
         if target then
-            OneWoW_Bags:RequestLayoutRefresh(target, "resize")
+            ns:RequestLayoutRefresh(target, "resize")
         elseif gui.RefreshLayout then
             gui:RefreshLayout()
         end
@@ -642,7 +642,7 @@ end
 ---@param mainWindow table
 ---@param positionDBKey string
 function WH:SaveAndRestorePosition(mainWindow, positionDBKey)
-    local db = OneWoW_Bags:GetDB()
+    local db = ns:GetDB()
     local pos = DB:Ensure(db, "global", positionDBKey)
     if not OneWoW_GUI:RestoreWindowPosition(mainWindow, pos) then
         mainWindow:SetPoint("CENTER")

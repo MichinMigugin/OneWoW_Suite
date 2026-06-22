@@ -1,14 +1,14 @@
-local ADDON_NAME, OneWoW_Bags = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local L = OneWoW_Bags.L
+local L = ns.L
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 local function GetController()
-    return OneWoW_Bags.CategoryController
+    return ns.CategoryController
 end
 
 local function HasBaganator()
@@ -28,8 +28,8 @@ local db = setmetatable({}, {
     end,
 })
 
-local Categories = OneWoW_Bags.Categories
-local SD = OneWoW_Bags.SectionDefaults
+local Categories = ns.Categories
+local SD = ns.SectionDefaults
 
 local max, floor = math.max, math.floor
 local pairs, ipairs = pairs, ipairs
@@ -39,8 +39,8 @@ local tinsert, sort = tinsert, sort
 local C_Timer = C_Timer
 local GameTooltip = GameTooltip
 
-OneWoW_Bags.CategoryManagerUI = {}
-local CatMgrUI = OneWoW_Bags.CategoryManagerUI
+ns.CategoryManagerUI = {}
+local CatMgrUI = ns.CategoryManagerUI
 
 local managerFrame       = nil
 local dialogContentFrame = nil
@@ -994,7 +994,7 @@ function CatMgrUI:RefreshRight()
     local locKey = BUILTIN_LOCALE_KEYS[catName]
     local dispName = (locKey and OneWoW.Locale:GetOptional(ADDON_NAME, locKey)) or catName
 
-    local catMod = OneWoW_Bags:EnsureCategoryModification(catName)
+    local catMod = ns:EnsureCategoryModification(catName)
 
     local SORT_OPTIONS = { "none", "default", "name", "rarity", "ilvl", "type", "expansion" }
     local SORT_LABELS = { OFF, L["SORT_DEFAULT"], NAME, RARITY, L["SORT_ITEM_LEVEL"], TYPE, L["EXPANSION"] }
@@ -1592,8 +1592,8 @@ function CatMgrUI:RefreshRight()
 
     local compactForKey = {
         backpack       = db.global.compactCategories and true or false,
-        character_bank = OneWoW_Bags.BankController:GetFor("personal", "compactCategories") and true or false,
-        warband_bank   = OneWoW_Bags.BankController:GetFor("warband", "compactCategories") and true or false,
+        character_bank = ns.BankController:GetFor("personal", "compactCategories") and true or false,
+        warband_bank   = ns.BankController:GetFor("warband", "compactCategories") and true or false,
     }
 
     local ownLineX = CONTROL_X
@@ -1998,10 +1998,10 @@ function CatMgrUI:Show()
     createBtn:SetScript("OnClick", function() StaticPopup_Show("ONEWOW_BAGS_CREATE_CATEGORY") end)
 
     -- ---- Import / Export / Undo ----
-    local Backup = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Backup
-    local Serializer = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Serializer
-    local Planner = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Planner
-    local ImportPreview = OneWoW_Bags.ImportPreview
+    local Backup = ns.ImportExport and ns.ImportExport.Backup
+    local Serializer = ns.ImportExport and ns.ImportExport.Serializer
+    local Planner = ns.ImportExport and ns.ImportExport.Planner
+    local ImportPreview = ns.ImportPreview
     local CopyPaste = OneWoW.CopyPaste
 
     -- Undo (icon-only) pinned to the far right
@@ -2075,7 +2075,7 @@ function CatMgrUI:Show()
         buildItems = function()
             local items = {}
             local bagAvailable = HasBaganator()
-            local tsm = OneWoW_Bags.TSMIntegration
+            local tsm = ns.TSMIntegration
             local tsmAvailable = tsm and tsm.IsAvailable and tsm:IsAvailable()
             local anyDirect = false
             if bagAvailable then
@@ -2102,7 +2102,7 @@ function CatMgrUI:Show()
                 end
                 doOpenPreview(Planner:FromBaganatorDirect(GetDB()))
             elseif value == "tsm_direct" then
-                local tsm = OneWoW_Bags.TSMIntegration
+                local tsm = ns.TSMIntegration
                 if not tsm or not tsm:IsAvailable() then
                     print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r "
                         .. (L["IMPORT_NOT_AVAILABLE_TOOLTIP"]))

@@ -1,15 +1,15 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local L = OneWoW_Bags.L
-local WH = OneWoW_Bags.WindowHelpers
-local BH = OneWoW_Bags.BarHelpers
+local L = ns.L
+local WH = ns.WindowHelpers
+local BH = ns.BarHelpers
 
 local pairs = pairs
 
-OneWoW_Bags.GuildBankBar = {}
-local GuildBankBar = OneWoW_Bags.GuildBankBar
+ns.GuildBankBar = {}
+local GuildBankBar = ns.GuildBankBar
 
 ---@class GuildBankBarFrame : Frame
 ---@field withdrawBtn table
@@ -24,11 +24,11 @@ local ROW1_Y = 0
 local BAR_HEIGHT = 38
 
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 local function GetController()
-    return OneWoW_Bags.GuildBankController
+    return ns.GuildBankController
 end
 
 function GuildBankBar:Create(parent)
@@ -130,7 +130,7 @@ function GuildBankBar:BuildTabButtons()
         xOffset = xOffset + 30
     end
 
-    if OneWoW_Bags.guildBankOpen and numTabs > 0 then
+    if ns.guildBankOpen and numTabs > 0 then
         local originalTab = GetCurrentGuildBankTab()
         for tabID = 1, numTabs do
             local _, _, isViewable = GetGuildBankTabInfo(tabID)
@@ -171,8 +171,8 @@ function GuildBankBar:CreateTabButton(parent, tabID, tabName, tabIcon, isViewabl
 
     btn._skinnedIcon = icon
     OneWoW_GUI:SkinIconFrame(btn, { preset = "clean" })
-    if OneWoW_Bags.Masque then
-        OneWoW_Bags.Masque:SkinBagBarButton(btn, "guild")
+    if ns.Masque then
+        ns.Masque:SkinBagBarButton(btn, "guild")
     end
 
     btn:SetScript("OnEnter", function(myself)
@@ -188,7 +188,7 @@ function GuildBankBar:CreateTabButton(parent, tabID, tabName, tabIcon, isViewabl
             elseif remainingWithdrawals == 0 then
                 GameTooltip:AddLine(L["GUILD_BANK_WITHDRAWALS_NONE"], 1, 0.4, 0.4)
             end
-            local GBSet = OneWoW_Bags.GuildBankSet
+            local GBSet = ns.GuildBankSet
             if GBSet and GBSet.slots[myself.tabID] then
                 local usedSlots = 0
                 local totalSlots = #GBSet.slots[myself.tabID]
@@ -205,7 +205,7 @@ function GuildBankBar:CreateTabButton(parent, tabID, tabName, tabIcon, isViewabl
     btn:SetScript("OnClick", function(myself, mouseButton)
         if not myself.isViewable then return end
 
-        if mouseButton == "RightButton" and OneWoW_Bags.guildBankOpen then
+        if mouseButton == "RightButton" and ns.guildBankOpen then
             local controller = GetController()
             if controller and controller.OpenTabEditor then
                 controller:OpenTabEditor(myself.tabID)
@@ -233,7 +233,7 @@ function GuildBankBar:OpenTabEditor()
     GuildBankPopupFrame:SetClampedToScreen(true)
     GuildBankPopupFrame:SetClampRectInsets(0, 0, 0, 0)
     GuildBankPopupFrame:SetFrameLevel(999)
-    local gbWindow = OneWoW_Bags.GuildBankGUI:GetMainWindow()
+    local gbWindow = ns.GuildBankGUI:GetMainWindow()
     if gbWindow then
         GuildBankPopupFrame:SetPoint("TOPLEFT", gbWindow, "TOPRIGHT", 2, 0)
     else
@@ -247,7 +247,7 @@ end
 
 function GuildBankBar:UpdateWithdrawButton()
     if not bagsBarFrame or not bagsBarFrame.withdrawBtn then return end
-    if not OneWoW_Bags.guildBankOpen then
+    if not ns.guildBankOpen then
         bagsBarFrame.withdrawBtn:Disable()
         return
     end

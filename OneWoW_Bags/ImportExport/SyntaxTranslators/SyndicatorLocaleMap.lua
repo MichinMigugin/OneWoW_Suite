@@ -1,8 +1,8 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-OneWoW_Bags.ImportExport = OneWoW_Bags.ImportExport or {}
-OneWoW_Bags.ImportExport.SyntaxTranslators = OneWoW_Bags.ImportExport.SyntaxTranslators or {}
-local ST = OneWoW_Bags.ImportExport.SyntaxTranslators
+ns.ImportExport = ns.ImportExport or {}
+ns.ImportExport.SyntaxTranslators = ns.ImportExport.SyntaxTranslators or {}
+local ST = ns.ImportExport.SyntaxTranslators
 
 -- Reverse lookup: localized keyword (lowercased) -> English canonical form.
 -- Used when (1) the Syndicator addon is not loaded (paste-string import of a

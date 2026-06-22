@@ -1,11 +1,11 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-OneWoW_Bags.ImportExport = OneWoW_Bags.ImportExport or {}
-OneWoW_Bags.ImportExport.Backup = OneWoW_Bags.ImportExport.Backup or {}
-local Backup = OneWoW_Bags.ImportExport.Backup
+ns.ImportExport = ns.ImportExport or {}
+ns.ImportExport.Backup = ns.ImportExport.Backup or {}
+local Backup = ns.ImportExport.Backup
 
 local pairs, time = pairs, time
-local deepCopy = OneWoW_Bags.ImportExport.Util.DeepCopy
+local deepCopy = ns.ImportExport.Util.DeepCopy
 
 local BACKUP_FIELDS = {
     "customCategoriesV2",
@@ -75,7 +75,7 @@ function Backup:Restore(db, controller)
         end
     end
 
-    local SD = OneWoW_Bags.SectionDefaults
+    local SD = ns.SectionDefaults
     if SD and SD.SyncOnewowSectionCategories then
         SD:SyncOnewowSectionCategories(g)
     end

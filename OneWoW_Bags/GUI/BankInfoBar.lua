@@ -1,12 +1,12 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-OneWoW_Bags.BankInfoBar = OneWoW_Bags.InfoBarFactory:Create({
+ns.BankInfoBar = ns.InfoBarFactory:Create({
     controllerKey = "BankController",
     guiTargetKey = "BankGUI",
-    hideScrollBarFn = function() return OneWoW_Bags.BankController:Get("hideScrollBar") end,
+    hideScrollBarFn = function() return ns.BankController:Get("hideScrollBar") end,
     viewModeDBKey = "bankViewMode",
-    showHeaderFn = function() return OneWoW_Bags.BankController:Get("showHeaderBar") ~= false end,
-    showSearchFn = function() return OneWoW_Bags.BankController:Get("showSearchBar") ~= false end,
+    showHeaderFn = function() return ns.BankController:Get("showHeaderBar") ~= false end,
+    showSearchFn = function() return ns.BankController:Get("showSearchBar") ~= false end,
     searchName = "OneWoW_BankSearch",
     savedSearches = true,
     searchTransfer = {
@@ -22,7 +22,7 @@ OneWoW_Bags.BankInfoBar = OneWoW_Bags.InfoBarFactory:Create({
     },
     expacFilter = {
         filterKey  = "activeBankExpansionFilter",
-        settingFn  = function() return OneWoW_Bags.BankController:Get("expansionFilter") == true end,
+        settingFn  = function() return ns.BankController:Get("expansionFilter") == true end,
     },
     cleanupCallback = function(controller)
         if controller and controller.SortBank then

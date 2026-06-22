@@ -1188,7 +1188,7 @@ local function GetTooltipData(bagID, slotID)
     if not bagID or not slotID then return nil end
     local key = bagID .. ":" .. slotID
     local cached = tooltipDataCache[key]
-    local Profile = OneWoW_Bags and OneWoW_Bags.Profile
+    local Profile = OneWoW_Bags_API and OneWoW_Bags_API.GetProfile()
     if cached then
         if Profile then
             Profile:Start("tooltipDataCache.hit")
@@ -1213,7 +1213,7 @@ end
 local function GetTooltipDataByHyperlink(hyperlink)
     if not hyperlink or hyperlink == "" then return nil end
     local cached = tooltipDataLinkCache[hyperlink]
-    local Profile = OneWoW_Bags and OneWoW_Bags.Profile
+    local Profile = OneWoW_Bags_API and OneWoW_Bags_API.GetProfile()
     if cached then
         if Profile then
             Profile:Start("tooltipDataLinkCache.hit")
@@ -1992,7 +1992,7 @@ end
 local function GetOrCreateIdentityProps(itemID, hyperlink)
     local key = GetItemIdentityKey(itemID, hyperlink)
     local cached = identityPropsCache[key]
-    local Profile = OneWoW_Bags and OneWoW_Bags.Profile
+    local Profile = OneWoW_Bags_API and OneWoW_Bags_API.GetProfile()
     if cached then
         if Profile then
             Profile:Start("PE:BuildProps.identityHit")
@@ -2118,7 +2118,7 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     -- Tier 2: per-slot shallow copy + slot-overlay fields. The metatable
     -- (__index) lazy-resolves tooltip/bind/stat fields on first access and
     -- writes them onto the per-slot table, not the shared base.
-    local Profile = OneWoW_Bags and OneWoW_Bags.Profile
+    local Profile = OneWoW_Bags_API and OneWoW_Bags_API.GetProfile()
     if Profile then Profile:Start("PE:BuildProps.PopulateSlotProps") end
 
     local props = {}

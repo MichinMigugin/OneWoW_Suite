@@ -1,12 +1,12 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local sort, tinsert = table.sort, tinsert
 local pairs, ipairs = pairs, ipairs
 local strtrim = strtrim
 local string_lower = string.lower
 
-OneWoW_Bags.SectionDefaults = OneWoW_Bags.SectionDefaults or {}
-local SD = OneWoW_Bags.SectionDefaults
+ns.SectionDefaults = ns.SectionDefaults or {}
+local SD = ns.SectionDefaults
 
 SD.SEC_ONEWOW_BAGS = "sec_onewow_bags"
 SD.SEC_EQUIPMENT = "sec_equipment"

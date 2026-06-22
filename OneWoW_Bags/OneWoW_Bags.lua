@@ -1,10 +1,12 @@
-local ADDON_NAME, OneWoW_Bags = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-
 local PE = OneWoW.PredicateEngine
-local L = OneWoW_Bags.L
-local Events = OneWoW_Bags.Events
+
+OneWoW_Bags = {}
+
+local L = ns.L
+local Events = ns.Events
 
 local ipairs, pairs, tinsert = ipairs, pairs, tinsert
 local hooksecurefunc = hooksecurefunc
@@ -12,40 +14,41 @@ local hooksecurefunc = hooksecurefunc
 local C_Timer = C_Timer
 local C_Bank = C_Bank
 
--- DO NOT change this _G reference. Right side is local namespace table. Confusing as they're named the same.
--- We use _G[""] form since _G.OneWoW_Bags would get caught in pre-commit hook.
-_G["OneWoW_Bags"] = OneWoW_Bags
-
-OneWoW_Bags.oneWoWHubActive = false
-OneWoW_Bags.bankOpen = false
-OneWoW_Bags.guildBankOpen = false
-OneWoW_Bags.isWarbandOnlyBankAccess = false
-OneWoW_Bags.inventoryPresentationState = {
+ns.oneWoWHubActive = false
+ns.bankOpen = false
+ns.guildBankOpen = false
+ns.isWarbandOnlyBankAccess = false
+ns.inventoryPresentationState = {
     altShowActive = false,
 }
 
 local function DetectOneWoW()
     if OneWoW then
-        OneWoW_Bags.oneWoWHubActive = true
+        ns.oneWoWHubActive = true
     end
 end
 
 local function ApplyTheme()
-    OneWoW_GUI:ApplyTheme(OneWoW_Bags)
+    OneWoW_Bags:ApplyTheme()
 end
 
 local function ApplyLanguage()
     -- Localization lives in the OneWoW Locale service now (scope = ADDON_NAME;
     -- shared vocab in the "shared" scope). SetLanguage refolds every scope in place,
-    -- pushes BINDING_* globals, and fires OnApply; OneWoW_Bags.L is a stable view.
+    -- pushes BINDING_* globals, and fires OnApply; ns.L is a stable view.
     -- esMX->esES is normalized inside. Kept as a thin shim for the profile-sync loop
     -- (t-profiles SyncSettingToChildAddons) until Phase 6.
     local lang = OneWoW_GUI:GetSetting("language") or "enUS"
     OneWoW.Locale:SetLanguage(lang)
 end
 
-OneWoW_Bags.ApplyTheme = ApplyTheme
-OneWoW_Bags.ApplyLanguage = ApplyLanguage
+function OneWoW_Bags:ApplyTheme()
+    OneWoW_GUI:ApplyTheme(ns)
+end
+
+function OneWoW_Bags:ApplyLanguage()
+    ApplyLanguage()
+end
 
 local GUI_TARGET_KEYS = {
     bags = { "GUI" },
@@ -107,23 +110,17 @@ local function EnsureTable(parent, key)
     return value
 end
 
---- Return the addon database handle after initialization.
----@return table db
-function OneWoW_Bags:GetDB()
-    return self.db
-end
-
-function OneWoW_Bags:SetAltShowActive(active)
+function ns:SetAltShowActive(active)
     self.inventoryPresentationState.altShowActive = active == true
 end
 
-function OneWoW_Bags:IsAltShowActive()
+function ns:IsAltShowActive()
     local db = self:GetDB()
     if not db.global.altToShow then return false end
     return self.inventoryPresentationState.altShowActive == true
 end
 
-function OneWoW_Bags:GetItemSortMode()
+function ns:GetItemSortMode()
     return self:GetDB().global.itemSort
 end
 
@@ -131,7 +128,7 @@ end
 --- coordinates as C_Container bag/slot coordinates.
 ---@param button table
 ---@return table props
-function OneWoW_Bags:GetButtonProps(button)
+function ns:GetButtonProps(button)
     local info = button and button.owb_itemInfo
     local itemID = info and info.itemID
     if not itemID then return {} end
@@ -143,7 +140,7 @@ function OneWoW_Bags:GetButtonProps(button)
     return PE:BuildProps(itemID, button.owb_bagID, button.owb_slotID, info)
 end
 
-function OneWoW_Bags:ShouldShowItemQuality(isBank, quality)
+function ns:ShouldShowItemQuality(isBank, quality)
     if self:IsAltShowActive() then return true end
     if not quality or quality < 1 then return false end
 
@@ -156,22 +153,22 @@ function OneWoW_Bags:ShouldShowItemQuality(isBank, quality)
     return db.global.rarityColor == true
 end
 
-function OneWoW_Bags:ShouldDimJunkItem(isJunk)
+function ns:ShouldDimJunkItem(isJunk)
     local db = self:GetDB()
     return isJunk and db.global.dimJunkItems and not self:IsAltShowActive()
 end
 
-function OneWoW_Bags:ShouldStripJunkOverlays(isJunk)
+function ns:ShouldStripJunkOverlays(isJunk)
     local db = self:GetDB()
     return isJunk and db.global.stripJunkOverlays and not self:IsAltShowActive()
 end
 
-function OneWoW_Bags:IsBankUIEnabled()
+function ns:IsBankUIEnabled()
     local db = self:GetDB()
     return db.global.enableBankUI ~= false
 end
 
-function OneWoW_Bags:EnsureCategoryModification(categoryName)
+function ns:EnsureCategoryModification(categoryName)
     if not categoryName then return nil end
 
     local db = self:GetDB()
@@ -180,13 +177,13 @@ function OneWoW_Bags:EnsureCategoryModification(categoryName)
     return EnsureTable(categoryModifications, categoryName)
 end
 
-function OneWoW_Bags:EnsureBuiltinCategoryAddedItems(categoryName)
+function ns:EnsureBuiltinCategoryAddedItems(categoryName)
     local categoryModification = self:EnsureCategoryModification(categoryName)
     if not categoryModification then return nil end
     return EnsureTable(categoryModification, "addedItems")
 end
 
-function OneWoW_Bags:InitializeControllers()
+function ns:InitializeControllers()
     if self.ControllersInitialized then return end
 
     self.WindowLayoutController = self.WindowLayoutController:Create(self)
@@ -201,7 +198,7 @@ end
 
 --- Clear category and predicate caches after settings or category data changes.
 ---@param scope "props"|nil Use "props" when item-property inputs changed.
-function OneWoW_Bags:InvalidateCategorization(scope)
+function ns:InvalidateCategorization(scope)
     local db = self:GetDB()
 
     self.Categories:SetCustomCategories(db.global.customCategoriesV2)
@@ -222,7 +219,7 @@ end
 --- preserves the identity-tier caches for items whose data is already
 --- resolved.
 ---@param idSet table<number, boolean>|nil
-function OneWoW_Bags:InvalidateItemIDs(idSet)
+function ns:InvalidateItemIDs(idSet)
     if not idSet or not next(idSet) then return end
     local Profile = self.Profile
     if Profile then Profile:Start("InvalidateItemIDs") end
@@ -233,7 +230,7 @@ end
 
 --- Snapshot coalesced layout refresh state for `/owblayout dump`.
 ---@return table snapshot `{ refreshScheduled: boolean, pending: table<guiKey, { pending: boolean, reason: string|nil }> }`
-function OneWoW_Bags:GetLayoutDebugSchedulerSnapshot()
+function ns:GetLayoutDebugSchedulerSnapshot()
     local pending = {}
     for guiKey in pairs(pendingRefresh) do
         pending[guiKey] = {
@@ -253,7 +250,7 @@ end
 --- Whether a coalesced refresh should be queued for this GUI (avoids guild/bank pending while closed).
 ---@param guiKey "GUI"|"BankGUI"|"GuildBankGUI"
 ---@return boolean
-function OneWoW_Bags:ShouldQueueLayoutRefresh(guiKey)
+function ns:ShouldQueueLayoutRefresh(guiKey)
     if guiKey == "GuildBankGUI" then
         return self.guildBankOpen == true
     end
@@ -265,7 +262,7 @@ end
 
 --- Clear coalesced refresh state for a window that is closing.
 ---@param guiKey "GUI"|"BankGUI"|"GuildBankGUI"
-function OneWoW_Bags:ClearPendingLayoutRefresh(guiKey)
+function ns:ClearPendingLayoutRefresh(guiKey)
     pendingRefresh[guiKey] = nil
     pendingRefreshReason[guiKey] = nil
 end
@@ -277,20 +274,20 @@ local suppressOnShowLayout = {}
 
 --- @param targetKey "bags"|"bank"|"guild"
 --- @param suppressed boolean
-function OneWoW_Bags:SetOnShowLayoutSuppressed(targetKey, suppressed)
+function ns:SetOnShowLayoutSuppressed(targetKey, suppressed)
     suppressOnShowLayout[targetKey] = suppressed or nil
 end
 
 --- @param targetKey "bags"|"bank"|"guild"
 --- @return boolean
-function OneWoW_Bags:IsOnShowLayoutSuppressed(targetKey)
+function ns:IsOnShowLayoutSuppressed(targetKey)
     return suppressOnShowLayout[targetKey] == true
 end
 
 --- Arm a coalesced flush, healing a latch whose timer was dropped.
 --- Only arms when there is pending work; coalesces within a frame; re-arms
 --- when the previous arm is older than STALE_AFTER (its timer never fired).
-function OneWoW_Bags:EnsureFlushScheduled()
+function ns:EnsureFlushScheduled()
     if next(pendingRefresh) == nil then return end
     local now = GetTime()
     if refreshScheduled and (now - lastArmTime) < STALE_AFTER then
@@ -306,7 +303,7 @@ end
 --- Force-recover the layout scheduler. Clears the `refreshScheduled` latch and
 --- re-arms a flush if work is pending. Used on zone enter, where a loading
 --- screen can drop the pending zero-delay flush timer and wedge the latch.
-function OneWoW_Bags:KickLayoutScheduler()
+function ns:KickLayoutScheduler()
     refreshScheduled = false
     local LD = self.LayoutDebug
     if LD and LD.enabled then
@@ -317,7 +314,7 @@ end
 
 ---@param target "bags"|"bank"|"guild"|"bank_related"|"all"|nil
 ---@param reason string|nil diagnostic tag; first-write-wins per target
-function OneWoW_Bags:RequestLayoutRefresh(target, reason)
+function ns:RequestLayoutRefresh(target, reason)
     ForEachTarget(self, target, GUI_TARGET_KEYS, function(_, key)
         if not self:ShouldQueueLayoutRefresh(key) then
             return
@@ -342,7 +339,7 @@ end
 --- that was actually executed via the scheduler for the given target.
 ---@param targetKey "bags"|"bank"|"guild"
 ---@return number|nil seconds
-function OneWoW_Bags:GetLastRefreshTime(targetKey)
+function ns:GetLastRefreshTime(targetKey)
     local guiKey = TARGET_TO_GUI[targetKey]
     return guiKey and lastRefreshTime[guiKey] or nil
 end
@@ -352,7 +349,7 @@ end
 --- show pass). Used by the open safety net as a last-resort recovery.
 ---@param targetKey "bags"|"bank"|"guild"
 ---@return boolean
-function OneWoW_Bags:IsWindowBlank(targetKey)
+function ns:IsWindowBlank(targetKey)
     local guiKey = TARGET_TO_GUI[targetKey]
     local gui = guiKey and self[guiKey]
     if not (gui and gui.IsShown and gui:IsShown()) then return false end
@@ -371,7 +368,7 @@ end
 --- otherwise refreshes once unless a layout already ran very recently.
 ---@param targetKey "bags"|"bank"|"guild"
 ---@param isShownFn function returns whether the window is still shown
-function OneWoW_Bags:ScheduleOpenSafetyNet(targetKey, isShownFn)
+function ns:ScheduleOpenSafetyNet(targetKey, isShownFn)
     C_Timer.After(0.5, function()
         if not isShownFn() then return end
         if self:IsWindowBlank(targetKey) then
@@ -392,7 +389,7 @@ end
 --- coalescer's one-frame delay. Skips visibility/build gating so a hidden
 --- window can pre-warm its layout before being shown. Use sparingly.
 ---@param target "bags"|"bank"|"guild"|"bank_related"|"all"|nil
-function OneWoW_Bags:RequestLayoutRefreshNow(target)
+function ns:RequestLayoutRefreshNow(target)
     ForEachTarget(self, target, GUI_TARGET_KEYS, function(gui)
         if gui.RefreshLayout then
             gui:RefreshLayout()
@@ -402,7 +399,7 @@ end
 
 --- Flush pending coalesced refresh requests. Skips windows that are
 --- hidden or whose backing Set is in the middle of a Build.
-function OneWoW_Bags:FlushPendingLayoutRefreshes()
+function ns:FlushPendingLayoutRefreshes()
     refreshScheduled = false
     local Profile = self.Profile
     if Profile then Profile:Start("RequestLayoutRefresh.Flush") end
@@ -517,7 +514,7 @@ local SET_TO_TARGET = {
 --- one of the item IDs, so e.g. bank-only item-info batches don't refresh
 --- the bags window.
 ---@param itemIDs table<number, boolean>|number[]|nil
-function OneWoW_Bags:UpdateSlotsForItemIDs(itemIDs)
+function ns:UpdateSlotsForItemIDs(itemIDs)
     if not itemIDs then return end
     for _, key in ipairs(VISUAL_TARGET_KEYS.all) do
         local setObj = self[key]
@@ -532,7 +529,7 @@ end
 
 --- Refresh item button visuals and then refresh layout for affected windows.
 ---@param target "bags"|"bank"|"guild"|"bank_related"|"all"|nil
-function OneWoW_Bags:RequestVisualRefresh(target)
+function ns:RequestVisualRefresh(target)
     ForEachTarget(self, target, VISUAL_TARGET_KEYS, function(setObj)
         if setObj.isBuilt == false then
             return
@@ -571,25 +568,25 @@ end
 --- preceding build/refresh pass. This avoids 500–800 OWB_FullUpdate calls plus
 --- a cascading layout refresh on `/reload`-style opens where item info is
 --- already cached and no tentative verdicts were ever produced.
-function OneWoW_Bags:ScheduleTooltipCatchupRefresh()
+function ns:ScheduleTooltipCatchupRefresh()
     if self._tooltipCatchupPending then return end
     self._tooltipCatchupPending = true
     C_Timer.After(0.75, function()
         self._tooltipCatchupPending = false
 
-        local Profile = OneWoW_Bags.Profile
+        local Profile = ns.Profile
         if not self._hasPendingTentatives then
             if Profile then
-                Profile:Start("OneWoW_Bags:ScheduleTooltipCatchupRefresh.skipped")
-                Profile:Stop("OneWoW_Bags:ScheduleTooltipCatchupRefresh.skipped")
+                Profile:Start("ns:ScheduleTooltipCatchupRefresh.skipped")
+                Profile:Stop("ns:ScheduleTooltipCatchupRefresh.skipped")
             end
             return
         end
 
         self._hasPendingTentatives = false
         if Profile then
-            Profile:Start("OneWoW_Bags:ScheduleTooltipCatchupRefresh.executed")
-            Profile:Stop("OneWoW_Bags:ScheduleTooltipCatchupRefresh.executed")
+            Profile:Start("ns:ScheduleTooltipCatchupRefresh.executed")
+            Profile:Stop("ns:ScheduleTooltipCatchupRefresh.executed")
         end
 
         local refreshBags = self.GUI and self.GUI:IsShown()
@@ -606,7 +603,7 @@ end
 
 --- Fully reset window frames and reopen windows that were visible.
 ---@param target "bags"|"bank"|"guild"|"bank_related"|"all"|nil
-function OneWoW_Bags:RequestWindowReset(target)
+function ns:RequestWindowReset(target)
     ForEachTarget(self, target, GUI_TARGET_KEYS, function(gui, key)
         if not gui.FullReset then return end
 
@@ -635,8 +632,8 @@ function OneWoW_Bags:RequestWindowReset(target)
     end)
 end
 
-local function RefreshGUI(owner)
-    local gui = owner.GUI
+local function RefreshGUI()
+    local gui = ns.GUI
     if not gui then return end
 
     local wasShown = gui:IsShown()
@@ -648,7 +645,7 @@ local function RefreshGUI(owner)
     end
 end
 
-function OneWoW_Bags:ReinitForLanguage(langCode)
+function ns:ReinitForLanguage(langCode)
     OneWoW_GUI:SetSetting("language", langCode)
     ApplyLanguage()
     if self.GUI then
@@ -659,7 +656,7 @@ function OneWoW_Bags:ReinitForLanguage(langCode)
     end
 end
 
--- Core-driven init: the suite loader calls _G["OneWoW_Bags"]:OnAddonLoaded()
+-- Core-driven init: the suite loader calls OneWoW_Bags:OnAddonLoaded()
 -- right after it force-loads this module (WoW does not deliver our own
 -- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). This
 -- also registers our runtime events via RegisterRuntimeEvents.
@@ -667,59 +664,59 @@ local didInit = false
 function OneWoW_Bags:OnAddonLoaded()
     if didInit then return end
     didInit = true
-    OneWoW.Lifecycle:CreateHandlerRegistry(self)
+    OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_Bags)
 
-    self:RegisterEnteringWorldHandler("zone_refresh", function(isLogin, isReload, isZoning)
+    OneWoW_Bags:RegisterEnteringWorldHandler("zone_refresh", function(isLogin, isReload, isZoning)
         if isZoning then
             Events:OnPlayerEnteringWorld(isLogin, isReload)
         end
     end)
 
-    self:InitializeDatabase()
-    self:InitializeControllers()
-    OneWoW_GUI:MigrateSettings(self.db.global)
+    ns:InitializeDatabase()
+    ns:InitializeControllers()
+    OneWoW_GUI:MigrateSettings(ns.db.global)
 
-    if self.Masque and self.Masque.OnLoad then
-        self.Masque:OnLoad()
+    if ns.Masque and ns.Masque.OnLoad then
+        ns.Masque:OnLoad()
     end
 
     ApplyTheme()
     ApplyLanguage()
 
-    OneWoW_Bags.Categories:SetCustomCategories(self.db.global.customCategoriesV2)
-    OneWoW_Bags.Categories:SetRecentItemDuration(self.db.global.recentItemDuration)
-    OneWoW_Bags.Categories:SetRecentItems(self.db.global.recentItems)
+    ns.Categories:SetCustomCategories(ns.db.global.customCategoriesV2)
+    ns.Categories:SetRecentItemDuration(ns.db.global.recentItemDuration)
+    ns.Categories:SetRecentItems(ns.db.global.recentItems)
 
-    self:RegisterSlashCommands()
-    self:RegisterRuntimeEvents()
+    ns:RegisterSlashCommands()
+    ns:RegisterRuntimeEvents()
 
-    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(owner, _)
-        ApplyTheme()
-        RefreshGUI(owner)
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_Bags, function(myself, _)
+        myself:ApplyTheme()
+        RefreshGUI()
     end)
 
-    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(owner, _)
-        ApplyLanguage()
-        RefreshGUI(owner)
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoW_Bags, function(myself, _)
+        myself:ApplyLanguage()
+        RefreshGUI()
     end)
 
-    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(owner, _)
-        RefreshGUI(owner)
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoW_Bags, function(_, _)
+        RefreshGUI()
     end)
 
-    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(owner, _)
-        RefreshGUI(owner)
+    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", OneWoW_Bags, function(_, _)
+        RefreshGUI()
     end)
 
-    OneWoW_GUI:RegisterSettingsCallback("OnMoneyDisplayChanged", self, function()
-        if OneWoW_Bags.BagsBar and OneWoW_Bags.BagsBar.UpdateGoldDisplay then
-            OneWoW_Bags.BagsBar:UpdateGoldDisplay()
+    OneWoW_GUI:RegisterSettingsCallback("OnMoneyDisplayChanged", OneWoW_Bags, function()
+        if ns.BagsBar and ns.BagsBar.UpdateGoldDisplay then
+            ns.BagsBar:UpdateGoldDisplay()
         end
-        if OneWoW_Bags.BankBar and OneWoW_Bags.BankBar.UpdateGold then
-            OneWoW_Bags.BankBar:UpdateGold()
+        if ns.BankBar and ns.BankBar.UpdateGold then
+            ns.BankBar:UpdateGold()
         end
-        if OneWoW_Bags.GuildBankBar and OneWoW_Bags.GuildBankBar.UpdateGold then
-            OneWoW_Bags.GuildBankBar:UpdateGold()
+        if ns.GuildBankBar and ns.GuildBankBar.UpdateGold then
+            ns.GuildBankBar:UpdateGold()
         end
     end)
 
@@ -733,40 +730,40 @@ end
 -- by the loader (OneWoW:EnsureLoaded) for a mid-session enable, when
 -- PLAYER_LOGIN has already fired and won't reach this module.
 function OneWoW_Bags:OnPlayerLogin()
-    if self.didLogin then return end
-    self.didLogin = true
+    if ns.didLogin then return end
+    ns.didLogin = true
     DetectOneWoW()
 
     if OneWoW and OneWoW.RegisterMinimap then
         OneWoW:RegisterMinimap("OneWoW_Bags", L["CTX_OPEN_BAGS"], nil, function()
-            if self.GUI then self.GUI:Toggle() end
+            if ns.GUI then ns.GUI:Toggle() end
         end)
     end
 
-    self.ItemPool:Preallocate(OneWoW_Bags.Constants.ITEM_POOL_PREALLOC_SIZE)
-    self.BagSet:Build()
-    self.BagsBar:UpdateIcons()
+    ns.ItemPool:Preallocate(ns.Constants.ITEM_POOL_PREALLOC_SIZE)
+    ns.BagSet:Build()
+    ns.BagsBar:UpdateIcons()
 
-    self:HookBlizzardBags()
-    self:HookPetCageTooltip()
-    if self.InstallIntegrationHooks then
-        self:InstallIntegrationHooks()
+    ns:HookBlizzardBags()
+    ns:HookPetCageTooltip()
+    if ns.InstallIntegrationHooks then
+        ns:InstallIntegrationHooks()
     end
-    if self.RegisterTooltipProvider then
-        self:RegisterTooltipProvider()
+    if ns.RegisterTooltipProvider then
+        ns:RegisterTooltipProvider()
     end
-    if self.FireLoginHandlers then
-        self:FireLoginHandlers()
+    if OneWoW_Bags.FireLoginHandlers then
+        OneWoW_Bags:FireLoginHandlers()
     end
 end
 
 function OneWoW_Bags:OnPlayerEnteringWorld(isLogin, isReload, isZoning)
-    if self.FireEnteringWorldHandlers then
-        self:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
+    if OneWoW_Bags.FireEnteringWorldHandlers then
+        OneWoW_Bags:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
     end
 end
 
-function OneWoW_Bags:HookPetCageTooltip()
+function ns:HookPetCageTooltip()
     local predicateEngine = PE
     local CAGE_ID = predicateEngine.BATTLE_PET_CAGE_ID
 
@@ -794,7 +791,7 @@ function OneWoW_Bags:HookPetCageTooltip()
     end)
 end
 
-function OneWoW_Bags:OnBankOpened()
+function ns:OnBankOpened()
     self.bankOpen = self:IsBankUIEnabled()
     if not self:IsBankUIEnabled() then
         self.isWarbandOnlyBankAccess = false
@@ -841,7 +838,7 @@ function OneWoW_Bags:OnBankOpened()
     self:ScheduleTooltipCatchupRefresh()
 end
 
-function OneWoW_Bags:OnBankClosed()
+function ns:OnBankClosed()
     if not self:IsBankUIEnabled() then
         self.bankOpen = false
         self.isWarbandOnlyBankAccess = false
@@ -864,7 +861,7 @@ function OneWoW_Bags:OnBankClosed()
     end
 end
 
-function OneWoW_Bags:SuppressGuildBankFrame()
+function ns:SuppressGuildBankFrame()
     if not GuildBankFrame then return end
     if self._guildBankSuppressed then return end
     self._guildBankSuppressed = true
@@ -876,7 +873,7 @@ function OneWoW_Bags:SuppressGuildBankFrame()
     GuildBankFrame:SetAlpha(0)
 end
 
-function OneWoW_Bags:RestoreGuildBankFrame()
+function ns:RestoreGuildBankFrame()
     if not self._guildBankSuppressed then return end
     if not GuildBankFrame then return end
     self._guildBankSuppressed = false
@@ -887,7 +884,7 @@ function OneWoW_Bags:RestoreGuildBankFrame()
     GuildBankFrame:SetAlpha(1)
 end
 
-function OneWoW_Bags:RefreshGuildBankContents()
+function ns:RefreshGuildBankContents()
     if not self.GuildBankSet.isBuilt then return end
 
     self:ProcessPendingGuildBankTransferTabs()
@@ -921,19 +918,19 @@ function OneWoW_Bags:RefreshGuildBankContents()
     self:RequestLayoutRefresh("guild")
 end
 
-function OneWoW_Bags:TrackGuildBankTransferTab(tabID)
+function ns:TrackGuildBankTransferTab(tabID)
     if not tabID then return end
     self._guildBankTransferTabs = self._guildBankTransferTabs or {}
     self._guildBankTransferTabs[tabID] = true
 end
 
-function OneWoW_Bags:TrackGuildBankTransferSource(tabID, slotID)
+function ns:TrackGuildBankTransferSource(tabID, slotID)
     if not tabID or not slotID then return end
     self._guildBankTransferSources = self._guildBankTransferSources or {}
     tinsert(self._guildBankTransferSources, {tab = tabID, slot = slotID})
 end
 
-function OneWoW_Bags:PurgeClearSource(tabID, slotID)
+function ns:PurgeClearSource(tabID, slotID)
     local sources = self._guildBankClearSources
     if sources then
         for i = #sources, 1, -1 do
@@ -959,7 +956,7 @@ function OneWoW_Bags:PurgeClearSource(tabID, slotID)
     end
 end
 
-function OneWoW_Bags:ProcessPendingGuildBankTransferTabs()
+function ns:ProcessPendingGuildBankTransferTabs()
     local transferTabs = self._guildBankTransferTabs
     if not transferTabs then
         return
@@ -995,7 +992,7 @@ function OneWoW_Bags:ProcessPendingGuildBankTransferTabs()
     end)
 end
 
-function OneWoW_Bags:QueueGuildBankRefresh()
+function ns:QueueGuildBankRefresh()
     if not self.GuildBankSet.isBuilt then return end
 
     if self._guildBankUpdatePending then
@@ -1009,7 +1006,7 @@ function OneWoW_Bags:QueueGuildBankRefresh()
     end)
 end
 
-function OneWoW_Bags:OnGuildBankOpened()
+function ns:OnGuildBankOpened()
     self.guildBankOpen = self:IsBankUIEnabled()
     if not self:IsBankUIEnabled() then
         self:RestoreGuildBankFrame()
@@ -1041,7 +1038,7 @@ function OneWoW_Bags:OnGuildBankOpened()
     self:ScheduleTooltipCatchupRefresh()
 end
 
-function OneWoW_Bags:OnGuildBankClosed()
+function ns:OnGuildBankClosed()
     if not self:IsBankUIEnabled() then
         self.guildBankOpen = false
         self:RestoreGuildBankFrame()
@@ -1064,11 +1061,11 @@ function OneWoW_Bags:OnGuildBankClosed()
     self:RestoreGuildBankFrame()
 end
 
-function OneWoW_Bags:OnGuildBankSlotsChanged()
+function ns:OnGuildBankSlotsChanged()
     self:QueueGuildBankRefresh()
 end
 
-function OneWoW_Bags:OnGuildBankItemLockChanged()
+function ns:OnGuildBankItemLockChanged()
     if not self.GuildBankSet.isBuilt then return end
     local currentTab = GetCurrentGuildBankTab()
     if currentTab then
@@ -1076,7 +1073,7 @@ function OneWoW_Bags:OnGuildBankItemLockChanged()
     end
 end
 
-function OneWoW_Bags:OnGuildBankTabsUpdated()
+function ns:OnGuildBankTabsUpdated()
     if self.guildBankOpen then
         -- GuildBankSet:Build() already emits a coalesced RequestLayoutRefresh("guild").
         self.GuildBankSet:Build()
@@ -1084,31 +1081,31 @@ function OneWoW_Bags:OnGuildBankTabsUpdated()
     end
 end
 
-function OneWoW_Bags:OnGuildBankMoneyUpdated()
+function ns:OnGuildBankMoneyUpdated()
     if self.GuildBankBar then
         self.GuildBankBar:UpdateGold()
     end
 end
 
-function OneWoW_Bags:OnGuildBankWithdrawMoneyUpdated()
+function ns:OnGuildBankWithdrawMoneyUpdated()
     if self.GuildBankBar then
         self.GuildBankBar:UpdateWithdrawButton()
     end
 end
 
-function OneWoW_Bags:OnPlayerMoney()
+function ns:OnPlayerMoney()
     if self.bankOpen and self.BankBar then
         self.BankBar:UpdateGold()
     end
 end
 
-function OneWoW_Bags:OnAccountMoney()
+function ns:OnAccountMoney()
     if self.bankOpen and self.BankBar then
         self.BankBar:UpdateGold()
     end
 end
 
-function OneWoW_Bags:OnBankTabsChanged(bankType)
+function ns:OnBankTabsChanged(bankType)
     if not self.bankOpen then return end
 
     local activeBankType = self.db.global.bankShowWarband and Enum.BankType.Account or Enum.BankType.Character
@@ -1138,7 +1135,7 @@ function OneWoW_Bags:OnBankTabsChanged(bankType)
     end
 end
 
-function OneWoW_Bags:SuppressBankFrame()
+function ns:SuppressBankFrame()
     if not BankFrame then return end
     if self._bankFrameSuppressed then return end
     self._bankFrameSuppressed = true
@@ -1168,7 +1165,7 @@ function OneWoW_Bags:SuppressBankFrame()
     end
 end
 
-function OneWoW_Bags:RestoreBankFrame()
+function ns:RestoreBankFrame()
     if not self._bankFrameSuppressed then return end
     self._bankFrameSuppressed = false
 
@@ -1204,7 +1201,7 @@ function OneWoW_Bags:RestoreBankFrame()
     self._bankHiddenParent = nil
 end
 
-function OneWoW_Bags:ProcessBagUpdate(dirtyBags)
+function ns:ProcessBagUpdate(dirtyBags)
     self.Categories:OnPlayerBagDirtySnapshot(dirtyBags)
 
     -- Partition dirty bagIDs by container domain so we only refresh the
@@ -1231,7 +1228,7 @@ function OneWoW_Bags:ProcessBagUpdate(dirtyBags)
     end
 end
 
-function OneWoW_Bags:OnItemLockChanged(bagID, slotID)
+function ns:OnItemLockChanged(bagID, slotID)
     if self.BagSet.isBuilt and self.BagSet.slots[bagID] and self.BagSet.slots[bagID][slotID] then
         self.BagSet.slots[bagID][slotID]:OWB_RefreshLock()
     end
@@ -1243,7 +1240,7 @@ function OneWoW_Bags:OnItemLockChanged(bagID, slotID)
     end
 end
 
-function OneWoW_Bags:RefreshCooldowns()
+function ns:RefreshCooldowns()
     if not self.BagSet.isBuilt then return end
     for _, bagSlots in pairs(self.BagSet.slots) do
         for _, button in pairs(bagSlots) do
@@ -1254,7 +1251,7 @@ function OneWoW_Bags:RefreshCooldowns()
     end
 end
 
-function OneWoW_Bags:OnCooldownUpdate()
+function ns:OnCooldownUpdate()
     if self._cooldownRefreshPending then return end
     self._cooldownRefreshPending = true
     C_Timer.After(0.05, function()
@@ -1263,7 +1260,7 @@ function OneWoW_Bags:OnCooldownUpdate()
     end)
 end
 
-function OneWoW_Bags:RegisterSlashCommands()
+function ns:RegisterSlashCommands()
     SLASH_ONEWOW_BAGS1 = "/1wb"
     SLASH_ONEWOW_BAGS2 = "/onewowbags"
     SLASH_ONEWOW_BAGS3 = "/1wbags"
@@ -1274,12 +1271,12 @@ function OneWoW_Bags:RegisterSlashCommands()
 
     SLASH_ONEWOW_BAGS_EXPORT1 = "/owbags-export"
     SlashCmdList["ONEWOW_BAGS_EXPORT"] = function()
-        local Serializer = OneWoW_Bags.ImportExport and OneWoW_Bags.ImportExport.Serializer
+        local Serializer = ns.ImportExport and ns.ImportExport.Serializer
         if not Serializer then
             print("|cFFFF6060" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. L["EXPORT_UNAVAILABLE_SERIALIZER"])
             return
         end
-        local db = OneWoW_Bags.db
+        local db = ns.db
         if not db or not db.global then
             print("|cFFFF6060" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. L["EXPORT_UNAVAILABLE_DB"])
             return
@@ -1290,19 +1287,19 @@ function OneWoW_Bags:RegisterSlashCommands()
     end
 end
 
-function OneWoW_Bags:ShouldHideBlizzardBagsBar()
+function ns:ShouldHideBlizzardBagsBar()
     local db = self.db
     return db.global.hideBlizzardBagsBar == true
 end
 
-function OneWoW_Bags:UpdateBlizzardBagsBarVisibility()
+function ns:UpdateBlizzardBagsBarVisibility()
     local blizzBagsBar = BagsBar
     if not blizzBagsBar then return end
 
     if not self._blizzardBagsBarHooked then
         self._blizzardBagsBarHooked = true
         blizzBagsBar:HookScript("OnShow", function(frame)
-            if OneWoW_Bags:ShouldHideBlizzardBagsBar() then
+            if ns:ShouldHideBlizzardBagsBar() then
                 frame:Hide()
             end
         end)
@@ -1315,7 +1312,7 @@ function OneWoW_Bags:UpdateBlizzardBagsBarVisibility()
     end
 end
 
-function OneWoW_Bags:HookBlizzardBags()
+function ns:HookBlizzardBags()
     local function IsMerchantVisible()
         return MerchantFrame and MerchantFrame:IsShown()
     end
@@ -1324,11 +1321,11 @@ function OneWoW_Bags:HookBlizzardBags()
         if source == "auto" and IsMerchantVisible() then
             return
         end
-        OneWoW_Bags.GUI:Show()
+        ns.GUI:Show()
     end
 
     local function ToggleOurBags()
-        OneWoW_Bags.GUI:Toggle()
+        ns.GUI:Toggle()
     end
 
     local bindingFrame = CreateFrame("Button", "OneWoW_BagsBindingFrame")
@@ -1432,7 +1429,7 @@ function OneWoW_Bags:HookBlizzardBags()
     self:UpdateBlizzardBagsBarVisibility()
 end
 
-function OneWoW_Bags:OnMerchantShow()
+function ns:OnMerchantShow()
     self.vendorInteractionActive = true
     self.vendorCloseGuardActive = false
     self.vendorAutoOpenedBags = false
@@ -1443,7 +1440,7 @@ function OneWoW_Bags:OnMerchantShow()
     self.GUI:Show()
 end
 
-function OneWoW_Bags:OnMerchantClosed()
+function ns:OnMerchantClosed()
     self.vendorInteractionActive = false
     self.vendorCloseGuardActive = true
     if self.db.global.autoClose and self.GUI and self.GUI:IsShown() then
@@ -1457,7 +1454,7 @@ end
 
 local moneyDialog = nil
 
-function OneWoW_Bags:GetMoneyDialog()
+function ns:GetMoneyDialog()
     if moneyDialog then return moneyDialog end
 
     local result = OneWoW_GUI:CreateDialog({
@@ -1470,8 +1467,8 @@ function OneWoW_Bags:GetMoneyDialog()
         escClose = true,
     })
 
-    local dialogFrame = assert(result.frame, "OneWoW_Bags:CreateDialog missing frame")
-    local contentFrame = assert(result.contentFrame, "OneWoW_Bags:CreateDialog missing contentFrame")
+    local dialogFrame = assert(result.frame, "ns:CreateDialog missing frame")
+    local contentFrame = assert(result.contentFrame, "ns:CreateDialog missing contentFrame")
     local titleBar = result.titleBar
 
     dialogFrame:SetFrameLevel(500)
@@ -1525,7 +1522,7 @@ end
 --- Show the shared money input dialog for bank and guild-bank money actions.
 --- `config` may provide title, anchorFrame, onDeposit, and/or onWithdraw.
 ---@param config table
-function OneWoW_Bags:ShowMoneyDialog(config)
+function ns:ShowMoneyDialog(config)
     local dialog = self:GetMoneyDialog()
     dialog.frame:Hide()
     MoneyInputFrame_ResetMoney(dialog.moneyBox)
@@ -1665,7 +1662,7 @@ local runtimeEventHandlers = {
     end,
 }
 
-function OneWoW_Bags:RegisterRuntimeEvents()
+function ns:RegisterRuntimeEvents()
     if self.runtimeEventsRegistered then return end
 
     self.runtimeEventsRegistered = true

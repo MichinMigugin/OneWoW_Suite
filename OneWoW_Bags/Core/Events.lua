@@ -1,12 +1,12 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local format = string.format
 local ipairs = ipairs
-local BagTypes = OneWoW_Bags.BagTypes
+local BagTypes = ns.BagTypes
 local C_Container = C_Container
 
-OneWoW_Bags.Events = {}
-local Events = OneWoW_Bags.Events
+ns.Events = {}
+local Events = ns.Events
 
 Events.dirtyBags = {}
 Events.RuntimeEvents = {
@@ -45,21 +45,21 @@ local pendingItemIDs = nil
 -- equipment-set membership across every slot, so a full coalesced visual
 -- refresh is appropriate.
 function Events:OnPredicateInvalidation()
-    OneWoW_Bags:InvalidateCategorization("props")
+    ns:InvalidateCategorization("props")
 
     if not predicateRefreshPending then
         predicateRefreshPending = true
         C_Timer.After(0, function()
             predicateRefreshPending = false
-            local refreshBags = OneWoW_Bags.GUI:IsShown()
-            local refreshBankRelated = OneWoW_Bags.bankOpen or OneWoW_Bags.guildBankOpen
+            local refreshBags = ns.GUI:IsShown()
+            local refreshBankRelated = ns.bankOpen or ns.guildBankOpen
 
             if refreshBags and refreshBankRelated then
-                OneWoW_Bags:RequestVisualRefresh("all")
+                ns:RequestVisualRefresh("all")
             elseif refreshBankRelated then
-                OneWoW_Bags:RequestVisualRefresh("bank_related")
+                ns:RequestVisualRefresh("bank_related")
             elseif refreshBags then
-                OneWoW_Bags:RequestVisualRefresh("bags")
+                ns:RequestVisualRefresh("bags")
             end
         end)
     end
@@ -81,7 +81,7 @@ end
 -- actually arrived get re-resolved.
 function Events:OnItemInfoReceived(itemID)
     if not itemID then return end
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
 
     if not pendingItemIDs then
         pendingItemIDs = {}
@@ -97,8 +97,8 @@ function Events:OnItemInfoReceived(itemID)
                 Profile:Start(sizeKey)
                 Profile:Stop(sizeKey)
             end
-            OneWoW_Bags:InvalidateItemIDs(ids)
-            OneWoW_Bags:UpdateSlotsForItemIDs(ids)
+            ns:InvalidateItemIDs(ids)
+            ns:UpdateSlotsForItemIDs(ids)
         end)
     end
 
@@ -166,12 +166,12 @@ function Events:OnBagUpdate(bagID)
 end
 
 function Events:OnBagUpdateDelayed()
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     if Profile then Profile:Start("Events:OnBagUpdateDelayed") end
     local dirty = self.dirtyBags
     self.dirtyBags = {}
-    OneWoW_Bags:InvalidateCategorization("props")
-    OneWoW_Bags:ProcessBagUpdate(dirty)
+    ns:InvalidateCategorization("props")
+    ns:ProcessBagUpdate(dirty)
 
     local playerBagsDirty = false
     for bagID in pairs(dirty) do
@@ -203,18 +203,18 @@ function Events:GetBagIndexForInventorySlot(inventorySlot)
 end
 
 function Events:RefreshBagBarIcons()
-    local BagsBar = OneWoW_Bags.BagsBar
+    local BagsBar = ns.BagsBar
     if BagsBar then
         BagsBar:UpdateIcons()
     end
 end
 
 function Events:SyncUnequippedBagFilters()
-    local controller = OneWoW_Bags.BagsController
+    local controller = ns.BagsController
     if not controller then
         return
     end
-    local selected = OneWoW_Bags:GetDB().global.selectedBag
+    local selected = ns:GetDB().global.selectedBag
     if selected ~= nil and not BagTypes:IsBagEquipped(selected) then
         controller:OnBagUnequipped(selected)
     end
@@ -223,7 +223,7 @@ end
 --- Rebuild BagSet slots when equipped container count diverges from cached buttons.
 --- Bag pickup from Blizzard's bar can fire PLAYER_EQUIPMENT_CHANGED without BAG_UPDATE_DELAYED.
 function Events:SyncPlayerBagSetSlots()
-    local BagSet = OneWoW_Bags.BagSet
+    local BagSet = ns.BagSet
     if not BagSet.isBuilt then
         return
     end
@@ -243,16 +243,16 @@ function Events:SyncPlayerBagSetSlots()
     end
 
     if next(dirty) then
-        OneWoW_Bags:InvalidateCategorization("props")
-        OneWoW_Bags:ProcessBagUpdate(dirty)
+        ns:InvalidateCategorization("props")
+        ns:ProcessBagUpdate(dirty)
     end
 end
 
 ---@param bagIndex number
 function Events:OnPlayerBagEquipmentChanged(bagIndex)
     local dirty = { [bagIndex] = true }
-    OneWoW_Bags:InvalidateCategorization("props")
-    OneWoW_Bags:ProcessBagUpdate(dirty)
+    ns:InvalidateCategorization("props")
+    ns:ProcessBagUpdate(dirty)
     self:SyncUnequippedBagFilters()
     self:RefreshBagBarIcons()
 end
@@ -273,77 +273,77 @@ function Events:OnBagContainerUpdate()
 end
 
 function Events:OnItemLockChanged(bagID, slotID)
-    OneWoW_Bags:OnItemLockChanged(bagID, slotID)
+    ns:OnItemLockChanged(bagID, slotID)
 end
 
 function Events:OnCooldownUpdate()
-    OneWoW_Bags:OnCooldownUpdate()
+    ns:OnCooldownUpdate()
 end
 
 function Events:OnQuestAccepted()
-    OneWoW_Bags:ProcessBagUpdate(BuildAllBagDirtySet())
+    ns:ProcessBagUpdate(BuildAllBagDirtySet())
 end
 
 function Events:OnQuestRemoved()
-    OneWoW_Bags:ProcessBagUpdate(BuildAllBagDirtySet())
+    ns:ProcessBagUpdate(BuildAllBagDirtySet())
 end
 
 function Events:OnBankOpened()
-    OneWoW_Bags:OnBankOpened()
+    ns:OnBankOpened()
 end
 
 function Events:OnBankClosed()
-    OneWoW_Bags:OnBankClosed()
+    ns:OnBankClosed()
 end
 
 function Events:OnBankTabsChanged(bankType)
-    OneWoW_Bags:OnBankTabsChanged(bankType)
+    ns:OnBankTabsChanged(bankType)
 end
 
 function Events:OnMerchantShow()
-    OneWoW_Bags:OnMerchantShow()
+    ns:OnMerchantShow()
 end
 
 function Events:OnMerchantClosed()
-    OneWoW_Bags:OnMerchantClosed()
+    ns:OnMerchantClosed()
 end
 
 function Events:OnPlayerInteractionShow(interactType)
     if interactType == Enum.PlayerInteractionType.GuildBanker then
-        OneWoW_Bags:OnGuildBankOpened()
+        ns:OnGuildBankOpened()
     end
 end
 
 function Events:OnPlayerInteractionHide(interactType)
     if interactType == Enum.PlayerInteractionType.GuildBanker then
-        OneWoW_Bags:OnGuildBankClosed()
+        ns:OnGuildBankClosed()
     end
 end
 
 function Events:OnGuildBankSlotsChanged(...)
-    OneWoW_Bags:OnGuildBankSlotsChanged(...)
+    ns:OnGuildBankSlotsChanged(...)
 end
 
 function Events:OnGuildBankItemLockChanged(...)
-    OneWoW_Bags:OnGuildBankItemLockChanged(...)
+    ns:OnGuildBankItemLockChanged(...)
 end
 
 function Events:OnGuildBankTabsUpdated()
-    OneWoW_Bags:OnGuildBankTabsUpdated()
+    ns:OnGuildBankTabsUpdated()
 end
 
 function Events:OnGuildBankMoneyUpdated()
-    OneWoW_Bags:OnGuildBankMoneyUpdated()
+    ns:OnGuildBankMoneyUpdated()
 end
 
 function Events:OnGuildBankWithdrawMoneyUpdated()
-    OneWoW_Bags:OnGuildBankWithdrawMoneyUpdated()
+    ns:OnGuildBankWithdrawMoneyUpdated()
 end
 
 function Events:OnPlayerMoney()
-    OneWoW_Bags:OnPlayerMoney()
+    ns:OnPlayerMoney()
 end
 
 function Events:OnAccountMoney()
-    OneWoW_Bags:OnAccountMoney()
+    ns:OnAccountMoney()
 end

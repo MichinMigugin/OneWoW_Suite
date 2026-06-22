@@ -1,9 +1,9 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-local L = OneWoW_Bags.L
+local L = ns.L
 local PE = OneWoW.PredicateEngine
-local BagTypes = OneWoW_Bags.BagTypes
-local Constants = OneWoW_Bags.Constants
+local BagTypes = ns.BagTypes
+local Constants = ns.Constants
 
 local tinsert, sort, wipe = tinsert, sort, wipe
 local ipairs, pairs = ipairs, pairs
@@ -13,8 +13,8 @@ local C_Item = C_Item
 local C_Container = C_Container
 local C_NewItems = C_NewItems
 
-OneWoW_Bags.Categories = {}
-local Categories = OneWoW_Bags.Categories
+ns.Categories = {}
+local Categories = ns.Categories
 
 -- BumpProfileCounter
 -- Increments a marker-style profile counter and, if a current refresh
@@ -26,7 +26,7 @@ local function BumpProfileCounter(Profile, name)
     if not Profile then return end
     Profile:Start(name)
     Profile:Stop(name)
-    local reason = OneWoW_Bags._currentRefreshReason
+    local reason = ns._currentRefreshReason
     if reason then
         local suffixed = name .. ".reason." .. reason
         Profile:Start(suffixed)
@@ -112,7 +112,7 @@ local categoryCache = {}
 local baseCategoryCache = {}
 
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 local SLOT_NORMALIZE = {
@@ -422,7 +422,7 @@ local function ResolveManualCategoryName(itemID, db, disabled, containerType)
 end
 
 local function CollectCustomPredicateCandidates(itemID, bagID, slotID, itemInfo, disabled, cands)
-    local SavedSearches = OneWoW_Bags.SavedSearches
+    local SavedSearches = ns.SavedSearches
     for i = 1, #precomputedCustomCands do
         local entry = precomputedCustomCands[i]
         local categoryData = entry.categoryData
@@ -505,7 +505,7 @@ end
 -- cache, so the next refresh re-evaluates with full data.
 local function ResolveBaseCategory(itemID, hyperlink, containerType, itemInfo, bagID, slotID)
     local db = GetDB()
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     local disabled = db.global.disabledCategories
     local catMods = db.global.categoryModifications
 
@@ -543,7 +543,7 @@ local function ResolveBaseCategory(itemID, hyperlink, containerType, itemInfo, b
         -- Tell the tooltip-catchup pass that at least one slot was provisional
         -- so the deferred refresh is still worth doing. Cleared by the catchup
         -- when it runs.
-        OneWoW_Bags._hasPendingTentatives = true
+        ns._hasPendingTentatives = true
         return "Other", true
     end
 
@@ -636,7 +636,7 @@ local function ResolveBaseCategory(itemID, hyperlink, containerType, itemInfo, b
             Profile:Start("Categories:GetItemCategory.tooltipDeferred")
             Profile:Stop("Categories:GetItemCategory.tooltipDeferred")
         end
-        OneWoW_Bags._hasPendingTentatives = true
+        ns._hasPendingTentatives = true
         return category, true
     end
 
@@ -655,7 +655,7 @@ end
 function Categories:GetItemCategory(bagID, slotID, itemInfo)
     if not itemInfo then return "Other" end
 
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     if Profile then Profile:Start("Categories:GetItemCategory") end
 
     local db = GetDB()
@@ -830,13 +830,13 @@ function Categories:BeginRecentExpiryTicker()
     end
     local interval = Constants.GUI.RECENT_EXPIRY_TICK_INTERVAL or 2
     recentExpiryTicker = C_Timer.NewTicker(interval, function()
-        local gui = OneWoW_Bags.GUI
+        local gui = ns.GUI
         if not gui or not gui:IsShown() then
             Categories:EndRecentExpiryTicker()
             return
         end
         if Categories:CleanExpiredRecent() then
-            OneWoW_Bags:RequestLayoutRefresh("all")
+            ns:RequestLayoutRefresh("all")
         end
     end)
 end
@@ -1108,7 +1108,7 @@ function Categories:AddItemToBuiltinCategory(categoryName, itemID)
         return false, pin.displayName
     end
 
-    local addedItems = OneWoW_Bags:EnsureBuiltinCategoryAddedItems(categoryName)
+    local addedItems = ns:EnsureBuiltinCategoryAddedItems(categoryName)
     if not addedItems then return false end
     addedItems[tostring(itemID)] = true
     InvalidateCache()

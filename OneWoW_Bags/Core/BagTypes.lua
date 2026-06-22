@@ -1,9 +1,9 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local C_Container = C_Container
 
-OneWoW_Bags.BagTypes = {}
-local BagTypes = OneWoW_Bags.BagTypes
+ns.BagTypes = {}
+local BagTypes = ns.BagTypes
 
 local playerBagIDs = {
     Enum.BagIndex.Backpack,
@@ -57,7 +57,7 @@ function BagTypes:GetBagName(bagID)
 end
 
 function BagTypes:GetContainerType(bagID)
-    local BankTypes = OneWoW_Bags.BankTypes
+    local BankTypes = ns.BankTypes
     if self:IsPlayerBag(bagID) then return "backpack" end
     if BankTypes:IsPersonalBankTab(bagID) then return "character_bank" end
     if BankTypes:IsWarbandTab(bagID) then return "warband_bank" end

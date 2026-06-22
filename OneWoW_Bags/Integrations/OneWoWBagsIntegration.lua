@@ -1,27 +1,27 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-local BagSet = OneWoW_Bags.BagSet
-local BankSet = OneWoW_Bags.BankSet
-local GuildBankSet = OneWoW_Bags.GuildBankSet
+local BagSet = ns.BagSet
+local BankSet = ns.BankSet
+local GuildBankSet = ns.GuildBankSet
 
 local pairs, pcall = pairs, pcall
 local C_Timer = C_Timer
 
-OneWoW_Bags.ItemButtonCallbacks = OneWoW_Bags.ItemButtonCallbacks or {}
-local callbacks = OneWoW_Bags.ItemButtonCallbacks
+ns.ItemButtonCallbacks = ns.ItemButtonCallbacks or {}
+local callbacks = ns.ItemButtonCallbacks
 
-function OneWoW_Bags:RegisterItemButtonCallback(name, callback)
+function ns:RegisterItemButtonCallback(name, callback)
 	if not callback or type(callback) ~= "function" then
 		error("InvalidCallback: callback must be a function")
 	end
 	callbacks[name] = callback
 end
 
-function OneWoW_Bags:UnregisterItemButtonCallback(name)
+function ns:UnregisterItemButtonCallback(name)
 	callbacks[name] = nil
 end
 
-function OneWoW_Bags:FireItemButtonCallback(button, bagID, slotID)
+function ns:FireItemButtonCallback(button, bagID, slotID)
 	local altShow = self:IsAltShowActive()
 	local db = self:GetDB()
 	if not altShow and db.global.stripJunkOverlays and button._owb_isJunk then
@@ -37,7 +37,7 @@ function OneWoW_Bags:FireItemButtonCallback(button, bagID, slotID)
 	end
 end
 
-function OneWoW_Bags:FireCallbacksOnAllButtons()
+function ns:FireCallbacksOnAllButtons()
 	if not BagSet.slots then return end
 
 	for _, bagSlots in pairs(BagSet.slots) do
@@ -49,7 +49,7 @@ function OneWoW_Bags:FireCallbacksOnAllButtons()
 	end
 end
 
-function OneWoW_Bags:FireCallbacksOnBankButtons()
+function ns:FireCallbacksOnBankButtons()
 	if not self.BankController:Get("overlays") then return end
 
 	if BankSet.slots then
@@ -64,7 +64,7 @@ function OneWoW_Bags:FireCallbacksOnBankButtons()
 
 end
 
-function OneWoW_Bags:ClearBankOverlays()
+function ns:ClearBankOverlays()
 	local engine = OneWoW and OneWoW.OverlayEngine
 
 	if BankSet.slots then
@@ -81,7 +81,7 @@ function OneWoW_Bags:ClearBankOverlays()
 
 end
 
-function OneWoW_Bags:ClearGuildBankOverlays()
+function ns:ClearGuildBankOverlays()
 	local engine = OneWoW and OneWoW.OverlayEngine
 
 	if GuildBankSet.slots then
@@ -98,42 +98,42 @@ function OneWoW_Bags:ClearGuildBankOverlays()
 end
 
 local function HookGUIRefresh()
-	local GUI = OneWoW_Bags.GUI
+	local GUI = ns.GUI
 	if not GUI then return end
 
 	local originalRefreshLayout = GUI.RefreshLayout
 	function GUI:RefreshLayout()
 		originalRefreshLayout(self)
 		C_Timer.After(0.05, function()
-			OneWoW_Bags:FireCallbacksOnAllButtons()
+			ns:FireCallbacksOnAllButtons()
 		end)
 	end
 
-	local originalBankRefresh = OneWoW_Bags.BankGUI.RefreshLayout
-	function OneWoW_Bags.BankGUI:RefreshLayout()
+	local originalBankRefresh = ns.BankGUI.RefreshLayout
+	function ns.BankGUI:RefreshLayout()
 		originalBankRefresh(self)
-		if OneWoW_Bags.BankController:Get("overlays") then
+		if ns.BankController:Get("overlays") then
 			C_Timer.After(0.05, function()
-				OneWoW_Bags:FireCallbacksOnBankButtons()
+				ns:FireCallbacksOnBankButtons()
 			end)
 		end
 	end
 
-	local originalGBRefresh = OneWoW_Bags.GuildBankGUI.RefreshLayout
-	function OneWoW_Bags.GuildBankGUI:RefreshLayout()
-		local db = OneWoW_Bags:GetDB()
+	local originalGBRefresh = ns.GuildBankGUI.RefreshLayout
+	function ns.GuildBankGUI:RefreshLayout()
+		local db = ns:GetDB()
 		originalGBRefresh(self)
 		if db.global.enableBankOverlays then
 			C_Timer.After(0.05, function()
-				OneWoW_Bags:ClearGuildBankOverlays()
+				ns:ClearGuildBankOverlays()
 			end)
 		end
 	end
 end
 
 -- Core force-loads OneWoW_Bags during its own ADDON_LOADED, which eats Bags'
--- ADDON_LOADED event. Login hooks run via OneWoW_Bags:OnPlayerLogin().
-function OneWoW_Bags:InstallIntegrationHooks()
+-- ADDON_LOADED event. Login hooks run via ns:OnPlayerLogin().
+function ns:InstallIntegrationHooks()
 	if self._integrationHooksInstalled then return end
 	self._integrationHooksInstalled = true
 	if self.GUI then
@@ -147,9 +147,9 @@ local integrationEventFrame = CreateFrame("Frame")
 integrationEventFrame:RegisterEvent("BANKFRAME_OPENED")
 integrationEventFrame:SetScript("OnEvent", function(_, event)
 	if event == "BANKFRAME_OPENED" then
-		if OneWoW_Bags.BankController:Get("overlays") then
+		if ns.BankController:Get("overlays") then
 			C_Timer.After(0.1, function()
-				OneWoW_Bags:FireCallbacksOnBankButtons()
+				ns:FireCallbacksOnBankButtons()
 			end)
 		end
 	end

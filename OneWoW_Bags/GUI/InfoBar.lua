@@ -1,11 +1,11 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local function BagsChromeOverride(db, key)
-    local altReveal = OneWoW_Bags:IsAltShowActive()
+    local altReveal = ns:IsAltShowActive()
     return (db.global[key] ~= false) or altReveal
 end
 
-OneWoW_Bags.InfoBar = OneWoW_Bags.InfoBarFactory:Create({
+ns.InfoBar = ns.InfoBarFactory:Create({
     controllerKey = "BagsController",
     viewModeDBKey = "viewMode",
     searchName = "OneWoW_BagsSearch",

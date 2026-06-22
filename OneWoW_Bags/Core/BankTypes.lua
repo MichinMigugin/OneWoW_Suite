@@ -1,7 +1,7 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-OneWoW_Bags.BankTypes = {}
-local BankTypes = OneWoW_Bags.BankTypes
+ns.BankTypes = {}
+local BankTypes = ns.BankTypes
 
 local bankTabIDs = {
     Enum.BagIndex.CharacterBankTab_1,

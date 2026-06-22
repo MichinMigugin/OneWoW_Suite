@@ -1,4 +1,4 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local function CompareValues(aValue, bValue, descending)
     if aValue == bValue then return 0 end
@@ -125,11 +125,11 @@ local function CompareType(a, b, descending)
     local aClass, aSub = a._owb_classID, a._owb_subClassID
     local bClass, bSub = b._owb_classID, b._owb_subClassID
     if aClass == nil then
-        local props = OneWoW_Bags:GetButtonProps(a)
+        local props = ns:GetButtonProps(a)
         aClass, aSub = props.classID, props.subClassID
     end
     if bClass == nil then
-        local props = OneWoW_Bags:GetButtonProps(b)
+        local props = ns:GetButtonProps(b)
         bClass, bSub = props.classID, props.subClassID
     end
     aClass = aClass or 0
@@ -142,7 +142,7 @@ local function CompareType(a, b, descending)
 end
 
 local function CompareExpansion(a, b, descending)
-    local WH = OneWoW_Bags.WindowHelpers
+    local WH = ns.WindowHelpers
     local aExp = a and WH:GetButtonExpansionID(a) or -1
     local bExp = b and WH:GetButtonExpansionID(b) or -1
     return CompareValues(aExp, bExp, descending)
@@ -187,7 +187,7 @@ local function AppendSpec(specs, mode, overrideDescending)
     }
 end
 
-function OneWoW_Bags:SortButtons(buttons, overrideSortMode, overrideSubSortMode, sortDescending, subSortDescending)
+function ns:SortButtons(buttons, overrideSortMode, overrideSubSortMode, sortDescending, subSortDescending)
     local sortMode = overrideSortMode or "default"
     if sortMode == "none" then
         return buttons

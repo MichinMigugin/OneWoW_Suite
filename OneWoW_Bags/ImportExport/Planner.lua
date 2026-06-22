@@ -1,13 +1,13 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-OneWoW_Bags.ImportExport = OneWoW_Bags.ImportExport or {}
-OneWoW_Bags.ImportExport.Planner = OneWoW_Bags.ImportExport.Planner or {}
-local Planner = OneWoW_Bags.ImportExport.Planner
+ns.ImportExport = ns.ImportExport or {}
+ns.ImportExport.Planner = ns.ImportExport.Planner or {}
+local Planner = ns.ImportExport.Planner
 
-local Serializer = OneWoW_Bags.ImportExport.Serializer
-local Translators = OneWoW_Bags.ImportExport.SyntaxTranslators
-local Util = OneWoW_Bags.ImportExport.Util
-local L = OneWoW_Bags.L
+local Serializer = ns.ImportExport.Serializer
+local Translators = ns.ImportExport.SyntaxTranslators
+local Util = ns.ImportExport.Util
+local L = ns.L
 
 local pairs, ipairs, type, tostring, tonumber = pairs, ipairs, type, tostring, tonumber
 local tinsert = table.insert
@@ -81,7 +81,7 @@ local function existingSnapshot(db)
         end
     end
 
-    local SD = OneWoW_Bags.SectionDefaults
+    local SD = ns.SectionDefaults
     if SD and SD.GetEffectiveBuiltinNames then
         for _, nm in ipairs(SD:GetEffectiveBuiltinNames(g)) do
             snapshot.builtinNames[normKey(nm)] = nm
@@ -244,11 +244,11 @@ end
 -- ------------------------------------------------------------------
 
 local function pushDefaultSections(plan, intermediate)
-    local BaganatorImport = OneWoW_Bags.Integrations.Baganator
+    local BaganatorImport = ns.Integrations.Baganator
     local sections = BaganatorImport:ResolveOrderToSections(intermediate.category_display_order or {})
-    local defaultMap = OneWoW_Bags.BaganatorDefaultMap or {}
+    local defaultMap = ns.BaganatorDefaultMap or {}
     local hints      = intermediate.display_hints or {}
-    local displayHints = OneWoW_Bags.BaganatorDefaultDisplayHints or {}
+    local displayHints = ns.BaganatorDefaultDisplayHints or {}
     local customs    = intermediate.custom_categories or {}
     local sectionsMeta = intermediate.category_sections or {}
 
@@ -311,8 +311,8 @@ end
 
 local function buildCategoriesFromCustom(plan, intermediate, context)
     local customs    = intermediate.custom_categories or {}
-    local defaultMap = OneWoW_Bags.BaganatorDefaultMap or {}
-    local BaganatorImport = OneWoW_Bags.Integrations.Baganator
+    local defaultMap = ns.BaganatorDefaultMap or {}
+    local BaganatorImport = ns.Integrations.Baganator
 
     for sourceId, data in pairs(customs) do
         local name = data.name
@@ -399,7 +399,7 @@ end
 ---@param options table|nil
 ---@return table plan
 function Planner:FromBaganatorDirect(db, options)
-    local BaganatorImport = OneWoW_Bags.Integrations.Baganator
+    local BaganatorImport = ns.Integrations.Baganator
     local intermediate, err = BaganatorImport:DirectRead()
     if not intermediate then
         local plan = newPlan("baganator_direct")
@@ -415,7 +415,7 @@ end
 ---@param options table|nil
 ---@return table plan
 function Planner:FromBaganatorString(text, db, options)
-    local BaganatorImport = OneWoW_Bags.Integrations.Baganator
+    local BaganatorImport = ns.Integrations.Baganator
     local intermediate, err = BaganatorImport:ParseString(text)
     if not intermediate then
         local plan = newPlan("baganator_string")
@@ -437,7 +437,7 @@ function Planner:FromTsmDirect(db, options)
     local plan = newPlan("tsm_direct")
     plan.options = options or { tsmPrefix = true }
 
-    local TSM = OneWoW_Bags.TSMIntegration
+    local TSM = ns.TSMIntegration
     if not TSM or not TSM.IsAvailable or not TSM:IsAvailable() then
         addWarning(plan, "error", L["IMPORT_WARN_TSM_UNAVAILABLE"])
         return plan

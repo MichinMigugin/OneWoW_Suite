@@ -36,6 +36,7 @@ Core\LayoutDebug.lua
 Core\Constants.lua
 Core\SectionDefaults.lua
 Core\Database.lua
+Core/API.lua
 Core\BagTypes.lua
 Core\BagEquip.lua
 Core\BankTypes.lua

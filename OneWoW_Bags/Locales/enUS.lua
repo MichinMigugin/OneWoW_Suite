@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW_Bags = ...
+local ADDON_NAME, ns = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
@@ -511,7 +511,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["IMPORT_RESULT_DISPLAY_ORDER_PARTIAL"] = "Layout: %d display order entries skipped.",
 })
 
-OneWoW_Bags.L = OneWoW.Locale:GetTable(ADDON_NAME)
+ns.L = OneWoW.Locale:GetTable(ADDON_NAME)
 -- Raw per-locale store for import/export + DB-migration readers that need a
 -- specific locale's strings (Core/Database.lua, ImportExport/Applier.lua).
-OneWoW_Bags.Locales = OneWoW.Locale:GetStore(ADDON_NAME)
+ns.Locales = OneWoW.Locale:GetStore(ADDON_NAME)

@@ -1,12 +1,12 @@
-local ADDON_NAME, OneWoW_Bags = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local Constants = OneWoW_Bags.Constants
-local L = OneWoW_Bags.L
-local BagTypes = OneWoW_Bags.BagTypes
-local BagEquip = OneWoW_Bags.BagEquip
-local WH = OneWoW_Bags.WindowHelpers
+local Constants = ns.Constants
+local L = ns.L
+local BagTypes = ns.BagTypes
+local BagEquip = ns.BagEquip
+local WH = ns.WindowHelpers
 
 local tinsert, sort = tinsert, sort
 local pairs, ipairs = pairs, ipairs
@@ -16,8 +16,8 @@ local C_Item = C_Item
 local C_CurrencyInfo = C_CurrencyInfo
 local C_Container = C_Container
 
-OneWoW_Bags.BagsBar = {}
-local BagsBar = OneWoW_Bags.BagsBar
+ns.BagsBar = {}
+local BagsBar = ns.BagsBar
 
 local bagsBarFrame = nil
 local bagButtons = {}
@@ -57,17 +57,17 @@ local trackerRelayoutPending = false
 local trackerReorder = nil
 
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 local function GetController()
-    return OneWoW_Bags.BagsController
+    return ns.BagsController
 end
 
 local function SyncBagsBarOuterHeight()
     if not bagsBarFrame then return end
     local db = GetDB()
-    local altShow = OneWoW_Bags:IsAltShowActive()
+    local altShow = ns:IsAltShowActive()
     local showBagsBar = db.global.showBagsBar ~= false
     local showRow1 = showBagsBar
     if altShow then
@@ -842,8 +842,8 @@ function BagsBar:CreateBagButton(parent, bagIndex, xOffset)
     btn.Icon = icon
     btn._skinnedIcon = icon
     OneWoW_GUI:SkinIconFrame(btn, { preset = "clean" })
-    if OneWoW_Bags.Masque then
-        OneWoW_Bags.Masque:SkinBagBarButton(btn, "bags")
+    if ns.Masque then
+        ns.Masque:SkinBagBarButton(btn, "bags")
     end
 
     btn:SetPoint("LEFT", parent, "LEFT", xOffset, 0)
@@ -919,7 +919,7 @@ end
 function BagsBar:UpdateBagHighlights()
     local controller = GetController()
     local selected = controller and controller.GetSelectedBag and controller:GetSelectedBag() or nil
-    local masque = OneWoW_Bags.Masque
+    local masque = ns.Masque
     local masqueActive = masque and masque:IsActive()
     for idx, btn in pairs(bagButtons) do
         local isSelected = selected ~= nil and selected == idx
@@ -1015,7 +1015,7 @@ function BagsBar:UpdateRowVisibility()
     if not bagsBarFrame then return end
 
     local db = GetDB()
-    local altShow = OneWoW_Bags:IsAltShowActive()
+    local altShow = ns:IsAltShowActive()
     local showBagsBar = db.global.showBagsBar ~= false
     local showMoney = db.global.showMoneyBar ~= false
     local showRow1 = showBagsBar

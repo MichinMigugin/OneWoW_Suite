@@ -1,24 +1,24 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local Constants = OneWoW_Bags.Constants
-local L = OneWoW_Bags.L
-local InfoBar = OneWoW_Bags.InfoBar
-local WH = OneWoW_Bags.WindowHelpers
-local Settings = OneWoW_Bags.Settings
-local BagsBar = OneWoW_Bags.BagsBar
-local BagSet = OneWoW_Bags.BagSet
-local CategoryManager = OneWoW_Bags.CategoryManager
-local Categories = OneWoW_Bags.Categories
-local ListView = OneWoW_Bags.ListView
-local BagView = OneWoW_Bags.BagView
-local CategoryView = OneWoW_Bags.CategoryView
+local Constants = ns.Constants
+local L = ns.L
+local InfoBar = ns.InfoBar
+local WH = ns.WindowHelpers
+local Settings = ns.Settings
+local BagsBar = ns.BagsBar
+local BagSet = ns.BagSet
+local CategoryManager = ns.CategoryManager
+local Categories = ns.Categories
+local ListView = ns.ListView
+local BagView = ns.BagView
+local CategoryView = ns.CategoryView
 
 local print, pcall = print, pcall
 
-OneWoW_Bags.GUI = OneWoW_Bags.GUI or {}
-local GUI = OneWoW_Bags.GUI
+ns.GUI = ns.GUI or {}
+local GUI = ns.GUI
 
 local MainWindow = nil
 local isInitialized = false
@@ -31,11 +31,11 @@ local needsCleanupAfterCombat = false
 local cleanupEventFrame = nil
 
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 local function GetLayoutController()
-    return OneWoW_Bags.WindowLayoutController
+    return ns.WindowLayoutController
 end
 
 function GUI:InitMainWindow()
@@ -51,11 +51,11 @@ function GUI:InitMainWindow()
             GUI._layoutInProgress = false
             GUI:CleanupAllViews()
             InfoBar:ClearSearch()
-            OneWoW_Bags.activeExpansionFilter = nil
+            ns.activeExpansionFilter = nil
             OneWoW_GUI:SaveWindowPosition(MainWindow, db.global.mainFramePosition)
         end,
         onDragStop = function()
-            if isInitialized then OneWoW_Bags:RequestLayoutRefresh("bags", "drag_stop") end
+            if isInitialized then ns:RequestLayoutRefresh("bags", "drag_stop") end
         end,
     })
 
@@ -142,7 +142,7 @@ function GUI:UpdateWindowWidth()
 end
 
 function GUI:RefreshLayout()
-    local LD = OneWoW_Bags.LayoutDebug
+    local LD = ns.LayoutDebug
     if not isInitialized or not MainWindow then
         if LD and LD.enabled then LD:Record("refresh_early", { target = "bags", note = "not initialized" }) end
         return
@@ -158,7 +158,7 @@ function GUI:RefreshLayout()
         return
     end
 
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     Profile:Start("GUI:RefreshLayout[bags]")
 
     WH:RunGuardedLayoutRefresh(GUI, "bags", function()
@@ -192,7 +192,7 @@ function GUI:RefreshLayout()
         end,
         filterButtons = function(allButtons)
             local filteredButtons = WH:FilterBySearch(allButtons, InfoBar:GetSearchText(), WH:GetScratchTable("mainSearch"))
-            return WH:FilterByExpansion(filteredButtons, OneWoW_Bags.activeExpansionFilter, WH:GetScratchTable("mainExpansion"))
+            return WH:FilterByExpansion(filteredButtons, ns.activeExpansionFilter, WH:GetScratchTable("mainExpansion"))
         end,
         layoutButtons = function(filteredButtons)
             local _, _, _, contentWidth = WH:GetLayoutMetrics("bagColumns", 15)
@@ -200,7 +200,7 @@ function GUI:RefreshLayout()
             local viewContext = controller:CreateViewContext({
                 sectionManager = CategoryManager,
                 containerType = "backpack",
-                showEmptySlots = OneWoW_Bags.BagsController:GetShowEmptySlots(),
+                showEmptySlots = ns.BagsController:GetShowEmptySlots(),
                 sortMode = db.global.itemSort,
                 getCollapsed = function(kind, key)
                     if kind == "category" then
@@ -227,7 +227,7 @@ function GUI:RefreshLayout()
                     end
                 end,
                 requestRelayout = function()
-                    OneWoW_Bags:RequestLayoutRefresh("bags", "relayout")
+                    ns:RequestLayoutRefresh("bags", "relayout")
                 end,
             })
 
@@ -252,7 +252,7 @@ function GUI:RefreshLayout()
 end
 
 function GUI:OnSearchChanged()
-    OneWoW_Bags:RequestLayoutRefresh("bags", "search")
+    ns:RequestLayoutRefresh("bags", "search")
 end
 
 function GUI:Show()
@@ -270,7 +270,7 @@ function GUI:Show()
     -- redundant coalesced refresh that would otherwise fire during Show().
     local warm = BagSet.isBuilt
     if warm then
-        OneWoW_Bags:SetOnShowLayoutSuppressed("bags", true)
+        ns:SetOnShowLayoutSuppressed("bags", true)
     end
 
     MainWindow:Show()
@@ -281,16 +281,16 @@ function GUI:Show()
     if not warm then
         BagSet:Build()
     else
-        OneWoW_Bags:ClearPendingLayoutRefresh("GUI")
-        OneWoW_Bags:RequestLayoutRefreshNow("bags")
-        OneWoW_Bags:SetOnShowLayoutSuppressed("bags", false)
+        ns:ClearPendingLayoutRefresh("GUI")
+        ns:RequestLayoutRefreshNow("bags")
+        ns:SetOnShowLayoutSuppressed("bags", false)
     end
 
-    OneWoW_Bags:ScheduleTooltipCatchupRefresh()
+    ns:ScheduleTooltipCatchupRefresh()
 
     -- Latch-bypassing recovery: forces a layout if the window ends up shown
     -- with items but nothing visible (e.g. a coalescer wedge after a zone load).
-    OneWoW_Bags:ScheduleOpenSafetyNet("bags", function()
+    ns:ScheduleOpenSafetyNet("bags", function()
         return MainWindow and MainWindow:IsShown()
     end)
 
@@ -320,7 +320,7 @@ end
 function GUI:FullReset()
     GUI._layoutInProgress = false
     Categories:EndRecentExpiryTicker()
-    OneWoW_Bags.BagSet:ReleaseAll()
+    ns.BagSet:ReleaseAll()
     CategoryManager:ReleaseAllSections()
     Settings:Reset()
     InfoBar:Reset()
@@ -342,7 +342,7 @@ end
 function GUI:ApplyTheme()
     if not MainWindow then return end
 
-    WH:ApplyBaseTheme(MainWindow, titleBar, OneWoW_Bags.InfoBar, OneWoW_Bags.BagsBar)
+    WH:ApplyBaseTheme(MainWindow, titleBar, ns.InfoBar, ns.BagsBar)
 
     if MainWindow.brandText then
         MainWindow.brandText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -363,7 +363,7 @@ function GUI:ApplyTheme()
     end
 
     InfoBar:UpdateViewButtons()
-    OneWoW_Bags:RequestLayoutRefresh("bags", "theme")
+    ns:RequestLayoutRefresh("bags", "theme")
 end
 
 function GUI:GetMainWindow()
@@ -379,19 +379,19 @@ altShowFrame:SetScript("OnEvent", function(_, _, key, down)
 
     if key == "LALT" or key == "RALT" then
         local nowDown = down == 1
-        if nowDown ~= OneWoW_Bags.inventoryPresentationState.altShowActive then
-            OneWoW_Bags:SetAltShowActive(nowDown)
+        if nowDown ~= ns.inventoryPresentationState.altShowActive then
+            ns:SetAltShowActive(nowDown)
             BagSet:UpdateAllSlots()
-            OneWoW_Bags:RequestLayoutRefresh("bags", "alt_show")
+            ns:RequestLayoutRefresh("bags", "alt_show")
         end
     end
 end)
 
 function GUI:IsAltShowActive()
-    return OneWoW_Bags:IsAltShowActive()
+    return ns:IsAltShowActive()
 end
 
 function GUI:UpdateBagsBarVisibility()
     if not isInitialized or not MainWindow then return end
-    OneWoW_Bags:RequestLayoutRefresh("bags", "bags_bar_visibility")
+    ns:RequestLayoutRefresh("bags", "bags_bar_visibility")
 end

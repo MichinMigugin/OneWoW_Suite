@@ -1,0 +1,49 @@
+local _, ns = ...
+
+-- Public, cross-addon read surface for the Bags hub. ns stays private.
+OneWoW_Bags_API = {}
+
+--- Register a callback invoked when Bags item buttons are painted.
+---@param name string unique callback id
+---@param callback fun(button: table, bagID: number, slotID: number)
+function OneWoW_Bags_API.RegisterItemButtonCallback(name, callback)
+    ns:RegisterItemButtonCallback(name, callback)
+end
+
+--- Remove a previously registered item-button callback.
+---@param name string
+function OneWoW_Bags_API.UnregisterItemButtonCallback(name)
+    ns:UnregisterItemButtonCallback(name)
+end
+
+--- Repaint overlays on all visible inventory item buttons.
+function OneWoW_Bags_API.FireCallbacksOnAllButtons()
+    ns:FireCallbacksOnAllButtons()
+end
+
+--- Optional profiler module for PredicateEngine integration.
+---@return table|nil
+function OneWoW_Bags_API.GetProfile()
+    return ns.Profile
+end
+
+--- Toggle the main Bags window.
+function OneWoW_Bags_API.Toggle()
+    if ns.GUI and ns.GUI.Toggle then
+        ns.GUI:Toggle()
+    end
+end
+
+--- Show the main Bags window.
+function OneWoW_Bags_API.Show()
+    if ns.GUI and ns.GUI.Show then
+        ns.GUI:Show()
+    end
+end
+
+--- Hide the main Bags window.
+function OneWoW_Bags_API.Hide()
+    if ns.GUI and ns.GUI.Hide then
+        ns.GUI:Hide()
+    end
+end

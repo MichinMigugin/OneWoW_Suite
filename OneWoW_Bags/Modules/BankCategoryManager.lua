@@ -1,8 +1,8 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-local BCM = OneWoW_Bags.CategoryManagerBase:Create()
-OneWoW_Bags.BankCategoryManager = BCM
+local BCM = ns.CategoryManagerBase:Create()
+ns.BankCategoryManager = BCM
 
 function BCM:GetSourceButtons()
-    return OneWoW_Bags.BankSet:GetAllButtons()
+    return ns.BankSet:GetAllButtons()
 end

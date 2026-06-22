@@ -1,18 +1,18 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local Constants = OneWoW_Bags.Constants
-local GuildBankSet = OneWoW_Bags.GuildBankSet
+local Constants = ns.Constants
+local GuildBankSet = ns.GuildBankSet
 
 local ipairs = ipairs
 local floor, max = math.floor, math.max
 
-OneWoW_Bags.GuildBankTabView = {}
-local View = OneWoW_Bags.GuildBankTabView
+ns.GuildBankTabView = {}
+local View = ns.GuildBankTabView
 
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 function View:Layout(contentFrame, width, filteredButtons, viewContext)
@@ -85,7 +85,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
                 local sectionHeight = 26
 
                 if not section.isCollapsed then
-                    local cols = OneWoW_Bags.GuildBankController:GetColumns() or floor((width - padding * 2) / (iconSize + spacing))
+                    local cols = ns.GuildBankController:GetColumns() or floor((width - padding * 2) / (iconSize + spacing))
                     cols = max(cols, 1)
 
                     local totalGridWidth = cols * (iconSize + spacing) - spacing
@@ -101,7 +101,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
                         local y = -(itemRow * (iconSize + spacing))
 
                         button:ClearAllPoints()
-                        OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, section.content, x, y)
+                        ns.WindowHelpers:SetPointPixelAligned(button, section.content, x, y)
                         button:OWB_SetIconSize(iconSize)
                         button:Show()
 

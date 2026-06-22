@@ -1,15 +1,15 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local ItemPool = OneWoW_Bags.ItemPool
+local ItemPool = ns.ItemPool
 
 local tonumber, pairs, tinsert, wipe, select = tonumber, pairs, tinsert, wipe, select
 local GameTooltip = GameTooltip
 local C_Item = C_Item
 
-OneWoW_Bags.GuildBankSet = {}
-local GBSet = OneWoW_Bags.GuildBankSet
+ns.GuildBankSet = {}
+local GBSet = ns.GuildBankSet
 
 GBSet.slots = {}
 GBSet.totalSlots = 0
@@ -172,7 +172,7 @@ local function HideDynamicChildren(button)
 end
 
 local function ClearGuildBankButton(button)
-    OneWoW_Bags.ItemPool:ClearNewItemGlow(button)
+    ns.ItemPool:ClearNewItemGlow(button)
     HideDynamicChildren(button)
 
     button:SetAlpha(1.0)
@@ -238,7 +238,7 @@ end
 
 function GBSet:Build()
     self._building = true
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     Profile:Start("GuildBankSet:Build")
 
     Profile:Start("GuildBankSet:Build.ReleaseAll")
@@ -256,7 +256,7 @@ function GBSet:Build()
         for slotID = 1, SLOTS_PER_TAB do
             local button = ItemPool:Acquire()
             button:SetParent(gbFrame)
-            OneWoW_Bags:ApplyItemButtonMixin(button)
+            ns:ApplyItemButtonMixin(button)
             button.owb_bagID = tabID
             button.owb_slotID = slotID
             button:SetID(slotID)
@@ -265,8 +265,8 @@ function GBSet:Build()
             self.totalSlots = self.totalSlots + 1
 
             GBSet:ApplyGuildBankScripts(button)
-            if OneWoW_Bags.Masque then
-                OneWoW_Bags.Masque:SkinItemButton(button, "guild")
+            if ns.Masque then
+                ns.Masque:SkinItemButton(button, "guild")
             end
         end
     end
@@ -283,7 +283,7 @@ function GBSet:Build()
 
     Profile:Stop("GuildBankSet:Build")
     self._building = false
-    OneWoW_Bags:RequestLayoutRefresh("guild", "build_done")
+    ns:RequestLayoutRefresh("guild", "build_done")
 end
 
 function GBSet:CacheTab(tabID)
@@ -328,9 +328,9 @@ function GBSet:CacheAllTabs()
 end
 
 local function ApplyCachedItemToButton(button, cached)
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     local tApply = Profile:Mark()
-    OneWoW_Bags.ItemPool:ClearNewItemGlow(button)
+    ns.ItemPool:ClearNewItemGlow(button)
 
     if cached and cached.texture then
         HideDynamicChildren(button)
@@ -354,7 +354,7 @@ local function ApplyCachedItemToButton(button, cached)
             iconFileID = cached.texture,
         }
         local tProps = Profile:Mark()
-        local props = OneWoW_Bags:GetButtonProps(button)
+        local props = ns:GetButtonProps(button)
         Profile:Add("GuildBankSet:GetButtonProps", tProps)
         button._owb_sortName = props.nameRaw ~= "" and props.nameRaw or nil
         button._owb_ilvl = props.ilvl and props.ilvl > 0 and props.ilvl or nil
@@ -365,7 +365,7 @@ local function ApplyCachedItemToButton(button, cached)
         button._owb_reagentQuality = props.reagentQuality
         button._owb_craftedQuality = props.craftedQuality
 
-        local masqueActive = OneWoW_Bags.Masque and OneWoW_Bags.Masque:IsActive()
+        local masqueActive = ns.Masque and ns.Masque:IsActive()
         if button.SetItemButtonQuality then
             button:SetItemButtonQuality(cached.quality, cached.itemLink, false)
             if button.IconBorder and not masqueActive then
@@ -377,7 +377,7 @@ local function ApplyCachedItemToButton(button, cached)
         end
 
         if not masqueActive then
-            if OneWoW_Bags:ShouldShowItemQuality(true, cached.quality) then
+            if ns:ShouldShowItemQuality(true, cached.quality) then
                 OneWoW_GUI:UpdateIconQuality(button, cached.quality)
             else
                 OneWoW_GUI:UpdateIconQuality(button, nil)
@@ -430,7 +430,7 @@ function GBSet:UpdateTabs(tabSet)
 end
 
 function GBSet:UpdateAllSlots()
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     Profile:Start("GuildBankSet:UpdateAllSlots.CacheAllTabs")
     local summary = self:CacheAllTabs()
     Profile:Stop("GuildBankSet:UpdateAllSlots.CacheAllTabs")
@@ -491,7 +491,7 @@ function GBSet:UpdateQualityColors()
     for _, tabSlots in pairs(self.slots) do
         for _, button in pairs(tabSlots) do
             local quality = button.owb_itemInfo and button.owb_itemInfo.quality
-            if OneWoW_Bags:ShouldShowItemQuality(true, quality) then
+            if ns:ShouldShowItemQuality(true, quality) then
                 OneWoW_GUI:UpdateIconQuality(button, button.owb_itemInfo.quality)
             else
                 OneWoW_GUI:UpdateIconQuality(button, nil)
@@ -585,11 +585,11 @@ function GBSet:ApplyGuildBankScripts(button)
             end
             local hadItem = myself.owb_hasItem
             local isPlacingItem = cursorType ~= nil
-            OneWoW_Bags._wasPlacingBeforeGBOp = isPlacingItem
-            OneWoW_Bags._destHadItemBeforeGBOp = hadItem and isPlacingItem
+            ns._wasPlacingBeforeGBOp = isPlacingItem
+            ns._destHadItemBeforeGBOp = hadItem and isPlacingItem
             PickupGuildBankItem(tabID, slotID)
             if hadItem or isPlacingItem then
-                OneWoW_Bags:TrackGuildBankTransferTab(tabID)
+                ns:TrackGuildBankTransferTab(tabID)
             end
         end
     end)
@@ -612,10 +612,10 @@ function GBSet:ApplyGuildBankScripts(button)
             SetCurrentGuildBankTab(tabID)
         end
         local hadItem = myself.owb_hasItem
-        OneWoW_Bags._wasPlacingBeforeGBOp = false
+        ns._wasPlacingBeforeGBOp = false
         PickupGuildBankItem(tabID, slotID)
         if hadItem then
-            OneWoW_Bags:TrackGuildBankTransferTab(tabID)
+            ns:TrackGuildBankTransferTab(tabID)
         end
     end)
 
@@ -626,9 +626,9 @@ function GBSet:ApplyGuildBankScripts(button)
             if tabID ~= GetCurrentGuildBankTab() then
                 SetCurrentGuildBankTab(tabID)
             end
-            OneWoW_Bags:TrackGuildBankTransferTab(tabID)
-            OneWoW_Bags._wasPlacingBeforeGBOp = true
-            OneWoW_Bags._destHadItemBeforeGBOp = myself.owb_hasItem
+            ns:TrackGuildBankTransferTab(tabID)
+            ns._wasPlacingBeforeGBOp = true
+            ns._destHadItemBeforeGBOp = myself.owb_hasItem
             PickupGuildBankItem(tabID, myself.owb_slotID)
         end
     end)
@@ -654,7 +654,7 @@ function GBSet:RestoreButtonScripts(button)
 end
 
 function GBSet:ReleaseAll()
-    local Pool = OneWoW_Bags.ItemPool
+    local Pool = ns.ItemPool
     for _, tabSlots in pairs(self.slots) do
         for _, button in pairs(tabSlots) do
             GBSet:RestoreButtonScripts(button)

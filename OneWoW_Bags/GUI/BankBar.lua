@@ -1,18 +1,18 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local BankTypes = OneWoW_Bags.BankTypes
-local BankSet = OneWoW_Bags.BankSet
-local WH = OneWoW_Bags.WindowHelpers
-local BH = OneWoW_Bags.BarHelpers
+local BankTypes = ns.BankTypes
+local BankSet = ns.BankSet
+local WH = ns.WindowHelpers
+local BH = ns.BarHelpers
 
 local pairs, ipairs = pairs, ipairs
 
 local C_Bank = C_Bank
 
-OneWoW_Bags.BankBar = {}
-local BankBar = OneWoW_Bags.BankBar
+ns.BankBar = {}
+local BankBar = ns.BankBar
 
 ---@class BankBarFrame : Frame
 ---@field withdrawBtn table
@@ -31,11 +31,11 @@ local ROW2_Y = -14
 local BAR_HEIGHT = 58
 
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 local function GetController()
-    return OneWoW_Bags.BankController
+    return ns.BankController
 end
 
 function BankBar:Create(parent)
@@ -124,7 +124,7 @@ end
 function BankBar:RefreshChromeAnchors()
     if not bagsBarFrame then return end
     local db = GetDB()
-    local leftInset, rightInset = WH:GetItemGridChromeInsets(OneWoW_Bags.BankController:Get("hideScrollBar"))
+    local leftInset, rightInset = WH:GetItemGridChromeInsets(ns.BankController:Get("hideScrollBar"))
     if bagsBarFrame.withdrawBtn then
         bagsBarFrame.withdrawBtn:ClearAllPoints()
         bagsBarFrame.withdrawBtn:SetPoint("RIGHT", bagsBarFrame, "RIGHT", -rightInset, ROW1_Y)
@@ -163,10 +163,10 @@ function BankBar:BuildTabButtons()
     tabButtons = {}
 
     local bagList = showWarband and BankTypes:GetWarbandTabIDs() or BankTypes:GetBankTabIDs()
-    local xOffset = select(1, WH:GetItemGridChromeInsets(OneWoW_Bags.BankController:Get("hideScrollBar")))
+    local xOffset = select(1, WH:GetItemGridChromeInsets(ns.BankController:Get("hideScrollBar")))
 
     local numPurchased = 0
-    if OneWoW_Bags.bankOpen then
+    if ns.bankOpen then
         local bankType = showWarband and Enum.BankType.Account or Enum.BankType.Character
         numPurchased = C_Bank.FetchNumPurchasedBankTabs(bankType) or 0
     end
@@ -207,9 +207,9 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
 
     btn._skinnedIcon = icon
     OneWoW_GUI:SkinIconFrame(btn, { preset = "clean" })
-    if OneWoW_Bags.Masque then
+    if ns.Masque then
         local showWarband = db.global.bankShowWarband
-        OneWoW_Bags.Masque:SkinBagBarButton(btn, showWarband and "warband" or "bank")
+        ns.Masque:SkinBagBarButton(btn, showWarband and "warband" or "bank")
     end
 
     btn:SetScript("OnEnter", function(myself)
@@ -231,7 +231,7 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
         else
             local showWarband = db.global.bankShowWarband
             local bType = showWarband and Enum.BankType.Account or Enum.BankType.Character
-            if OneWoW_Bags.bankOpen and C_Bank.CanPurchaseBankTab(bType) and not C_Bank.HasMaxBankTabs(bType) then
+            if ns.bankOpen and C_Bank.CanPurchaseBankTab(bType) and not C_Bank.HasMaxBankTabs(bType) then
                 local tabData = C_Bank.FetchNextPurchasableBankTabData(bType)
                 if tabData and tabData.tabCost then
                     GameTooltip:SetText(BANKSLOTPURCHASE, 1, 0.82, 0)
@@ -254,9 +254,9 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
         btn:SetAttribute("overrideBankType", nil)
         btn.GetBankTypeForTabPurchase = nil
         btn:SetScript("OnClick", function()
-            if not OneWoW_Bags.bankOpen then return end
-            if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.ShowPurchasePrompt then
-                OneWoW_Bags.BankGUI:ShowPurchasePrompt(bType)
+            if not ns.bankOpen then return end
+            if ns.BankGUI and ns.BankGUI.ShowPurchasePrompt then
+                ns.BankGUI:ShowPurchasePrompt(bType)
             end
         end)
         return btn
@@ -266,11 +266,11 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
     btn:SetAttribute("overrideBankType", nil)
     btn.GetBankTypeForTabPurchase = nil
     btn:SetScript("OnClick", function(myself, mouseButton)
-        if OneWoW_Bags.BankGUI and OneWoW_Bags.BankGUI.ClearForcedPurchasePrompt then
-            OneWoW_Bags.BankGUI:ClearForcedPurchasePrompt()
+        if ns.BankGUI and ns.BankGUI.ClearForcedPurchasePrompt then
+            ns.BankGUI:ClearForcedPurchasePrompt()
         end
 
-        if mouseButton == "RightButton" and OneWoW_Bags.bankOpen then
+        if mouseButton == "RightButton" and ns.bankOpen then
             local showWarband = db.global.bankShowWarband
             local bType = showWarband and Enum.BankType.Account or Enum.BankType.Character
             local tabData = BankBar:GetTabData(myself.bagID, myself.tabIndex)
@@ -311,7 +311,7 @@ end
 function BankBar:GetTabSettingsMenu()
     if not bagsBarFrame then return nil end
     if not bagsBarFrame._tabSettingsMenu then
-        local bankWindow = OneWoW_Bags.BankGUI:GetMainWindow()
+        local bankWindow = ns.BankGUI:GetMainWindow()
         local parent = bankWindow or UIParent
         bagsBarFrame._tabSettingsMenu = CreateFrame("Frame", "OneWoW_BankTabSettingsMenu", parent, "BankPanelTabSettingsMenuTemplate")
         bagsBarFrame._tabSettingsMenu:SetClampedToScreen(true)
@@ -339,7 +339,7 @@ function BankBar:UpdateBankTypeButtons()
     if not bagsBarFrame then return end
     local db = GetDB()
     local showWarband = db.global.bankShowWarband
-    local warbandOnly = OneWoW_Bags.isWarbandOnlyBankAccess == true
+    local warbandOnly = ns.isWarbandOnlyBankAccess == true
 
     local function setActive(btn)
         if not btn then return end

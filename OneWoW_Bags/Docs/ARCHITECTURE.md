@@ -188,12 +188,19 @@ OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some o
 
 ### The Root Namespace Object
 
-`OneWoW_Bags` (the second vararg from `local _, OneWoW_Bags = ...`) is the central orchestration hub. All layers attach their tables to it, and it is also exposed as `_G["OneWoW_Bags"]` for cross-addon access.
+`OneWoW_Bags = {}` is a **thin lifecycle root** (colon hooks only: `OnAddonLoaded`,
+`OnPlayerLogin`, `OnPlayerEnteringWorld`, `ApplyTheme`, `ApplyLanguage`). The
+private namespace table comes from the vararg: `local ADDON_NAME, ns = ...`. All
+modules attach to `ns`; database state lives on `ns.db` (initialized in
+`Core/Database.lua`).
 
-The root object provides:
+Cross-addon integrations use **`OneWoW_Bags_API`** (`Core/API.lua`) for
+item-button callbacks, window toggles, and optional profiler access.
+
+The `ns` object provides:
 
 - **State flags:** `bankOpen`, `guildBankOpen`, `oneWoWHubActive`, `inventoryPresentationState` (contains `altShowActive`), `activeExpansionFilter` (bags search bar expansion filter), `activeBankExpansionFilter`
-- **Lifecycle:** `OnAddonLoaded`, `OnPlayerLogin`, `InitializeControllers`, `InitializeDatabase`
+- **Lifecycle:** `OnAddonLoaded`, `OnPlayerLogin` on the thin root; `InitializeControllers`, `InitializeDatabase` on `ns`
 - **Refresh orchestration:** `RequestLayoutRefresh(target)`, `RequestVisualRefresh(target)`, `RequestWindowReset(target)`
 - **Cache invalidation:** `InvalidateCategorization(scope)` — refreshes `Categories` from `customCategoriesV2` / `recentItemDuration` / `recentItems`, clears category caches (`categoryCache` + `baseCategoryCache`); if `scope == "props"` then `OneWoW.PredicateEngine:InvalidatePropsCache()`, else full `OneWoW.PredicateEngine:InvalidateCache()`. **`InvalidateItemIDs(idSet)`** — surgical eviction after coalesced `GET_ITEM_INFO_RECEIVED` so identity-tier caches survive for unrelated items while streaming completes.
 - **Blizzard hooks:** `HookBlizzardBags`, `SuppressBankFrame`, `RestoreBankFrame`, `SuppressGuildBankFrame`, `RestoreGuildBankFrame`
@@ -661,8 +668,8 @@ TOC hooks: `1WoW_Bags_OnAddonCompartmentClick`, `1WoW_Bags_OnAddonCompartmentEnt
 ### Item button callbacks (`Integrations\OneWoWBagsIntegration.lua`)
 
 ```lua
-OneWoW_Bags:RegisterItemButtonCallback("MyAddon", function(button, bagID, slotID) ... end)
-OneWoW_Bags:UnregisterItemButtonCallback("MyAddon")
+OneWoW_Bags_API.RegisterItemButtonCallback("MyAddon", function(button, bagID, slotID) ... end)
+OneWoW_Bags_API.UnregisterItemButtonCallback("MyAddon")
 ```
 
 After `GUI:RefreshLayout`, visible inventory buttons fire registered callbacks (~50ms delay). After `BankGUI:RefreshLayout`, bank buttons fire when `enableBankOverlays` is true. After `GuildBankGUI:RefreshLayout`, when **`db.global.enableBankOverlays`** is true, the integration **clears** OneWoW overlays on guild bank buttons (`ClearGuildBankOverlays`) rather than invoking the same per-button callback loop. (Guild bank uses this shared key directly—not `BankController`-dispatched warband/personal overlay toggles.)

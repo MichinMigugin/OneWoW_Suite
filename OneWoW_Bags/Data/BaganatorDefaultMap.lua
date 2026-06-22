@@ -1,4 +1,4 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 -- Maps Baganator `default_*` source IDs to the matching OneWoW built-in
 -- category name. Values MUST match the built-in names declared in
@@ -8,7 +8,7 @@ local _, OneWoW_Bags = ...
 -- Unmapped default_* entries fall through to the "Keep / Ignore" flow in the
 -- ImportPreview dialog. Keeping one creates an empty placeholder custom
 -- category inside a dedicated "Baganator Import" section.
-OneWoW_Bags.BaganatorDefaultMap = {
+ns.BaganatorDefaultMap = {
     ["default_auto_recents"]        = "Recent Items",
     ["default_weapon"]              = "Weapons",
     ["default_armor"]               = "Armor",
@@ -40,7 +40,7 @@ OneWoW_Bags.BaganatorDefaultMap = {
 -- unmapped default in the preview's Keep/Ignore panel. Baganator's localized
 -- names are used first when available; this is a fallback for when the
 -- addon isn't loaded (paste-string import).
-OneWoW_Bags.BaganatorDefaultDisplayHints = {
+ns.BaganatorDefaultDisplayHints = {
     ["default_mount"]           = "Mounts",
     ["default_glyph"]           = "Glyphs",
     ["default_auto_junk"]       = "Auto Junk",

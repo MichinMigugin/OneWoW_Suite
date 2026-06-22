@@ -1,10 +1,10 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-OneWoW_Bags.ImportExport = OneWoW_Bags.ImportExport or {}
-OneWoW_Bags.ImportExport.Serializer = OneWoW_Bags.ImportExport.Serializer or {}
-local Serializer = OneWoW_Bags.ImportExport.Serializer
+ns.ImportExport = ns.ImportExport or {}
+ns.ImportExport.Serializer = ns.ImportExport.Serializer or {}
+local Serializer = ns.ImportExport.Serializer
 
-Serializer.FORMAT = "OneWoW_Bags.Export"
+Serializer.FORMAT = "ns.Export"
 Serializer.VERSION = 2
 
 local pairs, ipairs, type, tostring, tonumber = pairs, ipairs, type, tostring, tonumber
@@ -477,7 +477,7 @@ function Serializer:BuildExport(db)
     local g = db and db.global
     if not g then error("Serializer:BuildExport: missing db.global") end
 
-    local SD = OneWoW_Bags.SectionDefaults
+    local SD = ns.SectionDefaults
     local ownBagsId = SD and SD.SEC_ONEWOW_BAGS
 
     local sections = {}
@@ -495,7 +495,7 @@ function Serializer:BuildExport(db)
         categories[cid] = copyAllowedCategoryFields(cat)
     end
 
-    local IEUtil = OneWoW_Bags.ImportExport.Util
+    local IEUtil = ns.ImportExport.Util
     local savedSearches = IEUtil and IEUtil.CollectReferencedSavedSearches
         and IEUtil:CollectReferencedSavedSearches(categories, g.savedSearches)
         or {}

@@ -12,7 +12,7 @@ Instructions:
 
 local ADDON_NAME = ...
 
-if OneWoW_Bags then
+if OneWoW_Bags_API then
 
     function YourAddon_ApplyOverlay(overlayFrame, itemLink, containerInfo)
         if not overlayFrame then return end
@@ -53,5 +53,5 @@ if OneWoW_Bags then
         end
     end
 
-    OneWoW_Bags:RegisterItemButtonCallback(ADDON_NAME, YourAddon_UpdateItemButton)
+    OneWoW_Bags_API.RegisterItemButtonCallback(ADDON_NAME, YourAddon_UpdateItemButton)
 end

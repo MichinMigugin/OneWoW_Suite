@@ -1,9 +1,9 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local C_Timer = C_Timer
 
-OneWoW_Bags.GuildBankController = {}
-local GuildBankController = OneWoW_Bags.GuildBankController
+ns.GuildBankController = {}
+local GuildBankController = ns.GuildBankController
 
 function GuildBankController:Create(addon)
     local controller = {}

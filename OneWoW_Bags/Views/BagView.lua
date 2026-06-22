@@ -1,20 +1,20 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local Constants = OneWoW_Bags.Constants
-local L = OneWoW_Bags.L
-local BagTypes = OneWoW_Bags.BagTypes
-local BagSet = OneWoW_Bags.BagSet
+local Constants = ns.Constants
+local L = ns.L
+local BagTypes = ns.BagTypes
+local BagSet = ns.BagSet
 
 local ipairs = ipairs
 local floor, max = math.floor, math.max
 
-OneWoW_Bags.BagView = {}
-local View = OneWoW_Bags.BagView
+ns.BagView = {}
+local View = ns.BagView
 
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 function View:Layout(contentFrame, width, filteredButtons, viewContext)
@@ -95,7 +95,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
                     local y = -(itemRow * (iconSize + spacing))
 
                     button:ClearAllPoints()
-                    OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, section.content, x, y)
+                    ns.WindowHelpers:SetPointPixelAligned(button, section.content, x, y)
                     button:OWB_SetIconSize(iconSize)
                     button:Show()
 

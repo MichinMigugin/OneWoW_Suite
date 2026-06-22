@@ -1,7 +1,7 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-OneWoW_Bags.WindowLayoutController = {}
-local WindowLayoutController = OneWoW_Bags.WindowLayoutController
+ns.WindowLayoutController = {}
+local WindowLayoutController = ns.WindowLayoutController
 
 function WindowLayoutController:UpdateFixedWidth(config)
     if not config.mainWindow then return end

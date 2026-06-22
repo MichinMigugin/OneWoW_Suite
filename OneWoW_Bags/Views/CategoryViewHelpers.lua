@@ -1,8 +1,8 @@
-local ADDON_NAME, OneWoW_Bags = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local L = OneWoW_Bags.L
+local L = ns.L
 
 local tremove, tinsert, wipe, sort = tremove, tinsert, wipe, sort
 local pairs, ipairs, type = pairs, ipairs, type
@@ -10,9 +10,9 @@ local floor, min, max, ceil, sqrt = math.floor, math.min, math.max, math.ceil, m
 local tostring = tostring
 local SetItemButtonCount = SetItemButtonCount
 
-OneWoW_Bags.CategoryViewHelpers = {}
-local H = OneWoW_Bags.CategoryViewHelpers
-local WH = OneWoW_Bags.WindowHelpers
+ns.CategoryViewHelpers = {}
+local H = ns.CategoryViewHelpers
+local WH = ns.WindowHelpers
 local filterScratchByCategory = {}
 
 function H.CreateLabelPool()
@@ -95,7 +95,7 @@ function H.VerticalGap(cellSize, verticalSpacing)
 end
 
 function H.RenderItemGrid(parentFrame, items, startY, leftPadding, cellSize, iconSize, cols)
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     Profile:Start("CategoryView.RenderItemGrid")
     local itemRow = 0
     local itemCol = 0
@@ -103,7 +103,7 @@ function H.RenderItemGrid(parentFrame, items, startY, leftPadding, cellSize, ico
         local x = leftPadding + (itemCol * cellSize)
         local y = -(startY + itemRow * cellSize)
         button:ClearAllPoints()
-        OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, parentFrame, x, y)
+        ns.WindowHelpers:SetPointPixelAligned(button, parentFrame, x, y)
         button:OWB_SetIconSize(iconSize)
         button:Show()
         itemCol = itemCol + 1
@@ -384,7 +384,7 @@ function H.PackCompactBlocks(blockList, contentFrame, opts)
                     local x = leftPadding + (cat.startCol + itemCol) * cellSize
                     local y = -(yOffset + itemRow * cellSize)
                     button:ClearAllPoints()
-                    OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, contentFrame, x, y)
+                    ns.WindowHelpers:SetPointPixelAligned(button, contentFrame, x, y)
                     button:OWB_SetIconSize(iconSize)
                     button:Show()
                     itemCol = itemCol + 1
@@ -416,13 +416,13 @@ function H.LayoutCompactGroup(catInfoList, contentFrame, opts)
 end
 
 function H.GetSortedCategoryNames(itemsByCategory)
-    local Categories = OneWoW_Bags.Categories
+    local Categories = ns.Categories
     local names = {}
     for name in pairs(itemsByCategory) do
         tinsert(names, name)
     end
 
-    local db = OneWoW_Bags.db
+    local db = ns.db
     local categoryOrder = db.global.categoryOrder
     if #categoryOrder > 0 then
         local orderMap = {}
@@ -453,8 +453,8 @@ local function ResolveSectionShowHeader(sec, containerType)
 end
 
 local function GetSectionedLayoutImpl(itemsByCategory, containerType)
-    local Categories = OneWoW_Bags.Categories
-    local db = OneWoW_Bags.db
+    local Categories = ns.Categories
+    local db = ns.db
 
     local sections    = db.global.categorySections
     local sectOrder   = db.global.sectionOrder
@@ -669,7 +669,7 @@ local function GetSectionedLayoutImpl(itemsByCategory, containerType)
 end
 
 function H.GetSectionedLayout(itemsByCategory, containerType)
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     Profile:Start("CategoryView.GetSectionedLayout")
     local result = GetSectionedLayoutImpl(itemsByCategory, containerType)
     Profile:Stop("CategoryView.GetSectionedLayout")
@@ -728,7 +728,7 @@ function H.StackItems(items, db, PE)
 end
 
 function H.FilterItems(categoryName, itemsByCategory, filterToken, catMods, sortButtons, db, PE)
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     Profile:Start("CategoryView.FilterItems")
     local items = itemsByCategory[categoryName]
     if not items then
@@ -783,7 +783,7 @@ function H.GroupItemsBy(items, groupBy)
         for _, btn in ipairs(items) do
             local typeName = OTHER
             if btn.owb_itemInfo then
-                local props = OneWoW_Bags:GetButtonProps(btn)
+                local props = ns:GetButtonProps(btn)
                 typeName = props.itemType or OTHER
             end
             if not groups[typeName] then
@@ -798,7 +798,7 @@ function H.GroupItemsBy(items, groupBy)
         for _, btn in ipairs(items) do
             local slotName = OTHER
             if btn.owb_itemInfo then
-                local props = OneWoW_Bags:GetButtonProps(btn)
+                local props = ns:GetButtonProps(btn)
                 local equipLoc = props.equipLoc
                 if equipLoc and equipLoc ~= "" then
                     slotName = _G[equipLoc] or equipLoc
@@ -828,7 +828,7 @@ function H.GroupItemsBy(items, groupBy)
         for _, btn in ipairs(items) do
             local key = NONE
             if btn.owb_itemInfo then
-                local props = OneWoW_Bags:GetButtonProps(btn)
+                local props = ns:GetButtonProps(btn)
                 local list = props.equipmentSetList
                 if list and #list > 1 then
                     key = MULTI

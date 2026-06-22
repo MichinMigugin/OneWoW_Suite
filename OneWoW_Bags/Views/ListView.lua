@@ -1,22 +1,22 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-local Constants = OneWoW_Bags.Constants
-local BagTypes = OneWoW_Bags.BagTypes
+local Constants = ns.Constants
+local BagTypes = ns.BagTypes
 
 local floor, max = math.floor, math.max
 local ipairs = ipairs
 local tinsert = tinsert
 
-OneWoW_Bags.ListView = {}
-local View = OneWoW_Bags.ListView
+ns.ListView = {}
+local View = ns.ListView
 
 function View:Layout(contentFrame, buttons, width, viewContext)
-    local db = OneWoW_Bags:GetDB()
+    local db = ns:GetDB()
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local padding = 2
     local sortButtons = viewContext and viewContext.sortButtons or function(list)
-        OneWoW_Bags:SortButtons(list, db.global.itemSort)
+        ns:SortButtons(list, db.global.itemSort)
     end
 
     local showEmpty = viewContext and viewContext.showEmptySlots
@@ -54,7 +54,7 @@ function View:Layout(contentFrame, buttons, width, viewContext)
         local y = -(padding + (row * (iconSize + spacing)) + extraYOffset)
 
         button:ClearAllPoints()
-        OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, contentFrame, x, y)
+        ns.WindowHelpers:SetPointPixelAligned(button, contentFrame, x, y)
         button:OWB_SetIconSize(iconSize)
         button:Show()
 

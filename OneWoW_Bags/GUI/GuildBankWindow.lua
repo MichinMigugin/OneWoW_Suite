@@ -1,24 +1,24 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local Constants = OneWoW_Bags.Constants
-local WH = OneWoW_Bags.WindowHelpers
-local GuildBankInfoBar = OneWoW_Bags.GuildBankInfoBar
-local GuildBankBar = OneWoW_Bags.GuildBankBar
-local GuildBankSet = OneWoW_Bags.GuildBankSet
-local GuildBankCategoryManager = OneWoW_Bags.GuildBankCategoryManager
-local GuildBankTabView = OneWoW_Bags.GuildBankTabView
-local ListView = OneWoW_Bags.ListView
-local GuildBankLog = OneWoW_Bags.GuildBankLog
+local Constants = ns.Constants
+local WH = ns.WindowHelpers
+local GuildBankInfoBar = ns.GuildBankInfoBar
+local GuildBankBar = ns.GuildBankBar
+local GuildBankSet = ns.GuildBankSet
+local GuildBankCategoryManager = ns.GuildBankCategoryManager
+local GuildBankTabView = ns.GuildBankTabView
+local ListView = ns.ListView
+local GuildBankLog = ns.GuildBankLog
 
 local pcall, print = pcall, print
 local ipairs = ipairs
 local C_Timer = C_Timer
 local C_PlayerInteractionManager = C_PlayerInteractionManager
 
-OneWoW_Bags.GuildBankGUI = OneWoW_Bags.GuildBankGUI or {}
-local GuildBankGUI = OneWoW_Bags.GuildBankGUI
+ns.GuildBankGUI = ns.GuildBankGUI or {}
+local GuildBankGUI = ns.GuildBankGUI
 
 local MainWindow = nil
 local isInitialized = false
@@ -30,11 +30,11 @@ local needsCleanupAfterCombat = false
 local cleanupEventFrame = nil
 
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 local function GetLayoutController()
-    return OneWoW_Bags.WindowLayoutController
+    return ns.WindowLayoutController
 end
 
 function GuildBankGUI:InitMainWindow()
@@ -53,12 +53,12 @@ function GuildBankGUI:InitMainWindow()
             GuildBankLog:Hide()
 
             OneWoW_GUI:SaveWindowPosition(MainWindow, db.global.guildBankFramePosition)
-            if OneWoW_Bags.guildBankOpen then
-                OneWoW_Bags.guildBankOpen = false
+            if ns.guildBankOpen then
+                ns.guildBankOpen = false
                 GuildBankSet:ReleaseAll()
                 GuildBankSet:ClearCache()
-                if OneWoW_Bags.RestoreGuildBankFrame then
-                    OneWoW_Bags:RestoreGuildBankFrame()
+                if ns.RestoreGuildBankFrame then
+                    ns:RestoreGuildBankFrame()
                 end
                 C_Timer.After(0, function()
                     C_PlayerInteractionManager.ClearInteraction(Enum.PlayerInteractionType.GuildBanker)
@@ -66,7 +66,7 @@ function GuildBankGUI:InitMainWindow()
             end
         end,
         onDragStop = function()
-            if isInitialized then OneWoW_Bags:RequestLayoutRefresh("guild", "drag_stop") end
+            if isInitialized then ns:RequestLayoutRefresh("guild", "drag_stop") end
         end,
     })
 
@@ -80,8 +80,8 @@ function GuildBankGUI:InitMainWindow()
         onClose = function() MainWindow:Hide() end,
         settingsText = SETTINGS,
         onSettings = function()
-            if OneWoW_Bags.Settings then
-                OneWoW_Bags.Settings:Toggle()
+            if ns.Settings then
+                ns.Settings:Toggle()
             end
         end,
     })
@@ -152,7 +152,7 @@ function GuildBankGUI:UpdateWindowWidth()
 end
 
 function GuildBankGUI:RefreshLayout()
-    local LD = OneWoW_Bags.LayoutDebug
+    local LD = ns.LayoutDebug
     if not isInitialized or not MainWindow then
         if LD and LD.enabled then LD:Record("refresh_early", { target = "guild", note = "not initialized" }) end
         return
@@ -168,7 +168,7 @@ function GuildBankGUI:RefreshLayout()
         return
     end
 
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     Profile:Start("GuildBankGUI:RefreshLayout")
 
     WH:RunGuardedLayoutRefresh(GuildBankGUI, "guild", function()
@@ -208,7 +208,7 @@ function GuildBankGUI:RefreshLayout()
             local _, _, _, contentWidth = WH:GetLayoutMetrics("bankColumns", 15)
             local tabViewContext = controller:CreateViewContext({
                 sectionManager = GuildBankCategoryManager,
-                showEmptySlots = OneWoW_Bags.GuildBankController:GetShowEmptySlots(),
+                showEmptySlots = ns.GuildBankController:GetShowEmptySlots(),
                 sortMode = db.global.itemSort,
                 getCollapsed = function(kind, key)
                     if kind == "tab" then
@@ -221,7 +221,7 @@ function GuildBankGUI:RefreshLayout()
                     end
                 end,
                 requestRelayout = function()
-                    OneWoW_Bags:RequestLayoutRefresh("guild", "relayout")
+                    ns:RequestLayoutRefresh("guild", "relayout")
                 end,
             })
 
@@ -240,7 +240,7 @@ function GuildBankGUI:RefreshLayout()
 end
 
 function GuildBankGUI:OnSearchChanged()
-    OneWoW_Bags:RequestLayoutRefresh("guild", "search")
+    ns:RequestLayoutRefresh("guild", "search")
 end
 
 function GuildBankGUI:Show()
@@ -260,7 +260,7 @@ function GuildBankGUI:Show()
     -- redundant coalesced refresh that would otherwise fire during Show().
     local warm = GuildBankSet.isBuilt
     if warm then
-        OneWoW_Bags:SetOnShowLayoutSuppressed("guild", true)
+        ns:SetOnShowLayoutSuppressed("guild", true)
     end
 
     MainWindow:Show()
@@ -271,9 +271,9 @@ function GuildBankGUI:Show()
     if not warm then
         GuildBankSet:Build()
     else
-        OneWoW_Bags:ClearPendingLayoutRefresh("GuildBankGUI")
-        OneWoW_Bags:RequestLayoutRefreshNow("guild")
-        OneWoW_Bags:SetOnShowLayoutSuppressed("guild", false)
+        ns:ClearPendingLayoutRefresh("GuildBankGUI")
+        ns:RequestLayoutRefreshNow("guild")
+        ns:SetOnShowLayoutSuppressed("guild", false)
     end
 
     GuildBankBar:BuildTabButtons()
@@ -327,7 +327,7 @@ function GuildBankGUI:ApplyTheme()
     GuildBankInfoBar:UpdateViewButtons()
     GuildBankLog:ApplyTheme()
 
-    OneWoW_Bags:RequestLayoutRefresh("guild", "theme")
+    ns:RequestLayoutRefresh("guild", "theme")
 end
 
 function GuildBankGUI:GetMainWindow()

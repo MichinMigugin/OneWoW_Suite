@@ -1,19 +1,19 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local Constants = OneWoW_Bags.Constants
-local BankSet = OneWoW_Bags.BankSet
-local BankTypes = OneWoW_Bags.BankTypes
+local Constants = ns.Constants
+local BankSet = ns.BankSet
+local BankTypes = ns.BankTypes
 
 local ipairs = ipairs
 local floor, max = math.floor, math.max
 
-OneWoW_Bags.BankTabView = {}
-local View = OneWoW_Bags.BankTabView
+ns.BankTabView = {}
+local View = ns.BankTabView
 
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 function View:Layout(contentFrame, width, filteredButtons, viewContext)
@@ -29,7 +29,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
     local getCollapsed = viewContext.getCollapsed
     local setCollapsed = viewContext.setCollapsed
 
-    local BC = OneWoW_Bags.BankController
+    local BC = ns.BankController
     local selectedTab = BC:Get("selectedTab")
     local showWarband = BankSet:IsWarband()
     local bagList = showWarband and BankTypes:GetWarbandTabIDs() or BankTypes:GetBankTabIDs()
@@ -108,7 +108,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
                         local y = -(itemRow * (iconSize + spacing))
 
                         button:ClearAllPoints()
-                        OneWoW_Bags.WindowHelpers:SetPointPixelAligned(button, section.content, x, y)
+                        ns.WindowHelpers:SetPointPixelAligned(button, section.content, x, y)
                         button:OWB_SetIconSize(iconSize)
                         button:Show()
 

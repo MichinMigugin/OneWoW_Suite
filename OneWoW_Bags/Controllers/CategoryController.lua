@@ -1,4 +1,4 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local ipairs, pairs = ipairs, pairs
 local random, time = math.random, time
@@ -7,8 +7,8 @@ local tinsert, tremove, wipe = tinsert, tremove, wipe
 local strtrim = strtrim
 local string_lower = string.lower
 
-OneWoW_Bags.CategoryController = {}
-local CategoryController = OneWoW_Bags.CategoryController
+ns.CategoryController = {}
+local CategoryController = ns.CategoryController
 
 local function removeCategoryNameFromOtherSections(g, categoryName, keepSectionId)
     for sid, sec in pairs(g.categorySections) do
@@ -71,7 +71,7 @@ function CategoryController:IsCategoryDisplayNameAvailable(name, excludeCustomId
         return false
     end
     local g = self:GetDB().global
-    local SD = OneWoW_Bags.SectionDefaults
+    local SD = ns.SectionDefaults
     for _, bn in ipairs(SD:GetEffectiveBuiltinNames(g)) do
         if string_lower(bn) == key then
             return false
@@ -161,8 +161,8 @@ function CategoryController:RenameCategory(id, name)
             if #db.global.displayOrder > 0 then
                 wipe(db.global.displayOrder)
             end
-            if g.categorySections[OneWoW_Bags.SectionDefaults.SEC_ONEWOW_BAGS] then
-                OneWoW_Bags.SectionDefaults:SyncOnewowSectionCategories(g)
+            if g.categorySections[ns.SectionDefaults.SEC_ONEWOW_BAGS] then
+                ns.SectionDefaults:SyncOnewowSectionCategories(g)
             end
             self:RefreshUI()
         else
@@ -180,8 +180,8 @@ function CategoryController:RenameCategory(id, name)
     if #db.global.displayOrder > 0 then
         wipe(db.global.displayOrder)
     end
-    if g.categorySections[OneWoW_Bags.SectionDefaults.SEC_ONEWOW_BAGS] then
-        OneWoW_Bags.SectionDefaults:SyncOnewowSectionCategories(g)
+    if g.categorySections[ns.SectionDefaults.SEC_ONEWOW_BAGS] then
+        ns.SectionDefaults:SyncOnewowSectionCategories(g)
     end
     self:RefreshUI()
     return true
@@ -201,8 +201,8 @@ function CategoryController:DeleteCategory(id)
     if #db.global.displayOrder > 0 then
         wipe(db.global.displayOrder)
     end
-    if g.categorySections[OneWoW_Bags.SectionDefaults.SEC_ONEWOW_BAGS] then
-        OneWoW_Bags.SectionDefaults:SyncOnewowSectionCategories(g)
+    if g.categorySections[ns.SectionDefaults.SEC_ONEWOW_BAGS] then
+        ns.SectionDefaults:SyncOnewowSectionCategories(g)
     end
     self:RefreshUI()
 end
@@ -270,8 +270,8 @@ function CategoryController:DeleteSection(id)
         wipe(db.global.displayOrder)
     end
 
-    if id ~= OneWoW_Bags.SectionDefaults.SEC_ONEWOW_BAGS then
-        OneWoW_Bags.SectionDefaults:SyncOnewowSectionCategories(db.global)
+    if id ~= ns.SectionDefaults.SEC_ONEWOW_BAGS then
+        ns.SectionDefaults:SyncOnewowSectionCategories(db.global)
     end
 
     self:RefreshUI()
@@ -369,8 +369,8 @@ function CategoryController:SetSectionMembership(id, categoryName, isMember, ins
         wipe(db.global.displayOrder)
     end
 
-    if id ~= OneWoW_Bags.SectionDefaults.SEC_ONEWOW_BAGS then
-        OneWoW_Bags.SectionDefaults:SyncOnewowSectionCategories(db.global)
+    if id ~= ns.SectionDefaults.SEC_ONEWOW_BAGS then
+        ns.SectionDefaults:SyncOnewowSectionCategories(db.global)
     end
 
     self:RefreshUI()

@@ -1,8 +1,8 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-local CM = OneWoW_Bags.CategoryManagerBase:Create()
-OneWoW_Bags.CategoryManager = CM
+local CM = ns.CategoryManagerBase:Create()
+ns.CategoryManager = CM
 
 function CM:GetSourceButtons()
-    return OneWoW_Bags.BagSet:GetAllButtons()
+    return ns.BagSet:GetAllButtons()
 end

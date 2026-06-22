@@ -1,16 +1,16 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local Constants = OneWoW_Bags.Constants
-local WH = OneWoW_Bags.WindowHelpers
-local BankInfoBar = OneWoW_Bags.BankInfoBar
-local BankSet = OneWoW_Bags.BankSet
-local BankCategoryManager = OneWoW_Bags.BankCategoryManager
-local BankCategoryView = OneWoW_Bags.BankCategoryView
-local BankBar = OneWoW_Bags.BankBar
-local BankTabView = OneWoW_Bags.BankTabView
-local ListView = OneWoW_Bags.ListView
+local Constants = ns.Constants
+local WH = ns.WindowHelpers
+local BankInfoBar = ns.BankInfoBar
+local BankSet = ns.BankSet
+local BankCategoryManager = ns.BankCategoryManager
+local BankCategoryView = ns.BankCategoryView
+local BankBar = ns.BankBar
+local BankTabView = ns.BankTabView
+local ListView = ns.ListView
 
 local ipairs, pcall = ipairs, pcall
 
@@ -18,8 +18,8 @@ local C_Bank = C_Bank
 local C_Timer = C_Timer
 local max = math.max
 
-OneWoW_Bags.BankGUI = OneWoW_Bags.BankGUI or {}
-local BankGUI = OneWoW_Bags.BankGUI
+ns.BankGUI = ns.BankGUI or {}
+local BankGUI = ns.BankGUI
 
 local MainWindow = nil
 local isInitialized = false
@@ -37,11 +37,11 @@ local forcedPurchasePromptBankType = nil
 local PURCHASE_PROMPT_HEIGHT = 280
 
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 local function GetLayoutController()
-    return OneWoW_Bags.WindowLayoutController
+    return ns.WindowLayoutController
 end
 
 local function GetActiveBankType()
@@ -141,10 +141,10 @@ function BankGUI:InitMainWindow()
             end
             BankGUI:CleanupAllViews()
             BankInfoBar:ClearSearch()
-            OneWoW_Bags.activeBankExpansionFilter = nil
+            ns.activeBankExpansionFilter = nil
             OneWoW_GUI:SaveWindowPosition(MainWindow, db.global.bankFramePosition)
-            if OneWoW_Bags.bankOpen then
-                OneWoW_Bags.bankOpen = false
+            if ns.bankOpen then
+                ns.bankOpen = false
                 if BankFrame and BankFrame.BankPanel then
                     BankFrame.BankPanel:Hide()
                 end
@@ -157,7 +157,7 @@ function BankGUI:InitMainWindow()
             end
         end,
         onDragStop = function()
-            if isInitialized then OneWoW_Bags:RequestLayoutRefresh("bank", "drag_stop") end
+            if isInitialized then ns:RequestLayoutRefresh("bank", "drag_stop") end
         end,
     })
 
@@ -171,8 +171,8 @@ function BankGUI:InitMainWindow()
         onClose = function() MainWindow:Hide() end,
         settingsText = SETTINGS,
         onSettings = function()
-            if OneWoW_Bags.Settings then
-                OneWoW_Bags.Settings:Toggle()
+            if ns.Settings then
+                ns.Settings:Toggle()
             end
         end,
     })
@@ -182,9 +182,9 @@ function BankGUI:InitMainWindow()
     local infoBar = BankInfoBar:Create(contentArea)
     local bankBar = BankBar:Create(contentArea)
     BankInfoBar:UpdateVisibility()
-    BankBar:SetShown(OneWoW_Bags.BankController:Get("showBagsBar") ~= false)
+    BankBar:SetShown(ns.BankController:Get("showBagsBar") ~= false)
 
-    local hideScrollBar = OneWoW_Bags.BankController:Get("hideScrollBar")
+    local hideScrollBar = ns.BankController:Get("hideScrollBar")
     contentScrollFrame, contentFrame = WH:CreateScrollScaffold({
         contentArea = contentArea,
         scrollName = "OneWoW_BankContentScroll",
@@ -284,7 +284,7 @@ function BankGUI:EnsurePurchasePrompt()
     end)
     promptFrame:SetScript("OnEvent", function()
         if MainWindow and MainWindow:IsShown() then
-            OneWoW_Bags:RequestLayoutRefresh("bank", "purchase_money")
+            ns:RequestLayoutRefresh("bank", "purchase_money")
         end
     end)
 
@@ -333,7 +333,7 @@ end
 
 function BankGUI:ShowPurchasePrompt(bankType)
     forcedPurchasePromptBankType = bankType or GetActiveBankType()
-    OneWoW_Bags:RequestLayoutRefresh("bank", "purchase_prompt")
+    ns:RequestLayoutRefresh("bank", "purchase_prompt")
 end
 
 function BankGUI:ClearForcedPurchasePrompt()
@@ -425,7 +425,7 @@ function BankGUI:UpdateWindowWidth()
     if not MainWindow then return end
     local controller = GetLayoutController()
     if controller and controller.UpdateFixedWidth then
-        local activeKeys = OneWoW_Bags.BankController:ActiveKeys()
+        local activeKeys = ns.BankController:ActiveKeys()
         controller:UpdateFixedWidth({
             mainWindow = MainWindow,
             columnsKey = activeKeys.columns,
@@ -437,7 +437,7 @@ function BankGUI:UpdateWindowWidth()
 end
 
 function BankGUI:RefreshLayout()
-    local LD = OneWoW_Bags.LayoutDebug
+    local LD = ns.LayoutDebug
     if not isInitialized or not MainWindow then
         if LD and LD.enabled then LD:Record("refresh_early", { target = "bank", note = "not initialized" }) end
         return
@@ -453,7 +453,7 @@ function BankGUI:RefreshLayout()
         return
     end
 
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     Profile:Start("BankGUI:RefreshLayout")
 
     WH:RunGuardedLayoutRefresh(BankGUI, "bank", function()
@@ -471,11 +471,11 @@ function BankGUI:RefreshLayout()
         beforeLayout = function()
             Profile:Start("BankGUI:RefreshLayout.beforeLayout")
             BankInfoBar:UpdateVisibility()
-            BankBar:SetShown(OneWoW_Bags.BankController:Get("showBagsBar") ~= false)
+            BankBar:SetShown(ns.BankController:Get("showBagsBar") ~= false)
             BankBar:RefreshChromeAnchors()
             controller:BindScrollFrame({
                 scrollFrame = contentScrollFrame,
-                hideScrollBar = OneWoW_Bags.BankController:Get("hideScrollBar"),
+                hideScrollBar = ns.BankController:Get("hideScrollBar"),
                 topAnchor = BankInfoBar:GetFrame(),
                 bottomAnchor = BankBar:GetFrame(),
                 contentArea = contentArea,
@@ -501,9 +501,9 @@ function BankGUI:RefreshLayout()
                 Profile:Stop("BankGUI:RefreshLayout.filterButtons")
                 return {}
             end
-            local visibleButtons = WH:FilterByTab(allButtons, OneWoW_Bags.BankController:Get("selectedTab"), WH:GetScratchTable("bankTab"))
+            local visibleButtons = WH:FilterByTab(allButtons, ns.BankController:Get("selectedTab"), WH:GetScratchTable("bankTab"))
             local filteredButtons = WH:FilterBySearch(visibleButtons, BankInfoBar:GetSearchText(), WH:GetScratchTable("bankSearch"))
-            local result = WH:FilterByExpansion(filteredButtons, OneWoW_Bags.activeBankExpansionFilter, WH:GetScratchTable("bankExpansion"))
+            local result = WH:FilterByExpansion(filteredButtons, ns.activeBankExpansionFilter, WH:GetScratchTable("bankExpansion"))
             Profile:Stop("BankGUI:RefreshLayout.filterButtons")
             return result
         end,
@@ -513,11 +513,11 @@ function BankGUI:RefreshLayout()
                 Profile:Stop("BankGUI:RefreshLayout.layoutButtons")
                 return PURCHASE_PROMPT_HEIGHT
             end
-            local columnsKey = OneWoW_Bags.BankController:ActiveKeys().columns
+            local columnsKey = ns.BankController:ActiveKeys().columns
             local _, _, _, contentWidth = WH:GetLayoutMetrics(columnsKey, 15)
-            local viewMode = OneWoW_Bags.BankController:Get("viewMode")
+            local viewMode = ns.BankController:Get("viewMode")
             local layoutHeight
-            local bankShowEmpty = OneWoW_Bags.BankController:GetShowEmptySlots()
+            local bankShowEmpty = ns.BankController:GetShowEmptySlots()
             local categoryViewContext = controller:CreateViewContext({
                 sectionManager = BankCategoryManager,
                 containerType = db.global.bankShowWarband and "warband_bank" or "character_bank",
@@ -543,7 +543,7 @@ function BankGUI:RefreshLayout()
                     end
                 end,
                 requestRelayout = function()
-                    OneWoW_Bags:RequestLayoutRefresh("bank", "relayout")
+                    ns:RequestLayoutRefresh("bank", "relayout")
                 end,
             })
             local tabViewContext = controller:CreateViewContext({
@@ -552,20 +552,20 @@ function BankGUI:RefreshLayout()
                 sortMode = db.global.itemSort,
                 getCollapsed = function(kind, key)
                     if kind == "tab" then
-                        local tabsKey = OneWoW_Bags.BankController:ActiveKeys().collapsedTabs
+                        local tabsKey = ns.BankController:ActiveKeys().collapsedTabs
                         local tabs = db.global[tabsKey]
                         return (tabs and tabs[key]) or db.global.collapsedBankSections[key]
                     end
                 end,
                 setCollapsed = function(kind, key, collapsed)
                     if kind == "tab" then
-                        local tabsKey = OneWoW_Bags.BankController:ActiveKeys().collapsedTabs
+                        local tabsKey = ns.BankController:ActiveKeys().collapsedTabs
                         db.global[tabsKey] = db.global[tabsKey] or {}
                         db.global[tabsKey][key] = collapsed or nil
                     end
                 end,
                 requestRelayout = function()
-                    OneWoW_Bags:RequestLayoutRefresh("bank", "relayout")
+                    ns:RequestLayoutRefresh("bank", "relayout")
                 end,
             })
 
@@ -592,12 +592,12 @@ function BankGUI:RefreshLayout()
 end
 
 function BankGUI:OnSearchChanged()
-    OneWoW_Bags:RequestLayoutRefresh("bank", "search")
+    ns:RequestLayoutRefresh("bank", "search")
 end
 
 function BankGUI:OnBankTypeChanged()
     local db = GetDB()
-    OneWoW_Bags.BankController:Set("selectedTab", nil)
+    ns.BankController:Set("selectedTab", nil)
 
     local showWarband = db.global.bankShowWarband
 
@@ -633,7 +633,7 @@ function BankGUI:Show()
     -- redundant coalesced refresh that would otherwise fire during Show().
     local warm = BankSet.isBuilt
     if warm then
-        OneWoW_Bags:SetOnShowLayoutSuppressed("bank", true)
+        ns:SetOnShowLayoutSuppressed("bank", true)
     end
 
     MainWindow:Show()
@@ -644,20 +644,20 @@ function BankGUI:Show()
     if not warm then
         BankSet:Build()
     else
-        OneWoW_Bags:ClearPendingLayoutRefresh("BankGUI")
-        OneWoW_Bags:RequestLayoutRefreshNow("bank")
-        OneWoW_Bags:SetOnShowLayoutSuppressed("bank", false)
+        ns:ClearPendingLayoutRefresh("BankGUI")
+        ns:RequestLayoutRefreshNow("bank")
+        ns:SetOnShowLayoutSuppressed("bank", false)
     end
     TrackBuiltBankState()
 
-    OneWoW_Bags.BankBar:UpdateModeButtons()
-    OneWoW_Bags.BankBar:BuildTabButtons()
-    OneWoW_Bags.BankBar:UpdateGold()
+    ns.BankBar:UpdateModeButtons()
+    ns.BankBar:BuildTabButtons()
+    ns.BankBar:UpdateGold()
 
     -- Safety-net refresh: catches late GET_ITEM_INFO_RECEIVED arrivals that
     -- slipped in around Build, and recovers a blank window if the coalescer
     -- latch was wedged. Runs synchronously so it works even when wedged.
-    OneWoW_Bags:ScheduleOpenSafetyNet("bank", function()
+    ns:ScheduleOpenSafetyNet("bank", function()
         return MainWindow and MainWindow:IsShown()
     end)
 end
@@ -713,7 +713,7 @@ function BankGUI:ApplyTheme()
     WH:ApplyBaseTheme(MainWindow, titleBar, BankInfoBar, BankBar)
     ApplyPurchasePromptTheme(purchasePromptFrame)
     BankInfoBar:UpdateViewButtons()
-    OneWoW_Bags:RequestLayoutRefresh("bank", "theme")
+    ns:RequestLayoutRefresh("bank", "theme")
 end
 
 function BankGUI:GetMainWindow()

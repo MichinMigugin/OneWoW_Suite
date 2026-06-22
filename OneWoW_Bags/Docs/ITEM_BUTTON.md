@@ -18,26 +18,25 @@ the button mixin lives in
 
 ## API at a Glance
 
+Use `OneWoW_Bags_API` (`Core/API.lua`). Guard registration when OneWoW Bags may
+be absent:
+
 ```lua
-if OneWoW_Bags then
-    OneWoW_Bags:RegisterItemButtonCallback("MyAddon", function(button, bagID, slotID)
+if OneWoW_Bags_API then
+    OneWoW_Bags_API.RegisterItemButtonCallback("MyAddon", function(button, bagID, slotID)
         -- Decorate `button` for the item at (bagID, slotID).
     end)
 end
 
 -- Later, if you want to detach:
-OneWoW_Bags:UnregisterItemButtonCallback("MyAddon")
+OneWoW_Bags_API.UnregisterItemButtonCallback("MyAddon")
 ```
-
-OneWoW Bags is published on the global table as `OneWoW_Bags`. Always
-guard your registration with `if OneWoW_Bags then ... end` so your addon
-keeps working when OneWoW Bags is not installed.
 
 ---
 
 ## Functions
 
-### `OneWoW_Bags:RegisterItemButtonCallback(name, callback)`
+### `OneWoW_Bags_API.RegisterItemButtonCallback(name, callback)`
 
 Registers a callback under a string key. Re-registering the same `name`
 replaces the previous callback for that key.
@@ -53,7 +52,7 @@ replaces the previous callback for that key.
 
 **Returns:** nothing.
 
-### `OneWoW_Bags:UnregisterItemButtonCallback(name)`
+### `OneWoW_Bags_API.UnregisterItemButtonCallback(name)`
 
 Removes the callback registered under `name`. Safe to call when nothing is
 registered for that name (no-op).
@@ -171,7 +170,7 @@ calls, and toggle visibility based on item state.
 ```lua
 local ADDON_NAME = ...
 
-if OneWoW_Bags then
+if OneWoW_Bags_API then
     local function UpdateButton(button, bagID, slotID)
         if not button.MyAddonOverlay then
             button.MyAddonOverlay = CreateFrame("Frame", nil, button)
@@ -197,7 +196,7 @@ if OneWoW_Bags then
         overlay:Show()
     end
 
-    OneWoW_Bags:RegisterItemButtonCallback(ADDON_NAME, UpdateButton)
+    OneWoW_Bags_API.RegisterItemButtonCallback(ADDON_NAME, UpdateButton)
 end
 ```
 
@@ -292,7 +291,7 @@ Enum.ItemQuality.WoWToken   = 8
    ```
    Integrations\OneWoWBags.lua
    ```
-2. Wrap the registration in `if OneWoW_Bags then ... end` so your addon
+2. Wrap the registration in `if OneWoW_Bags_API then ... end` so your addon
    loads cleanly when OneWoW Bags is absent.
 3. Use a unique `name` (your addon folder name is a safe default) when
    calling `RegisterItemButtonCallback`.
@@ -304,7 +303,7 @@ Enum.ItemQuality.WoWToken   = 8
 
 ### My callback isn't firing
 
-- Verify OneWoW Bags is loaded: `print(OneWoW_Bags ~= nil)` from `/run`.
+- Verify OneWoW Bags is loaded: `print(OneWoW_Bags_API ~= nil)` from `/run`.
 - Make sure your integration file is listed in your `.toc` and your
   registration is reached at file load.
 - Bank window: callbacks are gated on `BankController:Get("overlays")`. The

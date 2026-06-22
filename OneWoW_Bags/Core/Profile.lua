@@ -1,4 +1,4 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 -- Lightweight profiler for measuring OneWoW_Bags hot paths (especially first
 -- bank/warband bank open). Disabled by default so it has zero cost in normal
@@ -10,7 +10,7 @@ local _, OneWoW_Bags = ...
 --                                                table churn per call).
 --
 -- Usage in code:
---   local P = OneWoW_Bags.Profile
+--   local P = ns.Profile
 --   P:Start("BankSet:Build"); ...; P:Stop("BankSet:Build")
 --   local t = P:Mark(); ...; P:Add("OWB_FullUpdate", t)
 --
@@ -24,8 +24,8 @@ local debugprofilestop = debugprofilestop
 local tinsert, tremove, wipe, sort, pairs, ipairs = tinsert, tremove, wipe, sort, pairs, ipairs
 local format = string.format
 
-OneWoW_Bags.Profile = {}
-local P = OneWoW_Bags.Profile
+ns.Profile = {}
+local P = ns.Profile
 
 P.enabled = false
 P._sections = {}

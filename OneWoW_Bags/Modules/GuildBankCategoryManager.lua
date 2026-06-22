@@ -1,8 +1,8 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-local GBCM = OneWoW_Bags.CategoryManagerBase:Create()
-OneWoW_Bags.GuildBankCategoryManager = GBCM
+local GBCM = ns.CategoryManagerBase:Create()
+ns.GuildBankCategoryManager = GBCM
 
 function GBCM:GetSourceButtons()
-    return OneWoW_Bags.GuildBankSet:GetAllButtons()
+    return ns.GuildBankSet:GetAllButtons()
 end

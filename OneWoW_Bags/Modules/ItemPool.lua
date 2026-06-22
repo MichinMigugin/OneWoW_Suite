@@ -1,4 +1,4 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -6,8 +6,8 @@ local tinsert, tremove, select = tinsert, tremove, select
 local pairs = pairs
 local PixelUtil = PixelUtil
 
-OneWoW_Bags.ItemPool = {}
-local Pool = OneWoW_Bags.ItemPool
+ns.ItemPool = {}
+local Pool = ns.ItemPool
 
 local available = {}
 local active = {}
@@ -46,8 +46,8 @@ end
 
 function Pool:Release(button)
     if not button then return end
-    if OneWoW_Bags.Masque then
-        OneWoW_Bags.Masque:UnskinItemButton(button)
+    if ns.Masque then
+        ns.Masque:UnskinItemButton(button)
     end
     Pool:ResetButton(button)
     button.inUse = false

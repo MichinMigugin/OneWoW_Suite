@@ -1,4 +1,4 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -9,10 +9,10 @@ local strgsub = string.gsub
 
 local C_Timer = C_Timer
 
-local L = OneWoW_Bags.L
+local L = ns.L
 
-OneWoW_Bags.Settings = {}
-local Settings = OneWoW_Bags.Settings
+ns.Settings = {}
+local Settings = ns.Settings
 local settingsFrame = nil
 local isCreated = false
 local savedSearchRows = {}
@@ -21,12 +21,12 @@ local savedSearchEmptyText = nil
 local COMPACT_GAP_STEPS = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 2.5, 3 }
 
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 local function ApplySetting(settingKey, value)
-    if OneWoW_Bags.SettingsController then
-        OneWoW_Bags.SettingsController:Apply(settingKey, value)
+    if ns.SettingsController then
+        ns.SettingsController:Apply(settingKey, value)
     end
 end
 
@@ -176,7 +176,7 @@ local function ShowSavedSearchPredicate(name, query)
 end
 
 local function SetMainSearchText(text)
-    local infoBar = OneWoW_Bags.InfoBar
+    local infoBar = ns.InfoBar
     local frame = infoBar and infoBar.GetFrame and infoBar:GetFrame()
     local searchBox = frame and frame.searchBox
     if not searchBox then return end
@@ -198,7 +198,7 @@ local function RegisterSavedSearchSettingsPopups()
         whileDead = true,
         hideOnEscape = true,
         OnAccept = function(self, oldName)
-            local SS = OneWoW_Bags.SavedSearches
+            local SS = ns.SavedSearches
             if not SS or not oldName then return end
 
             local newName = self.EditBox:GetText()
@@ -232,8 +232,8 @@ local function RegisterSavedSearchSettingsPopups()
         whileDead = true,
         hideOnEscape = true,
         OnAccept = function(_, name)
-            if OneWoW_Bags.SavedSearches and name then
-                OneWoW_Bags.SavedSearches:Delete(name)
+            if ns.SavedSearches and name then
+                ns.SavedSearches:Delete(name)
             end
         end,
     }
@@ -242,7 +242,7 @@ end
 function Settings:RefreshSavedSearchRows()
     if not savedSearchListContent then return end
 
-    local SS = OneWoW_Bags.SavedSearches
+    local SS = ns.SavedSearches
     if not SS then return end
 
     local names = SS:GetSortedNames()
@@ -477,7 +477,7 @@ local function BuildGeneralTab(sc, db)
         yOffset = FinalizeContainer(intContainer, intY, yOffset)
     end
 
-    if OneWoW_Bags.Masque and OneWoW_Bags.Masque.available then
+    if ns.Masque and ns.Masque.available then
         yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_MASQUE"], yOffset = yOffset })
         local masqueContainer = BuildContainer(sc, yOffset)
         local masqueY = -10

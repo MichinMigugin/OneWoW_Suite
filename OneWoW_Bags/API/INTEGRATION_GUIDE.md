@@ -67,12 +67,12 @@ When OneWoW Bags loads, it will automatically detect and register your callback.
 ```lua
 local ADDON_NAME = ...
 
-if OneWoW_Bags then
+if OneWoW_Bags_API then
     function YourAddon_OnItemButton(button, bagID, slotID)
         -- Your custom logic here
     end
 
-    OneWoW_Bags:RegisterItemButtonCallback(ADDON_NAME, YourAddon_OnItemButton)
+    OneWoW_Bags_API.RegisterItemButtonCallback(ADDON_NAME, YourAddon_OnItemButton)
 end
 ```
 
@@ -81,7 +81,7 @@ end
 ```lua
 local ADDON_NAME = ...
 
-if OneWoW_Bags then
+if OneWoW_Bags_API then
     function MyAddon_UpdateItemButton(button, bagID, slotID)
         if not button then return end
 
@@ -112,7 +112,7 @@ if OneWoW_Bags then
         end
     end
 
-    OneWoW_Bags:RegisterItemButtonCallback(ADDON_NAME, MyAddon_UpdateItemButton)
+    OneWoW_Bags_API.RegisterItemButtonCallback(ADDON_NAME, MyAddon_UpdateItemButton)
 end
 ```
 

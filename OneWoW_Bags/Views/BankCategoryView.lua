@@ -1,16 +1,16 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-local Constants = OneWoW_Bags.Constants
-local H = OneWoW_Bags.CategoryViewHelpers
+local Constants = ns.Constants
+local H = ns.CategoryViewHelpers
 local PE = OneWoW.PredicateEngine
 
 local floor, max = math.floor, math.max
 
-OneWoW_Bags.BankCategoryView = {}
-local View = OneWoW_Bags.BankCategoryView
+ns.BankCategoryView = {}
+local View = ns.BankCategoryView
 
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 local AcquireLabel, ReleaseAllLabels = H.CreateLabelPool()
@@ -24,7 +24,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
     local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local padding = 2
-    local BC = OneWoW_Bags.BankController
+    local BC = ns.BankController
     local compact = BC:Get("compactCategories")
     local showHeaders = BC:Get("showCategoryHeaders") ~= false
     local verticalSpacing = (BC:Get("categorySpacing") or 1.0)
@@ -34,7 +34,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
 
     local containerType = viewContext.containerType
 
-    local BankCategoryManager = OneWoW_Bags.BankCategoryManager
+    local BankCategoryManager = ns.BankCategoryManager
     local itemsByCategory = BankCategoryManager:AssignAndGroupCategories()
 
     local layout = H.GetSectionedLayout(itemsByCategory, containerType)

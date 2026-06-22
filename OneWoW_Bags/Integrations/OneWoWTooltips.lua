@@ -1,7 +1,7 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local PE = OneWoW.PredicateEngine
-local L = OneWoW_Bags.L
+local L = ns.L
 
 local tinsert = tinsert
 local tconcat = table.concat
@@ -12,11 +12,11 @@ local MAX_KEYWORDS_PER_LINE = 8
 local KEYWORD_COLOR = { 0.55, 0.9, 0.55 }
 
 local function IsEnabled()
-    return OneWoW_Bags:GetDB().global.showKeywordsInTooltips ~= false
+    return ns:GetDB().global.showKeywordsInTooltips ~= false
 end
 
 local function IsManagerOpen()
-    return OneWoW_Bags.CategoryManagerUI:IsOpen()
+    return ns.CategoryManagerUI:IsOpen()
 end
 
 local function FormatKeywordLines(keywords)
@@ -72,4 +72,4 @@ local function RegisterWithOneWoW()
     })
 end
 
-OneWoW_Bags.RegisterTooltipProvider = RegisterWithOneWoW
+ns.RegisterTooltipProvider = RegisterWithOneWoW

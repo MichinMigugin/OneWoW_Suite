@@ -1,9 +1,9 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local BagTypes = OneWoW_Bags.BagTypes
-local ItemPool = OneWoW_Bags.ItemPool
+local BagTypes = ns.BagTypes
+local ItemPool = ns.ItemPool
 
 local pairs, ipairs, tinsert, wipe = pairs, ipairs, tinsert, wipe
 
@@ -11,8 +11,8 @@ local C_Container = C_Container
 local CursorHasItem = CursorHasItem
 local IsControlKeyDown = IsControlKeyDown
 
-OneWoW_Bags.BagSet = {}
-local BagSet = OneWoW_Bags.BagSet
+ns.BagSet = {}
+local BagSet = ns.BagSet
 
 BagSet.slots = {}
 BagSet.totalSlots = 0
@@ -69,7 +69,7 @@ end
 
 function BagSet:Build()
     self._building = true
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     Profile:Start("BagSet:Build")
 
     Profile:Start("BagSet:Build.ReleaseAll")
@@ -88,11 +88,11 @@ function BagSet:Build()
         for slotID = 1, numSlots do
             local button = ItemPool:Acquire()
             button:SetParent(bagFrame)
-            OneWoW_Bags:ApplyItemButtonMixin(button)
+            ns:ApplyItemButtonMixin(button)
             button:OWB_SetSlot(bagID, slotID)
             self:ApplyBagScripts(button)
-            if OneWoW_Bags.Masque then
-                OneWoW_Bags.Masque:SkinItemButton(button, "bags")
+            if ns.Masque then
+                ns.Masque:SkinItemButton(button, "bags")
             end
             self.slots[bagID][slotID] = button
             self.totalSlots = self.totalSlots + 1
@@ -111,7 +111,7 @@ function BagSet:Build()
 
     Profile:Stop("BagSet:Build")
     self._building = false
-    OneWoW_Bags:RequestLayoutRefresh("bags", "build_done")
+    ns:RequestLayoutRefresh("bags", "build_done")
 end
 
 function BagSet:ReleaseAll()
@@ -132,7 +132,7 @@ end
 
 function BagSet:UpdateDirtyBags(dirtyBags)
     if not self.isBuilt then return end
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     for bagID in pairs(dirtyBags) do
         if self.slots[bagID] then
             if Profile then
@@ -176,11 +176,11 @@ function BagSet:RebuildBag(bagID, numSlots)
     for slotID = 1, numSlots do
         local button = ItemPool:Acquire()
         button:SetParent(bagFrame)
-        OneWoW_Bags:ApplyItemButtonMixin(button)
+        ns:ApplyItemButtonMixin(button)
         button:OWB_SetSlot(bagID, slotID)
         self:ApplyBagScripts(button)
-        if OneWoW_Bags.Masque then
-            OneWoW_Bags.Masque:SkinItemButton(button, "bags")
+        if ns.Masque then
+            ns.Masque:SkinItemButton(button, "bags")
         end
         button:OWB_MarkDirty()
         self.slots[bagID][slotID] = button
@@ -191,7 +191,7 @@ end
 
 -- cause: see BankSet:ProcessDirtySlots. Same convention.
 function BagSet:ProcessDirtySlots(cause)
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     local causeKey = cause and ("OWB_FullUpdate.cause." .. cause) or nil
     self.freeSlots = 0
     for _, bagSlots in pairs(self.slots) do
@@ -244,7 +244,7 @@ function BagSet:UpdateQualityColors()
     for _, bagSlots in pairs(self.slots) do
         for _, button in pairs(bagSlots) do
             local quality = button.owb_itemInfo and button.owb_itemInfo.quality
-            if OneWoW_Bags:ShouldShowItemQuality(false, quality) then
+            if ns:ShouldShowItemQuality(false, quality) then
                 OneWoW_GUI:UpdateIconQuality(button, button.owb_itemInfo.quality)
             else
                 OneWoW_GUI:UpdateIconQuality(button, nil)
@@ -269,7 +269,7 @@ end
 
 function BagSet:ApplyBagScripts(button)
     if button._bankScriptsApplied then
-        OneWoW_Bags.BankSet:RestoreBankScripts(button)
+        ns.BankSet:RestoreBankScripts(button)
     end
     if button._bagScriptsApplied then return end
     button._bagScriptsApplied = true
@@ -277,11 +277,11 @@ function BagSet:ApplyBagScripts(button)
     button:HookScript("OnClick", function(myself, mouseButton)
         if mouseButton == "RightButton"
             and IsControlKeyDown()
-            and OneWoW_Bags.bankOpen
+            and ns.bankOpen
             and myself.owb_hasItem
             and not CursorHasItem()
         then
-            OneWoW_Bags.BankController:DepositBagButtonStack(myself)
+            ns.BankController:DepositBagButtonStack(myself)
         end
     end)
 end

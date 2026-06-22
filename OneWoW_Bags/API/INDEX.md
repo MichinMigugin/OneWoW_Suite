@@ -42,8 +42,8 @@ Welcome to the OneWoW Bags integration API! This folder contains everything you 
 ### Register a Callback
 
 ```lua
-if OneWoW_Bags then
-    OneWoW_Bags:RegisterItemButtonCallback("MyAddon", MyCallback)
+if OneWoW_Bags_API then
+    OneWoW_Bags_API.RegisterItemButtonCallback("MyAddon", MyCallback)
 end
 
 function MyCallback(button, bagID, slotID)
@@ -139,13 +139,13 @@ Yes! Once you add your integration file to your addon's `.toc` file, it loads an
 
 ### What if OneWoW Bags isn't installed?
 
-The integration file checks for `OneWoW_Bags` and only runs if it exists. If OneWoW Bags isn't installed, your addon continues working normally (users just won't see overlays in OneWoW Bags).
+The integration file checks for `OneWoW_Bags_API` and only runs if it exists. If OneWoW Bags isn't installed, your addon continues working normally (users just won't see overlays in OneWoW Bags).
 
 ### Can I unregister my callback later?
 
 Yes! Call:
 ```lua
-OneWoW_Bags:UnregisterItemButtonCallback("MyAddon")
+OneWoW_Bags_API.UnregisterItemButtonCallback("MyAddon")
 ```
 
 ### How often do callbacks fire?

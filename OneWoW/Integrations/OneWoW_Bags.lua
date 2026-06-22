@@ -30,16 +30,15 @@ end
 local wired = false
 local function SetupCallbacks()
     if wired then return end
-    local Bags = OneWoW_Bags
-    if not Bags or not Bags.RegisterItemButtonCallback then return end
+    if not OneWoW_Bags_API or not OneWoW_Bags_API.RegisterItemButtonCallback then return end
     wired = true
 
-    Bags:RegisterItemButtonCallback("OneWoW_Overlays", function(button, bagID, slotID)
+    OneWoW_Bags_API.RegisterItemButtonCallback("OneWoW_Overlays", function(button, bagID, slotID)
         ProcessButton(button, bagID, slotID)
     end)
 
     local function RefreshOneWoWBags()
-        Bags:FireCallbacksOnAllButtons()
+        OneWoW_Bags_API.FireCallbacksOnAllButtons()
     end
 
     OneWoW.OverlayEngine:RegisterIntegration(RefreshOneWoWBags)

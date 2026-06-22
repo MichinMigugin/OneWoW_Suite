@@ -1,9 +1,9 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local BagTypes = OneWoW_Bags.BagTypes
-local ItemPool = OneWoW_Bags.ItemPool
+local BagTypes = ns.BagTypes
+local ItemPool = ns.ItemPool
 local PE = OneWoW.PredicateEngine
 
 local pairs = pairs
@@ -12,8 +12,8 @@ local UnitLevel = UnitLevel
 local C_Container = C_Container
 local PixelUtil = PixelUtil
 
-OneWoW_Bags.ItemButtonMixin = {}
-local Mixin = OneWoW_Bags.ItemButtonMixin
+ns.ItemButtonMixin = {}
+local Mixin = ns.ItemButtonMixin
 
 --- Sync sort-lock greyscale from container item info. Empty slots must clear
 --- desaturation — unlock events can fire after the item has already moved.
@@ -43,7 +43,7 @@ function Mixin:OWB_IsDirty()
 end
 
 function Mixin:OWB_UpdateNewItemGlow(quality, hasItem, props)
-    local db = OneWoW_Bags:GetDB()
+    local db = ns:GetDB()
     local bagID, slotID = self.owb_bagID, self.owb_slotID
 
     if not hasItem or not bagID or not slotID or not BagTypes:IsPlayerBag(bagID) then
@@ -99,7 +99,7 @@ function Mixin:OWB_UpdateNewItemGlow(quality, hasItem, props)
 end
 
 function Mixin:OWB_FullUpdate()
-    local Profile = OneWoW_Bags.Profile
+    local Profile = ns.Profile
     local tFull = Profile:Mark()
     self.owb_dirty = false
 
@@ -116,10 +116,10 @@ function Mixin:OWB_FullUpdate()
         SetItemButtonCount(self, info.stackCount)
         ApplyLockDesaturation(self, info)
 
-        local masqueActive = OneWoW_Bags.Masque and OneWoW_Bags.Masque:IsActive()
+        local masqueActive = ns.Masque and ns.Masque:IsActive()
         local quality = info.quality
         if not masqueActive then
-            if OneWoW_Bags:ShouldShowItemQuality(self.owb_isBank, quality) then
+            if ns:ShouldShowItemQuality(self.owb_isBank, quality) then
                 OneWoW_GUI:UpdateIconQuality(self, quality)
             else
                 OneWoW_GUI:UpdateIconQuality(self, nil)
@@ -188,13 +188,13 @@ function Mixin:OWB_UpdateJunkDim(hasItem, isJunk)
         return
     end
 
-    if OneWoW_Bags:ShouldDimJunkItem(isJunk) then
+    if ns:ShouldDimJunkItem(isJunk) then
         self:SetAlpha(0.4)
     else
         self:SetAlpha(1.0)
     end
 
-    if OneWoW_Bags:ShouldStripJunkOverlays(isJunk) then
+    if ns:ShouldStripJunkOverlays(isJunk) then
         if self.NewItemTexture then self.NewItemTexture:Hide() end
         if self.BattlepayItemTexture then self.BattlepayItemTexture:Hide() end
         if self.ProfessionQualityOverlay then self.ProfessionQualityOverlay:Hide() end
@@ -208,7 +208,7 @@ function Mixin:OWB_UpdateJunkDim(hasItem, isJunk)
 end
 
 function Mixin:OWB_UpdateUnusableOverlay(hasItem, info, props)
-    local db = OneWoW_Bags:GetDB()
+    local db = ns:GetDB()
     if not db.global.showUnusableOverlay then
         if self._owbUnusableOverlay then self._owbUnusableOverlay:Hide() end
         return
@@ -273,7 +273,7 @@ function Mixin:OWB_GetLink()
     return C_Container.GetContainerItemLink(self.owb_bagID, self.owb_slotID)
 end
 
-function OneWoW_Bags:ApplyItemButtonMixin(button)
+function ns:ApplyItemButtonMixin(button)
     if button._owbMixinApplied then return end
     button._owbMixinApplied = true
     for k, v in pairs(Mixin) do

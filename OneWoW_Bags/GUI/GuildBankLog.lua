@@ -1,15 +1,15 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local L = OneWoW_Bags.L
+local L = ns.L
 
 local format = format
 local max = math.max
 local C_Timer = C_Timer
 
-OneWoW_Bags.GuildBankLog = {}
-local GuildBankLog = OneWoW_Bags.GuildBankLog
+ns.GuildBankLog = {}
+local GuildBankLog = ns.GuildBankLog
 
 local logFrame = nil
 local scrollFrame = nil
@@ -286,7 +286,7 @@ end
 
 function GuildBankLog:PositionNearMainWindow()
     if not logFrame then return end
-    local mainWindow = OneWoW_Bags.GuildBankGUI:GetMainWindow()
+    local mainWindow = ns.GuildBankGUI:GetMainWindow()
     if mainWindow then
         logFrame:ClearAllPoints()
         logFrame:SetPoint("TOPLEFT", mainWindow, "TOPRIGHT", 4, 0)

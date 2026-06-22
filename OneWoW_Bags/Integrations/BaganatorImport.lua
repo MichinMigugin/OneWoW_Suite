@@ -1,8 +1,8 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-OneWoW_Bags.Integrations = OneWoW_Bags.Integrations or {}
-OneWoW_Bags.Integrations.Baganator = OneWoW_Bags.Integrations.Baganator or {}
-local BaganatorImport = OneWoW_Bags.Integrations.Baganator
+ns.Integrations = ns.Integrations or {}
+ns.Integrations.Baganator = ns.Integrations.Baganator or {}
+local BaganatorImport = ns.Integrations.Baganator
 
 local pairs, ipairs, type, tostring, tonumber = pairs, ipairs, type, tostring, tonumber
 local tinsert = table.insert

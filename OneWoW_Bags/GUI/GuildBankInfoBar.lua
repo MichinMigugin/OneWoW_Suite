@@ -1,6 +1,6 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-OneWoW_Bags.GuildBankInfoBar = OneWoW_Bags.InfoBarFactory:Create({
+ns.GuildBankInfoBar = ns.InfoBarFactory:Create({
     controllerKey = "GuildBankController",
     guiTargetKey = "GuildBankGUI",
     hideScrollBarKey = "bankHideScrollBar",

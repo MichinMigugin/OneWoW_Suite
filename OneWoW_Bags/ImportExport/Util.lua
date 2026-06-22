@@ -1,8 +1,8 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-OneWoW_Bags.ImportExport = OneWoW_Bags.ImportExport or {}
-OneWoW_Bags.ImportExport.Util = OneWoW_Bags.ImportExport.Util or {}
-local Util = OneWoW_Bags.ImportExport.Util
+ns.ImportExport = ns.ImportExport or {}
+ns.ImportExport.Util = ns.ImportExport.Util or {}
+local Util = ns.ImportExport.Util
 
 local pairs, type = pairs, type
 local tinsert = tinsert

@@ -1,7 +1,7 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-local BagTypes = OneWoW_Bags.BagTypes
-local L = OneWoW_Bags.L
+local BagTypes = ns.BagTypes
+local L = ns.L
 local C_Container = C_Container
 local C_Item = C_Item
 local C_Timer = C_Timer
@@ -12,8 +12,8 @@ local bit = bit
 
 local NORMAL_BAG_SUBCLASS = 0
 
-OneWoW_Bags.BagEquip = {}
-local BagEquip = OneWoW_Bags.BagEquip
+ns.BagEquip = {}
+local BagEquip = ns.BagEquip
 
 local EMPTY_BAG_MOVE_LIMIT = 500
 local EMPTY_BAG_FALLBACK_DELAY = 0.2

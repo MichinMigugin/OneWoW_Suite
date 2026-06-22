@@ -1,17 +1,17 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local tinsert, tremove, pairs, ipairs, wipe = tinsert, tremove, pairs, ipairs, wipe
 
-OneWoW_Bags.CategoryManagerBase = {}
+ns.CategoryManagerBase = {}
 
 --- Walk a list of item buttons, assign each one a category name (or clear it
 --- when the slot is empty / lacks itemInfo). Used by both bag and bank
 --- category managers — only the button source differs.
 ---@param buttons table[] item-button list
 local function AssignCategoriesForButtons(buttons)
-    local Categories = OneWoW_Bags.Categories
+    local Categories = ns.Categories
     for _, button in ipairs(buttons) do
         if button.owb_hasItem and button.owb_itemInfo then
             button.owb_categoryName = Categories:GetItemCategory(button.owb_bagID, button.owb_slotID, button.owb_itemInfo)
@@ -45,10 +45,10 @@ local function ClearActiveBuckets(activeBuckets)
     wipe(activeBuckets)
 end
 
-OneWoW_Bags.CategoryManagerBase.AssignCategoriesForButtons = AssignCategoriesForButtons
-OneWoW_Bags.CategoryManagerBase.GroupButtonsByCategory = GroupButtonsByCategory
+ns.CategoryManagerBase.AssignCategoriesForButtons = AssignCategoriesForButtons
+ns.CategoryManagerBase.GroupButtonsByCategory = GroupButtonsByCategory
 
-function OneWoW_Bags.CategoryManagerBase:Create()
+function ns.CategoryManagerBase:Create()
     local cm = {}
     local sectionPool = {}
     local activeSections = {}
@@ -74,9 +74,9 @@ function OneWoW_Bags.CategoryManagerBase:Create()
     end
 
     function cm:AssignAndGroupCategories(buttons)
-        local Profile = OneWoW_Bags.Profile
+        local Profile = ns.Profile
         Profile:Start("CategoryManager.AssignAndGroupCategories")
-        local Categories = OneWoW_Bags.Categories
+        local Categories = ns.Categories
         ClearActiveBuckets(activeCategoryBuckets)
 
         for _, button in ipairs(buttons or self:GetSourceButtons()) do

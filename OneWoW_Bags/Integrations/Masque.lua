@@ -1,14 +1,14 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local LibStub = LibStub
 local pairs = pairs
 
-OneWoW_Bags.Integrations = OneWoW_Bags.Integrations or {}
-OneWoW_Bags.Masque = {}
-local M = OneWoW_Bags.Masque
-OneWoW_Bags.Integrations.Masque = M
+ns.Integrations = ns.Integrations or {}
+ns.Masque = {}
+local M = ns.Masque
+ns.Integrations.Masque = M
 
 local Masque = LibStub("Masque", true)
 
@@ -25,7 +25,7 @@ M._initialized = false
 --- Database is queried lazily because Masque.lua loads before InitializeDatabase.
 function M:IsActive()
     if not M.available then return false end
-    local db = OneWoW_Bags.db
+    local db = ns.db
     if not db or not db.global then return true end
     return db.global.useMasque ~= false
 end
@@ -65,7 +65,7 @@ function M:KindFor(button)
         return "guild"
     end
     if button.owb_isBank then
-        local bc = OneWoW_Bags.BankController
+        local bc = ns.BankController
         if bc and bc.IsWarbandMode and bc:IsWarbandMode() then
             return "warband"
         end

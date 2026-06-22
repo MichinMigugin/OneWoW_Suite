@@ -1,12 +1,12 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local pairs = pairs
 local string_format = string.format
 
-OneWoW_Bags.BarHelpers = {}
-local BH = OneWoW_Bags.BarHelpers
+ns.BarHelpers = {}
+local BH = ns.BarHelpers
 
 ---@return Frame
 function BH:CreateBarFrame(parent, frameName, barHeight)
@@ -40,7 +40,7 @@ function BH:RecycleTabButtons(buttons)
 end
 
 function BH:UpdateTabHighlights(buttons, selectedTab)
-    local masque = OneWoW_Bags.Masque
+    local masque = ns.Masque
     local masqueActive = masque and masque:IsActive()
     for id, btn in pairs(buttons) do
         local isSelected = selectedTab ~= nil and selectedTab == id

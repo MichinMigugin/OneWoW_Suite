@@ -1,7 +1,7 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-local L = OneWoW_Bags.L
-local BagTypes = OneWoW_Bags.BagTypes
+local L = ns.L
+local BagTypes = ns.BagTypes
 local C_Container = C_Container
 local C_CurrencyInfo = C_CurrencyInfo
 local tinsert, tremove = tinsert, tremove
@@ -17,8 +17,8 @@ local function IsAlreadyTracked(trackers, trackType, id)
     return false
 end
 
-OneWoW_Bags.BagsController = {}
-local BagsController = OneWoW_Bags.BagsController
+ns.BagsController = {}
+local BagsController = ns.BagsController
 
 function BagsController:Create(addon)
     local controller = {}

@@ -1,15 +1,15 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-OneWoW_Bags.ImportExport = OneWoW_Bags.ImportExport or {}
-OneWoW_Bags.ImportExport.SyntaxTranslators = OneWoW_Bags.ImportExport.SyntaxTranslators or {}
-local ST = OneWoW_Bags.ImportExport.SyntaxTranslators
+ns.ImportExport = ns.ImportExport or {}
+ns.ImportExport.SyntaxTranslators = ns.ImportExport.SyntaxTranslators or {}
+local ST = ns.ImportExport.SyntaxTranslators
 
 local Registry = ST.Registry
 
 local Syndicator = ST.Syndicator or {}
 ST.Syndicator = Syndicator
 
-local L = OneWoW_Bags.L
+local L = ns.L
 
 local tinsert, tconcat = table.insert, table.concat
 local string_lower, string_gsub = string.lower, string.gsub

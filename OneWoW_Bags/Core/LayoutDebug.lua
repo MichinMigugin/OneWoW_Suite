@@ -1,4 +1,4 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 local format = string.format
 local tinsert, wipe = tinsert, wipe
@@ -8,8 +8,8 @@ local GetTime = GetTime
 local PREFIX = "|cff80c0ffOneWoW_Bags Layout|r"
 local RING_SIZE = 64
 
-OneWoW_Bags.LayoutDebug = {}
-local LD = OneWoW_Bags.LayoutDebug
+ns.LayoutDebug = {}
+local LD = ns.LayoutDebug
 
 LD.enabled = false
 LD.ring = {}
@@ -105,7 +105,7 @@ function LD:RecordLayoutComplete(targetKey, filteredCount, layoutHeight, buttons
     filteredCount = filteredCount or 0
     local filteredShown = self:CountFilteredShown(buttons, filterToken)
 
-    local setObj = OneWoW_Bags[SET_BY_TARGET[targetKey]]
+    local setObj = ns[SET_BY_TARGET[targetKey]]
     local total, hasItem, setShown, slots, free = self:CountSetStats(setObj)
 
     if self.enabled then

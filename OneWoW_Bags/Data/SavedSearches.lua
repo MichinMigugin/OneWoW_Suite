@@ -1,4 +1,4 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
 -- ============================================================================
 -- SavedSearches
@@ -25,8 +25,8 @@ local pairs = pairs
 local sort = sort
 local tinsert = tinsert
 
-OneWoW_Bags.SavedSearches = {}
-local SavedSearches = OneWoW_Bags.SavedSearches
+ns.SavedSearches = {}
+local SavedSearches = ns.SavedSearches
 
 local MAX_EXPANSION_DEPTH = 5
 -- PredicateEngine treats unknown #keywords as false, making this a safe
@@ -34,7 +34,7 @@ local MAX_EXPANSION_DEPTH = 5
 local NEVER_MATCH = "#onewow_saved_search_missing"
 
 local function GetDB()
-    return OneWoW_Bags:GetDB()
+    return ns:GetDB()
 end
 
 local function GetStore()
@@ -177,10 +177,10 @@ function SavedSearches:Set(name, query)
     end
     store[normalizedName] = normalizedQuery
 
-    OneWoW_Bags:InvalidateCategorization()
-    OneWoW_Bags:RequestLayoutRefresh("all")
-    if OneWoW_Bags.Settings and OneWoW_Bags.Settings.RefreshSavedSearchRows then
-        OneWoW_Bags.Settings:RefreshSavedSearchRows()
+    ns:InvalidateCategorization()
+    ns:RequestLayoutRefresh("all")
+    if ns.Settings and ns.Settings.RefreshSavedSearchRows then
+        ns.Settings:RefreshSavedSearchRows()
     end
     return true, normalizedName
 end
@@ -210,10 +210,10 @@ function SavedSearches:Rename(oldName, newName)
     store[normalizedNewName] = existingQuery
     ReplaceReferencesInDB(self, db, existingKey, normalizedNewName)
 
-    OneWoW_Bags:InvalidateCategorization()
-    OneWoW_Bags:RequestLayoutRefresh("all")
-    if OneWoW_Bags.Settings and OneWoW_Bags.Settings.RefreshSavedSearchRows then
-        OneWoW_Bags.Settings:RefreshSavedSearchRows()
+    ns:InvalidateCategorization()
+    ns:RequestLayoutRefresh("all")
+    if ns.Settings and ns.Settings.RefreshSavedSearchRows then
+        ns.Settings:RefreshSavedSearchRows()
     end
     return true, normalizedNewName
 end
@@ -228,10 +228,10 @@ function SavedSearches:Delete(name)
     if not key then return false, "SAVED_SEARCH_NOT_FOUND" end
 
     GetStore()[key] = nil
-    OneWoW_Bags:InvalidateCategorization()
-    OneWoW_Bags:RequestLayoutRefresh("all")
-    if OneWoW_Bags.Settings and OneWoW_Bags.Settings.RefreshSavedSearchRows then
-        OneWoW_Bags.Settings:RefreshSavedSearchRows()
+    ns:InvalidateCategorization()
+    ns:RequestLayoutRefresh("all")
+    if ns.Settings and ns.Settings.RefreshSavedSearchRows then
+        ns.Settings:RefreshSavedSearchRows()
     end
     return true
 end

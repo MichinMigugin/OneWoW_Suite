@@ -1,13 +1,13 @@
-local _, OneWoW_Bags = ...
+local _, ns = ...
 
-OneWoW_Bags.ImportExport = OneWoW_Bags.ImportExport or {}
-OneWoW_Bags.ImportExport.SyntaxTranslators = OneWoW_Bags.ImportExport.SyntaxTranslators or {}
-local ST = OneWoW_Bags.ImportExport.SyntaxTranslators
+ns.ImportExport = ns.ImportExport or {}
+ns.ImportExport.SyntaxTranslators = ns.ImportExport.SyntaxTranslators or {}
+local ST = ns.ImportExport.SyntaxTranslators
 
 local Registry = ST.Registry or {}
 ST.Registry = Registry
 
-local L = OneWoW_Bags.L
+local L = ns.L
 local string_format = string.format
 
 local translators = {}
