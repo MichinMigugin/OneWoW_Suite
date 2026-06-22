@@ -77,7 +77,7 @@ until the inventory is drained).
 
 | Load unit | Vararg today | Global publish today | Hook / debt | Notes |
 |-----------|--------------|----------------------|-------------|-------|
-| `OneWoW_AltTracker` | `ns` | `OneWoW_AltTracker = {}` | `lifecycle_root_db`, colon `GetProgressList` → `_API` | **First migration** — hub + stores |
+| `OneWoW_AltTracker` | `ns` | `OneWoW_AltTracker = {}` + `OneWoW_AltTracker_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API`, no `ns.OneWoWAltTracker` |
 | AltTracker_* stores (8) | `ns` | BootStore + `_API` | StoreBootstrap publish only | Stores are reference shape |
 | `OneWoW_QoL` | `ns` | `OneWoW_QoL = {}` | scattered `OneWoW_QoL.db` in UI/modules | Thin root; small `.db` sweep |
 | CatalogData_* stores (4) | `ns` | BootStore + `_API` | StoreBootstrap publish only | Reference shape |
@@ -113,7 +113,7 @@ until the inventory is drained).
 
 ### Recommended migration order
 
-1. **AltTracker family** — hub first (`ns.db`, `OneWoW_AltTracker_API`, drop `ns.OneWoWAltTracker`); stores already on BootStore + `_API`.
+1. **AltTracker family** — hub **complete** (`ns.db`, `OneWoW_AltTracker_API`, lifecycle root colon-hooks-only). Stores unchanged (BootStore stop-gap remains §2).
 2. **Catalog** — drop `ns.addon` hop; move colon helpers to `OneWoW_Catalog_API`; `ns.db`.
 3. **QoL** — thin root is done; sweep `OneWoW_QoL.db` → `ns.db` in UI/modules.
 4. **ShoppingList, Trackers, DirectDeposit** — stop `= ns` / renamed-vararg publish; thin lifecycle root + `ns.db`.

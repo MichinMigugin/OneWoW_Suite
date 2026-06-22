@@ -42,6 +42,7 @@ Global surface: `OneWoW/Docs/ARCHITECTURE.md` §6.1.
 local ADDON_NAME, ns = ...
 
 OneWoW_MyHub = {}
+local OneWoW_MyHub = OneWoW_MyHub   -- optional same-name shadow; see OneWoW-Lua-Conventions
 
 function OneWoW_MyHub:OnAddonLoaded()
     OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_MyHub)
@@ -61,6 +62,7 @@ end)
 ```
 
 - Root lua: `OneWoW_<Unit> = {}` directly — not `local addon = {}; OneWoW_<Unit> = addon`.
+- Localize the lifecycle root with same-name shadowing if needed (`local OneWoW_<Unit> = OneWoW_<Unit>`) — not renamed aliases.
 - DB on `ns.db`, not on the lifecycle root.
 - Hub units with cross-unit readers also publish `OneWoW_<Unit>_API` (dot-functions).
 

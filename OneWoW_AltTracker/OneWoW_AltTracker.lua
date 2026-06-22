@@ -4,27 +4,9 @@ local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
 OneWoW_AltTracker = {}
-local OneWoWAltTracker = OneWoW_AltTracker
+local OneWoW_AltTracker = OneWoW_AltTracker
 
-ns.OneWoWAltTracker = OneWoWAltTracker
 ns.oneWoWHubActive = false
-
--- Public cross-addon accessor. AltTracker data units (RequiredDeps:
--- OneWoW_AltTracker) read the effective progress override lists through this,
--- so the static baseline lives only in ns.OverrideDefaults (single source).
----@param key string one of "trackedCurrencyIDs", "worldBossQuestIDs", "weeklyActivityQuests"
----@return table|nil list effective override list (user customization, else baseline)
-function OneWoWAltTracker:GetProgressList(key)
-    return ns:GetProgressList(key)
-end
-
---- Shared season definition (raids, dungeons, difficulties + raid-cache helpers)
---- populated in Data/d-season.lua. AltTracker data units read it through this
---- accessor so the table stays private to the hub namespace.
----@return table seasonData the ns.SeasonData module
-function OneWoWAltTracker:GetSeasonData()
-    return ns.SeasonData
-end
 
 local function RegisterWithOneWoW()
     local moduleName = "alttracker"
@@ -60,30 +42,30 @@ end
 local function OnInitialize()
     ns:InitializeDatabase()
     OneWoW_GUI:MigrateSettings(ns.db.global)
-    OneWoWAltTracker:ApplyTheme()
+    OneWoW_AltTracker:ApplyTheme()
 
     if ns.ApplyLanguage then
         ns.ApplyLanguage()
     end
 
-    local function slashHandler(msg) OneWoWAltTracker:SlashCommandHandler(msg) end
+    local function slashHandler(msg) OneWoW_AltTracker:SlashCommandHandler(msg) end
     DB:RegisterSlashCommand("onewowat", slashHandler)
     DB:RegisterSlashCommand("owat", slashHandler)
     DB:RegisterSlashCommand("1wat", slashHandler)
 
-    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoWAltTracker, function(self)
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_AltTracker, function(self)
         self:ApplyTheme()
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoWAltTracker, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoW_AltTracker, function()
         if ns.ApplyLanguage then ns.ApplyLanguage() end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoWAltTracker, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoW_AltTracker, function()
         local mainFrame = _G["OneWoWAltTrackerMainFrame"]
         if mainFrame then
             OneWoW_GUI:ApplyFontToFrame(mainFrame)
         end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", OneWoWAltTracker, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", OneWoW_AltTracker, function()
         local mainFrame = _G["OneWoWAltTrackerMainFrame"]
         if mainFrame then
             OneWoW_GUI:ApplyFontToFrame(mainFrame)
@@ -92,7 +74,7 @@ local function OnInitialize()
             ns.UI.ResizeOverviewPanels()
         end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnMoneyDisplayChanged", OneWoWAltTracker, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnMoneyDisplayChanged", OneWoW_AltTracker, function()
         if ns.UI.RefreshMoneyDisplayTabs then
             ns.UI.RefreshMoneyDisplayTabs()
         end
@@ -104,11 +86,11 @@ local function OnInitialize()
     end
 end
 
-function OneWoWAltTracker:ApplyTheme()
+function OneWoW_AltTracker:ApplyTheme()
     OneWoW_GUI:ApplyTheme(self)
 end
 
-function OneWoWAltTracker:ApplyLanguage()
+function OneWoW_AltTracker:ApplyLanguage()
     if ns.ApplyLanguage then
         ns.ApplyLanguage()
     end
@@ -120,7 +102,7 @@ local function OnEnable()
     OneWoW:RegisterMinimap("OneWoW_AltTracker", ns.L["CTX_OPEN_ALTTRACKER"], "alttracker", nil)
 end
 
-function OneWoWAltTracker:SlashCommandHandler()
+function OneWoW_AltTracker:SlashCommandHandler()
     if ns.oneWoWHubActive then
         OneWoW.UI:Show("alttracker")
         return
@@ -134,10 +116,10 @@ end
 -- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). The
 -- one-shot guard makes the PLAYER_LOGIN safety net below a no-op when already run.
 local didInit = false
-function OneWoWAltTracker:OnAddonLoaded()
+function OneWoW_AltTracker:OnAddonLoaded()
     if didInit then return end
     didInit = true
-    OneWoW.Lifecycle:CreateHandlerRegistry(OneWoWAltTracker)
+    OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_AltTracker)
     OnInitialize()
 end
 
@@ -145,17 +127,17 @@ end
 -- startup, or is driven by the loader (OneWoW:EnsureLoaded) for a mid-session
 -- enable, when PLAYER_LOGIN has already fired and won't reach this module.
 local didLogin = false
-function OneWoWAltTracker:OnPlayerLogin()
+function OneWoW_AltTracker:OnPlayerLogin()
     if didLogin then return end
     didLogin = true
     OnEnable()
-    OneWoWAltTracker:RegisterLoginHandler("actionbars", ns.SetupActionBarsCompat)
-    OneWoWAltTracker:RegisterLoginHandler("financials", function()
+    OneWoW_AltTracker:RegisterLoginHandler("actionbars", ns.SetupActionBarsCompat)
+    OneWoW_AltTracker:RegisterLoginHandler("financials", function()
         if ns.UI and ns.UI.SetLoginServerTime then
             ns.UI.SetLoginServerTime()
         end
     end)
-    if OneWoWAltTracker.FireLoginHandlers then
-        OneWoWAltTracker:FireLoginHandlers()
+    if OneWoW_AltTracker.FireLoginHandlers then
+        OneWoW_AltTracker:FireLoginHandlers()
     end
 end

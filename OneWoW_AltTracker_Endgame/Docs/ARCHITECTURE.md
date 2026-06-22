@@ -281,6 +281,17 @@ OneWoW_AltTracker_Endgame_DB = {
 - `ns:GetAllCharacters()` - Get all characters sorted by last login
 - `ns:DeleteCharacter(charKey)` - Delete character data
 
+### Hub configuration access
+
+Collection modules read the parent hub's effective progress override lists and
+season definition through **`OneWoW_AltTracker_API`** dot-functions — not colon
+methods on `OneWoW_AltTracker`, and not the hub's `OneWoW_AltTracker_DB` global:
+
+```lua
+local currencyIDs = OneWoW_AltTracker_API.GetProgressList("trackedCurrencyIDs")
+local seasonData = OneWoW_AltTracker_API.GetSeasonData()
+```
+
 ## Data Access
 
 This addon stores all data in the `OneWoW_AltTracker_Endgame_DB` SavedVariable. Other addons access this data directly.

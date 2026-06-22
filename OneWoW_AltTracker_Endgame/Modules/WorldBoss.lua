@@ -35,7 +35,7 @@ function Module:CollectData(charKey, charData)
         end
     end
 
-    local questIDs = OneWoW_AltTracker:GetProgressList("worldBossQuestIDs")
+    local questIDs = OneWoW_AltTracker_API.GetProgressList("worldBossQuestIDs")
 
     for _, questID in ipairs(questIDs) do
         if C_QuestLog.IsQuestFlaggedCompleted(questID) then

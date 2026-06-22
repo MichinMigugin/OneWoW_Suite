@@ -3,13 +3,6 @@ local _, ns = ...
 ns.Raids = {}
 local Module = ns.Raids
 
-local function GetSeasonData()
-    if OneWoW_AltTracker then
-        return OneWoW_AltTracker:GetSeasonData()
-    end
-    return nil
-end
-
 local function CollectLockouts()
     local lockouts = {}
     local numSavedInstances = GetNumSavedInstances()
@@ -110,7 +103,7 @@ end
 function Module:CollectData(charKey, charData)
     if not charKey or not charData then return false end
 
-    local seasonData = GetSeasonData()
+    local seasonData = OneWoW_AltTracker_API.GetSeasonData()
 
     local raidsData = {
         lastUpdated = time(),

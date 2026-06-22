@@ -43,6 +43,8 @@ Data\d-professions.lua
 Data\d-season.lua
 Data\ShortNames.lua
 
+Core\API.lua
+
 # Main Addon File
 OneWoW_AltTracker.lua
 

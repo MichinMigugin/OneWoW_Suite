@@ -14,7 +14,7 @@ function Module:CollectData(charKey, charData)
     local idsToCollect = {}
     local seen = {}
 
-    local sourceIDs = OneWoW_AltTracker:GetProgressList("trackedCurrencyIDs")
+    local sourceIDs = OneWoW_AltTracker_API.GetProgressList("trackedCurrencyIDs")
 
     for _, id in ipairs(sourceIDs) do
         if id and id > 0 and not seen[id] then

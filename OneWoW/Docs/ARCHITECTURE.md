@@ -580,6 +580,7 @@ unit registry in `MIGRATION.md` §2. Core does **not** need `OneWoW_API` — the
 local ADDON_NAME, ns = ...
 
 OneWoW_MyHub = {}
+local OneWoW_MyHub = OneWoW_MyHub   -- optional same-name shadow; see OneWoW-Lua-Conventions
 
 function OneWoW_MyHub:OnAddonLoaded()
     OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_MyHub)
@@ -589,8 +590,12 @@ end
 ```
 
 - Root lua: `OneWoW_<Unit> = {}` (not `local addon = {}; OneWoW_<Unit> = addon`).
+- Optional: `local OneWoW_<Unit> = OneWoW_<Unit>` after publishing the global (same-name
+  shadowing — see `OneWoW-Lua-Conventions.mdc`). Do not use renamed aliases (`local addon = …`).
 - Lifecycle hooks use colon syntax on the thin root object.
 - DB handle lives on `ns.db`, never on the lifecycle root.
+- Cross-unit reads: `Core/API.lua` publishes `OneWoW_<Unit>_API` dot-functions (see
+  `OneWoW_AltTracker` as reference).
 
 **Data store** (AltTracker_* stores, CatalogData_*, …):
 
@@ -616,7 +621,7 @@ Neither pattern is `OneWoW_<Unit> = ns` written by hand.
 
 | Global kind | Syntax | Examples |
 |-------------|--------|----------|
-| Cross-unit `_API` | **dot-functions only** | `OneWoW_AltTracker_Character_API.GetCharacterData(charKey)` |
+| Cross-unit `_API` | **dot-functions only** | `OneWoW_AltTracker_API.GetProgressList(key)`, `OneWoW_AltTracker_Character_API.GetCharacterData(charKey)` |
 | Singleton service / toolkit | **colon-methods** | `OneWoW_GUI:CreateFS(...)`, `OneWoW:EnsureLoaded(...)` |
 | Core orchestrator (`OneWoW`) | **colon-methods** + `OneWoW.*` tables | `OneWoW:BringUp(...)`, `OneWoW.Lifecycle`, `OneWoW.PredicateEngine` |
 | Lifecycle root (`OneWoW_<Unit>`) | **colon for instance hooks only** | `OneWoW_AltTracker:OnAddonLoaded()`, `:ApplyTheme()` |
@@ -632,7 +637,8 @@ cross-unit data accessors on the lifecycle root as colon-methods (e.g.
 - `OneWoW_<Unit> = ns` or `_G[...] = ns` (hand namespace publish)
 - Renaming the vararg namespace: `local ADDON_NAME, OneWoW_Bags = ...` or
   `local ADDON_NAME, OneWoW = ...` — always `local ADDON_NAME, ns = ...`
-- Back-references: `ns.addon`, `ns.OneWoWAltTracker`, etc.
+- Back-references: `ns.addon`, `ns.OneWoWAltTracker`, etc. (AltTracker hub migrated —
+  uses `ns.db` + `OneWoW_AltTracker_API` instead)
 - `.db` on the lifecycle root (`OneWoW_AltTracker.db`, `OneWoW.db`) — use `ns.db`
 - Colon-methods on `_API` globals
 - Leaking internals on the lifecycle root (`OneWoW_AltTracker.UI = ...`)

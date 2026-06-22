@@ -11,7 +11,7 @@ function Module:CollectData(charKey, charData)
         lastUpdated = time(),
     }
 
-    local list = OneWoW_AltTracker:GetProgressList("weeklyActivityQuests")
+    local list = OneWoW_AltTracker_API.GetProgressList("weeklyActivityQuests")
 
     for _, entry in ipairs(list) do
         local questID = entry.questID

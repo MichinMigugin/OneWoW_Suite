@@ -1,9 +1,8 @@
 local _, ns = ...
 
-local OneWoWAltTracker = OneWoW_AltTracker
-local L = ns.L
-
 local OneWoW_GUI = OneWoW_GUI
+
+local L = ns.L
 
 ns.UI = ns.UI or {}
 

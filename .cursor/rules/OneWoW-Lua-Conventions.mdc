@@ -24,6 +24,30 @@ If the linter (Lua Language Server) flags an unknown global, add the symbol to `
 
 The exception: **bracket access with a computed key** — `_G["GameTooltipTextLeft"..i]`. The symbol name isn't known at edit time, so `_G[expr]` is the correct form. Direct `_G.FIELD` (with a literal field) is never necessary: either the name is known (use it directly) or it's computed (use `_G[expr]`).
 
+## Localizing globals — same-name shadowing
+
+When a file references a global many times (suite services like `OneWoW_GUI`, or the
+unit's own lifecycle root in root lua), localize with **same-name shadowing** —
+the same idiom as `local ipairs, pairs = ipairs, pairs`:
+
+```lua
+local OneWoW_GUI = OneWoW_GUI
+
+OneWoW_MyHub = {}
+local OneWoW_MyHub = OneWoW_MyHub   -- after publishing the global table
+```
+
+The RHS resolves to the global before the local binds; the rest of the file uses the
+fast local lookup. Other files still see `_G.OneWoW_MyHub`.
+
+**Do not** rename when localizing (`local addon = OneWoW_QoL`, `local OneWoWAltTracker =
+OneWoW_AltTracker`) — that is not the ipairs pattern and adds a second name for the
+same table. Prefer the canonical global name, or omit the local if the file has few
+references (root lifecycle lua is usually not hot enough to require it).
+
+Root lifecycle files may skip the local entirely and use the global directly; use
+shadowing only when the file has enough references to justify it.
+
 ## `self` shadowing — rename the inner `self` to `myself`
 
 When a closure inside a method also receives `self` as its first argument (widget callbacks like `OnClick`, `OnTextChanged`, etc.), name the **inner** parameter `myself` so the outer `self` continues to refer to the module/object throughout the closure body.
