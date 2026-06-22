@@ -47,23 +47,8 @@ local QUEST_STATUS_ATLAS_WARBAND   = "warband-completed-icon"
 local QUEST_STATUS_ATLAS_ACCOUNT   = "questlog-questtypeicon-group"
 local QUEST_STATUS_ATLAS_PENDING   = "Islands-QuestBangDisable"
 
-local QUEST_STATUS_RANK = {
-    completed_current = 1,
-    active_current    = 2,
-    active_other      = 3,
-    completed_warband = 4,
-    completed_account = 5,
-    pending           = 6,
-}
-
-local function PickHigherPriorityStatus(left, right)
-    left = left or "pending"
-    right = right or "pending"
-    if QUEST_STATUS_RANK[left] <= QUEST_STATUS_RANK[right] then
-        return left
-    end
-    return right
-end
+local QUEST_STATUS_ICON_SLOT = 17
+local QUEST_STATUS_MAX_ICONS = 4
 
 local function IsCompletedByOtherCharacter(questID, tracker)
     if not questID or not tracker then
@@ -81,111 +66,201 @@ local function IsCompletedByOtherCharacter(questID, tracker)
 end
 
 local function IsActiveOnOtherCharacter(questID, tracker)
-    if C_QuestLog.IsOnQuest(questID) then
-        return false
-    end
-
-    if activeQuestIDsAcrossAlts[questID] then
-        return true
-    end
-
-    if not tracker then
+    if not questID then
         return false
     end
 
     local currentKey = OneWoW_GUI:BuildCharKey()
-    for _, charInfo in ipairs(tracker.GetActiveCharacters(questID)) do
-        if charInfo.key ~= currentKey then
-            return true
+
+    if tracker then
+        for _, charInfo in ipairs(tracker.GetActiveCharacters(questID)) do
+            if charInfo.key ~= currentKey then
+                return true
+            end
         end
+    end
+
+    -- Warband-mode snapshot fallback. The map also records the current
+    -- character, so only trust it when the player is not the one on the quest.
+    if activeQuestIDsAcrossAlts[questID] and not C_QuestLog.IsOnQuest(questID) then
+        return true
     end
 
     return false
 end
 
-local function ResolveQuestListStatus(questID, tracker)
+--- Resolves every status fact for a quest row. Multiple facts can be true at
+--- once (e.g. active on self while a tracked alt has it completed), so each is
+--- reported independently instead of collapsing to a single status.
+---@param questID number|nil
+---@param tracker table|nil
+---@return table flags
+local function ResolveQuestStatusFlags(questID, tracker)
+    local flags = {}
+
     if not questID then
-        return "pending"
+        flags.pending = true
+        return flags
     end
 
     if tracker and tracker.IsCompletedByCurrentChar(questID) then
-        return "completed_current"
-    end
-
-    if C_QuestLog.IsOnQuest(questID) then
-        return "active_current"
+        flags.selfState = "completed_current"
+    elseif C_QuestLog.IsOnQuest(questID) then
+        flags.selfState = "active_current"
     end
 
     if IsActiveOnOtherCharacter(questID, tracker) then
-        return "active_other"
+        flags.warbandActive = true
     end
 
     if IsCompletedByOtherCharacter(questID, tracker) then
-        return "completed_warband"
+        flags.warbandCompleted = true
     end
 
-    if C_QuestLog.IsQuestFlaggedCompletedOnAccount(questID) then
-        return "completed_account"
+    -- Real account-wide completion via the API. Suppressed when the current
+    -- character already completed it, because that completion sets the account
+    -- flag anyway and the extra icon would just be redundant noise.
+    if flags.selfState ~= "completed_current"
+        and C_QuestLog.IsQuestFlaggedCompletedOnAccount(questID)
+    then
+        flags.accountCompleted = true
     end
 
-    return "pending"
+    if not flags.selfState
+        and not flags.warbandActive
+        and not flags.warbandCompleted
+        and not flags.accountCompleted
+    then
+        flags.pending = true
+    end
+
+    return flags
 end
 
-local function ResolveGroupListStatus(groupQuests, tracker)
-    local bestStatus = "pending"
+--- Combines status flags across every quest in a grouped list entry.
+---@param groupQuests table|nil
+---@param tracker table|nil
+---@return table flags
+local function ResolveGroupStatusFlags(groupQuests, tracker)
+    local flags = {}
 
     for _, childQuest in ipairs(groupQuests or {}) do
         if childQuest.id then
-            bestStatus = PickHigherPriorityStatus(
-                bestStatus,
-                ResolveQuestListStatus(childQuest.id, tracker)
-            )
+            local childFlags = ResolveQuestStatusFlags(childQuest.id, tracker)
+
+            if childFlags.selfState == "completed_current" then
+                flags.selfState = "completed_current"
+            elseif childFlags.selfState == "active_current"
+                and flags.selfState ~= "completed_current"
+            then
+                flags.selfState = "active_current"
+            end
+
+            if childFlags.warbandActive then flags.warbandActive = true end
+            if childFlags.warbandCompleted then flags.warbandCompleted = true end
+            if childFlags.accountCompleted then flags.accountCompleted = true end
         end
     end
 
-    return bestStatus
-end
-
-local function ApplyQuestListStatusIcon(tex, status)
-    if not tex then
-        return
+    if not flags.selfState
+        and not flags.warbandActive
+        and not flags.warbandCompleted
+        and not flags.accountCompleted
+    then
+        flags.pending = true
     end
 
-    status = status or "pending"
+    return flags
+end
 
-    tex:Show()
+--- Styles a single status texture for the given icon kind.
+---@param tex table
+---@param kind string
+local function StyleStatusIcon(tex, kind)
     tex:SetAlpha(1)
 
-    if status == "completed_current" then
-        tex:SetSize(14, 14)
+    if kind == "completed_current" then
+        tex:SetSize(13, 13)
         tex:SetAtlas("")
         tex:SetTexture(QUEST_STATUS_TEXTURE_CHECK)
         tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    elseif status == "completed_warband" then
-        tex:SetSize(16, 18)
-        tex:SetTexture(nil)
-        tex:SetAtlas(QUEST_STATUS_ATLAS_WARBAND)
-        tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    elseif status == "completed_account" then
-        tex:SetSize(18, 18)
-        tex:SetTexture(nil)
-        tex:SetAtlas(QUEST_STATUS_ATLAS_ACCOUNT)
-        tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    elseif status == "active_current" then
-        tex:SetSize(28, 28)
+    elseif kind == "active_current" then
+        tex:SetSize(16, 16)
         tex:SetTexture(nil)
         tex:SetAtlas(QUEST_STATUS_ATLAS_BANG)
         tex:SetVertexColor(unpack(WOW_QUEST_GOLD))
-    elseif status == "active_other" then
-        tex:SetSize(28, 28)
+    elseif kind == "active_other" then
+        tex:SetSize(16, 16)
         tex:SetTexture(nil)
         tex:SetAtlas(QUEST_STATUS_ATLAS_BANG_ALT)
         tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    elseif kind == "completed_warband" then
+        tex:SetSize(14, 16)
+        tex:SetTexture(nil)
+        tex:SetAtlas(QUEST_STATUS_ATLAS_WARBAND)
+        tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    elseif kind == "completed_account" then
+        tex:SetSize(15, 15)
+        tex:SetTexture(nil)
+        tex:SetAtlas(QUEST_STATUS_ATLAS_ACCOUNT)
+        tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     else
-        tex:SetSize(28, 28)
+        tex:SetSize(16, 16)
         tex:SetTexture(nil)
         tex:SetAtlas(QUEST_STATUS_ATLAS_PENDING)
         tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    end
+end
+
+--- Returns the ordered list of icon kinds present in a status flags table.
+--- Order is self, warband-active, warband-completed, account-completed.
+---@param flags table
+---@return string[] kinds
+local function BuildStatusIconKinds(flags)
+    local kinds = {}
+
+    if flags.selfState then
+        table.insert(kinds, flags.selfState)
+    end
+    if flags.warbandActive then
+        table.insert(kinds, "active_other")
+    end
+    if flags.warbandCompleted then
+        table.insert(kinds, "completed_warband")
+    end
+    if flags.accountCompleted then
+        table.insert(kinds, "completed_account")
+    end
+    if #kinds == 0 then
+        table.insert(kinds, "pending")
+    end
+
+    return kinds
+end
+
+--- Lays out a button's status icon cluster, right-aligned from baseRight.
+---@param btn table
+---@param flags table
+---@param baseRight number
+local function ApplyQuestListStatusIcons(btn, flags, baseRight)
+    local icons = btn.statusIcons
+    if not icons then return end
+
+    local kinds = BuildStatusIconKinds(flags)
+    local count = #kinds
+
+    for i = 1, #icons do
+        local tex = icons[i]
+        local kind = kinds[i]
+        if kind then
+            StyleStatusIcon(tex, kind)
+            tex:ClearAllPoints()
+            tex:SetPoint("RIGHT", btn, "RIGHT",
+                baseRight - (count - i) * QUEST_STATUS_ICON_SLOT, 0)
+            tex:Show()
+        else
+            tex:Hide()
+        end
     end
 end
 
@@ -211,6 +286,7 @@ local function ShowQuestStatusLegendTooltip(owner)
     GameTooltip:SetOwner(owner, "ANCHOR_LEFT")
     GameTooltip:ClearLines()
     GameTooltip:AddLine(L["QUESTS_STATUS_LEGEND_TITLE"], 1, 0.82, 0)
+    GameTooltip:AddLine(L["QUESTS_STATUS_LEGEND_COMBINE"], 0.8, 0.8, 0.8, true)
     GameTooltip:AddLine(" ")
 
     local legendLines = {
@@ -332,11 +408,25 @@ local function NormalizeQuestSearchText(value)
     return table.concat(terms, " ")
 end
 
+local function IsActiveCurrentMode()
+    return completionFilter == "active_current"
+end
+
+local function IsActiveAllAltsMode()
+    return completionFilter == "active_all"
+end
+
+local function IsActiveFilterMode()
+    return IsActiveCurrentMode() or IsActiveAllAltsMode()
+end
+
 local function IsDatabaseMode()
     return (searchText and NormalizeQuestSearchText(searchText) ~= "")
         or expansionFilter ~= -1
         or zoneFilter ~= ""
-        or (completionFilter ~= "all" and completionFilter ~= "active")
+        or (completionFilter ~= "all"
+            and completionFilter ~= "active_current"
+            and completionFilter ~= "active_all")
         or typeFilter ~= "all"
         or questTypeFilter ~= "all"
         or categoryFilter ~= "all"
@@ -404,9 +494,9 @@ end
 local function GetAdvancedButtonText()
     local count = CountAdvancedFilters()
     if count > 0 then
-        return "Advanced (" .. tostring(count) .. ")"
+        return string.format(L["QUESTS_ADVANCED_COUNT"], count)
     end
-    return "Advanced"
+    return L["QUESTS_ADVANCED"]
 end
 
 local function SetButtonText(button, text)
@@ -423,7 +513,7 @@ end
 local function UpdateFavoritesFilterButton(button)
     if not button then return end
 
-    SetButtonText(button, "Favorites")
+    SetButtonText(button, L["QUESTS_DATA_FAVORITES"])
 
     if button.SetActive then
         button:SetActive(runtimeFilter == "favorite")
@@ -2167,7 +2257,7 @@ function ShowQuestDetail(panels, questData)
     local metaParts = {
         string.format("%s: %s", L["EXPANSION"], expName),
         string.format("%s: %s", ZONE, zoneName),
-        string.format("Faction: %s", factionName),
+        string.format("%s: %s", FACTION, factionName),
         string.format("%s: %s", L["QUESTS_QUEST_TYPE"], questTypeName),
     }
 
@@ -3255,7 +3345,9 @@ local function UpdateQuestListEntry(btn, quest, panels)
 
     if btn.isSection then
         if btn.groupToggle then btn.groupToggle:Hide() end
-        if btn.checkTex then btn.checkTex:Hide() end
+        if btn.statusIcons then
+            for _, tex in ipairs(btn.statusIcons) do tex:Hide() end
+        end
         if btn.checkHit then btn.checkHit:Hide() end
         if btn.favBtn then btn.favBtn:Hide() end
         if btn.subText then btn.subText:SetText("") end
@@ -3264,7 +3356,7 @@ local function UpdateQuestListEntry(btn, quest, panels)
             btn.nameText:ClearAllPoints()
             btn.nameText:SetPoint("LEFT", btn, "LEFT", 8, 0)
             btn.nameText:SetPoint("RIGHT", btn, "RIGHT", -8, 0)
-            btn.nameText:SetText(entry.label or "Favorites")
+            btn.nameText:SetText(entry.label or L["QUESTS_DATA_FAVORITES"])
             btn.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         end
 
@@ -3284,6 +3376,33 @@ local function UpdateQuestListEntry(btn, quest, panels)
         end
     end
 
+    local statusFlags
+    if btn.isGroup then
+        local groupStatus = questGroupStatusCache[entry.key]
+        if not groupStatus then
+            groupStatus = { flags = ResolveGroupStatusFlags(entry.quests, tracker) }
+            questGroupStatusCache[entry.key] = groupStatus
+        end
+        statusFlags = groupStatus.flags
+    elseif quest and quest.id then
+        local rowStatus = questRowStatusCache[quest.id]
+        if not rowStatus then
+            rowStatus = {
+                flags = ResolveQuestStatusFlags(quest.id, tracker),
+                isFavorite =
+                    ns.Favorites
+                    and ns.Favorites:IsFavorite("quests", quest.id),
+            }
+            questRowStatusCache[quest.id] = rowStatus
+        end
+        statusFlags = rowStatus.flags
+    end
+    statusFlags = statusFlags or { pending = true }
+
+    local statusBaseRight = btn.isGroup and -40 or -26
+    local statusCount = #BuildStatusIconKinds(statusFlags)
+    local statusReserve = (btn.isGroup and 42 or 28) + statusCount * QUEST_STATUS_ICON_SLOT
+
     if btn.nameText then
         local nameText =
             btn.isGroup
@@ -3295,7 +3414,7 @@ local function UpdateQuestListEntry(btn, quest, panels)
 
         btn.nameText:ClearAllPoints()
         btn.nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", btn.isChild and 28 or 8, -6)
-        btn.nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", btn.isGroup and -58 or -44, -6)
+        btn.nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -statusReserve, -6)
         btn.nameText:SetText(nameText)
 
         if selectedQuest and quest and selectedQuest.id == quest.id then
@@ -3317,55 +3436,16 @@ local function UpdateQuestListEntry(btn, quest, panels)
     if btn.subText then
         btn.subText:ClearAllPoints()
         btn.subText:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", btn.isChild and 28 or 8, 6)
-        btn.subText:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -44, 6)
+        btn.subText:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -statusReserve, 6)
         btn.subText:SetText(expName)
     end
 
-    local listStatus
-
-    if btn.isGroup then
-        local groupStatus = questGroupStatusCache[entry.key]
-
-        if not groupStatus then
-            groupStatus = {
-                status = ResolveGroupListStatus(entry.quests, tracker),
-            }
-            questGroupStatusCache[entry.key] = groupStatus
-        end
-
-        listStatus = groupStatus.status
-    else
-        local rowStatus =
-            quest
-            and quest.id
-            and questRowStatusCache[quest.id]
-
-        if not rowStatus and quest and quest.id then
-            rowStatus = {
-                status = ResolveQuestListStatus(quest.id, tracker),
-
-                isFavorite =
-                    ns.Favorites
-                    and ns.Favorites:IsFavorite("quests", quest.id),
-            }
-
-            questRowStatusCache[quest.id] = rowStatus
-        end
-
-        if rowStatus then
-            listStatus = rowStatus.status
-        end
-    end
-
-    if btn.checkTex then
-        btn.checkTex:ClearAllPoints()
-        btn.checkTex:SetPoint("RIGHT", btn, "RIGHT", btn.isGroup and -40 or -28, 0)
-        ApplyQuestListStatusIcon(btn.checkTex, listStatus)
-    end
+    ApplyQuestListStatusIcons(btn, statusFlags, statusBaseRight)
 
     if btn.checkHit then
         btn.checkHit:ClearAllPoints()
-        btn.checkHit:SetPoint("CENTER", btn.checkTex, "CENTER", 0, 0)
+        btn.checkHit:SetPoint("RIGHT", btn, "RIGHT", statusBaseRight + 10, 0)
+        btn.checkHit:SetSize(statusCount * QUEST_STATUS_ICON_SLOT + 8, 24)
         btn.checkHit:Show()
     end
 
@@ -3416,19 +3496,18 @@ local function CreateQuestListEntry(parent, quest, yOffset, panels, onClick)
     subText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     btn.subText = subText
 
-    local checkTex = btn:CreateTexture(nil, "ARTWORK")
-    checkTex:SetSize(14, 14)
-    checkTex:SetPoint("RIGHT", btn, "RIGHT", -28, 0)
-    checkTex:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
-    checkTex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    checkTex:Hide()
-    btn.checkTex = checkTex
+    btn.statusIcons = {}
+    for i = 1, QUEST_STATUS_MAX_ICONS do
+        local tex = btn:CreateTexture(nil, "ARTWORK")
+        tex:Hide()
+        btn.statusIcons[i] = tex
+    end
 
     local checkHit = OneWoW_GUI:CreateLayoutFrame(btn, {
         width = 28,
-        height = 28,
+        height = 24,
     })
-    checkHit:SetPoint("CENTER", checkTex, "CENTER", 0, 0)
+    checkHit:SetPoint("RIGHT", btn, "RIGHT", -22, 0)
     checkHit:EnableMouseMotion(true)
     checkHit:SetScript("OnEnter", function(self)
         ShowQuestStatusLegendTooltip(self)
@@ -3655,7 +3734,7 @@ local function BuildQuestListDisplayEntries(quests, favoriteQuests)
         table.insert(entries, {
             type = "section",
             key = "favorites-section",
-            label = "Favorites",
+            label = L["QUESTS_DATA_FAVORITES"],
         })
 
         local favoriteEntries = BuildQuestListEntries(favoriteQuests)
@@ -3949,12 +4028,16 @@ function RefreshQuestList(panels)
 
     local quests
     local favoriteQuests = {}
-    -- "Active" intentionally combines the current quest log with AltTracker snapshots.
-    local activeMode = completionFilter == "active"
     local databaseMode = IsDatabaseMode()
+    local activeCurrentMode = IsActiveCurrentMode()
+    local activeAllAltsMode = IsActiveAllAltsMode()
 
-    if activeMode then
+    if activeAllAltsMode then
         quests = GetAllCharactersActiveQuests(addon)
+        favoriteQuests = {}
+    elseif activeCurrentMode then
+        quests = GetActiveQuestLogQuests(addon)
+        favoriteQuests = {}
     elseif databaseMode then
         quests = addon.GetSortedQuests(
             expansionFilter,
@@ -3971,7 +4054,7 @@ function RefreshQuestList(panels)
         favoriteQuests = GetFavoriteQuestsOutsideActiveList(addon, quests)
     end
 
-    if completionFilter ~= "all" and completionFilter ~= "active" then
+    if completionFilter ~= "all" and not IsActiveFilterMode() then
         local filtered = {}
         for _, quest in ipairs(quests) do
             if completionFilter == "completed" then
@@ -4284,8 +4367,9 @@ local function SetupProgressDropdown(panels)
                 { value = "all",           text = L["QUESTS_PROGRESS_ALL"]           },
                 { value = "completed",     text = L["QUESTS_PROGRESS_COMPLETED"]     },
                 { value = "not_completed", text = L["QUESTS_PROGRESS_NOT_COMPLETED"] },
-                { value = "active",        text = L["QUESTS_PROGRESS_ACTIVE"]        },
-                { value = "warband",       text = L["QUESTS_PROGRESS_WARBAND"]       },
+                { value = "active_current", text = L["QUESTS_PROGRESS_ACTIVE_CURRENT"] },
+                { value = "active_all",     text = L["QUESTS_PROGRESS_ACTIVE_ALL"]     },
+                { value = "warband",          text = L["QUESTS_PROGRESS_WARBAND"]          },
             }
         end,
         onSelect = function(value, text)
@@ -4442,9 +4526,9 @@ local function SetupAdvancedDropdowns(panels)
         { frame = panels.advCategory,   field = "category",   allText = L["QUESTS_FILTER_CATEGORY_ALL"], get = function() return categoryFilter end,   set = function(v) categoryFilter = v end },
         { frame = panels.advFlag,       field = "flag",       allText = L["QUESTS_FILTER_TRAIT_ALL"],    get = function() return flagFilter end,       set = function(v) flagFilter = v end },
         { frame = panels.advProfession, field = "profession", allText = L["QUESTS_FILTER_PROFESSION_ALL"], get = function() return professionFilter end, set = function(v) professionFilter = v end },
-        { frame = panels.advClass,      field = "class",      allText = "All Classes",     get = function() return classFilter end,      set = function(v) classFilter = v end },
-        { frame = panels.advRace,       field = "race",       allText = "All Races",       get = function() return raceFilter end,       set = function(v) raceFilter = v end },
-        { frame = panels.advFaction,    field = "faction",    allText = "All Factions",    get = function() return factionFilter end,    set = function(v) factionFilter = v end },
+        { frame = panels.advClass,      field = "class",      allText = L["QUESTS_FILTER_CLASS_ALL"],   get = function() return classFilter end,   set = function(v) classFilter = v end },
+        { frame = panels.advRace,       field = "race",       allText = L["QUESTS_FILTER_RACE_ALL"],    get = function() return raceFilter end,    set = function(v) raceFilter = v end },
+        { frame = panels.advFaction,    field = "faction",    allText = L["QUESTS_FILTER_FACTION_ALL"], get = function() return factionFilter end, set = function(v) factionFilter = v end },
     }
 
     for _, dynamic in ipairs(dynamicDefs) do
@@ -4501,13 +4585,13 @@ local function SetupAdvancedDropdowns(panels)
         buildItems = function()
             return {
                 { value = "all",              text = L["QUESTS_FILTER_DATA_ALL"] },
-                { value = "favorite",         text = "Favorites" },
-                { value = "has_location",     text = "Has Location" },
-                { value = "missing_location", text = "Missing Location" },
-                { value = "has_quest_giver",  text = "Has Quest Giver" },
-                { value = "has_turnin",       text = "Has Turn-in" },
-                { value = "has_rewards",      text = "Has Rewards" },
-                { value = "has_reward_choices", text = "Has Reward Choices" },
+                { value = "favorite",           text = L["QUESTS_DATA_FAVORITES"] },
+                { value = "has_location",       text = L["QUESTS_DATA_HAS_LOCATION"] },
+                { value = "missing_location",   text = L["QUESTS_DATA_MISSING_LOCATION"] },
+                { value = "has_quest_giver",    text = L["QUESTS_DATA_HAS_GIVER"] },
+                { value = "has_turnin",         text = L["QUESTS_DATA_HAS_TURNIN"] },
+                { value = "has_rewards",        text = L["QUESTS_DATA_HAS_REWARDS"] },
+                { value = "has_reward_choices", text = L["QUESTS_DATA_HAS_REWARD_CHOICES"] },
             }
         end,
         onSelect = function(value, text)
@@ -4545,6 +4629,10 @@ function ns.UI.OpenToQuest(questID)
 end
 
 function ns.UI.CreateQuestsTab(parent)
+    if completionFilter == "active" then
+        completionFilter = "active_all"
+    end
+
     local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
     local GAP    = ns.Constants.GUI.PANEL_GAP
     local HDR_H  = 42
@@ -4697,7 +4785,7 @@ function ns.UI.CreateQuestsTab(parent)
         end)
     end
 
-    local favFilterBtn = OneWoW_GUI:CreateFitTextButton(leftHeader, { text = "Favorites", height = 26, minWidth = 68, toggleable = true })
+    local favFilterBtn = OneWoW_GUI:CreateFitTextButton(leftHeader, { text = L["QUESTS_DATA_FAVORITES"], height = 26, minWidth = 68, toggleable = true })
     favFilterBtn:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -8, -8)
 
     local clearBtn = OneWoW_GUI:CreateFitTextButton(leftHeader, { text = L["QUESTS_CLEAR"], height = 26, minWidth = 34 })
@@ -4738,10 +4826,10 @@ function ns.UI.CreateQuestsTab(parent)
     local advQuestType = CreateAdvancedDropdown(advancedDrawer, L["QUESTS_QUEST_TYPE"], L["QUESTS_QTYPE_ALL"])
     local advCategory = CreateAdvancedDropdown(advancedDrawer, CATEGORY, L["QUESTS_FILTER_CATEGORY_ALL"])
     local advFlag = CreateAdvancedDropdown(advancedDrawer, L["QUESTS_TRAIT"], L["QUESTS_FILTER_TRAIT_ALL"])
-    local advProfession = CreateAdvancedDropdown(advancedDrawer, "Profession", L["QUESTS_FILTER_PROFESSION_ALL"])
-    local advClass = CreateAdvancedDropdown(advancedDrawer, "Class", "All Classes")
-    local advRace = CreateAdvancedDropdown(advancedDrawer, "Race", "All Races")
-    local advFaction = CreateAdvancedDropdown(advancedDrawer, "Faction", "All Factions")
+    local advProfession = CreateAdvancedDropdown(advancedDrawer, L["TRADESKILLS_PROFESSION"], L["QUESTS_FILTER_PROFESSION_ALL"])
+    local advClass = CreateAdvancedDropdown(advancedDrawer, CLASS, L["QUESTS_FILTER_CLASS_ALL"])
+    local advRace = CreateAdvancedDropdown(advancedDrawer, RACE, L["QUESTS_FILTER_RACE_ALL"])
+    local advFaction = CreateAdvancedDropdown(advancedDrawer, FACTION, L["QUESTS_FILTER_FACTION_ALL"])
     local advStory = CreateAdvancedDropdown(advancedDrawer, L["QUESTS_STORY"], L["QUESTS_FILTER_STORY_ALL"])
     local advRuntime = CreateAdvancedDropdown(advancedDrawer, L["QUESTS_DATA"], L["QUESTS_FILTER_DATA_ALL"])
 
@@ -4852,9 +4940,9 @@ function ns.UI.CreateQuestsTab(parent)
         advCategory.text:SetText(categoryFilter == "all" and L["QUESTS_FILTER_CATEGORY_ALL"] or FormatQuestMetadataValue(categoryFilter))
         advFlag.text:SetText(flagFilter == "all" and L["QUESTS_FILTER_TRAIT_ALL"] or FormatQuestMetadataValue(flagFilter))
         advProfession.text:SetText(professionFilter == "all" and L["QUESTS_FILTER_PROFESSION_ALL"] or FormatQuestMetadataValue(professionFilter))
-        advClass.text:SetText(classFilter == "all" and "All Classes" or GetClassDisplayName(classFilter))
-        advRace.text:SetText(raceFilter == "all" and "All Races" or GetRaceDisplayName(raceFilter))
-        advFaction.text:SetText(factionFilter == "all" and "All Factions" or GetFactionDisplayName(factionFilter))
+        advClass.text:SetText(classFilter == "all" and L["QUESTS_FILTER_CLASS_ALL"] or GetClassDisplayName(classFilter))
+        advRace.text:SetText(raceFilter == "all" and L["QUESTS_FILTER_RACE_ALL"] or GetRaceDisplayName(raceFilter))
+        advFaction.text:SetText(factionFilter == "all" and L["QUESTS_FILTER_FACTION_ALL"] or GetFactionDisplayName(factionFilter))
 
         local storyText = L["QUESTS_FILTER_STORY_ALL"]
         if storyFilter == "campaign" then storyText = L["CAMPAIGN"]
@@ -4864,13 +4952,13 @@ function ns.UI.CreateQuestsTab(parent)
         advStory.text:SetText(storyText)
 
         local runtimeText = L["QUESTS_FILTER_DATA_ALL"]
-        if runtimeFilter == "favorite" then runtimeText = "Favorites"
-        elseif runtimeFilter == "has_location" then runtimeText = "Has Location"
-        elseif runtimeFilter == "missing_location" then runtimeText = "Missing Location"
-        elseif runtimeFilter == "has_quest_giver" then runtimeText = "Has Quest Giver"
-        elseif runtimeFilter == "has_turnin" then runtimeText = "Has Turn-in"
-        elseif runtimeFilter == "has_rewards" then runtimeText = "Has Rewards"
-        elseif runtimeFilter == "has_reward_choices" then runtimeText = "Has Reward Choices" end
+        if runtimeFilter == "favorite" then runtimeText = L["QUESTS_DATA_FAVORITES"]
+        elseif runtimeFilter == "has_location" then runtimeText = L["QUESTS_DATA_HAS_LOCATION"]
+        elseif runtimeFilter == "missing_location" then runtimeText = L["QUESTS_DATA_MISSING_LOCATION"]
+        elseif runtimeFilter == "has_quest_giver" then runtimeText = L["QUESTS_DATA_HAS_GIVER"]
+        elseif runtimeFilter == "has_turnin" then runtimeText = L["QUESTS_DATA_HAS_TURNIN"]
+        elseif runtimeFilter == "has_rewards" then runtimeText = L["QUESTS_DATA_HAS_REWARDS"]
+        elseif runtimeFilter == "has_reward_choices" then runtimeText = L["QUESTS_DATA_HAS_REWARD_CHOICES"] end
         advRuntime.text:SetText(runtimeText)
     end
 
