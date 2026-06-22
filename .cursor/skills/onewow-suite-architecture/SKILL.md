@@ -155,10 +155,12 @@ See `OneWoW/Docs/ARCHITECTURE.md` §6.1 for the full taxonomy.
 | `ns` / `ns.db` | private namespace + `DB:Init` handle |
 | `OneWoW_<Unit>_DB` | WoW SV global (`## SavedVariables` name) |
 | `OneWoW_<Unit>_API` | cross-unit dot-functions |
-| `OneWoW_<Unit>` | thin lifecycle root (colon hooks only) |
+| `OneWoW_<Unit>` | hub lifecycle root (colon hooks only) |
+| `OneWoW` | core orchestrator singleton (colon API + `OneWoW.*` services; not raw `ns`) |
+| `OneWoW_GUI` | UI toolkit singleton (colon API) |
 
 **Colon vs dot:** `_API` uses dot-functions. `OneWoW_GUI` / `OneWoW` use colon-methods
-(service singletons). Lifecycle root uses colon for `OnAddonLoaded`, `ApplyTheme`, etc.
+(service / orchestrator singletons). Lifecycle root uses colon for `OnAddonLoaded`, `ApplyTheme`, etc.
 
 ### Exposing a public API
 
