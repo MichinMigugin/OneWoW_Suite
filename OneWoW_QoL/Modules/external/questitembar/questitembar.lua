@@ -52,10 +52,7 @@ local function HideBar()
 end
 
 local function GetSettings()
-    local addon = OneWoW_QoL
-    -- Defensive: return empty table if addon not initialized; writes will not persist.
-    if not addon or not addon.db then return {} end
-    local mods = addon.db.global.modules
+    local mods = ns.db.global.modules
     if not mods["questitembar"] then mods["questitembar"] = {} end
     local s = mods["questitembar"]
     if s.locked               == nil then s.locked               = false end

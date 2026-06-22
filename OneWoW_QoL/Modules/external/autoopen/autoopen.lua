@@ -16,9 +16,7 @@ local OPEN_PREDICATE_EXPR = "#hasloot&!#locked& #openable"
 local openPredicate = PE:Compile(OPEN_PREDICATE_EXPR)
 
 local function GetBlacklist()
-    local addon = OneWoW_QoL
-    if not addon or not addon.db then return {} end
-    local mods = addon.db.global.modules
+    local mods = ns.db.global.modules
     if not mods["autoopen"] then mods["autoopen"] = {} end
     if not mods["autoopen"].blacklist then mods["autoopen"].blacklist = {} end
     return mods["autoopen"].blacklist

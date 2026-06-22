@@ -83,5 +83,5 @@ first**, then locales, then code files.
 
 - Toggle value: `ns.ModuleRegistry:GetToggleValue("yourmodule", "myToggle")`
 - Enabled check (guard direct event handlers): `ns.ModuleRegistry:IsEnabled("yourmodule")`
-- Your saved data: `_G.OneWoW_QoL.db.global.modules["yourmodule"]` — only after init
+- Your saved data: `ns.db.global.modules["yourmodule"]` — only after init
   (inside `OnEnable` or later), never at file load.

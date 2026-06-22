@@ -79,12 +79,10 @@ SPECIAL["GameMenuFrame"] = {
 -- ============================================================
 
 function FM:GetDB()
-    local addon = OneWoW_QoL
-    if not addon or not addon.db then return nil end
-    if not addon.db.global.modules["framemover"] then
-        addon.db.global.modules["framemover"] = {}
+    if not ns.db.global.modules["framemover"] then
+        ns.db.global.modules["framemover"] = {}
     end
-    local modDB = addon.db.global.modules["framemover"]
+    local modDB = ns.db.global.modules["framemover"]
     if not modDB.fmdata then
         modDB.fmdata = { frames = {} }
     end

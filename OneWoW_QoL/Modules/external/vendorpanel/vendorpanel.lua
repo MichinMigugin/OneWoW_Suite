@@ -5,12 +5,10 @@ local VendorPanelModule, L = ns.ModuleRegistry:Current()
 if not VendorPanelModule then return end
 
 local function GetDB()
-    local addon = OneWoW_QoL
-    if not addon or not addon.db or not addon.db.global or not addon.db.global.modules then return nil end
-    if not addon.db.global.modules["vendorpanel"] then
-        addon.db.global.modules["vendorpanel"] = {}
+    if not ns.db.global.modules["vendorpanel"] then
+        ns.db.global.modules["vendorpanel"] = {}
     end
-    return addon.db.global.modules["vendorpanel"]
+    return ns.db.global.modules["vendorpanel"]
 end
 
 local function GetSettings()

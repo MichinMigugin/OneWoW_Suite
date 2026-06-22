@@ -42,9 +42,7 @@ local function SyncKeybindings()
 end
 
 local function GetSettings()
-    local addon = OneWoW_QoL
-    if not addon or not addon.db then return {} end
-    local s = addon.db.global.modules.bagbar
+    local s = ns.db.global.modules.bagbar
     if not s then return {} end
     if not s.manualItems then s.manualItems = {} end
     if not s.manualMacros then s.manualMacros = {} end
@@ -784,8 +782,7 @@ end
 -- ============================================================================
 
 local function ToggleBagBarModule()
-    local addon = OneWoW_QoL
-    if not addon or not addon.db then
+    if not ns.db then
         print("|cFFFFD100OneWoW QoL:|r BagBar isn't ready yet.")
         return
     end

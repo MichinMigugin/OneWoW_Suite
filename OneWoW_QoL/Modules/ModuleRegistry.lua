@@ -84,12 +84,9 @@ function Registry:HasModules()
 end
 
 function Registry:IsEnabled(moduleId)
-    local addon = OneWoW_QoL
-    if addon and addon.db and addon.db.global.modules then
-        local modData = addon.db.global.modules[moduleId]
-        if modData and modData.enabled ~= nil then
-            return modData.enabled
-        end
+    local modData = ns.db.global.modules[moduleId]
+    if modData and modData.enabled ~= nil then
+        return modData.enabled
     end
     local mod = modules[moduleId]
     if mod and mod.defaultEnabled ~= nil then
@@ -99,12 +96,10 @@ function Registry:IsEnabled(moduleId)
 end
 
 function Registry:SetEnabled(moduleId, enabled)
-    local addon = OneWoW_QoL
-    if not addon or not addon.db or not addon.db.global.modules then return end
-    if not addon.db.global.modules[moduleId] then
-        addon.db.global.modules[moduleId] = {}
+    if not ns.db.global.modules[moduleId] then
+        ns.db.global.modules[moduleId] = {}
     end
-    addon.db.global.modules[moduleId].enabled = enabled
+    ns.db.global.modules[moduleId].enabled = enabled
     local mod = modules[moduleId]
     if mod then
         if enabled and mod.OnEnable then
@@ -116,12 +111,9 @@ function Registry:SetEnabled(moduleId, enabled)
 end
 
 function Registry:GetToggleValue(moduleId, toggleId)
-    local addon = OneWoW_QoL
-    if addon and addon.db and addon.db.global.modules then
-        local modData = addon.db.global.modules[moduleId]
-        if modData and modData.toggles and modData.toggles[toggleId] ~= nil then
-            return modData.toggles[toggleId]
-        end
+    local modData = ns.db.global.modules[moduleId]
+    if modData and modData.toggles and modData.toggles[toggleId] ~= nil then
+        return modData.toggles[toggleId]
     end
     local mod = modules[moduleId]
     if mod and mod.toggles then
@@ -135,15 +127,13 @@ function Registry:GetToggleValue(moduleId, toggleId)
 end
 
 function Registry:SetToggleValue(moduleId, toggleId, value)
-    local addon = OneWoW_QoL
-    if not addon or not addon.db or not addon.db.global.modules then return end
-    if not addon.db.global.modules[moduleId] then
-        addon.db.global.modules[moduleId] = {}
+    if not ns.db.global.modules[moduleId] then
+        ns.db.global.modules[moduleId] = {}
     end
-    if not addon.db.global.modules[moduleId].toggles then
-        addon.db.global.modules[moduleId].toggles = {}
+    if not ns.db.global.modules[moduleId].toggles then
+        ns.db.global.modules[moduleId].toggles = {}
     end
-    addon.db.global.modules[moduleId].toggles[toggleId] = value
+    ns.db.global.modules[moduleId].toggles[toggleId] = value
     local mod = modules[moduleId]
     if mod and mod.OnToggle then
         mod:OnToggle(toggleId, value)

@@ -26,8 +26,7 @@ local modDetailsDialog  = nil
 local modDetailsContent = nil
 
 local function QoLUiFavorites()
-    local db = OneWoW_QoL and OneWoW_QoL.db and OneWoW_QoL.db.global
-    if not db then return nil end
+    local db = ns.db.global
     db.uiFavorites = db.uiFavorites or { features = {}, toggles = {} }
     db.uiFavorites.features = db.uiFavorites.features or {}
     db.uiFavorites.toggles = db.uiFavorites.toggles or {}

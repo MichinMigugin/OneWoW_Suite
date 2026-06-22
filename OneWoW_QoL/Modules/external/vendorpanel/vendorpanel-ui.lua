@@ -714,7 +714,7 @@ function VendorPanel:CreateFiltersDialog()
     showBlizzJunk:SetSize(20, 20)
     showBlizzJunk:SetChecked(GetShowBlizzJunk())
     showBlizzJunk:SetScript("OnClick", function(myself)
-        local db = OneWoW_QoL.db.global.modules["vendorpanel"]
+        local db = ns.db.global.modules["vendorpanel"]
         if not db.toggles then db.toggles = {} end
         db.toggles.show_blizz_junk = myself:GetChecked()
         VendorPanel:UpdatePreviewPanel()

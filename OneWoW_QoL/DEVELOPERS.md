@@ -298,11 +298,10 @@ end
 OneWoW_QoL_DB.global.modules.yourmodule
 ```
 
-For your own saved data, access the global scope through `addon.db` (only after init - e.g. inside `OnEnable`, never at file load):
+For your own saved data, use `ns.db` (only after init — e.g. inside `OnEnable`, never at file load). Every module file already has `local ADDON_NAME, ns = ...`:
 
 ```lua
-local addon = _G.OneWoW_QoL
-local db = addon.db.global.modules["yourmodule"]
+local db = ns.db.global.modules["yourmodule"]
 -- db.enabled and db.toggles are managed by the registry; add your own keys here
 ```
 
@@ -350,4 +349,4 @@ It demonstrates metadata in `module.lua`, logic captured via `Current()`, locale
 
 **Not cleaning up in `OnDisable`** - reverse anything you set up in `OnEnable`.
 
-**Accessing `addon.db` at file load** - it is not ready until after `ADDON_LOADED`. Use it inside `OnEnable` or later.
+**Accessing `ns.db` at file load** - it is not ready until after `ADDON_LOADED`. Use it inside `OnEnable` or later.

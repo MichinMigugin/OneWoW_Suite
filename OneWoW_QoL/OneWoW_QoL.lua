@@ -5,7 +5,7 @@ local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
 OneWoW_QoL = {}
-local addon = OneWoW_QoL
+local OneWoW_QoL = OneWoW_QoL
 
 ns.oneWoWHubActive = false
 
@@ -41,23 +41,23 @@ local function RegisterWithOneWoW()
 end
 
 local function OnInitialize()
-    addon:InitializeDatabase()
+    ns:InitializeDatabase()
 
-    OneWoW_GUI:MigrateSettings(addon.db.global)
+    OneWoW_GUI:MigrateSettings(ns.db.global)
 
-    OneWoW_GUI:ApplyTheme(addon)
+    OneWoW_QoL:ApplyTheme()
     if ns.ApplyLanguage then ns.ApplyLanguage() end
 
-    local function slashHandler() addon:SlashCommandHandler() end
+    local function slashHandler() OneWoW_QoL:SlashCommandHandler() end
     DB:RegisterSlashCommand("owqol", slashHandler)
     DB:RegisterSlashCommand("onewowqol", slashHandler)
     DB:RegisterSlashCommand("1wqol", slashHandler)
 
     if OneWoW_GUI.RegisterSettingsCallback then
-        OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", addon, function(myself)
-            OneWoW_GUI:ApplyTheme(myself)
+        OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_QoL, function(self)
+            OneWoW_GUI:ApplyTheme(self)
         end)
-        OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", addon, function()
+        OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoW_QoL, function()
             if ns.ApplyLanguage then ns.ApplyLanguage() end
         end)
     end
@@ -65,11 +65,11 @@ local function OnInitialize()
     OneWoW:RegisterLoadComponent("QoL", OneWoW:GetAddonVersion(ADDON_NAME), "/1wqol")
 end
 
-function addon:ApplyTheme()
+function OneWoW_QoL:ApplyTheme()
     OneWoW_GUI:ApplyTheme(self)
 end
 
-function addon:ApplyLanguage()
+function OneWoW_QoL:ApplyLanguage()
     if ns.ApplyLanguage then
         ns.ApplyLanguage()
     end
@@ -85,13 +85,9 @@ local function OnEnable()
     if OneWoW then
         OneWoW:RegisterMinimap("OneWoW_QoL", ns.L["CTX_OPEN_QOL"], "qol", nil)
     end
-
-    addon.PlayMountsModule = ns.ModuleRegistry:GetById("playmounts")
-    addon.ModuleRegistry = ns.ModuleRegistry
-    addon.UI = ns.UI
 end
 
-function addon:SlashCommandHandler()
+function OneWoW_QoL:SlashCommandHandler()
     if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
         OneWoW.UI:Show("qol")
         return
@@ -101,15 +97,11 @@ function addon:SlashCommandHandler()
     end
 end
 
-function addon:CopyTextKeybind()
+function OneWoW_QoL:CopyTextKeybind()
     local ct = ns.ModuleRegistry:GetById("copytext")
     if ct then
         ct:Capture()
     end
-end
-
-function addon:InitializeDatabase()
-    ns.InitializeDatabase(self)
 end
 
 -- Core-driven init: the suite loader calls _G["OneWoW_QoL"]:OnAddonLoaded()
@@ -117,17 +109,17 @@ end
 -- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). The
 -- one-shot guard makes the PLAYER_LOGIN safety net below a no-op when already run.
 local didInit = false
-function addon:OnAddonLoaded()
+function OneWoW_QoL:OnAddonLoaded()
     if didInit then return end
     didInit = true
-    OneWoW.Lifecycle:CreateHandlerRegistry(addon)
+    OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_QoL)
     -- Toast types export their arming functions on ns; the handler registry
     -- doesn't exist at their file scope.
-    addon:RegisterLoginHandler("toast-loot", ns.ToastLoot.OnLogin)
-    addon:RegisterEnteringWorldHandler("toast-instance", ns.ToastInstance.OnEnteringWorld)
+    OneWoW_QoL:RegisterLoginHandler("toast-loot", ns.ToastLoot.OnLogin)
+    OneWoW_QoL:RegisterEnteringWorldHandler("toast-instance", ns.ToastInstance.OnEnteringWorld)
     -- Portal Hub: module before esc-menu integration.
-    addon:RegisterLoginHandler("portalhub", function() ns.PortalHubModule:Initialize() end)
-    addon:RegisterLoginHandler("portalhub-esc", function() ns.PortalHubEsc:Initialize() end)
+    OneWoW_QoL:RegisterLoginHandler("portalhub", function() ns.PortalHubModule:Initialize() end)
+    OneWoW_QoL:RegisterLoginHandler("portalhub-esc", function() ns.PortalHubEsc:Initialize() end)
     OnInitialize()
 end
 
@@ -135,17 +127,17 @@ end
 -- startup, or is driven by the loader (OneWoW:EnsureLoaded) for a mid-session
 -- enable, when PLAYER_LOGIN has already fired and won't reach this module.
 local didLogin = false
-function addon:OnPlayerLogin()
+function OneWoW_QoL:OnPlayerLogin()
     if didLogin then return end
     didLogin = true
     OnEnable()
-    if addon.FireLoginHandlers then
-        addon:FireLoginHandlers()
+    if OneWoW_QoL.FireLoginHandlers then
+        OneWoW_QoL:FireLoginHandlers()
     end
 end
 
-function addon:OnPlayerEnteringWorld(isLogin, isReload, isZoning)
-    if addon.FireEnteringWorldHandlers then
-        addon:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
+function OneWoW_QoL:OnPlayerEnteringWorld(isLogin, isReload, isZoning)
+    if OneWoW_QoL.FireEnteringWorldHandlers then
+        OneWoW_QoL:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
     end
 end

@@ -74,9 +74,7 @@ local function ScheduleRelayout()
 end
 
 local function GetSettings()
-    local addon = OneWoW_QoL
-    if not addon or not addon.db then return {} end
-    local mods = addon.db.global.modules
+    local mods = ns.db.global.modules
     if not mods["minimapbuttons"] then mods["minimapbuttons"] = {} end
     local s = mods["minimapbuttons"]
     if s.closeMode       == nil then s.closeMode       = "autoclose" end

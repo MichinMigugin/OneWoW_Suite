@@ -5,12 +5,10 @@ local LFGPanelModule, L = ns.ModuleRegistry:Current()
 if not LFGPanelModule then return end
 
 local function GetDB()
-    local addon = OneWoW_QoL
-    if not addon or not addon.db or not addon.db.global or not addon.db.global.modules then return nil end
-    if not addon.db.global.modules["lfgpanel"] then
-        addon.db.global.modules["lfgpanel"] = {}
+    if not ns.db.global.modules["lfgpanel"] then
+        ns.db.global.modules["lfgpanel"] = {}
     end
-    return addon.db.global.modules["lfgpanel"]
+    return ns.db.global.modules["lfgpanel"]
 end
 
 local function GetShowPanel()

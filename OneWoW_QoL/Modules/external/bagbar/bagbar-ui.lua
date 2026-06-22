@@ -10,9 +10,8 @@ StaticPopupDialogs["ONEWOW_QOL_CLEAR_BAGBAR_BLACKLIST"] = {
     button1 = YES,
     button2 = NO,
     OnAccept = function()
-        local addon = OneWoW_QoL
-        if addon and addon.db and addon.db.global.modules and addon.db.global.modules["bagbar"] then
-            wipe(addon.db.global.modules["bagbar"].blacklist)
+        if ns.db.global.modules["bagbar"] then
+            wipe(ns.db.global.modules["bagbar"].blacklist)
         end
         BagBarModule:ClearTempBlacklist()
         if ns.ModuleRegistry:IsEnabled("bagbar") then

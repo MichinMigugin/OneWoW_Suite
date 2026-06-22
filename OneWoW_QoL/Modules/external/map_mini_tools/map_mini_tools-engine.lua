@@ -33,7 +33,7 @@ local minimapLayoutHooked = false
 -- ─── Settings ───────────────────────────────────────────────────────────────
 
 local function GetSettings()
-    local mods = OneWoW_QoL.db.global.modules
+    local mods = ns.db.global.modules
     if not mods.map_mini_tools then mods.map_mini_tools = {} end
     local s = mods.map_mini_tools
     if s.scale           == nil then s.scale           = 1.0        end

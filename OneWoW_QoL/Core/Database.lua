@@ -38,11 +38,11 @@ local defaults = {
     },
 }
 
-function ns.InitializeDatabase(addon)
+function ns:InitializeDatabase()
     local db = DB:Init({
         addonName = ADDON_NAME,
         savedVar  = "OneWoW_QoL_DB",
         defaults  = defaults,
     })
-    addon.db = db
+    ns.db = db
 end

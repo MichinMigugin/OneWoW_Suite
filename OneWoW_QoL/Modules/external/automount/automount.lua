@@ -56,16 +56,7 @@ for _, id in ipairs(FISHING_SPELL_IDS) do
 end
 
 local function GetPreferences()
-    local addon = OneWoW_QoL
-    if not addon or not addon.db then
-        return {
-            ground = "auto", flying = "auto", aquatic = "auto",
-            groundEnabled = true, flyingEnabled = true, aquaticEnabled = true, druidEnabled = true, druidCancelTravelForm = false,
-            dismountDelay = 15, fishingDelay = 15, gatherRemountDelay = 0.5,
-            dismountDisabled = false, fishingDisabled = false,
-        }
-    end
-    local mods = addon.db.global.modules
+    local mods = ns.db.global.modules
     if not mods["automount"] then mods["automount"] = {} end
     if not mods["automount"].preferences then
         mods["automount"].preferences = { ground = "auto", flying = "auto", aquatic = "auto" }
@@ -88,9 +79,7 @@ local function GetPreferences()
 end
 
 local function SavePreference(key, value)
-    local addon = OneWoW_QoL
-    if not addon or not addon.db then return end
-    local mods = addon.db.global.modules
+    local mods = ns.db.global.modules
     if not mods["automount"] then mods["automount"] = {} end
     if not mods["automount"].preferences then
         mods["automount"].preferences = { ground = "auto", flying = "auto", aquatic = "auto" }

@@ -33,6 +33,7 @@ Locales\itIT.lua
 # Core (load before everything else)
 Core\Constants.lua
 Core\Database.lua
+Core\API.lua
 Core\Core.lua
 
 # Main Addon File

@@ -21,8 +21,7 @@ local function GetToggle(id)
 end
 
 local function GetSettings()
-    local addon = OneWoW_QoL
-    local mods = addon.db.global.modules
+    local mods = ns.db.global.modules
     if not mods.map_world_tools then mods.map_world_tools = {} end
     local s = mods.map_world_tools
 

@@ -25,9 +25,7 @@ local function GetToggle(id)
 end
 
 local function GetPositionStorage()
-    local addon = OneWoW_QoL
-    if not addon or not addon.db then return nil end
-    local mods = addon.db.global.modules
+    local mods = ns.db.global.modules
     if not mods["coords"] then mods["coords"] = {} end
     if not mods["coords"].position then mods["coords"].position = {} end
     return mods["coords"].position

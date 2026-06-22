@@ -36,12 +36,9 @@ end
 local function GetSlotEnchantToggle(slotId)
     local defaultVal = enchantSlotDefaults[slotId]
     if defaultVal == nil then return false end
-    local addon = OneWoW_QoL
-    if addon and addon.db and addon.db.global.modules then
-        local modData = addon.db.global.modules["charinfo"]
-        if modData and modData.toggles and modData.toggles["enchant_slot_" .. slotId] ~= nil then
-            return modData.toggles["enchant_slot_" .. slotId]
-        end
+    local modData = ns.db.global.modules["charinfo"]
+    if modData and modData.toggles and modData.toggles["enchant_slot_" .. slotId] ~= nil then
+        return modData.toggles["enchant_slot_" .. slotId]
     end
     return defaultVal
 end

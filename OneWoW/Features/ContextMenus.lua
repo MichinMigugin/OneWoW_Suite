@@ -6,31 +6,21 @@ local function GetNotes()
 end
 
 local function GetPlayMountsModule()
-    local qol = OneWoW_QoL
-    if not qol then return nil end
-    return qol.PlayMountsModule
+    if not OneWoW_QoL_API then return nil end
+    return OneWoW_QoL_API.GetModule("playmounts")
 end
 
 local function IsPlayMountsEnabled()
-    local qol = OneWoW_QoL
-    if not qol or not qol.db or not qol.db.global or not qol.db.global.modules then return false end
-    local modData = qol.db.global.modules["playmounts"]
-    if modData and modData.enabled ~= nil then
-        return modData.enabled
-    end
-    return false
+    if not OneWoW_QoL_API then return false end
+    return OneWoW_QoL_API.IsModuleEnabled("playmounts", false)
 end
 
 local function IsMatchMountEnabled()
-    local qol = OneWoW_QoL
-    if not qol or not qol.db or not qol.db.global or not qol.db.global.modules then return true end
-    local modData = qol.db.global.modules["playmounts"]
-    if not modData then return true end
-    if modData.enabled == false then return false end
-    if modData.toggles and modData.toggles["enableMatchMount"] ~= nil then
-        return modData.toggles["enableMatchMount"]
+    if not OneWoW_QoL_API then return true end
+    if not OneWoW_QoL_API.IsModuleEnabled("playmounts", false) then
+        return false
     end
-    return true
+    return OneWoW_QoL_API.GetModuleToggle("playmounts", "enableMatchMount", true)
 end
 
 local function NavigateToPlayer(fullName)

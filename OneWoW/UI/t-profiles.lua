@@ -68,22 +68,18 @@ function OneWoW.Profiles.CaptureSettings()
         }
     end
 
-    local qol = OneWoW_QoL
-    if qol and qol.db and qol.db.global then
-        local q = qol.db.global
-        snapshot.qol = { language = q.language, theme = q.theme, minimap = DeepCopy(q.minimap), modules = {} }
-        if q.modules then
-            for id, modData in pairs(q.modules) do
-                snapshot.qol.modules[id] = DeepCopy(modData)
-            end
-        end
+    if OneWoW_QoL_API then
+        snapshot.qol = OneWoW_QoL_API.CaptureProfileSettings()
     end
 
     snapshot.cvars = {}
-    if qol and qol.GetCVarList then
-        for _, entry in ipairs(qol.GetCVarList()) do
-            local val = C_CVar.GetCVar(entry.cvar)
-            if val then snapshot.cvars[entry.cvar] = val end
+    if OneWoW_QoL_API and OneWoW_QoL_API.GetCVarList then
+        local cvarList = OneWoW_QoL_API.GetCVarList()
+        if cvarList then
+            for _, entry in ipairs(cvarList) do
+                local val = C_CVar.GetCVar(entry.cvar)
+                if val then snapshot.cvars[entry.cvar] = val end
+            end
         end
     end
 
@@ -105,17 +101,8 @@ function OneWoW.Profiles.ApplySettings(snapshot, profileName)
         if snapshot.core.portalHub then DeepMerge(g.portalHub, snapshot.core.portalHub) end
     end
 
-    local qol = OneWoW_QoL
-    if snapshot.qol and qol and qol.db and qol.db.global then
-        local q = qol.db.global
-        if snapshot.qol.language then q.language = snapshot.qol.language end
-        if snapshot.qol.theme    then q.theme    = snapshot.qol.theme    end
-        if snapshot.qol.minimap  then DeepMerge(q.minimap, snapshot.qol.minimap) end
-        if snapshot.qol.modules then
-            for id, modData in pairs(snapshot.qol.modules) do
-                if q.modules and q.modules[id] then DeepMerge(q.modules[id], modData) end
-            end
-        end
+    if snapshot.qol and OneWoW_QoL_API then
+        OneWoW_QoL_API.ApplyProfileSettings(snapshot.qol)
     end
 
     if snapshot.cvars then

@@ -33,23 +33,18 @@ local function GetToggle(id)
 end
 
 local function GetDisplayMode()
-    local addon = OneWoW_QoL
-    if addon and addon.db and addon.db.global.modules then
-        local modData = addon.db.global.modules["playmounts"]
-        if modData and modData.displayMode then
-            return modData.displayMode
-        end
+    local modData = ns.db.global.modules["playmounts"]
+    if modData and modData.displayMode then
+        return modData.displayMode
     end
     return "all"
 end
 
 local function SetDisplayMode(mode)
-    local addon = OneWoW_QoL
-    if not addon or not addon.db or not addon.db.global.modules then return end
-    if not addon.db.global.modules["playmounts"] then
-        addon.db.global.modules["playmounts"] = {}
+    if not ns.db.global.modules["playmounts"] then
+        ns.db.global.modules["playmounts"] = {}
     end
-    addon.db.global.modules["playmounts"].displayMode = mode
+    ns.db.global.modules["playmounts"].displayMode = mode
 end
 
 function PlayMountsModule:GetMountTypeName(mountTypeID)

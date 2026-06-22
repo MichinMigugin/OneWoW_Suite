@@ -5,11 +5,7 @@ local _, L = ns.ModuleRegistry:Current()
 local OneWoW_GUI = OneWoW_GUI
 
 local function GetInspectMogDb()
-    local addon = OneWoW_QoL
-    if not addon or not addon.db or not addon.db.global then
-        return { enabled = true, attachSide = "RIGHT", hideUnchanged = false, showEmptySlots = false }
-    end
-    local modules = addon.db.global.modules
+    local modules = ns.db.global.modules
     modules.inspectmog = modules.inspectmog or {}
     local db = modules.inspectmog
     if db.attachSide == nil then db.attachSide = "RIGHT" end

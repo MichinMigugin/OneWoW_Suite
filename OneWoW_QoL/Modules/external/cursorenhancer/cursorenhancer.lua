@@ -29,12 +29,10 @@ local function Clamp(val, min, max)
 end
 
 local function GetDB()
-    local addon = OneWoW_QoL
-    if not addon or not addon.db then return nil end
-    if not addon.db.global.modules["cursorenhancer"] then
-        addon.db.global.modules["cursorenhancer"] = {}
+    if not ns.db.global.modules["cursorenhancer"] then
+        ns.db.global.modules["cursorenhancer"] = {}
     end
-    local ceDb = addon.db.global.modules["cursorenhancer"]
+    local ceDb = ns.db.global.modules["cursorenhancer"]
     if not ceDb.cedata then
         ceDb.cedata = {}
     end

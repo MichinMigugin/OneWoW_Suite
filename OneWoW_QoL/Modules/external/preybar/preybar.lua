@@ -47,9 +47,7 @@ end
 PreyBarModule.GetToggle = GetToggle
 
 local function GetModuleStorage()
-    local addon = OneWoW_QoL
-    if not addon or not addon.db then return nil end
-    local mods = addon.db.global.modules
+    local mods = ns.db.global.modules
     if not mods["preybar"] then mods["preybar"] = {} end
     return mods["preybar"]
 end
