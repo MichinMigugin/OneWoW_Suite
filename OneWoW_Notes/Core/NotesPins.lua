@@ -36,8 +36,8 @@ local function ReleaseTodoFrame(f)
 end
 
 function NotesPins:Initialize()
-    if not OneWoW_Notes.notePins then
-        OneWoW_Notes.notePins = {}
+    if not ns.notePins then
+        ns.notePins = {}
     end
 
     if ns.NotesData then
@@ -87,12 +87,12 @@ function NotesPins:ShowNotePin(noteID)
 end
 
 function NotesPins:HideNotePin(noteID)
-    if not OneWoW_Notes.notePins or not OneWoW_Notes.notePins[noteID] then return end
+    if not ns.notePins or not ns.notePins[noteID] then return end
 
-    local pinFrame = OneWoW_Notes.notePins[noteID]
+    local pinFrame = ns.notePins[noteID]
     if pinFrame then
         pinFrame:Hide()
-        OneWoW_Notes.notePins[noteID] = nil
+        ns.notePins[noteID] = nil
 
         if ns.UI and ns.UI.notesFrame and ns.UI.notesFrame.RefreshNotesList then
             ns.UI.notesFrame.RefreshNotesList()
@@ -101,22 +101,22 @@ function NotesPins:HideNotePin(noteID)
 end
 
 function NotesPins:HideAllNotePins()
-    if not OneWoW_Notes.notePins then return end
+    if not ns.notePins then return end
 
-    for _, pinFrame in pairs(OneWoW_Notes.notePins) do
+    for _, pinFrame in pairs(ns.notePins) do
         if pinFrame then
             pinFrame:Hide()
         end
     end
 
-    OneWoW_Notes.notePins = {}
+    ns.notePins = {}
 end
 
 function NotesPins:SavePinPosition(noteID, point, relativePoint, x, y, width, height, meta)
     if not noteID then return end
 
     meta = meta or {}
-    OneWoW_Notes.db.global.notePinPositions[noteID] = {
+    ns.db.global.notePinPositions[noteID] = {
         point = point,
         relativePoint = relativePoint,
         x = x,
@@ -131,11 +131,11 @@ end
 
 function NotesPins:GetPinPosition(noteID)
     if not noteID then return nil end
-    return OneWoW_Notes.db.global.notePinPositions[noteID]
+    return ns.db.global.notePinPositions[noteID]
 end
 
 function NotesPins:CreateNotePin(noteID, note)
-    local addon = OneWoW_Notes
+    local addon = ns
     if not noteID or not note then return end
 
     if not addon.notePins then
@@ -578,7 +578,7 @@ function NotesPins:CreateNotePin(noteID, note)
             table.insert(sortedTodos, todo)
         end
 
-        if OneWoW_Notes.db.global.sortCompletedTasks == true then
+        if ns.db.global.sortCompletedTasks == true then
             table.sort(sortedTodos, function(a, b)
                 if a.completed ~= b.completed then return not a.completed end
                 return (a.created or 0) < (b.created or 0)
@@ -1007,9 +1007,9 @@ function NotesPins:CreateNotePin(noteID, note)
 end
 
 function NotesPins:RefreshNotePinColors(noteID)
-    if not OneWoW_Notes.notePins or not OneWoW_Notes.notePins[noteID] then return end
+    if not ns.notePins or not ns.notePins[noteID] then return end
 
-    local pinFrame = OneWoW_Notes.notePins[noteID]
+    local pinFrame = ns.notePins[noteID]
     if not pinFrame or not pinFrame:IsShown() then return end
 
     local note = ns.NotesData:GetAllNotes()[noteID]
@@ -1061,8 +1061,8 @@ function NotesPins:RefreshNotePinColors(noteID)
 end
 
 function NotesPins:RefreshAllPinFonts()
-    if not OneWoW_Notes.notePins then return end
-    for noteID, pinFrame in pairs(OneWoW_Notes.notePins) do
+    if not ns.notePins then return end
+    for noteID, pinFrame in pairs(ns.notePins) do
         if pinFrame and pinFrame:IsShown() then
             self:RefreshNotePinColors(noteID)
         end
@@ -1070,9 +1070,9 @@ function NotesPins:RefreshAllPinFonts()
 end
 
 function NotesPins:RefreshSyncPins()
-    if not OneWoW_Notes.notePins then return end
+    if not ns.notePins then return end
 
-    for noteID, pinFrame in pairs(OneWoW_Notes.notePins) do
+    for noteID, pinFrame in pairs(ns.notePins) do
         if pinFrame and pinFrame:IsShown() then
             local note = ns.NotesData:GetAllNotes()[noteID]
             if note and note.pinColor == "sync" then

@@ -11,7 +11,7 @@ local MainWindow = nil
 
 function ns.UI:Show(tabName)
     if not MainWindow then
-        self:CreateMainFrame(tabName or OneWoW_Notes.db.global.lastTab or "notes")
+        self:CreateMainFrame(tabName or ns.db.global.lastTab or "notes")
         if MainWindow then MainWindow:Show() end
     else
         MainWindow:Show()
@@ -40,14 +40,14 @@ end
 
 function ns.UI:CreateMainFrame(defaultTab)
 
-    local savedSize = OneWoW_Notes.db.global.mainFrameSize
+    local savedSize = ns.db.global.mainFrameSize
     local width  = (savedSize and savedSize.width)  or ns.Constants.GUI.WINDOW_WIDTH
     local height = (savedSize and savedSize.height) or ns.Constants.GUI.WINDOW_HEIGHT
 
     local frame = CreateFrame("Frame", "OneWoW_NotesMainFrame", UIParent, "BackdropTemplate")
     frame:SetSize(width, height)
 
-    local savedPos = OneWoW_Notes.db.global.mainFramePosition
+    local savedPos = ns.db.global.mainFramePosition
     if savedPos and savedPos.point then
         frame:SetPoint(savedPos.point, UIParent, savedPos.relativePoint or "CENTER", savedPos.xOfs or 0, savedPos.yOfs or 0)
     else
@@ -69,7 +69,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     frame:SetScript("OnDragStop", function(myself)
         myself:StopMovingOrSizing()
         local point, _, relativePoint, xOfs, yOfs = myself:GetPoint()
-        OneWoW_Notes.db.global.mainFramePosition = { point = point, relativePoint = relativePoint, xOfs = xOfs, yOfs = yOfs }
+        ns.db.global.mainFramePosition = { point = point, relativePoint = relativePoint, xOfs = xOfs, yOfs = yOfs }
     end)
     local resizeButton = CreateFrame("Button", nil, frame)
     resizeButton:SetSize(16, 16)
@@ -82,7 +82,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     resizeButton:SetScript("OnDragStop", function()
         frame:StopMovingOrSizing()
         local w, h = frame:GetSize()
-        OneWoW_Notes.db.global.mainFrameSize = { width = w, height = h }
+        ns.db.global.mainFrameSize = { width = w, height = h }
     end)
 
     local titleBg = OneWoW_GUI:CreateTitleBar(frame, {
@@ -109,7 +109,7 @@ function ns.UI:CreateMainFrame(defaultTab)
 
     local function SelectTab(tabName)
         currentTabName = tabName
-        OneWoW_Notes.db.global.lastTab = tabName
+        ns.db.global.lastTab = tabName
         if ns.UI.notesHelpPanel and ns.UI.notesHelpPanel:IsShown() then
             ns.UI.notesHelpPanel:Hide()
         end
@@ -218,6 +218,6 @@ function ns.UI:CreateMainFrame(defaultTab)
     frame.SelectTab = function(_, tab) SelectTab(tab) end
 
     MainWindow = frame
-    OneWoW_Notes.mainFrame = frame
+    ns.mainFrame = frame
     return frame
 end

@@ -30,8 +30,8 @@ function NotesTodos:AddTodo(noteID, todoText)
         end
     end
 
-    if OneWoW_Notes.notePins and OneWoW_Notes.notePins[noteID] then
-        local pinFrame = OneWoW_Notes.notePins[noteID]
+    if ns.notePins and ns.notePins[noteID] then
+        local pinFrame = ns.notePins[noteID]
         if pinFrame and pinFrame.RefreshLayout then
             pinFrame:RefreshLayout()
         end
@@ -50,8 +50,8 @@ function NotesTodos:RemoveTodo(noteID, todoId)
             table.remove(note.todos, i)
             note.modified = GetServerTime()
 
-            if OneWoW_Notes.notePins and OneWoW_Notes.notePins[noteID] then
-                local pinFrame = OneWoW_Notes.notePins[noteID]
+            if ns.notePins and ns.notePins[noteID] then
+                local pinFrame = ns.notePins[noteID]
                 if pinFrame and pinFrame.RefreshLayout then
                     pinFrame:RefreshLayout()
                 end
@@ -74,8 +74,8 @@ function NotesTodos:UpdateTodo(noteID, todoId, newText, completed)
             if completed ~= nil then todo.completed = completed end
             note.modified = GetServerTime()
 
-            if OneWoW_Notes.notePins and OneWoW_Notes.notePins[noteID] then
-                local pinFrame = OneWoW_Notes.notePins[noteID]
+            if ns.notePins and ns.notePins[noteID] then
+                local pinFrame = ns.notePins[noteID]
                 if pinFrame and pinFrame.RefreshTodos then
                     pinFrame:RefreshTodos()
                 end
@@ -146,8 +146,8 @@ function NotesTodos:CheckAndPerformResets()
                         ns.NotesPins:ShowNotePin(noteID)
                     end
 
-                    if OneWoW_Notes.notePins and OneWoW_Notes.notePins[noteID] then
-                        local pinFrame = OneWoW_Notes.notePins[noteID]
+                    if ns.notePins and ns.notePins[noteID] then
+                        local pinFrame = ns.notePins[noteID]
                         if pinFrame and pinFrame.RefreshTodos then
                             pinFrame:RefreshTodos()
                         end

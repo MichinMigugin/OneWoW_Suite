@@ -40,7 +40,7 @@ end
 
 function ns.UI.CreatePlayersTab(parent)
     do
-        local p = OneWoW_Notes.db.global.tabSortPrefs.players
+        local p = ns.db.global.tabSortPrefs.players
         currentSort.by        = p.by or "name"
         currentSort.ascending = p.ascending ~= false
     end
@@ -207,7 +207,7 @@ function ns.UI.CreatePlayersTab(parent)
         onChange = function(field, ascending)
             currentSort.by        = field
             currentSort.ascending = ascending
-            OneWoW_Notes.db.global.tabSortPrefs.players = { by = field, ascending = ascending }
+            ns.db.global.tabSortPrefs.players = { by = field, ascending = ascending }
             parent.RefreshPlayersList()
         end,
     })
@@ -651,9 +651,9 @@ function ns.UI.CreatePlayersTab(parent)
     end
 
     parent:HookScript("OnShow", function()
-        if OneWoW_Notes and OneWoW_Notes.pendingPlayerSelect then
-            local name = OneWoW_Notes.pendingPlayerSelect
-            OneWoW_Notes.pendingPlayerSelect = nil
+        if ns.pendingPlayerSelect then
+            local name = ns.pendingPlayerSelect
+            ns.pendingPlayerSelect = nil
             parent.SelectPlayer(name)
         end
     end)
@@ -872,7 +872,7 @@ function ns.UI.CreatePlayersTab(parent)
                     currentSort.by = "manual"
                     currentSort.ascending = true
                     playerSortHandle:SetSort("manual", true)
-                    OneWoW_Notes.db.global.tabSortPrefs.players = { by = "manual", ascending = true }
+                    ns.db.global.tabSortPrefs.players = { by = "manual", ascending = true }
                 end
                 for i, item in ipairs(groupArray) do item.data.sortOrder = i end
                 groupArray[groupIndex].data.sortOrder     = groupIndex - 1
@@ -893,7 +893,7 @@ function ns.UI.CreatePlayersTab(parent)
                     currentSort.by = "manual"
                     currentSort.ascending = true
                     playerSortHandle:SetSort("manual", true)
-                    OneWoW_Notes.db.global.tabSortPrefs.players = { by = "manual", ascending = true }
+                    ns.db.global.tabSortPrefs.players = { by = "manual", ascending = true }
                 end
                 for i, item in ipairs(groupArray) do item.data.sortOrder = i end
                 groupArray[groupIndex].data.sortOrder     = groupIndex + 1

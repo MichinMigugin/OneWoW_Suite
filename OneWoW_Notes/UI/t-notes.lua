@@ -53,7 +53,7 @@ function ns.UI.CreateNotesTab(parent)
     ns.UI.notesFrame = parent
 
     do
-        local p = OneWoW_Notes.db.global.tabSortPrefs.notes
+        local p = ns.db.global.tabSortPrefs.notes
         currentSort.by        = p.by or "modified"
         currentSort.ascending = p.ascending ~= false
     end
@@ -150,7 +150,7 @@ function ns.UI.CreateNotesTab(parent)
         onChange = function(field, ascending)
             currentSort.by        = field
             currentSort.ascending = ascending
-            OneWoW_Notes.db.global.tabSortPrefs.notes = { by = field, ascending = ascending }
+            ns.db.global.tabSortPrefs.notes = { by = field, ascending = ascending }
             if parent.RefreshNotesList then parent.RefreshNotesList() end
         end,
     })
@@ -359,7 +359,7 @@ function ns.UI.CreateNotesTab(parent)
                     local allNotes = ns.NotesData:GetAllNotes()
                     local noteData = allNotes[selectedNote]
                     if noteData then
-                        if noteData.pinEnabled and OneWoW_Notes.notePins and OneWoW_Notes.notePins[selectedNote] then
+                        if noteData.pinEnabled and ns.notePins and ns.notePins[selectedNote] then
                             ns.NotesPins:HideNotePin(selectedNote)
                             noteData.pinEnabled = false
                             self:GetNormalTexture():SetDesaturated(true)
@@ -495,8 +495,8 @@ function ns.UI.CreateNotesTab(parent)
                     if contentUpdateTimer then contentUpdateTimer:Cancel() end
 
                     contentUpdateTimer = C_Timer.NewTimer(2, function()
-                        if selectedNote and OneWoW_Notes.notePins and OneWoW_Notes.notePins[selectedNote] then
-                            local pinFrame = OneWoW_Notes.notePins[selectedNote]
+                        if selectedNote and ns.notePins and ns.notePins[selectedNote] then
+                            local pinFrame = ns.notePins[selectedNote]
                             if pinFrame and pinFrame.contentText then
                                 local allNotes = ns.NotesData:GetAllNotes()
                                 local note = allNotes[selectedNote]
@@ -754,7 +754,7 @@ function ns.UI.CreateNotesTab(parent)
                         end
                     end
                     if header.pinBtn then
-                        local pinEnabled = note.pinEnabled and OneWoW_Notes.notePins and OneWoW_Notes.notePins[selectedNote]
+                        local pinEnabled = note.pinEnabled and ns.notePins and ns.notePins[selectedNote]
                         header.pinBtn:GetNormalTexture():SetDesaturated(not pinEnabled)
                         header.pinBtn:GetNormalTexture():SetAlpha(pinEnabled and 1.0 or 0.3)
                         header.pinBtn:SetChecked(pinEnabled and true or false)
@@ -787,7 +787,7 @@ function ns.UI.CreateNotesTab(parent)
             end
         end
         if header.pinBtn then
-            local pinEnabled = note.pinEnabled and OneWoW_Notes.notePins and OneWoW_Notes.notePins[selectedNote]
+            local pinEnabled = note.pinEnabled and ns.notePins and ns.notePins[selectedNote]
             header.pinBtn:GetNormalTexture():SetDesaturated(not pinEnabled)
             header.pinBtn:GetNormalTexture():SetAlpha(pinEnabled and 1.0 or 0.3)
             header.pinBtn:SetChecked(pinEnabled and true or false)
@@ -1123,7 +1123,7 @@ function ns.UI.CreateNotesTab(parent)
             local normalTex = pinBtn:CreateTexture(nil, "BACKGROUND")
             normalTex:SetAllPoints()
             normalTex:SetTexture(MEDIA .. "icon-pin.png")
-            local pinActive = note.data.pinEnabled and OneWoW_Notes.notePins and OneWoW_Notes.notePins[note.id]
+            local pinActive = note.data.pinEnabled and ns.notePins and ns.notePins[note.id]
             if pinActive then
                 normalTex:SetDesaturated(false)
                 normalTex:SetAlpha(1.0)
@@ -1150,7 +1150,7 @@ function ns.UI.CreateNotesTab(parent)
                 if ns.NotesPins then
                     local noteData2 = NotesData:GetAllNotes()[note.id]
                     if noteData2 then
-                        if noteData2.pinEnabled and OneWoW_Notes.notePins and OneWoW_Notes.notePins[note.id] then
+                        if noteData2.pinEnabled and ns.notePins and ns.notePins[note.id] then
                             ns.NotesPins:HideNotePin(note.id)
                             noteData2.pinEnabled = false
                             self:GetNormalTexture():SetDesaturated(true)
@@ -1283,7 +1283,7 @@ function ns.UI.CreateNotesTab(parent)
                     currentSort.by = "manual"
                     currentSort.ascending = true
                     sortHandle:SetSort("manual", true)
-                    OneWoW_Notes.db.global.tabSortPrefs.notes = { by = "manual", ascending = true }
+                    ns.db.global.tabSortPrefs.notes = { by = "manual", ascending = true }
                 end
                 for i, item in ipairs(groupArray) do item.data.sortOrder = i end
                 groupArray[groupIndex].data.sortOrder     = groupIndex - 1
@@ -1304,7 +1304,7 @@ function ns.UI.CreateNotesTab(parent)
                     currentSort.by = "manual"
                     currentSort.ascending = true
                     sortHandle:SetSort("manual", true)
-                    OneWoW_Notes.db.global.tabSortPrefs.notes = { by = "manual", ascending = true }
+                    ns.db.global.tabSortPrefs.notes = { by = "manual", ascending = true }
                 end
                 for i, item in ipairs(groupArray) do item.data.sortOrder = i end
                 groupArray[groupIndex].data.sortOrder     = groupIndex + 1

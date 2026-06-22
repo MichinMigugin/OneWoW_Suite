@@ -47,7 +47,7 @@ end
 
 function ns.UI.CreateZonesTab(parent)
     do
-        local p = OneWoW_Notes.db.global.tabSortPrefs.zones
+        local p = ns.db.global.tabSortPrefs.zones
         currentSort.by        = p.by or "name"
         currentSort.ascending = p.ascending ~= false
     end
@@ -195,7 +195,7 @@ function ns.UI.CreateZonesTab(parent)
         onChange = function(field, ascending)
             currentSort.by        = field
             currentSort.ascending = ascending
-            OneWoW_Notes.db.global.tabSortPrefs.zones = { by = field, ascending = ascending }
+            ns.db.global.tabSortPrefs.zones = { by = field, ascending = ascending }
             parent.RefreshZonesList()
         end,
     })
@@ -391,7 +391,7 @@ function ns.UI.CreateZonesTab(parent)
                 if selectedZone and ns.ZonePins and ns.Zones then
                     local zoneData = ns.Zones:GetZone(selectedZone)
                     if zoneData then
-                        if zoneData.pinEnabled and OneWoW_Notes.zonePins and OneWoW_Notes.zonePins[selectedZone] then
+                        if zoneData.pinEnabled and ns.zonePins and ns.zonePins[selectedZone] then
                             ns.ZonePins:HideZonePin(selectedZone)
                             zoneData.pinEnabled = false
                             self:GetNormalTexture():SetDesaturated(true)
@@ -557,8 +557,8 @@ function ns.UI.CreateZonesTab(parent)
 
                         if contentUpdateTimer then contentUpdateTimer:Cancel() end
                         contentUpdateTimer = C_Timer.NewTimer(2, function()
-                            if selectedZone and OneWoW_Notes.zonePins and OneWoW_Notes.zonePins[selectedZone] then
-                                local pinFrame = OneWoW_Notes.zonePins[selectedZone]
+                            if selectedZone and ns.zonePins and ns.zonePins[selectedZone] then
+                                local pinFrame = ns.zonePins[selectedZone]
                                 if pinFrame and pinFrame.contentText then
                                     local zone = ns.Zones:GetZone(selectedZone)
                                     if zone then
@@ -1123,7 +1123,7 @@ function ns.UI.CreateZonesTab(parent)
                     currentSort.by = "manual"
                     currentSort.ascending = true
                     zoneSortHandle:SetSort("manual", true)
-                    OneWoW_Notes.db.global.tabSortPrefs.zones = { by = "manual", ascending = true }
+                    ns.db.global.tabSortPrefs.zones = { by = "manual", ascending = true }
                 end
                 for i, item in ipairs(groupArray) do item.data.sortOrder = i end
                 groupArray[groupIndex].data.sortOrder     = groupIndex - 1
@@ -1144,7 +1144,7 @@ function ns.UI.CreateZonesTab(parent)
                     currentSort.by = "manual"
                     currentSort.ascending = true
                     zoneSortHandle:SetSort("manual", true)
-                    OneWoW_Notes.db.global.tabSortPrefs.zones = { by = "manual", ascending = true }
+                    ns.db.global.tabSortPrefs.zones = { by = "manual", ascending = true }
                 end
                 for i, item in ipairs(groupArray) do item.data.sortOrder = i end
                 groupArray[groupIndex].data.sortOrder     = groupIndex + 1

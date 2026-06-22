@@ -68,7 +68,7 @@ function NotesData:AddNote(noteTitle, noteData)
         }
     end
 
-    if OneWoW_Notes.mainFrame and aOneWoW_Notesddon.mainFrame:IsShown() then
+    if ns.mainFrame and ns.mainFrame:IsShown() then
         noteData.isNew = true
         noteData.newTimestamp = GetServerTime()
     end
@@ -82,7 +82,7 @@ end
 function NotesData:RemoveNote(noteID)
     self:Remove(noteID)
 
-    local addon = OneWoW_Notes
+    local addon = ns
     if addon.notePins and addon.notePins[noteID] then
         local pinFrame = addon.notePins[noteID]
         if pinFrame and pinFrame.Hide then
@@ -101,7 +101,7 @@ function NotesData:UpdateNote(noteID, noteContent)
             note.modified = GetServerTime()
         end
 
-        local addon = OneWoW_Notes
+        local addon = ns
         if addon.notePins and addon.notePins[noteID] then
             local pinFrame = addon.notePins[noteID]
             if pinFrame and pinFrame.UpdateContent then
@@ -118,7 +118,7 @@ function NotesData:UpdateNoteTitle(noteID, newTitle)
         note.title = newTitle
         note.modified = GetServerTime()
 
-        local addon = OneWoW_Notes
+        local addon = ns
         if addon.notePins and addon.notePins[noteID] then
             local pinFrame = addon.notePins[noteID]
             if pinFrame and pinFrame.UpdateContent then
@@ -160,7 +160,7 @@ function NotesData:SetPinEnabled(noteID, pinEnabled)
 end
 
 function NotesData:FindNote(noteID)
-    local addon = OneWoW_Notes
+    local addon = ns
     if addon.db.global.notes[noteID] then
         return addon.db.global.notes[noteID], addon.db.global.notes
     elseif addon.db.char.notes[noteID] then

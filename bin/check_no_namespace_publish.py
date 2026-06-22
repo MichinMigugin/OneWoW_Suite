@@ -33,7 +33,6 @@ WARN_ONLY: bool = True  # Warn-only during migration; set False when worklist is
 ALLOWED_NAMESPACE_PUBLISH: set[str] = {
     "OneWoW/Core/StoreBootstrap.lua",
     "OneWoW_Bags/OneWoW_Bags.lua",
-    "OneWoW_Notes/OneWoW_Notes.lua",
 }
 
 # (pattern_id, compiled regex, human label)

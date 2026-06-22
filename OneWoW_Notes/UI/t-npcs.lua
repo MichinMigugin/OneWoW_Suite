@@ -81,7 +81,7 @@ end
 
 function ns.UI.CreateNPCsTab(parent)
     do
-        local p = OneWoW_Notes.db.global.tabSortPrefs.npcs
+        local p = ns.db.global.tabSortPrefs.npcs
         currentSort.by        = p.by or "name"
         currentSort.ascending = p.ascending ~= false
     end
@@ -201,7 +201,7 @@ function ns.UI.CreateNPCsTab(parent)
         onChange = function(field, ascending)
             currentSort.by        = field
             currentSort.ascending = ascending
-            OneWoW_Notes.db.global.tabSortPrefs.npcs = { by = field, ascending = ascending }
+            ns.db.global.tabSortPrefs.npcs = { by = field, ascending = ascending }
             parent.RefreshNPCsList()
         end,
     })
@@ -1041,7 +1041,7 @@ function ns.UI.CreateNPCsTab(parent)
                     currentSort.by = "manual"
                     currentSort.ascending = true
                     npcSortHandle:SetSort("manual", true)
-                    OneWoW_Notes.db.global.tabSortPrefs.npcs = { by = "manual", ascending = true }
+                    ns.db.global.tabSortPrefs.npcs = { by = "manual", ascending = true }
                 end
                 for i, item in ipairs(groupArray) do item.data.sortOrder = i end
                 groupArray[groupIndex].data.sortOrder     = groupIndex - 1
@@ -1062,7 +1062,7 @@ function ns.UI.CreateNPCsTab(parent)
                     currentSort.by = "manual"
                     currentSort.ascending = true
                     npcSortHandle:SetSort("manual", true)
-                    OneWoW_Notes.db.global.tabSortPrefs.npcs = { by = "manual", ascending = true }
+                    ns.db.global.tabSortPrefs.npcs = { by = "manual", ascending = true }
                 end
                 for i, item in ipairs(groupArray) do item.data.sortOrder = i end
                 groupArray[groupIndex].data.sortOrder     = groupIndex + 1

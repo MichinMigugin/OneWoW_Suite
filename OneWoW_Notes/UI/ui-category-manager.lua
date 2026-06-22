@@ -80,7 +80,7 @@ local function AddCustomCategory(sectionKey, categoryName)
         end
     end
 
-    tinsert(OneWoW_Notes.db.global[dbKey], categoryName)
+    tinsert(ns.db.global[dbKey], categoryName)
     return true
 end
 
@@ -100,9 +100,9 @@ local function RemoveCustomCategory(sectionKey, categoryName)
     local dbKey = CUSTOM_DB_KEYS[sectionKey]
     if not dbKey then return false, L["NOTES_CATEGORY_NOT_FOUND"] end
 
-    for i = #OneWoW_Notes.db.global[dbKey], 1, -1 do
-        if OneWoW_Notes.db.global[dbKey][i] == categoryName then
-            tremove(OneWoW_Notes.db.global[dbKey], i)
+    for i = #ns.db.global[dbKey], 1, -1 do
+        if ns.db.global[dbKey][i] == categoryName then
+            tremove(ns.db.global[dbKey], i)
             return true
         end
     end

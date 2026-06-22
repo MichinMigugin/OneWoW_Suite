@@ -91,5 +91,5 @@ function ns:InitializeDatabase()
         savedVar  = "OneWoW_Notes_DB",
         defaults  = defaults,
     })
-    self.db = db
+    ns.db = db
 end

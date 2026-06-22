@@ -1,126 +1,40 @@
-local addonName, ns = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-
 local DB = OneWoW_GUI.DB
 
-OneWoW_Notes_API = {}
-
---- Returns an NPC note.
----@param npcID number
----@return table|nil npcData
-function OneWoW_Notes_API.GetNPC(npcID)
-    return ns.NPCs:GetNPC(npcID)
-end
-
---- Adds or updates an NPC note.
----@param npcID number
----@param npcData table
----@return boolean saved
-function OneWoW_Notes_API.AddOrUpdateNPC(npcID, npcData)
-    npcID = tonumber(npcID)
-    if not npcID then
-        return false
-    end
-
-    local existing = ns.NPCs:GetNPC(npcID)
-    if existing then
-        for key, value in pairs(npcData) do
-            if value ~= nil then
-                existing[key] = value
-            end
-        end
-        ns.NPCs:SaveNPC(npcID, existing)
-    else
-        ns.NPCs:AddNPC(npcID, npcData)
-    end
-
-    return true
-end
-
---- Opens an NPC note, selecting it when the NPCs tab is ready.
----@param npcID number
----@return boolean opened
-function OneWoW_Notes_API.OpenNPC(npcID)
-    npcID = tonumber(npcID)
-    if not npcID then
-        return false
-    end
-
-    ns.pendingNPCSelect = npcID
-    OneWoW.UI:Show("notes")
-    OneWoW.UI:SelectSubTab("notes", "npcs")
-
-    local tabFrame = OneWoW.UI:GetContentFrame("notes", "npcs")
-    if tabFrame and tabFrame.SelectNPC then
-        tabFrame.SelectNPC(npcID)
-        ns.pendingNPCSelect = nil
-    end
-
-    return true
-end
-
---- Returns an item note.
----@param itemID number
----@return table|nil itemData
-function OneWoW_Notes_API.GetItem(itemID)
-    return ns.Items:GetItem(itemID)
-end
-
---- Adds or updates an item note.
----@param itemID number
----@param itemData table
----@return boolean saved
-function OneWoW_Notes_API.AddOrUpdateItem(itemID, itemData)
-    itemID = tonumber(itemID)
-    if not itemID then
-        return false
-    end
-
-    local existing = ns.Items:GetItem(itemID)
-    if existing then
-        for key, value in pairs(itemData) do
-            if value ~= nil then
-                existing[key] = value
-            end
-        end
-        ns.Items:SaveItem(itemID, existing)
-    else
-        ns.Items:AddItem(itemID, itemData)
-    end
-
-    return true
-end
-
---- Opens an item note, selecting it when the Items tab is ready.
----@param itemID number
----@return boolean opened
-function OneWoW_Notes_API.OpenItem(itemID)
-    itemID = tonumber(itemID)
-    if not itemID then
-        return false
-    end
-
-    ns.pendingItemSelect = itemID
-    OneWoW.UI:Show("notes")
-    OneWoW.UI:SelectSubTab("notes", "items")
-
-    if ns.UI.OpenNotesItem and ns.UI.OpenNotesItem(itemID) then
-        ns.pendingItemSelect = nil
-    end
-
-    return true
-end
-
--- We use _G[""] form since _G.OneWoW_Notes would get caught in pre-commit hook.
-_G["OneWoW_Notes"] = ns
+OneWoW_Notes = {}
 
 ns.oneWoWHubActive = false
 
-local function RegisterWithOneWoW()
-    if not OneWoW then return false end
-    if not OneWoW.RegisterModule then return false end
+function OneWoW_Notes:ApplyTheme()
+    OneWoW_GUI:ApplyTheme(ns)
 
+    if ns.NotesPins and ns.NotesPins.RefreshSyncPins then
+        ns.NotesPins:RefreshSyncPins()
+    end
+    if ns.ZonePins and ns.ZonePins.RefreshSyncPins then
+        ns.ZonePins:RefreshSyncPins()
+    end
+end
+
+function OneWoW_Notes:ApplyLanguage()
+    ns.ApplyLanguage()
+end
+
+function OneWoW_Notes:CloseHelpPanel()
+    if ns.UI and ns.UI.notesHelpPanel and ns.UI.notesHelpPanel:IsShown() then
+        ns.UI.notesHelpPanel:Hide()
+    end
+end
+
+function OneWoW_Notes:SlashCommandHandler(msg)
+    if ns.SlashCommandHandler then
+        ns:SlashCommandHandler(msg)
+    end
+end
+
+local function RegisterWithOneWoW()
     local tabs = {
         { name = "notes",   displayName = function() return ns.L["TAB_NOTES"]   end, create = function(p) ns.UI.CreateNotesTab(p) end },
         { name = "players", displayName = function() return ns.L["TAB_PLAYERS"] end, create = function(p) ns.UI.CreatePlayersTab(p) end },
@@ -132,7 +46,7 @@ local function RegisterWithOneWoW()
     OneWoW:RegisterModule({
         name = "notes",
         displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
-        addonName = "OneWoW_Notes",
+        addonName = ADDON_NAME,
         order = OneWoW:GetModuleTabOrder("notes"),
         tabs = tabs,
     })
@@ -151,7 +65,7 @@ local function OnInitialize()
 
     OneWoW_GUI:MigrateSettings(ns.db.global)
 
-    ns:ApplyTheme()
+    OneWoW_Notes:ApplyTheme()
     ns.ApplyLanguage()
 
     local function slashHandler(msg) ns:SlashCommandHandler(msg) end
@@ -159,19 +73,13 @@ local function OnInitialize()
     DB:RegisterSlashCommand("onewownotes", slashHandler)
     DB:RegisterSlashCommand("1wn", slashHandler)
 
-    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", ns, function()
-        if ns.ApplyTheme then ns.ApplyTheme() end
-        if ns.NotesPins and ns.NotesPins.RefreshSyncPins then
-            ns.NotesPins:RefreshSyncPins()
-        end
-        if ns.ZonePins and ns.ZonePins.RefreshSyncPins then
-            ns.ZonePins:RefreshSyncPins()
-        end
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_Notes, function(myself)
+        myself:ApplyTheme()
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", ns, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoW_Notes, function()
         ns.ApplyLanguage()
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", ns, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoW_Notes, function()
         if ns.NotesPins and ns.NotesPins.RefreshAllPinFonts then
             ns.NotesPins:RefreshAllPinFonts()
         end
@@ -179,27 +87,7 @@ local function OnInitialize()
             ns.ZonePins:RefreshAllPinFonts()
         end
     end)
-    local _ver = OneWoW:GetAddonVersion(addonName)
-    if OneWoW and OneWoW.RegisterLoadComponent then
-        OneWoW:RegisterLoadComponent("Notes", _ver, "/1wn")
-    end
-end
-
-function ns:CloseHelpPanel()
-    if ns.UI and ns.UI.notesHelpPanel and ns.UI.notesHelpPanel:IsShown() then
-        ns.UI.notesHelpPanel:Hide()
-    end
-end
-
-function ns:ApplyTheme()
-    OneWoW_GUI:ApplyTheme(self)
-
-    if ns.NotesPins and ns.NotesPins.RefreshSyncPins then
-        ns.NotesPins:RefreshSyncPins()
-    end
-    if ns.ZonePins and ns.ZonePins.RefreshSyncPins then
-        ns.ZonePins:RefreshSyncPins()
-    end
+    OneWoW:RegisterLoadComponent("Notes",  OneWoW:GetAddonVersion(ADDON_NAME), "/1wn")
 end
 
 local function OnEnable()
@@ -217,10 +105,7 @@ local function OnEnable()
     end
 
     RegisterWithOneWoW()
-
-    if OneWoW then
-        OneWoW:RegisterMinimap("OneWoW_Notes", ns.L["CTX_OPEN_NOTES"], "notes", nil)
-    end
+    OneWoW:RegisterMinimap("OneWoW_Notes", ns.L["CTX_OPEN_NOTES"], "notes", nil)
 
     if ns.ZonePins and ns.ZonePins.Initialize then
         ns.ZonePins:Initialize()
@@ -261,6 +146,10 @@ local function OnPlayerEnteringWorld(isInitialLogin)
     if ns.NotesTodos and ns.NotesTodos.CheckAndPerformResets then
         ns.NotesTodos:CheckAndPerformResets()
     end
+end
+
+function ns:CloseHelpPanel()
+    OneWoW_Notes:CloseHelpPanel()
 end
 
 function ns:FormatResetTimer(seconds)
@@ -332,7 +221,7 @@ function ns:UpdateWindowLayering()
 end
 
 function ns:SlashCommandHandler()
-    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
+    if ns.oneWoWHubActive then
         OneWoW.UI:Show("notes")
         return
     end
@@ -346,10 +235,10 @@ end
 -- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). The
 -- one-shot guard makes the PLAYER_LOGIN safety net below a no-op when already run.
 local didInit = false
-function ns:OnAddonLoaded()
+function OneWoW_Notes:OnAddonLoaded()
     if didInit then return end
     didInit = true
-    OneWoW.Lifecycle:CreateHandlerRegistry(ns)
+    OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_Notes)
     OnInitialize()
 end
 
@@ -360,22 +249,22 @@ end
 -- passed isInitialLogin=false for a mid-session enable, so the login-only note
 -- reset is skipped while pins/todos still initialize.
 local didLogin = false
-function ns:OnPlayerLogin()
+function OneWoW_Notes:OnPlayerLogin()
     if didLogin then return end
     didLogin = true
     OnEnable()
-    if ns.FireLoginHandlers then
-        ns:FireLoginHandlers()
+    if OneWoW_Notes.FireLoginHandlers then
+        OneWoW_Notes:FireLoginHandlers()
     end
 end
 
 local pewArmed = false
-function ns:OnPlayerEnteringWorld(isLogin, isReload, isZoning)
+function OneWoW_Notes:OnPlayerEnteringWorld(isLogin, isReload, isZoning)
     if not pewArmed then
         pewArmed = true
         OnPlayerEnteringWorld(isLogin)
     end
-    if ns.FireEnteringWorldHandlers then
-        ns:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
+    if OneWoW_Notes.FireEnteringWorldHandlers then
+        OneWoW_Notes:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
     end
 end

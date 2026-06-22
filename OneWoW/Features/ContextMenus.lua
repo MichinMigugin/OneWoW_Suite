@@ -1,8 +1,14 @@
 local _, OneWoW = ...
 local L = OneWoW.L
 
-local function GetNotes()
-    return OneWoW_Notes
+local function NavigateToPlayer(fullName)
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.OpenPlayer then return end
+    OneWoW_Notes_API.OpenPlayer(fullName)
+end
+
+local function NavigateToNPC(npcID)
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.OpenNPC then return end
+    OneWoW_Notes_API.OpenNPC(npcID)
 end
 
 local function GetPlayMountsModule()
@@ -21,34 +27,6 @@ local function IsMatchMountEnabled()
         return false
     end
     return OneWoW_QoL_API.GetModuleToggle("playmounts", "enableMatchMount", true)
-end
-
-local function NavigateToPlayer(fullName)
-    local notes = GetNotes()
-    if not notes then return end
-    notes.pendingPlayerSelect = fullName
-    if OneWoW.UI then
-        OneWoW.UI:Show("notes")
-        C_Timer.After(0.25, function()
-            if OneWoW.UI then
-                OneWoW.UI:SelectSubTab("notes", "players")
-            end
-        end)
-    end
-end
-
-local function NavigateToNPC(npcID)
-    local notes = GetNotes()
-    if not notes then return end
-    notes.pendingNPCSelect = tonumber(npcID)
-    if OneWoW.UI then
-        OneWoW.UI:Show("notes")
-        C_Timer.After(0.25, function()
-            if OneWoW.UI then
-                OneWoW.UI:SelectSubTab("notes", "npcs")
-            end
-        end)
-    end
 end
 
 local function CatalogHasVendor(npcID)
@@ -77,8 +55,7 @@ end
 -- =============================================
 
 local function HandlePlayerAdd(unit)
-    local notes = GetNotes()
-    if not notes or not notes.Players then
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.GetPlayer then
         print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_NOTES_NOT_LOADED"])
         return
     end
@@ -96,7 +73,7 @@ local function HandlePlayerAdd(unit)
     if not realm or realm == "" then realm = GetRealmName() end
     local fullName = playerName .. "-" .. realm
 
-    local existing = notes.Players:GetPlayer(fullName)
+    local existing = OneWoW_Notes_API.GetPlayer(fullName)
     if existing then
         print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_PLAYER_EXISTS"], playerName))
         NavigateToPlayer(fullName)
@@ -122,13 +99,12 @@ local function HandlePlayerAdd(unit)
         tooltipLines = {"", "", "", ""},
     }
 
-    notes.Players:AddPlayer(fullName, playerData)
+    OneWoW_Notes_API.AddPlayer(fullName, playerData)
     print("|cFFFFD100OneWoW:|r " .. string.format(L["ADDED_PLAYER_S"], playerName))
 end
 
 local function HandleAddMountInfo(unit)
-    local notes = GetNotes()
-    if not notes or not notes.Players then
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.GetPlayer then
         print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_NOTES_NOT_LOADED"])
         return
     end
@@ -176,7 +152,7 @@ local function HandleAddMountInfo(unit)
         end
     end
 
-    local existing = notes.Players:GetPlayer(fullName)
+    local existing = OneWoW_Notes_API.GetPlayer(fullName)
     if existing then
         local currentNote = existing.content or ""
         if currentNote ~= "" then
@@ -184,7 +160,7 @@ local function HandleAddMountInfo(unit)
         else
             existing.content = mountText
         end
-        notes.Players:SavePlayer(fullName, existing)
+        OneWoW_Notes_API.SavePlayer(fullName, existing)
         print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_APPENDED"], playerName))
     else
         local _, classFile = UnitClass(unit)
@@ -205,7 +181,7 @@ local function HandleAddMountInfo(unit)
             content      = mountText,
             tooltipLines = {"", "", "", ""},
         }
-        notes.Players:AddPlayer(fullName, playerData)
+        OneWoW_Notes_API.AddPlayer(fullName, playerData)
         print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_CREATED"], playerName))
     end
 end
@@ -268,8 +244,7 @@ local function PlayerContextMenuHandler(_, rootDescription, contextData)
     if not contextData or not contextData.unit then return end
     if not UnitIsPlayer(contextData.unit) then return end
 
-    local notes = GetNotes()
-    if not notes then return end
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.GetPlayer then return end
 
     rootDescription:CreateDivider()
     rootDescription:CreateTitle(L["UNIT_CTX_HEADER"])
@@ -279,7 +254,7 @@ local function PlayerContextMenuHandler(_, rootDescription, contextData)
         if not realm or realm == "" then realm = GetRealmName() end
         local fullName = playerName .. "-" .. realm
         local buttonText = L["UNIT_CTX_ADD_PLAYER_NOTE"]
-        if notes.Players and notes.Players:GetPlayer(fullName) then
+        if OneWoW_Notes_API.GetPlayer(fullName) then
             buttonText = L["UNIT_CTX_EDIT_NPC_NOTE"]
         end
         rootDescription:CreateButton(buttonText, function()
@@ -306,8 +281,7 @@ end
 -- =============================================
 
 local function HandleNPCAdd(unit, npcIDNum)
-    local notes = GetNotes()
-    if not notes or not notes.NPCs then
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.GetNPC then
         print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_NOTES_NOT_LOADED"])
         return
     end
@@ -320,7 +294,7 @@ local function HandleNPCAdd(unit, npcIDNum)
         return
     end
 
-    local existing = notes.NPCs:GetNPC(npcIDNum)
+    local existing = OneWoW_Notes_API.GetNPC(npcIDNum)
     if existing then
         print("|cFFFFD100OneWoW:|r " .. L["NPC_NOTE_ALREADY_EXISTS"])
         NavigateToNPC(npcIDNum)
@@ -353,19 +327,18 @@ local function HandleNPCAdd(unit, npcIDNum)
         alertOnFound = false,
     }
 
-    notes.NPCs:AddNPC(npcIDNum, npcData)
+    OneWoW_Notes_API.AddNPC(npcIDNum, npcData)
     print("|cFFFFD100OneWoW:|r " .. string.format(L["ADDED_NPC_S"], npcName))
     NavigateToNPC(npcIDNum)
 end
 
 local function HandleNPCUpdateLocation(_, npcIDNum)
-    local notes = GetNotes()
-    if not notes or not notes.NPCs then
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.GetNPC then
         print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_NOTES_NOT_LOADED"])
         return
     end
 
-    local npcData = notes.NPCs:GetNPC(npcIDNum)
+    local npcData = OneWoW_Notes_API.GetNPC(npcIDNum)
     if not npcData then return end
 
     local mapID = C_Map.GetBestMapForUnit("player")
@@ -377,7 +350,7 @@ local function HandleNPCUpdateLocation(_, npcIDNum)
         npcData.coords = { x = x * 100, y = y * 100 }
         local mapInfo  = C_Map.GetMapInfo(mapID)
         if mapInfo then npcData.zone = mapInfo.name end
-        notes.NPCs:SaveNPC(npcIDNum, npcData)
+        OneWoW_Notes_API.SaveNPC(npcIDNum, npcData)
         print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_NPC_LOC_UPDATED"],
             npcData.name or "NPC", npcData.coords.x, npcData.coords.y, npcData.zone or ""))
     else
@@ -399,8 +372,7 @@ local function NPCContextMenuHandler(_, rootDescription, contextData)
     local npcIDNum = tonumber(npcIDStr)
     if not npcIDNum then return end
 
-    local notes = GetNotes()
-    local hasNotesMenu = notes and notes.NPCs
+    local hasNotesMenu = OneWoW_Notes_API and OneWoW_Notes_API.GetNPC
     local hasVendor = CatalogHasVendor(npcIDNum)
 
     if not hasNotesMenu and not hasVendor then return end
@@ -409,7 +381,7 @@ local function NPCContextMenuHandler(_, rootDescription, contextData)
     rootDescription:CreateTitle(L["UNIT_CTX_HEADER"])
 
     if hasNotesMenu then
-        local hasExisting = notes.NPCs:GetNPC(npcIDNum) ~= nil
+        local hasExisting = OneWoW_Notes_API.GetNPC(npcIDNum) ~= nil
         local buttonText  = hasExisting and L["UNIT_CTX_EDIT_NPC_NOTE"] or L["UNIT_CTX_ADD_NPC_NOTE"]
 
         rootDescription:CreateButton(buttonText, function()

@@ -15,7 +15,7 @@ function DataModule:New(dbKey, categoryCustomKey, builtinCategories)
 end
 
 function DataModule:GetDataDB(storageType)
-    local addon = OneWoW_Notes
+    local addon = ns
     if storageType == "character" then
         return addon.db.char[self._dbKey]
     else
@@ -29,7 +29,7 @@ end
 
 function DataModule:GetAll()
     if self._cache then return self._cache end
-    local addon = OneWoW_Notes
+    local addon = ns
     local all = {}
     for key, data in pairs(addon.db.global[self._dbKey]) do
         all[key] = data
@@ -45,14 +45,14 @@ end
 
 function DataModule:Remove(key)
     if not key then return end
-    local addon = OneWoW_Notes
+    local addon = ns
     addon.db.global[self._dbKey][key] = nil
     addon.db.char[self._dbKey][key] = nil
     self._cache = nil
 end
 
 function DataModule:GetCategories()
-    local addon = OneWoW_Notes
+    local addon = ns
     local all = {}
     for _, c in ipairs(self._builtinCategories) do tinsert(all, c) end
     if self._categoryCustomKey then

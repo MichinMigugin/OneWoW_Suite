@@ -17,7 +17,7 @@ local currentInstanceID = nil
 local zoneEventFrame = CreateFrame("Frame")
 
 function Zones:Initialize()
-    if OneWoW_Notes.db.global.zoneAlertsEnabled then
+    if ns.db.global.zoneAlertsEnabled then
         self:EnableScanning()
         C_Timer.After(1, function() Zones:CheckZoneAlerts() end)
     end
@@ -26,7 +26,7 @@ end
 function Zones:EnableScanning()
     if scanningEnabled then return end
     scanningEnabled = true
-    OneWoW_Notes.db.global.zoneAlertsEnabled = true
+    ns.db.global.zoneAlertsEnabled = true
 
     zoneEventFrame:SetScript("OnEvent", function() C_Timer.After(0.1, function() Zones:CheckZoneAlerts() end) end)
     zoneEventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
@@ -57,7 +57,7 @@ end
 function Zones:DisableScanning()
     if not scanningEnabled then return end
     scanningEnabled = false
-    OneWoW_Notes.db.global.zoneAlertsEnabled = false
+    ns.db.global.zoneAlertsEnabled = false
     zoneEventFrame:UnregisterEvent("ZONE_CHANGED_NEW_AREA")
     zoneEventFrame:UnregisterEvent("ZONE_CHANGED")
     zoneEventFrame:UnregisterEvent("ZONE_CHANGED_INDOORS")
@@ -109,9 +109,9 @@ function Zones:CheckZoneAlerts()
     end
 
     if shouldHidePins and ns.ZonePins then
-        if OneWoW_Notes.zonePins then
+        if ns.zonePins then
             local toHide = {}
-            for zoneName in pairs(OneWoW_Notes.zonePins) do
+            for zoneName in pairs(ns.zonePins) do
                 if zoneName ~= fullZone and zoneName ~= zoneText and zoneName ~= subZoneText then
                     table.insert(toHide, zoneName)
                 end
@@ -218,12 +218,12 @@ function Zones:AddZone(zoneName, zoneData)
     zoneData.modified      = GetServerTime()
     zoneData.sortOrder     = zoneData.sortOrder or 0
 
-    if OneWoW_Notes.mainFrame and OneWoW_Notes.mainFrame:IsShown() then
+    if ns.mainFrame and ns.mainFrame:IsShown() then
         zoneData.isNew          = true
         zoneData.newTimestamp   = GetServerTime()
     end
 
-    local targetDB = (zoneData.storage == "character") and OneWoW_Notes.db.char.zones or OneWoW_Notes.db.global.zones
+    local targetDB = (zoneData.storage == "character") and ns.db.char.zones or ns.db.global.zones
     targetDB[zoneName] = zoneData
     self:InvalidateCache()
     return true
@@ -232,7 +232,7 @@ end
 function Zones:SaveZone(zoneName, zoneData)
     if not zoneName or not zoneData then return end
     zoneData.modified = GetServerTime()
-    local targetDB = (zoneData.storage == "character") and OneWoW_Notes.db.char.zones or OneWoW_Notes.db.global.zones
+    local targetDB = (zoneData.storage == "character") and ns.db.char.zones or ns.db.global.zones
     targetDB[zoneName] = zoneData
     self:InvalidateCache()
 end

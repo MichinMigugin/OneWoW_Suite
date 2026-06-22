@@ -87,7 +87,7 @@ until the inventory is drained).
 | `OneWoW_ShoppingList` | `ns` | `OneWoW_ShoppingList = {}` + `OneWoW_ShoppingList_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API` in `Core/API.lua` |
 | `OneWoW_Trackers` | `ns` | `OneWoW_Trackers = {}` + `OneWoW_Trackers_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API` in `Core/API.lua` |
 | `OneWoW_DirectDeposit` | `ns` | `OneWoW_DirectDeposit = {}` + `OneWoW_DirectDeposit_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API` in `Core/API.lua` |
-| `OneWoW_Notes` | `ns` | `_G["OneWoW_Notes"] = ns` | root grandfathered; 11 child hits (mostly `.db`) | |
+| `OneWoW_Notes` | `ns` | `OneWoW_Notes = {}` + `OneWoW_Notes_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API` in `Core/API.lua` |
 | `OneWoW_Utility_DevTool` | `Addon` | `OneWoW_Utility_DevTool = Addon` | `renamed_addon_vararg` | DevTool rename |
 
 **Tier D — namespace-as-global (largest)**
@@ -108,7 +108,7 @@ until the inventory is drained).
 2. **Catalog family** — **complete** (hub: `ns.db`, `OneWoW_Catalog_API` in `Core/API.lua`, thin lifecycle root; all 4 CatalogData stores: `_API` in `Core/API.lua`). BootStore stop-gap remains §2.
 3. **QoL** — **complete** (hub: `ns.db`, `OneWoW_QoL_API` in `Core/API.lua`, thin lifecycle root; internal `ns.db` sweep in UI/modules).
 4. **ShoppingList / Trackers / DirectDeposit** — **complete** (hub: `ns.db`, `OneWoW_*_API` in `Core/API.lua`, thin lifecycle root, vararg `ns` in DirectDeposit).
-5. **Notes** — migrate children off `OneWoW_Notes.db`; then remove root `_G` publish.
+5. **Notes** — **complete** (hub: `ns.db`, `OneWoW_Notes_API` in `Core/API.lua`, thin lifecycle root, internal `ns.*` sweep).
 6. **Bags** — rename vararg suite-wide; split facade vs `ns`; remove root publish last in unit.
 7. **DevTool** — `Addon` → `ns`; thin root.
 8. **OneWoW core** — `OneWoW/**` → `ns`; curated `OneWoW` facade; pair with §2 unit registry.
@@ -170,11 +170,17 @@ modules → root stub — see `OneWoW_AltTracker_Storage`.
 |------|--------------|--------|
 | `OneWoW_DirectDeposit` | `Core/API.lua` | done |
 
+**Notes status**
+
+| Unit | API location | Status |
+|------|--------------|--------|
+| `OneWoW_Notes` | `Core/API.lua` | done |
+
 **Backlog (file placement only)**
 
 | Load unit | API location today | Notes |
 |-----------|-------------------|-------|
-| `OneWoW_Notes` | mixed in `OneWoW_Notes.lua` | large surface; pair with Notes §3 migration |
+| _(none)_ | — | Notes backlog cleared |
 
 ### Run the inventory
 
@@ -203,7 +209,7 @@ entries** (~327 line-level `[warn]` hits), dominated by:
 | `ns_addon_backref` | 0 | `ns.addon =` (Catalog migrated) |
 
 By load unit (unique `path::pattern` entries): Bags 67, core 29, DevTool 14, QoL 11,
-Notes 11, DirectDeposit 9, Trackers 4, ShoppingList 3, AltTracker 3, QoL 11.
+DirectDeposit 9, Trackers 4, ShoppingList 3, AltTracker 3.
 
 ### Grandfathered (hook allowlist)
 
@@ -212,7 +218,6 @@ Remove each path from `ALLOWED_NAMESPACE_PUBLISH` in
 
 - `OneWoW/Core/StoreBootstrap.lua` (until unit registry — §2)
 - `OneWoW_Bags/OneWoW_Bags.lua` (publish line only; **not** the whole Bags tree)
-- `OneWoW_Notes/OneWoW_Notes.lua` (publish line only; **not** the whole Notes tree)
 
 ### Flip to enforced
 
@@ -264,13 +269,18 @@ move entries to `ARCHITECTURE.md` when resolved.
 |------|-------|-------|
 | In-game smoke (DirectDeposit) | manual | `/1wdd`, `/dd`, keybindings, main window tabs, Bags title-bar icon, core search, profile theme, manual/auto deposit |
 
+### Notes — deferred from step 5 PR
+
+| Item | Where | Notes |
+|------|-------|-------|
+| In-game smoke (Notes) | manual | `/1wn`, hub tabs, pins, context-menu player/NPC navigation, keybinding, help panel dismiss on hub switch |
+
 ### Suite-wide (cross-link — see sections above)
 
 | Item | Tracked in | Notes |
 |------|------------|-------|
 | BootStore `_G[addonName] = ns` retirement | §2 | Blocks final store namespace leak; pair with core unit registry |
-| DirectDeposit → Notes → Bags → DevTool → core | §3 order steps 5–8 | Full addon-by-addon analysis should revisit each unit's hook inventory, `_API` surface, and per-unit `Docs/ARCHITECTURE.md` |
+| DirectDeposit → Notes → Bags → DevTool → core | §3 order steps 6–8 | Full addon-by-addon analysis should revisit each unit's hook inventory, `_API` surface, and per-unit `Docs/ARCHITECTURE.md` |
 | Theme color per-file remainder | §1 / `GUI.md` | `t-quests` backdrops, DevTool chrome, `minimapbuttons` container, optional lint |
 | `no-namespace-publish` enforce flip | §3 end | `WARN_ONLY = False` when worklist empty (or BootStore-only) |
-| `OneWoW_Notes` API file placement | §3.1 backlog | Move mixed API out of root lua when Notes migrates |
 | Per-unit ARCHITECTURE scrub | §3 closing note | Remove stale "access `_DB` directly" language per unit |

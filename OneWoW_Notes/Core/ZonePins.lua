@@ -8,7 +8,7 @@ local ZonePins = {}
 ns.ZonePins = ZonePins
 
 function ZonePins:Initialize()
-    if not OneWoW_Notes.zonePins then OneWoW_Notes.zonePins = {} end
+    if not ns.zonePins then ns.zonePins = {} end
 
     if ns.Zones then
         C_Timer.After(0.5, function()
@@ -36,7 +36,7 @@ function ZonePins:Initialize()
 end
 
 function ZonePins:ShowZonePin(zoneName, zoneData)
-    local addon = OneWoW_Notes
+    local addon = ns
     if not zoneName or not zoneData then return end
     if not addon.zonePins then addon.zonePins = {} end
 
@@ -58,19 +58,19 @@ function ZonePins:ShowZonePin(zoneName, zoneData)
 end
 
 function ZonePins:HideZonePin(zoneName)
-    if not OneWoW_Notes.zonePins or not OneWoW_Notes.zonePins[zoneName] then return end
+    if not ns.zonePins or not ns.zonePins[zoneName] then return end
 
-    local pinFrame = OneWoW_Notes.zonePins[zoneName]
+    local pinFrame = ns.zonePins[zoneName]
     if pinFrame then
         pinFrame:Hide()
     end
 end
 
 function ZonePins:DestroyZonePin(zoneName)
-    if not OneWoW_Notes.zonePins or not OneWoW_Notes.zonePins[zoneName] then return end
+    if not ns.zonePins or not ns.zonePins[zoneName] then return end
 
-    local pinFrame = OneWoW_Notes.zonePins[zoneName]
-    OneWoW_Notes.zonePins[zoneName] = nil
+    local pinFrame = ns.zonePins[zoneName]
+    ns.zonePins[zoneName] = nil
     if pinFrame then
         pinFrame._destroying = true
         pinFrame:Hide()
@@ -79,25 +79,25 @@ function ZonePins:DestroyZonePin(zoneName)
 end
 
 function ZonePins:HideAllPins()
-    if not OneWoW_Notes.zonePins then return end
-    for _, pinFrame in pairs(OneWoW_Notes.zonePins) do
+    if not ns.zonePins then return end
+    for _, pinFrame in pairs(ns.zonePins) do
         if pinFrame then
             pinFrame._destroying = true
             pinFrame:Hide()
         end
     end
-    OneWoW_Notes.zonePins = {}
+    ns.zonePins = {}
 end
 
 function ZonePins:SavePinPosition(zoneName, point, relativePoint, x, y, width, height)
-    OneWoW_Notes.db.global.zonePinPositions[zoneName] = {
+    ns.db.global.zonePinPositions[zoneName] = {
         point = point, relativePoint = relativePoint,
         x = x, y = y, width = width, height = height
     }
 end
 
 function ZonePins:GetPinPosition(zoneName)
-    return OneWoW_Notes.db.global.zonePinPositions[zoneName]
+    return ns.db.global.zonePinPositions[zoneName]
 end
 
 function ZonePins:CreateZonePin(zoneName, zoneData)
@@ -144,8 +144,8 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     end)
 
     pin:SetScript("OnMouseDown", function(myself)
-        if myself.windowInfo and OneWoW_Notes.BringWindowToFront then
-            OneWoW_Notes:BringWindowToFront(myself)
+        if myself.windowInfo and ns.BringWindowToFront then
+            ns:BringWindowToFront(myself)
         end
     end)
 
@@ -567,29 +567,29 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         end
     end
 
-    OneWoW_Notes.zonePins[zoneName] = pin
+    ns.zonePins[zoneName] = pin
 
-    if OneWoW_Notes.RegisterWindow then
-        pin.windowInfo = OneWoW_Notes:RegisterWindow(pin, "zone_pinned", function()
+    if ns.RegisterWindow then
+        pin.windowInfo = ns:RegisterWindow(pin, "zone_pinned", function()
             pin:Hide()
         end)
     end
 
     pin:SetScript("OnHide", function(myself)
         if myself._destroying then
-            if OneWoW_Notes.zonePins and OneWoW_Notes.zonePins[zoneName] == myself then
-                OneWoW_Notes.zonePins[zoneName] = nil
+            if ns.zonePins and ns.zonePins[zoneName] == myself then
+                ns.zonePins[zoneName] = nil
             end
         end
-        if myself.windowInfo and OneWoW_Notes.UnregisterWindow then
-            OneWoW_Notes:UnregisterWindow(myself)
+        if myself.windowInfo and ns.UnregisterWindow then
+            ns:UnregisterWindow(myself)
             myself.windowInfo = nil
         end
     end)
 
     pin:SetScript("OnShow", function(myself)
-        if not myself.windowInfo and OneWoW_Notes.RegisterWindow then
-            myself.windowInfo = OneWoW_Notes:RegisterWindow(myself, "zone_pinned", function()
+        if not myself.windowInfo and ns.RegisterWindow then
+            myself.windowInfo = ns:RegisterWindow(myself, "zone_pinned", function()
                 myself:Hide()
             end)
         end
@@ -599,17 +599,17 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     pin:RefreshTodos()
     pin:Show()
 
-    if OneWoW_Notes.BringWindowToFront then
-        OneWoW_Notes:BringWindowToFront(pin)
+    if ns.BringWindowToFront then
+        ns:BringWindowToFront(pin)
     end
 
     return pin
 end
 
 function ZonePins:RefreshZonePinColors(zoneName)
-    if not OneWoW_Notes.zonePins or not OneWoW_Notes.zonePins[zoneName] then return end
+    if not ns.zonePins or not ns.zonePins[zoneName] then return end
 
-    local pinFrame = OneWoW_Notes.zonePins[zoneName]
+    local pinFrame = ns.zonePins[zoneName]
     if not pinFrame or not pinFrame:IsShown() then return end
 
     local zoneData = ns.Zones and ns.Zones:GetZone(zoneName)
@@ -658,8 +658,8 @@ function ZonePins:RefreshZonePinColors(zoneName)
 end
 
 function ZonePins:RefreshAllPinFonts()
-    if not OneWoW_Notes.zonePins then return end
-    for zoneName, pinFrame in pairs(OneWoW_Notes.zonePins) do
+    if not ns.zonePins then return end
+    for zoneName, pinFrame in pairs(ns.zonePins) do
         if pinFrame and pinFrame:IsShown() then
             self:RefreshZonePinColors(zoneName)
         end
@@ -667,9 +667,9 @@ function ZonePins:RefreshAllPinFonts()
 end
 
 function ZonePins:RefreshSyncPins()
-    if not OneWoW_Notes.zonePins then return end
+    if not ns.zonePins then return end
 
-    for zoneName, pinFrame in pairs(OneWoW_Notes.zonePins) do
+    for zoneName, pinFrame in pairs(ns.zonePins) do
         if pinFrame and pinFrame:IsShown() then
             local zoneData = ns.Zones and ns.Zones:GetZone(zoneName)
             if zoneData and zoneData.pinColor == "sync" then

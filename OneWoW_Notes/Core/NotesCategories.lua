@@ -25,7 +25,7 @@ function NotesCategories:GetCategories()
         table.insert(allCategories, category)
     end
 
-    for _, customCategory in ipairs(OneWoW_Notes.db.global.notesCustomCategories) do
+    for _, customCategory in ipairs(ns.db.global.notesCustomCategories) do
         table.insert(allCategories, customCategory)
     end
 
@@ -33,7 +33,7 @@ function NotesCategories:GetCategories()
 end
 
 function NotesCategories:GetCustomCategories()
-    return OneWoW_Notes.db.global.notesCustomCategories
+    return ns.db.global.notesCustomCategories
 end
 
 function NotesCategories:IsBuiltInCategory(categoryName)
@@ -57,7 +57,7 @@ function NotesCategories:AddCustomCategory(categoryName)
         end
     end
 
-    tinsert(OneWoW_Notes.db.global.notesCustomCategories, categoryName)
+    tinsert(ns.db.global.notesCustomCategories, categoryName)
     return true
 end
 
@@ -70,7 +70,7 @@ function NotesCategories:RemoveCustomCategory(categoryName)
         return false, L["NOTES_CATEGORY_BUILTIN"]
     end
 
-    local addon = OneWoW_Notes
+    local addon = ns
     for i = #addon.db.global.notesCustomCategories, 1, -1 do
         if addon.db.global.notesCustomCategories[i] == categoryName then
             table.remove(addon.db.global.notesCustomCategories, i)

@@ -347,8 +347,8 @@ function UI:SelectModuleTab(moduleName)
         OneWoW.db.global.lastModuleTab = moduleName
     end
 
-    if OneWoW_Notes and OneWoW_Notes.CloseHelpPanel then
-        OneWoW_Notes:CloseHelpPanel()
+    if OneWoW_Notes_API and OneWoW_Notes_API.CloseHelpPanel then
+        OneWoW_Notes_API.CloseHelpPanel()
     end
 
     UpdateRow1Styling()
@@ -456,8 +456,8 @@ function UI:SelectSubTab(moduleName, subTabName)
         OneWoW.db.global.lastSubTabs[moduleName] = subTabName
     end
 
-    if OneWoW_Notes and OneWoW_Notes.CloseHelpPanel then
-        OneWoW_Notes:CloseHelpPanel()
+    if OneWoW_Notes_API and OneWoW_Notes_API.CloseHelpPanel then
+        OneWoW_Notes_API.CloseHelpPanel()
     end
 
     UpdateRow2Styling()

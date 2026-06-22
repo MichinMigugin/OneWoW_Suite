@@ -21,7 +21,7 @@ function Items:AddItem(itemID, itemData)
     itemID = tonumber(itemID)
     if not itemID then return false end
 
-    local addon = OneWoW_Notes
+    local addon = ns
 
     local existing = self:GetItem(itemID)
     if existing then
@@ -83,7 +83,7 @@ function Items:SaveItem(itemID, itemData)
     itemID = tonumber(itemID)
     if not itemID then return end
 
-    local addon = OneWoW_Notes
+    local addon = ns
     local storageType = itemData.storage or "account"
     itemData.modified = GetServerTime()
 

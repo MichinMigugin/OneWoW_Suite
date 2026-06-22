@@ -78,7 +78,7 @@ function NPCs:AddNPC(npcID, npcInfo)
         sortOrder    = 0,
     }
 
-    if OneWoW_Notes.mainFrame and OneWoW_Notes.mainFrame:IsShown() then
+    if ns.mainFrame and ns.mainFrame:IsShown() then
         newData.isNew = true
         newData.newTimestamp = GetServerTime()
     end

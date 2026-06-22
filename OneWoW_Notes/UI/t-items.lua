@@ -39,7 +39,7 @@ end
 
 function ns.UI.CreateItemsTab(parent)
     do
-        local p = OneWoW_Notes.db.global.tabSortPrefs.items
+        local p = ns.db.global.tabSortPrefs.items
         currentSort.by        = p.by or "name"
         currentSort.ascending = p.ascending ~= false
     end
@@ -189,7 +189,7 @@ function ns.UI.CreateItemsTab(parent)
         onChange = function(field, ascending)
             currentSort.by        = field
             currentSort.ascending = ascending
-            OneWoW_Notes.db.global.tabSortPrefs.items = { by = field, ascending = ascending }
+            ns.db.global.tabSortPrefs.items = { by = field, ascending = ascending }
             parent.RefreshItemsList()
         end,
     })

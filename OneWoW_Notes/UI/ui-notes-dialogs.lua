@@ -338,7 +338,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     local noteData = allNotes[noteID]
     if not noteData or type(noteData) ~= "table" then return end
 
-    local pinWasAlreadyVisible = OneWoW_Notes.notePins and OneWoW_Notes.notePins[noteID] and OneWoW_Notes.notePins[noteID]:IsShown()
+    local pinWasAlreadyVisible = ns.notePins and ns.notePins[noteID] and ns.notePins[noteID]:IsShown()
 
     local pinOpenedByDialog = false
     if not pinWasAlreadyVisible and ns.NotesPins then
@@ -667,7 +667,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
                 notesDB[noteID].modified = GetServerTime()
             end
             noteData.pinHideTasksUntilHover = checked
-            local pf = OneWoW_Notes.notePins and OneWoW_Notes.notePins[noteID]
+            local pf = ns.notePins and ns.notePins[noteID]
             if pf then
                 pf._tasksHoverShown = checked and pf:IsMouseOver() or false
                 if pf.RefreshLayout then pf:RefreshLayout() end

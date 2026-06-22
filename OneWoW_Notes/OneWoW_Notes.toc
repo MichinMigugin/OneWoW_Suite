@@ -33,6 +33,7 @@ Locales\itIT.lua
 # Core
 Core\Constants.lua
 Core\Database.lua
+Core\API.lua
 Core\DataModule.lua
 Core\NotesConfig.lua
 Core\NotesData.lua
