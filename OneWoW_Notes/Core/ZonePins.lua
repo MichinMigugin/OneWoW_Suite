@@ -2,6 +2,7 @@ local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
+local PinSupport = ns.PinSupport
 
 local ZonePins = {}
 ns.ZonePins = ZonePins
@@ -110,8 +111,23 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     -- Sanitize zone name for frame global name
     local safeName = zoneName:gsub("[^%w]", "_")
 
+    local function SaveZonePinGeometry(myself)
+        if PinSupport.IsLayoutBlocked() then
+            PinSupport.DeferGeometrySave(myself, function()
+                SaveZonePinGeometry(myself)
+            end)
+            return
+        end
+        PinSupport.CachePinSize(myself)
+        local point, _, relativePoint, x, y = myself:GetPoint()
+        ZonePins:SavePinPosition(zoneName, point, relativePoint, x, y,
+            PinSupport.GetPinWidth(myself, 300), PinSupport.GetPinHeight(myself, 400))
+    end
+
     local pin = CreateFrame("Frame", "OneWoW_ZonePin_" .. safeName, UIParent, "BackdropTemplate")
     pin:SetSize(300, 400)
+    pin._cachedWidth = 300
+    pin._cachedHeight = 400
     pin:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -100, -50)
     pin:SetMovable(true)
     pin:SetResizable(true)
@@ -124,8 +140,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     pin:SetScript("OnDragStart", pin.StartMoving)
     pin:SetScript("OnDragStop", function(myself)
         myself:StopMovingOrSizing()
-        local point, _, relativePoint, x, y = myself:GetPoint()
-        ZonePins:SavePinPosition(zoneName, point, relativePoint, x, y, myself:GetWidth(), myself:GetHeight())
+        SaveZonePinGeometry(myself)
     end)
 
     pin:SetScript("OnMouseDown", function(myself)
@@ -233,12 +248,17 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     contentText:EnableMouse(false)
     contentText:EnableKeyboard(false)
     contentText:SetHyperlinksEnabled(true)
-    contentText:SetWidth(scrollFrame:GetWidth() or 280)
+    contentText:SetWidth(PinSupport.GetScrollWidth(scrollFrame, 280, "_cachedScrollWidth"))
     contentText:SetHeight(1)
     scrollFrame:SetScrollChild(contentText)
 
-    scrollFrame:HookScript("OnSizeChanged", function(_, width)
-        contentText:SetWidth(math.max(1, width))
+    scrollFrame:HookScript("OnSizeChanged", function(myself, width)
+        if PinSupport.IsLayoutBlocked() then
+            width = myself._cachedScrollWidth or 280
+        elseif width then
+            myself._cachedScrollWidth = width
+        end
+        contentText:SetWidth(math.max(1, width or 280))
     end)
 
     contentText:SetScript("OnHyperlinkClick", function(_, linkData, link, button)
@@ -290,10 +310,11 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         local todoCount = #(zd.todos or {})
         local taskHeight = 0
         if todoCount > 0 then
-            taskHeight = myself.todoContainer:GetHeight() or 40
+            taskHeight = PinSupport.GetFrameHeight(myself.todoContainer, myself._cachedTodoHeight or 40)
             if taskHeight <= 10 then
                 taskHeight = math.max(40, todoCount * 25 + 20)
             end
+            myself._cachedTodoHeight = taskHeight
         end
 
         local hasContent  = zd.content and zd.content ~= ""
@@ -347,11 +368,17 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         end
 
         if myself.todoContainer then
-            myself.todoContainer:SetWidth(myself.todoMainFrame:GetWidth())
+            myself.todoContainer:SetWidth(PinSupport.GetPinWidth(myself, 300))
         end
 
         if not skipTodoRefresh and myself.RefreshTodos then
             myself:RefreshTodos()
+        end
+
+        if PinSupport.IsLayoutBlocked() then
+            PinSupport.RegisterDeferredPin(myself)
+        else
+            PinSupport.CachePinSize(myself)
         end
     end
 
@@ -425,6 +452,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         end
 
         myself.todoContainer:SetHeight(math.abs(yOffset) + 10)
+        myself._cachedTodoHeight = math.abs(yOffset) + 10
     end
 
     -- Resize handle
@@ -437,8 +465,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     resizeBtn:SetScript("OnMouseDown", function() pin:StartSizing("BOTTOMRIGHT") end)
     resizeBtn:SetScript("OnMouseUp", function()
         pin:StopMovingOrSizing()
-        local point, _, relativePoint, x, y = pin:GetPoint()
-        ZonePins:SavePinPosition(zoneName, point, relativePoint, x, y, pin:GetWidth(), pin:GetHeight())
+        SaveZonePinGeometry(pin)
         if pin.RefreshLayout then pin:RefreshLayout(true) end
     end)
     pin.resizeBtn = resizeBtn
@@ -535,6 +562,8 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
                      savedPos.x or 0, savedPos.y or 0)
         if savedPos.width and savedPos.height then
             pin:SetSize(savedPos.width, savedPos.height)
+            pin._cachedWidth = savedPos.width
+            pin._cachedHeight = savedPos.height
         end
     end
 
