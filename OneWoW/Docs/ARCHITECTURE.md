@@ -539,7 +539,7 @@ a namespace; expose an `_API` instead.
 
 ### 6.1 Global surface taxonomy
 
-Each load unit has up to four distinct global surfaces. Do not collapse them.
+Each load unit has distinct global surfaces. Do not collapse them.
 
 | Symbol | Who may use it | Holds |
 |--------|----------------|-------|
@@ -547,11 +547,30 @@ Each load unit has up to four distinct global surfaces. Do not collapse them.
 | `ns.db` | internal only | `DB:Init` return value; read `ns.db.global.*` |
 | `OneWoW_<Unit>_DB` | `Database.lua` / BootStore init + owner's `_API` | raw SV root (`## SavedVariables` name) |
 | `OneWoW_<Unit>_API` | other load units | declared **dot-functions** only |
-| `OneWoW_<Unit>` | core lifecycle + `OneWoW_GUI` callbacks | lifecycle hooks, `ApplyTheme`/`ApplyLanguage`; **not** `.db`, `.UI`, cross-unit data |
+| `OneWoW_<Unit>` | lifecycle + `OneWoW_GUI` callbacks (hub units) | colon hooks (`OnAddonLoaded`, `ApplyTheme`, …); **not** `.db`, `.UI`, cross-unit data |
+| `OneWoW` | **core orchestrator** (suite-wide) | colon methods (`:EnsureLoaded`, …) + curated `OneWoW.*` services |
+| `OneWoW_GUI` | **UI toolkit** (suite-wide) | colon methods + `OneWoW_GUI.DB`; see §8.1 |
 
 **Naming:** `OneWoW_<LoadUnitName>_DB` and `OneWoW_<LoadUnitName>_API` where
 `<LoadUnitName>` matches the TOC folder / `ADDON_NAME` (e.g.
 `OneWoW_AltTracker_Character_DB`).
+
+#### Core orchestrator (`OneWoW`) vs hub lifecycle root
+
+`OneWoW` is **not** a thin lifecycle root like `OneWoW_Catalog = {}`. It is the
+**suite orchestrator singleton** — same tier as `OneWoW_GUI`: colon-methods,
+subsystems hung as `OneWoW.Lifecycle`, `OneWoW.UI`, `OneWoW.PredicateEngine`, etc.
+Every other load unit may read `OneWoW` and `OneWoW_GUI` (shared core surface).
+
+**Today (migration debt):** core uses the same *mechanism* as Bags — the vararg
+namespace is renamed `local ADDON_NAME, OneWoW = ...` and published wholesale via
+`_G["OneWoW"] = OneWoW`. That leaks private internals onto the global.
+
+**Target:** internal files use `local ADDON_NAME, ns = ...`; `ns.db` holds the DB
+handle; `_G.OneWoW` becomes a **curated facade** (only public subsystems and
+colon API), not a publish of the whole namespace. Long-term this pairs with the
+unit registry in `MIGRATION.md` §2. Core does **not** need `OneWoW_API` — the
+`OneWoW` global *is* the API, like `OneWoW_GUI`.
 
 #### Hub module vs data store init
 
@@ -599,6 +618,7 @@ Neither pattern is `OneWoW_<Unit> = ns` written by hand.
 |-------------|--------|----------|
 | Cross-unit `_API` | **dot-functions only** | `OneWoW_AltTracker_Character_API.GetCharacterData(charKey)` |
 | Singleton service / toolkit | **colon-methods** | `OneWoW_GUI:CreateFS(...)`, `OneWoW:EnsureLoaded(...)` |
+| Core orchestrator (`OneWoW`) | **colon-methods** + `OneWoW.*` tables | `OneWoW:BringUp(...)`, `OneWoW.Lifecycle`, `OneWoW.PredicateEngine` |
 | Lifecycle root (`OneWoW_<Unit>`) | **colon for instance hooks only** | `OneWoW_AltTracker:OnAddonLoaded()`, `:ApplyTheme()` |
 | Internal `ns` modules | colon on `ns` or sub-tables | `ns:GetProgressList(key)`, `ns.DataManager:GetCharacterData(charKey)` |
 
@@ -610,10 +630,10 @@ cross-unit data accessors on the lifecycle root as colon-methods (e.g.
 #### Anti-patterns (new code)
 
 - `OneWoW_<Unit> = ns` or `_G[...] = ns` (hand namespace publish)
-- Renaming the vararg namespace: `local ADDON_NAME, OneWoW_Bags = ...` — always
-  `local ADDON_NAME, ns = ...`
+- Renaming the vararg namespace: `local ADDON_NAME, OneWoW_Bags = ...` or
+  `local ADDON_NAME, OneWoW = ...` — always `local ADDON_NAME, ns = ...`
 - Back-references: `ns.addon`, `ns.OneWoWAltTracker`, etc.
-- `.db` on the lifecycle root (`OneWoW_AltTracker.db`) — use `ns.db`
+- `.db` on the lifecycle root (`OneWoW_AltTracker.db`, `OneWoW.db`) — use `ns.db`
 - Colon-methods on `_API` globals
 - Leaking internals on the lifecycle root (`OneWoW_AltTracker.UI = ...`)
 

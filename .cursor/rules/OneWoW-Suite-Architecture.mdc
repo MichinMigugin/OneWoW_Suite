@@ -52,8 +52,9 @@ Authoritative reference: [`OneWoW/Docs/ARCHITECTURE.md`](OneWoW/Docs/ARCHITECTUR
 - `ns.db` — internal `DB:Init` handle; not `addon.db`, `ns.addon.db`, or `OneWoW_<Unit>.db`
 - `OneWoW_<Unit>_DB` — WoW SV global name (matches TOC `## SavedVariables`)
 - `OneWoW_<Unit>_API` — cross-unit **dot-functions** only
-- `OneWoW_<Unit> = {}` — thin lifecycle root (colon hooks: `OnAddonLoaded`, `ApplyTheme`, …); not `= ns`, not `local addon = {}` hop
-- **Never publish the namespace as a global** — not `OneWoW_<Unit> = ns`, not `_G[ADDON_NAME] = ns` / `_G[addonName] = ns`
+- `OneWoW_<Unit> = {}` — hub lifecycle root (colon hooks: `OnAddonLoaded`, `ApplyTheme`, …); not `= ns`, not `local addon = {}` hop
+- **`OneWoW`** — core orchestrator singleton (colon API + `OneWoW.*` services); internal files should use `ns`, not publish raw `ns` as `_G["OneWoW"]`
+- **Never publish the namespace as a global** — not `OneWoW_<Unit> = ns`, not `_G[ADDON_NAME] = ns` / `_G[addonName] = ns`, not `_G["OneWoW"] = OneWoW`
 - Data stores: `OneWoW:BootStore(ns, { addonName = ADDON_NAME, ... })` — BootStore's `_G[addonName] = ns` is the store-only stop-gap (see `MIGRATION.md` §2)
 - `_API` uses dot-functions; `OneWoW_GUI` / `OneWoW` use colon-methods (service singletons)
 

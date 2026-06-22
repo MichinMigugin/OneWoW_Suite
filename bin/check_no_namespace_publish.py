@@ -2,21 +2,24 @@
 """Pre-commit hook: flag namespace publish and global-surface anti-patterns in Lua.
 
 Enforces OneWoW/Docs/ARCHITECTURE.md §6.1 during the addon migration period.
-See MIGRATION.md §3 for the cleanup checklist.
+See MIGRATION.md §3 for the cleanup checklist and full suite inventory.
 
 Flagged patterns (new code should not add these):
     OneWoW_<Unit> = ns              -- hand namespace publish
-    _G[...] = ns                    -- Notes-style publish
-    _G[...] = OneWoW_Bags           -- Bags-style publish (ns renamed to addon name)
-    local ADDON_NAME, OneWoW_Foo = ...  -- vararg namespace renamed (use ns)
+    _G[...] = ns                    -- Notes/Trackers-style publish
+    _G[...] = OneWoW / OneWoW_*     -- namespace-as-global publish
+    local ADDON_NAME, OneWoW = ...  -- core vararg renamed (use ns)
+    local ADDON_NAME, OneWoW_* = ... / local _, OneWoW_* = ...
+    local ADDON_NAME, Addon = ...   -- DevTool-style rename
     ns.addon = ...                  -- back-reference hop
-    OneWoW_<Unit>.db                -- db on lifecycle root (use ns.db)
+    OneWoW.db / OneWoW_<Unit>.db    -- db on published global (use ns.db)
 
 Grandfathered paths (ALLOWED_NAMESPACE_PUBLISH) pass as [allowed]. Everyone else
 prints [warn] while WARN_ONLY is True; flip to False when the inventory is drained.
 
 Allowlist keys are `path` (whole file) or `path::pattern_id` (single pattern in
-that file). Remove entries as units migrate.
+that file). Remove entries as units migrate. Grandfathering a root lua file does
+NOT suppress warnings in that unit's child files.
 """
 
 from __future__ import annotations
@@ -46,14 +49,29 @@ RULES: list[tuple[str, re.Pattern[str], str]] = [
         "_G[...] = ns (namespace publish)",
     ),
     (
-        "g_assign_bags_ns",
-        re.compile(r"_G\[[^\]]+\]\s*=\s*OneWoW_Bags\b"),
-        "_G[...] = OneWoW_Bags (namespace-as-global)",
+        "g_assign_renamed_ns",
+        re.compile(r"_G\[[^\]]+\]\s*=\s*OneWoW_\w+\b"),
+        "_G[...] = OneWoW_* (namespace-as-global)",
+    ),
+    (
+        "g_assign_core_ns",
+        re.compile(r"_G\[[^\]]+\]\s*=\s*OneWoW\b(?!_)"),
+        "_G[...] = OneWoW (core namespace-as-global)",
     ),
     (
         "renamed_ns_vararg",
-        re.compile(r"local\s+(?:ADDON_NAME,\s*)?OneWoW_\w+\s*=\s*\.\.\."),
+        re.compile(r"local\s+(?:ADDON_NAME|_),\s*OneWoW_\w+\s*=\s*\.\.\."),
         "renamed vararg namespace (use local ADDON_NAME, ns = ...)",
+    ),
+    (
+        "renamed_core_vararg",
+        re.compile(r"local\s+ADDON_NAME,\s*OneWoW\s*=\s*\.\.\."),
+        "core vararg renamed (use local ADDON_NAME, ns = ...)",
+    ),
+    (
+        "renamed_addon_vararg",
+        re.compile(r"local\s+ADDON_NAME,\s*Addon\s*=\s*\.\.\."),
+        "DevTool-style vararg rename (use local ADDON_NAME, ns = ...)",
     ),
     (
         "ns_addon_backref",
@@ -62,8 +80,8 @@ RULES: list[tuple[str, re.Pattern[str], str]] = [
     ),
     (
         "lifecycle_root_db",
-        re.compile(r"OneWoW_(?!GUI\b)\w+\.db\b"),
-        ".db on lifecycle root (use ns.db)",
+        re.compile(r"(?:\bOneWoW\.db\b|OneWoW_(?!GUI\b)\w+\.db\b)"),
+        ".db on published global (use ns.db)",
     ),
 ]
 
@@ -160,7 +178,9 @@ def main(argv: list[str]) -> int:
         print("  local ADDON_NAME, ns = ...     -- private namespace")
         print("  ns.db = DB:Init(...)           -- internal db handle")
         print("  OneWoW_<Unit>_API.Get*(...)    -- cross-unit contract")
-        print("  OneWoW_<Unit> = {}             -- thin lifecycle root only")
+        print("  OneWoW_<Unit> = {}             -- hub lifecycle root")
+        print("  OneWoW:* / OneWoW.*            -- core orchestrator (curated facade)")
+        print("Inventory + order: OneWoW/Docs/MIGRATION.md §3")
         if WARN_ONLY and worklist_keys:
             print()
             print("Warn-only mode: not blocking. Worklist (path::pattern_id):")
