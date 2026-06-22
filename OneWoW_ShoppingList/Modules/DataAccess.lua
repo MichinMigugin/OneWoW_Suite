@@ -143,28 +143,8 @@ end
 function DataAccess:GetQualityVariants(itemID)
     if qvCache[itemID] then return qvCache[itemID] end
     local variants = { itemID }
-    local profAddon = OneWoW_CatalogData_Tradeskills
-    if profAddon and profAddon.db and profAddon.db.global.recipeIndex then
-        for _, recipeData in pairs(profAddon.db.global.recipeIndex) do
-            if recipeData.reagentSlots then
-                for _, slot in ipairs(recipeData.reagentSlots) do
-                    if slot.options then
-                        local found = false
-                        for _, opt in ipairs(slot.options) do
-                            if opt.itemID == itemID then found = true; break end
-                        end
-                        if found then
-                            for _, opt in ipairs(slot.options) do
-                                if not tContains(variants, opt.itemID) then
-                                    table.insert(variants, opt.itemID)
-                                end
-                            end
-                            break
-                        end
-                    end
-                end
-            end
-        end
+    if OneWoW_CatalogData_Tradeskills_API and OneWoW_CatalogData_Tradeskills_API.GetCraftingQualityVariants then
+        variants = OneWoW_CatalogData_Tradeskills_API.GetCraftingQualityVariants(itemID)
     end
     qvCache[itemID] = variants
     return variants

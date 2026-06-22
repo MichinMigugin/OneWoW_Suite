@@ -16,7 +16,7 @@ local currentReagents = nil
 local buttonsCreated = false
 
 local function GetDB()
-    return OneWoW_ShoppingList_DB
+    return ns.db
 end
 
 local function HideButtons()
@@ -228,7 +228,7 @@ end
 function CatalogIntegration:Initialize()
     if TryRegister() then return end
 
-    ns:RegisterAddonLoadedWatcher("OneWoW_Catalog", function()
+    OneWoW_ShoppingList:RegisterAddonLoadedWatcher("OneWoW_Catalog", function()
         C_Timer.After(0.5, function()
             TryRegister()
         end)

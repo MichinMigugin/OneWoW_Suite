@@ -4,6 +4,10 @@ local L = ns.L
 ns.BagButton = {}
 local BagButton = ns.BagButton
 
+local function GetDB()
+    return ns.db
+end
+
 local function CreateShoppingButton(parent, anchorPoint, anchorRelative)
     if not parent then return nil end
 
@@ -45,13 +49,13 @@ local function CreateShoppingButton(parent, anchorPoint, anchorRelative)
 end
 
 function BagButton:CreateButtons()
-    if OneWoW_ShoppingList_DB.global.settings.showBagButtons == false then return end
+    if GetDB().global.settings.showBagButtons == false then return end
     self:CreateCombinedBagsButton()
     self:CreateBackpackButton()
 end
 
 function BagButton:UpdateVisibility()
-    local show = OneWoW_ShoppingList_DB.global.settings.showBagButtons ~= false
+    local show = GetDB().global.settings.showBagButtons ~= false
     if show then
         self:CreateCombinedBagsButton()
         self:CreateBackpackButton()
@@ -123,7 +127,7 @@ function BagButton:CreateAuctionHouseButton()
 end
 
 function BagButton:UpdateAHVisibility()
-    local show = OneWoW_ShoppingList_DB.global.settings.showAHButton ~= false
+    local show = GetDB().global.settings.showAHButton ~= false
     local ahFrame = AuctionHouseFrame
     if show and ahFrame and ahFrame:IsShown() then
         self:CreateAuctionHouseButton()
@@ -139,7 +143,7 @@ function BagButton:Initialize()
     frame:RegisterEvent("AUCTION_HOUSE_CLOSED")
     frame:SetScript("OnEvent", function(_, event)
         if event == "AUCTION_HOUSE_SHOW" then
-            if OneWoW_ShoppingList_DB.global.settings.showAHButton ~= false then
+            if GetDB().global.settings.showAHButton ~= false then
                 BagButton:CreateAuctionHouseButton()
                 if ahBtn then ahBtn:Show() end
             end
@@ -153,8 +157,8 @@ function BagButton:Initialize()
             BagButton:CreateButtons()
         end)
     end
-    ns:RegisterAddonLoadedWatcher("Blizzard_UIParent", deferCreateButtons)
-    ns:RegisterAddonLoadedWatcher(ADDON_NAME, deferCreateButtons)
+    OneWoW_ShoppingList:RegisterAddonLoadedWatcher("Blizzard_UIParent", deferCreateButtons)
+    OneWoW_ShoppingList:RegisterAddonLoadedWatcher(ADDON_NAME, deferCreateButtons)
 
     if ContainerFrameCombinedBags then
         deferCreateButtons()

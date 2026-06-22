@@ -7,8 +7,12 @@ local overlayPool = {}
 local activeOverlays = {}
 local refreshPending = false
 
+local function GetDB()
+    return ns.db
+end
+
 local function GetOverlaySettings()
-    return OneWoW_ShoppingList_DB.global.settings.overlay
+    return GetDB().global.settings.overlay
 end
 
 local function GetOrCreateOverlay(button)

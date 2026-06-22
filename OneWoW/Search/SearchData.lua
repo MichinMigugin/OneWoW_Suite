@@ -886,8 +886,8 @@ OneWoW.SearchData = {
         addonKey = "OneWoW_ShoppingList", addonLabel = "Shopping List",
         navType = "external",
         navFunc = function()
-            if OneWoW_ShoppingList and OneWoW_ShoppingList.MainWindow then
-                OneWoW_ShoppingList.MainWindow:Toggle()
+            if OneWoW_ShoppingList_API then
+                OneWoW_ShoppingList_API.Toggle()
             end
         end,
         keywords = {"shopping list", "shopping", "buy list", "need to buy", "item list", "wishlist"},
@@ -898,8 +898,8 @@ OneWoW.SearchData = {
         addonKey = "OneWoW_ShoppingList", addonLabel = "Shopping List",
         navType = "external",
         navFunc = function()
-            if OneWoW_ShoppingList and OneWoW_ShoppingList.MainWindow then
-                OneWoW_ShoppingList.MainWindow:Toggle()
+            if OneWoW_ShoppingList_API then
+                OneWoW_ShoppingList_API.Toggle()
             end
         end,
         keywords = {"add to list", "add item", "shopping add", "list item", "track item"},
@@ -910,8 +910,8 @@ OneWoW.SearchData = {
         addonKey = "OneWoW_ShoppingList", addonLabel = "Shopping List",
         navType = "external",
         navFunc = function()
-            if OneWoW_ShoppingList and OneWoW_ShoppingList.MainWindow then
-                OneWoW_ShoppingList.MainWindow:Toggle()
+            if OneWoW_ShoppingList_API then
+                OneWoW_ShoppingList_API.Toggle()
             end
         end,
         keywords = {"reagents", "profession reagents", "crafting materials", "recipe materials", "shopping reagents"},
@@ -922,8 +922,8 @@ OneWoW.SearchData = {
         addonKey = "OneWoW_ShoppingList", addonLabel = "Shopping List",
         navType = "external",
         navFunc = function()
-            if OneWoW_ShoppingList and OneWoW_ShoppingList.MainWindow then
-                OneWoW_ShoppingList.MainWindow:Toggle()
+            if OneWoW_ShoppingList_API then
+                OneWoW_ShoppingList_API.Toggle()
             end
         end,
         keywords = {"shopping overlay", "bag highlight", "list highlight", "shopping bag"},

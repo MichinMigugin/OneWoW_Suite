@@ -7,7 +7,7 @@ ns.OrdersUI = {}
 local OrdersUI = ns.OrdersUI
 
 local function GetDB()
-    return OneWoW_ShoppingList_DB
+    return ns.db
 end
 
 local function GetOrderDetailsFrame()
@@ -651,7 +651,7 @@ end
 
 function OrdersUI:Initialize()
     if not ProfessionsFrame then
-        ns:RegisterAddonLoadedWatcher("Blizzard_Professions", function()
+        OneWoW_ShoppingList:RegisterAddonLoadedWatcher("Blizzard_Professions", function()
             C_Timer.After(0.5, function()
                 OrdersUI:HookOrdersPage()
             end)

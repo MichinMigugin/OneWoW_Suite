@@ -87,7 +87,7 @@ until the inventory is drained).
 
 | Load unit | Vararg today | Global publish today | Hook / debt | Notes |
 |-----------|--------------|----------------------|-------------|-------|
-| `OneWoW_ShoppingList` | `ns` | `OneWoW_ShoppingList = ns` | `assign_ns`, locale vararg | Small unit |
+| `OneWoW_ShoppingList` | `ns` | `OneWoW_ShoppingList = {}` + `OneWoW_ShoppingList_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API` in `Core/API.lua` |
 | `OneWoW_Trackers` | `ns` | `_G["OneWoW_Trackers"] = ns` | `g_assign_ns`, `OneWoW_Trackers.db` | |
 | `OneWoW_DirectDeposit` | `OneWoW_DirectDeposit` | `_G["OneWoW_DirectDeposit"] = …` | `renamed_ns_vararg`, many `.db` | Bags-like |
 | `OneWoW_Notes` | `ns` | `_G["OneWoW_Notes"] = ns` | root grandfathered; 11 child hits (mostly `.db`) | |
@@ -110,7 +110,7 @@ until the inventory is drained).
 1. **AltTracker family** — **complete** (hub: `ns.db`, `OneWoW_AltTracker_API`, lifecycle root colon-hooks-only; all 8 stores: `_API` in `Core/API.lua`, root lua comment stub). BootStore stop-gap remains §2.
 2. **Catalog family** — **complete** (hub: `ns.db`, `OneWoW_Catalog_API` in `Core/API.lua`, thin lifecycle root; all 4 CatalogData stores: `_API` in `Core/API.lua`). BootStore stop-gap remains §2.
 3. **QoL** — **complete** (hub: `ns.db`, `OneWoW_QoL_API` in `Core/API.lua`, thin lifecycle root; internal `ns.db` sweep in UI/modules).
-4. **ShoppingList, Trackers, DirectDeposit** — stop `= ns` / renamed-vararg publish; thin lifecycle root + `ns.db`.
+4. **ShoppingList** — **complete** (hub: `ns.db`, `OneWoW_ShoppingList_API` in `Core/API.lua`, thin lifecycle root). **Trackers, DirectDeposit** — stop `= ns` / renamed-vararg publish; thin lifecycle root + `ns.db`.
 5. **Notes** — migrate children off `OneWoW_Notes.db`; then remove root `_G` publish.
 6. **Bags** — rename vararg suite-wide; split facade vs `ns`; remove root publish last in unit.
 7. **DevTool** — `Addon` → `ns`; thin root.
@@ -154,6 +154,12 @@ modules → root stub — see `OneWoW_AltTracker_Storage`.
 | Unit | API location | Status |
 |------|--------------|--------|
 | `OneWoW_QoL` | `Core/API.lua` | done |
+
+**ShoppingList status**
+
+| Unit | API location | Status |
+|------|--------------|--------|
+| `OneWoW_ShoppingList` | `Core/API.lua` | done |
 
 **Backlog (file placement only)**
 
@@ -231,14 +237,19 @@ move entries to `ARCHITECTURE.md` when resolved.
 |------|-------|-------|
 | In-game smoke (Catalog) | manual | Vendor `OpenToVendor`, quests favorites, item search, hub tab |
 
+### ShoppingList — deferred from step 4a PR
+
+| Item | Where | Notes |
+|------|-------|-------|
+| In-game smoke (ShoppingList) | manual | `/1wsl`, keybindings, lists/add item, bag/AH buttons, profession integration, Bags title-bar icon, core search, alt counts, quality variants |
+
 ### Suite-wide (cross-link — see sections above)
 
 | Item | Tracked in | Notes |
 |------|------------|-------|
 | BootStore `_G[addonName] = ns` retirement | §2 | Blocks final store namespace leak; pair with core unit registry |
-| ShoppingList → Trackers → DirectDeposit → Notes → Bags → DevTool → core | §3 order steps 4–8 | Full addon-by-addon analysis should revisit each unit's hook inventory, `_API` surface, and per-unit `Docs/ARCHITECTURE.md` |
+| Trackers → DirectDeposit → Notes → Bags → DevTool → core | §3 order steps 4b–8 | Full addon-by-addon analysis should revisit each unit's hook inventory, `_API` surface, and per-unit `Docs/ARCHITECTURE.md` |
 | Theme color per-file remainder | §1 / `GUI.md` | `t-quests` backdrops, DevTool chrome, `minimapbuttons` container, optional lint |
 | `no-namespace-publish` enforce flip | §3 end | `WARN_ONLY = False` when worklist empty (or BootStore-only) |
 | `OneWoW_Notes` API file placement | §3.1 backlog | Move mixed API out of root lua when Notes migrates |
 | Per-unit ARCHITECTURE scrub | §3 closing note | Remove stale "access `_DB` directly" language per unit |
-| `OneWoW_ShoppingList` bare-namespace reader | §2 | `DataAccess.lua` reads `OneWoW_CatalogData_Tradeskills` namespace — route through `_API` |

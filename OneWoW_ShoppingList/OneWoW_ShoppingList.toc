@@ -34,6 +34,7 @@ Locales\itIT.lua
 
 # Core (continued)
 Core\Database.lua
+Core\API.lua
 
 # Modules
 Modules\ShoppingList.lua

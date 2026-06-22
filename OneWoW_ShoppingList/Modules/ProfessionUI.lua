@@ -262,12 +262,12 @@ local function CreateButtons(schematicForm)
 end
 
 function GetDB()
-    return OneWoW_ShoppingList_DB
+    return ns.db
 end
 
 function ProfessionUI:Initialize()
     if not ProfessionsFrame then
-        ns:RegisterAddonLoadedWatcher("Blizzard_Professions", function()
+        OneWoW_ShoppingList:RegisterAddonLoadedWatcher("Blizzard_Professions", function()
             C_Timer.After(0.5, function()
                 ProfessionUI:HookProfessionsFrame()
             end)
@@ -280,7 +280,7 @@ function ProfessionUI:Initialize()
 end
 
 function ProfessionUI:UpdateVisibility()
-    local show = OneWoW_ShoppingList_DB.global.settings.showProfessionButtons ~= false
+    local show = GetDB().global.settings.showProfessionButtons ~= false
     if show then
         if openBtn then openBtn:Show() end
         if makeListBtn then makeListBtn:Show() end

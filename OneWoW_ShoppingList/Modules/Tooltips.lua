@@ -4,10 +4,14 @@ local L = ns.L
 ns.Tooltips = {}
 local Tooltips = ns.Tooltips
 
+local function GetDB()
+    return ns.db
+end
+
 local function AddShoppingListTooltip(tooltip, itemID)
     if not itemID then return end
 
-    if not OneWoW_ShoppingList_DB.global.settings.enableTooltips then return end
+    if not GetDB().global.settings.enableTooltips then return end
 
     local isOnList, lists = ns.ShoppingList:IsOnAnyList(itemID)
     if not isOnList then return end

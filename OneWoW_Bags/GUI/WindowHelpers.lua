@@ -44,7 +44,7 @@ local function GetSuiteTitleBarFeatureConfigs(L)
             tooltipTitle = L["SHOPPING_LIST"],
             tooltipDesc = L["SHOPPING_LIST_DESC"],
             onReady = function()
-                OneWoW_ShoppingList.MainWindow:Toggle()
+                OneWoW_ShoppingList_API.Toggle()
             end,
         },
         {

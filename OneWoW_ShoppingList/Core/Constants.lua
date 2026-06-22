@@ -1,8 +1,8 @@
-local _, OneWoW_ShoppingList = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-OneWoW_ShoppingList.Constants = {
+ns.Constants = {
     GUI = OneWoW_GUI:RegisterGUIConstants({
         WINDOW_WIDTH  = 820,
         WINDOW_HEIGHT = 580,

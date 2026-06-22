@@ -1,12 +1,12 @@
 <Bindings>
     <Binding name="ONEWOW_SHOPPING_LIST_TOGGLE" category="BINDING_HEADER_ONEWOW_SHOPPING_LIST">
-        if OneWoW_ShoppingList and OneWoW_ShoppingList.MainWindow then
-            OneWoW_ShoppingList.MainWindow:Toggle()
+        if OneWoW_ShoppingList_API then
+            OneWoW_ShoppingList_API.Toggle()
         end
     </Binding>
     <Binding name="ONEWOW_SHOPPING_LIST_ADD_ITEM" category="BINDING_HEADER_ONEWOW_SHOPPING_LIST">
-        if OneWoW_ShoppingList and OneWoW_ShoppingList.MainWindow then
-            OneWoW_ShoppingList.MainWindow:Show()
+        if OneWoW_ShoppingList_API then
+            OneWoW_ShoppingList_API.Show()
         end
     </Binding>
 </Bindings>

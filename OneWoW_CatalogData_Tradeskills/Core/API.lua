@@ -156,3 +156,10 @@ end
 function OneWoW_CatalogData_Tradeskills_API.PurgeCharacter(charKey)
     return ns.TradeskillScanner:PurgeCharacter(charKey)
 end
+
+--- Item IDs interchangeable in a crafting reagent slot (e.g. quality tiers).
+---@param itemID number
+---@return number[] variants
+function OneWoW_CatalogData_Tradeskills_API.GetCraftingQualityVariants(itemID)
+    return ns.TradeskillData:GetCraftingQualityVariants(itemID)
+end

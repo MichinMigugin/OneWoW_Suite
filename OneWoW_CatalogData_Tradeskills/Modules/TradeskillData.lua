@@ -314,3 +314,35 @@ function TD:GetStats()
     end
     return { professions = profCount, recipes = totalRecipes }
 end
+
+--- Item IDs interchangeable in a crafting reagent slot (e.g. quality tiers).
+---@param itemID number
+---@return number[] variants Always includes itemID; adds slot-mates when found.
+function TD:GetCraftingQualityVariants(itemID)
+    local variants = { itemID }
+    local recipes = self:GetRecipesByReagent(itemID)
+    for _, recipe in ipairs(recipes) do
+        if recipe.sl then
+            for _, slot in ipairs(recipe.sl) do
+                local options = slot[5]
+                if options and #options > 1 then
+                    local found = false
+                    for _, optID in ipairs(options) do
+                        if optID == itemID then
+                            found = true
+                            break
+                        end
+                    end
+                    if found then
+                        for _, optID in ipairs(options) do
+                            if not tContains(variants, optID) then
+                                tinsert(variants, optID)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return variants
+end

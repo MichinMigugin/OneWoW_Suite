@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW_ShoppingList = ...
+local ADDON_NAME, ns = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
@@ -273,4 +273,4 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["BINDING_NAME_ONEWOW_SHOPPING_LIST_ADD_ITEM"] = "Add Item to Default List",
 })
 
-OneWoW_ShoppingList.L = OneWoW.Locale:GetTable(ADDON_NAME)
+ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

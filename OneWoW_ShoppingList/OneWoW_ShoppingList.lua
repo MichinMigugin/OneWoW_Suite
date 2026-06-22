@@ -1,12 +1,13 @@
 local ADDON_NAME, ns = ...
 
-OneWoW_ShoppingList = ns
+local OneWoW_GUI = OneWoW_GUI
+
+OneWoW_ShoppingList = {}
+local OneWoW_ShoppingList = OneWoW_ShoppingList
 
 local L = ns.L
 
 ns.oneWoWHubActive = false
-
-local OneWoW_GUI = OneWoW_GUI
 
 local function DetectOneWoW()
     if OneWoW then
@@ -14,23 +15,16 @@ local function DetectOneWoW()
     end
 end
 
-local function ApplyTheme()
-    if OneWoW_GUI then
-        OneWoW_GUI:ApplyTheme(ns)
-    end
-end
-
 local function ApplyLanguage()
     -- Localization lives in the OneWoW Locale service now (scope = ADDON_NAME;
     -- shared vocab in the "shared" scope). SetLanguage refolds every scope in place,
-    -- pushes BINDING_* globals, and fires OnApply; OneWoW_ShoppingList.L is a stable
-    -- view. esMX->esES is normalized inside. Kept as a thin shim for the profile-sync
+    -- pushes BINDING_* globals, and fires OnApply; ns.L is a stable view.
+    -- esMX->esES is normalized inside. Kept as a thin shim for the profile-sync
     -- loop (t-profiles SyncSettingToChildAddons) until Phase 6.
     local lang = OneWoW_GUI:GetSetting("language") or "enUS"
     OneWoW.Locale:SetLanguage(lang)
 end
 
-ns.ApplyTheme = ApplyTheme
 ns.ApplyLanguage = ApplyLanguage
 
 local function InitializeModules()
@@ -63,11 +57,19 @@ local function InitializeModules()
     end
 end
 
+function OneWoW_ShoppingList:ApplyTheme()
+    OneWoW_GUI:ApplyTheme(self)
+end
+
+function OneWoW_ShoppingList:ApplyLanguage()
+    ApplyLanguage()
+end
+
 -- Core-driven login-phase arming. Runs from the module's own PLAYER_LOGIN at
 -- startup, or is driven by the loader (OneWoW:EnsureLoaded) for a mid-session
 -- enable, when PLAYER_LOGIN has already fired and won't reach this module.
 local didLogin = false
-function ns:OnPlayerLogin()
+function OneWoW_ShoppingList:OnPlayerLogin()
     if didLogin then return end
     didLogin = true
     DetectOneWoW()
@@ -77,8 +79,8 @@ function ns:OnPlayerLogin()
             if ns.MainWindow then ns.MainWindow:Toggle() end
         end)
     end
-    if ns.FireLoginHandlers then
-        ns:FireLoginHandlers()
+    if OneWoW_ShoppingList.FireLoginHandlers then
+        OneWoW_ShoppingList:FireLoginHandlers()
     end
 end
 
@@ -87,13 +89,13 @@ end
 -- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). The
 -- one-shot guard makes the PLAYER_LOGIN safety net below a no-op when already run.
 local didInit = false
-function ns:OnAddonLoaded()
+function OneWoW_ShoppingList:OnAddonLoaded()
     if didInit then return end
     didInit = true
-    OneWoW.Lifecycle:CreateHandlerRegistry(ns)
+    OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_ShoppingList)
     ns:InitializeDatabase()
 
-    local g = OneWoW_ShoppingList_DB.global
+    local g = ns.db.global
     local s = g.settings
     OneWoW_GUI:MigrateSettings({
         theme    = s.theme,
@@ -101,11 +103,11 @@ function ns:OnAddonLoaded()
         minimap  = g.minimap,
     })
 
-    ApplyTheme()
+    OneWoW_ShoppingList:ApplyTheme()
     ApplyLanguage()
 
-    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", ns, function()
-        ApplyTheme()
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_ShoppingList, function(myself)
+        myself:ApplyTheme()
         if ns.MainWindow and ns.MainWindow.Rebuild then
             local wasShown = ns.MainWindow:IsShown()
             ns.MainWindow:Rebuild()
@@ -117,7 +119,7 @@ function ns:OnAddonLoaded()
         end
     end)
 
-    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", ns, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoW_ShoppingList, function()
         if ns.MainWindow then
             local wasShown = ns.MainWindow:IsShown()
             ns.MainWindow:Rebuild()
@@ -129,7 +131,7 @@ function ns:OnAddonLoaded()
         end
     end)
 
-    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", ns, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", OneWoW_ShoppingList, function()
         if ns.MainWindow then
             local wasShown = ns.MainWindow:IsShown()
             ns.MainWindow:Rebuild()
@@ -141,7 +143,7 @@ function ns:OnAddonLoaded()
         end
     end)
 
-    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", ns, function(_, langCode)
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoW_ShoppingList, function(_, langCode)
         OneWoW.Locale:SetLanguage(langCode)
         if ns.MainWindow then
             local wasShown = ns.MainWindow:IsShown()

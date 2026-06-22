@@ -1,7 +1,6 @@
 local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-
 local DB = OneWoW_GUI.DB
 
 local MAIN_LIST_KEY = "Main List"
@@ -56,6 +55,6 @@ function ns:InitializeDatabase()
         savedVar  = "OneWoW_ShoppingList_DB",
         defaults  = defaults,
     })
-    self.db = db
+    ns.db = db
     EnsureMainList(db)
 end

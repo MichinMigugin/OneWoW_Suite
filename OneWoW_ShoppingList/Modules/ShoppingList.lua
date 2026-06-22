@@ -28,7 +28,7 @@ local function ScheduleRefresh()
 end
 
 local function GetDB()
-    return OneWoW_ShoppingList_DB
+    return ns.db
 end
 
 function ShoppingList:Initialize()

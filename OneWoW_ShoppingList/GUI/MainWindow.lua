@@ -45,7 +45,7 @@ local contentHeaderFrame
 local addButtonRowFrame
 
 local function GetDB()
-    return OneWoW_ShoppingList_DB
+    return ns.db
 end
 
 local function GetSettings()
@@ -639,7 +639,7 @@ function MainWindow:BuildSettingsPanel()
 
     AddStatusRow(L["OWSL_SETTINGS_ALT_ACCESS"],    ns.DataAccess:HasAltData(), yOff); yOff = yOff - 20
     AddStatusRow(L["OWSL_SETTINGS_WARBAND_ACCESS"], ns.DataAccess:HasAltData(), yOff); yOff = yOff - 20
-    AddStatusRow(L["OWSL_SETTINGS_RECIPE_DATA"],    OneWoW_CatalogData_Tradeskills ~= nil, yOff); yOff = yOff - 24
+    AddStatusRow(L["OWSL_SETTINGS_RECIPE_DATA"],    OneWoW_CatalogData_Tradeskills_API ~= nil, yOff); yOff = yOff - 24
 
     AddSectionHeader(L["OWSL_SETTINGS_KEYBINDS"], yOff)
     yOff = yOff - 22
