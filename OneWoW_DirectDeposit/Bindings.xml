@@ -1,27 +1,17 @@
 <Bindings>
     <Binding name="ONEWOW_DIRECTDEPOSIT_TOGGLE" category="BINDING_HEADER_ONEWOW_DIRECTDEPOSIT">
-        if OneWoW_DirectDeposit and OneWoW_DirectDeposit.GUI then
-            OneWoW_DirectDeposit.GUI:Toggle()
-        end
+        OneWoW_DirectDeposit_API.Toggle()
     </Binding>
     <Binding name="ONEWOW_DIRECTDEPOSIT_DEPOSIT" category="BINDING_HEADER_ONEWOW_DIRECTDEPOSIT">
-        if OneWoW_DirectDeposit and OneWoW_DirectDeposit.DirectDeposit then
-            OneWoW_DirectDeposit.DirectDeposit:ManualDeposit()
-        end
+        OneWoW_DirectDeposit_API.ManualDeposit()
     </Binding>
     <Binding name="ONEWOW_DIRECTDEPOSIT_ADD_PERSONAL" category="BINDING_HEADER_ONEWOW_DIRECTDEPOSIT">
-        if OneWoW_DirectDeposit then
-            OneWoW_DirectDeposit:AddHoveredItemToList("personal")
-        end
+        OneWoW_DirectDeposit_API.AddHoveredItemToList("personal")
     </Binding>
     <Binding name="ONEWOW_DIRECTDEPOSIT_ADD_WARBAND" category="BINDING_HEADER_ONEWOW_DIRECTDEPOSIT">
-        if OneWoW_DirectDeposit then
-            OneWoW_DirectDeposit:AddHoveredItemToList("warband")
-        end
+        OneWoW_DirectDeposit_API.AddHoveredItemToList("warband")
     </Binding>
     <Binding name="ONEWOW_DIRECTDEPOSIT_ADD_GUILD" category="BINDING_HEADER_ONEWOW_DIRECTDEPOSIT">
-        if OneWoW_DirectDeposit then
-            OneWoW_DirectDeposit:AddHoveredItemToList("guild")
-        end
+        OneWoW_DirectDeposit_API.AddHoveredItemToList("guild")
     </Binding>
 </Bindings>

@@ -1,10 +1,11 @@
-local _, OneWoW_DirectDeposit = ...
+local _, ns = ...
 
-local L = OneWoW_DirectDeposit.L
 local PE = OneWoW.PredicateEngine
 
-OneWoW_DirectDeposit.DirectDeposit = {}
-local DirectDeposit = OneWoW_DirectDeposit.DirectDeposit
+local L = ns.L
+
+ns.DirectDeposit = {}
+local DirectDeposit = ns.DirectDeposit
 
 DirectDeposit.guildBankOpen = false
 DirectDeposit.currentOpenBankType = nil
@@ -17,6 +18,10 @@ DirectDeposit.depositedItems = {}
 DirectDeposit.failedItems = {}
 DirectDeposit.depositTimers = {}
 DirectDeposit.progressCallback = nil
+
+local function GetDB()
+    return ns.db
+end
 
 function DirectDeposit:Initialize()
     self:RegisterEvents()
@@ -71,18 +76,18 @@ function DirectDeposit:RegisterEvents()
 end
 
 function DirectDeposit:IsEnabled()
-    return OneWoW_DirectDeposit.db.global.directDeposit.enabled == true
+    return GetDB().global.directDeposit.enabled == true
 end
 
 function DirectDeposit:GetCharacterSettings()
-    return OneWoW_DirectDeposit.db.char.directDeposit
+    return GetDB().char.directDeposit
 end
 
 function DirectDeposit:GetActiveSettings()
     local charSettings = self:GetCharacterSettings()
 
     if charSettings.useAccountSettings then
-        return OneWoW_DirectDeposit.db.global.directDeposit
+        return GetDB().global.directDeposit
     else
         return charSettings
     end
@@ -153,7 +158,7 @@ end
 --- Returns the warband-exclude item-ID list (keyed by tostring(itemID)).
 ---@return table
 function DirectDeposit:GetWarboundExcludeList()
-    return OneWoW_DirectDeposit.db.global.directDeposit.warboundExcludeList
+    return GetDB().global.directDeposit.warboundExcludeList
 end
 
 --- Adds an item to the warband-exclude list so the sweep never deposits it.
@@ -165,7 +170,7 @@ function DirectDeposit:AddWarboundExclude(itemID)
         return false, "Invalid item ID"
     end
 
-    local excludeList = OneWoW_DirectDeposit.db.global.directDeposit.warboundExcludeList
+    local excludeList = GetDB().global.directDeposit.warboundExcludeList
     if excludeList[tostring(itemID)] then
         return false, "Item already excluded"
     end
@@ -190,7 +195,7 @@ end
 function DirectDeposit:RemoveWarboundExclude(itemID)
     if not itemID then return false end
 
-    local excludeList = OneWoW_DirectDeposit.db.global.directDeposit.warboundExcludeList
+    local excludeList = GetDB().global.directDeposit.warboundExcludeList
     local key = tostring(itemID)
     if excludeList[key] then
         excludeList[key] = nil
@@ -201,7 +206,7 @@ function DirectDeposit:RemoveWarboundExclude(itemID)
 end
 
 function DirectDeposit:SweepWarboundItems()
-    local dd = OneWoW_DirectDeposit.db.global.directDeposit
+    local dd = GetDB().global.directDeposit
     if not dd.warboundAutoDeposit then
         return
     end
@@ -315,7 +320,7 @@ function DirectDeposit:NormalizeGold()
 end
 
 function DirectDeposit:DepositItemsToBank(manualTrigger)
-    if not manualTrigger and not OneWoW_DirectDeposit.db.global.directDeposit.itemDepositEnabled then
+    if not manualTrigger and not GetDB().global.directDeposit.itemDepositEnabled then
         return
     end
 
@@ -324,7 +329,7 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
         return
     end
 
-    local itemList = OneWoW_DirectDeposit.db.global.directDeposit.itemList
+    local itemList = GetDB().global.directDeposit.itemList
 
     if not next(itemList) then
         if manualTrigger then
@@ -661,7 +666,7 @@ function DirectDeposit:AddItemToList(itemID, bankType)
         return false, "Invalid item ID or bank type"
     end
 
-    local itemList = OneWoW_DirectDeposit.db.global.directDeposit.itemList
+    local itemList = GetDB().global.directDeposit.itemList
 
     if itemList[tostring(itemID)] then
         return false, "Item already in list"
@@ -682,7 +687,7 @@ function DirectDeposit:AddItemToList(itemID, bankType)
         addedTime = time()
     }
 
-    OneWoW_DirectDeposit.db.global.directDeposit.itemList = itemList
+    GetDB().global.directDeposit.itemList = itemList
 
     return true, "Item added successfully"
 end
@@ -695,7 +700,7 @@ function DirectDeposit:RemoveItemFromList(itemID)
 
     local itemIDStr = tostring(itemID)
 
-    local itemList = OneWoW_DirectDeposit.db.global.directDeposit.itemList
+    local itemList = GetDB().global.directDeposit.itemList
 
     if itemList[itemIDStr] then
         itemList[itemIDStr] = nil
@@ -711,12 +716,12 @@ function DirectDeposit:RemoveItemFromList(itemID)
 end
 
 function DirectDeposit:GetItemList()
-    return OneWoW_DirectDeposit.db.global.directDeposit.itemList
+    return GetDB().global.directDeposit.itemList
 end
 
-function OneWoW_DirectDeposit:GetAvailableItemIDs()
+function DirectDeposit:GetAvailableItemIDs()
     local ids = {}
-    local itemList = self.DirectDeposit:GetItemList()
+    local itemList = self:GetItemList()
     for itemID, _ in pairs(itemList) do
         table.insert(ids, itemID)
     end
@@ -728,11 +733,11 @@ function DirectDeposit:UpdateItemBankType(itemID, newBankType)
         return false
     end
 
-    local itemList = OneWoW_DirectDeposit.db.global.directDeposit.itemList
+    local itemList = GetDB().global.directDeposit.itemList
 
     if itemList[tostring(itemID)] then
         itemList[tostring(itemID)].bankType = newBankType
-        OneWoW_DirectDeposit.db.global.directDeposit.itemList = itemList
+        GetDB().global.directDeposit.itemList = itemList
         return true
     end
 

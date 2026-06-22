@@ -1,7 +1,6 @@
-local ADDON_NAME, OneWoW_DirectDeposit = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-
 local DB = OneWoW_GUI.DB
 
 local defaults = {
@@ -39,7 +38,7 @@ local defaults = {
     },
 }
 
-function OneWoW_DirectDeposit:InitializeDatabase()
+function ns:InitializeDatabase()
     local sv = OneWoW_DirectDeposit_DB
     if sv and not sv.global and next(sv) ~= nil then
         local oldData = {}
@@ -55,7 +54,7 @@ function OneWoW_DirectDeposit:InitializeDatabase()
         savedVar  = "OneWoW_DirectDeposit_DB",
         defaults  = defaults,
     })
-    self.db = db
+    ns.db = db
 
     local legacy = OneWoW_DirectDeposit_CharDB
     if legacy and not db.char._charDBMigrated then

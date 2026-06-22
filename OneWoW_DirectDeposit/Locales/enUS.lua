@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW_DirectDeposit = ...
+local ADDON_NAME, ns = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
@@ -91,4 +91,4 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["BINDING_NAME_ONEWOW_DIRECTDEPOSIT_ADD_GUILD"] = "Quick Add: Guild Bank",
 })
 
-OneWoW_DirectDeposit.L = OneWoW.Locale:GetTable(ADDON_NAME)
+ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

@@ -848,8 +848,8 @@ OneWoW.SearchData = {
         addonKey = "OneWoW_DirectDeposit", addonLabel = "DirectDeposit",
         navType = "external",
         navFunc = function()
-            if OneWoW_DirectDeposit and OneWoW_DirectDeposit.GUI then
-                OneWoW_DirectDeposit.GUI:Toggle()
+            if OneWoW_DirectDeposit_API then
+                OneWoW_DirectDeposit_API.Toggle()
             end
         end,
         keywords = {"deposit", "direct deposit", "directdeposit", "bank deposit", "item deposit", "deposit items"},
@@ -860,8 +860,8 @@ OneWoW.SearchData = {
         addonKey = "OneWoW_DirectDeposit", addonLabel = "DirectDeposit",
         navType = "external",
         navFunc = function()
-            if OneWoW_DirectDeposit and OneWoW_DirectDeposit.GUI then
-                OneWoW_DirectDeposit.GUI:Toggle()
+            if OneWoW_DirectDeposit_API then
+                OneWoW_DirectDeposit_API.Toggle()
             end
         end,
         keywords = {"item deposit", "send to bank", "deposit bag", "bank items", "move to bank"},
@@ -872,8 +872,8 @@ OneWoW.SearchData = {
         addonKey = "OneWoW_DirectDeposit", addonLabel = "DirectDeposit",
         navType = "external",
         navFunc = function()
-            if OneWoW_DirectDeposit and OneWoW_DirectDeposit.GUI then
-                OneWoW_DirectDeposit.GUI:Toggle()
+            if OneWoW_DirectDeposit_API then
+                OneWoW_DirectDeposit_API.Toggle()
             end
         end,
         keywords = {"directdeposit settings", "deposit settings", "deposit options"},

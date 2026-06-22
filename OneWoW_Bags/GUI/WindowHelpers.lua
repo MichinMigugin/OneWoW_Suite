@@ -54,7 +54,7 @@ local function GetSuiteTitleBarFeatureConfigs(L)
             tooltipTitle = L["DIRECT_DEPOSIT"],
             tooltipDesc = L["DIRECT_DEPOSIT_DESC"],
             onReady = function()
-                OneWoW_DirectDeposit.GUI:Toggle()
+                OneWoW_DirectDeposit_API.Toggle()
             end,
         },
     }
