@@ -6,7 +6,9 @@
 
 `OneWoW_Trackers` is a `LoadOnDemand` feature module for customizable tracker lists (guides, dailies/weeklies, todos, farm value). It registers a hub tab, provides standalone UI fallback, and owns list/step data plus an event-driven auto-completion engine.
 
-**SavedVariables:** `OneWoW_Trackers_DB` (global), `OneWoW_Trackers_CharDB` (per character).
+**SavedVariables:** `OneWoW_Trackers_DB` (global), `OneWoW_Trackers_CharDB` (per character). Internal reads use `ns.db` after `DB:Init` in `Core/Database.lua`.
+
+**Public cross-unit surface:** `OneWoW_Trackers_API` in `Core/API.lua` (UI Toggle/Show/Hide, weekly-reset region picker for QoL settings). Lifecycle colon hooks live on `OneWoW_Trackers = {}` only (`OneWoW_Trackers.lua`).
 
 **RequiredDeps:** `OneWoW`. **OptionalDeps:** `TradeSkillMaster`, `Auctionator` (farm value pricing).
 
@@ -15,13 +17,13 @@
 ## File Tree & Load Order
 
 ```
-OneWoW_Trackers.lua          — entry, lifecycle hooks, hub registration
+OneWoW_Trackers.lua          — thin lifecycle root, hub registration
 Core/Database.lua            — schema, migrations (incl. legacy Notes split)
+Core/API.lua                 — OneWoW_Trackers_API (cross-unit surface)
 Core/TrackerData.lua         — list/section/step model, import/export
 Core/TrackerEngine.lua       — event engine, auto-complete, pinned lifecycle
 Core/TrackerPresets.lua      — bundled presets and examples
 Core/TrackerMap.lua          — world-map pin provider
-Core/TrackerMigration.lua    — legacy guide migration
 Core/Constants.lua           — GUI constants
 UI/MainFrame.lua             — standalone shell
 UI/t-tracker.lua             — hub tab (browser + detail)
@@ -34,7 +36,7 @@ UI/Framework.lua             — shared UI helpers
 
 ## Lifecycle
 
-1. **`OnAddonLoaded`** — init DB, register slash commands
+1. **`OnAddonLoaded`** — init DB (`ns.db`), register slash commands
 2. **`OnPlayerLogin`** — hub tab registration, engine init, presets, map UI wiring
 3. **`OnPlayerEnteringWorld`** — engine rescan after zone/login transitions
 
@@ -49,5 +51,6 @@ Follows suite orchestrator hooks (no per-file `ADDON_LOADED` init) — see [ARCH
 ## Integration Points
 
 - **OneWoW hub** — `ModuleRegistry` tab `"trackers"`; minimap open path
+- **OneWoW_QoL** — weekly reset region picker via `OneWoW_Trackers_API`
 - **Map** — `TrackerMap` pins coordinate steps for pinned lists
 - **Pricing** — AH via OneWoW/Auctionator; TSM when present

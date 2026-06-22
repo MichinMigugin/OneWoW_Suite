@@ -237,9 +237,8 @@ function ns.UI.CreateSettingsTab(parent)
     -- Weekly reset region picker. Hosted here, but owned by OneWoW_Trackers,
     -- which exposes the data + strings through its public API. Only shown when
     -- Trackers is loaded (it is the sole consumer of the setting).
-    local trackers = OneWoW_Trackers
-    if trackers and trackers.GetWeeklyResetRegionOptions then
-        local resetTitle, resetDescText, resetCurrentFmt = trackers:GetWeeklyResetUIText()
+    if OneWoW_Trackers_API and OneWoW_Trackers_API.GetWeeklyResetRegionOptions then
+        local resetTitle, resetDescText, resetCurrentFmt = OneWoW_Trackers_API.GetWeeklyResetUIText()
 
         local resetHeader = CreateSectionHeader(scrollChild, resetTitle, 0)
         StackBelow(resetHeader, 20)
@@ -262,30 +261,30 @@ function ns.UI.CreateSettingsTab(parent)
         local dropdown = OneWoW_GUI:CreateDropdown(resetRow, {
             width = 240,
             height = 28,
-            text = trackers:GetWeeklyResetRegionLabel(),
+            text = OneWoW_Trackers_API.GetWeeklyResetRegionLabel(),
         })
         dropdown:SetPoint("LEFT", resetRow, "LEFT", 0, 0)
 
         local currentLabel = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         currentLabel:SetPoint("LEFT", dropdown, "RIGHT", 12, 0)
-        currentLabel:SetText(resetCurrentFmt:format(trackers:GetWeeklyResetRegionLabel()))
+        currentLabel:SetText(resetCurrentFmt:format(OneWoW_Trackers_API.GetWeeklyResetRegionLabel()))
         currentLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
         OneWoW_GUI:AttachFilterMenu(dropdown, {
             searchable = false,
             buildItems = function()
                 local items = {}
-                for _, opt in ipairs(trackers:GetWeeklyResetRegionOptions()) do
+                for _, opt in ipairs(OneWoW_Trackers_API.GetWeeklyResetRegionOptions()) do
                     items[#items + 1] = { text = opt.label, value = opt.value }
                 end
                 return items
             end,
             onSelect = function(value, text)
-                trackers:SetWeeklyResetRegion(value)
+                OneWoW_Trackers_API.SetWeeklyResetRegion(value)
                 dropdown._text:SetText(text)
                 currentLabel:SetText(resetCurrentFmt:format(text))
             end,
-            getActiveValue = function() return trackers:GetWeeklyResetRegion() end,
+            getActiveValue = function() return OneWoW_Trackers_API.GetWeeklyResetRegion() end,
         })
     end
 

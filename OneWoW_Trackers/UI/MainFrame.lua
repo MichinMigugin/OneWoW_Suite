@@ -11,7 +11,7 @@ local UI = ns.UI
 local mainFrame
 
 local function GetDB()
-    return OneWoW_Trackers.db
+    return ns.db
 end
 
 local function SavePosition()

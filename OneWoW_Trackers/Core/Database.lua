@@ -1,7 +1,6 @@
 local addonName, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-
 local DB = OneWoW_GUI.DB
 
 local CHAT_PREFIX = "|cFFFFD100OneWoW Trackers:|r"
@@ -172,7 +171,7 @@ function ns:InitializeDatabase()
         savedVar  = "OneWoW_Trackers_DB",
         defaults  = defaults,
     })
-    self.db = db
+    ns.db = db
 
     local legacyChar = OneWoW_Trackers_CharDB
     if type(legacyChar) == "table" and not db.char._charDBDrained then

@@ -35,7 +35,7 @@ local function SyncSettingToChildAddons(settingType, _)
     local integratedAddons = {
         "OneWoW_AltTracker", "OneWoW_Notes", "OneWoW_QoL",
         "OneWoW_Catalog", "OneWoW_DirectDeposit",
-        "OneWoW_ShoppingList", "OneWoW_Utility_DevTool",
+        "OneWoW_ShoppingList", "OneWoW_Trackers", "OneWoW_Utility_DevTool",
     }
     -- Themes are applied per child addon (each owns its theme). Language is NOT looped
     -- here: it lives in one central scope-folded view, so the caller applies it once via

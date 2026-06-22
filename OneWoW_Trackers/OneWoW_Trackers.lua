@@ -1,22 +1,14 @@
-local addonName, ns = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-
 local DB = OneWoW_GUI.DB
 
--- We use _G[""] form since _G.OneWoW_Trackers would get caught in pre-commit hook.
-_G["OneWoW_Trackers"] = ns
+OneWoW_Trackers = {}
+local OneWoW_Trackers = OneWoW_Trackers
 
 ns.oneWoWHubActive = false
 ns.mode = "standalone"
 ns.UI = ns.UI or {}
-
-local function ApplyTheme()
-    OneWoW_GUI:ApplyTheme(ns)
-    if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
-        ns.TrackerEngine:RefreshAllPinnedWindows()
-    end
-end
 
 local function ApplyLanguage()
     -- Localization lives in the OneWoW Locale service now (scope = ADDON_NAME).
@@ -26,13 +18,24 @@ local function ApplyLanguage()
     OneWoW.Locale:SetLanguage(lang)
 end
 
+function OneWoW_Trackers:ApplyTheme()
+    OneWoW_GUI:ApplyTheme(ns)
+    if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
+        ns.TrackerEngine:RefreshAllPinnedWindows()
+    end
+end
+
+function OneWoW_Trackers:ApplyLanguage()
+    ApplyLanguage()
+end
+
 local function RegisterAsOneWoWModule()
     if not OneWoW or not OneWoW.RegisterModule then return false end
 
     OneWoW:RegisterModule({
         name        = "trackers",
         displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
-        addonName   = "OneWoW_Trackers",
+        addonName   = ADDON_NAME,
         order       = OneWoW:GetModuleTabOrder("trackers"),
         tabs = {
             {
@@ -53,7 +56,7 @@ local function OnInitialize()
 
     OneWoW_GUI:MigrateSettings(ns.db.global)
 
-    ApplyTheme()
+    OneWoW_Trackers:ApplyTheme()
     ApplyLanguage()
 
     local function slashHandler(msg) ns:SlashCommandHandler(msg) end
@@ -61,25 +64,25 @@ local function OnInitialize()
     DB:RegisterSlashCommand("owt",     slashHandler)
     DB:RegisterSlashCommand("tracker", slashHandler)
 
-    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", ns, function()
-        ApplyTheme()
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_Trackers, function(myself)
+        myself:ApplyTheme()
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", ns, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoW_Trackers, function()
         ApplyLanguage()
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", ns, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoW_Trackers, function()
         if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
             ns.TrackerEngine:RefreshAllPinnedWindows()
         end
         if ns.UI and ns.UI.RefreshTab then ns.UI.RefreshTab() end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", ns, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", OneWoW_Trackers, function()
         if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
             ns.TrackerEngine:RefreshAllPinnedWindows()
         end
         if ns.UI and ns.UI.RefreshTab then ns.UI.RefreshTab() end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnMoneyDisplayChanged", ns, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnMoneyDisplayChanged", OneWoW_Trackers, function()
         if ns.TrackerEngine and ns.TrackerEngine.RefreshAllPinnedWindows then
             ns.TrackerEngine:RefreshAllPinnedWindows()
         end
@@ -88,7 +91,7 @@ local function OnInitialize()
         end
     end)
 
-    local _ver = OneWoW:GetAddonVersion(addonName)
+    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("Trackers", _ver, "/1wt")
     end
@@ -160,10 +163,10 @@ end
 -- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). The
 -- one-shot guard makes the PLAYER_LOGIN safety net below a no-op when already run.
 local didInit = false
-function ns:OnAddonLoaded()
+function OneWoW_Trackers:OnAddonLoaded()
     if didInit then return end
     didInit = true
-    OneWoW.Lifecycle:CreateHandlerRegistry(ns)
+    OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_Trackers)
     OnInitialize()
 end
 
@@ -171,22 +174,22 @@ end
 -- startup, or is driven by the loader (OneWoW:EnsureLoaded) for a mid-session
 -- enable, when PLAYER_LOGIN has already fired and won't reach this module.
 local didLogin = false
-function ns:OnPlayerLogin()
+function OneWoW_Trackers:OnPlayerLogin()
     if didLogin then return end
     didLogin = true
     OnEnable()
-    ns:RegisterEnteringWorldHandler("tracker_engine", function()
+    OneWoW_Trackers:RegisterEnteringWorldHandler("tracker_engine", function()
         if ns.TrackerEngine and ns.TrackerEngine.OnPlayerEnteringWorld then
             ns.TrackerEngine:OnPlayerEnteringWorld()
         end
     end)
-    if ns.FireLoginHandlers then
-        ns:FireLoginHandlers()
+    if OneWoW_Trackers.FireLoginHandlers then
+        OneWoW_Trackers:FireLoginHandlers()
     end
 end
 
-function ns:OnPlayerEnteringWorld(isLogin, isReload, isZoning)
-    if ns.FireEnteringWorldHandlers then
-        ns:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
+function OneWoW_Trackers:OnPlayerEnteringWorld(isLogin, isReload, isZoning)
+    if OneWoW_Trackers.FireEnteringWorldHandlers then
+        OneWoW_Trackers:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
     end
 end

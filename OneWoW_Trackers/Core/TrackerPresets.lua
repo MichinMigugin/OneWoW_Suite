@@ -476,7 +476,7 @@ function TP:LoadBundledContent()
     local TD = ns.TrackerData
     if not TD then return end
 
-    local db = OneWoW_Trackers.db
+    local db = ns.db
     local versions = db.global.trackerBundledVersions
     local deleted = db.global.trackerBundledDeleted
 
@@ -513,11 +513,11 @@ function TP:LoadBundledContent()
 end
 
 function TP:OnBundledDeleted(bundledID)
-    OneWoW_Trackers.db.global.trackerBundledDeleted[bundledID] = true
+    ns.db.global.trackerBundledDeleted[bundledID] = true
 end
 
 function TP:RestoreBundledContent()
-    local db = OneWoW_Trackers.db
+    local db = ns.db
     db.global.trackerBundledVersions = {}
     db.global.trackerBundledDeleted = {}
     self:LoadBundledContent()

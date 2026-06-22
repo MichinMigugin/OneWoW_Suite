@@ -108,7 +108,7 @@ local function GenerateKey(prefix)
 end
 
 local function GetDB()
-    return OneWoW_Trackers.db
+    return ns.db
 end
 
 function TD:GetListsDB()
@@ -768,10 +768,9 @@ end
 -- Weekly reset region — public API
 -- ============================================================================
 -- The weekly-reset-day picker UI is hosted by another addon (OneWoW_QoL's
--- settings tab), so the region concept is exposed here through deliberate
--- accessors on the global OneWoW_Trackers table (ns) rather than letting the
--- UI poke our SavedVariables directly. All user-facing strings stay localized
--- in this addon.
+-- settings tab), so the region concept is exposed through OneWoW_Trackers_API
+-- rather than letting the UI poke our SavedVariables directly. All user-facing
+-- strings stay localized in this addon.
 
 local RESET_REGION_ORDER = { "auto", "us", "eu", "asia" }
 local RESET_REGION_LABEL_KEY = {
@@ -783,21 +782,21 @@ local RESET_REGION_LABEL_KEY = {
 
 --- Current weekly reset region key ("auto" | "us" | "eu" | "asia").
 ---@return string
-function ns:GetWeeklyResetRegion()
+function TD:GetWeeklyResetRegion()
     return GetDB().global.weeklyResetRegion or "auto"
 end
 
 --- Localized label for a region key (defaults to the active region).
 ---@param value string|nil
 ---@return string
-function ns:GetWeeklyResetRegionLabel(value)
+function TD:GetWeeklyResetRegionLabel(value)
     local key = RESET_REGION_LABEL_KEY[value or self:GetWeeklyResetRegion()] or "RESET_REGION_AUTO"
     return ns.L[key]
 end
 
 --- Ordered { value, label } list for building a region dropdown.
 ---@return table[]
-function ns:GetWeeklyResetRegionOptions()
+function TD:GetWeeklyResetRegionOptions()
     local out = {}
     for _, value in ipairs(RESET_REGION_ORDER) do
         out[#out + 1] = { value = value, label = ns.L[RESET_REGION_LABEL_KEY[value]] or value }
@@ -807,7 +806,7 @@ end
 
 --- Localized title/description/current-format strings for the region picker UI.
 ---@return string title, string desc, string currentFmt
-function ns:GetWeeklyResetUIText()
+function TD:GetWeeklyResetUIText()
     return ns.L["SETTINGS_RESET_TITLE"],
         ns.L["SETTINGS_RESET_DESC"],
         ns.L["CURRENT_VALUE"]
@@ -815,7 +814,7 @@ end
 
 --- Set the weekly reset region and immediately reconcile any pending resets.
 ---@param value string
-function ns:SetWeeklyResetRegion(value)
+function TD:SetWeeklyResetRegion(value)
     if not RESET_REGION_LABEL_KEY[value] then value = "auto" end
     GetDB().global.weeklyResetRegion = value
     TD:CheckResets()
