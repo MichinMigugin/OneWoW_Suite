@@ -185,7 +185,9 @@ inside `OneWoW:BootStore`** for data stores (pass `addonName` in the config) —
 documented stop-gap headed for a core unit registry (see `OneWoW/Docs/MIGRATION.md`
 §2). **Hub modules** use a thin `OneWoW_<Unit> = {}` lifecycle object instead.
 **Never hand-publish** `OneWoW_<Unit> = ns` or `_G[...] = ns` — expose
-`OneWoW_<Unit>_API` for cross-unit contracts.
+`OneWoW_<Unit>_API` for cross-unit contracts. Publish `_API` from
+**`Core/API.lua`** (hub and store units); root lua does not define `_API` — stores
+use a comment stub only (`OneWoW_AltTracker_Storage` TOC is the reference).
 
 ```lua
 -- Good: curated, greppable, guard-friendly

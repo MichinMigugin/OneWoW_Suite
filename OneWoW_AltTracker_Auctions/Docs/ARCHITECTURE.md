@@ -251,12 +251,13 @@ Each module is self-contained with:
 ```
 OneWoW_AltTracker_Auctions/
 ├── OneWoW_AltTracker_Auctions.toc
-├── OneWoW_AltTracker_Auctions.lua (Addon initialization)
+├── OneWoW_AltTracker_Auctions.lua (no public globals; API lives in Core/API.lua)
 ├── README.md (This file)
 ├── Locales/
 │   └── enUS.lua
 ├── Core/
 │   ├── Database.lua (Database initialization, character management)
+│   ├── API.lua (Public API — global OneWoW_AltTracker_Auctions_API)
 │   └── Core.lua (Addon initialization, event setup)
 └── Modules/
     ├── ActiveAuctions.lua (Auction data collection)

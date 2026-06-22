@@ -609,7 +609,11 @@ OneWoW:BootStore(ns, {
 })
 ```
 
-- `_API` in the unit's root lua or `Core/API.lua`.
+- **`Core/API.lua`** publishes `OneWoW_<Unit>_API` (preferred). Root lua is a
+  comment stub for stores; see `OneWoW_AltTracker_Storage` as the canonical
+  store layout.
+- **TOC load order (stores):** `Core/Database.lua` → `Core/API.lua` →
+  `Core/Core.lua` (BootStore) → modules → `DataManager.lua` → root stub.
 - BootStore's `_G[addonName] = ns` is the **store-only** lifecycle stop-gap — not
   a pattern for hub modules.
 

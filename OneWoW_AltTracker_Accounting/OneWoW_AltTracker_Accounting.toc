@@ -21,6 +21,7 @@ Locales\enUS.lua
 
 # Core
 Core\Database.lua
+Core\API.lua
 Core\Core.lua
 
 # Data Collection Modules

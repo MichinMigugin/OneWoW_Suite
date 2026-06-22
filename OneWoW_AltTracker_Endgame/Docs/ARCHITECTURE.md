@@ -375,10 +375,9 @@ end
 
 ```
 OneWoW_AltTracker_Endgame/
-├── API/
-│   └── EndgameAPI.lua          # Global API interface
 ├── Core/
 │   ├── Database.lua            # Database initialization and access
+│   ├── API.lua                 # Public API (global OneWoW_AltTracker_Endgame_API)
 │   └── Core.lua                # Addon initialization and event handling
 ├── Locales/
 │   └── enUS.lua                # English localization
@@ -388,7 +387,7 @@ OneWoW_AltTracker_Endgame/
 │   ├── GreatVault.lua          # Great Vault progress tracking
 │   ├── PVP.lua                 # PVP rating and currency tracking
 │   └── DataManager.lua         # Central orchestrator
-├── OneWoW_AltTracker_Endgame.lua    # Main addon file
+├── OneWoW_AltTracker_Endgame.lua    # Main addon file (no public globals; API lives in Core/API.lua)
 ├── OneWoW_AltTracker_Endgame.toc    # TOC file
 └── README.md                   # This file
 ```
