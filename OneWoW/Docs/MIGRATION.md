@@ -80,13 +80,8 @@ until the inventory is drained).
 | `OneWoW_AltTracker` | `ns` | `OneWoW_AltTracker = {}` + `OneWoW_AltTracker_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API`, no `ns.OneWoWAltTracker` |
 | AltTracker_* stores (8) | `ns` | BootStore + `_API` in `Core/API.lua` | StoreBootstrap publish only | **done** — reference store layout (`OneWoW_AltTracker_Storage`) |
 | `OneWoW_QoL` | `ns` | `OneWoW_QoL = {}` | scattered `OneWoW_QoL.db` in UI/modules | Thin root; small `.db` sweep |
-| CatalogData_* stores (4) | `ns` | BootStore + `_API` | StoreBootstrap publish only | Reference shape |
-
-**Tier B — thin lifecycle root, namespace mostly private**
-
-| Load unit | Vararg today | Global publish today | Hook / debt | Notes |
-|-----------|--------------|----------------------|-------------|-------|
-| `OneWoW_Catalog` | `ns` | `OneWoW_Catalog = addon` | `ns.addon`, `OneWoW_Catalog.db` | Drop `addon` hop; `_API` for ItemDataLoader |
+| `OneWoW_Catalog` | `ns` | `OneWoW_Catalog = {}` + `OneWoW_Catalog_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API` in `Core/API.lua` |
+| CatalogData_* stores (4) | `ns` | BootStore + `_API` in `Core/API.lua` | StoreBootstrap publish only | **done** — reference store layout |
 
 **Tier C — namespace published as global**
 
@@ -113,7 +108,7 @@ until the inventory is drained).
 ### Recommended migration order
 
 1. **AltTracker family** — **complete** (hub: `ns.db`, `OneWoW_AltTracker_API`, lifecycle root colon-hooks-only; all 8 stores: `_API` in `Core/API.lua`, root lua comment stub). BootStore stop-gap remains §2.
-2. **Catalog** — drop `ns.addon` hop; move colon helpers to `OneWoW_Catalog_API`; `ns.db`.
+2. **Catalog family** — **complete** (hub: `ns.db`, `OneWoW_Catalog_API` in `Core/API.lua`, thin lifecycle root; all 4 CatalogData stores: `_API` in `Core/API.lua`). BootStore stop-gap remains §2.
 3. **QoL** — thin root is done; sweep `OneWoW_QoL.db` → `ns.db` in UI/modules.
 4. **ShoppingList, Trackers, DirectDeposit** — stop `= ns` / renamed-vararg publish; thin lifecycle root + `ns.db`.
 5. **Notes** — migrate children off `OneWoW_Notes.db`; then remove root `_G` publish.
@@ -144,12 +139,20 @@ modules → root stub — see `OneWoW_AltTracker_Storage`.
 | `OneWoW_AltTracker_Professions` | `Core/API.lua` | done |
 | `OneWoW_AltTracker_Auctions` | `Core/API.lua` | done |
 
-**Backlog (file placement only; global surface already correct)**
+**Catalog + CatalogData status**
+
+| Unit | API location | Status |
+|------|--------------|--------|
+| `OneWoW_Catalog` | `Core/API.lua` | done |
+| `OneWoW_CatalogData_Quests` | `Core/API.lua` | done |
+| `OneWoW_CatalogData_Journal` | `Core/API.lua` | done |
+| `OneWoW_CatalogData_Tradeskills` | `Core/API.lua` | done |
+| `OneWoW_CatalogData_Vendors` | `Core/API.lua` | done |
+
+**Backlog (file placement only)**
 
 | Load unit | API location today | Notes |
 |-----------|-------------------|-------|
-| `CatalogData_*` (4) | root lua (some table-literal `API = { ... }`) | BootStore + `_API` |
-| `OneWoW_Catalog` | `Modules/t-catalog.lua` | move with Catalog migration |
 | `OneWoW_Notes` | mixed in `OneWoW_Notes.lua` | large surface; pair with Notes §3 migration |
 
 ### Run the inventory
@@ -176,10 +179,10 @@ entries** (~327 line-level `[warn]` hits), dominated by:
 | `renamed_core_vararg` | 17 | `local ADDON_NAME, OneWoW = ...` in `OneWoW/**` |
 | `renamed_addon_vararg` | 14 | `local ADDON_NAME, Addon = ...` (DevTool) |
 | `g_assign_*` / `assign_ns` | 4 | namespace published as global |
-| `ns_addon_backref` | 1 | `ns.addon =` (Catalog) |
+| `ns_addon_backref` | 0 | `ns.addon =` (Catalog migrated) |
 
 By load unit (unique `path::pattern` entries): Bags 67, core 29, DevTool 14, QoL 11,
-Notes 11, DirectDeposit 9, Trackers 4, ShoppingList 3, AltTracker 3, Catalog 2.
+Notes 11, DirectDeposit 9, Trackers 4, ShoppingList 3, AltTracker 3, QoL 11.
 
 ### Grandfathered (hook allowlist)
 

@@ -5,15 +5,14 @@ ns.Favorites = Fav
 
 function Fav:IsFavorite(category, id)
     if id == nil then return false end
-    local db = ns.addon.db.global
-    local bucket = db.favorites[category]
+    local bucket = ns.db.global.favorites[category]
     if not bucket then return false end
     return bucket[tostring(id)] == true
 end
 
 function Fav:SetFavorite(category, id, on)
     if id == nil then return end
-    local db = ns.addon.db.global
+    local db = ns.db.global
     db.favorites[category] = db.favorites[category] or {}
     local key = tostring(id)
     if on then
@@ -28,7 +27,7 @@ end
 ---@return number[]
 function Fav:GetFavoriteIDs(category)
     local out = {}
-    local bucket = ns.addon.db.global.favorites[category]
+    local bucket = ns.db.global.favorites[category]
     if bucket then
         for key in pairs(bucket) do
             local id = tonumber(key)

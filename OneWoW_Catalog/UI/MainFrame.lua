@@ -11,7 +11,7 @@ local MainWindow = nil
 
 function ns.UI:Show(tabName)
     if not MainWindow then
-        local savedTab = ns.addon.db.global.lastTab
+        local savedTab = ns.db.global.lastTab
         self:CreateMainFrame(tabName or savedTab or "journal")
     else
         MainWindow:Show()
@@ -39,17 +39,16 @@ function ns.UI:Reset()
 end
 
 function ns.UI:CreateMainFrame(defaultTab)
-    local addon = ns.addon
-    if not addon or not addon.db or not addon.db.global then return nil end
+    if not ns.db or not ns.db.global then return nil end
 
-    local savedSize = addon.db.global.mainFrameSize
+    local savedSize = ns.db.global.mainFrameSize
     local width  = (savedSize and savedSize.width)  or ns.Constants.GUI.WINDOW_WIDTH
     local height = (savedSize and savedSize.height) or ns.Constants.GUI.WINDOW_HEIGHT
 
     local frame = CreateFrame("Frame", "OneWoW_CatalogMainFrame", UIParent, "BackdropTemplate")
     frame:SetSize(width, height)
 
-    local savedPos = addon.db.global.mainFramePosition
+    local savedPos = ns.db.global.mainFramePosition
     if savedPos and savedPos.point then
         frame:SetPoint(savedPos.point, UIParent, savedPos.relativePoint or "CENTER", savedPos.xOfs or 0, savedPos.yOfs or 0)
     else
@@ -71,7 +70,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     frame:SetScript("OnDragStop", function(myself)
         myself:StopMovingOrSizing()
         local point, _, relativePoint, xOfs, yOfs = myself:GetPoint()
-        addon.db.global.mainFramePosition = { point = point, relativePoint = relativePoint, xOfs = xOfs, yOfs = yOfs }
+        ns.db.global.mainFramePosition = { point = point, relativePoint = relativePoint, xOfs = xOfs, yOfs = yOfs }
     end)
 
     local resizeButton = CreateFrame("Button", nil, frame)
@@ -85,7 +84,7 @@ function ns.UI:CreateMainFrame(defaultTab)
     resizeButton:SetScript("OnDragStop", function()
         frame:StopMovingOrSizing()
         local w, h = frame:GetSize()
-        addon.db.global.mainFrameSize = { width = w, height = h }
+        ns.db.global.mainFrameSize = { width = w, height = h }
     end)
 
     local titleBg = OneWoW_GUI:CreateTitleBar(frame, {
@@ -115,7 +114,7 @@ function ns.UI:CreateMainFrame(defaultTab)
 
     local function SelectTab(tabName)
         currentTabName = tabName
-        addon.db.global.lastTab = tabName
+        ns.db.global.lastTab = tabName
         for name, tabFrame in pairs(tabs) do
             if name == tabName then tabFrame:Show() else tabFrame:Hide() end
         end
@@ -220,7 +219,6 @@ function ns.UI:CreateMainFrame(defaultTab)
     frame.tabButtons = tabButtons
     frame.SelectTab  = function(_, tab) SelectTab(tab) end
 
-    MainWindow      = frame
-    addon.mainFrame = frame
+    MainWindow = frame
     return frame
 end

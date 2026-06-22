@@ -544,9 +544,8 @@ local function QueueQuestUIRefresh()
 
         -- RefreshQuestsList is created lazily when the Catalog quest tab is
         -- first opened, so it may legitimately not exist yet.
-        local refresh = OneWoW_Catalog.UI.RefreshQuestsList
-        if refresh then
-            refresh()
+        if OneWoW_Catalog_API then
+            OneWoW_Catalog_API.RefreshQuestsList()
         end
     end)
 end
@@ -567,15 +566,15 @@ end
 -- never touch OneWoW_Catalog_DB directly. Both no-op gracefully when Catalog is
 -- not loaded.
 local function GetCatalogCachedItemName(itemID)
-    if OneWoW_Catalog and OneWoW_Catalog.GetCachedItemName then
-        return OneWoW_Catalog:GetCachedItemName(itemID)
+    if OneWoW_Catalog_API then
+        return OneWoW_Catalog_API.GetCachedItemName(itemID)
     end
     return nil
 end
 
 local function RememberCatalogItemName(itemID, itemName)
-    if OneWoW_Catalog and OneWoW_Catalog.RememberItemName then
-        return OneWoW_Catalog:RememberItemName(itemID, itemName)
+    if OneWoW_Catalog_API then
+        return OneWoW_Catalog_API.RememberItemName(itemID, itemName)
     end
     return false
 end

@@ -69,22 +69,15 @@ local function CatalogHasVendor(npcID)
 end
 
 local function HandleOpenVendorDetails(npcIDNum)
-    local catalog = OneWoW_Catalog
-    if catalog and catalog.UI and catalog.UI.OpenToVendor then
-        catalog.UI.OpenToVendor(npcIDNum)
+    if OneWoW_Catalog_API then
+        OneWoW_Catalog_API.OpenToVendor(npcIDNum)
         return
     end
     if not OneWoW or not OneWoW.UI then return end
-    if catalog then
-        catalog.pendingVendorSelect = tonumber(npcIDNum)
-    end
     OneWoW.UI:Show("catalog")
     C_Timer.After(0.25, function()
-        if OneWoW and OneWoW.UI then
-            OneWoW.UI:SelectSubTab("catalog", "vendors")
-        end
-        if catalog and catalog.UI and catalog.UI.OpenToVendor then
-            catalog.UI.OpenToVendor(npcIDNum)
+        if OneWoW_Catalog_API then
+            OneWoW_Catalog_API.OpenToVendor(npcIDNum)
         end
     end)
 end

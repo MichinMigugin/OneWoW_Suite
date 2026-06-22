@@ -8,7 +8,7 @@ OneWoW:BootStore(ns, {
     savedVar = "OneWoW_CatalogData_Tradeskills_DB",
     withScanCallbacks = true,
     onLogin = function()
-        ns.DataLoader = OneWoW_Catalog:CreateItemDataLoader(ns:GetDB())
+        ns.DataLoader = OneWoW_Catalog_API.CreateItemDataLoader(ns:GetDB())
         ns.DataLoader:Initialize()
 
         if ns.TradeskillData then
@@ -18,9 +18,8 @@ OneWoW:BootStore(ns, {
             ns.TradeskillScanner:Initialize()
         end
 
-        local catalog = OneWoW_Catalog
-        if catalog and catalog.Catalog then
-            catalog.Catalog:RegisterDataAddon("tradeskills", ns)
+        if OneWoW_Catalog_API then
+            OneWoW_Catalog_API.RegisterDataAddon("tradeskills", ns)
         end
     end,
 })

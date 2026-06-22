@@ -47,6 +47,7 @@ Data\Tradeskills_Tailoring.lua
 
 # Core
 Core\Database.lua
+Core\API.lua
 Core\Core.lua
 
 # Modules

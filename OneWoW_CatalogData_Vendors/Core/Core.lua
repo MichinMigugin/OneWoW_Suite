@@ -8,7 +8,7 @@ OneWoW:BootStore(ns, {
     savedVar = "OneWoW_CatalogData_Vendors_DB",
     withScanCallbacks = true,
     onLogin = function()
-        ns.DataLoader = OneWoW_Catalog:CreateItemDataLoader(ns:GetDB())
+        ns.DataLoader = OneWoW_Catalog_API.CreateItemDataLoader(ns:GetDB())
         ns.DataLoader:Initialize()
         if ns.ExtendDataLoaderWithNPC then
             ns:ExtendDataLoaderWithNPC(ns.DataLoader)
@@ -18,9 +18,8 @@ OneWoW:BootStore(ns, {
             ns.VendorScanner:Initialize()
         end
 
-        local catalog = OneWoW_Catalog
-        if catalog and catalog.Catalog then
-            catalog.Catalog:RegisterDataAddon("vendors", ns)
+        if OneWoW_Catalog_API then
+            OneWoW_Catalog_API.RegisterDataAddon("vendors", ns)
         end
     end,
 })

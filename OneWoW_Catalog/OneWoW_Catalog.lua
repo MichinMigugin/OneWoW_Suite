@@ -1,12 +1,11 @@
 local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-
 local DB = OneWoW_GUI.DB
-local addon = {}
-OneWoW_Catalog = addon
 
-ns.addon = addon
+OneWoW_Catalog = {}
+local OneWoW_Catalog = OneWoW_Catalog
+
 ns.oneWoWHubActive = false
 
 local function RegisterWithOneWoW()
@@ -35,35 +34,32 @@ end
 
 local function OnInitialize()
     ns:InitializeDatabase()
-    OneWoW_GUI:MigrateSettings(addon.db.global)
-
-    addon:ApplyTheme()
+    OneWoW_GUI:MigrateSettings(ns.db.global)
+    OneWoW_Catalog:ApplyTheme()
     if ns.ApplyLanguage then ns.ApplyLanguage() end
-    addon.Catalog = ns.Catalog
-    addon.UI = ns.UI
 
-    DB:RegisterSlashCommand("owcat", function(msg) addon:SlashCommandHandler(msg) end)
-    DB:RegisterSlashCommand("onewowcatalog", function(msg) addon:SlashCommandHandler(msg) end)
+    DB:RegisterSlashCommand("owcat", function(msg) OneWoW_Catalog:SlashCommandHandler(msg) end)
+    DB:RegisterSlashCommand("onewowcatalog", function(msg) OneWoW_Catalog:SlashCommandHandler(msg) end)
 
-    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", addon, function(myself)
-        myself:ApplyTheme()
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_Catalog, function(self)
+        self:ApplyTheme()
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", addon, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoW_Catalog, function()
         if ns.ApplyLanguage then ns.ApplyLanguage() end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", addon, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoW_Catalog, function()
         local mainFrame = OneWoW_CatalogMainFrame
         if mainFrame then
             OneWoW_GUI:ApplyFontToFrame(mainFrame)
         end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", addon, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", OneWoW_Catalog, function()
         local mainFrame = OneWoW_CatalogMainFrame
         if mainFrame then
             OneWoW_GUI:ApplyFontToFrame(mainFrame)
         end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnMoneyDisplayChanged", addon, function()
+    OneWoW_GUI:RegisterSettingsCallback("OnMoneyDisplayChanged", OneWoW_Catalog, function()
         if ns.UI.RefreshItemSearchList then ns.UI.RefreshItemSearchList() end
         if ns.UI.RefreshVendorsList then ns.UI.RefreshVendorsList() end
         if ns.UI.RefreshQuestsList then ns.UI.RefreshQuestsList() end
@@ -81,15 +77,15 @@ local function OnEnable()
         "catalog", nil)
 end
 
-function addon:ApplyTheme()
+function OneWoW_Catalog:ApplyTheme()
     OneWoW_GUI:ApplyTheme(self)
 end
 
-function addon:ApplyLanguage()
+function OneWoW_Catalog:ApplyLanguage()
     if ns.ApplyLanguage then ns.ApplyLanguage() end
 end
 
-function addon:SlashCommandHandler()
+function OneWoW_Catalog:SlashCommandHandler()
     if ns.oneWoWHubActive then
         OneWoW.UI:Show("catalog")
         return
@@ -104,10 +100,10 @@ end
 -- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). The
 -- one-shot guard makes the PLAYER_LOGIN safety net below a no-op when already run.
 local didInit = false
-function addon:OnAddonLoaded()
+function OneWoW_Catalog:OnAddonLoaded()
     if didInit then return end
     didInit = true
-    OneWoW.Lifecycle:CreateHandlerRegistry(addon)
+    OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_Catalog)
     OnInitialize()
 end
 
@@ -115,11 +111,11 @@ end
 -- startup, or is driven by the loader (OneWoW:EnsureLoaded) for a mid-session
 -- enable, when PLAYER_LOGIN has already fired and won't reach this module.
 local didLogin = false
-function addon:OnPlayerLogin()
+function OneWoW_Catalog:OnPlayerLogin()
     if didLogin then return end
     didLogin = true
     OnEnable()
-    if addon.FireLoginHandlers then
-        addon:FireLoginHandlers()
+    if OneWoW_Catalog.FireLoginHandlers then
+        OneWoW_Catalog:FireLoginHandlers()
     end
 end

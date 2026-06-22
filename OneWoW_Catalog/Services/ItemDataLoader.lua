@@ -13,7 +13,7 @@ local DB = OneWoW_GUI.DB
 
 ---@param dbTable table
 ---@return ItemDataLoader
-function OneWoW_Catalog:CreateItemDataLoader(dbTable)
+function ns.CreateItemDataLoader(dbTable)
     if not dbTable or type(dbTable) ~= "table" then
         error("CreateItemDataLoader requires a dbTable table", 2)
     end
@@ -175,29 +175,21 @@ local sharedLoader = nil
 ---@return ItemDataLoader
 function ns.GetItemDataLoader()
     if not sharedLoader then
-        sharedLoader = OneWoW_Catalog:CreateItemDataLoader(OneWoW_Catalog.db.global)
+        sharedLoader = ns.CreateItemDataLoader(ns.db.global)
         sharedLoader:Initialize()
     end
     return sharedLoader
 end
 
---- Public accessor for Catalog's shared item-data loader. Lets other units
---- resolve item data without reaching into `OneWoW_Catalog_DB` — Catalog owns and
---- supplies its own storage. Lazily created + initialized on first use.
----@return ItemDataLoader
-function OneWoW_Catalog:GetItemDataLoader()
-    return ns.GetItemDataLoader()
-end
-
 --- Look up a cached item *name* from Catalog's item cache. Returns nil when
 --- Catalog has no entry (or is not initialized). Tolerates legacy string-valued
---- cache entries. For cross-unit name sharing without touching `OneWoW_Catalog_DB`.
+--- cache entries.
 ---@param itemID number
 ---@return string|nil
-function OneWoW_Catalog:GetCachedItemName(itemID)
+function ns.GetCachedItemName(itemID)
     itemID = tonumber(itemID)
-    if not itemID or not self.db then return nil end
-    local itemCache = self.db.global and self.db.global.itemCache
+    if not itemID or not ns.db then return nil end
+    local itemCache = ns.db.global and ns.db.global.itemCache
     local cached = itemCache and itemCache[itemID]
     if type(cached) == "table" then
         return cached.name
@@ -209,19 +201,18 @@ end
 
 --- Record an item name into Catalog's item cache, filling link/quality/icon from
 --- the game the first time the item is seen. No-op (returns false) when Catalog
---- is not loaded — its SV would not persist anyway. For cross-unit name sharing
---- without touching `OneWoW_Catalog_DB`.
+--- is not loaded.
 ---@param itemID number
 ---@param itemName string
 ---@return boolean changed true if the stored name differs from before
-function OneWoW_Catalog:RememberItemName(itemID, itemName)
+function ns.RememberItemName(itemID, itemName)
     itemID = tonumber(itemID)
-    if not itemID or not itemName or itemName == "" or not self.db then
+    if not itemID or not itemName or itemName == "" or not ns.db then
         return false
     end
 
-    self.db.global.itemCache = self.db.global.itemCache or {}
-    local itemCache = self.db.global.itemCache
+    ns.db.global.itemCache = ns.db.global.itemCache or {}
+    local itemCache = ns.db.global.itemCache
     local previous = itemCache[itemID]
     local previousName =
         type(previous) == "table"

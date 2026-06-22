@@ -595,7 +595,7 @@ end
 - Lifecycle hooks use colon syntax on the thin root object.
 - DB handle lives on `ns.db`, never on the lifecycle root.
 - Cross-unit reads: `Core/API.lua` publishes `OneWoW_<Unit>_API` dot-functions (see
-  `OneWoW_AltTracker` as reference).
+  `OneWoW_AltTracker` and `OneWoW_Catalog` as reference hubs).
 
 **Data store** (AltTracker_* stores, CatalogData_*, …):
 
@@ -641,8 +641,8 @@ cross-unit data accessors on the lifecycle root as colon-methods (e.g.
 - `OneWoW_<Unit> = ns` or `_G[...] = ns` (hand namespace publish)
 - Renaming the vararg namespace: `local ADDON_NAME, OneWoW_Bags = ...` or
   `local ADDON_NAME, OneWoW = ...` — always `local ADDON_NAME, ns = ...`
-- Back-references: `ns.addon`, `ns.OneWoWAltTracker`, etc. (AltTracker hub migrated —
-  uses `ns.db` + `OneWoW_AltTracker_API` instead)
+- Back-references: `ns.addon`, `ns.OneWoWAltTracker`, etc. (AltTracker and Catalog hubs migrated —
+  use `ns.db` + `_API` instead)
 - `.db` on the lifecycle root (`OneWoW_AltTracker.db`, `OneWoW.db`) — use `ns.db`
 - Colon-methods on `_API` globals
 - Leaking internals on the lifecycle root (`OneWoW_AltTracker.UI = ...`)

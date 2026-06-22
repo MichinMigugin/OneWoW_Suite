@@ -3692,16 +3692,7 @@ local function GetFavoriteQuestsOutsideActiveList(addon, activeQuests)
     end
 
     local favorites = {}
-    local favBucket =
-        ns.addon
-        and ns.addon.db
-        and ns.addon.db.global
-        and ns.addon.db.global.favorites
-        and ns.addon.db.global.favorites.quests
-
-    if not favBucket then
-        return favorites
-    end
+    local favBucket = ns.db.global.favorites.quests
 
     for questID in pairs(favBucket) do
         questID = tonumber(questID)

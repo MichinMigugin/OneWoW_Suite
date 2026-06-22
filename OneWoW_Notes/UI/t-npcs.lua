@@ -772,8 +772,8 @@ function ns.UI.CreateNPCsTab(parent)
                                 OneWoW.UI:SelectSubTab("catalog", "quests")
 
                                 C_Timer.After(0.05, function()
-                                    if OneWoW_Catalog and OneWoW_Catalog.UI and OneWoW_Catalog.UI.OpenQuest then
-                                        OneWoW_Catalog.UI.OpenQuest(qid)
+                                    if OneWoW_Catalog_API then
+                                        OneWoW_Catalog_API.OpenQuest(qid)
                                     end
                                 end)
                             end)

@@ -65,5 +65,5 @@ function ns:InitializeDatabase()
         defaults = ns.DatabaseDefaults,
     })
 
-    ns.addon.db = db
+    ns.db = db
 end

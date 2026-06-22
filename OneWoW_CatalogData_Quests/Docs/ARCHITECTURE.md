@@ -19,8 +19,9 @@ Load-on-demand data store registered with `OneWoW_Catalog` as the `"quests"` pro
 | `Modules/QuestScanner.lua` | Live capture from quest log / quest detail events |
 | `Modules/CompletionTracker.lua` | Per-character completion; optional AltTracker cross-char |
 | `Core/Database.lua` | SavedVariables init |
-| `Core/Core.lua` | `BootStore` lifecycle; `Catalog:RegisterDataAddon("quests", ns)` |
-| `OneWoW_CatalogData_Quests.lua` | Public API (`GetQuest`, `GetQuestCount`, `GetCompletedCharacters`, …) |
+| `Core/API.lua` | Public API (`GetQuest`, `GetQuestCount`, `GetCompletedCharacters`, …) |
+| `Core/Core.lua` | `BootStore` lifecycle; registers with `OneWoW_Catalog_API` |
+| `OneWoW_CatalogData_Quests.lua` | Comment stub (no public globals) |
 
 ## Data Layout
 

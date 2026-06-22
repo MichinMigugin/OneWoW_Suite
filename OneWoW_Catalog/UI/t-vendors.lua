@@ -807,9 +807,7 @@ function ns.UI.OpenToVendor(npcID)
 
     local addon = GetDataAddon()
     if not addon or not addon.VendorData then
-        if OneWoW_Catalog then
-            OneWoW_Catalog.pendingVendorSelect = npcID
-        end
+        ns.pendingVendorSelect = npcID
         return
     end
 
@@ -823,14 +821,10 @@ function ns.UI.OpenToVendor(npcID)
     local function trySelect()
         local panels = ns.UI.vendorsPanels
         if not panels then
-            if OneWoW_Catalog then
-                OneWoW_Catalog.pendingVendorSelect = npcID
-            end
+            ns.pendingVendorSelect = npcID
             return false
         end
-        if OneWoW_Catalog then
-            OneWoW_Catalog.pendingVendorSelect = nil
-        end
+        ns.pendingVendorSelect = nil
         return SelectVendorByNpcID(panels, npcID)
     end
 
@@ -1067,9 +1061,9 @@ function ns.UI.CreateVendorsTab(parent)
     end
 
     parent:HookScript("OnShow", function()
-        if OneWoW_Catalog and OneWoW_Catalog.pendingVendorSelect then
-            local id = OneWoW_Catalog.pendingVendorSelect
-            OneWoW_Catalog.pendingVendorSelect = nil
+        if ns.pendingVendorSelect then
+            local id = ns.pendingVendorSelect
+            ns.pendingVendorSelect = nil
             C_Timer.After(0.05, function()
                 ns.UI.OpenToVendor(id)
             end)

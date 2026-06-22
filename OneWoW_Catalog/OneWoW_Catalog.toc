@@ -33,6 +33,7 @@ Locales\itIT.lua
 # Core
 Core\Constants.lua
 Core\Database.lua
+Core\API.lua
 Core\Favorites.lua
 Core\VendorCategories.lua
 Core\Navigation.lua
