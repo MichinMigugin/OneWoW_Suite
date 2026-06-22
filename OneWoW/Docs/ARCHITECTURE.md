@@ -326,6 +326,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 | No direct `db.global.settings` access (§8.5) | `bin/check_no_settings_bypass.py` (pre-commit `no-settings-bypass`) |
 | No direct combat/restriction API calls (§8.6) | `bin/check_no_restriction_bypass.py` (pre-commit `restriction-funnel`) |
 | No cross-load-unit SavedVariables access (§6/§7) | `bin/check_no_data_manager_bypass.py` (TOC-derived ownership; **enforced** — hard-fails off the `ALLOWED_FOREIGN_SV` allowlist) |
+| No namespace publish / global-surface anti-patterns (§6.1) | `bin/check_no_namespace_publish.py` (pre-commit `no-namespace-publish`; **warn-only** during migration) |
 | No `_G.literal` access | `bin/check_no_g_literal.py` |
 | Agent guidance | `.cursor/rules/OneWoW-Suite-Architecture.mdc`, `onewow-suite-architecture` skill |
 
@@ -511,12 +512,12 @@ shared theme/GUI primitives.
 
 ## 6. Cross-unit sharing
 
-Modules cannot share core's private `ns`. Sharing uses globals:
+Modules cannot share core's private `ns`. Sharing uses globals — see **§6.1**
+for the full taxonomy (`ns`, `ns.db`, `_DB`, `_API`, lifecycle root).
 
-- **Within a load unit:** `local _, ns = ...`
+- **Within a load unit:** `local ADDON_NAME, ns = ...`
 - **Across load units:** `_G.OneWoW`, the `OneWoW_GUI` global (toolkit), per-unit
-  APIs (`OneWoW_Catalog_TradeskillAPI`, `OneWoW_Trackers_API`), store `_API` /
-  `_DB` globals.
+  `OneWoW_<Unit>_API` globals (and store `_DB` globals owned by the DB layer).
 
 #### `ns` is private — never publish it as a global
 
@@ -530,10 +531,97 @@ whole namespace leaks every internal, hides what is actually contractual, and is
 the bug that silently killed AltTracker store lifecycle when it was *removed* (the
 core dispatcher had been resolving units through that leaked global). The lifecycle
 dispatcher's dependency on a `_G[addonName]` handle is satisfied **once, centrally,
-inside `OneWoW:BootStore`** — that is the *only* sanctioned namespace publish, and
-it is a documented stop-gap slated for replacement by a core unit registry (see
-`MIGRATION.md`). Store/feature authors never hand-publish a namespace; expose an
-`_API` instead.
+inside `OneWoW:BootStore`** for data stores — that is the *only* sanctioned
+namespace publish, and it is a documented stop-gap slated for replacement by a core
+unit registry (see `MIGRATION.md` §2). Hub modules use a **thin lifecycle object**
+(`OneWoW_<Unit> = {}`) instead; see §6.1. Store/feature authors never hand-publish
+a namespace; expose an `_API` instead.
+
+### 6.1 Global surface taxonomy
+
+Each load unit has up to four distinct global surfaces. Do not collapse them.
+
+| Symbol | Who may use it | Holds |
+|--------|----------------|-------|
+| `ns` | files in that TOC only | `ns.db`, `ns.UI`, `ns.Core`, modules |
+| `ns.db` | internal only | `DB:Init` return value; read `ns.db.global.*` |
+| `OneWoW_<Unit>_DB` | `Database.lua` / BootStore init + owner's `_API` | raw SV root (`## SavedVariables` name) |
+| `OneWoW_<Unit>_API` | other load units | declared **dot-functions** only |
+| `OneWoW_<Unit>` | core lifecycle + `OneWoW_GUI` callbacks | lifecycle hooks, `ApplyTheme`/`ApplyLanguage`; **not** `.db`, `.UI`, cross-unit data |
+
+**Naming:** `OneWoW_<LoadUnitName>_DB` and `OneWoW_<LoadUnitName>_API` where
+`<LoadUnitName>` matches the TOC folder / `ADDON_NAME` (e.g.
+`OneWoW_AltTracker_Character_DB`).
+
+#### Hub module vs data store init
+
+**Hub module** (Catalog, AltTracker, Bags, Notes, QoL, …):
+
+```lua
+local ADDON_NAME, ns = ...
+
+OneWoW_MyHub = {}
+
+function OneWoW_MyHub:OnAddonLoaded()
+    OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_MyHub)
+    ns:InitializeDatabase()  -- sets ns.db; see DATABASE.md
+    OneWoW_GUI:MigrateSettings(ns.db.global)
+end
+```
+
+- Root lua: `OneWoW_<Unit> = {}` (not `local addon = {}; OneWoW_<Unit> = addon`).
+- Lifecycle hooks use colon syntax on the thin root object.
+- DB handle lives on `ns.db`, never on the lifecycle root.
+
+**Data store** (AltTracker_* stores, CatalogData_*, …):
+
+```lua
+local ADDON_NAME, ns = ...
+
+OneWoW:BootStore(ns, {
+    addonName = ADDON_NAME,
+    savedVar = "OneWoW_MyStore_DB",
+    ...
+})
+```
+
+- `_API` in the unit's root lua or `Core/API.lua`.
+- BootStore's `_G[addonName] = ns` is the **store-only** lifecycle stop-gap — not
+  a pattern for hub modules.
+
+The lifecycle dispatcher (`Lifecycle.RunUnitHook`) resolves `_G[addonName]` today.
+Hubs satisfy that with a thin object; stores via BootStore's centralized publish.
+Neither pattern is `OneWoW_<Unit> = ns` written by hand.
+
+#### Colon (`:`) vs dot (`.`) on globals
+
+| Global kind | Syntax | Examples |
+|-------------|--------|----------|
+| Cross-unit `_API` | **dot-functions only** | `OneWoW_AltTracker_Character_API.GetCharacterData(charKey)` |
+| Singleton service / toolkit | **colon-methods** | `OneWoW_GUI:CreateFS(...)`, `OneWoW:EnsureLoaded(...)` |
+| Lifecycle root (`OneWoW_<Unit>`) | **colon for instance hooks only** | `OneWoW_AltTracker:OnAddonLoaded()`, `:ApplyTheme()` |
+| Internal `ns` modules | colon on `ns` or sub-tables | `ns:GetProgressList(key)`, `ns.DataManager:GetCharacterData(charKey)` |
+
+`OneWoW_GUI` is the canonical colon-style global (toolkit singleton under
+`OneWoW/GUI/`). Cross-unit contracts use `_API` dot-functions. Do not put
+cross-unit data accessors on the lifecycle root as colon-methods (e.g.
+`OneWoW_AltTracker:GetProgressList` → `OneWoW_AltTracker_API.GetProgressList`).
+
+#### Anti-patterns (new code)
+
+- `OneWoW_<Unit> = ns` or `_G[...] = ns` (hand namespace publish)
+- Renaming the vararg namespace: `local ADDON_NAME, OneWoW_Bags = ...` — always
+  `local ADDON_NAME, ns = ...`
+- Back-references: `ns.addon`, `ns.OneWoWAltTracker`, etc.
+- `.db` on the lifecycle root (`OneWoW_AltTracker.db`) — use `ns.db`
+- Colon-methods on `_API` globals
+- Leaking internals on the lifecycle root (`OneWoW_AltTracker.UI = ...`)
+
+**Grandfathered** until migrated (see `MIGRATION.md` §3, `no-namespace-publish`
+hook allowlist): `OneWoW_Bags/OneWoW_Bags.lua`, `OneWoW_Notes/OneWoW_Notes.lua`,
+`OneWoW/Core/StoreBootstrap.lua`.
+
+Internal db assignment: [`DATABASE.md`](DATABASE.md) — `ns.db` after `DB:Init`.
 
 LibStub is retained only for vendored Ace libs (`LibStub`, `CallbackHandler-1.0`,
 `LibDataBroker-1.1`, `LibDBIcon-1.0`, `LibSharedMedia-3.0`). The copy/paste
@@ -791,6 +879,8 @@ same module.
 ## 9. Caveats
 
 - **Runtime nil-guards** remain the backstop; lint checks are additive, not compile-time.
+- **Global surface:** follow §6.1 — internal `ns.db`, cross-unit `_API`, lifecycle root
+  stays thin; `no-namespace-publish` hook (warn-only during migration) flags regressions.
 - **Stores expose `_DB` and `_API`:** cross-module consumers should prefer `_API`; direct
   `_DB` reads are a refactor target.
 - **`DEMAND_LOADED` is normal** for force-loaded LoD units — not an error state.
@@ -820,3 +910,4 @@ same module.
 | `bin/check_toc_optional_deps.py` | Pre-commit: suite-internal OptionalDeps ban |
 | `bin/check_no_settings_bypass.py` | Pre-commit: direct `db.global.settings` access ban |
 | `bin/check_no_restriction_bypass.py` | Pre-commit: direct combat/restriction API ban (§8.6) |
+| `bin/check_no_namespace_publish.py` | Pre-commit: namespace publish / global-surface anti-patterns (§6.1; warn-only during migration) |

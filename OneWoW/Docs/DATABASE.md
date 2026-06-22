@@ -2,7 +2,7 @@
 
 Design rationale for `OneWoW/GUI/Database.lua` — the shared database layer used by all addons in the OneWoW suite. This document explains the reasoning behind the API, not how to call it. For the API surface, read `Database.lua` directly.
 
-Suite storage layout and scope resolution contract: [`ARCHITECTURE.md`](ARCHITECTURE.md) §6.
+Suite storage layout and global surface contract: [`ARCHITECTURE.md`](ARCHITECTURE.md) §6.1.
 
 ---
 
@@ -76,6 +76,33 @@ Later scopes override earlier ones. This allows large base tables in `Global` wi
 Logical scopes (`db.global`, `db.char`, resolved scope lookups) are the public concept. Physical storage (one shared root, split globals) is an initialization detail hidden from addon code.
 
 Long-term preferred layout: one shared `SavedVariables` root per addon, with character data stored at `MyAddon_DB.chars["Name-Realm"]` and exposed as `db.char`.
+
+### Internal db handle (`ns.db`)
+
+After `DB:Init` returns, assign the handle on the load unit's private namespace:
+
+```lua
+function ns:InitializeDatabase()
+    ns.db = DB:Init({
+        savedVar = "OneWoW_MyUnit_DB",
+        addonName = ADDON_NAME,
+        defaults = ns.DatabaseDefaults,
+    })
+end
+```
+
+- **Internal reads:** `ns.db.global.*` (and `ns.db.char` when used) — the normal path
+  for all files in the unit after init.
+- **Raw SV global:** `OneWoW_<Unit>_DB` is WoW's persistence root. Touch it only in
+  `Database.lua` (or BootStore `initDB`) for one-shot shape bridges before/during
+  `DB:Init` — not from UI or cross-unit code.
+- **Naming:** `savedVar` / TOC `## SavedVariables` must be `OneWoW_<LoadUnitName>_DB`,
+  matching the TOC folder / `ADDON_NAME`.
+- **Lifecycle root:** do not hang the db handle on `OneWoW_<Unit>.db`; use `ns.db`.
+- **Stores:** `OneWoW:BootStore` may set `ns.db` inside `initDB`; same rules apply.
+
+Cross-unit consumers read through the owner's `OneWoW_<Unit>_API`, not `ns.db` or
+the raw `_DB` global. See ARCHITECTURE §6.1.
 
 ---
 

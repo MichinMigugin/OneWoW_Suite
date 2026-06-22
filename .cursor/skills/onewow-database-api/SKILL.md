@@ -36,6 +36,25 @@ local DB = OneWoW_GUI.DB
 
 After `Init` returns, `db`, `db.global`, and every key in the defaults table are **guaranteed to exist**.
 
+**Standard assignment** — hang the handle on the private namespace:
+
+```lua
+function ns:InitializeDatabase()
+    ns.db = DB:Init({
+        savedVar = "OneWoW_MyUnit_DB",
+        addonName = ADDON_NAME,
+        defaults = ns.DatabaseDefaults,
+    })
+end
+```
+
+- Internal reads: `ns.db.global.*` after init.
+- Raw `OneWoW_<Unit>_DB` global: only in `Database.lua` / BootStore `initDB` for
+  one-shot bridges — not from UI or cross-unit code.
+- Do not use `addon.db`, `ns.addon.db`, or `OneWoW_<Unit>.db` on the lifecycle root.
+
+See `OneWoW/Docs/DATABASE.md` and ARCHITECTURE §6.1.
+
 ### Defaults
 
 `DB:MergeMissing(target, defaults)` fills only `nil` keys, recurses into tables, and uses `CopyTable` on table values to prevent reference sharing with the defaults template. Called automatically inside `Init` when `config.defaults` is provided.
@@ -87,25 +106,27 @@ Theme, language, and minimap are managed by `OneWoW_GUI:GetSetting` / `OneWoW_GU
 
 ## Review checklist — anti-patterns to flag
 
-1. **Defensive nil-chains on DB-defaulted keys.** `Addon.db and Addon.db.global and Addon.db.global.X` is dead code after `Init` + `MergeMissing`.
+1. **Defensive nil-chains on DB-defaulted keys.** `ns.db and ns.db.global and ns.db.global.X` is dead code after `Init` + `MergeMissing`.
 
-2. **`or default` on keys that have defaults.** `Addon.db.global.scale or 1.0` when `scale = 1.0` is in the defaults table — the fallback hides bugs in `MergeMissing`. `or {}` and `or default` are only correct for **dynamic keys** not defined in defaults (e.g. `catMods[entryName] or {}`).
+2. **`or default` on keys that have defaults.** `ns.db.global.scale or 1.0` when `scale = 1.0` is in the defaults table — the fallback hides bugs in `MergeMissing`. `or {}` and `or default` are only correct for **dynamic keys** not defined in defaults (e.g. `catMods[entryName] or {}`).
 
-3. **Hand-rolled merge / ensure-if-nil blocks.** `if not db.global.X then db.global.X = {} end`, custom `ApplyDefaults`, `mergeSubTable`, `mergeTabSettings` — replace with defaults + `MergeMissing` (automatic in `Init`) or `DB:Ensure` for dynamic paths.
+3. **Wrong db location.** `addon.db`, `ns.addon.db`, `OneWoW_<Unit>.db`, or reading `OneWoW_<Unit>_DB` outside `Database.lua` — use `ns.db` internally; cross-unit via `_API`.
 
-4. **Boolean migration flags interleaved with init.** `if not db.global.fooMigrated then ... end` should be a one-shot init bridge with a completion flag, not scattered through consumer code.
+4. **Hand-rolled merge / ensure-if-nil blocks.** `if not ns.db.global.X then ns.db.global.X = {} end`, custom `ApplyDefaults`, `mergeSubTable`, `mergeTabSettings` — replace with defaults + `MergeMissing` (automatic in `Init`) or `DB:Ensure` for dynamic paths.
 
-5. **Direct Blizzard helpers for SV init.** `MergeTable` overwrites destination values; `SetTablePairsToTable` wipes and replaces — both wrong for fill-only SV semantics. `MergeMissing` is the correct primitive.
+5. **Boolean migration flags interleaved with init.** `if not ns.db.global.fooMigrated then ... end` should be a one-shot init bridge with a completion flag, not scattered through consumer code.
 
-6. **Storing shared suite settings locally.** Theme, language, minimap state must go through `OneWoW_GUI:GetSetting` / `SetSetting`.
+6. **Direct Blizzard helpers for SV init.** `MergeTable` overwrites destination values; `SetTablePairsToTable` wipes and replaces — both wrong for fill-only SV semantics. `MergeMissing` is the correct primitive.
 
-7. **Raw scope name strings.** `"global"`, `"realm"`, etc. should be `DB.Scope.Global`, `DB.Scope.Realm`.
+7. **Storing shared suite settings locally.** Theme, language, minimap state must go through `OneWoW_GUI:GetSetting` / `SetSetting`.
 
-8. **Defaults stored by reference.** Direct assignment of a defaults sub-table into a live db table creates a reference-sharing bug — mutations to the live table mutate the defaults template. `MergeMissing` handles this via `CopyTable`; manual paths must do the same.
+8. **Raw scope name strings.** `"global"`, `"realm"`, etc. should be `DB.Scope.Global`, `DB.Scope.Realm`.
 
-9. **AceDB-specific calls in new code.** `db:RegisterDefaults`, `db:GetProfile`, profile callbacks. The suite is off AceDB — use `DB:Init` (or `OneWoW:BootStore` + the `DB:GetCharData` family for account-wide stores). Do not reintroduce AceDB APIs.
+9. **Defaults stored by reference.** Direct assignment of a defaults sub-table into a live db table creates a reference-sharing bug — mutations to the live table mutate the defaults template. `MergeMissing` handles this via `CopyTable`; manual paths must do the same.
 
-10. **Object-oriented calls on `db`.** `db:Read(...)`, `db:Set(...)` won't work — `db` is a plain table, `DB` is the utility module.
+10. **AceDB-specific calls in new code.** `db:RegisterDefaults`, `db:GetProfile`, profile callbacks. The suite is off AceDB — use `DB:Init` (or `OneWoW:BootStore` + the `DB:GetCharData` family for account-wide stores). Do not reintroduce AceDB APIs.
+
+11. **Object-oriented calls on `db`.** `db:Read(...)`, `db:Set(...)` won't work — `db` is a plain table, `DB` is the utility module.
 
 ## Related rules
 

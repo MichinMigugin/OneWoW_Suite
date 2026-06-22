@@ -51,3 +51,45 @@ Longer-term replacement:
 - Migrate the last bare-namespace reader — `OneWoW_ShoppingList/Modules/DataAccess.lua`
   reads `OneWoW_CatalogData_Tradeskills` — to a `OneWoW_CatalogData_Tradeskills_API`
   getter.
+
+---
+
+## 3. Addon global-surface cleanup
+
+Canonical rules: [`ARCHITECTURE.md`](ARCHITECTURE.md) §6.1. Enforcement:
+`bin/check_no_namespace_publish.py` (pre-commit `no-namespace-publish`; **warn-only**
+until the inventory is drained).
+
+### Per-unit checklist
+
+1. Vararg namespace: `local ADDON_NAME, ns = ...` (not `local ADDON_NAME, OneWoW_Bags = ...`).
+2. DB handle: `ns.db = DB:Init(...)` in `InitializeDatabase`; internal reads via `ns.db`.
+3. Lifecycle root: `OneWoW_<Unit> = {}` with colon hooks only (`OnAddonLoaded`, `ApplyTheme`, …).
+4. Cross-unit surface: `OneWoW_<Unit>_API` dot-functions; no colon-methods on `_API`.
+5. Remove hops: `ns.addon`, `ns.OneWoWAltTracker`, `local addon = {}; OneWoW_<Unit> = addon`.
+6. No `.db` or `.UI` on the lifecycle root; no hand `_G[...] = ns`.
+
+### Suggested migration order
+
+1. **AltTracker family** — hub + stores mostly compliant; hub needs `OneWoW_AltTracker_API` and `ns.db`.
+2. **Catalog / Notes** — separate lifecycle object vs `ns`; Notes still publishes `ns`.
+3. **Bags** — largest (namespace renamed to global; full module graph on `_G`).
+
+### Grandfathered (hook allowlist)
+
+Remove each path from `ALLOWED_NAMESPACE_PUBLISH` in
+`bin/check_no_namespace_publish.py` when that unit's migration is complete:
+
+- `OneWoW/Core/StoreBootstrap.lua` (until unit registry — §2)
+- `OneWoW_Bags/OneWoW_Bags.lua`
+- `OneWoW_Notes/OneWoW_Notes.lua`
+
+### Flip to enforced
+
+Set `WARN_ONLY = False` in `check_no_namespace_publish.py` when:
+
+- The warn-only worklist is empty (or only BootStore remains), and
+- Hub/store migrations above are landed.
+
+Per-unit `Docs/ARCHITECTURE.md` files that still say "access `_DB` directly" should
+be scrubbed when each unit migrates (not blocking this doc pass).

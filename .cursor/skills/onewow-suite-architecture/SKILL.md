@@ -31,32 +31,38 @@ Full rationale and tables: `OneWoW/Docs/ARCHITECTURE.md`.
 
 **PEW vs gameplay:** lifecycle entering-world collection → `BootStore.onEnteringWorld` or `RegisterEnteringWorldHandler`. Gameplay events (`PLAYER_ALIVE`, `BAG_UPDATE`, `MAIL_SHOW`, …) may use direct `RegisterEvent`.
 
-## Feature module template
+## Hub module template
 
 Core guarantees at-most-once `OnAddonLoaded` dispatch per unit; authors do not
 need a local `didInit` guard for lifecycle idempotency (the chain-up contract).
 
+Global surface: `OneWoW/Docs/ARCHITECTURE.md` §6.1.
+
 ```lua
-function ns.OnAddonLoaded()
-    OneWoW.Lifecycle:CreateHandlerRegistry(ns)
-    -- init DB, register sub-module handlers
+local ADDON_NAME, ns = ...
+
+OneWoW_MyHub = {}
+
+function OneWoW_MyHub:OnAddonLoaded()
+    OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_MyHub)
+    ns:InitializeDatabase()  -- sets ns.db
+    OneWoW_GUI:MigrateSettings(ns.db.global)
 end
 
-function ns.OnPlayerLogin()
-    -- arm passive hooks
-    ns:FireLoginHandlers()
-end
-
-function ns.OnPlayerEnteringWorld(isLogin, isReload, isZoning)
-    ns:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
+function OneWoW_MyHub:OnPlayerLogin()
+    OneWoW_MyHub:FireLoginHandlers()
 end
 
 -- Sub-module (never RegisterEvent lifecycle):
-ns:RegisterLoginHandler("feature", fn)
-ns:RegisterEnteringWorldHandler("feature", function(isLogin, isReload, isZoning)
+OneWoW_MyHub:RegisterLoginHandler("feature", fn)
+OneWoW_MyHub:RegisterEnteringWorldHandler("feature", function(isLogin, isReload, isZoning)
     if isZoning then ... end
 end)
 ```
+
+- Root lua: `OneWoW_<Unit> = {}` directly — not `local addon = {}; OneWoW_<Unit> = addon`.
+- DB on `ns.db`, not on the lifecycle root.
+- Hub units with cross-unit readers also publish `OneWoW_<Unit>_API` (dot-functions).
 
 ## Data store template
 
@@ -80,6 +86,7 @@ OneWoW:BootStore(ns, {
 })
 ```
 
+`BootStore` may set `ns.db` inside `initDB`; internal reads still use `ns.db`.
 `PLAYER_ALIVE` (resurrection) stays on the gameplay event frame; it is not a lifecycle substitute for PEW.
 
 ## Mid-session load
@@ -134,10 +141,24 @@ Placeholder tabs when unloaded: `OneWoW:GetAlwaysShowModules()`.
 
 ## Cross-unit sharing
 
-- Within unit: `local _, ns = ...`
+- Within unit: `local ADDON_NAME, ns = ...`; internal DB via `ns.db`
 - Across units: `OneWoW`, `OneWoW_GUI`, per-unit `_API` globals
 - Prefer `_API` over `_DB`; new cross-unit reads → `DataManager:Query` when implemented
 - Layering: no direct cross-family store global reads (see `check_no_data_manager_bypass.py`)
+
+### Global surface (summary)
+
+See `OneWoW/Docs/ARCHITECTURE.md` §6.1 for the full taxonomy.
+
+| Symbol | Role |
+|--------|------|
+| `ns` / `ns.db` | private namespace + `DB:Init` handle |
+| `OneWoW_<Unit>_DB` | WoW SV global (`## SavedVariables` name) |
+| `OneWoW_<Unit>_API` | cross-unit dot-functions |
+| `OneWoW_<Unit>` | thin lifecycle root (colon hooks only) |
+
+**Colon vs dot:** `_API` uses dot-functions. `OneWoW_GUI` / `OneWoW` use colon-methods
+(service singletons). Lifecycle root uses colon for `OnAddonLoaded`, `ApplyTheme`, etc.
 
 ### Exposing a public API
 
@@ -156,10 +177,11 @@ so *removing* a `= ns` line silently killed a store's `OnAddonLoaded` /
 `OnPlayerLogin` hooks.
 
 The dispatcher's need for a `_G[addonName]` handle is satisfied **once, centrally,
-inside `OneWoW:BootStore`** (pass `addonName` in the config). That is the *only*
-sanctioned namespace publish in the suite, and it is a documented stop-gap headed
-for a core unit registry (see `OneWoW/Docs/MIGRATION.md`). **Store/feature authors
-never hand-write a namespace publish** — expose an `OneWoW_<Unit>_API` instead.
+inside `OneWoW:BootStore`** for data stores (pass `addonName` in the config) — a
+documented stop-gap headed for a core unit registry (see `OneWoW/Docs/MIGRATION.md`
+§2). **Hub modules** use a thin `OneWoW_<Unit> = {}` lifecycle object instead.
+**Never hand-publish** `OneWoW_<Unit> = ns` or `_G[...] = ns` — expose
+`OneWoW_<Unit>_API` for cross-unit contracts.
 
 ```lua
 -- Good: curated, greppable, guard-friendly
@@ -197,5 +219,7 @@ end
 3. No raw `C_AddOns.LoadAddOn` / `UIParentLoadAddOn` outside core (`no-raw-loadaddon`)
 4. No suite-internal `OptionalDeps` in changed TOCs
 5. No cross-load-unit store reads off the allowlist (`no-data-manager-bypass`, enforced/hard-fail) — route through the owner's `_API`
-6. No namespace publishing (`OneWoW_<Unit> = ns` / `_G[addonName] = ns`); `BootStore` is the only sanctioned publish
-6. Stores use `BootStore` + `onEnteringWorld` for PEW collection work
+6. No namespace publish / global-surface anti-patterns (`no-namespace-publish`; warn-only during migration — see `MIGRATION.md` §3)
+7. `local ADDON_NAME, ns = ...`; internal reads via `ns.db`; no `ns.addon` hops; no `.db` on lifecycle root
+8. Hub cross-unit surface on `_API` dot-functions only (not colon-methods on manifest root)
+9. Stores use `BootStore` + `onEnteringWorld` for PEW collection work
