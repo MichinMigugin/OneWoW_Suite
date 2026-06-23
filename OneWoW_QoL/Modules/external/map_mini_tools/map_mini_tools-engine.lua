@@ -1863,9 +1863,9 @@ local function RegisterAddonLoadHooks()
     if EventUtil and EventUtil.ContinueOnAddOnLoaded then
         EventUtil.ContinueOnAddOnLoaded("Blizzard_HybridMinimap", OnHybridMinimapLoaded)
         EventUtil.ContinueOnAddOnLoaded("Plumber", OnPlumberLoaded)
-    elseif OneWoW_QoL and OneWoW_QoL.RegisterAddonLoadedWatcher then
-        OneWoW_QoL:RegisterAddonLoadedWatcher("Blizzard_HybridMinimap", OnHybridMinimapLoaded)
-        OneWoW_QoL:RegisterAddonLoadedWatcher("Plumber", OnPlumberLoaded)
+    else
+        OneWoW:RegisterAddonLoadedWatcher("Blizzard_HybridMinimap", OnHybridMinimapLoaded)
+        OneWoW:RegisterAddonLoadedWatcher("Plumber", OnPlumberLoaded)
     end
 end
 

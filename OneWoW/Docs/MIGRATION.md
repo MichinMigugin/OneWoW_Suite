@@ -29,4 +29,3 @@ helper). A handful of per-file cleanups remain and are **tracked in
 | Item | Where | Notes |
 |------|-------|-------|
 | `ModuleRegistry:GetModuleBucket(id)` | `OneWoW_QoL/Modules/ModuleRegistry.lua` | Optional DRY helper for ~17 external `GetDB()` copies |
-| `RegisterAddonLoadedWatcher` consolidation | `map_mini_tools-engine.lua`, `map_world_tools-engine.lua`, `framemover-core.lua` | Prefer `OneWoW:RegisterAddonLoadedWatcher` (pattern in `tp-technicalids.lua`) over lifecycle-root `OneWoW_QoL:RegisterAddonLoadedWatcher` fallbacks |

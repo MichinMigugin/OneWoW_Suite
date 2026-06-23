@@ -485,15 +485,12 @@ local function RegisterWorldMapLoader()
         EventUtil.ContinueOnAddOnLoaded("Blizzard_WorldMap", OnWorldMapAddonLoaded)
         EventUtil.ContinueOnAddOnLoaded("Blizzard_SharedMapDataProviders", AfterFogMixinReady)
     else
-        local qos = OneWoW_QoL
-        if qos and qos.RegisterAddonLoadedWatcher then
-            qos:RegisterAddonLoadedWatcher("Blizzard_WorldMap", function()
-                OnWorldMapAddonLoaded()
-            end)
-            qos:RegisterAddonLoadedWatcher("Blizzard_SharedMapDataProviders", function()
-                AfterFogMixinReady()
-            end)
-        end
+        OneWoW:RegisterAddonLoadedWatcher("Blizzard_WorldMap", function()
+            OnWorldMapAddonLoaded()
+        end)
+        OneWoW:RegisterAddonLoadedWatcher("Blizzard_SharedMapDataProviders", function()
+            AfterFogMixinReady()
+        end)
     end
 end
 

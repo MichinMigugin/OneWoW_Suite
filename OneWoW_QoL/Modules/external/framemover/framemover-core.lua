@@ -574,12 +574,9 @@ function FM:Initialize()
         end
     end)
 
-    local qos = OneWoW_QoL
-    if qos and qos.RegisterAddonLoadedWatcher then
-        qos:RegisterAddonLoadedWatcher(nil, function(addonKey)
-            FM:ProcessAddonFrames(addonKey)
-        end)
-    end
+    OneWoW:RegisterAddonLoadedWatcher(nil, function(addonKey)
+        FM:ProcessAddonFrames(addonKey)
+    end)
 
     self:ProcessGlobalFrames()
 
