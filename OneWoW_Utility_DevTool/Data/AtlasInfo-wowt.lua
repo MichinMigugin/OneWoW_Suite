@@ -1,15 +1,15 @@
 -- AUTOMATICALLY GENERATED
 -- https://www.townlong-yak.com/framexml/ptr/Helix/AtlasInfo.lua
-local _, Addon = ...
+local _, ns = ...
 
-Addon.atlasDataVersionPTR = "12.0.7.68182"
-if not Addon.ValidateDataBuildGameBuild("Atlas PTR", Addon.atlasDataVersionPTR) then
+ns.atlasDataVersionPTR = "12.0.7.68182"
+if not ns.ValidateDataBuildGameBuild("Atlas PTR", ns.atlasDataVersionPTR) then
 	return
 end
 
-function Addon.DevTool_LoadTextureAssetData()
-	Addon._AtlasInfoVersion = atlasVersion
-	Addon._AtlasInfo = {
+function ns.DevTool_LoadTextureAssetData()
+	ns._AtlasInfoVersion = atlasVersion
+	ns._AtlasInfo = {
 		["5426612"]={
 			["kiosk-BG"]={1920, 1080, 0.000488281, 0.937988, 0.000488281, 0.527832, false, false, "1x"},
 			["kiosk-button"]={468, 128, 0.000488281, 0.229004, 0.528809, 0.591309, false, false, "1x"},
@@ -21402,5 +21402,5 @@ function Addon.DevTool_LoadTextureAssetData()
 		}, -- Interface/WorldStateFrame/WorldStateCaptureBar
 	}
 
-	Addon.DevTool_LoadTextureAssetData = nil
+	ns.DevTool_LoadTextureAssetData = nil
 end

@@ -1,10 +1,10 @@
-local _, Addon = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-local L = Addon.L
+local L = ns.L
 
 local ErrorLogger = {}
-Addon.ErrorLogger = ErrorLogger
+ns.ErrorLogger = ErrorLogger
 
 ErrorLogger.currentError = nil
 
@@ -18,7 +18,7 @@ local CreateFrame = CreateFrame
 local ROW_HEIGHT = 20
 
 local function getConstants()
-    return Addon.Constants or {}
+    return ns.Constants or {}
 end
 
 local function throttlePerSec()
@@ -32,7 +32,7 @@ local function captureEventName()
 end
 
 local function getErrorDB()
-    return Addon.db.global.errorDB
+    return ns.db.global.errorDB
 end
 
 local function maxErrorsCap()
@@ -152,7 +152,7 @@ function ErrorLogger:IsBugGrabberBridgeActive()
 end
 
 function ErrorLogger:UpdateLuaTabBugGrabberNotice()
-    local tab = Addon.LuaConsoleTab
+    local tab = ns.LuaConsoleTab
     local notice = tab and tab.bugGrabberNotice
     local clearBtn = tab and tab.luaClearBtn
     if not tab or not notice or not clearBtn then
@@ -175,8 +175,8 @@ function ErrorLogger:UpdateLuaTabBugGrabberNotice()
     end
     if tab.LayoutErrorRowAnchors then
         C_Timer.After(0, function()
-            if Addon.LuaConsoleTab and Addon.LuaConsoleTab.LayoutErrorRowAnchors then
-                Addon.LuaConsoleTab.LayoutErrorRowAnchors()
+            if ns.LuaConsoleTab and ns.LuaConsoleTab.LayoutErrorRowAnchors then
+                ns.LuaConsoleTab.LayoutErrorRowAnchors()
             end
         end)
     end
@@ -196,7 +196,7 @@ function ErrorLogger:_ensureBugGrabberLateLoadListener()
         return
     end
     self._bugGrabberWatcherRegistered = true
-    local c = Addon.Constants
+    local c = ns.Constants
     local want = (c and c.BUGGRABBER_STANDALONE_ADDON) or "!BugGrabber"
     local function onBugGrabberLoaded()
         if not ErrorLogger:IsBugGrabberAvailable() then
@@ -375,7 +375,7 @@ function ErrorLogger:_applyErrorThrottle()
     if self._msgsAllowed < 1 then
         if not self._paused then
             if GetTime() > (self._lastThrottleWarn or 0) + 10 then
-                Addon:Print(L["ERR_THROTTLE_PAUSED"])
+                ns:Print(L["ERR_THROTTLE_PAUSED"])
                 self._lastThrottleWarn = GetTime()
             end
             self._paused = true
@@ -663,13 +663,13 @@ function ErrorLogger:UpdateErrorBadge()
 end
 
 function ErrorLogger:UpdateUI()
-    if not Addon.LuaConsoleTab then
+    if not ns.LuaConsoleTab then
         return
     end
 
     self:UpdateLuaTabBugGrabberNotice()
 
-    local tab = Addon.LuaConsoleTab
+    local tab = ns.LuaConsoleTab
     local errors = self:GetErrors()
     local currentSession = self:GetSessionId()
 
@@ -678,7 +678,7 @@ function ErrorLogger:UpdateUI()
         tab.LayoutErrorRowAnchors()
     end
 
-    local SC = Addon.StackColorizer
+    local SC = ns.StackColorizer
     for i, btn in ipairs(tab.errorButtons) do
         local errorIdx = #errors - (i - 1)
         local err = errors[errorIdx]
@@ -720,14 +720,14 @@ function ErrorLogger:UpdateUI()
 end
 
 function ErrorLogger:ShowErrorDetails(errorData)
-    if not Addon.LuaConsoleTab or not errorData then
+    if not ns.LuaConsoleTab or not errorData then
         return
     end
 
     self.currentError = errorData
-    local tab = Addon.LuaConsoleTab
+    local tab = ns.LuaConsoleTab
     local currentSession = self:GetSessionId()
-    local SC = Addon.StackColorizer
+    local SC = ns.StackColorizer
 
     local sessionLabel
     if errorData.session == currentSession then
@@ -788,8 +788,8 @@ function ErrorLogger:ShowErrorDetails(errorData)
     end)
 
     local analysis = errorData._analysis
-    if not analysis and Addon.ErrorAnalyzer then
-        analysis = Addon.ErrorAnalyzer:Analyze(errorData)
+    if not analysis and ns.ErrorAnalyzer then
+        analysis = ns.ErrorAnalyzer:Analyze(errorData)
         errorData._analysis = analysis
     end
 
@@ -847,20 +847,20 @@ end
 
 function ErrorLogger:CopyCurrentError()
     if not self.currentError then
-        Addon:Print(L["LABEL_NO_ERROR"])
+        ns:Print(L["LABEL_NO_ERROR"])
         return
     end
 
     local db = getErrorDB()
     local fmt = db and db.copyFormat or "plain"
     local text
-    if Addon.ErrorExport and Addon.ErrorExport.GetCopyText then
-        text = Addon.ErrorExport.GetCopyText(self.currentError, fmt, L)
+    if ns.ErrorExport and ns.ErrorExport.GetCopyText then
+        text = ns.ErrorExport.GetCopyText(self.currentError, fmt, L)
     else
         text = tostring(self.currentError.message)
     end
 
-    Addon:CopyToClipboard(text, L["ERR_COPY_TITLE"])
+    ns:CopyToClipboard(text, L["ERR_COPY_TITLE"])
 end
 
 function ErrorLogger:ClearErrors()
@@ -873,14 +873,14 @@ function ErrorLogger:ClearErrors()
     self:UpdateUI()
     self:UpdateErrorBadge()
 
-    if Addon.LuaConsoleTab then
+    if ns.LuaConsoleTab then
         local noErr = L["LABEL_NO_ERROR"]
-        Addon.LuaConsoleTab.detailsText._lastSetText = noErr
-        Addon.LuaConsoleTab.detailsText:SetText(noErr)
-        if Addon.LuaConsoleTab.analysisText then
-            Addon.LuaConsoleTab.analysisText:SetText(L["ERR_ANALYSIS_NONE"])
+        ns.LuaConsoleTab.detailsText._lastSetText = noErr
+        ns.LuaConsoleTab.detailsText:SetText(noErr)
+        if ns.LuaConsoleTab.analysisText then
+            ns.LuaConsoleTab.analysisText:SetText(L["ERR_ANALYSIS_NONE"])
         end
     end
 
-    Addon:Print(L["ERR_MSG_CLEARED"])
+    ns:Print(L["ERR_MSG_CLEARED"])
 end

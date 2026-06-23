@@ -1,9 +1,9 @@
-local _, Addon = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-local L = Addon.L
+local L = ns.L
 
-function Addon.UI:CreateLayoutTab(parent)
+function ns.UI:CreateLayoutTab(parent)
     local tab = CreateFrame("Frame", nil, parent)
     tab:SetAllPoints(parent)
     tab:Hide()
@@ -20,7 +20,7 @@ function Addon.UI:CreateLayoutTab(parent)
         minWidth = 120,
     })
     toggleBtn:SetScript("OnClick", function()
-        Addon.UI:ToggleGrid()
+        ns.UI:ToggleGrid()
     end)
 
     local sizeLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -40,7 +40,7 @@ function Addon.UI:CreateLayoutTab(parent)
             sizeLabel:SetText((L["LABEL_GRID_SIZE"]) .. " " .. value)
             tab.gridSize = value
             if tab.gridActive then
-                Addon.UI:UpdateGridOverlay()
+                ns.UI:UpdateGridOverlay()
             end
         end,
     })
@@ -63,7 +63,7 @@ function Addon.UI:CreateLayoutTab(parent)
             opacityLabel:SetText((L["LABEL_OPACITY"]) .. " " .. string.format("%.1f", value))
             tab.gridOpacity = value
             if tab.gridActive then
-                Addon.UI:UpdateGridOverlay()
+                ns.UI:UpdateGridOverlay()
             end
         end,
     })
@@ -86,7 +86,7 @@ function Addon.UI:CreateLayoutTab(parent)
     centerBtn:SetPoint("LEFT", toggleBtn, "LEFT", 0, 0)
     centerBtn:SetPoint("TOP", sizeContainer, "BOTTOM", 0, -24)
     centerBtn:SetScript("OnClick", function()
-        Addon.UI:ToggleCenterLines()
+        ns.UI:ToggleCenterLines()
     end)
 
     tab.gridSize = 50
@@ -94,12 +94,12 @@ function Addon.UI:CreateLayoutTab(parent)
     tab.gridActive = false
     tab.centerActive = false
 
-    Addon.LayoutToolsTab = tab
+    ns.LayoutToolsTab = tab
     return tab
 end
 
-function Addon.UI:ToggleGrid()
-    local tab = Addon.LayoutToolsTab
+function ns.UI:ToggleGrid()
+    local tab = ns.LayoutToolsTab
 
     if not tab.gridActive then
         if not self.gridFrame then
@@ -113,7 +113,7 @@ function Addon.UI:ToggleGrid()
         self:UpdateGridOverlay()
         self.gridFrame:Show()
         tab.gridActive = true
-        Addon:Print(L["MSG_GRID_ENABLED"])
+        ns:Print(L["MSG_GRID_ENABLED"])
     else
         if self.gridFrame then
             for _, line in ipairs(self.gridFrame.lines) do
@@ -122,14 +122,14 @@ function Addon.UI:ToggleGrid()
             self.gridFrame:Hide()
         end
         tab.gridActive = false
-        Addon:Print(L["MSG_GRID_DISABLED"])
+        ns:Print(L["MSG_GRID_DISABLED"])
     end
 end
 
-function Addon.UI:UpdateGridOverlay()
+function ns.UI:UpdateGridOverlay()
     if not self.gridFrame then return end
 
-    local tab = Addon.LayoutToolsTab
+    local tab = ns.LayoutToolsTab
     if not tab then return end
 
     for _, line in ipairs(self.gridFrame.lines) do
@@ -173,8 +173,8 @@ function Addon.UI:UpdateGridOverlay()
     end
 end
 
-function Addon.UI:ToggleCenterLines()
-    local tab = Addon.LayoutToolsTab
+function ns.UI:ToggleCenterLines()
+    local tab = ns.LayoutToolsTab
 
     if not tab.centerActive then
         if not self.centerFrame then
@@ -196,12 +196,12 @@ function Addon.UI:ToggleCenterLines()
 
         self.centerFrame:Show()
         tab.centerActive = true
-        Addon:Print(L["MSG_CENTER_LINES_ENABLED"])
+        ns:Print(L["MSG_CENTER_LINES_ENABLED"])
     else
         if self.centerFrame then
             self.centerFrame:Hide()
         end
         tab.centerActive = false
-        Addon:Print(L["MSG_CENTER_LINES_DISABLED"])
+        ns:Print(L["MSG_CENTER_LINES_DISABLED"])
     end
 end

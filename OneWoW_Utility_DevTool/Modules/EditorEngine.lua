@@ -1,20 +1,20 @@
-local _, Addon = ...
+local _, ns = ...
 
-local L = Addon.L
+local L = ns.L
 
 local format = string.format
 local tinsert, tremove = tinsert, tremove
 local GetTime = GetTime
 
-Addon.EditorEngine = {}
-local EE = Addon.EditorEngine
+ns.EditorEngine = {}
+local EE = ns.EditorEngine
 
 local undoQueues = {}
 local undoPositions = {}
 local savedSnapshots = {}
 
 local function getDB()
-    return Addon.db.global.editor
+    return ns.db.global.editor
 end
 
 local function getDefaultCategory()

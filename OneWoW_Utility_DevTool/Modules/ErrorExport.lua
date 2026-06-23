@@ -1,4 +1,4 @@
-local _, Addon = ...
+local _, ns = ...
 
 local tinsert = tinsert
 local type = type
@@ -6,7 +6,7 @@ local tostring = tostring
 local date = date
 local format = string.format
 
-Addon.ErrorExport = {}
+ns.ErrorExport = {}
 
 local function formatTime(err)
     if type(err.time) == "number" then
@@ -16,7 +16,7 @@ local function formatTime(err)
 end
 
 --- Remove WoW inline color codes for paste targets that do not understand them.
-function Addon.ErrorExport.StripWoWColorCodes(s)
+function ns.ErrorExport.StripWoWColorCodes(s)
     if type(s) ~= "string" or s == "" then
         return ""
     end
@@ -50,7 +50,7 @@ local function appendAnalysisLines(lines, analysis, L, prefix, suffix)
     end
 end
 
-function Addon.ErrorExport.BuildPlainText(err, L, includeAnalysis)
+function ns.ErrorExport.BuildPlainText(err, L, includeAnalysis)
     L = L or {}
     if includeAnalysis == nil then includeAnalysis = true end
     local lines = {}
@@ -86,22 +86,22 @@ local function buildHeaderLines()
     return lines
 end
 
-function Addon.ErrorExport.BuildCurseForgeText(err, L)
+function ns.ErrorExport.BuildCurseForgeText(err, L)
     L = L or {}
     local lines = {}
     for _, ln in ipairs(buildHeaderLines()) do
         tinsert(lines, ln)
     end
     tinsert(lines, (L["ERR_DETAIL_MESSAGE"]))
-    tinsert(lines, Addon.ErrorExport.StripWoWColorCodes(tostring(err.message or "")))
+    tinsert(lines, ns.ErrorExport.StripWoWColorCodes(tostring(err.message or "")))
     tinsert(lines, "")
     tinsert(lines, (L["ERR_EXPORT_CF_STACK"]))
     tinsert(lines, "```")
-    tinsert(lines, Addon.ErrorExport.StripWoWColorCodes(tostring(err.stack or "")))
+    tinsert(lines, ns.ErrorExport.StripWoWColorCodes(tostring(err.stack or "")))
     if err.locals and err.locals ~= "" then
         tinsert(lines, "")
         tinsert(lines, "--- locals ---")
-        tinsert(lines, Addon.ErrorExport.StripWoWColorCodes(tostring(err.locals)))
+        tinsert(lines, ns.ErrorExport.StripWoWColorCodes(tostring(err.locals)))
     end
     tinsert(lines, "```")
     appendAnalysisLines(lines, err._analysis, L)
@@ -113,7 +113,7 @@ function Addon.ErrorExport.BuildCurseForgeText(err, L)
     return table.concat(lines, "\n")
 end
 
-function Addon.ErrorExport.BuildDiscordText(err, L)
+function ns.ErrorExport.BuildDiscordText(err, L)
     L = L or {}
     local lines = {}
     for _, ln in ipairs(buildHeaderLines()) do
@@ -121,18 +121,18 @@ function Addon.ErrorExport.BuildDiscordText(err, L)
     end
     tinsert(lines, "**" .. (L["ERR_DETAIL_MESSAGE"]) .. "**")
     tinsert(lines, "```")
-    tinsert(lines, Addon.ErrorExport.StripWoWColorCodes(tostring(err.message or "")))
+    tinsert(lines, ns.ErrorExport.StripWoWColorCodes(tostring(err.message or "")))
     tinsert(lines, "```")
     tinsert(lines, "")
     tinsert(lines, "**" .. (L["ERR_DETAIL_STACK"]) .. "**")
     tinsert(lines, "```log")
-    tinsert(lines, Addon.ErrorExport.StripWoWColorCodes(tostring(err.stack or "")))
+    tinsert(lines, ns.ErrorExport.StripWoWColorCodes(tostring(err.stack or "")))
     tinsert(lines, "```")
     if err.locals and err.locals ~= "" then
         tinsert(lines, "")
         tinsert(lines, "**" .. (L["ERR_DETAIL_LOCALS"]) .. "**")
         tinsert(lines, "```log")
-        tinsert(lines, Addon.ErrorExport.StripWoWColorCodes(tostring(err.locals)))
+        tinsert(lines, ns.ErrorExport.StripWoWColorCodes(tostring(err.locals)))
         tinsert(lines, "```")
     end
     appendAnalysisLines(lines, err._analysis, L, "**", "**")
@@ -144,12 +144,12 @@ function Addon.ErrorExport.BuildDiscordText(err, L)
     return table.concat(lines, "\n")
 end
 
-function Addon.ErrorExport.GetCopyText(err, formatKey, L)
+function ns.ErrorExport.GetCopyText(err, formatKey, L)
     if formatKey == "curseforge" then
-        return Addon.ErrorExport.BuildCurseForgeText(err, L)
+        return ns.ErrorExport.BuildCurseForgeText(err, L)
     end
     if formatKey == "discord" then
-        return Addon.ErrorExport.BuildDiscordText(err, L)
+        return ns.ErrorExport.BuildDiscordText(err, L)
     end
-    return Addon.ErrorExport.BuildPlainText(err, L)
+    return ns.ErrorExport.BuildPlainText(err, L)
 end

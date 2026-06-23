@@ -25,7 +25,7 @@ ALLOWED_FILES = frozenset(
     }
 )
 
-SKIP_PREFIXES = ("OneWoW_Utility_DevTool/",)
+SKIP_PREFIXES = ()
 
 SKIP_CONTAINS = ("/Locales/", "\\Locales\\")
 

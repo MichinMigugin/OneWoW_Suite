@@ -1,14 +1,14 @@
 -- AUTOMATICALLY GENERATED -- shard 3/3
-local _, Addon = ...
+local _, ns = ...
 
-if not Addon.ValidateDataBuildGameBuild("Sound", Addon.soundDataVersionLIVE) then
+if not ns.ValidateDataBuildGameBuild("Sound", ns.soundDataVersionLIVE) then
 	return
 end
 
-Addon._SoundDataLoaders = Addon._SoundDataLoaders or {}
-tinsert(Addon._SoundDataLoaders, function()
-    if type(Addon._SoundEntries) ~= "table" then return end
-    local E = Addon._SoundEntries
+ns._SoundDataLoaders = ns._SoundDataLoaders or {}
+tinsert(ns._SoundDataLoaders, function()
+    if type(ns._SoundEntries) ~= "table" then return end
+    local E = ns._SoundEntries
 
     E[#E + 1] = "creature;therazane;vo_qe_therazane_attack06.ogg;562031"
     E[#E + 1] = "creature;therazane;vo_qe_therazane_attack07.ogg;562005"

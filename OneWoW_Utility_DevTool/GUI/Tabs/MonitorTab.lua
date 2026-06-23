@@ -1,10 +1,10 @@
-local ADDON_NAME, Addon = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local L = Addon.L
+local L = ns.L
 
 local function BindHeaderTooltip(btn, titleKey, bodyKey)
     btn:SetScript("OnEnter", function(self)
@@ -56,13 +56,13 @@ local function LayoutTotalsSegments(parent, segments, gap, topInset)
     end
 end
 
-function Addon.UI:CreateMonitorTab(parent)
+function ns.UI:CreateMonitorTab(parent)
     local tab = CreateFrame("Frame", nil, parent)
     tab:SetAllPoints(parent)
     tab:Hide()
 
-    local Monitor = Addon.MonitorTab
-    local Const = Addon.Constants or {}
+    local Monitor = ns.MonitorTab
+    local Const = ns.Constants or {}
     local MP = Const.MONITOR_PRESET
     if not MP or not MP.BALANCED then
         MP = {
@@ -127,7 +127,7 @@ function Addon.UI:CreateMonitorTab(parent)
 
     local showOnLoadCheck = OneWoW_GUI:CreateCheckbox(tab, { label = L["MON_LABEL_SHOW_ON_LOAD"] })
     showOnLoadCheck:SetPoint("LEFT", cpuCheck.label, "RIGHT", 15, 0)
-    showOnLoadCheck:SetChecked(Addon.db.global.monitor.showOnLoad)
+    showOnLoadCheck:SetChecked(ns.db.global.monitor.showOnLoad)
 
     local filterLabel = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     filterLabel:SetPoint("TOPLEFT", playBtn, "BOTTOMLEFT", 0, -14)
@@ -748,7 +748,7 @@ function Addon.UI:CreateMonitorTab(parent)
         if Monitor then
             Monitor:Reset()
             DoUpdate()
-            Addon:Print(L["MON_MSG_RESET"])
+            ns:Print(L["MON_MSG_RESET"])
         end
     end)
 
@@ -774,7 +774,7 @@ function Addon.UI:CreateMonitorTab(parent)
     end)
 
     showOnLoadCheck:SetScript("OnClick", function(self)
-        Addon.db.global.monitor.showOnLoad = self:GetChecked() and true or false
+        ns.db.global.monitor.showOnLoad = self:GetChecked() and true or false
     end)
 
     tab:SetScript("OnUpdate", function(self, elapsed)
@@ -789,11 +789,11 @@ function Addon.UI:CreateMonitorTab(parent)
             Monitor:StopMonitoring()
             Monitor:CloseAllPinnedPopouts()
         end
-        if Addon.MonitorTabUI == self then
-            Addon.MonitorTabUI = nil
+        if ns.MonitorTabUI == self then
+            ns.MonitorTabUI = nil
         end
     end
 
-    Addon.MonitorTabUI = tab
+    ns.MonitorTabUI = tab
     return tab
 end

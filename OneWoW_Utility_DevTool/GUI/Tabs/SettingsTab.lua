@@ -1,7 +1,7 @@
-local ADDON_NAME, Addon = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-local L = Addon.L
+local L = ns.L
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local abs = math.abs
@@ -36,7 +36,7 @@ local function attachUnloadTooltip(widget, tooltipTitle, tooltipBody)
     end
 end
 
-function Addon.UI:CreateSettingsTab(parent)
+function ns.UI:CreateSettingsTab(parent)
     local tab = CreateFrame("Frame", nil, parent)
     tab:SetAllPoints(parent)
     tab:Hide()

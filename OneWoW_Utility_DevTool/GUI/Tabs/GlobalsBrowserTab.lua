@@ -1,9 +1,9 @@
-local ADDON_NAME, Addon = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local L = Addon.L
+local L = ns.L
 
 local format = format
 local floor = math.floor
@@ -22,13 +22,13 @@ local GB
 
 local function ensureBrowser()
     if not GB then
-        GB = Addon.GlobalsBrowser
+        GB = ns.GlobalsBrowser
     end
     return GB
 end
 
 local function getDU()
-    return Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
+    return ns.Constants and ns.Constants.DEVTOOL_UI or {}
 end
 
 local function setActionButtonEnabled(btn, enabled)
@@ -137,8 +137,8 @@ local function scheduleFilterRefresh(tab)
             return
         end
         GB:SetFilterText(tab.searchBox:GetSearchText())
-        Addon.UI.GlobalsTab_RefreshList(tab)
-        Addon.UI.GlobalsTab_RestoreSelection(tab, true)
+        ns.UI.GlobalsTab_RefreshList(tab)
+        ns.UI.GlobalsTab_RestoreSelection(tab, true)
     end)
 end
 
@@ -153,7 +153,7 @@ local function scheduleTreeFilterRefresh(tab)
             return
         end
         GB:SetTreeFilterText(tab.treeSearchBox:GetSearchText())
-        Addon.UI.GlobalsTab_RebuildTree(tab)
+        ns.UI.GlobalsTab_RebuildTree(tab)
     end)
 end
 
@@ -273,7 +273,7 @@ local function applyTreeSelection(tab, node)
     updateActionButtons(tab)
 end
 
-function Addon.UI.GlobalsTab_RebuildTree(tab)
+function ns.UI.GlobalsTab_RebuildTree(tab)
     if not tab or not tab.tree then
         return
     end
@@ -443,7 +443,7 @@ local function createGlobalsTree(parentContent, scrollFrame, tab)
             if button == "RightButton" then
                 local copyText = GB:GetCopyReference(node) or node.text
                 if copyText then
-                    Addon:CopyToClipboard(copyText)
+                    ns:CopyToClipboard(copyText)
                 end
                 return
             end
@@ -542,14 +542,14 @@ local function createGlobalsTree(parentContent, scrollFrame, tab)
     return tree
 end
 
-function Addon.UI.GlobalsTab_RefreshList(tab)
+function ns.UI.GlobalsTab_RefreshList(tab)
     if tab and tab.virtualizedList then
         tab.virtualizedList.Refresh()
     end
     updateRootCountLabel(tab)
 end
 
-function Addon.UI.GlobalsTab_RestoreSelection(tab, preferFirst)
+function ns.UI.GlobalsTab_RestoreSelection(tab, preferFirst)
     if not tab or not tab.virtualizedList then
         return
     end
@@ -602,10 +602,10 @@ local function applyListSelection(tab, index)
         updateActionButtons(tab)
         return
     end
-    Addon.UI.GlobalsTab_RebuildTree(tab)
+    ns.UI.GlobalsTab_RebuildTree(tab)
 end
 
-function Addon.UI:CreateGlobalsBrowserTab(parent)
+function ns.UI:CreateGlobalsBrowserTab(parent)
     GB = ensureBrowser()
     local DU = getDU()
     local rowHeight = DU.GLOBALS_BROWSER_LIST_ROW_HEIGHT or 20
@@ -670,8 +670,8 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
                 end
             end
             tab.selectedRootEntry = nil
-            Addon.UI.GlobalsTab_RefreshList(tab)
-            Addon.UI.GlobalsTab_RestoreSelection(tab, true)
+            ns.UI.GlobalsTab_RefreshList(tab)
+            ns.UI.GlobalsTab_RestoreSelection(tab, true)
         end,
     })
     tab.categoryDropdown = categoryDropdown
@@ -688,9 +688,9 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     refreshBtn:SetScript("OnClick", function()
         local currentIdentity = saveCurrentRootIdentity(tab)
         GB:RefreshIndex()
-        Addon.UI.GlobalsTab_RefreshList(tab)
+        ns.UI.GlobalsTab_RefreshList(tab)
         restoreCurrentRootIdentity(tab, currentIdentity)
-        Addon.UI.GlobalsTab_RestoreSelection(tab, true)
+        ns.UI.GlobalsTab_RestoreSelection(tab, true)
     end)
 
     local favoritesBtn = OneWoW_GUI:CreateFitTextButton(tab, {
@@ -701,8 +701,8 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     favoritesBtn:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", 0, -5)
     favoritesBtn:SetScript("OnClick", function()
         GB:SetFavoritesOnly(not GB.favoritesOnly)
-        Addon.UI.GlobalsTab_RefreshList(tab)
-        Addon.UI.GlobalsTab_RestoreSelection(tab, true)
+        ns.UI.GlobalsTab_RefreshList(tab)
+        ns.UI.GlobalsTab_RestoreSelection(tab, true)
         updateActionButtons(tab)
     end)
     tab.favoritesBtn = favoritesBtn
@@ -718,8 +718,8 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
             return
         end
         GB:ToggleBookmark(tab.selectedRootEntry)
-        Addon.UI.GlobalsTab_RefreshList(tab)
-        Addon.UI.GlobalsTab_RestoreSelection(tab, true)
+        ns.UI.GlobalsTab_RefreshList(tab)
+        ns.UI.GlobalsTab_RestoreSelection(tab, true)
         updateActionButtons(tab)
     end)
     tab.bookmarkBtn = bookmarkBtn
@@ -730,9 +730,9 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
         onClick = function(myself)
             local currentIdentity = saveCurrentRootIdentity(tab)
             GB:SetIncludeNoisyRoots(myself:GetChecked())
-            Addon.UI.GlobalsTab_RefreshList(tab)
+            ns.UI.GlobalsTab_RefreshList(tab)
             restoreCurrentRootIdentity(tab, currentIdentity)
-            Addon.UI.GlobalsTab_RestoreSelection(tab, true)
+            ns.UI.GlobalsTab_RestoreSelection(tab, true)
         end,
     })
     noisyRootsCheck:SetPoint("LEFT", bookmarkBtn, "RIGHT", 10, 0)
@@ -747,7 +747,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     rootCountText:SetText("")
     tab.rootCountText = rootCountText
 
-    local savedListWidth = Addon.db.global.globalsBrowserLeftPaneWidth
+    local savedListWidth = ns.db.global.globalsBrowserLeftPaneWidth
     local initialListWidth = leftDefault
     if type(savedListWidth) == "number" and savedListWidth >= leftMin then
         initialListWidth = savedListWidth
@@ -810,9 +810,9 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
         bottomOuterInset = 5,
         rightOuterInset = 5,
         resizeCap = DU.MAIN_FRAME_RESIZE_CAP or 0.95,
-        mainFrame = Addon.UI and Addon.UI.mainFrame,
+        mainFrame = ns.UI and ns.UI.mainFrame,
         onWidthChanged = function(width)
-            Addon.db.global.globalsBrowserLeftPaneWidth = width
+            ns.db.global.globalsBrowserLeftPaneWidth = width
         end,
     })
 
@@ -956,7 +956,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
         local target = getCurrentTarget(tab)
         local reference = target and GB:GetCopyReference(target)
         if reference then
-            Addon:CopyToClipboard(reference)
+            ns:CopyToClipboard(reference)
         end
     end)
     tab.copyReferenceBtn = copyReferenceBtn
@@ -970,7 +970,7 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
     copyValueBtn:SetScript("OnClick", function()
         local target = getCurrentTarget(tab)
         if target then
-            Addon:CopyToClipboard(GB:GetCopyValue(target))
+            ns:CopyToClipboard(GB:GetCopyValue(target))
         end
     end)
     tab.copyValueBtn = copyValueBtn
@@ -980,8 +980,8 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
             if not GB.indexBuilt then
                 GB:RefreshIndex()
             end
-            Addon.UI.GlobalsTab_RefreshList(tab)
-            Addon.UI.GlobalsTab_RestoreSelection(tab, true)
+            ns.UI.GlobalsTab_RefreshList(tab)
+            ns.UI.GlobalsTab_RestoreSelection(tab, true)
         end
     end)
 
@@ -1005,12 +1005,12 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
             self._treeFilterTicker:Cancel()
             self._treeFilterTicker = nil
         end
-        if Addon.GlobalsBrowserTab == self then
-            Addon.GlobalsBrowserTab = nil
+        if ns.GlobalsBrowserTab == self then
+            ns.GlobalsBrowserTab = nil
         end
     end
 
-    Addon.GlobalsBrowserTab = tab
+    ns.GlobalsBrowserTab = tab
 
     GB:ResetFilterState()
     if categoryDropdown._text then
@@ -1020,8 +1020,8 @@ function Addon.UI:CreateGlobalsBrowserTab(parent)
         noisyRootsCheck:SetChecked(GB.includeNoisyRoots and true or false)
     end
     updateRootCountLabel(tab)
-    Addon.UI.GlobalsTab_RefreshList(tab)
-    Addon.UI.GlobalsTab_RestoreSelection(tab, true)
+    ns.UI.GlobalsTab_RefreshList(tab)
+    ns.UI.GlobalsTab_RestoreSelection(tab, true)
 
     return tab
 end

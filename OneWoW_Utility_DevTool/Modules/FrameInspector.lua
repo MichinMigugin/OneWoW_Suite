@@ -1,18 +1,18 @@
-local _, Addon = ...
+local _, ns = ...
 
 local FrameInspector = {}
-Addon.FrameInspector = FrameInspector
+ns.FrameInspector = FrameInspector
 
 function FrameInspector:InspectFrame(frame)
     if not frame then return end
 
-    local info = Addon:GetFrameInfo(frame)
+    local info = ns:GetFrameInfo(frame)
     if not info then return end
 
-    if Addon.FrameInspectorTab then
-        Addon.FrameInspectorTab:UpdateFrameDetails(frame, info)
-        if Addon.FrameInspectorTab.frameTree then
-            Addon.FrameInspectorTab.frameTree:BuildFromFrame(frame)
+    if ns.FrameInspectorTab then
+        ns.FrameInspectorTab:UpdateFrameDetails(frame, info)
+        if ns.FrameInspectorTab.frameTree then
+            ns.FrameInspectorTab.frameTree:BuildFromFrame(frame)
         end
     end
 
@@ -25,7 +25,7 @@ function FrameInspector:AddToRecentFrames(frame)
     local name = frame.GetName and frame:GetName()
     if not name then return end
 
-    local recent = Addon.db.global.recentFrames
+    local recent = ns.db.global.recentFrames
 
     for i, fname in ipairs(recent) do
         if fname == name then
@@ -43,7 +43,7 @@ end
 
 function FrameInspector:GetRecentFrames()
     local frames = {}
-    for _, name in ipairs(Addon.db.global.recentFrames) do
+    for _, name in ipairs(ns.db.global.recentFrames) do
         local frame = _G[name]
         if frame then
             tinsert(frames, frame)

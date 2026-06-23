@@ -1,9 +1,9 @@
-local ADDON_NAME, Addon = ...
+local ADDON_NAME, ns = ...
 
-local L = Addon.L
+local L = ns.L
 
 local ErrorAnalyzer = {}
-Addon.ErrorAnalyzer = ErrorAnalyzer
+ns.ErrorAnalyzer = ErrorAnalyzer
 
 local format = string.format
 local strmatch = string.match

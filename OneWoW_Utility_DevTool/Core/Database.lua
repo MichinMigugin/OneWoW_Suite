@@ -1,4 +1,4 @@
-local ADDON_NAME, Addon = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -18,14 +18,14 @@ local function getEditorLanguage()
 end
 
 local function getLocalizedDefaultCategory(language)
-    local locales = Addon.Locales or {}
+    local locales = ns.Locales or {}
     local localeData = locales[language] or locales["enUS"] or {}
     return localeData["EDITOR_CATEGORY_DEFAULT"]
 end
 
 local function getDefaultCategoryAliases()
     local aliases = { ["Uncategorized"] = true }
-    local locales = Addon.Locales or {}
+    local locales = ns.Locales or {}
     for _, localeData in pairs(locales) do
         local defaultCategory = localeData and localeData["EDITOR_CATEGORY_DEFAULT"]
         if defaultCategory and defaultCategory ~= "" then
@@ -81,11 +81,11 @@ local function normalizeEditorDB(global)
     editor.categoryCollapsed = normalizedCollapsed
 end
 
-function Addon:NormalizeEditorDatabase()
+function ns:NormalizeEditorDatabase()
     normalizeEditorDB(self.db.global)
 end
 
-function Addon:GetPinnedMonitorEntriesInOrder(arr)
+function ns:GetPinnedMonitorEntriesInOrder(arr)
     if type(arr) ~= "table" then return {} end
     local keys = {}
     for k in pairs(arr) do
@@ -111,7 +111,7 @@ local function bridgeLegacyMonitorPinned(d)
     if type(mon.pinnedMonitors) ~= "table" then
         mon.pinnedMonitors = {}
     end
-    if #Addon:GetPinnedMonitorEntriesInOrder(mon.pinnedMonitors) == 0 and type(mon.pinnedAddon) == "string" and mon.pinnedAddon ~= "" then
+    if #ns:GetPinnedMonitorEntriesInOrder(mon.pinnedMonitors) == 0 and type(mon.pinnedAddon) == "string" and mon.pinnedAddon ~= "" then
         local pos = mon.pinnedPosition
         if type(pos) ~= "table" then pos = {} end
         tinsert(mon.pinnedMonitors, {
@@ -120,7 +120,7 @@ local function bridgeLegacyMonitorPinned(d)
             position = CopyTable(pos),
         })
     end
-    local arr = Addon:GetPinnedMonitorEntriesInOrder(mon.pinnedMonitors)
+    local arr = ns:GetPinnedMonitorEntriesInOrder(mon.pinnedMonitors)
     local seen = {}
     local out = {}
     for _, e in ipairs(arr) do
@@ -136,7 +136,7 @@ local function bridgeLegacyMonitorPinned(d)
     mon.pinnedPosition = nil
 end
 
-function Addon:InitializeDatabase()
+function ns:InitializeDatabase()
     local sv = OneWoW_UtilityDevTool_DB
     if sv and not sv.global and next(sv) ~= nil then
         local oldData = {}
@@ -209,7 +209,7 @@ function Addon:InitializeDatabase()
         savedVar = "OneWoW_UtilityDevTool_DB",
         defaults = defaults,
     })
-    self.db = db
+    ns.db = db
 
     local g = db.global
     if type(g.tabs) ~= "table" then
@@ -231,4 +231,10 @@ function Addon:InitializeDatabase()
     end
 
     self:NormalizeEditorDatabase()
+end
+
+--- Return the addon database handle after initialization.
+---@return table db
+function ns:GetDB()
+    return ns.db
 end

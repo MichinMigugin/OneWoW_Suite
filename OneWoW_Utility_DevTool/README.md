@@ -19,6 +19,10 @@
 3. Restart World of Warcraft or type `/reload` in-game
 4. Open the addon with `/dt` or `/1wdt`
 
+Cross-addon integration uses `OneWoW_Utility_DevTool_API` (`Core/API.lua`); the
+lifecycle root `OneWoW_Utility_DevTool` exposes colon hooks only (`OnAddonLoaded`,
+`ApplyTheme`, …).
+
 ---
 
 ## Slash Commands

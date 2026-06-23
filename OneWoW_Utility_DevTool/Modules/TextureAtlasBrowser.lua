@@ -1,8 +1,8 @@
-local _, Addon = ...
-local L = Addon.L
+local _, ns = ...
+local L = ns.L
 
 local TextureAtlasBrowser = {}
-Addon.TextureAtlasBrowser = TextureAtlasBrowser
+ns.TextureAtlasBrowser = TextureAtlasBrowser
 
 local sort, tinsert, wipe = sort, tinsert, wipe
 local pairs, ipairs = pairs, ipairs
@@ -12,7 +12,7 @@ local VIEW_TEXTURE = "texture"
 local VIEW_ATLAS = "atlas"
 
 function TextureAtlasBrowser:IsDataAvailable()
-    return Addon._AtlasInfo ~= nil and type(Addon._AtlasInfo) == "table"
+    return ns._AtlasInfo ~= nil and type(ns._AtlasInfo) == "table"
 end
 
 function TextureAtlasBrowser:ResetAfterAssetUnload()
@@ -37,7 +37,7 @@ function TextureAtlasBrowser:EnsureIndices()
         return
     end
 
-    local AI = Addon._AtlasInfo
+    local AI = ns._AtlasInfo
     for texKey, atlasTable in pairs(AI) do
         local displayName = texKey
         if type(texKey) == "string" and texKey:match("^Interface/") then
@@ -134,8 +134,8 @@ function TextureAtlasBrowser:ResolveAtlasInfo(atlasName, textureKey)
     end
 
     local key = textureKey or self.atlasPrimaryTexture[atlasName]
-    if key and Addon._AtlasInfo[key] and Addon._AtlasInfo[key][atlasName] then
-        local info = self:RawRowToInfo(Addon._AtlasInfo[key][atlasName], key)
+    if key and ns._AtlasInfo[key] and ns._AtlasInfo[key][atlasName] then
+        local info = self:RawRowToInfo(ns._AtlasInfo[key][atlasName], key)
         if info then
             info.missing = not api
             return info, "data"
@@ -146,7 +146,7 @@ function TextureAtlasBrowser:ResolveAtlasInfo(atlasName, textureKey)
 end
 
 function TextureAtlasBrowser:GetAtlasesForTexture(texKey)
-    local t = Addon._AtlasInfo and Addon._AtlasInfo[texKey]
+    local t = ns._AtlasInfo and ns._AtlasInfo[texKey]
     if not t then
         return {}
     end
@@ -196,7 +196,7 @@ local function textureMatchesFilter(texKey, displayName, filter)
     if tostring(texKey):lower():find(filter, 1, true) then
         return true
     end
-    local t = Addon._AtlasInfo[texKey]
+    local t = ns._AtlasInfo[texKey]
     if t then
         for k in pairs(t) do
             if type(k) == "string" and k:lower():find(filter, 1, true) then
@@ -222,7 +222,7 @@ local function atlasMatchesFilter(atlasName, texKey, filter)
 end
 
 function TextureAtlasBrowser:TextureHasBookmarkedAtlas(texKey, bookmarks)
-    local t = Addon._AtlasInfo[texKey]
+    local t = ns._AtlasInfo[texKey]
     if not t or not bookmarks then
         return false
     end
@@ -273,7 +273,7 @@ function TextureAtlasBrowser:RebuildFiltered()
 
     local filter = self.filterText or ""
     local fav = self.favoritesOnly
-    local bookmarks = Addon.db.global.textureBookmarks
+    local bookmarks = ns.db.global.textureBookmarks
 
     if self.viewMode == VIEW_TEXTURE then
         for _, e in ipairs(self.textureEntries) do

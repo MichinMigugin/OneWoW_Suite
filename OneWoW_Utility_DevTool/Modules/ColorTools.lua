@@ -1,7 +1,7 @@
-local _, Addon = ...
+local _, ns = ...
 
 local ColorTools = {}
-Addon.ColorTools = ColorTools
+ns.ColorTools = ColorTools
 
 --- Cached class color rows for the Color Tools tab (WoW API data).
 function ColorTools:GetClassColorRows()

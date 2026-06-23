@@ -1,4 +1,4 @@
-local _, Addon = ...
+local _, ns = ...
 
 local format = format
 local tinsert = tinsert
@@ -8,7 +8,7 @@ local type = type
 local pcall = pcall
 
 local FB = {}
-Addon.FontBrowser = FB
+ns.FontBrowser = FB
 
 FB.masterList = {}
 FB.filteredList = {}
@@ -45,7 +45,7 @@ function FB:BuildCatalog()
     local seen = {}
     local list = {}
 
-    local staticNames = Addon.FontObjectNames or {}
+    local staticNames = ns.FontObjectNames or {}
     for _, name in ipairs(staticNames) do
         if not seen[name] then
             seen[name] = true
@@ -82,7 +82,7 @@ end
 function FB:RebuildFiltered()
     local result = {}
     local filter = self.filterText:upper()
-    local bookmarks = Addon.db.global.fontBookmarks
+    local bookmarks = ns.db.global.fontBookmarks
 
     for _, name in ipairs(self.masterList) do
         local pass = true
@@ -126,14 +126,14 @@ function FB:GetFilteredEntry(idx)
 end
 
 function FB:IsBookmarked(name)
-    local fb = Addon.db.global.fontBookmarks
+    local fb = ns.db.global.fontBookmarks
     if not fb then return false end
     return fb[name] or false
 end
 
 function FB:ToggleBookmark(name)
     if not name then return end
-    local g = Addon.db.global
+    local g = ns.db.global
     if g.fontBookmarks[name] then
         g.fontBookmarks[name] = nil
         return false

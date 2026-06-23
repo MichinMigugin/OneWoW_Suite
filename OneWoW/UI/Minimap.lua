@@ -63,8 +63,8 @@ local function ShowContextMenu(anchorFrame)
         local textLeftOffset = 8
         local hasErrorAlert = false
         if item.global == "OneWoW_Utility_DevTool" then
-            local dt = OneWoW_Utility_DevTool
-            if dt and dt.ErrorLogger and dt.ErrorLogger.HasCurrentSessionErrors and dt.ErrorLogger:HasCurrentSessionErrors() then
+            if OneWoW_Utility_DevTool_API and OneWoW_Utility_DevTool_API.HasCurrentSessionErrors
+                and OneWoW_Utility_DevTool_API.HasCurrentSessionErrors() then
                 hasErrorAlert = true
                 textLeftOffset = 24
             end

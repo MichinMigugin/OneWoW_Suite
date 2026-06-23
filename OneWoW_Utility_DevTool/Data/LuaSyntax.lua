@@ -1,8 +1,8 @@
-local _, Addon = ...
+local _, ns = ...
 
-Addon.EditorSyntaxData = {}
+ns.EditorSyntaxData = {}
 
-local D = Addon.EditorSyntaxData
+local D = ns.EditorSyntaxData
 
 D.LUA_KEYWORDS = {
     ["if"] = true, ["then"] = true, ["else"] = true, ["elseif"] = true,

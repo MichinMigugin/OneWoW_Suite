@@ -1,11 +1,11 @@
-local ADDON_NAME, Addon = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local L = Addon.L
+local L = ns.L
 
-function Addon.UI:CreateEventMonitorTab(parent)
+function ns.UI:CreateEventMonitorTab(parent)
     local tab = CreateFrame("Frame", nil, parent)
     tab:SetAllPoints(parent)
     tab:Hide()
@@ -13,11 +13,11 @@ function Addon.UI:CreateEventMonitorTab(parent)
     local startStopBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = START, height = 22, minWidth = 60 })
     startStopBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
     startStopBtn:SetScript("OnClick", function()
-        if Addon.EventMonitor then
-            if Addon.EventMonitor.monitoring then
-                Addon.EventMonitor:Stop()
+        if ns.EventMonitor then
+            if ns.EventMonitor.monitoring then
+                ns.EventMonitor:Stop()
             else
-                Addon.EventMonitor:Start()
+                ns.EventMonitor:Start()
             end
         end
     end)
@@ -25,36 +25,36 @@ function Addon.UI:CreateEventMonitorTab(parent)
     local pauseBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["PAUSE"], height = 22, minWidth = 70 })
     pauseBtn:SetPoint("LEFT", startStopBtn, "RIGHT", 5, 0)
     pauseBtn:SetScript("OnClick", function()
-        if Addon.EventMonitor then
-            Addon.EventMonitor:TogglePause()
+        if ns.EventMonitor then
+            ns.EventMonitor:TogglePause()
         end
     end)
 
     local clearBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_CLEAR"], height = 22, minWidth = 50 })
     clearBtn:SetPoint("LEFT", pauseBtn, "RIGHT", 5, 0)
     clearBtn:SetScript("OnClick", function()
-        if Addon.EventMonitor then
-            Addon.EventMonitor:Clear()
+        if ns.EventMonitor then
+            ns.EventMonitor:Clear()
         end
     end)
 
     local configBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_SELECT_EVENTS"], height = 22, minWidth = 80 })
     configBtn:SetPoint("LEFT", clearBtn, "RIGHT", 5, 0)
     configBtn:SetScript("OnClick", function()
-        Addon.UI:ShowEventSelector()
+        ns.UI:ShowEventSelector()
     end)
 
     local importBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_IMPORT_EVENTS"], height = 22, minWidth = 80 })
     importBtn:SetPoint("LEFT", configBtn, "RIGHT", 5, 0)
     importBtn:SetScript("OnClick", function()
-        Addon.UI:ShowEventImportDialog()
+        ns.UI:ShowEventImportDialog()
     end)
 
     local firehoseBtn = OneWoW_GUI:CreateFitTextButton(tab, { text = L["BTN_FIREHOSE"], height = 22, minWidth = 60 })
     firehoseBtn:SetPoint("LEFT", importBtn, "RIGHT", 5, 0)
     firehoseBtn:SetScript("OnClick", function()
-        if Addon.EventMonitor then
-            Addon.EventMonitor:FirehoseToggle()
+        if ns.EventMonitor then
+            ns.EventMonitor:FirehoseToggle()
         end
     end)
 
@@ -68,8 +68,8 @@ function Addon.UI:CreateEventMonitorTab(parent)
         height = 22,
         placeholderText = L["FILTER"],
         onTextChanged = function()
-            if Addon.EventMonitor then
-                Addon.EventMonitor:UpdateUI()
+            if ns.EventMonitor then
+                ns.EventMonitor:UpdateUI()
             end
         end,
     })
@@ -91,10 +91,10 @@ function Addon.UI:CreateEventMonitorTab(parent)
         content:SetWidth(math.max(w, tab.maxRowWidth or 0))
     end)
 
-    local ROW_HEIGHT = Addon.Constants and Addon.Constants.EVENT_VIEWER_ROW_HEIGHT or 14
-    local COL_EVENT = Addon.Constants and Addon.Constants.EVENT_VIEWER_COL_EVENT or 280
-    local COL_ARGS = Addon.Constants and Addon.Constants.EVENT_VIEWER_COL_ARGS or 260
-    local MAX_EVENT_ROWS = (Addon.Constants and Addon.Constants.DEVTOOL_UI and Addon.Constants.DEVTOOL_UI.EVENT_MONITOR_MAX_ROWS) or 201
+    local ROW_HEIGHT = ns.Constants and ns.Constants.EVENT_VIEWER_ROW_HEIGHT or 14
+    local COL_EVENT = ns.Constants and ns.Constants.EVENT_VIEWER_COL_EVENT or 280
+    local COL_ARGS = ns.Constants and ns.Constants.EVENT_VIEWER_COL_ARGS or 260
+    local MAX_EVENT_ROWS = (ns.Constants and ns.Constants.DEVTOOL_UI and ns.Constants.DEVTOOL_UI.EVENT_MONITOR_MAX_ROWS) or 201
 
     tab.emptyStateText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     tab.emptyStateText:SetPoint("CENTER", content, "CENTER", 0, 0)
@@ -147,7 +147,7 @@ function Addon.UI:CreateEventMonitorTab(parent)
     -- Hook OnLeave so correct styling persists: CreateButton's OnLeave always sets BTN_NORMAL,
     -- which overwrites our active state. Re-apply state-based styling.
     startStopBtn:HookScript("OnLeave", function(self)
-        if Addon.EventMonitor and Addon.EventMonitor.monitoring then
+        if ns.EventMonitor and ns.EventMonitor.monitoring then
             self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
             self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
             self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
@@ -158,8 +158,8 @@ function Addon.UI:CreateEventMonitorTab(parent)
         end
     end)
     pauseBtn:HookScript("OnLeave", function(self)
-        if Addon.EventMonitor and Addon.EventMonitor.monitoring then
-            if Addon.EventMonitor.paused then
+        if ns.EventMonitor and ns.EventMonitor.monitoring then
+            if ns.EventMonitor.paused then
                 self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
                 self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
                 self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
@@ -172,23 +172,23 @@ function Addon.UI:CreateEventMonitorTab(parent)
     end)
 
     function tab:Teardown()
-        if Addon.EventMonitor and Addon.EventMonitor.monitoring then
-            Addon.EventMonitor:Stop()
+        if ns.EventMonitor and ns.EventMonitor.monitoring then
+            ns.EventMonitor:Stop()
         end
-        if Addon.EventMonitorTab == self then
-            Addon.EventMonitorTab = nil
+        if ns.EventMonitorTab == self then
+            ns.EventMonitorTab = nil
         end
     end
 
-    Addon.EventMonitorTab = tab
+    ns.EventMonitorTab = tab
     return tab
 end
 
-function Addon.UI:ShowEventSelector()
+function ns.UI:ShowEventSelector()
     if not self.eventSelector then
         local frame = OneWoW_GUI:CreateFrame(UIParent, {
-            width = (Addon.Constants and Addon.Constants.DEVTOOL_UI and Addon.Constants.DEVTOOL_UI.EVENT_SELECTOR_WIDTH) or 600,
-            height = (Addon.Constants and Addon.Constants.DEVTOOL_UI and Addon.Constants.DEVTOOL_UI.EVENT_SELECTOR_HEIGHT) or 500,
+            width = (ns.Constants and ns.Constants.DEVTOOL_UI and ns.Constants.DEVTOOL_UI.EVENT_SELECTOR_WIDTH) or 600,
+            height = (ns.Constants and ns.Constants.DEVTOOL_UI and ns.Constants.DEVTOOL_UI.EVENT_SELECTOR_HEIGHT) or 500,
             backdrop = BACKDROP_INNER_NO_INSETS,
         })
         frame:SetPoint("CENTER")
@@ -207,24 +207,24 @@ function Addon.UI:ShowEventSelector()
         local commonBtn = OneWoW_GUI:CreateFitTextButton(frame, { text = L["BTN_COMMON_EVENTS"], height = 25, minWidth = 96 })
         commonBtn:SetPoint("TOPLEFT", 10, -30)
         commonBtn:SetScript("OnClick", function()
-            Addon.EventMonitor:RegisterCommonEvents()
-            Addon.UI:UpdateEventSelector()
-            Addon:Print((L["MSG_ADDED_COMMON_EVENTS"]):gsub("{count}", Addon.EventMonitor:GetEventCount()))
+            ns.EventMonitor:RegisterCommonEvents()
+            ns.UI:UpdateEventSelector()
+            ns:Print((L["MSG_ADDED_COMMON_EVENTS"]):gsub("{count}", ns.EventMonitor:GetEventCount()))
         end)
 
         local selectAllBtn = OneWoW_GUI:CreateFitTextButton(frame, { text = L["BTN_SELECT_ALL"], height = 25, minWidth = 72 })
         selectAllBtn:SetPoint("LEFT", commonBtn, "RIGHT", 5, 0)
         selectAllBtn:SetScript("OnClick", function()
-            Addon.UI:SelectAllEvents()
-            Addon:Print((L["MSG_SELECTED_ALL_EVENTS"]):gsub("{count}", Addon.EventMonitor:GetEventCount()))
+            ns.UI:SelectAllEvents()
+            ns:Print((L["MSG_SELECTED_ALL_EVENTS"]):gsub("{count}", ns.EventMonitor:GetEventCount()))
         end)
 
         local clearAllBtn = OneWoW_GUI:CreateFitTextButton(frame, { text = CLEAR_ALL, height = 25, minWidth = 72 })
         clearAllBtn:SetPoint("LEFT", selectAllBtn, "RIGHT", 5, 0)
         clearAllBtn:SetScript("OnClick", function()
-            Addon.EventMonitor.selectedEvents = {}
-            Addon.UI:UpdateEventSelector()
-            Addon:Print(L["MSG_CLEARED_ALL_EVENTS"])
+            ns.EventMonitor.selectedEvents = {}
+            ns.UI:UpdateEventSelector()
+            ns:Print(L["MSG_CLEARED_ALL_EVENTS"])
         end)
 
         local searchLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -237,7 +237,7 @@ function Addon.UI:ShowEventSelector()
             height = 25,
             placeholderText = L["FILTER"],
             onTextChanged = function()
-                Addon.UI:UpdateEventSelector()
+                ns.UI:UpdateEventSelector()
             end,
         })
         searchBox:SetPoint("LEFT", searchLabel, "RIGHT", 5, 0)
@@ -270,16 +270,16 @@ function Addon.UI:ShowEventSelector()
 
         frame.eventButtons = {}
         frame.eventRowHeight = 26
-        local commonCount = #Addon.EventMonitor:GetCommonEvents()
-        local poolSize = commonCount + (Addon.Constants.EVENT_SELECTOR_CUSTOM_BUFFER or 100)
+        local commonCount = #ns.EventMonitor:GetCommonEvents()
+        local poolSize = commonCount + (ns.Constants.EVENT_SELECTOR_CUSTOM_BUFFER or 100)
         for i = 1, poolSize do
             local btn = OneWoW_GUI:CreateCheckbox(leftContent, { label = "" })
             btn:SetPoint("TOPLEFT", 5, -(i-1) * frame.eventRowHeight - 5)
 
             btn:SetScript("OnClick", function(btnSelf)
                 if btnSelf.eventName then
-                    Addon.EventMonitor:ToggleEvent(btnSelf.eventName)
-                    Addon.UI:UpdateEventSelector()
+                    ns.EventMonitor:ToggleEvent(btnSelf.eventName)
+                    ns.UI:UpdateEventSelector()
                 end
             end)
 
@@ -314,11 +314,11 @@ function Addon.UI:ShowEventSelector()
         addBtn:SetScript("OnClick", function()
             local eventName = customBox:GetSearchText()
             if eventName and eventName ~= "" then
-                Addon.EventMonitor:ToggleEvent(eventName:upper())
+                ns.EventMonitor:ToggleEvent(eventName:upper())
                 customBox:SetText(customBox.placeholderText or "")
                 customBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                Addon.UI:UpdateEventSelector()
-                Addon:Print((L["MSG_ADDED_EVENT"]):gsub("{event}", eventName:upper()))
+                ns.UI:UpdateEventSelector()
+                ns:Print((L["MSG_ADDED_EVENT"]):gsub("{event}", eventName:upper()))
             end
         end)
 
@@ -341,33 +341,33 @@ function Addon.UI:ShowEventSelector()
 
         self.eventSelector = frame
 
-        Addon.EventMonitor:RegisterCommonEvents()
+        ns.EventMonitor:RegisterCommonEvents()
     end
 
     self:UpdateEventSelector()
     self.eventSelector:Show()
 end
 
-function Addon.UI:SelectAllEvents()
-    for _, event in ipairs(Addon.EventMonitor:GetCommonEvents()) do
-        Addon.EventMonitor.selectedEvents[event] = true
+function ns.UI:SelectAllEvents()
+    for _, event in ipairs(ns.EventMonitor:GetCommonEvents()) do
+        ns.EventMonitor.selectedEvents[event] = true
     end
 
     self:UpdateEventSelector()
 end
 
-function Addon.UI:UpdateEventSelector()
+function ns.UI:UpdateEventSelector()
     if not self.eventSelector then return end
 
     local frame = self.eventSelector
     local searchText = (frame.searchBox:GetSearchText() or ""):upper()
 
     local allEvents = {}
-    for _, event in ipairs(Addon.EventMonitor:GetCommonEvents()) do
+    for _, event in ipairs(ns.EventMonitor:GetCommonEvents()) do
         tinsert(allEvents, event)
     end
 
-    for event in pairs(Addon.EventMonitor.selectedEvents) do
+    for event in pairs(ns.EventMonitor.selectedEvents) do
         local exists = false
         for _, e in ipairs(allEvents) do
             if e == event then
@@ -395,7 +395,7 @@ function Addon.UI:UpdateEventSelector()
         if event then
             btn.eventName = event
             btn.label:SetText(event)
-            btn:SetChecked(Addon.EventMonitor:IsEventRegistered(event))
+            btn:SetChecked(ns.EventMonitor:IsEventRegistered(event))
             btn:Show()
         else
             btn:Hide()
@@ -405,13 +405,13 @@ function Addon.UI:UpdateEventSelector()
     local height = math.max(#filteredEvents * rowHeight + 10, frame.leftScroll:GetHeight())
     frame.leftScroll:GetScrollChild():SetHeight(height)
 
-    frame.eventCount:SetText((L["LABEL_SELECTED"]) .. " " .. Addon.EventMonitor:GetEventCount())
+    frame.eventCount:SetText((L["LABEL_SELECTED"]) .. " " .. ns.EventMonitor:GetEventCount())
 end
 
-function Addon.UI:ShowEventImportDialog()
+function ns.UI:ShowEventImportDialog()
     if not self.importDialog then
         local frame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-        local _DU = Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
+        local _DU = ns.Constants and ns.Constants.DEVTOOL_UI or {}
         frame:SetSize(_DU.EVENT_IMPORT_WIDTH or 650, _DU.EVENT_IMPORT_HEIGHT or 480)
         frame:SetPoint("CENTER")
         frame:SetFrameStrata("DIALOG")
@@ -471,13 +471,13 @@ function Addon.UI:ShowEventImportDialog()
                 statusLabel:SetText(L["EVENT_IMPORT_NOTHING"])
                 return
             end
-            local count = Addon.EventMonitor:ImportEvents(text)
+            local count = ns.EventMonitor:ImportEvents(text)
             if count == 0 then
                 statusLabel:SetText(L["EVENT_IMPORT_NONE_FOUND"])
             else
                 statusLabel:SetText((L["EVENT_IMPORT_SUCCESS"]):gsub("{count}", tostring(count)))
-                if not Addon.EventMonitor.monitoring then
-                    Addon.EventMonitor:Start()
+                if not ns.EventMonitor.monitoring then
+                    ns.EventMonitor:Start()
                 end
             end
         end)

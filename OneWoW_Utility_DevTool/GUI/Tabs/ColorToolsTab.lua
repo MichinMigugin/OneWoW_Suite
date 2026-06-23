@@ -1,9 +1,9 @@
-local _, Addon = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local C = OneWoW_GUI.Constants
-local L = Addon.L
+local L = ns.L
 
 local function updateColor(tab)
     local r = tab.rSlider:GetValue() / 255
@@ -24,7 +24,7 @@ end
 
 local function copyColorCode(tab)
     if tab.currentColorCode then
-        Addon:CopyToClipboard(tab.currentColorCode)
+        ns:CopyToClipboard(tab.currentColorCode)
     end
 end
 
@@ -38,8 +38,8 @@ local function updateLayout(tab)
     end
 end
 
-function Addon.UI:CreateColorToolsTab(parent)
-    local DU = Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
+function ns.UI:CreateColorToolsTab(parent)
+    local DU = ns.Constants and ns.Constants.DEVTOOL_UI or {}
     local PICKER_TOP = DU.COLOR_TOOLS_PICKER_TOP_PADDING or 10
     local PICKER_GAP = DU.COLOR_TOOLS_PICKER_VERTICAL_GAP or 20
     local ROW_H = DU.COLOR_TOOLS_ROW_HEIGHT or 25
@@ -54,7 +54,7 @@ function Addon.UI:CreateColorToolsTab(parent)
     tab.colorRows = {}
     tab.rowHeight = ROW_H
 
-    local ColorTools = Addon.ColorTools
+    local ColorTools = ns.ColorTools
     local classColors = ColorTools and ColorTools:GetClassColorRows() or {}
 
     local pickerPanel = OneWoW_GUI:CreateFrame(tab, {
@@ -192,7 +192,7 @@ function Addon.UI:CreateColorToolsTab(parent)
         row.copyBtn = OneWoW_GUI:CreateButton(row, { text = colorStr, width = 60, height = 20 })
         row.copyBtn:SetPoint("RIGHT", -5, 0)
         row.copyBtn:SetScript("OnClick", function()
-            Addon:CopyToClipboard(colorStr)
+            ns:CopyToClipboard(colorStr)
         end)
         row.copyBtn:HookScript("OnEnter", function(btn)
             GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")
@@ -217,7 +217,7 @@ function Addon.UI:CreateColorToolsTab(parent)
     commonTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     yOffset = yOffset - 40
-    local commonList = Addon.Constants and Addon.Constants.COLOR_TOOLS_COMMON or {}
+    local commonList = ns.Constants and ns.Constants.COLOR_TOOLS_COMMON or {}
     for _, entry in ipairs(commonList) do
         local hex = entry.hex
         local name = L[entry.nameKey]
@@ -243,7 +243,7 @@ function Addon.UI:CreateColorToolsTab(parent)
         row.copyBtn = OneWoW_GUI:CreateButton(row, { text = hex, width = 60, height = 20 })
         row.copyBtn:SetPoint("RIGHT", -5, 0)
         row.copyBtn:SetScript("OnClick", function()
-            Addon:CopyToClipboard(hex)
+            ns:CopyToClipboard(hex)
         end)
         row.copyBtn:HookScript("OnEnter", function(btn)
             GameTooltip:SetOwner(btn, "ANCHOR_RIGHT")

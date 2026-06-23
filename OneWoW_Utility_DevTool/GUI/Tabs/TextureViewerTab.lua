@@ -1,9 +1,9 @@
-local ADDON_NAME, Addon = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local L = Addon.L
+local L = ns.L
 
 local format = format
 local abs = math.abs
@@ -12,14 +12,14 @@ local max = math.max
 local min = math.min
 local tinsert = tinsert
 
-local BR = Addon.TextureAtlasBrowser
+local BR = ns.TextureAtlasBrowser
 
 -- Forward declaration: refreshSheetOverlays (above) calls this from overlay OnClick.
 local selectAtlasFromOverlay
 local applySheetFrameLayout
 
 local function getDU()
-    return Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
+    return ns.Constants and ns.Constants.DEVTOOL_UI or {}
 end
 
 local BOOKMARK_ICON_PATH = format("Interface\\AddOns\\%s\\Media\\icon-fav.png", ADDON_NAME)
@@ -60,11 +60,11 @@ local function scheduleFilterRefresh(tab)
         tab._filterTicker = nil
         if not tab.searchBox then return end
         BR:SetFilterText(tab.searchBox:GetSearchText())
-        Addon.UI.TextureTab_RefreshList(tab)
+        ns.UI.TextureTab_RefreshList(tab)
     end)
 end
 
-function Addon.UI.TextureTab_RefreshList(tab)
+function ns.UI.TextureTab_RefreshList(tab)
     if not tab or not tab.virtualizedList then return end
     tab.virtualizedList.Refresh()
 end
@@ -236,7 +236,7 @@ local function styleSheetOverlay(tab, overlay, DU)
         overlay:SetBackdropBorderColor(r, g, b, borderMutedA)
     end
 
-    local bookmarks = Addon.db.global.textureBookmarks
+    local bookmarks = ns.db.global.textureBookmarks
     local bmTex = ensureSheetOverlayBookmarkIcon(overlay)
     if bookmarks[overlay.atlasName] then
         bmTex:SetTexture(BOOKMARK_ICON_PATH)
@@ -456,7 +456,7 @@ local function updateDetailPanel(tab)
             tinsert(lines, line)
         end
 
-        local bm = Addon.db.global and Addon.db.global.textureBookmarks and Addon.db.global.textureBookmarks[atlasName]
+        local bm = ns.db.global and ns.db.global.textureBookmarks and ns.db.global.textureBookmarks[atlasName]
         if bm then
             tinsert(lines, "")
             tinsert(lines, "|cff00ff00[" .. (L["LABEL_BOOKMARKED"]) .. "]|r")
@@ -480,9 +480,9 @@ local function applyListSelection(tab, entryIndex)
         tab.selectedAtlasName = nil
         showTextureSheet(tab, entry.textureKey)
         -- Favorites + By sheet lists whole textures; pick first bookmarked atlas so detail + overlay match that slice.
-        if BR.favoritesOnly and Addon.db.global and Addon.db.global.textureBookmarks then
+        if BR.favoritesOnly and ns.db.global and ns.db.global.textureBookmarks then
             for _, row in ipairs(BR:GetAtlasesForTexture(entry.textureKey)) do
-                if Addon.db.global.textureBookmarks[row.atlasName] then
+                if ns.db.global.textureBookmarks[row.atlasName] then
                     selectAtlasFromOverlay(tab, row.atlasName)
                     break
                 end
@@ -494,14 +494,14 @@ local function applyListSelection(tab, entryIndex)
     end
 
     updateDetailPanel(tab)
-    Addon.UI.TextureTab_RefreshToolbarButtons(tab)
+    ns.UI.TextureTab_RefreshToolbarButtons(tab)
 end
 
 --- After toggling textureBookmarks; favorites view must rebuild the filtered list.
 local function textureTabAfterBookmarkToggle(tab)
     if BR.favoritesOnly then
         BR:RebuildFiltered()
-        Addon.UI.TextureTab_RefreshList(tab)
+        ns.UI.TextureTab_RefreshList(tab)
         local n = BR:GetFilteredCount()
         if n == 0 then
             tab.selectedListIndex = nil
@@ -515,7 +515,7 @@ local function textureTabAfterBookmarkToggle(tab)
             if tab.nameText then tab.nameText:SetText("") end
             updateDetailPanel(tab)
             if tab.virtualizedList then tab.virtualizedList.SetSelectedIndex(nil) end
-            Addon.UI.TextureTab_RefreshToolbarButtons(tab)
+            ns.UI.TextureTab_RefreshToolbarButtons(tab)
         else
             local pick = nil
             for i = 1, n do
@@ -534,7 +534,7 @@ local function textureTabAfterBookmarkToggle(tab)
     else
         updateDetailPanel(tab)
         if tab.virtualizedList then tab.virtualizedList.Refresh() end
-        Addon.UI.TextureTab_RefreshToolbarButtons(tab)
+        ns.UI.TextureTab_RefreshToolbarButtons(tab)
     end
     if BR:GetViewMode() == BR.VIEW_TEXTURE and tab.selectedTextureKey and tab.previewSheetHost and tab.previewSheetHost:IsShown() then
         updateSheetOverlayStyles(tab)
@@ -551,7 +551,7 @@ selectAtlasFromOverlay = function(tab, atlasName)
     end
     updateSheetOverlayStyles(tab)
     updateDetailPanel(tab)
-    Addon.UI.TextureTab_RefreshToolbarButtons(tab)
+    ns.UI.TextureTab_RefreshToolbarButtons(tab)
 end
 
 local TEXTURE_BAR_ACTIVE_KEY = "_textureBarActive"
@@ -574,17 +574,17 @@ local function setCopyButtonEnabled(btn, enabled)
     end
 end
 
-function Addon.UI.TextureTab_RefreshToolbarButtons(tab)
+function ns.UI.TextureTab_RefreshToolbarButtons(tab)
     if not tab or not tab.btnByTexture then return end
     tab.btnByTexture._textureBarActive = (BR:GetViewMode() == BR.VIEW_TEXTURE)
     tab.btnByAtlas._textureBarActive = (BR:GetViewMode() == BR.VIEW_ATLAS)
     tab.favsBtn._textureBarActive = BR.favoritesOnly
-    local bookmarked = tab.selectedAtlasName and Addon.db.global and Addon.db.global.textureBookmarks and Addon.db.global.textureBookmarks[tab.selectedAtlasName]
+    local bookmarked = tab.selectedAtlasName and ns.db.global and ns.db.global.textureBookmarks and ns.db.global.textureBookmarks[tab.selectedAtlasName]
     tab.bookmarkBtn._textureBarActive = bookmarked and true or false
     tab.manualToggle._textureBarActive = tab.manualPanel and tab.manualPanel:IsShown() or false
-    Addon.UI:PaintToolbarBarButton(tab.btnByTexture, TEXTURE_BAR_ACTIVE_KEY)
-    Addon.UI:PaintToolbarBarButton(tab.btnByAtlas, TEXTURE_BAR_ACTIVE_KEY)
-    Addon.UI:PaintToolbarBarButton(tab.favsBtn, TEXTURE_BAR_ACTIVE_KEY)
+    ns.UI:PaintToolbarBarButton(tab.btnByTexture, TEXTURE_BAR_ACTIVE_KEY)
+    ns.UI:PaintToolbarBarButton(tab.btnByAtlas, TEXTURE_BAR_ACTIVE_KEY)
+    ns.UI:PaintToolbarBarButton(tab.favsBtn, TEXTURE_BAR_ACTIVE_KEY)
     if tab.bookmarkBtn.SetFitText then
         if tab.selectedAtlasName then
             if bookmarked then
@@ -596,8 +596,8 @@ function Addon.UI.TextureTab_RefreshToolbarButtons(tab)
             tab.bookmarkBtn:SetFitText(L["BTN_BOOKMARK"])
         end
     end
-    Addon.UI:PaintToolbarBarButton(tab.bookmarkBtn, TEXTURE_BAR_ACTIVE_KEY)
-    Addon.UI:PaintToolbarBarButton(tab.manualToggle, TEXTURE_BAR_ACTIVE_KEY)
+    ns.UI:PaintToolbarBarButton(tab.bookmarkBtn, TEXTURE_BAR_ACTIVE_KEY)
+    ns.UI:PaintToolbarBarButton(tab.manualToggle, TEXTURE_BAR_ACTIVE_KEY)
 
     local hasSelection = tab.selectedAtlasName or tab.selectedTextureKey
     local hasAtlas = tab.selectedAtlasName ~= nil
@@ -606,7 +606,7 @@ function Addon.UI.TextureTab_RefreshToolbarButtons(tab)
     setCopyButtonEnabled(tab.copyCoordBtn, hasAtlas)
 end
 
-function Addon.UI:CreateTextureTab(parent)
+function ns.UI:CreateTextureTab(parent)
     local DU = getDU()
     local TEX_ROW_H = DU.TEXTURE_BROWSER_LIST_ROW_HEIGHT or DU.TEXTURE_LIST_BUTTON_HEIGHT or 22
     local NUM_ROWS = DU.TEXTURE_BROWSER_LIST_VISIBLE_ROWS or 40
@@ -638,17 +638,17 @@ function Addon.UI:CreateTextureTab(parent)
         warn:SetPoint("TOPRIGHT", tab, "TOPRIGHT", -16, -16)
         warn:SetJustifyH("LEFT")
         warn:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        local unloadOn = Addon.UI and Addon.UI.GetUnloadOnDisable and Addon.UI:GetUnloadOnDisable("textures")
+        local unloadOn = ns.UI and ns.UI.GetUnloadOnDisable and ns.UI:GetUnloadOnDisable("textures")
         local msg
         if unloadOn then
             msg = L["TEXTURE_MSG_UNLOADED"]
-        elseif Addon._DevToolTextureAssetsPurgedSession then
+        elseif ns._DevToolTextureAssetsPurgedSession then
             msg = L["TEXTURE_MSG_RELOAD_RESTORE"]
         else
             msg = L["TEXTURE_MSG_NO_DATA"]
         end
         warn:SetText(msg)
-        Addon.TextureBrowserTab = tab
+        ns.TextureBrowserTab = tab
         return tab
     end
 
@@ -658,7 +658,7 @@ function Addon.UI:CreateTextureTab(parent)
         minWidth = 72,
     })
     btnByTexture:SetPoint("LEFT", searchBox, "RIGHT", 6, 0)
-    Addon.UI:BindToolbarBarButtonMouse(btnByTexture, TEXTURE_BAR_ACTIVE_KEY)
+    ns.UI:BindToolbarBarButtonMouse(btnByTexture, TEXTURE_BAR_ACTIVE_KEY)
     btnByTexture:SetScript("OnClick", function()
         BR:SetViewMode(BR.VIEW_TEXTURE)
         BR:SetFilterText(searchBox:GetSearchText())
@@ -666,7 +666,7 @@ function Addon.UI:CreateTextureTab(parent)
         tab.selectedTextureKey = nil
         tab.selectedAtlasName = nil
         tab.sheetSelectionHighlightSuppressed = false
-        Addon.UI.TextureTab_RefreshList(tab)
+        ns.UI.TextureTab_RefreshList(tab)
         if BR:GetFilteredCount() > 0 then
             tab.virtualizedList.SetSelectedIndex(1)
         else
@@ -676,7 +676,7 @@ function Addon.UI:CreateTextureTab(parent)
             tab.nameText:SetText("")
             updateDetailPanel(tab)
         end
-        Addon.UI.TextureTab_RefreshToolbarButtons(tab)
+        ns.UI.TextureTab_RefreshToolbarButtons(tab)
     end)
 
     local btnByAtlas = OneWoW_GUI:CreateFitTextButton(tab, {
@@ -685,7 +685,7 @@ function Addon.UI:CreateTextureTab(parent)
         minWidth = 72,
     })
     btnByAtlas:SetPoint("LEFT", btnByTexture, "RIGHT", 4, 0)
-    Addon.UI:BindToolbarBarButtonMouse(btnByAtlas, TEXTURE_BAR_ACTIVE_KEY)
+    ns.UI:BindToolbarBarButtonMouse(btnByAtlas, TEXTURE_BAR_ACTIVE_KEY)
     btnByAtlas:SetScript("OnClick", function()
         BR:SetViewMode(BR.VIEW_ATLAS)
         BR:SetFilterText(searchBox:GetSearchText())
@@ -693,7 +693,7 @@ function Addon.UI:CreateTextureTab(parent)
         tab.selectedTextureKey = nil
         tab.selectedAtlasName = nil
         tab.sheetSelectionHighlightSuppressed = false
-        Addon.UI.TextureTab_RefreshList(tab)
+        ns.UI.TextureTab_RefreshList(tab)
         if BR:GetFilteredCount() > 0 then
             tab.virtualizedList.SetSelectedIndex(1)
         else
@@ -703,7 +703,7 @@ function Addon.UI:CreateTextureTab(parent)
             tab.nameText:SetText("")
             updateDetailPanel(tab)
         end
-        Addon.UI.TextureTab_RefreshToolbarButtons(tab)
+        ns.UI.TextureTab_RefreshToolbarButtons(tab)
     end)
 
     local favsBtn = OneWoW_GUI:CreateFitTextButton(tab, {
@@ -712,7 +712,7 @@ function Addon.UI:CreateTextureTab(parent)
         minWidth = 72,
     })
     favsBtn:SetPoint("LEFT", btnByAtlas, "RIGHT", 6, 0)
-    Addon.UI:BindToolbarBarButtonMouse(favsBtn, TEXTURE_BAR_ACTIVE_KEY)
+    ns.UI:BindToolbarBarButtonMouse(favsBtn, TEXTURE_BAR_ACTIVE_KEY)
     favsBtn:SetScript("OnClick", function()
         BR:SetFavoritesOnly(not BR.favoritesOnly)
         BR:SetFilterText(searchBox:GetSearchText())
@@ -720,7 +720,7 @@ function Addon.UI:CreateTextureTab(parent)
         tab.selectedTextureKey = nil
         tab.selectedAtlasName = nil
         tab.sheetSelectionHighlightSuppressed = false
-        Addon.UI.TextureTab_RefreshList(tab)
+        ns.UI.TextureTab_RefreshList(tab)
         if BR:GetFilteredCount() > 0 then
             tab.virtualizedList.SetSelectedIndex(1)
         else
@@ -729,7 +729,7 @@ function Addon.UI:CreateTextureTab(parent)
             syncPreviewInteraction(tab)
             updateDetailPanel(tab)
         end
-        Addon.UI.TextureTab_RefreshToolbarButtons(tab)
+        ns.UI.TextureTab_RefreshToolbarButtons(tab)
     end)
 
     local bookmarkBtn = OneWoW_GUI:CreateFitTextButton(tab, {
@@ -738,23 +738,23 @@ function Addon.UI:CreateTextureTab(parent)
         minWidth = 72,
     })
     bookmarkBtn:SetPoint("LEFT", favsBtn, "RIGHT", 4, 0)
-    Addon.UI:BindToolbarBarButtonMouse(bookmarkBtn, TEXTURE_BAR_ACTIVE_KEY)
+    ns.UI:BindToolbarBarButtonMouse(bookmarkBtn, TEXTURE_BAR_ACTIVE_KEY)
     bookmarkBtn:SetScript("OnClick", function()
         if not tab.selectedAtlasName then
-            Addon:Print(L["MSG_SELECT_ATLAS"])
-            Addon.UI.TextureTab_RefreshToolbarButtons(tab)
+            ns:Print(L["MSG_SELECT_ATLAS"])
+            ns.UI.TextureTab_RefreshToolbarButtons(tab)
             return
         end
-        if not Addon.db.global.textureBookmarks then
-            Addon.db.global.textureBookmarks = {}
+        if not ns.db.global.textureBookmarks then
+            ns.db.global.textureBookmarks = {}
         end
         local name = tab.selectedAtlasName
-        if Addon.db.global.textureBookmarks[name] then
-            Addon.db.global.textureBookmarks[name] = nil
-            Addon:Print((L["MSG_REMOVED_BOOKMARK"]):gsub("{name}", name))
+        if ns.db.global.textureBookmarks[name] then
+            ns.db.global.textureBookmarks[name] = nil
+            ns:Print((L["MSG_REMOVED_BOOKMARK"]):gsub("{name}", name))
         else
-            Addon.db.global.textureBookmarks[name] = true
-            Addon:Print((L["MSG_BOOKMARKED"]):gsub("{name}", name))
+            ns.db.global.textureBookmarks[name] = true
+            ns:Print((L["MSG_BOOKMARKED"]):gsub("{name}", name))
         end
         textureTabAfterBookmarkToggle(tab)
     end)
@@ -765,7 +765,7 @@ function Addon.UI:CreateTextureTab(parent)
         minWidth = 56,
     })
     manualToggle:SetPoint("LEFT", bookmarkBtn, "RIGHT", 6, 0)
-    Addon.UI:BindToolbarBarButtonMouse(manualToggle, TEXTURE_BAR_ACTIVE_KEY)
+    ns.UI:BindToolbarBarButtonMouse(manualToggle, TEXTURE_BAR_ACTIVE_KEY)
 
     tab.btnByTexture = btnByTexture
     tab.btnByAtlas = btnByAtlas
@@ -782,7 +782,7 @@ function Addon.UI:CreateTextureTab(parent)
         SPLIT_PAD = DIV_W + 10
     end
 
-    local savedListW = Addon.db.global.textureBrowserLeftPaneWidth
+    local savedListW = ns.db.global.textureBrowserLeftPaneWidth
     local initListW = LEFT_DEFAULT
     if type(savedListW) == "number" and savedListW >= LEFT_MIN then
         initListW = savedListW
@@ -808,7 +808,7 @@ function Addon.UI:CreateTextureTab(parent)
                 label = entry.atlasName
             end
             ensureListRowBookmarkIcon(btn, TEX_ROW_H)
-            local bookmarks = Addon.db.global.textureBookmarks
+            local bookmarks = ns.db.global.textureBookmarks
             local showBm = false
             if entry.kind == "atlas" and entry.atlasName and bookmarks[entry.atlasName] then
                 showBm = true
@@ -846,9 +846,9 @@ function Addon.UI:CreateTextureTab(parent)
         bottomOuterInset = 5,
         rightOuterInset = 5,
         resizeCap = DU.MAIN_FRAME_RESIZE_CAP or 0.95,
-        mainFrame = Addon.UI and Addon.UI.mainFrame,
+        mainFrame = ns.UI and ns.UI.mainFrame,
         onWidthChanged = function(w)
-            Addon.db.global.textureBrowserLeftPaneWidth = w
+            ns.db.global.textureBrowserLeftPaneWidth = w
         end,
     })
 
@@ -1116,7 +1116,7 @@ function Addon.UI:CreateTextureTab(parent)
             tab.infoPanel:SetPoint("TOPLEFT", previewBg, "BOTTOMLEFT", 0, -8)
             tab.infoPanel:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", -6, 42)
         end
-        Addon.UI.TextureTab_RefreshToolbarButtons(tab)
+        ns.UI.TextureTab_RefreshToolbarButtons(tab)
     end)
 
     -- Copy row: CopyPaste-dialog-style label + short buttons (matches Fonts tab)
@@ -1135,7 +1135,7 @@ function Addon.UI:CreateTextureTab(parent)
     copyNameBtn:SetScript("OnClick", function()
         local s = tab.selectedAtlasName or tab.selectedTextureKey
         if s then
-            Addon:CopyToClipboard(tostring(s))
+            ns:CopyToClipboard(tostring(s))
         end
     end)
 
@@ -1147,7 +1147,7 @@ function Addon.UI:CreateTextureTab(parent)
     copySnippetBtn:SetPoint("LEFT", copyNameBtn, "RIGHT", 4, 0)
     copySnippetBtn:SetScript("OnClick", function()
         if tab.selectedAtlasName then
-            Addon:CopyToClipboard(BR:GetSetAtlasSnippet(tab.selectedAtlasName))
+            ns:CopyToClipboard(BR:GetSetAtlasSnippet(tab.selectedAtlasName))
         end
     end)
 
@@ -1161,7 +1161,7 @@ function Addon.UI:CreateTextureTab(parent)
         if not tab.selectedAtlasName then return end
         local info = BR:ResolveAtlasInfo(tab.selectedAtlasName, tab.selectedTextureKey)
         if info then
-            Addon:CopyToClipboard(BR:GetCoordsCopyLine(info))
+            ns:CopyToClipboard(BR:GetCoordsCopyLine(info))
         end
     end)
 
@@ -1187,21 +1187,21 @@ function Addon.UI:CreateTextureTab(parent)
             self._filterTicker:Cancel()
             self._filterTicker = nil
         end
-        if Addon.TextureBrowserTab == self then
-            Addon.TextureBrowserTab = nil
+        if ns.TextureBrowserTab == self then
+            ns.TextureBrowserTab = nil
         end
     end
 
-    Addon.TextureBrowserTab = tab
+    ns.TextureBrowserTab = tab
 
-    Addon.UI.TextureTab_RefreshList(tab)
+    ns.UI.TextureTab_RefreshList(tab)
     if BR:GetFilteredCount() > 0 then
         tab.virtualizedList.SetSelectedIndex(1)
     else
         updateDetailPanel(tab)
     end
     syncPreviewInteraction(tab)
-    Addon.UI.TextureTab_RefreshToolbarButtons(tab)
+    ns.UI.TextureTab_RefreshToolbarButtons(tab)
 
     return tab
 end

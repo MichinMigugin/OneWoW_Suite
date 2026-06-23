@@ -1,18 +1,18 @@
 -- AUTOMATICALLY GENERATED
 -- https://wago.tools/
-local _, Addon = ...
+local _, ns = ...
 
-Addon.soundDataVersionLIVE = { "12.0.7.68182" }
-if not Addon.ValidateDataBuildGameBuild("Sound", Addon.soundDataVersionLIVE) then
+ns.soundDataVersionLIVE = { "12.0.7.68182" }
+if not ns.ValidateDataBuildGameBuild("Sound", ns.soundDataVersionLIVE) then
 	return
 end
 
-Addon._SoundDataLoaders = Addon._SoundDataLoaders or {}
-tinsert(Addon._SoundDataLoaders, function()
-	Addon._SoundFilesVersion = dataVersion
-	Addon._SoundEntryDelimiter = ";"
-	Addon._SoundEntries = {}
-	Addon._SoundSlices =
+ns._SoundDataLoaders = ns._SoundDataLoaders or {}
+tinsert(ns._SoundDataLoaders, function()
+	ns._SoundFilesVersion = dataVersion
+	ns._SoundEntryDelimiter = ";"
+	ns._SoundEntries = {}
+	ns._SoundSlices =
 	{
 		["ambience"] = {
 			["gluescreen"] = { 1, 5 },

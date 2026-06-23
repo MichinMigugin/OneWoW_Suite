@@ -1,8 +1,8 @@
-local _, Addon = ...
+local _, ns = ...
 
 local GB = {}
-Addon.GlobalsBrowser = GB
-local L = Addon.L
+ns.GlobalsBrowser = GB
+local L = ns.L
 
 local format = format
 local gsub = string.gsub
@@ -674,7 +674,7 @@ function GB:ResetFilterState()
     self.treeFilterText = ""
     self.categoryFilter = CATEGORY_ALL
     self.favoritesOnly = false
-    self.includeNoisyRoots = Addon.db.global.globalsIncludeNoisyRoots and true or false
+    self.includeNoisyRoots = ns.db.global.globalsIncludeNoisyRoots and true or false
     if self.indexBuilt then
         self:RebuildFiltered()
     else
@@ -718,7 +718,7 @@ end
 
 function GB:SetIncludeNoisyRoots(on)
     self.includeNoisyRoots = on and true or false
-    Addon.db.global.globalsIncludeNoisyRoots = self.includeNoisyRoots
+    ns.db.global.globalsIncludeNoisyRoots = self.includeNoisyRoots
     self:RefreshIndex()
 end
 
@@ -735,12 +735,12 @@ function GB:IsBookmarked(entry)
     if not bookmarkKey then
         return false
     end
-    return Addon.db.global.globalsBookmarks[bookmarkKey] and true or false
+    return ns.db.global.globalsBookmarks[bookmarkKey] and true or false
 end
 
 function GB:ToggleBookmark(entry)
     local bookmarkKey = getBookmarkKey(entry)
-    local g = Addon.db.global
+    local g = ns.db.global
     if not bookmarkKey then
         return nil
     end

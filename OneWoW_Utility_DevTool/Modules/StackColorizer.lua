@@ -1,7 +1,7 @@
-local _, Addon = ...
+local _, ns = ...
 
 local StackColorizer = {}
-Addon.StackColorizer = StackColorizer
+ns.StackColorizer = StackColorizer
 
 local format = string.format
 local strmatch = string.match
@@ -13,7 +13,7 @@ local palette
 
 local function getPalette()
     if palette then return palette end
-    local M = Addon.EditorSyntaxData and Addon.EditorSyntaxData.MONOKAI
+    local M = ns.EditorSyntaxData and ns.EditorSyntaxData.MONOKAI
     if not M then
         palette = false
         return palette

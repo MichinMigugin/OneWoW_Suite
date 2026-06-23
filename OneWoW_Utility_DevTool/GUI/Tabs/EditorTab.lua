@@ -1,9 +1,9 @@
-local _, Addon = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local L = Addon.L
+local L = ns.L
 local format = string.format
 local max = math.max
 local tinsert, wipe = tinsert, wipe
@@ -13,11 +13,11 @@ local GetTime = GetTime
 local function noop()
 end
 
-function Addon.UI:CreateEditorTab(parent)
-    local DU = Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
-    local ES = Addon.EditorSyntax
-    local EE = Addon.EditorEngine
-    local D = Addon.EditorSyntaxData
+function ns.UI:CreateEditorTab(parent)
+    local DU = ns.Constants and ns.Constants.DEVTOOL_UI or {}
+    local ES = ns.EditorSyntax
+    local EE = ns.EditorEngine
+    local D = ns.EditorSyntaxData
 
     local LEFT_DEFAULT = DU.EDITOR_LEFT_PANE_DEFAULT_WIDTH or 220
     local LEFT_MIN = DU.EDITOR_LEFT_PANE_MIN_WIDTH or 160
@@ -62,7 +62,7 @@ function Addon.UI:CreateEditorTab(parent)
     local pendingUndoText = nil
 
     local function getDB()
-        return Addon.db.global.editor
+        return ns.db.global.editor
     end
 
     local function getFont()
@@ -558,7 +558,7 @@ function Addon.UI:CreateEditorTab(parent)
 
     copyOutputBtn:SetScript("OnClick", function()
         if #outputBuffer == 0 then return end
-        Addon:CopyToClipboard(table.concat(outputBuffer, "\n"), L["EDITOR_LABEL_OUTPUT"])
+        ns:CopyToClipboard(table.concat(outputBuffer, "\n"), L["EDITOR_LABEL_OUTPUT"])
     end)
 
     local function addOutput(msg, msgType)

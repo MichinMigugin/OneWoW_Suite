@@ -1,4 +1,4 @@
-local ADDON_NAME, Addon = ...
+local ADDON_NAME, ns = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
@@ -542,7 +542,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["EDITOR_BTN_CODE_OPTIONS"] = "Code Options",
 })
 
-Addon.L = OneWoW.Locale:GetTable(ADDON_NAME)
+ns.L = OneWoW.Locale:GetTable(ADDON_NAME)
 -- Raw per-locale store for the editor-default-category readers in
 -- Core/Database.lua (they read a specific locale's strings).
-Addon.Locales = OneWoW.Locale:GetStore(ADDON_NAME)
+ns.Locales = OneWoW.Locale:GetStore(ADDON_NAME)

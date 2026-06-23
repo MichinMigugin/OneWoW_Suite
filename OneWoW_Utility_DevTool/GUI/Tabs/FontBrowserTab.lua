@@ -1,9 +1,9 @@
-local ADDON_NAME, Addon = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local L = Addon.L
+local L = ns.L
 
 local format = format
 local floor = math.floor
@@ -18,11 +18,11 @@ local FB
 local BOOKMARK_ICON_PATH = format("Interface\\AddOns\\%s\\Media\\icon-fav.png", ADDON_NAME)
 
 local function getDU()
-    return Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
+    return ns.Constants and ns.Constants.DEVTOOL_UI or {}
 end
 
 local function getEffectivePreviewBg()
-    local dbColor = Addon.db.global.fontBrowserPreviewBg
+    local dbColor = ns.db.global.fontBrowserPreviewBg
     if type(dbColor) == "table" and type(dbColor[1]) == "number" and type(dbColor[2]) == "number" and type(dbColor[3]) == "number" then
         return dbColor[1], dbColor[2], dbColor[3], (dbColor[4] or 1)
     end
@@ -45,7 +45,7 @@ local function scheduleFilterRefresh(tab)
         tab._filterTicker = nil
         if not tab.searchBox then return end
         FB:SetFilterText(tab.searchBox:GetSearchText())
-        Addon.UI.FontTab_RefreshList(tab)
+        ns.UI.FontTab_RefreshList(tab)
     end)
 end
 
@@ -82,7 +82,7 @@ local function styleListButtonText(btn)
     end
 end
 
-function Addon.UI.FontTab_RefreshList(tab)
+function ns.UI.FontTab_RefreshList(tab)
     if not tab or not tab.virtualizedList then return end
     tab.virtualizedList.Refresh()
 end
@@ -112,10 +112,10 @@ local function applyFontSelection(tab, idx)
 
     if tab.nameText then tab.nameText:SetText(name) end
 
-    Addon.UI.FontTab_UpdatePreview(tab)
-    Addon.UI.FontTab_UpdateDetails(tab)
-    Addon.UI.FontTab_UpdateCopyButtons(tab)
-    Addon.UI.FontTab_UpdateWorkspaceFromFont(tab)
+    ns.UI.FontTab_UpdatePreview(tab)
+    ns.UI.FontTab_UpdateDetails(tab)
+    ns.UI.FontTab_UpdateCopyButtons(tab)
+    ns.UI.FontTab_UpdateWorkspaceFromFont(tab)
     refreshWidgetSizeDropdownLabel(tab)
 end
 
@@ -221,7 +221,7 @@ local function recreateFontString(tab, key)
     return fs
 end
 
-function Addon.UI.FontTab_UpdatePreview(tab)
+function ns.UI.FontTab_UpdatePreview(tab)
     if not tab.selectedFontName then
         if tab.previewFS then tab.previewFS:SetText(L["FONT_MSG_SELECT_FONT"]) end
         if tab.templateFS then tab.templateFS:Hide() end
@@ -267,10 +267,10 @@ function Addon.UI.FontTab_UpdatePreview(tab)
         if tab.previewLabel then tab.previewLabel:Hide() end
     end
 
-    Addon.UI.FontTab_LayoutPreview(tab)
+    ns.UI.FontTab_LayoutPreview(tab)
 end
 
-function Addon.UI.FontTab_UpdateDetails(tab)
+function ns.UI.FontTab_UpdateDetails(tab)
     if not tab.infoText then return end
 
     local lines = {}
@@ -372,7 +372,7 @@ local function setCopyButtonEnabled(btn, enabled)
     end
 end
 
-function Addon.UI.FontTab_UpdateCopyButtons(tab)
+function ns.UI.FontTab_UpdateCopyButtons(tab)
     local hasSel = tab.selectedFontName ~= nil
     setCopyButtonEnabled(tab.copyNameBtn, hasSel)
     setCopyButtonEnabled(tab.copySetFontBtn, hasSel)
@@ -385,7 +385,7 @@ local FONT_BAR_ACTIVE_KEY = "_barActive"
 local function refreshToolbarState(tab)
     if tab.favsBtn then
         tab.favsBtn._barActive = FB.favoritesOnly
-        Addon.UI:PaintToolbarBarButton(tab.favsBtn, FONT_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(tab.favsBtn, FONT_BAR_ACTIVE_KEY)
     end
     if tab.bookmarkBtn then
         local bookmarked = tab.selectedFontName and FB:IsBookmarked(tab.selectedFontName)
@@ -393,15 +393,15 @@ local function refreshToolbarState(tab)
         if tab.bookmarkBtn.SetFitText then
             tab.bookmarkBtn:SetFitText(bookmarked and (L["BTN_REMOVE_BOOKMARK"]) or (L["BTN_BOOKMARK"]))
         end
-        Addon.UI:PaintToolbarBarButton(tab.bookmarkBtn, FONT_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(tab.bookmarkBtn, FONT_BAR_ACTIVE_KEY)
     end
     if tab.compareBtn then
         tab.compareBtn._barActive = tab.compareMode or false
-        Addon.UI:PaintToolbarBarButton(tab.compareBtn, FONT_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(tab.compareBtn, FONT_BAR_ACTIVE_KEY)
     end
 end
 
-function Addon.UI.FontTab_UpdateWorkspaceFromFont(tab)
+function ns.UI.FontTab_UpdateWorkspaceFromFont(tab)
     if not tab.selectedFontName then return end
     local info = FB:GetFontInfo(tab.selectedFontName)
     if not info then return end
@@ -411,15 +411,15 @@ function Addon.UI.FontTab_UpdateWorkspaceFromFont(tab)
     local flags = parseFlagsString(info.flags)
     if tab.outlineBtn then
         tab.outlineBtn._barActive = flags.outline
-        Addon.UI:PaintToolbarBarButton(tab.outlineBtn, FONT_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(tab.outlineBtn, FONT_BAR_ACTIVE_KEY)
     end
     if tab.thickBtn then
         tab.thickBtn._barActive = flags.thickOutline
-        Addon.UI:PaintToolbarBarButton(tab.thickBtn, FONT_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(tab.thickBtn, FONT_BAR_ACTIVE_KEY)
     end
     if tab.monoBtn then
         tab.monoBtn._barActive = flags.monochrome
-        Addon.UI:PaintToolbarBarButton(tab.monoBtn, FONT_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(tab.monoBtn, FONT_BAR_ACTIVE_KEY)
     end
 
     if info.textColor and tab.textREdit then
@@ -511,8 +511,8 @@ end
 
 local function applyWorkspaceOverrides(tab)
     tab.overrides = collectOverridesFromUI(tab)
-    Addon.UI.FontTab_UpdatePreview(tab)
-    Addon.UI.FontTab_UpdateDetails(tab)
+    ns.UI.FontTab_UpdatePreview(tab)
+    ns.UI.FontTab_UpdateDetails(tab)
 end
 
 local function createMiniEdit(parent, width)
@@ -549,8 +549,8 @@ local function createWorkspaceLabel(parent, text, y, bandWidth)
     return fs
 end
 
-function Addon.UI:CreateFontBrowserTab(parent)
-    FB = Addon.FontBrowser
+function ns.UI:CreateFontBrowserTab(parent)
+    FB = ns.FontBrowser
     if not FB then return CreateFrame("Frame", nil, parent) end
 
     FB:BuildCatalog()
@@ -593,18 +593,18 @@ function Addon.UI:CreateFontBrowserTab(parent)
         minWidth = 64,
     })
     favsBtn:SetPoint("LEFT", searchBox, "RIGHT", 6, 0)
-    Addon.UI:BindToolbarBarButtonMouse(favsBtn, FONT_BAR_ACTIVE_KEY)
+    ns.UI:BindToolbarBarButtonMouse(favsBtn, FONT_BAR_ACTIVE_KEY)
     favsBtn:SetScript("OnClick", function()
         FB:SetFavoritesOnly(not FB.favoritesOnly)
         tab.selectedFontName = nil
         tab.selectedListIndex = nil
-        Addon.UI.FontTab_RefreshList(tab)
+        ns.UI.FontTab_RefreshList(tab)
         if FB:GetFilteredCount() > 0 then
             if tab.virtualizedList then tab.virtualizedList.SetSelectedIndex(1) end
         else
-            Addon.UI.FontTab_UpdatePreview(tab)
-            Addon.UI.FontTab_UpdateDetails(tab)
-            Addon.UI.FontTab_UpdateCopyButtons(tab)
+            ns.UI.FontTab_UpdatePreview(tab)
+            ns.UI.FontTab_UpdateDetails(tab)
+            ns.UI.FontTab_UpdateCopyButtons(tab)
         end
         refreshToolbarState(tab)
     end)
@@ -616,29 +616,29 @@ function Addon.UI:CreateFontBrowserTab(parent)
         minWidth = 64,
     })
     bookmarkBtn:SetPoint("LEFT", favsBtn, "RIGHT", 4, 0)
-    Addon.UI:BindToolbarBarButtonMouse(bookmarkBtn, FONT_BAR_ACTIVE_KEY)
+    ns.UI:BindToolbarBarButtonMouse(bookmarkBtn, FONT_BAR_ACTIVE_KEY)
     bookmarkBtn:SetScript("OnClick", function()
         if not tab.selectedFontName then return end
         local added = FB:ToggleBookmark(tab.selectedFontName)
         local name = tab.selectedFontName
         if added then
-            Addon:Print((L["MSG_BOOKMARKED"]):gsub("{name}", name))
+            ns:Print((L["MSG_BOOKMARKED"]):gsub("{name}", name))
         else
-            Addon:Print((L["MSG_REMOVED_BOOKMARK"]):gsub("{name}", name))
+            ns:Print((L["MSG_REMOVED_BOOKMARK"]):gsub("{name}", name))
         end
         if FB.favoritesOnly then
             FB:RebuildFiltered()
-            Addon.UI.FontTab_RefreshList(tab)
+            ns.UI.FontTab_RefreshList(tab)
             if FB:GetFilteredCount() > 0 then
                 if tab.virtualizedList then tab.virtualizedList.SetSelectedIndex(1) end
             else
                 tab.selectedFontName = nil
-                Addon.UI.FontTab_UpdatePreview(tab)
-                Addon.UI.FontTab_UpdateDetails(tab)
+                ns.UI.FontTab_UpdatePreview(tab)
+                ns.UI.FontTab_UpdateDetails(tab)
             end
         else
             if tab.virtualizedList then tab.virtualizedList.Refresh() end
-            Addon.UI.FontTab_UpdateDetails(tab)
+            ns.UI.FontTab_UpdateDetails(tab)
         end
         refreshToolbarState(tab)
     end)
@@ -650,17 +650,17 @@ function Addon.UI:CreateFontBrowserTab(parent)
         minWidth = 64,
     })
     compareBtn:SetPoint("LEFT", bookmarkBtn, "RIGHT", 4, 0)
-    Addon.UI:BindToolbarBarButtonMouse(compareBtn, FONT_BAR_ACTIVE_KEY)
+    ns.UI:BindToolbarBarButtonMouse(compareBtn, FONT_BAR_ACTIVE_KEY)
     compareBtn:SetScript("OnClick", function()
         tab.compareMode = not tab.compareMode
-        Addon.UI.FontTab_LayoutPreview(tab)
-        Addon.UI.FontTab_UpdatePreview(tab)
+        ns.UI.FontTab_LayoutPreview(tab)
+        ns.UI.FontTab_UpdatePreview(tab)
         refreshToolbarState(tab)
     end)
     tab.compareBtn = compareBtn
 
     -- Left panel: virtualized font list
-    local savedW = Addon.db.global.fontBrowserLeftPaneWidth
+    local savedW = ns.db.global.fontBrowserLeftPaneWidth
     local initW = LEFT_DEFAULT
     if type(savedW) == "number" and savedW >= LEFT_MIN then
         initW = savedW
@@ -716,9 +716,9 @@ function Addon.UI:CreateFontBrowserTab(parent)
         bottomOuterInset = 5,
         rightOuterInset = 5,
         resizeCap = DU.MAIN_FRAME_RESIZE_CAP or 0.95,
-        mainFrame = Addon.UI and Addon.UI.mainFrame,
+        mainFrame = ns.UI and ns.UI.mainFrame,
         onWidthChanged = function(w)
-            Addon.db.global.fontBrowserLeftPaneWidth = w
+            ns.db.global.fontBrowserLeftPaneWidth = w
         end,
     })
 
@@ -770,30 +770,30 @@ function Addon.UI:CreateFontBrowserTab(parent)
     end
     previewBgSwatch:SetScript("OnClick", function()
         local r, g, b, a = getEffectivePreviewBg()
-        local prev = Addon.db.global.fontBrowserPreviewBg
+        local prev = ns.db.global.fontBrowserPreviewBg
         ColorPickerFrame:SetupColorPickerAndShow({
             r = r, g = g, b = b, opacity = a, hasOpacity = true,
             swatchFunc = function()
                 local rr, gg, bb = ColorPickerFrame:GetColorRGB()
                 local oo = (ColorPickerFrame.GetColorAlpha and ColorPickerFrame:GetColorAlpha()) or ColorPickerFrame.opacity or 1
-                Addon.db.global.fontBrowserPreviewBg = { rr, gg, bb, oo }
+                ns.db.global.fontBrowserPreviewBg = { rr, gg, bb, oo }
                 previewBgSwatch:UpdateColor()
             end,
             opacityFunc = function()
                 local rr, gg, bb = ColorPickerFrame:GetColorRGB()
                 local oo = (ColorPickerFrame.GetColorAlpha and ColorPickerFrame:GetColorAlpha()) or ColorPickerFrame.opacity or 1
-                Addon.db.global.fontBrowserPreviewBg = { rr, gg, bb, oo }
+                ns.db.global.fontBrowserPreviewBg = { rr, gg, bb, oo }
                 previewBgSwatch:UpdateColor()
             end,
             cancelFunc = function()
-                Addon.db.global.fontBrowserPreviewBg = prev
+                ns.db.global.fontBrowserPreviewBg = prev
                 previewBgSwatch:UpdateColor()
             end,
         })
     end)
     previewBgSwatch:SetScript("OnMouseDown", function(_, button)
         if button == "RightButton" then
-            Addon.db.global.fontBrowserPreviewBg = nil
+            ns.db.global.fontBrowserPreviewBg = nil
             previewBgSwatch:UpdateColor()
         end
     end)
@@ -829,7 +829,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     tab.previewFS:SetWordWrap(true)
 
     -- Initial layout (non-compare)
-    function Addon.UI.FontTab_LayoutPreview(t)
+    function ns.UI.FontTab_LayoutPreview(t)
         if t.compareMode then
             t.templateFS:ClearAllPoints()
             t.templateFS:SetPoint("TOPLEFT", t.previewClip, "TOPLEFT", 4, -14)
@@ -850,7 +850,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
             t.previewFS:SetPoint("BOTTOMRIGHT", t.previewClip, "BOTTOMRIGHT", -4, 2)
         end
     end
-    Addon.UI.FontTab_LayoutPreview(tab)
+    ns.UI.FontTab_LayoutPreview(tab)
 
     -- Preview border
     local border = CreateFrame("Frame", nil, rightPanel, "BackdropTemplate")
@@ -893,7 +893,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     presetNum:SetScript("OnClick", function()
         tab.sampleText = "0123456789\n1,234,567.89\n$99.99  100%"
         sampleEdit:SetText(tab.sampleText)
-        Addon.UI.FontTab_UpdatePreview(tab)
+        ns.UI.FontTab_UpdatePreview(tab)
     end)
 
     local presetLong = OneWoW_GUI:CreateFitTextButton(wsFrame, {
@@ -906,7 +906,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     presetLong:SetScript("OnClick", function()
         tab.sampleText = SAMPLE_TEXT_DEFAULT
         sampleEdit:SetText(tab.sampleText)
-        Addon.UI.FontTab_UpdatePreview(tab)
+        ns.UI.FontTab_UpdatePreview(tab)
     end)
 
     local presetLatin = OneWoW_GUI:CreateFitTextButton(wsFrame, {
@@ -919,7 +919,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     presetLatin:SetScript("OnClick", function()
         tab.sampleText = "ABCDEFGHIJKLMNOPQRSTUVWXYZ\nabcdefghijklmnopqrstuvwxyz\n0123456789"
         sampleEdit:SetText(tab.sampleText)
-        Addon.UI.FontTab_UpdatePreview(tab)
+        ns.UI.FontTab_UpdatePreview(tab)
     end)
 
     sampleEdit = CreateFrame("EditBox", nil, wsFrame, "BackdropTemplate")
@@ -943,7 +943,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
         else
             tab.sampleText = SAMPLE_TEXT_DEFAULT
         end
-        Addon.UI.FontTab_UpdatePreview(tab)
+        ns.UI.FontTab_UpdatePreview(tab)
     end)
 
     -- Spacing + Alpha row
@@ -980,14 +980,14 @@ function Addon.UI:CreateFontBrowserTab(parent)
     local outlineBtn = OneWoW_GUI:CreateFitTextButton(wsFrame, { text = L["FONT_FLAG_OUTLINE"], height = 18, minWidth = 54 })
     outlineBtn:SetPoint("LEFT", flagsLabel, "RIGHT", 4, 0)
     outlineBtn._barActive = false
-    Addon.UI:BindToolbarBarButtonMouse(outlineBtn, FONT_BAR_ACTIVE_KEY)
+    ns.UI:BindToolbarBarButtonMouse(outlineBtn, FONT_BAR_ACTIVE_KEY)
     outlineBtn:SetScript("OnClick", function(self)
         self._barActive = not self._barActive
         if self._barActive and tab.thickBtn then
             tab.thickBtn._barActive = false
-            Addon.UI:PaintToolbarBarButton(tab.thickBtn, FONT_BAR_ACTIVE_KEY)
+            ns.UI:PaintToolbarBarButton(tab.thickBtn, FONT_BAR_ACTIVE_KEY)
         end
-        Addon.UI:PaintToolbarBarButton(self, FONT_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(self, FONT_BAR_ACTIVE_KEY)
         applyWorkspaceOverrides(tab)
     end)
     tab.outlineBtn = outlineBtn
@@ -995,14 +995,14 @@ function Addon.UI:CreateFontBrowserTab(parent)
     local thickBtn = OneWoW_GUI:CreateFitTextButton(wsFrame, { text = L["FONT_FLAG_THICK"], height = 18, minWidth = 42 })
     thickBtn:SetPoint("LEFT", outlineBtn, "RIGHT", 3, 0)
     thickBtn._barActive = false
-    Addon.UI:BindToolbarBarButtonMouse(thickBtn, FONT_BAR_ACTIVE_KEY)
+    ns.UI:BindToolbarBarButtonMouse(thickBtn, FONT_BAR_ACTIVE_KEY)
     thickBtn:SetScript("OnClick", function(self)
         self._barActive = not self._barActive
         if self._barActive and tab.outlineBtn then
             tab.outlineBtn._barActive = false
-            Addon.UI:PaintToolbarBarButton(tab.outlineBtn, FONT_BAR_ACTIVE_KEY)
+            ns.UI:PaintToolbarBarButton(tab.outlineBtn, FONT_BAR_ACTIVE_KEY)
         end
-        Addon.UI:PaintToolbarBarButton(self, FONT_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(self, FONT_BAR_ACTIVE_KEY)
         applyWorkspaceOverrides(tab)
     end)
     tab.thickBtn = thickBtn
@@ -1010,10 +1010,10 @@ function Addon.UI:CreateFontBrowserTab(parent)
     local monoBtn = OneWoW_GUI:CreateFitTextButton(wsFrame, { text = L["FONT_FLAG_MONO"], height = 18, minWidth = 40 })
     monoBtn:SetPoint("LEFT", thickBtn, "RIGHT", 3, 0)
     monoBtn._barActive = false
-    Addon.UI:BindToolbarBarButtonMouse(monoBtn, FONT_BAR_ACTIVE_KEY)
+    ns.UI:BindToolbarBarButtonMouse(monoBtn, FONT_BAR_ACTIVE_KEY)
     monoBtn:SetScript("OnClick", function(self)
         self._barActive = not self._barActive
-        Addon.UI:PaintToolbarBarButton(self, FONT_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(self, FONT_BAR_ACTIVE_KEY)
         applyWorkspaceOverrides(tab)
     end)
     tab.monoBtn = monoBtn
@@ -1174,10 +1174,10 @@ function Addon.UI:CreateFontBrowserTab(parent)
         tab.widgetPresetActiveValue = "none"
         refreshWidgetSizeDropdownLabel(tab)
         if tab.selectedFontName then
-            Addon.UI.FontTab_UpdateWorkspaceFromFont(tab)
+            ns.UI.FontTab_UpdateWorkspaceFromFont(tab)
         end
-        Addon.UI.FontTab_UpdatePreview(tab)
-        Addon.UI.FontTab_UpdateDetails(tab)
+        ns.UI.FontTab_UpdatePreview(tab)
+        ns.UI.FontTab_UpdateDetails(tab)
     end)
 
     wsFrame:SetHeight(wsHeight)
@@ -1220,7 +1220,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     copyNameBtn:SetPoint("BOTTOM", rightPanel, "BOTTOM", 0, 6)
     copyNameBtn:SetScript("OnClick", function()
         if tab.selectedFontName then
-            Addon:CopyToClipboard(FB:GenerateCopyName(tab.selectedFontName))
+            ns:CopyToClipboard(FB:GenerateCopyName(tab.selectedFontName))
         end
     end)
     tab.copyNameBtn = copyNameBtn
@@ -1233,7 +1233,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     copySetFontBtn:SetPoint("LEFT", copyNameBtn, "RIGHT", 4, 0)
     copySetFontBtn:SetScript("OnClick", function()
         if tab.selectedFontName then
-            Addon:CopyToClipboard(FB:GenerateSetFont(tab.selectedFontName, getEffectiveOverrides(tab)))
+            ns:CopyToClipboard(FB:GenerateSetFont(tab.selectedFontName, getEffectiveOverrides(tab)))
         end
     end)
     tab.copySetFontBtn = copySetFontBtn
@@ -1246,7 +1246,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     copySnippetBtn:SetPoint("LEFT", copySetFontBtn, "RIGHT", 4, 0)
     copySnippetBtn:SetScript("OnClick", function()
         if tab.selectedFontName then
-            Addon:CopyToClipboard(FB:GenerateSnippet(tab.selectedFontName, getEffectiveOverrides(tab)))
+            ns:CopyToClipboard(FB:GenerateSnippet(tab.selectedFontName, getEffectiveOverrides(tab)))
         end
     end)
     tab.copySnippetBtn = copySnippetBtn
@@ -1259,7 +1259,7 @@ function Addon.UI:CreateFontBrowserTab(parent)
     copyCreateFontBtn:SetPoint("LEFT", copySnippetBtn, "RIGHT", 4, 0)
     copyCreateFontBtn:SetScript("OnClick", function()
         if tab.selectedFontName then
-            Addon:CopyToClipboard(FB:GenerateCreateFont(tab.selectedFontName, getEffectiveOverrides(tab)))
+            ns:CopyToClipboard(FB:GenerateCreateFont(tab.selectedFontName, getEffectiveOverrides(tab)))
         end
     end)
     tab.copyCreateFontBtn = copyCreateFontBtn
@@ -1268,25 +1268,25 @@ function Addon.UI:CreateFontBrowserTab(parent)
     tab:SetScript("OnShow", function()
         FB:BuildCatalog()
         FB:SetFilterText(searchBox:GetSearchText())
-        Addon.UI.FontTab_RefreshList(tab)
+        ns.UI.FontTab_RefreshList(tab)
         if tab.selectedFontName then
             tab.nameText:SetText(tab.selectedFontName)
         end
-        Addon.UI.FontTab_UpdateCopyButtons(tab)
+        ns.UI.FontTab_UpdateCopyButtons(tab)
         refreshToolbarState(tab)
     end)
 
     tab:SetScript("OnHide", function() end)
 
     -- Initial state
-    Addon.UI.FontTab_RefreshList(tab)
+    ns.UI.FontTab_RefreshList(tab)
     if FB:GetFilteredCount() > 0 then
         tab.virtualizedList.SetSelectedIndex(1)
     else
-        Addon.UI.FontTab_UpdatePreview(tab)
-        Addon.UI.FontTab_UpdateDetails(tab)
+        ns.UI.FontTab_UpdatePreview(tab)
+        ns.UI.FontTab_UpdateDetails(tab)
     end
-    Addon.UI.FontTab_UpdateCopyButtons(tab)
+    ns.UI.FontTab_UpdateCopyButtons(tab)
     refreshToolbarState(tab)
 
     return tab

@@ -1,9 +1,10 @@
-local ADDON_NAME, Addon = ...
-
-OneWoW_Utility_DevTool = Addon
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-local L = Addon.L
+
+OneWoW_Utility_DevTool = {}
+
+local L = ns.L
 
 local pcall = pcall
 local type = type
@@ -37,10 +38,10 @@ local function safeGetMulti(frame, method, ...)
     return results
 end
 
-Addon.safeGet = safeGet
-Addon.safeGetMulti = safeGetMulti
+ns.safeGet = safeGet
+ns.safeGetMulti = safeGetMulti
 
-function Addon:Print(msg)
+function ns:Print(msg)
     print("|cFFFFD100OneWoW|r - " .. L["ADDON_TITLE"] .. ": " .. tostring(msg))
 end
 
@@ -49,7 +50,7 @@ local function getRegisteredEvents(frame)
     local hasOnEvent = frame.GetScript and pcall(frame.GetScript, frame, "OnEvent")
     if not hasOnEvent then return nil end
     local events = {}
-    for _, event in ipairs(Addon.Constants.COMMON_EVENTS) do
+    for _, event in ipairs(ns.Constants.COMMON_EVENTS) do
         local ok, registered = pcall(frame.IsEventRegistered, frame, event)
         if ok and registered then
             tinsert(events, event)
@@ -61,7 +62,7 @@ end
 local function getScriptInfo(frame)
     if not frame.GetScript then return nil end
     local scripts = {}
-    for _, scriptName in ipairs(Addon.Constants.COMMON_SCRIPTS) do
+    for _, scriptName in ipairs(ns.Constants.COMMON_SCRIPTS) do
         local ok, handler = pcall(frame.GetScript, frame, scriptName)
         if ok and handler then
             tinsert(scripts, scriptName)
@@ -165,7 +166,7 @@ local function getTypeSpecificInfo(obj)
     return props
 end
 
-function Addon:GetFrameInfo(frame)
+function ns:GetFrameInfo(frame)
     if not frame then return nil end
 
     -- Tier 1: Universal properties (all objects)
@@ -305,7 +306,7 @@ function Addon:GetFrameInfo(frame)
     return info
 end
 
-function Addon:GetParentChain(frame)
+function ns:GetParentChain(frame)
     local chain = {}
     local current = frame
     while current do
@@ -319,7 +320,7 @@ function Addon:GetParentChain(frame)
     return chain
 end
 
-function Addon:GetChildren(frame)
+function ns:GetChildren(frame)
     if not frame or not frame.GetChildren then
         return {}
     end
@@ -328,12 +329,12 @@ function Addon:GetChildren(frame)
     return children
 end
 
-function Addon:GetAllChildren(frame)
+function ns:GetAllChildren(frame)
     if not frame then return {} end
 
     local all = {}
     local function addChildren(f)
-        local children = Addon:GetChildren(f)
+        local children = ns:GetChildren(f)
         for _, child in ipairs(children) do
             tinsert(all, child)
             addChildren(child)
@@ -343,7 +344,7 @@ function Addon:GetAllChildren(frame)
     return all
 end
 
-function Addon:SearchFramesByName(searchText)
+function ns:SearchFramesByName(searchText)
     if not searchText or searchText == "" then
         return {}
     end
@@ -380,12 +381,12 @@ function Addon:SearchFramesByName(searchText)
     return results
 end
 
-function Addon:CopyToClipboard(text, title)
+function ns:CopyToClipboard(text, title)
     OneWoW.CopyPaste:Copy(title or L["COPY_DEFAULT_TITLE"], text, { readOnly = true })
     self:Print(L["MSG_PRESS_CTRL_C"])
 end
 
-function Addon:ToggleMainWindow()
+function ns:ToggleMainWindow()
     if not self.UI then return end
     if self.UI.mainFrame and self.UI.mainFrame:IsShown() then
         self.UI:Hide()
@@ -397,13 +398,13 @@ function Addon:ToggleMainWindow()
     end
 end
 
-function Addon:OpenDevToolErrorsTab()
+function ns:OpenDevToolErrorsTab()
     if not self.UI then return end
     self.UI:Show()
     self.UI:SelectTab("errors")
 end
 
-function Addon:OnInitialize()
+function ns:OnInitialize()
     self:InitializeDatabase()
 
     local g = self.db.global
@@ -434,32 +435,32 @@ function Addon:OnInitialize()
         self.MonitorTab:RegisterPinnedRestoreEvents()
     end
 
-    OneWoW_GUI:MigrateSettings(self.db.global)
+    OneWoW_GUI:MigrateSettings(ns.db.global)
 
-    self:ApplyTheme()
-    self:ApplyLanguage()
-    self:NormalizeEditorDatabase()
+    OneWoW_Utility_DevTool:ApplyTheme()
+    OneWoW_Utility_DevTool:ApplyLanguage()
+    ns:NormalizeEditorDatabase()
 
-    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(owner)
-        owner:ApplyTheme()
-        owner:RebuildUI()
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_Utility_DevTool, function(myself)
+        myself:ApplyTheme()
+        ns:RebuildUI()
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(owner)
-        owner:ApplyLanguage()
-        owner:RebuildUI()
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoW_Utility_DevTool, function(myself)
+        myself:ApplyLanguage()
+        ns:RebuildUI()
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(owner)
-        owner:RebuildUI()
+    OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoW_Utility_DevTool, function()
+        ns:RebuildUI()
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", self, function(owner)
-        owner:RebuildUI()
+    OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", OneWoW_Utility_DevTool, function()
+        ns:RebuildUI()
     end)
 
-    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(owner, hidden)
-        if owner.Minimap then owner.Minimap:SetShown(not hidden) end
+    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", OneWoW_Utility_DevTool, function(_, hidden)
+        if ns.Minimap then ns.Minimap:SetShown(not hidden) end
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(owner)
-        if owner.Minimap then owner.Minimap:UpdateIcon() end
+    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", OneWoW_Utility_DevTool, function()
+        if ns.Minimap then ns.Minimap:UpdateIcon() end
     end)
 
     if self.ErrorLogger then
@@ -468,23 +469,18 @@ function Addon:OnInitialize()
 
 end
 
-function Addon:ApplyTheme()
-    OneWoW_GUI:ApplyTheme(self)
+function OneWoW_Utility_DevTool:ApplyTheme()
+    OneWoW_GUI:ApplyTheme(ns)
 end
 
-function Addon:ApplyLanguage()
-    -- Localization lives in the OneWoW Locale service now (scope = ADDON_NAME;
-    -- shared vocab in the "shared" scope). SetLanguage refolds every scope in place,
-    -- pushes BINDING_* globals (incl. our BINDING_HEADER/NAME_ONEWOW_DEVTOOL keys),
-    -- and fires OnApply; Addon.L is a stable view. esMX->esES is normalized inside.
-    -- Kept as a thin shim for the profile-sync loop (t-profiles) until Phase 6.
+function OneWoW_Utility_DevTool:ApplyLanguage()
     local lang = OneWoW_GUI:GetSetting("language") or "enUS"
     OneWoW.Locale:SetLanguage(lang)
 end
 
 -- Rebuild the window in place (preserving shown state) so a settings change —
 -- theme, language, or font — takes effect without forcing another change.
-function Addon:RebuildUI()
+function ns:RebuildUI()
     if self.UI and self.UI.FullReset then
         local wasShown = self.UI.mainFrame and self.UI.mainFrame:IsShown()
         self.UI:FullReset()
@@ -497,10 +493,10 @@ function Addon:RebuildUI()
 end
 
 local didInit = false
-function Addon:OnAddonLoaded()
+function OneWoW_Utility_DevTool:OnAddonLoaded()
     if didInit then return end
     didInit = true
-    Addon:OnInitialize()
+    ns:OnInitialize()
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     if OneWoW and OneWoW.RegisterLoadComponent then
         OneWoW:RegisterLoadComponent("DevTools", _ver, "/1wdt")
@@ -508,34 +504,34 @@ function Addon:OnAddonLoaded()
 end
 
 local didLogin = false
-function Addon:OnPlayerLogin()
+function OneWoW_Utility_DevTool:OnPlayerLogin()
     if didLogin then return end
     didLogin = true
     OneWoW:RegisterMinimap("OneWoW_Utility_DevTool", L["CTX_OPEN_DEVTOOLS"], nil, function()
-        Addon:ToggleMainWindow()
+        ns:ToggleMainWindow()
     end)
-    if Addon.db.global.monitor.showOnLoad then
+    if ns.db.global.monitor.showOnLoad then
         C_Timer.After(0.5, function()
-            if Addon.UI then
-                Addon.UI:Show()
-                Addon.UI:SelectTab("monitor")
+            if ns.UI then
+                ns.UI:Show()
+                ns.UI:SelectTab("monitor")
             end
         end)
     end
     C_Timer.After(1.0, function()
-        if Addon.MonitorTab then
-            Addon.MonitorTab:RestorePinnedMonitorsPending()
+        if ns.MonitorTab then
+            ns.MonitorTab:RestorePinnedMonitorsPending()
         end
     end)
     C_Timer.After(3.0, function()
-        if Addon.MonitorTab then
-            Addon.MonitorTab:RestorePinnedMonitorsPending()
+        if ns.MonitorTab then
+            ns.MonitorTab:RestorePinnedMonitorsPending()
         end
     end)
-    if Addon.InstallNotice and not Addon.InstallNotice:IsAcknowledged() then
+    if ns.InstallNotice and not ns.InstallNotice:IsAcknowledged() then
         C_Timer.After(4.0, function()
-            if Addon.InstallNotice and not Addon.InstallNotice:IsAcknowledged() then
-                Addon.InstallNotice:Show()
+            if ns.InstallNotice and not ns.InstallNotice:IsAcknowledged() then
+                ns.InstallNotice:Show()
             end
         end)
     end
@@ -549,17 +545,17 @@ SlashCmdList["ONEWOW_DEVTOOL"] = function(msg)
     msg = (type(msg) == "string") and msg:lower():gsub("^%s+", ""):gsub("%s+$", "") or ""
 
     if msg == "notice" then
-        if Addon.InstallNotice then
-            Addon.InstallNotice:ResetAck()
-            Addon.InstallNotice:Show(true)
+        if ns.InstallNotice then
+            ns.InstallNotice:ResetAck()
+            ns.InstallNotice:Show(true)
         end
         return
     end
 
-    if not Addon.UI then
-        Addon:Print(L["MSG_UI_NOT_LOADED"])
+    if not ns.UI then
+        ns:Print(L["MSG_UI_NOT_LOADED"])
         return
     end
 
-    Addon:ToggleMainWindow()
+    ns:ToggleMainWindow()
 end

@@ -1,10 +1,10 @@
-local _, Addon = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-local L = Addon.L
+local L = ns.L
 
 local FramePicker = {}
-Addon.FramePicker = FramePicker
+ns.FramePicker = FramePicker
 
 function FramePicker:Initialize()
     if self.overlay then return end
@@ -69,26 +69,26 @@ function FramePicker:Start()
 
     self.wasMainFrameShown = false
 
-    if Addon.UI and Addon.UI.mainFrame and Addon.UI.mainFrame:IsShown() then
+    if ns.UI and ns.UI.mainFrame and ns.UI.mainFrame:IsShown() then
         self.wasMainFrameShown = true
-        Addon.UI.mainFrame:Hide()
+        ns.UI.mainFrame:Hide()
     end
 
     self.overlay:Show()
     self.overlay:SetFrameStrata("FULLSCREEN_DIALOG")
     self.infoWindow:Show()
 
-    Addon:Print(L["FRAME_PICKER_MSG_ACTIVE"])
+    ns:Print(L["FRAME_PICKER_MSG_ACTIVE"])
 end
 
 function FramePicker:CycleFrame()
     if #self.allFrames <= 1 then
-        Addon:Print(L["FRAME_PICKER_MSG_ONE"])
+        ns:Print(L["FRAME_PICKER_MSG_ONE"])
         return
     end
 
     self.frameIndex = (self.frameIndex % #self.allFrames) + 1
-    Addon:Print((L["FRAME_PICKER_MSG_CYCLING"]):format(self.frameIndex, #self.allFrames))
+    ns:Print((L["FRAME_PICKER_MSG_CYCLING"]):format(self.frameIndex, #self.allFrames))
 end
 
 function FramePicker:Cancel()
@@ -96,13 +96,13 @@ function FramePicker:Cancel()
 
     self.overlay:Hide()
     self.infoWindow:Hide()
-    Addon.FrameInspector:ClearHighlight()
+    ns.FrameInspector:ClearHighlight()
 
-    if self.wasMainFrameShown and Addon.UI and Addon.UI.mainFrame then
-        Addon.UI.mainFrame:Show()
+    if self.wasMainFrameShown and ns.UI and ns.UI.mainFrame then
+        ns.UI.mainFrame:Show()
     end
 
-    Addon:Print(L["FRAME_PICKER_MSG_CANCELLED"])
+    ns:Print(L["FRAME_PICKER_MSG_CANCELLED"])
 end
 
 function FramePicker:GetGeometricFramesAtCursor()
@@ -173,7 +173,7 @@ end
 
 function FramePicker:OnUpdate(elapsed)
     if not self.checkedAPI then
-        Addon:Print(L["FRAME_PICKER_MSG_GEOMETRIC"])
+        ns:Print(L["FRAME_PICKER_MSG_GEOMETRIC"])
         self.checkedAPI = true
     end
 
@@ -208,7 +208,7 @@ function FramePicker:OnUpdate(elapsed)
             msg = msg .. "\n\n" .. self.debugStats
         end
         self.infoWindow.details:SetText(msg)
-        Addon.FrameInspector:ClearHighlight()
+        ns.FrameInspector:ClearHighlight()
         return
     end
 
@@ -314,11 +314,11 @@ function FramePicker:OnUpdate(elapsed)
         end
 
         self.infoWindow.details:SetText(table.concat(details, "\n"))
-        Addon.FrameInspector:HighlightFrame(targetFrame)
+        ns.FrameInspector:HighlightFrame(targetFrame)
     else
         self.currentFrame = nil
         self.infoWindow.details:SetText(L["FRAME_PICKER_ALL_FILTERED"])
-        Addon.FrameInspector:ClearHighlight()
+        ns.FrameInspector:ClearHighlight()
     end
 
     local mouseDown = IsMouseButtonDown("LeftButton")
@@ -334,17 +334,17 @@ end
 
 function FramePicker:OnClick()
     if not self.currentFrame then
-        Addon:Print(L["FRAME_PICKER_MSG_NO_FRAME"])
+        ns:Print(L["FRAME_PICKER_MSG_NO_FRAME"])
         return
     end
 
     local frame = self.currentFrame
     self:Cancel()
 
-    Addon.FrameInspector:InspectFrame(frame)
-    Addon:Print((L["FRAME_PICKER_MSG_SELECTED"]):format(frame.GetName and frame:GetName() or "Anonymous"))
+    ns.FrameInspector:InspectFrame(frame)
+    ns:Print((L["FRAME_PICKER_MSG_SELECTED"]):format(frame.GetName and frame:GetName() or "Anonymous"))
 
-    if Addon.UI then
-        Addon.UI:Show()
+    if ns.UI then
+        ns.UI:Show()
     end
 end

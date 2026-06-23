@@ -1,7 +1,7 @@
 <Bindings>
     <Binding name="ONEWOW_DEVTOOL_OPEN_ERRORS" category="BINDING_HEADER_ONEWOW_DEVTOOL">
-        if OneWoW_Utility_DevTool and OneWoW_Utility_DevTool.OpenDevToolErrorsTab then
-            OneWoW_Utility_DevTool:OpenDevToolErrorsTab()
+        if OneWoW_Utility_DevTool_API and OneWoW_Utility_DevTool_API.OpenDevToolErrorsTab then
+            OneWoW_Utility_DevTool_API.OpenDevToolErrorsTab()
         end
     </Binding>
 </Bindings>

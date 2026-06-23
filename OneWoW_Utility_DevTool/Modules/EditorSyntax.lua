@@ -1,4 +1,4 @@
-local _, Addon = ...
+local _, ns = ...
 
 local stringsub = string.sub
 local stringbyte = string.byte
@@ -9,8 +9,8 @@ local stringgsub = string.gsub
 local tableconcat = table.concat
 local wipe = wipe
 
-Addon.EditorSyntax = {}
-local ES = Addon.EditorSyntax
+ns.EditorSyntax = {}
+local ES = ns.EditorSyntax
 
 local TOKEN_NUMBER = 1
 local TOKEN_LINEBREAK = 2
@@ -258,7 +258,7 @@ end
 local work = {}
 
 function ES.colorCodeText(code, caretPos)
-    local D = Addon.EditorSyntaxData
+    local D = ns.EditorSyntaxData
     if not D then return code, caretPos end
 
     local M = D.MONOKAI

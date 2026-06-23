@@ -1,38 +1,38 @@
-local _, Addon = ...
+local _, ns = ...
 
 local format = format
 local table_concat = table.concat
 local type = type
 
 local SOUND_UNCAT = "uncategorized"
-local SOUND_PATH_PREFIX = (Addon.Constants and Addon.Constants.SOUND_PATH_PREFIX) or "sound/"
+local SOUND_PATH_PREFIX = (ns.Constants and ns.Constants.SOUND_PATH_PREFIX) or "sound/"
 
-function Addon.DevTool_WipeTextureAssetData()
-	local UI = Addon.UI
+function ns.DevTool_WipeTextureAssetData()
+	local UI = ns.UI
 	if UI and UI.IsTabEnabled and UI:IsTabEnabled("textures") then
 		return
 	end
-	Addon._AtlasInfo = nil
-	Addon._AtlasInfoVersion = nil
-	Addon._DevToolTextureAssetsPurgedSession = true
-	local BR = Addon.TextureAtlasBrowser
+	ns._AtlasInfo = nil
+	ns._AtlasInfoVersion = nil
+	ns._DevToolTextureAssetsPurgedSession = true
+	local BR = ns.TextureAtlasBrowser
 	if BR and BR.ResetAfterAssetUnload then
 		BR:ResetAfterAssetUnload()
 	end
 	collectgarbage("collect")
 end
 
-function Addon.DevTool_WipeSoundAssetData()
-	local UI = Addon.UI
+function ns.DevTool_WipeSoundAssetData()
+	local UI = ns.UI
 	if UI and UI.IsTabEnabled and UI:IsTabEnabled("sounds") then
 		return
 	end
-	Addon._SoundEntries = nil
-	Addon._SoundSlices = nil
-	Addon._SoundFilesVersion = nil
-	Addon._SoundEntryDelimiter = nil
-	Addon._DevToolSoundAssetsPurgedSession = true
-	local SB = Addon.SoundBrowser
+	ns._SoundEntries = nil
+	ns._SoundSlices = nil
+	ns._SoundFilesVersion = nil
+	ns._SoundEntryDelimiter = nil
+	ns._DevToolSoundAssetsPurgedSession = true
+	local SB = ns.SoundBrowser
 	if SB and SB.ResetAfterAssetUnload then
 		SB:ResetAfterAssetUnload()
 	end
@@ -50,7 +50,7 @@ local function devToolDataVersionMatches(gameVersion, expectedVersion)
 	return gameVersion == expectedVersion
 end
 
-function Addon.ValidateDataBuildGameBuild(dataType, expectedVersion, verbose)
+function ns.ValidateDataBuildGameBuild(dataType, expectedVersion, verbose)
 	local buildVersion, buildNumber = GetBuildInfo()
 	local gameVersion = buildVersion .. "." .. buildNumber
 	if type(expectedVersion) == "string" then
@@ -85,7 +85,7 @@ function Addon.ValidateDataBuildGameBuild(dataType, expectedVersion, verbose)
 	return false
 end
 
-function Addon.RebuildSoundFilePath(top, sub, tail)
+function ns.RebuildSoundFilePath(top, sub, tail)
 	if not tail or tail == "" then
 		return tail
 	end

@@ -1,14 +1,14 @@
-local ADDON_NAME, Addon = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-local L = Addon.L
+local L = ns.L
 
 local format = string.format
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 local function getErrorDB()
-    return Addon.db.global.errorDB
+    return ns.db.global.errorDB
 end
 
 local function soundChoiceLabel(L, value)
@@ -73,7 +73,7 @@ local function refreshDropdownLabels(tab)
     end
 end
 
-function Addon.UI:CreateErrorsTab(parent)
+function ns.UI:CreateErrorsTab(parent)
     local tab = CreateFrame("Frame", nil, parent)
     tab:SetAllPoints(parent)
     tab:Hide()
@@ -95,8 +95,8 @@ function Addon.UI:CreateErrorsTab(parent)
     clearBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -5)
     tab.luaClearBtn = clearBtn
     clearBtn:SetScript("OnClick", function()
-        if Addon.ErrorLogger then
-            Addon.ErrorLogger:ClearErrors()
+        if ns.ErrorLogger then
+            ns.ErrorLogger:ClearErrors()
         end
     end)
 
@@ -143,8 +143,8 @@ function Addon.UI:CreateErrorsTab(parent)
                 db.soundChoice = value
             end
             refreshDropdownLabels(tab)
-            if Addon.ErrorLogger and Addon.ErrorLogger.PreviewSoundChoice then
-                Addon.ErrorLogger:PreviewSoundChoice(value)
+            if ns.ErrorLogger and ns.ErrorLogger.PreviewSoundChoice then
+                ns.ErrorLogger:PreviewSoundChoice(value)
             end
         end,
     })
@@ -252,8 +252,8 @@ function Addon.UI:CreateErrorsTab(parent)
             height = 20,
             label = "",
             onClick = function(self)
-                if Addon.ErrorLogger and self.errorData then
-                    Addon.ErrorLogger:ShowErrorDetails(self.errorData)
+                if ns.ErrorLogger and self.errorData then
+                    ns.ErrorLogger:ShowErrorDetails(self.errorData)
                 end
             end,
         })
@@ -333,9 +333,9 @@ function Addon.UI:CreateErrorsTab(parent)
     end)
     detailsEditBox:SetScript("OnKeyDown", function(self, key)
         if IsControlKeyDown() and key == "C" then
-            local err = Addon.ErrorLogger and Addon.ErrorLogger.currentError
+            local err = ns.ErrorLogger and ns.ErrorLogger.currentError
             if err then
-                local plainText = Addon.ErrorExport.BuildPlainText(err, L, false)
+                local plainText = ns.ErrorExport.BuildPlainText(err, L, false)
                 local colorized = self._lastSetText
                 self._swappingForCopy = true
                 self:SetText(plainText)
@@ -388,8 +388,8 @@ function Addon.UI:CreateErrorsTab(parent)
     })
     copyBtn:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 5, 5)
     copyBtn:SetScript("OnClick", function()
-        if Addon.ErrorLogger then
-            Addon.ErrorLogger:CopyCurrentError()
+        if ns.ErrorLogger then
+            ns.ErrorLogger:CopyCurrentError()
         end
     end)
 
@@ -429,18 +429,18 @@ function Addon.UI:CreateErrorsTab(parent)
         refreshDropdownLabels(tab)
         local vis = (showDB and showDB.showAnalysis ~= false) and true or false
         setAnalysisVisible(vis)
-        if Addon.ErrorLogger then
-            Addon.ErrorLogger:UpdateLuaTabBugGrabberNotice()
-            Addon.ErrorLogger:UpdateUI()
+        if ns.ErrorLogger then
+            ns.ErrorLogger:UpdateLuaTabBugGrabberNotice()
+            ns.ErrorLogger:UpdateUI()
         elseif tab.LayoutErrorRowAnchors then
             tab.LayoutErrorRowAnchors()
         end
     end)
 
-    Addon.LuaConsoleTab = tab
+    ns.LuaConsoleTab = tab
     refreshDropdownLabels(tab)
-    if Addon.ErrorLogger and Addon.ErrorLogger.UpdateLuaTabBugGrabberNotice then
-        Addon.ErrorLogger:UpdateLuaTabBugGrabberNotice()
+    if ns.ErrorLogger and ns.ErrorLogger.UpdateLuaTabBugGrabberNotice then
+        ns.ErrorLogger:UpdateLuaTabBugGrabberNotice()
     end
     C_Timer.After(0, function()
         if tab.LayoutErrorRowAnchors then

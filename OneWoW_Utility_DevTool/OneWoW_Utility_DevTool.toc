@@ -34,9 +34,7 @@ Locales\itIT.lua
 # Core
 Core\Constants.lua
 Core\Database.lua
-
-# Main Addon File
-OneWoW_Utility_DevTool.lua
+Core\API.lua
 
 # Texture Atlas Data, Font Catalog, SoundFile Paths
 Data\Core.lua
@@ -76,10 +74,10 @@ Modules\EditorSyntax.lua
 Modules\EditorEngine.lua
 Modules\InstallNotice.lua
 
-# Main UI shell (defines Addon.UI, StyleContentPanel, Initialize)
+# Main UI shell (defines ns.UI, StyleContentPanel, Initialize)
 GUI\MainWindow.lua
 
-# Tab implementations (extend Addon.UI)
+# Tab implementations (extend ns.UI)
 GUI\Tabs\FrameInspectorTab.lua
 GUI\Tabs\EventMonitorTab.lua
 GUI\Tabs\ErrorsTab.lua
@@ -92,3 +90,6 @@ GUI\Tabs\SettingsTab.lua
 GUI\Tabs\EditorTab.lua
 GUI\Tabs\FontBrowserTab.lua
 GUI\Tabs\SoundBrowserTab.lua
+
+# Lifecycle root (colon hooks only)
+OneWoW_Utility_DevTool.lua

@@ -1,9 +1,9 @@
-local ADDON_NAME, Addon = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local L = Addon.L
+local L = ns.L
 
 local format = format
 local floor = math.floor
@@ -36,11 +36,11 @@ local SOUND_CHANNELS = {
 }
 
 local function getDU()
-    return Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
+    return ns.Constants and ns.Constants.DEVTOOL_UI or {}
 end
 
 local function getSavedSoundChannel()
-    local value = Addon.db.global.soundBrowserChannel
+    local value = ns.db.global.soundBrowserChannel
     for _, channel in ipairs(SOUND_CHANNELS) do
         if value == channel then
             return channel
@@ -99,7 +99,7 @@ local function styleListButtonText(btn)
     end
 end
 
-function Addon.UI.SoundTab_RefreshList(tab)
+function ns.UI.SoundTab_RefreshList(tab)
     if tab and tab.virtualizedList then
         tab.virtualizedList.Refresh()
     end
@@ -110,7 +110,7 @@ local SOUND_BAR_ACTIVE_KEY = "_barActive"
 local function refreshSoundToolbar(tab)
     if tab.favsBtn then
         tab.favsBtn._barActive = SB.favoritesOnly
-        Addon.UI:PaintToolbarBarButton(tab.favsBtn, SOUND_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(tab.favsBtn, SOUND_BAR_ACTIVE_KEY)
     end
     if tab.bookmarkBtn and tab.selectedEntry then
         local bm = SB:IsBookmarked(tab.selectedEntry)
@@ -118,17 +118,17 @@ local function refreshSoundToolbar(tab)
         if tab.bookmarkBtn.SetFitText then
             tab.bookmarkBtn:SetFitText(bm and (L["BTN_REMOVE_BOOKMARK"]) or (L["BTN_BOOKMARK"]))
         end
-        Addon.UI:PaintToolbarBarButton(tab.bookmarkBtn, SOUND_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(tab.bookmarkBtn, SOUND_BAR_ACTIVE_KEY)
     elseif tab.bookmarkBtn then
         tab.bookmarkBtn._barActive = false
         if tab.bookmarkBtn.SetFitText then
             tab.bookmarkBtn:SetFitText(L["BTN_BOOKMARK"])
         end
-        Addon.UI:PaintToolbarBarButton(tab.bookmarkBtn, SOUND_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(tab.bookmarkBtn, SOUND_BAR_ACTIVE_KEY)
     end
     if tab.manualToggle then
         tab.manualToggle._barActive = tab.manualPanel and tab.manualPanel:IsShown() or false
-        Addon.UI:PaintToolbarBarButton(tab.manualToggle, SOUND_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(tab.manualToggle, SOUND_BAR_ACTIVE_KEY)
     end
 end
 
@@ -146,7 +146,7 @@ local function setCopyBtnEnabled(btn, enabled)
     end
 end
 
-function Addon.UI.SoundTab_StopPlayback(tab)
+function ns.UI.SoundTab_StopPlayback(tab)
     if not tab then return end
     local h = tab.activeSoundHandle
     if h then
@@ -155,18 +155,18 @@ function Addon.UI.SoundTab_StopPlayback(tab)
     end
 end
 
-function Addon.UI.SoundTab_GlobalStopPlayback()
-    local t = Addon.SoundBrowserTab
+function ns.UI.SoundTab_GlobalStopPlayback()
+    local t = ns.SoundBrowserTab
     if t and t.StopPlayback then
         t:StopPlayback()
     end
 end
 
-function Addon.UI.SoundTab_RefreshSoundCvarCheckboxes()
-    local t = Addon.SoundBrowserTab
+function ns.UI.SoundTab_RefreshSoundCvarCheckboxes()
+    local t = ns.SoundBrowserTab
     if not t or not t.soundCvarMusicCb or not t.soundCvarAmbienceCb then return end
-    local cm = Addon.Constants.SOUND_CVAR_ENABLE_MUSIC
-    local ca = Addon.Constants.SOUND_CVAR_ENABLE_AMBIENCE
+    local cm = ns.Constants.SOUND_CVAR_ENABLE_MUSIC
+    local ca = ns.Constants.SOUND_CVAR_ENABLE_AMBIENCE
     t._syncingSoundCvars = true
     t.soundCvarMusicCb:SetChecked(C_CVar.GetCVar(cm) == "1")
     t.soundCvarAmbienceCb:SetChecked(C_CVar.GetCVar(ca) == "1")
@@ -184,7 +184,7 @@ end
 
 local function startPlaySoundFile(tab, fileDataId)
     if type(fileDataId) ~= "number" then return false end
-    Addon.UI.SoundTab_StopPlayback(tab)
+    ns.UI.SoundTab_StopPlayback(tab)
     tab.manualLastSoundKitId = nil
     local ch = getSoundChannel(tab)
     local willPlay, handle = PlaySoundFile(fileDataId, ch)
@@ -196,7 +196,7 @@ end
 
 local function startPlaySoundKit(tab, kitId)
     if type(kitId) ~= "number" then return false end
-    Addon.UI.SoundTab_StopPlayback(tab)
+    ns.UI.SoundTab_StopPlayback(tab)
     tab.manualLastSoundKitId = kitId
     local ch = getSoundChannel(tab)
     local willPlay, handle = PlaySound(kitId, ch)
@@ -206,16 +206,16 @@ local function startPlaySoundKit(tab, kitId)
     return willPlay and true or false, handle
 end
 
-function Addon.UI.SoundTab_PlayListSelection(tab)
+function ns.UI.SoundTab_PlayListSelection(tab)
     if not tab.selectedEntry then return end
     local id = SB:GetFileDataIdNumber(tab.selectedEntry)
     if not id then return end
     local ok, handle = startPlaySoundFile(tab, id)
     SoundTab_updateLastPlayLine(tab, ok, id)
-    Addon.UI.SoundTab_UpdateDetails(tab)
+    ns.UI.SoundTab_UpdateDetails(tab)
 end
 
-function Addon.UI.SoundTab_UpdateDetails(tab)
+function ns.UI.SoundTab_UpdateDetails(tab)
     if not tab.infoText then return end
     local lines = {}
     local e = tab.selectedEntry
@@ -256,7 +256,7 @@ function Addon.UI.SoundTab_UpdateDetails(tab)
     tab.infoScroll:GetScrollChild():SetHeight(max(h + 16, tab.infoScroll:GetHeight()))
 end
 
-function Addon.UI.SoundTab_UpdateCopyRow(tab)
+function ns.UI.SoundTab_UpdateCopyRow(tab)
     local e = tab.selectedEntry
     setCopyBtnEnabled(tab.copyFdidBtn, e ~= nil)
     setCopyBtnEnabled(tab.copyPathBtn, e ~= nil)
@@ -276,8 +276,8 @@ applyListSelection = function(tab, idx)
     elseif tab.nameText then
         tab.nameText:SetText("")
     end
-    Addon.UI.SoundTab_UpdateDetails(tab)
-    Addon.UI.SoundTab_UpdateCopyRow(tab)
+    ns.UI.SoundTab_UpdateDetails(tab)
+    ns.UI.SoundTab_UpdateCopyRow(tab)
     refreshSoundToolbar(tab)
 end
 
@@ -285,7 +285,7 @@ refreshListSelection = function(tab, preferFirst)
     if not tab or not tab.virtualizedList then
         return
     end
-    Addon.UI.SoundTab_RefreshList(tab)
+    ns.UI.SoundTab_RefreshList(tab)
     local count = SB:GetFilteredCount()
     if count <= 0 then
         tab.virtualizedList.SetSelectedIndex(nil)
@@ -333,7 +333,7 @@ local function hookListDoubleClickAndEnter(tab, leftPanel)
             btn:HookScript("OnDoubleClick", function(b)
                 if b.entryIndex and tab.virtualizedList then
                     tab.virtualizedList.SetSelectedIndex(b.entryIndex)
-                    Addon.UI.SoundTab_PlayListSelection(tab)
+                    ns.UI.SoundTab_PlayListSelection(tab)
                 end
             end)
         end
@@ -344,7 +344,7 @@ local function hookListDoubleClickAndEnter(tab, leftPanel)
         end
         self:SetPropagateKeyboardInput(false)
         if tab.virtualizedList and tab.selectedEntry then
-            Addon.UI.SoundTab_PlayListSelection(tab)
+            ns.UI.SoundTab_PlayListSelection(tab)
         end
     end)
 end
@@ -426,8 +426,8 @@ local function afterBookmarkToggle(tab)
     refreshSoundToolbar(tab)
 end
 
-function Addon.UI:CreateSoundBrowserTab(parent)
-    SB = Addon.SoundBrowser
+function ns.UI:CreateSoundBrowserTab(parent)
+    SB = ns.SoundBrowser
     if not SB then return CreateFrame("Frame", nil, parent) end
 
     local DU = getDU()
@@ -448,7 +448,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     tab.manualLastSoundKitId = nil
 
     function tab:StopPlayback()
-        Addon.UI.SoundTab_StopPlayback(self)
+        ns.UI.SoundTab_StopPlayback(self)
     end
 
     if not SB:IsDataAvailable() then
@@ -457,11 +457,11 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         warn:SetPoint("TOPRIGHT", tab, "TOPRIGHT", -12, -12)
         warn:SetJustifyH("LEFT")
         warn:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        local unloadOn = Addon.UI and Addon.UI.GetUnloadOnDisable and Addon.UI:GetUnloadOnDisable("sounds")
+        local unloadOn = ns.UI and ns.UI.GetUnloadOnDisable and ns.UI:GetUnloadOnDisable("sounds")
         local msg
         if unloadOn then
             msg = L["SOUND_MSG_UNLOADED"]
-        elseif Addon._DevToolSoundAssetsPurgedSession then
+        elseif ns._DevToolSoundAssetsPurgedSession then
             msg = L["SOUND_MSG_RELOAD_RESTORE"]
         else
             msg = L["SOUND_MSG_NO_DATA"]
@@ -469,11 +469,11 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         warn:SetText(msg)
         function tab:StopPlayback() end
         function tab:Teardown()
-            if Addon.SoundBrowserTab == self then
-                Addon.SoundBrowserTab = nil
+            if ns.SoundBrowserTab == self then
+                ns.SoundBrowserTab = nil
             end
         end
-        Addon.SoundBrowserTab = tab
+        ns.SoundBrowserTab = tab
         return tab
     end
 
@@ -481,7 +481,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     SB:SetFilterText("")
     SB:RebuildFiltered()
     SB:SetFilteredReadyCallback(function()
-        if Addon.SoundBrowserTab ~= tab then
+        if ns.SoundBrowserTab ~= tab then
             return
         end
         refreshListSelection(tab, true)
@@ -584,7 +584,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
 
     local toolbarBottom = -62
 
-    local savedListW = Addon.db.global.soundBrowserLeftPaneWidth
+    local savedListW = ns.db.global.soundBrowserLeftPaneWidth
     local initListW = LEFT_DEFAULT
     if type(savedListW) == "number" and savedListW >= LEFT_MIN then
         initListW = savedListW
@@ -639,9 +639,9 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         bottomOuterInset = 5,
         rightOuterInset = 5,
         resizeCap = DU.MAIN_FRAME_RESIZE_CAP or 0.95,
-        mainFrame = Addon.UI and Addon.UI.mainFrame,
+        mainFrame = ns.UI and ns.UI.mainFrame,
         onWidthChanged = function(w)
-            Addon.db.global.soundBrowserLeftPaneWidth = w
+            ns.db.global.soundBrowserLeftPaneWidth = w
         end,
     })
 
@@ -677,9 +677,9 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         end,
         onSelect = function(value)
             tab.soundChannelValue = value
-            Addon.db.global.soundBrowserChannel = value
+            ns.db.global.soundBrowserChannel = value
             refreshChannelDropdownLabel(tab)
-            Addon.UI.SoundTab_UpdateDetails(tab)
+            ns.UI.SoundTab_UpdateDetails(tab)
         end,
     })
     refreshChannelDropdownLabel(tab)
@@ -690,7 +690,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     bindSoundCvarCheckboxTooltip(musicCb, L["SOUND_CVAR_MUSIC_TIP"])
     musicCb:SetScript("OnClick", function(self)
         if tab._syncingSoundCvars then return end
-        C_CVar.SetCVar(Addon.Constants.SOUND_CVAR_ENABLE_MUSIC, self:GetChecked() and "1" or "0")
+        C_CVar.SetCVar(ns.Constants.SOUND_CVAR_ENABLE_MUSIC, self:GetChecked() and "1" or "0")
     end)
 
     local ambienceCb = OneWoW_GUI:CreateCheckbox(rightPanel, { label = L["SOUND_CVAR_AMBIENCE_LABEL"] })
@@ -699,16 +699,16 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     bindSoundCvarCheckboxTooltip(ambienceCb, L["SOUND_CVAR_AMBIENCE_TIP"])
     ambienceCb:SetScript("OnClick", function(self)
         if tab._syncingSoundCvars then return end
-        C_CVar.SetCVar(Addon.Constants.SOUND_CVAR_ENABLE_AMBIENCE, self:GetChecked() and "1" or "0")
+        C_CVar.SetCVar(ns.Constants.SOUND_CVAR_ENABLE_AMBIENCE, self:GetChecked() and "1" or "0")
     end)
 
     tab.soundCvarListener = CreateFrame("Frame", nil, tab)
     tab.soundCvarListener:SetScript("OnEvent", function(_, _, cvarName)
-        local cm = Addon.Constants.SOUND_CVAR_ENABLE_MUSIC
-        local ca = Addon.Constants.SOUND_CVAR_ENABLE_AMBIENCE
+        local cm = ns.Constants.SOUND_CVAR_ENABLE_MUSIC
+        local ca = ns.Constants.SOUND_CVAR_ENABLE_AMBIENCE
         if cvarName ~= cm and cvarName ~= ca then return end
-        if not Addon.UI or Addon.UI.currentTabKey ~= "sounds" then return end
-        Addon.UI.SoundTab_RefreshSoundCvarCheckboxes()
+        if not ns.UI or ns.UI.currentTabKey ~= "sounds" then return end
+        ns.UI.SoundTab_RefreshSoundCvarCheckboxes()
     end)
     tab.soundCvarListener:RegisterEvent("CVAR_UPDATE")
 
@@ -720,7 +720,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     playBtn:SetPoint("TOPLEFT", channelLabel, "BOTTOMLEFT", 0, -12)
     playBtn:SetScript("OnClick", function()
         if not tab.selectedEntry then return end
-        Addon.UI.SoundTab_PlayListSelection(tab)
+        ns.UI.SoundTab_PlayListSelection(tab)
     end)
 
     local stopBtn = OneWoW_GUI:CreateFitTextButton(rightPanel, {
@@ -730,9 +730,9 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     })
     stopBtn:SetPoint("LEFT", playBtn, "RIGHT", 6, 0)
     stopBtn:SetScript("OnClick", function()
-        Addon.UI.SoundTab_StopPlayback(tab)
+        ns.UI.SoundTab_StopPlayback(tab)
         SoundTab_updateLastPlayLine(tab, false, nil)
-        Addon.UI.SoundTab_UpdateDetails(tab)
+        ns.UI.SoundTab_UpdateDetails(tab)
     end)
 
     local controlsAnchor = CreateFrame("Frame", nil, rightPanel)
@@ -787,42 +787,42 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         if mode == MANUAL_FDID then
             local n = tonumber(raw)
             if not n then
-                Addon:Print(L["SOUND_ERR_BAD_FDID"])
+                ns:Print(L["SOUND_ERR_BAD_FDID"])
                 return
             end
             local ok, handle = startPlaySoundFile(tab, n)
             SoundTab_updateLastPlayLine(tab, ok, n)
-            Addon.UI.SoundTab_UpdateDetails(tab)
-            Addon.UI.SoundTab_UpdateCopyRow(tab)
+            ns.UI.SoundTab_UpdateDetails(tab)
+            ns.UI.SoundTab_UpdateCopyRow(tab)
             return
         end
         if mode == MANUAL_KIT then
             local n = tonumber(raw)
             if not n then
-                Addon:Print(L["SOUND_ERR_BAD_KIT"])
+                ns:Print(L["SOUND_ERR_BAD_KIT"])
                 return
             end
             local ok, handle = startPlaySoundKit(tab, n)
             SoundTab_updateLastPlayLine(tab, ok, n)
-            Addon.UI.SoundTab_UpdateDetails(tab)
-            Addon.UI.SoundTab_UpdateCopyRow(tab)
+            ns.UI.SoundTab_UpdateDetails(tab)
+            ns.UI.SoundTab_UpdateCopyRow(tab)
             return
         end
         local kitId, err = SB:ParseSoundKitKeyInput(raw)
         if not kitId then
             if err == "empty" then
-                Addon:Print(L["SOUND_ERR_EMPTY_KEY"])
+                ns:Print(L["SOUND_ERR_EMPTY_KEY"])
             elseif err == "nosoundkit" then
-                Addon:Print(L["SOUND_ERR_NO_SOUNDKIT"])
+                ns:Print(L["SOUND_ERR_NO_SOUNDKIT"])
             else
-                Addon:Print(L["SOUND_ERR_UNKNOWN_KEY"])
+                ns:Print(L["SOUND_ERR_UNKNOWN_KEY"])
             end
             return
         end
         local ok, handle = startPlaySoundKit(tab, kitId)
         SoundTab_updateLastPlayLine(tab, ok, kitId)
-        Addon.UI.SoundTab_UpdateDetails(tab)
-        Addon.UI.SoundTab_UpdateCopyRow(tab)
+        ns.UI.SoundTab_UpdateDetails(tab)
+        ns.UI.SoundTab_UpdateCopyRow(tab)
     end)
 
     local manualCopyKit = OneWoW_GUI:CreateFitTextButton(tab.manualPanel, {
@@ -834,7 +834,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     manualCopyKit:SetScript("OnClick", function()
         local k = tab.manualLastSoundKitId
         if type(k) == "number" then
-            Addon:CopyToClipboard(tostring(k))
+            ns:CopyToClipboard(tostring(k))
         end
     end)
     tab.copyKitBtn = manualCopyKit
@@ -848,7 +848,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     manualCopyPS:SetScript("OnClick", function()
         local k = tab.manualLastSoundKitId
         if type(k) == "number" then
-            Addon:CopyToClipboard(SB:GetPlaySoundSnippet(k, getSoundChannel(tab)))
+            ns:CopyToClipboard(SB:GetPlaySoundSnippet(k, getSoundChannel(tab)))
         end
     end)
     tab.copyPlaySoundSnippetBtn = manualCopyPS
@@ -888,7 +888,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     copyFdidBtn:SetScript("OnClick", function()
         local e = tab.selectedEntry
         if e then
-            Addon:CopyToClipboard(SB:GetFileDataIdString(e))
+            ns:CopyToClipboard(SB:GetFileDataIdString(e))
         end
     end)
     tab.copyFdidBtn = copyFdidBtn
@@ -902,7 +902,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     copyPathBtn:SetScript("OnClick", function()
         local e = tab.selectedEntry
         if e then
-            Addon:CopyToClipboard(SB:GetFullPath(e))
+            ns:CopyToClipboard(SB:GetFullPath(e))
         end
     end)
     tab.copyPathBtn = copyPathBtn
@@ -916,7 +916,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
     copySnippetBtn:SetScript("OnClick", function()
         local e = tab.selectedEntry
         if e then
-            Addon:CopyToClipboard(SB:GetPlaySoundFileSnippet(e, getSoundChannel(tab)))
+            ns:CopyToClipboard(SB:GetPlaySoundFileSnippet(e, getSoundChannel(tab)))
         end
     end)
     tab.copySnippetBtn = copySnippetBtn
@@ -927,7 +927,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         minWidth = 64,
     })
     favsBtn:SetPoint("TOPLEFT", tab, "TOPLEFT", 5, -32)
-    Addon.UI:BindToolbarBarButtonMouse(favsBtn, SOUND_BAR_ACTIVE_KEY)
+    ns.UI:BindToolbarBarButtonMouse(favsBtn, SOUND_BAR_ACTIVE_KEY)
     favsBtn:SetScript("OnClick", function()
         SB:SetFavoritesOnly(not SB.favoritesOnly)
         tab.selectedListIndex = nil
@@ -942,7 +942,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         minWidth = 64,
     })
     bookmarkBtn:SetPoint("LEFT", favsBtn, "RIGHT", 4, 0)
-    Addon.UI:BindToolbarBarButtonMouse(bookmarkBtn, SOUND_BAR_ACTIVE_KEY)
+    ns.UI:BindToolbarBarButtonMouse(bookmarkBtn, SOUND_BAR_ACTIVE_KEY)
     bookmarkBtn:SetScript("OnClick", function()
         if not tab.selectedEntry then return end
         local added = SB:ToggleBookmark(tab.selectedEntry)
@@ -951,9 +951,9 @@ function Addon.UI:CreateSoundBrowserTab(parent)
             label = SB:GetFileDataIdString(tab.selectedEntry)
         end
         if added then
-            Addon:Print((L["MSG_BOOKMARKED"]):gsub("{name}", tostring(label)))
+            ns:Print((L["MSG_BOOKMARKED"]):gsub("{name}", tostring(label)))
         else
-            Addon:Print((L["MSG_REMOVED_BOOKMARK"]):gsub("{name}", tostring(label)))
+            ns:Print((L["MSG_REMOVED_BOOKMARK"]):gsub("{name}", tostring(label)))
         end
         afterBookmarkToggle(tab)
     end)
@@ -965,7 +965,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         minWidth = 56,
     })
     manualToggle:SetPoint("LEFT", bookmarkBtn, "RIGHT", 6, 0)
-    Addon.UI:BindToolbarBarButtonMouse(manualToggle, SOUND_BAR_ACTIVE_KEY)
+    ns.UI:BindToolbarBarButtonMouse(manualToggle, SOUND_BAR_ACTIVE_KEY)
     manualToggle:SetScript("OnClick", function()
         if tab.manualPanel:IsShown() then
             tab.manualPanel:SetHeight(0)
@@ -987,7 +987,7 @@ function Addon.UI:CreateSoundBrowserTab(parent)
         if SB then
             SB:CancelSearch()
         end
-        Addon.UI.SoundTab_StopPlayback(tab)
+        ns.UI.SoundTab_StopPlayback(tab)
     end)
 
     function tab:Teardown()
@@ -1004,23 +1004,23 @@ function Addon.UI:CreateSoundBrowserTab(parent)
             self.soundCvarListener:SetScript("OnEvent", nil)
             self.soundCvarListener = nil
         end
-        Addon.UI.SoundTab_StopPlayback(self)
-        if Addon.SoundBrowserTab == self then
-            Addon.SoundBrowserTab = nil
+        ns.UI.SoundTab_StopPlayback(self)
+        if ns.SoundBrowserTab == self then
+            ns.SoundBrowserTab = nil
         end
     end
 
-    Addon.SoundBrowserTab = tab
+    ns.SoundBrowserTab = tab
 
-    Addon.UI.SoundTab_RefreshList(tab)
+    ns.UI.SoundTab_RefreshList(tab)
     if SB:GetFilteredCount() > 0 then
         tab.virtualizedList.SetSelectedIndex(1)
     else
-        Addon.UI.SoundTab_UpdateDetails(tab)
-        Addon.UI.SoundTab_UpdateCopyRow(tab)
+        ns.UI.SoundTab_UpdateDetails(tab)
+        ns.UI.SoundTab_UpdateCopyRow(tab)
     end
     refreshSoundToolbar(tab)
-    Addon.UI.SoundTab_RefreshSoundCvarCheckboxes()
+    ns.UI.SoundTab_RefreshSoundCvarCheckboxes()
 
     return tab
 end

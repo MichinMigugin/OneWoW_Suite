@@ -1,9 +1,9 @@
-local _, Addon = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local FrameTree = {}
-Addon.FrameTree = FrameTree
+ns.FrameTree = FrameTree
 
 local safeGet
 local NODE_HEIGHT = 20
@@ -12,7 +12,7 @@ local MAX_DEPTH = 20
 
 local function ensureHelpers()
     if not safeGet then
-        safeGet = Addon.safeGet
+        safeGet = ns.safeGet
     end
 end
 
@@ -226,7 +226,7 @@ function FrameTree:Create(parentContent, scrollFrame)
         nf:SetScript("OnEnter", function(myself)
             myself.bg:Show()
             if myself.nodeData and myself.nodeData.data then
-                Addon.FrameInspector:HighlightFrame(myself.nodeData.data)
+                ns.FrameInspector:HighlightFrame(myself.nodeData.data)
             end
         end)
 
@@ -234,20 +234,20 @@ function FrameTree:Create(parentContent, scrollFrame)
             if not myself.isSelectedStyle then
                 myself.bg:Hide()
             end
-            Addon.FrameInspector:ClearHighlight()
+            ns.FrameInspector:ClearHighlight()
         end)
 
         nf:SetScript("OnClick", function(myself, button)
             if not myself.nodeData then return end
             if button == "RightButton" then
-                Addon:CopyToClipboard(getNodeName(myself.nodeData.data))
+                ns:CopyToClipboard(getNodeName(myself.nodeData.data))
                 return
             end
             if myself.isToggleHit then
                 tree:ToggleNode(myself.nodeData)
             else
                 if myself.nodeData.data then
-                    Addon.FrameInspector:InspectFrame(myself.nodeData.data)
+                    ns.FrameInspector:InspectFrame(myself.nodeData.data)
                 end
             end
         end)

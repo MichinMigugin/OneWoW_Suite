@@ -1,8 +1,8 @@
-local _, Addon = ...
-local L = Addon.L
+local _, ns = ...
+local L = ns.L
 
 local SB = {}
-Addon.SoundBrowser = SB
+ns.SoundBrowser = SB
 
 local format = format
 local sort, tinsert, wipe = sort, tinsert, wipe
@@ -31,7 +31,7 @@ SB._filteredReadyCallback = nil
 
 local function getEntryString(entryRef)
     if type(entryRef) == "number" then
-        return Addon._SoundEntries and Addon._SoundEntries[entryRef]
+        return ns._SoundEntries and ns._SoundEntries[entryRef]
     end
     if type(entryRef) == "string" then
         return entryRef
@@ -82,7 +82,7 @@ local function notifyFilteredReady(self)
 end
 
 function SB:IsDataAvailable()
-    return type(Addon._SoundEntries) == "table" and type(Addon._SoundSlices) == "table"
+    return type(ns._SoundEntries) == "table" and type(ns._SoundSlices) == "table"
 end
 
 function SB:ResetAfterAssetUnload()
@@ -125,7 +125,7 @@ function SB:GetTopKeys()
         return self._topKeysCache
     end
     local keys = {}
-    for top in pairs(Addon._SoundSlices) do
+    for top in pairs(ns._SoundSlices) do
         if type(top) == "string" then
             tinsert(keys, top)
         end
@@ -136,7 +136,7 @@ function SB:GetTopKeys()
 end
 
 function SB:GetSubKeys(top)
-    local branch = top and Addon._SoundSlices and Addon._SoundSlices[top]
+    local branch = top and ns._SoundSlices and ns._SoundSlices[top]
     if type(branch) ~= "table" then
         return {}
     end
@@ -160,7 +160,7 @@ function SB:EnsureDefaultCategory()
         return
     end
     if self.selectedTop and self.selectedSub then
-        local slice = Addon._SoundSlices[self.selectedTop] and Addon._SoundSlices[self.selectedTop][self.selectedSub]
+        local slice = ns._SoundSlices[self.selectedTop] and ns._SoundSlices[self.selectedTop][self.selectedSub]
         if type(slice) == "table" and type(slice[1]) == "number" and type(slice[2]) == "number" then
             return
         end
@@ -222,8 +222,8 @@ function SB:RebuildFiltered()
     end
 
     local filter = self.filterText or ""
-    local entries = Addon._SoundEntries
-    local bookmarks = Addon.db.global.soundBookmarks
+    local entries = ns._SoundEntries
+    local bookmarks = ns.db.global.soundBookmarks
     local favoritesOnly = self.favoritesOnly
     local searchingAll = self:IsSearchingAll()
 
@@ -298,7 +298,7 @@ function SB:RebuildFiltered()
         return
     end
 
-    local slice = Addon._SoundSlices[top] and Addon._SoundSlices[top][sub]
+    local slice = ns._SoundSlices[top] and ns._SoundSlices[top][sub]
     if type(slice) ~= "table" then
         return
     end
@@ -363,7 +363,7 @@ function SB:GetFullPath(entryRef)
     if not tail then
         return ""
     end
-    return Addon.RebuildSoundFilePath(top, sub, tail)
+    return ns.RebuildSoundFilePath(top, sub, tail)
 end
 
 function SB:GetFileDataIdString(entryRef)
@@ -403,7 +403,7 @@ function SB:IsBookmarked(entryRef)
     if not key then
         return false
     end
-    return Addon.db.global.soundBookmarks[key] and true or false
+    return ns.db.global.soundBookmarks[key] and true or false
 end
 
 function SB:ToggleBookmark(entryRef)
@@ -412,7 +412,7 @@ function SB:ToggleBookmark(entryRef)
         return false
     end
 
-    local g = Addon.db.global
+    local g = ns.db.global
     if g.soundBookmarks[key] then
         g.soundBookmarks[key] = nil
         return false

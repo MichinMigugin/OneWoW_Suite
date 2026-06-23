@@ -1,7 +1,7 @@
-local ADDON_NAME, Addon = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-local L = Addon.L
+local L = ns.L
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local DEFAULT_THEME_ICON = OneWoW_GUI.Constants.DEFAULT_THEME_ICON
@@ -17,7 +17,7 @@ local UI = {
     currentTabKey = nil,
     settingsUnloadCheckboxes = {},
 }
-Addon.UI = UI
+ns.UI = UI
 
 function UI:StyleContentPanel(panel)
     panel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
@@ -87,8 +87,8 @@ function UI:GetTabDefinitions()
             labelKey = "TAB_FRAME",
             create = function(parent) return self:CreateFrameInspectorTab(parent) end,
             teardown = function(tab)
-                if Addon.FrameInspectorTab == tab then
-                    Addon.FrameInspectorTab = nil
+                if ns.FrameInspectorTab == tab then
+                    ns.FrameInspectorTab = nil
                 end
             end,
         },
@@ -100,8 +100,8 @@ function UI:GetTabDefinitions()
             teardown = function(tab)
                 if tab and tab.Teardown then
                     tab:Teardown()
-                elseif Addon.EventMonitorTab == tab then
-                    Addon.EventMonitorTab = nil
+                elseif ns.EventMonitorTab == tab then
+                    ns.EventMonitorTab = nil
                 end
             end,
         },
@@ -111,8 +111,8 @@ function UI:GetTabDefinitions()
             labelKey = "TAB_ERRORS",
             create = function(parent) return self:CreateErrorsTab(parent) end,
             teardown = function(tab)
-                if Addon.LuaConsoleTab == tab then
-                    Addon.LuaConsoleTab = nil
+                if ns.LuaConsoleTab == tab then
+                    ns.LuaConsoleTab = nil
                 end
             end,
         },
@@ -124,8 +124,8 @@ function UI:GetTabDefinitions()
             teardown = function(tab)
                 if tab and tab.Teardown then
                     tab:Teardown()
-                elseif Addon.MonitorTabUI == tab then
-                    Addon.MonitorTabUI = nil
+                elseif ns.MonitorTabUI == tab then
+                    ns.MonitorTabUI = nil
                 end
             end,
         },
@@ -141,8 +141,8 @@ function UI:GetTabDefinitions()
                 end
                 if tab and tab.Teardown then
                     tab:Teardown()
-                elseif Addon.GlobalsBrowserTab == tab then
-                    Addon.GlobalsBrowserTab = nil
+                elseif ns.GlobalsBrowserTab == tab then
+                    ns.GlobalsBrowserTab = nil
                 end
             end,
         },
@@ -158,8 +158,8 @@ function UI:GetTabDefinitions()
                 end
                 if tab and tab.Teardown then
                     tab:Teardown()
-                elseif Addon.TextureBrowserTab == tab then
-                    Addon.TextureBrowserTab = nil
+                elseif ns.TextureBrowserTab == tab then
+                    ns.TextureBrowserTab = nil
                 end
             end,
         },
@@ -187,8 +187,8 @@ function UI:GetTabDefinitions()
                 end
                 if tab and tab.Teardown then
                     tab:Teardown()
-                elseif Addon.SoundBrowserTab == tab then
-                    Addon.SoundBrowserTab = nil
+                elseif ns.SoundBrowserTab == tab then
+                    ns.SoundBrowserTab = nil
                 end
             end,
         },
@@ -204,8 +204,8 @@ function UI:GetTabDefinitions()
             labelKey = "TAB_LAYOUT",
             create = function(parent) return self:CreateLayoutTab(parent) end,
             teardown = function(tab)
-                if Addon.LayoutToolsTab == tab then
-                    Addon.LayoutToolsTab = nil
+                if ns.LayoutToolsTab == tab then
+                    ns.LayoutToolsTab = nil
                 end
             end,
         },
@@ -260,7 +260,7 @@ function UI:GetTabSettingsDefaults()
 end
 
 function UI:GetUnloadOnDisable(tabKey)
-    local g = Addon.db.global
+    local g = ns.db.global
     if tabKey == "textures" then return g.deferTextureBrowserData == true end
     if tabKey == "sounds" then return g.deferSoundBrowserData == true end
     return false
@@ -290,7 +290,7 @@ end
 
 function UI:ApplyUnloadAssetSetting(tabKey, wantUnload)
     if tabKey ~= "textures" and tabKey ~= "sounds" then return end
-    local g = Addon.db.global
+    local g = ns.db.global
     local old = self:GetUnloadOnDisable(tabKey)
     wantUnload = wantUnload and true or false
     if tabKey == "textures" then
@@ -304,10 +304,10 @@ function UI:ApplyUnloadAssetSetting(tabKey, wantUnload)
         self:UpdateUnloadCheckboxEnableState(tabKey)
     end
     if wantUnload and not old then
-        if tabKey == "textures" and Addon.DevTool_WipeTextureAssetData then
-            Addon.DevTool_WipeTextureAssetData()
-        elseif tabKey == "sounds" and Addon.DevTool_WipeSoundAssetData then
-            Addon.DevTool_WipeSoundAssetData()
+        if tabKey == "textures" and ns.DevTool_WipeTextureAssetData then
+            ns.DevTool_WipeTextureAssetData()
+        elseif tabKey == "sounds" and ns.DevTool_WipeSoundAssetData then
+            ns.DevTool_WipeSoundAssetData()
         end
     end
 end
@@ -328,7 +328,7 @@ function UI:IsTabEnabled(tabKey)
     if definition.alwaysEnabled then
         return true
     end
-    local dbTabs = Addon.db.global.tabs
+    local dbTabs = ns.db.global.tabs
     local tabSettings = dbTabs[tabKey]
     if type(tabSettings) == "table" and tabSettings.enabled ~= nil then
         return tabSettings.enabled and true or false
@@ -343,7 +343,7 @@ function UI:SetTabEnabled(tabKey, enabled)
         return
     end
 
-    local g = Addon.db.global
+    local g = ns.db.global
     g.tabs[tabKey] = g.tabs[tabKey] or {}
     if definition.alwaysEnabled then
         g.tabs[tabKey].enabled = true
@@ -555,7 +555,7 @@ end
 function UI:Initialize()
     if self.mainFrame then return end
 
-    local DU = Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
+    local DU = ns.Constants and ns.Constants.DEVTOOL_UI or {}
     local defaultW = DU.MAIN_FRAME_DEFAULT_WIDTH or 750
     local defaultH = DU.MAIN_FRAME_DEFAULT_HEIGHT or 450
     local resizeCap = DU.MAIN_FRAME_RESIZE_CAP or 0.95
@@ -640,15 +640,15 @@ function UI:Initialize()
     combatHide:RegisterEvent("PLAYER_REGEN_DISABLED")
     self.combatHideFrame = combatHide
 
-    if not OneWoW_GUI:RestoreWindowPosition(frame, Addon.db.global.position or {}) then
+    if not OneWoW_GUI:RestoreWindowPosition(frame, ns.db.global.position or {}) then
         frame:SetPoint("CENTER")
     end
 
     frame:SetScript("OnHide", function()
-        Addon.db.global.position = Addon.db.global.position or {}
-        OneWoW_GUI:SaveWindowPosition(frame, Addon.db.global.position)
-        if Addon.FrameInspector then
-            Addon.FrameInspector:ClearHighlight()
+        ns.db.global.position = ns.db.global.position or {}
+        OneWoW_GUI:SaveWindowPosition(frame, ns.db.global.position)
+        if ns.FrameInspector then
+            ns.FrameInspector:ClearHighlight()
         end
     end)
 
@@ -668,10 +668,10 @@ function UI:SelectTab(tabKey)
     for key, tab in pairs(self.tabs) do
         if key == tabKey then
             tab.content:Show()
-            if key == "events" and Addon.EventMonitor then
-                Addon.EventMonitor:UpdateUI()
-            elseif key == "sounds" and Addon.UI.SoundTab_RefreshSoundCvarCheckboxes then
-                Addon.UI.SoundTab_RefreshSoundCvarCheckboxes()
+            if key == "events" and ns.EventMonitor then
+                ns.EventMonitor:UpdateUI()
+            elseif key == "sounds" and ns.UI.SoundTab_RefreshSoundCvarCheckboxes then
+                ns.UI.SoundTab_RefreshSoundCvarCheckboxes()
             end
             self:StyleTabButton(tab.button, true)
         else
@@ -692,8 +692,8 @@ function UI:Show()
 end
 
 function UI:Hide()
-    if Addon.UI.SoundTab_GlobalStopPlayback then
-        Addon.UI.SoundTab_GlobalStopPlayback()
+    if ns.UI.SoundTab_GlobalStopPlayback then
+        ns.UI.SoundTab_GlobalStopPlayback()
     end
     if self.mainFrame then
         self.mainFrame:Hide()

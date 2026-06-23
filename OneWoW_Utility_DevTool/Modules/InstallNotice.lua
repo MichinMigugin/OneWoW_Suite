@@ -1,21 +1,21 @@
-local _, Addon = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-local L = Addon.L
+local L = ns.L
 
 local InstallNotice = {}
-Addon.InstallNotice = InstallNotice
+ns.InstallNotice = InstallNotice
 
 local activeDialog = nil
 
 local function getAckFlag()
-    local g = Addon.db and Addon.db.global
+    local g = ns.db and ns.db.global
     if not g then return false end
     return g.installNoticeAcknowledged and true or false
 end
 
 local function setAckFlag(value)
-    local g = Addon.db and Addon.db.global
+    local g = ns.db and ns.db.global
     if not g then return end
     g.installNoticeAcknowledged = value and true or false
 end

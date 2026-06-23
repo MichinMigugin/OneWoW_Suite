@@ -1,12 +1,12 @@
-local _, Addon = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-local L = Addon.L
+local L = ns.L
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
 local MonitorTab = {}
-Addon.MonitorTab = MonitorTab
+ns.MonitorTab = MonitorTab
 
 local addonInfo = {}
 local displayedList = {}
@@ -47,7 +47,7 @@ local function gatherAddOnProfilerFields(addonName)
     local o10 = safeGetAddOnMetric(addonName, E.CountTimeOver10Ms)
     local o50 = safeGetAddOnMetric(addonName, E.CountTimeOver50Ms)
     local o100 = safeGetAddOnMetric(addonName, E.CountTimeOver100Ms)
-    local weights = (Addon.Constants and Addon.Constants.MONITOR_AP_SPIKE_WEIGHTS) or { 1, 5, 10, 50, 100 }
+    local weights = (ns.Constants and ns.Constants.MONITOR_AP_SPIKE_WEIGHTS) or { 1, 5, 10, 50, 100 }
     local spikeScore = (weights[1] or 0) * o1 + (weights[2] or 0) * o5 + (weights[3] or 0) * o10
         + (weights[4] or 0) * o50 + (weights[5] or 0) * o100
     return {
@@ -228,7 +228,7 @@ function MonitorTab:GatherUsage()
 end
 
 function MonitorTab:GetSortedList()
-    local sortOrder = Addon.db.global.monitor.sortOrder
+    local sortOrder = ns.db.global.monitor.sortOrder
     local absOrder = math.abs(sortOrder)
     local ascending = sortOrder > 0
 
@@ -311,7 +311,7 @@ function MonitorTab:GetFilter()
 end
 
 function MonitorTab:ToggleSort(column)
-    local db = Addon.db.global.monitor
+    local db = ns.db.global.monitor
 
     local current = db.sortOrder
     local absOrder = math.abs(current)
@@ -370,10 +370,10 @@ end
 function MonitorTab:ToggleCPUProfiling()
     if profilingCPU then
         SetCVar("scriptProfile", "0")
-        Addon:Print(L["MON_MSG_CPU_DISABLED"])
+        ns:Print(L["MON_MSG_CPU_DISABLED"])
     else
         SetCVar("scriptProfile", "1")
-        Addon:Print(L["MON_MSG_CPU_ENABLED"])
+        ns:Print(L["MON_MSG_CPU_ENABLED"])
     end
     ReloadUI()
 end
@@ -419,9 +419,9 @@ function MonitorTab:FormatAPCount(value)
 end
 
 function MonitorTab:GetViewPreset()
-    local C = Addon.Constants and Addon.Constants.MONITOR_PRESET
+    local C = ns.Constants and ns.Constants.MONITOR_PRESET
     local defaultId = C and C.BALANCED or "balanced"
-    local db = Addon.db.global.monitor
+    local db = ns.db.global.monitor
     local id = db.viewPreset or defaultId
     if not C then return id end
     if id ~= C.BALANCED and id ~= C.MEMORY_DIG and id ~= C.CPU_SPIKES and id ~= C.MINIMAL and id ~= C.ENGINE_PROFILER then
@@ -431,8 +431,8 @@ function MonitorTab:GetViewPreset()
 end
 
 function MonitorTab:SetViewPreset(presetId)
-    local db = Addon.db.global.monitor
-    local Const = Addon.Constants
+    local db = ns.db.global.monitor
+    local Const = ns.Constants
     local C = Const and Const.MONITOR_PRESET
     local DS = Const and Const.MONITOR_PRESET_DEFAULT_SORT
     if not C then return end
@@ -455,7 +455,7 @@ function MonitorTab:SetViewPreset(presetId)
 end
 
 function MonitorTab:UpdateUI()
-    local tab = Addon.MonitorTabUI
+    local tab = ns.MonitorTabUI
     if not tab then return end
     tab:RefreshList()
 end
@@ -465,7 +465,7 @@ local pinnedMasterTicker = nil
 local GROWTH_SAMPLE_MAX = 30
 
 local function getMaxPinnedPopouts()
-    local c = Addon.Constants and Addon.Constants.MONITOR_MAX_PINNED_POPOUTS
+    local c = ns.Constants and ns.Constants.MONITOR_MAX_PINNED_POPOUTS
     return (type(c) == "number" and c > 0) and c or 4
 end
 
@@ -491,7 +491,7 @@ end
 
 local function findPinnedDbEntry(monitors, addonName)
     if type(monitors) ~= "table" then return nil end
-    local list = Addon.GetPinnedMonitorEntriesInOrder and Addon:GetPinnedMonitorEntriesInOrder(monitors) or {}
+    local list = ns.GetPinnedMonitorEntriesInOrder and ns:GetPinnedMonitorEntriesInOrder(monitors) or {}
     for _, e in ipairs(list) do
         if e.addon == addonName then
             return e
@@ -503,7 +503,7 @@ end
 local function removePinnedDbEntryByAddon(db, addonName)
     local arr = db.pinnedMonitors
     if type(arr) ~= "table" then return end
-    local list = Addon.GetPinnedMonitorEntriesInOrder and Addon:GetPinnedMonitorEntriesInOrder(arr) or {}
+    local list = ns.GetPinnedMonitorEntriesInOrder and ns:GetPinnedMonitorEntriesInOrder(arr) or {}
     local newArr = {}
     for _, e in ipairs(list) do
         if e.addon ~= addonName then tinsert(newArr, e) end
@@ -728,14 +728,14 @@ function MonitorTab:CreatePinnedPopup(addonName, addonTitle, existingDbEntry)
 
     if #pinnedSlots >= maxPins then
         local msg = L["MON_MSG_PIN_MAX"]
-        Addon:Print(msg and string.format(msg, maxPins) or ("You can pin up to " .. tostring(maxPins) .. " addon monitors at once."))
+        ns:Print(msg and string.format(msg, maxPins) or ("You can pin up to " .. tostring(maxPins) .. " addon monitors at once."))
         return
     end
 
     local addonIndex = FindAddonIndexByName(addonName)
     if not addonIndex then return end
 
-    local db = Addon.db.global.monitor
+    local db = ns.db.global.monitor
     ensurePinnedMonitorsArray(db)
 
     local dbEntry
@@ -931,7 +931,7 @@ function MonitorTab:ClosePinnedPopupByAddon(addonName)
     local slot = pinnedSlots[idx]
     tremove(pinnedSlots, idx)
 
-    local db = Addon.db.global.monitor
+    local db = ns.db.global.monitor
     if slot.dbEntry and not slot.dbEntry.reopenOnReload then
         removePinnedDbEntryByAddon(db, addonName)
     end
@@ -966,9 +966,9 @@ function MonitorTab:GetPinnedAddonName()
 end
 
 function MonitorTab:RestorePinnedMonitorsPending()
-    local db = Addon.db.global.monitor
+    local db = ns.db.global.monitor
     if type(db.pinnedMonitors) ~= "table" then return end
-    local list = Addon.GetPinnedMonitorEntriesInOrder and Addon:GetPinnedMonitorEntriesInOrder(db.pinnedMonitors) or {}
+    local list = ns.GetPinnedMonitorEntriesInOrder and ns:GetPinnedMonitorEntriesInOrder(db.pinnedMonitors) or {}
     for _, entry in ipairs(list) do
         if entry.reopenOnReload and type(entry.addon) == "string" and entry.addon ~= "" then
             local existing = select(1, findPinnedSlotByAddon(entry.addon))

@@ -1,4 +1,4 @@
-local ADDON_NAME, Addon = ...
+local ADDON_NAME, ns = ...
 
 local format = string.format
 
@@ -6,7 +6,7 @@ local noArgs = {}
 local unitSpellCastCommonArgs = { "unit", "castGUID", "spellID", "castBarID" }
 local itemLockCommonArgs = { "bagOrSlotIdx", "slotIdx" }
 
-Addon.Constants = {
+ns.Constants = {
     -- Error logger: EventRegistry name for internal subscribers (e.g. future EventMonitor correlation)
     ERROR_CAPTURE_EVENT = "OneWoW_DevTool.ErrorCaptured",
     -- Token-bucket refill rate (errors per second) before throttling capture

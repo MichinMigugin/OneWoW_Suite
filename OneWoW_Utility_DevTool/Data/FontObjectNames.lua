@@ -1,9 +1,9 @@
-local _, Addon = ...
+local _, ns = ...
 
 -- Static catalog of known Blizzard Font object names.
 -- Extracted from Blizzard_Fonts_Shared XMLs + well-known SystemFont globals.
 -- At runtime the module merges this with GetFonts() and filters by _G[name] validity.
-Addon.FontObjectNames = {
+ns.FontObjectNames = {
     "AchievementCriteriaFont",
     "AchievementDateFont",
     "AchievementDescriptionFont",

@@ -648,8 +648,7 @@ cross-unit data accessors on the lifecycle root as colon-methods (e.g.
 - Leaking internals on the lifecycle root (`OneWoW_AltTracker.UI = ...`)
 
 **Grandfathered** until migrated (see `MIGRATION.md` §3, `no-namespace-publish`
-hook allowlist): `OneWoW_Bags/OneWoW_Bags.lua`, `OneWoW_Notes/OneWoW_Notes.lua`,
-`OneWoW/Core/StoreBootstrap.lua`.
+hook allowlist): `OneWoW/Core/StoreBootstrap.lua`.
 
 Internal db assignment: [`DATABASE.md`](DATABASE.md) — `ns.db` after `DB:Init`.
 

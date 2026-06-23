@@ -1,7 +1,7 @@
-local _, Addon = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-local L = Addon.L
+local L = ns.L
 
 local function formatArgForDisplay(arg)
     if OneWoW.Restriction.IsSecret(arg) then return "[secret]" end
@@ -18,7 +18,7 @@ local function isUnitToken(s)
 end
 
 local function WrapEventViewerColor(text, colorKey)
-    local val = Addon.Constants.EVENT_VIEWER_COLORS and Addon.Constants.EVENT_VIEWER_COLORS[colorKey]
+    local val = ns.Constants.EVENT_VIEWER_COLORS and ns.Constants.EVENT_VIEWER_COLORS[colorKey]
     if type(val) == "string" then
         return OneWoW_GUI:WrapThemeColor(text, val)
     elseif type(val) == "table" then
@@ -29,7 +29,7 @@ local function WrapEventViewerColor(text, colorKey)
 end
 
 local EventMonitor = {}
-Addon.EventMonitor = EventMonitor
+ns.EventMonitor = EventMonitor
 
 EventMonitor.events = {}
 EventMonitor.monitoring = false
@@ -55,7 +55,7 @@ end
 function EventMonitor:RegisterAllPossibleEvents()
     if self.allEventsRegistered then return end
 
-    for _, event in ipairs(Addon.Constants.COMMON_EVENTS) do
+    for _, event in ipairs(ns.Constants.COMMON_EVENTS) do
         pcall(function() self.frame:RegisterEvent(event) end)
     end
 
@@ -64,13 +64,13 @@ end
 
 function EventMonitor:Start()
     if self.monitoring then
-        Addon:Print(L["MSG_MONITOR_ALREADY_RUNNING"])
+        ns:Print(L["MSG_MONITOR_ALREADY_RUNNING"])
         return
     end
 
     if self:GetEventCount() == 0 then
         self:RegisterCommonEvents()
-        Addon:Print(L["MSG_AUTO_SELECTED_FIRST"])
+        ns:Print(L["MSG_AUTO_SELECTED_FIRST"])
     end
 
     self:Initialize()
@@ -81,13 +81,13 @@ function EventMonitor:Start()
     self.monitoring = true
 
     local count = self:GetEventCount()
-    Addon:Print((L["MSG_MONITOR_STARTED"]):format(count))
+    ns:Print((L["MSG_MONITOR_STARTED"]):format(count))
     self:UpdateUI()
 end
 
 function EventMonitor:Stop()
     if not self.monitoring then
-        Addon:Print(L["MSG_MONITOR_NOT_RUNNING"])
+        ns:Print(L["MSG_MONITOR_NOT_RUNNING"])
         return
     end
 
@@ -100,14 +100,14 @@ function EventMonitor:Stop()
         self.frame:UnregisterAllEvents()
         self.allEventsRegistered = false
     end
-    Addon:Print(L["MSG_MONITOR_STOPPED"])
+    ns:Print(L["MSG_MONITOR_STOPPED"])
     self:UpdateUI()
 end
 
 function EventMonitor:Clear()
     self.events = {}
     self:UpdateUI()
-    Addon:Print(L["MSG_EVENT_LOG_CLEARED"])
+    ns:Print(L["MSG_EVENT_LOG_CLEARED"])
 end
 
 function EventMonitor:SetPaused(paused)
@@ -121,7 +121,7 @@ end
 
 function EventMonitor:TogglePause()
     self.paused = not self.paused
-    Addon:Print(self.paused and (L["MSG_EVENT_DISPLAY_PAUSED"]) or (L["MSG_EVENT_DISPLAY_RESUMED"]))
+    ns:Print(self.paused and (L["MSG_EVENT_DISPLAY_PAUSED"]) or (L["MSG_EVENT_DISPLAY_RESUMED"]))
     self:UpdateUI()
 end
 
@@ -158,7 +158,7 @@ function EventMonitor:OnEvent(event, ...)
     if not self.firehose and not self.selectedEvents[event] and not self.selectedRegistryEvents[event] then return end
 
     local now = GetTime()
-    local collapseWindow = Addon.Constants.EVENT_COLLAPSE_WINDOW or 0.2
+    local collapseWindow = ns.Constants.EVENT_COLLAPSE_WINDOW or 0.2
     local nArgs = select("#", ...)
 
     local last = self.events[1]
@@ -193,9 +193,9 @@ function EventMonitor:OnEvent(event, ...)
 end
 
 function EventMonitor:UpdateUI()
-    if not Addon.EventMonitorTab then return end
+    if not ns.EventMonitorTab then return end
 
-    local tab = Addon.EventMonitorTab
+    local tab = ns.EventMonitorTab
 
     if tab.startStopBtn then
         if self.monitoring then
@@ -268,7 +268,7 @@ function EventMonitor:UpdateUI()
     else
         local filterText = tab.filterBox and tab.filterBox:GetSearchText() or ""
         local filter = filterText ~= "" and filterText:upper() or nil
-        local argNames = Addon.Constants.EVENT_ARG_NAMES
+        local argNames = ns.Constants.EVENT_ARG_NAMES
         local displayCount = 0
         local maxRowWidth = 0
 
@@ -427,7 +427,7 @@ function EventMonitor:FirehoseStart()
     self.frame:RegisterAllEvents()
     self.firehose = true
     self.monitoring = true
-    Addon:Print(L["MSG_FIREHOSE_ON"])
+    ns:Print(L["MSG_FIREHOSE_ON"])
     self:UpdateUI()
 end
 
@@ -439,7 +439,7 @@ function EventMonitor:FirehoseStop()
     for event in pairs(self.selectedEvents) do
         pcall(function() self.frame:RegisterEvent(event) end)
     end
-    Addon:Print(L["MSG_FIREHOSE_OFF"])
+    ns:Print(L["MSG_FIREHOSE_OFF"])
     self:UpdateUI()
 end
 
@@ -452,11 +452,11 @@ function EventMonitor:FirehoseToggle()
 end
 
 function EventMonitor:RegisterCommonEvents()
-    for _, event in ipairs(Addon.Constants.COMMON_EVENTS) do
+    for _, event in ipairs(ns.Constants.COMMON_EVENTS) do
         self.selectedEvents[event] = true
     end
 end
 
 function EventMonitor:GetCommonEvents()
-    return Addon.Constants.COMMON_EVENTS
+    return ns.Constants.COMMON_EVENTS
 end

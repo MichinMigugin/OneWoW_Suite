@@ -1,12 +1,12 @@
-local _, Addon = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local L = Addon.L
+local L = ns.L
 
-function Addon.UI:CreateFrameInspectorTab(parent)
-    local DU = Addon.Constants and Addon.Constants.DEVTOOL_UI or {}
+function ns.UI:CreateFrameInspectorTab(parent)
+    local DU = ns.Constants and ns.Constants.DEVTOOL_UI or {}
     local resizeCap = DU.MAIN_FRAME_RESIZE_CAP or 0.95
 
     local tab = CreateFrame("Frame", nil, parent)
@@ -27,23 +27,23 @@ function Addon.UI:CreateFrameInspectorTab(parent)
     searchBtn:SetPoint("LEFT", searchBox, "RIGHT", 5, 0)
 
     pickBtn:SetScript("OnClick", function()
-        if Addon.FramePicker then
+        if ns.FramePicker then
             searchBox:SetText(searchBox.placeholderText or "")
             searchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            Addon.FramePicker:Start()
+            ns.FramePicker:Start()
         end
     end)
 
     local function doSearch()
         local text = searchBox:GetSearchText()
         if not text or text == "" then return end
-        local results = Addon:SearchFramesByName(text)
+        local results = ns:SearchFramesByName(text)
         if #results == 0 then
-            Addon:Print((L["MSG_NO_FRAMES_MATCHING"]):format(text))
+            ns:Print((L["MSG_NO_FRAMES_MATCHING"]):format(text))
         else
-            Addon.FrameInspector:InspectFrame(results[1])
+            ns.FrameInspector:InspectFrame(results[1])
             if #results > 1 then
-                Addon:Print((L["MSG_FOUND_FRAMES_FIRST"]):format(#results, results[1].GetName and results[1]:GetName() or "Anonymous"))
+                ns:Print((L["MSG_FOUND_FRAMES_FIRST"]):format(#results, results[1].GetName and results[1]:GetName() or "Anonymous"))
             end
         end
     end
@@ -76,7 +76,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
     copyHierarchyBtn:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -25, -3)
     copyHierarchyBtn:SetScript("OnClick", function()
         if tab.frameTree then
-            Addon:CopyToClipboard(tab.frameTree:SerializeToText())
+            ns:CopyToClipboard(tab.frameTree:SerializeToText())
         end
     end)
 
@@ -89,7 +89,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
         leftContent:SetWidth(w)
     end)
 
-    tab.frameTree = Addon.FrameTree:Create(leftContent, leftScroll)
+    tab.frameTree = ns.FrameTree:Create(leftContent, leftScroll)
 
     local rightPanel = OneWoW_GUI:CreateFrame(tab, { backdrop = BACKDROP_INNER_NO_INSETS, width = 100, height = 100 })
     self:StyleContentPanel(rightPanel)
@@ -115,7 +115,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
         bottomOuterInset = 5,
         rightOuterInset = 5,
         resizeCap = resizeCap,
-        mainFrame = Addon.UI and Addon.UI.mainFrame,
+        mainFrame = ns.UI and ns.UI.mainFrame,
         getMinRightWidth = getNeededRightWidth,
     })
 
@@ -134,14 +134,14 @@ function Addon.UI:CreateFrameInspectorTab(parent)
     parentGoBtn:SetPoint("RIGHT", copyDetailsBtn, "LEFT", -4, 0)
     parentGoBtn:SetScript("OnClick", function()
         if tab.currentParentRef then
-            Addon.FrameInspector:InspectFrame(tab.currentParentRef)
+            ns.FrameInspector:InspectFrame(tab.currentParentRef)
         end
     end)
     parentGoBtn:Hide()
     tab.parentGoBtn = parentGoBtn
     copyDetailsBtn:SetScript("OnClick", function()
         if tab.detailsText then
-            Addon:CopyToClipboard(tab.detailsText:GetText())
+            ns:CopyToClipboard(tab.detailsText:GetText())
         end
     end)
 
@@ -356,7 +356,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
                     tinsert(lines, "  " .. event)
                 end
             else
-                tinsert(lines, "  (none detected among " .. #Addon.Constants.COMMON_EVENTS .. " common events)")
+                tinsert(lines, "  (none detected among " .. #ns.Constants.COMMON_EVENTS .. " common events)")
             end
         end
 
@@ -463,7 +463,7 @@ function Addon.UI:CreateFrameInspectorTab(parent)
         self.rightScroll:GetScrollChild():SetHeight(math.max(height + 10, self.rightScroll:GetHeight()))
 
         -- Auto-expand main window if right panel is too narrow for content
-        local mainFrame = Addon.UI and Addon.UI.mainFrame
+        local mainFrame = ns.UI and ns.UI.mainFrame
         if mainFrame then
             local neededRightWidth = getNeededRightWidth()
 
@@ -483,6 +483,6 @@ function Addon.UI:CreateFrameInspectorTab(parent)
         end
     end
 
-    Addon.FrameInspectorTab = tab
+    ns.FrameInspectorTab = tab
     return tab
 end

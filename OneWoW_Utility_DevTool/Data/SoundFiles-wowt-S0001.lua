@@ -1,14 +1,14 @@
 -- AUTOMATICALLY GENERATED -- shard 1/3
-local _, Addon = ...
+local _, ns = ...
 
-if not Addon.ValidateDataBuildGameBuild("Sound PTR", Addon.soundDataVersionPTR) then
+if not ns.ValidateDataBuildGameBuild("Sound PTR", ns.soundDataVersionPTR) then
 	return
 end
 
-Addon._SoundDataLoaders = Addon._SoundDataLoaders or {}
-tinsert(Addon._SoundDataLoaders, function()
-    if type(Addon._SoundEntries) ~= "table" then return end
-    local E = Addon._SoundEntries
+ns._SoundDataLoaders = ns._SoundDataLoaders or {}
+tinsert(ns._SoundDataLoaders, function()
+    if type(ns._SoundEntries) ~= "table" then return end
+    local E = ns._SoundEntries
 
     E[#E + 1] = "ambience;gluescreen;gluescreenlogin.ogg;538968"
     E[#E + 1] = "ambience;gluescreen;wrath_login_1.ogg;538970"
