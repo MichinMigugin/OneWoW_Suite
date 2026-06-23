@@ -1,7 +1,7 @@
-local ADDON_NAME, OneWoW = ...
+local ADDON_NAME, ns = ...
 
 -- Machine-drafted — pending native review
-OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
+ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["ADDON_TITLE"] = "OneWoW",
 
     ["LOAD_FAIL_COMBAT"] = "戰鬥中無法載入該插件 - 請在戰鬥結束後重試。",

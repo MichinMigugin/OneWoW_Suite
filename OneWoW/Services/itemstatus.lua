@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-OneWoW.ItemStatus = {}
-local IS = OneWoW.ItemStatus
+ns.ItemStatus = {}
+local IS = ns.ItemStatus
 local callbacks = {}
 
 function IS:RegisterCallback(id, fn)
@@ -15,7 +15,7 @@ local function FireCallbacks()
 end
 
 local function GetDB()
-    return OneWoW.db and OneWoW.db.global and OneWoW.db.global.itemStatus
+    return ns.db and ns.db.global and ns.db.global.itemStatus
 end
 
 function IS:GetAllStatuses()
@@ -77,9 +77,9 @@ function IS:RemoveItemStatus(itemID)
     local db = GetDB()
     if not db then return end
     db[itemID] = nil
-    if OneWoW.OverlayEngine then
+    if ns.OverlayEngine then
         C_Timer.After(0.05, function()
-            OneWoW.OverlayEngine:Refresh()
+            ns.OverlayEngine:Refresh()
             FireCallbacks()
         end)
     else
@@ -118,9 +118,9 @@ function IS:MarkAsJunk(itemID, inputLink)
         junkItemLevel = itemLevel,
         lastSeen = GetServerTime(),
     })
-    if OneWoW.OverlayEngine then
+    if ns.OverlayEngine then
         C_Timer.After(0.05, function()
-            OneWoW.OverlayEngine:Refresh()
+            ns.OverlayEngine:Refresh()
             FireCallbacks()
         end)
     else
@@ -157,9 +157,9 @@ function IS:MarkAsProtected(itemID, inputLink)
         status = "Protected",
         lastSeen = GetServerTime(),
     })
-    if OneWoW.OverlayEngine then
+    if ns.OverlayEngine then
         C_Timer.After(0.05, function()
-            OneWoW.OverlayEngine:Refresh()
+            ns.OverlayEngine:Refresh()
             FireCallbacks()
         end)
     else
@@ -168,16 +168,16 @@ function IS:MarkAsProtected(itemID, inputLink)
     return true
 end
 
-function OneWoW:MarkItemJunkKeybind()
-    local L = OneWoW.L
+function ns:MarkItemJunkKeybind()
+    local L = ns.L
     local infoType, itemID, itemLink = GetCursorInfo()
     if infoType == "item" and itemID then
-        if OneWoW.ItemStatus:IsItemJunk(itemID) then
-            OneWoW.ItemStatus:RemoveItemStatus(itemID)
+        if ns.ItemStatus:IsItemJunk(itemID) then
+            ns.ItemStatus:RemoveItemStatus(itemID)
             local name = C_Item.GetItemInfo(itemID)
             print("|cFF00FF00OneWoW|r: " .. string.format(L["ITEMSTATUS_REMOVED_JUNK"], name or itemID))
         else
-            OneWoW.ItemStatus:MarkAsJunk(itemID, itemLink)
+            ns.ItemStatus:MarkAsJunk(itemID, itemLink)
             local name = C_Item.GetItemInfo(itemID)
             print("|cFF00FF00OneWoW|r: " .. string.format(L["ITEMSTATUS_MARKED_JUNK"], name or itemID))
         end
@@ -189,12 +189,12 @@ function OneWoW:MarkItemJunkKeybind()
     if link then
         local id = C_Item.GetItemInfoInstant(link)
         if id then
-            if OneWoW.ItemStatus:IsItemJunk(id) then
-                OneWoW.ItemStatus:RemoveItemStatus(id)
+            if ns.ItemStatus:IsItemJunk(id) then
+                ns.ItemStatus:RemoveItemStatus(id)
                 local name = C_Item.GetItemInfo(id)
                 print("|cFF00FF00OneWoW|r: " .. string.format(L["ITEMSTATUS_REMOVED_JUNK"], name or id))
             else
-                OneWoW.ItemStatus:MarkAsJunk(id, link)
+                ns.ItemStatus:MarkAsJunk(id, link)
                 local name = C_Item.GetItemInfo(id)
                 print("|cFF00FF00OneWoW|r: " .. string.format(L["ITEMSTATUS_MARKED_JUNK"], name or id))
             end
@@ -205,16 +205,16 @@ function OneWoW:MarkItemJunkKeybind()
     print("|cFF00FF00OneWoW|r: " .. L["ITEMSTATUS_HOVER_HINT"])
 end
 
-function OneWoW:MarkItemProtectedKeybind()
-    local L = OneWoW.L
+function ns:MarkItemProtectedKeybind()
+    local L = ns.L
     local infoType, itemID, itemLink = GetCursorInfo()
     if infoType == "item" and itemID then
-        if OneWoW.ItemStatus:IsItemProtected(itemID) then
-            OneWoW.ItemStatus:RemoveItemStatus(itemID)
+        if ns.ItemStatus:IsItemProtected(itemID) then
+            ns.ItemStatus:RemoveItemStatus(itemID)
             local name = C_Item.GetItemInfo(itemID)
             print("|cFF00FF00OneWoW|r: " .. string.format(L["ITEMSTATUS_REMOVED_PROTECTED"], name or itemID))
         else
-            OneWoW.ItemStatus:MarkAsProtected(itemID, itemLink)
+            ns.ItemStatus:MarkAsProtected(itemID, itemLink)
             local name = C_Item.GetItemInfo(itemID)
             print("|cFF00FF00OneWoW|r: " .. string.format(L["ITEMSTATUS_MARKED_PROTECTED"], name or itemID))
         end
@@ -226,12 +226,12 @@ function OneWoW:MarkItemProtectedKeybind()
     if link then
         local id = C_Item.GetItemInfoInstant(link)
         if id then
-            if OneWoW.ItemStatus:IsItemProtected(id) then
-                OneWoW.ItemStatus:RemoveItemStatus(id)
+            if ns.ItemStatus:IsItemProtected(id) then
+                ns.ItemStatus:RemoveItemStatus(id)
                 local name = C_Item.GetItemInfo(id)
                 print("|cFF00FF00OneWoW|r: " .. string.format(L["ITEMSTATUS_REMOVED_PROTECTED"], name or id))
             else
-                OneWoW.ItemStatus:MarkAsProtected(id, link)
+                ns.ItemStatus:MarkAsProtected(id, link)
                 local name = C_Item.GetItemInfo(id)
                 print("|cFF00FF00OneWoW|r: " .. string.format(L["ITEMSTATUS_MARKED_PROTECTED"], name or id))
             end

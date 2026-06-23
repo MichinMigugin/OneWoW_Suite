@@ -30,32 +30,19 @@ helper). A handful of per-file cleanups remain and are **tracked in
 
 ---
 
-## 2. Retire the `_G[addonName] = ns` lifecycle stop-gap
+## 2. Retire the `_G[addonName] = ns` lifecycle stop-gap — **complete**
 
-`OneWoW:BootStore` currently publishes `_G[config.addonName] = ns` so the core
-lifecycle dispatcher (`Lifecycle.RunUnitHook`) can resolve a load unit and call
-its `OnAddonLoaded` / `OnPlayerLogin` / `OnPlayerEnteringWorld` hooks. This is the
-**one sanctioned namespace publish** in the suite (centralized so its removal is a
-single edit) but it still leaks each store's namespace globally — the practice the
-encapsulation work otherwise retired. Authors must never hand-write it; the rule is
-documented in `ARCHITECTURE.md` §6, the `OneWoW-Suite-Architecture.mdc` rule, and
-the `onewow-suite-architecture` skill.
-
-Longer-term replacement:
-
-- Add a core-private unit registry: `BootStore` (and the manifest roots) register
-  `addonName → ns`; `Lifecycle.RunUnitHook` resolves that registry instead of
-  `_G[addonName]`.
-- Delete the `_G[config.addonName] = ns` line in `OneWoW/Core/StoreBootstrap.lua`.
-- Drop the remaining manifest-root `OneWoW_<Root> = ns` / `_G[...]` publishes.
+`OneWoW:BootStore` registers each store via `OneWoW.Lifecycle.RegisterUnit(addonName, storeNs)` in
+[`OneWoW/Core/StoreBootstrap.lua`](../Core/StoreBootstrap.lua). `Lifecycle.RunUnitHook` resolves units
+through `Lifecycle.ResolveUnit` (registry first, hub thin roots still in `_G` as fallback). The
+`_G[config.addonName] = ns` publish was removed in step 8.
 
 ---
 
 ## 3. Global-surface cleanup (suite-wide)
 
 Canonical rules: [`ARCHITECTURE.md`](ARCHITECTURE.md) §6.1. Enforcement:
-`bin/check_no_namespace_publish.py` (pre-commit `no-namespace-publish`; **warn-only**
-until the inventory is drained).
+`bin/check_no_namespace_publish.py` (pre-commit `no-namespace-publish`; **enforced**).
 
 ### Per-unit checklist
 
@@ -75,10 +62,10 @@ until the inventory is drained).
 | Load unit | Vararg today | Global publish today | Hook / debt | Notes |
 |-----------|--------------|----------------------|-------------|-------|
 | `OneWoW_AltTracker` | `ns` | `OneWoW_AltTracker = {}` + `OneWoW_AltTracker_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API`, no `ns.OneWoWAltTracker` |
-| AltTracker_* stores (8) | `ns` | BootStore + `_API` in `Core/API.lua` | StoreBootstrap publish only | **done** — reference store layout (`OneWoW_AltTracker_Storage`) |
+| AltTracker_* stores (8) | `ns` | BootStore registry + `_API` in `Core/API.lua` | **done** | reference store layout (`OneWoW_AltTracker_Storage`) |
 | `OneWoW_QoL` | `ns` | `OneWoW_QoL = {}` + `OneWoW_QoL_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API` in `Core/API.lua` |
 | `OneWoW_Catalog` | `ns` | `OneWoW_Catalog = {}` + `OneWoW_Catalog_API` | **done** (hub global surface) | Reference hub — `ns.db`, `_API` in `Core/API.lua` |
-| CatalogData_* stores (4) | `ns` | BootStore + `_API` in `Core/API.lua` | StoreBootstrap publish only | **done** — reference store layout |
+| CatalogData_* stores (4) | `ns` | BootStore registry + `_API` in `Core/API.lua` | **done** | reference store layout |
 
 **Tier C — namespace published as global**
 
@@ -97,25 +84,24 @@ until the inventory is drained).
 |-----------|--------------|----------------------|-------------|-------|
 | _(none — Bags migrated to Tier C)_ | | | | |
 
-**Tier E — core orchestrator (last; ties to §2)**
+**Tier E — core orchestrator**
 
 | Load unit | Vararg today | Global publish today | Hook / debt | Notes |
 |-----------|--------------|----------------------|-------------|-------|
-| `OneWoW` | `OneWoW` (all `OneWoW/**` files) | `_G["OneWoW"] = OneWoW` | `renamed_core_vararg`, `g_assign_core_ns`, `OneWoW.db` | Facade refactor + unit registry |
+| `OneWoW` | `ns` | curated `OneWoW` facade (`Core/Facade.lua`) | **done** | `ns.db` internal; unit registry; no `OneWoW.db` |
 
 ### Recommended migration order
 
-1. **AltTracker family** — **complete** (hub: `ns.db`, `OneWoW_AltTracker_API`, lifecycle root colon-hooks-only; all 8 stores: `_API` in `Core/API.lua`, root lua comment stub). BootStore stop-gap remains §2.
-2. **Catalog family** — **complete** (hub: `ns.db`, `OneWoW_Catalog_API` in `Core/API.lua`, thin lifecycle root; all 4 CatalogData stores: `_API` in `Core/API.lua`). BootStore stop-gap remains §2.
-3. **QoL** — **complete** (hub: `ns.db`, `OneWoW_QoL_API` in `Core/API.lua`, thin lifecycle root; internal `ns.db` sweep in UI/modules).
-4. **ShoppingList / Trackers / DirectDeposit** — **complete** (hub: `ns.db`, `OneWoW_*_API` in `Core/API.lua`, thin lifecycle root, vararg `ns` in DirectDeposit).
-5. **Notes** — **complete** (hub: `ns.db`, `OneWoW_Notes_API` in `Core/API.lua`, thin lifecycle root, internal `ns.*` sweep).
-6. **Bags** — **complete** (hub: `ns.db`, `OneWoW_Bags_API` in `Core/API.lua`, thin lifecycle root, internal `ns.*` sweep).
-7. **DevTool** — **complete** (hub: `ns.db`, `OneWoW_Utility_DevTool_API` in `Core/API.lua`, thin lifecycle root, internal `ns.*` sweep).
-8. **OneWoW core** — `OneWoW/**` → `ns`; curated `OneWoW` facade; pair with §2 unit registry.
+1. **AltTracker family** — **complete**
+2. **Catalog family** — **complete**
+3. **QoL** — **complete**
+4. **ShoppingList / Trackers / DirectDeposit** — **complete**
+5. **Notes** — **complete**
+6. **Bags** — **complete**
+7. **DevTool** — **complete**
+8. **OneWoW core** — **complete** (`OneWoW/**` → `ns`; curated facade in `Core/Facade.lua`; unit registry).
 
-Data stores (AltTracker_*, CatalogData_*) need no global-surface migration beyond
-retiring BootStore's `_G[addonName] = ns` when §2 lands.
+Data stores need no further global-surface migration beyond the BootStore registry (§2, complete).
 
 ### 3.1 Core/API.lua consolidation
 
@@ -226,17 +212,11 @@ DirectDeposit 9, Trackers 4, ShoppingList 3, AltTracker 3.
 
 ### Grandfathered (hook allowlist)
 
-Remove each path from `ALLOWED_NAMESPACE_PUBLISH` in
-`bin/check_no_namespace_publish.py` when that unit's migration is complete:
+- `OneWoW/Core/Facade.lua::g_assign_core_ns` — sole `_G["OneWoW"]` publish (curated facade table, not `ns`).
 
-- `OneWoW/Core/StoreBootstrap.lua` (until unit registry — §2)
+### Enforcement
 
-### Flip to enforced
-
-Set `WARN_ONLY = False` in `check_no_namespace_publish.py` when:
-
-- The warn-only worklist is empty (or only BootStore remains), and
-- Tiers A–E migrations above are landed.
+`WARN_ONLY = False` in `check_no_namespace_publish.py` (Jun 2026, step 8 landed).
 
 Per-unit `Docs/ARCHITECTURE.md` files that still say "access `_DB` directly" should
 be scrubbed when each unit migrates.
@@ -293,12 +273,18 @@ move entries to `ARCHITECTURE.md` when resolved.
 |------|-------|-------|
 | In-game smoke (DevTool) | manual | `/1wdt`, all tabs, error logger + binding, minimap badge, profile theme, editor snippets, pinned monitors |
 
+### Core — deferred from step 8 PR
+
+| Item | Where | Notes |
+|------|-------|-------|
+| In-game smoke (Core) | manual | `/ow`, hub tabs, minimap, profiles/theme/language, `EnsureLoaded`/`BringUp`, store login + hub login, portal hub favorites, zone transition lifecycle |
+
 ### Suite-wide (cross-link — see sections above)
 
 | Item | Tracked in | Notes |
 |------|------------|-------|
-| BootStore `_G[addonName] = ns` retirement | §2 | Blocks final store namespace leak; pair with core unit registry |
-| DirectDeposit → Notes → Bags → DevTool → core | §3 order steps 6–8 | DevTool complete; core (step 8) remains |
+| BootStore `_G[addonName] = ns` retirement | §2 | **complete** — unit registry |
+| DirectDeposit → Notes → Bags → DevTool → core | §3 order steps 6–8 | **complete** |
 | Theme color per-file remainder | §1 / `GUI.md` | `t-quests` backdrops, DevTool chrome, `minimapbuttons` container, optional lint |
-| `no-namespace-publish` enforce flip | §3 end | `WARN_ONLY = False` when worklist empty (or BootStore-only) |
+| `no-namespace-publish` enforce flip | §3 end | **complete** |
 | Per-unit ARCHITECTURE scrub | §3 closing note | Remove stale "access `_DB` directly" language per unit |

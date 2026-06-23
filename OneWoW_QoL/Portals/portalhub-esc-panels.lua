@@ -678,7 +678,7 @@ local function BuildInstanceToastPanel(container, yOffset, anchorPanel, hMode)
 end
 
 function EscPanels:Build()
-	local ph = OneWoW.db and OneWoW.db.global and OneWoW.db.global.portalHub
+	local ph = OneWoW:GetPortalHub()
 	if not ph or not ph.escEnabled then
 		self:HideAll()
 		return

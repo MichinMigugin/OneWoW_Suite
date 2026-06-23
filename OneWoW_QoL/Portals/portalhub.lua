@@ -73,30 +73,30 @@ local function CategorizePortal(portalData)
 end
 
 function PortalHub:IsFavorite(type, id)
-	if not OneWoW.db.global.portalHub.allFavorites then
+	if not OneWoW:GetPortalHub().allFavorites then
 		return false
 	end
 	local key = type .. ":" .. id
-	return OneWoW.db.global.portalHub.allFavorites[key] == true
+	return OneWoW:GetPortalHub().allFavorites[key] == true
 end
 
 function PortalHub:ToggleFavorite(type, id, name)
-	if not OneWoW.db.global.portalHub.allFavorites then
-		OneWoW.db.global.portalHub.allFavorites = {}
+	if not OneWoW:GetPortalHub().allFavorites then
+		OneWoW:GetPortalHub().allFavorites = {}
 	end
-	if not OneWoW.db.global.portalHub.escFavorites then
-		OneWoW.db.global.portalHub.escFavorites = {}
+	if not OneWoW:GetPortalHub().escFavorites then
+		OneWoW:GetPortalHub().escFavorites = {}
 	end
 
 	local key = type .. ":" .. id
-	local isFav = OneWoW.db.global.portalHub.allFavorites[key]
+	local isFav = OneWoW:GetPortalHub().allFavorites[key]
 
 	if isFav then
-		OneWoW.db.global.portalHub.allFavorites[key] = nil
-		for i = #OneWoW.db.global.portalHub.escFavorites, 1, -1 do
-			local fav = OneWoW.db.global.portalHub.escFavorites[i]
+		OneWoW:GetPortalHub().allFavorites[key] = nil
+		for i = #OneWoW:GetPortalHub().escFavorites, 1, -1 do
+			local fav = OneWoW:GetPortalHub().escFavorites[i]
 			if fav.type == type and fav.id == id then
-				table.remove(OneWoW.db.global.portalHub.escFavorites, i)
+				table.remove(OneWoW:GetPortalHub().escFavorites, i)
 			end
 		end
 		return false
@@ -104,7 +104,7 @@ function PortalHub:ToggleFavorite(type, id, name)
 		local category = CategorizePortal({type = type, id = id})
 
 		local categoryCount = 0
-		for _, fav in ipairs(OneWoW.db.global.portalHub.escFavorites) do
+		for _, fav in ipairs(OneWoW:GetPortalHub().escFavorites) do
 			local favCategory = CategorizePortal({type = fav.type, id = fav.id})
 			if favCategory == category then
 				categoryCount = categoryCount + 1
@@ -124,8 +124,8 @@ function PortalHub:ToggleFavorite(type, id, name)
 			return false
 		end
 
-		OneWoW.db.global.portalHub.allFavorites[key] = true
-		table.insert(OneWoW.db.global.portalHub.escFavorites, {
+		OneWoW:GetPortalHub().allFavorites[key] = true
+		table.insert(OneWoW:GetPortalHub().escFavorites, {
 			type = type,
 			id = id,
 			name = name
@@ -137,7 +137,7 @@ end
 -- ============================================================================
 -- Custom (user-added) teleport items
 -- ============================================================================
--- Account-wide list at OneWoW.db.global.portalHub.customItems. Each entry is a
+-- Account-wide list at OneWoW:GetPortalHub().customItems. Each entry is a
 -- flat record { id, type, category = "custom", name, addedAt } so the Account
 -- Sync tool can read it straight out of SavedVariables. Type is auto-detected
 -- from the item ID (toy if the toybox knows it, otherwise a plain item).
@@ -145,7 +145,7 @@ end
 --- Returns the raw account-wide custom item list (live table, do not mutate externally).
 ---@return table[]
 function PortalHub:GetCustomItems()
-	return OneWoW.db.global.portalHub.customItems
+	return OneWoW:GetPortalHub().customItems
 end
 
 --- Auto-detects whether an item ID is a toy or a regular item.
@@ -165,7 +165,7 @@ end
 ---@param id number
 ---@return boolean
 function PortalHub:IsCustomItem(id)
-	for _, entry in ipairs(OneWoW.db.global.portalHub.customItems) do
+	for _, entry in ipairs(OneWoW:GetPortalHub().customItems) do
 		if entry.id == id then
 			return true
 		end
@@ -199,7 +199,7 @@ function PortalHub:AddCustomItem(id)
 		name = C_Item.GetItemNameByID(id)
 	end
 
-	tinsert(OneWoW.db.global.portalHub.customItems, {
+	tinsert(OneWoW:GetPortalHub().customItems, {
 		id = id,
 		type = itemType,
 		category = "custom",
@@ -214,7 +214,7 @@ end
 ---@return boolean removed
 function PortalHub:RemoveCustomItem(id)
 	id = tonumber(id)
-	local items = OneWoW.db.global.portalHub.customItems
+	local items = OneWoW:GetPortalHub().customItems
 	for i = #items, 1, -1 do
 		if items[i].id == id then
 			tremove(items, i)
@@ -229,7 +229,7 @@ end
 ---@return table[]
 function PortalHub:GetCustomPortals(showAll)
 	local portals = {}
-	for _, entry in ipairs(OneWoW.db.global.portalHub.customItems) do
+	for _, entry in ipairs(OneWoW:GetPortalHub().customItems) do
 		if showAll or ns.PortalHubDetection:IsPortalUsable(entry.type, entry.id) then
 			tinsert(portals, {type = entry.type, id = entry.id, name = entry.name, category = "custom", isCustom = true})
 		end
@@ -239,11 +239,11 @@ end
 
 function PortalHub:GetFavorites()
 	local favorites = {}
-	if not OneWoW.db.global.portalHub.escFavorites then
+	if not OneWoW:GetPortalHub().escFavorites then
 		return favorites
 	end
 
-	for _, fav in ipairs(OneWoW.db.global.portalHub.escFavorites) do
+	for _, fav in ipairs(OneWoW:GetPortalHub().escFavorites) do
 		table.insert(favorites, {
 			type = fav.type,
 			id = fav.id,

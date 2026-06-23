@@ -1,16 +1,16 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local function IsEnabled()
-    return OneWoW.SettingsFeatureRegistry:IsIntegrationEnabled("onewow_bags")
+    return ns.SettingsFeatureRegistry:IsIntegrationEnabled("onewow_bags")
 end
 
 local function ProcessButton(button, bagID, slotID)
     if not IsEnabled() then
-        OneWoW.OverlayEngine:CleanButton(button)
+        ns.OverlayEngine:CleanButton(button)
         return
     end
     if not button.owb_hasItem or not bagID or not slotID then
-        OneWoW.OverlayEngine:CleanButton(button)
+        ns.OverlayEngine:CleanButton(button)
         return
     end
     local loc    = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
@@ -18,12 +18,12 @@ local function ProcessButton(button, bagID, slotID)
     if exists then
         local link = C_Item.GetItemLink(loc)
         if link then
-            OneWoW.OverlayEngine:ProcessButton(button, link, loc)
+            ns.OverlayEngine:ProcessButton(button, link, loc)
         else
-            OneWoW.OverlayEngine:CleanButton(button)
+            ns.OverlayEngine:CleanButton(button)
         end
     else
-        OneWoW.OverlayEngine:CleanButton(button)
+        ns.OverlayEngine:CleanButton(button)
     end
 end
 
@@ -41,7 +41,7 @@ local function SetupCallbacks()
         OneWoW_Bags_API.FireCallbacksOnAllButtons()
     end
 
-    OneWoW.OverlayEngine:RegisterIntegration(RefreshOneWoWBags)
+    ns.OverlayEngine:RegisterIntegration(RefreshOneWoWBags)
 end
 
 -- Wire on every load path (cold-start force-load via RunPostLoadInit, mid-session
@@ -49,4 +49,4 @@ end
 -- item-button callback + overlay-engine integration; it never paints. The first
 -- paint comes from OneWoW_Bags:InstallIntegrationHooks at login (and the overlay
 -- toggle path repaints via OverlayEngine:Refresh).
-OneWoW:RegisterAddonLoadedWatcher("OneWoW_Bags", SetupCallbacks)
+ns:RegisterAddonLoadedWatcher("OneWoW_Bags", SetupCallbacks)

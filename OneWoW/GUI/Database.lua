@@ -594,7 +594,7 @@ end
 -- Lightweight account-wide character store, separate from the scoped `Init`
 -- handle: a flat `{ characters = { [charKey] = data } }` SavedVariable used by
 -- data sub-addons that aggregate every character (e.g. AltTracker stores). The
--- store's shape is ensured by its `defaults` (merged via OneWoW:BootStore at
+-- store's shape is ensured by its `defaults` (merged via ns:BootStore at
 -- load); stores read/write the live `_G[savedVarName]` global directly, and the
 -- GetCharData/GetAllChars/DeleteChar helpers below operate on it by name.
 

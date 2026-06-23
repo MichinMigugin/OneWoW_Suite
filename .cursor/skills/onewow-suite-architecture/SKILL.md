@@ -68,12 +68,13 @@ end)
 
 ## Data store template
 
-`addonName` is **required** — `BootStore` uses it to publish the `_G[addonName]`
-handle the lifecycle dispatcher resolves (the one sanctioned namespace publish;
-see "Exposing a public API"). Capture it from the vararg, never the global:
+`addonName` is **required** — `BootStore` registers the store with
+`OneWoW.Lifecycle.RegisterUnit(addonName, storeNs)` so lifecycle dispatch can
+resolve hooks without publishing `ns` globally. Capture `ADDON_NAME` from the
+vararg, never the global:
 
 ```lua
-local ADDON_NAME, ns = ...   -- NOT `local _, ns = ...`
+local ADDON_NAME, ns = ...
 
 OneWoW:BootStore(ns, {
     addonName = ADDON_NAME,
@@ -180,10 +181,9 @@ core lifecycle dispatcher historically resolved units through this leaked global
 so *removing* a `= ns` line silently killed a store's `OnAddonLoaded` /
 `OnPlayerLogin` hooks.
 
-The dispatcher's need for a `_G[addonName]` handle is satisfied **once, centrally,
-inside `OneWoW:BootStore`** for data stores (pass `addonName` in the config) — a
-documented stop-gap headed for a core unit registry (see `OneWoW/Docs/MIGRATION.md`
-§2). **Hub modules** use a thin `OneWoW_<Unit> = {}` lifecycle object instead.
+The dispatcher resolves load units via `Lifecycle.ResolveUnit` (private registry
+from `BootStore`, with `_G[addonName]` fallback for hub thin lifecycle roots).
+**Hub modules** use a thin `OneWoW_<Unit> = {}` lifecycle object instead.
 **Never hand-publish** `OneWoW_<Unit> = ns` or `_G[...] = ns` — expose
 `OneWoW_<Unit>_API` for cross-unit contracts. Publish `_API` from
 **`Core/API.lua`** (hub and store units); root lua does not define `_API` — stores

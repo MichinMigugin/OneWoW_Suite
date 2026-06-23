@@ -11,12 +11,12 @@
 -- state, not user settings.
 -- ============================================================================
 
-local _, OneWoW = ...
+local _, ns = ...
 
 local wipe = wipe
 
-OneWoW.ExternalTooltipSync = OneWoW.ExternalTooltipSync or {}
-local Sync = OneWoW.ExternalTooltipSync
+ns.ExternalTooltipSync = ns.ExternalTooltipSync or {}
+local Sync = ns.ExternalTooltipSync
 
 local AUCTIONATOR_OPTION_KEYS = {
     "AUCTION_TOOLTIPS",
@@ -27,17 +27,17 @@ local AUCTIONATOR_OPTION_KEYS = {
 }
 
 local function State()
-    return OneWoW.db.global.externalTooltipSync
+    return ns.db.global.externalTooltipSync
 end
 
 local function ValueCfg()
-    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "value")
+    return ns.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "value")
 end
 
 function Sync:EnsurePopups()
     if self._popups then return end
     self._popups = true
-    local L = OneWoW.L
+    local L = ns.L
     StaticPopupDialogs["ONEWOW_AUCTIONATOR_AH_SOURCE"] = {
         text = L["VALUE_AUCTIONATOR_POPUP_TEXT"],
         button1 = OKAY,
@@ -124,7 +124,7 @@ function Sync:SyncAll()
     -- Addon-loaded watcher catch-up can invoke this at file-parse time (e.g.
     -- Auctionator sorts before OneWoW), before InitializeDatabase has run. The
     -- login handler below re-syncs once the DB exists.
-    if not OneWoW.db then return end
+    if not ns.db then return end
     local cfg = ValueCfg()
     self:EnsurePopups()
 
@@ -142,26 +142,26 @@ function Sync:SyncAll()
     end
 end
 
-OneWoW:RegisterAddonLoadedWatcher("Auctionator", function()
+ns:RegisterAddonLoadedWatcher("Auctionator", function()
     Sync:SyncAll()
 end)
-OneWoW:RegisterAddonLoadedWatcher("TradeSkillMaster", function()
+ns:RegisterAddonLoadedWatcher("TradeSkillMaster", function()
     Sync:SyncAll()
 end)
 
 -- Re-sync whenever a tooltip value setting changes, regardless of which UI
 -- mutated it (settings tab, Trackers farm panel, ...). Bulk resets pass a nil
 -- storageId and are included.
-OneWoW.SettingsFeatureRegistry:RegisterListener("ExternalTooltipSync", function(storageTab, storageId)
+ns.SettingsFeatureRegistry:RegisterListener("ExternalTooltipSync", function(storageTab, storageId)
     if storageTab == "tooltips" and (storageId == nil or storageId == "value") then
         Sync:SyncAll()
     end
 end)
 
-function OneWoW.ExternalTooltipSync_OnLogin()
+function ns.ExternalTooltipSync_OnLogin()
     Sync:SyncAll()
 end
 
-OneWoW:RegisterCoreLoginHandler("ExternalTooltipSync", function()
-    OneWoW.ExternalTooltipSync_OnLogin()
+ns:RegisterCoreLoginHandler("ExternalTooltipSync", function()
+    ns.ExternalTooltipSync_OnLogin()
 end, "early")

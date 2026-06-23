@@ -1,5 +1,5 @@
-local _, OneWoW = ...
-local L = OneWoW.L
+local _, ns = ...
+local L = ns.L
 
 local function NavigateToPlayer(fullName)
     if not OneWoW_Notes_API or not OneWoW_Notes_API.OpenPlayer then return end
@@ -41,8 +41,8 @@ local function HandleOpenVendorDetails(npcIDNum)
         OneWoW_Catalog_API.OpenToVendor(npcIDNum)
         return
     end
-    if not OneWoW or not OneWoW.UI then return end
-    OneWoW.UI:Show("catalog")
+    if not OneWoW or not ns.UI then return end
+    ns.UI:Show("catalog")
     C_Timer.After(0.25, function()
         if OneWoW_Catalog_API then
             OneWoW_Catalog_API.OpenToVendor(npcIDNum)
@@ -406,7 +406,7 @@ end
 -- INITIALIZATION
 -- =============================================
 
-function OneWoW:InitializeContextMenus()
+function ns:InitializeContextMenus()
     if not Menu or not Menu.ModifyMenu then return end
 
     Menu.ModifyMenu("MENU_UNIT_PLAYER",                   PlayerContextMenuHandler)
@@ -420,6 +420,6 @@ function OneWoW:InitializeContextMenus()
     Menu.ModifyMenu("MENU_UNIT_TARGET", NPCContextMenuHandler)
 end
 
-OneWoW:RegisterCoreLoginHandler("ContextMenus", function()
-    OneWoW:InitializeContextMenus()
+ns:RegisterCoreLoginHandler("ContextMenus", function()
+    ns:InitializeContextMenus()
 end, "early")

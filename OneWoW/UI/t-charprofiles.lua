@@ -1,24 +1,24 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local UI = OneWoW.UI
+local UI = ns.UI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 local function GetCharProfiles()
-    if not OneWoW.db.global.charProfiles then
-        OneWoW.db.global.charProfiles = {}
+    if not ns.db.global.charProfiles then
+        ns.db.global.charProfiles = {}
     end
-    return OneWoW.db.global.charProfiles
+    return ns.db.global.charProfiles
 end
 
 -- ============================================================
 -- Backend
 -- ============================================================
 
-OneWoW.CharProfiles = {}
-local Module = OneWoW.CharProfiles
+ns.CharProfiles = {}
+local Module = ns.CharProfiles
 
 function Module:CaptureKeybinds()
     local bindings = {}
@@ -497,7 +497,7 @@ function UI:ShowCharProfileRestoreDialog(profileName, profile, onRestored)
         showBrand = true,
         buttons = {
             { text = "Restore Profile", onClick = function(dialog)
-                local M = OneWoW.CharProfiles
+                local M = ns.CharProfiles
                 local results = {}
                 local reloadNeeded = false
 
@@ -691,7 +691,7 @@ function UI:ShowCharProfileImportDialog(onImported)
         buttons = {
             { text = "Import", onClick = function(dialog)
                 local text = eb:GetText()
-                local ok, res = OneWoW.CharProfiles:ImportProfile(text)
+                local ok, res = ns.CharProfiles:ImportProfile(text)
                 if ok then
                     print(string.format("|cFFFFD100OneWoW:|r Character profile imported: %s", res))
                     dialog:Hide()
@@ -727,7 +727,7 @@ end
 -- ============================================================
 
 function UI:CreateCharProfilesPanel(parent)
-    local M = OneWoW.CharProfiles
+    local M = ns.CharProfiles
 
     local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_CharProfilesScroll" })
     local yOffset = -10
@@ -880,7 +880,7 @@ function UI:CreateCharProfilesPanel(parent)
                         exportData[k] = v
                     end
                 end
-                local serialized = OneWoW.CharProfiles:SerializeProfile(exportData)
+                local serialized = ns.CharProfiles:SerializeProfile(exportData)
                 if serialized then
                     UI:ShowCharProfileExportDialog(name, serialized)
                 end

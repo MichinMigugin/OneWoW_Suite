@@ -1,26 +1,22 @@
-local ADDON_NAME, OneWoW = ...
-
--- Using _G[""] form so pre-commit hook is satisfied, but also because we can't do
--- `OneWoW = OneWoW` since it's already defined as a local
-_G["OneWoW"] = OneWoW
-
-local L = OneWoW.L
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-OneWoW._loadedComponents = {}
-OneWoW._registeredAddons = {}
-OneWoW._minimapEntries = {}
+local L = ns.L
 
-function OneWoW:RegisterMinimap(addon, label, tabKey, callback)
+ns._loadedComponents = {}
+ns._registeredAddons = {}
+ns._minimapEntries = {}
+
+function ns:RegisterMinimap(addon, label, tabKey, callback)
     -- addon: global name (e.g. "OneWoW_AltTracker")
     -- label: display string for context menu
-    -- tabKey: for OneWoW.UI:Show(tabKey) or nil if callback used
+    -- tabKey: for ns.UI:Show(tabKey) or nil if callback used
     -- callback: optional function() for custom open logic
     tinsert(self._minimapEntries, { addon = addon, label = label, tabKey = tabKey, callback = callback })
 end
 
-function OneWoW:RegisterLoadComponent(displayName, version, command)
+function ns:RegisterLoadComponent(displayName, version, command)
     self._registeredAddons[displayName] = true
     table.insert(self._loadedComponents, { name = displayName, ver = version, cmd = command })
 end
@@ -31,18 +27,18 @@ local function ScheduleDefaultSave()
         _defaultSaveTimer:Cancel()
     end
     _defaultSaveTimer = C_Timer.NewTimer(2, function()
-        if OneWoW.Profiles and OneWoW.Profiles.AutoSaveDefault then
-            OneWoW.Profiles.AutoSaveDefault()
+        if ns.Profiles and ns.Profiles.AutoSaveDefault then
+            ns.Profiles.AutoSaveDefault()
         end
     end)
 end
 
 local function ApplyLanguage()
     local lang = OneWoW_GUI:GetSetting("language")
-    lang = lang or (OneWoW.db and OneWoW.db.global.language) or "enUS"
-    -- Locale service folds enUS <- selected language, refolds the stable OneWoW.L
+    lang = lang or (ns.db and ns.db.global.language) or "enUS"
+    -- Locale service folds enUS <- selected language, refolds the stable ns.L
     -- view in place, and pushes BINDING_* globals. esMX->esES is normalized inside.
-    OneWoW.Locale:SetLanguage(lang)
+    ns.Locale:SetLanguage(lang)
 end
 
 local function ResetGUIOnSettingChange(self2)
@@ -62,8 +58,8 @@ local function RegisterSlashCommands()
     SLASH_ONEWOW3 = "/onewow"
     SLASH_ONEWOW4 = "/1w"
     SlashCmdList["ONEWOW"] = function()
-        if OneWoW.UI then
-            OneWoW.UI:Toggle()
+        if ns.UI then
+            ns.UI:Toggle()
         end
     end
 
@@ -77,7 +73,7 @@ local function RegisterSlashCommands()
     end
 end
 
-function OneWoW:OnAddonLoaded(loadedAddon)
+function ns:OnAddonLoaded(loadedAddon)
     if loadedAddon ~= ADDON_NAME then return end
 
     -- Core DB first, then the toolkit binds its settings handle to core's
@@ -88,14 +84,14 @@ function OneWoW:OnAddonLoaded(loadedAddon)
 
     -- Read the persisted lifecycle-trace flag into memory before RunStartupPhase
     -- so a /reload captures the full startup orchestration from the first event.
-    OneWoW.Lifecycle.Trace:Sync()
+    ns.Lifecycle.Trace:Sync()
 
-    OneWoW_GUI:ApplyTheme(OneWoW)
+    OneWoW_GUI:ApplyTheme(ns)
     ApplyLanguage()
     RegisterSlashCommands()
 
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function(self2)
-        OneWoW_GUI:ApplyTheme(OneWoW)
+        OneWoW_GUI:ApplyTheme(ns)
         ScheduleDefaultSave()
         ResetGUIOnSettingChange(self2)
     end)
@@ -130,7 +126,7 @@ function OneWoW:OnAddonLoaded(loadedAddon)
         ResetGUIOnSettingChange(self2)
     end)
 
-    local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
+    local _ver = ns:GetAddonVersion(ADDON_NAME)
     self:RegisterLoadComponent("Core", _ver, "/1w")
 
     self:RegisterMinimap("OneWoW", L["OPEN_ONEWOW"], nil, function()
@@ -141,8 +137,8 @@ function OneWoW:OnAddonLoaded(loadedAddon)
     -- ADDON_LOADED, before PLAYER_LOGIN). EnsureLoaded drives each unit's
     -- OnAddonLoaded() hook synchronously, so every DB is built in dependency order
     -- before any PLAYER_LOGIN fires.
-    if OneWoW.LoadOrchestrator then
-        OneWoW.LoadOrchestrator:RunStartupPhase()
+    if ns.LoadOrchestrator then
+        ns.LoadOrchestrator:RunStartupPhase()
     end
 end
 
@@ -153,24 +149,24 @@ eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     if event == "ADDON_LOADED" then
-        OneWoW:DispatchAddonLoaded(...)
+        ns:DispatchAddonLoaded(...)
     elseif event == "PLAYER_LOGIN" then
         -- After this point, a mid-session LoadAddOn won't deliver the unit's own
-        -- one-shot PLAYER_LOGIN, so OneWoW:EnsureLoaded drives its login hooks.
-        OneWoW._playerLoginFired = true
+        -- one-shot PLAYER_LOGIN, so ns:EnsureLoaded drives its login hooks.
+        ns._playerLoginFired = true
         -- Feature inits register themselves as "early" handlers in their own
         -- files; "late" handlers (integrations) run after the load banner.
-        OneWoW:FireCoreLoginHandlers("early")
+        ns:FireCoreLoginHandlers("early")
 
-        for _, comp in ipairs(OneWoW.ModuleManifest or {}) do
-            if not OneWoW._registeredAddons[comp.display] and C_AddOns.IsAddOnLoaded(comp.addon) then
-                OneWoW:RegisterLoadComponent(comp.display, OneWoW:GetAddonVersion(comp.addon), comp.cmd)
+        for _, comp in ipairs(ns.ModuleManifest or {}) do
+            if not ns._registeredAddons[comp.display] and C_AddOns.IsAddOnLoaded(comp.addon) then
+                ns:RegisterLoadComponent(comp.display, ns:GetAddonVersion(comp.addon), comp.cmd)
             end
         end
 
-        local comps = OneWoW._loadedComponents
+        local comps = ns._loadedComponents
         if comps and #comps > 0 then
-            local ver = OneWoW:GetAddonVersion(ADDON_NAME)
+            local ver = ns:GetAddonVersion(ADDON_NAME)
             local parts = {}
             for _, c in ipairs(comps) do
                 table.insert(parts, "|cFFFFFFFF" .. c.name .. "|r")
@@ -181,36 +177,36 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         -- First-run feature picker: show once per account. Delayed a few
         -- seconds so it appears AFTER the suite's load banner and any error
         -- popups have cleared.
-        if OneWoW.FirstRun and OneWoW.FirstRun:ShouldShowWizard() then
+        if ns.FirstRun and ns.FirstRun:ShouldShowWizard() then
             C_Timer.After(3, function()
-                if OneWoW.FirstRun and OneWoW.FirstRun:ShouldShowWizard() then
-                    OneWoW.FirstRun:ShowWizard()
+                if ns.FirstRun and ns.FirstRun:ShouldShowWizard() then
+                    ns.FirstRun:ShowWizard()
                 end
             end)
         end
 
-        OneWoW:FireCoreLoginHandlers("late")
-        OneWoW:RunManifestLoginPhase()
+        ns:FireCoreLoginHandlers("late")
+        ns:RunManifestLoginPhase()
     elseif event == "PLAYER_ENTERING_WORLD" then
         local isLogin, isReload = ...
-        OneWoW:DispatchEnteringWorld(isLogin, isReload)
+        ns:DispatchEnteringWorld(isLogin, isReload)
     end
 end)
 
 _G["1WoW_OnAddonCompartmentClick"] = function()
-    if OneWoW.UI then
-        OneWoW.UI:Toggle()
+    if ns.UI then
+        ns.UI:Toggle()
     end
 end
 
 _G["1WoW_OnAddonCompartmentEnter"] = function(_, button)
     GameTooltip:SetOwner(button, "ANCHOR_LEFT")
     GameTooltip:SetText("|cFFFFD1001WoW|r", 1, 1, 1)
-    local modCount = OneWoW:GetLoadedModuleCount()
+    local modCount = ns:GetLoadedModuleCount()
     if modCount > 0 then
-        GameTooltip:AddLine(format(OneWoW.L["MINIMAP_MODULES_LOADED"], modCount), 0.7, 0.7, 0.7)
+        GameTooltip:AddLine(format(ns.L["MINIMAP_MODULES_LOADED"], modCount), 0.7, 0.7, 0.7)
     end
-    GameTooltip:AddLine(OneWoW.L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.7)
+    GameTooltip:AddLine(ns.L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.7)
     GameTooltip:Show()
 end
 

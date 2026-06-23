@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 -- Machine-drafted — pending native review.
-OneWoW.Locale:RegisterShared("zhTW", {
+ns.Locale:RegisterShared("zhTW", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "語言選擇",
     ["LANGUAGE_DESC"] = "選擇插件介面使用的語言。變更會立即生效。",

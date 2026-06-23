@@ -45,7 +45,7 @@ function ns.UI.CreatePortalsTab(parent)
 	portalScrollFrame:SetPoint("TOPLEFT", portalPanel, "TOPLEFT", 8, -158)
 	portalScrollFrame:SetPoint("BOTTOMRIGHT", portalPanel, "BOTTOMRIGHT", -22, 8)
 
-	local ph = OneWoW.db.global.portalHub
+	local ph = OneWoW:GetPortalHub()
 
 	local optionsTitle = OneWoW_GUI:CreateFS(controlPanel, 12)
 	optionsTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 12, -10)
@@ -54,9 +54,9 @@ function ns.UI.CreatePortalsTab(parent)
 
 	local escCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Show Portals on ESC"] })
 	escCheckbox:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 12, -34)
-	escCheckbox:SetChecked(OneWoW.db.global.portalHub.escPortalsEnabled)
+	escCheckbox:SetChecked(OneWoW:GetPortalHub().escPortalsEnabled)
 	escCheckbox:SetScript("OnClick", function(checkbox)
-		OneWoW.db.global.portalHub.escPortalsEnabled = checkbox:GetChecked()
+		OneWoW:GetPortalHub().escPortalsEnabled = checkbox:GetChecked()
 		if ns.PortalHubEsc and GameMenuFrame and GameMenuFrame:IsShown() then
 			ns.PortalHubEsc:ShowPortalFrames()
 		end
@@ -66,9 +66,9 @@ function ns.UI.CreatePortalsTab(parent)
 
 	local randomHearthCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["PORTAL_RANDOM_HEARTHSTONE"] })
 	randomHearthCheckbox:SetPoint("LEFT", escLabel, "RIGHT", 20, 0)
-	randomHearthCheckbox:SetChecked(OneWoW.db.global.portalHub.randomHearthstone)
+	randomHearthCheckbox:SetChecked(OneWoW:GetPortalHub().randomHearthstone)
 	randomHearthCheckbox:SetScript("OnClick", function(checkbox)
-		OneWoW.db.global.portalHub.randomHearthstone = checkbox:GetChecked()
+		OneWoW:GetPortalHub().randomHearthstone = checkbox:GetChecked()
 		if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
 			ns.PortalHubEsc:Reload()
 		end
@@ -78,13 +78,13 @@ function ns.UI.CreatePortalsTab(parent)
 
 	local showAllCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["Show Unavailable"] })
 	showAllCheckbox:SetPoint("LEFT", randomHearthLabel, "RIGHT", 20, 0)
-	showAllCheckbox:SetChecked(OneWoW.db.global.portalHub.showAll)
+	showAllCheckbox:SetChecked(OneWoW:GetPortalHub().showAll)
 
 	local showAllEscCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["PORTAL_SHOW_ALL_ESC"] })
 	showAllEscCheckbox:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 12, -62)
-	showAllEscCheckbox:SetChecked(OneWoW.db.global.portalHub.showAllOnEsc or false)
+	showAllEscCheckbox:SetChecked(OneWoW:GetPortalHub().showAllOnEsc or false)
 	showAllEscCheckbox:SetScript("OnClick", function(checkbox)
-		OneWoW.db.global.portalHub.showAllOnEsc = checkbox:GetChecked()
+		OneWoW:GetPortalHub().showAllOnEsc = checkbox:GetChecked()
 		if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
 			ns.PortalHubEsc:Reload()
 		end
@@ -94,9 +94,9 @@ function ns.UI.CreatePortalsTab(parent)
 
 	local showSeasonalCheckbox = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["PORTAL_SHOW_SEASONAL"] })
 	showSeasonalCheckbox:SetPoint("LEFT", showAllEscLabel, "RIGHT", 20, 0)
-	showSeasonalCheckbox:SetChecked(OneWoW.db.global.portalHub.showSeasonal)
+	showSeasonalCheckbox:SetChecked(OneWoW:GetPortalHub().showSeasonal)
 	showSeasonalCheckbox:SetScript("OnClick", function(checkbox)
-		OneWoW.db.global.portalHub.showSeasonal = checkbox:GetChecked()
+		OneWoW:GetPortalHub().showSeasonal = checkbox:GetChecked()
 		if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
 			ns.PortalHubEsc:Reload()
 		end
@@ -111,7 +111,7 @@ function ns.UI.CreatePortalsTab(parent)
 	showDalaranCheckbox:SetPoint("LEFT", topRowLabel, "RIGHT", 10, 0)
 	showDalaranCheckbox:SetChecked(ph.showDalaranHearth ~= false)
 	showDalaranCheckbox:SetScript("OnClick", function(checkbox)
-		OneWoW.db.global.portalHub.showDalaranHearth = checkbox:GetChecked()
+		OneWoW:GetPortalHub().showDalaranHearth = checkbox:GetChecked()
 		if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
 			ns.PortalHubEsc:Reload()
 		end
@@ -123,7 +123,7 @@ function ns.UI.CreatePortalsTab(parent)
 	showGarrisonCheckbox:SetPoint("LEFT", showDalaranLabel, "RIGHT", 15, 0)
 	showGarrisonCheckbox:SetChecked(ph.showGarrisonHearth ~= false)
 	showGarrisonCheckbox:SetScript("OnClick", function(checkbox)
-		OneWoW.db.global.portalHub.showGarrisonHearth = checkbox:GetChecked()
+		OneWoW:GetPortalHub().showGarrisonHearth = checkbox:GetChecked()
 		if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
 			ns.PortalHubEsc:Reload()
 		end
@@ -135,7 +135,7 @@ function ns.UI.CreatePortalsTab(parent)
 	showWhistleCheckbox:SetPoint("LEFT", showGarrisonLabel, "RIGHT", 15, 0)
 	showWhistleCheckbox:SetChecked(ph.showFlightWhistle ~= false)
 	showWhistleCheckbox:SetScript("OnClick", function(checkbox)
-		OneWoW.db.global.portalHub.showFlightWhistle = checkbox:GetChecked()
+		OneWoW:GetPortalHub().showFlightWhistle = checkbox:GetChecked()
 		if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
 			ns.PortalHubEsc:Reload()
 		end
@@ -147,7 +147,7 @@ function ns.UI.CreatePortalsTab(parent)
 	showHousingCheckbox:SetPoint("LEFT", showWhistleLabel, "RIGHT", 15, 0)
 	showHousingCheckbox:SetChecked(ph.showHousingPortal ~= false)
 	showHousingCheckbox:SetScript("OnClick", function(checkbox)
-		OneWoW.db.global.portalHub.showHousingPortal = checkbox:GetChecked()
+		OneWoW:GetPortalHub().showHousingPortal = checkbox:GetChecked()
 		if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
 			ns.PortalHubEsc:Reload()
 		end
@@ -385,7 +385,7 @@ function ns.UI.CreatePortalsTab(parent)
 					portalButton.favoriteIcon:Hide()
 				end
 
-				local favCount = #OneWoW.db.global.portalHub.escFavorites or 0
+				local favCount = #OneWoW:GetPortalHub().escFavorites or 0
 				leftStatusText:SetText(string.format(L["Favorites: %d/%d"], favCount, 15))
 
 				if ns.PortalHubEsc then
@@ -455,7 +455,7 @@ function ns.UI.CreatePortalsTab(parent)
 		end
 		headerFrames = {}
 
-		local showAll = OneWoW.db.global.portalHub.showAll
+		local showAll = OneWoW:GetPortalHub().showAll
 		local allPortals = ns.PortalHubModule:GetPortalsForCategory(categoryID, showAll)
 
 		local available = {}
@@ -486,8 +486,8 @@ function ns.UI.CreatePortalsTab(parent)
 			end
 		end
 
-		local iconSize = OneWoW.db.global.portalHub.iconSize or 40
-		local columns = OneWoW.db.global.portalHub.gridColumns or 12
+		local iconSize = OneWoW:GetPortalHub().iconSize or 40
+		local columns = OneWoW:GetPortalHub().gridColumns or 12
 		local xOffset = 0
 		local yOffset = 0
 		local row = 0
@@ -557,7 +557,7 @@ function ns.UI.CreatePortalsTab(parent)
 			end
 		end
 
-		local favCount = #OneWoW.db.global.portalHub.escFavorites or 0
+		local favCount = #OneWoW:GetPortalHub().escFavorites or 0
 		local statusMsg = string.format(L["PORTAL_STATUS_AVAILABLE"], categoryName, availableCount)
 		if showAll then
 			statusMsg = string.format(L["PORTAL_STATUS_AVAILABLE_UNAVAILABLE"], categoryName, availableCount, unavailableCount)
@@ -659,7 +659,7 @@ function ns.UI.CreatePortalsTab(parent)
 		selectedCategoryRow = nil
 
 		local categories = ns.PortalHubModule:GetCategories()
-		local showAll = OneWoW.db.global.portalHub.showAll
+		local showAll = OneWoW:GetPortalHub().showAll
 		local filter = (filterText or ""):lower()
 
 		local yOffset = -5
@@ -701,7 +701,7 @@ function ns.UI.CreatePortalsTab(parent)
 	end
 
 	showAllCheckbox:SetScript("OnClick", function(checkbox)
-		OneWoW.db.global.portalHub.showAll = checkbox:GetChecked()
+		OneWoW:GetPortalHub().showAll = checkbox:GetChecked()
 		local filterText = split.searchBox and split.searchBox:GetSearchText() or ""
 		RefreshCategories(filterText)
 	end)

@@ -140,5 +140,8 @@ UI\t-profiles.lua
 UI\t-charprofiles.lua
 UI\t-managefeatures.lua
 
+# Facade (curated orchestrator global — must load after all ns.* attachments)
+Core\Facade.lua
+
 # Main
 OneWoW.lua

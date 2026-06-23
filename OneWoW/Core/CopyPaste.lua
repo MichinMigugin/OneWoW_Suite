@@ -1,12 +1,12 @@
 -- ============================================================================
--- OneWoW.CopyPaste — copy/paste dialog service (formerly LibCopyPaste-1.0).
+-- ns.CopyPaste — copy/paste dialog service (formerly LibCopyPaste-1.0).
 -- Method API: :Copy(title, text, options) / :Paste(title, callback, options)
 -- with options = { readOnly, autoHide, frameStrata }.
 -- Built on OneWoW_GUI components (CreateDialog + CreateScrollEditBox). One
 -- lazy singleton dialog per mode; cached dialogs are dropped on theme/font
 -- changes so the next open rebuilds with fresh styling.
 -- ============================================================================
-local _, OneWoW = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -17,8 +17,8 @@ local tinsert = tinsert
 local tContains = tContains
 local wipe = wipe
 
-OneWoW.CopyPaste = {}
-local CopyPaste = OneWoW.CopyPaste
+ns.CopyPaste = {}
+local CopyPaste = ns.CopyPaste
 
 local DEFAULT_STRATA = "DIALOG"
 local MAX_LETTERS = 999999
@@ -101,7 +101,7 @@ local function BuildDialog(mode)
         -- behind on huge texts, so reassure users the copy works regardless.
         local hint = OneWoW_GUI:CreateFS(dlg.frame, 11)
         hint:SetPoint("LEFT", dlg.frame, "BOTTOMLEFT", 12, 24)
-        hint:SetText(IsMacClient() and OneWoW.L["COPYPASTE_HINT_COPY_MAC"] or OneWoW.L["COPYPASTE_HINT_COPY"])
+        hint:SetText(IsMacClient() and ns.L["COPYPASTE_HINT_COPY_MAC"] or ns.L["COPYPASTE_HINT_COPY"])
         hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     end
 

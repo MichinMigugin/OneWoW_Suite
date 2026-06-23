@@ -1,13 +1,13 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-local UI = OneWoW.UI
+local UI = ns.UI
 
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 function UI:CreateSettingsMainTab(parent)
-    local L = OneWoW.L or {}
+    local L = ns.L or {}
 
     local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_SettingsScroll" })
     content:SetHeight(800)
@@ -50,8 +50,8 @@ end
 
 local coreSettingsTabs = {
     { name = "settings",       displayName = function() return SETTINGS end, create = function(parent) UI:CreateSettingsMainTab(parent) end },
-    { name = "profiles",       displayName = function() return OneWoW.L["PROFILES_SUBTAB"] end, create = function(parent) UI:CreateProfilesTab(parent) end },
-    { name = "managefeatures", displayName = function() return OneWoW.L["MANAGE_FEATURES_SUBTAB"] end, create = function(parent) UI:CreateManageFeaturesTab(parent) end },
+    { name = "profiles",       displayName = function() return ns.L["PROFILES_SUBTAB"] end, create = function(parent) UI:CreateProfilesTab(parent) end },
+    { name = "managefeatures", displayName = function() return ns.L["MANAGE_FEATURES_SUBTAB"] end, create = function(parent) UI:CreateManageFeaturesTab(parent) end },
 }
 
 function UI:BuildSettingsTabs()
@@ -59,7 +59,7 @@ function UI:BuildSettingsTabs()
     for _, tab in ipairs(coreSettingsTabs) do
         table.insert(tabs, tab)
     end
-    local addonPanels = OneWoW.ModuleRegistry:GetSettingsPanels()
+    local addonPanels = ns.ModuleRegistry:GetSettingsPanels()
     for _, panel in ipairs(addonPanels) do
         local capturedCreate = panel.create
         table.insert(tabs, {

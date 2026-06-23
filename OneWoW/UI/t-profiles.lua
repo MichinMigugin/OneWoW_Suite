@@ -1,6 +1,6 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-local UI = OneWoW.UI
+local UI = ns.UI
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -39,7 +39,7 @@ local function SyncSettingToChildAddons(settingType, _)
     }
     -- Themes are applied per child addon (each owns its theme). Language is NOT looped
     -- here: it lives in one central scope-folded view, so the caller applies it once via
-    -- OneWoW.Locale:SetLanguage(). (settingType is always "theme" now.)
+    -- ns.Locale:SetLanguage(). (settingType is always "theme" now.)
     for _, globalName in ipairs(integratedAddons) do
         local addon = _G[globalName]
         if addon and settingType == "theme" and addon.ApplyTheme then
@@ -52,13 +52,13 @@ end
 -- Backend
 -- ============================================================
 
-OneWoW.Profiles = {}
+ns.Profiles = {}
 
-function OneWoW.Profiles.CaptureSettings()
+function ns.Profiles.CaptureSettings()
     local snapshot = {}
 
-    if OneWoW.db and OneWoW.db.global then
-        local g = OneWoW.db.global
+    if ns.db and ns.db.global then
+        local g = ns.db.global
         snapshot.core = {
             language  = g.language,
             theme     = g.theme,
@@ -86,11 +86,11 @@ function OneWoW.Profiles.CaptureSettings()
     return snapshot
 end
 
-function OneWoW.Profiles.ApplySettings(snapshot, profileName)
+function ns.Profiles.ApplySettings(snapshot, profileName)
     if not snapshot then return end
 
-    if snapshot.core and OneWoW.db and OneWoW.db.global then
-        local g = OneWoW.db.global
+    if snapshot.core and ns.db and ns.db.global then
+        local g = ns.db.global
         if snapshot.core.language then g.language = snapshot.core.language end
         if snapshot.core.theme    then g.theme    = snapshot.core.theme    end
         if snapshot.core.minimap then
@@ -112,10 +112,10 @@ function OneWoW.Profiles.ApplySettings(snapshot, profileName)
     end
 
     if snapshot.core and snapshot.core.theme    then SyncSettingToChildAddons("theme", snapshot.core.theme) end
-    if snapshot.core and snapshot.core.language then OneWoW.Locale:SetLanguage(snapshot.core.language) end
+    if snapshot.core and snapshot.core.language then ns.Locale:SetLanguage(snapshot.core.language) end
 
     if profileName then
-        OneWoW.db.global.activeProfile = profileName
+        ns.db.global.activeProfile = profileName
     end
 
     UI:FullReset()
@@ -125,21 +125,21 @@ function OneWoW.Profiles.ApplySettings(snapshot, profileName)
     end)
 end
 
-function OneWoW.Profiles.AutoSaveDefault()
-    if not OneWoW.db or not OneWoW.db.global then return end
-    if not OneWoW.db.global.profiles then OneWoW.db.global.profiles = {} end
-    local snap = OneWoW.Profiles.CaptureSettings()
+function ns.Profiles.AutoSaveDefault()
+    if not ns.db or not ns.db.global then return end
+    if not ns.db.global.profiles then ns.db.global.profiles = {} end
+    local snap = ns.Profiles.CaptureSettings()
     snap._isDefault = true
     snap._updatedAt = time()
-    OneWoW.db.global.profiles[RESERVED_DEFAULT] = snap
-    OneWoW.db.global.defaultProfile = RESERVED_DEFAULT
+    ns.db.global.profiles[RESERVED_DEFAULT] = snap
+    ns.db.global.defaultProfile = RESERVED_DEFAULT
 end
 
 -- ============================================================
 -- Serialization
 -- ============================================================
 
-function OneWoW.Profiles.SerializeProfile(profileName, profile)
+function ns.Profiles.SerializeProfile(profileName, profile)
     local exportable = {}
     for k, v in pairs(profile) do
         if k ~= "_isDefault" and k ~= "_updatedAt" then
@@ -152,7 +152,7 @@ function OneWoW.Profiles.SerializeProfile(profileName, profile)
     return "-- OneWoW Settings Profile\n-- Version: 1\n" .. body
 end
 
-function OneWoW.Profiles.DeserializeProfile(str)
+function ns.Profiles.DeserializeProfile(str)
     if not str or str == "" then return nil, "Empty input" end
     local cleaned = str:gsub("%-%-[^\n]*\n?", "")
     local func = loadstring("return " .. cleaned)
@@ -163,11 +163,11 @@ function OneWoW.Profiles.DeserializeProfile(str)
     return data, nil
 end
 
-function OneWoW.Profiles.ImportProfile(str)
-    local data, err = OneWoW.Profiles.DeserializeProfile(str)
+function ns.Profiles.ImportProfile(str)
+    local data, err = ns.Profiles.DeserializeProfile(str)
     if not data then return false, err end
-    if not OneWoW.db.global.profiles then OneWoW.db.global.profiles = {} end
-    local profiles = OneWoW.db.global.profiles
+    if not ns.db.global.profiles then ns.db.global.profiles = {} end
+    local profiles = ns.db.global.profiles
     local name = data._exportName or "Imported"
     if name == RESERVED_DEFAULT then name = "Imported Default" end
     data._exportName = nil
@@ -183,17 +183,17 @@ end
 -- Auto-save hooks
 -- ============================================================
 
-OneWoW:RegisterCoreLoginHandler("profiles.AutoSaveDefault", function()
-    if OneWoW.Profiles and OneWoW.Profiles.AutoSaveDefault then
-        OneWoW.Profiles.AutoSaveDefault()
+ns:RegisterCoreLoginHandler("profiles.AutoSaveDefault", function()
+    if ns.Profiles and ns.Profiles.AutoSaveDefault then
+        ns.Profiles.AutoSaveDefault()
     end
 end)
 
 local _autoSaveFrame = CreateFrame("Frame")
 _autoSaveFrame:RegisterEvent("PLAYER_LOGOUT")
 _autoSaveFrame:SetScript("OnEvent", function()
-    if OneWoW.Profiles and OneWoW.Profiles.AutoSaveDefault then
-        OneWoW.Profiles.AutoSaveDefault()
+    if ns.Profiles and ns.Profiles.AutoSaveDefault then
+        ns.Profiles.AutoSaveDefault()
     end
 end)
 
@@ -250,7 +250,7 @@ function UI:ShowSettingsProfileImportDialog(onImported)
         buttons = {
             { text = "Import", onClick = function(d)
                 local text = eb:GetText()
-                local ok, res = OneWoW.Profiles.ImportProfile(text)
+                local ok, res = ns.Profiles.ImportProfile(text)
                 if ok then
                     print(string.format("|cFFFFD100OneWoW:|r Settings profile imported: %s", res))
                     d:Hide()
@@ -385,10 +385,10 @@ function UI:CreateProfilesTab(parent)
     local function RefreshListing()
         OneWoW_GUI:ClearFrame(listContainer)
 
-        local profiles = OneWoW.db.global.profiles
+        local profiles = ns.db.global.profiles
         if not profiles then profiles = {} end
 
-        local activeProfile = OneWoW.db.global.activeProfile
+        local activeProfile = ns.db.global.activeProfile
 
         local sorted = {}
         if profiles[RESERVED_DEFAULT] then
@@ -503,9 +503,9 @@ function UI:CreateProfilesTab(parent)
                 local capturedName = name
                 delBtn:SetScript("OnClick", function()
                     ShowDeleteConfirm(capturedName, function()
-                        OneWoW.db.global.profiles[capturedName] = nil
-                        if OneWoW.db.global.activeProfile == capturedName then
-                            OneWoW.db.global.activeProfile = nil
+                        ns.db.global.profiles[capturedName] = nil
+                        if ns.db.global.activeProfile == capturedName then
+                            ns.db.global.activeProfile = nil
                         end
                         RefreshListing()
                     end)
@@ -514,27 +514,27 @@ function UI:CreateProfilesTab(parent)
                 local exportBtn = OneWoW_GUI:CreateFitTextButton(card, { text = "Export", height = 26 })
                 exportBtn:SetPoint("RIGHT", delBtn, "LEFT", -6, 0)
                 exportBtn:SetScript("OnClick", function()
-                    local serialized = OneWoW.Profiles.SerializeProfile(capturedName, data)
+                    local serialized = ns.Profiles.SerializeProfile(capturedName, data)
                     if serialized then UI:ShowSettingsProfileExportDialog(capturedName, serialized) end
                 end)
 
                 local loadBtn = OneWoW_GUI:CreateFitTextButton(card, { text = "Load", height = 26 })
                 loadBtn:SetPoint("RIGHT", exportBtn, "LEFT", -6, 0)
                 loadBtn:SetScript("OnClick", function()
-                    OneWoW.Profiles.ApplySettings(data, capturedName)
+                    ns.Profiles.ApplySettings(data, capturedName)
                 end)
             else
                 local exportBtn = OneWoW_GUI:CreateFitTextButton(card, { text = "Export", height = 26 })
                 exportBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, btnY)
                 exportBtn:SetScript("OnClick", function()
-                    local serialized = OneWoW.Profiles.SerializeProfile(RESERVED_DEFAULT, data)
+                    local serialized = ns.Profiles.SerializeProfile(RESERVED_DEFAULT, data)
                     if serialized then UI:ShowSettingsProfileExportDialog(RESERVED_DEFAULT, serialized) end
                 end)
 
                 local restoreBtn = OneWoW_GUI:CreateFitTextButton(card, { text = "Restore Now", height = 26 })
                 restoreBtn:SetPoint("RIGHT", exportBtn, "LEFT", -6, 0)
                 restoreBtn:SetScript("OnClick", function()
-                    OneWoW.Profiles.ApplySettings(data, RESERVED_DEFAULT)
+                    ns.Profiles.ApplySettings(data, RESERVED_DEFAULT)
                 end)
             end
 
@@ -555,11 +555,11 @@ function UI:CreateProfilesTab(parent)
             print("|cFFFFD100OneWoW:|r Cannot use the name 'Default' - it is reserved.")
             return
         end
-        local snap = OneWoW.Profiles.CaptureSettings()
+        local snap = ns.Profiles.CaptureSettings()
         snap._updatedAt = time()
-        if not OneWoW.db.global.profiles then OneWoW.db.global.profiles = {} end
-        OneWoW.db.global.profiles[name] = snap
-        OneWoW.db.global.activeProfile  = name
+        if not ns.db.global.profiles then ns.db.global.profiles = {} end
+        ns.db.global.profiles[name] = snap
+        ns.db.global.activeProfile  = name
         nameInput:SetText("")
         print(string.format("|cFFFFD100OneWoW:|r Settings profile saved: %s", name))
         RefreshListing()
@@ -570,7 +570,7 @@ function UI:CreateProfilesTab(parent)
     end)
 
     C_Timer.After(0.05, function()
-        OneWoW.Profiles.AutoSaveDefault()
+        ns.Profiles.AutoSaveDefault()
         RefreshListing()
         OneWoW_GUI:ApplyFontToFrame(panelA)
     end)

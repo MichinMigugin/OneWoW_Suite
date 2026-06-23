@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local function IsEnabled()
-    return OneWoW.SettingsFeatureRegistry:IsIntegrationEnabled("arkinventory")
+    return ns.SettingsFeatureRegistry:IsIntegrationEnabled("arkinventory")
 end
 
 local wired = false
@@ -22,13 +22,13 @@ local function SetupHooks()
 
     local function UpdateButton(itemButton)
         if not IsEnabled() then
-            OneWoW.OverlayEngine:CleanButton(itemButton)
+            ns.OverlayEngine:CleanButton(itemButton)
             return
         end
 
         local data = ArkInventory.API.ItemFrameItemTableGet(itemButton)
         if not data then
-            OneWoW.OverlayEngine:CleanButton(itemButton)
+            ns.OverlayEngine:CleanButton(itemButton)
             return
         end
 
@@ -46,9 +46,9 @@ local function SetupHooks()
         end
 
         if data.h then
-            OneWoW.OverlayEngine:ProcessButton(itemButton, data.h, itemLocation)
+            ns.OverlayEngine:ProcessButton(itemButton, data.h, itemLocation)
         else
-            OneWoW.OverlayEngine:CleanButton(itemButton)
+            ns.OverlayEngine:CleanButton(itemButton)
         end
     end
 
@@ -71,7 +71,7 @@ local function SetupHooks()
         end
     end
 
-    OneWoW.OverlayEngine:RegisterIntegration(RefreshArkInventory)
+    ns.OverlayEngine:RegisterIntegration(RefreshArkInventory)
 end
 
-OneWoW:RegisterAddonLoadedWatcher("ArkInventory", SetupHooks)
+ns:RegisterAddonLoadedWatcher("ArkInventory", SetupHooks)

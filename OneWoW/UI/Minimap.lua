@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-OneWoW.Minimap = {}
-local MinimapMod = OneWoW.Minimap
+ns.Minimap = {}
+local MinimapMod = ns.Minimap
 
 local contextMenu
 local minimapBtn
@@ -16,7 +16,7 @@ local function ShowContextMenu(anchorFrame)
         contextMenu = nil
     end
 
-    local entries = OneWoW._minimapEntries or {}
+    local entries = ns._minimapEntries or {}
     local oneWoWEntry
     local otherEntries = {}
     for _, item in ipairs(entries) do
@@ -30,12 +30,12 @@ local function ShowContextMenu(anchorFrame)
 
     local visibleItems = {}
     if oneWoWEntry then
-        tinsert(visibleItems, { label = oneWoWEntry.label, global = "OneWoW", always = true, action = oneWoWEntry.callback or (function() if OneWoW.UI then OneWoW.UI:Show() end end) })
+        tinsert(visibleItems, { label = oneWoWEntry.label, global = "OneWoW", always = true, action = oneWoWEntry.callback or (function() if ns.UI then ns.UI:Show() end end) })
     end
     for _, item in ipairs(otherEntries) do
         local action = item.callback
         if not action and item.tabKey then
-            action = function() if OneWoW.UI then OneWoW.UI:Show(item.tabKey) end end
+            action = function() if ns.UI then ns.UI:Show(item.tabKey) end end
         end
         if action then
             tinsert(visibleItems, { label = item.label, global = item.addon, action = action })
@@ -176,7 +176,7 @@ end
 
 local function CreateMinimapButton()
     if minimapBtn then return end
-    position = (OneWoW.db and OneWoW.db.global and OneWoW.db.global.minimap and OneWoW.db.global.minimap.minimapPos) or 220
+    position = (ns.db and ns.db.global and ns.db.global.minimap and ns.db.global.minimap.minimapPos) or 220
 
     minimapBtn = CreateFrame("Button", "OneWoW_MinimapButton", Minimap)
     minimapBtn:SetSize(35, 35)
@@ -195,15 +195,15 @@ local function CreateMinimapButton()
     minimapBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         GameTooltip:AddLine("|cFFFFD1001WoW|r", 1, 0.82, 0, 1)
-        local L = OneWoW.L
+        local L = ns.L
         GameTooltip:AddLine(L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, 1)
         GameTooltip:AddLine(L["MINIMAP_RIGHT_CLICK"], 0.5, 0.5, 0.6, 1)
         GameTooltip:Show()
     end)
     minimapBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     minimapBtn:SetScript("OnClick", function(self, button)
-        if button == "LeftButton" and OneWoW.UI then
-            OneWoW.UI:Toggle()
+        if button == "LeftButton" and ns.UI then
+            ns.UI:Toggle()
         elseif button == "RightButton" then
             ShowContextMenu(self)
         end
@@ -214,8 +214,8 @@ local function CreateMinimapButton()
             local px, py = GetCursorPosition()
             local scale = Minimap:GetEffectiveScale()
             position = math.deg(math.atan2((py / scale) - my, (px / scale) - mx)) % 360
-            if OneWoW.db and OneWoW.db.global and OneWoW.db.global.minimap then
-                OneWoW.db.global.minimap.minimapPos = position
+            if ns.db and ns.db.global and ns.db.global.minimap then
+                ns.db.global.minimap.minimapPos = position
             end
             myself:Raise()
             UpdatePosition(myself)
@@ -249,8 +249,8 @@ function MinimapMod:Initialize()
             type = "launcher",
             icon = GetCurrentIcon(),
             OnClick = function(myself, button)
-                if button == "LeftButton" and OneWoW.UI then
-                    OneWoW.UI:Toggle()
+                if button == "LeftButton" and ns.UI then
+                    ns.UI:Toggle()
                 elseif button == "RightButton" then
                     ShowContextMenu(myself)
                 end
@@ -258,7 +258,7 @@ function MinimapMod:Initialize()
             OnEnter = function(myself)
                 GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
                 GameTooltip:AddLine("|cFFFFD1001WoW|r", 1, 0.82, 0, 1)
-                local L = OneWoW.L
+                local L = ns.L
                 GameTooltip:AddLine(L["MINIMAP_TOOLTIP_HINT"], 0.7, 0.7, 0.8, 1)
                 GameTooltip:AddLine(L["MINIMAP_RIGHT_CLICK"], 0.5, 0.5, 0.6, 1)
                 GameTooltip:Show()
@@ -295,6 +295,6 @@ function MinimapMod:IsShown()
     return minimapBtn and minimapBtn:IsShown()
 end
 
-OneWoW:RegisterCoreLoginHandler("Minimap", function()
+ns:RegisterCoreLoginHandler("Minimap", function()
     MinimapMod:Initialize()
 end, "early")

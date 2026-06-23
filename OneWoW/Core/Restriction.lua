@@ -1,4 +1,4 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 -- ============================================================================
 -- Restriction
@@ -15,7 +15,7 @@ local _, OneWoW = ...
 -- ============================================================================
 
 local Restriction = {}
-OneWoW.Restriction = Restriction
+ns.Restriction = Restriction
 
 -- Restriction types that gate protected actions / secure-frame mutations.
 -- Chat (addon comms, not secure-frame related; added 12.0.5) is intentionally

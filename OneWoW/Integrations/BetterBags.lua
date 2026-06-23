@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local function IsEnabled()
-    return OneWoW.SettingsFeatureRegistry:IsIntegrationEnabled("betterbags")
+    return ns.SettingsFeatureRegistry:IsIntegrationEnabled("betterbags")
 end
 
 local bb_events
@@ -11,17 +11,17 @@ local bb_addon
 local function ProcessButton(item, decoration)
     if not item or not decoration then return end
     if not IsEnabled() then
-        OneWoW.OverlayEngine:CleanButton(decoration)
+        ns.OverlayEngine:CleanButton(decoration)
         return
     end
     if item.isFreeSlot or not item.kind then
-        OneWoW.OverlayEngine:CleanButton(decoration)
+        ns.OverlayEngine:CleanButton(decoration)
         return
     end
     local bagid = decoration.bagID
     local slotid = decoration:GetID()
     if bagid == nil or not slotid then
-        OneWoW.OverlayEngine:CleanButton(decoration)
+        ns.OverlayEngine:CleanButton(decoration)
         return
     end
 
@@ -47,12 +47,12 @@ local function ProcessButton(item, decoration)
     if exists then
         local link = C_Item.GetItemLink(loc)
         if link then
-            OneWoW.OverlayEngine:ProcessButton(decoration, link, loc)
+            ns.OverlayEngine:ProcessButton(decoration, link, loc)
         else
-            OneWoW.OverlayEngine:CleanButton(decoration)
+            ns.OverlayEngine:CleanButton(decoration)
         end
     else
-        OneWoW.OverlayEngine:CleanButton(decoration)
+        ns.OverlayEngine:CleanButton(decoration)
     end
 end
 
@@ -81,7 +81,7 @@ local function SetupHooks()
 
     bb_events:RegisterMessage("item/Clearing", function(_, _, decoration)
         if decoration then
-            OneWoW.OverlayEngine:CleanButton(decoration)
+            ns.OverlayEngine:CleanButton(decoration)
         end
     end)
 
@@ -91,7 +91,7 @@ local function SetupHooks()
         bb_events:SendMessage(ctx, "bags/FullRefreshAll")
     end
 
-    OneWoW.OverlayEngine:RegisterIntegration(RefreshBetterBags)
+    ns.OverlayEngine:RegisterIntegration(RefreshBetterBags)
 end
 
-OneWoW:RegisterAddonLoadedWatcher("BetterBags", SetupHooks)
+ns:RegisterAddonLoadedWatcher("BetterBags", SetupHooks)

@@ -1,9 +1,9 @@
-local ADDON_NAME, OneWoW = ...
+local ADDON_NAME, ns = ...
 
-OneWoW.Locale:Register(ADDON_NAME, "enUS", {
+ns.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_TITLE"] = "OneWoW",
 
-    -- Addon loader (OneWoW:GetLoadFailureText); other tokens use Blizzard ADDON_* constants
+    -- Addon loader (ns:GetLoadFailureText); other tokens use Blizzard ADDON_* constants
     ["LOAD_FAIL_COMBAT"] = "Can't load that addon during combat - try again after combat ends.",
     ["LOAD_FAIL_OPTED_OUT"] = "That addon is soft-disabled for this character — enable it in Manage Features first.",
     ["LOAD_FAIL_UNKNOWN"] = "That addon could not be loaded.",
@@ -37,7 +37,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["MINIMAP_MODULES_LOADED"] = "%d modules loaded",
     ["MINIMAP_RIGHT_CLICK"] = "Right-click for options",
 
-    -- CopyPaste dialog (OneWoW.CopyPaste)
+    -- CopyPaste dialog (ns.CopyPaste)
     ["COPYPASTE_HINT_COPY"] = "Press Ctrl+C to copy",
     ["COPYPASTE_HINT_COPY_MAC"] = "Press Cmd+C to copy",
 
@@ -426,4 +426,4 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["BINDING_NAME_ONEWOW_MARK_ITEM_PROTECTED"] = "Mark Item as Protected",
 })
 
-OneWoW.L = OneWoW.Locale:GetTable(ADDON_NAME)
+ns.L = ns.Locale:GetTable(ADDON_NAME)

@@ -1,4 +1,4 @@
-local ADDON_NAME, OneWoW = ...
+local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -383,11 +383,11 @@ local DEFAULTS = {
 --- SettingsFeatureRegistry:ResetTab. Errors on unknown tab names.
 ---@param tabName string
 ---@return table
-function OneWoW:GetSettingsDefaults(tabName)
+function ns:GetSettingsDefaults(tabName)
     return CopyTable(DEFAULTS.settings[tabName])
 end
 
-function OneWoW:InitializeDatabase()
+function ns:InitializeDatabase()
     -- OneWoW_DB was historically a flat root — the root WAS the global table
     -- (`self.db = { global = OneWoW_DB }`). DB:Init single mode expects
     -- root.global plus scope roots, so wrap a legacy flat SV once before

@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 -- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
-OneWoW.Locale:RegisterShared("esMX", {
+ns.Locale:RegisterShared("esMX", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "Selección de idioma",
     ["LANGUAGE_DESC"] = "Elige el idioma de la interfaz del addon. Los cambios se aplican al instante.",

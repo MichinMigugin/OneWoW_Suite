@@ -382,7 +382,6 @@ function ns.UI.CreateBankTab(parent)
     end
     ns.UI.BankTabReference.parent = parent
 
-    _G["OneWoW_AltTracker"] = OneWoW_AltTracker or {}
     OneWoW_AltTracker.UI = OneWoW_AltTracker.UI or {}
     OneWoW_AltTracker.UI.RefreshBankDisplay = ns.UI.RefreshBankDisplay
     OneWoW_AltTracker.UI.BankTab = parent

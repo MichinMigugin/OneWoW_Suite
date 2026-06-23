@@ -55,12 +55,12 @@ end
 function EscMenu:HookGameMenu()
 	hooksecurefunc("ToggleGameMenu", function()
 		if not GameMenuFrame:IsShown() or OneWoW.Restriction.IsAddonRestricted() then return end
-		if OneWoW.db.global.portalHub and OneWoW.db.global.portalHub.escEnabled then
+		if OneWoW:GetPortalHub() and OneWoW:GetPortalHub().escEnabled then
 			EscMenu:ShowPortalFrames()
 		else
 			EscMenu:HidePortalFrames()
 		end
-		if OneWoW.db.global.instanceStatsEsc and OneWoW.db.global.instanceStatsEsc.enabled then
+		if OneWoW:GetCoreGlobal() and OneWoW:GetCoreGlobal().instanceStatsEsc and OneWoW:GetCoreGlobal().instanceStatsEsc.enabled then
 			EscMenu:ShowInstanceStatsFrame()
 		else
 			EscMenu:HideInstanceStatsFrame()
@@ -103,7 +103,7 @@ end
 
 function EscMenu:SyncEscLayout()
 	if not GameMenuFrame or not GameMenuFrame:IsShown() then return end
-	local ph = OneWoW.db and OneWoW.db.global and OneWoW.db.global.portalHub
+	local ph = OneWoW:GetPortalHub()
 	if not ph or not ph.escEnabled then return end
 
 	if ns.EscPanels then
@@ -169,11 +169,11 @@ function EscMenu:ShowPortalFrames()
 		rightFrame:SetSize(1, 1)
 	end
 
-	local iconSize = OneWoW.db.global.portalHub.escIconSize or 40
+	local iconSize = OneWoW:GetPortalHub().escIconSize or 40
 	local iconGap = 2
 	local yStart = -(iconSize / 2) - 10
 
-	local ph = OneWoW.db.global.portalHub or {}
+	local ph = OneWoW:GetPortalHub() or {}
 	local panelsSide = ph.escPanelsSide == "right" and "right" or "left"
 	local portalsSide = ph.escPortalsSide == "left" and "left" or "right"
 
@@ -202,7 +202,7 @@ function EscMenu:ShowPortalFrames()
 	local function deferredSync()
 		if not GameMenuFrame or not GameMenuFrame:IsShown() then return end
 		if OneWoW.Restriction.IsAddonRestricted() then return end
-		local hub = OneWoW.db and OneWoW.db.global and OneWoW.db.global.portalHub
+		local hub = OneWoW:GetPortalHub()
 		if not hub or not hub.escEnabled then return end
 		EscMenu:SyncEscLayout()
 	end
@@ -218,7 +218,7 @@ function EscMenu:BuildLeftSide()
 end
 
 function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
-	local ph = OneWoW.db.global.portalHub
+	local ph = OneWoW:GetPortalHub()
 	if not ph or not ph.escPortalsEnabled then return end
 	local showAll = ph.showAllOnEsc or false
 	local flyoutOrient = growLeft and "LEFT" or "RIGHT"
@@ -392,7 +392,7 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 		end
 	end
 
-	local showSeasonal = OneWoW.db.global.portalHub.showSeasonal ~= false
+	local showSeasonal = OneWoW:GetPortalHub().showSeasonal ~= false
 	local seasonPortals = ns.PortalHubDetection:GetCurrentSeasonPortals(showAll or showSeasonal)
 	if (#seasonPortals > 0) then
 		local displaySeason = #seasonPortals > 0 and seasonPortals or {{type = "spell", id = 1254400}}
@@ -447,7 +447,7 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 
 	if portalData.type == "randomhearth" then
 		local hasHearthstoneItem = C_Item.GetItemCount(6948) > 0
-		local randomEnabled = OneWoW.db.global.portalHub.randomHearthstone
+		local randomEnabled = OneWoW:GetPortalHub().randomHearthstone
 		local hearthstones = ns.PortalData_Hearthstones and ns.PortalData_Hearthstones.List or {}
 		local availableToys = {}
 
@@ -631,7 +631,11 @@ function EscMenu:CreateOpenHubButton(parent, xOffset, yOffset, iconSize, growLef
 		HideUIPanel(GameMenuFrame)
 		C_Timer.After(0.15, function()
 			-- This code only runs from the QoL unit, so the qol module tab exists.
-			OneWoW.db.global.lastSubTabs.qol = "portals"
+			local global = OneWoW:GetCoreGlobal()
+			if global then
+				if not global.lastSubTabs then global.lastSubTabs = {} end
+				global.lastSubTabs.qol = "portals"
+			end
 			OneWoW.UI:Show("qol")
 		end)
 	end)
@@ -821,15 +825,19 @@ end
 function EscMenu:SaveInstanceStatsPosition()
 	if not instanceStatsFrame then return end
 	local point, _, relativePoint, x, y = instanceStatsFrame:GetPoint()
-	OneWoW.db.global.instanceStatsPosition.point = point
-	OneWoW.db.global.instanceStatsPosition.relativePoint = relativePoint
-	OneWoW.db.global.instanceStatsPosition.x = x
-	OneWoW.db.global.instanceStatsPosition.y = y
+	local global = OneWoW:GetCoreGlobal()
+	if not global then return end
+	if not global.instanceStatsPosition then global.instanceStatsPosition = {} end
+	global.instanceStatsPosition.point = point
+	global.instanceStatsPosition.relativePoint = relativePoint
+	global.instanceStatsPosition.x = x
+	global.instanceStatsPosition.y = y
 end
 
 function EscMenu:RestoreInstanceStatsPosition()
 	if not instanceStatsFrame then return end
-	local savedPos = OneWoW.db and OneWoW.db.global and OneWoW.db.global.instanceStatsPosition
+	local global = OneWoW:GetCoreGlobal()
+	local savedPos = global and global.instanceStatsPosition
 	if savedPos and savedPos.point then
 		instanceStatsFrame:ClearAllPoints()
 		instanceStatsFrame:SetPoint(savedPos.point, UIParent, savedPos.relativePoint, savedPos.x, savedPos.y)

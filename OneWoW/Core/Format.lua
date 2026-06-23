@@ -1,4 +1,4 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -14,7 +14,7 @@ local floor, abs = math.floor, math.abs
 -- ============================================================================
 
 local Format = {}
-OneWoW.Format = Format
+ns.Format = Format
 
 --- Format a number with digit grouping. Uses BreakUpLargeNumbers (client
 --- locale) when the regional-numbers setting is on; otherwise US-style

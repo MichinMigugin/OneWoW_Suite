@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-OneWoW.Search = {}
-local Search = OneWoW.Search
+ns.Search = {}
+local Search = ns.Search
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -27,8 +27,8 @@ local function NavigateTo(entry)
     end
 
     if entry.navType == "module" then
-        if not OneWoW.UI then return end
-        local gui = OneWoW.UI
+        if not ns.UI then return end
+        local gui = ns.UI
         gui:Show()
         C_Timer.After(0.05, function()
             gui:SelectModuleTab(entry.module)
@@ -137,7 +137,7 @@ local function ShowResults(results)
 end
 
 local function DoSearch(query)
-    if not OneWoW.SearchData then return end
+    if not ns.SearchData then return end
     query = query:lower():match("^%s*(.-)%s*$")
     if #query < 2 then
         if resultsFrame then resultsFrame:Hide() end
@@ -145,7 +145,7 @@ local function DoSearch(query)
     end
 
     local hits = {}
-    for _, entry in ipairs(OneWoW.SearchData) do
+    for _, entry in ipairs(ns.SearchData) do
         local score = 0
         for _, kw in ipairs(entry.keywords) do
             local kwL = kw:lower()

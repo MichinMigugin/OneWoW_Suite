@@ -13,10 +13,10 @@
 --   - Lazy tooltip metatable for the few remaining tooltip-only fields
 -- ============================================================================
 
-local _, OneWoW = ...
+local _, ns = ...
 
-OneWoW.PredicateEngine = {}
-local PE = OneWoW.PredicateEngine
+ns.PredicateEngine = {}
+local PE = ns.PredicateEngine
 
 local tconcat, tinsert, wipe = table.concat, tinsert, wipe
 local ipairs, pairs, tonumber, tostring = ipairs, pairs, tonumber, tostring
@@ -953,7 +953,7 @@ RegisterKeyword("crafted",             function(p) return p.isCrafted end)
 RegisterKeyword("professionequipment", function(p) return p.isProfessionEquipment end)
 
 -- ---- 7.21  Upgrade keywords ----
--- #upgrade is registered by OneWoW.UpgradeDetection via PE:RegisterKeyword
+-- #upgrade is registered by ns.UpgradeDetection via PE:RegisterKeyword
 -- at runtime since "is this an upgrade" is policy (mode, equipped state) that
 -- belongs to that module. Without UpgradeDetection loaded, #upgrade is simply
 -- unregistered and predicates using it evaluate to false.
@@ -1486,7 +1486,7 @@ local function ResolveTooltipFields(props)
 
     local alreadyKnown = strfind(tt, ITEM_SPELL_KNOWN, 1, true) ~= nil
     if not alreadyKnown and rawget(props, "classID") == Enum.ItemClass.Recipe then
-        local Util = OneWoW.RecipeKnownUtil
+        local Util = ns.RecipeKnownUtil
         if Util then
             local result = Util:IsRecipeKnown(rawget(props, "id"), rawget(props, "hyperlink"))
             if result ~= nil then
@@ -1897,8 +1897,8 @@ local function PopulateBaseProps(props, itemID, hyperlink)
 
     -- ---- Junk (quality + OneWoW hook) ----
     props.isJunk = (props.quality == IQ.Poor)
-    if not props.isJunk and OneWoW.ItemStatus then
-        props.isJunk = OneWoW.ItemStatus:IsItemJunk(itemID) or false
+    if not props.isJunk and ns.ItemStatus then
+        props.isJunk = ns.ItemStatus:IsItemJunk(itemID) or false
     end
 
     -- ---- Special items ----

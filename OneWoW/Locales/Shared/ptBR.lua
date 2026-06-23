@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 -- Machine-drafted — pending native review.
-OneWoW.Locale:RegisterShared("ptBR", {
+ns.Locale:RegisterShared("ptBR", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "Seleção de idioma",
     ["LANGUAGE_DESC"] = "Escolha o idioma da interface do addon. As alterações são aplicadas na hora.",
@@ -103,7 +103,7 @@ OneWoW.Locale:RegisterShared("ptBR", {
     ["PRICES_FOUND"] = "preços encontrados",
     ["RIGHT_CLICK_FOR_MORE_OPTIONS"] = "Clique direito para mais opções",
     ["SCAN_AH"] = "ESCANEAR CL",
-    ["SEARCH_ITEMS"] = "Buscar itens...",
+    ["SEARCH_ITEMS"] = "Buscar itens..",
     ["SHOW_BAR"] = "Mostrar barra",
     ["GOLD_TOTAL"] = "Ouro total",
     ["WORLD_QUEST"] = "Missão mundial",

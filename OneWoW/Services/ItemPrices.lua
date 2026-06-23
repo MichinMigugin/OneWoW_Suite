@@ -1,13 +1,13 @@
-local _, OneWoW = ...
+local _, ns = ...
 local format = string.format
 
-OneWoW.ItemPrices = OneWoW.ItemPrices or {}
-local IP = OneWoW.ItemPrices
+ns.ItemPrices = ns.ItemPrices or {}
+local IP = ns.ItemPrices
 
 local CALLER_ID = "OneWoW"
 
 local function GetValueCfg()
-    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "value")
+    return ns.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "value")
 end
 
 function IP:GetValueCfg()

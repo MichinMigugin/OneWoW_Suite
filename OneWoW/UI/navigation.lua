@@ -1,6 +1,6 @@
-local ADDON_NAME, OneWoW = ...
+local ADDON_NAME, ns = ...
 
-local UI = OneWoW.UI
+local UI = ns.UI
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -18,11 +18,11 @@ end
 ---@param opts table? { pointerKey?: string, center?: boolean }
 function UI:CreateManageFeaturesLinkRow(parent, opts)
     opts = opts or {}
-    local L = OneWoW.L or {}
+    local L = ns.L or {}
     local pointerKey = opts.pointerKey or "HOME_MANAGE_POINTER"
 
     local manageText = OneWoW_GUI:CreateFS(parent, 12)
-    manageText:SetText(OneWoW.Locale:GetOptional(ADDON_NAME, pointerKey) or "")
+    manageText:SetText(ns.Locale:GetOptional(ADDON_NAME, pointerKey) or "")
     manageText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local manageLink = CreateFrame("Button", nil, parent)

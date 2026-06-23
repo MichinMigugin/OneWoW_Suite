@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local function IsEnabled()
-    return OneWoW.SettingsFeatureRegistry:IsIntegrationEnabled("baganator")
+    return ns.SettingsFeatureRegistry:IsIntegrationEnabled("baganator")
 end
 
 local wired = false
@@ -18,7 +18,7 @@ local function SetupHooks()
             if not itemButton then return false end
 
             if not IsEnabled() or not itemDetails or not itemDetails.itemLink then
-                OneWoW.OverlayEngine:CleanButton(itemButton)
+                ns.OverlayEngine:CleanButton(itemButton)
                 return false
             end
 
@@ -30,7 +30,7 @@ local function SetupHooks()
                 )
             end
 
-            OneWoW.OverlayEngine:ProcessButton(itemButton, itemDetails.itemLink, loc)
+            ns.OverlayEngine:ProcessButton(itemButton, itemDetails.itemLink, loc)
             return true
         end,
         function(itemButton)
@@ -53,8 +53,8 @@ local function SetupHooks()
         Baganator.API.RequestItemButtonsRefresh({ Baganator.Constants.RefreshReason.ItemWidgets })
     end
 
-    OneWoW.OverlayEngine:RegisterIntegration(RefreshBaganator)
+    ns.OverlayEngine:RegisterIntegration(RefreshBaganator)
     C_Timer.After(0.5, RefreshBaganator)
 end
 
-OneWoW:RegisterAddonLoadedWatcher("Baganator", SetupHooks)
+ns:RegisterAddonLoadedWatcher("Baganator", SetupHooks)

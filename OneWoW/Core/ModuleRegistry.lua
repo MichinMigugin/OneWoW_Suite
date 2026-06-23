@@ -1,12 +1,12 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-OneWoW.ModuleRegistry = {}
-local Registry = OneWoW.ModuleRegistry
+ns.ModuleRegistry = {}
+local Registry = ns.ModuleRegistry
 
 local registeredModules = {}
 local registeredSettingsPanels = {}
 
-function OneWoW:RegisterModule(moduleInfo)
+function ns:RegisterModule(moduleInfo)
     if not moduleInfo or not moduleInfo.name then return end
     if registeredModules[moduleInfo.name] then return end
 
@@ -21,7 +21,7 @@ function OneWoW:RegisterModule(moduleInfo)
 
     -- MainWindow builds row-1 tabs once at first open; mid-session loads (e.g. a
     -- soft-disabled unit re-enabled via Load Addon) register here after init.
-    EventRegistry:TriggerEvent("OneWoW.ModuleRegistered", moduleInfo.name)
+    EventRegistry:TriggerEvent("ns.ModuleRegistered", moduleInfo.name)
 end
 
 function Registry:GetModules()
@@ -52,7 +52,7 @@ function Registry:GetModuleCount()
     return count
 end
 
-function OneWoW:RegisterSettingsPanel(panelInfo)
+function ns:RegisterSettingsPanel(panelInfo)
     if not panelInfo or not panelInfo.name then return end
     if registeredSettingsPanels[panelInfo.name] then return end
 

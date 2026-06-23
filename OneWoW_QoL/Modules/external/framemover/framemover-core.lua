@@ -45,7 +45,7 @@ local function SyncEscPanels()
         return
     end
     local escPanels = ns.EscPanels
-    local ph = OneWoW.db.global.portalHub
+    local ph = OneWoW:GetPortalHub()
     if escPanels and escPanels.EnsurePanelsContainer and ph then
         escPanels:EnsurePanelsContainer(ph)
         return

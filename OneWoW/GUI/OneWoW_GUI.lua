@@ -1,3 +1,5 @@
+local _, ns = ...
+
 -- ============================================================================
 -- OneWoW/GUI/OneWoW_GUI.lua
 -- THIS IS THE GUI TOOLKIT (OneWoW_GUI global) - The single source of truth for
@@ -73,7 +75,7 @@ function OneWoW_GUI:GetBrandIcon(factionTheme)
 end
 
 local function GetRawThemeKeyFromSources(self, addon)
-    -- _settingsDB is OneWoW.db.global (core's OneWoW_DB); the addon fallback
+    -- _settingsDB is ns.db.global (core's OneWoW_DB); the addon fallback
     -- covers calls before InitializeSettings binds.
     local themeKey
     if self._settingsDB and self._settingsDB.theme then
@@ -106,7 +108,7 @@ end
 function OneWoW_GUI:GetThemeName(themeKey)
     local data = Constants.THEMES[themeKey]
     if themeKey then
-        local v = OneWoW.Locale:GetOptional("OneWoW", "THEME_" .. string.upper(themeKey))
+        local v = ns.Locale:GetOptional("OneWoW", "THEME_" .. string.upper(themeKey))
         if v then return v end
     end
     return (data and data.name) or themeKey or Constants.DEFAULT_THEME_NAME
@@ -117,7 +119,7 @@ function OneWoW_GUI:GetThemeDisplayName()
     local raw = GetRawThemeKeyFromSources(self, nil)
     if raw == "random" then
         local eff = self:GetEffectiveThemeKey()
-        local fmt = OneWoW.Locale:GetOptional("OneWoW", "THEME_RANDOM_CURRENT") or "Random (%s)"
+        local fmt = ns.Locale:GetOptional("OneWoW", "THEME_RANDOM_CURRENT") or "Random (%s)"
         return string.format(fmt, self:GetThemeName(eff))
     end
     return self:GetThemeName(raw)

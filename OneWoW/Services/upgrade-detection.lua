@@ -1,9 +1,9 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-local PE = OneWoW.PredicateEngine
+local PE = ns.PredicateEngine
 
 local UpgradeDetection = {}
-OneWoW.UpgradeDetection = UpgradeDetection
+ns.UpgradeDetection = UpgradeDetection
 
 local EQUIPLOC_TO_SLOTS = {
     INVTYPE_HEAD            = {1},
@@ -47,7 +47,7 @@ local SLOT_NAMES = {
 }
 
 local function GetDB()
-    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("overlays", "upgrade")
+    return ns.SettingsFeatureRegistry:GetFeatureSettings("overlays", "upgrade")
 end
 
 local function GetMode()
@@ -478,26 +478,26 @@ function UpgradeDetection:Initialize()
     else
         local mode = GetMode()
         if mode == "PAWN" then
-            OneWoW.SettingsFeatureRegistry:SetOverlaySetting("upgrade", "mode", "ILVL")
+            ns.SettingsFeatureRegistry:SetOverlaySetting("upgrade", "mode", "ILVL")
             print("|cFF00FF00OneWoW|r: Pawn not found - upgrade detection switched to Item Level mode.")
         end
     end
 end
 
 function UpgradeDetection:ShowPawnModePrompt()
-    local L = OneWoW.L or {}
+    local L = ns.L or {}
     StaticPopupDialogs["ONEWOW_ENABLE_PAWN_MODE"] = {
         text = "|cFF00FF00OneWoW - Upgrade Detection|r\n\n" .. (L["OVR_UPGRADE_PAWN_DETECTED_TEXT"]),
         button1 = L["OVR_UPGRADE_PAWN_ENABLE"],
         button2 = L["OVR_UPGRADE_PAWN_NO_THANKS"],
         OnAccept = function()
-            local reg = OneWoW.SettingsFeatureRegistry
+            local reg = ns.SettingsFeatureRegistry
             reg:SetOverlaySetting("upgrade", "mode", "PAWN")
             reg:SetOverlaySetting("upgrade", "showPawnPrompt", false)
             print("|cFF00FF00OneWoW|r: Upgrade detection set to Pawn mode.")
         end,
         OnCancel = function()
-            OneWoW.SettingsFeatureRegistry:SetOverlaySetting("upgrade", "showPawnPrompt", false)
+            ns.SettingsFeatureRegistry:SetOverlaySetting("upgrade", "showPawnPrompt", false)
         end,
         timeout = 0,
         whileDead = true,
@@ -513,6 +513,6 @@ end
 UpgradeDetection.CanPlayerUseItem = function(_, itemLink) return CanPlayerUseItem(itemLink) end
 UpgradeDetection.SLOT_NAMES = SLOT_NAMES
 
-OneWoW:RegisterCoreLoginHandler("UpgradeDetection", function()
+ns:RegisterCoreLoginHandler("UpgradeDetection", function()
     UpgradeDetection:Initialize()
 end, "early")

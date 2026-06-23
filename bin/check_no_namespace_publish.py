@@ -28,10 +28,11 @@ import re
 import sys
 
 # --- Enforcement phase -------------------------------------------------------
-WARN_ONLY: bool = True  # Warn-only during migration; set False when worklist is drained.
+WARN_ONLY: bool = False
 
 ALLOWED_NAMESPACE_PUBLISH: set[str] = {
-    "OneWoW/Core/StoreBootstrap.lua",
+    # Sole curated orchestrator publish — fresh table wired from private ns in Facade.lua.
+    "OneWoW/Core/Facade.lua::g_assign_core_ns",
 }
 
 # (pattern_id, compiled regex, human label)

@@ -1,7 +1,7 @@
-local ADDON_NAME, OneWoW = ...
+local ADDON_NAME, ns = ...
 
 -- Machine-drafted — pending native review
-OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
+ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["ADDON_TITLE"] = "OneWoW",
 
     ["LOAD_FAIL_COMBAT"] = "Não é possível carregar esse addon durante o combate - tente novamente após o combate terminar.",

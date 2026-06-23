@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local RecipeKnownUtil = {}
-OneWoW.RecipeKnownUtil = RecipeKnownUtil
+ns.RecipeKnownUtil = RecipeKnownUtil
 
 local knownRecipeSpells = {}
 local sessionMap = {}

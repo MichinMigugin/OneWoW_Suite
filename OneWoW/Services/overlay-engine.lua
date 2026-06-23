@@ -1,9 +1,9 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-OneWoW.OverlayEngine = {}
-local Engine = OneWoW.OverlayEngine
+ns.OverlayEngine = {}
+local Engine = ns.OverlayEngine
 
 local PositionOffsets = {
     TOPLEFT     = {1, -1},
@@ -65,7 +65,7 @@ local initialized   = false
 -- LOAD-BEARING INVARIANT: this table is created at file-parse time (not inside
 -- Initialize) and RegisterIntegration is an append-only insert with no dependency
 -- on Initialize-created state. Bag integrations wire themselves via
--- OneWoW:RegisterAddonLoadedWatcher, which fires at core ADDON_LOADED / file-parse
+-- ns:RegisterAddonLoadedWatcher, which fires at core ADDON_LOADED / file-parse
 -- -- i.e. BEFORE Engine:Initialize() runs. That ordering is correct: the list is
 -- populated before the engine starts consuming it. Consumption is login-gated --
 -- RefreshAll iterates this list, and the BAG_UPDATE_DELAYED handler is armed by an
@@ -78,7 +78,7 @@ function Engine:RegisterIntegration(fn)
     table.insert(self.integrationRefreshCallbacks, fn)
 end
 
-local Registry = OneWoW.SettingsFeatureRegistry
+local Registry = ns.SettingsFeatureRegistry
 
 local function IsGlobalEnabled()
     return Registry:IsEnabled("overlays", "general")
@@ -627,7 +627,7 @@ local function ApplyOverlayToButton(button, overlayId, positionIndex)
         entry.frame:SetFrameLevel(button:GetFrameLevel() + 3)
     end
     entry.frame:SetSize(finalSize, finalSize)
-    OneWoW.OverlayIcons:ApplyToTexture(entry.texture, iconName)
+    ns.OverlayIcons:ApplyToTexture(entry.texture, iconName)
     local iconColor = cfg.iconColor
     if iconColor then
         entry.texture:SetVertexColor(iconColor[1], iconColor[2], iconColor[3])
@@ -713,7 +713,7 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
     end
 
     if classID == Enum.ItemClass.Recipe then
-        local Util = OneWoW.RecipeKnownUtil
+        local Util = ns.RecipeKnownUtil
         if Util then
             return Util:IsRecipeKnown(itemID)
         end
@@ -759,12 +759,12 @@ end
 local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocation)
     local hits = {}
 
-    if IsOverlayEnabled("protected") and OneWoW.ItemStatus and OneWoW.ItemStatus:IsItemProtected(itemID) then
+    if IsOverlayEnabled("protected") and ns.ItemStatus and ns.ItemStatus:IsItemProtected(itemID) then
         hits[#hits + 1] = "protected"
     end
 
     if IsOverlayEnabled("junk") then
-        local isJunk = OneWoW.ItemStatus and OneWoW.ItemStatus:IsItemJunk(itemID)
+        local isJunk = ns.ItemStatus and ns.ItemStatus:IsItemJunk(itemID)
         if not isJunk and GetOverlayCfg("junk").includeGreyItems then
             local quality = select(3, C_Item.GetItemInfo(itemLink))
             if quality and quality == 0 then
@@ -928,7 +928,7 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
 
     if IsOverlayEnabled("upgrade") then
         if itemLocation and C_Item.DoesItemExist(itemLocation) then
-            local UD = OneWoW.UpgradeDetection
+            local UD = ns.UpgradeDetection
             if UD and UD:CheckItemUpgrade(itemLink, itemLocation) then
                 hits[#hits + 1] = "upgrade"
             end
@@ -1239,7 +1239,7 @@ end
 
 -- Repaint whenever any overlay setting changes, regardless of which UI mutated
 -- it (settings GUI, Bags settings, mirror writes from the tooltips tab, ...).
-OneWoW.SettingsFeatureRegistry:RegisterListener("OverlayEngine", function(storageTab)
+ns.SettingsFeatureRegistry:RegisterListener("OverlayEngine", function(storageTab)
     if storageTab == "overlays" then
         Engine:RequestRefresh()
     end
@@ -1716,6 +1716,6 @@ function Engine:Initialize()
     InitializeSurfaces()
 end
 
-OneWoW:RegisterCoreLoginHandler("OverlayEngine", function()
+ns:RegisterCoreLoginHandler("OverlayEngine", function()
     Engine:Initialize()
 end, "early")

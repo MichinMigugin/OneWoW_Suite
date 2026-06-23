@@ -1,7 +1,7 @@
-local ADDON_NAME, OneWoW = ...
+local ADDON_NAME, ns = ...
 
-local UI = OneWoW.UI
-local L = OneWoW.L
+local UI = ns.UI
+local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -193,7 +193,7 @@ end
 local function BuildDisplayModules()
     wipe(placeholderData)
 
-    local modules = OneWoW.ModuleRegistry:GetModules()
+    local modules = ns.ModuleRegistry:GetModules()
     local registeredNames = {}
     for _, mod in ipairs(modules) do
         registeredNames[mod.name] = true
@@ -203,7 +203,7 @@ local function BuildDisplayModules()
     for _, mod in ipairs(modules) do
         tinsert(displayModules, mod)
     end
-    for _, info in ipairs(OneWoW:GetAlwaysShowModules()) do
+    for _, info in ipairs(ns:GetAlwaysShowModules()) do
         if not registeredNames[info.name] then
             placeholderData[info.name] = info
             tinsert(displayModules, {
@@ -272,7 +272,7 @@ function UI:RefreshRow1ModuleTabs()
 
     -- A placeholder tab may have been showing; re-select so real module content loads.
     if currentModuleTab ~= "home" and currentModuleTab ~= "settings" then
-        if OneWoW.ModuleRegistry:IsRegistered(currentModuleTab) then
+        if ns.ModuleRegistry:IsRegistered(currentModuleTab) then
             UI:SelectModuleTab(currentModuleTab)
         end
     end
@@ -313,7 +313,7 @@ local function BuildRow2ForModule(moduleName)
     end
     row2Buttons = {}
 
-    local mod = OneWoW.ModuleRegistry:GetModule(moduleName)
+    local mod = ns.ModuleRegistry:GetModule(moduleName)
     if not mod or not mod.tabs or #mod.tabs == 0 then
         row2Container:Hide()
         UpdateContentAreaAnchors()
@@ -336,15 +336,15 @@ end
 function UI:SelectModuleTab(moduleName)
     -- Lazy modules load the first time their tab is opened. Dormant until modules
     -- become LoadOnDemand (migration step 3); a no-op for login-phase modules.
-    if OneWoW.LoadOrchestrator then
-        OneWoW.LoadOrchestrator:EnsureModuleForTab(moduleName)
+    if ns.LoadOrchestrator then
+        ns.LoadOrchestrator:EnsureModuleForTab(moduleName)
     end
 
     currentModuleTab = moduleName
     currentSubTab = nil
 
-    if OneWoW.db and OneWoW.db.global then
-        OneWoW.db.global.lastModuleTab = moduleName
+    if ns.db and ns.db.global then
+        ns.db.global.lastModuleTab = moduleName
     end
 
     if OneWoW_Notes_API and OneWoW_Notes_API.CloseHelpPanel then
@@ -386,7 +386,7 @@ function UI:SelectModuleTab(moduleName)
             row2Container:Show()
             UpdateContentAreaAnchors()
 
-            local lastSub = OneWoW.db and OneWoW.db.global and OneWoW.db.global.lastSubTabs and OneWoW.db.global.lastSubTabs["settings"]
+            local lastSub = ns.db and ns.db.global and ns.db.global.lastSubTabs and ns.db.global.lastSubTabs["settings"]
             local firstTab = UI.settingsTabs[1].name
             local targetTab = lastSub or firstTab
 
@@ -430,9 +430,9 @@ function UI:SelectModuleTab(moduleName)
 
     BuildRow2ForModule(moduleName)
 
-    local mod = OneWoW.ModuleRegistry:GetModule(moduleName)
+    local mod = ns.ModuleRegistry:GetModule(moduleName)
     if mod and mod.tabs and #mod.tabs > 0 then
-        local lastSub = OneWoW.db and OneWoW.db.global and OneWoW.db.global.lastSubTabs and OneWoW.db.global.lastSubTabs[moduleName]
+        local lastSub = ns.db and ns.db.global and ns.db.global.lastSubTabs and ns.db.global.lastSubTabs[moduleName]
         local firstTab = mod.tabs[1].name
         local targetTab = lastSub or firstTab
 
@@ -452,8 +452,8 @@ end
 function UI:SelectSubTab(moduleName, subTabName)
     currentSubTab = subTabName
 
-    if OneWoW.db and OneWoW.db.global and OneWoW.db.global.lastSubTabs then
-        OneWoW.db.global.lastSubTabs[moduleName] = subTabName
+    if ns.db and ns.db.global and ns.db.global.lastSubTabs then
+        ns.db.global.lastSubTabs[moduleName] = subTabName
     end
 
     if OneWoW_Notes_API and OneWoW_Notes_API.CloseHelpPanel then
@@ -477,7 +477,7 @@ function UI:SelectSubTab(moduleName, subTabName)
                 end
             end
         else
-            local mod = OneWoW.ModuleRegistry:GetModule(moduleName)
+            local mod = ns.ModuleRegistry:GetModule(moduleName)
             if mod and mod.tabs then
                 for _, tabInfo in ipairs(mod.tabs) do
                     if tabInfo.name == subTabName and tabInfo.create then
@@ -509,13 +509,13 @@ end
 
 function UI:InitMainWindow()
     if isInitialized then return end
-    if not OneWoW.Constants or not OneWoW.Constants.GUI then return end
+    if not ns.Constants or not ns.Constants.GUI then return end
 
-    L = OneWoW.L
-    local C = OneWoW.Constants.GUI
+    L = ns.L
+    local C = ns.Constants.GUI
 
     local screenW, screenH = GetScreenWidth(), GetScreenHeight()
-    local db = OneWoW.db and OneWoW.db.global or {}
+    local db = ns.db and ns.db.global or {}
     local storage = db.mainFramePosition or {}
     if db.mainFrameSize and not storage.width then
         storage.width = db.mainFrameSize.width
@@ -548,7 +548,7 @@ function UI:InitMainWindow()
     local maxH = math.min(C.MAX_HEIGHT, screenH)
     MainWindow:SetResizeBounds(C.MIN_WIDTH, C.MIN_HEIGHT, maxW, maxH)
     MainWindow:SetScript("OnHide", function()
-        local g = OneWoW.db and OneWoW.db.global
+        local g = ns.db and ns.db.global
         if g then
             g.mainFramePosition = g.mainFramePosition or {}
             OneWoW_GUI:SaveWindowPosition(MainWindow, g.mainFramePosition)
@@ -570,8 +570,8 @@ function UI:InitMainWindow()
     titleBar:SetScript("OnDragStart", function() MainWindow:StartMoving() end)
     titleBar:SetScript("OnDragStop", function() MainWindow:StopMovingOrSizing() end)
 
-    if OneWoW.Search then
-        OneWoW.Search:Init(titleBar, titleBar._closeBtn)
+    if ns.Search then
+        ns.Search:Init(titleBar, titleBar._closeBtn)
     end
 
     row1Container = CreateFrame("Frame", nil, MainWindow)
@@ -636,7 +636,7 @@ function UI:InitMainWindow()
 
     OneWoW_GUI:ApplyFontToFrame(MainWindow)
 
-    local lastTab = OneWoW.db and OneWoW.db.global and OneWoW.db.global.lastModuleTab or "home"
+    local lastTab = ns.db and ns.db.global and ns.db.global.lastModuleTab or "home"
     local validTab = false
     for _, btn in ipairs(row1Buttons) do
         if btn.moduleName == lastTab then
@@ -692,7 +692,7 @@ function UI:CreateAddonPlaceholderFrame(parent, info)
 
     local nameText = OneWoW_GUI:CreateFS(parent, 16)
     nameText:SetPoint("TOP", icon, "BOTTOM", 0, -16)
-    nameText:SetText(OneWoW.Locale:GetOptional(ADDON_NAME, info.localeKey) or info.name)
+    nameText:SetText(ns.Locale:GetOptional(ADDON_NAME, info.localeKey) or info.name)
     nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
     local statusText = OneWoW_GUI:CreateFS(parent, 12)
@@ -700,8 +700,8 @@ function UI:CreateAddonPlaceholderFrame(parent, info)
     statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local function RefreshPlaceholderStatus()
-        local state = OneWoW:GetFeatureUnitState(parent.addonName)
-        statusText:SetText(OneWoW:GetFeatureUnitStatusLabel(state))
+        local state = ns:GetFeatureUnitState(parent.addonName)
+        statusText:SetText(ns:GetFeatureUnitStatusLabel(state))
     end
 
     parent:SetScript("OnShow", RefreshPlaceholderStatus)
@@ -717,13 +717,13 @@ function UI:CreateAddonPlaceholderFrame(parent, info)
 end
 
 function UI:ResetUIToDefaults()
-    if OneWoW.db and OneWoW.db.global then
-        local C = OneWoW.Constants.GUI
+    if ns.db and ns.db.global then
+        local C = ns.Constants.GUI
         local screenW, screenH = GetScreenWidth(), GetScreenHeight()
         local defW = math.min(C.WINDOW_WIDTH, screenW)
         local defH = math.min(C.WINDOW_HEIGHT, screenH)
-        OneWoW.db.global.mainFrameSize = { width = defW, height = defH }
-        OneWoW.db.global.mainFramePosition = nil
+        ns.db.global.mainFrameSize = { width = defW, height = defH }
+        ns.db.global.mainFramePosition = nil
     end
     UI:FullReset()
     C_Timer.After(0.1, function() UI:Show() end)
@@ -750,10 +750,10 @@ function UI:FullReset()
     placeholderData = {}
 end
 
-EventRegistry:RegisterCallback("OneWoW.ModuleRegistered", function()
+EventRegistry:RegisterCallback("ns.ModuleRegistered", function()
     UI:RefreshRow1ModuleTabs()
 end)
 
-EventRegistry:RegisterCallback("OneWoW.FeatureStateChanged", function()
+EventRegistry:RegisterCallback("ns.FeatureStateChanged", function()
     UI:RefreshHomeStatus()
 end)

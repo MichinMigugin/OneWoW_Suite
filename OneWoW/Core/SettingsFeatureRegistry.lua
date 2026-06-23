@@ -12,14 +12,14 @@
 --                  coordinates; engines subscribe (no engine calls here).
 --
 -- This is the only file (besides Core/Database.lua defaults/migrations) that
--- may touch OneWoW.db.global.settings directly.
+-- may touch ns.db.global.settings directly.
 --
 -- GetFeatureSettings returns the LIVE storage table for multi-key reads on
 -- hot paths. It is READ-ONLY by contract: all writes go through SetEnabled /
 -- SetSetting / SetOverlaySetting / SetIntegrationEnabled so listeners fire.
 -- ============================================================================
 
-local _, OneWoW = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
@@ -35,18 +35,18 @@ local ipairs, pairs, wipe, type = ipairs, pairs, wipe, type
 ---@field settingsId string|nil mirror protocol: storage id override
 
 ---@class SettingsFeatureRegistry
-OneWoW.SettingsFeatureRegistry = {}
-local reg = OneWoW.SettingsFeatureRegistry
+ns.SettingsFeatureRegistry = {}
+local reg = ns.SettingsFeatureRegistry
 local featuresByTab = {}
 
 ---@type table<string, fun(storageTab: string, storageId: string|nil, key: string|nil, value: any)>
 local listeners = {}
 
 -- Nil-safe until step 8 moves Core/Database.lua to OneWoW_GUI.DB:Init; after
--- that this becomes a direct OneWoW.db.global.settings access.
+-- that this becomes a direct ns.db.global.settings access.
 ---@return table|nil
 local function GetSettingsDB()
-    return DB:Read(OneWoW.db, "global", "settings")
+    return DB:Read(ns.db, "global", "settings")
 end
 
 -- Resolves a (tabName, featureId) through any registered settingsTab/settingsId
@@ -228,6 +228,6 @@ function reg:ResetTab(tabName)
     if not settings then return end
     local tab = DB:Ensure(settings, tabName)
     wipe(tab)
-    DB:MergeMissing(tab, OneWoW:GetSettingsDefaults(tabName))
+    DB:MergeMissing(tab, ns:GetSettingsDefaults(tabName))
     Notify(tabName, nil, nil, nil)
 end

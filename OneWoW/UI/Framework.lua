@@ -5,13 +5,13 @@
 -- Font functions (ApplyFont, ApplyFontToFrame, SafeSetFont, CreateFS) are
 -- called directly from OneWoW_GUI. No per-addon bridges.
 -- ============================================================================
-local _, OneWoW = ...
+local _, ns = ...
 
-OneWoW.UI = OneWoW.UI or {}
+ns.UI = ns.UI or {}
 
 local OneWoW_GUI = OneWoW_GUI
 
-function OneWoW.UI.SerializeVal(val, depth)
+function ns.UI.SerializeVal(val, depth)
     local t = type(val)
     if t == "string" then
         return string.format("%q", val)
@@ -22,7 +22,7 @@ function OneWoW.UI.SerializeVal(val, depth)
         local inner = string.rep("  ", depth + 1)
         local outer = string.rep("  ", depth)
         for k, v in pairs(val) do
-            local vStr = OneWoW.UI.SerializeVal(v, depth + 1)
+            local vStr = ns.UI.SerializeVal(v, depth + 1)
             if vStr ~= nil then
                 local keyStr
                 if type(k) == "string" and k:match("^[%a_][%a%d_]*$") then
@@ -41,7 +41,7 @@ function OneWoW.UI.SerializeVal(val, depth)
     return nil
 end
 
-function OneWoW.UI.CreateScrollableEditBox(parent, onEscape)
+function ns.UI.CreateScrollableEditBox(parent, onEscape)
     local sf = CreateFrame("ScrollFrame", nil, parent, "UIPanelScrollFrameTemplate")
     sf:SetPoint("TOPLEFT",     parent, "TOPLEFT",     4,  -4)
     sf:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -20, 4)

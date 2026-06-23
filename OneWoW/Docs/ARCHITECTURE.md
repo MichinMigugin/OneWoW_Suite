@@ -326,7 +326,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 | No direct `db.global.settings` access (§8.5) | `bin/check_no_settings_bypass.py` (pre-commit `no-settings-bypass`) |
 | No direct combat/restriction API calls (§8.6) | `bin/check_no_restriction_bypass.py` (pre-commit `restriction-funnel`) |
 | No cross-load-unit SavedVariables access (§6/§7) | `bin/check_no_data_manager_bypass.py` (TOC-derived ownership; **enforced** — hard-fails off the `ALLOWED_FOREIGN_SV` allowlist) |
-| No namespace publish / global-surface anti-patterns (§6.1) | `bin/check_no_namespace_publish.py` (pre-commit `no-namespace-publish`; **warn-only** during migration) |
+| No namespace publish / global-surface anti-patterns (§6.1) | `bin/check_no_namespace_publish.py` (pre-commit `no-namespace-publish`; enforced) |
 | No `_G.literal` access | `bin/check_no_g_literal.py` |
 | Agent guidance | `.cursor/rules/OneWoW-Suite-Architecture.mdc`, `onewow-suite-architecture` skill |
 
@@ -529,13 +529,12 @@ via `local _, ns = ...`).
 **Do not write `_G[ADDON_NAME] = ns` / `OneWoW_<Unit> = ns`.** Publishing the
 whole namespace leaks every internal, hides what is actually contractual, and is
 the bug that silently killed AltTracker store lifecycle when it was *removed* (the
-core dispatcher had been resolving units through that leaked global). The lifecycle
-dispatcher's dependency on a `_G[addonName]` handle is satisfied **once, centrally,
-inside `OneWoW:BootStore`** for data stores — that is the *only* sanctioned
-namespace publish, and it is a documented stop-gap slated for replacement by a core
-unit registry (see `MIGRATION.md` §2). Hub modules use a **thin lifecycle object**
-(`OneWoW_<Unit> = {}`) instead; see §6.1. Store/feature authors never hand-publish
-a namespace; expose an `_API` instead.
+core dispatcher had been resolving units through that leaked global). Data stores
+register privately via `OneWoW:BootStore` → `OneWoW.Lifecycle.RegisterUnit` (see
+[`Core/StoreBootstrap.lua`](../Core/StoreBootstrap.lua)); `Lifecycle.ResolveUnit`
+falls back to `_G[addonName]` only for hub thin lifecycle roots. Hub modules use a
+**thin lifecycle object** (`OneWoW_<Unit> = {}`) instead; see §6.1. Store/feature
+authors never hand-publish a namespace; expose an `_API` instead.
 
 ### 6.1 Global surface taxonomy
 
@@ -562,15 +561,12 @@ Each load unit has distinct global surfaces. Do not collapse them.
 subsystems hung as `OneWoW.Lifecycle`, `OneWoW.UI`, `OneWoW.PredicateEngine`, etc.
 Every other load unit may read `OneWoW` and `OneWoW_GUI` (shared core surface).
 
-**Today (migration debt):** core uses the same *mechanism* as Bags — the vararg
-namespace is renamed `local ADDON_NAME, OneWoW = ...` and published wholesale via
-`_G["OneWoW"] = OneWoW`. That leaks private internals onto the global.
-
-**Target:** internal files use `local ADDON_NAME, ns = ...`; `ns.db` holds the DB
-handle; `_G.OneWoW` becomes a **curated facade** (only public subsystems and
-colon API), not a publish of the whole namespace. Long-term this pairs with the
-unit registry in `MIGRATION.md` §2. Core does **not** need `OneWoW_API` — the
-`OneWoW` global *is* the API, like `OneWoW_GUI`.
+**Implemented:** internal files use `local ADDON_NAME, ns = ...`; `ns.db` holds the DB
+handle; [`Core/Facade.lua`](../Core/Facade.lua) publishes a **curated facade** on
+`_G.OneWoW` (colon API + declared `OneWoW.*` services only — not a publish of `ns`).
+`OneWoW:GetPortalHub()` / `OneWoW:GetCoreGlobal()` replace cross-unit `OneWoW.db`
+reads. Core does **not** need `OneWoW_API` — the `OneWoW` global *is* the API, like
+`OneWoW_GUI`.
 
 #### Hub module vs data store init
 
@@ -614,8 +610,8 @@ OneWoW:BootStore(ns, {
   store layout.
 - **TOC load order (stores):** `Core/Database.lua` → `Core/API.lua` →
   `Core/Core.lua` (BootStore) → modules → `DataManager.lua` → root stub.
-- BootStore's `_G[addonName] = ns` is the **store-only** lifecycle stop-gap — not
-  a pattern for hub modules.
+- `BootStore` registers the store namespace with `Lifecycle.RegisterUnit` — stores
+  must NOT hand-publish `_G[addonName] = ns`.
 
 The lifecycle dispatcher (`Lifecycle.RunUnitHook`) resolves `_G[addonName]` today.
 Hubs satisfy that with a thin object; stores via BootStore's centralized publish.
@@ -909,7 +905,7 @@ same module.
 
 - **Runtime nil-guards** remain the backstop; lint checks are additive, not compile-time.
 - **Global surface:** follow §6.1 — internal `ns.db`, cross-unit `_API`, lifecycle root
-  stays thin; `no-namespace-publish` hook (warn-only during migration) flags regressions.
+  stays thin; `no-namespace-publish` hook flags regressions.
 - **Stores expose `_DB` and `_API`:** cross-module consumers should prefer `_API`; direct
   `_DB` reads are a refactor target.
 - **`DEMAND_LOADED` is normal** for force-loaded LoD units — not an error state.
@@ -939,4 +935,4 @@ same module.
 | `bin/check_toc_optional_deps.py` | Pre-commit: suite-internal OptionalDeps ban |
 | `bin/check_no_settings_bypass.py` | Pre-commit: direct `db.global.settings` access ban |
 | `bin/check_no_restriction_bypass.py` | Pre-commit: direct combat/restriction API ban (§8.6) |
-| `bin/check_no_namespace_publish.py` | Pre-commit: namespace publish / global-surface anti-patterns (§6.1; warn-only during migration) |
+| `bin/check_no_namespace_publish.py` | Pre-commit: namespace publish / global-surface anti-patterns (§6.1; enforced) |

@@ -1,4 +1,4 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 -- ============================================================================
 -- Util
@@ -10,7 +10,7 @@ local _, OneWoW = ...
 --- Version string from a load unit's TOC metadata.
 ---@param addonName string
 ---@return string|nil version "Unknown" if metadata missing; nil if the addon does not exist
-function OneWoW:GetAddonVersion(addonName)
+function ns:GetAddonVersion(addonName)
     if not C_AddOns.DoesAddOnExist(addonName) then return nil end
     return C_AddOns.GetAddOnMetadata(addonName, "Version") or "Unknown"
 end
@@ -20,7 +20,7 @@ end
 --- for unnamed future expansions.
 ---@param expansionID number
 ---@return string|nil
-function OneWoW:GetExpansionName(expansionID)
+function ns:GetExpansionName(expansionID)
     local expansionName
 
     if expansionID >= 0 and expansionID <= LE_EXPANSION_LEVEL_CURRENT then

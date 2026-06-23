@@ -1,16 +1,16 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local function IsEnabled()
-    return OneWoW.SettingsFeatureRegistry:IsIntegrationEnabled("bagnon")
+    return ns.SettingsFeatureRegistry:IsIntegrationEnabled("bagnon")
 end
 
 local function ProcessBagnonButton(button)
     if not IsEnabled() then
-        OneWoW.OverlayEngine:CleanButton(button)
+        ns.OverlayEngine:CleanButton(button)
         return
     end
     if button.info and button.info.cached then
-        OneWoW.OverlayEngine:CleanButton(button)
+        ns.OverlayEngine:CleanButton(button)
         return
     end
     local bag  = button.bag
@@ -20,12 +20,12 @@ local function ProcessBagnonButton(button)
     if exists then
         local link = C_Item.GetItemLink(loc)
         if link then
-            OneWoW.OverlayEngine:ProcessButton(button, link, loc)
+            ns.OverlayEngine:ProcessButton(button, link, loc)
         else
-            OneWoW.OverlayEngine:CleanButton(button)
+            ns.OverlayEngine:CleanButton(button)
         end
     else
-        OneWoW.OverlayEngine:CleanButton(button)
+        ns.OverlayEngine:CleanButton(button)
     end
 end
 
@@ -43,10 +43,10 @@ local function SetupHooks()
         BagBrother.Frames:Update()
     end
 
-    OneWoW.OverlayEngine:RegisterIntegration(RefreshBagnon)
+    ns.OverlayEngine:RegisterIntegration(RefreshBagnon)
 end
 
-OneWoW:RegisterCoreLoginHandler("Bagnon", function()
+ns:RegisterCoreLoginHandler("Bagnon", function()
     if C_AddOns.IsAddOnLoaded("Bagnon") then
         SetupHooks()
     end

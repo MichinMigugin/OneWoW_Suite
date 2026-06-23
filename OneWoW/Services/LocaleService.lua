@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 -- OneWoW Locale service. Contract documented in Docs/ARCHITECTURE.md
--- (§6 "Localization (OneWoW.Locale)").
+-- (§6 "Localization (ns.Locale)").
 --
 -- One service owns localization for the whole suite. Core fills the shared and
 -- "OneWoW" scopes; every other addon registers its own scope and reads back a
@@ -13,12 +13,12 @@ local _, OneWoW = ...
 --     both. shared and scope keysets are disjoint; /owlocale reports violations.
 --   * Views are identity-stable: GetTable(scope) hands back the SAME table for the
 --     life of the session. SetLanguage mutates the underlying resolved tables IN
---     PLACE so cached `local L = OneWoW.Locale:GetTable(scope)` never goes stale.
+--     PLACE so cached `local L = ns.Locale:GetTable(scope)` never goes stale.
 --   * A missing key resolves to its own name (never nil).
 
----@class OneWoW.Locale
+---@class ns.Locale
 local Locale = {}
-OneWoW.Locale = Locale
+ns.Locale = Locale
 
 local DEFAULT_LOCALE = "enUS"
 local SHARED_SCOPE   = "shared"
@@ -100,7 +100,7 @@ end
 ---@param scope string registration scope (ADDON_NAME, or "shared" via RegisterShared)
 ---@param locale string WoW locale code (enUS, koKR, …); esMX is its own locale (only enGB aliases to enUS)
 ---@param entries table { KEY = value } pairs merged into the scope/locale store
----@return OneWoW.Locale self for chaining
+---@return ns.Locale self for chaining
 function Locale:Register(scope, locale, entries)
     assert(type(scope) == "string", "Locale:Register - scope must be a string")
     assert(type(locale) == "string", "Locale:Register - locale must be a string")
@@ -130,7 +130,7 @@ end
 --- Sugar for the shared scope (THEME_*, language names, MINIMAP_* labels, buttons).
 ---@param locale string WoW locale code
 ---@param entries table { KEY = value } pairs merged into the shared scope
----@return OneWoW.Locale self for chaining
+---@return ns.Locale self for chaining
 function Locale:RegisterShared(locale, entries)
     return self:Register(SHARED_SCOPE, locale, entries)
 end
@@ -169,7 +169,7 @@ end
 --- Set the active language, refold every scope in place, fire OnApply listeners.
 --- Cached GetTable views stay valid (resolved tables mutate, not replaced).
 ---@param lang string locale code; nil/unknown falls back to enUS
----@return OneWoW.Locale self for chaining
+---@return ns.Locale self for chaining
 function Locale:SetLanguage(lang)
     self._activeLang = NormalizeLocale(lang) or DEFAULT_LOCALE
     for scope in pairs(self.store) do
@@ -219,7 +219,7 @@ end
 --- Replaces the per-addon ApplyLanguage hook. Listeners run under pcall, so a
 --- throwing listener routes to geterrorhandler() without blocking the others.
 ---@param fn fun(activeLang: string)
----@return OneWoW.Locale self for chaining
+---@return ns.Locale self for chaining
 function Locale:OnApply(fn)
     assert(type(fn) == "function", "Locale:OnApply - fn must be a function")
     tinsert(self._callbacks, fn)

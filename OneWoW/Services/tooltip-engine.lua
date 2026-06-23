@@ -1,10 +1,10 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-local PE = OneWoW.PredicateEngine
+local PE = ns.PredicateEngine
 
 local TooltipEngine = {}
-OneWoW.TooltipEngine = TooltipEngine
+ns.TooltipEngine = TooltipEngine
 
 local isProcessingTooltip = false
 local sectionProviders = {}
@@ -72,12 +72,12 @@ function TooltipEngine:EnsureDefaults()
 end
 
 function TooltipEngine:IsEnabled()
-    return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", "general")
+    return ns.SettingsFeatureRegistry:IsEnabled("tooltips", "general")
 end
 
 function TooltipEngine:IsFeatureEnabled(featureId)
     if not self:IsEnabled() then return false end
-    return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", featureId)
+    return ns.SettingsFeatureRegistry:IsEnabled("tooltips", featureId)
 end
 
 function TooltipEngine:HookTooltips()
@@ -249,7 +249,7 @@ function TooltipEngine:ProcessProviders(tooltip, context)
             if featureEnabled then
                 local lines
                 local label = "tooltip." .. (provider.id or provider.featureId or "?")
-                OneWoW.Lifecycle.SafeCall(label, function()
+                ns.Lifecycle.SafeCall(label, function()
                     lines = provider.callback(tooltip, context)
                 end)
                 if lines and #lines > 0 then
@@ -341,7 +341,7 @@ function TooltipEngine:HookAchievementUI()
             if not engine:IsEnabled() then return end
             if not engine:IsFeatureEnabled("technicalids") then return end
             if not achievementFrame.id then return end
-            if OneWoW.SettingsFeatureRegistry:GetSetting("tooltips", "technicalids", "showAchievementID") == false then return end
+            if ns.SettingsFeatureRegistry:GetSetting("tooltips", "technicalids", "showAchievementID") == false then return end
             GameTooltip:SetOwner(achievementFrame, "ANCHOR_NONE")
             GameTooltip:SetPoint("TOPLEFT", achievementFrame, "TOPRIGHT", 0, 0)
             local _gui = OneWoW_GUI
@@ -359,12 +359,12 @@ function TooltipEngine:HookAchievementUI()
     if C_AddOns.IsAddOnLoaded("Blizzard_AchievementUI") then
         hookAchievements()
     else
-        OneWoW:RegisterAddonLoadedWatcher("Blizzard_AchievementUI", function()
+        ns:RegisterAddonLoadedWatcher("Blizzard_AchievementUI", function()
             hookAchievements()
         end)
     end
 end
 
-OneWoW:RegisterCoreLoginHandler("TooltipEngine", function()
+ns:RegisterCoreLoginHandler("TooltipEngine", function()
     TooltipEngine:Initialize()
 end, "early")

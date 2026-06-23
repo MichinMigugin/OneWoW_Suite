@@ -1,6 +1,6 @@
--- Central lifecycle dispatch for the OneWoW suite. Only OneWoW.lua registers
+-- Central lifecycle dispatch for the OneWoW suite. Only ns.lua registers
 -- ADDON_LOADED, PLAYER_LOGIN, and PLAYER_ENTERING_WORLD for orchestrated units.
-local ADDON_NAME, OneWoW = ...
+local ADDON_NAME, ns = ...
 
 local C_AddOns = C_AddOns
 local ipairs = ipairs
@@ -17,8 +17,8 @@ local wipe = wipe
 local sort = sort
 local print = print
 
-OneWoW.Lifecycle = OneWoW.Lifecycle or {}
-local Lifecycle = OneWoW.Lifecycle
+ns.Lifecycle = ns.Lifecycle or {}
+local Lifecycle = ns.Lifecycle
 
 --- Isolated invoke for handler fans: one failure must not abort the fan-out.
 --- Failures are forwarded to geterrorhandler() (production sink; not debug-gated).
@@ -27,7 +27,7 @@ local Lifecycle = OneWoW.Lifecycle
 local function SafeCall(label, fn, ...)
     local ok, err = pcall(fn, ...)
     if not ok then
-        OneWoW:TraceRecord("error", label, { err = tostring(err) })
+        ns:TraceRecord("error", label, { err = tostring(err) })
         if label then
             geterrorhandler()(format("OneWoW lifecycle handler '%s': %s", tostring(label), tostring(err)))
         else
@@ -64,7 +64,7 @@ Lifecycle.Trace = Trace
 ---@param phase string funnel label (e.g. "OnAddonLoaded", "loadAddOn.hook")
 ---@param unit string|nil addon/unit name the event concerns
 ---@param detail table|nil extra key/value fields shown in the dump
-function OneWoW:TraceRecord(phase, unit, detail)
+function ns:TraceRecord(phase, unit, detail)
     if not Trace.enabled then return end
     Trace.head = (Trace.head % RING_SIZE) + 1
     Trace.count = Trace.count + 1
@@ -124,28 +124,47 @@ end
 ---@param on boolean
 function Trace:SetEnabled(on)
     self.enabled = on and true or false
-    OneWoW.db.global.debugTrace = self.enabled
+    ns.db.global.debugTrace = self.enabled
 end
 
 --- Reads the persisted flag into memory and clears the ring for a fresh
---- session. Called from OneWoW:OnAddonLoaded right after InitializeDatabase so
+--- session. Called from ns:OnAddonLoaded right after InitializeDatabase so
 --- a persisted-on flag captures the full startup orchestration.
 function Trace:Sync()
     self:Clear()
-    self.enabled = OneWoW.db.global.debugTrace and true or false
+    self.enabled = ns.db.global.debugTrace and true or false
 end
 
 local addonLoadedWatchers = {}
 local coreLoginHandlers = {}
 local coreEnteringWorldHandlers = {}
 
+local unitRegistry = {}
+
+--- Register a load unit for lifecycle hook dispatch (stores via BootStore; optional for hubs).
+---@param addonName string
+---@param unit table hook target (thin lifecycle root or store ns)
+function Lifecycle.RegisterUnit(addonName, unit)
+    if addonName and unit then
+        unitRegistry[addonName] = unit
+    end
+end
+
+--- Resolve a load unit for RunUnitHook. Hub thin roots remain in _G as fallback.
+---@param addonName string|nil
+---@return table|nil
+function Lifecycle.ResolveUnit(addonName)
+    if not addonName then return nil end
+    return unitRegistry[addonName] or _G[addonName]
+end
+
 --- Invokes a one-shot unit lifecycle hook if present; traces only on actual dispatch.
 ---@param addonName string|nil _G key for the load unit
 ---@param method string hook name (e.g. "OnPlayerLogin")
 local function RunUnitHook(addonName, method, ...)
-    local unit = addonName and _G[addonName]
+    local unit = Lifecycle.ResolveUnit(addonName)
     if unit and type(unit[method]) == "function" then
-        OneWoW:TraceRecord(method, addonName)
+        ns:TraceRecord(method, addonName)
         unit[method](unit, ...)
     end
 end
@@ -157,14 +176,14 @@ local onAddonLoadedDone = {}
 --- Manifest-gated: a Blizzard or third-party addon whose _G table happens to
 --- define OnAddonLoaded is never treated as a suite load unit.
 ---@param addonName string _G key for the load unit
-function OneWoW:DispatchUnitOnAddonLoaded(addonName)
+function ns:DispatchUnitOnAddonLoaded(addonName)
     if not addonName or onAddonLoadedDone[addonName] then return end
-    if not OneWoW:IsManifestUnit(addonName) then
+    if not ns:IsManifestUnit(addonName) then
         -- Trace only when the gate actually suppressed a would-have-run hook;
         -- a non-manifest addon with no OnAddonLoaded was a no-op before too.
-        local unit = _G[addonName]
+        local unit = Lifecycle.ResolveUnit(addonName)
         if unit and type(unit.OnAddonLoaded) == "function" then
-            OneWoW:TraceRecord("dispatch.skip", addonName, { reason = "NOT_MANIFEST" })
+            ns:TraceRecord("dispatch.skip", addonName, { reason = "NOT_MANIFEST" })
         end
         return
     end
@@ -173,7 +192,7 @@ function OneWoW:DispatchUnitOnAddonLoaded(addonName)
 end
 
 local function WalkManifestUnits(fn)
-    local manifest = OneWoW.ModuleManifest
+    local manifest = ns.ModuleManifest
     if not manifest then return end
     for _, m in ipairs(manifest) do
         if not m.addon or m.addon == "" then
@@ -197,7 +216,7 @@ end
 
 ---@param addonName string|nil specific addon, or nil/"*" for any addon load
 ---@param fn fun(loadedAddon: string)
-function OneWoW:RegisterAddonLoadedWatcher(addonName, fn)
+function ns:RegisterAddonLoadedWatcher(addonName, fn)
     if not fn then return end
     addonLoadedWatchers[#addonLoadedWatchers + 1] = {
         addonName = addonName,
@@ -221,20 +240,20 @@ end
 ---@param id string unique handler id (for debugging; not used for dedup)
 ---@param fn fun()
 ---@param phase "early"|"late"|nil "early" = before the load banner; default "late"
-function OneWoW:RegisterCoreLoginHandler(id, fn, phase)
+function ns:RegisterCoreLoginHandler(id, fn, phase)
     if not fn then return end
     coreLoginHandlers[#coreLoginHandlers + 1] = { id = id, fn = fn, phase = phase or "late" }
 end
 
 ---@param id string unique handler id
 ---@param fn fun(isLogin: boolean, isReload: boolean, isZoning: boolean)
-function OneWoW:RegisterCoreEnteringWorldHandler(id, fn)
+function ns:RegisterCoreEnteringWorldHandler(id, fn)
     if not fn then return end
     coreEnteringWorldHandlers[#coreEnteringWorldHandlers + 1] = { id = id, fn = fn }
 end
 
 ---@param phase "early"|"late"
-function OneWoW:FireCoreLoginHandlers(phase)
+function ns:FireCoreLoginHandlers(phase)
     local n = 0
     for _, entry in ipairs(coreLoginHandlers) do
         if entry.phase == phase then n = n + 1 end
@@ -247,7 +266,7 @@ function OneWoW:FireCoreLoginHandlers(phase)
     end
 end
 
-function OneWoW:FireCoreEnteringWorldHandlers(isLogin, isReload, isZoning)
+function ns:FireCoreEnteringWorldHandlers(isLogin, isReload, isZoning)
     self:TraceRecord("core.enteringWorldHandlers", nil, { count = #coreEnteringWorldHandlers })
     for _, entry in ipairs(coreEnteringWorldHandlers) do
         SafeCall(entry.id, entry.fn, isLogin, isReload, isZoning)
@@ -270,7 +289,7 @@ local addonLoadedNotified = {}
 --- C_AddOns.LoadAddOn (RunPostLoadInit). A mid-session LoadAddOn fires both, so
 --- the dedup set collapses that double-path to a single fan-out per addon.
 ---@param loadedAddon string|nil
-function OneWoW:NotifyAddonLoadedWatchers(loadedAddon)
+function ns:NotifyAddonLoadedWatchers(loadedAddon)
     if not loadedAddon or addonLoadedNotified[loadedAddon] then return end
     addonLoadedNotified[loadedAddon] = true
     self:TraceRecord("watchers.notify", loadedAddon)
@@ -278,9 +297,9 @@ function OneWoW:NotifyAddonLoadedWatchers(loadedAddon)
 end
 
 ---@param loadedAddon string addon name from ADDON_LOADED
-function OneWoW:DispatchAddonLoaded(loadedAddon)
+function ns:DispatchAddonLoaded(loadedAddon)
     if loadedAddon == ADDON_NAME then
-        OneWoW:OnAddonLoaded(loadedAddon)
+        ns:OnAddonLoaded(loadedAddon)
     elseif loadedAddon then
         -- Auto-loaded manifest units (e.g. DevTool) receive WoW's own ADDON_LOADED.
         self:DispatchUnitOnAddonLoaded(loadedAddon)
@@ -294,7 +313,7 @@ end
 -- DispatchEnteringWorld). OnAddonLoaded is a safety net for units whose hook was
 -- somehow not driven by the LoadAddOn path; DispatchUnitOnAddonLoaded guarantees
 -- at-most-once dispatch per unit.
-function OneWoW:RunManifestLoginPhase()
+function ns:RunManifestLoginPhase()
     self:TraceRecord("manifest.loginPhase")
     WalkManifestUnits(function(addonName)
         self:DispatchUnitOnAddonLoaded(addonName)
@@ -304,10 +323,10 @@ end
 
 ---@param isLogin boolean
 ---@param isReload boolean
-function OneWoW:DispatchEnteringWorld(isLogin, isReload)
+function ns:DispatchEnteringWorld(isLogin, isReload)
     local isZoning = not isLogin and not isReload
     self:TraceRecord("enteringWorld", nil, { isLogin = isLogin, isReload = isReload, isZoning = isZoning })
-    OneWoW:FireCoreEnteringWorldHandlers(isLogin, isReload, isZoning)
+    ns:FireCoreEnteringWorldHandlers(isLogin, isReload, isZoning)
     WalkManifestUnits(function(addonName)
         RunUnitHook(addonName, "OnPlayerEnteringWorld", isLogin, isReload, isZoning)
     end)
@@ -339,7 +358,7 @@ function Lifecycle:CreateHandlerRegistry(owner)
     end
 
     function owner:RegisterAddonLoadedWatcher(addonName, fn)
-        OneWoW:RegisterAddonLoadedWatcher(addonName, fn)
+        ns:RegisterAddonLoadedWatcher(addonName, fn)
     end
 
     function owner:FireLoginHandlers()

@@ -1,11 +1,11 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local tinsert, tremove = tinsert, tremove
 
-OneWoW.Toasts = OneWoW.Toasts or {}
-local Toasts = OneWoW.Toasts
+ns.Toasts = ns.Toasts or {}
+local Toasts = ns.Toasts
 
 local MAX_ACTIVE   = 3
 local TOAST_WIDTH  = 360
@@ -39,11 +39,11 @@ Toasts.anchorVisible = false
 -- in the SettingsFeatureRegistry catalog, so it has no GUI row; ResolveStorage
 -- falls through to (tab, id) untouched.
 local function GetAnchorCfg()
-    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("toastalerts", "anchor")
+    return ns.SettingsFeatureRegistry:GetFeatureSettings("toastalerts", "anchor")
 end
 
 local function IsEnabled()
-    return OneWoW.SettingsFeatureRegistry:IsEnabled("toastalerts", "general")
+    return ns.SettingsFeatureRegistry:IsEnabled("toastalerts", "general")
 end
 
 local function IndexOf(t, val)
@@ -370,7 +370,7 @@ local function BuildLargeToastAnimations(toast)
         self:SetAlpha(1)
         if self._instanceMapID then
             GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-            local L = OneWoW.L
+            local L = ns.L
             GameTooltip:SetText(L["TOAST_INSTANCE_CLICK"], 1, 1, 1)
             GameTooltip:Show()
         end
@@ -458,7 +458,7 @@ local SOUND_FEATURE = { loot = "detectiontypes", notes = "notealerts", instance 
 function Toasts.PlayToastSound(category)
     local featureId = SOUND_FEATURE[category]
     if not featureId then return end
-    local sound = OneWoW.SettingsFeatureRegistry:GetSetting("toastalerts", featureId, "sound")
+    local sound = ns.SettingsFeatureRegistry:GetSetting("toastalerts", featureId, "sound")
     if sound and sound > 0 then
         PlaySound(sound, "Master")
     end
@@ -524,7 +524,7 @@ local function BuildAnchor()
 
     anchor:SetScript("OnMouseUp", function(self, button)
         if button == "LeftButton" then
-            local reg = OneWoW.SettingsFeatureRegistry
+            local reg = ns.SettingsFeatureRegistry
             if self._wasDragged then
                 self:StopMovingOrSizing()
                 self._wasDragged = false
@@ -543,7 +543,7 @@ local function BuildAnchor()
 
     anchor:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        local L = OneWoW.L
+        local L = ns.L
         GameTooltip:SetText(L["TOAST_ANCHOR_TOOLTIP"])
         GameTooltip:AddLine("Alt+Drag: Move", 0.80, 0.80, 0.80)
         GameTooltip:AddLine("Shift+Click: Lock / Unlock", 0.80, 0.80, 0.80)
@@ -574,14 +574,14 @@ function Toasts.ShowAnchor()
     BuildAnchor()
     Toasts.anchorFrame:Show()
     Toasts.anchorVisible = true
-    OneWoW.SettingsFeatureRegistry:SetSetting("toastalerts", "anchor", "visible", true)
+    ns.SettingsFeatureRegistry:SetSetting("toastalerts", "anchor", "visible", true)
 end
 
 function Toasts.HideAnchor()
     if Toasts.anchorFrame then
         Toasts.anchorFrame:Hide()
         Toasts.anchorVisible = false
-        OneWoW.SettingsFeatureRegistry:SetSetting("toastalerts", "anchor", "visible", false)
+        ns.SettingsFeatureRegistry:SetSetting("toastalerts", "anchor", "visible", false)
     end
 end
 
@@ -599,11 +599,11 @@ local COLOR_ZONE   = {0.40, 1.00, 0.50, 1.0}
 local COLOR_ITEM   = {1.00, 0.82, 0.40, 1.0}
 
 local function NotesEnabled()
-    return OneWoW.SettingsFeatureRegistry:IsEnabled("toastalerts", "notealerts")
+    return ns.SettingsFeatureRegistry:IsEnabled("toastalerts", "notealerts")
 end
 
 local function NoteCategoryEnabled(category)
-    return OneWoW.SettingsFeatureRegistry:GetFeatureSettings("toastalerts", "notealerts")[category] ~= false
+    return ns.SettingsFeatureRegistry:GetFeatureSettings("toastalerts", "notealerts")[category] ~= false
 end
 
 function Toasts.FireNPCAlert(npcName, npcTexture, location)
@@ -664,6 +664,6 @@ function Toasts.FireItemLootAlert(itemName, itemTexture, count)
     })
 end
 
-OneWoW:RegisterCoreLoginHandler("toast-engine.BuildAnchor", function()
+ns:RegisterCoreLoginHandler("toast-engine.BuildAnchor", function()
     BuildAnchor()
 end)

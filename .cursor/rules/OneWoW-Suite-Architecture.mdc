@@ -53,9 +53,9 @@ Authoritative reference: [`OneWoW/Docs/ARCHITECTURE.md`](OneWoW/Docs/ARCHITECTUR
 - `OneWoW_<Unit>_DB` — WoW SV global name (matches TOC `## SavedVariables`)
 - `OneWoW_<Unit>_API` — cross-unit **dot-functions** only
 - `OneWoW_<Unit> = {}` — hub lifecycle root (colon hooks: `OnAddonLoaded`, `ApplyTheme`, …); not `= ns`, not `local addon = {}` hop
-- **`OneWoW`** — core orchestrator singleton (colon API + `OneWoW.*` services); internal files should use `ns`, not publish raw `ns` as `_G["OneWoW"]`
-- **Never publish the namespace as a global** — not `OneWoW_<Unit> = ns`, not `_G[ADDON_NAME] = ns` / `_G[addonName] = ns`, not `_G["OneWoW"] = OneWoW`
-- Data stores: `OneWoW:BootStore(ns, { addonName = ADDON_NAME, ... })` — BootStore's `_G[addonName] = ns` is the store-only stop-gap (see `MIGRATION.md` §2)
+- **`OneWoW`** — core orchestrator singleton (colon API + `OneWoW.*` services); internal files use `ns`; curated publish only in `Core/Facade.lua`
+- **Never publish the namespace as a global** — not `OneWoW_<Unit> = ns`, not `_G[ADDON_NAME] = ns` / `_G[addonName] = ns`
+- Data stores: `OneWoW:BootStore(ns, { addonName = ADDON_NAME, ... })` — registers `addonName → storeNs` via `Lifecycle.RegisterUnit` (no `_G[addonName] = ns`)
 - `_API` uses dot-functions; `OneWoW_GUI` / `OneWoW` use colon-methods (service singletons)
 
 ## Pre-commit enforcement
@@ -64,4 +64,4 @@ Authoritative reference: [`OneWoW/Docs/ARCHITECTURE.md`](OneWoW/Docs/ARCHITECTUR
 - `no-raw-loadaddon` — raw `LoadAddOn` ban outside the core loader funnel
 - `no-suite-internal-optionaldeps` — TOC OptionalDeps policy
 - `no-data-manager-bypass` — cross-load-unit SavedVariables access (enforced; hard-fails off the `ALLOWED_FOREIGN_SV` allowlist)
-- `no-namespace-publish` — namespace publish / global-surface anti-patterns (§6.1; **warn-only** during migration — see `MIGRATION.md` §3)
+- `no-namespace-publish` — namespace publish / global-surface anti-patterns (§6.1; enforced — see `MIGRATION.md` §3)

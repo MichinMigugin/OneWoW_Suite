@@ -1471,7 +1471,7 @@ function VendorPanelModule:OnEnable()
 
     local coreIS = GetItemStatus()
     if coreIS and (db.itemStatus or db.charItemStatus) then
-        local coreDB = OneWoW and OneWoW.db and OneWoW.db.global and OneWoW.db.global.itemStatus
+        local coreDB = OneWoW.ItemStatus and OneWoW.ItemStatus:GetAllStatuses()
         if coreDB then
             local migrated = 0
             if db.itemStatus then

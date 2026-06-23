@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 -- Machine-drafted — pending native review.
-OneWoW.Locale:RegisterShared("esES", {
+ns.Locale:RegisterShared("esES", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "Selección de idioma",
     ["LANGUAGE_DESC"] = "Elige el idioma de la interfaz del addon. Los cambios se aplican al instante.",

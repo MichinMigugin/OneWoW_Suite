@@ -1,6 +1,6 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-OneWoW.Locale:RegisterShared("enUS", {
+ns.Locale:RegisterShared("enUS", {
     -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "Language Selection",
     ["LANGUAGE_DESC"] = "Choose your preferred language for the addon interface. Changes apply instantly.",

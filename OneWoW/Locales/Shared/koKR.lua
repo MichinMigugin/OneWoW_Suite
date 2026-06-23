@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 -- Machine-drafted — pending native review.
-OneWoW.Locale:RegisterShared("koKR", {
+ns.Locale:RegisterShared("koKR", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "언어 선택",
     ["LANGUAGE_DESC"] = "애드온 인터페이스에 사용할 언어를 선택하세요. 변경 사항은 즉시 적용됩니다.",

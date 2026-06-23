@@ -1,12 +1,15 @@
-local OneWoW_GUI = OneWoW_GUI
+local _, ns = ...
 
+local OneWoW_GUI = OneWoW_GUI
 local Constants = OneWoW_GUI.Constants
-local DEFAULT_THEME_ICON = Constants.DEFAULT_THEME_ICON
-local DEFAULT_THEME_KEY = Constants.DEFAULT_THEME_KEY
+
 local CreateFrame = CreateFrame
-local unpack = unpack
 
 OneWoW_GUI._settingsDB = nil
+
+local DEFAULT_THEME_ICON = Constants.DEFAULT_THEME_ICON
+local DEFAULT_THEME_KEY = Constants.DEFAULT_THEME_KEY
+
 local callbacks = {}
 
 function OneWoW_GUI:RegisterSettingsCallback(event, owner, func)
@@ -105,11 +108,11 @@ function OneWoW_GUI:MigrateSettings(sourceGlobal)
     end
 end
 
--- Language list comes from the Locale service (OneWoW.Locale.SUPPORTED), the single
+-- Language list comes from the Locale service (ns.Locale.SUPPORTED), the single
 -- source of supported locales + native names. The service loads after this GUI file,
 -- so resolve it lazily at runtime (these helpers only run from button handlers).
 local function LangNative(code)
-    for _, e in ipairs(OneWoW.Locale.SUPPORTED) do
+    for _, e in ipairs(ns.Locale.SUPPORTED) do
         if e.code == code then return e.native end
     end
     return code
@@ -581,7 +584,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
 
     -- Resolve the locale view at call time; this panel is built post-login, after
     -- the locale files have loaded (the GUI block itself loads before them).
-    local L = OneWoW.L
+    local L = ns.L
     local function Current(value)
         return string.format(L["CURRENT_VALUE"], value)
     end
@@ -595,7 +598,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     local currentOffset = self:GetSetting("fontSizeOffset") or 0
 
     local settingsAddonName = options.addonName
-        local isPerAddonMinimap = not OneWoW and settingsAddonName
+    local isPerAddonMinimap = settingsAddonName ~= nil
     local isMinimapHidden
     if isPerAddonMinimap then
         local launcherDB = self._settingsDB and self._settingsDB.minimapLaunchers
@@ -764,7 +767,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
             return
         end
         local items = {}
-        for _, lang in ipairs(OneWoW.Locale.SUPPORTED) do
+        for _, lang in ipairs(ns.Locale.SUPPORTED) do
             tinsert(items, { label = lang.native, value = lang.code })
         end
         langMenu = CreateDropdownMenu(btn, items, function(value)
@@ -1331,7 +1334,7 @@ function OneWoW_GUI:CreateSettingsPanel(parent, options)
     return yOffset
 end
 
--- Settings DB bootstrap. Called by core's OnAddonLoaded (OneWoW.lua) right
+-- Settings DB bootstrap. Called by core's OnAddonLoaded (ns.lua) right
 -- after InitializeDatabase, before any theme/font reads. Shared settings
 -- live in core's OneWoW_DB, so the toolkit binds to core's db handle instead
 -- of owning its own.

@@ -1,8 +1,8 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-local function L(key) return OneWoW.L[key] end
+local function L(key) return ns.L[key] end
 
-OneWoW.SearchData = {
+ns.SearchData = {
 
     -- OneWoW Core: Settings
     {

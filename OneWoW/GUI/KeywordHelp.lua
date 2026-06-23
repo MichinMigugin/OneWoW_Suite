@@ -1,3 +1,5 @@
+local _, ns = ...
+
 local OneWoW_GUI = OneWoW_GUI
 
 local CreateFrame = CreateFrame
@@ -36,9 +38,9 @@ local Constants = OneWoW_GUI.Constants
 ---@class OneWoW_GUI_PlaceholderEditBox : EditBox
 ---@field placeholderText string?
 
----@return table?  The `OneWoW.PredicateEngine` instance, or nil if not yet attached.
+---@return table?  The `ns.PredicateEngine` instance, or nil if not yet attached.
 local function GetPE()
-    return OneWoW.PredicateEngine
+    return ns.PredicateEngine
 end
 
 -- Category bucketing. Any keyword whose canonical name isn't listed here
@@ -336,7 +338,7 @@ end
 --- Side effects on first build:
 ---   * Populates the module-level `keywordFrame`, `keywordContent`,
 ---     `categoryHeaders`, and `keywordChips` tables.
----   * Queries `OneWoW.PredicateEngine:GetAllKeywords()` and creates one
+---   * Queries `ns.PredicateEngine:GetAllKeywords()` and creates one
 ---     chip per entry. If the engine isn't attached yet, the chip area stays
 ---     empty (the frame still builds).
 ---   * Hooks `OnSizeChanged` / `OnShow` so layout re-runs after resize/reopen.

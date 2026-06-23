@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 -- Machine-drafted — pending native review.
-OneWoW.Locale:RegisterShared("ruRU", {
+ns.Locale:RegisterShared("ruRU", {
     -- Language picker
     ["LANGUAGE_SELECTION"] = "Выбор языка",
     ["LANGUAGE_DESC"] = "Выберите язык интерфейса аддона. Изменения применяются сразу.",

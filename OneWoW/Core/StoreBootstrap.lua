@@ -1,43 +1,35 @@
 -- Bootstraps LoadOnDemand data stores: exposes OnAddonLoaded / OnPlayerLogin /
 -- OnPlayerEnteringWorld hooks for OneWoW's lifecycle dispatcher. No WoW event
 -- registration — core drives all lifecycle phases.
-local _, OneWoW = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-
 local DB = OneWoW_GUI.DB
+
 local ipairs = ipairs
 
----@param ns table store namespace (becomes _G[addonName])
+---@param storeNs table store namespace (registered privately for lifecycle dispatch)
 ---@param config table savedVar, defaults, initDB, onLogin, onEnteringWorld, withScanCallbacks, sortField
-function OneWoW:BootStore(ns, config)
+function ns:BootStore(storeNs, config)
     local savedVar = config.savedVar
     local onLogin = config.onLogin
     local onEnteringWorld = config.onEnteringWorld
     local defaults = config.defaults
     local initDB = config.initDB
 
-    -- STOP-GAP (suite-wide cleanup pending; see OneWoW/Docs/MIGRATION.md):
-    -- the core lifecycle dispatcher (Lifecycle.RunUnitHook) resolves a load unit
-    -- by reading _G[addonName] and calling the OnAddonLoaded / OnPlayerLogin /
-    -- OnPlayerEnteringWorld hooks attached to ns below. Publishing the whole
-    -- namespace as a global is exactly the practice the suite is retiring, but
-    -- centralizing it here (instead of a hand-written "_G[addon] = ns" in every
-    -- store's main file) means all stores wire identically and the eventual
-    -- removal is a single edit. Stores must NOT hand-publish "= ns" anymore.
-    if config.addonName then
-        _G[config.addonName] = ns
+    if config.addonName and ns.Lifecycle then
+        ns.Lifecycle.RegisterUnit(config.addonName, storeNs)
     end
 
-    ns.AddonInitialized = false
+    storeNs.AddonInitialized = false
 
-    if OneWoW.Lifecycle then
-        OneWoW.Lifecycle:CreateHandlerRegistry(ns)
+    if ns.Lifecycle then
+        ns.Lifecycle:CreateHandlerRegistry(storeNs)
     end
 
     if config.withScanCallbacks then
         local scanCallbacks = {}
-        ns.RegisterScanCallback = function(_, idOrFn, maybeFn)
+        storeNs.RegisterScanCallback = function(_, idOrFn, maybeFn)
             local id, fn
             if type(idOrFn) == "function" then
                 fn = idOrFn
@@ -48,35 +40,35 @@ function OneWoW:BootStore(ns, config)
             end
             scanCallbacks[#scanCallbacks + 1] = { id = id, fn = fn }
         end
-        ns.FireScanCallbacks = function(_, data)
+        storeNs.FireScanCallbacks = function(_, data)
             local storeLabel = savedVar or "store"
             for i, entry in ipairs(scanCallbacks) do
                 local label = entry.id or (storeLabel .. "#" .. i)
-                OneWoW.Lifecycle.SafeCall(label, entry.fn, data)
+                ns.Lifecycle.SafeCall(label, entry.fn, data)
             end
         end
     end
 
-    ns.GetCharacterKey = function()
+    storeNs.GetCharacterKey = function()
         return OneWoW_GUI:GetCharacterKey()
     end
-    ns.GetCharacterData = function(_, charKey)
+    storeNs.GetCharacterData = function(_, charKey)
         return DB:GetCharData(savedVar, charKey)
     end
     -- Returns the live charKey -> charData map (the store's `.characters`
     -- table), matching the `_API.GetAllCharacters()` contract. Callers that
     -- want a sorted list build one themselves or use DB:GetAllChars directly.
-    ns.GetAllCharacters = function()
+    storeNs.GetAllCharacters = function()
         local sv = _G[savedVar]
         return (sv and sv.characters) or {}
     end
-    ns.DeleteCharacter = function(_, charKey)
+    storeNs.DeleteCharacter = function(_, charKey)
         return DB:DeleteChar(savedVar, charKey)
     end
 
     -- Core DispatchUnitOnAddonLoaded guarantees single dispatch; didInit removable later.
     local didInit = false
-    function ns.OnAddonLoaded()
+    function storeNs.OnAddonLoaded()
         if didInit then return end
         didInit = true
         if savedVar then
@@ -90,28 +82,28 @@ function OneWoW:BootStore(ns, config)
         end
         if initDB then
             initDB()
-        elseif ns.InitializeDatabase then
-            ns:InitializeDatabase()
+        elseif storeNs.InitializeDatabase then
+            storeNs:InitializeDatabase()
         end
     end
 
     local didLogin = false
-    function ns.OnPlayerLogin()
+    function storeNs.OnPlayerLogin()
         if didLogin then return end
         didLogin = true
-        ns.AddonInitialized = true
+        storeNs.AddonInitialized = true
         if onLogin then onLogin() end
-        if ns.FireLoginHandlers then
-            ns:FireLoginHandlers()
+        if storeNs.FireLoginHandlers then
+            storeNs:FireLoginHandlers()
         end
     end
 
-    function ns.OnPlayerEnteringWorld(isLogin, isReload, isZoning)
+    function storeNs.OnPlayerEnteringWorld(isLogin, isReload, isZoning)
         if onEnteringWorld then
             onEnteringWorld(isLogin, isReload, isZoning)
         end
-        if ns.FireEnteringWorldHandlers then
-            ns:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
+        if storeNs.FireEnteringWorldHandlers then
+            storeNs:FireEnteringWorldHandlers(isLogin, isReload, isZoning)
         end
     end
 end

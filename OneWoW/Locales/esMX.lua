@@ -1,7 +1,7 @@
-local ADDON_NAME, OneWoW = ...
+local ADDON_NAME, ns = ...
 
 -- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
-OneWoW.Locale:Register(ADDON_NAME, "esMX", {
+ns.Locale:Register(ADDON_NAME, "esMX", {
     ["ADDON_TITLE"] = "OneWoW",
 
     ["LOAD_FAIL_COMBAT"] = "No se puede cargar ese addon durante el combate - inténtalo de nuevo cuando termine el combate.",

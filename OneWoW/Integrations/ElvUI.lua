@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local function IsEnabled()
-    return OneWoW.SettingsFeatureRegistry:IsIntegrationEnabled("elvui")
+    return ns.SettingsFeatureRegistry:IsIntegrationEnabled("elvui")
 end
 
 local elvuiBags = nil
@@ -36,12 +36,12 @@ local function ProcessSlot(bagID, slotID)
     if C_Item.DoesItemExist(loc) then
         local link = C_Item.GetItemLink(loc)
         if link then
-            OneWoW.OverlayEngine:ProcessButton(button, link, loc)
+            ns.OverlayEngine:ProcessButton(button, link, loc)
         else
-            OneWoW.OverlayEngine:CleanButton(button)
+            ns.OverlayEngine:CleanButton(button)
         end
     else
-        OneWoW.OverlayEngine:CleanButton(button)
+        ns.OverlayEngine:CleanButton(button)
     end
 end
 
@@ -71,8 +71,8 @@ local function SetupHooks()
         end
     end
 
-    OneWoW.OverlayEngine:RegisterIntegration(RefreshElvUI)
+    ns.OverlayEngine:RegisterIntegration(RefreshElvUI)
     C_Timer.After(0.5, RefreshElvUI)
 end
 
-OneWoW:RegisterAddonLoadedWatcher("ElvUI", SetupHooks)
+ns:RegisterAddonLoadedWatcher("ElvUI", SetupHooks)

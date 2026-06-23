@@ -11,15 +11,15 @@
 -- Shared/dependency datastores auto-follow their parent through the orchestrator
 -- (soft) or the consumer graph below (hard).
 
-local _, OneWoW = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
 local C_AddOns = C_AddOns
 local UnitName = UnitName
 
-OneWoW.FirstRun = OneWoW.FirstRun or {}
-local FirstRun = OneWoW.FirstRun
+ns.FirstRun = ns.FirstRun or {}
+local FirstRun = ns.FirstRun
 
 -- Authoritative feature catalog. Each entry:
 --   addonName      - the WoW addon folder / TOC name (what DisableAddOn sees)
@@ -142,11 +142,11 @@ local DATASTORE_ADDONS = {
 }
 
 -- Loads a feature module and its manifest data stores now, so a reload-free enable
--- arms this session. OneWoW:BringUp loads the whole set (OnAddonLoaded each) before
+-- arms this session. ns:BringUp loads the whole set (OnAddonLoaded each) before
 -- a single OnPlayerLogin pass and a mid-session entering-world catch-up, matching
 -- the cold-start orchestrator's ordering.
 local function LoadFeatureNow(addonName)
-    OneWoW:BringUp(addonName)
+    ns:BringUp(addonName)
 end
 
 -- For each datastore, decide whether it should be enabled based on which
@@ -167,7 +167,7 @@ end
 function FirstRun:GetCurrentSelections(perCharacter)
     local selections = {}
     for _, entry in ipairs(FirstRun.CATALOG) do
-        selections[entry.addonName] = OneWoW:IsFeatureWanted(entry.addonName, perCharacter)
+        selections[entry.addonName] = ns:IsFeatureWanted(entry.addonName, perCharacter)
     end
     return selections
 end
@@ -185,7 +185,7 @@ end
 -- clears the soft opt-out (Blizzard becomes authoritative for these), then prompts
 -- a reload. Returns true when a reload was prompted.
 function FirstRun:Apply(selections, perCharacter, hard)
-    local L = OneWoW.L or {}
+    local L = ns.L or {}
 
     if hard then
         -- Full desired state: features plus the datastores their consumers pull in.
@@ -198,8 +198,8 @@ function FirstRun:Apply(selections, perCharacter, hard)
             desired[ds] = datastoreState[ds] and true or false
         end
         for name, want in pairs(desired) do
-            OneWoW:SetAddonEnabled(name, want, perCharacter)
-            OneWoW:SetFeatureOptOut(name, false, perCharacter)
+            ns:SetAddonEnabled(name, want, perCharacter)
+            ns:SetFeatureOptOut(name, false, perCharacter)
         end
 
         StaticPopupDialogs["ONEWOW_MANAGE_FEATURES_RELOAD"] = {
@@ -220,7 +220,7 @@ function FirstRun:Apply(selections, perCharacter, hard)
     -- the orchestrator, so they are not opted out individually here.
     for _, entry in ipairs(FirstRun.CATALOG) do
         local want = selections[entry.addonName] and true or false
-        OneWoW:SetFeatureOptOut(entry.addonName, not want, perCharacter)
+        ns:SetFeatureOptOut(entry.addonName, not want, perCharacter)
     end
 
     -- wizardShown is owned by the "Do not show again" checkbox in BuildPanel,
@@ -229,7 +229,7 @@ function FirstRun:Apply(selections, perCharacter, hard)
     -- Load any wanted, Blizzard-enabled, not-yet-loaded feature now (reload-free).
     for _, entry in ipairs(FirstRun.CATALOG) do
         local name = entry.addonName
-        if selections[name] and OneWoW:IsAddonEnabled(name, perCharacter)
+        if selections[name] and ns:IsAddonEnabled(name, perCharacter)
             and not C_AddOns.IsAddOnLoaded(name) then
             LoadFeatureNow(name)
         end
@@ -253,7 +253,7 @@ end
 -- All themed widgets go through OneWoW_GUI helpers so the panel matches the
 -- rest of the addon's UI standards: no raw SetBackdrop, no UICheckButtonTemplate.
 function FirstRun:BuildPanel(parent, opts)
-    local L = OneWoW.L or {}
+    local L = ns.L or {}
     local C = OneWoW_GUI.Constants.GUI
 
     local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_ManageFeaturesScroll" })
@@ -464,14 +464,14 @@ function FirstRun:BuildPanel(parent, opts)
     -- One row: "Do not show again" on the left, the scope selector on the right
     -- (across from the checkbox). The scope menu is attached later (after the
     -- refresh helpers it drives are defined).
-    local initialDontShow = OneWoW.db.global.wizardShown ~= false
-    OneWoW.db.global.wizardShown = initialDontShow
+    local initialDontShow = ns.db.global.wizardShown ~= false
+    ns.db.global.wizardShown = initialDontShow
     local dontShowRow = OneWoW_GUI:CreateLayoutFrame(content, { height = 28 })
     local dontShowCB = OneWoW_GUI:CreateCheckbox(dontShowRow, {
         label   = L["WIZARD_DONT_SHOW_AGAIN"],
         checked = initialDontShow,
         onClick = function(myself)
-            OneWoW.db.global.wizardShown = myself:GetChecked() and true or false
+            ns.db.global.wizardShown = myself:GetChecked() and true or false
         end,
     })
     dontShowCB:SetPoint("LEFT", dontShowRow, "LEFT", 0, 0)
@@ -581,7 +581,7 @@ function FirstRun:BuildPanel(parent, opts)
                 end)
                 loadBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
                 loadBtn:SetScript("OnClick", function()
-                    OneWoW:SetFeatureOptOut(addon, false, perCharacter)
+                    ns:SetFeatureOptOut(addon, false, perCharacter)
                     LoadFeatureNow(addon)
                     originalSelections[addon] = true
                     RefreshRow(addon)
@@ -601,10 +601,10 @@ function FirstRun:BuildPanel(parent, opts)
         local card = cards[addonName]
         if not card or not card.loadBtn then return end
         local show = card._checked
-            and OneWoW:IsAddonEnabled(addonName, perCharacter)
+            and ns:IsAddonEnabled(addonName, perCharacter)
             and (
                 not C_AddOns.IsAddOnLoaded(addonName)
-                or OneWoW:IsFeatureOptedOutInScope(addonName, perCharacter)
+                or ns:IsFeatureOptedOutInScope(addonName, perCharacter)
             )
         card.loadBtn:SetShown(show)
     end
@@ -630,7 +630,7 @@ function FirstRun:BuildPanel(parent, opts)
                 if want == was then
                     -- skip unchanged rows
                 else
-                    local blizz = OneWoW:IsAddonEnabled(name, perCharacter)
+                    local blizz = ns:IsAddonEnabled(name, perCharacter)
                     if want and not blizz then
                         needsHardApply = true
                         softApplyBlocked = true
@@ -794,7 +794,7 @@ function FirstRun:BuildPanel(parent, opts)
 end
 
 function FirstRun:ShouldShowWizard()
-    return not OneWoW.db.global.wizardShown
+    return not ns.db.global.wizardShown
 end
 
 -- First-run popup: a themed dialog that wraps BuildPanel. Triggered from
@@ -808,7 +808,7 @@ function FirstRun:ShowWizard()
     local C = OneWoW_GUI.Constants.GUI
     local result = OneWoW_GUI:CreateDialog({
         name      = "OneWoW_FirstRunWizard",
-        title     = OneWoW.L["WIZARD_TITLE"],
+        title     = ns.L["WIZARD_TITLE"],
         width     = C.WIZARD_DIALOG_WIDTH,
         height    = C.WIZARD_DIALOG_HEIGHT,
         showBrand = true,

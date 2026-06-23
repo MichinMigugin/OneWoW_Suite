@@ -1,6 +1,6 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-local UI = OneWoW.UI
+local UI = ns.UI
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -10,7 +10,7 @@ local STATUS_TEX_OK  = "Interface\\RaidFrame\\ReadyCheck-Ready"
 local STATUS_TEX_BAD = "Interface\\RaidFrame\\ReadyCheck-NotReady"
 
 -- The Home tab is read-only: it mirrors effective feature state (Blizzard enable
--- flags + OneWoW soft opt-out via OneWoW:GetFeatureUnitState). Enabling/disabling
+-- flags + OneWoW soft opt-out via ns:GetFeatureUnitState). Enabling/disabling
 -- lives in Settings > Manage Features (storage addons have dependencies users
 -- shouldn't toggle blind).
 --   all            -> green check  (wanted for every known character, loaded here)
@@ -35,11 +35,11 @@ local function MapFeatureUnitState(unitState)
 end
 
 function UI:CreateHomeTab(parent)
-    local L = OneWoW.L
+    local L = ns.L
     local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_HomeScroll" })
 
     -- Each status row registers its ApplyState() here so RefreshAll() (OnShow +
-    -- OneWoW.FeatureStateChanged) can re-query live state without rebuilding rows.
+    -- ns.FeatureStateChanged) can re-query live state without rebuilding rows.
     local rowRefreshers = {}
 
     -- Read-only status row: a tri-state checkmark + name + version. No toggle.
@@ -91,7 +91,7 @@ function UI:CreateHomeTab(parent)
         tag:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
 
         local function ApplyState()
-            state = MapFeatureUnitState(OneWoW:GetFeatureUnitState(addonName))
+            state = MapFeatureUnitState(ns:GetFeatureUnitState(addonName))
 
             if state == STATE_ALL then
                 light:SetTexture(STATUS_TEX_OK)
@@ -116,7 +116,7 @@ function UI:CreateHomeTab(parent)
                 nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
 
-            verText:SetText(OneWoW:GetAddonVersion(addonName) or "")
+            verText:SetText(ns:GetAddonVersion(addonName) or "")
 
             if state == STATE_NOTLOADED then
                 tag:SetText(L["HOME_NOTLOADED_TAG"])
@@ -144,7 +144,7 @@ function UI:CreateHomeTab(parent)
 
     local versionLabel = OneWoW_GUI:CreateFS(content, 16)
     versionLabel:SetPoint("TOP", content, "TOP", 0, yOffset)
-    versionLabel:SetText("OneWoW " .. (L["HOME_VERSION"]) .. " " .. (OneWoW:GetAddonVersion("OneWoW") or ""))
+    versionLabel:SetText("OneWoW " .. (L["HOME_VERSION"]) .. " " .. (ns:GetAddonVersion("OneWoW") or ""))
     versionLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - 35
 
@@ -590,7 +590,7 @@ function UI:CreateHomeTab(parent)
     content:SetHeight(math.abs(yOffset) + 50)
 
     -- Re-query every row's live state. Driven on panel show (navigate back to Home)
-    -- and by OneWoW.FeatureStateChanged (load/opt-out change while Home is visible).
+    -- and by ns.FeatureStateChanged (load/opt-out change while Home is visible).
     local function RefreshAll()
         for _, fn in ipairs(rowRefreshers) do fn() end
     end

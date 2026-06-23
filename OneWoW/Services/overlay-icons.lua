@@ -1,7 +1,7 @@
-local _, OneWoW = ...
+local _, ns = ...
 
-OneWoW.OverlayIcons = {}
-local OverlayIcons = OneWoW.OverlayIcons
+ns.OverlayIcons = {}
+local OverlayIcons = ns.OverlayIcons
 
 local iconDisplayNames = {
     ["BLANK"]        = "Blank (No Icon)",

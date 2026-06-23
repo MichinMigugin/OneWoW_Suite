@@ -1,8 +1,8 @@
-local _, OneWoW = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-OneWoW.Constants = {
+ns.Constants = {
     GUI = OneWoW_GUI:RegisterGUIConstants({
         WINDOW_WIDTH = 860,
         WINDOW_HEIGHT = 720,
