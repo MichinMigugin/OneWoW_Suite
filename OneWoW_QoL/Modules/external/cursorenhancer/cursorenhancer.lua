@@ -29,10 +29,7 @@ local function Clamp(val, min, max)
 end
 
 local function GetDB()
-    if not ns.db.global.modules["cursorenhancer"] then
-        ns.db.global.modules["cursorenhancer"] = {}
-    end
-    local ceDb = ns.db.global.modules["cursorenhancer"]
+    local ceDb = ns.ModuleRegistry:GetModuleBucket("cursorenhancer")
     if not ceDb.cedata then
         ceDb.cedata = {}
     end

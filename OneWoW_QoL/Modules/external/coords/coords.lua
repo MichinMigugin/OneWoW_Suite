@@ -25,10 +25,9 @@ local function GetToggle(id)
 end
 
 local function GetPositionStorage()
-    local mods = ns.db.global.modules
-    if not mods["coords"] then mods["coords"] = {} end
-    if not mods["coords"].position then mods["coords"].position = {} end
-    return mods["coords"].position
+    local bucket = ns.ModuleRegistry:GetModuleBucket("coords")
+    if not bucket.position then bucket.position = {} end
+    return bucket.position
 end
 
 local function GetCardinalDirection(radians)

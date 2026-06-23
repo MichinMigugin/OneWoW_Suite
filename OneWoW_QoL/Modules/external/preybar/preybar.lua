@@ -47,9 +47,7 @@ end
 PreyBarModule.GetToggle = GetToggle
 
 local function GetModuleStorage()
-    local mods = ns.db.global.modules
-    if not mods["preybar"] then mods["preybar"] = {} end
-    return mods["preybar"]
+    return ns.ModuleRegistry:GetModuleBucket("preybar")
 end
 
 local function GetPositionStorage()

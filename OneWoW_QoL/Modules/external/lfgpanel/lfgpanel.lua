@@ -5,10 +5,7 @@ local LFGPanelModule, L = ns.ModuleRegistry:Current()
 if not LFGPanelModule then return end
 
 local function GetDB()
-    if not ns.db.global.modules["lfgpanel"] then
-        ns.db.global.modules["lfgpanel"] = {}
-    end
-    return ns.db.global.modules["lfgpanel"]
+    return ns.ModuleRegistry:GetModuleBucket("lfgpanel")
 end
 
 local function GetShowPanel()
@@ -19,8 +16,6 @@ local function GetFilterResults()
     return ns.ModuleRegistry:GetToggleValue("lfgpanel", "filter_results")
 end
 
-ns.LFGGetDB = GetDB
-ns.LFGGetShowPanel = GetShowPanel
 ns.LFGGetFilterResults = GetFilterResults
 
 local DIFFICULTY_OPTIONS = {

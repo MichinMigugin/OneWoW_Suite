@@ -5,9 +5,7 @@ local _, L = ns.ModuleRegistry:Current()
 local OneWoW_GUI = OneWoW_GUI
 
 local function GetInspectMogDb()
-    local modules = ns.db.global.modules
-    modules.inspectmog = modules.inspectmog or {}
-    local db = modules.inspectmog
+    local db = ns.ModuleRegistry:GetModuleBucket("inspectmog")
     if db.attachSide == nil then db.attachSide = "RIGHT" end
     if db.hideUnchanged == nil then db.hideUnchanged = false end
     if db.showEmptySlots == nil then db.showEmptySlots = false end

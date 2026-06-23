@@ -65,6 +65,18 @@ function Registry:GetById(moduleId)
     return modules[moduleId]
 end
 
+--- Returns the per-module SavedVariables bucket at ns.db.global.modules[moduleId],
+--- creating an empty table if missing. Registry-owned keys (enabled, toggles) and
+--- module-owned keys share this bucket.
+---@param moduleId string
+---@return table bucket
+function Registry:GetModuleBucket(moduleId)
+    if not ns.db.global.modules[moduleId] then
+        ns.db.global.modules[moduleId] = {}
+    end
+    return ns.db.global.modules[moduleId]
+end
+
 function Registry:GetByCategory(category)
     local result = {}
     for _, id in ipairs(moduleOrder) do

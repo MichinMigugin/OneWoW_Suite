@@ -5,10 +5,7 @@ local VendorPanelModule, L = ns.ModuleRegistry:Current()
 if not VendorPanelModule then return end
 
 local function GetDB()
-    if not ns.db.global.modules["vendorpanel"] then
-        ns.db.global.modules["vendorpanel"] = {}
-    end
-    return ns.db.global.modules["vendorpanel"]
+    return ns.ModuleRegistry:GetModuleBucket("vendorpanel")
 end
 
 local function GetSettings()

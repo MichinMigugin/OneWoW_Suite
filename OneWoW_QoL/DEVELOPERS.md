@@ -301,8 +301,8 @@ OneWoW_QoL_DB.global.modules.yourmodule
 For your own saved data, use `ns.db` (only after init — e.g. inside `OnEnable`, never at file load). Every module file already has `local ADDON_NAME, ns = ...`:
 
 ```lua
-local db = ns.db.global.modules["yourmodule"]
--- db.enabled and db.toggles are managed by the registry; add your own keys here
+local bucket = ns.ModuleRegistry:GetModuleBucket("yourmodule")
+-- bucket.enabled and bucket.toggles are registry-managed; add custom keys on bucket
 ```
 
 ---

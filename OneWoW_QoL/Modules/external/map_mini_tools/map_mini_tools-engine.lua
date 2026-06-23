@@ -33,9 +33,7 @@ local minimapLayoutHooked = false
 -- ─── Settings ───────────────────────────────────────────────────────────────
 
 local function GetSettings()
-    local mods = ns.db.global.modules
-    if not mods.map_mini_tools then mods.map_mini_tools = {} end
-    local s = mods.map_mini_tools
+    local s = ns.ModuleRegistry:GetModuleBucket("map_mini_tools")
     if s.scale           == nil then s.scale           = 1.0        end
     if s.minimapAlpha    == nil then s.minimapAlpha    = 1.0        end
     if s.borderSize      == nil then s.borderSize      = 3          end

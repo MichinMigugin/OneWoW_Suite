@@ -79,10 +79,7 @@ SPECIAL["GameMenuFrame"] = {
 -- ============================================================
 
 function FM:GetDB()
-    if not ns.db.global.modules["framemover"] then
-        ns.db.global.modules["framemover"] = {}
-    end
-    local modDB = ns.db.global.modules["framemover"]
+    local modDB = ns.ModuleRegistry:GetModuleBucket("framemover")
     if not modDB.fmdata then
         modDB.fmdata = { frames = {} }
     end

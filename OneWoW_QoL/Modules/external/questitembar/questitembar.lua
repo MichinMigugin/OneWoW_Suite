@@ -52,9 +52,7 @@ local function HideBar()
 end
 
 local function GetSettings()
-    local mods = ns.db.global.modules
-    if not mods["questitembar"] then mods["questitembar"] = {} end
-    local s = mods["questitembar"]
+    local s = ns.ModuleRegistry:GetModuleBucket("questitembar")
     if s.locked               == nil then s.locked               = false end
     if s.hideWhenEmpty        == nil then s.hideWhenEmpty        = true  end
     if s.showOnlySupertracked == nil then s.showOnlySupertracked = false end

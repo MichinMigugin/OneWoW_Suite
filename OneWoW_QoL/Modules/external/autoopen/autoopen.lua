@@ -16,10 +16,9 @@ local OPEN_PREDICATE_EXPR = "#hasloot&!#locked& #openable"
 local openPredicate = PE:Compile(OPEN_PREDICATE_EXPR)
 
 local function GetBlacklist()
-    local mods = ns.db.global.modules
-    if not mods["autoopen"] then mods["autoopen"] = {} end
-    if not mods["autoopen"].blacklist then mods["autoopen"].blacklist = {} end
-    return mods["autoopen"].blacklist
+    local bucket = ns.ModuleRegistry:GetModuleBucket("autoopen")
+    if not bucket.blacklist then bucket.blacklist = {} end
+    return bucket.blacklist
 end
 
 function AutoOpenModule:IsBlacklisted(itemID)

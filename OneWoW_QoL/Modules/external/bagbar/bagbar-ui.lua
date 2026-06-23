@@ -10,8 +10,9 @@ StaticPopupDialogs["ONEWOW_QOL_CLEAR_BAGBAR_BLACKLIST"] = {
     button1 = YES,
     button2 = NO,
     OnAccept = function()
-        if ns.db.global.modules["bagbar"] then
-            wipe(ns.db.global.modules["bagbar"].blacklist)
+        local bucket = ns.ModuleRegistry:GetModuleBucket("bagbar")
+        if bucket.blacklist then
+            wipe(bucket.blacklist)
         end
         BagBarModule:ClearTempBlacklist()
         if ns.ModuleRegistry:IsEnabled("bagbar") then

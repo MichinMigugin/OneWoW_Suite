@@ -74,9 +74,7 @@ local function ScheduleRelayout()
 end
 
 local function GetSettings()
-    local mods = ns.db.global.modules
-    if not mods["minimapbuttons"] then mods["minimapbuttons"] = {} end
-    local s = mods["minimapbuttons"]
+    local s = ns.ModuleRegistry:GetModuleBucket("minimapbuttons")
     if s.closeMode       == nil then s.closeMode       = "autoclose" end
     if s.autoCloseDelay  == nil then s.autoCloseDelay  = 3           end
     if s.enhancedMenu    == nil then s.enhancedMenu    = false       end

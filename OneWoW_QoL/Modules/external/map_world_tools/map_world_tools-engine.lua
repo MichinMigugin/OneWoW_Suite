@@ -21,9 +21,7 @@ local function GetToggle(id)
 end
 
 local function GetSettings()
-    local mods = ns.db.global.modules
-    if not mods.map_world_tools then mods.map_world_tools = {} end
-    local s = mods.map_world_tools
+    local s = ns.ModuleRegistry:GetModuleBucket("map_world_tools")
 
     if s.fogTintR == nil then s.fogTintR = 255 end
     if s.fogTintG == nil then s.fogTintG = 255 end

@@ -56,12 +56,11 @@ for _, id in ipairs(FISHING_SPELL_IDS) do
 end
 
 local function GetPreferences()
-    local mods = ns.db.global.modules
-    if not mods["automount"] then mods["automount"] = {} end
-    if not mods["automount"].preferences then
-        mods["automount"].preferences = { ground = "auto", flying = "auto", aquatic = "auto" }
+    local bucket = ns.ModuleRegistry:GetModuleBucket("automount")
+    if not bucket.preferences then
+        bucket.preferences = { ground = "auto", flying = "auto", aquatic = "auto" }
     end
-    local prefs = mods["automount"].preferences
+    local prefs = bucket.preferences
     if prefs.ground         == nil then prefs.ground         = "auto" end
     if prefs.flying         == nil then prefs.flying         = "auto" end
     if prefs.aquatic        == nil then prefs.aquatic        = "auto" end
@@ -79,12 +78,11 @@ local function GetPreferences()
 end
 
 local function SavePreference(key, value)
-    local mods = ns.db.global.modules
-    if not mods["automount"] then mods["automount"] = {} end
-    if not mods["automount"].preferences then
-        mods["automount"].preferences = { ground = "auto", flying = "auto", aquatic = "auto" }
+    local bucket = ns.ModuleRegistry:GetModuleBucket("automount")
+    if not bucket.preferences then
+        bucket.preferences = { ground = "auto", flying = "auto", aquatic = "auto" }
     end
-    mods["automount"].preferences[key] = value
+    bucket.preferences[key] = value
 end
 
 local function InitializeMountData()

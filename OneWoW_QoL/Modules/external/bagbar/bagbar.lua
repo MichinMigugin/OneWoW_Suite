@@ -42,8 +42,7 @@ local function SyncKeybindings()
 end
 
 local function GetSettings()
-    local s = ns.db.global.modules.bagbar
-    if not s then return {} end
+    local s = ns.ModuleRegistry:GetModuleBucket("bagbar")
     if not s.manualItems then s.manualItems = {} end
     if not s.manualMacros then s.manualMacros = {} end
     if not s.blacklist then s.blacklist = {} end

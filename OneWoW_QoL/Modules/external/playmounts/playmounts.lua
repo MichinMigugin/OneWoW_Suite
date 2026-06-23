@@ -33,18 +33,15 @@ local function GetToggle(id)
 end
 
 local function GetDisplayMode()
-    local modData = ns.db.global.modules["playmounts"]
-    if modData and modData.displayMode then
+    local modData = ns.ModuleRegistry:GetModuleBucket("playmounts")
+    if modData.displayMode then
         return modData.displayMode
     end
     return "all"
 end
 
 local function SetDisplayMode(mode)
-    if not ns.db.global.modules["playmounts"] then
-        ns.db.global.modules["playmounts"] = {}
-    end
-    ns.db.global.modules["playmounts"].displayMode = mode
+    ns.ModuleRegistry:GetModuleBucket("playmounts").displayMode = mode
 end
 
 function PlayMountsModule:GetMountTypeName(mountTypeID)
