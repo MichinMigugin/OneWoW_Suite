@@ -898,6 +898,32 @@ local function owgFillThemeSemantics(theme)
     if not theme.TEXT_WARNING then
         theme.TEXT_WARNING = { 1.0, 0.62, 0.12, 1.0 }
     end
+    local bs = theme.BG_SECONDARY or bg
+    local as = theme.ACCENT_SECONDARY or ap
+    if not theme.QUEST_ROW_SECTION then
+        theme.QUEST_ROW_SECTION = {
+            owgClamp01(bs[1] * 0.25 + ap[1] * 0.03),
+            owgClamp01(bs[2] * 0.50 + ap[2] * 0.05),
+            owgClamp01(bs[3] * 0.35 + ap[3] * 0.04),
+            0.9,
+        }
+    end
+    if not theme.QUEST_ROW_CHILD then
+        theme.QUEST_ROW_CHILD = {
+            owgClamp01(bs[1] * 0.40 + ap[1] * 0.05),
+            owgClamp01(bs[2] * 0.75 + ap[2] * 0.07),
+            owgClamp01(bs[3] * 0.40 + ap[3] * 0.05),
+            0.82,
+        }
+    end
+    if not theme.QUEST_ROW_GROUP_TOGGLE then
+        theme.QUEST_ROW_GROUP_TOGGLE = {
+            owgClamp01(as[1] * 0.22 + bg[1] * 0.12),
+            owgClamp01(as[2] * 0.08 + bg[2] * 0.50),
+            owgClamp01(as[3] * 0.02 + bg[3] * 0.10),
+            0.9,
+        }
+    end
     if not theme.BTN_DANGER_NORMAL then
         theme.BTN_DANGER_NORMAL = {
             owgClamp01(0.48 + bg[1] * 0.35),

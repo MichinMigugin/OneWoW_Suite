@@ -51,6 +51,26 @@ repos:
             | OneWoW_Bags/API/Examples/
           )
 
+      - id: theme-color-bypass
+        name: Theme color literal bypass (warn-only)
+        description: |
+          Warns when widget color APIs use hardcoded RGB literals instead of
+          OneWoW_GUI:GetThemeColor. See OneWoW/Docs/GUI.md §Theme System and
+          bin/check_theme_color_bypass.py (WARN_ONLY=True; does not block).
+        entry: python bin/check_theme_color_bypass.py
+        language: python
+        types: [lua]
+        exclude: |
+          (?x)^(
+            Libs/
+            | \.lua-defs/
+            | \.wow_docs/
+            | \.vscode/
+            | \.releases/
+            | OneWoW_Bags/API/Examples/
+            | OneWoW_CatalogData_Quests/Tools/
+          )
+
       - id: no-data-manager-bypass
         name: No cross-load-unit SavedVariables access in Lua
         description: |
@@ -84,7 +104,7 @@ repos:
           Flags hand namespace publish (`OneWoW_<Unit> = ns`, `_G[...] = ns`,
           `_G[...] = OneWoW` / `OneWoW_*`), renamed vararg namespaces, `ns.addon`
           hops, and `.db` on published globals. Warn-only during migration — see
-          OneWoW/Docs/ARCHITECTURE.md §6.1 and MIGRATION.md §3 (full inventory).
+          OneWoW/Docs/ARCHITECTURE.md §6.1.
         entry: python bin/check_no_namespace_publish.py
         language: python
         types: [lua]

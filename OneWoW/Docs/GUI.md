@@ -300,12 +300,7 @@ Leave as literals, module-local palettes, or Blizzard/data-driven APIs:
 - `C_Item.GetItemQualityColor` / class colors
 - `Panels.lua` `def.color` caller-supplied action buttons
 - `(0,0,0,0)` transparent menu/button backdrops
-
-### Deferred follow-ups (per-file / Phase 2)
-- `OneWoW_Catalog/UI/t-quests.lua` — quest-log green-tinted row backdrops
-- `OneWoW_Utility_DevTool` — editor chrome (`DEVTOOL_*` constants table)
-- `minimapbuttons` — dark container vs theme decision
-- Optional `bin/check_theme_color_bypass.py` warn-only hook
+- **DevTool code editor** — Monokai background/gutter (`EditorTab.lua` `MONOKAI_BG` / `GUTTER_BG` from `EditorSyntaxData`); surrounding DevTool chrome uses `GetThemeColor`
 
 ### Wrap text in a theme color (color codes)
 ```lua
@@ -323,7 +318,8 @@ BTN_NORMAL, BTN_HOVER, BTN_PRESSED, BTN_BORDER, BTN_BORDER_HOVER,
 TEXT_FEATURES_ENABLED, TEXT_FEATURES_DISABLED,
 DOT_FEATURES_ENABLED, DOT_FEATURES_DISABLED,
 TEXT_WARNING,
-BTN_DANGER_NORMAL, BTN_DANGER_HOVER, BTN_DANGER_BORDER, BTN_DANGER_BORDER_HOVER
+BTN_DANGER_NORMAL, BTN_DANGER_HOVER, BTN_DANGER_BORDER, BTN_DANGER_BORDER_HOVER,
+QUEST_ROW_SECTION, QUEST_ROW_CHILD, QUEST_ROW_GROUP_TOGGLE
 
 ### Get spacing value
 ```lua

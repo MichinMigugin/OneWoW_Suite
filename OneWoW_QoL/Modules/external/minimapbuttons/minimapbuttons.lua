@@ -1,4 +1,5 @@
 local _, ns = ...
+
 local MinimapButtonsModule, L = ns.ModuleRegistry:Current()
 if not MinimapButtonsModule then return end
 
@@ -232,10 +233,7 @@ MinimapButtonsModule.SetButtonPref          = SetButtonPref
 MinimapButtonsModule.RemoveKnownButton      = RemoveKnownButton
 
 local function GetCurrentIcon()
-    if OneWoW_GUI and OneWoW_GUI.GetBrandIcon then
-        return OneWoW_GUI:GetBrandIcon(OneWoW_GUI:GetSetting("minimap.theme"))
-    end
-    return "Interface\\AddOns\\OneWoW\\Media\\neutral-mini.png"
+    return OneWoW_GUI:GetBrandIcon(OneWoW_GUI:GetSetting("minimap.theme"))
 end
 
 -- ─── Hub button position (free-floating on UIParent) ────────────────────────
@@ -906,9 +904,7 @@ local function BuildEnhancedRow()
             tex:SetTexture(icon)
             tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-            if OneWoW_GUI then
-                OneWoW_GUI:SkinIconFrame(btn, { preset = "clean" })
-            end
+            OneWoW_GUI:SkinIconFrame(btn, { preset = "clean" })
 
             btn:SetScript("OnEnter", function(self)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -1010,11 +1006,7 @@ function MinimapButtonsModule:LayoutContainer()
         div:ClearAllPoints()
         div:SetPoint("TOPLEFT", containerFrame, "TOPLEFT", 4, -(4 + yOff))
         div:SetPoint("TOPRIGHT", containerFrame, "TOPRIGHT", -4, -(4 + yOff))
-        if OneWoW_GUI then
-            div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        else
-            div:SetColorTexture(0.3, 0.3, 0.3, 0.5)
-        end
+        div:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         div:Show()
         yOff = yOff + 4
     else
@@ -1027,25 +1019,14 @@ function MinimapButtonsModule:LayoutContainer()
         if not searchBox then
             searchBox = CreateFrame("EditBox", nil, containerFrame, "BackdropTemplate")
             searchBox:SetSize(120, 20)
-            searchBox:SetBackdrop(OneWoW_GUI and OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS or {
-                bgFile = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
-            })
-            if OneWoW_GUI then
-                searchBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                searchBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            else
-                searchBox:SetBackdropColor(0.1, 0.1, 0.1, 0.9)
-                searchBox:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
-            end
+            searchBox:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+            searchBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            searchBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
             searchBox:SetFontObject(GameFontHighlightSmall)
             searchBox:SetTextInsets(4, 4, 0, 0)
             searchBox:SetAutoFocus(false)
             searchBox:SetMaxLetters(30)
-            if OneWoW_GUI then
-                searchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end
+            searchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             searchBox._placeholder = searchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
             searchBox._placeholder:SetPoint("LEFT", 6, 0)
@@ -1123,19 +1104,9 @@ local function CreateContainer()
     containerFrame:SetFrameStrata(CONTAINER_STRATA)
     containerFrame:SetFrameLevel(CONTAINER_LEVEL)
     containerFrame:SetClampedToScreen(true)
-    containerFrame:SetBackdrop(OneWoW_GUI and OneWoW_GUI.Constants.BACKDROP_SOFT or {
-        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-        tile = true, tileEdge = true, tileSize = 16, edgeSize = 14,
-        insets = { left = 3, right = 3, top = 3, bottom = 3 },
-    })
-    if OneWoW_GUI then
-        containerFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-        containerFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    else
-        containerFrame:SetBackdropColor(0, 0, 0, 1)
-        containerFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-    end
+    containerFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SOFT)
+    containerFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    containerFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     containerFrame:SetSize(100, 100)
     containerFrame:Hide()
 end
@@ -1360,14 +1331,12 @@ function MinimapButtonsModule:OnEnable()
         end)
     end
 
-    if OneWoW_GUI and OneWoW_GUI.RegisterSettingsCallback then
-        OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function()
-            MinimapButtonsModule:ApplyTheme()
-        end)
-        OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function()
-            MinimapButtonsModule:UpdateIcon()
-        end)
-    end
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", self, function()
+        MinimapButtonsModule:ApplyTheme()
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function()
+        MinimapButtonsModule:UpdateIcon()
+    end)
 end
 
 function MinimapButtonsModule:OnDisable()

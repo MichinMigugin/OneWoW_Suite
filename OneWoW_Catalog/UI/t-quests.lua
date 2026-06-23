@@ -3360,7 +3360,7 @@ local function UpdateQuestListEntry(btn, quest, panels)
             btn.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         end
 
-        btn:SetBackdropColor(0.025, 0.04, 0.03, 0.9)
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_SECTION"))
         btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
         return
     end
@@ -3465,7 +3465,7 @@ local function UpdateQuestListEntry(btn, quest, panels)
     if selectedQuest and quest and selectedQuest.id == quest.id then
         btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
     elseif btn.isChild then
-        btn:SetBackdropColor(0.035, 0.06, 0.04, 0.82)
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_CHILD"))
     else
         btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     end
@@ -3522,7 +3522,7 @@ local function CreateQuestListEntry(parent, quest, yOffset, panels, onClick)
     groupToggle:SetSize(18, 18)
     groupToggle:SetPoint("RIGHT", btn, "RIGHT", -8, 0)
     groupToggle:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    groupToggle:SetBackdropColor(0.08, 0.06, 0.01, 0.9)
+    groupToggle:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_GROUP_TOGGLE"))
     groupToggle:SetBackdropBorderColor(unpack(WOW_QUEST_GOLD))
 
     local groupToggleText = OneWoW_GUI:CreateFS(groupToggle, 16)
@@ -3564,7 +3564,7 @@ local function CreateQuestListEntry(parent, quest, yOffset, panels, onClick)
     end)
     btn:SetScript("OnLeave", function(self)
         if self.isSection then
-            self:SetBackdropColor(0.025, 0.04, 0.03, 0.9)
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_SECTION"))
             if self.nameText then
                 self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             end
@@ -3579,7 +3579,7 @@ local function CreateQuestListEntry(parent, quest, yOffset, panels, onClick)
                 self.nameText:SetTextColor(unpack(WOW_QUEST_GOLD))
             end
         elseif self.isChild then
-            self:SetBackdropColor(0.035, 0.06, 0.04, 0.82)
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_CHILD"))
             if self.nameText then
                 self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
