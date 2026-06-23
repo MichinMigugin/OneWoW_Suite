@@ -2,7 +2,7 @@
 """Pre-commit hook: flag namespace publish and global-surface anti-patterns in Lua.
 
 Enforces OneWoW/Docs/ARCHITECTURE.md §6.1 during the addon migration period.
-See MIGRATION.md §3 for the cleanup checklist and full suite inventory.
+Enforces OneWoW/Docs/ARCHITECTURE.md §6.1. See ARCHITECTURE.md §6.1 for the global-surface taxonomy.
 
 Flagged patterns (new code should not add these):
     OneWoW_<Unit> = ns              -- hand namespace publish
@@ -15,7 +15,7 @@ Flagged patterns (new code should not add these):
     OneWoW.db / OneWoW_<Unit>.db    -- db on published global (use ns.db)
 
 Grandfathered paths (ALLOWED_NAMESPACE_PUBLISH) pass as [allowed]. Everyone else
-prints [warn] while WARN_ONLY is True; flip to False when the inventory is drained.
+prints [error] when WARN_ONLY is False.
 
 Allowlist keys are `path` (whole file) or `path::pattern_id` (single pattern in
 that file). Remove entries as units migrate. Grandfathering a root lua file does
@@ -179,7 +179,7 @@ def main(argv: list[str]) -> int:
         print("  OneWoW_<Unit>_API.Get*(...)    -- cross-unit contract")
         print("  OneWoW_<Unit> = {}             -- hub lifecycle root")
         print("  OneWoW:* / OneWoW.*            -- core orchestrator (curated facade)")
-        print("Inventory + order: OneWoW/Docs/MIGRATION.md §3")
+        print("Inventory: OneWoW/Docs/ARCHITECTURE.md §6.1")
         if WARN_ONLY and worklist_keys:
             print()
             print("Warn-only mode: not blocking. Worklist (path::pattern_id):")

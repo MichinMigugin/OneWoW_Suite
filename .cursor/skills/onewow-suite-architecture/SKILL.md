@@ -15,8 +15,9 @@ Full rationale and tables: `OneWoW/Docs/ARCHITECTURE.md`.
 
 1. `OneWoW/Docs/ARCHITECTURE.md` — source of truth
 2. `OneWoW/Core/AddonLoader.lua` — `ModuleManifest`, `BringUp`, `EnsureLoaded`, enable API
-3. `OneWoW/Core/Lifecycle.lua` — dispatch, handler registries
-4. `OneWoW/Core/StoreBootstrap.lua` — `OneWoW:BootStore` for data stores
+3. `OneWoW/Core/Lifecycle.lua` — dispatch, `RegisterUnit` / `ResolveUnit`, handler registries
+4. `OneWoW/Core/Facade.lua` — curated `OneWoW` global (`GetPortalHub`, `GetCoreGlobal`)
+5. `OneWoW/Core/StoreBootstrap.lua` — `OneWoW:BootStore` for data stores
 
 ## Lifecycle decision table
 
@@ -218,6 +219,12 @@ end
   readers (`OneWoW_<Unit>.Member` and `= OneWoW_<Unit>`), not just `_API`
   consumers — in-family hub/compat files and other families both read these.
 
+**Core global settings (cross-unit):** do not read `OneWoW.db` (not on the facade).
+Use `OneWoW:GetPortalHub()` for `portalHub.*`, `OneWoW:GetCoreGlobal()` for other
+`OneWoW_DB` global roots, and `OneWoW.SettingsFeatureRegistry` for `settings.*`.
+When writing, cache the table in a local first — never `(OneWoW:GetCoreGlobal() or {}).field = value`
+(statement-start `(` is ambiguous Lua).
+
 ## PR checklist
 
 1. `python -m pre_commit run --all-files`
@@ -225,7 +232,7 @@ end
 3. No raw `C_AddOns.LoadAddOn` / `UIParentLoadAddOn` outside core (`no-raw-loadaddon`)
 4. No suite-internal `OptionalDeps` in changed TOCs
 5. No cross-load-unit store reads off the allowlist (`no-data-manager-bypass`, enforced/hard-fail) — route through the owner's `_API`
-6. No namespace publish / global-surface anti-patterns (`no-namespace-publish`; warn-only during migration — see `MIGRATION.md` §3)
+6. No namespace publish / global-surface anti-patterns (`no-namespace-publish`; enforced — see `ARCHITECTURE.md` §6.1)
 7. `local ADDON_NAME, ns = ...`; internal reads via `ns.db`; no `ns.addon` hops; no `.db` on lifecycle root
 8. Hub cross-unit surface on `_API` dot-functions only (not colon-methods on manifest root)
 9. Stores use `BootStore` + `onEnteringWorld` for PEW collection work

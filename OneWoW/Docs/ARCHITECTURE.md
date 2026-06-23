@@ -613,9 +613,14 @@ OneWoW:BootStore(ns, {
 - `BootStore` registers the store namespace with `Lifecycle.RegisterUnit` — stores
   must NOT hand-publish `_G[addonName] = ns`.
 
-The lifecycle dispatcher (`Lifecycle.RunUnitHook`) resolves `_G[addonName]` today.
-Hubs satisfy that with a thin object; stores via BootStore's centralized publish.
-Neither pattern is `OneWoW_<Unit> = ns` written by hand.
+`Lifecycle.RunUnitHook` resolves units via `Lifecycle.ResolveUnit` (private
+registry from `BootStore`, with `_G[addonName]` fallback for hub thin lifecycle
+roots). Neither pattern is `OneWoW_<Unit> = ns` written by hand.
+
+When assigning into core global settings from another load unit, cache
+`local global = OneWoW:GetCoreGlobal()` (or `local ph = OneWoW:GetPortalHub()`)
+before writing fields — do not start a statement with `(OneWoW:GetCoreGlobal() or {}).field = …`
+(ambiguous Lua syntax).
 
 #### Colon (`:`) vs dot (`.`) on globals
 
@@ -643,8 +648,9 @@ cross-unit data accessors on the lifecycle root as colon-methods (e.g.
 - Colon-methods on `_API` globals
 - Leaking internals on the lifecycle root (`OneWoW_AltTracker.UI = ...`)
 
-**Grandfathered** until migrated (see `MIGRATION.md` §3, `no-namespace-publish`
-hook allowlist): `OneWoW/Core/StoreBootstrap.lua`.
+**Hook allowlist** (`no-namespace-publish`): `OneWoW/Core/Facade.lua::g_assign_core_ns`
+only — the sole `_G["OneWoW"]` publish (curated facade table, not `ns`). All other
+namespace-publish patterns are enforced.
 
 Internal db assignment: [`DATABASE.md`](DATABASE.md) — `ns.db` after `DB:Init`.
 
@@ -921,8 +927,9 @@ same module.
 | File | Purpose |
 |---|---|
 | `OneWoW/Core/AddonLoader.lua` | Manifest, orchestrator, `BringUp`/`EnsureLoaded`, enable API, tab-order helpers |
-| `OneWoW/Core/Lifecycle.lua` | Lifecycle dispatch, handler registries, addon-loaded watchers, `/1wtrace` tracer (§3.11) |
-| `OneWoW/Core/StoreBootstrap.lua` | `OneWoW:BootStore` for data stores |
+| `OneWoW/Core/Lifecycle.lua` | Lifecycle dispatch, `RegisterUnit` / `ResolveUnit`, handler registries, addon-loaded watchers, `/1wtrace` tracer (§3.11) |
+| `OneWoW/Core/Facade.lua` | Curated `OneWoW` orchestrator global (colon API + public services; `GetPortalHub` / `GetCoreGlobal`) |
+| `OneWoW/Core/StoreBootstrap.lua` | `OneWoW:BootStore` for data stores (registers units privately) |
 | `OneWoW/Core/ModuleRegistry.lua` | Hub tab/module registration |
 | `OneWoW/Core/SettingsFeatureRegistry.lua` | Settings funnel: catalog, storage-path resolution, change notification (§8.5) |
 | `OneWoW/Core/Restriction.lua` | Combat/restriction funnel + Midnight secret-value guard (§8.6) |
