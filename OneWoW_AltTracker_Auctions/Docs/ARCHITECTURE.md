@@ -166,17 +166,19 @@ Central orchestrator that coordinates data collection from all modules.
 
 ## Data Access
 
-This addon stores all data in the `OneWoW_AltTracker_Auctions_DB` SavedVariable. Other addons can access this data directly.
+Persistence lives in `OneWoW_AltTracker_Auctions_DB` (the WoW `## SavedVariables` root).
+**Cross-unit readers must use `OneWoW_AltTracker_Auctions_API`** — not the `_DB` global
+directly (see [OneWoW/Docs/ARCHITECTURE.md](../../OneWoW/Docs/ARCHITECTURE.md) §6,
+enforced by the `no-data-manager-bypass` pre-commit hook).
 
 ### Accessing Data from Other Addons
 
-The main OneWoW_AltTracker addon and other addons can read auction data directly from the SavedVariable:
-
 ```lua
-local db = OneWoW_AltTracker_Auctions_DB
-if db and db.characters then
+local API = OneWoW_AltTracker_Auctions_API
+if API then
     local charKey = "CharacterName-RealmName"
-    local charData = db.characters[charKey]
+    local characters = API.GetCharacters()
+    local charData = characters and characters[charKey]
 
     if charData then
         print("Active auctions: " .. (charData.numActiveAuctions or 0))
@@ -189,9 +191,9 @@ end
 ### Iterating All Characters
 
 ```lua
-local db = OneWoW_AltTracker_Auctions_DB
-if db and db.characters then
-    for charKey, charData in pairs(db.characters) do
+local API = OneWoW_AltTracker_Auctions_API
+if API then
+    for charKey, charData in pairs(API.GetCharacters()) do
         if charData.numActiveAuctions and charData.numActiveAuctions > 0 then
             print(charKey .. " has " .. charData.numActiveAuctions .. " auctions")
         end
@@ -201,10 +203,12 @@ end
 
 ### Calculating Statistics
 
-To get auction statistics (like expiring soon count), you can process the auction data:
+To get auction statistics (like expiring soon count), read character data through
+`GetCharacters()` and process the returned tables:
 
 ```lua
-local charData = OneWoW_AltTracker_Auctions_DB.characters["CharName-RealmName"]
+local API = OneWoW_AltTracker_Auctions_API
+local charData = API and API.GetCharacters()["CharName-RealmName"]
 if charData and charData.activeAuctions then
     local expiringSoon = 0
     local serverTime = GetServerTime()
@@ -222,6 +226,11 @@ if charData and charData.activeAuctions then
     print("Auctions expiring soon: " .. expiringSoon)
 end
 ```
+
+### AH price scan control
+
+`StartScan`, `StopScan`, `StartFullScan`, `GetByItemID`, and related helpers live on
+the same `_API` table (see `Core/API.lua`).
 
 ## Architecture
 
@@ -244,7 +253,7 @@ Each module is self-contained with:
 - **Modules** - Data collection, WoW API calls, database operations
 - **DataManager** - Event handling, timing, orchestration only
 - **Core** - Database initialization, character key generation
-- **SavedVariable** - Data storage accessible by other addons
+- **SavedVariable** - Persistence root (`OneWoW_AltTracker_Auctions_DB`); cross-unit reads via `OneWoW_AltTracker_Auctions_API`
 
 ## File Structure
 
@@ -293,10 +302,15 @@ Data is automatically collected when:
 6. Timestamps are updated to track when data was collected
 
 ### Data Storage
-All auction data is stored in the `OneWoW_AltTracker_Auctions_DB` SavedVariable, organized by character key (`"Name-Realm"` format). This data persists across game sessions and can be accessed by other addons.
+Auction data is organized by character key (`"Name-Realm"` format) inside
+`OneWoW_AltTracker_Auctions_DB` and persists across sessions. Other suite units and
+third-party addons read it through `OneWoW_AltTracker_Auctions_API.GetCharacters()` (and
+the scan helpers on the same table), not by indexing `_DB` directly.
 
 ### Integration with OneWoW_AltTracker
-The main OneWoW_AltTracker addon reads this SavedVariable to display auction information in its UI, providing a centralized view of auctions across all characters.
+The main OneWoW_AltTracker addon uses `OneWoW_AltTracker_Auctions_API` to display
+auction information in its UI, providing a centralized view of auctions across all
+characters.
 
 ## Technical Details
 

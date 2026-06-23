@@ -294,17 +294,18 @@ local seasonData = OneWoW_AltTracker_API.GetSeasonData()
 
 ## Data Access
 
-This addon stores all data in the `OneWoW_AltTracker_Endgame_DB` SavedVariable. Other addons access this data directly.
+Persistence lives in `OneWoW_AltTracker_Endgame_DB` (the WoW `## SavedVariables` root).
+**Cross-unit readers must use `OneWoW_AltTracker_Endgame_API`** — not the `_DB` global
+directly (see [OneWoW/Docs/ARCHITECTURE.md](../../OneWoW/Docs/ARCHITECTURE.md) §6,
+enforced by the `no-data-manager-bypass` pre-commit hook).
 
 ### Accessing Data from Other Addons
 
-The main OneWoW_AltTracker addon reads endgame data directly from the SavedVariable:
-
 ```lua
-local db = OneWoW_AltTracker_Endgame_DB
-if db and db.characters then
+local API = OneWoW_AltTracker_Endgame_API
+if API then
     local charKey = "CharacterName-RealmName"
-    local charData = db.characters[charKey]
+    local charData = API.GetCharacterData(charKey)
 
     if charData then
         -- Mythic Plus data
@@ -340,9 +341,9 @@ end
 ### Check All Characters for Vault Rewards
 
 ```lua
-local db = OneWoW_AltTracker_Endgame_DB
-if db and db.characters then
-    for charKey, charData in pairs(db.characters) do
+local API = OneWoW_AltTracker_Endgame_API
+if API then
+    for charKey, charData in pairs(API.GetAllCharacters()) do
         if charData.greatVault and charData.greatVault.hasAvailableRewards then
             print(charKey .. " has vault rewards available!")
         end
@@ -353,11 +354,11 @@ end
 ### Find Highest Mythic Plus Score
 
 ```lua
+local API = OneWoW_AltTracker_Endgame_API
 local highestScore = 0
 local highestChar = nil
-local db = OneWoW_AltTracker_Endgame_DB
-if db and db.characters then
-    for charKey, charData in pairs(db.characters) do
+if API then
+    for charKey, charData in pairs(API.GetAllCharacters()) do
         if charData.mythicPlus and charData.mythicPlus.overallScore then
             if charData.mythicPlus.overallScore > highestScore then
                 highestScore = charData.mythicPlus.overallScore

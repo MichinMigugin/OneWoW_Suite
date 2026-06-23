@@ -25,7 +25,7 @@ OneWoW_Bags is a unified bag/bank/guild bank replacement addon for World of Warc
 
 **SavedVariable:** `OneWoW_Bags_DB`, initialized via `OneWoW_GUI.DB:Init` in **single** mode (defaults and persisted data under `db.global`).
 
-**TOC:** `## Interface: 120005, 120007` (Retail + compatible build). `## LoadOnDemand: 1` — the suite core force-loads this unit via `OneWoW:EnsureLoaded` when Bags is enabled; lifecycle init runs through `OnAddonLoaded` / `OnPlayerLogin` on the root namespace object (not a per-file `ADDON_LOADED` frame).
+**TOC:** `## Interface: 120005, 120007` (Retail + compatible build). `## LoadOnDemand: 1` — the suite core force-loads this unit via `OneWoW:EnsureLoaded` when Bags is enabled; lifecycle init runs through `OnAddonLoaded` / `OnPlayerLogin` on the thin lifecycle root `OneWoW_Bags` (not a per-file `ADDON_LOADED` frame).
 
 **Hard dependencies (`RequiredDeps`):** `OneWoW` (includes `OneWoW_GUI` global).
 
@@ -127,7 +127,7 @@ OneWoW_Bags.lua                    ← addon entry point, event frame, runtime h
 
 ## Architectural Pattern
 
-OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some orchestration logic lives on the root namespace object—but the separation is intentional and consistent.
+OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some orchestration logic lives on the thin lifecycle root (`OneWoW_Bags`)—but the separation is intentional and consistent.
 
 ### Layer Diagram
 

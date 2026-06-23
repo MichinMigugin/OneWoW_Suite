@@ -669,7 +669,8 @@ dialog service is `OneWoW.CopyPaste` (`Core/CopyPaste.lua`).
 
 ### Store access rules
 
-Every cross-module store read is nil-guarded. Prefer `_API` over `_DB`. Core reads
+Every cross-module store read is nil-guarded. Cross-unit access goes through the
+owner's `OneWoW_<Unit>_API` (enforced by `no-data-manager-bypass`). Core reads
 stores opportunistically (tooltips, overlays) — never as a load trigger.
 
 ### Core service roster
@@ -912,8 +913,8 @@ same module.
 - **Runtime nil-guards** remain the backstop; lint checks are additive, not compile-time.
 - **Global surface:** follow §6.1 — internal `ns.db`, cross-unit `_API`, lifecycle root
   stays thin; `no-namespace-publish` hook flags regressions.
-- **Stores expose `_DB` and `_API`:** cross-module consumers should prefer `_API`; direct
-  `_DB` reads are a refactor target.
+- **Stores expose `_API`:** cross-module consumers use `OneWoW_<Unit>_API` only;
+  the `_DB` global is owned by the store unit and the DB layer (not a cross-unit contract).
 - **`DEMAND_LOADED` is normal** for force-loaded LoD units — not an error state.
 - **Secret values (12.0+):** combat-related data may be opaque in instances; use Blizzard
   templates for combat UI rather than branching on secret values from tainted code.

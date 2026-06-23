@@ -280,75 +280,69 @@ Module stores data in character table
 Updates lastUpdate timestamp
 ```
 
-## How to Access the Data
+## How To Access The Data
 
 ### Accessing Data from Other Addons
 
-The main OneWoW_AltTracker addon reads storage data directly from the `OneWoW_AltTracker_Storage_DB` SavedVariable:
+Other addons must read storage data through `OneWoW_AltTracker_Storage_API` — **not**
+by touching `OneWoW_AltTracker_Storage_DB` directly (see
+[OneWoW/Docs/ARCHITECTURE.md](../../OneWoW/Docs/ARCHITECTURE.md) §6, enforced by the
+`no-data-manager-bypass` pre-commit hook):
 
 ```lua
-local db = OneWoW_AltTracker_Storage_DB
-if db and db.characters then
+local API = OneWoW_AltTracker_Storage_API
+if API then
     local charKey = "CharName-RealmName"
-    local charData = db.characters[charKey]
 
-    if charData then
-        -- Bags
-        if charData.bags then
-            for bagID, bagData in pairs(charData.bags) do
-                print("Bag " .. bagID .. " has " .. bagData.numSlots .. " slots")
-                if bagData.slots then
-                    for slotID, itemData in pairs(bagData.slots) do
-                        print("  " .. itemData.itemName .. " x" .. itemData.stackCount)
-                    end
+    -- Bags
+    local bags = API.GetBags(charKey)
+    if bags then
+        for bagID, bagData in pairs(bags) do
+            print("Bag " .. bagID .. " has " .. bagData.numSlots .. " slots")
+            if bagData.slots then
+                for slotID, itemData in pairs(bagData.slots) do
+                    print("  " .. itemData.itemName .. " x" .. itemData.stackCount)
                 end
             end
         end
+    end
 
-        -- Personal Bank
-        if charData.personalBank then
-            for bankBagID, bagData in pairs(charData.personalBank) do
-                print("Bank bag " .. bankBagID .. " has " .. bagData.numSlots .. " slots")
-            end
+    -- Personal Bank
+    local personalBank = API.GetPersonalBank(charKey)
+    if personalBank then
+        for bankBagID, bagData in pairs(personalBank) do
+            print("Bank bag " .. bankBagID .. " has " .. bagData.numSlots .. " slots")
         end
+    end
 
-        -- Mail
-        if charData.mail and charData.mail.mails then
-            print("Total mail items:", charData.mail.numMails)
-            for mailID, mailData in ipairs(charData.mail.mails) do
-                print("From:", mailData.sender, "Subject:", mailData.subject)
-            end
+    -- Mail
+    local mail = API.GetMail(charKey)
+    if mail and mail.mails then
+        print("Total mail items:", mail.numMails)
+        for mailID, mailData in ipairs(mail.mails) do
+            print("From:", mailData.sender, "Subject:", mailData.subject)
         end
+    end
 
-        -- Guild Bank
-        if charData.guildBank then
-            print("Guild:", charData.guildBank.guildName)
-            print("Guild Bank Money:", charData.guildBank.money)
-        end
+    -- Guild Bank (current player's guild)
+    local guildBank = API.GetGuildBank(charKey)
+    if guildBank then
+        print("Guild:", guildBank.guildName)
+        print("Guild Bank Money:", guildBank.money)
     end
 end
 ```
 
 ### Search for Items Across All Characters
 
+Use `GetItemIndex()` for inverted lookups, or iterate `GetCharacters()`:
+
 ```lua
+local API = OneWoW_AltTracker_Storage_API
 local searchItemID = 12345
-local db = OneWoW_AltTracker_Storage_DB
-if db and db.characters then
-    for charKey, charData in pairs(db.characters) do
-        -- Search bags
-        if charData.bags then
-            for bagID, bagData in pairs(charData.bags) do
-                if bagData.slots then
-                    for slotID, itemData in pairs(bagData.slots) do
-                        if itemData.itemID == searchItemID then
-                            print(charKey .. " has " .. itemData.stackCount .. " in bags")
-                        end
-                    end
-                end
-            end
-        end
-    end
+if API then
+  local locations = API.GetItemIndex():GetFamilyLocations(searchItemID)
+  -- locations is a structured rollup across bags, banks, mail, etc.
 end
 ```
 
@@ -362,24 +356,15 @@ end
 
 ### Manual Collection
 - **Warband Bank:** Must be manually triggered (no automatic events)
-- **Force All:** Call `API.ForceDataCollection()` to collect all enabled data types
 
 ### Login Collection
 - Automatically collects bag data on `PLAYER_LOGIN`
 
 ## Settings
 
-Settings control what data is tracked:
-```lua
-OneWoW_AltTracker_Storage_DB.settings = {
-    enableDataCollection = true,  -- Master toggle
-    trackBags = true,             -- Track character bags
-    trackPersonalBank = true,     -- Track personal bank
-    trackWarbandBank = true,      -- Track warband bank
-    trackGuildBank = true,        -- Track guild bank
-    trackMail = true,             -- Track mail
-}
-```
+Collection toggles live in `OneWoW_AltTracker_Storage_DB.settings` and are owned by this
+store unit (defaults/migrations in `Core/Database.lua`). They are **not** part of the
+cross-unit `_API` contract.
 
 ## Integration with Other Addons
 

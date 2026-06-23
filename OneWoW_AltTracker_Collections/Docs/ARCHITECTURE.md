@@ -145,17 +145,18 @@ OneWoW_AltTracker_Collections_DB = {
 
 ## Data Access
 
-This addon stores all data in the `OneWoW_AltTracker_Collections_DB` SavedVariable. Other addons access this data directly.
+Persistence lives in `OneWoW_AltTracker_Collections_DB` (the WoW `## SavedVariables`
+root). **Cross-unit readers must use `OneWoW_AltTracker_Collections_API`** — not the
+`_DB` global directly (see [OneWoW/Docs/ARCHITECTURE.md](../../OneWoW/Docs/ARCHITECTURE.md) §6,
+enforced by the `no-data-manager-bypass` pre-commit hook).
 
 ### Accessing Data from Other Addons
 
-The main OneWoW_AltTracker addon reads collections data directly from the SavedVariable:
-
 ```lua
-local db = OneWoW_AltTracker_Collections_DB
-if db and db.characters then
+local API = OneWoW_AltTracker_Collections_API
+if API then
     local charKey = "CharacterName-RealmName"
-    local charData = db.characters[charKey]
+    local charData = API.GetCharacterData(charKey)
 
     if charData then
         -- Quest data
@@ -189,16 +190,9 @@ end
 ### Checking Quest Completion
 
 ```lua
-local db = OneWoW_AltTracker_Collections_DB
-local charData = db.characters["CharName-RealmName"]
-
-if charData and charData.quests and charData.quests.completed then
-    for _, questID in ipairs(charData.quests.completed) do
-        if questID == 12345 then
-            print("Quest 12345 is completed!")
-            break
-        end
-    end
+local API = OneWoW_AltTracker_Collections_API
+if API and API.IsQuestCompleted(12345) then
+    print("Quest 12345 is completed on the current character!")
 end
 ```
 
@@ -209,7 +203,7 @@ This addon is designed to work with the main OneWoW_AltTracker addon. It:
 - Uses consistent character key format (Name-Realm)
 - Stores data in a separate SavedVariable for modularity
 - Updates data automatically via game events
-- Data is accessible via direct SavedVariable access
+- Data is exposed to other units through `OneWoW_AltTracker_Collections_API`
 
 ## Data Collection Behavior
 
