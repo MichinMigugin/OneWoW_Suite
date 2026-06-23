@@ -429,8 +429,6 @@ function OneWoW_GUI:ShowCopyLinksDialog(title, instructions, links)
     _linksDialog.frame:Show()
 end
 
-local SCROLL_FRAME_CHILD_RIGHT_GUTTER = 24
-
 function OneWoW_GUI:CreateScrollFrame(parent, options)
     options = options or {}
     local name = options.name
@@ -469,7 +467,7 @@ function OneWoW_GUI:CreateScrollFrame(parent, options)
 
     local function syncScrollChildWidth()
         local w = scrollFrame:GetWidth()
-        content:SetWidth(math.max(1, w - SCROLL_FRAME_CHILD_RIGHT_GUTTER))
+        content:SetWidth(math.max(1, w - Constants.GUI.SCROLLBAR_CONTENT_GUTTER))
     end
     scrollFrame:HookScript("OnSizeChanged", syncScrollChildWidth)
     scrollFrame:HookScript("OnShow", syncScrollChildWidth)

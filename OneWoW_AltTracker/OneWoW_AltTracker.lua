@@ -6,8 +6,6 @@ local DB = OneWoW_GUI.DB
 OneWoW_AltTracker = {}
 local OneWoW_AltTracker = OneWoW_AltTracker
 
-ns.oneWoWHubActive = false
-
 local function RegisterWithOneWoW()
     local moduleName = "alttracker"
 
@@ -35,7 +33,6 @@ local function RegisterWithOneWoW()
         order       = OneWoW:GetModuleTabOrder(moduleName),
         create      = function(p) ns.UI.CreateSettingsTab(p) end,
     })
-    ns.oneWoWHubActive = true
     return true
 end
 
@@ -60,13 +57,13 @@ local function OnInitialize()
         if ns.ApplyLanguage then ns.ApplyLanguage() end
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoW_AltTracker, function()
-        local mainFrame = _G["OneWoWAltTrackerMainFrame"]
+        local mainFrame = OneWoWMainWindow
         if mainFrame then
             OneWoW_GUI:ApplyFontToFrame(mainFrame)
         end
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", OneWoW_AltTracker, function()
-        local mainFrame = _G["OneWoWAltTrackerMainFrame"]
+        local mainFrame = OneWoWMainWindow
         if mainFrame then
             OneWoW_GUI:ApplyFontToFrame(mainFrame)
         end
@@ -103,12 +100,7 @@ local function OnEnable()
 end
 
 function OneWoW_AltTracker:SlashCommandHandler()
-    if ns.oneWoWHubActive then
-        OneWoW.UI:Show("alttracker")
-        return
-    end
-
-    ns.UI:Toggle()
+    OneWoW.UI:Show("alttracker")
 end
 
 -- Core-driven init: the suite loader calls _G["OneWoW_AltTracker"]:OnAddonLoaded()

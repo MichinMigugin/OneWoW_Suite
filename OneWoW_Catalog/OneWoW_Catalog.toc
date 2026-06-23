@@ -45,8 +45,6 @@ OneWoW_Catalog.lua
 Services\ItemDataLoader.lua
 
 # UI
-UI\MainFrame.lua
-
 # UI - Tabs
 UI\t-journal.lua
 UI\t-vendors.lua

@@ -1,13 +1,13 @@
 local ADDON_NAME, ns = ...
 
+ns.UI = ns.UI or {}
+
 local OneWoW_GUI = OneWoW_GUI
 
 local DB = OneWoW_GUI.DB
 
 OneWoW_QoL = {}
 local OneWoW_QoL = OneWoW_QoL
-
-ns.oneWoWHubActive = false
 
 local function RegisterWithOneWoW()
     if not OneWoW then return false end
@@ -36,7 +36,6 @@ local function RegisterWithOneWoW()
         order       = OneWoW:GetModuleTabOrder("qol"),
         create      = function(p) ns.UI.CreateSettingsTab(p) end,
     })
-    ns.oneWoWHubActive = true
     return true
 end
 
@@ -88,13 +87,7 @@ local function OnEnable()
 end
 
 function OneWoW_QoL:SlashCommandHandler()
-    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
-        OneWoW.UI:Show("qol")
-        return
-    end
-    if ns.UI and ns.UI.Toggle then
-        ns.UI:Toggle()
-    end
+    OneWoW.UI:Show("qol")
 end
 
 function OneWoW_QoL:CopyTextKeybind()

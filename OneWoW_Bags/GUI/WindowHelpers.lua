@@ -17,7 +17,7 @@ ns.WindowHelpers = {}
 local WH = ns.WindowHelpers
 
 local ITEM_GRID_H_PADDING = 2
-local SCROLLBAR_RESERVE_WIDTH = 12
+local SCROLLBAR_RESERVE_WIDTH = OneWoW_GUI.Constants.GUI.SCROLLBAR_WIDTH + 2
 local scratchTables = {}
 
 local SUITE_TITLE_BAR_ADDONS = {

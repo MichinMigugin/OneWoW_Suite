@@ -42,10 +42,7 @@ OneWoW_QoL.lua
 # Module Registry (MUST load before UI and external modules)
 Modules\ModuleRegistry.lua
 
-# UI Main Frame
-UI\MainFrame.lua
-
-# Tab UI Files
+# UI - Tabs
 UI\t-features.lua
 UI\t-toggles.lua
 UI\t-settings.lua

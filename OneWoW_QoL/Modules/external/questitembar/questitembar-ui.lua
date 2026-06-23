@@ -13,7 +13,7 @@ local LIST_SCROLL_HEIGHT = 180
 local MIN_LIST_HEIGHT = 80
 local ROW_HEIGHT = 28
 local ROW_GAP = 2
-local SCROLLBAR_WIDTH = 18
+local SCROLLBAR_GUTTER = OneWoW_GUI.Constants.GUI.SCROLLBAR_CONTENT_GUTTER
 local STATUS_COL_WIDTH = 100
 local ITEM_ICON_WIDTH = 28
 local ITEM_COL_MIN_WIDTH = 108
@@ -377,7 +377,7 @@ local function BuildContent(container, _, contentYOffset)
 
     local colHeader = CreateFrame("Frame", nil, listScrollWrap, "BackdropTemplate")
     colHeader:SetPoint("TOPLEFT", listScrollWrap, "TOPLEFT", 4, -4)
-    colHeader:SetPoint("TOPRIGHT", listScrollWrap, "TOPRIGHT", -(4 + SCROLLBAR_WIDTH), -4)
+    colHeader:SetPoint("TOPRIGHT", listScrollWrap, "TOPRIGHT", -(4 + SCROLLBAR_GUTTER), -4)
     colHeader:SetHeight(18)
     colHeader:SetBackdrop(BACKDROP_SIMPLE)
     colHeader:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
@@ -392,7 +392,7 @@ local function BuildContent(container, _, contentYOffset)
     local useTightLayout = listWidth < TIGHT_LAYOUT_THRESHOLD
     container._qibUsedTightLayout = useTightLayout
     -- Split flexible space 50/50 between Quest and Item so both benefit from wider windows
-    local rowWidth = listWidth - 8 - SCROLLBAR_WIDTH
+    local rowWidth = listWidth - 8 - SCROLLBAR_GUTTER
     local availableForQuestAndItem = rowWidth - 16 - STATUS_COL_WIDTH - 8
     local reserved = QUEST_COL_MIN_WIDTH + ITEM_COL_MIN_WIDTH + 8
     local extra = math.max(0, availableForQuestAndItem - reserved)
@@ -418,7 +418,7 @@ local function BuildContent(container, _, contentYOffset)
     local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(listScrollWrap, {})
     scrollFrame:ClearAllPoints()
     scrollFrame:SetPoint("TOPLEFT", colHeader, "BOTTOMLEFT", 0, -2)
-    scrollFrame:SetPoint("BOTTOMRIGHT", listScrollWrap, "BOTTOMRIGHT", -(4 + SCROLLBAR_WIDTH), 4)
+    scrollFrame:SetPoint("BOTTOMRIGHT", listScrollWrap, "BOTTOMRIGHT", -(4 + SCROLLBAR_GUTTER), 4)
 
     local entries = QuestItemBarModule.BuildQuestItemDebugList()
     local rowY = -2

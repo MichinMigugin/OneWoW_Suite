@@ -190,7 +190,7 @@ function OneWoW_Notes_API.OpenItem(itemID)
     return true
 end
 
---- Show or toggle the Notes module (hub or standalone).
+--- Show or toggle the Notes module in the suite hub.
 function OneWoW_Notes_API.OpenNotes()
     if ns.SlashCommandHandler then
         ns:SlashCommandHandler()

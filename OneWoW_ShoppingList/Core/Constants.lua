@@ -9,6 +9,5 @@ ns.Constants = {
         SIDEBAR_WIDTH = 300,
         ROW_HEIGHT    = 38,
         ROW_GAP       = 2,
-        SCROLLBAR_W   = 10,
     }),
 }

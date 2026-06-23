@@ -4,7 +4,7 @@
 
 ## Overview
 
-`OneWoW_Trackers` is a `LoadOnDemand` feature module for customizable tracker lists (guides, dailies/weeklies, todos, farm value). It registers a hub tab, provides standalone UI fallback, and owns list/step data plus an event-driven auto-completion engine.
+`OneWoW_Trackers` is a `LoadOnDemand` feature module for customizable tracker lists (guides, dailies/weeklies, todos, farm value). It registers a hub tab and owns list/step data plus an event-driven auto-completion engine.
 
 **SavedVariables:** `OneWoW_Trackers_DB` (global), `OneWoW_Trackers_CharDB` (per character). Internal reads use `ns.db` after `DB:Init` in `Core/Database.lua`.
 
@@ -24,8 +24,7 @@ Core/TrackerData.lua         — list/section/step model, import/export
 Core/TrackerEngine.lua       — event engine, auto-complete, pinned lifecycle
 Core/TrackerPresets.lua      — bundled presets and examples
 Core/TrackerMap.lua          — world-map pin provider
-Core/Constants.lua           — GUI constants
-UI/MainFrame.lua             — standalone shell
+Core/Constants.lua           — GUI constants (inherits suite defaults)
 UI/t-tracker.lua             — hub tab (browser + detail)
 UI/ui-tracker-editor.lua     — create/edit dialogs
 UI/ui-tracker-pinned.lua     — pinned overlay windows

@@ -4600,12 +4600,8 @@ function ns.UI.OpenToQuest(questID)
     questID = tonumber(questID)
     if not questID then return end
 
-    if ns.oneWoWHubActive then
-        OneWoW.UI:Show("catalog")
-        OneWoW.UI:SelectSubTab("catalog", "quests")
-    else
-        ns.UI:Show("quests")
-    end
+    OneWoW.UI:Show("catalog")
+    OneWoW.UI:SelectSubTab("catalog", "quests")
 
     C_Timer.After(0.15, function()
         local panels = activePanels or ns.UI.questsPanels

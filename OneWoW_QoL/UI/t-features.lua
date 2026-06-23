@@ -590,19 +590,11 @@ end
 function ns.UI.SelectFeature(moduleId)
     if not moduleId then return end
 
-    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
-        OneWoW.UI:Show("qol")
-        -- Show("qol") only switches to the QoL module — it lands on whatever
-        -- sub-tab was last viewed (Toggles, Settings, etc.). Force the
-        -- features sub-tab so per-module detail panels are visible.
-        if OneWoW.UI.SelectSubTab then
-            OneWoW.UI:SelectSubTab("qol", "features")
-        end
-    elseif ns.UI and ns.UI.Show then
-        -- Use Show("features") so the window opens/stays open on the features tab
-        -- (Toggle() would close the window if it was already visible)
-        ns.UI:Show("features")
-    end
+    OneWoW.UI:Show("qol")
+    -- Show("qol") only switches to the QoL module — it lands on whatever
+    -- sub-tab was last viewed (Toggles, Settings, etc.). Force the
+    -- features sub-tab so per-module detail panels are visible.
+    OneWoW.UI:SelectSubTab("qol", "features")
 
     -- Retry-aware navigation: CreateFeaturesTab sets _featuresSplit
     -- immediately, but BuildFeaturesList populates featureRows on a 0.1s

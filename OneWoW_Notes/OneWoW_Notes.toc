@@ -54,7 +54,6 @@ OneWoW_Notes.lua
 
 # UI - Framework
 UI\Framework.lua
-UI\MainFrame.lua
 UI\ui-dialog.lua
 
 # UI - Tabs

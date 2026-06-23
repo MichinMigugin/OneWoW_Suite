@@ -385,7 +385,23 @@ end
 
 ### Register GUI constants with fallback
 
-Addons can override or add GUI constants (especially window sizes). Missing keys fall back to `Constants.GUI`, then to `0`. The returned table is read-only.
+`OneWoW_GUI.Constants.GUI` is the source of truth for shared hub chrome. Suite defaults:
+
+| Key | Value |
+|-----|-------|
+| `WINDOW_WIDTH` / `WINDOW_HEIGHT` | 1075 × 900 |
+| `MIN_WIDTH` / `MIN_HEIGHT` | 860 × 560 |
+| `MAX_WIDTH` / `MAX_HEIGHT` | 2560 × 1600 |
+| `LEFT_PANEL_WIDTH` | 320 |
+| `SCROLLBAR_WIDTH` | 10 |
+| `SCROLLBAR_THUMB_WIDTH` | 8 |
+| `SCROLLBAR_CONTENT_GUTTER` | 24 |
+
+Addons can override or add GUI constants via `RegisterGUIConstants`. Missing keys fall back to `Constants.GUI`, then to `0`. The returned table is read-only.
+
+**Hub tab modules** (`OneWoW_Notes`, `OneWoW_QoL`, `OneWoW_Catalog`, `OneWoW_Trackers`, `OneWoW_AltTracker`) render inside `OneWoWMainWindow` and must **not** override `WINDOW_*`, `MIN_*`, `MAX_*`, or `LEFT_PANEL_WIDTH`. Use `RegisterGUIConstants({})` or only unit-specific keys (e.g. `CONTROL_PANEL_HEIGHT`, `SPECIAL_COLORS`).
+
+**Standalone-window addons** (`OneWoW_Bags`, `OneWoW_DirectDeposit`, `OneWoW_ShoppingList`, `OneWoW_Utility_DevTool`) may override window dimensions for their own frames.
 
 **Signature:** `OneWoW_GUI:RegisterGUIConstants(guiConstants)` — takes a table, returns a table with metatable.
 
@@ -398,8 +414,6 @@ OneWoW_MyAddon.Constants = {
         WINDOW_HEIGHT = 580,
         MIN_WIDTH     = 820,
         MIN_HEIGHT    = 500,
-        LEFT_PANEL_WIDTH = 300,
-        SEARCH_HEIGHT = 28,
         ROW_HEIGHT    = 38,  -- addon-specific; falls back to 0 if unused
     }),
 }
@@ -409,9 +423,9 @@ OneWoW_MyAddon.Constants = {
 WINDOW_WIDTH, WINDOW_HEIGHT, MIN_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT,
 PADDING, BUTTON_HEIGHT, BUTTON_WIDTH, SEARCH_HEIGHT, SEARCH_WIDTH,
 CHECKBOX_SIZE, ROW1_HEIGHT, ROW2_HEIGHT, LEFT_PANEL_WIDTH, PANEL_GAP, TAB_BUTTON_HEIGHT,
-TOGGLE_BUTTON_WIDTH, TOGGLE_BUTTON_HEIGHT
+TOGGLE_BUTTON_WIDTH, TOGGLE_BUTTON_HEIGHT, SCROLLBAR_WIDTH, SCROLLBAR_THUMB_WIDTH, SCROLLBAR_CONTENT_GUTTER
 
-**Common overrides:** WINDOW_WIDTH, WINDOW_HEIGHT, MIN_WIDTH, MIN_HEIGHT, LEFT_PANEL_WIDTH, SIDEBAR_WIDTH, SEARCH_HEIGHT, ROW_HEIGHT, SUBTAB_BUTTON_HEIGHT. Use WINDOW_WIDTH and WINDOW_HEIGHT for main window dimensions.
+**Common overrides (standalone windows only):** WINDOW_WIDTH, WINDOW_HEIGHT, MIN_WIDTH, MIN_HEIGHT, SIDEBAR_WIDTH, SEARCH_HEIGHT, ROW_HEIGHT, SUBTAB_BUTTON_HEIGHT.
 
 ---
 

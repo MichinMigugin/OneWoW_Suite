@@ -5,8 +5,6 @@ local DB = OneWoW_GUI.DB
 
 OneWoW_Notes = {}
 
-ns.oneWoWHubActive = false
-
 function OneWoW_Notes:ApplyTheme()
     OneWoW_GUI:ApplyTheme(ns)
 
@@ -56,7 +54,6 @@ local function RegisterWithOneWoW()
         order       = OneWoW:GetModuleTabOrder("notes"),
         create      = function(p) ns.UI.CreateSettingsTab(p) end,
     })
-    ns.oneWoWHubActive = true
     return true
 end
 
@@ -221,13 +218,7 @@ function ns:UpdateWindowLayering()
 end
 
 function ns:SlashCommandHandler()
-    if ns.oneWoWHubActive then
-        OneWoW.UI:Show("notes")
-        return
-    end
-    if ns.UI and ns.UI.Toggle then
-        ns.UI:Toggle()
-    end
+    OneWoW.UI:Show("notes")
 end
 
 -- Core-driven init: the suite loader calls _G["OneWoW_Notes"]:OnAddonLoaded()

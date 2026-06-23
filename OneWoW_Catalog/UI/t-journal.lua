@@ -1445,12 +1445,8 @@ function ns.UI.OpenToInstance(mapID)
     end
     if not instData then return end
 
-    if ns.oneWoWHubActive then
-        OneWoW.UI:Show("catalog")
-        OneWoW.UI:SelectSubTab("catalog", "journal")
-    else
-        ns.UI:Show("journal")
-    end
+    OneWoW.UI:Show("catalog")
+    OneWoW.UI:SelectSubTab("catalog", "journal")
 
     C_Timer.After(0.15, function()
         local panels = panels_ref or ns.UI.journalPanels

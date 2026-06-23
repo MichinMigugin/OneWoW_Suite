@@ -47,7 +47,6 @@ OneWoW_Trackers.lua
 
 # UI
 UI\Framework.lua
-UI\MainFrame.lua
 UI\t-tracker.lua
 UI\ui-tracker-editor.lua
 UI\ui-tracker-pinned.lua

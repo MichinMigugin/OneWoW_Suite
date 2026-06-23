@@ -3,25 +3,19 @@ local _, ns = ...
 -- Public, cross-addon read surface for the Trackers hub. ns stays private.
 OneWoW_Trackers_API = {}
 
---- Toggle the standalone Trackers main window (no-op when hub-hosted).
+--- Toggle the Trackers module in the suite hub.
 function OneWoW_Trackers_API.Toggle()
-    if ns.UI and ns.UI.Toggle then
-        ns.UI:Toggle()
-    end
+    OneWoW.UI:Toggle()
 end
 
---- Show the standalone Trackers main window.
+--- Show the Trackers module in the suite hub.
 function OneWoW_Trackers_API.Show()
-    if ns.UI and ns.UI.Show then
-        ns.UI:Show()
-    end
+    OneWoW.UI:Show("trackers")
 end
 
---- Hide the standalone Trackers main window.
+--- Hide the suite hub window.
 function OneWoW_Trackers_API.Hide()
-    if ns.UI and ns.UI.Hide then
-        ns.UI:Hide()
-    end
+    OneWoW.UI:Hide()
 end
 
 --- Current weekly reset region key ("auto" | "us" | "eu" | "asia").

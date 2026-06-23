@@ -287,3 +287,115 @@ function ns.SetFavoriteItem(itemID, value)
     local k = tostring(itemID)
     ns.db.global.favoriteItems[k] = value and true or nil
 end
+
+function ns.UI.RegisterRosterTabFrame(tabName, frame)
+    local addon = OneWoW_AltTracker
+    if not addon or not tabName or not frame then return end
+    addon.rosterTabFrames = addon.rosterTabFrames or {}
+    addon.rosterTabFrames[tabName] = frame
+end
+
+local function GetRosterTabFrames()
+    local addon = OneWoW_AltTracker
+    return addon and addon.rosterTabFrames
+end
+
+function ns.UI.RefreshMoneyDisplayTabs()
+    local t = GetRosterTabFrames()
+    if not t then return end
+    if ns.UI.RefreshSummaryTab and t.summary then
+        ns.UI.RefreshSummaryTab(t.summary)
+    end
+    if ns.UI.RefreshFinancialsTab and t.financials then
+        ns.UI.RefreshFinancialsTab(t.financials)
+    end
+    if ns.UI.RefreshItemsTab and t.items then
+        ns.UI.RefreshItemsTab(t.items)
+    end
+    if ns.UI.RefreshAuctionsTab and t.auctions then
+        ns.UI.RefreshAuctionsTab(t.auctions)
+        if ns.UI.RefreshAuctionsStats then
+            ns.UI.RefreshAuctionsStats(t.auctions)
+        end
+    end
+end
+
+function ns.UI.RefreshAllFavoriteRosters()
+    local t = GetRosterTabFrames()
+    if not t then return end
+    if ns.UI.RefreshSummaryTab and t.summary then
+        ns.UI.RefreshSummaryTab(t.summary)
+    end
+    if t.progress and t.progress.subTabFrames then
+        for _, key in ipairs({ "mythicplus", "raids", "weekly", "currencies" }) do
+            local f = t.progress.subTabFrames[key]
+            if f and f.refreshFunc then
+                f.refreshFunc(f)
+            end
+        end
+        if ns.UI.RefreshProgressStats and t.progress then
+            ns.UI.RefreshProgressStats(t.progress)
+        end
+    end
+    if ns.UI.RefreshEquipmentTab and t.equipment then
+        ns.UI.RefreshEquipmentTab(t.equipment)
+    end
+    if ns.UI.RefreshProfessionsTab and t.professions then
+        ns.UI.RefreshProfessionsTab(t.professions)
+    end
+    if ns.UI.RefreshLockoutsTab and t.lockouts then
+        ns.UI.RefreshLockoutsTab(t.lockouts)
+    end
+end
+
+function ns.UI.ResizeOverviewPanels()
+    local t = GetRosterTabFrames()
+    if not t then return end
+    local offset = OneWoW_GUI:GetFontSizeOffset() or 0
+    local extraHeight = math.max(0, offset) * 8
+    for _, tabFrame in pairs(t) do
+        if tabFrame.overviewPanel and tabFrame.overviewPanel._baseHeight then
+            tabFrame.overviewPanel:SetHeight(tabFrame.overviewPanel._baseHeight + extraHeight)
+        end
+    end
+end
+
+function ns.UI.CreateFavoriteStarButton(charRow, charKey)
+    local L = ns.L
+    local starBtn = CreateFrame("Button", nil, charRow)
+    starBtn:SetSize(30, 32)
+    starBtn:EnableMouse(true)
+    starBtn:RegisterForClicks("LeftButtonUp")
+    local starIcon = starBtn:CreateTexture(nil, "ARTWORK")
+    starIcon:SetSize(14, 14)
+    starIcon:SetPoint("CENTER")
+    OneWoW_GUI:SetFavoriteAtlasTexture(starIcon)
+    local function applyStarColor()
+        if ns.IsFavoriteChar(charKey) then
+            starIcon:SetDesaturated(false)
+            starIcon:SetAlpha(1)
+        else
+            starIcon:SetDesaturated(true)
+            starIcon:SetAlpha(0.4)
+        end
+    end
+    applyStarColor()
+    starBtn:SetFrameLevel((charRow:GetFrameLevel() or 0) + 10)
+    starBtn:SetScript("OnClick", function()
+        ns.SetFavoriteChar(charKey, not ns.IsFavoriteChar(charKey))
+        applyStarColor()
+        if ns.UI.RefreshAllFavoriteRosters then
+            ns.UI.RefreshAllFavoriteRosters()
+        end
+    end)
+    starBtn:SetScript("OnEnter", function()
+        GameTooltip:SetOwner(starBtn, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["TT_COL_STAR"], 1, 1, 1)
+        GameTooltip:AddLine(L["TT_COL_STAR_DESC"], nil, nil, nil, true)
+        GameTooltip:Show()
+    end)
+    starBtn:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    return starBtn
+end

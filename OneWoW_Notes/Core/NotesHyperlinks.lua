@@ -229,14 +229,14 @@ function ns.UI.CreateNotesHelpPanel()
 
     helpPanel._visibilityTicker = nil
     helpPanel:SetScript("OnShow", function(self)
-        local mf = OneWoW_NotesMainFrame or OneWoWMainWindow
+        local mf = OneWoWMainWindow
         if mf and mf:IsShown() then
             self:ClearAllPoints()
             self:SetPoint("TOPLEFT", mf, "TOPRIGHT", 5, 0)
         end
         if not self._visibilityTicker then
             self._visibilityTicker = C_Timer.NewTicker(0.5, function()
-                local mainFrame = OneWoW_NotesMainFrame or OneWoWMainWindow
+                local mainFrame = OneWoWMainWindow
                 if not mainFrame or not mainFrame:IsShown() then
                     self:Hide()
                 end

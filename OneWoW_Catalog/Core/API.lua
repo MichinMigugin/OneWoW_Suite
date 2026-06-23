@@ -45,11 +45,9 @@ function OneWoW_Catalog_API.RememberItemName(itemID, itemName)
     return ns.RememberItemName(itemID, itemName)
 end
 
---- Toggle the standalone Catalog main window (no-op when hub-hosted).
+--- Toggle the Catalog module in the suite hub.
 function OneWoW_Catalog_API.Toggle()
-    if ns.UI and ns.UI.Toggle then
-        ns.UI:Toggle()
-    end
+    OneWoW.UI:Toggle()
 end
 
 --- Open the item search tab, optionally focused on one item.

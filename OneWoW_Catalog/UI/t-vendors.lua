@@ -813,10 +813,8 @@ function ns.UI.OpenToVendor(npcID)
 
     if not addon.VendorData:GetAllVendors()[npcID] then return end
 
-    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
-        OneWoW.UI:Show("catalog")
-        OneWoW.UI:SelectSubTab("catalog", "vendors")
-    end
+    OneWoW.UI:Show("catalog")
+    OneWoW.UI:SelectSubTab("catalog", "vendors")
 
     local function trySelect()
         local panels = ns.UI.vendorsPanels

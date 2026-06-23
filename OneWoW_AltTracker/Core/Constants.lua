@@ -4,10 +4,6 @@ local OneWoW_GUI = OneWoW_GUI
 
 ns.Constants = {
     GUI = OneWoW_GUI:RegisterGUIConstants({
-        WINDOW_WIDTH = 1400,
-        WINDOW_HEIGHT = 900,
-        MIN_WIDTH = 1000,
-        LEFT_PANEL_WIDTH = 350,
         SUBTAB_BUTTON_HEIGHT = 28,
         CONTROL_PANEL_HEIGHT = 75,
     }),

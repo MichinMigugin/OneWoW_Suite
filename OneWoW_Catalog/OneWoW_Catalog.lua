@@ -6,8 +6,6 @@ local DB = OneWoW_GUI.DB
 OneWoW_Catalog = {}
 local OneWoW_Catalog = OneWoW_Catalog
 
-ns.oneWoWHubActive = false
-
 local function RegisterWithOneWoW()
     OneWoW:RegisterModule({
         name        = "catalog",
@@ -28,7 +26,6 @@ local function RegisterWithOneWoW()
         order       = OneWoW:GetModuleTabOrder("catalog"),
         create      = function(p) ns.UI.CreateSettingsTab(p) end,
     })
-    ns.oneWoWHubActive = true
     return true
 end
 
@@ -48,13 +45,13 @@ local function OnInitialize()
         if ns.ApplyLanguage then ns.ApplyLanguage() end
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoW_Catalog, function()
-        local mainFrame = OneWoW_CatalogMainFrame
+        local mainFrame = OneWoWMainWindow
         if mainFrame then
             OneWoW_GUI:ApplyFontToFrame(mainFrame)
         end
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", OneWoW_Catalog, function()
-        local mainFrame = OneWoW_CatalogMainFrame
+        local mainFrame = OneWoWMainWindow
         if mainFrame then
             OneWoW_GUI:ApplyFontToFrame(mainFrame)
         end
@@ -86,13 +83,7 @@ function OneWoW_Catalog:ApplyLanguage()
 end
 
 function OneWoW_Catalog:SlashCommandHandler()
-    if ns.oneWoWHubActive then
-        OneWoW.UI:Show("catalog")
-        return
-    end
-    if ns.UI and ns.UI.Toggle then
-        ns.UI:Toggle()
-    end
+    OneWoW.UI:Show("catalog")
 end
 
 -- Core-driven init: the suite loader calls _G["OneWoW_Catalog"]:OnAddonLoaded()

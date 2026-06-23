@@ -6,8 +6,6 @@ local DB = OneWoW_GUI.DB
 OneWoW_Trackers = {}
 local OneWoW_Trackers = OneWoW_Trackers
 
-ns.oneWoWHubActive = false
-ns.mode = "standalone"
 ns.UI = ns.UI or {}
 
 local function ApplyLanguage()
@@ -46,8 +44,6 @@ local function RegisterAsOneWoWModule()
         },
     })
 
-    ns.oneWoWHubActive = true
-    ns.mode = "onewow_module"
     return true
 end
 
@@ -122,25 +118,7 @@ local function OnEnable()
 end
 
 function ns:SlashCommandHandler()
-    if ns.mode == "notes_subtab" then
-        if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
-            OneWoW.UI:Show("notes", "tracker")
-        elseif OneWoW_Notes then
-            if OneWoW_Notes.SlashCommandHandler then
-                OneWoW_Notes:SlashCommandHandler("")
-            end
-        end
-        return
-    end
-
-    if ns.oneWoWHubActive and OneWoW and OneWoW.UI then
-        OneWoW.UI:Show("trackers")
-        return
-    end
-
-    if ns.UI and ns.UI.Toggle then
-        ns.UI:Toggle()
-    end
+    OneWoW.UI:Show("trackers")
 end
 
 function ns:FormatResetTimer(seconds)

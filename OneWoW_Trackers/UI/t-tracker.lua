@@ -147,8 +147,8 @@ function ns.UI.CreateTrackerTab(parent)
         end
     end)
 
-    local LEFT_PANEL_WIDTH = ns.Constants.GUI.LEFT_PANEL_WIDTH or 350
-    local GAP = 10
+    local LEFT_PANEL_WIDTH = OneWoW_GUI.Constants.GUI.LEFT_PANEL_WIDTH
+    local GAP = OneWoW_GUI.Constants.GUI.PANEL_GAP
 
     local listPanel = OneWoW_GUI:CreateFrame(parent, {
         width    = LEFT_PANEL_WIDTH,

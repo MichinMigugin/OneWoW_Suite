@@ -194,7 +194,7 @@ local function applyScrollBarStyle(scrollBar, container, offset)
     scrollBar:ClearAllPoints()
     scrollBar:SetPoint("TOPRIGHT", container, "TOPRIGHT", offset, 0)
     scrollBar:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", offset, 0)
-    scrollBar:SetWidth(10)
+    scrollBar:SetWidth(Constants.GUI.SCROLLBAR_WIDTH)
     if scrollBar.ScrollUpButton then
         scrollBar.ScrollUpButton:Hide()
         scrollBar.ScrollUpButton:SetAlpha(0)
@@ -214,7 +214,7 @@ local function applyScrollBarStyle(scrollBar, container, offset)
         if scrollBar.Track.Middle then scrollBar.Track.Middle:SetColorTexture(GetThemeColor("BG_TERTIARY")) end
     end
     if scrollBar.ThumbTexture then
-        scrollBar.ThumbTexture:SetWidth(8)
+        scrollBar.ThumbTexture:SetWidth(Constants.GUI.SCROLLBAR_THUMB_WIDTH)
         scrollBar.ThumbTexture:SetColorTexture(GetThemeColor("ACCENT_PRIMARY"))
     end
     scrollBar:SetScript("OnEnter", function(self)
