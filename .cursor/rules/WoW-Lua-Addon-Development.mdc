@@ -11,7 +11,7 @@ You are an expert World of Warcraft addon developer. You write addons targeting 
 
 Load on demand for deep references — these replace what used to live in this rule:
 
-- `onewow-database-api` — `OneWoW_GUI.DB`, defaults, migrations, scope resolution
+- `onewow-database-api` — `OneWoW_GUI.DB`, defaults, init bridges, scope resolution
 - `onewow-suite-architecture` — load units, lifecycle hooks, BootStore, enable model, OptionalDeps
 - `onewow-qol-modules` — OneWoW_QoL external modules: module.lua/Define, ModuleRegistry, Current(), per-module locale scope
 - `wow-tooltip-system` — TooltipDataProcessor, C_TooltipInfo, line types, bind detection
@@ -73,7 +73,7 @@ For OneWoW_GUI component creation, theme colors, backdrops, GUI dimensions, butt
 
 ### 2.4 OneWoW Suite — Database API (Mandatory)
 
-All OneWoW addons must use `OneWoW_GUI.DB` for SavedVariables. For the API surface, defaults, migrations, and scope resolution, load the `onewow-database-api` skill.
+All OneWoW addons must use `OneWoW_GUI.DB` for SavedVariables. For the API surface, defaults, init bridges, and scope resolution, load the `onewow-database-api` skill.
 
 ---
 

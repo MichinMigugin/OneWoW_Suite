@@ -2,7 +2,6 @@ local ADDON_NAME = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_DEVTOOLS"] = "DevTools 열기",
     ["ADDON_TITLE"] = "DevTool",
     ["ADDON_SUBTITLE"] = "프레임 검사기 및 개발 유틸리티",

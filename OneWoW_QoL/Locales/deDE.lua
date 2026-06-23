@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
-    -- migrated from OneWoW scope
     ["OVERLAYS_SUBTAB"] = "Overlays",
     ["TOOLTIPS_SUBTAB"] = "Tooltips",
     ["CTX_OPEN_QOL"] = "QoL öffnen",

@@ -16,7 +16,7 @@ local function RegisterWithOneWoW()
     local tabs = {
         { name = "features",    displayName = function() return ns.L["TAB_FEATURES"] end, create = function(p) ns.UI.CreateFeaturesTab(p) end },
         { name = "toggles",     displayName = function() return ns.L["TAB_TOGGLES"]  end, create = function(p) ns.UI.CreateTogglesTab(p) end },
-        -- Feature settings tabs migrated from core; strings live in the QoL scope
+        -- Feature settings tabs owned by QoL scope; strings live in the QoL scope
         -- (TOAST_ALERTS_SUBTAB resolves via the shared scope).
         { name = "toastalerts", displayName = function() return ns.L["TOAST_ALERTS_SUBTAB"] end, create = function(p) ns.UI.CreateToastAlertsTab(p) end },
         { name = "tooltips",    displayName = function() return ns.L["TOOLTIPS_SUBTAB"]     end, create = function(p) ns.UI.CreateTooltipsTab(p) end },

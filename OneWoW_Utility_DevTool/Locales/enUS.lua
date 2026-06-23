@@ -2,7 +2,6 @@ local ADDON_NAME, ns = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_DEVTOOLS"] = "Open DevTools",
     ["ADDON_TITLE"] = "DevTool",
     ["ADDON_SUBTITLE"] = "Frame Inspector & Development Utilities",

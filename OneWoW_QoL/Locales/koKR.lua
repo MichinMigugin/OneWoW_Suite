@@ -2,7 +2,6 @@ local ADDON_NAME = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
-    -- migrated from OneWoW scope
     ["OVERLAYS_SUBTAB"] = "오버레이",
     ["TOOLTIPS_SUBTAB"] = "툴팁",
     ["CTX_OPEN_QOL"] = "QoL 열기",

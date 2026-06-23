@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_BAGS"] = "Apri Bags",
     ["ADDON_TITLE"] = "Borse",
 

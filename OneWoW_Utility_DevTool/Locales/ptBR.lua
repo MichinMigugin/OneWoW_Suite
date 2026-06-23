@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — ptBR, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_DEVTOOLS"] = "Abrir DevTools",
     ["ADDON_TITLE"] = "DevTool",
     ["ADDON_SUBTITLE"] = "Inspetor de Frames e Utilitários de Desenvolvimento",

@@ -2,7 +2,6 @@ local ADDON_NAME = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "esES", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_SL"] = "Abrir Shopping List",
     ["OWSL_MAIN_LIST"] = "Lista principal",
     ["OWSL_LIST_EXISTS"] = "La lista ya existe",

@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_CATALOG"] = "打开 Catalog",
 
     ["ADDON_TITLE_FRAME"] = "OneWoW Catalog",

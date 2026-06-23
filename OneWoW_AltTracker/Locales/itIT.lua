@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_ALTTRACKER"] = "Apri AltTracker",
 
     ["AB_PAGE_1"] = "Pagina 1",
@@ -44,7 +43,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["AB_FAIL_UNKNOWN_TYPE"] = "Tipo di azione sconosciuto",
     ["AB_INVALID_TARGET_BAR"] = "Numero di barra di destinazione non valido: %d",
     ["AB_MACRO_IGNORED"] = "La macro «%s» è stata ignorata, nessuno spazio per crearla",
-    ["AB_MIGRATION_SUCCESS"] = "Barre delle azioni migrate a multi-specializzazione: %d personaggi aggiornati",
     ["AB_NO_ACTIVE_SPEC"] = "Impossibile raccogliere i dati della barra delle azioni: nessuna specializzazione attiva",
     ["AB_NO_BAR_DATA"] = "Nessun dato della barra delle azioni trovato",
     ["AB_NO_KEYBIND_DATA"] = "Nessun dato di assegnazione tasti trovato",
@@ -226,7 +224,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["DM_CALLING_REFRESH_MAIL"] = "DataManager trovato, chiamo RefreshMailData()",
     ["DM_CHECKING_EVENT_REG"] = "Verifica della registrazione degli eventi...",
     ["DM_CLEARED_MAIL_DATA"] = "Dati della posta cancellati per %d personaggi",
-    ["DM_EQUIPMENT_MIGRATED"] = "Dati di equipaggiamento migrati dall'espansione %d alla %d. Dati invalidati per %d personaggio/i. I livelli oggetto si aggiorneranno quando accederai con ciascun personaggio.",
     ["DM_EVENTS_REGISTERED"] = "eventsRegistered:",
     ["DM_EXISTS"] = "DataManager esiste",
     ["DM_NOT_INITIALIZED"] = "DataManager non inizializzato",
@@ -330,8 +327,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["PROF_EXPANDED_DETAILS"] = "Dettagli estesi - In arrivo",
     ["PROF_INCOMPLETE_SECONDARY"] = "Secondaria incompleta",
     ["PROF_MAX_LEVEL"] = "Livello massimo",
-    ["PROF_MIGRATED_PREFIX"] = "  Migrato: ",
-    ["PROF_MIGRATION_COMPLETE"] = "%d personaggio/i migrato/i dal vecchio al nuovo formato!",
     ["PROF_MISSING_EQUIPMENT"] = "Equipaggiamento mancante",
     ["PROF_NO_PROFESSIONS"] = "Nessuna professione",
     ["PROF_PRIMARY_PROFS"] = "Professioni principali",

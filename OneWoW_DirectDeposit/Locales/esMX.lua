@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_DD"] = "Abrir Direct Deposit",
     ["ADDON_TITLE"] = "Depósito Directo",
     ["ADDON_SUBTITLE"] = "Gestión Automática de Oro del Banco de la banda guerrera",

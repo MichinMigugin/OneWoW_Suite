@@ -137,7 +137,6 @@ ns.Locale:RegisterShared("esMX", {
     ["SLOT"] = "Ranura",
     ["SUMMARY"] = "Resumen",
 
-    -- migrated from OneWoW scope
     ["TOAST_ALERTS_SUBTAB"] = "Alertas",
     ["FEATURE_UNIT_STATUS_MISSING"] = "No detectado",
     ["FEATURE_UNIT_STATUS_DISABLED"] = "No activado",

@@ -137,7 +137,6 @@ ns.Locale:RegisterShared("zhTW", {
     ["SLOT"] = "欄位",
     ["SUMMARY"] = "概要",
 
-    -- migrated from OneWoW scope
     ["TOAST_ALERTS_SUBTAB"] = "彈出提示",
     ["FEATURE_UNIT_STATUS_MISSING"] = "未偵測到",
     ["FEATURE_UNIT_STATUS_DISABLED"] = "未啟用",

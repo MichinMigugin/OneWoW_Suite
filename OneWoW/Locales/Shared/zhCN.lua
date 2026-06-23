@@ -137,7 +137,6 @@ ns.Locale:RegisterShared("zhCN", {
     ["SLOT"] = "栏位",
     ["SUMMARY"] = "概要",
 
-    -- migrated from OneWoW scope
     ["TOAST_ALERTS_SUBTAB"] = "弹出提示",
     ["FEATURE_UNIT_STATUS_MISSING"] = "未检测到",
     ["FEATURE_UNIT_STATUS_DISABLED"] = "未启用",

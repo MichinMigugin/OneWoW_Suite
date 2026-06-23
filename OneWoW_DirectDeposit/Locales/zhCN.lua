@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — zhCN, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_DD"] = "打开直接存款",
     ["ADDON_TITLE"] = "直接存款",
     ["ADDON_SUBTITLE"] = "战团银行金币自动管理",

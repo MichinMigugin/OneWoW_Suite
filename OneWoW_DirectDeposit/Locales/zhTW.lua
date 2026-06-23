@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — zhTW (Taiwan terms), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_DD"] = "開啟直接存款",
     ["ADDON_TITLE"] = "直接存款",
     ["ADDON_SUBTITLE"] = "戰隊銀行金幣自動管理",

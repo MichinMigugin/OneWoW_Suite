@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_SL"] = "Abrir Shopping List",
     ["OWSL_MAIN_LIST"] = "Lista principal",
     ["OWSL_LIST_EXISTS"] = "La lista ya existe",

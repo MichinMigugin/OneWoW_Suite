@@ -2,7 +2,6 @@ local ADDON_NAME = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_ALTTRACKER"] = "AltTracker 열기",
 
     ["AB_PAGE_1"] = "페이지 1",
@@ -43,7 +42,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["AB_FAIL_UNKNOWN_TYPE"] = "알 수 없는 행동 유형",
     ["AB_INVALID_TARGET_BAR"] = "잘못된 대상 단축바 번호: %d",
     ["AB_MACRO_IGNORED"] = "매크로 '%s'이(가) 무시되었습니다. 생성할 공간이 없습니다",
-    ["AB_MIGRATION_SUCCESS"] = "행동 단축바가 다중 전문화로 이전되었습니다: %d개 캐릭터 업데이트",
     ["AB_NO_ACTIVE_SPEC"] = "행동 단축바 데이터를 수집할 수 없습니다: 활성 전문화 없음",
     ["AB_NO_BAR_DATA"] = "행동 단축바 데이터를 찾을 수 없습니다",
     ["AB_NO_KEYBIND_DATA"] = "단축키 데이터를 찾을 수 없습니다",
@@ -225,7 +223,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["DM_CALLING_REFRESH_MAIL"] = "DataManager 발견, RefreshMailData() 호출 중",
     ["DM_CHECKING_EVENT_REG"] = "이벤트 등록 확인 중...",
     ["DM_CLEARED_MAIL_DATA"] = "%d개 캐릭터의 우편 데이터를 지웠습니다",
-    ["DM_EQUIPMENT_MIGRATED"] = "장비 데이터가 확장팩 %d에서 %d(으)로 이전되었습니다. %d개 캐릭터의 데이터가 무효화되었습니다. 각 캐릭터에 접속하면 아이템 레벨이 갱신됩니다.",
     ["DM_EVENTS_REGISTERED"] = "eventsRegistered:",
     ["DM_EXISTS"] = "DataManager 존재",
     ["DM_NOT_INITIALIZED"] = "DataManager가 초기화되지 않았습니다",
@@ -329,8 +326,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["PROF_EXPANDED_DETAILS"] = "확장 상세 - 곧 제공",
     ["PROF_INCOMPLETE_SECONDARY"] = "미완료 보조",
     ["PROF_MAX_LEVEL"] = "최대 숙련",
-    ["PROF_MIGRATED_PREFIX"] = "  이전됨: ",
-    ["PROF_MIGRATION_COMPLETE"] = "구 형식에서 신 형식으로 %d개 캐릭터를 이전했습니다!",
     ["PROF_MISSING_EQUIPMENT"] = "누락 장비",
     ["PROF_NO_PROFESSIONS"] = "전문기술 없음",
     ["PROF_PRIMARY_PROFS"] = "주 전문기술",

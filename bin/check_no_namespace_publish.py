@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Pre-commit hook: flag namespace publish and global-surface anti-patterns in Lua.
 
-Enforces OneWoW/Docs/ARCHITECTURE.md §6.1 during the addon migration period.
 Enforces OneWoW/Docs/ARCHITECTURE.md §6.1. See ARCHITECTURE.md §6.1 for the global-surface taxonomy.
 
 Flagged patterns (new code should not add these):
@@ -18,7 +17,7 @@ Grandfathered paths (ALLOWED_NAMESPACE_PUBLISH) pass as [allowed]. Everyone else
 prints [error] when WARN_ONLY is False.
 
 Allowlist keys are `path` (whole file) or `path::pattern_id` (single pattern in
-that file). Remove entries as units migrate. Grandfathering a root lua file does
+that file). Remove grandfather entries when cleaned up. Grandfathering a root lua file does
 NOT suppress warnings in that unit's child files.
 """
 

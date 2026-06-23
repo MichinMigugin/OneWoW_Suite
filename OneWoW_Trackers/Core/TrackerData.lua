@@ -1208,7 +1208,7 @@ function TD:NormalizeAllLists()
 
             -- Pinned-window UI state introduced after the original pinned schema.
             -- Defaults are applied here so existing lists in the DB pick them up
-            -- without needing a per-key migration. Legacy `pinnedLocked` was a
+            -- without needing a per-key bridge. Legacy `pinnedLocked` was a
             -- single combined lock; we split it into independent move/resize
             -- locks here for parity with the Notes pin.
             if list.pinnedLocked ~= nil then

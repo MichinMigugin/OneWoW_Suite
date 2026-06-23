@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_CATALOG"] = "Catalog öffnen",
 
     ["ADDON_TITLE_FRAME"] = "OneWoW Catalog",

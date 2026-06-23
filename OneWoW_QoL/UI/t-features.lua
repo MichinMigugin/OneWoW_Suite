@@ -2,7 +2,7 @@ local _, ns = ...
 local L = ns.L
 
 -- Each external module's locale strings live in its own scope (per-module locale
--- migration via module.lua/Define), not core ns.L. Resolve module-owned keys (module
+-- registered via module.lua/Define), not core ns.L. Resolve module-owned keys (module
 -- title/description and toggle label/description/group) against that module's cached
 -- scope view (`_view`, set by ModuleRegistry:Define).
 local function ML(id, key)

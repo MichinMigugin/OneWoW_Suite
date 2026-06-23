@@ -51,7 +51,7 @@ Core\Profile.lua                   ← optional hot-path profiler (/owbprof); us
 Core\LayoutDebug.lua               ← /owblayout ring buffer for layout-scheduler diagnostics
 Core\Constants.lua                 ← OneWoW_GUI:RegisterGUIConstants, icon sizes, pool prealloc size
 Core\SectionDefaults.lua           ← stable section IDs, builtin lists, OneWoW Bags catch-all section sync
-Core\Database.lua                  ← DB:Init, defaults, migrations
+Core\Database.lua                  ← DB:Init, defaults, init bridges
 Core\BagTypes.lua                  ← bag ID constants, reagent/player bag helpers
 Core\BagEquip.lua                  ← equipped-bag pickup/swap/empty/move-contents (used by BagsBar)
 Core\BankTypes.lua                 ← bank/warband tab constants
@@ -178,7 +178,7 @@ OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some o
                              │ reads
 ┌────────────────────────────▼─────────────────────────────────┐
 │                      Core Layer                              │
-│  Database (DB:Init, defaults, migrations)                    │
+│  Database (DB:Init, defaults, init bridges)                    │
 │  Events (event routing table, dirtyBags accumulator)         │
 │  Constants (GUI metrics, icon sizes)                         │
 │  Profile (optional /owbprof timings)                         │
@@ -405,7 +405,7 @@ Layout-affecting numeric settings (e.g. `bagColumns`) use `SettingsController:De
 
 ### SectionDefaults (`Core\SectionDefaults.lua`)
 
-Stable section IDs (`SEC_ONEWOW_BAGS`, `SEC_EQUIPMENT`, `SEC_CRAFTING`, `SEC_HOUSING`), default member lists per section, and `BUILTIN_SORT_PRIORITY` for ordering. `BuildOnewowMembers` / `SyncOnewowSectionCategories` maintain the **OneWoW Bags** catch-all section: builtins and custom categories not assigned elsewhere, sorted per saved `categoryOrder` or builtin priority. Used by `CategoryController`, category UI (`GUI\CategoryManager.lua`), and migrations (v3+ and v10+).
+Stable section IDs (`SEC_ONEWOW_BAGS`, `SEC_EQUIPMENT`, `SEC_CRAFTING`, `SEC_HOUSING`), default member lists per section, and `BUILTIN_SORT_PRIORITY` for ordering. `BuildOnewowMembers` / `SyncOnewowSectionCategories` maintain the **OneWoW Bags** catch-all section: builtins and custom categories not assigned elsewhere, sorted per saved `categoryOrder` or builtin priority. Used by `CategoryController`, category UI (`GUI\CategoryManager.lua`), and section sync on init.
 
 ### CategoryViewHelpers (`Views\CategoryViewHelpers.lua`)
 
@@ -545,7 +545,7 @@ Modes: `none` (no reorder), `default` (bagID then slotID among occupied slots), 
 
 **`rarity` mode** (`CompareRarity`): descending comparisons in order — (1) item quality (`_owb_itemQuality`, fallback `owb_itemInfo.quality`), (2) reagent profession tier (`_owb_reagentQuality`), (3) crafted tier (`_owb_craftedQuality`). Item rarity wins globally; profession tiers break ties (e.g. same-name common herbs with different diamond tiers).
 
-Default in **fresh DB defaults** is `itemSort = "none"` (migration 5); `GetItemSortMode` returns `db.global.itemSort or "default"` if the key were absent.
+Default in **fresh DB defaults** is `itemSort = "none"`; `GetItemSortMode` returns `db.global.itemSort or "default"` if the key were absent.
 
 Per-category `categoryModifications[name].subSortMode` provides a secondary
 criterion after `sortMode`. Optional `sortDescending` / `subSortDescending`
@@ -644,10 +644,8 @@ Shared: `bankShowWarband` (active mode), `bankFramePosition`, `collapsedBankCate
 
 ### Legacy SV bridge
 
-On first load after the migration collapse, a shape-detected bridge wraps a flat
-`OneWoW_Bags_DB` root into `root.global` before `DB:Init`. The 18 versioned
-`RunMigrations` steps that used to run here were removed (assumes users logged in
-on a recent build). See suite commit *Collapse legacy RunMigrations* for the step list.
+A shape-detected bridge in `Core/Database.lua` wraps a flat `OneWoW_Bags_DB` root into
+`root.global` before `DB:Init` when the saved file predates the scoped layout.
 
 ---
 

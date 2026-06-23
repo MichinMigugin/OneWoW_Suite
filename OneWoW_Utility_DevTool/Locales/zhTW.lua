@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — zhTW, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_DEVTOOLS"] = "開啟 DevTools",
     ["ADDON_TITLE"] = "DevTool",
     ["ADDON_SUBTITLE"] = "框架檢查器與開發工具",

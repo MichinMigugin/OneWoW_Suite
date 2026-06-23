@@ -363,7 +363,7 @@ end
 ## Settings
 
 Collection toggles live in `OneWoW_AltTracker_Storage_DB.settings` and are owned by this
-store unit (defaults/migrations in `Core/Database.lua`). They are **not** part of the
+store unit (defaults/init bridges in `Core/Database.lua`). They are **not** part of the
 cross-unit `_API` contract.
 
 ## Integration with Other Addons

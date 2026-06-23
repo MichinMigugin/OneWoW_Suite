@@ -190,7 +190,7 @@ This creates four themed split containers:
 All dropdowns read/write the shared settings (`OneWoW_DB`) and fire callbacks.
 The panel consumes ~695px of vertical space.
 
-### Migrate existing settings (call once at addon init)
+### Import per-addon settings into shared GUI DB (call once at addon init)
 ```lua
 OneWoW_GUI:MigrateSettings(addon.db.global)
 ```

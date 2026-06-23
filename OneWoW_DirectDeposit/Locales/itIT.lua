@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — itIT, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_DD"] = "Apri Deposito Diretto",
     ["ADDON_TITLE"] = "Deposito Diretto",
     ["ADDON_SUBTITLE"] = "Gestione Automatica dell'Oro della Banca della Brigata",

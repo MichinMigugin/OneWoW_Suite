@@ -145,7 +145,6 @@ ns.Locale:RegisterShared("enUS", {
     --   Pin — two distinct senses: noun "map pin" (Catalog) vs verb "pin" (Trackers).
     -- ("%d" is a bare format placeholder, also intentionally left scoped.)
 
-    -- migrated from OneWoW scope
     ["TOAST_ALERTS_SUBTAB"] = "Toast Alerts",
     ["FEATURE_UNIT_STATUS_MISSING"] = "Not detected",
     ["FEATURE_UNIT_STATUS_DISABLED"] = "Not enabled",

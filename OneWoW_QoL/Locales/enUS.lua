@@ -2,7 +2,6 @@ local ADDON_NAME, ns = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
-    -- migrated from OneWoW scope
     ["OVERLAYS_SUBTAB"] = "Overlays",
     ["TOOLTIPS_SUBTAB"] = "Tooltips",
     ["CTX_OPEN_QOL"] = "Open QoL",

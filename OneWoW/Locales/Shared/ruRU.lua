@@ -137,7 +137,6 @@ ns.Locale:RegisterShared("ruRU", {
     ["SLOT"] = "Слот",
     ["SUMMARY"] = "Сводка",
 
-    -- migrated from OneWoW scope
     ["TOAST_ALERTS_SUBTAB"] = "Оповещения",
     ["FEATURE_UNIT_STATUS_MISSING"] = "Не обнаружено",
     ["FEATURE_UNIT_STATUS_DISABLED"] = "Не включено",

@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_ALTTRACKER"] = "AltTracker öffnen",
 
     ["AB_PAGE_1"] = "Seite 1",
@@ -44,7 +43,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["AB_FAIL_UNKNOWN_TYPE"] = "Unbekannter Aktionstyp",
     ["AB_INVALID_TARGET_BAR"] = "Ungültige Zielleistennummer: %d",
     ["AB_MACRO_IGNORED"] = "Makro „%s“ wurde ignoriert, kein Platz zum Erstellen",
-    ["AB_MIGRATION_SUCCESS"] = "Aktionsleisten auf Multi-Spezialisierung migriert: %d Charaktere aktualisiert",
     ["AB_NO_ACTIVE_SPEC"] = "Aktionsleistendaten können nicht erfasst werden: Keine aktive Spezialisierung",
     ["AB_NO_BAR_DATA"] = "Keine Aktionsleistendaten gefunden",
     ["AB_NO_KEYBIND_DATA"] = "Keine Tastenbelegungsdaten gefunden",
@@ -226,7 +224,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["DM_CALLING_REFRESH_MAIL"] = "DataManager gefunden, rufe RefreshMailData() auf",
     ["DM_CHECKING_EVENT_REG"] = "Überprüfe Ereignisregistrierung...",
     ["DM_CLEARED_MAIL_DATA"] = "Postdaten für %d Charaktere gelöscht",
-    ["DM_EQUIPMENT_MIGRATED"] = "Ausrüstungsdaten von Erweiterung %d auf %d migriert. Daten für %d Charakter(e) ungültig gemacht. Gegenstandsstufen werden aktualisiert, sobald ihr euch mit jedem Charakter einloggt.",
     ["DM_EVENTS_REGISTERED"] = "eventsRegistered:",
     ["DM_EXISTS"] = "DataManager existiert",
     ["DM_NOT_INITIALIZED"] = "DataManager nicht initialisiert",
@@ -330,8 +327,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["PROF_EXPANDED_DETAILS"] = "Erweiterte Details - Bald verfügbar",
     ["PROF_INCOMPLETE_SECONDARY"] = "Unvollständiger Nebenberuf",
     ["PROF_MAX_LEVEL"] = "Maximalstufe",
-    ["PROF_MIGRATED_PREFIX"] = "  Migriert: ",
-    ["PROF_MIGRATION_COMPLETE"] = "%d Charakter(e) vom alten ins neue Format migriert!",
     ["PROF_MISSING_EQUIPMENT"] = "Fehlende Ausrüstung",
     ["PROF_NO_PROFESSIONS"] = "Keine Berufe",
     ["PROF_PRIMARY_PROFS"] = "Hauptberufe",

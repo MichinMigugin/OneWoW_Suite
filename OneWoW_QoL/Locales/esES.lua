@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "esES", {
 
-    -- migrated from OneWoW scope
     ["OVERLAYS_SUBTAB"] = "Superposiciones",
     ["TOOLTIPS_SUBTAB"] = "Tooltips",
     ["CTX_OPEN_QOL"] = "Abrir QoL",

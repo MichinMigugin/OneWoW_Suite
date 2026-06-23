@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — esMX (LatAm terms applied: presionar, mouse), pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
-    -- migrated from OneWoW scope
     ["OVERLAYS_SUBTAB"] = "Superposiciones",
     ["TOOLTIPS_SUBTAB"] = "Tooltips",
     ["CTX_OPEN_QOL"] = "Abrir QoL",

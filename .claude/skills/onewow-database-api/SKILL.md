@@ -1,6 +1,6 @@
 ---
 name: onewow-database-api
-description: "Use this skill when authoring or reviewing OneWoW addon code that touches SavedVariables, defaults, migrations, or scope resolution — anything calling OneWoW_GUI.DB or accessing Addon.db.* paths."
+description: "Use this skill when authoring or reviewing OneWoW addon code that touches SavedVariables, defaults, init bridges, or scope resolution — anything calling OneWoW_GUI.DB or accessing Addon.db.* paths."
 ---
 # Stub — not the source of truth
 

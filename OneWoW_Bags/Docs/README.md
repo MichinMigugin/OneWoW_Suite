@@ -6,7 +6,7 @@ Contributor and integrator docs for OneWoW_Bags. These files are **not** loaded 
 
 | Document | Contents |
 |----------|----------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Load order, layered MVC, data/layout/settings pipelines, DB schema, migrations, performance, refresh targets |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Load order, layered MVC, data/layout/settings pipelines, DB schema, init bridges, performance, refresh targets |
 | [CATEGORIZATION.md](CATEGORIZATION.md) | `GetItemCategory` / `ResolveBaseCategory`, tie-breaking, section layout, per-category sort/group/stack |
 | [SEARCH_SYNTAX.md](SEARCH_SYNTAX.md) | Predicate expression language (`#keywords`, operators, properties, `SAVED(Name)`) |
 | [IMPORT_EXPORT.md](IMPORT_EXPORT.md) | Category/section bundle import/export, preview dialog, merge rules, undo |

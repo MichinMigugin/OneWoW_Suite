@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
-    -- migrated from OneWoW scope
     ["OVERLAYS_SUBTAB"] = "Наложения",
     ["TOOLTIPS_SUBTAB"] = "Подсказки",
     ["CTX_OPEN_QOL"] = "Открыть QoL",

@@ -2,7 +2,6 @@ local ADDON_NAME, ns = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_TRACKERS"] = "Open Trackers",
     ["ADDON_TITLE_SHORT"]               = "Trackers",
     ["ADDON_TITLE_FRAME"]               = "OneWoW Trackers",

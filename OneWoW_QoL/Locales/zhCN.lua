@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
-    -- migrated from OneWoW scope
     ["OVERLAYS_SUBTAB"] = "覆盖层",
     ["TOOLTIPS_SUBTAB"] = "鼠标提示",
     ["CTX_OPEN_QOL"] = "打开 QoL",

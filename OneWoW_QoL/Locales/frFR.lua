@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "frFR", {
 
-    -- migrated from OneWoW scope
     ["OVERLAYS_SUBTAB"] = "Incrustations",
     ["TOOLTIPS_SUBTAB"] = "Infobulles",
     ["CTX_OPEN_QOL"] = "Ouvrir QoL",

@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — itIT, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_SL"] = "Apri lista della spesa",
     ["OWSL_MAIN_LIST"] = "Lista principale",
     ["OWSL_LIST_EXISTS"] = "La lista esiste già",

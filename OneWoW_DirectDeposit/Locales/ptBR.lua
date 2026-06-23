@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — ptBR, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_DD"] = "Abrir Depósito Direto",
     ["ADDON_TITLE"] = "Depósito Direto",
     ["ADDON_SUBTITLE"] = "Gerenciamento Automático de Ouro do Banco do Bando de Guerra",

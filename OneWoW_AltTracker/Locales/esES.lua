@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "esES", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_ALTTRACKER"] = "Abrir AltTracker",
 
     ["AB_PAGE_1"] = "Página 1",
@@ -44,7 +43,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["AB_FAIL_UNKNOWN_TYPE"] = "Tipo de acción desconocido",
     ["AB_INVALID_TARGET_BAR"] = "Número de barra de destino inválido: %d",
     ["AB_MACRO_IGNORED"] = "La macro «%s» se ignoró, no hay espacio para crearla",
-    ["AB_MIGRATION_SUCCESS"] = "Barras de acción migradas a multiespecialización: %d personajes actualizados",
     ["AB_NO_ACTIVE_SPEC"] = "No se pueden recopilar datos de barra de acción: ninguna especialización activa",
     ["AB_NO_BAR_DATA"] = "No se encontraron datos de barra de acción",
     ["AB_NO_KEYBIND_DATA"] = "No se encontraron datos de asignación de teclas",
@@ -226,7 +224,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["DM_CALLING_REFRESH_MAIL"] = "DataManager encontrado, llamando a RefreshMailData()",
     ["DM_CHECKING_EVENT_REG"] = "Comprobando el registro de eventos...",
     ["DM_CLEARED_MAIL_DATA"] = "Datos de correo borrados para %d personajes",
-    ["DM_EQUIPMENT_MIGRATED"] = "Datos de equipo migrados de la expansión %d a la %d. Datos invalidados para %d personaje(s). Los niveles de objeto se actualizarán cuando inicies sesión con cada personaje.",
     ["DM_EVENTS_REGISTERED"] = "eventsRegistered:",
     ["DM_EXISTS"] = "DataManager existe",
     ["DM_NOT_INITIALIZED"] = "DataManager no inicializado",
@@ -330,8 +327,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["PROF_EXPANDED_DETAILS"] = "Detalles ampliados - Próximamente",
     ["PROF_INCOMPLETE_SECONDARY"] = "Secundaria incompleta",
     ["PROF_MAX_LEVEL"] = "Nivel máximo",
-    ["PROF_MIGRATED_PREFIX"] = "  Migrado: ",
-    ["PROF_MIGRATION_COMPLETE"] = "¡%d personaje(s) migrado(s) del formato antiguo al nuevo!",
     ["PROF_MISSING_EQUIPMENT"] = "Equipo ausente",
     ["PROF_NO_PROFESSIONS"] = "Sin profesiones",
     ["PROF_PRIMARY_PROFS"] = "Profesiones principales",

@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — ptBR, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_SL"] = "Abrir lista de compras",
     ["OWSL_MAIN_LIST"] = "Lista principal",
     ["OWSL_LIST_EXISTS"] = "A lista já existe",

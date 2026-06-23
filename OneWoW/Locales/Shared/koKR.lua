@@ -137,7 +137,6 @@ ns.Locale:RegisterShared("koKR", {
     ["SLOT"] = "슬롯",
     ["SUMMARY"] = "요약",
 
-    -- migrated from OneWoW scope
     ["TOAST_ALERTS_SUBTAB"] = "토스트 알림",
     ["FEATURE_UNIT_STATUS_MISSING"] = "감지되지 않음",
     ["FEATURE_UNIT_STATUS_DISABLED"] = "사용 안 함",

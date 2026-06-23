@@ -297,7 +297,7 @@ OneWoW:GetLoadFailureText(reason)               -> localized string
 - **`{ deferInCombat = true }`** queues to `PLAYER_REGEN_ENABLED`.
 - **Lazy cross-module data:** reserve `WithAddon` for *explicit user actions* (e.g.
   Catalog AH scan → `OneWoW_AltTracker_Auctions`), not speculative tab opens.
-- **Trackers → Notes migration** uses `WithAddon("OneWoW_Notes", …)` when Notes is
+- **Trackers legacy SV drain** uses `WithAddon("OneWoW_Notes", …)` when Notes is
   wanted but not loaded; defers when Notes is soft-opted-out.
 - **The funnel is mandatory.** Raw `C_AddOns.LoadAddOn` / `UIParentLoadAddOn` calls
   are forbidden everywhere except `Core/AddonLoader.lua` and `Core/Lifecycle.lua` —
@@ -642,8 +642,7 @@ cross-unit data accessors on the lifecycle root as colon-methods (e.g.
 - `OneWoW_<Unit> = ns` or `_G[...] = ns` (hand namespace publish)
 - Renaming the vararg namespace: `local ADDON_NAME, OneWoW_Bags = ...` or
   `local ADDON_NAME, OneWoW = ...` — always `local ADDON_NAME, ns = ...`
-- Back-references: `ns.addon`, `ns.OneWoWAltTracker`, etc. (AltTracker and Catalog hubs migrated —
-  use `ns.db` + `_API` instead)
+- Back-references: `ns.addon`, `ns.OneWoWAltTracker`, etc. — use `ns.db` + `_API` instead
 - `.db` on the lifecycle root (`OneWoW_AltTracker.db`, `OneWoW.db`) — use `ns.db`
 - Colon-methods on `_API` globals
 - Leaking internals on the lifecycle root (`OneWoW_AltTracker.UI = ...`)
@@ -665,7 +664,7 @@ dialog service is `OneWoW.CopyPaste` (`Core/CopyPaste.lua`).
 | OneWoW | OneWoW_Bags | `Integrations/OneWoW_Bags.lua` (wired via `RegisterAddonLoadedWatcher`) | Overlay engine with Bags callbacks |
 | OneWoW_ShoppingList | OneWoW_Catalog | `OneWoW_Catalog_TradeskillAPI` | Recipe callback |
 | OneWoW_Trackers | OneWoW_Notes | `OneWoW_Trackers_API` | Tracker sub-tab in Notes |
-| OneWoW_Trackers | OneWoW_Notes_DB | One-time migration | Legacy tracker data drain |
+| OneWoW_Trackers | OneWoW_Notes_DB | Init bridge (legacy SV drain) | Legacy tracker data drain |
 
 ### Store access rules
 
@@ -768,7 +767,7 @@ may register both.
    surface (`OneWoW`, `OneWoW_GUI`, `OneWoW_DB`) is readable everywhere. Lint:
    `bin/check_no_data_manager_bypass.py` (**enforced**; hard-fails off-list;
    `ALLOWED_FOREIGN_SV` grandfathers the core profile manager and documented
-   one-time migrations — see the hook docstring).
+   cross-SV init bridges — see the hook docstring).
 2. **Inverse dependencies via events/callbacks**, not direct calls — core stays
    consumer-agnostic.
 3. **Cross-unit data** should route through `DataManager:Query` (planned broker in
@@ -828,7 +827,7 @@ size, flags)` with `fontSizeOffset` from `OneWoW_DB` (range −3..+5, floor 6).
 All reads and writes of `OneWoW.db.global.settings.*` (tooltips, overlays,
 toastalerts) route through `OneWoW.SettingsFeatureRegistry`
 (`Core/SettingsFeatureRegistry.lua`). Only that file and `Core/Database.lua`
-(defaults, migrations) touch the tree directly — enforced by the
+(defaults, init bridges) touch the tree directly — enforced by the
 `no-settings-bypass` pre-commit hook (§3.10). `portalHub` is a separate DB
 root outside the funnel; the former `toasts` root was folded into
 `settings.toastalerts` (including the storage-only `anchor` id, no catalog row).
@@ -878,7 +877,7 @@ obtained from `GetFeatureSettings`.
 
 `ExternalTooltipSync` runtime state (Auctionator column backup, one-time popup
 flags) lives in its own `db.global.externalTooltipSync` root, not in settings —
-relocated during the core migration collapse (formerly a versioned step in `Core/Database.lua`).
+relocated to init bridges in `InitializeDatabase` (formerly under `Core/Database.lua`).
 
 ### 8.6 Restriction funnel (`OneWoW.Restriction`)
 

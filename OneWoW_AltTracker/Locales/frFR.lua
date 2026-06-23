@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "frFR", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_ALTTRACKER"] = "Ouvrir AltTracker",
 
     ["AB_PAGE_1"] = "Page 1",
@@ -44,7 +43,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["AB_FAIL_UNKNOWN_TYPE"] = "Type d'action inconnu",
     ["AB_INVALID_TARGET_BAR"] = "Numéro de barre cible invalide : %d",
     ["AB_MACRO_IGNORED"] = "La macro « %s » a été ignorée, pas de place pour la créer",
-    ["AB_MIGRATION_SUCCESS"] = "Barres d'action migrées vers le multi-spécialisation : %d personnages mis à jour",
     ["AB_NO_ACTIVE_SPEC"] = "Impossible de collecter les données de barre d'action : aucune spécialisation active",
     ["AB_NO_BAR_DATA"] = "Aucune donnée de barre d'action trouvée",
     ["AB_NO_KEYBIND_DATA"] = "Aucune donnée de raccourci trouvée",
@@ -226,7 +224,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["DM_CALLING_REFRESH_MAIL"] = "DataManager trouvé, appel de RefreshMailData()",
     ["DM_CHECKING_EVENT_REG"] = "Vérification de l'enregistrement des événements...",
     ["DM_CLEARED_MAIL_DATA"] = "Données de courrier effacées pour %d personnages",
-    ["DM_EQUIPMENT_MIGRATED"] = "Données d'équipement migrées de l'extension %d vers %d. Données invalidées pour %d personnage(s). Les niveaux d'objet seront actualisés à la connexion de chaque personnage.",
     ["DM_EVENTS_REGISTERED"] = "eventsRegistered :",
     ["DM_EXISTS"] = "DataManager existe",
     ["DM_NOT_INITIALIZED"] = "DataManager non initialisé",
@@ -330,8 +327,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["PROF_EXPANDED_DETAILS"] = "Détails étendus - Bientôt disponible",
     ["PROF_INCOMPLETE_SECONDARY"] = "Secondaire incomplet",
     ["PROF_MAX_LEVEL"] = "Niveau max",
-    ["PROF_MIGRATED_PREFIX"] = "  Migré : ",
-    ["PROF_MIGRATION_COMPLETE"] = "%d personnage(s) migré(s) de l'ancien vers le nouveau format !",
     ["PROF_MISSING_EQUIPMENT"] = "Équipement manquant",
     ["PROF_NO_PROFESSIONS"] = "Aucun métier",
     ["PROF_PRIMARY_PROFS"] = "Métiers principaux",

@@ -2,7 +2,6 @@ local ADDON_NAME = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_CATALOG"] = "Catalog 열기",
 
     ["ADDON_TITLE_FRAME"] = "OneWoW 도감",

@@ -154,7 +154,7 @@ All under `bin/` unless noted; run from the repo root.
 | `locale_gen.py --enus … --locale … [--existing …] [--dict …] --out …` | Regenerate a locale file from the `enUS` template, overlaying existing translations + a `--dict` JSON; preserves layout/comments/escapes; handles addon-table **and** module-style headers; unmapped keys fall back to `enUS` (reported as TODO). | Authoring/refilling a whole locale. |
 | `gen_esmx.py <Locales…>` | Generate `esMX` from `esES` + apply the Latin-American term map (`LATAM_SUBS`: `presionar`, `mouse`) + machine-draft header. Re-runnable (terms live in the tool). | After any `esES` change. |
 | `locale_usage.py` | **Scope-leak audit** — keys read cross-scope through the wrong `L` binding (`ns.L` vs `OneWoW.L`). | After moving features between addons. |
-| `locale_migrate.py` | Relocate keys between scopes (remove from src locales, insert into dst), e.g. core→`shared` or core→`OneWoW_QoL`. | Restructuring scopes. |
+| `locale_migrate.py` | Relocate keys between scopes (remove from src locales, insert into dst), e.g. core→`shared` or core→`OneWoW_QoL`. Inserts a `-- migrated from <scope> scope` provenance line on move. `--remove-migrate-comments all` (or `OneWoW,shared`, …) strips those lines after a scope move is settled. | Restructuring scopes; cleaning provenance after a move is complete. |
 | `check_no_g_literal.py` | Guard: forbids `_G.CLOSE` / `_G["CLOSE"]` (use the bare global). | CI / pre-commit. |
 | `/owlocale` (in-game) | Per-scope key counts, shared/scope collisions, registered locales not in `SUPPORTED`. The only locale debug command (no debug builds). | In-client sanity check. |
 

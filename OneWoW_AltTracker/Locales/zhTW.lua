@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_ALTTRACKER"] = "開啟 AltTracker",
 
     ["AB_PAGE_1"] = "第 1 頁",
@@ -44,7 +43,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["AB_FAIL_UNKNOWN_TYPE"] = "未知的動作類型",
     ["AB_INVALID_TARGET_BAR"] = "無效的目標動作條編號：%d",
     ["AB_MACRO_IGNORED"] = "巨集「%s」已被忽略，沒有空間可建立",
-    ["AB_MIGRATION_SUCCESS"] = "動作條已遷移至多專精模式：已更新 %d 個角色",
     ["AB_NO_ACTIVE_SPEC"] = "無法收集動作條資料：沒有啟用的專精",
     ["AB_NO_BAR_DATA"] = "找不到動作條資料",
     ["AB_NO_KEYBIND_DATA"] = "找不到按鍵綁定資料",
@@ -226,7 +224,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["DM_CALLING_REFRESH_MAIL"] = "已找到 DataManager，正在呼叫 RefreshMailData()",
     ["DM_CHECKING_EVENT_REG"] = "正在檢查事件註冊...",
     ["DM_CLEARED_MAIL_DATA"] = "已清除 %d 個角色的郵件資料",
-    ["DM_EQUIPMENT_MIGRATED"] = "裝備資料已從資料片 %d 遷移到 %d。已使 %d 個角色的資料失效。裝備等級將在你登入每個角色時重新整理。",
     ["DM_EVENTS_REGISTERED"] = "eventsRegistered：",
     ["DM_EXISTS"] = "DataManager 存在",
     ["DM_NOT_INITIALIZED"] = "DataManager 未初始化",
@@ -330,8 +327,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["PROF_EXPANDED_DETAILS"] = "擴充詳情 - 即將推出",
     ["PROF_INCOMPLETE_SECONDARY"] = "次要專業不完整",
     ["PROF_MAX_LEVEL"] = "最高等級",
-    ["PROF_MIGRATED_PREFIX"] = "  已遷移：",
-    ["PROF_MIGRATION_COMPLETE"] = "已將 %d 個角色從舊格式遷移到新格式！",
     ["PROF_MISSING_EQUIPMENT"] = "缺少裝備",
     ["PROF_NO_PROFESSIONS"] = "無專業",
     ["PROF_PRIMARY_PROFS"] = "主要專業",

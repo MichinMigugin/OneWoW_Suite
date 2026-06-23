@@ -17,14 +17,14 @@ Suite storage layout and global surface contract: [`ARCHITECTURE.md`](ARCHITECTU
 - Presets are separate from scopes; only one preset is active at a time.
 - Presets are sparse overlays applied at read time — they do not overwrite stored scope values.
 - `Char` is a logical scope, not a requirement for a separate `SavedVariablesPerCharacter` global.
-- The API supports multiple physical storage layouts for compatibility during incremental migration.
+- The API supports multiple physical storage layouts for legacy SavedVariable shapes.
 - Long-term, prefer one shared `SavedVariables` root per addon.
 - Defaults are templates only and must never be stored by reference.
 - Blizzard table helpers are internal implementation details, not part of the public API.
 - `DB:Init` is `single`/`split` only. The AceDB compatibility path (`DB:NewCompat`) has been retired now that the whole suite is on the native API.
 - `DB` is a stateless utility module. `db` handles are plain tables, not objects with methods.
 - `Set` puts value last: `DB:Set(db, keys..., value)`.
-- Migrations use a versioned integer high-water mark. Defaults application is a normalizer, not a migration.
+- Structural one-time transforms use **init bridges** in each addon's `InitializeDatabase` (shape detection or one-shot flags). Defaults application is a **normalizer** via `Init` + `MergeMissing`, not a bridge.
 
 ---
 
@@ -188,16 +188,16 @@ Starting with a single active preset avoids preset collision rules, multi-preset
 - Activates one preset at a time
 - Does not mutate underlying scope values when switching
 
-### `RunMigrations` (retired)
+### Init bridges
 
-Versioned `DB:RunMigrations` was removed from the suite (2026). One-time structural
-transforms now use **idempotent init bridges** in each addon's `InitializeDatabase`:
-shape-detected flat SV wraps, boolean or `_migrationVersion` gates where legacy
-steps already ran, then `DB:Init`. Ongoing shape repair stays in `MergeMissing`.
+One-time structural transforms run as **idempotent init bridges** beside `DB:Init` in each
+addon's `InitializeDatabase`: shape-detected flat SV wraps, boolean or `_migrationVersion`
+gates where a legacy step already ran, then `DB:Init`. Ongoing shape repair stays in
+`MergeMissing`. There is no shared versioned migration runner.
 
 ---
 
-## Migrations vs Normalizers
+## Init bridges vs normalizers
 
 The codebase separates two concepts:
 
@@ -221,13 +221,6 @@ Metatables may be useful for a narrow readonly resolved view but should not defi
 - Nested virtual fallback tables are hard to reason about
 
 Recommended: store scopes and presets as normal plain tables, resolve values explicitly in the DB layer, optionally expose readonly convenience views for limited read-only scenarios.
-
----
-
-## Migrations vs Normalizers (see above)
-
-`Init` + `MergeMissing` handles normalizers. One-time bridges live beside `Init`
-in each addon's `InitializeDatabase` — not a shared versioned runner.
 
 ---
 
@@ -276,11 +269,11 @@ Better yet, if the key is in defaults, it does not need ensuring at all.
 
 Every addon had its own `ApplyDefaults`, `mergeSubTable`, or `mergeTabSettings` function. All replaced by `DB:MergeMissing`, called once inside `DB:Init`.
 
-### Boolean migration flags scattered through init
+### Boolean bridge flags scattered through init
 
 ```lua
 -- Before: interleaved boolean flags make it unclear where "apply defaults" ends
--- and "migrate data" begins
+-- and "bridge legacy data" begins
 if not self.db.global.categoriesV2Migrated then
     self:MigrateCategorySystemV2()
     self.db.global.categoriesV2Migrated = true

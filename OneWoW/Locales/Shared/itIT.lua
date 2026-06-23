@@ -137,7 +137,6 @@ ns.Locale:RegisterShared("itIT", {
     ["SLOT"] = "Slot",
     ["SUMMARY"] = "Riepilogo",
 
-    -- migrated from OneWoW scope
     ["TOAST_ALERTS_SUBTAB"] = "Avvisi",
     ["FEATURE_UNIT_STATUS_MISSING"] = "Non rilevato",
     ["FEATURE_UNIT_STATUS_DISABLED"] = "Non attivato",

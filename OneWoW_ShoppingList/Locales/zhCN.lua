@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — zhCN, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_SL"] = "打开购物清单",
     ["OWSL_MAIN_LIST"] = "主清单",
     ["OWSL_LIST_EXISTS"] = "清单已存在",

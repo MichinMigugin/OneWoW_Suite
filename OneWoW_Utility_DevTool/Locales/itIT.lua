@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — itIT, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_DEVTOOLS"] = "Apri DevTools",
     ["ADDON_TITLE"] = "DevTool",
     ["ADDON_SUBTITLE"] = "Ispettore di frame e utilità di sviluppo",

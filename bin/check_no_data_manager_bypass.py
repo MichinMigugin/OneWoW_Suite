@@ -35,16 +35,16 @@ What counts as a violation
 
     Sanctioned exceptions: `ALLOWED_FOREIGN_SV` grandfathers entries that are
     legitimately allowed to touch a foreign SV — the core profile manager
-    (enumerates every unit's SV for import/export/wipe) and documented, time-boxed
-    one-time data migrations.
+    (enumerates every unit's SV for import/export/wipe) and documented cross-SV
+    init bridges.
 
 Enforcement (now hard-failing)
     WARN_ONLY = False: accesses whose `path::symbol` (or file path) is in
     ALLOWED_FOREIGN_SV print as [allowed] and pass; any other cross-load-unit
-    access fails the commit. Delete migration entries as their data drains
+    access fails the commit. Delete bridge entries as their data drains
     complete. The call-site migration to `_API` getters/mutators is finished;
     add a new entry to ALLOWED_FOREIGN_SV only for a genuinely sanctioned case
-    (core profile manager, a documented time-boxed migration), never to dodge
+    (core profile manager, a documented cross-SV init bridge), never to dodge
     building the owner unit's public `_API`.
 
 Allowlist keys are `path::symbol` (NOT path:lineno) so they survive edits that

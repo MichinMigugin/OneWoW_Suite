@@ -2,7 +2,6 @@ local ADDON_NAME = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_DD"] = "Открыть Direct Deposit",
     ["ADDON_TITLE"] = "Прямой депозит",
     ["ADDON_SUBTITLE"] = "Автоматическое управление золотом в банке отряда",

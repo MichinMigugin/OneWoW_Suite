@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "esES", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_NOTES"] = "Abrir Notes",
 
 -- Addon

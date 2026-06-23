@@ -256,7 +256,7 @@ local DEFAULTS = {
             },
         },
         -- Toast runtime config (relocated from the legacy db.global.toasts
-        -- root in migration v5). "anchor" is a storage-only id — not in the
+        -- root in legacy minimap layout). "anchor" is a storage-only id — not in the
         -- SettingsFeatureRegistry catalog; its x/y are dynamic keys written
         -- on drag.
         toastalerts = {

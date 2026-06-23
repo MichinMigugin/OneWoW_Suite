@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
-    -- migrated from OneWoW scope
     ["OVERLAYS_SUBTAB"] = "Sovrapposizioni",
     ["TOOLTIPS_SUBTAB"] = "Tooltip",
     ["CTX_OPEN_QOL"] = "Apri QoL",

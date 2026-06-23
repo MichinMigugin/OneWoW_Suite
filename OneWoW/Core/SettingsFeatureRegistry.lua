@@ -11,7 +11,7 @@
 --   Notification — mutators fire registered listeners with storage-resolved
 --                  coordinates; engines subscribe (no engine calls here).
 --
--- This is the only file (besides Core/Database.lua defaults/migrations) that
+-- This is the only file (besides Core/Database.lua defaults/init bridges) that
 -- may touch ns.db.global.settings directly.
 --
 -- GetFeatureSettings returns the LIVE storage table for multi-key reads on

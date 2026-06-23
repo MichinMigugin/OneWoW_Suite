@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_ALTTRACKER"] = "Abrir AltTracker",
 
     ["AB_PAGE_1"] = "Página 1",
@@ -44,7 +43,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["AB_FAIL_UNKNOWN_TYPE"] = "Tipo de ação desconhecido",
     ["AB_INVALID_TARGET_BAR"] = "Número de barra de destino inválido: %d",
     ["AB_MACRO_IGNORED"] = "A macro «%s» foi ignorada, sem espaço para criar",
-    ["AB_MIGRATION_SUCCESS"] = "Barras de ação migradas para multiespecialização: %d personagens atualizados",
     ["AB_NO_ACTIVE_SPEC"] = "Não é possível coletar dados da barra de ação: nenhuma especialização ativa",
     ["AB_NO_BAR_DATA"] = "Nenhum dado de barra de ação encontrado",
     ["AB_NO_KEYBIND_DATA"] = "Nenhum dado de atalho de tecla encontrado",
@@ -226,7 +224,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["DM_CALLING_REFRESH_MAIL"] = "DataManager encontrado, chamando RefreshMailData()",
     ["DM_CHECKING_EVENT_REG"] = "Verificando o registro de eventos...",
     ["DM_CLEARED_MAIL_DATA"] = "Dados de correio limpos para %d personagens",
-    ["DM_EQUIPMENT_MIGRATED"] = "Dados de equipamento migrados da expansão %d para %d. Dados invalidados para %d personagem(ns). Os níveis de item serão atualizados quando você entrar com cada personagem.",
     ["DM_EVENTS_REGISTERED"] = "eventsRegistered:",
     ["DM_EXISTS"] = "DataManager existe",
     ["DM_NOT_INITIALIZED"] = "DataManager não inicializado",
@@ -330,8 +327,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["PROF_EXPANDED_DETAILS"] = "Detalhes ampliados - Em breve",
     ["PROF_INCOMPLETE_SECONDARY"] = "Secundária incompleta",
     ["PROF_MAX_LEVEL"] = "Nível máximo",
-    ["PROF_MIGRATED_PREFIX"] = "  Migrado: ",
-    ["PROF_MIGRATION_COMPLETE"] = "%d personagem(ns) migrado(s) do formato antigo para o novo!",
     ["PROF_MISSING_EQUIPMENT"] = "Equipamento ausente",
     ["PROF_NO_PROFESSIONS"] = "Sem profissões",
     ["PROF_PRIMARY_PROFS"] = "Profissões primárias",

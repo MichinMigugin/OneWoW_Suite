@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — zhTW, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_SL"] = "開啟購物清單",
     ["OWSL_MAIN_LIST"] = "主清單",
     ["OWSL_LIST_EXISTS"] = "清單已存在",

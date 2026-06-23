@@ -9,7 +9,7 @@ Contributor and integrator documentation for the suite.
 | Document | Contents |
 |----------|----------|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Load units, lifecycle, enable model, hub UI, cross-unit sharing, GUI integration |
-| [DATABASE.md](DATABASE.md) | `OneWoW_GUI.DB` — SavedVariables, defaults, migrations, scope resolution |
+| [DATABASE.md](DATABASE.md) | `OneWoW_GUI.DB` — SavedVariables, defaults, init bridges, scope resolution |
 | [GUI.md](GUI.md) | `OneWoW_GUI` toolkit — components, themes, settings, window persistence |
 | [LOCALES.md](LOCALES.md) | Localization routing, scopes, Blizzard-term alignment, tooling |
 | [PREDICATE_ENGINE.md](PREDICATE_ENGINE.md) | Shared `OneWoW.PredicateEngine` — tokenizer, keywords, extension API |

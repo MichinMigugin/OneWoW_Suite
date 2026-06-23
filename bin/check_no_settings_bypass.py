@@ -9,7 +9,7 @@ OneWoW/Docs/ARCHITECTURE.md §8.5. The check matches the suffix pattern
 
 Allowed files (by basename):
   - SettingsFeatureRegistry.lua — the funnel itself.
-  - Database.lua — defaults/migrations own the tree; CatalogData units also
+  - Database.lua — defaults/init bridges own the tree; CatalogData units also
     have their own unrelated `ns.db.global.settings` roots in Core/Database.lua.
 
 Escape hatch: -- noqa: settings-funnel on the offending line.

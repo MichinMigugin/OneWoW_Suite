@@ -335,7 +335,7 @@ end
 
 function UI:SelectModuleTab(moduleName)
     -- Lazy modules load the first time their tab is opened. Dormant until modules
-    -- become LoadOnDemand (migration step 3); a no-op for login-phase modules.
+    -- become LoadOnDemand; a no-op while all modules are login-phase.
     if ns.LoadOrchestrator then
         ns.LoadOrchestrator:EnsureModuleForTab(moduleName)
     end

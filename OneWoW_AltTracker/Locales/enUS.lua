@@ -2,7 +2,6 @@ local ADDON_NAME, ns = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_ALTTRACKER"] = "Open AltTracker",
 
     ["AB_PAGE_1"] = "Page 1",
@@ -43,7 +42,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["AB_FAIL_UNKNOWN_TYPE"] = "Unknown action type",
     ["AB_INVALID_TARGET_BAR"] = "Invalid target bar number: %d",
     ["AB_MACRO_IGNORED"] = "Macro '%s' was ignored, no space to create",
-    ["AB_MIGRATION_SUCCESS"] = "Action Bars migrated to multi-spec: %d characters updated",
     ["AB_NO_ACTIVE_SPEC"] = "Cannot collect action bar data: No active specialization",
     ["AB_NO_BAR_DATA"] = "No action bar data found",
     ["AB_NO_KEYBIND_DATA"] = "No keybind data found",
@@ -225,7 +223,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["DM_CALLING_REFRESH_MAIL"] = "DataManager found, calling RefreshMailData()",
     ["DM_CHECKING_EVENT_REG"] = "Checking event registration...",
     ["DM_CLEARED_MAIL_DATA"] = "Cleared mail data for %d characters",
-    ["DM_EQUIPMENT_MIGRATED"] = "Equipment data migrated from expansion %d to %d. Invalidated data for %d character(s). Item levels will refresh when you log into each character.",
     ["DM_EVENTS_REGISTERED"] = "eventsRegistered:",
     ["DM_EXISTS"] = "DataManager exists",
     ["DM_NOT_INITIALIZED"] = "DataManager not initialized",
@@ -329,8 +326,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["PROF_EXPANDED_DETAILS"] = "Expanded Details - Coming Soon",
     ["PROF_INCOMPLETE_SECONDARY"] = "Incomplete Secondary",
     ["PROF_MAX_LEVEL"] = "Max Level",
-    ["PROF_MIGRATED_PREFIX"] = "  Migrated: ",
-    ["PROF_MIGRATION_COMPLETE"] = "Migrated %d character(s) from old to new format!",
     ["PROF_MISSING_EQUIPMENT"] = "Missing Equipment",
     ["PROF_NO_PROFESSIONS"] = "No Professions",
     ["PROF_PRIMARY_PROFS"] = "Primary Profs",

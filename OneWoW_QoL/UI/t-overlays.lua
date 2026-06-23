@@ -1416,7 +1416,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         rightY = rightY - fontLabel:GetStringHeight() - 6
 
         -- Legacy values may be raw LSM names ("Hack") for fonts that have a
-        -- hardcoded OneWoW key ("hack"); migrate on read so the dropdown's
+        -- hardcoded OneWoW key ("hack"); normalize on read so the dropdown's
         -- selection highlight matches the merged list.
         local function ResolveOverlayFontKey()
             local raw = reg:GetOverlaySetting(featureId, "fontFamily")

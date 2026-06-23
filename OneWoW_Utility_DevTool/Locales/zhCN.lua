@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — zhCN, pending native review.
 OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_DEVTOOLS"] = "打开 DevTools",
     ["ADDON_TITLE"] = "DevTool",
     ["ADDON_SUBTITLE"] = "框架检查器与开发工具",

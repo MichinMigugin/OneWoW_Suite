@@ -1,6 +1,6 @@
 ---
 name: onewow-database-api
-description: Use this skill when authoring or reviewing OneWoW addon code that touches SavedVariables, defaults, migrations, or scope resolution — anything calling OneWoW_GUI.DB or accessing Addon.db.* paths.
+description: Use this skill when authoring or reviewing OneWoW addon code that touches SavedVariables, defaults, init bridges, or scope resolution — anything calling OneWoW_GUI.DB or accessing Addon.db.* paths.
 ---
 
 # OneWoW Database API Skill
@@ -14,7 +14,7 @@ The OneWoW Suite owns its addon-facing database API in `OneWoW_GUI.DB`. All OneW
 ## Authoritative sources
 
 1. `OneWoW/GUI/Database.lua` — API surface. Read first for function signatures and behavior.
-2. `OneWoW/Docs/DATABASE.md` — design rationale. Read when uncertain *why* the API is shaped a certain way (scope resolution order, migrations vs. normalizers, default reference safety).
+2. `OneWoW/Docs/DATABASE.md` — design rationale. Read when uncertain *why* the API is shaped a certain way (scope resolution order, init bridges vs. normalizers, default reference safety).
 
 ## Standard import
 
@@ -83,7 +83,7 @@ Sparse overlays applied at read time. Only one active at a time. Do not mutate s
 - `DB:SetPresetValue(db, presetName, ..., value)`
 - `DB:SetActivePreset(db, presetName)`
 
-### One-time SV bridges (retired `RunMigrations`)
+### Init bridges
 
 Structural one-time transforms use idempotent bridges in each addon's
 `InitializeDatabase` (shape-detected flat SV wraps, one-shot flags). There is no
@@ -96,8 +96,8 @@ if sv and not sv.global and next(sv) ~= nil then
 end
 ```
 
-Migrations are structural (rename keys, restructure tables, move data between scopes).
-Defaults application is a normalizer handled by `Init` + `MergeMissing`, not a migration.
+Init bridges are structural (rename keys, restructure tables, move data between scopes).
+Defaults application is a normalizer handled by `Init` + `MergeMissing`, not a bridge.
 Legacy `_migrationVersion` or boolean flags gate bridges for saves that already ran old steps.
 
 ## Shared settings
@@ -114,7 +114,7 @@ Theme, language, and minimap are managed by `OneWoW_GUI:GetSetting` / `OneWoW_GU
 
 4. **Hand-rolled merge / ensure-if-nil blocks.** `if not ns.db.global.X then ns.db.global.X = {} end`, custom `ApplyDefaults`, `mergeSubTable`, `mergeTabSettings` — replace with defaults + `MergeMissing` (automatic in `Init`) or `DB:Ensure` for dynamic paths.
 
-5. **Boolean migration flags interleaved with init.** `if not ns.db.global.fooMigrated then ... end` should be a one-shot init bridge with a completion flag, not scattered through consumer code.
+5. **Boolean bridge flags interleaved with init.** `if not ns.db.global.fooMigrated then ... end` should be a one-shot init bridge with a completion flag, not scattered through consumer code.
 
 6. **Direct Blizzard helpers for SV init.** `MergeTable` overwrites destination values; `SetTablePairsToTable` wipes and replaces — both wrong for fill-only SV semantics. `MergeMissing` is the correct primitive.
 

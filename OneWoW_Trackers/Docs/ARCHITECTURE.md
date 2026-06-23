@@ -18,7 +18,7 @@
 
 ```
 OneWoW_Trackers.lua          — thin lifecycle root, hub registration
-Core/Database.lua            — schema, migrations (incl. legacy Notes split)
+Core/Database.lua            — schema, init bridges (incl. legacy Notes SV drain)
 Core/API.lua                 — OneWoW_Trackers_API (cross-unit surface)
 Core/TrackerData.lua         — list/section/step model, import/export
 Core/TrackerEngine.lua       — event engine, auto-complete, pinned lifecycle

@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
-    -- migrated from OneWoW scope
     ["OVERLAYS_SUBTAB"] = "覆蓋層",
     ["TOOLTIPS_SUBTAB"] = "滑鼠提示",
     ["CTX_OPEN_QOL"] = "開啟 QoL",

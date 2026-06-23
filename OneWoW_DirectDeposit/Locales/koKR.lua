@@ -2,7 +2,6 @@ local ADDON_NAME = ...
 
 OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_DD"] = "Direct Deposit 열기",
     ["ADDON_TITLE"] = "자동 입금",
     ["ADDON_SUBTITLE"] = "전투부대 은행 골드 자동 관리",

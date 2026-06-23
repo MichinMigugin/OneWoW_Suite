@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_ALTTRACKER"] = "Открыть AltTracker",
 
     ["AB_PAGE_1"] = "Страница 1",
@@ -44,7 +43,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["AB_FAIL_UNKNOWN_TYPE"] = "Неизвестный тип действия",
     ["AB_INVALID_TARGET_BAR"] = "Недопустимый номер целевой панели: %d",
     ["AB_MACRO_IGNORED"] = "Макрос «%s» проигнорирован, нет места для создания",
-    ["AB_MIGRATION_SUCCESS"] = "Панели команд перенесены на мультиспециализацию: обновлено персонажей: %d",
     ["AB_NO_ACTIVE_SPEC"] = "Невозможно собрать данные панели команд: нет активной специализации",
     ["AB_NO_BAR_DATA"] = "Данные панели команд не найдены",
     ["AB_NO_KEYBIND_DATA"] = "Данные о привязках клавиш не найдены",
@@ -226,7 +224,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["DM_CALLING_REFRESH_MAIL"] = "DataManager найден, вызываю RefreshMailData()",
     ["DM_CHECKING_EVENT_REG"] = "Проверка регистрации событий...",
     ["DM_CLEARED_MAIL_DATA"] = "Данные почты очищены для %d персонажей",
-    ["DM_EQUIPMENT_MIGRATED"] = "Данные экипировки перенесены с дополнения %d на %d. Данные сделаны недействительными для %d персонажа(ей). Уровни предметов обновятся при входе на каждого персонажа.",
     ["DM_EVENTS_REGISTERED"] = "eventsRegistered:",
     ["DM_EXISTS"] = "DataManager существует",
     ["DM_NOT_INITIALIZED"] = "DataManager не инициализирован",
@@ -330,8 +327,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["PROF_EXPANDED_DETAILS"] = "Расширенные сведения - Скоро",
     ["PROF_INCOMPLETE_SECONDARY"] = "Неполная второстепенная",
     ["PROF_MAX_LEVEL"] = "Макс. уровень",
-    ["PROF_MIGRATED_PREFIX"] = "  Перенесено: ",
-    ["PROF_MIGRATION_COMPLETE"] = "Перенесено персонажей со старого формата на новый: %d!",
     ["PROF_MISSING_EQUIPMENT"] = "Отсутствующая экипировка",
     ["PROF_NO_PROFESSIONS"] = "Нет профессий",
     ["PROF_PRIMARY_PROFS"] = "Основные профессии",

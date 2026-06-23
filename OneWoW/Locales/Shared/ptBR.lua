@@ -137,7 +137,6 @@ ns.Locale:RegisterShared("ptBR", {
     ["SLOT"] = "Espaço",
     ["SUMMARY"] = "Resumo",
 
-    -- migrated from OneWoW scope
     ["TOAST_ALERTS_SUBTAB"] = "Alertas",
     ["FEATURE_UNIT_STATUS_MISSING"] = "Não detectado",
     ["FEATURE_UNIT_STATUS_DISABLED"] = "Não ativado",

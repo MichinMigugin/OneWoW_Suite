@@ -3,7 +3,6 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
-    -- migrated from OneWoW scope
     ["CTX_OPEN_CATALOG"] = "Abrir Catalog",
 
     ["ADDON_TITLE_FRAME"] = "OneWoW Catalog",
