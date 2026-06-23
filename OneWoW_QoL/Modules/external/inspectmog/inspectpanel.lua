@@ -678,10 +678,6 @@ end
 function UI:Refresh(unit)
     self:EnsureFrame()
     AnchorToInspect(self.frame)
-    self.frame.title:SetText(L["INSPECTMOG_PANEL_TITLE"])
-    if self.frame.addAllBtn then
-        self.frame.addAllBtn:SetFitText(L["INSPECTMOG_ADD_ALL"])
-    end
 
     local snapshot =
         ns.Scanner
