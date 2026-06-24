@@ -62,6 +62,9 @@ local ENGLISH_TO_OW = {
     ["auto"] = false,
     ["recent"] = false,
     ["bagtype"] = false,
+    ["activeseason"] = "currentseason",
+    ["currentseason"] = "currentseason",
+    ["active-season"] = "currentseason",
 }
 
 local function addWarning(warnings, term, reason, severity)

@@ -31,7 +31,7 @@ Two layers:
 - Strict soulbound: character-only; account-bound does **not** match `#soulbound`.
 - `~` is literal string-contains only. Negation uses `!` or `not`.
 - `${CONSTANT}` curly-brace syntax for named constants and parameters (e.g. `quality==${EPIC}` resolves to `quality==4` before tokenizing).
-- Lazy tooltip metatable for the few remaining tooltip-only fields. The same metatable also drives lazy bind resolution and lazy stat resolution (`C_Item.GetItemStats` on first access).
+- Lazy tooltip metatable for the few remaining tooltip-only fields. The same metatable also drives lazy bind resolution, lazy stat resolution (`C_Item.GetItemStats` on first access), and lazy `#currentseason` resolution (`isCurrentSeason`).
 
 ### Tokenizer notes
 
@@ -197,6 +197,25 @@ PE:RegisterProperty("myname", { field = "myName", type = "string" })
 Then `mystat>=200`, `mygold>100g`, `myname~foo` become valid expression tokens. The engine reads `props.<field>` at evaluation time; your addon is responsible for populating that field — typically by attaching values via a wrapper that calls `BuildProps` and then layers extra fields, or by populating fields in a custom keyword's resolver path.
 
 String-typed properties support `=` / `==` (exact, case-insensitive), `!=`, `~` (literal contains), and `~~` (Lua pattern; malformed patterns return false). Numeric properties support `==`, `!=`, `<`, `<=`, `>`, `>=`, and the `prop:low-high` range form. With `unit = "money"`, numeric RHS values may also be money strings (`100g`, `5s50c`, `200g50s`).
+
+### `#currentseason` (`isCurrentSeason`)
+
+Registered keywords: `#currentseason`, `#activeseason` (verbose: `IsCurrentSeason`, `IsActiveSeason`).
+
+Resolution is **lazy** on first read of `props.isCurrentSeason`:
+
+1. **Expansion guard** — if `expansionID >= 0` and `expansionID ~= LE_EXPANSION_LEVEL_CURRENT`, set `false` and stop (no tooltip scan). Unknown expansion (`-1` while item data streams) defers via `_tooltipDataMissing`.
+2. **Equipment** — scan identity-cached `props.bonusIDs` against `CURRENT_SEASON_BONUS_IDS`; else require `C_Item.GetItemUpgradeInfo` track + non-gray upgrade-path tooltip lines.
+3. **All item types** — scan tooltip lines for the current season label (`EXPANSION_SEASON_NAME:format(expansionName, seasonNum)`). Expansion name from `LE_EXPANSION_LEVEL_CURRENT`; season ordinal from `C_MythicPlus.GetCurrentSeasonValues()` (values ≤ 12), then `GetCurrentUIDisplaySeason()`, then `GetCurrentSeason()` minus `EXPANSION_FIRST_GLOBAL_MPLUS_SEASON` for the active expansion. **Do not** use `C_SeasonInfo.GetCurrentDisplaySeasonID()` — that is a content UID (e.g. 34), not the `1` in `Midnight Season 1`. Falls back to concatenated tooltip body (same path as `tooltip~`). Gray standalone headers (entire line equals the label) are ignored so outdated season markers on old gear do not match.
+
+Identity props also expose `bonusIDs` (parsed once per item link in `PopulateBaseProps`) so season checks do not re-parse hyperlinks.
+
+**Maintenance (each season / expansion):**
+
+- `CURRENT_SEASON_BONUS_IDS` — crafted/voidforged bonus IDs on item links.
+- `EXPANSION_FIRST_GLOBAL_MPLUS_SEASON` — when a new expansion starts, add its first global `C_MythicPlus.GetCurrentSeason()` ID (ordinal 1 in tooltips; see warcraft.wiki.gg seasonal pages).
+
+**Debug:** `/petooltip` or `/owpetooltip` dumps `C_TooltipInfo` lines and season-label diagnostics to chat (hover a bag slot, tooltip, or pass an item link).
 
 ---
 

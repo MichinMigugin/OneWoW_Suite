@@ -656,6 +656,10 @@ For `#knowledge`, see **Consumable Subtypes** (same predicate).
 | `#upgrade` | Items flagged as an upgrade for your character (OneWoW upgrade-detection registers this with `PE:RegisterKeyword` at runtime; if that module is not loaded, `#upgrade` is unknown and matches nothing) |
 | `#upgradeable` | Items that can be upgraded (`C_Item.GetItemUpgradeInfo`) |
 | `#fullyupgraded` | Items at max upgrade level |
+| `#currentseason` | Items tagged for the **current PvE season** (alias: `#activeseason`). Expansion guard rejects wrong-expansion items without tooltip work. Equipment: current-season bonus IDs on the link and/or upgrade-track tooltip heuristics. All types: tooltip lines mentioning the active display season label (`EXPANSION_SEASON_NAME`, e.g. `Midnight Season 1` on tokens, or embedded in use text like socket items). Gray/outdated season lines are ignored. Not the same as `#currentexpansion` — older seasons within the same expansion do not match. |
+| `#activeseason` | Alias of `#currentseason` (Baganator/Syndicator import compatibility) |
+
+> **`#currentseason` maintenance:** update `CURRENT_SEASON_BONUS_IDS` in `PredicateEngine.lua` each season when Blizzard adds new crafted/voidforged bonus IDs. At the start of a **new expansion**, also add that expansion's first global M+ season ID to `EXPANSION_FIRST_GLOBAL_MPLUS_SEASON` (the ordinal `1` in tooltip labels like `Midnight Season 1`; see warcraft.wiki.gg seasonal pages). Debug tooltip/season matching in-game with `/petooltip`.
 
 ### Tooltip
 
@@ -999,6 +1003,8 @@ read more like natural conditions.
 | `HasAppearance` | `#transmog` |
 | `IsUpgradeable` | `#upgradeable` |
 | `IsFullyUpgraded` | `#fullyupgraded` |
+| `IsCurrentSeason` | `#currentseason` |
+| `IsActiveSeason` | `#activeseason` |
 | `IsProfessionEquipment` | `#professionequipment` |
 | `IsEquipped` | `#equipped` |
 | `IsEquippable` | `#gear` |

@@ -11,6 +11,8 @@
 --   - ~ operator is string-contains ONLY; negation uses ! or "not"
 --   - ${CONSTANT} curly-brace syntax for named constants / parameters
 --   - Lazy tooltip metatable for the few remaining tooltip-only fields
+--   - #currentseason: expansion guard + gear checks + season tooltip line
+--     (CURRENT_SEASON_BONUS_IDS + EXPANSION_FIRST_GLOBAL_MPLUS_SEASON; see PREDICATE_ENGINE.md)
 -- ============================================================================
 
 local _, ns = ...
@@ -22,9 +24,10 @@ local tconcat, tinsert, wipe = table.concat, tinsert, wipe
 local ipairs, pairs, tonumber, tostring = ipairs, pairs, tonumber, tostring
 local strlower, strfind, strmatch, strtrim, strsplit = string.lower, string.find, string.match, strtrim, strsplit
 local rawset, rawget, setmetatable = rawset, rawget, setmetatable
-local pcall, select = pcall, select
+local pcall, select, math = pcall, select, math
 local Enum = Enum
 local C_Item, C_NewItems = C_Item, C_NewItems
+local C_SeasonInfo = C_SeasonInfo
 local C_Container = C_Container
 local C_TooltipInfo = C_TooltipInfo
 local C_ToyBox, PlayerHasToy = C_ToyBox, PlayerHasToy
@@ -32,9 +35,14 @@ local C_MountJournal, C_PetJournal = C_MountJournal, C_PetJournal
 local C_TransmogCollection = C_TransmogCollection
 local C_TradeSkillUI = C_TradeSkillUI
 local C_HousingCatalog = C_HousingCatalog
+local C_MythicPlus = C_MythicPlus
 local GetSpecialization, GetSpecializationInfo = GetSpecialization, GetSpecializationInfo
 local BattlePetToolTip_UnpackBattlePetLink = BattlePetToolTip_UnpackBattlePetLink
 local UnitLevel = UnitLevel
+local print, format = print, string.format
+local GetMouseFoci = GetMouseFoci
+local GameTooltip = GameTooltip
+local GetCursorInfo = GetCursorInfo
 
 -- ============================================================================
 -- SECTION 2: CACHES
@@ -150,6 +158,25 @@ MapContexts("store",      {12})
 local chargesPattern = ITEM_SPELL_CHARGES:match("|4(.-):.-%;")
 local tradeablePattern = BIND_TRADE_TIME_REMAINING:match("^(.-)%%s")
 local uniqueEquipPattern = ITEM_UNIQUE_EQUIPPABLE:gsub("%-", "%%-")
+
+-- #currentseason: bonus IDs for crafted/voidforged gear (update each season).
+local CURRENT_SEASON_BONUS_IDS = {
+    [13653] = true, -- Voidforged
+    [13654] = true, -- Voidforged
+    [13655] = true, -- Voidforged
+    [12066] = true, -- Radiance Crafted
+}
+
+-- First C_MythicPlus.GetCurrentSeason() global ID per expansion (ordinal 1 in tooltips).
+-- Update when a new expansion begins; see warcraft.wiki.gg seasonal pages.
+local EXPANSION_FIRST_GLOBAL_MPLUS_SEASON = {
+    [Enum.ExpansionLevel.Midnight] = 41,
+}
+
+local UPGRADE_PATH_PATTERN = ITEM_UPGRADE_TOOLTIP_FORMAT_STRING
+    and ("^" .. ITEM_UPGRADE_TOOLTIP_FORMAT_STRING:gsub("%%s", ".*"):gsub("%%d", ".*"))
+
+local currentSeasonLabelCache
 
 -- Class token (UnitClass second return, uppercase) -> classID used by
 -- C_Item.DoesItemContainSpec. Needed for alt-path eligibility checks where
@@ -378,6 +405,8 @@ local FLAG_REGISTRY = {
     isrefundable            = "isRefundable",
     isscrappable            = "isScrappable",
     isenchanted             = "isEnchanted",
+    iscurrentseason         = "isCurrentSeason",
+    isactiveseason          = "isCurrentSeason",
 
     -- Tooltip-derived flags (lazy)
     hasuseability           = "hasUseAbility",
@@ -966,6 +995,7 @@ RegisterKeyword("professionequipment", function(p) return p.isProfessionEquipmen
 -- unregistered and predicates using it evaluate to false.
 RegisterKeyword("upgradeable",      function(p) return p.isUpgradeable end)
 RegisterKeyword("fullyupgraded",    function(p) return p.isFullyUpgraded end)
+RegisterKeyword({"currentseason", "activeseason"}, function(p) return p.isCurrentSeason == true end)
 
 -- ---- 7.22  Tooltip-text keywords ----
 -- These trigger the lazy tooltip scan on first access to tooltipText.
@@ -1696,6 +1726,253 @@ local function ResolveSpecs(props)
     end
 end
 
+-- ---------- Current season helpers (#currentseason) ----------
+
+-- EXPANSION_SEASON_NAME uses a per-expansion ordinal (1, 2, 3…), not the content
+-- season UID from C_SeasonInfo.GetCurrentDisplaySeasonID (e.g. 34 for Midnight S1).
+local MAX_EXPANSION_SEASON_ORDINAL = 12
+
+---@return number|nil
+local function GetCurrentExpansionSeasonNumber()
+    local displayNum = C_MythicPlus.GetCurrentSeasonValues()
+    if displayNum and displayNum > 0 and displayNum <= MAX_EXPANSION_SEASON_ORDINAL then
+        return displayNum
+    end
+    local uiSeason = C_MythicPlus.GetCurrentUIDisplaySeason()
+    if uiSeason and uiSeason > 0 and uiSeason <= MAX_EXPANSION_SEASON_ORDINAL then
+        return uiSeason
+    end
+    local globalSeason = C_MythicPlus.GetCurrentSeason()
+    if globalSeason == -1 then
+        C_MythicPlus.RequestMapInfo()
+        globalSeason = C_MythicPlus.GetCurrentSeason()
+    end
+    local firstGlobal = EXPANSION_FIRST_GLOBAL_MPLUS_SEASON[LE_EXPANSION_LEVEL_CURRENT]
+    if globalSeason and globalSeason > 0 and firstGlobal then
+        local ordinal = globalSeason - firstGlobal + 1
+        if ordinal >= 1 and ordinal <= MAX_EXPANSION_SEASON_ORDINAL then
+            return ordinal
+        end
+    end
+    return nil
+end
+
+--- Build the localized season label Blizzard puts on current-expansion item tooltips.
+--- Uses LE_EXPANSION_LEVEL_CURRENT for the expansion name and the per-expansion
+--- season ordinal from C_MythicPlus (not C_SeasonInfo.GetCurrentDisplaySeasonID).
+---@return string|nil
+local function GetCurrentSeasonLabel()
+    local seasonNum = GetCurrentExpansionSeasonNumber()
+    if not seasonNum then return nil end
+    local cacheKey = tostring(LE_EXPANSION_LEVEL_CURRENT) .. ":" .. tostring(seasonNum)
+    if currentSeasonLabelCache and currentSeasonLabelCache.key == cacheKey then
+        return currentSeasonLabelCache.label
+    end
+    local expName = ns:GetExpansionName(LE_EXPANSION_LEVEL_CURRENT)
+    if not expName then
+        local displayExpID = C_SeasonInfo.GetCurrentDisplaySeasonExpansion()
+        expName = displayExpID and ns:GetExpansionName(displayExpID)
+    end
+    local label = expName and EXPANSION_SEASON_NAME:format(expName, seasonNum) or nil
+    currentSeasonLabelCache = { key = cacheKey, label = label }
+    return label
+end
+
+---@param row table|nil
+---@return boolean
+local function IsGrayTooltipLine(row)
+    if not row or not row.leftColor then return false end
+    local r = math.floor(row.leftColor.r * 100)
+    local g = math.floor(row.leftColor.g * 100)
+    local b = math.floor(row.leftColor.b * 100)
+    return r == g and g == b and r < 60
+end
+
+---@param text string|nil
+---@return string
+local function StripTooltipLineText(text)
+    if not text then return "" end
+    local stripped = text:gsub("|c%x%x%x%x%x%x%x%x", "")
+    stripped = stripped:gsub("|r", "")
+    stripped = stripped:gsub("|H.-|h", "")
+    stripped = stripped:gsub("|h", "")
+    return stripped
+end
+
+---@param row table|nil
+---@return string
+local function GetTooltipLineText(row)
+    if not row then return "" end
+    local text = StripTooltipLineText(row.leftText)
+    if text ~= "" then return text end
+    return StripTooltipLineText(row.rightText)
+end
+
+---@param props table
+---@return table|nil
+local function GetPropsTooltipData(props)
+    local bagID, slotID = rawget(props, "_bagID"), rawget(props, "_slotID")
+    local hyperlink = rawget(props, "hyperlink")
+    local tooltipData
+    if bagID and slotID then
+        tooltipData = GetTooltipData(bagID, slotID)
+    end
+    if not tooltipData and hyperlink then
+        tooltipData = GetTooltipDataByHyperlink(hyperlink)
+    end
+    return tooltipData
+end
+
+---@param bonusIDs table|nil
+---@return boolean
+local function HasCurrentSeasonBonusID(bonusIDs)
+    if not bonusIDs then return false end
+    for _, bonusID in ipairs(bonusIDs) do
+        if CURRENT_SEASON_BONUS_IDS[bonusID] then
+            return true
+        end
+    end
+    return false
+end
+
+--- Equipment branch: true/false, or nil when tooltip data is still unavailable.
+---@param props table
+---@param tooltipData table|nil
+---@return boolean|nil
+local function CheckEquipmentCurrentSeason(props, tooltipData)
+    if not rawget(props, "isEquipment") then
+        return false
+    end
+    if HasCurrentSeasonBonusID(rawget(props, "bonusIDs")) then
+        return true
+    end
+    local hyperlink = rawget(props, "hyperlink")
+    local itemID = rawget(props, "id")
+    local upgradeInfo = C_Item.GetItemUpgradeInfo(hyperlink or itemID)
+    if not upgradeInfo or not upgradeInfo.trackString then
+        return false
+    end
+    if not tooltipData then
+        return nil
+    end
+    local seen = false
+    for index = 1, math.min(#tooltipData.lines, 4) do
+        local row = tooltipData.lines[index]
+        if IsGrayTooltipLine(row) then
+            return false
+        end
+        if UPGRADE_PATH_PATTERN and row.leftText and row.leftText:match(UPGRADE_PATH_PATTERN) then
+            seen = true
+        end
+    end
+    return seen
+end
+
+--- True when a tooltip line mentions the current season label. Blizzard renders
+--- standalone season headers via GameTooltip_AddDisabledLine; do not skip
+--- DisabledLine rows. Gray is only rejected for standalone headers (entire line
+--- equals the label) so outdated season markers on old gear do not match while
+--- embedded mentions in use text (e.g. socket items) still match.
+---@param row table|nil
+---@param currentLabel string
+---@return boolean
+local function TooltipLineMentionsSeason(row, currentLabel)
+    if not row or not currentLabel or currentLabel == "" then return false end
+    local text = GetTooltipLineText(row)
+    if text == "" then return false end
+    if strfind(text, currentLabel, 1, true) == nil then return false end
+    if text == currentLabel and IsGrayTooltipLine(row) then
+        return false
+    end
+    return true
+end
+
+--- Scan structured tooltip lines, then fall back to concatenated tooltip body
+--- (same source as tooltip~ / props.tooltipText).
+---@param props table
+---@param currentLabel string
+---@return boolean
+local function CheckSeasonTooltipMention(props, currentLabel)
+    local tooltipData = GetPropsTooltipData(props)
+    if tooltipData and tooltipData.lines then
+        for index = 1, #tooltipData.lines do
+            if TooltipLineMentionsSeason(tooltipData.lines[index], currentLabel) then
+                return true
+            end
+        end
+    end
+
+    local bagID, slotID = rawget(props, "_bagID"), rawget(props, "_slotID")
+    local hyperlink = rawget(props, "hyperlink")
+    local tt = ""
+    if bagID and slotID then
+        tt = GetTooltipText(bagID, slotID)
+    end
+    if tt == "" and hyperlink then
+        tt = GetTooltipTextByHyperlink(hyperlink)
+    end
+    return tt ~= "" and strfind(tt, currentLabel, 1, true) ~= nil
+end
+
+---@param props table
+---@return boolean
+local function HasAnyTooltipBody(props)
+    if GetPropsTooltipData(props) then return true end
+    local bagID, slotID = rawget(props, "_bagID"), rawget(props, "_slotID")
+    local hyperlink = rawget(props, "hyperlink")
+    if bagID and slotID and GetTooltipText(bagID, slotID) ~= "" then
+        return true
+    end
+    if hyperlink and GetTooltipTextByHyperlink(hyperlink) ~= "" then
+        return true
+    end
+    return false
+end
+
+--- Lazily resolves props.isCurrentSeason on first access.
+---@param props table
+local function ResolveIsCurrentSeason(props)
+    local expansionID = rawget(props, "expansionID")
+    local itemID = rawget(props, "id")
+
+    if expansionID >= 0 and expansionID ~= LE_EXPANSION_LEVEL_CURRENT then
+        rawset(props, "isCurrentSeason", false)
+        rawset(props, "_currentSeasonResolved", true)
+        return
+    end
+
+    if expansionID == -1 and itemID and not C_Item.IsItemDataCachedByID(itemID) then
+        C_Item.RequestLoadItemDataByID(itemID)
+        rawset(props, "_tooltipDataMissing", true)
+        return
+    end
+
+    local tooltipData = GetPropsTooltipData(props)
+    local result = false
+    local equipResult = CheckEquipmentCurrentSeason(props, tooltipData)
+
+    if equipResult == true then
+        result = true
+    elseif equipResult == nil then
+        rawset(props, "_tooltipDataMissing", true)
+        return
+    else
+        local currentLabel = GetCurrentSeasonLabel()
+        if not currentLabel then
+            rawset(props, "_tooltipDataMissing", true)
+            return
+        end
+        result = CheckSeasonTooltipMention(props, currentLabel)
+        if not result and not HasAnyTooltipBody(props) then
+            rawset(props, "_tooltipDataMissing", true)
+            return
+        end
+    end
+
+    rawset(props, "isCurrentSeason", result)
+    rawset(props, "_currentSeasonResolved", true)
+end
+
 -- ============================================================================
 -- SECTION 9: LAYER 1 — BUILDPROPS
 -- ============================================================================
@@ -1710,6 +1987,10 @@ local TOOLTIP_FIELDS_SET = {
     isUnique            = true,
     isUniqueEquipped    = true,
     tooltipText         = true,
+}
+
+local CURRENT_SEASON_FIELDS_SET = {
+    isCurrentSeason = true,
 }
 
 -- Bind fields
@@ -1818,6 +2099,12 @@ local propsMT = {
             end
             return rawget(self, key)
         end
+        if CURRENT_SEASON_FIELDS_SET[key] then
+            if not rawget(self, "_currentSeasonResolved") then
+                ResolveIsCurrentSeason(self)
+            end
+            return rawget(self, key)
+        end
         return nil
     end
 }
@@ -1890,6 +2177,8 @@ local function PopulateBaseProps(props, itemID, hyperlink)
     props.isKnowledge = false
     props.isEnchanted = false
     props.isCrafted = false
+    -- isCurrentSeason: lazy via propsMT (tooltip/bonus-ID resolution); do not preset here.
+    props.bonusIDs = nil
 
     -- Slot-state defaults (BuildProps overlay may overwrite per slot).
     props.isRefundable = false
@@ -2004,11 +2293,13 @@ local function PopulateBaseProps(props, itemID, hyperlink)
     end
 
     -- ---- Item link parsed properties ----
-    local itemLinkProperties = ParseItemLink(itemLink)
+    local linkForParse = hyperlink or itemLink
+    local itemLinkProperties = ParseItemLink(linkForParse)
     if itemLinkProperties then
         props.isEnchanted = itemLinkProperties.enchantID ~= nil
         props.isCrafted = itemLinkProperties.crafterGUID ~= nil
         props.itemContextCategory = ITEM_CONTEXT_CATEGORY[itemLinkProperties.itemContext]
+        props.bonusIDs = itemLinkProperties.bonusIDs
     end
 
     -- ---- Catalyst properties ----
@@ -3140,6 +3431,7 @@ function PE:InvalidateCache()
     wipe(tooltipDataCache)
     wipe(tooltipDataLinkCache)
     wipe(identityPropsCache)
+    currentSeasonLabelCache = nil
     knownProfs = nil
 end
 
@@ -3207,6 +3499,225 @@ end
 ---@return string
 function PE:GetTooltipText(bagID, slotID)
     return GetTooltipText(bagID, slotID)
+end
+
+-- ============================================================================
+-- DEBUG: tooltip line dump (/petooltip, /owpetooltip)
+-- ============================================================================
+
+local DEBUG_PREFIX = "|cFF55CCFFPE|r"
+
+local TOOLTIP_LINE_TYPE_NAMES do
+    TOOLTIP_LINE_TYPE_NAMES = {}
+    for name, value in pairs(Enum.TooltipDataLineType) do
+        TOOLTIP_LINE_TYPE_NAMES[value] = name
+    end
+end
+
+local function FormatTooltipColor(color)
+    if not color then return "nil" end
+    return format(
+        "rgb(%d,%d,%d)",
+        math.floor(color.r * 100),
+        math.floor(color.g * 100),
+        math.floor(color.b * 100)
+    )
+end
+
+local function TruncateForChat(text, maxLen)
+    if not text or text == "" then return "" end
+    if #text <= maxLen then return text end
+    return text:sub(1, maxLen) .. "..."
+end
+
+local function DumpTooltipDataSection(title, tooltipData, currentLabel)
+    print(DEBUG_PREFIX .. ": " .. title)
+    if not tooltipData or not tooltipData.lines then
+        print(DEBUG_PREFIX .. ":   (no tooltip data)")
+        return
+    end
+    print(DEBUG_PREFIX .. format(":   %d lines", #tooltipData.lines))
+    for index, row in ipairs(tooltipData.lines) do
+        local typeName = TOOLTIP_LINE_TYPE_NAMES[row.type] or tostring(row.type)
+        local left = row.leftText or ""
+        local right = row.rightText or ""
+        local stripped = GetTooltipLineText(row)
+        local gray = IsGrayTooltipLine(row)
+        local mentions = currentLabel and TooltipLineMentionsSeason(row, currentLabel) or false
+        print(DEBUG_PREFIX .. format(
+            ":   [%d] type=%s gray=%s season=%s",
+            index, typeName, tostring(gray), tostring(mentions)
+        ))
+        if left ~= "" then
+            print(DEBUG_PREFIX .. format(":        left=%q", left))
+        end
+        if right ~= "" then
+            print(DEBUG_PREFIX .. format(":       right=%q", right))
+        end
+        if stripped ~= "" and stripped ~= left and stripped ~= right then
+            print(DEBUG_PREFIX .. format(":     stripped=%q", stripped))
+        end
+        if row.leftColor then
+            print(DEBUG_PREFIX .. format(":        leftColor=%s", FormatTooltipColor(row.leftColor)))
+        end
+    end
+end
+
+--- Dev-only: dump C_TooltipInfo lines + #currentseason diagnostics to chat.
+---@param itemID number|nil
+---@param bagID number|nil
+---@param slotID number|nil
+---@param hyperlink string|nil
+function PE:DumpTooltipDebug(itemID, bagID, slotID, hyperlink)
+    local currentLabel = GetCurrentSeasonLabel()
+    print(DEBUG_PREFIX .. ": === Tooltip debug ===")
+    print(DEBUG_PREFIX .. format(
+        ": itemID=%s bag=%s slot=%s",
+        tostring(itemID), tostring(bagID), tostring(slotID)
+    ))
+    if hyperlink then
+        print(DEBUG_PREFIX .. format(": hyperlink=%s", TruncateForChat(hyperlink, 120)))
+    end
+    print(DEBUG_PREFIX .. format(": currentSeasonLabel=%q", currentLabel or "nil"))
+    local mplusDisplay, mplusMilestone, mplusReward = C_MythicPlus.GetCurrentSeasonValues()
+    print(DEBUG_PREFIX .. format(
+        ": M+ display=%s milestone=%s reward=%s uiDisplay=%s global=%s expansionOrdinal=%s",
+        tostring(mplusDisplay),
+        tostring(mplusMilestone),
+        tostring(mplusReward),
+        tostring(C_MythicPlus.GetCurrentUIDisplaySeason()),
+        tostring(C_MythicPlus.GetCurrentSeason()),
+        tostring(GetCurrentExpansionSeasonNumber())
+    ))
+    print(DEBUG_PREFIX .. format(
+        ": SeasonInfo displayUID=%s displayExp=%s LE_CURRENT=%s itemExpansion=%s",
+        tostring(C_SeasonInfo.GetCurrentDisplaySeasonID()),
+        tostring(C_SeasonInfo.GetCurrentDisplaySeasonExpansion()),
+        tostring(LE_EXPANSION_LEVEL_CURRENT),
+        tostring(itemID and select(15, C_Item.GetItemInfo(hyperlink or itemID)))
+    ))
+
+    if bagID and slotID then
+        DumpTooltipDataSection(
+            "C_TooltipInfo.GetBagItem (fresh)",
+            C_TooltipInfo.GetBagItem(bagID, slotID),
+            currentLabel
+        )
+        DumpTooltipDataSection("GetTooltipData (cached)", GetTooltipData(bagID, slotID), currentLabel)
+        local tt = GetTooltipText(bagID, slotID)
+        print(DEBUG_PREFIX .. format(": GetTooltipText len=%d text=%q", #tt, TruncateForChat(tt, 240)))
+    end
+
+    if hyperlink then
+        DumpTooltipDataSection(
+            "C_TooltipInfo.GetHyperlink (fresh)",
+            C_TooltipInfo.GetHyperlink(hyperlink),
+            currentLabel
+        )
+        DumpTooltipDataSection(
+            "GetTooltipDataByHyperlink (cached)",
+            GetTooltipDataByHyperlink(hyperlink),
+            currentLabel
+        )
+        local tt = GetTooltipTextByHyperlink(hyperlink)
+        print(DEBUG_PREFIX .. format(": GetTooltipTextByHyperlink len=%d text=%q", #tt, TruncateForChat(tt, 240)))
+    end
+
+    if itemID then
+        local props = self:BuildProps(itemID, bagID, slotID, hyperlink)
+        print(DEBUG_PREFIX .. format(
+            ": props.expansionID=%s isEquipment=%s",
+            tostring(props.expansionID), tostring(props.isEquipment)
+        ))
+        print(DEBUG_PREFIX .. format(
+            ": props.isCurrentSeason=%s resolved=%s tooltipMissing=%s",
+            tostring(props.isCurrentSeason),
+            tostring(rawget(props, "_currentSeasonResolved")),
+            tostring(rawget(props, "_tooltipDataMissing"))
+        ))
+        if currentLabel then
+            print(DEBUG_PREFIX .. format(
+                ": CheckSeasonTooltipMention=%s",
+                tostring(CheckSeasonTooltipMention(props, currentLabel))
+            ))
+        end
+    end
+end
+
+local function FindBagButtonUnderMouse()
+    local foci = GetMouseFoci()
+    if not foci then return end
+
+    local frames
+    if foci.GetParent then
+        frames = { foci }
+    else
+        frames = foci
+    end
+
+    for _, frame in ipairs(frames) do
+        local walk = frame
+        while walk do
+            if walk.owb_bagID and walk.owb_slotID then
+                return walk
+            end
+            walk = walk:GetParent()
+        end
+    end
+end
+
+local function ResolveTooltipDumpTarget(msg)
+    msg = strtrim(msg or "")
+    if msg ~= "" then
+        local hyperlink = msg:match("(|c.-|Hitem:.-|h.-|h|r)")
+        if not hyperlink and msg:find("item:", 1, true) then
+            hyperlink = msg
+        end
+        if hyperlink then
+            local itemID = C_Item.GetItemInfoInstant(hyperlink)
+            return itemID, nil, nil, hyperlink
+        end
+        local itemID = tonumber(msg)
+        if itemID then
+            local _, itemLink = C_Item.GetItemInfo(itemID)
+            return itemID, nil, nil, itemLink
+        end
+    end
+
+    local bagButton = FindBagButtonUnderMouse()
+    if bagButton then
+        local info = bagButton.owb_itemInfo
+        local itemID = info and info.itemID
+        local hyperlink = info and info.hyperlink
+        if not hyperlink and bagButton.owb_bagID and bagButton.owb_slotID then
+            hyperlink = C_Container.GetContainerItemLink(bagButton.owb_bagID, bagButton.owb_slotID)
+        end
+        if not itemID and hyperlink then
+            itemID = C_Item.GetItemInfoInstant(hyperlink)
+        end
+        return itemID, bagButton.owb_bagID, bagButton.owb_slotID, hyperlink
+    end
+
+    local _, link = GameTooltip:GetItem()
+    if link then
+        return C_Item.GetItemInfoInstant(link), nil, nil, link
+    end
+
+    local infoType, itemID, itemLink = GetCursorInfo()
+    if infoType == "item" and itemID then
+        return itemID, nil, nil, itemLink
+    end
+end
+
+SLASH_PE_TOOLTIP_DUMP1 = "/petooltip"
+SLASH_PE_TOOLTIP_DUMP2 = "/owpetooltip"
+SlashCmdList["PE_TOOLTIP_DUMP"] = function(msg)
+    local itemID, bagID, slotID, hyperlink = ResolveTooltipDumpTarget(msg)
+    if not itemID then
+        print(DEBUG_PREFIX .. ": hover a bag slot / tooltip item, pick up an item, or pass itemID / item link")
+        return
+    end
+    PE:DumpTooltipDebug(itemID, bagID, slotID, hyperlink)
 end
 
 PE.BATTLE_PET_CAGE_ID = BATTLE_PET_CAGE_ID
