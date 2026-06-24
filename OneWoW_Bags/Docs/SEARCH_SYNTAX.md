@@ -443,9 +443,14 @@ The known-profession set is cached until
 ### Expansion
 
 Each expansion has a full name keyword and one or more short aliases.
+`#currentexpansion` is a meta-keyword that always matches items from the
+client's current expansion (resolved from `LE_EXPANSION_LEVEL_CURRENT` at load
+time). Use it in saved searches and category rules when you want them to track
+the live expansion without editing the rule each patch.
 
 | Keyword | Aliases |
 |---|---|
+| `#currentexpansion` | |
 | `#classic` | `#vanilla` |
 | `#burningcrusade` | `#tbc` |
 | `#wrath` | `#wotlk`, `#northrend` |
@@ -817,6 +822,7 @@ vendorprice>0           Items worth something to a vendor
 vendorprice>=1g         Items worth at least 1 gold each
 totalvalue:10g-50g      Stack value between 10g and 50g
 expansion==10           The War Within items
+expansion==${CURRENTEXPANSION}  Current-expansion items (updates each patch)
 count>1                 Stacked items
 sockets>0               Items with at least one socket
 upgradelevel>0          Partially upgraded items
@@ -1048,6 +1054,7 @@ evaluation. This allows rule templates with adjustable thresholds.
 
 | Constant | Value |
 |---|---|
+| `${CURRENTEXPANSION}` | Client current expansion ID (`LE_EXPANSION_LEVEL_CURRENT`) |
 | `${CLASSIC}` | 0 |
 | `${TBC}` | 1 |
 | `${WRATH}` | 2 |
@@ -1083,7 +1090,7 @@ in this document; full API and extension notes are in
 | Caches | `propsCache`, `tooltipCache`, `compiledCache` — keyed by expression string and `bagID:slotID` where applicable. |
 | Overrides | `ITEM_ID_OVERRIDES` — small hardcoded `itemID → classID/subClassID` fixes for mis-tagged recipes/items. |
 | Data / patterns | Hearthstone ID set (`HS_IDS`), knowledge-study icon set (`KNOWLEDGE_ICONS`), `ITEM_CONTEXT_CATEGORY` → `#raid` / `#dungeon` / `#delves` / `#worldquest` / `#pvp` / `#store`, locale patterns for charges / tradeable / unique-equip, `CLASS_ID` (including Evoker, for `CanClassEquip` alt checks); `ResolveHousing` + `C_HousingCatalog` for decor quantity fields. |
-| `CONSTANT_MAP` | `${POOR}` … `${HEIRLOOM}` and expansion `${CLASSIC}` … `${LASTTITAN}` for `ResolveParams` / vendor templates. |
+| `CONSTANT_MAP` | `${POOR}` … `${HEIRLOOM}` and expansion `${CURRENTEXPANSION}`, `${CLASSIC}` … `${LASTTITAN}` for `ResolveParams` / vendor templates. |
 | `PROP_REGISTRY` | Built-in numeric and string property names and aliases (including money units on `vendorprice` / `totalvalue` and housing decor counts: `decorstorage`, `decorplaced`, `decorredeemable`, `decortotal`). Exposed to callers via `RegisterProperty` merges. |
 | `FLAG_REGISTRY` | Lowercased `IsEquipment`-style words → `props` field names (vendor-style verbose rules). |
 | `KEYWORD_MAP` | All `#` keywords via `RegisterKeyword` (quality, class, subtypes, stats, context, etc.). |

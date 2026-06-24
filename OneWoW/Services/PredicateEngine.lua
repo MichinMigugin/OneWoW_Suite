@@ -192,6 +192,7 @@ local CONSTANT_MAP = {
     ARTIFACT  = IQ.Artifact,
     HEIRLOOM  = IQ.Heirloom,
     -- Expansion IDs
+    CURRENTEXPANSION = LE_EXPANSION_LEVEL_CURRENT,
     CLASSIC     = EL.None,
     TBC         = EL.BurningCrusade,
     WRATH       = EL.Northrend,
@@ -882,6 +883,7 @@ RegisterKeyword({"wand", "wands"},  function(p) return p.equipLoc == "INVTYPE_RA
 
 -- ---- 7.15  Expansion keywords ----
 for _, def in ipairs({
+    {"currentexpansion",                                LE_EXPANSION_LEVEL_CURRENT},
     {{"classic", "vanilla"},                            EL.None},
     {{"burningcrusade", "tbc"},                         EL.BurningCrusade},
     {{"wrath", "wotlk", "northrend"},                   EL.Northrend},
