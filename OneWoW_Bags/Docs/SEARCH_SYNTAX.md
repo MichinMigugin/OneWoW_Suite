@@ -896,6 +896,43 @@ reqlevel:70-80          Items requiring level 70-80
 
 ---
 
+### Spec & Class Eligibility (set membership)
+
+`forspec` and `forclass` test whether an item is **eligible** for a given
+specialization or class — i.e. whether that spec/class would be offered the item
+as loot. They are **viewer-independent**: the result depends only on the item, not
+on which character you are logged into (unlike the item link's specialization
+field, which always reflects the *current* character). Internally they use
+`C_Item.DoesItemContainSpec` — the same primitive behind `#myspec`.
+
+Because an item can be eligible for **several** specs and classes at once, these
+are *membership* tests, not numeric comparisons:
+
+| You type | Operator | Meaning |
+|---|---|---|
+| `forspec=269` | `=` / `==` | eligible for spec 269 (Windwalker Monk) |
+| `forspec!=269` | `!=` | NOT eligible for spec 269 |
+| `forclass=1` | `=` / `==` | eligible for class 1 (Warrior) |
+| `forclass!=2` | `!=` | NOT eligible for class 2 (Paladin) |
+
+Ordered comparators (`>`, `<`, `>=`, `<=`) and range syntax (`forspec:1-100`) are
+**not** supported — spec and class IDs are identifiers, not magnitudes. Only
+equippable gear is eligible for any spec/class; everything else matches none.
+
+Specialization IDs are listed at <https://warcraft.wiki.gg/wiki/SpecializationID>.
+Class IDs are 1–13 in the usual order: 1 Warrior, 2 Paladin, 3 Hunter, 4 Rogue,
+5 Priest, 6 Death Knight, 7 Shaman, 8 Mage, 9 Warlock, 10 Monk, 11 Druid,
+12 Demon Hunter, 13 Evoker.
+
+```
+forspec=269                Gear a Windwalker Monk could roll on
+#gear & forclass=9         All gear usable by a Warlock
+#epic & forspec=270        Epic gear for Mistweaver Monk
+#gear & forspec!=265       Gear NOT for Affliction Warlock
+```
+
+---
+
 ## Shorthand for Item Level
 
 Because item level searches are so common, there are shortcuts that don't

@@ -319,6 +319,11 @@ RegisterPropAlias("avoidance",                  "statAvoidance")
 
 RegisterPropAlias("mylevel",    "playerLevel")
 
+-- Spec membership (set type: `forclass=ID` / `forspec=ID` test membership;
+-- viewer-independent via DoesItemContainSpec, NOT the link's spec field).
+RegisterPropAlias("forclass",   "eligibleClasses", "set")
+RegisterPropAlias("forspec",    "eligibleSpecs",   "set")
+
 -- String properties
 RegisterPropAlias("name",       "name",           "string")
 RegisterPropAlias("equiploc",   "equipLoc",       "string")
@@ -1659,6 +1664,36 @@ local function ResolveStats(props)
     end
 end
 
+-- ---------- ResolveSpecs ----------
+-- Lazily populates the item's eligible-class and eligible-spec membership SETS,
+-- backing the forclass/forspec "set" props. Viewer-independent: it asks
+-- C_Item.DoesItemContainSpec with explicit class/spec IDs (the basis of #myspec)
+-- rather than reading the link's viewer-stamped specialization field. Only
+-- equippable gear is probed, so non-gear short-circuits with zero API calls.
+local function ResolveSpecs(props)
+    local classes, specs = {}, {}
+    rawset(props, "eligibleClasses", classes)
+    rawset(props, "eligibleSpecs", specs)
+
+    if not rawget(props, "isEquipment") then return end
+    local item = rawget(props, "hyperlink") or rawget(props, "id")
+    if not item then return end
+
+    -- Probe ONLY with the 3-arg form (explicit specID). The 2-arg form
+    -- (specID defaulting to 0) ignores the passed classID and tests the CURRENT
+    -- player, which makes forclass/forspec viewer-relative. Class eligibility is
+    -- derived from any matching spec, since loot eligibility is spec-driven.
+    for classID = 1, GetNumClasses() do
+        for specIndex = 1, GetNumSpecializationsForClassID(classID) do
+            local specID = GetSpecializationInfoForClassID(classID, specIndex)
+            if specID and C_Item.DoesItemContainSpec(item, classID, specID) then
+                specs[specID] = true
+                classes[classID] = true
+            end
+        end
+    end
+end
+
 -- ============================================================================
 -- SECTION 9: LAYER 1 — BUILDPROPS
 -- ============================================================================
@@ -1721,6 +1756,12 @@ local STAT_FIELDS_SET = {
     socketSingingWind       = true,
 }
 
+-- Spec membership sets (lazy via C_Item.DoesItemContainSpec enumeration)
+local SPEC_FIELDS_SET = {
+    eligibleClasses = true,
+    eligibleSpecs   = true,
+}
+
 -- Metatable applied to every props table for lazy field resolution.
 -- Stays permanently; uses _tooltipResolved and _bindResolved flags to
 -- avoid redundant scans (rather than stripping the metatable).
@@ -1764,6 +1805,14 @@ local propsMT = {
             if not rawget(self, "_statsResolved") then
                 ResolveStats(self)
                 rawset(self, "_statsResolved", true)
+            end
+            return rawget(self, key)
+        end
+        -- Spec membership sets: DoesItemContainSpec enumeration on first access
+        if SPEC_FIELDS_SET[key] then
+            if not rawget(self, "_specsResolved") then
+                ResolveSpecs(self)
+                rawset(self, "_specsResolved", true)
             end
             return rawget(self, key)
         end
@@ -2446,7 +2495,7 @@ local function Tokenize(searchStr)
                     i = opEnd + 1
 
                     local val
-                    if reg.type == "number" then
+                    if reg.type == "number" or reg.type == "set" then
                         local valStart = i
                         while i <= len do
                             local ch = searchStr:sub(i, i)
@@ -2697,7 +2746,18 @@ ParsePrimary = function(tokens, pos)
         local op = token.op
         local val = token.value
 
-        if reg.type == "number" then
+        if reg.type == "set" then
+            -- Membership test against a lookup set (e.g. forspec=73). `=`/`==`
+            -- mean "ID is in the set", `!=` means "not in the set"; ordered
+            -- comparators are meaningless for nominal class/spec IDs.
+            return function(props)
+                local set = props[field]
+                local present = (set ~= nil) and (set[val] == true)
+                if op == "!=" then return not present end
+                if op == "=" or op == "==" then return present end
+                return false
+            end, pos + 1
+        elseif reg.type == "number" then
             if type(val) == "string" then
                 local rhsField = PROP_REGISTRY[val].field
                 return function(props)
@@ -2743,6 +2803,7 @@ ParsePrimary = function(tokens, pos)
     if token.type == "prop_range" then
         local reg = PROP_REGISTRY[token.prop]
         if not reg then return function() return false end, pos + 1 end
+        if reg.type ~= "number" then return function() return false end, pos + 1 end
         local field = reg.field
         local low, high = token.low, token.high
         return function(props)
