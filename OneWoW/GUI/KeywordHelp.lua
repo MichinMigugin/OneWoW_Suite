@@ -84,7 +84,7 @@ local CATEGORY_RULES = {
     collect = { toy = true, mount = true, pet = true, collected = true, uncollected = true, alreadyknown = true, pethumanoid = true, petbeast = true, petdragonkin = true, petflying = true, petundead = true, petcritter = true, petmagic = true, petelemental = true, petaquatic = true, petmechanical = true, wildpet = true, petcanbattle = true, pettradeable = true, companionpet = true },
     transmog = { transmog = true, knowntransmog = true, unknowntransmog = true, catalyst = true, catalystupgrade = true },
     expans  = { classic = true, tbc = true, wrath = true, cata = true, mop = true, wod = true, legion = true, bfa = true, shadowlands = true, dragonflight = true, tww = true, midnight = true, lasttitan = true, titan = true },
-    upgrade = { upgrade = true, upgradeable = true, fullyupgraded = true },
+    upgrade = { upgrade = true, upgradeable = true, fullyupgraded = true, currentseason = true, activeseason = true, explorer = true, adventurer = true, veteran = true, champion = true, hero = true, myth = true },
     stat    = { intellect = true, agility = true, strength = true, stamina = true, crit = true, haste = true, mastery = true, versatility = true, speed = true, leech = true, avoidance = true },
     socket  = { prismatic = true, metasocket = true, redsocket = true, yellowsocket = true, bluesocket = true, primordial = true },
     context = { raid = true, dungeon = true, delves = true, worldquest = true, pvp = true, store = true },

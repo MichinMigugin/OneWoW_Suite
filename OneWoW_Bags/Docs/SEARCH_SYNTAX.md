@@ -656,6 +656,12 @@ For `#knowledge`, see **Consumable Subtypes** (same predicate).
 | `#upgrade` | Items flagged as an upgrade for your character (OneWoW upgrade-detection registers this with `PE:RegisterKeyword` at runtime; if that module is not loaded, `#upgrade` is unknown and matches nothing) |
 | `#upgradeable` | Items that can be upgraded (`C_Item.GetItemUpgradeInfo`) |
 | `#fullyupgraded` | Items at max upgrade level |
+| `#explorer` | Items on the Explorer upgrade track |
+| `#adventurer` | Items on the Adventurer upgrade track |
+| `#veteran` | Items on the Veteran upgrade track |
+| `#champion` | Items on the Champion upgrade track |
+| `#hero` | Items on the Hero upgrade track |
+| `#myth` | Items on the Myth upgrade track |
 | `#currentseason` | Items tagged for the **current PvE season** (alias: `#activeseason`). Expansion guard rejects wrong-expansion items without tooltip work. Equipment: current-season bonus IDs on the link and/or upgrade-track tooltip heuristics. All types: tooltip lines mentioning the active display season label (`EXPANSION_SEASON_NAME`, e.g. `Midnight Season 1` on tokens, or embedded in use text like socket items). Gray/outdated season lines are ignored. Not the same as `#currentexpansion` — older seasons within the same expansion do not match. |
 | `#activeseason` | Alias of `#currentseason` (Baganator/Syndicator import compatibility) |
 

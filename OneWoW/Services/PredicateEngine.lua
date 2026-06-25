@@ -176,6 +176,16 @@ local EXPANSION_FIRST_GLOBAL_MPLUS_SEASON = {
 local UPGRADE_PATH_PATTERN = ITEM_UPGRADE_TOOLTIP_FORMAT_STRING
     and ("^" .. ITEM_UPGRADE_TOOLTIP_FORMAT_STRING:gsub("%%s", ".*"):gsub("%%d", ".*"))
 
+-- ItemUpgradeInfo.trackStringID tier constants (locale-independent; stable across seasons).
+local UPGRADE_TRACK_IDS = {
+    explorer   = 970,
+    adventurer = 971,
+    veteran    = 972,
+    champion   = 973,
+    hero       = 974,
+    myth       = 978,
+}
+
 local currentSeasonLabelCache
 
 -- Class token (UnitClass second return, uppercase) -> classID used by
@@ -345,7 +355,9 @@ RegisterPropAlias("speed",                      "statSpeed")
 RegisterPropAlias("leech",                      "statLeech")
 RegisterPropAlias("avoidance",                  "statAvoidance")
 
-RegisterPropAlias("mylevel",    "playerLevel")
+RegisterPropAlias("mylevel",        "playerLevel")
+RegisterPropAlias("upgradelevel",   "upgradeLevel")
+RegisterPropAlias("upgrademax",     "upgradeMax")
 
 -- Spec membership (set type: `forclass=ID` / `forspec=ID` test membership;
 -- viewer-independent via DoesItemContainSpec, NOT the link's spec field).
@@ -1057,6 +1069,12 @@ RegisterKeyword("delves", function(p) return p.itemContextCategory == "delves" e
 RegisterKeyword("worldquest", function(p) return p.itemContextCategory == "worldquest" end)
 RegisterKeyword("pvp", function(p) return p.itemContextCategory == "pvp" end)
 RegisterKeyword("store", function(p) return p.itemContextCategory == "store" end)
+
+-- ---- 7.27  Item track upgrade keywords ----
+for _, keyword in ipairs({ "explorer", "adventurer", "veteran", "champion", "hero", "myth" }) do
+    local trackID = UPGRADE_TRACK_IDS[keyword]
+    RegisterKeyword(keyword, function(p) return p.upgradeTrackStringID == trackID end)
+end
 
 -- ============================================================================
 -- SECTION 8: LAYER 1 — UTILITY FUNCTIONS
@@ -1846,10 +1864,7 @@ local function CheckEquipmentCurrentSeason(props, tooltipData)
     if HasCurrentSeasonBonusID(rawget(props, "bonusIDs")) then
         return true
     end
-    local hyperlink = rawget(props, "hyperlink")
-    local itemID = rawget(props, "id")
-    local upgradeInfo = C_Item.GetItemUpgradeInfo(hyperlink or itemID)
-    if not upgradeInfo or not upgradeInfo.trackString then
+    if not rawget(props, "upgradeTrackString") then
         return false
     end
     if not tooltipData then
@@ -2256,14 +2271,18 @@ local function PopulateBaseProps(props, itemID, hyperlink)
     props.maxLevel        = props.ilvl
     props.isUpgradeable   = false
     props.isFullyUpgraded = false
+    props.upgradeTrackString = nil
+    props.upgradeTrackStringID = nil
 
-    local upgradeInfo = C_Item.GetItemUpgradeInfo(itemID)
+    local upgradeInfo = C_Item.GetItemUpgradeInfo(hyperlink or itemID)
     if upgradeInfo then
-        props.upgradeLevel    = upgradeInfo.currentLevel or 0
-        props.upgradeMax      = upgradeInfo.maxLevel or 0
-        props.maxLevel        = upgradeInfo.maxItemLevel or props.ilvl
-        props.isUpgradeable   = (props.upgradeMax > 0)
-        props.isFullyUpgraded = (props.upgradeLevel >= props.upgradeMax and props.upgradeMax > 0)
+        props.upgradeLevel         = upgradeInfo.currentLevel or 0
+        props.upgradeMax           = upgradeInfo.maxLevel or 0
+        props.maxLevel             = upgradeInfo.maxItemLevel or props.ilvl
+        props.isUpgradeable        = (props.upgradeLevel < props.upgradeMax)
+        props.isFullyUpgraded      = (props.upgradeLevel >= props.upgradeMax and props.upgradeMax > 0)
+        props.upgradeTrackString   = upgradeInfo.trackString
+        props.upgradeTrackStringID = upgradeInfo.trackStringID
     end
 
     -- ---- Transmog / appearance (identity portion: hyperlink path only) ----
