@@ -1,0 +1,308 @@
+{
+  "categories": [
+    {
+      "source": "1",
+      "name": "Warbound",
+      "search": "(tww|ilvl>600)&(Armor|Weapon|Equipment)&(BOE|WUE)"
+    },
+    {
+      "source": "3",
+      "name": "Upgrades",
+      "search": "#upgrade"
+    },
+    {
+      "source": "2",
+      "name": "Season 1",
+      "search": "tww&Season 1&#equipment"
+    },
+    {
+      "source": "5",
+      "name": "Reagent",
+      "search": "#reagent&tww"
+    },
+    {
+      "source": "4",
+      "name": "Gear",
+      "search": "tww&(weapon|armor|cosmetic)&!(boe|wue)&!(Season 1)"
+    },
+    {
+      "source": "7",
+      "name": "Profession",
+      "search": "#profession&tww"
+    },
+    {
+      "source": "6",
+      "name": "Tradeskill",
+      "search": "#tradeskill&tww"
+    },
+    {
+      "source": "9",
+      "name": "Miscellaneous",
+      "search": "tww&#miscellaneous"
+    },
+    {
+      "source": "8",
+      "name": "Recipe",
+      "search": "#recipe&tww"
+    },
+    {
+      "source": "12",
+      "name": "Enhancement",
+      "search": "tww&(item enhancement|gem)"
+    },
+    {
+      "source": "11",
+      "name": "Potion",
+      "search": "#potion&tww"
+    },
+    {
+      "source": "10",
+      "name": "Consumables",
+      "search": "tww&#consumable"
+    }
+  ],
+  "version": 2,
+  "sections": {
+    "1": {
+      "name": "EQUIPMENT"
+    },
+    "2": {
+      "name": "CRAFTING"
+    },
+    "3": {
+      "name": "Warbound"
+    },
+    "4": {
+      "name": "Dungeon & Raid"
+    },
+    "5": {
+      "name": "Previous Seasons"
+    },
+    "6": {
+      "name": "Quest"
+    },
+    "7": {
+      "name": "Miscellaneous"
+    },
+    "9": {
+      "name": "Legacy"
+    }
+  },
+  "order": [
+    "default_auto_recents",
+    "----",
+    "_4",
+    "default_keystone",
+    "11",
+    "10",
+    "__end",
+    "_1",
+    "default_auto_equipment_sets",
+    "3",
+    "4",
+    "12",
+    "_3",
+    "1",
+    "__end",
+    "_5",
+    "2",
+    "__end",
+    "__end",
+    "_2",
+    "5",
+    "6",
+    "7",
+    "8",
+    "__end",
+    "_6",
+    "default_questitem",
+    "__end",
+    "_7",
+    "default_container",
+    "default_key",
+    "default_battlepet",
+    "default_toy",
+    "9",
+    "default_other",
+    "default_junk",
+    "__end",
+    "default_hearthstone",
+    "default_special_empty",
+    "_9",
+    "default_potion",
+    "default_consumable",
+    "default_food",
+    "default_weapon",
+    "default_armor",
+    "default_itemenhancement",
+    "default_gem",
+    "default_reagent",
+    "default_tradegoods",
+    "default_profession",
+    "default_recipe",
+    "default_miscellaneous",
+    "__end"
+  ],
+  "modifications": [
+    {
+      "showGroupPrefix": false,
+      "source": "default_questitem",
+      "group": "expansion",
+      "priority": -1
+    },
+    {
+      "showGroupPrefix": false,
+      "source": "default_armor",
+      "group": "slot",
+      "priority": -1
+    },
+    {
+      "showGroupPrefix": false,
+      "source": "default_itemenhancement",
+      "group": "type",
+      "priority": -1
+    },
+    {
+      "showGroupPrefix": true,
+      "source": "default_junk",
+      "priority": -1
+    },
+    {
+      "showGroupPrefix": false,
+      "source": "default_miscellaneous",
+      "group": "expansion",
+      "priority": -1
+    },
+    {
+      "showGroupPrefix": false,
+      "source": "default_weapon",
+      "group": "slot",
+      "priority": -1
+    },
+    {
+      "items": [
+        144457
+      ],
+      "source": "default_other"
+    },
+    {
+      "showGroupPrefix": true,
+      "source": "default_recipe",
+      "priority": -1
+    },
+    {
+      "items": [
+        229013
+      ],
+      "source": "default_container"
+    },
+    {
+      "source": "default_profession"
+    },
+    {
+      "showGroupPrefix": true,
+      "source": "7",
+      "priority": 0
+    },
+    {
+      "showGroupPrefix": true,
+      "source": "default_tradegoods",
+      "priority": -1
+    },
+    {
+      "showGroupPrefix": false,
+      "source": "1",
+      "group": "slot",
+      "priority": 3
+    },
+    {
+      "showGroupPrefix": false,
+      "source": "default_reagent",
+      "priority": -1
+    },
+    {
+      "showGroupPrefix": false,
+      "source": "3",
+      "group": "slot",
+      "priority": 1
+    },
+    {
+      "showGroupPrefix": true,
+      "source": "2",
+      "priority": 0
+    },
+    {
+      "showGroupPrefix": true,
+      "source": "5",
+      "priority": 0
+    },
+    {
+      "showGroupPrefix": false,
+      "source": "4",
+      "group": "slot",
+      "priority": 0
+    },
+    {
+      "showGroupPrefix": false,
+      "source": "default_consumable",
+      "group": "type",
+      "priority": -1
+    },
+    {
+      "showGroupPrefix": true,
+      "source": "6",
+      "priority": 0
+    },
+    {
+      "showGroupPrefix": false,
+      "source": "9",
+      "group": "type",
+      "priority": 0
+    },
+    {
+      "showGroupPrefix": true,
+      "source": "8",
+      "priority": 0
+    },
+    {
+      "showGroupPrefix": true,
+      "source": "default_gem",
+      "group": "expansion",
+      "priority": -1
+    },
+    {
+      "showGroupPrefix": true,
+      "source": "default_auto_equipment_sets",
+      "priority": -1
+    },
+    {
+      "showGroupPrefix": false,
+      "source": "default_potion",
+      "group": "type",
+      "priority": -1
+    },
+    {
+      "showGroupPrefix": false,
+      "source": "12",
+      "group": "type",
+      "priority": 0
+    },
+    {
+      "showGroupPrefix": true,
+      "source": "11",
+      "priority": 0
+    },
+    {
+      "items": [
+        109076,
+        188152,
+        211495
+      ],
+      "source": "10",
+      "showGroupPrefix": false,
+      "group": "type",
+      "priority": 0
+    }
+  ],
+  "hidden": []
+}

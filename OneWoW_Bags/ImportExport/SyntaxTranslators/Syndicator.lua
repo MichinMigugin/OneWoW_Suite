@@ -65,6 +65,31 @@ local ENGLISH_TO_OW = {
     ["activeseason"] = "currentseason",
     ["currentseason"] = "currentseason",
     ["active-season"] = "currentseason",
+    ["active season"] = "currentseason",
+    ["knowledge"] = "knowledge",
+    ["upgrade"] = "upgrade",
+    ["myclass"] = "myclass",
+    ["my class"] = "myclass",
+    -- expansion abbreviations (Syndicator TextToExpansion)
+    ["tww"] = "tww",
+    ["df"] = "dragonflight",
+    ["dragonflight"] = "dragonflight",
+    ["sl"] = "shadowlands",
+    ["shadowlands"] = "shadowlands",
+    ["bfa"] = "bfa",
+    ["legion"] = "legion",
+    ["wod"] = "wod",
+    ["mop"] = "mop",
+    ["cata"] = "cata",
+    ["wotlk"] = "wotlk",
+    ["tbc"] = "tbc",
+    ["classic"] = "classic",
+    ["tier token"] = "tiertoken",
+    ["tiertoken"] = "tiertoken",
+    ["catalyst"] = "catalyst",
+    ["transmog upgrade"] = "transmogupgrade",
+    ["transmogupgrade"] = "transmogupgrade",
+    ["item enhancement"] = "itemenhancement",
 }
 
 local function addWarning(warnings, term, reason, severity)
@@ -75,28 +100,24 @@ local function addWarning(warnings, term, reason, severity)
     })
 end
 
-local function normalizeKeyword(rawToken, context, warnings)
-    local token = string_lower(rawToken)
-    -- Step 1: direct English match
-    local hit = ENGLISH_TO_OW[token]
+local function lookupEnglishKeyword(token, _context, warnings)
+    local lower = string_lower(token)
+    local hit = ENGLISH_TO_OW[lower]
     if hit ~= nil then
         if hit == false then
-            addWarning(warnings, "#" .. rawToken, L["IMPORT_WARN_KEYWORD_NO_EQUIVALENT"], "warn")
+            addWarning(warnings, "#" .. token, L["IMPORT_WARN_KEYWORD_NO_EQUIVALENT"], "warn")
             return nil, false
         end
         return hit, true
     end
 
-    -- Step 2: live Syndicator API lookup for localized keywords -> English
     local live = rawget(_G, "Syndicator")
     if live and live.Search and live.Search.GetKeywordsForSubstring then
-        -- Best effort: GetKeywordsForSubstring returns candidate keywords matching
-        -- the substring; we only trust exact prefix/equality matches.
-        local ok, candidates = pcall(live.Search.GetKeywordsForSubstring, token)
+        local ok, candidates = pcall(live.Search.GetKeywordsForSubstring, lower)
         if ok and type(candidates) == "table" then
             for _, cand in ipairs(candidates) do
                 local candLower = string_lower(cand)
-                if candLower == token then
+                if candLower == lower then
                     local eng = ENGLISH_TO_OW[candLower]
                     if eng and eng ~= false then
                         return eng, true
@@ -106,10 +127,9 @@ local function normalizeKeyword(rawToken, context, warnings)
         end
     end
 
-    -- Step 3: bundled reverse map
     local localeMap = ST.SyndicatorLocaleMap
     if localeMap then
-        local english = localeMap[token]
+        local english = localeMap[lower]
         if english then
             local owKey = ENGLISH_TO_OW[english]
             if owKey and owKey ~= false then
@@ -118,15 +138,44 @@ local function normalizeKeyword(rawToken, context, warnings)
         end
     end
 
-    -- Step 4: unresolved — warn and preserve literal
-    local locale = context and context.locale or (GetLocale and GetLocale() or "")
-    local msg = "Keyword '#" .. rawToken .. "' could not be resolved"
-    if locale ~= "" then
-        msg = msg .. " (source locale " .. locale .. ")"
+    return nil, false
+end
+
+local function normalizeKeyword(rawToken, context, warnings)
+    local owKw, ok = lookupEnglishKeyword(rawToken, context, warnings)
+    if ok then
+        return owKw, true
     end
-    msg = msg .. "; preserved as-is."
-    addWarning(warnings, "#" .. rawToken, msg, "warn")
+    if owKw == nil then
+        local locale = context and context.locale or (GetLocale and GetLocale() or "")
+        local msg = "Keyword '#" .. rawToken .. "' could not be resolved"
+        if locale ~= "" then
+            msg = msg .. " (source locale " .. locale .. ")"
+        end
+        msg = msg .. "; preserved as-is."
+        addWarning(warnings, "#" .. rawToken, msg, "warn")
+        return rawToken, false
+    end
     return rawToken, false
+end
+
+local function isPassthroughAtom(body)
+    if body == "" then return true end
+    if string_sub(body, 1, 1) == '"' then return true end
+    if body:find("~", 1, true) then return true end
+    if body:find(":", 1, true) then return true end
+    if body:match("^%d") or body:match("^[><=!]+%d") then return true end
+    if body:match("^%d+[gsc]$") or body:match("^[><=!]+%d+[gsc]$") then return true end
+    return false
+end
+
+local function tryBareKeyword(body, context, warnings)
+    if isPassthroughAtom(body) then return nil end
+    local owKw, ok = lookupEnglishKeyword(body, context, warnings)
+    if ok and owKw then
+        return owKw
+    end
+    return nil
 end
 
 -- Translate a single "atom": a non-operator, non-whitespace token.
@@ -181,8 +230,12 @@ local function translateAtom(atom, context, warnings)
         return prefix .. body
     end
 
-    -- name~substring / name:substring / generic property predicates (ilvl:, quality:, ...)
-    -- All are passthrough — OneWoW's predicate engine consumes the same shapes.
+    -- name~substring / property predicates: passthrough
+    local bareKw = tryBareKeyword(body, context, warnings)
+    if bareKw then
+        return prefix .. "#" .. bareKw
+    end
+
     return prefix .. body
 end
 
@@ -245,6 +298,35 @@ local function tokenize(input)
     return tokens
 end
 
+local function mergeSpacedKeywordTokens(tokens)
+    local merged = {}
+    local i = 1
+    while i <= #tokens do
+        local tok = tokens[i]
+        if tok.kind == "atom" and i + 1 <= #tokens and tokens[i + 1].kind == "atom" then
+            local combined = tok.value .. " " .. tokens[i + 1].value
+            local pair = string_lower(combined)
+            if ENGLISH_TO_OW[pair] ~= nil then
+                tinsert(merged, { kind = "atom", value = combined })
+                i = i + 2
+            else
+                local localeMap = ST.SyndicatorLocaleMap
+                if localeMap and localeMap[pair] then
+                    tinsert(merged, { kind = "atom", value = combined })
+                    i = i + 2
+                else
+                    tinsert(merged, tok)
+                    i = i + 1
+                end
+            end
+        else
+            tinsert(merged, tok)
+            i = i + 1
+        end
+    end
+    return merged
+end
+
 -- Public contract — Syndicator translator entry point.
 -- input: Syndicator search string.
 -- context: { locale, liveSyndicator }
@@ -261,6 +343,7 @@ function Syndicator:Translate(input, context)
     text = string_gsub(text, "&&", "&")
 
     local tokens = tokenize(text)
+    tokens = mergeSpacedKeywordTokens(tokens)
     local out = {}
     local translatable = true
     for _, tok in ipairs(tokens) do

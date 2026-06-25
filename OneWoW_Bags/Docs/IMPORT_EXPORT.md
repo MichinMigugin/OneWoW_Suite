@@ -35,7 +35,8 @@ Available sources:
 - **TSM (direct)** — reads live TradeSkillMaster groups.
 - **OneWoW string (paste)** — paste a string produced by OneWoW's `Export`
   button (see below).
-- **Baganator string (paste)** — paste a Baganator JSON export string.
+- **Baganator string (paste)** — paste a Baganator export string (JSON v1/v2 or
+  `BGR!1!` CBOR v3 from the Copy button).
 
 Every source builds a **plan**, never touches the DB directly, and opens the
 preview dialog.
@@ -98,23 +99,26 @@ Baganator ships many `default_*` categories (e.g. `default_weapon`,
 ### Rule Translation
 
 Baganator / Syndicator search expressions are translated to OneWoW predicate
-syntax:
+syntax via `ImportExport/SyntaxTranslators/Syndicator.lua`:
 
 - Operators: `||` → `|`, `&&` → `&`, `~` and `!` both map to `!`.
-- Keywords: localized keyword tokens (`#rüstung`, `#арм...`) are reverse-mapped
-  to the canonical English tokens (`#armor`). Resolution order:
-  1. Direct English match.
-  2. Live Syndicator API (when Syndicator is loaded).
-  3. Bundled `SyndicatorLocaleMap.lua` reverse table.
-  4. Warn + preserve the literal token.
-- Passthrough: item-level comparisons (`ilvl>N`) and money shorthands (`12g`,
-  `>5s`) are copied as-is.
-- Unknown tokens become a warning and are dropped with a comment in the result
-  expression.
+- `#keywords`: localized tokens (`#rüstung`, …) reverse-map to English, then to
+  OneWoW canonical keywords (`#armor`, `#currentseason`, …). See the
+  [Baganator compatibility registry](#baganator-import-compatibility) for the
+  full matrix.
+- **Bare keywords** (no `#`): Syndicator treats tokens like `Armor`, `BOE`, `tww`
+  as keywords; OneWoW normally treats bare words as name substrings. The
+  importer injects `#` for known Syndicator/OneWoW keywords during translation.
+- Spaced keywords (`active season`, `item enhancement`, `my class`) are merged
+  before lookup when they match a known phrase.
+- Passthrough: quoted strings, `ilvl>N`, money shorthands (`12g`), and literal
+  text like `Season 1` (not the `active season` keyword) are copied as-is.
+- Syndicator-only keywords (`#auto`, `#recent`, `#bagtype`) emit a warning and
+  are stripped.
 
 Untranslatable rules are flagged in the preview; you can choose **Snapshot
-items** to convert the rule into a static item list captured from your current
-bags, or **Drop rules** to discard them.
+items** or **Drop rules**. See [SEARCH_SYNTAX.md](SEARCH_SYNTAX.md) for OneWoW
+predicate details.
 
 ---
 
@@ -285,3 +289,96 @@ Key invariants:
 4. Add menu entries to the `Import from...` pulldown in `CategoryManager.lua`.
 
 No other file should need to know about the new source.
+
+---
+
+## Baganator import compatibility
+
+Living gap registry for Baganator/Syndicator → OneWoW_Bags import fidelity.
+**Maintenance rule:** when you add or change any of the following, update the
+relevant row here and touch the listed code paths:
+
+- New `PredicateEngine` keyword → `SyntaxTranslators/Syndicator.lua`,
+  `SyndicatorLocaleMap.lua`
+- New OneWoW `groupBy` value, modification field, or builtin category →
+  `Planner.lua`, `BaganatorDefaultMap.lua`
+- Baganator export format version change → re-read vendored
+  `_OneWoW_Offline/Baganator/`, update `Integrations/BaganatorImport.lua`
+- Closing an import bug → mark row **Resolved**, note commit/PR
+
+**Reference:** vendored
+`Baganator/CustomiseDialog/Categories/ImportExport.lua` · **Code:**
+`Integrations/BaganatorImport.lua`, `ImportExport/Planner.lua`,
+`ImportExport/Applier.lua`, `Data/BaganatorDefaultMap.lua` · **Fixtures:**
+`Docs/fixtures/baganator/`
+
+### Decode / format
+
+| Baganator concept | OneWoW status | User impact | Code touchpoints | Notes |
+|-------------------|---------------|-------------|------------------|-------|
+| JSON v1/v2 export (`categories[]`, `order`, …) | **Supported** | Paste imports categories + layout | `BaganatorImport.lua` | Lenient: `addon` field optional when `categories` present |
+| `BGR!1!` CBOR v3 | **Supported** | Same as JSON after decode | `DecodeBaganatorPaste` | Requires `addon == "Baganator"` |
+| `||` pipe escape in search | **Supported** | Rules decode correctly | `DecodeBaganatorPaste`, `Syndicator.lua` | Normalized to `\|` |
+| Full profile export (`kind: "profile"`) | **Unsupported** | Clear error, no DB write | `ParseString` | Categories-only scope |
+| Profile-shaped paste (`custom_categories`) | **Supported** | Routed through `NormalizeProfilePayload` | `BaganatorImport.lua` | Legacy SV paste |
+
+### Schema / layout
+
+| Baganator concept | OneWoW status | User impact | Code touchpoints | Notes |
+|-------------------|---------------|-------------|------------------|-------|
+| `categories[]` → customs | **Supported** | Custom categories in preview | `NormalizeExportPayload` | |
+| `order` / `sections` | **Supported** | Section order + names | `Planner.pushDefaultSections`, `buildDisplayOrderFromBaganator` | v1 `_EQUIPMENT` migrated to `_1` |
+| `modifications[]` | **Supported** | Priority, color, group, pins, hideIn | `Planner.applyBaganatorModification` | All source IDs, not only mapped defaults |
+| `hidden[]` | **Supported** | `disabledCategories` in preview | `mapHiddenCategories` | |
+| `displayOrder` from Baganator order | **Supported** | Global layout restored | `buildDisplayOrderFromBaganator` | `section:bag_sec_N`, `section_end` |
+| Direct read active profile | **Supported** | Uses `BAGANATOR_CURRENT_PROFILE` | `DirectRead` | Fallback `DEFAULT` |
+| Direct read `category_modifications` | **Supported** | Mods preserved on direct path | `NormalizeProfilePayload` | Was hardcoded `{}` pre-fix |
+
+### Default categories
+
+| Baganator concept | OneWoW status | User impact | Code touchpoints | Notes |
+|-------------------|---------------|-------------|------------------|-------|
+| Known `default_*` IDs | **Supported** | Map to OneWoW builtins | `BaganatorDefaultMap.lua` | |
+| `default_auto_tradeskillmaster` | **Partial** | Keep/Ignore in preview | `BaganatorDefaultDisplayHints` | No builtin equivalent |
+| `default_auto_inventory_slots` | **Partial** | Keep/Ignore | Display hints | OneWoW uses `enableInventorySlots` setting |
+| `default_projectile` / `default_quiver` | **Partial** | Keep/Ignore (Classic-era) | Display hints | Retail exports may still reference them |
+
+### Category modifications
+
+| Baganator mod | OneWoW status | User impact | Code touchpoints | Notes |
+|---------------|---------------|-------------|------------------|-------|
+| `priority` | **Supported** | Clamped -2..3 | `applyBaganatorModification` | |
+| `hideIn` → `appliesIn` | **Supported** | Per-container visibility | `InvertHideIn` | |
+| `color` | **Supported** | Category color | Planner → Applier | |
+| `group` → `groupBy` | **Partial** | expansion/type/slot/quality/set OK | Planner | `track` → warn + skip |
+| `addedItems` `i:ID` | **Supported** | Item pins | Planner | Stored as string IDs |
+| `addedItems` `p:ID` | **Unsupported** | Warn + skip | Planner | No pet-pin model |
+| `showGroupPrefix` | **Unsupported** | Info warn, dropped | Planner | No OneWoW field |
+
+### Search syntax
+
+| Syndicator concept | OneWoW status | User impact | Code touchpoints | Notes |
+|--------------------|---------------|-------------|------------------|-------|
+| Bare keywords (`Armor`, `BOE`, `tww`) | **Supported** | Injected as `#keyword` | `Syndicator.lua` `tryBareKeyword` | |
+| `#activeseason` / `active season` | **Supported** | Maps to `#currentseason` | `ENGLISH_TO_OW`, `PredicateEngine` | Implementations may disagree on edge items |
+| Literal `Season 1` text | **Supported** | Passthrough (name substring) | Translator | Not rewritten to season keyword |
+| `#upgrade` | **Partial** | Passthrough when PE loaded | PE + UpgradeDetection | Semantic diff vs Syndicator |
+| `#junk` | **Partial** | Mapped but semantics differ | PE | OneWoW = poor quality or ItemStatus junk |
+| `#auto`, `#recent`, `#bagtype` | **Intentional skip** | Stripped + warn | `ENGLISH_TO_OW` | Baganator auto-categories |
+| Localized `#keywords` | **Supported** | Via locale map + live Syndicator | `SyndicatorLocaleMap.lua` | |
+
+### Intentional non-imports
+
+| Concept | Notes |
+|---------|-------|
+| Full Baganator profile | Export categories only |
+| Battle pet pins | Item pins only |
+| `group: track` | Baganator upgrade-track UI grouping |
+| Baganator junk/upgrade **plugins** | Not the same as OneWoW `enableJunkCategory` / `enableUpgradeCategory` |
+| `showGroupPrefix` | No OneWoW equivalent |
+
+### Baganator manual QA
+
+See `Docs/fixtures/baganator/README.md` for fixture strings and the in-game
+checklist (migration JSON, `BGR!1!`, direct read, v1 legacy, profile reject,
+undo).

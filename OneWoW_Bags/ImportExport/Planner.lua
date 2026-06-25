@@ -243,16 +243,13 @@ end
 -- Baganator shared helper: intermediate shape -> Plan
 -- ------------------------------------------------------------------
 
-local function pushDefaultSections(plan, intermediate)
-    local BaganatorImport = ns.Integrations.Baganator
-    local sections = BaganatorImport:ResolveOrderToSections(intermediate.category_display_order or {})
-    local defaultMap = ns.BaganatorDefaultMap or {}
-    local hints      = intermediate.display_hints or {}
-    local displayHints = ns.BaganatorDefaultDisplayHints or {}
-    local customs    = intermediate.custom_categories or {}
-    local sectionsMeta = intermediate.category_sections or {}
+local SECTION_END = "__end"
 
-    local unmappedSet = {}
+local function buildSourceIdResolver(intermediate)
+    local defaultMap = ns.BaganatorDefaultMap or {}
+    local hints = intermediate.display_hints or {}
+    local displayHints = ns.BaganatorDefaultDisplayHints or {}
+    local customs = intermediate.custom_categories or {}
 
     local function resolveName(sourceId)
         if customs[sourceId] then
@@ -262,57 +259,127 @@ local function pushDefaultSections(plan, intermediate)
         if mapped then
             return mapped, "default_mapped"
         end
-        -- unmapped default or unknown source id
-        if sourceId:sub(1, 8) == "default_" then
+        if type(sourceId) == "string" and sourceId:sub(1, 8) == "default_" then
             return hints[sourceId] or displayHints[sourceId] or sourceId, "default_unmapped"
         end
         return nil, "unknown"
     end
 
-    -- Produce sections and populate their `categories` arrays with the names
-    -- that the applier should wire up. Unmapped defaults emit plan.unmappedDefaults
-    -- entries (applier creates placeholders in "Baganator Import" section).
-    for bagIndex, sourceIDs in pairs(sections) do
-        local meta = sectionsMeta[bagIndex] or sectionsMeta[tonumber(bagIndex)] or {}
-        if meta.name then
-            local planSid = "bag_sec_" .. tostring(bagIndex)
-            local section = {
-                name         = meta.name,
-                collapsed    = meta.collapsed,
-                showHeader   = meta.showHeader ~= false,
-                categories   = {},
-                originalId   = planSid,
-            }
-            for _, sourceId in ipairs(sourceIDs) do
-                local nm, kind = resolveName(sourceId)
-                if kind == "custom" or kind == "default_mapped" then
-                    if nm and nm ~= "" then
-                        tinsert(section.categories, nm)
+    return resolveName
+end
+
+local function pushDefaultSections(plan, intermediate, resolveName)
+    local BaganatorImport = ns.Integrations.Baganator
+    local order = intermediate.category_display_order or {}
+    local sectionsByIndex = BaganatorImport:ResolveOrderToSections(order)
+    local sectionsMeta = intermediate.category_sections or {}
+    local unmappedSet = {}
+    local sectionSeen = {}
+
+    for _, entry in ipairs(order) do
+        if entry:sub(1, 1) == "_" and entry ~= "----" and entry ~= SECTION_END then
+            local bagIndex = entry:sub(2)
+            if not sectionSeen[bagIndex] then
+                sectionSeen[bagIndex] = true
+                local meta = sectionsMeta[bagIndex] or sectionsMeta[tonumber(bagIndex)] or {}
+                if meta.name then
+                    local planSid = "bag_sec_" .. tostring(bagIndex)
+                    local section = {
+                        name         = meta.name,
+                        collapsed    = meta.collapsed,
+                        showHeader   = meta.showHeader ~= false,
+                        categories   = {},
+                        originalId   = planSid,
+                    }
+                    for _, sourceId in ipairs(sectionsByIndex[bagIndex] or {}) do
+                        local nm, kind = resolveName(sourceId)
+                        if kind == "custom" or kind == "default_mapped" then
+                            if nm and nm ~= "" then
+                                tinsert(section.categories, nm)
+                            end
+                        elseif kind == "default_unmapped" then
+                            if not unmappedSet[sourceId] then
+                                unmappedSet[sourceId] = true
+                                tinsert(plan.unmappedDefaults, {
+                                    sourceId    = sourceId,
+                                    displayName = nm or sourceId,
+                                    sectionHint = meta.name,
+                                    resolution  = "ignore",
+                                })
+                            end
+                        end
                     end
-                elseif kind == "default_unmapped" then
-                    if not unmappedSet[sourceId] then
-                        unmappedSet[sourceId] = true
-                        tinsert(plan.unmappedDefaults, {
-                            sourceId    = sourceId,
-                            displayName = nm or sourceId,
-                            sectionHint = meta.name,
-                            resolution  = "ignore",
-                        })
-                    end
+                    plan.sections[planSid] = section
+                    tinsert(plan.sectionOrder, planSid)
                 end
             end
-            plan.sections[planSid] = section
-            tinsert(plan.sectionOrder, planSid)
         end
     end
 
     return unmappedSet
 end
 
-local function buildCategoriesFromCustom(plan, intermediate, context)
-    local customs    = intermediate.custom_categories or {}
-    local defaultMap = ns.BaganatorDefaultMap or {}
+local function clampPriority(p)
+    if p > 3 then return 3 end
+    if p < -2 then return -2 end
+    return p
+end
+
+local function applyBaganatorModification(plan, displayName, mod, BaganatorImport, warnedOnce)
+    if not displayName or type(mod) ~= "table" then return end
+
+    plan.modifications[displayName] = plan.modifications[displayName] or {}
+    local dest = plan.modifications[displayName]
+
+    if mod.hideIn then
+        dest.appliesIn = BaganatorImport:InvertHideIn(mod.hideIn)
+    end
+    if type(mod.priority) == "number" then
+        dest.priority = clampPriority(mod.priority)
+    end
+    if type(mod.color) == "string" and #mod.color == 6 then
+        dest.color = mod.color
+    end
+    if type(mod.group) == "string" then
+        if mod.group == "track" then
+            if not warnedOnce.groupTrack then
+                warnedOnce.groupTrack = true
+                addWarning(plan, "warn", L["IMPORT_WARN_BAGANATOR_GROUP_TRACK_SKIPPED"])
+            end
+        else
+            dest.groupBy = mod.group
+        end
+    end
+    if mod.showGroupPrefix ~= nil and not warnedOnce.showGroupPrefix then
+        warnedOnce.showGroupPrefix = true
+        addWarning(plan, "info", L["IMPORT_WARN_BAGANATOR_SHOW_GROUP_PREFIX_SKIPPED"])
+    end
+
+    if type(mod.addedItems) == "table" then
+        dest.addedItems = dest.addedItems or {}
+        for key, val in pairs(mod.addedItems) do
+            if val then
+                if type(key) == "string" and key:sub(1, 2) == "p:" then
+                    if not warnedOnce.petPin then
+                        warnedOnce.petPin = true
+                        addWarning(plan, "warn", L["IMPORT_WARN_BAGANATOR_PET_PIN_SKIPPED"])
+                    end
+                elseif type(key) == "string" and key:sub(1, 2) == "i:" then
+                    local n = tonumber(key:sub(3))
+                    if n then dest.addedItems[tostring(n)] = true end
+                else
+                    local n = tonumber(key)
+                    if n then dest.addedItems[tostring(n)] = true end
+                end
+            end
+        end
+    end
+end
+
+local function buildCategoriesFromCustom(plan, intermediate, context, resolveName)
+    local customs = intermediate.custom_categories or {}
     local BaganatorImport = ns.Integrations.Baganator
+    local warnedOnce = {}
 
     for sourceId, data in pairs(customs) do
         local name = data.name
@@ -330,7 +397,6 @@ local function buildCategoriesFromCustom(plan, intermediate, context)
                 ruleHandling            = "use_translated",
             }
 
-            -- Translate any Syndicator search expression via the registry.
             if data.search and data.search ~= "" and Translators and Translators.Registry then
                 local result = Translators.Registry:Translate("syndicator", data.search, context)
                 category.searchExpression         = result.expression
@@ -341,39 +407,106 @@ local function buildCategoriesFromCustom(plan, intermediate, context)
                 end
             end
 
-            -- Per-name category modifications (hideIn inversion + priority).
             if data.hideIn or data.priority then
-                plan.modifications[name] = plan.modifications[name] or {}
-                if data.hideIn then
-                    plan.modifications[name].appliesIn = BaganatorImport:InvertHideIn(data.hideIn)
-                end
-                if type(data.priority) == "number" then
-                    -- Baganator uses higher numbers for higher priority; clamp to OneWoW's -2..3.
-                    local p = data.priority
-                    if p > 3 then p = 3 elseif p < -2 then p = -2 end
-                    plan.modifications[name].priority = p
-                end
+                applyBaganatorModification(plan, name, {
+                    hideIn = data.hideIn,
+                    priority = data.priority,
+                }, BaganatorImport, warnedOnce)
             end
 
             plan.categories[planCid] = category
         end
     end
 
-    -- Mapped defaults that carry modifications (hideIn) in the Baganator payload.
     local catMods = intermediate.category_modifications or {}
     for sourceId, mod in pairs(catMods) do
-        local mappedName = defaultMap[sourceId]
-        if mappedName and type(mod) == "table" then
-            plan.modifications[mappedName] = plan.modifications[mappedName] or {}
-            if mod.hideIn then
-                plan.modifications[mappedName].appliesIn = BaganatorImport:InvertHideIn(mod.hideIn)
-            end
-            if type(mod.priority) == "number" then
-                local p = mod.priority
-                if p > 3 then p = 3 elseif p < -2 then p = -2 end
-                plan.modifications[mappedName].priority = p
+        local displayName = resolveName(sourceId)
+        if displayName and type(mod) == "table" then
+            applyBaganatorModification(plan, displayName, mod, BaganatorImport, warnedOnce)
+
+            if customs[sourceId] and type(mod.addedItems) == "table" then
+                local planCid = "bag_cat_" .. sourceId
+                local category = plan.categories[planCid]
+                if category then
+                    for key, val in pairs(mod.addedItems) do
+                        if val and type(key) == "string" and key:sub(1, 2) == "i:" then
+                            local n = tonumber(key:sub(3))
+                            if n then category.items[tostring(n)] = true end
+                        end
+                    end
+                end
             end
         end
+    end
+end
+
+local function mapHiddenCategories(plan, intermediate, resolveName)
+    local hidden = intermediate.category_hidden or {}
+    for sourceId in pairs(hidden) do
+        local displayName, kind = resolveName(sourceId)
+        if displayName and (kind == "custom" or kind == "default_mapped") then
+            plan.disabledCategories[displayName] = true
+        end
+    end
+end
+
+local function buildDisplayOrderFromBaganator(plan, intermediate, resolveName)
+    local BaganatorImport = ns.Integrations.Baganator
+    local order = intermediate.category_display_order or {}
+    local _, loose = BaganatorImport:ResolveOrderToSections(order)
+    local looseSeen = {}
+    local displayOrder = {}
+
+    local function pushCategoryName(sourceId)
+        local nm, kind = resolveName(sourceId)
+        if kind == "custom" or kind == "default_mapped" then
+            if nm and nm ~= "" then
+                tinsert(displayOrder, nm)
+            end
+        end
+    end
+
+    for _, entry in ipairs(order) do
+        if entry == SECTION_END then
+            tinsert(displayOrder, "section_end")
+        elseif entry == "----" then
+            -- divider only
+        elseif entry:sub(1, 1) == "_" then
+            local bagIndex = entry:sub(2)
+            tinsert(displayOrder, "section:bag_sec_" .. tostring(bagIndex))
+        else
+            pushCategoryName(entry)
+            looseSeen[entry] = true
+        end
+    end
+
+    for _, sourceId in ipairs(loose) do
+        if not looseSeen[sourceId] then
+            pushCategoryName(sourceId)
+        end
+    end
+
+    if #displayOrder > 0 then
+        plan.displayOrder = displayOrder
+    end
+end
+
+local function buildCategoryOrderFromDisplay(plan, intermediate, resolveName)
+    local customs = intermediate.custom_categories or {}
+    local customNames = {}
+    for sourceId in pairs(customs) do
+        local nm = resolveName(sourceId)
+        if nm then customNames[nm] = true end
+    end
+
+    local categoryOrder = {}
+    for _, entry in ipairs(plan.displayOrder or {}) do
+        if type(entry) == "string" and customNames[entry] then
+            tinsert(categoryOrder, entry)
+        end
+    end
+    if #categoryOrder > 0 then
+        plan.categoryOrder = categoryOrder
     end
 end
 
@@ -381,13 +514,23 @@ local function planFromBaganatorIntermediate(intermediate, db, options)
     local plan = newPlan(intermediate.source or "baganator")
     plan.options = options or {}
 
+    for _, code in ipairs(intermediate.import_warnings or {}) do
+        if code == "missing_addon" then
+            addWarning(plan, "info", L["IMPORT_WARN_BAGANATOR_MISSING_ADDON"])
+        end
+    end
+
     local context = {
         locale         = intermediate.exportedLocale or (GetLocale and GetLocale() or "enUS"),
         liveSyndicator = rawget(_G, "Syndicator") ~= nil,
     }
 
-    pushDefaultSections(plan, intermediate)
-    buildCategoriesFromCustom(plan, intermediate, context)
+    local resolveName = buildSourceIdResolver(intermediate)
+    pushDefaultSections(plan, intermediate, resolveName)
+    buildCategoriesFromCustom(plan, intermediate, context, resolveName)
+    mapHiddenCategories(plan, intermediate, resolveName)
+    buildDisplayOrderFromBaganator(plan, intermediate, resolveName)
+    buildCategoryOrderFromDisplay(plan, intermediate, resolveName)
 
     Planner:DetectConflicts(plan, db)
     recountEstimate(plan)

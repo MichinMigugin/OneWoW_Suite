@@ -232,13 +232,19 @@ ST.SyndicatorLocaleMap = {
     ["комплект"]    = "set",
     ["장비세트"]    = "set",
 
-    -- active season (Syndicator KEYWORD_ACTIVE_SEASON; hyphenated import form)
+    -- active season (Syndicator KEYWORD_ACTIVE_SEASON; spaced + hyphenated forms)
+    ["active season"]   = "activeseason",
     ["active-season"]   = "activeseason",
+    ["saison active"]   = "activeseason",
     ["saison-active"]   = "activeseason",
+    ["текущий сезон"]   = "activeseason",
     ["текущий-сезон"]   = "activeseason",
+    ["temporada ativa"] = "activeseason",
     ["temporada-ativa"] = "activeseason",
+    ["temporada activa"] = "activeseason",
     ["temporada-activa"] = "activeseason",
     ["現行賽季"]        = "activeseason",
     ["当前赛季"]        = "activeseason",
+    ["현재 시즌"]       = "activeseason",
     ["현재-시즌"]       = "activeseason",
 }

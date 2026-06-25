@@ -46,4 +46,8 @@ ns.BaganatorDefaultDisplayHints = {
     ["default_auto_junk"]       = "Auto Junk",
     ["default_auto_new_items"]  = "Auto New Items",
     ["default_auto_upgrade"]    = "Auto Upgrades",
+    ["default_projectile"]      = "Projectile",
+    ["default_quiver"]          = "Quiver",
+    ["default_auto_tradeskillmaster"] = "TSM Groups",
+    ["default_auto_inventory_slots"] = "Inventory Slots",
 }
