@@ -47,6 +47,53 @@ local function replaceCategoryNameInAllSections(g, oldName, newName)
     end
 end
 
+local function removeNameFromOrderedList(list, categoryName)
+    if not list then return end
+    for i = #list, 1, -1 do
+        if list[i] == categoryName then
+            tremove(list, i)
+        end
+    end
+end
+
+local function replaceNameInOrderedList(list, oldName, newName)
+    if not list or oldName == newName then return end
+    for i, entry in ipairs(list) do
+        if entry == oldName then
+            list[i] = newName
+        end
+    end
+end
+
+local function purgeCategoryKeys(g, categoryName)
+    if not categoryName or categoryName == "" then return end
+    if g.categoryModifications then
+        g.categoryModifications[categoryName] = nil
+    end
+    if g.disabledCategories then
+        g.disabledCategories[categoryName] = nil
+    end
+    removeNameFromOrderedList(g.categoryOrder, categoryName)
+    removeNameFromOrderedList(g.displayOrder, categoryName)
+end
+
+local function rekeyCategoryKeys(g, oldName, newName)
+    if not oldName or not newName or oldName == newName then return end
+
+    if g.categoryModifications and g.categoryModifications[oldName] then
+        g.categoryModifications[newName] = g.categoryModifications[oldName]
+        g.categoryModifications[oldName] = nil
+    end
+
+    if g.disabledCategories and g.disabledCategories[oldName] then
+        g.disabledCategories[newName] = g.disabledCategories[oldName]
+        g.disabledCategories[oldName] = nil
+    end
+
+    replaceNameInOrderedList(g.categoryOrder, oldName, newName)
+    replaceNameInOrderedList(g.displayOrder, oldName, newName)
+end
+
 function CategoryController:Create(addon)
     local controller = {}
     controller.addon = addon
@@ -158,6 +205,7 @@ function CategoryController:RenameCategory(id, name)
         category.name = name
         replaceCategoryNameInAllSections(g, oldName, name)
         if oldName ~= name then
+            rekeyCategoryKeys(g, oldName, name)
             if #db.global.displayOrder > 0 then
                 wipe(db.global.displayOrder)
             end
@@ -177,6 +225,7 @@ function CategoryController:RenameCategory(id, name)
     local oldName = category.name
     category.name = name
     replaceCategoryNameInAllSections(g, oldName, name)
+    rekeyCategoryKeys(g, oldName, name)
     if #db.global.displayOrder > 0 then
         wipe(db.global.displayOrder)
     end
@@ -197,6 +246,7 @@ function CategoryController:DeleteCategory(id)
     g.customCategoriesV2[id] = nil
     if catName and catName ~= "" then
         removeCategoryNameFromAllSections(g, catName)
+        purgeCategoryKeys(g, catName)
     end
     if #db.global.displayOrder > 0 then
         wipe(db.global.displayOrder)

@@ -18,12 +18,32 @@ Open **Category Manager**. The action bar now has three import/export controls:
 | Control | What it does |
 |---|---|
 | `Import from...` pulldown | Pick a source, opens the preview dialog |
+| Find & Fix (magnifying glass) | Scan for orphaned category data and stale layout references; preview before cleanup |
 | `Export` | Copy the current config to a clipboard dialog |
-| `Undo` icon (curved arrow) | Revert the most recent import (one-shot) |
+| `Undo` icon (curved arrow) | Revert the most recent import **or cleanup** (one-shot) |
 
 The pulldown is always visible. If Baganator or TSM is not loaded the
 corresponding `(direct)` entry is tagged `(not loaded)`; you can still use the
 `(paste)` entries to process an export string from that addon.
+
+### Category Manager origin indicators
+
+The left panel shows a colored dot on each section and category row (right-aligned):
+
+| Dot | Meaning |
+|---|---|
+| Green | Built-in section or category |
+| Blue | Custom (user-created) |
+| Red | Imported from Baganator or TSM |
+
+Hover a row for a tooltip with the origin text. The right-panel detail header
+shows matching type tags: `[Built-in]`, `[Custom]`, `[Baganator]`, or `[TSM]`.
+
+Import metadata uses existing boolean flags on SavedVariables records:
+`isBaganator` / `isTSM` on `customCategoriesV2` entries (categories) and, for
+Baganator imports, on `categorySections` (sections). OneWoW-to-OneWoW string
+import round-trips these flags via export; it does not stamp new external-import
+flags on categories that were not already marked.
 
 ---
 
@@ -58,8 +78,18 @@ The preview shows:
    - `Skip` — do not import this entry.
    - `Rename` — import with a custom prefix/suffix.
    - `Merge` — combine with the existing entry (see merge rules below).
-6. **Rule handling** — for rules that were translated from another dialect you
-   can choose `Translate`, `Snapshot items`, or `Drop rules`.
+6. **Rule handling** (Baganator imports only) — categories that had a Baganator
+   search rule show an extra row with the original rule text (`rule: …`) and a
+   **cycle button** (click to rotate). Hover the button for a tooltip. Options:
+   - **Use translated** (default) — import the rule converted to OneWoW search
+     syntax. The category keeps matching new items as you loot them. Any pinned
+     item IDs from the export are kept too.
+   - **Skip rule** — do not import the search rule. Only item IDs explicitly
+     listed in the Baganator export are pinned to the category; nothing new will
+     match unless you add pins yourself.
+   - **Snapshot items** — same import result as Skip rule (search rule dropped,
+     exported item IDs kept). The preview selects this when translation failed,
+     or you can pick it when you prefer a fixed pin list over a live rule.
 7. **Summary + Import / Cancel buttons** — a live count updates as you edit
    resolutions.
 
@@ -116,9 +146,21 @@ syntax via `ImportExport/SyntaxTranslators/Syndicator.lua`:
 - Syndicator-only keywords (`#auto`, `#recent`, `#bagtype`) emit a warning and
   are stripped.
 
-Untranslatable rules are flagged in the preview; you can choose **Snapshot
-items** or **Drop rules**. See [SEARCH_SYNTAX.md](SEARCH_SYNTAX.md) for OneWoW
-predicate details.
+When a category has a Baganator search rule, the preview shows the **original**
+Baganator expression next to the rule-handling button (not the converted
+OneWoW text). Use the button to choose how that rule is applied on import:
+
+| Button label | What you get |
+|---|---|
+| **Use translated** | Live search rule in OneWoW syntax (`filterMode = "search"`). Keeps matching dynamically. Default when translation succeeds. |
+| **Skip rule** | No search rule — category is item-pin only (`filterMode = "items"`). Only exported item IDs are pinned. |
+| **Snapshot items** | Same as Skip rule at import time. Auto-selected when translation fails; pick manually if you want a fixed list even though translation worked. |
+
+Categories with `(0 items)` in the preview rely entirely on **Use translated**
+— switching to Skip rule or Snapshot items leaves an empty category unless you
+add pins later.
+
+See [SEARCH_SYNTAX.md](SEARCH_SYNTAX.md) for OneWoW predicate details.
 
 ---
 
@@ -136,6 +178,8 @@ literal and opens a read-only copy dialog (powered by `OneWoW.CopyPaste`).
 - `displayOrder`.
 - **v2 only:** `savedSearches` — transitive closure of saved searches referenced
   by exported custom category `searchExpression` values (`SAVED(Name)` tokens).
+  Collected from `db.global.savedSearches` at export time via
+  `ImportExport/Util.lua` (`CollectReferencedSavedSearches`).
 - **v2 only:** `enableJunkCategory`, `enableUpgradeCategory` — whether optional
   **1W Junk** / **1W Upgrades** builtins participate in layout.
 - Envelope metadata: `format`, `version`, `addon`, `exportedAt`, `exportedBy`,
@@ -203,6 +247,38 @@ comments, metatables, and anything else that could smuggle code.
 
 ---
 
+## Find & Fix (config cleanup)
+
+The magnifying-glass button in the Category Manager action bar (left of
+**Import from...**) scans `db.global` for stale category/section data and opens
+a preview dialog before applying changes.
+
+### What it detects
+
+| Issue | Example |
+|---|---|
+| Orphaned `categoryModifications` keys | `aa`, `Imp: Bank It` after the category was deleted or renamed |
+| Stale section members | A section lists a category name that no longer exists |
+| Stale `sectionOrder` IDs | Order references a section that was removed |
+| Stale `categoryOrder` / `displayOrder` entries | Order lists a category name that no longer exists |
+
+Valid category names include all custom categories, effective built-in names
+(from `SectionDefaults`), and `"Empty"`. Empty-but-valid modification tables
+on built-ins (e.g. `Keys = {}` after browsing the manager) are **not** flagged.
+
+### Apply behavior
+
+- Takes a snapshot via `ImportExport/Backup.lua` before mutating (same undo slot
+  as import).
+- Removes selected entries (`nil` keys, not empty tables).
+- Calls `SyncOnewowSectionCategories` when the ONEWOW BAGS section exists.
+
+Deleting a custom category via the Category Manager also purges its
+`categoryModifications`, `disabledCategories`, and order-array references
+immediately (see `CategoryController:DeleteCategory`).
+
+---
+
 ## Undo
 
 Every `Applier:Apply` call begins with `Backup:Snapshot("pre_import", db)`,
@@ -229,15 +305,17 @@ categories). Verify:
 
 1. Custom category with `searchExpression` using `SAVED(MySearch)` — search
    definition travels with the export and categorization works after import.
-2. Section `collapsed`, `showHeader`, and `showHeaderBank` flags — including
+2. **Find & Fix** lists orphaned modification keys (empty or not) and removes
+   them on apply; export no longer includes deleted test categories.
+3. Section `collapsed`, `showHeader`, and `showHeaderBank` flags — including
    when the section name already exists on the target (merge path).
-3. Custom section ordering matches the source (`sectionOrder` / `displayOrder`).
-4. **1W Junk** / **1W Upgrades** visibility matches export when toggles differ
+4. Custom section ordering matches the source (`sectionOrder` / `displayOrder`).
+5. **1W Junk** / **1W Upgrades** visibility matches export when toggles differ
    on the target before import.
-5. Skip one conflicting category in the preview — remaining `displayOrder`
+6. Skip one conflicting category in the preview — remaining `displayOrder`
    entries still restore; skipped names are omitted without clearing the whole
    layout.
-6. **Undo** restores all backed-up fields including saved searches and junk/
+7. **Undo** restores all backed-up fields including saved searches and junk/
    upgrade toggles.
 
 ---
@@ -250,6 +328,7 @@ Source (Baganator / TSM / paste)
       ▼
 Integrations/BaganatorImport.lua    Integrations/TSMIntegration.lua
 ImportExport/Serializer.lua (OneWoW native)
+ImportExport/ConfigCleanup.lua (Find & Fix scan/apply)
       │
       ▼  intermediate payload (normalized)
 ImportExport/SyntaxTranslators/Registry.lua

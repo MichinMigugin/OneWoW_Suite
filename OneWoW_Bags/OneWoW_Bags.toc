@@ -46,6 +46,7 @@ Core\Events.lua
 Data\SavedSearches.lua
 Data\Sorting.lua
 Data\Categories.lua
+Data\CategoryOrigin.lua
 Data\BaganatorDefaultMap.lua
 
 # Modules
@@ -68,6 +69,7 @@ ImportExport\SyntaxTranslators\SyndicatorLocaleMap.lua
 ImportExport\SyntaxTranslators\Syndicator.lua
 ImportExport\Planner.lua
 ImportExport\Applier.lua
+ImportExport\ConfigCleanup.lua
 
 # Integrations
 Integrations\OneWoWBagsIntegration.lua
@@ -109,6 +111,7 @@ GUI\GuildBankBar.lua
 GUI\GuildBankLog.lua
 GUI\GuildBankWindow.lua
 GUI\ImportPreview.lua
+GUI\CleanupPreview.lua
 GUI\CategoryManager.lua
 GUI\Settings.lua
 GUI\MainWindow.lua

@@ -195,12 +195,14 @@ function Planner:FromOneWowString(text, db)
 
     for sid, sec in pairs(payload.sections or {}) do
         plan.sections[sid] = {
-            name         = sec.name,
-            collapsed    = sec.collapsed,
-            showHeader   = sec.showHeader,
+            name           = sec.name,
+            collapsed      = sec.collapsed,
+            showHeader     = sec.showHeader,
             showHeaderBank = sec.showHeaderBank,
-            categories   = deepCopy(sec.categories or {}),
-            originalId   = sid,
+            categories     = deepCopy(sec.categories or {}),
+            originalId     = sid,
+            isBaganator    = sec.isBaganator,
+            isTSM          = sec.isTSM,
         }
     end
     plan.sectionOrder = deepCopy(payload.sectionOrder) or {}
@@ -290,6 +292,7 @@ local function pushDefaultSections(plan, intermediate, resolveName)
                         showHeader   = meta.showHeader ~= false,
                         categories   = {},
                         originalId   = planSid,
+                        isBaganator  = true,
                     }
                     for _, sourceId in ipairs(sectionsByIndex[bagIndex] or {}) do
                         local nm, kind = resolveName(sourceId)

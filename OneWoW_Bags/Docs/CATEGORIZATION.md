@@ -229,14 +229,14 @@ Search strings use its expression language (`#keyword`, operators, etc.). `Build
 
 | Mechanism | Role |
 |-----------|------|
-| `customCategoriesV2` | Custom categories: `items`, `searchExpression`, `itemType` / `itemSubType`, `filterMode`, `typeMatchMode`, `enabled`, `sortOrder`, `isTSM`, etc. |
+| `customCategoriesV2` | Custom categories: `items`, `searchExpression`, `itemType` / `itemSubType`, `filterMode`, `typeMatchMode`, `enabled`, `sortOrder`, `isBaganator`, `isTSM`, etc. |
 | `savedSearches` | Named predicate shortcuts expanded from `SAVED(Name)` before custom search categories are evaluated. Referenced entries are included in native OneWoW export v2 — see [`IMPORT_EXPORT.md`](IMPORT_EXPORT.md). |
 | `categoryModifications[name]` | `sortMode`, `subSortMode`, `sortDescending`, `subSortDescending`, `groupBy`, `priority`, `color`, `appliesIn`, `addedItems`, `forceOwnLine` (per-container compact layout) |
 | `disabledCategories` | Disable builtin/custom by name; classification remaps to **Other** when applicable |
 | `enableJunkCategory` | Separate toggle for **phase B2** (default `true`); disabling skips the 1W Junk check entirely |
 | `enableUpgradeCategory` | Separate toggle for **phase A2** (default `true`); disabling skips the 1W Upgrades overlay entirely |
 | `pinnedCategoryShowsWhenDisabled` | If true, manual pins win even when their target category is disabled. If false, disabled pins are filtered out so later stages can assign. Also controls visibility of disabled categories with items in `H.GetSectionedLayout`. |
-| `categoryOrder`, `sectionOrder`, `displayOrder`, `categorySections` | Structural ordering and grouping; `categorySections[id].showHeader` / `.showHeaderBank` control per-container header visibility |
+| `categoryOrder`, `sectionOrder`, `displayOrder`, `categorySections` | Structural ordering and grouping; `categorySections[id].showHeader` / `.showHeaderBank` control per-container header visibility; `categorySections[id].isBaganator` marks Baganator-imported sections |
 | `enableInventorySlots` | Split **Weapons** / **Armor** into slot-named categories after candidate pool pick (default `false`) |
 | `stackItems` | Merge identical items for display inside category view |
 | `compactCategories` / `compactGap` | Side-by-side category blocks via `CategoryViewHelpers.LayoutCompactGroup` (`PackCompactBlocks`). Honors per-category `groupBy` (when category headers are on); a grouped category takes its own line for its title, then its subgroups pack with the same compact rules (`compactGap` between them) |
@@ -267,7 +267,8 @@ Both views are thin wrappers that delegate to the shared pipeline in `CategoryVi
 ## Integrations
 
 - **TSM** (`Integrations/TSMIntegration.lua`): Creates `customCategoriesV2` entries with `"TSM: "` prefixed names, `items` maps, and `isTSM = true`. These behave like manual-pin custom categories for assignment (**phase B1**, not the merged pool).
-- **Baganator** (`Controllers/CategoryController.lua`): `BAGANATOR_CAT_MAP` maps external keys to builtin names (including `"Empty"` for ordering/import). Does not change `GetItemCategory` logic for `"Empty"`.
+- **Baganator** (`ImportExport/Planner.lua`, `ImportExport/Applier.lua`): Baganator imports set `isBaganator = true` on created categories and sections. Category Manager shows red origin dots and `[Baganator]` type tags for these entries (see [`IMPORT_EXPORT.md`](IMPORT_EXPORT.md)).
+- **Baganator default map** (`Controllers/CategoryController.lua`): `BAGANATOR_CAT_MAP` maps external keys to builtin names (including `"Empty"` for ordering/import). Does not change `GetItemCategory` logic for `"Empty"`.
 
 ---
 

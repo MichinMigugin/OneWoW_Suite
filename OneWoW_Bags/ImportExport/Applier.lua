@@ -117,6 +117,8 @@ local function applySectionFlags(dbSec, section)
     if section.collapsed ~= nil then dbSec.collapsed = section.collapsed end
     if section.showHeader ~= nil then dbSec.showHeader = section.showHeader end
     if section.showHeaderBank ~= nil then dbSec.showHeaderBank = section.showHeaderBank end
+    if section.isBaganator then dbSec.isBaganator = true end
+    if section.isTSM then dbSec.isTSM = true end
 end
 
 local function ensureSection(section, controller, planIdToDbId)
@@ -159,6 +161,12 @@ local function ensureBaganatorImportSection(controller, catchAllLabel)
     local hit = snap.sectionsByName[normKey(catchAllLabel)]
     if hit then return hit.id end
     local newId = controller:CreateSection(catchAllLabel)
+    if newId then
+        local dbSec = db.global.categorySections[newId]
+        if dbSec then
+            dbSec.isBaganator = true
+        end
+    end
     return newId
 end
 

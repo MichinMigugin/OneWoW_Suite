@@ -10,6 +10,7 @@ local tinsert, sort = tinsert, sort
 local format = format
 
 local L = ns.L
+local GameTooltip = GameTooltip
 
 -- ------------------------------------------------------------------
 -- Summary helpers
@@ -96,6 +97,24 @@ local function ruleLabel(r)
     if r == "skip_rule"      then return L["IMPORT_PREVIEW_RULE_SKIP"] end
     if r == "snapshot_items" then return L["IMPORT_PREVIEW_RULE_SNAPSHOT"] end
     return L["IMPORT_PREVIEW_RULE_USE_TRANSLATED"]
+end
+
+local function ruleTooltipKey(r)
+    if r == "skip_rule"      then return "IMPORT_PREVIEW_RULE_SKIP_TIP" end
+    if r == "snapshot_items" then return "IMPORT_PREVIEW_RULE_SNAPSHOT_TIP" end
+    return "IMPORT_PREVIEW_RULE_USE_TRANSLATED_TIP"
+end
+
+local function attachRuleTooltip(btn, cat)
+    btn:SetScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+        GameTooltip:SetText(ruleLabel(cat.ruleHandling), 1, 1, 1)
+        GameTooltip:AddLine(L[ruleTooltipKey(cat.ruleHandling)], 0.8, 0.8, 0.8, true)
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine(L["IMPORT_PREVIEW_RULE_CYCLE_HINT"], 0.6, 0.6, 0.6, true)
+        GameTooltip:Show()
+    end)
+    btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 end
 
 local function unmappedLabel(r)
@@ -331,18 +350,25 @@ renderContent = function(state)
             end)
             ruleBtn:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 32 + indent, y)
             addChild(scrollContent, ruleBtn)
+            attachRuleTooltip(ruleBtn, cat)
 
             local originalText = makeText(scrollContent, format(L["IMPORT_PREVIEW_RULE_LINE"], cat.originalSearchExpression), 10, { 0.7, 0.7, 0.9 })
             originalText:SetPoint("LEFT", ruleBtn, "RIGHT", 8, 0)
             originalText:SetWidth(scrollContent:GetWidth() - 200 - indent)
             originalText:SetJustifyH("LEFT")
             addChild(scrollContent, originalText)
-            y = y - 20
+            -- 20px button + 8px breathing room before the next row
+            y = y - 28
         end
+
+        y = y - 4
     end
 
-    for _, sid in ipairs(sectionIds) do
+    for idx, sid in ipairs(sectionIds) do
         local sec = state.plan.sections[sid]
+        if idx > 1 then
+            y = y - 6
+        end
         local secLabel = sec.isNew
             and format("+ %s  [%s]", sec.name or "", L["IMPORT_PREVIEW_TAG_NEW"])
             or  format("= %s  [%s]", sec.name or "", L["IMPORT_PREVIEW_TAG_MERGE"])

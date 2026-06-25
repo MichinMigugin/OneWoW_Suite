@@ -464,6 +464,8 @@ local function copyAllowedSectionFields(sec, keepCategories)
     if sec.collapsed ~= nil then out.collapsed = sec.collapsed end
     if sec.showHeader ~= nil then out.showHeader = sec.showHeader end
     if sec.showHeaderBank ~= nil then out.showHeaderBank = sec.showHeaderBank end
+    if sec.isBaganator ~= nil then out.isBaganator = sec.isBaganator end
+    if sec.isTSM ~= nil then out.isTSM = sec.isTSM end
     if keepCategories and sec.categories then
         out.categories = deepCopy(sec.categories)
     end
@@ -497,7 +499,7 @@ function Serializer:BuildExport(db)
 
     local IEUtil = ns.ImportExport.Util
     local savedSearches = IEUtil and IEUtil.CollectReferencedSavedSearches
-        and IEUtil:CollectReferencedSavedSearches(categories, g.savedSearches)
+        and IEUtil.CollectReferencedSavedSearches(categories, g.savedSearches)
         or {}
 
     local playerName = UnitName and UnitName("player") or "?"

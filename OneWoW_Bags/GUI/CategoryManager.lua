@@ -30,6 +30,7 @@ local db = setmetatable({}, {
 
 local Categories = ns.Categories
 local SD = ns.SectionDefaults
+local CategoryOrigin = ns.CategoryOrigin
 
 local max, floor = math.max, math.floor
 local pairs, ipairs = pairs, ipairs
@@ -155,6 +156,27 @@ local function ReleaseWrapper(w)
         w:SetParent(UIParent)
     end
     return nil
+end
+
+local ORIGIN_DOT_SIZE = 10
+
+local function AttachOriginDot(row, kind)
+    local dot = row:CreateTexture(nil, "OVERLAY")
+    dot:SetSize(ORIGIN_DOT_SIZE, ORIGIN_DOT_SIZE)
+    dot:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+    dot:SetAtlas(CategoryOrigin:GetOriginAtlas(kind))
+    row._catMgrOriginDot = dot
+    return dot
+end
+
+local function ShowOriginTooltip(owner, title, originKey, hintKey)
+    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+    GameTooltip:SetText(title, 1, 1, 1)
+    GameTooltip:AddLine(L[originKey], 0.8, 0.8, 0.8)
+    GameTooltip:AddLine(" ")
+    local tr, tg, tb = OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
+    GameTooltip:AddLine(L[hintKey], tr, tg, tb, true)
+    GameTooltip:Show()
 end
 
 local function ApplySectionHeaderReorderVisual(secRow)
@@ -524,15 +546,15 @@ BuildSectionMemberRows = function(secRow, section, sectionID, startY)
             end)
 
             local captName = catName
+            local catData = (not isBuiltin and catID) and customCats[catID] or nil
+            local originKind, importKind = CategoryOrigin:ResolveCategoryOrigin(isBuiltin, catData)
+            AttachOriginDot(row, originKind)
+            local captOriginKey = CategoryOrigin:GetOriginTooltipKey(originKind, importKind, false)
             row:SetScript("OnEnter", function(self)
                 if reorder:IsActive() then return end
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                 local locKey = BUILTIN_LOCALE_KEYS[captName]
-                GameTooltip:SetText((locKey and OneWoW.Locale:GetOptional(ADDON_NAME, locKey)) or captName, 1, 1, 1)
-                GameTooltip:AddLine(" ")
-                local tr, tg, tb = OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
-                GameTooltip:AddLine(L["CATEGORY_REORDER_HINT"], tr, tg, tb, true)
-                GameTooltip:Show()
+                local displayName = (locKey and OneWoW.Locale:GetOptional(ADDON_NAME, locKey)) or captName
+                ShowOriginTooltip(self, displayName, captOriginKey, "CATEGORY_REORDER_HINT")
             end)
             row:SetScript("OnLeave", GameTooltip_Hide)
 
@@ -556,7 +578,7 @@ BuildSectionMemberRows = function(secRow, section, sectionID, startY)
             local locKey2 = BUILTIN_LOCALE_KEYS[catName]
             local nTxt = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             nTxt:SetPoint("LEFT",  row,  "LEFT",  nameX, 0)
-            nTxt:SetPoint("RIGHT", row,  "RIGHT", -6, 0)
+            nTxt:SetPoint("RIGHT", row._catMgrOriginDot, "LEFT", -4, 0)
             nTxt:SetJustifyH("LEFT")
             nTxt:SetText((locKey2 and OneWoW.Locale:GetOptional(ADDON_NAME, locKey2)) or catName)
             if isSelCat then
@@ -916,6 +938,12 @@ function CatMgrUI:RefreshRight()
         header:SetText(section.name)
         header:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
+        local sectionTypeKey = CategoryOrigin:GetSectionTypeLabelKey(sectionID, section)
+        local secTypeLabel = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        secTypeLabel:SetPoint("LEFT", header, "RIGHT", 8, 0)
+        secTypeLabel:SetText("[" .. (sectionTypeKey and L[sectionTypeKey] or CUSTOM) .. "]")
+        secTypeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
         local captID = sectionID
         local delBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=DELETE, height=22 })
         delBtn:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -6, -10)
@@ -1030,13 +1058,8 @@ function CatMgrUI:RefreshRight()
 
     local typeLabel = rightTopWrapper:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     typeLabel:SetPoint("LEFT", header, "RIGHT", 8, 0)
-    if isBuiltin then
-        typeLabel:SetText("[" .. (L["CATEGORY_TYPE_BUILTIN"]) .. "]")
-    elseif catData and catData.isTSM then
-        typeLabel:SetText("[" .. (L["CATEGORY_TYPE_TSM"]) .. "]")
-    else
-        typeLabel:SetText("[" .. (CUSTOM) .. "]")
-    end
+    local typeKey = CategoryOrigin:GetCategoryTypeLabelKey(catData, isBuiltin)
+    typeLabel:SetText("[" .. (typeKey and L[typeKey] or CUSTOM) .. "]")
     typeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     if isCustom then
@@ -1891,9 +1914,13 @@ function CatMgrUI:RefreshLeft()
                 CatMgrUI:Refresh()
             end)
 
+            local secOriginKind, secImportKind = CategoryOrigin:ResolveSectionOrigin(sectionID, section)
+            AttachOriginDot(secRow, secOriginKind)
+            local captSecOriginKey = CategoryOrigin:GetOriginTooltipKey(secOriginKind, secImportKind, true)
+
             local secName = secRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             secName:SetPoint("LEFT", collapseBtn, "RIGHT", 4, 0)
-            secName:SetPoint("RIGHT", secRow, "RIGHT", -6, 0)
+            secName:SetPoint("RIGHT", secRow._catMgrOriginDot, "LEFT", -4, 0)
             secName:SetJustifyH("LEFT")
             secName:SetText(section.name)
             if isSelSec then
@@ -1909,12 +1936,7 @@ function CatMgrUI:RefreshLeft()
 
             secRow:SetScript("OnEnter", function(myself)
                 if sReorder:IsActive() or (categoryReorder and categoryReorder:IsActive()) then return end
-                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-                GameTooltip:SetText(section.name, 1, 1, 1)
-                GameTooltip:AddLine(" ")
-                local tr, tg, tb = OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")
-                GameTooltip:AddLine(L["SECTION_DRAG_HINT"], tr, tg, tb, true)
-                GameTooltip:Show()
+                ShowOriginTooltip(myself, section.name, captSecOriginKey, "SECTION_DRAG_HINT")
             end)
             secRow:SetScript("OnLeave", GameTooltip_Hide)
 
@@ -2125,6 +2147,35 @@ function CatMgrUI:Show()
 
     actionBar:HookScript("OnShow", refreshUndoBtn)
     refreshUndoBtn()
+    CatMgrUI.RefreshUndoButton = refreshUndoBtn
+
+    -- Find & Fix (orphaned category data) — left of Import dropdown
+    local ConfigCleanup = ns.ImportExport and ns.ImportExport.ConfigCleanup
+    local CleanupPreview = ns.CleanupPreview
+
+    local findFixBtn = OneWoW_GUI:CreateAtlasIconButton(actionBar, {
+        atlas = "communities-icon-searchmagnifyingglass",
+        width = 22,
+        height = 22,
+    })
+    findFixBtn:SetPoint("RIGHT", importDropdown, "LEFT", -6, 0)
+    findFixBtn:SetScript("OnClick", function()
+        if not ConfigCleanup then return end
+        local report = ConfigCleanup:Scan(GetDB())
+        if not report.hasIssues then
+            print("|cFFFFD100" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. L["CLEANUP_PREVIEW_NONE"])
+            return
+        end
+        if CleanupPreview then
+            CleanupPreview:Show(report, GetController(), GetDB())
+        end
+    end)
+    findFixBtn:HookScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_BOTTOMRIGHT")
+        GameTooltip:SetText(L["CLEANUP_FIND_FIX_TOOLTIP"], 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    findFixBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
 
     local splitArea = CreateFrame("Frame", nil, dialogContentFrame)
     splitArea:SetPoint("TOPLEFT",     actionBar,         "BOTTOMLEFT",  0, -4)
