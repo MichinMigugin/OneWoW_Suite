@@ -39,7 +39,7 @@ Two layers:
 - Standalone quoted `~"…"` / `~'…'` is treated as shorthand for `name~…`.
 - `~` remains literal contains; `~~` uses Lua pattern matching, and malformed patterns fail safely as non-matches.
 - Bare numeric sugar: `>600` → `ilvl>600`, `200-300` → `ilvl:200-300`. Bare money sugar: `>100g` → `vendorprice>1000000`, `10s-50s` → `vendorprice:1000-5000`. Money parsing accepts combinations like `5g50s10c`.
-- The WoW pipe escape `||` is consumed as a single OR token.
+- **WoW EditBox operator encoding (agents/maintainers):** In-game search and category rule edit boxes use **single** `|`, `&`, and `!`. Users must **not** type `||` (broken in EditBoxes). SavedVariables may store `||` as WoW's pipe escape; the tokenizer accepts both `|` and `||` as OR so SV/import strings compile correctly. Do **not** recommend word-only operators or compile-path normalization unless behavior regresses. See [SEARCH_SYNTAX.md Operators — implementer note](../../OneWoW_Bags/Docs/SEARCH_SYNTAX.md#implementer--agent-note-editbox-encoding).
 - `PE._STRICT_TOKENIZER` (false by default): when set truthy on the engine table, the tokenizer raises an error if it ever stalls on a character it cannot consume. Useful for catching grammar regressions in tests; leave off in production.
 
 ### Bind detection (source-aware)

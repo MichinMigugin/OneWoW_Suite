@@ -76,20 +76,20 @@ local CATEGORY_RULES = {
     bind    = { soulbound = true, boe = true, boa = true, bou = true, wue = true },
     gear    = { gear = true, set = true, needsrepair = true, broken = true, cosmetic = true },
     class   = { myclass = true, myspec = true },
-    slot    = { head = true, neck = true, shoulder = true, chest = true, robe = true, waist = true, legs = true, feet = true, wrist = true, hand = true, finger = true, trinket = true, cloak = true, weapon = true, mainhand = true, offhand = true, holdable = true, shield = true, wand = true, ranged = true, thrown = true, relic = true, shirt = true, tabard = true, bag = true, ammopouch = true, quiver = true },
-    weapon  = { ["1haxe"] = true, ["1hsword"] = true, ["1hmace"] = true, bow = true, gun = true, crossbow = true, dagger = true, fist = true, polearm = true, stave = true, staff = true, ["2haxe"] = true, ["2hsword"] = true, ["2hmace"] = true, ["1h"] = true, onehand = true, ["2h"] = true, twohand = true, axe = true, sword = true, mace = true },
-    armor   = { cloth = true, leather = true, mail = true, plate = true },
+    slot    = { head = true, neck = true, shoulder = true, chest = true, robe = true, waist = true, legs = true, feet = true, wrist = true, hands = true, finger = true, trinket = true, back = true, mainhand = true, offhand = true, holdable = true, shield = true, wand = true, ranged = true, thrown = true, relic = true, shirt = true, tabard = true, bag = true, quiver = true },
+    weapon  = { weapon = true, ["1haxe"] = true, ["1hsword"] = true, ["1hmace"] = true, bow = true, gun = true, crossbow = true, dagger = true, fist = true, polearm = true, stave = true, staff = true, ["2haxe"] = true, ["2hsword"] = true, ["2hmace"] = true, ["1h"] = true, onehand = true, ["2h"] = true, twohand = true, axe = true, sword = true, mace = true, warglaive = true, fishingpole = true },
+    armor   = { cloth = true, leather = true, mail = true, plate = true, libram = true, idol = true, totem = true, sigil = true },
     consum  = { consumable = true, potion = true, food = true, flask = true, elixir = true, bandage = true, scroll = true, vantusrune = true, utilitycurio = true, combatcurio = true, curio = true, explosive = true, knowledge = true },
-    prof    = { recipe = true, tradeskill = true, tradegoods = true, reagent = true, craftingreagent = true, crafted = true, professionequipment = true, blacksmithing = true, leatherworking = true, tailoring = true, engineering = true, enchanting = true, alchemy = true, jewelcrafting = true, inscription = true, cooking = true, fishing = true, mining = true, herbalism = true, skinning = true, archaeology = true, myprofs = true, alchemyrecipe = true, blacksmithingrecipe = true, leatherworkingrecipe = true, tailoringrecipe = true, engineeringrecipe = true, enchantingrecipe = true, jewelcraftingrecipe = true, inscriptionrecipe = true, cookingrecipe = true, fishingrecipe = true },
+    prof    = { recipe = true, tradeskill = true, tradegoods = true, reagent = true, craftingreagent = true, crafted = true, professionequipment = true, blacksmithing = true, leatherworking = true, tailoring = true, engineering = true, enchanting = true, alchemy = true, jewelcrafting = true, inscription = true, cooking = true, fishing = true, mining = true, herbalism = true, skinning = true, archaeology = true, myprofs = true, alchemyrecipe = true, blacksmithingrecipe = true, leatherworkingrecipe = true, tailoringrecipe = true, engineeringrecipe = true, enchantingrecipe = true, jewelcraftingrecipe = true, inscriptionrecipe = true, cookingrecipe = true, fishingrecipe = true, firstaidrecipe = true, bookrecipe = true, holiday = true, mountequipment = true, contexttoken = true },
     collect = { toy = true, mount = true, pet = true, collected = true, uncollected = true, alreadyknown = true, pethumanoid = true, petbeast = true, petdragonkin = true, petflying = true, petundead = true, petcritter = true, petmagic = true, petelemental = true, petaquatic = true, petmechanical = true, wildpet = true, petcanbattle = true, pettradeable = true, companionpet = true },
     transmog = { transmog = true, knowntransmog = true, unknowntransmog = true, catalyst = true, catalystupgrade = true },
-    expans  = { classic = true, tbc = true, wrath = true, cata = true, mop = true, wod = true, legion = true, bfa = true, shadowlands = true, dragonflight = true, tww = true, midnight = true, lasttitan = true, titan = true },
+    expans  = { currentexpansion = true, classic = true, vanilla = true, burningcrusade = true, tbc = true, wrath = true, wotlk = true, northrend = true, cata = true, cataclysm = true, mop = true, mistsofpandaria = true, mists = true, pandaria = true, wod = true, draenor = true, warlords = true, legion = true, bfa = true, battleforazeroth = true, shadowlands = true, sl = true, dragonflight = true, df = true, tww = true, warwithin = true, thewarwithin = true, midnight = true, lasttitan = true, titan = true },
     upgrade = { upgrade = true, upgradeable = true, fullyupgraded = true, currentseason = true, activeseason = true, explorer = true, adventurer = true, veteran = true, champion = true, hero = true, myth = true },
     stat    = { intellect = true, agility = true, strength = true, stamina = true, crit = true, haste = true, mastery = true, versatility = true, speed = true, leech = true, avoidance = true },
-    socket  = { prismatic = true, metasocket = true, redsocket = true, yellowsocket = true, bluesocket = true, primordial = true },
+    socket  = { prismatic = true, metasocket = true, redsocket = true, yellowsocket = true, bluesocket = true, cogwheel = true, tinkersocket = true, dominationsocket = true, primordial = true },
     context = { raid = true, dungeon = true, delves = true, worldquest = true, pvp = true, store = true },
-    state   = { usable = true, unusable = true, locked = true, hasloot = true, new = true, socket = true, equipped = true, refundable = true, enchanted = true, charges = true, onuse = true, onequip = true, unique = true, uniqueequipped = true, reputation = true, tradeableloot = true, openable = true, sellable = true, unsellable = true, quest = true, questitem = true },
-    special = { hearthstone = true, keystone = true, tierset = true, battlepay = true, wowtoken = true, housing = true, decor = true, dye = true, room = true, recent = true },
+    state   = { usable = true, unusable = true, locked = true, hasloot = true, new = true, socket = true, equipped = true, refundable = true, enchanted = true, charges = true, onuse = true, onequip = true, unique = true, uniqueequipped = true, reputation = true, tradeableloot = true, openable = true, sellable = true, unsellable = true, quest = true, questitem = true, scrappable = true },
+    special = { hearthstone = true, keystone = true, tierset = true, battlepay = true, wowtoken = true, housing = true, decor = true, dye = true, room = true, roomcustomization = true, exteriorcustomization = true, serviceitem = true, currency = true, recent = true },
 }
 
 --- Resolve the display category for a canonical keyword name. Falls back to
@@ -445,7 +445,7 @@ local function BuildKeywordFrame()
     footer:SetPoint("BOTTOMRIGHT", keywordFrame, "BOTTOMRIGHT", -12, 10)
     footer:SetJustifyH("LEFT")
     footer:SetWordWrap(true)
-    footer:SetText("Click any keyword to insert it into the search box. Combine with 'and' / 'or' / 'not' or & | !.")
+    footer:SetText("Click any keyword to insert it into the search box. Combine with & | ! (or and / or / not).")
     footer:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     -- Populate chips
@@ -503,7 +503,7 @@ function OneWoW_GUI:CreateKeywordHelpButton(parent, options)
     local size = options.size or 20
     local editBoxTarget = options.editBox
     local title = options.tooltipTitle or "Search Help"
-    local desc = options.tooltipDesc or "Search by item name, item ID, or #keywords. Click to see all keywords and syntax."
+    local desc = options.tooltipDesc or "Search by item name or #keywords. Combine with & | ! (or and / or / not). Use id= for item ID; bare numbers match ilvl. Click for keyword chips."
 
     ---@type OneWoW_GUI_KeywordHelpButton
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
@@ -549,7 +549,7 @@ function OneWoW_GUI:AttachSearchTooltip(editBox, options)
     if not editBox then return end
     options = options or {}
     local title = options.tooltipTitle or "Search"
-    local desc  = options.tooltipDesc or "Search by item name, item ID, or #keywords. Use the nearby ? button to see all keywords."
+    local desc  = options.tooltipDesc or "Search by item name or #keywords. Combine with & | ! (or and / or / not). Use id= for item ID; bare numbers match ilvl. Use the ? button for keyword chips."
     local prevEnter = editBox:GetScript("OnEnter")
     local prevLeave = editBox:GetScript("OnLeave")
     editBox:SetScript("OnEnter", function(myself, ...)

@@ -117,6 +117,10 @@ You can also use the explicit name property with the contains operator:
 Multiple terms must be joined with an explicit operator. There is no implicit
 AND between adjacent tokens, so write `#armor & #epic`, not `#armor #epic`.
 
+Bare numbers such as `623` or `>600` are **item level** shorthands (see
+[Shorthand for Item Level](#shorthand-for-item-level)), not item IDs. Use
+`id=6948` or `itemid=6948` to match by item ID.
+
 ---
 
 ## Keywords
@@ -667,6 +671,11 @@ For `#knowledge`, see **Consumable Subtypes** (same predicate).
 
 > **`#currentseason` maintenance:** update `CURRENT_SEASON_BONUS_IDS` in `PredicateEngine.lua` each season when Blizzard adds new crafted/voidforged bonus IDs. At the start of a **new expansion**, also add that expansion's first global M+ season ID to `EXPANSION_FIRST_GLOBAL_MPLUS_SEASON` (the ordinal `1` in tooltip labels like `Midnight Season 1`; see warcraft.wiki.gg seasonal pages). Debug tooltip/season matching in-game with `/petooltip`.
 
+**Related properties:** `upgradelevel` and `upgrademax` are numeric comparisons from
+`C_Item.GetItemUpgradeInfo` (current and max upgrade tier). `maxlevel` is the
+maximum possible **item level** after upgrades — a different field. `#upgradeable`
+and `#fullyupgraded` are boolean keywords derived from the same upgrade info.
+
 ### Tooltip
 
 These keywords scan the item's tooltip text (or tooltip-derived fields filled by that scan). They may be slightly slower than other keywords on first access.
@@ -701,6 +710,7 @@ These keywords scan the item's tooltip text (or tooltip-derived fields filled by
 | `#hearthstone` | Hearthstone and all hearthstone toy variants |
 | `#keystone` | Mythic Keystones |
 | `#tierset` | Items belonging to a tier set |
+| `#currency` | Currency items (hyperlink resolves via `C_CurrencyInfo.GetCurrencyInfoFromLink`) |
 
 ---
 
@@ -715,6 +725,10 @@ precedence:
 | `&` or `and` | AND (both must match) | `#armor & #epic` or `#armor and #epic` |
 | `\|` or `or` | OR (either can match) | `#food \| #potion` or `#food or #potion` |
 | `( )` | Grouping | `#hearthstone \| (#armor & #junk)` |
+
+In bags search bars and category rule edit boxes, type **single-character**
+operators (`|`, `&`, `!`). Word aliases (`or`, `and`, `not`) work too, but are
+optional alternatives — not replacements for `|` and `&`.
 
 ### Precedence
 
@@ -952,7 +966,8 @@ forspec=269                Gear a Windwalker Monk could roll on
 ## Shorthand for Item Level
 
 Because item level searches are so common, there are shortcuts that don't
-require typing `ilvl`:
+require typing `ilvl`. These bind to **item level**, not item ID — use `id=`
+for ID matching.
 
 | Shorthand | Equivalent |
 |---|---|
@@ -1005,7 +1020,6 @@ read more like natural conditions.
 | `IsQuestItem` | `#quest` |
 | `IsTierSet` | `#tierset` |
 | `IsAppearanceCollected` | `#knowntransmog` |
-| `IsUnknownAppearance` | `#unknowntransmog` |
 | `HasAppearance` | `#transmog` |
 | `IsUpgradeable` | `#upgradeable` |
 | `IsFullyUpgraded` | `#fullyupgraded` |
@@ -1023,10 +1037,6 @@ read more like natural conditions.
 | `IsKnowledge` | `#knowledge` |
 | `IsRefundable` | `#refundable` |
 | `IsEnchanted` | `#enchanted` |
-
-There is no `IsUpgrade` verbose flag in `FLAG_REGISTRY`. Use `#upgrade` when
-OneWoW's upgrade-detection module registers it via `PE:RegisterKeyword`; otherwise
-that keyword is unknown and matches nothing.
 
 > **`IsBOA` vs `#boa`:** The `IsBOA` flag checks the strict `isBOA` property —
 > true only for items whose tooltip shows account-bound binding (not Warbound
@@ -1108,7 +1118,7 @@ in this document; full API and extension notes are in
 | `KEYWORD_MAP` | All `#` keywords via `RegisterKeyword` (quality, class, subtypes, stats, context, etc.). |
 | `BuildProps` | Layer 1: `itemID` + optional slot → flat `props` (lazy tooltip/binds/stats on access). |
 | `ParseItemLink` (internal) | Decomposes retail item link fields (context, bonuses, craft GUID, quality prefix, etc.). |
-| `Tokenize` | Layer 2 input: `&` `and` `\|` `or` `!` `not` `#keyword`, comparisons, flags, `()` , bare `ilvl` / money shorthands, `||` OR, quoted `~` name shorthand, text fallback. |
+| `Tokenize` | Layer 2 input: `&` `and` `\|` `or` `!` `not` `#keyword`, comparisons, flags, `()` , bare `ilvl` / money shorthands, quoted `~` name shorthand, text fallback. Tokenizer also accepts `||` as OR for SV/import strings; users type single `\|` in EditBoxes. |
 | Parser | `ParseExpression` → `ParseAnd` → `ParseNot` → `ParsePrimary` (precedence: `!` tightest, then `&`, then `|` / `or`). |
 | Public `PE:` API | `Compile`, `SafeEvaluate`, `CheckItem`, `BuildProps`, `ResolveParams`, `RegisterKeyword`, `RegisterProperty`, `GetAllKeywords`, `GetMatchingKeywords`, `InvalidateCache`, `InvalidatePropsCache`, `InvalidateKnownProfessions`, `GetBattlePetData`, `GetItemCacheKey`, `GetItemIdentityKey`, `ParseItemLink`, `CanClassEquip`, `GetTooltipText`, `GetExpansionID`, `GetExpansionName`. |
 | `PE` fields | `ParseMoney`, `BattlePetTypes`, `ClassID`, `BATTLE_PET_CAGE_ID`. |
@@ -1134,7 +1144,7 @@ All food items.
 Epic weapons at ilvl 620 or above.
 
 ```
-#pet & (#pethumanoid || #petbeast)
+#pet & (#pethumanoid | #petbeast)
 ```
 Pets that are either Humanoid or Beast.
 
@@ -1149,7 +1159,7 @@ Epic pets at level 25 or above.
 TWW armor that's not in an equipment set and is still bind-on-equip.
 
 ```
-(#potion || #food || #flask) & count>5
+(#potion | #food | #flask) & count>5
 ```
 Consumables with more than 5 in the stack.
 
@@ -1159,7 +1169,7 @@ Consumables with more than 5 in the stack.
 Equippable items with uncollected appearances, excluding cosmetics.
 
 ```
-#hearthstone || (#armor & #junk) || #food
+#hearthstone | (#armor & #junk) | #food
 ```
 Hearthstones, armor that matches `#junk` (Poor or 1W-marked junk), or food.
 
