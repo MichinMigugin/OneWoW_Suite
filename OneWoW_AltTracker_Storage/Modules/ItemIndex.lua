@@ -295,12 +295,18 @@ function ItemIndex:Initialize()
         BuildIndex()
     end)
 
+    -- Storage-owned scopes (bags / personal / warband / guild / mail) rebuild via
+    -- DataManager's post-write signal, so the index reads SavedVariables AFTER the
+    -- scanner wrote them -- removing the old read-after-write race (and the
+    -- duplicate BAG_UPDATE_DELAYED / BANKFRAME_CLOSED / GUILDBANKFRAME_CLOSED
+    -- registrations). Equipment is collected by the Character unit, not
+    -- DataManager, so it keeps its own event.
+    ns.DataManager:RegisterStorageChanged(function()
+        ScheduleRebuild()
+    end)
+
     local f = CreateFrame("Frame")
-    f:RegisterEvent("BAG_UPDATE_DELAYED")
-    f:RegisterEvent("BANKFRAME_CLOSED")
-    f:RegisterEvent("GUILDBANKFRAME_CLOSED")
     f:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
-    f:RegisterEvent("PLAYER_ACCOUNT_BANK_TAB_SLOTS_CHANGED")
     f:SetScript("OnEvent", function()
         ScheduleRebuild()
     end)

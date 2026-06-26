@@ -6,6 +6,9 @@ local DataManager = ns.DataManager
 local eventFrame = nil
 local initialized = false
 
+-- Post-write storage-change subscribers (ItemIndex, the AltTracker Items tab).
+local storageListeners = {}
+
 function DataManager:Initialize()
     if initialized then return end
     initialized = true
@@ -132,6 +135,7 @@ function DataManager:CollectBags()
 
     if OneWoW_AltTracker_Storage_DB.settings.trackBags then
         ns.Bags:CollectData(charKey, charData)
+        self:NotifyStorageChanged("bags", charKey)
     end
 
     if OneWoW_AltTracker and OneWoW_AltTracker.UI and OneWoW_AltTracker.UI.BankTab then
@@ -155,6 +159,7 @@ function DataManager:CollectPersonalBank()
 
     if OneWoW_AltTracker_Storage_DB.settings.trackPersonalBank then
         ns.PersonalBank:CollectData(charKey, charData)
+        self:NotifyStorageChanged("personal", charKey)
     end
 
     if OneWoW_AltTracker and OneWoW_AltTracker.UI and OneWoW_AltTracker.UI.BankTab then
@@ -178,6 +183,7 @@ function DataManager:CollectWarbandBank()
 
     if OneWoW_AltTracker_Storage_DB.settings.trackWarbandBank then
         ns.WarbandBank:CollectData(charKey, charData)
+        self:NotifyStorageChanged("warband", charKey)
     end
 
     if OneWoW_AltTracker and OneWoW_AltTracker.UI and OneWoW_AltTracker.UI.BankTab then
@@ -201,6 +207,7 @@ function DataManager:CollectGuildBank()
 
     if OneWoW_AltTracker_Storage_DB.settings.trackGuildBank then
         ns.GuildBank:CollectData(charKey, charData)
+        self:NotifyStorageChanged("guild", charKey)
     end
 
     if OneWoW_AltTracker and OneWoW_AltTracker.UI and OneWoW_AltTracker.UI.BankTab then
@@ -224,6 +231,7 @@ function DataManager:CollectMail()
 
     if OneWoW_AltTracker_Storage_DB.settings.trackMail then
         ns.Mail:CollectData(charKey, charData)
+        self:NotifyStorageChanged("mail", charKey)
     end
 
     self:NotifyMailChanged()
@@ -251,6 +259,27 @@ function DataManager:NotifyMailChanged()
     local atUI = OneWoW_AltTracker and OneWoW_AltTracker.UI
     if atUI and type(atUI.RefreshMailIcons) == "function" then
         atUI.RefreshMailIcons()
+    end
+end
+
+-- Subscribe to post-write storage-change signals. Listeners receive a
+-- { scope, charKey } table. DataManager is the single event owner, so a listener
+-- reacts to data the scanner has already written rather than racing the write on
+-- its own event frame.
+function DataManager:RegisterStorageChanged(fn)
+    if type(fn) == "function" then
+        storageListeners[#storageListeners + 1] = fn
+    end
+end
+
+-- Fired by each Collect* after its SavedVariables write. One bad listener must
+-- not stop the rest, so each call is isolated.
+function DataManager:NotifyStorageChanged(scope, charKey)
+    if #storageListeners == 0 then return end
+    local info = { scope = scope, charKey = charKey }
+    for _, fn in ipairs(storageListeners) do
+        local ok, err = pcall(fn, info)
+        if not ok then geterrorhandler()(err) end
     end
 end
 

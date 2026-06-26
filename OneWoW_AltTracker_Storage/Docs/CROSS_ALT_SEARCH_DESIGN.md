@@ -4,8 +4,9 @@
 > Storage-side read layer (`Query.lua`: registry + Gather/Filter/Group/Query +
 > duplicate finder), and the Items-tab dupe view-mode that consumes it are built;
 > the PE props are verified in-client, the read layer + dupe UI still need in-client
-> exercise. The DataManager refresh rework, the default-gather migration onto
-> `Query`, and scanner consolidation are still design only.
+> exercise. The DataManager refresh rework (`NotifyStorageChanged` + live refresh +
+> dupeSpec persistence) is also built. Migrating the *default* Items/Bank gather onto
+> `Query` and scanner consolidation are still design only.
 > See [Implementation status](#implementation-status) below.
 > Captures the reasoning from the cross-alt dupe-search discussion as one artifact.
 
@@ -59,11 +60,23 @@ Two product goals sit on the same machinery:
     anchor-item-first then name/itemID/ilvl; and a filter bar where the search box
     flexes and the checkboxes cluster right.
 
-**Not started — design only (§8, §10 steps 3–5):** `NotifyStorageChanged` /
-DataManager event-ownership, migrating the Items + Bank tabs' default gather onto
-`Query`, and scanner consolidation. Equipped + auction sources are not yet
-descriptors (they live in sibling units; they join when the Items tab default
-gather migrates onto `Query`).
+- **§10 step 3 — `NotifyStorageChanged` + live refresh.** DataManager gained a
+  listener registry (`RegisterStorageChanged` / `NotifyStorageChanged`); each
+  `Collect*` fires `{scope, charKey}` after its SV write. **ItemIndex** dropped its
+  duplicate bag/bank/guild event registrations and subscribes instead (keeps only
+  `PLAYER_EQUIPMENT_CHANGED`, which DataManager doesn't own) — removing the
+  read-after-write race. The **Items tab** subscribes via
+  `OneWoW_AltTracker_Storage_API.RegisterStorageChanged` and live-refreshes
+  (debounced 0.3s, visibility-gated), so the default and dupe views update when
+  items move. Plus **dupeSpec persistence**: the last-used spec is stored in
+  `OneWoW_AltTracker_DB.global.dupeSpec` (seeded from the Storage default, fields
+  back-filled), so the dupe controls survive a reload/relog.
+
+**Not started — design only (§10 steps 4–5):** migrating the Items + Bank tabs'
+*default* gather onto `Query` (the dupe path already uses it; the Bank tab still
+has its own `RefreshBankDisplay` poke from DataManager), and scanner consolidation.
+Equipped + auction sources are not yet descriptors (they live in sibling units;
+they join when the Items tab default gather migrates onto `Query`).
 
 **Abandoned — dead ends, kept for the reasoning (§11):** link-based loot/drop spec
 (a `lootSpec` prop was tried and reverted — the link's spec field is viewer-stamped);
@@ -85,7 +98,10 @@ to this list as new work lands.
   finder (`OneWoWDupeSpec`, presets, `BuildDupeKey`, ilvl-range pass), and the new
   public `OneWoW_AltTracker_Storage_API` surface
   (`Gather`/`Filter`/`Group`/`Query`/`FindDuplicates`/`GetEffectiveILvl`/
-  `GetDupePresets`/`GetDefaultDupeSpec`).
+  `GetDupePresets`/`GetDefaultDupeSpec`/`RegisterStorageChanged`). Also update the
+  DataManager section: it's now the single storage event owner emitting
+  `NotifyStorageChanged`, and ItemIndex is a signal-driven subscriber (only
+  `PLAYER_EQUIPMENT_CHANGED` stays on its own frame).
 - [ ] `OneWoW/Docs/PREDICATE_ENGINE.md` — confirm the **`set` prop type** and
   `forspec`/`forclass` are documented (added earlier in this effort); add if missing.
 - [ ] `OneWoW_Bags/Docs/SEARCH_SYNTAX.md` — already has the spec/class section;

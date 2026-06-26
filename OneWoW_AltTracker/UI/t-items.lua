@@ -136,14 +136,31 @@ local function PresetLabelForSpec(spec)
     return CUSTOM
 end
 
+-- Load the persisted dupe spec (account-wide), seeding from the Storage default
+-- on first use and back-filling newly added fields so older saves stay valid.
+-- dupeSpec aliases the SavedVariables table, so toggle changes persist directly.
+local function EnsureDupeSpec()
+    if dupeSpec then return dupeSpec end
+    local api = OneWoW_AltTracker_Storage_API
+    local defaults = (api and api.GetDefaultDupeSpec and api.GetDefaultDupeSpec()) or {}
+    local stored = ns.db and ns.db.global and ns.db.global.dupeSpec
+    if stored then
+        for k, v in pairs(defaults) do
+            if stored[k] == nil then stored[k] = v end
+        end
+        dupeSpec = stored
+    else
+        dupeSpec = defaults
+    end
+    return dupeSpec
+end
+
 -- Build the dupe controls row (preset + iLvl mode dropdowns, stat/socket/similar
 -- toggles). Lives below the filter bar and is shown only in dupe mode. onChanged
 -- is called after any control change so the caller re-renders the dupe view.
 function ns.UI.BuildDupeControls(parent, anchorBar, onChanged)
     local api = OneWoW_AltTracker_Storage_API
-    if not dupeSpec and api and api.GetDefaultDupeSpec then
-        dupeSpec = api.GetDefaultDupeSpec()
-    end
+    EnsureDupeSpec()
 
     local bar = OneWoW_GUI:CreateFilterBar(parent, { height = 32, anchorBelow = anchorBar, offset = -5 })
 
@@ -268,6 +285,25 @@ function ns.UI.BuildDupeControls(parent, anchorBar, onChanged)
     AttachTooltip(cbSimilar, L["DUPE_OPT_SIMILAR"], L["TT_DUPE_OPT_SIMILAR_DESC"])
 
     return bar
+end
+
+-- Live refresh: re-render the Items tab when storage changes underneath it (e.g.
+-- moving an item bank<->bags), debounced and gated on visibility. Drives both the
+-- default and dupe views via RefreshItemsTab's branch.
+local itemsTabRef
+local itemsRefreshPending = false
+local storageSubscribed = false
+
+local function ScheduleItemsRefresh()
+    if itemsRefreshPending then return end
+    itemsRefreshPending = true
+    C_Timer.After(0.3, function()
+        itemsRefreshPending = false
+        local tab = itemsTabRef
+        if tab and tab:IsVisible() then
+            ns.UI.RefreshItemsTab(tab)
+        end
+    end)
 end
 
 function ns.UI.CreateItemsTab(parent)
@@ -457,9 +493,7 @@ function ns.UI.CreateItemsTab(parent)
     SetDupeMode = function(on)
         dupeMode = on and true or false
         if dupeMode then
-            if not dupeSpec and OneWoW_AltTracker_Storage_API and OneWoW_AltTracker_Storage_API.GetDefaultDupeSpec then
-                dupeSpec = OneWoW_AltTracker_Storage_API.GetDefaultDupeSpec()
-            end
+            EnsureDupeSpec()
             noticeBar:Hide()
             scanBarContainer:Hide()
             if scanAHButton then scanAHButton:Hide() end
@@ -476,6 +510,14 @@ function ns.UI.CreateItemsTab(parent)
     end
 
     OneWoW_GUI:ApplyFontToFrame(parent)
+
+    -- Subscribe once to storage changes so the tab live-refreshes. Storage is an
+    -- optional dep here (not guaranteed loaded), so this is genuinely conditional.
+    itemsTabRef = parent
+    if not storageSubscribed and OneWoW_AltTracker_Storage_API and OneWoW_AltTracker_Storage_API.RegisterStorageChanged then
+        storageSubscribed = true
+        OneWoW_AltTracker_Storage_API.RegisterStorageChanged(ScheduleItemsRefresh)
+    end
 
     C_Timer.After(0.2, function()
         if ns.UI.RefreshItemsTab then
@@ -984,7 +1026,7 @@ function ns.UI.RefreshDupeView(itemsTab)
         return
     end
 
-    if not dupeSpec then dupeSpec = storageAPI.GetDefaultDupeSpec() end
+    EnsureDupeSpec()
 
     local groups = storageAPI.FindDuplicates({
         chars = "all",
