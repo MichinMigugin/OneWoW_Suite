@@ -3,6 +3,10 @@ local _, ns = ...
 ns.WarbandBank = {}
 local Module = ns.WarbandBank
 
+-- Account-wide warband bank, tabbed (up to 5): tab N lives in container bag 11+N.
+-- Account-scope, so it writes DB.warbandBank (not charData). Slot scanning and the
+-- canonical record shape live in ns.ContainerScan (§9 shared scanner); this keeps
+-- the tab structure, money, and rolled-up slot totals.
 function Module:CollectData(charKey, charData)
     if not charKey then return false end
 
@@ -36,31 +40,11 @@ function Module:CollectData(charKey, charData)
 
         if tabIndex <= numTabs then
             local warbandBagID = 11 + tabIndex
-            local numSlots = C_Container.GetContainerNumSlots(warbandBagID)
+            local slots, usedCount, numSlots = ns.ContainerScan:BagSlots(warbandBagID)
 
             if numSlots and numSlots > 0 then
+                tabData.items = slots
                 tabData.totalSlots = numSlots
-                local usedCount = 0
-
-                for slotIndex = 1, numSlots do
-                    local itemInfo = C_Container.GetContainerItemInfo(warbandBagID, slotIndex)
-                    if itemInfo and itemInfo.itemID then
-                        local itemLink = C_Container.GetContainerItemLink(warbandBagID, slotIndex)
-                        local itemName, _, itemQuality, itemLevel, _, _, _, _, _, itemTexture, sellPrice = C_Item.GetItemInfo(itemLink or itemInfo.itemID)
-                        tabData.items[slotIndex] = {
-                            itemID = itemInfo.itemID,
-                            itemName = itemName,
-                            itemLink = itemLink,
-                            quality = itemInfo.quality or itemQuality,
-                            itemLevel = itemLevel,
-                            texture = itemTexture,
-                            sellPrice = sellPrice or 0,
-                            stackCount = itemInfo.stackCount or 1,
-                        }
-                        usedCount = usedCount + 1
-                    end
-                end
-
                 tabData.usedSlots = usedCount
                 tabData.freeSlots = numSlots - usedCount
             end

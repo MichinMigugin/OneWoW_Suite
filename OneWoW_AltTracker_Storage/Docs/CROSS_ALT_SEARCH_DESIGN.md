@@ -1,13 +1,14 @@
 # Cross-Alt Search & Duplicate-Finder — Design Notes
 
-> Status: **partially implemented.** The PredicateEngine search props, the
+> Status: **all five §10 steps built.** The PredicateEngine search props, the
 > Storage-side read layer (`Query.lua`: registry + Gather/Filter/Group/Query +
-> duplicate finder), and the Items-tab dupe view-mode that consumes it are built;
-> the PE props are verified in-client, the read layer + dupe UI still need in-client
-> exercise. The DataManager refresh rework (`NotifyStorageChanged` + live refresh +
-> dupeSpec persistence) is also built. The *default* Items + Bank gather now route
-> through `Query` (an `auction` descriptor joined the registry). Only scanner
-> consolidation (§9 / §10 step 5) is still design only.
+> duplicate finder), the Items-tab dupe view-mode, the DataManager refresh rework
+> (`NotifyStorageChanged` + live refresh + dupeSpec persistence), the *default*
+> Items + Bank gather routed through `Query` (with an `auction` descriptor), and the
+> write-side scanner consolidation (`ContainerScan.lua`) are all in. PE props are
+> verified in-client; the read layer, dupe UI, and rebuilt scanners still need
+> in-client exercise. What remains is verification plus the close-out doc/comment
+> pass before this design doc is deleted.
 > See [Implementation status](#implementation-status) below.
 > Captures the reasoning from the cross-alt dupe-search discussion as one artifact.
 
@@ -92,8 +93,25 @@ Two product goals sit on the same machinery:
   remaining §8 cleanup). Equipped gear still has no descriptor — nothing consumes it
   through `Query` yet (the ItemIndex tooltip path reads it directly).
 
-**Not started — design only (§10 step 5):** scanner consolidation (§9) behind the
-shared record builder + descriptor registry.
+- **§10 step 5 — write-side scanner consolidation** (`Modules/ContainerScan.lua`).
+  The `Bags` / `PersonalBank` / `WarbandBank` / `GuildBank` scanners were
+  near-duplicate slot loops with drifted field sets. The duplicated parts — the slot
+  iteration and the canonical record builder — now live in `ns.ContainerScan`
+  (`BagSlots` for any C_Container bag; `GuildTabSlots` + link-hex quality recovery
+  for guild tabs). Each scanner module keeps only its genuinely-different outer
+  structure (flat bags vs. tabs, per-tab accounting, money, write path) and calls
+  the shared scanner for slots. Field-drift is fixed: every slot now carries the
+  same shape, so warband slots gained `isLocked`/`isBound` and bag slots are
+  itemID-guarded like the bank scanners (both harmless to the read side, which
+  treats missing flags as false). `Mail` stays special (its own write path).
+  *Deviation from §3/§9:* this shares the builder + slot loop rather than fusing the
+  write config into the `Query` read registry — the read path is live, so a single
+  read+write registry was judged higher-risk than warranted; the outer container
+  structures differ enough that one mega-scanner would be config-heavy. Full
+  read+write registry unification remains a possible future refactor.
+
+**Not started:** nothing — all §10 steps are built. Remaining work is in-client
+verification and the close-out doc/comment pass below.
 
 **Abandoned — dead ends, kept for the reasoning (§11):** link-based loot/drop spec
 (a `lootSpec` prop was tried and reverted — the link's spec field is viewer-stamped);
@@ -122,6 +140,10 @@ to this list as new work lands.
   **`auction`** descriptor (reads the Auctions sibling unit's API via `ctx.allChars`,
   not this unit's SV) and that the AltTracker Items + Bank tabs' default gather both
   route through `Gather` now (the Bank tab's old `ns.UI.GetBankData` was removed).
+  Also document the **`ContainerScan`** module: the shared write-side slot scanner
+  (`BagSlots` / `GuildTabSlots`) and canonical record builder that the four bank/bag
+  scanners now delegate to, plus the now-uniform stored slot shape (warband gained
+  `isLocked`/`isBound`).
 - [ ] `OneWoW/Docs/PREDICATE_ENGINE.md` — confirm the **`set` prop type** and
   `forspec`/`forclass` are documented (added earlier in this effort); add if missing.
 - [ ] `OneWoW_Bags/Docs/SEARCH_SYNTAX.md` — already has the spec/class section;

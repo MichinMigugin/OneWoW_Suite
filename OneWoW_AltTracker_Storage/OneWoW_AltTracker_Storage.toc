@@ -35,6 +35,7 @@ Core\API.lua
 Core\Core.lua
 
 # Data Collection Modules
+Modules\ContainerScan.lua
 Modules\Bags.lua
 Modules\PersonalBank.lua
 Modules\WarbandBank.lua
