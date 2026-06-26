@@ -44,6 +44,9 @@ Modules\Mail.lua
 # Item Index (inverted item lookup for tooltips)
 Modules\ItemIndex.lua
 
+# Query layer (cross-alt gather / filter / group / duplicate finder)
+Modules\Query.lua
+
 # Data Manager (orchestrates all modules)
 Modules\DataManager.lua
 

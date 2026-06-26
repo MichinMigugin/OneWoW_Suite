@@ -1,9 +1,12 @@
 # Cross-Alt Search & Duplicate-Finder — Design Notes
 
-> Status: **partially implemented.** The PredicateEngine search props this design
-> relies on are built, documented, and verified in-client; the Storage-side read
-> layer, the Items-tab dupe view-mode, the refresh rework, and scanner consolidation
-> are still design only. See [Implementation status](#implementation-status) below.
+> Status: **partially implemented.** The PredicateEngine search props, the
+> Storage-side read layer (`Query.lua`: registry + Gather/Filter/Group/Query +
+> duplicate finder), and the Items-tab dupe view-mode that consumes it are built;
+> the PE props are verified in-client, the read layer + dupe UI still need in-client
+> exercise. The DataManager refresh rework, the default-gather migration onto
+> `Query`, and scanner consolidation are still design only.
+> See [Implementation status](#implementation-status) below.
 > Captures the reasoning from the cross-alt dupe-search discussion as one artifact.
 
 ## 1. Goal
@@ -35,10 +38,24 @@ Two product goals sit on the same machinery:
 - Confirmed PE already exposes every **dupe-key value** (`ilvl`, the stat set,
   `sockets`) as intrinsic props — so **no further PE work is needed** for this
   feature.
+- **§10 step 1 — the Storage read layer** (`OneWoW_AltTracker_Storage/Modules/Query.lua`):
+  the container-descriptor registry (bags / personal / warband / guild / mail),
+  `Gather`/`Filter`/`Group`/`Query`, `GetEffectiveILvl`, and the duplicate finder
+  (`BuildDupeKey` + `FindDuplicates` + the ilvl within-bucket pass + presets).
+  Exposed on `OneWoW_AltTracker_Storage_API`.
+- **§10 step 2 — the Items-tab dupe view-mode** (`OneWoW_AltTracker/UI/t-items.lua`):
+  a "Duplicates" toggle on the filter bar swaps the Items tab into a dupe grouping
+  with a controls row (preset + iLvl-mode dropdowns, primary/secondary/socket/similar
+  toggles), adaptive columns, and the reused per-location expand rows — built on
+  `FindDuplicates`. Additive: the default view's gather/render is untouched. Required
+  completing the latent `OneWoW_GUI` `DataTable:SetColumns` so it rebuilds header
+  buttons for a new column set (`OneWoW/GUI/Panels.lua`).
 
-**Not started — design only (§3–§10):** the container-descriptor registry,
-`Gather`/`Filter`/`Group`/`Query`, `BuildDupeKey`, the Items-tab dupe view-mode,
-`NotifyStorageChanged` / DataManager event-ownership, and scanner consolidation.
+**Not started — design only (§8, §10 steps 3–5):** `NotifyStorageChanged` /
+DataManager event-ownership, migrating the Items + Bank tabs' default gather onto
+`Query`, and scanner consolidation. Equipped + auction sources are not yet
+descriptors (they live in sibling units; they join when the Items tab default
+gather migrates onto `Query`).
 
 **Abandoned — dead ends, kept for the reasoning (§11):** link-based loot/drop spec
 (a `lootSpec` prop was tried and reverted — the link's spec field is viewer-stamped);
@@ -234,6 +251,7 @@ toggles only decide what goes into the comparison key.
 ---@field matchPrimary   boolean -- split by primary stat (Int/Str/Agi) from C_Item.GetItemStats
 ---@field matchSecondary boolean -- split by secondary-stat SET (Haste/Crit/Mastery/Vers) from GetItemStats
 ---@field matchSocket    boolean -- split by "has any socket" (C_Item.GetItemNumSockets > 0)
+---@field matchTrack     boolean -- split by upgrade track (Hero/Veteran/...) via props.upgradeTrackStringID; level diffs stay to the ilvl-range pass
 ---@field minCount       number  -- a group counts as a dupe at >= this many slots (default 2)
 ```
 
@@ -259,9 +277,19 @@ local function BuildDupeKey(inst, spec)
     if spec.matchPrimary        then key = key .. "|p"  .. PrimaryFrom(p) end      -- reads p.statIntellect/Strength/Agility
     if spec.matchSecondary      then key = key .. "|s"  .. SecondarySetFrom(p) end -- reads p.statCrit/Haste/Mastery/Versatility
     if spec.matchSocket         then key = key .. "|k"  .. (p.hasSocket and 1 or 0) end
+    if spec.matchTrack          then key = key .. "|t"  .. (p.upgradeTrackStringID or 0) end -- track only; level -> ilvl pass
     return key
 end
 ```
+
+**Upgrade track is a track-only split (`matchTrack`).** Two copies can share an
+effective ilvl while sitting on different tracks (Champion 3/6 ≈ Veteran 1/6) —
+the higher track has upgrade headroom the other lacks, so they aren't truly
+redundant. `matchTrack` splits the key by `upgradeTrackStringID` so they land in
+separate groups; *level* differences within one track (1/6 vs 3/6) are left to the
+ilvl-range post-pass. It defaults **off** in every preset (the ilvl pass + the
+visible Track column already inform the keep-decision); toggle it on to keep
+tracks apart. Non-upgradeable items share a single nil-track bucket (no split).
 
 **ilvl range is not a key — it's a within-bucket pass.** Range matching isn't a
 clean equivalence (with tolerance 3, 620≈622 and 622≈625, but 620≉625), so it can't
@@ -276,12 +304,19 @@ the search box to pre-narrow candidates — and is a different thing from this
 
 Presets are just toggle sets the UI loads into the controls:
 
-| Preset | mode | iLvl | Prim | Sec | Sock | meaning |
-| --- | --- | --- | --- | --- | --- | --- |
-| Same item | item | off | – | – | – | every copy of the base item |
-| Same item + ilvl | item | exact | – | – | – | same item, same power |
-| **Same gear** (initial default) | item | range | ✓ | ✓ | ✓ | the initial dupe check |
-| Similar gear | similar | range | ✓ | ✓ | ✓ | functionally-equivalent across itemIDs |
+| Preset | mode | iLvl | Prim | Sec | Sock | Track | meaning |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Same item | item | off | – | – | – | – | every copy of the base item |
+| Same item + ilvl | item | exact | – | – | – | – | same item, same power |
+| **Same gear** (initial default) | item | range | ✓ | ✓ | ✓ | – | the initial dupe check |
+| Similar gear | similar | range | ✓ | ✓ | ✓ | – | functionally-equivalent across itemIDs |
+
+All columns (incl. iLvl / Prim / Sec / Sock / Track) are shown in the dupe table
+regardless of which toggles are on, so the user can see where a *different* split
+would help. The expand row collapses byte-identical copies in the same place
+(`who + location + itemLink`) into one `… x N` line and shows each distinct copy's
+ilvl → fully-upgraded ceiling, track, and stats so differences are visible at a
+glance.
 
 The persisted setting is the last-used `OneWoWDupeSpec` (plus optional named custom
 specs) — small and forward-compatible, so adding a toggle later doesn't break stored

@@ -58,7 +58,220 @@ local onHeaderCreate = function(btn, col, index)
     end
 end
 
+-- ===========================================================================
+-- Duplicate view-mode (CROSS_ALT_SEARCH_DESIGN.md §7). Additive: the default
+-- Items view above is untouched; toggling the "Duplicates" control switches the
+-- same tab into a dupe grouping with adaptive columns, driven by the Storage
+-- Query API (FindDuplicates). Module-level so RefreshItemsTab can branch on it.
+-- ===========================================================================
+
+local dupeMode = false
+local dupeSpec  -- lazily seeded from OneWoW_AltTracker_Storage_API.GetDefaultDupeSpec()
+
+local dupeColumnsConfig = {
+    {key = "expand",    label = "",                     width = 25,  fixed = true,  align = "icon",   sortable = false, ttTitle = L["TT_COL_EXPAND"],     ttDesc = L["TT_COL_EXPAND_DESC"]},
+    {key = "item",      label = L["ITEM"],              width = 140, fixed = false, align = "left",   sortable = false, ttTitle = L["ITEM"],              ttDesc = L["TT_COL_ITEM_DESC"]},
+    {key = "itemid",    label = L["ITEMS_COL_ITEMID"],  width = 55,  fixed = true,  align = "center", sortable = false, ttTitle = L["ITEMS_COL_ITEMID"],  ttDesc = L["TT_ITEMS_COL_ITEMID_DESC"]},
+    {key = "ilvl",      label = ITEM_LEVEL_ABBR,        width = 55,  fixed = true,  align = "center", sortable = false, ttTitle = ITEM_LEVEL_ABBR,        ttDesc = L["TT_ITEMS_COL_ILVL_DESC"]},
+    {key = "copies",    label = L["ITEMS_COL_COPIES"],  width = 50,  fixed = true,  align = "center", sortable = false, ttTitle = L["ITEMS_COL_COPIES"],  ttDesc = L["TT_ITEMS_COL_COPIES_DESC"]},
+    {key = "primary",   label = PRIMARY,                width = 70,  fixed = true,  align = "center", sortable = false, ttTitle = PRIMARY,                ttDesc = L["TT_ITEMS_COL_PRIMARY_DESC"]},
+    {key = "secondary", label = SECONDARY,              width = 80,  fixed = false, align = "left",   sortable = false, ttTitle = SECONDARY,              ttDesc = L["TT_ITEMS_COL_SECONDARY_DESC"]},
+    {key = "socket",    label = L["DUPE_OPT_SOCKET"],   width = 50,  fixed = true,  align = "center", sortable = false, ttTitle = L["DUPE_OPT_SOCKET"],   ttDesc = L["TT_ITEMS_COL_SOCKET_DESC"]},
+    {key = "track",     label = L["DUPE_OPT_TRACK"],    width = 85,  fixed = true,  align = "center", sortable = false, ttTitle = L["DUPE_OPT_TRACK"],    ttDesc = L["TT_ITEMS_COL_TRACK_DESC"]},
+    {key = "lastseen",  label = L["COL_LAST_SEEN"],     width = 85,  fixed = true,  align = "center", sortable = false, ttTitle = L["COL_LAST_SEEN"],     ttDesc = L["TT_ITEMS_COL_LAST_SEEN_DESC"]},
+}
+
+local DUPE_PRESETS = {
+    {value = "same_item",      key = "DUPE_PRESET_SAME_ITEM",      descKey = "TT_DUPE_PRESET_SAME_ITEM_DESC"},
+    {value = "same_item_ilvl", key = "DUPE_PRESET_SAME_ITEM_ILVL", descKey = "TT_DUPE_PRESET_SAME_ITEM_ILVL_DESC"},
+    {value = "same_gear",      key = "DUPE_PRESET_SAME_GEAR",      descKey = "TT_DUPE_PRESET_SAME_GEAR_DESC"},
+    {value = "similar_gear",   key = "DUPE_PRESET_SIMILAR_GEAR",   descKey = "TT_DUPE_PRESET_SIMILAR_GEAR_DESC"},
+}
+
+-- Attach a hover tooltip to a control without clobbering its existing OnEnter
+-- (dropdowns set a border-focus handler; HookScript preserves it).
+local function AttachTooltip(frame, title, desc)
+    frame:HookScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(title or "", 1, 1, 1)
+        if desc and desc ~= "" then GameTooltip:AddLine(desc, nil, nil, nil, true) end
+        GameTooltip:Show()
+    end)
+    frame:HookScript("OnLeave", function() GameTooltip:Hide() end)
+end
+
+local DUPE_ILVL_MODES = {
+    {value = "off",   key = "DUPE_ILVL_OFF"},
+    {value = "exact", key = "DUPE_ILVL_EXACT"},
+    {value = "range", key = "DUPE_ILVL_RANGE"},
+}
+
+local function IlvlModeLabel(mode)
+    for _, m in ipairs(DUPE_ILVL_MODES) do
+        if m.value == mode then return L[m.key] end
+    end
+    return L["DUPE_ILVL_RANGE"]
+end
+
+-- The grouping-relevant fields decide whether a spec equals a named preset;
+-- ilvlTolerance and minCount don't affect identity, so they're left out.
+local function SpecMatchesPreset(spec, preset)
+    return spec.mode == preset.mode
+        and spec.ilvlMode == preset.ilvlMode
+        and spec.matchPrimary == preset.matchPrimary
+        and spec.matchSecondary == preset.matchSecondary
+        and spec.matchSocket == preset.matchSocket
+        and (spec.matchTrack and true or false) == (preset.matchTrack and true or false)
+end
+
+local function PresetLabelForSpec(spec)
+    local api = OneWoW_AltTracker_Storage_API
+    local presets = api and api.GetDupePresets and api.GetDupePresets()
+    if presets then
+        for _, def in ipairs(DUPE_PRESETS) do
+            local p = presets[def.value]
+            if p and SpecMatchesPreset(spec, p) then return L[def.key] end
+        end
+    end
+    return CUSTOM
+end
+
+-- Build the dupe controls row (preset + iLvl mode dropdowns, stat/socket/similar
+-- toggles). Lives below the filter bar and is shown only in dupe mode. onChanged
+-- is called after any control change so the caller re-renders the dupe view.
+function ns.UI.BuildDupeControls(parent, anchorBar, onChanged)
+    local api = OneWoW_AltTracker_Storage_API
+    if not dupeSpec and api and api.GetDefaultDupeSpec then
+        dupeSpec = api.GetDefaultDupeSpec()
+    end
+
+    local bar = OneWoW_GUI:CreateFilterBar(parent, { height = 32, anchorBelow = anchorBar, offset = -5 })
+
+    local presetDropdown, presetText
+    local ilvlDropdown, ilvlText
+    local cbPrimary, cbSecondary, cbSocket, cbSimilar, cbTrack
+
+    local function SyncControls()
+        cbPrimary:SetChecked(dupeSpec.matchPrimary)
+        cbSecondary:SetChecked(dupeSpec.matchSecondary)
+        cbSocket:SetChecked(dupeSpec.matchSocket)
+        cbSimilar:SetChecked(dupeSpec.mode == "similar")
+        cbTrack:SetChecked(dupeSpec.matchTrack)
+        ilvlText:SetText(IlvlModeLabel(dupeSpec.ilvlMode))
+        ilvlDropdown._activeValue = dupeSpec.ilvlMode
+        presetText:SetText(PresetLabelForSpec(dupeSpec))
+    end
+
+    -- descKey of the preset the spec currently matches, or nil when "Custom".
+    local function ActivePresetDescKey()
+        local presets = api and api.GetDupePresets and api.GetDupePresets()
+        if presets then
+            for _, def in ipairs(DUPE_PRESETS) do
+                local p = presets[def.value]
+                if p and SpecMatchesPreset(dupeSpec, p) then return def.descKey end
+            end
+        end
+        return nil
+    end
+
+    -- A manual toggle change may no longer match any preset -> relabel to Custom.
+    local function OnToggleChanged()
+        presetText:SetText(PresetLabelForSpec(dupeSpec))
+        if onChanged then onChanged() end
+    end
+
+    presetDropdown, presetText = OneWoW_GUI:CreateDropdown(bar, { width = 130, height = 22, text = PresetLabelForSpec(dupeSpec) })
+    presetDropdown:SetPoint("LEFT", bar, "LEFT", 8, 0)
+    OneWoW_GUI:AttachFilterMenu(presetDropdown, {
+        searchable = false,
+        buildItems = function()
+            local items = {}
+            for _, def in ipairs(DUPE_PRESETS) do
+                items[#items + 1] = {
+                    text = L[def.key], value = def.value,
+                    onEnter = function(b)
+                        GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
+                        GameTooltip:SetText(L[def.key], 1, 1, 1)
+                        GameTooltip:AddLine(L[def.descKey], nil, nil, nil, true)
+                        GameTooltip:Show()
+                    end,
+                    onLeave = function() GameTooltip:Hide() end,
+                }
+            end
+            return items
+        end,
+        onSelect = function(value)
+            local presets = api and api.GetDupePresets and api.GetDupePresets()
+            local preset = presets and presets[value]
+            if preset then
+                for k, v in pairs(preset) do dupeSpec[k] = v end
+            end
+            SyncControls()
+            if onChanged then onChanged() end
+        end,
+    })
+    -- Closed-control tooltip: explain the currently active preset (or the feature
+    -- when the spec is Custom).
+    presetDropdown:HookScript("OnEnter", function(self)
+        local descKey = ActivePresetDescKey()
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["DUPE_TOGGLE"], 1, 1, 1)
+        GameTooltip:AddLine(descKey and L[descKey] or L["TT_DUPE_TOGGLE_DESC"], nil, nil, nil, true)
+        GameTooltip:Show()
+    end)
+    presetDropdown:HookScript("OnLeave", function() GameTooltip:Hide() end)
+
+    ilvlDropdown, ilvlText = OneWoW_GUI:CreateDropdown(bar, { width = 95, height = 22, text = IlvlModeLabel(dupeSpec.ilvlMode) })
+    ilvlDropdown:SetPoint("LEFT", presetDropdown, "RIGHT", 6, 0)
+    ilvlDropdown._activeValue = dupeSpec.ilvlMode
+    OneWoW_GUI:AttachFilterMenu(ilvlDropdown, {
+        searchable = false,
+        getActiveValue = function() return ilvlDropdown._activeValue end,
+        buildItems = function()
+            local items = {}
+            for _, m in ipairs(DUPE_ILVL_MODES) do
+                items[#items + 1] = { text = L[m.key], value = m.value }
+            end
+            return items
+        end,
+        onSelect = function(value, text)
+            dupeSpec.ilvlMode = value
+            ilvlText:SetText(text)
+            OnToggleChanged()
+        end,
+    })
+    AttachTooltip(ilvlDropdown, ITEM_LEVEL_ABBR, L["TT_DUPE_ILVL_DESC"])
+
+    cbPrimary = OneWoW_GUI:CreateCheckbox(bar, { label = PRIMARY, checked = dupeSpec.matchPrimary })
+    cbPrimary:SetPoint("LEFT", ilvlDropdown, "RIGHT", 10, 0)
+    cbPrimary:SetScript("OnClick", function(self) dupeSpec.matchPrimary = self:GetChecked() and true or false OnToggleChanged() end)
+    AttachTooltip(cbPrimary, PRIMARY, L["TT_ITEMS_COL_PRIMARY_DESC"])
+
+    cbSecondary = OneWoW_GUI:CreateCheckbox(bar, { label = SECONDARY, checked = dupeSpec.matchSecondary })
+    cbSecondary:SetPoint("LEFT", cbPrimary.label, "RIGHT", 10, 0)
+    cbSecondary:SetScript("OnClick", function(self) dupeSpec.matchSecondary = self:GetChecked() and true or false OnToggleChanged() end)
+    AttachTooltip(cbSecondary, SECONDARY, L["TT_ITEMS_COL_SECONDARY_DESC"])
+
+    cbSocket = OneWoW_GUI:CreateCheckbox(bar, { label = L["DUPE_OPT_SOCKET"], checked = dupeSpec.matchSocket })
+    cbSocket:SetPoint("LEFT", cbSecondary.label, "RIGHT", 10, 0)
+    cbSocket:SetScript("OnClick", function(self) dupeSpec.matchSocket = self:GetChecked() and true or false OnToggleChanged() end)
+    AttachTooltip(cbSocket, L["DUPE_OPT_SOCKET"], L["TT_ITEMS_COL_SOCKET_DESC"])
+
+    cbTrack = OneWoW_GUI:CreateCheckbox(bar, { label = L["DUPE_OPT_TRACK"], checked = dupeSpec.matchTrack })
+    cbTrack:SetPoint("LEFT", cbSocket.label, "RIGHT", 10, 0)
+    cbTrack:SetScript("OnClick", function(self) dupeSpec.matchTrack = self:GetChecked() and true or false OnToggleChanged() end)
+    AttachTooltip(cbTrack, L["DUPE_OPT_TRACK"], L["TT_ITEMS_COL_TRACK_DESC"])
+
+    cbSimilar = OneWoW_GUI:CreateCheckbox(bar, { label = L["DUPE_OPT_SIMILAR"], checked = dupeSpec.mode == "similar" })
+    cbSimilar:SetPoint("LEFT", cbTrack.label, "RIGHT", 10, 0)
+    cbSimilar:SetScript("OnClick", function(self) dupeSpec.mode = self:GetChecked() and "similar" or "item" OnToggleChanged() end)
+    AttachTooltip(cbSimilar, L["DUPE_OPT_SIMILAR"], L["TT_DUPE_OPT_SIMILAR_DESC"])
+
+    return bar
+end
+
 function ns.UI.CreateItemsTab(parent)
+    local SetDupeMode, AnchorRoster, dupeControls
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
         title = L["ITEMS_OVERVIEW"],
         height = 70,
@@ -84,24 +297,26 @@ function ns.UI.CreateItemsTab(parent)
             end
         end,
     })
-    searchBox:SetWidth(200)
-    searchBox:SetPoint("LEFT", filterBar, "LEFT", 8, 0)
-
     if OneWoW_GUI.AttachSearchTooltip then
         OneWoW_GUI:AttachSearchTooltip(searchBox)
     end
     local searchHelpBtn
     if OneWoW_GUI.CreateKeywordHelpButton then
         searchHelpBtn = OneWoW_GUI:CreateKeywordHelpButton(filterBar, { editBox = searchBox, size = 20 })
-        searchHelpBtn:SetPoint("LEFT", searchBox, "RIGHT", 4, 0)
     end
 
-    local checkBound = OneWoW_GUI:CreateCheckbox(filterBar, { label = L["ITEMS_FILTER_BOUND"] })
-    if searchHelpBtn then
-        checkBound:SetPoint("LEFT", searchHelpBtn, "RIGHT", 10, 1)
-    else
-        checkBound:SetPoint("LEFT", searchBox, "RIGHT", 15, 1)
-    end
+    -- Scan-AH sits at the far right; the filter checkboxes cluster just left of
+    -- it, and the search box flexes to fill everything to their left.
+    local scanAHButton = OneWoW_GUI:CreateFitTextButton(filterBar, { text = L["SCAN_AH"], height = 20 })
+    scanAHButton:SetPoint("RIGHT", filterBar, "RIGHT", -8, 0)
+    scanAHButton.isAHScanning = false
+
+    local filterCluster = CreateFrame("Frame", nil, filterBar)
+    filterCluster:SetHeight(20)
+    filterCluster:SetPoint("RIGHT", scanAHButton, "LEFT", -10, 0)
+
+    local checkBound = OneWoW_GUI:CreateCheckbox(filterCluster, { label = L["ITEMS_FILTER_BOUND"] })
+    checkBound:SetPoint("LEFT", filterCluster, "LEFT", 0, 0)
     checkBound:SetScript("OnClick", function(self)
         hidebound = self:GetChecked()
         if ns.UI.RefreshItemsTab then
@@ -109,7 +324,7 @@ function ns.UI.CreateItemsTab(parent)
         end
     end)
 
-    local checkVendor = OneWoW_GUI:CreateCheckbox(filterBar, { label = L["ITEMS_FILTER_NO_VENDOR"] })
+    local checkVendor = OneWoW_GUI:CreateCheckbox(filterCluster, { label = L["ITEMS_FILTER_NO_VENDOR"] })
     checkVendor:SetPoint("LEFT", checkBound.label, "RIGHT", 15, 0)
     checkVendor:SetScript("OnClick", function(self)
         hideNoVendor = self:GetChecked()
@@ -118,9 +333,36 @@ function ns.UI.CreateItemsTab(parent)
         end
     end)
 
-    local scanAHButton = OneWoW_GUI:CreateFitTextButton(filterBar, { text = L["SCAN_AH"], height = 20 })
-    scanAHButton:SetPoint("RIGHT", filterBar, "RIGHT", -8, 0)
-    scanAHButton.isAHScanning = false
+    local checkDupes = OneWoW_GUI:CreateCheckbox(filterCluster, { label = L["DUPE_TOGGLE"] })
+    checkDupes:SetPoint("LEFT", checkVendor.label, "RIGHT", 15, 0)
+    checkDupes:SetScript("OnClick", function(self)
+        SetDupeMode(self:GetChecked() and true or false)
+    end)
+    checkDupes:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["TT_DUPE_TOGGLE"], 1, 1, 1)
+        GameTooltip:AddLine(L["TT_DUPE_TOGGLE_DESC"], nil, nil, nil, true)
+        GameTooltip:Show()
+    end)
+    checkDupes:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    parent.checkDupes = checkDupes
+
+    -- Size the cluster to its checkboxes so the right anchor lines up; re-measure
+    -- once strings/fonts settle (label widths are 0 before first layout).
+    local function SizeFilterCluster()
+        filterCluster:SetWidth(checkBound:GetMeasuredWidth() + 15 + checkVendor:GetMeasuredWidth() + 15 + checkDupes:GetMeasuredWidth())
+    end
+    SizeFilterCluster()
+    C_Timer.After(0, SizeFilterCluster)
+
+    -- Search box (+ keyword help) flex to fill the space left of the cluster.
+    searchBox:SetPoint("LEFT", filterBar, "LEFT", 8, 0)
+    if searchHelpBtn then
+        searchHelpBtn:SetPoint("RIGHT", filterCluster, "LEFT", -8, 0)
+        searchBox:SetPoint("RIGHT", searchHelpBtn, "LEFT", -4, 0)
+    else
+        searchBox:SetPoint("RIGHT", filterCluster, "LEFT", -8, 0)
+    end
     scanAHButton:SetScript("OnClick", function(self)
         if self.isAHScanning then
             if OneWoW_AltTracker_Auctions_API then
@@ -162,7 +404,21 @@ function ns.UI.CreateItemsTab(parent)
     noticeText:SetText(L["ITEMS_NOTICE"])
     noticeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
 
+    dupeControls = ns.UI.BuildDupeControls(parent, filterBar, function()
+        ns.UI.RefreshItemsTab(parent)
+    end)
+    dupeControls:Hide()
+    parent.dupeControls = dupeControls
+
     local rosterPanel = OneWoW_GUI:CreateRosterPanel(parent, noticeBar)
+
+    -- Re-anchor the roster (table) below whichever bar is active: the notice in
+    -- the default view, the dupe controls in dupe mode.
+    AnchorRoster = function(anchor)
+        rosterPanel:ClearAllPoints()
+        rosterPanel:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -8)
+        rosterPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -5, 30)
+    end
 
     local dt
     dt = OneWoW_GUI:CreateDataTable(rosterPanel, {
@@ -194,6 +450,30 @@ function ns.UI.CreateItemsTab(parent)
     parent.scrollContent = dt.scrollContent
     parent.statusBar = status.bar
     parent.statusText = status.text
+
+    -- Switch the Items tab between the default view and the dupe view: swap the
+    -- data table columns, show the matching controls bar, re-anchor the table,
+    -- then re-render. The default gather/render path is left entirely intact.
+    SetDupeMode = function(on)
+        dupeMode = on and true or false
+        if dupeMode then
+            if not dupeSpec and OneWoW_AltTracker_Storage_API and OneWoW_AltTracker_Storage_API.GetDefaultDupeSpec then
+                dupeSpec = OneWoW_AltTracker_Storage_API.GetDefaultDupeSpec()
+            end
+            noticeBar:Hide()
+            scanBarContainer:Hide()
+            if scanAHButton then scanAHButton:Hide() end
+            dupeControls:Show()
+            AnchorRoster(dupeControls)
+            dt:SetColumns(dupeColumnsConfig)
+        else
+            dupeControls:Hide()
+            noticeBar:Show()
+            AnchorRoster(noticeBar)
+            dt:SetColumns(columnsConfig)
+        end
+        ns.UI.RefreshItemsTab(parent)
+    end
 
     OneWoW_GUI:ApplyFontToFrame(parent)
 
@@ -447,8 +727,372 @@ local function AddToLocation(item, charName, location, qty)
     end
 end
 
+-- ---------------------------------------------------------------------------
+-- Dupe view-mode render path (uses the Storage Query API; default path above
+-- is untouched).
+-- ---------------------------------------------------------------------------
+
+-- Position a dupe row's cells against the data table's resolved column layout.
+-- Same math as the default view's inline block, parameterized by column set.
+local function PositionRowCells(itemRow, dt, columns, rowHeight)
+    if not (dt and dt.headerRow and dt.headerRow.columnButtons and columns) then return end
+    for i, cell in ipairs(itemRow.cells) do
+        local btn = dt.headerRow.columnButtons[i]
+        if btn and btn.columnWidth and btn.columnX then
+            local width = btn.columnWidth
+            local x = btn.columnX
+            local col = columns[i]
+            cell:ClearAllPoints()
+            if col and col.align == "icon" then
+                cell:SetSize(width, rowHeight)
+                cell:SetPoint("LEFT", itemRow, "LEFT", x, 0)
+            elseif col and col.align == "center" then
+                cell:SetWidth(width - 6)
+                cell:SetPoint("CENTER", itemRow, "LEFT", x + width / 2, 0)
+            elseif col and col.align == "right" then
+                cell:SetWidth(width - 6)
+                cell:SetPoint("RIGHT", itemRow, "LEFT", x + width - 3, 0)
+            else
+                cell:SetWidth(width - 6)
+                cell:SetPoint("LEFT", itemRow, "LEFT", x + 3, 0)
+            end
+        end
+    end
+end
+
+local function MakeTextCell(row, text, justify)
+    local fs = OneWoW_GUI:CreateFS(row, 12)
+    fs:SetText(text or "")
+    fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    if justify then fs:SetJustifyH(justify) end
+    return fs
+end
+
+-- Item icon + name (hover tooltip + shift-click link), used by dupe rows.
+local function BuildItemCell(itemRow, name, texture, quality, itemLink, rowHeight)
+    local itemContainer = CreateFrame("Frame", nil, itemRow)
+    itemContainer:SetHeight(rowHeight - 4)
+
+    local iconFrame = OneWoW_GUI:CreateSkinnedIcon(itemContainer, {
+        size = rowHeight - 4, preset = "clean", iconTexture = texture, quality = quality,
+    })
+    iconFrame:SetPoint("LEFT", itemContainer, "LEFT", 2, 0)
+
+    local linkBtn = CreateFrame("Button", nil, itemContainer)
+    linkBtn:SetPoint("LEFT", iconFrame, "RIGHT", 4, 0)
+    linkBtn:SetPoint("RIGHT", itemContainer, "RIGHT", -4, 0)
+    linkBtn:SetHeight(rowHeight - 4)
+
+    local nameText = OneWoW_GUI:CreateFS(linkBtn, 12)
+    nameText:SetPoint("LEFT", linkBtn, "LEFT", 0, 0)
+    nameText:SetPoint("RIGHT", linkBtn, "RIGHT", 0, 0)
+    nameText:SetJustifyH("LEFT")
+    nameText:SetWordWrap(false)
+    nameText:SetText(name or "Unknown")
+
+    local function Paint()
+        if quality and ITEM_QUALITY_COLORS[quality] then
+            local c = ITEM_QUALITY_COLORS[quality]
+            nameText:SetTextColor(c.r, c.g, c.b)
+        else
+            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+    end
+    Paint()
+
+    if itemLink then
+        linkBtn:EnableMouse(true)
+        linkBtn:SetScript("OnEnter", function(self)
+            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetHyperlink(itemLink)
+            GameTooltip:Show()
+        end)
+        linkBtn:SetScript("OnLeave", function()
+            Paint()
+            GameTooltip:Hide()
+        end)
+        linkBtn:SetScript("OnClick", function()
+            if IsModifiedClick("CHATLINK") then
+                ChatEdit_InsertLink(itemLink)
+            end
+        end)
+    end
+
+    return itemContainer
+end
+
+local function ResolveDupeRep(inst)
+    local name, texture, quality, link = inst.name, inst.texture, inst.quality, inst.itemLink
+    local key = inst.itemLink or inst.itemID
+    if key then
+        local n, l, q, _, _, _, _, _, _, tex = C_Item.GetItemInfo(key)
+        name = name or n
+        link = link or l
+        quality = quality or q
+        texture = texture or tex
+    end
+    return name, texture, quality, link
+end
+
+-- Primary stat (the single highest of Int/Str/Agi) as a localized short name.
+-- Stamina is a fallback only -- it's on nearly all gear and would otherwise win on
+-- raw magnitude, so it shows only when the item has no Int/Str/Agi.
+local DUPE_PRIMARY = {
+    {field = "statIntellect", short = ITEM_MOD_INTELLECT_SHORT},
+    {field = "statStrength",  short = ITEM_MOD_STRENGTH_SHORT},
+    {field = "statAgility",   short = ITEM_MOD_AGILITY_SHORT},
+}
+local function PrimaryDisplay(p)
+    local best, bestVal
+    for _, s in ipairs(DUPE_PRIMARY) do
+        local v = p[s.field] or 0
+        if v > 0 and (not bestVal or v > bestVal) then best, bestVal = s.short, v end
+    end
+    if best then return best end
+    if (p.statStamina or 0) > 0 then return ITEM_MOD_STAMINA_SHORT end
+    return "-"
+end
+
+local DUPE_SECONDARY = {
+    {field = "statCrit",        short = ITEM_MOD_CRIT_RATING_SHORT},
+    {field = "statHaste",       short = ITEM_MOD_HASTE_RATING_SHORT},
+    {field = "statMastery",     short = ITEM_MOD_MASTERY_RATING_SHORT},
+    {field = "statVersatility", short = ITEM_MOD_VERSATILITY},
+}
+local function SecondaryDisplay(p)
+    local parts = {}
+    for _, s in ipairs(DUPE_SECONDARY) do
+        if (p[s.field] or 0) > 0 then parts[#parts + 1] = s.short end
+    end
+    if #parts == 0 then return "-" end
+    return table.concat(parts, "/")
+end
+
+local DUPE_LOC_LABEL = {
+    bags    = L["BANK_BAGS"],
+    bank    = L["BANK_PERSONAL"],
+    warband = L["BANK_WARBAND"],
+    guild   = GUILD,
+    mail    = L["MAIL"],
+}
+
+-- "Hero 2/6" style track label from PE upgrade props, "-" when the item has no
+-- upgrade track. upgradeTrackString is localized by the game.
+local function TrackDisplay(p)
+    local track = p.upgradeTrackString
+    if track and track ~= "" then
+        local mx = p.upgradeMax or 0
+        if mx > 0 then
+            return track .. " " .. (p.upgradeLevel or 0) .. "/" .. mx
+        end
+        return track
+    end
+    return "-"
+end
+
+-- Copies that are byte-identical in the same place collapse into one line. The
+-- itemLink encodes ilvl/track/upgrade/gems, so same who+location+link == truly
+-- identical; falls back to itemID when a link is missing.
+local function CopySignature(m)
+    local w = m.where or {}
+    local who = w.charName or w.guildName or "Account"
+    return who .. "|" .. (w.type or "") .. "|" .. (m.itemLink or tostring(m.itemID))
+end
+
+-- One expand line per distinct copy: where + qty, then the differentiating
+-- detail (ilvl -> fully-upgraded ceiling, track, primary, secondary, socket) so
+-- it's clear at a glance how copies differ (and which has the most headroom).
+local function ComposeCopyLine(m, qty)
+    local storageAPI = OneWoW_AltTracker_Storage_API
+    local w = m.where or {}
+    local who = w.charName or w.guildName or "Account"
+    local loc = DUPE_LOC_LABEL[w.type] or (w.type or "")
+    local p = PE:BuildProps(m.itemID, nil, nil, m.itemLink)
+
+    local ilvl = storageAPI.GetEffectiveILvl(m)
+    local ceiling = p.maxLevel or ilvl
+    local ilvlStr = tostring(ilvl)
+    if ceiling and ceiling > ilvl then ilvlStr = ilvl .. "->" .. ceiling end
+
+    -- Name leads the detail: in Similar mode a group spans different items that
+    -- only share a slot, so the row title isn't the copy's actual item.
+    local nm = m.name or C_Item.GetItemInfo(m.itemLink or m.itemID)
+    local detail = {}
+    if nm then detail[#detail + 1] = nm end
+    detail[#detail + 1] = "#" .. m.itemID
+    detail[#detail + 1] = ilvlStr
+    local track = TrackDisplay(p)
+    if track ~= "-" then detail[#detail + 1] = track end
+    local prim = PrimaryDisplay(p)
+    if prim ~= "-" then detail[#detail + 1] = prim end
+    local sec = SecondaryDisplay(p)
+    if sec ~= "-" then detail[#detail + 1] = sec end
+    if p.hasSocket then detail[#detail + 1] = L["DUPE_OPT_SOCKET"] end
+
+    return who .. " - " .. loc .. " x" .. qty .. "   " .. table.concat(detail, ", ")
+end
+
+-- Collapse a group's members into per-copy lines (identical copies merged with a
+-- summed quantity). The anchor item (the one the group is titled by) sorts first,
+-- then by name -> itemID -> highest ilvl, so related copies sit together -- useful
+-- in Similar mode where a group mixes different items sharing a slot.
+local function BuildCopyLines(group, anchorName)
+    local order, bySig = {}, {}
+    for _, m in ipairs(group.members) do
+        local sig = CopySignature(m)
+        local agg = bySig[sig]
+        if not agg then
+            agg = { m = m, qty = 0, name = m.name or C_Item.GetItemInfo(m.itemLink or m.itemID) or "" }
+            bySig[sig] = agg
+            order[#order + 1] = agg
+        end
+        agg.qty = agg.qty + (m.count or 1)
+    end
+    local api = OneWoW_AltTracker_Storage_API
+    table.sort(order, function(a, b)
+        local aAnchor = anchorName ~= nil and a.name == anchorName
+        local bAnchor = anchorName ~= nil and b.name == anchorName
+        if aAnchor ~= bAnchor then return aAnchor end
+        if a.name ~= b.name then return a.name < b.name end
+        if a.m.itemID ~= b.m.itemID then return a.m.itemID < b.m.itemID end
+        return api.GetEffectiveILvl(a.m) > api.GetEffectiveILvl(b.m)
+    end)
+    local lines = {}
+    for _, agg in ipairs(order) do
+        lines[#lines + 1] = { text = ComposeCopyLine(agg.m, agg.qty), link = agg.m.itemLink }
+    end
+    return lines
+end
+
+-- Dupe render: group duplicates via the Storage Query API and lay them out with
+-- the adaptive dupe columns. SetDupeMode swaps the table columns before this
+-- runs, so the data table headers already match dupeColumnsConfig here.
+function ns.UI.RefreshDupeView(itemsTab)
+    if not itemsTab then return end
+    local storageAPI = OneWoW_AltTracker_Storage_API
+    local scrollContent = itemsTab.scrollContent
+    if not scrollContent then return end
+    local dt = itemsTab.dataTable
+
+    OneWoW_GUI:ClearDataRows(scrollContent)
+    wipe(itemRows)
+    if dt then dt:ClearRows() end
+
+    if not (storageAPI and storageAPI.FindDuplicates) then
+        if itemsTab.statusText then itemsTab.statusText:SetText(L["DUPE_NONE"]) end
+        return
+    end
+
+    if not dupeSpec then dupeSpec = storageAPI.GetDefaultDupeSpec() end
+
+    local groups = storageAPI.FindDuplicates({
+        chars = "all",
+        containers = { bags = true, personal = true, warband = true, guild = true, mail = true },
+        predicate = (filterText ~= "" and filterText) or nil,
+        dupe = dupeSpec,
+    }) or {}
+
+    table.sort(groups, function(a, b)
+        if a.slotCount ~= b.slotCount then return a.slotCount > b.slotCount end
+        return (a.key or "") < (b.key or "")
+    end)
+
+    if #groups == 0 then
+        if itemsTab.statusText then itemsTab.statusText:SetText(L["DUPE_NONE"]) end
+        return
+    end
+
+    local rowHeight = 30
+    local rowGap = 2
+
+    for _, group in ipairs(groups) do
+        -- Representative = highest effective-ilvl copy (the "best" one to keep).
+        local rep = group.members[1]
+        local repIlvl = storageAPI.GetEffectiveILvl(rep)
+        local maxLastSeen = rep.lastSeen or 0
+        for _, m in ipairs(group.members) do
+            local lvl = storageAPI.GetEffectiveILvl(m)
+            if lvl > repIlvl then rep, repIlvl = m, lvl end
+            if (m.lastSeen or 0) > maxLastSeen then maxLastSeen = m.lastSeen end
+        end
+
+        local name, texture, quality, link = ResolveDupeRep(rep)
+        local props = PE:BuildProps(rep.itemID, nil, nil, rep.itemLink)
+
+        local itemRow = OneWoW_GUI:CreateDataRow(scrollContent, {
+            rowHeight = rowHeight,
+            expandedHeight = 60,
+            rowGap = rowGap,
+            data = { group = group, name = name },
+            createDetails = function(ef, d)
+                local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef)
+                local panel = grid:AddPanel(d.name or "")
+                for _, entry in ipairs(BuildCopyLines(d.group, d.name)) do
+                    local fs = grid:AddLine(panel, entry.text)
+                    -- Invisible hover region over the line so the copy's item
+                    -- tooltip shows on mouseover (and shift-click links it).
+                    if fs and entry.link then
+                        local hover = CreateFrame("Button", nil, panel)
+                        hover:SetAllPoints(fs)
+                        hover:EnableMouse(true)
+                        hover:SetScript("OnEnter", function(self)
+                            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                            GameTooltip:SetHyperlink(entry.link)
+                            GameTooltip:Show()
+                        end)
+                        hover:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                        hover:SetScript("OnClick", function()
+                            if IsModifiedClick("CHATLINK") then ChatEdit_InsertLink(entry.link) end
+                        end)
+                    end
+                end
+                grid:Finish()
+                OneWoW_GUI:ApplyFontToFrame(ef)
+            end,
+        })
+
+        local itemContainer = BuildItemCell(itemRow, name, texture, quality, link, rowHeight)
+        table.insert(itemRow.cells, itemContainer)
+
+        table.insert(itemRow.cells, MakeTextCell(itemRow, tostring(rep.itemID)))
+
+        local ilvlStr
+        local spread = group.ilvlSpread
+        if spread and #spread > 1 then
+            ilvlStr = spread[1] .. "-" .. spread[#spread]
+        elseif repIlvl and repIlvl > 0 then
+            ilvlStr = tostring(repIlvl)
+        else
+            ilvlStr = "-"
+        end
+        table.insert(itemRow.cells, MakeTextCell(itemRow, ilvlStr))
+        table.insert(itemRow.cells, MakeTextCell(itemRow, tostring(group.slotCount)))
+        table.insert(itemRow.cells, MakeTextCell(itemRow, PrimaryDisplay(props)))
+        table.insert(itemRow.cells, MakeTextCell(itemRow, SecondaryDisplay(props), "LEFT"))
+        table.insert(itemRow.cells, MakeTextCell(itemRow, props.hasSocket and YES or NO))
+        table.insert(itemRow.cells, MakeTextCell(itemRow, TrackDisplay(props)))
+        table.insert(itemRow.cells, MakeTextCell(itemRow, FormatLastSeen(maxLastSeen)))
+
+        PositionRowCells(itemRow, dt, dupeColumnsConfig, rowHeight)
+
+        table.insert(itemRows, itemRow)
+        if dt then dt:RegisterRow(itemRow) end
+    end
+
+    OneWoW_GUI:LayoutDataRows(scrollContent, { rowHeight = rowHeight, rowGap = rowGap })
+    OneWoW_GUI:ApplyFontToFrame(itemsTab)
+
+    if itemsTab.statusText then
+        itemsTab.statusText:SetText(string.format(L["DUPE_STATUS"], #groups))
+    end
+end
+
 function ns.UI.RefreshItemsTab(itemsTab)
     if not itemsTab then return end
+    if dupeMode then
+        return ns.UI.RefreshDupeView(itemsTab)
+    end
     local storageAPI = OneWoW_AltTracker_Storage_API
     if not storageAPI then return end
 

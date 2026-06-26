@@ -986,7 +986,10 @@ function OneWoW_GUI:CreateDataTable(parent, options)
         end
     end
 
-    for i, col in ipairs(columns) do
+    -- Factored so SetColumns can rebuild the header buttons for a new column
+    -- set at runtime (adaptive columns / view-mode switching), not just at
+    -- creation. Returns the button; the caller registers it.
+    local function MakeHeaderButton(col, i)
         local btn = CreateFrame("Button", nil, headerRow, "BackdropTemplate")
         btn:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
         btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
@@ -1053,7 +1056,11 @@ function OneWoW_GUI:CreateDataTable(parent, options)
             onHeaderCreate(btn, col, i)
         end
 
-        tinsert(headerRow.columnButtons, btn)
+        return btn
+    end
+
+    for i, col in ipairs(columns) do
+        tinsert(headerRow.columnButtons, MakeHeaderButton(col, i))
     end
 
     headerRow:SetScript("OnSizeChanged", function()
@@ -1158,6 +1165,18 @@ function OneWoW_GUI:CreateDataTable(parent, options)
     function dataTable:SetColumns(newColumns)
         columns = newColumns
         headerRow.columns = newColumns
+        -- Rebuild the header buttons for the new set: tear down the old ones,
+        -- recreate from newColumns (re-running onHeaderCreate), then relayout.
+        -- Callers clear and re-add their data rows separately.
+        for _, oldBtn in ipairs(headerRow.columnButtons) do
+            oldBtn:Hide()
+            oldBtn:SetParent(nil)
+        end
+        wipe(headerRow.columnButtons)
+        for i, col in ipairs(columns) do
+            tinsert(headerRow.columnButtons, MakeHeaderButton(col, i))
+        end
+        UpdateColumnLayout()
     end
 
     function dataTable:GetSortState()
