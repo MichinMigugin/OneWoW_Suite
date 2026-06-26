@@ -50,6 +50,14 @@ Two product goals sit on the same machinery:
   `FindDuplicates`. Additive: the default view's gather/render is untouched. Required
   completing the latent `OneWoW_GUI` `DataTable:SetColumns` so it rebuilds header
   buttons for a new column set (`OneWoW/GUI/Panels.lua`).
+  - **Step 2 refinements** (all in `t-items.lua` unless noted): control tooltips
+    (per-preset + checkboxes); `matchTrack` toggle + Track column (track-only split,
+    off by default; `upgradeTrackStringID` key line in `Query.lua`); Stamina as a
+    fallback primary (display + key, kept in sync); an **ID** column; per-copy expand
+    lines showing name + `#itemID` + ilvl->ceiling + track + stats, byte-identical
+    copies collapsed (`who+location+itemLink`), hover = item tooltip, sorted
+    anchor-item-first then name/itemID/ilvl; and a filter bar where the search box
+    flexes and the checkboxes cluster right.
 
 **Not started — design only (§8, §10 steps 3–5):** `NotifyStorageChanged` /
 DataManager event-ownership, migrating the Items + Bank tabs' default gather onto
@@ -60,6 +68,39 @@ gather migrates onto `Query`).
 **Abandoned — dead ends, kept for the reasoning (§11):** link-based loot/drop spec
 (a `lootSpec` prop was tried and reverted — the link's spec field is viewer-stamped);
 `matchSpec` as a dupe-key dimension (spec moved to the filter axis above).
+
+## Durable-doc & comment follow-ups (close-out checklist)
+
+This design doc is **temporary** — it's deleted once the feature ships. Everything
+that must outlive it is tracked here; do this pass before removing the doc. Append
+to this list as new work lands.
+
+**Durable docs to update:**
+- [ ] `OneWoW/Docs/GUI.md` — document that `DataTable:SetColumns(newColumns)` now
+  rebuilds the header buttons (re-runs `onHeaderCreate`, relayouts), enabling
+  runtime column/view-mode switching. Previously it only swapped the array.
+- [ ] `OneWoW_AltTracker_Storage/Docs/ARCHITECTURE.md` — add a **Query layer**
+  section for `Modules/Query.lua`: the container-descriptor registry, the
+  `OneWoWItemInstance` shape, `Gather`/`Filter`/`Group`/`Query`, the duplicate
+  finder (`OneWoWDupeSpec`, presets, `BuildDupeKey`, ilvl-range pass), and the new
+  public `OneWoW_AltTracker_Storage_API` surface
+  (`Gather`/`Filter`/`Group`/`Query`/`FindDuplicates`/`GetEffectiveILvl`/
+  `GetDupePresets`/`GetDefaultDupeSpec`).
+- [ ] `OneWoW/Docs/PREDICATE_ENGINE.md` — confirm the **`set` prop type** and
+  `forspec`/`forclass` are documented (added earlier in this effort); add if missing.
+- [ ] `OneWoW_Bags/Docs/SEARCH_SYNTAX.md` — already has the spec/class section;
+  re-confirm no further additions are needed (the dupe search box reuses existing PE
+  syntax + `#hero`/`#veteran`/... track keywords).
+- [ ] **AltTracker user doc** — there is no `OneWoW_AltTracker/Docs/`. Decide whether
+  the Items-tab dupe view-mode warrants a short user-facing doc (what "duplicate"
+  means, presets, the controls/columns); create it or consciously skip.
+
+**Code-comment cleanup (avoid dangling references):**
+- [ ] Several comments in `Query.lua` and `t-items.lua` cite
+  `CROSS_ALT_SEARCH_DESIGN.md §N`. Replace those with self-contained explanations
+  (or drop the section refs) so comments still make sense after this doc is gone.
+- [ ] Otherwise inline comments were written to stand alone as features landed — a
+  light skim to confirm is enough.
 
 ## 2. Data-fidelity findings that shape the design
 
