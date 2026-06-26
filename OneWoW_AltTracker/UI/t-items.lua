@@ -911,12 +911,15 @@ local function SecondaryDisplay(p)
     return table.concat(parts, "/")
 end
 
-local DUPE_LOC_LABEL = {
+-- Location-type -> display label, shared by the default and dupe views (the
+-- default view's gather adds the "auction" source the dupe view never groups on).
+local LOC_LABEL = {
     bags    = L["BANK_BAGS"],
     bank    = L["BANK_PERSONAL"],
     warband = L["BANK_WARBAND"],
     guild   = GUILD,
     mail    = L["MAIL"],
+    auction = L["ITEMS_LOCATION_AH"],
 }
 
 -- "Hero 2/6" style track label from PE upgrade props, "-" when the item has no
@@ -949,7 +952,7 @@ local function ComposeCopyLine(m, qty)
     local storageAPI = OneWoW_AltTracker_Storage_API
     local w = m.where or {}
     local who = w.charName or w.guildName or "Account"
-    local loc = DUPE_LOC_LABEL[w.type] or (w.type or "")
+    local loc = LOC_LABEL[w.type] or (w.type or "")
     local p = PE:BuildProps(m.itemID, nil, nil, m.itemLink)
 
     local ilvl = storageAPI.GetEffectiveILvl(m)
@@ -1167,208 +1170,52 @@ function ns.UI.RefreshItemsTab(itemsTab)
     wipe(itemRows)
     if dt then dt:ClearRows() end
 
+    -- Gather every occupied slot across all characters + account/guild + auctions
+    -- through the shared Storage Query layer (one normalized instance per slot),
+    -- then aggregate by itemID into the row records the render path below expects.
+    -- The dupe view-mode and Bank tab gather through the same layer (§3 single
+    -- container model); only the by-itemID rollup is unique to this view.
     local items = {}
 
-    for charKey, charData in pairs(storageAPI.GetCharacters()) do
-        local charName = charKey:match("^([^%-]+)")
+    local instances = storageAPI.Gather({
+        chars = "all",
+        containers = { bags = true, personal = true, warband = true, guild = true, mail = true, auction = true },
+    })
 
-        if charData.bags then
-            local ts = charData.bagsLastUpdate or 0
-            for bagID, bagInfo in pairs(charData.bags) do
-                if bagInfo.slots then
-                    for slotID, itemData in pairs(bagInfo.slots) do
-                        if itemData and itemData.itemID then
-                            local itemID = itemData.itemID
-                            if not items[itemID] then
-                                local iName, iTex, iLink, iVend = ResolveItemData(itemData)
-                                items[itemID] = {
-                                    itemID = itemID,
-                                    itemName = iName,
-                                    texture = iTex,
-                                    quality = itemData.quality,
-                                    itemLink = iLink,
-                                    vendorPrice = iVend,
-                                    totalQty = 0,
-                                    isBound = false,
-                                    locations = {},
-                                    lastSeenTime = 0,
-                                }
-                            end
-                            items[itemID].totalQty = items[itemID].totalQty + (itemData.stackCount or 1)
-                            if ts > (items[itemID].lastSeenTime or 0) then items[itemID].lastSeenTime = ts end
-                            if itemData.isBound then items[itemID].isBound = true end
-                            AddToLocation(items[itemID], charName, L["BANK_BAGS"], itemData.stackCount or 1)
-                        end
-                    end
-                end
-            end
+    for _, inst in ipairs(instances) do
+        local itemID = inst.itemID
+        local rec = items[itemID]
+        if not rec then
+            -- Live link lookup for the per-variant sell price / name / icon, as
+            -- the legacy gather did; falls back to the instance's stored fields.
+            local iName, iTex, iLink, iVend = ResolveItemData({
+                itemID   = itemID,
+                itemLink = inst.itemLink,
+                texture  = inst.texture,
+                sellPrice = inst.vendorPrice,
+                itemName = inst.name,
+            })
+            rec = {
+                itemID = itemID,
+                itemName = iName or inst.name or "Unknown",
+                texture = iTex or inst.texture,
+                quality = inst.quality,
+                itemLink = iLink or inst.itemLink,
+                vendorPrice = iVend,
+                totalQty = 0,
+                isBound = false,
+                locations = {},
+                lastSeenTime = 0,
+            }
+            items[itemID] = rec
         end
-
-        if charData.personalBank and charData.personalBank.tabs then
-            local ts = charData.personalBankLastUpdate or 0
-            for tabIndex, tabInfo in pairs(charData.personalBank.tabs) do
-                if tabInfo.items then
-                    for slotID, itemData in pairs(tabInfo.items) do
-                        if itemData and itemData.itemID then
-                            local itemID = itemData.itemID
-                            if not items[itemID] then
-                                local iName, iTex, iLink, iVend = ResolveItemData(itemData)
-                                items[itemID] = {
-                                    itemID = itemID,
-                                    itemName = iName,
-                                    texture = iTex,
-                                    quality = itemData.quality,
-                                    itemLink = iLink,
-                                    vendorPrice = iVend,
-                                    totalQty = 0,
-                                    isBound = false,
-                                    locations = {},
-                                    lastSeenTime = 0,
-                                }
-                            end
-                            items[itemID].totalQty = items[itemID].totalQty + (itemData.stackCount or 1)
-                            if ts > (items[itemID].lastSeenTime or 0) then items[itemID].lastSeenTime = ts end
-                            if itemData.isBound then items[itemID].isBound = true end
-                            AddToLocation(items[itemID], charName, L["BANK_PERSONAL"], itemData.stackCount or 1)
-                        end
-                    end
-                end
-            end
-        end
-
-        if charData.mail and charData.mail.mails then
-            local ts = charData.mailLastUpdate or 0
-            for mailID, mailData in pairs(charData.mail.mails) do
-                if mailData.items then
-                    for attachmentIndex, itemData in pairs(mailData.items) do
-                        if itemData and itemData.itemID then
-                            local itemID = itemData.itemID
-                            if not items[itemID] then
-                                local iName, iTex, iLink, iVend = ResolveItemData(itemData)
-                                items[itemID] = {
-                                    itemID = itemID,
-                                    itemName = iName or itemData.name or "Unknown",
-                                    texture = iTex or itemData.texture,
-                                    quality = itemData.quality,
-                                    itemLink = iLink,
-                                    vendorPrice = iVend,
-                                    totalQty = 0,
-                                    isBound = false,
-                                    locations = {},
-                                    lastSeenTime = 0,
-                                }
-                            end
-                            items[itemID].totalQty = items[itemID].totalQty + (itemData.count or 1)
-                            if ts > (items[itemID].lastSeenTime or 0) then items[itemID].lastSeenTime = ts end
-                            if itemData.canUse == false then
-                                items[itemID].isBound = true
-                            end
-                            AddToLocation(items[itemID], charName, L["MAIL"], itemData.count or 1)
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    local warbandBank = storageAPI.GetWarbandBank()
-    if warbandBank and warbandBank.tabs then
-        local ts = warbandBank.lastUpdateTime or 0
-        for tabIndex, tabInfo in pairs(warbandBank.tabs) do
-            if tabInfo.items then
-                for slotIndex, itemData in pairs(tabInfo.items) do
-                    if itemData and itemData.itemID then
-                        local itemID = itemData.itemID
-                        if not items[itemID] then
-                            local iName, iTex, iLink, iVend = ResolveItemData(itemData)
-                            items[itemID] = {
-                                itemID = itemID,
-                                itemName = iName,
-                                texture = iTex,
-                                quality = itemData.quality,
-                                itemLink = iLink,
-                                vendorPrice = iVend,
-                                totalQty = 0,
-                                isBound = false,
-                                locations = {},
-                                lastSeenTime = 0,
-                            }
-                        end
-                        items[itemID].totalQty = items[itemID].totalQty + (itemData.stackCount or 1)
-                        if ts > (items[itemID].lastSeenTime or 0) then items[itemID].lastSeenTime = ts end
-                        AddToLocation(items[itemID], "Account", L["BANK_WARBAND"], itemData.stackCount or 1)
-                    end
-                end
-            end
-        end
-    end
-
-    local guildBanks = storageAPI.GetGuildBanks()
-    if guildBanks then
-        for guildName, guildBank in pairs(guildBanks) do
-            local ts = guildBank.lastUpdateTime or 0
-            if guildBank.tabs then
-                for tabIndex, tabInfo in pairs(guildBank.tabs) do
-                    if tabInfo.slots then
-                        for slotID, itemData in pairs(tabInfo.slots) do
-                            if itemData and itemData.itemID then
-                                local itemID = itemData.itemID
-                                if not items[itemID] then
-                                    local iName, iTex, iLink, iVend = ResolveItemData(itemData)
-                                    items[itemID] = {
-                                        itemID = itemID,
-                                        itemName = iName,
-                                        texture = iTex,
-                                        quality = itemData.quality,
-                                        itemLink = iLink,
-                                        vendorPrice = iVend,
-                                        totalQty = 0,
-                                        isBound = false,
-                                        locations = {},
-                                        lastSeenTime = 0,
-                                    }
-                                end
-                                items[itemID].totalQty = items[itemID].totalQty + (itemData.stackCount or 1)
-                                if ts > (items[itemID].lastSeenTime or 0) then items[itemID].lastSeenTime = ts end
-                                AddToLocation(items[itemID], guildName, GUILD, itemData.stackCount or 1)
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    local auctionChars = OneWoW_AltTracker_Auctions_API and OneWoW_AltTracker_Auctions_API.GetCharacters()
-    if auctionChars then
-        for charKey, charData in pairs(auctionChars) do
-            local charName = charKey:match("^([^%-]+)")
-            local ts = charData.lastAuctionUpdate or 0
-            if charData.activeAuctions then
-                for _, auction in ipairs(charData.activeAuctions) do
-                    local itemID = auction.itemID
-                    if itemID then
-                        if not items[itemID] then
-                            items[itemID] = {
-                                itemID = itemID,
-                                itemName = auction.itemName or "Unknown",
-                                texture = auction.itemIcon,
-                                quality = auction.itemRarity,
-                                itemLink = auction.itemLink,
-                                vendorPrice = 0,
-                                totalQty = 0,
-                                isBound = false,
-                                locations = {},
-                                lastSeenTime = 0,
-                            }
-                        end
-                        items[itemID].totalQty = items[itemID].totalQty + (auction.quantity or 1)
-                        if ts > (items[itemID].lastSeenTime or 0) then items[itemID].lastSeenTime = ts end
-                        AddToLocation(items[itemID], charName, L["ITEMS_LOCATION_AH"], auction.quantity or 1)
-                    end
-                end
-            end
-        end
+        local qty = inst.count or 1
+        rec.totalQty = rec.totalQty + qty
+        if (inst.lastSeen or 0) > rec.lastSeenTime then rec.lastSeenTime = inst.lastSeen end
+        if inst.isBound then rec.isBound = true end
+        local w = inst.where or {}
+        local who = w.charName or w.guildName or "Account"
+        AddToLocation(rec, who, LOC_LABEL[w.type] or (w.type or ""), qty)
     end
 
     local filteredItems = {}

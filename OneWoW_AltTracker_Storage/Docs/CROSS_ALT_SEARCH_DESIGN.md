@@ -5,8 +5,9 @@
 > duplicate finder), and the Items-tab dupe view-mode that consumes it are built;
 > the PE props are verified in-client, the read layer + dupe UI still need in-client
 > exercise. The DataManager refresh rework (`NotifyStorageChanged` + live refresh +
-> dupeSpec persistence) is also built. Migrating the *default* Items/Bank gather onto
-> `Query` and scanner consolidation are still design only.
+> dupeSpec persistence) is also built. The *default* Items + Bank gather now route
+> through `Query` (an `auction` descriptor joined the registry). Only scanner
+> consolidation (§9 / §10 step 5) is still design only.
 > See [Implementation status](#implementation-status) below.
 > Captures the reasoning from the cross-alt dupe-search discussion as one artifact.
 
@@ -72,11 +73,27 @@ Two product goals sit on the same machinery:
   `OneWoW_AltTracker_DB.global.dupeSpec` (seeded from the Storage default, fields
   back-filled), so the dupe controls survive a reload/relog.
 
-**Not started — design only (§10 steps 4–5):** migrating the Items + Bank tabs'
-*default* gather onto `Query` (the dupe path already uses it; the Bank tab still
-has its own `RefreshBankDisplay` poke from DataManager), and scanner consolidation.
-Equipped + auction sources are not yet descriptors (they live in sibling units;
-they join when the Items tab default gather migrates onto `Query`).
+- **§10 step 4 — default Items + Bank gather migrated onto `Query`.** The Items
+  tab's ~200-line hand-rolled multi-source walk is replaced by one
+  `storageAPI.Gather{ chars="all", containers={bags,personal,warband,guild,mail,
+  auction} }` call plus a by-itemID rollup that reconstructs the same row records
+  (totalQty / locations / lastSeen / isBound) the render path expects. The Bank tab
+  walks the same layer via a per-bank-type `Gather` (`GatherBankItems`; the old
+  `GetBankData` + per-type slot ladder were removed). An **`auction` descriptor**
+  joined the registry (it reads the Auctions sibling unit's API, not this unit's SV;
+  `ctx.allChars` lets it include auction-only characters). `MakeInstance` now also
+  derives `isBound` from a mail attachment's `canUse` and `texture` from `itemIcon`,
+  for source parity. Behavior-preserving: same sources, labels, totals, sort, and
+  the 100-item unfiltered cap. *Not* done as part of this step: gather/filter
+  caching (the Items tab still re-gathers per refresh, as before — a possible
+  follow-up, with the caveat that auction collection emits no `NotifyStorageChanged`
+  signal to invalidate on), and the DataManager→Bank `RefreshBankDisplay` poke
+  (still in place; converting it to a `RegisterStorageChanged` subscription is the
+  remaining §8 cleanup). Equipped gear still has no descriptor — nothing consumes it
+  through `Query` yet (the ItemIndex tooltip path reads it directly).
+
+**Not started — design only (§10 step 5):** scanner consolidation (§9) behind the
+shared record builder + descriptor registry.
 
 **Abandoned — dead ends, kept for the reasoning (§11):** link-based loot/drop spec
 (a `lootSpec` prop was tried and reverted — the link's spec field is viewer-stamped);
@@ -101,7 +118,10 @@ to this list as new work lands.
   `GetDupePresets`/`GetDefaultDupeSpec`/`RegisterStorageChanged`). Also update the
   DataManager section: it's now the single storage event owner emitting
   `NotifyStorageChanged`, and ItemIndex is a signal-driven subscriber (only
-  `PLAYER_EQUIPMENT_CHANGED` stays on its own frame).
+  `PLAYER_EQUIPMENT_CHANGED` stays on its own frame). Note the registry now has an
+  **`auction`** descriptor (reads the Auctions sibling unit's API via `ctx.allChars`,
+  not this unit's SV) and that the AltTracker Items + Bank tabs' default gather both
+  route through `Gather` now (the Bank tab's old `ns.UI.GetBankData` was removed).
 - [ ] `OneWoW/Docs/PREDICATE_ENGINE.md` — confirm the **`set` prop type** and
   `forspec`/`forclass` are documented (added earlier in this effort); add if missing.
 - [ ] `OneWoW_Bags/Docs/SEARCH_SYNTAX.md` — already has the spec/class section;

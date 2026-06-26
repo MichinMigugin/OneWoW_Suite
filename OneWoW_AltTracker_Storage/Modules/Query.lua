@@ -42,10 +42,12 @@ local function MakeInstance(slot, locType, where, lastSeen)
         itemLink    = slot.itemLink,
         name        = slot.itemName or slot.name,
         quality     = slot.quality or slot.itemRarity,
-        texture     = slot.texture,
+        texture     = slot.texture or slot.itemIcon,
         count       = slot.stackCount or slot.count or slot.quantity or 1,
         vendorPrice = slot.sellPrice or 0,
-        isBound     = slot.isBound == true,
+        -- isBound is coarse (§4): containers store it directly; mail attachments
+        -- only carry canUse, where false (can't use => not yours yet) means bound.
+        isBound     = slot.isBound == true or slot.canUse == false,
         lastSeen    = lastSeen or 0,
         where       = where,
     }
@@ -59,9 +61,11 @@ end
 -- resolved char set; "account"/"guild" are gated only by their own flag.
 -- `gather(ctx, emit)` walks the right SV path and emits an instance per slot.
 --
--- Equipped + auction sources (which live in sibling units, not this unit's SV)
--- are intentionally out of scope for this first read layer; they join when the
--- Items tab migrates onto Query (§10 step 4).
+-- Most descriptors read this unit's own SavedVariables (ctx.db). The "auction"
+-- descriptor instead reads the Auctions sibling unit's public API (it has no
+-- copy in this unit's SV) -- the Items-tab default view enables it (§10 step 4).
+-- Equipped gear still has no descriptor: nothing consumes it through Query yet
+-- (the ItemIndex tooltip path reads it directly), so it joins when a caller needs it.
 
 local DESCRIPTORS = {
     {
@@ -170,6 +174,33 @@ local DESCRIPTORS = {
             end
         end,
     },
+    {
+        -- Active auctions live in the Auctions sibling unit, not this unit's SV.
+        -- Its field names differ (itemRarity/itemIcon/quantity) -- MakeInstance
+        -- reconciles them. ctx.allChars (chars == "all") includes auction-only
+        -- characters that have no stored bags/bank, matching the legacy gather.
+        id = "auction", scopeType = "character", locationType = "auction",
+        gather = function(ctx, emit)
+            local capi = OneWoW_AltTracker_Auctions_API
+            local chars = capi and capi.GetCharacters and capi.GetCharacters()
+            if not chars then return end
+            for charKey, cd in pairs(chars) do
+                if (ctx.allChars or ctx.charSet[charKey]) and cd.activeAuctions then
+                    local name = GetCharMeta(charKey)
+                    local lastSeen = cd.lastAuctionUpdate or 0
+                    for index, a in ipairs(cd.activeAuctions) do
+                        emit(MakeInstance({
+                            itemID = a.itemID, itemLink = a.itemLink,
+                            itemName = a.itemName, quality = a.itemRarity,
+                            texture = a.itemIcon, quantity = a.quantity,
+                        }, "auction", {
+                            charKey = charKey, charName = name, slotID = index,
+                        }, lastSeen))
+                    end
+                end
+            end
+        end,
+    },
 }
 
 -- ---------------------------------------------------------------------------
@@ -212,7 +243,11 @@ function Query.Gather(scope)
     local db = OneWoW_AltTracker_Storage_DB
     local containers = scope.containers or {}
 
-    local ctx = { db = db, charSet = ResolveCharSet(scope.chars, db) }
+    local ctx = {
+        db = db,
+        charSet = ResolveCharSet(scope.chars, db),
+        allChars = (scope.chars == nil or scope.chars == "all"),
+    }
     if scope.guilds then
         ctx.guildsFilter = {}
         for _, g in ipairs(scope.guilds) do ctx.guildsFilter[g] = true end

@@ -21,7 +21,7 @@ local function MatchesSearch(itemData, searchText)
         local ok, matched = pcall(PE.CheckItem, PE, searchText, itemData.itemID, nil, nil, itemInfo)
         if ok then return matched == true end
     end
-    local name = itemData.itemName
+    local name = itemData.name or itemData.itemName
     return name and name:lower():find(searchText:lower(), 1, true) ~= nil
 end
 
@@ -393,6 +393,36 @@ function ns.UI.CreateBankTab(parent)
     end)
 end
 
+-- Bank-type button -> Query container descriptor id (they line up 1:1).
+local CONTAINER_FOR_BANKTYPE = {
+    personal = "personal",
+    warband  = "warband",
+    guild    = "guild",
+    bags     = "bags",
+}
+
+-- Gather the slots for the currently selected bank view through the shared
+-- Storage Query layer (§3 single container model). Per-character containers are
+-- scoped to the selected character; warband is account-wide (ignores chars) and
+-- guild is scoped to the selected guild. Returns normalized OneWoWItemInstance[].
+local function GatherBankItems()
+    local storageAPI = OneWoW_AltTracker_Storage_API
+    if not storageAPI or not storageAPI.Gather then return {} end
+
+    local id = CONTAINER_FOR_BANKTYPE[currentBankType]
+    if not id then return {} end
+
+    local scope = { containers = { [id] = true } }
+    if id == "guild" then
+        if not selectedGuildName then return {} end
+        scope.guilds = { selectedGuildName }
+    else
+        scope.chars = { selectedCharacterKey }
+    end
+
+    return storageAPI.Gather(scope)
+end
+
 function ns.UI.RefreshBankDisplay(parent)
     if not parent or not parent.bankViewPanel then return end
 
@@ -408,65 +438,11 @@ function ns.UI.RefreshBankDisplay(parent)
 
     ns.UI.CleanupBankFrames(parent)
 
-    local bankData = ns.UI.GetBankData(selectedCharacterKey, currentBankType, selectedGuildName)
-    local sortedItems = {}
-
-    if bankData then
-        if currentBankType == "bags" then
-            if bankData.bags then
-                for bagID = 0, 5 do
-                    local bagData = bankData.bags[bagID]
-                    if bagData and bagData.slots then
-                        for _, itemData in pairs(bagData.slots) do
-                            if itemData then
-                                table.insert(sortedItems, itemData)
-                            end
-                        end
-                    end
-                end
-            end
-        elseif currentBankType == "personal" then
-            if bankData.personalBank and bankData.personalBank.tabs then
-                for _, tabData in pairs(bankData.personalBank.tabs) do
-                    if tabData.items then
-                        for _, itemData in pairs(tabData.items) do
-                            if itemData and itemData.itemID then
-                                table.insert(sortedItems, itemData)
-                            end
-                        end
-                    end
-                end
-            end
-        elseif currentBankType == "warband" then
-            if bankData.warbandBank and bankData.warbandBank.tabs then
-                for _, tabData in pairs(bankData.warbandBank.tabs) do
-                    if tabData.items then
-                        for _, itemData in pairs(tabData.items) do
-                            if itemData and itemData.itemID then
-                                table.insert(sortedItems, itemData)
-                            end
-                        end
-                    end
-                end
-            end
-        elseif currentBankType == "guild" then
-            if bankData.guildBank and bankData.guildBank.tabs then
-                for _, tabData in pairs(bankData.guildBank.tabs) do
-                    if tabData.slots then
-                        for _, itemData in pairs(tabData.slots) do
-                            if itemData and itemData.itemID then
-                                table.insert(sortedItems, itemData)
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
+    local sortedItems = GatherBankItems()
 
     table.sort(sortedItems, function(a, b)
-        local nameA = a.itemName
-        local nameB = b.itemName
+        local nameA = a.name
+        local nameB = b.name
         if nameA and nameB then
             return nameA < nameB
         elseif nameA then
@@ -506,21 +482,6 @@ function ns.UI.RefreshBankDisplay(parent)
     if parent.statusText then
         parent.statusText:SetText(L["BANK_VIEWING"] .. ": " .. charName .. " - " .. bankTypeName .. " - " .. #sortedItems .. " " .. ITEMS)
     end
-end
-
-function ns.UI.GetBankData(characterKey, _, guildName)
-    local storageAPI = OneWoW_AltTracker_Storage_API
-    if not storageAPI or not characterKey then return nil end
-
-    local charData = storageAPI.GetCharacters()[characterKey]
-    if not charData then return nil end
-
-    return {
-        bags = charData.bags,
-        personalBank = charData.personalBank,
-        warbandBank = storageAPI.GetWarbandBank(),
-        guildBank = guildName and storageAPI.GetGuildBanks()[guildName] or nil,
-    }
 end
 
 function ns.UI.FilterBankItems(parent, searchText)
