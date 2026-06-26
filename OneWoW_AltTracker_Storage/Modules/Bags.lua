@@ -4,7 +4,7 @@ ns.Bags = {}
 local Module = ns.Bags
 
 -- Backpack + bags 0-5. Flat (no tabs): each bag is its own unit. Slot scanning
--- and the canonical record shape live in ns.ContainerScan (§9 shared scanner).
+-- and the canonical record shape live in ns.ContainerScan.
 function Module:CollectData(charKey, charData)
     if not charKey or not charData then return false end
 

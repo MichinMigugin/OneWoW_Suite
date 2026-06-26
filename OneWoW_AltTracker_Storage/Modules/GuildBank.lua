@@ -5,8 +5,8 @@ local Module = ns.GuildBank
 
 -- Guild bank, tabbed (up to 8 viewable tabs). Guild-scope, so it writes
 -- DB.guildBanks[guildName]. Slot scanning, the canonical record shape, and the
--- link-hex quality recovery live in ns.ContainerScan (§9 shared scanner); this
--- keeps the tab metadata, money, and write path.
+-- link-hex quality recovery live in ns.ContainerScan; this keeps the tab
+-- metadata, money, and write path.
 function Module:CollectData(charKey, charData)
     if not charKey then return false end
 

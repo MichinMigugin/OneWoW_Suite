@@ -1221,7 +1221,7 @@ These components exist in the library but are not fully documented here. See sou
 
 When building **`OptionsSliderTemplate`** sliders manually (custom layout), call **`OneWoW_GUI:ConfigureOptionsSliderEnds(slider, lowText, highText)`** after **`SetMinMaxValues`** / value setup. It applies **`slider.Low` / `slider.High`** (with **`_G[name.."Low"]`** fallback), **`HookScript("OnShow", …)`** once per slider, and stores texts so endpoints stay correct after **`ClearFrame`** + widget reuse (Blizzard otherwise restores localized “Low”/“High”).
 - **CreateProgressBar(parent, options)** — progress bar with theme colors
-- **CreateDataTable(parent, options)** — table with `ClearDataRows`, `LayoutDataRows`, `CreateDataRow`
+- **CreateDataTable(parent, options)** — table with `ClearDataRows`, `LayoutDataRows`, `CreateDataRow`, and `SetColumns(newColumns)`. `SetColumns` swaps the column set at runtime: it tears down the old header buttons, rebuilds them for the new columns (re-running `onHeaderCreate`), and relayouts — so one table can switch between column sets / view-modes. Callers re-render their rows against the new layout afterward.
 - **CreateOverviewPanel(parent, options)** — overview layout
 - **CreateStatusBar(parent, anchorFrame, options)** — status bar
 - **CreateRosterPanel(parent, anchorFrame)** — roster layout

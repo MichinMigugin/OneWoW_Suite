@@ -59,10 +59,9 @@ local onHeaderCreate = function(btn, col, index)
 end
 
 -- ===========================================================================
--- Duplicate view-mode (CROSS_ALT_SEARCH_DESIGN.md §7). Additive: the default
--- Items view above is untouched; toggling the "Duplicates" control switches the
--- same tab into a dupe grouping with adaptive columns, driven by the Storage
--- Query API (FindDuplicates). Module-level so RefreshItemsTab can branch on it.
+-- Duplicate view-mode. Toggling the "Duplicates" control switches the Items tab
+-- into a dupe grouping with adaptive columns, driven by the Storage Query API
+-- (FindDuplicates). Module-level so RefreshItemsTab can branch on it.
 -- ===========================================================================
 
 local dupeMode = false
@@ -1173,8 +1172,8 @@ function ns.UI.RefreshItemsTab(itemsTab)
     -- Gather every occupied slot across all characters + account/guild + auctions
     -- through the shared Storage Query layer (one normalized instance per slot),
     -- then aggregate by itemID into the row records the render path below expects.
-    -- The dupe view-mode and Bank tab gather through the same layer (§3 single
-    -- container model); only the by-itemID rollup is unique to this view.
+    -- The dupe view-mode and Bank tab gather through the same layer; only the
+    -- by-itemID rollup is unique to this view.
     local items = {}
 
     local instances = storageAPI.Gather({
@@ -1186,8 +1185,8 @@ function ns.UI.RefreshItemsTab(itemsTab)
         local itemID = inst.itemID
         local rec = items[itemID]
         if not rec then
-            -- Live link lookup for the per-variant sell price / name / icon, as
-            -- the legacy gather did; falls back to the instance's stored fields.
+            -- Live link lookup for the per-variant sell price / name / icon;
+            -- falls back to the instance's stored fields.
             local iName, iTex, iLink, iVend = ResolveItemData({
                 itemID   = itemID,
                 itemLink = inst.itemLink,

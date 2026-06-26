@@ -1,10 +1,10 @@
 local _, ns = ...
 
--- Read-side query layer (CROSS_ALT_SEARCH_DESIGN.md §3-§5). A container
--- descriptor registry drives a single Gather that normalizes every stored slot
--- shape into OneWoWItemInstance[]; Filter runs PE in link-mode; Group buckets by
--- a key function. FindDuplicates is Group(BuildDupeKey) plus a min-count cut and
--- an ilvl within-bucket pass. Pure addition: nothing on the write side calls in.
+-- Read-side query layer. A container descriptor registry drives a single Gather
+-- that normalizes every stored slot shape into OneWoWItemInstance[]; Filter runs
+-- PE in link-mode; Group buckets by a key function. FindDuplicates is
+-- Group(BuildDupeKey) plus a min-count cut and an ilvl within-bucket pass.
+-- See OneWoW_AltTracker_Storage/Docs/ARCHITECTURE.md.
 
 local PE = OneWoW.PredicateEngine
 local API = OneWoW_AltTracker_Storage_API
@@ -30,7 +30,7 @@ end
 -- Build one OneWoWItemInstance from a stored slot record. The stored shapes
 -- disagree on field names (stackCount vs count, itemName vs name) -- this is the
 -- single place that reconciles them. Returns nil for empty/0-itemID slots so
--- callers never branch on a missing item (§11 "Empty / 0-itemID slots").
+-- callers never branch on a missing item (empty / 0-itemID slots are skipped).
 local function MakeInstance(slot, locType, where, lastSeen)
     if not slot then return nil end
     local itemID = slot.itemID
@@ -45,7 +45,7 @@ local function MakeInstance(slot, locType, where, lastSeen)
         texture     = slot.texture or slot.itemIcon,
         count       = slot.stackCount or slot.count or slot.quantity or 1,
         vendorPrice = slot.sellPrice or 0,
-        -- isBound is coarse (§4): containers store it directly; mail attachments
+        -- isBound is coarse: containers store it directly; mail attachments
         -- only carry canUse, where false (can't use => not yours yet) means bound.
         isBound     = slot.isBound == true or slot.canUse == false,
         lastSeen    = lastSeen or 0,
@@ -54,18 +54,18 @@ local function MakeInstance(slot, locType, where, lastSeen)
 end
 
 -- ---------------------------------------------------------------------------
--- Container descriptor registry (§3)
+-- Container descriptor registry
 -- ---------------------------------------------------------------------------
 -- Each descriptor owns the read traversal for one container kind. scopeType
--- encodes the account/guild rule (§6): "character" containers iterate the
--- resolved char set; "account"/"guild" are gated only by their own flag.
+-- encodes the account/guild rule: "character" containers iterate the resolved
+-- char set; "account"/"guild" are gated only by their own flag.
 -- `gather(ctx, emit)` walks the right SV path and emits an instance per slot.
 --
 -- Most descriptors read this unit's own SavedVariables (ctx.db). The "auction"
 -- descriptor instead reads the Auctions sibling unit's public API (it has no
--- copy in this unit's SV) -- the Items-tab default view enables it (§10 step 4).
--- Equipped gear still has no descriptor: nothing consumes it through Query yet
--- (the ItemIndex tooltip path reads it directly), so it joins when a caller needs it.
+-- copy in this unit's SV); the Items-tab default view enables it. Equipped gear
+-- has no descriptor: nothing consumes it through Query (the ItemIndex tooltip
+-- path reads it directly), so it would join only when a caller needs it.
 
 local DESCRIPTORS = {
     {
@@ -178,7 +178,7 @@ local DESCRIPTORS = {
         -- Active auctions live in the Auctions sibling unit, not this unit's SV.
         -- Its field names differ (itemRarity/itemIcon/quantity) -- MakeInstance
         -- reconciles them. ctx.allChars (chars == "all") includes auction-only
-        -- characters that have no stored bags/bank, matching the legacy gather.
+        -- characters that have no stored bags/bank.
         id = "auction", scopeType = "character", locationType = "auction",
         gather = function(ctx, emit)
             local capi = OneWoW_AltTracker_Auctions_API
@@ -204,7 +204,7 @@ local DESCRIPTORS = {
 }
 
 -- ---------------------------------------------------------------------------
--- Effective ilvl (lazy, memoized -- §4)
+-- Effective ilvl (lazy, memoized)
 -- ---------------------------------------------------------------------------
 
 --- Effective item level for an instance, resolved on first access from the link
@@ -219,7 +219,7 @@ function API.GetEffectiveILvl(inst)
 end
 
 -- ---------------------------------------------------------------------------
--- Gather / Filter / Group / Query (§5)
+-- Gather / Filter / Group / Query
 -- ---------------------------------------------------------------------------
 
 local function ResolveCharSet(chars, db)
@@ -336,7 +336,7 @@ function Query.Query(opts)
 end
 
 -- ---------------------------------------------------------------------------
--- Duplicate finder (§5 "what is a duplicate")
+-- Duplicate finder
 -- ---------------------------------------------------------------------------
 
 -- The initial default: same base item, redundant within an ilvl band, split by

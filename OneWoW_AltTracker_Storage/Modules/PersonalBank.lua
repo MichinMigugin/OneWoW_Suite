@@ -4,8 +4,8 @@ ns.PersonalBank = {}
 local Module = ns.PersonalBank
 
 -- Character bank, tabbed: tab N lives in container bag 5+N. Slot scanning and the
--- canonical record shape live in ns.ContainerScan (§9 shared scanner); this keeps
--- only the tab structure and per-tab slot accounting.
+-- canonical record shape live in ns.ContainerScan; this keeps only the tab
+-- structure and per-tab slot accounting.
 function Module:CollectData(charKey, charData)
     if not charKey or not charData then return false end
 

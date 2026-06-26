@@ -124,7 +124,7 @@ end
 --- Subscribe to post-write storage-change signals. The callback fires after a
 --- scanner writes to SavedVariables, receiving a { scope, charKey } table
 --- (scope = "bags"|"personal"|"warband"|"guild"|"mail"). Use it to refresh
---- views/caches deterministically instead of racing the write on your own events.
+--- views/caches once the changed data has landed.
 ---@param callback fun(info: table)
 function OneWoW_AltTracker_Storage_API.RegisterStorageChanged(callback)
     ns.DataManager:RegisterStorageChanged(callback)

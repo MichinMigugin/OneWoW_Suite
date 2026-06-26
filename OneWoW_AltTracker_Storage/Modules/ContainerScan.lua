@@ -1,13 +1,13 @@
 local _, ns = ...
 
--- Shared write-side scanner (CROSS_ALT_SEARCH_DESIGN.md §9). The Bags / Personal
--- / Warband / Guild scanners were near-duplicates of the same slot loop: read a
--- slot, fetch its link, decorate via C_Item.GetItemInfo, assemble an identically
--- shaped record -- and their field sets had drifted (isBound/isLocked present in
--- some, absent in others). This module owns the one record builder and the slot
--- iteration, emitting the single canonical slot shape; the per-container modules
--- keep only their own outer structure (tabs, accounting, write path), since those
--- genuinely differ. Mail stays special (its own write path).
+-- Shared write-side scanner. The Bags / PersonalBank / WarbandBank / GuildBank
+-- modules all read the same kind of slot -- read a slot, fetch its link, decorate
+-- via C_Item.GetItemInfo, assemble a record -- so slot iteration and the one
+-- canonical record builder live here, emitting a single uniform slot shape. Each
+-- container module keeps only its own outer structure (flat bags vs. tabs, per-tab
+-- accounting, money, write path), which genuinely differ. Mail has its own write
+-- path (expiry math, accounting hooks) and does not use this scanner.
+-- See OneWoW_AltTracker_Storage/Docs/ARCHITECTURE.md.
 
 ns.ContainerScan = {}
 local ContainerScan = ns.ContainerScan

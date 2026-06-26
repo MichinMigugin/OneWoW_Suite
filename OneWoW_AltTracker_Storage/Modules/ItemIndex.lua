@@ -296,11 +296,9 @@ function ItemIndex:Initialize()
     end)
 
     -- Storage-owned scopes (bags / personal / warband / guild / mail) rebuild via
-    -- DataManager's post-write signal, so the index reads SavedVariables AFTER the
-    -- scanner wrote them -- removing the old read-after-write race (and the
-    -- duplicate BAG_UPDATE_DELAYED / BANKFRAME_CLOSED / GUILDBANKFRAME_CLOSED
-    -- registrations). Equipment is collected by the Character unit, not
-    -- DataManager, so it keeps its own event.
+    -- DataManager's post-write signal, so the index reads SavedVariables after the
+    -- scanner has written them. Equipment is collected by the Character unit, not
+    -- DataManager, so it has its own PLAYER_EQUIPMENT_CHANGED handler below.
     ns.DataManager:RegisterStorageChanged(function()
         ScheduleRebuild()
     end)

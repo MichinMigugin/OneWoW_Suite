@@ -402,9 +402,9 @@ local CONTAINER_FOR_BANKTYPE = {
 }
 
 -- Gather the slots for the currently selected bank view through the shared
--- Storage Query layer (§3 single container model). Per-character containers are
--- scoped to the selected character; warband is account-wide (ignores chars) and
--- guild is scoped to the selected guild. Returns normalized OneWoWItemInstance[].
+-- Storage Query layer. Per-character containers are scoped to the selected
+-- character; warband is account-wide (ignores chars) and guild is scoped to the
+-- selected guild. Returns normalized OneWoWItemInstance[].
 local function GatherBankItems()
     local storageAPI = OneWoW_AltTracker_Storage_API
     if not storageAPI or not storageAPI.Gather then return {} end

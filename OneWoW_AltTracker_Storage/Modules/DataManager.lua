@@ -263,9 +263,8 @@ function DataManager:NotifyMailChanged()
 end
 
 -- Subscribe to post-write storage-change signals. Listeners receive a
--- { scope, charKey } table. DataManager is the single event owner, so a listener
--- reacts to data the scanner has already written rather than racing the write on
--- its own event frame.
+-- { scope, charKey } table. DataManager is the single storage event owner, so a
+-- listener reacts to data the scanner has already written.
 function DataManager:RegisterStorageChanged(fn)
     if type(fn) == "function" then
         storageListeners[#storageListeners + 1] = fn

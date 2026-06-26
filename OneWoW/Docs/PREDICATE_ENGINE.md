@@ -111,7 +111,7 @@ All functions are method-style (`PE:Func(...)`). Exported constants use dot synt
 | Function | Purpose |
 |---|---|
 | `PE:RegisterKeyword(nameOrNames, func)` | Register a `#keyword` (or a list of aliases — first name is canonical). `func(props)` returns truthy to match. Wipes `compiledCache`. Re-registering the same predicate function under a new name keeps the existing canonical entry. |
-| `PE:RegisterProperty(nameOrNames, def)` | Register a numeric or string property for comparison syntax (e.g. `haste>=200`). `def = { field = "fieldName", type = "number"\|"string", unit = "money"? }`. `unit = "money"` enables money parsing (`100g`, `5s50c`) on the RHS for number-typed properties. Wipes `compiledCache`. |
+| `PE:RegisterProperty(nameOrNames, def)` | Register a numeric, string, or set property for comparison syntax (e.g. `haste>=200`, `forspec=73`). `def = { field = "fieldName", type = "number"\|"string"\|"set", unit = "money"? }`. `unit = "money"` enables money parsing (`100g`, `5s50c`) on the RHS for number-typed properties. A `set` property's field holds a lookup table `{ [id] = true }`; `=`/`==` test membership and `!=` non-membership (ordered comparators are meaningless for nominal IDs and return false). Wipes `compiledCache`. |
 | `PE:GetAllKeywords() -> { canonical, aliases[] }[]` | Every registered keyword in registration order. `aliases` excludes the canonical name and is alphabetically sorted. Intended for help/reference UIs. |
 | `PE:GetMatchingKeywords(itemID, bagID?, slotID?, itemInfo?) -> string[]` | Return canonical names of every registered keyword that matches this item, in registration order. With only hyperlink context, policy bind keywords such as `#boe`, `#bou`, `#warbound`, and `#wue` can still match via tooltip fallback, while current-bound state (`#bop` / `#soulbound` / `#bound`) cannot be inferred. Current slot-state keywords such as `#new`, `#locked`, `#tradeableloot`, durability, equipment-set membership, count, refund/scrap state, and battle-pay state require `bagID`/`slotID`. |
 
@@ -192,11 +192,12 @@ end)
 PE:RegisterProperty("mystat", { field = "myStat", type = "number" })
 PE:RegisterProperty("mygold", { field = "myGold", type = "number", unit = "money" })
 PE:RegisterProperty("myname", { field = "myName", type = "string" })
+PE:RegisterProperty("myset",  { field = "mySet",  type = "set" })
 ```
 
-Then `mystat>=200`, `mygold>100g`, `myname~foo` become valid expression tokens. The engine reads `props.<field>` at evaluation time; your addon is responsible for populating that field — typically by attaching values via a wrapper that calls `BuildProps` and then layers extra fields, or by populating fields in a custom keyword's resolver path.
+Then `mystat>=200`, `mygold>100g`, `myname~foo`, `myset=42` become valid expression tokens. The engine reads `props.<field>` at evaluation time; your addon is responsible for populating that field — typically by attaching values via a wrapper that calls `BuildProps` and then layers extra fields, or by populating fields in a custom keyword's resolver path.
 
-String-typed properties support `=` / `==` (exact, case-insensitive), `!=`, `~` (literal contains), and `~~` (Lua pattern; malformed patterns return false). Numeric properties support `==`, `!=`, `<`, `<=`, `>`, `>=`, and the `prop:low-high` range form. With `unit = "money"`, numeric RHS values may also be money strings (`100g`, `5s50c`, `200g50s`).
+String-typed properties support `=` / `==` (exact, case-insensitive), `!=`, `~` (literal contains), and `~~` (Lua pattern; malformed patterns return false). Numeric properties support `==`, `!=`, `<`, `<=`, `>`, `>=`, and the `prop:low-high` range form. With `unit = "money"`, numeric RHS values may also be money strings (`100g`, `5s50c`, `200g50s`). Set-typed properties expect the field to be a `{ [id] = true }` lookup table and support only `=` / `==` (member) and `!=` (non-member); ordered comparators and ranges return false. The built-in `forspec` / `forclass` props are set-typed — they test viewer-independent spec/class eligibility via `C_Item.DoesItemContainSpec` (see [OneWoW_Bags/Docs/SEARCH_SYNTAX.md](../../OneWoW_Bags/Docs/SEARCH_SYNTAX.md) → "Spec & Class Eligibility").
 
 ### `#currentseason` (`isCurrentSeason`)
 

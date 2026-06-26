@@ -10,6 +10,40 @@ This addon automatically collects and stores detailed inventory data across all 
 
 ## What Data is Collected
 
+### Shared scanner & canonical slot record
+
+The Bags, Personal Bank, Warband Bank, and Guild Bank modules all scan the same
+kind of slot, so the slot iteration and the record builder live in one place:
+`Modules/ContainerScan.lua` (`ns.ContainerScan`).
+
+- `ContainerScan:BagSlots(bagID)` scans any `C_Container` bag (a backpack bag, a
+  personal-bank tab bag, or a warband tab bag — all the same API) and returns the
+  slot map (keyed by slotID), the used-slot count, and the bag's slot count.
+- `ContainerScan:GuildTabSlots(tabID)` scans a guild tab (the guild API; quality
+  is recovered from the link's color code, which the guild API doesn't expose).
+
+Both emit the **canonical slot record** — one uniform shape across every container:
+
+```lua
+{
+    itemID     = number,
+    itemLink   = string,
+    itemName   = string,
+    quality    = number,
+    itemLevel  = number,
+    texture    = number,
+    sellPrice  = number,   -- 0 if none
+    stackCount = number,
+    isLocked   = boolean,
+    isBound    = boolean,  -- nil for guild slots (the guild API can't report bind)
+}
+```
+
+Each container module keeps only its own outer structure — flat bags vs. tabs,
+per-tab slot accounting, money totals, and where it writes — and calls the shared
+scanner for the slots. Mail is the exception: its expiry math and accounting hooks
+mean it keeps its own write path and record shape (see the Mail module below).
+
 ### 1. Bags Module
 **File:** `Modules/Bags.lua`
 
@@ -73,7 +107,7 @@ This addon automatically collects and stores detailed inventory data across all 
 - Manual collection only (called by other addons)
 - Uses `C_Bank.FetchDepositedMoney` and `C_Bank.FetchPurchasedBankTabData`
 
-**Stored In:** `charData.warbandBank`
+**Stored In:** `OneWoW_AltTracker_Storage_DB.warbandBank` (account-level, not per-character)
 
 ### 4. Guild Bank Module
 **File:** `Modules/GuildBank.lua`
@@ -98,10 +132,10 @@ This addon automatically collects and stores detailed inventory data across all 
 - `GUILDBANKFRAME_OPENED` - collected when player opens guild bank (0.5s delay)
 - `GUILDBANK_UPDATE_TABS` - updates when tabs are switched (0.2s delay)
 
-**Stored In:** `charData.guildBank`
+**Stored In:** `OneWoW_AltTracker_Storage_DB.guildBanks[guildName]` (account-level, keyed by guild)
 
 **Special Behavior:**
-- Returns `nil` if character is not in a guild
+- Returns early without writing if the character is not in a guild
 
 ### 5. Mail Module
 **File:** `Modules/Mail.lua`
@@ -144,9 +178,11 @@ This addon automatically collects and stores detailed inventory data across all 
 ```lua
 OneWoW_AltTracker_Storage_DB = {
     characters = {
-        ["CharName-RealmName"] = {
-            -- Character data here
-        },
+        ["CharName-RealmName"] = { --[[ per-character data, below ]] },
+    },
+    warbandBank = { --[[ account-wide, below ]] },     -- shared across all characters
+    guildBanks = {
+        ["GuildName"] = { --[[ per-guild data, below ]] },
     },
     settings = {
         enableDataCollection = true,
@@ -160,71 +196,42 @@ OneWoW_AltTracker_Storage_DB = {
 }
 ```
 
-### Character Data Structure
+Each occupied slot holds the **canonical slot record** (see
+[Shared scanner & canonical slot record](#shared-scanner--canonical-slot-record)
+above); `SLOT` below is that shape.
+
+### Per-Character Data
 **Character Key Format:** `"CharacterName-RealmName"`
 
-Each character entry contains:
 ```lua
 characters["CharName-RealmName"] = {
+    -- Backpack + bags 0-5, flat (each bag is its own unit, keyed by bagID).
     bags = {
         [bagID] = {
             numSlots = number,
-            slots = {
-                [slotID] = {
-                    itemID = number,
-                    itemLink = string,
-                    itemName = string,
-                    quality = number,
-                    itemLevel = number,
-                    texture = number,
-                    stackCount = number,
-                    isLocked = boolean,
-                    isBound = boolean,
-                },
-            },
+            slots = { [slotID] = SLOT },
         },
     },
     bagsLastUpdate = timestamp,
 
+    -- Character bank, tabbed (tab N lives in container bag 5+N).
     personalBank = {
-        [bankBagID] = {
-            numSlots = number,
-            slots = { -- same structure as bags
+        tabs = {
+            [tabIndex] = {
+                items = { [slotID] = SLOT },
+                totalSlots = number,
+                usedSlots = number,
+                freeSlots = number,
             },
         },
     },
     personalBankLastUpdate = timestamp,
 
-    warbandBank = {
-        money = number,
-        tabs = {
-            [tabID] = {
-                name = string,
-                icon = number,
-                slots = { -- same structure as bags
-                },
-            },
-        },
-    },
-    warbandBankLastUpdate = timestamp,
-
-    guildBank = {
-        guildName = string,
-        money = number,
-        tabs = {
-            [tabID] = {
-                name = string,
-                icon = number,
-                canDeposit = boolean,
-                slots = { -- same structure as bags
-                },
-            },
-        },
-    },
-    guildBankLastUpdate = timestamp,
-
+    -- Mail keeps its own (non-canonical) attachment shape.
     mail = {
         numMails = number,
+        hasAnyMail = boolean,
+        hasNewMail = boolean,
         mails = {
             [mailID] = {
                 sender = string,
@@ -237,12 +244,15 @@ characters["CharName-RealmName"] = {
                 wasReturned = boolean,
                 canReply = boolean,
                 isGM = boolean,
+                collectedAt = timestamp,
                 items = {
                     [attachmentIndex] = {
                         name = string,
                         itemLink = string,
                         itemID = number,
+                        itemName = string,
                         texture = number,
+                        sellPrice = number,
                         count = number,
                         quality = number,
                         canUse = boolean,
@@ -255,6 +265,45 @@ characters["CharName-RealmName"] = {
 }
 ```
 
+### Account-Wide Data (DB root, not per-character)
+
+```lua
+-- Warband bank: shared across the whole account, written by whichever character
+-- last scanned it. Tabbed (up to 5; tab N lives in container bag 11+N).
+OneWoW_AltTracker_Storage_DB.warbandBank = {
+    money = number,
+    tabs = {
+        [tabIndex] = {
+            items = { [slotID] = SLOT },
+            totalSlots = number,
+            usedSlots = number,
+            freeSlots = number,
+        },
+    },
+    totalSlots = number,
+    totalFree = number,
+    totalUsed = number,
+    lastUpdateTime = timestamp,
+    lastUpdatedBy = "CharName-RealmName",
+}
+
+-- Guild banks: one entry per guild, keyed by guild name (up to 8 viewable tabs).
+OneWoW_AltTracker_Storage_DB.guildBanks["GuildName"] = {
+    guildName = string,
+    money = number,
+    tabs = {
+        [tabID] = {
+            slots = { [slotID] = SLOT },
+            name = string,
+            icon = number,
+            canDeposit = boolean,
+        },
+    },
+    lastUpdateTime = timestamp,
+    lastUpdatedBy = "CharName-RealmName",
+}
+```
+
 ## Data Collection Orchestration
 
 ### DataManager (Modules/DataManager.lua)
@@ -264,6 +313,22 @@ The DataManager orchestrates all data collection:
 2. **Event Handling** - Routes events to appropriate collection modules
 3. **Module Coordination** - Calls individual module collection functions
 4. **Settings Respect** - Only collects data if tracking is enabled for that module
+
+The DataManager is the **single owner of storage events** — it registers the bag /
+bank / guild / mail events once, and every other piece of the unit reacts to its
+post-write signal rather than registering its own copies of those events. After a
+`Collect*` writes to SavedVariables it fires `NotifyStorageChanged(scope, charKey)`
+(`scope = "bags"|"personal"|"warband"|"guild"|"mail"`). Subscribe with
+`RegisterStorageChanged(fn)` (also exposed on the public API); each listener is
+called in a `pcall` so one failure can't stop the rest.
+
+Two listeners use this today:
+
+- **ItemIndex** rebuilds its inverted index on the signal, so it reads
+  SavedVariables after the scanner has written them. (It keeps only its own
+  `PLAYER_EQUIPMENT_CHANGED` handler, since equipment is collected by the Character
+  unit, not the DataManager.)
+- The **AltTracker Items tab** re-renders on the signal (debounced, visibility-gated).
 
 ### Event Flow
 ```
@@ -307,11 +372,11 @@ if API then
         end
     end
 
-    -- Personal Bank
+    -- Personal Bank (tabbed)
     local personalBank = API.GetPersonalBank(charKey)
-    if personalBank then
-        for bankBagID, bagData in pairs(personalBank) do
-            print("Bank bag " .. bankBagID .. " has " .. bagData.numSlots .. " slots")
+    if personalBank and personalBank.tabs then
+        for tabIndex, tabData in pairs(personalBank.tabs) do
+            print("Bank tab " .. tabIndex .. ": " .. tabData.usedSlots .. "/" .. tabData.totalSlots)
         end
     end
 
@@ -346,16 +411,65 @@ if API then
 end
 ```
 
+## Query Layer (cross-alt gather / filter / group / duplicates)
+
+`Modules/Query.lua` is the read-side counterpart to the scanners. A container
+descriptor registry (bags / personal / warband / guild / mail, plus an `auction`
+descriptor that reads the Auctions sibling unit's API) drives a single `Gather`
+that normalizes every stored slot — whatever its on-disk shape — into a uniform
+`OneWoWItemInstance` list. Filtering, grouping, and the duplicate finder are passes
+on top, so callers gather once and filter cheaply.
+
+```lua
+local API = OneWoW_AltTracker_Storage_API
+
+-- Gather (expensive, scope-driven): normalized instances for the chosen sources.
+local insts = API.Gather({
+    chars = "all",                       -- "all" | "Char-Realm" | { keys... }
+    containers = { bags = true, personal = true, warband = true,
+                   guild = true, mail = true, auction = true },
+    guilds = nil,                        -- optional guild-name filter
+})
+
+-- Filter (cheap, predicate-driven): compiles a PredicateEngine expression once.
+local gear = API.Filter(insts, "#gear & ilvl>=600")
+
+-- Group by a key function (or "itemID" / "none").
+local groups = API.Group(insts, function(i) return "id:" .. i.itemID end)
+
+-- One-shot Gather -> Filter -> Group for non-interactive callers.
+local rollup = API.Query({ chars = "all", containers = { bags = true }, group = "itemID" })
+
+-- Duplicate finder: groups holding more than one copy under a "what counts as a
+-- duplicate" spec. Presets seed the spec; GetDefaultDupeSpec is the starting point.
+local dupes = API.FindDuplicates({
+    chars = "all",
+    containers = { bags = true, personal = true, warband = true, guild = true, mail = true },
+    dupe = API.GetDefaultDupeSpec(),
+})
+```
+
+Related API surface:
+
+| Function | Purpose |
+|---|---|
+| `API.Gather(scope) -> instances[]` | Normalize every occupied slot in scope into `OneWoWItemInstance`. |
+| `API.Filter(instances, predicate) -> instances[]` | Keep instances matching a PredicateEngine expression (compiled once). |
+| `API.Group(instances, keyFn) -> groups[]` | Bucket instances by a key function (nil key skips the instance). |
+| `API.Query(opts) -> instances[]\|groups[]` | One-shot gather → filter → group. |
+| `API.FindDuplicates(opts) -> groups[]` | Groups with ≥ `minCount` copies under a dupe spec, with the ilvl within-bucket pass. |
+| `API.GetEffectiveILvl(instance) -> number` | Effective item level for an instance (lazy, memoized on the record). |
+| `API.GetDupePresets()` / `API.GetDefaultDupeSpec()` | Named dupe specs / a fresh copy of the default spec. |
+| `API.RegisterStorageChanged(fn)` | Subscribe to the post-write `{ scope, charKey }` signal (see DataManager above). |
+
 ## When Data is Collected
 
 ### Automatic Collection
 - **Bags:** Every time bag contents change (`BAG_UPDATE_DELAYED`)
 - **Personal Bank:** When bank is opened (`BANKFRAME_OPENED`)
+- **Warband Bank:** When the account bank is opened (`BANKFRAME_OPENED`) and on bag changes while it is reachable (`BAG_UPDATE_DELAYED`)
 - **Guild Bank:** When guild bank is opened or tabs switch (`GUILDBANKFRAME_OPENED`, `GUILDBANK_UPDATE_TABS`)
 - **Mail:** When mailbox is opened or inbox updates (`MAIL_SHOW`, `MAIL_INBOX_UPDATE`)
-
-### Manual Collection
-- **Warband Bank:** Must be manually triggered (no automatic events)
 
 ### Login Collection
 - Automatically collects bag data on `PLAYER_LOGIN`
@@ -384,13 +498,15 @@ OneWoW_AltTracker_Storage/
 │   ├── API.lua            - Public API (global OneWoW_AltTracker_Storage_API)
 │   └── Core.lua           - Addon initialization and event handling
 ├── Modules/
+│   ├── ContainerScan.lua - Shared slot scanner + canonical record builder
 │   ├── Bags.lua          - Bag data collection
 │   ├── PersonalBank.lua  - Personal bank data collection
 │   ├── WarbandBank.lua   - Warband bank data collection
 │   ├── GuildBank.lua     - Guild bank data collection
 │   ├── Mail.lua          - Mail data collection
 │   ├── ItemIndex.lua     - Inverted item -> location index (tooltips)
-│   └── DataManager.lua   - Orchestrates all data collection
+│   ├── Query.lua         - Cross-alt gather / filter / group / duplicate finder
+│   └── DataManager.lua   - Orchestrates collection; owns storage events + signal
 ├── Locales/
 │   └── enUS.lua          - English localization
 ├── OneWoW_AltTracker_Storage.lua  - Main addon file (no public globals; API lives in Core/API.lua)
