@@ -1,23 +1,23 @@
 {
   "wow_docs_root": ".",
   "sources": {
-    "wow-ui-source": {
-      "url": "https://github.com/Gethe/wow-ui-source.git",
-      "branch": "live",
-      "scan_roots": [
-        "Interface/AddOns"
-      ],
-      "last_synced_commit": "dea5bd5d5f7adbbedcfa835738a7902da89cfe8c",
-      "last_synced_date": "2026-06-18"
-    },
     "blizzard-interface-resources": {
       "url": "https://github.com/Ketho/BlizzardInterfaceResources.git",
       "branch": "live",
       "scan_roots": [
         "Resources"
       ],
-      "last_synced_commit": "c8d1f943caa7a66ed42b6a74153008c29b76b395",
-      "last_synced_date": "2026-06-18"
+      "last_synced_commit": "774b2c550366245b5b7fa84688307fa891960632",
+      "last_synced_date": "2026-06-27"
+    },
+    "wow-ui-source": {
+      "url": "https://github.com/Gethe/wow-ui-source.git",
+      "branch": "live",
+      "scan_roots": [
+        "Interface/AddOns"
+      ],
+      "last_synced_commit": "b62f0b48c9358512f78e77695f1cf6c04f57397b",
+      "last_synced_date": "2026-06-27"
     }
   },
   "default_source": "wow-ui-source",
@@ -32,6 +32,49 @@
     "auction/AuctionHouseConstantsDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/AuctionHouseConstantsDocumentation.lua",
     "auction/AuctionHouseDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/AuctionHouseDocumentation.lua",
     "auction/AuctionHouseEnumsDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/AuctionHouseEnumsDocumentation.lua",
+    "auction/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionData.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionData.lua",
+    "auction/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseAuctionsFrame.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseAuctionsFrame.xml",
+    "auction/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseCategoriesList.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseCategoriesList.lua",
+    "auction/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseCategoriesList.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseCategoriesList.xml",
+    "auction/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseItemList.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseItemList.xml",
+    "auction/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseMultisell.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseMultisell.xml",
+    "auction/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseSharedTemplates.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseSharedTemplates.lua",
+    "auction/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseSharedTemplates.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseSharedTemplates.xml",
+    "auction/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseTab.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseTab.xml",
+    "auction/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseUtil.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Mainline/Blizzard_AuctionHouseUtil.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionData.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionData.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseAuctionsFrame.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseAuctionsFrame.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseBrowseResultsFrame.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseBrowseResultsFrame.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseBrowseResultsFrame.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseBrowseResultsFrame.xml",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseBuyDialog.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseBuyDialog.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseBuyDialog.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseBuyDialog.xml",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseCategoriesList.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseCategoriesList.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseCommoditiesBuyFrame.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseCommoditiesBuyFrame.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseCommoditiesBuyFrame.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseCommoditiesBuyFrame.xml",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseCommoditiesList.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseCommoditiesList.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseCommoditiesList.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseCommoditiesList.xml",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseCommoditiesSellFrame.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseCommoditiesSellFrame.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseCommoditiesSellFrame.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseCommoditiesSellFrame.xml",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseFrame.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseFrame.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseFrame.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseFrame.xml",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseItemBuyFrame.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseItemBuyFrame.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseItemBuyFrame.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseItemBuyFrame.xml",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseItemList.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseItemList.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseItemSellFrame.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseItemSellFrame.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseItemSellFrame.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseItemSellFrame.xml",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseMultisell.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseMultisell.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseSearchBar.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseSearchBar.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseSearchBar.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseSearchBar.xml",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseSellFrame.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseSellFrame.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseSellFrame.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseSellFrame.xml",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseSharedTemplates.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseSharedTemplates.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseSharedTemplates.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseSharedTemplates.xml",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseTab.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseTab.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseTableBuilder.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseTableBuilder.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseTableBuilder.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseTableBuilder.xml",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseUtil.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseUtil.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseWoWTokenFrame.lua": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseWoWTokenFrame.lua",
+    "auction/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseWoWTokenFrame.xml": "Interface/AddOns/Blizzard_AuctionHouseUI/Shared/Blizzard_AuctionHouseWoWTokenFrame.xml",
     "bags_bank_container/BagConstantsDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/BagConstantsDocumentation.lua",
     "bags_bank_container/BagIndexConstantsDocumentation.lua": "Interface/AddOns/Blizzard_APIDocumentationGenerated/BagIndexConstantsDocumentation.lua",
     "bags_bank_container/BagsBar.lua": "Interface/AddOns/Blizzard_MainMenuBarBagButtons/Shared/BagsBar.lua",
