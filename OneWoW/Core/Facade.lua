@@ -1,6 +1,6 @@
 -- Publishes the curated OneWoW orchestrator global (colon API + public services).
 -- Internal addon state lives on ns; only declared surfaces are wired here.
-local ADDON_NAME, ns = ...
+local _, ns = ...
 
 OneWoW = {}
 
@@ -30,6 +30,7 @@ local SERVICE_KEYS = {
     "ExternalTooltipSync",
     "ItemStatus",
     "OverlayIcons",
+    "AHItemKeys",
     "ItemPrices",
     "RecipeKnownUtil",
     "UpgradeDetection",

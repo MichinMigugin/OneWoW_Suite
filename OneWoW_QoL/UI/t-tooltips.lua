@@ -1276,65 +1276,18 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     ahIntro:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     yOffset = yOffset - ahIntro:GetStringHeight() - 8
 
-    local ahSource = valSettings.ahPriceSource or "onewow"
-    local ahSourceLabel
-    if ahSource == "auctionator" then
-        ahSourceLabel = L["TIPS_VALUE_AH_SOURCE_AUCTIONATOR"]
-    elseif ahSource == "tsm" then
-        ahSourceLabel = L["TIPS_VALUE_AH_SOURCE_TSM"]
-    else
-        ahSourceLabel = L["TIPS_VALUE_AH_SOURCE_ONEWOW"]
-    end
-
-    local ahSrcLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    ahSrcLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    ahSrcLabel:SetJustifyH("LEFT")
-    ahSrcLabel:SetText(L["TIPS_VALUE_AH_SOURCE_LABEL"])
-    ahSrcLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    yOffset = yOffset - ahSrcLabel:GetStringHeight() - 4
-
-    local ahSrcDrop, ahSrcText = OneWoW_GUI:CreateDropdown(dsc, {
-        width = 220,
-        height = 26,
-        text = ahSourceLabel,
-    })
-    ahSrcDrop:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    OneWoW_GUI:AttachFilterMenu(ahSrcDrop, {
-        searchable = false,
-        buildItems = function()
-            return {
-                { value = "onewow", text = L["TIPS_VALUE_AH_SOURCE_ONEWOW"] },
-                { value = "auctionator", text = L["TIPS_VALUE_AH_SOURCE_AUCTIONATOR"] },
-                { value = "tsm", text = L["TIPS_VALUE_AH_SOURCE_TSM"] },
-            }
-        end,
-        onSelect = function(value, text)
-            Registry:SetSetting("tooltips", "value", "ahPriceSource", value)
-            ahSrcText:SetText(text)
-        end,
-        getActiveValue = function() return valSettings.ahPriceSource or "onewow" end,
-    })
-    yOffset = yOffset - (32 + fontOffset)
-
-    local ahSrcDesc = OneWoW_GUI:CreateFS(dsc, 10)
-    ahSrcDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    ahSrcDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    ahSrcDesc:SetJustifyH("LEFT")
-    ahSrcDesc:SetWordWrap(true)
-    ahSrcDesc:SetSpacing(2)
-    ahSrcDesc:SetText(L["TIPS_VALUE_AH_SOURCE_DESC"])
-    ahSrcDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    yOffset = yOffset - ahSrcDesc:GetStringHeight() - 10
+    local ahSourceWidgets = OneWoW.ItemPrices:AttachAHSourceControl(dsc, { yOffset = yOffset, width = 220 })
+    yOffset = ahSourceWidgets.bottomY
 
     local function refreshAhSourceRow(enabled, ahOn)
         local on = enabled and ahOn
         if on then
-            ahSrcLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            ahSourceWidgets.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         else
-            ahSrcLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            ahSourceWidgets.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
-        ahSrcDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        ahSrcDrop:SetAlpha(on and 1 or 0.45)
+        ahSourceWidgets.desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        ahSourceWidgets.dropdown:SetAlpha(on and 1 or 0.45)
     end
     table.insert(allRefreshFuncs, function(enabled) refreshAhSourceRow(enabled, valSettings.showAHValue ~= false) end)
     refreshAhSourceRow(isEnabled, valSettings.showAHValue ~= false)

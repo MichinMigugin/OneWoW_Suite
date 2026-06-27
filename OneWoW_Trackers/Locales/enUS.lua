@@ -40,8 +40,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["FARM_VAL_AH_ONLY"]                = "Auction House unit price only (TSM off).",
     ["FARM_VAL_TSM_MISSING"]            = "TSM enabled but TSM API not available; using Auction House only.",
     ["FARM_VAL_NO_AH_TSM"]              = "Auction House unit price off; TSM applies when available.",
-    ["FARM_AH_ONEWOW"]                  = "OneWoW scan data",
-    ["FARM_AH_AUCTIONATOR"]             = "Auctionator",
     ["FARM_SHOW_AH"]                    = "Use Auction House price",
     ["FARM_USE_TSM"]                    = "Prefer TSM price when available",
     ["FARM_AH_SOURCE"]                  = "AH data:",

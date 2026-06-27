@@ -327,4 +327,10 @@ ns.Locale:RegisterShared("ptBR", {
     ["TOAST_NEW_RECIPE"] = "Nova receita!",
     ["TOAST_NEW_TMOG"] = "Nova aparência!",
     ["TOAST_INSTANCE_CLICK"] = "Clique para ver no Diário",
+    -- AH price source (shared)
+    ["SHARED_AH_SOURCE_LABEL"] = "Dados de preço da CL",
+    ["SHARED_AH_SOURCE_DESC"] = "A varredura do OneWoW armazena os preços em AltTracker - Auctions. O Auctionator usa seu próprio banco de dados quando você varre com esse addon. O TradeSkillMaster usa a cadeia de preço TSM definida abaixo (padrão dbmarket).",
+    ["SHARED_AH_SOURCE_ONEWOW"] = "Varredura de CL do OneWoW",
+    ["SHARED_AH_SOURCE_AUCTIONATOR"] = "Auctionator",
+    ["SHARED_AH_SOURCE_TSM"] = "TradeSkillMaster",
 })

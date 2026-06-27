@@ -335,4 +335,11 @@ ns.Locale:RegisterShared("enUS", {
     ["TOAST_NEW_RECIPE"] = "New Recipe!",
     ["TOAST_NEW_TMOG"] = "New Appearance!",
     ["TOAST_INSTANCE_CLICK"] = "Click to view in Journal",
+
+  -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
+    ["SHARED_AH_SOURCE_LABEL"] = "AH price data",
+    ["SHARED_AH_SOURCE_DESC"] = "OneWoW scan stores prices in AltTracker - Auctions. Auctionator uses its own database when you scan with that addon. TradeSkillMaster uses the TSM price string set below (default dbmarket).",
+    ["SHARED_AH_SOURCE_ONEWOW"] = "OneWoW AH scan",
+    ["SHARED_AH_SOURCE_AUCTIONATOR"] = "Auctionator",
+    ["SHARED_AH_SOURCE_TSM"] = "TradeSkillMaster",
 })

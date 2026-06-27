@@ -327,4 +327,10 @@ ns.Locale:RegisterShared("koKR", {
     ["TOAST_NEW_RECIPE"] = "새 제조법!",
     ["TOAST_NEW_TMOG"] = "새 외형!",
     ["TOAST_INSTANCE_CLICK"] = "클릭하여 저널에서 보기",
+    -- AH price source (shared)
+    ["SHARED_AH_SOURCE_LABEL"] = "AH 가격 데이터",
+    ["SHARED_AH_SOURCE_DESC"] = "OneWoW 스캔은 AltTracker - Auctions에 가격을 저장합니다. Auctionator는 해당 애드온으로 스캔할 때 자체 데이터베이스를 사용합니다. TradeSkillMaster는 아래 설정한 TSM 가격 문자열(기본 dbmarket)을 사용합니다.",
+    ["SHARED_AH_SOURCE_ONEWOW"] = "OneWoW AH 스캔",
+    ["SHARED_AH_SOURCE_AUCTIONATOR"] = "Auctionator",
+    ["SHARED_AH_SOURCE_TSM"] = "TradeSkillMaster",
 })

@@ -229,15 +229,25 @@ end
 
 ### AH price cache and full scan
 
-`StartFullScan`, `StopFullScan`, `CanFullScan`, `GetByItemID`, and `GetCharacters` live on
-the same `_API` table (see `Core/API.lua`).
+`StartFullScan`, `StopFullScan`, `CanFullScan`, `GetPrice`, `GetPriceForSpecies`,
+`GetScanMeta`, `StartTargetedScan`, and `GetCharacters` live on the same `_API`
+table (see `Core/API.lua`).
 
-- **Population:** Catalog Item Search exposes the SCAN AH button, which calls
-  `StartFullScan` (`FullAHScanner` replicate scan). Results are written to the
-  `OneWoW_AHPrices` SavedVariable (14-day TTL purge on login).
-- **Consumption:** AltTracker Items (and other suite units) read prices through
-  `OneWoW.ItemPrices:GetUnitAHPrice`, which routes to `GetByItemID` for the
-  default OneWoW source, or to Auctionator/TSM when configured in QoL → Tooltips → Value.
+- **Population:** The AH Prices sidebar panel (`UI/AHPricesPanel.lua`) on
+  `AuctionHouseFrameTabSideBar` calls `StartFullScan` (`AHReplicateScanner`
+  replicate scan). Optional auto-scan on AH open is controlled by
+  `autoScanOnOpen` (default off). Results are written to the realm-scoped
+  `OneWoW_AHPrices` SavedVariable v2 schema (14-day TTL purge on login; v1
+  data discarded).
+- **Item keys:** `OneWoW.AHItemKeys` (core) serializes Blizzard `ItemKey`
+  tables to storage keys (`id:ilvl:suffix:species`) for gear, pets, and
+  commodities.
+- **Consumption:** AltTracker Items, QoL tooltips, Trackers farm value, and
+  Catalog item search read prices through `OneWoW.ItemPrices:GetUnitAHPrice`
+  (link-aware for the OneWoW source), or Auctionator/TSM when configured in
+  the shared AH price source dropdown (`SHARED_AH_SOURCE_*` locale keys).
+- **Phase 2:** `AHTargetedScanner` queues `SearchForItemKeys` lookups with
+  throttling for on-demand price refresh.
 
 ## Architecture
 
@@ -268,17 +278,23 @@ Each module is self-contained with:
 OneWoW_AltTracker_Auctions/
 ├── OneWoW_AltTracker_Auctions.toc
 ├── OneWoW_AltTracker_Auctions.lua (no public globals; API lives in Core/API.lua)
-├── README.md (This file)
-├── Locales/
-│   └── enUS.lua
+├── Docs/
+│   └── ARCHITECTURE.md (this file)
+├── Locales/ (11 locales)
 ├── Core/
-│   ├── Database.lua (Database initialization, character management)
+│   ├── Database.lua (character DB + AH price cache defaults)
+│   ├── AHPriceCache.lua (realm-scoped OneWoW_AHPrices v2)
+│   ├── AHScanCoordinator.lua (scan lock, cooldown, AH close hooks)
 │   ├── API.lua (Public API — global OneWoW_AltTracker_Auctions_API)
-│   └── Core.lua (Addon initialization, event setup)
+│   └── Core.lua (Addon initialization, scanner/panel wiring)
+├── UI/
+│   └── AHPricesPanel.lua (AH sidebar tab + scan controls)
 └── Modules/
+    ├── AHReplicateScanner.lua (full replicate scan)
+    ├── AHTargetedScanner.lua (SearchForItemKeys queue, phase 2)
     ├── ActiveAuctions.lua (Auction data collection)
     ├── ActiveBids.lua (Bid data collection)
-    └── DataManager.lua (Event orchestration)
+    └── DataManager.lua (Event orchestration, auto-scan hook)
 ```
 
 ## Dependencies

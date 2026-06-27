@@ -1,25 +1,26 @@
 local _, ns = ...
 local format = string.format
 
+local OneWoW_GUI = OneWoW_GUI
+
 ns.ItemPrices = ns.ItemPrices or {}
 local IP = ns.ItemPrices
 
 local CALLER_ID = "OneWoW"
+local Registry = ns.SettingsFeatureRegistry
 
 local function GetValueCfg()
-    return ns.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "value")
+    return Registry:GetFeatureSettings("tooltips", "value")
+end
+
+local function GetSharedL()
+    return ns.Locale:GetTable("shared")
 end
 
 function IP:GetValueCfg()
     return GetValueCfg()
 end
 
---- Resolve a TSM custom price for an item, independent of any UI toggle.
---- Used both by the optional TSM tooltip line and the TSM AH price source.
----@param itemLink string|nil
----@param priceStr string|nil TSM custom price string; defaults to "dbmarket"
----@return number|nil price in copper
----@return string|nil priceStr the price string actually used
 local function ResolveTSMPrice(itemLink, priceStr)
     if not (itemLink and TSM_API and TSM_API.ToItemString and TSM_API.GetCustomPriceValue) then
         return nil, nil
@@ -52,10 +53,158 @@ function IP:ShouldOfferOneWoWAHScanUI()
     return not self:IsAuctionatorAHSourceActive() and not self:IsTSMAHSourceActive()
 end
 
+function IP:BuildAHSourceMenuItems()
+    local L = GetSharedL()
+    local items = {
+        { value = "onewow", text = L["SHARED_AH_SOURCE_ONEWOW"] },
+        { value = "auctionator", text = L["SHARED_AH_SOURCE_AUCTIONATOR"] },
+        { value = "tsm", text = L["SHARED_AH_SOURCE_TSM"] },
+    }
+    return items
+end
+
+function IP:GetAHSourceLabel(source)
+    local L = GetSharedL()
+    if source == "auctionator" then
+        return L["SHARED_AH_SOURCE_AUCTIONATOR"]
+    end
+    if source == "tsm" then
+        return L["SHARED_AH_SOURCE_TSM"]
+    end
+    return L["SHARED_AH_SOURCE_ONEWOW"]
+end
+
+-- Single source of truth. SetSetting persists the value and fires the registry's
+-- Notify, which drives every BindAHSourceWatcher subscriber (AH panel, QoL
+-- Tooltips/Value, Trackers farm) to re-sync -- so no caller needs an after-hook.
+function IP:SetAHPriceSource(value)
+    Registry:SetSetting("tooltips", "value", "ahPriceSource", value)
+end
+
+-- Live two-way sync for AH source pickers. The setting is the single source of
+-- truth; SetSetting already broadcasts via the registry's Notify. Each attached
+-- control subscribes while visible and re-applies the current value, so the AH
+-- panel, the QoL Tooltips/Value tab, and the Trackers farm picker all update the
+-- moment the source changes anywhere -- no window reopen required. Listeners are
+-- registered on show and dropped on hide so they never accumulate or touch dead
+-- frames.
+local sourceWatcherCount = 0
+local function BindAHSourceWatcher(frame, refresh)
+    sourceWatcherCount = sourceWatcherCount + 1
+    local id = "ItemPrices.AHSourceWatcher." .. sourceWatcherCount
+    local function listener(_, _, key)
+        if key == nil or key == "ahPriceSource" then
+            refresh()
+        end
+    end
+    frame:HookScript("OnShow", function()
+        Registry:RegisterListener(id, listener)
+        refresh()
+    end)
+    frame:HookScript("OnHide", function()
+        Registry:RegisterListener(id, nil)
+    end)
+    -- Already-visible frames (built shown) miss OnShow; register now for live
+    -- changes. Skip the immediate refresh -- the caller has already rendered its
+    -- initial state and may not be fully built yet.
+    if frame:IsShown() then
+        Registry:RegisterListener(id, listener)
+    end
+end
+
+function IP:AttachAHSourceMenu(btn, opts)
+    local options = opts or {}
+    OneWoW_GUI:AttachFilterMenu(btn, {
+        searchable = false,
+        buildItems = function()
+            return self:BuildAHSourceMenuItems()
+        end,
+        onSelect = function(value)
+            self:SetAHPriceSource(value)
+        end,
+        getActiveValue = function()
+            local v = GetValueCfg()
+            return (v and v.ahPriceSource) or "onewow"
+        end,
+    })
+    if options.onSelect then
+        BindAHSourceWatcher(btn, function()
+            options.onSelect((GetValueCfg().ahPriceSource) or "onewow")
+        end)
+    end
+end
+
+---@param parent Frame
+---@param opts table? yOffset, width, onSelect
+---@return table widgets label, dropdown, desc, and bottomY fields
+function IP:AttachAHSourceControl(parent, opts)
+    local L = GetSharedL()
+    local options = opts or {}
+    local yOffset = options.yOffset or 0
+    local width = options.width or 220
+
+    local label = OneWoW_GUI:CreateFS(parent, 12)
+    label:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
+    label:SetJustifyH("LEFT")
+    label:SetText(L["SHARED_AH_SOURCE_LABEL"])
+    label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    yOffset = yOffset - label:GetStringHeight() - 4
+
+    local valSettings = GetValueCfg()
+    local ahSource = valSettings.ahPriceSource or "onewow"
+    local drop, dropText = OneWoW_GUI:CreateDropdown(parent, {
+        width = width,
+        height = 26,
+        text = self:GetAHSourceLabel(ahSource),
+    })
+    drop:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
+
+    OneWoW_GUI:AttachFilterMenu(drop, {
+        searchable = false,
+        buildItems = function()
+            return self:BuildAHSourceMenuItems()
+        end,
+        onSelect = function(value)
+            self:SetAHPriceSource(value)
+        end,
+        getActiveValue = function()
+            local v = GetValueCfg()
+            return (v and v.ahPriceSource) or "onewow"
+        end,
+    })
+
+    -- Keep this dropdown's text (and any consumer-supplied onSelect) in step with
+    -- the shared setting whenever it changes here or in another window.
+    local function applyValue()
+        local value = (GetValueCfg().ahPriceSource) or "onewow"
+        dropText:SetText(self:GetAHSourceLabel(value))
+        if options.onSelect then options.onSelect(value) end
+    end
+    BindAHSourceWatcher(drop, applyValue)
+
+    yOffset = yOffset - 32
+
+    local desc = OneWoW_GUI:CreateFS(parent, 10)
+    desc:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
+    desc:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
+    desc:SetJustifyH("LEFT")
+    desc:SetWordWrap(true)
+    desc:SetSpacing(2)
+    desc:SetText(L["SHARED_AH_SOURCE_DESC"])
+    desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    yOffset = yOffset - desc:GetStringHeight() - 8
+
+    return {
+        label = label,
+        dropdown = drop,
+        desc = desc,
+        bottomY = yOffset,
+    }
+end
+
 function IP:GetUnitAHPriceForSpecies(speciesID, displayName)
     if not speciesID then return nil, nil end
     local v = GetValueCfg()
-    -- Auctionator and TSM resolve by item link, so build a battlepet link for them.
     local needsLink = v.ahPriceSource == "tsm"
         or (v.ahPriceSource == "auctionator" and C_AddOns.IsAddOnLoaded("Auctionator")
             and Auctionator and Auctionator.API and Auctionator.API.v1)
@@ -63,6 +212,17 @@ function IP:GetUnitAHPriceForSpecies(speciesID, displayName)
         local nm = displayName or "Pet"
         local link = format("|cffffffff|Hbattlepet:%d:1:3:1:0:0:0:0:0|h[%s]|h|r", speciesID, nm)
         return self:GetUnitAHPrice(82800, link)
+    end
+    if OneWoW_AltTracker_Auctions_API and OneWoW_AltTracker_Auctions_API.GetPriceForSpecies then
+        local row = OneWoW_AltTracker_Auctions_API.GetPriceForSpecies(speciesID)
+        if row and row.price and row.price > 0 then
+            return row.price, {
+                source = "onewow",
+                timestamp = row.timestamp,
+                dbKey = row.dbKey,
+                ageDays = nil,
+            }
+        end
     end
     return self:GetUnitAHPrice(82800, nil)
 end
@@ -123,14 +283,16 @@ function IP:GetUnitAHPrice(itemID, itemLink)
         return nil, nil
     end
 
-    local row = OneWoW_AltTracker_Auctions_API
-        and OneWoW_AltTracker_Auctions_API.GetByItemID(itemID)
-    if row and row.price and row.price > 0 then
-        return row.price, {
-            source = "onewow",
-            timestamp = row.timestamp,
-            ageDays = nil,
-        }
+    if OneWoW_AltTracker_Auctions_API and OneWoW_AltTracker_Auctions_API.GetPrice then
+        local row = OneWoW_AltTracker_Auctions_API.GetPrice(itemID, itemLink)
+        if row and row.price and row.price > 0 then
+            return row.price, {
+                source = "onewow",
+                timestamp = row.timestamp,
+                dbKey = row.dbKey,
+                ageDays = nil,
+            }
+        end
     end
     return nil, nil
 end
@@ -162,5 +324,11 @@ OneWoW_ItemPricesAPI = {
     end,
     IsTSMAHSourceActive = function()
         return IP:IsTSMAHSourceActive()
+    end,
+    ShouldOfferOneWoWAHScanUI = function()
+        return IP:ShouldOfferOneWoWAHScanUI()
+    end,
+    GetAHSourceLabel = function(source)
+        return IP:GetAHSourceLabel(source)
     end,
 }

@@ -63,6 +63,10 @@ function DataManager:HandleEvent(event, ...)
     if event == "AUCTION_HOUSE_SHOW" then
         auctionHouseOpen = true
         self:ScheduleScan(60)
+        if ns.AHPricesPanel then
+            ns.AHPricesPanel:OnAuctionHouseOpen()
+            ns.AHPricesPanel:TryAutoScan()
+        end
 
     elseif event == "AUCTION_HOUSE_CLOSED" then
         auctionHouseOpen = false
@@ -94,6 +98,10 @@ function DataManager:HandleEvent(event, ...)
             auctionHouseOpen = true
             C_AuctionHouse.QueryOwnedAuctions({})
             self:ScheduleScan(60)
+            if ns.AHPricesPanel then
+                ns.AHPricesPanel:OnAuctionHouseOpen()
+                ns.AHPricesPanel:TryAutoScan()
+            end
         end
 
     elseif event == "AUCTION_HOUSE_SHOW_NOTIFICATION" then

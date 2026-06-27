@@ -31,6 +31,7 @@ present — no existence guard.
 - [Dropdowns](#dropdowns)
 - [Icon Skinning System](#icon-skinning-system)
 - [Additional Components](#additional-components)
+- [Side Bar Tabs](#side-bar-tabs)
 - [Utility](#utility)
 - [Available Backdrop Templates](#available-backdrop-templates)
 - [GUI Dimension Defaults](#gui-dimension-defaults)
@@ -1240,6 +1241,42 @@ OneWoW core namespace, not in this library: `OneWoW.Format.FormatNumber` /
 `OneWoW.Restriction.IsAddonRestricted`, `OneWoW:GetAddonVersion`,
 `OneWoW:GetExpansionName` (see `OneWoW/Core/Format.lua`, `Restriction.lua`,
 `Util.lua`).
+
+---
+
+## Side Bar Tabs
+
+Shared helpers for vertical icon tabs docked to the right edge of a host frame
+(e.g. `MerchantFrame`, `AuctionHouseFrame`). Used by QoL vendor panel and
+`OneWoW_AltTracker_Auctions` AH Prices panel.
+
+**Source:** `OneWoW/GUI/SideBarTabs.lua`
+
+```lua
+local OneWoW_GUI = OneWoW_GUI
+
+local sidebar = OneWoW_GUI:EnsureSideBar(MerchantFrame, "OneWoWMerchantSideBar")
+
+local tab = OneWoW_GUI:CreateSideBarTab(sidebar, {
+    icon = "Interface\\Icons\\INV_Misc_Bag_08",
+    tooltip = "My panel",
+    onToggle = function(show)
+        myPanel:SetShown(show)
+    end,
+    repositionOpts = {
+        hostFrame = MerchantFrame,
+        dockedPanel = myPanel,
+        anchoredTab = tab,
+        defaultHost = MerchantFrame,
+    },
+})
+
+OneWoW_GUI:RepositionSideBar(sidebar, repositionOpts)
+```
+
+- **`EnsureSideBar(host, globalName)`** — returns the sidebar frame (`sidebar.Tabs`, `sidebar.selTab`).
+- **`CreateSideBarTab(sidebar, opts)`** — returns `tab, tabIndex`; exclusive selection via `DeselectOtherSideBarTabs`.
+- **`RepositionSideBar(sidebar, opts)`** — anchors to `dockedPanel` when shown, else `hostFrame`.
 
 ---
 

@@ -41,8 +41,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["FARM_VAL_AH_ONLY"]               = "Apenas preço unitário da CL (TSM desativado).",
     ["FARM_VAL_TSM_MISSING"]           = "TSM ativado, mas a API do TSM não está disponível; usando apenas a casa de leilões.",
     ["FARM_VAL_NO_AH_TSM"]             = "Preço unitário da CL desativado; o TSM se aplica quando disponível.",
-    ["FARM_AH_ONEWOW"]                  = "Dados de varredura do OneWoW",
-    ["FARM_AH_AUCTIONATOR"]            = "Auctionator",
     ["FARM_SHOW_AH"]                    = "Usar preço da casa de leilões",
     ["FARM_USE_TSM"]                    = "Preferir o preço do TSM quando disponível",
     ["FARM_AH_SOURCE"]                  = "Dados da CL:",

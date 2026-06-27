@@ -41,8 +41,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["FARM_VAL_AH_ONLY"]               = "경매장 개당 가격 전용 (TSM 꺼짐).",
     ["FARM_VAL_TSM_MISSING"]           = "TSM이 활성화되었지만 TSM API를 사용할 수 없습니다. 경매장만 사용합니다.",
     ["FARM_VAL_NO_AH_TSM"]             = "경매장 개당 가격 꺼짐. 가능할 때 TSM이 적용됩니다.",
-    ["FARM_AH_ONEWOW"]                  = "OneWoW 스캔 데이터",
-    ["FARM_AH_AUCTIONATOR"]            = "Auctionator",
     ["FARM_SHOW_AH"]                    = "경매장 가격 사용",
     ["FARM_USE_TSM"]                    = "가능할 때 TSM 가격 우선",
     ["FARM_AH_SOURCE"]                  = "경매장 데이터:",

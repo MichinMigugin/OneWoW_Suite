@@ -543,23 +543,11 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     end)
     openOwBtn:SetScript("OnLeave", GameTooltip_Hide)
 
-    OneWoW_GUI:AttachFilterMenu(ahSrcBtn, {
-        buildItems = function()
-            local t = { { value = "onewow", text = L["FARM_AH_ONEWOW"] } }
-            if C_AddOns.IsAddOnLoaded("Auctionator") then
-                tinsert(t, { value = "auctionator", text = L["FARM_AH_AUCTIONATOR"] })
-            end
-            return t
-        end,
-        onSelect = function(value)
-            OneWoW.SettingsFeatureRegistry:SetSetting("tooltips", "value", "ahPriceSource", value)
+    OneWoW.ItemPrices:AttachAHSourceMenu(ahSrcBtn, {
+        onSelect = function()
             RefreshFarmPricingUI()
             RedrawDetailRows()
             RefreshAllFarmWindows()
-        end,
-        getActiveValue = function()
-            local v = API and API.GetValueCfg and API.GetValueCfg()
-            return (v and v.ahPriceSource) or "onewow"
         end,
     })
 
@@ -763,7 +751,7 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
 
         srcLine1:SetText(format(L["FARM_VAL_LINE1"], summary))
         if showAH then
-            local supplier = (v.ahPriceSource == "auctionator") and (L["FARM_AH_AUCTIONATOR"]) or (L["FARM_AH_ONEWOW"])
+            local supplier = OneWoW.ItemPrices:GetAHSourceLabel(v.ahPriceSource or "onewow")
             srcLine2:SetText(format(L["FARM_VAL_LINE2"], supplier))
             srcLine2:Show()
         elseif useTSM then
@@ -776,7 +764,7 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
 
         cbShowAH:SetChecked(showAH)
         cbUseTSM:SetChecked(useTSM)
-        local ahLbl = (v.ahPriceSource == "auctionator") and (L["FARM_AH_AUCTIONATOR"]) or (L["FARM_AH_ONEWOW"])
+        local ahLbl = OneWoW.ItemPrices:GetAHSourceLabel(v.ahPriceSource or "onewow")
         ahSrcBtn:SetFitText(format("%s: %s", L["FARM_AH_SOURCE"], ahLbl))
     end
 

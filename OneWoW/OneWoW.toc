@@ -41,6 +41,7 @@ GUI\Display.lua
 GUI\Controls.lua
 GUI\EditBoxes.lua
 GUI\Layout.lua
+GUI\SideBarTabs.lua
 GUI\Panels.lua
 GUI\Icons.lua
 GUI\ReorderDrag.lua
@@ -101,6 +102,7 @@ Core\FirstRunWizard.lua
 # overlay engine that consumes them; overlay-icons + upgrade-detection before
 # overlay-engine; overlay-engine before itemstatus.
 Services\PredicateEngine.lua
+Services\AHItemKeys.lua
 Services\ItemPrices.lua
 Services\RecipeKnownUtil.lua
 Services\overlay-icons.lua

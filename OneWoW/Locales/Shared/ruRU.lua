@@ -327,4 +327,10 @@ ns.Locale:RegisterShared("ruRU", {
     ["TOAST_NEW_RECIPE"] = "Новый рецепт!",
     ["TOAST_NEW_TMOG"] = "Новый облик!",
     ["TOAST_INSTANCE_CLICK"] = "Нажмите, чтобы посмотреть в журнале",
+    -- AH price source (shared)
+    ["SHARED_AH_SOURCE_LABEL"] = "Данные цены аукциона",
+    ["SHARED_AH_SOURCE_DESC"] = "Сканирование OneWoW хранит цены в AltTracker - Auctions. Auctionator использует свою базу данных, когда вы сканируете этим аддоном. TradeSkillMaster использует строку цены TSM, заданную ниже (по умолчанию dbmarket).",
+    ["SHARED_AH_SOURCE_ONEWOW"] = "Сканирование аукциона OneWoW",
+    ["SHARED_AH_SOURCE_AUCTIONATOR"] = "Auctionator",
+    ["SHARED_AH_SOURCE_TSM"] = "TradeSkillMaster",
 })

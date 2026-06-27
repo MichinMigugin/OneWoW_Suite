@@ -41,8 +41,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["FARM_VAL_AH_ONLY"]               = "Nur AH-Einzelpreis (TSM aus).",
     ["FARM_VAL_TSM_MISSING"]           = "TSM aktiviert, aber TSM-API nicht verfügbar; es wird nur das Auktionshaus verwendet.",
     ["FARM_VAL_NO_AH_TSM"]             = "AH-Einzelpreis aus; TSM wird angewendet, wenn verfügbar.",
-    ["FARM_AH_ONEWOW"]                  = "OneWoW-Scandaten",
-    ["FARM_AH_AUCTIONATOR"]            = "Auctionator",
     ["FARM_SHOW_AH"]                    = "Auktionshauspreis verwenden",
     ["FARM_USE_TSM"]                    = "TSM-Preis bevorzugen, wenn verfügbar",
     ["FARM_AH_SOURCE"]                  = "AH-Daten:",

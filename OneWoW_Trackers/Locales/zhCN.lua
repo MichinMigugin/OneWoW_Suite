@@ -41,8 +41,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["FARM_VAL_AH_ONLY"]               = "仅使用拍卖行单价（TSM 已关闭）。",
     ["FARM_VAL_TSM_MISSING"]           = "已启用 TSM，但 TSM API 不可用；仅使用拍卖行。",
     ["FARM_VAL_NO_AH_TSM"]             = "拍卖行单价已关闭；可用时应用 TSM。",
-    ["FARM_AH_ONEWOW"]                  = "OneWoW 扫描数据",
-    ["FARM_AH_AUCTIONATOR"]            = "Auctionator",
     ["FARM_SHOW_AH"]                    = "使用拍卖行价格",
     ["FARM_USE_TSM"]                    = "可用时优先使用 TSM 价格",
     ["FARM_AH_SOURCE"]                  = "拍卖行数据：",

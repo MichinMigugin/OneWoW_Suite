@@ -327,4 +327,10 @@ ns.Locale:RegisterShared("frFR", {
     ["TOAST_NEW_RECIPE"] = "Nouvelle recette !",
     ["TOAST_NEW_TMOG"] = "Nouvelle apparence !",
     ["TOAST_INSTANCE_CLICK"] = "Cliquez pour voir dans le Journal",
+    -- AH price source (shared)
+    ["SHARED_AH_SOURCE_LABEL"] = "Données de prix HV",
+    ["SHARED_AH_SOURCE_DESC"] = "Le scan OneWoW stocke les prix dans AltTracker - Auctions. Auctionator utilise sa propre base de données quand vous scannez avec cet addon. TradeSkillMaster utilise la chaîne de prix TSM définie ci-dessous (par défaut dbmarket).",
+    ["SHARED_AH_SOURCE_ONEWOW"] = "Scan HV OneWoW",
+    ["SHARED_AH_SOURCE_AUCTIONATOR"] = "Auctionator",
+    ["SHARED_AH_SOURCE_TSM"] = "TradeSkillMaster",
 })

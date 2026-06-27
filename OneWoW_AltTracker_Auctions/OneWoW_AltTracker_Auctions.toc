@@ -31,17 +31,19 @@ Locales\itIT.lua
 
 # Core
 Core\Database.lua
+Core\AHPriceCache.lua
+Core\AHScanCoordinator.lua
 Core\API.lua
 Core\Core.lua
 
+# UI
+UI\AHPricesPanel.lua
+
 # Data Collection Modules
+Modules\AHReplicateScanner.lua
+Modules\AHTargetedScanner.lua
 Modules\ActiveAuctions.lua
 Modules\ActiveBids.lua
-
-# AH price cache (full-market replicate scan)
-Modules\FullAHScanner.lua
-
-# Data Manager (orchestrates all modules)
 Modules\DataManager.lua
 
 # Main Addon File

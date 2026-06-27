@@ -41,8 +41,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["FARM_VAL_AH_ONLY"]               = "Prix unitaire de l'HV uniquement (TSM désactivé).",
     ["FARM_VAL_TSM_MISSING"]           = "TSM activé mais l'API TSM est indisponible ; utilisation de l'hôtel des ventes uniquement.",
     ["FARM_VAL_NO_AH_TSM"]             = "Prix unitaire de l'HV désactivé ; TSM s'applique quand disponible.",
-    ["FARM_AH_ONEWOW"]                  = "Données de scan OneWoW",
-    ["FARM_AH_AUCTIONATOR"]            = "Auctionator",
     ["FARM_SHOW_AH"]                    = "Utiliser le prix de l'hôtel des ventes",
     ["FARM_USE_TSM"]                    = "Préférer le prix TSM si disponible",
     ["FARM_AH_SOURCE"]                  = "Données HV :",

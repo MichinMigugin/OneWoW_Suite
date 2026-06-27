@@ -89,6 +89,13 @@ local EXPANSION_PRIORITY = {
     "Cataclysm", "WrathoftheLichKing", "BurningCrusade", "Classic",
 }
 
+-- The localized item name is embedded in every hyperlink's "[Name]" segment, so
+-- it can be recovered offline without touching the live item cache.
+local function NameFromLink(itemLink)
+    if type(itemLink) ~= "string" then return nil end
+    return itemLink:match("%[(.-)%]")
+end
+
 local function GetOwnedItems()
     local owned = {}
     local storageAPI = OneWoW_AltTracker_Storage_API
@@ -97,12 +104,19 @@ local function GetOwnedItems()
     local warbandBank = storageAPI.GetWarbandBank()
     local guildBanks = storageAPI.GetGuildBanks()
 
-    local function addOwned(itemID, count, charName, locLabel)
-        if not owned[itemID] then
-            owned[itemID] = { total = 0, locations = {} }
+    -- name is captured from the slot's persisted itemName / itemLink so owned-item
+    -- search works offline (the live cache may not have the item yet).
+    local function addOwned(itemID, count, charName, locLabel, name)
+        local rec = owned[itemID]
+        if not rec then
+            rec = { total = 0, locations = {} }
+            owned[itemID] = rec
         end
-        owned[itemID].total = owned[itemID].total + count
-        tinsert(owned[itemID].locations, { charName = charName, locLabel = locLabel, count = count })
+        rec.total = rec.total + count
+        if not rec.name and name and name ~= "" then
+            rec.name = name
+        end
+        tinsert(rec.locations, { charName = charName, locLabel = locLabel, count = count })
     end
 
     if characters then
@@ -114,7 +128,8 @@ local function GetOwnedItems()
                     if bagInfo.slots then
                         for _, slot in pairs(bagInfo.slots) do
                             if slot and slot.itemID then
-                                addOwned(slot.itemID, slot.stackCount or 1, charName, "bags")
+                                addOwned(slot.itemID, slot.stackCount or 1, charName, "bags",
+                                    slot.itemName or NameFromLink(slot.itemLink))
                             end
                         end
                     end
@@ -126,7 +141,8 @@ local function GetOwnedItems()
                     if tabInfo.items then
                         for _, slot in pairs(tabInfo.items) do
                             if slot and slot.itemID then
-                                addOwned(slot.itemID, slot.stackCount or 1, charName, "bank")
+                                addOwned(slot.itemID, slot.stackCount or 1, charName, "bank",
+                                    slot.itemName or NameFromLink(slot.itemLink))
                             end
                         end
                     end
@@ -138,7 +154,8 @@ local function GetOwnedItems()
                     if mailData.items then
                         for _, slot in pairs(mailData.items) do
                             if slot and slot.itemID then
-                                addOwned(slot.itemID, slot.count or 1, charName, "mail")
+                                addOwned(slot.itemID, slot.count or 1, charName, "mail",
+                                    slot.itemName or NameFromLink(slot.itemLink))
                             end
                         end
                     end
@@ -152,7 +169,10 @@ local function GetOwnedItems()
             if tabInfo.items then
                 for _, slot in pairs(tabInfo.items) do
                     if slot and slot.itemID then
-                        addOwned(slot.itemID, slot.count or 1, "Warband", "warband")
+                        -- Warband tabs use ContainerScan, whose canonical slot field
+                        -- is stackCount (not count).
+                        addOwned(slot.itemID, slot.stackCount or 1, "Warband", "warband",
+                            slot.itemName or NameFromLink(slot.itemLink))
                     end
                 end
             end
@@ -166,7 +186,8 @@ local function GetOwnedItems()
                     if tabInfo.slots then
                         for _, slot in pairs(tabInfo.slots) do
                             if slot and slot.itemID then
-                                addOwned(slot.itemID, slot.stackCount or 1, guildName, "guild")
+                                addOwned(slot.itemID, slot.stackCount or 1, guildName, "guild",
+                                    slot.itemName or NameFromLink(slot.itemLink))
                             end
                         end
                     end
@@ -182,7 +203,8 @@ local function GetOwnedItems()
             if charData.activeAuctions then
                 for _, auc in ipairs(charData.activeAuctions) do
                     if auc.itemID then
-                        addOwned(auc.itemID, auc.quantity or 1, charName, "ah")
+                        addOwned(auc.itemID, auc.quantity or 1, charName, "ah",
+                            auc.itemName or NameFromLink(auc.itemLink))
                     end
                 end
             end
@@ -324,8 +346,10 @@ function ItemSearch:Query(searchTerm, sourceFilter)
     local ownedMap = GetOwnedItems()
 
     if doOwned and not limitReached then
-        for itemID in pairs(ownedMap) do
-            local itemName = C_Item.GetItemNameByID(itemID)
+        for itemID, od in pairs(ownedMap) do
+            -- Prefer the name persisted at scan time so owned items match offline;
+            -- fall back to the live cache only when no stored name exists.
+            local itemName = od.name or C_Item.GetItemNameByID(itemID)
             if itemName and itemName:lower():find(term, 1, true) then
                 addOrAnnotate(itemID, itemName, nil, nil, "isOwned")
                 if limitReached then break end

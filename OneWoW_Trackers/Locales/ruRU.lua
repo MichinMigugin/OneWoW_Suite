@@ -41,8 +41,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["FARM_VAL_AH_ONLY"]               = "Только цена аукциона за единицу (TSM выключен).",
     ["FARM_VAL_TSM_MISSING"]           = "TSM включён, но TSM API недоступен; используется только аукцион.",
     ["FARM_VAL_NO_AH_TSM"]             = "Цена аукциона за единицу выключена; TSM применяется при наличии.",
-    ["FARM_AH_ONEWOW"]                  = "Данные сканирования OneWoW",
-    ["FARM_AH_AUCTIONATOR"]            = "Auctionator",
     ["FARM_SHOW_AH"]                    = "Использовать цену аукциона",
     ["FARM_USE_TSM"]                    = "Предпочитать цену TSM, если доступна",
     ["FARM_AH_SOURCE"]                  = "Данные аукциона:",

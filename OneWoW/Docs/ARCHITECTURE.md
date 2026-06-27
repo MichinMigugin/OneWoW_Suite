@@ -690,7 +690,8 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | `OneWoW.ItemStatus` | `Services/itemstatus.lua` | Overlay engine, Bags |
 | `OneWoW.UpgradeDetection` | `Services/upgrade-detection.lua` | Overlay engine, Bags |
 | `OneWoW.RecipeKnownUtil` | `Services/RecipeKnownUtil.lua` | Overlay engine, tooltip providers |
-| `OneWoW.ItemPrices` | `Services/ItemPrices.lua` | Tooltip providers, overlay engine |
+| `OneWoW.AHItemKeys` | `Services/AHItemKeys.lua` | AH scanners (`OneWoW_AltTracker_Auctions`), `ItemPrices` link-aware lookups |
+| `OneWoW.ItemPrices` | `Services/ItemPrices.lua` | Tooltip providers, overlay engine, AH source UI helpers |
 | `OneWoW.Locale` | `Services/LocaleService.lua` | Every addon (each registers its own scope, reads back a view) — see Localization below |
 
 Feature content that registers in from QoL: settings catalogs

@@ -41,8 +41,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["FARM_VAL_AH_ONLY"]               = "Solo prezzo unitario CdA (TSM disattivato).",
     ["FARM_VAL_TSM_MISSING"]           = "TSM attivo ma l'API di TSM non è disponibile; uso solo la casa d'aste.",
     ["FARM_VAL_NO_AH_TSM"]             = "Prezzo unitario CdA disattivato; TSM si applica quando disponibile.",
-    ["FARM_AH_ONEWOW"]                  = "Dati di scansione OneWoW",
-    ["FARM_AH_AUCTIONATOR"]            = "Auctionator",
     ["FARM_SHOW_AH"]                    = "Usa il prezzo della casa d'aste",
     ["FARM_USE_TSM"]                    = "Preferisci il prezzo TSM quando disponibile",
     ["FARM_AH_SOURCE"]                  = "Dati CdA:",

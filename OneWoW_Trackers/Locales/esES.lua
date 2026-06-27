@@ -41,8 +41,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["FARM_VAL_AH_ONLY"]               = "Solo precio unitario de CdS (TSM desactivado).",
     ["FARM_VAL_TSM_MISSING"]           = "TSM activado pero la API de TSM no está disponible; usando solo la casa de subastas.",
     ["FARM_VAL_NO_AH_TSM"]             = "Precio unitario de CdS desactivado; TSM se aplica cuando está disponible.",
-    ["FARM_AH_ONEWOW"]                  = "Datos de escaneo de OneWoW",
-    ["FARM_AH_AUCTIONATOR"]            = "Auctionator",
     ["FARM_SHOW_AH"]                    = "Usar precio de la casa de subastas",
     ["FARM_USE_TSM"]                    = "Preferir el precio de TSM cuando esté disponible",
     ["FARM_AH_SOURCE"]                  = "Datos de CdS:",

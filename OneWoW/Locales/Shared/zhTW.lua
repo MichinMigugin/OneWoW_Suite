@@ -327,4 +327,10 @@ ns.Locale:RegisterShared("zhTW", {
     ["TOAST_NEW_RECIPE"] = "新配方！",
     ["TOAST_NEW_TMOG"] = "新外觀！",
     ["TOAST_INSTANCE_CLICK"] = "點擊在圖鑑中查看",
+    -- AH price source (shared)
+    ["SHARED_AH_SOURCE_LABEL"] = "拍賣價格資料",
+    ["SHARED_AH_SOURCE_DESC"] = "OneWoW 掃描將價格儲存在 AltTracker - Auctions 中。當你用 Auctionator 掃描時，它使用自己的資料庫。TradeSkillMaster 使用下方設定的 TSM 價格字串（預設 dbmarket）。",
+    ["SHARED_AH_SOURCE_ONEWOW"] = "OneWoW 拍賣掃描",
+    ["SHARED_AH_SOURCE_AUCTIONATOR"] = "Auctionator",
+    ["SHARED_AH_SOURCE_TSM"] = "TradeSkillMaster",
 })
