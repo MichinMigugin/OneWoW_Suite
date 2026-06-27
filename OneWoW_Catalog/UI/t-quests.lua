@@ -869,7 +869,7 @@ local function ResolveQuestZoneName(quest)
         return quest.zoneName
     end
 
-    if quest.mapID and quest.mapID ~= 0 and C_Map and C_Map.GetMapInfo then
+    if quest.mapID and quest.mapID ~= 0 then
         local mapInfo = C_Map.GetMapInfo(quest.mapID)
         if mapInfo and mapInfo.name and mapInfo.name ~= "" then
             quest.zoneName = mapInfo.name

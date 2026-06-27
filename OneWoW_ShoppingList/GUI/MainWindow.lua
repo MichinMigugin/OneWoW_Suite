@@ -8,14 +8,12 @@ local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 local function MatchesShoppingSearch(searchText, itemID, itemLink, displayName, quantity)
     if not searchText or searchText == "" then return true end
-    if PE and itemID then
+    if itemID then
         local itemInfo = {
             hyperlink = itemLink,
             count = quantity or 1,
+            quality = C_Item.GetItemQualityByID(itemID)
         }
-        if C_Item and C_Item.GetItemQualityByID then
-            itemInfo.quality = C_Item.GetItemQualityByID(itemID)
-        end
         local ok, matched = pcall(PE.CheckItem, PE, searchText, itemID, nil, nil, itemInfo)
         if ok then return matched == true end
     end

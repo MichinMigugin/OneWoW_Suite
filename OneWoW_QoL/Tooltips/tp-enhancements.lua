@@ -266,7 +266,7 @@ local function EnhancementsUnitProvider(tooltip, context)
         local summary = C_PlayerInfo.GetPlayerMythicPlusRatingSummary("mouseover")
         if summary and summary.currentSeasonScore then
             local score = summary.currentSeasonScore
-            local color = C_ChallengeMode and C_ChallengeMode.GetDungeonScoreRarityColor and C_ChallengeMode.GetDungeonScoreRarityColor(score)
+            local color = C_ChallengeMode.GetDungeonScoreRarityColor(score)
             local scoreText
             if color and color.r then
                 scoreText = string.format("|cFF%02x%02x%02x%d|r", color.r * 255, color.g * 255, color.b * 255, score)

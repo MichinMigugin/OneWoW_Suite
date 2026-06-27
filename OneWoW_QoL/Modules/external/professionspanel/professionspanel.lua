@@ -78,7 +78,7 @@ end
 
 function ProfPanelModule:ScanExpansionData()
     local expansions = {}
-    if not C_TradeSkillUI or not C_TradeSkillUI.IsTradeSkillReady() then return expansions end
+    if not C_TradeSkillUI.IsTradeSkillReady() then return expansions end
 
     local categories = { C_TradeSkillUI.GetCategories() }
     if not categories or #categories == 0 then return expansions end

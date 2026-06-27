@@ -248,12 +248,10 @@ function ns.UI.CreatePortalsTab(parent)
 				enabled = true
 			end
 		elseif portal.type == "housing" then
-			if C_Housing and C_Housing.GetVisitCooldownInfo then
-				local cdInfo = C_Housing.GetVisitCooldownInfo()
-				start = cdInfo.startTime
-				duration = cdInfo.duration
-				enabled = cdInfo.isEnabled
-			end
+			local cdInfo = C_Housing.GetVisitCooldownInfo()
+			start = cdInfo.startTime
+			duration = cdInfo.duration
+			enabled = cdInfo.isEnabled
 		end
 
 		if enabled and duration and duration > 0 then
@@ -409,12 +407,10 @@ function ns.UI.CreatePortalsTab(parent)
 			elseif portal.type == "housing" then
 				GameTooltip:SetText(L["UI_PORTAL_TITLE_TELEPORT"], 1, 1, 1)
 				GameTooltip:AddLine(L["UI_PORTAL_TELEPORT_HOME"], 0.7, 0.7, 0.7, true)
-				if C_Housing then
-					local info = C_Housing.GetCurrentHouseInfo()
-					if info and info.houseGUID then
-						GameTooltip:AddLine(" ")
-						GameTooltip:AddLine(string.format(L["UI_PORTAL_HOUSE_ID"], info.houseGUID), 0.5, 0.5, 0.5)
-					end
+				local info = C_Housing.GetCurrentHouseInfo()
+				if info and info.houseGUID then
+					GameTooltip:AddLine(" ")
+					GameTooltip:AddLine(string.format(L["UI_PORTAL_HOUSE_ID"], info.houseGUID), 0.5, 0.5, 0.5)
 				end
 			end
 			if isAvailable then

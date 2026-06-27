@@ -30,7 +30,7 @@ local professionNameCache = {}
 
 local function GetLocalizedProfessionName(skillID)
     if professionNameCache[skillID] then return professionNameCache[skillID] end
-    local name = C_TradeSkillUI and C_TradeSkillUI.GetTradeSkillDisplayName and C_TradeSkillUI.GetTradeSkillDisplayName(skillID)
+    local name = C_TradeSkillUI.GetTradeSkillDisplayName(skillID)
     if not name or name == "" then
         local fallback = {
             [171]="Alchemy", [164]="Blacksmithing", [333]="Enchanting", [202]="Engineering",

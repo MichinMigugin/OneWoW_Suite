@@ -84,7 +84,7 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
         return false
     end
 
-    if C_ToyBox and C_ToyBox.GetToyInfo and C_ToyBox.GetToyInfo(itemID) then
+    if C_ToyBox.GetToyInfo(itemID) then
         return PlayerHasToy(itemID) == true
     end
 
@@ -94,33 +94,33 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
             or equipLoc == "INVTYPE_FINGER" or equipLoc == "INVTYPE_NECK" then
             return nil
         end
-        if C_TransmogCollection then
-            local sourceID = select(2, C_TransmogCollection.GetItemInfo(itemLink))
-            if not sourceID then return nil end
-            if C_TransmogCollection.PlayerHasTransmogItemModifiedAppearance(sourceID) then
-                return true
-            end
-            local sourceInfo = C_TransmogCollection.GetSourceInfo(sourceID)
-            if sourceInfo then
-                if sourceInfo.isCollected then return true end
-                if sourceInfo.visualID then
-                    local allSources = C_TransmogCollection.GetAllAppearanceSources(sourceInfo.visualID)
-                    if allSources then
-                        for _, otherID in ipairs(allSources) do
-                            if otherID ~= sourceID then
-                                if C_TransmogCollection.PlayerHasTransmogItemModifiedAppearance(otherID) then
-                                    local otherInfo = C_TransmogCollection.GetSourceInfo(otherID)
-                                    if otherInfo and otherInfo.isCollected and otherInfo.categoryID == sourceInfo.categoryID then
-                                        return true
-                                    end
+
+        local sourceID = select(2, C_TransmogCollection.GetItemInfo(itemLink))
+        if not sourceID then return nil end
+        if C_TransmogCollection.PlayerHasTransmogItemModifiedAppearance(sourceID) then
+            return true
+        end
+        local sourceInfo = C_TransmogCollection.GetSourceInfo(sourceID)
+        if sourceInfo then
+            if sourceInfo.isCollected then return true end
+            if sourceInfo.visualID then
+                local allSources = C_TransmogCollection.GetAllAppearanceSources(sourceInfo.visualID)
+                if allSources then
+                    for _, otherID in ipairs(allSources) do
+                        if otherID ~= sourceID then
+                            if C_TransmogCollection.PlayerHasTransmogItemModifiedAppearance(otherID) then
+                                local otherInfo = C_TransmogCollection.GetSourceInfo(otherID)
+                                if otherInfo and otherInfo.isCollected and otherInfo.categoryID == sourceInfo.categoryID then
+                                    return true
                                 end
                             end
                         end
                     end
                 end
             end
-            return false
         end
+
+        return false
     end
 
     local td = C_TooltipInfo.GetHyperlink(itemLink)

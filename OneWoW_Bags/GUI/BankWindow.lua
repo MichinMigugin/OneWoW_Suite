@@ -150,9 +150,7 @@ function BankGUI:InitMainWindow()
                 end
                 BankSet:ReleaseAll()
                 C_Timer.After(0, function()
-                    if C_Bank and C_Bank.CloseBankFrame then
-                        C_Bank.CloseBankFrame()
-                    end
+                    C_Bank.CloseBankFrame()
                 end)
             end
         end,

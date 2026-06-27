@@ -25,15 +25,9 @@ function VendorTracker:Initialize()
         VendorTracker:OnBuybackItem(index)
     end)
 
-    if C_Container then
-        hooksecurefunc(C_Container, "UseContainerItem", function(bag, slot)
-            VendorTracker:OnUseContainerItem(bag, slot)
-        end)
-    else
-        hooksecurefunc("UseContainerItem", function(bag, slot)
-            VendorTracker:OnUseContainerItem(bag, slot)
-        end)
-    end
+    hooksecurefunc(C_Container, "UseContainerItem", function(bag, slot)
+        VendorTracker:OnUseContainerItem(bag, slot)
+    end)
 end
 
 function VendorTracker:HandleEvent(event, ...)
@@ -85,7 +79,7 @@ function VendorTracker:OnUseContainerItem(bag, slot)
     local itemID = tonumber(itemLink:match("item:(%d+)"))
     if not itemID then return end
     local name, _, _, _, _, _, _, stackCount, _, _, sellPrice = C_Item.GetItemInfo(itemID)
-    local info = C_Container and C_Container.GetContainerItemInfo(bag, slot)
+    local info = C_Container.GetContainerItemInfo(bag, slot)
     local count = (info and info.stackCount) or stackCount or 1
     if sellPrice and sellPrice > 0 then
         ns.Transactions:RecordIncome("vendor_sale", sellPrice * count, "Vendor", itemLink, name or "Item", count, nil)

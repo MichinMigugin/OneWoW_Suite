@@ -428,7 +428,7 @@ end
 
 local function GetContainerSlotCount(itemID)
     if not itemID then return nil end
-    local td = C_TooltipInfo and C_TooltipInfo.GetItemByID and C_TooltipInfo.GetItemByID(itemID)
+    local td = C_TooltipInfo.GetItemByID(itemID)
     if td and td.lines then
         for _, line in ipairs(td.lines) do
             if line.leftText then
@@ -668,7 +668,7 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
 
     local isMisc = (classID == Enum.ItemClass.Miscellaneous)
 
-    if C_ToyBox and C_ToyBox.GetToyInfo and C_ToyBox.GetToyInfo(itemID) then
+    if C_ToyBox.GetToyInfo(itemID) then
         return PlayerHasToy(itemID) == true
     end
 
@@ -682,14 +682,13 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
     end
 
     if isMisc and subclassID == Enum.ItemMiscellaneousSubclass.Mount then
-        if C_MountJournal and C_MountJournal.GetMountFromItem then
-            local mountID = C_MountJournal.GetMountFromItem(itemID)
-            if mountID then
-                local _, _, _, _, _, _, _, _, _, _, isCollected = C_MountJournal.GetMountInfoByID(mountID)
-                return isCollected == true
-            end
+        local mountID = C_MountJournal.GetMountFromItem(itemID)
+        if mountID then
+            local _, _, _, _, _, _, _, _, _, _, isCollected = C_MountJournal.GetMountInfoByID(mountID)
+            return isCollected == true
         end
-        local td = C_TooltipInfo and C_TooltipInfo.GetHyperlink and C_TooltipInfo.GetHyperlink(itemLink)
+
+        local td = C_TooltipInfo.GetHyperlink(itemLink)
         if td and td.lines then
             for _, line in ipairs(td.lines) do
                 if line.leftText and line.leftText == ITEM_SPELL_KNOWN then return true end
@@ -699,7 +698,7 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
     end
 
     if isMisc and subclassID == Enum.ItemMiscellaneousSubclass.CompanionPet then
-        local td = C_TooltipInfo and C_TooltipInfo.GetHyperlink and C_TooltipInfo.GetHyperlink(itemLink)
+        local td = C_TooltipInfo.GetHyperlink(itemLink)
         if td and td.lines then
             for _, line in ipairs(td.lines) do
                 if line.leftText then
@@ -785,11 +784,9 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
     end
 
     if IsOverlayEnabled("housingdecor") then
-        local isDecor = false
-        if Enum.ItemClass.Housing and classID == Enum.ItemClass.Housing then
-            isDecor = true
-        elseif C_HousingDecor and C_HousingDecor.IsDecorItem then
-            isDecor = C_HousingDecor.IsDecorItem(itemID) or false
+        local isDecor = classID == Enum.ItemClass.Housing
+        if not isDecor and itemLink then
+            isDecor = C_Item.IsDecorItem(itemLink) or false
         end
         if isDecor then
             hits[#hits + 1] = "housingdecor"
@@ -812,17 +809,16 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
             if equipLoc and equipLoc ~= "" and equipLoc ~= "INVTYPE_NON_EQUIP"
                 and equipLoc ~= "INVTYPE_TRINKET" and equipLoc ~= "INVTYPE_FINGER"
                 and equipLoc ~= "INVTYPE_NECK" then
-                if C_TransmogCollection then
-                    local sourceID = select(2, C_TransmogCollection.GetItemInfo(itemLink))
-                    if sourceID then
-                        local known = C_TransmogCollection.PlayerHasTransmogItemModifiedAppearance(sourceID)
-                        if not known then
-                            local sourceInfo = C_TransmogCollection.GetSourceInfo(sourceID)
-                            if sourceInfo and sourceInfo.isCollected then known = true end
-                        end
-                        if not known then
-                            hits[#hits + 1] = "transmog"
-                        end
+
+                local sourceID = select(2, C_TransmogCollection.GetItemInfo(itemLink))
+                if sourceID then
+                    local known = C_TransmogCollection.PlayerHasTransmogItemModifiedAppearance(sourceID)
+                    if not known then
+                        local sourceInfo = C_TransmogCollection.GetSourceInfo(sourceID)
+                        if sourceInfo and sourceInfo.isCollected then known = true end
+                    end
+                    if not known then
+                        hits[#hits + 1] = "transmog"
                     end
                 end
             end
@@ -855,7 +851,7 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
     if IsOverlayEnabled("recipe") then
         if classID == Enum.ItemClass.Recipe then
             local isTeachable = false
-            local tooltipData = C_TooltipInfo and C_TooltipInfo.GetItemByID and C_TooltipInfo.GetItemByID(itemID)
+            local tooltipData = C_TooltipInfo.GetItemByID(itemID)
             if tooltipData and tooltipData.lines then
                 for _, line in ipairs(tooltipData.lines) do
                     if line.type == Enum.TooltipDataLineType.ItemSpellTriggerLearn then
@@ -871,7 +867,7 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
     end
 
     if IsOverlayEnabled("toys") then
-        if C_ToyBox and C_ToyBox.GetToyInfo and C_ToyBox.GetToyInfo(itemID) then
+        if C_ToyBox.GetToyInfo(itemID) then
             hits[#hits + 1] = "toys"
         end
     end
@@ -880,15 +876,13 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
     local isWarbound           = false
     local isWarboundUntilEquip = false
 
-    if C_Item.IsItemBindToAccountUntilEquip and itemLink then
+    if itemLink then
         isWarboundUntilEquip = C_Item.IsItemBindToAccountUntilEquip(itemLink) or false
     end
 
     if itemLocation then
-        if C_Item.IsBound then
-            isBound = C_Item.IsBound(itemLocation) or false
-        end
-        if isBound and C_Bank and C_Bank.IsItemAllowedInBankType then
+        isBound = C_Item.IsBound(itemLocation) or false
+        if isBound then
             isWarbound = C_Bank.IsItemAllowedInBankType(Enum.BankType.Account, itemLocation) or false
         end
     end

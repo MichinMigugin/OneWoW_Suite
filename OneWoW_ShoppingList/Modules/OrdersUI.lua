@@ -115,7 +115,7 @@ local function UpdateButtonsState()
 end
 
 local function GetCrafterOrderByID(orderID)
-    if not orderID or not C_CraftingOrders or not C_CraftingOrders.GetCrafterOrders then return nil end
+    if not orderID then return nil end
     local orders = C_CraftingOrders.GetCrafterOrders()
     if not orders then return nil end
     for _, o in ipairs(orders) do
@@ -129,7 +129,7 @@ end
 local function BuildMissingBasicReagents(orderInfo)
     if not orderInfo or not orderInfo.reagents then return {} end
 
-    local CUSTOMER = (Enum and Enum.CraftingOrderReagentSource and Enum.CraftingOrderReagentSource.Customer) or 1
+    local CUSTOMER = Enum.CraftingOrderReagentSource.Customer
     local totals = {}
 
     for _, r in ipairs(orderInfo.reagents) do
@@ -158,7 +158,7 @@ end
 local function BuildBasicReagentsFromSchematic(recipeID)
     recipeID = tonumber(recipeID)
     if not recipeID then return {} end
-    local schematic = C_TradeSkillUI and C_TradeSkillUI.GetRecipeSchematic and C_TradeSkillUI.GetRecipeSchematic(recipeID, false)
+    local schematic = C_TradeSkillUI.GetRecipeSchematic(recipeID, false)
     if not schematic or not schematic.reagentSlotSchematics then return {} end
 
     local totals = {}
@@ -355,7 +355,7 @@ local function BuildMissingBasicReagentsFromOrdersUI()
                 -- Strip color codes and leading quantities (e.g. "|cffffffff3 Foo|r" or "1/6 Bar")
                 name = name:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
                 name = name:gsub("^%s*%d+%s*/%s*%d+%s+", ""):gsub("^%s*%d+%s+", "")
-                local id = C_Item and C_Item.GetItemInfoInstant and C_Item.GetItemInfoInstant(name)
+                local id = C_Item.GetItemInfoInstant(name)
                 id = tonumber(id)
                 if id and id > 0 then return id end
             end
@@ -385,7 +385,7 @@ local function BuildMissingBasicReagentsFromOrdersUI()
             if neededQty <= 0 then return end
         else
             -- If we can't read counts from UI, fall back to source heuristics.
-            local CUSTOMER = (Enum and Enum.CraftingOrderReagentSource and Enum.CraftingOrderReagentSource.Customer) or 1
+            local CUSTOMER = Enum.CraftingOrderReagentSource.Customer
             if slot.orderSource ~= nil then
                 if slot.orderSource == CUSTOMER then return end
             else

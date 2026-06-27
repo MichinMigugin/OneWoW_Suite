@@ -445,7 +445,7 @@ local function CreateSlotPreview(parent, featureId, reg)
             local bgStyle = reg:GetOverlaySetting(featureId, "bgStyle") or "Solid-Circle"
             local bgScale = reg:GetOverlaySetting(featureId, "bgScale") or 1.0
             local bgColor = reg:GetOverlaySetting(featureId, "bgColor") or {1, 1, 1}
-            if reg:GetOverlaySetting(featureId, "bgUseRarityColor") and PREVIEW_BG_RARITY_ITEM_LINK and C_Item and C_Item.GetItemInfo then
+            if reg:GetOverlaySetting(featureId, "bgUseRarityColor") and PREVIEW_BG_RARITY_ITEM_LINK then
                 local quality = select(3, C_Item.GetItemInfo(PREVIEW_BG_RARITY_ITEM_LINK))
                 if quality then
                     local r, g, b = C_Item.GetItemQualityColor(quality)

@@ -38,11 +38,8 @@ end
 
 local function IsBagSlotUnboundTradeable(bag, slot, info)
     if not info or not info.itemID or info.itemID < 1 then return false end
-    local loc
-    if ItemLocation and ItemLocation.CreateFromBagAndSlot then
-        loc = ItemLocation:CreateFromBagAndSlot(bag, slot)
-    end
-    if loc and loc.IsValid and loc:IsValid() and C_Item and C_Item.IsBound then
+    local loc = ItemLocation:CreateFromBagAndSlot(bag, slot)
+    if loc and loc:IsValid() then
         local ok, bound = pcall(C_Item.IsBound, loc)
         if ok and bound then
             return false
@@ -165,15 +162,15 @@ function TFV.ResolveItemIDFromCursor()
         return a
     end
     local link = (type(a) == "string" and a:find("|H")) and a or (type(b) == "string" and b:find("|H") and b or nil)
-    if link and C_Item.GetItemInfoInstant then
+    if link then
         local id = C_Item.GetItemInfoInstant(link)
         if type(id) == "number" and id > 0 then return id end
     end
-    if a and C_Item and C_Item.GetItemID then
+    if a then
         local ok, id = pcall(C_Item.GetItemID, a)
         if ok and type(id) == "number" and id > 0 then return id end
     end
-    if b and C_Item and C_Item.GetItemID then
+    if b then
         local ok, id = pcall(C_Item.GetItemID, b)
         if ok and type(id) == "number" and id > 0 then return id end
     end

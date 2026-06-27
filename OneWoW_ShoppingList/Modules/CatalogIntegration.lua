@@ -128,10 +128,10 @@ end
 local function GetRecipeName(recipe)
     if not recipe then return nil end
     local name = nil
-    if recipe.item and C_Item and C_Item.GetItemNameByID then
+    if recipe.item then
         name = C_Item.GetItemNameByID(recipe.item)
     end
-    if not name and recipe.id and C_Spell and C_Spell.GetSpellName then
+    if not name and recipe.id then
         name = C_Spell.GetSpellName(recipe.id)
     end
     return name or ("Recipe #" .. (recipe.id or 0))

@@ -88,18 +88,19 @@ function TextureAtlasBrowser:TextureKeyForAPI(texKey)
     end
     local slash = texKey
     local backslash = texKey:find("/", 1, true) and texKey:gsub("/", "\\") or texKey
-    if C_Texture.GetFileIDFromPath then
-        local fid = C_Texture.GetFileIDFromPath(backslash)
+    local fid = GetFileIDFromPath(backslash)
+
+    if type(fid) == "number" and fid > 0 then
+        return fid
+    end
+
+    if backslash ~= slash then
+        fid = GetFileIDFromPath(slash)
         if type(fid) == "number" and fid > 0 then
             return fid
         end
-        if backslash ~= slash then
-            fid = C_Texture.GetFileIDFromPath(slash)
-            if type(fid) == "number" and fid > 0 then
-                return fid
-            end
-        end
     end
+
     return backslash
 end
 

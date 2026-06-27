@@ -55,11 +55,7 @@ local function GetCharacterInfo()
 
     local _, itemLevelEquipped = GetAverageItemLevel()
     local itemLevel = math.floor(itemLevelEquipped or 0)
-
-    local mplusRating = 0
-    if C_ChallengeMode and C_ChallengeMode.GetOverallDungeonScore then
-        mplusRating = C_ChallengeMode.GetOverallDungeonScore() or 0
-    end
+    local mplusRating = C_ChallengeMode.GetOverallDungeonScore() or 0
 
     return {
         name            = name,
@@ -564,7 +560,7 @@ function AFKPanelModule:CheckAFK()
     C_Timer.After(0, function()
         local _, instanceType = IsInInstance()
         if instanceType == "pvp" or instanceType == "arena" then return end
-        local isPetBattle = C_PetBattles and C_PetBattles.IsInBattle and C_PetBattles.IsInBattle()
+        local isPetBattle = C_PetBattles.IsInBattle()
         self:SetAFK(UnitIsAFK("player") and not isPetBattle)
     end)
 end
@@ -643,7 +639,7 @@ function AFKPanelModule:OnEvent(event, arg1)
     C_Timer.After(0, function()
         local _, instanceType = IsInInstance()
         if instanceType == "pvp" or instanceType == "arena" then return end
-        local isPetBattle = C_PetBattles and C_PetBattles.IsInBattle and C_PetBattles.IsInBattle()
+        local isPetBattle = C_PetBattles.IsInBattle()
         self:SetAFK(UnitIsAFK("player") and not isPetBattle)
     end)
 end

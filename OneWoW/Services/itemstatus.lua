@@ -93,7 +93,7 @@ function IS:MarkAsJunk(itemID, inputLink)
     if not itemID then return false end
     local itemName, itemLink, itemRarity, itemLevel, _, itemType, itemSubType, _, _, itemTexture = C_Item.GetItemInfo(itemID)
     if not itemName then return false end
-    if inputLink and C_Item.GetDetailedItemLevelInfo then
+    if inputLink then
         local actualItemLevel = C_Item.GetDetailedItemLevelInfo(inputLink)
         if actualItemLevel and actualItemLevel > 0 then itemLevel = actualItemLevel end
         local _, _, linkRarity = C_Item.GetItemInfo(inputLink)
@@ -135,7 +135,7 @@ function IS:MarkAsProtected(itemID, inputLink)
     if not itemID then return false end
     local itemName, itemLink, itemRarity, itemLevel, _, itemType, itemSubType, _, _, itemTexture = C_Item.GetItemInfo(itemID)
     if not itemName then return false end
-    if inputLink and C_Item.GetDetailedItemLevelInfo then
+    if inputLink then
         local actualItemLevel = C_Item.GetDetailedItemLevelInfo(inputLink)
         if actualItemLevel and actualItemLevel > 0 then itemLevel = actualItemLevel end
         local _, _, linkRarity = C_Item.GetItemInfo(inputLink)

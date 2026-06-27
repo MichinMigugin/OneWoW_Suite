@@ -43,7 +43,7 @@ function Module:CollectData(charKey, charData, professionName)
             recipes[recipeID] = true
         end
 
-        if profsDB and C_TradeSkillUI.GetRecipeItemLink then
+        if profsDB then
             local link = C_TradeSkillUI.GetRecipeItemLink(recipeID)
             if link then
                 local itemID = tonumber(link:match("item:(%d+)"))

@@ -602,12 +602,10 @@ function EscMenu:UpdateCooldown(button, portalData)
 			enabled = true
 		end
 	elseif portalData.type == "housing" then
-		if C_Housing and C_Housing.GetVisitCooldownInfo then
-			local cdInfo = C_Housing.GetVisitCooldownInfo()
-			start = cdInfo.startTime
-			duration = cdInfo.duration
-			enabled = cdInfo.isEnabled
-		end
+		local cdInfo = C_Housing.GetVisitCooldownInfo()
+		start = cdInfo.startTime
+		duration = cdInfo.duration
+		enabled = cdInfo.isEnabled
 	end
 
 	if enabled and not IsSecret(duration) and duration > 0 then

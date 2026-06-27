@@ -61,8 +61,8 @@ local function GetExpansionVersion(id)
     return EXPANSION_VERSIONS[id]
 end
 
-local GetItemLinkByGUID = C_Item and C_Item.GetItemLinkByGUID
-local GetItemGem = C_Item and C_Item.GetItemGem
+local GetItemLinkByGUID = C_Item.GetItemLinkByGUID
+local GetItemGem = C_Item.GetItemGem
 
 local function ExtractItemIDs(itemID, _, data, itemLinkFromTooltip)
     local detectedIDs = {}
@@ -74,7 +74,7 @@ local function ExtractItemIDs(itemID, _, data, itemLinkFromTooltip)
     -- Prefer GetItemLinkByGUID when we have data.guid (equipped, inventory).
     -- Fall back to tooltip:GetItem() link for vendor, quest preview, etc.
     local itemLink = itemLinkFromTooltip
-    if data and data.guid and GetItemLinkByGUID then
+    if data and data.guid then
         local guidLink = GetItemLinkByGUID(data.guid)
         if guidLink then
             itemLink = guidLink
@@ -311,7 +311,7 @@ local function TechnicalIDsProvider(tooltip, context)
 
     elseif context.type == "azeriteessence" and context.essenceID then
         detectedIDs.essenceID = context.essenceID
-        local spellID = C_AzeriteEssence and C_AzeriteEssence.GetEssenceSpell and C_AzeriteEssence.GetEssenceSpell(context.essenceID)
+        local spellID = C_AzeriteEssence.GetEssenceSpell(context.essenceID)
         if spellID then
             detectedIDs.spellID = spellID
             local iconID = C_Spell.GetSpellTexture(spellID)

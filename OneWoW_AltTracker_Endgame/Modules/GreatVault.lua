@@ -22,10 +22,8 @@ end
 
 local function GetDetailedItemLevel(hyperlink)
     if type(hyperlink) ~= "string" or hyperlink == "" then return nil end
-    if C_Item and C_Item.GetDetailedItemLevelInfo then
-        local ilvl = C_Item.GetDetailedItemLevelInfo(hyperlink)
-        if type(ilvl) == "number" and ilvl > 0 then return ilvl end
-    end
+    local ilvl = C_Item.GetDetailedItemLevelInfo(hyperlink)
+    if type(ilvl) == "number" and ilvl > 0 then return ilvl end
     return nil
 end
 

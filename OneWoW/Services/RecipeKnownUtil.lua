@@ -31,13 +31,11 @@ local function BuildCacheFromTradeSkill()
             knownRecipeSpells[recipeSpellID] = true
         end
 
-        if C_TradeSkillUI.GetRecipeItemLink then
-            local link = C_TradeSkillUI.GetRecipeItemLink(recipeSpellID)
-            if link then
-                local itemID = tonumber(link:match("item:(%d+)"))
-                if itemID then
-                    SaveToMap(itemID, recipeSpellID)
-                end
+        local link = C_TradeSkillUI.GetRecipeItemLink(recipeSpellID)
+        if link then
+            local itemID = tonumber(link:match("item:(%d+)"))
+            if itemID then
+                SaveToMap(itemID, recipeSpellID)
             end
         end
     end

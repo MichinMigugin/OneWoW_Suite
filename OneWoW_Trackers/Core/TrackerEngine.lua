@@ -226,14 +226,11 @@ function TE:EvaluateObjective(obj)
     elseif ot == "quest_account" then
         local qid = tonumber(op.questID)
         if qid then
-            if C_QuestLog.IsQuestFlaggedCompletedOnAccount then
-                return C_QuestLog.IsQuestFlaggedCompletedOnAccount(qid) and 1 or 0, 1
-            end
-            return C_QuestLog.IsQuestFlaggedCompleted(qid) and 1 or 0, 1
+            return C_QuestLog.IsQuestFlaggedCompletedOnAccount(qid) and 1 or 0, 1
         end
         if op.questIDs then
             local done = 0
-            local checkFn = C_QuestLog.IsQuestFlaggedCompletedOnAccount or C_QuestLog.IsQuestFlaggedCompleted
+            local checkFn = C_QuestLog.IsQuestFlaggedCompletedOnAccount
             for _, id in ipairs(op.questIDs) do
                 if checkFn(tonumber(id)) then
                     done = done + 1
@@ -257,7 +254,7 @@ function TE:EvaluateObjective(obj)
     elseif ot == "quest_pool_account" then
         if op.questIDs then
             local done = 0
-            local checkFn = C_QuestLog.IsQuestFlaggedCompletedOnAccount or C_QuestLog.IsQuestFlaggedCompleted
+            local checkFn = C_QuestLog.IsQuestFlaggedCompletedOnAccount
             for _, id in ipairs(op.questIDs) do
                 if checkFn(tonumber(id)) then
                     done = done + 1
@@ -295,7 +292,7 @@ function TE:EvaluateObjective(obj)
         local qid = tonumber(op.questID)
         if qid then
             if C_QuestLog.IsQuestFlaggedCompleted(qid) then return 1, 1 end
-            if C_TaskQuest and C_TaskQuest.IsActive and C_TaskQuest.IsActive(qid) then
+            if C_TaskQuest.IsActive(qid) then
                 return 0, 1
             end
             return 0, 1
@@ -525,7 +522,7 @@ function TE:EvaluateObjective(obj)
     elseif ot == "prof_knowledge" then
         local skillLineVariantID = tonumber(op.skillLineVariantID)
         if skillLineVariantID then
-            local configID = C_ProfSpecs and C_ProfSpecs.GetConfigIDForSkillLine and C_ProfSpecs.GetConfigIDForSkillLine(skillLineVariantID)
+            local configID = C_ProfSpecs.GetConfigIDForSkillLine(skillLineVariantID)
             if configID then
                 local configInfo = C_Traits.GetConfigInfo(configID)
                 if configInfo and configInfo.treeIDs then
@@ -580,7 +577,7 @@ function TE:EvaluateObjective(obj)
 
     elseif ot == "campaign" then
         local campaignID = tonumber(op.campaignID)
-        if campaignID and C_CampaignInfo then
+        if campaignID then
             local info = C_CampaignInfo.GetCampaignInfo(campaignID)
             if info then
                 if info.complete then return 1, 1 end
@@ -813,9 +810,7 @@ local function OnPlayerEnteringWorld()
         OnEnterInstance()
     end)
     C_Timer.After(3, function()
-        if C_Calendar and C_Calendar.OpenCalendar then
-            C_Calendar.OpenCalendar()
-        end
+        C_Calendar.OpenCalendar()
     end)
     TE:RestorePinnedWindows()
 end

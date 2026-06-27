@@ -92,9 +92,7 @@ function DataManager:HandleEvent(event, ...)
         local interactionType = ...
         if interactionType == Enum.PlayerInteractionType.Auctioneer then
             auctionHouseOpen = true
-            if C_AuctionHouse and C_AuctionHouse.QueryOwnedAuctions then
-                C_AuctionHouse.QueryOwnedAuctions({})
-            end
+            C_AuctionHouse.QueryOwnedAuctions({})
             self:ScheduleScan(60)
         end
 

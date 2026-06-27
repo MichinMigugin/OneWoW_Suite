@@ -232,15 +232,12 @@ function VendorData:CreateWaypoint(vendor, mapID)
 
     local x = (location.x or 0) / 100
     local y = (location.y or 0) / 100
+    local uiMapPoint = UiMapPoint.CreateFromCoordinates(mapID, x, y)
 
-    if C_Map and C_Map.SetUserWaypoint then
-        local uiMapPoint = UiMapPoint.CreateFromCoordinates(mapID, x, y)
-        C_Map.SetUserWaypoint(uiMapPoint)
-        C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-        return true
-    end
+    C_Map.SetUserWaypoint(uiMapPoint)
+    C_SuperTrack.SetSuperTrackedUserWaypoint(true)
 
-    return false
+    return true
 end
 
 function VendorData:GetItemCount(npcID)

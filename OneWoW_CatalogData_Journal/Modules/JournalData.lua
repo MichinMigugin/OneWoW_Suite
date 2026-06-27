@@ -95,18 +95,14 @@ function JournalData:DetermineItemSpecial(idata)
     if itemType == "Miscellaneous" or itemType == "Consumable" then
         local itemID = idata.itemID
         if itemID then
-            if C_ToyBox and C_ToyBox.GetToyInfo then
-                local _, _, _, isToy = C_ToyBox.GetToyInfo(itemID)
-                if isToy then return "Toy" end
-            end
-            if C_MountJournal and C_MountJournal.GetMountFromItem then
-                local mountID = C_MountJournal.GetMountFromItem(itemID)
-                if mountID then return "Mount" end
-            end
-            if C_PetJournal and C_PetJournal.GetPetInfoByItemID then
-                local _, _, _, _, _, _, _, _, _, _, _, _, speciesID = C_PetJournal.GetPetInfoByItemID(itemID)
-                if speciesID and speciesID > 0 then return "Pet" end
-            end
+            local _, _, _, isToy = C_ToyBox.GetToyInfo(itemID)
+            if isToy then return "Toy" end
+
+            local mountID = C_MountJournal.GetMountFromItem(itemID)
+            if mountID then return "Mount" end
+
+            local _, _, _, _, _, _, _, _, _, _, _, _, speciesID = C_PetJournal.GetPetInfoByItemID(itemID)
+            if speciesID and speciesID > 0 then return "Pet" end
         end
     end
 
@@ -119,18 +115,15 @@ function JournalData:IsItemCollected(itemID, itemData, specialType)
     end
 
     if specialType == "TMog" then
-        if C_TransmogCollection then
-            return C_TransmogCollection.PlayerHasTransmog(itemID)
-        end
-        return false
+        return C_TransmogCollection.PlayerHasTransmog(itemID) or false
     end
 
     if specialType == "Mount" then
         local mountID = itemData.mountID
-        if not mountID and C_MountJournal and C_MountJournal.GetMountFromItem then
+        if not mountID then
             mountID = C_MountJournal.GetMountFromItem(itemID)
         end
-        if mountID and C_MountJournal then
+        if mountID then
             local _, _, _, _, _, _, _, _, _, _, isCollected = C_MountJournal.GetMountInfoByID(mountID)
             return isCollected
         end
@@ -139,11 +132,11 @@ function JournalData:IsItemCollected(itemID, itemData, specialType)
 
     if specialType == "Pet" then
         local speciesID = itemData.speciesID
-        if not speciesID and C_PetJournal and C_PetJournal.GetPetInfoByItemID then
+        if not speciesID then
             local _, _, _, _, _, _, _, _, _, _, _, _, sid = C_PetJournal.GetPetInfoByItemID(itemID)
             speciesID = sid
         end
-        if speciesID and speciesID > 0 and C_PetJournal then
+        if speciesID and speciesID > 0 then
             local numCollected = C_PetJournal.GetNumCollectedInfo(speciesID)
             return (numCollected and numCollected > 0)
         end
@@ -151,15 +144,12 @@ function JournalData:IsItemCollected(itemID, itemData, specialType)
     end
 
     if specialType == "Toy" then
-        if PlayerHasToy then
-            return PlayerHasToy(itemID)
-        end
-        return false
+        return PlayerHasToy(itemID) or false
     end
 
     if specialType == "Recipe" then
         local spellID = itemData.spellID
-        if spellID and C_TradeSkillUI and C_TradeSkillUI.GetRecipeInfo then
+        if spellID then
             local recipeInfo = C_TradeSkillUI.GetRecipeInfo(spellID)
             if recipeInfo and recipeInfo.learned ~= nil then
                 return recipeInfo.learned

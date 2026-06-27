@@ -23,7 +23,7 @@ local memoryPeakByIndex = {}
 local lastGatherTime = 0
 
 local function ProfilerNamespaceAvailable()
-    return C_AddOnProfiler and C_AddOnProfiler.GetAddOnMetric and Enum and Enum.AddOnProfilerMetric
+    return true
 end
 
 function MonitorTab:ProfilerEnabled()

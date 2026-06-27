@@ -139,10 +139,7 @@ end
 
 local function IsDecorItem(itemLink)
     if not itemLink then return false end
-    if C_Item.IsDecorItem then
-        return C_Item.IsDecorItem(itemLink)
-    end
-    return false
+    return C_Item.IsDecorItem(itemLink) or false
 end
 
 local function IsHousingItem(itemLink)

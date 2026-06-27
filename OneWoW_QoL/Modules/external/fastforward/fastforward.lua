@@ -19,7 +19,7 @@ local function StopGameMovieSafe()
     if mf:IsShown() then
         pcall(mf.Hide, mf)
     end
-    if type(CinematicFinished) == "function" and Enum and Enum.CinematicType then
+    if type(CinematicFinished) == "function" then
         pcall(CinematicFinished, Enum.CinematicType.GameMovie)
     end
 

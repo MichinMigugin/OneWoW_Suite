@@ -97,7 +97,7 @@ function ns.UI.CreatePlayersTab(parent)
     end)
     addManualBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local altTrackerLoaded = C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("OneWoW_AltTracker_Character")
+    local altTrackerLoaded = C_AddOns.IsAddOnLoaded("OneWoW_AltTracker_Character")
     local addAltsBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["PLAYER_ADD_ALTS"], height = 25, minWidth = 70 })
     addAltsBtn:SetPoint("LEFT", addManualBtn, "RIGHT", 5, 0)
     if not altTrackerLoaded then

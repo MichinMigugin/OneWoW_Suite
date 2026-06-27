@@ -257,17 +257,11 @@ function Module:RestoreKeybinds(keybindData)
     local count = 0
     for _, bindData in ipairs(keybindData.bindings) do
         if bindData.key1 then
-            local ctx = 1
-            if C_KeyBindings and C_KeyBindings.GetBindingContextForAction then
-                ctx = C_KeyBindings.GetBindingContextForAction(bindData.command)
-            end
+            local ctx = C_KeyBindings.GetBindingContextForAction(bindData.command) or 1
             SetBinding(bindData.key1, bindData.command, ctx)
         end
         if bindData.key2 then
-            local ctx = 1
-            if C_KeyBindings and C_KeyBindings.GetBindingContextForAction then
-                ctx = C_KeyBindings.GetBindingContextForAction(bindData.command)
-            end
+            local ctx = C_KeyBindings.GetBindingContextForAction(bindData.command) or 1
             SetBinding(bindData.key2, bindData.command, ctx)
         end
         count = count + 1
@@ -439,7 +433,7 @@ function Module:GetCurrentCounts()
     local numGlobal, numPerChar = GetNumMacros()
     counts.accountMacros = numGlobal or 0
     counts.characterMacros = numPerChar or 0
-    counts.addonSet = C_AddOns and C_AddOns.GetNumAddOns() or 0
+    counts.addonSet = C_AddOns.GetNumAddOns() or 0
     return counts
 end
 

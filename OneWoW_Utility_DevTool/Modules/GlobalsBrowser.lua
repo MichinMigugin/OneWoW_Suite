@@ -471,9 +471,6 @@ local function buildSearchText(entry)
 end
 
 local function getAddOnCount()
-    if not C_AddOns or not C_AddOns.GetNumAddOns then
-        return 0
-    end
     local ok, count = pcall(C_AddOns.GetNumAddOns)
     if ok and type(count) == "number" then
         return count
@@ -482,9 +479,6 @@ local function getAddOnCount()
 end
 
 local function getAddOnInfo(index)
-    if not C_AddOns or not C_AddOns.GetAddOnInfo then
-        return nil
-    end
     local ok, name, title = pcall(C_AddOns.GetAddOnInfo, index)
     if not ok then
         return nil, nil
@@ -499,12 +493,12 @@ local function resolveAddOnDataTable(addOnName)
     if type(addOnName) ~= "string" or addOnName == "" then
         return nil, nil
     end
-    if C_AddOns and C_AddOns.GetAddOnLocalTable then
-        local ok, value = pcall(C_AddOns.GetAddOnLocalTable, addOnName)
-        if ok and type(value) == "table" then
-            return value, "local"
-        end
+
+    local ok, value = pcall(C_AddOns.GetAddOnLocalTable, addOnName)
+    if ok and type(value) == "table" then
+        return value, "local"
     end
+
     local globalValue = _G[addOnName]
     if type(globalValue) == "table" then
         return globalValue, "global"

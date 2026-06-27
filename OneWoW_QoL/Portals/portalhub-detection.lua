@@ -125,7 +125,7 @@ function Detection:IsAvailable(type, id)
 	elseif type == "spell" then
 		return C_SpellBook.IsSpellKnown(id)
 	elseif type == "housing" then
-		return C_Housing and C_Housing.HasHousingExpansionAccess()
+		return C_Housing.HasHousingExpansionAccess()
 	end
 	return false
 end
@@ -577,7 +577,7 @@ function Detection:GetSpecialPortals(showAll)
 end
 
 function Detection:GetHousingPortal()
-	if C_Housing and C_Housing.HasHousingExpansionAccess() then
+	if C_Housing.HasHousingExpansionAccess() then
 		return {type = "housing", id = 1233637}
 	end
 	return nil

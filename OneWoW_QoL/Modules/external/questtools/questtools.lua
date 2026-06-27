@@ -43,18 +43,16 @@ end
 
 function QuestToolsModule:DebugPrintGossipApiVsUi()
     print("|cff00ff00[OneWoW_QoL QuestTools]|r Gossip: API name vs. UI button text")
-    if C_GossipInfo and C_GossipInfo.GetOptions then
-        local opts = C_GossipInfo.GetOptions()
-        if opts then
-            for _, o in pairs(opts) do
-                print("  API", "order", tostring(o.orderIndex), "name", tostring(o.name), "icon", tostring(o.icon))
-            end
-        else
-            print("  API: (nil)")
+
+    local opts = C_GossipInfo.GetOptions()
+    if opts then
+        for _, o in pairs(opts) do
+            print("  API", "order", tostring(o.orderIndex), "name", tostring(o.name), "icon", tostring(o.icon))
         end
     else
-        print("  API: C_GossipInfo not available")
+        print("  API: (nil)")
     end
+
     print("  UI (GossipFrame scroll buttons):")
     local lines = self:GetGossipDisplayedButtonTexts()
     if #lines == 0 then
@@ -90,12 +88,10 @@ end
 
 function QuestToolsModule:IsGossipOptionChoosable(opt)
     if not opt then return false end
-    if Enum and Enum.GossipOptionStatus and opt.status ~= nil then
+    if opt.status ~= nil then
         local S = Enum.GossipOptionStatus
-        if S then
-            if opt.status == S.Locked or opt.status == S.Unavailable then
-                return false
-            end
+        if opt.status == S.Locked or opt.status == S.Unavailable then
+            return false
         end
     end
     return true
@@ -103,10 +99,7 @@ end
 
 local function HasQuestLabelPrependFlag(opt)
     if not opt or opt.flags == nil then return false end
-    if FlagsUtil and FlagsUtil.IsSet and Enum and Enum.GossipOptionRecFlags and Enum.GossipOptionRecFlags.QuestLabelPrepend then
-        return FlagsUtil.IsSet(opt.flags, Enum.GossipOptionRecFlags.QuestLabelPrepend)
-    end
-    return false
+    return FlagsUtil.IsSet(opt.flags, Enum.GossipOptionRecFlags.QuestLabelPrepend)
 end
 
 local function ResolveIndexedGossipHits(hits, texts, byOrder)
@@ -157,7 +150,6 @@ end
 function QuestToolsModule:TryAutoGossip()
     if not ns.ModuleRegistry:IsEnabled("questtools") or not GetToggle("auto_gossip") then return false end
     if IsShiftKeyDown() then return false end
-    if not C_GossipInfo or not C_GossipInfo.GetOptions then return false end
     local gf = GossipFrame
     if gf and not gf:IsShown() then return false end
 
@@ -171,7 +163,7 @@ function QuestToolsModule:TryAutoGossip()
             ok = pcall(C_GossipInfo.SelectOption, id)
         end
         return ok
-    elseif opt.orderIndex ~= nil and C_GossipInfo.SelectOptionByIndex then
+    elseif opt.orderIndex ~= nil then
         local idx = opt.orderIndex
         local ok = pcall(C_GossipInfo.SelectOptionByIndex, idx, name)
         if not ok then
@@ -185,7 +177,6 @@ end
 function QuestToolsModule:ScheduleGossipRetries()
     if not ns.ModuleRegistry:IsEnabled("questtools") or not GetToggle("auto_gossip") then return end
     if IsShiftKeyDown() then return end
-    if not C_GossipInfo or not C_GossipInfo.GetOptions then return end
 
     self._gossipRetryToken = (self._gossipRetryToken or 0) + 1
     local token = self._gossipRetryToken
@@ -211,7 +202,6 @@ end
 function QuestToolsModule:OnGossipOpen()
     if not ns.ModuleRegistry:IsEnabled("questtools") or not GetToggle("auto_gossip") then return end
     if IsShiftKeyDown() then return end
-    if not C_GossipInfo or not C_GossipInfo.GetOptions then return end
     self:HookGossipFrameShow()
     self:ScheduleGossipRetries()
 end

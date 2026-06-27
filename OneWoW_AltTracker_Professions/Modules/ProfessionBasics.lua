@@ -151,7 +151,7 @@ function Module:CollectData(charKey, charData)
 
     -- If a profession window is open right now, refresh its bands into the
     -- freshly built table so the data lands where the UI reads it.
-    if C_TradeSkillUI and C_TradeSkillUI.IsTradeSkillReady() then
+    if C_TradeSkillUI.IsTradeSkillReady() then
         self:CollectExpansionSkills(charKey, charData)
     end
 
@@ -185,7 +185,7 @@ end
 -- from the TRADE_SKILL_SHOW flow.
 function Module:CollectExpansionSkills(charKey, charData)
     if not charData or not charData.professions then return false end
-    if not C_TradeSkillUI or not C_TradeSkillUI.IsTradeSkillReady() then return false end
+    if not C_TradeSkillUI.IsTradeSkillReady() then return false end
 
     local childInfos = C_TradeSkillUI.GetChildProfessionInfos()
     if not childInfos or #childInfos == 0 then return false end

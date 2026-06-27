@@ -31,18 +31,13 @@ function Module:Initialize()
     frame:RegisterEvent("PLAYER_MONEY")
     frame:RegisterEvent("CHALLENGE_MODE_COMPLETED")
 
-    if C_BlackMarket then
-        frame:RegisterEvent("BLACK_MARKET_BID_RESULT")
-        frame:RegisterEvent("BLACK_MARKET_OPEN")
-    end
+    frame:RegisterEvent("BLACK_MARKET_BID_RESULT")
+    frame:RegisterEvent("BLACK_MARKET_OPEN")
+    frame:RegisterEvent("CRAFTINGORDERS_DISPLAY_CRAFTER_FULFILLED_MSG")
 
-    if C_CraftingOrders then
-        frame:RegisterEvent("CRAFTINGORDERS_DISPLAY_CRAFTER_FULFILLED_MSG")
-    end
-
-    frame:SetScript("OnEvent", function(self, event, ...)
+    frame:SetScript("OnEvent", function(_, event, ...)
         if event == "QUEST_TURNED_IN" then
-            local questID, xpReward, moneyReward = ...
+            local questID, _, moneyReward = ...
             if moneyReward and moneyReward > 0 then
                 local title = C_QuestLog.GetTitleForQuestID(questID) or "Quest Reward"
                 ns.Transactions:RecordIncome("quest_reward", moneyReward, "Quest", tostring(questID), title, nil, nil)

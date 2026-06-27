@@ -178,6 +178,27 @@ repos:
             | OneWoW_Bags/API/Examples/
           )
 
+      - id: no-api-existence-guards
+        name: No defensive C_* / Enum API existence guards in Lua
+        description: |
+          Forbids multi-version-style existence checks on C_* namespaces, Enum
+          tables, FlagsUtil, and ItemLocation (e.g. C_Item and C_Item.GetItemInfo).
+          OneWoW targets Retail 12+ only — call APIs directly. See
+          .cursor/rules/No-Defensive-Guards.mdc.
+        entry: python bin/check_no_api_existence_guards.py
+        language: python
+        types: [lua]
+        exclude: |
+          (?x)^(
+            Libs/
+            | \.lua-defs/
+            | \.wow_docs/
+            | \.vscode/
+            | \.releases/
+            | OneWoW_Bags/API/Examples/
+            | OneWoW_CatalogData_Quests/Tools/
+          )
+
       - id: no-raw-loadaddon
         name: No raw LoadAddOn outside the core loader funnel
         description: |

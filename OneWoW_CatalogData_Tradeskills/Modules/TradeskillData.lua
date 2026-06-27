@@ -160,7 +160,7 @@ function TD:GetRecipesByProfession(professionName, expFilter, searchText)
                 end
             end
             if not recipeName or not recipeName:find(searchLower, 1, true) then
-                local spellName = C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(recipe.id)
+                local spellName = C_Spell.GetSpellName(recipe.id)
                 if spellName then
                     if not spellName:lower():find(searchLower, 1, true) then
                         include = false

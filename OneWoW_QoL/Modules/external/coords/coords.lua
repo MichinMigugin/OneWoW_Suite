@@ -306,7 +306,7 @@ function CoordsModule:CheckVisibility()
     if GetToggle("hide_in_instance") and IsInInstance() then
         shouldHide = true
     end
-    if C_PetBattles and C_PetBattles.IsInBattle and C_PetBattles.IsInBattle() then
+    if C_PetBattles.IsInBattle() then
         shouldHide = true
     end
 

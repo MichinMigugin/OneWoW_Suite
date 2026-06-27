@@ -17,9 +17,7 @@ function Module:CollectData(charKey, charData)
         totalUsed = 0,
     }
 
-    if C_Bank and C_Bank.FetchDepositedMoney then
-        warbandBank.money = C_Bank.FetchDepositedMoney(Enum.BankType.Account)
-    end
+    warbandBank.money = C_Bank.FetchDepositedMoney(Enum.BankType.Account)
 
     local numTabs = 0
     pcall(function()

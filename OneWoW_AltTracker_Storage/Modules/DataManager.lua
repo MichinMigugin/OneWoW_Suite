@@ -55,18 +55,16 @@ function DataManager:HandleEvent(event)
     if event == "BAG_UPDATE_DELAYED" then
         self:CollectBags()
 
-        if C_Bank and C_Bank.CanUseBank then
-            if C_Bank.CanUseBank(Enum.BankType.Character) then
-                C_Timer.After(0.3, function()
-                    self:CollectPersonalBank()
-                end)
-            end
+        if C_Bank.CanUseBank(Enum.BankType.Character) then
+            C_Timer.After(0.3, function()
+                self:CollectPersonalBank()
+            end)
+        end
 
-            if C_Bank.CanUseBank(Enum.BankType.Account) then
-                C_Timer.After(0.3, function()
-                    self:CollectWarbandBank()
-                end)
-            end
+        if C_Bank.CanUseBank(Enum.BankType.Account) then
+            C_Timer.After(0.3, function()
+                self:CollectWarbandBank()
+            end)
         end
 
     elseif event == "BANKFRAME_OPENED" then
@@ -74,7 +72,7 @@ function DataManager:HandleEvent(event)
             self:CollectPersonalBank()
         end)
 
-        if C_Bank and C_Bank.CanUseBank and C_Bank.CanUseBank(Enum.BankType.Account) then
+        if C_Bank.CanUseBank(Enum.BankType.Account) then
             C_Timer.After(0.5, function()
                 self:CollectWarbandBank()
             end)

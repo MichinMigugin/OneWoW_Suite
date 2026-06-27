@@ -37,11 +37,7 @@ local function GetCharacterInfo()
 
 	local _, itemLevelEquipped = GetAverageItemLevel()
 	local itemLevel = math.floor(itemLevelEquipped or 0)
-
-	local mplusRating = 0
-	if C_ChallengeMode and C_ChallengeMode.GetOverallDungeonScore then
-		mplusRating = C_ChallengeMode.GetOverallDungeonScore() or 0
-	end
+	local mplusRating = C_ChallengeMode.GetOverallDungeonScore() or 0
 
 	return {
 		name             = name,
