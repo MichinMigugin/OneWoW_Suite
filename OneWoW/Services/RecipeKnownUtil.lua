@@ -6,7 +6,7 @@ ns.RecipeKnownUtil = RecipeKnownUtil
 local knownRecipeSpells = {}
 local sessionMap = {}
 
-local LEARN_LINE_TYPE = Enum.TooltipDataLineType and Enum.TooltipDataLineType.ItemSpellTriggerLearn or 38
+local LEARN_LINE_TYPE = Enum.TooltipDataLineType.ItemSpellTriggerLearn
 
 local eventFrame = CreateFrame("Frame")
 

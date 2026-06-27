@@ -105,20 +105,18 @@ local function ExtractItemIDs(itemID, _, data, itemLinkFromTooltip)
         end
 
         -- GemID from C_Item.GetItemGem (returns itemName, itemLink)
-        if GetItemGem then
-            local gems = {}
-            for i = 1, 4 do
-                local _, gemLink = GetItemGem(itemLink, i)
-                if gemLink then
-                    local gemID = tonumber(string.match(gemLink, "item:(%d+)"))
-                    if gemID then
-                        table.insert(gems, gemID)
-                    end
+        local gems = {}
+        for i = 1, 4 do
+            local _, gemLink = GetItemGem(itemLink, i)
+            if gemLink then
+                local gemID = tonumber(string.match(gemLink, "item:(%d+)"))
+                if gemID then
+                    table.insert(gems, gemID)
                 end
             end
-            if #gems > 0 then
-                detectedIDs.gemID = gems
-            end
+        end
+        if #gems > 0 then
+            detectedIDs.gemID = gems
         end
 
         local expansionID = select(15, C_Item.GetItemInfo(itemID))
@@ -311,11 +309,9 @@ local function TechnicalIDsProvider(tooltip, context)
 
     elseif context.type == "azeriteessence" and context.essenceID then
         detectedIDs.essenceID = context.essenceID
-        local spellID = C_AzeriteEssence.GetEssenceSpell(context.essenceID)
-        if spellID then
-            detectedIDs.spellID = spellID
-            local iconID = C_Spell.GetSpellTexture(spellID)
-            if iconID then detectedIDs.iconID = iconID end
+        local info = C_AzeriteEssence.GetEssenceInfo(context.essenceID)
+        if info and info.icon then
+            detectedIDs.iconID = info.icon
         end
 
     elseif context.type == "conduit" and context.conduitID then

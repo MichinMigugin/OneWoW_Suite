@@ -57,12 +57,6 @@ local function BuildActivityRow(activities)
     return row
 end
 
-local function ResolveDungeonThreshold(thresholdEnum)
-    if thresholdEnum.MythicPlus ~= nil then return thresholdEnum.MythicPlus end
-    if thresholdEnum.Activities ~= nil then return thresholdEnum.Activities end
-    return nil
-end
-
 function Module:CollectData(charKey, charData)
     if not charKey or not charData then return false end
 
@@ -78,11 +72,10 @@ function Module:CollectData(charKey, charData)
 
     vaultData.hasAvailableRewards = C_WeeklyRewards.HasAvailableRewards() and true or false
 
-    local thresholdEnum = Enum.WeeklyRewardChestThresholdType or {}
-    local dungeonThreshold = ResolveDungeonThreshold(thresholdEnum)
+    local thresholdEnum = Enum.WeeklyRewardChestThresholdType
 
     local raidActs = GetSortedActivities(thresholdEnum.Raid)
-    local dungActs = GetSortedActivities(dungeonThreshold)
+    local dungActs = GetSortedActivities(thresholdEnum.Activities)
     local worldActs = GetSortedActivities(thresholdEnum.World)
 
     local existing = charData.greatVault

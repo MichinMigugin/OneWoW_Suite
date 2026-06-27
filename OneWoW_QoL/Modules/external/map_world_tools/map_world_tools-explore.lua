@@ -85,7 +85,7 @@ local function AppendMissingExplorationOverlays(pin, mapID, artTable, outList, f
 
     local tintOn = GetToggle("tintUnexplored")
     local tr, tg, tb, ta = UnexploredTintRGBA()
-    local zoneMap = (Enum.UIMapType and Enum.UIMapType.Zone and mapType == Enum.UIMapType.Zone) or mapType == 3
+    local zoneMap = mapType == Enum.UIMapType.Zone
 
     for rectKey, filesStr in pairs(artTable) do
         if not TileExists[rectKey] then

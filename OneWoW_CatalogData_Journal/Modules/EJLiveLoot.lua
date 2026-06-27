@@ -137,8 +137,8 @@ local function applyLootFilterForScan()
     end)
     if ok then return end
     local classID = select(3, UnitClass("player")) or 0
-    local spec = GetSpecialization() or 1
-    local specID = select(1, GetSpecializationInfo(spec)) or 0
+    local spec = C_SpecializationInfo.GetSpecialization() or 1
+    local specID = select(1, C_SpecializationInfo.GetSpecializationInfo(spec)) or 0
     EJ_SetLootFilterCompat(classID, specID)
 end
 

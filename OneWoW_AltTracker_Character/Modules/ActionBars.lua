@@ -3,6 +3,8 @@ local _, ns = ...
 local OneWoW_GUI = OneWoW_GUI
 
 local C_Spell, C_Item = C_Spell, C_Item
+local C_ActionBar, C_SpellBook = C_ActionBar, C_SpellBook
+local C_SpecializationInfo = C_SpecializationInfo
 
 ns.ActionBars = {}
 local Module = ns.ActionBars
@@ -85,8 +87,8 @@ function Module:GetActionInfo(slotID)
     local actionData = {
         actionType = actionType,
         id = id,
-        texture = GetActionTexture(slotID),
-        text = GetActionText(slotID),
+        texture = C_ActionBar.GetActionTexture(slotID),
+        text = C_ActionBar.GetActionText(slotID),
         timestamp = time()
     }
 
@@ -101,9 +103,7 @@ function Module:GetActionInfo(slotID)
     end
 
     if actionType == "spell" then
-        if FindBaseSpellByID then
-            id = FindBaseSpellByID(id) or id
-        end
+        id = C_SpellBook.FindBaseSpellByID(id) or id
 
         if IsCovenantSignatureAbility(id) then
             id = GetCovenantSignatureAbility() or id
@@ -260,12 +260,12 @@ end
 function Module:CollectData(charKey, charData)
     if not charKey or not charData then return false end
 
-    local specIndex = GetSpecialization()
+    local specIndex = C_SpecializationInfo.GetSpecialization()
     if not specIndex then
         return false
     end
 
-    local specID, specName = GetSpecializationInfo(specIndex)
+    local specID, specName = C_SpecializationInfo.GetSpecializationInfo(specIndex)
     if not specID or not specName then
         return false
     end
@@ -412,13 +412,13 @@ function Module:CollectActionBarsData()
         return nil
     end
 
-    local specIndex = GetSpecialization()
+    local specIndex = C_SpecializationInfo.GetSpecialization()
     if not specIndex then
         print("|cFFFFD100OneWoW|r AltTracker: Cannot collect action bar data: No active specialization")
         return nil
     end
 
-    local specID, specName = GetSpecializationInfo(specIndex)
+    local specID, specName = C_SpecializationInfo.GetSpecializationInfo(specIndex)
     if not specID or not specName then
         print("|cFFFFD100OneWoW|r AltTracker: Cannot collect action bar data: No spec info")
         return nil
@@ -545,13 +545,13 @@ end
 function Module:SaveActionBarSet(setName)
     local charKey = OneWoW_GUI:BuildCharKey()
     if not charKey then return nil end
-    local specIndex = GetSpecialization()
+    local specIndex = C_SpecializationInfo.GetSpecialization()
     if not specIndex then
         print("|cFFFFD100OneWoW|r AltTracker: Cannot backup: No active specialization")
         return nil
     end
 
-    local specID, specName = GetSpecializationInfo(specIndex)
+    local specID, specName = C_SpecializationInfo.GetSpecializationInfo(specIndex)
     if not specID or not specName then
         print("|cFFFFD100OneWoW|r AltTracker: Cannot backup: No spec info")
         return nil
@@ -957,32 +957,17 @@ function Module:CreateSpellOverrideMap()
                 end
             end
         end
+    end
 
-        local isInspect = false
-        for specIndex = 1, GetNumSpecGroups(isInspect) do
-            for tier = 1, MAX_TALENT_TIERS do
-                for column = 1, NUM_TALENT_COLUMNS do
-                    local spellId = select(6, GetTalentInfo(tier, column, specIndex))
-                    if spellId then
-                        local newid = C_Spell.GetOverrideSpell(spellId)
-                        if newid ~= spellId then
-                            spellOverride[newid] = spellId
-                        end
-                    end
-                end
-            end
-        end
-
-        for pvpTalentSlot = 1, 3 do
-            local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(pvpTalentSlot)
-            if slotInfo then
-                for _, pvpTalentID in ipairs(slotInfo.availableTalentIDs) do
-                    local spellId = select(6, GetPvpTalentInfoByID(pvpTalentID))
-                    if spellId then
-                        local newid = C_Spell.GetOverrideSpell(spellId)
-                        if newid ~= spellId then
-                            spellOverride[newid] = spellId
-                        end
+    for pvpTalentSlot = 1, 3 do
+        local slotInfo = C_SpecializationInfo.GetPvpTalentSlotInfo(pvpTalentSlot)
+        if slotInfo then
+            for _, pvpTalentID in ipairs(slotInfo.availableTalentIDs) do
+                local spellId = select(6, GetPvpTalentInfoByID(pvpTalentID))
+                if spellId then
+                    local newid = C_Spell.GetOverrideSpell(spellId)
+                    if newid ~= spellId then
+                        spellOverride[newid] = spellId
                     end
                 end
             end
@@ -1033,9 +1018,7 @@ local function PickupActionTable(actionData, flyouts, mountCache)
     elseif actionData.actionType == "spell" then
         local spellId = actionData.spellID
         if spellId then
-            if FindBaseSpellByID then
-                spellId = FindBaseSpellByID(spellId) or spellId
-            end
+            spellId = C_SpellBook.FindBaseSpellByID(spellId) or spellId
 
             if IsCovenantSignatureAbility(spellId) then
                 local covenantId = GetCovenantSignatureAbility()

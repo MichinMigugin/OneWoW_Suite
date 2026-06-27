@@ -27,7 +27,7 @@ function NotesHyperlinks:ConvertManualLinks(text)
     local function convertSpellID(spellID)
         local id = tonumber(spellID)
         if id then
-            local spellLink = C_Spell.GetSpellLink(id) or C_SpellBook.GetSpellLinkFromSpellID(id)
+            local spellLink = C_Spell.GetSpellLink(id)
             if spellLink then return spellLink end
         end
         return "(spell=" .. spellID .. ")"
@@ -36,7 +36,7 @@ function NotesHyperlinks:ConvertManualLinks(text)
     local function convertQuestID(questID)
         local id = tonumber(questID)
         if id then
-            local questLink = C_QuestLog.GetQuestLink(id)
+            local questLink = GetQuestLink(id)
             if questLink then return questLink end
         end
         return "(quest=" .. questID .. ")"

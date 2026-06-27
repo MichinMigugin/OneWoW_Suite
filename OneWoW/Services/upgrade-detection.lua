@@ -70,10 +70,9 @@ local function AltHasTwoHanderEquipped(equipment)
 end
 
 local function GetCurrentSpecID()
-    local specIndex = GetSpecialization and GetSpecialization()
+    local specIndex = C_SpecializationInfo.GetSpecialization()
     if not specIndex then return nil end
-    local specID = GetSpecializationInfo and GetSpecializationInfo(specIndex)
-    return specID
+    return select(1, C_SpecializationInfo.GetSpecializationInfo(specIndex))
 end
 
 local function CanPlayerUseItem(itemLink)

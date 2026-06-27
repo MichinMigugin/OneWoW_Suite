@@ -478,8 +478,8 @@ function DirectDeposit:DepositSingleSlot(slotInfo)
             return
         end
     else
-        local ok, bindType = pcall(C_Item.GetItemBindType, itemLocation)
-        if ok and (bindType == Enum.ItemBind.OnAcquire or bindType == Enum.ItemBind.Quest) then
+        local bindType = itemInfo.hyperlink and select(14, C_Item.GetItemInfo(itemInfo.hyperlink))
+        if bindType == Enum.ItemBind.OnAcquire or bindType == Enum.ItemBind.Quest then
             table.insert(self.failedItems, {itemID = expectedID, itemName = itemName or "Unknown", reason = "Item binding prevents deposit"})
             return
         end
@@ -564,8 +564,8 @@ function DirectDeposit:DepositItemByID(itemID, targetBankType, itemName)
                                 errorReason = "Item binding prevents deposit"
                             end
                         else
-                            local ok, bindType = pcall(C_Item.GetItemBindType, itemLocation)
-                            if ok and (bindType == Enum.ItemBind.OnAcquire or bindType == Enum.ItemBind.Quest) then
+                            local bindType = itemInfo.hyperlink and select(14, C_Item.GetItemInfo(itemInfo.hyperlink))
+                            if bindType == Enum.ItemBind.OnAcquire or bindType == Enum.ItemBind.Quest then
                                 canDeposit = false
                                 hadError = true
                                 errorReason = "Item binding prevents deposit"

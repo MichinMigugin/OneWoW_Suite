@@ -1,6 +1,6 @@
-local addonName, ns = ...
+local _, ns = ...
 
-local OneWoW_GUI = OneWoW_GUI
+local C_SpecializationInfo = C_SpecializationInfo
 
 ns.CharacterStats = {}
 local Module = ns.CharacterStats
@@ -103,9 +103,9 @@ function Module:CollectData(charKey, charData)
         stats.versatility = nil
     end
 
-    local specID = GetSpecialization()
-    if specID then
-        local id, name, description, icon, background, role = GetSpecializationInfo(specID)
+    local specIndex = C_SpecializationInfo.GetSpecialization()
+    if specIndex then
+        local id, name, _, icon, background, role = C_SpecializationInfo.GetSpecializationInfo(specIndex)
         stats.specID = id
         stats.specName = name
         stats.specRole = role

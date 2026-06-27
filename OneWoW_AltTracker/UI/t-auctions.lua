@@ -891,7 +891,7 @@ function ns.UI.RefreshAuctionsStats(auctionsTab)
 
     stats.attention = stats.expiring + stats.expired
 
-    if C_AuctionHouse.IsAuctionHouseOpen() then
+    if AuctionHouseFrame and AuctionHouseFrame:IsShown() then
         stats.ahStatus = L["AUCTION_AH_OPEN"]
     end
 

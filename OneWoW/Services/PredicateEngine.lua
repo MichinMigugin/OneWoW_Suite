@@ -36,7 +36,7 @@ local C_TransmogCollection = C_TransmogCollection
 local C_TradeSkillUI = C_TradeSkillUI
 local C_HousingCatalog = C_HousingCatalog
 local C_MythicPlus = C_MythicPlus
-local GetSpecialization, GetSpecializationInfo = GetSpecialization, GetSpecializationInfo
+local GetSpecialization, GetSpecializationInfo = C_SpecializationInfo.GetSpecialization, C_SpecializationInfo.GetSpecializationInfo
 local BattlePetToolTip_UnpackBattlePetLink = BattlePetToolTip_UnpackBattlePetLink
 local UnitLevel = UnitLevel
 local print, format = print, string.format
@@ -1734,7 +1734,7 @@ local function ResolveSpecs(props)
     -- player, which makes forclass/forspec viewer-relative. Class eligibility is
     -- derived from any matching spec, since loot eligibility is spec-driven.
     for classID = 1, GetNumClasses() do
-        for specIndex = 1, GetNumSpecializationsForClassID(classID) do
+        for specIndex = 1, C_SpecializationInfo.GetNumSpecializationsForClassID(classID) do
             local specID = GetSpecializationInfoForClassID(classID, specIndex)
             if specID and C_Item.DoesItemContainSpec(item, classID, specID) then
                 specs[specID] = true

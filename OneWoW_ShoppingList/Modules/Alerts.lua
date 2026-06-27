@@ -4,6 +4,10 @@ local L = ns.L
 ns.Alerts = {}
 local Alerts = ns.Alerts
 
+local function GetDB()
+    return ns.db
+end
+
 local function ShowAlert(itemID, itemName, alertType)
     if not ns.ShoppingList then return end
     if not ns.ShoppingList:CanShowAlert(itemID, alertType) then return end

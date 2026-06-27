@@ -1,7 +1,10 @@
-local addonName, ns = ...
-local L = ns.L
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
+
+local C_SpecializationInfo = C_SpecializationInfo
+
+local L = ns.L
 
 ns.UI = ns.UI or {}
 
@@ -65,7 +68,7 @@ local function ShowRestoreBarDialog(setName, sourceBarNumber, parent)
     instructionText:SetText(L["AB_SELECT_TARGET_BAR"])
     instructionText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local dropdown, dropdownText = OneWoW_GUI:CreateDropdown(cf, {
+    local dropdown = OneWoW_GUI:CreateDropdown(cf, {
         width = 200,
         height = 28,
         text = L[BAR_NAMES[sourceBarNumber]] or string.format(L["AB_LABEL_BAR"], sourceBarNumber),
@@ -195,8 +198,8 @@ end
 
 local function ShowBackupDialog(split)
     local playerName = UnitName("player")
-    local specIndex = GetSpecialization()
-    local specName = specIndex and select(2, GetSpecializationInfo(specIndex)) or ""
+    local specIndex = C_SpecializationInfo.GetSpecialization()
+    local specName = specIndex and select(2, C_SpecializationInfo.GetSpecializationInfo(specIndex)) or ""
     local defaultName = playerName .. " " .. specName
 
     local result = OneWoW_GUI:CreateDialog({
@@ -608,7 +611,7 @@ function ns.UI.ShowSetDetails(split, setName)
                         GameTooltip:AddLine((L[BAR_NAMES[barNumber]] or string.format(L["AB_LABEL_BAR"], barNumber)) .. ", " .. string.format(L["AB_LABEL_SLOT"], slotIndex), 0.8, 0.8, 0.8)
                         GameTooltip:Show()
                     end)
-                    slotFrame:SetScript("OnLeave", function(self)
+                    slotFrame:SetScript("OnLeave", function()
                         GameTooltip:Hide()
                     end)
                 else
@@ -873,7 +876,7 @@ function ns.UI.CreateActionBarsTab(parent)
 
     local controlTitle = OneWoW_GUI:CreateFS(controlPanel, 12)
     controlTitle:SetPoint("LEFT", controlPanel, "LEFT", 10, 0)
-    local currentSpec = select(2, GetSpecializationInfo(GetSpecialization())) or UNKNOWN
+    local currentSpec = select(2, C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())) or UNKNOWN
     controlTitle:SetText(UnitName("player") .. " - " .. currentSpec)
     controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
@@ -904,7 +907,7 @@ function ns.UI.CreateActionBarsTab(parent)
         ShowBackupDialog(split)
     end)
 
-    local filterDropdown, filterDropdownText = OneWoW_GUI:CreateDropdown(controlPanel, {
+    local filterDropdown = OneWoW_GUI:CreateDropdown(controlPanel, {
         width = 160,
         height = 28,
         text = ALL_CLASSES,

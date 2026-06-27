@@ -2847,7 +2847,7 @@ function ShowQuestDetail(panels, questData)
 
                                 local _, _, resolvedQuality = C_Item.GetItemInfo(itemID)
                                 if resolvedQuality then
-                                    local r, g, b = GetItemQualityColor(resolvedQuality)
+                                    local r, g, b = C_Item.GetItemQualityColor(resolvedQuality)
                                     itemText:SetTextColor(r, g, b)
                                 end
                             end,
@@ -2856,7 +2856,7 @@ function ShowQuestDetail(panels, questData)
 
                     if itemQuality then
                         local r, g, b =
-                            GetItemQualityColor(itemQuality)
+                            C_Item.GetItemQualityColor(itemQuality)
 
                         itemText:SetTextColor(r, g, b)
                     else

@@ -475,7 +475,7 @@ function TE:EvaluateObjective(obj)
         end
 
     elseif ot == "vault_dungeon" then
-        local activities = C_WeeklyRewards.GetActivities(Enum.WeeklyRewardChestThresholdType.MythicPlus)
+        local activities = C_WeeklyRewards.GetActivities(Enum.WeeklyRewardChestThresholdType.Activities)
         if activities then
             local best = 0
             for _, act in ipairs(activities) do
