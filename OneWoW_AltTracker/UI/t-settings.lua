@@ -957,7 +957,7 @@ function ns.UI.CreateSettingsTab(parent)
         {key = "fi_costs",     label = "Verify repair/vendor cost event names",      auto = false, value = function() return "MERCHANT_CLOSED and related events" end, file = "OneWoW_AltTracker_Accounting/"},
 
         {section = "Items Tab"},
-        {key = "it_ah",        label = "Verify AH scan connection still works",       auto = false, value = function() return "Test with /at then Items tab" end, file = "OneWoW_AltTracker_Storage/Modules/AHScanner.lua"},
+        {key = "it_ah",        label = "Verify Items tab AH prices read from cache",  auto = false, value = function() return "Open Items tab; confirm AH column from OneWoW_AHPrices (Catalog full scan first) or Auctionator/TSM per setting" end, file = "OneWoW_AltTracker/UI/t-items.lua + OneWoW_AltTracker_Auctions/Modules/FullAHScanner.lua"},
 
         {section = "Profiles / Settings"},
         {key = "ps_backup",    label = "Verify saved variable backup and restore",    auto = false, value = function() return "Test export/import of profile data" end, file = "OneWoW_AltTracker/Core/"},

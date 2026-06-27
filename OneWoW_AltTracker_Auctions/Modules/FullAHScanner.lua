@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.FullAHScanner = {}
 local FullAHScanner = ns.FullAHScanner
@@ -14,7 +14,7 @@ local function GetOrCreateScanFrame()
     if scanFrame then return scanFrame end
     if not AuctionHouseFrame then return nil end
     scanFrame = CreateFrame("Frame", "OneWoW_FullAHScanFrame", AuctionHouseFrame)
-    scanFrame:SetScript("OnEvent", function(self, event, ...)
+    scanFrame:SetScript("OnEvent", function(_, event, ...)
         FullAHScanner:HandleEvent(event, ...)
     end)
     return scanFrame
@@ -23,7 +23,7 @@ end
 function FullAHScanner:Initialize()
 end
 
-function FullAHScanner:HandleEvent(event, ...)
+function FullAHScanner:HandleEvent(event)
     if event == "REPLICATE_ITEM_LIST_UPDATE" then
         if scanFrame then scanFrame:UnregisterEvent("REPLICATE_ITEM_LIST_UPDATE") end
         if scanState and scanState.waitingTicker then
@@ -60,8 +60,8 @@ function FullAHScanner:StartScan(callback)
     local frame = GetOrCreateScanFrame()
     if not frame then return false end
 
-    if not _G.OneWoW_AHPrices then
-        _G.OneWoW_AHPrices = {}
+    if not OneWoW_AHPrices then
+        OneWoW_AHPrices = {}
     end
 
     scanState = {
@@ -169,7 +169,7 @@ function FullAHScanner:CacheScanData()
         if processed >= limit then
             local pricesFound = 0
             for iID, price in pairs(minPrices) do
-                _G.OneWoW_AHPrices[iID] = {
+                OneWoW_AHPrices[iID] = {
                     price = price,
                     timestamp = serverTime,
                 }
@@ -199,14 +199,4 @@ function FullAHScanner:CompleteScan(pricesFound)
     scanState = nil
     lastScanTime = time()
     if cb then cb("scanCompleted", 1.0, pricesFound) end
-end
-
-function FullAHScanner:GetPrice(itemID)
-    if _G.OneWoW_AHPrices then
-        local data = _G.OneWoW_AHPrices[itemID]
-        if data then
-            return data.price, data.timestamp
-        end
-    end
-    return nil, nil
 end

@@ -1,4 +1,9 @@
-local addonName, ns = ...
+local _, ns = ...
+
+local tinsert = tinsert
+local GetServerTime = GetServerTime
+local C_AuctionHouse = C_AuctionHouse
+local C_Item = C_Item
 
 ns.ActiveBids = {}
 local ActiveBids = ns.ActiveBids
@@ -45,7 +50,7 @@ function ActiveBids:CollectData(charKey, charData)
                     collectedAt = serverTime,
                 }
 
-                table.insert(bids, bidData)
+                tinsert(bids, bidData)
                 totalBidAmount = totalBidAmount + (bidInfo.bidAmount or 0)
             end
         end

@@ -340,15 +340,11 @@ function ns.UI.CreateItemsTab(parent)
         searchHelpBtn = OneWoW_GUI:CreateKeywordHelpButton(filterBar, { editBox = searchBox, size = 20 })
     end
 
-    -- Scan-AH sits at the far right; the filter checkboxes cluster just left of
-    -- it, and the search box flexes to fill everything to their left.
-    local scanAHButton = OneWoW_GUI:CreateFitTextButton(filterBar, { text = L["SCAN_AH"], height = 20 })
-    scanAHButton:SetPoint("RIGHT", filterBar, "RIGHT", -8, 0)
-    scanAHButton.isAHScanning = false
-
+    -- Filter checkboxes sit at the far right; the search box flexes to fill the
+    -- space to their left.
     local filterCluster = CreateFrame("Frame", nil, filterBar)
     filterCluster:SetHeight(20)
-    filterCluster:SetPoint("RIGHT", scanAHButton, "LEFT", -10, 0)
+    filterCluster:SetPoint("RIGHT", filterBar, "RIGHT", -8, 0)
 
     local checkBound = OneWoW_GUI:CreateCheckbox(filterCluster, { label = L["ITEMS_FILTER_BOUND"] })
     checkBound:SetPoint("LEFT", filterCluster, "LEFT", 0, 0)
@@ -398,34 +394,6 @@ function ns.UI.CreateItemsTab(parent)
     else
         searchBox:SetPoint("RIGHT", filterCluster, "LEFT", -8, 0)
     end
-    scanAHButton:SetScript("OnClick", function(self)
-        if self.isAHScanning then
-            if OneWoW_AltTracker_Auctions_API then
-                OneWoW_AltTracker_Auctions_API.StopScan()
-            end
-            return
-        end
-        if not AuctionHouseFrame or not AuctionHouseFrame:IsShown() then
-            print(L["ADDON_CHAT_PREFIX"] .. " " .. L["OPEN_THE_AUCTION_HOUSE_FIRST_TO_SCAN_PRICES"])
-            return
-        end
-        ns.UI:StartAHScan(parent, scanAHButton)
-    end)
-
-    parent.scanAHButton = scanAHButton
-
-    local scanBarContainer = OneWoW_GUI:CreateFrame(parent, { height = 20, bgColor = "BG_SECONDARY", borderColor = "BORDER_SUBTLE" })
-    scanBarContainer:SetPoint("TOPLEFT", filterBar, "BOTTOMLEFT", 0, -3)
-    scanBarContainer:SetPoint("TOPRIGHT", filterBar, "BOTTOMRIGHT", 0, -3)
-    scanBarContainer:Hide()
-
-    local scanProgressBar = OneWoW_GUI:CreateProgressBar(scanBarContainer, { height = 14, min = 0, max = 1, value = 0 })
-    scanProgressBar:SetPoint("TOPLEFT", scanBarContainer, "TOPLEFT", 4, -3)
-    scanProgressBar:SetPoint("TOPRIGHT", scanBarContainer, "TOPRIGHT", -4, -3)
-
-    parent.scanBarContainer = scanBarContainer
-    parent.scanProgressBar = scanProgressBar
-
     local noticeBar = OneWoW_GUI:CreateFrame(parent, { height = 28, bgColor = "BG_SECONDARY", borderColor = "BORDER_SUBTLE" })
     noticeBar:SetPoint("TOPLEFT", filterBar, "BOTTOMLEFT", 0, -5)
     noticeBar:SetPoint("TOPRIGHT", filterBar, "BOTTOMRIGHT", 0, -5)
@@ -438,6 +406,7 @@ function ns.UI.CreateItemsTab(parent)
     noticeText:SetWordWrap(true)
     noticeText:SetText(L["ITEMS_NOTICE"])
     noticeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+    parent.noticeText = noticeText
 
     dupeControls = ns.UI.BuildDupeControls(parent, filterBar, function()
         ns.UI.RefreshItemsTab(parent)
@@ -494,8 +463,6 @@ function ns.UI.CreateItemsTab(parent)
         if dupeMode then
             EnsureDupeSpec()
             noticeBar:Hide()
-            scanBarContainer:Hide()
-            if scanAHButton then scanAHButton:Hide() end
             dupeControls:Show()
             AnchorRoster(dupeControls)
             dt:SetColumns(dupeColumnsConfig)
@@ -521,197 +488,6 @@ function ns.UI.CreateItemsTab(parent)
     C_Timer.After(0.2, function()
         if ns.UI.RefreshItemsTab then
             ns.UI.RefreshItemsTab(parent)
-        end
-    end)
-end
-
-function ns.UI:StartAHScan(itemsTab, scanButton)
-    if not OneWoW_AltTracker_Auctions_API then
-        return
-    end
-
-    local storageAPI = OneWoW_AltTracker_Storage_API
-    if not storageAPI then
-        return
-    end
-
-    local itemsToScan = {}
-    local seenItems = {}
-
-    for charKey, charData in pairs(storageAPI.GetCharacters()) do
-        if charData.bags then
-            for bagID, bagInfo in pairs(charData.bags) do
-                if bagInfo.slots then
-                    for slotID, itemData in pairs(bagInfo.slots) do
-                        if itemData and itemData.itemID and not seenItems[itemData.itemID] then
-                            if not itemData.isBound then
-                                table.insert(itemsToScan, {
-                                    itemID = itemData.itemID,
-                                    itemName = itemData.itemName,
-                                    isBound = itemData.isBound,
-                                })
-                                seenItems[itemData.itemID] = true
-                            end
-                        end
-                    end
-                end
-            end
-        end
-
-        if charData.personalBank and charData.personalBank.tabs then
-            for tabIndex, tabInfo in pairs(charData.personalBank.tabs) do
-                if tabInfo.items then
-                    for slotID, itemData in pairs(tabInfo.items) do
-                        if itemData and itemData.itemID and not seenItems[itemData.itemID] then
-                            if not itemData.isBound then
-                                table.insert(itemsToScan, {
-                                    itemID = itemData.itemID,
-                                    itemName = itemData.itemName,
-                                    isBound = itemData.isBound,
-                                })
-                                seenItems[itemData.itemID] = true
-                            end
-                        end
-                    end
-                end
-            end
-        end
-
-        if charData.mail and charData.mail.mails then
-            for mailID, mailData in pairs(charData.mail.mails) do
-                if mailData.items then
-                    for attachmentIndex, itemData in pairs(mailData.items) do
-                        if itemData and itemData.itemID and not seenItems[itemData.itemID] then
-                            local isBound = itemData.canUse == false
-                            if not isBound then
-                                table.insert(itemsToScan, {
-                                    itemID = itemData.itemID,
-                                    itemName = itemData.itemName or itemData.name,
-                                    isBound = isBound,
-                                })
-                                seenItems[itemData.itemID] = true
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    local warbandBank = storageAPI.GetWarbandBank()
-    if warbandBank and warbandBank.tabs then
-        for tabIndex, tabInfo in pairs(warbandBank.tabs) do
-            if tabInfo.items then
-                for slotIndex, itemData in pairs(tabInfo.items) do
-                    if itemData and itemData.itemID and not seenItems[itemData.itemID] then
-                        table.insert(itemsToScan, {
-                            itemID = itemData.itemID,
-                            itemName = itemData.itemName,
-                            isBound = false,
-                        })
-                        seenItems[itemData.itemID] = true
-                    end
-                end
-            end
-        end
-    end
-
-    local guildBanks = storageAPI.GetGuildBanks()
-    if guildBanks then
-        for guildName, guildBank in pairs(guildBanks) do
-            if guildBank.tabs then
-                for tabIndex, tabInfo in pairs(guildBank.tabs) do
-                    if tabInfo.slots then
-                        for slotID, itemData in pairs(tabInfo.slots) do
-                            if itemData and itemData.itemID and not seenItems[itemData.itemID] then
-                                table.insert(itemsToScan, {
-                                    itemID = itemData.itemID,
-                                    itemName = itemData.itemName,
-                                    isBound = false,
-                                })
-                                seenItems[itemData.itemID] = true
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    if #itemsToScan == 0 then
-        print(L["ADDON_CHAT_PREFIX"] .. " " .. L["ITEMS_NONE_TO_SCAN"])
-        return
-    end
-
-    scanButton.isAHScanning = true
-    scanButton:SetText(L["STOP"])
-
-    local progressBar = itemsTab.scanProgressBar
-    local progressContainer = itemsTab.scanBarContainer
-    local noticeBar = itemsTab.noticeBar
-
-    local function ShowProgress(show)
-        if show then
-            progressContainer:Show()
-            if noticeBar then
-                noticeBar:SetPoint("TOPLEFT", progressContainer, "BOTTOMLEFT", 0, -3)
-                noticeBar:SetPoint("TOPRIGHT", progressContainer, "BOTTOMRIGHT", 0, -3)
-            end
-        else
-            progressContainer:Hide()
-            if noticeBar then
-                noticeBar:SetPoint("TOPLEFT", itemsTab.filterBar, "BOTTOMLEFT", 0, -5)
-                noticeBar:SetPoint("TOPRIGHT", itemsTab.filterBar, "BOTTOMRIGHT", 0, -5)
-            end
-        end
-    end
-
-    local function ScanDone(pricesFound)
-        scanButton.isAHScanning = false
-        scanButton:SetText(L["SCAN_AH"])
-        scanButton:SetEnabled(true)
-        ShowProgress(false)
-        if ns.UI.RefreshItemsTab then
-            ns.UI.RefreshItemsTab(itemsTab)
-        end
-    end
-
-    local lastRefreshIndex = 0
-
-    OneWoW_AltTracker_Auctions_API.StartScan(itemsToScan, function(status, current, total, extra)
-        if status == "scanStarted" then
-            ShowProgress(true)
-            if progressBar then
-                progressBar:UpdateProgress(0, total)
-                progressBar._text:SetText("0/" .. total .. " - " .. (L["ITEMS_SCANNING_STATUS"]))
-            end
-        elseif status == "itemScanned" then
-            if progressBar then
-                progressBar:UpdateProgress(current, total)
-                local pricesFound = extra or 0
-                progressBar._text:SetText(current .. "/" .. total .. "  (" .. pricesFound .. " " .. (L["PRICES_FOUND"]) .. ")")
-            end
-            if current - lastRefreshIndex >= 25 then
-                lastRefreshIndex = current
-                if ns.UI.RefreshItemsTab then
-                    ns.UI.RefreshItemsTab(itemsTab)
-                end
-            end
-        elseif status == "scanCompleted" then
-            local pricesFound = extra or 0
-            if progressBar then
-                progressBar:UpdateProgress(total, total)
-                progressBar._text:SetText(L["ITEMS_SCAN_COMPLETE"] .. "  (" .. pricesFound .. " " .. (L["PRICES_FOUND"]) .. ")")
-            end
-            C_Timer.After(3, function()
-                ScanDone(pricesFound)
-            end)
-        elseif status == "scanStopped" then
-            ScanDone(0)
-        elseif status == "ahClosed" then
-            if scanButton.isAHScanning then
-                OneWoW_AltTracker_Auctions_API.StopScan()
-            end
         end
     end)
 end
@@ -1141,13 +917,9 @@ function ns.UI.RefreshItemsTab(itemsTab)
     if not storageAPI then return end
 
     do
-        local ip = OneWoW and OneWoW.ItemPrices
-        local auctionatorActive = ip and ip:IsAuctionatorAHSourceActive()
-        local tsmActive = ip and ip:IsTSMAHSourceActive()
-        local hideScan = auctionatorActive or tsmActive
-        if itemsTab.scanAHButton then
-            itemsTab.scanAHButton:SetShown(not hideScan)
-        end
+        local ip = OneWoW.ItemPrices
+        local auctionatorActive = ip:IsAuctionatorAHSourceActive()
+        local tsmActive = ip:IsTSMAHSourceActive()
         if itemsTab.noticeText then
             local notice = L["ITEMS_NOTICE"]
             if auctionatorActive then
@@ -1163,7 +935,6 @@ function ns.UI.RefreshItemsTab(itemsTab)
     if not scrollContent then return end
 
     local dt = itemsTab.dataTable
-    local OneWoW_GUI = OneWoW_GUI
 
     OneWoW_GUI:ClearDataRows(scrollContent)
     wipe(itemRows)
@@ -1252,26 +1023,13 @@ function ns.UI.RefreshItemsTab(itemsTab)
         end
 
         if shouldInclude then
-            local ow = OneWoW
-            if ow and ow.ItemPrices then
-                local p, meta = ow.ItemPrices:GetUnitAHPrice(itemID, itemData.itemLink)
-                if p and p > 0 then
-                    itemData.ahPrice = p
-                    itemData.ahTime = (meta and meta.timestamp) or 0
-                else
-                    itemData.ahPrice = 0
-                    itemData.ahTime = 0
-                end
+            local p, meta = OneWoW.ItemPrices:GetUnitAHPrice(itemID, itemData.itemLink)
+            if p and p > 0 then
+                itemData.ahPrice = p
+                itemData.ahTime = (meta and meta.timestamp) or 0
             else
-                local ahData = OneWoW_AltTracker_Auctions_API
-                    and OneWoW_AltTracker_Auctions_API.GetByItemID(itemID)
-                if ahData then
-                    itemData.ahPrice = ahData.price or 0
-                    itemData.ahTime = ahData.timestamp or 0
-                else
-                    itemData.ahPrice = 0
-                    itemData.ahTime = 0
-                end
+                itemData.ahPrice = 0
+                itemData.ahTime = 0
             end
             if itemData.ahPrice and itemData.ahPrice > 0 then
                 totalAHValue = totalAHValue + (itemData.ahPrice * itemData.totalQty)
@@ -1421,7 +1179,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
                 GameTooltip:SetHyperlink(itemData.itemLink)
                 GameTooltip:Show()
             end)
-            itemLinkFrame:SetScript("OnLeave", function(self)
+            itemLinkFrame:SetScript("OnLeave", function()
                 if itemData.quality and ITEM_QUALITY_COLORS[itemData.quality] then
                     local color = ITEM_QUALITY_COLORS[itemData.quality]
                     itemNameText:SetTextColor(color.r, color.g, color.b)
@@ -1430,7 +1188,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
                 end
                 GameTooltip:Hide()
             end)
-            itemLinkFrame:SetScript("OnClick", function(self, button)
+            itemLinkFrame:SetScript("OnClick", function()
                 if IsModifiedClick("CHATLINK") then
                     ChatEdit_InsertLink(itemData.itemLink)
                 end

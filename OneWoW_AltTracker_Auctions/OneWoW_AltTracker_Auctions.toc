@@ -38,8 +38,7 @@ Core\Core.lua
 Modules\ActiveAuctions.lua
 Modules\ActiveBids.lua
 
-# AH Scanner Modules
-Modules\AHScanner.lua
+# AH price cache (full-market replicate scan)
 Modules\FullAHScanner.lua
 
 # Data Manager (orchestrates all modules)

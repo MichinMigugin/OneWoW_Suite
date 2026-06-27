@@ -227,10 +227,17 @@ if charData and charData.activeAuctions then
 end
 ```
 
-### AH price scan control
+### AH price cache and full scan
 
-`StartScan`, `StopScan`, `StartFullScan`, `GetByItemID`, and related helpers live on
+`StartFullScan`, `StopFullScan`, `CanFullScan`, `GetByItemID`, and `GetCharacters` live on
 the same `_API` table (see `Core/API.lua`).
+
+- **Population:** Catalog Item Search exposes the SCAN AH button, which calls
+  `StartFullScan` (`FullAHScanner` replicate scan). Results are written to the
+  `OneWoW_AHPrices` SavedVariable (14-day TTL purge on login).
+- **Consumption:** AltTracker Items (and other suite units) read prices through
+  `OneWoW.ItemPrices:GetUnitAHPrice`, which routes to `GetByItemID` for the
+  default OneWoW source, or to Auctionator/TSM when configured in QoL → Tooltips → Value.
 
 ## Architecture
 

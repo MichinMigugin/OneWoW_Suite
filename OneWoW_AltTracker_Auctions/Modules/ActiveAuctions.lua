@@ -1,11 +1,16 @@
-local addonName, ns = ...
+local _, ns = ...
+
+local tinsert, tremove = tinsert, tremove
+local ipairs, pairs = ipairs, pairs
+local floor = floor
+local GetServerTime = GetServerTime
+local C_AuctionHouse = C_AuctionHouse
+local C_Item = C_Item
 
 ns.ActiveAuctions = {}
 local ActiveAuctions = ns.ActiveAuctions
 
 function ActiveAuctions:CollectData(charKey, charData)
-    if not C_AuctionHouse then return false end
-
     local serverTime = GetServerTime()
     local previousAuctions = {}
 
@@ -64,7 +69,7 @@ function ActiveAuctions:CollectData(charKey, charData)
                     self:RecordHistoryEvent(charData, auctionToRecord, "sold", salePrice, serverTime, "status_field")
                     currentAuctions[auctionInfo.auctionID] = auctionData
                 elseif auctionInfo.status == 0 then
-                    table.insert(auctions, auctionData)
+                    tinsert(auctions, auctionData)
                     currentAuctions[auctionData.auctionID] = auctionData
                     totalValue = totalValue + (auctionInfo.buyoutAmount or 0)
                 end
@@ -118,10 +123,10 @@ function ActiveAuctions:RecordHistoryEvent(charData, auction, outcome, goldAmoun
         confirmed = (detectionMethod == "mail"),
     }
 
-    table.insert(charData.auctionHistory, 1, historyEntry)
+    tinsert(charData.auctionHistory, 1, historyEntry)
 
     if #charData.auctionHistory > 100 then
-        table.remove(charData.auctionHistory)
+        tremove(charData.auctionHistory)
     end
 
 end
@@ -207,7 +212,7 @@ function ActiveAuctions:GetHistoryStats(charData)
 
     local totalPosted = stats.sold + stats.expired + stats.canceled
     if totalPosted > 0 then
-        stats.successRate = math.floor((stats.sold / totalPosted) * 100)
+        stats.successRate = floor((stats.sold / totalPosted) * 100)
     else
         stats.successRate = 0
     end

@@ -9,10 +9,6 @@ OneWoW:BootStore(ns, {
     defaults = ns.DatabaseDefaults,
     sortField = "lastUpdate",
     onLogin = function()
-        if ns.AHScanner then
-            ns.AHScanner:Initialize()
-        end
-
         if ns.FullAHScanner then
             ns.FullAHScanner:Initialize()
         end

@@ -1,4 +1,10 @@
-local addonName, ns = ...
+local _, ns = ...
+
+local ipairs = ipairs
+local type = type
+local GetServerTime = GetServerTime
+local CreateFrame = CreateFrame
+local C_AuctionHouse = C_AuctionHouse
 
 ns.DataManager = {}
 local DataManager = ns.DataManager
@@ -7,7 +13,6 @@ local eventFrame = nil
 local initialized = false
 local auctionHouseOpen = false
 local ignoreUpdateEvent = false
-local scanPending = false
 local scanFrame = nil
 
 function DataManager:Initialize()
@@ -17,10 +22,10 @@ function DataManager:Initialize()
     if not scanFrame then
         scanFrame = CreateFrame("Frame")
         scanFrame.ticksRemaining = 0
-        scanFrame:SetScript("OnUpdate", function(self, elapsed)
-            if self.ticksRemaining > 0 then
-                self.ticksRemaining = self.ticksRemaining - 1
-                if self.ticksRemaining == 0 then
+        scanFrame:SetScript("OnUpdate", function(myself)
+            if myself.ticksRemaining > 0 then
+                myself.ticksRemaining = myself.ticksRemaining - 1
+                if myself.ticksRemaining == 0 then
                     DataManager:ExecuteScan()
                 end
             end
@@ -49,7 +54,7 @@ function DataManager:RegisterEvents()
         eventFrame:RegisterEvent(event)
     end
 
-    eventFrame:SetScript("OnEvent", function(self, event, ...)
+    eventFrame:SetScript("OnEvent", function(_, event, ...)
         DataManager:HandleEvent(event, ...)
     end)
 end
@@ -61,7 +66,6 @@ function DataManager:HandleEvent(event, ...)
 
     elseif event == "AUCTION_HOUSE_CLOSED" then
         auctionHouseOpen = false
-        scanPending = false
 
     elseif event == "OWNED_AUCTIONS_UPDATED" then
         if ignoreUpdateEvent then
@@ -99,7 +103,7 @@ function DataManager:HandleEvent(event, ...)
         self:HandleNotification(notificationType, itemName)
 
     elseif event == "AUCTION_HOUSE_SHOW_FORMATTED_NOTIFICATION" then
-        local notificationType, text, itemLink = ...
+        local notificationType, _, itemLink = ...
         local itemName = nil
         if itemLink and type(itemLink) == "string" then
             itemName = itemLink:match("%[(.+)%]")
@@ -155,15 +159,10 @@ function DataManager:RecordNotificationSale(charData, itemName, serverTime)
                 event.outcome = "sold"
                 event.detectionMethod = "notification"
                 event.timestamp = serverTime
-                --print("|cFF00FF00SUCCESS:|r Updated history event to sold for " .. itemName)
                 found = true
                 break
             end
         end
-    end
-
-    if not found then
-        --print("|cFFFF0000ERROR:|r Could not find auction for " .. tostring(itemName))
     end
 end
 
@@ -197,14 +196,11 @@ function DataManager:ScheduleScan(numFrames)
     if not scanFrame then return end
     if scanFrame.ticksRemaining > 0 then return end
     scanFrame.ticksRemaining = numFrames or 2
-    scanPending = true
 end
 
 function DataManager:ExecuteScan()
     if not auctionHouseOpen then return false end
     if not C_AuctionHouse then return false end
-
-    scanPending = false
 
     local charKey = ns:GetCharacterKey()
     if not charKey then return false end

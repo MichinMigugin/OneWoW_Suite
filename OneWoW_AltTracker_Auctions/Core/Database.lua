@@ -25,7 +25,7 @@ function ns:InitializeDatabase()
     end
 
     if not OneWoW_AHPrices then
-        _G["OneWoW_AHPrices"] = {}
+        OneWoW_AHPrices = {}
     end
 
     local cutoff = GetServerTime() - (AH_PRICE_MAX_AGE_DAYS * 86400)
