@@ -17,34 +17,21 @@ This is a companion data addon for the OneWoW Catalog. It provides:
 
 ## Supported Professions
 
-- Alchemy
-- Blacksmithing
-- Cooking
-- Enchanting
-- Engineering
-- Fishing
-- Herbalism
-- Housing Dyes
-- Inscription
-- Jewelcrafting
-- Leatherworking
-- Mining
-- Skinning
-- Tailoring
+Alchemy, Blacksmithing, Cooking, Enchanting, Engineering, Fishing, Herbalism, Housing Dyes, Inscription, Jewelcrafting, Leatherworking, Mining, Skinning, Tailoring.
 
 ---
 
-## Required Addon
+## Required Addons
 
-This addon requires:
-- **OneWoW_Catalog** - The main Catalog addon that uses this data
+- **OneWoW** - Core hub (required)
+- **OneWoW_Catalog** - Parent module that consumes this data (required)
 
 ---
 
 ## Installation
 
 1. Extract the `OneWoW_CatalogData_Tradeskills` folder to your `World of Warcraft\_retail_\Interface\AddOns\` directory
-2. Make sure `OneWoW_Catalog` is also installed
+2. Install **OneWoW** and **OneWoW_Catalog**
 3. Restart World of Warcraft or type `/reload` in-game
 4. Open the Catalog and go to the Tradeskills tab to see the data
 
@@ -60,6 +47,18 @@ This addon requires:
 
 ---
 
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
+
+## If This Module Is Disabled
+
+`OneWoW_Catalog` still loads. Disabling this data pack empties the Tradeskills tab and removes crafted/recipe sources from Item Search (including which alts know a recipe).
+
+**Elsewhere:** ShoppingList loses craft detection, craft orders, recipe picker, and crafting-quality inventory counts; QoL Professions Panel loses supplemental alt data from tradeskill scans. Adding ingredients from the open Blizzard profession window still works.
+
+Full cross-module matrix: [OneWoW_Catalog README — Disabling Data Modules](../OneWoW_Catalog/README.md#disabling-data-modules).
+
 ## Support
 
 **Website:** https://wow2.xyz/
@@ -69,10 +68,6 @@ This addon requires:
 ## OneWoW Suite
 
 Part of the [OneWoW Suite](../README.md). See the suite README for the full addon catalog and install guide.
-
-## Contributing
-
-See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ---
 

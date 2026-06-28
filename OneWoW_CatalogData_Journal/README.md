@@ -15,17 +15,23 @@ This is a companion data addon for the OneWoW Catalog. It provides:
 
 ---
 
-## Required Addon
+## Supported Expansions
 
-This addon requires:
-- **OneWoW_Catalog** - The main Catalog addon that uses this data
+Classic, The Burning Crusade, Wrath of the Lich King, Cataclysm, Mists of Pandaria, Warlords of Draenor, Legion, Battle for Azeroth, Shadowlands, Dragonflight, The War Within, Midnight.
+
+---
+
+## Required Addons
+
+- **OneWoW** - Core hub (required)
+- **OneWoW_Catalog** - Parent module that consumes this data (required)
 
 ---
 
 ## Installation
 
 1. Extract the `OneWoW_CatalogData_Journal` folder to your `World of Warcraft\_retail_\Interface\AddOns\` directory
-2. Make sure `OneWoW_Catalog` is also installed
+2. Install **OneWoW** and **OneWoW_Catalog**
 3. Restart World of Warcraft or type `/reload` in-game
 4. Open the Catalog and go to the Journal tab to see the data
 
@@ -41,22 +47,19 @@ This addon requires:
 
 ---
 
-## Supported Expansions
+## Contributing
 
-- Classic
-- The Burning Crusade
-- Wrath of the Lich King
-- Cataclysm
-- Mists of Pandaria
-- Warlords of Draenor
-- Legion
-- Battle for Azeroth
-- Shadowlands
-- Dragonflight
-- The War Within
-- Midnight
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
----
+## If This Module Is Disabled
+
+`OneWoW_Catalog` still loads. Disabling this data pack removes the Journal tab (instance/encounter/loot browser), Item Search drop sources, and collection tracking on journal loot.
+
+**Elsewhere:** QoL Item Tracker loses instance/encounter tooltip lines; instance-entry toasts and the ESC menu lose collection progress stats; toast click-through to the journal no longer opens an instance.
+
+**Note:** Journal quest-loot "View Quest" and completion badges also need **OneWoW_CatalogData_Quests**.
+
+Full cross-module matrix: [OneWoW_Catalog README — Disabling Data Modules](../OneWoW_Catalog/README.md#disabling-data-modules).
 
 ## Support
 
@@ -67,10 +70,6 @@ This addon requires:
 ## OneWoW Suite
 
 Part of the [OneWoW Suite](../README.md). See the suite README for the full addon catalog and install guide.
-
-## Contributing
-
-See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ---
 

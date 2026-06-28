@@ -73,6 +73,27 @@ The Catalog works with companion data addons to provide complete information:
 - Per-character completion tracking
 - All expansions from Classic through Midnight
 
+Each data pack is optional. Disable any `OneWoW_CatalogData_*` addon you do not use to reduce memory and load time — `OneWoW_Catalog` itself keeps running.
+
+---
+
+## Disabling Data Modules
+
+`OneWoW_Catalog` always loads when enabled. The four **CatalogData** addons are separate load units; turn one off in the WoW addon list (or via suite feature controls) and only that pack's data disappears. Other Catalog tabs and unrelated suite addons keep working.
+
+Per-pack READMEs have a short summary; this table is the canonical cross-module reference.
+
+| Disabled module | In Catalog | Elsewhere in the suite |
+| --- | --- | --- |
+| **Journal** (`OneWoW_CatalogData_Journal`) | Journal tab empty; Item Search drop filter and drop details; collection status on journal loot; navigate-to-instance from toasts | QoL Item Tracker — no instance/encounter lines on item tooltips; QoL — no collection grid on instance-entry toasts or ESC instance panel |
+| **Quests** (`OneWoW_CatalogData_Quests`) | Quests tab empty (including active-quest views); Item Search quest-reward filter and details; open-to-quest navigation | Notes — no associated-quest list on NPCs; Journal — no "View Quest" or quest completion on journal loot *(also needs Quests)*; AltTracker settings — quest completion not listed for character purge |
+| **Vendors** (`OneWoW_CatalogData_Vendors`) | Vendors tab empty; Item Search vendor filter and "sold by" details; open-to-vendor navigation | Core — no "Open Vendor Details" on NPC context menus; QoL Item Tracker — no vendor lines on item tooltips |
+| **Tradeskills** (`OneWoW_CatalogData_Tradeskills`) | Tradeskills tab empty; Item Search crafted filter and recipe details (including known-by alts) | ShoppingList — no craft detection, craft orders, recipe picker, or crafting-quality inventory rollup; QoL Professions Panel — no supplemental alt recipe data from tradeskill scans |
+
+**Still works with any subset:** Catalog shell, Settings, Item Search (owned items via AltTracker), and every Catalog tab whose data pack remains enabled. ShoppingList profession-window hooks that use Blizzard APIs directly are unaffected by disabling Tradeskills.
+
+**Cross-dependencies:** Journal quest-loot links and completion badges need **both** Journal and Quests. ShoppingList recipe features need Tradeskills when Catalog is used for craft planning, not for adding ingredients from the open profession window.
+
 ---
 
 ## Customization

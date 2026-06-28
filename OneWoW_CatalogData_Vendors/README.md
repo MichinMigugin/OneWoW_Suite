@@ -15,17 +15,17 @@ This is a companion data addon for the OneWoW Catalog. It provides:
 
 ---
 
-## Required Addon
+## Required Addons
 
-This addon requires:
-- **OneWoW_Catalog** - The main Catalog addon that uses this data
+- **OneWoW** - Core hub (required)
+- **OneWoW_Catalog** - Parent module that consumes this data (required)
 
 ---
 
 ## Installation
 
 1. Extract the `OneWoW_CatalogData_Vendors` folder to your `World of Warcraft\_retail_\Interface\AddOns\` directory
-2. Make sure `OneWoW_Catalog` is also installed
+2. Install **OneWoW** and **OneWoW_Catalog**
 3. Restart World of Warcraft or type `/reload` in-game
 4. Open the Catalog and go to the Vendors tab to see the data
 
@@ -40,6 +40,18 @@ This addon requires:
 
 ---
 
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
+
+## If This Module Is Disabled
+
+`OneWoW_Catalog` still loads. Disabling this data pack empties the Vendors tab and removes vendor sources from Item Search and open-to-vendor navigation.
+
+**Elsewhere:** NPC context menus lose "Open Vendor Details"; QoL Item Tracker loses vendor/zone lines on item tooltips.
+
+Full cross-module matrix: [OneWoW_Catalog README — Disabling Data Modules](../OneWoW_Catalog/README.md#disabling-data-modules).
+
 ## Support
 
 **Website:** https://wow2.xyz/
@@ -49,10 +61,6 @@ This addon requires:
 ## OneWoW Suite
 
 Part of the [OneWoW Suite](../README.md). See the suite README for the full addon catalog and install guide.
-
-## Contributing
-
-See [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ---
 
