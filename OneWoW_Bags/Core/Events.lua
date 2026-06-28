@@ -125,27 +125,26 @@ end
 function Events:OnPlayerEnteringWorld(isLogin)
     if isLogin then return end
 
-    local addon = OneWoW_Bags
     local function refreshVisible(reason)
-        if addon.GUI and addon.GUI.IsShown and addon.GUI:IsShown()
-            and addon.BagSet and addon.BagSet.isBuilt then
-            addon:RequestLayoutRefresh("bags", reason)
+        if ns.GUI and ns.GUI.IsShown and ns.GUI:IsShown()
+            and ns.BagSet and ns.BagSet.isBuilt then
+            ns:RequestLayoutRefresh("bags", reason)
         end
-        if addon.bankOpen and addon.BankGUI and addon.BankGUI.IsShown and addon.BankGUI:IsShown()
-            and addon.BankSet and addon.BankSet.isBuilt then
-            addon:RequestLayoutRefresh("bank", reason)
+        if ns.bankOpen and ns.BankGUI and ns.BankGUI.IsShown and ns.BankGUI:IsShown()
+            and ns.BankSet and ns.BankSet.isBuilt then
+            ns:RequestLayoutRefresh("bank", reason)
         end
-        if addon.guildBankOpen and addon.GuildBankGUI and addon.GuildBankGUI.IsShown and addon.GuildBankGUI:IsShown()
-            and addon.GuildBankSet and addon.GuildBankSet.isBuilt then
-            addon:RequestLayoutRefresh("guild", reason)
+        if ns.guildBankOpen and ns.GuildBankGUI and ns.GuildBankGUI.IsShown and ns.GuildBankGUI:IsShown()
+            and ns.GuildBankSet and ns.GuildBankSet.isBuilt then
+            ns:RequestLayoutRefresh("guild", reason)
         end
     end
 
-    local LD = addon.LayoutDebug
+    local LD = ns.LayoutDebug
     if LD and LD.enabled then
-        local bagsShown = addon.GUI and addon.GUI.IsShown and addon.GUI:IsShown()
-        local bankShown = addon.bankOpen and addon.BankGUI and addon.BankGUI.IsShown and addon.BankGUI:IsShown()
-        local guildShown = addon.guildBankOpen and addon.GuildBankGUI and addon.GuildBankGUI.IsShown and addon.GuildBankGUI:IsShown()
+        local bagsShown = ns.GUI and ns.GUI.IsShown and ns.GUI:IsShown()
+        local bankShown = ns.bankOpen and ns.BankGUI and ns.BankGUI.IsShown and ns.BankGUI:IsShown()
+        local guildShown = ns.guildBankOpen and ns.GuildBankGUI and ns.GuildBankGUI.IsShown and ns.GuildBankGUI:IsShown()
         LD:Record("entering_world", {
             note = format("bags=%s bank=%s guild=%s", tostring(bagsShown), tostring(bankShown), tostring(guildShown)),
         })
@@ -153,7 +152,7 @@ function Events:OnPlayerEnteringWorld(isLogin)
 
     -- A loading screen can drop the pending zero-delay flush timer and wedge
     -- the refreshScheduled latch. Reset it so any pending bag work flushes.
-    addon:KickLayoutScheduler()
+    ns:KickLayoutScheduler()
 
     refreshVisible("entering_world")
     C_Timer.After(0.1, function()
