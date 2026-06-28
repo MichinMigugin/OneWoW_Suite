@@ -612,6 +612,7 @@ end
 ns.ModuleManifest = {
     { addon = "OneWoW_Notes",           display = "Notes",         cmd = "/1wn",   module = "notes",      tabOrder = 1, loadPhase = "login" },
     { addon = "OneWoW_AltTracker",      display = "AltTracker",    cmd = "/1wat",  module = "alttracker", tabOrder = 2, loadPhase = "login",
+        storePolicy = "bundled",
         stores = {
             "OneWoW_AltTracker_Storage",
             "OneWoW_AltTracker_Character",
@@ -622,6 +623,7 @@ ns.ModuleManifest = {
             "OneWoW_AltTracker_Auctions",
         } },
     { addon = "OneWoW_Catalog",         display = "Catalog",       cmd = "/owcat", module = "catalog",    tabOrder = 3, loadPhase = "login",
+        storePolicy = "optional",
         stores = {
             "OneWoW_CatalogData_Tradeskills",
             "OneWoW_CatalogData_Vendors",
@@ -636,6 +638,53 @@ ns.ModuleManifest = {
     { addon = "OneWoW_Utility_DevTool", display = "DevTools",      cmd = "/1wdt",  loadPhase = "login" },
 }
 local Manifest = ns.ModuleManifest
+
+-- Manage Features sub-row titles (existing Home / scoped locale keys).
+local STORE_LABEL_KEYS = {
+    OneWoW_AltTracker_Storage     = "DATA_MOD_STORAGE",
+    OneWoW_AltTracker_Character     = "DATA_MOD_CHARACTER",
+    OneWoW_AltTracker_Professions   = "DATA_MOD_PROFESSIONS",
+    OneWoW_AltTracker_Collections   = "DATA_MOD_COLLECTIONS",
+    OneWoW_AltTracker_Endgame       = "DATA_MOD_ENDGAME",
+    OneWoW_AltTracker_Accounting    = "DATA_MOD_ACCOUNTING",
+    OneWoW_AltTracker_Auctions      = "DATA_MOD_AUCTIONS",
+    OneWoW_CatalogData_Journal      = "CAT_MOD_JOURNAL",
+    OneWoW_CatalogData_Quests       = "CAT_MOD_QUESTS",
+    OneWoW_CatalogData_Vendors      = "CAT_MOD_VENDORS",
+    OneWoW_CatalogData_Tradeskills  = "CAT_MOD_TRADESKILLS",
+}
+
+--- Manifest entry for a root load unit, or nil.
+---@param addonName string
+---@return table|nil
+function ns:GetManifestByAddon(addonName)
+    if not addonName then return nil end
+    for _, entry in ipairs(Manifest) do
+        if entry.addon == addonName then
+            return entry
+        end
+    end
+    return nil
+end
+
+--- Manifest roots that own data stores, in manifest order.
+---@return table[]
+function ns:GetManifestParentsWithStores()
+    local result = {}
+    for _, entry in ipairs(Manifest) do
+        if entry.stores and #entry.stores > 0 then
+            result[#result + 1] = entry
+        end
+    end
+    return result
+end
+
+--- Locale key for a store load unit's display name in Manage Features.
+---@param storeAddon string
+---@return string|nil
+function ns:GetStoreLabelKey(storeAddon)
+    return STORE_LABEL_KEYS[storeAddon]
+end
 
 -- Row-1 tab order comes from each hub entry's tabOrder; placeholder labels from module.
 local MODULE_TAB_LOCALE_KEYS = {

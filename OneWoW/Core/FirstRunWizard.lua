@@ -14,6 +14,9 @@
 local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
+local C = OneWoW_GUI.Constants.GUI
+
+local L = ns.L
 
 local C_AddOns = C_AddOns
 local UnitName = UnitName
@@ -38,18 +41,10 @@ FirstRun.CATALOG = {
         labelKey    = "WIZARD_FEATURE_ALTTRACKER",
         summaryKey  = "WIZARD_FEATURE_ALTTRACKER_DESC",
         group       = "feature",
-        iconTexture = "Interface\\Icons\\Achievement_Guild_ClassyDwarf",
-        iconAtlas   = "plunderstorm-glues-queueselector-trio",
-        iconTexCoords = {0.27, 0.74, 0.27, 0.70},
-        datastores  = {
-            "OneWoW_AltTracker_Storage",
-            "OneWoW_AltTracker_Character",
-            "OneWoW_AltTracker_Collections",
-            "OneWoW_AltTracker_Endgame",
-            "OneWoW_AltTracker_Accounting",
-            "OneWoW_AltTracker_Professions",
-            "OneWoW_AltTracker_Auctions",
-        },
+        iconTexture = "Interface\\Icons\\achievement_guildperk_everybodysfriend",
+        --iconAtlas   = "plunderstorm-glues-queueselector-trio",
+        --iconTexCoords = {0.27, 0.74, 0.27, 0.70},
+        datastores  = {},
     },
     {
         addonName   = "OneWoW_Catalog",
@@ -57,12 +52,7 @@ FirstRun.CATALOG = {
         summaryKey  = "WIZARD_FEATURE_CATALOG_DESC",
         group       = "feature",
         iconTexture = "Interface\\Icons\\INV_Misc_Book_11",
-        datastores  = {
-            "OneWoW_CatalogData_Journal",
-            "OneWoW_CatalogData_Quests",
-            "OneWoW_CatalogData_Vendors",
-            "OneWoW_CatalogData_Tradeskills",
-        },
+        datastores  = {},
     },
     {
         addonName   = "OneWoW_Notes",
@@ -117,7 +107,7 @@ FirstRun.CATALOG = {
         labelKey    = "WIZARD_FEATURE_DIRECTDEPOSIT",
         summaryKey  = "WIZARD_FEATURE_DIRECTDEPOSIT_DESC",
         group       = "standalone",
-        iconTexture = "Interface\\Icons\\INV_Misc_Coin_02",
+        iconTexture = "Interface\\Icons\\achievement_guildperk_mobilebanking",
         datastores  = {},
     },
 
@@ -132,14 +122,83 @@ FirstRun.CATALOG = {
     },
 }
 
-local DATASTORE_ADDONS = {
-    "OneWoW_AltTracker_Storage",    "OneWoW_AltTracker_Character",
-    "OneWoW_AltTracker_Collections", "OneWoW_AltTracker_Endgame",
-    "OneWoW_AltTracker_Accounting", "OneWoW_AltTracker_Professions",
-    "OneWoW_AltTracker_Auctions",
-    "OneWoW_CatalogData_Journal",   "OneWoW_CatalogData_Quests",
-    "OneWoW_CatalogData_Vendors",   "OneWoW_CatalogData_Tradeskills",
+-- Per-data-module icons (numeric file IDs) so sub-rows mirror the parent's icon slot.
+local STORE_ICONS = {
+    OneWoW_CatalogData_Journal      = 5341597,  -- inv_toy_booklibrary
+    OneWoW_CatalogData_Quests       = 236670,   -- achievement_quests_completed_07
+    OneWoW_CatalogData_Tradeskills  = 136241,   -- trade_blacksmithing
+    OneWoW_CatalogData_Vendors      = 901746,   -- inv_misc_coinbag_special
+    OneWoW_AltTracker_Accounting    = 413573,   -- achievement_guildperk_cashflow_rank2
+    OneWoW_AltTracker_Auctions      = 413570,   -- achievement_guildperk_bartering
+    OneWoW_AltTracker_Character     = 134148,   -- inv_misc_grouplooking
+    OneWoW_AltTracker_Collections   = 1418621,  -- item_shop_giftbox01
+    OneWoW_AltTracker_Endgame       = 255347,   -- achievement_dungeon_heroic_gloryoftheraider
+    OneWoW_AltTracker_Professions   = 4624728,  -- inv_10_specialization_professionbook_engineering_color1
+    OneWoW_AltTracker_Storage       = 1542852,  -- inv_misc_treasurechest03b
 }
+
+-- Sub-row copy and "What's affected?" modal keys (Catalog optional stores only).
+local STORE_DESC_KEYS = {
+    OneWoW_CatalogData_Journal     = "WIZARD_CAT_DATA_JOURNAL_DESC",
+    OneWoW_CatalogData_Quests      = "WIZARD_CAT_DATA_QUESTS_DESC",
+    OneWoW_CatalogData_Vendors     = "WIZARD_CAT_DATA_VENDORS_DESC",
+    OneWoW_CatalogData_Tradeskills = "WIZARD_CAT_DATA_TRADESKILLS_DESC",
+}
+
+local STORE_AFFECTED_KEYS = {
+    OneWoW_CatalogData_Journal = {
+        title = "WIZARD_AFFECTED_JOURNAL_TITLE",
+        body  = "WIZARD_AFFECTED_JOURNAL_BODY",
+    },
+    OneWoW_CatalogData_Quests = {
+        title = "WIZARD_AFFECTED_QUESTS_TITLE",
+        body  = "WIZARD_AFFECTED_QUESTS_BODY",
+    },
+    OneWoW_CatalogData_Vendors = {
+        title = "WIZARD_AFFECTED_VENDORS_TITLE",
+        body  = "WIZARD_AFFECTED_VENDORS_BODY",
+    },
+    OneWoW_CatalogData_Tradeskills = {
+        title = "WIZARD_AFFECTED_TRADESKILLS_TITLE",
+        body  = "WIZARD_AFFECTED_TRADESKILLS_BODY",
+    },
+}
+
+local PARENT_MODULE_LABEL_KEYS = {
+    OneWoW_Catalog    = "MODULE_CATALOG",
+    OneWoW_AltTracker = "MODULE_ALTTRACKER",
+}
+
+local PARENT_DATA_TOOLTIP_KEYS = {
+    OneWoW_Catalog    = "WIZARD_DATA_TOOLTIP_CATALOG",
+    OneWoW_AltTracker = "WIZARD_DATA_TOOLTIP_ALTTRACKER",
+}
+
+local function BuildDatastoreAddonList()
+    local seen = {}
+    local list = {}
+    local function add(name)
+        if name and not seen[name] then
+            seen[name] = true
+            list[#list + 1] = name
+        end
+    end
+    for _, entry in ipairs(ns.ModuleManifest) do
+        if entry.stores then
+            for _, store in ipairs(entry.stores) do
+                add(store)
+            end
+        end
+    end
+    for _, entry in ipairs(FirstRun.CATALOG) do
+        for _, ds in ipairs(entry.datastores) do
+            add(ds)
+        end
+    end
+    return list
+end
+
+local DATASTORE_ADDONS = BuildDatastoreAddonList()
 
 -- Loads a feature module and its manifest data stores now, so a reload-free enable
 -- arms this session. ns:BringUp loads the whole set (OnAddonLoaded each) before
@@ -149,15 +208,93 @@ local function LoadFeatureNow(addonName)
     ns:BringUp(addonName)
 end
 
--- For each datastore, decide whether it should be enabled based on which
--- consumer features the user kept checked.
-local function ComputeDatastoreState(selections)
-    local wanted = {}
-    for _, ds in ipairs(DATASTORE_ADDONS) do wanted[ds] = false end
+local function GetStoreOwner(storeAddon)
+    for _, entry in ipairs(ns.ModuleManifest) do
+        if entry.stores then
+            for _, store in ipairs(entry.stores) do
+                if store == storeAddon then
+                    return entry
+                end
+            end
+        end
+    end
+    return nil
+end
+
+-- Consumer feature that forces an optional store on while its owning parent is
+-- selected. A store has RequiredDeps on its owning parent, so it cannot load when
+-- the parent is off -- in that case no consumer can force it and we return nil.
+local function GetStoreConsumerForced(storeAddon, selections)
+    local owner = GetStoreOwner(storeAddon)
+    if owner and not selections[owner.addon] then
+        return nil
+    end
     for _, entry in ipairs(FirstRun.CATALOG) do
         if selections[entry.addonName] then
             for _, ds in ipairs(entry.datastores) do
-                wanted[ds] = true
+                if ds == storeAddon then
+                    if owner and owner.addon ~= entry.addonName then
+                        return entry.addonName
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+-- Denominator pool: manifest stores under selected parents plus consumer pulls.
+local function ComputeEligibleDatastorePool(selections)
+    local pool = {}
+    for _, entry in ipairs(ns.ModuleManifest) do
+        if entry.stores and selections[entry.addon] then
+            for _, store in ipairs(entry.stores) do
+                pool[store] = true
+            end
+        end
+    end
+    for _, entry in ipairs(FirstRun.CATALOG) do
+        if selections[entry.addonName] then
+            for _, ds in ipairs(entry.datastores) do
+                local owner = GetStoreOwner(ds)
+                if not owner or selections[owner.addon] then
+                    pool[ds] = true
+                end
+            end
+        end
+    end
+    return pool
+end
+
+-- Effective wanted set: consumer graph + bundled parents + optional storeSelections.
+local function ComputeDatastoreState(selections, storeSelections)
+    storeSelections = storeSelections or {}
+    local wanted = {}
+    for _, ds in ipairs(DATASTORE_ADDONS) do
+        wanted[ds] = false
+    end
+    for _, entry in ipairs(FirstRun.CATALOG) do
+        if selections[entry.addonName] then
+            for _, ds in ipairs(entry.datastores) do
+                local owner = GetStoreOwner(ds)
+                if not owner or selections[owner.addon] then
+                    wanted[ds] = true
+                end
+            end
+        end
+    end
+    for _, manifest in ipairs(ns:GetManifestParentsWithStores()) do
+        if selections[manifest.addon] then
+            if manifest.storePolicy == "bundled" then
+                for _, store in ipairs(manifest.stores) do
+                    wanted[store] = true
+                end
+            elseif manifest.storePolicy == "optional" then
+                for _, store in ipairs(manifest.stores) do
+                    if storeSelections[store] then
+                        wanted[store] = true
+                    end
+                end
             end
         end
     end
@@ -168,6 +305,18 @@ function FirstRun:GetCurrentSelections(perCharacter)
     local selections = {}
     for _, entry in ipairs(FirstRun.CATALOG) do
         selections[entry.addonName] = ns:IsFeatureWanted(entry.addonName, perCharacter)
+    end
+    return selections
+end
+
+function FirstRun:GetCurrentStoreSelections(perCharacter)
+    local selections = {}
+    for _, manifest in ipairs(ns:GetManifestParentsWithStores()) do
+        if manifest.storePolicy == "optional" then
+            for _, store in ipairs(manifest.stores) do
+                selections[store] = ns:IsFeatureWanted(store, perCharacter)
+            end
+        end
     end
     return selections
 end
@@ -184,12 +333,12 @@ end
 -- (the only way to truly unload, or to re-enable a Blizzard-disabled unit) and
 -- clears the soft opt-out (Blizzard becomes authoritative for these), then prompts
 -- a reload. Returns true when a reload was prompted.
-function FirstRun:Apply(selections, perCharacter, hard)
-    local L = ns.L or {}
+function FirstRun:Apply(selections, perCharacter, hard, storeSelections)
+    storeSelections = storeSelections or {}
+
+    local datastoreState = ComputeDatastoreState(selections, storeSelections)
 
     if hard then
-        -- Full desired state: features plus the datastores their consumers pull in.
-        local datastoreState = ComputeDatastoreState(selections)
         local desired = {}
         for _, entry in ipairs(FirstRun.CATALOG) do
             desired[entry.addonName] = selections[entry.addonName] and true or false
@@ -216,17 +365,14 @@ function FirstRun:Apply(selections, perCharacter, hard)
         return true
     end
 
-    -- Soft path: opt-out is per feature; data stores follow their parent through
-    -- the orchestrator, so they are not opted out individually here.
     for _, entry in ipairs(FirstRun.CATALOG) do
         local want = selections[entry.addonName] and true or false
         ns:SetFeatureOptOut(entry.addonName, not want, perCharacter)
     end
+    for _, ds in ipairs(DATASTORE_ADDONS) do
+        ns:SetFeatureOptOut(ds, not datastoreState[ds], perCharacter)
+    end
 
-    -- wizardShown is owned by the "Do not show again" checkbox in BuildPanel,
-    -- which writes to the DB on toggle. Apply intentionally does not touch it.
-
-    -- Load any wanted, Blizzard-enabled, not-yet-loaded feature now (reload-free).
     for _, entry in ipairs(FirstRun.CATALOG) do
         local name = entry.addonName
         if selections[name] and ns:IsAddonEnabled(name, perCharacter)
@@ -244,7 +390,48 @@ function FirstRun:ApplyRecommended()
     for _, entry in ipairs(FirstRun.CATALOG) do
         sel[entry.addonName] = (entry.group ~= "utility")
     end
-    self:Apply(sel, false, false)
+    local storeSel = {}
+    for _, manifest in ipairs(ns:GetManifestParentsWithStores()) do
+        if manifest.storePolicy == "optional" then
+            for _, store in ipairs(manifest.stores) do
+                storeSel[store] = sel[manifest.addon] and true or false
+            end
+        end
+    end
+    self:Apply(sel, false, false, storeSel)
+end
+
+function FirstRun:ShowStoreAffectedDialog(storeAddon)
+    local keys = STORE_AFFECTED_KEYS[storeAddon]
+    if not keys then return end
+
+    local dialogKey = "OneWoW_StoreAffectedDialog"
+    if FirstRun._affectedDialog and FirstRun._affectedDialog:IsShown() then
+        FirstRun._affectedDialog:Hide()
+    end
+
+    local result = OneWoW_GUI:CreateDialog({
+        name            = dialogKey,
+        title           = L[keys.title],
+        width           = 480,
+        height          = 360,
+        showScrollFrame = true,
+        buttons         = {
+            { text = CLOSE, onClick = function(frame) frame:Hide() end },
+        },
+    })
+    FirstRun._affectedDialog = result.frame
+
+    local body = OneWoW_GUI:CreateFS(result.scrollContent, 12)
+    body:SetPoint("TOPLEFT", result.scrollContent, "TOPLEFT", 12, -12)
+    body:SetPoint("TOPRIGHT", result.scrollContent, "TOPRIGHT", -12, -12)
+    body:SetJustifyH("LEFT")
+    body:SetWordWrap(true)
+    body:SetText(L[keys.body] or "")
+    result.scrollContent:SetHeight(math.max(40, body:GetStringHeight() + 24))
+
+    result.frame:Show()
+    result.frame:Raise()
 end
 
 -- Build the Manage Features panel into `parent` (a Frame). This is reused by
@@ -253,9 +440,6 @@ end
 -- All themed widgets go through OneWoW_GUI helpers so the panel matches the
 -- rest of the addon's UI standards: no raw SetBackdrop, no UICheckButtonTemplate.
 function FirstRun:BuildPanel(parent, opts)
-    local L = ns.L or {}
-    local C = OneWoW_GUI.Constants.GUI
-
     local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_ManageFeaturesScroll" })
     content:SetHeight(1)
 
@@ -268,10 +452,37 @@ function FirstRun:BuildPanel(parent, opts)
     end
 
     local selections = FirstRun:GetCurrentSelections(perCharacter)
+    local storeSelections = FirstRun:GetCurrentStoreSelections(perCharacter)
+    for _, manifest in ipairs(ns:GetManifestParentsWithStores()) do
+        if manifest.storePolicy == "optional" then
+            for _, store in ipairs(manifest.stores) do
+                if storeSelections[store] == nil then
+                    storeSelections[store] = false
+                end
+            end
+        end
+    end
     local originalSelections = {}
     for _, entry in ipairs(FirstRun.CATALOG) do
         originalSelections[entry.addonName] = selections[entry.addonName] and true or false
     end
+    local originalStoreSelections = {}
+    for store, wanted in pairs(storeSelections) do
+        originalStoreSelections[store] = wanted and true or false
+    end
+    for _, manifest in ipairs(ns:GetManifestParentsWithStores()) do
+        if manifest.storePolicy == "optional" then
+            for _, store in ipairs(manifest.stores) do
+                if originalStoreSelections[store] == nil then
+                    originalStoreSelections[store] = storeSelections[store] and true or false
+                end
+            end
+        end
+    end
+
+    local cards = {}
+    local storeCards = {}
+    local storeMeta = {}
 
     local function CountSelected()
         local count = 0
@@ -284,14 +495,16 @@ function FirstRun:BuildPanel(parent, opts)
     end
 
     local function CountWantedDatastores()
-        local count = 0
-        local datastoreState = ComputeDatastoreState(selections)
-        for _, ds in ipairs(DATASTORE_ADDONS) do
-            if datastoreState[ds] then
-                count = count + 1
+        local effective = ComputeDatastoreState(selections, storeSelections)
+        local pool = ComputeEligibleDatastorePool(selections)
+        local enabled, total = 0, 0
+        for store in pairs(pool) do
+            total = total + 1
+            if effective[store] then
+                enabled = enabled + 1
             end
         end
-        return count
+        return enabled, total
     end
 
     local function HasChanges()
@@ -299,6 +512,17 @@ function FirstRun:BuildPanel(parent, opts)
             local addonName = entry.addonName
             if (selections[addonName] and true or false) ~= originalSelections[addonName] then
                 return true
+            end
+        end
+        for _, manifest in ipairs(ns:GetManifestParentsWithStores()) do
+            if manifest.storePolicy == "optional" then
+                for _, store in ipairs(manifest.stores) do
+                    local cur = storeSelections[store] and true or false
+                    local orig = originalStoreSelections[store] and true or false
+                    if cur ~= orig then
+                        return true
+                    end
+                end
             end
         end
         return false
@@ -499,16 +723,71 @@ function FirstRun:BuildPanel(parent, opts)
     }
     local groupOrder  = { "feature", "standalone", "utility" }
 
-    local cards = {}
-    -- Assigned after the cards exist; forward-declared so the card onToggle and
-    -- preset closures can capture them.
-    local RefreshRow, RefreshAllRows, RefreshActions
+    -- Forward-declared; closures below capture these.
+    local RefreshRow, RefreshAllRows, RefreshStoreRow, RefreshStoreRowsForParent, RefreshAllStoreRows, RefreshActions
+
+    local function GetCatalogLabel(addonName)
+        for _, entry in ipairs(FirstRun.CATALOG) do
+            if entry.addonName == addonName then
+                return L[entry.labelKey]
+            end
+        end
+        return addonName
+    end
+
+    local function BuildDataSummaryTooltip()
+        local effective = ComputeDatastoreState(selections, storeSelections)
+        local pool = ComputeEligibleDatastorePool(selections)
+        local lines = {}
+        for _, manifest in ipairs(ns:GetManifestParentsWithStores()) do
+            local tooltipKey = PARENT_DATA_TOOLTIP_KEYS[manifest.addon]
+            if tooltipKey then
+                local enabled, total = 0, 0
+                for _, store in ipairs(manifest.stores) do
+                    if pool[store] then
+                        total = total + 1
+                        if effective[store] then
+                            enabled = enabled + 1
+                        end
+                    end
+                end
+                if total > 0 then
+                    local parentLabel = L[PARENT_MODULE_LABEL_KEYS[manifest.addon]] or manifest.addon
+                    lines[#lines + 1] = format("%s: %s", parentLabel, format(L[tooltipKey], enabled, total))
+                end
+            end
+        end
+        local alsoRequired = {}
+        for _, ds in ipairs(DATASTORE_ADDONS) do
+            if effective[ds] and not pool[ds] then
+                local consumer = GetStoreConsumerForced(ds, selections)
+                if consumer then
+                    local storeLabel = L[ns:GetStoreLabelKey(ds)] or ds
+                    alsoRequired[#alsoRequired + 1] = format("%s (%s)", storeLabel, GetCatalogLabel(consumer))
+                end
+            end
+        end
+        if #alsoRequired > 0 then
+            lines[#lines + 1] = format(L["WIZARD_DATA_TOOLTIP_ALSO_REQUIRED"], table.concat(alsoRequired, ", "))
+        end
+        return table.concat(lines, "\n")
+    end
 
     local function RefreshSummary()
+        local enabled, total = CountWantedDatastores()
         summary:SetItemValue(1, format(L["WIZARD_SUMMARY_SELECTED_FORMAT"], CountSelected(), #FirstRun.CATALOG))
-        summary:SetItemValue(2, format(L["WIZARD_SUMMARY_DATA_FORMAT"], CountWantedDatastores()))
+        summary:SetItemValue(2, format(L["WIZARD_SUMMARY_DATA_FORMAT"], enabled, total))
         summary:SetItemValue(3, HasChanges() and L["WIZARD_SUMMARY_PENDING"] or READY)
     end
+
+    local dataSummaryBox = summary.itemBoxes[2]
+    dataSummaryBox:EnableMouse(true)
+    dataSummaryBox:SetScript("OnEnter", function(box)
+        GameTooltip:SetOwner(box, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(BuildDataSummaryTooltip(), nil, nil, nil, nil, true)
+        GameTooltip:Show()
+    end)
+    dataSummaryBox:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     local function ApplyPreset(preset)
         for _, entry in ipairs(FirstRun.CATALOG) do
@@ -525,12 +804,25 @@ function FirstRun:BuildPanel(parent, opts)
                 cards[entry.addonName]:SetChecked(want, true)
             end
         end
+        for _, manifest in ipairs(ns:GetManifestParentsWithStores()) do
+            if manifest.storePolicy == "optional" then
+                for _, store in ipairs(manifest.stores) do
+                    if preset == "recommended" then
+                        storeSelections[store] = selections[manifest.addon] and true or false
+                    elseif preset == "minimal" then
+                        storeSelections[store] = false
+                    end
+                end
+            end
+        end
         RefreshSummary()
         RefreshAllRows()
+        RefreshAllStoreRows()
         RefreshActions()
     end
 
     local listItems = {}
+    local subRowTightAfter = {}
     local extraGapForHeader = OneWoW_GUI:GetSpacing("MD")
     local headerIndices = {}
     for _, group in ipairs(groupOrder) do
@@ -555,8 +847,17 @@ function FirstRun:BuildPanel(parent, opts)
                     checked = selections[addon],
                     onToggle = function(_, checked)
                         selections[addon] = checked and true or false
+                        if not checked then
+                            local manifest = ns:GetManifestByAddon(addon)
+                            if manifest and manifest.storePolicy == "optional" and manifest.stores then
+                                for _, store in ipairs(manifest.stores) do
+                                    storeSelections[store] = false
+                                end
+                            end
+                        end
                         presetButtons.SetActiveByValue("manual")
                         RefreshRow(addon)
+                        RefreshAllStoreRows()
                         RefreshActions()
                         RefreshSummary()
                     end,
@@ -574,17 +875,32 @@ function FirstRun:BuildPanel(parent, opts)
                 })
                 loadBtn:SetPoint("RIGHT", card.checkbox, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
                 loadBtn:Hide()
+                loadBtn.tooltipText = L["WIZARD_LOAD_ADDON_TOOLTIP"]
                 loadBtn:HookScript("OnEnter", function(myself)
                     GameTooltip:SetOwner(myself, "ANCHOR_TOP")
-                    GameTooltip:SetText(L["WIZARD_LOAD_ADDON_TOOLTIP"], nil, nil, nil, nil, true)
+                    GameTooltip:SetText(myself.tooltipText, nil, nil, nil, nil, true)
                     GameTooltip:Show()
                 end)
                 loadBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
                 loadBtn:SetScript("OnClick", function()
                     ns:SetFeatureOptOut(addon, false, perCharacter)
+                    -- Bring the feature's wanted data stores along: clear their soft
+                    -- opt-out so BringUp's EnsureLoaded loads them (a store has
+                    -- RequiredDeps on this parent, so the parent loads first).
+                    local manifest = ns:GetManifestByAddon(addon)
+                    if manifest and manifest.stores then
+                        local effective = ComputeDatastoreState(selections, storeSelections)
+                        for _, store in ipairs(manifest.stores) do
+                            if effective[store] then
+                                ns:SetFeatureOptOut(store, false, perCharacter)
+                                originalStoreSelections[store] = storeSelections[store] and true or false
+                            end
+                        end
+                    end
                     LoadFeatureNow(addon)
                     originalSelections[addon] = true
                     RefreshRow(addon)
+                    RefreshStoreRowsForParent(addon)
                     RefreshActions()
                     RefreshSummary()
                 end)
@@ -592,26 +908,159 @@ function FirstRun:BuildPanel(parent, opts)
 
                 cards[addon] = card
                 table.insert(listItems, card)
+
+                local manifest = ns:GetManifestByAddon(addon)
+                if manifest and manifest.stores then
+                    for si, store in ipairs(manifest.stores) do
+                        local labelKey = ns:GetStoreLabelKey(store)
+                        local title = labelKey and L[labelKey] or store
+                        local descKey = STORE_DESC_KEYS[store]
+                        local rowSummary = descKey and L[descKey] or ""
+                        local isOptional = manifest.storePolicy == "optional"
+                        local affectedKeys = STORE_AFFECTED_KEYS[store]
+
+                        local sub = OneWoW_GUI:CreateSelectableSubCard(listContainer, {
+                            title = title,
+                            summary = rowSummary,
+                            iconTexture = STORE_ICONS[store],
+                            checked = storeSelections[store] and true or false,
+                            interactive = isOptional,
+                            affectedText = (isOptional and affectedKeys) and L["WIZARD_WHATS_AFFECTED"] or nil,
+                            onAffectedClick = (isOptional and affectedKeys) and function()
+                                FirstRun:ShowStoreAffectedDialog(store)
+                            end or nil,
+                            onToggle = isOptional and function(_, checked)
+                                storeSelections[store] = checked and true or false
+                                if checked and not selections[addon] then
+                                    selections[addon] = true
+                                    if cards[addon] then
+                                        cards[addon]:SetChecked(true, true)
+                                    end
+                                    RefreshStoreRowsForParent(addon)
+                                end
+                                presetButtons.SetActiveByValue("manual")
+                                RefreshStoreRow(store)
+                                RefreshRow(addon)
+                                RefreshActions()
+                                RefreshSummary()
+                            end or nil,
+                        })
+                        sub:ClearAllPoints()
+                        storeCards[store] = sub
+                        storeMeta[store] = { parent = addon, optional = isOptional }
+                        table.insert(listItems, sub)
+                        if si < #manifest.stores then
+                            subRowTightAfter[#listItems] = true
+                        end
+                    end
+                end
             end
         end
     end
 
-    -- Per-row Load Addon button: checked + Blizzard-enabled + (not loaded or soft-opted-out).
+    -- True when a unit is checked + Blizzard-enabled but not actually loaded in this
+    -- session (never loaded, or soft-opted-out so it was skipped at startup).
+    local function NeedsSoftLoad(unit)
+        return ns:IsAddonEnabled(unit, perCharacter)
+            and (
+                not C_AddOns.IsAddOnLoaded(unit)
+                or ns:IsFeatureOptedOutInScope(unit, perCharacter)
+            )
+    end
+
+    -- Per-row Load button. Shows when the feature itself needs a soft load, or when
+    -- it owns wanted-but-unloaded data stores (a parent-only control that pulls its
+    -- children). Relabels to "Load Data Addons" whenever children are what's pending.
     RefreshRow = function(addonName)
         local card = cards[addonName]
         if not card or not card.loadBtn then return end
-        local show = card._checked
-            and ns:IsAddonEnabled(addonName, perCharacter)
-            and (
-                not C_AddOns.IsAddOnLoaded(addonName)
-                or ns:IsFeatureOptedOutInScope(addonName, perCharacter)
-            )
-        card.loadBtn:SetShown(show)
+
+        local parentNeedsLoad = card._checked and NeedsSoftLoad(addonName)
+
+        local childNeedsLoad = false
+        if card._checked and ns:IsAddonEnabled(addonName, perCharacter) then
+            local manifest = ns:GetManifestByAddon(addonName)
+            if manifest and manifest.stores then
+                local effective = ComputeDatastoreState(selections, storeSelections)
+                for _, store in ipairs(manifest.stores) do
+                    if effective[store] and NeedsSoftLoad(store) then
+                        childNeedsLoad = true
+                        break
+                    end
+                end
+            end
+        end
+
+        card.loadBtn:SetShown(parentNeedsLoad or childNeedsLoad)
+        if parentNeedsLoad or childNeedsLoad then
+            if childNeedsLoad then
+                card.loadBtn:SetFitText(L["WIZARD_LOAD_DATA_ADDONS"])
+                card.loadBtn.tooltipText = L["WIZARD_LOAD_DATA_ADDONS_TOOLTIP"]
+            else
+                card.loadBtn:SetFitText(L["WIZARD_LOAD_ADDON"])
+                card.loadBtn.tooltipText = L["WIZARD_LOAD_ADDON_TOOLTIP"]
+            end
+        end
     end
 
     RefreshAllRows = function()
         for _, entry in ipairs(FirstRun.CATALOG) do
             RefreshRow(entry.addonName)
+        end
+    end
+
+    RefreshStoreRow = function(storeAddon)
+        local sub = storeCards[storeAddon]
+        local meta = storeMeta[storeAddon]
+        if not sub or not meta then return end
+
+        local manifest = ns:GetManifestByAddon(meta.parent)
+        if not manifest then return end
+
+        local parentWanted = selections[meta.parent] and true or false
+        local effective = ComputeDatastoreState(selections, storeSelections)
+        local forcedConsumer = GetStoreConsumerForced(storeAddon, selections)
+        local checked, muted, interactive, badgeText
+
+        if manifest.storePolicy == "bundled" then
+            checked = parentWanted
+            muted = not parentWanted
+            interactive = false
+            badgeText = parentWanted and L["WIZARD_STORE_BUNDLED"] or nil
+        elseif forcedConsumer and not (parentWanted and storeSelections[storeAddon]) then
+            checked = effective[storeAddon] and true or false
+            muted = not parentWanted
+            interactive = false
+            badgeText = format(L["WIZARD_STORE_REQUIRED_BY"], GetCatalogLabel(forcedConsumer))
+        elseif not parentWanted then
+            checked = false
+            muted = true
+            interactive = false
+            badgeText = nil
+        else
+            checked = storeSelections[storeAddon] and true or false
+            muted = false
+            interactive = true
+            badgeText = nil
+        end
+
+        sub:SetChecked(checked, true)
+        sub:SetMuted(muted)
+        sub:SetInteractive(interactive)
+        sub:SetBadgeText(badgeText)
+    end
+
+    RefreshStoreRowsForParent = function(parentAddon)
+        local manifest = ns:GetManifestByAddon(parentAddon)
+        if not manifest or not manifest.stores then return end
+        for _, store in ipairs(manifest.stores) do
+            RefreshStoreRow(store)
+        end
+    end
+
+    RefreshAllStoreRows = function()
+        for store in pairs(storeCards) do
+            RefreshStoreRow(store)
         end
     end
 
@@ -649,6 +1098,8 @@ function FirstRun:BuildPanel(parent, opts)
     for i = 1, #listItems do
         if headerIndices[i + 1] then
             stackGaps[i] = extraGapForHeader
+        elseif subRowTightAfter[i] then
+            stackGaps[i] = 4
         else
             stackGaps[i] = OneWoW_GUI:GetSpacing("XS")
         end
@@ -695,10 +1146,12 @@ function FirstRun:BuildPanel(parent, opts)
         presetButtons.SetActiveByValue("manual")
     end)
 
-    -- Rebase the "original" baseline so HasChanges() reports clean.
     local function RebaseOriginal()
         for _, entry in ipairs(FirstRun.CATALOG) do
             originalSelections[entry.addonName] = selections[entry.addonName] and true or false
+        end
+        for store, wanted in pairs(storeSelections) do
+            originalStoreSelections[store] = wanted and true or false
         end
     end
 
@@ -706,6 +1159,7 @@ function FirstRun:BuildPanel(parent, opts)
     -- it onto the cards (each scope can have different per-addon flags).
     local function LoadSelectionsForScope(pc)
         local fresh = FirstRun:GetCurrentSelections(pc)
+        local freshStores = FirstRun:GetCurrentStoreSelections(pc)
         for _, entry in ipairs(FirstRun.CATALOG) do
             local want = fresh[entry.addonName] and true or false
             selections[entry.addonName] = want
@@ -713,8 +1167,17 @@ function FirstRun:BuildPanel(parent, opts)
                 cards[entry.addonName]:SetChecked(want, true)
             end
         end
+        for store, want in pairs(freshStores) do
+            storeSelections[store] = want and true or false
+        end
+        for store in pairs(storeCards) do
+            if storeSelections[store] == nil then
+                storeSelections[store] = false
+            end
+        end
         presetButtons.SetActiveByValue("manual")
         RefreshAllRows()
+        RefreshAllStoreRows()
     end
 
     -- Commit a scope change. keepChanges = carry the staged checkbox intent into
@@ -776,19 +1239,21 @@ function FirstRun:BuildPanel(parent, opts)
 
     softApplyBtn:SetScript("OnClick", function()
         if not softApplyBtn._enabled then return end
-        FirstRun:Apply(selections, perCharacter, false)
+        FirstRun:Apply(selections, perCharacter, false, storeSelections)
         RebaseOriginal()
         RefreshAllRows()
+        RefreshAllStoreRows()
         RefreshActions()
         RefreshSummary()
     end)
 
     hardApplyBtn:SetScript("OnClick", function()
         if not hardApplyBtn._enabled then return end
-        FirstRun:Apply(selections, perCharacter, true)
+        FirstRun:Apply(selections, perCharacter, true, storeSelections)
     end)
 
     RefreshAllRows()
+    RefreshAllStoreRows()
     RefreshActions()
     RefreshSummary()
 end
@@ -805,7 +1270,6 @@ function FirstRun:ShowWizard()
         return
     end
 
-    local C = OneWoW_GUI.Constants.GUI
     local result = OneWoW_GUI:CreateDialog({
         name      = "OneWoW_FirstRunWizard",
         title     = ns.L["WIZARD_TITLE"],

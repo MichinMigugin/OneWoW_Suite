@@ -291,7 +291,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
     ["ITEMSEARCH_TITLE"] = "物品搜尋",
     ["ITEMSEARCH_PLACEHOLDER"] = "搜尋物品……",
-    ["ITEMSEARCH_EMPTY"] = "輸入物品名稱以搜尋。",
+    ["ITEMSEARCH_EMPTY"] = "沒有可顯示的物品。",
+    ["ITEMSEARCH_SOURCE_UNAVAIL"] = "無法使用。請在管理功能中載入其資料插件。",
     ["ITEMSEARCH_NO_RESULTS"] = "找不到結果。",
 
     ["ITEMSEARCH_LIST_TITLE"] = "結果",
@@ -301,7 +302,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["ITEMSEARCH_RESULTS_CAPPED"] = "%d 個結果（已達上限）",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "正在瀏覽 %d 件物品",
     ["ITEMSEARCH_MIN_CHARS"] = "至少輸入 2 個字元以搜尋。",
-    ["ITEMSEARCH_NOTICE"] = "此搜尋將顯示來自商人、副本首領掉落、背包等的物品。這些不僅僅是你擁有的物品，而是你看過或已知會掉落的所有物品。",
+    ["ITEMSEARCH_NOTICE"] = "顯示來自商人、副本首領掉落、背包等的物品。這些不僅僅是你擁有的物品，而是你看過或已知會掉落的所有物品。",
 
     ["TT_IS_FILTER_ALL"] = "所有來源",
     ["TT_IS_FILTER_ALL_DESC"] = "在所有資料來源中搜尋。",

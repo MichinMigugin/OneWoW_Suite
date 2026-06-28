@@ -13,11 +13,11 @@ local function RegisterWithOneWoW()
         addonName   = ADDON_NAME,
         order       = OneWoW:GetModuleTabOrder("catalog"),
         tabs = {
-            { name = "journal",     displayName = function() return ns.L["TAB_JOURNAL"]     end, create = function(p) ns.UI.CreateJournalTab(p)    end },
-            { name = "vendors",     displayName = function() return ns.L["TAB_VENDORS"]     end, create = function(p) ns.UI.CreateVendorsTab(p)    end },
-            { name = "tradeskills", displayName = function() return TRADESKILLS end, create = function(p) ns.UI.CreateTradeskillsTab(p) end },
-            { name = "quests",      displayName = function() return ns.L["TAB_QUESTS"]      end, create = function(p) ns.UI.CreateQuestsTab(p)     end },
-            { name = "itemsearch",  displayName = function() return ns.L["TAB_ITEMSEARCH"]  end, create = function(p) ns.UI.CreateItemSearchTab(p) end },
+            { name = "journal",     displayName = function() return ns.L["TAB_JOURNAL"]     end, requiresAddon = "OneWoW_CatalogData_Journal",     create = function(p) ns.UI.CreateJournalTab(p)    end },
+            { name = "vendors",     displayName = function() return ns.L["TAB_VENDORS"]     end, requiresAddon = "OneWoW_CatalogData_Vendors",     create = function(p) ns.UI.CreateVendorsTab(p)    end },
+            { name = "tradeskills", displayName = function() return TRADESKILLS end, requiresAddon = "OneWoW_CatalogData_Tradeskills", create = function(p) ns.UI.CreateTradeskillsTab(p) end },
+            { name = "quests",      displayName = function() return ns.L["TAB_QUESTS"]      end, requiresAddon = "OneWoW_CatalogData_Quests",      create = function(p) ns.UI.CreateQuestsTab(p)     end },
+            { name = "itemsearch",  displayName = function() return ns.L["TAB_ITEMSEARCH"]  end, requiresAnyAddon = ns.ItemSearch.SOURCE_ADDONS, create = function(p) ns.UI.CreateItemSearchTab(p) end },
         },
     })
     OneWoW:RegisterSettingsPanel({

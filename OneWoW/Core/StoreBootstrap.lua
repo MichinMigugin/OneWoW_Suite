@@ -96,6 +96,11 @@ function ns:BootStore(storeNs, config)
         if storeNs.FireLoginHandlers then
             storeNs:FireLoginHandlers()
         end
+        -- Login init complete = this store's data is queryable. Emit the
+        -- suite-wide data-ready signal (data boundary) so consumers populate
+        -- without ad-hoc retries. Keyed on addon name, uniform with the
+        -- load-boundary signals; no-op for stores nobody watches.
+        OneWoW:SignalDataReady(config.addonName)
     end
 
     function storeNs.OnPlayerEnteringWorld(isLogin, isReload, isZoning)

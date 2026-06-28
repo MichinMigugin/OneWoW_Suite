@@ -291,7 +291,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
     ["ITEMSEARCH_TITLE"] = "Búsqueda de objetos",
     ["ITEMSEARCH_PLACEHOLDER"] = "Buscar un objeto...",
-    ["ITEMSEARCH_EMPTY"] = "Introduce el nombre de un objeto para buscar.",
+    ["ITEMSEARCH_EMPTY"] = "No hay objetos que mostrar.",
+    ["ITEMSEARCH_SOURCE_UNAVAIL"] = "No disponible. Carga su complemento de datos en Gestionar funciones.",
     ["ITEMSEARCH_NO_RESULTS"] = "No se encontraron resultados.",
 
     ["ITEMSEARCH_LIST_TITLE"] = "Resultados",
@@ -301,7 +302,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["ITEMSEARCH_RESULTS_CAPPED"] = "%d resultados (límite alcanzado)",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "Explorando %d objetos",
     ["ITEMSEARCH_MIN_CHARS"] = "Escribe al menos 2 caracteres para buscar.",
-    ["ITEMSEARCH_NOTICE"] = "Esta búsqueda mostrará objetos de vendedores, botín de jefes de instancia, inventarios y más. No son solo los objetos que posees. Son todos los objetos que has visto o que se sabe que sueltan.",
+    ["ITEMSEARCH_NOTICE"] = "Muestra objetos de vendedores, botín de jefes de instancia, inventarios y más. No son solo los objetos que posees; son todos los objetos que has visto o que se sabe que sueltan.",
 
     ["TT_IS_FILTER_ALL"] = "Todas las fuentes",
     ["TT_IS_FILTER_ALL_DESC"] = "Buscar en todas las fuentes de datos.",

@@ -291,7 +291,8 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
 
     ["ITEMSEARCH_TITLE"] = "Recherche d'objets",
     ["ITEMSEARCH_PLACEHOLDER"] = "Rechercher un objet...",
-    ["ITEMSEARCH_EMPTY"] = "Saisissez un nom d'objet à rechercher.",
+    ["ITEMSEARCH_EMPTY"] = "Aucun objet à afficher.",
+    ["ITEMSEARCH_SOURCE_UNAVAIL"] = "Indisponible. Chargez son add-on de données dans Gérer les fonctionnalités.",
     ["ITEMSEARCH_NO_RESULTS"] = "Aucun résultat trouvé.",
 
     ["ITEMSEARCH_LIST_TITLE"] = "Résultats",
@@ -301,7 +302,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["ITEMSEARCH_RESULTS_CAPPED"] = "%d résultats (limite atteinte)",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "Parcours de %d objets",
     ["ITEMSEARCH_MIN_CHARS"] = "Saisissez au moins 2 caractères pour rechercher.",
-    ["ITEMSEARCH_NOTICE"] = "Cette recherche affiche des objets provenant des marchands, des butins de boss d'instance, des inventaires et plus encore. Ce ne sont pas seulement les objets que vous possédez. Ce sont tous les objets que vous avez vus ou connus pour être lâchés.",
+    ["ITEMSEARCH_NOTICE"] = "Affiche des objets provenant des marchands, des butins de boss d'instance, des inventaires et plus encore. Ce ne sont pas seulement les objets que vous possédez ; ce sont tous les objets que vous avez vus ou connus pour être lâchés.",
 
     ["TT_IS_FILTER_ALL"] = "Toutes les sources",
     ["TT_IS_FILTER_ALL_DESC"] = "Rechercher dans toutes les sources de données.",

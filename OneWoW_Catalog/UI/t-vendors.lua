@@ -1013,8 +1013,22 @@ function ns.UI.CreateVendorsTab(parent)
     emptyDetail:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyDetail = emptyDetail
 
-    local addon = GetDataAddon()
-    if addon then
+    -- Start in the no-data state; the data-ready watcher swaps to the live view
+    -- once the Vendors data unit's data is queryable. Catch-up covers a tab opened
+    -- after data was already ready; the signal covers a mid-session load. The
+    -- `wired` guard keeps it idempotent (scan-callback registration is not
+    -- dedup-safe, and catch-up + a later signal can both reach the handler).
+    emptyList:SetText(L["VENDORS_NO_DATA"])
+    emptyDetail:SetText(L["VENDORS_NO_DATA"])
+    panels.listScrollChild:SetHeight(100)
+    panels.detailScrollChild:SetHeight(100)
+
+    local wired = false
+    OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Vendors", function()
+        if wired then return end
+        local addon = GetDataAddon()
+        if not addon then return end
+        wired = true
         emptyList:SetText(L["VENDORS_EMPTY"])
         emptyDetail:SetText(L["VENDORS_SELECT"])
         panels.detailScrollChild:SetHeight(100)
@@ -1028,26 +1042,7 @@ function ns.UI.CreateVendorsTab(parent)
         C_Timer.After(0.5, function()
             RefreshVendorList(panels)
         end)
-    else
-        emptyList:SetText(L["VENDORS_NO_DATA"])
-        emptyDetail:SetText(L["VENDORS_NO_DATA"])
-        panels.listScrollChild:SetHeight(100)
-        panels.detailScrollChild:SetHeight(100)
-
-        C_Timer.After(2.0, function()
-            local retryAddon = GetDataAddon()
-            if retryAddon then
-                emptyList:SetText(L["VENDORS_EMPTY"])
-                emptyDetail:SetText(L["VENDORS_SELECT"])
-                if retryAddon.RegisterScanCallback then
-                    retryAddon:RegisterScanCallback(function()
-                        RefreshVendorList(panels)
-                    end)
-                end
-                RefreshVendorList(panels)
-            end
-        end)
-    end
+    end)
 
     ns.UI.vendorsPanels = panels
     ns.UI.RefreshVendorsList = function()

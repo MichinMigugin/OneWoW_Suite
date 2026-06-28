@@ -1,8 +1,13 @@
 local OneWoW_GUI = OneWoW_GUI
 
+local Constants = OneWoW_GUI.Constants
+
+local pairs, ipairs = pairs, ipairs
+local floor, ceil = math.floor, math.ceil
+local min, max = math.min, math.max
+local abs = math.abs
 local CreateFrame = CreateFrame
 
-local Constants = OneWoW_GUI.Constants
 
 function OneWoW_GUI:CreateFilterBar(parent, config)
     config = config or {}
@@ -233,7 +238,7 @@ function OneWoW_GUI:CreateSectionHeader(parent, options)
     titleText:SetText(title)
     titleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local sectionHeight = math.max(30, titleText:GetStringHeight() + 14)
+    local sectionHeight = max(30, titleText:GetStringHeight() + 14)
     section:SetHeight(sectionHeight)
     section.bottomY = yOffset - sectionHeight
     section._minHeight = 30
@@ -241,12 +246,12 @@ function OneWoW_GUI:CreateSectionHeader(parent, options)
 
     function section:GetMeasuredHeight()
         local titleH = titleText:GetStringHeight() or 0
-        return math.max(self._minHeight, titleH + 14)
+        return max(self._minHeight, titleH + 14)
     end
 
     section:HookScript("OnSizeChanged", function()
         local newH = section:GetMeasuredHeight()
-        if math.abs(newH - (section:GetHeight() or 0)) > 0.5 then
+        if abs(newH - (section:GetHeight() or 0)) > 0.5 then
             section:SetHeight(newH)
             section.bottomY = section._yOffset - newH
         end
@@ -284,7 +289,8 @@ function OneWoW_GUI:StackVertically(parent, items, options)
             if child and child.SetPoint then
                 child:ClearAllPoints()
                 local y = yByIndex and yByIndex[i] or 0
-                child:SetPoint("TOPLEFT", parent, "TOPLEFT", sidePad, -y)
+                local leftInset = sidePad + (child._stackLeftInset or 0)
+                child:SetPoint("TOPLEFT", parent, "TOPLEFT", leftInset, -y)
                 child:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -sidePad, -y)
             end
         end
@@ -318,7 +324,7 @@ function OneWoW_GUI:StackVertically(parent, items, options)
         end
         AnchorAll(yByIndex)
         if autoHeight and parent.SetHeight then
-            parent:SetHeight(math.max(1, cursor))
+            parent:SetHeight(max(1, cursor))
         end
         self._totalHeight = cursor
         if onLayout then onLayout(cursor) end
@@ -473,17 +479,17 @@ function OneWoW_GUI:CreateActionBar(parent, options)
             right:SetHeight(rH)
             total = lH + rowGap + rH
         else
-            local rowH = math.max(lH, rH, rowHeight)
+            local rowH = max(lH, rH, rowHeight)
             left:SetPoint("TOPLEFT", bar, "TOPLEFT", 0, 0)
-            left:SetWidth(math.max(1, lW))
+            left:SetWidth(max(1, lW))
             left:SetHeight(rowH)
             right:SetPoint("TOPRIGHT", bar, "TOPRIGHT", 0, 0)
-            right:SetWidth(math.max(1, rW))
+            right:SetWidth(max(1, rW))
             right:SetHeight(rowH)
             total = rowH
         end
 
-        if math.abs(total - (bar:GetHeight() or 0)) > 0.5 then
+        if abs(total - (bar:GetHeight() or 0)) > 0.5 then
             self._isResizing = true
             bar:SetHeight(total)
             self._isResizing = false
@@ -503,7 +509,7 @@ function OneWoW_GUI:CreateActionBar(parent, options)
         if w > 0 and (lW + rW + gap) > w then
             return lH + rowGap + rH
         end
-        return math.max(lH, rH, rowHeight)
+        return max(lH, rH, rowHeight)
     end
 
     function bar:OnHeightChanged(fn)
@@ -624,7 +630,7 @@ function OneWoW_GUI:CreateHeroPanel(parent, options)
         end
         local h2 = lineH
         if availW > 0 and unboundedW > availW then
-            local lines = math.ceil(unboundedW / availW)
+            local lines = ceil(unboundedW / availW)
             if lines > 1 then lines = lines + 1 end
             h2 = lines * lineH
         end
@@ -646,7 +652,7 @@ function OneWoW_GUI:CreateHeroPanel(parent, options)
         local descH = MeasureFSHeight(panel.description, textW)
         local textTotal = pad + titleH + 4 + subtitleH + 6 + descH + pad
         local iconH = (options.iconSize or 48) + 10 + (pad * 2)
-        local desired = math.max(panel._minHeight, textTotal, iconH)
+        local desired = max(panel._minHeight, textTotal, iconH)
         if panel.callout then
             local calloutBottom = (Constants.GUI.BADGE_HEIGHT or 18) + OneWoW_GUI:GetSpacing("MD") * 2
             if calloutBottom > desired then desired = calloutBottom end
@@ -659,7 +665,7 @@ function OneWoW_GUI:CreateHeroPanel(parent, options)
         if panel._isResizing then return end
         local desired = MeasureHeight()
         local current = panel:GetHeight() or 0
-        if math.abs(desired - current) > 0.5 then
+        if abs(desired - current) > 0.5 then
             panel._isResizing = true
             panel:SetHeight(desired)
             panel._isResizing = false
@@ -739,7 +745,7 @@ function OneWoW_GUI:CreateSummaryStrip(parent, options)
             if total > maxText then maxText = total end
         end
         local pad = OneWoW_GUI:GetSpacing("SM") * 2
-        return math.max(strip._minHeight, maxText + pad)
+        return max(strip._minHeight, maxText + pad)
     end
 
     local function LayoutBoxes()
@@ -750,7 +756,7 @@ function OneWoW_GUI:CreateSummaryStrip(parent, options)
         local gap = OneWoW_GUI:GetSpacing("SM")
         local innerX = OneWoW_GUI:GetSpacing("SM")
         local boxWidth = (width - (innerX * 2) - (gap * (count - 1))) / count
-        local textWidth = math.max(20, boxWidth - (OneWoW_GUI:GetSpacing("SM") * 2))
+        local textWidth = max(20, boxWidth - (OneWoW_GUI:GetSpacing("SM") * 2))
         for _, box in ipairs(strip.itemBoxes) do
             if box.value and box.value.SetWidth then box.value:SetWidth(textWidth) end
             if box.label and box.label.SetWidth then box.label:SetWidth(textWidth) end
@@ -758,7 +764,7 @@ function OneWoW_GUI:CreateSummaryStrip(parent, options)
         local desired = MeasureHeight()
         if not strip._isResizing then
             local current = strip:GetHeight() or 0
-            if math.abs(desired - current) > 0.5 then
+            if abs(desired - current) > 0.5 then
                 strip._isResizing = true
                 strip:SetHeight(desired)
                 strip._isResizing = false
@@ -812,6 +818,13 @@ function OneWoW_GUI:CreateSelectableCard(parent, options)
     card._onToggle = options.onToggle
     card._minHeight = minHeight
     card._heightListeners = {}
+    -- Sub-row support: non-interactive (bundled/forced), muted (parent off), and a
+    -- left inset honored by StackVertically so children sit under their parent.
+    card._interactive = options.interactive ~= false
+    card._muted = options.muted and true or false
+    if options.indent then
+        card._stackLeftInset = options.indent
+    end
 
     local selectedAccent = card:CreateTexture(nil, "ARTWORK")
     selectedAccent:SetPoint("TOPLEFT", card, "TOPLEFT", 0, 0)
@@ -847,52 +860,93 @@ function OneWoW_GUI:CreateSelectableCard(parent, options)
     local check = self:CreateCheckbox(card, {
         label = "",
         checked = card._checked,
-        onClick = function(self)
-            card:SetChecked(self:GetChecked() and true or false)
+        onClick = function(myself)
+            if not card._interactive then
+                myself:SetChecked(card._checked)
+                return
+            end
+            card:SetChecked(myself:GetChecked() and true or false)
         end,
     })
     check:SetPoint("RIGHT", card, "RIGHT", -OneWoW_GUI:GetSpacing("MD"), 0)
     card.checkbox = check
+    if not card._interactive then
+        check:Disable()
+    end
 
     local title = self:CreateFS(card, options.titleSize or 13)
     title:SetPoint("TOPLEFT", iconFrame, "TOPRIGHT", OneWoW_GUI:GetSpacing("MD"), -5)
-    title:SetPoint("RIGHT", check, "LEFT", -OneWoW_GUI:GetSpacing("MD"), 0)
     title:SetJustifyH("LEFT")
     title:SetText(options.title or "")
     card.title = title
 
     local summary = self:CreateFS(card, options.summarySize or 11)
     summary:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -5)
-    summary:SetPoint("RIGHT", check, "LEFT", -OneWoW_GUI:GetSpacing("MD"), 0)
     summary:SetJustifyH("LEFT")
     summary:SetWordWrap(true)
     summary:SetText(options.summary or "")
     card.summary = summary
 
-    if options.badgeText and options.badgeText ~= "" then
-        local badgeMeasure = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        OneWoW_GUI:SafeSetFont(badgeMeasure, OneWoW_GUI:GetFont(), 9)
-        badgeMeasure:SetText(options.badgeText)
-        local badgeWidth = math.max(options.badgeWidth or 0, badgeMeasure:GetStringWidth() + 18)
-        badgeMeasure:Hide()
-        badgeMeasure:SetParent(nil)
+    -- Right cluster, laid out right-to-left: checkbox, optional "What's affected?"
+    -- link, optional badge. Re-run whenever the badge appears/disappears so the
+    -- title/summary always stop at the leftmost visible element.
+    local function LayoutRightCluster()
+        local anchor = check
+        if card.affectedBtn then
+            card.affectedBtn:SetPoint("RIGHT", anchor, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
+            anchor = card.affectedBtn
+        end
+        if card.badge and card.badge:IsShown() then
+            card.badge:SetPoint("RIGHT", anchor, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
+            anchor = card.badge
+        end
+        card.title:SetPoint("RIGHT", anchor, "LEFT", -OneWoW_GUI:GetSpacing("MD"), 0)
+        card.summary:SetPoint("RIGHT", anchor, "LEFT", -OneWoW_GUI:GetSpacing("MD"), 0)
+    end
 
+    local function EnsureBadge()
+        if card.badge then return card.badge end
         local badge = self:CreateFrame(card, {
-            width = badgeWidth,
+            width = Constants.GUI.BADGE_HEIGHT,
             height = Constants.GUI.BADGE_HEIGHT,
             backdrop = Constants.BACKDROP_INNER_NO_INSETS,
             bgColor = "BG_TERTIARY",
             borderColor = "BORDER_SUBTLE",
         })
-        badge:SetPoint("TOPRIGHT", check, "LEFT", -OneWoW_GUI:GetSpacing("MD"), -5)
+        badge:SetPoint("RIGHT", check, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
         badge.text = self:CreateFS(badge, 9)
         badge.text:SetPoint("CENTER", badge, "CENTER", 0, 0)
-        badge.text:SetText(options.badgeText)
         card.badge = badge
-        title:SetPoint("RIGHT", badge, "LEFT", -OneWoW_GUI:GetSpacing("SM"), 0)
+        return badge
+    end
+
+    if options.affectedText and options.onAffectedClick then
+        local affectedBtn = self:CreateFitTextButton(card, {
+            text = options.affectedText,
+            height = 18,
+            minWidth = 40,
+            paddingX = 8,
+        })
+        affectedBtn:SetScript("OnClick", options.onAffectedClick)
+        card.affectedBtn = affectedBtn
     end
 
     local function ApplyVisual(self, hover)
+        if self._muted then
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            self.selectedAccent:Hide()
+            self.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            self.summary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            self.icon:SetDesaturated(true)
+            self.icon:SetAlpha(0.4)
+            self.iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            if self.badge then
+                self.badge:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                self.badge.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            end
+            return
+        end
         if self._checked then
             self:SetBackdropColor(OneWoW_GUI:GetThemeColor(hover and "BG_HOVER" or "BG_ACTIVE"))
             self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor(hover and "BORDER_FOCUS" or "BORDER_ACCENT"))
@@ -935,10 +989,49 @@ function OneWoW_GUI:CreateSelectableCard(parent, options)
         return self._checked
     end
 
-    card:SetScript("OnEnter", function(self) ApplyVisual(self, true) end)
-    card:SetScript("OnLeave", function(self) ApplyVisual(self, false) end)
-    card:SetScript("OnClick", function(self)
-        self:SetChecked(not self._checked)
+    function card:SetMuted(muted)
+        self._muted = muted and true or false
+        ApplyVisual(self, self:IsMouseOver())
+    end
+
+    function card:SetInteractive(interactive)
+        self._interactive = interactive and true or false
+        if self._interactive then
+            self.checkbox:Enable()
+        else
+            self.checkbox:Disable()
+        end
+    end
+
+    function card:SetBadgeText(text)
+        if not text or text == "" then
+            if self.badge then self.badge:Hide() end
+            LayoutRightCluster()
+            return
+        end
+        local b = EnsureBadge()
+        b.text:SetText(text)
+        local badgeMeasure = card:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        OneWoW_GUI:SafeSetFont(badgeMeasure, OneWoW_GUI:GetFont(), 9)
+        badgeMeasure:SetText(text)
+        b:SetWidth(max(options.badgeWidth or 0, badgeMeasure:GetStringWidth() + 18))
+        badgeMeasure:Hide()
+        badgeMeasure:SetParent(nil)
+        b:Show()
+        LayoutRightCluster()
+        ApplyVisual(self, self:IsMouseOver())
+    end
+
+    LayoutRightCluster()
+    if options.badgeText and options.badgeText ~= "" then
+        card:SetBadgeText(options.badgeText)
+    end
+
+    card:SetScript("OnEnter", function(myself) ApplyVisual(myself, true) end)
+    card:SetScript("OnLeave", function(myself) ApplyVisual(myself, false) end)
+    card:SetScript("OnClick", function(myself)
+        if not myself._interactive then return end
+        myself:SetChecked(not myself._checked)
     end)
 
     card:SetChecked(card._checked, true)
@@ -965,7 +1058,7 @@ function OneWoW_GUI:CreateSelectableCard(parent, options)
         end
         local h2 = lineH
         if availW > 0 and unboundedW > availW then
-            local lines = math.ceil(unboundedW / availW)
+            local lines = ceil(unboundedW / availW)
             if lines > 1 then lines = lines + 1 end
             h2 = lines * lineH
         end
@@ -988,7 +1081,7 @@ function OneWoW_GUI:CreateSelectableCard(parent, options)
         local iconH = card.iconFrame and (card.iconFrame:GetHeight() or 0) or 0
         local textTotal = titleTopOffset + titleH + summaryGap + summaryH + bottomPad
         local iconTotal = iconH + (pad * 2)
-        return math.max(card._minHeight, textTotal, iconTotal)
+        return max(card._minHeight, textTotal, iconTotal)
     end
 
     card._isResizing = false
@@ -996,7 +1089,7 @@ function OneWoW_GUI:CreateSelectableCard(parent, options)
         if card._isResizing then return end
         local desired = MeasureHeight()
         local current = card:GetHeight() or 0
-        if math.abs(desired - current) > 0.5 then
+        if abs(desired - current) > 0.5 then
             card._isResizing = true
             card:SetHeight(desired)
             card._isResizing = false
@@ -1028,6 +1121,32 @@ function OneWoW_GUI:CreateSelectableCard(parent, options)
     return card
 end
 
+--- Indented selectable row for Manage Features data-store sub-rows.
+--- Thin preset over CreateSelectableCard: smaller icon/text and a left inset so
+--- children align under the midpoint of their parent's icon. Returns the card
+--- frame (same stacking contract as CreateSelectableCard) and reuses all of its
+--- behavior (muted, non-interactive, badge, "What's affected?" link).
+---@param parent Frame
+---@param options table?
+---@return Button card
+function OneWoW_GUI:CreateSelectableSubCard(parent, options)
+    options = options or {}
+    local parentIconSize = Constants.GUI.SELECTABLE_CARD_ICON_SIZE
+    local defaultIndent = OneWoW_GUI:GetSpacing("MD") + (parentIconSize + 8) / 2
+
+    local subOptions = {}
+    for k, v in pairs(options) do
+        subOptions[k] = v
+    end
+    subOptions.indent = options.indent or defaultIndent
+    subOptions.height = options.height or Constants.GUI.SELECTABLE_SUB_CARD_HEIGHT
+    subOptions.iconSize = options.iconSize or 26
+    subOptions.titleSize = options.titleSize or 12
+    subOptions.summarySize = options.summarySize or 10
+
+    return OneWoW_GUI:CreateSelectableCard(parent, subOptions)
+end
+
 function OneWoW_GUI:CreateVerticalPaneResizer(options)
     options = options or {}
     local parent = options.parent
@@ -1036,11 +1155,6 @@ function OneWoW_GUI:CreateVerticalPaneResizer(options)
     if not parent or not leftPanel or not rightPanel then
         error("OneWoW_GUI:CreateVerticalPaneResizer requires parent, leftPanel, and rightPanel")
     end
-
-    local floor = math.floor
-    local ceil = math.ceil
-    local min = math.min
-    local max = math.max
 
     local dividerWidth = options.dividerWidth or 6
     local leftMinWidth = options.leftMinWidth or 200
@@ -1175,10 +1289,6 @@ function OneWoW_GUI:CreateHorizontalPaneResizer(options)
         error("OneWoW_GUI:CreateHorizontalPaneResizer requires parent, topPanel, and bottomPanel")
     end
 
-    local floor = math.floor
-    local max = math.max
-    local min = math.min
-
     local dividerHeight = options.dividerHeight or 6
     local topMinHeight = options.topMinHeight or 100
     local bottomMinHeight = options.bottomMinHeight or 60
@@ -1196,7 +1306,7 @@ function OneWoW_GUI:CreateHorizontalPaneResizer(options)
     dividerTex:SetPoint("RIGHT", divider, "RIGHT", 0, 0)
     dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    divider:SetScript("OnEnter", function(self)
+    divider:SetScript("OnEnter", function()
         dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         SetCursor("UI_RESIZE_CURSOR")
     end)

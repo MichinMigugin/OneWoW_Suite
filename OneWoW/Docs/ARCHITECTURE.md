@@ -228,6 +228,42 @@ Use watchers for "wire when addon X is available." Use `RegisterCoreLoginHandler
 only for login-scoped work unrelated to addon load — **not** as an "if addon loaded
 at login" check, which misses mid-session and force-load paths.
 
+### 3.4.2 Data-available notification (data-ready watchers)
+
+There are **two distinct boundaries** for a provider:
+
+- **Load boundary** — `ns.FeatureStateChanged` (fired from the `LoadAddOn` hook and
+  `SetFeatureOptOut`). Means "this unit is now loaded / its opt-out changed." Drives
+  showing/hiding tabs, rebuilding placeholders, and Home status. It fires **before**
+  the unit's `OnPlayerLogin`.
+- **Data boundary** — `OneWoW:SignalDataReady(addonName)`. Means "this provider's
+  data is now queryable." Drives populating/refreshing data views.
+
+The two are not interchangeable: providers register/init their queryable data in
+`OnPlayerLogin` (Catalog data units call `OneWoW_Catalog_API.RegisterDataAddon`
+there; stores finish their initial collection), which runs **after**
+`ns.FeatureStateChanged`. Reading provider data on the load boundary therefore sees
+it as still missing (a one-event-delayed reaction). Use the data boundary instead.
+
+`RegisterDataReadyWatcher(addonName, fn)` is the data-boundary analogue of
+`RegisterAddonLoadedWatcher`, with the same **registration-time catch-up**: a
+filtered watcher whose provider is already ready fires `fn` once immediately, so a
+consumer (or a tab) built after readiness is not stranded — this replaces the
+ad-hoc `C_Timer.After` retries consumers used to poll for late registration.
+Wildcard (`nil`/`"*"`) watchers get no catch-up. `dataReadySet` is monotonic per
+session, so `SignalDataReady` fans out at most once per addon; watcher setup fns
+must still be idempotent (catch-up plus a later signal can both reach a late
+registrant, and scan-callback registration is not dedup-safe). `IsDataReady(addonName)`
+queries the flag.
+
+**Auto-fired by the store lifecycle:** `BootStore`'s `OnPlayerLogin`
+(`Core/StoreBootstrap.lua`) calls `OneWoW:SignalDataReady(config.addonName)` after
+`onLogin` and the login handlers run, so **every** data store emits the signal when
+its login init completes — Catalog data units and `OneWoW_AltTracker_Storage`
+included, with no provider-side code. Stores nobody watches fire harmless no-ops.
+Non-store (hub) providers may call `SignalDataReady` explicitly when their data is
+ready.
+
 ### 3.5 `OnPlayerLogin`
 
 At core `PLAYER_LOGIN`: `OneWoW:FireCoreLoginHandlers("early")` (feature inits),
@@ -453,12 +489,19 @@ while working.
 
 Manage Features' `FirstRun.CATALOG[].datastores` (consumer graph) and
 `ModuleManifest.stores` (ownership graph) remain **distinct** sources of truth.
+Manage Features renders manifest `stores` as indented sub-rows under Catalog and
+AltTracker. `storePolicy` is `optional` (user-toggleable Catalog data packs) or
+`bundled` (AltTracker stores mirror the parent; display-only). Soft Apply writes
+per-store `SetFeatureOptOut`; the consumer graph still pulls stores for Bags and
+Shopping List. See
+[`OneWoW_Catalog/README.md#disabling-data-modules`](../../OneWoW_Catalog/README.md#disabling-data-modules)
+for per-pack impact detail.
 
 ### 4.2 Home tab live refresh
 
 `UI/t-home.lua` builds module rows once; each row's `ApplyState()` re-reads
 `GetFeatureUnitState`. `MainWindow` registers `EventRegistry` on
-`OneWoW.FeatureStateChanged` (fired from `SetFeatureOptOut` and post-`LoadAddOn` hook)
+`ns.FeatureStateChanged` (fired from `SetFeatureOptOut` and the post-`LoadAddOn` hook)
 to call `GUI:RefreshHomeStatus()` while Home is visible.
 
 Visual mapping: green = fully wanted; grey = mixed across chars; amber check =
@@ -486,6 +529,26 @@ _G.OneWoW:RegisterModule({
 `ModuleRegistry` stores `name`, `displayName`, `tabs`, `order`. `MainWindow.lua`
 calls `tabInfo.create(frame)` lazily; content cached in `moduleContentFrames`.
 
+Each row-2 tab table may also declare optional gating fields:
+
+- `requiresAddon` (string) — the load unit backing this tab's content. When that
+  addon is not loaded, `SelectSubTab` renders the shared `CreateAddonPlaceholderFrame`
+  (icon + name + `GetFeatureUnitState` status + Manage Features link) instead of
+  calling `create`, and tags the frame `_isPlaceholder` / `_requiresAddon`.
+- `requiresAnyAddon` (string array) — for an aggregator tab that draws from several
+  optional addons. Available when ANY listed addon is loaded; otherwise renders
+  `CreateAggregatorPlaceholderFrame` (icon + name + `AGGREGATOR_PLACEHOLDER_DESC` +
+  one `GetStoreLabelKey`/`GetFeatureUnitState` status line per source + Manage
+  Features link), tagging the frame `_isPlaceholder` / `_requiresAnyAddon`.
+- `isAvailable` (function) — optional predicate (highest priority) that overrides the
+  default `C_AddOns.IsAddOnLoaded` check, for bespoke availability logic.
+
+A tab with none of these is always available. Example: `OneWoW_Catalog` declares
+`requiresAddon = "OneWoW_CatalogData_Quests"` (etc.) on its single-source data tabs,
+and `requiresAnyAddon = { "OneWoW_CatalogData_Journal", …, "OneWoW_AltTracker_Storage" }`
+on `itemsearch` (which aggregates journal/vendor/crafted/quest/owned data) so it shows
+the aggregator placeholder only when none of its sources are loaded.
+
 **Cached content is stale by default.** A tab frame is built once; revisiting it
 just `Show()`s the cached frame. `MainWindow` calls `frame:Activate()` on every
 tab selection and `frame:Deactivate()` when leaving — tabs whose content can
@@ -497,7 +560,12 @@ today.
 
 **Placeholder tabs:** when a hub module is not loaded, `GetAlwaysShowModules()` still
 shows its tab (same `tabOrder`, locale key label). Selecting a placeholder prompts load or
-Manage Features.
+Manage Features. The same pattern extends to row-2 sub-tabs via `requiresAddon` /
+`requiresAnyAddon` / `isAvailable` (above): an unavailable sub-tab renders the
+placeholder, and when a backing addon loads, the `ns.FeatureStateChanged` handler
+rebuilds the on-screen tab in place (matching either `_requiresAddon == name` or
+`name` being a member of `_requiresAnyAddon`; off-screen ones rebuild lazily on next
+selection via the `_isPlaceholder` staleness check in `SelectSubTab`).
 
 Standalone-window modules (Bags, ShoppingList, DirectDeposit) open via slash commands,
 not hub tabs.

@@ -68,7 +68,7 @@ local function RegisterTitleBarForRefresh(titleBar, settingsBtn)
 
     if titleBarRefreshRegistered then return end
     titleBarRefreshRegistered = true
-    EventRegistry:RegisterCallback("OneWoW.FeatureStateChanged", function(_, addonName)
+    EventRegistry:RegisterCallback("ns.FeatureStateChanged", function(_, addonName)
         if not IsSuiteTitleBarAddon(addonName) then return end
         for _, entry in ipairs(titleBarRefreshRegistry) do
             WH:SyncSuiteTitleBarButtons(entry.titleBar, entry.settingsBtn)

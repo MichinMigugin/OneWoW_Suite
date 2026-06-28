@@ -139,6 +139,15 @@ local addonLoadedWatchers = {}
 local coreLoginHandlers = {}
 local coreEnteringWorldHandlers = {}
 
+-- Data-ready registry: the "data boundary" sibling of the addon-loaded watchers.
+-- A provider's data becomes queryable only after its login init runs (Catalog
+-- data units RegisterDataAddon in onLogin; stores finish CollectBags there),
+-- which is strictly after ns.FeatureStateChanged ("load boundary"). dataReadySet
+-- is monotonic per session; watchers get registration-time catch-up so a consumer
+-- built after readiness still fires once.
+local dataReadyWatchers = {}
+local dataReadySet = {}
+
 local unitRegistry = {}
 
 --- Register a load unit for lifecycle hook dispatch (stores via BootStore; optional for hubs).
@@ -232,6 +241,53 @@ function ns:RegisterAddonLoadedWatcher(addonName, fn)
         self:TraceRecord("watcher.catchup", addonName)
         SafeCall(addonName, fn, addonName)
     end
+end
+
+local function FireDataReadyWatchers(addonName)
+    for _, entry in ipairs(dataReadyWatchers) do
+        local filter = entry.addonName
+        if not filter or filter == "*" or filter == addonName then
+            SafeCall(entry.addonName or "*", entry.fn, addonName)
+        end
+    end
+end
+
+--- Marks a provider's data queryable and fans out its data-ready watchers, at
+--- most once per addon per session (monotonic). Auto-fired by BootStore at the
+--- end of OnPlayerLogin; hub providers may call it explicitly. nil/duplicate
+--- addonName is a no-op (so the call site needs no guard).
+---@param addonName string|nil provider addon name
+function ns:SignalDataReady(addonName)
+    if not addonName or dataReadySet[addonName] then return end
+    dataReadySet[addonName] = true
+    self:TraceRecord("dataReady.signal", addonName)
+    FireDataReadyWatchers(addonName)
+end
+
+--- "Wire when provider X's data is queryable" — the data-boundary analogue of
+--- RegisterAddonLoadedWatcher. Registration-time catch-up: a filtered watcher
+--- whose provider is already ready fires once immediately, so a consumer (or tab)
+--- built after readiness is not stranded. Wildcard (nil/"*") gets no catch-up.
+--- Setup fns must be idempotent (catch-up + a later signal can both reach a late
+--- registrant; scan-callback registration is not dedup-safe).
+---@param addonName string|nil specific provider, or nil/"*" for any
+---@param fn fun(readyAddon: string)
+function ns:RegisterDataReadyWatcher(addonName, fn)
+    if not fn then return end
+    dataReadyWatchers[#dataReadyWatchers + 1] = {
+        addonName = addonName,
+        fn = fn,
+    }
+    if addonName and addonName ~= "" and addonName ~= "*" and dataReadySet[addonName] then
+        self:TraceRecord("dataReady.catchup", addonName)
+        SafeCall(addonName, fn, addonName)
+    end
+end
+
+---@param addonName string provider addon name
+---@return boolean ready
+function ns:IsDataReady(addonName)
+    return addonName ~= nil and dataReadySet[addonName] == true
 end
 
 --- Handlers within a phase must be order-independent: a handler that needs

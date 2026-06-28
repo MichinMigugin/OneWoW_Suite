@@ -891,21 +891,7 @@ function ns.UI.CreateTradeskillsTab(parent)
     panels.listTitle:SetText(L["TRADESKILLS_LIST_TITLE"])
     panels.detailTitle:SetText(L["TRADESKILLS_DETAIL_TITLE"])
 
-    local addon = GetDataAddon()
-    local professions = addon and addon.TradeskillData:GetProfessions() or {}
-
-    local allBtn = CreateProfTextButton(profHeader, L["TRADESKILLS_ALL"], nil, true)
-    tinsert(profButtons, allBtn)
-
-    local buttonList = {allBtn}
-    for _, prof in ipairs(professions) do
-        if prof.hasData then
-            local displayName = GetLocalizedProfName(prof)
-            local btn = CreateProfTextButton(profHeader, displayName, prof, false)
-            tinsert(profButtons, btn)
-            tinsert(buttonList, btn)
-        end
-    end
+    local buttonList = {}
 
     local function LayoutProfButtons()
         local w = profHeader:GetWidth()
@@ -926,6 +912,39 @@ function ns.UI.CreateTradeskillsTab(parent)
             xOff = xOff + btnWidth + PROF_BTN_GAP
         end
     end
+
+    -- (Re)build the profession filter buttons from current data. Tradeskills data
+    -- registers in onLogin (after the tab may have been rebuilt on the load
+    -- boundary), so the data-ready watcher calls this again to surface the
+    -- profession list without a reload.
+    local function BuildProfButtons()
+        for _, btn in ipairs(profButtons) do
+            btn:Hide()
+            btn:SetParent(nil)
+        end
+        wipe(profButtons)
+        wipe(buttonList)
+
+        local addon = GetDataAddon()
+        local professions = addon and addon.TradeskillData:GetProfessions() or {}
+
+        local allBtn = CreateProfTextButton(profHeader, L["TRADESKILLS_ALL"], nil, true)
+        tinsert(profButtons, allBtn)
+        tinsert(buttonList, allBtn)
+
+        for _, prof in ipairs(professions) do
+            if prof.hasData then
+                local displayName = GetLocalizedProfName(prof)
+                local btn = CreateProfTextButton(profHeader, displayName, prof, false)
+                tinsert(profButtons, btn)
+                tinsert(buttonList, btn)
+            end
+        end
+
+        LayoutProfButtons()
+    end
+
+    BuildProfButtons()
 
     profHeader:SetScript("OnSizeChanged", function()
         LayoutProfButtons()
@@ -1018,26 +1037,33 @@ function ns.UI.CreateTradeskillsTab(parent)
 
     ns.UI.tradeskillsPanels = panels
 
-    if addon then
+    -- Start in the no-data state; the data-ready watcher swaps to the live view,
+    -- rebuilds the profession buttons, and wires the scan callback once the
+    -- Tradeskills data unit's data is queryable. Catch-up covers a tab opened
+    -- after data was already ready; the signal covers a mid-session load. `wired`
+    -- keeps scan-callback registration idempotent.
+    if GetDataAddon() then
         emptyList:SetText(L["TRADESKILLS_SELECT"])
-        addon:RegisterScanCallback(function()
-            if selectedProfession and RefreshRecipeList then
-                RefreshRecipeList()
-            end
-        end)
     else
         emptyList:SetText(L["TRADESKILLS_NO_DATA"])
         panels.listScrollChild:SetHeight(100)
-        C_Timer.After(2.0, function()
-            local retryAddon = GetDataAddon()
-            if retryAddon then
-                emptyList:SetText(L["TRADESKILLS_SELECT"])
-                retryAddon:RegisterScanCallback(function()
-                    if selectedProfession and RefreshRecipeList then RefreshRecipeList() end
-                end)
-            end
-        end)
     end
+
+    local wired = false
+    OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Tradeskills", function()
+        local addon = GetDataAddon()
+        if not addon then return end
+        emptyList:SetText(L["TRADESKILLS_SELECT"])
+        BuildProfButtons()
+        if not wired then
+            wired = true
+            addon:RegisterScanCallback(function()
+                if selectedProfession and RefreshRecipeList then
+                    RefreshRecipeList()
+                end
+            end)
+        end
+    end)
 
     parent:SetScript("OnShow", function()
         selectedProfession = nil

@@ -291,7 +291,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
     ["ITEMSEARCH_TITLE"] = "Gegenstandssuche",
     ["ITEMSEARCH_PLACEHOLDER"] = "Nach einem Gegenstand suchen...",
-    ["ITEMSEARCH_EMPTY"] = "Gebt einen Gegenstandsnamen zum Suchen ein.",
+    ["ITEMSEARCH_EMPTY"] = "Keine Gegenstände vorhanden.",
+    ["ITEMSEARCH_SOURCE_UNAVAIL"] = "Nicht verfügbar. Lade das zugehörige Daten-Add-on unter „Funktionen verwalten“.",
     ["ITEMSEARCH_NO_RESULTS"] = "Keine Ergebnisse gefunden.",
 
     ["ITEMSEARCH_LIST_TITLE"] = "Ergebnisse",
@@ -301,7 +302,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ITEMSEARCH_RESULTS_CAPPED"] = "%d Ergebnisse (Grenze erreicht)",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "Durchsuche %d Gegenstände",
     ["ITEMSEARCH_MIN_CHARS"] = "Gebt mindestens 2 Zeichen zum Suchen ein.",
-    ["ITEMSEARCH_NOTICE"] = "Diese Suche zeigt Gegenstände von Händlern, Bossbeute aus Instanzen, Inventaren und mehr. Es sind nicht nur Gegenstände, die ihr besitzt. Es sind alle Gegenstände, die ihr gesehen habt oder die bekanntermaßen droppen.",
+    ["ITEMSEARCH_NOTICE"] = "Zeigt Gegenstände von Händlern, Bossbeute aus Instanzen, Inventaren und mehr. Es sind nicht nur Gegenstände, die ihr besitzt; es sind alle Gegenstände, die ihr gesehen habt oder die bekanntermaßen droppen.",
 
     ["TT_IS_FILTER_ALL"] = "Alle Quellen",
     ["TT_IS_FILTER_ALL_DESC"] = "In allen Datenquellen suchen.",

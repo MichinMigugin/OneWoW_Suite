@@ -291,7 +291,8 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
     ["ITEMSEARCH_TITLE"] = "Ricerca oggetti",
     ["ITEMSEARCH_PLACEHOLDER"] = "Cerca un oggetto...",
-    ["ITEMSEARCH_EMPTY"] = "Inserisci il nome di un oggetto per cercare.",
+    ["ITEMSEARCH_EMPTY"] = "Nessun oggetto da mostrare.",
+    ["ITEMSEARCH_SOURCE_UNAVAIL"] = "Non disponibile. Carica il relativo add-on dati in Gestisci funzioni.",
     ["ITEMSEARCH_NO_RESULTS"] = "Nessun risultato trovato.",
 
     ["ITEMSEARCH_LIST_TITLE"] = "Risultati",
@@ -301,7 +302,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["ITEMSEARCH_RESULTS_CAPPED"] = "%d risultati (limite raggiunto)",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "Esplorazione di %d oggetti",
     ["ITEMSEARCH_MIN_CHARS"] = "Digita almeno 2 caratteri per cercare.",
-    ["ITEMSEARCH_NOTICE"] = "Questa ricerca mostrerà oggetti da venditori, bottino dei boss delle istanze, inventari e altro. Non sono solo gli oggetti che possiedi. Sono tutti gli oggetti che hai visto o che è noto rilascino.",
+    ["ITEMSEARCH_NOTICE"] = "Mostra oggetti da venditori, bottino dei boss delle istanze, inventari e altro. Non sono solo gli oggetti che possiedi; sono tutti gli oggetti che hai visto o che è noto rilascino.",
 
     ["TT_IS_FILTER_ALL"] = "Tutte le fonti",
     ["TT_IS_FILTER_ALL_DESC"] = "Cerca in tutte le fonti di dati.",

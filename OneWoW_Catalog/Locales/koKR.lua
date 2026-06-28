@@ -289,7 +289,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
     ["ITEMSEARCH_TITLE"] = "아이템 검색",
     ["ITEMSEARCH_PLACEHOLDER"] = "아이템 이름 검색...",
-    ["ITEMSEARCH_EMPTY"] = "검색할 아이템 이름을 입력하세요.",
+    ["ITEMSEARCH_EMPTY"] = "표시할 아이템이 없습니다.",
+    ["ITEMSEARCH_SOURCE_UNAVAIL"] = "사용할 수 없습니다. 기능 관리에서 해당 데이터 애드온을 불러오세요.",
     ["ITEMSEARCH_NO_RESULTS"] = "결과가 없습니다.",
 
     ["ITEMSEARCH_LIST_TITLE"] = "결과",
@@ -299,7 +300,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ITEMSEARCH_RESULTS_CAPPED"] = "결과 %d개 (상한 도달)",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "아이템 %d개 탐색 중",
     ["ITEMSEARCH_MIN_CHARS"] = "검색하려면 글자를 2자 이상 입력하세요.",
-    ["ITEMSEARCH_NOTICE"] = "이 검색은 상인, 인스턴스 보스 전리품, 가방 등에서 본 아이템을 보여줍니다. 직접 소유한 아이템만이 아니라, 본 적이 있거나 전리로 알려진 모든 아이템이 포함될 수 있습니다.",
+    ["ITEMSEARCH_NOTICE"] = "상인, 인스턴스 보스 전리품, 가방 등에서 얻을 수 있는 아이템을 보여줍니다. 직접 소유한 아이템만이 아니라, 본 적이 있거나 전리로 알려진 모든 아이템이 포함됩니다.",
 
     ["TT_IS_FILTER_ALL"] = "모든 출처",
     ["TT_IS_FILTER_ALL_DESC"] = "모든 데이터 출처에서 검색합니다.",

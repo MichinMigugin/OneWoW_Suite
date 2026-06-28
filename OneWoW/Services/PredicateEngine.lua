@@ -2218,7 +2218,8 @@ local function PopulateBaseProps(props, itemID, hyperlink)
     props.isProfessionEquipment = props.classID == Enum.ItemClass.Profession and props.isEquipment
 
     -- 'Usable' in this context is equivalent to the item having a 'Use: ' text in tooltip
-    props.isUsable = (C_Item.IsUsableItem(itemID) == true)
+    --props.isUsable = C_Item.IsUsableItem(hyperlink or itemID) == true
+    props.isUsable = C_Item.IsUsableItem(itemID) == true
 
     -- ---- Socket detection (API-based, no tooltip needed) ----
     local socketCount = hyperlink and C_Item.GetItemNumSockets(hyperlink) or 0

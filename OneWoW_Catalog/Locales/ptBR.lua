@@ -291,7 +291,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
     ["ITEMSEARCH_TITLE"] = "Busca de itens",
     ["ITEMSEARCH_PLACEHOLDER"] = "Buscar um item...",
-    ["ITEMSEARCH_EMPTY"] = "Digite o nome de um item para buscar.",
+    ["ITEMSEARCH_EMPTY"] = "Nenhum item para mostrar.",
+    ["ITEMSEARCH_SOURCE_UNAVAIL"] = "Indisponível. Carregue o complemento de dados em Gerenciar funcionalidades.",
     ["ITEMSEARCH_NO_RESULTS"] = "Nenhum resultado encontrado.",
 
     ["ITEMSEARCH_LIST_TITLE"] = "Resultados",
@@ -301,7 +302,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["ITEMSEARCH_RESULTS_CAPPED"] = "%d resultados (limite atingido)",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "Explorando %d itens",
     ["ITEMSEARCH_MIN_CHARS"] = "Digite pelo menos 2 caracteres para buscar.",
-    ["ITEMSEARCH_NOTICE"] = "Esta busca mostrará itens de vendedores, despojos de chefes de instância, inventários e mais. Não são apenas os itens que você possui. São todos os itens que você viu ou que se sabe que são saqueados.",
+    ["ITEMSEARCH_NOTICE"] = "Mostra itens de vendedores, despojos de chefes de instância, inventários e mais. Não são apenas os itens que você possui; são todos os itens que você viu ou que se sabe que são saqueados.",
 
     ["TT_IS_FILTER_ALL"] = "Todas as fontes",
     ["TT_IS_FILTER_ALL_DESC"] = "Buscar em todas as fontes de dados.",

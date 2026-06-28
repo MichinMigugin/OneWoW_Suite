@@ -4989,7 +4989,12 @@ function ns.UI.CreateQuestsTab(parent)
         panels.UpdateAdvancedTexts()
     end)
 
-    C_Timer.After(0.5, function()
+    -- Populate the data-backed dropdowns and list once the Quests data unit's data
+    -- is queryable (it registers in onLogin, after the load boundary). Catch-up
+    -- covers a tab opened after data was already ready; the signal covers a
+    -- mid-session load. Ongoing quest-enrichment refreshes still arrive via
+    -- QuestData's QueueQuestUIRefresh -> RefreshQuestsList push.
+    OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Quests", function()
         PopulateExpansionDropdown(panels)
         PopulateZoneDropdown(panels)
         SetupProgressDropdown(panels)

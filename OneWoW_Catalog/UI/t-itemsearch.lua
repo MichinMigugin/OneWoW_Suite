@@ -20,6 +20,7 @@ local emptyList      = nil
 local emptyDetail    = nil
 local searchTimer    = nil
 local suppressSearchBoxChange = false
+local dataReadyWatchersRegistered = false
 
 local function OpenItemNoteFromResult(result)
     if not result or not result.itemID or not ns.Navigation or not ns.Navigation.OpenItemNote then
@@ -101,18 +102,42 @@ local function ClearDetailElements()
     wipe(detailElements)
 end
 
-local function UpdateSourceButtonStates()
-    for _, btn in ipairs(sourceButtons) do
-        if btn.sourceKey == currentSource then
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            btn.highlight:Show()
-        else
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            btn.highlight:Hide()
-        end
+-- Resting (non-hovered) appearance for a single button, honoring availability
+-- and active selection. Shared by UpdateSourceButtonStates and OnLeave so the
+-- two never diverge.
+local function ApplySourceButtonResting(btn)
+    if not btn.available then
+        btn:SetAlpha(0.4)
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        btn.highlight:Hide()
+    elseif btn.sourceKey == currentSource then
+        btn:SetAlpha(1)
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        btn.highlight:Show()
+    else
+        btn:SetAlpha(1)
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        btn.highlight:Hide()
     end
+end
+
+-- Recomputes each button's availability and resting style. Returns true if any
+-- button's availability changed, so callers can refresh the list once data
+-- becomes (un)available mid-session.
+local function UpdateSourceButtonStates()
+    local availabilityChanged = false
+    for _, btn in ipairs(sourceButtons) do
+        local available = (not ns.ItemSearch) or ns.ItemSearch:IsSourceAvailable(btn.sourceKey)
+        if btn.available ~= available then
+            btn.available = available
+            availabilityChanged = true
+        end
+        ApplySourceButtonResting(btn)
+    end
+    return availabilityChanged
 end
 
 local function CreateSourceButton(parent, def)
@@ -132,6 +157,7 @@ local function CreateSourceButton(parent, def)
 
     btn.label     = label
     btn.sourceKey = def.key
+    btn.available = true
 
     btn.highlight = btn:CreateTexture(nil, "OVERLAY")
     btn.highlight:SetAllPoints()
@@ -140,24 +166,25 @@ local function CreateSourceButton(parent, def)
     btn.highlight:Hide()
 
     btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+        if self.available then
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+        end
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
         GameTooltip:SetText(L[def.labelKey], 1, 1, 1)
-        GameTooltip:AddLine(L[def.descKey], 0.7, 0.7, 0.7, true)
+        if self.available then
+            GameTooltip:AddLine(L[def.descKey], 0.7, 0.7, 0.7, true)
+        else
+            GameTooltip:AddLine(L["ITEMSEARCH_SOURCE_UNAVAIL"], 1, 0.5, 0.5, true)
+        end
         GameTooltip:Show()
     end)
     btn:SetScript("OnLeave", function(self)
-        if self.sourceKey == currentSource then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-        else
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        end
+        ApplySourceButtonResting(self)
         GameTooltip:Hide()
     end)
     btn:SetScript("OnClick", function(self)
+        if not self.available then return end
         currentSource = self.sourceKey
         selectedItem  = nil
         UpdateSourceButtonStates()
@@ -591,25 +618,18 @@ RefreshItemList = function()
         return
     end
 
-    local results, limitReached
+    -- Single path: a <2 char term browses all available sources; >=2 filters.
+    local hasFilter = #currentSearch >= 2
+    local results, limitReached = ns.ItemSearch:Query(currentSearch, currentSource)
 
-    if currentSearch == "" or #currentSearch < 2 then
-        results = ns.ItemSearch:GetDefaultItems(50)
-        limitReached = false
-        if not results or #results == 0 then
-            panels.listScrollChild:SetHeight(100)
-            if emptyList then emptyList:SetText(L["ITEMSEARCH_EMPTY"]); emptyList:Show() end
-            if panels.leftStatusText then panels.leftStatusText:SetText("") end
-            return
+    if not results or #results == 0 then
+        panels.listScrollChild:SetHeight(100)
+        if emptyList then
+            emptyList:SetText(hasFilter and L["ITEMSEARCH_NO_RESULTS"] or L["ITEMSEARCH_EMPTY"])
+            emptyList:Show()
         end
-    else
-        results, limitReached = ns.ItemSearch:Query(currentSearch, currentSource)
-        if not results or #results == 0 then
-            panels.listScrollChild:SetHeight(100)
-            if emptyList then emptyList:SetText(L["ITEMSEARCH_NO_RESULTS"]); emptyList:Show() end
-            if panels.leftStatusText then panels.leftStatusText:SetText("") end
-            return
-        end
+        if panels.leftStatusText then panels.leftStatusText:SetText("") end
+        return
     end
 
     if emptyList then emptyList:Hide() end
@@ -658,7 +678,7 @@ RefreshItemList = function()
 
     if panels.leftStatusText then
         local n = #results
-        if currentSearch == "" or #currentSearch < 2 then
+        if not hasFilter then
             panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_BROWSE_DEFAULT"], n))
         elseif limitReached then
             panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_RESULTS_CAPPED"], n))
@@ -667,7 +687,7 @@ RefreshItemList = function()
         end
     end
 
-    local exactItemID = tonumber(currentSearch)
+    local exactItemID = hasFilter and tonumber(currentSearch) or nil
     if exactItemID and not selectedItem then
         SelectVisibleItemResult(exactItemID)
     end
@@ -676,6 +696,10 @@ end
 function ns.UI.CreateItemSearchTab(parent)
     local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
     local GAP    = ns.Constants.GUI.PANEL_GAP
+
+    -- Rebuilt fresh each construction (the tab can be rebuilt placeholder->real
+    -- when a data source loads); drop any buttons from a prior build.
+    wipe(sourceButtons)
 
     local searchHeader = OneWoW_GUI:CreateFilterBar(parent, { height = HEADER_H, offset = 0 })
     searchHeader:ClearAllPoints()
@@ -781,6 +805,28 @@ function ns.UI.CreateItemSearchTab(parent)
 
     UpdateSourceButtonStates()
     RefreshItemList()
+
+    -- A data source becoming queryable mid-session changes which filters are
+    -- usable. Watch the data boundary (OneWoW:SignalDataReady, fired after the
+    -- provider's OnPlayerLogin registers its data) rather than the load boundary
+    -- (ns.FeatureStateChanged, which fires before registration). Registered here
+    -- (not at file scope) because ns.ItemSearch is only populated once m-itemsearch
+    -- has parsed; the once-flag keeps a single set of watchers across tab rebuilds,
+    -- and they reference the module-level panels/refresh upvalues which always point
+    -- at the live tab. The build-time UpdateSourceButtonStates above covers a tab
+    -- opened after sources were ready, so a catch-up landing while panels==nil is a
+    -- safe no-op.
+    if not dataReadyWatchersRegistered then
+        dataReadyWatchersRegistered = true
+        for _, addon in ipairs(ns.ItemSearch.SOURCE_ADDONS) do
+            OneWoW:RegisterDataReadyWatcher(addon, function()
+                if not panels then return end
+                if UpdateSourceButtonStates() then
+                    RefreshItemList()
+                end
+            end)
+        end
+    end
 
     ns.UI.RefreshItemSearchList = RefreshItemList
 

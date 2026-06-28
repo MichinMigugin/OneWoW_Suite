@@ -1385,8 +1385,22 @@ function ns.UI.CreateJournalTab(parent)
     ns.UI.journalPanels = panels
     panels_ref = panels
 
-    local addon = GetDataAddon()
-    if addon then
+    -- Start in the no-data state; the data-ready watcher swaps to the live view
+    -- once the Journal data unit's data is queryable. Catch-up covers a tab opened
+    -- after data was already ready; the signal covers a mid-session load. The
+    -- `wired` guard keeps it idempotent (scan-callback registration is not
+    -- dedup-safe, and catch-up + a later signal can both reach the handler).
+    emptyList:SetText(L["JOURNAL_NO_DATA"])
+    emptyDetail:SetText(L["JOURNAL_NO_DATA"])
+    panels.listScrollChild:SetHeight(100)
+    panels.detailScrollChild:SetHeight(100)
+
+    local wired = false
+    OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Journal", function()
+        if wired then return end
+        local addon = GetDataAddon()
+        if not addon then return end
+        wired = true
         emptyList:SetText(L["JOURNAL_EMPTY"])
         emptyDetail:SetText(L["JOURNAL_SELECT"])
         panels.detailScrollChild:SetHeight(100)
@@ -1404,29 +1418,7 @@ function ns.UI.CreateJournalTab(parent)
             InitializeDropdowns(panels)
             RefreshJournalList(panels)
         end)
-    else
-        emptyList:SetText(L["JOURNAL_NO_DATA"])
-        emptyDetail:SetText(L["JOURNAL_NO_DATA"])
-        panels.listScrollChild:SetHeight(100)
-        panels.detailScrollChild:SetHeight(100)
-
-        C_Timer.After(2.0, function()
-            local retryAddon = GetDataAddon()
-            if retryAddon then
-                dataAddon = retryAddon
-                emptyList:SetText(L["JOURNAL_EMPTY"])
-                emptyDetail:SetText(L["JOURNAL_SELECT"])
-                if retryAddon.RegisterScanCallback then
-                    retryAddon:RegisterScanCallback(function()
-                        InvalidateJournalFilterCache()
-                        RefreshJournalList(ns.UI.journalPanels)
-                    end)
-                end
-                InitializeDropdowns(panels)
-                RefreshJournalList(panels)
-            end
-        end)
-    end
+    end)
 end
 
 function ns.UI.OpenToInstance(mapID)

@@ -290,7 +290,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["ITEMSEARCH_TITLE"] = "Item Search",
     ["ITEMSEARCH_PLACEHOLDER"] = "Search for an item...",
-    ["ITEMSEARCH_EMPTY"] = "Enter an item name to search.",
+    ["ITEMSEARCH_EMPTY"] = "No items to show.",
+    ["ITEMSEARCH_SOURCE_UNAVAIL"] = "Not available. Load its data add-on in Manage Features.",
     ["ITEMSEARCH_NO_RESULTS"] = "No results found.",
 
     ["ITEMSEARCH_LIST_TITLE"] = "Results",
@@ -300,7 +301,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ITEMSEARCH_RESULTS_CAPPED"] = "%d results (cap reached)",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "Browsing %d items",
     ["ITEMSEARCH_MIN_CHARS"] = "Type at least 2 characters to search.",
-    ["ITEMSEARCH_NOTICE"] = "This Search will show items from vendors, instance boss drops, inventories and all. These are not just items you own. They are all items that you have seen or are known to drop.",
+    ["ITEMSEARCH_NOTICE"] = "Shows items from vendors, instance boss drops, inventories and more. These are not just items you own; they are all items you have seen or that are known to drop.",
 
     ["TT_IS_FILTER_ALL"] = "All Sources",
     ["TT_IS_FILTER_ALL_DESC"] = "Search across all data sources.",

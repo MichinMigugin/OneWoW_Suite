@@ -20,7 +20,6 @@ local TRADESKILL_PROFS = {
 }
 
 local MAX_RESULTS = 200
-local DEFAULT_LIMIT = 50
 
 local function GetRecipeKnownByFromAltTracker(itemID)
     local profsAPI = OneWoW_AltTracker_Professions_API
@@ -82,12 +81,6 @@ local function GetRecipeKnownByFromAltTracker(itemID)
     sort(knownBy)
     return knownBy
 end
-
-local EXPANSION_PRIORITY = {
-    "Midnight", "TheWarWithin", "Dragonflight", "Shadowlands",
-    "BattleforAzeroth", "Legion", "WarlordsofDraenor", "MistsofPandaria",
-    "Cataclysm", "WrathoftheLichKing", "BurningCrusade", "Classic",
-}
 
 -- The localized item name is embedded in every hyperlink's "[Name]" segment, so
 -- it can be recovered offline without touching the live item cache.
@@ -214,21 +207,57 @@ local function GetOwnedItems()
     return owned
 end
 
-function ItemSearch:Query(searchTerm, sourceFilter)
-    if not searchTerm or #searchTerm < 2 then return {}, false end
+-- Per-filter data availability. "all" is always available (the tab-level
+-- placeholder covers the no-sources case); every other filter maps to the data
+-- it reads. Shared by Query (source gating) and the UI (button enable state) so
+-- the two can never drift. The Owned source depends on Storage (GetOwnedItems
+-- early-returns without it).
+local SOURCE_AVAILABILITY = {
+    all     = function() return true end,
+    drops   = function() return ns.Catalog ~= nil and ns.Catalog:GetDataAddon("journal") ~= nil end,
+    vendors = function() return ns.Catalog ~= nil and ns.Catalog:GetDataAddon("vendors") ~= nil end,
+    crafted = function() return ns.Catalog ~= nil and ns.Catalog:GetDataAddon("tradeskills") ~= nil end,
+    owned   = function() return OneWoW_AltTracker_Storage_API ~= nil end,
+    quests  = function() return ns.Catalog ~= nil and ns.Catalog:GetDataAddon("quests") ~= nil end,
+}
 
-    local term = searchTerm:lower()
-    local exactItemID = tonumber(searchTerm)
+function ItemSearch:IsSourceAvailable(sourceKey)
+    local fn = SOURCE_AVAILABILITY[sourceKey]
+    if not fn then return true end
+    return fn() and true or false
+end
+
+-- The backing data addons this tab aggregates. Single source of truth: reused
+-- for the tab's `requiresAnyAddon` gate (OneWoW_Catalog.lua) and for the
+-- data-ready watchers that refresh the source buttons (t-itemsearch.lua).
+ItemSearch.SOURCE_ADDONS = {
+    "OneWoW_CatalogData_Journal",
+    "OneWoW_CatalogData_Vendors",
+    "OneWoW_CatalogData_Tradeskills",
+    "OneWoW_CatalogData_Quests",
+    "OneWoW_AltTracker_Storage",
+}
+
+function ItemSearch:Query(searchTerm, sourceFilter)
+    -- A nil or <2 char term means "no text filter": browse every available source.
+    -- An empty Lua pattern still matches every name via string.find(s, "", 1, true),
+    -- so the source loops below work unchanged for the browse case.
+    local hasFilter = searchTerm ~= nil and #searchTerm >= 2
+    local term = hasFilter and searchTerm:lower() or ""
+    local exactItemID = hasFilter and tonumber(searchTerm) or nil
     local results = {}
     local resultMap = {}
     local count = 0
     local limitReached = false
 
-    local doJournal = (sourceFilter == "all" or sourceFilter == "drops")
-    local doVendors = (sourceFilter == "all" or sourceFilter == "vendors")
-    local doCrafted = (sourceFilter == "all" or sourceFilter == "crafted")
-    local doOwned   = (sourceFilter == "all" or sourceFilter == "owned")
-    local doQuest   = (sourceFilter == "all" or sourceFilter == "quests")
+    -- Gate each source on its backing data actually being present so an unloaded
+    -- source contributes nothing and never consumes the result cap. "all" pulls
+    -- from every available source; a specific filter pulls only from its own.
+    local doJournal = (sourceFilter == "all" or sourceFilter == "drops")   and self:IsSourceAvailable("drops")
+    local doVendors = (sourceFilter == "all" or sourceFilter == "vendors") and self:IsSourceAvailable("vendors")
+    local doCrafted = (sourceFilter == "all" or sourceFilter == "crafted") and self:IsSourceAvailable("crafted")
+    local doOwned   = (sourceFilter == "all" or sourceFilter == "owned")   and self:IsSourceAvailable("owned")
+    local doQuest   = (sourceFilter == "all" or sourceFilter == "quests")  and self:IsSourceAvailable("quests")
 
     local function addOrAnnotate(itemID, name, icon, quality, sourceKey)
         if resultMap[itemID] then
@@ -372,49 +401,6 @@ function ItemSearch:Query(searchTerm, sourceFilter)
     end)
 
     return results, limitReached
-end
-
-function ItemSearch:GetDefaultItems(limit)
-    limit = limit or DEFAULT_LIMIT
-    local results = {}
-    local resultMap = {}
-    local count = 0
-
-    local ownedMap = GetOwnedItems()
-
-    for _, expName in ipairs(EXPANSION_PRIORITY) do
-        local items = _G["OneWoWItems_" .. expName]
-        if items then
-            for itemID, idata in pairs(items) do
-                if idata.name and not resultMap[itemID] then
-                    count = count + 1
-                    local od = ownedMap[itemID]
-                    results[count] = {
-                        itemID     = itemID,
-                        name       = idata.name,
-                        icon       = idata.icon,
-                        quality    = idata.quality or 1,
-                        ownedCount = od and od.total or 0,
-                        isJournal  = true,
-                        isVendor   = false,
-                        isCrafted  = false,
-                        isOwned    = od and true or false,
-                    }
-                    resultMap[itemID] = count
-                    if count >= limit then break end
-                end
-            end
-        end
-        if count >= limit then break end
-    end
-
-    sort(results, function(a, b)
-        if a.ownedCount > 0 and b.ownedCount == 0 then return true end
-        if a.ownedCount == 0 and b.ownedCount > 0 then return false end
-        return (a.name or "") < (b.name or "")
-    end)
-
-    return results
 end
 
 function ItemSearch:GetDetail(itemID)

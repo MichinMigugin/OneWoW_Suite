@@ -449,6 +449,61 @@ function UI:SelectModuleTab(moduleName)
     end
 end
 
+-- A sub-tab whose content depends on optional data addon(s) can declare
+-- `requiresAddon` (single string), `requiresAnyAddon` (array; available when ANY
+-- listed addon is loaded -- for aggregator panels), and/or `isAvailable`
+-- (predicate, highest priority). When unavailable, the sub-tab renders a "Not
+-- loaded" placeholder instead of its content. A tab with none of these is always
+-- available (current behavior).
+local function SubTabContentAvailable(tabInfo)
+    if tabInfo.isAvailable then return tabInfo.isAvailable() and true or false end
+    if tabInfo.requiresAddon then return C_AddOns.IsAddOnLoaded(tabInfo.requiresAddon) end
+    if tabInfo.requiresAnyAddon then
+        for _, addon in ipairs(tabInfo.requiresAnyAddon) do
+            if C_AddOns.IsAddOnLoaded(addon) then return true end
+        end
+        return false
+    end
+    return true
+end
+
+-- Builds a module sub-tab's content frame: real content when available, otherwise
+-- the shared placeholder. Tags the frame so SelectSubTab can detect a stale
+-- placeholder once the backing addon loads and rebuild it in place.
+local function BuildModuleSubTabFrame(tabInfo)
+    local frame = CreateFrame("Frame", nil, contentArea)
+    frame:SetAllPoints()
+    if SubTabContentAvailable(tabInfo) then
+        tabInfo.create(frame)
+        frame._isPlaceholder = false
+    elseif tabInfo.requiresAnyAddon then
+        UI:CreateAggregatorPlaceholderFrame(frame, {
+            name = (type(tabInfo.displayName) == "function" and tabInfo.displayName()) or tabInfo.displayName,
+            addons = tabInfo.requiresAnyAddon,
+        })
+        frame._isPlaceholder = true
+        frame._requiresAnyAddon = tabInfo.requiresAnyAddon
+    else
+        UI:CreateAddonPlaceholderFrame(frame, {
+            addonName = tabInfo.requiresAddon,
+            name = (type(tabInfo.displayName) == "function" and tabInfo.displayName()) or tabInfo.displayName,
+        })
+        frame._isPlaceholder = true
+        frame._requiresAddon = tabInfo.requiresAddon
+    end
+    OneWoW_GUI:ApplyFontToFrame(frame)
+    return frame
+end
+
+local function FindModuleTab(moduleName, subTabName)
+    local mod = ns.ModuleRegistry:GetModule(moduleName)
+    if not mod or not mod.tabs then return nil end
+    for _, tabInfo in ipairs(mod.tabs) do
+        if tabInfo.name == subTabName then return tabInfo end
+    end
+    return nil
+end
+
 function UI:SelectSubTab(moduleName, subTabName)
     currentSubTab = subTabName
 
@@ -464,6 +519,19 @@ function UI:SelectSubTab(moduleName, subTabName)
     HideAllContent()
 
     local key = moduleName .. ":" .. subTabName
+
+    -- Drop a stale placeholder so it rebuilds as real content now that its backing
+    -- addon is available (e.g. after a mid-session "Load Data Addons").
+    local cached = moduleContentFrames[key]
+    if cached and cached._isPlaceholder then
+        local tabInfo = FindModuleTab(moduleName, subTabName)
+        if tabInfo and SubTabContentAvailable(tabInfo) then
+            cached:Hide()
+            cached:SetParent(nil)
+            moduleContentFrames[key] = nil
+        end
+    end
+
     if not moduleContentFrames[key] then
         if moduleName == "settings" and UI.settingsTabs then
             for _, tabInfo in ipairs(UI.settingsTabs) do
@@ -477,18 +545,9 @@ function UI:SelectSubTab(moduleName, subTabName)
                 end
             end
         else
-            local mod = ns.ModuleRegistry:GetModule(moduleName)
-            if mod and mod.tabs then
-                for _, tabInfo in ipairs(mod.tabs) do
-                    if tabInfo.name == subTabName and tabInfo.create then
-                        local frame = CreateFrame("Frame", nil, contentArea)
-                        frame:SetAllPoints()
-                        tabInfo.create(frame)
-                        moduleContentFrames[key] = frame
-                        OneWoW_GUI:ApplyFontToFrame(frame)
-                        break
-                    end
-                end
+            local tabInfo = FindModuleTab(moduleName, subTabName)
+            if tabInfo and tabInfo.create then
+                moduleContentFrames[key] = BuildModuleSubTabFrame(tabInfo)
             end
         end
     end
@@ -716,6 +775,66 @@ function UI:CreateAddonPlaceholderFrame(parent, info)
     })
 end
 
+--- Placeholder for an aggregator panel that has no single backing addon: it draws
+--- from several optional data addons (info.addons) and is "available" when ANY of
+--- them is loaded. Lists each source with its current load state so the user knows
+--- what to enable in Manage Features.
+---@param parent Frame
+---@param info table { name: string, addons: string[] }
+function UI:CreateAggregatorPlaceholderFrame(parent, info)
+    local addons = info.addons or {}
+
+    local icon = parent:CreateTexture(nil, "ARTWORK")
+    icon:SetSize(96, 96)
+    icon:SetPoint("CENTER", parent, "CENTER", 0, 110)
+    icon:SetTexture("Interface\\AddOns\\OneWoW\\Media\\neutral-large.png")
+
+    local nameText = OneWoW_GUI:CreateFS(parent, 16)
+    nameText:SetPoint("TOP", icon, "BOTTOM", 0, -16)
+    nameText:SetText(info.name or "")
+    nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local descText = OneWoW_GUI:CreateFS(parent, 12)
+    descText:SetWidth(440)
+    descText:SetJustifyH("CENTER")
+    descText:SetPoint("TOP", nameText, "BOTTOM", 0, -10)
+    descText:SetText(ns.L["AGGREGATOR_PLACEHOLDER_DESC"])
+    descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    -- One status line per source addon (localized name + current load state).
+    local sourceRows = {}
+    local anchor = descText
+    for _, addon in ipairs(addons) do
+        local labelKey = ns:GetStoreLabelKey(addon)
+        local fs = OneWoW_GUI:CreateFS(parent, 12)
+        fs:SetPoint("TOP", anchor, "BOTTOM", 0, anchor == descText and -16 or -6)
+        fs._addon = addon
+        fs._label = (labelKey and ns.L[labelKey]) or addon
+        sourceRows[#sourceRows + 1] = fs
+        anchor = fs
+    end
+
+    local function RefreshSourceRows()
+        for _, fs in ipairs(sourceRows) do
+            local state = ns:GetFeatureUnitState(fs._addon)
+            local loaded = C_AddOns.IsAddOnLoaded(fs._addon)
+            fs:SetText(fs._label .. "  -  " .. ns:GetFeatureUnitStatusLabel(state))
+            fs:SetTextColor(OneWoW_GUI:GetThemeColor(loaded and "TEXT_PRIMARY" or "TEXT_MUTED"))
+        end
+    end
+
+    parent:SetScript("OnShow", RefreshSourceRows)
+    RefreshSourceRows()
+
+    local linkRow = CreateFrame("Frame", nil, parent)
+    linkRow:SetSize(400, 20)
+    linkRow:SetPoint("TOP", anchor, "BOTTOM", 0, -24)
+    UI:CreateManageFeaturesLinkRow(linkRow, {
+        pointerKey = "PLACEHOLDER_ENABLE_POINTER",
+        center = true,
+    })
+end
+
 function UI:ResetUIToDefaults()
     if ns.db and ns.db.global then
         local C = ns.Constants.GUI
@@ -754,6 +873,22 @@ EventRegistry:RegisterCallback("ns.ModuleRegistered", function()
     UI:RefreshRow1ModuleTabs()
 end)
 
-EventRegistry:RegisterCallback("ns.FeatureStateChanged", function()
+EventRegistry:RegisterCallback("ns.FeatureStateChanged", function(_, name)
     UI:RefreshHomeStatus()
+    -- A data addon loaded while its placeholder sub-tab is on screen: rebuild it in
+    -- place. Off-screen placeholders rebuild lazily on next SelectSubTab. Covers
+    -- both single-addon (`_requiresAddon`) and aggregator (`_requiresAnyAddon`) tabs.
+    if not (activeContentFrame and activeContentFrame._isPlaceholder
+        and currentModuleTab and currentSubTab) then
+        return
+    end
+    local matches = activeContentFrame._requiresAddon == name
+    if not matches and activeContentFrame._requiresAnyAddon then
+        for _, addon in ipairs(activeContentFrame._requiresAnyAddon) do
+            if addon == name then matches = true break end
+        end
+    end
+    if matches then
+        UI:SelectSubTab(currentModuleTab, currentSubTab)
+    end
 end)
