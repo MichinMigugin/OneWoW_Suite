@@ -19,7 +19,7 @@ Feature modules, data stores, DevTool sub-modules, and sub-modules must **not** 
 - `RegisterEvent("PLAYER_ENTERING_WORLD")`
 - `EventRegistry:RegisterFrameEventAndCallback` on those three events
 
-Only `OneWoW/OneWoW.lua` may register them.
+Only `OneWoW/Core/Events.lua` (the single core event frame) may register them. Core files needing other (gameplay) events should register through its `ns.RegisterEvent(event, ownerID, fn)` / `ns.UnregisterEvent` rather than spawning their own frame.
 
 ## Required lifecycle patterns
 

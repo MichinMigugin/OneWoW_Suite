@@ -142,56 +142,44 @@ function ns:OnAddonLoaded(loadedAddon)
     end
 end
 
-local eventFrame = CreateFrame("Frame")
-eventFrame:RegisterEvent("ADDON_LOADED")
-eventFrame:RegisterEvent("PLAYER_LOGIN")
-eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+-- The core PLAYER_LOGIN sequence. Lives here (not in Core/Events.lua) so it keeps
+-- file-local access to ADDON_NAME and the helpers above; Core/Events.lua owns the
+-- shared event frame and invokes this on PLAYER_LOGIN.
+function ns:RunCoreLoginSequence()
+    -- Feature inits register themselves as "early" handlers in their own
+    -- files; "late" handlers (integrations) run after the load banner.
+    ns:FireCoreLoginHandlers("early")
 
-eventFrame:SetScript("OnEvent", function(_, event, ...)
-    if event == "ADDON_LOADED" then
-        ns:DispatchAddonLoaded(...)
-    elseif event == "PLAYER_LOGIN" then
-        -- After this point, a mid-session LoadAddOn won't deliver the unit's own
-        -- one-shot PLAYER_LOGIN, so ns:EnsureLoaded drives its login hooks.
-        ns._playerLoginFired = true
-        -- Feature inits register themselves as "early" handlers in their own
-        -- files; "late" handlers (integrations) run after the load banner.
-        ns:FireCoreLoginHandlers("early")
-
-        for _, comp in ipairs(ns.ModuleManifest or {}) do
-            if not ns._registeredAddons[comp.display] and C_AddOns.IsAddOnLoaded(comp.addon) then
-                ns:RegisterLoadComponent(comp.display, ns:GetAddonVersion(comp.addon), comp.cmd)
-            end
+    for _, comp in ipairs(ns.ModuleManifest or {}) do
+        if not ns._registeredAddons[comp.display] and C_AddOns.IsAddOnLoaded(comp.addon) then
+            ns:RegisterLoadComponent(comp.display, ns:GetAddonVersion(comp.addon), comp.cmd)
         end
-
-        local comps = ns._loadedComponents
-        if comps and #comps > 0 then
-            local ver = ns:GetAddonVersion(ADDON_NAME)
-            local parts = {}
-            for _, c in ipairs(comps) do
-                table.insert(parts, "|cFFFFFFFF" .. c.name .. "|r")
-            end
-            print("|cFF00FF00OneWoW|r |cFF888888v." .. ver .. "|r: " .. table.concat(parts, " + ") .. " |cFF00FF00loaded|r - /1w")
-        end
-
-        -- First-run feature picker: show once per account. Delayed a few
-        -- seconds so it appears AFTER the suite's load banner and any error
-        -- popups have cleared.
-        if ns.FirstRun and ns.FirstRun:ShouldShowWizard() then
-            C_Timer.After(3, function()
-                if ns.FirstRun and ns.FirstRun:ShouldShowWizard() then
-                    ns.FirstRun:ShowWizard()
-                end
-            end)
-        end
-
-        ns:FireCoreLoginHandlers("late")
-        ns:RunManifestLoginPhase()
-    elseif event == "PLAYER_ENTERING_WORLD" then
-        local isLogin, isReload = ...
-        ns:DispatchEnteringWorld(isLogin, isReload)
     end
-end)
+
+    local comps = ns._loadedComponents
+    if comps and #comps > 0 then
+        local ver = ns:GetAddonVersion(ADDON_NAME)
+        local parts = {}
+        for _, c in ipairs(comps) do
+            table.insert(parts, "|cFFFFFFFF" .. c.name .. "|r")
+        end
+        print("|cFF00FF00OneWoW|r |cFF888888v." .. ver .. "|r: " .. table.concat(parts, " + ") .. " |cFF00FF00loaded|r - /1w")
+    end
+
+    -- First-run feature picker: show once per account. Delayed a few
+    -- seconds so it appears AFTER the suite's load banner and any error
+    -- popups have cleared.
+    if ns.FirstRun and ns.FirstRun:ShouldShowWizard() then
+        C_Timer.After(3, function()
+            if ns.FirstRun and ns.FirstRun:ShouldShowWizard() then
+                ns.FirstRun:ShowWizard()
+            end
+        end)
+    end
+
+    ns:FireCoreLoginHandlers("late")
+    ns:RunManifestLoginPhase()
+end
 
 _G["1WoW_OnAddonCompartmentClick"] = function()
     if ns.UI then

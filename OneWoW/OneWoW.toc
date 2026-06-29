@@ -83,6 +83,7 @@ Locales\ptBR.lua
 Locales\itIT.lua
 
 # Core
+Core\Events.lua
 Core\Constants.lua
 Core\Format.lua
 Core\Restriction.lua

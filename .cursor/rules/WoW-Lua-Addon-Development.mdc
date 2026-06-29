@@ -173,7 +173,7 @@ f:SetScript("OnEvent", function(self, event, ...)
 end)
 ```
 
-**OneWoW Suite override:** for files under `OneWoW_*` load units, do **not** use frame `RegisterEvent` for `ADDON_LOADED`, `PLAYER_LOGIN`, or `PLAYER_ENTERING_WORLD` for lifecycle/init. Follow `OneWoW-Suite-Architecture.mdc` and load the `onewow-suite-architecture` skill. Gameplay events (`PLAYER_ALIVE`, `BAG_UPDATE`, …) may still use `RegisterEvent`.
+**OneWoW Suite override:** for files under `OneWoW_*` load units, do **not** use frame `RegisterEvent` for `ADDON_LOADED`, `PLAYER_LOGIN`, or `PLAYER_ENTERING_WORLD` for lifecycle/init — the single core event frame in `OneWoW/Core/Events.lua` owns those and routes them through core dispatch. Follow `OneWoW-Suite-Architecture.mdc` and load the `onewow-suite-architecture` skill. Gameplay events (`PLAYER_ALIVE`, `BAG_UPDATE`, …) may still use `RegisterEvent`.
 
 ### 4.3 Event Handling — EventRegistry (Modern)
 
