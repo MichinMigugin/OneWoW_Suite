@@ -1336,7 +1336,10 @@ function ns:HookBlizzardBags()
     self.bindingFrame = bindingFrame
 
     local function SetupBindingOverrides()
-        if OneWoW.Restriction.IsAddonRestricted() then
+        -- SetOverrideBinding is protected, so gate on combat-tier restriction
+        -- (lockdown/Combat/Encounter/keystone/PvP) but NOT on the Map restriction:
+        -- key bindings must still set up inside a Delve when out of combat.
+        if OneWoW.Restriction.IsProtectedActionBlocked() then
             bindingFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
             return
         end

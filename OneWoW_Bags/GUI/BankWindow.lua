@@ -402,7 +402,11 @@ function BankGUI:SyncBuiltTabState()
 end
 
 function BankGUI:CleanupAllViews()
-    if OneWoW.Restriction.IsAddonRestricted() then
+    -- Releasing pooled section frames / labels and hiding item buttons is not a
+    -- protected action, so only defer it during combat lockdown. An instanced-map
+    -- restriction (Delve) must NOT block cleanup, or stale category headers linger
+    -- over the relayout and overlap.
+    if OneWoW.Restriction.IsInCombat() then
         needsCleanupAfterCombat = true
         return
     end

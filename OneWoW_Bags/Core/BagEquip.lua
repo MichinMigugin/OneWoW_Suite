@@ -123,7 +123,7 @@ function BagEquip:CanPickup(bagIndex)
     if not BagTypes:IsSwappableBag(bagIndex) then
         return false
     end
-    if OneWoW.Restriction.IsAddonRestricted() then
+    if OneWoW.Restriction.IsProtectedActionBlocked() then
         return false
     end
     return self:IsEquippedBagEmpty(bagIndex)
@@ -136,7 +136,7 @@ function BagEquip:CanSwap(bagIndex)
     if not BagTypes:IsSwappableBag(bagIndex) then
         return false
     end
-    if OneWoW.Restriction.IsAddonRestricted() then
+    if OneWoW.Restriction.IsProtectedActionBlocked() then
         return false
     end
     if BagTypes:IsBagEquipped(bagIndex) and not self:IsEquippedBagEmpty(bagIndex) then
@@ -175,7 +175,7 @@ function BagEquip:PickupEquipped(bagIndex)
         return false
     end
     if not self:CanPickup(bagIndex) then
-        if not OneWoW.Restriction.IsAddonRestricted() and not self:IsEquippedBagEmpty(bagIndex) then
+        if not OneWoW.Restriction.IsProtectedActionBlocked() and not self:IsEquippedBagEmpty(bagIndex) then
             UIErrorsFrame:AddMessage(ONLY_EMPTY_BAGS, 1.0, 0.1, 0.1, 1.0)
         end
         return false
@@ -207,7 +207,7 @@ end
 ---@param targetBagIndex number
 ---@return boolean
 function BagEquip:EquipFromContainer(sourceBagID, sourceSlot, targetBagIndex)
-    if OneWoW.Restriction.IsAddonRestricted() then
+    if OneWoW.Restriction.IsProtectedActionBlocked() then
         return false
     end
     local itemID = C_Container.GetContainerItemID(sourceBagID, sourceSlot)
@@ -233,7 +233,7 @@ end
 ---@param bagIndex number
 ---@return boolean
 function BagEquip:EquipCursorBag(bagIndex)
-    if OneWoW.Restriction.IsAddonRestricted() then
+    if OneWoW.Restriction.IsProtectedActionBlocked() then
         return false
     end
     local itemID = self:GetCursorBagItemID()
@@ -377,7 +377,7 @@ function BagEquip:CanEmpty(bagIndex)
     if not BagTypes:IsBagEquipped(bagIndex) or self:IsEquippedBagEmpty(bagIndex) then
         return false
     end
-    if OneWoW.Restriction.IsAddonRestricted() then
+    if OneWoW.Restriction.IsProtectedActionBlocked() then
         return false
     end
     return self:CanEmptyTo(bagIndex, nil)
@@ -453,7 +453,7 @@ function BagEquip:ContinueEmptyBag()
     if not sourceBag then
         return
     end
-    if OneWoW.Restriction.IsAddonRestricted() then
+    if OneWoW.Restriction.IsProtectedActionBlocked() then
         self:FinishEmptyBag()
         return
     end

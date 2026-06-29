@@ -28,6 +28,18 @@ local RESTRICTED_ACTION_TYPES = {
     Enum.AddOnRestrictionType.Map,
 }
 
+-- Subset that gates protected actions (item moves, bindings) WITHOUT Map.
+-- An instanced-map restriction (e.g. a Delve) does not block protected
+-- inventory/binding actions out of combat — only combat lockdown and the
+-- combat/encounter/keystone/PvP restriction types do. Excluding Map here is
+-- what lets bag layout cleanup and item handling work normally inside Delves.
+local PROTECTED_ACTION_TYPES = {
+    Enum.AddOnRestrictionType.Combat,
+    Enum.AddOnRestrictionType.Encounter,
+    Enum.AddOnRestrictionType.ChallengeMode,
+    Enum.AddOnRestrictionType.PvPMatch,
+}
+
 --- True if value must not be used in addon logic or persisted (Midnight
 --- secret system). Secret values may only be passed to display APIs.
 ---@param value any
@@ -51,6 +63,24 @@ function Restriction.IsAddonRestricted()
     if InCombatLockdown() then return true end
 
     for _, restrictionType in ipairs(RESTRICTED_ACTION_TYPES) do
+        if C_RestrictedActions.GetAddOnRestrictionState(restrictionType) ~= Enum.AddOnRestrictionState.Inactive then
+            return true
+        end
+    end
+
+    return false
+end
+
+--- True while combat lockdown or a combat-tier restriction (Combat, Encounter,
+--- ChallengeMode, PvPMatch) is active/activating — but NOT for an instanced-map
+--- restriction alone. Gate protected actions that are safe inside a Delve out
+--- of combat (item pickup/equip, bank transfers, binding overrides) behind this
+--- rather than IsAddonRestricted, so the Map restriction does not block them.
+---@return boolean
+function Restriction.IsProtectedActionBlocked()
+    if InCombatLockdown() then return true end
+
+    for _, restrictionType in ipairs(PROTECTED_ACTION_TYPES) do
         if C_RestrictedActions.GetAddOnRestrictionState(restrictionType) ~= Enum.AddOnRestrictionState.Inactive then
             return true
         end
