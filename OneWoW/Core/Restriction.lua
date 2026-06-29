@@ -68,21 +68,6 @@ local function EnsureSeeded()
     end
 end
 
--- ADDON_RESTRICTION_STATE_CHANGED is synchronous and fires BEFORE a type activates
--- and AFTER it deactivates. Trust the payload state rather than polling, because
--- the query APIs return false during dispatch of this event.
-ns.RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED", "Restriction", function(_, restrictionType, restrictionState)
-    state.types[restrictionType] = restrictionState ~= INACTIVE
-end)
-
-ns.RegisterEvent("PLAYER_REGEN_DISABLED", "Restriction", function()
-    state.lockdown = true
-end)
-
-ns.RegisterEvent("PLAYER_REGEN_ENABLED", "Restriction", function()
-    state.lockdown = false
-end)
-
 --- True if value must not be used in addon logic or persisted (Midnight
 --- secret system). Secret values may only be passed to display APIs.
 ---@param value any
@@ -137,6 +122,113 @@ end
 function Restriction.IsInCombat()
     return InCombatLockdown()
 end
+
+-- ---------------------------------------------------------------------------
+-- Deferred-until-unrestricted callbacks
+-- ---------------------------------------------------------------------------
+-- RunWhenUnrestricted(bucket, ownerID, fn) runs fn as soon as `bucket` is clear:
+-- immediately (synchronously) if already clear, otherwise once on the next
+-- clearing transition. One-shot; re-registering the same ownerID replaces the
+-- prior entry; CancelWhenUnrestricted(ownerID) drops it. Buckets map to the
+-- getters so callers express intent rather than naming raw restriction types:
+--   "lockdown"   -> IsInCombat               (combat-only UX / perf deferral)
+--   "protected"  -> IsProtectedActionBlocked (secure-frame / protected actions)
+--   "restricted" -> IsAddonRestricted        (broad gate, includes Map)
+local BUCKET_BLOCKED = {
+    lockdown = Restriction.IsInCombat,
+    protected = Restriction.IsProtectedActionBlocked,
+    restricted = Restriction.IsAddonRestricted,
+}
+
+-- pending[ownerID] = { bucket = string, fn = function }
+local pending = {}
+
+local function IsBucketBlocked(bucket)
+    local predicate = BUCKET_BLOCKED[bucket]
+    return predicate ~= nil and predicate()
+end
+
+local function FlushPending()
+    -- Collect ready entries first: a fired callback may re-register itself, and
+    -- it must not be re-run within the same pass.
+    local ready
+    for ownerID, entry in pairs(pending) do
+        if not IsBucketBlocked(entry.bucket) then
+            ready = ready or {}
+            ready[ownerID] = entry
+        end
+    end
+    if not ready then return end
+
+    for ownerID, entry in pairs(ready) do
+        pending[ownerID] = nil
+        local ok, err = pcall(entry.fn)
+        if not ok then
+            print("|cFFFF0000OneWoW|r Restriction callback error [" .. tostring(ownerID) .. "]: " .. tostring(err))
+        end
+    end
+end
+
+local flushScheduled = false
+-- Flush AFTER event dispatch settles: during ADDON_RESTRICTION_STATE_CHANGED the
+-- query APIs report false and an Activating type is not yet enforced, so deferring
+-- one frame lets callbacks act on the final state.
+local function ScheduleFlush()
+    if flushScheduled then return end
+    flushScheduled = true
+    C_Timer.After(0, function()
+        flushScheduled = false
+        FlushPending()
+    end)
+end
+
+--- Run fn once `bucket` is clear: now if already clear, otherwise on the next
+--- clearing transition. Re-registering the same ownerID replaces the prior fn.
+---@param bucket "lockdown"|"protected"|"restricted"
+---@param ownerID string
+---@param fn fun(): nil
+function Restriction.RunWhenUnrestricted(bucket, ownerID, fn)
+    if BUCKET_BLOCKED[bucket] == nil then
+        error("RunWhenUnrestricted: unknown bucket '" .. tostring(bucket) .. "'", 2)
+    end
+    if type(ownerID) ~= "string" or type(fn) ~= "function" then
+        error("RunWhenUnrestricted(bucket, ownerID, fn): ownerID must be a string and fn a function", 2)
+    end
+
+    if not IsBucketBlocked(bucket) then
+        pending[ownerID] = nil
+        fn()
+        return
+    end
+    pending[ownerID] = { bucket = bucket, fn = fn }
+end
+
+--- Drop a pending callback (e.g. on teardown) so it never fires.
+---@param ownerID string
+function Restriction.CancelWhenUnrestricted(ownerID)
+    pending[ownerID] = nil
+end
+
+-- ADDON_RESTRICTION_STATE_CHANGED is synchronous and fires BEFORE a type activates
+-- and AFTER it deactivates. Trust the payload state rather than polling, because
+-- the query APIs return false during dispatch of this event. A type going Inactive
+-- can unblock a pending callback, so schedule a post-dispatch flush.
+ns.RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED", "Restriction", function(_, restrictionType, restrictionState)
+    local active = restrictionState ~= INACTIVE
+    state.types[restrictionType] = active
+    if not active then
+        ScheduleFlush()
+    end
+end)
+
+ns.RegisterEvent("PLAYER_REGEN_DISABLED", "Restriction", function()
+    state.lockdown = true
+end)
+
+ns.RegisterEvent("PLAYER_REGEN_ENABLED", "Restriction", function()
+    state.lockdown = false
+    ScheduleFlush()
+end)
 
 --- Debug view of the restriction cache vs. the live API, for in-game diagnosis
 --- (e.g. confirming Map=Active inside a Delve). Not a hot path — builds tables

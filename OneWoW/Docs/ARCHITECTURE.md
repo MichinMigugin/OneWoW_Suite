@@ -145,22 +145,31 @@ set both `module` and `tabOrder`.
 
 ### 3.3 Event ownership
 
-Only **`OneWoW.lua`** registers `ADDON_LOADED`, `PLAYER_LOGIN`, and
-`PLAYER_ENTERING_WORLD` for suite lifecycle dispatch. The GUI toolkit's settings
-bootstrap (`OneWoW_GUI:InitializeSettings()` in `GUI/Settings.lua`) is called
-from core's `OnAddonLoaded` — it no longer self-registers `ADDON_LOADED`.
-Embedded `Libs/` are unchanged.
+A single core event frame in **`Core/Events.lua`** registers `ADDON_LOADED`,
+`PLAYER_LOGIN`, and `PLAYER_ENTERING_WORLD` and routes them into suite lifecycle
+dispatch (`DispatchAddonLoaded` / `RunCoreLoginSequence` / `DispatchEnteringWorld`).
+It also exposes a **core-only** multiplexer — `ns.RegisterEvent(event, ownerID, fn)`
+and `ns.UnregisterEvent(event, ownerID)` — so other core files share that one frame
+for **gameplay** events instead of each creating their own (e.g.
+`OneWoW.Restriction` listens for `PLAYER_REGEN_*` and
+`ADDON_RESTRICTION_STATE_CHANGED` this way, §8.6). `ns.RegisterEvent` **rejects**
+the three lifecycle events: they must flow through the ordered dispatch, not a flat
+fan-out. The GUI toolkit's settings bootstrap
+(`OneWoW_GUI:InitializeSettings()` in `GUI/Settings.lua`) is called from core's
+`OnAddonLoaded` — it no longer self-registers `ADDON_LOADED`. Embedded `Libs/` are
+unchanged.
 
 | Registrar | Allowed? |
 |-----------|----------|
-| `OneWoW.lua` | Yes — sole lifecycle authority for manifest units |
+| `Core/Events.lua` | Yes — sole lifecycle authority + core gameplay-event multiplexer |
 | Embedded `Libs/` | Yes — third-party, off-limits |
 | Feature modules, stores, DevTool, sub-modules | **No** — chain up to manifest parent |
 
-Orchestrated units may still `RegisterEvent` for **gameplay** WoW events (`PLAYER_ALIVE`,
-`BAG_UPDATE`, `ZONE_CHANGED`, …). Only the three **lifecycle** events above must route
-through core dispatch. For data stores, entering-world collection belongs in `BootStore`
-`onEnteringWorld` (or `RegisterEnteringWorldHandler` on the store namespace), not a raw
+Orchestrated units may still `RegisterEvent` on their own frame for **gameplay** WoW
+events (`PLAYER_ALIVE`, `BAG_UPDATE`, `ZONE_CHANGED`, …). Only the three
+**lifecycle** events above must route through core dispatch. For data stores,
+entering-world collection belongs in `BootStore` `onEnteringWorld` (or
+`RegisterEnteringWorldHandler` on the store namespace), not a raw
 `PLAYER_ENTERING_WORLD` frame.
 
 ### 3.4 `OnAddonLoaded`
@@ -266,7 +275,9 @@ ready.
 
 ### 3.5 `OnPlayerLogin`
 
-At core `PLAYER_LOGIN`: `OneWoW:FireCoreLoginHandlers("early")` (feature inits),
+At core `PLAYER_LOGIN`, `Core/Events.lua` invokes `ns:RunCoreLoginSequence()`
+(defined in `OneWoW.lua`, kept there for file-local access to `ADDON_NAME` and the
+banner/wizard helpers): `OneWoW:FireCoreLoginHandlers("early")` (feature inits),
 then the load banner, then `OneWoW:FireCoreLoginHandlers("late")` (integrations),
 then `OneWoW:RunManifestLoginPhase()` walks the manifest and calls
 `DispatchUnitOnAddonLoaded` (safety net; no-op when already run) then `OnPlayerLogin()`
@@ -957,19 +968,41 @@ Every combat-lockdown and addon-restriction check routes through
 except `Restriction.lua` itself — enforced by the `restriction-funnel`
 pre-commit hook (§3.10; escape hatch `-- noqa: restriction-funnel`).
 
-Two methods, picked by intent:
+Getters, picked by intent:
 
-- **`IsAddonRestricted()`** — true in combat lockdown **or** while any reviewed
-  restriction type is active/activating. Gate secure-frame mutations and other
-  protected actions behind this.
 - **`IsInCombat()`** — true in combat lockdown only. For combat-only UX/perf
   gates (fade, deferral, suppression) that are not about secure-frame safety.
+- **`IsProtectedActionBlocked()`** — true in combat lockdown **or** while a
+  combat-tier restriction (`Combat`, `Encounter`, `ChallengeMode`, `PvPMatch`)
+  is active/activating, but **not** for the `Map` restriction alone. Gate
+  protected actions that stay valid inside an instanced map out of combat (item
+  pickup/equip, bank transfers, binding overrides) behind this — this is what
+  lets bag layout cleanup and item handling keep working inside a Delve.
+- **`IsAddonRestricted()`** — true in combat lockdown **or** while any reviewed
+  restriction type is active/activating (the superset, **including `Map`**). The
+  broad gate for actions that must also stand down inside a Delve / restricted map.
+
+`RunWhenUnrestricted(bucket, ownerID, fn)` runs `fn` as soon as the named bucket
+(`"lockdown"` / `"protected"` / `"restricted"`, mapped to the three getters) is
+clear: immediately if already clear, otherwise once on the next clearing
+transition (flushed one frame after the event settles, since the query APIs report
+false during dispatch). `CancelWhenUnrestricted(ownerID)` drops a pending callback;
+re-registering the same `ownerID` replaces it (one-shot, no stacking). This is the
+supported replacement for hand-rolled `PLAYER_REGEN_ENABLED` re-arm frames.
+
+State is **event-driven and cached**: `Restriction` listens — via the core
+`ns.RegisterEvent` multiplexer (§3.3) — for `ADDON_RESTRICTION_STATE_CHANGED` and
+`PLAYER_REGEN_*`, lazily seeding from the live API on first read. The getters read
+this cache, except combat lockdown, which is read **live** via `InCombatLockdown()`
+(the secure-frame gate must never act on a stale value). `GetSnapshot()` returns
+the cached-vs-live state for in-game diagnosis.
 
 The restriction-type set is an **explicit, reviewed allowlist**
 (`RESTRICTED_ACTION_TYPES`: `Combat`, `Encounter`, `ChallengeMode`, `PvPMatch`,
-`Map`), listed by name rather than iterated over `Enum.AddOnRestrictionType` so
-a type added by a future patch is **not** silently inherited — it must be opted
-in on purpose. `Chat` (addon comms, added 12.0.5) is intentionally excluded.
+`Map`; `PROTECTED_ACTION_TYPES` is the same minus `Map`), listed by name rather
+than iterated over `Enum.AddOnRestrictionType` so a type added by a future patch is
+**not** silently inherited — it must be opted in on purpose. `Chat` (addon comms,
+added 12.0.5) is intentionally excluded.
 
 `Restriction.IsSecret(value)` (the Midnight secret-value guard) lives in the
 same module.
@@ -996,12 +1029,13 @@ same module.
 | File | Purpose |
 |---|---|
 | `OneWoW/Core/AddonLoader.lua` | Manifest, orchestrator, `BringUp`/`EnsureLoaded`, enable API, tab-order helpers |
+| `OneWoW/Core/Events.lua` | Single core WoW event frame: lifecycle routing + core-only `ns.RegisterEvent` gameplay-event multiplexer (§3.3) |
 | `OneWoW/Core/Lifecycle.lua` | Lifecycle dispatch, `RegisterUnit` / `ResolveUnit`, handler registries, addon-loaded watchers, `/1wtrace` tracer (§3.11) |
 | `OneWoW/Core/Facade.lua` | Curated `OneWoW` orchestrator global (colon API + public services; `GetPortalHub` / `GetCoreGlobal`) |
 | `OneWoW/Core/StoreBootstrap.lua` | `OneWoW:BootStore` for data stores (registers units privately) |
 | `OneWoW/Core/ModuleRegistry.lua` | Hub tab/module registration |
 | `OneWoW/Core/SettingsFeatureRegistry.lua` | Settings funnel: catalog, storage-path resolution, change notification (§8.5) |
-| `OneWoW/Core/Restriction.lua` | Combat/restriction funnel + Midnight secret-value guard (§8.6) |
+| `OneWoW/Core/Restriction.lua` | Combat/restriction funnel: event-driven cache, intent getters, `RunWhenUnrestricted`, `GetSnapshot` + Midnight secret-value guard (§8.6) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
 | `OneWoW/UI/t-home.lua` | Home tab: read-only status + live refresh |
 | `OneWoW/UI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |

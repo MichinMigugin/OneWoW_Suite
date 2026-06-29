@@ -410,21 +410,6 @@ function WH:QueueContentRefresh(scrollFrame, contentFrame, refreshCallback)
     end)
 end
 
---- Register a PLAYER_REGEN_ENABLED cleanup for work deferred out of combat.
---- `config` must provide shouldCleanup() and cleanup() callbacks.
----@param config table
----@return table eventFrame
-function WH:RegisterDeferredCleanup(config)
-    local eventFrame = CreateFrame("Frame")
-    eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-    eventFrame:SetScript("OnEvent", function()
-        if config.shouldCleanup and config.shouldCleanup() and config.cleanup then
-            config.cleanup()
-        end
-    end)
-    return eventFrame
-end
-
 function WH:GetKnownExpansionIDs()
     local ids = {}
     local seen = {}

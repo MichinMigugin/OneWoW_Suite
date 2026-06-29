@@ -27,8 +27,6 @@ local contentScrollFrame = nil
 local contentFrame = nil
 local titleBar = nil
 local contentArea = nil
-local needsCleanupAfterCombat = false
-local cleanupEventFrame = nil
 local purchasePromptFrame = nil
 local lastBuiltBankType = nil
 local lastPurchasedTabCount = nil
@@ -196,17 +194,6 @@ function BankGUI:InitMainWindow()
         return BankSet.isBuilt
     end)
     isInitialized = true
-
-    if not cleanupEventFrame then
-        cleanupEventFrame = WH:RegisterDeferredCleanup({
-            shouldCleanup = function()
-                return needsCleanupAfterCombat and MainWindow and not MainWindow:IsShown()
-            end,
-            cleanup = function()
-                BankGUI:CleanupAllViews()
-            end,
-        })
-    end
 end
 
 function BankGUI:EnsurePurchasePrompt()
@@ -401,16 +388,7 @@ function BankGUI:SyncBuiltTabState()
     lastPurchasedTabCount = purchasedTabCount
 end
 
-function BankGUI:CleanupAllViews()
-    -- Releasing pooled section frames / labels and hiding item buttons is not a
-    -- protected action, so only defer it during combat lockdown. An instanced-map
-    -- restriction (Delve) must NOT block cleanup, or stale category headers linger
-    -- over the relayout and overlap.
-    if OneWoW.Restriction.IsInCombat() then
-        needsCleanupAfterCombat = true
-        return
-    end
-    needsCleanupAfterCombat = false
+local function ReleaseAllViews()
     if BankSet.isBuilt then
         local allButtons = BankSet:GetAllButtons()
         for _, button in ipairs(allButtons) do
@@ -421,6 +399,25 @@ function BankGUI:CleanupAllViews()
 
     BankCategoryView:ReleaseCompactLabels()
     BankCategoryManager:ReleaseAllSections()
+end
+
+function BankGUI:CleanupAllViews()
+    -- Releasing pooled section frames / labels and hiding item buttons is not a
+    -- protected action, so only defer it during combat lockdown. An instanced-map
+    -- restriction (Delve) must NOT block cleanup, or stale category headers linger
+    -- over the relayout and overlap.
+    if OneWoW.Restriction.IsInCombat() then
+        -- Defer until lockdown clears, then re-check the window is still hidden:
+        -- a re-show in the meantime means the views are live and must be kept.
+        OneWoW.Restriction.RunWhenUnrestricted("lockdown", "OneWoW_Bags.cleanup.bank", function()
+            if MainWindow and not MainWindow:IsShown() then
+                ReleaseAllViews()
+            end
+        end)
+        return
+    end
+
+    ReleaseAllViews()
 end
 
 function BankGUI:UpdateWindowWidth()
@@ -689,6 +686,7 @@ end
 
 function BankGUI:FullReset()
     BankGUI._layoutInProgress = false
+    OneWoW.Restriction.CancelWhenUnrestricted("OneWoW_Bags.cleanup.bank")
     BankSet:ReleaseAll()
     BankInfoBar:Reset()
     BankBar:Reset()

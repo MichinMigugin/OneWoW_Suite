@@ -751,7 +751,7 @@ A wedged scheduler shows as `refreshScheduled=true` with `pending` set but no `f
 - **Dirty batching:** `dirtyBags` until `BAG_UPDATE_DELAYED`
 - **Predicate / category caches** with targeted invalidation (`props` vs full) and **`InvalidateItemIDs`** for streaming item-info batches
 - **Settings debounce** on high-churn sliders
-- **Combat-deferred cleanup** via `WindowHelpers:RegisterDeferredCleanup` when windows hide during lockdown
+- **Combat-deferred cleanup** via `OneWoW.Restriction.RunWhenUnrestricted("lockdown", ...)` when windows hide during lockdown (re-checks the window is still hidden before releasing pools)
 - **Guild bank refresh coalescing** — `QueueGuildBankRefresh` uses a one-shot OnUpdate driver
 - **Scoped refresh targets** — pure display settings (e.g. `bagColumns`, `scale`) target `"bags"` only; category-affecting settings (e.g. junk/upgrade toggles, `stackItems`, `appliesIn` changes) target `"all"` to keep bags and bank in sync
 

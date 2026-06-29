@@ -248,11 +248,20 @@ end
   `C_RestrictedActions.GetAddOnRestrictionState`, or
   `C_RestrictedActions.IsAddOnRestrictionActive` directly — route every
   combat/restriction check through `OneWoW.Restriction`:
-  - `OneWoW.Restriction.IsAddonRestricted()` — gate secure-frame mutations and
-    other protected actions (covers combat lockdown **and** the reviewed
-    instanced-content restriction types: Combat/Encounter/ChallengeMode/PvPMatch/Map).
+  - `OneWoW.Restriction.IsAddonRestricted()` — broad gate: combat lockdown **and**
+    all reviewed restriction types, **including** the instanced-map restriction
+    (Combat/Encounter/ChallengeMode/PvPMatch/Map). For actions that must also stand
+    down inside a Delve / restricted map.
+  - `OneWoW.Restriction.IsProtectedActionBlocked()` — protected actions that stay
+    valid inside an instanced map out of combat (item moves, bindings, secure-frame
+    mutations safe in a Delve): combat lockdown or Combat/Encounter/ChallengeMode/
+    PvPMatch, but **not** Map.
   - `OneWoW.Restriction.IsInCombat()` — combat-only UX/perf gates (fade,
     deferral, suppression) that are not about secure-frame safety.
+  - `OneWoW.Restriction.RunWhenUnrestricted(bucket, ownerID, fn)` — run `fn` when a
+    bucket (`"lockdown"` / `"protected"` / `"restricted"`) clears: now if already
+    clear, else once on the next transition. `CancelWhenUnrestricted(ownerID)` drops
+    it. Use instead of a hand-rolled `PLAYER_REGEN_ENABLED` re-arm frame.
 
   ```lua
   if not OneWoW.Restriction.IsAddonRestricted() then
@@ -346,7 +355,7 @@ end)
 12. **Fixed-width buttons.** Buttons must auto-size to text for localization. Use `CreateFitTextButton` (or equivalent) — fixed widths cause truncation in other languages.
 13. **Static strings in UI code.** See `onewow-gui-ui` skill.
 14. **Defensive nil-chain guards on DB-initialized keys.** See `onewow-database-api` skill.
-15. **Calling `InCombatLockdown` / `C_RestrictedActions.GetAddOnRestrictionState` / `C_RestrictedActions.IsAddOnRestrictionActive` directly.** Route through `OneWoW.Restriction.IsAddonRestricted()` (secure/protected) or `OneWoW.Restriction.IsInCombat()` (combat-only UX/perf). Enforced by the `restriction-funnel` hook (§5).
+15. **Calling `InCombatLockdown` / `C_RestrictedActions.GetAddOnRestrictionState` / `C_RestrictedActions.IsAddOnRestrictionActive` directly.** Route through `OneWoW.Restriction.IsAddonRestricted()` (broad, incl. Map), `IsProtectedActionBlocked()` (protected actions, excl. Map), or `IsInCombat()` (combat-only UX/perf) — defer with `RunWhenUnrestricted`. Enforced by the `restriction-funnel` hook (§5).
 
 ## Reference Links
 

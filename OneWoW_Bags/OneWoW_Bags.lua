@@ -1335,15 +1335,7 @@ function ns:HookBlizzardBags()
     end)
     self.bindingFrame = bindingFrame
 
-    local function SetupBindingOverrides()
-        -- SetOverrideBinding is protected, so gate on combat-tier restriction
-        -- (lockdown/Combat/Encounter/keystone/PvP) but NOT on the Map restriction:
-        -- key bindings must still set up inside a Delve when out of combat.
-        if OneWoW.Restriction.IsProtectedActionBlocked() then
-            bindingFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-            return
-        end
-        bindingFrame:UnregisterEvent("PLAYER_REGEN_ENABLED")
+    local function ApplyBindingOverrides()
         ClearOverrideBindings(bindingFrame)
 
         local bindings = {
@@ -1367,8 +1359,16 @@ function ns:HookBlizzardBags()
         end
     end
 
+    local function SetupBindingOverrides()
+        -- SetOverrideBinding is protected, so defer until protected actions are
+        -- allowed (combat lockdown / Combat / Encounter / keystone / PvP) — but NOT
+        -- the Map restriction, so bindings still set up inside a Delve out of combat.
+        -- One-shot: a re-run (e.g. UPDATE_BINDINGS) replaces any pending request.
+        OneWoW.Restriction.RunWhenUnrestricted("protected", "OneWoW_Bags.bindings", ApplyBindingOverrides)
+    end
+
     bindingFrame:SetScript("OnEvent", function(_, event)
-        if event == "PLAYER_REGEN_ENABLED" or event == "UPDATE_BINDINGS" then
+        if event == "UPDATE_BINDINGS" then
             SetupBindingOverrides()
         end
     end)
