@@ -6,21 +6,14 @@ local InspectMogModule = ns.ModuleRegistry:Current()
 if not InspectMogModule then return end
 
 function InspectMogModule:OnEnable()
-    OneWoW:EnsureLoaded("Blizzard_InspectUI")
-
-    if ns.InspectMogScanner and ns.InspectMogScanner.Initialize then
-        ns.InspectMogScanner:Initialize()
-    end
-    if ns.InspectMogUI and ns.InspectMogUI.Initialize then
-        ns.InspectMogUI:Initialize()
-    end
+    -- Lazy: never force-load Blizzard_InspectUI here. Arm() registers a watcher
+    -- so wiring only happens once the inspect UI exists (via a real inspect),
+    -- at which point INSPECTED_UNIT is a valid token. Force-loading it at login
+    -- left InspectPVPFrame handling INSPECT_HONOR_UPDATE with a nil unit.
+    ns.InspectMogUI:Arm()
 end
 
 function InspectMogModule:OnDisable()
-    if ns.InspectMogUI then
-        ns.InspectMogUI:Hide()
-    end
-    if ns.InspectMogScanner and ns.InspectMogScanner.frame then
-        ns.InspectMogScanner.frame:UnregisterAllEvents()
-    end
+    ns.InspectMogUI:Disarm()
+    ns.InspectMogScanner:Shutdown()
 end

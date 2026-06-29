@@ -9,12 +9,13 @@ local function GetInspectMogDb()
     if db.attachSide == nil then db.attachSide = "RIGHT" end
     if db.hideUnchanged == nil then db.hideUnchanged = false end
     if db.showEmptySlots == nil then db.showEmptySlots = false end
-    if db.enabled == nil then db.enabled = true end
     return db
 end
 
-local function IsInspectMogEnabled()
-    return ns.ModuleRegistry:IsEnabled("inspectmog") and GetInspectMogDb().enabled
+-- Module on/off in Features is the sole enable switch (no sub-toggle). Every
+-- hook/watcher callback gates on this so disabled state is a true no-op.
+local function IsInspectMogActive()
+    return ns.ModuleRegistry:IsEnabled("inspectmog")
 end
 
 ns.InspectMogUI = {}
@@ -99,7 +100,9 @@ local function CallInspectGuildScriptWhenReady(scriptFunc, self, ...)
         return
     end
 
-    if not CanUpdateInspectGuildFrame() then
+    -- When the module is disabled the wrapper defers entirely to the original
+    -- script (true no-op); the nil-guild guard only applies while active.
+    if IsInspectMogActive() and not CanUpdateInspectGuildFrame() then
         if self and self.Hide then
             self:Hide()
         else
@@ -111,6 +114,11 @@ local function CallInspectGuildScriptWhenReady(scriptFunc, self, ...)
     return scriptFunc(self, ...)
 end
 
+-- Original captured at install time so Disarm can restore it (only if our
+-- wrapper is still the current global, to avoid clobbering a later addon).
+local guildGuardOriginalUpdate = nil
+local guildGuardWrapperUpdate = nil
+
 local function InstallInspectGuildFrameGuard()
     local updateFunc = _G["InspectGuildFrame_Update"]
     local guildFrame = _G["InspectGuildFrame"]
@@ -120,14 +128,16 @@ local function InstallInspectGuildFrameGuard()
 
     if type(updateFunc) == "function" and not inspectGuildUpdateGuardInstalled then
         inspectGuildUpdateGuardInstalled = true
-        _G["InspectGuildFrame_Update"] = function(...)
-            if not CanUpdateInspectGuildFrame() then
+        guildGuardOriginalUpdate = updateFunc
+        guildGuardWrapperUpdate = function(...)
+            if IsInspectMogActive() and not CanUpdateInspectGuildFrame() then
                 HideInspectGuildFrame()
                 return
             end
 
-            return updateFunc(...)
+            return guildGuardOriginalUpdate(...)
         end
+        _G["InspectGuildFrame_Update"] = guildGuardWrapperUpdate
     end
 
     if guildFrame then
@@ -157,6 +167,21 @@ local function InstallInspectGuildFrameGuard()
             guildFrame:SetScript("OnShow", guildFrame.OneWoWInspectMogOnShowWrapper)
         end
     end
+end
+
+-- Restore the original InspectGuildFrame_Update on disable so OneWoW leaves no
+-- residual Blizzard-global wrapper. Only restore if our wrapper is still the
+-- current value; a later addon may have hooked on top of it. The guild-frame
+-- OnEvent/OnShow wrappers stay in place but no-op via IsInspectMogActive().
+local function RestoreInspectGuildFrameGuard()
+    if guildGuardWrapperUpdate
+        and _G["InspectGuildFrame_Update"] == guildGuardWrapperUpdate
+    then
+        _G["InspectGuildFrame_Update"] = guildGuardOriginalUpdate
+    end
+    inspectGuildUpdateGuardInstalled = false
+    guildGuardOriginalUpdate = nil
+    guildGuardWrapperUpdate = nil
 end
 
 local function GetCatalogItemLoader()
@@ -560,8 +585,8 @@ function UI:EnsureFrame()
     addAllBtn:SetScript("OnClick", function()
         AddAllVisibleAppearancesToNotes(frame)
     end)
-    addAllBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    addAllBtn:SetScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
         GameTooltip:SetText(L["INSPECTMOG_TT_ADD_ALL_TITLE"], 1, 1, 1)
         GameTooltip:AddLine(L["INSPECTMOG_TT_ADD_ALL_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
@@ -705,10 +730,10 @@ function UI:Refresh(unit)
         end)
         row:SetScript("OnClick", nil)
 
-        row.itemHit:SetScript("OnEnter", function(self)
-            local rowData = self:GetParent().data
+        row.itemHit:SetScript("OnEnter", function(myself)
+            local rowData = myself:GetParent().data
             ShowInspectMogTooltip(
-                self,
+                myself,
                 GetEquippedItemID(rowData),
                 GetEquippedItemLink(rowData),
                 nil,
@@ -719,8 +744,8 @@ function UI:Refresh(unit)
         row.itemHit:SetScript("OnLeave", function()
             GameTooltip:Hide()
         end)
-        row.itemHit:SetScript("OnClick", function(self)
-            local rowData = self:GetParent().data
+        row.itemHit:SetScript("OnClick", function(myself)
+            local rowData = myself:GetParent().data
             if HandleItemPreviewClick(GetEquippedItemID(rowData), GetEquippedItemLink(rowData)) then
                 return
             end
@@ -729,13 +754,13 @@ function UI:Refresh(unit)
             end
         end)
 
-        row.appearanceHit:SetScript("OnEnter", function(self)
-            local rowData = self:GetParent().data
+        row.appearanceHit:SetScript("OnEnter", function(myself)
+            local rowData = myself:GetParent().data
             local hiddenText = IsHiddenAppearance(rowData)
                 and L["INSPECTMOG_TT_HIDDEN_APPEARANCE"]
                 or nil
             ShowInspectMogTooltip(
-                self,
+                myself,
                 GetAppearanceItemID(rowData),
                 GetAppearanceItemLink(rowData),
                 rowData.appearanceSourceID,
@@ -747,8 +772,8 @@ function UI:Refresh(unit)
         row.appearanceHit:SetScript("OnLeave", function()
             GameTooltip:Hide()
         end)
-        row.appearanceHit:SetScript("OnClick", function(self)
-            local rowData = self:GetParent().data
+        row.appearanceHit:SetScript("OnClick", function(myself)
+            local rowData = myself:GetParent().data
             if HandleItemPreviewClick(GetAppearanceItemID(rowData), GetAppearanceItemLink(rowData)) then
                 return
             end
@@ -782,43 +807,65 @@ function UI:Hide()
     end
 end
 
-function UI:Initialize()
-    self:EnsureFrame()
-
-    local function HookInspectFrame()
-        if self.inspectHooked or not InspectFrame then
-            return
-        end
-
-        self.inspectHooked = true
-
-        InspectFrame:HookScript("OnShow", function()
-            InstallInspectGuildFrameGuard()
-            if GetInspectMogDb().enabled then
-                UI:Show()
-            end
-        end)
-
-        InspectFrame:HookScript("OnHide", function()
-            UI:Hide()
-        end)
-
-        if InspectFrame:IsShown() and GetInspectMogDb().enabled then
-            UI:Show()
-        end
+function UI:HookInspectFrame()
+    if self.inspectHooked or not InspectFrame then
+        return
     end
 
-    -- Never raw-load Blizzard_InspectUI here: OnEnable's EnsureLoaded (or
-    -- Blizzard itself, on first inspect) brings it in. The watcher fires on
-    -- both load paths and catches up immediately if it is already loaded.
-    if InspectFrame then
+    self.inspectHooked = true
+
+    InspectFrame:HookScript("OnShow", function()
+        if not IsInspectMogActive() then
+            return
+        end
         InstallInspectGuildFrameGuard()
-        HookInspectFrame()
+        UI:Show()
+    end)
+
+    InspectFrame:HookScript("OnHide", function()
+        UI:Hide()
+    end)
+
+    if InspectFrame:IsShown() and IsInspectMogActive() then
+        UI:Show()
+    end
+end
+
+-- Wire the live hooks. Runs once the inspect UI exists while the module is
+-- enabled (panel frame creation is deferred to UI:Show, so a disabled or
+-- never-used module never allocates it).
+function UI:Wire()
+    if not IsInspectMogActive() or not InspectFrame then
+        return
+    end
+
+    InstallInspectGuildFrameGuard()
+    self:HookInspectFrame()
+
+    if ns.InspectMogScanner and ns.InspectMogScanner.Initialize then
+        ns.InspectMogScanner:Initialize()
+    end
+end
+
+-- Called from OnEnable. Never raw-loads Blizzard_InspectUI: if it is already
+-- present (a prior inspect loaded it) wire now, otherwise wait for the load.
+-- The watcher is registered once and persists across enable/disable cycles;
+-- its callback re-checks IsInspectMogActive() before wiring.
+function UI:Arm()
+    if InspectFrame then
+        self:Wire()
     elseif not self.inspectWatcherRegistered then
         self.inspectWatcherRegistered = true
         OneWoW:RegisterAddonLoadedWatcher("Blizzard_InspectUI", function()
-            InstallInspectGuildFrameGuard()
-            HookInspectFrame()
+            UI:Wire()
         end)
     end
+end
+
+-- Called from OnDisable. Hides the panel and restores the guild-guard global.
+-- The InspectFrame OnShow/OnHide hooks remain installed but no-op via
+-- IsInspectMogActive(); scanner events are unregistered by OnDisable.
+function UI:Disarm()
+    self:Hide()
+    RestoreInspectGuildFrameGuard()
 end

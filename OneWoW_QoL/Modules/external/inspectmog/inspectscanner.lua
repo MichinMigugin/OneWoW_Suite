@@ -5,8 +5,11 @@ local function GetInspectMogDb()
     if db.attachSide == nil then db.attachSide = "RIGHT" end
     if db.hideUnchanged == nil then db.hideUnchanged = false end
     if db.showEmptySlots == nil then db.showEmptySlots = false end
-    if db.enabled == nil then db.enabled = true end
     return db
+end
+
+local function IsInspectMogActive()
+    return ns.ModuleRegistry:IsEnabled("inspectmog")
 end
 
 local Scanner = {}
@@ -195,6 +198,10 @@ function Scanner:Initialize()
     if not self.frame then
         self.frame = CreateFrame("Frame")
         self.frame:SetScript("OnEvent", function(_, event, guid)
+            if not IsInspectMogActive() then
+                return
+            end
+
             if event == "PLAYER_TARGET_CHANGED" then
                 if ns.Panel and ns.Panel:IsShownForInspect() then
                     C_Timer.After(0.1, function()
@@ -218,4 +225,12 @@ function Scanner:Initialize()
     -- later re-enable must arm them again even though the frame survives.
     self.frame:RegisterEvent("INSPECT_READY")
     self.frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+end
+
+-- Called from OnDisable: unregister events so the scanner stops responding
+-- while disabled. The frame is reused on a later re-enable (Initialize re-arms).
+function Scanner:Shutdown()
+    if self.frame then
+        self.frame:UnregisterAllEvents()
+    end
 end
