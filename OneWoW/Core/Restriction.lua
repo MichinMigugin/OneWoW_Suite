@@ -12,6 +12,13 @@ local _, ns = ...
 -- (RESTRICTED_ACTION_TYPES below) rather than iterated over
 -- Enum.AddOnRestrictionType, so a new type added by a future patch is NOT
 -- silently inherited — it must be reviewed and opted in here on purpose.
+--
+-- Restriction-type state is cached and kept fresh by ADDON_RESTRICTION_STATE_CHANGED
+-- (lazy-seeded on first read), so the getters avoid a per-call GetAddOnRestrictionState
+-- loop on hot paths. Combat lockdown is intentionally read LIVE via InCombatLockdown()
+-- in the getters — it is the gate for secure-frame safety and must never act on a
+-- stale value; the PLAYER_REGEN_* listeners only maintain state.lockdown for the
+-- snapshot and for transition detection used by a later phase.
 -- ============================================================================
 
 local Restriction = {}
@@ -40,6 +47,42 @@ local PROTECTED_ACTION_TYPES = {
     Enum.AddOnRestrictionType.PvPMatch,
 }
 
+local INACTIVE = Enum.AddOnRestrictionState.Inactive
+
+-- Event-driven cache. `types[restrictionType]` is true while that type is Active
+-- or Activating. `lockdown` mirrors combat lockdown via PLAYER_REGEN_* and is used
+-- by GetSnapshot + (later) transition detection; the getters read lockdown live.
+local state = { lockdown = false, types = {} }
+local seeded = false
+
+-- Lazy seed: the first getter that needs restriction-type state reads the live
+-- values once, then ADDON_RESTRICTION_STATE_CHANGED keeps the cache fresh. This
+-- decouples seeding from load order and stays correct across a /reload inside a
+-- restricted zone (no event fires on reload, but the first read sees live truth).
+local function EnsureSeeded()
+    if seeded then return end
+    seeded = true
+    state.lockdown = InCombatLockdown()
+    for _, restrictionType in ipairs(RESTRICTED_ACTION_TYPES) do
+        state.types[restrictionType] = C_RestrictedActions.GetAddOnRestrictionState(restrictionType) ~= INACTIVE
+    end
+end
+
+-- ADDON_RESTRICTION_STATE_CHANGED is synchronous and fires BEFORE a type activates
+-- and AFTER it deactivates. Trust the payload state rather than polling, because
+-- the query APIs return false during dispatch of this event.
+ns.RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED", "Restriction", function(_, restrictionType, restrictionState)
+    state.types[restrictionType] = restrictionState ~= INACTIVE
+end)
+
+ns.RegisterEvent("PLAYER_REGEN_DISABLED", "Restriction", function()
+    state.lockdown = true
+end)
+
+ns.RegisterEvent("PLAYER_REGEN_ENABLED", "Restriction", function()
+    state.lockdown = false
+end)
+
 --- True if value must not be used in addon logic or persisted (Midnight
 --- secret system). Secret values may only be passed to display APIs.
 ---@param value any
@@ -62,10 +105,9 @@ end
 function Restriction.IsAddonRestricted()
     if InCombatLockdown() then return true end
 
+    EnsureSeeded()
     for _, restrictionType in ipairs(RESTRICTED_ACTION_TYPES) do
-        if C_RestrictedActions.GetAddOnRestrictionState(restrictionType) ~= Enum.AddOnRestrictionState.Inactive then
-            return true
-        end
+        if state.types[restrictionType] then return true end
     end
 
     return false
@@ -80,10 +122,9 @@ end
 function Restriction.IsProtectedActionBlocked()
     if InCombatLockdown() then return true end
 
+    EnsureSeeded()
     for _, restrictionType in ipairs(PROTECTED_ACTION_TYPES) do
-        if C_RestrictedActions.GetAddOnRestrictionState(restrictionType) ~= Enum.AddOnRestrictionState.Inactive then
-            return true
-        end
+        if state.types[restrictionType] then return true end
     end
 
     return false
@@ -95,4 +136,32 @@ end
 ---@return boolean
 function Restriction.IsInCombat()
     return InCombatLockdown()
+end
+
+--- Debug view of the restriction cache vs. the live API, for in-game diagnosis
+--- (e.g. confirming Map=Active inside a Delve). Not a hot path — builds tables
+--- and reads live state on each call.
+---@return table
+function Restriction.GetSnapshot()
+    EnsureSeeded()
+
+    local typeNames, stateNames = {}, {}
+    for name, value in pairs(Enum.AddOnRestrictionType) do typeNames[value] = name end
+    for name, value in pairs(Enum.AddOnRestrictionState) do stateNames[value] = name end
+
+    local types = {}
+    for _, restrictionType in ipairs(RESTRICTED_ACTION_TYPES) do
+        local live = C_RestrictedActions.GetAddOnRestrictionState(restrictionType)
+        types[typeNames[restrictionType] or restrictionType] = {
+            cached = state.types[restrictionType] or false,
+            live = stateNames[live] or live,
+        }
+    end
+
+    return {
+        seeded = seeded,
+        lockdownLive = InCombatLockdown(),
+        lockdownCached = state.lockdown,
+        types = types,
+    }
 end
