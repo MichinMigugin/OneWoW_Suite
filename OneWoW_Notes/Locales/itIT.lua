@@ -253,6 +253,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 -- Zones tab
     ["ZONES_CONTROLS"] = "Controlli zone",
     ["ZONES_LIST"] = "Elenco zone",
+    ["ZONES_CURRENT_SECTION"] = "Zone attuali",
     ["BUTTON_ADD_CURRENT_ZONE"] = "Aggiungi zona",
     ["ZONE_ADD_PARENT"] = "Aggiungi zona superiore",
     ["ZONE_ADD_PARENT_DESC"] = "Aggiungi una nota per la zona superiore/regione.",

@@ -253,6 +253,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 -- Zones tab
     ["ZONES_CONTROLS"] = "區域控制",
     ["ZONES_LIST"] = "區域清單",
+    ["ZONES_CURRENT_SECTION"] = "目前區域",
     ["BUTTON_ADD_CURRENT_ZONE"] = "新增區域",
     ["ZONE_ADD_PARENT"] = "新增上層區域",
     ["ZONE_ADD_PARENT_DESC"] = "為上層/大區新增筆記。",

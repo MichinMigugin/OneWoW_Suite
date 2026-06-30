@@ -253,6 +253,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 -- Zones tab
     ["ZONES_CONTROLS"] = "区域控制",
     ["ZONES_LIST"] = "区域列表",
+    ["ZONES_CURRENT_SECTION"] = "当前区域",
     ["BUTTON_ADD_CURRENT_ZONE"] = "添加区域",
     ["ZONE_ADD_PARENT"] = "添加上级区域",
     ["ZONE_ADD_PARENT_DESC"] = "为上级/大区添加笔记。",

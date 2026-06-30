@@ -253,6 +253,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 -- Zones tab
     ["ZONES_CONTROLS"] = "Zonensteuerung",
     ["ZONES_LIST"] = "Zonenliste",
+    ["ZONES_CURRENT_SECTION"] = "Aktuelle Zone(n)",
     ["BUTTON_ADD_CURRENT_ZONE"] = "Zone hinzufügen",
     ["ZONE_ADD_PARENT"] = "Übergeordnete hinzufügen",
     ["ZONE_ADD_PARENT_DESC"] = "Eine Notiz für die übergeordnete Zone/Region hinzufügen.",

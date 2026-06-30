@@ -940,11 +940,24 @@ function ns.UI.CreateZonesTab(parent)
             end
         end
 
+        -- Names of the zone(s) the player is currently in (main + sub + combined),
+        -- so notes for the current location can be surfaced in their own section.
+        local czText = GetZoneText() or ""
+        local czSub  = GetSubZoneText() or ""
+        local czFull = czText
+        if czSub ~= "" and czSub ~= czText then czFull = czText .. " - " .. czSub end
+        local function isCurrentZoneName(name)
+            return name == czFull or name == czText or (czSub ~= "" and name == czSub)
+        end
+
+        local currentZones = {}
         local newZones  = {}
         local favorites = {}
         local regular   = {}
         for _, zone in ipairs(filtered) do
-            if zone.data.isNew then
+            if isCurrentZoneName(zone.name) then
+                currentZones[#currentZones + 1] = zone
+            elseif zone.data.isNew then
                 newZones[#newZones + 1] = zone
             elseif zone.data.favorite then
                 favorites[#favorites + 1] = zone
@@ -978,6 +991,7 @@ function ns.UI.CreateZonesTab(parent)
                 if currentSort.ascending then return nameA < nameB else return nameA > nameB end
             end
         end
+        table.sort(currentZones, sortZones)
         table.sort(newZones,  sortZones)
         table.sort(favorites, sortZones)
         table.sort(regular,   sortZones)
@@ -1190,6 +1204,12 @@ function ns.UI.CreateZonesTab(parent)
         end
         for i, zone in ipairs(newZones) do BuildZoneRow(zone, yOffset, newZones, i) yOffset = yOffset - 55 end
 
+        if #currentZones > 0 then
+            CreateSectionHeader(L["ZONES_CURRENT_SECTION"], yOffset)
+            yOffset = yOffset - 30
+        end
+        for i, zone in ipairs(currentZones) do BuildZoneRow(zone, yOffset, currentZones, i) yOffset = yOffset - 55 end
+
         if #favorites > 0 then
             CreateSectionHeader(FAVORITES, yOffset)
             yOffset = yOffset - 30
@@ -1204,11 +1224,26 @@ function ns.UI.CreateZonesTab(parent)
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
         if leftStatusText then
-            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_ZONES"], #newZones + #favorites + #regular))
+            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_ZONES"], #currentZones + #newZones + #favorites + #regular))
         end
     end
 
     parent.RefreshZonesList()
+
+    -- Keep the "Current Zone(s)" section live: re-list on zone change while the
+    -- Zones tab is visible.
+    if not parent._zoneWatch then
+        parent._zoneWatch = CreateFrame("Frame")
+        parent._zoneWatch:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+        parent._zoneWatch:RegisterEvent("ZONE_CHANGED")
+        parent._zoneWatch:RegisterEvent("ZONE_CHANGED_INDOORS")
+        parent._zoneWatch:SetScript("OnEvent", function()
+            if not parent:IsVisible() or not parent.RefreshZonesList then return end
+            C_Timer.After(0.2, function()
+                if parent:IsVisible() then parent.RefreshZonesList() end
+            end)
+        end)
+    end
 end
 
 local function MakeZoneLabel(parent, text, x, y)

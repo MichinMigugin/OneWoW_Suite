@@ -253,6 +253,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 -- Zones tab
     ["ZONES_CONTROLS"] = "지역 제어",
     ["ZONES_LIST"] = "지역 목록",
+    ["ZONES_CURRENT_SECTION"] = "현재 지역",
     ["BUTTON_ADD_CURRENT_ZONE"] = "지역 추가",
     ["ZONE_ADD_PARENT"] = "상위 지역 추가",
     ["ZONE_ADD_PARENT_DESC"] = "상위/광역 지역에 대한 메모를 추가합니다.",

@@ -253,6 +253,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 -- Zones tab
     ["ZONES_CONTROLS"] = "Управление зонами",
     ["ZONES_LIST"] = "Список зон",
+    ["ZONES_CURRENT_SECTION"] = "Текущие зоны",
     ["BUTTON_ADD_CURRENT_ZONE"] = "Добавить зону",
     ["ZONE_ADD_PARENT"] = "Добавить родительскую",
     ["ZONE_ADD_PARENT_DESC"] = "Добавить заметку для родительской зоны/региона.",

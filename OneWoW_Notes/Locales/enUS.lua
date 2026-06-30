@@ -260,6 +260,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 -- Zones tab
     ["ZONES_CONTROLS"] = "Zones Controls",
     ["ZONES_LIST"] = "Zones List",
+    ["ZONES_CURRENT_SECTION"] = "Current Zone(s)",
     ["BUTTON_ADD_CURRENT_ZONE"] = "Add Zone",
     ["ZONE_ADD_PARENT"] = "Add Parent",
     ["ZONE_ADD_PARENT_DESC"] = "Add a note for the parent/region zone.",
