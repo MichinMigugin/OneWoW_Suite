@@ -8,70 +8,71 @@ ns.Zones = Zones
 
 Zones.GetAllZones = Zones.GetAll
 
-local scanningEnabled = false
 local lastAlertedZone = nil
 local lastAlertTime   = 0
 local currentZone     = ""
 local currentSubZone  = ""
 local currentInstanceID = nil
-local zoneEventFrame = CreateFrame("Frame")
+local zoneEventFrame  = CreateFrame("Frame")
+local zoneWatchStarted = false
 
 function Zones:Initialize()
-    if ns.db.global.zoneAlertsEnabled then
-        self:EnableScanning()
-        C_Timer.After(1, function() Zones:CheckZoneAlerts() end)
-    end
+    -- Always watch zone changes so pinned zone notes trigger even when the zone
+    -- alert messages are turned off. Alerts themselves stay gated by the setting.
+    self:StartZoneWatch()
+    C_Timer.After(1, function() Zones:CheckZones() end)
 end
 
-function Zones:EnableScanning()
-    if scanningEnabled then return end
-    scanningEnabled = true
-    ns.db.global.zoneAlertsEnabled = true
+-- Register the zone-change events / poll once. Independent of zone alerts so
+-- pins keep working regardless of the alert toggle.
+function Zones:StartZoneWatch()
+    if zoneWatchStarted then return end
+    zoneWatchStarted = true
 
-    zoneEventFrame:SetScript("OnEvent", function() C_Timer.After(0.1, function() Zones:CheckZoneAlerts() end) end)
+    zoneEventFrame:SetScript("OnEvent", function() C_Timer.After(0.1, function() Zones:CheckZones() end) end)
     zoneEventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
     zoneEventFrame:RegisterEvent("ZONE_CHANGED")
     zoneEventFrame:RegisterEvent("ZONE_CHANGED_INDOORS")
 
     OneWoW_Notes:RegisterEnteringWorldHandler("zones", function()
-        C_Timer.After(0.1, function() Zones:CheckZoneAlerts() end)
+        C_Timer.After(0.1, function() Zones:CheckZones() end)
     end)
 
     if not self.periodicTimer then
         self.periodicTimer = C_Timer.NewTicker(2, function()
-            if not scanningEnabled then return end
             local newZone = GetZoneText()
             local newSubZone = GetSubZoneText()
             local _, _, _, _, _, _, _, newInstanceID = GetInstanceInfo()
             if newZone ~= currentZone or newSubZone ~= currentSubZone or newInstanceID ~= currentInstanceID then
-                Zones:CheckZoneAlerts()
+                Zones:CheckZones()
             end
         end)
     end
 end
 
+-- "Scanning" in the settings UI refers to the zone alert messages, not pin
+-- triggering (pins are always watched once StartZoneWatch has run).
 function Zones:IsScanning()
-    return scanningEnabled
+    return ns.db.global.zoneAlertsEnabled and true or false
+end
+
+function Zones:EnableScanning()
+    ns.db.global.zoneAlertsEnabled = true
+    self:StartZoneWatch()
+    Zones:CheckZones()
 end
 
 function Zones:DisableScanning()
-    if not scanningEnabled then return end
-    scanningEnabled = false
+    -- Only turn off the alert messages; the zone watcher keeps running so pinned
+    -- zone notes still appear on zone change.
     ns.db.global.zoneAlertsEnabled = false
-    zoneEventFrame:UnregisterEvent("ZONE_CHANGED_NEW_AREA")
-    zoneEventFrame:UnregisterEvent("ZONE_CHANGED")
-    zoneEventFrame:UnregisterEvent("ZONE_CHANGED_INDOORS")
-    OneWoW_Notes:UnregisterEnteringWorldHandler("zones")
-    if self.periodicTimer then
-        self.periodicTimer:Cancel()
-        self.periodicTimer = nil
-    end
 end
 
-function Zones:CheckZoneAlerts()
-    if not scanningEnabled then return end
+-- Runs on every zone change: shows/hides pinned zone notes (always) and fires
+-- zone alert messages (only when zone alerts are enabled).
+function Zones:CheckZones()
     local now = GetTime()
-    if (now - lastAlertTime) < 5 then return end
+    local alertsOn = ns.db.global.zoneAlertsEnabled and true or false
 
     local zoneText    = GetZoneText()    or ""
     local subZoneText = GetSubZoneText() or ""
@@ -128,25 +129,23 @@ function Zones:CheckZoneAlerts()
         local zoneData = allZones[key]
         if not zoneData or type(zoneData) ~= "table" then return end
 
-        if zoneData.pinEnabled then
-            local dismissed = zoneData.dismissedUntil and GetTime() < zoneData.dismissedUntil
-            if not dismissed and ns.ZonePins then
-                ns.ZonePins:ShowZonePin(key, zoneData)
-            end
+        local dismissed = zoneData.dismissedUntil and GetTime() < zoneData.dismissedUntil
+
+        -- Pins always trigger, regardless of the alert setting.
+        if zoneData.pinEnabled and not dismissed and ns.ZonePins then
+            ns.ZonePins:ShowZonePin(key, zoneData)
         end
 
-        if zoneData.alertEnabled ~= false then
-            local dismissed = zoneData.dismissedUntil and GetTime() < zoneData.dismissedUntil
-            if not dismissed then
-                if not (lastAlertedZone == key and (now - lastAlertTime) < 30) then
-                    lastAlertTime   = now
-                    lastAlertedZone = key
-                    print("|cFFFFD100OneWoW - Zones:|r " .. (L["NPC_LABEL_ZONE"]) .. " " .. key)
-                    PlaySound(SOUNDKIT.RAID_WARNING)
-                    if OneWoW and OneWoW.Toasts and OneWoW.Toasts.FireZoneAlert then
-                        local preview = (zoneData.content and zoneData.content ~= "") and zoneData.content:sub(1, 60) or nil
-                        OneWoW.Toasts.FireZoneAlert(key, preview)
-                    end
+        -- Alert message / sound / toast only when zone alerts are enabled.
+        if alertsOn and zoneData.alertEnabled ~= false and not dismissed then
+            if not (lastAlertedZone == key and (now - lastAlertTime) < 30) then
+                lastAlertTime   = now
+                lastAlertedZone = key
+                print("|cFFFFD100OneWoW - Zones:|r " .. (L["NPC_LABEL_ZONE"]) .. " " .. key)
+                PlaySound(SOUNDKIT.RAID_WARNING)
+                if OneWoW and OneWoW.Toasts and OneWoW.Toasts.FireZoneAlert then
+                    local preview = (zoneData.content and zoneData.content ~= "") and zoneData.content:sub(1, 60) or nil
+                    OneWoW.Toasts.FireZoneAlert(key, preview)
                 end
             end
         end
