@@ -640,7 +640,7 @@ local function HookZoneClockDragScripts()
                 SaveFrameLayoutPos(self, "clockPos")
                 return
             end
-            if button == "LeftButton" and not OneWoW.Restriction.IsAddonRestricted() and TimeManagerFrame then
+            if button == "LeftButton" and not OneWoW.Restriction.IsProtectedActionBlocked() and TimeManagerFrame then
                 TimeManagerFrame:SetShown(not TimeManagerFrame:IsShown())
             end
         end)
@@ -1023,7 +1023,7 @@ end
 
 local CLICK_ACTIONS = {
     calendar = function()
-        if not OneWoW.Restriction.IsAddonRestricted() and GameTimeFrame then
+        if not OneWoW.Restriction.IsProtectedActionBlocked() and GameTimeFrame then
             GameTimeFrame:Click()
         end
     end,
@@ -1037,7 +1037,7 @@ local CLICK_ACTIONS = {
         end
     end,
     map = function()
-        if not OneWoW.Restriction.IsAddonRestricted() then ToggleWorldMap() end
+        if not OneWoW.Restriction.IsProtectedActionBlocked() then ToggleWorldMap() end
     end,
 }
 

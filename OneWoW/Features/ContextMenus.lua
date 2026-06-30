@@ -364,7 +364,7 @@ local function NPCContextMenuHandler(_, rootDescription, contextData)
     if not UnitExists(contextData.unit) then return end
 
     local guid = UnitGUID(contextData.unit)
-    if not guid or issecretvalue(guid) then return end
+    if not guid or ns.Restriction.IsSecret(guid) then return end
 
     local unitType, _, _, _, _, npcIDStr = strsplit("-", guid)
     if unitType ~= "Creature" and unitType ~= "Vehicle" then return end

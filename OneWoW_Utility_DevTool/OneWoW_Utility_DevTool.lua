@@ -15,10 +15,7 @@ local function safeGet(frame, method, ...)
     if not fn then return nil, false end
     local ok, result = pcall(fn, frame, ...)
     if not ok then return nil, true end
-    if result ~= nil then
-        if type(result) == "table" and issecrettable(result) then return nil, true end
-        if issecretvalue(result) then return nil, true end
-    end
+    if result ~= nil and OneWoW.Restriction.IsSecret(result) then return nil, true end
     return result, false
 end
 
@@ -29,7 +26,7 @@ local function safeGetMulti(frame, method, ...)
     if not callResults[1] then return nil end
     local results = {}
     for i = 2, #callResults do
-        if issecretvalue(callResults[i]) then
+        if OneWoW.Restriction.IsSecret(callResults[i]) then
             tinsert(results, "[secret]")
         else
             tinsert(results, callResults[i])

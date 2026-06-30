@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-"""Pre-commit hook: forbid direct combat/restriction API calls.
+"""Pre-commit hook: forbid direct combat/restriction/secret API calls.
 
-All combat-lockdown and addon-restriction checks must route through the
-OneWoW.Restriction funnel — see OneWoW/Docs/ARCHITECTURE.md. Use
-`OneWoW.Restriction.IsAddonRestricted()` to gate secure-frame mutations /
-protected actions, and `OneWoW.Restriction.IsInCombat()` for combat-only
-UX/perf gates (fade, deferral, suppression).
+All combat-lockdown, addon-restriction, and Midnight secret-value checks must
+route through the OneWoW.Restriction funnel — see OneWoW/Docs/ARCHITECTURE.md.
+Use `OneWoW.Restriction.IsAddonRestricted()` to gate secure-frame mutations /
+protected actions, `OneWoW.Restriction.IsInCombat()` for combat-only UX/perf
+gates (fade, deferral, suppression), and `OneWoW.Restriction.IsSecret()` (or the
+granular `IsSecretValue()` / `IsSecretTable()`) for secret-value checks.
 
 Flagged identifiers (word-boundary, code only — comment/string mentions are
 stripped first so docs and syntax tables do not false-positive):
   - InCombatLockdown
   - GetAddOnRestrictionState        (incl. C_RestrictedActions.* form)
   - IsAddOnRestrictionActive        (incl. C_RestrictedActions.* form)
+  - issecretvalue
+  - issecrettable
 
 Allowed file (by basename):
   - Restriction.lua — the funnel itself.
@@ -28,7 +31,8 @@ import sys
 ALLOWED_BASENAMES = frozenset({"Restriction.lua"})
 
 FORBIDDEN_RE = re.compile(
-    r"\b(InCombatLockdown|GetAddOnRestrictionState|IsAddOnRestrictionActive)\b"
+    r"\b(InCombatLockdown|GetAddOnRestrictionState|IsAddOnRestrictionActive"
+    r"|issecretvalue|issecrettable)\b"
 )
 
 
@@ -128,9 +132,10 @@ def main(argv: list[str]) -> int:
 
     if rc:
         print()
-        print("Route all combat/restriction checks through OneWoW.Restriction:")
+        print("Route all combat/restriction/secret checks through OneWoW.Restriction:")
         print("  IsAddonRestricted()  — gate secure-frame mutations / protected actions")
         print("  IsInCombat()         — combat-only UX/perf gates (fade, deferral)")
+        print("  IsSecret()           — secret-value checks (IsSecretValue/IsSecretTable for the granular form)")
         print("Reference: OneWoW/Docs/ARCHITECTURE.md")
         print("Suppress (rare): add -- noqa: restriction-funnel on the line.")
     return rc

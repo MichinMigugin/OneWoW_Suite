@@ -818,7 +818,7 @@ end
 local function OnEvent(_, event, ...)
     if event == "CHAT_MSG_LOOT" then
         local msg = ...
-        if msg and not issecretvalue(msg) then
+        if msg and not OneWoW.Restriction.IsSecret(msg) then
             local itemID = msg:match("item:(%d+)")
             if itemID then
                 OnItemLooted(itemID)
@@ -827,7 +827,7 @@ local function OnEvent(_, event, ...)
 
     elseif event == "GOSSIP_SHOW" then
         local npcGUID = UnitGUID("npc")
-        if npcGUID and not issecretvalue(npcGUID) then
+        if npcGUID and not OneWoW.Restriction.IsSecret(npcGUID) then
             local npcType, _, _, _, _, npcID = strsplit("-", npcGUID)
             if npcType == "Creature" then
                 OnNPCInteract(npcID)
@@ -841,7 +841,7 @@ local function OnEvent(_, event, ...)
         -- so kill tracking only resolves in the open world.
         if next(killIndex) then
             local _, targetGUID = ...
-            if targetGUID and not issecretvalue(targetGUID) then
+            if targetGUID and not OneWoW.Restriction.IsSecret(targetGUID) then
                 local unitType, _, _, _, _, creatureID = strsplit("-", targetGUID)
                 if unitType == "Creature" or unitType == "Vehicle" then
                     OnCreatureKilled(creatureID)

@@ -10,7 +10,7 @@ local deferredGeometrySaves = {}
 local worldMapHooked = false
 
 function PinSupport.IsLayoutBlocked()
-    return OneWoW.Restriction.IsAddonRestricted()
+    return OneWoW.Restriction.IsProtectedActionBlocked()
 end
 
 function PinSupport.ShowTooltip(owner, anchor, title, body)
@@ -70,11 +70,15 @@ end
 function PinSupport.RegisterDeferredPin(pin)
     deferredPins[pin] = true
     PinSupport.EnsureWorldMapHook()
+    -- Recover when the restriction lifts, not only on WorldMapFrame:OnHide.
+    OneWoW.Restriction.RunWhenUnrestricted("protected", "OneWoW_Notes.PinSupport", PinSupport.FlushDeferred)
 end
 
 function PinSupport.DeferGeometrySave(pin, fn)
     deferredGeometrySaves[pin] = fn
     PinSupport.EnsureWorldMapHook()
+    -- Recover when the restriction lifts, not only on WorldMapFrame:OnHide.
+    OneWoW.Restriction.RunWhenUnrestricted("protected", "OneWoW_Notes.PinSupport", PinSupport.FlushDeferred)
 end
 
 function PinSupport.FlushDeferred()

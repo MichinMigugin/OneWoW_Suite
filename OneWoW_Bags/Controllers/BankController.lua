@@ -365,7 +365,7 @@ function BankController:QueueBagDeposits(queue, bankType)
             return
         end
 
-        if self.addon.bankOpen and C_Bank.CanUseBank(bankType) then
+        if self.addon.bankOpen and C_Bank.CanUseBank(bankType) and not OneWoW.Restriction.IsProtectedActionBlocked() then
             local info = C_Container.GetContainerItemInfo(entry.bagID, entry.slotID)
             if info and not info.isLocked and info.itemID == entry.itemID and info.hyperlink == entry.hyperlink then
                 local location = ItemLocation:CreateFromBagAndSlot(entry.bagID, entry.slotID)
@@ -402,7 +402,7 @@ function BankController:QueueBankWithdrawals(queue, bankType)
             return
         end
 
-        if self.addon.bankOpen and C_Bank.CanUseBank(bankType) then
+        if self.addon.bankOpen and C_Bank.CanUseBank(bankType) and not OneWoW.Restriction.IsProtectedActionBlocked() then
             local info = C_Container.GetContainerItemInfo(entry.bagID, entry.slotID)
             if info and not info.isLocked and info.itemID == entry.itemID and info.hyperlink == entry.hyperlink then
                 C_Container.UseContainerItem(entry.bagID, entry.slotID)
@@ -416,6 +416,7 @@ function BankController:QueueBankWithdrawals(queue, bankType)
 end
 
 function BankController:DepositBagButtonStack(button)
+    if OneWoW.Restriction.IsProtectedActionBlocked() then return false end
     if not self.addon.bankOpen or not button or not button.owb_hasItem then return false end
 
     local bankType = self:GetActiveBankType()

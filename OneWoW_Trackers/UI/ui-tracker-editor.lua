@@ -26,7 +26,7 @@ end
 
 local function GetTargetCreatureID()
     local guid = UnitGUID("target")
-    if not guid or issecretvalue(guid) then return nil end
+    if not guid or OneWoW.Restriction.IsSecret(guid) then return nil end
     local unitType, _, _, _, _, npcID = strsplit("-", guid)
     if unitType ~= "Creature" and unitType ~= "Vehicle" then return nil end
     return tonumber(npcID)
@@ -41,7 +41,7 @@ end
 
 local function UpdateTitleFromTarget(nameBox)
     local name = UnitName("target")
-    if not name or issecretvalue(name) then FillMsg("TRACKER_FILL_NO_TARGET"); return end
+    if not name or OneWoW.Restriction.IsSecret(name) then FillMsg("TRACKER_FILL_NO_TARGET"); return end
     nameBox:SetText(format(ns.L["TRACKER_TALK_TO_FORMAT"], name))
 end
 

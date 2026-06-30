@@ -36,8 +36,8 @@ local housingCallbacks = {}
 local housingEventFrame = CreateFrame("Frame")
 
 local function ApplyPendingHousingCallbacks()
-	if OneWoW.Restriction.IsAddonRestricted() then
-		housingEventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+	if OneWoW.Restriction.IsProtectedActionBlocked() then
+		OneWoW.Restriction.RunWhenUnrestricted("protected", "OneWoW_QoL.portalhub.housing", ApplyPendingHousingCallbacks)
 		return
 	end
 
@@ -52,9 +52,6 @@ housingEventFrame:SetScript("OnEvent", function(self, event, houses)
 		housingHouse = houses and houses[1] or nil
 		housingLoaded = true
 		self:UnregisterEvent("PLAYER_HOUSE_LIST_UPDATED")
-		ApplyPendingHousingCallbacks()
-	elseif event == "PLAYER_REGEN_ENABLED" then
-		self:UnregisterEvent("PLAYER_REGEN_ENABLED")
 		ApplyPendingHousingCallbacks()
 	end
 end)
@@ -91,9 +88,9 @@ function Detection:ApplyHousingTeleportAttributes(button, suffix)
 			return
 		end
 
-		if OneWoW.Restriction.IsAddonRestricted() then
+		if OneWoW.Restriction.IsProtectedActionBlocked() then
 			tinsert(housingCallbacks, applyHouse)
-			housingEventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+			OneWoW.Restriction.RunWhenUnrestricted("protected", "OneWoW_QoL.portalhub.housing", ApplyPendingHousingCallbacks)
 			return
 		end
 

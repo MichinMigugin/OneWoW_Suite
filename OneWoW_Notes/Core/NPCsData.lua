@@ -28,7 +28,7 @@ end
 function NPCs:GetTargetNPCInfo()
     if not UnitExists("target") or UnitIsPlayer("target") then return nil end
     local guid = UnitGUID("target")
-    if not guid or issecretvalue(guid) then return nil end
+    if not guid or OneWoW.Restriction.IsSecret(guid) then return nil end
     local unitType, _, _, _, _, entityIDStr = strsplit("-", guid)
     if unitType ~= "Creature" and unitType ~= "Vehicle" then return nil end
     local entityID = tonumber(entityIDStr)
@@ -124,7 +124,7 @@ function NPCs:Initialize()
             if event ~= "PLAYER_TARGET_CHANGED" then return end
             if not UnitExists("target") or UnitIsPlayer("target") then return end
             local guid = UnitGUID("target")
-            if not guid or issecretvalue(guid) then return end
+            if not guid or OneWoW.Restriction.IsSecret(guid) then return end
             local unitType, _, _, _, _, entityIDStr = strsplit("-", guid)
             if unitType ~= "Creature" and unitType ~= "Vehicle" then return end
             local entityID = tonumber(entityIDStr)

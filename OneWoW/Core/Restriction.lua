@@ -68,18 +68,30 @@ local function EnsureSeeded()
     end
 end
 
---- True if value must not be used in addon logic or persisted (Midnight
---- secret system). Secret values may only be passed to display APIs.
+--- True if `value` is a secret scalar (Midnight secret system). Thin mirror of
+--- the `issecretvalue` global so the raw call stays funnelled in one place.
+---@param value any
+---@return boolean
+function Restriction.IsSecretValue(value)
+    return issecretvalue(value)
+end
+
+--- True if `value` is a secret table — the table reference itself is secret, or
+--- its flags make reads produce secrets, so its contents must not be iterated.
+--- Thin mirror of the `issecrettable` global (returns false for non-tables).
+---@param value any
+---@return boolean
+function Restriction.IsSecretTable(value)
+    return issecrettable(value)
+end
+
+--- True if value must not be used in addon logic or persisted (Midnight secret
+--- system) — either a secret scalar or a secret table. Secret values may only
+--- be passed to display APIs.
 ---@param value any
 ---@return boolean
 function Restriction.IsSecret(value)
-    if issecretvalue(value) then
-        return true
-    end
-    if type(value) == "table" and issecrettable(value) then
-        return true
-    end
-    return false
+    return Restriction.IsSecretValue(value) or Restriction.IsSecretTable(value)
 end
 
 --- True while in combat lockdown or while any reviewed addon-restriction type

@@ -109,11 +109,11 @@ local function isIdentifier(text)
 end
 
 local function isSecretValue(value)
-    return issecretvalue(value)
+    return OneWoW.Restriction.IsSecretValue(value)
 end
 
 local function isSecretTable(value)
-    return issecrettable(value)
+    return OneWoW.Restriction.IsSecretTable(value)
 end
 
 local function _iterateAndCount(value, limit)

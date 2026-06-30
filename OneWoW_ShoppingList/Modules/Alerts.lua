@@ -48,7 +48,7 @@ end
 
 local function HandleLoot(_, message)
     if not ns.ShoppingList then return end
-    if issecretvalue(message) then return end
+    if OneWoW.Restriction.IsSecret(message) then return end
     local link = string.match(message, "|H(item:[^|]+)|h")
     if not link then return end
 

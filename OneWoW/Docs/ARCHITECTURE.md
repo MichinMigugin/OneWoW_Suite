@@ -371,7 +371,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 | No raw `LoadAddOn` outside the loader funnel (§3.8) | `bin/check_no_raw_loadaddon.py` (pre-commit `no-raw-loadaddon`) |
 | No suite-internal `OptionalDeps` | `bin/check_toc_optional_deps.py` (pre-commit `no-suite-internal-optionaldeps`) |
 | No direct `db.global.settings` access (§8.5) | `bin/check_no_settings_bypass.py` (pre-commit `no-settings-bypass`) |
-| No direct combat/restriction API calls (§8.6) | `bin/check_no_restriction_bypass.py` (pre-commit `restriction-funnel`) |
+| No direct combat/restriction/secret API calls (§8.6) | `bin/check_no_restriction_bypass.py` (pre-commit `restriction-funnel`) |
 | No cross-load-unit SavedVariables access (§6/§7) | `bin/check_no_data_manager_bypass.py` (TOC-derived ownership; **enforced** — hard-fails off the `ALLOWED_FOREIGN_SV` allowlist) |
 | No namespace publish / global-surface anti-patterns (§6.1) | `bin/check_no_namespace_publish.py` (pre-commit `no-namespace-publish`; enforced) |
 | No `_G.literal` access | `bin/check_no_g_literal.py` |
@@ -961,12 +961,13 @@ relocated to init bridges in `InitializeDatabase` (formerly under `Core/Database
 
 ### 8.6 Restriction funnel (`OneWoW.Restriction`)
 
-Every combat-lockdown and addon-restriction check routes through
-`OneWoW.Restriction` (`Core/Restriction.lua`). Calling `InCombatLockdown`,
-`C_RestrictedActions.GetAddOnRestrictionState`, or
-`C_RestrictedActions.IsAddOnRestrictionActive` directly is banned everywhere
-except `Restriction.lua` itself — enforced by the `restriction-funnel`
-pre-commit hook (§3.10; escape hatch `-- noqa: restriction-funnel`).
+Every combat-lockdown, addon-restriction, and Midnight secret-value check routes
+through `OneWoW.Restriction` (`Core/Restriction.lua`). Calling `InCombatLockdown`,
+`C_RestrictedActions.GetAddOnRestrictionState`,
+`C_RestrictedActions.IsAddOnRestrictionActive`, `issecretvalue`, or
+`issecrettable` directly is banned everywhere except `Restriction.lua` itself —
+enforced by the `restriction-funnel` pre-commit hook (§3.10; escape hatch
+`-- noqa: restriction-funnel`).
 
 Getters, picked by intent:
 
@@ -1004,8 +1005,31 @@ than iterated over `Enum.AddOnRestrictionType` so a type added by a future patch
 **not** silently inherited — it must be opted in on purpose. `Chat` (addon comms,
 added 12.0.5) is intentionally excluded.
 
-`Restriction.IsSecret(value)` (the Midnight secret-value guard) lives in the
-same module.
+**Secret-value guard (Midnight).** `Restriction.IsSecret(value)` is true for a
+secret scalar **or** a secret table — gate any read/branch/persist of a value
+that may be secret behind it. The granular `IsSecretValue(value)` /
+`IsSecretTable(value)` mirror the `issecretvalue` / `issecrettable` globals 1:1
+for callers that must distinguish the two (e.g. the DevTool globals inspector,
+which only iterates a table when `IsSecretTable` is false). `IsSecret` is simply
+`IsSecretValue(value) or IsSecretTable(value)`.
+
+#### Choosing a gate (suite convention)
+
+Reclassified suite-wide during the 12.0 restriction audit. Pick by **what the
+call does**, not by habit:
+
+| Situation | Getter |
+| --- | --- |
+| Mutating a secure frame, or a protected action that stays valid in an instanced map out of combat (item pickup/equip/move, bank transfers, binding overrides, Blizzard panel toggles like calendar/world-map) | `IsProtectedActionBlocked()` |
+| Combat-only UX/perf gate — fade, defer, suppress — not about secure-frame safety | `IsInCombat()` |
+| Action that must also stand down inside a Delve / restricted map | `IsAddonRestricted()` (rare; the broad gate) |
+| Deferring a blocked protected action until it is safe | `RunWhenUnrestricted("protected", ownerID, fn)` |
+| Reading/branching on a possibly-secret value | `IsSecret()` (or `IsSecretValue`/`IsSecretTable`) |
+
+The common audit fix was `IsAddonRestricted()` → `IsProtectedActionBlocked()`:
+the broad gate (which includes `Map`) was over-gating protected actions that are
+actually fine inside a Delve out of combat, which is what surfaced the original
+Delve bag-layout and bag/quest-bar-on-reload bugs.
 
 ---
 
@@ -1044,5 +1068,5 @@ same module.
 | `bin/check_suite_lifecycle.py` | Pre-commit: lifecycle `RegisterEvent` ban |
 | `bin/check_toc_optional_deps.py` | Pre-commit: suite-internal OptionalDeps ban |
 | `bin/check_no_settings_bypass.py` | Pre-commit: direct `db.global.settings` access ban |
-| `bin/check_no_restriction_bypass.py` | Pre-commit: direct combat/restriction API ban (§8.6) |
+| `bin/check_no_restriction_bypass.py` | Pre-commit: direct combat/restriction/secret API ban (§8.6) |
 | `bin/check_no_namespace_publish.py` | Pre-commit: namespace publish / global-surface anti-patterns (§6.1; enforced) |

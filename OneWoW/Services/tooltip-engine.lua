@@ -116,7 +116,7 @@ function TooltipEngine:ProcessTooltipData(tooltip, data)
     if isProcessingTooltip then return end
     if not data or not data.type then return end
     if not Enum or not Enum.TooltipDataType then return end
-    if issecretvalue(data.type) then return end
+    if ns.Restriction.IsSecret(data.type) then return end
 
     local tooltipType = tonumber(data.type)
     if not tooltipType then return end
@@ -138,7 +138,7 @@ function TooltipEngine:BuildContext(tooltip, tooltipType, data)
     }
 
     if tooltipType == Enum.TooltipDataType.Unit then
-        if data.guid and not issecretvalue(data.guid) then
+        if data.guid and not ns.Restriction.IsSecret(data.guid) then
             local _, unit = tooltip:GetUnit()
             context.unit = unit
             context.isPlayer = unit and UnitIsPlayer(unit)
@@ -150,14 +150,14 @@ function TooltipEngine:BuildContext(tooltip, tooltipType, data)
         end
         context.type = "unit"
     elseif tooltipType == Enum.TooltipDataType.Item then
-        if data.id and not issecretvalue(data.id) then
+        if data.id and not ns.Restriction.IsSecret(data.id) then
             context.itemID = data.id
 
             local itemLink
-            if data.guid and not issecretvalue(data.guid) then
+            if data.guid and not ns.Restriction.IsSecret(data.guid) then
                 itemLink = C_Item.GetItemLinkByGUID(data.guid)
             end
-            if not itemLink and data.hyperlink and not issecretvalue(data.hyperlink)
+            if not itemLink and data.hyperlink and not ns.Restriction.IsSecret(data.hyperlink)
                 and type(data.hyperlink) == "string" then
                 itemLink = data.hyperlink
             end
@@ -324,7 +324,7 @@ function TooltipEngine:TooltipHasOneWoWSection(tooltip)
         local line = _G[tooltipName .. "TextLeft" .. i]
         if line then
             local text = line:GetText()
-            if text and not issecretvalue(text) and string.find(text, "OneWoW") then
+            if text and not ns.Restriction.IsSecret(text) and string.find(text, "OneWoW") then
                 return true
             end
         end

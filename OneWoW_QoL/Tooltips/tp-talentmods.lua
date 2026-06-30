@@ -178,7 +178,7 @@ local function OnSpellTooltip(tooltip, data)
     if settings.hideInCombat and UnitAffectingCombat("player") then return end
 
     local spellID = (data.type == Enum.TooltipDataType.Macro and data.lines[1] and data.lines[1].tooltipID) or data.id
-    if not spellID or issecretvalue(spellID) then return end
+    if not spellID or OneWoW.Restriction.IsSecret(spellID) then return end
 
     local inheritedModifiers = {}
     local baseSpellID = modifierInheritance[spellID]

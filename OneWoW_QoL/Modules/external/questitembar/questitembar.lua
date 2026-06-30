@@ -10,7 +10,6 @@ local eventFrame    = nil
 local updateTimer   = nil
 local proximityTicker = nil
 local scheduledFromProximityTrigger = false
-local pendingUpdate = false
 local previewMode   = false
 
 local defaultColumns = 12
@@ -637,11 +636,12 @@ function QuestItemBarModule:LayoutButtons(count)
 end
 
 function QuestItemBarModule:SecureUpdate(fromProximityTrigger)
-    if OneWoW.Restriction.IsAddonRestricted() then
-        pendingUpdate = true
+    if OneWoW.Restriction.IsProtectedActionBlocked() then
+        OneWoW.Restriction.RunWhenUnrestricted("protected", "OneWoW_QoL.questitembar", function()
+            QuestItemBarModule:FullUpdate()
+        end)
         return
     end
-    pendingUpdate = false
 
     if not barFrame then return end
 
@@ -913,9 +913,6 @@ function QuestItemBarModule:RegisterEvents()
         if not ns.ModuleRegistry:IsEnabled("questitembar") then return end
 
         if event == "PLAYER_REGEN_ENABLED" then
-            if pendingUpdate then
-                QuestItemBarModule:FullUpdate()
-            end
             SyncKeybindings()
             return
         end

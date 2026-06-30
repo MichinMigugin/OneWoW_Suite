@@ -405,9 +405,6 @@ function BagBarModule:RegisterEvents()
         elseif event == "BAG_UPDATE_DELAYED" or event == "UPDATE_MACROS" then
             BagBarModule:ScheduleUpdate()
         elseif event == "PLAYER_REGEN_ENABLED" then
-            if BagBarModule.needsUpdate then
-                BagBarModule:ScheduleUpdate()
-            end
             BagBarModule:UpdateCooldowns()
             SyncKeybindings()
         elseif event == "PLAYER_REGEN_DISABLED" then
@@ -535,11 +532,12 @@ function BagBarModule:UpdateBar()
         HideChrome()
         return
     end
-    if OneWoW.Restriction.IsAddonRestricted() then
-        self.needsUpdate = true
+    if OneWoW.Restriction.IsProtectedActionBlocked() then
+        OneWoW.Restriction.RunWhenUnrestricted("protected", "OneWoW_QoL.bagbar", function()
+            BagBarModule:UpdateBar()
+        end)
         return
     end
-    self.needsUpdate = false
 
     if self._suppressedForProfessions then
         HideChrome()

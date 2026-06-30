@@ -67,7 +67,7 @@ function PlayMountsModule:DetectMountOnUnit(unit)
         local spellId = spellInfo.spellId
         spellIterator = spellIterator + 1
 
-        if spellId and not issecretvalue(spellId) then
+        if spellId and not OneWoW.Restriction.IsSecret(spellId) then
             local formInfo = NON_MOUNT_MOVEMENT_FORMS[spellId]
             if formInfo then
                 return { isMount = false, isMovementForm = true, name = formInfo.name, icon = formInfo.icon, spellId = spellId }

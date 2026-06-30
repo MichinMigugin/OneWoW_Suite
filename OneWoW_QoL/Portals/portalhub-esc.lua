@@ -16,10 +16,6 @@ local instanceStatsFrame = nil
 local lastAutoUpdatedInstance = nil
 local autoUpdateRegistered = false
 
-local function IsSecret(value)
-	return issecretvalue(value)
-end
-
 function EscMenu:Initialize()
 	self:HookGameMenu()
 	self:RegisterAutoUpdateEvents()
@@ -70,7 +66,14 @@ function EscMenu:HookGameMenu()
 	if GameMenuFrame then
 		GameMenuFrame:HookScript("OnHide", function()
 			EscMenu:HideInstanceStatsFrame()
-			EscMenu:HidePortalFrames()
+			-- Portal strips are children of the protected GameMenuFrame, so Hide()
+			-- on them is blocked in combat. The menu (their parent) is already
+			-- hidden, so defer the state cleanup until restrictions clear; guard
+			-- against the menu being reopened before the deferred run fires.
+			OneWoW.Restriction.RunWhenUnrestricted("protected", "OneWoW_QoL.portalhub.eschide", function()
+				if GameMenuFrame and GameMenuFrame:IsShown() then return end
+				EscMenu:HidePortalFrames()
+			end)
 		end)
 	end
 end
@@ -608,7 +611,7 @@ function EscMenu:UpdateCooldown(button, portalData)
 		enabled = cdInfo.isEnabled
 	end
 
-	if enabled and not IsSecret(duration) and duration > 0 then
+	if enabled and not OneWoW.Restriction.IsSecret(duration) and duration > 0 then
 		button.cooldownFrame:SetCooldown(start, duration)
 	else
 		button.cooldownFrame:Clear()
