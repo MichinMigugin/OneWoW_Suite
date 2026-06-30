@@ -5,7 +5,7 @@ local OneWoW = OneWoW
 ns.NoteLookup = {}
 
 function ns.NoteLookup.GetNotesAddon()
-    return OneWoW_Notes
+    return OneWoW_Notes_API
 end
 
 function ns.NoteLookup.GetPlayerFullName(unit)
@@ -16,20 +16,23 @@ function ns.NoteLookup.GetPlayerFullName(unit)
     return name .. "-" .. realm
 end
 
+-- Notes keeps its SavedVariables on a private namespace (ns.db), not on the
+-- OneWoW_Notes lifecycle hub object, so read through the public Notes API. The
+-- API getters already resolve the char/global scopes internally.
 function ns.NoteLookup.FindNoteData(category, key)
-    local notesAddon = ns.NoteLookup.GetNotesAddon()
-    if not notesAddon or not notesAddon.db then return nil end
+    local api = OneWoW_Notes_API
+    if not api then return nil end
 
-    local charData = notesAddon.db.char and notesAddon.db.char[category]
-    if charData and charData[key] and type(charData[key]) == "table" then
-        return charData[key]
+    local noteData
+    if category == "items" then
+        noteData = api.GetItem(key)
+    elseif category == "players" then
+        noteData = api.GetPlayer(key)
+    elseif category == "npcs" then
+        noteData = api.GetNPC(key)
     end
 
-    local globalData = notesAddon.db.global and notesAddon.db.global[category]
-    if globalData and globalData[key] and type(globalData[key]) == "table" then
-        return globalData[key]
-    end
-
+    if type(noteData) == "table" then return noteData end
     return nil
 end
 
