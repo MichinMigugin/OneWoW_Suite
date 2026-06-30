@@ -1351,12 +1351,12 @@ local function ResolveHousing(props)
 
             if info then
                 if info.itemID == itemID then
-                    local quantity = info.quantity or 0
-                    local numPlaced = info.numPlaced or 0
+                    local numStored = info.totalNumStored or 0
+                    local numPlaced = info.totalNumPlaced or 0
                     local remainingRedeemable = info.remainingRedeemable or 0
-                    local total = quantity + numPlaced + remainingRedeemable
+                    local total = numStored + numPlaced + remainingRedeemable
 
-                    rawset(props, "decorNumStorage", quantity)
+                    rawset(props, "decorNumStorage", numStored)
                     rawset(props, "decorNumPlaced", numPlaced)
                     rawset(props, "decorNumRedeemable", remainingRedeemable)
                     rawset(props, "decorNumTotal", total)
