@@ -162,9 +162,10 @@ repos:
         description: |
           Forbids InCombatLockdown / C_RestrictedActions.GetAddOnRestrictionState /
           C_RestrictedActions.IsAddOnRestrictionActive / issecretvalue / issecrettable
-          outside Restriction.lua. Route through OneWoW.Restriction.IsAddonRestricted()
-          (secure/protected), OneWoW.Restriction.IsInCombat() (combat-only UX/perf), or
-          OneWoW.Restriction.IsSecret() (secret values). See OneWoW/Docs/ARCHITECTURE.md.
+          outside Restriction.lua. Route through OneWoW.Restriction.IsProtectedActionBlocked()
+          (secure-frame / protected actions; excl. Map), IsAddonRestricted() (broad gate, only
+          when the action must also stand down in a restricted map), IsInCombat() (combat-only
+          UX/perf), or IsSecret() (secret values). See OneWoW/Docs/ARCHITECTURE.md.
         entry: python bin/check_no_restriction_bypass.py
         language: python
         types: [lua]

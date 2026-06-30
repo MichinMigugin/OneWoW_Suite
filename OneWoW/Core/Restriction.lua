@@ -24,7 +24,9 @@ local _, ns = ...
 local Restriction = {}
 ns.Restriction = Restriction
 
--- Restriction types that gate protected actions / secure-frame mutations.
+-- The full reviewed restriction-type set behind IsAddonRestricted (the broad
+-- gate, including Map). Protected actions / secure-frame mutations use the
+-- PROTECTED_ACTION_TYPES subset below (via IsProtectedActionBlocked) instead.
 -- Chat (addon comms, not secure-frame related; added 12.0.5) is intentionally
 -- excluded — route any future chat-comms gating through a dedicated helper.
 local RESTRICTED_ACTION_TYPES = {
@@ -95,9 +97,12 @@ function Restriction.IsSecret(value)
 end
 
 --- True while in combat lockdown or while any reviewed addon-restriction type
---- (RESTRICTED_ACTION_TYPES) is active or activating. The `~= Inactive` test
---- covers both Active and the transient Activating state. Gate secure-frame
---- mutations and other protected actions behind this.
+--- (RESTRICTED_ACTION_TYPES, including Map) is active or activating. The
+--- `~= Inactive` test covers both Active and the transient Activating state.
+--- This is the BROAD gate — use it only for actions that must also stand down
+--- inside an instanced/restricted map (e.g. a Delve). For protected actions /
+--- secure-frame mutations that stay valid in a Delve out of combat, use
+--- IsProtectedActionBlocked instead (Map does not block them).
 ---@return boolean
 function Restriction.IsAddonRestricted()
     if InCombatLockdown() then return true end

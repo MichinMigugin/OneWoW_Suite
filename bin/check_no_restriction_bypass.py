@@ -3,10 +3,13 @@
 
 All combat-lockdown, addon-restriction, and Midnight secret-value checks must
 route through the OneWoW.Restriction funnel — see OneWoW/Docs/ARCHITECTURE.md.
-Use `OneWoW.Restriction.IsAddonRestricted()` to gate secure-frame mutations /
-protected actions, `OneWoW.Restriction.IsInCombat()` for combat-only UX/perf
-gates (fade, deferral, suppression), and `OneWoW.Restriction.IsSecret()` (or the
-granular `IsSecretValue()` / `IsSecretTable()`) for secret-value checks.
+Use `OneWoW.Restriction.IsProtectedActionBlocked()` to gate secure-frame
+mutations / protected actions (excludes the Map restriction, so they keep
+working inside a Delve out of combat); `OneWoW.Restriction.IsAddonRestricted()`
+only for actions that must also stand down inside a restricted map;
+`OneWoW.Restriction.IsInCombat()` for combat-only UX/perf gates (fade, deferral,
+suppression); and `OneWoW.Restriction.IsSecret()` (or the granular
+`IsSecretValue()` / `IsSecretTable()`) for secret-value checks.
 
 Flagged identifiers (word-boundary, code only — comment/string mentions are
 stripped first so docs and syntax tables do not false-positive):
@@ -133,9 +136,10 @@ def main(argv: list[str]) -> int:
     if rc:
         print()
         print("Route all combat/restriction/secret checks through OneWoW.Restriction:")
-        print("  IsAddonRestricted()  — gate secure-frame mutations / protected actions")
-        print("  IsInCombat()         — combat-only UX/perf gates (fade, deferral)")
-        print("  IsSecret()           — secret-value checks (IsSecretValue/IsSecretTable for the granular form)")
+        print("  IsProtectedActionBlocked() — gate secure-frame mutations / protected actions (excl. Map)")
+        print("  IsAddonRestricted()        — broad gate; only when the action must also stand down in a restricted map")
+        print("  IsInCombat()               — combat-only UX/perf gates (fade, deferral)")
+        print("  IsSecret()                 — secret-value checks (IsSecretValue/IsSecretTable for the granular form)")
         print("Reference: OneWoW/Docs/ARCHITECTURE.md")
         print("Suppress (rare): add -- noqa: restriction-funnel on the line.")
     return rc

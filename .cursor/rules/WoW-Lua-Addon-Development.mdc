@@ -264,7 +264,7 @@ end
     it. Use instead of a hand-rolled `PLAYER_REGEN_ENABLED` re-arm frame.
 
   ```lua
-  if not OneWoW.Restriction.IsAddonRestricted() then
+  if not OneWoW.Restriction.IsProtectedActionBlocked() then
       secureFrame:SetAttribute("unit", "target")
   end
   ```
@@ -342,7 +342,7 @@ end)
 ## Common Mistakes to Avoid
 
 1. **Using removed/deprecated APIs.** For WoW addon dev before Dragonflight, many APIs have moved to `C_*` namespaces or been removed entirely. See `wow-api-specialist` skill.
-2. **Modifying secure frames in combat.** Will silently fail or throw taint errors. Gate all secure frame modifications behind `not OneWoW.Restriction.IsAddonRestricted()`.
+2. **Modifying secure frames in combat.** Will silently fail or throw taint errors. Gate secure frame modifications behind `not OneWoW.Restriction.IsProtectedActionBlocked()` (the protected-action gate excludes the `Map` restriction, so they keep working inside a Delve out of combat). Reserve `IsAddonRestricted()` for actions that must *also* stand down inside a restricted map.
 3. **Hardcoding spell/item IDs without fallbacks.** IDs can change between patches. Prefer name-based lookups with ID as cache keys, and always nil-check returns.
 4. **Forgetting that CLEU doesn't pass event args via `...`.** You MUST call `CombatLogGetCurrentEventInfo()` inside the handler.
 5. **Creating frames in a loop without pooling.** Use `CreateFramePool` or manually pool/recycle frames.
