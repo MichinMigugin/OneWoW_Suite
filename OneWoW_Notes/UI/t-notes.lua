@@ -982,12 +982,16 @@ function ns.UI.CreateNotesTab(parent)
             end
         end
 
+        local special = {}
         local newNotes = {}
         local favorites = {}
         local regular = {}
 
         for _, note in ipairs(notesList) do
-            if note.data.isNew then
+            local nt = note.data.noteType
+            if nt == "daily" or nt == "weekly" then
+                table.insert(special, note)
+            elseif note.data.isNew then
                 table.insert(newNotes, note)
             elseif note.data.favorite then
                 table.insert(favorites, note)
@@ -1030,6 +1034,7 @@ function ns.UI.CreateNotesTab(parent)
             end
         end
 
+        table.sort(special, sortNotes)
         table.sort(newNotes, sortNotes)
         table.sort(favorites, sortNotes)
         table.sort(regular, sortNotes)
@@ -1339,6 +1344,15 @@ function ns.UI.CreateNotesTab(parent)
 
         local yOffset = 0
 
+        if #special > 0 then
+            CreateSectionHeader(SPECIAL, yOffset)
+            yOffset = yOffset - 30
+        end
+        for i, note in ipairs(special) do
+            BuildNoteRow(note, yOffset, special, i)
+            yOffset = yOffset - 55
+        end
+
         if #newNotes > 0 then
             CreateSectionHeader(NEW, yOffset)
             yOffset = yOffset - 30
@@ -1368,7 +1382,7 @@ function ns.UI.CreateNotesTab(parent)
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
         if leftStatusText then
-            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_NOTES"], #newNotes + #favorites + #regular))
+            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_NOTES"], #special + #newNotes + #favorites + #regular))
         end
     end
 
