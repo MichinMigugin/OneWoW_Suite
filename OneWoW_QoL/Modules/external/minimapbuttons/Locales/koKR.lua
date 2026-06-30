@@ -31,8 +31,8 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["MMBTNS_GROW_LEFT"] = "왼쪽",
     ["MMBTNS_GROW_RIGHT"] = "오른쪽",
 
-    ["MMBTNS_HIDE_COLLECTED"] = "수집된 버튼을 미니맵에서 숨기기",
-    ["MMBTNS_HIDE_COLLECTED_DESC"] = "컨테이너로 수집되면 원래의 미니맵 버튼을 숨깁니다.",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP"] = "미니맵에도 표시",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP_DESC"] = "수집된 버튼을 미니맵에도 유지하고, 수집기 안에 클릭 가능한 복사본으로 표시합니다.",
     ["MMBTNS_SHOW_TOOLTIPS"] = "툴팁 표시",
     ["MMBTNS_SHOW_TOOLTIPS_DESC"] = "컨테이너의 버튼 위에 마우스를 올리면 원래 애드온 툴팁을 표시합니다.",
 

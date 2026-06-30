@@ -31,8 +31,8 @@ OneWoW.Locale:Register(M._scope, "zhCN", {
     ["MMBTNS_GROW_LEFT"] = "左",
     ["MMBTNS_GROW_RIGHT"] = "右",
 
-    ["MMBTNS_HIDE_COLLECTED"] = "从小地图隐藏已收集的按钮",
-    ["MMBTNS_HIDE_COLLECTED_DESC"] = "一旦按钮被收集到容器中，便隐藏原始的小地图按钮。",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP"] = "同时显示在小地图上",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP_DESC"] = "在收集器中以可点击的副本显示已收集的按钮，同时将其保留在小地图上。",
     ["MMBTNS_SHOW_TOOLTIPS"] = "显示工具提示",
     ["MMBTNS_SHOW_TOOLTIPS_DESC"] = "将鼠标悬停在容器中的按钮上时显示原始插件的工具提示。",
 

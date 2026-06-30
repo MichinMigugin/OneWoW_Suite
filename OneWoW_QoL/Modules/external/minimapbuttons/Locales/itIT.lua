@@ -31,8 +31,8 @@ OneWoW.Locale:Register(M._scope, "itIT", {
     ["MMBTNS_GROW_LEFT"] = "Sinistra",
     ["MMBTNS_GROW_RIGHT"] = "Destra",
 
-    ["MMBTNS_HIDE_COLLECTED"] = "Nascondi i raccolti dalla minimappa",
-    ["MMBTNS_HIDE_COLLECTED_DESC"] = "Nasconde i pulsanti originali della minimappa una volta raccolti nel contenitore.",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP"] = "Mostra anche sulla minimappa",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP_DESC"] = "Mantiene i pulsanti raccolti anche sulla minimappa, mostrati come copie cliccabili nel contenitore.",
     ["MMBTNS_SHOW_TOOLTIPS"] = "Mostra descrizioni",
     ["MMBTNS_SHOW_TOOLTIPS_DESC"] = "Mostra le descrizioni originali degli addon passando il cursore sui pulsanti nel contenitore.",
 

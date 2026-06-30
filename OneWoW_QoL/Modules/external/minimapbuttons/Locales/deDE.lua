@@ -31,8 +31,8 @@ OneWoW.Locale:Register(M._scope, "deDE", {
     ["MMBTNS_GROW_LEFT"] = "Links",
     ["MMBTNS_GROW_RIGHT"] = "Rechts",
 
-    ["MMBTNS_HIDE_COLLECTED"] = "Gesammelte von Minikarte ausblenden",
-    ["MMBTNS_HIDE_COLLECTED_DESC"] = "Blendet die ursprünglichen Minikarten-Buttons aus, sobald sie in den Container gesammelt wurden.",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP"] = "Auch auf Minikarte anzeigen",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP_DESC"] = "Behält gesammelte Buttons zusätzlich auf der Minikarte und zeigt sie als anklickbare Kopien im Sammler.",
     ["MMBTNS_SHOW_TOOLTIPS"] = "Tooltips anzeigen",
     ["MMBTNS_SHOW_TOOLTIPS_DESC"] = "Zeigt die ursprünglichen Addon-Tooltips an, wenn du im Container über Buttons fährst.",
 

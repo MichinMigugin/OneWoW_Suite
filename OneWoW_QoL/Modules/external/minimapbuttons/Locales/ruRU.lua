@@ -31,8 +31,8 @@ OneWoW.Locale:Register(M._scope, "ruRU", {
     ["MMBTNS_GROW_LEFT"] = "Влево",
     ["MMBTNS_GROW_RIGHT"] = "Вправо",
 
-    ["MMBTNS_HIDE_COLLECTED"] = "Скрывать собранные с мини-карты",
-    ["MMBTNS_HIDE_COLLECTED_DESC"] = "Скрывает оригинальные кнопки мини-карты после их сбора в контейнер.",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP"] = "Также показывать на мини-карте",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP_DESC"] = "Оставляет собранные кнопки также на мини-карте, показывая их как кликабельные копии в контейнере.",
     ["MMBTNS_SHOW_TOOLTIPS"] = "Показывать подсказки",
     ["MMBTNS_SHOW_TOOLTIPS_DESC"] = "Показывает оригинальные подсказки аддонов при наведении на кнопки в контейнере.",
 

@@ -30,8 +30,8 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["MMBTNS_GROW_LEFT"] = "Left",
     ["MMBTNS_GROW_RIGHT"] = "Right",
 
-    ["MMBTNS_HIDE_COLLECTED"] = "Hide Collected from Minimap",
-    ["MMBTNS_HIDE_COLLECTED_DESC"] = "Hides the original minimap buttons once collected into the container.",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP"] = "Also Show on Minimap",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP_DESC"] = "Keep collected buttons on the minimap as well, shown as click-through copies inside the collector.",
     ["MMBTNS_SHOW_TOOLTIPS"] = "Show Tooltips",
     ["MMBTNS_SHOW_TOOLTIPS_DESC"] = "Display original addon tooltips when hovering buttons in the container.",
 

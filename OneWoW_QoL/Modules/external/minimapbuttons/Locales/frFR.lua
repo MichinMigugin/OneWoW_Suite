@@ -31,8 +31,8 @@ OneWoW.Locale:Register(M._scope, "frFR", {
     ["MMBTNS_GROW_LEFT"] = "Gauche",
     ["MMBTNS_GROW_RIGHT"] = "Droite",
 
-    ["MMBTNS_HIDE_COLLECTED"] = "Masquer les rassemblés de la minicarte",
-    ["MMBTNS_HIDE_COLLECTED_DESC"] = "Masque les boutons d'origine de la minicarte une fois rassemblés dans le conteneur.",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP"] = "Afficher aussi sur la minicarte",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP_DESC"] = "Conserve les boutons rassemblés également sur la minicarte, affichés comme des copies cliquables dans le conteneur.",
     ["MMBTNS_SHOW_TOOLTIPS"] = "Afficher les infobulles",
     ["MMBTNS_SHOW_TOOLTIPS_DESC"] = "Affiche les infobulles d'origine des addons en survolant les boutons dans le conteneur.",
 

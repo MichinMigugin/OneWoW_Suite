@@ -328,17 +328,21 @@ local function BuildContent(container, isEnabled)
     lockCB:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     cy = cy - ROW_HEIGHT
 
-    -- Hide collected from minimap
-    local hideCB = OneWoW_GUI:CreateCheckbox(container, {
-        label   = L["MMBTNS_HIDE_COLLECTED"],
-        checked = s.hideCollected,
+    -- Also Show on Minimap: collected buttons keep their normal entry in the
+    -- collector AND get a click-through copy back on the minimap edge.
+    local alsoShowCB = OneWoW_GUI:CreateCheckbox(container, {
+        label   = L["MMBTNS_ALSO_SHOW_ON_MINIMAP"],
+        checked = s.alsoShowOnMinimap,
         onClick = function(self)
-            s.hideCollected = self:GetChecked()
+            s.alsoShowOnMinimap = self:GetChecked()
             MinimapButtonsModule:Refresh()
         end,
     })
-    hideCB:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+    alsoShowCB:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     cy = cy - ROW_HEIGHT
+
+    local _, alsoDescCy = AddDescription(container, cy, L["MMBTNS_ALSO_SHOW_ON_MINIMAP_DESC"])
+    cy = alsoDescCy
 
     -- Show tooltips
     local tipCB = OneWoW_GUI:CreateCheckbox(container, {

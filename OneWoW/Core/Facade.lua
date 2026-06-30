@@ -109,4 +109,14 @@ function OneWoW:GetCoreGlobal()
     return ns.db and ns.db.global
 end
 
+--- Loaded suite components ({ name, ver, cmd }), filled as units register.
+function OneWoW:GetLoadedComponents()
+    return ns._loadedComponents
+end
+
+--- Registered minimap launcher entries ({ addon, label, tabKey, callback }).
+function OneWoW:GetMinimapEntries()
+    return ns._minimapEntries
+end
+
 _G["OneWoW"] = OneWoW

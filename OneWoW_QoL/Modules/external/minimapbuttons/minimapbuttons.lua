@@ -28,6 +28,10 @@ local collectedButtons = {}
 local collectedNames   = {}
 local collectedMap     = {}
 local hiddenButtons    = {}           -- [frame] = true for currently-hidden buttons
+-- Dual-display ("Also Show on Minimap"): when on, real buttons stay on the
+-- minimap and the panel shows these lightweight proxy icons that forward clicks.
+local proxyButtons     = {}           -- array of proxy frames shown in the panel
+local proxyByName      = {}           -- [frameName] = proxy frame
 local enhancedRow      = {}
 local enhancedBuiltCount = 0          -- #_loadedComponents the row was last built from
 local searchBox        = nil
@@ -86,7 +90,8 @@ local function GetSettings()
     if s.buttonScale     == nil then s.buttonScale     = 10          end
     if s.locked          == nil then s.locked          = false       end
     if s.growDirection   == nil then s.growDirection    = "down"      end
-    if s.hideCollected   == nil then s.hideCollected   = true        end
+    if s.alsoShowOnMinimap == nil then s.alsoShowOnMinimap = false    end
+    if s.proxyPos        == nil then s.proxyPos        = {}          end
     if s.showTooltips    == nil then s.showTooltips    = true        end
 
     -- The old text-input whitelist / blacklist never worked reliably (see the
@@ -391,7 +396,6 @@ end
 local function CollectButton(frame)
     local name = frame:GetName()
     if not name or collectedNames[name] then return end
-    if not GetSettings().hideCollected then return end
 
     local origEnter = frame:GetScript("OnEnter")
     local origLeave = frame:GetScript("OnLeave")
@@ -401,6 +405,10 @@ local function CollectButton(frame)
 
     frame:SetParent(containerFrame)
     frame:SetFrameStrata(CONTAINER_STRATA)
+    -- Stash the button's own drag handlers so Map / uncollect can restore them;
+    -- otherwise the icon is stuck undraggable once it has been collected.
+    frame._OneWoWMBBOrigDragStart = frame:GetScript("OnDragStart")
+    frame._OneWoWMBBOrigDragStop  = frame:GetScript("OnDragStop")
     frame:SetScript("OnDragStart", nil)
     frame:SetScript("OnDragStop", nil)
     if frame.SetIgnoreParentScale then
@@ -460,6 +468,13 @@ local function UncollectButton(frame)
     frame:SetScript("OnLeave", frame._OneWoWMBBOrigLeave)
     frame._OneWoWMBBOrigEnter = nil
     frame._OneWoWMBBOrigLeave = nil
+
+    -- Restore the button's own drag handlers so it can be repositioned on the
+    -- minimap again (LibDBIcon and most addons drive dragging through these).
+    frame:SetScript("OnDragStart", frame._OneWoWMBBOrigDragStart)
+    frame:SetScript("OnDragStop", frame._OneWoWMBBOrigDragStop)
+    frame._OneWoWMBBOrigDragStart = nil
+    frame._OneWoWMBBOrigDragStop = nil
 
     -- Drop layout anchors from the collector grid; otherwise icons stay where the panel was.
     RawClearAllPoints(frame)
@@ -588,6 +603,184 @@ local function UnhideButton(frame)
     LibDBIconNotifyRestored(frame)
 end
 
+-- ─── Dual-display proxies (Also Show on Minimap) ────────────────────────────
+--
+-- The real button is collected into the panel as normal (100% the same look,
+-- tooltip, and clicks there). When "Also Show on Minimap" is on we additionally
+-- place a lightweight proxy back on the minimap edge that mirrors the icon and
+-- forwards clicks/tooltips to the collected real.
+
+local PROXY_SIZE = 31
+
+-- Best-effort icon lookup for an arbitrary minimap button: LibDBIcon exposes
+-- `.icon`; otherwise grab the first textured layer; fall back to a placeholder.
+local function ExtractButtonIcon(frame)
+    if frame.icon and frame.icon.GetTexture then
+        local t = frame.icon:GetTexture()
+        if t then return t end
+    end
+    if frame.GetRegions then
+        for _, r in ipairs({ frame:GetRegions() }) do
+            if r and r.GetObjectType and r:GetObjectType() == "Texture" then
+                local t = r:GetTexture()
+                if t then return t end
+            end
+        end
+    end
+    return "Interface\\ICONS\\INV_Misc_QuestionMark"
+end
+
+local function RemoveProxy(frameName)
+    local proxy = proxyByName[frameName]
+    if not proxy then return end
+    proxyByName[frameName] = nil
+    for i = #proxyButtons, 1, -1 do
+        if proxyButtons[i] == proxy then
+            tremove(proxyButtons, i)
+            break
+        end
+    end
+    proxy:Hide()
+    proxy:SetParent(nil)
+end
+
+local function ProxyRadius()
+    return (Minimap:GetWidth() or 140) / 2 + 6
+end
+
+local function PositionProxyAtAngle(proxy, angleDeg)
+    local a = math.rad(angleDeg)
+    local r = ProxyRadius()
+    proxy:ClearAllPoints()
+    proxy:SetPoint("CENTER", Minimap, "CENTER", math.cos(a) * r, math.sin(a) * r)
+    proxy._angle = angleDeg
+end
+
+-- Save a proxy's hand-placed angle so it persists across reloads / re-collects.
+local function SaveProxyAngle(frameName, angleDeg)
+    if not frameName then return end
+    local s = GetSettings()
+    s.proxyPos = s.proxyPos or {}
+    s.proxyPos[frameName] = angleDeg
+end
+
+-- Create (or refresh) the minimap proxy for a collected button. The proxy lives
+-- on the minimap edge and forwards clicks/tooltip to the real (collected) frame.
+local function EnsureProxy(frameName)
+    local real = FindButtonFrame(frameName)
+    if not real then return nil end
+
+    local proxy = proxyByName[frameName]
+    if not proxy then
+        proxy = CreateFrame("Button", nil, Minimap)
+        proxy:SetSize(PROXY_SIZE, PROXY_SIZE)
+        proxy:SetFrameStrata("MEDIUM")
+        proxy:SetFrameLevel((Minimap:GetFrameLevel() or 0) + 8)
+        proxy:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+
+        -- Standard LibDBIcon-style minimap button look: background, cropped icon,
+        -- round tracking-border ring, and the minimap zoom-button highlight.
+        local bg = proxy:CreateTexture(nil, "BACKGROUND")
+        bg:SetSize(20, 20)
+        bg:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
+        bg:SetPoint("TOPLEFT", 7, -5)
+
+        local icon = proxy:CreateTexture(nil, "ARTWORK")
+        icon:SetSize(17, 17)
+        icon:SetPoint("TOPLEFT", 7, -6)
+        icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        proxy.icon = icon
+
+        local border = proxy:CreateTexture(nil, "OVERLAY")
+        border:SetSize(53, 53)
+        border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+        border:SetPoint("TOPLEFT")
+
+        proxy:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+
+        proxy:SetScript("OnClick", function(_, button)
+            local target = FindButtonFrame(proxy._realName)
+            if target and target.Click then pcall(target.Click, target, button) end
+        end)
+        proxy:SetScript("OnEnter", function(myself)
+            if not GetSettings().showTooltips then return end
+            local target = FindButtonFrame(proxy._realName)
+            local onEnter = target and target:GetScript("OnEnter")
+            if onEnter then
+                pcall(onEnter, target)
+            else
+                GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
+                GameTooltip:AddLine(myself._realName or "", 1, 0.82, 0)
+                GameTooltip:Show()
+            end
+        end)
+        proxy:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+        -- Draggable around the minimap edge (LibDBIcon-style angle), unless the
+        -- collector position is locked. A plain left-click still triggers OnClick.
+        proxy:RegisterForDrag("LeftButton")
+        proxy:SetScript("OnDragStart", function(myself)
+            if GetSettings().locked then return end
+            myself:SetScript("OnUpdate", function(s2)
+                local mx, my = Minimap:GetCenter()
+                if not mx then return end
+                local scale = Minimap:GetEffectiveScale() or 1
+                local cx, cy = GetCursorPosition()
+                cx, cy = cx / scale, cy / scale
+                PositionProxyAtAngle(s2, math.deg(math.atan2(cy - my, cx - mx)))
+            end)
+        end)
+        proxy:SetScript("OnDragStop", function(myself)
+            myself:SetScript("OnUpdate", nil)
+            SaveProxyAngle(myself._realName, myself._angle)
+        end)
+
+        proxyByName[frameName] = proxy
+        table.insert(proxyButtons, proxy)
+    end
+
+    proxy._realName = frameName
+    proxy.icon:SetTexture(ExtractButtonIcon(real))
+    return proxy
+end
+
+local function ClearProxies()
+    for _, proxy in ipairs(proxyButtons) do
+        proxy:Hide()
+        proxy:SetParent(nil)
+    end
+    wipe(proxyButtons)
+    wipe(proxyByName)
+end
+
+local function SortProxies()
+    table.sort(proxyButtons, function(a, b)
+        return (a._realName or "") < (b._realName or "")
+    end)
+end
+
+-- Position proxies around the minimap edge: each uses its saved angle if the
+-- user has dragged it, otherwise a default clockwise arc slot (which is saved so
+-- it stays put afterwards).
+local function LayoutMinimapProxies()
+    if #proxyButtons == 0 then return end
+    local s = GetSettings()
+    s.proxyPos = s.proxyPos or {}
+    local step = 30  -- degrees between proxies on the default arc
+    for i, proxy in ipairs(proxyButtons) do
+        local name = proxy._realName
+        local angle = name and s.proxyPos[name]
+        if not angle then
+            angle = 90 - (i - 1) * step
+            if name then s.proxyPos[name] = angle end
+        end
+        PositionProxyAtAngle(proxy, angle)
+        proxy:Show()
+    end
+end
+
+MinimapButtonsModule.LayoutMinimapProxies = LayoutMinimapProxies
+
 -- Move a single button to the state implied by `pref`. Idempotent — calling
 -- twice with the same pref is a no-op. Caller is responsible for triggering
 -- LayoutContainer / UpdateBadge afterwards if it's batching multiple updates.
@@ -601,13 +794,21 @@ local function ApplyPrefImmediate(frameName, pref)
 
     if pref == "mini" then
         if isHidden then UnhideButton(frame) end
-        if not isCollected and containerFrame and GetSettings().hideCollected then
+        if not isCollected and containerFrame then
             CollectButton(frame)
         end
+        -- Dual-display: also mirror the collected button onto the minimap edge.
+        if GetSettings().alsoShowOnMinimap then
+            EnsureProxy(frameName)
+        else
+            RemoveProxy(frameName)
+        end
     elseif pref == "map" then
+        RemoveProxy(frameName)
         if isCollected then UncollectByName(frameName) end
         if isHidden then UnhideButton(frame) end
     elseif pref == "hide" then
+        RemoveProxy(frameName)
         if isCollected then UncollectByName(frameName) end
         if not isHidden then HideButton(frame) end
     end
@@ -627,7 +828,7 @@ local function ConsiderButton(frame, hint)
     end
     RegisterDetectedButton(frameName, hint)
 
-    if not containerFrame or not GetSettings().hideCollected then return end
+    if not containerFrame then return end
     ApplyPrefImmediate(frameName, GetButtonPref(frameName))
 end
 
@@ -732,40 +933,15 @@ end
 
 function MinimapButtonsModule:CollectAll()
     local s = GetSettings()
-    if not s.hideCollected then
-        SyncLibDBIconRadiusToMinimapShape()
-        local copy = {}
-        for _, b in ipairs(collectedButtons) do
-            copy[#copy + 1] = b
-        end
-        for _, btn in ipairs(copy) do
-            UncollectButton(btn)
-        end
-        wipe(collectedButtons)
-        wipe(collectedNames)
-        wipe(collectedMap)
-        -- "Don't hide anything" also implies "stop hiding any buttons you
-        -- were holding offscreen" — restore them to the minimap.
-        local hiddenCopy = {}
-        for btn in pairs(hiddenButtons) do
-            hiddenCopy[#hiddenCopy + 1] = btn
-        end
-        for _, btn in ipairs(hiddenCopy) do
-            UnhideButton(btn)
-        end
-        RefreshAllLibDBIcons()
-        C_Timer.After(0, function()
-            SyncLibDBIconRadiusToMinimapShape()
-            RefreshAllLibDBIcons()
-        end)
-        self:LayoutContainer()
-        self:UpdateBadge()
-        return
+
+    -- If dual-display was just turned off, drop any minimap proxies first.
+    if not s.alsoShowOnMinimap then
+        ClearProxies()
     end
 
-    -- First refresh discovery so seen flags are current. ConsiderButton calls
-    -- ApplyPrefImmediate for every discovered button, so this single pass
-    -- collects / leaves-on-map / hides each button per its stored pref.
+    -- Discovery refreshes seen flags and, via ConsiderButton -> ApplyPrefImmediate,
+    -- collects / leaves-on-map / hides each button per its stored pref (and mirrors
+    -- "mini" buttons to a minimap proxy when dual-display is on).
     self:DiscoverButtons()
 
     -- Reconcile any buttons we're still holding that no longer have a
@@ -779,6 +955,7 @@ function MinimapButtonsModule:CollectAll()
             local pref = GetButtonPref(n)
             if pref ~= "mini" then
                 tremove(collectedButtons, i)
+                RemoveProxy(n)
                 UncollectButton(btn)
                 if pref == "hide" then HideButton(btn) end
             end
@@ -786,6 +963,12 @@ function MinimapButtonsModule:CollectAll()
     end
 
     SortCollected()
+
+    if s.alsoShowOnMinimap then
+        SortProxies()
+        LayoutMinimapProxies()
+    end
+
     self:LayoutContainer()
     self:UpdateBadge()
 end
@@ -815,9 +998,10 @@ local OW_COMPANION_ICONS = {
 ---@param compName string
 ---@return (fun())|nil
 local function FindMinimapEntryAction(compName)
-    if not OneWoW or not OneWoW._minimapEntries then return nil end
+    local entries = OneWoW and OneWoW.GetMinimapEntries and OneWoW:GetMinimapEntries()
+    if not entries then return nil end
     local target = compName:lower()
-    for _, entry in ipairs(OneWoW._minimapEntries) do
+    for _, entry in ipairs(entries) do
         local stripped = (entry.addon or ""):gsub("^OneWoW_?", ""):gsub("_", ""):lower()
         if stripped == target then
             if entry.callback then
@@ -835,8 +1019,7 @@ local function FindMinimapEntryAction(compName)
 end
 
 local function GetCompanionAction(compName)
-    if not OneWoW then return nil end
-    local companions = OneWoW._loadedComponents
+    local companions = OneWoW and OneWoW.GetLoadedComponents and OneWoW:GetLoadedComponents()
     if not companions then return nil end
     for _, comp in ipairs(companions) do
         if comp.name == compName then
@@ -885,11 +1068,12 @@ local function BuildEnhancedRow()
     end
     wipe(enhancedRow)
 
-    if not OneWoW or not OneWoW._loadedComponents then return end
+    local companions = OneWoW and OneWoW.GetLoadedComponents and OneWoW:GetLoadedComponents()
+    if not companions then return end
 
-    enhancedBuiltCount = #OneWoW._loadedComponents
+    enhancedBuiltCount = #companions
 
-    for _, comp in ipairs(OneWoW._loadedComponents) do
+    for _, comp in ipairs(companions) do
         -- GUI only opens the main OneWoW window, identical to the Core tile, so
         -- it would be a redundant duplicate launcher. Skip it.
         if comp.name ~= "GUI" then
@@ -1134,8 +1318,9 @@ local function ShowContainer()
     -- wired to stale actions until a /reload. Rebuild here when the loaded
     -- component count has changed since the last build, so opening the panel
     -- always reflects the fully-populated, correctly-wired set.
-    if GetSettings().enhancedMenu and OneWoW and OneWoW._loadedComponents
-        and enhancedBuiltCount ~= #OneWoW._loadedComponents then
+    local companions = OneWoW and OneWoW.GetLoadedComponents and OneWoW:GetLoadedComponents()
+    if GetSettings().enhancedMenu and companions
+        and enhancedBuiltCount ~= #companions then
         BuildEnhancedRow()
     end
     ResetCollectedVisibilityMap()
@@ -1170,7 +1355,7 @@ function MinimapButtonsModule:StartAutoCloseTimer()
     local delay = s.autoCloseDelay or 3
     autoCloseTimer = C_Timer.NewTimer(delay, function()
         if containerFrame and containerFrame:IsShown() then
-            if not MouseIsOver(containerFrame) and not (hubButton and MouseIsOver(hubButton)) then
+            if not containerFrame:IsMouseOver() and not (hubButton and hubButton:IsMouseOver()) then
                 HideContainer()
             else
                 MinimapButtonsModule:StartAutoCloseTimer()
@@ -1345,6 +1530,7 @@ function MinimapButtonsModule:OnDisable()
     end
 
     SyncLibDBIconRadiusToMinimapShape()
+    ClearProxies()
     for _, btn in ipairs(collectedButtons) do
         UncollectButton(btn)
     end

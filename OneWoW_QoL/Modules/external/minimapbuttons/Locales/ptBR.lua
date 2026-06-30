@@ -31,8 +31,8 @@ OneWoW.Locale:Register(M._scope, "ptBR", {
     ["MMBTNS_GROW_LEFT"] = "Esquerda",
     ["MMBTNS_GROW_RIGHT"] = "Direita",
 
-    ["MMBTNS_HIDE_COLLECTED"] = "Ocultar os reunidos do minimapa",
-    ["MMBTNS_HIDE_COLLECTED_DESC"] = "Oculta os botões originais do minimapa depois de reunidos no contêiner.",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP"] = "Mostrar também no minimapa",
+    ["MMBTNS_ALSO_SHOW_ON_MINIMAP_DESC"] = "Mantém os botões reunidos também no minimapa, exibidos como cópias clicáveis no coletor.",
     ["MMBTNS_SHOW_TOOLTIPS"] = "Mostrar dicas",
     ["MMBTNS_SHOW_TOOLTIPS_DESC"] = "Exibe as dicas originais dos addons ao passar o cursor pelos botões no contêiner.",
 
