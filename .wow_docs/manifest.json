@@ -7,8 +7,8 @@
       "scan_roots": [
         "Interface/AddOns"
       ],
-      "last_synced_commit": "b62f0b48c9358512f78e77695f1cf6c04f57397b",
-      "last_synced_date": "2026-06-29"
+      "last_synced_commit": "dc16328fd4b0e7ce7ead4d6d2194b61e068d176c",
+      "last_synced_date": "2026-06-30"
     },
     "blizzard-interface-resources": {
       "url": "https://github.com/Ketho/BlizzardInterfaceResources.git",
@@ -17,7 +17,7 @@
         "Resources"
       ],
       "last_synced_commit": "774b2c550366245b5b7fa84688307fa891960632",
-      "last_synced_date": "2026-06-29"
+      "last_synced_date": "2026-06-30"
     }
   },
   "default_source": "wow-ui-source",
