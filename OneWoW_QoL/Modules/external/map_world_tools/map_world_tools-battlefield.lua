@@ -188,7 +188,7 @@ local function EnsureDragHitOverlay()
     dragHitFrame:EnableMouse(true)
     dragHitFrame:RegisterForDrag("LeftButton")
     dragHitFrame:SetScript("OnMouseDown", function()
-        if not GetToggle("unlockBattlefield") or OneWoW.Restriction.IsAddonRestricted() then
+        if not GetToggle("unlockBattlefield") or OneWoW.Restriction.IsProtectedActionBlocked() then
             return
         end
         if BattlefieldMapFrame then

@@ -650,8 +650,8 @@ function Module:GetAllSetNames()
 end
 
 local function RestoreBars(mod, barsData, petBarData, options)
-    if OneWoW.Restriction.IsAddonRestricted() then
-        print("|cFFFFD100OneWoW|r AltTracker: Cannot restore action bars while in combat")
+    if OneWoW.Restriction.IsProtectedActionBlocked() then
+        print("|cFFFFD100OneWoW|r AltTracker: Cannot restore action bars while restricted (combat or instance restriction)")
         return false
     end
 
@@ -1149,8 +1149,8 @@ local function PickupActionTable(actionData, flyouts, mountCache)
 end
 
 function Module:RestoreActionSlot(slotID, actionData, flyouts, mountCache, spellOverride)
-    if OneWoW.Restriction.IsAddonRestricted() then
-        return false, "In combat"
+    if OneWoW.Restriction.IsProtectedActionBlocked() then
+        return false, "Restricted"
     end
 
     if not actionData then
@@ -1170,8 +1170,8 @@ function Module:RestoreActionSlot(slotID, actionData, flyouts, mountCache, spell
 end
 
 function Module:RestorePetActionSlot(slotID, actionData)
-    if OneWoW.Restriction.IsAddonRestricted() then
-        return false, "In combat"
+    if OneWoW.Restriction.IsProtectedActionBlocked() then
+        return false, "Restricted"
     end
 
     if not IsPetActive() then

@@ -265,8 +265,9 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     -- SetPropagateMouseClicks became a protected function; calling it while the
     -- list refreshes in combat throws ADDON_ACTION_BLOCKED. false is the default
-    -- state anyway, so skipping it under restriction is harmless.
-    if not OneWoW.Restriction.IsAddonRestricted() then
+    -- state anyway, so skipping it under restriction is harmless. Gated on the
+    -- protected-action tier (not Map) so the list still builds inside a Delve.
+    if not OneWoW.Restriction.IsProtectedActionBlocked() then
         card:SetPropagateMouseClicks(false)
     end
 

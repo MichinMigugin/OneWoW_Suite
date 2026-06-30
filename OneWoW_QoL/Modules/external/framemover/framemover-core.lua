@@ -23,7 +23,7 @@ local modifierFrame
 local function IsProtectedMutationBlocked(frame)
     local restricted = FM._restrictionCached
     if restricted == nil then
-        restricted = OneWoW.Restriction.IsAddonRestricted()
+        restricted = OneWoW.Restriction.IsProtectedActionBlocked()
     end
     return restricted and frame:IsProtected()
 end
@@ -482,7 +482,7 @@ function FM:SchedulePendingDrain()
 end
 
 local function DrainPendingWork()
-    FM._restrictionCached = OneWoW.Restriction.IsAddonRestricted()
+    FM._restrictionCached = OneWoW.Restriction.IsProtectedActionBlocked()
     local n = 0
     for key, runner in pairs(FM.pendingWork) do
         FM.pendingWork[key] = nil

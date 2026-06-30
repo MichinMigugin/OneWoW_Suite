@@ -47,7 +47,7 @@ end
 
 function AutoOpenModule:ScanAndOpen()
     if self._atBank or self._atMail or self._atMerchant or self._atCrafting then return end
-    if Restriction.IsAddonRestricted() then return end
+    if Restriction.IsProtectedActionBlocked() then return end
 
     local items = ns.AutoOpenItems
     if not items then return end
