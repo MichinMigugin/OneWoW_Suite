@@ -88,11 +88,14 @@ function BagButton:CreateAuctionHouseButton()
 
     local closeBtn = AuctionHouseFrameCloseButton
     local ahFrame = AuctionHouseFrame
-    if not closeBtn and not ahFrame then return end
+    if not ahFrame then return end
 
-    local btn = CreateFrame("Button", nil, UIParent)
+    -- Parent to the AH frame (not UIParent) so the cart shares the AH window's
+    -- strata and is hidden/occluded with it, instead of floating on top of every
+    -- other window. Frame level sits just above the close button cluster.
+    local btn = CreateFrame("Button", nil, ahFrame)
     btn:SetSize(28, 28)
-    btn:SetFrameStrata("HIGH")
+    btn:SetFrameLevel((closeBtn or ahFrame):GetFrameLevel() + 1)
     btn:EnableMouse(true)
 
     if closeBtn then
