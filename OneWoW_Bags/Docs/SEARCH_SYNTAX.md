@@ -797,14 +797,14 @@ Syntax: `property>=value`, `property<=value`, `property>value`, `property<value`
 | `durability` | | Current durability (bag/slot items; otherwise treated as `0` for comparisons) |
 | `maxdurability` | | Maximum durability for the slot |
 | `durabilitypct` | | `current / max * 100` when the slot has durability from `C_Container.GetContainerItemDurability`; otherwise the field is unset and numeric comparisons treat it as `0` |
-| `decorstorage` | | In-storage quantity for housing **decor** items (from `C_HousingCatalog` catalog entry matching the item ID) |
+| `decorstorage` | | In-storage quantity for housing **decor** items (`C_HousingCatalog.GetCatalogEntryInfoByItem`, `totalNumStored`) |
 | `decorplaced` | | Number of placed instances |
 | `decorredeemable` | | Remaining redeemable count |
 | `decortotal` | | Sum of storage, placed, and redeemable |
 
 > **`#decor` vs `decorstorage>=1`:** The keyword `#decor` matches the Housing · Decor **item subclass**. Numeric `decor*` properties count catalog state for that item and are independent of `#decor` wording overlap.
 
-> **Housing decor counts:** `BuildProps` calls `ResolveHousing` only for items whose class/subclass are Housing · Decor (`#decor`). Counts come from `C_HousingCatalog.CreateCatalogSearcher` (skipped when the API returns no searcher — e.g. housing unavailable). The catalog runs an **async** search and fills `decor*` fields in the callback; the first predicate evaluation can see `0`/missing values until props refresh (same `props[field] or 0` rule as other numerics).
+> **Housing decor counts:** During identity-tier `PopulateBaseProps`, Housing · Decor items (`#decor`) call `C_HousingCatalog.GetCatalogEntryInfoByItem` (hyperlink or item ID). When the API returns entry info, `decorNumStorage`, `decorNumPlaced`, `decorNumRedeemable`, and `decorNumTotal` are set synchronously before `BuildProps` returns. If housing is unavailable or the item has no catalog entry, those fields stay unset and numeric comparisons treat them as `0` (same `props[field] or 0` rule as other numerics). Counts are identity-tier and refresh on `InvalidatePropsCache` (e.g. `BAG_UPDATE_DELAYED`).
 
 
 > **`#armor` vs `armor>=N`:** The keyword `#armor` matches any item in the
@@ -1111,7 +1111,7 @@ in this document; full API and extension notes are in
 |---|---|
 | Caches | `propsCache`, `tooltipCache`, `compiledCache` — keyed by expression string and `bagID:slotID` where applicable. |
 | Overrides | `ITEM_ID_OVERRIDES` — small hardcoded `itemID → classID/subClassID` fixes for mis-tagged recipes/items. |
-| Data / patterns | Hearthstone ID set (`HS_IDS`), knowledge-study icon set (`KNOWLEDGE_ICONS`), `ITEM_CONTEXT_CATEGORY` → `#raid` / `#dungeon` / `#delves` / `#worldquest` / `#pvp` / `#store`, locale patterns for charges / tradeable / unique-equip, `CLASS_ID` (including Evoker, for `CanClassEquip` alt checks); `ResolveHousing` + `C_HousingCatalog` for decor quantity fields. |
+| Data / patterns | Hearthstone ID set (`HS_IDS`), knowledge-study icon set (`KNOWLEDGE_ICONS`), `ITEM_CONTEXT_CATEGORY` → `#raid` / `#dungeon` / `#delves` / `#worldquest` / `#pvp` / `#store`, locale patterns for charges / tradeable / unique-equip, `CLASS_ID` (including Evoker, for `CanClassEquip` alt checks); `C_HousingCatalog.GetCatalogEntryInfoByItem` in `PopulateBaseProps` for decor quantity fields. |
 | `CONSTANT_MAP` | `${POOR}` … `${HEIRLOOM}` and expansion `${CURRENTEXPANSION}`, `${CLASSIC}` … `${LASTTITAN}` for `ResolveParams` / vendor templates. |
 | `PROP_REGISTRY` | Built-in numeric and string property names and aliases (including money units on `vendorprice` / `totalvalue` and housing decor counts: `decorstorage`, `decorplaced`, `decorredeemable`, `decortotal`). Exposed to callers via `RegisterProperty` merges. |
 | `FLAG_REGISTRY` | Lowercased `IsEquipment`-style words → `props` field names (vendor-style verbose rules). |

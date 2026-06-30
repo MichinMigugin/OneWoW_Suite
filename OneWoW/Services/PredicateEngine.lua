@@ -1332,44 +1332,6 @@ local function GetTooltipTextByHyperlink(hyperlink)
     return text
 end
 
--- ---------- ResolveHousing ----------
--- Fills in props with information related to housing decor items
----@param props table
-local function ResolveHousing(props)
-    local searcher = C_HousingCatalog.CreateCatalogSearcher()
-    if not searcher then return end -- check for when housing is unavailable in-game
-
-    local itemID = rawget(props, "id")
-
-    searcher:SetCollected(true)
-    searcher:SetResultsUpdatedCallback(function()
-       local matchingEntryIDs = searcher:GetCatalogSearchResults()
-
-       for _, entryID in ipairs(matchingEntryIDs) do
-          if entryID.entryType == Enum.HousingCatalogEntryType.Decor then
-            local info = C_HousingCatalog.GetCatalogEntryInfo(entryID)
-
-            if info then
-                if info.itemID == itemID then
-                    local numStored = info.totalNumStored or 0
-                    local numPlaced = info.totalNumPlaced or 0
-                    local remainingRedeemable = info.remainingRedeemable or 0
-                    local total = numStored + numPlaced + remainingRedeemable
-
-                    rawset(props, "decorNumStorage", numStored)
-                    rawset(props, "decorNumPlaced", numPlaced)
-                    rawset(props, "decorNumRedeemable", remainingRedeemable)
-                    rawset(props, "decorNumTotal", total)
-
-                    break
-                end
-            end
-          end
-       end
-    end)
-    searcher:RunSearch()
-end
-
 -- ---------- ResolveCollected ----------
 ---@param itemID number
 ---@param hyperlink string|nil
@@ -2332,7 +2294,19 @@ local function PopulateBaseProps(props, itemID, hyperlink)
     end
 
     if props.classID == Enum.ItemClass.Housing and props.subClassID == Enum.ItemHousingSubclass.Decor then
-        ResolveHousing(props)
+        local info = C_HousingCatalog.GetCatalogEntryInfoByItem(hyperlink or itemID)
+
+        if info then
+            local numStored = info.totalNumStored or 0
+            local numPlaced = info.totalNumPlaced or 0
+            local remainingRedeemable = info.remainingRedeemable or 0
+            local total = numStored + numPlaced + remainingRedeemable
+
+            props.decorNumStorage = numStored
+            props.decorNumPlaced = numPlaced
+            props.decorNumRedeemable = remainingRedeemable
+            props.decorNumTotal = total
+        end
     end
 
     -- BIND DETECTION NOTE: API-based bind detection removed as it's not detailed enough. Warbound == Soulbound according to the API.
