@@ -66,6 +66,20 @@ function OneWoW_GUI:WrapThemeColor(text, themeKey)
     return CreateColor(r or 1, g or 1, b or 1, a or 1):WrapTextInColorCode(text)
 end
 
+-- Scrollbar thumb color, derived from the theme's brightest accent and blended
+-- hard toward white so it reads as a vivid, fully-opaque handle that clearly
+-- stands out from the ACCENT_PRIMARY row selection (same hue family, but much
+-- lighter). hover = true brightens it further. Theme-matched, no per-theme token.
+local function BlendToWhite(r, g, b, t)
+    return r + (1 - r) * t, g + (1 - g) * t, b + (1 - b) * t
+end
+
+function OneWoW_GUI:GetScrollThumbColor(hover)
+    local r, g, b = GetThemeColor("ACCENT_HIGHLIGHT")
+    r, g, b = BlendToWhite(r, g, b, hover and 0.75 or 0.5)
+    return r, g, b, 1
+end
+
 function OneWoW_GUI:GetSpacing(key)
     return GetSpacing(key)
 end
@@ -215,13 +229,15 @@ local function applyScrollBarStyle(scrollBar, container, offset)
     end
     if scrollBar.ThumbTexture then
         scrollBar.ThumbTexture:SetWidth(Constants.GUI.SCROLLBAR_THUMB_WIDTH)
-        scrollBar.ThumbTexture:SetColorTexture(GetThemeColor("ACCENT_PRIMARY"))
+        -- Bright theme-derived thumb so it stands out hard from the
+        -- ACCENT_PRIMARY row selection (see GetScrollThumbColor).
+        scrollBar.ThumbTexture:SetColorTexture(OneWoW_GUI:GetScrollThumbColor(false))
     end
     scrollBar:SetScript("OnEnter", function(self)
-        if self.ThumbTexture then self.ThumbTexture:SetColorTexture(GetThemeColor("ACCENT_HIGHLIGHT")) end
+        if self.ThumbTexture then self.ThumbTexture:SetColorTexture(OneWoW_GUI:GetScrollThumbColor(true)) end
     end)
     scrollBar:SetScript("OnLeave", function(self)
-        if self.ThumbTexture then self.ThumbTexture:SetColorTexture(GetThemeColor("ACCENT_PRIMARY")) end
+        if self.ThumbTexture then self.ThumbTexture:SetColorTexture(OneWoW_GUI:GetScrollThumbColor(false)) end
     end)
 end
 

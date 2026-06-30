@@ -1093,7 +1093,8 @@ function OneWoW_GUI:CreateDataTable(parent, options)
     scrollThumb:SetHeight(30)
     scrollThumb:SetPoint("TOP", scrollTrack, "TOP", 0, 0)
     scrollThumb:SetBackdrop(Constants.BACKDROP_SIMPLE)
-    scrollThumb:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    -- Bright theme-derived thumb so it stands out hard from the ACCENT_PRIMARY row selection.
+    scrollThumb:SetBackdropColor(OneWoW_GUI:GetScrollThumbColor(false))
 
     local function UpdateScrollThumb()
         local maxScroll = scrollFrame:GetVerticalScrollRange()
