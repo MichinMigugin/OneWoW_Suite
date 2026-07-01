@@ -138,6 +138,25 @@ function OneWoW_Notes_API.OpenPlayer(fullName)
     return true
 end
 
+--- Refreshes the Players tab in place if it is already built, without opening
+--- the window. Reselects fullName when provided so external edits show live.
+---@param fullName string|nil
+---@return boolean refreshed
+function OneWoW_Notes_API.RefreshPlayersTab(fullName)
+    local tabFrame = OneWoW.UI:GetContentFrame("notes", "players")
+    if not tabFrame then
+        return false
+    end
+
+    if fullName and fullName ~= "" and tabFrame.SelectPlayer then
+        tabFrame.SelectPlayer(fullName)
+    elseif tabFrame.RefreshPlayersList then
+        tabFrame.RefreshPlayersList()
+    end
+
+    return true
+end
+
 --- Returns an item note.
 ---@param itemID number
 ---@return table|nil itemData

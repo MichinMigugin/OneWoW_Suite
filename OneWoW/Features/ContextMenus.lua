@@ -184,6 +184,10 @@ local function HandleAddMountInfo(unit)
         OneWoW_Notes_API.AddPlayer(fullName, playerData)
         print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_CREATED"], playerName))
     end
+
+    if OneWoW_Notes_API.RefreshPlayersTab then
+        OneWoW_Notes_API.RefreshPlayersTab(fullName)
+    end
 end
 
 local function HandleMatchMount(unit)
