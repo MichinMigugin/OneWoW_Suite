@@ -205,6 +205,13 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     pin.titleText = titleText
     pin.titleBar  = titleBar
 
+    -- Grow the title bar to fit a wrapped (multi-line) zone name instead of clipping.
+    pin.UpdateTitleHeight = function(myself)
+        if not myself.titleText or not myself.titleBar then return end
+        local th = myself.titleText:GetStringHeight() or 0
+        myself.titleBar:SetHeight(math.max(20, math.ceil(th) + 8))
+    end
+
     -- Close button — sets dismissedUntil 30 min so it won't re-open on re-enter
     local closeBtn = CreateFrame("Button", nil, titleBar)
     closeBtn:SetSize(16, 16)
@@ -307,6 +314,8 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         local zd = ns.Zones and ns.Zones:GetZone(zoneName)
         if not zd then return end
 
+        myself:UpdateTitleHeight()
+
         local todoCount = #(zd.todos or {})
         local taskHeight = 0
         if todoCount > 0 then
@@ -318,7 +327,8 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         end
 
         local hasContent  = zd.content and zd.content ~= ""
-        local minWindow   = 30 + (hasContent and 60 or 10) + taskHeight + 35
+        local titleBarHeight = PinSupport.GetFrameHeight(myself.titleBar, 20) + 10
+        local minWindow   = titleBarHeight + (hasContent and 60 or 10) + taskHeight + 35
         myself:SetResizeBounds(200, minWindow, GetScreenWidth(), GetScreenHeight())
 
         myself.contentFrame:ClearAllPoints()
@@ -482,7 +492,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
         insets = { left = 3, right = 3, top = 3, bottom = 3 }
     })
     local listItemColor = colorConfig.listItem
-    hoverPanel:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], 0.9)
+    hoverPanel:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], pinAlpha)
     hoverPanel:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
     hoverPanel:SetFrameLevel(pin:GetFrameLevel() + 10)
     hoverPanel:Hide()
@@ -513,10 +523,10 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
                 pin:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], val)
             end
             pin:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+            hoverPanel:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], val)
         end,
     })
-    alphaSlider:SetPoint("TOPLEFT",  hoverPanel, "TOPLEFT",  10, -5)
-    alphaSlider:SetPoint("TOPRIGHT", hoverPanel, "TOPRIGHT", -10, -5)
+    pin.alphaSlider = alphaSlider
 
     local lockMoveCB = OneWoW_GUI:CreateCheckbox(hoverPanel, {
         label = L["LOCK_MOVE"],
@@ -532,16 +542,20 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
             end
         end,
     })
-    lockMoveCB:SetPoint("BOTTOMLEFT", hoverPanel, "BOTTOMLEFT", 10, 5)
     if zoneData.lockMove then
         pin:SetMovable(false)
         pin:RegisterForDrag()
     end
+    pin.lockMoveCB = lockMoveCB
 
     local function HideHoverControls()
         hoverPanel:Hide()
     end
     local function ShowHoverControls()
+        PinSupport.LayoutHoverPanel(hoverPanel, {
+            { control = alphaSlider, fill = true },
+            { control = lockMoveCB },
+        })
         hoverPanel:Show()
     end
 

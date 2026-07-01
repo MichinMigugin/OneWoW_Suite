@@ -99,6 +99,61 @@ function PinSupport.FlushDeferred()
     wipe(deferredPins)
 end
 
+-- Lays out a pin's hover-control panel and sizes it to fit. Full-width controls
+-- (e.g. the alpha slider) take their own row; the rest flow left-to-right and
+-- wrap onto a new row only when the next control's measured width won't fit.
+-- All sizes are read live, so the panel packs tightly at small fonts and stays
+-- overlap-free at large fonts (fixed offsets used to overlap or waste space).
+--
+-- items: array of { control = frame, fill = bool }
+--   fill = span both edges on its own row; otherwise the control flows.
+function PinSupport.LayoutHoverPanel(panel, items)
+    local padX, padY, colGap, rowGap = 8, 8, 12, 6
+    local panelW = panel:GetWidth()
+    if not panelW or panelW < 1 then panelW = 300 end
+    local avail = panelW - padX * 2
+
+    local function measure(c)
+        local w = c.GetMeasuredWidth  and c:GetMeasuredWidth()  or c:GetWidth()
+        local h = c.GetMeasuredHeight and c:GetMeasuredHeight() or c:GetHeight()
+        if not w or w < 1 then w = 20 end
+        if not h or h < 1 then h = 20 end
+        return w, h
+    end
+
+    local y = -padY
+    local i, n = 1, #items
+    while i <= n do
+        local item = items[i]
+        local c = item.control
+        if item.fill then
+            c:ClearAllPoints()
+            c:SetPoint("TOPLEFT",  panel, "TOPLEFT",   padX, y)
+            c:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -padX, y)
+            local _, h = measure(c)
+            y = y - h - rowGap
+            i = i + 1
+        else
+            local x, rowH, placed = padX, 0, 0
+            while i <= n and not items[i].fill do
+                local cc = items[i].control
+                local w, h = measure(cc)
+                if placed > 0 and (x + w) > (padX + avail) then break end
+                cc:ClearAllPoints()
+                cc:SetPoint("TOPLEFT", panel, "TOPLEFT", x, y)
+                x = x + w + colGap
+                if h > rowH then rowH = h end
+                placed = placed + 1
+                i = i + 1
+            end
+            y = y - rowH - rowGap
+        end
+    end
+
+    local total = (-y) - rowGap + padY
+    panel:SetHeight(math.max(total, 36))
+end
+
 function PinSupport.EnsureWorldMapHook()
     if worldMapHooked then return end
     worldMapHooked = true
