@@ -179,6 +179,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
 -- Storage / Category labels
     ["STORAGE_ACCOUNT_WIDE"] = "Весь аккаунт",
+    ["LABEL_ICON"] = "Значок",
 
 -- Label fields (for dialogs)
     ["LABEL_NOTE_TITLE"] = "Заголовок заметки",

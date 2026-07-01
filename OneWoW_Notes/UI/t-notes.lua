@@ -1046,300 +1046,137 @@ function ns.UI.CreateNotesTab(parent)
         end
 
         local function BuildNoteRow(note, yOffset, groupArray, groupIndex)
-            local listItemColor = {OneWoW_GUI:GetThemeColor("BG_SECONDARY")}
-            local pinColor = note.data.pinColor or "hunter"
-            local colorConfig = ns.Config:GetResolvedColorConfig(pinColor)
-            local cR, cG, cB = colorConfig.background[1], colorConfig.background[2], colorConfig.background[3]
+            local colorConfig = ns.Config:GetResolvedColorConfig(note.data.pinColor or "hunter")
+            local bg = colorConfig.background
 
-            local noteFrame = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
-            noteFrame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
-            noteFrame:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yOffset)
-            noteFrame:SetHeight(50)
-            noteFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-            noteFrame:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], listItemColor[4])
-            noteFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-            local colorStrip = noteFrame:CreateTexture(nil, "ARTWORK")
-            colorStrip:SetSize(4, 46)
-            colorStrip:SetPoint("LEFT", noteFrame, "LEFT", 2, 0)
-            colorStrip:SetColorTexture(cR, cG, cB, 1)
-
-            local deleteBtn = CreateFrame("Button", nil, noteFrame)
-            deleteBtn:SetSize(22, 22)
-            deleteBtn:SetPoint("BOTTOMRIGHT", noteFrame, "BOTTOMRIGHT", -27, 5)
-            deleteBtn:SetNormalTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetPushedTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetHighlightTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:GetHighlightTexture():SetAlpha(0.5)
-            deleteBtn:SetScript("OnClick", function()
-                StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE"] = {
-                    text = string.format(L["POPUP_DELETE_NOTE"], note.data.title or "Untitled"),
-                    button1 = DELETE,
-                    button2 = CANCEL,
-                    OnAccept = function()
-                        NotesData:RemoveNote(note.id)
-                        if selectedNote == note.id then
-                            selectedNote = nil
-                            if emptyMessage then emptyMessage:Show() end
-                            if detailPanel.editorContent then
-                                for _, frame in pairs(detailPanel.editorContent) do
-                                    if frame and frame.Hide then frame:Hide() end
-                                end
-                            end
-                        end
-                        parent.RefreshNotesList()
-                    end,
-                    timeout = 0, whileDead = true, hideOnEscape = true,
-                }
-                StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE")
-            end)
-            deleteBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NOTE_DELETE"], 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NOTE_DELETE_DESC"], 0.8, 0.8, 0.8, true)
-                GameTooltip:Show()
-            end)
-            deleteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-            local propertiesBtn = CreateFrame("Button", nil, noteFrame)
-            propertiesBtn:SetSize(22, 22)
-            propertiesBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -1, 0)
-            propertiesBtn:SetNormalTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:SetPushedTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:SetHighlightTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:GetHighlightTexture():SetAlpha(0.5)
-            propertiesBtn:SetScript("OnClick", function()
-                if ns.UI.ShowNotePropertiesDialog then
-                    ns.UI.ShowNotePropertiesDialog(note.id)
-                end
-            end)
-            propertiesBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NOTE_PROPERTIES"], 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NOTE_PROPERTIES_DESC"], 0.8, 0.8, 0.8, true)
-                GameTooltip:Show()
-            end)
-            propertiesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-            local pinBtn = CreateFrame("CheckButton", nil, noteFrame)
-            pinBtn:SetSize(22, 22)
-            pinBtn:SetPoint("RIGHT", propertiesBtn, "LEFT", -1, 0)
-
-            local normalTex = pinBtn:CreateTexture(nil, "BACKGROUND")
-            normalTex:SetAllPoints()
-            normalTex:SetTexture(MEDIA .. "icon-pin.png")
-            local pinActive = note.data.pinEnabled and ns.notePins and ns.notePins[note.id]
-            if pinActive then
-                normalTex:SetDesaturated(false)
-                normalTex:SetAlpha(1.0)
-                pinBtn:SetChecked(true)
-            else
-                normalTex:SetDesaturated(true)
-                normalTex:SetAlpha(0.3)
-                pinBtn:SetChecked(false)
+            local iconAtlas
+            if note.data.noteType == "daily" then
+                iconAtlas = "questlog-questtypeicon-Daily"
+            elseif note.data.noteType == "weekly" then
+                iconAtlas = "questlog-questtypeicon-Weekly"
             end
-            pinBtn:SetNormalTexture(normalTex)
-
-            local checkedTex = pinBtn:CreateTexture(nil, "BACKGROUND")
-            checkedTex:SetAllPoints()
-            checkedTex:SetTexture(MEDIA .. "icon-pin.png")
-            pinBtn:SetCheckedTexture(checkedTex)
-
-            local highlightTex = pinBtn:CreateTexture(nil, "HIGHLIGHT")
-            highlightTex:SetAllPoints()
-            highlightTex:SetTexture(MEDIA .. "icon-pin.png")
-            highlightTex:SetAlpha(0.5)
-            pinBtn:SetHighlightTexture(highlightTex)
-
-            pinBtn:SetScript("OnClick", function(self)
-                if ns.NotesPins then
-                    local noteData2 = NotesData:GetAllNotes()[note.id]
-                    if noteData2 then
-                        if noteData2.pinEnabled and ns.notePins and ns.notePins[note.id] then
-                            ns.NotesPins:HideNotePin(note.id)
-                            noteData2.pinEnabled = false
-                            self:GetNormalTexture():SetDesaturated(true)
-                            self:GetNormalTexture():SetAlpha(0.3)
-                            self:SetChecked(false)
-                        else
-                            noteData2.pinEnabled = true
-                            ns.NotesPins:ShowNotePin(note.id)
-                            self:GetNormalTexture():SetDesaturated(false)
-                            self:GetNormalTexture():SetAlpha(1.0)
-                            self:SetChecked(true)
-                        end
-                        if parent.UpdateEditorButtons then parent.UpdateEditorButtons() end
-                    end
-                end
-            end)
-            pinBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NOTE_PIN"], 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NOTE_PIN_DESC"], 0.8, 0.8, 0.8, true)
-                GameTooltip:Show()
-            end)
-            pinBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-            local favoriteBtn = CreateFrame("CheckButton", nil, noteFrame)
-            favoriteBtn:SetSize(22, 22)
-            favoriteBtn:SetPoint("RIGHT", pinBtn, "LEFT", -1, 0)
-
-            local favNormalTex = favoriteBtn:CreateTexture(nil, "BACKGROUND")
-            favNormalTex:SetAllPoints()
-            favNormalTex:SetTexture(MEDIA .. "icon-fav.png")
-            if note.data.favorite then
-                favNormalTex:SetDesaturated(false)
-                favNormalTex:SetAlpha(1.0)
-                favoriteBtn:SetChecked(true)
-            else
-                favNormalTex:SetDesaturated(true)
-                favNormalTex:SetAlpha(0.3)
-                favoriteBtn:SetChecked(false)
-            end
-            favoriteBtn:SetNormalTexture(favNormalTex)
-
-            local favCheckedTex2 = favoriteBtn:CreateTexture(nil, "BACKGROUND")
-            favCheckedTex2:SetAllPoints()
-            favCheckedTex2:SetTexture(MEDIA .. "icon-fav.png")
-            favoriteBtn:SetCheckedTexture(favCheckedTex2)
-
-            local favHighlightTex2 = favoriteBtn:CreateTexture(nil, "HIGHLIGHT")
-            favHighlightTex2:SetAllPoints()
-            favHighlightTex2:SetTexture(MEDIA .. "icon-fav.png")
-            favHighlightTex2:SetAlpha(0.5)
-            favoriteBtn:SetHighlightTexture(favHighlightTex2)
-
-            favoriteBtn:SetScript("OnClick", function(self)
-                if ns.NotesData then
-                    local isFav = ns.NotesData:ToggleFavorite(note.id)
-                    if isFav then
-                        self:GetNormalTexture():SetDesaturated(false)
-                        self:GetNormalTexture():SetAlpha(1.0)
-                        self:SetChecked(true)
-                    else
-                        self:GetNormalTexture():SetDesaturated(true)
-                        self:GetNormalTexture():SetAlpha(0.3)
-                        self:SetChecked(false)
-                    end
-                    parent.RefreshNotesList()
-                    if parent.UpdateEditorButtons then parent.UpdateEditorButtons() end
-                end
-            end)
-            favoriteBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NOTE_FAVORITE"], 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NOTE_FAVORITE_DESC"], 0.8, 0.8, 0.8, true)
-                GameTooltip:Show()
-            end)
-            favoriteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-            if note.data.isNew then
-                local newFlagBtn = CreateFrame("Button", nil, noteFrame)
-                newFlagBtn:SetSize(22, 22)
-                newFlagBtn:SetPoint("RIGHT", favoriteBtn, "LEFT", -1, 0)
-                newFlagBtn:SetNormalTexture(MEDIA .. "icon-flag.png")
-                newFlagBtn:SetPushedTexture(MEDIA .. "icon-flag.png")
-                newFlagBtn:SetHighlightTexture(MEDIA .. "icon-flag.png")
-                newFlagBtn:GetHighlightTexture():SetAlpha(0.5)
-                newFlagBtn:SetScript("OnClick", function()
-                    if ns.NotesData then
-                        local noteData2 = ns.NotesData:FindNote(note.id)
-                        if noteData2 then
-                            noteData2.isNew = false
-                            noteData2.newTimestamp = nil
-                            parent.RefreshNotesList()
-                        end
-                    end
-                end)
-                newFlagBtn:SetScript("OnEnter", function(self)
-                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    GameTooltip:SetText(L["TOOLTIP_NOTE_NEW"], 1, 1, 1)
-                    GameTooltip:AddLine(L["UI_NOTE_REMOVE_FLAG_HINT"], 0.8, 0.8, 0.8, true)
-                    GameTooltip:Show()
-                end)
-                newFlagBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-            end
-
-            local titleText = OneWoW_GUI:CreateFS(noteFrame, 12)
-            titleText:SetPoint("TOPLEFT", noteFrame, "TOPLEFT", 12, -6)
-            titleText:SetPoint("TOPRIGHT", noteFrame, "TOPRIGHT", -80, -6)
-            titleText:SetJustifyH("LEFT")
-            titleText:SetText(note.data.title or L["NOTE_UNTITLED"])
-            titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-            local storageFS = OneWoW_GUI:CreateFS(noteFrame, 10)
-            storageFS:SetPoint("BOTTOMLEFT", noteFrame, "BOTTOMLEFT", 12, 6)
-            local stText = note.data.storage == "character" and (CHARACTER) or (L["STORAGE_ACCOUNT_WIDE"])
-            storageFS:SetText(stText)
-            storageFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             local canMoveUp   = groupArray ~= nil and groupIndex ~= nil and groupIndex > 1
             local canMoveDown = groupArray ~= nil and groupIndex ~= nil and groupIndex < #groupArray
 
-            local upBtn = CreateFrame("Button", nil, noteFrame)
-            upBtn:SetSize(18, 22)
-            upBtn:SetPoint("TOPRIGHT", noteFrame, "TOPRIGHT", -4, -3)
-            upBtn:SetNormalAtlas("common-button-collapseExpand-up")
-            upBtn:SetHighlightAtlas("common-button-collapseExpand-up")
-            if canMoveUp then upBtn:Show() else upBtn:Hide() end
-            upBtn:SetScript("OnClick", function()
-                if not canMoveUp then return end
+            local function EnsureManualSort()
                 if currentSort.by ~= "manual" then
                     currentSort.by = "manual"
                     currentSort.ascending = true
                     sortHandle:SetSort("manual", true)
                     ns.db.global.tabSortPrefs.notes = { by = "manual", ascending = true }
                 end
-                for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                groupArray[groupIndex].data.sortOrder     = groupIndex - 1
-                groupArray[groupIndex - 1].data.sortOrder = groupIndex
-                parent.RefreshNotesList()
-            end)
-
-            local downBtn = CreateFrame("Button", nil, noteFrame)
-            downBtn:SetSize(18, 22)
-            downBtn:SetPoint("BOTTOMRIGHT", noteFrame, "BOTTOMRIGHT", -4, 3)
-            downBtn:SetNormalAtlas("common-button-collapseExpand-down")
-            downBtn:SetHighlightAtlas("common-button-collapseExpand-down")
-            OneWoW_GUI:TintScrollReorderButtons(upBtn, downBtn)
-            if canMoveDown then downBtn:Show() else downBtn:Hide() end
-            downBtn:SetScript("OnClick", function()
-                if not canMoveDown then return end
-                if currentSort.by ~= "manual" then
-                    currentSort.by = "manual"
-                    currentSort.ascending = true
-                    sortHandle:SetSort("manual", true)
-                    ns.db.global.tabSortPrefs.notes = { by = "manual", ascending = true }
-                end
-                for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                groupArray[groupIndex].data.sortOrder     = groupIndex + 1
-                groupArray[groupIndex + 1].data.sortOrder = groupIndex
-                parent.RefreshNotesList()
-            end)
-
-            noteFrame:EnableMouse(true)
-            noteFrame:SetScript("OnMouseDown", function()
-                selectedNote = note.id
-                ShowEditor()
-                parent.RefreshNotesList()
-            end)
-            noteFrame:SetScript("OnEnter", function(self)
-                if selectedNote ~= note.id then
-                    self:SetBackdropColor(listItemColor[1] * 1.2, listItemColor[2] * 1.2, listItemColor[3] * 1.2, listItemColor[4] + 0.1)
-                end
-            end)
-            noteFrame:SetScript("OnLeave", function(self)
-                if selectedNote ~= note.id then
-                    self:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], listItemColor[4])
-                end
-            end)
-
-            if selectedNote == note.id then
-                noteFrame:SetBackdropColor(listItemColor[1] + 0.15, listItemColor[2] + 0.15, listItemColor[3] + 0.15, 0.9)
-                noteFrame:SetBackdropBorderColor(1, 0.82, 0, 1)
             end
 
-            table.insert(noteListItems, noteFrame)
+            local rowOpts = {
+                yOffset     = yOffset,
+                barColor    = { bg[1], bg[2], bg[3] },
+                icon        = "Interface\\Buttons\\UI-GuildButton-PublicNote-Up",
+                iconAtlas   = iconAtlas,
+                title       = note.data.title or L["NOTE_UNTITLED"],
+                storageText = note.data.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
+                selected    = (selectedNote == note.id),
+                onSelect    = function()
+                    selectedNote = note.id
+                    ShowEditor()
+                    parent.RefreshNotesList()
+                end,
+                pin = {
+                    active  = (note.data.pinEnabled and ns.notePins and ns.notePins[note.id]) and true or false,
+                    tooltip = { title = L["TOOLTIP_NOTE_PIN"], desc = L["TOOLTIP_NOTE_PIN_DESC"] },
+                    onToggle = function(state)
+                        if not ns.NotesPins then return end
+                        local noteData2 = NotesData:GetAllNotes()[note.id]
+                        if not noteData2 then return end
+                        if state then
+                            noteData2.pinEnabled = true
+                            ns.NotesPins:ShowNotePin(note.id)
+                        else
+                            ns.NotesPins:HideNotePin(note.id)
+                            noteData2.pinEnabled = false
+                        end
+                        if parent.UpdateEditorButtons then parent.UpdateEditorButtons() end
+                    end,
+                },
+                fav = {
+                    active  = note.data.favorite and true or false,
+                    tooltip = { title = L["TOOLTIP_NOTE_FAVORITE"], desc = L["TOOLTIP_NOTE_FAVORITE_DESC"] },
+                    onToggle = function()
+                        if ns.NotesData then
+                            ns.NotesData:ToggleFavorite(note.id)
+                            parent.RefreshNotesList()
+                            if parent.UpdateEditorButtons then parent.UpdateEditorButtons() end
+                        end
+                    end,
+                },
+                props = {
+                    tooltip = { title = L["TOOLTIP_NOTE_PROPERTIES"], desc = L["TOOLTIP_NOTE_PROPERTIES_DESC"] },
+                    onClick = function()
+                        if ns.UI.ShowNotePropertiesDialog then ns.UI.ShowNotePropertiesDialog(note.id) end
+                    end,
+                },
+                delete = {
+                    tooltip = { title = L["TOOLTIP_NOTE_DELETE"], desc = L["TOOLTIP_NOTE_DELETE_DESC"] },
+                    onClick = function()
+                        StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE"] = {
+                            text = string.format(L["POPUP_DELETE_NOTE"], note.data.title or L["NOTE_UNTITLED"]),
+                            button1 = DELETE,
+                            button2 = CANCEL,
+                            OnAccept = function()
+                                NotesData:RemoveNote(note.id)
+                                if selectedNote == note.id then
+                                    selectedNote = nil
+                                    if emptyMessage then emptyMessage:Show() end
+                                    if detailPanel.editorContent then
+                                        for _, frame in pairs(detailPanel.editorContent) do
+                                            if frame and frame.Hide then frame:Hide() end
+                                        end
+                                    end
+                                end
+                                parent.RefreshNotesList()
+                            end,
+                            timeout = 0, whileDead = true, hideOnEscape = true,
+                        }
+                        StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE")
+                    end,
+                },
+                reorder = {
+                    canUp = canMoveUp, canDown = canMoveDown,
+                    onUp = function()
+                        EnsureManualSort()
+                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
+                        groupArray[groupIndex].data.sortOrder     = groupIndex - 1
+                        groupArray[groupIndex - 1].data.sortOrder = groupIndex
+                        parent.RefreshNotesList()
+                    end,
+                    onDown = function()
+                        EnsureManualSort()
+                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
+                        groupArray[groupIndex].data.sortOrder     = groupIndex + 1
+                        groupArray[groupIndex + 1].data.sortOrder = groupIndex
+                        parent.RefreshNotesList()
+                    end,
+                },
+            }
+
+            if note.data.isNew then
+                rowOpts.newFlag = {
+                    tooltip = { title = L["TOOLTIP_NOTE_NEW"], desc = L["UI_NOTE_REMOVE_FLAG_HINT"] },
+                    onClick = function()
+                        if ns.NotesData then
+                            local noteData2 = ns.NotesData:FindNote(note.id)
+                            if noteData2 then
+                                noteData2.isNew = false
+                                noteData2.newTimestamp = nil
+                                parent.RefreshNotesList()
+                            end
+                        end
+                    end,
+                }
+            end
+
+            local row = ns.UI.CreateNotesListRow(scrollChild, rowOpts)
+            table.insert(noteListItems, row)
         end
 
         local yOffset = 0
@@ -1350,7 +1187,7 @@ function ns.UI.CreateNotesTab(parent)
         end
         for i, note in ipairs(special) do
             BuildNoteRow(note, yOffset, special, i)
-            yOffset = yOffset - 55
+            yOffset = yOffset - ns.UI.LIST_ROW_SPACING
         end
 
         if #newNotes > 0 then
@@ -1359,7 +1196,7 @@ function ns.UI.CreateNotesTab(parent)
         end
         for i, note in ipairs(newNotes) do
             BuildNoteRow(note, yOffset, newNotes, i)
-            yOffset = yOffset - 55
+            yOffset = yOffset - ns.UI.LIST_ROW_SPACING
         end
 
         if #favorites > 0 then
@@ -1368,7 +1205,7 @@ function ns.UI.CreateNotesTab(parent)
         end
         for i, note in ipairs(favorites) do
             BuildNoteRow(note, yOffset, favorites, i)
-            yOffset = yOffset - 55
+            yOffset = yOffset - ns.UI.LIST_ROW_SPACING
         end
 
         if #regular > 0 then
@@ -1377,7 +1214,7 @@ function ns.UI.CreateNotesTab(parent)
         end
         for i, note in ipairs(regular) do
             BuildNoteRow(note, yOffset, regular, i)
-            yOffset = yOffset - 55
+            yOffset = yOffset - ns.UI.LIST_ROW_SPACING
         end
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)

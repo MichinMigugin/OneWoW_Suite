@@ -179,6 +179,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
 -- Storage / Category labels
     ["STORAGE_ACCOUNT_WIDE"] = "Tutto l'account",
+    ["LABEL_ICON"] = "Icona",
 
 -- Label fields (for dialogs)
     ["LABEL_NOTE_TITLE"] = "Titolo della nota",

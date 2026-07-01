@@ -711,142 +711,92 @@ function ns.UI.CreateItemsTab(parent)
         table.sort(regular,   sortItems)
 
         local function BuildItemRow(item, yOffset)
-            local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
-            row:SetSize(scrollChild:GetWidth(), 50)
-            row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
-            row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            local barColor
+            local qc = ITEM_QUALITY_COLORS[item.data.rarity or 1]
+            if qc then
+                -- Dim the (full-bright) quality color to match the other tabs' bars.
+                barColor = { qc.r * 0.7, qc.g * 0.7, qc.b * 0.7 }
+            end
 
-            local icon = row:CreateTexture(nil, "ARTWORK")
-            icon:SetSize(32, 32)
-            icon:SetPoint("LEFT", row, "LEFT", 8, 0)
-            icon:SetTexture(item.data.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
-
-            local titleText = OneWoW_GUI:CreateFS(row, 12)
-            titleText:SetPoint("TOPLEFT", row, "TOPLEFT", 48, -10)
-            titleText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -10, -10)
-            titleText:SetJustifyH("LEFT")
-            titleText:SetText(item.data.name or ("Item " .. item.id))
-            titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-            local deleteBtn = CreateFrame("Button", nil, row)
-            deleteBtn:SetSize(18, 18)
-            deleteBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -5, 5)
-            deleteBtn:SetNormalTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetPushedTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetHighlightTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:GetHighlightTexture():SetAlpha(0.5)
-            deleteBtn:SetScript("OnClick", function()
-                StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_ITEM"] = {
-                    text = string.format(L["POPUP_DELETE_ITEM"]),
-                    button1 = DELETE, button2 = CANCEL,
-                    OnAccept = function()
-                        if ns.Items then
-                            ns.Items:RemoveItem(item.id)
-                            if selectedItem == item.id then
-                                selectedItem = nil
-                                emptyMessage:Show()
-                                if detailPanel.editorContent then
-                                    for _, f in pairs(detailPanel.editorContent) do
-                                        if f and f.Hide then f:Hide() end
-                                    end
-                                end
-                            end
-                            parent.RefreshItemsList()
-                        end
-                    end,
-                    timeout = 0, whileDead = true, hideOnEscape = true,
-                }
-                StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE_ITEM")
-            end)
-
-            local propertiesBtn = CreateFrame("Button", nil, row)
-            propertiesBtn:SetSize(18, 18)
-            propertiesBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -2, 0)
-            propertiesBtn:SetNormalTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:SetPushedTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:SetHighlightTexture(MEDIA .. "icon-gears.png")
-            propertiesBtn:GetHighlightTexture():SetAlpha(0.5)
-            propertiesBtn:SetScript("OnClick", function()
-                if ns.UI.ShowItemPropertiesDialog then
-                    ns.UI.ShowItemPropertiesDialog(item.id, parent)
-                end
-            end)
-
-            local alertBtn = CreateFrame("CheckButton", nil, row)
-            alertBtn:SetSize(18, 18)
-            alertBtn:SetPoint("RIGHT", propertiesBtn, "LEFT", -2, 0)
-            local aN = alertBtn:CreateTexture(nil, "BACKGROUND")
-            aN:SetAllPoints()
-            aN:SetTexture(MEDIA .. "icon-alert.png")
-            aN:SetDesaturated(not item.data.alertOnLoot)
-            aN:SetAlpha(item.data.alertOnLoot and 1.0 or 0.3)
-            alertBtn:SetNormalTexture(aN)
-            alertBtn:SetScript("OnClick", function()
-                if ns.Items then
-                    local itemData = ns.Items:GetItem(item.id)
-                    if itemData then
-                        itemData.alertOnLoot = not itemData.alertOnLoot
-                        aN:SetDesaturated(not itemData.alertOnLoot)
-                        aN:SetAlpha(itemData.alertOnLoot and 1.0 or 0.3)
+            local rowOpts = {
+                yOffset     = yOffset,
+                barColor    = barColor,
+                icon        = item.data.icon or "Interface\\Icons\\INV_Misc_QuestionMark",
+                title       = item.data.name or ("Item " .. item.id),
+                storageText = item.data.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
+                selected    = (selectedItem == item.id),
+                onSelect    = function()
+                    selectedItem = item.id
+                    ShowEditor()
+                    parent.RefreshItemsList()
+                end,
+                alert = {
+                    active  = item.data.alertOnLoot and true or false,
+                    tooltip = { title = L["ITEM_ALERT_ON_LOOT"], desc = L["ITEM_ALERT_ON_LOOT_DESC"] },
+                    onToggle = function(state)
+                        if not ns.Items then return end
+                        local itemData = ns.Items:GetItem(item.id)
+                        if not itemData then return end
+                        itemData.alertOnLoot = state
                         ns.Items:SaveItem(item.id, itemData)
                         if detailPanel.editorContent and detailPanel.editorContent.header then
                             local h = detailPanel.editorContent.header
                             if h.alertBtn and selectedItem == item.id then
-                                h.alertBtn:GetNormalTexture():SetDesaturated(not itemData.alertOnLoot)
-                                h.alertBtn:GetNormalTexture():SetAlpha(itemData.alertOnLoot and 1.0 or 0.3)
-                                h.alertBtn:SetChecked(itemData.alertOnLoot)
+                                h.alertBtn:GetNormalTexture():SetDesaturated(not state)
+                                h.alertBtn:GetNormalTexture():SetAlpha(state and 1.0 or 0.3)
+                                h.alertBtn:SetChecked(state)
                             end
                         end
-                    end
-                end
-            end)
+                    end,
+                },
+                fav = {
+                    active  = item.data.favorite and true or false,
+                    tooltip = { title = L["TOOLTIP_ITEM_FAVORITE"], desc = L["TOOLTIP_ITEM_FAVORITE_DESC"] },
+                    onToggle = function(state)
+                        if not ns.Items then return end
+                        local itemData = ns.Items:GetItem(item.id)
+                        if itemData then
+                            itemData.favorite = state
+                            ns.Items:SaveItem(item.id, itemData)
+                            parent.RefreshItemsList()
+                        end
+                    end,
+                },
+                props = {
+                    tooltip = { title = L["TOOLTIP_ITEM_PROPERTIES_DESC"] },
+                    onClick = function()
+                        if ns.UI.ShowItemPropertiesDialog then ns.UI.ShowItemPropertiesDialog(item.id, parent) end
+                    end,
+                },
+                delete = {
+                    tooltip = { title = L["TOOLTIP_ITEM_DELETE"], desc = L["TOOLTIP_ITEM_DELETE_DESC"] },
+                    onClick = function()
+                        StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_ITEM"] = {
+                            text = string.format(L["POPUP_DELETE_ITEM"]),
+                            button1 = DELETE, button2 = CANCEL,
+                            OnAccept = function()
+                                if ns.Items then
+                                    ns.Items:RemoveItem(item.id)
+                                    if selectedItem == item.id then
+                                        selectedItem = nil
+                                        emptyMessage:Show()
+                                        if detailPanel.editorContent then
+                                            for _, f in pairs(detailPanel.editorContent) do
+                                                if f and f.Hide then f:Hide() end
+                                            end
+                                        end
+                                    end
+                                    parent.RefreshItemsList()
+                                end
+                            end,
+                            timeout = 0, whileDead = true, hideOnEscape = true,
+                        }
+                        StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE_ITEM")
+                    end,
+                },
+            }
 
-            local favBtn = CreateFrame("CheckButton", nil, row)
-            favBtn:SetSize(18, 18)
-            favBtn:SetPoint("RIGHT", alertBtn, "LEFT", -2, 0)
-            local fN = favBtn:CreateTexture(nil, "BACKGROUND")
-            fN:SetAllPoints()
-            fN:SetTexture(MEDIA .. "icon-fav.png")
-            fN:SetDesaturated(not item.data.favorite)
-            fN:SetAlpha(item.data.favorite and 1.0 or 0.3)
-            favBtn:SetNormalTexture(fN)
-            favBtn:SetScript("OnClick", function()
-                if ns.Items then
-                    local itemData = ns.Items:GetItem(item.id)
-                    if itemData then
-                        itemData.favorite = not itemData.favorite
-                        fN:SetDesaturated(not itemData.favorite)
-                        fN:SetAlpha(itemData.favorite and 1.0 or 0.3)
-                        ns.Items:SaveItem(item.id, itemData)
-                        parent.RefreshItemsList()
-                    end
-                end
-            end)
-
-            row:EnableMouse(true)
-            row:SetScript("OnMouseDown", function()
-                selectedItem = item.id
-                ShowEditor()
-                parent.RefreshItemsList()
-            end)
-            row:SetScript("OnEnter", function(self)
-                if selectedItem ~= item.id then
-                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-                end
-            end)
-            row:SetScript("OnLeave", function(self)
-                if selectedItem ~= item.id then
-                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                end
-            end)
-
-            if selectedItem == item.id then
-                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                row:SetBackdropBorderColor(1, 0.82, 0, 1)
-            end
-
+            local row = ns.UI.CreateNotesListRow(scrollChild, rowOpts)
             table.insert(itemListItems, row)
         end
 
@@ -856,19 +806,19 @@ function ns.UI.CreateItemsTab(parent)
             CreateSectionHeader(NEW, yOffset)
             yOffset = yOffset - 30
         end
-        for _, item in ipairs(newItems) do BuildItemRow(item, yOffset) yOffset = yOffset - 55 end
+        for _, item in ipairs(newItems) do BuildItemRow(item, yOffset) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
 
         if #favorites > 0 then
             CreateSectionHeader(FAVORITES, yOffset)
             yOffset = yOffset - 30
         end
-        for _, item in ipairs(favorites) do BuildItemRow(item, yOffset) yOffset = yOffset - 55 end
+        for _, item in ipairs(favorites) do BuildItemRow(item, yOffset) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
 
         if #regular > 0 then
             CreateSectionHeader(L["TAB_ITEMS"], yOffset)
             yOffset = yOffset - 30
         end
-        for _, item in ipairs(regular) do BuildItemRow(item, yOffset) yOffset = yOffset - 55 end
+        for _, item in ipairs(regular) do BuildItemRow(item, yOffset) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
         if leftStatusText then

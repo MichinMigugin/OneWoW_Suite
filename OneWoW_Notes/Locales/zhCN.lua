@@ -179,6 +179,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
 -- Storage / Category labels
     ["STORAGE_ACCOUNT_WIDE"] = "全账号",
+    ["LABEL_ICON"] = "图标",
 
 -- Label fields (for dialogs)
     ["LABEL_NOTE_TITLE"] = "笔记标题",

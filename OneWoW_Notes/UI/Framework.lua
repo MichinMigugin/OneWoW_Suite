@@ -3,6 +3,8 @@ local _, ns = ...
 ns.UI = ns.UI or {}
 
 local OneWoW_GUI = OneWoW_GUI
+local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
+local MEDIA = "Interface\\AddOns\\OneWoW_Notes\\Media\\"
 
 function ns.UI.CreateSplitPanel(parent)
     local panels = OneWoW_GUI:CreateSplitPanel(parent)
@@ -121,14 +123,15 @@ function ns.UI.CreateFontDropdown(parent, width, height)
     local function RefreshText()
         textFS:SetText(dropdown._displayText)
 
+        -- Preview the selected font, but route through SafeSetFont so a font
+        -- whose file fails to load falls back to a stock path (instead of
+        -- rendering blank — the "disappearing selection" bug) and so it honors
+        -- the global font-size offset like the rest of the themed chrome.
+        local fontPath
         if dropdown._value and dropdown._value ~= "default" then
-            local fontPath = OneWoW_GUI:GetFontByKey(dropdown._value)
-            if fontPath then
-                textFS:SetFont(fontPath, 11, "")
-                return
-            end
+            fontPath = OneWoW_GUI:GetFontByKey(dropdown._value)
         end
-        textFS:SetFontObject("GameFontNormalSmall")
+        OneWoW_GUI:SafeSetFont(textFS, fontPath, 11)
     end
 
     function dropdown:SetOptions(options) self._options = options end
@@ -210,6 +213,347 @@ function ns.UI.CloseAllOpenDropdowns()
     end
 end
 
+-- =====================================================================
+-- Shared list row for the Notes/Zones/Players/NPCs/Items tabs.
+-- One standard "bubble": [color bar] [icon] [title (2-line) / detail /
+-- storage] [action icons, vertically centered] [reorder arrows].
+-- =====================================================================
+
+ns.UI.LIST_ROW_HEIGHT  = 52
+ns.UI.LIST_ROW_SPACING = 57   -- row height + gap; used as the per-row yOffset step
+
+local ACTION_BTN = 18
+local ACTION_GAP = 2
+
+local function AttachRowTooltip(btn, tip)
+    if not tip then return end
+    btn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(tip.title or "", 1, 1, 1)
+        if tip.desc then GameTooltip:AddLine(tip.desc, 0.8, 0.8, 0.8, true) end
+        GameTooltip:Show()
+    end)
+    btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+end
+
+local function MakeActionButton(row, iconPath)
+    local b = CreateFrame("Button", nil, row)
+    b:SetSize(ACTION_BTN, ACTION_BTN)
+    b:SetNormalTexture(iconPath)
+    b:SetPushedTexture(iconPath)
+    b:SetHighlightTexture(iconPath)
+    b:GetHighlightTexture():SetAlpha(0.5)
+    return b
+end
+
+-- Toggle button: owns its desaturate/alpha/checked visuals. onToggle(newState)
+-- is called after the visual flips so callers just persist the new value.
+local function MakeToggleButton(row, iconPath, active, onToggle)
+    local b = CreateFrame("CheckButton", nil, row)
+    b:SetSize(ACTION_BTN, ACTION_BTN)
+
+    local tex = b:CreateTexture(nil, "BACKGROUND")
+    tex:SetAllPoints()
+    tex:SetTexture(iconPath)
+    local function render(a)
+        tex:SetDesaturated(not a)
+        tex:SetAlpha(a and 1.0 or 0.3)
+        b:SetChecked(a and true or false)
+    end
+    render(active)
+    b:SetNormalTexture(tex)
+
+    local chk = b:CreateTexture(nil, "BACKGROUND")
+    chk:SetAllPoints()
+    chk:SetTexture(iconPath)
+    b:SetCheckedTexture(chk)
+
+    local hl = b:CreateTexture(nil, "HIGHLIGHT")
+    hl:SetAllPoints()
+    hl:SetTexture(iconPath)
+    hl:SetAlpha(0.5)
+    b:SetHighlightTexture(hl)
+
+    b._active = active and true or false
+    b._render = render
+    b:SetScript("OnClick", function(self)
+        local newState = not self._active
+        self._active = newState
+        render(newState)
+        if onToggle then onToggle(newState) end
+    end)
+    return b
+end
+
+-- opts:
+--   yOffset, height, selected, onSelect
+--   barColor = {r,g,b} | nil          -- left accent bar
+--   icon = texturePath | nil, iconAtlas = atlasName | nil
+--   title, detail, storageText        -- text block (title wraps to 2 lines)
+--   pin/alert/fav = { active, onToggle, tooltip }  (toggles)
+--   gotoAction/props/delete/newFlag = { onClick, tooltip }  (buttons)
+--   reorder = { canUp, canDown, onUp, onDown }
+function ns.UI.CreateNotesListRow(scrollChild, opts)
+    local height = opts.height or ns.UI.LIST_ROW_HEIGHT
+
+    local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
+    row:SetPoint("TOPLEFT",  scrollChild, "TOPLEFT",  0, opts.yOffset)
+    row:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, opts.yOffset)
+    row:SetHeight(height)
+    row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+    if opts.barColor then
+        local bar = row:CreateTexture(nil, "ARTWORK")
+        bar:SetPoint("TOPLEFT", row, "TOPLEFT", 2, -3)
+        bar:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 2, 3)
+        bar:SetWidth(4)
+        bar:SetColorTexture(opts.barColor[1], opts.barColor[2], opts.barColor[3], 1)
+        row.colorBar = bar
+    end
+
+    local iconX = opts.barColor and 10 or 8
+    local textX = opts.barColor and 12 or 10
+    if opts.icon or opts.iconAtlas then
+        local icon = row:CreateTexture(nil, "ARTWORK")
+        icon:SetSize(26, 26)
+        icon:SetPoint("LEFT", row, "LEFT", iconX, 0)
+        if opts.iconAtlas and C_Texture.GetAtlasInfo(opts.iconAtlas) then
+            icon:SetAtlas(opts.iconAtlas)
+        else
+            icon:SetTexture(opts.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+            icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+        end
+        row.iconTexture = icon
+        textX = iconX + 26 + 6
+    end
+
+    local rightReserve = 6
+    if opts.reorder then
+        local up = CreateFrame("Button", nil, row)
+        up:SetSize(18, 22)
+        up:SetPoint("TOPRIGHT", row, "TOPRIGHT", -4, -3)
+        up:SetNormalAtlas("common-button-collapseExpand-up")
+        up:SetHighlightAtlas("common-button-collapseExpand-up")
+        if opts.reorder.canUp then up:Show() else up:Hide() end
+        up:SetScript("OnClick", function()
+            if opts.reorder.canUp and opts.reorder.onUp then opts.reorder.onUp() end
+        end)
+
+        local down = CreateFrame("Button", nil, row)
+        down:SetSize(18, 22)
+        down:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -4, 3)
+        down:SetNormalAtlas("common-button-collapseExpand-down")
+        down:SetHighlightAtlas("common-button-collapseExpand-down")
+        OneWoW_GUI:TintScrollReorderButtons(up, down)
+        if opts.reorder.canDown then down:Show() else down:Hide() end
+        down:SetScript("OnClick", function()
+            if opts.reorder.canDown and opts.reorder.onDown then opts.reorder.onDown() end
+        end)
+        row.reorderUp, row.reorderDown = up, down
+        rightReserve = 26
+    end
+
+    -- Action cluster: pinned to the bottom-right, filling right -> left. Living
+    -- in the bottom band (not vertically centered) keeps it from stealing the
+    -- title's horizontal width, so the title stays readable in narrow lists.
+    local anchor
+    local function place(btn)
+        if anchor then
+            btn:SetPoint("RIGHT", anchor, "LEFT", -ACTION_GAP, 0)
+        else
+            btn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -rightReserve, 5)
+        end
+        anchor = btn
+    end
+
+    if opts.delete then
+        local b = MakeActionButton(row, MEDIA .. "icon-trash.png")
+        b:SetScript("OnClick", opts.delete.onClick)
+        AttachRowTooltip(b, opts.delete.tooltip)
+        place(b); row.deleteBtn = b
+    end
+    if opts.props then
+        local b = MakeActionButton(row, MEDIA .. "icon-gears.png")
+        b:SetScript("OnClick", opts.props.onClick)
+        AttachRowTooltip(b, opts.props.tooltip)
+        place(b); row.propsBtn = b
+    end
+    if opts.fav then
+        local b = MakeToggleButton(row, MEDIA .. "icon-fav.png", opts.fav.active, opts.fav.onToggle)
+        AttachRowTooltip(b, opts.fav.tooltip)
+        place(b); row.favBtn = b
+    end
+    if opts.alert then
+        local b = MakeToggleButton(row, MEDIA .. "icon-alert.png", opts.alert.active, opts.alert.onToggle)
+        AttachRowTooltip(b, opts.alert.tooltip)
+        place(b); row.alertBtn = b
+    end
+    if opts.gotoAction then
+        local b = MakeActionButton(row, MEDIA .. "icon-compass.png")
+        b:SetScript("OnClick", opts.gotoAction.onClick)
+        AttachRowTooltip(b, opts.gotoAction.tooltip)
+        place(b); row.gotoBtn = b
+    end
+    if opts.pin then
+        local b = MakeToggleButton(row, MEDIA .. "icon-pin.png", opts.pin.active, opts.pin.onToggle)
+        AttachRowTooltip(b, opts.pin.tooltip)
+        place(b); row.pinBtn = b
+    end
+    if opts.newFlag then
+        local b = MakeActionButton(row, MEDIA .. "icon-flag.png")
+        b:SetScript("OnClick", opts.newFlag.onClick)
+        AttachRowTooltip(b, opts.newFlag.tooltip)
+        place(b); row.newFlagBtn = b
+    end
+
+    -- Title spans the top band, nearly full width (only the reorder-arrow column
+    -- is reserved). The action cluster lives in the bottom band, so it does not
+    -- constrain the title. Storage/detail are pinned to the bottom, in the box.
+    local titleRight = -(rightReserve + 4)
+
+    local title = OneWoW_GUI:CreateFS(row, 12)
+    title:SetPoint("TOPLEFT",  row, "TOPLEFT",  textX, -7)
+    title:SetPoint("TOPRIGHT", row, "TOPRIGHT", titleRight, -7)
+    title:SetJustifyH("LEFT")
+    title:SetWordWrap(false)
+    title:SetText(opts.title or "")
+    title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    row.titleFS = title
+
+    local storageFS
+    if opts.storageText and opts.storageText ~= "" then
+        storageFS = OneWoW_GUI:CreateFS(row, 10)
+        storageFS:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", textX, 7)
+        storageFS:SetJustifyH("LEFT")
+        storageFS:SetText(opts.storageText)
+        storageFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        row.storageFS = storageFS
+    end
+
+    if opts.detail and opts.detail ~= "" then
+        local detail = OneWoW_GUI:CreateFS(row, 10)
+        if storageFS then
+            detail:SetPoint("BOTTOMLEFT", storageFS, "TOPLEFT", 0, 1)
+        else
+            detail:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", textX, 7)
+        end
+        detail:SetPoint("RIGHT", row, "RIGHT", titleRight, 0)
+        detail:SetJustifyH("LEFT")
+        detail:SetWordWrap(false)
+        detail:SetText(opts.detail)
+        detail:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        row.detailFS = detail
+    end
+
+    row:EnableMouse(true)
+    row:SetScript("OnMouseDown", function()
+        if opts.onSelect then opts.onSelect() end
+    end)
+    row:SetScript("OnEnter", function(self)
+        if not opts.selected then self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER")) end
+    end)
+    row:SetScript("OnLeave", function(self)
+        if not opts.selected then self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY")) end
+    end)
+    if opts.selected then
+        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        row:SetBackdropBorderColor(1, 0.82, 0, 1)
+    end
+
+    return row
+end
+
+-- Curated icon set for the per-note icon picker (NPC/Zone notes). Every entry
+-- uses a guaranteed-present texture (evergreen Blizzard art or shipped Media),
+-- and the key is what gets persisted in SavedVariables.
+ns.UI.NOTE_ICONS = {
+    { key = "gossip",   texture = "Interface\\GossipFrame\\GossipGossipIcon" },
+    { key = "quest",    texture = "Interface\\GossipFrame\\AvailableQuestIcon" },
+    { key = "skull",    texture = "Interface\\TargetingFrame\\UI-TargetingFrame-Skull" },
+    { key = "map",      texture = "Interface\\Icons\\INV_Misc_Map_01" },
+    { key = "vendor",   texture = "Interface\\Icons\\INV_Misc_Coin_01" },
+    { key = "question", texture = "Interface\\Icons\\INV_Misc_QuestionMark" },
+    { key = "flag",     texture = MEDIA .. "icon-flag.png" },
+    { key = "compass",  texture = MEDIA .. "icon-compass.png" },
+    { key = "pin",      texture = MEDIA .. "icon-pin.png" },
+    { key = "alert",    texture = MEDIA .. "icon-alert.png" },
+    { key = "star",     texture = MEDIA .. "icon-fav.png" },
+    { key = "horde",    texture = MEDIA .. "horde-mini.png" },
+    { key = "alliance", texture = MEDIA .. "alliance-mini.png" },
+    { key = "neutral",  texture = MEDIA .. "neutral-mini.png" },
+}
+
+local _noteIconByKey = {}
+for _, def in ipairs(ns.UI.NOTE_ICONS) do _noteIconByKey[def.key] = def.texture end
+
+--- Resolves a stored icon key to its texture. Returns nil for unknown/absent keys.
+function ns.UI.ResolveNoteIcon(key)
+    return key and _noteIconByKey[key] or nil
+end
+
+-- A compact grid of selectable icons. opts:
+--   selectedKey, onSelect(key), size (default 26), perRow (default 7)
+function ns.UI.CreateIconPicker(parent, opts)
+    opts = opts or {}
+    local size   = opts.size or 26
+    local perRow = opts.perRow or 7
+    local gap    = 4
+    local icons  = ns.UI.NOTE_ICONS
+
+    local picker = CreateFrame("Frame", nil, parent)
+    picker._selectedKey = opts.selectedKey
+    picker._buttons = {}
+
+    local function refreshSelection()
+        for _, b in ipairs(picker._buttons) do
+            if b._iconKey == picker._selectedKey then
+                b:SetBackdropBorderColor(1, 0.82, 0, 1)
+            else
+                b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            end
+        end
+    end
+
+    for i, def in ipairs(icons) do
+        local col = (i - 1) % perRow
+        local rowN = math.floor((i - 1) / perRow)
+
+        local b = CreateFrame("Button", nil, picker, "BackdropTemplate")
+        b:SetSize(size, size)
+        b:SetPoint("TOPLEFT", picker, "TOPLEFT", col * (size + gap), -rowN * (size + gap))
+        b:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        b:SetBackdropColor(0, 0, 0, 0)
+        b._iconKey = def.key
+
+        local tex = b:CreateTexture(nil, "ARTWORK")
+        tex:SetPoint("TOPLEFT", 2, -2)
+        tex:SetPoint("BOTTOMRIGHT", -2, 2)
+        tex:SetTexture(def.texture)
+        tex:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+
+        local hl = b:CreateTexture(nil, "HIGHLIGHT")
+        hl:SetAllPoints()
+        hl:SetColorTexture(1, 1, 1, 0.2)
+
+        b:SetScript("OnClick", function(self)
+            picker._selectedKey = self._iconKey
+            refreshSelection()
+            if opts.onSelect then opts.onSelect(self._iconKey) end
+        end)
+
+        table.insert(picker._buttons, b)
+    end
+
+    local rows = math.ceil(#icons / perRow)
+    picker:SetWidth(perRow * (size + gap) - gap)
+    picker:SetHeight(rows * (size + gap) - gap)
+    refreshSelection()
+
+    return picker
+end
+
 local _themedDialogs = {}
 
 function ns.UI.CreateThemedDialog(config)
@@ -270,9 +614,20 @@ function ns.UI.CreateCustomScroll(parent)
     local container = CreateFrame("Frame", nil, parent)
 
     local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(container, {})
+    -- Fill the container. CreateScrollFrame already reserves a scrollbar gutter
+    -- on the scroll child; the old extra -14 inset here double-counted it and
+    -- left a wide empty strip on the right. Reserve the scrollbar width once so
+    -- rows extend to just before the scrollbar, matching the search box above.
     scrollFrame:ClearAllPoints()
     scrollFrame:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
-    scrollFrame:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", -14, 0)
+    scrollFrame:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", 0, 0)
+
+    local function syncWidth()
+        scrollChild:SetWidth(math.max(1, scrollFrame:GetWidth() - 20))
+    end
+    scrollFrame:HookScript("OnSizeChanged", syncWidth)
+    scrollFrame:HookScript("OnShow", syncWidth)
+    syncWidth()
 
     return {
         container   = container,

@@ -179,6 +179,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
 -- Storage / Category labels
     ["STORAGE_ACCOUNT_WIDE"] = "Accountweit",
+    ["LABEL_ICON"] = "Symbol",
 
 -- Label fields (for dialogs)
     ["LABEL_NOTE_TITLE"] = "Notiztitel",

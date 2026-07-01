@@ -893,200 +893,131 @@ function ns.UI.CreateNPCsTab(parent)
         table.sort(regular,   sortNPCs)
 
         local function BuildNPCRow(npc, yOffset, groupArray, groupIndex)
-            local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
-            row:SetSize(scrollChild:GetWidth(), 64)
-            row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
-            row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            local canMoveUp   = groupArray ~= nil and groupIndex ~= nil and groupIndex > 1
+            local canMoveDown = groupArray ~= nil and groupIndex ~= nil and groupIndex < #groupArray
 
-            local nameText = OneWoW_GUI:CreateFS(row, 12)
-            nameText:SetPoint("TOPLEFT",  row, "TOPLEFT",  10, -10)
-            nameText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -27, -10)
-            nameText:SetJustifyH("LEFT")
-            nameText:SetText(npc.data.name or ("NPC " .. tostring(npc.id)))
-            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            local function EnsureManualSort()
+                if currentSort.by ~= "manual" then
+                    currentSort.by = "manual"
+                    currentSort.ascending = true
+                    npcSortHandle:SetSort("manual", true)
+                    ns.db.global.tabSortPrefs.npcs = { by = "manual", ascending = true }
+                end
+            end
 
-            local subText = OneWoW_GUI:CreateFS(row, 10)
-            subText:SetPoint("TOPLEFT", row, "TOPLEFT", 10, -30)
-            subText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -10, -30)
-            subText:SetJustifyH("LEFT")
-            subText:SetText(npc.data.zone or "")
-            subText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-            local deleteBtn = CreateFrame("Button", nil, row)
-            deleteBtn:SetSize(18, 18)
-            deleteBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -27, 6)
-            deleteBtn:SetNormalTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetPushedTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetHighlightTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:GetHighlightTexture():SetAlpha(0.5)
-            deleteBtn:SetScript("OnClick", function()
-                StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_NPC"] = {
-                    text = L["POPUP_DELETE_NPC"],
-                    button1 = DELETE, button2 = CANCEL,
-                    OnAccept = function()
+            local rowOpts = {
+                yOffset     = yOffset,
+                barColor    = { 0.5, 0.5, 0.5 },
+                icon        = ns.UI.ResolveNoteIcon(npc.data.iconKey) or "Interface\\GossipFrame\\GossipGossipIcon",
+                title       = npc.data.name or ("NPC " .. tostring(npc.id)),
+                detail      = npc.data.zone or "",
+                storageText = npc.data.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
+                selected    = (selectedNPC == npc.id),
+                onSelect    = function()
+                    selectedNPC = npc.id
+                    ShowEditor()
+                    parent.RefreshNPCsList()
+                end,
+                gotoAction = {
+                    tooltip = { title = L["UI_NPC_GOTO_TITLE"], desc = L["UI_NPC_CREATE_WAYPOINT"] },
+                    onClick = function()
                         if ns.NPCs then
-                            ns.NPCs:RemoveNPC(npc.id)
-                            if selectedNPC == npc.id then
-                                selectedNPC = nil
-                                emptyMessage:Show()
-                                if detailPanel.editorContent then
-                                    for _, f in pairs(detailPanel.editorContent) do
-                                        if f and f.Hide then f:Hide() end
-                                    end
-                                end
+                            local nd = ns.NPCs:GetNPC(npc.id)
+                            if nd and nd.mapID and nd.coords then
+                                ns.NPCs:CreateWaypoint(npc.id, nd)
+                            else
+                                print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_NO_LOCATION"]))
                             end
-                            parent.RefreshNPCsList()
                         end
                     end,
-                    timeout = 0, whileDead = true, hideOnEscape = true,
-                }
-                StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE_NPC")
-            end)
-
-            local propBtn = CreateFrame("Button", nil, row)
-            propBtn:SetSize(18, 18)
-            propBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -2, 0)
-            propBtn:SetNormalTexture(MEDIA .. "icon-gears.png")
-            propBtn:SetPushedTexture(MEDIA .. "icon-gears.png")
-            propBtn:SetHighlightTexture(MEDIA .. "icon-gears.png")
-            propBtn:GetHighlightTexture():SetAlpha(0.5)
-            propBtn:SetScript("OnClick", function()
-                if ns.UI.ShowNPCPropertiesDialog then ns.UI.ShowNPCPropertiesDialog(npc.id, parent) end
-            end)
-
-            local gotoBtn2 = CreateFrame("Button", nil, row)
-            gotoBtn2:SetSize(18, 18)
-            gotoBtn2:SetPoint("RIGHT", propBtn, "LEFT", -2, 0)
-            gotoBtn2:SetNormalTexture(MEDIA .. "icon-compass.png")
-            gotoBtn2:SetPushedTexture(MEDIA .. "icon-compass.png")
-            gotoBtn2:SetHighlightTexture(MEDIA .. "icon-compass.png")
-            gotoBtn2:GetHighlightTexture():SetAlpha(0.5)
-            gotoBtn2:SetScript("OnClick", function()
-                if ns.NPCs then
-                    local nd = ns.NPCs:GetNPC(npc.id)
-                    if nd and nd.mapID and nd.coords then
-                        ns.NPCs:CreateWaypoint(npc.id, nd)
-                    else
-                        print("|cFFFFD100OneWoW - NPCs:|r " .. (L["MSG_NPC_NO_LOCATION"]))
-                    end
-                end
-            end)
-
-            local alertBtn2 = CreateFrame("CheckButton", nil, row)
-            alertBtn2:SetSize(18, 18)
-            alertBtn2:SetPoint("RIGHT", gotoBtn2, "LEFT", -2, 0)
-            local aN2 = alertBtn2:CreateTexture(nil, "BACKGROUND")
-            aN2:SetAllPoints() aN2:SetTexture(MEDIA .. "icon-alert.png")
-            aN2:SetDesaturated(not npc.data.alertOnFound)
-            aN2:SetAlpha(npc.data.alertOnFound and 1.0 or 0.3)
-            alertBtn2:SetNormalTexture(aN2)
-            alertBtn2:SetScript("OnClick", function()
-                if ns.NPCs then
-                    local nd = ns.NPCs:GetNPC(npc.id)
-                    if nd then
-                        nd.alertOnFound = not nd.alertOnFound
-                        aN2:SetDesaturated(not nd.alertOnFound)
-                        aN2:SetAlpha(nd.alertOnFound and 1.0 or 0.3)
+                },
+                alert = {
+                    active  = npc.data.alertOnFound and true or false,
+                    tooltip = { title = L["TOOLTIP_NPC_SOUND"], desc = L["TOOLTIP_NPC_SOUND_DESC"] },
+                    onToggle = function(state)
+                        if not ns.NPCs then return end
+                        local nd = ns.NPCs:GetNPC(npc.id)
+                        if not nd then return end
+                        nd.alertOnFound = state
                         ns.NPCs:SaveNPC(npc.id, nd)
                         if selectedNPC == npc.id and detailPanel.editorContent and detailPanel.editorContent.header then
                             local h = detailPanel.editorContent.header
                             if h.alertBtn then
-                                h.alertBtn:GetNormalTexture():SetDesaturated(not nd.alertOnFound)
-                                h.alertBtn:GetNormalTexture():SetAlpha(nd.alertOnFound and 1.0 or 0.3)
-                                h.alertBtn:SetChecked(nd.alertOnFound)
+                                h.alertBtn:GetNormalTexture():SetDesaturated(not state)
+                                h.alertBtn:GetNormalTexture():SetAlpha(state and 1.0 or 0.3)
+                                h.alertBtn:SetChecked(state)
                             end
                             if h.ignoreIfDeadCheck then
-                                if nd.alertOnFound then h.ignoreIfDeadCheck:Show() else h.ignoreIfDeadCheck:Hide() end
+                                if state then h.ignoreIfDeadCheck:Show() else h.ignoreIfDeadCheck:Hide() end
                             end
                         end
-                    end
-                end
-            end)
-
-            local favBtn2 = CreateFrame("CheckButton", nil, row)
-            favBtn2:SetSize(18, 18)
-            favBtn2:SetPoint("RIGHT", alertBtn2, "LEFT", -2, 0)
-            local fN2 = favBtn2:CreateTexture(nil, "BACKGROUND")
-            fN2:SetAllPoints() fN2:SetTexture(MEDIA .. "icon-fav.png")
-            fN2:SetDesaturated(not npc.data.favorite)
-            fN2:SetAlpha(npc.data.favorite and 1.0 or 0.3)
-            favBtn2:SetNormalTexture(fN2)
-            favBtn2:SetScript("OnClick", function()
-                if ns.NPCs then
-                    local nd = ns.NPCs:GetNPC(npc.id)
-                    if nd then
-                        nd.favorite = not nd.favorite
-                        fN2:SetDesaturated(not nd.favorite)
-                        fN2:SetAlpha(nd.favorite and 1.0 or 0.3)
-                        ns.NPCs:SaveNPC(npc.id, nd)
+                    end,
+                },
+                fav = {
+                    active  = npc.data.favorite and true or false,
+                    tooltip = { title = L["TOOLTIP_NPC_FAVORITE"], desc = L["TOOLTIP_NPC_FAVORITE_DESC"] },
+                    onToggle = function(state)
+                        if not ns.NPCs then return end
+                        local nd = ns.NPCs:GetNPC(npc.id)
+                        if nd then
+                            nd.favorite = state
+                            ns.NPCs:SaveNPC(npc.id, nd)
+                            parent.RefreshNPCsList()
+                        end
+                    end,
+                },
+                props = {
+                    tooltip = { title = L["TOOLTIP_NPC_PROPERTIES_DESC"] },
+                    onClick = function()
+                        if ns.UI.ShowNPCPropertiesDialog then ns.UI.ShowNPCPropertiesDialog(npc.id, parent) end
+                    end,
+                },
+                delete = {
+                    tooltip = { title = L["TOOLTIP_NPC_DELETE"], desc = L["TOOLTIP_NPC_DELETE_DESC"] },
+                    onClick = function()
+                        StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_NPC"] = {
+                            text = L["POPUP_DELETE_NPC"],
+                            button1 = DELETE, button2 = CANCEL,
+                            OnAccept = function()
+                                if ns.NPCs then
+                                    ns.NPCs:RemoveNPC(npc.id)
+                                    if selectedNPC == npc.id then
+                                        selectedNPC = nil
+                                        emptyMessage:Show()
+                                        if detailPanel.editorContent then
+                                            for _, f in pairs(detailPanel.editorContent) do
+                                                if f and f.Hide then f:Hide() end
+                                            end
+                                        end
+                                    end
+                                    parent.RefreshNPCsList()
+                                end
+                            end,
+                            timeout = 0, whileDead = true, hideOnEscape = true,
+                        }
+                        StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE_NPC")
+                    end,
+                },
+                reorder = {
+                    canUp = canMoveUp, canDown = canMoveDown,
+                    onUp = function()
+                        EnsureManualSort()
+                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
+                        groupArray[groupIndex].data.sortOrder     = groupIndex - 1
+                        groupArray[groupIndex - 1].data.sortOrder = groupIndex
                         parent.RefreshNPCsList()
-                    end
-                end
-            end)
+                    end,
+                    onDown = function()
+                        EnsureManualSort()
+                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
+                        groupArray[groupIndex].data.sortOrder     = groupIndex + 1
+                        groupArray[groupIndex + 1].data.sortOrder = groupIndex
+                        parent.RefreshNPCsList()
+                    end,
+                },
+            }
 
-            local canMoveUp   = groupArray ~= nil and groupIndex ~= nil and groupIndex > 1
-            local canMoveDown = groupArray ~= nil and groupIndex ~= nil and groupIndex < #groupArray
-
-            local upBtn = CreateFrame("Button", nil, row)
-            upBtn:SetSize(18, 22)
-            upBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -4, -3)
-            upBtn:SetNormalAtlas("common-button-collapseExpand-up")
-            upBtn:SetHighlightAtlas("common-button-collapseExpand-up")
-            if canMoveUp then upBtn:Show() else upBtn:Hide() end
-            upBtn:SetScript("OnClick", function()
-                if not canMoveUp then return end
-                if currentSort.by ~= "manual" then
-                    currentSort.by = "manual"
-                    currentSort.ascending = true
-                    npcSortHandle:SetSort("manual", true)
-                    ns.db.global.tabSortPrefs.npcs = { by = "manual", ascending = true }
-                end
-                for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                groupArray[groupIndex].data.sortOrder     = groupIndex - 1
-                groupArray[groupIndex - 1].data.sortOrder = groupIndex
-                parent.RefreshNPCsList()
-            end)
-
-            local downBtn = CreateFrame("Button", nil, row)
-            downBtn:SetSize(18, 22)
-            downBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -4, 3)
-            downBtn:SetNormalAtlas("common-button-collapseExpand-down")
-            downBtn:SetHighlightAtlas("common-button-collapseExpand-down")
-            OneWoW_GUI:TintScrollReorderButtons(upBtn, downBtn)
-            if canMoveDown then downBtn:Show() else downBtn:Hide() end
-            downBtn:SetScript("OnClick", function()
-                if not canMoveDown then return end
-                if currentSort.by ~= "manual" then
-                    currentSort.by = "manual"
-                    currentSort.ascending = true
-                    npcSortHandle:SetSort("manual", true)
-                    ns.db.global.tabSortPrefs.npcs = { by = "manual", ascending = true }
-                end
-                for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                groupArray[groupIndex].data.sortOrder     = groupIndex + 1
-                groupArray[groupIndex + 1].data.sortOrder = groupIndex
-                parent.RefreshNPCsList()
-            end)
-
-            row:EnableMouse(true)
-            row:SetScript("OnMouseDown", function()
-                selectedNPC = npc.id
-                ShowEditor()
-                parent.RefreshNPCsList()
-            end)
-            row:SetScript("OnEnter", function(self)
-                if selectedNPC ~= npc.id then self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER")) end
-            end)
-            row:SetScript("OnLeave", function(self)
-                if selectedNPC ~= npc.id then self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY")) end
-            end)
-            if selectedNPC == npc.id then
-                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                row:SetBackdropBorderColor(1, 0.82, 0, 1)
-            end
-
+            local row = ns.UI.CreateNotesListRow(scrollChild, rowOpts)
             table.insert(npcListItems, row)
         end
 
@@ -1097,21 +1028,21 @@ function ns.UI.CreateNPCsTab(parent)
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
-        for i, n in ipairs(newNPCs) do BuildNPCRow(n, yOffset, newNPCs, i) yOffset = yOffset - 69 end
+        for i, n in ipairs(newNPCs) do BuildNPCRow(n, yOffset, newNPCs, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
 
         if #favorites > 0 then
             local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = FAVORITES, yOffset = yOffset })
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
-        for i, n in ipairs(favorites) do BuildNPCRow(n, yOffset, favorites, i) yOffset = yOffset - 69 end
+        for i, n in ipairs(favorites) do BuildNPCRow(n, yOffset, favorites, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
 
         if #regular > 0 then
             local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["TAB_NPCS"], yOffset = yOffset })
             table.insert(npcListItems, sh)
             yOffset = yOffset - 30
         end
-        for i, n in ipairs(regular) do BuildNPCRow(n, yOffset, regular, i) yOffset = yOffset - 69 end
+        for i, n in ipairs(regular) do BuildNPCRow(n, yOffset, regular, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
         if leftStatusText then
@@ -1295,7 +1226,7 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
         name           = "OneWoW_NotesNPCProperties",
         title          = L["DIALOG_NPC_PROPERTIES"] .. ": " .. (nd.name or "NPC ") .. npcID,
         width          = 500,
-        height         = 520,
+        height         = 600,
         destroyOnClose = true,
         buttons = {
             { text = CLOSE, onClick = function(dlg) dlg:Hide() end },
@@ -1530,6 +1461,14 @@ function ns.UI.ShowNPCPropertiesDialog(npcID, refreshParent)
     end)
     ignoreCB:SetScript("OnLeave", function() GameTooltip:Hide() end)
     yPos = yPos - 30
+
+    MakeNPCLabel(content, L["LABEL_ICON"], COL1_X, yPos)
+    local iconPicker = ns.UI.CreateIconPicker(content, {
+        selectedKey = nd.iconKey or "gossip",
+        onSelect = function(key) SaveField("iconKey", key) end,
+    })
+    iconPicker:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
+    yPos = yPos - LBL_GAP - iconPicker:GetHeight() - 10
 
     MakeNPCLabel(content, L["LABEL_NOTE_PREVIEW"], COL1_X, yPos)
     yPos = yPos - LBL_GAP

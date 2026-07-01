@@ -1003,196 +1003,101 @@ function ns.UI.CreateZonesTab(parent)
         end
 
         local function BuildZoneRow(zone, yOfs, groupArray, groupIndex)
-            local listItemColor = {OneWoW_GUI:GetThemeColor("BG_SECONDARY")}
             local resolvedColor = ns.Config:GetResolvedColorConfig(zone.data.pinColor)
-            local cR, cG, cB = resolvedColor.background[1], resolvedColor.background[2], resolvedColor.background[3]
-
-            local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
-            row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOfs)
-            row:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", 0, yOfs)
-            row:SetHeight(50)
-            row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-            row:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], listItemColor[4])
-            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-            local colorStrip = row:CreateTexture(nil, "ARTWORK")
-            colorStrip:SetSize(4, 46)
-            colorStrip:SetPoint("LEFT", row, "LEFT", 2, 0)
-            colorStrip:SetColorTexture(cR, cG, cB, 1)
-
-            local titleFS = OneWoW_GUI:CreateFS(row, 12)
-            titleFS:SetPoint("TOPLEFT", row, "TOPLEFT", 12, -6)
-            titleFS:SetPoint("TOPRIGHT", row, "TOPRIGHT", -80, -6)
-            titleFS:SetJustifyH("LEFT")
-            titleFS:SetText(zone.name)
-            titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-            local storageFS = OneWoW_GUI:CreateFS(row, 10)
-            storageFS:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 12, 6)
-            local stText = zone.data.storage == "character" and (CHARACTER) or (L["STORAGE_ACCOUNT_WIDE"])
-            storageFS:SetText(stText)
-            storageFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-            local alertBtn = CreateFrame("Button", nil, row)
-            alertBtn:SetSize(18, 18)
-            alertBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -28, -6)
-            local aN = alertBtn:CreateTexture(nil, "BACKGROUND")
-            aN:SetAllPoints()
-            aN:SetTexture(MEDIA .. "icon-alert.png")
-            local alertOn = zone.data.alertEnabled ~= false
-            aN:SetDesaturated(not alertOn)
-            aN:SetAlpha(alertOn and 1.0 or 0.3)
-            alertBtn:SetNormalTexture(aN)
-            alertBtn:SetScript("OnClick", function()
-                if ns.Zones then
-                    local zoneData = ns.Zones:GetZone(zone.name)
-                    if zoneData then
-                        local wasEnabled = zoneData.alertEnabled ~= false
-                        zoneData.alertEnabled = not wasEnabled
-                        aN:SetDesaturated(wasEnabled)
-                        aN:SetAlpha(wasEnabled and 0.3 or 1.0)
-                        ns.Zones:SaveZone(zone.name, zoneData)
-                    end
-                end
-            end)
-            alertBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_ZONE_ALERT"], 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_ZONE_ALERT_DESC"], 0.8, 0.8, 0.8, true)
-                GameTooltip:Show()
-            end)
-            alertBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-            local pinListBtn = CreateFrame("Button", nil, row)
-            pinListBtn:SetSize(18, 18)
-            pinListBtn:SetPoint("RIGHT", alertBtn, "LEFT", -2, 0)
-            local pN = pinListBtn:CreateTexture(nil, "BACKGROUND")
-            pN:SetAllPoints()
-            pN:SetTexture(MEDIA .. "icon-pin.png")
-            pN:SetDesaturated(not zone.data.pinEnabled)
-            pN:SetAlpha(zone.data.pinEnabled and 1.0 or 0.3)
-            pinListBtn:SetNormalTexture(pN)
-            pinListBtn:SetScript("OnClick", function()
-                if ns.Zones and ns.ZonePins then
-                    local zoneData = ns.Zones:GetZone(zone.name)
-                    if zoneData then
-                        if zoneData.pinEnabled then
-                            ns.ZonePins:HideZonePin(zone.name)
-                            zoneData.pinEnabled = false
-                        else
-                            zoneData.pinEnabled = true
-                            ns.ZonePins:ShowZonePin(zone.name, zoneData)
-                        end
-                        pN:SetDesaturated(not zoneData.pinEnabled)
-                        pN:SetAlpha(zoneData.pinEnabled and 1.0 or 0.3)
-                        ns.Zones:SaveZone(zone.name, zoneData)
-                        if selectedZone == zone.name then
-                            ShowEditor()
-                        end
-                    end
-                end
-            end)
-            pinListBtn:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["TOOLTIP_NOTE_PIN"], 1, 1, 1)
-                GameTooltip:AddLine(L["TOOLTIP_NOTE_PIN_DESC"], 0.8, 0.8, 0.8, true)
-                GameTooltip:Show()
-            end)
-            pinListBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-            local favBtn = CreateFrame("Button", nil, row)
-            favBtn:SetSize(18, 18)
-            favBtn:SetPoint("RIGHT", pinListBtn, "LEFT", -2, 0)
-            local fN2 = favBtn:CreateTexture(nil, "BACKGROUND")
-            fN2:SetAllPoints()
-            fN2:SetTexture(MEDIA .. "icon-fav.png")
-            fN2:SetDesaturated(not zone.data.favorite)
-            fN2:SetAlpha(zone.data.favorite and 1.0 or 0.3)
-            favBtn:SetNormalTexture(fN2)
-            favBtn:SetScript("OnClick", function()
-                if ns.Zones then
-                    local zoneData = ns.Zones:GetZone(zone.name)
-                    if zoneData then
-                        zoneData.favorite = not zoneData.favorite
-                        fN2:SetDesaturated(not zoneData.favorite)
-                        fN2:SetAlpha(zoneData.favorite and 1.0 or 0.3)
-                        ns.Zones:SaveZone(zone.name, zoneData)
-                        parent.RefreshZonesList()
-                    end
-                end
-            end)
+            local bg = resolvedColor.background
 
             local canMoveUp   = groupArray ~= nil and groupIndex ~= nil and groupIndex > 1
             local canMoveDown = groupArray ~= nil and groupIndex ~= nil and groupIndex < #groupArray
 
-            local upBtn = CreateFrame("Button", nil, row)
-            upBtn:SetSize(18, 22)
-            upBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -4, -3)
-            upBtn:SetNormalAtlas("common-button-collapseExpand-up")
-            upBtn:SetHighlightAtlas("common-button-collapseExpand-up")
-            if canMoveUp then upBtn:Show() else upBtn:Hide() end
-            upBtn:SetScript("OnClick", function()
-                if not canMoveUp then return end
+            local function EnsureManualSort()
                 if currentSort.by ~= "manual" then
                     currentSort.by = "manual"
                     currentSort.ascending = true
                     zoneSortHandle:SetSort("manual", true)
                     ns.db.global.tabSortPrefs.zones = { by = "manual", ascending = true }
                 end
-                for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                groupArray[groupIndex].data.sortOrder     = groupIndex - 1
-                groupArray[groupIndex - 1].data.sortOrder = groupIndex
-                parent.RefreshZonesList()
-            end)
-
-            local downBtn = CreateFrame("Button", nil, row)
-            downBtn:SetSize(18, 22)
-            downBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -4, 3)
-            downBtn:SetNormalAtlas("common-button-collapseExpand-down")
-            downBtn:SetHighlightAtlas("common-button-collapseExpand-down")
-            OneWoW_GUI:TintScrollReorderButtons(upBtn, downBtn)
-            if canMoveDown then downBtn:Show() else downBtn:Hide() end
-            downBtn:SetScript("OnClick", function()
-                if not canMoveDown then return end
-                if currentSort.by ~= "manual" then
-                    currentSort.by = "manual"
-                    currentSort.ascending = true
-                    zoneSortHandle:SetSort("manual", true)
-                    ns.db.global.tabSortPrefs.zones = { by = "manual", ascending = true }
-                end
-                for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                groupArray[groupIndex].data.sortOrder     = groupIndex + 1
-                groupArray[groupIndex + 1].data.sortOrder = groupIndex
-                parent.RefreshZonesList()
-            end)
-
-            row:EnableMouse(true)
-            row:SetScript("OnMouseDown", function()
-                if zone.data.isNew then
-                    zone.data.isNew = false
-                    zone.data.newTimestamp = nil
-                    if ns.Zones then ns.Zones:SaveZone(zone.name, zone.data) end
-                end
-                selectedZone = zone.name
-                ShowEditor()
-                parent.RefreshZonesList()
-            end)
-            row:SetScript("OnEnter", function(self)
-                if selectedZone ~= zone.name then
-                    self:SetBackdropColor(listItemColor[1] * 1.2, listItemColor[2] * 1.2, listItemColor[3] * 1.2, listItemColor[4] + 0.1)
-                end
-            end)
-            row:SetScript("OnLeave", function(self)
-                if selectedZone ~= zone.name then
-                    self:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], listItemColor[4])
-                end
-            end)
-
-            if selectedZone == zone.name then
-                row:SetBackdropColor(listItemColor[1] + 0.15, listItemColor[2] + 0.15, listItemColor[3] + 0.15, 0.9)
-                row:SetBackdropBorderColor(1, 0.82, 0, 1)
             end
 
+            local rowOpts = {
+                yOffset     = yOfs,
+                barColor    = { bg[1], bg[2], bg[3] },
+                icon        = ns.UI.ResolveNoteIcon(zone.data.iconKey) or "Interface\\Icons\\INV_Misc_Map_01",
+                title       = zone.name,
+                storageText = zone.data.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
+                selected    = (selectedZone == zone.name),
+                onSelect    = function()
+                    if zone.data.isNew then
+                        zone.data.isNew = false
+                        zone.data.newTimestamp = nil
+                        if ns.Zones then ns.Zones:SaveZone(zone.name, zone.data) end
+                    end
+                    selectedZone = zone.name
+                    ShowEditor()
+                    parent.RefreshZonesList()
+                end,
+                pin = {
+                    active  = zone.data.pinEnabled and true or false,
+                    tooltip = { title = L["TOOLTIP_ZONE_PIN"], desc = L["TOOLTIP_ZONE_PIN_DESC"] },
+                    onToggle = function(state)
+                        if not (ns.Zones and ns.ZonePins) then return end
+                        local zoneData = ns.Zones:GetZone(zone.name)
+                        if not zoneData then return end
+                        if state then
+                            zoneData.pinEnabled = true
+                            ns.ZonePins:ShowZonePin(zone.name, zoneData)
+                        else
+                            ns.ZonePins:HideZonePin(zone.name)
+                            zoneData.pinEnabled = false
+                        end
+                        ns.Zones:SaveZone(zone.name, zoneData)
+                        if selectedZone == zone.name then ShowEditor() end
+                    end,
+                },
+                alert = {
+                    active  = zone.data.alertEnabled ~= false,
+                    tooltip = { title = L["TOOLTIP_ZONE_ALERT"], desc = L["TOOLTIP_ZONE_ALERT_DESC"] },
+                    onToggle = function(state)
+                        if not ns.Zones then return end
+                        local zoneData = ns.Zones:GetZone(zone.name)
+                        if zoneData then
+                            zoneData.alertEnabled = state
+                            ns.Zones:SaveZone(zone.name, zoneData)
+                        end
+                    end,
+                },
+                fav = {
+                    active  = zone.data.favorite and true or false,
+                    tooltip = { title = L["TOOLTIP_ZONE_FAVORITE"], desc = L["TOOLTIP_ZONE_FAVORITE_DESC"] },
+                    onToggle = function(state)
+                        if not ns.Zones then return end
+                        local zoneData = ns.Zones:GetZone(zone.name)
+                        if zoneData then
+                            zoneData.favorite = state
+                            ns.Zones:SaveZone(zone.name, zoneData)
+                            parent.RefreshZonesList()
+                        end
+                    end,
+                },
+                reorder = {
+                    canUp = canMoveUp, canDown = canMoveDown,
+                    onUp = function()
+                        EnsureManualSort()
+                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
+                        groupArray[groupIndex].data.sortOrder     = groupIndex - 1
+                        groupArray[groupIndex - 1].data.sortOrder = groupIndex
+                        parent.RefreshZonesList()
+                    end,
+                    onDown = function()
+                        EnsureManualSort()
+                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
+                        groupArray[groupIndex].data.sortOrder     = groupIndex + 1
+                        groupArray[groupIndex + 1].data.sortOrder = groupIndex
+                        parent.RefreshZonesList()
+                    end,
+                },
+            }
+
+            local row = ns.UI.CreateNotesListRow(scrollChild, rowOpts)
             table.insert(zoneListItems, row)
         end
 
@@ -1202,25 +1107,25 @@ function ns.UI.CreateZonesTab(parent)
             CreateSectionHeader(NEW, yOffset)
             yOffset = yOffset - 30
         end
-        for i, zone in ipairs(newZones) do BuildZoneRow(zone, yOffset, newZones, i) yOffset = yOffset - 55 end
+        for i, zone in ipairs(newZones) do BuildZoneRow(zone, yOffset, newZones, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
 
         if #currentZones > 0 then
             CreateSectionHeader(L["ZONES_CURRENT_SECTION"], yOffset)
             yOffset = yOffset - 30
         end
-        for i, zone in ipairs(currentZones) do BuildZoneRow(zone, yOffset, currentZones, i) yOffset = yOffset - 55 end
+        for i, zone in ipairs(currentZones) do BuildZoneRow(zone, yOffset, currentZones, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
 
         if #favorites > 0 then
             CreateSectionHeader(FAVORITES, yOffset)
             yOffset = yOffset - 30
         end
-        for i, zone in ipairs(favorites) do BuildZoneRow(zone, yOffset, favorites, i) yOffset = yOffset - 55 end
+        for i, zone in ipairs(favorites) do BuildZoneRow(zone, yOffset, favorites, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
 
         if #regular > 0 then
             CreateSectionHeader(L["TAB_ZONES"], yOffset)
             yOffset = yOffset - 30
         end
-        for i, zone in ipairs(regular) do BuildZoneRow(zone, yOffset, regular, i) yOffset = yOffset - 55 end
+        for i, zone in ipairs(regular) do BuildZoneRow(zone, yOffset, regular, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
         if leftStatusText then
@@ -1804,6 +1709,14 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
         end)
     end
     yPos = yPos - ROW_H
+
+    MakeZoneLabel(content, L["LABEL_ICON"], COL1_X, yPos)
+    local iconPicker = ns.UI.CreateIconPicker(content, {
+        selectedKey = zoneData.iconKey or "map",
+        onSelect = function(key) SaveField("iconKey", key) end,
+    })
+    iconPicker:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
+    yPos = yPos - LBL_GAP - iconPicker:GetHeight() - 10
 
     MakeZoneLabel(content, L["LABEL_NOTE_PREVIEW"], COL1_X, yPos)
     yPos = yPos - LBL_GAP

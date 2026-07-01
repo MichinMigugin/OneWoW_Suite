@@ -179,6 +179,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
 -- Storage / Category labels
     ["STORAGE_ACCOUNT_WIDE"] = "계정 전체",
+    ["LABEL_ICON"] = "아이콘",
 
 -- Label fields (for dialogs)
     ["LABEL_NOTE_TITLE"] = "메모 제목",

@@ -744,185 +744,133 @@ function ns.UI.CreatePlayersTab(parent)
         table.sort(regular,    sortPlayers)
 
         local function BuildPlayerRow(player, yOffset, groupArray, groupIndex)
-            local row = CreateFrame("Frame", nil, scrollChild, "BackdropTemplate")
-            row:SetSize(scrollChild:GetWidth(), 50)
-            row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, yOffset)
-            row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            local classFile = player.data.class
+            local barColor
+            if classFile and RAID_CLASS_COLORS[classFile] then
+                -- Dim the (full-bright) class color to match the dimmer pin-color
+                -- bars used by the other tabs.
+                local c = RAID_CLASS_COLORS[classFile]
+                barColor = { c.r * 0.7, c.g * 0.7, c.b * 0.7 }
+            end
+            local classAtlas
+            if classFile and classFile ~= "" then
+                classAtlas = "classicon-" .. classFile:lower()
+            end
 
-            local nameText = OneWoW_GUI:CreateFS(row, 12)
-            nameText:SetPoint("TOPLEFT",  row, "TOPLEFT",  10, -10)
-            nameText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -27, -10)
-            nameText:SetJustifyH("LEFT")
-            nameText:SetText(player.data.name or player.fullName)
-            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-            local subText = OneWoW_GUI:CreateFS(row, 10)
-            subText:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 10, 8)
-            local sub = ""
-            if player.data.realm and player.data.realm ~= "" then sub = player.data.realm .. " " end
-            if player.data.class and player.data.class ~= "" then sub = sub .. player.data.class end
-            subText:SetText(sub)
-            subText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-            local deleteBtn = CreateFrame("Button", nil, row)
-            deleteBtn:SetSize(18, 18)
-            deleteBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -27, 5)
-            deleteBtn:SetNormalTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetPushedTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:SetHighlightTexture(MEDIA .. "icon-trash.png")
-            deleteBtn:GetHighlightTexture():SetAlpha(0.5)
-            deleteBtn:SetScript("OnClick", function()
-                StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_PLAYER"] = {
-                    text = string.format(L["POPUP_DELETE_PLAYER"]),
-                    button1 = DELETE, button2 = CANCEL,
-                    OnAccept = function()
-                        if ns.Players then
-                            ns.Players:RemovePlayer(player.fullName)
-                            if selectedPlayer == player.fullName then
-                                selectedPlayer = nil
-                                emptyMessage:Show()
-                                if detailPanel.editorContent then
-                                    for _, f in pairs(detailPanel.editorContent) do
-                                        if f and f.Hide then f:Hide() end
-                                    end
-                                end
-                            end
-                            parent.RefreshPlayersList()
-                        end
-                    end,
-                    timeout = 0, whileDead = true, hideOnEscape = true,
-                }
-                StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE_PLAYER")
-            end)
-
-            local propBtn = CreateFrame("Button", nil, row)
-            propBtn:SetSize(18, 18)
-            propBtn:SetPoint("RIGHT", deleteBtn, "LEFT", -2, 0)
-            propBtn:SetNormalTexture(MEDIA .. "icon-gears.png")
-            propBtn:SetPushedTexture(MEDIA .. "icon-gears.png")
-            propBtn:SetHighlightTexture(MEDIA .. "icon-gears.png")
-            propBtn:GetHighlightTexture():SetAlpha(0.5)
-            propBtn:SetScript("OnClick", function()
-                if ns.UI.ShowPlayerPropertiesDialog then ns.UI.ShowPlayerPropertiesDialog(player.fullName, parent) end
-            end)
-
-            local alertBtn2 = CreateFrame("CheckButton", nil, row)
-            alertBtn2:SetSize(18, 18)
-            alertBtn2:SetPoint("RIGHT", propBtn, "LEFT", -2, 0)
-            local aN2 = alertBtn2:CreateTexture(nil, "BACKGROUND")
-            aN2:SetAllPoints() aN2:SetTexture(MEDIA .. "icon-alert.png")
-            aN2:SetDesaturated(not player.data.soundEnabled)
-            aN2:SetAlpha(player.data.soundEnabled and 1.0 or 0.3)
-            alertBtn2:SetNormalTexture(aN2)
-            alertBtn2:SetScript("OnClick", function()
-                if ns.Players then
-                    local pd = ns.Players:GetPlayer(player.fullName)
-                    if pd then
-                        pd.soundEnabled = not pd.soundEnabled
-                        aN2:SetDesaturated(not pd.soundEnabled)
-                        aN2:SetAlpha(pd.soundEnabled and 1.0 or 0.3)
-                        ns.Players:SavePlayer(player.fullName, pd)
-                        if selectedPlayer == player.fullName and detailPanel.editorContent and detailPanel.editorContent.header then
-                            local h = detailPanel.editorContent.header
-                            if h.alertBtn then
-                                h.alertBtn:GetNormalTexture():SetDesaturated(not pd.soundEnabled)
-                                h.alertBtn:GetNormalTexture():SetAlpha(pd.soundEnabled and 1.0 or 0.3)
-                                h.alertBtn:SetChecked(pd.soundEnabled)
-                            end
-                        end
-                    end
-                end
-            end)
-
-            local favBtn2 = CreateFrame("CheckButton", nil, row)
-            favBtn2:SetSize(18, 18)
-            favBtn2:SetPoint("RIGHT", alertBtn2, "LEFT", -2, 0)
-            local fN2 = favBtn2:CreateTexture(nil, "BACKGROUND")
-            fN2:SetAllPoints() fN2:SetTexture(MEDIA .. "icon-fav.png")
-            fN2:SetDesaturated(not player.data.favorite)
-            fN2:SetAlpha(player.data.favorite and 1.0 or 0.3)
-            favBtn2:SetNormalTexture(fN2)
-            favBtn2:SetScript("OnClick", function()
-                if ns.Players then
-                    local pd = ns.Players:GetPlayer(player.fullName)
-                    if pd then
-                        pd.favorite = not pd.favorite
-                        fN2:SetDesaturated(not pd.favorite)
-                        fN2:SetAlpha(pd.favorite and 1.0 or 0.3)
-                        ns.Players:SavePlayer(player.fullName, pd)
-                        parent.RefreshPlayersList()
-                    end
-                end
-            end)
+            local detail = ""
+            if player.data.realm and player.data.realm ~= "" then detail = player.data.realm .. " " end
+            if player.data.class and player.data.class ~= "" then detail = detail .. player.data.class end
 
             local canMoveUp   = groupArray ~= nil and groupIndex ~= nil and groupIndex > 1
             local canMoveDown = groupArray ~= nil and groupIndex ~= nil and groupIndex < #groupArray
 
-            local upBtn = CreateFrame("Button", nil, row)
-            upBtn:SetSize(18, 22)
-            upBtn:SetPoint("TOPRIGHT", row, "TOPRIGHT", -4, -3)
-            upBtn:SetNormalAtlas("common-button-collapseExpand-up")
-            upBtn:SetHighlightAtlas("common-button-collapseExpand-up")
-            if canMoveUp then upBtn:Show() else upBtn:Hide() end
-            upBtn:SetScript("OnClick", function()
-                if not canMoveUp then return end
+            local function EnsureManualSort()
                 if currentSort.by ~= "manual" then
                     currentSort.by = "manual"
                     currentSort.ascending = true
                     playerSortHandle:SetSort("manual", true)
                     ns.db.global.tabSortPrefs.players = { by = "manual", ascending = true }
                 end
-                for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                groupArray[groupIndex].data.sortOrder     = groupIndex - 1
-                groupArray[groupIndex - 1].data.sortOrder = groupIndex
-                parent.RefreshPlayersList()
-            end)
-
-            local downBtn = CreateFrame("Button", nil, row)
-            downBtn:SetSize(18, 22)
-            downBtn:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -4, 3)
-            downBtn:SetNormalAtlas("common-button-collapseExpand-down")
-            downBtn:SetHighlightAtlas("common-button-collapseExpand-down")
-            OneWoW_GUI:TintScrollReorderButtons(upBtn, downBtn)
-            if canMoveDown then downBtn:Show() else downBtn:Hide() end
-            downBtn:SetScript("OnClick", function()
-                if not canMoveDown then return end
-                if currentSort.by ~= "manual" then
-                    currentSort.by = "manual"
-                    currentSort.ascending = true
-                    playerSortHandle:SetSort("manual", true)
-                    ns.db.global.tabSortPrefs.players = { by = "manual", ascending = true }
-                end
-                for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                groupArray[groupIndex].data.sortOrder     = groupIndex + 1
-                groupArray[groupIndex + 1].data.sortOrder = groupIndex
-                parent.RefreshPlayersList()
-            end)
-
-            row:EnableMouse(true)
-            row:SetScript("OnMouseDown", function()
-                selectedPlayer = player.fullName
-                ShowEditor()
-                parent.RefreshPlayersList()
-            end)
-            row:SetScript("OnEnter", function(self)
-                if selectedPlayer ~= player.fullName then
-                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-                end
-            end)
-            row:SetScript("OnLeave", function(self)
-                if selectedPlayer ~= player.fullName then
-                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                end
-            end)
-
-            if selectedPlayer == player.fullName then
-                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                row:SetBackdropBorderColor(1, 0.82, 0, 1)
             end
 
+            local rowOpts = {
+                yOffset     = yOffset,
+                barColor    = barColor,
+                iconAtlas   = classAtlas,
+                icon        = "Interface\\Icons\\INV_Misc_QuestionMark",
+                title       = player.data.name or player.fullName,
+                detail      = detail,
+                storageText = player.data.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
+                selected    = (selectedPlayer == player.fullName),
+                onSelect    = function()
+                    selectedPlayer = player.fullName
+                    ShowEditor()
+                    parent.RefreshPlayersList()
+                end,
+                alert = {
+                    active  = player.data.soundEnabled and true or false,
+                    tooltip = { title = L["TOOLTIP_PLAYER_SOUND"], desc = L["TOOLTIP_PLAYER_SOUND_DESC"] },
+                    onToggle = function(state)
+                        if not ns.Players then return end
+                        local pd = ns.Players:GetPlayer(player.fullName)
+                        if not pd then return end
+                        pd.soundEnabled = state
+                        ns.Players:SavePlayer(player.fullName, pd)
+                        if selectedPlayer == player.fullName and detailPanel.editorContent and detailPanel.editorContent.header then
+                            local h = detailPanel.editorContent.header
+                            if h.alertBtn then
+                                h.alertBtn:GetNormalTexture():SetDesaturated(not state)
+                                h.alertBtn:GetNormalTexture():SetAlpha(state and 1.0 or 0.3)
+                                h.alertBtn:SetChecked(state)
+                            end
+                        end
+                    end,
+                },
+                fav = {
+                    active  = player.data.favorite and true or false,
+                    tooltip = { title = L["TOOLTIP_PLAYER_FAVORITE"], desc = L["TOOLTIP_PLAYER_FAVORITE_DESC"] },
+                    onToggle = function(state)
+                        if not ns.Players then return end
+                        local pd = ns.Players:GetPlayer(player.fullName)
+                        if pd then
+                            pd.favorite = state
+                            ns.Players:SavePlayer(player.fullName, pd)
+                            parent.RefreshPlayersList()
+                        end
+                    end,
+                },
+                props = {
+                    tooltip = { title = L["TOOLTIP_PLAYER_PROPERTIES_DESC"] },
+                    onClick = function()
+                        if ns.UI.ShowPlayerPropertiesDialog then ns.UI.ShowPlayerPropertiesDialog(player.fullName, parent) end
+                    end,
+                },
+                delete = {
+                    tooltip = { title = L["TOOLTIP_PLAYER_DELETE"], desc = L["TOOLTIP_PLAYER_DELETE_DESC"] },
+                    onClick = function()
+                        StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_PLAYER"] = {
+                            text = string.format(L["POPUP_DELETE_PLAYER"]),
+                            button1 = DELETE, button2 = CANCEL,
+                            OnAccept = function()
+                                if ns.Players then
+                                    ns.Players:RemovePlayer(player.fullName)
+                                    if selectedPlayer == player.fullName then
+                                        selectedPlayer = nil
+                                        emptyMessage:Show()
+                                        if detailPanel.editorContent then
+                                            for _, f in pairs(detailPanel.editorContent) do
+                                                if f and f.Hide then f:Hide() end
+                                            end
+                                        end
+                                    end
+                                    parent.RefreshPlayersList()
+                                end
+                            end,
+                            timeout = 0, whileDead = true, hideOnEscape = true,
+                        }
+                        StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE_PLAYER")
+                    end,
+                },
+                reorder = {
+                    canUp = canMoveUp, canDown = canMoveDown,
+                    onUp = function()
+                        EnsureManualSort()
+                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
+                        groupArray[groupIndex].data.sortOrder     = groupIndex - 1
+                        groupArray[groupIndex - 1].data.sortOrder = groupIndex
+                        parent.RefreshPlayersList()
+                    end,
+                    onDown = function()
+                        EnsureManualSort()
+                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
+                        groupArray[groupIndex].data.sortOrder     = groupIndex + 1
+                        groupArray[groupIndex + 1].data.sortOrder = groupIndex
+                        parent.RefreshPlayersList()
+                    end,
+                },
+            }
+
+            local row = ns.UI.CreateNotesListRow(scrollChild, rowOpts)
             table.insert(playerListItems, row)
         end
 
@@ -931,17 +879,17 @@ function ns.UI.CreatePlayersTab(parent)
         if #newPlayers > 0 then
             CreateSectionHeader(NEW, yOffset) yOffset = yOffset - 30
         end
-        for i, p in ipairs(newPlayers) do BuildPlayerRow(p, yOffset, newPlayers, i) yOffset = yOffset - 55 end
+        for i, p in ipairs(newPlayers) do BuildPlayerRow(p, yOffset, newPlayers, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
 
         if #favorites > 0 then
             CreateSectionHeader(FAVORITES, yOffset) yOffset = yOffset - 30
         end
-        for i, p in ipairs(favorites) do BuildPlayerRow(p, yOffset, favorites, i) yOffset = yOffset - 55 end
+        for i, p in ipairs(favorites) do BuildPlayerRow(p, yOffset, favorites, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
 
         if #regular > 0 then
             CreateSectionHeader(L["TAB_PLAYERS"], yOffset) yOffset = yOffset - 30
         end
-        for i, p in ipairs(regular) do BuildPlayerRow(p, yOffset, regular, i) yOffset = yOffset - 55 end
+        for i, p in ipairs(regular) do BuildPlayerRow(p, yOffset, regular, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
         if leftStatusText then
