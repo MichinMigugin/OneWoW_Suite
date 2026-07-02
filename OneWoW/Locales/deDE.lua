@@ -139,6 +139,7 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["HOME_PENDING_DISABLE_TAG"] = "(aus beim nächsten Neuladen)",
     ["HOME_MANAGE_POINTER"] = "Aktiviert oder deaktiviert Funktionen unter",
     ["HOME_MANAGE_LINK"] = "Funktionen verwalten",
+    ["HOME_VERSION_MISMATCH_NOTICE"] = "Einige OneWoW-Addons sind veraltet und stimmen nicht mit der Kernversion %s überein. Bitte lade die komplette OneWoW-Suite erneut herunter, damit alle Module dieselbe Version haben.",
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",

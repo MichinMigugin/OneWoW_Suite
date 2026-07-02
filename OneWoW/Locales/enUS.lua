@@ -140,6 +140,7 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["HOME_PENDING_DISABLE_TAG"] = "(off next reload)",
     ["HOME_MANAGE_POINTER"] = "Enable or disable features in",
     ["HOME_MANAGE_LINK"] = "Manage Features",
+    ["HOME_VERSION_MISMATCH_NOTICE"] = "Some OneWoW addons are out of date and don't match core version %s. Please redownload the complete OneWoW suite so every module is on the same version.",
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",

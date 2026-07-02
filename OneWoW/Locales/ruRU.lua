@@ -139,6 +139,7 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["HOME_PENDING_DISABLE_TAG"] = "(выкл. при следующей перезагрузке)",
     ["HOME_MANAGE_POINTER"] = "Включайте или отключайте функции в",
     ["HOME_MANAGE_LINK"] = "Управление функциями",
+    ["HOME_VERSION_MISMATCH_NOTICE"] = "Некоторые аддоны OneWoW устарели и не соответствуют версии ядра %s. Пожалуйста, повторно загрузите полный набор OneWoW, чтобы все модули были одной версии.",
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",

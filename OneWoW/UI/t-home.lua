@@ -42,10 +42,69 @@ function UI:CreateHomeTab(parent)
     -- ns.FeatureStateChanged) can re-query live state without rebuilding rows.
     local rowRefreshers = {}
 
+    -- The suite ships as one bundle: every addon's TOC Version bumps together, so
+    -- core's version is the canonical one. A per-addon mismatch means the user has
+    -- a stale/partial install (e.g. an installer only replaced some folders) and
+    -- should redownload the whole suite. Dev-only utilities are excluded — they
+    -- ship on a separate cadence from a private repo and legitimately differ.
+    local coreVersion = ns:GetAddonVersion("OneWoW")
+
+    --- True when an installed suite addon's TOC version differs from core's.
+    --- Missing addons (nil version) and core itself never count as a mismatch.
+    ---@param addonName string
+    ---@return boolean
+    local function IsVersionMismatch(addonName)
+        if addonName == "OneWoW" or not coreVersion then return false end
+        local ver = ns:GetAddonVersion(addonName)
+        return ver ~= nil and ver ~= coreVersion
+    end
+
+    -- Addon groups shown on the left/right columns. Hoisted so the version-parity
+    -- pre-scan (below) and the layout loops share one source of truth.
+    local moduleChecks = {
+        { key = "MODULE_ALTTRACKER", addonName = "OneWoW_AltTracker" },
+        { key = "MODULE_CATALOG",    addonName = "OneWoW_Catalog" },
+        { key = "MODULE_NOTES",      addonName = "OneWoW_Notes" },
+        { key = "MODULE_QOL",        addonName = "OneWoW_QoL" },
+    }
+    local standaloneChecks = {
+        { key = "MODULE_BAGS",          addonName = "OneWoW_Bags" },
+        { key = "MODULE_DIRECTDEPOSIT", addonName = "OneWoW_DirectDeposit" },
+        { key = "MODULE_SHOPPINGLIST",  addonName = "OneWoW_ShoppingList" },
+        { key = "MODULE_TRACKERS",      addonName = "OneWoW_Trackers" },
+    }
+    local dataModuleChecks = {
+        { key = "DATA_MOD_ACCOUNTING",  addonName = "OneWoW_AltTracker_Accounting" },
+        { key = "DATA_MOD_AUCTIONS",    addonName = "OneWoW_AltTracker_Auctions" },
+        { key = "DATA_MOD_CHARACTER",   addonName = "OneWoW_AltTracker_Character" },
+        { key = "DATA_MOD_COLLECTIONS", addonName = "OneWoW_AltTracker_Collections" },
+        { key = "DATA_MOD_ENDGAME",     addonName = "OneWoW_AltTracker_Endgame" },
+        { key = "DATA_MOD_PROFESSIONS", addonName = "OneWoW_AltTracker_Professions" },
+        { key = "DATA_MOD_STORAGE",     addonName = "OneWoW_AltTracker_Storage" },
+    }
+    local catalogDataChecks = {
+        { key = "CAT_MOD_JOURNAL",     addonName = "OneWoW_CatalogData_Journal" },
+        { key = "CAT_MOD_QUESTS",      addonName = "OneWoW_CatalogData_Quests" },
+        { key = "CAT_MOD_TRADESKILLS", addonName = "OneWoW_CatalogData_Tradeskills" },
+        { key = "CAT_MOD_VENDORS",     addonName = "OneWoW_CatalogData_Vendors" },
+    }
+
+    --- Scan every parity-checked addon group once to decide whether to surface the
+    --- redownload notice (and reserve layout space for it). Static per session.
+    ---@return boolean
+    local function HasAnyVersionMismatch()
+        for _, group in ipairs({ moduleChecks, standaloneChecks, dataModuleChecks, catalogDataChecks }) do
+            for _, mod in ipairs(group) do
+                if IsVersionMismatch(mod.addonName) then return true end
+            end
+        end
+        return false
+    end
+
     -- Read-only status row: a tri-state checkmark + name + version. No toggle.
     -- Widgets are built once; ApplyState() re-reads GetFeatureUnitState and restyles
     -- so the row stays accurate when addons load/unload or opt-out changes.
-    local function CreateModuleRow(panel, localeKey, addonName, rowY)
+    local function CreateModuleRow(panel, localeKey, addonName, rowY, skipParity)
         local localizedName = L[localeKey]
         local state  -- live, updated by ApplyState(); read by the tooltip handler
 
@@ -117,6 +176,11 @@ function UI:CreateHomeTab(parent)
             end
 
             verText:SetText(ns:GetAddonVersion(addonName) or "")
+            if not skipParity and IsVersionMismatch(addonName) then
+                verText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))  -- red: stale/partial install
+            else
+                verText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            end
 
             if state == STATE_NOTLOADED then
                 tag:SetText(L["HOME_NOTLOADED_TAG"])
@@ -144,9 +208,23 @@ function UI:CreateHomeTab(parent)
 
     local versionLabel = OneWoW_GUI:CreateFS(content, 16)
     versionLabel:SetPoint("TOP", content, "TOP", 0, yOffset)
-    versionLabel:SetText("OneWoW " .. (L["HOME_VERSION"]) .. " " .. (ns:GetAddonVersion("OneWoW") or ""))
+    versionLabel:SetText("OneWoW " .. (L["HOME_VERSION"]) .. " " .. (coreVersion or ""))
     versionLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - 35
+
+    -- Surfaced only when a suite addon's version drifts from core (stale/partial
+    -- install). Reserves flow space only when shown so the normal case has no gap.
+    if HasAnyVersionMismatch() then
+        local mismatchNotice = OneWoW_GUI:CreateFS(content, 12)
+        mismatchNotice:SetPoint("TOPLEFT",  content, "TOPLEFT",  40, yOffset)
+        mismatchNotice:SetPoint("TOPRIGHT", content, "TOPRIGHT", -40, yOffset)
+        mismatchNotice:SetJustifyH("CENTER")
+        mismatchNotice:SetText(string.format(L["HOME_VERSION_MISMATCH_NOTICE"], coreVersion or ""))
+        mismatchNotice:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+        -- Fixed reserve: the notice wraps to 2-3 lines and content width isn't
+        -- resolved yet at build time, so GetStringHeight would under-report.
+        yOffset = yOffset - 52
+    end
 
     local divider1 = content:CreateTexture(nil, "ARTWORK")
     divider1:SetHeight(1)
@@ -225,7 +303,7 @@ function UI:CreateHomeTab(parent)
     manageRow:SetPoint("TOPLEFT", content, "TOPLEFT", 15, yOffset)
     manageRow:SetPoint("TOPRIGHT", content, "TOPRIGHT", -15, yOffset)
 
-    UI:CreateManageFeaturesLinkRow(manageRow, { pointerKey = "HOME_MANAGE_POINTER" })
+    UI:CreateManageFeaturesLinkRow(manageRow, { pointerKey = "HOME_MANAGE_POINTER", center = true })
 
     yOffset = yOffset - 28
 
@@ -300,13 +378,6 @@ function UI:CreateHomeTab(parent)
     detectedTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     modY = detectedTitleY - 24
-    local moduleChecks = {
-        { key = "MODULE_ALTTRACKER", addonName = "OneWoW_AltTracker" },
-        { key = "MODULE_CATALOG",    addonName = "OneWoW_Catalog" },
-        { key = "MODULE_NOTES",      addonName = "OneWoW_Notes" },
-        { key = "MODULE_QOL",        addonName = "OneWoW_QoL" },
-    }
-
     for _, mod in ipairs(moduleChecks) do
         CreateModuleRow(leftPanel, mod.key, mod.addonName, modY)
         modY = modY - 28
@@ -326,13 +397,6 @@ function UI:CreateHomeTab(parent)
     standaloneTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     modY = standaloneTitleY - 24
-    local standaloneChecks = {
-        { key = "MODULE_BAGS",          addonName = "OneWoW_Bags" },
-        { key = "MODULE_DIRECTDEPOSIT", addonName = "OneWoW_DirectDeposit" },
-        { key = "MODULE_SHOPPINGLIST",  addonName = "OneWoW_ShoppingList" },
-        { key = "MODULE_TRACKERS",      addonName = "OneWoW_Trackers" },
-    }
-
     for _, mod in ipairs(standaloneChecks) do
         CreateModuleRow(leftPanel, mod.key, mod.addonName, modY)
         modY = modY - 28
@@ -354,16 +418,6 @@ function UI:CreateHomeTab(parent)
     atSubHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     rightY = rightY - 22
 
-    local dataModuleChecks = {
-        { key = "DATA_MOD_ACCOUNTING",  addonName = "OneWoW_AltTracker_Accounting" },
-        { key = "DATA_MOD_AUCTIONS",    addonName = "OneWoW_AltTracker_Auctions" },
-        { key = "DATA_MOD_CHARACTER",   addonName = "OneWoW_AltTracker_Character" },
-        { key = "DATA_MOD_COLLECTIONS", addonName = "OneWoW_AltTracker_Collections" },
-        { key = "DATA_MOD_ENDGAME",     addonName = "OneWoW_AltTracker_Endgame" },
-        { key = "DATA_MOD_PROFESSIONS", addonName = "OneWoW_AltTracker_Professions" },
-        { key = "DATA_MOD_STORAGE",     addonName = "OneWoW_AltTracker_Storage" },
-    }
-
     for _, mod in ipairs(dataModuleChecks) do
         CreateModuleRow(rightPanel, mod.key, mod.addonName, rightY)
         rightY = rightY - 28
@@ -382,13 +436,6 @@ function UI:CreateHomeTab(parent)
     catSubHeader:SetText(L["HOME_CATALOG_DATA_MODULES"])
     catSubHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     rightY = catSubHeaderY - 22
-
-    local catalogDataChecks = {
-        { key = "CAT_MOD_JOURNAL",     addonName = "OneWoW_CatalogData_Journal" },
-        { key = "CAT_MOD_QUESTS",      addonName = "OneWoW_CatalogData_Quests" },
-        { key = "CAT_MOD_TRADESKILLS", addonName = "OneWoW_CatalogData_Tradeskills" },
-        { key = "CAT_MOD_VENDORS",     addonName = "OneWoW_CatalogData_Vendors" },
-    }
 
     for _, mod in ipairs(catalogDataChecks) do
         CreateModuleRow(rightPanel, mod.key, mod.addonName, rightY)
@@ -436,8 +483,8 @@ function UI:CreateHomeTab(parent)
     splitContainer:HookScript("OnSizeChanged", LayoutUtilColumns)
     C_Timer.After(0, LayoutUtilColumns)
 
-    CreateModuleRow(utilLeftPanel,  "MODULE_DEVTOOLS",  "OneWoW_Utility_DevTool",  -4)
-    CreateModuleRow(utilRightPanel, "MODULE_EXTRACTOR", "OneWoW_Utility_Extractor", -4)
+    CreateModuleRow(utilLeftPanel,  "MODULE_DEVTOOLS",  "OneWoW_Utility_DevTool",  -4, true)
+    CreateModuleRow(utilRightPanel, "MODULE_EXTRACTOR", "OneWoW_Utility_Extractor", -4, true)
 
     local containerH = columnsDepth + 8 + 18 + 24 + 32 + 20
     splitContainer:SetHeight(containerH)

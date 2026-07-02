@@ -127,6 +127,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["HOME_PENDING_DISABLE_TAG"] = "(다음 재시작 후 비활성)",
     ["HOME_MANAGE_POINTER"] = "다음에서 기능 사용/사용 안 함:",
     ["HOME_MANAGE_LINK"] = "기능 관리",
+    ["HOME_VERSION_MISMATCH_NOTICE"] = "일부 OneWoW 애드온이 최신이 아니며 코어 버전 %s와(과) 일치하지 않습니다. 모든 모듈이 동일한 버전이 되도록 전체 OneWoW 모음을 다시 다운로드하세요.",
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",
     ["DATA_MOD_CHARACTER"] = "Character",

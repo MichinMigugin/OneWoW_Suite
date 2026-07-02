@@ -139,6 +139,7 @@ ns.Locale:Register(ADDON_NAME, "esMX", {
     ["HOME_PENDING_DISABLE_TAG"] = "(desactivado en la próxima recarga)",
     ["HOME_MANAGE_POINTER"] = "Activa o desactiva funciones en",
     ["HOME_MANAGE_LINK"] = "Gestionar funciones",
+    ["HOME_VERSION_MISMATCH_NOTICE"] = "Algunos complementos de OneWoW están desactualizados y no coinciden con la versión %s del núcleo. Vuelve a descargar la suite completa de OneWoW para que todos los módulos tengan la misma versión.",
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",

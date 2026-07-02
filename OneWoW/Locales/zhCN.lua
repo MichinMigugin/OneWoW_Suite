@@ -139,6 +139,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["HOME_PENDING_DISABLE_TAG"] = "（下次重载时关闭）",
     ["HOME_MANAGE_POINTER"] = "在此处启用或禁用功能",
     ["HOME_MANAGE_LINK"] = "管理功能",
+    ["HOME_VERSION_MISMATCH_NOTICE"] = "部分 OneWoW 插件已过期，与核心版本 %s 不一致。请重新下载完整的 OneWoW 套件，使所有模块保持相同版本。",
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",

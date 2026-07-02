@@ -139,6 +139,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["HOME_PENDING_DISABLE_TAG"] = "(disattivato al prossimo ricaricamento)",
     ["HOME_MANAGE_POINTER"] = "Attiva o disattiva le funzioni in",
     ["HOME_MANAGE_LINK"] = "Gestisci funzioni",
+    ["HOME_VERSION_MISMATCH_NOTICE"] = "Alcuni addon di OneWoW non sono aggiornati e non corrispondono alla versione %s del core. Scarica di nuovo la suite completa di OneWoW in modo che tutti i moduli siano alla stessa versione.",
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",
