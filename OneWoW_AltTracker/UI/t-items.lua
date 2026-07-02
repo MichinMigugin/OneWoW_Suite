@@ -73,6 +73,7 @@ local dupeColumnsConfig = {
     {key = "itemid",    label = L["ITEMS_COL_ITEMID"],  width = 55,  fixed = true,  align = "center", sortable = false, ttTitle = L["ITEMS_COL_ITEMID"],  ttDesc = L["TT_ITEMS_COL_ITEMID_DESC"]},
     {key = "ilvl",      label = ITEM_LEVEL_ABBR,        width = 55,  fixed = true,  align = "center", sortable = false, ttTitle = ITEM_LEVEL_ABBR,        ttDesc = L["TT_ITEMS_COL_ILVL_DESC"]},
     {key = "copies",    label = L["ITEMS_COL_COPIES"],  width = 50,  fixed = true,  align = "center", sortable = false, ttTitle = L["ITEMS_COL_COPIES"],  ttDesc = L["TT_ITEMS_COL_COPIES_DESC"]},
+    {key = "total",     label = TOTAL,                  width = 50,  fixed = true,  align = "center", sortable = false, ttTitle = TOTAL,                  ttDesc = L["TT_ITEMS_COL_TOTAL_DESC"]},
     {key = "primary",   label = PRIMARY,                width = 70,  fixed = true,  align = "center", sortable = false, ttTitle = PRIMARY,                ttDesc = L["TT_ITEMS_COL_PRIMARY_DESC"]},
     {key = "secondary", label = SECONDARY,              width = 80,  fixed = false, align = "left",   sortable = false, ttTitle = SECONDARY,              ttDesc = L["TT_ITEMS_COL_SECONDARY_DESC"]},
     {key = "socket",    label = L["DUPE_OPT_SOCKET"],   width = 50,  fixed = true,  align = "center", sortable = false, ttTitle = L["DUPE_OPT_SOCKET"],   ttDesc = L["TT_ITEMS_COL_SOCKET_DESC"]},
@@ -711,23 +712,56 @@ local function TrackDisplay(p)
     return "-"
 end
 
--- Copies that are byte-identical in the same place collapse into one line. The
--- itemLink encodes ilvl/track/upgrade/gems, so same who+location+link == truly
--- identical; falls back to itemID when a link is missing.
-local function CopySignature(m)
+-- Expanded copies roll up per location ("location totals"): every copy held in
+-- one place becomes a single line with the summed quantity, regardless of
+-- ilvl/track differences. Character bags/bank/mail bucket per character; the
+-- Warband bank is one shared account-wide bucket (no character name); guild banks
+-- bucket per guild (shared across that guild's members, not per alt).
+local function LocationSignature(m)
     local w = m.where or {}
-    local who = w.charName or w.guildName or "Account"
-    return who .. "|" .. (w.type or "") .. "|" .. (m.itemLink or tostring(m.itemID))
+    if w.type == "warband" then return "warband" end
+    if w.type == "guild" then return "guild|" .. (w.guildName or "?") end
+    return (w.charName or w.guildName or "Account") .. "|" .. (w.type or "")
 end
 
--- One expand line per distinct copy: where + qty, then the differentiating
--- detail (ilvl -> fully-upgraded ceiling, track, primary, secondary, socket) so
--- it's clear at a glance how copies differ (and which has the most headroom).
+-- Display label for a rolled-up location line, matching how the place is owned:
+-- Warband is account-wide (no name), guild banks show the guild name (what
+-- matters when alts span several guilds), everything else is "Character - Place".
+local function LocationLabel(m)
+    local w = m.where or {}
+    local loc = LOC_LABEL[w.type] or (w.type or "")
+    if w.type == "warband" then
+        return loc
+    elseif w.type == "guild" then
+        return (w.guildName or "?") .. " - " .. loc
+    end
+    return (w.charName or "Account") .. " - " .. loc
+end
+
+-- Order rolled-up location lines: character-owned places first (grouped by
+-- character), then the shared Warband bank, then guild banks.
+local LOC_OWNER_RANK = { warband = 2, guild = 3 }
+
+-- Distinct rolled-up locations in a group == the number of lines the expanded
+-- section shows (one per LocationSignature bucket). Drives the "Locs" column so
+-- the count always matches what the user sees when they expand the row.
+local function CountLocations(group)
+    local seen, n = {}, 0
+    for _, m in ipairs(group.members) do
+        local sig = LocationSignature(m)
+        if not seen[sig] then
+            seen[sig] = true
+            n = n + 1
+        end
+    end
+    return n
+end
+
+-- One expand line per rolled-up location: label + summed qty, then the
+-- representative copy's detail (ilvl -> fully-upgraded ceiling, track, primary,
+-- secondary, socket) so it's clear what the best copy there looks like.
 local function ComposeCopyLine(m, qty)
     local storageAPI = OneWoW_AltTracker_Storage_API
-    local w = m.where or {}
-    local who = w.charName or w.guildName or "Account"
-    local loc = LOC_LABEL[w.type] or (w.type or "")
     local p = PE:BuildProps(m.itemID, nil, nil, m.itemLink)
 
     local ilvl = storageAPI.GetEffectiveILvl(m)
@@ -750,17 +784,21 @@ local function ComposeCopyLine(m, qty)
     if sec ~= "-" then detail[#detail + 1] = sec end
     if p.hasSocket then detail[#detail + 1] = L["DUPE_OPT_SOCKET"] end
 
-    return who .. " - " .. loc .. " x" .. qty .. "   " .. table.concat(detail, ", ")
+    return LocationLabel(m) .. "  x" .. qty .. "   " .. table.concat(detail, ", ")
 end
 
--- Collapse a group's members into per-copy lines (identical copies merged with a
--- summed quantity). The anchor item (the one the group is titled by) sorts first,
--- then by name -> itemID -> highest ilvl, so related copies sit together -- useful
--- in Similar mode where a group mixes different items sharing a slot.
+-- Collapse a group's members into one line per character + location, with the
+-- quantity summed across every copy there. The representative copy (highest
+-- effective ilvl at that location) supplies the differentiating detail, so a
+-- location holding mixed-ilvl copies still surfaces the best one. The anchor item
+-- (the one the group is titled by) sorts first, then by name -> itemID -> highest
+-- ilvl, so related locations sit together -- useful in Similar mode where a group
+-- mixes different items sharing a slot.
 local function BuildCopyLines(group, anchorName)
+    local api = OneWoW_AltTracker_Storage_API
     local order, bySig = {}, {}
     for _, m in ipairs(group.members) do
-        local sig = CopySignature(m)
+        local sig = LocationSignature(m)
         local agg = bySig[sig]
         if not agg then
             agg = { m = m, qty = 0, name = m.name or C_Item.GetItemInfo(m.itemLink or m.itemID) or "" }
@@ -768,15 +806,26 @@ local function BuildCopyLines(group, anchorName)
             order[#order + 1] = agg
         end
         agg.qty = agg.qty + (m.count or 1)
+        -- Keep the highest-ilvl copy at this location as the line's representative.
+        if api.GetEffectiveILvl(m) > api.GetEffectiveILvl(agg.m) then
+            agg.m = m
+            agg.name = m.name or agg.name
+        end
     end
-    local api = OneWoW_AltTracker_Storage_API
     table.sort(order, function(a, b)
         local aAnchor = anchorName ~= nil and a.name == anchorName
         local bAnchor = anchorName ~= nil and b.name == anchorName
         if aAnchor ~= bAnchor then return aAnchor end
+        local aw, bw = a.m.where or {}, b.m.where or {}
+        local ar = LOC_OWNER_RANK[aw.type] or 1
+        local br = LOC_OWNER_RANK[bw.type] or 1
+        if ar ~= br then return ar < br end
+        local an = aw.charName or aw.guildName or ""
+        local bn = bw.charName or bw.guildName or ""
+        if an ~= bn then return an < bn end
+        if (aw.type or "") ~= (bw.type or "") then return (aw.type or "") < (bw.type or "") end
         if a.name ~= b.name then return a.name < b.name end
-        if a.m.itemID ~= b.m.itemID then return a.m.itemID < b.m.itemID end
-        return api.GetEffectiveILvl(a.m) > api.GetEffectiveILvl(b.m)
+        return a.m.itemID < b.m.itemID
     end)
     local lines = {}
     for _, agg in ipairs(order) do
@@ -887,7 +936,8 @@ function ns.UI.RefreshDupeView(itemsTab)
             ilvlStr = "-"
         end
         table.insert(itemRow.cells, MakeTextCell(itemRow, ilvlStr))
-        table.insert(itemRow.cells, MakeTextCell(itemRow, tostring(group.slotCount)))
+        table.insert(itemRow.cells, MakeTextCell(itemRow, tostring(CountLocations(group))))
+        table.insert(itemRow.cells, MakeTextCell(itemRow, tostring(group.totalCount or group.slotCount)))
         table.insert(itemRow.cells, MakeTextCell(itemRow, PrimaryDisplay(props)))
         table.insert(itemRow.cells, MakeTextCell(itemRow, SecondaryDisplay(props), "LEFT"))
         table.insert(itemRow.cells, MakeTextCell(itemRow, props.hasSocket and YES or NO))
