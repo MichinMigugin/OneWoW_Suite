@@ -1,5 +1,17 @@
 local _, ns = ...
+
+local OneWoW_GUI = OneWoW_GUI
+
 local L = ns.L
+
+local function WithUnitAsTarget(unit, fn)
+    if unit ~= "target" then
+        TargetUnit(unit)
+        C_Timer.After(0.1, function() fn("target") end)
+        return
+    end
+    fn(unit)
+end
 
 local function NavigateToPlayer(fullName)
     if not OneWoW_Notes_API or not OneWoW_Notes_API.OpenPlayer then return end
@@ -41,8 +53,7 @@ local function HandleOpenVendorDetails(npcIDNum)
         OneWoW_Catalog_API.OpenToVendor(npcIDNum)
         return
     end
-    if not OneWoW or not ns.UI then return end
-    ns.UI:Show("catalog")
+    OneWoW.UI:Show("catalog")
     C_Timer.After(0.25, function()
         if OneWoW_Catalog_API then
             OneWoW_Catalog_API.OpenToVendor(npcIDNum)
@@ -55,56 +66,31 @@ end
 -- =============================================
 
 local function HandlePlayerAdd(unit)
-    if not OneWoW_Notes_API or not OneWoW_Notes_API.GetPlayer then
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.GetPlayer or not OneWoW_Notes_API.GetPlayerInfoFromUnit then
         print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_NOTES_NOT_LOADED"])
         return
     end
 
     if not UnitExists(unit) or not UnitIsPlayer(unit) then return end
 
-    if unit ~= "target" then
-        TargetUnit(unit)
-        C_Timer.After(0.1, function() HandlePlayerAdd("target") end)
-        return
-    end
+    WithUnitAsTarget(unit, function(targetUnit)
+        local playerInfo = OneWoW_Notes_API.GetPlayerInfoFromUnit(targetUnit)
+        if not playerInfo then return end
 
-    local playerName, realm = UnitName(unit)
-    if not playerName then return end
-    if not realm or realm == "" then realm = GetRealmName() end
-    local fullName = playerName .. "-" .. realm
+        local existing = OneWoW_Notes_API.GetPlayer(playerInfo.fullName)
+        if existing then
+            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_PLAYER_EXISTS"], playerInfo.name))
+            NavigateToPlayer(playerInfo.fullName)
+            return
+        end
 
-    local existing = OneWoW_Notes_API.GetPlayer(fullName)
-    if existing then
-        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_PLAYER_EXISTS"], playerName))
-        NavigateToPlayer(fullName)
-        return
-    end
-
-    local _, classFile = UnitClass(unit)
-    local _, race      = UnitRace(unit)
-    local guild        = GetGuildInfo(unit) or ""
-
-    local playerData = {
-        name         = playerName,
-        realm        = realm,
-        fullName     = fullName,
-        class        = classFile or "",
-        race         = race or "",
-        level        = UnitLevel(unit) or 0,
-        guild        = guild,
-        faction      = "",
-        category     = "General",
-        storage      = "account",
-        content      = "",
-        tooltipLines = {"", "", "", ""},
-    }
-
-    OneWoW_Notes_API.AddPlayer(fullName, playerData)
-    print("|cFFFFD100OneWoW:|r " .. string.format(L["ADDED_PLAYER_S"], playerName))
+        OneWoW_Notes_API.AddPlayer(playerInfo.fullName, playerInfo)
+        print("|cFFFFD100OneWoW:|r " .. string.format(L["ADDED_PLAYER_S"], playerInfo.name))
+    end)
 end
 
 local function HandleAddMountInfo(unit)
-    if not OneWoW_Notes_API or not OneWoW_Notes_API.GetPlayer then
+    if not OneWoW_Notes_API or not OneWoW_Notes_API.GetPlayer or not OneWoW_Notes_API.GetPlayerInfoFromUnit then
         print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_NOTES_NOT_LOADED"])
         return
     end
@@ -117,77 +103,56 @@ local function HandleAddMountInfo(unit)
 
     if not UnitExists(unit) or not UnitIsPlayer(unit) then return end
 
-    if unit ~= "target" then
-        TargetUnit(unit)
-        C_Timer.After(0.1, function() HandleAddMountInfo("target") end)
-        return
-    end
-
-    local mountInfo = pmModule:DetectMountOnUnit(unit)
-    if not mountInfo then
-        local playerName = UnitName(unit) or "Player"
-        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_PLAYER_NOT_MOUNTED"], playerName))
-        return
-    end
-
-    local playerName, realm = UnitName(unit)
-    if not realm or realm == "" then realm = GetRealmName() end
-    local fullName = playerName .. "-" .. realm
-
-    local mountText
-    if mountInfo.isMovementForm then
-        mountText = string.format(L["UNIT_CTX_MOUNT_MOVEMENT_FORM"], mountInfo.name)
-    else
-        local mountLink = C_Spell.GetSpellLink(mountInfo.spellID or mountInfo.spellId) or mountInfo.name
-        mountText = string.format(L["UNIT_CTX_MOUNT_LABEL"], mountLink)
-        if mountInfo.mountTypeName then
-            mountText = mountText .. "\n" .. string.format(L["TYPE_S"], mountInfo.mountTypeName)
+    WithUnitAsTarget(unit, function(targetUnit)
+        local mountInfo = pmModule:DetectMountOnUnit(targetUnit)
+        if not mountInfo then
+            local playerName = UnitName(targetUnit) or "Player"
+            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_PLAYER_NOT_MOUNTED"], playerName))
+            return
         end
-        if mountInfo.sourceText and mountInfo.sourceText ~= "" then
-            mountText = mountText .. "\n" .. string.format(L["UNIT_CTX_MOUNT_SOURCE"], mountInfo.sourceText)
-        end
-        if mountInfo.isCollected ~= nil then
-            local status = mountInfo.isCollected and COLLECTED or NOT_COLLECTED
-            mountText = mountText .. "\n" .. string.format(L["UNIT_CTX_MOUNT_STATUS"], status)
-        end
-    end
 
-    local existing = OneWoW_Notes_API.GetPlayer(fullName)
-    if existing then
-        local currentNote = existing.content or ""
-        if currentNote ~= "" then
-            existing.content = currentNote .. "\n\n" .. mountText
+        local playerInfo = OneWoW_Notes_API.GetPlayerInfoFromUnit(targetUnit)
+        if not playerInfo then return end
+
+        local mountText
+        if mountInfo.isMovementForm then
+            mountText = string.format(L["UNIT_CTX_MOUNT_MOVEMENT_FORM"], mountInfo.name)
         else
-            existing.content = mountText
+            local mountLink = C_Spell.GetSpellLink(mountInfo.spellID or mountInfo.spellId) or mountInfo.name
+            mountText = string.format(L["UNIT_CTX_MOUNT_LABEL"], mountLink)
+            if mountInfo.mountTypeName then
+                mountText = mountText .. "\n" .. string.format(L["TYPE_S"], mountInfo.mountTypeName)
+            end
+            if mountInfo.sourceText and mountInfo.sourceText ~= "" then
+                mountText = mountText .. "\n" .. string.format(L["UNIT_CTX_MOUNT_SOURCE"], mountInfo.sourceText)
+            end
+            if mountInfo.isCollected ~= nil then
+                local status = mountInfo.isCollected and COLLECTED or NOT_COLLECTED
+                mountText = mountText .. "\n" .. string.format(L["UNIT_CTX_MOUNT_STATUS"], status)
+            end
         end
-        OneWoW_Notes_API.SavePlayer(fullName, existing)
-        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_APPENDED"], playerName))
-    else
-        local _, classFile = UnitClass(unit)
-        local _, race      = UnitRace(unit)
-        local guild        = GetGuildInfo(unit) or ""
 
-        local playerData = {
-            name         = playerName,
-            realm        = realm,
-            fullName     = fullName,
-            class        = classFile or "",
-            race         = race or "",
-            level        = UnitLevel(unit) or 0,
-            guild        = guild,
-            faction      = "",
-            category     = "General",
-            storage      = "account",
-            content      = mountText,
-            tooltipLines = {"", "", "", ""},
-        }
-        OneWoW_Notes_API.AddPlayer(fullName, playerData)
-        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_CREATED"], playerName))
-    end
+        local fullName = playerInfo.fullName
+        local existing = OneWoW_Notes_API.GetPlayer(fullName)
+        if existing then
+            local currentNote = existing.content or ""
+            if currentNote ~= "" then
+                existing.content = currentNote .. "\n\n" .. mountText
+            else
+                existing.content = mountText
+            end
+            OneWoW_Notes_API.SavePlayer(fullName, existing)
+            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_APPENDED"], playerInfo.name))
+        else
+            playerInfo.content = mountText
+            OneWoW_Notes_API.AddPlayer(fullName, playerInfo)
+            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_CREATED"], playerInfo.name))
+        end
 
-    if OneWoW_Notes_API.RefreshPlayersTab then
-        OneWoW_Notes_API.RefreshPlayersTab(fullName)
-    end
+        if OneWoW_Notes_API.RefreshPlayersTab then
+            OneWoW_Notes_API.RefreshPlayersTab(fullName)
+        end
+    end)
 end
 
 local function HandleMatchMount(unit)
@@ -202,46 +167,42 @@ local function HandleMatchMount(unit)
         return
     end
 
-    if unit ~= "target" then
-        TargetUnit(unit)
-        C_Timer.After(0.1, function() HandleMatchMount("target") end)
-        return
-    end
+    WithUnitAsTarget(unit, function(targetUnit)
+        local mountInfo = pmModule:DetectMountOnUnit(targetUnit)
+        if not mountInfo then
+            local playerName = UnitName(targetUnit) or "Player"
+            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_PLAYER_NOT_MOUNTED"], playerName))
+            return
+        end
 
-    local mountInfo = pmModule:DetectMountOnUnit(unit)
-    if not mountInfo then
-        local playerName = UnitName(unit) or "Player"
-        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_PLAYER_NOT_MOUNTED"], playerName))
-        return
-    end
+        if mountInfo.isMovementForm then
+            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_CANNOT_MATCH_FORM"], mountInfo.name))
+            return
+        end
 
-    if mountInfo.isMovementForm then
-        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_CANNOT_MATCH_FORM"], mountInfo.name))
-        return
-    end
+        if not mountInfo.isCollected then
+            local mountLink = C_Spell.GetSpellLink(mountInfo.spellID or mountInfo.spellId) or mountInfo.name
+            print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_NOT_COLLECTED"], mountLink))
+            return
+        end
 
-    if not mountInfo.isCollected then
+        if IsFlying() then
+            print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_CANNOT_FLYING"])
+            return
+        end
+
         local mountLink = C_Spell.GetSpellLink(mountInfo.spellID or mountInfo.spellId) or mountInfo.name
-        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_NOT_COLLECTED"], mountLink))
-        return
-    end
-
-    if IsFlying() then
-        print("|cFFFFD100OneWoW:|r " .. L["UNIT_CTX_CANNOT_FLYING"])
-        return
-    end
-
-    local mountLink = C_Spell.GetSpellLink(mountInfo.spellID or mountInfo.spellId) or mountInfo.name
-    if IsMounted() then
-        Dismount()
-        C_Timer.After(0.3, function()
+        if IsMounted() then
+            Dismount()
+            C_Timer.After(0.3, function()
+                C_MountJournal.SummonByID(mountInfo.mountID)
+                print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MATCHING_MOUNT"], mountLink))
+            end)
+        else
             C_MountJournal.SummonByID(mountInfo.mountID)
             print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MATCHING_MOUNT"], mountLink))
-        end)
-    else
-        C_MountJournal.SummonByID(mountInfo.mountID)
-        print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MATCHING_MOUNT"], mountLink))
-    end
+        end
+    end)
 end
 
 local function PlayerContextMenuHandler(_, rootDescription, contextData)
@@ -255,15 +216,16 @@ local function PlayerContextMenuHandler(_, rootDescription, contextData)
 
     local playerName, realm = UnitName(contextData.unit)
     if playerName then
-        if not realm or realm == "" then realm = GetRealmName() end
-        local fullName = playerName .. "-" .. realm
-        local buttonText = L["UNIT_CTX_ADD_PLAYER_NOTE"]
-        if OneWoW_Notes_API.GetPlayer(fullName) then
-            buttonText = L["UNIT_CTX_EDIT_NPC_NOTE"]
+        local fullName = OneWoW_GUI:GetCharacterKey(playerName, realm ~= "" and realm or nil)
+        if fullName then
+            local buttonText = L["UNIT_CTX_ADD_PLAYER_NOTE"]
+            if OneWoW_Notes_API.GetPlayer(fullName) then
+                buttonText = L["UNIT_CTX_EDIT_NPC_NOTE"]
+            end
+            rootDescription:CreateButton(buttonText, function()
+                HandlePlayerAdd(contextData.unit)
+            end)
         end
-        rootDescription:CreateButton(buttonText, function()
-            HandlePlayerAdd(contextData.unit)
-        end)
     end
 
     local pmModule = GetPlayMountsModule()
@@ -292,48 +254,44 @@ local function HandleNPCAdd(unit, npcIDNum)
 
     if not UnitExists(unit) or UnitIsPlayer(unit) then return end
 
-    if unit ~= "target" then
-        TargetUnit(unit)
-        C_Timer.After(0.1, function() HandleNPCAdd("target", npcIDNum) end)
-        return
-    end
-
-    local existing = OneWoW_Notes_API.GetNPC(npcIDNum)
-    if existing then
-        print("|cFFFFD100OneWoW:|r " .. L["NPC_NOTE_ALREADY_EXISTS"])
-        NavigateToNPC(npcIDNum)
-        return
-    end
-
-    local npcName = UnitName(unit) or ("NPC " .. npcIDNum)
-    local mapID   = C_Map.GetBestMapForUnit("player")
-    local coords  = nil
-    if mapID then
-        local pos = C_Map.GetPlayerMapPosition(mapID, "player")
-        if pos then
-            local x, y = pos:GetXY()
-            coords = { x = x * 100, y = y * 100 }
+    WithUnitAsTarget(unit, function(targetUnit)
+        local existing = OneWoW_Notes_API.GetNPC(npcIDNum)
+        if existing then
+            print("|cFFFFD100OneWoW:|r " .. L["NPC_NOTE_ALREADY_EXISTS"])
+            NavigateToNPC(npcIDNum)
+            return
         end
-    end
-    local mapInfo  = mapID and C_Map.GetMapInfo(mapID)
-    local zoneName = (mapInfo and mapInfo.name) or GetZoneText() or ""
 
-    local npcData = {
-        id           = npcIDNum,
-        name         = npcName,
-        mapID        = mapID,
-        zone         = zoneName,
-        coords       = coords,
-        category     = "Other",
-        storage      = "account",
-        content      = "",
-        tooltipLines = {"", "", "", ""},
-        alertOnFound = false,
-    }
+        local npcName = UnitName(targetUnit) or ("NPC " .. npcIDNum)
+        local mapID   = C_Map.GetBestMapForUnit("player")
+        local coords  = nil
+        if mapID then
+            local pos = C_Map.GetPlayerMapPosition(mapID, "player")
+            if pos then
+                local x, y = pos:GetXY()
+                coords = { x = x * 100, y = y * 100 }
+            end
+        end
+        local mapInfo  = mapID and C_Map.GetMapInfo(mapID)
+        local zoneName = (mapInfo and mapInfo.name) or GetZoneText() or ""
 
-    OneWoW_Notes_API.AddNPC(npcIDNum, npcData)
-    print("|cFFFFD100OneWoW:|r " .. string.format(L["ADDED_NPC_S"], npcName))
-    NavigateToNPC(npcIDNum)
+        local npcData = {
+            id           = npcIDNum,
+            name         = npcName,
+            mapID        = mapID,
+            zone         = zoneName,
+            coords       = coords,
+            category     = "Other",
+            storage      = "account",
+            content      = "",
+            tooltipLines = {"", "", "", ""},
+            alertOnFound = false,
+        }
+
+        OneWoW_Notes_API.AddNPC(npcIDNum, npcData)
+        print("|cFFFFD100OneWoW:|r " .. string.format(L["ADDED_NPC_S"], npcName))
+        NavigateToNPC(npcIDNum)
+    end)
 end
 
 local function HandleNPCUpdateLocation(_, npcIDNum)

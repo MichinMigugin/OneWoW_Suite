@@ -1,6 +1,8 @@
 local _, ns = ...
 local L = ns.L
 
+local OneWoW_GUI = OneWoW_GUI
+
 local Players = ns.DataModule:New(
     "players",
     "playerCustomCategories",
@@ -34,27 +36,36 @@ function Players:GetPlayer(fullName)
     return self:GetAll()[fullName]
 end
 
-function Players:GetTargetPlayerInfo()
-    if not UnitExists("target") or not UnitIsPlayer("target") then return nil end
-    local name, realm = UnitName("target")
+--- Snapshot of a player unit for new note creation.
+---@param unit string?
+---@return table|nil playerInfo
+function Players:GetPlayerInfoFromUnit(unit)
+    unit = unit or "target"
+    if not UnitExists(unit) or not UnitIsPlayer(unit) then return nil end
+    local name, realm = UnitName(unit)
     if not name then return nil end
-    if not realm or realm == "" then realm = GetRealmName() or "Unknown" end
-    local fullName = name .. "-" .. realm
-    local _, class = UnitClass("target")
-    local _, race  = UnitRace("target")
-    local level    = UnitLevel("target")
-    local guild    = GetGuildInfo("target") or ""
-    local _, faction = UnitFactionGroup("target")
+    local displayRealm = (realm ~= "" and realm) or GetRealmName()
+    local fullName = OneWoW_GUI:GetCharacterKey(name, realm ~= "" and realm or nil)
+    if not fullName then return nil end
+    local _, class = UnitClass(unit)
+    local _, race  = UnitRace(unit)
+    local level    = UnitLevel(unit)
+    local guild    = GetGuildInfo(unit) or ""
+    local _, faction = UnitFactionGroup(unit)
     return {
         fullName = fullName,
         name     = name,
-        realm    = realm,
+        realm    = displayRealm,
         class    = class and class:upper() or "WARRIOR",
         race     = race or "",
         level    = level or 1,
         guild    = guild,
         faction  = faction or "",
     }
+end
+
+function Players:GetTargetPlayerInfo()
+    return self:GetPlayerInfoFromUnit("target")
 end
 
 function Players:AddPlayer(fullName, playerInfo)

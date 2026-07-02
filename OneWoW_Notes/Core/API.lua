@@ -83,6 +83,14 @@ function OneWoW_Notes_API.OpenNPC(npcID)
     return true
 end
 
+--- Snapshot of a player unit for new note creation.
+---@param unit string?
+---@return table|nil playerInfo
+function OneWoW_Notes_API.GetPlayerInfoFromUnit(unit)
+    if not ns.Players then return nil end
+    return ns.Players:GetPlayerInfoFromUnit(unit or "target")
+end
+
 --- Returns a player note.
 ---@param fullName string
 ---@return table|nil playerData
