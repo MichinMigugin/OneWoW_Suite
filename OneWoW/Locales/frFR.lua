@@ -183,6 +183,7 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["UNIT_CTX_CANNOT_FLYING"] = "Impossible de changer de monture en vol.",
     ["UNIT_CTX_MATCHING_MOUNT"] = "Monture assortie : %s",
     ["UNIT_CTX_MOUNT_INFO_APPENDED"] = "Infos de monture ajoutées à la note pour %s.",
+    ["UNIT_CTX_MOUNT_INFO_ALREADY_RECORDED"] = "Infos de monture déjà enregistrées pour %s.",
     ["UNIT_CTX_MOUNT_INFO_CREATED"] = "Note créée avec les infos de monture pour %s.",
     ["UNIT_CTX_MOUNT_MOVEMENT_FORM"] = "Forme de déplacement : %s",
     ["UNIT_CTX_MOUNT_LABEL"] = "Monture : %s",

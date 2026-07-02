@@ -1,6 +1,7 @@
 local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
+local strfind = strfind
 
 local L = ns.L
 
@@ -39,6 +40,22 @@ local function IsMatchMountEnabled()
         return false
     end
     return OneWoW_QoL_API.GetModuleToggle("playmounts", "enableMatchMount", true)
+end
+
+---@param content string
+---@param mountInfo table
+---@param mountText string
+---@return boolean
+local function NoteContentHasMount(content, mountInfo, mountText)
+    if content == "" then return false end
+    if mountInfo.isMovementForm then
+        return strfind(content, mountText, 1, true) ~= nil
+    end
+    local spellID = mountInfo.spellID or mountInfo.spellId
+    if spellID and strfind(content, "|Hspell:" .. spellID, 1, true) then
+        return true
+    end
+    return strfind(content, mountText, 1, true) ~= nil
 end
 
 local function CatalogHasVendor(npcID)
@@ -136,6 +153,10 @@ local function HandleAddMountInfo(unit)
         local existing = OneWoW_Notes_API.GetPlayer(fullName)
         if existing then
             local currentNote = existing.content or ""
+            if NoteContentHasMount(currentNote, mountInfo, mountText) then
+                print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_ALREADY_RECORDED"], playerInfo.name))
+                return
+            end
             if currentNote ~= "" then
                 existing.content = currentNote .. "\n\n" .. mountText
             else

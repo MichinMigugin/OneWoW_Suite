@@ -183,6 +183,7 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["UNIT_CTX_CANNOT_FLYING"] = "Reittierwechsel im Flug nicht möglich.",
     ["UNIT_CTX_MATCHING_MOUNT"] = "Abgeglichenes Reittier: %s",
     ["UNIT_CTX_MOUNT_INFO_APPENDED"] = "Reittierinfo zur Notiz für %s hinzugefügt.",
+    ["UNIT_CTX_MOUNT_INFO_ALREADY_RECORDED"] = "Reittierinfo für %s bereits notiert.",
     ["UNIT_CTX_MOUNT_INFO_CREATED"] = "Notiz mit Reittierinfo für %s erstellt.",
     ["UNIT_CTX_MOUNT_MOVEMENT_FORM"] = "Bewegungsgestalt: %s",
     ["UNIT_CTX_MOUNT_LABEL"] = "Reittier: %s",

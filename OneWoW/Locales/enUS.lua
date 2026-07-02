@@ -184,6 +184,7 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["UNIT_CTX_CANNOT_FLYING"] = "Cannot switch mounts while flying.",
     ["UNIT_CTX_MATCHING_MOUNT"] = "Matching mount: %s",
     ["UNIT_CTX_MOUNT_INFO_APPENDED"] = "Mount info added to note for %s.",
+    ["UNIT_CTX_MOUNT_INFO_ALREADY_RECORDED"] = "Mount info already recorded for %s.",
     ["UNIT_CTX_MOUNT_INFO_CREATED"] = "Created note with mount info for %s.",
     ["UNIT_CTX_MOUNT_MOVEMENT_FORM"] = "Movement Form: %s",
     ["UNIT_CTX_MOUNT_LABEL"] = "Mount: %s",

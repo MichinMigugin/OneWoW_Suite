@@ -166,6 +166,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["UNIT_CTX_CANNOT_FLYING"] = "비행 중에는 탈것을 바꿀 수 없습니다.",
     ["UNIT_CTX_MATCHING_MOUNT"] = "탈것 맞추는 중: %s",
     ["UNIT_CTX_MOUNT_INFO_APPENDED"] = "%s 메모에 탈것 정보 추가됨.",
+    ["UNIT_CTX_MOUNT_INFO_ALREADY_RECORDED"] = "%s 메모에 탈것 정보가 이미 기록되어 있습니다.",
     ["UNIT_CTX_MOUNT_INFO_CREATED"] = "탈것 정보가 있는 메모를 %s에 대해 생성함.",
     ["UNIT_CTX_MOUNT_MOVEMENT_FORM"] = "이동 형태: %s",
     ["UNIT_CTX_MOUNT_LABEL"] = "탈것: %s",

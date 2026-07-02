@@ -183,6 +183,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["UNIT_CTX_CANNOT_FLYING"] = "Impossibile cambiare cavalcatura in volo.",
     ["UNIT_CTX_MATCHING_MOUNT"] = "Cavalcatura abbinata: %s",
     ["UNIT_CTX_MOUNT_INFO_APPENDED"] = "Info cavalcatura aggiunta alla nota di %s.",
+    ["UNIT_CTX_MOUNT_INFO_ALREADY_RECORDED"] = "Info cavalcatura già registrata per %s.",
     ["UNIT_CTX_MOUNT_INFO_CREATED"] = "Nota creata con info cavalcatura per %s.",
     ["UNIT_CTX_MOUNT_MOVEMENT_FORM"] = "Forma di movimento: %s",
     ["UNIT_CTX_MOUNT_LABEL"] = "Cavalcatura: %s",

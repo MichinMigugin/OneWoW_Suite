@@ -183,6 +183,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["UNIT_CTX_CANNOT_FLYING"] = "飞行时无法切换坐骑。",
     ["UNIT_CTX_MATCHING_MOUNT"] = "正在匹配坐骑：%s",
     ["UNIT_CTX_MOUNT_INFO_APPENDED"] = "坐骑信息已添加到 %s 的笔记。",
+    ["UNIT_CTX_MOUNT_INFO_ALREADY_RECORDED"] = "%s 的笔记中已记录坐骑信息。",
     ["UNIT_CTX_MOUNT_INFO_CREATED"] = "已为 %s 创建带坐骑信息的笔记。",
     ["UNIT_CTX_MOUNT_MOVEMENT_FORM"] = "移动形态：%s",
     ["UNIT_CTX_MOUNT_LABEL"] = "坐骑：%s",

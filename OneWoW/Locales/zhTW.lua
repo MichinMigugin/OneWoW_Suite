@@ -183,6 +183,7 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["UNIT_CTX_CANNOT_FLYING"] = "飛行時無法切換坐騎。",
     ["UNIT_CTX_MATCHING_MOUNT"] = "正在匹配坐騎：%s",
     ["UNIT_CTX_MOUNT_INFO_APPENDED"] = "坐騎資訊已加入 %s 的筆記。",
+    ["UNIT_CTX_MOUNT_INFO_ALREADY_RECORDED"] = "%s 的筆記中已記錄坐騎資訊。",
     ["UNIT_CTX_MOUNT_INFO_CREATED"] = "已為 %s 建立帶坐騎資訊的筆記。",
     ["UNIT_CTX_MOUNT_MOVEMENT_FORM"] = "移動形態：%s",
     ["UNIT_CTX_MOUNT_LABEL"] = "坐騎：%s",

@@ -183,6 +183,7 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["UNIT_CTX_CANNOT_FLYING"] = "Невозможно сменить средство передвижения в полёте.",
     ["UNIT_CTX_MATCHING_MOUNT"] = "Сопоставление средства передвижения: %s",
     ["UNIT_CTX_MOUNT_INFO_APPENDED"] = "Инфо о средстве передвижения добавлено в заметку для %s.",
+    ["UNIT_CTX_MOUNT_INFO_ALREADY_RECORDED"] = "Инфо о средстве передвижения для %s уже записано.",
     ["UNIT_CTX_MOUNT_INFO_CREATED"] = "Создана заметка с инфо о средстве передвижения для %s.",
     ["UNIT_CTX_MOUNT_MOVEMENT_FORM"] = "Форма передвижения: %s",
     ["UNIT_CTX_MOUNT_LABEL"] = "Средство передвижения: %s",

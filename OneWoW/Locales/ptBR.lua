@@ -183,6 +183,7 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["UNIT_CTX_CANNOT_FLYING"] = "Não é possível trocar de montaria durante o voo.",
     ["UNIT_CTX_MATCHING_MOUNT"] = "Igualando montaria: %s",
     ["UNIT_CTX_MOUNT_INFO_APPENDED"] = "Info de montaria adicionada à nota de %s.",
+    ["UNIT_CTX_MOUNT_INFO_ALREADY_RECORDED"] = "Info de montaria já registrada para %s.",
     ["UNIT_CTX_MOUNT_INFO_CREATED"] = "Nota criada com info de montaria para %s.",
     ["UNIT_CTX_MOUNT_MOVEMENT_FORM"] = "Forma de movimento: %s",
     ["UNIT_CTX_MOUNT_LABEL"] = "Montaria: %s",
