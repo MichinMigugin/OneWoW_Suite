@@ -47,6 +47,27 @@ local function Enrich(rec, lookupKey)
     return rec
 end
 
+-- The container API's isBound is soulbound-only: a Warbound (account-bound) item
+-- reports isBound=false, so a "Hide Bound"-style filter misses it. Detect warbound
+-- from the live slot the same way the overlay engine does -- Warbound-until-equipped
+-- off the link, otherwise a bound item the Account bank will accept. Must run at
+-- scan time: the ItemLocation is only valid for the logged-in character, so stored
+-- alt data only carries this once that alt has been re-scanned.
+---@param bagID number
+---@param slotID number
+---@param itemLink string|nil
+---@return boolean
+local function DetectWarbound(bagID, slotID, itemLink)
+    if itemLink and C_Item.IsItemBindToAccountUntilEquip(itemLink) then
+        return true
+    end
+    local loc = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
+    if C_Item.DoesItemExist(loc) and C_Item.IsBound(loc) then
+        return C_Bank.IsItemAllowedInBankType(Enum.BankType.Account, loc) or false
+    end
+    return false
+end
+
 -- Canonical slot record from a live container slot (bags / personal / warband,
 -- all C_Container). itemInfo is the GetContainerItemInfo result for the slot.
 local function BuildContainerRecord(bagID, slotID, itemInfo)
@@ -58,6 +79,7 @@ local function BuildContainerRecord(bagID, slotID, itemInfo)
         stackCount = itemInfo.stackCount or 1,
         isLocked   = itemInfo.isLocked,
         isBound    = itemInfo.isBound,
+        isWarbound = DetectWarbound(bagID, slotID, itemLink),
     }
     return Enrich(rec, itemLink or itemInfo.itemID)
 end

@@ -48,6 +48,9 @@ local function MakeInstance(slot, locType, where, lastSeen)
         -- isBound is coarse: containers store it directly; mail attachments
         -- only carry canUse, where false (can't use => not yours yet) means bound.
         isBound     = slot.isBound == true or slot.canUse == false,
+        -- Warbound (account-bound) is captured separately at scan time; the coarse
+        -- isBound above is soulbound-only and would miss it. Absent on guild/mail slots.
+        isWarbound  = slot.isWarbound == true,
         lastSeen    = lastSeen or 0,
         where       = where,
     }

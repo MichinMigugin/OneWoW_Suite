@@ -974,6 +974,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
                 vendorPrice = iVend,
                 totalQty = 0,
                 isBound = false,
+                isWarbound = false,
                 locations = {},
                 lastSeenTime = 0,
             }
@@ -983,6 +984,7 @@ function ns.UI.RefreshItemsTab(itemsTab)
         rec.totalQty = rec.totalQty + qty
         if (inst.lastSeen or 0) > rec.lastSeenTime then rec.lastSeenTime = inst.lastSeen end
         if inst.isBound then rec.isBound = true end
+        if inst.isWarbound then rec.isWarbound = true end
         local w = inst.where or {}
         local who = w.charName or w.guildName or "Account"
         AddToLocation(rec, who, LOC_LABEL[w.type] or (w.type or ""), qty)
@@ -1001,11 +1003,15 @@ function ns.UI.RefreshItemsTab(itemsTab)
         if itemData.vendorPrice and itemData.vendorPrice > 0 then
             totalVendorValue = totalVendorValue + (itemData.vendorPrice * itemData.totalQty)
         end
-        if itemData.isBound then totalBoundItems = totalBoundItems + 1 end
+        -- "Bound" here is the broad sense the filter uses: soulbound OR warbound
+        -- (account-bound). The container API's isBound is soulbound-only, so
+        -- warbound is tracked separately and folded in for both the count and filter.
+        local isBoundish = itemData.isBound or itemData.isWarbound
+        if isBoundish then totalBoundItems = totalBoundItems + 1 end
 
         local shouldInclude = true
 
-        if itemData.isBound and hidebound then
+        if isBoundish and hidebound then
             shouldInclude = false
         end
 
