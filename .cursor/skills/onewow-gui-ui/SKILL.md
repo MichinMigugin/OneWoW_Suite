@@ -169,6 +169,41 @@ Every addon should have `Addon/Core/Constants.lua` and `Addon/Locales/<locale>.l
 
 Theme, language, minimap state — owned by the suite. Use `OneWoW_GUI:GetSetting(key)` / `OneWoW_GUI:SetSetting(key, value)` rather than per-addon storage.
 
+## Live font size & re-flow ("headphones + wheels")
+
+Users can change the suite font and font **size** at runtime. Two things must hold
+for a panel to respond without a `/reload`:
+
+1. **Re-apply fonts (headphones).** The main OneWoW window rebuilds itself on font
+   change, so anything inside it is covered. Anything **outside** it is not:
+   standalone dialogs and panels docked to Blizzard frames (Auction House, merchant,
+   inspect, …). Those must be **font roots**.
+   - **Dialogs built via `OneWoW_GUI:CreateDialog`** (and everything routed through it —
+     `CreateConfirmDialog`, `ShowCopyURLDialog`, `ShowCopyLinksDialog`) are registered
+     **automatically**. Nothing to do.
+   - **Hand-rolled panels** (`CreateFrame` docked to a Blizzard frame) must call
+     `OneWoW_GUI:RegisterFontRoot(frame, relayoutFn)` once at build. The driver then
+     runs `ApplyFontToFrame(frame)` across the subtree on every font/size change.
+     Never hand-register `OnFontChanged`/`OnFontSizeChanged` for this — the registry
+     is the one funnel.
+
+2. **Re-flow with measured heights (wheels).** Re-fonting alone isn't enough if the
+   layout hard-codes row heights: taller text overlaps the row below it (the classic
+   "status text lands on the description" bug). Stacked text rows must derive their
+   height from the text — `fs:GetStringHeight()` (fall back to a fixed height only
+   until the width resolves) — and the panel exposes a `relayout` function that
+   re-runs the stack. Pass it as `RegisterFontRoot(frame, relayout)` (docked panels)
+   or `config.relayout` (dialogs) so it runs after re-fonting.
+
+**Standing check (do this even when the task is something else):** any time you open a
+panel/dialog file, confirm both apply — it's a font root (auto via `CreateDialog`, else
+`RegisterFontRoot`), and its text rows are measured, not fixed-height. Fixing the
+"wheels" on a panel you're already editing is in scope, not scope creep.
+
+Reference implementation: `OneWoW_AltTracker_Auctions/UI/AHPricesPanel.lua`
+(`RelayoutPanel` + `RegisterFontRoot`). Registry + driver: `OneWoW/GUI/Settings.lua`
+(`RegisterFontRoot` / `ApplyFontToFrame`).
+
 ## Review checklist — anti-patterns to flag
 
 1. **Raw `CreateFrame`/`CreateFontString` for components OneWoW_GUI provides.** Buttons, edit boxes, scroll frames, section headers, skinned icons, dropdowns, panels — all have helpers. Search the README catalog before approving raw widget construction.
@@ -194,6 +229,8 @@ Theme, language, minimap state — owned by the suite. Use `OneWoW_GUI:GetSettin
 11. **Per-addon storage of shared suite settings.** Theme key, language, minimap visibility stored in `Addon.db` instead of via `OneWoW_GUI:GetSetting/SetSetting`. (Overlaps with `wow-database-api` skill review item #6.)
 
 12. **Custom UI patterns added without checking OneWoW_GUI first.** New widget code without evidence the OneWoW_GUI catalog was consulted. The policy requires checking — and discussing additions to OneWoW_GUI before introducing local workarounds — not just falling through to raw `CreateFrame`.
+
+13. **Panels that don't survive a live font-size change.** A dialog/panel outside the main window that isn't a font root (built via raw `CreateFrame` without `RegisterFontRoot`), or a stacked layout with hard-coded text-row heights that overlaps when the font grows. See "Live font size & re-flow" above. Check this on every panel/dialog you touch, even incidentally.
 
 ## Related rules
 

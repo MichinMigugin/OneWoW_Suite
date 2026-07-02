@@ -479,6 +479,60 @@ function OneWoW_GUI:ApplyFontToFrame(frame)
     end
 end
 
+-- ============================================================================
+-- Font-root registry
+-- ============================================================================
+-- The main OneWoW window re-applies fonts by rebuilding itself on font change
+-- (ResetGUIOnSettingChange -> UI:FullReset). Frames that live *outside* that
+-- window — standalone dialogs, and panels docked to Blizzard frames (Auction
+-- House, merchant, etc.) — are not caught by that rebuild, so their text keeps
+-- the size it had at creation until the next /reload.
+--
+-- A font root is any such frame that opts in to automatic font handling. On a
+-- font / font-size change the driver below re-applies fonts across the whole
+-- subtree (ApplyFontToFrame) and runs an optional re-flow callback so a stack
+-- that measures its text can re-space itself. CreateDialog registers every
+-- dialog automatically; docked panels call RegisterFontRoot directly.
+--
+-- Keyed weakly so a frame that's abandoned (never a real concern for the shared
+-- reused dialogs, but true for one-shot panels) drops out without leaking.
+local fontRoots = setmetatable({}, { __mode = "k" })
+
+--- Register a frame subtree for automatic font updates on font / font-size change.
+--- Idempotent: re-registering the same frame just updates its relayout callback.
+---@param frame Frame root frame whose subtree gets ApplyFontToFrame on font change
+---@param relayout (fun())|nil optional re-flow callback run after fonts re-apply
+function OneWoW_GUI:RegisterFontRoot(frame, relayout)
+    if not frame then return end
+    fontRoots[frame] = relayout or true
+end
+
+--- Stop tracking a frame. Rarely needed thanks to weak keys, but available for
+--- panels that are explicitly torn down.
+---@param frame Frame
+function OneWoW_GUI:UnregisterFontRoot(frame)
+    if frame then fontRoots[frame] = nil end
+end
+
+-- Re-apply fonts (and re-flow) across every registered root. One misbehaving
+-- panel's relayout must not stop the others from updating, so relayouts are
+-- isolated via pcall; the error still surfaces through the normal handler.
+local function RefreshFontRoots()
+    for frame, relayout in pairs(fontRoots) do
+        OneWoW_GUI:ApplyFontToFrame(frame)
+        if type(relayout) == "function" then
+            local ok, err = pcall(relayout)
+            if not ok then geterrorhandler()(err) end
+        end
+    end
+end
+
+-- Drive the registry off font changes. SetSetting fires OnFontChanged for both
+-- a font swap and a size change (the fontSizeOffset branch fires it after
+-- OnFontSizeChanged), so listening to OnFontChanged alone covers every case
+-- without double-processing.
+OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", OneWoW_GUI, RefreshFontRoots)
+
 function OneWoW_GUI:MigrateLSMFontName(lsmName)
     if not lsmName then return nil end
     return LSM_NAME_TO_KEY[lsmName]

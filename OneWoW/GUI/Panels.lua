@@ -141,6 +141,11 @@ function OneWoW_GUI:CreateDialog(config)
         result.scrollContent = scrollContent
     end
 
+    -- Auto-handle live font / font-size changes: this dialog lives on UIParent,
+    -- outside the main window's rebuild, so register it as a font root. Callers
+    -- with a measured stack can pass config.relayout to re-flow after re-fonting.
+    self:RegisterFontRoot(frame, config.relayout)
+
     frame:Hide()
     return result
 end

@@ -175,6 +175,36 @@ OneWoW_GUI:SafeSetFont(myFontString, fontPath, 12)
 -- If user set offset to -2, actual size applied = 10
 ```
 
+### Live font updates: font roots
+
+The main OneWoW window re-applies fonts by rebuilding itself on font change. Frames
+that live **outside** it — standalone dialogs and panels docked to Blizzard frames
+(Auction House, merchant, inspect) — are not caught by that rebuild, so their text
+stays the old size until `/reload`. Register such frames as **font roots** and the
+toolkit handles them centrally.
+
+```lua
+-- Docked / hand-rolled panel: register once at build.
+OneWoW_GUI:RegisterFontRoot(panelFrame, RelayoutPanel)  -- relayout is optional
+```
+
+- On any font / font-size change, the single internal driver runs
+  `ApplyFontToFrame(frame)` across the subtree, then the optional `relayout`.
+- **Do not** register your own `OnFontChanged` / `OnFontSizeChanged` for this — the
+  registry is the one funnel (it listens to `OnFontChanged`, which also fires for a
+  size change, so there's no double work).
+- **`CreateDialog` (and everything routed through it — `CreateConfirmDialog`,
+  `ShowCopyURLDialog`, `ShowCopyLinksDialog`) auto-registers.** Pass `config.relayout`
+  if the dialog has a measured stack to re-flow. Nothing else to wire up.
+- `OneWoW_GUI:UnregisterFontRoot(frame)` exists for explicitly torn-down panels;
+  keys are weak, so abandoned frames drop out on their own.
+
+**Re-fonting is only half the job.** If a stacked layout hard-codes row heights,
+taller text overlaps the next row. Stacked text rows should measure themselves
+(`fs:GetStringHeight()`, with a fixed fallback until the width resolves) inside the
+`relayout` function. Reference implementation:
+`OneWoW_AltTracker_Auctions/UI/AHPricesPanel.lua` (`RelayoutPanel` + `RegisterFontRoot`).
+
 ### Stamp out the standard 4-part settings panel
 ```lua
 local yOffset = OneWoW_GUI:CreateSettingsPanel(parentFrame, {
