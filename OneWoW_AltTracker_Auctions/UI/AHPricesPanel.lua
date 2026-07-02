@@ -28,6 +28,7 @@ local autoScanCheck = nil
 local disabledNote = nil
 local isScanning = false
 local EnsureTab
+local RelayoutPanel
 
 local function GetBrandIcon()
     local theme = (OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
@@ -131,6 +132,7 @@ local function TogglePanel(show)
     if not panelFrame or not panelTab then return end
     if show then
         panelFrame:Show()
+        if RelayoutPanel then RelayoutPanel() end
         RepositionAuctionSidebar()
     else
         panelFrame:Hide()
@@ -158,9 +160,11 @@ local function BuildPanel()
     panelFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     panelFrame:Hide()
 
+    -- No brand icon/label: the title itself already reads "OneWoW AH Prices", and
+    -- in this narrow (320px) panel the centered brand text overlaps the title.
     OneWoW_GUI:CreateTitleBar(panelFrame, {
         title = L["AH_PANEL_TITLE"],
-        showBrand = true,
+        showBrand = false,
         onClose = function()
             panelTab:SetChecked(false)
             TogglePanel(false)
@@ -171,20 +175,18 @@ local function BuildPanel()
     contentFrame:SetPoint("TOPLEFT", panelFrame, "TOPLEFT", 12, -42)
     contentFrame:SetPoint("BOTTOMRIGHT", panelFrame, "BOTTOMRIGHT", -12, 12)
 
-    -- Deterministic vertical stack. Every element anchors to contentFrame at an
-    -- explicit, accumulated y offset with fixed heights, so layout does not depend
-    -- on FontString heights resolving (the panel is built while hidden). This
-    -- mirrors how the vendor panel stacks fixed-height rows.
+    -- Fixed metrics for non-text rows (button, progress bar, checkbox). The two
+    -- wrapping-text rows below (auto-scan description, AH source picker) grow with
+    -- the font size, so their heights are measured in RelayoutPanel instead of
+    -- being hard-coded — otherwise the status text overlaps them at larger fonts.
     local BTN_H = 26
     local PROGRESS_H = 28
     local CHECK_H = 24
-    local AUTODESC_H = 32
-    local SOURCE_H = 110
-    local y = 0
+    local AUTODESC_FALLBACK_H = 32  -- used only until the FontString can be measured
+    local SOURCE_FALLBACK_H = 110
 
     -- Scan button
     scanBtn = OneWoW_GUI:CreateFitTextButton(contentFrame, { text = L["AH_PANEL_SCAN"], height = BTN_H })
-    scanBtn:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, y)
     scanBtn:SetScript("OnClick", function()
         if isScanning then
             OneWoW_AltTracker_Auctions_API.StopFullScan()
@@ -198,12 +200,9 @@ local function BuildPanel()
         end
         OneWoW_AltTracker_Auctions_API.StartFullScan(OnScanCallback)
     end)
-    y = y - BTN_H - 10
 
     -- Progress bar (reserves a fixed row; shown only while scanning)
     local progressHolder = CreateFrame("Frame", nil, contentFrame, "BackdropTemplate")
-    progressHolder:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, y)
-    progressHolder:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, y)
     progressHolder:SetHeight(PROGRESS_H)
     progressHolder:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SIMPLE)
     progressHolder:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
@@ -221,7 +220,6 @@ local function BuildPanel()
     progressText = OneWoW_GUI:CreateFS(progressHolder, 10)
     progressText:SetPoint("BOTTOMLEFT", progressHolder, "BOTTOMLEFT", 6, 4)
     progressText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    y = y - PROGRESS_H - 10
 
     -- Auto-scan toggle
     autoScanCheck = OneWoW_GUI:CreateCheckbox(contentFrame, {
@@ -231,33 +229,23 @@ local function BuildPanel()
             GetSettings().autoScanOnOpen = myself:GetChecked() and true or false
         end,
     })
-    autoScanCheck:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, y)
-    y = y - CHECK_H - 2
 
     local autoScanDesc = OneWoW_GUI:CreateFS(contentFrame, 10)
-    autoScanDesc:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 4, y)
-    autoScanDesc:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, y)
-    autoScanDesc:SetHeight(AUTODESC_H)
     autoScanDesc:SetJustifyH("LEFT")
     autoScanDesc:SetJustifyV("TOP")
     autoScanDesc:SetWordWrap(true)
     autoScanDesc:SetText(L["AH_PANEL_AUTO_SCAN_DESC"])
     autoScanDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    y = y - AUTODESC_H - 14
 
-    -- AH price source picker (always usable, even when scan is disabled)
+    -- AH price source picker (always usable, even when scan is disabled).
+    -- AttachAHSourceControl lays out its own label/dropdown/description and
+    -- returns them so we can measure the block for the stack.
     local sourceHolder = CreateFrame("Frame", nil, contentFrame)
-    sourceHolder:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, y)
-    sourceHolder:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, y)
-    sourceHolder:SetHeight(SOURCE_H)
-    ItemPrices:AttachAHSourceControl(sourceHolder, { yOffset = 0, width = 200, onSelect = UpdateScanControls })
-    y = y - SOURCE_H - 6
+    local srcCtl = ItemPrices:AttachAHSourceControl(sourceHolder, { yOffset = 0, width = 200, onSelect = UpdateScanControls })
 
     -- Scan status / cache stats and the "external source" note share one slot;
     -- only one is visible at a time (toggled in UpdateScanControls).
     statusText = OneWoW_GUI:CreateFS(contentFrame, 11)
-    statusText:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 4, y)
-    statusText:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, y)
     statusText:SetJustifyH("LEFT")
     statusText:SetJustifyV("TOP")
     statusText:SetWordWrap(true)
@@ -265,8 +253,6 @@ local function BuildPanel()
     statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     disabledNote = OneWoW_GUI:CreateFS(contentFrame, 11)
-    disabledNote:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 4, y)
-    disabledNote:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, y)
     disabledNote:SetJustifyH("LEFT")
     disabledNote:SetJustifyV("TOP")
     disabledNote:SetWordWrap(true)
@@ -274,10 +260,71 @@ local function BuildPanel()
     disabledNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
     disabledNote:Hide()
 
+    -- Re-flow the stack top-to-bottom, measuring the wrapping-text rows so nothing
+    -- overlaps regardless of font size. Called on build, on show, and on font
+    -- change. GetStringHeight is only meaningful once the FontString width is
+    -- resolved, so fall back to the fixed heights when a measure returns nothing.
+    RelayoutPanel = function()
+        if not contentFrame then return end
+        local y = 0
+
+        scanBtn:ClearAllPoints()
+        scanBtn:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, y)
+        y = y - BTN_H - 10
+
+        progressHolder:ClearAllPoints()
+        progressHolder:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, y)
+        progressHolder:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, y)
+        y = y - PROGRESS_H - 10
+
+        autoScanCheck:ClearAllPoints()
+        autoScanCheck:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, y)
+        y = y - CHECK_H - 4
+
+        local descH = math.ceil(autoScanDesc:GetStringHeight() or 0)
+        if descH < 14 then descH = AUTODESC_FALLBACK_H end
+        autoScanDesc:ClearAllPoints()
+        autoScanDesc:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 4, y)
+        autoScanDesc:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, y)
+        autoScanDesc:SetHeight(descH)
+        y = y - descH - 14
+
+        sourceHolder:ClearAllPoints()
+        sourceHolder:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, y)
+        sourceHolder:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, y)
+        -- Mirror AttachAHSourceControl's internal stack: label + gap + dropdown(32) + desc + gap.
+        local srcLabelH = math.ceil((srcCtl and srcCtl.label and srcCtl.label:GetStringHeight()) or 0)
+        local srcDescH  = math.ceil((srcCtl and srcCtl.desc  and srcCtl.desc:GetStringHeight())  or 0)
+        local sourceH
+        if srcLabelH > 0 and srcDescH > 0 then
+            sourceH = srcLabelH + 4 + 32 + srcDescH + 8
+        else
+            sourceH = SOURCE_FALLBACK_H
+        end
+        sourceHolder:SetHeight(sourceH)
+        y = y - sourceH - 6
+
+        statusText:ClearAllPoints()
+        statusText:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 4, y)
+        statusText:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, y)
+
+        disabledNote:ClearAllPoints()
+        disabledNote:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 4, y)
+        disabledNote:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, y)
+    end
+
     AuctionHouseFrame:HookScript("OnHide", function()
         if panelTab then panelTab:SetChecked(false) end
         TogglePanel(false)
     end)
+
+    RelayoutPanel()
+    C_Timer.After(0, RelayoutPanel)  -- re-measure once frame widths resolve
+
+    -- The panel is docked to AuctionHouseFrame, outside the main OneWoW window, so
+    -- it isn't caught by the core window's font rebuild. Registering it as a font
+    -- root re-applies fonts across the subtree and re-flows on font/size change.
+    OneWoW_GUI:RegisterFontRoot(panelFrame, RelayoutPanel)
 
     UpdateScanControls()
 end
