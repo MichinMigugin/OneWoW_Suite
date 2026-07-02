@@ -1,5 +1,5 @@
-## Interface: 120005, 120007
-## Version: R6.2606.1918
+## Interface: 120007, 121000
+## Version: R6.2607.0223
 ## Title: |cFFFFD100OneWoW|r - |cFF00FF00Quality of Life|r
 ## Notes: OneWoW Addon that: provides a Quality of Life hub with a developer-extensible module system.
 ## Author: OneWoW Dev Team
