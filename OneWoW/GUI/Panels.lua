@@ -637,7 +637,7 @@ function OneWoW_GUI:CreateVirtualizedList(parent, options)
         end
     end
 
-    scrollFrame:HookScript("OnSizeChanged", function(self, w)
+    scrollFrame:HookScript("OnSizeChanged", function(_, w)
         content:SetWidth(w)
         ensureButtonPool()
         Refresh()
@@ -743,7 +743,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     local listScrollChild = CreateFrame("Frame", "OneWoWGUI_Split_ListContent" .. uid, listScrollFrame)
     listScrollChild:SetHeight(1)
     listScrollFrame:SetScrollChild(listScrollChild)
-    listScrollFrame:HookScript("OnSizeChanged", function(self, w)
+    listScrollFrame:HookScript("OnSizeChanged", function(_, w)
         listScrollChild:SetWidth(w)
     end)
 
@@ -776,7 +776,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     local detailScrollChild = CreateFrame("Frame", "OneWoWGUI_Split_DetailContent" .. uid, detailScrollFrame)
     detailScrollChild:SetHeight(1)
     detailScrollFrame:SetScrollChild(detailScrollChild)
-    detailScrollFrame:HookScript("OnSizeChanged", function(self, w)
+    detailScrollFrame:HookScript("OnSizeChanged", function(_, w)
         detailScrollChild:SetWidth(w)
     end)
 

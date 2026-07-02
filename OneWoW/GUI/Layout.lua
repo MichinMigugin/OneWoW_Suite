@@ -1194,7 +1194,7 @@ function OneWoW_GUI:CreateVerticalPaneResizer(options)
     dividerTex:SetPoint("BOTTOM", divider, "BOTTOM", 0, 0)
     dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    divider:SetScript("OnEnter", function(self)
+    divider:SetScript("OnEnter", function()
         dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         SetCursor("UI_RESIZE_CURSOR")
     end)

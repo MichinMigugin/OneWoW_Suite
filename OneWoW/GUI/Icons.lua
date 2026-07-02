@@ -133,7 +133,7 @@ function OneWoW_GUI:CreateItemIcon(parent, options)
             GameTooltip:SetHyperlink(itemLink)
             GameTooltip:Show()
         end)
-        iconFrame:SetScript("OnLeave", function(self)
+        iconFrame:SetScript("OnLeave", function()
             GameTooltip:Hide()
         end)
     end
