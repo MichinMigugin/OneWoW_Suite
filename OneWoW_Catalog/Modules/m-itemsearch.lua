@@ -89,118 +89,64 @@ local function NameFromLink(itemLink)
     return itemLink:match("%[(.-)%]")
 end
 
+-- Storage location type -> the locLabel key the item-search UI displays. The
+-- Storage Query layer emits "auction"; the UI's label map uses "ah". Types not
+-- listed here (bags/bank/mail/guild) pass through unchanged.
+local LOC_TYPE_TO_LABEL = {
+    auction = "ah",
+}
+
+-- Owned-item rollup for the search + detail views. Rather than re-walking every
+-- container by hand, this reuses the shared Storage Query layer (the same
+-- Gather + normalization the AltTracker Items/Bank tabs use) so the traversal
+-- lives in exactly one place. We only aggregate the normalized instances by
+-- itemID into the { total, name, locations } shape those views expect.
 local function GetOwnedItems()
     local owned = {}
     local storageAPI = OneWoW_AltTracker_Storage_API
-    if not storageAPI then return owned end
-    local characters = storageAPI.GetCharacters()
-    local warbandBank = storageAPI.GetWarbandBank()
-    local guildBanks = storageAPI.GetGuildBanks()
+    if not storageAPI or not storageAPI.Gather then return owned end
 
-    -- name is captured from the slot's persisted itemName / itemLink so owned-item
-    -- search works offline (the live cache may not have the item yet).
-    local function addOwned(itemID, count, charName, locLabel, name)
-        local rec = owned[itemID]
-        if not rec then
-            rec = { total = 0, locations = {} }
-            owned[itemID] = rec
-        end
-        rec.total = rec.total + count
-        if not rec.name and name and name ~= "" then
-            rec.name = name
-        end
-        tinsert(rec.locations, { charName = charName, locLabel = locLabel, count = count })
-    end
+    local instances = storageAPI.Gather({
+        chars = "all",
+        containers = { bags = true, personal = true, warband = true, guild = true, mail = true, auction = true },
+    })
 
-    if characters then
-        for charKey, charData in pairs(characters) do
-            local charName = charKey:match("^([^%-]+)") or charKey
+    for _, inst in ipairs(instances) do
+        local itemID = inst.itemID
+        if itemID then
+            local where = inst.where or {}
+            local locType = where.type
+            local locLabel = LOC_TYPE_TO_LABEL[locType] or locType
 
-            if charData.bags then
-                for _, bagInfo in pairs(charData.bags) do
-                    if bagInfo.slots then
-                        for _, slot in pairs(bagInfo.slots) do
-                            if slot and slot.itemID then
-                                addOwned(slot.itemID, slot.stackCount or 1, charName, "bags",
-                                    slot.itemName or NameFromLink(slot.itemLink))
-                            end
-                        end
-                    end
+            -- Account/guild containers don't carry a per-character name; keep the
+            -- same display strings the previous hand-walk produced.
+            local charName
+            if locType == "warband" then
+                charName = "Warband"
+            elseif locType == "guild" then
+                charName = where.guildName
+            else
+                charName = where.charName
+            end
+
+            local count = inst.count or 1
+            local rec = owned[itemID]
+            if not rec then
+                rec = { total = 0, locations = {} }
+                owned[itemID] = rec
+            end
+            rec.total = rec.total + count
+
+            -- Name is used for offline owned-search matching. MakeInstance carries
+            -- the stored itemName; fall back to the link's "[Name]" like before.
+            if not rec.name then
+                local name = inst.name or NameFromLink(inst.itemLink)
+                if name and name ~= "" then
+                    rec.name = name
                 end
             end
 
-            if charData.personalBank and charData.personalBank.tabs then
-                for _, tabInfo in pairs(charData.personalBank.tabs) do
-                    if tabInfo.items then
-                        for _, slot in pairs(tabInfo.items) do
-                            if slot and slot.itemID then
-                                addOwned(slot.itemID, slot.stackCount or 1, charName, "bank",
-                                    slot.itemName or NameFromLink(slot.itemLink))
-                            end
-                        end
-                    end
-                end
-            end
-
-            if charData.mail and charData.mail.mails then
-                for _, mailData in pairs(charData.mail.mails) do
-                    if mailData.items then
-                        for _, slot in pairs(mailData.items) do
-                            if slot and slot.itemID then
-                                addOwned(slot.itemID, slot.count or 1, charName, "mail",
-                                    slot.itemName or NameFromLink(slot.itemLink))
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    if warbandBank and warbandBank.tabs then
-        for _, tabInfo in pairs(warbandBank.tabs) do
-            if tabInfo.items then
-                for _, slot in pairs(tabInfo.items) do
-                    if slot and slot.itemID then
-                        -- Warband tabs use ContainerScan, whose canonical slot field
-                        -- is stackCount (not count).
-                        addOwned(slot.itemID, slot.stackCount or 1, "Warband", "warband",
-                            slot.itemName or NameFromLink(slot.itemLink))
-                    end
-                end
-            end
-        end
-    end
-
-    if guildBanks then
-        for guildName, guildBank in pairs(guildBanks) do
-            if guildBank.tabs then
-                for _, tabInfo in pairs(guildBank.tabs) do
-                    if tabInfo.slots then
-                        for _, slot in pairs(tabInfo.slots) do
-                            if slot and slot.itemID then
-                                addOwned(slot.itemID, slot.stackCount or 1, guildName, "guild",
-                                    slot.itemName or NameFromLink(slot.itemLink))
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    local auctionChars = OneWoW_AltTracker_Auctions_API and OneWoW_AltTracker_Auctions_API.GetCharacters()
-    if auctionChars then
-        for charKey, charData in pairs(auctionChars) do
-            local charName = charKey:match("^([^%-]+)") or charKey
-            if charData.activeAuctions then
-                for _, auc in ipairs(charData.activeAuctions) do
-                    if auc.itemID then
-                        addOwned(auc.itemID, auc.quantity or 1, charName, "ah",
-                            auc.itemName or NameFromLink(auc.itemLink))
-                    end
-                end
-            end
+            tinsert(rec.locations, { charName = charName, locLabel = locLabel, count = count })
         end
     end
 
