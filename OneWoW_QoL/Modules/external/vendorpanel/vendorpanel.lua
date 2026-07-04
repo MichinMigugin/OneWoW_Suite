@@ -57,8 +57,10 @@ local state = {
     availableFilters = {},
     playerClass = nil,
     playerClassId = nil,
-    oneTimeItems = { ilvlGear = {}, reagents = {} },
-    collapsedCategories = { gray = false, marked = false, ilvlGear = false, reagents = false, noValueJunk = false },
+    oneTimeItems = { ilvlGear = {}, reagents = {}, custom = {} },
+    collapsedCategories = { gray = false, marked = false, ilvlGear = false, reagents = false, custom = false, noValueJunk = false },
+    vendorDropdown = nil,
+    optionsDialog = nil,
     activeSellTicker = nil,
     activeSellConfirmTicker = nil,
     activeSellErrFrame = nil,
@@ -798,13 +800,14 @@ function VendorPanel:SellJunkItems()
                         local isMarked = GetItemStatus():IsItemJunk(itemInfo.itemID)
                         local isIlvlGear = oneTime.ilvlGear and oneTime.ilvlGear[itemInfo.itemID]
                         local isReagent = oneTime.reagents and oneTime.reagents[itemInfo.itemID]
-                        local isJunkItem = isGray or isMarked or isIlvlGear or isReagent
+                        local isCustom = oneTime.custom and oneTime.custom[itemInfo.itemID]
+                        local isJunkItem = isGray or isMarked or isIlvlGear or isReagent or isCustom
                         if GetItemStatus():IsItemProtected(itemInfo.itemID) then isJunkItem = false end
                         if isJunkItem and not itemInfo.hasNoValue and sellPrice and sellPrice > 0 then
                             table.insert(itemsToSell, {
                                 bag = bag, slot = slot, itemID = itemInfo.itemID,
                                 name = itemName, sellPrice = sellPrice * (itemInfo.stackCount or 1),
-                                isGray = isGray, isMarked = isMarked, isIlvlGear = isIlvlGear, isReagent = isReagent
+                                isGray = isGray, isMarked = isMarked, isIlvlGear = isIlvlGear, isReagent = isReagent, isCustom = isCustom
                             })
                         end
                     end
@@ -823,7 +826,7 @@ function VendorPanel:SellJunkItems()
     local pendingSells = {}
     local actualSoldCount = 0
     local actualGold = 0
-    local grayCount, markedCount, ilvlGearCount, reagentsCount = 0, 0, 0, 0
+    local grayCount, markedCount, ilvlGearCount, reagentsCount, customCount = 0, 0, 0, 0, 0
     local confirmTicker, sellTicker
     local summaryPrinted = false
 
@@ -869,6 +872,7 @@ function VendorPanel:SellJunkItems()
                 elseif item.isMarked then markedCount = markedCount + 1
                 elseif item.isIlvlGear then ilvlGearCount = ilvlGearCount + 1
                 elseif item.isReagent then reagentsCount = reagentsCount + 1
+                elseif item.isCustom then customCount = customCount + 1
                 end
                 table.remove(pendingSells, i)
             end
@@ -889,6 +893,7 @@ function VendorPanel:SellJunkItems()
                 if markedCount > 0 then table.insert(categoryParts, markedCount .. " " .. L["VENDOR_SOLD_MARKED"]) end
                 if ilvlGearCount > 0 then table.insert(categoryParts, ilvlGearCount .. " " .. L["VENDOR_SOLD_ILVL"]) end
                 if reagentsCount > 0 then table.insert(categoryParts, reagentsCount .. " " .. L["VENDOR_SOLD_REAGENT"]) end
+                if customCount > 0 then table.insert(categoryParts, customCount .. " " .. L["VENDOR_SOLD_CUSTOM"]) end
                 local categoryStr = table.concat(categoryParts, ", ")
                 print("OneWoW QoL: " .. string.format(L["VENDOR_SOLD"], actualSoldCount, categoryStr, moneyStr))
             end
@@ -936,12 +941,12 @@ end
 ---@return integer destroyable
 ---@return boolean allCached
 function VendorPanel:GetJunkCounts()
-    local grayItems, markedItems, ilvlGearItems, reagentItems, noValueJunkItems, allCached = self:GetJunkItemsDetailed()
+    local grayItems, markedItems, ilvlGearItems, reagentItems, noValueJunkItems, customItems, allCached = self:GetJunkItemsDetailed()
     if not allCached then return 0, 0, false end
     if not GetShowBlizzJunk() then noValueJunkItems = {} end
 
     local sellable, destroyable = 0, 0
-    for _, list in ipairs({ grayItems, markedItems, ilvlGearItems, reagentItems }) do
+    for _, list in ipairs({ grayItems, markedItems, ilvlGearItems, reagentItems, customItems }) do
         for _, item in ipairs(list) do
             if not item.noSellPrice then sellable = sellable + 1 else destroyable = destroyable + 1 end
         end
@@ -979,10 +984,11 @@ function VendorPanel:DestroyNextJunkItem()
                         local isGameJunk = (classID == Enum.ItemClass.Miscellaneous and subclassID == Enum.ItemMiscellaneousSubclass.Junk)
                         local isIlvlGear = state.oneTimeItems.ilvlGear[itemInfo.itemID]
                         local isReagent = state.oneTimeItems.reagents[itemInfo.itemID]
-                        local isJunkItem = isUserMarked or isGray or isGameJunk or isIlvlGear or isReagent
+                        local isCustom = state.oneTimeItems.custom[itemInfo.itemID]
+                        local isJunkItem = isUserMarked or isGray or isGameJunk or isIlvlGear or isReagent or isCustom
                         if isJunkItem and (itemInfo.hasNoValue or not sellPrice or sellPrice == 0) then
                             local shouldDestroy = false
-                            if isUserMarked or isIlvlGear or isReagent then shouldDestroy = true
+                            if isUserMarked or isIlvlGear or isReagent or isCustom then shouldDestroy = true
                             elseif (isGray or isGameJunk) and GetShowBlizzJunk() then shouldDestroy = true
                             end
                             if shouldDestroy then
@@ -1034,8 +1040,9 @@ function VendorPanel:DeleteAllNoValueJunk()
                         local isGameJunk = (classID == Enum.ItemClass.Miscellaneous and subclassID == Enum.ItemMiscellaneousSubclass.Junk)
                         local isIlvlGear = state.oneTimeItems.ilvlGear[itemInfo.itemID]
                         local isReagent = state.oneTimeItems.reagents[itemInfo.itemID]
+                        local isCustom = state.oneTimeItems.custom[itemInfo.itemID]
                         local shouldDelete = false
-                        if isUserMarked or isIlvlGear or isReagent then shouldDelete = true
+                        if isUserMarked or isIlvlGear or isReagent or isCustom then shouldDelete = true
                         elseif (isGray or isGameJunk) and GetShowBlizzJunk() then shouldDelete = true
                         end
                         if shouldDelete and (itemInfo.hasNoValue or not sellPrice or sellPrice == 0) then
@@ -1236,6 +1243,94 @@ function VendorPanel:AddGearBelowIlvl(targetIlvl)
     end
 end
 
+--- Add every bag item matching a bag-search expression (same syntax as the Bags
+--- search box) to the sell list. Reuses the shared PredicateEngine.
+function VendorPanel:AddSearchMatches(expr)
+    expr = expr and strtrim(expr) or ""
+    if expr == "" then
+        print("OneWoW QoL: " .. L["VENDOR_SEARCH_EMPTY"])
+        return
+    end
+    local PE = OneWoW.PredicateEngine
+    local compiled, err = PE:Compile(expr)
+    if not compiled then
+        print("OneWoW QoL: " .. L["VENDOR_SEARCH_INVALID"] .. (err and (" " .. err) or ""))
+        return
+    end
+    local count = 0
+    for bag = 0, NUM_BAG_SLOTS + 1 do
+        local numSlots = C_Container.GetContainerNumSlots(bag)
+        if numSlots then
+            for slot = 1, numSlots do
+                local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
+                if itemInfo and itemInfo.itemID and not GetItemStatus():IsItemProtected(itemInfo.itemID) then
+                    if PE:CheckItem(expr, itemInfo.itemID, bag, slot, itemInfo) then
+                        state.oneTimeItems.custom[itemInfo.itemID] = true
+                        count = count + 1
+                    end
+                end
+            end
+        end
+    end
+    if count > 0 then
+        print("OneWoW QoL: " .. string.format(L["VENDOR_SEARCH_ADDED"], count, expr))
+        self:UpdatePreviewPanel()
+        self:UpdateButton()
+    else
+        print("OneWoW QoL: " .. string.format(L["VENDOR_SEARCH_NONE"], expr))
+    end
+end
+
+--- Set of itemIDs that belong to any equipment-manager set, so "Add Soulbound
+--- Equipment" can skip gear the player has saved into a set.
+local function BuildEquipmentSetItemIDs()
+    local inSet = {}
+    for _, setID in ipairs(C_EquipmentSet.GetEquipmentSetIDs()) do
+        local itemIDs = C_EquipmentSet.GetItemIDs(setID)
+        if itemIDs then
+            for _, itemID in pairs(itemIDs) do
+                if itemID and itemID > 0 then inSet[itemID] = true end
+            end
+        end
+    end
+    return inSet
+end
+
+--- Add all soulbound equippable items (weapons/armor) to the sell list, skipping
+--- anything saved into an equipment-manager set.
+function VendorPanel:AddSoulboundEquipment()
+    local inSet = BuildEquipmentSetItemIDs()
+    local count = 0
+    for bag = 0, NUM_BAG_SLOTS + 1 do
+        local numSlots = C_Container.GetContainerNumSlots(bag)
+        if numSlots then
+            for slot = 1, numSlots do
+                local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
+                if itemInfo and itemInfo.itemID and not inSet[itemInfo.itemID]
+                   and not GetItemStatus():IsItemProtected(itemInfo.itemID) then
+                    local classID = select(12, C_Item.GetItemInfo(itemInfo.itemID))
+                    local isEquipment = (classID == Enum.ItemClass.Weapon or classID == Enum.ItemClass.Armor)
+                    if isEquipment then
+                        local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
+                        local isSoulbound = itemLocation and C_Item.DoesItemExist(itemLocation) and C_Item.IsBound(itemLocation)
+                        if isSoulbound then
+                            state.oneTimeItems.custom[itemInfo.itemID] = true
+                            count = count + 1
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if count > 0 then
+        print("OneWoW QoL: " .. string.format(L["VENDOR_SOULBOUND_ADDED"], count))
+        self:UpdatePreviewPanel()
+        self:UpdateButton()
+    else
+        print("OneWoW QoL: " .. L["VENDOR_SOULBOUND_NONE"])
+    end
+end
+
 function VendorPanel:UpdateButton()
     if not state.vendorButton then return end
     local junkCount, destroyCount, allCached = self:GetJunkCounts()
@@ -1304,6 +1399,21 @@ function VendorPanel:TogglePreviewPanel()
     self:UpdatePanelToggleButton()
 end
 
+--- Dock a side dialog to the right of the panel, or centered over it when there
+--- isn't room to the right. Shared by the Quick Add and Options dialogs.
+local function DockSideDialog(dialog, minSpace)
+    if not state.junkPreviewPanel then return end
+    local screenWidth = GetScreenWidth() * UIParent:GetEffectiveScale()
+    local panelRight = state.junkPreviewPanel:GetRight()
+    local spaceOnRight = screenWidth - (panelRight or 0)
+    dialog:ClearAllPoints()
+    if spaceOnRight >= (minSpace or 210) then
+        dialog:SetPoint("TOPLEFT", state.junkPreviewPanel, "TOPRIGHT", 5, 0)
+    else
+        dialog:SetPoint("CENTER", state.junkPreviewPanel, "CENTER", 0, 0)
+    end
+end
+
 function VendorPanel:ToggleFiltersDialog()
     if not state.filtersDialog then self:CreateFiltersDialog() end
     if state.filtersDialog:IsShown() then
@@ -1311,21 +1421,27 @@ function VendorPanel:ToggleFiltersDialog()
         return
     end
     if not state.junkPreviewPanel or not state.junkPreviewPanel:IsShown() then return end
+    if state.optionsDialog then state.optionsDialog:Hide() end
     local neverSellCount = 0
     for _ in pairs(self:GetNeverSellList()) do neverSellCount = neverSellCount + 1 end
     if state.filtersDialog.neverSellBtnText then
         state.filtersDialog.neverSellBtnText:SetText(string.format(L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", neverSellCount))
     end
-    local screenWidth = GetScreenWidth() * UIParent:GetEffectiveScale()
-    local panelRight = state.junkPreviewPanel:GetRight()
-    local spaceOnRight = screenWidth - panelRight
-    state.filtersDialog:ClearAllPoints()
-    if spaceOnRight >= 210 then
-        state.filtersDialog:SetPoint("TOPLEFT", state.junkPreviewPanel, "TOPRIGHT", 5, 0)
-    else
-        state.filtersDialog:SetPoint("CENTER", state.junkPreviewPanel, "CENTER", 0, 0)
-    end
+    DockSideDialog(state.filtersDialog, 210)
     state.filtersDialog:Show()
+end
+
+function VendorPanel:ToggleOptionsDialog()
+    if not state.optionsDialog then self:CreateOptionsDialog() end
+    if state.optionsDialog:IsShown() then
+        state.optionsDialog:Hide()
+        return
+    end
+    if not state.junkPreviewPanel or not state.junkPreviewPanel:IsShown() then return end
+    if state.filtersDialog then state.filtersDialog:Hide() end
+    if state.optionsDialog.Refresh then state.optionsDialog.Refresh() end
+    DockSideDialog(state.optionsDialog, 250)
+    state.optionsDialog:Show()
 end
 
 function VendorPanel:ToggleNeverSellDialog()
@@ -1356,14 +1472,14 @@ function VendorPanel:StopUpdates()
     end
 end
 
---- Align Blizzard's merchant spec filter with showAllArmor. When enabled, sets the
---- native dropdown to all class specs (LE_LOOT_FILTER_CLASS); when disabled,
---- restores the default current-spec filter.
+--- Apply the user's persistent default for Blizzard's native merchant filter.
+--- "all" shows every item (LE_LOOT_FILTER_ALL); anything else restores Blizzard's
+--- current-spec default. Runs on every vendor open and when the option changes.
 function VendorPanel:SyncMerchantSpecFilter()
     if not MerchantFrame or not MerchantFrame:IsShown() then return end
 
-    if state.showAllArmor then
-        SetMerchantFilter(LE_LOOT_FILTER_CLASS)
+    if (GetSettings().defaultMerchantFilter or "spec") == "all" then
+        SetMerchantFilter(LE_LOOT_FILTER_ALL)
     else
         ResetSetMerchantFilter()
     end
@@ -1372,12 +1488,21 @@ function VendorPanel:SyncMerchantSpecFilter()
         MerchantFrame.FilterDropdown:Update()
     end
 
+    self:RerenderMerchantGrid()
+end
+
+--- Repaginate + rescan the merchant grid and refresh our filter dropdown label.
+--- Used by both the merchant-filter sync and the panel-side toggles (armor dim,
+--- known-item handling) that change what our grid shows without touching the
+--- native Blizzard filter.
+function VendorPanel:RerenderMerchantGrid()
+    if not MerchantFrame or not MerchantFrame:IsShown() then return end
     MerchantFrame.page = 1
     MerchantFrame_Update()
     VPFilters.ScanVendor()
 
-    if state.junkPreviewPanel and state.junkPreviewPanel.vendorDropdown and state.junkPreviewPanel.vendorDropdown.RefreshFilters then
-        state.junkPreviewPanel.vendorDropdown:RefreshFilters()
+    if state.vendorDropdown and state.vendorDropdown.RefreshFilters then
+        state.vendorDropdown:RefreshFilters()
     end
 end
 
@@ -1399,8 +1524,8 @@ function VendorPanel:OnMerchantShow()
         if not state.junkPreviewPanel then self:CreatePreviewPanel() end
         C_Timer.After(0.25, function()
             VPFilters.ScanVendor()
-            if state.junkPreviewPanel and state.junkPreviewPanel.vendorDropdown and state.junkPreviewPanel.vendorDropdown.RefreshFilters then
-                state.junkPreviewPanel.vendorDropdown:RefreshFilters()
+            if state.vendorDropdown and state.vendorDropdown.RefreshFilters then
+                state.vendorDropdown:RefreshFilters()
             end
         end)
         self:UpdatePreviewPanel()
@@ -1426,13 +1551,12 @@ function VendorPanel:OnMerchantShow()
 
     C_Timer.After(0, function() VendorPanel:UpdatePanelToggleButton() end)
 
-    if state.showAllArmor then
-        C_Timer.After(0, function()
-            if MerchantFrame and MerchantFrame:IsShown() then
-                VendorPanel:SyncMerchantSpecFilter()
-            end
-        end)
-    end
+    -- Apply the persistent default merchant filter (ALL / current spec) on every open.
+    C_Timer.After(0, function()
+        if MerchantFrame and MerchantFrame:IsShown() then
+            VendorPanel:SyncMerchantSpecFilter()
+        end
+    end)
 end
 
 function VendorPanel:OnMerchantClosed()
@@ -1447,11 +1571,13 @@ function VendorPanel:OnMerchantClosed()
     if state.junkPreviewPanel then state.junkPreviewPanel:Hide() end
     self:ManageBlizzardSellButton(false)
     if state.filtersDialog then state.filtersDialog:Hide() end
+    if state.optionsDialog then state.optionsDialog:Hide() end
     if state.neverSellDialog then state.neverSellDialog:Hide() end
     state.currentVendorFilter = "Show All"
     wipe(state.availableFilters)
     state.oneTimeItems.ilvlGear = {}
     state.oneTimeItems.reagents = {}
+    state.oneTimeItems.custom = {}
 end
 
 -- ============================================================
@@ -1598,12 +1724,15 @@ function VendorPanelModule:OnToggle(toggleId, value)
         if not value and state.junkPreviewPanel and state.junkPreviewPanel:IsShown() then
             state.junkPreviewPanel:Hide()
         end
+        if state.optionsDialog and state.optionsDialog.showPanelCheck then
+            state.optionsDialog.showPanelCheck:SetChecked(value)
+        end
     elseif toggleId == "show_blizz_junk" then
         if state.junkPreviewPanel and state.junkPreviewPanel:IsShown() then
             VendorPanel:UpdatePreviewPanel()
         end
-        if state.filtersDialog and state.filtersDialog.showBlizzJunk then
-            state.filtersDialog.showBlizzJunk:SetChecked(value)
+        if state.optionsDialog and state.optionsDialog.showBlizzCheck then
+            state.optionsDialog.showBlizzCheck:SetChecked(value)
         end
     end
 end
