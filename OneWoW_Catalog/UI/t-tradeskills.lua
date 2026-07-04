@@ -1,5 +1,6 @@
 local _, ns = ...
 
+local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
@@ -27,6 +28,7 @@ local searchTimer = nil
 local recipeDetailCallbacks = {}
 local filterKnownByMe = false
 local filterKnownByAlts = false
+local filterNotKnownByMe = false
 local filterExpansion = nil
 
 OneWoW_Catalog_TradeskillAPI = {
@@ -71,14 +73,16 @@ local function GetDataAddon()
 end
 
 local function FilterByKnown(recipes, addon)
-    if not filterKnownByMe and not filterKnownByAlts then return recipes end
+    if not filterKnownByMe and not filterKnownByAlts and not filterNotKnownByMe then
+        return recipes
+    end
     local charKey = OneWoW_GUI:BuildCharKey()
     local filtered = {}
     for _, recipe in ipairs(recipes) do
         local knownBy = addon.TradeskillScanner:GetRecipeKnownBy(recipe.id)
-        if knownBy and #knownBy > 0 then
-            local knownByMe = false
-            local knownByAlt = false
+        local knownByMe = false
+        local knownByAlt = false
+        if knownBy then
             for _, key in ipairs(knownBy) do
                 if key == charKey then
                     knownByMe = true
@@ -86,9 +90,23 @@ local function FilterByKnown(recipes, addon)
                     knownByAlt = true
                 end
             end
-            if (filterKnownByMe and knownByMe) or (filterKnownByAlts and knownByAlt) then
-                tinsert(filtered, recipe)
+        end
+
+        local include = false
+        if filterNotKnownByMe then
+            if not knownByMe then
+                if filterKnownByAlts then
+                    include = knownByAlt
+                else
+                    include = true
+                end
             end
+        elseif (filterKnownByMe and knownByMe) or (filterKnownByAlts and knownByAlt) then
+            include = true
+        end
+
+        if include then
+            tinsert(filtered, recipe)
         end
     end
     return filtered
@@ -432,6 +450,85 @@ ShowRecipeDetail = function(recipe)
     end
 
     yOffset = yOffset - 8
+
+    -- Recipe scroll/book (not crafted output); SetItemByID feeds TooltipEngine + ATT.
+    local recipeItemID = OneWoW.RecipeKnownUtil:GetRecipeItemID(recipe.id)
+    if recipeItemID then
+        local recipeItemHeader = CreateFrame("Frame", nil, child, "BackdropTemplate")
+        recipeItemHeader:SetHeight(24)
+        recipeItemHeader:SetPoint("TOPLEFT", child, "TOPLEFT", 0, yOffset)
+        recipeItemHeader:SetPoint("TOPRIGHT", child, "TOPRIGHT", 0, yOffset)
+        recipeItemHeader:SetBackdrop(BACKDROP_SIMPLE)
+        recipeItemHeader:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        recipeItemHeader:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        tinsert(detailElements, recipeItemHeader)
+
+        local recipeItemTitle = OneWoW_GUI:CreateFS(recipeItemHeader, 12)
+        recipeItemTitle:SetPoint("LEFT", 8, 0)
+        recipeItemTitle:SetText(L["TRADESKILLS_RECIPE_ITEM"])
+        recipeItemTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        yOffset = yOffset - 28
+
+        local riRow = CreateFrame("Frame", nil, child, "BackdropTemplate")
+        riRow:SetHeight(REAGENT_ROW_HEIGHT)
+        riRow:SetPoint("TOPLEFT", child, "TOPLEFT", 8, yOffset)
+        riRow:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
+        riRow:SetBackdrop(BACKDROP_SIMPLE)
+        riRow:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+        riRow:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        tinsert(detailElements, riRow)
+
+        local riIcon = CreateFrame("Frame", nil, riRow, "BackdropTemplate")
+        riIcon:SetSize(22, 22)
+        riIcon:SetPoint("LEFT", 4, 0)
+        riIcon:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        riIcon:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+        riIcon:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+        local riIconTex = riIcon:CreateTexture(nil, "ARTWORK")
+        riIconTex:SetPoint("TOPLEFT", 1, -1)
+        riIconTex:SetPoint("BOTTOMRIGHT", -1, 1)
+        riIconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+        local riName = OneWoW_GUI:CreateFS(riRow, 10)
+        riName:SetPoint("LEFT", riIcon, "RIGHT", 6, 0)
+        riName:SetPoint("RIGHT", riRow, "RIGHT", -4, 0)
+        riName:SetJustifyH("LEFT")
+        riName:SetWordWrap(false)
+
+        local riCached = addon.DataLoader:GetCachedItem(recipeItemID)
+        if riCached and riCached.name then
+            riName:SetText(riCached.name)
+            riIconTex:SetTexture(riCached.icon)
+            riName:SetTextColor(OneWoW_GUI:GetItemQualityColor(riCached.quality))
+        else
+            riName:SetText("...")
+            riName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            riIconTex:SetTexture(134400)
+            addon.DataLoader:LoadItemData(recipeItemID, function(_, itemData)
+                if riRow:IsVisible() and itemData then
+                    riName:SetText(itemData.name)
+                    riIconTex:SetTexture(itemData.icon)
+                    riName:SetTextColor(OneWoW_GUI:GetItemQualityColor(itemData.quality))
+                end
+            end)
+        end
+
+        riRow:SetScript("OnEnter", function(self)
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetItemByID(recipeItemID)
+            GameTooltip:Show()
+        end)
+        riRow:SetScript("OnLeave", function(self)
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            GameTooltip:Hide()
+        end)
+
+        yOffset = yOffset - REAGENT_ROW_HEIGHT - 8
+    end
 
     local reagents, slots = addon.TradeskillData:GetRecipeReagents(recipe.id)
 
@@ -845,7 +942,7 @@ RefreshRecipeList = function()
         end
     end
 
-    if (filterKnownByMe or filterKnownByAlts) and recipes then
+    if (filterKnownByMe or filterKnownByAlts or filterNotKnownByMe) and recipes then
         recipes = FilterByKnown(recipes, addon)
     end
 
@@ -871,7 +968,7 @@ function ns.UI.CreateTradeskillsTab(parent)
     local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
     local GAP = ns.Constants.GUI.PANEL_GAP
 
-    local SEARCH_HEADER_H = PROF_HEADER_H + 46
+    local SEARCH_HEADER_H = PROF_HEADER_H + 66
 
     local searchHeader = OneWoW_GUI:CreateFilterBar(parent, { height = SEARCH_HEADER_H, offset = 0 })
     searchHeader:ClearAllPoints()
@@ -970,16 +1067,35 @@ function ns.UI.CreateTradeskillsTab(parent)
     local knownMeCheck = OneWoW_GUI:CreateCheckbox(searchHeader, { label = L["TRADESKILLS_SHOW_KNOWN_ME"] })
     knownMeCheck:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", 0, -4)
     knownMeCheck:SetChecked(false)
-    knownMeCheck:SetScript("OnClick", function(self)
-        filterKnownByMe = self:GetChecked()
-        RefreshRecipeList()
-    end)
 
     local knownAltsCheck = OneWoW_GUI:CreateCheckbox(searchHeader, { label = L["TRADESKILLS_SHOW_KNOWN_ALTS"] })
     knownAltsCheck:SetPoint("LEFT", knownMeCheck.label, "RIGHT", 10, 0)
     knownAltsCheck:SetChecked(false)
+
+    local notKnownCheck = OneWoW_GUI:CreateCheckbox(searchHeader, { label = L["TRADESKILLS_SHOW_NOT_KNOWN"] })
+    notKnownCheck:SetPoint("TOPLEFT", knownMeCheck, "BOTTOMLEFT", 0, -2)
+    notKnownCheck:SetChecked(false)
+
+    knownMeCheck:SetScript("OnClick", function(self)
+        filterKnownByMe = self:GetChecked()
+        if filterKnownByMe and filterNotKnownByMe then
+            filterNotKnownByMe = false
+            notKnownCheck:SetChecked(false)
+        end
+        RefreshRecipeList()
+    end)
+
     knownAltsCheck:SetScript("OnClick", function(self)
         filterKnownByAlts = self:GetChecked()
+        RefreshRecipeList()
+    end)
+
+    notKnownCheck:SetScript("OnClick", function(self)
+        filterNotKnownByMe = self:GetChecked()
+        if filterNotKnownByMe and filterKnownByMe then
+            filterKnownByMe = false
+            knownMeCheck:SetChecked(false)
+        end
         RefreshRecipeList()
     end)
 
@@ -1004,7 +1120,7 @@ function ns.UI.CreateTradeskillsTab(parent)
         height = 22,
         text = L["TRADESKILLS_ALL_EXPANSIONS"],
     })
-    expDropdown:SetPoint("TOPLEFT", knownMeCheck, "BOTTOMLEFT", 0, -4)
+    expDropdown:SetPoint("TOPLEFT", notKnownCheck, "BOTTOMLEFT", 0, -4)
     expDropdown:SetPoint("RIGHT", searchHeader, "RIGHT", -8, 0)
 
     OneWoW_GUI:AttachFilterMenu(expDropdown, {
@@ -1071,12 +1187,14 @@ function ns.UI.CreateTradeskillsTab(parent)
         currentSearch = ""
         filterKnownByMe = false
         filterKnownByAlts = false
+        filterNotKnownByMe = false
         filterExpansion = nil
         wipe(expandedExpansions)
 
         if searchBox then searchBox:SetText("") end
         if knownMeCheck then knownMeCheck:SetChecked(false) end
         if knownAltsCheck then knownAltsCheck:SetChecked(false) end
+        if notKnownCheck then notKnownCheck:SetChecked(false) end
         if expDropText then expDropText:SetText(L["TRADESKILLS_ALL_EXPANSIONS"]) end
 
         UpdateProfButtonStates()

@@ -205,6 +205,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["TRADESKILLS_TYPE_GATHERING"] = "Coleta",
     ["TRADESKILLS_SHOW_KNOWN_ME"] = "Conhecida por mim",
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "Conhecida por secundários",
+    ["TRADESKILLS_SHOW_NOT_KNOWN"] = "Desconhecida",
+    ["TRADESKILLS_RECIPE_ITEM"] = "Item de receita",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Todas as expansões",
 
     ["QUESTS_LIST_TITLE"] = "Missões",

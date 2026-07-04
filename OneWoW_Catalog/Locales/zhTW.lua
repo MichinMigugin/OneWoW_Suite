@@ -205,6 +205,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TRADESKILLS_TYPE_GATHERING"] = "採集",
     ["TRADESKILLS_SHOW_KNOWN_ME"] = "本角色已學會",
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "其他角色已學會",
+    ["TRADESKILLS_SHOW_NOT_KNOWN"] = "未學會",
+    ["TRADESKILLS_RECIPE_ITEM"] = "配方物品",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "所有資料片",
 
     ["QUESTS_LIST_TITLE"] = "任務",

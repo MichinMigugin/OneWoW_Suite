@@ -204,6 +204,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRADESKILLS_TYPE_GATHERING"] = "채집",
     ["TRADESKILLS_SHOW_KNOWN_ME"] = "내 캐릭터가 습득",
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "다른 캐릭터가 습득",
+    ["TRADESKILLS_SHOW_NOT_KNOWN"] = "미습득",
+    ["TRADESKILLS_RECIPE_ITEM"] = "제조법 아이템",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "모든 확장팩",
 
     ["QUESTS_LIST_TITLE"] = "퀘스트",

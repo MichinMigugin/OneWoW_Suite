@@ -205,6 +205,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["TRADESKILLS_TYPE_GATHERING"] = "Recolección",
     ["TRADESKILLS_SHOW_KNOWN_ME"] = "Conocido por mí",
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "Conocido por secundarios",
+    ["TRADESKILLS_SHOW_NOT_KNOWN"] = "No conocido",
+    ["TRADESKILLS_RECIPE_ITEM"] = "Objeto de receta",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Todas las expansiones",
 
     ["QUESTS_LIST_TITLE"] = "Misiones",

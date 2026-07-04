@@ -137,6 +137,40 @@ function RecipeKnownUtil:RegisterMapping(itemID, recipeSpellID)
     end
 end
 
+--- Resolve the learnable recipe-scroll item ID for a recipe spell ID.
+--- Uses the live profession UI link when available, otherwise the item→spell map
+--- built while professions are open (same map Recipe Knowledge tooltips use).
+function RecipeKnownUtil:GetRecipeItemID(recipeSpellID)
+    if not recipeSpellID then return nil end
+
+    local link = C_TradeSkillUI.GetRecipeItemLink(recipeSpellID)
+    if link then
+        local itemID = tonumber(link:match("item:(%d+)"))
+        if itemID then
+            SaveToMap(itemID, recipeSpellID)
+            return itemID
+        end
+    end
+
+    for itemID, spellID in pairs(sessionMap) do
+        if spellID == recipeSpellID then
+            return itemID
+        end
+    end
+
+    local saved = GetSavedMap()
+    if saved then
+        for itemID, spellID in pairs(saved) do
+            if spellID == recipeSpellID then
+                sessionMap[itemID] = spellID
+                return itemID
+            end
+        end
+    end
+
+    return nil
+end
+
 function RecipeKnownUtil:IsCacheReady()
     local saved = GetSavedMap()
     return saved and next(saved) ~= nil

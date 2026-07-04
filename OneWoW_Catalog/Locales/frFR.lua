@@ -205,6 +205,8 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TRADESKILLS_TYPE_GATHERING"] = "Récolte",
     ["TRADESKILLS_SHOW_KNOWN_ME"] = "Connu par moi",
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "Connu par mes secondaires",
+    ["TRADESKILLS_SHOW_NOT_KNOWN"] = "Non connu",
+    ["TRADESKILLS_RECIPE_ITEM"] = "Objet de recette",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Toutes les extensions",
 
     ["QUESTS_LIST_TITLE"] = "Quêtes",
