@@ -1088,13 +1088,12 @@ function VendorPanel:GetJunkItemsDetailed()
                         allCached = false
                         C_Item.RequestLoadItemDataByID(itemInfo.itemID)
                     else
-                        local itemLevel, actualQuality, actualItemLink = 0, quality, itemLink
+                        local itemLevel, actualItemLink = 0, itemLink
                         local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
                         if itemLocation and C_Item.DoesItemExist(itemLocation) then
                             local item = Item:CreateFromItemLocation(itemLocation)
                             if item and item:IsItemDataCached() then
                                 itemLevel = item:GetCurrentItemLevel() or 0
-                                actualQuality = item:GetItemQuality() or quality
                                 actualItemLink = item:GetItemLink() or itemLink
                             end
                         end
@@ -1188,7 +1187,7 @@ function VendorPanel:UpdatePreviewPanel()
             if not item.noSellPrice then sellableCount = sellableCount + 1 else destroyableCount = destroyableCount + 1 end
         end
     end
-    for _, item in ipairs(noValueJunkItems) do destroyableCount = destroyableCount + 1 end
+    for _ = 1, #noValueJunkItems do destroyableCount = destroyableCount + 1 end
 
     if state.junkPreviewPanel.sellJunkButton and state.junkPreviewPanel.sellJunkButton.fontString then
         state.junkPreviewPanel.sellJunkButton.fontString:SetText(VendorPanel:FormatSellButtonText(sellableCount))

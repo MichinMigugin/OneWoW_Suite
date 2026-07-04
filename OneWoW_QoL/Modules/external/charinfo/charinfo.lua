@@ -233,7 +233,7 @@ local function UpdateInfoPanel(button, itemLink, slotId, item)
 
     local stats = C_Item.GetItemStats(itemLink)
     local totalSockets = 0
-    if stats then
+    if showSockets and stats then
         for statKey, value in pairs(stats) do
             if string.find(statKey, "EMPTY_SOCKET_") then
                 totalSockets = totalSockets + value
@@ -241,7 +241,7 @@ local function UpdateInfoPanel(button, itemLink, slotId, item)
         end
     end
 
-    if totalSockets > 0 then
+    if showSockets and totalSockets > 0 then
         showGemIcon = true
         local filledGems = 0
         for i = 3, 6 do
@@ -441,7 +441,6 @@ local enchantSlotLabels = {
 }
 
 function CharInfoModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh)
-    local OneWoW_GUI = OneWoW_GUI
     if not OneWoW_GUI then return yOffset end
 
     local sectionHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")

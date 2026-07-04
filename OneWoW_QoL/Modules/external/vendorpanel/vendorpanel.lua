@@ -346,7 +346,7 @@ function VPFilters.ScanVendor()
     for i = 1, GetMerchantNumItems() do
         local itemLink = GetMerchantItemLink(i)
         if itemLink then
-            local itemType, itemSubType, _, equipSlot = select(6, C_Item.GetItemInfo(itemLink))
+            local itemType, _, _, equipSlot = select(6, C_Item.GetItemInfo(itemLink))
             local armorType = GetArmorTypeFromLink(itemLink)
             if armorType then state.availableFilters[armorType] = true end
             local label = slotLabels[equipSlot]
@@ -787,17 +787,8 @@ function VendorPanel:SellJunkItems()
             for slot = 1, numSlots do
                 local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
                 if itemInfo and itemInfo.itemID then
-                    local itemName, itemLink, quality, _, _, _, _, _, _, _, sellPrice = C_Item.GetItemInfo(itemInfo.itemID)
+                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice = C_Item.GetItemInfo(itemInfo.itemID)
                     if itemName and sellPrice and sellPrice > 0 then
-                        local itemLevel, actualQuality = 0, quality
-                        local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
-                        if itemLocation and C_Item.DoesItemExist(itemLocation) then
-                            local item = Item:CreateFromItemLocation(itemLocation)
-                            if item and item:IsItemDataCached() then
-                                itemLevel = item:GetCurrentItemLevel() or 0
-                                actualQuality = item:GetItemQuality() or quality
-                            end
-                        end
                         local isGray = quality == 0
                         local isMarked = GetItemStatus():IsItemJunk(itemInfo.itemID)
                         local isIlvlGear = oneTime.ilvlGear and oneTime.ilvlGear[itemInfo.itemID]
@@ -837,7 +828,7 @@ function VendorPanel:SellJunkItems()
     end
     local errFrame = state.activeSellErrFrame
     errFrame:RegisterEvent("UI_ERROR_MESSAGE")
-    errFrame:SetScript("OnEvent", function(self, event, _, msg)
+    errFrame:SetScript("OnEvent", function(_, _, _, msg)
         if msg == ERR_VENDOR_DOESNT_BUY then
             vendorRefused = true
             errFrame:UnregisterEvent("UI_ERROR_MESSAGE")
@@ -968,16 +959,7 @@ function VendorPanel:DestroyNextJunkItem()
             for slot = 1, numSlots do
                 local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
                 if itemInfo and itemInfo.itemID then
-                    local itemName, itemLink, quality, _, _, _, _, _, _, _, sellPrice = C_Item.GetItemInfo(itemInfo.itemID)
-                    local itemLevel, actualQuality = 0, quality
-                    local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
-                    if itemLocation and C_Item.DoesItemExist(itemLocation) then
-                        local item = Item:CreateFromItemLocation(itemLocation)
-                        if item and item:IsItemDataCached() then
-                            itemLevel = item:GetCurrentItemLevel() or 0
-                            actualQuality = item:GetItemQuality() or quality
-                        end
-                    end
+                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice = C_Item.GetItemInfo(itemInfo.itemID)
                     if not self:IsItemInNeverSellList(itemInfo.itemID) and
                        not GetItemStatus():IsItemProtected(itemInfo.itemID) then
                         local isUserMarked = GetItemStatus():IsItemJunk(itemInfo.itemID)
@@ -997,7 +979,7 @@ function VendorPanel:DestroyNextJunkItem()
                                 ClearCursor()
                                 C_Container.PickupContainerItem(bag, slot)
                                 DeleteCursorItem()
-                                print("OneWoW QoL: Destroyed " .. (itemLink or itemName or "item") .. ".")
+                                print("OneWoW QoL: Destroyed " .. (itemName or "item") .. ".")
                                 C_Timer.After(0.2, function()
                                     VendorPanel:UpdatePreviewPanel()
                                     VendorPanel:UpdateButton()
@@ -1025,16 +1007,7 @@ function VendorPanel:DeleteAllNoValueJunk()
             for slot = 1, numSlots do
                 local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
                 if itemInfo and itemInfo.itemID then
-                    local itemName, itemLink, quality, _, _, _, _, _, _, _, sellPrice, classID, subclassID = C_Item.GetItemInfo(itemInfo.itemID)
-                    local itemLevel, actualQuality = 0, quality
-                    local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
-                    if itemLocation and C_Item.DoesItemExist(itemLocation) then
-                        local item = Item:CreateFromItemLocation(itemLocation)
-                        if item and item:IsItemDataCached() then
-                            itemLevel = item:GetCurrentItemLevel() or 0
-                            actualQuality = item:GetItemQuality() or quality
-                        end
-                    end
+                    local itemName, _, quality, _, _, _, _, _, _, _, sellPrice, classID, subclassID = C_Item.GetItemInfo(itemInfo.itemID)
                     if not self:IsItemInNeverSellList(itemInfo.itemID) and
                        not GetItemStatus():IsItemProtected(itemInfo.itemID) then
                         local isUserMarked = GetItemStatus():IsItemJunk(itemInfo.itemID)
@@ -1048,7 +1021,7 @@ function VendorPanel:DeleteAllNoValueJunk()
                         elseif (isGray or isGameJunk) and GetShowBlizzJunk() then shouldDelete = true
                         end
                         if shouldDelete and (itemInfo.hasNoValue or not sellPrice or sellPrice == 0) then
-                            table.insert(itemsToDelete, { bag = bag, slot = slot, link = itemLink, name = itemName })
+                            table.insert(itemsToDelete, { bag = bag, slot = slot, name = itemName })
                         end
                     end
                 end
@@ -1090,15 +1063,7 @@ function VendorPanel:AddNonSoulboundReagents()
                 if itemInfo and itemInfo.itemID then
                     local itemName, _, quality, _, _, _, _, _, _, _, sellPrice, classID = C_Item.GetItemInfo(itemInfo.itemID)
                     if itemName and sellPrice and sellPrice > 0 then
-                        local itemLevel, actualQuality = 0, quality
                         local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
-                        if itemLocation and C_Item.DoesItemExist(itemLocation) then
-                            local item = Item:CreateFromItemLocation(itemLocation)
-                            if item and item:IsItemDataCached() then
-                                itemLevel = item:GetCurrentItemLevel() or 0
-                                actualQuality = item:GetItemQuality() or quality
-                            end
-                        end
                         if not GetItemStatus():IsItemProtected(itemInfo.itemID) then
                             local alreadyJunk = GetItemStatus():IsItemJunk(itemInfo.itemID)
                             if quality ~= 0 and not alreadyJunk then
@@ -1210,13 +1175,12 @@ function VendorPanel:AddGearBelowIlvl(targetIlvl)
                 if itemInfo and itemInfo.itemID then
                     local itemName, _, quality, _, _, _, _, _, _, _, sellPrice, classID = C_Item.GetItemInfo(itemInfo.itemID)
                     if itemName and sellPrice and sellPrice > 0 then
-                        local itemLevel, actualQuality = 0, quality
+                        local itemLevel = 0
                         local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
                         if itemLocation and C_Item.DoesItemExist(itemLocation) then
                             local item = Item:CreateFromItemLocation(itemLocation)
                             if item and item:IsItemDataCached() then
                                 itemLevel = item:GetCurrentItemLevel() or 0
-                                actualQuality = item:GetItemQuality() or quality
                             end
                         end
                         if not GetItemStatus():IsItemProtected(itemInfo.itemID) then
@@ -1691,7 +1655,7 @@ function VendorPanelModule:OnEnable()
     if not self._eventFrame then
         local frame = CreateFrame("Frame", "OneWoW_QoL_VendorPanelEvents")
         self._eventFrame = frame
-        frame:SetScript("OnEvent", function(f, event)
+        frame:SetScript("OnEvent", function(_, event)
             if event == "MERCHANT_SHOW" then
                 VendorPanel:OnMerchantShow()
             elseif event == "MERCHANT_CLOSED" then

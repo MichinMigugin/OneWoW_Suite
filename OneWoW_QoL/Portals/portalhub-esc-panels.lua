@@ -53,14 +53,37 @@ local function GetCharacterInfo()
 end
 
 local function GetZoneNoteData()
-	local notesAddon = OneWoW_Notes
-	if not notesAddon or not notesAddon.Zones then return nil, nil end
+	local zoneText = GetZoneText() or ""
+	local subZoneText = GetSubZoneText() or ""
+	local fullZone = zoneText
+	if subZoneText ~= "" and subZoneText ~= zoneText then
+		fullZone = zoneText .. " - " .. subZoneText
+	end
 
-	local zoneName = notesAddon.Zones:GetCurrentZoneName()
-	if not zoneName or zoneName == "" then return nil, nil end
+	OneWoW:BringUp("OneWoW_Notes")
+	local api = OneWoW_Notes_API
+	if not api or not api.GetZone then
+		return zoneText ~= "" and zoneText or nil, nil
+	end
 
-	local zoneData = notesAddon.Zones:GetZone(zoneName)
-	return zoneName, zoneData
+	local keys = { fullZone, api.GetCurrentZoneName(), subZoneText, zoneText }
+	local seen = {}
+	for i = 1, #keys do
+		local key = keys[i]
+		if key and key ~= "" and not seen[key] then
+			seen[key] = true
+			local data = api.GetZone(key)
+			if data then
+				return key, data
+			end
+		end
+	end
+
+	local currentName = api.GetCurrentZoneName()
+	if currentName and currentName ~= "" then
+		return currentName, nil
+	end
+	return zoneText ~= "" and zoneText or nil, nil
 end
 
 local function GetCatalogData(mapID)
@@ -431,32 +454,19 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, 
 			end
 			C_Timer.After(0.15, function()
 				if not targetZone or targetZone == "" then return end
-				local notesAddon = OneWoW_Notes
-				if notesAddon and notesAddon.Zones then
-					local existing = notesAddon.Zones:GetZone(targetZone)
-					if not existing then
-						local mapInfo = notesAddon.Zones.GetCurrentMapInfo and notesAddon.Zones:GetCurrentMapInfo() or nil
-						local zoneData = { content = "", category = "General", storage = "account", pinColor = "sync", fontColor = "match" }
-						if mapInfo then
-							zoneData.mapID = mapInfo.mapID
-							zoneData.mapType = mapInfo.mapType
-							zoneData.parentMapID = mapInfo.parentMapID
-						end
-						notesAddon.Zones:AddZone(targetZone, zoneData)
+				OneWoW:BringUp("OneWoW_Notes")
+				local api = OneWoW_Notes_API
+				if not api then return end
+				if not api.GetZone(targetZone) then
+					local mapInfo = api.GetCurrentMapInfo and api.GetCurrentMapInfo() or nil
+					local noteZoneData = { content = "", category = "General", storage = "account", pinColor = "sync", fontColor = "match" }
+					if mapInfo then
+						noteZoneData.mapID = mapInfo.mapID
+						noteZoneData.parentMapID = mapInfo.parentMapID
 					end
+					api.AddZone(targetZone, noteZoneData)
 				end
-				if OneWoW.UI then
-					OneWoW.UI:Show("notes")
-					C_Timer.After(0.1, function()
-						OneWoW.UI:SelectSubTab("notes", "zones")
-						C_Timer.After(0.15, function()
-							local zonesFrame = OneWoW.UI:GetContentFrame("notes", "zones")
-							if zonesFrame and zonesFrame.SelectZone then
-								zonesFrame.SelectZone(targetZone)
-							end
-						end)
-					end)
-				end
+				api.OpenZone(targetZone)
 			end)
 		end)
 		panel.actionBtn = actionBtn
@@ -472,7 +482,7 @@ local function BuildZoneNotesPanel(container, yOffset, anchorPanel, flexHeight, 
 		panel:SetPoint("TOPRIGHT", anchorPanel, "BOTTOMRIGHT", 0, -PANEL_GAP)
 	end
 	panel:SetHeight(flexHeight)
-	panel.currentZoneName = zoneName
+	panel.currentZoneName = zoneName or displayZone
 
 	local headerPad = PANEL_PADDING
 	local headerW = PANEL_WIDTH - 2 * headerPad

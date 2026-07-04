@@ -27,7 +27,7 @@ local ICON_ROW_GAP    = 4
 local TOGGLE_BTN_W    = 70
 local TOGGLE_BTN_H    = 20
 
-local function LabelForPref(L, pref)
+local function LabelForPref(pref)
     if pref == "mini" then return L["MMBTNS_ICONS_MINI"] end
     if pref == "map"  then return L["MMBTNS_ICONS_MAP_STATE"]       end
     if pref == "hide" then return HIDE      end
@@ -124,7 +124,7 @@ local function BuildIconRow(parent, info, yOffset, refreshFn)
         local seenLbl = info.seen
             and (L["MMBTNS_ICONS_ENABLED"])
             or  (L["MMBTNS_ICONS_DISABLED"])
-        statusText:SetText(seenLbl .. " : " .. LabelForPref(L, pref))
+        statusText:SetText(seenLbl .. " : " .. LabelForPref(pref))
 
         local color = info.seen and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED"
         statusText:SetTextColor(OneWoW_GUI:GetThemeColor(color))
@@ -238,7 +238,7 @@ end
 
 -- ─── Main settings content builder ─────────────────────────────────────────
 
-local function BuildContent(container, isEnabled)
+local function BuildContent(container)
     local s = GetSettings()
     local cy = 0
 
@@ -356,12 +356,11 @@ local function BuildContent(container, isEnabled)
     cy = cy - ROW_HEIGHT
 
     -- Grow direction (4-way radio: Down / Up / Left / Right)
-    local growLabel
-    growLabel, cy = AddLabel(container, cy, L["GROW_DIRECTION"])
+    _, cy = AddLabel(container, cy, L["GROW_DIRECTION"])
 
     local growDown, growUp, growLeft, growRight
 
-    local function SetGrowDir(dir, self)
+    local function SetGrowDir(dir)
         s.growDirection = dir
         if growDown  then growDown:SetChecked(dir  == "down")  end
         if growUp    then growUp:SetChecked(dir    == "up")    end
@@ -372,28 +371,28 @@ local function BuildContent(container, isEnabled)
     growDown = OneWoW_GUI:CreateCheckbox(container, {
         label   = L["DOWN"],
         checked = s.growDirection == "down",
-        onClick = function(self) SetGrowDir("down", self) end,
+        onClick = function() SetGrowDir("down") end,
     })
     growDown:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
 
     growUp = OneWoW_GUI:CreateCheckbox(container, {
         label   = L["UP"],
         checked = s.growDirection == "up",
-        onClick = function(self) SetGrowDir("up", self) end,
+        onClick = function() SetGrowDir("up") end,
     })
     growUp:SetPoint("TOPLEFT", container, "TOPLEFT", 110, cy)
 
     growLeft = OneWoW_GUI:CreateCheckbox(container, {
         label   = L["MMBTNS_GROW_LEFT"],
         checked = s.growDirection == "left",
-        onClick = function(self) SetGrowDir("left", self) end,
+        onClick = function() SetGrowDir("left") end,
     })
     growLeft:SetPoint("TOPLEFT", container, "TOPLEFT", 190, cy)
 
     growRight = OneWoW_GUI:CreateCheckbox(container, {
         label   = L["MMBTNS_GROW_RIGHT"],
         checked = s.growDirection == "right",
-        onClick = function(self) SetGrowDir("right", self) end,
+        onClick = function() SetGrowDir("right") end,
     })
     growRight:SetPoint("TOPLEFT", container, "TOPLEFT", 280, cy)
     cy = cy - ROW_HEIGHT
@@ -531,7 +530,7 @@ end
 
 -- ─── CreateCustomDetail (called by the module feature panel framework) ──────
 
-function MinimapButtonsModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled)
+function MinimapButtonsModule:CreateCustomDetail(detailScrollChild, yOffset, _)
     if detailScrollChild._mmbtnContainer then
         OneWoW_GUI:ClearFrame(detailScrollChild._mmbtnContainer)
     end
@@ -548,14 +547,14 @@ function MinimapButtonsModule:CreateCustomDetail(detailScrollChild, yOffset, isE
 
     self._refreshCustomDetail = function()
         OneWoW_GUI:ClearFrame(container)
-        local cy = BuildContent(container, isEnabled)
+        local cy = BuildContent(container)
         detailScrollChild:SetHeight(math.abs(capturedYOffset) + math.abs(cy) + 20)
         if detailScrollChild.updateThumb then
             detailScrollChild.updateThumb()
         end
     end
 
-    local cy = BuildContent(container, isEnabled)
+    local cy = BuildContent(container)
 
     return yOffset + cy
 end

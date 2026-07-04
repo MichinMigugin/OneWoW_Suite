@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 local ProfPanelModule, L = ns.ModuleRegistry:Current()
 
 local OneWoW_GUI = OneWoW_GUI
@@ -142,15 +142,15 @@ function ProfPanelUI:CreateExpansionRow(parent, expansion, index)
     row.bg = bg
 
     row:EnableMouse(true)
-    row:SetScript("OnEnter", function(self)
-        self.bg:SetColorTexture(hoverR, hoverG, hoverB, 0.8)
+    row:SetScript("OnEnter", function(myself)
+        myself.bg:SetColorTexture(hoverR, hoverG, hoverB, 0.8)
     end)
-    row:SetScript("OnLeave", function(self)
-        self.bg:SetColorTexture(bgR, bgG, bgB, 0.6)
+    row:SetScript("OnLeave", function(myself)
+        myself.bg:SetColorTexture(bgR, bgG, bgB, 0.6)
     end)
-    row:SetScript("OnClick", function(self)
-        self.isExpanded = not self.isExpanded
-        ProfPanelUI:ToggleExpansion(self)
+    row:SetScript("OnClick", function(myself)
+        myself.isExpanded = not myself.isExpanded
+        ProfPanelUI:ToggleExpansion(myself)
     end)
 
     local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -376,7 +376,6 @@ end
 
 function ProfPanelUI:CreateAltEntry(parent, alt, xOffset, yOffset)
     local mutedR, mutedG, mutedB = OneWoW_GUI:GetThemeColor("TEXT_MUTED")
-    local accentR, accentG, accentB = OneWoW_GUI:GetThemeColor("TEXT_ACCENT")
 
     local frame = CreateFrame("Button", nil, parent)
     frame:SetHeight(16)
@@ -404,8 +403,8 @@ function ProfPanelUI:CreateAltEntry(parent, alt, xOffset, yOffset)
     fs:SetJustifyH("LEFT")
     fs:SetText(classColor .. alt.name .. "|r" .. expansionStr)
 
-    frame:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    frame:SetScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_TOP")
         GameTooltip:SetText(alt.name .. " - " .. (alt.realm or ""), 1, 1, 1)
         if alt.expansions and #alt.expansions > 0 then
             local sorted = {}
@@ -426,7 +425,7 @@ function ProfPanelUI:CreateAltEntry(parent, alt, xOffset, yOffset)
         end
         GameTooltip:Show()
     end)
-    frame:SetScript("OnLeave", function(self) GameTooltip:Hide() end)
+    frame:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     return frame
 end
