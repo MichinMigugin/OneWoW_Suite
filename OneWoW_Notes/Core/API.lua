@@ -197,6 +197,63 @@ function OneWoW_Notes_API.AddOrUpdateItem(itemID, itemData)
     return true
 end
 
+--- Returns the resolved current zone name (main + sub when applicable).
+---@return string|nil zoneName
+function OneWoW_Notes_API.GetCurrentZoneName()
+    if not ns.Zones then return nil end
+    return ns.Zones:GetCurrentZoneName()
+end
+
+--- Returns a zone note.
+---@param zoneName string
+---@return table|nil zoneData
+function OneWoW_Notes_API.GetZone(zoneName)
+    if not zoneName or zoneName == "" or not ns.Zones then
+        return nil
+    end
+    return ns.Zones:GetZone(zoneName)
+end
+
+--- Map context for the current player location.
+---@return table|nil mapInfo
+function OneWoW_Notes_API.GetCurrentMapInfo()
+    if not ns.Zones then return nil end
+    return ns.Zones:GetCurrentMapInfo()
+end
+
+--- Adds a new zone note.
+---@param zoneName string
+---@param zoneData table
+---@return boolean saved
+function OneWoW_Notes_API.AddZone(zoneName, zoneData)
+    if not zoneName or zoneName == "" or not ns.Zones then
+        return false
+    end
+    ns.Zones:AddZone(zoneName, zoneData)
+    return true
+end
+
+--- Opens a zone note, selecting it when the Zones tab is ready.
+---@param zoneName string
+---@return boolean opened
+function OneWoW_Notes_API.OpenZone(zoneName)
+    if not zoneName or zoneName == "" then
+        return false
+    end
+
+    ns.pendingZoneSelect = zoneName
+    OneWoW.UI:Show("notes")
+    OneWoW.UI:SelectSubTab("notes", "zones")
+
+    local tabFrame = OneWoW.UI:GetContentFrame("notes", "zones")
+    if tabFrame and tabFrame.SelectZone then
+        tabFrame.SelectZone(zoneName)
+        ns.pendingZoneSelect = nil
+    end
+
+    return true
+end
+
 --- Opens an item note, selecting it when the Items tab is ready.
 ---@param itemID number
 ---@return boolean opened

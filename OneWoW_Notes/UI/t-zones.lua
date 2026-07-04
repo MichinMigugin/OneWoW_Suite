@@ -824,6 +824,14 @@ function ns.UI.CreateZonesTab(parent)
         parent.RefreshZonesList()
     end
 
+    parent:HookScript("OnShow", function()
+        if ns.pendingZoneSelect then
+            local name = ns.pendingZoneSelect
+            ns.pendingZoneSelect = nil
+            parent.SelectZone(name)
+        end
+    end)
+
     function parent.RefreshZoneTodos()
         if not todoContainer or not selectedZone then return end
 
