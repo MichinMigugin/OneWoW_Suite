@@ -49,8 +49,12 @@ function EscMenu:AutoUpdateCurrentInstance()
 end
 
 function EscMenu:HookGameMenu()
-	hooksecurefunc("ToggleGameMenu", function()
-		if not GameMenuFrame:IsShown() or OneWoW.Restriction.IsProtectedActionBlocked() then return end
+	-- OnShow covers both ESC (ToggleGameMenu → ShowUIPanel) and the Game Menu
+	-- micro button (MainMenuMicroButton → ShowUIPanel directly, no ToggleGameMenu).
+	if not GameMenuFrame then return end
+
+	GameMenuFrame:HookScript("OnShow", function()
+		if OneWoW.Restriction.IsProtectedActionBlocked() then return end
 		if OneWoW:GetPortalHub() and OneWoW:GetPortalHub().escEnabled then
 			EscMenu:ShowPortalFrames()
 		else
@@ -63,19 +67,17 @@ function EscMenu:HookGameMenu()
 		end
 	end)
 
-	if GameMenuFrame then
-		GameMenuFrame:HookScript("OnHide", function()
-			EscMenu:HideInstanceStatsFrame()
-			-- Portal strips are children of the protected GameMenuFrame, so Hide()
-			-- on them is blocked in combat. The menu (their parent) is already
-			-- hidden, so defer the state cleanup until restrictions clear; guard
-			-- against the menu being reopened before the deferred run fires.
-			OneWoW.Restriction.RunWhenUnrestricted("protected", "OneWoW_QoL.portalhub.eschide", function()
-				if GameMenuFrame and GameMenuFrame:IsShown() then return end
-				EscMenu:HidePortalFrames()
-			end)
+	GameMenuFrame:HookScript("OnHide", function()
+		EscMenu:HideInstanceStatsFrame()
+		-- Portal strips are children of the protected GameMenuFrame, so Hide()
+		-- on them is blocked in combat. The menu (their parent) is already
+		-- hidden, so defer the state cleanup until restrictions clear; guard
+		-- against the menu being reopened before the deferred run fires.
+		OneWoW.Restriction.RunWhenUnrestricted("protected", "OneWoW_QoL.portalhub.eschide", function()
+			if GameMenuFrame and GameMenuFrame:IsShown() then return end
+			EscMenu:HidePortalFrames()
 		end)
-	end
+	end)
 end
 
 local STRIP_GAP = 6
