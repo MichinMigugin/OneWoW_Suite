@@ -24,6 +24,11 @@ function FrameMoverModule:OnToggle(toggleId, value)
         end
     elseif toggleId == "enable_scaling" then
         FM:SetScalingEnabled(value)
+    elseif toggleId == "show_modify_hud" and not value then
+        local UI = ns.FrameMoverUI
+        if UI and UI.HideModifyHud then
+            UI:HideModifyHud()
+        end
     end
 end
 

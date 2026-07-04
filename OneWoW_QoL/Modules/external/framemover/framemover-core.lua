@@ -108,6 +108,14 @@ function FM:ScalingEnabled() return GetToggle("enable_scaling")  end
 function FM:SavePositions()  return GetToggle("save_positions")  end
 function FM:SaveScales()     return GetToggle("save_scales")     end
 function FM:ClampToScreen()  return GetToggle("clamp_to_screen") end
+function FM:ShowModifyHud()  return GetToggle("show_modify_hud") end
+
+function FM:NotifyModified(frameName)
+    local UI = ns.FrameMoverUI
+    if UI and UI.OnFrameModified then
+        UI:OnFrameModified(frameName)
+    end
+end
 
 -- ============================================================
 -- Frame resolution  ("Foo.Bar.Baz" -> _G.Foo.Bar.Baz)
@@ -238,6 +246,7 @@ function FM:AdjustScale(frameName, frame, delta)
     if state then state.dragged = true end
     self:SaveScale(frameName, newScale)
     self:SavePosition(frameName)
+    self:NotifyModified(frameName)
 end
 
 -- ============================================================
@@ -267,6 +276,24 @@ function FM:ResetAllScales()
             end
         end
     end
+end
+
+function FM:ResetScale(frameName)
+    local db = self:GetFrameDB(frameName)
+    db.scale = nil
+    local state = self.frameStates[frameName]
+    if state and state.frame and not IsProtectedMutationBlocked(state.frame) then
+        state.frame:SetScale(1.0)
+    end
+end
+
+function FM:GetDisplayScale(frameName)
+    local state = self.frameStates[frameName]
+    if state and state.frame then
+        return state.frame:GetScale()
+    end
+    local db = self:GetFrameDB(frameName)
+    return db.scale or 1.0
 end
 
 function FM:ResetFrame(frameName)
@@ -312,6 +339,16 @@ function FM:MakeMovable(frame, frameName)
 
     local special = SPECIAL[frameName]
 
+    local function ApplyDragClamp(f)
+        -- Alt overrides clamp for this drag and leaves it off so the frame
+        -- can stay partially off-screen. A later drag without Alt re-applies
+        -- clamp (when the toggle is on) and pulls it back on-screen.
+        local clamp = FM:ClampToScreen() and not IsAltKeyDown()
+        if not IsProtectedMutationBlocked(f) then
+            f:SetClampedToScreen(clamp)
+        end
+    end
+
     -- Drag hooks ------------------------------------------------
     frame:HookScript("OnMouseDown", function(f, button)
         if not FM.active then return end
@@ -322,6 +359,7 @@ function FM:MakeMovable(frame, frameName)
         end
         if IsProtectedMutationBlocked(f) then return end
         if special and special.onDragStart then special.onDragStart() end
+        ApplyDragClamp(f)
         f:StartMoving()
         state.dragging = true
     end)
@@ -334,6 +372,7 @@ function FM:MakeMovable(frame, frameName)
         state.dragging = false
         state.dragged  = true
         FM:SavePosition(frameName)
+        FM:NotifyModified(frameName)
         if special and special.onDragStop then special.onDragStop() end
     end)
 
@@ -344,6 +383,7 @@ function FM:MakeMovable(frame, frameName)
             state.dragging = false
             state.dragged  = true
             FM:SavePosition(frameName)
+            FM:NotifyModified(frameName)
             if special and special.onDragStop then special.onDragStop() end
         end
     end)
@@ -594,4 +634,8 @@ function FM:Shutdown()
     wipe(self.pendingWork)
     self._restrictionCached = nil
     if self._eventFrame then self._eventFrame:UnregisterAllEvents() end
+    local UI = ns.FrameMoverUI
+    if UI and UI.HideModifyHud then
+        UI:HideModifyHud()
+    end
 end

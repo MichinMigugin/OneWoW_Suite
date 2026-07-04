@@ -5,13 +5,14 @@ local M = ns.ModuleRegistry:Current()
 OneWoW.Locale:Register(M._scope, "ptBR", {
 
     ["FRAMEMOVER_TITLE"] = "Movedor de quadros",
-    ["FRAMEMOVER_DESC"] = "Arraste os quadros da interface da Blizzard para reposicioná-los. Use Ctrl+Rolagem para dimensionar. Posições e escalas podem persistir entre sessões.",
+    ["FRAMEMOVER_DESC"] = "Arraste os quadros da interface da Blizzard para reposicioná-los. Use Ctrl+Rolagem para dimensionar. Segure Alt ao arrastar para mover os quadros parcialmente para fora da tela quando «Confinar à tela» estiver ativado. Posições e escalas podem persistir entre sessões.",
 
     ["FRAMEMOVER_TOGGLE_REQUIRE_SHIFT"] = "Exigir Shift para arrastar",
     ["FRAMEMOVER_TOGGLE_ENABLE_SCALING"] = "Dimensionamento com Ctrl+Rolagem",
     ["FRAMEMOVER_TOGGLE_SAVE_POSITIONS"] = "Lembrar posições",
     ["FRAMEMOVER_TOGGLE_SAVE_SCALES"] = "Lembrar escalas",
     ["FRAMEMOVER_TOGGLE_CLAMP_SCREEN"] = "Confinar à tela",
+    ["FRAMEMOVER_TOGGLE_MODIFY_HUD"] = "Mostrar popup de escala",
 
     ["FRAMEMOVER_GROUP_BEHAVIOR"] = "Comportamento",
     ["FRAMEMOVER_GROUP_SAVING"] = "Persistência",
@@ -26,11 +27,12 @@ OneWoW.Locale:Register(M._scope, "ptBR", {
     ["FRAMEMOVER_CAT_HOUSING"] = "Moradia",
 
     ["FRAMEMOVER_FRAMES_HEADER"] = "Quadros movíveis",
+    ["FRAMEMOVER_FILTER_EMPTY"] = "Nenhum quadro corresponde à sua busca.",
     ["FRAMEMOVER_RESET_POSITIONS"] = "Redefinir todas as posições",
     ["FRAMEMOVER_RESET_SCALES"] = "Redefinir todas as escalas",
     ["FRAMEMOVER_RESET_POS_DONE"] = "Posições redefinidas. Reabra os quadros para ver os padrões.",
     ["FRAMEMOVER_RESET_SCALE_DONE"] = "Escalas redefinidas. Reabra os quadros para ver os padrões.",
-    ["FRAMEMOVER_ENABLED_TOOLTIP"] = "Clique esquerdo para alternar. Ctrl+Rolagem sobre um quadro para dimensioná-lo.",
+    ["FRAMEMOVER_ENABLED_TOOLTIP"] = "Clique esquerdo para alternar. Ctrl+Rolagem sobre um quadro para dimensioná-lo. Segure Alt ao arrastar para ignorar o confinamento.",
     ["FEATURES_ON"] = "Ativado",
     ["FEATURES_OFF"] = "Desativado",
 })
