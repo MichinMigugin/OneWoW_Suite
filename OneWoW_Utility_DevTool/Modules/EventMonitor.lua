@@ -318,16 +318,16 @@ function EventMonitor:UpdateUI()
 
                 if displayCount >= 200 then
                     displayCount = displayCount + 1
-                    local row = rowPool[displayCount]
-                    if row then
-                        row.eventCol:SetText(WrapEventViewerColor("...", "TIMESTAMP"))
-                        row.argsCol:SetText(L["MSG_SHOWING_FIRST_200_EVENTS"])
-                        row.countCol:SetText("")
-                        row:SetHeight(ROW_HEIGHT)
-                        row:ClearAllPoints()
-                        row:SetPoint("TOPLEFT", content, "TOPLEFT", 2, -(displayCount - 1) * ROW_HEIGHT)
-                        row:SetPoint("RIGHT", content, "RIGHT", -2, 0)
-                        row:Show()
+                    local overflowRow = rowPool[displayCount]
+                    if overflowRow then
+                        overflowRow.eventCol:SetText(WrapEventViewerColor("...", "TIMESTAMP"))
+                        overflowRow.argsCol:SetText(L["MSG_SHOWING_FIRST_200_EVENTS"])
+                        overflowRow.countCol:SetText("")
+                        overflowRow:SetHeight(ROW_HEIGHT)
+                        overflowRow:ClearAllPoints()
+                        overflowRow:SetPoint("TOPLEFT", content, "TOPLEFT", 2, -(displayCount - 1) * ROW_HEIGHT)
+                        overflowRow:SetPoint("RIGHT", content, "RIGHT", -2, 0)
+                        overflowRow:Show()
                     end
                     break
                 end

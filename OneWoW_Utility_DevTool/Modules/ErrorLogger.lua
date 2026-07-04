@@ -233,12 +233,10 @@ function ErrorLogger:_registerBugGrabberBridgeOnce()
     local owner = {}
     self._bugGrabberCallbackOwner = owner
     EventRegistry:RegisterCallback("BugGrabber.BugGrabbed", function(_, tableID)
-        local ok = pcall(function()
+        -- keep BugGrabber's callback chain healthy on handler errors
+        pcall(function()
             ErrorLogger:_onBugGrabberBugGrabbed(tableID)
         end)
-        if not ok then
-            -- keep BugGrabber's callback chain healthy
-        end
     end, owner)
     self:UpdateLuaTabBugGrabberNotice()
 end
@@ -494,12 +492,10 @@ function ErrorLogger:_onAuxEvent(event, a1, a2)
 end
 
 function ErrorLogger:_onLuaError(msg)
-    local ok = pcall(function()
+    -- avoid breaking the error pipeline on capture failures
+    pcall(function()
         self:_captureFromHandler(msg, false)
     end)
-    if not ok then
-        -- avoid breaking the error pipeline
-    end
     if self.originalErrorHandler then
         return self.originalErrorHandler(msg)
     end

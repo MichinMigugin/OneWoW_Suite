@@ -157,7 +157,6 @@ function FrameTree:Create(parentContent, scrollFrame)
             end
         end
 
-        local rootNode
         local prevNode
 
         for i, pf in ipairs(parentChain) do
@@ -180,7 +179,6 @@ function FrameTree:Create(parentContent, scrollFrame)
             end
 
             if i == 1 then
-                rootNode = node
                 tinsert(self.rootNodes, node)
             else
                 if prevNode.children == nil then

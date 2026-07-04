@@ -1,4 +1,4 @@
-local ADDON_NAME, ns = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -87,7 +87,7 @@ function ns.UI:CreateEventMonitorTab(parent)
     scroll:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -14, 4)
 
     tab.maxRowWidth = 0
-    scroll:HookScript("OnSizeChanged", function(self, w)
+    scroll:HookScript("OnSizeChanged", function(_, w)
         content:SetWidth(math.max(w, tab.maxRowWidth or 0))
     end)
 
@@ -146,27 +146,27 @@ function ns.UI:CreateEventMonitorTab(parent)
 
     -- Hook OnLeave so correct styling persists: CreateButton's OnLeave always sets BTN_NORMAL,
     -- which overwrites our active state. Re-apply state-based styling.
-    startStopBtn:HookScript("OnLeave", function(self)
+    startStopBtn:HookScript("OnLeave", function(myself)
         if ns.EventMonitor and ns.EventMonitor.monitoring then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         else
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-            self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+            myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     end)
-    pauseBtn:HookScript("OnLeave", function(self)
+    pauseBtn:HookScript("OnLeave", function(myself)
         if ns.EventMonitor and ns.EventMonitor.monitoring then
             if ns.EventMonitor.paused then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+                myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             else
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end
     end)
@@ -264,7 +264,7 @@ function ns.UI:ShowEventSelector()
         leftScroll:SetPoint("TOPLEFT", 4, -25)
         leftScroll:SetPoint("BOTTOMRIGHT", -14, 4)
 
-        leftScroll:HookScript("OnSizeChanged", function(self, w)
+        leftScroll:HookScript("OnSizeChanged", function(_, w)
             leftContent:SetWidth(w)
         end)
 
@@ -451,10 +451,10 @@ function ns.UI:ShowEventImportDialog()
         editBox:SetHeight(400)
         editBox:SetMaxLetters(0)
         editBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        editBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+        editBox:SetScript("OnEscapePressed", function(myself) myself:ClearFocus() end)
         editScroll:SetScrollChild(editBox)
 
-        editScroll:HookScript("OnSizeChanged", function(self, w)
+        editScroll:HookScript("OnSizeChanged", function(_, w)
             editBox:SetWidth(w)
         end)
 

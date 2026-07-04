@@ -802,7 +802,7 @@ function ns.UI:CreateTextureTab(parent)
         getCount = function() return BR:GetFilteredCount() end,
         getEntry = function(idx) return BR:GetFilteredEntry(idx) end,
         onSelect = function(idx) applyListSelection(tab, idx) end,
-        renderRow = function(btn, idx, entry, isSelected)
+        renderRow = function(btn, _, entry, _)
             local label = entry.displayName or entry.atlasName or "?"
             if entry.kind == "atlas" and entry.textureKey then
                 label = entry.atlasName

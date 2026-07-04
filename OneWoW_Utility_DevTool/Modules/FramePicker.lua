@@ -171,7 +171,7 @@ function FramePicker:GetGeometricFramesAtCursor()
     return framesAtCursor
 end
 
-function FramePicker:OnUpdate(elapsed)
+function FramePicker:OnUpdate(_)
     if not self.checkedAPI then
         ns:Print(L["FRAME_PICKER_MSG_GEOMETRIC"])
         self.checkedAPI = true
@@ -300,12 +300,12 @@ function FramePicker:OnUpdate(elapsed)
                 for i = 1, math.min(8, #validFrames) do
                     local f = validFrames[i]
                     local fname = f.GetName and f:GetName() or "Anonymous"
-                    local ftype = f.GetObjectType and f:GetObjectType() or "Unknown"
+                    local frameType = f.GetObjectType and f:GetObjectType() or "Unknown"
                     local mouse = f.IsMouseEnabled and (f:IsMouseEnabled() and "M" or "-") or "?"
                     local hasRect = "-"
                     pcall(function() if f.GetRect and select(1, f:GetRect()) ~= nil then hasRect = "R" end end)
                     local marker = (i == self.frameIndex) and ">>>" or "   "
-                    tinsert(details, string.format("%s[%d] %s (%s) %s%s", marker, i, fname, ftype, mouse, hasRect))
+                    tinsert(details, string.format("%s[%d] %s (%s) %s%s", marker, i, fname, frameType, mouse, hasRect))
                 end
                 if #validFrames > 8 then
                     tinsert(details, string.format("  ... and %d more", #validFrames - 8))

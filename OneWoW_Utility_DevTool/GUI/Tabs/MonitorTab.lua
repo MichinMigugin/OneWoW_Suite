@@ -1,4 +1,4 @@
-local ADDON_NAME, ns = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -213,9 +213,9 @@ function ns.UI:CreateMonitorTab(parent)
     headerFrame:SetPoint("TOPLEFT", playBtn, "BOTTOMLEFT", 0, -41)
     headerFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
 
-    local function MakeHeader(parent, text, sortCol, titleKey, bodyKey, justifyH)
+    local function MakeHeader(headerParent, text, sortCol, titleKey, bodyKey, justifyH)
         justifyH = justifyH or "CENTER"
-        local h = CreateFrame("Button", nil, parent)
+        local h = CreateFrame("Button", nil, headerParent)
         h:SetHeight(22)
         h.text = h:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         h.text:SetPoint("TOPLEFT", h, "TOPLEFT", 2, 0)
@@ -464,7 +464,7 @@ function ns.UI:CreateMonitorTab(parent)
         headerFrame:SetPoint("RIGHT", tab, "RIGHT", -TAB_PANEL_RIGHT_INSET - LIST_RIGHT_GUTTER, 0)
     end
 
-    listScroll:HookScript("OnSizeChanged", function(self, w)
+    listScroll:HookScript("OnSizeChanged", function(_, w)
         listContent:SetWidth(w)
         tab:ApplyMonitorColumnLayout()
     end)
@@ -479,10 +479,10 @@ function ns.UI:CreateMonitorTab(parent)
         row:SetPoint("RIGHT", listContent, "RIGHT", 0, 0)
         row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
-        row:SetScript("OnClick", function(self, button)
-            if button == "RightButton" and self.addonInfo and Monitor then
-                local info = self.addonInfo
-                MenuUtil.CreateContextMenu(self, function(ownerRegion, rootDescription)
+        row:SetScript("OnClick", function(myself, button)
+            if button == "RightButton" and myself.addonInfo and Monitor then
+                local info = myself.addonInfo
+                MenuUtil.CreateContextMenu(myself, function(_, rootDescription)
                     local pinTitle = (L["MON_CTX_PIN_TITLE"]):gsub("{title}", tostring(info.title or ""))
                     rootDescription:CreateTitle(pinTitle)
                     rootDescription:CreateButton(L["MON_CTX_MONITOR_THIS"], function()
@@ -773,11 +773,11 @@ function ns.UI:CreateMonitorTab(parent)
         end
     end)
 
-    showOnLoadCheck:SetScript("OnClick", function(self)
-        ns.db.global.monitor.showOnLoad = self:GetChecked() and true or false
+    showOnLoadCheck:SetScript("OnClick", function(myself)
+        ns.db.global.monitor.showOnLoad = myself:GetChecked() and true or false
     end)
 
-    tab:SetScript("OnUpdate", function(self, elapsed)
+    tab:SetScript("OnUpdate", function(_, elapsed)
         if Monitor then
             Monitor:OnUpdate(elapsed)
         end

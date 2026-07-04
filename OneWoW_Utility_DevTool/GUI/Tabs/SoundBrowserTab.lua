@@ -210,7 +210,7 @@ function ns.UI.SoundTab_PlayListSelection(tab)
     if not tab.selectedEntry then return end
     local id = SB:GetFileDataIdNumber(tab.selectedEntry)
     if not id then return end
-    local ok, handle = startPlaySoundFile(tab, id)
+    local ok = startPlaySoundFile(tab, id)
     SoundTab_updateLastPlayLine(tab, ok, id)
     ns.UI.SoundTab_UpdateDetails(tab)
 end
@@ -606,7 +606,7 @@ function ns.UI:CreateSoundBrowserTab(parent)
         onSelect = function(idx)
             applyListSelection(tab, idx)
         end,
-        renderRow = function(btn, idx, entry, isSelected)
+        renderRow = function(btn, _, entry, _)
             ensureListRowBookmarkIcon(btn, ROW_H)
             if SB:IsBookmarked(entry) then
                 btn._soundBmTex:SetTexture(BOOKMARK_ICON_PATH)
@@ -688,18 +688,18 @@ function ns.UI:CreateSoundBrowserTab(parent)
     musicCb:SetPoint("LEFT", channelDropdown, "RIGHT", 14, 0)
     tab.soundCvarMusicCb = musicCb
     bindSoundCvarCheckboxTooltip(musicCb, L["SOUND_CVAR_MUSIC_TIP"])
-    musicCb:SetScript("OnClick", function(self)
+    musicCb:SetScript("OnClick", function(myself)
         if tab._syncingSoundCvars then return end
-        C_CVar.SetCVar(ns.Constants.SOUND_CVAR_ENABLE_MUSIC, self:GetChecked() and "1" or "0")
+        C_CVar.SetCVar(ns.Constants.SOUND_CVAR_ENABLE_MUSIC, myself:GetChecked() and "1" or "0")
     end)
 
     local ambienceCb = OneWoW_GUI:CreateCheckbox(rightPanel, { label = L["SOUND_CVAR_AMBIENCE_LABEL"] })
     ambienceCb:SetPoint("LEFT", musicCb.label, "RIGHT", 10, 0)
     tab.soundCvarAmbienceCb = ambienceCb
     bindSoundCvarCheckboxTooltip(ambienceCb, L["SOUND_CVAR_AMBIENCE_TIP"])
-    ambienceCb:SetScript("OnClick", function(self)
+    ambienceCb:SetScript("OnClick", function(myself)
         if tab._syncingSoundCvars then return end
-        C_CVar.SetCVar(ns.Constants.SOUND_CVAR_ENABLE_AMBIENCE, self:GetChecked() and "1" or "0")
+        C_CVar.SetCVar(ns.Constants.SOUND_CVAR_ENABLE_AMBIENCE, myself:GetChecked() and "1" or "0")
     end)
 
     tab.soundCvarListener = CreateFrame("Frame", nil, tab)
@@ -790,7 +790,7 @@ function ns.UI:CreateSoundBrowserTab(parent)
                 ns:Print(L["SOUND_ERR_BAD_FDID"])
                 return
             end
-            local ok, handle = startPlaySoundFile(tab, n)
+            local ok = startPlaySoundFile(tab, n)
             SoundTab_updateLastPlayLine(tab, ok, n)
             ns.UI.SoundTab_UpdateDetails(tab)
             ns.UI.SoundTab_UpdateCopyRow(tab)
@@ -802,7 +802,7 @@ function ns.UI:CreateSoundBrowserTab(parent)
                 ns:Print(L["SOUND_ERR_BAD_KIT"])
                 return
             end
-            local ok, handle = startPlaySoundKit(tab, n)
+            local ok = startPlaySoundKit(tab, n)
             SoundTab_updateLastPlayLine(tab, ok, n)
             ns.UI.SoundTab_UpdateDetails(tab)
             ns.UI.SoundTab_UpdateCopyRow(tab)
@@ -819,7 +819,7 @@ function ns.UI:CreateSoundBrowserTab(parent)
             end
             return
         end
-        local ok, handle = startPlaySoundKit(tab, kitId)
+        local ok = startPlaySoundKit(tab, kitId)
         SoundTab_updateLastPlayLine(tab, ok, kitId)
         ns.UI.SoundTab_UpdateDetails(tab)
         ns.UI.SoundTab_UpdateCopyRow(tab)

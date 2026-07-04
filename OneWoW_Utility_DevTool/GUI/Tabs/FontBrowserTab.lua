@@ -683,7 +683,7 @@ function ns.UI:CreateFontBrowserTab(parent)
             applyFontSelection(tab, idx)
             refreshToolbarState(tab)
         end,
-        renderRow = function(btn, idx, name, isSelected)
+        renderRow = function(btn, _, name, _)
             ensureListRowBookmarkIcon(btn, ROW_H)
             if FB:IsBookmarked(name) then
                 btn._fontBookmarkIcon:SetTexture(BOOKMARK_ICON_PATH)
@@ -761,18 +761,18 @@ function ns.UI:CreateFontBrowserTab(parent)
     tab.previewBg = previewBg
 
     -- Swatch: UpdateColor updates both swatch and preview texture
-    previewBgSwatch.UpdateColor = function(self)
+    previewBgSwatch.UpdateColor = function(myself)
         local rr, gg, bb, aa = getEffectivePreviewBg()
-        self:SetBackdropColor(rr, gg, bb, 1)
-        if self.tab and self.tab.previewBg then
-            self.tab.previewBg:SetColorTexture(rr, gg, bb, aa)
+        myself:SetBackdropColor(rr, gg, bb, 1)
+        if myself.tab and myself.tab.previewBg then
+            myself.tab.previewBg:SetColorTexture(rr, gg, bb, aa)
         end
     end
     previewBgSwatch:SetScript("OnClick", function()
-        local r, g, b, a = getEffectivePreviewBg()
+        local pr, pg, pb, pa = getEffectivePreviewBg()
         local prev = ns.db.global.fontBrowserPreviewBg
         ColorPickerFrame:SetupColorPickerAndShow({
-            r = r, g = g, b = b, opacity = a, hasOpacity = true,
+            r = pr, g = pg, b = pb, opacity = pa, hasOpacity = true,
             swatchFunc = function()
                 local rr, gg, bb = ColorPickerFrame:GetColorRGB()
                 local oo = (ColorPickerFrame.GetColorAlpha and ColorPickerFrame:GetColorAlpha()) or ColorPickerFrame.opacity or 1
@@ -797,8 +797,8 @@ function ns.UI:CreateFontBrowserTab(parent)
             previewBgSwatch:UpdateColor()
         end
     end)
-    previewBgSwatch:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    previewBgSwatch:SetScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
         GameTooltip:SetText(L["FONT_PREVIEW_BG_SWATCH"], 1, 1, 1, nil, true)
         GameTooltip:Show()
     end)
@@ -882,7 +882,7 @@ function ns.UI:CreateFontBrowserTab(parent)
 
     -- Sample text row: presets anchored to wsFrame right so edit uses remaining width
     local sampleEdit
-    local sampleLabel = createWorkspaceLabel(wsFrame, L["FONT_LABEL_SAMPLE_TEXT"], 0, WS_LABEL_COL)
+    createWorkspaceLabel(wsFrame, L["FONT_LABEL_SAMPLE_TEXT"], 0, WS_LABEL_COL)
 
     local presetNum = OneWoW_GUI:CreateFitTextButton(wsFrame, {
         text = L["FONT_SAMPLE_NUMBERS"],
@@ -934,10 +934,10 @@ function ns.UI:CreateFontBrowserTab(parent)
     sampleEdit:SetAutoFocus(false)
     sampleEdit:SetTextInsets(3, 3, 0, 0)
     sampleEdit:SetText("")
-    sampleEdit:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    sampleEdit:SetScript("OnEnterPressed", function(self)
-        self:ClearFocus()
-        local text = strtrim(self:GetText())
+    sampleEdit:SetScript("OnEscapePressed", function(myself) myself:ClearFocus() end)
+    sampleEdit:SetScript("OnEnterPressed", function(myself)
+        myself:ClearFocus()
+        local text = strtrim(myself:GetText())
         if text ~= "" then
             tab.sampleText = text
         else
@@ -951,7 +951,7 @@ function ns.UI:CreateFontBrowserTab(parent)
     local spacingEdit = createMiniEdit(wsFrame, 32)
     spacingEdit:SetPoint("LEFT", spacingAlphaLabel, "RIGHT", WS_LABEL_GAP, 0)
     spacingEdit:SetText("0")
-    spacingEdit:SetScript("OnEnterPressed", function(self) self:ClearFocus(); applyWorkspaceOverrides(tab) end)
+    spacingEdit:SetScript("OnEnterPressed", function(myself) myself:ClearFocus(); applyWorkspaceOverrides(tab) end)
     tab.spacingEdit = spacingEdit
 
     local alphaLabel = createMiniLabel(wsFrame, L["FONT_LABEL_ALPHA"])
@@ -959,7 +959,7 @@ function ns.UI:CreateFontBrowserTab(parent)
     local alphaEdit = createMiniEdit(wsFrame, 36)
     alphaEdit:SetPoint("LEFT", alphaLabel, "RIGHT", 4, 0)
     alphaEdit:SetText("1.00")
-    alphaEdit:SetScript("OnEnterPressed", function(self) self:ClearFocus(); applyWorkspaceOverrides(tab) end)
+    alphaEdit:SetScript("OnEnterPressed", function(myself) myself:ClearFocus(); applyWorkspaceOverrides(tab) end)
     tab.alphaEdit = alphaEdit
 
     -- Size + Flags row
@@ -968,8 +968,8 @@ function ns.UI:CreateFontBrowserTab(parent)
     local sizeEdit = createMiniEdit(wsFrame, 40)
     sizeEdit:SetPoint("LEFT", sizeLabel, "RIGHT", WS_LABEL_GAP, 0)
     sizeEdit:SetText("12")
-    sizeEdit:SetScript("OnEnterPressed", function(self)
-        self:ClearFocus()
+    sizeEdit:SetScript("OnEnterPressed", function(myself)
+        myself:ClearFocus()
         applyWorkspaceOverrides(tab)
     end)
     tab.sizeEdit = sizeEdit
@@ -981,13 +981,13 @@ function ns.UI:CreateFontBrowserTab(parent)
     outlineBtn:SetPoint("LEFT", flagsLabel, "RIGHT", 4, 0)
     outlineBtn._barActive = false
     ns.UI:BindToolbarBarButtonMouse(outlineBtn, FONT_BAR_ACTIVE_KEY)
-    outlineBtn:SetScript("OnClick", function(self)
-        self._barActive = not self._barActive
-        if self._barActive and tab.thickBtn then
+    outlineBtn:SetScript("OnClick", function(myself)
+        myself._barActive = not myself._barActive
+        if myself._barActive and tab.thickBtn then
             tab.thickBtn._barActive = false
             ns.UI:PaintToolbarBarButton(tab.thickBtn, FONT_BAR_ACTIVE_KEY)
         end
-        ns.UI:PaintToolbarBarButton(self, FONT_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(myself, FONT_BAR_ACTIVE_KEY)
         applyWorkspaceOverrides(tab)
     end)
     tab.outlineBtn = outlineBtn
@@ -996,13 +996,13 @@ function ns.UI:CreateFontBrowserTab(parent)
     thickBtn:SetPoint("LEFT", outlineBtn, "RIGHT", 3, 0)
     thickBtn._barActive = false
     ns.UI:BindToolbarBarButtonMouse(thickBtn, FONT_BAR_ACTIVE_KEY)
-    thickBtn:SetScript("OnClick", function(self)
-        self._barActive = not self._barActive
-        if self._barActive and tab.outlineBtn then
+    thickBtn:SetScript("OnClick", function(myself)
+        myself._barActive = not myself._barActive
+        if myself._barActive and tab.outlineBtn then
             tab.outlineBtn._barActive = false
             ns.UI:PaintToolbarBarButton(tab.outlineBtn, FONT_BAR_ACTIVE_KEY)
         end
-        ns.UI:PaintToolbarBarButton(self, FONT_BAR_ACTIVE_KEY)
+        ns.UI:PaintToolbarBarButton(myself, FONT_BAR_ACTIVE_KEY)
         applyWorkspaceOverrides(tab)
     end)
     tab.thickBtn = thickBtn
@@ -1011,9 +1011,9 @@ function ns.UI:CreateFontBrowserTab(parent)
     monoBtn:SetPoint("LEFT", thickBtn, "RIGHT", 3, 0)
     monoBtn._barActive = false
     ns.UI:BindToolbarBarButtonMouse(monoBtn, FONT_BAR_ACTIVE_KEY)
-    monoBtn:SetScript("OnClick", function(self)
-        self._barActive = not self._barActive
-        ns.UI:PaintToolbarBarButton(self, FONT_BAR_ACTIVE_KEY)
+    monoBtn:SetScript("OnClick", function(myself)
+        myself._barActive = not myself._barActive
+        ns.UI:PaintToolbarBarButton(myself, FONT_BAR_ACTIVE_KEY)
         applyWorkspaceOverrides(tab)
     end)
     tab.monoBtn = monoBtn
@@ -1026,7 +1026,7 @@ function ns.UI:CreateFontBrowserTab(parent)
     local textREdit = createMiniEdit(wsFrame, 36)
     textREdit:SetPoint("LEFT", textRLabel, "RIGHT", 2, 0)
     textREdit:SetText("1.00")
-    textREdit:SetScript("OnEnterPressed", function(self) self:ClearFocus(); applyWorkspaceOverrides(tab) end)
+    textREdit:SetScript("OnEnterPressed", function(myself) myself:ClearFocus(); applyWorkspaceOverrides(tab) end)
     tab.textREdit = textREdit
 
     local textGLabel = createMiniLabel(wsFrame, "G")
@@ -1034,7 +1034,7 @@ function ns.UI:CreateFontBrowserTab(parent)
     local textGEdit = createMiniEdit(wsFrame, 36)
     textGEdit:SetPoint("LEFT", textGLabel, "RIGHT", 2, 0)
     textGEdit:SetText("1.00")
-    textGEdit:SetScript("OnEnterPressed", function(self) self:ClearFocus(); applyWorkspaceOverrides(tab) end)
+    textGEdit:SetScript("OnEnterPressed", function(myself) myself:ClearFocus(); applyWorkspaceOverrides(tab) end)
     tab.textGEdit = textGEdit
 
     local textBLabel = createMiniLabel(wsFrame, "B")
@@ -1042,7 +1042,7 @@ function ns.UI:CreateFontBrowserTab(parent)
     local textBEdit = createMiniEdit(wsFrame, 36)
     textBEdit:SetPoint("LEFT", textBLabel, "RIGHT", 2, 0)
     textBEdit:SetText("1.00")
-    textBEdit:SetScript("OnEnterPressed", function(self) self:ClearFocus(); applyWorkspaceOverrides(tab) end)
+    textBEdit:SetScript("OnEnterPressed", function(myself) myself:ClearFocus(); applyWorkspaceOverrides(tab) end)
     tab.textBEdit = textBEdit
 
     local textALabel = createMiniLabel(wsFrame, "A")
@@ -1050,7 +1050,7 @@ function ns.UI:CreateFontBrowserTab(parent)
     local textAEdit = createMiniEdit(wsFrame, 36)
     textAEdit:SetPoint("LEFT", textALabel, "RIGHT", 2, 0)
     textAEdit:SetText("1.00")
-    textAEdit:SetScript("OnEnterPressed", function(self) self:ClearFocus(); applyWorkspaceOverrides(tab) end)
+    textAEdit:SetScript("OnEnterPressed", function(myself) myself:ClearFocus(); applyWorkspaceOverrides(tab) end)
     tab.textAEdit = textAEdit
 
     -- Shadow Color row: R G B A
@@ -1061,7 +1061,7 @@ function ns.UI:CreateFontBrowserTab(parent)
     local shadREdit = createMiniEdit(wsFrame, 36)
     shadREdit:SetPoint("LEFT", shadRLabel, "RIGHT", 2, 0)
     shadREdit:SetText("0.00")
-    shadREdit:SetScript("OnEnterPressed", function(self) self:ClearFocus(); applyWorkspaceOverrides(tab) end)
+    shadREdit:SetScript("OnEnterPressed", function(myself) myself:ClearFocus(); applyWorkspaceOverrides(tab) end)
     tab.shadREdit = shadREdit
 
     local shadGLabel = createMiniLabel(wsFrame, "G")
@@ -1069,7 +1069,7 @@ function ns.UI:CreateFontBrowserTab(parent)
     local shadGEdit = createMiniEdit(wsFrame, 36)
     shadGEdit:SetPoint("LEFT", shadGLabel, "RIGHT", 2, 0)
     shadGEdit:SetText("0.00")
-    shadGEdit:SetScript("OnEnterPressed", function(self) self:ClearFocus(); applyWorkspaceOverrides(tab) end)
+    shadGEdit:SetScript("OnEnterPressed", function(myself) myself:ClearFocus(); applyWorkspaceOverrides(tab) end)
     tab.shadGEdit = shadGEdit
 
     local shadBLabel = createMiniLabel(wsFrame, "B")
@@ -1077,7 +1077,7 @@ function ns.UI:CreateFontBrowserTab(parent)
     local shadBEdit = createMiniEdit(wsFrame, 36)
     shadBEdit:SetPoint("LEFT", shadBLabel, "RIGHT", 2, 0)
     shadBEdit:SetText("0.00")
-    shadBEdit:SetScript("OnEnterPressed", function(self) self:ClearFocus(); applyWorkspaceOverrides(tab) end)
+    shadBEdit:SetScript("OnEnterPressed", function(myself) myself:ClearFocus(); applyWorkspaceOverrides(tab) end)
     tab.shadBEdit = shadBEdit
 
     local shadALabel = createMiniLabel(wsFrame, "A")
@@ -1085,7 +1085,7 @@ function ns.UI:CreateFontBrowserTab(parent)
     local shadAEdit = createMiniEdit(wsFrame, 36)
     shadAEdit:SetPoint("LEFT", shadALabel, "RIGHT", 2, 0)
     shadAEdit:SetText("1.00")
-    shadAEdit:SetScript("OnEnterPressed", function(self) self:ClearFocus(); applyWorkspaceOverrides(tab) end)
+    shadAEdit:SetScript("OnEnterPressed", function(myself) myself:ClearFocus(); applyWorkspaceOverrides(tab) end)
     tab.shadAEdit = shadAEdit
 
     -- Shadow Offset row (X, Y)
@@ -1096,7 +1096,7 @@ function ns.UI:CreateFontBrowserTab(parent)
     local shadXEdit = createMiniEdit(wsFrame, 32)
     shadXEdit:SetPoint("LEFT", xLabel, "RIGHT", 2, 0)
     shadXEdit:SetText("0")
-    shadXEdit:SetScript("OnEnterPressed", function(self) self:ClearFocus(); applyWorkspaceOverrides(tab) end)
+    shadXEdit:SetScript("OnEnterPressed", function(myself) myself:ClearFocus(); applyWorkspaceOverrides(tab) end)
     tab.shadXEdit = shadXEdit
 
     local yLabel = createMiniLabel(wsFrame, "Y")
@@ -1104,7 +1104,7 @@ function ns.UI:CreateFontBrowserTab(parent)
     local shadYEdit = createMiniEdit(wsFrame, 32)
     shadYEdit:SetPoint("LEFT", yLabel, "RIGHT", 2, 0)
     shadYEdit:SetText("0")
-    shadYEdit:SetScript("OnEnterPressed", function(self) self:ClearFocus(); applyWorkspaceOverrides(tab) end)
+    shadYEdit:SetScript("OnEnterPressed", function(myself) myself:ClearFocus(); applyWorkspaceOverrides(tab) end)
     tab.shadYEdit = shadYEdit
 
     -- Size preset (bottom row) + Reset right-aligned. Label in fixed column, BOTTOM-anchored to match dropdown.
@@ -1128,8 +1128,8 @@ function ns.UI:CreateFontBrowserTab(parent)
     widgetSizeDrop:SetPoint("BOTTOM", wsFrame, "BOTTOM", 0, WS_BOTTOM_PAD)
     widgetSizeDrop:SetPoint("LEFT", wsFrame, "BOTTOMLEFT", WS_LABEL_COL + WS_LABEL_GAP, 0)
     widgetSizeDrop:SetPoint("RIGHT", resetBtn, "LEFT", -8, 0)
-    widgetSizeDrop:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    widgetSizeDrop:SetScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
         GameTooltip:SetText(L["FONT_WIDGET_SIZE_DISCLAIMER"], 1, 1, 1, nil, true)
         GameTooltip:Show()
     end)

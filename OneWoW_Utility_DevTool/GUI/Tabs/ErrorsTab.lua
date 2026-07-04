@@ -1,4 +1,4 @@
-local ADDON_NAME, ns = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 local L = ns.L
@@ -11,7 +11,7 @@ local function getErrorDB()
     return ns.db.global.errorDB
 end
 
-local function soundChoiceLabel(L, value)
+local function soundChoiceLabel(value)
     if value == "devtools_error" then
         return L["ERR_SOUND_DEVTOOL"]
     end
@@ -27,7 +27,7 @@ local function soundChoiceLabel(L, value)
     return OFF
 end
 
-local function copyFormatLabel(L, value)
+local function copyFormatLabel(value)
     if value == "curseforge" then
         return L["ERR_COPY_FMT_CURSEFORGE"]
     end
@@ -48,7 +48,7 @@ local function normalizeKeepSessions(n)
     return n
 end
 
-local function keepSessionsDropdownText(L, n)
+local function keepSessionsDropdownText(n)
     n = normalizeKeepSessions(n)
     local fmt = L["ERR_KEEP_SESSIONS_VALUE"]
     return format(fmt, n)
@@ -60,15 +60,15 @@ local function refreshDropdownLabels(tab)
         return
     end
     if tab.soundDropdown and tab.soundDropdown._text then
-        tab.soundDropdown._text:SetText(soundChoiceLabel(L, db.soundChoice or "off"))
+        tab.soundDropdown._text:SetText(soundChoiceLabel(db.soundChoice or "off"))
         tab.soundDropdown._activeValue = db.soundChoice
     end
     if tab.copyFormatDropdown and tab.copyFormatDropdown._text then
-        tab.copyFormatDropdown._text:SetText(copyFormatLabel(L, db.copyFormat or "plain"))
+        tab.copyFormatDropdown._text:SetText(copyFormatLabel(db.copyFormat or "plain"))
         tab.copyFormatDropdown._activeValue = db.copyFormat
     end
     if tab.keepSessionsDropdown and tab.keepSessionsDropdown._text then
-        tab.keepSessionsDropdown._text:SetText(keepSessionsDropdownText(L, db.keepLastSessions))
+        tab.keepSessionsDropdown._text:SetText(keepSessionsDropdownText(db.keepLastSessions))
         tab.keepSessionsDropdown._activeValue = normalizeKeepSessions(db.keepLastSessions)
     end
 end
@@ -110,10 +110,10 @@ function ns.UI:CreateErrorsTab(parent)
         label = L["ERR_CLEAR_ON_RELOAD"],
     })
     clearReloadCheck:SetChecked(getErrorDB() and getErrorDB().clearOnReload or false)
-    clearReloadCheck:SetScript("OnClick", function(self)
+    clearReloadCheck:SetScript("OnClick", function(myself)
         local db = getErrorDB()
         if db then
-            db.clearOnReload = self:GetChecked() and true or false
+            db.clearOnReload = myself:GetChecked() and true or false
         end
     end)
 
@@ -242,7 +242,7 @@ function ns.UI:CreateErrorsTab(parent)
     listScroll:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 4, -4)
     listScroll:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -14, 4)
 
-    listScroll:HookScript("OnSizeChanged", function(self, w)
+    listScroll:HookScript("OnSizeChanged", function(_, w)
         listContent:SetWidth(w)
     end)
 
@@ -251,9 +251,9 @@ function ns.UI:CreateErrorsTab(parent)
         local btn = OneWoW_GUI:CreateListRowBasic(listContent, {
             height = 20,
             label = "",
-            onClick = function(self)
-                if ns.ErrorLogger and self.errorData then
-                    ns.ErrorLogger:ShowErrorDetails(self.errorData)
+            onClick = function(myself)
+                if ns.ErrorLogger and myself.errorData then
+                    ns.ErrorLogger:ShowErrorDetails(myself.errorData)
                 end
             end,
         })
@@ -277,7 +277,7 @@ function ns.UI:CreateErrorsTab(parent)
     analysisScroll:SetPoint("TOPLEFT", analysisPanel, "TOPLEFT", 4, -4)
     analysisScroll:SetPoint("BOTTOMRIGHT", analysisPanel, "BOTTOMRIGHT", -14, 4)
 
-    analysisScroll:HookScript("OnSizeChanged", function(self, w)
+    analysisScroll:HookScript("OnSizeChanged", function(_, w)
         analysisContent:SetWidth(w)
     end)
 
@@ -318,46 +318,46 @@ function ns.UI:CreateErrorsTab(parent)
     detailsEditBox:SetText(L["LABEL_NO_ERROR"])
     detailsScroll:SetScrollChild(detailsEditBox)
 
-    detailsScroll:HookScript("OnSizeChanged", function(self, w)
+    detailsScroll:HookScript("OnSizeChanged", function(_, w)
         detailsEditBox:SetWidth(math.max(1, w))
     end)
     detailsScroll:HookScript("OnMouseDown", function()
         detailsEditBox:SetFocus()
     end)
 
-    detailsEditBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    detailsEditBox:SetScript("OnTextChanged", function(self, userInput)
-        if userInput and not self._swappingForCopy then
-            self:SetText(self._lastSetText or "")
+    detailsEditBox:SetScript("OnEscapePressed", function(myself) myself:ClearFocus() end)
+    detailsEditBox:SetScript("OnTextChanged", function(myself, userInput)
+        if userInput and not myself._swappingForCopy then
+            myself:SetText(myself._lastSetText or "")
         end
     end)
-    detailsEditBox:SetScript("OnKeyDown", function(self, key)
+    detailsEditBox:SetScript("OnKeyDown", function(myself, key)
         if IsControlKeyDown() and key == "C" then
             local err = ns.ErrorLogger and ns.ErrorLogger.currentError
             if err then
                 local plainText = ns.ErrorExport.BuildPlainText(err, L, false)
-                local colorized = self._lastSetText
-                self._swappingForCopy = true
-                self:SetText(plainText)
-                self:HighlightText()
-                self:SetPropagateKeyboardInput(false)
+                local colorized = myself._lastSetText
+                myself._swappingForCopy = true
+                myself:SetText(plainText)
+                myself:HighlightText()
+                myself:SetPropagateKeyboardInput(false)
                 C_Timer.After(0, function()
-                    self._swappingForCopy = nil
+                    myself._swappingForCopy = nil
                     if colorized then
-                        self:SetText(colorized)
+                        myself:SetText(colorized)
                     end
                 end)
             else
-                self:SetPropagateKeyboardInput(true)
+                myself:SetPropagateKeyboardInput(true)
             end
             return
         end
         if IsControlKeyDown() and key == "A" then
-            self:SetPropagateKeyboardInput(false)
-            self:HighlightText()
+            myself:SetPropagateKeyboardInput(false)
+            myself:HighlightText()
             return
         end
-        self:SetPropagateKeyboardInput(true)
+        myself:SetPropagateKeyboardInput(true)
     end)
 
     detailsEditBox._lastSetText = L["LABEL_NO_ERROR"]
