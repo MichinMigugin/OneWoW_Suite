@@ -45,6 +45,18 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TIPS_ITEMTRACKER_GENERAL_LOOT"] = "General Loot",
     ["TIPS_ITEMTRACKER_TRACK_SECTION"] = "Track Sources",
     ["TIPS_ITEMTRACKER_TRACK_SECTION_DESC"] = "Choose which item locations appear in the tooltip.",
+
+    -- Shared Alt Scope control (Gear Upgrades, Item Tracker, Recipe Knowledge)
+    ["TIPS_SCOPE_HEADER"] = "Alt scope",
+    ["TIPS_SCOPE_ALL"] = "Show for all characters (default)",
+    ["TIPS_SCOPE_SELECTED"] = "Only show for these characters / roles",
+    ["TIPS_SCOPE_ADD_ALT"] = "+ Add Alt",
+    ["TIPS_SCOPE_ADD_ROLE"] = "+ Add Role",
+    ["TIPS_SCOPE_NONE_SELECTED"] = "Nothing selected \226\128\148 no alt info will show.",
+    ["TIPS_SCOPE_NO_ALTS"] = "No characters found.",
+    ["TIPS_SCOPE_NO_ROLES"] = "No roles yet \226\128\148 create them in Roles & Alts.",
+    ["TIPS_SCOPE_EXCLUDE_NOTE"] = "With 'Only these', any character or role you don't add is excluded. Everyone still sees the tooltip \226\128\148 this only limits which alts' data appears.",
+    ["TIPS_SCOPE_MANAGE_LINK"] = "Manage Roles & Alts here \226\134\146",
     ["TIPS_ITEMTRACKER_SHOW_ALTS"] = "Characters (Alts)",
     ["TIPS_ITEMTRACKER_SHOW_BAGS"] = "Character Bags",
     ["TIPS_ITEMTRACKER_SHOW_BANK"] = "Character Bank",

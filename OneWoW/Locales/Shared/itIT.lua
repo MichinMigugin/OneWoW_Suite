@@ -1,8 +1,7 @@
 local _, ns = ...
 
--- Machine-drafted — pending native review.
 ns.Locale:RegisterShared("itIT", {
-    -- Language picker
+    -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "Selezione lingua",
     ["LANGUAGE_DESC"] = "Scegli la lingua dell'interfaccia dell'addon. Le modifiche si applicano subito.",
 
@@ -18,7 +17,7 @@ ns.Locale:RegisterShared("itIT", {
     ["THEME_GROUP_BOLD"] = "Audace e stilizzato",
     ["THEME_GROUP_LIGHT"] = "Chiaro e accessibilità",
 
-    -- Theme display names
+    -- Theme display names (keyed THEME_<UPPER themeKey>; resolved at runtime)
     ["THEME_GREEN"] = "Verde foresta",
     ["THEME_BLUE"] = "Blu oceano",
     ["THEME_PURPLE"] = "Viola reale",
@@ -45,7 +44,7 @@ ns.Locale:RegisterShared("itIT", {
     ["THEME_NIGHTFAE"] = "Crepuscolo Silfennari",
     ["THEME_HIGHCONTRAST"] = "Contrasto elevato",
 
-    -- Font section
+    -- Font section (font family names are proper nouns; "Font Size" uses FONT_SIZE global)
     ["FONT_SECTION"] = "Carattere",
     ["FONT_DESC"] = "Scegli il carattere usato da tutti gli addon OneWoW. Sono supportati anche i caratteri SharedMedia di altri addon, che appariranno nell'elenco.",
     ["FONT_SIZE_DESC"] = "Regola la dimensione del carattere su tutti gli addon.",
@@ -58,10 +57,10 @@ ns.Locale:RegisterShared("itIT", {
     ["VALUE_DISPLAY_REGIONAL"] = "Usa il raggruppamento numerico regionale (lingua del client)",
     ["VALUE_DISPLAY_WHITE"] = "Usa valori bianchi (modalità lettere; aspetto classico se disattivato)",
 
-    -- Footer links
+    -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "Dona",
 
-    -- Minimap section labels
+    -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "Pulsante minimappa",
     ["MINIMAP_SECTION_DESC"] = "Mostra o nascondi il pulsante della minimappa.",
     ["MINIMAP_SHOW_BTN"] = "Mostra pulsante minimappa",
@@ -71,7 +70,7 @@ ns.Locale:RegisterShared("itIT", {
     -- Common
     ["CURRENT_VALUE"] = "Attuale: %s",
 
-    -- consolidated
+    -- consolidated (cross-scope duplicates)
     ["ADD_ITEM"] = "Aggiungi oggetto",
     ["BATTLE_PET"] = "Mascotte da battaglia",
     ["BUTTON_SIZE"] = "Dimensione pulsanti",
@@ -108,7 +107,7 @@ ns.Locale:RegisterShared("itIT", {
     ["GOLD_TOTAL"] = "Oro totale",
     ["WORLD_QUEST"] = "Missione del mondo",
 
-    -- consolidated (bare-word terms)
+    -- consolidated (cross-scope bare-word terms)
     ["ITEM"] = "Oggetto",
     ["RENAME"] = "Rinomina",
     ["EXPANSION"] = "Espansione",
@@ -136,6 +135,15 @@ ns.Locale:RegisterShared("itIT", {
     ["SESSION"] = "Sessione",
     ["SLOT"] = "Slot",
     ["SUMMARY"] = "Riepilogo",
+
+    -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
+    -- in during a future consolidation pass. Each is one English word whose
+    -- translation diverges by grammatical context, so a single shared value can't fit:
+    --   Active, Expired, Personal, Minimal, Manual — adjectives that must agree in
+    --     gender/number with the noun they describe (e.g. fr actif/active,
+    --     es mínimo/mínima), which differs per call site.
+    --   Pin — two distinct senses: noun "map pin" (Catalog) vs verb "pin" (Trackers).
+    -- ("%d" is a bare format placeholder, also intentionally left scoped.)
 
     ["TOAST_ALERTS_SUBTAB"] = "Avvisi",
     ["FEATURE_UNIT_STATUS_MISSING"] = "Non rilevato",
@@ -204,11 +212,13 @@ ns.Locale:RegisterShared("itIT", {
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT"] = "Max alt mostrati",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_TOOLTIP"] = "Limita il numero di righe di miglioramento degli alt aggiunte al tooltip così da non farlo diventare troppo alto quando hai molti alt. «TUTTI» mostra ogni alt idoneo.",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_ALL"] = "TUTTI",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED"] = "Mostra miglioramenti solo per questi alt",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED_TOOLTIP"] = "Quando selezionato, i miglioramenti degli alt sono limitati agli alt che hai scelto sotto. Quando non selezionato (predefinito), vengono considerati tutti gli alt da AltTracker.",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_PICK"] = "+ Scegli alt",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NONE"] = "(nessun alt selezionato)",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NO_ALTS"] = "(nessun alt disponibile — AltTracker non caricato o nessun alt registrato)",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT"] = "Ordina alt per",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT_TOOLTIP"] = "Sceglie come ordinare l'elenco upgrade degli alt prima del limite «Alt max. mostrati».",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_DESC"] = "Miglioramento (alto a basso)",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_ASC"] = "Miglioramento (basso ad alto)",
+    ["OVR_UPGRADE_ALT_SORT_NAME"] = "Nome (A-Z)",
+    ["OVR_UPGRADE_ALT_SORT_ILVL"] = "Livello oggetto (alto a basso)",
+    ["OVR_UPGRADE_ALT_SORT_LOGIN"] = "Ultimo accesso (più recente)",
     ["OVR_UPGRADE_SELF_SPEC_MATCH"] = "Abbina solo alla mia specializzazione attuale",
     ["OVR_UPGRADE_SELF_SPEC_MATCH_TOOLTIP"] = "Quando selezionato, i miglioramenti si attivano solo per oggetti contrassegnati per la tua specializzazione attualmente attiva. Utile per classi a doppia specializzazione (es. Guerriero Furia vs Protezione) per evitare suggerimenti di scudo/1M/2M errati per il tuo stile attuale. Quando non selezionato (predefinito), può andare bene qualsiasi oggetto equipaggiabile dalla tua classe.",
     ["OVR_TOOLTIP_DETAIL_FULL"] = "Completo",
@@ -327,7 +337,8 @@ ns.Locale:RegisterShared("itIT", {
     ["TOAST_NEW_RECIPE"] = "Nuova ricetta!",
     ["TOAST_NEW_TMOG"] = "Nuovo aspetto!",
     ["TOAST_INSTANCE_CLICK"] = "Clicca per vedere nel Diario",
-    -- AH price source (shared)
+
+  -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "Dati di prezzo CA",
     ["SHARED_AH_SOURCE_DESC"] = "La scansione di OneWoW memorizza i prezzi in AltTracker - Auctions. Auctionator usa il proprio database quando scansioni con quell'addon. TradeSkillMaster usa la stringa di prezzo TSM impostata sotto (predefinito dbmarket).",
     ["SHARED_AH_SOURCE_ONEWOW"] = "Scansione CA di OneWoW",

@@ -3,6 +3,17 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
+    ["TIPS_SCOPE_HEADER"] = "分身範圍",
+    ["TIPS_SCOPE_ALL"] = "顯示所有角色（預設）",
+    ["TIPS_SCOPE_SELECTED"] = "僅顯示這些角色 / 群組",
+    ["TIPS_SCOPE_ADD_ALT"] = "+ 新增分身",
+    ["TIPS_SCOPE_ADD_ROLE"] = "+ 新增群組",
+    ["TIPS_SCOPE_NONE_SELECTED"] = "未選擇任何項目 \226\128\148 不會顯示分身資訊。",
+    ["TIPS_SCOPE_NO_ALTS"] = "找不到角色。",
+    ["TIPS_SCOPE_NO_ROLES"] = "尚無群組 \226\128\148 請在「角色與分身」中建立。",
+    ["TIPS_SCOPE_EXCLUDE_NOTE"] = "選擇「僅這些」時，未新增的角色與群組會被排除。所有人仍能看到提示 \226\128\148 這僅限制顯示哪些分身資料。",
+    ["TIPS_SCOPE_MANAGE_LINK"] = "在此管理角色與分身 \226\134\146",
+
     ["OVERLAYS_SUBTAB"] = "覆蓋層",
     ["TOOLTIPS_SUBTAB"] = "滑鼠提示",
     ["CTX_OPEN_QOL"] = "開啟 QoL",

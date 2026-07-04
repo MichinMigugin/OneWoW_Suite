@@ -1,8 +1,7 @@
 local _, ns = ...
 
--- Machine-drafted — pending native review.
 ns.Locale:RegisterShared("esES", {
-    -- Language picker
+    -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "Selección de idioma",
     ["LANGUAGE_DESC"] = "Elige el idioma de la interfaz del addon. Los cambios se aplican al instante.",
 
@@ -18,7 +17,7 @@ ns.Locale:RegisterShared("esES", {
     ["THEME_GROUP_BOLD"] = "Atrevido y estilizado",
     ["THEME_GROUP_LIGHT"] = "Claro y accesibilidad",
 
-    -- Theme display names
+    -- Theme display names (keyed THEME_<UPPER themeKey>; resolved at runtime)
     ["THEME_GREEN"] = "Verde bosque",
     ["THEME_BLUE"] = "Azul océano",
     ["THEME_PURPLE"] = "Púrpura real",
@@ -45,7 +44,7 @@ ns.Locale:RegisterShared("esES", {
     ["THEME_NIGHTFAE"] = "Crepúsculo Nocturfata",
     ["THEME_HIGHCONTRAST"] = "Alto contraste",
 
-    -- Font section
+    -- Font section (font family names are proper nouns; "Font Size" uses FONT_SIZE global)
     ["FONT_SECTION"] = "Fuente",
     ["FONT_DESC"] = "Elige la fuente usada en todos los addons de OneWoW. También se admiten las fuentes SharedMedia de otros addons y aparecerán en la lista.",
     ["FONT_SIZE_DESC"] = "Ajustar el tamaño de fuente en todos los addons.",
@@ -58,10 +57,10 @@ ns.Locale:RegisterShared("esES", {
     ["VALUE_DISPLAY_REGIONAL"] = "Usar agrupación numérica regional (idioma del cliente)",
     ["VALUE_DISPLAY_WHITE"] = "Usar valores en blanco (modo letras; aspecto clásico si está desactivado)",
 
-    -- Footer links
+    -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "Donar",
 
-    -- Minimap section labels
+    -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "Botón del minimapa",
     ["MINIMAP_SECTION_DESC"] = "Mostrar u ocultar el botón del minimapa.",
     ["MINIMAP_SHOW_BTN"] = "Mostrar botón del minimapa",
@@ -71,7 +70,7 @@ ns.Locale:RegisterShared("esES", {
     -- Common
     ["CURRENT_VALUE"] = "Actual: %s",
 
-    -- consolidated
+    -- consolidated (cross-scope duplicates)
     ["ADD_ITEM"] = "Añadir objeto",
     ["BATTLE_PET"] = "Mascota de batalla",
     ["BUTTON_SIZE"] = "Tamaño de botón",
@@ -108,7 +107,7 @@ ns.Locale:RegisterShared("esES", {
     ["GOLD_TOTAL"] = "Oro total",
     ["WORLD_QUEST"] = "Misión mundial",
 
-    -- consolidated (bare-word terms)
+    -- consolidated (cross-scope bare-word terms)
     ["ITEM"] = "Objeto",
     ["RENAME"] = "Renombrar",
     ["EXPANSION"] = "Expansión",
@@ -136,6 +135,15 @@ ns.Locale:RegisterShared("esES", {
     ["SESSION"] = "Sesión",
     ["SLOT"] = "Ranura",
     ["SUMMARY"] = "Resumen",
+
+    -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
+    -- in during a future consolidation pass. Each is one English word whose
+    -- translation diverges by grammatical context, so a single shared value can't fit:
+    --   Active, Expired, Personal, Minimal, Manual — adjectives that must agree in
+    --     gender/number with the noun they describe (e.g. fr actif/active,
+    --     es mínimo/mínima), which differs per call site.
+    --   Pin — two distinct senses: noun "map pin" (Catalog) vs verb "pin" (Trackers).
+    -- ("%d" is a bare format placeholder, also intentionally left scoped.)
 
     ["TOAST_ALERTS_SUBTAB"] = "Alertas",
     ["FEATURE_UNIT_STATUS_MISSING"] = "No detectado",
@@ -204,11 +212,13 @@ ns.Locale:RegisterShared("esES", {
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT"] = "Máx. de alts mostrados",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_TOOLTIP"] = "Limita el número de líneas de mejora de alts añadidas al tooltip para que no crezca demasiado cuando tienes muchos alts. «TODOS» muestra cada alt que cumpla.",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_ALL"] = "TODOS",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED"] = "Mostrar mejoras solo para estos alts",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED_TOOLTIP"] = "Cuando está marcado, las mejoras de alts se limitan a los alts que has elegido abajo. Cuando no está marcado (predeterminado), se consideran todos los alts de AltTracker.",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_PICK"] = "+ Elegir alts",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NONE"] = "(ningún alt seleccionado)",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NO_ALTS"] = "(no hay alts disponibles — AltTracker no cargado o sin alts registrados)",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT"] = "Ordenar alts por",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT_TOOLTIP"] = "Elige cómo se ordena la lista de mejoras de alts antes de aplicar el límite «Máx. alts mostrados».",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_DESC"] = "Mejora (de mayor a menor)",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_ASC"] = "Mejora (de menor a mayor)",
+    ["OVR_UPGRADE_ALT_SORT_NAME"] = "Nombre (A-Z)",
+    ["OVR_UPGRADE_ALT_SORT_ILVL"] = "Nivel de objeto (de mayor a menor)",
+    ["OVR_UPGRADE_ALT_SORT_LOGIN"] = "Último inicio de sesión (más reciente)",
     ["OVR_UPGRADE_SELF_SPEC_MATCH"] = "Coincidir solo con mi especialización actual",
     ["OVR_UPGRADE_SELF_SPEC_MATCH_TOOLTIP"] = "Cuando está marcado, las mejoras solo se activan para objetos etiquetados para tu especialización actualmente activa. Útil para clases con doble especialización (p. ej. Guerrero Furia vs. Protección) para evitar sugerencias de escudo/1M/2M erróneas para tu estilo actual. Cuando no está marcado (predeterminado), puede valer cualquier objeto que tu clase pueda equipar.",
     ["OVR_TOOLTIP_DETAIL_FULL"] = "Completo",
@@ -327,7 +337,8 @@ ns.Locale:RegisterShared("esES", {
     ["TOAST_NEW_RECIPE"] = "¡Nueva receta!",
     ["TOAST_NEW_TMOG"] = "¡Nueva apariencia!",
     ["TOAST_INSTANCE_CLICK"] = "Haz clic para ver en el Diario",
-    -- AH price source (shared)
+
+  -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "Datos de precio de CS",
     ["SHARED_AH_SOURCE_DESC"] = "El escaneo de OneWoW guarda los precios en AltTracker - Auctions. Auctionator usa su propia base de datos cuando escaneas con ese addon. TradeSkillMaster usa la cadena de precio TSM definida abajo (predeterminado dbmarket).",
     ["SHARED_AH_SOURCE_ONEWOW"] = "Escaneo de CS de OneWoW",

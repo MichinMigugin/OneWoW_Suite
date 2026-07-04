@@ -90,13 +90,14 @@ local function AggregateFamilyRows(locations, cfg, L, groupByRank)
     local buckets = {}
     local order   = {}
 
-    local function bucket(key, ownerName, ownerKind, class, locationType, rank)
+    local function bucket(key, ownerName, ownerKind, class, locationType, rank, charKey)
         local b = buckets[key]
         if not b then
             b = {
                 ownerName    = ownerName,
                 ownerKind    = ownerKind,    -- "char" | "warband" | "guild"
                 class        = class,
+                charKey      = charKey,
                 locationType = locationType,
                 rank         = rank,
                 count        = 0,
@@ -141,7 +142,7 @@ local function AggregateFamilyRows(locations, cfg, L, groupByRank)
                     b.count = b.count + (loc.count or 0)
                 elseif loc.charKey then
                     local key = loc.charKey .. "|" .. locType .. "|" .. (rankSlot or "_")
-                    local b = bucket(key, loc.name or loc.charKey, "char", loc.class, locType, rankSlot)
+                    local b = bucket(key, loc.name or loc.charKey, "char", loc.class, locType, rankSlot, loc.charKey)
                     b.count = b.count + (loc.count or 0)
                 end
             end
@@ -173,6 +174,7 @@ local function AggregateFamilyRows(locations, cfg, L, groupByRank)
             ownerName    = b.ownerName,
             ownerKind    = b.ownerKind,
             class        = b.class,
+            charKey      = b.charKey,
             locationType = b.locationType,
             label        = locLabels[b.locationType] or b.locationType,
             rank         = b.rank,
@@ -234,6 +236,7 @@ local function ItemTrackerProvider(_, context)
     local showAlts      = cfg.showAlts      ~= false
     local showVendors   = cfg.showVendors   ~= false
     local showInstances = cfg.showInstances ~= false
+    local altScope      = cfg.altScope
 
     local maxChars     = cfg.characterLimit
     local colorByClass = cfg.colorByClass ~= false
@@ -274,7 +277,7 @@ local function ItemTrackerProvider(_, context)
             local capped         = false
             for _, row in ipairs(rows) do
                 if row.ownerKind == "char" then
-                    if showAlts then
+                    if showAlts and OneWoW.AltScope:IsCharIncluded(row.charKey, altScope) then
                         if not shownChars[row.ownerName] then
                             if shownCharCount >= maxChars then
                                 capped = true

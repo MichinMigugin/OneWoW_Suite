@@ -1064,128 +1064,67 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         altLimitSliderWrap:SetPoint("TOPLEFT", dsc, "TOPLEFT", 200, yOffset - 2)
         yOffset = yOffset - 36
 
-        -- Row 8: [Only show upgrades for these alts] (double-indented)
-        local whitelistCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED"] })
-        whitelistCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 48, yOffset)
-        whitelistCb:SetChecked(reg:GetOverlaySetting(featureId, "tooltipAltWhitelistEnabled") or false)
-        whitelistCb:SetScript("OnEnter", function(self)
+        -- Row 7b: [Sort alts by] dropdown (double-indented under Show alt upgrades)
+        local ALT_SORT_OPTIONS = {
+            { value = "UPGRADE_DESC", text = L["OVR_UPGRADE_ALT_SORT_UPGRADE_DESC"] },
+            { value = "UPGRADE_ASC",  text = L["OVR_UPGRADE_ALT_SORT_UPGRADE_ASC"] },
+            { value = "NAME_ASC",     text = L["OVR_UPGRADE_ALT_SORT_NAME"] },
+            { value = "ILVL_DESC",    text = L["OVR_UPGRADE_ALT_SORT_ILVL"] },
+            { value = "LOGIN_DESC",   text = L["OVR_UPGRADE_ALT_SORT_LOGIN"] },
+        }
+        local function GetAltSortLabel(val)
+            for _, o in ipairs(ALT_SORT_OPTIONS) do
+                if o.value == val then return o.text end
+            end
+            return L["OVR_UPGRADE_ALT_SORT_UPGRADE_DESC"]
+        end
+
+        local altSortLbl = OneWoW_GUI:CreateFS(dsc, 12)
+        altSortLbl:SetPoint("TOPLEFT", dsc, "TOPLEFT", 48, yOffset - 4)
+        altSortLbl:SetText(L["OVR_UPGRADE_TOOLTIP_ALT_SORT"])
+        altSortLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        altSortLbl:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText(L["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED"], 1, 1, 1)
-            GameTooltip:AddLine(L["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED_TOOLTIP"], nil, nil, nil, true)
+            GameTooltip:SetText(L["OVR_UPGRADE_TOOLTIP_ALT_SORT"], 1, 1, 1)
+            GameTooltip:AddLine(L["OVR_UPGRADE_TOOLTIP_ALT_SORT_TOOLTIP"], nil, nil, nil, true)
             GameTooltip:Show()
         end)
-        whitelistCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        yOffset = yOffset - 28
+        altSortLbl:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-        local pickAltsBtn = OneWoW_GUI:CreateDropdown(dsc, {
-            width = 110,
-            height = 22,
-            text = L["OVR_UPGRADE_TOOLTIP_WHITELIST_PICK"],
+        local currentSort = reg:GetOverlaySetting(featureId, "tooltipAltSort") or "UPGRADE_DESC"
+        local altSortDD, altSortDDText = OneWoW_GUI:CreateDropdown(dsc, {
+            width = 200,
+            text = GetAltSortLabel(currentSort),
         })
-        pickAltsBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 66, yOffset)
-
-        local whitelistSummary = OneWoW_GUI:CreateFS(dsc, 11)
-        whitelistSummary:SetPoint("LEFT", pickAltsBtn, "RIGHT", 8, 0)
-        whitelistSummary:SetPoint("RIGHT", dsc, "RIGHT", -12, 0)
-        whitelistSummary:SetJustifyH("LEFT")
-        whitelistSummary:SetWordWrap(false)
-
-        local function GetAltEntries()
-            local charAPI = OneWoW_AltTracker_Character_API
-            if not charAPI or not charAPI.GetAllCharacters then return {}, nil end
-            local currentKey = charAPI.GetCurrentCharacterKey and charAPI.GetCurrentCharacterKey()
-            local entries = {}
-            for charKey, charData in pairs(charAPI.GetAllCharacters() or {}) do
-                entries[#entries + 1] = { key = charKey, data = charData }
-            end
-            return entries, currentKey
-        end
-
-        local function GetClassColoredName(name, class)
-            if class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] then
-                local c = RAID_CLASS_COLORS[class]
-                return string.format("|cFF%02x%02x%02x%s|r", c.r * 255, c.g * 255, c.b * 255, name or "?")
-            end
-            return name or "?"
-        end
-
-        local function RefreshWhitelistSummary()
-            local whitelist = reg:GetOverlaySetting(featureId, "tooltipAltWhitelist")
-            local entries, currentKey = GetAltEntries()
-            if #entries == 0 then
-                whitelistSummary:SetText(L["OVR_UPGRADE_TOOLTIP_WHITELIST_NO_ALTS"])
-                whitelistSummary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                return
-            end
-            local names = {}
-            for _, entry in ipairs(entries) do
-                if entry.key and entry.key ~= currentKey and whitelist[entry.key] then
-                    local data = entry.data
-                    local nm = data and data.name or entry.key
-                    local cls = data and data.class
-                    names[#names + 1] = GetClassColoredName(nm, cls)
-                end
-            end
-            if #names == 0 then
-                whitelistSummary:SetText(L["OVR_UPGRADE_TOOLTIP_WHITELIST_NONE"])
-                whitelistSummary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            else
-                whitelistSummary:SetText(table.concat(names, ", "))
-                whitelistSummary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end
-        end
-
-        OneWoW_GUI:AttachFilterMenu(pickAltsBtn, {
-            searchable = true,
-            buildItems = function()
-                local items = {}
-                local whitelist = reg:GetOverlaySetting(featureId, "tooltipAltWhitelist")
-                local entries, currentKey = GetAltEntries()
-                if #entries == 0 then
-                    items[#items + 1] = {
-                        type = "header",
-                        text = L["OVR_UPGRADE_TOOLTIP_WHITELIST_NO_ALTS"],
-                    }
-                    return items
-                end
-                local sorted = {}
-                for _, entry in ipairs(entries) do
-                    if entry.key and entry.key ~= currentKey and type(entry.data) == "table" then
-                        sorted[#sorted + 1] = entry
-                    end
-                end
-                table.sort(sorted, function(a, b)
-                    local an = (a.data and a.data.name) or a.key or ""
-                    local bn = (b.data and b.data.name) or b.key or ""
-                    return an:lower() < bn:lower()
-                end)
-                for _, entry in ipairs(sorted) do
-                    local data = entry.data
-                    local nm = data.name or entry.key
-                    local cls = data.class
-                    local charKey = entry.key
-                    items[#items + 1] = {
-                        type = "checkbox",
-                        text = GetClassColoredName(nm, cls),
-                        checked = whitelist[charKey] and true or false,
-                        onToggle = function(isOn)
-                            local wl = reg:GetOverlaySetting(featureId, "tooltipAltWhitelist")
-                            if isOn then
-                                wl[charKey] = true
-                            else
-                                wl[charKey] = nil
-                            end
-                            RefreshWhitelistSummary()
-                        end,
-                    }
-                end
-                return items
+        altSortDD:SetPoint("TOPLEFT", dsc, "TOPLEFT", 200, yOffset - 2)
+        OneWoW_GUI:AttachFilterMenu(altSortDD, {
+            searchable = false,
+            buildItems = function() return ALT_SORT_OPTIONS end,
+            onSelect = function(value, text)
+                altSortDDText:SetText(text)
+                reg:SetOverlaySetting(featureId, "tooltipAltSort", value)
+            end,
+            getActiveValue = function()
+                return reg:GetOverlaySetting(featureId, "tooltipAltSort") or "UPGRADE_DESC"
             end,
         })
-        RefreshWhitelistSummary()
-        yOffset = yOffset - 26
+        yOffset = yOffset - 34
 
-        yOffset = yOffset - 10
+        -- Row 8: Alt scope (roles + per-alt selection) — replaces the legacy
+        -- per-alt whitelist. Shared with Item Tracker / Recipe Knowledge.
+        local scopeY, scopeControls = ns.UI.BuildAltScopeSection(dsc, {
+            yOffset = yOffset,
+            x = 48,
+            getScope = function()
+                local s = reg:GetOverlaySetting(featureId, "altScope")
+                if type(s) ~= "table" then s = { mode = "all", chars = {}, roles = {} } end
+                return s
+            end,
+            saveScope = function(s)
+                reg:SetOverlaySetting(featureId, "altScope", s)
+            end,
+        })
+        yOffset = scopeY - 10
 
         local function setAltChildrenEnabled(enabled)
             if enabled then
@@ -1198,15 +1137,10 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                     altLimitSliderWrap.slider:Enable()
                 end
                 altLimitSliderWrap.valLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                whitelistCb:Enable()
-                whitelistCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                if whitelistCb:GetChecked() then
-                    pickAltsBtn:Enable()
-                    pickAltsBtn._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                else
-                    pickAltsBtn:Disable()
-                    pickAltsBtn._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                end
+                altSortLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                altSortDD:Enable()
+                altSortDD._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                scopeControls.SetEnabled(true)
             else
                 altSpecCb:Disable()
                 altSpecCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -1217,26 +1151,12 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                     altLimitSliderWrap.slider:Disable()
                 end
                 altLimitSliderWrap.valLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                whitelistCb:Disable()
-                whitelistCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                pickAltsBtn:Disable()
-                pickAltsBtn._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                altSortLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                altSortDD:Disable()
+                altSortDD._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                scopeControls.SetEnabled(false)
             end
         end
-
-        whitelistCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "tooltipAltWhitelistEnabled", self:GetChecked())
-            if showAltsCb:GetChecked() then
-                if self:GetChecked() then
-                    pickAltsBtn:Enable()
-                    pickAltsBtn._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                else
-                    pickAltsBtn:Disable()
-                    pickAltsBtn._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                end
-            end
-            RefreshWhitelistSummary()
-        end)
 
         local function refreshTooltipSubs(enabled)
             if enabled then

@@ -3,6 +3,17 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
+    ["TIPS_SCOPE_HEADER"] = "Ambito alt",
+    ["TIPS_SCOPE_ALL"] = "Mostra per tutti i personaggi (predefinito)",
+    ["TIPS_SCOPE_SELECTED"] = "Mostra solo per questi personaggi / ruoli",
+    ["TIPS_SCOPE_ADD_ALT"] = "+ Aggiungi alt",
+    ["TIPS_SCOPE_ADD_ROLE"] = "+ Aggiungi ruolo",
+    ["TIPS_SCOPE_NONE_SELECTED"] = "Nessuna selezione \226\128\148 nessuna info alt verrà mostrata.",
+    ["TIPS_SCOPE_NO_ALTS"] = "Nessun personaggio trovato.",
+    ["TIPS_SCOPE_NO_ROLES"] = "Nessun ruolo ancora \226\128\148 creali in Ruoli e alt.",
+    ["TIPS_SCOPE_EXCLUDE_NOTE"] = "Con « Solo questi », ogni personaggio o ruolo non aggiunto è escluso. Tutti vedono ancora la descrizione \226\128\148 limita solo quali dati alt compaiono.",
+    ["TIPS_SCOPE_MANAGE_LINK"] = "Gestisci Ruoli e alt qui \226\134\146",
+
     ["OVERLAYS_SUBTAB"] = "Sovrapposizioni",
     ["TOOLTIPS_SUBTAB"] = "Tooltip",
     ["CTX_OPEN_QOL"] = "Apri QoL",

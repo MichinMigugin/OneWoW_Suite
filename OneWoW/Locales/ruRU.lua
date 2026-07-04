@@ -1,9 +1,9 @@
 local ADDON_NAME, ns = ...
 
--- Machine-drafted — pending native review
 ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["ADDON_TITLE"] = "OneWoW",
 
+    -- Addon loader (ns:GetLoadFailureText); other tokens use Blizzard ADDON_* constants
     ["LOAD_FAIL_COMBAT"] = "Невозможно загрузить этот аддон в бою - попробуйте снова после окончания боя.",
     ["LOAD_FAIL_OPTED_OUT"] = "Этот аддон мягко отключён для данного персонажа — сначала включите его в «Управлении функциями».",
     ["LOAD_FAIL_UNKNOWN"] = "Не удалось загрузить этот аддон.",
@@ -11,6 +11,35 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["HOME_TAB"] = "OneWoW",
     ["PROFILES_SUBTAB"] = "Профили",
     ["MANAGE_FEATURES_SUBTAB"] = "Управление функциями",
+
+    -- Roles & Alts settings tab
+    ["ROLES_ALTS_SUBTAB"] = "Роли и твинки",
+    ["ROLES_ALTS_TITLE"] = "Роли и твинки",
+    ["ROLES_ALTS_DESC"] = "Создавайте роли (например, Ремесленники или Мейны), назначайте персонажей и управляйте тем, кого отслеживает OneWoW. Роли позволяют подсказкам показывать информацию о твинках только для нужных персонажей.",
+    ["ROLES_SECTION"] = "Роли",
+    ["ROLES_SECTION_DESC"] = "Группируйте персонажей в именованные роли. Персонаж может входить в любое число ролей. Подсказки с ограничением по твинкам могут использовать эти роли.",
+    ["ROLES_NEW_BTN"] = "+ Новая роль",
+    ["ROLES_NONE"] = "Ролей пока нет. Создайте первую.",
+    ["ROLES_MEMBER_COUNT"] = "%d персонаж(ей)",
+    ["ROLES_ASSIGN_BTN"] = "Назначить",
+    ["ROLES_NEW_TITLE"] = "Новая роль",
+    ["ROLES_RENAME_TITLE"] = "Переименовать роль",
+    ["ROLES_NAME_LABEL"] = "Название роли",
+    ["ROLES_DELETE_CONFIRM"] = "Удалить роль \"%s\"? Данные персонажей сохранятся; удалится только группировка по роли.",
+    ["ROLES_ASSIGN_NONE"] = "Персонажи не найдены.",
+    ["CHARS_SECTION"] = "Персонажи",
+    ["CHARS_SECTION_DESC"] = "Все персонажи, по которым есть данные в OneWoW. Выберите удалённых или переименованных в игре персонажей и удалите их из всех баз OneWoW. После удаления интерфейс перезагрузится.",
+    ["CHARS_NEED_ALTTRACKER"] = "Загрузите AltTracker, чтобы просматривать и управлять персонажами.",
+    ["CHARS_REMOVE_BTN"] = "Удалить выбранных",
+    ["CHARS_COUNT"] = "Найдено персонажей во всех базах: %d",
+    ["CHARS_NONE"] = "Персонажи ни в одной базе не найдены.",
+    ["CHARS_ROLES_LABEL"] = "Роли:",
+    ["CHARS_NO_ROLES"] = "\226\128\148",
+    ["CHARS_REMOVE_CONFIRM_TITLE"] = "Подтвердить удаление",
+    ["CHARS_REMOVE_CONFIRM"] = "Безвозвратно удалить %d персонаж(ей) из ВСЕХ баз OneWoW?\n\n|cFFFF6666%s|r\n\nОтменить нельзя. Интерфейс будет перезагружен.",
+    ["CHARS_REMOVE_NONE_SELECTED"] = "Персонажи не выбраны.",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "Роли персонажей, фильтр твинков в подсказках и удаление персонажей из баз OneWoW — в Настройки \226\134\146 Роли и твинки.",
+    ["SETTINGS_ROLES_ALTS_BTN"] = "Открыть Роли и твинки",
 
     ["HOME_VERSION"] = "Версия",
     ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
@@ -38,6 +67,7 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["MINIMAP_MODULES_LOADED"] = "Загружено модулей: %d",
     ["MINIMAP_RIGHT_CLICK"] = "Правый клик для настроек",
 
+    -- CopyPaste dialog (ns.CopyPaste)
     ["COPYPASTE_HINT_COPY"] = "Нажмите Ctrl+C для копирования",
     ["COPYPASTE_HINT_COPY_MAC"] = "Нажмите Cmd+C для копирования",
 
@@ -191,6 +221,7 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["UNIT_CTX_MOUNT_SOURCE"] = "Источник: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Статус: %s",
 
+    -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Настройки",
     ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Настройки > Язык",
     ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Настройки > Тема",
@@ -313,6 +344,7 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["SRCH_PATH_SL_REAGENTS"] = "Shopping List > Реагенты профессий",
     ["SRCH_PATH_SL_OVERLAYS"] = "Shopping List > Наложения сумок",
 
+    -- Search descriptions
     ["SRCH_DESC_OW_SETTINGS"] = "Язык, тема, кнопка мини-карты и глобальные параметры",
     ["SRCH_DESC_OW_SETTINGS_LANGUAGE"] = "Выбор из английского, испанского, корейского, французского, русского, немецкого",
     ["SRCH_DESC_OW_SETTINGS_THEME"] = "Выбор из множества цветовых тем (сгруппированное меню), высокого контраста, случайной при перезагрузке, тёмной, светлой и стилизованных палитр",

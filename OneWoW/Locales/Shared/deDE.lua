@@ -1,8 +1,7 @@
 local _, ns = ...
 
--- Machine-drafted — pending native review.
 ns.Locale:RegisterShared("deDE", {
-    -- Language picker
+    -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "Sprachauswahl",
     ["LANGUAGE_DESC"] = "Wähle die Sprache der Addon-Oberfläche. Änderungen werden sofort übernommen.",
 
@@ -18,7 +17,7 @@ ns.Locale:RegisterShared("deDE", {
     ["THEME_GROUP_BOLD"] = "Kräftig & stilvoll",
     ["THEME_GROUP_LIGHT"] = "Hell & Barrierefreiheit",
 
-    -- Theme display names
+    -- Theme display names (keyed THEME_<UPPER themeKey>; resolved at runtime)
     ["THEME_GREEN"] = "Waldgrün",
     ["THEME_BLUE"] = "Ozeanblau",
     ["THEME_PURPLE"] = "Königslila",
@@ -45,7 +44,7 @@ ns.Locale:RegisterShared("deDE", {
     ["THEME_NIGHTFAE"] = "Nachtfae-Zwielicht",
     ["THEME_HIGHCONTRAST"] = "Hoher Kontrast",
 
-    -- Font section
+    -- Font section (font family names are proper nouns; "Font Size" uses FONT_SIZE global)
     ["FONT_SECTION"] = "Schriftart",
     ["FONT_DESC"] = "Wähle die Schriftart für alle OneWoW-Addons. SharedMedia-Schriftarten anderer Addons werden ebenfalls unterstützt und erscheinen in der Liste.",
     ["FONT_SIZE_DESC"] = "Schriftgröße über alle Addons hinweg anpassen.",
@@ -58,10 +57,10 @@ ns.Locale:RegisterShared("deDE", {
     ["VALUE_DISPLAY_REGIONAL"] = "Regionale Zifferngruppierung verwenden (Client-Sprache)",
     ["VALUE_DISPLAY_WHITE"] = "Weiße Werte verwenden (Buchstabenmodus; klassische Optik wenn aus)",
 
-    -- Footer links
+    -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "Spenden",
 
-    -- Minimap section labels
+    -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "Minikarten-Schaltfläche",
     ["MINIMAP_SECTION_DESC"] = "Minikarten-Schaltfläche anzeigen oder ausblenden.",
     ["MINIMAP_SHOW_BTN"] = "Minikarten-Schaltfläche anzeigen",
@@ -71,7 +70,7 @@ ns.Locale:RegisterShared("deDE", {
     -- Common
     ["CURRENT_VALUE"] = "Aktuell: %s",
 
-    -- consolidated
+    -- consolidated (cross-scope duplicates)
     ["ADD_ITEM"] = "Gegenstand hinzufügen",
     ["BATTLE_PET"] = "Kampfhaustier",
     ["BUTTON_SIZE"] = "Schaltflächengröße",
@@ -108,7 +107,7 @@ ns.Locale:RegisterShared("deDE", {
     ["GOLD_TOTAL"] = "Gold gesamt",
     ["WORLD_QUEST"] = "Weltquest",
 
-    -- consolidated (bare-word terms)
+    -- consolidated (cross-scope bare-word terms)
     ["ITEM"] = "Gegenstand",
     ["RENAME"] = "Umbenennen",
     ["EXPANSION"] = "Erweiterung",
@@ -136,6 +135,15 @@ ns.Locale:RegisterShared("deDE", {
     ["SESSION"] = "Sitzung",
     ["SLOT"] = "Platz",
     ["SUMMARY"] = "Zusammenfassung",
+
+    -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
+    -- in during a future consolidation pass. Each is one English word whose
+    -- translation diverges by grammatical context, so a single shared value can't fit:
+    --   Active, Expired, Personal, Minimal, Manual — adjectives that must agree in
+    --     gender/number with the noun they describe (e.g. fr actif/active,
+    --     es mínimo/mínima), which differs per call site.
+    --   Pin — two distinct senses: noun "map pin" (Catalog) vs verb "pin" (Trackers).
+    -- ("%d" is a bare format placeholder, also intentionally left scoped.)
 
     ["TOAST_ALERTS_SUBTAB"] = "Hinweise",
     ["FEATURE_UNIT_STATUS_MISSING"] = "Nicht erkannt",
@@ -204,11 +212,13 @@ ns.Locale:RegisterShared("deDE", {
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT"] = "Max. angezeigte Twinks",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_TOOLTIP"] = "Begrenzt die Anzahl der zum Tooltip hinzugefügten Twink-Verbesserungszeilen, damit er bei vielen Twinks nicht zu lang wird. „ALLE“ zeigt jeden infrage kommenden Twink.",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_ALL"] = "ALLE",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED"] = "Verbesserungen nur für diese Twinks anzeigen",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED_TOOLTIP"] = "Wenn angehakt, sind Twink-Verbesserungen auf die unten ausgewählten Twinks beschränkt. Wenn nicht angehakt (Standard), werden alle Twinks aus AltTracker berücksichtigt.",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_PICK"] = "+ Twinks auswählen",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NONE"] = "(keine Twinks ausgewählt)",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NO_ALTS"] = "(keine Twinks verfügbar — AltTracker nicht geladen oder keine Twinks erfasst)",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT"] = "Twinks sortieren nach",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT_TOOLTIP"] = "Legt fest, wie die Twink-Upgrade-Liste sortiert wird, bevor das Limit \226\128\158Max. angezeigte Twinks\226\128\157 greift.",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_DESC"] = "Upgrade-Wert (hoch zu niedrig)",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_ASC"] = "Upgrade-Wert (niedrig zu hoch)",
+    ["OVR_UPGRADE_ALT_SORT_NAME"] = "Name (A\226\128\223Z)",
+    ["OVR_UPGRADE_ALT_SORT_ILVL"] = "Gegenstandsstufe (hoch zu niedrig)",
+    ["OVR_UPGRADE_ALT_SORT_LOGIN"] = "Letzter Login (neueste zuerst)",
     ["OVR_UPGRADE_SELF_SPEC_MATCH"] = "Nur mit meiner aktuellen Spez abgleichen",
     ["OVR_UPGRADE_SELF_SPEC_MATCH_TOOLTIP"] = "Wenn angehakt, werden Verbesserungen nur für Gegenstände ausgelöst, die für eure aktuell aktive Spezialisierung markiert sind. Nützlich für Klassen mit zwei Spezialisierungen (z. B. Furor- vs. Schutzkrieger), um falsche Schild/1H/2H-Vorschläge für euren aktuellen Spielstil zu vermeiden. Wenn nicht angehakt (Standard), kann jeder von eurer Klasse anlegbare Gegenstand infrage kommen.",
     ["OVR_TOOLTIP_DETAIL_FULL"] = "Vollständig",
@@ -327,7 +337,8 @@ ns.Locale:RegisterShared("deDE", {
     ["TOAST_NEW_RECIPE"] = "Neues Rezept!",
     ["TOAST_NEW_TMOG"] = "Neue Optik!",
     ["TOAST_INSTANCE_CLICK"] = "Klicken, um im Journal anzuzeigen",
-    -- AH price source (shared)
+
+  -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "AH-Preisdaten",
     ["SHARED_AH_SOURCE_DESC"] = "Der OneWoW-Scan speichert Preise in AltTracker - Auctions. Auctionator nutzt seine eigene Datenbank, wenn ihr mit diesem Addon scannt. TradeSkillMaster nutzt die unten festgelegte TSM-Preiszeichenkette (Standard dbmarket).",
     ["SHARED_AH_SOURCE_ONEWOW"] = "OneWoW-AH-Scan",

@@ -1,9 +1,9 @@
 local ADDON_NAME, ns = ...
 
--- Machine-drafted — pending native review
 ns.Locale:Register(ADDON_NAME, "itIT", {
     ["ADDON_TITLE"] = "OneWoW",
 
+    -- Addon loader (ns:GetLoadFailureText); other tokens use Blizzard ADDON_* constants
     ["LOAD_FAIL_COMBAT"] = "Impossibile caricare quell'addon durante il combattimento - riprova al termine del combattimento.",
     ["LOAD_FAIL_OPTED_OUT"] = "Quell'addon è disattivato in modo leggero per questo personaggio — attivalo prima in Gestisci funzioni.",
     ["LOAD_FAIL_UNKNOWN"] = "Impossibile caricare quell'addon.",
@@ -11,6 +11,35 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["HOME_TAB"] = "OneWoW",
     ["PROFILES_SUBTAB"] = "Profili",
     ["MANAGE_FEATURES_SUBTAB"] = "Gestisci funzioni",
+
+    -- Roles & Alts settings tab
+    ["ROLES_ALTS_SUBTAB"] = "Ruoli e alt",
+    ["ROLES_ALTS_TITLE"] = "Ruoli e alt",
+    ["ROLES_ALTS_DESC"] = "Crea ruoli (come Artigiani o Main), assegna personaggi e gestisci quali personaggi OneWoW tiene traccia. I ruoli permettono alle descrizioni di mostrare info sugli alt solo per i personaggi che ti interessano.",
+    ["ROLES_SECTION"] = "Ruoli",
+    ["ROLES_SECTION_DESC"] = "Raggruppa i personaggi in ruoli con nome. Un personaggio può appartenere a più ruoli. Le descrizioni con ambito alt possono usare questi ruoli.",
+    ["ROLES_NEW_BTN"] = "+ Nuovo ruolo",
+    ["ROLES_NONE"] = "Nessun ruolo ancora. Creane uno per iniziare.",
+    ["ROLES_MEMBER_COUNT"] = "%d personaggio/i",
+    ["ROLES_ASSIGN_BTN"] = "Assegna",
+    ["ROLES_NEW_TITLE"] = "Nuovo ruolo",
+    ["ROLES_RENAME_TITLE"] = "Rinomina ruolo",
+    ["ROLES_NAME_LABEL"] = "Nome ruolo",
+    ["ROLES_DELETE_CONFIRM"] = "Eliminare il ruolo \"%s\"? I personaggi conservano i dati; viene rimosso solo il raggruppamento per ruolo.",
+    ["ROLES_ASSIGN_NONE"] = "Nessun personaggio trovato.",
+    ["CHARS_SECTION"] = "Personaggi",
+    ["CHARS_SECTION_DESC"] = "Ogni personaggio per cui OneWoW ha dati. Seleziona personaggi eliminati o rinominati in gioco e rimuovili da tutti i database OneWoW. Segue un ricaricamento dell'interfaccia.",
+    ["CHARS_NEED_ALTTRACKER"] = "Carica AltTracker per visualizzare e gestire i personaggi.",
+    ["CHARS_REMOVE_BTN"] = "Rimuovi selezionati",
+    ["CHARS_COUNT"] = "%d personaggi trovati in tutti i database",
+    ["CHARS_NONE"] = "Nessun personaggio trovato in alcun database.",
+    ["CHARS_ROLES_LABEL"] = "Ruoli:",
+    ["CHARS_NO_ROLES"] = "\226\128\148",
+    ["CHARS_REMOVE_CONFIRM_TITLE"] = "Conferma rimozione",
+    ["CHARS_REMOVE_CONFIRM"] = "Eliminare definitivamente %d personaggio/i da TUTTI i database OneWoW?\n\n|cFFFF6666%s|r\n\nOperazione irreversibile. Seguirà un ricaricamento dell'interfaccia.",
+    ["CHARS_REMOVE_NONE_SELECTED"] = "Nessun personaggio selezionato.",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "Ruoli personaggio, filtri alt nelle descrizioni e rimozione personaggi cancellati dai database OneWoW si gestiscono in Impostazioni \226\134\146 Ruoli e alt.",
+    ["SETTINGS_ROLES_ALTS_BTN"] = "Apri Ruoli e alt",
 
     ["HOME_VERSION"] = "Versione",
     ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
@@ -38,6 +67,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["MINIMAP_MODULES_LOADED"] = "%d moduli caricati",
     ["MINIMAP_RIGHT_CLICK"] = "Clic destro per le opzioni",
 
+    -- CopyPaste dialog (ns.CopyPaste)
     ["COPYPASTE_HINT_COPY"] = "Premi Ctrl+C per copiare",
     ["COPYPASTE_HINT_COPY_MAC"] = "Premi Cmd+C per copiare",
 
@@ -191,6 +221,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["UNIT_CTX_MOUNT_SOURCE"] = "Fonte: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Stato: %s",
 
+    -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Impostazioni",
     ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Impostazioni > Lingua",
     ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Impostazioni > Tema",
@@ -313,6 +344,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["SRCH_PATH_SL_REAGENTS"] = "Shopping List > Reagenti di professione",
     ["SRCH_PATH_SL_OVERLAYS"] = "Shopping List > Sovrapposizioni borse",
 
+    -- Search descriptions
     ["SRCH_DESC_OW_SETTINGS"] = "Lingua, tema, pulsante minimappa e opzioni globali",
     ["SRCH_DESC_OW_SETTINGS_LANGUAGE"] = "Scegli tra inglese, spagnolo, coreano, francese, russo, tedesco",
     ["SRCH_DESC_OW_SETTINGS_THEME"] = "Scegli tra molti temi di colore (menu raggruppato), alto contrasto, casuale per ricaricamento, scuro, chiaro e palette stilizzate",

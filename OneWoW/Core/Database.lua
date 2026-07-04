@@ -231,8 +231,8 @@ local DEFAULTS = {
                 tooltipShowAlts = true,
                 tooltipIgnoreSoulbound = false,
                 tooltipAltLimit = 10,
-                tooltipAltWhitelistEnabled = false,
-                tooltipAltWhitelist = {},
+                tooltipAltSort = "UPGRADE_DESC",
+                altScope = { mode = "all", chars = {}, roles = {} },
                 showPawnPrompt = true,
                 altSpecMatch = false,
                 selfSpecMatch = false,
@@ -336,8 +336,12 @@ local DEFAULTS = {
                 showGuildBanks  = true,
                 showVendors     = true,
                 showInstances   = true,
+                altScope        = { mode = "all", chars = {}, roles = {} },
             },
-            recipeknowledge = { enabled = true },
+            recipeknowledge = {
+                enabled = true,
+                altScope = { mode = "all", chars = {}, roles = {} },
+            },
             customnotes = { enabled = true },
             enhancements = {
                 removeBlizzardVendorValue = true,
@@ -376,6 +380,10 @@ local DEFAULTS = {
     profiles = {},
     charProfiles = {},
     defaultProfile = "Default",
+    -- User-defined character roles for the Roles & Alts tab and tooltip alt
+    -- scoping. Map keyed by generated role id: roles[id] = { id, name,
+    -- members = { [charKey] = true } }. Owned by OneWoW.AltScope.
+    roles = {},
 }
 
 --- Fresh copy of the shipped defaults subtree for one settings tab
@@ -407,4 +415,26 @@ function ns:InitializeDatabase()
         savedVar = "OneWoW_DB",
         defaults = { global = DEFAULTS },
     })
+
+    self:MigrateAltScope()
+end
+
+-- One-time migration of the legacy Gear Upgrades per-alt whitelist
+-- (tooltipAltWhitelistEnabled / tooltipAltWhitelist) into the shared altScope
+-- shape. Runs every load but is a no-op once the legacy keys are gone.
+function ns:MigrateAltScope()
+    local settings = self.db and self.db.global and self.db.global.settings
+    local up = settings and settings.overlays and settings.overlays.upgrade
+    if not up then return end
+    if up.tooltipAltWhitelistEnabled == nil and up.tooltipAltWhitelist == nil then return end
+
+    if up.tooltipAltWhitelistEnabled and (type(up.altScope) ~= "table" or up.altScope.mode ~= "selected") then
+        up.altScope = {
+            mode = "selected",
+            chars = CopyTable(up.tooltipAltWhitelist or {}),
+            roles = {},
+        }
+    end
+    up.tooltipAltWhitelistEnabled = nil
+    up.tooltipAltWhitelist = nil
 end

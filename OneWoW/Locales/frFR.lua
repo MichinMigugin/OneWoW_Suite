@@ -1,9 +1,9 @@
 local ADDON_NAME, ns = ...
 
--- Machine-drafted — pending native review
 ns.Locale:Register(ADDON_NAME, "frFR", {
     ["ADDON_TITLE"] = "OneWoW",
 
+    -- Addon loader (ns:GetLoadFailureText); other tokens use Blizzard ADDON_* constants
     ["LOAD_FAIL_COMBAT"] = "Impossible de charger cet addon en combat - réessayez une fois le combat terminé.",
     ["LOAD_FAIL_OPTED_OUT"] = "Cet addon est désactivé en douceur pour ce personnage — activez-le d'abord dans Gérer les fonctionnalités.",
     ["LOAD_FAIL_UNKNOWN"] = "Cet addon n'a pas pu être chargé.",
@@ -11,6 +11,35 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["HOME_TAB"] = "OneWoW",
     ["PROFILES_SUBTAB"] = "Profils",
     ["MANAGE_FEATURES_SUBTAB"] = "Gérer les fonctionnalités",
+
+    -- Roles & Alts settings tab
+    ["ROLES_ALTS_SUBTAB"] = "Rôles et alts",
+    ["ROLES_ALTS_TITLE"] = "Rôles et alts",
+    ["ROLES_ALTS_DESC"] = "Créez des rôles (comme Artisans ou Mains), assignez-y des personnages et gérez ceux que OneWoW suit. Les rôles permettent aux infobulles d'afficher les infos d'alt uniquement pour les personnages qui vous intéressent.",
+    ["ROLES_SECTION"] = "Rôles",
+    ["ROLES_SECTION_DESC"] = "Regroupez vos personnages en rôles nommés. Un personnage peut appartenir à plusieurs rôles. Les infobulles avec filtrage d'alt peuvent cibler ces rôles.",
+    ["ROLES_NEW_BTN"] = "+ Nouveau rôle",
+    ["ROLES_NONE"] = "Aucun rôle pour l'instant. Créez-en un pour commencer.",
+    ["ROLES_MEMBER_COUNT"] = "%d personnage(s)",
+    ["ROLES_ASSIGN_BTN"] = "Assigner",
+    ["ROLES_NEW_TITLE"] = "Nouveau rôle",
+    ["ROLES_RENAME_TITLE"] = "Renommer le rôle",
+    ["ROLES_NAME_LABEL"] = "Nom du rôle",
+    ["ROLES_DELETE_CONFIRM"] = "Supprimer le rôle \"%s\" ? Les données des personnages sont conservées ; seul le regroupement par rôle est supprimé.",
+    ["ROLES_ASSIGN_NONE"] = "Aucun personnage trouvé.",
+    ["CHARS_SECTION"] = "Personnages",
+    ["CHARS_SECTION_DESC"] = "Chaque personnage pour lequel OneWoW a des données. Sélectionnez les personnages supprimés ou renommés en jeu et retirez-les de toutes les bases OneWoW. Un rechargement de l'interface suit la suppression.",
+    ["CHARS_NEED_ALTTRACKER"] = "Chargez AltTracker pour afficher et gérer vos personnages.",
+    ["CHARS_REMOVE_BTN"] = "Supprimer la sélection",
+    ["CHARS_COUNT"] = "%d personnages trouvés dans toutes les bases",
+    ["CHARS_NONE"] = "Aucun personnage trouvé dans une base.",
+    ["CHARS_ROLES_LABEL"] = "Rôles :",
+    ["CHARS_NO_ROLES"] = "\226\128\148",
+    ["CHARS_REMOVE_CONFIRM_TITLE"] = "Confirmer la suppression",
+    ["CHARS_REMOVE_CONFIRM"] = "Supprimer définitivement %d personnage(s) de TOUTES les bases OneWoW ?\n\n|cFFFF6666%s|r\n\nCette action est irréversible. Un rechargement de l'interface suivra.",
+    ["CHARS_REMOVE_NONE_SELECTED"] = "Aucun personnage sélectionné.",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "Les rôles de personnages, le filtrage d'alt des infobulles et la suppression des personnages effacés des bases OneWoW se gèrent dans Paramètres \226\134\146 Rôles et alts.",
+    ["SETTINGS_ROLES_ALTS_BTN"] = "Ouvrir Rôles et alts",
 
     ["HOME_VERSION"] = "Version",
     ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
@@ -38,6 +67,7 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["MINIMAP_MODULES_LOADED"] = "%d modules chargés",
     ["MINIMAP_RIGHT_CLICK"] = "Clic droit pour les options",
 
+    -- CopyPaste dialog (ns.CopyPaste)
     ["COPYPASTE_HINT_COPY"] = "Appuyez sur Ctrl+C pour copier",
     ["COPYPASTE_HINT_COPY_MAC"] = "Appuyez sur Cmd+C pour copier",
 
@@ -191,6 +221,7 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["UNIT_CTX_MOUNT_SOURCE"] = "Source : %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Statut : %s",
 
+    -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Paramètres",
     ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Paramètres > Langue",
     ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Paramètres > Thème",
@@ -313,6 +344,7 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["SRCH_PATH_SL_REAGENTS"] = "Shopping List > Composants de métier",
     ["SRCH_PATH_SL_OVERLAYS"] = "Shopping List > Incrustations de sacs",
 
+    -- Search descriptions
     ["SRCH_DESC_OW_SETTINGS"] = "Langue, thème, bouton de mini-carte et options globales",
     ["SRCH_DESC_OW_SETTINGS_LANGUAGE"] = "Choisissez parmi anglais, espagnol, coréen, français, russe, allemand",
     ["SRCH_DESC_OW_SETTINGS_THEME"] = "Choisissez parmi de nombreux thèmes de couleurs (menu groupé), contraste élevé, aléatoire par rechargement, sombre, clair et palettes stylisées",

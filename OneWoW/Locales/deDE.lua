@@ -1,9 +1,9 @@
 local ADDON_NAME, ns = ...
 
--- Machine-drafted — pending native review
 ns.Locale:Register(ADDON_NAME, "deDE", {
     ["ADDON_TITLE"] = "OneWoW",
 
+    -- Addon loader (ns:GetLoadFailureText); other tokens use Blizzard ADDON_* constants
     ["LOAD_FAIL_COMBAT"] = "Dieses Addon kann im Kampf nicht geladen werden - versucht es nach dem Kampf erneut.",
     ["LOAD_FAIL_OPTED_OUT"] = "Dieses Addon ist für diesen Charakter weich deaktiviert — aktiviert es zuerst unter Funktionen verwalten.",
     ["LOAD_FAIL_UNKNOWN"] = "Dieses Addon konnte nicht geladen werden.",
@@ -11,6 +11,35 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["HOME_TAB"] = "OneWoW",
     ["PROFILES_SUBTAB"] = "Profile",
     ["MANAGE_FEATURES_SUBTAB"] = "Funktionen verwalten",
+
+    -- Roles & Alts settings tab
+    ["ROLES_ALTS_SUBTAB"] = "Rollen & Twinks",
+    ["ROLES_ALTS_TITLE"] = "Rollen & Twinks",
+    ["ROLES_ALTS_DESC"] = "Erstelle Rollen (z. B. Handwerker oder Mains), weise ihnen Charaktere zu und verwalte, welche Charaktere OneWoW verfolgt. Rollen ermöglichen Tooltips, Alt-Informationen nur für die Charaktere anzuzeigen, die dich interessieren.",
+    ["ROLES_SECTION"] = "Rollen",
+    ["ROLES_SECTION_DESC"] = "Gruppiere deine Charaktere in benannte Rollen. Ein Charakter kann beliebig vielen Rollen angehören. Tooltips mit Alt-Einschränkung können diese Rollen nutzen.",
+    ["ROLES_NEW_BTN"] = "+ Neue Rolle",
+    ["ROLES_NONE"] = "Noch keine Rollen. Erstelle eine, um loszulegen.",
+    ["ROLES_MEMBER_COUNT"] = "%d Charakter(e)",
+    ["ROLES_ASSIGN_BTN"] = "Zuweisen",
+    ["ROLES_NEW_TITLE"] = "Neue Rolle",
+    ["ROLES_RENAME_TITLE"] = "Rolle umbenennen",
+    ["ROLES_NAME_LABEL"] = "Rollenname",
+    ["ROLES_DELETE_CONFIRM"] = "Rolle \"%s\" löschen? Charakterdaten bleiben erhalten; nur die Rollenzuordnung wird entfernt.",
+    ["ROLES_ASSIGN_NONE"] = "Keine Charaktere gefunden.",
+    ["CHARS_SECTION"] = "Charaktere",
+    ["CHARS_SECTION_DESC"] = "Jeder Charakter, für den OneWoW Daten hat. Wähle Charaktere, die du im Spiel gelöscht oder umbenannt hast, und entferne sie aus allen OneWoW-Datenbanken. Danach folgt ein UI-Reload.",
+    ["CHARS_NEED_ALTTRACKER"] = "Lade AltTracker, um Charaktere anzuzeigen und zu verwalten.",
+    ["CHARS_REMOVE_BTN"] = "Ausgewählte entfernen",
+    ["CHARS_COUNT"] = "%d Charaktere in allen Datenbanken gefunden",
+    ["CHARS_NONE"] = "In keiner Datenbank wurden Charaktere gefunden.",
+    ["CHARS_ROLES_LABEL"] = "Rollen:",
+    ["CHARS_NO_ROLES"] = "\226\128\148",
+    ["CHARS_REMOVE_CONFIRM_TITLE"] = "Entfernen bestätigen",
+    ["CHARS_REMOVE_CONFIRM"] = "%d Charakter(e) dauerhaft aus ALLEN OneWoW-Datenbanken löschen?\n\n|cFFFF6666%s|r\n\nDas kann nicht rückgängig gemacht werden. Danach folgt ein UI-Reload.",
+    ["CHARS_REMOVE_NONE_SELECTED"] = "Keine Charaktere ausgewählt.",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "Charakterrollen, Tooltip-Alt-Filter und das Entfernen gelöschter Charaktere aus OneWoW-Datenbanken werden unter Einstellungen \226\134\146 Rollen & Twinks verwaltet.",
+    ["SETTINGS_ROLES_ALTS_BTN"] = "Rollen & Twinks öffnen",
 
     ["HOME_VERSION"] = "Version",
     ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
@@ -38,6 +67,7 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["MINIMAP_MODULES_LOADED"] = "%d Module geladen",
     ["MINIMAP_RIGHT_CLICK"] = "Rechtsklick für Optionen",
 
+    -- CopyPaste dialog (ns.CopyPaste)
     ["COPYPASTE_HINT_COPY"] = "Strg+C drücken zum Kopieren",
     ["COPYPASTE_HINT_COPY_MAC"] = "Cmd+C drücken zum Kopieren",
 
@@ -191,6 +221,7 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["UNIT_CTX_MOUNT_SOURCE"] = "Quelle: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Status: %s",
 
+    -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Einstellungen",
     ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Einstellungen > Sprache",
     ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Einstellungen > Design",
@@ -313,6 +344,7 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["SRCH_PATH_SL_REAGENTS"] = "Shopping List > Berufsreagenzien",
     ["SRCH_PATH_SL_OVERLAYS"] = "Shopping List > Taschen-Overlays",
 
+    -- Search descriptions
     ["SRCH_DESC_OW_SETTINGS"] = "Sprache, Design, Minikartenschaltfläche und globale Optionen",
     ["SRCH_DESC_OW_SETTINGS_LANGUAGE"] = "Wählt aus Englisch, Spanisch, Koreanisch, Französisch, Russisch, Deutsch",
     ["SRCH_DESC_OW_SETTINGS_THEME"] = "Wählt aus vielen Farbdesigns (gruppiertes Menü), hoher Kontrast, zufällig pro Neuladen, dunkel, hell und stilisierte Paletten",

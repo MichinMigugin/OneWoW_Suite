@@ -3,6 +3,17 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
+    ["TIPS_SCOPE_HEADER"] = "Alt-Umfang",
+    ["TIPS_SCOPE_ALL"] = "Für alle Charaktere anzeigen (Standard)",
+    ["TIPS_SCOPE_SELECTED"] = "Nur für diese Charaktere / Rollen anzeigen",
+    ["TIPS_SCOPE_ADD_ALT"] = "+ Twink hinzufügen",
+    ["TIPS_SCOPE_ADD_ROLE"] = "+ Rolle hinzufügen",
+    ["TIPS_SCOPE_NONE_SELECTED"] = "Nichts ausgewählt \226\128\148 keine Alt-Infos werden angezeigt.",
+    ["TIPS_SCOPE_NO_ALTS"] = "Keine Charaktere gefunden.",
+    ["TIPS_SCOPE_NO_ROLES"] = "Noch keine Rollen \226\128\148 erstelle sie unter Rollen & Twinks.",
+    ["TIPS_SCOPE_EXCLUDE_NOTE"] = "Bei \226\128\158Nur diese\226\128\157 sind alle nicht hinzugefügten Charaktere und Rollen ausgeschlossen. Jeder sieht weiterhin den Tooltip \226\128\148 dies beschränkt nur, deren Alt-Daten erscheinen.",
+    ["TIPS_SCOPE_MANAGE_LINK"] = "Rollen & Twinks hier verwalten \226\134\146",
+
     ["OVERLAYS_SUBTAB"] = "Overlays",
     ["TOOLTIPS_SUBTAB"] = "Tooltips",
     ["CTX_OPEN_QOL"] = "QoL öffnen",

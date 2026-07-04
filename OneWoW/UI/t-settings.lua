@@ -50,6 +50,7 @@ end
 
 local coreSettingsTabs = {
     { name = "settings",       displayName = function() return SETTINGS end, create = function(parent) UI:CreateSettingsMainTab(parent) end },
+    { name = "rolesandalts",   displayName = function() return ns.L["ROLES_ALTS_SUBTAB"] end, create = function(parent) UI:CreateRolesAndAltsTab(parent) end },
     { name = "profiles",       displayName = function() return ns.L["PROFILES_SUBTAB"] end, create = function(parent) UI:CreateProfilesTab(parent) end },
     { name = "managefeatures", displayName = function() return ns.L["MANAGE_FEATURES_SUBTAB"] end, create = function(parent) UI:CreateManageFeaturesTab(parent) end },
 }

@@ -1,8 +1,7 @@
 local _, ns = ...
 
--- Machine-drafted — pending native review.
 ns.Locale:RegisterShared("koKR", {
-    -- Language picker
+    -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "언어 선택",
     ["LANGUAGE_DESC"] = "애드온 인터페이스에 사용할 언어를 선택하세요. 변경 사항은 즉시 적용됩니다.",
 
@@ -18,7 +17,7 @@ ns.Locale:RegisterShared("koKR", {
     ["THEME_GROUP_BOLD"] = "강렬 & 스타일",
     ["THEME_GROUP_LIGHT"] = "라이트 & 접근성",
 
-    -- Theme display names
+    -- Theme display names (keyed THEME_<UPPER themeKey>; resolved at runtime)
     ["THEME_GREEN"] = "숲의 녹색",
     ["THEME_BLUE"] = "바다의 파랑",
     ["THEME_PURPLE"] = "왕실의 보라",
@@ -45,7 +44,7 @@ ns.Locale:RegisterShared("koKR", {
     ["THEME_NIGHTFAE"] = "맹세단 황혼",
     ["THEME_HIGHCONTRAST"] = "고대비",
 
-    -- Font section
+    -- Font section (font family names are proper nouns; "Font Size" uses FONT_SIZE global)
     ["FONT_SECTION"] = "글꼴",
     ["FONT_DESC"] = "모든 OneWoW 애드온에서 사용할 글꼴을 선택하세요. 다른 애드온의 SharedMedia 글꼴도 지원되며 목록에 표시됩니다.",
     ["FONT_SIZE_DESC"] = "모든 애드온의 글꼴 크기를 조정합니다.",
@@ -58,10 +57,10 @@ ns.Locale:RegisterShared("koKR", {
     ["VALUE_DISPLAY_REGIONAL"] = "지역 숫자 구분 사용 (클라이언트 로캘)",
     ["VALUE_DISPLAY_WHITE"] = "흰색 수치 사용 (문자 모드, 끄면 클래식 모양)",
 
-    -- Footer links
+    -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "후원",
 
-    -- Minimap section labels
+    -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "미니맵 버튼",
     ["MINIMAP_SECTION_DESC"] = "미니맵 버튼을 표시하거나 숨깁니다.",
     ["MINIMAP_SHOW_BTN"] = "미니맵 버튼 표시",
@@ -71,7 +70,7 @@ ns.Locale:RegisterShared("koKR", {
     -- Common
     ["CURRENT_VALUE"] = "현재: %s",
 
-    -- consolidated
+    -- consolidated (cross-scope duplicates)
     ["ADD_ITEM"] = "아이템 추가",
     ["BATTLE_PET"] = "전투 애완동물",
     ["BUTTON_SIZE"] = "버튼 크기",
@@ -108,7 +107,7 @@ ns.Locale:RegisterShared("koKR", {
     ["GOLD_TOTAL"] = "총 골드",
     ["WORLD_QUEST"] = "전역 퀘스트",
 
-    -- consolidated (bare-word terms)
+    -- consolidated (cross-scope bare-word terms)
     ["ITEM"] = "아이템",
     ["RENAME"] = "이름 변경",
     ["EXPANSION"] = "확장팩",
@@ -136,6 +135,15 @@ ns.Locale:RegisterShared("koKR", {
     ["SESSION"] = "세션",
     ["SLOT"] = "슬롯",
     ["SUMMARY"] = "요약",
+
+    -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
+    -- in during a future consolidation pass. Each is one English word whose
+    -- translation diverges by grammatical context, so a single shared value can't fit:
+    --   Active, Expired, Personal, Minimal, Manual — adjectives that must agree in
+    --     gender/number with the noun they describe (e.g. fr actif/active,
+    --     es mínimo/mínima), which differs per call site.
+    --   Pin — two distinct senses: noun "map pin" (Catalog) vs verb "pin" (Trackers).
+    -- ("%d" is a bare format placeholder, also intentionally left scoped.)
 
     ["TOAST_ALERTS_SUBTAB"] = "토스트 알림",
     ["FEATURE_UNIT_STATUS_MISSING"] = "감지되지 않음",
@@ -204,11 +212,13 @@ ns.Locale:RegisterShared("koKR", {
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT"] = "표시할 최대 부캐릭터 수",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_TOOLTIP"] = "툴팁에 추가되는 부캐릭터 업그레이드 줄 수를 제한하여 부캐릭터가 많을 때 툴팁이 너무 길어지지 않게 합니다. 'ALL'은 해당되는 모든 부캐릭터를 표시합니다.",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_ALL"] = "ALL",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED"] = "다음 부캐릭터의 업그레이드만 표시",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED_TOOLTIP"] = "선택 시 아래에서 선택한 부캐릭터로 부캐릭터 업그레이드가 제한됩니다. 해제 시(기본값) AltTracker의 모든 부캐릭터가 고려됩니다.",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_PICK"] = "+ 부캐릭터 선택",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NONE"] = "(선택된 부캐릭터 없음)",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NO_ALTS"] = "(사용 가능한 부캐릭터 없음 — AltTracker 미불러옴 또는 기록된 부캐릭터 없음)",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT"] = "부캐 정렬 기준",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT_TOOLTIP"] = "「표시할 부캐 최대 수」 제한 적용 전 부캐 업그레이드 목록의 정렬 방식을 선택합니다.",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_DESC"] = "업그레이드 수치 (높음→낮음)",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_ASC"] = "업그레이드 수치 (낮음→높음)",
+    ["OVR_UPGRADE_ALT_SORT_NAME"] = "이름 (가나다순)",
+    ["OVR_UPGRADE_ALT_SORT_ILVL"] = "아이템 레벨 (높음→낮음)",
+    ["OVR_UPGRADE_ALT_SORT_LOGIN"] = "최근 로그인 순",
     ["OVR_UPGRADE_SELF_SPEC_MATCH"] = "내 현재 특성만 일치",
     ["OVR_UPGRADE_SELF_SPEC_MATCH_TOOLTIP"] = "선택 시 현재 활성 전문화에 태그된 아이템에만 업그레이드가 표시됩니다. 이중 특성 직업(예: 분노 vs 방어 전사)에서 현재 플레이 스타일에 맞지 않는 방패/한손/양손 제안을 피하는 데 유용합니다. 해제 시(기본값) 직업이 착용할 수 있는 모든 아이템이 해당될 수 있습니다.",
     ["OVR_TOOLTIP_DETAIL_FULL"] = "전체",
@@ -327,7 +337,8 @@ ns.Locale:RegisterShared("koKR", {
     ["TOAST_NEW_RECIPE"] = "새 제조법!",
     ["TOAST_NEW_TMOG"] = "새 외형!",
     ["TOAST_INSTANCE_CLICK"] = "클릭하여 저널에서 보기",
-    -- AH price source (shared)
+
+  -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "AH 가격 데이터",
     ["SHARED_AH_SOURCE_DESC"] = "OneWoW 스캔은 AltTracker - Auctions에 가격을 저장합니다. Auctionator는 해당 애드온으로 스캔할 때 자체 데이터베이스를 사용합니다. TradeSkillMaster는 아래 설정한 TSM 가격 문자열(기본 dbmarket)을 사용합니다.",
     ["SHARED_AH_SOURCE_ONEWOW"] = "OneWoW AH 스캔",

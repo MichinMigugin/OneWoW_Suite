@@ -16,3 +16,19 @@ end
 function OneWoW_AltTracker_API.GetSeasonData()
     return ns.SeasonData
 end
+
+--- Every character known to any OneWoW database, with the stores each was found
+--- in. Drives the core Roles & Alts tab's character list + purge. Sorted by last
+--- login (most recent first), then name.
+---@return table[] characters
+function OneWoW_AltTracker_API.CollectAllCharacters()
+    return ns.CharacterCleanup:CollectAll()
+end
+
+--- Permanently remove a character from every OneWoW database. A UI reload should
+--- follow so stale in-memory views are dropped.
+---@param charKey string
+---@return string[] purgedFrom labels of stores the character was removed from
+function OneWoW_AltTracker_API.PurgeCharacter(charKey)
+    return ns.CharacterCleanup:Purge(charKey)
+end

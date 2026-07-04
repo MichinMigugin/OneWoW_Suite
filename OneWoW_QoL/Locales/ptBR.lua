@@ -3,6 +3,17 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
+    ["TIPS_SCOPE_HEADER"] = "Escopo de alts",
+    ["TIPS_SCOPE_ALL"] = "Mostrar para todos os personagens (padrão)",
+    ["TIPS_SCOPE_SELECTED"] = "Mostrar apenas para estes personagens / funções",
+    ["TIPS_SCOPE_ADD_ALT"] = "+ Adicionar alt",
+    ["TIPS_SCOPE_ADD_ROLE"] = "+ Adicionar função",
+    ["TIPS_SCOPE_NONE_SELECTED"] = "Nada selecionado \226\128\148 nenhuma info de alt será exibida.",
+    ["TIPS_SCOPE_NO_ALTS"] = "Nenhum personagem encontrado.",
+    ["TIPS_SCOPE_NO_ROLES"] = "Nenhuma função ainda \226\128\148 crie em Funções e alts.",
+    ["TIPS_SCOPE_EXCLUDE_NOTE"] = "Com « Apenas estes », qualquer personagem ou função não adicionado fica excluído. Todos ainda veem a dica \226\128\148 isso só limita quais dados de alt aparecem.",
+    ["TIPS_SCOPE_MANAGE_LINK"] = "Gerenciar Funções e alts aqui \226\134\146",
+
     ["OVERLAYS_SUBTAB"] = "Sobreposições",
     ["TOOLTIPS_SUBTAB"] = "Dicas",
     ["CTX_OPEN_QOL"] = "Abrir QoL",

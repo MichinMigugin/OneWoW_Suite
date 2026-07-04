@@ -1,8 +1,7 @@
 local _, ns = ...
 
--- Machine-drafted — pending native review.
 ns.Locale:RegisterShared("zhCN", {
-    -- Language picker
+    -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "语言选择",
     ["LANGUAGE_DESC"] = "选择插件界面使用的语言。更改会立即生效。",
 
@@ -18,7 +17,7 @@ ns.Locale:RegisterShared("zhCN", {
     ["THEME_GROUP_BOLD"] = "大胆与个性",
     ["THEME_GROUP_LIGHT"] = "浅色与无障碍",
 
-    -- Theme display names
+    -- Theme display names (keyed THEME_<UPPER themeKey>; resolved at runtime)
     ["THEME_GREEN"] = "森林绿",
     ["THEME_BLUE"] = "海洋蓝",
     ["THEME_PURPLE"] = "皇家紫",
@@ -45,7 +44,7 @@ ns.Locale:RegisterShared("zhCN", {
     ["THEME_NIGHTFAE"] = "暗夜仙林暮光",
     ["THEME_HIGHCONTRAST"] = "高对比度",
 
-    -- Font section
+    -- Font section (font family names are proper nouns; "Font Size" uses FONT_SIZE global)
     ["FONT_SECTION"] = "字体",
     ["FONT_DESC"] = "选择所有 OneWoW 插件使用的字体。也支持来自其他插件的 SharedMedia 字体，它们会出现在列表中。",
     ["FONT_SIZE_DESC"] = "调整所有插件的字体大小。",
@@ -58,10 +57,10 @@ ns.Locale:RegisterShared("zhCN", {
     ["VALUE_DISPLAY_REGIONAL"] = "使用区域数字分组（客户端区域设置）",
     ["VALUE_DISPLAY_WHITE"] = "使用白色数值（字母模式；关闭时为经典外观）",
 
-    -- Footer links
+    -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "捐赠",
 
-    -- Minimap section labels
+    -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "小地图按钮",
     ["MINIMAP_SECTION_DESC"] = "显示或隐藏小地图按钮。",
     ["MINIMAP_SHOW_BTN"] = "显示小地图按钮",
@@ -71,7 +70,7 @@ ns.Locale:RegisterShared("zhCN", {
     -- Common
     ["CURRENT_VALUE"] = "当前：%s",
 
-    -- consolidated
+    -- consolidated (cross-scope duplicates)
     ["ADD_ITEM"] = "添加物品",
     ["BATTLE_PET"] = "战斗宠物",
     ["BUTTON_SIZE"] = "按钮大小",
@@ -108,7 +107,7 @@ ns.Locale:RegisterShared("zhCN", {
     ["GOLD_TOTAL"] = "金币总计",
     ["WORLD_QUEST"] = "世界任务",
 
-    -- consolidated (bare-word terms)
+    -- consolidated (cross-scope bare-word terms)
     ["ITEM"] = "物品",
     ["RENAME"] = "重命名",
     ["EXPANSION"] = "资料片",
@@ -136,6 +135,15 @@ ns.Locale:RegisterShared("zhCN", {
     ["SESSION"] = "会话",
     ["SLOT"] = "栏位",
     ["SUMMARY"] = "概要",
+
+    -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
+    -- in during a future consolidation pass. Each is one English word whose
+    -- translation diverges by grammatical context, so a single shared value can't fit:
+    --   Active, Expired, Personal, Minimal, Manual — adjectives that must agree in
+    --     gender/number with the noun they describe (e.g. fr actif/active,
+    --     es mínimo/mínima), which differs per call site.
+    --   Pin — two distinct senses: noun "map pin" (Catalog) vs verb "pin" (Trackers).
+    -- ("%d" is a bare format placeholder, also intentionally left scoped.)
 
     ["TOAST_ALERTS_SUBTAB"] = "弹出提示",
     ["FEATURE_UNIT_STATUS_MISSING"] = "未检测到",
@@ -204,11 +212,13 @@ ns.Locale:RegisterShared("zhCN", {
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT"] = "显示的小号上限",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_TOOLTIP"] = "限制添加到鼠标提示中的小号升级行数，以免在你有很多小号时变得过长。“全部”会显示每个符合条件的小号。",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_ALL"] = "全部",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED"] = "仅为这些小号显示升级",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED_TOOLTIP"] = "勾选后，小号升级仅限于你在下方选择的小号。取消勾选（默认）时，会考虑 AltTracker 中的所有小号。",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_PICK"] = "+ 选择小号",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NONE"] = "（未选择小号）",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NO_ALTS"] = "（无可用小号 — AltTracker 未加载或未记录小号）",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT"] = "小号排序依据",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT_TOOLTIP"] = "在应用「最多显示小号数」限制之前，选择小号升级列表的排序方式。",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_DESC"] = "升级幅度（高到低）",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_ASC"] = "升级幅度（低到高）",
+    ["OVR_UPGRADE_ALT_SORT_NAME"] = "名称（A-Z）",
+    ["OVR_UPGRADE_ALT_SORT_ILVL"] = "物品等级（高到低）",
+    ["OVR_UPGRADE_ALT_SORT_LOGIN"] = "最近登录（最新优先）",
     ["OVR_UPGRADE_SELF_SPEC_MATCH"] = "仅匹配我的当前专精",
     ["OVR_UPGRADE_SELF_SPEC_MATCH_TOOLTIP"] = "勾选后，升级仅对标记为你当前激活专精的物品触发。对双专精职业（如 武器/防护 战士）很有用，可避免不适合你当前玩法的盾牌/单手/双手建议。取消勾选（默认）时，你职业可装备的任何物品都可能符合条件。",
     ["OVR_TOOLTIP_DETAIL_FULL"] = "完整",
@@ -327,7 +337,8 @@ ns.Locale:RegisterShared("zhCN", {
     ["TOAST_NEW_RECIPE"] = "新配方！",
     ["TOAST_NEW_TMOG"] = "新外观！",
     ["TOAST_INSTANCE_CLICK"] = "点击在图鉴中查看",
-    -- AH price source (shared)
+
+  -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "拍卖价格数据",
     ["SHARED_AH_SOURCE_DESC"] = "OneWoW 扫描将价格存储在 AltTracker - Auctions 中。当你用 Auctionator 扫描时，它使用自己的数据库。TradeSkillMaster 使用下方设置的 TSM 价格字符串（默认 dbmarket）。",
     ["SHARED_AH_SOURCE_ONEWOW"] = "OneWoW 拍卖扫描",

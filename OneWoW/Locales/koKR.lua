@@ -2,13 +2,45 @@ local ADDON_NAME, ns = ...
 
 ns.Locale:Register(ADDON_NAME, "koKR", {
     ["ADDON_TITLE"] = "OneWoW",
+
     -- Addon loader (ns:GetLoadFailureText); other tokens use Blizzard ADDON_* constants
     ["LOAD_FAIL_COMBAT"] = "전투 중에는 해당 애드온을 불러올 수 없습니다. 전투 종료 후 다시 시도하세요.",
     ["LOAD_FAIL_OPTED_OUT"] = "해당 애드온은 이 캐릭터에서 소프트 비활성화되어 있습니다. 먼저 기능 관리에서 활성화하세요.",
     ["LOAD_FAIL_UNKNOWN"] = "해당 애드온을 불러올 수 없습니다.",
+
     ["HOME_TAB"] = "OneWoW",
     ["PROFILES_SUBTAB"] = "프로필",
     ["MANAGE_FEATURES_SUBTAB"] = "기능 관리",
+
+    -- Roles & Alts settings tab
+    ["ROLES_ALTS_SUBTAB"] = "역할 및 부캐",
+    ["ROLES_ALTS_TITLE"] = "역할 및 부캐",
+    ["ROLES_ALTS_DESC"] = "역할(예: 제작 캐릭터, 메인 캐릭터)을 만들고 캐릭터를 할당하여 OneWoW가 추적하는 캐릭터를 관리하세요. 역할을 사용하면 관심 있는 캐릭터의 부캐 정보만 툴팁에 표시할 수 있습니다.",
+    ["ROLES_SECTION"] = "역할",
+    ["ROLES_SECTION_DESC"] = "캐릭터를 이름이 있는 역할로 묶습니다. 한 캐릭터는 여러 역할에 속할 수 있습니다. 부캐 범위를 지원하는 툴팁에서 이 역할을 사용할 수 있습니다.",
+    ["ROLES_NEW_BTN"] = "+ 새 역할",
+    ["ROLES_NONE"] = "아직 역할이 없습니다. 하나를 만들어 시작하세요.",
+    ["ROLES_MEMBER_COUNT"] = "캐릭터 %d명",
+    ["ROLES_ASSIGN_BTN"] = "할당",
+    ["ROLES_NEW_TITLE"] = "새 역할",
+    ["ROLES_RENAME_TITLE"] = "역할 이름 변경",
+    ["ROLES_NAME_LABEL"] = "역할 이름",
+    ["ROLES_DELETE_CONFIRM"] = "역할 \"%s\"을(를) 삭제할까요? 캐릭터 데이터는 유지되며 역할 그룹만 제거됩니다.",
+    ["ROLES_ASSIGN_NONE"] = "캐릭터를 찾을 수 없습니다.",
+    ["CHARS_SECTION"] = "캐릭터",
+    ["CHARS_SECTION_DESC"] = "OneWoW에 데이터가 있는 모든 캐릭터입니다. 게임에서 삭제하거나 이름을 바꾼 캐릭터를 선택하여 모든 OneWoW 데이터베이스에서 제거하세요. 제거 후 UI가 다시 로드됩니다.",
+    ["CHARS_NEED_ALTTRACKER"] = "캐릭터를 보고 관리하려면 AltTracker를 불러오세요.",
+    ["CHARS_REMOVE_BTN"] = "선택 항목 제거",
+    ["CHARS_COUNT"] = "모든 데이터베이스에서 캐릭터 %d명 발견",
+    ["CHARS_NONE"] = "어떤 데이터베이스에서도 캐릭터를 찾을 수 없습니다.",
+    ["CHARS_ROLES_LABEL"] = "역할:",
+    ["CHARS_NO_ROLES"] = "\226\128\148",
+    ["CHARS_REMOVE_CONFIRM_TITLE"] = "제거 확인",
+    ["CHARS_REMOVE_CONFIRM"] = "모든 OneWoW 데이터베이스에서 캐릭터 %d명을 영구 삭제할까요?\n\n|cFFFF6666%s|r\n\n되돌릴 수 없습니다. UI가 다시 로드됩니다.",
+    ["CHARS_REMOVE_NONE_SELECTED"] = "선택된 캐릭터가 없습니다.",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "캐릭터 역할, 툴팁 부캐 필터, 삭제된 캐릭터의 OneWoW 데이터베이스 제거는 설정 \226\134\146 역할 및 부캐에서 관리합니다.",
+    ["SETTINGS_ROLES_ALTS_BTN"] = "역할 및 부캐 열기",
+
     ["HOME_VERSION"] = "버전",
     ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
     ["HOME_REQUIRED_ADDONS"] = "필수 애드온",
@@ -18,6 +50,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["PLACEHOLDER_ENABLE_POINTER"] = "다음에서 활성화:",
     ["AGGREGATOR_PLACEHOLDER_DESC"] = "이 화면은 여러 애드온의 데이터를 결합합니다. 아이템을 보려면 기능 관리에서 아래 소스 중 하나를 활성화하세요.",
     ["HOME_MINIMAP_PLACEHOLDER"] = "곧 제공 예정",
+
     ["MODULE_ALTTRACKER"] = "AltTracker",
     ["MODULE_CATALOG"] = "Catalog",
     ["MODULE_DIRECTDEPOSIT"] = "Direct Deposit",
@@ -25,14 +58,19 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["MODULE_QOL"] = "QoL",
     ["MODULE_SHOPPINGLIST"] = "Shopping List",
     ["MODULE_TRACKERS"] = "Trackers",
+
     ["MODULE_BAGS"] = "Bags",
     ["MODULE_DEVTOOLS"] = "DevTools",
     ["MODULE_EXTRACTOR"] = "Extractor",
+
     ["MINIMAP_TOOLTIP_HINT"] = "클릭하여 OneWoW 전환",
     ["MINIMAP_MODULES_LOADED"] = "%d개 모듈 로드됨",
     ["MINIMAP_RIGHT_CLICK"] = "우클릭하여 옵션 열기",
+
+    -- CopyPaste dialog (ns.CopyPaste)
     ["COPYPASTE_HINT_COPY"] = "Ctrl+C를 눌러 복사하세요",
     ["COPYPASTE_HINT_COPY_MAC"] = "Cmd+C를 눌러 복사하세요",
+
     ["WIZARD_TITLE"] = "OneWoW에 오신 것을 환영합니다",
     ["MANAGE_SCOPE_LABEL"] = "적용 대상:",
     ["MANAGE_SCOPE_ALL"] = "모든 캐릭터",
@@ -99,6 +137,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WIZARD_FEATURE_DIRECTDEPOSIT_DESC"] = "캐릭터와 전투부대 은행 간 골드 및 아이템 이동을 자동화합니다.",
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "프레임 검사, 이벤트, 오류, 전역 변수, 아틀라스 탐색 개발자 유틸리티.",
+
     ["HOME_COMMANDS"] = "사용 가능한 명령어",
     ["CMD_TOGGLE_ONEWOW"] = "OneWoW 전환",
     ["CMD_KEYWORD_HELP"] = "검색 키워드 도움말 열기",
@@ -112,11 +151,14 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["CMD_OPEN_SL"] = "Shopping List 열기",
     ["CMD_SL_ADD"] = "활성 목록에 아이템 추가",
     ["CMD_OPEN_DEVTOOLS"] = "DevTools 열기",
+
     ["RESET_UI_SECTION"] = "창 레이아웃",
     ["RESET_UI_DESC"] = "OneWoW 창을 기본 크기와 위치로 재설정합니다.",
     ["RESET_UI_BTN"] = "창 재설정",
+
     ["VALUE_AUCTIONATOR_POPUP_TEXT"] = "Auctionator가 OneWoW 툴팁의 경매장 가격 소스가 되었습니다. OneWoW가 겹치는 Auctionator 툴팁 줄을 껐습니다. Auctionator로 AH를 스캔하여 가격을 갱신하세요. 이 옵션이 켜져 있으면 OneWoW 전체 AH 스캐너 버튼이 숨겨집니다.",
     ["VALUE_TSM_POPUP_TEXT"] = "OneWoW가 툴팁에 TSM 가격 줄을 표시합니다. 중복 정보를 피하려면 TSM > 설정 > 툴팁 설정에서 \"TSM 툴팁 사용\"을 끄거나, 필요 없는 개별 TSM 툴팁 줄을 지우세요.",
+
     ["HOME_DETECTED_DATA_MODULES"] = "감지된 데이터 모듈",
     ["HOME_STATUS_ALL"] = "모든 캐릭터에서 사용",
     ["HOME_STATUS_SOME"] = "일부 캐릭터에서 사용",
@@ -128,6 +170,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["HOME_MANAGE_POINTER"] = "다음에서 기능 사용/사용 안 함:",
     ["HOME_MANAGE_LINK"] = "기능 관리",
     ["HOME_VERSION_MISMATCH_NOTICE"] = "일부 OneWoW 애드온이 최신이 아니며 코어 버전 %s와(과) 일치하지 않습니다. 모든 모듈이 동일한 버전이 되도록 전체 OneWoW 모음을 다시 다운로드하세요.",
+
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",
     ["DATA_MOD_CHARACTER"] = "Character",
@@ -135,10 +178,12 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["DATA_MOD_ENDGAME"] = "EndGame",
     ["DATA_MOD_PROFESSIONS"] = "Professions",
     ["DATA_MOD_STORAGE"] = "Storage",
+
     ["CAT_MOD_JOURNAL"] = "Journal",
     ["CAT_MOD_TRADESKILLS"] = "Tradeskills",
     ["CAT_MOD_QUESTS"] = "Quests",
     ["CAT_MOD_VENDORS"] = "Vendors",
+
     ["HOME_UTILITIES"] = "유틸리티",
     ["HOME_ALTTRACKER_MODULES"] = "AltTracker 모듈",
     ["HOME_CATALOG_DATA_MODULES"] = "Catalog 데이터 모듈",
@@ -146,7 +191,9 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "특별 감사",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellewic, kellzilla, 그리고 모든 베타 테스터 여러분 — 감사합니다!",
+
     ["MODULE_ONEWOW"] = "OneWoW",
+
     ["UNIT_CTX_HEADER"] = "OneWoW",
     ["UNIT_CTX_ADD_PLAYER_NOTE"] = "메모 추가",
     ["UNIT_CTX_ADD_MOUNT_INFO"] = "탈것 정보 추가",
@@ -173,6 +220,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["UNIT_CTX_MOUNT_LABEL"] = "탈것: %s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "출처: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "상태: %s",
+
     -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > 설정",
     ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > 설정 > 언어",
@@ -295,6 +343,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["SRCH_PATH_SL_ADD"] = "Shopping List > 아이템 추가",
     ["SRCH_PATH_SL_REAGENTS"] = "Shopping List > 전문기술 재료",
     ["SRCH_PATH_SL_OVERLAYS"] = "Shopping List > 가방 오버레이",
+
     -- Search descriptions
     ["SRCH_DESC_OW_SETTINGS"] = "언어, 테마, 미니맵 버튼 및 전역 옵션",
     ["SRCH_DESC_OW_SETTINGS_LANGUAGE"] = "English, Español, 한국어, Français, Русский, Deutsch 중 선택",
@@ -421,6 +470,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["SRCH_DESC_SL_ADD"] = "필요한 아이템을 추적하려면 쇼핑 목록에 추가",
     ["SRCH_DESC_SL_REAGENTS"] = "전문기술 제조법을 쇼핑 목록에 연결하여 필요 재료 추적",
     ["SRCH_DESC_SL_OVERLAYS"] = "쇼핑 목록에 있는 가방 아이템 강조",
+
     ["BINDING_HEADER_ONEWOW"] = "|cFF00FF00OneWoW|r",
     ["BINDING_NAME_ONEWOW_TOGGLE"] = "OneWoW 창 전환",
     ["BINDING_NAME_ONEWOW_RELOAD_UI"] = "UI 재시작",

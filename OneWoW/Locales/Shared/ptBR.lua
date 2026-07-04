@@ -1,8 +1,7 @@
 local _, ns = ...
 
--- Machine-drafted — pending native review.
 ns.Locale:RegisterShared("ptBR", {
-    -- Language picker
+    -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "Seleção de idioma",
     ["LANGUAGE_DESC"] = "Escolha o idioma da interface do addon. As alterações são aplicadas na hora.",
 
@@ -18,7 +17,7 @@ ns.Locale:RegisterShared("ptBR", {
     ["THEME_GROUP_BOLD"] = "Ousado e estilizado",
     ["THEME_GROUP_LIGHT"] = "Claro e acessibilidade",
 
-    -- Theme display names
+    -- Theme display names (keyed THEME_<UPPER themeKey>; resolved at runtime)
     ["THEME_GREEN"] = "Verde floresta",
     ["THEME_BLUE"] = "Azul oceano",
     ["THEME_PURPLE"] = "Roxo real",
@@ -45,7 +44,7 @@ ns.Locale:RegisterShared("ptBR", {
     ["THEME_NIGHTFAE"] = "Crepúsculo dos Feéricos",
     ["THEME_HIGHCONTRAST"] = "Alto contraste",
 
-    -- Font section
+    -- Font section (font family names are proper nouns; "Font Size" uses FONT_SIZE global)
     ["FONT_SECTION"] = "Fonte",
     ["FONT_DESC"] = "Escolha a fonte usada em todos os addons do OneWoW. Fontes SharedMedia de outros addons também são suportadas e aparecerão na lista.",
     ["FONT_SIZE_DESC"] = "Ajustar o tamanho da fonte em todos os addons.",
@@ -58,10 +57,10 @@ ns.Locale:RegisterShared("ptBR", {
     ["VALUE_DISPLAY_REGIONAL"] = "Usar agrupamento numérico regional (idioma do cliente)",
     ["VALUE_DISPLAY_WHITE"] = "Usar valores em branco (modo letras; visual clássico quando desativado)",
 
-    -- Footer links
+    -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "Doar",
 
-    -- Minimap section labels
+    -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "Botão do minimapa",
     ["MINIMAP_SECTION_DESC"] = "Mostrar ou ocultar o botão do minimapa.",
     ["MINIMAP_SHOW_BTN"] = "Mostrar botão do minimapa",
@@ -71,7 +70,7 @@ ns.Locale:RegisterShared("ptBR", {
     -- Common
     ["CURRENT_VALUE"] = "Atual: %s",
 
-    -- consolidated
+    -- consolidated (cross-scope duplicates)
     ["ADD_ITEM"] = "Adicionar item",
     ["BATTLE_PET"] = "Mascote de batalha",
     ["BUTTON_SIZE"] = "Tamanho do botão",
@@ -108,7 +107,7 @@ ns.Locale:RegisterShared("ptBR", {
     ["GOLD_TOTAL"] = "Ouro total",
     ["WORLD_QUEST"] = "Missão mundial",
 
-    -- consolidated (bare-word terms)
+    -- consolidated (cross-scope bare-word terms)
     ["ITEM"] = "Item",
     ["RENAME"] = "Renomear",
     ["EXPANSION"] = "Expansão",
@@ -136,6 +135,15 @@ ns.Locale:RegisterShared("ptBR", {
     ["SESSION"] = "Sessão",
     ["SLOT"] = "Espaço",
     ["SUMMARY"] = "Resumo",
+
+    -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
+    -- in during a future consolidation pass. Each is one English word whose
+    -- translation diverges by grammatical context, so a single shared value can't fit:
+    --   Active, Expired, Personal, Minimal, Manual — adjectives that must agree in
+    --     gender/number with the noun they describe (e.g. fr actif/active,
+    --     es mínimo/mínima), which differs per call site.
+    --   Pin — two distinct senses: noun "map pin" (Catalog) vs verb "pin" (Trackers).
+    -- ("%d" is a bare format placeholder, also intentionally left scoped.)
 
     ["TOAST_ALERTS_SUBTAB"] = "Alertas",
     ["FEATURE_UNIT_STATUS_MISSING"] = "Não detectado",
@@ -204,11 +212,13 @@ ns.Locale:RegisterShared("ptBR", {
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT"] = "Máx. de alts mostrados",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_TOOLTIP"] = "Limita o número de linhas de melhoria de alts adicionadas à dica para que ela não fique muito longa quando você tem muitos alts. «TODOS» mostra cada alt que se qualifica.",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_ALL"] = "TODOS",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED"] = "Mostrar melhorias apenas para estes alts",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED_TOOLTIP"] = "Quando marcado, as melhorias de alts ficam limitadas aos alts que você escolheu abaixo. Quando desmarcado (padrão), todos os alts do AltTracker são considerados.",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_PICK"] = "+ Escolher alts",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NONE"] = "(nenhum alt selecionado)",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NO_ALTS"] = "(nenhum alt disponível — AltTracker não carregado ou nenhum alt registrado)",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT"] = "Ordenar alts por",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT_TOOLTIP"] = "Escolhe como a lista de melhorias de alts é ordenada antes do limite «Máx. alts exibidos».",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_DESC"] = "Melhoria (maior para menor)",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_ASC"] = "Melhoria (menor para maior)",
+    ["OVR_UPGRADE_ALT_SORT_NAME"] = "Nome (A-Z)",
+    ["OVR_UPGRADE_ALT_SORT_ILVL"] = "Nível do item (maior para menor)",
+    ["OVR_UPGRADE_ALT_SORT_LOGIN"] = "Último login (mais recente)",
     ["OVR_UPGRADE_SELF_SPEC_MATCH"] = "Corresponder apenas à minha especialização atual",
     ["OVR_UPGRADE_SELF_SPEC_MATCH_TOOLTIP"] = "Quando marcado, as melhorias só são acionadas para itens marcados para sua especialização atualmente ativa. Útil para classes de dupla especialização (ex. Guerreiro Fúria vs. Proteção) para evitar sugestões de escudo/1M/2M erradas para seu estilo atual. Quando desmarcado (padrão), qualquer item que sua classe possa equipar pode servir.",
     ["OVR_TOOLTIP_DETAIL_FULL"] = "Completo",
@@ -327,7 +337,8 @@ ns.Locale:RegisterShared("ptBR", {
     ["TOAST_NEW_RECIPE"] = "Nova receita!",
     ["TOAST_NEW_TMOG"] = "Nova aparência!",
     ["TOAST_INSTANCE_CLICK"] = "Clique para ver no Diário",
-    -- AH price source (shared)
+
+  -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "Dados de preço da CL",
     ["SHARED_AH_SOURCE_DESC"] = "A varredura do OneWoW armazena os preços em AltTracker - Auctions. O Auctionator usa seu próprio banco de dados quando você varre com esse addon. O TradeSkillMaster usa a cadeia de preço TSM definida abaixo (padrão dbmarket).",
     ["SHARED_AH_SOURCE_ONEWOW"] = "Varredura de CL do OneWoW",

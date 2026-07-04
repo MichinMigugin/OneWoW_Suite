@@ -447,6 +447,24 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
 
+    yOffset = ns.UI.BuildAltScopeSection(dsc, {
+        yOffset = yOffset,
+        x = 12,
+        getScope = function()
+            local s = Registry:GetFeatureSettings("tooltips", "itemtracker").altScope
+            if type(s) ~= "table" then s = { mode = "all", chars = {}, roles = {} } end
+            return s
+        end,
+        saveScope = function(s)
+            Registry:SetSetting("tooltips", "itemtracker", "altScope", s)
+        end,
+    })
+
+    yOffset = yOffset - 6
+
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
+    yOffset = yOffset - 12
+
     local reqHeader = OneWoW_GUI:CreateFS(dsc, 12)
     reqHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
     reqHeader:SetText(L["TIPS_ITEMTRACKER_REQUIRES_SECTION"])
@@ -1477,6 +1495,68 @@ local function ShowPetsDetail(split, dsc, feature, selectedRow)
     split.UpdateDetailThumb()
 end
 
+local function ShowRecipeKnowledgeDetail(split, dsc, feature, selectedRow)
+    local yOffset = -10
+
+    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
+    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    titleLabel:SetJustifyH("LEFT")
+    titleLabel:SetText(L[feature.title])
+    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
+    yOffset = yOffset - 12
+
+    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
+    descLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    descLabel:SetJustifyH("LEFT")
+    descLabel:SetWordWrap(true)
+    descLabel:SetSpacing(3)
+    descLabel:SetText(L[feature.description])
+    descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    yOffset = yOffset - descLabel:GetStringHeight() - 16
+
+    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
+        yOffset = yOffset,
+        statusLabel = L["FEATURE_STATUS_LABEL"],
+        enabledText = L["FEATURE_ENABLED"],
+        disabledText = L["FEATURE_DISABLED"],
+        enableBtnText = L["FEATURE_ENABLE_BTN"],
+        disableBtnText = L["FEATURE_DISABLE_BTN"],
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newState)
+            end
+        end,
+    })
+    yOffset = statusBlock.getBottomY() - 14
+
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
+    yOffset = yOffset - 12
+
+    yOffset = ns.UI.BuildAltScopeSection(dsc, {
+        yOffset = yOffset,
+        x = 12,
+        getScope = function()
+            local s = Registry:GetFeatureSettings("tooltips", "recipeknowledge").altScope
+            if type(s) ~= "table" then s = { mode = "all", chars = {}, roles = {} } end
+            return s
+        end,
+        saveScope = function(s)
+            Registry:SetSetting("tooltips", "recipeknowledge", "altScope", s)
+        end,
+    })
+
+    dsc:SetHeight(math.abs(yOffset) + 20)
+    OneWoW_GUI:ApplyFontToFrame(dsc)
+    split.UpdateDetailThumb()
+end
+
 local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     local dsc = split.detailScrollChild
     OneWoW_GUI:ClearFrame(dsc)
@@ -1508,6 +1588,11 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
 
     if feature.id == "itemtracker" then
         ShowItemTrackerDetail(split, dsc, feature, selectedRow)
+        return
+    end
+
+    if feature.id == "recipeknowledge" then
+        ShowRecipeKnowledgeDetail(split, dsc, feature, selectedRow)
         return
     end
 

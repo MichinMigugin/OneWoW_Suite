@@ -1,9 +1,9 @@
 local ADDON_NAME, ns = ...
 
--- Machine-drafted — pending native review
 ns.Locale:Register(ADDON_NAME, "esES", {
     ["ADDON_TITLE"] = "OneWoW",
 
+    -- Addon loader (ns:GetLoadFailureText); other tokens use Blizzard ADDON_* constants
     ["LOAD_FAIL_COMBAT"] = "No se puede cargar ese addon durante el combate - inténtalo de nuevo cuando termine el combate.",
     ["LOAD_FAIL_OPTED_OUT"] = "Ese addon está desactivado de forma suave para este personaje — actívalo primero en Gestionar funciones.",
     ["LOAD_FAIL_UNKNOWN"] = "No se pudo cargar ese addon.",
@@ -11,6 +11,35 @@ ns.Locale:Register(ADDON_NAME, "esES", {
     ["HOME_TAB"] = "OneWoW",
     ["PROFILES_SUBTAB"] = "Perfiles",
     ["MANAGE_FEATURES_SUBTAB"] = "Gestionar funciones",
+
+    -- Roles & Alts settings tab
+    ["ROLES_ALTS_SUBTAB"] = "Roles y alts",
+    ["ROLES_ALTS_TITLE"] = "Roles y alts",
+    ["ROLES_ALTS_DESC"] = "Crea roles (como Artesanos o Principales), asigna personajes y gestiona cuáles sigue OneWoW. Los roles permiten que las descripciones muestren información de alts solo de los personajes que te interesan.",
+    ["ROLES_SECTION"] = "Roles",
+    ["ROLES_SECTION_DESC"] = "Agrupa tus personajes en roles con nombre. Un personaje puede pertenecer a varios roles. Las descripciones con alcance de alt pueden usar estos roles.",
+    ["ROLES_NEW_BTN"] = "+ Nuevo rol",
+    ["ROLES_NONE"] = "Aún no hay roles. Crea uno para empezar.",
+    ["ROLES_MEMBER_COUNT"] = "%d personaje(s)",
+    ["ROLES_ASSIGN_BTN"] = "Asignar",
+    ["ROLES_NEW_TITLE"] = "Nuevo rol",
+    ["ROLES_RENAME_TITLE"] = "Renombrar rol",
+    ["ROLES_NAME_LABEL"] = "Nombre del rol",
+    ["ROLES_DELETE_CONFIRM"] = "¿Eliminar el rol \"%s\"? Los personajes conservan sus datos; solo se elimina la agrupación por rol.",
+    ["ROLES_ASSIGN_NONE"] = "No se encontraron personajes.",
+    ["CHARS_SECTION"] = "Personajes",
+    ["CHARS_SECTION_DESC"] = "Cada personaje del que OneWoW tiene datos. Selecciona personajes que hayas eliminado o renombrado en el juego y quítalos de todas las bases de datos de OneWoW. Tras la eliminación se recargará la interfaz.",
+    ["CHARS_NEED_ALTTRACKER"] = "Carga AltTracker para ver y gestionar tus personajes.",
+    ["CHARS_REMOVE_BTN"] = "Eliminar seleccionados",
+    ["CHARS_COUNT"] = "%d personajes encontrados en todas las bases",
+    ["CHARS_NONE"] = "No se encontraron personajes en ninguna base.",
+    ["CHARS_ROLES_LABEL"] = "Roles:",
+    ["CHARS_NO_ROLES"] = "\226\128\148",
+    ["CHARS_REMOVE_CONFIRM_TITLE"] = "Confirmar eliminación",
+    ["CHARS_REMOVE_CONFIRM"] = "¿Eliminar permanentemente %d personaje(s) de TODAS las bases de OneWoW?\n\n|cFFFF6666%s|r\n\nEsta acción no se puede deshacer. Se recargará la interfaz.",
+    ["CHARS_REMOVE_NONE_SELECTED"] = "Ningún personaje seleccionado.",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "Los roles de personajes, el filtrado de alts en descripciones y la eliminación de personajes borrados de las bases de OneWoW se gestionan en Ajustes \226\134\146 Roles y alts.",
+    ["SETTINGS_ROLES_ALTS_BTN"] = "Abrir Roles y alts",
 
     ["HOME_VERSION"] = "Versión",
     ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
@@ -38,6 +67,7 @@ ns.Locale:Register(ADDON_NAME, "esES", {
     ["MINIMAP_MODULES_LOADED"] = "%d módulos cargados",
     ["MINIMAP_RIGHT_CLICK"] = "Clic derecho para opciones",
 
+    -- CopyPaste dialog (ns.CopyPaste)
     ["COPYPASTE_HINT_COPY"] = "Pulsa Ctrl+C para copiar",
     ["COPYPASTE_HINT_COPY_MAC"] = "Pulsa Cmd+C para copiar",
 
@@ -191,6 +221,7 @@ ns.Locale:Register(ADDON_NAME, "esES", {
     ["UNIT_CTX_MOUNT_SOURCE"] = "Fuente: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Estado: %s",
 
+    -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Ajustes",
     ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Ajustes > Idioma",
     ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Ajustes > Tema",
@@ -313,6 +344,7 @@ ns.Locale:Register(ADDON_NAME, "esES", {
     ["SRCH_PATH_SL_REAGENTS"] = "Shopping List > Componentes de profesión",
     ["SRCH_PATH_SL_OVERLAYS"] = "Shopping List > Superposiciones de bolsas",
 
+    -- Search descriptions
     ["SRCH_DESC_OW_SETTINGS"] = "Idioma, tema, botón de minimapa y opciones globales",
     ["SRCH_DESC_OW_SETTINGS_LANGUAGE"] = "Elige entre inglés, español, coreano, francés, ruso, alemán",
     ["SRCH_DESC_OW_SETTINGS_THEME"] = "Elige entre muchos temas de color (menú agrupado), alto contraste, aleatorio por recarga, oscuro, claro y paletas estilizadas",

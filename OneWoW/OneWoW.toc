@@ -108,6 +108,7 @@ Services\ItemPrices.lua
 Services\RecipeKnownUtil.lua
 Services\overlay-icons.lua
 Services\upgrade-detection.lua
+Services\AltScope.lua
 Services\overlay-engine.lua
 Services\itemstatus.lua
 Services\toast-engine.lua
@@ -139,6 +140,7 @@ UI\MainWindow.lua
 UI\Minimap.lua
 UI\t-home.lua
 UI\t-settings.lua
+UI\t-rolesandalts.lua
 UI\t-profiles.lua
 UI\t-charprofiles.lua
 UI\t-managefeatures.lua

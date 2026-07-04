@@ -1,9 +1,9 @@
 local ADDON_NAME, ns = ...
 
--- Machine-drafted — pending native review
 ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["ADDON_TITLE"] = "OneWoW",
 
+    -- Addon loader (ns:GetLoadFailureText); other tokens use Blizzard ADDON_* constants
     ["LOAD_FAIL_COMBAT"] = "战斗中无法加载该插件 - 请在战斗结束后重试。",
     ["LOAD_FAIL_OPTED_OUT"] = "该插件已对此角色软禁用 — 请先在“管理功能”中启用它。",
     ["LOAD_FAIL_UNKNOWN"] = "无法加载该插件。",
@@ -11,6 +11,35 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["HOME_TAB"] = "OneWoW",
     ["PROFILES_SUBTAB"] = "配置文件",
     ["MANAGE_FEATURES_SUBTAB"] = "管理功能",
+
+    -- Roles & Alts settings tab
+    ["ROLES_ALTS_SUBTAB"] = "角色与小号",
+    ["ROLES_ALTS_TITLE"] = "角色与小号",
+    ["ROLES_ALTS_DESC"] = "创建角色分组（如工匠或主力），分配角色并管理 OneWoW 跟踪的角色。分组可让提示信息仅显示你关心的小号数据。",
+    ["ROLES_SECTION"] = "分组",
+    ["ROLES_SECTION_DESC"] = "将角色归入命名分组。一个角色可属于多个分组。支持小号范围的提示可使用这些分组。",
+    ["ROLES_NEW_BTN"] = "+ 新建分组",
+    ["ROLES_NONE"] = "尚无分组。创建一个开始吧。",
+    ["ROLES_MEMBER_COUNT"] = "%d 个角色",
+    ["ROLES_ASSIGN_BTN"] = "分配",
+    ["ROLES_NEW_TITLE"] = "新建分组",
+    ["ROLES_RENAME_TITLE"] = "重命名分组",
+    ["ROLES_NAME_LABEL"] = "分组名称",
+    ["ROLES_DELETE_CONFIRM"] = "删除分组“%s”？角色数据保留，仅移除分组归类。",
+    ["ROLES_ASSIGN_NONE"] = "未找到角色。",
+    ["CHARS_SECTION"] = "角色",
+    ["CHARS_SECTION_DESC"] = "OneWoW 有数据的所有角色。选择已在游戏中删除或重命名的角色，从所有 OneWoW 数据库中移除。移除后将重新加载界面。",
+    ["CHARS_NEED_ALTTRACKER"] = "加载 AltTracker 以查看和管理角色。",
+    ["CHARS_REMOVE_BTN"] = "移除所选",
+    ["CHARS_COUNT"] = "在所有数据库中找到 %d 个角色",
+    ["CHARS_NONE"] = "任何数据库中均未找到角色。",
+    ["CHARS_ROLES_LABEL"] = "分组：",
+    ["CHARS_NO_ROLES"] = "\226\128\148",
+    ["CHARS_REMOVE_CONFIRM_TITLE"] = "确认移除",
+    ["CHARS_REMOVE_CONFIRM"] = "从所有 OneWoW 数据库中永久删除 %d 个角色？\n\n|cFFFF6666%s|r\n\n此操作无法撤销。将重新加载界面。",
+    ["CHARS_REMOVE_NONE_SELECTED"] = "未选择角色。",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "角色分组、提示信息小号筛选以及从 OneWoW 数据库移除已删角色，均在设置 \226\134\146 角色与小号 中管理。",
+    ["SETTINGS_ROLES_ALTS_BTN"] = "打开角色与小号",
 
     ["HOME_VERSION"] = "版本",
     ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
@@ -38,6 +67,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["MINIMAP_MODULES_LOADED"] = "已加载 %d 个模块",
     ["MINIMAP_RIGHT_CLICK"] = "右键点击查看选项",
 
+    -- CopyPaste dialog (ns.CopyPaste)
     ["COPYPASTE_HINT_COPY"] = "按 Ctrl+C 复制",
     ["COPYPASTE_HINT_COPY_MAC"] = "按 Cmd+C 复制",
 
@@ -191,6 +221,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["UNIT_CTX_MOUNT_SOURCE"] = "来源：%s",
     ["UNIT_CTX_MOUNT_STATUS"] = "状态：%s",
 
+    -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > 设置",
     ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > 设置 > 语言",
     ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > 设置 > 主题",
@@ -313,6 +344,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["SRCH_PATH_SL_REAGENTS"] = "Shopping List > 专业材料",
     ["SRCH_PATH_SL_OVERLAYS"] = "Shopping List > 背包覆盖层",
 
+    -- Search descriptions
     ["SRCH_DESC_OW_SETTINGS"] = "语言、主题、小地图按钮和全局选项",
     ["SRCH_DESC_OW_SETTINGS_LANGUAGE"] = "可选英语、西班牙语、韩语、法语、俄语、德语",
     ["SRCH_DESC_OW_SETTINGS_THEME"] = "可选多种配色主题（分组菜单）、高对比度、每次重载随机、暗色、亮色和风格化调色板",

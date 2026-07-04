@@ -1,8 +1,7 @@
 local _, ns = ...
 
--- Machine-drafted — pending native review.
 ns.Locale:RegisterShared("ruRU", {
-    -- Language picker
+    -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "Выбор языка",
     ["LANGUAGE_DESC"] = "Выберите язык интерфейса аддона. Изменения применяются сразу.",
 
@@ -18,7 +17,7 @@ ns.Locale:RegisterShared("ruRU", {
     ["THEME_GROUP_BOLD"] = "Яркие и стильные",
     ["THEME_GROUP_LIGHT"] = "Светлые и доступность",
 
-    -- Theme display names
+    -- Theme display names (keyed THEME_<UPPER themeKey>; resolved at runtime)
     ["THEME_GREEN"] = "Лесной зелёный",
     ["THEME_BLUE"] = "Океанский синий",
     ["THEME_PURPLE"] = "Королевский фиолетовый",
@@ -45,7 +44,7 @@ ns.Locale:RegisterShared("ruRU", {
     ["THEME_NIGHTFAE"] = "Сумерки Ночного Народца",
     ["THEME_HIGHCONTRAST"] = "Высокий контраст",
 
-    -- Font section
+    -- Font section (font family names are proper nouns; "Font Size" uses FONT_SIZE global)
     ["FONT_SECTION"] = "Шрифт",
     ["FONT_DESC"] = "Выберите шрифт для всех аддонов OneWoW. Шрифты SharedMedia из других аддонов также поддерживаются и появятся в списке.",
     ["FONT_SIZE_DESC"] = "Настройка размера шрифта во всех аддонах.",
@@ -58,10 +57,10 @@ ns.Locale:RegisterShared("ruRU", {
     ["VALUE_DISPLAY_REGIONAL"] = "Использовать региональную группировку цифр (язык клиента)",
     ["VALUE_DISPLAY_WHITE"] = "Использовать белые значения (режим букв; классический вид, если выключено)",
 
-    -- Footer links
+    -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "Поддержать",
 
-    -- Minimap section labels
+    -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "Кнопка миникарты",
     ["MINIMAP_SECTION_DESC"] = "Показать или скрыть кнопку миникарты.",
     ["MINIMAP_SHOW_BTN"] = "Показывать кнопку миникарты",
@@ -71,7 +70,7 @@ ns.Locale:RegisterShared("ruRU", {
     -- Common
     ["CURRENT_VALUE"] = "Текущее: %s",
 
-    -- consolidated
+    -- consolidated (cross-scope duplicates)
     ["ADD_ITEM"] = "Добавить предмет",
     ["BATTLE_PET"] = "Боевой питомец",
     ["BUTTON_SIZE"] = "Размер кнопок",
@@ -108,7 +107,7 @@ ns.Locale:RegisterShared("ruRU", {
     ["GOLD_TOTAL"] = "Всего золота",
     ["WORLD_QUEST"] = "Локальное задание",
 
-    -- consolidated (bare-word terms)
+    -- consolidated (cross-scope bare-word terms)
     ["ITEM"] = "Предмет",
     ["RENAME"] = "Переименовать",
     ["EXPANSION"] = "Дополнение",
@@ -136,6 +135,15 @@ ns.Locale:RegisterShared("ruRU", {
     ["SESSION"] = "Сессия",
     ["SLOT"] = "Слот",
     ["SUMMARY"] = "Сводка",
+
+    -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
+    -- in during a future consolidation pass. Each is one English word whose
+    -- translation diverges by grammatical context, so a single shared value can't fit:
+    --   Active, Expired, Personal, Minimal, Manual — adjectives that must agree in
+    --     gender/number with the noun they describe (e.g. fr actif/active,
+    --     es mínimo/mínima), which differs per call site.
+    --   Pin — two distinct senses: noun "map pin" (Catalog) vs verb "pin" (Trackers).
+    -- ("%d" is a bare format placeholder, also intentionally left scoped.)
 
     ["TOAST_ALERTS_SUBTAB"] = "Оповещения",
     ["FEATURE_UNIT_STATUS_MISSING"] = "Не обнаружено",
@@ -204,11 +212,13 @@ ns.Locale:RegisterShared("ruRU", {
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT"] = "Макс. показываемых твинков",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_TOOLTIP"] = "Ограничивает число строк улучшений твинков, добавляемых в подсказку, чтобы она не становилась слишком длинной при большом числе твинков. «ВСЕ» показывает каждого подходящего твинка.",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_ALL"] = "ВСЕ",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED"] = "Показывать улучшения только для этих твинков",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED_TOOLTIP"] = "Если отмечено, улучшения твинков ограничены твинками, выбранными вами ниже. Если не отмечено (по умолчанию), учитываются все твинки из AltTracker.",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_PICK"] = "+ Выбрать твинков",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NONE"] = "(твинки не выбраны)",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NO_ALTS"] = "(нет доступных твинков — AltTracker не загружен или твинки не записаны)",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT"] = "Сортировать твинков по",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT_TOOLTIP"] = "Задаёт порядок списка улучшений для твинков до применения лимита «Макс. твинков».",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_DESC"] = "Прирост улучшения (по убыванию)",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_ASC"] = "Прирост улучшения (по возрастанию)",
+    ["OVR_UPGRADE_ALT_SORT_NAME"] = "Имя (А–Я)",
+    ["OVR_UPGRADE_ALT_SORT_ILVL"] = "Уровень предмета (по убыванию)",
+    ["OVR_UPGRADE_ALT_SORT_LOGIN"] = "Последний вход (сначала недавние)",
     ["OVR_UPGRADE_SELF_SPEC_MATCH"] = "Соответствовать только моей текущей специализации",
     ["OVR_UPGRADE_SELF_SPEC_MATCH_TOOLTIP"] = "Если отмечено, улучшения срабатывают только для предметов, помеченных для вашей текущей активной специализации. Полезно для классов с двумя специализациями (напр. воин Неистовства и Защиты), чтобы избежать неподходящих для текущего стиля игры предложений щита/одноручного/двуручного. Если не отмечено (по умолчанию), подойти может любой предмет, который может надеть ваш класс.",
     ["OVR_TOOLTIP_DETAIL_FULL"] = "Полная",
@@ -327,7 +337,8 @@ ns.Locale:RegisterShared("ruRU", {
     ["TOAST_NEW_RECIPE"] = "Новый рецепт!",
     ["TOAST_NEW_TMOG"] = "Новый облик!",
     ["TOAST_INSTANCE_CLICK"] = "Нажмите, чтобы посмотреть в журнале",
-    -- AH price source (shared)
+
+  -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "Данные цены аукциона",
     ["SHARED_AH_SOURCE_DESC"] = "Сканирование OneWoW хранит цены в AltTracker - Auctions. Auctionator использует свою базу данных, когда вы сканируете этим аддоном. TradeSkillMaster использует строку цены TSM, заданную ниже (по умолчанию dbmarket).",
     ["SHARED_AH_SOURCE_ONEWOW"] = "Сканирование аукциона OneWoW",

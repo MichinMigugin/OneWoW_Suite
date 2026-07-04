@@ -116,12 +116,15 @@ local function RecipeKnowledgeProvider(_, context)
     local OneWoW_GUI     = OneWoW_GUI
     local currentCharKey = OneWoW_GUI and OneWoW_GUI:BuildCharKey()
     local currentKnows   = Util and Util:IsRecipeKnown(context.itemID)
+    local altScope       = OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "recipeknowledge").altScope
 
     local knownBy  = {}
     local unknownBy = {}
 
     for charKey, charData in pairs(profChars) do
-        if charData.professions then
+        -- The current character is "you", not an alt, so it always shows; alts
+        -- are filtered by the feature's alt scope.
+        if charData.professions and (charKey == currentCharKey or OneWoW.AltScope:IsCharIncluded(charKey, altScope)) then
             local hasProfession = false
             for _, profData in pairs(charData.professions) do
                 if ProfNamesMatch(profData.name, profName) then

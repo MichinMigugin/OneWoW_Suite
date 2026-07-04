@@ -3,6 +3,17 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
+    ["TIPS_SCOPE_HEADER"] = "Область твинков",
+    ["TIPS_SCOPE_ALL"] = "Показывать для всех персонажей (по умолчанию)",
+    ["TIPS_SCOPE_SELECTED"] = "Показывать только для этих персонажей / ролей",
+    ["TIPS_SCOPE_ADD_ALT"] = "+ Добавить твинка",
+    ["TIPS_SCOPE_ADD_ROLE"] = "+ Добавить роль",
+    ["TIPS_SCOPE_NONE_SELECTED"] = "Ничего не выбрано \226\128\148 данные твинков не появятся.",
+    ["TIPS_SCOPE_NO_ALTS"] = "Персонажи не найдены.",
+    ["TIPS_SCOPE_NO_ROLES"] = "Ролей пока нет \226\128\148 создайте в Роли и твинки.",
+    ["TIPS_SCOPE_EXCLUDE_NOTE"] = "При « Только эти » все не добавленные персонажи и роли исключаются. Подсказку видят все \226\128\148 ограничиваются только данные твинков.",
+    ["TIPS_SCOPE_MANAGE_LINK"] = "Управлять Роли и твинки здесь \226\134\146",
+
     ["OVERLAYS_SUBTAB"] = "Наложения",
     ["TOOLTIPS_SUBTAB"] = "Подсказки",
     ["CTX_OPEN_QOL"] = "Открыть QoL",

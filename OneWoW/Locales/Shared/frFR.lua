@@ -1,8 +1,7 @@
 local _, ns = ...
 
--- Machine-drafted — pending native review.
 ns.Locale:RegisterShared("frFR", {
-    -- Language picker
+    -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "Sélection de la langue",
     ["LANGUAGE_DESC"] = "Choisissez la langue de l'interface de l'addon. Les changements s'appliquent immédiatement.",
 
@@ -18,7 +17,7 @@ ns.Locale:RegisterShared("frFR", {
     ["THEME_GROUP_BOLD"] = "Audacieux & stylisé",
     ["THEME_GROUP_LIGHT"] = "Clair & accessibilité",
 
-    -- Theme display names
+    -- Theme display names (keyed THEME_<UPPER themeKey>; resolved at runtime)
     ["THEME_GREEN"] = "Vert forêt",
     ["THEME_BLUE"] = "Bleu océan",
     ["THEME_PURPLE"] = "Violet royal",
@@ -45,7 +44,7 @@ ns.Locale:RegisterShared("frFR", {
     ["THEME_NIGHTFAE"] = "Crépuscule des Faë",
     ["THEME_HIGHCONTRAST"] = "Contraste élevé",
 
-    -- Font section
+    -- Font section (font family names are proper nouns; "Font Size" uses FONT_SIZE global)
     ["FONT_SECTION"] = "Police",
     ["FONT_DESC"] = "Choisissez la police utilisée par tous les addons OneWoW. Les polices SharedMedia d'autres addons sont aussi prises en charge et apparaîtront dans la liste.",
     ["FONT_SIZE_DESC"] = "Ajuster la taille de police sur tous les addons.",
@@ -58,10 +57,10 @@ ns.Locale:RegisterShared("frFR", {
     ["VALUE_DISPLAY_REGIONAL"] = "Utiliser le séparateur de milliers régional (locale du client)",
     ["VALUE_DISPLAY_WHITE"] = "Utiliser des valeurs blanches (mode lettres ; aspect classique si désactivé)",
 
-    -- Footer links
+    -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "Faire un don",
 
-    -- Minimap section labels
+    -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "Bouton de la minicarte",
     ["MINIMAP_SECTION_DESC"] = "Afficher ou masquer le bouton de la minicarte.",
     ["MINIMAP_SHOW_BTN"] = "Afficher le bouton de la minicarte",
@@ -71,7 +70,7 @@ ns.Locale:RegisterShared("frFR", {
     -- Common
     ["CURRENT_VALUE"] = "Actuel : %s",
 
-    -- consolidated
+    -- consolidated (cross-scope duplicates)
     ["ADD_ITEM"] = "Ajouter un objet",
     ["BATTLE_PET"] = "Mascotte de combat",
     ["BUTTON_SIZE"] = "Taille des boutons",
@@ -108,7 +107,7 @@ ns.Locale:RegisterShared("frFR", {
     ["GOLD_TOTAL"] = "Or total",
     ["WORLD_QUEST"] = "Quête du monde",
 
-    -- consolidated (bare-word terms)
+    -- consolidated (cross-scope bare-word terms)
     ["ITEM"] = "Objet",
     ["RENAME"] = "Renommer",
     ["EXPANSION"] = "Extension",
@@ -136,6 +135,15 @@ ns.Locale:RegisterShared("frFR", {
     ["SESSION"] = "Session",
     ["SLOT"] = "Emplacement",
     ["SUMMARY"] = "Résumé",
+
+    -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
+    -- in during a future consolidation pass. Each is one English word whose
+    -- translation diverges by grammatical context, so a single shared value can't fit:
+    --   Active, Expired, Personal, Minimal, Manual — adjectives that must agree in
+    --     gender/number with the noun they describe (e.g. fr actif/active,
+    --     es mínimo/mínima), which differs per call site.
+    --   Pin — two distinct senses: noun "map pin" (Catalog) vs verb "pin" (Trackers).
+    -- ("%d" is a bare format placeholder, also intentionally left scoped.)
 
     ["TOAST_ALERTS_SUBTAB"] = "Alertes",
     ["FEATURE_UNIT_STATUS_MISSING"] = "Non détecté",
@@ -204,11 +212,13 @@ ns.Locale:RegisterShared("frFR", {
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT"] = "Rerolls max affichés",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_TOOLTIP"] = "Limite le nombre de lignes d'amélioration de rerolls ajoutées à l'infobulle afin qu'elle ne devienne pas trop longue quand vous avez beaucoup de rerolls. « TOUS » affiche chaque reroll qui convient.",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_ALL"] = "TOUS",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED"] = "Afficher les améliorations uniquement pour ces rerolls",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED_TOOLTIP"] = "Quand coché, les améliorations des rerolls sont limitées aux rerolls que vous avez choisis ci-dessous. Quand décoché (par défaut), tous les rerolls d'AltTracker sont pris en compte.",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_PICK"] = "+ Choisir des rerolls",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NONE"] = "(aucun reroll sélectionné)",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NO_ALTS"] = "(aucun reroll disponible — AltTracker non chargé ou aucun reroll enregistré)",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT"] = "Trier les alts par",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT_TOOLTIP"] = "Définit l'ordre de la liste d'amélioration des alts avant l'application de la limite « Alts max. affichés ».",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_DESC"] = "Gain d'amélioration (élevé à faible)",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_ASC"] = "Gain d'amélioration (faible à élevé)",
+    ["OVR_UPGRADE_ALT_SORT_NAME"] = "Nom (A-Z)",
+    ["OVR_UPGRADE_ALT_SORT_ILVL"] = "Niveau d'objet (élevé à faible)",
+    ["OVR_UPGRADE_ALT_SORT_LOGIN"] = "Dernière connexion (récent d'abord)",
     ["OVR_UPGRADE_SELF_SPEC_MATCH"] = "Correspondre uniquement à ma spé actuelle",
     ["OVR_UPGRADE_SELF_SPEC_MATCH_TOOLTIP"] = "Quand coché, les améliorations ne se déclenchent que pour les objets marqués pour votre spécialisation actuellement active. Utile pour les classes à double spé (ex. Guerrier Fureur vs Protection) pour éviter les suggestions de bouclier/1M/2M inadaptées à votre style actuel. Quand décoché (par défaut), tout objet équipable par votre classe peut convenir.",
     ["OVR_TOOLTIP_DETAIL_FULL"] = "Complet",
@@ -327,7 +337,8 @@ ns.Locale:RegisterShared("frFR", {
     ["TOAST_NEW_RECIPE"] = "Nouvelle recette !",
     ["TOAST_NEW_TMOG"] = "Nouvelle apparence !",
     ["TOAST_INSTANCE_CLICK"] = "Cliquez pour voir dans le Journal",
-    -- AH price source (shared)
+
+  -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "Données de prix HV",
     ["SHARED_AH_SOURCE_DESC"] = "Le scan OneWoW stocke les prix dans AltTracker - Auctions. Auctionator utilise sa propre base de données quand vous scannez avec cet addon. TradeSkillMaster utilise la chaîne de prix TSM définie ci-dessous (par défaut dbmarket).",
     ["SHARED_AH_SOURCE_ONEWOW"] = "Scan HV OneWoW",

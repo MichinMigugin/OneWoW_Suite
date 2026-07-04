@@ -1,9 +1,9 @@
 local ADDON_NAME, ns = ...
 
--- Machine-drafted — pending native review
 ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["ADDON_TITLE"] = "OneWoW",
 
+    -- Addon loader (ns:GetLoadFailureText); other tokens use Blizzard ADDON_* constants
     ["LOAD_FAIL_COMBAT"] = "Não é possível carregar esse addon durante o combate - tente novamente após o combate terminar.",
     ["LOAD_FAIL_OPTED_OUT"] = "Esse addon está desativado de forma suave para este personagem — ative-o primeiro em Gerenciar funcionalidades.",
     ["LOAD_FAIL_UNKNOWN"] = "Não foi possível carregar esse addon.",
@@ -11,6 +11,35 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["HOME_TAB"] = "OneWoW",
     ["PROFILES_SUBTAB"] = "Perfis",
     ["MANAGE_FEATURES_SUBTAB"] = "Gerenciar funcionalidades",
+
+    -- Roles & Alts settings tab
+    ["ROLES_ALTS_SUBTAB"] = "Funções e alts",
+    ["ROLES_ALTS_TITLE"] = "Funções e alts",
+    ["ROLES_ALTS_DESC"] = "Crie funções (como Artesãos ou Mains), atribua personagens e gerencie quais o OneWoW acompanha. As funções permitem que as dicas mostrem informações de alt apenas dos personagens que você quer.",
+    ["ROLES_SECTION"] = "Funções",
+    ["ROLES_SECTION_DESC"] = "Agrupe seus personagens em funções nomeadas. Um personagem pode pertencer a várias funções. Dicas com escopo de alt podem usar essas funções.",
+    ["ROLES_NEW_BTN"] = "+ Nova função",
+    ["ROLES_NONE"] = "Nenhuma função ainda. Crie uma para começar.",
+    ["ROLES_MEMBER_COUNT"] = "%d personagem(ns)",
+    ["ROLES_ASSIGN_BTN"] = "Atribuir",
+    ["ROLES_NEW_TITLE"] = "Nova função",
+    ["ROLES_RENAME_TITLE"] = "Renomear função",
+    ["ROLES_NAME_LABEL"] = "Nome da função",
+    ["ROLES_DELETE_CONFIRM"] = "Excluir a função \"%s\"? Os personagens mantêm os dados; apenas o agrupamento por função é removido.",
+    ["ROLES_ASSIGN_NONE"] = "Nenhum personagem encontrado.",
+    ["CHARS_SECTION"] = "Personagens",
+    ["CHARS_SECTION_DESC"] = "Cada personagem do qual o OneWoW tem dados. Selecione personagens excluídos ou renomeados no jogo e remova-os de todos os bancos de dados do OneWoW. A interface será recarregada após a remoção.",
+    ["CHARS_NEED_ALTTRACKER"] = "Carregue o AltTracker para ver e gerenciar seus personagens.",
+    ["CHARS_REMOVE_BTN"] = "Remover selecionados",
+    ["CHARS_COUNT"] = "%d personagens encontrados em todos os bancos",
+    ["CHARS_NONE"] = "Nenhum personagem encontrado em nenhum banco.",
+    ["CHARS_ROLES_LABEL"] = "Funções:",
+    ["CHARS_NO_ROLES"] = "\226\128\148",
+    ["CHARS_REMOVE_CONFIRM_TITLE"] = "Confirmar remoção",
+    ["CHARS_REMOVE_CONFIRM"] = "Excluir permanentemente %d personagem(ns) de TODOS os bancos do OneWoW?\n\n|cFFFF6666%s|r\n\nIsso não pode ser desfeito. A interface será recarregada.",
+    ["CHARS_REMOVE_NONE_SELECTED"] = "Nenhum personagem selecionado.",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "Funções de personagem, filtro de alt nas dicas e remoção de personagens excluídos dos bancos do OneWoW são gerenciados em Configurações \226\134\146 Funções e alts.",
+    ["SETTINGS_ROLES_ALTS_BTN"] = "Abrir Funções e alts",
 
     ["HOME_VERSION"] = "Versão",
     ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
@@ -38,6 +67,7 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["MINIMAP_MODULES_LOADED"] = "%d módulos carregados",
     ["MINIMAP_RIGHT_CLICK"] = "Clique direito para opções",
 
+    -- CopyPaste dialog (ns.CopyPaste)
     ["COPYPASTE_HINT_COPY"] = "Pressione Ctrl+C para copiar",
     ["COPYPASTE_HINT_COPY_MAC"] = "Pressione Cmd+C para copiar",
 
@@ -191,6 +221,7 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["UNIT_CTX_MOUNT_SOURCE"] = "Fonte: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Status: %s",
 
+    -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Configurações",
     ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Configurações > Idioma",
     ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Configurações > Tema",
@@ -313,6 +344,7 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["SRCH_PATH_SL_REAGENTS"] = "Shopping List > Reagentes de profissão",
     ["SRCH_PATH_SL_OVERLAYS"] = "Shopping List > Sobreposições de bolsas",
 
+    -- Search descriptions
     ["SRCH_DESC_OW_SETTINGS"] = "Idioma, tema, botão do minimapa e opções globais",
     ["SRCH_DESC_OW_SETTINGS_LANGUAGE"] = "Escolha entre inglês, espanhol, coreano, francês, russo, alemão",
     ["SRCH_DESC_OW_SETTINGS_THEME"] = "Escolha entre muitos temas de cor (menu agrupado), alto contraste, aleatório por recarga, escuro, claro e paletas estilizadas",

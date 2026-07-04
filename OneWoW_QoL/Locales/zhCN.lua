@@ -3,6 +3,17 @@ local ADDON_NAME = ...
 -- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
+    ["TIPS_SCOPE_HEADER"] = "小号范围",
+    ["TIPS_SCOPE_ALL"] = "显示所有角色（默认）",
+    ["TIPS_SCOPE_SELECTED"] = "仅显示这些角色 / 分组",
+    ["TIPS_SCOPE_ADD_ALT"] = "+ 添加小号",
+    ["TIPS_SCOPE_ADD_ROLE"] = "+ 添加分组",
+    ["TIPS_SCOPE_NONE_SELECTED"] = "未选择任何项 \226\128\148 不会显示小号信息。",
+    ["TIPS_SCOPE_NO_ALTS"] = "未找到角色。",
+    ["TIPS_SCOPE_NO_ROLES"] = "尚无分组 \226\128\148 请在「角色与小号」中创建。",
+    ["TIPS_SCOPE_EXCLUDE_NOTE"] = "选择「仅这些」时，未添加的角色和分组会被排除。所有人仍能看到提示 \226\128\148 这仅限制显示哪些小号数据。",
+    ["TIPS_SCOPE_MANAGE_LINK"] = "在此管理角色与小号 \226\134\146",
+
     ["OVERLAYS_SUBTAB"] = "覆盖层",
     ["TOOLTIPS_SUBTAB"] = "鼠标提示",
     ["CTX_OPEN_QOL"] = "打开 QoL",

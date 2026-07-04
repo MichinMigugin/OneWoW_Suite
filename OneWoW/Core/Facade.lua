@@ -34,6 +34,7 @@ local SERVICE_KEYS = {
     "ItemPrices",
     "RecipeKnownUtil",
     "UpgradeDetection",
+    "AltScope",
 }
 
 for _, key in ipairs(SERVICE_KEYS) do

@@ -43,6 +43,7 @@ Data\d-professions.lua
 Data\d-season.lua
 Data\ShortNames.lua
 
+Core\CharacterCleanup.lua
 Core\API.lua
 
 # Main Addon File

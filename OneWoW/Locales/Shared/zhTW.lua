@@ -1,8 +1,7 @@
 local _, ns = ...
 
--- Machine-drafted — pending native review.
 ns.Locale:RegisterShared("zhTW", {
-    -- Language picker
+    -- Language picker (native names come from Locale.SUPPORTED, not from here)
     ["LANGUAGE_SELECTION"] = "語言選擇",
     ["LANGUAGE_DESC"] = "選擇插件介面使用的語言。變更會立即生效。",
 
@@ -18,7 +17,7 @@ ns.Locale:RegisterShared("zhTW", {
     ["THEME_GROUP_BOLD"] = "大膽與個性",
     ["THEME_GROUP_LIGHT"] = "淺色與無障礙",
 
-    -- Theme display names
+    -- Theme display names (keyed THEME_<UPPER themeKey>; resolved at runtime)
     ["THEME_GREEN"] = "森林綠",
     ["THEME_BLUE"] = "海洋藍",
     ["THEME_PURPLE"] = "皇家紫",
@@ -45,7 +44,7 @@ ns.Locale:RegisterShared("zhTW", {
     ["THEME_NIGHTFAE"] = "暗夜仙林暮光",
     ["THEME_HIGHCONTRAST"] = "高對比",
 
-    -- Font section
+    -- Font section (font family names are proper nouns; "Font Size" uses FONT_SIZE global)
     ["FONT_SECTION"] = "字型",
     ["FONT_DESC"] = "選擇所有 OneWoW 插件使用的字型。也支援來自其他插件的 SharedMedia 字型，它們會出現在清單中。",
     ["FONT_SIZE_DESC"] = "調整所有插件的字型大小。",
@@ -58,10 +57,10 @@ ns.Locale:RegisterShared("zhTW", {
     ["VALUE_DISPLAY_REGIONAL"] = "使用區域數字分組（用戶端地區設定）",
     ["VALUE_DISPLAY_WHITE"] = "使用白色數值（字母模式；關閉時為經典外觀）",
 
-    -- Footer links
+    -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "贊助",
 
-    -- Minimap section labels
+    -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "小地圖按鈕",
     ["MINIMAP_SECTION_DESC"] = "顯示或隱藏小地圖按鈕。",
     ["MINIMAP_SHOW_BTN"] = "顯示小地圖按鈕",
@@ -71,7 +70,7 @@ ns.Locale:RegisterShared("zhTW", {
     -- Common
     ["CURRENT_VALUE"] = "目前：%s",
 
-    -- consolidated
+    -- consolidated (cross-scope duplicates)
     ["ADD_ITEM"] = "新增物品",
     ["BATTLE_PET"] = "戰鬥寵物",
     ["BUTTON_SIZE"] = "按鈕大小",
@@ -108,7 +107,7 @@ ns.Locale:RegisterShared("zhTW", {
     ["GOLD_TOTAL"] = "金幣總計",
     ["WORLD_QUEST"] = "世界任務",
 
-    -- consolidated (bare-word terms)
+    -- consolidated (cross-scope bare-word terms)
     ["ITEM"] = "物品",
     ["RENAME"] = "重新命名",
     ["EXPANSION"] = "資料片",
@@ -136,6 +135,15 @@ ns.Locale:RegisterShared("zhTW", {
     ["SESSION"] = "工作階段",
     ["SLOT"] = "欄位",
     ["SUMMARY"] = "概要",
+
+    -- Deliberately NOT consolidated into shared (kept per-scope) — do not move these
+    -- in during a future consolidation pass. Each is one English word whose
+    -- translation diverges by grammatical context, so a single shared value can't fit:
+    --   Active, Expired, Personal, Minimal, Manual — adjectives that must agree in
+    --     gender/number with the noun they describe (e.g. fr actif/active,
+    --     es mínimo/mínima), which differs per call site.
+    --   Pin — two distinct senses: noun "map pin" (Catalog) vs verb "pin" (Trackers).
+    -- ("%d" is a bare format placeholder, also intentionally left scoped.)
 
     ["TOAST_ALERTS_SUBTAB"] = "彈出提示",
     ["FEATURE_UNIT_STATUS_MISSING"] = "未偵測到",
@@ -204,11 +212,13 @@ ns.Locale:RegisterShared("zhTW", {
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT"] = "顯示的分身上限",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_TOOLTIP"] = "限制加入滑鼠提示的分身升級行數，以免在你有很多分身時變得過長。「全部」會顯示每個符合條件的分身。",
     ["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_ALL"] = "全部",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED"] = "僅為這些分身顯示升級",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_ENABLED_TOOLTIP"] = "勾選後，分身升級僅限於你在下方選擇的分身。取消勾選（預設）時，會考慮 AltTracker 中的所有分身。",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_PICK"] = "+ 選擇分身",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NONE"] = "（未選擇分身）",
-    ["OVR_UPGRADE_TOOLTIP_WHITELIST_NO_ALTS"] = "（無可用分身 — AltTracker 未載入或未記錄分身）",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT"] = "分身排序依據",
+    ["OVR_UPGRADE_TOOLTIP_ALT_SORT_TOOLTIP"] = "在套用「最多顯示分身數」限制之前，選擇分身升級清單的排序方式。",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_DESC"] = "升級幅度（高到低）",
+    ["OVR_UPGRADE_ALT_SORT_UPGRADE_ASC"] = "升級幅度（低到高）",
+    ["OVR_UPGRADE_ALT_SORT_NAME"] = "名稱（A-Z）",
+    ["OVR_UPGRADE_ALT_SORT_ILVL"] = "物品等級（高到低）",
+    ["OVR_UPGRADE_ALT_SORT_LOGIN"] = "最近登入（最新優先）",
     ["OVR_UPGRADE_SELF_SPEC_MATCH"] = "僅符合我的目前專精",
     ["OVR_UPGRADE_SELF_SPEC_MATCH_TOOLTIP"] = "勾選後，升級僅對標記為你目前啟用專精的物品觸發。對雙專精職業（如 武器/防護 戰士）很有用，可避免不適合你目前玩法的盾牌/單手/雙手建議。取消勾選（預設）時，你職業可裝備的任何物品都可能符合條件。",
     ["OVR_TOOLTIP_DETAIL_FULL"] = "完整",
@@ -327,7 +337,8 @@ ns.Locale:RegisterShared("zhTW", {
     ["TOAST_NEW_RECIPE"] = "新配方！",
     ["TOAST_NEW_TMOG"] = "新外觀！",
     ["TOAST_INSTANCE_CLICK"] = "點擊在圖鑑中查看",
-    -- AH price source (shared)
+
+  -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "拍賣價格資料",
     ["SHARED_AH_SOURCE_DESC"] = "OneWoW 掃描將價格儲存在 AltTracker - Auctions 中。當你用 Auctionator 掃描時，它使用自己的資料庫。TradeSkillMaster 使用下方設定的 TSM 價格字串（預設 dbmarket）。",
     ["SHARED_AH_SOURCE_ONEWOW"] = "OneWoW 拍賣掃描",

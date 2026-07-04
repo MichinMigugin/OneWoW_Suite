@@ -1,6 +1,27 @@
 local _, ns = ...
 local OneWoW = OneWoW
 
+local sort = sort
+
+-- Alt list ordering. Equal-key rows fall back to name so the list does not
+-- jitter between hovers. UPGRADE_DESC (biggest upgrade first) is the default.
+local ALT_SORT_COMPARATORS = {
+    UPGRADE_DESC = function(a, b) return a.diff > b.diff end,
+    UPGRADE_ASC  = function(a, b) return a.diff < b.diff end,
+    NAME_ASC     = function(a, b) return (a.name or "") < (b.name or "") end,
+    ILVL_DESC    = function(a, b) return (a.itemLevel or 0) > (b.itemLevel or 0) end,
+    LOGIN_DESC   = function(a, b) return (a.lastLogin or 0) > (b.lastLogin or 0) end,
+}
+
+local function SortAltMatches(matches, sortMode)
+    local cmp = ALT_SORT_COMPARATORS[sortMode] or ALT_SORT_COMPARATORS.UPGRADE_DESC
+    sort(matches, function(a, b)
+        if cmp(a, b) then return true end
+        if cmp(b, a) then return false end
+        return (a.name or "") < (b.name or "")
+    end)
+end
+
 local function GetClassColoredName(name, class)
     if class and RAID_CLASS_COLORS and RAID_CLASS_COLORS[class] then
         local c = RAID_CLASS_COLORS[class]
@@ -159,28 +180,38 @@ local function DoGearUpgrade(tooltip, context, onlyUpgrade, detail, showAlts, al
         local characters = charAPI.GetAllCharacters() or {}
 
         local limit = (altOptions and altOptions.limit) or 10
-        local whitelist = altOptions and altOptions.whitelistEnabled and altOptions.whitelist or nil
+        local scope = altOptions and altOptions.scope
 
-        local altCount = 0
+        -- Collect every matching alt first, then sort, THEN cap. Applying the
+        -- limit mid-scan over unordered pairs() is what made the list look
+        -- randomly ordered and could hide the biggest upgrades entirely.
+        local matches = {}
         for charKey, charData in pairs(characters) do
-            if limit > 0 and altCount >= limit then break end
             if charKey and charKey ~= currentKey and type(charData) == "table"
-               and (not whitelist or whitelist[charKey]) then
+               and OneWoW.AltScope:IsCharIncluded(charKey, scope) then
                 local altResult = UD:IsItemUpgradeForAlt(context.itemID, itemLink, charData)
                 if altResult and altResult.diff and (not onlyUpgrade or altResult.diff > 0) then
-                    altLines[#altLines + 1] = BuildCharLine(
-                        altResult.diff,
-                        charData.name,
-                        charData.class,
-                        altResult.equipped,
-                        altResult.new,
-                        false,
-                        detail,
-                        L
-                    )
-                    altCount = altCount + 1
+                    matches[#matches + 1] = {
+                        diff      = altResult.diff,
+                        name      = charData.name,
+                        class     = charData.class,
+                        equipped  = altResult.equipped,
+                        new       = altResult.new,
+                        itemLevel = charData.itemLevel or 0,
+                        lastLogin = charData.lastLogin or 0,
+                    }
                 end
             end
+        end
+
+        SortAltMatches(matches, altOptions and altOptions.sort)
+
+        local shown = (limit and limit > 0) and math.min(#matches, limit) or #matches
+        for i = 1, shown do
+            local m = matches[i]
+            altLines[#altLines + 1] = BuildCharLine(
+                m.diff, m.name, m.class, m.equipped, m.new, false, detail, L
+            )
         end
     end
 
@@ -225,8 +256,8 @@ local function GearUpgradeProvider(tooltip, context)
     local altOptions = {
         ignoreSoulbound    = up.tooltipIgnoreSoulbound,
         limit              = up.tooltipAltLimit,
-        whitelistEnabled   = up.tooltipAltWhitelistEnabled,
-        whitelist          = up.tooltipAltWhitelist,
+        scope              = up.altScope,
+        sort               = up.tooltipAltSort,
     }
 
     local ok, result, debugMsg = pcall(DoGearUpgrade, tooltip, context, onlyUpgrade, detail, showAlts, altOptions)
