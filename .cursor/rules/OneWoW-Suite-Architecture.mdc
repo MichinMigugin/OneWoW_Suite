@@ -66,3 +66,4 @@ Authoritative reference: [`OneWoW/Docs/ARCHITECTURE.md`](OneWoW/Docs/ARCHITECTUR
 - `no-suite-internal-optionaldeps` — TOC OptionalDeps policy
 - `no-data-manager-bypass` — cross-load-unit SavedVariables access (enforced; hard-fails off the `ALLOWED_FOREIGN_SV` allowlist)
 - `no-namespace-publish` — namespace publish / global-surface anti-patterns (§6.1; enforced — see `ARCHITECTURE.md` §6.1)
+- `no-per-addon-media` — per-addon `OneWoW_*/Media/` ban (all assets under `OneWoW/Media/`; see `GUI.md`)

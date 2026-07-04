@@ -20,6 +20,7 @@ present — no existence guard.
 
 - [How To Get It](#how-to-get-it)
 - [Centralized Settings (Settings.lua)](#centralized-settings-settingslua)
+- [Media assets](#media-assets)
 - [Theme System](#theme-system)
 - [Frames & Layout](#frames--layout)
 - [Buttons & Controls](#buttons--controls)
@@ -111,6 +112,39 @@ if fontPath then
     myFontString:SetFont(fontPath, 12)
 end
 ```
+
+## Media assets
+
+All suite textures, fonts, and sounds live under **`OneWoW/Media/`** on disk.
+Every load unit has `RequiredDeps: OneWoW`, so runtime paths always use the hub
+addon folder — never a per-load-unit `OneWoW_*/Media/` tree.
+
+| Location | Use |
+|----------|-----|
+| `OneWoW/Media/` (root) | Shared assets: `icon-*.png`, faction minis, `bar.tga`, `OneWoWMini-*.tga`, `Fonts/` |
+| `OneWoW/Media/<AddonName>/` | Assets owned by one unit (e.g. `OneWoW_QoL/cursorenhancer/`, `OneWoW_Utility_DevTool/devtools-error.ogg`) |
+
+**Lua:** use `OneWoW_GUI.Constants.MEDIA_BASE` — do not hardcode
+`Interface\AddOns\OneWoW\Media\` or ship copies under `OneWoW_Notes\Media\`, etc.
+
+```lua
+local OneWoW_GUI = OneWoW_GUI
+
+-- Shared icon at hub root
+local icon = OneWoW_GUI.Constants.MEDIA_BASE .. "icon-fav.png"
+
+-- Addon-specific subfolder (trailing segment has no leading backslash; MEDIA_BASE ends with \)
+local cursorMedia = OneWoW_GUI.Constants.MEDIA_BASE .. "OneWoW_QoL\\cursorenhancer\\"
+outerRing:SetTexture(cursorMedia .. "c1")
+
+-- Faction / brand icons
+local brand = OneWoW_GUI:GetBrandIcon(OneWoW_GUI:GetSetting("minimap.theme"))
+
+-- Overlay custom icons (icon-* keys)
+local path = OneWoW.OverlayIcons:GetTexturePath("icon-mount")
+```
+
+Enforced by pre-commit `no-per-addon-media` (`bin/check_no_per_addon_media.py`).
 
 ### Available font keys
 

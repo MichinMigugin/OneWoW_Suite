@@ -19,9 +19,9 @@ Five rules govern OneWoW UI code:
 
 ## Authoritative sources
 
-1. `OneWoW/Docs/GUI.md` — component catalog, backdrop templates, GUI dimension keys, icon skinning, dropdown/menu helpers. Read first to find an existing helper before considering raw widgets.
+1. `OneWoW/Docs/GUI.md` — component catalog, backdrop templates, GUI dimension keys, media asset policy, icon skinning, dropdown/menu helpers. Read first to find an existing helper before considering raw widgets.
 2. `OneWoW/GUI/Buttons.lua`, `EditBoxes.lua`, `Controls.lua`, `Layout.lua`, `Panels.lua`, `Display.lua`, `Icons.lua`, `Settings.lua`, `Minimap.lua`, `ReorderDrag.lua` — implementations. Read when uncertain about a helper's option contract.
-3. `OneWoW/GUI/Constants.lua` — `BACKDROP_*` templates, `GUI.*` dimension defaults, `THEMES` table (semantic color keys). Theme color keys live here.
+3. `OneWoW/GUI/Constants.lua` — `BACKDROP_*` templates, `GUI.*` dimension defaults, `MEDIA_BASE` / `ICON_TEXTURES`, `THEMES` table (semantic color keys). Theme color keys live here.
 4. `OneWoW/GUI/OneWoW_GUI.lua` — `GetThemeColor`, `RegisterGUIConstants`, `GetSetting`, `SetSetting`, theme application logic.
 
 ## Standard import
@@ -92,6 +92,20 @@ frame:SetBackdrop(C.BACKDROP_SIMPLE)            -- just bgFile
 ```
 
 `OneWoW_GUI:CreateFrame` requires `backdrop` in its options table — pick from these constants.
+
+## Media assets
+
+All suite media ships under `OneWoW/Media/` (shared root or `OneWoW/Media/<AddonName>/`
+for unit-specific files). **Never** add `OneWoW_*/Media/` copies.
+
+```lua
+local MEDIA = OneWoW_GUI.Constants.MEDIA_BASE
+texture:SetTexture(MEDIA .. "icon-gears.png")
+```
+
+Faction icons: `OneWoW_GUI:GetBrandIcon(theme)` or `Constants.ICON_TEXTURES`.
+Custom overlay icons: `OneWoW.OverlayIcons:GetTexturePath("icon-mount")`.
+Full layout and pre-commit policy: `OneWoW/Docs/GUI.md` (Media assets).
 
 ## Buttons: auto-size by default
 

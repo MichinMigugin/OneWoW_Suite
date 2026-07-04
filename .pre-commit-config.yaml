@@ -236,6 +236,18 @@ repos:
         language: python
         files: \.toc$
 
+      - id: no-per-addon-media
+        name: No per-addon Media folders outside OneWoW hub
+        description: |
+          Forbids OneWoW_*/Media/ trees. All suite media lives under
+          OneWoW/Media/ (shared root or OneWoW/Media/<AddonName>/
+          subfolders). Use OneWoW_GUI.Constants.MEDIA_BASE in Lua.
+          See OneWoW/Docs/GUI.md (Media assets).
+        entry: python bin/check_no_per_addon_media.py
+        language: python
+        pass_filenames: false
+        always_run: true
+
       - id: locale-parity
         name: Locale key parity, format specifiers, and duplicate keys
         description: |

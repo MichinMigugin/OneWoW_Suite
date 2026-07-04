@@ -374,6 +374,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 | No direct combat/restriction/secret API calls (§8.6) | `bin/check_no_restriction_bypass.py` (pre-commit `restriction-funnel`) |
 | No cross-load-unit SavedVariables access (§6/§7) | `bin/check_no_data_manager_bypass.py` (TOC-derived ownership; **enforced** — hard-fails off the `ALLOWED_FOREIGN_SV` allowlist) |
 | No namespace publish / global-surface anti-patterns (§6.1) | `bin/check_no_namespace_publish.py` (pre-commit `no-namespace-publish`; enforced) |
+| No per-addon `Media/` folders (hub-only assets) | `bin/check_no_per_addon_media.py` (pre-commit `no-per-addon-media`) |
 | No `_G.literal` access | `bin/check_no_g_literal.py` |
 | Agent guidance | `.cursor/rules/OneWoW-Suite-Architecture.mdc`, `onewow-suite-architecture` skill |
 
@@ -1114,3 +1115,4 @@ show the stored Known count and dash out Total/Missing rather than a misleading
 | `bin/check_no_settings_bypass.py` | Pre-commit: direct `db.global.settings` access ban |
 | `bin/check_no_restriction_bypass.py` | Pre-commit: direct combat/restriction/secret API ban (§8.6) |
 | `bin/check_no_namespace_publish.py` | Pre-commit: namespace publish / global-surface anti-patterns (§6.1; enforced) |
+| `bin/check_no_per_addon_media.py` | Pre-commit: per-addon `OneWoW_*/Media/` ban (hub `OneWoW/Media/` only; see GUI.md) |

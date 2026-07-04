@@ -233,6 +233,7 @@ When writing, cache the table in a local first — never `(OneWoW:GetCoreGlobal(
 4. No suite-internal `OptionalDeps` in changed TOCs
 5. No cross-load-unit store reads off the allowlist (`no-data-manager-bypass`, enforced/hard-fail) — route through the owner's `_API`
 6. No namespace publish / global-surface anti-patterns (`no-namespace-publish`; enforced — see `ARCHITECTURE.md` §6.1)
-7. `local ADDON_NAME, ns = ...`; internal reads via `ns.db`; no `ns.addon` hops; no `.db` on lifecycle root
-8. Hub cross-unit surface on `_API` dot-functions only (not colon-methods on manifest root)
-9. Stores use `BootStore` + `onEnteringWorld` for PEW collection work
+7. No per-addon `Media/` folders (`no-per-addon-media`) — use `OneWoW/Media/` + `MEDIA_BASE`; see `GUI.md`
+8. `local ADDON_NAME, ns = ...`; internal reads via `ns.db`; no `ns.addon` hops; no `.db` on lifecycle root
+9. Hub cross-unit surface on `_API` dot-functions only (not colon-methods on manifest root)
+10. Stores use `BootStore` + `onEnteringWorld` for PEW collection work

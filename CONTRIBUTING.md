@@ -81,6 +81,7 @@ QoL external modules use per-module locale scopes — see [OneWoW_QoL/DEVELOPERS
 - **Localization:** `L["STRING_KEY"]` for scoped strings; bare globals for Blizzard terms; see LOCALES.md
 - **SavedVariables:** use `OneWoW_GUI.DB` — see [OneWoW/Docs/DATABASE.md](OneWoW/Docs/DATABASE.md)
 - **UI:** use `OneWoW_GUI` components — see [OneWoW/Docs/GUI.md](OneWoW/Docs/GUI.md)
+- **Media:** ship textures/fonts/sounds under `OneWoW/Media/` only (`no-per-addon-media` pre-commit hook)
 - **Lifecycle:** suite load units use orchestrator hooks, not per-file `ADDON_LOADED` for init — see ARCHITECTURE.md §3
 - **Comments:** add only where logic is not self-evident
 - **Style:** match surrounding code; localize frequently-used globals at file top
