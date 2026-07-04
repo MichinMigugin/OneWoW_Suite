@@ -29,6 +29,7 @@ local recipeDetailCallbacks = {}
 local filterKnownByMe = false
 local filterKnownByAlts = false
 local filterNotKnownByMe = false
+local filterNotKnownByAlts = false
 local filterExpansion = nil
 
 OneWoW_Catalog_TradeskillAPI = {
@@ -73,7 +74,8 @@ local function GetDataAddon()
 end
 
 local function FilterByKnown(recipes, addon)
-    if not filterKnownByMe and not filterKnownByAlts and not filterNotKnownByMe then
+    if not filterKnownByMe and not filterKnownByAlts
+        and not filterNotKnownByMe and not filterNotKnownByAlts then
         return recipes
     end
     local charKey = OneWoW_GUI:BuildCharKey()
@@ -92,18 +94,11 @@ local function FilterByKnown(recipes, addon)
             end
         end
 
-        local include = false
-        if filterNotKnownByMe then
-            if not knownByMe then
-                if filterKnownByAlts then
-                    include = knownByAlt
-                else
-                    include = true
-                end
-            end
-        elseif (filterKnownByMe and knownByMe) or (filterKnownByAlts and knownByAlt) then
-            include = true
-        end
+        local include = true
+        if filterKnownByMe and not knownByMe then include = false end
+        if filterNotKnownByMe and knownByMe then include = false end
+        if filterKnownByAlts and not knownByAlt then include = false end
+        if filterNotKnownByAlts and knownByAlt then include = false end
 
         if include then
             tinsert(filtered, recipe)
@@ -942,7 +937,7 @@ RefreshRecipeList = function()
         end
     end
 
-    if (filterKnownByMe or filterKnownByAlts or filterNotKnownByMe) and recipes then
+    if (filterKnownByMe or filterKnownByAlts or filterNotKnownByMe or filterNotKnownByAlts) and recipes then
         recipes = FilterByKnown(recipes, addon)
     end
 
@@ -968,7 +963,8 @@ function ns.UI.CreateTradeskillsTab(parent)
     local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
     local GAP = ns.Constants.GUI.PANEL_GAP
 
-    local SEARCH_HEADER_H = PROF_HEADER_H + 66
+    local SEARCH_HEADER_H = PROF_HEADER_H + 88
+    local KNOWN_FILTER_COL_OFFSET = 148
 
     local searchHeader = OneWoW_GUI:CreateFilterBar(parent, { height = SEARCH_HEADER_H, offset = 0 })
     searchHeader:ClearAllPoints()
@@ -1068,36 +1064,45 @@ function ns.UI.CreateTradeskillsTab(parent)
     knownMeCheck:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", 0, -4)
     knownMeCheck:SetChecked(false)
 
+    local notKnownMeCheck = OneWoW_GUI:CreateCheckbox(searchHeader, { label = L["TRADESKILLS_SHOW_NOT_KNOWN_ME"] })
+    notKnownMeCheck:SetPoint("LEFT", knownMeCheck, "LEFT", KNOWN_FILTER_COL_OFFSET, 0)
+    notKnownMeCheck:SetChecked(false)
+
     local knownAltsCheck = OneWoW_GUI:CreateCheckbox(searchHeader, { label = L["TRADESKILLS_SHOW_KNOWN_ALTS"] })
-    knownAltsCheck:SetPoint("LEFT", knownMeCheck.label, "RIGHT", 10, 0)
+    knownAltsCheck:SetPoint("TOPLEFT", knownMeCheck, "BOTTOMLEFT", 0, -2)
     knownAltsCheck:SetChecked(false)
 
-    local notKnownCheck = OneWoW_GUI:CreateCheckbox(searchHeader, { label = L["TRADESKILLS_SHOW_NOT_KNOWN"] })
-    notKnownCheck:SetPoint("TOPLEFT", knownMeCheck, "BOTTOMLEFT", 0, -2)
-    notKnownCheck:SetChecked(false)
+    local notKnownAltsCheck = OneWoW_GUI:CreateCheckbox(searchHeader, { label = L["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] })
+    notKnownAltsCheck:SetPoint("LEFT", knownAltsCheck, "LEFT", KNOWN_FILTER_COL_OFFSET, 0)
+    notKnownAltsCheck:SetChecked(false)
 
-    knownMeCheck:SetScript("OnClick", function(self)
-        filterKnownByMe = self:GetChecked()
-        if filterKnownByMe and filterNotKnownByMe then
-            filterNotKnownByMe = false
-            notKnownCheck:SetChecked(false)
-        end
-        RefreshRecipeList()
-    end)
+    local function WireKnownFilterPair(knownCheck, notKnownCheck, setKnown, setNotKnown)
+        knownCheck:SetScript("OnClick", function(self)
+            local checked = self:GetChecked()
+            setKnown(checked)
+            if checked then
+                setNotKnown(false)
+                notKnownCheck:SetChecked(false)
+            end
+            RefreshRecipeList()
+        end)
+        notKnownCheck:SetScript("OnClick", function(self)
+            local checked = self:GetChecked()
+            setNotKnown(checked)
+            if checked then
+                setKnown(false)
+                knownCheck:SetChecked(false)
+            end
+            RefreshRecipeList()
+        end)
+    end
 
-    knownAltsCheck:SetScript("OnClick", function(self)
-        filterKnownByAlts = self:GetChecked()
-        RefreshRecipeList()
-    end)
-
-    notKnownCheck:SetScript("OnClick", function(self)
-        filterNotKnownByMe = self:GetChecked()
-        if filterNotKnownByMe and filterKnownByMe then
-            filterKnownByMe = false
-            knownMeCheck:SetChecked(false)
-        end
-        RefreshRecipeList()
-    end)
+    WireKnownFilterPair(knownMeCheck, notKnownMeCheck,
+        function(v) filterKnownByMe = v end,
+        function(v) filterNotKnownByMe = v end)
+    WireKnownFilterPair(knownAltsCheck, notKnownAltsCheck,
+        function(v) filterKnownByAlts = v end,
+        function(v) filterNotKnownByAlts = v end)
 
     local EXPANSION_OPTIONS = {
         {key = nil,                 label = L["TRADESKILLS_ALL_EXPANSIONS"]},
@@ -1120,7 +1125,7 @@ function ns.UI.CreateTradeskillsTab(parent)
         height = 22,
         text = L["TRADESKILLS_ALL_EXPANSIONS"],
     })
-    expDropdown:SetPoint("TOPLEFT", notKnownCheck, "BOTTOMLEFT", 0, -4)
+    expDropdown:SetPoint("TOPLEFT", knownAltsCheck, "BOTTOMLEFT", 0, -4)
     expDropdown:SetPoint("RIGHT", searchHeader, "RIGHT", -8, 0)
 
     OneWoW_GUI:AttachFilterMenu(expDropdown, {
@@ -1188,13 +1193,15 @@ function ns.UI.CreateTradeskillsTab(parent)
         filterKnownByMe = false
         filterKnownByAlts = false
         filterNotKnownByMe = false
+        filterNotKnownByAlts = false
         filterExpansion = nil
         wipe(expandedExpansions)
 
         if searchBox then searchBox:SetText("") end
         if knownMeCheck then knownMeCheck:SetChecked(false) end
         if knownAltsCheck then knownAltsCheck:SetChecked(false) end
-        if notKnownCheck then notKnownCheck:SetChecked(false) end
+        if notKnownMeCheck then notKnownMeCheck:SetChecked(false) end
+        if notKnownAltsCheck then notKnownAltsCheck:SetChecked(false) end
         if expDropText then expDropText:SetText(L["TRADESKILLS_ALL_EXPANSIONS"]) end
 
         UpdateProfButtonStates()

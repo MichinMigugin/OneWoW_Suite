@@ -205,7 +205,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TRADESKILLS_TYPE_GATHERING"] = "Sammeln",
     ["TRADESKILLS_SHOW_KNOWN_ME"] = "Mir bekannt",
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "Twinks bekannt",
-    ["TRADESKILLS_SHOW_NOT_KNOWN"] = "Unbekannt",
+    ["TRADESKILLS_SHOW_NOT_KNOWN_ME"] = "Mir unbekannt",
+    ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "Twinks unbekannt",
     ["TRADESKILLS_RECIPE_ITEM"] = "Rezeptgegenstand",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Alle Erweiterungen",
 

@@ -205,7 +205,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TRADESKILLS_TYPE_GATHERING"] = "采集",
     ["TRADESKILLS_SHOW_KNOWN_ME"] = "本角色已学会",
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "其他角色已学会",
-    ["TRADESKILLS_SHOW_NOT_KNOWN"] = "未学会",
+    ["TRADESKILLS_SHOW_NOT_KNOWN_ME"] = "本角色未学会",
+    ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "其他角色未学会",
     ["TRADESKILLS_RECIPE_ITEM"] = "配方物品",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "所有资料片",
 

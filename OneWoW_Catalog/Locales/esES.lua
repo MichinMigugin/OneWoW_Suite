@@ -205,7 +205,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["TRADESKILLS_TYPE_GATHERING"] = "Recolección",
     ["TRADESKILLS_SHOW_KNOWN_ME"] = "Conocido por mí",
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "Conocido por secundarios",
-    ["TRADESKILLS_SHOW_NOT_KNOWN"] = "No conocido",
+    ["TRADESKILLS_SHOW_NOT_KNOWN_ME"] = "No conocido por mí",
+    ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "No conocido por secundarios",
     ["TRADESKILLS_RECIPE_ITEM"] = "Objeto de receta",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Todas las expansiones",
 

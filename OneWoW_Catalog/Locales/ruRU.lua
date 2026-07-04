@@ -205,7 +205,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TRADESKILLS_TYPE_GATHERING"] = "Сбор",
     ["TRADESKILLS_SHOW_KNOWN_ME"] = "Известно мне",
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "Известно соратникам",
-    ["TRADESKILLS_SHOW_NOT_KNOWN"] = "Не изучено",
+    ["TRADESKILLS_SHOW_NOT_KNOWN_ME"] = "Не изучено мной",
+    ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "Не изучено соратниками",
     ["TRADESKILLS_RECIPE_ITEM"] = "Предмет рецепта",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Все дополнения",
 

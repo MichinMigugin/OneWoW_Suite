@@ -204,7 +204,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRADESKILLS_TYPE_GATHERING"] = "Gathering",
     ["TRADESKILLS_SHOW_KNOWN_ME"] = "Known By Me",
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "Known By Alts",
-    ["TRADESKILLS_SHOW_NOT_KNOWN"] = "Not Known",
+    ["TRADESKILLS_SHOW_NOT_KNOWN_ME"] = "Not Known By Me",
+    ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "Not Known By Alts",
     ["TRADESKILLS_RECIPE_ITEM"] = "Recipe Item",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "All Expansions",
 
