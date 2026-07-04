@@ -265,6 +265,7 @@ Modules\external\automount\Locales\itIT.lua
 Modules\external\automount\automount.lua
 
 Modules\external\cursorenhancer\module.lua
+Modules\external\cursorenhancer\cursorenhancer.lua
 Modules\external\cursorenhancer\Locales\enUS.lua
 Modules\external\cursorenhancer\Locales\koKR.lua
 Modules\external\cursorenhancer\Locales\frFR.lua
@@ -276,7 +277,7 @@ Modules\external\cursorenhancer\Locales\esMX.lua
 Modules\external\cursorenhancer\Locales\ruRU.lua
 Modules\external\cursorenhancer\Locales\ptBR.lua
 Modules\external\cursorenhancer\Locales\itIT.lua
-Modules\external\cursorenhancer\cursorenhancer.lua
+
 
 Modules\external\professionspanel\module.lua
 Modules\external\professionspanel\Locales\enUS.lua
