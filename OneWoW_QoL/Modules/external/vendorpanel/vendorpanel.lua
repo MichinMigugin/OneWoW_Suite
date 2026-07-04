@@ -4,6 +4,8 @@ local _, ns = ...
 local VendorPanelModule, L = ns.ModuleRegistry:Current()
 if not VendorPanelModule then return end
 
+local OneWoW_GUI = OneWoW_GUI
+
 local function GetDB()
     return ns.ModuleRegistry:GetModuleBucket("vendorpanel")
 end
@@ -1331,9 +1333,50 @@ function VendorPanel:AddSoulboundEquipment()
     end
 end
 
+-- Count colors match the side panel: destroy = theme red, sell = gray-items grey.
+-- Display order is always destroy then sell (same as the panel bottom row).
+local SELL_COUNT_R, SELL_COUNT_G, SELL_COUNT_B = 0.7, 0.7, 0.7
+
+local function ColorCount(n, r, g, b)
+    return string.format("|cff%02x%02x%02x%d|r", r * 255 + 0.5, g * 255 + 0.5, b * 255 + 0.5, n)
+end
+
+function VendorPanel:FormatDestroyCount(n)
+    local r, g, b = OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED")
+    return ColorCount(n, r, g, b)
+end
+
+function VendorPanel:FormatSellCount(n)
+    return ColorCount(n, SELL_COUNT_R, SELL_COUNT_G, SELL_COUNT_B)
+end
+
+function VendorPanel:GetSellCountColor()
+    return SELL_COUNT_R, SELL_COUNT_G, SELL_COUNT_B
+end
+
+function VendorPanel:FormatSellCountsText(destroyCount, sellCount)
+    local fmt = L["VENDOR_SELL_COUNTS"]:gsub("%%d", "%%s")
+    return string.format(fmt, self:FormatDestroyCount(destroyCount), self:FormatSellCount(sellCount))
+end
+
+function VendorPanel:FormatCountsLabelText(destroyCount, sellCount)
+    local fmt = L["VENDOR_COUNTS_LABEL"]:gsub("%%d", "%%s")
+    return string.format(fmt, self:FormatDestroyCount(destroyCount), self:FormatSellCount(sellCount))
+end
+
+function VendorPanel:FormatDestroyButtonText(destroyCount)
+    local fmt = L["VENDOR_DESTROY_COUNT"]:gsub("%%d", "%%s")
+    return string.format(fmt, self:FormatDestroyCount(destroyCount))
+end
+
+function VendorPanel:FormatSellButtonText(sellCount)
+    local fmt = L["VENDOR_SELL_COUNT"]:gsub("%%d", "%%s")
+    return string.format(fmt, self:FormatSellCount(sellCount))
+end
+
 function VendorPanel:UpdateButton()
     if not state.vendorButton then return end
-    local junkCount, destroyCount, allCached = self:GetJunkCounts()
+    local sellCount, destroyCount, allCached = self:GetJunkCounts()
     if not allCached then
         if state._buttonRetry then state._buttonRetry:Cancel() end
         state._buttonRetry = C_Timer.NewTimer(0.3, function() VendorPanel:UpdateButton() end)
@@ -1341,12 +1384,11 @@ function VendorPanel:UpdateButton()
     end
     ---@diagnostic disable-next-line: undefined-field
     local btnText = state.vendorButton.text
-    if junkCount > 0 or destroyCount > 0 then
-        btnText:SetText(string.format(L["VENDOR_SELL_COUNTS"], junkCount, destroyCount))
+    btnText:SetText(self:FormatSellCountsText(destroyCount, sellCount))
+    if sellCount > 0 or destroyCount > 0 then
         state.vendorButton:Enable()
         state.vendorButton:SetAlpha(1.0)
     else
-        btnText:SetText(string.format(L["VENDOR_SELL_COUNTS"], 0, 0))
         state.vendorButton:Disable()
         state.vendorButton:SetAlpha(0.6)
     end

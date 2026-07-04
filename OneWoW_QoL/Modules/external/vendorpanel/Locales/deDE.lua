@@ -14,7 +14,7 @@ OneWoW.Locale:Register(M._scope, "deDE", {
     ["VENDOR_JUNK_MANAGER"] = "Müllverwaltung",
     ["VENDOR_SELL_JUNK"] = "Linksklick, um allen Müll zu verkaufen",
     ["VENDOR_TOGGLE_PANEL"] = "Rechtsklick, um das Müllpanel umzuschalten",
-    ["VENDOR_COUNTS_LABEL"] = "Verkäuflich: %d   Zerstörbar: %d",
+    ["VENDOR_COUNTS_LABEL"] = "Zerstörbar: %d   Verkäuflich: %d",
     ["VENDOR_SELL_COUNTS"] = "Verkaufen (%d/%d)",
     ["VENDOR_TOGGLE_PANEL_TOOLTIP"] = "Müllpanel umschalten",
     ["VENDOR_HIDE_PANEL"] = "Klicken, um das Müllpanel auszublenden",

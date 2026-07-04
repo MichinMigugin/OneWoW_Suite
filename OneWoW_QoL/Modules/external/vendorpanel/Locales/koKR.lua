@@ -14,7 +14,7 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["VENDOR_JUNK_MANAGER"] = "잡동사니 관리자",
     ["VENDOR_SELL_JUNK"] = "왼쪽 클릭하여 모든 잡동사니 판매",
     ["VENDOR_TOGGLE_PANEL"] = "오른쪽 클릭하여 잡동사니 패널 전환",
-    ["VENDOR_COUNTS_LABEL"] = "판매 가능: %d   파괴 가능: %d",
+    ["VENDOR_COUNTS_LABEL"] = "파괴 가능: %d   판매 가능: %d",
     ["VENDOR_SELL_COUNTS"] = "판매 (%d/%d)",
     ["VENDOR_TOGGLE_PANEL_TOOLTIP"] = "잡동사니 패널 전환",
     ["VENDOR_HIDE_PANEL"] = "클릭하여 잡동사니 패널 숨기기",

@@ -31,7 +31,12 @@ end
 function VendorPanel:CreateVendorButton()
     if state.vendorButton then return end
 
-    state.vendorButton = OneWoW_GUI:CreateButton(MerchantFrame, { name = "OneWoW_QoL_VendorButton", text = "Sell (0/0)", width = 100, height = 22 })
+    state.vendorButton = OneWoW_GUI:CreateButton(MerchantFrame, {
+        name = "OneWoW_QoL_VendorButton",
+        text = VendorPanel:FormatSellCountsText(0, 0),
+        width = 100,
+        height = 22,
+    })
     state.vendorButton:SetPoint("TOPLEFT", MerchantFrame, "TOPLEFT", 60, -28)
     state.vendorButton:SetFrameLevel(MerchantFrame:GetFrameLevel() + 10)
 
@@ -60,13 +65,13 @@ function VendorPanel:CreateVendorButton()
         myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
         myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
         myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
-        local junkCount, destroyCount = VendorPanel:GetJunkCounts()
+        local sellCount, destroyCount = VendorPanel:GetJunkCounts()
         GameTooltip:SetOwner(myself, "ANCHOR_BOTTOM")
         GameTooltip:SetText(L["VENDOR_JUNK_MANAGER"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:AddLine(L["VENDOR_SELL_JUNK"], 1, 1, 1, true)
         GameTooltip:AddLine(L["VENDOR_TOGGLE_PANEL"], 1, 1, 1, true)
         GameTooltip:AddLine(" ", 1, 1, 1)
-        GameTooltip:AddLine(string.format(L["VENDOR_COUNTS_LABEL"], junkCount, destroyCount), OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        GameTooltip:AddLine(VendorPanel:FormatCountsLabelText(destroyCount, sellCount), 1, 1, 1)
         GameTooltip:Show()
     end)
     state.vendorButton:SetScript("OnLeave", function(myself)
@@ -166,13 +171,13 @@ function VendorPanel:CreateReplacementSellButton()
     end)
 
     state.replacementSellButton:HookScript("OnEnter", function(myself)
-        local junkCount, destroyCount = VendorPanel:GetJunkCounts()
+        local sellCount, destroyCount = VendorPanel:GetJunkCounts()
         GameTooltip:SetOwner(myself, "ANCHOR_TOP")
         GameTooltip:AddTexture(GetBrandIcon())
         GameTooltip:AddLine(L["VENDOR_JUNK_MANAGER"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:AddLine(L["VENDOR_SELL_JUNK"], 1, 1, 1, true)
         GameTooltip:AddLine(" ", 1, 1, 1)
-        GameTooltip:AddLine(string.format(L["VENDOR_COUNTS_LABEL"], junkCount, destroyCount), OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        GameTooltip:AddLine(VendorPanel:FormatCountsLabelText(destroyCount, sellCount), 1, 1, 1)
         GameTooltip:Show()
     end)
 
@@ -279,7 +284,7 @@ function VendorPanel:CreatePreviewPanel()
     end)
     state.junkPreviewPanel.closeButton = bottomCloseBtn
 
-    local destroyButton = OneWoW_GUI:CreateFitTextButton(bottomRow, { text = string.format(L["VENDOR_DESTROY_COUNT"], 0), height = 28 })
+    local destroyButton = OneWoW_GUI:CreateFitTextButton(bottomRow, { text = VendorPanel:FormatDestroyButtonText(0), height = 28 })
     destroyButton.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
     destroyButton.fontString = destroyButton.text
     destroyButton:SetScript("OnClick", function() VendorPanel:DestroyNextJunkItem() end)
@@ -295,7 +300,8 @@ function VendorPanel:CreatePreviewPanel()
     end)
     state.junkPreviewPanel.destroyButton = destroyButton
 
-    local sellJunkButton = OneWoW_GUI:CreateFitTextButton(bottomRow, { text = string.format(L["VENDOR_SELL_COUNT"], 0), height = 28 })
+    local sellJunkButton = OneWoW_GUI:CreateFitTextButton(bottomRow, { text = VendorPanel:FormatSellButtonText(0), height = 28 })
+    sellJunkButton.text:SetTextColor(VendorPanel:GetSellCountColor())
     sellJunkButton.fontString = sellJunkButton.text
     sellJunkButton:SetScript("OnClick", function()
         VendorPanel:SellJunkItems()
@@ -307,7 +313,8 @@ function VendorPanel:CreatePreviewPanel()
         GameTooltip:AddLine(L["VENDOR_SELL_WITH_PRICE"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
-    sellJunkButton:HookScript("OnLeave", function()
+    sellJunkButton:HookScript("OnLeave", function(myself)
+        myself.text:SetTextColor(VendorPanel:GetSellCountColor())
         GameTooltip:Hide()
     end)
     state.junkPreviewPanel.sellJunkButton = sellJunkButton
@@ -1184,11 +1191,13 @@ function VendorPanel:UpdatePreviewPanel()
     for _, item in ipairs(noValueJunkItems) do destroyableCount = destroyableCount + 1 end
 
     if state.junkPreviewPanel.sellJunkButton and state.junkPreviewPanel.sellJunkButton.fontString then
-        state.junkPreviewPanel.sellJunkButton.fontString:SetText(string.format(L["VENDOR_SELL_COUNT"], sellableCount))
+        state.junkPreviewPanel.sellJunkButton.fontString:SetText(VendorPanel:FormatSellButtonText(sellableCount))
+        state.junkPreviewPanel.sellJunkButton.fontString:SetTextColor(VendorPanel:GetSellCountColor())
     end
     if state.junkPreviewPanel.destroyButton then
         if state.junkPreviewPanel.destroyButton.fontString then
-            state.junkPreviewPanel.destroyButton.fontString:SetText(string.format(L["VENDOR_DESTROY_COUNT"], destroyableCount))
+            state.junkPreviewPanel.destroyButton.fontString:SetText(VendorPanel:FormatDestroyButtonText(destroyableCount))
+            state.junkPreviewPanel.destroyButton.fontString:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
         state.junkPreviewPanel.destroyButton:SetAlpha(destroyableCount > 0 and 1.0 or 0.5)
     end

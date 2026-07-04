@@ -14,7 +14,7 @@ OneWoW.Locale:Register(M._scope, "esMX", {
     ["VENDOR_JUNK_MANAGER"] = "Gestor de basura",
     ["VENDOR_SELL_JUNK"] = "Clic izquierdo para vender toda la basura",
     ["VENDOR_TOGGLE_PANEL"] = "Clic derecho para alternar el panel de basura",
-    ["VENDOR_COUNTS_LABEL"] = "Vendibles: %d   Destruibles: %d",
+    ["VENDOR_COUNTS_LABEL"] = "Destruibles: %d   Vendibles: %d",
     ["VENDOR_SELL_COUNTS"] = "Vender (%d/%d)",
     ["VENDOR_TOGGLE_PANEL_TOOLTIP"] = "Alternar panel de basura",
     ["VENDOR_HIDE_PANEL"] = "Haz clic para ocultar el panel de basura",

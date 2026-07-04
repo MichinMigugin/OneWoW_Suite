@@ -14,7 +14,7 @@ OneWoW.Locale:Register(M._scope, "frFR", {
     ["VENDOR_JUNK_MANAGER"] = "Gestionnaire de camelote",
     ["VENDOR_SELL_JUNK"] = "Clic gauche pour vendre toute la camelote",
     ["VENDOR_TOGGLE_PANEL"] = "Clic droit pour afficher/masquer le panneau de camelote",
-    ["VENDOR_COUNTS_LABEL"] = "Vendables : %d   Destructibles : %d",
+    ["VENDOR_COUNTS_LABEL"] = "Destructibles : %d   Vendables : %d",
     ["VENDOR_SELL_COUNTS"] = "Vendre (%d/%d)",
     ["VENDOR_TOGGLE_PANEL_TOOLTIP"] = "Afficher/masquer le panneau de camelote",
     ["VENDOR_HIDE_PANEL"] = "Cliquez pour masquer le panneau de camelote",

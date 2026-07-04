@@ -14,7 +14,7 @@ OneWoW.Locale:Register(M._scope, "zhCN", {
     ["VENDOR_JUNK_MANAGER"] = "垃圾管理器",
     ["VENDOR_SELL_JUNK"] = "左键点击以出售所有垃圾物品",
     ["VENDOR_TOGGLE_PANEL"] = "右键点击以切换垃圾面板",
-    ["VENDOR_COUNTS_LABEL"] = "可出售：%d   可销毁：%d",
+    ["VENDOR_COUNTS_LABEL"] = "可销毁：%d   可出售：%d",
     ["VENDOR_SELL_COUNTS"] = "出售（%d/%d）",
     ["VENDOR_TOGGLE_PANEL_TOOLTIP"] = "切换垃圾面板",
     ["VENDOR_HIDE_PANEL"] = "点击以隐藏垃圾面板",

@@ -13,7 +13,7 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["VENDOR_JUNK_MANAGER"] = "Junk Manager",
     ["VENDOR_SELL_JUNK"] = "Left-click to sell all junk items",
     ["VENDOR_TOGGLE_PANEL"] = "Right-click to toggle junk panel",
-    ["VENDOR_COUNTS_LABEL"] = "Sellable: %d   Destroyable: %d",
+    ["VENDOR_COUNTS_LABEL"] = "Destroyable: %d   Sellable: %d",
     ["VENDOR_SELL_COUNTS"] = "Sell (%d/%d)",
     ["VENDOR_TOGGLE_PANEL_TOOLTIP"] = "Toggle Junk Panel",
     ["VENDOR_HIDE_PANEL"] = "Click to hide the junk panel",

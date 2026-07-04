@@ -14,7 +14,7 @@ OneWoW.Locale:Register(M._scope, "ruRU", {
     ["VENDOR_JUNK_MANAGER"] = "Управление хламом",
     ["VENDOR_SELL_JUNK"] = "Левый щелчок, чтобы продать весь хлам",
     ["VENDOR_TOGGLE_PANEL"] = "Правый щелчок, чтобы открыть/закрыть панель хлама",
-    ["VENDOR_COUNTS_LABEL"] = "Можно продать: %d   Можно уничтожить: %d",
+    ["VENDOR_COUNTS_LABEL"] = "Можно уничтожить: %d   Можно продать: %d",
     ["VENDOR_SELL_COUNTS"] = "Продать (%d/%d)",
     ["VENDOR_TOGGLE_PANEL_TOOLTIP"] = "Открыть/закрыть панель хлама",
     ["VENDOR_HIDE_PANEL"] = "Щёлкните, чтобы скрыть панель хлама",

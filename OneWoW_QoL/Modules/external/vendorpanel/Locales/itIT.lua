@@ -14,7 +14,7 @@ OneWoW.Locale:Register(M._scope, "itIT", {
     ["VENDOR_JUNK_MANAGER"] = "Gestione cianfrusaglie",
     ["VENDOR_SELL_JUNK"] = "Clic sinistro per vendere tutte le cianfrusaglie",
     ["VENDOR_TOGGLE_PANEL"] = "Clic destro per aprire/chiudere il pannello delle cianfrusaglie",
-    ["VENDOR_COUNTS_LABEL"] = "Vendibili: %d   Distruggibili: %d",
+    ["VENDOR_COUNTS_LABEL"] = "Distruggibili: %d   Vendibili: %d",
     ["VENDOR_SELL_COUNTS"] = "Vendi (%d/%d)",
     ["VENDOR_TOGGLE_PANEL_TOOLTIP"] = "Apri/chiudi pannello cianfrusaglie",
     ["VENDOR_HIDE_PANEL"] = "Clicca per nascondere il pannello delle cianfrusaglie",

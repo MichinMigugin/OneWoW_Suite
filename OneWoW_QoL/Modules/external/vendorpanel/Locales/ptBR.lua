@@ -14,7 +14,7 @@ OneWoW.Locale:Register(M._scope, "ptBR", {
     ["VENDOR_JUNK_MANAGER"] = "Gerenciador de tralha",
     ["VENDOR_SELL_JUNK"] = "Clique esquerdo para vender toda a tralha",
     ["VENDOR_TOGGLE_PANEL"] = "Clique direito para alternar o painel de tralha",
-    ["VENDOR_COUNTS_LABEL"] = "Vendáveis: %d   Destruíveis: %d",
+    ["VENDOR_COUNTS_LABEL"] = "Destruíveis: %d   Vendáveis: %d",
     ["VENDOR_SELL_COUNTS"] = "Vender (%d/%d)",
     ["VENDOR_TOGGLE_PANEL_TOOLTIP"] = "Alternar painel de tralha",
     ["VENDOR_HIDE_PANEL"] = "Clique para ocultar o painel de tralha",
