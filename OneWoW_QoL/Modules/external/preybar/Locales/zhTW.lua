@@ -15,6 +15,8 @@ OneWoW.Locale:Register(M._scope, "zhTW", {
     ["PREYBAR_TOGGLE_AFFIXES_DESC"] = "在列下方顯示目前狩獵的詞綴圖示。",
     ["PREYBAR_TOGGLE_HIDE_BLIZZARD"] = "隱藏暴雪小工具",
     ["PREYBAR_TOGGLE_HIDE_BLIZZARD_DESC"] = "當此列處於作用中時，隱藏暴雪預設的獵物狩獵進度小工具。",
+    ["PREYBAR_TOGGLE_CLICK_WAYPOINT"] = "點擊設定路徑點",
+    ["PREYBAR_TOGGLE_CLICK_WAYPOINT_DESC"] = "當獵物就緒時，點擊該列可在地圖上設定前往狩獵的路徑點。",
     ["PREYBAR_TOGGLE_LOCK"] = "鎖定位置",
     ["PREYBAR_TOGGLE_LOCK_DESC"] = "鎖定該列使其無法被拖曳。關閉此項並開啟此設定面板，即可使用範例預覽重新擺放該列。",
 
@@ -40,6 +42,7 @@ OneWoW.Locale:Register(M._scope, "zhTW", {
     ["PREYBAR_STATE_LABEL"] = "%s  %d%%",
     ["PREYBAR_DEMO_BOSS"] = "範例獵物",
     ["PREYBAR_DRAG_HINT"] = "解鎖以拖曳  -  獵物狩獵列",
+    ["PREYBAR_CLICK_WAYPOINT_HINT"] = "點擊設定前往獵物的路徑點",
     ["PREYBAR_OPACITY_FMT"] = "不透明度：%d%%",
     ["PREYBAR_SETTINGS_HINT"] = "此面板開啟時會顯示一個範例列，便於你擺放它。關閉「鎖定位置」即可拖曳它，然後再次鎖定。在此面板之外，該列僅在進行中的獵物狩獵期間出現。",
 })

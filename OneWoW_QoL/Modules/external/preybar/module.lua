@@ -16,6 +16,7 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
         { id = "show_difficulty", label = "PREYBAR_TOGGLE_DIFFICULTY",    description = "PREYBAR_TOGGLE_DIFFICULTY_DESC",    default = true  },
         { id = "show_affixes",    label = "PREYBAR_TOGGLE_AFFIXES",       description = "PREYBAR_TOGGLE_AFFIXES_DESC",       default = true  },
         { id = "hide_blizzard",   label = "PREYBAR_TOGGLE_HIDE_BLIZZARD", description = "PREYBAR_TOGGLE_HIDE_BLIZZARD_DESC", default = true  },
+        { id = "click_waypoint",  label = "PREYBAR_TOGGLE_CLICK_WAYPOINT", description = "PREYBAR_TOGGLE_CLICK_WAYPOINT_DESC", default = true  },
         { id = "lock",            label = "PREYBAR_TOGGLE_LOCK",          description = "PREYBAR_TOGGLE_LOCK_DESC",          default = false },
     },
     preview        = false,
@@ -31,4 +32,5 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     _isAmbushed    = false,
     _ambushToken   = 0,
     _pewDelayTimer = nil,
+    _dragActive    = false,
 })

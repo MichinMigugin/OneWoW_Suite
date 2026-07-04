@@ -14,6 +14,8 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["PREYBAR_TOGGLE_AFFIXES_DESC"] = "막대 아래에 진행 중인 사냥의 고유 능력 아이콘을 표시합니다.",
     ["PREYBAR_TOGGLE_HIDE_BLIZZARD"] = "블리자드 위젯 숨기기",
     ["PREYBAR_TOGGLE_HIDE_BLIZZARD_DESC"] = "이 막대가 활성화된 동안 블리자드 기본 사냥감 진행도 위젯을 숨깁니다.",
+    ["PREYBAR_TOGGLE_CLICK_WAYPOINT"] = "클릭하여 경로 설정",
+    ["PREYBAR_TOGGLE_CLICK_WAYPOINT_DESC"] = "사냥감이 준비되면 막대를 클릭하여 사냥 위치로 향하는 지도 경로를 설정합니다.",
     ["PREYBAR_TOGGLE_LOCK"] = "위치 고정",
     ["PREYBAR_TOGGLE_LOCK_DESC"] = "막대를 끌 수 없도록 고정합니다. 이 설정을 끄고 설정 패널을 열면 예시 미리보기로 막대 위치를 옮길 수 있습니다.",
 
@@ -39,6 +41,7 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["PREYBAR_STATE_LABEL"] = "%s  %d%%",
     ["PREYBAR_DEMO_BOSS"] = "예시 사냥감",
     ["PREYBAR_DRAG_HINT"] = "잠금 해제 후 끌어 이동  -  사냥감 추적 막대",
+    ["PREYBAR_CLICK_WAYPOINT_HINT"] = "클릭하여 사냥감으로 가는 경로를 설정합니다",
     ["PREYBAR_OPACITY_FMT"] = "불투명도: %d%%",
     ["PREYBAR_SETTINGS_HINT"] = "이 패널이 열려 있는 동안 위치를 잡을 수 있도록 예시 막대가 표시됩니다. 위치 고정을 끄고 끌어다 놓은 뒤 다시 고정하세요. 이 패널 밖에서는 사냥이 진행 중일 때만 막대가 표시됩니다.",
 })

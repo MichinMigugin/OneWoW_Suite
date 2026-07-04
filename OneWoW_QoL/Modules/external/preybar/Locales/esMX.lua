@@ -15,6 +15,8 @@ OneWoW.Locale:Register(M._scope, "esMX", {
     ["PREYBAR_TOGGLE_AFFIXES_DESC"] = "Muestra los iconos de afijos de la caza activa bajo la barra.",
     ["PREYBAR_TOGGLE_HIDE_BLIZZARD"] = "Ocultar widget de Blizzard",
     ["PREYBAR_TOGGLE_HIDE_BLIZZARD_DESC"] = "Oculta el widget de progreso de caza de presa predeterminado de Blizzard mientras esta barra está activa.",
+    ["PREYBAR_TOGGLE_CLICK_WAYPOINT"] = "Clic para marcar la ruta",
+    ["PREYBAR_TOGGLE_CLICK_WAYPOINT_DESC"] = "Cuando la presa esté lista, haz clic en la barra para marcar en el mapa una ruta hacia la caza.",
     ["PREYBAR_TOGGLE_LOCK"] = "Bloquear posición",
     ["PREYBAR_TOGGLE_LOCK_DESC"] = "Bloquea la barra para que no se pueda arrastrar. Desactiva esto y abre este panel de ajustes para reposicionar la barra usando la vista previa de muestra.",
 
@@ -40,6 +42,7 @@ OneWoW.Locale:Register(M._scope, "esMX", {
     ["PREYBAR_STATE_LABEL"] = "%s  %d%%",
     ["PREYBAR_DEMO_BOSS"] = "Presa de muestra",
     ["PREYBAR_DRAG_HINT"] = "Desbloquear para arrastrar  -  Barra de caza de presa",
+    ["PREYBAR_CLICK_WAYPOINT_HINT"] = "Haz clic para marcar una ruta hacia tu presa",
     ["PREYBAR_OPACITY_FMT"] = "Opacidad: %d%%",
     ["PREYBAR_SETTINGS_HINT"] = "Se muestra una barra de ejemplo mientras este panel está abierto para que puedas posicionarla. Desactiva Bloquear posición para arrastrarla y luego vuelve a bloquearla. Fuera de este panel, la barra solo aparece durante una caza de presa activa.",
 })

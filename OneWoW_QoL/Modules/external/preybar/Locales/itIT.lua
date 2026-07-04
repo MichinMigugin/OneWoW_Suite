@@ -15,6 +15,8 @@ OneWoW.Locale:Register(M._scope, "itIT", {
     ["PREYBAR_TOGGLE_AFFIXES_DESC"] = "Mostra le icone degli affissi della caccia attiva sotto la barra.",
     ["PREYBAR_TOGGLE_HIDE_BLIZZARD"] = "Nascondi widget Blizzard",
     ["PREYBAR_TOGGLE_HIDE_BLIZZARD_DESC"] = "Nasconde il widget predefinito di progresso della caccia alla preda di Blizzard mentre questa barra è attiva.",
+    ["PREYBAR_TOGGLE_CLICK_WAYPOINT"] = "Clic per impostare il waypoint",
+    ["PREYBAR_TOGGLE_CLICK_WAYPOINT_DESC"] = "Quando la preda è pronta, clicca sulla barra per impostare sulla mappa un waypoint verso la caccia.",
     ["PREYBAR_TOGGLE_LOCK"] = "Blocca posizione",
     ["PREYBAR_TOGGLE_LOCK_DESC"] = "Blocca la barra in modo che non possa essere trascinata. Disattiva questa opzione e apri questo pannello delle impostazioni per riposizionare la barra usando l'anteprima di esempio.",
 
@@ -40,6 +42,7 @@ OneWoW.Locale:Register(M._scope, "itIT", {
     ["PREYBAR_STATE_LABEL"] = "%s  %d%%",
     ["PREYBAR_DEMO_BOSS"] = "Preda di esempio",
     ["PREYBAR_DRAG_HINT"] = "Sblocca per trascinare  -  Barra di caccia alla preda",
+    ["PREYBAR_CLICK_WAYPOINT_HINT"] = "Clicca per impostare un waypoint verso la tua preda",
     ["PREYBAR_OPACITY_FMT"] = "Opacità: %d%%",
     ["PREYBAR_SETTINGS_HINT"] = "Mentre questo pannello è aperto viene mostrata una barra di esempio così puoi posizionarla. Disattiva Blocca posizione per trascinarla, poi bloccala di nuovo. Al di fuori di questo pannello la barra appare solo durante una caccia alla preda attiva.",
 })

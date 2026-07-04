@@ -15,6 +15,8 @@ OneWoW.Locale:Register(M._scope, "zhCN", {
     ["PREYBAR_TOGGLE_AFFIXES_DESC"] = "在栏下方显示当前狩猎的词缀图标。",
     ["PREYBAR_TOGGLE_HIDE_BLIZZARD"] = "隐藏暴雪小部件",
     ["PREYBAR_TOGGLE_HIDE_BLIZZARD_DESC"] = "当此栏处于活动状态时，隐藏暴雪默认的猎物狩猎进度小部件。",
+    ["PREYBAR_TOGGLE_CLICK_WAYPOINT"] = "点击设置路径点",
+    ["PREYBAR_TOGGLE_CLICK_WAYPOINT_DESC"] = "当猎物就绪时，点击该栏可在地图上设置前往狩猎的路径点。",
     ["PREYBAR_TOGGLE_LOCK"] = "锁定位置",
     ["PREYBAR_TOGGLE_LOCK_DESC"] = "锁定该栏使其无法被拖动。关闭此项并打开此设置面板，即可使用示例预览重新摆放该栏。",
 
@@ -40,6 +42,7 @@ OneWoW.Locale:Register(M._scope, "zhCN", {
     ["PREYBAR_STATE_LABEL"] = "%s  %d%%",
     ["PREYBAR_DEMO_BOSS"] = "示例猎物",
     ["PREYBAR_DRAG_HINT"] = "解锁以拖动  -  猎物狩猎栏",
+    ["PREYBAR_CLICK_WAYPOINT_HINT"] = "点击设置前往猎物的路径点",
     ["PREYBAR_OPACITY_FMT"] = "不透明度：%d%%",
     ["PREYBAR_SETTINGS_HINT"] = "此面板打开时会显示一个示例栏，便于你摆放它。关闭“锁定位置”即可拖动它，然后再次锁定。在此面板之外，该栏仅在进行中的猎物狩猎期间出现。",
 })

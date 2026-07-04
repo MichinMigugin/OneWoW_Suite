@@ -15,6 +15,8 @@ OneWoW.Locale:Register(M._scope, "deDE", {
     ["PREYBAR_TOGGLE_AFFIXES_DESC"] = "Zeigt die Affixsymbole der aktiven Jagd unter der Leiste an.",
     ["PREYBAR_TOGGLE_HIDE_BLIZZARD"] = "Blizzard-Widget ausblenden",
     ["PREYBAR_TOGGLE_HIDE_BLIZZARD_DESC"] = "Blendet Blizzards Standard-Widget für den Beutejagd-Fortschritt aus, während diese Leiste aktiv ist.",
+    ["PREYBAR_TOGGLE_CLICK_WAYPOINT"] = "Zum Setzen des Wegpunkts klicken",
+    ["PREYBAR_TOGGLE_CLICK_WAYPOINT_DESC"] = "Wenn die Beute bereit ist, klicke auf die Leiste, um einen Kartenwegpunkt zur Jagd zu setzen.",
     ["PREYBAR_TOGGLE_LOCK"] = "Position sperren",
     ["PREYBAR_TOGGLE_LOCK_DESC"] = "Sperrt die Leiste, sodass sie nicht gezogen werden kann. Schalte dies aus und öffne dieses Einstellungspanel, um die Leiste mit der Beispielvorschau neu zu positionieren.",
 
@@ -40,6 +42,7 @@ OneWoW.Locale:Register(M._scope, "deDE", {
     ["PREYBAR_STATE_LABEL"] = "%s  %d%%",
     ["PREYBAR_DEMO_BOSS"] = "Beispielbeute",
     ["PREYBAR_DRAG_HINT"] = "Entsperren zum Ziehen  -  Beutejagd-Leiste",
+    ["PREYBAR_CLICK_WAYPOINT_HINT"] = "Klicken, um einen Wegpunkt zu deiner Beute zu setzen",
     ["PREYBAR_OPACITY_FMT"] = "Deckkraft: %d%%",
     ["PREYBAR_SETTINGS_HINT"] = "Während dieses Panel geöffnet ist, wird eine Beispielleiste angezeigt, damit du sie positionieren kannst. Schalte „Position sperren“ aus, um sie zu ziehen, und sperre sie dann wieder. Außerhalb dieses Panels erscheint die Leiste nur während einer aktiven Beutejagd.",
 })

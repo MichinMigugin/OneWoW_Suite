@@ -97,8 +97,13 @@ function PreyBarModule:CreateFrame()
     f:EnableMouse(true)
     f:SetMovable(true)
     f:RegisterForDrag("LeftButton")
+    -- A left-press resets the drag flag; OnDragStart sets it only when an actual
+    -- drag begins. OnMouseUp then distinguishes a stationary click (set waypoint)
+    -- from the tail of a move (do nothing).
+    f:SetScript("OnMouseDown", function() PreyBarModule._dragActive = false end)
     f:SetScript("OnDragStart", function(frame)
         if PreyBarModule.GetToggle("lock") then return end
+        PreyBarModule._dragActive = true
         frame:StartMoving()
     end)
     f:SetScript("OnDragStop", function(frame)
@@ -108,10 +113,25 @@ function PreyBarModule:CreateFrame()
             OneWoW_GUI:SaveWindowPosition(frame, storage)
         end
     end)
+    f:SetScript("OnMouseUp", function(_, button)
+        if button ~= "LeftButton" or PreyBarModule._dragActive then return end
+        if not PreyBarModule.GetToggle("click_waypoint") then return end
+        if not PreyBarModule:IsHuntReady() then return end
+        PreyBarModule:SetPreyWaypoint()
+    end)
     f:SetScript("OnEnter", function(frame)
-        if PreyBarModule.GetToggle("lock") then return end
+        local showDrag = not PreyBarModule.GetToggle("lock")
+        local showClick = PreyBarModule.GetToggle("click_waypoint") and PreyBarModule:IsHuntReady()
+        if not showDrag and not showClick then return end
         GameTooltip:SetOwner(frame, "ANCHOR_TOP")
-        GameTooltip:SetText(L["PREYBAR_DRAG_HINT"], 1, 1, 1)
+        if showDrag then
+            GameTooltip:SetText(L["PREYBAR_DRAG_HINT"], 1, 1, 1)
+            if showClick then
+                GameTooltip:AddLine(L["PREYBAR_CLICK_WAYPOINT_HINT"], 1, 1, 1)
+            end
+        else
+            GameTooltip:SetText(L["PREYBAR_CLICK_WAYPOINT_HINT"], 1, 1, 1)
+        end
         GameTooltip:Show()
     end)
     f:SetScript("OnLeave", function() GameTooltip:Hide() end)

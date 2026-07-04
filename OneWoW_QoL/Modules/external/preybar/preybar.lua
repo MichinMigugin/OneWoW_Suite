@@ -133,6 +133,25 @@ function PreyBarModule:GetActiveHunt()
     return difficultyKey, bossName
 end
 
+-- ---- Click-to-waypoint ----
+--- True when a prey hunt is active and its progress has reached Final ("Ready").
+--- Mirrors Blizzard's own template, which only enables the widget's click at Final.
+---@return boolean
+function PreyBarModule:IsHuntReady()
+    local info = self:GetWidgetInfo()
+    return info ~= nil
+        and info.shownState == Enum.WidgetShownState.Shown
+        and info.progressState == Enum.PreyHuntProgressState.Final
+end
+
+--- Super-track the active prey quest so its map waypoint / navigation arrow shows.
+--- No-op when there is no active prey quest.
+function PreyBarModule:SetPreyWaypoint()
+    local questID = C_QuestLog.GetActivePreyQuest()
+    if not questID then return end
+    C_SuperTrack.SetSuperTrackedQuestID(questID)
+end
+
 -- ---- Widget resolution ----
 -- Mirrors Blizzard_UIWidgetTemplatePreyHuntProgress GetPreyHuntProgressVisInfoData:
 -- return visualization info only when shownState is not Hidden.
