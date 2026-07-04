@@ -1,9 +1,9 @@
 local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
-
 local DB = OneWoW_GUI.DB
-local ipairs, pairs, wipe = ipairs, pairs, wipe
+
+local ipairs, wipe = ipairs, wipe
 
 ns.DatabaseDefaults = {
     global = {

@@ -100,7 +100,7 @@ local function addWarning(warnings, term, reason, severity)
     })
 end
 
-local function lookupEnglishKeyword(token, _context, warnings)
+local function lookupEnglishKeyword(token, _, warnings)
     local lower = string_lower(token)
     local hit = ENGLISH_TO_OW[lower]
     if hit ~= nil then
