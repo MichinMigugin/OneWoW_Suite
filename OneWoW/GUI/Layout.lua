@@ -1,6 +1,7 @@
 local OneWoW_GUI = OneWoW_GUI
 
 local Constants = OneWoW_GUI.Constants
+local noop = OneWoW_GUI.noop
 
 local pairs, ipairs = pairs, ipairs
 local floor, ceil = math.floor, math.ceil
@@ -36,7 +37,7 @@ function OneWoW_GUI:CreateSortControls(parent, options)
     local sortFields   = options.sortFields   or {}
     local defaultField = options.defaultField or (sortFields[1] and sortFields[1].key) or ""
     local defaultAsc   = options.defaultAsc ~= false
-    local onChange     = options.onChange or function(field, ascending) end
+    local onChange     = options.onChange or noop
     local dropWidth    = options.dropdownWidth or 110
 
     local state = { field = defaultField, ascending = defaultAsc }
@@ -931,47 +932,47 @@ function OneWoW_GUI:CreateSelectableCard(parent, options)
         card.affectedBtn = affectedBtn
     end
 
-    local function ApplyVisual(self, hover)
-        if self._muted then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            self.selectedAccent:Hide()
-            self.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            self.summary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            self.icon:SetDesaturated(true)
-            self.icon:SetAlpha(0.4)
-            self.iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            if self.badge then
-                self.badge:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                self.badge.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    local function ApplyVisual(myself, hover)
+        if myself._muted then
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            myself.selectedAccent:Hide()
+            myself.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            myself.summary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            myself.icon:SetDesaturated(true)
+            myself.icon:SetAlpha(0.4)
+            myself.iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            if myself.badge then
+                myself.badge:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                myself.badge.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
             return
         end
-        if self._checked then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor(hover and "BG_HOVER" or "BG_ACTIVE"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor(hover and "BORDER_FOCUS" or "BORDER_ACCENT"))
-            self.selectedAccent:Show()
-            self.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            self.summary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-            self.icon:SetDesaturated(false)
-            self.icon:SetAlpha(1)
-            self.iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            if self.badge then
-                self.badge:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                self.badge.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        if myself._checked then
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor(hover and "BG_HOVER" or "BG_ACTIVE"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor(hover and "BORDER_FOCUS" or "BORDER_ACCENT"))
+            myself.selectedAccent:Show()
+            myself.title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            myself.summary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            myself.icon:SetDesaturated(false)
+            myself.icon:SetAlpha(1)
+            myself.iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            if myself.badge then
+                myself.badge:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+                myself.badge.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             end
         else
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor(hover and "BG_HOVER" or "BG_SECONDARY"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor(hover and "BORDER_FOCUS" or "BORDER_SUBTLE"))
-            self.selectedAccent:Hide()
-            self.title:SetTextColor(OneWoW_GUI:GetThemeColor(hover and "TEXT_ACCENT" or "TEXT_PRIMARY"))
-            self.summary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            self.icon:SetDesaturated(true)
-            self.icon:SetAlpha(0.68)
-            self.iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            if self.badge then
-                self.badge:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                self.badge.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor(hover and "BG_HOVER" or "BG_SECONDARY"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor(hover and "BORDER_FOCUS" or "BORDER_SUBTLE"))
+            myself.selectedAccent:Hide()
+            myself.title:SetTextColor(OneWoW_GUI:GetThemeColor(hover and "TEXT_ACCENT" or "TEXT_PRIMARY"))
+            myself.summary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            myself.icon:SetDesaturated(true)
+            myself.icon:SetAlpha(0.68)
+            myself.iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            if myself.badge then
+                myself.badge:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                myself.badge.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             end
         end
     end
@@ -1198,25 +1199,25 @@ function OneWoW_GUI:CreateVerticalPaneResizer(options)
         dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         SetCursor("UI_RESIZE_CURSOR")
     end)
-    divider:SetScript("OnLeave", function(self)
-        if not self._owPaneDragActive then
+    divider:SetScript("OnLeave", function(myself)
+        if not myself._owPaneDragActive then
             dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
             SetCursor(nil)
         end
     end)
 
-    divider:SetScript("OnMouseDown", function(self, button)
+    divider:SetScript("OnMouseDown", function(myself, button)
         if button == "LeftButton" then
-            self._owPaneDragActive = true
+            myself._owPaneDragActive = true
             local x = GetCursorPosition()
-            self._owPaneStartCursorX = x / self:GetEffectiveScale()
-            self._owPaneStartLeftW = leftPanel:GetWidth()
+            myself._owPaneStartCursorX = x / myself:GetEffectiveScale()
+            myself._owPaneStartLeftW = leftPanel:GetWidth()
         end
     end)
 
-    divider:SetScript("OnMouseUp", function(self, button)
-        if button == "LeftButton" and self._owPaneDragActive then
-            self._owPaneDragActive = false
+    divider:SetScript("OnMouseUp", function(myself, button)
+        if button == "LeftButton" and myself._owPaneDragActive then
+            myself._owPaneDragActive = false
             dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
             SetCursor(nil)
             if onWidthChanged then
@@ -1225,11 +1226,11 @@ function OneWoW_GUI:CreateVerticalPaneResizer(options)
         end
     end)
 
-    divider:SetScript("OnUpdate", function(self)
-        if not self._owPaneDragActive then return end
-        local cursorX = GetCursorPosition() / self:GetEffectiveScale()
-        local delta = cursorX - self._owPaneStartCursorX
-        local desiredLeftWidth = max(leftMinWidth, self._owPaneStartLeftW + delta)
+    divider:SetScript("OnUpdate", function(myself)
+        if not myself._owPaneDragActive then return end
+        local cursorX = GetCursorPosition() / myself:GetEffectiveScale()
+        local delta = cursorX - myself._owPaneStartCursorX
+        local desiredLeftWidth = max(leftMinWidth, myself._owPaneStartLeftW + delta)
 
         local neededRightGrow = effectiveRightReserveForGrow()
         local screenMax = floor(GetScreenWidth() * resizeCap)
@@ -1310,25 +1311,25 @@ function OneWoW_GUI:CreateHorizontalPaneResizer(options)
         dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         SetCursor("UI_RESIZE_CURSOR")
     end)
-    divider:SetScript("OnLeave", function(self)
-        if not self._owPaneDragActive then
+    divider:SetScript("OnLeave", function(myself)
+        if not myself._owPaneDragActive then
             dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
             SetCursor(nil)
         end
     end)
 
-    divider:SetScript("OnMouseDown", function(self, button)
+    divider:SetScript("OnMouseDown", function(myself, button)
         if button == "LeftButton" then
-            self._owPaneDragActive = true
+            myself._owPaneDragActive = true
             local _, y = GetCursorPosition()
-            self._owPaneStartCursorY = y / self:GetEffectiveScale()
-            self._owPaneStartTopH = topPanel:GetHeight()
+            myself._owPaneStartCursorY = y / myself:GetEffectiveScale()
+            myself._owPaneStartTopH = topPanel:GetHeight()
         end
     end)
 
-    divider:SetScript("OnMouseUp", function(self, button)
-        if button == "LeftButton" and self._owPaneDragActive then
-            self._owPaneDragActive = false
+    divider:SetScript("OnMouseUp", function(myself, button)
+        if button == "LeftButton" and myself._owPaneDragActive then
+            myself._owPaneDragActive = false
             dividerTex:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
             SetCursor(nil)
             if onHeightChanged then
@@ -1337,12 +1338,12 @@ function OneWoW_GUI:CreateHorizontalPaneResizer(options)
         end
     end)
 
-    divider:SetScript("OnUpdate", function(self)
-        if not self._owPaneDragActive then return end
+    divider:SetScript("OnUpdate", function(myself)
+        if not myself._owPaneDragActive then return end
         local _, cursorY = GetCursorPosition()
-        cursorY = cursorY / self:GetEffectiveScale()
-        local delta = self._owPaneStartCursorY - cursorY
-        local desiredTopH = max(topMinHeight, self._owPaneStartTopH + delta)
+        cursorY = cursorY / myself:GetEffectiveScale()
+        local delta = myself._owPaneStartCursorY - cursorY
+        local desiredTopH = max(topMinHeight, myself._owPaneStartTopH + delta)
 
         local totalH = parent:GetHeight()
         local maxTopH = totalH - bottomMinHeight - dividerHeight

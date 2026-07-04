@@ -37,25 +37,25 @@ function OneWoW_GUI:CreateEditBox(parent, options)
         box:SetMaxLetters(maxLetters)
     end
 
-    box:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    box:SetScript("OnEscapePressed", function(myself) myself:ClearFocus() end)
 
-    box:SetScript("OnEditFocusGained", function(self)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-        if self:GetText() == self.placeholderText then
-            self:SetText("")
-            self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    box:SetScript("OnEditFocusGained", function(myself)
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+        if myself:GetText() == myself.placeholderText then
+            myself:SetText("")
+            myself:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         end
     end)
 
-    box:SetScript("OnEditFocusLost", function(self)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        self:RestorePlaceholder()
+    box:SetScript("OnEditFocusLost", function(myself)
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        myself:RestorePlaceholder()
     end)
 
     if onTextChanged then
-        box:SetScript("OnTextChanged", function(self)
-            local text = self:GetText()
-            if text == self.placeholderText then text = "" end
+        box:SetScript("OnTextChanged", function(myself)
+            local text = myself:GetText()
+            if text == myself.placeholderText then text = "" end
             onTextChanged(text)
         end)
     end
@@ -116,7 +116,7 @@ function OneWoW_GUI:CreateScrollEditBox(parent, options)
 
     scrollFrame:SetScrollChild(editBox)
 
-    scrollFrame:HookScript("OnSizeChanged", function(self, w)
+    scrollFrame:HookScript("OnSizeChanged", function(_, w)
         editBox:SetWidth(math.max(1, w))
     end)
 
@@ -124,14 +124,14 @@ function OneWoW_GUI:CreateScrollEditBox(parent, options)
         editBox:SetFocus()
     end)
 
-    editBox:SetScript("OnEscapePressed", function(self)
-        self:ClearFocus()
-        if onEscapePressed then onEscapePressed(self) end
+    editBox:SetScript("OnEscapePressed", function(myself)
+        myself:ClearFocus()
+        if onEscapePressed then onEscapePressed(myself) end
     end)
 
     if onTextChanged then
-        editBox:SetScript("OnTextChanged", function(self, userInput)
-            onTextChanged(self, userInput)
+        editBox:SetScript("OnTextChanged", function(myself, userInput)
+            onTextChanged(myself, userInput)
         end)
     end
 

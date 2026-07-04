@@ -1,4 +1,3 @@
-local _, ns = ...
 
 local ipairs = ipairs
 local CreateFrame = CreateFrame

@@ -25,24 +25,24 @@ function OneWoW_GUI:CreateButton(parent, options)
     btn.text:SetText(text)
     btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    btn:SetScript("OnEnter", function(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+        myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     end)
-    btn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    btn:SetScript("OnLeave", function(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end)
-    btn:SetScript("OnMouseDown", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
+    btn:SetScript("OnMouseDown", function(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
     end)
-    btn:SetScript("OnMouseUp", function(self)
-        if self:IsMouseOver() then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+    btn:SetScript("OnMouseUp", function(myself)
+        if myself:IsMouseOver() then
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
         else
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
         end
     end)
 
@@ -114,40 +114,40 @@ function OneWoW_GUI:CreateFitTextButton(parent, options)
     if toggleable then
         btn.isActive = false
 
-        local function applyNormal(self)
-            if self.isActive then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        local function applyNormal(myself)
+            if myself.isActive then
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             else
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         end
 
-        local function applyHover(self)
-            if self.isActive then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        local function applyHover(myself)
+            if myself.isActive then
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+                myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             else
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-                self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+                myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
             end
         end
 
         btn:SetScript("OnEnter", applyHover)
         btn:SetScript("OnLeave", applyNormal)
-        btn:SetScript("OnMouseDown", function(self)
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
+        btn:SetScript("OnMouseDown", function(myself)
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
         end)
-        btn:SetScript("OnMouseUp", function(self)
-            if self:IsMouseOver() then
-                applyHover(self)
+        btn:SetScript("OnMouseUp", function(myself)
+            if myself:IsMouseOver() then
+                applyHover(myself)
             else
-                applyNormal(self)
+                applyNormal(myself)
             end
         end)
 
@@ -229,17 +229,17 @@ function OneWoW_GUI:CreateFitFrameButtons(parent, options)
 
         applyNormal(btn)
 
-        btn:SetScript("OnEnter", function(self) applyHover(self) end)
-        btn:SetScript("OnLeave", function(self) applyNormal(self) end)
-        btn:SetScript("OnMouseDown", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED")) end)
-        btn:SetScript("OnMouseUp", function(self) applyNormal(self) end)
-        btn:SetScript("OnClick", function(self)
+        btn:SetScript("OnEnter", function(myself) applyHover(myself) end)
+        btn:SetScript("OnLeave", function(myself) applyNormal(myself) end)
+        btn:SetScript("OnMouseDown", function(myself) myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED")) end)
+        btn:SetScript("OnMouseUp", function(myself) applyNormal(myself) end)
+        btn:SetScript("OnClick", function(myself)
             for _, ob in ipairs(buttons) do
-                ob.isActive = (ob == self)
+                ob.isActive = (ob == myself)
                 applyNormal(ob)
             end
             if onSelect then
-                onSelect(self.itemValue, item.text, self)
+                onSelect(myself.itemValue, item.text, myself)
             end
         end)
 
@@ -322,10 +322,10 @@ function OneWoW_GUI:CreateOnOffToggleButtons(parent, options)
     end
 
     for _, btn in ipairs({ onBtn, offBtn }) do
-        btn:SetScript("OnEnter", function(self) applyHover(self) end)
-        btn:SetScript("OnLeave", function(self) applyNormal(self) end)
-        btn:SetScript("OnMouseDown", function(self) self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED")) end)
-        btn:SetScript("OnMouseUp", function(self) applyNormal(self) end)
+        btn:SetScript("OnEnter", function(myself) applyHover(myself) end)
+        btn:SetScript("OnLeave", function(myself) applyNormal(myself) end)
+        btn:SetScript("OnMouseDown", function(myself) myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED")) end)
+        btn:SetScript("OnMouseUp", function(myself) applyNormal(myself) end)
     end
 
     local function refresh(enabled, val)
@@ -430,26 +430,26 @@ function OneWoW_GUI:CreateFavoriteToggleButton(parent, options)
 
     applyVisual(options.favorite)
 
-    btn.SetFavorite = function(self, on)
+    btn.SetFavorite = function(_, on)
         applyVisual(on)
     end
-    btn.GetFavorite = function(self)
-        return self._favorite
+    btn.GetFavorite = function(myself)
+        return myself._favorite
     end
 
-    btn:SetScript("OnClick", function(self)
-        local nv = not self._favorite
+    btn:SetScript("OnClick", function(myself)
+        local nv = not myself._favorite
         applyVisual(nv)
         if options.onClick then
-            options.onClick(self, nv)
+            options.onClick(myself, nv)
         end
     end)
 
     local tTitle = options.tooltipTitle
     local tText = options.tooltipText
     if tTitle or tText then
-        btn:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        btn:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
             if tTitle then
                 GameTooltip:SetText(tTitle, 1, 1, 1)
             end

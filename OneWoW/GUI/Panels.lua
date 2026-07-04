@@ -38,8 +38,8 @@ function OneWoW_GUI:CreateDialog(config)
     if movable then
         frame:SetMovable(true)
         frame:RegisterForDrag("LeftButton")
-        frame:SetScript("OnDragStart", function(self) self:StartMoving() end)
-        frame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+        frame:SetScript("OnDragStart", function(myself) myself:StartMoving() end)
+        frame:SetScript("OnDragStop", function(myself) myself:StopMovingOrSizing() end)
     end
 
     if escClose and name then
@@ -102,15 +102,15 @@ function OneWoW_GUI:CreateDialog(config)
             if def.color then
                 local cr, cg, cb = def.color[1], def.color[2], def.color[3]
                 btn:SetBackdropColor(cr, cg, cb, 0.6)
-                btn:SetScript("OnEnter", function(self)
-                    self:SetBackdropColor(cr, cg, cb, 0.8)
-                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-                    self.text:SetTextColor(1, 1, 1)
+                btn:SetScript("OnEnter", function(myself)
+                    myself:SetBackdropColor(cr, cg, cb, 0.8)
+                    myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+                    myself.text:SetTextColor(1, 1, 1)
                 end)
-                btn:SetScript("OnLeave", function(self)
-                    self:SetBackdropColor(cr, cg, cb, 0.6)
-                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                    self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                btn:SetScript("OnLeave", function(myself)
+                    myself:SetBackdropColor(cr, cg, cb, 0.6)
+                    myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                    myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 end)
             end
 
@@ -608,10 +608,10 @@ function OneWoW_GUI:CreateVirtualizedList(parent, options)
                 SetSelectedIndex(b.entryIndex)
             end
         end)
-        btn:SetScript("OnEnter", function(self)
-            local t = self._tooltipFullText
+        btn:SetScript("OnEnter", function(myself)
+            local t = myself._tooltipFullText
             if t and t ~= "" then
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
                 local r, g, b = OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")
                 local firstLine
                 for line in tostring(t):gmatch("([^\n]+)") do
@@ -637,7 +637,7 @@ function OneWoW_GUI:CreateVirtualizedList(parent, options)
         local viewH = scrollFrame:GetHeight()
         if viewH <= 0 then return end
         local needed = math.ceil(viewH / rowHeight) + 2
-        for i = #listButtons + 1, needed do
+        for _ = #listButtons + 1, needed do
             createRowButton()
         end
     end
@@ -648,7 +648,7 @@ function OneWoW_GUI:CreateVirtualizedList(parent, options)
         Refresh()
     end)
 
-    for i = 1, numVisibleRows do
+    for _ = 1, numVisibleRows do
         createRowButton()
     end
 
@@ -669,9 +669,9 @@ function OneWoW_GUI:CreateVirtualizedList(parent, options)
 
     if enableKeyboardNav then
         parent:EnableKeyboard(true)
-        parent:SetScript("OnKeyDown", function(self, key)
+        parent:SetScript("OnKeyDown", function(myself, key)
             if key == "UP" or key == "DOWN" then
-                self:SetPropagateKeyboardInput(false)
+                myself:SetPropagateKeyboardInput(false)
                 local n = getCount()
                 if n <= 0 then return end
                 local cur = state.selectedIndex or 0
@@ -681,7 +681,7 @@ function OneWoW_GUI:CreateVirtualizedList(parent, options)
                     SetSelectedIndex(cur < n and cur + 1 or n)
                 end
             else
-                self:SetPropagateKeyboardInput(true)
+                myself:SetPropagateKeyboardInput(true)
             end
         end)
     end
@@ -847,7 +847,6 @@ function OneWoW_GUI:CreateDataTable(parent, options)
     local onHeaderCreate = options.onHeaderCreate
 
     _dataTableCount = _dataTableCount + 1
-    local uid = _dataTableCount
 
     local container = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     container:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
@@ -953,7 +952,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
         end
 
         local xOffset = 5
-        for i, col in ipairs(columns) do
+        for i, _ in ipairs(columns) do
             local btn = headerRow.columnButtons[i]
             if btn then
                 local width = resolvedWidths[i]
@@ -1021,23 +1020,23 @@ function OneWoW_GUI:CreateDataTable(parent, options)
             btn.text = text
         end
 
-        btn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+        btn:SetScript("OnEnter", function(myself)
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
             if btn.text then btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end
             if col.ttTitle and col.ttDesc then
-                GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                GameTooltip:SetOwner(myself, "ANCHOR_TOP")
                 GameTooltip:SetText(col.ttTitle, 1, 1, 1)
                 GameTooltip:AddLine(col.ttDesc, nil, nil, nil, true)
                 GameTooltip:Show()
             elseif col.tooltip then
-                GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                GameTooltip:SetOwner(myself, "ANCHOR_TOP")
                 GameTooltip:SetText(col.tooltip, 1, 1, 1)
                 GameTooltip:Show()
             end
         end)
 
-        btn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        btn:SetScript("OnLeave", function(myself)
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
             if btn.text then btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
             GameTooltip:Hide()
         end)
@@ -1076,13 +1075,13 @@ function OneWoW_GUI:CreateDataTable(parent, options)
     scrollFrame:SetPoint("TOPLEFT", headerRow, "BOTTOMLEFT", 0, -2)
     scrollFrame:SetPoint("BOTTOMRIGHT", inner, "BOTTOMRIGHT", -scrollBarWidth, 0)
     scrollFrame:EnableMouseWheel(true)
-    scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-        local current = self:GetVerticalScroll()
-        local maxScroll = self:GetVerticalScrollRange()
+    scrollFrame:SetScript("OnMouseWheel", function(myself, delta)
+        local current = myself:GetVerticalScroll()
+        local maxScroll = myself:GetVerticalScrollRange()
         if delta > 0 then
-            self:SetVerticalScroll(math.max(0, current - 40))
+            myself:SetVerticalScroll(math.max(0, current - 40))
         else
-            self:SetVerticalScroll(math.min(maxScroll, current + 40))
+            myself:SetVerticalScroll(math.min(maxScroll, current + 40))
         end
     end)
 
@@ -1123,21 +1122,21 @@ function OneWoW_GUI:CreateDataTable(parent, options)
 
     scrollThumb:EnableMouse(true)
     scrollThumb:RegisterForDrag("LeftButton")
-    scrollThumb:SetScript("OnDragStart", function(self)
-        self.dragging = true
-        self.dragStartY = select(2, GetCursorPosition()) / self:GetEffectiveScale()
-        self.dragStartScroll = scrollFrame:GetVerticalScroll()
+    scrollThumb:SetScript("OnDragStart", function(myself)
+        myself.dragging = true
+        myself.dragStartY = select(2, GetCursorPosition()) / myself:GetEffectiveScale()
+        myself.dragStartScroll = scrollFrame:GetVerticalScroll()
     end)
-    scrollThumb:SetScript("OnDragStop", function(self) self.dragging = false end)
-    scrollThumb:SetScript("OnUpdate", function(self)
-        if not self.dragging then return end
-        local curY = select(2, GetCursorPosition()) / self:GetEffectiveScale()
-        local delta = self.dragStartY - curY
+    scrollThumb:SetScript("OnDragStop", function(myself) myself.dragging = false end)
+    scrollThumb:SetScript("OnUpdate", function(myself)
+        if not myself.dragging then return end
+        local curY = select(2, GetCursorPosition()) / myself:GetEffectiveScale()
+        local delta = myself.dragStartY - curY
         local trackHeight = scrollTrack:GetHeight()
-        local thumbRange = trackHeight - self:GetHeight()
+        local thumbRange = trackHeight - myself:GetHeight()
         if thumbRange > 0 then
             local maxScroll = scrollFrame:GetVerticalScrollRange()
-            local newScroll = self.dragStartScroll + (delta / thumbRange) * maxScroll
+            local newScroll = myself.dragStartScroll + (delta / thumbRange) * maxScroll
             scrollFrame:SetVerticalScroll(math.max(0, math.min(maxScroll, newScroll)))
         end
     end)
@@ -1147,7 +1146,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
     scrollContent:SetHeight(400)
     scrollFrame:SetScrollChild(scrollContent)
 
-    scrollFrame:HookScript("OnSizeChanged", function(self, width)
+    scrollFrame:HookScript("OnSizeChanged", function(_, width)
         scrollContent:SetWidth(width)
         UpdateScrollThumb()
     end)
@@ -1378,20 +1377,20 @@ function OneWoW_GUI:CreateDataRow(scrollContent, options)
         expandBtn:SetScript("OnClick", ToggleExpanded)
     end
 
-    row:SetScript("OnMouseDown", function(self, button)
+    row:SetScript("OnMouseDown", function(_, button)
         if button == "LeftButton" and expandable then
             ToggleExpanded()
         end
     end)
 
-    row:SetScript("OnEnter", function(self)
-        self.bg:SetColorTexture(hoverR, hoverG, hoverB, 0.8)
-        if onRowEnter then onRowEnter(self) end
+    row:SetScript("OnEnter", function(myself)
+        myself.bg:SetColorTexture(hoverR, hoverG, hoverB, 0.8)
+        if onRowEnter then onRowEnter(myself) end
     end)
 
-    row:SetScript("OnLeave", function(self)
-        self.bg:SetColorTexture(bgR, bgG, bgB, 0.6)
-        if onRowLeave then onRowLeave(self) end
+    row:SetScript("OnLeave", function(myself)
+        myself.bg:SetColorTexture(bgR, bgG, bgB, 0.6)
+        if onRowLeave then onRowLeave(myself) end
     end)
 
     if not scrollContent._dataRows then
@@ -1461,30 +1460,30 @@ function OneWoW_GUI:CreateOverviewPanel(parent, options)
         statBox.value = value
 
         statBox:EnableMouse(true)
-        statBox:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        statBox:SetScript("OnEnter", function(myself)
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
             GameTooltip:SetText(stat.ttTitle or "", 1, 1, 1)
             GameTooltip:AddLine(stat.ttDesc or "", nil, nil, nil, true)
-            if self.extraTooltipLines and #self.extraTooltipLines > 0 then
+            if myself.extraTooltipLines and #myself.extraTooltipLines > 0 then
                 GameTooltip:AddLine(" ")
-                for _, line in ipairs(self.extraTooltipLines) do
+                for _, line in ipairs(myself.extraTooltipLines) do
                     GameTooltip:AddLine(line.text, line.r or 0.8, line.g or 0.8, line.b or 0.8, line.wrap)
                 end
             end
             GameTooltip:Show()
         end)
-        statBox:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        statBox:SetScript("OnLeave", function(myself)
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
             GameTooltip:Hide()
         end)
 
         tinsert(statBoxes, statBox)
     end
 
-    statsContainer:SetScript("OnSizeChanged", function(self, width, height)
+    statsContainer:SetScript("OnSizeChanged", function(myself, width, containerHeight)
         local boxWidth = (width - (numCols + 1) * 3) / numCols
-        local boxHeight = (height - (numRows + 1) * 3) / numRows
+        local boxHeight = (containerHeight - (numRows + 1) * 3) / numRows
 
         for i, box in ipairs(statBoxes) do
             local r = math.ceil(i / numCols)
@@ -1495,7 +1494,7 @@ function OneWoW_GUI:CreateOverviewPanel(parent, options)
 
             box:SetSize(boxWidth, boxHeight)
             box:ClearAllPoints()
-            box:SetPoint("TOPLEFT", self, "TOPLEFT", x, y)
+            box:SetPoint("TOPLEFT", myself, "TOPLEFT", x, y)
         end
     end)
 
