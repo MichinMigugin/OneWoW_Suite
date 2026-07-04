@@ -387,20 +387,41 @@ OneWoW.TooltipEngine:RegisterProvider({
 })
 
 -- Re-run the tooltip data pipeline whenever Shift state changes while a
--- tooltip is up. RefreshData() re-fires every TooltipDataProcessor postcall,
--- including ours, so the provider can rebuild its lines with the new shift
--- state and produce the compact / expanded view.
+-- non-action-bar item tooltip is up. RefreshDataNextUpdate() re-fires every
+-- TooltipDataProcessor postcall on the tooltip's next OnUpdate (Blizzard's
+-- deferred path), including ours, so the provider can rebuild its lines with
+-- the new shift state and produce the compact / expanded view.
+--
+-- Direct RefreshData() from addon code is unsafe: action-bar tooltips (GetAction)
+-- and lines with secret unitToken values error when rebuilt from tainted code.
+-- Shift-for-drag off the locked action bar fires MODIFIER_STATE_CHANGED and
+-- must be ignored here.
+local function RequestItemTrackerTooltipRefresh(tooltip)
+    if not tooltip or not tooltip:IsShown() or not tooltip.RefreshDataNextUpdate then
+        return
+    end
+
+    local data = tooltip.GetPrimaryTooltipData and tooltip:GetPrimaryTooltipData()
+    if not data or data.type ~= Enum.TooltipDataType.Item then return end
+    if OneWoW.Restriction.IsSecret(data.type) then return end
+
+    local info = tooltip.GetPrimaryTooltipInfo and tooltip:GetPrimaryTooltipInfo()
+    if info and info.getterName == "GetAction" then return end
+
+    if GetCursorInfo() then return end
+
+    tooltip:RefreshDataNextUpdate()
+end
+
 do
     local f = CreateFrame("Frame")
     f:RegisterEvent("MODIFIER_STATE_CHANGED")
     f:SetScript("OnEvent", function(_, _, key)
         if key ~= "LSHIFT" and key ~= "RSHIFT" then return end
         if OneWoW.Restriction.IsInCombat() then return end
-        if GameTooltip and GameTooltip:IsShown() and GameTooltip.RefreshData then
-            GameTooltip:RefreshData()
-        end
-        if ItemRefTooltip and ItemRefTooltip:IsShown() and ItemRefTooltip.RefreshData then
-            ItemRefTooltip:RefreshData()
-        end
+        if not OneWoW.TooltipEngine:IsFeatureEnabled("itemtracker") then return end
+
+        RequestItemTrackerTooltipRefresh(GameTooltip)
+        RequestItemTrackerTooltipRefresh(ItemRefTooltip)
     end)
 end
