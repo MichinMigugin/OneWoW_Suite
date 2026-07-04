@@ -9,46 +9,64 @@ local currentSortColumn = nil
 local currentSortAscending = true
 local characterRows = {}
 
-local enchantableSlots = {
-    [1] = true,
-    [3] = true,
-    [5] = true,
-    [7] = true,
-    [8] = true,
-    [9] = true,
+-- Defaults match OneWoW_QoL charinfo; user overrides live in that panel and are
+-- read via OneWoW_QoL_API.IsEnchantSlotEnabled when QoL is loaded.
+local ENCHANT_SLOT_DEFAULTS = {
+    [1]  = true,
+    [2]  = false,
+    [3]  = true,
+    [5]  = true,
+    [6]  = false,
+    [7]  = true,
+    [8]  = true,
+    [9]  = true,
+    [10] = false,
     [11] = true,
     [12] = true,
     [15] = true,
     [16] = true,
-}
-
-local softEnchantSlots = {
-    [9] = true,
-    [15] = true,
+    [17] = true,
 }
 
 local OFFHAND_SLOT = 17
 
-local function IsOffHandWeaponFromLink(item)
+local function IsEnchantSlotEnabled(slotId)
+    local defaultVal = ENCHANT_SLOT_DEFAULTS[slotId]
+    if defaultVal == nil then return false end
+    if OneWoW_QoL_API and OneWoW_QoL_API.IsEnchantSlotEnabled then
+        return OneWoW_QoL_API.IsEnchantSlotEnabled(slotId)
+    end
+    return defaultVal
+end
+
+local function IsOffHandWeapon(item)
     if not item or not item.itemID then return false end
-    local _, _, _, itemEquipLoc = C_Item.GetItemInfoInstant(item.itemID)
-    if not itemEquipLoc then return false end
-    return itemEquipLoc == "INVTYPE_WEAPON"
-        or itemEquipLoc == "INVTYPE_WEAPONOFFHAND"
-        or itemEquipLoc == "INVTYPE_WEAPONMAINHAND"
-        or itemEquipLoc == "INVTYPE_2HWEAPON"
+    local invType = C_Item.GetItemInventoryTypeByID(item.itemID)
+    if not invType then return false end
+    return invType == Enum.InventoryType.IndexWeaponType
+        or invType == Enum.InventoryType.IndexWeaponoffhandType
+        or invType == Enum.InventoryType.IndexWeaponmainhandType
 end
 
 local function IsSlotEnchantable(slotId, equipment)
-    if enchantableSlots[slotId] then return true end
-    if slotId == OFFHAND_SLOT and equipment then
-        return IsOffHandWeaponFromLink(equipment[OFFHAND_SLOT])
+    if not IsEnchantSlotEnabled(slotId) then return false end
+    if slotId == OFFHAND_SLOT then
+        return equipment and IsOffHandWeapon(equipment[OFFHAND_SLOT]) or false
     end
-    return false
+    return true
 end
 
-local function IsSoftEnchantSlot(slotId)
-    return softEnchantSlots[slotId] or false
+-- Prefer scan-time enchantID; fall back to charinfo-style link parse for older SV.
+local function ItemHasEnchant(item)
+    if type(item.enchantID) == "number" then
+        return item.enchantID > 0
+    end
+    if not item.itemLink then return false end
+    local itemString = item.itemLink:match("item:([%-?%d:]+)")
+    if not itemString then return false end
+    local fields = { strsplit(":", itemString) }
+    local enchantID = tonumber(fields[2])
+    return enchantID and enchantID > 0
 end
 
 function ns.UI.CreateEquipmentTab(parent)
@@ -80,8 +98,8 @@ function ns.UI.CreateEquipmentTab(parent)
         {key = "level",     label = L["COL_LEVEL"],              width = 40,  fixed = true,  align = "center",                   ttTitle = LEVEL,             ttDesc = L["TT_COL_LEVEL_DESC"]},
         {key = "itemLevel", label = L["COL_ITEM_LEVEL"],     width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_ILVL"],             ttDesc = L["TT_COL_ILVL_DESC"]},
         {key = "durability", label = L["EQUIPMENT_COL_DURABILITY"], width = 50, fixed = false, align = "center",                  ttTitle = DURABILITY,       ttDesc = L["TT_COL_DURABILITY_DESC"]},
-        {key = "enchants",  label = L["EQUIPMENT_COL_ENCHANTS"], width = 55,  fixed = false, align = "center",                   ttTitle = ENCHANTS,         ttDesc = L["TT_COL_ENCHANTS_DESC"]},
-        {key = "gems",      label = L["EQUIPMENT_COL_GEMS"],    width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_GEMS"],             ttDesc = L["TT_COL_GEMS_DESC"]},
+        {key = "enchants",  label = L["EQUIPMENT_COL_ENCHANTS"], width = 60,  fixed = false, align = "center",                   ttTitle = ENCHANTS,         ttDesc = L["TT_COL_ENCHANTS_DESC"]},
+        {key = "gems",      label = L["EQUIPMENT_COL_GEMS"],    width = 60,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_GEMS"],             ttDesc = L["TT_COL_GEMS_DESC"]},
         {key = "tierSet",   label = L["EQUIPMENT_COL_TIER_SET"], width = 45,  fixed = false, align = "center",                   ttTitle = L["TT_COL_TIER_SET"],         ttDesc = L["TT_COL_TIER_SET_DESC"]},
         {key = "str",       label = STR,      width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_STR"],              ttDesc = L["TT_COL_STR_DESC"]},
         {key = "agi",       label = AGI,      width = 45,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_AGI"],              ttDesc = L["TT_COL_AGI_DESC"]},
@@ -194,7 +212,6 @@ local function GetEquipmentStats(charKey, charData)
     local cd = OneWoW_AltTracker_Character_API.GetCharacterData(charKey)
     local equipment = cd and cd.equipment
     local totalDurability, durabilityItems, missingEnchants, missingGems, tierCount = 0, 0, 0, 0, 0
-    local hardMissingEnchants = 0
     if equipment then
         for slotId = 1, 19 do
             if slotId ~= 4 and slotId ~= 18 and slotId ~= 19 then
@@ -205,12 +222,8 @@ local function GetEquipmentStats(charKey, charData)
                         durabilityItems = durabilityItems + 1
                     end
                     if IsSlotEnchantable(slotId, equipment) and charData.level and charData.level >= 70 then
-                        local enchantId = item.itemLink:match("item:%d+:(%d+)")
-                        if not enchantId or enchantId == "0" or enchantId == "" then
+                        if not ItemHasEnchant(item) then
                             missingEnchants = missingEnchants + 1
-                            if not IsSoftEnchantSlot(slotId) then
-                                hardMissingEnchants = hardMissingEnchants + 1
-                            end
                         end
                     end
                     local itemSockets = item.numSockets or 0
@@ -224,9 +237,9 @@ local function GetEquipmentStats(charKey, charData)
     end
     local durabilityPct = durabilityItems > 0 and math.floor(totalDurability / durabilityItems) or 100
     local statusScore = 0
-    if durabilityPct < 30 or hardMissingEnchants >= 5 or missingGems >= 5 then
+    if durabilityPct < 30 or missingEnchants >= 5 or missingGems >= 5 then
         statusScore = 2
-    elseif hardMissingEnchants > 0 or missingGems > 0 or durabilityPct < 70 then
+    elseif missingEnchants > 0 or missingGems > 0 or durabilityPct < 70 then
         statusScore = 1
     end
     return durabilityPct, missingEnchants, missingGems, tierCount, statusScore
@@ -316,7 +329,6 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         local totalDurability = 0
         local durabilityItems = 0
         local missingEnchants = 0
-        local hardMissingEnchants = 0
         local totalEnchantableSlots = 0
         local missingGems = 0
         local totalGemSlots = 0
@@ -335,12 +347,8 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
 
                         if IsSlotEnchantable(slotId, equipment) and charData.level and charData.level >= 70 then
                             totalEnchantableSlots = totalEnchantableSlots + 1
-                            local enchantId = item.itemLink:match("item:%d+:(%d+)")
-                            if not enchantId or enchantId == "0" or enchantId == "" then
+                            if not ItemHasEnchant(item) then
                                 missingEnchants = missingEnchants + 1
-                                if not IsSoftEnchantSlot(slotId) then
-                                    hardMissingEnchants = hardMissingEnchants + 1
-                                end
                             end
                         end
 
@@ -429,17 +437,22 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         durabilityText:SetJustifyH("CENTER")
         table.insert(charRow.cells, durabilityText)
 
+        local doneEnchants = totalEnchantableSlots - missingEnchants
+        local doneGems = totalGemSlots - missingGems
+
         local enchantsCell = CreateFrame("Frame", nil, charRow)
         enchantsCell:SetHeight(32)
         enchantsCell:EnableMouse(true)
         enchantsCell:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            if missingEnchants > 0 then
-                GameTooltip:SetText(string.format(L["TT_ENCHANTS_MISSING_OF"], missingEnchants, totalEnchantableSlots), 1, 0.35, 0.13)
+            if totalEnchantableSlots == 0 then
+                GameTooltip:SetText(string.format(L["TT_ENCHANTS_PROGRESS"], 0, 0), 0.5, 0.5, 0.5)
+            elseif missingEnchants > 0 then
+                GameTooltip:SetText(string.format(L["TT_ENCHANTS_PROGRESS"], doneEnchants, totalEnchantableSlots), 1, 0.35, 0.13)
             else
-                GameTooltip:SetText(string.format(L["TT_ENCHANTS_ALL_OK"], totalEnchantableSlots), 0.30, 0.69, 0.31)
+                GameTooltip:SetText(string.format(L["TT_ENCHANTS_PROGRESS"], doneEnchants, totalEnchantableSlots), 0.30, 0.69, 0.31)
             end
-            GameTooltip:AddLine(L["TT_ENCHANTS_SLOT_LIST"], 1, 1, 1)
+            GameTooltip:AddLine(L["TT_ENCHANTS_TRACKED_NOTE"], 0.7, 0.7, 0.7, true)
             GameTooltip:AddLine(L["TT_ENCHANTS_QUALITY_NOTE"], 0.7, 0.7, 0.7)
             GameTooltip:Show()
         end)
@@ -448,16 +461,15 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         end)
         local enchantsText = OneWoW_GUI:CreateFS(enchantsCell, 12)
         enchantsText:SetPoint("CENTER", enchantsCell, "CENTER", 0, 0)
-        if missingEnchants > 0 then
-            enchantsText:SetText(tostring(missingEnchants))
-            if missingEnchants >= 5 then
-                enchantsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
-            else
-                enchantsText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            end
-        else
-            enchantsText:SetText("0")
+        enchantsText:SetText(doneEnchants .. "/" .. totalEnchantableSlots)
+        if totalEnchantableSlots == 0 then
+            enchantsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        elseif missingEnchants == 0 then
             enchantsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        elseif missingEnchants >= 5 then
+            enchantsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+        else
+            enchantsText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         end
         table.insert(charRow.cells, enchantsCell)
 
@@ -466,10 +478,12 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         gemsCell:EnableMouse(true)
         gemsCell:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            if missingGems > 0 then
-                GameTooltip:SetText(string.format(L["TT_GEMS_MISSING_OF"], missingGems, totalGemSlots), 1, 0.35, 0.13)
+            if totalGemSlots == 0 then
+                GameTooltip:SetText(string.format(L["TT_GEMS_PROGRESS"], 0, 0), 0.5, 0.5, 0.5)
+            elseif missingGems > 0 then
+                GameTooltip:SetText(string.format(L["TT_GEMS_PROGRESS"], doneGems, totalGemSlots), 1, 0.35, 0.13)
             else
-                GameTooltip:SetText(string.format(L["TT_GEMS_ALL_OK"], totalGemSlots), 0.30, 0.69, 0.31)
+                GameTooltip:SetText(string.format(L["TT_GEMS_PROGRESS"], doneGems, totalGemSlots), 0.30, 0.69, 0.31)
             end
             GameTooltip:Show()
         end)
@@ -478,16 +492,15 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         end)
         local gemsText = OneWoW_GUI:CreateFS(gemsCell, 12)
         gemsText:SetPoint("CENTER", gemsCell, "CENTER", 0, 0)
-        if missingGems > 0 then
-            gemsText:SetText(tostring(missingGems))
-            if missingGems >= 5 then
-                gemsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
-            else
-                gemsText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            end
-        else
-            gemsText:SetText("0")
+        gemsText:SetText(doneGems .. "/" .. totalGemSlots)
+        if totalGemSlots == 0 then
+            gemsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        elseif missingGems == 0 then
             gemsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        elseif missingGems >= 5 then
+            gemsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+        else
+            gemsText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         end
         table.insert(charRow.cells, gemsCell)
 
@@ -587,9 +600,9 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         statusCell:EnableMouse(true)
         statusCell:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            if durabilityPct < 30 or hardMissingEnchants >= 5 or missingGems >= 5 then
+            if durabilityPct < 30 or missingEnchants >= 5 or missingGems >= 5 then
                 GameTooltip:SetText(L["STATUS_ATTENTION"], 1, 0.34, 0.13)
-            elseif hardMissingEnchants > 0 or missingGems > 0 or durabilityPct < 70 then
+            elseif missingEnchants > 0 or missingGems > 0 or durabilityPct < 70 then
                 GameTooltip:SetText(L["STATUS_REVIEW"], 1, 1, 0)
             else
                 GameTooltip:SetText(L["STATUS_OK"], 0.30, 0.69, 0.31)
@@ -614,9 +627,9 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
         local statusIcon = statusCell:CreateTexture(nil, "OVERLAY")
         statusIcon:SetSize(14, 14)
         statusIcon:SetPoint("CENTER", statusCell, "CENTER", 0, 0)
-        if durabilityPct < 30 or hardMissingEnchants >= 5 or missingGems >= 5 then
+        if durabilityPct < 30 or missingEnchants >= 5 or missingGems >= 5 then
             statusIcon:SetTexture("Interface\\FriendsFrame\\StatusIcon-DnD")
-        elseif hardMissingEnchants > 0 or missingGems > 0 or durabilityPct < 70 then
+        elseif missingEnchants > 0 or missingGems > 0 or durabilityPct < 70 then
             statusIcon:SetTexture("Interface\\FriendsFrame\\StatusIcon-Away")
         else
             statusIcon:SetTexture("Interface\\FriendsFrame\\StatusIcon-Online")
@@ -708,7 +721,6 @@ function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILe
 
         if equipment then
             local charMissingEnchants = 0
-            local charHardMissingEnchants = 0
             local charMissingGems = 0
             local charLowDurability = 0
             local charTierCount = 0
@@ -724,12 +736,8 @@ function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILe
                         end
 
                         if IsSlotEnchantable(slotId, equipment) and charData.level and charData.level >= 70 then
-                            local enchantId = item.itemLink:match("item:%d+:(%d+)")
-                            if not enchantId or enchantId == "0" or enchantId == "" then
+                            if not ItemHasEnchant(item) then
                                 charMissingEnchants = charMissingEnchants + 1
-                                if not IsSoftEnchantSlot(slotId) then
-                                    charHardMissingEnchants = charHardMissingEnchants + 1
-                                end
                             end
                         end
 
@@ -743,19 +751,16 @@ function ns.UI.RefreshEquipmentStats(equipmentTab, allChars, charCount, totalILe
                 end
             end
 
-            if charMissingEnchants > 0 then
-                stats.missingEnchants = stats.missingEnchants + 1
-            end
-            if charMissingGems > 0 then
-                stats.missingGems = stats.missingGems + 1
-            end
+            -- Sum missing slots/sockets across all alts (not "characters with any missing").
+            stats.missingEnchants = stats.missingEnchants + charMissingEnchants
+            stats.missingGems = stats.missingGems + charMissingGems
             if charLowDurability >= 3 then
                 stats.lowDurability = stats.lowDurability + 1
             end
             if charTierCount >= 2 then
                 stats.tierSets = stats.tierSets + 1
             end
-            if charLowDurability >= 3 or charHardMissingEnchants >= 5 or charMissingGems >= 5 then
+            if charLowDurability >= 3 or charMissingEnchants >= 5 or charMissingGems >= 5 then
                 stats.attention = stats.attention + 1
             end
         end

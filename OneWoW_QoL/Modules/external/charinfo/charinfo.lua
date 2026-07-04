@@ -49,6 +49,12 @@ local function IsSlotEnchantable(slotId)
     return true
 end
 
+-- Cross-addon: AltTracker Equipment tab uses the same slot toggles as this panel.
+-- Off-hand weapon checks stay caller-side (live player vs stored alt gear).
+function OneWoW_QoL_API.IsEnchantSlotEnabled(slotId)
+    return GetSlotEnchantToggle(slotId)
+end
+
 local slotNames = {
     [1] = "Head",
     [2] = "Neck",
