@@ -63,11 +63,28 @@ local function GetWeeklyActivitiesList()
     return ns:GetProgressList("weeklyActivityQuests")
 end
 
-local function GetWeeklyActivityCompleted(endgameData, questID)
-    if not endgameData or not endgameData.weeklyActivities or not endgameData.weeklyActivities.activities then
+local function GetWeeklyActivityLabel(entry)
+    if entry.localeKey and L[entry.localeKey] then
+        return L[entry.localeKey]
+    end
+    if entry.name then
+        return entry.name
+    end
+    local ids = entry.questIDs
+    if type(ids) == "table" and ids[1] then
+        return C_QuestLog.GetTitleForQuestID(ids[1]) or entry.key or "?"
+    end
+    if entry.questID then
+        return C_QuestLog.GetTitleForQuestID(entry.questID) or entry.key or "?"
+    end
+    return entry.key or "?"
+end
+
+local function GetWeeklyActivityCompleted(endgameData, activityKey)
+    if not activityKey or not endgameData or not endgameData.weeklyActivities or not endgameData.weeklyActivities.activities then
         return false
     end
-    local a = endgameData.weeklyActivities.activities[questID]
+    local a = endgameData.weeklyActivities.activities[activityKey]
     return a and a.completed or false
 end
 
@@ -76,7 +93,7 @@ local function GetWeeklyActivityCounts(endgameData)
     local done = 0
     local total = #activities
     for _, entry in ipairs(activities) do
-        if GetWeeklyActivityCompleted(endgameData, entry.questID) then
+        if GetWeeklyActivityCompleted(endgameData, entry.key) then
             done = done + 1
         end
     end
@@ -264,8 +281,7 @@ local function GetProgressSortValue(charKey, charData, sortColumn)
         local done = GetWeeklyActivityCounts(edg)
         return done or 0
     elseif sortColumn:sub(1, 3) == "wa_" then
-        local qid = tonumber(sortColumn:sub(4))
-        return (qid and GetWeeklyActivityCompleted(edg, qid)) and 1 or 0
+        return GetWeeklyActivityCompleted(edg, sortColumn:sub(4)) and 1 or 0
     elseif sortColumn:sub(1, 5) == "raid_" then
         local raidKey = sortColumn:sub(6)
         if edg and edg.raids and edg.raids.bosses and edg.raids.bosses[raidKey] then
@@ -769,8 +785,8 @@ local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
         local activities = GetWeeklyActivitiesList()
         if #activities > 0 then
             for _, entry in ipairs(activities) do
-                local done = GetWeeklyActivityCompleted(endgameData, entry.questID)
-                local label = entry.name or C_QuestLog.GetTitleForQuestID(entry.questID) or ("Quest " .. entry.questID)
+                local done = GetWeeklyActivityCompleted(endgameData, entry.key)
+                local label = GetWeeklyActivityLabel(entry)
                 local value = done and DONE or L["PROGRESS_WEEKLY_NOT_DONE"]
                 local color = done
                     and {OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")}
@@ -1069,16 +1085,17 @@ local function CreateWeeklyColumns()
     table.insert(cols, {key = "vaultWorld",   label = L["PROGRESS_COL_VAULT_W"], width = 115, minWidth = 115, flexWeight = 1, align = "left", ttTitle = WORLD,   ttDesc = L["TT_COL_VAULT_W_DESC"]})
     table.insert(cols, {key = "worldBoss",    label = L["PROGRESS_COL_WORLD_BOSS"], width = 65, minWidth = 65, flexWeight = 1, align = "left", ttTitle = L["TT_COL_WORLD_BOSS"], ttDesc = L["TT_COL_WORLD_BOSS_DESC"]})
     for _, entry in ipairs(GetWeeklyActivitiesList()) do
-        local label = ns.ShortNames:GetShortName(entry.name or "", 8)
+        local fullName = GetWeeklyActivityLabel(entry)
+        local label = ns.ShortNames:GetShortName(fullName, 8)
         table.insert(cols, {
-            key          = "wa_" .. entry.questID,
+            key          = "wa_" .. entry.key,
             label        = label,
             width        = 70,
             minWidth     = 70,
             flexWeight   = 1,
             align        = "center",
-            ttTitle      = entry.name,
-            ttDesc       = entry.name,
+            ttTitle      = fullName,
+            ttDesc       = fullName,
             activityData = entry,
         })
     end
@@ -1390,7 +1407,7 @@ local function BuildWeeklyCells(charRow, charData, charKey, endgameData, progres
 
     for _, entry in ipairs(GetWeeklyActivitiesList()) do
         local cellText = OneWoW_GUI:CreateFS(charRow, 12)
-        local done = GetWeeklyActivityCompleted(endgameData, entry.questID)
+        local done = GetWeeklyActivityCompleted(endgameData, entry.key)
         cellText:SetText(done and "1/1" or "0/1")
         if done then
             cellText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
@@ -1491,21 +1508,22 @@ local function BuildWeeklyTooltip(self, edg, chd, chk, contentFrame)
             GameTooltip:AddLine("No vault data yet - log in to scan.", 0.5, 0.5, 0.5)
         end
     elseif colKey:sub(1, 3) == "wa_" then
-        local qid = tonumber(colKey:sub(4))
-        local label
-        for _, entry in ipairs(GetWeeklyActivitiesList()) do
-            if entry.questID == qid then label = entry.name; break end
+        local activityKey = colKey:sub(4)
+        local entry
+        for _, e in ipairs(GetWeeklyActivitiesList()) do
+            if e.key == activityKey then entry = e; break end
         end
-        label = label or C_QuestLog.GetTitleForQuestID(qid or 0) or ("Quest " .. (qid or "?"))
+        local label = entry and GetWeeklyActivityLabel(entry) or activityKey
         GameTooltip:SetText(label, 1, 1, 1)
-        local completed = qid and GetWeeklyActivityCompleted(edg, qid)
+        local completed = GetWeeklyActivityCompleted(edg, activityKey)
         if completed then
             GameTooltip:AddLine(DONE, 0.2, 0.9, 0.2)
         else
             GameTooltip:AddLine(L["PROGRESS_WEEKLY_NOT_DONE"], 0.5, 0.5, 0.5)
         end
-        if qid then
-            GameTooltip:AddLine("Quest ID: " .. qid, 0.6, 0.6, 0.6)
+        local ids = entry and (entry.questIDs or (entry.questID and { entry.questID }))
+        if ids and #ids > 0 then
+            GameTooltip:AddLine("Quest ID: " .. table.concat(ids, ", "), 0.6, 0.6, 0.6)
         end
     elseif colKey == "rating" then
         GameTooltip:SetText(RATING, 1, 1, 1)

@@ -100,4 +100,13 @@ function ns:InitializeDatabase()
         global.overrides = { progress = {} }
         global.overridesReset = true
     end
+
+    -- Drop stale weekly-activity overrides that still pointed at season metas
+    -- 95842/95843 (sticky completion flag). Baseline now uses zone weeklies.
+    if not global.weeklyActivityQuestsV2 then
+        if global.overrides and global.overrides.progress then
+            global.overrides.progress.weeklyActivityQuests = nil
+        end
+        global.weeklyActivityQuestsV2 = true
+    end
 end

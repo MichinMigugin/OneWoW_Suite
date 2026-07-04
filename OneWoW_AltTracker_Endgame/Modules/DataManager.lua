@@ -68,6 +68,7 @@ function DataManager:HandleEvent(event)
     elseif event == "WEEKLY_REWARDS_UPDATE" then
         C_Timer.After(0.5, function()
             self:UpdateGreatVault()
+            self:UpdateWeeklyActivities()
         end)
 
     elseif event == "CURRENCY_DISPLAY_UPDATE" or event == "PVP_RATED_STATS_UPDATE" or event == "HONOR_LEVEL_UPDATE" then
