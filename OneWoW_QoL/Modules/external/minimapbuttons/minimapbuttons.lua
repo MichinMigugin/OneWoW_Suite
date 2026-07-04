@@ -7,10 +7,15 @@ local OneWoW_GUI = OneWoW_GUI
 
 -- ─── Raw UIParent methods (bypass noop overrides when positioning buttons) ──
 
-local RawClearAllPoints = UIParent.ClearAllPoints
-local RawSetPoint       = UIParent.SetPoint
-local RawSetScale       = UIParent.SetScale
-local RawSetParent      = UIParent.SetParent
+local RawClearAllPoints      = UIParent.ClearAllPoints
+local RawSetPoint            = UIParent.SetPoint
+local RawSetScale            = UIParent.SetScale
+local RawSetParent           = UIParent.SetParent
+local RawSetAlpha            = UIParent.SetAlpha
+local RawSetFrameStrata      = UIParent.SetFrameStrata
+local RawSetFrameLevel       = UIParent.SetFrameLevel
+local RawSetFixedFrameStrata = UIParent.SetFixedFrameStrata
+local RawSetFixedFrameLevel  = UIParent.SetFixedFrameLevel
 
 local IS_RETAIL = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
 
@@ -393,6 +398,20 @@ function MinimapButtonsModule:ApplyButtonScale()
     self:LayoutContainer()
 end
 
+-- Force a collected button's stacking + visibility to our panel's values via the
+-- Raw* UIParent methods, bypassing both any fixed-frame locks a rival collector
+-- set and our own noop'd instance methods. Clears the SetFixedFrame* locks first
+-- (otherwise strata/level assignments are silently dropped), then pins the button
+-- above the container backdrop at full alpha.
+---@param frame table
+local function PinCollectedStacking(frame)
+    RawSetFixedFrameStrata(frame, false)
+    RawSetFixedFrameLevel(frame, false)
+    RawSetFrameStrata(frame, CONTAINER_STRATA)
+    RawSetFrameLevel(frame, CONTAINER_LEVEL + 2)
+    RawSetAlpha(frame, 1)
+end
+
 local function CollectButton(frame)
     local name = frame:GetName()
     if not name or collectedNames[name] then return end
@@ -404,7 +423,7 @@ local function CollectButton(frame)
     frame._OneWoWMBBCollected = true
 
     frame:SetParent(containerFrame)
-    frame:SetFrameStrata(CONTAINER_STRATA)
+    PinCollectedStacking(frame)
     -- Stash the button's own drag handlers so Map / uncollect can restore them;
     -- otherwise the icon is stuck undraggable once it has been collected.
     frame._OneWoWMBBOrigDragStart = frame:GetScript("OnDragStart")
@@ -416,10 +435,23 @@ local function CollectButton(frame)
     end
     ApplyCollectedButtonScale(frame)
 
-    frame.ClearAllPoints = noop
-    frame.SetPoint       = noop
-    frame.SetParent      = noop
-    frame.SetScale       = noop
+    -- Seize every mutator a rival collector uses to fight us. We already blocked
+    -- position (Parent/Point/Scale); the visibility + stacking group closes the
+    -- rest. EllesmereUI's minimap flyout, for example, hard-locks strata/level
+    -- via SetFixedFrame* and forces SetAlpha(0) on buttons it sweeps — which left
+    -- our collected icons transparent-but-clickable. With the instance methods
+    -- noop'd, no addon can override our layout while the button is collected; we
+    -- drive the real values through the Raw* UIParent methods. Show/Hide stay
+    -- hooked (not blocked) so genuine visibility changes still reflow the panel.
+    frame.ClearAllPoints      = noop
+    frame.SetPoint            = noop
+    frame.SetParent           = noop
+    frame.SetScale            = noop
+    frame.SetAlpha            = noop
+    frame.SetFrameStrata      = noop
+    frame.SetFrameLevel       = noop
+    frame.SetFixedFrameStrata = noop
+    frame.SetFixedFrameLevel  = noop
 
     if not frame._OneWoWMBBShowHooked then
         hooksecurefunc(frame, "Show", function()
@@ -458,11 +490,20 @@ local function UncollectButton(frame)
     end
     collectedMap[frame] = nil
 
-    frame.ClearAllPoints = nil
-    frame.SetPoint       = nil
-    frame.SetParent      = nil
-    frame.SetScale       = nil
+    -- Release every mutator we seized in CollectButton (revert to the metatable
+    -- method), then reset the values we forced so the button behaves normally
+    -- back on the minimap.
+    frame.ClearAllPoints      = nil
+    frame.SetPoint            = nil
+    frame.SetParent           = nil
+    frame.SetScale            = nil
+    frame.SetAlpha            = nil
+    frame.SetFrameStrata      = nil
+    frame.SetFrameLevel       = nil
+    frame.SetFixedFrameStrata = nil
+    frame.SetFixedFrameLevel  = nil
     RawSetScale(frame, 1)
+    RawSetAlpha(frame, 1)
 
     frame:SetScript("OnEnter", frame._OneWoWMBBOrigEnter)
     frame:SetScript("OnLeave", frame._OneWoWMBBOrigLeave)
@@ -1261,6 +1302,11 @@ function MinimapButtonsModule:LayoutContainer()
             RawSetPoint(btn, "TOPLEFT", containerFrame, "TOPLEFT",
                 4 + col * (bSize + spacing),
                 -(4 + yOff + row * (bSize + spacing)))
+
+            -- Re-assert stacking + alpha every layout as belt-and-suspenders:
+            -- CollectButton already noop'd these mutators, but a button collected
+            -- before that seizure (or via a future path) still gets pinned here.
+            PinCollectedStacking(btn)
 
             btn:Show()
         end
