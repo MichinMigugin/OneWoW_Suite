@@ -72,6 +72,7 @@ local function GetPreferences()
     if prefs.dismountDelay      == nil then prefs.dismountDelay      = 15  end
     if prefs.fishingDelay       == nil then prefs.fishingDelay       = 15  end
     if prefs.gatherRemountDelay == nil then prefs.gatherRemountDelay = 0.5 end
+    if prefs.gatherDisabled     == nil then prefs.gatherDisabled     = false end
     if prefs.dismountDisabled   == nil then prefs.dismountDisabled   = false end
     if prefs.fishingDisabled    == nil then prefs.fishingDisabled    = false end
     return prefs
@@ -438,7 +439,10 @@ function AutoMountModule:OnEnable()
             elseif event == "LOOT_CLOSED" then
                 if isGathering then
                     isGathering = false
-                    C_Timer.After(GetPreferences().gatherRemountDelay, function() TryMount(true) end)
+                    local prefs = GetPreferences()
+                    if not prefs.gatherDisabled then
+                        C_Timer.After(prefs.gatherRemountDelay, function() TryMount(true) end)
+                    end
                 end
             elseif event == "UNIT_SPELLCAST_CHANNEL_STOP" then
                 local unit, _, spellID = ...
@@ -696,7 +700,7 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
     local sliderDefs = {
         { key = "dismountDelay",      disableKey = "dismountDisabled", label = L["AUTOMOUNT_DISMOUNT_DELAY"],  desc = L["AUTOMOUNT_DISMOUNT_DELAY_DESC"],  minVal = 0,   maxVal = 30, step = 0.5 },
         { key = "fishingDelay",       disableKey = "fishingDisabled",  label = L["AUTOMOUNT_FISHING_DELAY"],   desc = L["AUTOMOUNT_FISHING_DELAY_DESC"],   minVal = 0,   maxVal = 30, step = 0.5 },
-        { key = "gatherRemountDelay", label = L["AUTOMOUNT_GATHER_DELAY"],    desc = L["AUTOMOUNT_GATHER_DELAY_DESC"],    minVal = 0,   maxVal = 5,  step = 0.5 },
+        { key = "gatherRemountDelay", disableKey = "gatherDisabled", label = L["AUTOMOUNT_GATHER_DELAY"], desc = L["AUTOMOUNT_GATHER_DELAY_DESC"], minVal = 0, maxVal = 30, step = 0.5 },
     }
 
     for _, def in ipairs(sliderDefs) do
