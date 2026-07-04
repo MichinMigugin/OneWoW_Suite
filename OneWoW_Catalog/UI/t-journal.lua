@@ -1076,8 +1076,10 @@ local function InitializeDropdowns(panels)
 
     if panels.expDropdown then
         panels.expText:SetText(L["JOURNAL_EXPANSION_ALL"])
+        -- Tall enough for All + every expansion (default menuHeight clips the last row).
         OneWoW_GUI:AttachFilterMenu(panels.expDropdown, {
             searchable = false,
+            menuHeight = 400,
             getActiveValue = function() return expansionFilter end,
             buildItems = function()
                 local items = { { value = 0, text = L["JOURNAL_EXPANSION_ALL"] } }
