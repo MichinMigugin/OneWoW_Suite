@@ -8,7 +8,7 @@ function MailSendTracker:Initialize()
 end
 
 function MailSendTracker:HookMailSend()
-    hooksecurefunc("SendMail", function(recipient, subject, body)
+    hooksecurefunc("SendMail", function(recipient, _, _)
         local money = GetSendMailMoney() or 0
         local cod = GetSendMailCOD() or 0
         local totalCost = GetSendMailPrice() or 0

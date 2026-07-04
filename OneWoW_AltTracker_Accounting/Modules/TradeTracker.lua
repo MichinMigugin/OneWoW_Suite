@@ -19,7 +19,7 @@ function TradeTracker:Initialize()
     frame:RegisterEvent("TRADE_TARGET_ITEM_CHANGED")
     frame:RegisterEvent("TRADE_MONEY_CHANGED")
     frame:RegisterEvent("UI_INFO_MESSAGE")
-    frame:SetScript("OnEvent", function(self, event, ...)
+    frame:SetScript("OnEvent", function(_, event, ...)
         TradeTracker:HandleEvent(event, ...)
     end)
 end

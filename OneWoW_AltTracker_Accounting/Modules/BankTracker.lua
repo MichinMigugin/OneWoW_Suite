@@ -20,12 +20,12 @@ function BankTracker:RegisterEvents()
     frame:RegisterEvent("BANKFRAME_CLOSED")
     frame:RegisterEvent("PLAYER_MONEY")
 
-    frame:SetScript("OnEvent", function(self, event, ...)
-        BankTracker:HandleEvent(event, ...)
+    frame:SetScript("OnEvent", function(_, event)
+        BankTracker:HandleEvent(event)
     end)
 end
 
-function BankTracker:HandleEvent(event, ...)
+function BankTracker:HandleEvent(event)
     if event == "GUILDBANKFRAME_OPENED" then
         guildBankOpen = true
         goldBeforeBank = GetMoney()

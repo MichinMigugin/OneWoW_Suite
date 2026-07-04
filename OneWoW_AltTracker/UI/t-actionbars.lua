@@ -40,7 +40,7 @@ local CLASS_DISPLAY_NAMES = {
     EVOKER = "Evoker",
 }
 
-local function ShowRestoreBarDialog(setName, sourceBarNumber, parent)
+local function ShowRestoreBarDialog(setName, sourceBarNumber)
     local barName = L[BAR_NAMES[sourceBarNumber]] or string.format(L["AB_LABEL_BAR"], sourceBarNumber)
     local selectedTargetBar = sourceBarNumber
 
@@ -639,7 +639,7 @@ function ns.UI.ShowSetDetails(split, setName)
                 end)
                 local capturedBarNumber = barNumber
                 restoreBarBtn:SetScript("OnClick", function()
-                    ShowRestoreBarDialog(setName, capturedBarNumber, split)
+                    ShowRestoreBarDialog(setName, capturedBarNumber)
                 end)
             end
 
@@ -970,7 +970,7 @@ function ns.UI.RefreshActionBarsListing(actionBarsTab)
     end
 end
 
-function ns.UI.ShowActionBarDetails(actionBarsTab, charKey, specName)
+function ns.UI.ShowActionBarDetails(actionBarsTab, _, _)
     if actionBarsTab and actionBarsTab.split then
         ns.UI.ShowSetDetails(actionBarsTab.split, selectedSetName)
     end

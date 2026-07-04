@@ -62,7 +62,7 @@ function Module:RefreshFromCurrency(charKey, charData)
     if not charData.concentration then return false end
 
     local updated = false
-    for slotName, concData in pairs(charData.concentration) do
+    for _, concData in pairs(charData.concentration) do
         if concData.currencyID and concData.currencyID > 0 then
             local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(concData.currencyID)
             if currencyInfo then

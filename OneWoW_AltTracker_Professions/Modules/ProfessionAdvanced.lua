@@ -121,7 +121,7 @@ function Module:GetRecipeExpansion(recipeInfo)
     return 0
 end
 
-function Module:GetRecipeCount(charKey, charData, professionName)
+function Module:GetRecipeCount(_, charData, professionName)
     if not charData or not charData.recipes or not charData.recipes[professionName] then
         return 0
     end

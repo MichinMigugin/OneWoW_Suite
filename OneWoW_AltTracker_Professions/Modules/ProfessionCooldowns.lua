@@ -1,16 +1,16 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.ProfessionCooldowns = {}
 local Module = ns.ProfessionCooldowns
 
-function Module:CollectData(charKey, charData, professionName)
+function Module:CollectData(_, _, _)
     return false
 end
 
-function Module:GetActiveCooldowns(charKey, charData, professionName)
+function Module:GetActiveCooldowns(_, _, _)
     return {}
 end
 
-function Module:CleanExpiredCooldowns(charKey, charData, professionName)
+function Module:CleanExpiredCooldowns(_, _, _)
     return false
 end

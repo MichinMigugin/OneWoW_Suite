@@ -36,7 +36,7 @@ local function CollectSlot(slotID)
     local itemID = GetInventoryItemID("player", slotID)
     if not itemID then return nil end
 
-    local itemName, _, itemQuality, itemLevel, _, itemType, itemSubType = C_Item.GetItemInfo(itemLink)
+    local itemName, _, itemQuality, itemLevel = C_Item.GetItemInfo(itemLink)
     if not itemName then
         itemName = NameFromLink(itemLink)
     end
@@ -119,7 +119,7 @@ function Module:CollectData(charKey, charData)
     return true
 end
 
-function Module:RetryMissing(charKey, charData)
+function Module:RetryMissing(_, charData)
     if not charData or not charData.professions or not charData.professionEquipment then return end
 
     local skillLineToName = BuildSkillLineToName(charData)
@@ -134,7 +134,7 @@ function Module:RetryMissing(charKey, charData)
     end
 end
 
-function Module:GetEquipmentForProfession(charKey, charData, professionName)
+function Module:GetEquipmentForProfession(_, charData, professionName)
     if not charData or not charData.professionEquipment then return nil end
 
     return charData.professionEquipment[professionName]

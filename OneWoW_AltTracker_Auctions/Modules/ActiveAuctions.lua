@@ -131,7 +131,7 @@ function ActiveAuctions:RecordHistoryEvent(charData, auction, outcome, goldAmoun
 
 end
 
-function ActiveAuctions:DetectAuctionOutcomes(charKey, charData, previousAuctions, currentAuctions, serverTime)
+function ActiveAuctions:DetectAuctionOutcomes(_, charData, previousAuctions, currentAuctions, serverTime)
     if not previousAuctions or not next(previousAuctions) then return end
 
     for auctionID, oldAuction in pairs(previousAuctions) do

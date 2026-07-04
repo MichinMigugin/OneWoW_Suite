@@ -52,6 +52,7 @@ end
 ---@param parent Frame scroll child / detail frame
 ---@param opts table { yOffset, x, getScope, saveScope }
 ---@return number newYOffset
+---@return table scopeControls `{ SetEnabled = fun(enabled: boolean) }`
 function ns.UI.BuildAltScopeSection(parent, opts)
     local L = ns.L
     local y = opts.yOffset or 0

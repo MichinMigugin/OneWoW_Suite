@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
@@ -50,7 +50,7 @@ function ns.UI.CreateSummaryTab(parent)
         {key = "lastSeen",  label = L["COL_LAST_SEEN"],  width = 80,  fixed = false, align = "left",                     ttTitle = L["COL_LAST_SEEN"],  ttDesc = L["TT_COL_LAST_SEEN_DESC"]},
     }
 
-    local function onHeaderCreate(btn, col, i)
+    local function onHeaderCreate(btn, col, _)
         if col.key == "expand" then
             local icon = btn:CreateTexture(nil, "ARTWORK")
             icon:SetSize(14, 14)
@@ -199,7 +199,6 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
     local dt = summaryTab.dataTable
     local columnsConfig = summaryTab.columnsConfig
-    local OneWoW_GUI = OneWoW_GUI
 
     OneWoW_GUI:ClearDataRows(scrollContent)
     wipe(characterRows)
@@ -208,7 +207,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
     local rowHeight = 32
     local rowGap = 2
 
-    for charIndex, charInfo in ipairs(allChars) do
+    for _, charInfo in ipairs(allChars) do
         local charKey = charInfo.key
         local charData = charInfo.data
 
@@ -330,7 +329,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
             GameTooltip:Show()
         end)
-        nameFrame:SetScript("OnLeave", function(self)
+        nameFrame:SetScript("OnLeave", function()
             GameTooltip:Hide()
         end)
 
@@ -388,7 +387,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
             GameTooltip:Show()
         end)
-        levelContainer:SetScript("OnLeave", function(self)
+        levelContainer:SetScript("OnLeave", function()
             GameTooltip:Hide()
         end)
 
@@ -432,7 +431,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
             GameTooltip:Show()
         end)
-        specFrame:SetScript("OnLeave", function(self)
+        specFrame:SetScript("OnLeave", function()
             GameTooltip:Hide()
         end)
 
@@ -463,14 +462,14 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         restedFrame:SetAllPoints(restedText)
         restedFrame:EnableMouse(true)
         restedFrame:SetScript("OnEnter", function(self)
-            local level = charData.level or 0
-            local isMaxLevel = (level >= 90)
+            local ttLevel = charData.level or 0
+            local ttIsMaxLevel = (ttLevel >= 90)
             local ttFmt = ns.AltTrackerFormatters
 
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:SetText(L["COL_RESTED_XP"], 1, 1, 1)
 
-            if not isMaxLevel and charData.xp and charData.xp.currentXP ~= nil and charData.xp.maxXP and charData.xp.maxXP > 0 then
+            if not ttIsMaxLevel and charData.xp and charData.xp.currentXP ~= nil and charData.xp.maxXP and charData.xp.maxXP > 0 then
                 local currentXP = charData.xp.currentXP or 0
                 local xpPercent = (currentXP / charData.xp.maxXP) * 100
                 local xpNeeded = charData.xp.maxXP - currentXP
@@ -526,7 +525,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
             GameTooltip:Show()
         end)
-        restedFrame:SetScript("OnLeave", function(self)
+        restedFrame:SetScript("OnLeave", function()
             GameTooltip:Hide()
         end)
 
@@ -554,7 +553,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
 
                         local usedSlots = 0
                         if bagsData[bagID].slots then
-                            for slotID, itemData in pairs(bagsData[bagID].slots) do
+                            for _, itemData in pairs(bagsData[bagID].slots) do
                                 if itemData then
                                     usedSlots = usedSlots + 1
                                 end
@@ -666,7 +665,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
                 GameTooltip:Show()
             end
         end)
-        lastSeenContainer:SetScript("OnLeave", function(self)
+        lastSeenContainer:SetScript("OnLeave", function()
             GameTooltip:Hide()
         end)
 
@@ -742,7 +741,7 @@ function ns.UI.FormatPlaytimeCompact(seconds)
     end
 end
 
-function ns.UI.ShowPlaytimeDialog(stats)
+function ns.UI.ShowPlaytimeDialog(_)
     if not OneWoW_AltTracker_Character_API then
         return
     end
@@ -762,7 +761,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
     local classTotals = {}
     local accountTotal = 0
 
-    for charKey, charData in pairs(OneWoW_AltTracker_Character_API.GetAllCharacters()) do
+    for _, charData in pairs(OneWoW_AltTracker_Character_API.GetAllCharacters()) do
         if charData.class and charData.playTime and charData.playTime.total then
             local class = charData.class
             classTotals[class] = (classTotals[class] or 0) + charData.playTime.total
@@ -837,7 +836,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
         rowFrame:EnableMouse(true)
         rowFrame:SetScript("OnEnter", function(self)
             local classChars = {}
-            for charKey, charData in pairs(OneWoW_AltTracker_Character_API.GetAllCharacters()) do
+            for _, charData in pairs(OneWoW_AltTracker_Character_API.GetAllCharacters()) do
                 if charData.class == classInfo.class then
                     table.insert(classChars, charData)
                 end
@@ -858,7 +857,7 @@ function ns.UI.ShowPlaytimeDialog(stats)
             end
             GameTooltip:Show()
         end)
-        rowFrame:SetScript("OnLeave", function(self)
+        rowFrame:SetScript("OnLeave", function()
             GameTooltip:Hide()
         end)
 
@@ -940,7 +939,7 @@ function ns.UI.RefreshSummaryStats(summaryTab)
     local uniquePets = {}
     local uniqueMounts = {}
     if OneWoW_AltTracker_Collections_API then
-        for charKey, collData in pairs(OneWoW_AltTracker_Collections_API.GetAllCharacters()) do
+        for _, collData in pairs(OneWoW_AltTracker_Collections_API.GetAllCharacters()) do
             if collData.petsMounts then
                 if collData.petsMounts.pets and collData.petsMounts.pets.collection then
                     for _, pet in ipairs(collData.petsMounts.pets.collection) do

@@ -7,7 +7,7 @@ local Module = ns.WarbandBank
 -- Account-scope, so it writes DB.warbandBank (not charData). Slot scanning and the
 -- canonical record shape live in ns.ContainerScan; this keeps the tab structure,
 -- money, and rolled-up slot totals.
-function Module:CollectData(charKey, charData)
+function Module:CollectData(charKey, _)
     if not charKey then return false end
 
     local warbandBank = {

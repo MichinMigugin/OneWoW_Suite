@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
@@ -114,7 +114,7 @@ function ns.UI.CreateEquipmentTab(parent)
         {key = "status",    label = STATUS,   width = 40,  fixed = false, align = "center",                   ttTitle = STATUS,           ttDesc = L["TT_COL_STATUS_DESC"]}
     }
 
-    local onHeaderCreate = function(btn, col, index)
+    local onHeaderCreate = function(btn, col, _)
         if col.key == "expand" then
             local icon = btn:CreateTexture(nil, "ARTWORK")
             icon:SetSize(14, 14)
@@ -301,7 +301,6 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
 
     local dt = equipmentTab.dataTable
     local columnsConfig = equipmentTab.columnsConfig
-    local OneWoW_GUI = OneWoW_GUI
 
     OneWoW_GUI:ClearDataRows(scrollContent)
     wipe(characterRows)
@@ -313,7 +312,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
     local totalILevel = 0
     local charCount = 0
 
-    for charIndex, charInfo in ipairs(allChars) do
+    for _, charInfo in ipairs(allChars) do
         local charKey = charInfo.key
         local charData = charInfo.data
 
@@ -379,8 +378,8 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
             data = { charKey = charKey, charData = charData },
             createDetails = function(ef, d)
                 local cKey = d.charKey
-                local cd = OneWoW_AltTracker_Character_API.GetCharacterData(cKey)
-                local eq = cd and cd.equipment
+                local detailChar = OneWoW_AltTracker_Character_API.GetCharacterData(cKey)
+                local eq = detailChar and detailChar.equipment
                 if eq then
                     local slotOrder = {1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 4, 19}
                     local iconSize = 48
@@ -456,7 +455,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
             GameTooltip:AddLine(L["TT_ENCHANTS_QUALITY_NOTE"], 0.7, 0.7, 0.7)
             GameTooltip:Show()
         end)
-        enchantsCell:SetScript("OnLeave", function(self)
+        enchantsCell:SetScript("OnLeave", function()
             GameTooltip:Hide()
         end)
         local enchantsText = OneWoW_GUI:CreateFS(enchantsCell, 12)
@@ -487,7 +486,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
             end
             GameTooltip:Show()
         end)
-        gemsCell:SetScript("OnLeave", function(self)
+        gemsCell:SetScript("OnLeave", function()
             GameTooltip:Hide()
         end)
         local gemsText = OneWoW_GUI:CreateFS(gemsCell, 12)
@@ -525,7 +524,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
             GameTooltip:AddLine(L["TT_TIER_TRACKING"], 0.7, 0.7, 0.7)
             GameTooltip:Show()
         end)
-        tierCell:SetScript("OnLeave", function(self)
+        tierCell:SetScript("OnLeave", function()
             GameTooltip:Hide()
         end)
         local tierSetText = OneWoW_GUI:CreateFS(tierCell, 12)
@@ -621,7 +620,7 @@ function ns.UI.RefreshEquipmentTab(equipmentTab)
             end
             GameTooltip:Show()
         end)
-        statusCell:SetScript("OnLeave", function(self)
+        statusCell:SetScript("OnLeave", function()
             GameTooltip:Hide()
         end)
         local statusIcon = statusCell:CreateTexture(nil, "OVERLAY")

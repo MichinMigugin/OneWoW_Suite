@@ -1,7 +1,4 @@
--- OneWoW AltTracker Addon File
--- OneWoW_AltTracker_Endgame/Modules/GreatVault.lua
--- Created by MichinMigugin (Ricky)
-local addonName, ns = ...
+local _, ns = ...
 
 ns.GreatVault = {}
 local Module = ns.GreatVault

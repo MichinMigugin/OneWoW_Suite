@@ -183,7 +183,7 @@ end
 -- own parent profession, so opening one profession never overwrites another.
 -- The API only returns data while a trade-skill window is open, so this runs
 -- from the TRADE_SKILL_SHOW flow.
-function Module:CollectExpansionSkills(charKey, charData)
+function Module:CollectExpansionSkills(_, charData)
     if not charData or not charData.professions then return false end
     if not C_TradeSkillUI.IsTradeSkillReady() then return false end
 
@@ -229,7 +229,7 @@ function Module:CollectExpansionSkills(charKey, charData)
     return found
 end
 
-function Module:GetProfessionByName(charKey, charData, professionName)
+function Module:GetProfessionByName(_, charData, professionName)
     if not charData or not charData.professions then return nil end
 
     for slotName, profData in pairs(charData.professions) do

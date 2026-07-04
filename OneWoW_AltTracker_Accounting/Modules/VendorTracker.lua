@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.VendorTracker = {}
 local VendorTracker = ns.VendorTracker
@@ -13,8 +13,8 @@ function VendorTracker:Initialize()
     frame:RegisterEvent("MERCHANT_SHOW")
     frame:RegisterEvent("MERCHANT_CLOSED")
     frame:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
-    frame:SetScript("OnEvent", function(self, event, ...)
-        VendorTracker:HandleEvent(event, ...)
+    frame:SetScript("OnEvent", function(_, event)
+        VendorTracker:HandleEvent(event)
     end)
 
     hooksecurefunc("BuyMerchantItem", function(index, quantity)
@@ -30,7 +30,7 @@ function VendorTracker:Initialize()
     end)
 end
 
-function VendorTracker:HandleEvent(event, ...)
+function VendorTracker:HandleEvent(event)
     if event == "MERCHANT_SHOW" then
         private.merchantOpen = true
         private.goldBeforeRepair = GetMoney()
@@ -66,7 +66,7 @@ end
 
 function VendorTracker:OnBuybackItem(index)
     local itemLink = GetBuybackItemLink(index)
-    local name, texture, count, price = GetBuybackItemInfo(index)
+    local name, _, count, price = GetBuybackItemInfo(index)
     if name and price and price > 0 then
         ns.Transactions:RecordExpense("vendor_buyback", price, "Vendor", itemLink, name, count or 1, nil)
     end

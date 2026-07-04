@@ -26,7 +26,7 @@ function Module:Initialize()
     frame:RegisterEvent("CRAFTINGORDERS_CRAFT_ORDER_RESPONSE")
     frame:RegisterEvent("PLAYER_MONEY")
 
-    frame:SetScript("OnEvent", function(self, event, ...)
+    frame:SetScript("OnEvent", function(_, event, ...)
         if event == "CRAFTINGORDERS_SHOW_CUSTOMER" then
             private.goldAtCustomerOpen = GetMoney()
             private.goldBeforeCancel = GetMoney()

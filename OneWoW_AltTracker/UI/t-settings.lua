@@ -94,9 +94,9 @@ function ns.UI.CreateSettingsTab(parent)
         end
     end
 
-    local function CreateDatabaseEntry(parent, dbData, yPos)
-        local container = OneWoW_GUI:CreateFrame(parent, { width = 770, height = 60, bgColor = "BG_TERTIARY" })
-        container:SetPoint("TOPLEFT", parent, "TOPLEFT", 15, yPos)
+    local function CreateDatabaseEntry(entryParent, dbData, yPos)
+        local container = OneWoW_GUI:CreateFrame(entryParent, { width = 770, height = 60, bgColor = "BG_TERTIARY" })
+        container:SetPoint("TOPLEFT", entryParent, "TOPLEFT", 15, yPos)
 
         local nameText = OneWoW_GUI:CreateFS(container, 12)
         nameText:SetPoint("TOPLEFT", 12, -10)
@@ -230,7 +230,6 @@ function ns.UI.CreateSettingsTab(parent)
             showScrollFrame = true,
         })
         overrideDialog = result.frame
-        local scrollFrame = result.scrollFrame
         local sc = result.scrollContent
 
         local dy = -8
@@ -245,8 +244,8 @@ function ns.UI.CreateSettingsTab(parent)
         descText:SetSpacing(3)
         dy = dy - 55
 
-        local function MakeListRow(parent, col1, col2, yPos, r, g, b)
-            local row = OneWoW_GUI:CreateFrame(parent, { height = 28, bgColor = "BG_TERTIARY", borderColor = "BORDER_SUBTLE" })
+        local function MakeListRow(listParent, col1, col2, yPos)
+            local row = OneWoW_GUI:CreateFrame(listParent, { height = 28, bgColor = "BG_TERTIARY", borderColor = "BORDER_SUBTLE" })
             row:SetPoint("TOPLEFT", 8, yPos)
             row:SetPoint("TOPRIGHT", -8, yPos)
 
@@ -267,7 +266,7 @@ function ns.UI.CreateSettingsTab(parent)
             return row
         end
 
-        local function MakeRemoveBtn(parent, row, onClick)
+        local function MakeRemoveBtn(row, onClick)
             local btn = OneWoW_GUI:CreateFitTextButton(row, { text = L["OVERRIDE_REMOVE"] .. " Remove", height = 20 })
             btn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
             btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
@@ -292,20 +291,14 @@ function ns.UI.CreateSettingsTab(parent)
             for i, id in ipairs(ids) do
                 local nm = KNOWN_BOSS_NAMES[id] or C_QuestLog.GetTitleForQuestID(id) or ("Quest ID: " .. id)
                 local done = C_QuestLog.IsQuestFlaggedCompleted(id)
-                local r, g, b
-                if done then
-                    r, g, b = OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED")
-                else
-                    r, g, b = OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")
-                end
-                local row = MakeListRow(sc, "Quest: " .. id, nm, ldY, r, g, b)
+                local row = MakeListRow(sc, "Quest: " .. id, nm, ldY)
                 if done then
                     local doneTag = OneWoW_GUI:CreateFS(row, 10)
                     doneTag:SetPoint("RIGHT", row, "RIGHT", -70, 0)
                     doneTag:SetText("Done")
                     doneTag:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
                 end
-                MakeRemoveBtn(sc, row, function()
+                MakeRemoveBtn(row, function()
                     table.remove(ids, i)
                     RebuildBossList()
                 end)
@@ -338,7 +331,7 @@ function ns.UI.CreateSettingsTab(parent)
                 local info = C_CurrencyInfo.GetCurrencyInfo(id)
                 local nm = (info and info.name) or ("Currency ID: " .. id)
                 local row = MakeListRow(sc, "ID: " .. id, nm, ldY)
-                MakeRemoveBtn(sc, row, function()
+                MakeRemoveBtn(row, function()
                     table.remove(ids, i)
                     RebuildCurrencyList()
                 end)
@@ -398,7 +391,6 @@ function ns.UI.CreateSettingsTab(parent)
         addCurrBox:SetScript("OnEnterPressed", function() addCurrBtn:Click() end)
         sc.currencyAddRow = addCurrRow
 
-        local sec3StartDY = dy
         RebuildCurrencyList()
 
         local sec3DY = (sc.currencyListEndDY or dy) - 12
@@ -515,7 +507,7 @@ function ns.UI.CreateSettingsTab(parent)
         {section = "Summary Tab"},
         {key = "s_maxlevel",  label = "Verify Max Player Level",                   auto = true,  value = function() return "Level " .. (GetMaxPlayerLevel and GetMaxPlayerLevel() or "?") end, file = "Auto-detected via API"},
         {key = "s_ilvl",      label = "Verify iLvl range for new content",          auto = false, value = function() return "Manual check required" end, file = "No single file - check new content tooltips"},
-        {key = "s_toc",       label = "Update ## Interface in all TOC files",        auto = false, value = function() local v, b = GetBuildInfo(); return "Current build: " .. (b or "?") end, file = "All .toc files"},
+        {key = "s_toc",       label = "Update ## Interface in all TOC files",        auto = false, value = function() local _, b = GetBuildInfo(); return "Current build: " .. (b or "?") end, file = "All .toc files"},
 
         {section = "Progress Tab"},
         {key = "p_currencies", label = "Verify Tracked Currency IDs (change per season)", auto = false, value = GetCurrencyIDsDisplay, file = "OneWoW_AltTracker/Core/Database.lua + Override System"},
@@ -585,7 +577,6 @@ function ns.UI.CreateSettingsTab(parent)
             showScrollFrame = true,
         })
         checklistDialog = clResult.frame
-        local scrollFrame2 = clResult.scrollFrame
         local sc2 = clResult.scrollContent
 
         local cdy = -8

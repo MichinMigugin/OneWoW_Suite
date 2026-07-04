@@ -356,7 +356,7 @@ local function CreateSubTabContent(contentFrame, columnsConfig, subTabKey)
     local state = subTabState[subTabKey]
     state.columns = columnsConfig
 
-    local function onHeaderCreate(btn, col, i)
+    local function onHeaderCreate(btn, col, _)
         if col.key == "expand" then
             local icon = btn:CreateTexture(nil, "ARTWORK")
             icon:SetSize(14, 14)
@@ -454,7 +454,7 @@ local function CreateSubTabContent(contentFrame, columnsConfig, subTabKey)
     return contentFrame
 end
 
-local function CreateCommonCells(charRow, charData, charKey, endgameData, rowHeight)
+local function CreateCommonCells(charRow, charData, charKey, _, _)
     ns.UI.AddCommonCells(charRow, charKey, charData)
 
     local realmText = OneWoW_GUI:CreateFS(charRow, 12)
@@ -673,7 +673,7 @@ local function AddRaidExpandBossRow(panel, enc, difficulties)
     panel.dy = panel.dy - EXPAND_LINE_H
 end
 
-local function BuildExpandedPanels(ef, endgameData, charData, subTabKey)
+local function BuildExpandedPanels(ef, endgameData, _, subTabKey)
     local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef)
 
     if subTabKey == "mythicplus" then
@@ -1120,7 +1120,7 @@ local function CreateCurrenciesColumns()
     return cols
 end
 
-local function BuildMythicPlusCells(charRow, charData, charKey, endgameData, progressTab)
+local function BuildMythicPlusCells(charRow, _, _, endgameData, _)
     local bestTimeText = OneWoW_GUI:CreateFS(charRow, 12)
     bestTimeText:SetText(GetBestRunString(endgameData))
     bestTimeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -1247,7 +1247,7 @@ local function BuildMythicPlusTooltip(self, edg, chd, chk, contentFrame)
     GameTooltip:Show()
 end
 
-local function BuildRaidsCells(charRow, charData, charKey, endgameData, progressTab)
+local function BuildRaidsCells(charRow, _, _, endgameData, _)
     local difficulties = GetRaidDifficulties()
     for _, raid in ipairs(GetSeasonRaids()) do
         local raidBlock = GetRaidProgressSummary(endgameData, raid.key)
@@ -1310,7 +1310,7 @@ local function BuildRaidsTooltip(self, edg, chd, chk, contentFrame)
     GameTooltip:Show()
 end
 
-local function BuildCurrenciesCells(charRow, charData, charKey, endgameData, progressTab)
+local function BuildCurrenciesCells(charRow, _, _, endgameData, _)
     for _, cur in ipairs(SEASON_CURRENCIES) do
         local curText = OneWoW_GUI:CreateFS(charRow, 12)
         local qty = 0
@@ -1383,7 +1383,7 @@ local function BuildCurrenciesTooltip(self, edg, chd, chk, contentFrame)
     GameTooltip:Show()
 end
 
-local function BuildWeeklyCells(charRow, charData, charKey, endgameData, progressTab)
+local function BuildWeeklyCells(charRow, _, _, endgameData, _)
     local vaultRaidCell = CreateVaultTrackCell(charRow, GetVaultActivities(endgameData, "raid"))
     table.insert(charRow.cells, vaultRaidCell)
 

@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.TransmogTracker = {}
 local Module = ns.TransmogTracker
@@ -16,7 +16,7 @@ function Module:Initialize()
     frame:RegisterEvent("TRANSMOGRIFY_OPEN")
     frame:RegisterEvent("VIEWED_TRANSMOG_OUTFIT_SLOT_SAVE_SUCCESS")
     frame:RegisterEvent("PLAYER_MONEY")
-    frame:SetScript("OnEvent", function(self, event, ...)
+    frame:SetScript("OnEvent", function(_, event)
         if event == "TRANSMOGRIFY_OPEN" then
             private.goldOnOpen = GetMoney()
             private.waitingForMoney = false

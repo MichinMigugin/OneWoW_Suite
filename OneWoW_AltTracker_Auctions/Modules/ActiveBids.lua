@@ -8,7 +8,7 @@ local C_Item = C_Item
 ns.ActiveBids = {}
 local ActiveBids = ns.ActiveBids
 
-function ActiveBids:CollectData(charKey, charData)
+function ActiveBids:CollectData(_, charData)
     local numBids = C_AuctionHouse.GetNumBids()
 
     if numBids == 0 then

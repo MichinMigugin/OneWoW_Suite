@@ -1,13 +1,10 @@
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
 
 ns.UI = ns.UI or {}
 
-local currentSortColumn = nil
-local currentSortAscending = true
-local characterRows = {}
 local selectedAltKey = nil
 
 local columnsConfig = {
@@ -24,7 +21,7 @@ local columnsConfig = {
     {key = "delete", label = L["AUCTIONS_COL_DELETE"], width = 50, fixed = true, align = "center", sortable = false, ttTitle = DELETE, ttDesc = L["TT_COL_DELETE_DESC"]}
 }
 
-local onHeaderCreate = function(btn, col, index)
+local onHeaderCreate = function(btn, col, _)
     if col.key == "expand" then
         local icon = btn:CreateTexture(nil, "ARTWORK")
         icon:SetSize(14, 14)
@@ -38,8 +35,6 @@ local onHeaderCreate = function(btn, col, index)
 end
 
 function ns.UI.CreateAuctionsTab(parent)
-    local OneWoW_GUI = OneWoW_GUI
-
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
         title = L["AUCTIONS_OVERVIEW"],
         height = 110,
@@ -74,9 +69,9 @@ function ns.UI.CreateAuctionsTab(parent)
         if not OneWoW_AltTracker_Storage_API then return end
 
         local totalGold = 0
-        for charKey, storageData in pairs(OneWoW_AltTracker_Storage_API.GetCharacters()) do
+        for _, storageData in pairs(OneWoW_AltTracker_Storage_API.GetCharacters()) do
             if storageData.mail and storageData.mail.mails then
-                for mailID, mailData in pairs(storageData.mail.mails) do
+                for _, mailData in pairs(storageData.mail.mails) do
                     if mailData.sender and (mailData.sender == "Auction House" or mailData.sender == "The Auction House") and mailData.money and mailData.money > 0 then
                         totalGold = totalGold + mailData.money
                     end
@@ -108,7 +103,7 @@ function ns.UI.CreateAuctionsTab(parent)
                 local auctionGold = 0
                 local auctionItems = {}
 
-                for mailID, mailData in pairs(storageData.mail.mails) do
+                for _, mailData in pairs(storageData.mail.mails) do
                     if (mailData.sender == "Auction House" or mailData.sender == "The Auction House") and mailData.money and mailData.money > 0 then
                         auctionGold = auctionGold + mailData.money
 
@@ -306,9 +301,7 @@ function ns.UI.CreateAuctionsTab(parent)
         columns = columnsConfig,
         headerHeight = 26,
         onHeaderCreate = onHeaderCreate,
-        onSort = function(sortColumn, sortAscending)
-            currentSortColumn = sortColumn
-            currentSortAscending = sortAscending
+        onSort = function(_, _)
             ns.UI.RefreshAuctionsTab(parent)
             C_Timer.After(0.1, function() dt.UpdateSortIndicators() end)
         end,
@@ -346,7 +339,6 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
     if not scrollContent then return end
 
     local dt = auctionsTab.dataTable
-    local OneWoW_GUI = OneWoW_GUI
     OneWoW_GUI:ClearDataRows(scrollContent)
     wipe(auctionRows)
     if dt then dt:ClearRows() end
@@ -448,7 +440,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
             expandedHeight = 50,
             rowGap = rowGap,
             data = { charKey = charKey, charData = charData, itemData = itemData, isHistory = isHistory },
-            createDetails = function(ef, d)
+            createDetails = function(ef, _)
                 local text = OneWoW_GUI:CreateFS(ef, 12)
                 text:SetPoint("CENTER")
                 text:SetText(L["EXPANDED_DETAILS_SOON"])
@@ -523,7 +515,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
                 GameTooltip:SetHyperlink(itemData.itemLink)
                 GameTooltip:Show()
             end)
-            itemLinkFrame:SetScript("OnLeave", function(self)
+            itemLinkFrame:SetScript("OnLeave", function()
                 if itemData.itemRarity and ITEM_QUALITY_COLORS[itemData.itemRarity] then
                     local color = ITEM_QUALITY_COLORS[itemData.itemRarity]
                     itemNameText:SetTextColor(color.r, color.g, color.b)
@@ -532,7 +524,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
                 end
                 GameTooltip:Hide()
             end)
-            itemLinkFrame:SetScript("OnClick", function(self, button)
+            itemLinkFrame:SetScript("OnClick", function()
                 if IsModifiedClick("CHATLINK") then
                     ChatEdit_InsertLink(itemData.itemLink)
                 end
@@ -650,14 +642,14 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                     GameTooltip:SetText("Expires At", 1, 1, 1)
                     GameTooltip:AddLine(date("%Y-%m-%d %H:%M:%S", auction.endsAt), 1, 1, 1)
-                    local timeLeft = auction.endsAt - GetServerTime()
-                    if timeLeft > 0 then
-                        GameTooltip:AddLine("Time Remaining: " .. math.floor(timeLeft/3600) .. "h " .. math.floor((timeLeft%3600)/60) .. "m", 0.7, 0.7, 0.7)
+                    local remainingSecs = auction.endsAt - GetServerTime()
+                    if remainingSecs > 0 then
+                        GameTooltip:AddLine("Time Remaining: " .. math.floor(remainingSecs/3600) .. "h " .. math.floor((remainingSecs%3600)/60) .. "m", 0.7, 0.7, 0.7)
                     end
                     GameTooltip:Show()
                 end
             end)
-            timeContainer:SetScript("OnLeave", function(self)
+            timeContainer:SetScript("OnLeave", function()
                 GameTooltip:Hide()
             end)
         else
@@ -853,7 +845,7 @@ function ns.UI.RefreshAuctionsStats(auctionsTab)
 
         local storageData = OneWoW_AltTracker_Storage_API and OneWoW_AltTracker_Storage_API.GetCharacters()[charKey]
         if storageData and storageData.mail and storageData.mail.mails then
-            for mailID, mailData in pairs(storageData.mail.mails) do
+            for _, mailData in pairs(storageData.mail.mails) do
                 if mailData.sender and (mailData.sender == "Auction House" or mailData.sender == "The Auction House") and mailData.money and mailData.money > 0 then
                     stats.goldWaiting = stats.goldWaiting + mailData.money
                     hasAuctions = true

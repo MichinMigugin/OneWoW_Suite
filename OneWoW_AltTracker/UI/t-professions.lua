@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
@@ -26,7 +26,7 @@ local columnsConfig = {
     {key = "gear", label = L["PROF_COL_GEAR"], width = 50, fixed = false, align = "left", ttTitle = L["PROF_COL_GEAR"], ttDesc = L["PROF_TT_GEAR_DESC"]}
 }
 
-local onHeaderCreate = function(btn, col, index)
+local onHeaderCreate = function(btn, col, _)
     if col.key == "expand" then
         local icon = btn:CreateTexture(nil, "ARTWORK")
         icon:SetSize(14, 14)
@@ -143,13 +143,13 @@ local function GetEstimatedConcentration(concData)
     return estimated, concData.max or 0, concData.value, concData.ts or time()
 end
 
-local function AddConcentrationTooltip(frame, concData, profName, L)
+local function AddConcentrationTooltip(frame, concData, profName)
     frame:EnableMouse(true)
     frame:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(profName or L["PROF_COL_CONC"], 1, 1, 1)
         if concData and concData.value then
-            local current, max, stored, ts = GetEstimatedConcentration(concData)
+            local current, max = GetEstimatedConcentration(concData)
             local r, g, b = GetSkillColor(current, max)
             GameTooltip:AddDoubleLine(L["SEASON_CURRENT"], string.format("%d / %d", current, max), 1, 1, 1, r, g, b)
             if current < max then
@@ -163,7 +163,7 @@ local function AddConcentrationTooltip(frame, concData, profName, L)
         end
         GameTooltip:Show()
     end)
-    frame:SetScript("OnLeave", function(self)
+    frame:SetScript("OnLeave", function()
         GameTooltip:Hide()
     end)
 end
@@ -213,7 +213,7 @@ local function AddProfessionTooltip(frame, profData, profRecipes)
         if profRecipes and type(profRecipes) == "table" then
             local totalRecipes = 0
             local totalLearned = 0
-            for expansionID, expData in pairs(profRecipes) do
+            for _, expData in pairs(profRecipes) do
                 if type(expData) == "table" then
                     totalRecipes = totalRecipes + (expData.totalRecipes or 0)
                     totalLearned = totalLearned + (expData.learnedRecipes or 0)
@@ -234,7 +234,7 @@ local function AddProfessionTooltip(frame, profData, profRecipes)
 
         GameTooltip:Show()
     end)
-    frame:SetScript("OnLeave", function(self)
+    frame:SetScript("OnLeave", function()
         GameTooltip:Hide()
     end)
 end
@@ -281,7 +281,7 @@ local function BuildExpandedPanels(ef, data, row)
 
     local hasProfessions = false
     if professions then
-        for slotName, profData in pairs(professions) do
+        for _, profData in pairs(professions) do
             if profData and profData.name and profData.name ~= "" then
                 hasProfessions = true
                 break
@@ -406,7 +406,7 @@ local function BuildExpandedPanels(ef, data, row)
         local totalLearned = 0
         local profRecipeData = recipesByExpansion and recipesByExpansion[profData.name]
         if profRecipeData and type(profRecipeData) == "table" then
-            for expansionID, expData in pairs(profRecipeData) do
+            for _, expData in pairs(profRecipeData) do
                 if type(expData) == "table" then
                     totalRecipes = totalRecipes + (expData.totalRecipes or 0)
                     totalLearned = totalLearned + (expData.learnedRecipes or 0)
@@ -516,7 +516,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
     wipe(characterRows)
     if dt then dt:ClearRows() end
 
-    for charIndex, charInfo in ipairs(allChars) do
+    for _, charInfo in ipairs(allChars) do
         local charKey = charInfo.key
         local charData = charInfo.data
 
@@ -575,7 +575,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
             conc1Text:SetText(tostring(current))
             local r, g, b = GetSkillColor(current, conc1Data.max or 0)
             conc1Text:SetTextColor(r, g, b)
-            AddConcentrationTooltip(conc1Frame, conc1Data, prof1.name, L)
+            AddConcentrationTooltip(conc1Frame, conc1Data, prof1.name)
         else
             conc1Text:SetText("--")
             conc1Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -611,7 +611,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
             conc2Text:SetText(tostring(current))
             local r, g, b = GetSkillColor(current, conc2Data.max or 0)
             conc2Text:SetTextColor(r, g, b)
-            AddConcentrationTooltip(conc2Frame, conc2Data, prof2.name, L)
+            AddConcentrationTooltip(conc2Frame, conc2Data, prof2.name)
         else
             conc2Text:SetText("--")
             conc2Text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -824,7 +824,7 @@ function ns.UI.RefreshProfessionsStats(professionsTab)
 
             local prof1Recipes = charRecipesByExpansion[professions.Primary1.name]
             if prof1Recipes and type(prof1Recipes) == "table" then
-                for expansionID, expData in pairs(prof1Recipes) do
+                for _, expData in pairs(prof1Recipes) do
                     if type(expData) == "table" then
                         stats.recipesKnown = stats.recipesKnown + (expData.learnedRecipes or 0)
                         stats.recipesTotal = stats.recipesTotal + (expData.totalRecipes or 0)
@@ -844,7 +844,7 @@ function ns.UI.RefreshProfessionsStats(professionsTab)
 
             local prof2Recipes = charRecipesByExpansion[professions.Primary2.name]
             if prof2Recipes and type(prof2Recipes) == "table" then
-                for expansionID, expData in pairs(prof2Recipes) do
+                for _, expData in pairs(prof2Recipes) do
                     if type(expData) == "table" then
                         stats.recipesKnown = stats.recipesKnown + (expData.learnedRecipes or 0)
                         stats.recipesTotal = stats.recipesTotal + (expData.totalRecipes or 0)
@@ -859,7 +859,7 @@ function ns.UI.RefreshProfessionsStats(professionsTab)
 
             local cookingRecipes = charRecipesByExpansion["Cooking"]
             if cookingRecipes and type(cookingRecipes) == "table" then
-                for expansionID, expData in pairs(cookingRecipes) do
+                for _, expData in pairs(cookingRecipes) do
                     if type(expData) == "table" then
                         stats.recipesKnown = stats.recipesKnown + (expData.learnedRecipes or 0)
                         stats.recipesTotal = stats.recipesTotal + (expData.totalRecipes or 0)
@@ -874,7 +874,7 @@ function ns.UI.RefreshProfessionsStats(professionsTab)
 
             local fishingRecipes = charRecipesByExpansion["Fishing"]
             if fishingRecipes and type(fishingRecipes) == "table" then
-                for expansionID, expData in pairs(fishingRecipes) do
+                for _, expData in pairs(fishingRecipes) do
                     if type(expData) == "table" then
                         stats.recipesKnown = stats.recipesKnown + (expData.learnedRecipes or 0)
                         stats.recipesTotal = stats.recipesTotal + (expData.totalRecipes or 0)

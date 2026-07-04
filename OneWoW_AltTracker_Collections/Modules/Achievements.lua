@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.Achievements = {}
 local Module = ns.Achievements
@@ -65,7 +65,7 @@ function Module:GetAchievementInfo(achievementID)
     if numCriteria and numCriteria > 0 then
         local criteria = {}
         for i = 1, numCriteria do
-            local criteriaString, criteriaType, criteriaCompleted, quantity, reqQuantity, charName, flags, assetID, quantityString = GetAchievementCriteriaInfo(achievementID, i)
+            local criteriaString, criteriaType, criteriaCompleted, quantity, reqQuantity, charName, criteriaFlags, assetID, quantityString = GetAchievementCriteriaInfo(achievementID, i)
             table.insert(criteria, {
                 index = i,
                 description = criteriaString,
@@ -74,7 +74,7 @@ function Module:GetAchievementInfo(achievementID)
                 quantity = quantity,
                 reqQuantity = reqQuantity,
                 charName = charName,
-                flags = flags,
+                flags = criteriaFlags,
                 assetID = assetID,
                 quantityString = quantityString,
             })

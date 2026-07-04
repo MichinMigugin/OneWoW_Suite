@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.Mail = {}
 local Module = ns.Mail
@@ -128,8 +128,8 @@ function private.RecordMail(index)
         return false
     end
 
-    local packageIcon, stationeryIcon, sender, subject, money, CODAmount, daysLeft, hasItem = GetInboxHeaderInfo(index)
-    local invoiceType, itemName, buyer, bid, buyout, deposit, consignment, count = GetInboxInvoiceInfo(index)
+    local _, _, sender, _, money, CODAmount = GetInboxHeaderInfo(index)
+    local invoiceType, itemName, buyer, _, _, _, _, count = GetInboxInvoiceInfo(index)
     local quantity = count or 1
 
     if invoiceType == "seller" or invoiceType == "seller_temp_invoice" then
@@ -222,8 +222,8 @@ function Module:CollectData(charKey, charData)
     local numItems = GetInboxNumItems()
 
     for mailID = 1, math.min(numItems, 20) do
-        local packageIcon, stationeryIcon, sender, subject, money, CODAmount, daysLeft, hasItem,
-              wasRead, wasReturned, textCreated, canReply, isGM = GetInboxHeaderInfo(mailID)
+        local _, _, sender, subject, money, CODAmount, daysLeft, hasItem,
+              wasRead, wasReturned, _, canReply, isGM = GetInboxHeaderInfo(mailID)
 
         if sender then
             mailbox.mails[mailID] = {

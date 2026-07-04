@@ -41,7 +41,7 @@ local columnsConfig = {
     {key = "lastseen", label = L["COL_LAST_SEEN"], width = 85, fixed = true, align = "center",                  ttTitle = L["COL_LAST_SEEN"], ttDesc = L["TT_ITEMS_COL_LAST_SEEN_DESC"]},
 }
 
-local onHeaderCreate = function(btn, col, index)
+local onHeaderCreate = function(btn, col, _)
     if col.key == "expand" then
         local icon = btn:CreateTexture(nil, "ARTWORK")
         icon:SetSize(14, 14)

@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.Equipment = {}
 local Module = ns.Equipment
@@ -139,7 +139,7 @@ function Module:CollectData(charKey, charData)
 
     -- Backfill sockets/setID once item data is fully cached (GetItemStats often
     -- returns nil on first pass, which left gems at 0/0).
-    for slotID, slotData in pairs(equipment) do
+    for _, slotData in pairs(equipment) do
         if slotData.itemID then
             local item = Item:CreateFromItemID(slotData.itemID)
             item:ContinueOnItemLoad(function()

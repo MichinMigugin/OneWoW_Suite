@@ -43,9 +43,9 @@ end
 function GoldWatcher:ScanInboxForAuctionSales()
     local numItems = GetInboxNumItems()
     for i = 1, numItems do
-        local _, _, sender, subject, money = GetInboxHeaderInfo(i)
+        local _, _, _, _, money = GetInboxHeaderInfo(i)
         if money and money > 0 then
-            local invoiceType, itemName, buyer, bid, buyout, deposit, consignment, count = GetInboxInvoiceInfo(i)
+            local invoiceType, itemName, buyer, _, _, _, _, count = GetInboxInvoiceInfo(i)
             if invoiceType == "seller" or invoiceType == "seller_temp_invoice" then
                 local already = false
                 for _, entry in ipairs(pendingAuctionSales) do
@@ -79,7 +79,7 @@ function GoldWatcher:TryClaimPendingAuctionSales(amount)
 
     local remaining = amount
     local matched = {}
-    for i, entry in ipairs(pendingAuctionSales) do
+    for _, entry in ipairs(pendingAuctionSales) do
         if not entry.consumed and entry.amount <= remaining + 1 then
             table.insert(matched, entry)
             remaining = remaining - entry.amount

@@ -7,7 +7,7 @@ local Module = ns.GuildBank
 -- DB.guildBanks[guildName]. Slot scanning, the canonical record shape, and the
 -- link-hex quality recovery live in ns.ContainerScan; this keeps the tab
 -- metadata, money, and write path.
-function Module:CollectData(charKey, charData)
+function Module:CollectData(charKey, _)
     if not charKey then return false end
 
     if not IsInGuild() then

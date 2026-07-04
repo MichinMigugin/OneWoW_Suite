@@ -1,16 +1,16 @@
-local addonName, ns = ...
+local _, ns = ...
 
 ns.ProfessionTrainers = {}
 local Module = ns.ProfessionTrainers
 
-function Module:CollectData(charKey, charData)
+function Module:CollectData(_, _)
     return false
 end
 
-function Module:GetRecentTrainers(charKey, charData, count)
+function Module:GetRecentTrainers(_, _, _)
     return {}
 end
 
-function Module:GetTrainersByZone(charKey, charData, zoneName)
+function Module:GetTrainersByZone(_, _, _)
     return {}
 end

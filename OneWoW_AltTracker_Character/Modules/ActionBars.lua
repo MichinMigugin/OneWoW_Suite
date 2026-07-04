@@ -1148,7 +1148,7 @@ local function PickupActionTable(actionData, flyouts, mountCache)
     return success, failReason
 end
 
-function Module:RestoreActionSlot(slotID, actionData, flyouts, mountCache, spellOverride)
+function Module:RestoreActionSlot(slotID, actionData, flyouts, mountCache, _)
     if OneWoW.Restriction.IsProtectedActionBlocked() then
         return false, "Restricted"
     end

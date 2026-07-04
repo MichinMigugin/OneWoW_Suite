@@ -7,7 +7,7 @@ local function CollectLockouts()
     local lockouts = {}
     local numSavedInstances = GetNumSavedInstances()
     for i = 1, numSavedInstances do
-        local name, id, reset, difficulty, locked, extended, instanceIDMostSig, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress = GetSavedInstanceInfo(i)
+        local name, id, reset, difficulty, locked, extended, _, isRaid, maxPlayers, difficultyName, numEncounters, encounterProgress = GetSavedInstanceInfo(i)
 
         if isRaid and locked then
             local lockoutData = {

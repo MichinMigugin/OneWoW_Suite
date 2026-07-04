@@ -1,4 +1,4 @@
-local addonName, ns = ...
+local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
@@ -23,7 +23,7 @@ local columnsConfig = {
     {key = "expires", label = L["TT_COL_EXPIRES"], width = 80, fixed = false, align = "left", ttTitle = L["TT_COL_EXPIRES"], ttDesc = L["TT_COL_EXPIRES_DESC"]}
 }
 
-local onHeaderCreate = function(btn, col, index)
+local onHeaderCreate = function(btn, col, _)
     if col.key == "expand" then
         local icon = btn:CreateTexture(nil, "ARTWORK")
         icon:SetSize(14, 14)
@@ -150,7 +150,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
     local rowHeight = 32
     local rowGap = 2
 
-    for charIndex, charInfo in ipairs(allChars) do
+    for _, charInfo in ipairs(allChars) do
         local charKey = charInfo.key
         local charData = charInfo.data
 
@@ -285,7 +285,7 @@ function ns.UI.RefreshLockoutsTab(lockoutsTab)
                     end
                     GameTooltip:Show()
                 end)
-                lockoutText:SetScript("OnLeave", function(self)
+                lockoutText:SetScript("OnLeave", function()
                     GameTooltip:Hide()
                 end)
             else
@@ -391,7 +391,7 @@ function ns.UI.RefreshLockoutsStats(lockoutsTab)
     local currentTime = time()
     local soonestReset = nil
 
-    for charKey, charData in pairs(OneWoW_AltTracker_Character_API.GetAllCharacters()) do
+    for charKey, _ in pairs(OneWoW_AltTracker_Character_API.GetAllCharacters()) do
         local endgameData = OneWoW_AltTracker_Endgame_API.GetCharacterData(charKey)
 
         local hasLockouts = false
