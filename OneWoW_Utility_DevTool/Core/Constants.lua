@@ -1,6 +1,6 @@
-local ADDON_NAME, ns = ...
+local _, ns = ...
 
-local format = string.format
+local OneWoW_GUI = OneWoW_GUI
 
 local noArgs = {}
 local unitSpellCastCommonArgs = { "unit", "castGUID", "spellID", "castBarID" }
@@ -11,7 +11,7 @@ ns.Constants = {
     ERROR_CAPTURE_EVENT = "OneWoW_DevTool.ErrorCaptured",
     -- Token-bucket refill rate (errors per second) before throttling capture
     ERROR_LOGGER_ERRORS_PER_SEC = 10,
-    ERROR_LOGGER_ALERT_SOUND_FILE = format("Interface/AddOns/%s/Media/devtools-error.ogg", ADDON_NAME),
+    ERROR_LOGGER_ALERT_SOUND_FILE = OneWoW_GUI.Constants.MEDIA_BASE .. "OneWoW_Utility_DevTool\\devtools-error.ogg",
     -- Standalone !BugGrabber addon folder name (ADDON_LOADED arg); not embedded in DevTool
     BUGGRABBER_STANDALONE_ADDON = "!BugGrabber",
 

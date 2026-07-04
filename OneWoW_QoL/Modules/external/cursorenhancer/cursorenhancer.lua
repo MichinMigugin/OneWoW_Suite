@@ -36,7 +36,7 @@ local hooksecurefunc = hooksecurefunc
 
 local CE = {}
 
-local MEDIA = "Interface\\AddOns\\OneWoW_QoL\\Media\\"
+local MEDIA = OneWoW_GUI.Constants.MEDIA_BASE .. "OneWoW_QoL\\cursorenhancer\\"
 
 -- Ring textures shared by the swipe rings (GCD + cast). Keys are stored in DB.
 CE.RING_TEXTURES = {

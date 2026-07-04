@@ -20,7 +20,7 @@ local emptyMessage   = nil
 local leftStatusText = nil
 local scrollChild    = nil
 
-local MEDIA = "Interface\\AddOns\\OneWoW_Notes\\Media\\"
+local MEDIA = OneWoW_GUI.Constants.MEDIA_BASE
 
 local npcNameCache = {}
 

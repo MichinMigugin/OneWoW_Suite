@@ -27,7 +27,7 @@ local leftStatusText = nil
 local rightStatusText = nil
 local scrollChild = nil
 
-local MEDIA = "Interface\\AddOns\\OneWoW_Notes\\Media\\"
+local MEDIA = OneWoW_GUI.Constants.MEDIA_BASE
 
 local function CreateThemedPanel(name, parentFrame)
     local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")

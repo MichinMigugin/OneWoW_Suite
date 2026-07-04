@@ -4,7 +4,7 @@ ns.UI = ns.UI or {}
 
 local OneWoW_GUI = OneWoW_GUI
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local MEDIA = "Interface\\AddOns\\OneWoW_Notes\\Media\\"
+local MEDIA = OneWoW_GUI.Constants.MEDIA_BASE
 
 function ns.UI.CreateSplitPanel(parent)
     local panels = OneWoW_GUI:CreateSplitPanel(parent)

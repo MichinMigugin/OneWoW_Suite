@@ -1,4 +1,4 @@
-local ADDON_NAME, ns = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -22,7 +22,7 @@ local function getDU()
     return ns.Constants and ns.Constants.DEVTOOL_UI or {}
 end
 
-local BOOKMARK_ICON_PATH = format("Interface\\AddOns\\%s\\Media\\icon-fav.png", ADDON_NAME)
+local BOOKMARK_ICON_PATH = OneWoW_GUI.Constants.MEDIA_BASE .. "icon-fav.png"
 
 --- Solo atlas preview: fit atlas pixel aspect ratio inside a max square of (base * zoom).
 local function layoutAtlasSoloFrame(tab, atlasName, textureKey)

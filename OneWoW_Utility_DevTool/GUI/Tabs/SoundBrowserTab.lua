@@ -1,4 +1,4 @@
-local ADDON_NAME, ns = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
@@ -18,7 +18,7 @@ local SB
 local applyListSelection
 local refreshListSelection
 
-local BOOKMARK_ICON_PATH = format("Interface\\AddOns\\%s\\Media\\icon-fav.png", ADDON_NAME)
+local BOOKMARK_ICON_PATH = OneWoW_GUI.Constants.MEDIA_BASE .. "icon-fav.png"
 
 local MANUAL_FDID = "fdid"
 local MANUAL_KIT = "kit"
