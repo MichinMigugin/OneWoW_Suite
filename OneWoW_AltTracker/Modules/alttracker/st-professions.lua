@@ -27,6 +27,8 @@ function ProfessionsModule:GetCharacterProfessions(characterKey)
         concentration = charData.concentration or {},
         recipeCount = 0,
         recipesByExpansion = {},
+        recipeProgress = {},
+        catalogLoaded = false,
         weeklyQuestStatus = {}
     }
 
@@ -40,57 +42,29 @@ function ProfessionsModule:GetCharacterProfessions(characterKey)
         professionData.recipeCount = count
     end
 
-    local catalogGlobals = {
-        ["Alchemy"] = "OneWoWTradeskills_Alchemy",
-        ["Blacksmithing"] = "OneWoWTradeskills_Blacksmithing",
-        ["Cooking"] = "OneWoWTradeskills_Cooking",
-        ["Enchanting"] = "OneWoWTradeskills_Enchanting",
-        ["Engineering"] = "OneWoWTradeskills_Engineering",
-        ["Fishing"] = "OneWoWTradeskills_Fishing",
-        ["Herbalism"] = "OneWoWTradeskills_Herbalism",
-        ["Inscription"] = "OneWoWTradeskills_Inscription",
-        ["Jewelcrafting"] = "OneWoWTradeskills_Jewelcrafting",
-        ["Leatherworking"] = "OneWoWTradeskills_Leatherworking",
-        ["Mining"] = "OneWoWTradeskills_Mining",
-        ["Skinning"] = "OneWoWTradeskills_Skinning",
-        ["Tailoring"] = "OneWoWTradeskills_Tailoring",
-    }
-
+    -- Recipe comparison is sourced from the Professions unit's API, which folds
+    -- in the LoD catalog data when it is loaded and degrades to stored-only
+    -- counts when it is not (no fake "Total 0 / Known 0"). recipesByExpansion is
+    -- kept for the profession tooltip's per-expansion breakdown (catalog-only).
     local recipesByExpansion = {}
+    local recipeProgress = {}
+    local catalogLoaded = false
     local professions = charData.professions or {}
-    local knownRecipes = charData.recipes or {}
 
     for _, profInfo in pairs(professions) do
         if profInfo and profInfo.name then
-            local globalName = catalogGlobals[profInfo.name]
-            local catalogData = globalName and _G[globalName]
-            if catalogData and catalogData.r then
-                local knownSet = {}
-                if knownRecipes[profInfo.name] then
-                    for k in pairs(knownRecipes[profInfo.name]) do
-                        knownSet[tonumber(k) or k] = true
-                    end
-                end
-
-                local profExpData = {}
-                for recipeID, recipe in pairs(catalogData.r) do
-                    local expKey = recipe.exp or "Unknown"
-                    if not profExpData[expKey] then
-                        profExpData[expKey] = {
-                            learnedRecipes = 0,
-                            totalRecipes = 0,
-                        }
-                    end
-                    profExpData[expKey].totalRecipes = profExpData[expKey].totalRecipes + 1
-                    if knownSet[recipeID] then
-                        profExpData[expKey].learnedRecipes = profExpData[expKey].learnedRecipes + 1
-                    end
-                end
-                recipesByExpansion[profInfo.name] = profExpData
+            local progress = OneWoW_AltTracker_Professions_API.GetRecipeProgress(characterKey, profInfo.name)
+            recipeProgress[profInfo.name] = progress
+            if progress.catalogLoaded then
+                catalogLoaded = true
+                recipesByExpansion[profInfo.name] = progress.byExpansion
             end
         end
     end
+
     professionData.recipesByExpansion = recipesByExpansion
+    professionData.recipeProgress = recipeProgress
+    professionData.catalogLoaded = catalogLoaded
 
     return professionData
 end

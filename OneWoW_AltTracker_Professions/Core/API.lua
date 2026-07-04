@@ -89,6 +89,66 @@ function OneWoW_AltTracker_Professions_API.GetRecipeCount(charKey, professionNam
     return ns.ProfessionAdvanced:GetRecipeCount(charKey, charData, professionName)
 end
 
+--- Recipe progress for a profession. Stored known count is always available;
+--- totals and the per-expansion breakdown require the LoD catalog data unit
+--- (OneWoW_CatalogData_Tradeskills) to be loaded. When it is not, callers must
+--- degrade to showing the stored count only (never a fake "Total 0 / Known 0").
+---@param charKey string
+---@param professionName string
+---@return table progress { catalogLoaded, stored, known, total, byExpansion }
+function OneWoW_AltTracker_Professions_API.GetRecipeProgress(charKey, professionName)
+    local charData = ns.DataManager:GetCharacterData(charKey)
+
+    local storedSet = charData and charData.recipes and charData.recipes[professionName]
+    local stored = 0
+    if storedSet then
+        for _ in pairs(storedSet) do
+            stored = stored + 1
+        end
+    end
+
+    local progress = {
+        catalogLoaded = false,
+        stored = stored,
+        known = stored,
+        total = nil,
+        byExpansion = {},
+    }
+
+    local catalog = OneWoW_CatalogData_Tradeskills_API
+    if not catalog or not catalog.GetRecipesByProfession then
+        return progress
+    end
+
+    local recipes = catalog.GetRecipesByProfession(professionName)
+    if not recipes or #recipes == 0 then
+        return progress
+    end
+
+    progress.catalogLoaded = true
+    local byExpansion = {}
+    local total, known = 0, 0
+    for _, recipe in ipairs(recipes) do
+        local expKey = recipe.exp or "Unknown"
+        local entry = byExpansion[expKey]
+        if not entry then
+            entry = { totalRecipes = 0, learnedRecipes = 0 }
+            byExpansion[expKey] = entry
+        end
+        entry.totalRecipes = entry.totalRecipes + 1
+        total = total + 1
+        if storedSet and storedSet[recipe.id] then
+            entry.learnedRecipes = entry.learnedRecipes + 1
+            known = known + 1
+        end
+    end
+
+    progress.total = total
+    progress.known = known
+    progress.byExpansion = byExpansion
+    return progress
+end
+
 --- Shared item -> recipe spell ID map, populated by the core RecipeKnownUtil
 --- service from trade-skill data. Persisted in this unit's SavedVariables.
 ---@return table|nil map itemID -> recipeSpellID

@@ -195,6 +195,14 @@ function TD:GetRecipe(recipeID)
     return data.r[recipeID]
 end
 
+--- Profession name that owns a recipe ID in the static catalog, or nil.
+---@param recipeID number
+---@return string|nil professionName
+function TD:GetRecipeProfession(recipeID)
+    BuildRecipeIndex()
+    return recipeIndex[recipeID]
+end
+
 function TD:GetRecipeReagents(recipeID)
     local recipe = self:GetRecipe(recipeID)
     if not recipe then return nil, nil end

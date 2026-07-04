@@ -768,6 +768,7 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | `OneWoW.Toasts` | `Services/toast-engine.lua` | Toast types from QoL, `OneWoW_Notes` `Fire*Alert` |
 | `OneWoW.ItemStatus` | `Services/itemstatus.lua` | Overlay engine, Bags |
 | `OneWoW.UpgradeDetection` | `Services/upgrade-detection.lua` | Overlay engine, Bags |
+| `OneWoW.ProfessionRecipe` | `Services/ProfessionRecipe.lua` | AltTracker Professions (persist), Catalog Tradeskills (scanCache), RecipeKnownUtil, AltTracker Professions tab — see [PROFESSION_RECIPE.md](PROFESSION_RECIPE.md) / §8.7 |
 | `OneWoW.RecipeKnownUtil` | `Services/RecipeKnownUtil.lua` | Overlay engine, tooltip providers |
 | `OneWoW.AHItemKeys` | `Services/AHItemKeys.lua` | AH scanners (`OneWoW_AltTracker_Auctions`), `ItemPrices` link-aware lookups |
 | `OneWoW.ItemPrices` | `Services/ItemPrices.lua` | Tooltip providers, overlay engine, AH source UI helpers |
@@ -1031,6 +1032,48 @@ the broad gate (which includes `Map`) was over-gating protected actions that are
 actually fine inside a Delve out of combat, which is what surfaced the original
 Delve bag-layout and bag/quest-bar-on-reload bugs.
 
+### 8.7 Profession recipe funnel (`OneWoW.ProfessionRecipe`)
+
+One core service owns the `TRADE_SKILL_SHOW` / `TRADE_SKILL_LIST_UPDATE` /
+`TRADE_SKILL_CLOSE` / `NEW_RECIPE_LEARNED` events for recipe scanning
+(`Services/ProfessionRecipe.lua`), registered via the core `ns.RegisterEvent`
+multiplexer (§3.3). It replaced four independent listeners (AltTracker
+Professions, Catalog Tradeskills, `RecipeKnownUtil`, plus Blizzard) whose
+differing debounce timings and profession-name handling produced races and
+corrupted SavedVariables keys (empty-string buckets, cross-contaminated recipe
+sets — e.g. Mining holding Cooking IDs).
+
+Consumers subscribe (LoD-safe, on login) through the Facade global and receive
+**ephemeral** scan snapshots — nothing is persisted in core. Three channels:
+
+- **`RegisterScanCallback(ownerID, fn)`** — `fn(scan)` with the learned recipe
+  IDs and item→recipe map. Debounced (~0.25s, re-armed) and ready-gated on
+  `C_TradeSkillUI.IsTradeSkillReady()`.
+- **`RegisterOpenCallback(ownerID, fn)`** — `fn(context)` on the same
+  "window ready" trigger, for live-query collectors that read the trade-skill
+  APIs directly and don't need recipe IDs (AltTracker Professions' basics /
+  equipment / concentration / expansion-band collection).
+- **`RegisterClosedCallback(ownerID, fn)`** — `fn()` on `TRADE_SKILL_CLOSE`.
+
+`UnregisterCallback(ownerID)` drops all channels for an owner; events are
+registered on 0→1 subscribers and torn down on 1→0. The snapshot re-reads
+`GetBaseProfessionInfo()` every scan so a fast window switch can't misattribute
+recipes. Open callbacks fire before scan callbacks so a consumer's profession
+list is populated before recipe commit resolves it.
+
+**Identity + persistence contract (consumer side).** The snapshot carries the
+numeric profession identity (`baseInfo.professionID` + per-recipe
+`GetProfessionInfoByRecipeID`), not just the name string, because the empty/stale
+name string was the original corruption surface. The AltTracker Professions
+commit module resolves the canonical profession (skill-line ID → own-slot name →
+per-recipe plurality → catalog plurality → skip; never writes `recipes[""]`),
+merges monotonically (a partial/empty scan never shrinks a stored set), and
+self-heals (a recipe authoritatively belongs to the resolved profession, so it is
+pruned from every other bucket and the `""` bucket is dropped on any resolved
+commit). Display degrades strictly: without the LoD catalog data unit loaded,
+show the stored Known count and dash out Total/Missing rather than a misleading
+`Total 0 / Known 0`.
+
 ---
 
 ## 9. Caveats
@@ -1060,6 +1103,7 @@ Delve bag-layout and bag/quest-bar-on-reload bugs.
 | `OneWoW/Core/ModuleRegistry.lua` | Hub tab/module registration |
 | `OneWoW/Core/SettingsFeatureRegistry.lua` | Settings funnel: catalog, storage-path resolution, change notification (§8.5) |
 | `OneWoW/Core/Restriction.lua` | Combat/restriction funnel: event-driven cache, intent getters, `RunWhenUnrestricted`, `GetSnapshot` + Midnight secret-value guard (§8.6) |
+| `OneWoW/Services/ProfessionRecipe.lua` | Trade-skill recipe scan funnel: single `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED` owner, scan/open/closed callback channels, ephemeral snapshots (§8.7) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
 | `OneWoW/UI/t-home.lua` | Home tab: read-only status + live refresh |
 | `OneWoW/UI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |

@@ -9,6 +9,10 @@ OneWoW:BootStore(ns, {
     defaults = ns.DatabaseDefaults,
     sortField = "lastUpdate",
     onLogin = function()
+        if ns.ProfessionRecipeCommit then
+            ns.ProfessionRecipeCommit:Initialize()
+        end
+
         if ns.DataManager then
             ns.DataManager:Initialize()
             ns.DataManager:RegisterEvents()

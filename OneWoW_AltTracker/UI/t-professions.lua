@@ -9,6 +9,10 @@ local currentSortColumn = nil
 local currentSortAscending = true
 local characterRows = {}
 
+-- Placeholder for numeric fields that require the LoD catalog data unit (not a
+-- translatable string; an em dash for "unavailable").
+local DASH = "\226\128\148"
+
 local columnsConfig = {
     {key = "expand", label = "", width = 25, fixed = true, align = "icon", sortable = false, ttTitle = L["TT_COL_EXPAND"], ttDesc = L["TT_COL_EXPAND_DESC"]},
     {key = "star", label = "", width = 30, fixed = true, align = "icon", sortable = false, ttTitle = L["TT_COL_STAR"], ttDesc = L["TT_COL_STAR_DESC"]},
@@ -110,6 +114,25 @@ function ns.UI.CreateProfessionsTab(parent)
     if ns.UI.RegisterRosterTabFrame then
         ns.UI.RegisterRosterTabFrame("professions", parent)
     end
+
+    -- Live refresh: when the core funnel delivers a scan (the player opened or
+    -- updated a profession), rebuild the tab so Known counts update without a
+    -- /reload. Only when the tab is actually visible to avoid wasted work.
+    OneWoW.ProfessionRecipe.RegisterScanCallback("AltTracker_ProfessionsTab", function()
+        if parent:IsShown() and ns.UI.RefreshProfessionsTab then
+            ns.UI.RefreshProfessionsTab(parent)
+        end
+    end)
+
+    -- Recipe totals/Missing need the LoD catalog data unit. If it loads after this
+    -- tab was rendered in degraded (em-dash) mode, refresh once its data is
+    -- queryable so the dashes become real numbers. Catch-up fires immediately if
+    -- it is already loaded, which is a harmless no-op re-render.
+    OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Tradeskills", function()
+        if ns.UI.RefreshProfessionsTab then
+            ns.UI.RefreshProfessionsTab(parent)
+        end
+    end)
 end
 
 local ProfessionsModule = nil
@@ -277,7 +300,7 @@ local function BuildExpandedPanels(ef, data, row)
 
     local professions = data.professions
     local professionEquipment = data.professionEquipment
-    local recipesByExpansion = data.recipesByExpansion
+    local recipeProgress = data.recipeProgress or {}
 
     local hasProfessions = false
     if professions then
@@ -402,17 +425,24 @@ local function BuildExpandedPanels(ef, data, row)
         local nameFS = grid:AddLine(pRecipes, iconMarkup .. " " .. profData.name)
         MakeProfClickable(nameFS, pRecipes, profData)
 
-        local totalRecipes = 0
-        local totalLearned = 0
-        local profRecipeData = recipesByExpansion and recipesByExpansion[profData.name]
-        if profRecipeData and type(profRecipeData) == "table" then
-            for _, expData in pairs(profRecipeData) do
-                if type(expData) == "table" then
-                    totalRecipes = totalRecipes + (expData.totalRecipes or 0)
-                    totalLearned = totalLearned + (expData.learnedRecipes or 0)
-                end
-            end
+        local progress = recipeProgress[profData.name]
+
+        -- Degraded contract: without the catalog data unit loaded there is no
+        -- authoritative total, so show only the stored Known count and dash out
+        -- Total/Missing rather than rendering a misleading "Total 0 / Known 0".
+        if not progress or not progress.catalogLoaded then
+            local stored = (progress and progress.stored) or 0
+            grid:AddLine(pRecipes, "  " .. L["PROF_LABEL_TOTAL"] .. " " .. DASH)
+            grid:AddLine(pRecipes, "  " .. L["PROF_LABEL_KNOWN"] .. " " .. tostring(stored),
+                {OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")})
+            grid:AddLine(pRecipes, "  " .. L["PROF_LABEL_MISSING"] .. " " .. DASH,
+                {OneWoW_GUI:GetThemeColor("TEXT_SECONDARY")})
+            grid:AddLine(pRecipes, " ")
+            return
         end
+
+        local totalRecipes = progress.total or 0
+        local totalLearned = progress.known or 0
 
         grid:AddLine(pRecipes, "  " .. L["PROF_LABEL_TOTAL"] .. " " .. tostring(totalRecipes))
 
@@ -524,6 +554,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         local professions = professionData.professions or {}
         local professionEquipment = professionData.professionEquipment or {}
         local recipesByExpansion = professionData.recipesByExpansion or {}
+        local recipeProgress = professionData.recipeProgress or {}
         local concentration = professionData.concentration or {}
 
         local charRow = OneWoW_GUI:CreateDataRow(scrollContent, {
@@ -533,6 +564,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
                 professions = professions,
                 professionEquipment = professionEquipment,
                 recipesByExpansion = recipesByExpansion,
+                recipeProgress = recipeProgress,
             },
             exclusiveExpand = true,
             createDetails = function(ef, d, expandedRow)
@@ -806,7 +838,20 @@ function ns.UI.RefreshProfessionsStats(professionsTab)
         local professionData = ProfModule:GetCharacterProfessions(charKey)
         local professions = professionData.professions or {}
         local professionEquipment = professionData.professionEquipment or {}
-        local charRecipesByExpansion = professionData.recipesByExpansion or {}
+        local charRecipeProgress = professionData.recipeProgress or {}
+
+        -- Catalog totals only count when the catalog data unit is loaded; without
+        -- it, contribute the stored Known count and leave the total untouched.
+        local function AccumulateRecipes(profName)
+            local progress = charRecipeProgress[profName]
+            if not progress then return end
+            if progress.catalogLoaded then
+                stats.recipesKnown = stats.recipesKnown + (progress.known or 0)
+                stats.recipesTotal = stats.recipesTotal + (progress.total or 0)
+            else
+                stats.recipesKnown = stats.recipesKnown + (progress.stored or 0)
+            end
+        end
 
         local hasPrimary1 = false
         local hasPrimary2 = false
@@ -822,15 +867,7 @@ function ns.UI.RefreshProfessionsStats(professionsTab)
                 stats.maxLevelProfs = stats.maxLevelProfs + 1
             end
 
-            local prof1Recipes = charRecipesByExpansion[professions.Primary1.name]
-            if prof1Recipes and type(prof1Recipes) == "table" then
-                for _, expData in pairs(prof1Recipes) do
-                    if type(expData) == "table" then
-                        stats.recipesKnown = stats.recipesKnown + (expData.learnedRecipes or 0)
-                        stats.recipesTotal = stats.recipesTotal + (expData.totalRecipes or 0)
-                    end
-                end
-            end
+            AccumulateRecipes(professions.Primary1.name)
         end
 
         if professions.Primary2 and professions.Primary2.name then
@@ -842,45 +879,21 @@ function ns.UI.RefreshProfessionsStats(professionsTab)
                 stats.maxLevelProfs = stats.maxLevelProfs + 1
             end
 
-            local prof2Recipes = charRecipesByExpansion[professions.Primary2.name]
-            if prof2Recipes and type(prof2Recipes) == "table" then
-                for _, expData in pairs(prof2Recipes) do
-                    if type(expData) == "table" then
-                        stats.recipesKnown = stats.recipesKnown + (expData.learnedRecipes or 0)
-                        stats.recipesTotal = stats.recipesTotal + (expData.totalRecipes or 0)
-                    end
-                end
-            end
+            AccumulateRecipes(professions.Primary2.name)
         end
 
         if professions.Cooking and professions.Cooking.name then
             hasCooking = true
             uniqueSecondaryProfs["Cooking"] = true
 
-            local cookingRecipes = charRecipesByExpansion["Cooking"]
-            if cookingRecipes and type(cookingRecipes) == "table" then
-                for _, expData in pairs(cookingRecipes) do
-                    if type(expData) == "table" then
-                        stats.recipesKnown = stats.recipesKnown + (expData.learnedRecipes or 0)
-                        stats.recipesTotal = stats.recipesTotal + (expData.totalRecipes or 0)
-                    end
-                end
-            end
+            AccumulateRecipes("Cooking")
         end
 
         if professions.Fishing and professions.Fishing.name then
             hasFishing = true
             uniqueSecondaryProfs["Fishing"] = true
 
-            local fishingRecipes = charRecipesByExpansion["Fishing"]
-            if fishingRecipes and type(fishingRecipes) == "table" then
-                for _, expData in pairs(fishingRecipes) do
-                    if type(expData) == "table" then
-                        stats.recipesKnown = stats.recipesKnown + (expData.learnedRecipes or 0)
-                        stats.recipesTotal = stats.recipesTotal + (expData.totalRecipes or 0)
-                    end
-                end
-            end
+            AccumulateRecipes("Fishing")
         end
 
         if professions.Archaeology and professions.Archaeology.name then

@@ -32,6 +32,7 @@ local SERVICE_KEYS = {
     "OverlayIcons",
     "AHItemKeys",
     "ItemPrices",
+    "ProfessionRecipe",
     "RecipeKnownUtil",
     "UpgradeDetection",
     "AltScope",

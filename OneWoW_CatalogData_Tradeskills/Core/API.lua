@@ -44,6 +44,14 @@ function OneWoW_CatalogData_Tradeskills_API.GetRecipeReagents(recipeID)
     return ns.TradeskillData:GetRecipeReagents(recipeID)
 end
 
+--- Profession name that owns a recipe ID in the static catalog, or nil.
+--- Used by consumers to attribute learned recipes to a profession.
+---@param recipeID number
+---@return string|nil professionName
+function OneWoW_CatalogData_Tradeskills_API.GetRecipeProfession(recipeID)
+    return ns.TradeskillData:GetRecipeProfession(recipeID)
+end
+
 --- Search recipes across professions and expansions.
 ---@param text string
 ---@param profFilter string|nil

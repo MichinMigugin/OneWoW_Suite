@@ -8,8 +8,6 @@ local sessionMap = {}
 
 local LEARN_LINE_TYPE = Enum.TooltipDataLineType.ItemSpellTriggerLearn
 
-local eventFrame = CreateFrame("Frame")
-
 local function GetSavedMap()
     return OneWoW_AltTracker_Professions_API and OneWoW_AltTracker_Professions_API.GetRecipeItemMap()
 end
@@ -21,38 +19,22 @@ local function SaveToMap(itemID, recipeSpellID)
     end
 end
 
-local function BuildCacheFromTradeSkill()
-    local ids = C_TradeSkillUI.GetAllRecipeIDs()
-    if not ids or #ids == 0 then return end
-
-    for _, recipeSpellID in ipairs(ids) do
-        local info = C_TradeSkillUI.GetRecipeInfo(recipeSpellID)
-        if info and info.learned then
+-- Consume scan snapshots from the core ProfessionRecipe funnel instead of owning
+-- a private TRADE_SKILL_* / NEW_RECIPE_LEARNED frame. The session recipe cache
+-- and item->spell map are in-memory here; SavedVariables persistence of the item
+-- map is owned by the AltTracker Professions unit (via SaveToMap on demand, and
+-- its own commit module on scan) so this stays correct when that unit is absent.
+ns.ProfessionRecipe.RegisterScanCallback("RecipeKnownUtil", function(scan)
+    if not scan then return end
+    if scan.learned then
+        for recipeSpellID in pairs(scan.learned) do
             knownRecipeSpells[recipeSpellID] = true
-        end
-
-        local link = C_TradeSkillUI.GetRecipeItemLink(recipeSpellID)
-        if link then
-            local itemID = tonumber(link:match("item:(%d+)"))
-            if itemID then
-                SaveToMap(itemID, recipeSpellID)
-            end
         end
     end
-end
-
-eventFrame:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
-eventFrame:RegisterEvent("TRADE_SKILL_SHOW")
-eventFrame:RegisterEvent("NEW_RECIPE_LEARNED")
-eventFrame:SetScript("OnEvent", function(_, event, ...)
-    if event == "NEW_RECIPE_LEARNED" then
-        local recipeSpellID = ...
-        if recipeSpellID then
-            knownRecipeSpells[recipeSpellID] = true
+    if scan.itemMap then
+        for itemID, recipeSpellID in pairs(scan.itemMap) do
+            sessionMap[itemID] = recipeSpellID
         end
-        BuildCacheFromTradeSkill()
-    elseif event == "TRADE_SKILL_LIST_UPDATE" or event == "TRADE_SKILL_SHOW" then
-        BuildCacheFromTradeSkill()
     end
 end)
 

@@ -37,6 +37,7 @@ Core\Core.lua
 # Data Collection Modules
 Modules\ProfessionBasics.lua
 Modules\ProfessionAdvanced.lua
+Modules\ProfessionRecipeCommit.lua
 Modules\ProfessionEquipment.lua
 Modules\ProfessionConcentration.lua
 Modules\ProfessionCooldowns.lua

@@ -53,10 +53,18 @@ charData.professions = {
 
 ---
 
-### 2. ProfessionAdvanced Module
-**File:** `Modules/ProfessionAdvanced.lua`
+### 2. Recipe collection — core funnel + ProfessionRecipeCommit
+**Files:** `OneWoW/Services/ProfessionRecipe.lua` (core, event owner),
+`Modules/ProfessionRecipeCommit.lua` (this unit, persistence),
+`Modules/ProfessionAdvanced.lua` (stored-count helper only)
 
-**Collects:**
+Recipe scanning is **not** owned by this unit. The core `OneWoW.ProfessionRecipe`
+service is the single suite-wide owner of the `TRADE_SKILL_*` /
+`NEW_RECIPE_LEARNED` events (see [OneWoW/Docs/ARCHITECTURE.md](../../OneWoW/Docs/ARCHITECTURE.md)
+§8.7). This unit subscribes on login (gated on `settings.trackRecipes`) via
+`ProfessionRecipeCommit` and commits the ephemeral scan snapshots it receives.
+
+**Collects (via the snapshot):**
 - The set of *learned* recipe (spell) IDs for the opened profession
 - An account-level map of item ID → recipe (spell) ID (`recipeItemMap`)
 
@@ -65,12 +73,27 @@ charData.professions = {
 > categories, or craftability/quality details are persisted — consumers re-query
 > those live from `C_TradeSkillUI` when needed. "Recipes by expansion" is
 > **derived on demand** by consumers (e.g.
-> `OneWoW_AltTracker/Modules/alttracker/st-professions.lua`); it is **not** stored
-> on `charData`.
+> `OneWoW_AltTracker/Modules/alttracker/st-professions.lua` via
+> `OneWoW_AltTracker_Professions_API.GetRecipeProgress`); it is **not** stored on
+> `charData`.
 
-**Triggered By:**
-- TRADE_SKILL_SHOW event (when the profession window opens)
-- TRADE_SKILL_LIST_UPDATE event (when the recipe list updates)
+**Identity, merge, and self-healing (`ProfessionRecipeCommit`):**
+- Canonical profession is resolved by **numeric skill-line identity first**
+  (`baseInfo.professionID` → own-slot name → per-recipe
+  `C_TradeSkillUI.GetProfessionInfoByRecipeID` plurality → catalog plurality when
+  the catalog data unit is loaded). If nothing resolves, the commit is **skipped**
+  — a recipe is never written under an empty `""` key. This fixes the original
+  bug where a stale/empty name string produced `recipes[""]` and
+  cross-contaminated buckets (e.g. Mining holding Cooking IDs).
+- Merges are **monotonic**: a partial or empty scan never shrinks a stored set.
+- Commits **self-heal**: the scanned IDs authoritatively belong to the resolved
+  profession, so they are pruned from every other bucket and the `""` bucket is
+  dropped on any resolved commit. A retryable v3 repair in `Core/Database.lua`
+  relocates orphaned `""` entries at login for professions the player never
+  reopens (deferred when no attribution source is available).
+
+**Triggered By:** the core funnel's ready-gated, debounced scan callback
+(coalesces `TRADE_SKILL_SHOW` / `TRADE_SKILL_LIST_UPDATE` / `NEW_RECIPE_LEARNED`).
 
 **Storage Location:**
 - `charData.recipes[professionName]` — set of learned recipe spell IDs (`[recipeSpellID] = true`)
@@ -294,19 +317,21 @@ OneWoW_AltTracker_Professions_DB = {
 ### Automatic Collection
 
 **Event-Driven Collection:**
-1. **TRADE_SKILL_SHOW** - Fired when profession window opens
-   - Collects basic profession info (0.5s delay)
-   - Collects advanced recipe data (1.0s delay)
-   - Collects equipment data
-   - Collects cooldown data
+1. **Core `OneWoW.ProfessionRecipe` funnel** (owns `TRADE_SKILL_SHOW` /
+   `TRADE_SKILL_LIST_UPDATE` / `TRADE_SKILL_CLOSE` / `NEW_RECIPE_LEARNED`,
+   ready-gated + debounced ~0.25s):
+   - **Open callback** → `DataManager:OnProfessionWindowReady` collects basic
+     profession info, equipment, concentration, and expansion skill bands.
+   - **Scan callback** → `ProfessionRecipeCommit` commits learned recipe IDs +
+     the item→recipe map.
+   - **Closed callback** → transient-state teardown.
 
-2. **TRADE_SKILL_LIST_UPDATE** - Fired when recipe list changes
-   - Updates recipe data for currently open profession (0.3s delay)
-   - Updates cooldown data
+2. **PLAYER_EQUIPMENT_CHANGED** - Fired when gear changes (slots 20-30)
+   - Updates basic profession info + equipment data (0.5s delay), via
+     DataManager's own small event frame (a LoD unit cannot use the core's
+     private `ns.RegisterEvent`).
 
-3. **PLAYER_EQUIPMENT_CHANGED** - Fired when gear changes (slots 20-30)
-   - Updates basic profession info (0.5s delay)
-   - Updates equipment data
+3. **CURRENCY_DISPLAY_UPDATE** - Updates concentration (0.5s delay), same frame.
 
 4. **TRAINER_SHOW** - Fired when trainer window opens
    - Records trainer location (0.5s delay)
@@ -323,21 +348,23 @@ OneWoW_AltTracker_Professions_DB = {
 
 **File:** `Modules/DataManager.lua`
 
-The DataManager acts as the central orchestrator that triggers data collection from all modules:
+DataManager orchestrates the **live-query** collectors (basics, equipment,
+concentration, expansion bands). Recipe collection is owned by the core funnel +
+`ProfessionRecipeCommit`, not DataManager.
 
 **Responsibilities:**
-- Registers game events
+- Subscribes to the core `OneWoW.ProfessionRecipe` open/closed callbacks for the
+  live-query collectors
+- Keeps a small private event frame for the two non-trade-skill events only
+  (`PLAYER_EQUIPMENT_CHANGED`, `CURRENCY_DISPLAY_UPDATE`)
 - Handles event timing (delays to ensure data is ready)
-- Calls appropriate module collection functions
-- Manages current open profession state
 - Provides access to character data
 
-**Event Flow:**
-1. Game event fires (TRADE_SKILL_SHOW, etc.)
-2. DataManager receives event with delay
-3. DataManager calls appropriate module(s)
-4. Module collects data and stores in database
-5. Updates `lastUpdate` timestamp
+**Event Flow (recipes):**
+1. Core funnel fires the open callback (window ready) → collectors run
+2. Core funnel fires the scan callback → `ProfessionRecipeCommit` resolves the
+   canonical profession and commits (monotonic + self-healing)
+3. Updates `lastUpdate` timestamp
 
 ---
 
@@ -500,11 +527,15 @@ end
 
 ## Integration With OneWoW AltTracker
 
-This addon is designed to work as a standalone datastore or integrate with the main OneWoW AltTracker addon.
+This addon is a LoD datastore for the OneWoW suite.
 
-**OptionalDeps:** OneWoW_AltTracker
+**RequiredDeps:** OneWoW, OneWoW_AltTracker
 
-When the main AltTracker addon is loaded, this professions datastore can be queried for profession information across all characters.
+The professions datastore can be queried for profession information across all
+characters through `OneWoW_AltTracker_Professions_API`. Recipe totals/known
+comparison also uses `OneWoW_CatalogData_Tradeskills_API` when that LoD unit is
+loaded (nil-guarded — no OptionalDeps; display degrades to stored-only counts
+otherwise).
 
 ---
 

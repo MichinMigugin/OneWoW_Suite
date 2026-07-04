@@ -41,14 +41,10 @@ local function GetCharKey()
 end
 
 function Scanner:Initialize()
-    local frame = CreateFrame("Frame")
-    frame:RegisterEvent("TRADE_SKILL_SHOW")
-    frame:SetScript("OnEvent", function(_, event)
-        if event == "TRADE_SKILL_SHOW" then
-            C_Timer.After(0.5, function()
-                Scanner:ScanCurrentProfession()
-            end)
-        end
+    -- Consume the core OneWoW.ProfessionRecipe funnel instead of owning a private
+    -- TRADE_SKILL_SHOW frame. The snapshot is ready-gated and debounced upstream.
+    OneWoW.ProfessionRecipe.RegisterScanCallback("CatalogData_Tradeskills", function(scan)
+        Scanner:OnScan(scan)
     end)
 
     C_Timer.After(3, function()
@@ -94,14 +90,16 @@ function Scanner:ScanExpansionSkills()
     return expansions, bestLabel, bestSkill
 end
 
-function Scanner:ScanCurrentProfession()
-    if not C_TradeSkillUI.IsTradeSkillReady() then return end
+-- Merge one ephemeral scan snapshot from the core funnel into scanCache. Keyed
+-- by the base profession name (guarded non-empty); the funnel re-reads the base
+-- info per scan so the name matches the learned set.
+function Scanner:OnScan(scan)
+    if not scan then return end
 
-    local profInfo = C_TradeSkillUI.GetBaseProfessionInfo()
-    if not profInfo or not profInfo.professionName then return end
+    local profName = scan.baseInfo and scan.baseInfo.professionName
+    if not profName or profName == "" then return end
 
-    local profName = profInfo.professionName
-    local charKey = GetCharKey()
+    local charKey = scan.charKey or GetCharKey()
     if not charKey then return end
 
     local sessionKey = charKey .. ":" .. profName
@@ -113,13 +111,11 @@ function Scanner:ScanCurrentProfession()
     if not db.scanCache[charKey] then db.scanCache[charKey] = {} end
 
     local knownRecipes = {}
-    local recipeIDs = C_TradeSkillUI.GetAllRecipeIDs()
-    if recipeIDs then
-        for _, recipeID in ipairs(recipeIDs) do
-            local recipeInfo = C_TradeSkillUI.GetRecipeInfo(recipeID)
-            if recipeInfo and recipeInfo.learned then
-                knownRecipes[recipeID] = true
-            end
+    local recipeCount = 0
+    if scan.learned then
+        for recipeID in pairs(scan.learned) do
+            knownRecipes[recipeID] = true
+            recipeCount = recipeCount + 1
         end
     end
 
@@ -128,8 +124,8 @@ function Scanner:ScanCurrentProfession()
     db.scanCache[charKey][profName] = {
         known = knownRecipes,
         lastScan = time(),
-        skillLevel = profInfo.skillLevel or 0,
-        maxSkillLevel = profInfo.maxSkillLevel or 0,
+        skillLevel = scan.baseInfo.skillLevel or 0,
+        maxSkillLevel = scan.baseInfo.maxSkillLevel or 0,
         expansions = expansions,
         bestExpansion = bestExpansion,
         bestSkill = bestSkill,
@@ -140,7 +136,7 @@ function Scanner:ScanCurrentProfession()
     ns:FireScanCallbacks({
         charKey = charKey,
         professionName = profName,
-        recipeCount = #(recipeIDs or {}),
+        recipeCount = recipeCount,
     })
 end
 

@@ -105,6 +105,7 @@ Core\FirstRunWizard.lua
 Services\PredicateEngine.lua
 Services\AHItemKeys.lua
 Services\ItemPrices.lua
+Services\ProfessionRecipe.lua
 Services\RecipeKnownUtil.lua
 Services\overlay-icons.lua
 Services\upgrade-detection.lua
