@@ -776,14 +776,6 @@ local function GetQuestTypeLabel(quest)
     return QUEST_TYPE_LABELS[quest.questType] or QUEST_TYPE_LABELS.standard
 end
 
-local function GetGroupTypeLabel(quest)
-    if not quest then return SOLO end
-    local sg = quest.suggestedGroup or 0
-    if sg >= 10 then return RAID  end
-    if sg >= 2  then return GROUP end
-    return SOLO
-end
-
 local function GetCurrencyRewardInfo(rewardCurrency)
     local currencyID
     local quantity = 1
@@ -832,20 +824,6 @@ local function FormatQuestMetadataValue(value)
         or value:gsub("_", " "):gsub("^%l", string.upper)
 end
 
-local function GetFirstMetadataValue(values)
-    if type(values) ~= "table" then
-        return nil
-    end
-
-    for _, value in ipairs(values) do
-        if value ~= nil and tostring(value) ~= "" then
-            return value
-        end
-    end
-
-    return nil
-end
-
 local function FormatQuestMetadataList(values)
     if type(values) ~= "table" or #values == 0 then
         return "-"
@@ -882,21 +860,6 @@ end
 
 local function CreateSeparatorLine(parent, yOffset)
     return OneWoW_GUI:CreateDivider(parent, { yOffset = yOffset })
-end
-
-local function CreateLabel(parent, text, fontSize, yOffset, xLeft, textColor)
-    local fs = OneWoW_GUI:CreateFS(parent, fontSize or 10)
-    fs:SetPoint("TOPLEFT", parent, "TOPLEFT", xLeft or 10, yOffset)
-    fs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-    fs:SetJustifyH("LEFT")
-    fs:SetWordWrap(true)
-    fs:SetText(text)
-    if textColor then
-        fs:SetTextColor(table.unpack(textColor))
-    else
-        fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    end
-    return fs
 end
 
 local npcNameCache = {}
@@ -1364,22 +1327,6 @@ local function ScheduleNPCNameRefresh(npcID, questData)
     end
 
     C_Timer.After(NPC_NAME_REFRESH_DELAYS[state.attempt], retry)
-end
-
-local function GetNPCName(npcID, questData)
-    if not npcID then
-        return nil
-    end
-
-    if npcNameCache[npcID] then
-        return npcNameCache[npcID]
-    end
-
-    if questData then
-        ScheduleNPCNameRefresh(npcID, questData)
-    end
-
-    return nil
 end
 
 local function ResolveQuestName(questID)
@@ -3163,13 +3110,13 @@ function ShowQuestDetail(panels, questData)
             return 1, 0.82, 0
         end
 
-        local function addChainToken(text, r, g, b, onClick, onEnter, onLeave, questID)
+        local function addChainToken(text, r, g, b, onClick, onEnter, onLeave, chainQuestID)
             local questBtn = track(CreateFrame("Button", nil, parent))
             local questText = OneWoW_GUI:CreateFS(questBtn, 12)
             questText:SetPoint("LEFT", questBtn, "LEFT", 0, 0)
             questText:SetText(HighlightSearchText(text))
             questText:SetTextColor(r, g, b)
-            RegisterVisibleQuestName(questID, questText, nil, nil, HighlightSearchText)
+            RegisterVisibleQuestName(chainQuestID, questText, nil, nil, HighlightSearchText)
 
             local btnWidth = questText:GetStringWidth() + 4
             if xOffset + btnWidth > W and xOffset > PAD + 8 then
@@ -3329,7 +3276,7 @@ function ShowQuestDetail(panels, questData)
     panels.detailScrollChild:SetHeight(math.abs(yOffset) + 20)
 end
 
-local function UpdateQuestListEntry(btn, quest, panels)
+local function UpdateQuestListEntry(btn, quest, _)
     local addon   = GetDataAddon()
     if not addon then return end
     local tracker = addon
@@ -3546,7 +3493,7 @@ local function CreateQuestListEntry(parent, quest, yOffset, panels, onClick)
             favorite = false,
             tooltipTitle = L["CATALOG_FAVORITE"],
             tooltipText  = L["CATALOG_FAVORITE_TT"],
-            onClick = function(favSelf, on)
+            onClick = function(_, on)
                 if not btn.quest then return end
                 ns.Favorites:SetFavorite("quests", btn.quest.id, on)
                 RefreshQuestList(panels)
@@ -3767,7 +3714,7 @@ local function EnsureQuestListRows(panels, onClick)
         or panels.listScrollFrame
         or panels.listScrollChild
 
-    for i = #questListButtons + 1, capacity do
+    for _ = #questListButtons + 1, capacity do
         local btn = CreateQuestListEntry(
             rowParent,
             nil,
@@ -4299,51 +4246,6 @@ local function PopulateExpansionDropdown(panels)
             zoneFilter = ""
             panels.zoneText:SetText(L["QUESTS_ZONE_ALL"])
             PopulateZoneDropdown(panels)
-            RefreshQuestList(panels)
-        end,
-    })
-end
-
-local function SetupTypeDropdown(panels)
-    OneWoW_GUI:AttachFilterMenu(panels.typeDropdown, {
-        searchable = false,
-        getActiveValue = function() return typeFilter end,
-        buildItems = function()
-            return {
-                { value = "all",   text = L["QUESTS_TYPE_ALL"]   },
-                { value = "solo",  text = SOLO  },
-                { value = "group", text = GROUP },
-                { value = "raid",  text = RAID  },
-            }
-        end,
-        onSelect = function(value, text)
-            typeFilter = value
-            panels.typeText:SetText(value == "all" and L["QUESTS_TYPE_ALL"] or text)
-            RefreshQuestList(panels)
-        end,
-    })
-end
-
-local function SetupQuestTypeDropdown(panels)
-    OneWoW_GUI:AttachFilterMenu(panels.qTypeDropdown, {
-        searchable = false,
-        getActiveValue = function() return questTypeFilter end,
-        buildItems = function()
-            return {
-                { value = "all",        text = L["QUESTS_QTYPE_ALL"]       },
-                { value = "standard",   text = QUEST_TYPE_LABELS.standard   },
-                { value = "world",      text = QUEST_TYPE_LABELS.world      },
-                { value = "dungeon",    text = QUEST_TYPE_LABELS.dungeon    },
-                { value = "raid",       text = QUEST_TYPE_LABELS.raid       },
-                { value = "pvp",        text = QUEST_TYPE_LABELS.pvp        },
-                { value = "profession", text = QUEST_TYPE_LABELS.profession },
-                { value = "scenario",   text = QUEST_TYPE_LABELS.scenario   },
-                { value = "group",      text = QUEST_TYPE_LABELS.group      },
-            }
-        end,
-        onSelect = function(value, text)
-            questTypeFilter = value
-            panels.qTypeText:SetText(value == "all" and L["QUESTS_QTYPE_ALL"] or text)
             RefreshQuestList(panels)
         end,
     })
