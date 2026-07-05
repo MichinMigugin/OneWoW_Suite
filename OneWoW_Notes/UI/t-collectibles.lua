@@ -93,6 +93,10 @@ end
 -- count in the section header.
 local MAX_VENDOR_ROWS = 3
 
+-- Base height of the "Sold by" section (label + fixed row area). The captured
+-- purchase-block reason line grows it on demand in PopulateSoldBy.
+local SOLD_BY_BASE_HEIGHT = 28 + MAX_VENDOR_ROWS * 30
+
 -- Vendor display entries for a record's stored offers, hydrated from the Catalog
 -- vendor store when it is loaded (richer name + a location for the waypoint), or
 -- rendered straight from the offer snapshot otherwise (opt-out safe).
@@ -109,6 +113,7 @@ local function BuildVendorEntries(record)
             cost          = offer.cost,
             currencies    = offer.currencies,
             isPurchasable = offer.isPurchasable,
+            blockReason   = offer.blockReason,
             zone          = offer.location and offer.location.zone,
             mapID         = offer.location and offer.location.mapID,
         }
@@ -446,10 +451,6 @@ function ns.UI.CreateCollectiblesTab(parent)
                 if afford then
                     colorKey = afford.affordable and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED"
                 end
-                if entry.isPurchasable == false then
-                    costStr = (costStr ~= "" and (costStr .. "  ") or "") ..
-                        "|cFFFF6060(" .. L["COLLECTIBLE_CANT_BUY"] .. ")|r"
-                end
                 row.costFS:SetText(costStr)
                 row.costFS:SetTextColor(OneWoW_GUI:GetThemeColor(colorKey))
 
@@ -465,6 +466,44 @@ function ns.UI.CreateCollectiblesTab(parent)
                 row:Show()
             else
                 row:Hide()
+            end
+        end
+
+        -- Purchase-block reason. `isPurchasable` stays the "can/can't buy" gate;
+        -- when it is set we answer "why not?" with the requirement(s) captured at
+        -- sighting (`offer.blockReason` — the red merchant-tooltip lines, which the
+        -- static C_TooltipInfo item getters do not expose). Collected across the
+        -- blocked offers and deduped to one line below the rows. Falls back to the
+        -- generic text when the gate is set but no specific reason was captured
+        -- (older offer, or a purely availability-side gate such as limited stock).
+        local reasonFS = section.reasonFS
+        if reasonFS then
+            local seen, reasons, anyBlocked = {}, {}, false
+            for _, entry in ipairs(entries) do
+                if entry.isPurchasable == false then
+                    anyBlocked = true
+                    if entry.blockReason and entry.blockReason ~= "" then
+                        for line in entry.blockReason:gmatch("[^\n]+") do
+                            if not seen[line] then
+                                seen[line] = true
+                                reasons[#reasons + 1] = line
+                            end
+                        end
+                    end
+                end
+            end
+            if #reasons == 0 and anyBlocked then
+                reasons[1] = L["COLLECTIBLE_CANT_BUY"]
+            end
+
+            if #reasons > 0 then
+                reasonFS:SetText(table.concat(reasons, "\n"))
+                reasonFS:Show()
+                section:SetHeight(SOLD_BY_BASE_HEIGHT + reasonFS:GetStringHeight() + 8)
+            else
+                reasonFS:SetText("")
+                reasonFS:Hide()
+                section:SetHeight(SOLD_BY_BASE_HEIGHT)
             end
         end
     end
@@ -764,7 +803,7 @@ function ns.UI.CreateCollectiblesTab(parent)
             local soldBySection = CreateThemedBar(nil, detailPanel)
             soldBySection:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -10)
             soldBySection:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -10)
-            soldBySection:SetHeight(28 + MAX_VENDOR_ROWS * 30)
+            soldBySection:SetHeight(SOLD_BY_BASE_HEIGHT)
 
             local soldByLabel = OneWoW_GUI:CreateFS(soldBySection, 12)
             soldByLabel:SetPoint("TOPLEFT", soldBySection, "TOPLEFT", 10, -8)
@@ -811,6 +850,18 @@ function ns.UI.CreateCollectiblesTab(parent)
                 soldByRows[i] = row
             end
             soldBySection.rows = soldByRows
+
+            -- Live "why can't I buy this" line: the item's current unmet (red)
+            -- requirement, shown once beneath the rows. Uses the shared disabled
+            -- color (same red the unaffordable cost uses) so nothing is hardcoded.
+            local reasonFS = OneWoW_GUI:CreateFS(soldBySection, 10)
+            reasonFS:SetPoint("TOPLEFT",  soldBySection, "TOPLEFT",  10, -(26 + MAX_VENDOR_ROWS * 30))
+            reasonFS:SetPoint("TOPRIGHT", soldBySection, "TOPRIGHT", -10, -(26 + MAX_VENDOR_ROWS * 30))
+            reasonFS:SetJustifyH("LEFT")
+            reasonFS:SetWordWrap(true)
+            reasonFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+            reasonFS:Hide()
+            soldBySection.reasonFS = reasonFS
 
             local tooltipSection = CreateThemedBar(nil, detailPanel)
             tooltipSection:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -10)

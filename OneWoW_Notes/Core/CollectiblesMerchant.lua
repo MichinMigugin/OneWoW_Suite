@@ -42,6 +42,7 @@ local function BuildOffer(scan, itemID, item)
         cost          = item.cost,
         currencies    = item.currencies,
         isPurchasable = item.isPurchasable,
+        blockReason   = item.blockReason,
         location      = scan.location,
         lastSeen      = item.lastSeen or scan.scannedAt,
     }

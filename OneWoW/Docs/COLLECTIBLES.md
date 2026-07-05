@@ -173,7 +173,7 @@ record carrying a slim vendor-offer junction:
 
 ```
 record.acquisition.vendorOffers[] =
-  { npcID, npcName, itemID, cost, currencies, isPurchasable, location, lastSeen }
+  { npcID, npcName, itemID, cost, currencies, isPurchasable, blockReason, location, lastSeen }
 ```
 
 Capture is a **subscription decision**, not a handler-side gate:
@@ -190,6 +190,21 @@ that store is loaded, else straight from the offer snapshot). Live affordability
 per offer comes from `OneWoW.Collectibles.GetOfferAffordability`, which compares
 the offer's gold/currency/item costs against the player's current holdings — a
 live view, never persisted.
+
+The captured `isPurchasable` flag stays the "can / can't buy" gate. When it is
+`false`, the panel answers **why** with the offer's `blockReason` line beneath the
+vendor rows: the red (unmet-requirement) lines of the **merchant** tooltip,
+captured at sighting by `OneWoW.Merchant` (`C_TooltipInfo.GetMerchantItem`). This
+capture is deliberate — those player-evaluated requirement lines are added only by
+the fully-rendered merchant tooltip; the template-only `C_TooltipInfo.GetItemByID`
+/ `GetHyperlink` getters omit them, so a consumer viewing the offer later (away
+from the vendor) cannot re-derive them. `blockReason` is a sighting snapshot that
+pairs with `isPurchasable`: both refresh on the next visit (and clear once the row
+becomes purchasable). Reasons are collected across blocked offers and deduped to
+one line; if the gate is set but no reason was captured (an older offer, or a
+purely availability-side gate like limited stock) it falls back to the generic
+"couldn't buy when last seen" text. The currency coloring plus the requirement
+line together explain "this is why you can't buy it."
 
 **Ensembles at vendors.** An ensemble item resolves (via
 `ResolveKeyFromItem` → `C_Item.GetItemLearnTransmogSet`) to a `set:<setID>` key,

@@ -72,6 +72,7 @@ when the last subscriber leaves:
       maxStack      = <number>,
       isPurchasable = <bool>,              -- false = "saw it, can't buy yet"
       isUsable      = <bool>,
+      blockReason   = "<red requirement lines>" | nil,  -- only when not purchasable; from GetMerchantItem tooltip
       lastSeen      = <time()>,
       currencies    = { { amount, texture, currencyID?/itemID?, name }, ... },
     }, ...

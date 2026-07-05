@@ -251,7 +251,7 @@ end
 -- ---------------------------------------------------------------------------
 -- A vendor offer is a slim junction recording that a collectible's granting item
 -- was seen for sale at a vendor: { npcID, npcName, itemID, cost, currencies,
--- isPurchasable, location, lastSeen }. It is a *snapshot at sighting* — live
+-- isPurchasable, blockReason, location, lastSeen }. It is a *snapshot at sighting* — live
 -- affordability + the full vendor encyclopedia are resolved elsewhere (core
 -- OneWoW.Collectibles.GetOfferAffordability / CatalogData_Vendors). Deduped by
 -- npcID + itemID so repeated/idempotent merchant scans refresh rather than stack.
@@ -279,7 +279,7 @@ end
 --- user's chosen category/intent; only the offer list is touched. Idempotent:
 --- an offer for the same npc+item is refreshed in place, not duplicated.
 ---@param key string canonical collectible key
----@param offer table `{ npcID, npcName?, itemID, cost?, currencies?, isPurchasable?, location?, lastSeen? }`
+---@param offer table `{ npcID, npcName?, itemID, cost?, currencies?, isPurchasable?, blockReason?, location?, lastSeen? }`
 ---@return boolean ok, boolean|nil isNewOffer
 function Collectibles:MergeVendorOffer(key, offer)
     key = OneWoW.Collectibles.CanonicalizeKey(key)
@@ -303,6 +303,7 @@ function Collectibles:MergeVendorOffer(key, offer)
             existing.cost          = offer.cost
             existing.currencies    = offer.currencies
             existing.isPurchasable = offer.isPurchasable
+            existing.blockReason   = offer.blockReason
             existing.location      = offer.location
             existing.lastSeen      = offer.lastSeen
             isNew = false
