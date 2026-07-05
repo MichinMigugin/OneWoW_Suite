@@ -1,5 +1,5 @@
 ## Interface: 120007, 121000
-## Version: R6.2607.0223
+## Version: R6.2607.0523
 ## Title: OneWoW - Data: |cFFFFFFFFAccounting|r
 ## Notes: OneWoW Data Addon that: tracks all gold income and expenses for all your characters.
 ## Author: OneWoW Dev Team
