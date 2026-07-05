@@ -141,6 +141,7 @@ function BagBarModule:OnDisable()
     if self._eventFrame then
         self._eventFrame:UnregisterAllEvents()
     end
+    OneWoW.ProfessionRecipe.UnregisterCallback("QoL_bagbar")
     OneWoW_QoL:UnregisterEnteringWorldHandler("bagbar")
     TeardownBar()
 end
@@ -386,22 +387,26 @@ function BagBarModule:RegisterEvents()
     self._eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
     self._eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     self._eventFrame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
-    self._eventFrame:RegisterEvent("TRADE_SKILL_SHOW")
-    self._eventFrame:RegisterEvent("TRADE_SKILL_CLOSE")
     self._eventFrame:RegisterEvent("UPDATE_BINDINGS")
     self._eventFrame:RegisterEvent("UPDATE_MACROS")
+
+    -- Profession-window suppression funneled through OneWoW.ProfessionRecipe.
+    -- Re-subscribing by the same ownerID is idempotent, so it is safe to call
+    -- here on every RegisterEvents(); OnDisable drops it.
+    OneWoW.ProfessionRecipe.RegisterShowCallback("QoL_bagbar", function()
+        BagBarModule._suppressedForProfessions = true
+        if updateTimer then updateTimer:Cancel() end
+        HideChrome()
+    end)
+    OneWoW.ProfessionRecipe.RegisterClosedCallback("QoL_bagbar", function()
+        BagBarModule._suppressedForProfessions = false
+        BagBarModule:ScheduleUpdate()
+    end)
 
     self._eventFrame:SetScript("OnEvent", function(_, event)
         if event == "UPDATE_BINDINGS" then
             SyncKeybindings()
             return
-        elseif event == "TRADE_SKILL_SHOW" then
-            BagBarModule._suppressedForProfessions = true
-            if updateTimer then updateTimer:Cancel() end
-            HideChrome()
-        elseif event == "TRADE_SKILL_CLOSE" then
-            BagBarModule._suppressedForProfessions = false
-            BagBarModule:ScheduleUpdate()
         elseif event == "BAG_UPDATE_DELAYED" or event == "UPDATE_MACROS" then
             BagBarModule:ScheduleUpdate()
         elseif event == "PLAYER_REGEN_ENABLED" then

@@ -46,7 +46,14 @@ function AutoOpenModule:ClearBlacklist()
 end
 
 function AutoOpenModule:ScanAndOpen()
-    if self._atBank or self._atMail or self._atMerchant or self._atCrafting then return end
+    -- Merchant and trade-skill state are read live from the core funnels
+    -- (OneWoW.Merchant / OneWoW.ProfessionRecipe, the single event owners) rather
+    -- than locally tracked _atMerchant / _atCrafting flags.
+    if self._atBank or self._atMail
+        or OneWoW.Merchant.IsMerchantOpen()
+        or OneWoW.ProfessionRecipe.IsTradeskillOpen() then
+        return
+    end
     if Restriction.IsProtectedActionBlocked() then return end
 
     local items = ns.AutoOpenItems
@@ -87,14 +94,6 @@ function AutoOpenModule:OnEnable()
                 AO._atMail = true
             elseif event == "MAIL_CLOSED" then
                 AO._atMail = false
-            elseif event == "MERCHANT_SHOW" then
-                AO._atMerchant = true
-            elseif event == "MERCHANT_CLOSED" then
-                AO._atMerchant = false
-            elseif event == "TRADE_SKILL_SHOW" then
-                AO._atCrafting = true
-            elseif event == "TRADE_SKILL_CLOSE" then
-                AO._atCrafting = false
             end
         end)
     end
@@ -106,12 +105,8 @@ function AutoOpenModule:OnEnable()
     self._frame:RegisterEvent("BANKFRAME_CLOSED")
     self._frame:RegisterEvent("MAIL_SHOW")
     self._frame:RegisterEvent("MAIL_CLOSED")
-    self._frame:RegisterEvent("MERCHANT_SHOW")
-    self._frame:RegisterEvent("MERCHANT_CLOSED")
     self._frame:RegisterEvent("GUILDBANKFRAME_OPENED")
     self._frame:RegisterEvent("GUILDBANKFRAME_CLOSED")
-    self._frame:RegisterEvent("TRADE_SKILL_SHOW")
-    self._frame:RegisterEvent("TRADE_SKILL_CLOSE")
 end
 
 function AutoOpenModule:OnDisable()
@@ -119,10 +114,8 @@ function AutoOpenModule:OnDisable()
         self._frame:UnregisterAllEvents()
     end
     OneWoW_QoL:UnregisterEnteringWorldHandler("autoopen")
-    self._atBank     = false
-    self._atMail     = false
-    self._atMerchant = false
-    self._atCrafting = false
+    self._atBank = false
+    self._atMail = false
 end
 
 function AutoOpenModule:OnToggle()

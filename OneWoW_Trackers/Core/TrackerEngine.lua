@@ -894,8 +894,6 @@ function TE:Initialize()
     frame:RegisterEvent("ZONE_CHANGED")
     frame:RegisterEvent("SKILL_LINES_CHANGED")
     frame:RegisterEvent("TRAIT_TREE_CURRENCY_INFO_UPDATED")
-    frame:RegisterEvent("TRADE_SKILL_SHOW")
-    frame:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
     frame:RegisterEvent("NEW_TOY_ADDED")
     frame:RegisterEvent("NEW_MOUNT_ADDED")
     frame:RegisterEvent("NEW_PET_ADDED")
@@ -903,6 +901,13 @@ function TE:Initialize()
     frame:RegisterEvent("CALENDAR_UPDATE_EVENT_LIST")
 
     frame:SetScript("OnEvent", OnEvent)
+
+    -- Trade-skill refresh is funneled through OneWoW.ProfessionRecipe: the open
+    -- channel fires once the profession window is loaded/ready (replaces the
+    -- former raw TRADE_SKILL_SHOW / TRADE_SKILL_LIST_UPDATE registrations).
+    OneWoW.ProfessionRecipe.RegisterOpenCallback("OneWoW_Trackers_Engine", function()
+        DeferScan(0.5)
+    end)
 
     BuildIndices()
 

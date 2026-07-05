@@ -20,8 +20,8 @@ Events.RuntimeEvents = {
     "BANKFRAME_OPENED",
     "BANKFRAME_CLOSED",
     "BANK_TABS_CHANGED",
-    "MERCHANT_SHOW",
-    "MERCHANT_CLOSED",
+    -- MERCHANT_SHOW / MERCHANT_CLOSED now route through the core OneWoW.Merchant
+    -- funnel (single MERCHANT_* owner); see ns:RegisterRuntimeEvents.
     "PLAYER_INTERACTION_MANAGER_FRAME_SHOW",
     "PLAYER_INTERACTION_MANAGER_FRAME_HIDE",
     "GUILDBANKBAGSLOTS_CHANGED",

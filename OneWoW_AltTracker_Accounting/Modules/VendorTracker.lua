@@ -3,15 +3,22 @@ local _, ns = ...
 ns.VendorTracker = {}
 local VendorTracker = ns.VendorTracker
 
+local OneWoW = OneWoW
+
 local private = {
     goldBeforeRepair = 0,
-    merchantOpen = false,
 }
 
 function VendorTracker:Initialize()
+    -- Gold-before-repair snapshot routes through the core OneWoW.Merchant show
+    -- channel (single MERCHANT_* owner); live merchant state comes from
+    -- IsMerchantOpen(). The frame keeps UPDATE_INVENTORY_DURABILITY (not a
+    -- merchant event).
+    OneWoW.Merchant.RegisterShowCallback("Accounting_VendorTracker", function()
+        VendorTracker:OnMerchantShow()
+    end)
+
     local frame = CreateFrame("Frame")
-    frame:RegisterEvent("MERCHANT_SHOW")
-    frame:RegisterEvent("MERCHANT_CLOSED")
     frame:RegisterEvent("UPDATE_INVENTORY_DURABILITY")
     frame:SetScript("OnEvent", function(_, event)
         VendorTracker:HandleEvent(event)
@@ -30,14 +37,13 @@ function VendorTracker:Initialize()
     end)
 end
 
+function VendorTracker:OnMerchantShow()
+    private.goldBeforeRepair = GetMoney()
+end
+
 function VendorTracker:HandleEvent(event)
-    if event == "MERCHANT_SHOW" then
-        private.merchantOpen = true
-        private.goldBeforeRepair = GetMoney()
-    elseif event == "MERCHANT_CLOSED" then
-        private.merchantOpen = false
-    elseif event == "UPDATE_INVENTORY_DURABILITY" then
-        if private.merchantOpen then
+    if event == "UPDATE_INVENTORY_DURABILITY" then
+        if OneWoW.Merchant.IsMerchantOpen() then
             C_Timer.After(0.1, function()
                 VendorTracker:CheckRepairCost()
             end)
@@ -55,7 +61,7 @@ function VendorTracker:CheckRepairCost()
 end
 
 function VendorTracker:OnBuyMerchantItem(index, quantity)
-    if not private.merchantOpen then return end
+    if not OneWoW.Merchant.IsMerchantOpen() then return end
     local itemInfo = C_MerchantFrame.GetItemInfo(index)
     local itemLink = GetMerchantItemLink(index)
     if itemInfo and itemInfo.name and itemInfo.price and itemInfo.price > 0 then
@@ -73,7 +79,7 @@ function VendorTracker:OnBuybackItem(index)
 end
 
 function VendorTracker:OnUseContainerItem(bag, slot)
-    if not private.merchantOpen then return end
+    if not OneWoW.Merchant.IsMerchantOpen() then return end
     local itemLink = C_Container.GetContainerItemLink(bag, slot)
     if not itemLink then return end
     local itemID = tonumber(itemLink:match("item:(%d+)"))

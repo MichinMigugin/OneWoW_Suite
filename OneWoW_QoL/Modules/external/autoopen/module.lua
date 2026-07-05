@@ -14,7 +14,5 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     _frame      = nil,
     _atBank     = false,
     _atMail     = false,
-    _atMerchant = false,
-    _atCrafting = false,
     _tempBlacklist = {},
 })

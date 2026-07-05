@@ -2,25 +2,24 @@ local _, ns = ...
 local AutoRepairModule = ns.ModuleRegistry:Current()
 if not AutoRepairModule then return end
 
+local OneWoW = OneWoW
+
+-- MERCHANT_SHOW was this module's only event, so it subscribes to the core
+-- OneWoW.Merchant show channel (single MERCHANT_* owner) instead of owning a
+-- frame; module enable/disable maps 1:1 onto subscribe / UnregisterCallback.
+local OWNER_ID = "QoL_autorepair"
+
 function AutoRepairModule:OnEnable()
-    if not self._frame then
-        self._frame = CreateFrame("Frame", "OneWoW_QoL_AutoRepair")
-        self._frame:SetScript("OnEvent", function(_, event)
-            if event == "MERCHANT_SHOW" then
-                self:MERCHANT_SHOW()
-            end
-        end)
-    end
-    self._frame:RegisterEvent("MERCHANT_SHOW")
+    OneWoW.Merchant.RegisterShowCallback(OWNER_ID, function()
+        AutoRepairModule:OnMerchantShow()
+    end)
 end
 
 function AutoRepairModule:OnDisable()
-    if self._frame then
-        self._frame:UnregisterAllEvents()
-    end
+    OneWoW.Merchant.UnregisterCallback(OWNER_ID)
 end
 
-function AutoRepairModule:MERCHANT_SHOW()
+function AutoRepairModule:OnMerchantShow()
     if not CanMerchantRepair() then return end
 
     local repairAllCost, canRepair = GetRepairAllCost()

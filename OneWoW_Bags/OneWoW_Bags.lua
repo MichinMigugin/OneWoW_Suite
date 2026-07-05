@@ -1613,12 +1613,6 @@ local runtimeEventHandlers = {
     BANK_TABS_CHANGED = function(...)
         Events:OnBankTabsChanged(...)
     end,
-    MERCHANT_SHOW = function(...)
-        Events:OnMerchantShow(...)
-    end,
-    MERCHANT_CLOSED = function(...)
-        Events:OnMerchantClosed(...)
-    end,
     PLAYER_INTERACTION_MANAGER_FRAME_SHOW = function(...)
         Events:OnPlayerInteractionShow(...)
     end,
@@ -1672,6 +1666,15 @@ function ns:RegisterRuntimeEvents()
     for _, eventName in ipairs(Events.RuntimeEvents) do
         eventFrame:RegisterEvent(eventName)
     end
+
+    -- MERCHANT_SHOW / MERCHANT_CLOSED route through the core OneWoW.Merchant
+    -- funnel (single MERCHANT_* owner) instead of this frame.
+    OneWoW.Merchant.RegisterShowCallback("OneWoW_Bags", function()
+        Events:OnMerchantShow()
+    end)
+    OneWoW.Merchant.RegisterClosedCallback("OneWoW_Bags", function()
+        Events:OnMerchantClosed()
+    end)
 end
 
 eventFrame:SetScript("OnEvent", function(_, event, ...)

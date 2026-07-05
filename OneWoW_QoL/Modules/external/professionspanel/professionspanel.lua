@@ -504,21 +504,20 @@ function ProfPanelModule:RebuildPanel()
 end
 
 function ProfPanelModule:OnEnable()
-    if not self._eventFrame then
-        self._eventFrame = CreateFrame("Frame", "OneWoW_QoL_ProfPanelEvents")
-        self._eventFrame:RegisterEvent("TRADE_SKILL_SHOW")
-        self._eventFrame:RegisterEvent("TRADE_SKILL_CLOSE")
-        self._eventFrame:RegisterEvent("TRADE_SKILL_LIST_UPDATE")
-        self._eventFrame:SetScript("OnEvent", function(_, event)
-            if event == "TRADE_SKILL_SHOW" then
-                ProfPanelModule:OnProfessionWindowOpened()
-            elseif event == "TRADE_SKILL_CLOSE" then
-                ProfPanelModule:OnProfessionWindowClosed()
-            elseif event == "TRADE_SKILL_LIST_UPDATE" then
-                ProfPanelModule:OnProfessionDataUpdated()
-            end
-        end)
-    end
+    -- TRADE_SKILL_* is owned by OneWoW.ProfessionRecipe. Subscriptions are keyed
+    -- by ownerID (idempotent) and dropped in OnDisable:
+    --   show   -> panel/tab must appear the instant the window opens
+    --   open   -> data ready / TRADE_SKILL_LIST_UPDATE, ready-gated + coalesced
+    --   closed -> teardown
+    OneWoW.ProfessionRecipe.RegisterShowCallback("QoL_professionspanel", function()
+        ProfPanelModule:OnProfessionWindowOpened()
+    end)
+    OneWoW.ProfessionRecipe.RegisterOpenCallback("QoL_professionspanel", function()
+        ProfPanelModule:OnProfessionDataUpdated()
+    end)
+    OneWoW.ProfessionRecipe.RegisterClosedCallback("QoL_professionspanel", function()
+        ProfPanelModule:OnProfessionWindowClosed()
+    end)
 
     local OneWoW_GUI = OneWoW_GUI
     if OneWoW_GUI then
@@ -535,9 +534,7 @@ function ProfPanelModule:OnEnable()
 end
 
 function ProfPanelModule:OnDisable()
-    if self._eventFrame then
-        self._eventFrame:UnregisterAllEvents()
-    end
+    OneWoW.ProfessionRecipe.UnregisterCallback("QoL_professionspanel")
     if self._panel then
         self._panel:Hide()
     end

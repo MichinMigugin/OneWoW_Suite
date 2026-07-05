@@ -1656,19 +1656,23 @@ function VendorPanelModule:OnEnable()
         local frame = CreateFrame("Frame", "OneWoW_QoL_VendorPanelEvents")
         self._eventFrame = frame
         frame:SetScript("OnEvent", function(_, event)
-            if event == "MERCHANT_SHOW" then
-                VendorPanel:OnMerchantShow()
-            elseif event == "MERCHANT_CLOSED" then
-                VendorPanel:OnMerchantClosed()
-            elseif event == "BAG_UPDATE" then
+            if event == "BAG_UPDATE" then
                 VendorPanel:UpdateButton()
                 VendorPanel:UpdatePreviewPanel()
             end
         end)
     end
-    self._eventFrame:RegisterEvent("MERCHANT_SHOW")
-    self._eventFrame:RegisterEvent("MERCHANT_CLOSED")
     self._eventFrame:RegisterEvent("BAG_UPDATE")
+
+    -- MERCHANT_SHOW / MERCHANT_CLOSED route through the core OneWoW.Merchant
+    -- funnel (single MERCHANT_* owner); the frame keeps BAG_UPDATE. Module
+    -- enable/disable maps onto subscribe / UnregisterCallback.
+    OneWoW.Merchant.RegisterShowCallback("QoL_vendorpanel", function()
+        VendorPanel:OnMerchantShow()
+    end)
+    OneWoW.Merchant.RegisterClosedCallback("QoL_vendorpanel", function()
+        VendorPanel:OnMerchantClosed()
+    end)
 
     local GUI = OneWoW_GUI
     if GUI and not self._guiCallbacksRegistered then
@@ -1717,9 +1721,8 @@ function VendorPanelModule:OnEnable()
 end
 
 function VendorPanelModule:OnDisable()
+    OneWoW.Merchant.UnregisterCallback("QoL_vendorpanel")
     if self._eventFrame then
-        self._eventFrame:UnregisterEvent("MERCHANT_SHOW")
-        self._eventFrame:UnregisterEvent("MERCHANT_CLOSED")
         self._eventFrame:UnregisterEvent("BAG_UPDATE")
     end
     VendorPanel:OnMerchantClosed()

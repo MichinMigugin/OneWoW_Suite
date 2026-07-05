@@ -17,16 +17,33 @@ function Module:Initialize()
 
     local frame = CreateFrame("Frame")
     frame:RegisterEvent("CHAT_MSG_SKILL")
-    frame:RegisterEvent("NEW_RECIPE_LEARNED")
     frame:RegisterEvent("PLAYER_MONEY")
 
     frame:SetScript("OnEvent", function(_, event, ...)
         Module:HandleEvent(event, ...)
     end)
 
+    -- NEW_RECIPE_LEARNED is owned by OneWoW.ProfessionRecipe. Its learned channel
+    -- is immediate and un-gated (trainer purchases open the trainer window, not
+    -- the trade-skill window, so the ready-gated scan channel never fires here).
+    OneWoW.ProfessionRecipe.RegisterLearnedCallback("Accounting_TrainerTracker", function(recipeID)
+        Module:OnRecipeLearned(recipeID)
+    end)
+
     C_Timer.After(1, function()
         private.goldBefore = GetMoney()
     end)
+end
+
+function Module:OnRecipeLearned(spellID)
+    if not spellID then return end
+    if private.currentRecipes then
+        local spellName = C_Spell.GetSpellName(spellID)
+        table.insert(private.currentRecipes, spellName or ("Spell " .. tostring(spellID)))
+    end
+    if private.currentConfirmation then
+        private.currentConfirmation.confirmed = true
+    end
 end
 
 function Module:HandleEvent(event, ...)
@@ -37,18 +54,6 @@ function Module:HandleEvent(event, ...)
         if extracted then
             private.pendingSkillName = extracted
             private.pendingSkillTime = GetServerTime()
-        end
-
-    elseif event == "NEW_RECIPE_LEARNED" then
-        local spellID = ...
-        if spellID then
-            if private.currentRecipes then
-                local spellName = C_Spell.GetSpellName(spellID)
-                table.insert(private.currentRecipes, spellName or ("Spell " .. tostring(spellID)))
-            end
-            if private.currentConfirmation then
-                private.currentConfirmation.confirmed = true
-            end
         end
 
     elseif event == "PLAYER_MONEY" then
