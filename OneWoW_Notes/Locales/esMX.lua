@@ -29,6 +29,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["COLLECTIBLE_INTENT_SPOTTED"] = "Localizado",
     ["COLLECTIBLE_INTENT_FARMING"] = "Farmeando",
     ["COLLECTIBLE_DELETE_DESC"] = "Eliminar este coleccionable de tu lista",
+    ["COLLECTIBLE_SET_PROGRESS"] = "Conjunto: %s (%d/%d)",
     ["POPUP_DELETE_COLLECTIBLE"] = "¿Eliminar este coleccionable?",
 
 -- Notes Tab

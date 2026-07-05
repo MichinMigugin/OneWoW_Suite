@@ -29,6 +29,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["COLLECTIBLE_INTENT_SPOTTED"] = "발견함",
     ["COLLECTIBLE_INTENT_FARMING"] = "파밍 중",
     ["COLLECTIBLE_DELETE_DESC"] = "목록에서 이 수집품을 제거합니다",
+    ["COLLECTIBLE_SET_PROGRESS"] = "세트: %s (%d/%d)",
     ["POPUP_DELETE_COLLECTIBLE"] = "이 수집품을 삭제하시겠습니까?",
 
 -- Notes Tab

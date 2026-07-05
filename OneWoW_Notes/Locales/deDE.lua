@@ -29,6 +29,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["COLLECTIBLE_INTENT_SPOTTED"] = "Gesichtet",
     ["COLLECTIBLE_INTENT_FARMING"] = "Farmen",
     ["COLLECTIBLE_DELETE_DESC"] = "Dieses Sammelobjekt aus deiner Liste entfernen",
+    ["COLLECTIBLE_SET_PROGRESS"] = "Set: %s (%d/%d)",
     ["POPUP_DELETE_COLLECTIBLE"] = "Dieses Sammelobjekt löschen?",
 
 -- Notes Tab

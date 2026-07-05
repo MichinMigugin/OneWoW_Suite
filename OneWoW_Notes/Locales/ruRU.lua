@@ -29,6 +29,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["COLLECTIBLE_INTENT_SPOTTED"] = "Замечено",
     ["COLLECTIBLE_INTENT_FARMING"] = "Фарм",
     ["COLLECTIBLE_DELETE_DESC"] = "Удалить этот коллекционный предмет из списка",
+    ["COLLECTIBLE_SET_PROGRESS"] = "Комплект: %s (%d/%d)",
     ["POPUP_DELETE_COLLECTIBLE"] = "Удалить этот коллекционный предмет?",
 
 -- Notes Tab

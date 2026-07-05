@@ -267,6 +267,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["COLLECTIBLE_INTENT_SPOTTED"] = "Spotted",
     ["COLLECTIBLE_INTENT_FARMING"] = "Farming",
     ["COLLECTIBLE_DELETE_DESC"] = "Remove this collectible from your list",
+    ["COLLECTIBLE_SET_PROGRESS"] = "Set: %s (%d/%d)",
     ["POPUP_DELETE_COLLECTIBLE"] = "Delete this collectible?",
 
 -- Zones tab

@@ -75,12 +75,17 @@ local function GetSourceData(sourceID)
     }
 end
 
-local function GetItemTransmogSource(itemLink)
-    if not itemLink then
-        return nil
+-- Resolve an item's OWN appearance source (itemModifiedAppearanceID). GetItemInfo
+-- MayReturnNothing for some fully-decorated equipped links (bonus/enchant mods),
+-- so fall back to the bare itemID, whose visual is identical for ilvl-only bonuses.
+local function GetItemTransmogSource(itemLink, itemID)
+    local _, sourceID
+    if itemLink then
+        _, sourceID = C_TransmogCollection.GetItemInfo(itemLink)
     end
-
-    local _, sourceID = C_TransmogCollection.GetItemInfo(itemLink)
+    if not sourceID and itemID then
+        _, sourceID = C_TransmogCollection.GetItemInfo(itemID)
+    end
     return sourceID
 end
 
@@ -134,7 +139,7 @@ function Scanner:BuildInspectSnapshot(unit)
         local itemLink = GetInventoryItemLink(unit, slot.id)
         local itemID = GetInventoryItemID(unit, slot.id)
         local texture = GetInventoryItemTexture(unit, slot.id)
-        local baseSourceID = GetItemTransmogSource(itemLink)
+        local baseSourceID = GetItemTransmogSource(itemLink, itemID)
         local appearanceSourceID = GetSlotAppearanceSource(transmogList, slot.id)
 
         if itemLink or settings.showEmptySlots then

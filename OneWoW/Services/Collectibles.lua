@@ -26,10 +26,11 @@ ns.Collectibles = Collectibles
 
 local C_MountJournal = C_MountJournal
 local C_TransmogCollection = C_TransmogCollection
+local C_TransmogSets = C_TransmogSets
 local C_Spell = C_Spell
 local C_Item = C_Item
 
-local tonumber, type, select, floor = tonumber, type, select, math.floor
+local ipairs, tonumber, type, select, floor = ipairs, tonumber, type, select, math.floor
 local strsplit, strtrim = strsplit, strtrim
 
 -- ---------------------------------------------------------------------------
@@ -241,4 +242,88 @@ function Collectibles.GetCollectionState(key)
     end
 
     return nil
+end
+
+-- ---------------------------------------------------------------------------
+-- Ensemble / transmog-set rollups (view layer, live, no SavedVariables)
+-- ---------------------------------------------------------------------------
+-- A transmog set ("ensemble") is a collection of appearance sources. These are
+-- pure views over the live Blizzard set APIs: member keys enumerate the set's
+-- per-slot sources as canonical `appearance:source` keys, and progress counts
+-- how many of those sources are collected (reusing GetCollectionState so the
+-- service stays the single source of collection truth). Nothing is persisted.
+
+--- Canonical `appearance:source` keys for every source in a transmog set,
+--- including each slot's alternate sources (`C_TransmogSets.GetAllSourceIDs`).
+--- This is a *superset* of the set's per-slot primary appearances, so its count
+--- is larger than the completion figure Blizzard shows — use
+--- `GetEnsembleProgress` for the user-facing "collected/total", and this only
+--- when you genuinely need every source key that belongs to the set.
+---@param setID number transmog set id
+---@return table|nil keys array of `appearance:source:<id>` strings, or nil
+function Collectibles.GetEnsembleMemberKeys(setID)
+    setID = CoerceID(setID)
+    if not setID then return nil end
+
+    local sources = C_TransmogSets.GetAllSourceIDs(setID)
+    if not sources or #sources == 0 then return nil end
+
+    local keys = {}
+    for _, sourceID in ipairs(sources) do
+        local key = Collectibles.BuildKey("appearance", "source", sourceID)
+        if key then keys[#keys + 1] = key end
+    end
+
+    if #keys == 0 then return nil end
+    return keys
+end
+
+--- Live collection progress for a transmog set, matching the count Blizzard's
+--- Appearances > Sets tab shows (e.g. "9/9"). This is the set's per-slot
+--- **primary appearances** (`C_TransmogSets.GetSetPrimaryAppearances`), not
+--- `GetEnsembleMemberKeys`/`GetAllSourceIDs` — the latter also returns each
+--- slot's alternate sources, which roughly doubles the total and disagrees with
+--- Blizzard's UI. `.collected` on each primary appearance is already the live
+--- account state, so no separate `GetCollectionState` pass is needed.
+---@param setID number transmog set id
+---@return table|nil progress `{ collected, total, name }`, or nil for an unknown set
+function Collectibles.GetEnsembleProgress(setID)
+    setID = CoerceID(setID)
+    if not setID then return nil end
+
+    local appearances = C_TransmogSets.GetSetPrimaryAppearances(setID)
+    if not appearances then return nil end
+
+    local collected, total = 0, 0
+    for _, appearance in ipairs(appearances) do
+        total = total + 1
+        if appearance.collected then
+            collected = collected + 1
+        end
+    end
+    if total == 0 then return nil end
+
+    local setInfo = C_TransmogSets.GetSetInfo(setID)
+    return {
+        collected = collected,
+        total = total,
+        name = setInfo and setInfo.name or nil,
+    }
+end
+
+--- The transmog set ids that contain a given appearance-source collectible key.
+--- Lets a consumer bridge from an `appearance:source` collectible to its set(s)
+--- without touching C_TransmogSets directly. Returns nil for non-appearance keys
+--- or a source that belongs to no set.
+---@param key string an `appearance:source:<id>` collectible key
+---@return table|nil setIDs array of transmog set ids, or nil
+function Collectibles.GetContainingSets(key)
+    local descriptor = Collectibles.ParseKey(key)
+    if not descriptor or descriptor.type ~= "appearance" or descriptor.subtype ~= "source" then
+        return nil
+    end
+
+    local setIDs = C_TransmogSets.GetSetsContainingSourceID(descriptor.id)
+    if not setIDs or #setIDs == 0 then return nil end
+    return setIDs
 end

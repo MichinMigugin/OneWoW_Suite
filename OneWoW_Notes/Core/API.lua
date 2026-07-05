@@ -125,6 +125,32 @@ function OneWoW_Notes_API.SavePlayer(fullName, playerData)
     return true
 end
 
+--- Records a collectible reference ("sighting") on a player note. Idempotent per
+--- key; the optional spellID is stored for context (dropped if it is a secret).
+---@param fullName string
+---@param key string canonical collectible key
+---@param spellID number|nil
+---@return boolean added
+function OneWoW_Notes_API.AddPlayerCollectibleRef(fullName, key, spellID)
+    if not fullName or fullName == "" or not ns.Players then
+        return false
+    end
+    return ns.Players:AddCollectibleRef(fullName, key, spellID)
+end
+
+--- True if a player note already references a collectible (structured ref, or a
+--- pre-v2-C content-embedded link). Lets callers dedup without knowing the note
+--- storage or link grammar.
+---@param fullName string
+---@param key string canonical collectible key
+---@return boolean
+function OneWoW_Notes_API.PlayerHasCollectibleRef(fullName, key)
+    if not fullName or fullName == "" or not ns.Players then
+        return false
+    end
+    return ns.Players:HasCollectibleRef(fullName, key)
+end
+
 --- Opens a player note, selecting it when the Players tab is ready.
 ---@param fullName string
 ---@return boolean opened

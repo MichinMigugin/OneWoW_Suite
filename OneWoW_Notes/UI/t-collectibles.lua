@@ -13,6 +13,7 @@ ns.UI = ns.UI or {}
 local selectedKey    = nil
 local collListRows   = {}
 local categoryFilter = "All"
+local typeFilter     = "All"
 local storageFilter  = "All"
 local searchFilter   = ""
 local currentSort    = { by = "name", ascending = true }
@@ -125,8 +126,24 @@ function ns.UI.CreateCollectiblesTab(parent)
     end)
     manageCategoriesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
+    -- Type filter: derived live from the canonical key (mount:… / appearance:…),
+    -- not a stored user field. Labels come from Blizzard globals so no new locale
+    -- keys are needed. Only resolved types are offered.
+    local typeDD = ns.UI.CreateThemedDropdown(controlPanel, TYPE, 120, 25)
+    typeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
+    typeDD:SetOptions({
+        {text = ALL,      value = "All"},
+        {text = MOUNTS,   value = "mount"},
+        {text = WARDROBE, value = "appearance"},
+    })
+    typeDD:SetSelected("All")
+    typeDD.onSelect = function(value)
+        typeFilter = value
+        parent.RefreshCollectiblesList()
+    end
+
     local storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
-    storeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
+    storeDD:SetPoint("LEFT", typeDD, "RIGHT", 4, 0)
     storeDD:SetOptions({
         {text = ALL,                     value = "All"},
         {text = L["UI_STORAGE_ACCOUNT"], value = "account"},
@@ -271,6 +288,25 @@ function ns.UI.CreateCollectiblesTab(parent)
             header.sourceText:Hide()
         end
 
+        -- Ensemble progress: only meaningful for an appearance source that belongs
+        -- to a transmog set. GetContainingSets returns nil for everything else.
+        local setLine
+        local setIDs = OneWoW.Collectibles.GetContainingSets(selectedKey)
+        if setIDs and setIDs[1] then
+            local progress = OneWoW.Collectibles.GetEnsembleProgress(setIDs[1])
+            if progress and progress.total > 0 then
+                setLine = string.format(L["COLLECTIBLE_SET_PROGRESS"],
+                    progress.name or "", progress.collected, progress.total)
+            end
+        end
+        if setLine then
+            header.setProgressText:SetText(setLine)
+            header.setProgressText:Show()
+        else
+            header.setProgressText:SetText("")
+            header.setProgressText:Hide()
+        end
+
         local state = OneWoW.Collectibles.GetCollectionState(selectedKey)
         if state then
             header.statusText:SetText(state.collected and COLLECTED or NOT_COLLECTED)
@@ -376,6 +412,15 @@ function ns.UI.CreateCollectiblesTab(parent)
             sourceText:SetWordWrap(false)
             sourceText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             editorHeader.sourceText = sourceText
+
+            -- Ensemble/set progress (appearances that belong to a transmog set).
+            local setProgressText = OneWoW_GUI:CreateFS(editorHeader, 10)
+            setProgressText:SetPoint("TOPLEFT", sourceText, "BOTTOMLEFT", 0, -2)
+            setProgressText:SetPoint("RIGHT",   editorHeader, "RIGHT", -12, 0)
+            setProgressText:SetJustifyH("LEFT")
+            setProgressText:SetWordWrap(false)
+            setProgressText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+            editorHeader.setProgressText = setProgressText
 
             local deleteBtn = CreateFrame("Button", nil, editorHeader)
             deleteBtn:SetSize(22, 22)
@@ -575,7 +620,13 @@ function ns.UI.CreateCollectiblesTab(parent)
                 local name = select(1, ResolveRow(key, record))
                 local matches = true
                 if categoryFilter ~= "All" and record.category ~= categoryFilter then matches = false end
-                if storageFilter  ~= "All" and record.storage  ~= storageFilter  then matches = false end
+                if matches and typeFilter ~= "All" then
+                    -- The canonical key is authoritative for type (record.type is a
+                    -- create-time convenience copy); derive it live.
+                    local descriptor = OneWoW.Collectibles.ParseKey(key)
+                    if not descriptor or descriptor.type ~= typeFilter then matches = false end
+                end
+                if matches and storageFilter ~= "All" and record.storage ~= storageFilter then matches = false end
                 if matches and searchFilter ~= "" then
                     if not name:lower():find(searchFilter:lower(), 1, true) then matches = false end
                 end
@@ -659,8 +710,12 @@ function ns.UI.CreateCollectiblesTab(parent)
         selectedKey    = key
         searchFilter   = ""
         categoryFilter = "All"
+        typeFilter     = "All"
         storageFilter  = "All"
         searchBox:SetText("")
+        catDD:SetSelected("All")
+        typeDD:SetSelected("All")
+        storeDD:SetSelected("All")
         ShowEditor()
         parent.RefreshCollectiblesList()
         return true

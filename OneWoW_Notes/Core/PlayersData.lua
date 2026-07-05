@@ -3,6 +3,8 @@ local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
 
+local tinsert, ipairs, strfind = tinsert, ipairs, strfind
+
 local Players = ns.DataModule:New(
     "players",
     "playerCustomCategories",
@@ -112,6 +114,78 @@ end
 
 function Players:RemovePlayer(fullName)
     self:Remove(fullName)
+end
+
+-- ---------------------------------------------------------------------------
+-- Collectible references (v2-C "sightings")
+-- ---------------------------------------------------------------------------
+-- A structured record that a player is associated with a collectible (e.g. seen
+-- riding a mount). Replaces the old "search the note body for a link substring"
+-- dedup with a first-class list, while still recognizing pre-v2-C notes whose
+-- only trace of the sighting is the embedded collectible hyperlink. The field is
+-- created lazily on first add — players without sightings carry no empty table.
+
+--- Records a collectible reference on a player. Idempotent per canonical key.
+--- The optional spellID is kept for sighting context but dropped if it is a
+--- secret value (another unit's aura data in instanced content is opaque).
+---@param fullName string
+---@param key string canonical collectible key
+---@param spellID number|nil
+---@return boolean added true when a new ref was stored
+function Players:AddCollectibleRef(fullName, key, spellID)
+    key = OneWoW.Collectibles.CanonicalizeKey(key)
+    if not key then return false end
+
+    local player = self:GetPlayer(fullName)
+    if not player then return false end
+
+    player.collectibleRefs = player.collectibleRefs or {}
+    for _, ref in ipairs(player.collectibleRefs) do
+        if ref.key == key then return false end
+    end
+
+    local safeSpellID
+    if spellID ~= nil and not OneWoW.Restriction.IsSecret(spellID) then
+        safeSpellID = spellID
+    end
+
+    tinsert(player.collectibleRefs, {
+        key = key,
+        spellID = safeSpellID,
+        addedAt = GetServerTime(),
+    })
+    self:SavePlayer(fullName, player)
+    return true
+end
+
+--- True if the player already references a collectible. Structured refs are the
+--- source of truth; the content fallback keeps pre-v2-C notes deduping until the
+--- next add upgrades them to a structured ref.
+---@param fullName string
+---@param key string canonical collectible key
+---@return boolean
+function Players:HasCollectibleRef(fullName, key)
+    key = OneWoW.Collectibles.CanonicalizeKey(key)
+    if not key then return false end
+
+    local player = self:GetPlayer(fullName)
+    if not player then return false end
+
+    if player.collectibleRefs then
+        for _, ref in ipairs(player.collectibleRefs) do
+            if ref.key == key then return true end
+        end
+    end
+
+    -- Backward-compat: before v2-C the sighting lived only as the collectible
+    -- hyperlink in the note body ("|Honewowcollectible:<key>|h...").
+    if player.content and player.content ~= "" then
+        if strfind(player.content, "onewowcollectible:" .. key, 1, true) then
+            return true
+        end
+    end
+
+    return false
 end
 
 function Players:Initialize()

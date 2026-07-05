@@ -29,6 +29,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["COLLECTIBLE_INTENT_SPOTTED"] = "Repéré",
     ["COLLECTIBLE_INTENT_FARMING"] = "Farm en cours",
     ["COLLECTIBLE_DELETE_DESC"] = "Retirer cet objet de collection de votre liste",
+    ["COLLECTIBLE_SET_PROGRESS"] = "Ensemble : %s (%d/%d)",
     ["POPUP_DELETE_COLLECTIBLE"] = "Supprimer cet objet de collection ?",
 
 -- Notes Tab

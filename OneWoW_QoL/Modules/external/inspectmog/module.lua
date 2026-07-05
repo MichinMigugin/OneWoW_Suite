@@ -9,6 +9,9 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     author         = "OneWoW",
     contact        = "https://wow2.xyz/",
     link           = "https://wow2.xyz/",
+    toggles        = {
+        { id = "route_to_collectibles", label = "INSPECTMOG_ROUTE_COLLECTIBLES", default = false },
+    },
     preview        = true,
     defaultEnabled = false,
 })

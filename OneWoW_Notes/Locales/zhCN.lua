@@ -29,6 +29,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["COLLECTIBLE_INTENT_SPOTTED"] = "已发现",
     ["COLLECTIBLE_INTENT_FARMING"] = "刷取中",
     ["COLLECTIBLE_DELETE_DESC"] = "从列表中移除此收藏品",
+    ["COLLECTIBLE_SET_PROGRESS"] = "套装：%s (%d/%d)",
     ["POPUP_DELETE_COLLECTIBLE"] = "删除此收藏品？",
 
 -- Notes Tab

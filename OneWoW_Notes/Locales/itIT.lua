@@ -29,6 +29,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["COLLECTIBLE_INTENT_SPOTTED"] = "Individuato",
     ["COLLECTIBLE_INTENT_FARMING"] = "Farming",
     ["COLLECTIBLE_DELETE_DESC"] = "Rimuovi questo oggetto da collezione dalla tua lista",
+    ["COLLECTIBLE_SET_PROGRESS"] = "Set: %s (%d/%d)",
     ["POPUP_DELETE_COLLECTIBLE"] = "Eliminare questo oggetto da collezione?",
 
 -- Notes Tab

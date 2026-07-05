@@ -29,6 +29,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["COLLECTIBLE_INTENT_SPOTTED"] = "Localizado",
     ["COLLECTIBLE_INTENT_FARMING"] = "Farmando",
     ["COLLECTIBLE_DELETE_DESC"] = "Remover este colecionável da sua lista",
+    ["COLLECTIBLE_SET_PROGRESS"] = "Conjunto: %s (%d/%d)",
     ["POPUP_DELETE_COLLECTIBLE"] = "Excluir este colecionável?",
 
 -- Notes Tab

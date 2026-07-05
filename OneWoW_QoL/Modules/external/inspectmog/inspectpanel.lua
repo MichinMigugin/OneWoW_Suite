@@ -390,7 +390,79 @@ local function AddItemToNotes(itemID, itemName, itemLink, icon, quality, quiet)
     return true
 end
 
+-- v2-A: when the "route to collectibles" toggle is on, a shift-clicked slot is
+-- captured as a canonical `appearance:source` collectible (identity + live state
+-- resolved by core OneWoW.Collectibles) instead of a legacy numeric Item note.
+-- Both zones route: the item zone adds the item's OWN appearance (baseSourceID),
+-- the appearance zone adds the applied transmog (appearanceSourceID).
+local function RouteAppearancesToCollectibles()
+    return ns.ModuleRegistry:GetToggleValue("inspectmog", "route_to_collectibles") == true
+end
+
+-- Resolve an equipped item's OWN appearance source. Mirrors the scanner's
+-- link→itemID fallback so a stale/uncached snapshot (common when inspecting a
+-- freshly-targeted player) doesn't leave the item zone dead.
+local function ResolveEquippedSourceID(rowData)
+    local link = GetEquippedItemLink(rowData)
+    local id = tonumber(GetEquippedItemID(rowData))
+    local _, sourceID
+    if link then
+        _, sourceID = C_TransmogCollection.GetItemInfo(link)
+    end
+    if not sourceID and id then
+        _, sourceID = C_TransmogCollection.GetItemInfo(id)
+    end
+    return sourceID
+end
+
+-- Upsert an `appearance:source` collectible from a raw source id.
+local function AddSourceToCollectibles(sourceID, quiet)
+    sourceID = tonumber(sourceID)
+    if not sourceID then
+        return false
+    end
+
+    OneWoW:BringUp("OneWoW_Notes")
+
+    local notesAPI = OneWoW_Notes_API
+    if not notesAPI or not notesAPI.BuildAppearanceSourceKey then
+        return false
+    end
+
+    local key = notesAPI.BuildAppearanceSourceKey(sourceID)
+    if not key then
+        return false
+    end
+
+    notesAPI.UpsertCollectible(key, { category = "Transmog", storage = "account" })
+
+    if not quiet and notesAPI.OpenCollectible then
+        notesAPI.OpenCollectible(key)
+    end
+
+    return true, key
+end
+
 local function AddEquippedItemToNotes(rowData, quiet)
+    if RouteAppearancesToCollectibles() then
+        -- The equipped item's own appearance is what the collector wants tracked,
+        -- not the item as a stat/BiS note. Re-resolve at click time (the snapshot's
+        -- baseSourceID can be nil until the item finishes caching).
+        local sourceID = rowData.baseSourceID or ResolveEquippedSourceID(rowData)
+        if not sourceID then
+            local itemID = tonumber(GetEquippedItemID(rowData))
+            if itemID then
+                local cached = ResolveItemData(itemID, function()
+                    AddEquippedItemToNotes(rowData, quiet)
+                end)
+                if not cached then return true end
+                sourceID = ResolveEquippedSourceID(rowData)
+            end
+        end
+        rowData.baseSourceID = sourceID or rowData.baseSourceID
+        return AddSourceToCollectibles(sourceID, quiet)
+    end
+
     local itemID = tonumber(GetEquippedItemID(rowData))
     if not itemID then return false end
 
@@ -417,7 +489,18 @@ local function AddEquippedItemToNotes(rowData, quiet)
     return AddItemToNotes(itemID, itemName, itemLink, icon, quality, quiet)
 end
 
+local function AddAppearanceToCollectibles(rowData, quiet)
+    if IsHiddenAppearance(rowData) then
+        return false
+    end
+    return AddSourceToCollectibles(rowData.appearanceSourceID, quiet)
+end
+
 local function AddAppearanceToNotes(rowData, quiet)
+    if RouteAppearancesToCollectibles() then
+        return AddAppearanceToCollectibles(rowData, quiet)
+    end
+
     if IsHiddenAppearance(rowData) then
         return false
     end
@@ -455,23 +538,31 @@ local function AddAllVisibleAppearancesToNotes(frame)
         return
     end
 
+    local routing = RouteAppearancesToCollectibles()
     local seen = {}
     local count = 0
     local firstAddedItemID = nil
+    local firstAddedKey = nil
     for _, row in ipairs(frame.rows) do
         if row:IsShown() and row.data then
             local itemID = tonumber(GetAddAllAppearanceItemID(row.data))
             if itemID and not seen[itemID] then
                 seen[itemID] = true
-                if AddAppearanceToNotes(row.data, true) then
+                local ok, key = AddAppearanceToNotes(row.data, true)
+                if ok then
                     firstAddedItemID = firstAddedItemID or itemID
+                    firstAddedKey = firstAddedKey or key
                     count = count + 1
                 end
             end
         end
     end
 
-    if firstAddedItemID then
+    if routing then
+        if firstAddedKey and OneWoW_Notes_API and OneWoW_Notes_API.OpenCollectible then
+            OneWoW_Notes_API.OpenCollectible(firstAddedKey)
+        end
+    elseif firstAddedItemID then
         OpenItemInNotes(firstAddedItemID)
     end
 end
@@ -732,12 +823,15 @@ function UI:Refresh(unit)
 
         row.itemHit:SetScript("OnEnter", function(myself)
             local rowData = myself:GetParent().data
+            local addText = RouteAppearancesToCollectibles()
+                and L["INSPECTMOG_TT_SHIFT_ADD_EQUIPPED_COLL"]
+                or L["INSPECTMOG_TT_SHIFT_ADD_EQUIPPED"]
             ShowInspectMogTooltip(
                 myself,
                 GetEquippedItemID(rowData),
                 GetEquippedItemLink(rowData),
                 nil,
-                L["INSPECTMOG_TT_SHIFT_ADD_EQUIPPED"],
+                addText,
                 L["INSPECTMOG_TT_PREVIEW_EQUIPPED"]
             )
         end)
@@ -759,12 +853,15 @@ function UI:Refresh(unit)
             local hiddenText = IsHiddenAppearance(rowData)
                 and L["INSPECTMOG_TT_HIDDEN_APPEARANCE"]
                 or nil
+            local addText = RouteAppearancesToCollectibles()
+                and L["INSPECTMOG_TT_SHIFT_ADD_APPEARANCE_COLL"]
+                or L["INSPECTMOG_TT_SHIFT_ADD_APPEARANCE"]
             ShowInspectMogTooltip(
                 myself,
                 GetAppearanceItemID(rowData),
                 GetAppearanceItemLink(rowData),
                 rowData.appearanceSourceID,
-                L["INSPECTMOG_TT_SHIFT_ADD_APPEARANCE"],
+                addText,
                 L["INSPECTMOG_TT_PREVIEW_APPEARANCE"],
                 hiddenText
             )

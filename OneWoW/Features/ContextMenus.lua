@@ -121,7 +121,11 @@ local function HandleAddMountInfo(unit)
         -- mount's type/source/status now live on the collectible row (resolved live
         -- in the Collectibles tab), not duplicated into each player note. Movement
         -- forms (Travel Form, etc.) have no mount id, so they stay a plain text line.
-        local refText, dedupNeedle
+        -- collectibleKey is nil for movement forms (Travel Form, etc.), which have
+        -- no mount id and stay a plain-text line; a real mount carries a canonical
+        -- key that drives both the shared collectible row and the structured
+        -- per-player ref (dedup / sighting).
+        local refText, dedupNeedle, collectibleKey, mountSpellID
         if mountInfo.isMovementForm then
             refText = string.format(L["UNIT_CTX_MOUNT_MOVEMENT_FORM"], mountInfo.name)
             dedupNeedle = refText
@@ -149,27 +153,46 @@ local function HandleAddMountInfo(unit)
                 link = C_Spell.GetSpellLink(mountInfo.spellID or mountInfo.spellId) or mountInfo.name
             end
             refText = string.format(L["UNIT_CTX_MOUNT_LABEL"], link)
-            dedupNeedle = "onewowcollectible:" .. key
+            collectibleKey = key
+            mountSpellID = mountInfo.spellID or mountInfo.spellId
         end
 
         local fullName = playerInfo.fullName
         local existing = OneWoW_Notes_API.GetPlayer(fullName)
         if existing then
-            local currentNote = existing.content or ""
-            if currentNote ~= "" and strfind(currentNote, dedupNeedle, 1, true) then
+            -- Dedup on the structured collectible ref for real mounts (also matches
+            -- pre-v2-C notes that only embedded the link); movement forms have no
+            -- key, so they fall back to the plain-text needle.
+            local alreadyRecorded
+            if collectibleKey then
+                alreadyRecorded = OneWoW_Notes_API.PlayerHasCollectibleRef(fullName, collectibleKey)
+            else
+                local currentNote = existing.content or ""
+                alreadyRecorded = currentNote ~= "" and strfind(currentNote, dedupNeedle, 1, true) ~= nil
+            end
+
+            if alreadyRecorded then
                 print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_ALREADY_RECORDED"], playerInfo.name))
                 return
             end
+
+            local currentNote = existing.content or ""
             if currentNote ~= "" then
                 existing.content = currentNote .. "\n\n" .. refText
             else
                 existing.content = refText
             end
             OneWoW_Notes_API.SavePlayer(fullName, existing)
+            if collectibleKey then
+                OneWoW_Notes_API.AddPlayerCollectibleRef(fullName, collectibleKey, mountSpellID)
+            end
             print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_APPENDED"], playerInfo.name))
         else
             playerInfo.content = refText
             OneWoW_Notes_API.AddPlayer(fullName, playerInfo)
+            if collectibleKey then
+                OneWoW_Notes_API.AddPlayerCollectibleRef(fullName, collectibleKey, mountSpellID)
+            end
             print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_CREATED"], playerInfo.name))
         end
 
