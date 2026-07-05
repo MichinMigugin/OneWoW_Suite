@@ -220,6 +220,7 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["UNIT_CTX_MOUNT_LABEL"] = "Monture : %s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "Source : %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Statut : %s",
+    ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "Impossible d'identifier la monture de %s.",
 
     -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Paramètres",

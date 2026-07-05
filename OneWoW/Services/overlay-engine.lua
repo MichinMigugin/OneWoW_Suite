@@ -1594,10 +1594,16 @@ local function InitializeSurfaces()
         EventRegistry:RegisterCallback("MapCanvas.MapSet", RefreshWorldQuestPins)
     end
 
+    -- NEW_RECIPE_LEARNED is funneled through OneWoW.ProfessionRecipe's learned
+    -- channel (un-gated: it fires for trainer / world-drop learns too, which the
+    -- ready-gated scan channel would miss).
+    ns.ProfessionRecipe.RegisterLearnedCallback("OverlayEngine", function()
+        C_Timer.After(0.1, RefreshAll)
+    end)
+
     local surfaceEventFrame = CreateFrame("Frame")
     surfaceEventFrame:RegisterEvent("GUILDBANKBAGSLOTS_CHANGED")
     surfaceEventFrame:RegisterEvent("TRANSMOG_COLLECTION_UPDATED")
-    surfaceEventFrame:RegisterEvent("NEW_RECIPE_LEARNED")
     surfaceEventFrame:RegisterEvent("MAIL_SHOW")
     surfaceEventFrame:RegisterEvent("MAIL_INBOX_UPDATE")
     surfaceEventFrame:RegisterEvent("QUEST_DETAIL")
@@ -1611,8 +1617,6 @@ local function InitializeSurfaces()
         elseif event == "TRANSMOG_COLLECTION_UPDATED" then
             C_Timer.After(0.1, RefreshAll)
             C_Timer.After(0.1, RefreshGuildBank)
-        elseif event == "NEW_RECIPE_LEARNED" then
-            C_Timer.After(0.1, RefreshAll)
         elseif event == "MAIL_SHOW" or event == "MAIL_INBOX_UPDATE" then
             C_Timer.After(0.1, RefreshMailbox)
         elseif event == "QUEST_DETAIL" then
@@ -1691,8 +1695,6 @@ function Engine:Initialize()
     eventFrame:RegisterEvent("BANKFRAME_OPENED")
     eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
     eventFrame:RegisterEvent("PLAYER_ACCOUNT_BANK_TAB_SLOTS_CHANGED")
-    eventFrame:RegisterEvent("MERCHANT_UPDATE")
-    eventFrame:RegisterEvent("MERCHANT_SHOW")
     eventFrame:RegisterEvent("INVENTORY_SEARCH_UPDATE")
     eventFrame:SetScript("OnEvent", function(_, event)
         if event == "BAG_UPDATE_DELAYED" then
@@ -1700,12 +1702,19 @@ function Engine:Initialize()
             for _, fn in ipairs(Engine.integrationRefreshCallbacks) do fn() end
         elseif event == "BANKFRAME_OPENED" or event == "PLAYERBANKSLOTS_CHANGED" or event == "PLAYER_ACCOUNT_BANK_TAB_SLOTS_CHANGED" then
             RefreshBank()
-        elseif event == "MERCHANT_UPDATE" or event == "MERCHANT_SHOW" then
-            RefreshVendor()
         elseif event == "INVENTORY_SEARCH_UPDATE" then
             C_Timer.After(0, RefreshSearchDim)
         end
     end)
+
+    -- Vendor overlay repaints route through the core OneWoW.Merchant funnel
+    -- (single MERCHANT_* owner): show for the instant open refresh, scan for the
+    -- coalesced MERCHANT_UPDATE refreshes. Core-internal, so ns.Merchant direct.
+    -- This is a standing subscription (registered at login), so the funnel stays
+    -- live near-permanently -- like RecipeKnownUtil on the recipe funnel, the
+    -- lazy lifecycle becomes a single-owner correctness mechanism, not a perf win.
+    ns.Merchant.RegisterShowCallback("OverlayEngine", RefreshVendor)
+    ns.Merchant.RegisterScanCallback("OverlayEngine", RefreshVendor)
 
     InitializeSurfaces()
 end

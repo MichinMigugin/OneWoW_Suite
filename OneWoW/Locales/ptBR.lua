@@ -220,6 +220,7 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["UNIT_CTX_MOUNT_LABEL"] = "Montaria: %s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "Fonte: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Status: %s",
+    ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "Não foi possível identificar a montaria de %s.",
 
     -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Configurações",

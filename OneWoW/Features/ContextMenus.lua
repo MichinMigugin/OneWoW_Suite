@@ -42,22 +42,6 @@ local function IsMatchMountEnabled()
     return OneWoW_QoL_API.GetModuleToggle("playmounts", "enableMatchMount", true)
 end
 
----@param content string
----@param mountInfo table
----@param mountText string
----@return boolean
-local function NoteContentHasMount(content, mountInfo, mountText)
-    if content == "" then return false end
-    if mountInfo.isMovementForm then
-        return strfind(content, mountText, 1, true) ~= nil
-    end
-    local spellID = mountInfo.spellID or mountInfo.spellId
-    if spellID and strfind(content, "|Hspell:" .. spellID, 1, true) then
-        return true
-    end
-    return strfind(content, mountText, 1, true) ~= nil
-end
-
 local function CatalogHasVendor(npcID)
     local api = OneWoW_CatalogData_Vendors_API
     if not api or not api.GetAllVendors then return false end
@@ -131,41 +115,60 @@ local function HandleAddMountInfo(unit)
         local playerInfo = OneWoW_Notes_API.GetPlayerInfoFromUnit(targetUnit)
         if not playerInfo then return end
 
-        local mountText
+        -- Build the reference line + a dedup needle. A real mount becomes a single
+        -- canonical collectible row (created once, shared across every player that
+        -- rides it) plus a thin `(collectible=)` link in the player note — the
+        -- mount's type/source/status now live on the collectible row (resolved live
+        -- in the Collectibles tab), not duplicated into each player note. Movement
+        -- forms (Travel Form, etc.) have no mount id, so they stay a plain text line.
+        local refText, dedupNeedle
         if mountInfo.isMovementForm then
-            mountText = string.format(L["UNIT_CTX_MOUNT_MOVEMENT_FORM"], mountInfo.name)
+            refText = string.format(L["UNIT_CTX_MOUNT_MOVEMENT_FORM"], mountInfo.name)
+            dedupNeedle = refText
         else
-            local mountLink = C_Spell.GetSpellLink(mountInfo.spellID or mountInfo.spellId) or mountInfo.name
-            mountText = string.format(L["UNIT_CTX_MOUNT_LABEL"], mountLink)
-            if mountInfo.mountTypeName then
-                mountText = mountText .. "\n" .. string.format(L["TYPE_S"], mountInfo.mountTypeName)
+            -- playmounts:DetectMountOnUnit only resolves a mount from a non-secret
+            -- aura spellId (it gates on OneWoW.Restriction.IsSecret), so a returned
+            -- mountID is always a plain, resolvable number even in instanced content.
+            -- Still bail with a user-visible message if a canonical key can't be
+            -- built rather than writing a bad reference.
+            local key = OneWoW_Notes_API.BuildMountKey and OneWoW_Notes_API.BuildMountKey(mountInfo.mountID)
+            if not key then
+                print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_UNIDENTIFIED"], playerInfo.name))
+                return
             end
-            if mountInfo.sourceText and mountInfo.sourceText ~= "" then
-                mountText = mountText .. "\n" .. string.format(L["UNIT_CTX_MOUNT_SOURCE"], mountInfo.sourceText)
+
+            -- Ensure the shared collectible row exists (default category "Mount" on
+            -- create); never touch an existing row so the user's own category/intent
+            -- survives re-adding the mount from another player.
+            if not OneWoW_Notes_API.GetCollectible(key) then
+                OneWoW_Notes_API.UpsertCollectible(key, { category = "Mount" })
             end
-            if mountInfo.isCollected ~= nil then
-                local status = mountInfo.isCollected and COLLECTED or NOT_COLLECTED
-                mountText = mountText .. "\n" .. string.format(L["UNIT_CTX_MOUNT_STATUS"], status)
+
+            local link = OneWoW_Notes_API.BuildCollectibleLink and OneWoW_Notes_API.BuildCollectibleLink(key)
+            if not link then
+                link = C_Spell.GetSpellLink(mountInfo.spellID or mountInfo.spellId) or mountInfo.name
             end
+            refText = string.format(L["UNIT_CTX_MOUNT_LABEL"], link)
+            dedupNeedle = "onewowcollectible:" .. key
         end
 
         local fullName = playerInfo.fullName
         local existing = OneWoW_Notes_API.GetPlayer(fullName)
         if existing then
             local currentNote = existing.content or ""
-            if NoteContentHasMount(currentNote, mountInfo, mountText) then
+            if currentNote ~= "" and strfind(currentNote, dedupNeedle, 1, true) then
                 print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_ALREADY_RECORDED"], playerInfo.name))
                 return
             end
             if currentNote ~= "" then
-                existing.content = currentNote .. "\n\n" .. mountText
+                existing.content = currentNote .. "\n\n" .. refText
             else
-                existing.content = mountText
+                existing.content = refText
             end
             OneWoW_Notes_API.SavePlayer(fullName, existing)
             print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_APPENDED"], playerInfo.name))
         else
-            playerInfo.content = mountText
+            playerInfo.content = refText
             OneWoW_Notes_API.AddPlayer(fullName, playerInfo)
             print("|cFFFFD100OneWoW:|r " .. string.format(L["UNIT_CTX_MOUNT_INFO_CREATED"], playerInfo.name))
         end

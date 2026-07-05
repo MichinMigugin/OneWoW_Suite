@@ -220,6 +220,7 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["UNIT_CTX_MOUNT_LABEL"] = "Mount: %s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "Source: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Status: %s",
+    ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "Could not identify %s's mount.",
 
     -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Settings",

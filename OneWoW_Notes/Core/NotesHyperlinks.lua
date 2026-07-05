@@ -8,6 +8,43 @@ local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 ns.NotesHyperlinks = {}
 local NotesHyperlinks = ns.NotesHyperlinks
 
+-- Custom hyperlink type for collectible references. Unlike item/spell/etc. tokens
+-- (which convert to native Blizzard links), a collectible link has no native
+-- counterpart: clicking `|Honewowcollectible:<key>|h` is dispatched by
+-- LinkUtil.ProcessLink (via SetItemRef) to the handler registered below, opening
+-- the Collectibles tab. The key keeps its own colons (mount:1234,
+-- appearance:source:5678) — LinkUtil.SplitLinkData only peels the leading type off,
+-- so `linkData.options` is the whole key.
+local COLLECTIBLE_LINK_TYPE = "onewowcollectible"
+-- OneWoW brand gold (matches the chat print prefix) so a collectible ref reads as
+-- an addon link, not a Blizzard item/spell link.
+local COLLECTIBLE_LINK_COLOR = "|cFFFFD100"
+
+--- Builds a clickable collectible hyperlink for a key, or nil if the key is
+--- invalid. Display text is the live collectible name, falling back to the generic
+--- label while the name is unresolved (e.g. an uncached appearance).
+---@param key string
+---@return string|nil link
+function NotesHyperlinks:BuildCollectibleLink(key)
+    local canonical = OneWoW.Collectibles.CanonicalizeKey(key)
+    if not canonical then return nil end
+    local display = OneWoW.Collectibles.ResolveDisplay(canonical)
+    local name = (display and display.name) or ns.L["TAB_COLLECTIBLES"]
+    return COLLECTIBLE_LINK_COLOR .. "|H" .. COLLECTIBLE_LINK_TYPE .. ":" .. canonical .. "|h[" .. name .. "]|h|r"
+end
+
+-- Route clicks on collectible links to the Collectibles tab. Registered once;
+-- returning nil marks the link handled, so SetItemRef never falls through to the
+-- default item-ref tooltip for our custom type.
+if LinkUtil and not LinkUtil.IsLinkHandlerRegistered(COLLECTIBLE_LINK_TYPE) then
+    LinkUtil.RegisterLinkHandler(COLLECTIBLE_LINK_TYPE, function(_, _, linkData)
+        local key = linkData and linkData.options
+        if key and key ~= "" and OneWoW_Notes_API and OneWoW_Notes_API.OpenCollectible then
+            OneWoW_Notes_API.OpenCollectible(key)
+        end
+    end)
+end
+
 function NotesHyperlinks:ConvertManualLinks(text)
     if not text then return text end
 
@@ -101,6 +138,12 @@ function NotesHyperlinks:ConvertManualLinks(text)
         return "(mount=" .. mountID .. ")"
     end
 
+    local function convertCollectible(key)
+        local link = NotesHyperlinks:BuildCollectibleLink(key)
+        if link then return link end
+        return "(collectible=" .. key .. ")"
+    end
+
     local function createWaypointLink(mapID, x, y, label)
         local mID = tonumber(mapID)
         local px = tonumber(x)
@@ -136,6 +179,8 @@ function NotesHyperlinks:ConvertManualLinks(text)
     text = text:gsub("%(toy=(%d+)%)", convertToyID)
     text = text:gsub("%(battlepet=(%d+)%)", convertBattlePetID)
     text = text:gsub("%(mount=(%d+)%)", convertMountID)
+    text = text:gsub("%(collectible=([%w:]+)%)", convertCollectible)
+    text = text:gsub("%(coll=([%w:]+)%)", convertCollectible)
 
     text = text:gsub("%(/?way ([%d%.]+) ([%d%.]+)([^%)\n]*)", function(x, y, label)
         local currentMapID = C_Map.GetBestMapForUnit("player")
@@ -328,6 +373,7 @@ function ns.UI.CreateNotesHelpPanel()
         { name = TOY,      syntax = L["UI_HELP_LINK_TOY_SYNTAX"],      example = L["UI_HELP_LINK_TOY_EXAMPLE"],      icon = "Interface\\Icons\\INV_Misc_Toy_10" },
         { name = L["BATTLE_PET"],      syntax = L["UI_HELP_LINK_PET_SYNTAX"],      example = L["UI_HELP_LINK_PET_EXAMPLE"],      icon = "Interface\\Icons\\INV_Box_PetCarrier_01" },
         { name = MOUNT,    syntax = L["UI_HELP_LINK_MOUNT_SYNTAX"],    example = L["UI_HELP_LINK_MOUNT_EXAMPLE"],    icon = "Interface\\Icons\\Ability_Mount_RidingHorse" },
+        { name = L["TAB_COLLECTIBLES"], syntax = L["UI_HELP_LINK_COLLECTIBLE_SYNTAX"], example = L["UI_HELP_LINK_COLLECTIBLE_EXAMPLE"], icon = "Interface\\Icons\\INV_Misc_Gift_02" },
         { name = L["UI_HELP_LINK_WAYPOINT_NAME"], syntax = L["UI_HELP_LINK_WAYPOINT_SYNTAX"], example = L["UI_HELP_LINK_WAYPOINT_EXAMPLE"], icon = "Interface\\Icons\\Taxi_Flight_Path_Unfriendly" },
     }
 

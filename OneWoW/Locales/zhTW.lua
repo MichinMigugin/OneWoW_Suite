@@ -220,6 +220,7 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["UNIT_CTX_MOUNT_LABEL"] = "坐騎：%s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "來源：%s",
     ["UNIT_CTX_MOUNT_STATUS"] = "狀態：%s",
+    ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "無法辨識%s的坐騎。",
 
     -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > 設定",

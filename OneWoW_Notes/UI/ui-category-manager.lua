@@ -14,6 +14,7 @@ local SECTIONS = {
     { key = "npcs",    label = "TAB_NPCS",     getCategories = function() return ns.NPCs and ns.NPCs:GetCategories() or {} end },
     { key = "zones",   label = "TAB_ZONES",    getCategories = function() return ns.Zones and ns.Zones:GetCategories() or {} end },
     { key = "items",   label = "TAB_ITEMS",    getCategories = function() return ns.Items and ns.Items:GetCategories() or {} end },
+    { key = "collectibles", label = "TAB_COLLECTIBLES", getCategories = function() return ns.Collectibles and ns.Collectibles:GetCategories() or {} end },
 }
 
 local BUILT_IN_CATEGORIES = {
@@ -36,6 +37,9 @@ local BUILT_IN_CATEGORIES = {
     items = {
         "General", "Transmog", "Crafting", "Quest", "Rare", "Collectible"
     },
+    collectibles = {
+        "General", "Mount", "Transmog", "Want List", "Other"
+    },
 }
 
 local CUSTOM_DB_KEYS = {
@@ -44,6 +48,7 @@ local CUSTOM_DB_KEYS = {
     npcs    = "npcCustomCategories",
     zones   = "zoneCustomCategories",
     items   = "itemCustomCategories",
+    collectibles = "collectibleCustomCategories",
 }
 
 local function IsBuiltIn(sectionKey, categoryName)

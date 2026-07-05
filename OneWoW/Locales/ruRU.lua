@@ -220,6 +220,7 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["UNIT_CTX_MOUNT_LABEL"] = "Средство передвижения: %s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "Источник: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Статус: %s",
+    ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "Не удалось определить ездовое животное %s.",
 
     -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Настройки",

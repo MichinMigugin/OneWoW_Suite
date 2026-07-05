@@ -372,6 +372,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 | No suite-internal `OptionalDeps` | `bin/check_toc_optional_deps.py` (pre-commit `no-suite-internal-optionaldeps`) |
 | No direct `db.global.settings` access (§8.5) | `bin/check_no_settings_bypass.py` (pre-commit `no-settings-bypass`) |
 | No direct combat/restriction/secret API calls (§8.6) | `bin/check_no_restriction_bypass.py` (pre-commit `restriction-funnel`) |
+| No registering core-owned events outside their funnel owner (§8.7 / §8.8) | `bin/check_no_core_event_bypass.py` (pre-commit `core-event-funnel`; `EVENT_OWNER` registry: `MERCHANT_*`→`Merchant.lua`, `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED`→`ProfessionRecipe.lua`; escape hatch `-- noqa: core-event-funnel`) |
 | No cross-load-unit SavedVariables access (§6/§7) | `bin/check_no_data_manager_bypass.py` (TOC-derived ownership; **enforced** — hard-fails off the `ALLOWED_FOREIGN_SV` allowlist) |
 | No namespace publish / global-surface anti-patterns (§6.1) | `bin/check_no_namespace_publish.py` (pre-commit `no-namespace-publish`; enforced) |
 | No per-addon `Media/` folders (hub-only assets) | `bin/check_no_per_addon_media.py` (pre-commit `no-per-addon-media`) |
@@ -769,8 +770,10 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | `OneWoW.Toasts` | `Services/toast-engine.lua` | Toast types from QoL, `OneWoW_Notes` `Fire*Alert` |
 | `OneWoW.ItemStatus` | `Services/itemstatus.lua` | Overlay engine, Bags |
 | `OneWoW.UpgradeDetection` | `Services/upgrade-detection.lua` | Overlay engine, Bags |
-| `OneWoW.ProfessionRecipe` | `Services/ProfessionRecipe.lua` | AltTracker Professions (persist), Catalog Tradeskills (scanCache), RecipeKnownUtil, AltTracker Professions tab — see [PROFESSION_RECIPE.md](PROFESSION_RECIPE.md) / §8.7 |
+| `OneWoW.ProfessionRecipe` | `Services/ProfessionRecipe.lua` | AltTracker Professions (persist) + Accounting (trainer costs), Catalog Tradeskills (scanCache), RecipeKnownUtil, overlay-engine, Trackers, QoL bagbar/professionspanel/autoopen — see [PROFESSION_RECIPE.md](PROFESSION_RECIPE.md) / §8.7 |
+| `OneWoW.Merchant` | `Services/Merchant.lua` | Catalog Vendors (merge), `OneWoW_Notes` collectibles (planned), overlay-engine / Accounting / Bags / QoL merchant sites (v2-G) — single `MERCHANT_*` owner, scan/show/closed channels, ephemeral snapshots, no SV; see [MERCHANT.md](MERCHANT.md) / §8.8 |
 | `OneWoW.RecipeKnownUtil` | `Services/RecipeKnownUtil.lua` | Overlay engine, tooltip providers |
+| `OneWoW.Collectibles` | `Services/Collectibles.lua` | `OneWoW_Notes` (Collectibles data/tab), ContextMenus, Trackers (planned) — collectible key grammar + live display/state, no SV; see [COLLECTIBLES.md](COLLECTIBLES.md) |
 | `OneWoW.AHItemKeys` | `Services/AHItemKeys.lua` | AH scanners (`OneWoW_AltTracker_Auctions`), `ItemPrices` link-aware lookups |
 | `OneWoW.ItemPrices` | `Services/ItemPrices.lua` | Tooltip providers, overlay engine, AH source UI helpers |
 | `OneWoW.Locale` | `Services/LocaleService.lua` | Every addon (each registers its own scope, reads back a view) — see Localization below |
@@ -1045,7 +1048,8 @@ corrupted SavedVariables keys (empty-string buckets, cross-contaminated recipe
 sets — e.g. Mining holding Cooking IDs).
 
 Consumers subscribe (LoD-safe, on login) through the Facade global and receive
-**ephemeral** scan snapshots — nothing is persisted in core. Three channels:
+**ephemeral** scan snapshots — nothing is persisted in core. Five channels plus a
+live state read:
 
 - **`RegisterScanCallback(ownerID, fn)`** — `fn(scan)` with the learned recipe
   IDs and item→recipe map. Debounced (~0.25s, re-armed) and ready-gated on
@@ -1053,14 +1057,29 @@ Consumers subscribe (LoD-safe, on login) through the Facade global and receive
 - **`RegisterOpenCallback(ownerID, fn)`** — `fn(context)` on the same
   "window ready" trigger, for live-query collectors that read the trade-skill
   APIs directly and don't need recipe IDs (AltTracker Professions' basics /
-  equipment / concentration / expansion-band collection).
+  equipment / concentration / expansion-band collection; Trackers full-scan).
+- **`RegisterShowCallback(ownerID, fn)`** — `fn()` **immediate** on
+  `TRADE_SKILL_SHOW` (undebounced), for panels that must appear in lockstep with
+  the window (QoL bagbar suppression, professions panel sidebar). Delivers a
+  catch-up call if the window is already open at subscribe time.
+- **`RegisterLearnedCallback(ownerID, fn)`** — `fn(recipeID, recipeLevel,
+  baseRecipeID)` **immediate** on `NEW_RECIPE_LEARNED`, **un-gated**. This is
+  deliberately *not* the scan channel: `NEW_RECIPE_LEARNED` also fires with the
+  trade-skill window closed (trainer / world-drop learns), where the ready-gated
+  scan never runs, and it carries the just-learned ID rather than only the full
+  set. Consumers: Accounting trainer-cost confirmation, overlay recipe-known
+  refresh.
 - **`RegisterClosedCallback(ownerID, fn)`** — `fn()` on `TRADE_SKILL_CLOSE`.
 
-`UnregisterCallback(ownerID)` drops all channels for an owner; events are
-registered on 0→1 subscribers and torn down on 1→0. The snapshot re-reads
-`GetBaseProfessionInfo()` every scan so a fast window switch can't misattribute
-recipes. Open callbacks fire before scan callbacks so a consumer's profession
-list is populated before recipe commit resolves it.
+`IsTradeskillOpen()` is the live "is a profession window open" read (ready **or**
+`ProfessionsFrame` shown) — the shared replacement for per-module `_atCrafting`
+flags (QoL autoopen). `UnregisterCallback(ownerID)` drops all channels for an
+owner; events are registered on 0→1 subscribers and torn down on 1→0. The
+snapshot re-reads `GetBaseProfessionInfo()` every scan so a fast window switch
+can't misattribute recipes. Open callbacks fire before scan callbacks so a
+consumer's profession list is populated before recipe commit resolves it.
+Suite-wide `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED` consolidation is complete and
+enforced by the `core-event-funnel` hook (§3.10).
 
 **Identity + persistence contract (consumer side).** The snapshot carries the
 numeric profession identity (`baseInfo.professionID` + per-recipe
@@ -1074,6 +1093,46 @@ pruned from every other bucket and the `""` bucket is dropped on any resolved
 commit). Display degrades strictly: without the LoD catalog data unit loaded,
 show the stored Known count and dash out Total/Missing rather than a misleading
 `Total 0 / Known 0`.
+
+### 8.8 Merchant funnel (`OneWoW.Merchant`)
+
+One core service owns the `MERCHANT_SHOW` / `MERCHANT_UPDATE` / `MERCHANT_CLOSED`
+events (`Services/Merchant.lua`), registered via the core `ns.RegisterEvent`
+multiplexer (§3.3). It mirrors the recipe funnel (§8.7): before it, every
+merchant listener (Catalog `VendorScanner`, `overlay-engine`, Accounting
+`VendorTracker`, `OneWoW_Bags`, QoL auto-repair / auto-open / vendor-panel)
+registered its own frame with ad-hoc debounce — the `VendorScanner`
+`scanInProgress` flag never actually debounced, so `MERCHANT_SHOW` +
+`MERCHANT_UPDATE` scans double-fired.
+
+Consumers subscribe (LoD-safe, on login / module enable) through the Facade
+global and receive **ephemeral** snapshots — core persists nothing (vendor
+catalogs stay in `OneWoW_CatalogData_Vendors_DB`, collectibles in
+`OneWoW_Notes_DB`). Three channels:
+
+- **`RegisterScanCallback(ownerID, fn)`** — `fn(scan)` vendor snapshot (npc
+  identity, location, `items[itemID]` with gold + extended costs + `isPurchasable`
+  / `isUsable`). Coalesced ~0.25s debounce; one deferred rescan (~0.5s) covers
+  first-visit uncached rows (`GetMerchantItemLink` nil → `GetMerchantItemID`
+  fallback + `RequestLoadItemDataByID`). Consumers must be **idempotent**
+  (catch-up + retry re-deliver).
+- **`RegisterShowCallback(ownerID, fn)`** — `fn()` fired **synchronously** on
+  `MERCHANT_SHOW`, before any scan (merchants have no ready gate), for consumers
+  that must act at open time (repair, gold snapshot, panel anchoring).
+- **`RegisterClosedCallback(ownerID, fn)`** — `fn()` on `MERCHANT_CLOSED`.
+
+`UnregisterCallback(ownerID)` drops all channels; `GetLastScan()` returns the
+ephemeral snapshot; `IsMerchantOpen()` is a live `MerchantFrame:IsShown()`
+wrapper for state-flag consumers that don't need a subscription. All channels
+share one refcount: events register on 0→1 subscribers and tear down on 1→0.
+Subscription is driven by consumer settings / module lifecycle — there is **no**
+core-level scanning flag and no handler-side enable gate. See
+[MERCHANT.md](MERCHANT.md). Suite-wide `MERCHANT_*` consolidation is complete: all
+former listeners (Catalog `VendorScanner`, `overlay-engine`, Accounting
+`VendorTracker`, `OneWoW_Bags`, QoL auto-repair / auto-open / vendor-panel) now
+consume these channels or `IsMerchantOpen()`, and the single-owner rule is
+enforced by the generalized `core-event-funnel` pre-commit hook (§3.10),
+seeded with `MERCHANT_*`→`Merchant.lua`.
 
 ---
 
@@ -1105,6 +1164,8 @@ show the stored Known count and dash out Total/Missing rather than a misleading
 | `OneWoW/Core/SettingsFeatureRegistry.lua` | Settings funnel: catalog, storage-path resolution, change notification (§8.5) |
 | `OneWoW/Core/Restriction.lua` | Combat/restriction funnel: event-driven cache, intent getters, `RunWhenUnrestricted`, `GetSnapshot` + Midnight secret-value guard (§8.6) |
 | `OneWoW/Services/ProfessionRecipe.lua` | Trade-skill recipe scan funnel: single `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED` owner, scan/open/closed callback channels, ephemeral snapshots (§8.7) |
+| `OneWoW/Services/Merchant.lua` | Merchant scan funnel: single `MERCHANT_*` owner, scan/show/closed callback channels, ephemeral vendor snapshots, no SV (§8.8, see [MERCHANT.md](MERCHANT.md)) |
+| `OneWoW/Services/Collectibles.lua` | Collectible identity resolver: key grammar (`type[:subtype]:id`), live display + collection state, no SV (see [COLLECTIBLES.md](COLLECTIBLES.md)) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
 | `OneWoW/UI/t-home.lua` | Home tab: read-only status + live refresh |
 | `OneWoW/UI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |

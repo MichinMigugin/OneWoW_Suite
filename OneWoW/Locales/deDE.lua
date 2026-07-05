@@ -220,6 +220,7 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["UNIT_CTX_MOUNT_LABEL"] = "Reittier: %s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "Quelle: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Status: %s",
+    ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "Reittier von %s konnte nicht identifiziert werden.",
 
     -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Einstellungen",

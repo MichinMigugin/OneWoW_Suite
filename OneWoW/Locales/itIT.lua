@@ -220,6 +220,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["UNIT_CTX_MOUNT_LABEL"] = "Cavalcatura: %s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "Fonte: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "Stato: %s",
+    ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "Impossibile identificare la cavalcatura di %s.",
 
     -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Impostazioni",

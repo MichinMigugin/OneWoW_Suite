@@ -48,6 +48,7 @@ Core\ItemsData.lua
 Core\ZonesData.lua
 Core\PlayersData.lua
 Core\NPCsData.lua
+Core\CollectiblesData.lua
 
 # Main
 OneWoW_Notes.lua
@@ -62,6 +63,7 @@ UI\t-players.lua
 UI\t-npcs.lua
 UI\t-zones.lua
 UI\t-items.lua
+UI\t-collectibles.lua
 UI\t-settings.lua
 
 # UI - Dialogs

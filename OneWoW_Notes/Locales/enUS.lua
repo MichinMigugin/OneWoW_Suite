@@ -20,6 +20,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TAB_NPCS"] = "NPCs",
     ["TAB_ZONES"] = "Zones",
     ["TAB_ITEMS"] = "Items",
+    ["TAB_COLLECTIBLES"] = "Collectibles",
 
 -- Notes Tab
     ["NOTES_LIST_TITLE"] = "Notes",
@@ -258,6 +259,16 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ITEM_VALIDATE_FIRST"] = "Validate the item first.",
     ["ITEM_LOADING"] = "Loading...",
 
+-- Collectibles tab
+    ["COLLECTIBLES_CONTROLS"] = "Collectibles Controls",
+    ["COLLECTIBLES_SELECT"] = "Select a collectible to view its details.",
+    ["COLLECTIBLE_INTENT_LABEL"] = "Intent",
+    ["COLLECTIBLE_INTENT_WANT"] = "Want",
+    ["COLLECTIBLE_INTENT_SPOTTED"] = "Spotted",
+    ["COLLECTIBLE_INTENT_FARMING"] = "Farming",
+    ["COLLECTIBLE_DELETE_DESC"] = "Remove this collectible from your list",
+    ["POPUP_DELETE_COLLECTIBLE"] = "Delete this collectible?",
+
 -- Zones tab
     ["ZONES_CONTROLS"] = "Zones Controls",
     ["ZONES_LIST"] = "Zones List",
@@ -406,6 +417,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["UI_HELP_LINK_PET_EXAMPLE"] = "(battlepet=1234)",
     ["UI_HELP_LINK_MOUNT_SYNTAX"] = "(mount=ID)",
     ["UI_HELP_LINK_MOUNT_EXAMPLE"] = "(mount=1234)",
+    ["UI_HELP_LINK_COLLECTIBLE_SYNTAX"] = "(collectible=KEY)",
+    ["UI_HELP_LINK_COLLECTIBLE_EXAMPLE"] = "(collectible=mount:1234)",
     ["UI_HELP_LINK_WAYPOINT_NAME"] = "Waypoint",
     ["UI_HELP_LINK_WAYPOINT_SYNTAX"] = "(/way X Y Label)",
     ["UI_HELP_LINK_WAYPOINT_EXAMPLE"] = "(/way 52.3 41.7 Boss)",

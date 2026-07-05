@@ -220,6 +220,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["UNIT_CTX_MOUNT_LABEL"] = "탈것: %s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "출처: %s",
     ["UNIT_CTX_MOUNT_STATUS"] = "상태: %s",
+    ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "%s님의 탈것을 식별할 수 없습니다.",
 
     -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > 설정",

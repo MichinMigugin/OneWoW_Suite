@@ -107,6 +107,8 @@ Services\AHItemKeys.lua
 Services\ItemPrices.lua
 Services\ProfessionRecipe.lua
 Services\RecipeKnownUtil.lua
+Services\Collectibles.lua
+Services\Merchant.lua
 Services\overlay-icons.lua
 Services\upgrade-detection.lua
 Services\AltScope.lua

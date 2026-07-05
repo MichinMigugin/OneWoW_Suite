@@ -220,6 +220,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["UNIT_CTX_MOUNT_LABEL"] = "坐骑：%s",
     ["UNIT_CTX_MOUNT_SOURCE"] = "来源：%s",
     ["UNIT_CTX_MOUNT_STATUS"] = "状态：%s",
+    ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "无法识别%s的坐骑。",
 
     -- Search paths
     ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > 设置",

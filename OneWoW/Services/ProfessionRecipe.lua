@@ -17,8 +17,14 @@ local _, ns = ...
 -- while at least one consumer is subscribed.
 --
 -- Channels:
---   RegisterScanCallback  fn(scan)     recipe IDs + item map (debounced, ready-gated)
---   RegisterOpenCallback  fn(context)  "window ready" trigger for live-query collectors
+--   RegisterScanCallback   fn(scan)    recipe IDs + item map (debounced, ready-gated)
+--   RegisterOpenCallback   fn(context) "window ready" trigger for live-query collectors
+--   RegisterShowCallback   fn()        TRADE_SKILL_SHOW, immediate/undebounced -- for
+--                                      panels that must appear the instant the window opens
+--   RegisterLearnedCallback fn(recipeID, recipeLevel, baseRecipeID)
+--                                      NEW_RECIPE_LEARNED, immediate + un-gated. Fires even
+--                                      when the trade-skill window is closed (trainer / world-
+--                                      drop learns), which the ready-gated scan cannot.
 --   RegisterClosedCallback fn()        TRADE_SKILL_CLOSE teardown
 -- ============================================================================
 
@@ -43,6 +49,8 @@ local DEBOUNCE = 0.25
 -- ownerID -> fn, one table per channel.
 local scanCallbacks = {}
 local openCallbacks = {}
+local showCallbacks = {}
+local learnedCallbacks = {}
 local closedCallbacks = {}
 
 local eventsRegistered = false
@@ -54,6 +62,8 @@ local OnEvent -- forward declaration (referenced by EnsureEvents)
 local function AnySubscribers()
     return next(scanCallbacks) ~= nil
         or next(openCallbacks) ~= nil
+        or next(showCallbacks) ~= nil
+        or next(learnedCallbacks) ~= nil
         or next(closedCallbacks) ~= nil
 end
 
@@ -137,6 +147,18 @@ local function FireScan(scan)
     end
 end
 
+local function FireShow()
+    for ownerID, fn in pairs(showCallbacks) do
+        ns.Lifecycle.SafeCall("ProfessionRecipe.show:" .. ownerID, fn)
+    end
+end
+
+local function FireLearned(recipeID, recipeLevel, baseRecipeID)
+    for ownerID, fn in pairs(learnedCallbacks) do
+        ns.Lifecycle.SafeCall("ProfessionRecipe.learned:" .. ownerID, fn, recipeID, recipeLevel, baseRecipeID)
+    end
+end
+
 local function FireClosed()
     for ownerID, fn in pairs(closedCallbacks) do
         ns.Lifecycle.SafeCall("ProfessionRecipe.closed:" .. ownerID, fn)
@@ -166,7 +188,7 @@ local function ArmScan()
     scanTimer = C_Timer.NewTimer(DEBOUNCE, DoScan)
 end
 
-function OnEvent(event)
+function OnEvent(event, ...)
     if event == "TRADE_SKILL_CLOSE" then
         if scanTimer then
             scanTimer:Cancel()
@@ -175,8 +197,19 @@ function OnEvent(event)
         FireClosed()
         return
     end
+
+    -- Immediate, un-debounced signals fire before the coalesced scan is armed.
+    if event == "TRADE_SKILL_SHOW" then
+        FireShow()
+    elseif event == "NEW_RECIPE_LEARNED" then
+        -- Un-gated: NEW_RECIPE_LEARNED also fires with the trade-skill window
+        -- closed (trainer / world-drop learns), so learned subscribers cannot
+        -- rely on the ready-gated scan below.
+        FireLearned(...)
+    end
+
     -- TRADE_SKILL_SHOW / TRADE_SKILL_LIST_UPDATE / NEW_RECIPE_LEARNED all coalesce
-    -- into one re-armed scan.
+    -- into one re-armed (ready-gated) scan for the recipe/item snapshot consumers.
     ArmScan()
 end
 
@@ -208,6 +241,26 @@ function ProfessionRecipe.RegisterOpenCallback(ownerID, fn)
     Subscribe(openCallbacks, ownerID, fn)
 end
 
+--- Subscribe to the immediate TRADE_SKILL_SHOW trigger (undebounced) for panels
+--- that must open in lockstep with the trade-skill window. If the window is
+--- already open at subscribe time the handler is delivered a catch-up call.
+---@param ownerID string
+---@param fn fun()
+function ProfessionRecipe.RegisterShowCallback(ownerID, fn)
+    Subscribe(showCallbacks, ownerID, fn)
+    if ProfessionRecipe.IsTradeskillOpen() then
+        ns.Lifecycle.SafeCall("ProfessionRecipe.show:" .. ownerID, fn)
+    end
+end
+
+--- Subscribe to NEW_RECIPE_LEARNED. Fires synchronously with the event payload,
+--- un-gated by trade-skill readiness (so trainer / world-drop learns are seen).
+---@param ownerID string
+---@param fn fun(recipeID: number?, recipeLevel: number?, baseRecipeID: number?)
+function ProfessionRecipe.RegisterLearnedCallback(ownerID, fn)
+    Subscribe(learnedCallbacks, ownerID, fn)
+end
+
 --- Subscribe to TRADE_SKILL_CLOSE for transient-state teardown.
 ---@param ownerID string
 ---@param fn fun()
@@ -221,8 +274,20 @@ end
 function ProfessionRecipe.UnregisterCallback(ownerID)
     scanCallbacks[ownerID] = nil
     openCallbacks[ownerID] = nil
+    showCallbacks[ownerID] = nil
+    learnedCallbacks[ownerID] = nil
     closedCallbacks[ownerID] = nil
     EnsureEvents()
+end
+
+--- Live "is a trade-skill / professions window open" check, the shared
+--- replacement for per-module _atCrafting flags. True once the trade-skill data
+--- is ready, or while the Blizzard professions frame is shown (covers the brief
+--- gap between TRADE_SKILL_SHOW and readiness).
+---@return boolean
+function ProfessionRecipe.IsTradeskillOpen()
+    if C_TradeSkillUI.IsTradeSkillReady() then return true end
+    return ProfessionsFrame ~= nil and ProfessionsFrame:IsShown()
 end
 
 --- The most recent ephemeral scan snapshot, or nil if none this session.

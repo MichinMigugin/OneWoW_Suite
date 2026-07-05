@@ -179,6 +179,27 @@ repos:
             | OneWoW_Bags/API/Examples/
           )
 
+      - id: core-event-funnel
+        name: No registering core-owned events outside their funnel owner
+        description: |
+          Forbids string-literal RegisterEvent("<core-owned-event>") outside the
+          one service that owns it (registry in bin/check_no_core_event_bypass.py:
+          MERCHANT_* -> Merchant.lua). Consume the funnel's scan/show/closed
+          channels (OneWoW.Merchant) or IsMerchantOpen() instead. See
+          OneWoW/Docs/MERCHANT.md and OneWoW/Docs/ARCHITECTURE.md §3.10 / §8.8.
+        entry: python bin/check_no_core_event_bypass.py
+        language: python
+        types: [lua]
+        exclude: |
+          (?x)^(
+            Libs/
+            | \.lua-defs/
+            | \.wow_docs/
+            | \.vscode/
+            | \.releases/
+            | OneWoW_Bags/API/Examples/
+          )
+
       - id: no-api-existence-guards
         name: No defensive C_* / Enum API existence guards in Lua
         description: |

@@ -34,6 +34,8 @@ local SERVICE_KEYS = {
     "ItemPrices",
     "ProfessionRecipe",
     "RecipeKnownUtil",
+    "Collectibles",
+    "Merchant",
     "UpgradeDetection",
     "AltScope",
 }

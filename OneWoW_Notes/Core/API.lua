@@ -274,6 +274,83 @@ function OneWoW_Notes_API.OpenItem(itemID)
     return true
 end
 
+-- ---------------------------------------------------------------------------
+-- Collectibles (keyed by canonical collectible key, e.g. "mount:2240")
+-- ---------------------------------------------------------------------------
+
+--- Returns a collectible record by key.
+---@param key string
+---@return table|nil record
+function OneWoW_Notes_API.GetCollectible(key)
+    if not ns.Collectibles then return nil end
+    return ns.Collectibles:GetCollectible(key)
+end
+
+--- Create-or-update a collectible record (only non-nil fields overwrite).
+---@param key string
+---@param fields table|nil
+---@return boolean ok, table|nil record
+function OneWoW_Notes_API.UpsertCollectible(key, fields)
+    if not ns.Collectibles then return false end
+    return ns.Collectibles:UpsertCollectible(key, fields)
+end
+
+--- Saves an existing collectible record.
+---@param key string
+---@param data table
+---@return boolean saved
+function OneWoW_Notes_API.SaveCollectible(key, data)
+    if not ns.Collectibles or not data then return false end
+    ns.Collectibles:SaveCollectible(key, data)
+    return true
+end
+
+--- Opens a collectible record, selecting it when the Collectibles tab is ready.
+---@param key string
+---@return boolean opened
+function OneWoW_Notes_API.OpenCollectible(key)
+    key = OneWoW.Collectibles.CanonicalizeKey(key)
+    if not key then
+        return false
+    end
+
+    ns.pendingCollectibleSelect = key
+    OneWoW.UI:Show("notes")
+    OneWoW.UI:SelectSubTab("notes", "collectibles")
+
+    local tabFrame = OneWoW.UI:GetContentFrame("notes", "collectibles")
+    if tabFrame and tabFrame.SelectCollectible then
+        tabFrame.SelectCollectible(key)
+        ns.pendingCollectibleSelect = nil
+    end
+
+    return true
+end
+
+--- Builds a canonical mount collectible key, or nil.
+---@param mountID number
+---@return string|nil key
+function OneWoW_Notes_API.BuildMountKey(mountID)
+    return OneWoW.Collectibles.BuildKey("mount", mountID)
+end
+
+--- Builds a canonical appearance-source collectible key, or nil.
+---@param sourceID number
+---@return string|nil key
+function OneWoW_Notes_API.BuildAppearanceSourceKey(sourceID)
+    return OneWoW.Collectibles.BuildKey("appearance", "source", sourceID)
+end
+
+--- Builds a clickable collectible hyperlink for a key (opens the Collectibles tab
+--- when clicked), or nil if the key is invalid. Lets other units embed a thin
+--- collectible reference in note content without knowing the link grammar.
+---@param key string
+---@return string|nil link
+function OneWoW_Notes_API.BuildCollectibleLink(key)
+    if not ns.NotesHyperlinks then return nil end
+    return ns.NotesHyperlinks:BuildCollectibleLink(key)
+end
+
 --- Show or toggle the Notes module in the suite hub.
 function OneWoW_Notes_API.OpenNotes()
     if ns.SlashCommandHandler then

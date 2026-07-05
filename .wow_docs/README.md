@@ -17,6 +17,10 @@ The full upstream trees are large. Agents following [`.cursor/skills/wow-api-spe
 
 The copies here target **areas OneWoW_Suite addons actually touch**—for example tooltips, items, bags/bank/containers, menus, cursors, colors, constants, professions, housing, and the per-locale `GlobalStrings` (Blizzard's official UI terms in all 11 client locales, used for localization)—rather than the full AddOns tree.
 
+## Full local fallback
+
+The curated set is intentionally small. A **full local clone** of the upstream sources lives at `.cache/onewow-suite/sources/wow-ui-source/Interface/AddOns` — the complete Blizzard `wow-ui-source` `Interface/AddOns` tree (including `Blizzard_APIDocumentationGenerated`). When `.wow_docs` does not contain what you need, search that clone; if you find material worth keeping, copy the file into an appropriate `.wow_docs` location and re-run `python bin/bootstrap_wow_docs_manifest.py` to register it in `manifest.json`.
+
 ## Maintenance
 
 - **Sync from upstream:** `python bin/refresh_wow_docs.py` (or `--dry-run` first).
