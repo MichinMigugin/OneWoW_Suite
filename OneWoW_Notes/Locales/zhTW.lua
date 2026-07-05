@@ -1,6 +1,5 @@
 local ADDON_NAME = ...
 
--- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
     ["CTX_OPEN_NOTES"] = "開啟 Notes",
@@ -22,15 +21,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TAB_ZONES"] = "區域",
     ["TAB_ITEMS"] = "物品",
     ["TAB_COLLECTIBLES"] = "收藏品",
-    ["COLLECTIBLES_CONTROLS"] = "收藏品控制",
-    ["COLLECTIBLES_SELECT"] = "選擇一個收藏品以檢視詳細資訊。",
-    ["COLLECTIBLE_INTENT_LABEL"] = "意向",
-    ["COLLECTIBLE_INTENT_WANT"] = "想要",
-    ["COLLECTIBLE_INTENT_SPOTTED"] = "已發現",
-    ["COLLECTIBLE_INTENT_FARMING"] = "刷取中",
-    ["COLLECTIBLE_DELETE_DESC"] = "從清單中移除此收藏品",
-    ["COLLECTIBLE_SET_PROGRESS"] = "套裝：%s (%d/%d)",
-    ["POPUP_DELETE_COLLECTIBLE"] = "刪除此收藏品？",
 
 -- Notes Tab
     ["NOTES_LIST_TITLE"] = "筆記",
@@ -88,6 +78,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["SETTINGS_LANGUAGE_DESC"] = "選擇你偏好的語言。變更會立即生效。",
     ["SETTINGS_MINIMAP"] = "小地圖按鈕",
 
+-- Theme Names
+
 -- Language Names
     ["LANG_ENUS"] = "英語",
     ["LANG_KOKR"] = "韓語",
@@ -132,6 +124,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["NOTES_CONTROLS"] = "筆記控制",
     ["NOTES_LIST"] = "筆記清單",
     ["MESSAGE_SELECT_NOTE"] = "選擇一筆筆記以編輯",
+    -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
+    -- adjective default-name whose form can vary by locale; leave scoped.
     ["NOTE_UNTITLED"] = "無標題",
 
 -- Notes sort
@@ -161,6 +155,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 -- Note todo
     ["NOTE_RESET_TODOS"] = "重設所有待辦",
     ["NOTE_RESET_TODOS_DESC"] = "取消勾選所有已完成的待辦",
+
+-- Status bar
 
 -- Buttons
     ["BUTTON_ADD_NOTE"] = "新增筆記",
@@ -204,6 +200,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["COLOR_HUNTER_GREEN"] = "獵人綠",
     ["FONT_DEFAULT"] = "預設 (Friz Quadrata)",
     ["FONT_COLOR_MATCHING"] = "預設 - 相符",
+    -- "Priest White" intentionally NOT deduped with NOTES_PIN_COLOR_PRIEST_WHITE —
+    -- two independent UIs (font-color picker vs pin-color set); keep separate.
     ["FONT_COLOR_WHITE"] = "牧師白",
     ["FONT_COLOR_BLACK"] = "午夜黑",
 
@@ -260,6 +258,28 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["ITEM_VALIDATE"] = "驗證",
     ["ITEM_VALIDATE_FIRST"] = "請先驗證物品。",
     ["ITEM_LOADING"] = "載入中……",
+
+-- Collectibles tab
+    ["COLLECTIBLES_CONTROLS"] = "收藏品控制",
+    ["COLLECTIBLES_SELECT"] = "選擇一個收藏品以檢視詳細資訊。",
+    ["COLLECTIBLE_INTENT_LABEL"] = "意向",
+    ["COLLECTIBLE_INTENT_WANT"] = "想要",
+    ["COLLECTIBLE_INTENT_SPOTTED"] = "已發現",
+    ["COLLECTIBLE_INTENT_FARMING"] = "刷取中",
+    ["COLLECTIBLE_INTENT_DELETE"] = "刪除清單",
+    ["COLLECTIBLE_DELETE_DESC"] = "從清單中移除此收藏品",
+    ["COLLECTIBLE_SET_PROGRESS"] = "套裝：%s (%d/%d)",
+    ["COLLECTIBLE_SET_MEMBERS"] = "套裝外觀",
+    ["POPUP_DELETE_COLLECTIBLE"] = "刪除此收藏品？",
+    ["COLLECTIBLE_SOLD_BY"] = "出售者",
+    ["COLLECTIBLE_CANT_BUY"] = "上次無法購買",
+    ["POPUP_CAPTURE_COLLECTIBLES"] = "將 %d 個商人收藏品加入願望清單？",
+    ["COLLECTIBLE_CAPTURE_ADDED"] = "已將 %d 個商人收藏品加入願望清單。",
+    ["COLLECTIBLE_CAPTURE_PROMPT"] = "詢問",
+    ["COLLECTIBLE_CAPTURE_AUTO"] = "自動",
+    ["COLLECTIBLE_TTL_IMMEDIATE"] = "立即",
+    ["COLLECTIBLE_EMPTY_DELETE_LIST"] = "清空刪除清單",
+    ["POPUP_EMPTY_DELETE_LIST"] = "永久刪除刪除清單中的全部 %d 個物品？",
 
 -- Zones tab
     ["ZONES_CONTROLS"] = "區域控制",
@@ -371,6 +391,11 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["SETTINGS_PLAYER_DETECTION_DESC"] = "當你選定一名帶有已啟用提醒筆記的玩家時，以聊天訊息和聲音提醒。",
     ["SETTINGS_ZONE_ALERTS"] = "區域提醒",
     ["SETTINGS_ZONE_ALERTS_DESC"] = "當你進入一個帶有已啟用提醒筆記的區域時，以聊天訊息和聲音提醒。",
+    ["SETTINGS_COLLECTIBLE_CAPTURE"] = "商人收藏品擷取",
+    ["SETTINGS_COLLECTIBLE_CAPTURE_DESC"] = "將你在商人處看到的未收集物品加入願望清單。「詢問」會先確認；「自動」會靜默加入。",
+    ["SETTINGS_AUTODELETE"] = "自動刪除已收集的物品",
+    ["SETTINGS_AUTODELETE_DESC"] = "開啟後，你正在追蹤的已收集物品（想要、已發現、刷取中）將移至刪除清單，並在清理延遲後永久刪除。",
+    ["SETTINGS_AUTODELETE_TTL"] = "清理延遲",
 
 -- Zone pin button
     ["TOOLTIP_ZONE_PIN"] = "釘選區域視窗",
@@ -432,6 +457,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["BINDING_HEADER_ONEWOW_NOTES"] = "|cFF00FF00OneWoW|r Notes",
     ["BINDING_NAME_ONEWOW_NOTES_QUICKNOTE"] = "快速筆記",
 
+    -- Keys referenced in code but previously missing from the locale
+    -- (surfaced by key-name-on-miss; values are the code-side fallbacks).
     ["BUTTON_DESELECT_ALL"] = "取消全選",
     ["BUTTON_SELECT_ALL"] = "全選",
     ["DIALOG_CONFIRM_DELETE"] = "確認刪除",

@@ -4,6 +4,8 @@ local L = ns.L
 local OneWoW_GUI = OneWoW_GUI
 
 local tinsert, ipairs, strfind = tinsert, ipairs, strfind
+local pairs, tonumber, tconcat = pairs, tonumber, table.concat
+local C_MountJournal = C_MountJournal
 
 local Players = ns.DataModule:New(
     "players",
@@ -186,6 +188,119 @@ function Players:HasCollectibleRef(fullName, key)
     end
 
     return false
+end
+
+-- ---------------------------------------------------------------------------
+-- Legacy mount-blob migration (v2-E)
+-- ---------------------------------------------------------------------------
+-- Before v1-D, "Add Mount Info" wrote a multi-line blob into the player note:
+--   Mount: <spell hyperlink>\nType: …\nSource: …\nStatus: …
+-- v1-D replaced that with a single thin `Mount: <collectible link>` line plus a
+-- shared collectible row and a structured ref. This one-time pass upgrades any
+-- surviving legacy blob: the embedded `|Hspell:<id>|h` resolves to a mount, so
+-- each such note gets its collectible row + ref and its blob block rewritten to
+-- the thin link. v1-D-era notes carry `onewowcollectible:` (not a spell link), so
+-- they never match. Gated by a global flag so the scan runs once per account.
+
+-- Split a note body into its `\n\n`-delimited blocks (the granularity the old
+-- writer appended each mount blob at).
+local function SplitBlocks(s)
+    local blocks, pos = {}, 1
+    while true do
+        local a, b = strfind(s, "\n\n", pos, true)
+        if not a then
+            blocks[#blocks + 1] = s:sub(pos)
+            break
+        end
+        blocks[#blocks + 1] = s:sub(pos, a - 1)
+        pos = b + 1
+    end
+    return blocks
+end
+
+-- Thin replacement line for a migrated mount blob. Uses the Blizzard MOUNT global
+-- (locale-safe, no cross-scope core-locale dependency) + the clickable collectible
+-- link, matching what v1-D writes for new sightings visually.
+local function BuildMountRefLine(key)
+    local link
+    if ns.NotesHyperlinks and ns.NotesHyperlinks.BuildCollectibleLink then
+        link = ns.NotesHyperlinks:BuildCollectibleLink(key)
+    end
+    if not link then
+        local display = OneWoW.Collectibles.ResolveDisplay(key)
+        link = display and display.name
+    end
+    if not link then return nil end
+    return MOUNT .. ": " .. link
+end
+
+-- Rewrite one note's legacy mount blob(s) in place. Returns true if it changed.
+function Players:MigrateMountBlobForNote(fullName, record)
+    local content = record.content
+    if type(content) ~= "string" or content == "" then return false end
+    if not strfind(content, "Hspell:", 1, true) then return false end
+
+    local blocks = SplitBlocks(content)
+    local changed = false
+
+    for i, block in ipairs(blocks) do
+        local mountID, spellID
+        for s in block:gmatch("Hspell:(%d+)") do
+            local sid = tonumber(s)
+            local mid = sid and C_MountJournal.GetMountFromSpell(sid)
+            if mid then
+                mountID, spellID = mid, sid
+                break
+            end
+        end
+
+        if mountID then
+            local key = OneWoW.Collectibles.BuildKey("mount", mountID)
+            local line = key and BuildMountRefLine(key)
+            if key and line then
+                -- Create the shared collectible row once (never clobber an existing
+                -- one), mirroring the v1-D ContextMenus upsert.
+                if ns.Collectibles and not ns.Collectibles:GetCollectible(key) then
+                    ns.Collectibles:UpsertCollectible(key, { category = "Mount" })
+                end
+                blocks[i] = line
+                changed = true
+                self:AddCollectibleRef(fullName, key, spellID)
+            end
+        end
+    end
+
+    if changed then
+        record.content = tconcat(blocks, "\n\n")
+    end
+    return changed
+end
+
+--- One-time account-wide pass that upgrades legacy mount blobs to the v1-D thin
+--- ref + shared collectible row. Idempotent (gated by a global flag; re-running
+--- is a no-op). Safe to call at login after the Players module is initialized.
+function Players:MigrateLegacyMountBlobs()
+    if not (ns.db and ns.db.global) then return end
+    if ns.db.global.collectibleMountMigrated then return end
+    if not (OneWoW and OneWoW.Collectibles) then return end
+
+    -- Snapshot first: SavePlayer/AddCollectibleRef invalidate the merged cache, so
+    -- mutating while iterating self:GetAll() would be undefined.
+    local snapshot = {}
+    for fullName, record in pairs(self:GetAll()) do
+        if type(record) == "table" then
+            snapshot[#snapshot + 1] = { fullName = fullName, record = record }
+        end
+    end
+
+    for _, entry in ipairs(snapshot) do
+        if self:MigrateMountBlobForNote(entry.fullName, entry.record) then
+            entry.record._collectibleMountMigrated = true
+            self:SavePlayer(entry.fullName, entry.record)
+        end
+    end
+
+    ns.db.global.collectibleMountMigrated = true
 end
 
 function Players:Initialize()

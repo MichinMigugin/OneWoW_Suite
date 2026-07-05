@@ -266,9 +266,20 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["COLLECTIBLE_INTENT_WANT"] = "Want",
     ["COLLECTIBLE_INTENT_SPOTTED"] = "Spotted",
     ["COLLECTIBLE_INTENT_FARMING"] = "Farming",
+    ["COLLECTIBLE_INTENT_DELETE"] = "Delete List",
     ["COLLECTIBLE_DELETE_DESC"] = "Remove this collectible from your list",
     ["COLLECTIBLE_SET_PROGRESS"] = "Set: %s (%d/%d)",
+    ["COLLECTIBLE_SET_MEMBERS"] = "Set appearances",
     ["POPUP_DELETE_COLLECTIBLE"] = "Delete this collectible?",
+    ["COLLECTIBLE_SOLD_BY"] = "Sold by",
+    ["COLLECTIBLE_CANT_BUY"] = "Couldn't buy when last seen",
+    ["POPUP_CAPTURE_COLLECTIBLES"] = "Add %d vendor collectible(s) to your want list?",
+    ["COLLECTIBLE_CAPTURE_ADDED"] = "Added %d vendor collectible(s) to your want list.",
+    ["COLLECTIBLE_CAPTURE_PROMPT"] = "Prompt",
+    ["COLLECTIBLE_CAPTURE_AUTO"] = "Automatic",
+    ["COLLECTIBLE_TTL_IMMEDIATE"] = "Immediate",
+    ["COLLECTIBLE_EMPTY_DELETE_LIST"] = "Empty Delete List",
+    ["POPUP_EMPTY_DELETE_LIST"] = "Permanently delete all %d item(s) in the Delete List?",
 
 -- Zones tab
     ["ZONES_CONTROLS"] = "Zones Controls",
@@ -380,6 +391,11 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["SETTINGS_PLAYER_DETECTION_DESC"] = "Alert with a chat message and sound when you target a player that has a note with alerting enabled.",
     ["SETTINGS_ZONE_ALERTS"] = "Zone Alerts",
     ["SETTINGS_ZONE_ALERTS_DESC"] = "Alert with a chat message and sound when you enter a zone that has a note with alerting enabled.",
+    ["SETTINGS_COLLECTIBLE_CAPTURE"] = "Vendor Collectible Capture",
+    ["SETTINGS_COLLECTIBLE_CAPTURE_DESC"] = "Add uncollected items you see at vendors to your want list. Prompt asks first; Automatic adds them silently.",
+    ["SETTINGS_AUTODELETE"] = "Auto-delete collected items",
+    ["SETTINGS_AUTODELETE_DESC"] = "When on, collected items you were tracking (Want, Spotted, Farming) move to the Delete List, then are permanently removed after the purge delay.",
+    ["SETTINGS_AUTODELETE_TTL"] = "Purge after",
 
 -- Zone pin button
     ["TOOLTIP_ZONE_PIN"] = "Pin Zone Window",

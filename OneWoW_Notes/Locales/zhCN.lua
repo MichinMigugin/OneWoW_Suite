@@ -1,6 +1,5 @@
 local ADDON_NAME = ...
 
--- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
     ["CTX_OPEN_NOTES"] = "打开 Notes",
@@ -22,15 +21,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TAB_ZONES"] = "区域",
     ["TAB_ITEMS"] = "物品",
     ["TAB_COLLECTIBLES"] = "收藏品",
-    ["COLLECTIBLES_CONTROLS"] = "收藏品控制",
-    ["COLLECTIBLES_SELECT"] = "选择一个收藏品以查看详情。",
-    ["COLLECTIBLE_INTENT_LABEL"] = "意向",
-    ["COLLECTIBLE_INTENT_WANT"] = "想要",
-    ["COLLECTIBLE_INTENT_SPOTTED"] = "已发现",
-    ["COLLECTIBLE_INTENT_FARMING"] = "刷取中",
-    ["COLLECTIBLE_DELETE_DESC"] = "从列表中移除此收藏品",
-    ["COLLECTIBLE_SET_PROGRESS"] = "套装：%s (%d/%d)",
-    ["POPUP_DELETE_COLLECTIBLE"] = "删除此收藏品？",
 
 -- Notes Tab
     ["NOTES_LIST_TITLE"] = "笔记",
@@ -88,6 +78,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["SETTINGS_LANGUAGE_DESC"] = "选择你偏好的语言。更改会立即生效。",
     ["SETTINGS_MINIMAP"] = "小地图按钮",
 
+-- Theme Names
+
 -- Language Names
     ["LANG_ENUS"] = "英语",
     ["LANG_KOKR"] = "韩语",
@@ -132,6 +124,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["NOTES_CONTROLS"] = "笔记控制",
     ["NOTES_LIST"] = "笔记列表",
     ["MESSAGE_SELECT_NOTE"] = "选择一条笔记以编辑",
+    -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
+    -- adjective default-name whose form can vary by locale; leave scoped.
     ["NOTE_UNTITLED"] = "无标题",
 
 -- Notes sort
@@ -161,6 +155,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 -- Note todo
     ["NOTE_RESET_TODOS"] = "重置所有待办",
     ["NOTE_RESET_TODOS_DESC"] = "取消勾选所有已完成的待办",
+
+-- Status bar
 
 -- Buttons
     ["BUTTON_ADD_NOTE"] = "添加笔记",
@@ -204,6 +200,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["COLOR_HUNTER_GREEN"] = "猎人绿",
     ["FONT_DEFAULT"] = "默认 (Friz Quadrata)",
     ["FONT_COLOR_MATCHING"] = "默认 - 匹配",
+    -- "Priest White" intentionally NOT deduped with NOTES_PIN_COLOR_PRIEST_WHITE —
+    -- two independent UIs (font-color picker vs pin-color set); keep separate.
     ["FONT_COLOR_WHITE"] = "牧师白",
     ["FONT_COLOR_BLACK"] = "午夜黑",
 
@@ -260,6 +258,28 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["ITEM_VALIDATE"] = "验证",
     ["ITEM_VALIDATE_FIRST"] = "请先验证物品。",
     ["ITEM_LOADING"] = "加载中……",
+
+-- Collectibles tab
+    ["COLLECTIBLES_CONTROLS"] = "收藏品控制",
+    ["COLLECTIBLES_SELECT"] = "选择一个收藏品以查看详情。",
+    ["COLLECTIBLE_INTENT_LABEL"] = "意向",
+    ["COLLECTIBLE_INTENT_WANT"] = "想要",
+    ["COLLECTIBLE_INTENT_SPOTTED"] = "已发现",
+    ["COLLECTIBLE_INTENT_FARMING"] = "刷取中",
+    ["COLLECTIBLE_INTENT_DELETE"] = "删除列表",
+    ["COLLECTIBLE_DELETE_DESC"] = "从列表中移除此收藏品",
+    ["COLLECTIBLE_SET_PROGRESS"] = "套装：%s (%d/%d)",
+    ["COLLECTIBLE_SET_MEMBERS"] = "套装外观",
+    ["POPUP_DELETE_COLLECTIBLE"] = "删除此收藏品？",
+    ["COLLECTIBLE_SOLD_BY"] = "出售者",
+    ["COLLECTIBLE_CANT_BUY"] = "上次无法购买",
+    ["POPUP_CAPTURE_COLLECTIBLES"] = "将 %d 个商人收藏品添加到愿望清单？",
+    ["COLLECTIBLE_CAPTURE_ADDED"] = "已将 %d 个商人收藏品添加到愿望清单。",
+    ["COLLECTIBLE_CAPTURE_PROMPT"] = "询问",
+    ["COLLECTIBLE_CAPTURE_AUTO"] = "自动",
+    ["COLLECTIBLE_TTL_IMMEDIATE"] = "立即",
+    ["COLLECTIBLE_EMPTY_DELETE_LIST"] = "清空删除列表",
+    ["POPUP_EMPTY_DELETE_LIST"] = "永久删除删除列表中的全部 %d 个物品？",
 
 -- Zones tab
     ["ZONES_CONTROLS"] = "区域控制",
@@ -371,6 +391,11 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["SETTINGS_PLAYER_DETECTION_DESC"] = "当你选定一名带有已启用提醒笔记的玩家时，以聊天消息和声音提醒。",
     ["SETTINGS_ZONE_ALERTS"] = "区域提醒",
     ["SETTINGS_ZONE_ALERTS_DESC"] = "当你进入一个带有已启用提醒笔记的区域时，以聊天消息和声音提醒。",
+    ["SETTINGS_COLLECTIBLE_CAPTURE"] = "商人收藏品捕获",
+    ["SETTINGS_COLLECTIBLE_CAPTURE_DESC"] = "将你在商人处看到的未收集物品添加到愿望清单。“询问”会先确认；“自动”会静默添加。",
+    ["SETTINGS_AUTODELETE"] = "自动删除已收集的物品",
+    ["SETTINGS_AUTODELETE_DESC"] = "开启后，你正在追踪的已收集物品（想要、已发现、刷取中）将移至删除列表，并在清理延迟后被永久删除。",
+    ["SETTINGS_AUTODELETE_TTL"] = "清理延迟",
 
 -- Zone pin button
     ["TOOLTIP_ZONE_PIN"] = "固定区域窗口",
@@ -432,6 +457,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["BINDING_HEADER_ONEWOW_NOTES"] = "|cFF00FF00OneWoW|r Notes",
     ["BINDING_NAME_ONEWOW_NOTES_QUICKNOTE"] = "快速笔记",
 
+    -- Keys referenced in code but previously missing from the locale
+    -- (surfaced by key-name-on-miss; values are the code-side fallbacks).
     ["BUTTON_DESELECT_ALL"] = "取消全选",
     ["BUTTON_SELECT_ALL"] = "全选",
     ["DIALOG_CONFIRM_DELETE"] = "确认删除",

@@ -49,6 +49,7 @@ Core\ZonesData.lua
 Core\PlayersData.lua
 Core\NPCsData.lua
 Core\CollectiblesData.lua
+Core\CollectiblesMerchant.lua
 
 # Main
 OneWoW_Notes.lua

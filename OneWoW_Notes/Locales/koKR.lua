@@ -1,6 +1,5 @@
 local ADDON_NAME = ...
 
--- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
     ["CTX_OPEN_NOTES"] = "Notes 열기",
@@ -22,15 +21,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TAB_ZONES"] = "지역",
     ["TAB_ITEMS"] = "아이템",
     ["TAB_COLLECTIBLES"] = "수집품",
-    ["COLLECTIBLES_CONTROLS"] = "수집품 관리",
-    ["COLLECTIBLES_SELECT"] = "세부 정보를 보려면 수집품을 선택하세요.",
-    ["COLLECTIBLE_INTENT_LABEL"] = "의도",
-    ["COLLECTIBLE_INTENT_WANT"] = "원함",
-    ["COLLECTIBLE_INTENT_SPOTTED"] = "발견함",
-    ["COLLECTIBLE_INTENT_FARMING"] = "파밍 중",
-    ["COLLECTIBLE_DELETE_DESC"] = "목록에서 이 수집품을 제거합니다",
-    ["COLLECTIBLE_SET_PROGRESS"] = "세트: %s (%d/%d)",
-    ["POPUP_DELETE_COLLECTIBLE"] = "이 수집품을 삭제하시겠습니까?",
 
 -- Notes Tab
     ["NOTES_LIST_TITLE"] = "메모",
@@ -88,6 +78,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["SETTINGS_LANGUAGE_DESC"] = "선호하는 언어를 선택하세요. 변경 사항은 즉시 적용됩니다.",
     ["SETTINGS_MINIMAP"] = "미니맵 버튼",
 
+-- Theme Names
+
 -- Language Names
     ["LANG_ENUS"] = "영어",
     ["LANG_KOKR"] = "한국어",
@@ -132,6 +124,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["NOTES_CONTROLS"] = "메모 제어",
     ["NOTES_LIST"] = "메모 목록",
     ["MESSAGE_SELECT_NOTE"] = "편집할 메모를 선택하세요",
+    -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
+    -- adjective default-name whose form can vary by locale; leave scoped.
     ["NOTE_UNTITLED"] = "제목 없음",
 
 -- Notes sort
@@ -161,6 +155,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 -- Note todo
     ["NOTE_RESET_TODOS"] = "모든 작업 초기화",
     ["NOTE_RESET_TODOS_DESC"] = "완료된 모든 작업 체크 해제",
+
+-- Status bar
 
 -- Buttons
     ["BUTTON_ADD_NOTE"] = "메모 추가",
@@ -204,6 +200,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["COLOR_HUNTER_GREEN"] = "사냥꾼 초록",
     ["FONT_DEFAULT"] = "기본 (Friz Quadrata)",
     ["FONT_COLOR_MATCHING"] = "기본 - 일치",
+    -- "Priest White" intentionally NOT deduped with NOTES_PIN_COLOR_PRIEST_WHITE —
+    -- two independent UIs (font-color picker vs pin-color set); keep separate.
     ["FONT_COLOR_WHITE"] = "사제 흰색",
     ["FONT_COLOR_BLACK"] = "자정 검정",
 
@@ -260,6 +258,28 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ITEM_VALIDATE"] = "확인",
     ["ITEM_VALIDATE_FIRST"] = "먼저 아이템을 확인하세요.",
     ["ITEM_LOADING"] = "불러오는 중...",
+
+-- Collectibles tab
+    ["COLLECTIBLES_CONTROLS"] = "수집품 관리",
+    ["COLLECTIBLES_SELECT"] = "세부 정보를 보려면 수집품을 선택하세요.",
+    ["COLLECTIBLE_INTENT_LABEL"] = "의도",
+    ["COLLECTIBLE_INTENT_WANT"] = "원함",
+    ["COLLECTIBLE_INTENT_SPOTTED"] = "발견함",
+    ["COLLECTIBLE_INTENT_FARMING"] = "파밍 중",
+    ["COLLECTIBLE_INTENT_DELETE"] = "삭제 목록",
+    ["COLLECTIBLE_DELETE_DESC"] = "목록에서 이 수집품을 제거합니다",
+    ["COLLECTIBLE_SET_PROGRESS"] = "세트: %s (%d/%d)",
+    ["COLLECTIBLE_SET_MEMBERS"] = "세트 형상",
+    ["POPUP_DELETE_COLLECTIBLE"] = "이 수집품을 삭제하시겠습니까?",
+    ["COLLECTIBLE_SOLD_BY"] = "판매처",
+    ["COLLECTIBLE_CANT_BUY"] = "지난번에 구매할 수 없었음",
+    ["POPUP_CAPTURE_COLLECTIBLES"] = "상인의 수집품 %d개를 위시리스트에 추가하시겠습니까?",
+    ["COLLECTIBLE_CAPTURE_ADDED"] = "상인의 수집품 %d개를 위시리스트에 추가했습니다.",
+    ["COLLECTIBLE_CAPTURE_PROMPT"] = "물어보기",
+    ["COLLECTIBLE_CAPTURE_AUTO"] = "자동",
+    ["COLLECTIBLE_TTL_IMMEDIATE"] = "즉시",
+    ["COLLECTIBLE_EMPTY_DELETE_LIST"] = "삭제 목록 비우기",
+    ["POPUP_EMPTY_DELETE_LIST"] = "삭제 목록에 있는 %d개의 항목을 영구적으로 삭제하시겠습니까?",
 
 -- Zones tab
     ["ZONES_CONTROLS"] = "지역 제어",
@@ -371,6 +391,11 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["SETTINGS_PLAYER_DETECTION_DESC"] = "알림이 켜진 메모가 있는 플레이어를 대상으로 지정하면 대화 메시지와 소리로 알립니다.",
     ["SETTINGS_ZONE_ALERTS"] = "지역 알림",
     ["SETTINGS_ZONE_ALERTS_DESC"] = "알림이 켜진 메모가 있는 지역에 들어가면 대화 메시지와 소리로 알립니다.",
+    ["SETTINGS_COLLECTIBLE_CAPTURE"] = "상인 수집품 담기",
+    ["SETTINGS_COLLECTIBLE_CAPTURE_DESC"] = "상인에게서 발견한 미수집 아이템을 위시리스트에 추가합니다. '물어보기'는 먼저 확인하고, '자동'은 조용히 추가합니다.",
+    ["SETTINGS_AUTODELETE"] = "수집한 항목 자동 삭제",
+    ["SETTINGS_AUTODELETE_DESC"] = "켜면 추적하던 수집 항목(원함, 발견함, 파밍 중)이 삭제 목록으로 이동한 뒤, 정리 대기 시간이 지나면 영구적으로 삭제됩니다.",
+    ["SETTINGS_AUTODELETE_TTL"] = "삭제 대기 시간",
 
 -- Zone pin button
     ["TOOLTIP_ZONE_PIN"] = "지역 창 고정",
@@ -432,6 +457,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["BINDING_HEADER_ONEWOW_NOTES"] = "|cFF00FF00OneWoW|r Notes",
     ["BINDING_NAME_ONEWOW_NOTES_QUICKNOTE"] = "빠른 메모",
 
+    -- Keys referenced in code but previously missing from the locale
+    -- (surfaced by key-name-on-miss; values are the code-side fallbacks).
     ["BUTTON_DESELECT_ALL"] = "모두 선택 해제",
     ["BUTTON_SELECT_ALL"] = "모두 선택",
     ["DIALOG_CONFIRM_DELETE"] = "삭제 확인",

@@ -1,6 +1,5 @@
 local ADDON_NAME = ...
 
--- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
     ["CTX_OPEN_NOTES"] = "Abrir Notes",
@@ -22,15 +21,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["TAB_ZONES"] = "Zonas",
     ["TAB_ITEMS"] = "Itens",
     ["TAB_COLLECTIBLES"] = "Colecionáveis",
-    ["COLLECTIBLES_CONTROLS"] = "Controles de colecionáveis",
-    ["COLLECTIBLES_SELECT"] = "Selecione um colecionável para ver seus detalhes.",
-    ["COLLECTIBLE_INTENT_LABEL"] = "Intenção",
-    ["COLLECTIBLE_INTENT_WANT"] = "Desejado",
-    ["COLLECTIBLE_INTENT_SPOTTED"] = "Localizado",
-    ["COLLECTIBLE_INTENT_FARMING"] = "Farmando",
-    ["COLLECTIBLE_DELETE_DESC"] = "Remover este colecionável da sua lista",
-    ["COLLECTIBLE_SET_PROGRESS"] = "Conjunto: %s (%d/%d)",
-    ["POPUP_DELETE_COLLECTIBLE"] = "Excluir este colecionável?",
 
 -- Notes Tab
     ["NOTES_LIST_TITLE"] = "Notas",
@@ -88,6 +78,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["SETTINGS_LANGUAGE_DESC"] = "Escolha seu idioma preferido. As alterações são aplicadas instantaneamente.",
     ["SETTINGS_MINIMAP"] = "Botão do minimapa",
 
+-- Theme Names
+
 -- Language Names
     ["LANG_ENUS"] = "Inglês",
     ["LANG_KOKR"] = "Coreano",
@@ -132,6 +124,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["NOTES_CONTROLS"] = "Controles de notas",
     ["NOTES_LIST"] = "Lista de notas",
     ["MESSAGE_SELECT_NOTE"] = "Selecione uma nota para editar",
+    -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
+    -- adjective default-name whose form can vary by locale; leave scoped.
     ["NOTE_UNTITLED"] = "Sem título",
 
 -- Notes sort
@@ -161,6 +155,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 -- Note todo
     ["NOTE_RESET_TODOS"] = "Reiniciar todas as tarefas",
     ["NOTE_RESET_TODOS_DESC"] = "Desmarcar todas as tarefas concluídas",
+
+-- Status bar
 
 -- Buttons
     ["BUTTON_ADD_NOTE"] = "Adicionar nota",
@@ -204,6 +200,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["COLOR_HUNTER_GREEN"] = "Verde caçador",
     ["FONT_DEFAULT"] = "Padrão (Friz Quadrata)",
     ["FONT_COLOR_MATCHING"] = "Padrão - Combinando",
+    -- "Priest White" intentionally NOT deduped with NOTES_PIN_COLOR_PRIEST_WHITE —
+    -- two independent UIs (font-color picker vs pin-color set); keep separate.
     ["FONT_COLOR_WHITE"] = "Branco sacerdote",
     ["FONT_COLOR_BLACK"] = "Preto meia-noite",
 
@@ -260,6 +258,28 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["ITEM_VALIDATE"] = "Validar",
     ["ITEM_VALIDATE_FIRST"] = "Valide o item primeiro.",
     ["ITEM_LOADING"] = "Carregando...",
+
+-- Collectibles tab
+    ["COLLECTIBLES_CONTROLS"] = "Controles de colecionáveis",
+    ["COLLECTIBLES_SELECT"] = "Selecione um colecionável para ver seus detalhes.",
+    ["COLLECTIBLE_INTENT_LABEL"] = "Intenção",
+    ["COLLECTIBLE_INTENT_WANT"] = "Desejado",
+    ["COLLECTIBLE_INTENT_SPOTTED"] = "Localizado",
+    ["COLLECTIBLE_INTENT_FARMING"] = "Farmando",
+    ["COLLECTIBLE_INTENT_DELETE"] = "Lista de exclusão",
+    ["COLLECTIBLE_DELETE_DESC"] = "Remover este colecionável da sua lista",
+    ["COLLECTIBLE_SET_PROGRESS"] = "Conjunto: %s (%d/%d)",
+    ["COLLECTIBLE_SET_MEMBERS"] = "Aparências do conjunto",
+    ["POPUP_DELETE_COLLECTIBLE"] = "Excluir este colecionável?",
+    ["COLLECTIBLE_SOLD_BY"] = "Vendido por",
+    ["COLLECTIBLE_CANT_BUY"] = "Não foi possível comprar na última vez",
+    ["POPUP_CAPTURE_COLLECTIBLES"] = "Adicionar %d item(ns) colecionável(is) de vendedor à sua lista de desejos?",
+    ["COLLECTIBLE_CAPTURE_ADDED"] = "%d item(ns) colecionável(is) de vendedor adicionado(s) à sua lista de desejos.",
+    ["COLLECTIBLE_CAPTURE_PROMPT"] = "Perguntar",
+    ["COLLECTIBLE_CAPTURE_AUTO"] = "Automático",
+    ["COLLECTIBLE_TTL_IMMEDIATE"] = "Imediato",
+    ["COLLECTIBLE_EMPTY_DELETE_LIST"] = "Esvaziar lista de exclusão",
+    ["POPUP_EMPTY_DELETE_LIST"] = "Excluir permanentemente %d item(ns) da lista de exclusão?",
 
 -- Zones tab
     ["ZONES_CONTROLS"] = "Controles de zonas",
@@ -371,6 +391,11 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["SETTINGS_PLAYER_DETECTION_DESC"] = "Alerta com uma mensagem no chat e um som quando você seleciona um jogador que tem uma nota com alerta ativado.",
     ["SETTINGS_ZONE_ALERTS"] = "Alertas de zona",
     ["SETTINGS_ZONE_ALERTS_DESC"] = "Alerta com uma mensagem no chat e um som quando você entra em uma zona que tem uma nota com alerta ativado.",
+    ["SETTINGS_COLLECTIBLE_CAPTURE"] = "Captura de colecionáveis de vendedor",
+    ["SETTINGS_COLLECTIBLE_CAPTURE_DESC"] = "Adicione à sua lista de desejos os itens não colecionados que você vir em vendedores. «Perguntar» pergunta primeiro; «Automático» os adiciona silenciosamente.",
+    ["SETTINGS_AUTODELETE"] = "Excluir automaticamente itens coletados",
+    ["SETTINGS_AUTODELETE_DESC"] = "Quando ativado, os itens coletados que você acompanhava (Desejado, Localizado, Farmando) vão para a lista de exclusão e são removidos permanentemente após o tempo de limpeza.",
+    ["SETTINGS_AUTODELETE_TTL"] = "Excluir após",
 
 -- Zone pin button
     ["TOOLTIP_ZONE_PIN"] = "Fixar janela de zona",
@@ -432,6 +457,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["BINDING_HEADER_ONEWOW_NOTES"] = "|cFF00FF00OneWoW|r Notes",
     ["BINDING_NAME_ONEWOW_NOTES_QUICKNOTE"] = "Nota rápida",
 
+    -- Keys referenced in code but previously missing from the locale
+    -- (surfaced by key-name-on-miss; values are the code-side fallbacks).
     ["BUTTON_DESELECT_ALL"] = "Desmarcar tudo",
     ["BUTTON_SELECT_ALL"] = "Selecionar tudo",
     ["DIALOG_CONFIRM_DELETE"] = "Confirmar exclusão",

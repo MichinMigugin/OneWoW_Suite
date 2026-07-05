@@ -30,7 +30,7 @@ local C_Item, C_NewItems = C_Item, C_NewItems
 local C_SeasonInfo = C_SeasonInfo
 local C_Container = C_Container
 local C_TooltipInfo = C_TooltipInfo
-local C_ToyBox, PlayerHasToy = C_ToyBox, PlayerHasToy
+local C_ToyBox = C_ToyBox
 local C_MountJournal, C_PetJournal = C_MountJournal, C_PetJournal
 local C_TransmogCollection = C_TransmogCollection
 local C_TradeSkillUI = C_TradeSkillUI
@@ -1430,25 +1430,29 @@ end
 ---@param hyperlink string|nil
 ---@return boolean
 local function ResolveCollected(itemID, classID, subClassID, hyperlink)
+    -- Collection truth is owned by OneWoW.Collectibles (v2-D consumer migration).
+    -- Each branch still detects the collectible *type* locally (that classification
+    -- is item-shape logic, not collection state) and then reads the uniform
+    -- `.collected` boolean from core so there is one source of collection truth.
+    local Collectibles = OneWoW.Collectibles
+
     -- Toy check
-    local toyInfo = C_ToyBox.GetToyInfo(itemID)
-    if toyInfo then
-        return PlayerHasToy(itemID)
+    if C_ToyBox.GetToyInfo(itemID) then
+        local st = Collectibles.GetCollectionState(Collectibles.BuildKey("toy", itemID))
+        return (st and st.collected) or false
     end
     -- Battle pet check (both caged and captured)
     local petData = GetBattlePetData(itemID, hyperlink)
     if petData and petData.speciesID then
-        local num = petData.numCollected
-        return num and num > 0
+        local st = Collectibles.GetCollectionState(Collectibles.BuildKey("pet", petData.speciesID))
+        return (st and st.collected) or false
     end
-    -- Mount check
+    -- Mount check: GetMountFromItem is O(1) and replaces the old full-journal scan.
     if classID == Enum.ItemClass.Miscellaneous and subClassID == Enum.ItemMiscellaneousSubclass.Mount then
-        local mountIDs = C_MountJournal.GetMountIDs()
-        if mountIDs then
-            for _, mountID in ipairs(mountIDs) do
-                local _, _, _, _, _, _, _, _, _, _, isCollected, _, itemIDMount = C_MountJournal.GetMountInfoByID(mountID)
-                if itemIDMount == itemID and isCollected then return true end
-            end
+        local mountID = C_MountJournal.GetMountFromItem(itemID)
+        if mountID then
+            local st = Collectibles.GetCollectionState(Collectibles.BuildKey("mount", mountID))
+            return (st and st.collected) or false
         end
     end
     return false
@@ -2249,6 +2253,10 @@ local function PopulateBaseProps(props, itemID, hyperlink)
     end
 
     -- ---- Transmog / appearance (identity portion: hyperlink path only) ----
+    -- The item-keyed primary check has no `appearance:source` analog in core (that
+    -- key is source-keyed), so PlayerHasTransmog(itemID) stays; the source-keyed
+    -- fallback routes through OneWoW.Collectibles so the sourceID collection check
+    -- is the service's uniform state (v2-D consumer migration).
     props.hasAppearance         = false
     props.isAppearanceCollected = C_TransmogCollection.PlayerHasTransmog(itemID)
 
@@ -2258,8 +2266,9 @@ local function PopulateBaseProps(props, itemID, hyperlink)
             props.hasAppearance = true
 
             if not props.isAppearanceCollected then
-                local collected = C_TransmogCollection.PlayerHasTransmogItemModifiedAppearance(sourceID)
-                props.isAppearanceCollected = collected == true
+                local st = OneWoW.Collectibles.GetCollectionState(
+                    OneWoW.Collectibles.BuildKey("appearance", "source", sourceID))
+                props.isAppearanceCollected = (st and st.collected) == true
             end
         end
     end

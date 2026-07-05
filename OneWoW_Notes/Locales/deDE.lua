@@ -1,6 +1,5 @@
 local ADDON_NAME = ...
 
--- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
     ["CTX_OPEN_NOTES"] = "Notes öffnen",
@@ -22,15 +21,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TAB_ZONES"] = "Zonen",
     ["TAB_ITEMS"] = "Gegenstände",
     ["TAB_COLLECTIBLES"] = "Sammelobjekte",
-    ["COLLECTIBLES_CONTROLS"] = "Sammelobjekt-Steuerung",
-    ["COLLECTIBLES_SELECT"] = "Wähle ein Sammelobjekt, um Details anzuzeigen.",
-    ["COLLECTIBLE_INTENT_LABEL"] = "Absicht",
-    ["COLLECTIBLE_INTENT_WANT"] = "Gewünscht",
-    ["COLLECTIBLE_INTENT_SPOTTED"] = "Gesichtet",
-    ["COLLECTIBLE_INTENT_FARMING"] = "Farmen",
-    ["COLLECTIBLE_DELETE_DESC"] = "Dieses Sammelobjekt aus deiner Liste entfernen",
-    ["COLLECTIBLE_SET_PROGRESS"] = "Set: %s (%d/%d)",
-    ["POPUP_DELETE_COLLECTIBLE"] = "Dieses Sammelobjekt löschen?",
 
 -- Notes Tab
     ["NOTES_LIST_TITLE"] = "Notizen",
@@ -88,6 +78,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["SETTINGS_LANGUAGE_DESC"] = "Wähle deine bevorzugte Sprache. Änderungen werden sofort übernommen.",
     ["SETTINGS_MINIMAP"] = "Minikartenknopf",
 
+-- Theme Names
+
 -- Language Names
     ["LANG_ENUS"] = "Englisch",
     ["LANG_KOKR"] = "Koreanisch",
@@ -132,6 +124,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["NOTES_CONTROLS"] = "Notizensteuerung",
     ["NOTES_LIST"] = "Notizenliste",
     ["MESSAGE_SELECT_NOTE"] = "Wähle eine Notiz zum Bearbeiten",
+    -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
+    -- adjective default-name whose form can vary by locale; leave scoped.
     ["NOTE_UNTITLED"] = "Ohne Titel",
 
 -- Notes sort
@@ -161,6 +155,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 -- Note todo
     ["NOTE_RESET_TODOS"] = "Alle Aufgaben zurücksetzen",
     ["NOTE_RESET_TODOS_DESC"] = "Alle erledigten Aufgaben abwählen",
+
+-- Status bar
 
 -- Buttons
     ["BUTTON_ADD_NOTE"] = "Notiz hinzufügen",
@@ -204,6 +200,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["COLOR_HUNTER_GREEN"] = "Jägergrün",
     ["FONT_DEFAULT"] = "Standard (Friz Quadrata)",
     ["FONT_COLOR_MATCHING"] = "Standard – Passend",
+    -- "Priest White" intentionally NOT deduped with NOTES_PIN_COLOR_PRIEST_WHITE —
+    -- two independent UIs (font-color picker vs pin-color set); keep separate.
     ["FONT_COLOR_WHITE"] = "Priesterweiß",
     ["FONT_COLOR_BLACK"] = "Mitternachtsschwarz",
 
@@ -260,6 +258,28 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ITEM_VALIDATE"] = "Prüfen",
     ["ITEM_VALIDATE_FIRST"] = "Prüfe zuerst den Gegenstand.",
     ["ITEM_LOADING"] = "Lädt...",
+
+-- Collectibles tab
+    ["COLLECTIBLES_CONTROLS"] = "Sammelobjekt-Steuerung",
+    ["COLLECTIBLES_SELECT"] = "Wähle ein Sammelobjekt, um Details anzuzeigen.",
+    ["COLLECTIBLE_INTENT_LABEL"] = "Absicht",
+    ["COLLECTIBLE_INTENT_WANT"] = "Gewünscht",
+    ["COLLECTIBLE_INTENT_SPOTTED"] = "Gesichtet",
+    ["COLLECTIBLE_INTENT_FARMING"] = "Farmen",
+    ["COLLECTIBLE_INTENT_DELETE"] = "Löschliste",
+    ["COLLECTIBLE_DELETE_DESC"] = "Dieses Sammelobjekt aus deiner Liste entfernen",
+    ["COLLECTIBLE_SET_PROGRESS"] = "Set: %s (%d/%d)",
+    ["COLLECTIBLE_SET_MEMBERS"] = "Set-Vorlagen",
+    ["POPUP_DELETE_COLLECTIBLE"] = "Dieses Sammelobjekt löschen?",
+    ["COLLECTIBLE_SOLD_BY"] = "Verkauft von",
+    ["COLLECTIBLE_CANT_BUY"] = "Beim letzten Mal nicht kaufbar",
+    ["POPUP_CAPTURE_COLLECTIBLES"] = "%d Händler-Sammelobjekt(e) zu deiner Wunschliste hinzufügen?",
+    ["COLLECTIBLE_CAPTURE_ADDED"] = "%d Händler-Sammelobjekt(e) zu deiner Wunschliste hinzugefügt.",
+    ["COLLECTIBLE_CAPTURE_PROMPT"] = "Nachfragen",
+    ["COLLECTIBLE_CAPTURE_AUTO"] = "Automatisch",
+    ["COLLECTIBLE_TTL_IMMEDIATE"] = "Sofort",
+    ["COLLECTIBLE_EMPTY_DELETE_LIST"] = "Löschliste leeren",
+    ["POPUP_EMPTY_DELETE_LIST"] = "Alle %d Objekt(e) in der Löschliste endgültig löschen?",
 
 -- Zones tab
     ["ZONES_CONTROLS"] = "Zonensteuerung",
@@ -371,6 +391,11 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["SETTINGS_PLAYER_DETECTION_DESC"] = "Mit einer Chatnachricht und einem Ton warnen, wenn du einen Spieler anvisierst, der eine Notiz mit aktivierter Warnung hat.",
     ["SETTINGS_ZONE_ALERTS"] = "Zonenwarnungen",
     ["SETTINGS_ZONE_ALERTS_DESC"] = "Mit einer Chatnachricht und einem Ton warnen, wenn du eine Zone betrittst, die eine Notiz mit aktivierter Warnung hat.",
+    ["SETTINGS_COLLECTIBLE_CAPTURE"] = "Händler-Sammelobjekte erfassen",
+    ["SETTINGS_COLLECTIBLE_CAPTURE_DESC"] = "Füge nicht gesammelte Gegenstände, die du bei Händlern siehst, zu deiner Wunschliste hinzu. „Nachfragen“ fragt zuerst; „Automatisch“ fügt sie stillschweigend hinzu.",
+    ["SETTINGS_AUTODELETE"] = "Gesammelte Objekte automatisch löschen",
+    ["SETTINGS_AUTODELETE_DESC"] = "Wenn aktiviert, werden gesammelte Objekte, die du verfolgt hast (Gewünscht, Gesichtet, Farmen), in die Löschliste verschoben und nach der Löschverzögerung endgültig entfernt.",
+    ["SETTINGS_AUTODELETE_TTL"] = "Löschen nach",
 
 -- Zone pin button
     ["TOOLTIP_ZONE_PIN"] = "Zonenfenster anheften",
@@ -432,6 +457,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["BINDING_HEADER_ONEWOW_NOTES"] = "|cFF00FF00OneWoW|r Notes",
     ["BINDING_NAME_ONEWOW_NOTES_QUICKNOTE"] = "Schnellnotiz",
 
+    -- Keys referenced in code but previously missing from the locale
+    -- (surfaced by key-name-on-miss; values are the code-side fallbacks).
     ["BUTTON_DESELECT_ALL"] = "Alle abwählen",
     ["BUTTON_SELECT_ALL"] = "Alle auswählen",
     ["DIALOG_CONFIRM_DELETE"] = "Löschen bestätigen",

@@ -238,7 +238,7 @@ function ns.UI.CreateNPCsTab(parent)
     local listingPanel = CreateThemedPanel(nil, parent)
     listingPanel:SetPoint("TOPLEFT",  controlPanel, "BOTTOMLEFT",  0, -10)
     listingPanel:SetPoint("BOTTOMLEFT", parent,     "BOTTOMLEFT",  0, 35)
-    listingPanel:SetWidth(258)
+    listingPanel:SetWidth(OneWoW_GUI.Constants.GUI.LEFT_PANEL_WIDTH)
 
     local listingTitle = OneWoW_GUI:CreateFS(listingPanel, 16)
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)

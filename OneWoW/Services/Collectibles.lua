@@ -17,8 +17,18 @@ local _, ns = ...
 -- persisted as truth: `GetCollectionState` is always live. Nothing here holds
 -- state, so the service is a set of pure functions published on the Facade.
 --
--- v1 resolves `mount` and `appearance:source`. The key grammar is complete for
--- every planned type so keys built now stay valid as resolution is extended.
+-- Resolution currently covers `mount`, `appearance:source`, `pet`, `toy`,
+-- `heirloom`, `set` (transmog set / "ensemble"), `decor` (housing catalog), and
+-- `recipe` (a profession recipe item — "Recipe:/Technique:/Pattern: ...");
+-- `ResolveKeyFromItem` maps an itemID onto those. The key grammar is complete for
+-- every planned type so keys built now stay valid as resolution is extended
+-- (`campsite` lands later).
+--
+-- A `set` is a first-class *acquisition* record (it is the single thing a vendor
+-- sells and the thing you link/want), but collection *truth* for it stays a view:
+-- GetCollectionState/`set` derives from the set's member appearances, never a
+-- stored flag. Members are read-only live views (GetSetMembers) — the set is the
+-- only stored key; individual appearances are not fanned out into records.
 -- ============================================================================
 
 local Collectibles = {}
@@ -27,8 +37,19 @@ ns.Collectibles = Collectibles
 local C_MountJournal = C_MountJournal
 local C_TransmogCollection = C_TransmogCollection
 local C_TransmogSets = C_TransmogSets
+local C_PetJournal = C_PetJournal
+local C_ToyBox = C_ToyBox
+local C_Heirloom = C_Heirloom
+local C_CurrencyInfo = C_CurrencyInfo
 local C_Spell = C_Spell
 local C_Item = C_Item
+local C_HousingCatalog = C_HousingCatalog
+local PlayerHasToy = PlayerHasToy
+local GetMoney = GetMoney
+
+-- A `decor` key is always the Decor housing-catalog entry type (the grammar has
+-- no room for the entry type, and rooms aren't collectible records).
+local DECOR_ENTRY_TYPE = Enum.HousingCatalogEntryType.Decor
 
 local ipairs, tonumber, type, select, floor = ipairs, tonumber, type, select, math.floor
 local strsplit, strtrim = strsplit, strtrim
@@ -49,7 +70,9 @@ local TYPES = {
     pet        = { subtype = false },
     toy        = { subtype = false },
     heirloom   = { subtype = false },
+    set        = { subtype = false },  -- transmog set / "ensemble": set:<setID>
     decor      = { subtype = false },
+    recipe     = { subtype = false },  -- profession recipe item: recipe:<itemID>
     campsite   = { subtype = false },
 }
 
@@ -196,6 +219,173 @@ local function ResolveAppearanceSource(id)
     }
 end
 
+-- A battle pet is keyed by speciesID; the journal gives name/icon/source, but no
+-- per-species item link (links need a specific caged-pet GUID), so link stays nil.
+local function ResolvePet(id)
+    local name, icon, _, _, sourceText = C_PetJournal.GetPetInfoBySpeciesID(id)
+    if not name then return nil end
+
+    if sourceText and sourceText ~= "" then
+        sourceText = strtrim((sourceText:gsub("|n", " ")))
+        if sourceText == "" then sourceText = nil end
+    else
+        sourceText = nil
+    end
+
+    return {
+        type = "pet",
+        name = name,
+        icon = icon,
+        sourceText = sourceText,
+    }
+end
+
+-- Toy display comes from the toy box; fall back to the item record for any field
+-- the toy box leaves nil before the item is cached.
+local function ResolveToy(id)
+    local _, name, icon = C_ToyBox.GetToyInfo(id)
+    local link = C_ToyBox.GetToyLink(id)
+
+    if not name or not icon then
+        local itemName, itemLink, _, _, _, _, _, _, _, itemIcon = C_Item.GetItemInfo(id)
+        name = name or itemName
+        link = link or itemLink
+        icon = icon or itemIcon
+    end
+
+    if not (name or icon or link) then return nil end
+
+    return {
+        type = "toy",
+        name = name,
+        icon = icon,
+        link = link,
+    }
+end
+
+-- Heirloom display comes from the heirloom journal (name + the `source` string);
+-- the item record fills icon/link/name before the heirloom data is cached.
+local function ResolveHeirloom(id)
+    local name, _, _, icon, _, source = C_Heirloom.GetHeirloomInfo(id)
+    local link = C_Heirloom.GetHeirloomLink(id)
+
+    if not name or not icon or not link then
+        local itemName, itemLink, _, _, _, _, _, _, _, itemIcon = C_Item.GetItemInfo(id)
+        name = name or itemName
+        link = link or itemLink
+        icon = icon or itemIcon
+    end
+
+    if not (name or icon or link) then return nil end
+
+    local sourceText
+    if source and source ~= "" then
+        sourceText = strtrim((source:gsub("|n", " ")))
+        if sourceText == "" then sourceText = nil end
+    end
+
+    return {
+        type = "heirloom",
+        name = name,
+        icon = icon,
+        link = link,
+        sourceText = sourceText,
+    }
+end
+
+-- A transmog set ("ensemble") resolves to its set name plus a representative
+-- icon. Sets carry no icon field and no chat hyperlink, so the icon is taken from
+-- the set's first primary appearance — mirroring Blizzard's TransmogUtil.GetSetIcon,
+-- which walks GetSetPrimaryAppearances and treats each `appearanceID` as a source.
+-- Callers that captured the teaching ensemble item can substitute that item's
+-- icon/link at display time; this is the source-less fallback.
+local function ResolveSet(id)
+    local info = C_TransmogSets.GetSetInfo(id)
+    if not info then return nil end
+
+    local icon
+    local appearances = C_TransmogSets.GetSetPrimaryAppearances(id)
+    if appearances and appearances[1] then
+        local member = ResolveAppearanceSource(appearances[1].appearanceID)
+        icon = member and member.icon
+    end
+
+    local label = info.label
+    if label == "" then label = nil end
+
+    return {
+        type = "set",
+        name = info.name,
+        icon = icon,
+        sourceText = label,
+    }
+end
+
+-- Housing decor resolves from the housing catalog. `GetCatalogEntryInfoByRecordID`
+-- takes (entryType, recordID, tryGetOwnedInfo) — pass `true` so ownership counts
+-- populate (GetCollectionState reuses the same entry info). Decor art can be a
+-- texture file or an atlas; we resolve a texture (falling back to the granting
+-- item's icon), and take the item link when the entry maps to an item.
+local function GetDecorEntryInfo(recordID)
+    return C_HousingCatalog.GetCatalogEntryInfoByRecordID(DECOR_ENTRY_TYPE, recordID, true)
+end
+
+local function ResolveDecor(id)
+    local info = GetDecorEntryInfo(id)
+    if not info then return nil end
+
+    local icon = info.iconTexture
+    local link
+    if info.itemID then
+        local _, itemLink, _, _, _, _, _, _, _, itemIcon = C_Item.GetItemInfo(info.itemID)
+        link = itemLink
+        icon = icon or itemIcon or select(5, C_Item.GetItemInfoInstant(info.itemID))
+    end
+
+    local sourceText = info.sourceText
+    if sourceText == "" then sourceText = nil end
+
+    return {
+        type = "decor",
+        name = info.name,
+        icon = icon,
+        link = link,
+        sourceText = sourceText,
+    }
+end
+
+-- A profession recipe item (what a vendor sells: "Recipe:/Technique:/Pattern: ...").
+-- Keyed by the recipe *item* id — that is the buyable/linkable unit and what the
+-- merchant funnel detects — so display comes straight from the item record.
+-- `sourceText` is the item's subtype (the profession, e.g. "Inscription").
+local function ResolveRecipe(id)
+    local itemName, itemLink, _, _, _, _, itemSubType, _, _, itemIcon = C_Item.GetItemInfo(id)
+    local icon = itemIcon or select(5, C_Item.GetItemInfoInstant(id))
+    if not (itemName or icon or itemLink) then return nil end
+
+    if itemSubType == "" then itemSubType = nil end
+
+    return {
+        type = "recipe",
+        name = itemName,
+        icon = icon,
+        link = itemLink,
+        sourceText = itemSubType,
+    }
+end
+
+-- Whether the recipe a given recipe item teaches is already known. Delegates to
+-- the canonical `ns.RecipeKnownUtil` (core, loaded before this file): it maps the
+-- recipe *item* to its taught recipe spell via the tooltip's `ItemSpellTriggerLearn`
+-- line (NOT `C_Item.GetItemSpell`, which on e.g. an enchant "Formula:" returns the
+-- illusion Use spell, not the teach spell) and answers known from the
+-- ProfessionRecipe scan cache / AltTracker data / `GetRecipeInfo(...).learned`.
+-- `IsRecipeKnown` returns `true`/`nil` (nil = not known or not yet resolvable), so
+-- normalize to a strict boolean.
+local function IsRecipeItemKnown(itemID)
+    return ns.RecipeKnownUtil:IsRecipeKnown(itemID) == true
+end
+
 --- Live display data for a collectible key: `{ name, icon, link, sourceText?, type }`.
 --- Returns nil for unknown/malformed keys or types without resolution yet.
 ---@param key string
@@ -208,6 +398,18 @@ function Collectibles.ResolveDisplay(key)
         return ResolveMount(descriptor.id)
     elseif descriptor.type == "appearance" and descriptor.subtype == "source" then
         return ResolveAppearanceSource(descriptor.id)
+    elseif descriptor.type == "pet" then
+        return ResolvePet(descriptor.id)
+    elseif descriptor.type == "toy" then
+        return ResolveToy(descriptor.id)
+    elseif descriptor.type == "heirloom" then
+        return ResolveHeirloom(descriptor.id)
+    elseif descriptor.type == "set" then
+        return ResolveSet(descriptor.id)
+    elseif descriptor.type == "decor" then
+        return ResolveDecor(descriptor.id)
+    elseif descriptor.type == "recipe" then
+        return ResolveRecipe(descriptor.id)
     end
 
     return nil
@@ -222,6 +424,12 @@ end
 --- keys or types without resolution yet. Never persisted — query at display time.
 ---   mount      -> { collected }
 ---   appearance -> { collected, bySource, byItem? }  (collected == bySource)
+---   pet        -> { collected, numCollected, limit? }  (collected == numCollected > 0)
+---   toy        -> { collected }
+---   heirloom   -> { collected }
+---   set        -> { collected, numCollected, total }  (collected == whole set owned)
+---   decor      -> { collected, numOwned, numStored, numPlaced }  (collected == numOwned > 0)
+---   recipe     -> { collected }  (collected == the taught recipe is known)
 ---@param key string
 ---@return table|nil state
 function Collectibles.GetCollectionState(key)
@@ -239,9 +447,168 @@ function Collectibles.GetCollectionState(key)
             byItem = C_TransmogCollection.PlayerHasTransmog(itemID) == true
         end
         return { collected = bySource, bySource = bySource, byItem = byItem }
+    elseif descriptor.type == "pet" then
+        -- Pets carry a count (numCollected can exceed 1); `collected` is the common
+        -- boolean, `numCollected`/`limit` are the detail consumers that need the
+        -- count (e.g. tracker objectives) read.
+        local numCollected, limit = C_PetJournal.GetNumCollectedInfo(descriptor.id)
+        numCollected = numCollected or 0
+        return { collected = numCollected > 0, numCollected = numCollected, limit = limit }
+    elseif descriptor.type == "toy" then
+        return { collected = PlayerHasToy(descriptor.id) == true }
+    elseif descriptor.type == "heirloom" then
+        return { collected = C_Heirloom.PlayerHasHeirloom(descriptor.id) == true }
+    elseif descriptor.type == "set" then
+        -- Collection truth for a set is a *view* over its members: prefer the
+        -- authoritative set flag, falling back to primary-appearance progress.
+        local info = C_TransmogSets.GetSetInfo(descriptor.id)
+        local progress = Collectibles.GetEnsembleProgress(descriptor.id)
+        local numCollected = (progress and progress.collected) or 0
+        local total = (progress and progress.total) or 0
+        local collected = (info and info.collected == true)
+            or (total > 0 and numCollected >= total)
+        return { collected = collected, numCollected = numCollected, total = total }
+    elseif descriptor.type == "decor" then
+        -- Quantity model: decor is owned in counts (storage + placed), matching
+        -- Blizzard's GetEntryTotalOwned (totalNumStored + remainingRedeemable +
+        -- totalNumPlaced). "Collected" is simply owning at least one instance.
+        local info = GetDecorEntryInfo(descriptor.id)
+        if not info then return { collected = false } end
+        local stored = (info.totalNumStored or 0) + (info.remainingRedeemable or 0)
+        local placed = info.totalNumPlaced or 0
+        local numOwned = stored + placed
+        return { collected = numOwned > 0, numOwned = numOwned, numStored = stored, numPlaced = placed }
+    elseif descriptor.type == "recipe" then
+        return { collected = IsRecipeItemKnown(descriptor.id) }
     end
 
     return nil
+end
+
+-- ---------------------------------------------------------------------------
+-- Item -> key resolution
+-- ---------------------------------------------------------------------------
+
+--- Resolve the collectible key an item grants, or nil if the item is not a
+--- known collectible. Used to classify merchant/loot items into collectibles.
+--- Order matters: a caged-pet or mount item also has an appearance-less nature,
+--- so the specific collection journals are checked before the transmog source
+--- fallback. An ensemble item teaches a whole transmog set (and has no transmog
+--- source of its own), so it resolves to `set:<setID>` — checked before the
+--- single-appearance fallback. A recipe-class item ("Recipe:/Technique:/Pattern:")
+--- is always a `recipe:<itemID>` — checked before the decor branch because a
+--- housing-decor recipe teaches a craft (it does not itself grant the decor).
+--- A housing decor item maps to `decor:<recordID>`.
+--- `sourceID == itemModifiedAppearanceID` (v1-A), so an equippable item with a
+--- transmog source maps straight to `appearance:source:<id>`.
+---@param itemID number
+---@return string|nil key
+function Collectibles.ResolveKeyFromItem(itemID)
+    itemID = CoerceID(itemID)
+    if not itemID then return nil end
+
+    local mountID = C_MountJournal.GetMountFromItem(itemID)
+    if mountID then
+        return Collectibles.BuildKey("mount", mountID)
+    end
+
+    if C_ToyBox.GetToyInfo(itemID) then
+        return Collectibles.BuildKey("toy", itemID)
+    end
+
+    local speciesID = select(13, C_PetJournal.GetPetInfoByItemID(itemID))
+    if speciesID then
+        return Collectibles.BuildKey("pet", speciesID)
+    end
+
+    if C_Heirloom.IsItemHeirloom(itemID) then
+        return Collectibles.BuildKey("heirloom", itemID)
+    end
+
+    -- A recipe-class item teaches a craft — it is a recipe collectible in its own
+    -- right (and, for decor recipes, does NOT map to the crafted decor's catalog
+    -- entry), so classify by item class before the decor/transmog fallbacks. The
+    -- class from GetItemInfoInstant is available even before the item is cached.
+    local recipeClassID = select(6, C_Item.GetItemInfoInstant(itemID))
+    if recipeClassID == Enum.ItemClass.Recipe then
+        return Collectibles.BuildKey("recipe", itemID)
+    end
+
+    -- Housing decor items grant a catalog Decor entry (rooms are not records).
+    local decorEntry = C_HousingCatalog.GetCatalogEntryInfoByItem(itemID)
+    if decorEntry and decorEntry.entryType == DECOR_ENTRY_TYPE and decorEntry.recordID then
+        return Collectibles.BuildKey("decor", decorEntry.recordID)
+    end
+
+    -- Ensemble items ("Ensemble: ...") teach an entire transmog set: the set is
+    -- the buyable/linkable unit, so resolve to a set key rather than the item's
+    -- (nonexistent) single appearance.
+    local setID = C_Item.GetItemLearnTransmogSet(itemID)
+    if setID then
+        return Collectibles.BuildKey("set", setID)
+    end
+
+    local _, sourceID = C_TransmogCollection.GetItemInfo(itemID)
+    if sourceID then
+        return Collectibles.BuildKey("appearance", "source", sourceID)
+    end
+
+    return nil
+end
+
+-- ---------------------------------------------------------------------------
+-- Vendor-offer affordability (view layer, live, no SavedVariables)
+-- ---------------------------------------------------------------------------
+
+--- Live affordability of a vendor offer against the player's current gold,
+--- currencies, and items. View-time only — never persist the result (it changes
+--- as the player earns/spends). Returns a uniform table:
+---   `{ affordable, requirements = { { kind, name?, currencyID?/itemID?, need, have, met } } }`
+--- `kind` is `"gold"` | `"currency"` | `"item"`. `affordable` is the AND of every
+--- requirement's `met`; an offer with no cost is trivially affordable.
+---@param offer table `{ cost?, currencies? }` snapshot (merchant/vendor item entry shape)
+---@return table|nil affordability, nil for a nil offer
+function Collectibles.GetOfferAffordability(offer)
+    if type(offer) ~= "table" then return nil end
+
+    local requirements = {}
+    local affordable = true
+
+    local goldCost = tonumber(offer.cost) or 0
+    if goldCost > 0 then
+        local have = GetMoney() or 0
+        local met = have >= goldCost
+        if not met then affordable = false end
+        requirements[#requirements + 1] = {
+            kind = "gold", need = goldCost, have = have, met = met,
+        }
+    end
+
+    if type(offer.currencies) == "table" then
+        for _, cost in ipairs(offer.currencies) do
+            local need = tonumber(cost.amount) or 0
+            if need > 0 then
+                local have, req = 0, nil
+                if cost.currencyID then
+                    local info = C_CurrencyInfo.GetCurrencyInfo(cost.currencyID)
+                    have = (info and info.quantity) or 0
+                    req = { kind = "currency", currencyID = cost.currencyID, name = cost.name }
+                elseif cost.itemID then
+                    have = C_Item.GetItemCount(cost.itemID) or 0
+                    req = { kind = "item", itemID = cost.itemID, name = cost.name }
+                end
+                if req then
+                    req.need = need
+                    req.have = have
+                    req.met = have >= need
+                    if not req.met then affordable = false end
+                    requirements[#requirements + 1] = req
+                end
+            end
+        end
+    end
+
+    return { affordable = affordable, requirements = requirements }
 end
 
 -- ---------------------------------------------------------------------------
@@ -309,6 +676,40 @@ function Collectibles.GetEnsembleProgress(setID)
         total = total,
         name = setInfo and setInfo.name or nil,
     }
+end
+
+--- Live, read-only member rows for a transmog set: one entry per primary
+--- (per-slot) appearance, matching the count Blizzard's Sets tab shows. Each
+--- entry is `{ key?, name?, icon?, link?, collected }`. Display fields come from
+--- the live transmog APIs (each primary appearance's `appearanceID` doubles as a
+--- source id, as Blizzard's TransmogUtil.GetSetIcon relies on), and `collected`
+--- is the per-appearance live account state. `key` is the canonical
+--- `appearance:source` key for callers that want to open the individual piece;
+--- members are never persisted as their own records. Nil for an unknown set.
+---@param setID number transmog set id
+---@return table|nil members array of member entries, or nil
+function Collectibles.GetSetMembers(setID)
+    setID = CoerceID(setID)
+    if not setID then return nil end
+
+    local appearances = C_TransmogSets.GetSetPrimaryAppearances(setID)
+    if not appearances then return nil end
+
+    local members = {}
+    for _, appearance in ipairs(appearances) do
+        local sourceID = appearance.appearanceID
+        local display = ResolveAppearanceSource(sourceID)
+        members[#members + 1] = {
+            key       = Collectibles.BuildKey("appearance", "source", sourceID),
+            name      = display and display.name or nil,
+            icon      = display and display.icon or nil,
+            link      = display and display.link or nil,
+            collected = appearance.collected == true,
+        }
+    end
+
+    if #members == 0 then return nil end
+    return members
 end
 
 --- The transmog set ids that contain a given appearance-source collectible key.

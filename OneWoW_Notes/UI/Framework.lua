@@ -313,8 +313,32 @@ function ns.UI.CreateNotesListRow(scrollChild, opts)
         row.colorBar = bar
     end
 
-    local iconX = opts.barColor and 10 or 8
-    local textX = opts.barColor and 12 or 10
+    -- Opt-in expand caret (tree parents, e.g. transmog-set nodes). A text caret
+    -- (">"/"v") mirrors the Catalog group pattern — no atlas dependency — and
+    -- reserves a left column so the icon/text shift right of it.
+    local caretPad = 0
+    if opts.expand then
+        local caret = CreateFrame("Button", nil, row)
+        caret:SetSize(16, 20)
+        caret:SetPoint("LEFT", row, "LEFT", opts.barColor and 6 or 4, 0)
+        local caretFS = OneWoW_GUI:CreateFS(caret, 12)
+        caretFS:SetAllPoints()
+        caretFS:SetJustifyH("CENTER")
+        caretFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        local function renderCaret(expanded)
+            caretFS:SetText(expanded and "v" or ">")
+        end
+        renderCaret(opts.expand.expanded)
+        caret:SetScript("OnClick", function()
+            if opts.expand.onToggle then opts.expand.onToggle() end
+        end)
+        AttachRowTooltip(caret, opts.expand.tooltip)
+        row.expandBtn = caret
+        caretPad = 18
+    end
+
+    local iconX = (opts.barColor and 10 or 8) + caretPad
+    local textX = (opts.barColor and 12 or 10) + caretPad
     if opts.icon or opts.iconAtlas then
         local icon = row:CreateTexture(nil, "ARTWORK")
         icon:SetSize(26, 26)

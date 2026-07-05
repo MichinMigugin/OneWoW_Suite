@@ -420,29 +420,37 @@ function TE:EvaluateObjective(obj)
         return nil
 
     elseif ot == "toy" then
+        -- Collection truth is owned by OneWoW.Collectibles (v2-D); the engine keeps
+        -- its `current, max` contract by reading the uniform state's `.collected`.
         local itemID = tonumber(op.itemID)
         if itemID then
-            return PlayerHasToy(itemID) and 1 or 0, 1
+            local st = OneWoW.Collectibles.GetCollectionState(OneWoW.Collectibles.BuildKey("toy", itemID))
+            return (st and st.collected) and 1 or 0, 1
         end
 
     elseif ot == "mount" then
         local mountID = tonumber(op.mountID)
         if mountID then
-            local _, _, _, _, _, _, _, _, _, _, isCollected = C_MountJournal.GetMountInfoByID(mountID)
-            return isCollected and 1 or 0, 1
+            local st = OneWoW.Collectibles.GetCollectionState(OneWoW.Collectibles.BuildKey("mount", mountID))
+            return (st and st.collected) and 1 or 0, 1
         end
 
     elseif ot == "pet" then
         local speciesID = tonumber(op.speciesID)
         if speciesID then
-            local numCollected = C_PetJournal.GetNumCollectedInfo(speciesID)
-            return numCollected or 0, 1
+            -- Pet objectives complete on any copy; core's numCollected preserves the
+            -- old count-based `current` (numCollected can exceed 1).
+            local st = OneWoW.Collectibles.GetCollectionState(OneWoW.Collectibles.BuildKey("pet", speciesID))
+            return (st and st.numCollected) or 0, 1
         end
 
     elseif ot == "transmog" then
+        -- itemModifiedAppearanceID == sourceID (v1-A), so this routes through the
+        -- appearance:source state, which uses the IMA-aware collection API.
         local appearanceID = tonumber(op.itemModifiedAppearanceID)
         if appearanceID then
-            return C_TransmogCollection.PlayerHasTransmog(appearanceID) and 1 or 0, 1
+            local st = OneWoW.Collectibles.GetCollectionState(OneWoW.Collectibles.BuildKey("appearance", "source", appearanceID))
+            return (st and st.collected) and 1 or 0, 1
         end
 
 

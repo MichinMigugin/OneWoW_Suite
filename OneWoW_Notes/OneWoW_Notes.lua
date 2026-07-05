@@ -114,11 +114,17 @@ local function OnEnable()
     if ns.Players and ns.Players.Initialize then
         ns.Players:Initialize()
     end
+    if ns.Players and ns.Players.MigrateLegacyMountBlobs then
+        ns.Players:MigrateLegacyMountBlobs()
+    end
     if ns.NPCs and ns.NPCs.Initialize then
         ns.NPCs:Initialize()
     end
     if ns.Items and ns.Items.Initialize then
         ns.Items:Initialize()
+    end
+    if ns.CollectiblesMerchant and ns.CollectiblesMerchant.Initialize then
+        ns.CollectiblesMerchant:Initialize()
     end
 
     ns.notePins    = ns.notePins    or {}
@@ -135,6 +141,12 @@ local function OnPlayerEnteringWorld(isInitialLogin)
                 end
             end
         end
+    end
+
+    -- Recycle-bin housekeeping on login: auto-recycle collected items and purge
+    -- expired Delete-List rows even if the Collectibles tab is never opened.
+    if isInitialLogin and ns.Collectibles and ns.Collectibles.RunCleanup then
+        ns.Collectibles:RunCleanup()
     end
 
     if ns.NotesPins and ns.NotesPins.Initialize then

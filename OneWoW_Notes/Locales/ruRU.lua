@@ -1,6 +1,5 @@
 local ADDON_NAME = ...
 
--- Machine-drafted — pending native review
 OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
     ["CTX_OPEN_NOTES"] = "Открыть Notes",
@@ -22,15 +21,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TAB_ZONES"] = "Зоны",
     ["TAB_ITEMS"] = "Предметы",
     ["TAB_COLLECTIBLES"] = "Коллекционные предметы",
-    ["COLLECTIBLES_CONTROLS"] = "Управление коллекцией",
-    ["COLLECTIBLES_SELECT"] = "Выберите коллекционный предмет, чтобы просмотреть подробности.",
-    ["COLLECTIBLE_INTENT_LABEL"] = "Намерение",
-    ["COLLECTIBLE_INTENT_WANT"] = "Хочу",
-    ["COLLECTIBLE_INTENT_SPOTTED"] = "Замечено",
-    ["COLLECTIBLE_INTENT_FARMING"] = "Фарм",
-    ["COLLECTIBLE_DELETE_DESC"] = "Удалить этот коллекционный предмет из списка",
-    ["COLLECTIBLE_SET_PROGRESS"] = "Комплект: %s (%d/%d)",
-    ["POPUP_DELETE_COLLECTIBLE"] = "Удалить этот коллекционный предмет?",
 
 -- Notes Tab
     ["NOTES_LIST_TITLE"] = "Заметки",
@@ -88,6 +78,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["SETTINGS_LANGUAGE_DESC"] = "Выберите предпочитаемый язык. Изменения применяются мгновенно.",
     ["SETTINGS_MINIMAP"] = "Кнопка миникарты",
 
+-- Theme Names
+
 -- Language Names
     ["LANG_ENUS"] = "Английский",
     ["LANG_KOKR"] = "Корейский",
@@ -132,6 +124,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["NOTES_CONTROLS"] = "Управление заметками",
     ["NOTES_LIST"] = "Список заметок",
     ["MESSAGE_SELECT_NOTE"] = "Выберите заметку для редактирования",
+    -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
+    -- adjective default-name whose form can vary by locale; leave scoped.
     ["NOTE_UNTITLED"] = "Без названия",
 
 -- Notes sort
@@ -161,6 +155,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 -- Note todo
     ["NOTE_RESET_TODOS"] = "Сбросить все задачи",
     ["NOTE_RESET_TODOS_DESC"] = "Снять отметки со всех выполненных задач",
+
+-- Status bar
 
 -- Buttons
     ["BUTTON_ADD_NOTE"] = "Добавить заметку",
@@ -204,6 +200,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["COLOR_HUNTER_GREEN"] = "Зеленый охотника",
     ["FONT_DEFAULT"] = "По умолчанию (Friz Quadrata)",
     ["FONT_COLOR_MATCHING"] = "По умолчанию - В тон",
+    -- "Priest White" intentionally NOT deduped with NOTES_PIN_COLOR_PRIEST_WHITE —
+    -- two independent UIs (font-color picker vs pin-color set); keep separate.
     ["FONT_COLOR_WHITE"] = "Белый жреца",
     ["FONT_COLOR_BLACK"] = "Полуночно-черный",
 
@@ -260,6 +258,28 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["ITEM_VALIDATE"] = "Проверить",
     ["ITEM_VALIDATE_FIRST"] = "Сначала проверьте предмет.",
     ["ITEM_LOADING"] = "Загрузка...",
+
+-- Collectibles tab
+    ["COLLECTIBLES_CONTROLS"] = "Управление коллекцией",
+    ["COLLECTIBLES_SELECT"] = "Выберите коллекционный предмет, чтобы просмотреть подробности.",
+    ["COLLECTIBLE_INTENT_LABEL"] = "Намерение",
+    ["COLLECTIBLE_INTENT_WANT"] = "Хочу",
+    ["COLLECTIBLE_INTENT_SPOTTED"] = "Замечено",
+    ["COLLECTIBLE_INTENT_FARMING"] = "Фарм",
+    ["COLLECTIBLE_INTENT_DELETE"] = "Список удаления",
+    ["COLLECTIBLE_DELETE_DESC"] = "Удалить этот коллекционный предмет из списка",
+    ["COLLECTIBLE_SET_PROGRESS"] = "Комплект: %s (%d/%d)",
+    ["COLLECTIBLE_SET_MEMBERS"] = "Модели набора",
+    ["POPUP_DELETE_COLLECTIBLE"] = "Удалить этот коллекционный предмет?",
+    ["COLLECTIBLE_SOLD_BY"] = "Продавец",
+    ["COLLECTIBLE_CANT_BUY"] = "Нельзя было купить в прошлый раз",
+    ["POPUP_CAPTURE_COLLECTIBLES"] = "Добавить коллекционные предметы у торговца (%d) в список желаний?",
+    ["COLLECTIBLE_CAPTURE_ADDED"] = "Коллекционные предметы у торговца (%d) добавлены в список желаний.",
+    ["COLLECTIBLE_CAPTURE_PROMPT"] = "Спрашивать",
+    ["COLLECTIBLE_CAPTURE_AUTO"] = "Автоматически",
+    ["COLLECTIBLE_TTL_IMMEDIATE"] = "Немедленно",
+    ["COLLECTIBLE_EMPTY_DELETE_LIST"] = "Очистить список удаления",
+    ["POPUP_EMPTY_DELETE_LIST"] = "Безвозвратно удалить все предметы (%d) из списка удаления?",
 
 -- Zones tab
     ["ZONES_CONTROLS"] = "Управление зонами",
@@ -371,6 +391,11 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["SETTINGS_PLAYER_DETECTION_DESC"] = "Оповещать сообщением в чате и звуком, когда вы выбираете целью игрока с заметкой, у которой включены оповещения.",
     ["SETTINGS_ZONE_ALERTS"] = "Оповещения о зонах",
     ["SETTINGS_ZONE_ALERTS_DESC"] = "Оповещать сообщением в чате и звуком, когда вы входите в зону с заметкой, у которой включены оповещения.",
+    ["SETTINGS_COLLECTIBLE_CAPTURE"] = "Сбор коллекционных предметов у торговцев",
+    ["SETTINGS_COLLECTIBLE_CAPTURE_DESC"] = "Добавляйте в список желаний неполученные предметы, которые вы видите у торговцев. «Спрашивать» сначала запрашивает подтверждение; «Автоматически» добавляет их без уведомления.",
+    ["SETTINGS_AUTODELETE"] = "Автоматически удалять полученные предметы",
+    ["SETTINGS_AUTODELETE_DESC"] = "Если включено, полученные предметы, которые вы отслеживали (Хочу, Замечено, Фарм), перемещаются в список удаления, а затем безвозвратно удаляются по истечении задержки очистки.",
+    ["SETTINGS_AUTODELETE_TTL"] = "Удалять через",
 
 -- Zone pin button
     ["TOOLTIP_ZONE_PIN"] = "Закрепить окно зоны",
@@ -432,6 +457,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["BINDING_HEADER_ONEWOW_NOTES"] = "|cFF00FF00OneWoW|r Notes",
     ["BINDING_NAME_ONEWOW_NOTES_QUICKNOTE"] = "Быстрая заметка",
 
+    -- Keys referenced in code but previously missing from the locale
+    -- (surfaced by key-name-on-miss; values are the code-side fallbacks).
     ["BUTTON_DESELECT_ALL"] = "Снять выделение",
     ["BUTTON_SELECT_ALL"] = "Выделить все",
     ["DIALOG_CONFIRM_DELETE"] = "Подтвердить удаление",

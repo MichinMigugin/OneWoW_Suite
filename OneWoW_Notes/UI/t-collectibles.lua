@@ -12,11 +12,19 @@ ns.UI = ns.UI or {}
 -- numeric id — the whole tab is keyed by strings from OneWoW.Collectibles.
 local selectedKey    = nil
 local collListRows   = {}
-local categoryFilter = "All"
-local typeFilter     = "All"
-local storageFilter  = "All"
-local searchFilter   = ""
+local categoryFilter  = "All"
+local typeFilter      = "All"
+local storageFilter   = "All"
+local collectedFilter = "All"   -- All | collected | uncollected (live)
+local searchFilter    = ""
 local currentSort    = { by = "name", ascending = true }
+
+-- Transmog-set rows are collapsible tree parents: their per-slot member
+-- appearances are a live, read-only view (never stored records). Expansion state
+-- is view-only and keyed by the set's collectible key; sets default collapsed.
+local expandedSets       = {}
+local CHILD_ROW_HEIGHT   = 28
+local CHILD_ROW_SPACING  = 32
 
 local detailPanel    = nil
 local emptyMessage   = nil
@@ -25,7 +33,8 @@ local scrollChild    = nil
 
 -- Intent is the user's plan for a collectible; stored on the record as a plain
 -- token. "none" maps to the Blizzard NONE global; the rest are scoped keys.
-local INTENT_ORDER = { "none", "want", "spotted", "farming" }
+-- "delete" is the recycle bin (dimmed, sorted last, TTL-purged).
+local INTENT_ORDER = { "none", "want", "spotted", "farming", "delete" }
 
 local function IntentLabel(intent)
     if intent == "want" then
@@ -34,6 +43,8 @@ local function IntentLabel(intent)
         return L["COLLECTIBLE_INTENT_SPOTTED"]
     elseif intent == "farming" then
         return L["COLLECTIBLE_INTENT_FARMING"]
+    elseif intent == "delete" then
+        return L["COLLECTIBLE_INTENT_DELETE"]
     end
     return NONE
 end
@@ -64,7 +75,125 @@ local function ResolveRow(key, record)
     local link = display and display.link
     local sourceText = display and display.sourceText
     local complete = display and display.name and display.icon and true or false
+
+    -- A transmog set has no native icon/link. When the teaching ensemble item was
+    -- captured from a vendor, prefer that item's icon + link so the set shows the
+    -- real ensemble (keeping the set's name as the title). Falls back silently to
+    -- the member-appearance icon from core while the item is uncached.
+    if record and record.sourceItemID then
+        local _, itemLink, _, _, _, _, _, _, _, itemIcon = C_Item.GetItemInfo(record.sourceItemID)
+        if itemIcon then icon = itemIcon end
+        if itemLink then link = itemLink end
+    end
+
     return name, icon, link, sourceText, complete
+end
+
+-- Max vendor rows drawn in the "Sold by" section; extras are summarized by the
+-- count in the section header.
+local MAX_VENDOR_ROWS = 3
+
+-- Vendor display entries for a record's stored offers, hydrated from the Catalog
+-- vendor store when it is loaded (richer name + a location for the waypoint), or
+-- rendered straight from the offer snapshot otherwise (opt-out safe).
+local function BuildVendorEntries(record)
+    local entries = {}
+    local offers = record and record.acquisition and record.acquisition.vendorOffers
+    if not offers then return entries end
+
+    local api = OneWoW_CatalogData_Vendors_API
+    for _, offer in ipairs(offers) do
+        local entry = {
+            npcID         = offer.npcID,
+            name          = offer.npcName,
+            cost          = offer.cost,
+            currencies    = offer.currencies,
+            isPurchasable = offer.isPurchasable,
+            zone          = offer.location and offer.location.zone,
+            mapID         = offer.location and offer.location.mapID,
+        }
+        if api and api.GetVendor then
+            local vendor = api.GetVendor(offer.npcID)
+            if vendor then
+                entry.vendorRecord = vendor
+                entry.name = entry.name or vendor.name
+                if vendor.locations then
+                    for mID, loc in pairs(vendor.locations) do
+                        entry.mapID = entry.mapID or mID
+                        entry.zone  = entry.zone or (loc and loc.zone)
+                        break
+                    end
+                end
+            end
+        end
+        entry.name = entry.name or UNKNOWN
+        entries[#entries + 1] = entry
+    end
+    return entries
+end
+
+-- Human-readable cost string for one offer entry (gold coin string + currencies).
+local function FormatCost(entry)
+    local parts = {}
+    if entry.cost and entry.cost > 0 then
+        parts[#parts + 1] = GetCoinTextureString(entry.cost)
+    end
+    if entry.currencies then
+        for _, c in ipairs(entry.currencies) do
+            if c.amount and c.amount > 0 then
+                parts[#parts + 1] = c.amount .. " " .. (c.name or "")
+            end
+        end
+    end
+    return table.concat(parts, "  ")
+end
+
+-- A compact, read-only child row for a transmog-set member appearance: indented
+-- under its set parent, showing the piece's icon + name and a ready-check glyph
+-- for its live collected state (color plus glyph, not color alone). Hovering
+-- shows the appearance's item tooltip when a link is available.
+local function CreateMemberChildRow(parentFrame, opts)
+    local row = CreateFrame("Frame", nil, parentFrame, "BackdropTemplate")
+    row:SetPoint("TOPLEFT",  parentFrame, "TOPLEFT",  18, opts.yOffset)
+    row:SetPoint("TOPRIGHT", parentFrame, "TOPRIGHT", 0,  opts.yOffset)
+    row:SetHeight(CHILD_ROW_HEIGHT)
+    row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+    local icon = row:CreateTexture(nil, "ARTWORK")
+    icon:SetSize(20, 20)
+    icon:SetPoint("LEFT", row, "LEFT", 8, 0)
+    icon:SetTexture(opts.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+    icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+
+    local check = row:CreateTexture(nil, "ARTWORK")
+    check:SetSize(16, 16)
+    check:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+    check:SetTexture(opts.collected
+        and "Interface\\RaidFrame\\ReadyCheck-Ready"
+        or  "Interface\\RaidFrame\\ReadyCheck-NotReady")
+
+    local name = OneWoW_GUI:CreateFS(row, 11)
+    name:SetPoint("LEFT",  icon, "RIGHT", 6, 0)
+    name:SetPoint("RIGHT", check, "LEFT", -6, 0)
+    name:SetJustifyH("LEFT")
+    name:SetWordWrap(false)
+    name:SetText(opts.name or UNKNOWN)
+    name:SetTextColor(OneWoW_GUI:GetThemeColor(
+        opts.collected and "TEXT_PRIMARY" or "TEXT_MUTED"))
+
+    if opts.link then
+        row:EnableMouse(true)
+        row:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetHyperlink(opts.link)
+            GameTooltip:Show()
+        end)
+        row:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    end
+
+    return row
 end
 
 function ns.UI.CreateCollectiblesTab(parent)
@@ -132,9 +261,15 @@ function ns.UI.CreateCollectiblesTab(parent)
     local typeDD = ns.UI.CreateThemedDropdown(controlPanel, TYPE, 120, 25)
     typeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
     typeDD:SetOptions({
-        {text = ALL,      value = "All"},
-        {text = MOUNTS,   value = "mount"},
-        {text = WARDROBE, value = "appearance"},
+        {text = ALL,                     value = "All"},
+        {text = MOUNTS,                  value = "mount"},
+        {text = WARDROBE,                value = "appearance"},
+        {text = WARDROBE_SETS,           value = "set"},
+        {text = PETS,                    value = "pet"},
+        {text = TOY_BOX,                 value = "toy"},
+        {text = HEIRLOOMS,               value = "heirloom"},
+        {text = CATALOG_SHOP_TYPE_DECOR, value = "decor"},
+        {text = AUCTION_CATEGORY_RECIPES, value = "recipe"},
     })
     typeDD:SetSelected("All")
     typeDD.onSelect = function(value)
@@ -155,6 +290,21 @@ function ns.UI.CreateCollectiblesTab(parent)
         parent.RefreshCollectiblesList()
     end
 
+    -- Collected filter: live state (GetCollectionState), not a stored field. Lets
+    -- users who keep everything narrow to what they still need vs. already own.
+    local collectedDD = ns.UI.CreateThemedDropdown(controlPanel, STATUS, 130, 25)
+    collectedDD:SetPoint("LEFT", storeDD, "RIGHT", 4, 0)
+    collectedDD:SetOptions({
+        {text = ALL,           value = "All"},
+        {text = COLLECTED,     value = "collected"},
+        {text = NOT_COLLECTED, value = "uncollected"},
+    })
+    collectedDD:SetSelected("All")
+    collectedDD.onSelect = function(value)
+        collectedFilter = value
+        parent.RefreshCollectiblesList()
+    end
+
     local sortHandle = OneWoW_GUI:CreateSortControls(controlPanel, {
         sortFields = {
             {key = "name",     label = NAME},
@@ -170,7 +320,7 @@ function ns.UI.CreateCollectiblesTab(parent)
             parent.RefreshCollectiblesList()
         end,
     })
-    sortHandle.dropdown:SetPoint("LEFT", storeDD, "RIGHT", 6, 0)
+    sortHandle.dropdown:SetPoint("LEFT", collectedDD, "RIGHT", 6, 0)
     sortHandle.dirBtn:SetPoint("LEFT", sortHandle.dropdown, "RIGHT", 4, 0)
 
     local helpButton = CreateFrame("Button", nil, controlPanel)
@@ -203,7 +353,7 @@ function ns.UI.CreateCollectiblesTab(parent)
     local listingPanel = CreateThemedPanel(nil, parent)
     listingPanel:SetPoint("TOPLEFT",    controlPanel, "BOTTOMLEFT", 0, -10)
     listingPanel:SetPoint("BOTTOMLEFT", parent,       "BOTTOMLEFT", 0, 35)
-    listingPanel:SetWidth(258)
+    listingPanel:SetWidth(OneWoW_GUI.Constants.GUI.LEFT_PANEL_WIDTH)
 
     local listingTitle = OneWoW_GUI:CreateFS(listingPanel, 16)
     listingTitle:SetPoint("TOP", listingPanel, "TOP", 0, -10)
@@ -255,6 +405,70 @@ function ns.UI.CreateCollectiblesTab(parent)
     rightStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     rightStatusText:SetText(READY)
 
+    -- Fills the "Sold by" section from the record's vendor offers and re-anchors
+    -- the tooltip section below it (or back under the content box when there are
+    -- no offers, keeping non-vendor collectibles compact). Live affordability +
+    -- waypoints are resolved here, never persisted.
+    local function PopulateSoldBy(ec, record)
+        local section = ec.soldBySection
+        if not section then return end
+
+        local entries = BuildVendorEntries(record)
+        local total = #entries
+
+        if total == 0 then
+            section:Hide()
+            ec.tooltipSection:ClearAllPoints()
+            ec.tooltipSection:SetPoint("TOPLEFT",  ec.contentBg, "BOTTOMLEFT",  0, -10)
+            ec.tooltipSection:SetPoint("TOPRIGHT", ec.contentBg, "BOTTOMRIGHT", 0, -10)
+            return
+        end
+
+        section.label:SetText(string.format("%s (%d)", L["COLLECTIBLE_SOLD_BY"], total))
+        section:Show()
+        ec.tooltipSection:ClearAllPoints()
+        ec.tooltipSection:SetPoint("TOPLEFT",  section, "BOTTOMLEFT",  0, -10)
+        ec.tooltipSection:SetPoint("TOPRIGHT", section, "BOTTOMRIGHT", 0, -10)
+
+        local api = OneWoW_CatalogData_Vendors_API
+        for i, row in ipairs(section.rows) do
+            local entry = entries[i]
+            if entry then
+                local nameStr = entry.name or UNKNOWN
+                if entry.zone and entry.zone ~= "" then
+                    nameStr = nameStr .. "  |cFF808080" .. entry.zone .. "|r"
+                end
+                row.nameFS:SetText(nameStr)
+
+                local costStr = FormatCost(entry)
+                local afford = OneWoW.Collectibles.GetOfferAffordability(entry)
+                local colorKey = "TEXT_SECONDARY"
+                if afford then
+                    colorKey = afford.affordable and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED"
+                end
+                if entry.isPurchasable == false then
+                    costStr = (costStr ~= "" and (costStr .. "  ") or "") ..
+                        "|cFFFF6060(" .. L["COLLECTIBLE_CANT_BUY"] .. ")|r"
+                end
+                row.costFS:SetText(costStr)
+                row.costFS:SetTextColor(OneWoW_GUI:GetThemeColor(colorKey))
+
+                if api and api.CreateWaypoint and entry.vendorRecord and entry.mapID then
+                    row.wpBtn:Show()
+                    row.wpBtn:SetScript("OnClick", function()
+                        api.CreateWaypoint(entry.vendorRecord, entry.mapID)
+                    end)
+                else
+                    row.wpBtn:Hide()
+                end
+
+                row:Show()
+            else
+                row:Hide()
+            end
+        end
+    end
+
     -- Fills the (already-built) editor from the live record + core resolution.
     -- Tolerates a nil/partial ResolveDisplay: shows what it has now and arms the
     -- item-info watcher so the panel completes itself once the cache fills.
@@ -288,12 +502,20 @@ function ns.UI.CreateCollectiblesTab(parent)
             header.sourceText:Hide()
         end
 
-        -- Ensemble progress: only meaningful for an appearance source that belongs
-        -- to a transmog set. GetContainingSets returns nil for everything else.
+        -- Ensemble/set progress. For a `set` record the progress is the set
+        -- itself; for an appearance source it is the set(s) that contain it
+        -- (GetContainingSets returns nil for everything else).
         local setLine
-        local setIDs = OneWoW.Collectibles.GetContainingSets(selectedKey)
-        if setIDs and setIDs[1] then
-            local progress = OneWoW.Collectibles.GetEnsembleProgress(setIDs[1])
+        local descriptor = OneWoW.Collectibles.ParseKey(selectedKey)
+        local progressSetID
+        if descriptor and descriptor.type == "set" then
+            progressSetID = descriptor.id
+        else
+            local setIDs = OneWoW.Collectibles.GetContainingSets(selectedKey)
+            progressSetID = setIDs and setIDs[1]
+        end
+        if progressSetID then
+            local progress = OneWoW.Collectibles.GetEnsembleProgress(progressSetID)
             if progress and progress.total > 0 then
                 setLine = string.format(L["COLLECTIBLE_SET_PROGRESS"],
                     progress.name or "", progress.collected, progress.total)
@@ -309,7 +531,15 @@ function ns.UI.CreateCollectiblesTab(parent)
 
         local state = OneWoW.Collectibles.GetCollectionState(selectedKey)
         if state then
-            header.statusText:SetText(state.collected and COLLECTED or NOT_COLLECTED)
+            -- Decor uses a quantity model: when owned, show the owned/placed/
+            -- storage breakdown (Blizzard's localized HOUSING_DECOR_OWNED_COUNT_FORMAT)
+            -- instead of a bare "Collected". `numOwned` is decor-only.
+            local statusStr = state.collected and COLLECTED or NOT_COLLECTED
+            if state.numOwned and state.numOwned > 0 then
+                statusStr = HOUSING_DECOR_OWNED_COUNT_FORMAT:format(
+                    state.numOwned, state.numPlaced or 0, state.numStored or 0)
+            end
+            header.statusText:SetText(statusStr)
             header.statusText:SetTextColor(OneWoW_GUI:GetThemeColor(
                 state.collected and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED"))
             header.statusText:Show()
@@ -329,6 +559,8 @@ function ns.UI.CreateCollectiblesTab(parent)
                 ec.tooltipEdits[i]:SetText((record.tooltipLines and record.tooltipLines[i]) or "")
             end
         end
+
+        PopulateSoldBy(ec, record)
 
         -- Self-arming: keep listening only while this record's display is partial.
         if complete then
@@ -470,12 +702,10 @@ function ns.UI.CreateCollectiblesTab(parent)
             intentDD:SetOptions(intentOpts)
             intentDD.onSelect = function(value)
                 if not selectedKey then return end
-                local record = ns.Collectibles:GetCollectible(selectedKey)
-                if record then
-                    record.intent = value
-                    ns.Collectibles:SaveCollectible(selectedKey, record)
-                    parent.RefreshCollectiblesList()
-                end
+                -- SetIntent applies recycle-bin bookkeeping (deletedAt + Delete List
+                -- category on enter, restore on exit); don't mutate intent directly.
+                ns.Collectibles:SetIntent(selectedKey, value)
+                parent.RefreshCollectiblesList()
             end
 
             local contentBg = CreateThemedBar(nil, detailPanel)
@@ -526,6 +756,61 @@ function ns.UI.CreateCollectiblesTab(parent)
                     end
                 end
             end)
+
+            -- "Sold by" vendor section (v2-F-D). Sits between the content box and
+            -- the tooltip lines; shown only when the record carries vendor offers,
+            -- so non-vendor collectibles keep the compact layout (tooltipSection is
+            -- re-anchored live in PopulateEditor).
+            local soldBySection = CreateThemedBar(nil, detailPanel)
+            soldBySection:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -10)
+            soldBySection:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -10)
+            soldBySection:SetHeight(28 + MAX_VENDOR_ROWS * 30)
+
+            local soldByLabel = OneWoW_GUI:CreateFS(soldBySection, 12)
+            soldByLabel:SetPoint("TOPLEFT", soldBySection, "TOPLEFT", 10, -8)
+            soldByLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            soldBySection.label = soldByLabel
+
+            local soldByRows = {}
+            for i = 1, MAX_VENDOR_ROWS do
+                local row = CreateFrame("Frame", nil, soldBySection)
+                row:SetPoint("TOPLEFT",  soldBySection, "TOPLEFT",  10, -26 - (i - 1) * 30)
+                row:SetPoint("TOPRIGHT", soldBySection, "TOPRIGHT", -10, -26 - (i - 1) * 30)
+                row:SetHeight(28)
+
+                local wpBtn = CreateFrame("Button", nil, row)
+                wpBtn:SetSize(20, 20)
+                wpBtn:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+                wpBtn:SetNormalTexture(MEDIA .. "icon-pin.png")
+                wpBtn:GetNormalTexture():SetTexCoord(0.1, 0.9, 0.1, 0.9)
+                wpBtn:SetHighlightTexture(MEDIA .. "icon-pin.png")
+                wpBtn:GetHighlightTexture():SetAlpha(0.5)
+                wpBtn:SetScript("OnEnter", function(self)
+                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                    GameTooltip:SetText(MAP_PIN, 1, 1, 1)
+                    GameTooltip:Show()
+                end)
+                wpBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                row.wpBtn = wpBtn
+
+                local nameFS = OneWoW_GUI:CreateFS(row, 11)
+                nameFS:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+                nameFS:SetPoint("RIGHT", wpBtn, "LEFT", -6, 0)
+                nameFS:SetJustifyH("LEFT")
+                nameFS:SetWordWrap(false)
+                row.nameFS = nameFS
+
+                local costFS = OneWoW_GUI:CreateFS(row, 10)
+                costFS:SetPoint("TOPLEFT", nameFS, "BOTTOMLEFT", 0, -2)
+                costFS:SetPoint("RIGHT", wpBtn, "LEFT", -6, 0)
+                costFS:SetJustifyH("LEFT")
+                costFS:SetWordWrap(false)
+                row.costFS = costFS
+
+                row:Hide()
+                soldByRows[i] = row
+            end
+            soldBySection.rows = soldByRows
 
             local tooltipSection = CreateThemedBar(nil, detailPanel)
             tooltipSection:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -10)
@@ -580,6 +865,7 @@ function ns.UI.CreateCollectiblesTab(parent)
                 infoBar        = infoBar,
                 contentBg      = contentBg,
                 contentScroll  = contentScroll,
+                soldBySection  = soldBySection,
                 tooltipSection = tooltipSection,
                 tooltipEdits   = tooltipEdits,
             }
@@ -627,6 +913,12 @@ function ns.UI.CreateCollectiblesTab(parent)
                     if not descriptor or descriptor.type ~= typeFilter then matches = false end
                 end
                 if matches and storageFilter ~= "All" and record.storage ~= storageFilter then matches = false end
+                if matches and collectedFilter ~= "All" then
+                    local state = OneWoW.Collectibles.GetCollectionState(key)
+                    local isCollected = state and state.collected or false
+                    if collectedFilter == "collected" and not isCollected then matches = false end
+                    if collectedFilter == "uncollected" and isCollected then matches = false end
+                end
                 if matches and searchFilter ~= "" then
                     if not name:lower():find(searchFilter:lower(), 1, true) then matches = false end
                 end
@@ -637,6 +929,11 @@ function ns.UI.CreateCollectiblesTab(parent)
         end
 
         local function sortEntries(a, b)
+            -- Recycle-bin (delete-intent) rows always sink to the bottom, whatever
+            -- the active sort; within each group the chosen sort applies.
+            local aDel = a.record.intent == "delete"
+            local bDel = b.record.intent == "delete"
+            if aDel ~= bDel then return bDel end
             if currentSort.by == "category" then
                 local ca = a.record.category or ""
                 local cb = b.record.category or ""
@@ -671,12 +968,23 @@ function ns.UI.CreateCollectiblesTab(parent)
             local detailText = intent ~= "none" and IntentLabel(intent) or nil
 
             local key = entry.key
-            local row = ns.UI.CreateNotesListRow(scrollChild, {
+            local descriptor = OneWoW.Collectibles.ParseKey(key)
+            local isSet = descriptor and descriptor.type == "set"
+
+            -- A set gets an expand caret; the collected/total rolls up onto the
+            -- parent's detail line so the count reads at a glance while collapsed.
+            local rowDetail = detailText
+            if isSet and state and state.total and state.total > 0 then
+                local prog = string.format("%d/%d", state.numCollected or 0, state.total)
+                rowDetail = detailText and (detailText .. "  " .. prog) or prog
+            end
+
+            local rowOpts = {
                 yOffset     = yOffset,
                 barColor    = barColor,
                 icon        = icon,
                 title       = entry.name,
-                detail      = detailText,
+                detail      = rowDetail,
                 storageText = entry.record.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
                 selected    = (selectedKey == key),
                 onSelect    = function()
@@ -691,9 +999,43 @@ function ns.UI.CreateCollectiblesTab(parent)
                         DeleteSelected()
                     end,
                 },
-            })
+            }
+            if isSet then
+                rowOpts.expand = {
+                    expanded = expandedSets[key] == true,
+                    tooltip  = { title = L["COLLECTIBLE_SET_MEMBERS"] },
+                    onToggle = function()
+                        expandedSets[key] = not expandedSets[key]
+                        parent.RefreshCollectiblesList()
+                    end,
+                }
+            end
+
+            local row = ns.UI.CreateNotesListRow(scrollChild, rowOpts)
+            -- Recycle-bin rows read as "on the way out": dimmed but still fully
+            -- interactive (select to restore its intent, or delete now).
+            row:SetAlpha(entry.record.intent == "delete" and 0.5 or 1)
             table.insert(collListRows, row)
             yOffset = yOffset - ns.UI.LIST_ROW_SPACING
+
+            -- Expanded set: render its per-slot member appearances as read-only,
+            -- live child rows (no records, no selection — the set is the record).
+            if isSet and expandedSets[key] then
+                local members = OneWoW.Collectibles.GetSetMembers(descriptor.id)
+                if members then
+                    for _, member in ipairs(members) do
+                        local child = CreateMemberChildRow(scrollChild, {
+                            yOffset   = yOffset,
+                            icon      = member.icon,
+                            name      = member.name,
+                            link      = member.link,
+                            collected = member.collected,
+                        })
+                        table.insert(collListRows, child)
+                        yOffset = yOffset - CHILD_ROW_SPACING
+                    end
+                end
+            end
         end
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
@@ -707,15 +1049,17 @@ function ns.UI.CreateCollectiblesTab(parent)
         if not key or not ns.Collectibles:GetCollectible(key) then
             return false
         end
-        selectedKey    = key
-        searchFilter   = ""
-        categoryFilter = "All"
-        typeFilter     = "All"
-        storageFilter  = "All"
+        selectedKey     = key
+        searchFilter    = ""
+        categoryFilter  = "All"
+        typeFilter      = "All"
+        storageFilter   = "All"
+        collectedFilter = "All"
         searchBox:SetText("")
         catDD:SetSelected("All")
         typeDD:SetSelected("All")
         storeDD:SetSelected("All")
+        collectedDD:SetSelected("All")
         ShowEditor()
         parent.RefreshCollectiblesList()
         return true
@@ -733,11 +1077,22 @@ function ns.UI.CreateCollectiblesTab(parent)
 
     ns.UI.RefreshCollectiblesList = parent.RefreshCollectiblesList
 
+    -- Lets the merchant capture listener refresh the open detail in place when a
+    -- vendor offer lands on the currently-selected record.
+    ns.UI.RefreshCollectiblesDetail = function()
+        if selectedKey and detailPanel and detailPanel.editorContent then
+            PopulateEditor()
+        end
+    end
+
     ns.UI.OpenNotesCollectible = function(key)
         return OpenCollectibleEditor(key)
     end
 
     function parent.Activate()
+        -- Run the recycle-bin sweep when the tab is opened (auto-recycle collected
+        -- items + purge expired Delete-List rows), so the list is current on view.
+        ns.Collectibles:RunCleanup()
         if ns.pendingCollectibleSelect then
             local key = ns.pendingCollectibleSelect
             ns.pendingCollectibleSelect = nil
