@@ -24,6 +24,24 @@ local ITEM_TYPE_COLORS = {
 
 ns.ITEM_TYPE_COLORS = ITEM_TYPE_COLORS
 
+local function GetCollectionStatusText(status)
+    if status.collected then
+        return "|cFF66CC66" .. L["TIPS_COLLECTIONS_COLLECTED"] .. "|r"
+    end
+
+    if status.type == "recipe" and status.collectedByAlt then
+        local mode = OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "collections").recipeAltDisplay
+            or "differentiated"
+        if mode == "combined" then
+            return "|cFF66CC66" .. L["TIPS_COLLECTIONS_COLLECTED"] .. "|r"
+        elseif mode == "differentiated" then
+            return "|cFFFFD700" .. L["TIPS_COLLECTIONS_ALT_COLLECTED"] .. "|r"
+        end
+    end
+
+    return "|cFFCC6666" .. L["TIPS_COLLECTIONS_NOT_COLLECTED"] .. "|r"
+end
+
 local function CollectionsProvider(_, context)
     if not context.itemID then return nil end
 
@@ -45,17 +63,12 @@ local function CollectionsProvider(_, context)
         return {
             {type = "headerRight", text = typeString, r = typeColor[1], g = typeColor[2], b = typeColor[3]}
         }
-    elseif status.collected then
-        local text = "|cFF66CC66" .. L["TIPS_COLLECTIONS_COLLECTED"] .. "|r | " .. typeString
-        return {
-            {type = "headerRight", text = text, r = typeColor[1], g = typeColor[2], b = typeColor[3]}
-        }
-    else
-        local text = "|cFFCC6666" .. L["TIPS_COLLECTIONS_NOT_COLLECTED"] .. "|r | " .. typeString
-        return {
-            {type = "headerRight", text = text, r = typeColor[1], g = typeColor[2], b = typeColor[3]}
-        }
     end
+
+    local text = GetCollectionStatusText(status) .. " | " .. typeString
+    return {
+        {type = "headerRight", text = text, r = typeColor[1], g = typeColor[2], b = typeColor[3]}
+    }
 end
 
 OneWoW.TooltipEngine:RegisterProvider({

@@ -1495,6 +1495,103 @@ local function ShowPetsDetail(split, dsc, feature, selectedRow)
     split.UpdateDetailThumb()
 end
 
+local function ShowCollectionsDetail(split, dsc, feature, selectedRow)
+    local yOffset = -10
+
+    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
+    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    titleLabel:SetJustifyH("LEFT")
+    titleLabel:SetText(L[feature.title])
+    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
+    yOffset = yOffset - 12
+
+    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
+    descLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    descLabel:SetJustifyH("LEFT")
+    descLabel:SetWordWrap(true)
+    descLabel:SetSpacing(3)
+    descLabel:SetText(L[feature.description])
+    descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    yOffset = yOffset - descLabel:GetStringHeight() - 16
+
+    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
+        yOffset = yOffset,
+        statusLabel = L["FEATURE_STATUS_LABEL"],
+        enabledText = L["FEATURE_ENABLED"],
+        disabledText = L["FEATURE_DISABLED"],
+        enableBtnText = L["FEATURE_ENABLE_BTN"],
+        disableBtnText = L["FEATURE_DISABLE_BTN"],
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newState)
+            end
+        end,
+    })
+    yOffset = statusBlock.getBottomY() - 14
+
+    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
+    yOffset = yOffset - 12
+
+    local settingsLabel = OneWoW_GUI:CreateFS(dsc, 12)
+    settingsLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    settingsLabel:SetText(L["TIPS_COLLECTIONS_RECIPE_ALT_DISPLAY"])
+    settingsLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+    yOffset = yOffset - settingsLabel:GetStringHeight() - 6
+
+    local hintLabel = OneWoW_GUI:CreateFS(dsc, 11)
+    hintLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    hintLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    hintLabel:SetJustifyH("LEFT")
+    hintLabel:SetWordWrap(true)
+    hintLabel:SetSpacing(2)
+    hintLabel:SetText(L["TIPS_COLLECTIONS_RECIPE_ALT_DISPLAY_DESC"])
+    hintLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    yOffset = yOffset - hintLabel:GetStringHeight() - 10
+
+    local DISPLAY_MODE_KEYS = {
+        differentiated = "TIPS_COLLECTIONS_RECIPE_ALT_DIFFERENTIATED",
+        combined = "TIPS_COLLECTIONS_RECIPE_ALT_COMBINED",
+        self_only = "TIPS_COLLECTIONS_RECIPE_ALT_SELF_ONLY",
+    }
+
+    local currentMode = Registry:GetFeatureSettings("tooltips", "collections").recipeAltDisplay or "differentiated"
+    local currentKey = DISPLAY_MODE_KEYS[currentMode] or DISPLAY_MODE_KEYS.differentiated
+
+    local dropdown, dropdownText = OneWoW_GUI:CreateDropdown(dsc, {
+        width = 220,
+        height = 26,
+        text = L[currentKey],
+    })
+    dropdown:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    yOffset = yOffset - 34
+
+    OneWoW_GUI:AttachFilterMenu(dropdown, {
+        searchable = false,
+        buildItems = function()
+            return {
+                { value = "differentiated", text = L["TIPS_COLLECTIONS_RECIPE_ALT_DIFFERENTIATED"] },
+                { value = "combined", text = L["TIPS_COLLECTIONS_RECIPE_ALT_COMBINED"] },
+                { value = "self_only", text = L["TIPS_COLLECTIONS_RECIPE_ALT_SELF_ONLY"] },
+            }
+        end,
+        onSelect = function(value, text)
+            Registry:SetSetting("tooltips", "collections", "recipeAltDisplay", value)
+            dropdownText:SetText(text)
+        end,
+    })
+
+    dsc:SetHeight(math.abs(yOffset) + 20)
+    OneWoW_GUI:ApplyFontToFrame(dsc)
+    split.UpdateDetailThumb()
+end
+
 local function ShowRecipeKnowledgeDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
 
@@ -1588,6 +1685,11 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
 
     if feature.id == "itemtracker" then
         ShowItemTrackerDetail(split, dsc, feature, selectedRow)
+        return
+    end
+
+    if feature.id == "collections" then
+        ShowCollectionsDetail(split, dsc, feature, selectedRow)
         return
     end
 

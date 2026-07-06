@@ -988,11 +988,32 @@ local function ResolveCollectionStatus(p)
     return status
 end
 
+local function ResolveAltCollectionStatus(p)
+    if ResolveCollectionStatus(p) == true then return false end
+    if ResolveCollectionStatus(p) == nil then return nil end
+
+    local cached = rawget(p, "_altCollectionStatus")
+    if cached ~= nil then
+        return cached == 1
+    end
+
+    local st = OneWoW.Collectibles.GetItemCollectionStatus(p.id, p.hyperlink)
+    local alt = st and st.collectedByAlt == true
+    rawset(p, "_altCollectionStatus", alt and 1 or 0)
+    return alt
+end
+
 RegisterKeyword("toy",                  function(p) return p.isToy end)
 RegisterKeyword("mount",                function(p) return p.isMount end)
 RegisterKeyword({"pet", "battlepet"},   function(p) return p.isPet end)
 RegisterKeyword({"collected", "collectionknown"}, function(p) return ResolveCollectionStatus(p) == true end)
 RegisterKeyword({"uncollected", "collectionmissing"}, function(p) return ResolveCollectionStatus(p) == false end)
+RegisterKeyword("altcollected",         function(p) return ResolveAltCollectionStatus(p) == true end)
+RegisterKeyword("altuncollected",       function(p)
+    local selfStatus = ResolveCollectionStatus(p)
+    if selfStatus == nil or selfStatus == true then return false end
+    return ResolveAltCollectionStatus(p) ~= true
+end)
 RegisterKeyword("alreadyknown",         function(p) return p.isAlreadyKnown end)
 
 for _, def in ipairs({

@@ -88,7 +88,7 @@ whereas keying them as heirlooms would make `PlayerHasHeirloom` report them
 | `BuildLink(key)` | `(collectible=<key>)` token or `nil` | Token grammar only; Notes renders the clickable link |
 | `ResolveDisplay(key)` | `{ name, icon, link, sourceText?, type }` or `nil` | Live per-type resolution |
 | `GetCollectionState(key)` | type-specific table or `nil` | Live; never persisted |
-| `GetItemCollectionStatus(itemID, hyperlink?)` | `{ applicable, collected, key, type, … }` or `nil` | Item-facing facade; `nil` when not a collectible |
+| `GetItemCollectionStatus(itemID, hyperlink?)` | `{ applicable, collected, collectedByAlt?, key, type, … }` or `nil` | Item-facing facade; `nil` when not a collectible; `collectedByAlt` is recipe-only |
 | `ResolveKeyFromItem(itemID, hyperlink?)` | canonical key string or `nil` | Maps an item → the collectible it grants (mount/toy/pet/heirloom/**recipe**/**set**/**decor**/appearance) |
 | `GetOfferAffordability(offer)` | `{ affordable, requirements = { … } }` or `nil` | Live check of a vendor offer vs. player gold / currencies / items; never persisted |
 | `GetEnsembleMemberKeys(setID)` | `{ "appearance:source:<id>", … }` or `nil` | All set sources (incl. alternates) as collectible keys |
@@ -141,9 +141,11 @@ that a collectible is wanted, but whether it is *collected* is always answered
 live so it can never drift from the game state.
 
 `GetItemCollectionStatus(itemID, hyperlink?)` is the item-facing entry point:
-tooltips, `#collected` / `#collectionknown`, and `props.isCollected` all read
-through it (key resolution via `ResolveKeyFromItem`, state via
-`GetCollectionState`).
+tooltips, `#collected` / `#collectionknown`, `#altcollected`, and
+`props.isCollected` all read through it (key resolution via `ResolveKeyFromItem`,
+state via `GetCollectionState`). For recipes, `collected` is the logged-in
+character only; `collectedByAlt` is true when a scoped alt in Recipe Knowledge's
+`altScope` knows the recipe and you do not.
 
 ## Secret-value caveat (12.0)
 

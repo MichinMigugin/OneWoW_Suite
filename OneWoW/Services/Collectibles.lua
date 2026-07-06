@@ -511,9 +511,22 @@ function Collectibles.GetItemCollectionStatus(itemID, hyperlink)
     local state = Collectibles.GetCollectionState(key)
     local collected = state and state.collected == true or false
 
+    local collectedByAlt = false
+    if descriptor.type == "recipe" and not collected then
+        local Registry = OneWoW.SettingsFeatureRegistry
+        if Registry then
+            local rk = Registry:GetFeatureSettings("tooltips", "recipeknowledge")
+            local altScope = rk and rk.altScope
+            if altScope and ns.RecipeKnownUtil then
+                collectedByAlt = ns.RecipeKnownUtil:IsRecipeKnownByScopedAlt(itemID, altScope) == true
+            end
+        end
+    end
+
     local status = {
         applicable = true,
         collected = collected,
+        collectedByAlt = collectedByAlt,
         key = key,
         type = descriptor.type,
     }

@@ -322,6 +322,10 @@ local DEFAULTS = {
                 enabled = true,
                 altScope = { mode = "all", chars = {}, roles = {} },
             },
+            collections = {
+                enabled = true,
+                recipeAltDisplay = "differentiated",
+            },
             customnotes = { enabled = true },
             enhancements = {
                 removeBlizzardVendorValue = true,

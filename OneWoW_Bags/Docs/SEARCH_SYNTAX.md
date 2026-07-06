@@ -497,7 +497,9 @@ without link data never match.
 | `#mount` | Mounts |
 | `#pet` | Battle pets (alias: `#battlepet`) |
 | `#collected` | Collectibles you already own (alias: `#collectionknown`) — toys, mounts, pets, recipes, decor, ensembles, appearances |
-| `#uncollected` | Collectible-shaped items you are missing (alias: `#collectionmissing`); not true on non-collectibles |
+| `#uncollected` | Collectible-shaped items you are missing on the logged-in character (alias: `#collectionmissing`); not true on non-collectibles |
+| `#altcollected` | Recipe items known by a scoped alt but not by you (uses Recipe Knowledge alt scope; meaningful for `#recipe` only) |
+| `#altuncollected` | Collectible-shaped recipes nobody in the Recipe Knowledge alt scope knows (neither you nor scoped alts) |
 | `#collectionknown` | Alias of `#collected` |
 | `#collectionmissing` | Alias of `#uncollected` |
 | `#alreadyknown` | Tooltip shows Blizzard "Already Known" (not recipe learn state — use `#collected` for recipes) |
