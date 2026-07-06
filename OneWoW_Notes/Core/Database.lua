@@ -38,14 +38,14 @@ local defaults = {
         },
         zoneAlertsEnabled  = true,
         sortCompletedTasks = false,
-        -- Vendor collectible capture (v2-F-C): off | prompt | auto. A subscription
+        -- Vendor collectible capture: off | prompt | auto. A subscription
         -- decision, reconciled by ns.CollectiblesMerchant:ApplySubscription().
         collectibleCaptureMode = "off",
         -- Recycle bin: when on, collected items you were tracking move to the Delete
         -- List and are permanently purged after collectiblePurgeTTLDays (0 = immediate).
         collectibleAutoDelete    = false,
         collectiblePurgeTTLDays  = 7,
-        -- One-time v2-E legacy mount-blob migration guard (set true after the pass).
+        -- One-time legacy mount-blob migration guard (set true after the pass).
         collectibleMountMigrated = false,
     },
     char = {

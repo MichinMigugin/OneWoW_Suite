@@ -112,7 +112,7 @@ Core holds only the ephemeral `lastScan`. Vendor catalogs live in
 | `OneWoW_Bags` | show + closed | Vendor-mode enter/exit (`Events:OnMerchantShow` / `OnMerchantClosed`) |
 | QoL auto-repair / vendor-panel | show (+ closed) | Repair on open / panel anchoring; module lifecycle = subscribe/`UnregisterCallback` |
 | QoL auto-open | `IsMerchantOpen()` | Pure state read, no subscription |
-| `OneWoW_Notes` collectibles (v2-F-C, planned) | scan | Upsert uncollected vendor items as wishlist `vendorOffers` |
+| `OneWoW_Notes` collectibles (`CollectiblesMerchant`) | scan | Upsert uncollected vendor items as wishlist `vendorOffers` (+ `blockReason` from the merchant tooltip) |
 
 The subscription decision is driven entirely by **consumer settings / module
 lifecycle** — there is no core-level "enable scanning" flag. Toggling a consumer

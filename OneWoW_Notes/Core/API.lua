@@ -139,7 +139,7 @@ function OneWoW_Notes_API.AddPlayerCollectibleRef(fullName, key, spellID)
 end
 
 --- True if a player note already references a collectible (structured ref, or a
---- pre-v2-C content-embedded link). Lets callers dedup without knowing the note
+--- legacy content-embedded link). Lets callers dedup without knowing the note
 --- storage or link grammar.
 ---@param fullName string
 ---@param key string canonical collectible key

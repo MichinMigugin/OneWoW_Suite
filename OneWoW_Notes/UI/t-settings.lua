@@ -113,7 +113,7 @@ function ns.UI.CreateSettingsTab(parent)
     )
     yOffset = yOffset - 70
 
-    -- Vendor collectible capture (v2-F-C): off | prompt | auto. A dropdown rather
+    -- Vendor collectible capture: off | prompt | auto. A dropdown rather
     -- than a toggle because it is tri-state; changing it reconciles the merchant
     -- subscription via ns.CollectiblesMerchant.
     yOffset = yOffset - 10

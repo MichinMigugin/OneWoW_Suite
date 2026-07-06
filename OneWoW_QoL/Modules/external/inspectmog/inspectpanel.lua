@@ -390,7 +390,7 @@ local function AddItemToNotes(itemID, itemName, itemLink, icon, quality, quiet)
     return true
 end
 
--- v2-A: when the "route to collectibles" toggle is on, a shift-clicked slot is
+-- When the "route to collectibles" toggle is on, a shift-clicked slot is
 -- captured as a canonical `appearance:source` collectible (identity + live state
 -- resolved by core OneWoW.Collectibles) instead of a legacy numeric Item note.
 -- Both zones route: the item zone adds the item's OWN appearance (baseSourceID),

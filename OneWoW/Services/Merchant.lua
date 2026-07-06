@@ -16,8 +16,8 @@ local _, ns = ...
 -- up its own frame with its own MERCHANT_* registration and ad-hoc debounce
 -- (VendorScanner's `scanInProgress` flag was set/cleared synchronously and
 -- never actually debounced -- MERCHANT_SHOW's 0.5s scan and MERCHANT_UPDATE
--- scans routinely double-fired). Consumers migrate onto the channels below in
--- v2-G; this file is the funnel they target.
+-- scans routinely double-fired). Every consumer now subscribes to the channels
+-- below instead of owning its own MERCHANT_* registration.
 --
 -- Channels:
 --   RegisterScanCallback   fn(scan)  vendor snapshot (coalesced debounce, retry)
@@ -85,7 +85,7 @@ local function ClearTransient()
 end
 
 -- Lazily register the shared core-frame events on 0->1 subscribers and tear them
--- down on 1->0. Once overlay-engine holds a standing subscription (v2-G) this is
+-- down on 1->0. Because overlay-engine holds a standing subscription this is
 -- primarily a correctness/single-owner mechanism, not a perf optimization.
 local function EnsureEvents()
     if AnySubscribers() then

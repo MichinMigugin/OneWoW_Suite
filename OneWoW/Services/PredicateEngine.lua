@@ -1430,7 +1430,7 @@ end
 ---@param hyperlink string|nil
 ---@return boolean
 local function ResolveCollected(itemID, classID, subClassID, hyperlink)
-    -- Collection truth is owned by OneWoW.Collectibles (v2-D consumer migration).
+    -- Collection truth is owned by OneWoW.Collectibles.
     -- Each branch still detects the collectible *type* locally (that classification
     -- is item-shape logic, not collection state) and then reads the uniform
     -- `.collected` boolean from core so there is one source of collection truth.
@@ -2256,7 +2256,7 @@ local function PopulateBaseProps(props, itemID, hyperlink)
     -- The item-keyed primary check has no `appearance:source` analog in core (that
     -- key is source-keyed), so PlayerHasTransmog(itemID) stays; the source-keyed
     -- fallback routes through OneWoW.Collectibles so the sourceID collection check
-    -- is the service's uniform state (v2-D consumer migration).
+    -- is the service's uniform state.
     props.hasAppearance         = false
     props.isAppearanceCollected = C_TransmogCollection.PlayerHasTransmog(itemID)
 

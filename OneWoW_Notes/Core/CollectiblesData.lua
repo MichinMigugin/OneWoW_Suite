@@ -247,7 +247,7 @@ function Collectibles:RunCleanup()
 end
 
 -- ---------------------------------------------------------------------------
--- Vendor offers (v2-F-C merchant capture)
+-- Vendor offers (merchant capture)
 -- ---------------------------------------------------------------------------
 -- A vendor offer is a slim junction recording that a collectible's granting item
 -- was seen for sale at a vendor: { npcID, npcName, itemID, cost, currencies,

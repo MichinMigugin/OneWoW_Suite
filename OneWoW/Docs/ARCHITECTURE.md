@@ -771,7 +771,7 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | `OneWoW.ItemStatus` | `Services/itemstatus.lua` | Overlay engine, Bags |
 | `OneWoW.UpgradeDetection` | `Services/upgrade-detection.lua` | Overlay engine, Bags |
 | `OneWoW.ProfessionRecipe` | `Services/ProfessionRecipe.lua` | AltTracker Professions (persist) + Accounting (trainer costs), Catalog Tradeskills (scanCache), RecipeKnownUtil, overlay-engine, Trackers, QoL bagbar/professionspanel/autoopen — see [PROFESSION_RECIPE.md](PROFESSION_RECIPE.md) / §8.7 |
-| `OneWoW.Merchant` | `Services/Merchant.lua` | Catalog Vendors (merge), `OneWoW_Notes` collectibles (planned), overlay-engine / Accounting / Bags / QoL merchant sites (v2-G) — single `MERCHANT_*` owner, scan/show/closed channels, ephemeral snapshots, no SV; see [MERCHANT.md](MERCHANT.md) / §8.8 |
+| `OneWoW.Merchant` | `Services/Merchant.lua` | Catalog Vendors (merge), `OneWoW_Notes` collectibles, overlay-engine / Accounting / Bags / QoL merchant sites — single `MERCHANT_*` owner, scan/show/closed channels, ephemeral snapshots, no SV; see [MERCHANT.md](MERCHANT.md) / §8.8 |
 | `OneWoW.RecipeKnownUtil` | `Services/RecipeKnownUtil.lua` | Overlay engine, tooltip providers |
 | `OneWoW.Collectibles` | `Services/Collectibles.lua` | `OneWoW_Notes` (Collectibles data/tab), ContextMenus, Trackers (planned) — collectible key grammar + live display/state, no SV; see [COLLECTIBLES.md](COLLECTIBLES.md) |
 | `OneWoW.AHItemKeys` | `Services/AHItemKeys.lua` | AH scanners (`OneWoW_AltTracker_Auctions`), `ItemPrices` link-aware lookups |

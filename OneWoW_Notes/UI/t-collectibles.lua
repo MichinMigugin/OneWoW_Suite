@@ -796,7 +796,7 @@ function ns.UI.CreateCollectiblesTab(parent)
                 end
             end)
 
-            -- "Sold by" vendor section (v2-F-D). Sits between the content box and
+            -- "Sold by" vendor section. Sits between the content box and
             -- the tooltip lines; shown only when the record carries vendor offers,
             -- so non-vendor collectibles keep the compact layout (tooltipSection is
             -- re-anchored live in PopulateEditor).

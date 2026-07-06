@@ -499,7 +499,7 @@ end
 --- is always a `recipe:<itemID>` — checked before the decor branch because a
 --- housing-decor recipe teaches a craft (it does not itself grant the decor).
 --- A housing decor item maps to `decor:<recordID>`.
---- `sourceID == itemModifiedAppearanceID` (v1-A), so an equippable item with a
+--- `sourceID == itemModifiedAppearanceID`, so an equippable item with a
 --- transmog source maps straight to `appearance:source:<id>`.
 ---@param itemID number
 ---@return string|nil key

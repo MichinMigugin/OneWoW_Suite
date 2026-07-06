@@ -73,6 +73,8 @@ Common getters: `GetBagItem(bag, slot)`, `GetItemByID(itemID)`, `GetHyperlink(li
 
 `TooltipUtil.SurfaceArgs` is **not** needed post-10.1.0 — fields are pre-surfaced on the returned data.
 
+**Getter scope matters — template getters omit player-evaluated lines.** `GetItemByID(itemID)` and `GetHyperlink(link)` build a *template* tooltip and **omit** player-evaluated requirement lines entirely — `Requires achievement: …`, `Requires Level …`, red reputation/skill gates. Those lines (and their red `RED_FONT_COLOR` = `(1, 0.125, 0.125)` unmet coloring) exist only in a fully-rendered **contextual** tooltip: `GetBagItem(bag, slot)` for an owned item, or `GetMerchantItem(merchantSlotIndex)` for a vendor row. So if you need the red "you don't meet this" reason (e.g. why a purchase is blocked), you must scan the contextual getter **while that context is live** — you cannot re-derive it later from an itemID/link. Verified in-game: `GetItemByID` for a `Requires achievement` toy jumps straight from flavor description to flavor text with no requirement line, while the merchant tooltip shows it red.
+
 ### Structured line reading: prefer enum types over text matching
 
 `tooltipData.lines[i].type` is an `Enum.TooltipDataLineType` value (44 values including `ItemBinding`, `ItemLevel`, `SellPrice`, `FlavorText`, `EquipSlot`, `GemSocket`, `TradeTimeRemaining`, etc.). Many lines expose typed structured fields beyond `leftText` — e.g. `ItemBinding` lines populate `line.bonding` with an `Enum.TooltipDataItemBinding` value (`Soulbound`, `BindOnEquip`, `BindToAccount`, `AccountUntilEquipped`, …).

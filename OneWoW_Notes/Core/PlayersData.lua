@@ -119,12 +119,12 @@ function Players:RemovePlayer(fullName)
 end
 
 -- ---------------------------------------------------------------------------
--- Collectible references (v2-C "sightings")
+-- Collectible references ("sightings")
 -- ---------------------------------------------------------------------------
 -- A structured record that a player is associated with a collectible (e.g. seen
 -- riding a mount). Replaces the old "search the note body for a link substring"
--- dedup with a first-class list, while still recognizing pre-v2-C notes whose
--- only trace of the sighting is the embedded collectible hyperlink. The field is
+-- dedup with a first-class list, while still recognizing legacy notes whose only
+-- trace of the sighting is the embedded collectible hyperlink. The field is
 -- created lazily on first add — players without sightings carry no empty table.
 
 --- Records a collectible reference on a player. Idempotent per canonical key.
@@ -161,7 +161,7 @@ function Players:AddCollectibleRef(fullName, key, spellID)
 end
 
 --- True if the player already references a collectible. Structured refs are the
---- source of truth; the content fallback keeps pre-v2-C notes deduping until the
+--- source of truth; the content fallback keeps legacy notes deduping until the
 --- next add upgrades them to a structured ref.
 ---@param fullName string
 ---@param key string canonical collectible key
@@ -179,7 +179,7 @@ function Players:HasCollectibleRef(fullName, key)
         end
     end
 
-    -- Backward-compat: before v2-C the sighting lived only as the collectible
+    -- Backward-compat: legacy notes stored the sighting only as the collectible
     -- hyperlink in the note body ("|Honewowcollectible:<key>|h...").
     if player.content and player.content ~= "" then
         if strfind(player.content, "onewowcollectible:" .. key, 1, true) then
@@ -191,16 +191,17 @@ function Players:HasCollectibleRef(fullName, key)
 end
 
 -- ---------------------------------------------------------------------------
--- Legacy mount-blob migration (v2-E)
+-- Legacy mount-blob migration
 -- ---------------------------------------------------------------------------
--- Before v1-D, "Add Mount Info" wrote a multi-line blob into the player note:
+-- The original "Add Mount Info" wrote a multi-line blob into the player note:
 --   Mount: <spell hyperlink>\nType: …\nSource: …\nStatus: …
--- v1-D replaced that with a single thin `Mount: <collectible link>` line plus a
+-- That was replaced with a single thin `Mount: <collectible link>` line plus a
 -- shared collectible row and a structured ref. This one-time pass upgrades any
 -- surviving legacy blob: the embedded `|Hspell:<id>|h` resolves to a mount, so
 -- each such note gets its collectible row + ref and its blob block rewritten to
--- the thin link. v1-D-era notes carry `onewowcollectible:` (not a spell link), so
--- they never match. Gated by a global flag so the scan runs once per account.
+-- the thin link. Notes already in the thin-link format carry `onewowcollectible:`
+-- (not a spell link), so they never match. Gated by a global flag so the scan
+-- runs once per account.
 
 -- Split a note body into its `\n\n`-delimited blocks (the granularity the old
 -- writer appended each mount blob at).
@@ -220,7 +221,7 @@ end
 
 -- Thin replacement line for a migrated mount blob. Uses the Blizzard MOUNT global
 -- (locale-safe, no cross-scope core-locale dependency) + the clickable collectible
--- link, matching what v1-D writes for new sightings visually.
+-- link, matching what new sightings write visually.
 local function BuildMountRefLine(key)
     local link
     if ns.NotesHyperlinks and ns.NotesHyperlinks.BuildCollectibleLink then
@@ -259,7 +260,7 @@ function Players:MigrateMountBlobForNote(fullName, record)
             local line = key and BuildMountRefLine(key)
             if key and line then
                 -- Create the shared collectible row once (never clobber an existing
-                -- one), mirroring the v1-D ContextMenus upsert.
+                -- one), mirroring the ContextMenus upsert.
                 if ns.Collectibles and not ns.Collectibles:GetCollectible(key) then
                     ns.Collectibles:UpsertCollectible(key, { category = "Mount" })
                 end
@@ -276,7 +277,7 @@ function Players:MigrateMountBlobForNote(fullName, record)
     return changed
 end
 
---- One-time account-wide pass that upgrades legacy mount blobs to the v1-D thin
+--- One-time account-wide pass that upgrades legacy mount blobs to the thin
 --- ref + shared collectible row. Idempotent (gated by a global flag; re-running
 --- is a no-op). Safe to call at login after the Players module is initialized.
 function Players:MigrateLegacyMountBlobs()

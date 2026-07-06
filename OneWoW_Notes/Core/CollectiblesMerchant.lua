@@ -2,7 +2,7 @@ local _, ns = ...
 local L = ns.L
 
 -- ============================================================================
--- Collectibles merchant capture (v2-F-C)
+-- Collectibles merchant capture
 -- ============================================================================
 -- Subscribes Notes to the core OneWoW.Merchant scan funnel and turns vendor
 -- items that grant an uncollected collectible into "want" records with a vendor

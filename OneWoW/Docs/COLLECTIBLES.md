@@ -47,9 +47,9 @@ today stays valid as resolution is extended to more types.
 `sourceID` and `itemModifiedAppearanceID` are the same identifier; the `source`
 subtype uses it directly.
 
-**Resolved today:** `mount`, `appearance:source`, `pet`, `toy`, `heirloom`
-(v2-D added the latter three), `set` (transmog set / "ensemble"), `decor`
-(housing catalog, v4), and `recipe` (profession recipe items, v4). `campsite` is a
+**Resolved today:** `mount`, `appearance:source`, `pet`, `toy`, `heirloom`,
+`set` (transmog set / "ensemble"), `decor` (housing catalog), and `recipe`
+(profession recipe items). `campsite` is a
 valid key with no `ResolveDisplay` / `GetCollectionState` implementation yet — it
 returns `nil` for an unresolved type.
 
@@ -65,6 +65,18 @@ This is the deliberate split behind the design anchor "ensembles/achievements/
 filters are views, not primary keys": that still holds for *collection state*,
 while a set is a legitimate *acquisition* key (unlike a filter or achievement,
 which never becomes a record).
+
+### heirloom vs. appearance — `IsItemHeirloom` is the gate, not item quality
+
+`ResolveKeyFromItem` classifies heirlooms with `C_Heirloom.IsItemHeirloom(itemID)`
+(the same authoritative check Blizzard's own `MerchantFrame.lua` uses), **never**
+item quality. Some legacy vendor items (e.g. Enchanter Erodin's Dreadmist pieces)
+render at heirloom quality (Q7) but are pre-upgrade-system transmog-source tokens:
+`IsItemHeirloom` returns `false`, they never enter the heirloom collection, and
+they only grant a transmog appearance. Those correctly fall through the heirloom
+gate to `appearance:source`, which yields real, resolvable collection state —
+whereas keying them as heirlooms would make `PlayerHasHeirloom` report them
+"uncollected" forever. Do not trust quality color over the API.
 
 ## API
 
@@ -95,7 +107,7 @@ plus type-specific detail (so callers never branch on the return **type**):
 - `decor` → `{ collected, numOwned, numStored, numPlaced }` (`collected` == `numOwned > 0`; quantity model — owned across storage + placed, matching Blizzard's `GetEntryTotalOwned`)
 - `recipe` → `{ collected }` (`collected` == the taught recipe is known)
 
-## Ensemble / transmog-set rollups (v2-B)
+## Ensemble / transmog-set rollups
 
 An ensemble is a transmog **set** — a bundle of appearance sources. These are
 pure live views over `C_TransmogSets` with **no SavedVariables**:
@@ -135,11 +147,11 @@ cannot be branched on or concatenated into a key from tainted code. Callers must
 gate on resolvable (non-secret) data and bail with a user-visible message rather
 than building a bad key. Core resolution itself takes only plain numeric ids.
 
-## Ingest paths & Notes-side views (v2-A / v2-C)
+## Ingest paths & Notes-side views
 
 These live in consumers, not this service, but complete the picture:
 
-- **InspectMog → appearance (v2-A):** with the InspectMog module's *Add
+- **InspectMog → appearance:** with the InspectMog module's *Add
   appearances to Collectibles* toggle on, shift-clicking an inspected slot
   upserts an `appearance:source:<sourceID>` collectible via
   `OneWoW_Notes_API.BuildAppearanceSourceKey` + `UpsertCollectible` instead of a
@@ -150,19 +162,19 @@ These live in consumers, not this service, but complete the picture:
   mode, and each zone's tooltip states which appearance it adds. (No core
   `rowData` helper — the existing source-id→key builder already covers it, so
   core stays uncoupled from the inspect-scanner row shape.)
-- **Collectibles tab type filter (v2-A):** the Notes tab filters rows by
+- **Collectibles tab type filter:** the Notes tab filters rows by
   `ParseKey(key).type`; labels reuse Blizzard globals (`ALL`, `MOUNTS`,
   `WARDROBE`, …). Now offers every resolved type (see the recycle-bin section
   below for the current type + collected filters).
-- **Player `collectibleRefs` / sightings (v2-C):** `OneWoW_Notes` stores a
+- **Player `collectibleRefs` / sightings:** `OneWoW_Notes` stores a
   structured `{ key, spellID?, addedAt }` list per player note.
   `OneWoW_Notes_API.AddPlayerCollectibleRef` / `PlayerHasCollectibleRef` replace
   the old "search the note body for the link substring" dedup used by the
   *Add Mount Info* context menu (the content check remains a backward-compat
-  fallback for pre-v2-C notes). Secret spellIDs (another unit's aura in
+  fallback for legacy notes). Secret spellIDs (another unit's aura in
   instanced content) are dropped, per the caveat above.
 
-## Merchant funnel & vendor offers (v2-F-C / v2-F-D)
+## Merchant funnel & vendor offers
 
 Vendor-discovered collectible capture (seeing an item at a vendor you cannot buy
 yet) rides the core `OneWoW.Merchant` scan funnel, not this service.
@@ -217,7 +229,7 @@ per-slot members render as live, read-only child rows (`GetSetMembers`) with a
 collected/total roll-up on the parent — the members are views, so they are never
 stored and are not individually selectable.
 
-**Housing decor at vendors (v4).** Because capture is generic
+**Housing decor at vendors.** Because capture is generic
 (`ResolveKeyFromItem` → `GetCollectionState`), housing decor sold at a merchant is
 captured with **no capture-side change**: a decor item resolves to
 `decor:<recordID>` (via `C_HousingCatalog.GetCatalogEntryInfoByItem`), and decor
@@ -227,7 +239,7 @@ offer. The detail view shows the localized owned breakdown
 model, and the Collectibles type filter gains a **Decor** option
 (`CATALOG_SHOP_TYPE_DECOR`).
 
-**Recipes at vendors (v4).** A recipe item (item class `Enum.ItemClass.Recipe` —
+**Recipes at vendors.** A recipe item (item class `Enum.ItemClass.Recipe` —
 "Recipe:/Technique:/Pattern: …") resolves to `recipe:<itemID>`, keyed by the item
 because that is what the vendor sells and what the merchant funnel sees. The class
 is checked **before** the decor branch, so a *housing-decor recipe* is captured as
@@ -243,7 +255,7 @@ scan cache / AltTracker data / `GetRecipeInfo(…).learned`. The type filter gai
 mixed vendor were not being captured before recipes were wired up: they are recipe
 items, and had no resolved key.
 
-## Recycle bin: intents, auto-delete & the collected filter (v4)
+## Recycle bin: intents, auto-delete & the collected filter
 
 All of this lives in `OneWoW_Notes` (records + settings + UI), not the core
 service — the recycle bin is *user content*, and collection state stays live.

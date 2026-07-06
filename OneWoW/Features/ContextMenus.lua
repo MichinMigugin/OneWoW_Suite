@@ -161,7 +161,7 @@ local function HandleAddMountInfo(unit)
         local existing = OneWoW_Notes_API.GetPlayer(fullName)
         if existing then
             -- Dedup on the structured collectible ref for real mounts (also matches
-            -- pre-v2-C notes that only embedded the link); movement forms have no
+            -- legacy notes that only embedded the link); movement forms have no
             -- key, so they fall back to the plain-text needle.
             local alreadyRecorded
             if collectibleKey then

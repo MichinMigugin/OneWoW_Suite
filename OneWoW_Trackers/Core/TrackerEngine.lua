@@ -420,7 +420,7 @@ function TE:EvaluateObjective(obj)
         return nil
 
     elseif ot == "toy" then
-        -- Collection truth is owned by OneWoW.Collectibles (v2-D); the engine keeps
+        -- Collection truth is owned by OneWoW.Collectibles; the engine keeps
         -- its `current, max` contract by reading the uniform state's `.collected`.
         local itemID = tonumber(op.itemID)
         if itemID then
@@ -445,7 +445,7 @@ function TE:EvaluateObjective(obj)
         end
 
     elseif ot == "transmog" then
-        -- itemModifiedAppearanceID == sourceID (v1-A), so this routes through the
+        -- itemModifiedAppearanceID == sourceID, so this routes through the
         -- appearance:source state, which uses the IMA-aware collection API.
         local appearanceID = tonumber(op.itemModifiedAppearanceID)
         if appearanceID then
