@@ -13,7 +13,7 @@ local C_TooltipInfo = C_TooltipInfo
 local C_Container = C_Container
 local strfind = string.find
 local tconcat = table.concat
-local ipairs, pairs, wipe, tonumber = ipairs, pairs, wipe, tonumber
+local ipairs, wipe, tonumber = ipairs, wipe, tonumber
 
 local LINE_LEARN = Enum.TooltipDataLineType.ItemSpellTriggerLearn
 local LINE_BINDING = Enum.TooltipDataLineType.ItemBinding

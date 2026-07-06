@@ -20,7 +20,7 @@ local _, ns = ...
 ns.PredicateEngine = {}
 local PE = ns.PredicateEngine
 
-local tconcat, tinsert, wipe = table.concat, tinsert, wipe
+local tinsert, wipe = tinsert, wipe
 local ipairs, pairs, tonumber, tostring = ipairs, pairs, tonumber, tostring
 local strlower, strfind, strmatch, strtrim, strsplit = string.lower, string.find, string.match, strtrim, strsplit
 local rawset, rawget, setmetatable = rawset, rawget, setmetatable
