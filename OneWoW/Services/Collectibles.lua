@@ -544,6 +544,19 @@ end
 -- Item -> key resolution
 -- ---------------------------------------------------------------------------
 
+-- Upgraded/catalyst links often carry bonus IDs that make GetItemInfo(hyperlink)
+-- return nothing while GetItemInfo(itemID) still resolves the canonical source.
+local function ResolveTransmogSourceID(itemID, hyperlink)
+    local _, sourceID
+    if hyperlink then
+        _, sourceID = C_TransmogCollection.GetItemInfo(hyperlink)
+    end
+    if not sourceID and itemID then
+        _, sourceID = C_TransmogCollection.GetItemInfo(itemID)
+    end
+    return sourceID
+end
+
 --- Resolve the collectible key an item grants, or nil if the item is not a
 --- known collectible. Used to classify merchant/loot items into collectibles.
 --- Order matters: a caged-pet or mount item also has an appearance-less nature,
@@ -605,7 +618,7 @@ function Collectibles.ResolveKeyFromItem(itemID, hyperlink)
         return Collectibles.BuildKey("set", setID)
     end
 
-    local _, sourceID = C_TransmogCollection.GetItemInfo(hyperlink or itemID)
+    local sourceID = ResolveTransmogSourceID(itemID, hyperlink)
     if sourceID then
         return Collectibles.BuildKey("appearance", "source", sourceID)
     end

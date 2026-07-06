@@ -147,6 +147,11 @@ state via `GetCollectionState`). For recipes, `collected` is the logged-in
 character only; `collectedByAlt` is true when a scoped alt in Recipe Knowledge's
 `altScope` knows the recipe and you do not.
 
+Appearance resolution in `ResolveKeyFromItem` calls
+`C_TransmogCollection.GetItemInfo(hyperlink)` first, then falls back to
+`GetItemInfo(itemID)` when the link returns no source (common on upgraded or
+catalyst gear whose bonus IDs poison the hyperlink lookup).
+
 ## Secret-value caveat (12.0)
 
 When a key is derived from a unit's aura (e.g. identifying a mount from the

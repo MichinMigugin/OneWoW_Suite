@@ -2313,24 +2313,27 @@ local function PopulateBaseProps(props, itemID, hyperlink)
         props.upgradeTrackStringID = upgradeInfo.trackStringID
     end
 
-    -- ---- Transmog / appearance (identity portion: hyperlink path only) ----
-    -- The item-keyed primary check has no `appearance:source` analog in core (that
-    -- key is source-keyed), so PlayerHasTransmog(itemID) stays; the source-keyed
-    -- fallback routes through OneWoW.Collectibles so the sourceID collection check
-    -- is the service's uniform state.
+    -- ---- Transmog / appearance ----
+    -- PlayerHasTransmog(itemID) is the fast item-keyed check; source-keyed
+    -- collection routes through OneWoW.Collectibles. GetItemInfo(hyperlink)
+    -- is tried first, with itemID fallback when bonus-heavy links resolve nil.
     props.hasAppearance         = false
     props.isAppearanceCollected = C_TransmogCollection.PlayerHasTransmog(itemID)
 
+    local _, sourceID
     if hyperlink then
-        local _, sourceID = C_TransmogCollection.GetItemInfo(hyperlink)
-        if sourceID then
-            props.hasAppearance = true
+        _, sourceID = C_TransmogCollection.GetItemInfo(hyperlink)
+    end
+    if not sourceID then
+        _, sourceID = C_TransmogCollection.GetItemInfo(itemID)
+    end
+    if sourceID then
+        props.hasAppearance = true
 
-            if not props.isAppearanceCollected then
-                local st = OneWoW.Collectibles.GetCollectionState(
-                    OneWoW.Collectibles.BuildKey("appearance", "source", sourceID))
-                props.isAppearanceCollected = (st and st.collected) == true
-            end
+        if not props.isAppearanceCollected then
+            local st = OneWoW.Collectibles.GetCollectionState(
+                OneWoW.Collectibles.BuildKey("appearance", "source", sourceID))
+            props.isAppearanceCollected = (st and st.collected) == true
         end
     end
 
