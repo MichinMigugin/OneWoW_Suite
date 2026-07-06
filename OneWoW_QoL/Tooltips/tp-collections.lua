@@ -1,6 +1,7 @@
 local _, ns = ...
 
 local OneWoW = OneWoW
+local PE = OneWoW.PredicateEngine
 
 local BATTLE_PET_CAGE_ID = 82800
 
@@ -43,7 +44,7 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
 
     local isMisc = (classID == Enum.ItemClass.Miscellaneous)
 
-    if classID == Enum.ItemClass.Recipe then
+    if PE:IsRecipeItem(itemID, nil, nil, itemLink) then
         local Util = OneWoW.RecipeKnownUtil
         if Util then
             return Util:IsRecipeKnown(itemID)

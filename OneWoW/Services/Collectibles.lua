@@ -527,10 +527,8 @@ function Collectibles.ResolveKeyFromItem(itemID)
 
     -- A recipe-class item teaches a craft — it is a recipe collectible in its own
     -- right (and, for decor recipes, does NOT map to the crafted decor's catalog
-    -- entry), so classify by item class before the decor/transmog fallbacks. The
-    -- class from GetItemInfoInstant is available even before the item is cached.
-    local recipeClassID = select(6, C_Item.GetItemInfoInstant(itemID))
-    if recipeClassID == Enum.ItemClass.Recipe then
+    -- entry), so classify by item class before the decor/transmog fallbacks.
+    if ns.PredicateEngine:IsRecipeItem(itemID) then
         return Collectibles.BuildKey("recipe", itemID)
     end
 

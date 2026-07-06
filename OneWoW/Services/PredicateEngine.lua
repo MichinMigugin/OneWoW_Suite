@@ -498,7 +498,12 @@ RegisterKeyword("reagent",                              function(p) return p.cla
 RegisterKeyword("projectile",                           function(p) return p.classID == Enum.ItemClass.Projectile end)
 RegisterKeyword({"tradegoods", "tradegood"},            function(p) return p.classID == Enum.ItemClass.Tradegoods end)
 RegisterKeyword({"itemenhancement", "enhancement"},     function(p) return p.classID == Enum.ItemClass.ItemEnhancement end)
-RegisterKeyword("recipe",                               function(p) return p.classID == Enum.ItemClass.Recipe end)
+
+local function PropsIsRecipeItem(props)
+    return props.classID == Enum.ItemClass.Recipe
+end
+
+RegisterKeyword("recipe",                               function(p) return PropsIsRecipeItem(p) end)
 -- CurrencyTokenObsolete (skipped)
 RegisterKeyword("quiver",                               function(p) return p.classID == Enum.ItemClass.Quiver end)
 
@@ -3196,6 +3201,24 @@ function PE:SafeEvaluate(compiled, props)
         return false, tostring(result)
     end
     return result, nil
+end
+
+--- True when the item is a profession recipe scroll, after ITEM_ID_OVERRIDES.
+--- Prefer this over raw C_Item.GetItemInfoInstant class checks.
+---@param itemID number
+---@param bagID number|nil
+---@param slotID number|nil
+---@param itemInfo string|table|nil
+---@return boolean isRecipe
+---@return table|nil props
+function PE:IsRecipeItem(itemID, bagID, slotID, itemInfo)
+    if not itemID then return false, nil end
+
+    local props = self:BuildProps(itemID, bagID, slotID, itemInfo)
+    if PropsIsRecipeItem(props) then
+        return true, props
+    end
+    return false, nil
 end
 
 --- High-level: compile + evaluate in one call. Builds props if needed.

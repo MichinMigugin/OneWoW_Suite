@@ -204,8 +204,7 @@ local function IsAlreadyKnown(itemLink)
 
     local itemID = tonumber(itemLink:match("item:(%d+)"))
     if itemID then
-        local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(itemID)
-        if classID == Enum.ItemClass.Recipe then
+        if OneWoW.PredicateEngine:IsRecipeItem(itemID, nil, nil, itemLink) then
             local Util = OneWoW.RecipeKnownUtil
             if Util then
                 local result = Util:IsRecipeKnown(itemID)

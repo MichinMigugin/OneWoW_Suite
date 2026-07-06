@@ -1110,7 +1110,7 @@ in this document; full API and extension notes are in
 | Area | What lives there (approx.) |
 |---|---|
 | Caches | `propsCache`, `tooltipCache`, `compiledCache` — keyed by expression string and `bagID:slotID` where applicable. |
-| Overrides | `ITEM_ID_OVERRIDES` — small hardcoded `itemID → classID/subClassID` fixes for mis-tagged recipes/items. |
+| Overrides | `ITEM_ID_OVERRIDES` — small hardcoded `itemID → classID/subClassID` fixes for mis-tagged recipes/items. Programmatic callers outside bag search should use `OneWoW.PredicateEngine:IsRecipeItem` instead of raw `GetItemInfoInstant` class checks. |
 | Data / patterns | Hearthstone ID set (`HS_IDS`), knowledge-study icon set (`KNOWLEDGE_ICONS`), `ITEM_CONTEXT_CATEGORY` → `#raid` / `#dungeon` / `#delves` / `#worldquest` / `#pvp` / `#store`, locale patterns for charges / tradeable / unique-equip, `CLASS_ID` (including Evoker, for `CanClassEquip` alt checks); `C_HousingCatalog.GetCatalogEntryInfoByItem` in `PopulateBaseProps` for decor quantity fields. |
 | `CONSTANT_MAP` | `${POOR}` … `${HEIRLOOM}` and expansion `${CURRENTEXPANSION}`, `${CLASSIC}` … `${LASTTITAN}` for `ResolveParams` / vendor templates. |
 | `PROP_REGISTRY` | Built-in numeric and string property names and aliases (including money units on `vendorprice` / `totalvalue` and housing decor counts: `decorstorage`, `decorplaced`, `decorredeemable`, `decortotal`). Exposed to callers via `RegisterProperty` merges. |

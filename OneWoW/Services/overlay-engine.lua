@@ -1,6 +1,7 @@
 local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
+local PE = ns.PredicateEngine
 
 ns.OverlayEngine = {}
 local Engine = ns.OverlayEngine
@@ -711,7 +712,7 @@ local function CheckCollectionStatus(itemID, itemLink, classID, subclassID)
         return false
     end
 
-    if classID == Enum.ItemClass.Recipe then
+    if PE:IsRecipeItem(itemID, nil, nil, itemLink) then
         local Util = ns.RecipeKnownUtil
         if Util then
             return Util:IsRecipeKnown(itemID)
@@ -849,7 +850,7 @@ local function DetectOverlays(classID, subclassID, itemID, itemLink, itemLocatio
 
 
     if IsOverlayEnabled("recipe") then
-        if classID == Enum.ItemClass.Recipe then
+        if PE:IsRecipeItem(itemID, nil, nil, itemLink) then
             local isTeachable = false
             local tooltipData = C_TooltipInfo.GetItemByID(itemID)
             if tooltipData and tooltipData.lines then

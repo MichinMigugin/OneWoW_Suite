@@ -350,11 +350,7 @@ function ItemSearch:Query(searchTerm, sourceFilter)
 end
 
 function ItemSearch:GetDetail(itemID)
-    local isRecipe = false
-    local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(itemID)
-    if classID == Enum.ItemClass.Recipe then
-        isRecipe = true
-    end
+    local isRecipe = OneWoW.PredicateEngine:IsRecipeItem(itemID)
 
     local detail = {
         drops        = {},

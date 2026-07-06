@@ -1,6 +1,7 @@
 local _, ns = ...
 
 local OneWoW = OneWoW
+local PE = OneWoW.PredicateEngine
 
 local PROFESSION_SKILL_IDS = {
     171, 164, 333, 202, 182,
@@ -101,10 +102,16 @@ end
 local function RecipeKnowledgeProvider(_, context)
     if not context.itemID then return nil end
 
-    local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(context.itemID)
-    if classID ~= Enum.ItemClass.Recipe then return nil end
+    local isRecipe, props = PE:IsRecipeItem(context.itemID, nil, nil, context.itemLink)
+    if not isRecipe then return nil end
 
-    local profName = DetectProfession(context.itemID)
+    local profName
+    if props and props.subClassID then
+        profName = C_Item.GetItemSubClassInfo(Enum.ItemClass.Recipe, props.subClassID)
+    end
+    if not profName or profName == "" then
+        profName = DetectProfession(context.itemID)
+    end
     if not profName then return nil end
 
     local profsAPI = OneWoW_AltTracker_Professions_API
