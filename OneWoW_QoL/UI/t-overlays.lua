@@ -1,71 +1,49 @@
 local _, ns = ...
 
+-- ============================================================================
+-- QoL > Overlays — Overlay System 2.0 settings UI (card layout)
+-- ============================================================================
+-- Left list: General + built-ins (Item Level, Quality Border, Gear Upgrade)
+-- + user overlays in priority order, each row with its icon thumbnail,
+-- a drag handle for reordering, and enable dot, plus a pinned
+-- "+ Add Overlay" row.
+--
+-- Detail pane: a hero block (live preview slots + name + enable toggle)
+-- followed by collapsible full-width cards (Rule / Icon / Placement /
+-- Background / Where It Shows / Manage). All painting in the preview goes
+-- through the real 2.0 renderer so what you see is what you get.
+-- ============================================================================
+
 local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 
 local L = ns.L
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 
-local OVERLAY_SETTINGS_IDS = {
-    consumables  = true,
-    housingdecor = true,
-    itemlevel    = true,
-    junk         = true,
-    knownitems   = true,
-    mounts       = true,
-    pets         = true,
-    protected    = true,
-    quest        = true,
-    reagents     = true,
-    recipe       = true,
-    soulbound    = true,
-    toys         = true,
-    unknownitems = true,
-    upgrade      = true,
-    warbound     = true,
-    wue          = true,
-    boe          = true,
-    transmog       = true,
+local BG_STYLE_OPTIONS = {
+    "Solid-Circle", "Solid-Square", "Spinning Orbs", "Glow Pulse", "Portal Spiral",
+    "PowerSwirlAnimation-YellowRing", "PowerSwirlAnimation-BlueRing",
+    "PowerSwirlAnimation-StarBurst", "PowerSwirlAnimation-WhiteStarBurst",
+    "PowerSwirlAnimation-SpinningGlowys",
+    "ArtifactsFX-SpinningGlowys", "ArtifactsFX-StarBurst", "ArtifactsFX-YellowRing",
+    "Artifacts-PerkRing-GoldMedal", "Artifacts-PerkRing-MainProc", "Artifacts-PerkRing-Small",
+    "auctionhouse-itemicon-border-blue", "auctionhouse-itemicon-border-green",
+    "auctionhouse-itemicon-border-purple", "auctionhouse-itemicon-border-gray",
+    "auctionhouse-itemicon-border-orange", "auctionhouse-itemicon-border-white",
+    "auctionhouse-itemicon-border-account", "auctionhouse-itemicon-border-artifact",
 }
 
-local POSITIONS = {
-    "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT",
-    "Outer-Top-Left", "Outer-Top-Middle", "Outer-Top-Right",
-    "Outer-Bottom-Left", "Outer-Bottom-Middle", "Outer-Bottom-Right",
-}
-
-local PositionOffsets = {
-    TOPLEFT     = { 1, -1},
-    TOPRIGHT    = {-1, -1},
-    BOTTOMLEFT  = { 1,  1},
-    BOTTOMRIGHT = {-1,  1},
-    BOTTOM      = { 0,  1},
-    TOP         = { 0, -1},
-    LEFT        = { 1,  0},
-    RIGHT       = {-1,  0},
-    CENTER      = { 0,  0},
-}
-
-local OuterPositionData = {
-    ["Outer-Top-Left"]      = { "TOPLEFT",     4, -4 },
-    ["Outer-Top-Middle"]    = { "TOP",         0, -4 },
-    ["Outer-Top-Right"]     = { "TOPRIGHT",   -4, -4 },
-    ["Outer-Bottom-Left"]   = { "BOTTOMLEFT",  4,  4 },
-    ["Outer-Bottom-Middle"] = { "BOTTOM",      0,  4 },
-    ["Outer-Bottom-Right"]  = { "BOTTOMRIGHT",-4,  4 },
-}
-
-local ICON_EFFECT_OPTIONS = { "None", "Spinning", "Zooming", "Both" }
-local ICON_EFFECT_VALUE_MAP  = { ["None"] = "none", ["Spinning"] = "spinning", ["Zooming"] = "zooming", ["Both"] = "both" }
-local ICON_EFFECT_DISPLAY_MAP = { ["none"] = "None", ["spinning"] = "Spinning", ["zooming"] = "Zooming", ["both"] = "Both" }
-
-local BG_STYLE_OPTIONS = { "Solid-Circle", "Solid-Square", "Spinning Orbs", "Glow Pulse", "Portal Spiral" }
-
-local PREVIEW_SLOT_SIZE = 74
--- Item link used only for overlay settings preview when "rarity-colored background" is enabled (matches engine: C_Item.GetItemQualityColor).
+-- Item link used only for the preview's rarity-colored background (matches
+-- engine: C_Item.GetItemQualityColor).
 local PREVIEW_BG_RARITY_ITEM_LINK = "|cff0070dd|Hitem:19019::::::::60:::::::::|h[]|h|r"
+
+local PREVIEW_SLOT_SIZE = 44
+local PREVIEW_ICONS = {
+    "Interface\\Icons\\INV_Chest_Plate06",
+    "Interface\\Icons\\INV_Misc_Food_11",
+}
+local PREVIEW_QUALITIES = { Enum.ItemQuality.Epic, Enum.ItemQuality.Poor }
 
 local ICON_CATEGORIES = {
     {
@@ -142,6 +120,18 @@ local ICON_CATEGORIES = {
             "bags-glow-white", "bags-glow-purple", "bags-glow-blue",
             "bags-glow-green", "bags-glow-orange", "bags-glow-artifact",
             "bags-glow-heirloom",
+            "auctionhouse-itemicon-border-color", "auctionhouse-itemicon-border-blue",
+            "auctionhouse-itemicon-border-green", "auctionhouse-itemicon-border-purple",
+            "auctionhouse-itemicon-border-gray", "auctionhouse-itemicon-border-orange",
+            "auctionhouse-itemicon-border-white", "auctionhouse-itemicon-border-account",
+            "auctionhouse-itemicon-border-artifact",
+            "Artifacts-ItemIconBorder", "Artifacts-PerkRing-GoldMedal",
+            "Artifacts-PerkRing-MainProc", "Artifacts-PerkRing-Small",
+            "Artifacts-PerkRing-Highlight", "ArtifactsFX-SpinningGlowys",
+            "ArtifactsFX-StarBurst", "ArtifactsFX-YellowRing",
+            "PowerSwirlAnimation-YellowRing", "PowerSwirlAnimation-BlueRing",
+            "PowerSwirlAnimation-StarBurst", "PowerSwirlAnimation-WhiteStarBurst",
+            "PowerSwirlAnimation-SpinningGlowys",
         },
     },
     {
@@ -150,446 +140,978 @@ local ICON_CATEGORIES = {
             "Battlenet-ClientIcon-WoW", "BfAMission-Icon-HUB",
             "BfAMission-Icon-Normal", "midnight-beta-access",
             "checkmark-minimal-disabled",
+            "AnimCreate_Icon_Template", "AnimCreate_Icon_Texture",
+            "AnimCreate_Icon_Add", "AnimCreate_Icon_Mask",
         },
     },
 }
 
-local PICKER_MAX_HEIGHT = 220
-local PICKER_ROW_HEIGHT = 24
-local PICKER_HDR_HEIGHT = 22
-local PICKER_ICON_SIZE  = 16
+-- Card collapsed state, remembered per card key for the session.
+local collapsedCards = {}
 
-local function CreateIconPicker(parent, initialIcon, onChange)
-    local currentSelected = initialIcon or "VignetteEvent-SuperTracked"
+-- ----------------------------------------------------------------------------
+-- Storage helpers
+-- ----------------------------------------------------------------------------
 
-    local container = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    container:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    container:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    container:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local scrollFrame, scrollChild = OneWoW_GUI:CreateScrollFrame(container, {})
-    scrollFrame:ClearAllPoints()
-    scrollFrame:SetPoint("TOPLEFT",     container, "TOPLEFT",     0,    0)
-    scrollFrame:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", 0, 0)
-
-    local catExpanded = {}
-    local headers     = {}
-    local allItemRows = {}
-
-    for catIdx, cat in ipairs(ICON_CATEGORIES) do
-        catExpanded[catIdx] = (catIdx == 1)
-
-        local hdr = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
-        hdr:SetHeight(PICKER_HDR_HEIGHT)
-        hdr:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-        hdr:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        hdr:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        hdr:Hide()
-
-        local hdrArrow = hdr:CreateTexture(nil, "OVERLAY")
-        hdrArrow:SetSize(12, 12)
-        hdrArrow:SetPoint("LEFT", hdr, "LEFT", 5, 0)
-        if catIdx == 1 then
-            hdrArrow:SetAtlas("UI-HUD-ActionBar-PageDownArrow-Up", false)
-        else
-            hdrArrow:SetAtlas("UI-HUD-ActionBar-PageNextButton-Up", false)
-        end
-
-        local hdrLabel = OneWoW_GUI:CreateFS(hdr, 10)
-        hdrLabel:SetPoint("LEFT", hdr, "LEFT", 20, 0)
-        hdrLabel:SetText(L[cat.nameKey])
-        hdrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-        local catRows = {}
-        for _, iconName in ipairs(cat.icons) do
-            local row = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
-            row:SetHeight(PICKER_ROW_HEIGHT)
-            row:SetBackdrop(BACKDROP_SIMPLE)
-            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-            row:Hide()
-
-            local icoFrame = CreateFrame("Frame", nil, row)
-            icoFrame:SetSize(PICKER_ICON_SIZE, PICKER_ICON_SIZE)
-            icoFrame:SetPoint("LEFT", row, "LEFT", 22, 0)
-            local icoTex = icoFrame:CreateTexture(nil, "ARTWORK")
-            icoTex:SetAllPoints(icoFrame)
-            OneWoW.OverlayIcons:ApplyToTexture(icoTex, iconName)
-
-            local lbl = OneWoW_GUI:CreateFS(row, 10)
-            lbl:SetPoint("LEFT", icoFrame, "RIGHT", 5, 0)
-            lbl:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-            lbl:SetJustifyH("LEFT")
-            lbl:SetText(OneWoW.OverlayIcons:GetDisplayName(iconName))
-            lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-            table.insert(catRows,    { iconName = iconName, frame = row, label = lbl })
-            table.insert(allItemRows, { iconName = iconName, frame = row, label = lbl })
-        end
-
-        headers[catIdx] = { frame = hdr, arrow = hdrArrow, items = catRows }
-    end
-
-    local function LayoutPicker()
-        local yPos = -2
-
-        for catIdx, _ in ipairs(ICON_CATEGORIES) do
-            local hdrData = headers[catIdx]
-            local hdr     = hdrData.frame
-
-            hdr:ClearAllPoints()
-            hdr:SetPoint("TOPLEFT",  scrollChild, "TOPLEFT",  2, yPos)
-            hdr:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -2, yPos)
-            hdr:Show()
-            yPos = yPos - (PICKER_HDR_HEIGHT + 2)
-
-            if catExpanded[catIdx] then
-                hdrData.arrow:SetAtlas("UI-HUD-ActionBar-PageDownArrow-Up", false)
-            else
-                hdrData.arrow:SetAtlas("UI-HUD-ActionBar-PageNextButton-Up", false)
-            end
-
-            for _, rowData in ipairs(hdrData.items) do
-                if catExpanded[catIdx] then
-                    rowData.frame:ClearAllPoints()
-                    rowData.frame:SetPoint("TOPLEFT",  scrollChild, "TOPLEFT",  2, yPos)
-                    rowData.frame:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -2, yPos)
-                    rowData.frame:Show()
-                    yPos = yPos - (PICKER_ROW_HEIGHT + 2)
-
-                    if rowData.iconName == currentSelected then
-                        rowData.frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                        rowData.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                    else
-                        rowData.frame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-                        rowData.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                    end
-                else
-                    rowData.frame:Hide()
-                end
-            end
-        end
-
-        local totalH = math.abs(yPos) + 4
-        scrollChild:SetHeight(totalH)
-
-        local frameH = math.min(PICKER_MAX_HEIGHT, math.max(PICKER_HDR_HEIGHT + 4, totalH))
-        container:SetHeight(frameH)
-
-        local maxScroll = math.max(0, totalH - frameH)
-        if scrollFrame.ScrollBar then
-            scrollFrame.ScrollBar:SetMinMaxValues(0, maxScroll)
-            if scrollFrame:GetVerticalScroll() > maxScroll then
-                scrollFrame.ScrollBar:SetValue(maxScroll)
-            end
-        end
-    end
-
-    for catIdx in ipairs(ICON_CATEGORIES) do
-        local capturedIdx = catIdx
-        headers[catIdx].frame:SetScript("OnClick", function()
-            catExpanded[capturedIdx] = not catExpanded[capturedIdx]
-            LayoutPicker()
-        end)
-    end
-
-    for _, rowData in ipairs(allItemRows) do
-        local capturedName  = rowData.iconName
-        local capturedFrame = rowData.frame
-        local capturedLabel = rowData.label
-
-        capturedFrame:SetScript("OnEnter", function(self)
-            if capturedName ~= currentSelected then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-                capturedLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            end
-        end)
-        capturedFrame:SetScript("OnLeave", function(self)
-            if capturedName ~= currentSelected then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-                capturedLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end
-        end)
-        capturedFrame:SetScript("OnClick", function()
-            currentSelected = capturedName
-            LayoutPicker()
-            onChange(capturedName)
-        end)
-    end
-
-    LayoutPicker()
-    return container
+local function Reg()
+    return OneWoW.SettingsFeatureRegistry
 end
 
-local function CreateSlotPreview(parent, featureId, reg)
-    local SLOT_SIZE = PREVIEW_SLOT_SIZE
-
-    local container = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    container:SetSize(SLOT_SIZE + 6, SLOT_SIZE + 6)
-    container:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    container:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    container:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-
-    local slotFrame = CreateFrame("Frame", nil, container, "BackdropTemplate")
-    slotFrame:SetSize(SLOT_SIZE, SLOT_SIZE)
-    slotFrame:SetPoint("CENTER", container, "CENTER", 0, 0)
-    slotFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    slotFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    slotFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-
-    local itemTex = slotFrame:CreateTexture(nil, "ARTWORK")
-    itemTex:SetPoint("TOPLEFT",     slotFrame, "TOPLEFT",     1, -1)
-    itemTex:SetPoint("BOTTOMRIGHT", slotFrame, "BOTTOMRIGHT", -1,  1)
-    itemTex:SetTexture("Interface\\Icons\\INV_Misc_Bag_07")
-
-    local overlayFrame = CreateFrame("Frame", nil, slotFrame)
-    overlayFrame:SetFrameLevel(slotFrame:GetFrameLevel() + 3)
-    overlayFrame:EnableMouse(false)
-
-    local overlayTex = overlayFrame:CreateTexture(nil, "OVERLAY", nil, 3)
-    overlayTex:SetAllPoints(overlayFrame)
-
-    local iconAnim = overlayFrame:CreateAnimationGroup()
-    local iSpin1 = iconAnim:CreateAnimation("Rotation")
-    iSpin1:SetDuration(1.5); iSpin1:SetDegrees(-360); iSpin1:SetOrder(1)
-    local iScaleUp = iconAnim:CreateAnimation("Scale")
-    iScaleUp:SetDuration(0.75); iScaleUp:SetScale(1.5, 1.5); iScaleUp:SetOrder(1)
-    local iSpin2 = iconAnim:CreateAnimation("Rotation")
-    iSpin2:SetDuration(1.5); iSpin2:SetDegrees(-360); iSpin2:SetOrder(2)
-    local iScaleDown = iconAnim:CreateAnimation("Scale")
-    iScaleDown:SetDuration(0.75); iScaleDown:SetScale(1/1.5, 1/1.5); iScaleDown:SetOrder(2)
-    iconAnim:SetLooping("REPEAT")
-
-    local bgFrame = CreateFrame("Frame", nil, overlayFrame)
-    bgFrame:SetPoint("CENTER", overlayFrame, "CENTER", 0, 0)
-    bgFrame:SetFrameLevel(overlayFrame:GetFrameLevel() - 1)
-    bgFrame:EnableMouse(false)
-    local bgTex = bgFrame:CreateTexture(nil, "ARTWORK")
-
-    local bgAnim = bgTex:CreateAnimationGroup()
-    local bSpin1 = bgAnim:CreateAnimation("Rotation")
-    bSpin1:SetDuration(1.5); bSpin1:SetDegrees(-360); bSpin1:SetOrder(1)
-    local bScaleUp = bgAnim:CreateAnimation("Scale")
-    bScaleUp:SetDuration(0.75); bScaleUp:SetScale(1.8, 1.8); bScaleUp:SetOrder(1)
-    local bSpin2 = bgAnim:CreateAnimation("Rotation")
-    bSpin2:SetDuration(1.5); bSpin2:SetDegrees(-360); bSpin2:SetOrder(2)
-    local bScaleDown = bgAnim:CreateAnimation("Scale")
-    bScaleDown:SetDuration(0.75); bScaleDown:SetScale(1/1.8, 1/1.8); bScaleDown:SetOrder(2)
-    bgAnim:SetLooping("REPEAT")
-
-    local bgPulseAnim = bgTex:CreateAnimationGroup()
-    local bgFadeOut = bgPulseAnim:CreateAnimation("Alpha")
-    bgFadeOut:SetFromAlpha(1.0)
-    bgFadeOut:SetToAlpha(0.3)
-    bgFadeOut:SetDuration(0.75)
-    bgFadeOut:SetOrder(1)
-    local bgFadeIn = bgPulseAnim:CreateAnimation("Alpha")
-    bgFadeIn:SetFromAlpha(0.3)
-    bgFadeIn:SetToAlpha(1.0)
-    bgFadeIn:SetDuration(0.75)
-    bgFadeIn:SetOrder(2)
-    bgPulseAnim:SetLooping("REPEAT")
-
-    bgFrame:Hide()
-
-    local bgMask = bgFrame:CreateMaskTexture()
-    bgMask:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-    bgMask:SetAllPoints(bgFrame)
-    bgMask:Hide()
-    local previewMaskActive = false
-
-    local function Refresh()
-        local icon     = reg:GetOverlaySetting(featureId, "icon")     or "VignetteEvent-SuperTracked"
-        local position = reg:GetOverlaySetting(featureId, "position") or "TOPRIGHT"
-        local scale    = reg:GetOverlaySetting(featureId, "scale")    or 1.0
-        local alpha    = reg:GetOverlaySetting(featureId, "alpha")    or 1.0
-        local baseSize = SLOT_SIZE * 0.54
-        local finalSize = baseSize * scale
-
-        overlayFrame:ClearAllPoints()
-        local outerData = OuterPositionData[position]
-        if outerData then
-            overlayFrame:SetPoint("CENTER", slotFrame, outerData[1], outerData[2], outerData[3])
-        else
-            local offsets = PositionOffsets[position] or {0, 0}
-            overlayFrame:SetPoint(position, slotFrame, position, offsets[1], offsets[2])
-        end
-        overlayFrame:SetSize(finalSize, finalSize)
-        if icon == "BLANK" then
-            overlayTex:SetTexture(nil)
-            overlayTex:SetAtlas("")
-            overlayTex:SetAlpha(0)
-        else
-            OneWoW.OverlayIcons:ApplyToTexture(overlayTex, icon)
-            local iconColor = reg:GetOverlaySetting(featureId, "iconColor") or {1, 1, 1}
-            overlayTex:SetVertexColor(iconColor[1], iconColor[2], iconColor[3])
-            overlayTex:SetAlpha(alpha)
-        end
-        overlayFrame:Show()
-
-        local effect = reg:GetOverlaySetting(featureId, "effect") or "none"
-        iconAnim:Stop()
-        if effect ~= "none" then
-            local hasSpin = (effect == "spinning" or effect == "both")
-            local hasZoom = (effect == "zooming" or effect == "both")
-            iSpin1:SetDegrees(hasSpin and -360 or 0)
-            iSpin2:SetDegrees(hasSpin and -360 or 0)
-            iScaleUp:SetScale(hasZoom and 1.5 or 1, hasZoom and 1.5 or 1)
-            iScaleDown:SetScale(hasZoom and (1/1.5) or 1, hasZoom and (1/1.5) or 1)
-            iconAnim:Play()
-        end
-
-        local bgEnabled = reg:GetOverlaySetting(featureId, "bgEnabled")
-        if bgEnabled then
-            bgFrame:SetFrameLevel(overlayFrame:GetFrameLevel() - 1)
-
-            local bgStyle = reg:GetOverlaySetting(featureId, "bgStyle") or "Solid-Circle"
-            local bgScale = reg:GetOverlaySetting(featureId, "bgScale") or 1.0
-            local bgColor = reg:GetOverlaySetting(featureId, "bgColor") or {1, 1, 1}
-            if reg:GetOverlaySetting(featureId, "bgUseRarityColor") and PREVIEW_BG_RARITY_ITEM_LINK then
-                local quality = select(3, C_Item.GetItemInfo(PREVIEW_BG_RARITY_ITEM_LINK))
-                if quality then
-                    local r, g, b = C_Item.GetItemQualityColor(quality)
-                    bgColor = {r, g, b}
-                end
-            end
-
-            local baseBgSize = finalSize * 1.6
-            local finalBgSize = baseBgSize * bgScale
-            bgFrame:SetSize(finalBgSize, finalBgSize)
-            bgTex:ClearAllPoints()
-            bgTex:SetAllPoints(bgFrame)
-            bgTex:SetVertexColor(bgColor[1], bgColor[2], bgColor[3])
-
-            local function applyCircleMask()
-                if not previewMaskActive then
-                    bgTex:AddMaskTexture(bgMask)
-                    previewMaskActive = true
-                end
-                bgMask:Show()
-            end
-
-            local function removeCircleMask()
-                if previewMaskActive then
-                    bgTex:RemoveMaskTexture(bgMask)
-                    previewMaskActive = false
-                end
-                bgMask:Hide()
-            end
-
-            if bgStyle == "Spinning Orbs" then
-                removeCircleMask()
-                bgTex:SetTexture(nil)
-                bgTex:SetAtlas("ArtifactsFX-SpinningGlowys-Purple", false)
-                bgPulseAnim:Stop()
-                bgAnim:Play()
-            elseif bgStyle == "Portal Spiral" then
-                removeCircleMask()
-                bgTex:SetTexture(nil)
-                bgTex:SetAtlas("UI-Frame-jailerstower-Portrait-QualityEpic", false)
-                bgPulseAnim:Stop()
-                bgAnim:Play()
-            elseif bgStyle == "Glow Pulse" then
-                bgAnim:Stop()
-                bgTex:SetAtlas("")
-                bgTex:SetTexture("Interface\\Buttons\\WHITE8x8")
-                applyCircleMask()
-                bgPulseAnim:Play()
-            else
-                bgAnim:Stop()
-                bgPulseAnim:Stop()
-                bgTex:SetAtlas("")
-                bgTex:SetTexture("Interface\\Buttons\\WHITE8x8")
-                if bgStyle == "Solid-Circle" then
-                    applyCircleMask()
-                else
-                    removeCircleMask()
-                end
-            end
-            bgFrame:Show()
-        else
-            bgAnim:Stop()
-            bgPulseAnim:Stop()
-            bgFrame:Hide()
-        end
-    end
-
-    Refresh()
-
-    return container, Refresh
+local function GetUserOverlays()
+    return Reg():GetFeatureSettings("overlays", "userOverlays")
 end
 
-local function ShowGeneralDetail(split, dsc, selectedRow)
-    local yOffset = -10
+--- Persist one userOverlays entry through the settings funnel (fires
+--- listeners so the engine rebuilds + repaints).
+local function SaveEntry(id, entry)
+    Reg():SetSetting("overlays", "userOverlays", id, entry)
+end
 
-    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L["OVR_GENERAL_TITLE"])
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+local function SetEntryField(id, entry, key, value)
+    entry[key] = value
+    SaveEntry(id, entry)
+end
 
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 12
+--- Ordered array of { id, entry } for the list panel.
+local function GetOrderedEntries()
+    local ordered = {}
+    for id, entry in pairs(GetUserOverlays()) do
+        if type(entry) == "table" then
+            table.insert(ordered, { id = id, entry = entry })
+        end
+    end
+    table.sort(ordered, function(a, b)
+        local oa, ob = a.entry.order or 0, b.entry.order or 0
+        if oa ~= ob then return oa < ob end
+        return a.id < b.id
+    end)
+    return ordered
+end
 
-    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    descLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-    descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    descLabel:SetJustifyH("LEFT")
-    descLabel:SetWordWrap(true)
-    descLabel:SetSpacing(3)
-    descLabel:SetText(L["OVR_GENERAL_DESC"])
-    descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    yOffset = yOffset - descLabel:GetStringHeight() - 16
+local function EntryDisplayName(entry)
+    local preset = entry.preset and OneWoW.Overlays2Defs:GetPreset(entry.preset)
+    if preset then return L[preset.title] end
+    if entry.name and entry.name ~= "" then return entry.name end
+    return L["OVR_CUSTOM_DEFAULT_NAME"]
+end
 
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
-        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", "general") end,
-        onToggle = function(newState)
-            OneWoW.SettingsFeatureRegistry:SetEnabled("overlays", "general", newState)
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
+--- Move a user overlay to an arbitrary position: pull it out of the ordered
+--- list and re-insert it before/after the target, then renumber and persist.
+--- fromId/toId are userOverlays ids; insertBefore true = above target.
+local function ReorderEntry(fromId, toId, insertBefore)
+    if fromId == toId then return false end
+    local ordered = GetOrderedEntries()
+
+    local srcIdx
+    for i, item in ipairs(ordered) do
+        if item.id == fromId then srcIdx = i break end
+    end
+    if not srcIdx then return false end
+    local src = table.remove(ordered, srcIdx)
+
+    local tgtIdx
+    for i, item in ipairs(ordered) do
+        if item.id == toId then tgtIdx = i break end
+    end
+    if not tgtIdx then
+        table.insert(ordered, srcIdx, src)
+        return false
+    end
+
+    table.insert(ordered, insertBefore and tgtIdx or (tgtIdx + 1), src)
+
+    for i, item in ipairs(ordered) do
+        item.entry.order = i
+        SaveEntry(item.id, item.entry)
+    end
+    return true
+end
+
+-- Forward declaration: list rebuild (assigned in BuildOverlayList).
+local RefreshListRef
+
+local function RefreshList(selectId)
+    if RefreshListRef then RefreshListRef(selectId) end
+end
+
+-- ----------------------------------------------------------------------------
+-- Card stack
+-- ----------------------------------------------------------------------------
+
+local function NewCardStack(split, dsc)
+    local stack = OneWoW_GUI:CreateCardStack(dsc, {
+        getCollapsed = function(key) return collapsedCards[key] end,
+        setCollapsed = function(key, collapsed) collapsedCards[key] = collapsed end,
+    })
+    stack.dsc = dsc
+    stack.split = split
+    stack.OnRelayout = function()
+        split.UpdateDetailThumb()
+    end
+    return stack
+end
+
+-- ----------------------------------------------------------------------------
+-- Hero block: preview slots + name + enable toggle
+-- ----------------------------------------------------------------------------
+
+local function CreatePreviewSlot(parent, iconPath, size)
+    local slot = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    slot:SetSize(size or PREVIEW_SLOT_SIZE, size or PREVIEW_SLOT_SIZE)
+    slot:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    slot:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    slot:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    local tex = slot:CreateTexture(nil, "ARTWORK")
+    tex:SetPoint("TOPLEFT", slot, "TOPLEFT", 1, -1)
+    tex:SetPoint("BOTTOMRIGHT", slot, "BOTTOMRIGHT", -1, 1)
+    tex:SetTexture(iconPath)
+    slot._iconTex = tex
+    slot._defaultIcon = iconPath
+    return slot
+end
+
+--- Hero block at the top of every detail: the selection title, an optional
+--- description, and the enable toggle. Painting goes to the split's docked
+--- side preview panel when present (the Overlays tab); otherwise two inline
+--- preview slots render in the hero itself (the Tooltips > Gear Upgrades
+--- mirror has no side panel).
+--- opts: title, desc?, isEnabled fn?, onToggle fn(newState)?, selectedRow?,
+---       paintSlot fn(slotFrame, quality)? (nil = bare slots)
+--- Returns RefreshPreview.
+local function AddHeroBlock(stack, opts)
+    local dsc = stack.dsc
+    local hero = CreateFrame("Frame", nil, dsc, "BackdropTemplate")
+    hero:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    hero:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    hero:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    stack:AddFrame(hero)
+
+    local Renderer = OneWoW.Overlays2Renderer
+    local sidePreview = stack.split._overlayPreview
+
+    local slots = {}
+    local textLeft = 10
+    if not sidePreview then
+        for i = 1, 2 do
+            local slot = CreatePreviewSlot(hero, PREVIEW_ICONS[i])
+            slot:SetPoint("TOPLEFT", hero, "TOPLEFT", 10 + (i - 1) * (PREVIEW_SLOT_SIZE + 6), -10)
+            slots[i] = slot
+        end
+        textLeft = 10 + 2 * (PREVIEW_SLOT_SIZE + 6) + 6
+    end
+
+    local title = OneWoW_GUI:CreateFS(hero, 15)
+    title:SetPoint("TOPLEFT", hero, "TOPLEFT", textLeft, -12)
+    title:SetWidth(math.max(120, stack.contentWidth - textLeft - 100))
+    title:SetJustifyH("LEFT")
+    title:SetWordWrap(false)
+    title:SetText(opts.title or "")
+    title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+    local toggleBtn, statusDot, statusText
+    if opts.isEnabled then
+        statusDot = OneWoW_GUI:CreateStatusDot(hero, { enabled = opts.isEnabled() })
+        statusDot:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 1, -9)
+
+        statusText = OneWoW_GUI:CreateFS(hero, 11)
+        statusText:SetPoint("LEFT", statusDot, "RIGHT", 5, 0)
+        statusText:SetJustifyH("LEFT")
+
+        toggleBtn = OneWoW_GUI:CreateFitTextButton(hero, { text = L["FEATURE_ENABLE_BTN"], height = 24 })
+        toggleBtn:SetPoint("TOPRIGHT", hero, "TOPRIGHT", -10, -10)
+
+        local function SyncToggle()
+            local enabled = opts.isEnabled()
+            statusDot:SetStatus(enabled)
+            if enabled then
+                statusText:SetText(L["FEATURE_ENABLED"])
+                statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+                toggleBtn:SetFitText(L["FEATURE_DISABLE_BTN"])
+            else
+                statusText:SetText(L["FEATURE_DISABLED"])
+                statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+                toggleBtn:SetFitText(L["FEATURE_ENABLE_BTN"])
+            end
+        end
+        SyncToggle()
+
+        toggleBtn:SetScript("OnClick", function()
+            local newState = not opts.isEnabled()
+            if opts.onToggle then opts.onToggle(newState) end
+            SyncToggle()
+            if opts.selectedRow and opts.selectedRow.dot then
+                opts.selectedRow.dot:SetStatus(newState)
+            end
+        end)
+    end
+
+    local bottomY = sidePreview and -50 or -(10 + PREVIEW_SLOT_SIZE)
+
+    local desc
+    if opts.desc then
+        desc = OneWoW_GUI:CreateFS(hero, 11)
+        desc:SetPoint("TOPLEFT", hero, "TOPLEFT", 10, bottomY - 8)
+        desc:SetWidth(stack.contentWidth - 8)
+        desc:SetJustifyH("LEFT")
+        desc:SetWordWrap(true)
+        desc:SetSpacing(2)
+        desc:SetText(opts.desc)
+        desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        bottomY = bottomY - 8 - desc:GetStringHeight()
+    end
+
+    hero:SetHeight(math.abs(bottomY) + 10)
+
+    local function RefreshPreview()
+        if sidePreview then
+            sidePreview:SetPainter(opts.paintSlot)
+            if sidePreview.SetTintAccessor then
+                sidePreview:SetTintAccessor(opts.tintAccessor)
+            end
+            return
+        end
+        for i = 1, 2 do
+            Renderer:CleanButton(slots[i])
+            if opts.paintSlot then
+                opts.paintSlot(slots[i], PREVIEW_QUALITIES[i])
+                Renderer:ShowContainer(slots[i])
+            end
+        end
+    end
+    RefreshPreview()
+
+    return RefreshPreview
+end
+
+-- ----------------------------------------------------------------------------
+-- Docked side preview panel (always visible; does not scroll away)
+-- ----------------------------------------------------------------------------
+
+local SIDE_PREVIEW_WIDTH = 132
+
+local function CreateSidePreviewPanel(split)
+    local panel = CreateFrame("Frame", nil, split.detailPanel, "BackdropTemplate")
+    panel:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    panel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    panel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    panel:SetWidth(SIDE_PREVIEW_WIDTH)
+    panel:SetPoint("TOPRIGHT", split.detailPanel, "TOPRIGHT", -8, -32)
+    panel:SetPoint("BOTTOMRIGHT", split.detailPanel, "BOTTOMRIGHT", -8, 8)
+
+    -- Make room: end the detail scroll area at the panel's left edge.
+    local sf = split.detailScrollFrame
+    local container = sf:GetParent()
+    sf:ClearAllPoints()
+    sf:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+    sf:SetPoint("BOTTOMLEFT", container, "BOTTOMLEFT", 0, 0)
+    sf:SetPoint("RIGHT", panel, "LEFT", -18, 0)
+
+    -- The scrollbar was styled against the container's right edge (where the
+    -- preview panel now sits); move it into the gap right of the scroll area.
+    local sb = sf.ScrollBar
+    if sb then
+        sb:ClearAllPoints()
+        sb:SetPoint("TOPLEFT", sf, "TOPRIGHT", 4, 0)
+        sb:SetPoint("BOTTOMLEFT", sf, "BOTTOMRIGHT", 4, 0)
+    end
+
+    local heading = OneWoW_GUI:CreateFS(panel, 12)
+    heading:SetPoint("TOP", panel, "TOP", 0, -10)
+    heading:SetText(PREVIEW)
+    heading:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+    -- Large sample on top, normal bag-button size pair below (epic + poor).
+    local big = CreatePreviewSlot(panel, PREVIEW_ICONS[1], 76)
+    big:SetPoint("TOP", panel, "TOP", 0, -30)
+
+    local smallLeft = CreatePreviewSlot(panel, PREVIEW_ICONS[1], 37)
+    smallLeft:SetPoint("TOP", panel, "TOP", -21, -30 - 76 - 12)
+
+    local smallRight = CreatePreviewSlot(panel, PREVIEW_ICONS[2], 37)
+    smallRight:SetPoint("TOP", panel, "TOP", 21, -30 - 76 - 12)
+
+    panel._slots = {
+        { slot = big,        quality = PREVIEW_QUALITIES[1], role = "big" },
+        { slot = smallLeft,  quality = PREVIEW_QUALITIES[1], role = "left" },
+        { slot = smallRight, quality = PREVIEW_QUALITIES[2], role = "right" },
+    }
+
+    local Renderer = OneWoW.Overlays2Renderer
+
+    local tintLabel = OneWoW_GUI:CreateFS(panel, 11)
+    tintLabel:SetPoint("TOP", smallLeft, "BOTTOM", 21, -16)
+    tintLabel:SetText(L["OVR_ICON_COLOR_LABEL"])
+    tintLabel:SetJustifyH("CENTER")
+    tintLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local tintSwatch = OneWoW_GUI:CreateColorSwatch(panel, {
+        getColor = function()
+            local acc = panel._tintAccessor
+            local tint = acc and acc.getTint and acc.getTint() or { 1, 1, 1 }
+            return tint[1], tint[2], tint[3]
+        end,
+        onColorChanged = function(r, g, b)
+            local acc = panel._tintAccessor
+            if acc and acc.setTint then
+                acc.setTint({ r, g, b })
             end
         end,
     })
+    tintSwatch:SetPoint("TOP", tintLabel, "BOTTOM", 0, -6)
 
-    yOffset = statusBlock.getBottomY() - 20
+    local tintReset = OneWoW_GUI:CreateFitTextButton(panel, { text = RESET, height = 20 })
+    tintReset:SetPoint("TOP", tintSwatch, "BOTTOM", 0, -6)
+    tintReset:SetScript("OnClick", function()
+        local acc = panel._tintAccessor
+        if acc and acc.setTint then
+            acc.setTint(nil)
+        end
+    end)
 
-    local noteLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    noteLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-    noteLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    noteLabel:SetJustifyH("LEFT")
-    noteLabel:SetWordWrap(true)
-    noteLabel:SetSpacing(3)
-    noteLabel:SetText(L["OVR_GENERAL_NOTE"])
-    noteLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - noteLabel:GetStringHeight() - 20
+    -- Background color + rarity color live here too, shown only while the
+    -- overlay has Add Background enabled (see SyncAppearance).
+    local bgColorLabel = OneWoW_GUI:CreateFS(panel, 11)
+    bgColorLabel:SetPoint("TOP", tintReset, "BOTTOM", 0, -14)
+    bgColorLabel:SetText(L["OVR_BG_COLOR_LABEL"])
+    bgColorLabel:SetJustifyH("CENTER")
+    bgColorLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 14
+    local bgSwatch = OneWoW_GUI:CreateColorSwatch(panel, {
+        getColor = function()
+            local acc = panel._tintAccessor
+            local c = acc and acc.bgGet and acc.bgGet("color") or { 1, 1, 1 }
+            return c[1], c[2], c[3]
+        end,
+        onColorChanged = function(r, g, b)
+            local acc = panel._tintAccessor
+            if acc and acc.bgSet then
+                acc.bgSet("color", { r, g, b })
+            end
+        end,
+    })
+    bgSwatch:SetPoint("TOP", bgColorLabel, "BOTTOM", 0, -6)
 
-    local intHeader = OneWoW_GUI:CreateFS(dsc, 16)
-    intHeader:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-    intHeader:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    intHeader:SetJustifyH("LEFT")
-    intHeader:SetText(L["OVR_INTEGRATIONS_HEADER"])
-    intHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - intHeader:GetStringHeight() - 6
+    -- Reset clears the color (nil) so no color is applied over the texture.
+    local bgReset = OneWoW_GUI:CreateFitTextButton(panel, { text = RESET, height = 20 })
+    bgReset:SetPoint("TOP", bgSwatch, "BOTTOM", 0, -6)
+    bgReset:SetScript("OnClick", function()
+        local acc = panel._tintAccessor
+        if acc and acc.bgSet then
+            acc.bgSet("color", nil)
+        end
+    end)
 
-    local intDesc = OneWoW_GUI:CreateFS(dsc, 12)
-    intDesc:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-    intDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    intDesc:SetJustifyH("LEFT")
-    intDesc:SetWordWrap(true)
-    intDesc:SetSpacing(3)
-    intDesc:SetText(L["OVR_INTEGRATIONS_DESC"])
-    intDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - intDesc:GetStringHeight() - 10
+    -- Vendor / Auction House visibility status lights at the bottom. The panel
+    -- is narrow, so labels are short, width-capped and wrap — this stays inside
+    -- the box at any font size. Each status is its own bottom-anchored row.
+    local STATUS_LABEL_W = SIDE_PREVIEW_WIDTH - 12 - 8 - 5 - 8
+
+    local vendorDot = OneWoW_GUI:CreateStatusDot(panel, { enabled = false })
+    vendorDot:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 12, 10)
+    local vendorLbl = OneWoW_GUI:CreateFS(panel, 10)
+    vendorLbl:SetPoint("BOTTOMLEFT", vendorDot, "BOTTOMRIGHT", 5, -1)
+    vendorLbl:SetWidth(STATUS_LABEL_W)
+    vendorLbl:SetJustifyH("LEFT")
+    vendorLbl:SetWordWrap(true)
+    vendorLbl:SetText(L["OVR_PREVIEW_VENDORS"])
+    vendorLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local ahDot = OneWoW_GUI:CreateStatusDot(panel, { enabled = false })
+    ahDot:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 12, 10 + 22)
+    local ahLbl = OneWoW_GUI:CreateFS(panel, 10)
+    ahLbl:SetPoint("BOTTOMLEFT", ahDot, "BOTTOMRIGHT", 5, -1)
+    ahLbl:SetWidth(STATUS_LABEL_W)
+    ahLbl:SetJustifyH("LEFT")
+    ahLbl:SetWordWrap(true)
+    ahLbl:SetText(L["OVR_PREVIEW_AH"])
+    ahLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    function panel:Refresh()
+        for _, entry in ipairs(self._slots) do
+            Renderer:CleanButton(entry.slot)
+            -- Restore the slot's default icon; role-aware painters (item level)
+            -- may override it per refresh.
+            if entry.slot._iconTex and entry.slot._defaultIcon then
+                entry.slot._iconTex:SetTexture(entry.slot._defaultIcon)
+            end
+            if self._paint then
+                self._paint(entry.slot, entry.quality, entry.role)
+                Renderer:ShowContainer(entry.slot)
+            end
+        end
+    end
+
+    --- fn(slotFrame, quality) or nil for bare slots.
+    function panel:SetPainter(fn)
+        self._paint = fn
+        self:Refresh()
+    end
+
+    --- Show/hide the background color controls based on the current overlay's
+    --- Add Background state, and update vendor/AH status lights. Called on
+    --- selection and on every preview refresh.
+    function panel:SyncAppearance()
+        local acc = self._tintAccessor
+        -- Background color only applies to a plain color fill, not when
+        -- rarity color overrides it.
+        local bgOn = acc ~= nil and acc.bgGet ~= nil and acc.bgGet("enabled") == true
+        local showColor = bgOn and acc.bgGet("useRarityColor") ~= true
+        bgColorLabel:SetShown(showColor)
+        bgSwatch:SetShown(showColor)
+        bgReset:SetShown(showColor)
+
+        local hasSurface = acc ~= nil and acc.get ~= nil
+        vendorDot:SetShown(hasSurface)
+        vendorLbl:SetShown(hasSurface)
+        ahDot:SetShown(hasSurface)
+        ahLbl:SetShown(hasSurface)
+        if hasSurface then
+            vendorDot:SetStatus(acc.get("applyToVendorItems") == true)
+            ahDot:SetStatus(acc.get("applyToAuctionHouse") == true)
+        end
+    end
+
+    function panel:SetTintAccessor(acc)
+        self._tintAccessor = acc
+        local shown = acc ~= nil and acc.getTint ~= nil
+        tintLabel:SetShown(shown)
+        tintSwatch:SetShown(shown)
+        tintReset:SetShown(shown)
+        self:SyncAppearance()
+    end
+    panel:SetTintAccessor(nil)
+
+    split._overlayPreview = panel
+    return panel
+end
+
+-- ----------------------------------------------------------------------------
+-- Shared control helpers (inside card content)
+-- ----------------------------------------------------------------------------
+
+-- GetThemeColor returns r,g,b,a; capturing it into a single local collapses it
+-- to r, which then breaks SetTextColor. Always apply it in one call.
+local function ApplyThemeText(fs, key)
+    fs:SetTextColor(OneWoW_GUI:GetThemeColor(key))
+end
+
+local function AddLabel(content, y, text, x)
+    local lbl = OneWoW_GUI:CreateFS(content, 12)
+    lbl:SetPoint("TOPLEFT", content, "TOPLEFT", x or 0, y)
+    lbl:SetText(text)
+    lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    return lbl, y - lbl:GetStringHeight() - 5
+end
+
+-- width is REQUIRED (stack.contentWidth): wrapped text must be measured
+-- against an explicit width because fresh parents have unresolved rects.
+local function AddNote(content, y, text, width)
+    local note = OneWoW_GUI:CreateFS(content, 11)
+    note:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+    note:SetWidth(width)
+    note:SetJustifyH("LEFT")
+    note:SetWordWrap(true)
+    note:SetSpacing(2)
+    note:SetText(text)
+    note:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    return y - note:GetStringHeight() - 10
+end
+
+local function AddCheckbox(content, y, label, checked, onClick, x)
+    local cb = OneWoW_GUI:CreateCheckbox(content, { label = label })
+    cb:SetPoint("TOPLEFT", content, "TOPLEFT", x or 0, y)
+    cb:SetChecked(checked)
+    cb:SetScript("OnClick", function(myself) onClick(myself:GetChecked()) end)
+    return cb, y - 28
+end
+
+-- ----------------------------------------------------------------------------
+-- Appearance accessors
+-- ----------------------------------------------------------------------------
+-- One card codebase drives both storage shapes:
+--   * user overlays — 2.0 entry (icon spec table, bg table)
+--   * gear upgrade  — flat 1.0-shape keys under overlays/upgrade
+
+local function UserAccessor(id, entry, refreshPreview)
+    local function IconSpec()
+        if type(entry.icon) ~= "table" then
+            entry.icon = { kind = "list", value = "VignetteEvent-SuperTracked" }
+        end
+        return entry.icon
+    end
+    local function BG()
+        if type(entry.bg) ~= "table" then
+            entry.bg = { enabled = false }
+        end
+        return entry.bg
+    end
+    return {
+        supportsSources = true,
+        get = function(key) return entry[key] end,
+        set = function(key, value)
+            entry[key] = value
+            SaveEntry(id, entry)
+            refreshPreview()
+        end,
+        getIconSpec = IconSpec,
+        setIcon = function(kind, value)
+            local spec = IconSpec()
+            spec.kind = kind
+            spec.value = value
+            SaveEntry(id, entry)
+            refreshPreview()
+        end,
+        getTint = function() return IconSpec().tint end,
+        setTint = function(tint)
+            IconSpec().tint = tint
+            SaveEntry(id, entry)
+            refreshPreview()
+        end,
+        bgGet = function(key)
+            local bg = entry.bg
+            return bg and bg[key]
+        end,
+        bgSet = function(key, value)
+            BG()[key] = value
+            SaveEntry(id, entry)
+            refreshPreview()
+        end,
+        refreshPreview = refreshPreview,
+    }
+end
+
+local UPGRADE_BG_KEYS = {
+    enabled = "bgEnabled",
+    style = "bgStyle",
+    scale = "bgScale",
+    color = "bgColor",
+    useRarityColor = "bgUseRarityColor",
+}
+
+local function UpgradeAccessor(refreshPreview)
+    local featureId = "upgrade"
+    local reg = Reg()
+    return {
+        supportsSources = false,
+        get = function(key) return reg:GetOverlaySetting(featureId, key) end,
+        set = function(key, value)
+            reg:SetOverlaySetting(featureId, key, value)
+            refreshPreview()
+        end,
+        getIconSpec = function()
+            return {
+                kind = "list",
+                value = reg:GetOverlaySetting(featureId, "icon") or "Professions-Icon-Quality-Tier3-Small",
+                tint = reg:GetOverlaySetting(featureId, "iconColor"),
+            }
+        end,
+        setIcon = function(_, value)
+            reg:SetOverlaySetting(featureId, "icon", value)
+            refreshPreview()
+        end,
+        getTint = function() return reg:GetOverlaySetting(featureId, "iconColor") end,
+        setTint = function(tint)
+            reg:SetOverlaySetting(featureId, "iconColor", tint)
+            refreshPreview()
+        end,
+        bgGet = function(key) return reg:GetOverlaySetting(featureId, UPGRADE_BG_KEYS[key]) end,
+        bgSet = function(key, value)
+            reg:SetOverlaySetting(featureId, UPGRADE_BG_KEYS[key], value)
+            refreshPreview()
+        end,
+        refreshPreview = refreshPreview,
+    }
+end
+
+--- Renderer paint config from an accessor (drives the hero preview).
+local function AccessorPaint(acc)
+    return {
+        iconSpec = acc.getIconSpec(),
+        position = acc.get("position"),
+        scale = acc.get("scale"),
+        alpha = acc.get("alpha"),
+        effect = acc.get("effect"),
+        bg = acc.bgGet("enabled") and {
+            enabled = true,
+            style = acc.bgGet("style"),
+            scale = acc.bgGet("scale"),
+            color = acc.bgGet("color"),
+            useRarityColor = acc.bgGet("useRarityColor"),
+        } or nil,
+    }
+end
+
+-- ----------------------------------------------------------------------------
+-- Card builders
+-- ----------------------------------------------------------------------------
+
+local function BuildIconCategoriesForGrid()
+    local cats = {}
+    for _, cat in ipairs(ICON_CATEGORIES) do
+        table.insert(cats, { name = L[cat.nameKey], icons = cat.icons })
+    end
+    return cats
+end
+
+local function BuildIconTypeCard(content, acc, w, rebuild)
+    local y = 0
+    local spec = acc.getIconSpec()
+    local currentKind = spec.kind or "list"
+
+    local radioButtons = {}
+    local TYPES = {
+        { kind = "list",  label = L["OVR_ICON_TYPE_SYSTEM"] },
+        { kind = "atlas", label = L["OVR_ICON_ATLAS_LABEL"] },
+        { kind = "file",  label = L["OVR_ICON_FILE_LABEL"] },
+    }
+
+    for _, info in ipairs(TYPES) do
+        local radio = CreateFrame("CheckButton", nil, content, "UIRadioButtonTemplate")
+        radio:SetPoint("TOPLEFT", content, "TOPLEFT", 2, y)
+        radio:SetChecked(currentKind == info.kind)
+
+        local label = OneWoW_GUI:CreateFS(content, 12)
+        label:SetPoint("LEFT", radio, "RIGHT", 5, 0)
+        label:SetText(info.label)
+        label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+        radio:SetScript("OnClick", function()
+            for _, rb in ipairs(radioButtons) do rb:SetChecked(false) end
+            radio:SetChecked(true)
+            local current = acc.getIconSpec()
+            if current.kind == info.kind then return end
+            local newValue
+            if info.kind == "list" then
+                newValue = (current.kind == "list" and current.value) or "VignetteEvent-SuperTracked"
+            else
+                -- Keep an existing atlas/file string only when staying the
+                -- same kind; a system icon name is meaningless as an atlas/file.
+                newValue = (current.kind == info.kind) and current.value or ""
+            end
+            acc.setIcon(info.kind, newValue)
+            -- Rebuild so the matching source input (atlas / file) appears and
+            -- the gallery enables only for the System type.
+            if rebuild then rebuild() end
+        end)
+
+        radioButtons[#radioButtons + 1] = radio
+        y = y - 24
+    end
+
+    local kind = acc.getIconSpec().kind or "list"
+    if kind == "atlas" then
+        y = y - 6
+        y = select(2, AddLabel(content, y, L["OVR_ICON_ATLAS_LABEL"]))
+
+        local err = OneWoW_GUI:CreateFS(content, 11)
+        local box = OneWoW_GUI:CreateEditBox(content, {
+            placeholderText = L["OVR_ICON_ATLAS_PLACEHOLDER"],
+            height = 22,
+        })
+        box:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        box:SetPoint("TOPRIGHT", content, "TOPRIGHT", -60, y)
+        box:SetText(acc.getIconSpec().value or "")
+        box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+        local function ApplyAtlas()
+            local name = box:GetSearchText()
+            if name == "" then return end
+            if OneWoW.OverlayIcons:IsValidAtlas(name) then
+                acc.setIcon("atlas", name)
+                err:SetText("")
+            else
+                err:SetText(L["OVR_ICON_ATLAS_INVALID"])
+                err:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+            end
+        end
+
+        local useBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["OVR_ICON_USE_BTN"], height = 22 })
+        useBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
+        useBtn:SetScript("OnClick", ApplyAtlas)
+        box:SetScript("OnEnterPressed", function(myself)
+            myself:ClearFocus()
+            ApplyAtlas()
+        end)
+        y = y - 26
+
+        err:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        err:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
+        err:SetJustifyH("LEFT")
+        err:SetText("")
+        y = y - 13
+        y = AddNote(content, y, L["OVR_ICON_ATLAS_NOTE"], w)
+    elseif kind == "file" then
+        y = y - 6
+        y = select(2, AddLabel(content, y, L["OVR_ICON_FILE_LABEL"]))
+
+        local err = OneWoW_GUI:CreateFS(content, 11)
+        local box = OneWoW_GUI:CreateEditBox(content, {
+            placeholderText = L["OVR_ICON_FILE_PLACEHOLDER"],
+            height = 22,
+        })
+        box:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        box:SetPoint("TOPRIGHT", content, "TOPRIGHT", -60, y)
+        box:SetText(acc.getIconSpec().value or "")
+        box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+        local probeTex = content:CreateTexture(nil, "BACKGROUND")
+        probeTex:SetSize(1, 1)
+        probeTex:SetPoint("TOPLEFT", content, "TOPLEFT", -100, 0)
+        probeTex:Hide()
+
+        local function ApplyFile()
+            local name = box:GetSearchText()
+            if name == "" then return end
+            if probeTex:SetTexture(OneWoW.OverlayIcons:GetCustomFilePath(name)) then
+                acc.setIcon("file", name)
+                err:SetText("")
+            else
+                err:SetText(L["OVR_ICON_FILE_INVALID"])
+                err:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+            end
+            probeTex:SetTexture(nil)
+        end
+
+        local useBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["OVR_ICON_USE_BTN"], height = 22 })
+        useBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
+        useBtn:SetScript("OnClick", ApplyFile)
+        box:SetScript("OnEnterPressed", function(myself)
+            myself:ClearFocus()
+            ApplyFile()
+        end)
+        y = y - 26
+
+        err:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        err:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
+        err:SetJustifyH("LEFT")
+        err:SetText("")
+        y = y - 13
+        y = AddNote(content, y, L["OVR_ICON_FILE_NOTE"], w)
+    end
+
+    return math.abs(y)
+end
+
+local function BuildIconCard(content, acc, w)
+    local y = 0
+    local spec = acc.getIconSpec()
+
+    local grid = OneWoW_GUI:CreateIconGrid(content, {
+        categories = BuildIconCategoriesForGrid(),
+        width = w,
+        selected = spec.kind == "list" and spec.value or nil,
+        applyIcon = function(tex, iconName)
+            OneWoW.OverlayIcons:ApplyToTexture(tex, iconName)
+        end,
+        getDisplayName = function(iconName)
+            return OneWoW.OverlayIcons:GetDisplayName(iconName)
+        end,
+        searchPlaceholder = L["SEARCH_HINT"],
+        onSelect = function(iconName)
+            acc.setIcon("list", iconName)
+        end,
+    })
+    grid:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+    y = y - grid:GetHeight() - 10
+
+    return math.abs(y)
+end
+
+local function BuildPlacementCard(content, acc)
+    local posGrid = OneWoW_GUI:CreatePositionGrid(content, {
+        value = acc.get("position") or "TOPRIGHT",
+        onChange = function(pos)
+            acc.set("position", pos)
+        end,
+    })
+    posGrid:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -14)
+
+    local posLbl = OneWoW_GUI:CreateFS(content, 12)
+    posLbl:SetPoint("BOTTOMLEFT", posGrid, "TOPLEFT", 0, 3)
+    posLbl:SetText(L["OVR_POSITION_LABEL"])
+    posLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local rightX = posGrid:GetWidth() + 24
+    local y = 0
+
+    local scaleLbl = OneWoW_GUI:CreateFS(content, 12)
+    scaleLbl:SetPoint("TOPLEFT", content, "TOPLEFT", rightX, y)
+    scaleLbl:SetText(L["OVR_SCALE_LABEL"])
+    scaleLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    y = y - scaleLbl:GetStringHeight() - 4
+
+    local scaleSlider = OneWoW_GUI:CreateSlider(content, {
+        minVal = 0.5, maxVal = 2.0, step = 0.1,
+        currentVal = acc.get("scale") or 1.0,
+        onChange = function(val) acc.set("scale", val) end,
+        width = 160,
+    })
+    scaleSlider:SetPoint("TOPLEFT", content, "TOPLEFT", rightX, y)
+    scaleSlider:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
+    y = y - 34
+
+    local alphaLbl = OneWoW_GUI:CreateFS(content, 12)
+    alphaLbl:SetPoint("TOPLEFT", content, "TOPLEFT", rightX, y)
+    alphaLbl:SetText(L["OVR_ALPHA_LABEL"])
+    alphaLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    y = y - alphaLbl:GetStringHeight() - 4
+
+    local alphaSlider = OneWoW_GUI:CreateSlider(content, {
+        minVal = 0.1, maxVal = 1.0, step = 0.1,
+        currentVal = acc.get("alpha") or 1.0,
+        onChange = function(val) acc.set("alpha", val) end,
+        width = 160,
+    })
+    alphaSlider:SetPoint("TOPLEFT", content, "TOPLEFT", rightX, y)
+    alphaSlider:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
+    y = y - 34
+
+    return math.max(math.abs(y), 14 + posGrid:GetHeight() + 4)
+end
+
+-- Effect picker as radio rows (no dropdown) — its own card between Placement
+-- and Background. Values stay stable (none/spinning/zooming/both); only the
+-- labels are localized.
+local EFFECT_CHOICES = {
+    { value = "none",     labelKey = "OVR_EFFECT_NONE" },
+    { value = "spinning", labelKey = "OVR_EFFECT_SPINNING" },
+    { value = "zooming",  labelKey = "OVR_EFFECT_ZOOMING" },
+    { value = "both",     labelKey = "OVR_EFFECT_BOTH" },
+}
+
+local function BuildEffectCard(content, acc)
+    local y = 0
+    local current = acc.get("effect") or "none"
+    local radios = {}
+
+    for _, choice in ipairs(EFFECT_CHOICES) do
+        local radio = CreateFrame("CheckButton", nil, content, "UIRadioButtonTemplate")
+        radio:SetPoint("TOPLEFT", content, "TOPLEFT", 2, y)
+        radio:SetChecked(current == choice.value)
+
+        local label = OneWoW_GUI:CreateFS(content, 12)
+        label:SetPoint("LEFT", radio, "RIGHT", 5, 0)
+        label:SetText(L[choice.labelKey])
+        label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+        radio:SetScript("OnClick", function()
+            for _, rb in ipairs(radios) do rb:SetChecked(false) end
+            radio:SetChecked(true)
+            acc.set("effect", choice.value)
+        end)
+
+        radios[#radios + 1] = radio
+        y = y - 24
+    end
+
+    return math.abs(y)
+end
+
+-- Paint one background-style preview swatch. Named styles (solid shapes,
+-- glow pulse) draw a representative white texture; atlas styles draw the atlas.
+local function ApplyBackgroundPreview(tex, style)
+    tex:SetVertexColor(1, 1, 1)
+    if C_Texture.GetAtlasInfo(style) then
+        tex:SetTexture(nil)
+        tex:SetAtlas(style, false)
+    else
+        tex:SetAtlas("")
+        tex:SetTexture("Interface\\Buttons\\WHITE8x8")
+        if style == "Solid-Circle" or style == "Glow Pulse" then
+            tex:SetTexCoord(0, 1, 0, 1)
+        end
+    end
+end
+
+local function BuildBackgroundCard(content, acc, w)
+    local y = 0
+
+    local _, cbY = AddCheckbox(content, y, L["OVR_BG_ENABLE_LABEL"], acc.bgGet("enabled") == true, function(checked)
+        acc.bgSet("enabled", checked)
+    end)
+    y = cbY - 4
+
+    -- Same gallery presentation as the icon picker so styles are visible
+    -- rather than hidden behind an opaque dropdown. Color and rarity color
+    -- live on the side preview panel (shown when Add Background is on).
+    y = select(2, AddLabel(content, y, L["OVR_BG_STYLE_LABEL"]))
+    local grid = OneWoW_GUI:CreateIconGrid(content, {
+        categories = { { name = L["OVR_BG_STYLE_LABEL"], icons = BG_STYLE_OPTIONS } },
+        width = w,
+        selected = acc.bgGet("style") or "Solid-Circle",
+        applyIcon = ApplyBackgroundPreview,
+        getDisplayName = function(style)
+            return OneWoW.OverlayIcons:GetDisplayName(style)
+        end,
+        searchPlaceholder = L["SEARCH_HINT"],
+        onSelect = function(style)
+            acc.bgSet("style", style)
+        end,
+    })
+    grid:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+    y = y - grid:GetHeight() - 10
+
+    y = select(2, AddLabel(content, y, L["OVR_BG_SCALE_LABEL"]))
+    local bgScaleSlider = OneWoW_GUI:CreateSlider(content, {
+        minVal = 0.1, maxVal = 3.0, step = 0.1,
+        currentVal = acc.bgGet("scale") or 1.0,
+        onChange = function(val) acc.bgSet("scale", val) end,
+        width = 200,
+    })
+    bgScaleSlider:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+    y = y - 36
+
+    -- Rarity color overrides the picked background color; when on, the color
+    -- swatch on the preview panel is hidden.
+    local _, rarityY = AddCheckbox(content, y, L["OVR_BG_RARITY_LABEL"], acc.bgGet("useRarityColor") == true, function(checked)
+        acc.bgSet("useRarityColor", checked)
+    end)
+    y = rarityY
+
+    y = AddNote(content, y, L["OVR_BG_COLOR_SIDE_NOTE"], w)
+
+    return math.abs(y)
+end
+
+--- Vendor + Auction House visibility toggles. getFn/setFn take (key) /
+--- (key, value) with keys applyToVendorItems / applyToAuctionHouse.
+local function BuildSurfacesCard(content, getFn, setFn)
+    local y = 0
+    local _, y1 = AddCheckbox(content, y, L["OVR_VENDOR_LABEL"], getFn("applyToVendorItems") == true, function(checked)
+        setFn("applyToVendorItems", checked)
+    end)
+    local _, y2 = AddCheckbox(content, y1, L["OVR_AH_LABEL"], getFn("applyToAuctionHouse") == true, function(checked)
+        setFn("applyToAuctionHouse", checked)
+    end)
+    return math.abs(y2)
+end
+
+-- ----------------------------------------------------------------------------
+-- General detail
+-- ----------------------------------------------------------------------------
+
+local function ShowGeneralDetail(split, dsc, selectedRow)
+    local stack = NewCardStack(split, dsc)
+
+    AddHeroBlock(stack, {
+        title = L["OVR_GENERAL_TITLE"],
+        desc = L["OVR_GENERAL_DESC"] .. " " .. L["OVR_GENERAL_NOTE"],
+        isEnabled = function() return Reg():IsEnabled("overlays", "general") end,
+        onToggle = function(newState) Reg():SetEnabled("overlays", "general", newState) end,
+        selectedRow = selectedRow,
+    })
+
+    stack:AddCard("general-overlays", L["OVERLAYS_LIST_TITLE"], function(content, w)
+        local y = 0
+        local addBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["OVR_ADD_OVERLAY_BTN"], height = 26 })
+        addBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        addBtn:SetScript("OnClick", function()
+            ns.UI.ShowAddOverlayDialog()
+        end)
+        y = y - 32
+        y = AddNote(content, y, L["OVR_MAX_OVERLAYS_NOTE"], w)
+        return math.abs(y)
+    end)
 
     local integrationDefs = {
         { addonName = "ArkInventory",  displayName = "ArkInventory", dbKey = "arkinventory" },
@@ -600,212 +1122,377 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
         { addonName = "ElvUI",         displayName = "ElvUI",        dbKey = "elvui" },
     }
 
-    for _, def in ipairs(integrationDefs) do
-        local opts = {
-            addonName         = def.addonName,
-            displayName       = def.displayName,
-            statusLabel       = L["FEATURE_STATUS_LABEL"],
-            detectedText      = L["OVR_INT_DETECTED"],
-            notDetectedText   = L["OVR_INT_NOT_DETECTED"],
-            enabledText       = L["FEATURE_ENABLED"],
-            disabledText      = L["FEATURE_DISABLED"],
-            enableBtnText     = L["FEATURE_ENABLE_BTN"],
-            disableBtnText    = L["FEATURE_DISABLE_BTN"],
-            notCompatible     = def.notCompatible,
-            notCompatibleText = L["OVR_INT_NOT_COMPATIBLE"],
-        }
-
-        if def.dbKey then
-            opts.isEnabled = function()
-                return OneWoW.SettingsFeatureRegistry:IsIntegrationEnabled(def.dbKey)
-            end
-            opts.onToggle = function(newState)
-                OneWoW.SettingsFeatureRegistry:SetIntegrationEnabled(def.dbKey, newState)
-            end
-        end
-
-        local row = OneWoW_GUI:CreateIntegrationRow(dsc, opts)
-        row:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-        row:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-        yOffset = yOffset - 34
-    end
-
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 14
-
-    local resetAllBtn = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["OVR_RESET_ALL_DEFAULTS_BTN"], height = 26 })
-    resetAllBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    resetAllBtn:SetScript("OnClick", function()
-        local reg = OneWoW.SettingsFeatureRegistry
-        -- Preserve the master switch and integration states across the reset.
-        local generalEnabled = reg:IsEnabled("overlays", "general")
-        local integrationStates = {}
+    stack:AddCard("general-integrations", L["OVR_INTEGRATIONS_HEADER"], function(content, w)
+        local y = AddNote(content, 0, L["OVR_INTEGRATIONS_DESC"], w)
         for _, def in ipairs(integrationDefs) do
+            local opts = {
+                addonName         = def.addonName,
+                displayName       = def.displayName,
+                statusLabel       = L["FEATURE_STATUS_LABEL"],
+                detectedText      = L["OVR_INT_DETECTED"],
+                notDetectedText   = L["OVR_INT_NOT_DETECTED"],
+                enabledText       = L["FEATURE_ENABLED"],
+                disabledText      = L["FEATURE_DISABLED"],
+                enableBtnText     = L["FEATURE_ENABLE_BTN"],
+                disableBtnText    = L["FEATURE_DISABLE_BTN"],
+                notCompatible     = def.notCompatible,
+                notCompatibleText = L["OVR_INT_NOT_COMPATIBLE"],
+            }
             if def.dbKey then
-                integrationStates[def.dbKey] = reg:IsIntegrationEnabled(def.dbKey)
+                opts.isEnabled = function()
+                    return Reg():IsIntegrationEnabled(def.dbKey)
+                end
+                opts.onToggle = function(newState)
+                    Reg():SetIntegrationEnabled(def.dbKey, newState)
+                end
             end
+            local row = OneWoW_GUI:CreateIntegrationRow(content, opts)
+            row:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+            row:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
+            y = y - 34
         end
-        reg:ResetTab("overlays")
-        reg:SetEnabled("overlays", "general", generalEnabled)
-        for key, value in pairs(integrationStates) do
-            reg:SetIntegrationEnabled(key, value)
-        end
-        OneWoW_GUI:ClearFrame(dsc)
-        ShowGeneralDetail(split, dsc, selectedRow)
+        return math.abs(y)
     end)
-    yOffset = yOffset - 30 - 10
 
-    dsc:SetHeight(math.abs(yOffset) + 20)
-    OneWoW_GUI:ApplyFontToFrame(dsc)
-    split.UpdateDetailThumb()
-end
-
-local function ShowOverlayDetail(split, feature, selectedRow)
-    local dsc = split.detailScrollChild
-    OneWoW_GUI:ClearFrame(dsc)
-
-    local featureId = feature.id
-    local reg       = OneWoW.SettingsFeatureRegistry
-
-    if featureId == "general" then
-        ShowGeneralDetail(split, dsc, selectedRow)
-        return
-    end
-
-    local yOffset = -10
-
-    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title])
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
-
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 12
-
-    local descLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    descLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-    descLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    descLabel:SetJustifyH("LEFT")
-    descLabel:SetWordWrap(true)
-    descLabel:SetSpacing(3)
-    descLabel:SetText(L[feature.description])
-    descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    yOffset = yOffset - descLabel:GetStringHeight() - 16
-
-    -- While Warbound is set to also cover Warbound-Until-Equipped items, the
-    -- standalone WuE overlay is managed by Warbound and can't be toggled here.
-    -- Offer a confirm-gated button to split it out into its own overlay.
-    if featureId == "wue" and reg:GetOverlaySetting("warbound", "includeWUE") ~= false then
-        local incNote = OneWoW_GUI:CreateFS(dsc, 12)
-        incNote:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-        incNote:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-        incNote:SetJustifyH("LEFT")
-        incNote:SetWordWrap(true)
-        incNote:SetSpacing(3)
-        incNote:SetText(L["OVR_WUE_INCLUDED_NOTE"])
-        incNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        yOffset = yOffset - incNote:GetStringHeight() - 16
-
-        local splitBtn = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["OVR_WUE_SPLIT_BTN"], height = 26 })
-        splitBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        splitBtn:SetScript("OnClick", function()
+    stack:AddCard("general-manage", L["OVR_CARD_MANAGE"], function(content)
+        local resetAllBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["OVR_RESET_ALL_DEFAULTS_BTN"], height = 26 })
+        resetAllBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+        resetAllBtn:SetScript("OnClick", function()
             local dialog = OneWoW_GUI:CreateConfirmDialog({
-                name    = "OneWoW_OverlayWUESplitConfirm",
-                title   = L["OVR_WUE_SPLIT_CONFIRM_TITLE"],
-                message = L["OVR_WUE_SPLIT_CONFIRM_MSG"],
+                name    = "OneWoW_OverlayResetAllConfirm",
+                title   = L["OVR_RESET_ALL_DEFAULTS_BTN"],
+                message = L["OVR_RESET_ALL_CONFIRM_MSG"],
                 buttons = {
-                    { text = L["OVR_WUE_SPLIT_CONFIRM_YES"], color = { 0.2, 0.6, 0.2 }, onClick = function(d)
+                    { text = L["OVR_RESET_ALL_DEFAULTS_BTN"], color = { 0.6, 0.2, 0.2 }, onClick = function(d)
                         d:Hide()
-                        reg:SetOverlaySetting("warbound", "includeWUE", false)
-                        ShowOverlayDetail(split, feature, selectedRow)
+                        local reg = Reg()
+                        -- Preserve the master switch and integration states.
+                        local generalEnabled = reg:IsEnabled("overlays", "general")
+                        local integrationStates = {}
+                        for _, def in ipairs(integrationDefs) do
+                            if def.dbKey then
+                                integrationStates[def.dbKey] = reg:IsIntegrationEnabled(def.dbKey)
+                            end
+                        end
+                        reg:ResetTab("overlays")
+                        reg:SetEnabled("overlays", "general", generalEnabled)
+                        for key, value in pairs(integrationStates) do
+                            reg:SetIntegrationEnabled(key, value)
+                        end
+                        RefreshList("general")
                     end },
                     { text = CANCEL, onClick = function(d) d:Hide() end },
                 },
             })
             dialog.frame:Show()
         end)
-        yOffset = yOffset - 26 - 16
+        return 28
+    end)
 
-        dsc:SetHeight(math.abs(yOffset) + 20)
-        OneWoW_GUI:ApplyFontToFrame(dsc)
-        split.UpdateDetailThumb()
-        return
-    end
+    stack:Finish()
+end
 
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
+-- ----------------------------------------------------------------------------
+-- Item Level detail
+-- ----------------------------------------------------------------------------
+
+local function ShowItemLevelDetail(split, dsc, selectedRow)
+    local featureId = "itemlevel"
+    local reg = Reg()
+    local stack = NewCardStack(split, dsc)
+    local Renderer = OneWoW.Overlays2Renderer
+
+    local RefreshPreview = AddHeroBlock(stack, {
+        title = L["OVR_ITEMLEVEL_TITLE"],
+        desc = L["OVR_ITEMLEVEL_DESC"],
         isEnabled = function() return reg:IsEnabled("overlays", featureId) end,
-        onToggle = function(newState)
-            reg:SetEnabled("overlays", featureId, newState)
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
+        onToggle = function(newState) reg:SetEnabled("overlays", featureId, newState) end,
+        selectedRow = selectedRow,
+        paintSlot = function(slot, _, role)
+            local cfg = reg:GetFeatureSettings("overlays", featureId)
+            -- big = equipment ilvl; left = pet level (if enabled);
+            -- right = bag container size (if enabled). Lets the user see each
+            -- number type on its own sample icon.
+            if role == "left" then
+                if cfg.showPetLevel == false then return end
+                if slot._iconTex then slot._iconTex:SetTexture("Interface\\Icons\\INV_Box_PetCarrier_01") end
+                Renderer:ApplyItemLevel(slot, cfg, "25", Enum.ItemQuality.Rare)
+            elseif role == "right" then
+                if cfg.showContainerSlots == false then return end
+                if slot._iconTex then slot._iconTex:SetTexture("Interface\\Icons\\INV_Misc_Bag_10_Blue") end
+                Renderer:ApplyItemLevel(slot, cfg, "32", Enum.ItemQuality.Uncommon)
+            else
+                Renderer:ApplyItemLevel(slot, cfg, "528", Enum.ItemQuality.Epic)
             end
         end,
     })
 
-    yOffset = statusBlock.getBottomY() - 20
+    stack:AddCard("ilvl-text", L["OVR_CARD_TEXTSTYLE"], function(content)
+        local y = 0
+        y = select(2, AddLabel(content, y, L["OVR_ILVL_COLOR_LABEL"]))
 
-    if featureId == "warbound" then
-        local incCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_WARBOUND_INCLUDE_WUE_LABEL"] })
-        incCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        incCb:SetChecked(reg:GetOverlaySetting("warbound", "includeWUE") ~= false)
-        incCb:SetScript("OnClick", function(myself)
-            local checked = myself:GetChecked()
-            reg:SetOverlaySetting("warbound", "includeWUE", checked)
-            -- Keep the two mutually exclusive: folding WuE back into Warbound
-            -- turns the standalone WuE overlay off.
-            if checked then
-                reg:SetEnabled("overlays", "wue", false)
+        local COLOR_MODES = {
+            { value = "custom",  label = L["OVR_ILVL_COLOR_CUSTOM"] },
+            { value = "quality", label = L["OVR_ILVL_COLOR_QUALITY"] },
+            { value = "theme",   label = L["OVR_ILVL_COLOR_THEME"] },
+        }
+        local currentMode = reg:GetOverlaySetting(featureId, "colorMode") or "custom"
+        local radios = {}
+
+        for _, modeInfo in ipairs(COLOR_MODES) do
+            local radio = CreateFrame("CheckButton", nil, content, "UIRadioButtonTemplate")
+            radio:SetPoint("TOPLEFT", content, "TOPLEFT", 2, y)
+            radio:SetChecked(currentMode == modeInfo.value)
+
+            local radioLabel = OneWoW_GUI:CreateFS(content, 12)
+            radioLabel:SetPoint("LEFT", radio, "RIGHT", 5, 0)
+            radioLabel:SetText(modeInfo.label)
+            radioLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+            if modeInfo.value == "custom" then
+                local swatch = OneWoW_GUI:CreateColorSwatch(content, {
+                    getColor = function()
+                        local c = reg:GetOverlaySetting(featureId, "customColor") or { 1, 1, 1 }
+                        return c[1], c[2], c[3]
+                    end,
+                    onColorChanged = function(r, g, b)
+                        reg:SetOverlaySetting(featureId, "customColor", { r, g, b })
+                        RefreshPreview()
+                    end,
+                })
+                swatch:SetPoint("LEFT", radioLabel, "RIGHT", 10, 0)
             end
-        end)
-        yOffset = yOffset - 28
 
-        local incNote = OneWoW_GUI:CreateFS(dsc, 11)
-        incNote:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-        incNote:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-        incNote:SetJustifyH("LEFT")
-        incNote:SetWordWrap(true)
-        incNote:SetSpacing(3)
-        incNote:SetText(L["OVR_WARBOUND_INCLUDE_WUE_NOTE"])
-        incNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        yOffset = yOffset - incNote:GetStringHeight() - 16
-    end
+            radio:SetScript("OnClick", function()
+                reg:SetOverlaySetting(featureId, "colorMode", modeInfo.value)
+                for _, rb in ipairs(radios) do rb:SetChecked(false) end
+                radio:SetChecked(true)
+                RefreshPreview()
+            end)
+            radios[#radios + 1] = radio
+            y = y - 24
+        end
+        y = y - 8
 
-    if featureId == "junk" or featureId == "protected" then
-        local noteKey = (featureId == "junk") and "OVR_JUNK_NOTE" or "OVR_PROTECTED_NOTE"
-        local markNote = OneWoW_GUI:CreateFS(dsc, 12)
-        markNote:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-        markNote:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-        markNote:SetJustifyH("LEFT")
-        markNote:SetWordWrap(true)
-        markNote:SetSpacing(3)
-        markNote:SetText(L[noteKey])
-        markNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        yOffset = yOffset - markNote:GetStringHeight() - 16
-    end
+        y = select(2, AddLabel(content, y, L["OVR_FONTSIZE_LABEL"]))
+        local fsSlider = OneWoW_GUI:CreateSlider(content, {
+            minVal = 7, maxVal = 20, step = 1,
+            currentVal = reg:GetOverlaySetting(featureId, "fontSize") or 10,
+            onChange = function(val)
+                reg:SetOverlaySetting(featureId, "fontSize", val)
+                RefreshPreview()
+            end,
+            width = 220, fmt = "%d",
+        })
+        fsSlider:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        y = y - 38
 
-    if featureId == "upgrade" then
-        OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-        yOffset = yOffset - 14
+        y = select(2, AddLabel(content, y, L["OVR_FONT_LABEL"]))
+        local fontList = OneWoW_GUI:GetFontList()
+        local function ResolveOverlayFontKey()
+            local raw = reg:GetOverlaySetting(featureId, "fontFamily")
+            return OneWoW_GUI:MigrateLSMFontName(raw) or raw or "default"
+        end
+        local currentInfo = OneWoW_GUI:GetFontInfoByKey(ResolveOverlayFontKey())
+        local fontDD = OneWoW_GUI:CreateDropdown(content, {
+            width = 240,
+            text = currentInfo and currentInfo.label or "WoW Default",
+        })
+        OneWoW_GUI:AttachFilterMenu(fontDD, {
+            searchable = true,
+            buildItems = function()
+                local items = {}
+                for _, entry in ipairs(fontList) do
+                    table.insert(items, {
+                        text = entry.label,
+                        value = entry.key,
+                        fontPath = entry.file,
+                        fontSize = 13,
+                    })
+                end
+                return items
+            end,
+            onSelect = function(value, text)
+                fontDD._text:SetText(text)
+                reg:SetOverlaySetting(featureId, "fontFamily", value)
+                RefreshPreview()
+            end,
+            getActiveValue = ResolveOverlayFontKey,
+        })
+        fontDD:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        y = y - 30
 
-        local modeHdr = OneWoW_GUI:CreateFS(dsc, 12)
-        modeHdr:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        modeHdr:SetText(L["OVR_UPGRADE_MODE_LABEL"])
-        modeHdr:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-        yOffset = yOffset - modeHdr:GetStringHeight() - 10
+        y = select(2, AddLabel(content, y, L["OVR_FONT_OUTLINE_LABEL"]))
+        local outlineOptions = { "None", "Outline", "Thick Outline" }
+        local outlineDisplayMap = { [""] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick Outline" }
+        local outlineValueMap = { ["None"] = "", ["Outline"] = "OUTLINE", ["Thick Outline"] = "THICKOUTLINE" }
+        local currentOutline = reg:GetOverlaySetting(featureId, "fontOutline") or "OUTLINE"
+        local outlineDD = OneWoW_GUI:CreateDropdown(content, { width = 240, text = outlineDisplayMap[currentOutline] })
+        OneWoW_GUI:AttachFilterMenu(outlineDD, {
+            searchable = false,
+            buildItems = function()
+                local items = {}
+                for _, opt in ipairs(outlineOptions) do
+                    table.insert(items, { text = opt, value = opt })
+                end
+                return items
+            end,
+            onSelect = function(value, text)
+                outlineDD._text:SetText(text)
+                reg:SetOverlaySetting(featureId, "fontOutline", outlineValueMap[value])
+                RefreshPreview()
+            end,
+            getActiveValue = function()
+                local cur = reg:GetOverlaySetting(featureId, "fontOutline") or "OUTLINE"
+                return outlineDisplayMap[cur]
+            end,
+        })
+        outlineDD:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        y = y - 26
 
-        local hasPawn = PawnShouldItemLinkHaveUpgradeArrow ~= nil
+        return math.abs(y)
+    end)
 
-        local pawnStatus = OneWoW_GUI:CreateFS(dsc, 12)
-        pawnStatus:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    stack:AddCard("ilvl-placement", L["OVR_CARD_PLACEMENT"], function(content)
+        local posGrid = OneWoW_GUI:CreatePositionGrid(content, {
+            value = reg:GetOverlaySetting(featureId, "position") or "TOPRIGHT",
+            onChange = function(pos)
+                reg:SetOverlaySetting(featureId, "position", pos)
+                RefreshPreview()
+            end,
+        })
+        posGrid:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+        return posGrid:GetHeight()
+    end)
+
+    stack:AddCard("ilvl-surfaces", L["OVR_CARD_SURFACES"], function(content)
+        local y = 0
+        local _
+        _, y = AddCheckbox(content, y, L["OVR_VENDOR_LABEL"],
+            reg:GetOverlaySetting(featureId, "applyToVendorItems") ~= false, function(checked)
+                reg:SetOverlaySetting(featureId, "applyToVendorItems", checked)
+            end)
+        _, y = AddCheckbox(content, y, L["OVR_AH_LABEL"],
+            reg:GetOverlaySetting(featureId, "applyToAuctionHouse") == true, function(checked)
+                reg:SetOverlaySetting(featureId, "applyToAuctionHouse", checked)
+            end)
+        _, y = AddCheckbox(content, y, L["OVR_ILVL_PET_LEVEL"],
+            reg:GetOverlaySetting(featureId, "showPetLevel") ~= false, function(checked)
+                reg:SetOverlaySetting(featureId, "showPetLevel", checked)
+                RefreshPreview()
+            end)
+        _, y = AddCheckbox(content, y, L["OVR_ILVL_CONTAINER_SLOTS"],
+            reg:GetOverlaySetting(featureId, "showContainerSlots") ~= false, function(checked)
+                reg:SetOverlaySetting(featureId, "showContainerSlots", checked)
+                RefreshPreview()
+            end)
+        return math.abs(y)
+    end)
+
+    stack:Finish()
+end
+
+-- ----------------------------------------------------------------------------
+-- Quality Border detail
+-- ----------------------------------------------------------------------------
+
+local function ShowQualityBorderDetail(split, dsc, selectedRow)
+    local featureId = "qualityborder"
+    local reg = Reg()
+    local stack = NewCardStack(split, dsc)
+    local Renderer = OneWoW.Overlays2Renderer
+
+    local RefreshPreview = AddHeroBlock(stack, {
+        title = L["OVR_QUALITYBORDER_TITLE"],
+        desc = L["OVR_QUALITYBORDER_DESC"],
+        isEnabled = function() return reg:IsEnabled("overlays", featureId) end,
+        onToggle = function(newState) reg:SetEnabled("overlays", featureId, newState) end,
+        selectedRow = selectedRow,
+        paintSlot = function(slot, quality)
+            local cfg = reg:GetFeatureSettings("overlays", featureId)
+            Renderer:ApplyQualityBorder(slot, cfg, quality)
+        end,
+    })
+
+    stack:AddCard("qb-style", L["OVR_CARD_STYLE"], function(content)
+        local y = 0
+        -- OneWoW clean border only (no style choice). Scale controls border
+        -- thickness; alpha controls opacity.
+        y = select(2, AddLabel(content, y, L["OVR_SCALE_LABEL"]))
+        local scaleSlider = OneWoW_GUI:CreateSlider(content, {
+            minVal = 1, maxVal = 6, step = 1,
+            currentVal = reg:GetOverlaySetting(featureId, "scale") or 2,
+            onChange = function(val)
+                reg:SetOverlaySetting(featureId, "scale", val)
+                RefreshPreview()
+            end,
+            width = 220, fmt = "%d",
+        })
+        scaleSlider:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        y = y - 38
+
+        y = select(2, AddLabel(content, y, L["OVR_ALPHA_LABEL"]))
+        local alphaSlider = OneWoW_GUI:CreateSlider(content, {
+            minVal = 0.1, maxVal = 1.0, step = 0.1,
+            currentVal = reg:GetOverlaySetting(featureId, "alpha") or 1.0,
+            onChange = function(val)
+                reg:SetOverlaySetting(featureId, "alpha", val)
+                RefreshPreview()
+            end,
+            width = 220,
+        })
+        alphaSlider:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        y = y - 38
+        return math.abs(y)
+    end)
+
+    stack:AddCard("qb-surfaces", L["OVR_CARD_SURFACES"], function(content)
+        return BuildSurfacesCard(content,
+            function(key) return reg:GetOverlaySetting(featureId, key) end,
+            function(key, value)
+                reg:SetOverlaySetting(featureId, key, value)
+            end)
+    end)
+
+    stack:Finish()
+end
+
+-- ----------------------------------------------------------------------------
+-- Gear Upgrade detail (detector-backed built-in; flat 1.0-shape storage)
+-- ----------------------------------------------------------------------------
+
+local function ShowUpgradeDetail(split, feature, selectedRow)
+    local dsc = split.detailScrollChild
+    OneWoW_GUI:ClearFrame(dsc)
+
+    local featureId = "upgrade"
+    local reg = Reg()
+    local stack = NewCardStack(split, dsc)
+    local Renderer = OneWoW.Overlays2Renderer
+
+    local refreshPreviewRef
+    local acc = UpgradeAccessor(function()
+        if refreshPreviewRef then refreshPreviewRef() end
+    end)
+
+    refreshPreviewRef = AddHeroBlock(stack, {
+        title = L[feature.title],
+        desc = L[feature.description],
+        isEnabled = function() return reg:IsEnabled("overlays", featureId) end,
+        onToggle = function(newState) reg:SetEnabled("overlays", featureId, newState) end,
+        selectedRow = selectedRow,
+        tintAccessor = acc,
+        paintSlot = function(slot)
+            Renderer:ApplyOverlay(slot, AccessorPaint(acc), 1, PREVIEW_BG_RARITY_ITEM_LINK)
+        end,
+    })
+
+    stack:AddCard("upgrade-detection", L["OVR_UPGRADE_MODE_LABEL"], function(content)
+        local y = 0
+        local hasPawn = rawget(_G, "PawnShouldItemLinkHaveUpgradeArrow") ~= nil
+
+        local pawnStatus = OneWoW_GUI:CreateFS(content, 12)
+        pawnStatus:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
         if hasPawn then
             pawnStatus:SetText(L["OVR_UPGRADE_PAWN_STATUS"] .. ": " .. L["OVR_UPGRADE_PAWN_DETECTED"])
             pawnStatus:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
@@ -813,7 +1500,7 @@ local function ShowOverlayDetail(split, feature, selectedRow)
             pawnStatus:SetText(L["OVR_UPGRADE_PAWN_STATUS"] .. ": " .. L["OVR_UPGRADE_PAWN_NOT_DETECTED"])
             pawnStatus:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
-        yOffset = yOffset - pawnStatus:GetStringHeight() - 10
+        y = y - pawnStatus:GetStringHeight() - 10
 
         local currentMode = reg:GetOverlaySetting(featureId, "mode") or "ILVL"
         if not hasPawn and (currentMode == "PAWN" or currentMode == "PAWN>ILVL") then
@@ -822,8 +1509,8 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         end
 
         local MODES = {
-            { value = "ILVL",     label = L["OVR_UPGRADE_MODE_ILVL"],      desc = L["OVR_UPGRADE_MODE_ILVL_DESC"] },
-            { value = "PAWN",     label = L["OVR_UPGRADE_MODE_PAWN"],       desc = L["OVR_UPGRADE_MODE_PAWN_DESC"], needsPawn = true },
+            { value = "ILVL",      label = L["OVR_UPGRADE_MODE_ILVL"],      desc = L["OVR_UPGRADE_MODE_ILVL_DESC"] },
+            { value = "PAWN",      label = L["OVR_UPGRADE_MODE_PAWN"],      desc = L["OVR_UPGRADE_MODE_PAWN_DESC"], needsPawn = true },
             { value = "PAWN>ILVL", label = L["OVR_UPGRADE_MODE_PAWN_ILVL"], desc = L["OVR_UPGRADE_MODE_PAWN_ILVL_DESC"], needsPawn = true },
         }
 
@@ -831,62 +1518,58 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         local refreshEnforcePawnState
 
         for _, modeInfo in ipairs(MODES) do
-            local radio = CreateFrame("CheckButton", nil, dsc, "UIRadioButtonTemplate")
-            radio:SetPoint("TOPLEFT", dsc, "TOPLEFT", 15, yOffset)
+            local radio = CreateFrame("CheckButton", nil, content, "UIRadioButtonTemplate")
+            radio:SetPoint("TOPLEFT", content, "TOPLEFT", 2, y)
             radio:SetChecked(currentMode == modeInfo.value)
 
-            local radioLabel = OneWoW_GUI:CreateFS(dsc, 12)
+            local radioLabel = OneWoW_GUI:CreateFS(content, 12)
             radioLabel:SetPoint("LEFT", radio, "RIGHT", 5, 0)
             radioLabel:SetText(modeInfo.label)
             radioLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            yOffset = yOffset - 20
+            y = y - 20
 
-            local radioDesc = OneWoW_GUI:CreateFS(dsc, 10)
-            radioDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 40, yOffset)
-            radioDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+            local radioDesc = OneWoW_GUI:CreateFS(content, 10)
+            radioDesc:SetPoint("TOPLEFT", content, "TOPLEFT", 26, y)
+            radioDesc:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
             radioDesc:SetJustifyH("LEFT")
             radioDesc:SetWordWrap(true)
             radioDesc:SetText(modeInfo.desc)
             radioDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            yOffset = yOffset - radioDesc:GetStringHeight() - 10
+            y = y - radioDesc:GetStringHeight() - 10
 
             if modeInfo.needsPawn and not hasPawn then
                 radio:Disable()
                 radioLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                radioDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
 
             radio:SetScript("OnClick", function()
                 reg:SetOverlaySetting(featureId, "mode", modeInfo.value)
-                for _, rb in ipairs(radioButtons) do
-                    rb:SetChecked(false)
-                end
+                for _, rb in ipairs(radioButtons) do rb:SetChecked(false) end
                 radio:SetChecked(true)
                 if refreshEnforcePawnState then
                     refreshEnforcePawnState(modeInfo.value)
                 end
             end)
-
             radioButtons[#radioButtons + 1] = radio
         end
 
         if not hasPawn then
-            local pawnNote = OneWoW_GUI:CreateFS(dsc, 10)
-            pawnNote:SetPoint("TOPLEFT", dsc, "TOPLEFT", 15, yOffset)
+            local pawnNote = OneWoW_GUI:CreateFS(content, 10)
+            pawnNote:SetPoint("TOPLEFT", content, "TOPLEFT", 2, y)
             pawnNote:SetText(L["OVR_UPGRADE_PAWN_NOT_INSTALLED"])
             pawnNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            yOffset = yOffset - pawnNote:GetStringHeight() - 10
+            y = y - pawnNote:GetStringHeight() - 10
         end
 
         if hasPawn then
-            local enforceCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_PAWN_ENFORCE_REQ_LEVEL"] })
-            enforceCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+            local enforceCb = OneWoW_GUI:CreateCheckbox(content, { label = L["OVR_UPGRADE_PAWN_ENFORCE_REQ_LEVEL"] })
+            enforceCb:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
             enforceCb:SetChecked(reg:GetOverlaySetting(featureId, "pawnEnforceReqLevel") ~= false)
-            enforceCb:SetScript("OnClick", function(self)
-                reg:SetOverlaySetting(featureId, "pawnEnforceReqLevel", self:GetChecked())
+            enforceCb:SetScript("OnClick", function(myself)
+                reg:SetOverlaySetting(featureId, "pawnEnforceReqLevel", myself:GetChecked())
             end)
-            enforceCb:SetScript("OnEnter", function(self)
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            enforceCb:SetScript("OnEnter", function(myself)
+                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
                 GameTooltip:SetText(L["OVR_UPGRADE_PAWN_ENFORCE_REQ_LEVEL"], 1, 1, 1)
                 GameTooltip:AddLine(L["OVR_UPGRADE_PAWN_ENFORCE_REQ_LEVEL_TOOLTIP"], nil, nil, nil, true)
                 GameTooltip:Show()
@@ -904,25 +1587,29 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                 end
             end
             refreshEnforcePawnState(currentMode)
-            yOffset = yOffset - 28
+            y = y - 28
         end
 
-        local selfSpecCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_SELF_SPEC_MATCH"] })
-        selfSpecCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+        local selfSpecCb = OneWoW_GUI:CreateCheckbox(content, { label = L["OVR_UPGRADE_SELF_SPEC_MATCH"] })
+        selfSpecCb:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
         selfSpecCb:SetChecked(reg:GetOverlaySetting(featureId, "selfSpecMatch") or false)
-        selfSpecCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "selfSpecMatch", self:GetChecked())
+        selfSpecCb:SetScript("OnClick", function(myself)
+            reg:SetOverlaySetting(featureId, "selfSpecMatch", myself:GetChecked())
         end)
-        selfSpecCb:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        selfSpecCb:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
             GameTooltip:SetText(L["OVR_UPGRADE_SELF_SPEC_MATCH"], 1, 1, 1)
             GameTooltip:AddLine(L["OVR_UPGRADE_SELF_SPEC_MATCH_TOOLTIP"], nil, nil, nil, true)
             GameTooltip:Show()
         end)
         selfSpecCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        yOffset = yOffset - 28
+        y = y - 28
 
-        yOffset = yOffset - 6
+        return math.abs(y)
+    end)
+
+    stack:AddCard("upgrade-tooltip", L["OVR_CARD_TOOLTIP"], function(content, w)
+        local y = 0
 
         local DETAIL_LEVELS = {
             { value = "FULL",    text = L["OVR_TOOLTIP_DETAIL_FULL"] },
@@ -936,17 +1623,16 @@ local function ShowOverlayDetail(split, feature, selectedRow)
             return val
         end
 
-        -- Row 1: [Show in Tooltips checkbox]   [Detail dropdown]
-        local tooltipCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_TOOLTIP_LABEL"] })
-        tooltipCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+        local tooltipCb = OneWoW_GUI:CreateCheckbox(content, { label = L["OVR_UPGRADE_TOOLTIP_LABEL"] })
+        tooltipCb:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
         tooltipCb:SetChecked(reg:GetOverlaySetting(featureId, "showInTooltip") or false)
 
         local currentDetail = reg:GetOverlaySetting(featureId, "tooltipDetail") or "FULL"
-        local detailDD, detailDDText = OneWoW_GUI:CreateDropdown(dsc, {
+        local detailDD, detailDDText = OneWoW_GUI:CreateDropdown(content, {
             width = 110,
             text = GetDetailLabel(currentDetail),
         })
-        detailDD:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+        detailDD:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
         OneWoW_GUI:AttachFilterMenu(detailDD, {
             searchable = false,
             buildItems = function() return DETAIL_LEVELS end,
@@ -958,70 +1644,65 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                 return reg:GetOverlaySetting(featureId, "tooltipDetail") or "FULL"
             end,
         })
-        yOffset = yOffset - 30
+        y = y - 30
 
-        -- Row 2: [Only show if upgrade] (indented sub-option)
-        local onlyUpgradeCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_TOOLTIP_ONLY_UPGRADE"] })
-        onlyUpgradeCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 30, yOffset)
+        local onlyUpgradeCb = OneWoW_GUI:CreateCheckbox(content, { label = L["OVR_UPGRADE_TOOLTIP_ONLY_UPGRADE"] })
+        onlyUpgradeCb:SetPoint("TOPLEFT", content, "TOPLEFT", 18, y)
         onlyUpgradeCb:SetChecked(reg:GetOverlaySetting(featureId, "tooltipOnlyUpgrade") or false)
-        onlyUpgradeCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "tooltipOnlyUpgrade", self:GetChecked())
+        onlyUpgradeCb:SetScript("OnClick", function(myself)
+            reg:SetOverlaySetting(featureId, "tooltipOnlyUpgrade", myself:GetChecked())
         end)
-        yOffset = yOffset - 28
+        y = y - 28
 
-        -- Row 3: [Show skipped reason] (indented sub-option)
-        local showSkipCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_TOOLTIP_SHOW_SKIP"] })
-        showSkipCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 30, yOffset)
+        local showSkipCb = OneWoW_GUI:CreateCheckbox(content, { label = L["OVR_UPGRADE_TOOLTIP_SHOW_SKIP"] })
+        showSkipCb:SetPoint("TOPLEFT", content, "TOPLEFT", 18, y)
         showSkipCb:SetChecked(reg:GetOverlaySetting(featureId, "tooltipShowSkipReason") or false)
-        showSkipCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "tooltipShowSkipReason", self:GetChecked())
+        showSkipCb:SetScript("OnClick", function(myself)
+            reg:SetOverlaySetting(featureId, "tooltipShowSkipReason", myself:GetChecked())
         end)
-        yOffset = yOffset - 28
+        y = y - 28
 
-        -- Row 4: [Show alt upgrades] (indented sub-option)
-        local showAltsCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_TOOLTIP_SHOW_ALTS"] })
-        showAltsCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 30, yOffset)
+        local showAltsCb = OneWoW_GUI:CreateCheckbox(content, { label = L["OVR_UPGRADE_TOOLTIP_SHOW_ALTS"] })
+        showAltsCb:SetPoint("TOPLEFT", content, "TOPLEFT", 18, y)
         showAltsCb:SetChecked(reg:GetOverlaySetting(featureId, "tooltipShowAlts") ~= false)
-        showAltsCb:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        showAltsCb:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
             GameTooltip:SetText(L["OVR_UPGRADE_TOOLTIP_SHOW_ALTS"], 1, 1, 1)
             GameTooltip:AddLine(L["OVR_UPGRADE_TOOLTIP_SHOW_ALTS_TOOLTIP"], nil, nil, nil, true)
             GameTooltip:Show()
         end)
         showAltsCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        yOffset = yOffset - 28
+        y = y - 28
 
-        -- Row 5: [Match alts' current spec only] (double-indented under Show alt upgrades)
-        local altSpecCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_ALT_SPEC_MATCH"] })
-        altSpecCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 48, yOffset)
+        local altSpecCb = OneWoW_GUI:CreateCheckbox(content, { label = L["OVR_UPGRADE_ALT_SPEC_MATCH"] })
+        altSpecCb:SetPoint("TOPLEFT", content, "TOPLEFT", 36, y)
         altSpecCb:SetChecked(reg:GetOverlaySetting(featureId, "altSpecMatch") or false)
-        altSpecCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "altSpecMatch", self:GetChecked())
+        altSpecCb:SetScript("OnClick", function(myself)
+            reg:SetOverlaySetting(featureId, "altSpecMatch", myself:GetChecked())
         end)
-        altSpecCb:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        altSpecCb:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
             GameTooltip:SetText(L["OVR_UPGRADE_ALT_SPEC_MATCH"], 1, 1, 1)
             GameTooltip:AddLine(L["OVR_UPGRADE_ALT_SPEC_MATCH_TOOLTIP"], nil, nil, nil, true)
             GameTooltip:Show()
         end)
         altSpecCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        yOffset = yOffset - 28
+        y = y - 28
 
-        -- Row 6: [Ignore Soulbound] (double-indented under Show alt upgrades)
-        local ignoreSBCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_UPGRADE_TOOLTIP_IGNORE_SOULBOUND"] })
-        ignoreSBCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 48, yOffset)
+        local ignoreSBCb = OneWoW_GUI:CreateCheckbox(content, { label = L["OVR_UPGRADE_TOOLTIP_IGNORE_SOULBOUND"] })
+        ignoreSBCb:SetPoint("TOPLEFT", content, "TOPLEFT", 36, y)
         ignoreSBCb:SetChecked(reg:GetOverlaySetting(featureId, "tooltipIgnoreSoulbound") or false)
-        ignoreSBCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "tooltipIgnoreSoulbound", self:GetChecked())
+        ignoreSBCb:SetScript("OnClick", function(myself)
+            reg:SetOverlaySetting(featureId, "tooltipIgnoreSoulbound", myself:GetChecked())
         end)
-        ignoreSBCb:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        ignoreSBCb:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
             GameTooltip:SetText(L["OVR_UPGRADE_TOOLTIP_IGNORE_SOULBOUND"], 1, 1, 1)
             GameTooltip:AddLine(L["OVR_UPGRADE_TOOLTIP_IGNORE_SOULBOUND_TOOLTIP"], nil, nil, nil, true)
             GameTooltip:Show()
         end)
         ignoreSBCb:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        yOffset = yOffset - 28
+        y = y - 28
 
         local ALT_LIMIT_VALUES = { 1, 2, 3, 4, 6, 8, 10, 15, 20, 25, 0 }
         local function altLimitValueToPos(val)
@@ -1036,12 +1717,12 @@ local function ShowOverlayDetail(split, feature, selectedRow)
             return tostring(v)
         end
 
-        local altLimitLbl = OneWoW_GUI:CreateFS(dsc, 12)
-        altLimitLbl:SetPoint("TOPLEFT", dsc, "TOPLEFT", 48, yOffset - 4)
+        local altLimitLbl = OneWoW_GUI:CreateFS(content, 12)
+        altLimitLbl:SetPoint("TOPLEFT", content, "TOPLEFT", 36, y - 4)
         altLimitLbl:SetText(L["OVR_UPGRADE_TOOLTIP_ALT_LIMIT"])
         altLimitLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        altLimitLbl:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        altLimitLbl:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
             GameTooltip:SetText(L["OVR_UPGRADE_TOOLTIP_ALT_LIMIT"], 1, 1, 1)
             GameTooltip:AddLine(L["OVR_UPGRADE_TOOLTIP_ALT_LIMIT_TOOLTIP"], nil, nil, nil, true)
             GameTooltip:Show()
@@ -1049,8 +1730,8 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         altLimitLbl:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
         local currentLimit = reg:GetOverlaySetting(featureId, "tooltipAltLimit") or 10
-        local altLimitSliderWrap = OneWoW_GUI:CreateSlider(dsc, {
-            width = 220,
+        local altLimitSliderWrap = OneWoW_GUI:CreateSlider(content, {
+            width = 200,
             minVal = 1,
             maxVal = #ALT_LIMIT_VALUES,
             step = 1,
@@ -1061,10 +1742,9 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                 reg:SetOverlaySetting(featureId, "tooltipAltLimit", value)
             end,
         })
-        altLimitSliderWrap:SetPoint("TOPLEFT", dsc, "TOPLEFT", 200, yOffset - 2)
-        yOffset = yOffset - 36
+        altLimitSliderWrap:SetPoint("TOPLEFT", content, "TOPLEFT", 180, y - 2)
+        y = y - 36
 
-        -- Row 7b: [Sort alts by] dropdown (double-indented under Show alt upgrades)
         local ALT_SORT_OPTIONS = {
             { value = "UPGRADE_DESC", text = L["OVR_UPGRADE_ALT_SORT_UPGRADE_DESC"] },
             { value = "UPGRADE_ASC",  text = L["OVR_UPGRADE_ALT_SORT_UPGRADE_ASC"] },
@@ -1079,12 +1759,12 @@ local function ShowOverlayDetail(split, feature, selectedRow)
             return L["OVR_UPGRADE_ALT_SORT_UPGRADE_DESC"]
         end
 
-        local altSortLbl = OneWoW_GUI:CreateFS(dsc, 12)
-        altSortLbl:SetPoint("TOPLEFT", dsc, "TOPLEFT", 48, yOffset - 4)
+        local altSortLbl = OneWoW_GUI:CreateFS(content, 12)
+        altSortLbl:SetPoint("TOPLEFT", content, "TOPLEFT", 36, y - 4)
         altSortLbl:SetText(L["OVR_UPGRADE_TOOLTIP_ALT_SORT"])
         altSortLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        altSortLbl:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        altSortLbl:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
             GameTooltip:SetText(L["OVR_UPGRADE_TOOLTIP_ALT_SORT"], 1, 1, 1)
             GameTooltip:AddLine(L["OVR_UPGRADE_TOOLTIP_ALT_SORT_TOOLTIP"], nil, nil, nil, true)
             GameTooltip:Show()
@@ -1092,11 +1772,11 @@ local function ShowOverlayDetail(split, feature, selectedRow)
         altSortLbl:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
         local currentSort = reg:GetOverlaySetting(featureId, "tooltipAltSort") or "UPGRADE_DESC"
-        local altSortDD, altSortDDText = OneWoW_GUI:CreateDropdown(dsc, {
+        local altSortDD, altSortDDText = OneWoW_GUI:CreateDropdown(content, {
             width = 200,
             text = GetAltSortLabel(currentSort),
         })
-        altSortDD:SetPoint("TOPLEFT", dsc, "TOPLEFT", 200, yOffset - 2)
+        altSortDD:SetPoint("TOPLEFT", content, "TOPLEFT", 180, y - 2)
         OneWoW_GUI:AttachFilterMenu(altSortDD, {
             searchable = false,
             buildItems = function() return ALT_SORT_OPTIONS end,
@@ -1108,13 +1788,12 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                 return reg:GetOverlaySetting(featureId, "tooltipAltSort") or "UPGRADE_DESC"
             end,
         })
-        yOffset = yOffset - 34
+        y = y - 34
 
-        -- Row 8: Alt scope (roles + per-alt selection) — replaces the legacy
-        -- per-alt whitelist. Shared with Item Tracker / Recipe Knowledge.
-        local scopeY, scopeControls = ns.UI.BuildAltScopeSection(dsc, {
-            yOffset = yOffset,
-            x = 48,
+        local scopeY, scopeControls = ns.UI.BuildAltScopeSection(content, {
+            yOffset = y,
+            x = 36,
+            width = w,
             getScope = function()
                 local s = reg:GetOverlaySetting(featureId, "altScope")
                 if type(s) ~= "table" then s = { mode = "all", chars = {}, roles = {} } end
@@ -1124,718 +1803,712 @@ local function ShowOverlayDetail(split, feature, selectedRow)
                 reg:SetOverlaySetting(featureId, "altScope", s)
             end,
         })
-        yOffset = scopeY - 10
+        y = scopeY - 6
 
         local function setAltChildrenEnabled(enabled)
+            local key = enabled and "TEXT_PRIMARY" or "TEXT_MUTED"
             if enabled then
                 altSpecCb:Enable()
-                altSpecCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 ignoreSBCb:Enable()
-                ignoreSBCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                altLimitLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                if altLimitSliderWrap.slider then
-                    altLimitSliderWrap.slider:Enable()
-                end
-                altLimitSliderWrap.valLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                altSortLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                if altLimitSliderWrap.slider then altLimitSliderWrap.slider:Enable() end
                 altSortDD:Enable()
-                altSortDD._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                scopeControls.SetEnabled(true)
             else
                 altSpecCb:Disable()
-                altSpecCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 ignoreSBCb:Disable()
-                ignoreSBCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                altLimitLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                if altLimitSliderWrap.slider then
-                    altLimitSliderWrap.slider:Disable()
-                end
-                altLimitSliderWrap.valLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                altSortLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                if altLimitSliderWrap.slider then altLimitSliderWrap.slider:Disable() end
                 altSortDD:Disable()
-                altSortDD._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                scopeControls.SetEnabled(false)
             end
+            ApplyThemeText(altSpecCb.label, key)
+            ApplyThemeText(ignoreSBCb.label, key)
+            ApplyThemeText(altLimitLbl, key)
+            ApplyThemeText(altLimitSliderWrap.valLabel, key)
+            ApplyThemeText(altSortLbl, key)
+            ApplyThemeText(altSortDD._text, key)
+            scopeControls.SetEnabled(enabled)
         end
 
         local function refreshTooltipSubs(enabled)
+            local key = enabled and "TEXT_PRIMARY" or "TEXT_MUTED"
             if enabled then
                 detailDD:Enable()
-                detailDD._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                detailDD:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
                 onlyUpgradeCb:Enable()
-                onlyUpgradeCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 showSkipCb:Enable()
-                showSkipCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 showAltsCb:Enable()
-                showAltsCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                 setAltChildrenEnabled(showAltsCb:GetChecked())
             else
                 detailDD:Disable()
-                detailDD._text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                detailDD:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
                 onlyUpgradeCb:Disable()
-                onlyUpgradeCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 showSkipCb:Disable()
-                showSkipCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 showAltsCb:Disable()
-                showAltsCb.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 setAltChildrenEnabled(false)
             end
+            ApplyThemeText(detailDD._text, key)
+            ApplyThemeText(onlyUpgradeCb.label, key)
+            ApplyThemeText(showSkipCb.label, key)
+            ApplyThemeText(showAltsCb.label, key)
         end
         refreshTooltipSubs(reg:GetOverlaySetting(featureId, "showInTooltip") or false)
 
-        showAltsCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "tooltipShowAlts", self:GetChecked())
-            setAltChildrenEnabled(self:GetChecked())
+        showAltsCb:SetScript("OnClick", function(myself)
+            reg:SetOverlaySetting(featureId, "tooltipShowAlts", myself:GetChecked())
+            setAltChildrenEnabled(myself:GetChecked())
         end)
 
-        tooltipCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "showInTooltip", self:GetChecked())
-            refreshTooltipSubs(self:GetChecked())
+        tooltipCb:SetScript("OnClick", function(myself)
+            reg:SetOverlaySetting(featureId, "showInTooltip", myself:GetChecked())
+            refreshTooltipSubs(myself:GetChecked())
         end)
-    end
 
-    if not OVERLAY_SETTINGS_IDS[featureId] then
-        dsc:SetHeight(math.abs(yOffset) + 20)
-        split.UpdateDetailThumb()
-        return
-    end
+        return math.abs(y)
+    end)
 
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 14
+    stack:AddCard("upgrade-icon", L["OVR_ICON_LABEL"], function(content, w)
+        return BuildIconCard(content, acc, w)
+    end)
 
-    if featureId == "quest" then
-        local questNote = OneWoW_GUI:CreateFS(dsc, 12)
-        questNote:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-        questNote:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-        questNote:SetJustifyH("LEFT")
-        questNote:SetWordWrap(true)
-        questNote:SetSpacing(3)
-        questNote:SetText(L["OVR_QUEST_NOTE"])
-        questNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        yOffset = yOffset - questNote:GetStringHeight() - 16
+    stack:AddCard("upgrade-placement", L["OVR_CARD_PLACEMENT"], function(content)
+        return BuildPlacementCard(content, acc)
+    end)
 
-        local vendorCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_VENDOR_LABEL"] })
-        vendorCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        vendorCb:SetChecked(reg:GetOverlaySetting(featureId, "applyToVendorItems") or false)
-        vendorCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "applyToVendorItems", self:GetChecked())
-        end)
-        yOffset = yOffset - 30
+    stack:AddCard("upgrade-effect", L["OVR_EFFECT_LABEL"], function(content)
+        return BuildEffectCard(content, acc)
+    end)
 
-        local ahCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_AH_LABEL"] })
-        ahCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        ahCb:SetChecked(reg:GetOverlaySetting(featureId, "applyToAuctionHouse") or false)
-        ahCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "applyToAuctionHouse", self:GetChecked())
-        end)
-        yOffset = yOffset - 30 - 10
+    stack:AddCard("upgrade-bg", L["OVR_CARD_BACKGROUND"], function(content, w)
+        return BuildBackgroundCard(content, acc, w)
+    end)
 
-        dsc:SetHeight(math.abs(yOffset) + 20)
-        split.UpdateDetailThumb()
-        return
-    end
+    stack:AddCard("upgrade-surfaces", L["OVR_CARD_SURFACES"], function(content)
+        return BuildSurfacesCard(content, acc.get, acc.set)
+    end)
 
-    local settingsHdr = OneWoW_GUI:CreateFS(dsc, 12)
-    settingsHdr:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    settingsHdr:SetText(L["OVR_SETTINGS_HEADER"])
-    settingsHdr:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - settingsHdr:GetStringHeight() - 10
-
-    if featureId == "itemlevel" then
-        local rightY = yOffset
-
-        local posLabel = OneWoW_GUI:CreateFS(dsc, 12)
-        posLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        posLabel:SetText(L["OVR_POSITION_LABEL"])
-        posLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        yOffset = yOffset - posLabel:GetStringHeight() - 6
-
-        local currentPos = reg:GetOverlaySetting(featureId, "position") or "TOPRIGHT"
-        local posDD, posDDText = OneWoW_GUI:CreateDropdown(dsc, { width = 160, text = currentPos })
-        OneWoW_GUI:AttachFilterMenu(posDD, {
-            searchable = false,
-            buildItems = function()
-                local items = {}
-                for _, opt in ipairs(POSITIONS) do
-                    table.insert(items, { text = opt, value = opt })
+    stack:AddCard("upgrade-manage", L["OVR_CARD_MANAGE"], function(content)
+        local resetBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["OVR_RESET_DEFAULTS_BTN"], height = 26 })
+        resetBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+        resetBtn:SetScript("OnClick", function()
+            local fresh = OneWoW:GetSettingsDefaults("overlays")[featureId]
+            fresh.enabled = reg:IsEnabled("overlays", featureId)
+            local cfg = reg:GetFeatureSettings("overlays", featureId)
+            for key in pairs(cfg) do
+                if fresh[key] == nil then
+                    reg:SetOverlaySetting(featureId, key, nil)
                 end
-                return items
-            end,
-            onSelect = function(value, text)
-                posDDText:SetText(text)
-                reg:SetOverlaySetting(featureId, "position", value)
-            end,
-            getActiveValue = function() return reg:GetOverlaySetting(featureId, "position") end,
-        })
-        posDD:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        yOffset = yOffset - 26 - 16
-
-        local qualCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_QUALITY_COLORS_LABEL"] })
-        qualCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        qualCb:SetChecked(reg:GetOverlaySetting(featureId, "useQualityColors") or false)
-        qualCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "useQualityColors", self:GetChecked())
+            end
+            for key, value in pairs(fresh) do
+                reg:SetOverlaySetting(featureId, key, value)
+            end
+            ShowUpgradeDetail(split, feature, selectedRow)
         end)
-        yOffset = yOffset - 30 - 16
+        return 28
+    end)
 
-        local vendorCb2 = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_VENDOR_LABEL"] })
-        vendorCb2:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        vendorCb2:SetChecked(reg:GetOverlaySetting(featureId, "applyToVendorItems") ~= false)
-        vendorCb2:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "applyToVendorItems", self:GetChecked())
-        end)
-        yOffset = yOffset - 30
+    stack:Finish()
+end
 
-        local ahCb2 = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_AH_LABEL"] })
-        ahCb2:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        ahCb2:SetChecked(reg:GetOverlaySetting(featureId, "applyToAuctionHouse") or false)
-        ahCb2:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "applyToAuctionHouse", self:GetChecked())
-        end)
-        yOffset = yOffset - 30 - 16
+-- Public entry point so Tooltips > Gear Upgrades can render the same detail
+-- panel as a 1:1 mirror (feature.id == "upgrade" with tooltip-flavored
+-- title/description keys).
+function ns.UI.ShowOverlayFeatureDetail(split, feature, selectedRow)
+    ShowUpgradeDetail(split, feature, selectedRow)
+end
 
-        local petLvlCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_ILVL_PET_LEVEL"] })
-        petLvlCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        petLvlCb:SetChecked(reg:GetOverlaySetting(featureId, "showPetLevel") ~= false)
-        petLvlCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "showPetLevel", self:GetChecked())
-        end)
-        yOffset = yOffset - 30
+-- ----------------------------------------------------------------------------
+-- User overlay detail
+-- ----------------------------------------------------------------------------
 
-        local containerSlotsCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_ILVL_CONTAINER_SLOTS"] })
-        containerSlotsCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        containerSlotsCb:SetChecked(reg:GetOverlaySetting(featureId, "showContainerSlots") ~= false)
-        containerSlotsCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "showContainerSlots", self:GetChecked())
-        end)
-        yOffset = yOffset - 30 - 16
+local ShowUserOverlayDetail
 
-        local fsLabel = OneWoW_GUI:CreateFS(dsc, 12)
-        fsLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        fsLabel:SetText(L["OVR_FONTSIZE_LABEL"])
-        fsLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        yOffset = yOffset - fsLabel:GetStringHeight() - 6
+ShowUserOverlayDetail = function(split, id, selectedRow)
+    local dsc = split.detailScrollChild
+    OneWoW_GUI:ClearFrame(dsc)
 
-        local currentFS = reg:GetOverlaySetting(featureId, "fontSize") or 10
-        local fsSlider = OneWoW_GUI:CreateSlider(dsc, {
-            minVal = 7, maxVal = 20, step = 1, currentVal = currentFS,
-            onChange = function(val) reg:SetOverlaySetting(featureId, "fontSize", val) end,
-            width = 240, fmt = "%d",
-        })
-        fsSlider:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        yOffset = yOffset - 36 - 10
+    local entry = GetUserOverlays()[id]
+    if not entry then
+        dsc:SetHeight(10)
+        split.UpdateDetailThumb()
+        return
+    end
 
-        local fontList = OneWoW_GUI:GetFontList()
+    local Defs = OneWoW.Overlays2Defs
+    local Renderer = OneWoW.Overlays2Renderer
+    local preset = entry.preset and Defs:GetPreset(entry.preset)
+    local stack = NewCardStack(split, dsc)
 
-        local fontLabel = OneWoW_GUI:CreateFS(dsc, 12)
-        fontLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-        fontLabel:SetText(L["OVR_FONT_LABEL"])
-        fontLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        rightY = rightY - fontLabel:GetStringHeight() - 6
+    local refreshPreviewRef
+    local acc = UserAccessor(id, entry, function()
+        if refreshPreviewRef then refreshPreviewRef() end
+    end)
 
-        -- Legacy values may be raw LSM names ("Hack") for fonts that have a
-        -- hardcoded OneWoW key ("hack"); normalize on read so the dropdown's
-        -- selection highlight matches the merged list.
-        local function ResolveOverlayFontKey()
-            local raw = reg:GetOverlaySetting(featureId, "fontFamily")
-            return OneWoW_GUI:MigrateLSMFontName(raw) or raw or "default"
+    refreshPreviewRef = AddHeroBlock(stack, {
+        title = EntryDisplayName(entry),
+        desc = preset and L[preset.description] or nil,
+        isEnabled = function() return entry.enabled == true end,
+        onToggle = function(newState) SetEntryField(id, entry, "enabled", newState) end,
+        selectedRow = selectedRow,
+        tintAccessor = acc,
+        paintSlot = function(slot)
+            Renderer:ApplyOverlay(slot, AccessorPaint(acc), 1, PREVIEW_BG_RARITY_ITEM_LINK)
+        end,
+    })
+
+    -- ---- Rule card ----
+    stack:AddCard("user-rule", L["OVR_RULE_LABEL"], function(content, w)
+        local y = 0
+
+        if preset then
+            local expr = Defs:ResolveExpression(entry) or ""
+            y = AddNote(content, y, L["OVR_RULE_PRESET_NOTE"] .. " |cffffffff" .. expr .. "|r", w)
+
+            if preset.extras then
+                if preset.extras.includeWUE ~= nil then
+                    local _, cbY = AddCheckbox(content, y, L["OVR_WARBOUND_INCLUDE_WUE_LABEL"],
+                        entry.includeWUE ~= false, function(checked)
+                            SetEntryField(id, entry, "includeWUE", checked)
+                            ShowUserOverlayDetail(split, id, selectedRow)
+                        end)
+                    y = cbY
+                end
+                if preset.extras.includeGreyItems ~= nil then
+                    local _, cbY = AddCheckbox(content, y, L["OVR_JUNK_GREY_LABEL"],
+                        entry.includeGreyItems == true, function(checked)
+                            SetEntryField(id, entry, "includeGreyItems", checked)
+                            ShowUserOverlayDetail(split, id, selectedRow)
+                        end)
+                    y = cbY
+                end
+                if preset.extras.showInTooltip ~= nil then
+                    local _, cbY = AddCheckbox(content, y, L["OVR_TOOLTIP_LABEL"],
+                        entry.showInTooltip ~= false, function(checked)
+                            SetEntryField(id, entry, "showInTooltip", checked)
+                        end)
+                    y = cbY
+                end
+            end
+
+            if entry.preset == "junk" or entry.preset == "protected" then
+                local noteKey = (entry.preset == "junk") and "OVR_JUNK_NOTE" or "OVR_PROTECTED_NOTE"
+                y = AddNote(content, y - 4, L[noteKey], w)
+            end
+            return math.abs(y)
         end
 
-        local currentKey = ResolveOverlayFontKey()
-        local currentInfo = OneWoW_GUI:GetFontInfoByKey(currentKey)
-        local currentLabel = currentInfo and currentInfo.label or "WoW Default"
-        local fontDD = OneWoW_GUI:CreateDropdown(dsc, { width = 240, text = currentLabel })
-        OneWoW_GUI:AttachFilterMenu(fontDD, {
-            searchable = true,
-            buildItems = function()
-                local items = {}
-                for _, entry in ipairs(fontList) do
-                    tinsert(items, {
-                        text = entry.label,
-                        value = entry.key,
-                        fontPath = entry.file,
-                        fontSize = 13,
-                    })
-                end
-                return items
-            end,
-            onSelect = function(value, text)
-                fontDD._text:SetText(text)
-                reg:SetOverlaySetting(featureId, "fontFamily", value)
-            end,
-            getActiveValue = ResolveOverlayFontKey,
+        -- Custom overlay: editable name + rule.
+        local nameLbl = OneWoW_GUI:CreateFS(content, 12)
+        nameLbl:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y - 5)
+        nameLbl:SetText(NAME)
+        nameLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+        local nameBox = OneWoW_GUI:CreateEditBox(content, { maxLetters = 40, width = 220, height = 22 })
+        nameBox:SetPoint("LEFT", nameLbl, "RIGHT", 10, 0)
+        nameBox:SetText(entry.name or "")
+        nameBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        nameBox:SetScript("OnEnterPressed", function(box)
+            box:ClearFocus()
+            local newName = box:GetSearchText()
+            if newName ~= "" then
+                SetEntryField(id, entry, "name", newName)
+                RefreshList(id)
+            end
+        end)
+        y = y - 30
+
+        local ruleBox = OneWoW_GUI:CreateEditBox(content, {
+            placeholderText = L["OVR_RULE_PLACEHOLDER"],
+            height = 22,
         })
-        fontDD:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
-        fontDD:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
-        rightY = rightY - 26 - 16
+        ruleBox:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        ruleBox:SetPoint("TOPRIGHT", content, "TOPRIGHT", -30, y)
+        if entry.expression and entry.expression ~= "" then
+            ruleBox:SetText(entry.expression)
+            ruleBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
 
-        local outlineLabel = OneWoW_GUI:CreateFS(dsc, 12)
-        outlineLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-        outlineLabel:SetText("Font Outline")
-        outlineLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        rightY = rightY - outlineLabel:GetStringHeight() - 6
-
-        local outlineOptions = {"None", "Outline", "Thick Outline"}
-        local currentOutline = reg:GetOverlaySetting(featureId, "fontOutline") or "OUTLINE"
-        local outlineDisplayMap = {[""] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick Outline"}
-        local outlineValueMap = {["None"] = "", ["Outline"] = "OUTLINE", ["Thick Outline"] = "THICKOUTLINE"}
-        local outlineDD = OneWoW_GUI:CreateDropdown(dsc, { width = 240, text = outlineDisplayMap[currentOutline] })
-        OneWoW_GUI:AttachFilterMenu(outlineDD, {
-            searchable = false,
-            buildItems = function()
-                local items = {}
-                for _, opt in ipairs(outlineOptions) do
-                    table.insert(items, { text = opt, value = opt })
-                end
-                return items
-            end,
-            onSelect = function(value, text)
-                outlineDD._text:SetText(text)
-                reg:SetOverlaySetting(featureId, "fontOutline", outlineValueMap[value])
-            end,
-            getActiveValue = function()
-                local cur = reg:GetOverlaySetting(featureId, "fontOutline") or "OUTLINE"
-                return outlineDisplayMap[cur]
-            end,
+        local helpBtn = OneWoW_GUI:CreateKeywordHelpButton(content, {
+            editBox = ruleBox,
+            size = 22,
+            tooltipTitle = L["OVR_RULE_HELP_TITLE"],
+            tooltipDesc = L["OVR_RULE_HELP_DESC"],
         })
-        outlineDD:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
-        outlineDD:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
-        rightY = rightY - 26 - 10
+        helpBtn:SetPoint("LEFT", ruleBox, "RIGHT", 8, 0)
+        y = y - 28
 
-        yOffset = math.min(yOffset, rightY)
-        dsc:SetHeight(math.abs(yOffset) + 20)
-        split.UpdateDetailThumb()
+        local errLabel = OneWoW_GUI:CreateFS(content, 11)
+        errLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+        errLabel:SetPoint("TOPRIGHT", content, "TOPRIGHT", -70, y)
+        errLabel:SetJustifyH("LEFT")
+        errLabel:SetWordWrap(true)
+
+        local function ShowRuleState(ok, err)
+            if ok then
+                errLabel:SetText(L["OVR_RULE_SAVED"])
+                errLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+            else
+                errLabel:SetText(string.format(L["OVR_RULE_ERROR"], err or "?"))
+                errLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+            end
+        end
+
+        if entry.expression and entry.expression ~= "" then
+            local ok, err = Defs:ValidateExpression(entry.expression)
+            if not ok then ShowRuleState(false, err) else errLabel:SetText("") end
+        else
+            errLabel:SetText("")
+        end
+
+        local function SaveRule()
+            local text = ruleBox:GetSearchText()
+            local ok, err = Defs:ValidateExpression(text)
+            if ok then
+                SetEntryField(id, entry, "expression", text)
+            end
+            ShowRuleState(ok, err)
+        end
+
+        ruleBox:SetScript("OnEnterPressed", function(box)
+            box:ClearFocus()
+            SaveRule()
+        end)
+
+        local saveBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["OVR_RULE_SAVE_BTN"], height = 22 })
+        saveBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
+        saveBtn:SetScript("OnClick", SaveRule)
+        y = y - 30
+
+        return math.abs(y)
+    end)
+
+    stack:AddCard("user-icon-type", L["OVR_ICON_TYPE_LABEL"], function(content, w)
+        return BuildIconTypeCard(content, acc, w, function()
+            ShowUserOverlayDetail(split, id, selectedRow)
+        end)
+    end)
+
+    -- The system-icon gallery only applies to the "list" icon type; atlas and
+    -- custom-file types use the inputs inside the Icon Type card instead.
+    if (acc.getIconSpec().kind or "list") == "list" then
+        stack:AddCard("user-icon", L["OVR_ICON_LABEL"], function(content, w)
+            return BuildIconCard(content, acc, w)
+        end)
+    end
+
+    stack:AddCard("user-placement", L["OVR_CARD_PLACEMENT"], function(content)
+        return BuildPlacementCard(content, acc)
+    end)
+
+    stack:AddCard("user-effect", L["OVR_EFFECT_LABEL"], function(content)
+        return BuildEffectCard(content, acc)
+    end)
+
+    stack:AddCard("user-bg", L["OVR_CARD_BACKGROUND"], function(content, w)
+        return BuildBackgroundCard(content, acc, w)
+    end)
+
+    stack:AddCard("user-surfaces", L["OVR_CARD_SURFACES"], function(content)
+        return BuildSurfacesCard(content,
+            function(key) return entry[key] end,
+            function(key, value) SetEntryField(id, entry, key, value) end)
+    end)
+
+    stack:AddCard("user-manage", L["OVR_CARD_MANAGE"], function(content)
+        local deleteBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["OVR_DELETE_BTN"], height = 26 })
+        deleteBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+        deleteBtn:SetScript("OnClick", function()
+            local dialog = OneWoW_GUI:CreateConfirmDialog({
+                name    = "OneWoW_OverlayDeleteConfirm",
+                title   = L["OVR_DELETE_BTN"],
+                message = string.format(L["OVR_DELETE_CONFIRM_MSG"], EntryDisplayName(entry)),
+                buttons = {
+                    { text = DELETE, color = { 0.6, 0.2, 0.2 }, onClick = function(d)
+                        d:Hide()
+                        Reg():SetSetting("overlays", "userOverlays", id, nil)
+                        RefreshList("general")
+                    end },
+                    { text = CANCEL, onClick = function(d) d:Hide() end },
+                },
+            })
+            dialog.frame:Show()
+        end)
+        return 28
+    end)
+
+    stack:Finish()
+end
+
+-- ----------------------------------------------------------------------------
+-- Add Overlay dialog
+-- ----------------------------------------------------------------------------
+
+local addDialog
+
+function ns.UI.ShowAddOverlayDialog()
+    if addDialog then
+        addDialog.frame:Show()
         return
     end
 
-    local currentIcon = reg:GetOverlaySetting(featureId, "icon") or "VignetteEvent-SuperTracked"
+    local selectedPreset = nil -- nil == custom
 
-    local previewContainer, RefreshPreview = CreateSlotPreview(dsc, featureId, reg)
-    local rightY = yOffset
+    addDialog = OneWoW_GUI:CreateDialog({
+        name   = "OneWoW_OverlayAddDialog",
+        title  = L["OVR_ADD_OVERLAY_BTN"],
+        width  = 420,
+        height = 240,
+    })
 
-    local previewFrame = CreateFrame("Frame", nil, dsc)
-    previewFrame:SetSize(20, 20)
-    previewFrame:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-    local previewTex = previewFrame:CreateTexture(nil, "ARTWORK")
-    previewTex:SetAllPoints(previewFrame)
-    OneWoW.OverlayIcons:ApplyToTexture(previewTex, currentIcon)
+    local content = addDialog.contentFrame
 
-    local function ApplyPreviewTint()
-        local iconColor = reg:GetOverlaySetting(featureId, "iconColor") or {1, 1, 1}
-        previewTex:SetVertexColor(iconColor[1], iconColor[2], iconColor[3])
+    local typeLabel = OneWoW_GUI:CreateFS(content, 12)
+    typeLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 14, -16)
+    typeLabel:SetText(L["OVR_ADD_DIALOG_TYPE_LABEL"])
+    typeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local nameLabel = OneWoW_GUI:CreateFS(content, 12)
+    local nameBox
+
+    local typeDD, typeDDText = OneWoW_GUI:CreateDropdown(content, {
+        width = 240,
+        text = L["OVR_ADD_DIALOG_CUSTOM"],
+    })
+    typeDD:SetPoint("TOPLEFT", content, "TOPLEFT", 14, -36)
+    typeDD:SetPoint("TOPRIGHT", content, "TOPRIGHT", -14, -36)
+
+    local function SetNameEnabled(enabled)
+        if enabled then
+            nameBox:Enable()
+            nameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        else
+            nameBox:Disable()
+            nameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
     end
-    ApplyPreviewTint()
 
-    local previewName = OneWoW_GUI:CreateFS(dsc, 10)
-    previewName:SetPoint("LEFT", previewFrame, "RIGHT", 6, 0)
-    previewName:SetText(OneWoW.OverlayIcons:GetDisplayName(currentIcon))
-    previewName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    rightY = rightY - 24 - 6
-
-    previewContainer:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-    rightY = rightY - previewContainer:GetHeight() - 10
-
-    local posLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    posLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-    posLabel:SetText(L["OVR_POSITION_LABEL"])
-    posLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    rightY = rightY - posLabel:GetStringHeight() - 6
-
-    local currentPos = reg:GetOverlaySetting(featureId, "position") or "TOPRIGHT"
-    local posDropdown, posDropdownText = OneWoW_GUI:CreateDropdown(dsc, { width = 160, text = currentPos })
-    OneWoW_GUI:AttachFilterMenu(posDropdown, {
-        searchable = false,
+    OneWoW_GUI:AttachFilterMenu(typeDD, {
+        searchable = true,
         buildItems = function()
-            local items = {}
-            for _, opt in ipairs(POSITIONS) do
-                table.insert(items, { text = opt, value = opt })
+            local items = { { text = L["OVR_ADD_DIALOG_CUSTOM"], value = "__custom__" } }
+            -- Skip presets that already exist as an overlay; only deleted
+            -- presets should be offered for re-adding.
+            local present = {}
+            for _, e in pairs(GetUserOverlays()) do
+                if type(e) == "table" and e.preset then
+                    present[e.preset] = true
+                end
+            end
+            for _, preset in ipairs(OneWoW.Overlays2Defs:GetPresets()) do
+                if not present[preset.id] then
+                    table.insert(items, { text = L[preset.title], value = preset.id })
+                end
             end
             return items
         end,
         onSelect = function(value, text)
-            posDropdownText:SetText(text)
-            reg:SetOverlaySetting(featureId, "position", value)
-            RefreshPreview()
-        end,
-        getActiveValue = function() return reg:GetOverlaySetting(featureId, "position") end,
-    })
-    posDropdown:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
-    posDropdown:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
-    rightY = rightY - 26 - 10
-
-    local scaleLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    scaleLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-    scaleLabel:SetText(L["OVR_SCALE_LABEL"])
-    scaleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    rightY = rightY - scaleLabel:GetStringHeight() - 6
-
-    local currentScale = reg:GetOverlaySetting(featureId, "scale") or 1.0
-    local scaleSlider  = OneWoW_GUI:CreateSlider(dsc, {
-        minVal = 0.5, maxVal = 2.0, step = 0.1, currentVal = currentScale,
-        onChange = function(val)
-            reg:SetOverlaySetting(featureId, "scale", val)
-            RefreshPreview()
-        end,
-        width = 160,
-    })
-    scaleSlider:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
-    scaleSlider:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
-    rightY = rightY - 36 - 10
-
-    local alphaLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    alphaLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-    alphaLabel:SetText(L["OVR_ALPHA_LABEL"])
-    alphaLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    rightY = rightY - alphaLabel:GetStringHeight() - 6
-
-    local currentAlpha = reg:GetOverlaySetting(featureId, "alpha") or 1.0
-    local alphaSlider  = OneWoW_GUI:CreateSlider(dsc, {
-        minVal = 0.1, maxVal = 1.0, step = 0.1, currentVal = currentAlpha,
-        onChange = function(val)
-            reg:SetOverlaySetting(featureId, "alpha", val)
-            RefreshPreview()
-        end,
-        width = 160,
-    })
-    alphaSlider:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
-    alphaSlider:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
-    rightY = rightY - 36 - 10
-
-    local iconColorLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    iconColorLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-    iconColorLabel:SetText(L["OVR_ICON_COLOR_LABEL"])
-    iconColorLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local iconSwatch = OneWoW_GUI:CreateColorSwatch(dsc, {
-        getColor = function()
-            local sc = reg:GetOverlaySetting(featureId, "iconColor") or {1, 1, 1}
-            return sc[1], sc[2], sc[3]
-        end,
-        onColorChanged = function(r, g, b)
-            reg:SetOverlaySetting(featureId, "iconColor", {r, g, b})
-            ApplyPreviewTint()
-            RefreshPreview()
-        end,
-    })
-    iconSwatch:SetPoint("LEFT", iconColorLabel, "RIGHT", 8, 0)
-    rightY = rightY - 28 - 10
-
-    local effectLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    effectLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-    effectLabel:SetText(L["OVR_EFFECT_LABEL"])
-    effectLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    rightY = rightY - effectLabel:GetStringHeight() - 6
-
-    local currentEffect = reg:GetOverlaySetting(featureId, "effect") or "none"
-    local effectDD, effectDDText = OneWoW_GUI:CreateDropdown(dsc, { width = 160, text = ICON_EFFECT_DISPLAY_MAP[currentEffect] or "None" })
-    OneWoW_GUI:AttachFilterMenu(effectDD, {
-        searchable = false,
-        buildItems = function()
-            local items = {}
-            for _, opt in ipairs(ICON_EFFECT_OPTIONS) do
-                table.insert(items, { text = opt, value = opt })
-            end
-            return items
-        end,
-        onSelect = function(value, text)
-            effectDDText:SetText(text)
-            reg:SetOverlaySetting(featureId, "effect", ICON_EFFECT_VALUE_MAP[value])
-            RefreshPreview()
+            typeDDText:SetText(text)
+            selectedPreset = (value ~= "__custom__") and value or nil
+            SetNameEnabled(selectedPreset == nil)
         end,
         getActiveValue = function()
-            local cur = reg:GetOverlaySetting(featureId, "effect") or "none"
-            return ICON_EFFECT_DISPLAY_MAP[cur] or "None"
+            return selectedPreset or "__custom__"
         end,
     })
-    effectDD:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
-    effectDD:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
-    rightY = rightY - 26 - 16
 
-    local bgDiv = dsc:CreateTexture(nil, "ARTWORK")
-    bgDiv:SetHeight(1)
-    bgDiv:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
-    bgDiv:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
-    bgDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    rightY = rightY - 10
+    nameLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 14, -76)
+    nameLabel:SetText(NAME)
+    nameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local bgCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_BG_ENABLE_LABEL"] })
-    bgCb:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-    bgCb:SetChecked(reg:GetOverlaySetting(featureId, "bgEnabled") or false)
-    bgCb:SetScript("OnClick", function(self)
-        reg:SetOverlaySetting(featureId, "bgEnabled", self:GetChecked())
-        RefreshPreview()
-    end)
-    rightY = rightY - 30
+    nameBox = OneWoW_GUI:CreateEditBox(content, {
+        placeholderText = L["OVR_CUSTOM_DEFAULT_NAME"],
+        maxLetters = 40,
+    })
+    nameBox:SetPoint("TOPLEFT", content, "TOPLEFT", 14, -96)
+    nameBox:SetPoint("TOPRIGHT", content, "TOPRIGHT", -14, -96)
 
-    local bgStyleLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    bgStyleLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-    bgStyleLabel:SetText(L["OVR_BG_STYLE_LABEL"])
-    bgStyleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    rightY = rightY - bgStyleLabel:GetStringHeight() - 6
+    local capNote = OneWoW_GUI:CreateFS(content, 11)
+    capNote:SetPoint("TOPLEFT",  content, "TOPLEFT",  14, -132)
+    capNote:SetPoint("TOPRIGHT", content, "TOPRIGHT", -14, -132)
+    capNote:SetJustifyH("LEFT")
+    capNote:SetWordWrap(true)
+    capNote:SetText(L["OVR_MAX_OVERLAYS_NOTE"])
+    capNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local currentBgStyle = reg:GetOverlaySetting(featureId, "bgStyle") or "Solid-Circle"
-    local bgStyleDD, bgStyleDDText = OneWoW_GUI:CreateDropdown(dsc, { width = 180, text = currentBgStyle })
-    OneWoW_GUI:AttachFilterMenu(bgStyleDD, {
-        searchable = false,
-        buildItems = function()
-            local items = {}
-            for _, opt in ipairs(BG_STYLE_OPTIONS) do
-                table.insert(items, { text = opt, value = opt })
+    local createBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["CREATE"], height = 26 })
+    createBtn:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -14, 12)
+    createBtn:SetScript("OnClick", function()
+        local Defs = OneWoW.Overlays2Defs
+        local userOverlays = GetUserOverlays()
+
+        local maxOrder = 0
+        for _, entry in pairs(userOverlays) do
+            if type(entry) == "table" and (entry.order or 0) > maxOrder then
+                maxOrder = entry.order or 0
             end
-            return items
-        end,
-        onSelect = function(value, text)
-            bgStyleDDText:SetText(text)
-            reg:SetOverlaySetting(featureId, "bgStyle", value)
-            RefreshPreview()
-        end,
-        getActiveValue = function() return reg:GetOverlaySetting(featureId, "bgStyle") or "Solid-Circle" end,
-    })
-    bgStyleDD:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
-    bgStyleDD:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
-    rightY = rightY - 26 - 10
-
-    local bgScaleLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    bgScaleLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-    bgScaleLabel:SetText(L["OVR_BG_SCALE_LABEL"])
-    bgScaleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    rightY = rightY - bgScaleLabel:GetStringHeight() - 6
-
-    local currentBgScale = reg:GetOverlaySetting(featureId, "bgScale") or 1.0
-    local bgScaleSlider = OneWoW_GUI:CreateSlider(dsc, {
-        minVal = 0.1, maxVal = 3.0, step = 0.1, currentVal = currentBgScale,
-        onChange = function(val)
-            reg:SetOverlaySetting(featureId, "bgScale", val)
-            RefreshPreview()
-        end,
-        width = 160,
-    })
-    bgScaleSlider:SetPoint("TOPLEFT",  dsc, "TOP",      20,  rightY)
-    bgScaleSlider:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, rightY)
-    rightY = rightY - 36 - 10
-
-    local bgColorLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    bgColorLabel:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-    bgColorLabel:SetText(L["OVR_BG_COLOR_LABEL"])
-    bgColorLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local bgSwatch = OneWoW_GUI:CreateColorSwatch(dsc, {
-        getColor = function()
-            local sc = reg:GetOverlaySetting(featureId, "bgColor") or {1, 1, 1}
-            return sc[1], sc[2], sc[3]
-        end,
-        onColorChanged = function(r, g, b)
-            reg:SetOverlaySetting(featureId, "bgColor", {r, g, b})
-            RefreshPreview()
-        end,
-    })
-    bgSwatch:SetPoint("LEFT", bgColorLabel, "RIGHT", 8, 0)
-    rightY = rightY - 28 - 10
-
-    local bgRarityCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_BG_RARITY_LABEL"] })
-    bgRarityCb:SetPoint("TOPLEFT", dsc, "TOP", 20, rightY)
-    bgRarityCb:SetChecked(reg:GetOverlaySetting(featureId, "bgUseRarityColor") or false)
-    bgRarityCb:SetScript("OnClick", function(self)
-        reg:SetOverlaySetting(featureId, "bgUseRarityColor", self:GetChecked())
-        RefreshPreview()
-    end)
-    rightY = rightY - 30 - 16
-
-    local iconLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    iconLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    iconLabel:SetText(L["OVR_ICON_LABEL"])
-    iconLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    yOffset = yOffset - 18 - 4
-
-    local picker = CreateIconPicker(dsc, currentIcon, function(iconName)
-        reg:SetOverlaySetting(featureId, "icon", iconName)
-        OneWoW.OverlayIcons:ApplyToTexture(previewTex, iconName)
-        ApplyPreviewTint()
-        previewName:SetText(OneWoW.OverlayIcons:GetDisplayName(iconName))
-        RefreshPreview()
-    end)
-    picker:SetPoint("TOPLEFT",  dsc, "TOPLEFT", 12,  yOffset)
-    picker:SetPoint("TOPRIGHT", dsc, "TOP",     -20, yOffset)
-    yOffset = yOffset - picker:GetHeight() - 16
-
-    yOffset = math.min(yOffset, rightY)
-
-    local vendorCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_VENDOR_LABEL"] })
-    vendorCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    local vendorEnabled = reg:GetOverlaySetting(featureId, "applyToVendorItems") or false
-    vendorCb:SetChecked(vendorEnabled)
-    vendorCb:SetScript("OnClick", function(self)
-        reg:SetOverlaySetting(featureId, "applyToVendorItems", self:GetChecked())
-    end)
-
-    local vendorApplyAll = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["OVR_APPLY_TO_ALL_BTN"], height = 20 })
-    vendorApplyAll:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    vendorApplyAll:SetScript("OnClick", function()
-        local val = vendorCb:GetChecked()
-        for id in pairs(OVERLAY_SETTINGS_IDS) do
-            reg:SetOverlaySetting(id, "applyToVendorItems", val)
         end
-    end)
-    yOffset = yOffset - 30
 
-    local ahCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_AH_LABEL"] })
-    ahCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    local ahEnabled = reg:GetOverlaySetting(featureId, "applyToAuctionHouse") or false
-    ahCb:SetChecked(ahEnabled)
-    ahCb:SetScript("OnClick", function(self)
-        reg:SetOverlaySetting(featureId, "applyToAuctionHouse", self:GetChecked())
+        local name = nameBox:GetSearchText()
+        local entry = Defs:NewEntry(selectedPreset, name ~= "" and name or L["OVR_CUSTOM_DEFAULT_NAME"])
+        entry.order = maxOrder + 1
+
+        local id = Defs:GenerateId(userOverlays)
+        SaveEntry(id, entry)
+
+        addDialog.frame:Hide()
+        RefreshList(id)
     end)
 
-    local ahApplyAll = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["OVR_APPLY_TO_ALL_BTN"], height = 20 })
-    ahApplyAll:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    ahApplyAll:SetScript("OnClick", function()
-        local val = ahCb:GetChecked()
-        for id in pairs(OVERLAY_SETTINGS_IDS) do
-            reg:SetOverlaySetting(id, "applyToAuctionHouse", val)
-        end
-    end)
-    yOffset = yOffset - 30 - 10
+    SetNameEnabled(true)
+    addDialog.frame:Show()
+end
 
-    if featureId == "junk" or featureId == "protected" then
-        local tooltipCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_TOOLTIP_LABEL"] })
-        tooltipCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-        tooltipCb:SetChecked(reg:GetOverlaySetting(featureId, "showInTooltip") ~= false)
-        tooltipCb:SetScript("OnClick", function(self)
-            reg:SetOverlaySetting(featureId, "showInTooltip", self:GetChecked())
+-- ----------------------------------------------------------------------------
+-- Left list
+-- ----------------------------------------------------------------------------
+
+--- List row with icon thumbnail, label, drag-reorder handle, and enable dot.
+local function CreateOverlayRow(parent, opts)
+    local row = OneWoW_GUI:CreateListRowBasic(parent, {
+        height = 30,
+        label = opts.label,
+        showDot = true,
+        dotEnabled = opts.enabled,
+        onClick = opts.onClick,
+    })
+
+    if opts.iconSpec then
+        local icoFrame = CreateFrame("Frame", nil, row)
+        icoFrame:SetSize(18, 18)
+        icoFrame:SetPoint("LEFT", row, "LEFT", 8, 0)
+        local icoTex = icoFrame:CreateTexture(nil, "ARTWORK")
+        icoTex:SetAllPoints(icoFrame)
+        OneWoW.OverlayIcons:ApplyIconSpec(icoTex, opts.iconSpec)
+
+        row.label:ClearAllPoints()
+        row.label:SetPoint("LEFT", icoFrame, "RIGHT", 6, 0)
+        row.label:SetPoint("RIGHT", row, "RIGHT", opts.canMove and -46 or -24, 0)
+        row.label:SetJustifyH("LEFT")
+    end
+
+    -- Drag-handle affordance. The whole row is the drag source (wired by the
+    -- reorder controller); this grip is a visual hint carrying the tooltip.
+    -- Motion-only so mouse clicks fall through to the row and start the drag.
+    if opts.canMove then
+        local grip = CreateFrame("Frame", nil, row)
+        grip:SetSize(16, 16)
+        grip:SetPoint("RIGHT", row.dot, "LEFT", -6, 0)
+        -- Motion only (for the tooltip); a Frame does not capture clicks by
+        -- default, so mouse-down falls through to the row and starts the drag.
+        grip:EnableMouseMotion(true)
+
+        local gripTex = grip:CreateTexture(nil, "ARTWORK")
+        gripTex:SetAllPoints(grip)
+        gripTex:SetAtlas("common-icon-move")
+        gripTex:SetAlpha(0.7)
+
+        grip:SetScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L["OVR_DRAG_REORDER_HINT"], 1, 1, 1)
+            GameTooltip:Show()
         end)
-        yOffset = yOffset - 30 - 10
+        grip:SetScript("OnLeave", GameTooltip_Hide)
+    end
 
-        if featureId == "junk" then
-            local greyCb = OneWoW_GUI:CreateCheckbox(dsc, { label = L["OVR_JUNK_GREY_LABEL"] })
-            greyCb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-            greyCb:SetChecked(reg:GetOverlaySetting(featureId, "includeGreyItems") or false)
-            greyCb:SetScript("OnClick", function(self)
-                reg:SetOverlaySetting(featureId, "includeGreyItems", self:GetChecked())
-            end)
-            yOffset = yOffset - 30 - 10
+    return row
+end
+
+local function BuildOverlayList(split)
+    local lsc = split.listScrollChild
+    local selectedRow = nil
+    local selectedId = nil
+
+    local BUILTINS = {
+        { id = "general",       title = "OVR_GENERAL_TITLE" },
+        { id = "itemlevel",     title = "OVR_ITEMLEVEL_TITLE" },
+        { id = "qualityborder", title = "OVR_QUALITYBORDER_TITLE" },
+        { id = "upgrade",       title = "OVR_UPGRADE_TITLE" },
+    }
+
+    -- Drag-reorder for user overlay rows. Rebuilt each render into
+    -- userRowFrames; built-ins never join this list, so they stay pinned and
+    -- cannot be dragged or used as drop targets.
+    local userRowFrames = {}
+    local reorderCtrl
+
+    local function RestoreRowBorder(row)
+        if row.isActive then
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+        else
+            row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         end
     end
 
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 14
+    local function EnsureReorder()
+        if reorderCtrl then return reorderCtrl end
+        local r, g, b = OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")
+        reorderCtrl = OneWoW_GUI:CreateReorderDrag({
+            getItems = function() return userRowFrames end,
+            dropIndicator = { thickness = 2, horizontalPadding = 6, color = { r, g, b, 1 } },
+            autoScroll = {
+                getFrame = function() return split.listScrollFrame end,
+                edgeZone = 40, maxSpeed = 14, minSpeed = 2,
+            },
+            onPickup = function(row)
+                row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+            end,
+            onRestore = function(row)
+                RestoreRowBorder(row)
+            end,
+            onReorder = function(fromIdx, toIdx, insertBefore)
+                local src = userRowFrames[fromIdx]
+                local tgt = userRowFrames[toIdx]
+                if not src or not tgt or not src._ovrId or not tgt._ovrId then return end
+                if ReorderEntry(src._ovrId, tgt._ovrId, insertBefore) then
+                    RefreshList(src._ovrId)
+                end
+            end,
+        })
+        return reorderCtrl
+    end
 
-    local resetBtn = OneWoW_GUI:CreateFitTextButton(dsc, { text = L["OVR_RESET_DEFAULTS_BTN"], height = 26 })
-    resetBtn:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    resetBtn:SetScript("OnClick", function()
-        -- Reset this feature to shipped defaults, preserving its enable state.
-        local fresh = OneWoW:GetSettingsDefaults("overlays")[featureId]
-        fresh.enabled = reg:IsEnabled("overlays", featureId)
-        local cfg = reg:GetFeatureSettings("overlays", featureId)
-        for key in pairs(cfg) do
-            if fresh[key] == nil then
-                reg:SetOverlaySetting(featureId, key, nil)
-            end
+    local function ShowDetailFor(rowId, row)
+        local dsc = split.detailScrollChild
+        OneWoW_GUI:ClearFrame(dsc)
+
+        if rowId == "general" then
+            ShowGeneralDetail(split, dsc, row)
+        elseif rowId == "itemlevel" then
+            ShowItemLevelDetail(split, dsc, row)
+        elseif rowId == "qualityborder" then
+            ShowQualityBorderDetail(split, dsc, row)
+        elseif rowId == "upgrade" then
+            ShowUpgradeDetail(split, { id = "upgrade", title = "OVR_UPGRADE_TITLE", description = "OVR_UPGRADE_DESC" }, row)
+        else
+            ShowUserOverlayDetail(split, rowId, row)
         end
-        for key, value in pairs(fresh) do
-            reg:SetOverlaySetting(featureId, key, value)
+    end
+
+    local function IsRowEnabled(rowId)
+        if rowId == "general" or rowId == "itemlevel"
+            or rowId == "qualityborder" or rowId == "upgrade" then
+            return Reg():IsEnabled("overlays", rowId)
         end
-        ShowOverlayDetail(split, feature, selectedRow)
-    end)
-    yOffset = yOffset - 30 - 10
-
-    dsc:SetHeight(math.abs(yOffset) + 20)
-    OneWoW_GUI:ApplyFontToFrame(dsc)
-    split.UpdateDetailThumb()
-end
-
--- Public entry point so other tabs (e.g. Tooltips > Gear Upgrades) can render
--- an overlay feature's full detail panel as a 1:1 mirror. The caller passes a
--- feature table with the overlays-side id (e.g. id = "upgrade") but may
--- override title/description locale keys for tab-specific wording.
-function ns.UI.ShowOverlayFeatureDetail(split, feature, selectedRow)
-    ShowOverlayDetail(split, feature, selectedRow)
-end
-
-local function BuildFeatureList(split, tabName)
-    local lsc = split.listScrollChild
-    local features = OneWoW.SettingsFeatureRegistry:GetByTab(tabName)
-    local selectedRow = nil
-    local selectedFeatureId = nil
-    local allRows = {}
-
-    local function UpdateEnabledCount()
-        local enabledCount = 0
-        for _, f in ipairs(features) do
-            if OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", f.id) then
-                enabledCount = enabledCount + 1
-            end
-        end
-        split.leftStatusText:SetText(string.format("Features: %d/%d", enabledCount, #features))
+        local entry = GetUserOverlays()[rowId]
+        return entry ~= nil and entry.enabled == true
     end
 
     local function RenderRows(filterText)
         OneWoW_GUI:ClearFrame(lsc)
         selectedRow = nil
-        allRows = {}
+        local allRows = {}
         local rowToSelect = nil
         local yOffset = -5
         local filter = (filterText or ""):lower()
 
-        for _, feature in ipairs(features) do
-            local displayName = L[feature.title]
-            if filter == "" or displayName:lower():find(filter, 1, true) then
-                local capturedFeature = feature
-                local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id)
+        -- Only allow drag-reordering when the list is unfiltered; a filtered
+        -- subset has no meaningful full-list ordering.
+        local canDrag = (filter == "")
+        local reorder = EnsureReorder()
+        wipe(userRowFrames)
 
+        local function PlaceRow(row, rowId)
+            row:SetPoint("TOPLEFT", lsc, "TOPLEFT", 4, yOffset)
+            row:SetPoint("TOPRIGHT", lsc, "TOPRIGHT", -4, yOffset)
+            if rowId == selectedId then
+                rowToSelect = row
+            end
+            table.insert(allRows, row)
+            yOffset = yOffset - 34
+        end
+
+        local function RowClick(rowId, displayName)
+            return function(myself)
+                if reorderCtrl and reorderCtrl:IsActive() then return end
+                if selectedRow and selectedRow ~= myself then
+                    selectedRow:SetActive(false)
+                end
+                selectedRow = myself
+                selectedId = rowId
+                myself:SetActive(true)
+                ShowDetailFor(rowId, myself)
+                if split.rightStatusText then
+                    split.rightStatusText:SetText(displayName)
+                end
+            end
+        end
+
+        for _, builtin in ipairs(BUILTINS) do
+            local displayName = L[builtin.title]
+            if filter == "" or displayName:lower():find(filter, 1, true) then
                 local row = OneWoW_GUI:CreateListRowBasic(lsc, {
                     height = 30,
                     label = displayName,
                     showDot = true,
-                    dotEnabled = isEnabled,
-                    onClick = function(self)
-                        if selectedRow and selectedRow ~= self then
-                            selectedRow:SetActive(false)
-                        end
-                        selectedRow = self
-                        selectedFeatureId = capturedFeature.id
-                        self:SetActive(true)
-                        ShowOverlayDetail(split, capturedFeature, self)
-                        if split.rightStatusText then
-                            local fe = OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", capturedFeature.id)
-                            split.rightStatusText:SetText(displayName .. (fe and " (Enabled)" or " (Disabled)"))
-                        end
-                    end,
+                    dotEnabled = IsRowEnabled(builtin.id),
+                    onClick = RowClick(builtin.id, displayName),
                 })
-                row:SetPoint("TOPLEFT", lsc, "TOPLEFT", 4, yOffset)
-                row:SetPoint("TOPRIGHT", lsc, "TOPRIGHT", -4, yOffset)
-                if capturedFeature.id == selectedFeatureId then
-                    rowToSelect = row
-                end
-                table.insert(allRows, row)
-                yOffset = yOffset - 34
+                PlaceRow(row, builtin.id)
             end
         end
 
-        lsc:SetHeight(math.abs(yOffset) + 10)
-        if #allRows > 0 and not selectedRow then
-            (rowToSelect or allRows[1]):Click()
+        local ordered = GetOrderedEntries()
+        for _, item in ipairs(ordered) do
+            local displayName = EntryDisplayName(item.entry)
+            if filter == "" or displayName:lower():find(filter, 1, true) then
+                local capturedId = item.id
+                local row = CreateOverlayRow(lsc, {
+                    label = displayName,
+                    enabled = item.entry.enabled == true,
+                    iconSpec = type(item.entry.icon) == "table" and item.entry.icon or nil,
+                    canMove = canDrag,
+                    onClick = RowClick(capturedId, displayName),
+                })
+                row._ovrId = capturedId
+                PlaceRow(row, capturedId)
+                if canDrag then
+                    table.insert(userRowFrames, row)
+                    reorder:Attach(row)
+                end
+            end
         end
-        UpdateEnabledCount()
+
+        -- Pinned "+ Add Overlay" action row (never auto-selected).
+        local addRow = OneWoW_GUI:CreateListRowBasic(lsc, {
+            height = 30,
+            label = "+ " .. L["OVR_ADD_OVERLAY_BTN"],
+            onClick = function() ns.UI.ShowAddOverlayDialog() end,
+        })
+        addRow.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        addRow.label:SetJustifyH("CENTER")
+        addRow:SetPoint("TOPLEFT", lsc, "TOPLEFT", 4, yOffset)
+        addRow:SetPoint("TOPRIGHT", lsc, "TOPRIGHT", -4, yOffset)
+        yOffset = yOffset - 34
+
+        lsc:SetHeight(math.abs(yOffset) + 10)
+
+        local enabledCount = 0
+        for _, item in ipairs(ordered) do
+            if item.entry.enabled then enabledCount = enabledCount + 1 end
+        end
+        split.leftStatusText:SetText(string.format("%s: %d/%d", L["OVERLAYS_LIST_TITLE"], enabledCount, #ordered))
+
+        if #allRows > 0 and not selectedRow then
+            local target = rowToSelect or allRows[1]
+            target:Click()
+        end
     end
 
     RenderRows("")
 
     if split.searchBox then
-        split.searchBox:SetScript("OnTextChanged", function(self)
-            local text = self:GetSearchText()
-            RenderRows(text)
+        split.searchBox:SetScript("OnTextChanged", function(myself)
+            RenderRows(myself:GetSearchText())
         end)
     end
 
-    -- Re-render on tab activation: the selected feature's detail pane is
-    -- rebuilt with fresh registry reads, so state changed elsewhere (e.g. the
-    -- Tooltips > Gear Upgrades mirror of overlays/upgrade) shows correctly.
-    split.RefreshList = function()
+    RefreshListRef = function(selectId)
+        if selectId then selectedId = selectId end
         local text = split.searchBox and split.searchBox:GetSearchText() or ""
         RenderRows(text)
     end
+
+    split.RefreshList = RefreshListRef
 end
 
 function ns.UI.CreateOverlaysTab(parent)
@@ -1843,12 +2516,14 @@ function ns.UI.CreateOverlaysTab(parent)
     split.listTitle:SetText(L["OVERLAYS_LIST_TITLE"])
     split.detailTitle:SetText(L["OVERLAYS_DETAIL_TITLE"])
 
+    CreateSidePreviewPanel(split)
+
     C_Timer.After(0.1, function()
-        BuildFeatureList(split, "overlays")
+        BuildOverlayList(split)
         OneWoW_GUI:ApplyFontToFrame(parent)
     end)
 
-    -- nil until the deferred BuildFeatureList above has run once.
+    -- nil until the deferred BuildOverlayList above has run once.
     parent.Activate = function()
         if split.RefreshList then split.RefreshList() end
     end

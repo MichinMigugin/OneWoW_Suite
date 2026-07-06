@@ -764,7 +764,7 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | Service | File | Consumed by |
 |---|---|---|
 | `OneWoW.PredicateEngine` | `Services/PredicateEngine.lua` | Bags (search/categories), AltTracker, ShoppingList, DirectDeposit, QoL; core overlay + tooltip engines |
-| `OneWoW.OverlayEngine` | `Services/overlay-engine.lua` | Bag integrations (core `Integrations/*`), `OneWoW_Bags` |
+| `OneWoW.OverlayEngine` | `Services/Overlays2/engine.lua` (definitions/renderer/surfaces siblings in `Services/Overlays2/`) | Bag integrations (core `Integrations/*`), `OneWoW_Bags` |
 | `OneWoW.OverlayIcons` | `Services/overlay-icons.lua` | Overlay engine rendering, QoL overlays tab |
 | `OneWoW.TooltipEngine` | `Services/tooltip-engine.lua` | Provider registration from QoL, Bags, DirectDeposit |
 | `OneWoW.Toasts` | `Services/toast-engine.lua` | Toast types from QoL, `OneWoW_Notes` `Fire*Alert` |

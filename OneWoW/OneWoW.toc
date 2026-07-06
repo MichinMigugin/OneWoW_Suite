@@ -43,6 +43,7 @@ GUI\EditBoxes.lua
 GUI\Layout.lua
 GUI\SideBarTabs.lua
 GUI\Panels.lua
+GUI\Cards.lua
 GUI\Icons.lua
 GUI\ReorderDrag.lua
 GUI\KeywordHelp.lua
@@ -101,7 +102,8 @@ Core\FirstRunWizard.lua
 # DO NOT reorder within this block: PredicateEngine first (upgrade-detection +
 # tooltip-engine capture it at file scope); ItemPrices + RecipeKnownUtil before the
 # overlay engine that consumes them; overlay-icons + upgrade-detection before
-# overlay-engine; overlay-engine before itemstatus.
+# the Overlays2 block; within Overlays2: definitions -> renderer -> engine ->
+# surfaces (each captures the previous at file scope); engine before itemstatus.
 Services\PredicateEngine.lua
 Services\AHItemKeys.lua
 Services\ItemPrices.lua
@@ -112,7 +114,10 @@ Services\Merchant.lua
 Services\overlay-icons.lua
 Services\upgrade-detection.lua
 Services\AltScope.lua
-Services\overlay-engine.lua
+Services\Overlays2\definitions.lua
+Services\Overlays2\renderer.lua
+Services\Overlays2\engine.lua
+Services\Overlays2\surfaces.lua
 Services\itemstatus.lua
 Services\toast-engine.lua
 Services\tooltip-engine.lua

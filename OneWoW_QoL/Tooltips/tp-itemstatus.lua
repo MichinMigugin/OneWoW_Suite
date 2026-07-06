@@ -1,18 +1,29 @@
 local _, ns = ...
 local OneWoW = OneWoW
 
+-- Junk/Protected are user overlays (preset entries) in Overlay System 2.0;
+-- the tooltip line is gated on an enabled preset entry with showInTooltip on.
+local function FindEnabledPresetEntry(presetId)
+    local userOverlays = OneWoW.SettingsFeatureRegistry:GetFeatureSettings("overlays", "userOverlays")
+    for _, entry in pairs(userOverlays) do
+        if type(entry) == "table" and entry.preset == presetId and entry.enabled then
+            return entry
+        end
+    end
+    return nil
+end
+
 local function ItemStatusProvider(_, context)
     if not context.itemID then return nil end
     if not OneWoW.ItemStatus then return nil end
 
     local config = OneWoW.TooltipEngine.TOOLTIP_CONFIG
     local L = ns.L
-    local reg = OneWoW.SettingsFeatureRegistry
     local lines = {}
 
     if OneWoW.ItemStatus:IsItemProtected(context.itemID) then
-        local protCfg = reg:GetFeatureSettings("overlays", "protected")
-        if protCfg.enabled and protCfg.showInTooltip ~= false then
+        local protEntry = FindEnabledPresetEntry("protected")
+        if protEntry and protEntry.showInTooltip ~= false then
             lines[#lines + 1] = {
                 type = "text",
                 text = L["ITEMSTATUS_TOOLTIP_PROTECTED"],
@@ -24,8 +35,8 @@ local function ItemStatusProvider(_, context)
     end
 
     if OneWoW.ItemStatus:IsItemJunk(context.itemID) then
-        local junkCfg = reg:GetFeatureSettings("overlays", "junk")
-        if junkCfg.enabled and junkCfg.showInTooltip ~= false then
+        local junkEntry = FindEnabledPresetEntry("junk")
+        if junkEntry and junkEntry.showInTooltip ~= false then
             lines[#lines + 1] = {
                 type = "text",
                 text = L["ITEMSTATUS_TOOLTIP_JUNK"],

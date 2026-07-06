@@ -14,6 +14,24 @@ local function FireCallbacks()
     end
 end
 
+-- Junk/Protected status feeds PredicateEngine (#markedjunk / #protected /
+-- #junk). PE caches per-item props, so a plain overlay repaint would
+-- re-evaluate stale data and the newly marked item wouldn't light up in bags
+-- until a reload. Wipe the props cache first, then repaint every surface.
+local function RefreshOverlaysForStatusChange()
+    if ns.PredicateEngine and ns.PredicateEngine.InvalidatePropsCache then
+        ns.PredicateEngine:InvalidatePropsCache()
+    end
+    if ns.OverlayEngine then
+        C_Timer.After(0.05, function()
+            ns.OverlayEngine:Refresh()
+            FireCallbacks()
+        end)
+    else
+        FireCallbacks()
+    end
+end
+
 local function GetDB()
     return ns.db and ns.db.global and ns.db.global.itemStatus
 end
@@ -77,14 +95,7 @@ function IS:RemoveItemStatus(itemID)
     local db = GetDB()
     if not db then return end
     db[itemID] = nil
-    if ns.OverlayEngine then
-        C_Timer.After(0.05, function()
-            ns.OverlayEngine:Refresh()
-            FireCallbacks()
-        end)
-    else
-        FireCallbacks()
-    end
+    RefreshOverlaysForStatusChange()
 end
 
 function IS:MarkAsJunk(itemID, inputLink)
@@ -118,14 +129,7 @@ function IS:MarkAsJunk(itemID, inputLink)
         junkItemLevel = itemLevel,
         lastSeen = GetServerTime(),
     })
-    if ns.OverlayEngine then
-        C_Timer.After(0.05, function()
-            ns.OverlayEngine:Refresh()
-            FireCallbacks()
-        end)
-    else
-        FireCallbacks()
-    end
+    RefreshOverlaysForStatusChange()
     return true
 end
 
@@ -157,14 +161,7 @@ function IS:MarkAsProtected(itemID, inputLink)
         status = "Protected",
         lastSeen = GetServerTime(),
     })
-    if ns.OverlayEngine then
-        C_Timer.After(0.05, function()
-            ns.OverlayEngine:Refresh()
-            FireCallbacks()
-        end)
-    else
-        FireCallbacks()
-    end
+    RefreshOverlaysForStatusChange()
     return true
 end
 

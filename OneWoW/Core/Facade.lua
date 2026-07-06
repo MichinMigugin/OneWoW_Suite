@@ -10,6 +10,8 @@ local SERVICE_KEYS = {
     "Restriction",
     "PredicateEngine",
     "OverlayEngine",
+    "Overlays2Defs",
+    "Overlays2Renderer",
     "TooltipEngine",
     "Toasts",
     "SettingsFeatureRegistry",

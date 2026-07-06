@@ -37,6 +37,34 @@ local iconDisplayNames = {
     ["bags-glow-artifact"] = "Glow - Artifact",
     ["bags-glow-heirloom"] = "Glow - Heirloom",
 
+    ["Solid-Circle"]  = "Solid Circle",
+    ["Solid-Square"]  = "Solid Square",
+    ["Spinning Orbs"] = "Spinning Orbs",
+    ["Glow Pulse"]    = "Glow Pulse",
+    ["Portal Spiral"] = "Portal Spiral",
+    ["auctionhouse-itemicon-border-color"]    = "Auction House Border - Dynamic",
+    ["auctionhouse-itemicon-border-blue"]     = "Auction House Border - Blue",
+    ["auctionhouse-itemicon-border-green"]    = "Auction House Border - Green",
+    ["auctionhouse-itemicon-border-purple"]   = "Auction House Border - Purple",
+    ["auctionhouse-itemicon-border-gray"]     = "Auction House Border - Gray",
+    ["auctionhouse-itemicon-border-orange"]   = "Auction House Border - Orange",
+    ["auctionhouse-itemicon-border-white"]    = "Auction House Border - White",
+    ["auctionhouse-itemicon-border-account"]  = "Auction House Border - Account",
+    ["auctionhouse-itemicon-border-artifact"] = "Auction House Border - Artifact",
+    ["Artifacts-ItemIconBorder"]        = "Artifact Item Border",
+    ["Artifacts-PerkRing-GoldMedal"]    = "Artifact Ring - Gold",
+    ["Artifacts-PerkRing-MainProc"]     = "Artifact Ring - Main",
+    ["Artifacts-PerkRing-Small"]        = "Artifact Ring - Small",
+    ["Artifacts-PerkRing-Highlight"]    = "Artifact Ring - Highlight",
+    ["ArtifactsFX-SpinningGlowys"]      = "Artifact FX - Spinning Glow",
+    ["ArtifactsFX-StarBurst"]           = "Artifact FX - Starburst",
+    ["ArtifactsFX-YellowRing"]          = "Artifact FX - Yellow Ring",
+    ["PowerSwirlAnimation-YellowRing"]  = "Power Swirl - Yellow Ring",
+    ["PowerSwirlAnimation-BlueRing"]    = "Power Swirl - Blue Ring",
+    ["PowerSwirlAnimation-StarBurst"]   = "Power Swirl - Starburst",
+    ["PowerSwirlAnimation-WhiteStarBurst"] = "Power Swirl - White Starburst",
+    ["PowerSwirlAnimation-SpinningGlowys"] = "Power Swirl - Spinning Glow",
+
     ["VignetteKill"]               = "Vignette Kill",
     ["VignetteEvent-SuperTracked"] = "Vignette Event",
     ["poi-door-arrow-up"]          = "Arrow Up",
@@ -74,6 +102,10 @@ local iconDisplayNames = {
     ["BfAMission-Icon-Normal"]              = "BfA Mission",
     ["midnight-beta-access"]                = "Midnight Beta",
     ["checkmark-minimal-disabled"]          = "Checkmark Disabled",
+    ["AnimCreate_Icon_Template"]            = "AnimCreate Template",
+    ["AnimCreate_Icon_Texture"]             = "AnimCreate Texture",
+    ["AnimCreate_Icon_Add"]                 = "AnimCreate Add",
+    ["AnimCreate_Icon_Mask"]                = "AnimCreate Mask",
 }
 
 function OverlayIcons:GetIconList()
@@ -113,6 +145,28 @@ function OverlayIcons:GetIconList()
         "bags-glow-orange",
         "bags-glow-artifact",
         "bags-glow-heirloom",
+        "auctionhouse-itemicon-border-color",
+        "auctionhouse-itemicon-border-blue",
+        "auctionhouse-itemicon-border-green",
+        "auctionhouse-itemicon-border-purple",
+        "auctionhouse-itemicon-border-gray",
+        "auctionhouse-itemicon-border-orange",
+        "auctionhouse-itemicon-border-white",
+        "auctionhouse-itemicon-border-account",
+        "auctionhouse-itemicon-border-artifact",
+        "Artifacts-ItemIconBorder",
+        "Artifacts-PerkRing-GoldMedal",
+        "Artifacts-PerkRing-MainProc",
+        "Artifacts-PerkRing-Small",
+        "Artifacts-PerkRing-Highlight",
+        "ArtifactsFX-SpinningGlowys",
+        "ArtifactsFX-StarBurst",
+        "ArtifactsFX-YellowRing",
+        "PowerSwirlAnimation-YellowRing",
+        "PowerSwirlAnimation-BlueRing",
+        "PowerSwirlAnimation-StarBurst",
+        "PowerSwirlAnimation-WhiteStarBurst",
+        "PowerSwirlAnimation-SpinningGlowys",
         "groupfinder-icon-role-large-tank",
         "soulbinds_tree_conduit_icon_protect",
         "Bonus-Objective-Star",
@@ -145,6 +199,10 @@ function OverlayIcons:GetIconList()
         "BfAMission-Icon-Normal",
         "midnight-beta-access",
         "checkmark-minimal-disabled",
+        "AnimCreate_Icon_Template",
+        "AnimCreate_Icon_Texture",
+        "AnimCreate_Icon_Add",
+        "AnimCreate_Icon_Mask",
     }
 end
 
@@ -183,4 +241,82 @@ function OverlayIcons:ApplyToTexture(texture, iconName)
     else
         texture:SetAtlas(iconName, false)
     end
+end
+
+-- ============================================================================
+-- Icon specs (Overlays 2.0)
+-- ============================================================================
+-- spec = { kind = "list"|"atlas"|"file", value = string, tint = {r,g,b}|nil }
+--   list  — an entry from GetIconList (shipped icon-*.png or curated atlas)
+--   atlas — any Blizzard atlas name (validated with C_Texture.GetAtlasInfo)
+--   file  — a user file in Interface\AddOns\OneWoW\Media\CustomOverlays\
+
+local CUSTOM_OVERLAYS_DIR = "Interface\\AddOns\\OneWoW\\Media\\CustomOverlays\\"
+
+---@return string
+function OverlayIcons:GetCustomOverlaysDir()
+    return CUSTOM_OVERLAYS_DIR
+end
+
+--- True when the atlas name exists in the client.
+---@param atlasName string|nil
+---@return boolean
+function OverlayIcons:IsValidAtlas(atlasName)
+    if type(atlasName) ~= "string" or atlasName == "" then return false end
+    return C_Texture.GetAtlasInfo(atlasName) ~= nil
+end
+
+--- Full texture path for a user-supplied CustomOverlays file name.
+--- Strips any directory components the user may have pasted.
+---@param fileName string
+---@return string
+function OverlayIcons:GetCustomFilePath(fileName)
+    local clean = fileName:gsub("[\\/]+", ""):gsub("%s+$", ""):gsub("^%s+", "")
+    return CUSTOM_OVERLAYS_DIR .. clean
+end
+
+--- Apply an icon spec to a texture. Returns false when the spec renders
+--- nothing (BLANK or unresolvable), true otherwise. Always resets vertex
+--- color, then applies the spec tint when present.
+---@param texture Texture
+---@param spec table|nil
+---@return boolean visible
+function OverlayIcons:ApplyIconSpec(texture, spec)
+    if not texture then return false end
+
+    local kind  = spec and spec.kind or "list"
+    local value = spec and spec.value
+
+    texture:SetVertexColor(1, 1, 1)
+
+    if not value or value == "BLANK" then
+        texture:SetTexture(nil)
+        texture:SetAlpha(0)
+        return false
+    end
+
+    if kind == "atlas" then
+        if not self:IsValidAtlas(value) then
+            texture:SetTexture(nil)
+            texture:SetAlpha(0)
+            return false
+        end
+        texture:SetAtlas(value, false)
+    elseif kind == "file" then
+        -- SetTexture returns false when the file does not exist; render
+        -- nothing rather than a green placeholder square.
+        if not texture:SetTexture(self:GetCustomFilePath(value)) then
+            texture:SetTexture(nil)
+            texture:SetAlpha(0)
+            return false
+        end
+    else
+        self:ApplyToTexture(texture, value)
+    end
+
+    local tint = spec and spec.tint
+    if tint then
+        texture:SetVertexColor(tint[1] or 1, tint[2] or 1, tint[3] or 1)
+    end
+    return true
 end

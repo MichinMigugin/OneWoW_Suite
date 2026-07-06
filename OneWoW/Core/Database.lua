@@ -54,166 +54,155 @@ local DEFAULTS = {
     instanceStatsEsc = { enabled = false },
     instanceStatsPosition = {},
     settings = {
+        -- Overlay system 2.0: predicate-driven user overlays plus the
+        -- itemlevel / qualityborder / upgrade built-ins. Legacy 1.0
+        -- per-feature tables (consumables, junk, soulbound, ...) are
+        -- converted into userOverlays entries by ns:MigrateOverlays2().
         overlays = {
             general = { enabled = true },
-            consumables = {
-                enabled          = false,
-                icon             = "VignetteEvent-SuperTracked",
-                position         = "TOPRIGHT",
-                scale            = 1.0,
-                alpha            = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
-            },
             itemlevel = {
                 enabled = false,
                 position = "TOPRIGHT",
-                useQualityColors = false,
-                applyToVendorItems = true,
-                applyToAuctionHouse = false,
                 fontSize = 10,
+                fontFamily = "default",
+                fontOutline = "OUTLINE",
+                colorMode = "custom", -- "custom" | "quality" | "theme"
+                customColor = { 1, 1, 1 },
                 showPetLevel = true,
                 showContainerSlots = true,
+                applyToVendorItems = true,
+                applyToAuctionHouse = false,
             },
-            knownitems = {
+            qualityborder = {
                 enabled = false,
-                icon = "warband-completed-icon",
-                position = "TOPRIGHT",
-                scale = 1.0,
+                scale = 2,
                 alpha = 1.0,
                 applyToVendorItems = false,
                 applyToAuctionHouse = false,
             },
-            unknownitems = {
-                enabled = false,
-                icon = "Warfronts-BaseMapIcons-Horde-Workshop-Minimap",
-                position = "TOPLEFT",
-                scale = 1.0,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
+            -- User-added overlays, keyed by generated id:
+            -- userOverlays[id] = { preset|nil, name|nil, enabled, order,
+            --   expression, icon = { kind = "list"|"atlas"|"file", value,
+            --   tint = {r,g,b}|nil }, position, scale, alpha, effect,
+            --   bg = { enabled, style, scale, color, useRarityColor },
+            --   applyToVendorItems, applyToAuctionHouse,
+            --   plus preset extras (showInTooltip, includeGreyItems,
+            --   includeWUE) }.
+            --
+            -- Built-in presets are stored as normal userOverlays entries so
+            -- every 1.0 overlay option remains visible in 2.0. Users can
+            -- enable, reorder, tint, restyle, or delete them like any other
+            -- overlay; the Add Overlay dialog can recreate deleted presets.
+            userOverlays = {
+                ov_junk = {
+                    preset = "junk", enabled = false, order = 1,
+                    position = "CENTER", scale = 1.5, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "bags-junkcoin" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                    showInTooltip = true, includeGreyItems = false,
+                },
+                ov_protected = {
+                    preset = "protected", enabled = false, order = 2,
+                    position = "CENTER", scale = 1.5, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "questlog-questtypeicon-lock" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                    showInTooltip = true,
+                },
+                ov_consumables = {
+                    preset = "consumables", enabled = false, order = 3,
+                    position = "TOPRIGHT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "VignetteEvent-SuperTracked" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                },
+                ov_housingdecor = {
+                    preset = "housingdecor", enabled = false, order = 4,
+                    position = "TOPLEFT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "shop-icon-housing-beds-selected" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                },
+                ov_knownitems = {
+                    preset = "knownitems", enabled = false, order = 5,
+                    position = "TOPRIGHT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "warband-completed-icon" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                },
+                ov_unknownitems = {
+                    preset = "unknownitems", enabled = false, order = 6,
+                    position = "TOPLEFT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "Warfronts-BaseMapIcons-Horde-Workshop-Minimap" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                },
+                ov_transmog = {
+                    preset = "transmog", enabled = false, order = 7,
+                    position = "TOPLEFT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "Warfronts-BaseMapIcons-Horde-Workshop-Minimap" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                },
+                ov_mounts = {
+                    preset = "mounts", enabled = false, order = 8,
+                    position = "TOPLEFT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "icon-mount" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                },
+                ov_pets = {
+                    preset = "pets", enabled = false, order = 9,
+                    position = "TOPLEFT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "icon-pet" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                },
+                ov_quest = {
+                    preset = "quest", enabled = false, order = 10,
+                    position = "CENTER", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "Quest-Campaign-Available" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                },
+                ov_reagents = {
+                    preset = "reagents", enabled = false, order = 11,
+                    position = "TOPRIGHT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "Bonus-Objective-Star" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                },
+                ov_recipe = {
+                    preset = "recipe", enabled = false, order = 12,
+                    position = "BOTTOMRIGHT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "icon-recipe" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                },
+                ov_soulbound = {
+                    preset = "soulbound", enabled = false, order = 13,
+                    position = "TOPLEFT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "VignetteKill" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                },
+                ov_toys = {
+                    preset = "toys", enabled = false, order = 14,
+                    position = "BOTTOMRIGHT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "icon-toy" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                },
+                ov_warbound = {
+                    preset = "warbound", enabled = false, order = 15,
+                    position = "TOPLEFT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "warbands-icon" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                    includeWUE = true,
+                },
+                ov_wue = {
+                    preset = "wue", enabled = false, order = 16,
+                    position = "TOPLEFT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "warband-completed-icon" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                },
+                ov_boe = {
+                    preset = "boe", enabled = false, order = 17,
+                    position = "TOPRIGHT", scale = 1.0, alpha = 1.0, effect = "none",
+                    icon = { kind = "list", value = "icon-flag" },
+                    applyToVendorItems = false, applyToAuctionHouse = false,
+                },
             },
-            housingdecor = {
-                enabled = false,
-                icon = "shop-icon-housing-beds-selected",
-                position = "TOPLEFT",
-                scale = 1.0,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
-            },
-            mounts = {
-                enabled = false,
-                icon = "icon-mount",
-                position = "TOPLEFT",
-                scale = 1.0,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
-            },
-            pets = {
-                enabled = false,
-                icon = "icon-pet",
-                position = "TOPLEFT",
-                scale = 1.0,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
-            },
-            quest = {
-                enabled = false,
-                icon = "Quest-Campaign-Available",
-                position = "CENTER",
-                scale = 1.0,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
-            },
-            reagents = {
-                enabled = false,
-                icon = "Bonus-Objective-Star",
-                position = "TOPRIGHT",
-                scale = 1.0,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
-            },
-            recipe = {
-                enabled = false,
-                icon = "icon-recipe",
-                position = "BOTTOMRIGHT",
-                scale = 1.0,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
-            },
-            soulbound = {
-                enabled = false,
-                icon = "VignetteKill",
-                position = "TOPLEFT",
-                scale = 1.0,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
-            },
-            toys = {
-                enabled = false,
-                icon = "icon-toy",
-                position = "BOTTOMRIGHT",
-                scale = 1.0,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
-            },
-            warbound = {
-                enabled = false,
-                icon = "warbands-icon",
-                position = "TOPLEFT",
-                scale = 1.0,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
-                includeWUE = true,
-            },
-            wue = {
-                enabled = false,
-                icon = "warband-completed-icon",
-                position = "TOPLEFT",
-                scale = 1.0,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
-            },
-            boe = {
-                enabled = false,
-                icon = "icon-flag",
-                position = "TOPRIGHT",
-                scale = 1.0,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
-            },
-            junk = {
-                enabled = false,
-                icon = "bags-junkcoin",
-                position = "CENTER",
-                scale = 1.5,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
-                showInTooltip = true,
-                includeGreyItems = false,
-            },
-            protected = {
-                enabled = false,
-                icon = "soulbinds_tree_conduit_icon_protect",
-                position = "CENTER",
-                scale = 1.5,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
-                showInTooltip = true,
-            },
+            -- Detector-backed built-in (ns.UpgradeDetection). Also stores
+            -- the Gear Upgrades tooltip settings mirrored from the
+            -- tooltips/gearupgrades catalog entry.
             upgrade = {
                 enabled = false,
                 icon = "Professions-Icon-Quality-Tier3-Small",
@@ -236,15 +225,6 @@ local DEFAULTS = {
                 showPawnPrompt = true,
                 altSpecMatch = false,
                 selfSpecMatch = false,
-            },
-            transmog = {
-                enabled = false,
-                icon = "Warfronts-BaseMapIcons-Horde-Workshop-Minimap",
-                position = "TOPLEFT",
-                scale = 1.0,
-                alpha = 1.0,
-                applyToVendorItems = false,
-                applyToAuctionHouse = false,
             },
             integrations = {
                 arkinventory = { enabled = true },
@@ -417,6 +397,89 @@ function ns:InitializeDatabase()
     })
 
     self:MigrateAltScope()
+    self:MigrateOverlays2()
+end
+
+-- Legacy 1.0 overlay feature ids in their catalog order. Every legacy entry
+-- is converted into its matching 2.0 preset row so disabled-but-customized
+-- overlay settings are preserved, not silently dropped.
+local LEGACY_OVERLAY_IDS = {
+    "consumables", "housingdecor", "junk", "protected", "knownitems",
+    "unknownitems", "mounts", "pets", "quest", "reagents", "recipe",
+    "soulbound", "toys", "warbound", "wue", "boe", "transmog",
+}
+
+-- Extra per-feature keys that survive migration onto the preset entry.
+local LEGACY_OVERLAY_EXTRAS = {
+    junk      = { "showInTooltip", "includeGreyItems" },
+    protected = { "showInTooltip" },
+    warbound  = { "includeWUE" },
+}
+
+-- One-time migration from overlay system 1.0 (fixed per-feature tables) to
+-- 2.0 (userOverlays entries). Runs every load but is a no-op once the legacy
+-- feature tables are gone.
+function ns:MigrateOverlays2()
+    local settings = self.db and self.db.global and self.db.global.settings
+    local overlays = settings and settings.overlays
+    if not overlays then return end
+
+    local order = 0
+    for _, id in ipairs(LEGACY_OVERLAY_IDS) do
+        local old = overlays[id]
+        if type(old) == "table" then
+            order = order + 1
+            local existing = overlays.userOverlays["ov_" .. id] or {}
+            local entry = {
+                preset = id,
+                enabled = old.enabled == true,
+                order = existing.order or order,
+                position = old.position or existing.position,
+                scale = old.scale or existing.scale,
+                alpha = old.alpha or existing.alpha,
+                effect = old.effect or existing.effect,
+                applyToVendorItems = old.applyToVendorItems,
+                applyToAuctionHouse = old.applyToAuctionHouse,
+                icon = {
+                    kind = "list",
+                    value = old.icon or (existing.icon and existing.icon.value),
+                    tint = old.iconColor and CopyTable(old.iconColor)
+                        or (existing.icon and existing.icon.tint and CopyTable(existing.icon.tint) or nil),
+                },
+            }
+            if old.bgEnabled ~= nil or old.bgStyle ~= nil or existing.bg then
+                entry.bg = {
+                    enabled = old.bgEnabled or (existing.bg and existing.bg.enabled) or false,
+                    style = old.bgStyle or (existing.bg and existing.bg.style),
+                    scale = old.bgScale or (existing.bg and existing.bg.scale),
+                    color = old.bgColor and CopyTable(old.bgColor)
+                        or (existing.bg and existing.bg.color and CopyTable(existing.bg.color) or nil),
+                    useRarityColor = old.bgUseRarityColor ~= nil and old.bgUseRarityColor
+                        or (existing.bg and existing.bg.useRarityColor),
+                }
+            end
+            local extras = LEGACY_OVERLAY_EXTRAS[id]
+            if extras then
+                for _, key in ipairs(extras) do
+                    entry[key] = old[key]
+                    if entry[key] == nil then entry[key] = existing[key] end
+                end
+            end
+            overlays.userOverlays["ov_" .. id] = entry
+            overlays[id] = nil
+        end
+    end
+
+    -- itemlevel 1.0 -> 2.0: useQualityColors collapses into colorMode; the
+    -- remaining shared keys keep their stored values, new keys come from the
+    -- defaults merge.
+    local il = overlays.itemlevel
+    if il and il.useQualityColors ~= nil then
+        if il.colorMode == nil then
+            il.colorMode = il.useQualityColors and "quality" or "custom"
+        end
+        il.useQualityColors = nil
+    end
 end
 
 -- One-time migration of the legacy Gear Upgrades per-alt whitelist

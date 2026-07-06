@@ -91,16 +91,27 @@ function ns.UI.BuildAltScopeSection(parent, opts)
     addRoleBtn:SetPoint("LEFT", addAltBtn, "RIGHT", 8, 0)
     y = y - 28
 
+    -- opts.width: explicit layout width for wrapped-text measurement. Freshly
+    -- created parents (card contents) have unresolved rects, so anchoring to
+    -- TOPRIGHT and measuring GetStringHeight would return single-line heights.
     local summary = OneWoW_GUI:CreateFS(parent, 11)
     summary:SetPoint("TOPLEFT", parent, "TOPLEFT", x + 18, y)
-    summary:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, y)
+    if opts.width then
+        summary:SetWidth(opts.width - x - 18)
+    else
+        summary:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, y)
+    end
     summary:SetJustifyH("LEFT")
     summary:SetWordWrap(false)
     y = y - 20
 
     local note = OneWoW_GUI:CreateFS(parent, 10)
     note:SetPoint("TOPLEFT", parent, "TOPLEFT", x + 18, y)
-    note:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, y)
+    if opts.width then
+        note:SetWidth(opts.width - x - 18)
+    else
+        note:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, y)
+    end
     note:SetJustifyH("LEFT")
     note:SetWordWrap(true)
     note:SetSpacing(2)

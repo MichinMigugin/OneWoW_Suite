@@ -708,6 +708,13 @@ for _, def in ipairs({
     end)
 end
 
+-- Housing decor by item shape: any Housing-class item, or a non-Housing item
+-- that grants decor per C_Item.IsDecorItem (e.g. redeemable furniture drops).
+RegisterKeyword({"housingdecor", "itemdecor"}, function(p)
+    if p.classID == Enum.ItemClass.Housing then return true end
+    return p.hyperlink ~= nil and C_Item.IsDecorItem(p.hyperlink) == true
+end)
+
 -- ---- 7.10  Profession subclass keywords ----
 for _, def in ipairs({
     {"blacksmithing",   Enum.ItemProfessionSubclass.Blacksmithing},
@@ -1958,6 +1965,76 @@ local function ResolveIsCurrentSeason(props)
     rawset(props, "isCurrentSeason", result)
     rawset(props, "_currentSeasonResolved", true)
 end
+
+-- ============================================================================
+-- SECTION 8.5: LATE-BOUND KEYWORDS
+-- ============================================================================
+-- Registered here instead of Section 7 because they capture helpers defined
+-- between the two sections (GetPropsTooltipData) as upvalues.
+
+-- #protected: item marked Protected via OneWoW ItemStatus (sibling of the
+-- isJunk hook in PopulateBaseProps).
+RegisterKeyword("protected", function(p)
+    return ns.ItemStatus:IsItemProtected(p.id)
+end)
+
+-- #markedjunk: item explicitly marked Junk via OneWoW ItemStatus. Unlike
+-- #junk, this does NOT include poor-quality (grey) items.
+RegisterKeyword("markedjunk", function(p)
+    return ns.ItemStatus:IsItemJunk(p.id)
+end)
+
+-- #teachable: the item's tooltip carries a "Use: Teaches you ..." learn line.
+-- True for unlearned recipes, mount/pet/toy teaching items, etc.
+RegisterKeyword("teachable", function(p)
+    local td = GetPropsTooltipData(p)
+    if not (td and td.lines) then return false end
+    for _, line in ipairs(td.lines) do
+        if line.type == Enum.TooltipDataLineType.ItemSpellTriggerLearn then
+            return true
+        end
+    end
+    return false
+end)
+
+-- Tri-state collection status for collectible-SHAPED items only: toys,
+-- pets, mount items, recipes, and transmoggable gear. Returns true
+-- (collected), false (missing), or nil (item is not a collectible) — unlike
+-- #uncollected, which is true for every item that is not collected,
+-- including non-collectibles. Cached on the props table (0 = nil,
+-- 1 = collected, 2 = missing).
+local function ResolveCollectionStatus(p)
+    local cached = rawget(p, "_collectionStatus")
+    if cached ~= nil then
+        if cached == 0 then return nil end
+        return cached == 1
+    end
+
+    local status
+    if p.isToy or p.isMount or p.isPet then
+        if p.isCollected then
+            status = true
+        elseif p.isPet and p.petSpeciesID == 0 then
+            -- Companion pet items with no species mapping: fall back to the
+            -- "Already Known" tooltip line.
+            status = p.isAlreadyKnown == true
+        elseif p.isMount and C_MountJournal.GetMountFromItem(p.id) == nil then
+            status = p.isAlreadyKnown == true
+        else
+            status = false
+        end
+    elseif PropsIsRecipeItem(p) then
+        status = ns.RecipeKnownUtil:IsRecipeKnown(p.id)
+    elseif p.hasAppearance then
+        status = p.isAppearanceCollected == true
+    end
+
+    rawset(p, "_collectionStatus", status == nil and 0 or (status and 1 or 2))
+    return status
+end
+
+RegisterKeyword("collectionknown",   function(p) return ResolveCollectionStatus(p) == true end)
+RegisterKeyword("collectionmissing", function(p) return ResolveCollectionStatus(p) == false end)
 
 -- ============================================================================
 -- SECTION 9: LAYER 1 — BUILDPROPS

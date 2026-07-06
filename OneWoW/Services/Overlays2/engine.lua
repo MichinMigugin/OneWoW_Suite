@@ -1,0 +1,376 @@
+local _, ns = ...
+
+-- ============================================================================
+-- Overlays 2.0 — engine
+-- ============================================================================
+-- Matching + orchestration layer. Every user overlay is a compiled
+-- PredicateEngine expression evaluated against PE:BuildProps; the "upgrade"
+-- built-in stays detector-backed (ns.UpgradeDetection). At most
+-- MAX_ICON_OVERLAYS icon overlays paint per button (priority = entry order);
+-- item level and the quality border render independently of the cap.
+--
+-- Published as ns.OverlayEngine / OneWoW.OverlayEngine with the same
+-- integration surface as the 1.0 engine (RegisterIntegration, ProcessButton,
+-- CleanButton, Refresh, RequestRefresh), so external bag integrations work
+-- unchanged. Surface hooks live in surfaces.lua.
+-- ============================================================================
+
+local PE = ns.PredicateEngine
+local Defs = ns.Overlays2Defs
+local Renderer = ns.Overlays2Renderer
+local Registry = ns.SettingsFeatureRegistry
+
+ns.OverlayEngine = {}
+local Engine = ns.OverlayEngine
+
+local ipairs, tinsert = ipairs, tinsert
+
+local BATTLE_PET_CAGE_ID = 82800
+
+-- LOAD-BEARING INVARIANT: this table is created at file-parse time (not inside
+-- Initialize) and RegisterIntegration is an append-only insert with no
+-- dependency on Initialize-created state. Bag integrations wire themselves via
+-- ns:RegisterAddonLoadedWatcher, which fires BEFORE Engine:Initialize() runs.
+-- Do NOT move this table's creation into Initialize.
+Engine.integrationRefreshCallbacks = {}
+
+function Engine:RegisterIntegration(fn)
+    tinsert(self.integrationRefreshCallbacks, fn)
+end
+
+-- Surface refreshers (bags/bank/vendor/... passes) register here from
+-- surfaces.lua; RefreshAll runs every one of them.
+Engine.surfaceRefreshers = {}
+
+function Engine:RegisterSurfaceRefresher(fn)
+    tinsert(self.surfaceRefreshers, fn)
+end
+
+-- ----------------------------------------------------------------------------
+-- Settings access
+-- ----------------------------------------------------------------------------
+
+local function IsGlobalEnabled()
+    return Registry:IsEnabled("overlays", "general")
+end
+
+Engine.IsGlobalEnabled = IsGlobalEnabled
+
+local function GetItemLevelCfg()
+    return Registry:GetFeatureSettings("overlays", "itemlevel")
+end
+
+local function GetQualityBorderCfg()
+    return Registry:GetFeatureSettings("overlays", "qualityborder")
+end
+
+-- Active definition list, rebuilt lazily after any overlays settings change.
+local activeDefs = nil
+
+local function GetActiveDefs()
+    if not activeDefs then
+        activeDefs = Defs:BuildActiveList()
+    end
+    return activeDefs
+end
+
+--- Compile errors from the last active-list build (settings UI surface).
+---@return table<string, string> id -> error message
+function Engine:GetCompileErrors()
+    return GetActiveDefs().errors
+end
+
+--- True when any active overlay (or built-in) paints on the given surface
+--- flag ("applyToVendorItems" / "applyToAuctionHouse").
+local function AnySurfaceEnabled(flagKey)
+    for _, def in ipairs(GetActiveDefs()) do
+        if def.entry[flagKey] then return true end
+    end
+    if GetItemLevelCfg().enabled and GetItemLevelCfg()[flagKey] then return true end
+    if GetQualityBorderCfg().enabled and GetQualityBorderCfg()[flagKey] then return true end
+    return false
+end
+
+function Engine:AnyVendorOverlayEnabled()
+    return AnySurfaceEnabled("applyToVendorItems")
+end
+
+function Engine:AnyAHOverlayEnabled()
+    return AnySurfaceEnabled("applyToAuctionHouse")
+end
+
+-- ----------------------------------------------------------------------------
+-- Matching
+-- ----------------------------------------------------------------------------
+
+local CONTEXT_FLAG = {
+    vendor       = "applyToVendorItems",
+    auctionhouse = "applyToAuctionHouse",
+}
+
+local function DefAppliesToContext(def, context)
+    local flagKey = context and CONTEXT_FLAG[context]
+    if not flagKey then return true end
+    return def.entry[flagKey] == true
+end
+
+--- Evaluate all active definitions for one item. Returns an array of matched
+--- defs, capped at MAX_ICON_OVERLAYS (priority = list order).
+local function EvaluateMatches(itemID, itemLink, itemLocation, context)
+    local matches = {}
+    local bagID, slotID
+    if itemLocation and itemLocation.IsBagAndSlot and itemLocation:IsBagAndSlot() then
+        bagID, slotID = itemLocation:GetBagAndSlot()
+    end
+
+    local props
+    for _, def in ipairs(GetActiveDefs()) do
+        if #matches >= Defs.MAX_ICON_OVERLAYS then break end
+        if DefAppliesToContext(def, context) then
+            if def.upgrade then
+                if itemLocation and C_Item.DoesItemExist(itemLocation)
+                    and ns.UpgradeDetection:CheckItemUpgrade(itemLink, itemLocation) then
+                    tinsert(matches, def)
+                end
+            else
+                props = props or PE:BuildProps(itemID, bagID, slotID, itemLink)
+                if PE:SafeEvaluate(def.compiled, props) then
+                    tinsert(matches, def)
+                end
+            end
+        end
+    end
+    return matches
+end
+
+-- ----------------------------------------------------------------------------
+-- Paint config normalization
+-- ----------------------------------------------------------------------------
+
+-- User overlays store the 2.0 shape (icon table, bg table); the upgrade
+-- built-in keeps its 1.0 flat keys (icon string, iconColor, bgEnabled, ...).
+local function BuildPaint(def)
+    local entry = def.entry
+    if def.upgrade then
+        return {
+            iconSpec = { kind = "list", value = entry.icon or "Professions-Icon-Quality-Tier3-Small", tint = entry.iconColor },
+            position = entry.position,
+            scale = entry.scale,
+            alpha = entry.alpha,
+            effect = entry.effect,
+            bg = entry.bgEnabled and {
+                enabled = true,
+                style = entry.bgStyle,
+                scale = entry.bgScale,
+                color = entry.bgColor,
+                useRarityColor = entry.bgUseRarityColor,
+            } or nil,
+        }
+    end
+    return {
+        iconSpec = entry.icon,
+        position = entry.position,
+        scale = entry.scale,
+        alpha = entry.alpha,
+        effect = entry.effect,
+        bg = entry.bg,
+    }
+end
+
+-- ----------------------------------------------------------------------------
+-- Item level helpers
+-- ----------------------------------------------------------------------------
+
+local function GetPetLevelFromLink(itemLink)
+    local level = itemLink:match("|Hbattlepet:%d+:(%d+)")
+    return level and tonumber(level)
+end
+
+local function GetContainerSlotCount(itemID)
+    local td = C_TooltipInfo.GetItemByID(itemID)
+    if td and td.lines then
+        for _, line in ipairs(td.lines) do
+            if line.leftText then
+                local slots = line.leftText:match("(%d+)%s+Slot")
+                if slots then return tonumber(slots) end
+            end
+        end
+    end
+    return nil
+end
+
+--- Value shown by the item level overlay for this item, or nil to skip it:
+--- pet level for battle pets, slot count for containers, ilvl for equipment.
+local function ComputeItemLevelText(cfg, itemLink, classID, itemLocation)
+    local isPetItem = (classID == Enum.ItemClass.Battlepet)
+        or (itemLink:find("|Hbattlepet:") ~= nil)
+    local isContainer = (classID == Enum.ItemClass.Container)
+
+    if isPetItem then
+        if cfg.showPetLevel == false then return nil end
+        local level = GetPetLevelFromLink(itemLink)
+        if not level or level == 0 then return nil end
+        return level
+    end
+
+    if isContainer then
+        if cfg.showContainerSlots == false then return nil end
+        local itemID = C_Item.GetItemInfoInstant(itemLink)
+        local slots = GetContainerSlotCount(itemID)
+        if not slots or slots == 0 then return nil end
+        return slots
+    end
+
+    local _, _, _, equipLoc = C_Item.GetItemInfoInstant(itemLink)
+    if not equipLoc or equipLoc == "" or equipLoc == "INVTYPE_NON_EQUIP"
+        or equipLoc == "INVTYPE_NON_EQUIP_IGNORE" then
+        return nil
+    end
+
+    local ilvl
+    if itemLocation and C_Item.DoesItemExist(itemLocation) then
+        ilvl = C_Item.GetCurrentItemLevel(itemLocation)
+    end
+    if not ilvl or ilvl == 0 then
+        ilvl = C_Item.GetDetailedItemLevelInfo(itemLink)
+    end
+    if not ilvl or ilvl == 0 then return nil end
+    return ilvl
+end
+
+local function BuiltinAppliesToContext(cfg, context)
+    local flagKey = context and CONTEXT_FLAG[context]
+    if not flagKey then return true end
+    return cfg[flagKey] == true
+end
+
+-- ----------------------------------------------------------------------------
+-- Button pipeline
+-- ----------------------------------------------------------------------------
+
+local function PaintButton(button, itemID, itemLink, itemLocation, context, classID)
+    local matches = EvaluateMatches(itemID, itemLink, itemLocation, context)
+    for i, def in ipairs(matches) do
+        Renderer:ApplyOverlay(button, BuildPaint(def), i, itemLink)
+    end
+
+    local quality = select(3, C_Item.GetItemInfo(itemLink))
+
+    local ilvlCfg = GetItemLevelCfg()
+    if ilvlCfg.enabled and BuiltinAppliesToContext(ilvlCfg, context) then
+        local text = ComputeItemLevelText(ilvlCfg, itemLink, classID, itemLocation)
+        if text then
+            Renderer:ApplyItemLevel(button, ilvlCfg, text, quality)
+        end
+    end
+
+    local qbCfg = GetQualityBorderCfg()
+    if qbCfg.enabled and BuiltinAppliesToContext(qbCfg, context) then
+        Renderer:ApplyQualityBorder(button, qbCfg, quality)
+    end
+
+    Renderer:ShowContainer(button)
+end
+
+local function BuildOverlaysForButton(button, itemLink, itemLocation, context)
+    if not button or not itemLink then
+        Renderer:CleanButton(button)
+        return
+    end
+
+    local objType = button.GetObjectType and button:GetObjectType()
+    if objType == "Texture" or objType == "FontString" then
+        return
+    end
+
+    if not IsGlobalEnabled() then
+        Renderer:CleanButton(button)
+        return
+    end
+
+    local isBattlePetLink = itemLink:find("|Hbattlepet:") ~= nil
+    local itemID, classID
+
+    if isBattlePetLink then
+        itemID  = BATTLE_PET_CAGE_ID
+        classID = Enum.ItemClass.Battlepet
+    else
+        itemID = C_Item.GetItemInfoInstant(itemLink)
+    end
+
+    if not itemID then
+        Renderer:CleanButton(button)
+        return
+    end
+
+    Renderer:CleanButton(button)
+    button.onewow_itemLink = itemLink
+
+    if not classID then
+        local _, _, _, _, _, cID = C_Item.GetItemInfoInstant(itemLink)
+        classID = cID
+    end
+
+    if C_Item.IsItemDataCachedByID(itemID) then
+        PaintButton(button, itemID, itemLink, itemLocation, context, classID)
+    else
+        C_Item.RequestLoadItemDataByID(itemID)
+        local item = Item:CreateFromItemID(itemID)
+        item:ContinueOnItemLoad(function()
+            if not IsGlobalEnabled() then return end
+            -- Re-check the button still shows this item (async load can
+            -- outlive a slot change).
+            if button.onewow_itemLink ~= itemLink then return end
+            local _, _, _, _, _, cID = C_Item.GetItemInfoInstant(itemLink)
+            PaintButton(button, itemID, itemLink, itemLocation, context, cID)
+        end)
+    end
+end
+
+-- ----------------------------------------------------------------------------
+-- Public API
+-- ----------------------------------------------------------------------------
+
+function Engine:ProcessButton(button, link, location, context)
+    BuildOverlaysForButton(button, link, location, context)
+end
+
+function Engine:CleanButton(button)
+    Renderer:CleanButton(button)
+end
+
+local function RefreshAll()
+    for _, fn in ipairs(Engine.surfaceRefreshers) do
+        fn()
+    end
+    for _, fn in ipairs(Engine.integrationRefreshCallbacks) do
+        fn()
+    end
+end
+
+function Engine:Refresh()
+    RefreshAll()
+end
+
+local refreshPending = false
+
+--- Coalescing variant of Refresh: any number of requests inside one debounce
+--- window produce a single repaint. Preferred entry point for settings-driven
+--- refreshes (slider drags fire dozens of mutations per second).
+function Engine:RequestRefresh()
+    if refreshPending then return end
+    refreshPending = true
+    C_Timer.After(0.05, function()
+        refreshPending = false
+        RefreshAll()
+    end)
+end
+
+-- Rebuild definitions and repaint whenever any overlay setting changes,
+-- regardless of which UI mutated it.
+Registry:RegisterListener("OverlayEngine", function(storageTab)
+    if storageTab == "overlays" then
+        activeDefs = nil
+        Engine:RequestRefresh()
+    end
+end)
