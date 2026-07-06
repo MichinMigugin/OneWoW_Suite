@@ -58,7 +58,9 @@ local function CollectionsProvider(_, context)
 
     typeColor = ITEM_TYPE_COLORS[classID] or {0.9, 0.9, 0.9}
 
-    local status = OneWoW.Collectibles.GetItemCollectionStatus(context.itemID, context.itemLink)
+    local status = OneWoW.Collectibles.GetItemCollectionStatus(context.itemID, context.itemLink, {
+        tooltipData = context.data,
+    })
     if not status then
         return {
             {type = "headerRight", text = typeString, r = typeColor[1], g = typeColor[2], b = typeColor[3]}

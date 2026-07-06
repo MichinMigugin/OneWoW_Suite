@@ -90,6 +90,7 @@ whereas keying them as heirlooms would make `PlayerHasHeirloom` report them
 | `GetCollectionState(key)` | type-specific table or `nil` | Live; never persisted |
 | `GetItemCollectionStatus(itemID, hyperlink?)` | `{ applicable, collected, collectedByAlt?, key, type, … }` or `nil` | Item-facing facade; `nil` when not a collectible; `collectedByAlt` is recipe-only |
 | `ResolveKeyFromItem(itemID, hyperlink?)` | canonical key string or `nil` | Maps an item → the collectible it grants (mount/toy/pet/heirloom/**recipe**/**set**/**decor**/appearance) |
+| `ResolveTransmogSourceID(itemID, hyperlink?)` | `sourceID` or `nil` | `itemModifiedAppearanceID` via GetItemInfo, TryOn, or artifact link synthesis |
 | `GetOfferAffordability(offer)` | `{ affordable, requirements = { … } }` or `nil` | Live check of a vendor offer vs. player gold / currencies / items; never persisted |
 | `GetEnsembleMemberKeys(setID)` | `{ "appearance:source:<id>", … }` or `nil` | All set sources (incl. alternates) as collectible keys |
 | `GetEnsembleProgress(setID)` | `{ collected, total, name }` or `nil` | Live set completion; matches Blizzard's Sets tab (primary appearances) |
@@ -148,9 +149,14 @@ character only; `collectedByAlt` is true when a scoped alt in Recipe Knowledge's
 `altScope` knows the recipe and you do not.
 
 Appearance resolution in `ResolveKeyFromItem` calls
-`C_TransmogCollection.GetItemInfo(hyperlink)` first, then falls back to
-`GetItemInfo(itemID)` when the link returns no source (common on upgraded or
-catalyst gear whose bonus IDs poison the hyperlink lookup).
+`Collectibles.ResolveTransmogSourceID(itemID, hyperlink)`: hyperlink, bare
+itemID, DressUpModel TryOn (Remix / poisoned links), then artifact link
+synthesis when quality is Artifact. When a dressable item still has no
+sourceID, it falls back to `appearance:item:<itemID>` — used by profession
+fishing poles where `GetItemInfo`/`TryOn` fail but `PlayerHasTransmog(itemID)`
+is authoritative. TryOn falls back to `C_Transmog.GetSlotForInventoryType` for
+inv types outside the static slot map (via `C_Item.GetItemInventoryTypeByID` →
+`C_Transmog.GetSlotForInventoryType`).
 
 ## Secret-value caveat (12.0)
 
@@ -259,12 +265,15 @@ is checked **before** the decor branch, so a *housing-decor recipe* is captured 
 the recipe you buy — not the crafted decor it teaches (the recipe item does not map
 to the decor's catalog entry). `collected` means the taught recipe is already
 known, answered by the canonical **`ns.RecipeKnownUtil:IsRecipeKnown(itemID)`**: it
-maps the recipe item → its taught recipe spell via the tooltip's
-`ItemSpellTriggerLearn` line (**not** `C_Item.GetItemSpell`, which on an enchant
-"Formula:" returns the illusion *Use* spell, not the teach spell — the bug that let
-already-known formulae be captured), then answers known from the ProfessionRecipe
-scan cache / AltTracker data / `GetRecipeInfo(…).learned`. The type filter gains a
-**Recipes** option (`AUCTION_CATEGORY_RECIPES`). This is why decor *recipes* at a
+maps the recipe *item* to candidate spell/recipe IDs via the tooltip's
+`ItemSpellTriggerLearn` line and the scan-built `recipeItemMap` (**not**
+`C_Item.GetItemSpell`, which on e.g. an enchant "Formula:" returns the illusion
+*Use* spell, not the teach spell), then answers known from the ProfessionRecipe
+scan cache / AltTracker data / `GetRecipeInfo(...).learned` /
+`C_SpellBook.IsSpellKnown`. Legacy profession books (e.g. removed TBC master
+trainers) often expose a teach *spell* ID on the tooltip that differs from the
+trade-skill *recipe* ID stored by AltTracker; both are checked. The type filter
+gains a **Recipes** option (`AUCTION_CATEGORY_RECIPES`). This is why decor *recipes* at a
 mixed vendor were not being captured before recipes were wired up: they are recipe
 items, and had no resolved key.
 

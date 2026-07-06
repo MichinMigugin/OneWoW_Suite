@@ -35,6 +35,7 @@ local Collectibles = {}
 ns.Collectibles = Collectibles
 
 local C_MountJournal = C_MountJournal
+local C_Transmog = C_Transmog
 local C_TransmogCollection = C_TransmogCollection
 local C_TransmogSets = C_TransmogSets
 local C_PetJournal = C_PetJournal
@@ -46,6 +47,37 @@ local C_Item = C_Item
 local C_HousingCatalog = C_HousingCatalog
 local PlayerHasToy = PlayerHasToy
 local GetMoney = GetMoney
+local CreateFrame = CreateFrame
+local UnitLevel = UnitLevel
+
+-- DressUpModel slot map; robes use the chest slot.
+local INVENTORY_SLOTS_BY_EQUIP_LOC = {
+    ["INVTYPE_HEAD"] = {1},
+    ["INVTYPE_NECK"] = {2},
+    ["INVTYPE_SHOULDER"] = {3},
+    ["INVTYPE_BODY"] = {4},
+    ["INVTYPE_CHEST"] = {5},
+    ["INVTYPE_ROBE"] = {5},
+    ["INVTYPE_WAIST"] = {6},
+    ["INVTYPE_LEGS"] = {7},
+    ["INVTYPE_FEET"] = {8},
+    ["INVTYPE_WRIST"] = {9},
+    ["INVTYPE_HAND"] = {10},
+    ["INVTYPE_FINGER"] = {11},
+    ["INVTYPE_TRINKET"] = {12},
+    ["INVTYPE_CLOAK"] = {15},
+    ["INVTYPE_WEAPON"] = {16, 17},
+    ["INVTYPE_SHIELD"] = {17},
+    ["INVTYPE_2HWEAPON"] = {16, 17},
+    ["INVTYPE_WEAPONMAINHAND"] = {16},
+    ["INVTYPE_RANGED"] = {16},
+    ["INVTYPE_RANGEDRIGHT"] = {16},
+    ["INVTYPE_WEAPONOFFHAND"] = {17},
+    ["INVTYPE_HOLDABLE"] = {17},
+    ["INVTYPE_TABARD"] = {19},
+}
+
+local dressUpModel
 
 -- A `decor` key is always the Decor housing-catalog entry type (the grammar has
 -- no room for the entry type, and rooms aren't collectible records).
@@ -66,7 +98,7 @@ local KEY_SEP = ":"
 
 local TYPES = {
     mount      = { subtype = false },
-    appearance = { subtype = true },  -- appearance:source:<sourceID> | appearance:ima:<imaID>
+    appearance = { subtype = true },  -- appearance:source:<sourceID> | appearance:item:<itemID> | appearance:ima:<imaID>
     pet        = { subtype = false },
     toy        = { subtype = false },
     heirloom   = { subtype = false },
@@ -216,6 +248,25 @@ local function ResolveAppearanceSource(id)
         name = name,
         icon = icon,
         link = link,
+    }
+end
+
+-- Item-keyed appearance for dressable items whose sourceID cannot be resolved
+-- live (profession fishing poles: GetItemInfo/TryOn fail, PlayerHasTransmog works).
+local function ResolveAppearanceItem(id)
+    local itemName, itemLink, _, _, _, _, itemSubType, _, _, itemIcon = C_Item.GetItemInfo(id)
+    local icon = itemIcon or select(5, C_Item.GetItemInfoInstant(id))
+    if not (itemName or icon or itemLink) then return nil end
+
+    if itemSubType == "" then itemSubType = nil end
+
+    return {
+        type = "appearance",
+        subtype = "item",
+        name = itemName,
+        icon = icon,
+        link = itemLink,
+        sourceText = itemSubType,
     }
 end
 
@@ -382,8 +433,8 @@ end
 -- ProfessionRecipe scan cache / AltTracker data / `GetRecipeInfo(...).learned`.
 -- `IsRecipeKnown` returns `true`/`nil` (nil = not known or not yet resolvable), so
 -- normalize to a strict boolean.
-local function IsRecipeItemKnown(itemID)
-    return ns.RecipeKnownUtil:IsRecipeKnown(itemID) == true
+local function IsRecipeItemKnown(itemID, context)
+    return ns.RecipeKnownUtil:IsRecipeKnown(itemID, context) == true
 end
 
 --- Live display data for a collectible key: `{ name, icon, link, sourceText?, type }`.
@@ -398,6 +449,8 @@ function Collectibles.ResolveDisplay(key)
         return ResolveMount(descriptor.id)
     elseif descriptor.type == "appearance" and descriptor.subtype == "source" then
         return ResolveAppearanceSource(descriptor.id)
+    elseif descriptor.type == "appearance" and descriptor.subtype == "item" then
+        return ResolveAppearanceItem(descriptor.id)
     elseif descriptor.type == "pet" then
         return ResolvePet(descriptor.id)
     elseif descriptor.type == "toy" then
@@ -431,8 +484,9 @@ end
 ---   decor      -> { collected, numOwned, numStored, numPlaced }  (collected == numOwned > 0)
 ---   recipe     -> { collected }  (collected == the taught recipe is known)
 ---@param key string
+---@param context table|nil `{ hyperlink?, bagID?, slotID?, tooltipData? }`
 ---@return table|nil state
-function Collectibles.GetCollectionState(key)
+function Collectibles.GetCollectionState(key, context)
     local descriptor = Collectibles.ParseKey(key)
     if not descriptor then return nil end
 
@@ -447,6 +501,9 @@ function Collectibles.GetCollectionState(key)
             byItem = C_TransmogCollection.PlayerHasTransmog(itemID) == true
         end
         return { collected = bySource, bySource = bySource, byItem = byItem }
+    elseif descriptor.type == "appearance" and descriptor.subtype == "item" then
+        local collected = C_TransmogCollection.PlayerHasTransmog(descriptor.id) == true
+        return { collected = collected, byItem = collected }
     elseif descriptor.type == "pet" then
         -- Pets carry a count (numCollected can exceed 1); `collected` is the common
         -- boolean, `numCollected`/`limit` are the detail consumers that need the
@@ -479,7 +536,7 @@ function Collectibles.GetCollectionState(key)
         local numOwned = stored + placed
         return { collected = numOwned > 0, numOwned = numOwned, numStored = stored, numPlaced = placed }
     elseif descriptor.type == "recipe" then
-        return { collected = IsRecipeItemKnown(descriptor.id) }
+        return { collected = IsRecipeItemKnown(descriptor.id, context) }
     end
 
     return nil
@@ -497,10 +554,16 @@ local BATTLE_PET_CAGE_ID = 82800
 --- with type-specific fields merged from `GetCollectionState`.
 ---@param itemID number
 ---@param hyperlink string|nil
+---@param context table|nil `{ bagID?, slotID?, tooltipData? }` — bag/slot or live tooltip lines for recipe known checks
 ---@return table|nil status
-function Collectibles.GetItemCollectionStatus(itemID, hyperlink)
+function Collectibles.GetItemCollectionStatus(itemID, hyperlink, context)
     itemID = CoerceID(itemID)
     if not itemID then return nil end
+
+    context = context or {}
+    if hyperlink and not context.hyperlink then
+        context.hyperlink = hyperlink
+    end
 
     local key = Collectibles.ResolveKeyFromItem(itemID, hyperlink)
     if not key then return nil end
@@ -508,7 +571,7 @@ function Collectibles.GetItemCollectionStatus(itemID, hyperlink)
     local descriptor = Collectibles.ParseKey(key)
     if not descriptor then return nil end
 
-    local state = Collectibles.GetCollectionState(key)
+    local state = Collectibles.GetCollectionState(key, context)
     local collected = state and state.collected == true or false
 
     local collectedByAlt = false
@@ -518,7 +581,7 @@ function Collectibles.GetItemCollectionStatus(itemID, hyperlink)
             local rk = Registry:GetFeatureSettings("tooltips", "recipeknowledge")
             local altScope = rk and rk.altScope
             if altScope and ns.RecipeKnownUtil then
-                collectedByAlt = ns.RecipeKnownUtil:IsRecipeKnownByScopedAlt(itemID, altScope) == true
+                collectedByAlt = ns.RecipeKnownUtil:IsRecipeKnownByScopedAlt(itemID, altScope, context) == true
             end
         end
     end
@@ -546,13 +609,136 @@ end
 
 -- Upgraded/catalyst links often carry bonus IDs that make GetItemInfo(hyperlink)
 -- return nothing while GetItemInfo(itemID) still resolves the canonical source.
-local function ResolveTransmogSourceID(itemID, hyperlink)
+-- Artifact / Remix links may fail both; DressUpModel TryOn is the next tier.
+
+local function GetDressUpModel()
+    if not dressUpModel then
+        dressUpModel = CreateFrame("DressUpModel")
+    end
+    return dressUpModel
+end
+
+--- Normalize a DressUpModel / visual id to the modified-appearance source for `itemID`.
+local function SourceIDForItem(candidateID, itemID)
+    if not candidateID or candidateID == 0 then return nil end
+
+    local sourceInfo = C_TransmogCollection.GetSourceInfo(candidateID)
+    if sourceInfo and sourceInfo.itemID == itemID then
+        return candidateID
+    end
+
+    local sources = C_TransmogCollection.GetAllAppearanceSources(candidateID)
+    if sources then
+        for _, sourceID in ipairs(sources) do
+            local info = C_TransmogCollection.GetSourceInfo(sourceID)
+            if info and info.itemID == itemID then
+                return sourceID
+            end
+        end
+    end
+
+    return nil
+end
+
+local function GetTryOnSlots(itemID, tryLink)
+    local _, _, _, equipLoc = C_Item.GetItemInfoInstant(tryLink)
+    local slots = equipLoc and INVENTORY_SLOTS_BY_EQUIP_LOC[equipLoc]
+    if slots then return slots end
+
+    -- GetSlotForInventoryType expects Enum.InventoryType (numeric), not INVTYPE_* strings.
+    local inventoryType = C_Item.GetItemInventoryTypeByID(tryLink)
+    if not inventoryType and itemID then
+        inventoryType = C_Item.GetItemInventoryTypeByID(itemID)
+    end
+    if inventoryType then
+        local slot = C_Transmog.GetSlotForInventoryType(inventoryType)
+        if slot then
+            return { slot }
+        end
+    end
+
+    if C_Item.IsDressableItemByID(tryLink) then
+        return { 16, 17 }
+    end
+
+    return nil
+end
+
+local function ResolveTransmogSourceIDViaTryOn(itemID, tryLink)
+    if not tryLink or not C_Item.IsDressableItemByID(tryLink) then
+        return nil
+    end
+    if not select(2, C_Item.GetItemInfoInstant(tryLink)) then
+        return nil
+    end
+
+    local tryOnItemID = itemID or tonumber(tryLink:match("item:(%d+)"))
+    if not tryOnItemID then return nil end
+
+    local slots = GetTryOnSlots(tryOnItemID, tryLink)
+    if not slots then return nil end
+
+    local model = GetDressUpModel()
+    model:SetUnit("player")
+    model:Undress()
+    for i = 1, #slots do
+        model:TryOn(tryLink, slots[i])
+        local tmogInfo = model:GetItemTransmogInfo(slots[i])
+        local appearanceID = tmogInfo and tmogInfo.appearanceID
+        local sourceID = SourceIDForItem(appearanceID, tryOnItemID)
+        if sourceID then
+            return sourceID
+        end
+    end
+
+    return nil
+end
+
+local function ResolveArtifactSourceID(itemID)
+    if not itemID or not C_Item.IsItemDataCachedByID(itemID) then
+        return nil
+    end
+    local _, _, quality = C_Item.GetItemInfo(itemID)
+    if quality ~= Enum.ItemQuality.Artifact then
+        return nil
+    end
+
+    local level = UnitLevel("player")
+    for appearanceIndex = 1, 999 do
+        local tryLink = ("item:%d::::::::%d:::::1:8:%d:"):format(itemID, level, appearanceIndex)
+        local _, sourceID = C_TransmogCollection.GetItemInfo(tryLink)
+        if sourceID then
+            return sourceID
+        end
+    end
+
+    return nil
+end
+
+--- Live `itemModifiedAppearanceID` for a dressable item, or nil when not collectible.
+--- Tries hyperlink, bare itemID, DressUpModel TryOn, then artifact link synthesis.
+---@param itemID number
+---@param hyperlink string|nil
+---@return number|nil sourceID
+function Collectibles.ResolveTransmogSourceID(itemID, hyperlink)
+    itemID = CoerceID(itemID)
+    if not itemID and not hyperlink then return nil end
+
     local _, sourceID
     if hyperlink then
         _, sourceID = C_TransmogCollection.GetItemInfo(hyperlink)
     end
     if not sourceID and itemID then
         _, sourceID = C_TransmogCollection.GetItemInfo(itemID)
+    end
+    if not sourceID then
+        local tryLink = hyperlink or (itemID and ("item:%d"):format(itemID))
+        if tryLink then
+            sourceID = ResolveTransmogSourceIDViaTryOn(itemID, tryLink)
+        end
+    end
+    if not sourceID and itemID then
+        sourceID = ResolveArtifactSourceID(itemID)
     end
     return sourceID
 end
@@ -618,9 +804,16 @@ function Collectibles.ResolveKeyFromItem(itemID, hyperlink)
         return Collectibles.BuildKey("set", setID)
     end
 
-    local sourceID = ResolveTransmogSourceID(itemID, hyperlink)
+    local sourceID = Collectibles.ResolveTransmogSourceID(itemID, hyperlink)
     if sourceID then
         return Collectibles.BuildKey("appearance", "source", sourceID)
+    end
+
+    -- Dressable but source-less: profession tools whose GetItemInfo/TryOn fail
+    -- (fishing poles). Collection truth is PlayerHasTransmog(itemID).
+    local tryLink = hyperlink or ("item:%d"):format(itemID)
+    if C_Item.IsDressableItemByID(tryLink) then
+        return Collectibles.BuildKey("appearance", "item", itemID)
     end
 
     return nil

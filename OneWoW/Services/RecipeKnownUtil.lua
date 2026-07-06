@@ -6,7 +6,13 @@ ns.RecipeKnownUtil = RecipeKnownUtil
 local knownRecipeSpells = {}
 local sessionMap = {}
 
+local C_TradeSkillUI = C_TradeSkillUI
+local C_SpellBook = C_SpellBook
+local C_TooltipInfo = C_TooltipInfo
+local C_Container = C_Container
+
 local LEARN_LINE_TYPE = Enum.TooltipDataLineType.ItemSpellTriggerLearn
+local SPELL_BANK_PLAYER = Enum.SpellBookSpellBank.Player
 
 local function GetSavedMap()
     return OneWoW_AltTracker_Professions_API and OneWoW_AltTracker_Professions_API.GetRecipeItemMap()
@@ -38,8 +44,45 @@ ns.ProfessionRecipe.RegisterScanCallback("RecipeKnownUtil", function(scan)
     end
 end)
 
-local function GetSpellIDFromTooltip(itemID)
-    local td = C_TooltipInfo.GetItemByID(itemID)
+local function FindBagSlotForItem(itemID)
+    for bag = 0, 4 do
+        local slots = C_Container.GetContainerNumSlots(bag)
+        for slot = 1, slots do
+            local info = C_Container.GetContainerItemInfo(bag, slot)
+            if info and info.itemID == itemID then
+                return bag, slot
+            end
+        end
+    end
+end
+
+-- Contextual tooltip first: bag slot and live tooltip data include player-evaluated
+-- lines such as ITEM_SPELL_KNOWN that GetItemByID omits.
+local function ResolveTooltipData(itemID, context)
+    if context and context.tooltipData then
+        return context.tooltipData
+    end
+
+    local bagID = context and context.bagID
+    local slotID = context and context.slotID
+    if not (bagID and slotID) then
+        bagID, slotID = FindBagSlotForItem(itemID)
+    end
+    if bagID and slotID then
+        local td = C_TooltipInfo.GetBagItem(bagID, slotID)
+        if td then return td end
+    end
+
+    local hyperlink = context and context.hyperlink
+    if hyperlink then
+        local td = C_TooltipInfo.GetHyperlink(hyperlink)
+        if td then return td end
+    end
+
+    return C_TooltipInfo.GetItemByID(itemID)
+end
+
+local function GetSpellIDFromTooltipData(td)
     if not td or not td.lines then return nil end
     for _, line in ipairs(td.lines) do
         if line.type == LEARN_LINE_TYPE and line.spellID then
@@ -49,34 +92,113 @@ local function GetSpellIDFromTooltip(itemID)
     return nil
 end
 
-function RecipeKnownUtil:GetRecipeSpellID(itemID)
+local function TooltipSaysAlreadyKnown(td)
+    if not td or not td.lines then return false end
+    for _, line in ipairs(td.lines) do
+        if line.leftText and line.leftText == ITEM_SPELL_KNOWN then
+            return true
+        end
+    end
+    return false
+end
+
+-- Legacy profession books (e.g. Master Cookbook) expose a teach *spell* on the
+-- tooltip, while AltTracker / GetRecipeInfo use trade-skill *recipe* IDs. Gather
+-- every candidate ID we might match against.
+local function GetRecipeIDCandidates(itemID, context)
+    local candidates = {}
+    local seen = {}
+
+    local function add(id)
+        id = tonumber(id)
+        if id and id > 0 and not seen[id] then
+            seen[id] = true
+            candidates[#candidates + 1] = id
+        end
+    end
+
+    if sessionMap[itemID] then add(sessionMap[itemID]) end
+    local saved = GetSavedMap()
+    if saved and saved[itemID] then add(saved[itemID]) end
+
+    local td = ResolveTooltipData(itemID, context)
+    local teachSpellID = GetSpellIDFromTooltipData(td)
+    if teachSpellID then
+        add(teachSpellID)
+        -- Teach-spell line only: map entries from ProfessionRecipe scans are
+        -- already trade-skill recipe IDs and must not be passed here.
+        local info = C_TradeSkillUI.GetRecipeInfoForSkillLineAbility(teachSpellID)
+        if info and info.recipeID then
+            add(info.recipeID)
+        end
+    end
+
+    return candidates
+end
+
+local function IsRecipeIDLearned(recipeID)
+    if knownRecipeSpells[recipeID] then return true end
+
+    local info = C_TradeSkillUI.GetRecipeInfo(recipeID)
+    if info and info.learned then
+        knownRecipeSpells[recipeID] = true
+        return true
+    end
+
+    if C_SpellBook.IsSpellKnown(recipeID, SPELL_BANK_PLAYER) then
+        knownRecipeSpells[recipeID] = true
+        return true
+    end
+
+    return false
+end
+
+local function CharRecipeSetHasItem(charRecipeSet, itemID, candidates)
+    if not charRecipeSet then return false end
+
+    for i = 1, #candidates do
+        if charRecipeSet[candidates[i]] then
+            return true
+        end
+    end
+
+    for recipeID in pairs(charRecipeSet) do
+        local link = C_TradeSkillUI.GetRecipeItemLink(recipeID)
+        if link then
+            local linkItemID = tonumber(link:match("item:(%d+)"))
+            if linkItemID == itemID then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+function RecipeKnownUtil:GetRecipeSpellID(itemID, context)
     if not itemID then return nil end
 
-    local spellID = GetSpellIDFromTooltip(itemID)
-    if spellID then
-        SaveToMap(itemID, spellID)
-        return spellID
-    end
-
-    if sessionMap[itemID] then return sessionMap[itemID] end
-
-    local saved = GetSavedMap()
-    if saved and saved[itemID] then
-        sessionMap[itemID] = saved[itemID]
-        return saved[itemID]
-    end
+    local candidates = GetRecipeIDCandidates(itemID, context)
+    if candidates[1] then return candidates[1] end
 
     return nil
 end
 
-function RecipeKnownUtil:IsRecipeKnown(itemID)
+function RecipeKnownUtil:IsRecipeKnown(itemID, context)
     if not itemID then return nil end
 
-    local recipeSpellID = self:GetRecipeSpellID(itemID)
-    if not recipeSpellID then return nil end
-
-    if knownRecipeSpells[recipeSpellID] then
+    local td = ResolveTooltipData(itemID, context)
+    if TooltipSaysAlreadyKnown(td) then
         return true
+    end
+
+    local candidates = GetRecipeIDCandidates(itemID, context)
+    if #candidates == 0 then return nil end
+
+    for i = 1, #candidates do
+        if IsRecipeIDLearned(candidates[i]) then
+            return true
+        end
     end
 
     if OneWoW_AltTracker_Professions_API then
@@ -85,32 +207,20 @@ function RecipeKnownUtil:IsRecipeKnown(itemID)
         local charData = charKey and OneWoW_AltTracker_Professions_API.GetCharacterData(charKey)
         if charData and charData.recipes then
             for _, recipeSet in pairs(charData.recipes) do
-                if recipeSet[recipeSpellID] then
-                    knownRecipeSpells[recipeSpellID] = true
+                if CharRecipeSetHasItem(recipeSet, itemID, candidates) then
                     return true
                 end
             end
         end
     end
 
-    local info = C_TradeSkillUI.GetRecipeInfo(recipeSpellID)
-    if info and info.learned then
-        knownRecipeSpells[recipeSpellID] = true
-        return true
-    end
-
     return nil
 end
 
-function RecipeKnownUtil:IsAltRecipeKnown(charRecipeSet, itemID)
+function RecipeKnownUtil:IsAltRecipeKnown(charRecipeSet, itemID, context)
     if not charRecipeSet or not itemID then return false end
 
-    local recipeSpellID = self:GetRecipeSpellID(itemID)
-    if recipeSpellID and charRecipeSet[recipeSpellID] then
-        return true
-    end
-
-    return false
+    return CharRecipeSetHasItem(charRecipeSet, itemID, GetRecipeIDCandidates(itemID, context))
 end
 
 function RecipeKnownUtil:RegisterMapping(itemID, recipeSpellID)
@@ -241,8 +351,8 @@ end
 
 --- True when a scoped alt (not the logged-in character) knows the recipe and self does not.
 --- `altScope` is the Recipe Knowledge tooltip altScope table.
-function RecipeKnownUtil:IsRecipeKnownByScopedAlt(itemID, altScope)
-    if not itemID or self:IsRecipeKnown(itemID) then return false end
+function RecipeKnownUtil:IsRecipeKnownByScopedAlt(itemID, altScope, context)
+    if not itemID or self:IsRecipeKnown(itemID, context) then return false end
     if not altScope or not OneWoW_AltTracker_Professions_API then return false end
 
     local profName = self:GetRecipeProfessionName(itemID)
@@ -265,7 +375,7 @@ function RecipeKnownUtil:IsRecipeKnownByScopedAlt(itemID, altScope)
             end
             if hasProfession then
                 local recipeSet = FindRecipes(charData, profName)
-                if recipeSet and self:IsAltRecipeKnown(recipeSet, itemID) then
+                if recipeSet and self:IsAltRecipeKnown(recipeSet, itemID, context) then
                     return true
                 end
             end

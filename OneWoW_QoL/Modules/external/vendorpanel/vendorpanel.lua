@@ -207,7 +207,7 @@ local function IsAlreadyKnown(itemLink)
         if OneWoW.PredicateEngine:IsRecipeItem(itemID, nil, nil, itemLink) then
             local Util = OneWoW.RecipeKnownUtil
             if Util then
-                local result = Util:IsRecipeKnown(itemID)
+                local result = Util:IsRecipeKnown(itemID, { hyperlink = itemLink })
                 if result ~= nil then return result end
             end
         end

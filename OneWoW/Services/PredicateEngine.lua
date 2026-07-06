@@ -971,6 +971,19 @@ end
 -- Tri-state collection ownership for collectible-shaped items only. Backed by
 -- `OneWoW.Collectibles.GetItemCollectionStatus` (true = owned, false = missing,
 -- nil = not a collectible). Cached on props as 0/1/2.
+local function GetCollectionContext(props)
+    if not props then return nil end
+    local bagID, slotID = rawget(props, "_bagID"), rawget(props, "_slotID")
+    if not (bagID and slotID) and not rawget(props, "hyperlink") then
+        return nil
+    end
+    return {
+        bagID = bagID,
+        slotID = slotID,
+        hyperlink = rawget(props, "hyperlink"),
+    }
+end
+
 local function ResolveCollectionStatus(p)
     local cached = rawget(p, "_collectionStatus")
     if cached ~= nil then
@@ -978,7 +991,7 @@ local function ResolveCollectionStatus(p)
         return cached == 1
     end
 
-    local st = OneWoW.Collectibles.GetItemCollectionStatus(p.id, p.hyperlink)
+    local st = OneWoW.Collectibles.GetItemCollectionStatus(p.id, p.hyperlink, GetCollectionContext(p))
     local status
     if st then
         status = st.collected == true
@@ -997,7 +1010,7 @@ local function ResolveAltCollectionStatus(p)
         return cached == 1
     end
 
-    local st = OneWoW.Collectibles.GetItemCollectionStatus(p.id, p.hyperlink)
+    local st = OneWoW.Collectibles.GetItemCollectionStatus(p.id, p.hyperlink, GetCollectionContext(p))
     local alt = st and st.collectedByAlt == true
     rawset(p, "_altCollectionStatus", alt and 1 or 0)
     return alt
@@ -1545,6 +1558,12 @@ local function ResolveTooltipFields(props)
     rawset(props, "isTradeableLoot",    strfind(tt, tradeablePattern, 1, true) ~= nil)
 
     local alreadyKnown = strfind(tt, ITEM_SPELL_KNOWN, 1, true) ~= nil
+    if not alreadyKnown and rawget(props, "isRecipe") then
+        local Util = OneWoW.RecipeKnownUtil
+        if Util and Util:IsRecipeKnown(rawget(props, "id"), GetCollectionContext(props)) == true then
+            alreadyKnown = true
+        end
+    end
     rawset(props, "isAlreadyKnown", alreadyKnown)
     rawset(props, "isUniqueEquipped",   isUniqueEquipped)
     rawset(props, "isUnique",           isUniqueEquipped or strfind(tt, "^"..ITEM_UNIQUE) ~= nil or strfind(tt, "\n"..ITEM_UNIQUE, 1, true) ~= nil)
@@ -2315,24 +2334,15 @@ local function PopulateBaseProps(props, itemID, hyperlink)
 
     -- ---- Transmog / appearance ----
     -- PlayerHasTransmog(itemID) is the fast item-keyed check; source-keyed
-    -- collection routes through OneWoW.Collectibles. GetItemInfo(hyperlink)
-    -- is tried first, with itemID fallback when bonus-heavy links resolve nil.
+    -- collection routes through OneWoW.Collectibles.ResolveTransmogSourceID.
     props.hasAppearance         = false
     props.isAppearanceCollected = C_TransmogCollection.PlayerHasTransmog(itemID)
 
-    local _, sourceID
-    if hyperlink then
-        _, sourceID = C_TransmogCollection.GetItemInfo(hyperlink)
-    end
-    if not sourceID then
-        _, sourceID = C_TransmogCollection.GetItemInfo(itemID)
-    end
-    if sourceID then
+    local appearanceKey = OneWoW.Collectibles.ResolveKeyFromItem(itemID, hyperlink)
+    if appearanceKey and appearanceKey:find("^appearance:", 1) == 1 then
         props.hasAppearance = true
-
         if not props.isAppearanceCollected then
-            local st = OneWoW.Collectibles.GetCollectionState(
-                OneWoW.Collectibles.BuildKey("appearance", "source", sourceID))
+            local st = OneWoW.Collectibles.GetCollectionState(appearanceKey)
             props.isAppearanceCollected = (st and st.collected) == true
         end
     end
