@@ -34,6 +34,7 @@ addons). For the public API, caches, and extension points, see
 - [Named Constants](#named-constants)
 - [PredicateEngine.lua (file map)](#predicateenginelua-file-map)
 - [Combining Everything](#combining-everything)
+- [Item overlays (Overlays 2.0)](#item-overlays-overlays-20)
 
 ---
 
@@ -157,7 +158,7 @@ These keywords match **Blizzard item quality** only.
 |---|---|---|
 | `#weapon` | | All weapons |
 | `#armor` | | All armor |
-| `#consumable` | | All consumables |
+| `#consumable` | | Consumables (excludes mis-tagged profession recipes reclassified as `#recipe` via `ITEM_ID_OVERRIDES`) |
 | `#container` | `#bag` | Bags and containers |
 | `#gem` | | Gems |
 | `#reagent` | | Reagents |
@@ -332,6 +333,7 @@ Handedness keywords:
 | Keyword | Aliases |
 |---|---|
 | `#decor` | |
+| `#housingdecor` | `#itemdecor` | Housing-class items **or** any item `C_Item.IsDecorItem` recognizes (e.g. redeemable furniture drops). Classification only — use `#collected` / `#collectionmissing` for ownership |
 | `#dye` | `#housingdye` |
 | `#room` | |
 | `#roomcustomization` | |
@@ -491,18 +493,40 @@ without link data never match.
 
 ### Collectibles
 
+Collection ownership keywords all read through `OneWoW.Collectibles.GetItemCollectionStatus`
+(key resolution + live journal state). Recipe items may need bag/slot or live tooltip
+context for legacy books where `GetItemByID` omits player-evaluated lines.
+
 | Keyword | What it matches |
 |---|---|
 | `#toy` | Toys |
 | `#mount` | Mounts |
 | `#pet` | Battle pets (alias: `#battlepet`) |
 | `#collected` | Collectibles you already own (alias: `#collectionknown`) — toys, mounts, pets, recipes, decor, ensembles, appearances |
-| `#uncollected` | Collectible-shaped items you are missing on the logged-in character (alias: `#collectionmissing`); not true on non-collectibles |
+| `#uncollected` | Collectible-shaped items you are missing on the logged-in character (alias: `#collectionmissing`); **not** true on non-collectibles |
 | `#altcollected` | Recipe items known by a scoped alt but not by you (uses Recipe Knowledge alt scope; meaningful for `#recipe` only) |
 | `#altuncollected` | Collectible-shaped recipes nobody in the Recipe Knowledge alt scope knows (neither you nor scoped alts) |
 | `#collectionknown` | Alias of `#collected` |
 | `#collectionmissing` | Alias of `#uncollected` |
-| `#alreadyknown` | Tooltip shows Blizzard "Already Known" (not recipe learn state — use `#collected` for recipes) |
+
+**`#uncollected` behavior:** Only true on collectible-shaped items you lack. Bare
+`!#collected` no longer matches random gear — combine with a type keyword when you
+want “missing toys” (`#toy & #uncollected`), not “everything I don't own.”
+
+**`#alreadyknown` vs `#collected`:** These answer different questions and are **not**
+aliases.
+
+| Keyword | Layer | Meaning |
+|---|---|---|
+| `#alreadyknown` | Tooltip (lazy) | Tooltip body contains Blizzard `ITEM_SPELL_KNOWN` (“Already known”). May also be set for `#recipe` items when `RecipeKnownUtil` resolves learn state but the tooltip line is absent (legacy books). |
+| `#collected` | Collectibles | You own/learned this collectible per `GetItemCollectionStatus` (mount journal, toy box, recipe known, decor owned, transmog set, etc.). |
+
+For recipe toasts and overlays, prefer `#recipe & !#collected` over
+`#recipe & !#alreadyknown`. Non-collectibles can show “Already known” without
+being a Collectibles key.
+
+**Overlay presets:** `knownitems` → `#collectionknown`; `unknownitems` →
+`#collectionmissing`. See [Item overlays (Overlays 2.0)](#item-overlays-overlays-20).
 
 ### Battle Pet Type
 
@@ -686,11 +710,13 @@ These keywords scan the item's tooltip text (or tooltip-derived fields filled by
 
 | Keyword | What it matches |
 |---|---|
+| `#teachable` | Tooltip has an `ItemSpellTriggerLearn` line (“Use: Teaches you …”) — recipe plans, profession books, mount/pet/toy teaching items, etc. Independent of whether you already own the taught collectible |
 | `#charges` | Charge pattern in the tooltip (`ITEM_SPELL_CHARGES`–based detection) |
 | `#unique` | Tooltip **Unique** / **Unique-Equipped**, **or** unique battle pets (`isPetUnique` from the journal) |
 | `#onuse` | Items with a `Use:` tooltip effect |
 | `#onequip` | Items with an `Equip:` tooltip effect |
 | `#uniqueequipped` | Unique-equipped items |
+| `#alreadyknown` | Tooltip shows Blizzard “Already known” (see [Collectibles](#collectibles) — not an alias of `#collected`) |
 | `#reputation` | Items with "Reputation" in the tooltip |
 | `#tradeableloot` | Loot still in the trade window |
 | `#openable` | Containers you can right-click to open now (bag tooltip includes `ITEM_OPENABLE`); subset of `#hasloot` — excludes locked lockboxes and other containers you cannot open yet |
@@ -1197,3 +1223,52 @@ IsEquipment & !IsInEquipmentSet & quality<${RARE} & vendorprice>0
 ```
 Equipped-type items not in a set, below rare quality, that can be sold (vendor
 rule style).
+
+---
+
+## Item overlays (Overlays 2.0)
+
+OneWoW **item icon overlays** (bags, bank, vendor, AH, etc.) are driven by the same
+PredicateEngine expressions documented here. Each enabled overlay is a compiled PE
+rule evaluated once per item button (`OneWoW.OverlayEngine` / `Overlays2/`).
+
+Built-in overlay presets map to canned expressions in
+[`OneWoW/Services/Overlays2/definitions.lua`](../../OneWoW/Services/Overlays2/definitions.lua).
+Users can enable presets from QoL → Overlays or author fully custom rules with the
+same syntax as bag search.
+
+| Preset ID | Expression | Notes |
+|---|---|---|
+| `junk` | `#junk` or `#markedjunk` | `#markedjunk` when “include grey items” is off |
+| `protected` | `#protected` | ItemStatus protected mark |
+| `consumables` | `#consumable` | Excludes mis-tagged recipes reclassified as `#recipe` |
+| `housingdecor` | `#housingdecor` | Classification only, not collection |
+| `knownitems` | `#collectionknown` | Alias of `#collected` |
+| `unknownitems` | `#collectionmissing` | Alias of `#uncollected` |
+| `transmog` | `#transmog and #unknowntransmog` | Uncollected appearances |
+| `mounts` | `#mount` | |
+| `pets` | `#pet` | |
+| `quest` | `#quest` | |
+| `reagents` | `#tradegoods` | |
+| `recipe` | `#recipe and #teachable` | Profession plans with a teach line (not raw class alone) |
+| `soulbound` | `#soulbound` | |
+| `toys` | `#toy` | |
+| `warbound` | `#warbound` or `#warbound and !#wue` | Optional WUE exclusion |
+| `wue` | `#wue` | |
+| `boe` | `#boe` | |
+
+**Not expression presets:** `itemlevel` and `qualityborder` are rendered separately
+(no icon slot, no max-4 overlay cap).
+
+**Custom overlays:** Stored in `db.global.overlays.userOverlays`. Each entry is either
+`preset = "<id>"` (inherits the catalog expression) or a freeform `expression` string.
+Up to four icon overlays paint per button; item level and quality border do not count
+toward the cap.
+
+**Examples:**
+
+```
+#recipe and #teachable and #collectionmissing
+#housingdecor and #uncollected
+#consumable and !#potion
+```

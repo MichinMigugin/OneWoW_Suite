@@ -478,7 +478,13 @@ RegisterKeyword({"wue", "warbounduntilequip"},          function(p) return p.isW
 
 -- ---- 7.3  Item class keywords ----
 -- Same order as found in Enum.ItemClass
-RegisterKeyword("consumable",                           function(p) return p.classID == Enum.ItemClass.Consumable end)
+local function PropsIsRecipeItem(props)
+    return props.classID == Enum.ItemClass.Recipe
+end
+
+RegisterKeyword("consumable", function(p)
+    return p.classID == Enum.ItemClass.Consumable and not PropsIsRecipeItem(p)
+end)
 RegisterKeyword({"container", "bag"},                   function(p) return p.classID == Enum.ItemClass.Container end)
 RegisterKeyword("weapon",                               function(p) return p.classID == Enum.ItemClass.Weapon end)
 RegisterKeyword("gem",                                  function(p) return p.classID == Enum.ItemClass.Gem end)
@@ -487,10 +493,6 @@ RegisterKeyword("reagent",                              function(p) return p.cla
 RegisterKeyword("projectile",                           function(p) return p.classID == Enum.ItemClass.Projectile end)
 RegisterKeyword({"tradegoods", "tradegood"},            function(p) return p.classID == Enum.ItemClass.Tradegoods end)
 RegisterKeyword({"itemenhancement", "enhancement"},     function(p) return p.classID == Enum.ItemClass.ItemEnhancement end)
-
-local function PropsIsRecipeItem(props)
-    return props.classID == Enum.ItemClass.Recipe
-end
 
 --- Identity-tier recipe check without BuildProps (safe for Collectibles.ResolveKeyFromItem).
 local function IdentityIsRecipeItem(itemID)

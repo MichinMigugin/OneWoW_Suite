@@ -156,7 +156,9 @@ Each group resolves all of its fields on the first read of any field in that gro
 |---|---|---|
 | `OneWoW.ItemStatus:IsItemJunk(itemID)` | `props.isJunk` (in addition to `quality == Poor`) | `isJunk` reflects only the quality check. |
 | `TransmogUpgradeMaster_API.IsAppearanceMissing(hyperlink)` | `props.isCatalyst`, `props.isCatalystUpgrade` (and the `#catalyst` / `#catalystupgrade` keywords that read them) | Both fields stay `false`; the keywords therefore never match. |
-| `OneWoW.RecipeKnownUtil:IsRecipeKnown(itemID)` | `props.isAlreadyKnown` for recipe items, when the tooltip's `ITEM_SPELL_KNOWN` line is absent | Falls back to tooltip-text detection only. |
+| `OneWoW.Collectibles.GetItemCollectionStatus(itemID, hyperlink, context)` | `#collected`, `#uncollected`, `#collectionknown`, `#collectionmissing`, `#altcollected`, `#altuncollected` via `ResolveCollectionStatus`; `props.isCollected` | Collection keywords never match; `isCollected` stays false. |
+| `OneWoW.RecipeKnownUtil:IsRecipeKnown(itemID, context)` | `props.isAlreadyKnown` for `#recipe` items when the tooltip's `ITEM_SPELL_KNOWN` line is absent; **not** used for `#collected` (collection truth is Collectibles only) | `#alreadyknown` falls back to tooltip-text detection only for recipes. |
+| `OneWoW.TooltipScanner` | `#teachable`, lazy tooltip fields in `ResolveTooltipFields`, bind fallback | `#teachable` never matches; tooltip-derived fields stay at safe defaults. |
 
 ### Keywords registered by external modules
 

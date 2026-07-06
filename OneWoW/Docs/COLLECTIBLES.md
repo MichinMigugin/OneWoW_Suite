@@ -41,7 +41,7 @@ today stays valid as resolution is extended to more types.
 | heirloom | `heirloom:<itemID>` | `C_Heirloom` |
 | set | `set:<setID>` | `C_TransmogSets.GetSetInfo(...).collected` (rolled up from members) |
 | decor | `decor:<recordID>` | `C_HousingCatalog.GetCatalogEntryInfoByRecordID` owned counts (`entryType` = Decor) |
-| recipe | `recipe:<itemID>` | recipe known via `ns.RecipeKnownUtil:IsRecipeKnown(itemID)` (tooltip `ItemSpellTriggerLearn` → recipe spell → ProfessionRecipe scan cache / AltTracker / `GetRecipeInfo(...).learned`) |
+| recipe | `recipe:<itemID>` | recipe known via `ns.RecipeKnownUtil:IsRecipeKnown(itemID, context)` (tooltip `ItemSpellTriggerLearn` → recipe spell → ProfessionRecipe scan cache / AltTracker / `GetRecipeInfo(...).learned`; contextual bag/slot/live `tooltipData` for legacy books) |
 | campsite | `campsite:<sceneID>` | `C_WarbandScene` |
 
 `sourceID` and `itemModifiedAppearanceID` are the same identifier; the `source`
@@ -88,7 +88,7 @@ whereas keying them as heirlooms would make `PlayerHasHeirloom` report them
 | `BuildLink(key)` | `(collectible=<key>)` token or `nil` | Token grammar only; Notes renders the clickable link |
 | `ResolveDisplay(key)` | `{ name, icon, link, sourceText?, type }` or `nil` | Live per-type resolution |
 | `GetCollectionState(key)` | type-specific table or `nil` | Live; never persisted |
-| `GetItemCollectionStatus(itemID, hyperlink?)` | `{ applicable, collected, collectedByAlt?, key, type, … }` or `nil` | Item-facing facade; `nil` when not a collectible; `collectedByAlt` is recipe-only |
+| `GetItemCollectionStatus(itemID, hyperlink?, context?)` | `{ applicable, collected, collectedByAlt?, key, type, … }` or `nil` | Item-facing facade; `nil` when not a collectible. Optional `context` = `{ bagID?, slotID?, tooltipData?, hyperlink? }` for player-evaluated tooltip lines (recipe “Already known”, legacy profession books). `collectedByAlt` is recipe-only |
 | `ResolveKeyFromItem(itemID, hyperlink?)` | canonical key string or `nil` | Maps an item → the collectible it grants (mount/toy/pet/heirloom/**recipe**/**set**/**decor**/appearance) |
 | `ResolveTransmogSourceID(itemID, hyperlink?)` | `sourceID` or `nil` | `itemModifiedAppearanceID` via GetItemInfo, TryOn, or artifact link synthesis |
 | `GetOfferAffordability(offer)` | `{ affordable, requirements = { … } }` or `nil` | Live check of a vendor offer vs. player gold / currencies / items; never persisted |
@@ -141,12 +141,14 @@ status is **never** persisted as truth in SavedVariables — a note may record
 that a collectible is wanted, but whether it is *collected* is always answered
 live so it can never drift from the game state.
 
-`GetItemCollectionStatus(itemID, hyperlink?)` is the item-facing entry point:
+`GetItemCollectionStatus(itemID, hyperlink?, context?)` is the item-facing entry point:
 tooltips, `#collected` / `#collectionknown`, `#altcollected`, and
 `props.isCollected` all read through it (key resolution via `ResolveKeyFromItem`,
-state via `GetCollectionState`). For recipes, `collected` is the logged-in
-character only; `collectedByAlt` is true when a scoped alt in Recipe Knowledge's
-`altScope` knows the recipe and you do not.
+state via `GetCollectionState`). Pass `context` when the caller has bag/slot or
+live tooltip data — required for legacy recipe items (e.g. Master Cookbook **27736**)
+where `C_TooltipInfo.GetItemByID` omits player-evaluated `ITEM_SPELL_KNOWN` lines.
+For recipes, `collected` is the logged-in character only; `collectedByAlt` is true
+when a scoped alt in Recipe Knowledge's `altScope` knows the recipe and you do not.
 
 Appearance resolution in `ResolveKeyFromItem` calls
 `Collectibles.ResolveTransmogSourceID(itemID, hyperlink)`: hyperlink, bare
