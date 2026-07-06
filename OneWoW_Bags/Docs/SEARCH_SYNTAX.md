@@ -496,9 +496,11 @@ without link data never match.
 | `#toy` | Toys |
 | `#mount` | Mounts |
 | `#pet` | Battle pets (alias: `#battlepet`) |
-| `#collected` | Toys/mounts/pets you already own |
-| `#uncollected` | Toys/mounts/pets you don't own |
-| `#alreadyknown` | Recipes/items marked "Already Known" |
+| `#collected` | Collectibles you already own (alias: `#collectionknown`) — toys, mounts, pets, recipes, decor, ensembles, appearances |
+| `#uncollected` | Collectible-shaped items you are missing (alias: `#collectionmissing`); not true on non-collectibles |
+| `#collectionknown` | Alias of `#collected` |
+| `#collectionmissing` | Alias of `#uncollected` |
+| `#alreadyknown` | Tooltip shows Blizzard "Already Known" (not recipe learn state — use `#collected` for recipes) |
 
 ### Battle Pet Type
 

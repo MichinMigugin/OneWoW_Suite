@@ -132,7 +132,7 @@ local function ScanBagsForCollectibles()
     end
 
     if recipesEnabled then
-        local expr = "#recipe&!#alreadyknown"
+        local expr = "#recipe&!#collected"
         if GetCfg().recipesOnlyMyProfessions then
             expr = expr .. "&#myprofs"
         end

@@ -88,7 +88,8 @@ whereas keying them as heirlooms would make `PlayerHasHeirloom` report them
 | `BuildLink(key)` | `(collectible=<key>)` token or `nil` | Token grammar only; Notes renders the clickable link |
 | `ResolveDisplay(key)` | `{ name, icon, link, sourceText?, type }` or `nil` | Live per-type resolution |
 | `GetCollectionState(key)` | type-specific table or `nil` | Live; never persisted |
-| `ResolveKeyFromItem(itemID)` | canonical key string or `nil` | Maps an itemID → the collectible it grants (mount/toy/pet/heirloom/**recipe** by item class `Recipe`/**set** via `GetItemLearnTransmogSet`/**decor** via `GetCatalogEntryInfoByItem`/appearance) |
+| `GetItemCollectionStatus(itemID, hyperlink?)` | `{ applicable, collected, key, type, … }` or `nil` | Item-facing facade; `nil` when not a collectible |
+| `ResolveKeyFromItem(itemID, hyperlink?)` | canonical key string or `nil` | Maps an item → the collectible it grants (mount/toy/pet/heirloom/**recipe**/**set**/**decor**/appearance) |
 | `GetOfferAffordability(offer)` | `{ affordable, requirements = { … } }` or `nil` | Live check of a vendor offer vs. player gold / currencies / items; never persisted |
 | `GetEnsembleMemberKeys(setID)` | `{ "appearance:source:<id>", … }` or `nil` | All set sources (incl. alternates) as collectible keys |
 | `GetEnsembleProgress(setID)` | `{ collected, total, name }` or `nil` | Live set completion; matches Blizzard's Sets tab (primary appearances) |
@@ -138,6 +139,11 @@ total (each slot's alternate sources) and disagrees with Blizzard's UI.
 status is **never** persisted as truth in SavedVariables — a note may record
 that a collectible is wanted, but whether it is *collected* is always answered
 live so it can never drift from the game state.
+
+`GetItemCollectionStatus(itemID, hyperlink?)` is the item-facing entry point:
+tooltips, `#collected` / `#collectionknown`, and `props.isCollected` all read
+through it (key resolution via `ResolveKeyFromItem`, state via
+`GetCollectionState`).
 
 ## Secret-value caveat (12.0)
 

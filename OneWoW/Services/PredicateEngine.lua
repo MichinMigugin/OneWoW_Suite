@@ -31,7 +31,7 @@ local C_SeasonInfo = C_SeasonInfo
 local C_Container = C_Container
 local C_TooltipInfo = C_TooltipInfo
 local C_ToyBox = C_ToyBox
-local C_MountJournal, C_PetJournal = C_MountJournal, C_PetJournal
+local C_PetJournal = C_PetJournal
 local C_TransmogCollection = C_TransmogCollection
 local C_TradeSkillUI = C_TradeSkillUI
 local C_HousingCatalog = C_HousingCatalog
@@ -503,6 +503,18 @@ local function PropsIsRecipeItem(props)
     return props.classID == Enum.ItemClass.Recipe
 end
 
+--- Identity-tier recipe check without BuildProps (safe for Collectibles.ResolveKeyFromItem).
+local function IdentityIsRecipeItem(itemID)
+    if not itemID then return false end
+    local override = ITEM_ID_OVERRIDES[itemID]
+    if override and override.classID then
+        return override.classID == Enum.ItemClass.Recipe
+    end
+    -- GetItemInfoInstant: itemID, itemType, itemSubType, equipLoc, icon, classID, subclassID
+    local classID = select(6, C_Item.GetItemInfoInstant(itemID))
+    return classID == Enum.ItemClass.Recipe
+end
+
 RegisterKeyword("recipe",                               function(p) return PropsIsRecipeItem(p) end)
 -- CurrencyTokenObsolete (skipped)
 RegisterKeyword("quiver",                               function(p) return p.classID == Enum.ItemClass.Quiver end)
@@ -956,11 +968,31 @@ for _, def in ipairs({
 end
 
 -- ---- 7.16  Collectible keywords ----
+-- Tri-state collection ownership for collectible-shaped items only. Backed by
+-- `OneWoW.Collectibles.GetItemCollectionStatus` (true = owned, false = missing,
+-- nil = not a collectible). Cached on props as 0/1/2.
+local function ResolveCollectionStatus(p)
+    local cached = rawget(p, "_collectionStatus")
+    if cached ~= nil then
+        if cached == 0 then return nil end
+        return cached == 1
+    end
+
+    local st = OneWoW.Collectibles.GetItemCollectionStatus(p.id, p.hyperlink)
+    local status
+    if st then
+        status = st.collected == true
+    end
+
+    rawset(p, "_collectionStatus", status == nil and 0 or (status and 1 or 2))
+    return status
+end
+
 RegisterKeyword("toy",                  function(p) return p.isToy end)
 RegisterKeyword("mount",                function(p) return p.isMount end)
 RegisterKeyword({"pet", "battlepet"},   function(p) return p.isPet end)
-RegisterKeyword("collected",            function(p) return p.isCollected end)
-RegisterKeyword("uncollected",          function(p) return not p.isCollected end)
+RegisterKeyword({"collected", "collectionknown"}, function(p) return ResolveCollectionStatus(p) == true end)
+RegisterKeyword({"uncollected", "collectionmissing"}, function(p) return ResolveCollectionStatus(p) == false end)
 RegisterKeyword("alreadyknown",         function(p) return p.isAlreadyKnown end)
 
 for _, def in ipairs({
@@ -1344,7 +1376,7 @@ local function GetTooltipTextByHyperlink(hyperlink)
     return text
 end
 
--- ---------- ResolveCollected ----------
+-- ---------- GetBattlePetData ----------
 ---@param itemID number
 ---@param hyperlink string|nil
 ---@return table|nil
@@ -1435,39 +1467,13 @@ local function GetItemCacheKey(itemID, bagID, slotID, hyperlink)
     return cacheKey
 end
 
--- Checks toy/mount/pet collection status for a specific item.
+--- Whether the current character owns the collectible this item grants.
 ---@param itemID number
----@param classID number
----@param subClassID number
 ---@param hyperlink string|nil
 ---@return boolean
-local function ResolveCollected(itemID, classID, subClassID, hyperlink)
-    -- Collection truth is owned by OneWoW.Collectibles.
-    -- Each branch still detects the collectible *type* locally (that classification
-    -- is item-shape logic, not collection state) and then reads the uniform
-    -- `.collected` boolean from core so there is one source of collection truth.
-    local Collectibles = OneWoW.Collectibles
-
-    -- Toy check
-    if C_ToyBox.GetToyInfo(itemID) then
-        local st = Collectibles.GetCollectionState(Collectibles.BuildKey("toy", itemID))
-        return (st and st.collected) or false
-    end
-    -- Battle pet check (both caged and captured)
-    local petData = GetBattlePetData(itemID, hyperlink)
-    if petData and petData.speciesID then
-        local st = Collectibles.GetCollectionState(Collectibles.BuildKey("pet", petData.speciesID))
-        return (st and st.collected) or false
-    end
-    -- Mount check: GetMountFromItem is O(1) and replaces the old full-journal scan.
-    if classID == Enum.ItemClass.Miscellaneous and subClassID == Enum.ItemMiscellaneousSubclass.Mount then
-        local mountID = C_MountJournal.GetMountFromItem(itemID)
-        if mountID then
-            local st = Collectibles.GetCollectionState(Collectibles.BuildKey("mount", mountID))
-            return (st and st.collected) or false
-        end
-    end
-    return false
+local function ItemCollectionOwned(itemID, hyperlink)
+    local st = OneWoW.Collectibles.GetItemCollectionStatus(itemID, hyperlink)
+    return st and st.collected == true or false
 end
 
 -- ---------- ResolveTooltipFields ----------
@@ -1518,15 +1524,6 @@ local function ResolveTooltipFields(props)
     rawset(props, "isTradeableLoot",    strfind(tt, tradeablePattern, 1, true) ~= nil)
 
     local alreadyKnown = strfind(tt, ITEM_SPELL_KNOWN, 1, true) ~= nil
-    if not alreadyKnown and rawget(props, "classID") == Enum.ItemClass.Recipe then
-        local Util = ns.RecipeKnownUtil
-        if Util then
-            local result = Util:IsRecipeKnown(rawget(props, "id"), rawget(props, "hyperlink"))
-            if result ~= nil then
-                alreadyKnown = result
-            end
-        end
-    end
     rawset(props, "isAlreadyKnown", alreadyKnown)
     rawset(props, "isUniqueEquipped",   isUniqueEquipped)
     rawset(props, "isUnique",           isUniqueEquipped or strfind(tt, "^"..ITEM_UNIQUE) ~= nil or strfind(tt, "\n"..ITEM_UNIQUE, 1, true) ~= nil)
@@ -1997,45 +1994,6 @@ RegisterKeyword("teachable", function(p)
     return false
 end)
 
--- Tri-state collection status for collectible-SHAPED items only: toys,
--- pets, mount items, recipes, and transmoggable gear. Returns true
--- (collected), false (missing), or nil (item is not a collectible) — unlike
--- #uncollected, which is true for every item that is not collected,
--- including non-collectibles. Cached on the props table (0 = nil,
--- 1 = collected, 2 = missing).
-local function ResolveCollectionStatus(p)
-    local cached = rawget(p, "_collectionStatus")
-    if cached ~= nil then
-        if cached == 0 then return nil end
-        return cached == 1
-    end
-
-    local status
-    if p.isToy or p.isMount or p.isPet then
-        if p.isCollected then
-            status = true
-        elseif p.isPet and p.petSpeciesID == 0 then
-            -- Companion pet items with no species mapping: fall back to the
-            -- "Already Known" tooltip line.
-            status = p.isAlreadyKnown == true
-        elseif p.isMount and C_MountJournal.GetMountFromItem(p.id) == nil then
-            status = p.isAlreadyKnown == true
-        else
-            status = false
-        end
-    elseif PropsIsRecipeItem(p) then
-        status = ns.RecipeKnownUtil:IsRecipeKnown(p.id)
-    elseif p.hasAppearance then
-        status = p.isAppearanceCollected == true
-    end
-
-    rawset(p, "_collectionStatus", status == nil and 0 or (status and 1 or 2))
-    return status
-end
-
-RegisterKeyword("collectionknown",   function(p) return ResolveCollectionStatus(p) == true end)
-RegisterKeyword("collectionmissing", function(p) return ResolveCollectionStatus(p) == false end)
-
 -- ============================================================================
 -- SECTION 9: LAYER 1 — BUILDPROPS
 -- ============================================================================
@@ -2294,7 +2252,7 @@ local function PopulateBaseProps(props, itemID, hyperlink)
 
     props.isMount = (props.classID == Enum.ItemClass.Miscellaneous and props.subClassID == Enum.ItemMiscellaneousSubclass.Mount)
     props.isCosmetic = (props.classID == Enum.ItemClass.Armor and props.subClassID == Enum.ItemArmorSubclass.Cosmetic)
-    props.isCollected = ResolveCollected(itemID, props.classID, props.subClassID, hyperlink)
+    props.isCollected = ItemCollectionOwned(itemID, hyperlink)
 
     -- ---- Quest item (identity portion; BuildProps OR-s in C_Container quest-info fallback) ----
     props.isQuestItem = (classID == Enum.ItemClass.Questitem)
@@ -3278,6 +3236,14 @@ function PE:SafeEvaluate(compiled, props)
         return false, tostring(result)
     end
     return result, nil
+end
+
+--- True when the item is a profession recipe scroll, after ITEM_ID_OVERRIDES.
+--- Identity-tier only (no BuildProps). Use from Collectibles key resolution.
+---@param itemID number
+---@return boolean
+function PE:IsRecipeItemIdentity(itemID)
+    return IdentityIsRecipeItem(itemID)
 end
 
 --- True when the item is a profession recipe scroll, after ITEM_ID_OVERRIDES.

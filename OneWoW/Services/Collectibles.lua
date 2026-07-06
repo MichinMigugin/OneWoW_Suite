@@ -486,6 +486,48 @@ function Collectibles.GetCollectionState(key)
 end
 
 -- ---------------------------------------------------------------------------
+-- Item-facing collection facade
+-- ---------------------------------------------------------------------------
+
+local BATTLE_PET_CAGE_ID = 82800
+
+--- Whether an item grants a collectible and if the current character owns it.
+--- Returns nil when the item is not a collectible (no collection UI). Otherwise
+--- `{ applicable = true, collected = bool, key = string, type = string, ... }`
+--- with type-specific fields merged from `GetCollectionState`.
+---@param itemID number
+---@param hyperlink string|nil
+---@return table|nil status
+function Collectibles.GetItemCollectionStatus(itemID, hyperlink)
+    itemID = CoerceID(itemID)
+    if not itemID then return nil end
+
+    local key = Collectibles.ResolveKeyFromItem(itemID, hyperlink)
+    if not key then return nil end
+
+    local descriptor = Collectibles.ParseKey(key)
+    if not descriptor then return nil end
+
+    local state = Collectibles.GetCollectionState(key)
+    local collected = state and state.collected == true or false
+
+    local status = {
+        applicable = true,
+        collected = collected,
+        key = key,
+        type = descriptor.type,
+    }
+    if state then
+        for field, value in pairs(state) do
+            if field ~= "collected" then
+                status[field] = value
+            end
+        end
+    end
+    return status
+end
+
+-- ---------------------------------------------------------------------------
 -- Item -> key resolution
 -- ---------------------------------------------------------------------------
 
@@ -502,8 +544,9 @@ end
 --- `sourceID == itemModifiedAppearanceID`, so an equippable item with a
 --- transmog source maps straight to `appearance:source:<id>`.
 ---@param itemID number
+---@param hyperlink string|nil battle-pet cage links need the hyperlink for species
 ---@return string|nil key
-function Collectibles.ResolveKeyFromItem(itemID)
+function Collectibles.ResolveKeyFromItem(itemID, hyperlink)
     itemID = CoerceID(itemID)
     if not itemID then return nil end
 
@@ -517,6 +560,9 @@ function Collectibles.ResolveKeyFromItem(itemID)
     end
 
     local speciesID = select(13, C_PetJournal.GetPetInfoByItemID(itemID))
+    if not speciesID and itemID == BATTLE_PET_CAGE_ID and hyperlink then
+        speciesID = tonumber(hyperlink:match("|Hbattlepet:(%d+):"))
+    end
     if speciesID then
         return Collectibles.BuildKey("pet", speciesID)
     end
@@ -528,12 +574,12 @@ function Collectibles.ResolveKeyFromItem(itemID)
     -- A recipe-class item teaches a craft — it is a recipe collectible in its own
     -- right (and, for decor recipes, does NOT map to the crafted decor's catalog
     -- entry), so classify by item class before the decor/transmog fallbacks.
-    if ns.PredicateEngine:IsRecipeItem(itemID) then
+    if ns.PredicateEngine:IsRecipeItemIdentity(itemID) then
         return Collectibles.BuildKey("recipe", itemID)
     end
 
     -- Housing decor items grant a catalog Decor entry (rooms are not records).
-    local decorEntry = C_HousingCatalog.GetCatalogEntryInfoByItem(itemID)
+    local decorEntry = C_HousingCatalog.GetCatalogEntryInfoByItem(hyperlink or itemID)
     if decorEntry and decorEntry.entryType == DECOR_ENTRY_TYPE and decorEntry.recordID then
         return Collectibles.BuildKey("decor", decorEntry.recordID)
     end
@@ -546,7 +592,7 @@ function Collectibles.ResolveKeyFromItem(itemID)
         return Collectibles.BuildKey("set", setID)
     end
 
-    local _, sourceID = C_TransmogCollection.GetItemInfo(itemID)
+    local _, sourceID = C_TransmogCollection.GetItemInfo(hyperlink or itemID)
     if sourceID then
         return Collectibles.BuildKey("appearance", "source", sourceID)
     end
