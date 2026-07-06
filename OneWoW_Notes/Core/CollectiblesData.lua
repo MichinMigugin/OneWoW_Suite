@@ -12,7 +12,7 @@ local _, ns = ...
 -- namespaces and both are referenced in this file.
 
 local Collectibles = ns.DataModule:New("collectibles", "collectibleCustomCategories", {
-    "General", "Mount", "Transmog", "Want List", "Delete List", "Other"
+    "General", "Want List", "Delete List", "Other"
 })
 ns.Collectibles = Collectibles
 
@@ -138,6 +138,49 @@ function Collectibles:SetIntent(key, intent)
     end
 
     self:SaveCollectible(key, record)
+end
+
+-- ---------------------------------------------------------------------------
+-- One-time legacy category migration
+-- ---------------------------------------------------------------------------
+-- The "Mount" and "Transmog" built-in categories were retired because Type
+-- already conveys that distinction. Remap any record still filed under them (and
+-- any recycle-bin `prevCategory` stash) onto "General" so nothing is stranded in
+-- a category the UI no longer offers. Runs once, guarded by an account flag.
+local LEGACY_CATEGORY_REMAP = { Mount = "General", Transmog = "General" }
+
+function Collectibles:MigrateLegacyCategories()
+    if not (ns.db and ns.db.global) then return end
+    if ns.db.global.collectibleCategoriesMigrated then return end
+
+    -- Snapshot keys first: SaveCollectible invalidates the merged cache, so
+    -- mutating while iterating GetAll() would be undefined.
+    local keys = {}
+    for key, record in pairs(self:GetAll()) do
+        if type(record) == "table" then keys[#keys + 1] = key end
+    end
+
+    for _, key in ipairs(keys) do
+        local record = self:GetCollectible(key)
+        if record then
+            local changed = false
+            local mapped = LEGACY_CATEGORY_REMAP[record.category]
+            if mapped then
+                record.category = mapped
+                changed = true
+            end
+            local mappedPrev = LEGACY_CATEGORY_REMAP[record.prevCategory]
+            if mappedPrev then
+                record.prevCategory = mappedPrev
+                changed = true
+            end
+            if changed then
+                self:SaveCollectible(key, record)
+            end
+        end
+    end
+
+    ns.db.global.collectibleCategoriesMigrated = true
 end
 
 -- ---------------------------------------------------------------------------

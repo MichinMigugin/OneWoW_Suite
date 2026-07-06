@@ -434,7 +434,7 @@ local function AddSourceToCollectibles(sourceID, quiet)
         return false
     end
 
-    notesAPI.UpsertCollectible(key, { category = "Transmog", storage = "account" })
+    notesAPI.UpsertCollectible(key, { storage = "account" })
 
     if not quiet and notesAPI.OpenCollectible then
         notesAPI.OpenCollectible(key)

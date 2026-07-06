@@ -47,6 +47,9 @@ local defaults = {
         collectiblePurgeTTLDays  = 7,
         -- One-time legacy mount-blob migration guard (set true after the pass).
         collectibleMountMigrated = false,
+        -- One-time guard for remapping the retired "Mount"/"Transmog" built-in
+        -- collectible categories onto "General" (set true after the pass).
+        collectibleCategoriesMigrated = false,
     },
     char = {
         notes        = {},

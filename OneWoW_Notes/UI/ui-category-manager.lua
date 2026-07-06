@@ -38,7 +38,7 @@ local BUILT_IN_CATEGORIES = {
         "General", "Transmog", "Crafting", "Quest", "Rare", "Collectible"
     },
     collectibles = {
-        "General", "Mount", "Transmog", "Want List", "Other"
+        "General", "Want List", "Other"
     },
 }
 

@@ -262,7 +262,7 @@ function Players:MigrateMountBlobForNote(fullName, record)
                 -- Create the shared collectible row once (never clobber an existing
                 -- one), mirroring the ContextMenus upsert.
                 if ns.Collectibles and not ns.Collectibles:GetCollectible(key) then
-                    ns.Collectibles:UpsertCollectible(key, { category = "Mount" })
+                    ns.Collectibles:UpsertCollectible(key)
                 end
                 blocks[i] = line
                 changed = true

@@ -141,11 +141,11 @@ local function HandleAddMountInfo(unit)
                 return
             end
 
-            -- Ensure the shared collectible row exists (default category "Mount" on
+            -- Ensure the shared collectible row exists (defaults to "General" on
             -- create); never touch an existing row so the user's own category/intent
             -- survives re-adding the mount from another player.
             if not OneWoW_Notes_API.GetCollectible(key) then
-                OneWoW_Notes_API.UpsertCollectible(key, { category = "Mount" })
+                OneWoW_Notes_API.UpsertCollectible(key)
             end
 
             local link = OneWoW_Notes_API.BuildCollectibleLink and OneWoW_Notes_API.BuildCollectibleLink(key)

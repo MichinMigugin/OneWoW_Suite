@@ -117,6 +117,9 @@ local function OnEnable()
     if ns.Players and ns.Players.MigrateLegacyMountBlobs then
         ns.Players:MigrateLegacyMountBlobs()
     end
+    if ns.Collectibles and ns.Collectibles.MigrateLegacyCategories then
+        ns.Collectibles:MigrateLegacyCategories()
+    end
     if ns.NPCs and ns.NPCs.Initialize then
         ns.NPCs:Initialize()
     end
