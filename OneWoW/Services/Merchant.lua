@@ -33,7 +33,6 @@ local C_Map = C_Map
 local C_MerchantFrame = C_MerchantFrame
 local C_CurrencyInfo = C_CurrencyInfo
 local C_Item = C_Item
-local C_TooltipInfo = C_TooltipInfo
 local MerchantFrame = MerchantFrame
 local ipairs, pairs, next, time, tonumber, type = ipairs, pairs, next, time, tonumber, type
 local floor = math.floor
@@ -179,25 +178,7 @@ end
 -- them. RED_FONT_COLOR is (1, 0.125, 0.125): a strong red channel with weak
 -- green/blue. Returns the newline-joined reason(s), or nil when none.
 local function ScanBlockReason(merchantIndex)
-    local td = C_TooltipInfo.GetMerchantItem(merchantIndex)
-    if not td or not td.lines then return nil end
-
-    local reasons
-    for _, line in ipairs(td.lines) do
-        local c = line.leftColor
-        if c and c.r and c.r > 0.8 and c.g < 0.4 and c.b < 0.4 then
-            local text = line.leftText
-            if text and text ~= "" then
-                text = (text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
-                if text ~= "" then
-                    reasons = reasons or {}
-                    reasons[#reasons + 1] = text
-                end
-            end
-        end
-    end
-    if not reasons then return nil end
-    return table.concat(reasons, "\n")
+    return ns.TooltipScanner:ScanMerchantBlockReason(merchantIndex)
 end
 
 -- Build an ephemeral snapshot of the currently open merchant. Returns the

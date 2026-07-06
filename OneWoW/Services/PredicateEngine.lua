@@ -52,26 +52,15 @@ local GetCursorInfo = GetCursorInfo
 -- identityPropsCache:    keyed by item-identity (hyperlink or itemID/pet stats),
 --                        stores the slot-INDEPENDENT subset of props. Shared
 --                        across every slot holding the same item.
--- tooltipCache:          keyed by "bagID:slotID", stores concatenated tooltip
---                        left-text (slot-mode).
--- tooltipTextLinkCache:  keyed by hyperlink, stores concatenated tooltip
---                        left-text (hyperlink-mode).
--- tooltipDataCache:      keyed by "bagID:slotID", stores the raw TooltipData
---                        snapshot. Shared by ResolveTooltipFields and
---                        ResolveBind so both pay at most one
---                        C_TooltipInfo.GetBagItem call per slot.
--- tooltipDataLinkCache:  keyed by hyperlink, stores the raw TooltipData
---                        snapshot. Hyperlink-mode sibling of tooltipDataCache.
+-- tooltip caches: owned by TooltipScanner (bagDataCache, linkDataCache,
+-- bagTextCache, linkTextCache). PredicateEngine forwards through thin wrappers.
 -- compiledCache:         keyed by expression string, stores compiled
 --                        function(props)->bool.
 
 local propsCache = {}
 local identityPropsCache = {}
-local tooltipCache = {}
-local tooltipTextLinkCache = {}
-local tooltipDataCache = {}
-local tooltipDataLinkCache = {}
 local compiledCache = {}
+local Scanner = ns.TooltipScanner
 
 -- ============================================================================
 -- SECTION 3: CONSTANTS AND LOCALE PATTERNS
@@ -1296,118 +1285,26 @@ local function ParseItemLink(link)
     return t
 end
 
--- ---------- ConcatTooltipLines ----------
--- Joins a TooltipData.lines array into a single newline-separated string of
--- left-text. Returns "" when the tooltipData is nil/empty so callers can treat
--- "no result" uniformly.
-local function ConcatTooltipLines(tooltipData)
-    if not tooltipData or not tooltipData.lines or #tooltipData.lines == 0 then
-        return ""
-    end
-    local parts = {}
-    for _, line in ipairs(tooltipData.lines) do
-        parts[#parts + 1] = line.leftText or ""
-    end
-    return tconcat(parts, "\n")
-end
+-- ---------- Tooltip data (delegates to TooltipScanner) ----------
 
--- ---------- GetTooltipData ----------
--- Cached fetch of the raw TooltipData snapshot for a bag slot. Shared by
--- GetTooltipText (text extraction) and ResolveBind (bind-line scan) so we
--- pay at most one C_TooltipInfo.GetBagItem call per slot per invalidation
--- window. Returns nil if the API has nothing for the slot; nil results are
--- NOT cached so the next call can retry once data streams.
 local function GetTooltipData(bagID, slotID)
-    if not bagID or not slotID then return nil end
-    local key = bagID .. ":" .. slotID
-    local cached = tooltipDataCache[key]
-    local Profile = OneWoW_Bags_API and OneWoW_Bags_API.GetProfile()
-    if cached then
-        if Profile then
-            Profile:Start("tooltipDataCache.hit")
-            Profile:Stop("tooltipDataCache.hit")
-        end
-        return cached
-    end
-
-    if Profile then Profile:Start("tooltipDataCache.miss") end
-    local td = C_TooltipInfo.GetBagItem(bagID, slotID)
-    if td then tooltipDataCache[key] = td end
-    if Profile then Profile:Stop("tooltipDataCache.miss") end
-    return td
+    return Scanner:GetBagItemData(bagID, slotID)
 end
 
--- ---------- GetTooltipDataByHyperlink ----------
--- Hyperlinkless sibling of GetTooltipData. Used for callers that have only a
--- hyperlink (toast-loot, identity-tier fallback) so ResolveBind and
--- GetTooltipTextByHyperlink share one C_TooltipInfo.GetHyperlink call per
--- hyperlink. Nil results are NOT cached (same retry rationale as
--- GetTooltipData).
 local function GetTooltipDataByHyperlink(hyperlink)
-    if not hyperlink or hyperlink == "" then return nil end
-    local cached = tooltipDataLinkCache[hyperlink]
-    local Profile = OneWoW_Bags_API and OneWoW_Bags_API.GetProfile()
-    if cached then
-        if Profile then
-            Profile:Start("tooltipDataLinkCache.hit")
-            Profile:Stop("tooltipDataLinkCache.hit")
-        end
-        return cached
-    end
-
-    if Profile then Profile:Start("tooltipDataLinkCache.miss") end
-    local td = C_TooltipInfo.GetHyperlink(hyperlink)
-    if td then tooltipDataLinkCache[hyperlink] = td end
-    if Profile then Profile:Stop("tooltipDataLinkCache.miss") end
-    return td
+    return Scanner:GetHyperlinkData(hyperlink)
 end
 
--- ---------- GetTooltipText ----------
--- Returns the concatenated left-text of all tooltip lines for a bag slot.
--- Cached per bagID:slotID; wiped on BAG_UPDATE_DELAYED.
---
--- Empty results are NOT cached. Lua treats "" as truthy, so caching the empty
--- string would make `if tooltipCache[key]` short-circuit forever once a single
--- pre-data-streaming evaluation poisoned the slot. Returning "" without
--- caching lets the next call retry C_TooltipInfo when data is more likely to
--- be available.
 local function GetTooltipText(bagID, slotID)
-    if not bagID or not slotID then return "" end
-    local key = bagID .. ":" .. slotID
-    local cached = tooltipCache[key]
-    if cached then return cached end
-
-    local text = ConcatTooltipLines(GetTooltipData(bagID, slotID))
-    if text == "" then
-        return ""
-    end
-
-    tooltipCache[key] = text
-    return text
+    return Scanner:GetBagItemText(bagID, slotID)
 end
 
--- ---------- GetTooltipTextByHyperlink ----------
--- Identity-tier sibling of GetTooltipText. Used as the lazy resolver's
--- fallback when a caller invokes BuildProps without bagID/slotID (e.g.
--- toast-loot, which only has a hyperlink). Returns the hyperlink's generic
--- tooltip body, which omits contextual lines (`<Right Click to Open>`,
--- "You may trade for X minutes", per-character "Already Known") that the
--- bag tooltip would include -- callers that need those must supply slot
--- context.
---
--- Empty results are NOT cached for the same reason as GetTooltipText.
 local function GetTooltipTextByHyperlink(hyperlink)
-    if not hyperlink or hyperlink == "" then return "" end
-    local cached = tooltipTextLinkCache[hyperlink]
-    if cached then return cached end
+    return Scanner:GetHyperlinkText(hyperlink)
+end
 
-    local text = ConcatTooltipLines(GetTooltipDataByHyperlink(hyperlink))
-    if text == "" then
-        return ""
-    end
-
-    tooltipTextLinkCache[hyperlink] = text
-    return text
+local function GetPropsTooltipData(props)
+    return Scanner:GetPropsData(props)
 end
 
 -- ---------- GetBattlePetData ----------
@@ -1526,16 +1423,7 @@ end
 -- lookup yielded text. Callers (propsMT.__index, ResolveBaseCategory) use
 -- this to avoid persisting predicate verdicts that depended on missing data.
 local function ResolveTooltipFields(props)
-    local bagID, slotID = rawget(props, "_bagID"), rawget(props, "_slotID")
-    local hyperlink = rawget(props, "hyperlink")
-
-    local tt = ""
-    if bagID and slotID then
-        tt = GetTooltipText(bagID, slotID)
-    end
-    if tt == "" and hyperlink then
-        tt = GetTooltipTextByHyperlink(hyperlink)
-    end
+    local tt = Scanner:GetPropsText(props)
 
     if tt == "" then
         rawset(props, "hasCharges", false)
@@ -1553,11 +1441,13 @@ local function ResolveTooltipFields(props)
 
     rawset(props, "tooltipText",        tt)
     rawset(props, "hasCharges",         strfind(tt, "(%d+) |4" .. chargesPattern) ~= nil)
-    rawset(props, "hasUseAbility",      strfind(tt, "^"..USE_COLON) ~= nil or strfind(tt, "\n"..USE_COLON, 1, true) ~= nil)
-    rawset(props, "hasEquipAbility",    strfind(tt, "^"..ITEM_SPELL_TRIGGER_ONEQUIP) ~= nil or strfind(tt, "\n"..ITEM_SPELL_TRIGGER_ONEQUIP, 1, true) ~= nil)
+    rawset(props, "hasUseAbility",      Scanner:HasUseEffect(tt))
+    rawset(props, "hasEquipAbility",    Scanner:HasEquipEffect(tt))
     rawset(props, "isTradeableLoot",    strfind(tt, tradeablePattern, 1, true) ~= nil)
 
-    local alreadyKnown = strfind(tt, ITEM_SPELL_KNOWN, 1, true) ~= nil
+    local td = Scanner:GetPropsData(props)
+    local alreadyKnown = td and Scanner:IsAlreadyKnown(td)
+        or Scanner:IsAlreadyKnownText(tt)
     if not alreadyKnown and rawget(props, "isRecipe") then
         local Util = OneWoW.RecipeKnownUtil
         if Util and Util:IsRecipeKnown(rawget(props, "id"), GetCollectionContext(props)) == true then
@@ -1592,7 +1482,6 @@ end
 -- not match because we cannot infer current-bound state for an item the
 -- player does not own. This is intentional and matches user expectations.
 local TDIB = Enum.TooltipDataItemBinding
-local BIND_LINE_TYPE = 20
 
 local BIND_FIELDS = { "isSoulbound", "isBOE", "isBOA", "isBOU", "isWUE", "isWarbound" }
 
@@ -1600,16 +1489,6 @@ local function ClearBindFields(props)
     for i = 1, #BIND_FIELDS do
         rawset(props, BIND_FIELDS[i], false)
     end
-end
-
-local function ScanBondingFromTooltipData(tooltipData)
-    if not tooltipData then return nil end
-    for _, line in ipairs(tooltipData.lines) do
-        if line.type == BIND_LINE_TYPE and line.bonding ~= nil then
-            return line.bonding
-        end
-    end
-    return nil
 end
 
 -- source: "bag" or "link". Controls whether BindOnPickup is treated as state
@@ -1656,7 +1535,7 @@ local function ResolveBind(props)
         source = "link"
     end
 
-    local bonding = ScanBondingFromTooltipData(tooltipData)
+    local bonding = Scanner:GetBindState(tooltipData)
 
     if bonding == nil then
         ClearBindFields(props)
@@ -1841,21 +1720,6 @@ local function GetTooltipLineText(row)
     return StripTooltipLineText(row.rightText)
 end
 
----@param props table
----@return table|nil
-local function GetPropsTooltipData(props)
-    local bagID, slotID = rawget(props, "_bagID"), rawget(props, "_slotID")
-    local hyperlink = rawget(props, "hyperlink")
-    local tooltipData
-    if bagID and slotID then
-        tooltipData = GetTooltipData(bagID, slotID)
-    end
-    if not tooltipData and hyperlink then
-        tooltipData = GetTooltipDataByHyperlink(hyperlink)
-    end
-    return tooltipData
-end
-
 ---@param bonusIDs table|nil
 ---@return boolean
 local function HasCurrentSeasonBonusID(bonusIDs)
@@ -2024,14 +1888,7 @@ end)
 -- #teachable: the item's tooltip carries a "Use: Teaches you ..." learn line.
 -- True for unlearned recipes, mount/pet/toy teaching items, etc.
 RegisterKeyword("teachable", function(p)
-    local td = GetPropsTooltipData(p)
-    if not (td and td.lines) then return false end
-    for _, line in ipairs(td.lines) do
-        if line.type == Enum.TooltipDataLineType.ItemSpellTriggerLearn then
-            return true
-        end
-    end
-    return false
+    return Scanner:GetLearnSpellID(Scanner:GetPropsData(p)) ~= nil
 end)
 
 -- ============================================================================
@@ -3529,10 +3386,7 @@ end
 function PE:InvalidateCache()
     wipe(compiledCache)
     wipe(propsCache)
-    wipe(tooltipCache)
-    wipe(tooltipTextLinkCache)
-    wipe(tooltipDataCache)
-    wipe(tooltipDataLinkCache)
+    Scanner:InvalidateTooltipCaches()
     wipe(identityPropsCache)
     currentSeasonLabelCache = nil
     knownProfs = nil
@@ -3544,10 +3398,7 @@ end
 --- level, equipped status) can shift between bag updates.
 function PE:InvalidatePropsCache()
     wipe(propsCache)
-    wipe(tooltipCache)
-    wipe(tooltipTextLinkCache)
-    wipe(tooltipDataCache)
-    wipe(tooltipDataLinkCache)
+    Scanner:InvalidateTooltipCaches()
     wipe(identityPropsCache)
 end
 
@@ -3556,10 +3407,9 @@ end
 --- already-resolved identity props.
 ---
 --- Walks propsCache once, evicting entries whose `.id` is in idSet and
---- collecting their slot keys so paired caches (tooltipCache here,
---- categoryCache in OneWoW_Bags.Categories) can be cleaned without re-
---- walking. identityPropsCache and tooltipTextLinkCache (hyperlink-keyed)
---- are walked alongside.
+--- collecting their slot keys so TooltipScanner bag-slot caches can be
+--- cleaned without re-walking. identityPropsCache hyperlink entries are
+--- walked alongside.
 ---@param idSet table<number, boolean>|nil
 ---@return table<string, boolean> evictedSlotKeys
 function PE:InvalidateItemIDs(idSet)
@@ -3569,13 +3419,11 @@ function PE:InvalidateItemIDs(idSet)
     for key, entry in pairs(propsCache) do
         if entry.id and idSet[entry.id] then
             propsCache[key] = nil
-            tooltipCache[key] = nil
-            tooltipDataCache[key] = nil
+            Scanner:InvalidateBagSlot(key)
             evictedSlotKeys[key] = true
             local hyperlink = entry.hyperlink
             if hyperlink then
-                tooltipTextLinkCache[hyperlink] = nil
-                tooltipDataLinkCache[hyperlink] = nil
+                Scanner:InvalidateHyperlink(hyperlink)
             end
         end
     end
@@ -3585,8 +3433,7 @@ function PE:InvalidateItemIDs(idSet)
             identityPropsCache[key] = nil
             local hyperlink = entry.hyperlink
             if hyperlink then
-                tooltipTextLinkCache[hyperlink] = nil
-                tooltipDataLinkCache[hyperlink] = nil
+                Scanner:InvalidateHyperlink(hyperlink)
             end
         end
     end
@@ -3601,7 +3448,7 @@ end
 ---@param slotID number|nil
 ---@return string
 function PE:GetTooltipText(bagID, slotID)
-    return GetTooltipText(bagID, slotID)
+    return Scanner:GetBagItemText(bagID, slotID)
 end
 
 -- ============================================================================

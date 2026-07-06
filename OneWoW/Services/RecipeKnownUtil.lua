@@ -8,10 +8,8 @@ local sessionMap = {}
 
 local C_TradeSkillUI = C_TradeSkillUI
 local C_SpellBook = C_SpellBook
-local C_TooltipInfo = C_TooltipInfo
-local C_Container = C_Container
+local TooltipScanner = ns.TooltipScanner
 
-local LEARN_LINE_TYPE = Enum.TooltipDataLineType.ItemSpellTriggerLearn
 local SPELL_BANK_PLAYER = Enum.SpellBookSpellBank.Player
 
 local function GetSavedMap()
@@ -44,62 +42,12 @@ ns.ProfessionRecipe.RegisterScanCallback("RecipeKnownUtil", function(scan)
     end
 end)
 
-local function FindBagSlotForItem(itemID)
-    for bag = 0, 4 do
-        local slots = C_Container.GetContainerNumSlots(bag)
-        for slot = 1, slots do
-            local info = C_Container.GetContainerItemInfo(bag, slot)
-            if info and info.itemID == itemID then
-                return bag, slot
-            end
-        end
-    end
-end
-
--- Contextual tooltip first: bag slot and live tooltip data include player-evaluated
--- lines such as ITEM_SPELL_KNOWN that GetItemByID omits.
 local function ResolveTooltipData(itemID, context)
-    if context and context.tooltipData then
-        return context.tooltipData
+    context = context or {}
+    if not context.itemID then
+        context.itemID = itemID
     end
-
-    local bagID = context and context.bagID
-    local slotID = context and context.slotID
-    if not (bagID and slotID) then
-        bagID, slotID = FindBagSlotForItem(itemID)
-    end
-    if bagID and slotID then
-        local td = C_TooltipInfo.GetBagItem(bagID, slotID)
-        if td then return td end
-    end
-
-    local hyperlink = context and context.hyperlink
-    if hyperlink then
-        local td = C_TooltipInfo.GetHyperlink(hyperlink)
-        if td then return td end
-    end
-
-    return C_TooltipInfo.GetItemByID(itemID)
-end
-
-local function GetSpellIDFromTooltipData(td)
-    if not td or not td.lines then return nil end
-    for _, line in ipairs(td.lines) do
-        if line.type == LEARN_LINE_TYPE and line.spellID then
-            return line.spellID
-        end
-    end
-    return nil
-end
-
-local function TooltipSaysAlreadyKnown(td)
-    if not td or not td.lines then return false end
-    for _, line in ipairs(td.lines) do
-        if line.leftText and line.leftText == ITEM_SPELL_KNOWN then
-            return true
-        end
-    end
-    return false
+    return TooltipScanner:ResolveItemData(context)
 end
 
 -- Legacy profession books (e.g. Master Cookbook) expose a teach *spell* on the
@@ -122,7 +70,7 @@ local function GetRecipeIDCandidates(itemID, context)
     if saved and saved[itemID] then add(saved[itemID]) end
 
     local td = ResolveTooltipData(itemID, context)
-    local teachSpellID = GetSpellIDFromTooltipData(td)
+    local teachSpellID = TooltipScanner:GetLearnSpellID(td)
     if teachSpellID then
         add(teachSpellID)
         -- Teach-spell line only: map entries from ProfessionRecipe scans are
@@ -188,7 +136,7 @@ function RecipeKnownUtil:IsRecipeKnown(itemID, context)
     if not itemID then return nil end
 
     local td = ResolveTooltipData(itemID, context)
-    if TooltipSaysAlreadyKnown(td) then
+    if TooltipScanner:IsAlreadyKnown(td) then
         return true
     end
 
@@ -321,7 +269,7 @@ local function FindRecipes(charData, profName)
 end
 
 local function DetectProfessionFromTooltip(itemID)
-    local td = C_TooltipInfo.GetItemByID(itemID)
+    local td = TooltipScanner:GetItemByIDData(itemID)
     if not td or not td.lines then return nil end
     local profNames = GetAllProfessionNames()
     local lastMatch = nil

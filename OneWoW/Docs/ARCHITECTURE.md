@@ -764,6 +764,7 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | Service | File | Consumed by |
 |---|---|---|
 | `OneWoW.PredicateEngine` | `Services/PredicateEngine.lua` | Bags (search/categories), AltTracker, ShoppingList, DirectDeposit, QoL; core overlay + tooltip engines |
+| `OneWoW.TooltipScanner` | `Services/TooltipScanner.lua` | `C_TooltipInfo` routing, tooltip caches, structured line extractors — see [TOOLTIP_SCANNER.md](TOOLTIP_SCANNER.md) |
 | `OneWoW.OverlayEngine` | `Services/Overlays2/engine.lua` (definitions/renderer/surfaces siblings in `Services/Overlays2/`) | Bag integrations (core `Integrations/*`), `OneWoW_Bags` |
 | `OneWoW.OverlayIcons` | `Services/overlay-icons.lua` | Overlay engine rendering, QoL overlays tab |
 | `OneWoW.TooltipEngine` | `Services/tooltip-engine.lua` | Provider registration from QoL, Bags, DirectDeposit |
@@ -772,7 +773,7 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | `OneWoW.UpgradeDetection` | `Services/upgrade-detection.lua` | Overlay engine, Bags |
 | `OneWoW.ProfessionRecipe` | `Services/ProfessionRecipe.lua` | AltTracker Professions (persist) + Accounting (trainer costs), Catalog Tradeskills (scanCache), RecipeKnownUtil, overlay-engine, Trackers, QoL bagbar/professionspanel/autoopen — see [PROFESSION_RECIPE.md](PROFESSION_RECIPE.md) / §8.7 |
 | `OneWoW.Merchant` | `Services/Merchant.lua` | Catalog Vendors (merge), `OneWoW_Notes` collectibles, overlay-engine / Accounting / Bags / QoL merchant sites — single `MERCHANT_*` owner, scan/show/closed channels, ephemeral snapshots, no SV; see [MERCHANT.md](MERCHANT.md) / §8.8 |
-| `OneWoW.RecipeKnownUtil` | `Services/RecipeKnownUtil.lua` | Overlay engine, tooltip providers |
+| `OneWoW.RecipeKnownUtil` | `Services/RecipeKnownUtil.lua` | Overlay engine, tooltip providers; delegates tooltip reads to TooltipScanner |
 | `OneWoW.Collectibles` | `Services/Collectibles.lua` | `OneWoW_Notes` (Collectibles data/tab), ContextMenus, Trackers (planned) — collectible key grammar + live display/state, no SV; see [COLLECTIBLES.md](COLLECTIBLES.md) |
 | `OneWoW.AHItemKeys` | `Services/AHItemKeys.lua` | AH scanners (`OneWoW_AltTracker_Auctions`), `ItemPrices` link-aware lookups |
 | `OneWoW.ItemPrices` | `Services/ItemPrices.lua` | Tooltip providers, overlay engine, AH source UI helpers |

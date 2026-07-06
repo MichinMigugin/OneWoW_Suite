@@ -63,10 +63,7 @@ Other binding values (`BindOnEquip`, `BindOnUse`, `Soulbound`, account variants,
 |---|---|---|---|
 | `propsCache` | `"bagID:slotID"` (slot context) or item-identity key (no slot) | Result of `BuildProps`: per-slot props or identity-only props | `InvalidatePropsCache`, `InvalidateCache`, matching entries in `InvalidateItemIDs` |
 | `identityPropsCache` | item-identity key | Slot-independent base props shared by every slot holding the same item identity | `InvalidatePropsCache`, `InvalidateCache`, matching entries in `InvalidateItemIDs` |
-| `tooltipCache` | `"bagID:slotID"` | Concatenated bag-tooltip left-text | `InvalidatePropsCache`, `InvalidateCache`, matching entries in `InvalidateItemIDs` |
-| `tooltipTextLinkCache` | hyperlink | Concatenated hyperlink-tooltip left-text | `InvalidatePropsCache`, `InvalidateCache`, matching entries in `InvalidateItemIDs` |
-| `tooltipDataCache` | `"bagID:slotID"` | Raw `TooltipData` from `C_TooltipInfo.GetBagItem` | `InvalidatePropsCache`, `InvalidateCache`, matching entries in `InvalidateItemIDs` |
-| `tooltipDataLinkCache` | hyperlink | Raw `TooltipData` from `C_TooltipInfo.GetHyperlink` | `InvalidatePropsCache`, `InvalidateCache`, matching entries in `InvalidateItemIDs` |
+| `tooltipCache` / `tooltipDataCache` / link variants | — | Owned by **`OneWoW.TooltipScanner`** — see [TOOLTIP_SCANNER.md](TOOLTIP_SCANNER.md) | `TooltipScanner:InvalidateTooltipCaches()` via `PE:InvalidatePropsCache` / `PE:InvalidateCache` / `PE:InvalidateItemIDs` |
 | `compiledCache` | Expression string | Compiled `function(props) -> bool` | `InvalidateCache`, `RegisterKeyword`, `RegisterProperty` |
 | `knownProfs` | (single set) | Lowercase profession-name set used by `#myprofs` | `InvalidateCache`, `InvalidateKnownProfessions` |
 

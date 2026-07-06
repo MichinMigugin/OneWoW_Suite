@@ -9,6 +9,7 @@ local SERVICE_KEYS = {
     "UI",
     "Restriction",
     "PredicateEngine",
+    "TooltipScanner",
     "OverlayEngine",
     "Overlays2Defs",
     "Overlays2Renderer",
