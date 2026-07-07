@@ -330,6 +330,25 @@ function VPFilters.CheckVendorItemFilter(itemLink, filterType)
     return matches
 end
 
+local filterLabelKeys = {
+    ["Show All"] = "VENDOR_FILTER_SHOW_ALL",
+    ["Equipable"] = "VENDOR_FILTER_EQUIPABLE",
+    ["Weapons"] = "VENDOR_FILTER_WEAPONS",
+    ["Patterns"] = "VENDOR_FILTER_ALL_PATTERNS",
+    ["Consumables"] = "VENDOR_FILTER_CONSUMABLES",
+    ["Reagents"] = "VENDOR_REAGENTS",
+    ["Cosmetic Items"] = "VENDOR_FILTER_COSMETICS",
+    ["Alchemy"] = "VENDOR_FILTER_PROF_ALCHEMY",
+    ["Blacksmithing"] = "VENDOR_FILTER_PROF_BLACKSMITHING",
+    ["Cooking"] = "VENDOR_FILTER_PROF_COOKING",
+    ["Enchanting"] = "VENDOR_FILTER_PROF_ENCHANTING",
+    ["Engineering"] = "VENDOR_FILTER_PROF_ENGINEERING",
+    ["Inscription"] = "VENDOR_FILTER_PROF_INSCRIPTION",
+    ["Jewelcrafting"] = "VENDOR_FILTER_PROF_JEWELCRAFTING",
+    ["Leatherworking"] = "VENDOR_FILTER_PROF_LEATHERWORKING",
+    ["Tailoring"] = "VENDOR_FILTER_PROF_TAILORING",
+}
+
 function VPFilters.ScanVendor()
     wipe(state.availableFilters)
     local nonEquipSlots = {
@@ -470,6 +489,21 @@ ns.VPComputeFilterMatch = ComputeFilterMatch
 -- ============================================================
 local VendorPanel = {}
 ns.VendorPanel = VendorPanel
+
+function VendorPanel:GetVendorFilterDisplayLabel(filterType)
+    if filterType == "Mounts" then return MOUNTS end
+    if filterType == "Pets" then return PETS end
+    if filterType == "Toys" then return L["VENDOR_EX_TOYS"] end
+    if filterType == "Decor" then return DECOR end
+    if filterType == "Housing" then return L["VENDOR_EX_HOUSING"] end
+    local invGlobal = slotFilterMap[filterType]
+    if invGlobal then
+        return _G[invGlobal]
+    end
+    local key = filterLabelKeys[filterType]
+    if key then return L[key] end
+    return filterType
+end
 
 --- True when our merchant-grid filtering should engage (hide + repaginate). We
 --- stand down entirely when VendorFilter is loaded (it owns the grid then).
@@ -858,7 +892,7 @@ end
 function VendorPanel:UpdateNeverSellButtonCount()
     local count = 0
     for _ in pairs(self:GetNeverSellList()) do count = count + 1 end
-    local text = string.format(L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", count)
+    local text = string.format(L["VENDOR_PROTECTED_ITEMS_COUNT"], count)
     if state.optionsTab and state.optionsTab.neverSellBtnText then
         state.optionsTab.neverSellBtnText:SetText(text)
     end
@@ -1304,11 +1338,11 @@ function VendorPanel:AddGearBelowIlvl(targetIlvl)
         end
     end
     if count > 0 then
-        print("OneWoW QoL: Added " .. count .. " items below iLvl " .. targetIlvl .. " to sell list.")
+        print("OneWoW QoL: " .. string.format(L["VENDOR_GEAR_ADDED"], count, targetIlvl))
         self:UpdatePreviewPanel()
         self:UpdateButton()
     else
-        print("OneWoW QoL: No gear found below iLvl " .. targetIlvl .. ".")
+        print("OneWoW QoL: " .. string.format(L["VENDOR_GEAR_NONE"], targetIlvl))
     end
 end
 

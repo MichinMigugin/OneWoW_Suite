@@ -25,6 +25,6 @@ function AutoSummonModule:CONFIRM_SUMMON()
         if UnitAffectingCombat("player") then return end
     end
 
-    ConfirmSummon()
+    C_SummonInfo.ConfirmSummon()
     StaticPopup_Hide("CONFIRM_SUMMON")
 end

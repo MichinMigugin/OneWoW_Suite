@@ -140,21 +140,28 @@ function Scanner:OnScan(scan)
     })
 end
 
+local function CollectCurrentProfessionNames()
+    local names = {}
+    for _, skillLineID in ipairs(C_TradeSkillUI.GetAllProfessionTradeSkillLines()) do
+        local info = C_TradeSkillUI.GetProfessionInfoBySkillLineID(skillLineID)
+        if info and (info.skillLevel or 0) > 0 then
+            local name = info.professionName
+            if info.parentProfessionName and info.parentProfessionName ~= "" then
+                name = info.parentProfessionName
+            end
+            if name and name ~= "" then
+                names[name] = true
+            end
+        end
+    end
+    return names
+end
+
 function Scanner:CleanupStaleProfessions(charKey)
     local db = ns:GetDB()
     if not db.scanCache or not db.scanCache[charKey] then return end
 
-    local currentProfNames = {}
-    local prof1, prof2, archaeology, fishing, cooking = GetProfessions()
-    local slots = { prof1, prof2, archaeology, fishing, cooking }
-    for _, index in ipairs(slots) do
-        if index then
-            local name = GetProfessionInfo(index)
-            if name then
-                currentProfNames[name] = true
-            end
-        end
-    end
+    local currentProfNames = CollectCurrentProfessionNames()
 
     for profName, _ in pairs(db.scanCache[charKey]) do
         if not currentProfNames[profName] then

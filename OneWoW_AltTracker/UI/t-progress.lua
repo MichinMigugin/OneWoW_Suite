@@ -454,7 +454,7 @@ local function CreateSubTabContent(contentFrame, columnsConfig, subTabKey)
     return contentFrame
 end
 
-local function CreateCommonCells(charRow, charData, charKey, _, _)
+local function CreateCommonCells(charRow, charData, charKey, endgameData, _)
     ns.UI.AddCommonCells(charRow, charKey, charData)
 
     local realmText = OneWoW_GUI:CreateFS(charRow, 12)

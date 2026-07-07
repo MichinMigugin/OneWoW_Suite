@@ -110,6 +110,7 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["MMSKIN_ACTION_TRACKING"] = "추적",
     ["MMSKIN_ACTION_MISSIONS"] = "임무",
     ["MMSKIN_ACTION_MAP"] = "지도",
+    ["MMSKIN_WORLD_MAP_BUTTON"] = "세계 지도",
 
     ["MMSKIN_SHOW_COMPARTMENT"] = "애드온 칸",
 

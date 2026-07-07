@@ -111,6 +111,7 @@ OneWoW.Locale:Register(M._scope, "esES", {
     ["MMSKIN_ACTION_TRACKING"] = "Rastreo",
     ["MMSKIN_ACTION_MISSIONS"] = "Misiones",
     ["MMSKIN_ACTION_MAP"] = "Mapa",
+    ["MMSKIN_WORLD_MAP_BUTTON"] = "Mapa del mundo",
 
     ["MMSKIN_SHOW_COMPARTMENT"] = "Compartimento de addons",
 

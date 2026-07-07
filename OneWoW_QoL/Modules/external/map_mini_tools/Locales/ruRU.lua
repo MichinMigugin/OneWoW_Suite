@@ -111,6 +111,7 @@ OneWoW.Locale:Register(M._scope, "ruRU", {
     ["MMSKIN_ACTION_TRACKING"] = "Слежение",
     ["MMSKIN_ACTION_MISSIONS"] = "Задания",
     ["MMSKIN_ACTION_MAP"] = "Карта",
+    ["MMSKIN_WORLD_MAP_BUTTON"] = "Карта мира",
 
     ["MMSKIN_SHOW_COMPARTMENT"] = "Отсек аддонов",
 

@@ -4506,7 +4506,7 @@ function ns.UI.OpenToQuest(questID)
     OneWoW.UI:SelectSubTab("catalog", "quests")
 
     C_Timer.After(0.15, function()
-        local panels = activePanels or ns.UI.questsPanels
+        local panels = ns.UI.questsPanels
         if not panels then return end
         local addon = GetDataAddon()
         if not addon then return end

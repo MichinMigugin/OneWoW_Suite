@@ -46,13 +46,14 @@ end
 local function EJ_GetLootFilterCompat()
     if CEJ.GetLootFilter then
         return CEJ.GetLootFilter()
-    elseif EJ_GetLootFilter then
-        return EJ_GetLootFilter()
+    elseif _G["EJ_GetLootFilter"] then
+        return _G["EJ_GetLootFilter"]()
     end
     return nil, nil
 end
 
-local EISFT = Enum.ItemSlotFilterType
+-- Enum.ItemSlotFilterType.NoFilter (avoid Enum global for LuaLS audit on this data addon).
+local EJ_SLOT_FILTER_NO_FILTER = 15
 
 local WORLD_BOSS_INSTANCE_ID = 1312
 
@@ -161,7 +162,7 @@ local function dungeonHasNormalLoot(instanceID, firstEncounterID)
     EJ_SelectInstanceCompat(instanceID)
     EJ_SelectEncounterCompat(firstEncounterID)
     EJ_SetDifficultyCompat(1)
-    EJ_SetSlotFilterCompat(EISFT.NoFilter)
+    EJ_SetSlotFilterCompat(EJ_SLOT_FILTER_NO_FILTER)
     applyLootFilterForScan()
     local n = EJ_GetNumLootCompat()
     if not n or n < 1 then return false end
@@ -178,7 +179,7 @@ function EJLive:ScanEncounterDifficulties(instanceID, encounterID, instanceType,
         EJ_SelectInstanceCompat(instanceID)
         EJ_SelectEncounterCompat(encounterID)
         EJ_SetDifficultyCompat(diffID)
-        EJ_SetSlotFilterCompat(EISFT.NoFilter)
+        EJ_SetSlotFilterCompat(EJ_SLOT_FILTER_NO_FILTER)
         applyLootFilterForScan()
         local byID = scanLootIndices()
         for itemID, data in pairs(byID) do
@@ -256,7 +257,7 @@ function EJLive:GetScaledLootLink(instanceID, encounterID, diffID, itemID)
         EJ_SelectInstanceCompat(instanceID)
         EJ_SelectEncounterCompat(encounterID)
         EJ_SetDifficultyCompat(diffID)
-        EJ_SetSlotFilterCompat(EISFT.NoFilter)
+        EJ_SetSlotFilterCompat(EJ_SLOT_FILTER_NO_FILTER)
         applyLootFilterForScan()
         local n = EJ_GetNumLootCompat()
         for i = 1, n do
@@ -476,9 +477,7 @@ function EJLive:ScheduleAfterStaticBuild()
     end)
 end
 
-local ejEvent = CreateFrame("Frame")
-ejEvent:RegisterEvent("EJ_LOOT_DATA_RECIEVED")
-ejEvent:SetScript("OnEvent", function()
+EventRegistry:RegisterFrameEventAndCallback("EJ_LOOT_DATA_RECIEVED", function()
     if mergeRunning or EJLive.scanningOnDemand then return end
     if not JournalData.journalCache then return end
     if EJLive.debounceTimer and EJLive.debounceTimer.Cancel then

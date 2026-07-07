@@ -141,7 +141,7 @@ end
 local function FormatCost(entry)
     local parts = {}
     if entry.cost and entry.cost > 0 then
-        parts[#parts + 1] = GetCoinTextureString(entry.cost)
+        parts[#parts + 1] = C_CurrencyInfo.GetCoinTextureString(entry.cost)
     end
     if entry.currencies then
         for _, c in ipairs(entry.currencies) do

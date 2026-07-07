@@ -545,24 +545,26 @@ function VendorPanel:CreateOptionsTabContent()
 
     local vendorDropdown, dropText = OneWoW_GUI:CreateDropdown(content, {
         height = 22,
-        text = state.currentVendorFilter == "Cosmetic Items" and "Cosmetics" or state.currentVendorFilter,
+        text = VendorPanel:GetVendorFilterDisplayLabel(
+            state.currentVendorFilter == "Cosmetic Items" and "Cosmetic Items" or state.currentVendorFilter
+        ),
     })
     d.vendorDropdown = vendorDropdown
 
     local function buildVendorFilterItems()
         local items = {}
 
-        table.insert(items, { text = "Show All", value = "Show All" })
+        table.insert(items, { text = VendorPanel:GetVendorFilterDisplayLabel("Show All"), value = "Show All" })
 
         local collectibles = {"Mounts", "Pets", "Toys", "Cosmetic Items", "Decor", "Housing"}
         local numCollect = 0
         for _, label in ipairs(collectibles) do if state.availableFilters[label] then numCollect = numCollect + 1 end end
         if numCollect > 0 then
             table.insert(items, { type = "divider" })
-            table.insert(items, { type = "header", text = "Collectibles" })
+            table.insert(items, { type = "header", text = L["VENDOR_FILTER_SECTION_COLLECTIBLES"] })
             for _, label in ipairs(collectibles) do
                 if state.availableFilters[label] then
-                    table.insert(items, { text = label, value = label })
+                    table.insert(items, { text = VendorPanel:GetVendorFilterDisplayLabel(label), value = label })
                 end
             end
         end
@@ -572,10 +574,10 @@ function VendorPanel:CreateOptionsTabContent()
         for _, label in ipairs(materials) do if state.availableFilters[label] then numMat = numMat + 1 end end
         if numMat > 0 then
             table.insert(items, { type = "divider" })
-            table.insert(items, { type = "header", text = "Materials & Consumables" })
+            table.insert(items, { type = "header", text = L["VENDOR_FILTER_SECTION_MATERIALS"] })
             for _, label in ipairs(materials) do
                 if state.availableFilters[label] then
-                    table.insert(items, { text = label, value = label })
+                    table.insert(items, { text = VendorPanel:GetVendorFilterDisplayLabel(label), value = label })
                 end
             end
         end
@@ -585,10 +587,10 @@ function VendorPanel:CreateOptionsTabContent()
         for _, label in ipairs(equipment) do if state.availableFilters[label] then numEquip = numEquip + 1 end end
         if numEquip > 0 then
             table.insert(items, { type = "divider" })
-            table.insert(items, { type = "header", text = "Equipment" })
+            table.insert(items, { type = "header", text = L["VENDOR_FILTER_SECTION_EQUIPMENT"] })
             for _, label in ipairs(equipment) do
                 if state.availableFilters[label] then
-                    table.insert(items, { text = label, value = label })
+                    table.insert(items, { text = VendorPanel:GetVendorFilterDisplayLabel(label), value = label })
                 end
             end
         end
@@ -598,13 +600,13 @@ function VendorPanel:CreateOptionsTabContent()
         for _, label in ipairs(professions) do if state.availableFilters[label] then numProf = numProf + 1 end end
         if state.availableFilters["Patterns"] or numProf > 0 then
             table.insert(items, { type = "divider" })
-            table.insert(items, { type = "header", text = "Patterns / Recipes" })
+            table.insert(items, { type = "header", text = L["VENDOR_FILTER_SECTION_PATTERNS"] })
             if state.availableFilters["Patterns"] then
-                table.insert(items, { text = "All Patterns", value = "Patterns" })
+                table.insert(items, { text = VendorPanel:GetVendorFilterDisplayLabel("Patterns"), value = "Patterns" })
             end
             for _, label in ipairs(professions) do
                 if state.availableFilters[label] then
-                    table.insert(items, { text = label, value = label })
+                    table.insert(items, { text = VendorPanel:GetVendorFilterDisplayLabel(label), value = label })
                 end
             end
         end
@@ -643,7 +645,7 @@ function VendorPanel:CreateOptionsTabContent()
         buildItems = buildVendorFilterItems,
         onSelect = function(value, _)
             state.currentVendorFilter = value
-            dropText:SetText(value == "Cosmetic Items" and "Cosmetics" or value)
+            dropText:SetText(VendorPanel:GetVendorFilterDisplayLabel(value))
             if MerchantFrame and MerchantFrame:IsShown() then
                 MerchantFrame.page = 1
                 MerchantFrame_Update()
@@ -771,7 +773,7 @@ function VendorPanel:CreateOptionsTabContent()
 
     d.neverSellBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "", height = 26, minWidth = 176 })
     d.neverSellBtnText = d.neverSellBtn.text
-    d.neverSellBtnText:SetText(string.format(L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", 0))
+    d.neverSellBtnText:SetText(string.format(L["VENDOR_PROTECTED_ITEMS_COUNT"], 0))
     d.neverSellBtn:SetScript("OnClick", function() VendorPanel:ToggleNeverSellDialog() end)
     d.neverSellBtn:HookScript("OnEnter", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
@@ -930,7 +932,7 @@ function VendorPanel:CreateAddTabContent()
         end)
         d.customSlotBtns[slotIndex] = slotBtn
 
-        local clearBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "x", height = rowH, minWidth = clearW })
+        local clearBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["VENDOR_SLOT_CLEAR"], height = rowH, minWidth = clearW })
         clearBtn:SetScript("OnClick", function()
             if not VendorPanel:CustomFilterSlotIsEmpty(slotIndex) then
                 VendorPanel:ClearCustomFilterSlot(slotIndex)
@@ -981,7 +983,7 @@ function VendorPanel:CreateAddTabContent()
         state.oneTimeItems.ilvlGear = {}; state.oneTimeItems.reagents = {}; state.oneTimeItems.custom = {}
         VendorPanel:ClearAddTabSearch()
         VendorPanel:UpdatePreviewPanel(); VendorPanel:UpdateButton()
-        print("OneWoW QoL: Cleared all one-time items from sell list.")
+        print("OneWoW QoL: " .. L["VENDOR_CLEAR_ONETIME_DONE"])
     end)
     d.clearAllBtn:HookScript("OnEnter", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")

@@ -111,6 +111,7 @@ OneWoW.Locale:Register(M._scope, "zhTW", {
     ["MMSKIN_ACTION_TRACKING"] = "追蹤",
     ["MMSKIN_ACTION_MISSIONS"] = "任務",
     ["MMSKIN_ACTION_MAP"] = "地圖",
+    ["MMSKIN_WORLD_MAP_BUTTON"] = "世界地圖",
 
     ["MMSKIN_SHOW_COMPARTMENT"] = "插件附掛欄",
 

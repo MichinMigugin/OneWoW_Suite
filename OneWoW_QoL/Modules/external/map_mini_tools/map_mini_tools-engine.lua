@@ -533,6 +533,27 @@ local function GetZoneAnchor()
     end
 end
 
+local function GetClockAlign()
+    local a = GetSettings().clockAlign
+    if a == "LEFT" or a == "RIGHT" then return a end
+    return "CENTER"
+end
+
+local function GetClockAnchor()
+    local align  = GetClockAlign()
+    local inside = GetToggle("zoneClockInside")
+    if align == "LEFT" then
+        if inside then return "BOTTOMLEFT", "BOTTOMLEFT",  6,  6
+        else           return "TOPLEFT",    "BOTTOMLEFT",  0, -4 end
+    elseif align == "RIGHT" then
+        if inside then return "BOTTOMRIGHT", "BOTTOMRIGHT", -6,  6
+        else           return "TOPRIGHT",    "BOTTOMRIGHT",  0, -4 end
+    else
+        if inside then return "BOTTOM", "BOTTOM",  0,  6
+        else           return "TOP",    "BOTTOM",  0, -4 end
+    end
+end
+
 local ApplyDefaultZoneFrameAnchor
 
 local function GetZoneTextWidth()
@@ -826,27 +847,6 @@ local function ApplyZoneTextLayout()
 end
 
 M.RefreshZoneLayout = ApplyZoneTextLayout
-
-local function GetClockAlign()
-    local a = GetSettings().clockAlign
-    if a == "LEFT" or a == "RIGHT" then return a end
-    return "CENTER"
-end
-
-local function GetClockAnchor()
-    local align  = GetClockAlign()
-    local inside = GetToggle("zoneClockInside")
-    if align == "LEFT" then
-        if inside then return "BOTTOMLEFT", "BOTTOMLEFT",  6,  6
-        else           return "TOPLEFT",    "BOTTOMLEFT",  0, -4 end
-    elseif align == "RIGHT" then
-        if inside then return "BOTTOMRIGHT", "BOTTOMRIGHT", -6,  6
-        else           return "TOPRIGHT",    "BOTTOMRIGHT",  0, -4 end
-    else
-        if inside then return "BOTTOM", "BOTTOM",  0,  6
-        else           return "TOP",    "BOTTOM",  0, -4 end
-    end
-end
 
 local function ApplyClockLayout()
     if not clockFrame then return end
@@ -1969,8 +1969,10 @@ local function CreateWorldMapButton()
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         if MicroButtonTooltipText and WORLDMAP_BUTTON then
             GameTooltip:SetText(MicroButtonTooltipText(WORLDMAP_BUTTON, "TOGGLEWORLDMAP"))
+        elseif WORLDMAP_BUTTON then
+            GameTooltip:SetText(WORLDMAP_BUTTON)
         else
-            GameTooltip:SetText(WORLDMAP_BUTTON or "World Map")
+            GameTooltip:SetText(L["MMSKIN_WORLD_MAP_BUTTON"])
         end
         GameTooltip:Show()
     end)
