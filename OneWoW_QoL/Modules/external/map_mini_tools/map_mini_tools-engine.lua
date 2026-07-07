@@ -18,6 +18,7 @@ local borderFrame
 local zoneFrame, zoneFontStr, zoneBgTex
 local clockFrame, clockFontStr, clockBgTex
 local clickOverlay
+local worldMapBtn
 local eventFrame
 local skinTooltip
 local autoZoomTimer
@@ -351,7 +352,7 @@ M.RefreshAlpha = ApplyMinimapAlpha
 -- Keeps the wide outer frame for positioning but shrinks the clickable / drag
 -- rectangle to the measured text plus padding. Prevents zone and clock from
 -- stealing each other's drags when their hidden flanks overlap on screen.
-local function ApplyHitInsetsForText(frame, fontString, padX, padY)
+local function ApplyHitInsetsForText(frame, fontString, padX, padY, justifyH)
     padX = padX or 4
     padY = padY or 2
     local fw = frame:GetWidth()
@@ -363,15 +364,38 @@ local function ApplyHitInsetsForText(frame, fontString, padX, padY)
         frame:SetHitRectInsets(0, 0, 0, 0)
         return
     end
-    local hx = math.max(0, (fw - (tw + padX * 2)) / 2)
+    local insetLeft, insetRight
+    local spare = math.max(0, fw - (tw + padX * 2))
+    if justifyH == "LEFT" then
+        insetLeft, insetRight = 0, spare
+    elseif justifyH == "RIGHT" then
+        insetLeft, insetRight = spare, 0
+    else
+        insetLeft = spare / 2
+        insetRight = spare / 2
+    end
     local hy = math.max(0, (fh - (th + padY * 2)) / 2)
-    frame:SetHitRectInsets(hx, hx, hy, hy)
+    frame:SetHitRectInsets(insetLeft, insetRight, hy, hy)
+end
+
+local function CaptureFrameAnchor(frame)
+    local p, rel, rp, x, y = frame:GetPoint(1)
+    if not p then return nil end
+    return { p, rel, rp, x, y }
+end
+
+local function RestoreFrameAnchor(frame, anchor)
+    if not anchor then return end
+    frame:ClearAllPoints()
+    frame:SetPoint(anchor[1], anchor[2], anchor[3], anchor[4], anchor[5])
 end
 
 -- After a drag, nudge the frame so the measured text rect stays on-screen.
 -- The outer frame rectangle (which is much wider than the text) is allowed
 -- to extend off-screen; only the visible glyphs are clamped.
-local function ClampFrameToTextOnScreen(frame, fontString)
+local function ClampFrameToTextOnScreen(frame, fontString, justifyH, padX)
+    padX = padX or 4
+    justifyH = justifyH or "CENTER"
     local tw = fontString.GetUnboundedStringWidth and fontString:GetUnboundedStringWidth()
         or fontString:GetStringWidth()
     local th = fontString:GetStringHeight()
@@ -383,7 +407,14 @@ local function ClampFrameToTextOnScreen(frame, fontString)
     local fh      = frame:GetHeight()
     if not fLeft or not fBottom then return end
 
-    local textLeft   = fLeft + (fw - tw) / 2
+    local textLeft
+    if justifyH == "LEFT" then
+        textLeft = fLeft + padX
+    elseif justifyH == "RIGHT" then
+        textLeft = fLeft + fw - padX - tw
+    else
+        textLeft = fLeft + (fw - tw) / 2
+    end
     local textRight  = textLeft + tw
     local textBottom = fBottom + (fh - th) / 2
     local textTop    = textBottom + th
@@ -468,6 +499,10 @@ M.RefreshClockBackground = ApplyClockBackground
 
 -- ─── Zone Text ──────────────────────────────────────────────────────────────
 
+local ZONE_FRAME_PAD_X = 8
+local ZONE_FRAME_PAD_Y = 3
+local ZONE_MIN_FONT_SIZE = 8
+
 local PVP_COLORS = {
     sanctuary = { 0.41, 0.80, 0.94 },
     arena     = { 1.00, 0.10, 0.10 },
@@ -477,9 +512,123 @@ local PVP_COLORS = {
     combat    = { 1.00, 0.10, 0.10 },
 }
 
+local function GetZoneAlign()
+    local a = GetSettings().zoneAlign
+    if a == "LEFT" or a == "RIGHT" then return a end
+    return "CENTER"
+end
+
+local function GetZoneAnchor()
+    local align  = GetZoneAlign()
+    local inside = GetToggle("zoneClockInside")
+    if align == "LEFT" then
+        if inside then return "TOPLEFT",    "TOPLEFT",    6, -6
+        else           return "BOTTOMLEFT", "TOPLEFT",    0,  4 end
+    elseif align == "RIGHT" then
+        if inside then return "TOPRIGHT",    "TOPRIGHT",   -6, -6
+        else           return "BOTTOMRIGHT", "TOPRIGHT",    0,  4 end
+    else
+        if inside then return "TOP",    "TOP",  0, -6
+        else           return "BOTTOM", "TOP",  0,  4 end
+    end
+end
+
+local ApplyDefaultZoneFrameAnchor
+
+local function GetZoneTextWidth()
+    if not zoneFontStr then return 0 end
+    return zoneFontStr.GetUnboundedStringWidth and zoneFontStr:GetUnboundedStringWidth()
+        or zoneFontStr:GetStringWidth()
+end
+
+-- When zone/clock is drawn inside the minimap, cap width to the map edge.
+local function GetZoneMaxFrameWidth()
+    if not MINIMAP or not GetToggle("zoneClockInside") then return nil end
+    local mw = MINIMAP:GetWidth()
+    if not mw or mw <= 0 then return nil end
+    return mw
+end
+
+local function ApplyZoneFontSize(fontPath, flags, desiredSize, text)
+    if not zoneFontStr then return desiredSize end
+    local maxFrameW = GetZoneMaxFrameWidth()
+    if not maxFrameW then
+        OneWoW_GUI:SafeSetFont(zoneFontStr, fontPath, desiredSize, flags)
+        zoneFontStr:SetText(text)
+        return desiredSize
+    end
+    local size = desiredSize
+    local minSize = ZONE_MIN_FONT_SIZE
+    while size >= minSize do
+        OneWoW_GUI:SafeSetFont(zoneFontStr, fontPath, size, flags)
+        zoneFontStr:SetText(text)
+        if GetZoneTextWidth() + (ZONE_FRAME_PAD_X * 2) <= maxFrameW then
+            return size
+        end
+        size = size - 1
+    end
+    OneWoW_GUI:SafeSetFont(zoneFontStr, fontPath, minSize, flags)
+    zoneFontStr:SetText(text)
+    return minSize
+end
+
+local function FitZoneFrameToText()
+    if not zoneFrame or not zoneFontStr then return end
+    local s2 = GetSettings()
+    local align = GetZoneAlign()
+    local uw = GetZoneTextWidth()
+    local textH = zoneFontStr:GetStringHeight()
+    local _, effectiveSize = zoneFontStr:GetFont()
+    local anchor = CaptureFrameAnchor(zoneFrame)
+    local frameH = math.max(textH + (ZONE_FRAME_PAD_Y * 2), (effectiveSize or s2.zoneFontSize) + 4)
+    local frameW = math.max(uw + (ZONE_FRAME_PAD_X * 2), 40)
+    local maxFrameW = GetZoneMaxFrameWidth()
+    if maxFrameW then
+        frameW = math.min(frameW, maxFrameW)
+    elseif align == "CENTER" then
+        -- Outside + center: keep a wide strip so short names stay centered on the minimap.
+        frameW = math.max(MINIMAP:GetWidth() + 40, frameW)
+    end
+    zoneFrame:SetHeight(frameH)
+    zoneFrame:SetWidth(frameW)
+    zoneFrame:SetScale(1)
+    if maxFrameW and uw > 0 and uw + (ZONE_FRAME_PAD_X * 2) > maxFrameW then
+        zoneFrame:SetScale(maxFrameW / (uw + (ZONE_FRAME_PAD_X * 2)))
+    end
+    if anchor then
+        RestoreFrameAnchor(zoneFrame, anchor)
+    elseif ApplyDefaultZoneFrameAnchor then
+        ApplyDefaultZoneFrameAnchor()
+    end
+    ApplyHitInsetsForText(zoneFrame, zoneFontStr, ZONE_FRAME_PAD_X, ZONE_FRAME_PAD_Y, align)
+end
+
+-- CENTER uses a single TOP anchor (never stretch LEFT/RIGHT or the string truncates to "...").
+-- LEFT/RIGHT alignment pins the font string to the matching edge of a tight frame.
+local function LayoutZoneFontString()
+    if not zoneFontStr or not zoneFrame then return end
+    zoneFontStr:ClearAllPoints()
+    local align = GetZoneAlign()
+    if align == "LEFT" then
+        zoneFontStr:SetPoint("TOPLEFT", zoneFrame, "TOPLEFT", ZONE_FRAME_PAD_X, -ZONE_FRAME_PAD_Y)
+        zoneFontStr:SetJustifyH("LEFT")
+    elseif align == "RIGHT" then
+        zoneFontStr:SetPoint("TOPRIGHT", zoneFrame, "TOPRIGHT", -ZONE_FRAME_PAD_X, -ZONE_FRAME_PAD_Y)
+        zoneFontStr:SetJustifyH("RIGHT")
+    else
+        zoneFontStr:SetPoint("TOP", zoneFrame, "TOP", 0, -ZONE_FRAME_PAD_Y)
+        zoneFontStr:SetJustifyH("CENTER")
+    end
+    zoneFontStr:SetJustifyV("TOP")
+    zoneFontStr:SetWordWrap(false)
+end
+
 local function UpdateZoneDisplay()
     if not zoneFontStr then return end
-    zoneFontStr:SetText(GetMinimapZoneText())
+    local s = GetSettings()
+    local text = GetMinimapZoneText()
+    local fontPath = ResolveFontPath(s.zoneFont) or OneWoW_GUI:GetFont()
+    ApplyZoneFontSize(fontPath, "OUTLINE", s.zoneFontSize, text)
 
     local pvpType = C_PvP.GetZonePVPInfo()
     local c = PVP_COLORS[pvpType]
@@ -489,57 +638,14 @@ local function UpdateZoneDisplay()
         zoneFontStr:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     end
 
-    if zoneFrame then
-        ApplyHitInsetsForText(zoneFrame, zoneFontStr, 6, 2)
-    end
+    LayoutZoneFontString()
+    FitZoneFrameToText()
     ApplyZoneBackground()
-end
-
-local function GetZoneAlign()
-    local a = GetSettings().zoneAlign
-    if a == "LEFT" or a == "RIGHT" then return a end
-    return "CENTER"
-end
-
--- Top-anchored text so changing font size does not shift the label vertically on the minimap edge.
-local function LayoutZoneFontString()
-    if not zoneFontStr or not zoneFrame then return end
-    zoneFontStr:ClearAllPoints()
-    zoneFontStr:SetPoint("TOP", zoneFrame, "TOP", 0, -2)
-    zoneFontStr:SetPoint("LEFT", zoneFrame, "LEFT", 6, 0)
-    zoneFontStr:SetPoint("RIGHT", zoneFrame, "RIGHT", -6, 0)
-    local align = GetZoneAlign()
-    if align == "LEFT" then
-        zoneFontStr:SetJustifyH("LEFT")
-    elseif align == "RIGHT" then
-        zoneFontStr:SetJustifyH("RIGHT")
-    else
-        zoneFontStr:SetJustifyH("CENTER")
-    end
-    zoneFontStr:SetJustifyV("TOP")
 end
 
 local function ApplyZoneFont()
     if not zoneFontStr then return end
-    local s = GetSettings()
-    local fontPath = ResolveFontPath(s.zoneFont) or OneWoW_GUI:GetFont()
-    OneWoW_GUI:SafeSetFont(zoneFontStr, fontPath, s.zoneFontSize, "OUTLINE")
-    LayoutZoneFontString()
     UpdateZoneDisplay()
-    if zoneFrame then
-        local s2 = GetSettings()
-        local textH = zoneFontStr:GetStringHeight()
-        zoneFrame:SetHeight(math.max(textH + 6, s2.zoneFontSize + 4))
-        -- LEFT/RIGHT alignment uses a tight frame so the text sits flush
-        -- against the matching minimap edge instead of extending past it.
-        if GetZoneAlign() == "CENTER" then
-            zoneFrame:SetWidth(math.max(MINIMAP:GetWidth() + 40, zoneFontStr:GetStringWidth() + 16))
-        else
-            zoneFrame:SetWidth(math.max(zoneFontStr:GetStringWidth() + 16, 40))
-        end
-        ApplyHitInsetsForText(zoneFrame, zoneFontStr, 6, 2)
-    end
-    ApplyZoneBackground()
 end
 
 M.RefreshZoneFont = ApplyZoneFont
@@ -574,17 +680,50 @@ local function SaveFrameLayoutPos(frame, key)
     GetSettings()[key] = { p, relName, rp, x, y }
 end
 
--- Re-anchor a freshly dragged frame back to MINIMAP using a CENTER/CENTER
--- offset. After StartMoving/StopMovingOrSizing the frame's first anchor is
--- typically resolved against UIParent; this restores a Minimap-relative
--- anchor so the frame rides the minimap when zoneClockAnchorMinimap is on.
-local function ReanchorToMinimap(frame)
-    if not frame or not MINIMAP then return end
-    local fx, fy = frame:GetCenter()
-    local mx, my = MINIMAP:GetCenter()
-    if not fx or not mx then return end
+local function GetRegionPointXY(region, point)
+    if not region or not point then return end
+    if point == "TOPLEFT" then
+        return region:GetLeft(), region:GetTop()
+    elseif point == "TOPRIGHT" then
+        return region:GetRight(), region:GetTop()
+    elseif point == "TOP" then
+        local cx = select(1, region:GetCenter())
+        return cx, region:GetTop()
+    elseif point == "BOTTOMLEFT" then
+        return region:GetLeft(), region:GetBottom()
+    elseif point == "BOTTOMRIGHT" then
+        return region:GetRight(), region:GetBottom()
+    elseif point == "BOTTOM" then
+        local cx = select(1, region:GetCenter())
+        return cx, region:GetBottom()
+    elseif point == "LEFT" then
+        local _, cy = region:GetCenter()
+        return region:GetLeft(), cy
+    elseif point == "RIGHT" then
+        local _, cy = region:GetCenter()
+        return region:GetRight(), cy
+    end
+    return region:GetCenter()
+end
+
+local function ReanchorFrameToMinimapByAlign(frame, getAnchorFn)
+    if not frame or not MINIMAP or not getAnchorFn then return end
+    local point, relPoint = getAnchorFn()
+    local fx, fy = GetRegionPointXY(frame, point)
+    local rx, ry = GetRegionPointXY(MINIMAP, relPoint)
+    if not fx or not rx then return end
     frame:ClearAllPoints()
-    frame:SetPoint("CENTER", MINIMAP, "CENTER", fx - mx, fy - my)
+    frame:SetPoint(point, MINIMAP, relPoint, fx - rx, fy - ry)
+end
+
+ApplyDefaultZoneFrameAnchor = function()
+    if not zoneFrame or not MINIMAP then return end
+    if GetToggle("zoneClockDraggable") and ApplySavedFramePos(zoneFrame, "zoneTextPos") then
+        return
+    end
+    local point, relPoint, x, y = GetZoneAnchor()
+    zoneFrame:ClearAllPoints()
+    zoneFrame:SetPoint(point, MINIMAP, relPoint, x, y)
 end
 
 local function HookZoneClockDragScripts()
@@ -604,9 +743,9 @@ local function HookZoneClockDragScripts()
                 self:StopMovingOrSizing()
                 self._oneWoWDragging = nil
                 if GetToggle("zoneClockAnchorMinimap") then
-                    ReanchorToMinimap(self)
+                    ReanchorFrameToMinimapByAlign(self, GetZoneAnchor)
                 end
-                ClampFrameToTextOnScreen(self, zoneFontStr)
+                ClampFrameToTextOnScreen(self, zoneFontStr, GetZoneAlign(), ZONE_FRAME_PAD_X)
                 SaveFrameLayoutPos(self, "zoneTextPos")
             end
         end)
@@ -634,9 +773,9 @@ local function HookZoneClockDragScripts()
                 self:StopMovingOrSizing()
                 self._oneWoWDragging = nil
                 if GetToggle("zoneClockAnchorMinimap") then
-                    ReanchorToMinimap(self)
+                    ReanchorFrameToMinimapByAlign(self, GetClockAnchor)
                 end
-                ClampFrameToTextOnScreen(self, clockFontStr)
+                ClampFrameToTextOnScreen(self, clockFontStr, GetClockAlign(), 4)
                 SaveFrameLayoutPos(self, "clockPos")
                 return
             end
@@ -653,24 +792,8 @@ local function HookZoneClockDragScripts()
     end
 end
 
-local function GetZoneAnchor()
-    local align  = GetZoneAlign()
-    local inside = GetToggle("zoneClockInside")
-    if align == "LEFT" then
-        if inside then return "TOPLEFT",    "TOPLEFT",    6, -6
-        else           return "BOTTOMLEFT", "TOPLEFT",    0,  4 end
-    elseif align == "RIGHT" then
-        if inside then return "TOPRIGHT",    "TOPRIGHT",   -6, -6
-        else           return "BOTTOMRIGHT", "TOPRIGHT",    0,  4 end
-    else
-        if inside then return "TOP",    "TOP",  0, -6
-        else           return "BOTTOM", "TOP",  0,  4 end
-    end
-end
-
 local function ApplyZoneTextLayout()
     if not zoneFrame then return end
-    local point, relPoint, x, y = GetZoneAnchor()
     if GetToggle("zoneClockDraggable") then
         if GetToggle("zoneClockAnchorMinimap") then
             zoneFrame:SetParent(MINIMAP)
@@ -686,20 +809,18 @@ local function ApplyZoneTextLayout()
         -- glyphs on-screen after drag.
         zoneFrame:SetClampedToScreen(false)
         if not ApplySavedFramePos(zoneFrame, "zoneTextPos") then
-            zoneFrame:ClearAllPoints()
-            zoneFrame:SetPoint(point, MINIMAP, relPoint, x, y)
+            ApplyDefaultZoneFrameAnchor()
         end
         HookZoneClockDragScripts()
     else
         zoneFrame:SetParent(MINIMAP)
         zoneFrame:SetMovable(false)
         zoneFrame:SetClampedToScreen(false)
-        zoneFrame:ClearAllPoints()
         if GetToggle("zoneClockInside") then
             zoneFrame:SetFrameStrata("HIGH")
             zoneFrame:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 25)
         end
-        zoneFrame:SetPoint(point, MINIMAP, relPoint, x, y)
+        ApplyDefaultZoneFrameAnchor()
         HookZoneClockDragScripts()
     end
 end
@@ -1041,53 +1162,69 @@ local CLICK_ACTIONS = {
     end,
 }
 
-local function CreateClickOverlay()
-    if clickOverlay then return end
-    clickOverlay = CreateFrame("Frame", nil, MINIMAP)
-    clickOverlay:SetAllPoints(MINIMAP)
-    -- Pin at Minimap's own level so children of Minimap (TomTom waypoints,
-    -- LibDBIcon buttons, other pin addons) stay above us and receive their
-    -- own right-clicks and mouseover. Our click-actions still fire when a
-    -- right/middle/Btn4/Btn5 click lands on empty minimap pixels.
-    clickOverlay:SetFrameLevel(MINIMAP:GetFrameLevel())
-    clickOverlay:EnableMouse(true)
-    clickOverlay:SetPassThroughButtons("LeftButton")
-    clickOverlay:SetPropagateMouseMotion(true)
+local function IsMinimapClickInsideShape(minimap)
+    if GetToggle("squareShape") then return true end
+    local x, y = GetCursorPosition()
+    local scale = minimap:GetEffectiveScale()
+    x, y = x / scale, y / scale
+    local cx, cy = minimap:GetCenter()
+    if not cx or not cy then return false end
+    return math.sqrt((x - cx) ^ 2 + (y - cy) ^ 2) <= (minimap:GetWidth() / 2)
+end
 
-    clickOverlay:SetScript("OnMouseUp", function(self, btn)
-        if not GetToggle("clickActions") then return end
-        local s = GetSettings()
+local function HandleMinimapClickAction(minimap, button)
+    local s = GetSettings()
+    local actionKey
+    if button == "RightButton" then
+        actionKey = s.clickRight
+    elseif button == "MiddleButton" then
+        actionKey = s.clickMiddle
+    elseif button == "Button4" then
+        actionKey = s.clickBtn4
+    elseif button == "Button5" then
+        actionKey = s.clickBtn5
+    else
+        return false
+    end
+    if not actionKey or actionKey == "none" or not CLICK_ACTIONS[actionKey] then
+        return false
+    end
+    if not IsMinimapClickInsideShape(minimap) then return false end
+    CLICK_ACTIONS[actionKey]()
+    return true
+end
 
-        local actionKey
-        if     btn == "RightButton"  then actionKey = s.clickRight
-        elseif btn == "MiddleButton" then actionKey = s.clickMiddle
-        elseif btn == "Button4"      then actionKey = s.clickBtn4
-        elseif btn == "Button5"      then actionKey = s.clickBtn5
-        end
-
-        if not actionKey or actionKey == "none" or not CLICK_ACTIONS[actionKey] then return end
-
-        if not GetToggle("squareShape") then
-            local x, y = GetCursorPosition()
-            local scale = self:GetEffectiveScale()
-            x, y = x / scale, y / scale
-            local cx, cy = self:GetCenter()
-            if math.sqrt((x - cx) ^ 2 + (y - cy) ^ 2) > (self:GetWidth() / 2) then
+local function SetupMinimapClickHandler()
+    if not MINIMAP or M._minimapClickHooked then return end
+    M._minimapClickHooked = true
+    M._origMinimapOnMouseUp = MINIMAP:GetScript("OnMouseUp")
+    MINIMAP:SetScript("OnMouseUp", function(self, button)
+        if ns.ModuleRegistry:IsEnabled("map_mini_tools") and GetToggle("clickActions") then
+            if HandleMinimapClickAction(self, button) then
                 return
             end
         end
-
-        CLICK_ACTIONS[actionKey]()
+        if M._origMinimapOnMouseUp then
+            M._origMinimapOnMouseUp(self, button)
+        end
     end)
+end
+
+local function RestoreMinimapClickHandler()
+    if not MINIMAP or not M._minimapClickHooked then return end
+    MINIMAP:SetScript("OnMouseUp", M._origMinimapOnMouseUp)
+    M._origMinimapOnMouseUp = nil
+    M._minimapClickHooked = nil
 end
 
 local function ShowClickOverlay()
     if not GetToggle("clickActions") then
+        RestoreMinimapClickHandler()
         if clickOverlay then clickOverlay:Hide() end
         return
     end
-    CreateClickOverlay()
-    clickOverlay:Show()
+    SetupMinimapClickHandler()
+    if clickOverlay then clickOverlay:Hide() end
 end
 
 -- ─── Mouse Wheel Zoom ───────────────────────────────────────────────────────
@@ -1185,6 +1322,9 @@ local function ApplyScale()
     else
         MINIMAP:SetScale(1)
         if MINIMAP_CLUSTER then MINIMAP_CLUSTER:SetScale(sc) end
+    end
+    if zoneFrame and zoneFrame:IsShown() then
+        UpdateZoneDisplay()
     end
 end
 
@@ -1409,12 +1549,22 @@ local function EnsureMinimapLayoutHooks()
     minimapLayoutHooked = true
     hooksecurefunc(MINIMAP, "Layout", function()
         if not ns.ModuleRegistry:IsEnabled("map_mini_tools") then return end
-        C_Timer.After(0, ReapplySavedMinimapIconAnchors)
+        C_Timer.After(0, function()
+            ReapplySavedMinimapIconAnchors()
+            if zoneFrame and zoneFrame:IsShown() then
+                UpdateZoneDisplay()
+            end
+        end)
     end)
     if MinimapCluster and MinimapCluster.Layout then
         hooksecurefunc(MinimapCluster, "Layout", function()
             if not ns.ModuleRegistry:IsEnabled("map_mini_tools") then return end
-            C_Timer.After(0, ReapplySavedMinimapIconAnchors)
+            C_Timer.After(0, function()
+                ReapplySavedMinimapIconAnchors()
+                if zoneFrame and zoneFrame:IsShown() then
+                    UpdateZoneDisplay()
+                end
+            end)
         end)
     end
 end
@@ -1795,19 +1945,61 @@ end
 
 M.RefreshAddonCompartmentLayout = ApplyAddonCompartmentSquareLayout
 
--- ─── Hide minimap world map button ───────────────────────────────────────────
+-- ─── World map button (Blizzard removed MiniMapWorldMapButton in 10.0) ───────
+
+local function CreateWorldMapButton()
+    if worldMapBtn or not MINIMAP then return end
+    worldMapBtn = CreateFrame("Button", "OneWoW_QoL_MmSkinWorldMapBtn", MINIMAP)
+    worldMapBtn:SetSize(20, 20)
+    worldMapBtn:SetPoint("TOPRIGHT", MINIMAP, "TOPRIGHT", -4, -4)
+    worldMapBtn:SetFrameStrata("HIGH")
+    worldMapBtn:SetFrameLevel((MINIMAP:GetFrameLevel() or 2) + 30)
+
+    local icon = worldMapBtn:CreateTexture(nil, "ARTWORK")
+    icon:SetSize(16, 16)
+    icon:SetPoint("CENTER")
+    icon:SetTexture("Interface\\Minimap\\UI-WorldMap-Icon")
+
+    worldMapBtn:SetScript("OnClick", function()
+        if not OneWoW.Restriction.IsProtectedActionBlocked() then
+            ToggleWorldMap()
+        end
+    end)
+    worldMapBtn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        if MicroButtonTooltipText and WORLDMAP_BUTTON then
+            GameTooltip:SetText(MicroButtonTooltipText(WORLDMAP_BUTTON, "TOGGLEWORLDMAP"))
+        else
+            GameTooltip:SetText(WORLDMAP_BUTTON or "World Map")
+        end
+        GameTooltip:Show()
+    end)
+    worldMapBtn:SetScript("OnLeave", GameTooltip_Hide)
+end
 
 local function ApplyWorldMapButtonVisibility()
-    local b = MiniMapWorldMapButton
-    if not b then return end
-    if not ns.ModuleRegistry:IsEnabled("map_mini_tools") then
-        b:Show()
+    if MiniMapWorldMapButton then
+        if not ns.ModuleRegistry:IsEnabled("map_mini_tools") then
+            MiniMapWorldMapButton:Show()
+        elseif GetToggle("hideWorldMapButton") then
+            MiniMapWorldMapButton:Hide()
+        else
+            MiniMapWorldMapButton:Show()
+        end
+        if worldMapBtn then worldMapBtn:Hide() end
         return
     end
+
+    if not ns.ModuleRegistry:IsEnabled("map_mini_tools") then
+        if worldMapBtn then worldMapBtn:Hide() end
+        return
+    end
+
+    CreateWorldMapButton()
     if GetToggle("hideWorldMapButton") then
-        b:Hide()
+        worldMapBtn:Hide()
     else
-        b:Show()
+        worldMapBtn:Show()
     end
 end
 
@@ -1976,9 +2168,12 @@ function M:OnDisable()
     end
     compartmentSquareSaved = nil
 
+    if worldMapBtn then worldMapBtn:Hide() end
     if MiniMapWorldMapButton then
         MiniMapWorldMapButton:Show()
     end
+
+    RestoreMinimapClickHandler()
 
     AttachMinimap()
 
@@ -2012,6 +2207,7 @@ function M:OnDisable()
     if TimeManagerClockButton then TimeManagerClockButton:SetAlpha(1) end
 
     if clickOverlay then clickOverlay:Hide() end
+    RestoreMinimapClickHandler()
 
     MINIMAP:EnableMouseWheel(false)
     MINIMAP:SetScript("OnMouseWheel", nil)
