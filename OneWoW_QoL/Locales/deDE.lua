@@ -12,7 +12,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TIPS_SCOPE_NO_ALTS"] = "Keine Charaktere gefunden.",
     ["TIPS_SCOPE_NO_ROLES"] = "Noch keine Rollen \226\128\148 erstelle sie unter Rollen & Twinks.",
     ["TIPS_SCOPE_EXCLUDE_NOTE"] = "Bei \226\128\158Nur diese\226\128\157 sind alle nicht hinzugefügten Charaktere und Rollen ausgeschlossen. Jeder sieht weiterhin den Tooltip \226\128\148 dies beschränkt nur, deren Alt-Daten erscheinen.",
-    ["TIPS_SCOPE_MANAGE_LINK"] = "Rollen & Twinks hier verwalten \226\134\146",
+    ["TIPS_SCOPE_MANAGE_LINK"] = "Rollen & Twinks hier verwalten",
 
     ["OVERLAYS_SUBTAB"] = "Overlays",
     ["TOOLTIPS_SUBTAB"] = "Tooltips",

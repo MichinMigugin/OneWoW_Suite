@@ -12,7 +12,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TIPS_SCOPE_NO_ALTS"] = "找不到角色。",
     ["TIPS_SCOPE_NO_ROLES"] = "尚無群組 \226\128\148 請在「角色與分身」中建立。",
     ["TIPS_SCOPE_EXCLUDE_NOTE"] = "選擇「僅這些」時，未新增的角色與群組會被排除。所有人仍能看到提示 \226\128\148 這僅限制顯示哪些分身資料。",
-    ["TIPS_SCOPE_MANAGE_LINK"] = "在此管理角色與分身 \226\134\146",
+    ["TIPS_SCOPE_MANAGE_LINK"] = "在此管理角色與分身",
 
     ["OVERLAYS_SUBTAB"] = "覆蓋層",
     ["TOOLTIPS_SUBTAB"] = "滑鼠提示",

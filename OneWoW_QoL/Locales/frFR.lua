@@ -12,7 +12,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TIPS_SCOPE_NO_ALTS"] = "Aucun personnage trouvé.",
     ["TIPS_SCOPE_NO_ROLES"] = "Aucun rôle pour l'instant \226\128\148 créez-les dans Rôles et alts.",
     ["TIPS_SCOPE_EXCLUDE_NOTE"] = "Avec « Uniquement ceux-ci », tout personnage ou rôle non ajouté est exclu. Tout le monde voit toujours l'infobulle \226\128\148 cela limite seulement les données d'alt affichées.",
-    ["TIPS_SCOPE_MANAGE_LINK"] = "Gérer Rôles et alts ici \226\134\146",
+    ["TIPS_SCOPE_MANAGE_LINK"] = "Gérer Rôles et alts ici",
 
     ["OVERLAYS_SUBTAB"] = "Incrustations",
     ["TOOLTIPS_SUBTAB"] = "Infobulles",

@@ -12,7 +12,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["TIPS_SCOPE_NO_ALTS"] = "Nessun personaggio trovato.",
     ["TIPS_SCOPE_NO_ROLES"] = "Nessun ruolo ancora \226\128\148 creali in Ruoli e alt.",
     ["TIPS_SCOPE_EXCLUDE_NOTE"] = "Con « Solo questi », ogni personaggio o ruolo non aggiunto è escluso. Tutti vedono ancora la descrizione \226\128\148 limita solo quali dati alt compaiono.",
-    ["TIPS_SCOPE_MANAGE_LINK"] = "Gestisci Ruoli e alt qui \226\134\146",
+    ["TIPS_SCOPE_MANAGE_LINK"] = "Gestisci Ruoli e alt qui",
 
     ["OVERLAYS_SUBTAB"] = "Sovrapposizioni",
     ["TOOLTIPS_SUBTAB"] = "Tooltip",

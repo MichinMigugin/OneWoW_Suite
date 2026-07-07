@@ -12,7 +12,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["TIPS_SCOPE_NO_ALTS"] = "Nenhum personagem encontrado.",
     ["TIPS_SCOPE_NO_ROLES"] = "Nenhuma função ainda \226\128\148 crie em Funções e alts.",
     ["TIPS_SCOPE_EXCLUDE_NOTE"] = "Com « Apenas estes », qualquer personagem ou função não adicionado fica excluído. Todos ainda veem a dica \226\128\148 isso só limita quais dados de alt aparecem.",
-    ["TIPS_SCOPE_MANAGE_LINK"] = "Gerenciar Funções e alts aqui \226\134\146",
+    ["TIPS_SCOPE_MANAGE_LINK"] = "Gerenciar Funções e alts aqui",
 
     ["OVERLAYS_SUBTAB"] = "Sobreposições",
     ["TOOLTIPS_SUBTAB"] = "Dicas",

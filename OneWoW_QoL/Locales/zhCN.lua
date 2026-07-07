@@ -12,7 +12,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TIPS_SCOPE_NO_ALTS"] = "未找到角色。",
     ["TIPS_SCOPE_NO_ROLES"] = "尚无分组 \226\128\148 请在「角色与小号」中创建。",
     ["TIPS_SCOPE_EXCLUDE_NOTE"] = "选择「仅这些」时，未添加的角色和分组会被排除。所有人仍能看到提示 \226\128\148 这仅限制显示哪些小号数据。",
-    ["TIPS_SCOPE_MANAGE_LINK"] = "在此管理角色与小号 \226\134\146",
+    ["TIPS_SCOPE_MANAGE_LINK"] = "在此管理角色与小号",
 
     ["OVERLAYS_SUBTAB"] = "覆盖层",
     ["TOOLTIPS_SUBTAB"] = "鼠标提示",

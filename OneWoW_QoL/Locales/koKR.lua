@@ -11,7 +11,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TIPS_SCOPE_NO_ALTS"] = "캐릭터를 찾을 수 없습니다.",
     ["TIPS_SCOPE_NO_ROLES"] = "아직 역할 없음 \226\128\148 역할 및 부캐에서 만드세요.",
     ["TIPS_SCOPE_EXCLUDE_NOTE"] = "「이 항목만」을 사용하면 추가하지 않은 캐릭터와 역할은 제외됩니다. 툴팁은 모두에게 보이며, 표시되는 부캐 데이터만 제한됩니다.",
-    ["TIPS_SCOPE_MANAGE_LINK"] = "역할 및 부캐 여기서 관리 \226\134\146",
+    ["TIPS_SCOPE_MANAGE_LINK"] = "역할 및 부캐 여기서 관리",
 
     ["OVERLAYS_SUBTAB"] = "오버레이",
     ["TOOLTIPS_SUBTAB"] = "툴팁",
