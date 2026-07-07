@@ -474,6 +474,21 @@ local function CollectCustomPredicateCandidates(itemID, bagID, slotID, itemInfo,
     end
 end
 
+-- Record a provisional (tentative) verdict so the tooltip catchup can re-run.
+-- Besides the coarse `_hasPendingTentatives` flag, we track the specific item
+-- IDs so the catchup can refresh only those slots surgically (see
+-- ns:ScheduleTooltipCatchupRefresh) instead of rebuilding every slot.
+local function MarkTentative(itemID)
+    ns._hasPendingTentatives = true
+    if not itemID then return end
+    local pending = ns._pendingTentativeItemIDs
+    if not pending then
+        pending = {}
+        ns._pendingTentativeItemIDs = pending
+    end
+    pending[itemID] = true
+end
+
 -- ResolveBaseCategory
 -- Identity-tier resolver for an item's display category. Runs the
 -- classification pipeline (manual pin -> 1W Junk -> custom predicates ->
@@ -543,7 +558,7 @@ local function ResolveBaseCategory(itemID, hyperlink, containerType, itemInfo, b
         -- Tell the tooltip-catchup pass that at least one slot was provisional
         -- so the deferred refresh is still worth doing. Cleared by the catchup
         -- when it runs.
-        ns._hasPendingTentatives = true
+        MarkTentative(itemID)
         return "Other", true
     end
 
@@ -636,10 +651,16 @@ local function ResolveBaseCategory(itemID, hyperlink, containerType, itemInfo, b
             Profile:Start("Categories:GetItemCategory.tooltipDeferred")
             Profile:Stop("Categories:GetItemCategory.tooltipDeferred")
         end
-        ns._hasPendingTentatives = true
+        MarkTentative(itemID)
         return category, true
     end
 
+    -- Resolved against warm data: drop any prior tentative marker for this item
+    -- so the catchup doesn't redundantly re-process a slot the item_info wave
+    -- already reconciled.
+    if itemID and ns._pendingTentativeItemIDs then
+        ns._pendingTentativeItemIDs[itemID] = nil
+    end
     baseCategoryCache[idKey] = category
     return category, false
 end

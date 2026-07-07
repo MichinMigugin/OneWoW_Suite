@@ -75,7 +75,6 @@ local GUI_TO_SET = {
 local pendingRefresh = {}
 local pendingRefreshReason = {}
 local refreshScheduled = false
-local lastRefreshTime = {}
 -- Self-healing scheduler watchdog: if the flush timer armed at `lastArmTime`
 -- is ever dropped (e.g. a zero-delay C_Timer callback lost across a loading
 -- screen), `refreshScheduled` would latch true forever. Re-arming is allowed
@@ -335,13 +334,14 @@ function ns:RequestLayoutRefresh(target, reason)
     self:EnsureFlushScheduled()
 end
 
---- Get the (GetTime-based) timestamp of the most recent RefreshLayout call
---- that was actually executed via the scheduler for the given target.
+--- Whether a coalesced layout refresh is still queued (requested but not yet
+--- flushed) for the given target. A stuck-queued refresh at safety-net time
+--- means the coalescer wedged; a clear queue means the last request flushed.
 ---@param targetKey "bags"|"bank"|"guild"
----@return number|nil seconds
-function ns:GetLastRefreshTime(targetKey)
+---@return boolean
+function ns:HasPendingLayoutRefresh(targetKey)
     local guiKey = TARGET_TO_GUI[targetKey]
-    return guiKey and lastRefreshTime[guiKey] or nil
+    return (guiKey and pendingRefresh[guiKey]) == true
 end
 
 --- Heuristic for a failed layout: the window is shown and its backing set has
@@ -364,24 +364,24 @@ end
 
 --- Schedule a post-open safety-net layout that survives a wedged scheduler.
 --- Runs synchronously (RequestLayoutRefreshNow) so it recovers even if the
---- coalescer latch is stuck. Forces a layout when the window looks blank;
---- otherwise refreshes once unless a layout already ran very recently.
+--- coalescer latch is stuck. It only forces a layout for the two failure modes
+--- it exists to catch: a blank window (layout produced nothing visible) or a
+--- refresh still stuck in the queue (coalescer wedged, never flushed). A
+--- healthy window that already laid out and has no pending work is left alone,
+--- so it no longer fires a redundant full relayout on a normal cold open.
 ---@param targetKey "bags"|"bank"|"guild"
 ---@param isShownFn function returns whether the window is still shown
 function ns:ScheduleOpenSafetyNet(targetKey, isShownFn)
     C_Timer.After(0.5, function()
         if not isShownFn() then return end
-        if self:IsWindowBlank(targetKey) then
+        local blank = self:IsWindowBlank(targetKey)
+        if blank or self:HasPendingLayoutRefresh(targetKey) then
             local LD = self.LayoutDebug
             if LD and LD.enabled then
-                LD:Record("safety_net_blank", { target = targetKey })
+                LD:Record(blank and "safety_net_blank" or "safety_net_wedged", { target = targetKey })
             end
             self:RequestLayoutRefreshNow(targetKey)
-            return
         end
-        local last = self:GetLastRefreshTime(targetKey)
-        if last and (GetTime() - last) < 0.3 then return end
-        self:RequestLayoutRefreshNow(targetKey)
     end)
 end
 
@@ -466,7 +466,6 @@ function ns:FlushPendingLayoutRefreshes()
                 if Profile and reason then
                     Profile:Start(guiKey .. ":RefreshLayout.reason." .. reason)
                 end
-                lastRefreshTime[guiKey] = GetTime()
                 self._currentRefreshReason = reason
                 gui:RefreshLayout()
                 self._currentRefreshReason = nil
@@ -568,6 +567,14 @@ end
 --- preceding build/refresh pass. This avoids 500–800 OWB_FullUpdate calls plus
 --- a cascading layout refresh on `/reload`-style opens where item info is
 --- already cached and no tentative verdicts were ever produced.
+---
+--- The refresh is surgical: `Categories` records the specific still-unresolved
+--- item IDs (`_pendingTentativeItemIDs`) and drops each one on a successful
+--- resolution, so at catchup time the set holds only items whose data arrived
+--- silently (no `GET_ITEM_INFO_RECEIVED`). We reconcile just those slots via
+--- the same `InvalidateItemIDs` + `UpdateSlotsForItemIDs` path the item_info
+--- wave uses, instead of rebuilding every slot. If the set is empty, the
+--- item_info wave already reconciled everything and the catchup does nothing.
 function ns:ScheduleTooltipCatchupRefresh()
     if self._tooltipCatchupPending then return end
     self._tooltipCatchupPending = true
@@ -584,20 +591,31 @@ function ns:ScheduleTooltipCatchupRefresh()
         end
 
         self._hasPendingTentatives = false
+        local pending = self._pendingTentativeItemIDs
+        self._pendingTentativeItemIDs = nil
+
+        -- The set is the source of truth: successful (non-tentative)
+        -- resolutions drop their item from it, so an empty set means the
+        -- item_info wave already reconciled every provisional verdict before
+        -- the catchup fired. Nothing to do — skip the refresh entirely.
+        if not (pending and next(pending)) then
+            if Profile then
+                Profile:Start("ns:ScheduleTooltipCatchupRefresh.reconciled")
+                Profile:Stop("ns:ScheduleTooltipCatchupRefresh.reconciled")
+            end
+            return
+        end
+
         if Profile then
             Profile:Start("ns:ScheduleTooltipCatchupRefresh.executed")
             Profile:Stop("ns:ScheduleTooltipCatchupRefresh.executed")
         end
 
-        local refreshBags = self.GUI and self.GUI:IsShown()
-        local refreshBankRelated = self.bankOpen or self.guildBankOpen
-        if refreshBags and refreshBankRelated then
-            self:RequestVisualRefresh("all")
-        elseif refreshBankRelated then
-            self:RequestVisualRefresh("bank_related")
-        elseif refreshBags then
-            self:RequestVisualRefresh("bags")
-        end
+        -- Surgical: evict + re-render only the still-tentative slots. Each
+        -- matched set emits its own coalesced layout refresh, which
+        -- re-categorizes with warm data (cache hits for everything else).
+        self:InvalidateItemIDs(pending)
+        self:UpdateSlotsForItemIDs(pending)
     end)
 end
 
