@@ -2,6 +2,8 @@ local _, ns = ...
 
 local format = string.format
 local ipairs = ipairs
+local GetTime = GetTime
+local C_Timer = C_Timer
 local BagTypes = ns.BagTypes
 local C_Container = C_Container
 
@@ -42,6 +44,18 @@ Events.RuntimeEvents = {
 
 local predicateRefreshPending = false
 local pendingItemIDs = nil
+local itemInfoFlushArmed = false
+local itemInfoFirstEnqueue = nil
+local itemInfoLastEnqueue = nil
+
+-- Trailing-debounce window for GET_ITEM_INFO_RECEIVED. On a cold open the
+-- client streams item data in many small waves across consecutive frames.
+-- Flushing on C_Timer.After(0) turned each wave into its own full relayout;
+-- waiting for a short lull collapses the whole burst into one or two.
+local ITEM_INFO_DEBOUNCE = 0.1
+-- Hard cap so a continuous trickle of events still flushes periodically
+-- instead of being starved by the trailing reset.
+local ITEM_INFO_MAX_WAIT = 0.3
 
 -- Fires on infrequent, broad predicate changes (EQUIPMENT_SETS_CHANGED,
 -- PLAYER_EQUIPMENT_CHANGED). These affect upgrade/unusable overlays and
@@ -71,38 +85,67 @@ end
 -- Fires per-item as the client streams item data. Using the broad visual
 -- refresh path here rebuilds every slot on every event, causing flashing
 -- when the server re-queries items (e.g. failed Warband soulbound inserts).
--- Instead, coalesce itemIDs until next frame and re-render only the slots
--- holding those specific items. UpdateSlotsForItemIDs now emits its own
+-- Instead, coalesce itemIDs over a short trailing-debounce window (see
+-- FlushItemInfo) and re-render only the slots holding those specific items
+-- once the burst settles. UpdateSlotsForItemIDs now emits its own
 -- per-set layout refreshes for any set that actually matched, so we no
 -- longer issue a blanket "all" refresh here.
 --
 -- Cache invalidation: surgical per-itemID eviction is also coalesced into
--- the next-frame batch (InvalidateItemIDs). The previous bulk
+-- the batch (InvalidateItemIDs). The previous bulk
 -- InvalidateCategorization("props") per event was throwing away the
 -- identity-tier caches for unrelated items in the same cold-streaming
 -- window; with the batched surgical eviction, only the items whose data
 -- actually arrived get re-resolved.
+--
+-- Flushing uses a trailing debounce (ITEM_INFO_DEBOUNCE) capped at
+-- ITEM_INFO_MAX_WAIT: the burst of cold-streaming waves collapses into a
+-- single InvalidateItemIDs + UpdateSlotsForItemIDs pass (one full relayout)
+-- instead of one per frame-wave.
+local function FlushItemInfo()
+    local now = GetTime()
+    -- Trailing debounce: if more events arrived within the debounce window
+    -- and we haven't hit the hard cap, wait for the remaining quiet time.
+    if (now - itemInfoLastEnqueue) < ITEM_INFO_DEBOUNCE
+        and (now - itemInfoFirstEnqueue) < ITEM_INFO_MAX_WAIT then
+        C_Timer.After(ITEM_INFO_DEBOUNCE - (now - itemInfoLastEnqueue), FlushItemInfo)
+        return
+    end
+
+    local ids = pendingItemIDs
+    pendingItemIDs = nil
+    itemInfoFlushArmed = false
+    itemInfoFirstEnqueue = nil
+    itemInfoLastEnqueue = nil
+    if not ids then return end
+
+    local Profile = ns.Profile
+    if Profile then
+        local n = 0
+        for _ in pairs(ids) do n = n + 1 end
+        -- Marker name encodes the batch size so the dump shows the
+        -- distribution of flush sizes naturally (one row per size).
+        local sizeKey = "Events:OnItemInfoReceived.flush.size=" .. tostring(n)
+        Profile:Start(sizeKey)
+        Profile:Stop(sizeKey)
+    end
+    ns:InvalidateItemIDs(ids)
+    ns:UpdateSlotsForItemIDs(ids)
+end
+
 function Events:OnItemInfoReceived(itemID)
     if not itemID then return end
     local Profile = ns.Profile
+    local now = GetTime()
 
     if not pendingItemIDs then
         pendingItemIDs = {}
-        C_Timer.After(0, function()
-            local ids = pendingItemIDs
-            pendingItemIDs = nil
-            if Profile then
-                local n = 0
-                for _ in pairs(ids) do n = n + 1 end
-                -- Marker name encodes the batch size so the dump shows the
-                -- distribution of flush sizes naturally (one row per size).
-                local sizeKey = "Events:OnItemInfoReceived.flush.size=" .. tostring(n)
-                Profile:Start(sizeKey)
-                Profile:Stop(sizeKey)
-            end
-            ns:InvalidateItemIDs(ids)
-            ns:UpdateSlotsForItemIDs(ids)
-        end)
+        itemInfoFirstEnqueue = now
+    end
+    itemInfoLastEnqueue = now
+    if not itemInfoFlushArmed then
+        itemInfoFlushArmed = true
+        C_Timer.After(ITEM_INFO_DEBOUNCE, FlushItemInfo)
     end
 
     if Profile then

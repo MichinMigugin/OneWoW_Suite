@@ -368,7 +368,9 @@ Search uses `OneWoW.PredicateEngine` (tokenizer, AST, evaluation). For full engi
 
 ```
 InfoBar / BankInfoBar / GuildBankInfoBar: search changed
-  └─→ *Controller:OnSearchChanged → *GUI:RefreshLayout
+  └─→ *Controller:OnSearchChanged → *GUI:OnSearchChanged
+       (dedupes: unchanged text — incl. the empty fire during open — is dropped)
+  └─→ *GUI:RefreshLayout
        └─→ filterButtons → WH:FilterBySearch
             ├─→ SavedSearches:Expand(expr)
             └─→ PE:CheckItem(expandedExpr, itemID, bagID, slotID, info)
@@ -591,7 +593,7 @@ width = cols × (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 × oute
 | Merchant | `MERCHANT_SHOW` / `MERCHANT_CLOSED` (auto open/close with guards in `HookBlizzardBags`) |
 | Money | `PLAYER_MONEY`, `ACCOUNT_MONEY`, guild bank money events |
 | Quest | `QUEST_ACCEPTED` / `QUEST_REMOVED` → full-bag dirty rebuild |
-| Predicate-related | `EQUIPMENT_SETS_CHANGED` / `PLAYER_EQUIPMENT_CHANGED` → `Events:OnPredicateInvalidation` → `InvalidateCategorization("props")` + deferred `RequestVisualRefresh` for visible windows; `GET_ITEM_INFO_RECEIVED` → coalesced `InvalidateItemIDs` + `UpdateSlotsForItemIDs` (no blanket categorization wipe) |
+| Predicate-related | `EQUIPMENT_SETS_CHANGED` / `PLAYER_EQUIPMENT_CHANGED` → `Events:OnPredicateInvalidation` → `InvalidateCategorization("props")` + deferred `RequestVisualRefresh` for visible windows; `GET_ITEM_INFO_RECEIVED` → trailing-debounced (~0.1s, capped 0.3s) `InvalidateItemIDs` + `UpdateSlotsForItemIDs` so a cold-streaming burst collapses into one relayout instead of one per frame-wave (no blanket categorization wipe) |
 
 ---
 

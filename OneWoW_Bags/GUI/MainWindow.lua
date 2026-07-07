@@ -251,7 +251,15 @@ function GUI:RefreshLayout()
     Profile:Stop("GUI:RefreshLayout[bags]")
 end
 
-function GUI:OnSearchChanged()
+function GUI:OnSearchChanged(text)
+    -- Dedupe: the search box fires onTextChanged once during open with empty
+    -- text, and can re-fire with unchanged text. Those produce a byte-identical
+    -- filter result to the layout that already ran (build_done / warm open), so
+    -- skip the redundant full relayout. Search text only ever changes through
+    -- this handler, so tracking it here stays in sync with GetSearchText().
+    text = text or ""
+    if text == (self._lastSearchText or "") then return end
+    self._lastSearchText = text
     ns:RequestLayoutRefresh("bags", "search")
 end
 

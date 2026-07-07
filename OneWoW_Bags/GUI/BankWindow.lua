@@ -590,7 +590,15 @@ function BankGUI:RefreshLayout()
     Profile:Stop("BankGUI:RefreshLayout")
 end
 
-function BankGUI:OnSearchChanged()
+function BankGUI:OnSearchChanged(text)
+    -- Dedupe: the search box fires onTextChanged once during open with empty
+    -- text, and can re-fire with unchanged text. Those produce a byte-identical
+    -- filter result to the layout that already ran (build_done / warm open), so
+    -- skip the redundant full relayout. Search text only ever changes through
+    -- this handler, so tracking it here stays in sync with GetSearchText().
+    text = text or ""
+    if text == (self._lastSearchText or "") then return end
+    self._lastSearchText = text
     ns:RequestLayoutRefresh("bank", "search")
 end
 
