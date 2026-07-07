@@ -1501,6 +1501,46 @@ function CatMgrUI:RefreshRight()
     })
     yPos = yPos - ROW_H
 
+    BuildLabelRow("SUB_GROUP_BY", yPos)
+    local currentSubGroup = catMod.subGroupBy or "none"
+    local subGroupDropdown, subGroupDropdownText = OneWoW_GUI:CreateDropdown(rightTopWrapper, {
+        width = DROPDOWN_W,
+        height = DROPDOWN_H,
+        text = LabelFromOptions(GROUP_OPTIONS, GROUP_LABELS, currentSubGroup, 1),
+    })
+    subGroupDropdown:SetPoint("TOPLEFT", rightTopWrapper, "TOPLEFT", CONTROL_X, yPos + 2)
+    local function RefreshSubGroupState()
+        local primary = catMod.groupBy or "none"
+        local enabled = primary ~= "none"
+        if enabled then
+            subGroupDropdown:Enable()
+            subGroupDropdownText:SetTextColor(1, 1, 1)
+        else
+            subGroupDropdown:Disable()
+            subGroupDropdownText:SetTextColor(0.5, 0.5, 0.5)
+        end
+    end
+    OneWoW_GUI:AttachFilterMenu(subGroupDropdown, {
+        searchable = false,
+        buildItems = function()
+            local items = {}
+            for i, v in ipairs(GROUP_OPTIONS) do
+                tinsert(items, { text = GROUP_LABELS[i], value = v })
+            end
+            return items
+        end,
+        getActiveValue = function() return catMod.subGroupBy or "none" end,
+        onSelect = function(value, text)
+            subGroupDropdownText:SetText(text)
+            local controller = GetController()
+            if controller and controller.SetCategorySubGroupBy then
+                controller:SetCategorySubGroupBy(capCatName, value)
+            end
+        end,
+    })
+    RefreshSubGroupState()
+    yPos = yPos - ROW_H
+
     BuildLabelRow("PRIORITY", yPos)
     local currentPrio = catMod.priority or 0
     local prioDropdown, prioDropdownText = OneWoW_GUI:CreateDropdown(rightTopWrapper, {

@@ -497,6 +497,11 @@ function CategoryController:SetCategoryGroupBy(categoryName, value)
     self:RefreshUI({ invalidate = false })
 end
 
+function CategoryController:SetCategorySubGroupBy(categoryName, value)
+    self:GetCategoryModification(categoryName).subGroupBy = value
+    self:RefreshUI({ invalidate = false })
+end
+
 function CategoryController:SetCategoryPriority(categoryName, value)
     self:GetCategoryModification(categoryName).priority = value
     self:RefreshUI()

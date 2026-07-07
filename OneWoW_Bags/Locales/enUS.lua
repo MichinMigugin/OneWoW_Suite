@@ -299,6 +299,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["CATEGORY_SEARCH_EXPR_DESC"] = "Use keywords like #pet, #mount, #toy, #collected, #soulbound with operators & (and), | (or), ! (not). Example: (#pet|#mount)&!#collected",
 
     ["GROUP_BY"] = "Group By",
+    ["SUB_GROUP_BY"] = "Sub-group By",
     ["GROUP_SUBTYPE"] = "Sub-Type",
     ["GROUP_UPGRADE_TRACK"] = "Upgrade Track",
     ["GROUP_EQUIPMENT_SET"] = "Equipment Set",

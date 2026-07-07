@@ -252,6 +252,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["CATEGORY_SEARCH_EXPR"] = "검색 식:",
     ["CATEGORY_SEARCH_EXPR_DESC"] = "#pet, #mount, #toy, #collected, #soulbound 같은 키워드와 연산자 & (그리고), | (또는), ! (아님)을 사용하세요. 예: (#pet|#mount)&!#collected",
     ["GROUP_BY"] = "묶기 기준",
+    ["SUB_GROUP_BY"] = "하위 묶기 기준",
     ["GROUP_SUBTYPE"] = "하위 유형",
     ["GROUP_UPGRADE_TRACK"] = "업그레이드 추적",
     ["GROUP_EQUIPMENT_SET"] = "장비 세트",

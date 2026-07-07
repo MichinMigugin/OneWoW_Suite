@@ -106,7 +106,7 @@ When two categories with the same name collide and the user picks `Merge`:
 - **items** — always unioned (pinned item IDs from both sides are kept).
 - **enabled** — sticky; stays enabled if either side was enabled.
 - **modifications** (per category, per scope)
-  - `sortMode`, `subSortMode`, `sortDescending`, `subSortDescending`, `groupBy`, `priority`, `color`: imported wins when set, otherwise keep existing.
+  - `sortMode`, `subSortMode`, `sortDescending`, `subSortDescending`, `groupBy`, `subGroupBy`, `priority`, `color`: imported wins when set, otherwise keep existing.
   - `forceOwnLine`: unioned per container key (`backpack`, `character_bank`, `warband_bank`).
   - `appliesIn` (bag/bank/etc. scoping): intersected (fewer scopes kept).
   - `addedItems`: unioned.

@@ -26,6 +26,9 @@ for rank, trackID in ipairs(OneWoW.PredicateEngine.UpgradeTrackOrder) do
     upgradeTrackRank[trackID] = rank
 end
 
+local GROUP_LABEL_SEP = " / "
+local UNTRACKED_TRACK_RANK = 9999
+
 ---@param classID number
 ---@return string|nil
 local function GetClassDisplayName(classID)
@@ -344,10 +347,11 @@ function H.PackCompactBlocks(blockList, contentFrame, opts)
         -- these same compact rules (recursively). Grouping only applies when
         -- category headers are shown; the category takes its own line.
         local groupByVal = catInfo.groupBy
+        local subGroupByVal = catInfo.subGroupBy
         local isGrouped = showHeaders and groupByVal and groupByVal ~= "none"
         local groups, groupOrder
         if isGrouped then
-            groups, groupOrder = H.GroupItemsBy(catInfo.items, groupByVal)
+            groups, groupOrder = H.GroupItemsBy(catInfo.items, groupByVal, subGroupByVal)
             if not (groups and groupOrder) then isGrouped = false end
         end
 
@@ -888,134 +892,151 @@ function H.FilterItems(categoryName, itemsByCategory, filterToken, catMods, sort
     return items
 end
 
-function H.GroupItemsBy(items, groupBy)
+---@param groupBy string
+---@param subGroupBy string|nil
+---@return string|nil effectiveSubGroupBy
+function H.EffectiveSubGroupBy(groupBy, subGroupBy)
+    if not groupBy or groupBy == "none" then return nil end
+    if not subGroupBy or subGroupBy == "none" or subGroupBy == groupBy then return nil end
+    return subGroupBy
+end
+
+---@param btn table
+---@param dimension string
+---@return string label
+---@return string|number sortKey
+local function ResolveGroupDimension(btn, dimension)
+    local OTHER = L["CAT_OTHER"]
+
+    if dimension == "expansion" then
+        local expID = WH:GetButtonExpansionID(btn)
+        return WH:GetExpansionDisplayName(expID), expID
+    elseif dimension == "type" then
+        local typeName = OTHER
+        if btn.owb_itemInfo then
+            local classID = ResolveButtonClassSubClass(btn)
+            if classID ~= nil then
+                typeName = GetClassDisplayName(classID) or OTHER
+            end
+        end
+        return typeName, typeName
+    elseif dimension == "subtype" then
+        local subTypeName = OTHER
+        if btn.owb_itemInfo then
+            local classID, subClassID = ResolveButtonClassSubClass(btn)
+            if classID ~= nil and subClassID ~= nil then
+                subTypeName = GetSubClassDisplayName(classID, subClassID) or OTHER
+            end
+        end
+        return subTypeName, subTypeName
+    elseif dimension == "track" then
+        if btn.owb_itemInfo then
+            local trackID, trackLabel = ResolveButtonUpgradeTrack(btn)
+            if trackID and trackLabel and trackLabel ~= "" then
+                return trackLabel, upgradeTrackRank[trackID] or UNTRACKED_TRACK_RANK
+            end
+        end
+        return OTHER, UNTRACKED_TRACK_RANK
+    elseif dimension == "slot" then
+        local slotName = OTHER
+        if btn.owb_itemInfo then
+            local props = ns:GetButtonProps(btn)
+            local equipLoc = props.equipLoc
+            if equipLoc and equipLoc ~= "" then
+                slotName = _G[equipLoc] or equipLoc
+            end
+        end
+        return slotName, slotName
+    elseif dimension == "quality" then
+        local q = (btn.owb_itemInfo and btn.owb_itemInfo.quality) or 0
+        local qName = _G["ITEM_QUALITY" .. q .. "_DESC"] or (L["QUALITY_PREFIX"] .. q)
+        return qName, q
+    elseif dimension == "equipmentset" then
+        local MULTI = L["EQUIPMENT_SET_MULTIPLE"]
+        local NONE = L["EQUIPMENT_SET_NONE"]
+        local key = NONE
+        if btn.owb_itemInfo then
+            local props = ns:GetButtonProps(btn)
+            local list = props.equipmentSetList
+            if list and #list > 1 then
+                key = MULTI
+            elseif list and #list == 1 then
+                key = list[1]
+            end
+        end
+        return key, key
+    end
+
+    return OTHER, OTHER
+end
+
+---@param keyA string|number
+---@param keyB string|number
+---@param dimension string
+---@return boolean true when keyA should sort before keyB
+local function GroupDimensionLess(keyA, keyB, dimension)
+    if keyA == keyB then return false end
+    if dimension == "expansion" or dimension == "quality" then
+        return keyA > keyB
+    elseif dimension == "track" then
+        return keyA < keyB
+    elseif dimension == "equipmentset" then
+        local MULTI = L["EQUIPMENT_SET_MULTIPLE"]
+        local NONE = L["EQUIPMENT_SET_NONE"]
+        if keyA == MULTI then return false end
+        if keyB == MULTI then return true end
+        if keyA == NONE then return false end
+        if keyB == NONE then return true end
+        return keyA < keyB
+    end
+    return keyA < keyB
+end
+
+---@param items table[]
+---@param groupBy string
+---@param subGroupBy string|nil
+---@return table<string, table[]>|nil groups
+---@return { name: string }[]|nil groupOrder
+function H.GroupItemsBy(items, groupBy, subGroupBy)
+    if not groupBy or groupBy == "none" then return nil, nil end
+
+    local effectiveSubGroupBy = H.EffectiveSubGroupBy(groupBy, subGroupBy)
+
     local groups = {}
     local groupOrder = {}
 
-    if groupBy == "expansion" then
-        for _, btn in ipairs(items) do
-            local expID = WH:GetButtonExpansionID(btn)
-            local expName = WH:GetExpansionDisplayName(expID)
-            if not groups[expName] then
-                groups[expName] = {}
-                tinsert(groupOrder, { name = expName, sortKey = expID })
-            end
-            tinsert(groups[expName], btn)
+    for _, btn in ipairs(items) do
+        local primaryLabel, primaryKey = ResolveGroupDimension(btn, groupBy)
+        local displayName = primaryLabel
+        local sortPrimary = primaryKey
+        local sortSecondary
+
+        if effectiveSubGroupBy then
+            local secondaryLabel, secondaryKey = ResolveGroupDimension(btn, effectiveSubGroupBy)
+            displayName = primaryLabel .. GROUP_LABEL_SEP .. secondaryLabel
+            sortSecondary = secondaryKey
         end
-        sort(groupOrder, function(a, b) return a.sortKey > b.sortKey end)
-    elseif groupBy == "type" then
-        local OTHER = L["CAT_OTHER"]
-        for _, btn in ipairs(items) do
-            local typeName = OTHER
-            if btn.owb_itemInfo then
-                local classID = ResolveButtonClassSubClass(btn)
-                if classID ~= nil then
-                    typeName = GetClassDisplayName(classID) or OTHER
-                end
-            end
-            if not groups[typeName] then
-                groups[typeName] = {}
-                tinsert(groupOrder, { name = typeName, sortKey = typeName })
-            end
-            tinsert(groups[typeName], btn)
+
+        if not groups[displayName] then
+            groups[displayName] = {}
+            tinsert(groupOrder, {
+                name = displayName,
+                sortPrimary = sortPrimary,
+                sortSecondary = sortSecondary,
+            })
         end
-        sort(groupOrder, function(a, b) return a.sortKey < b.sortKey end)
-    elseif groupBy == "subtype" then
-        local OTHER = L["CAT_OTHER"]
-        for _, btn in ipairs(items) do
-            local subTypeName = OTHER
-            if btn.owb_itemInfo then
-                local classID, subClassID = ResolveButtonClassSubClass(btn)
-                if classID ~= nil and subClassID ~= nil then
-                    subTypeName = GetSubClassDisplayName(classID, subClassID) or OTHER
-                end
-            end
-            if not groups[subTypeName] then
-                groups[subTypeName] = {}
-                tinsert(groupOrder, { name = subTypeName, sortKey = subTypeName })
-            end
-            tinsert(groups[subTypeName], btn)
-        end
-        sort(groupOrder, function(a, b) return a.sortKey < b.sortKey end)
-    elseif groupBy == "track" then
-        local OTHER = L["CAT_OTHER"]
-        local UNTRACKED_RANK = 9999
-        for _, btn in ipairs(items) do
-            local groupName = OTHER
-            local sortKey = UNTRACKED_RANK
-            if btn.owb_itemInfo then
-                local trackID, trackLabel = ResolveButtonUpgradeTrack(btn)
-                if trackID and trackLabel and trackLabel ~= "" then
-                    groupName = trackLabel
-                    sortKey = upgradeTrackRank[trackID] or UNTRACKED_RANK
-                end
-            end
-            if not groups[groupName] then
-                groups[groupName] = {}
-                tinsert(groupOrder, { name = groupName, sortKey = sortKey })
-            end
-            tinsert(groups[groupName], btn)
-        end
-        sort(groupOrder, function(a, b) return a.sortKey < b.sortKey end)
-    elseif groupBy == "slot" then
-        local OTHER = L["CAT_OTHER"]
-        for _, btn in ipairs(items) do
-            local slotName = OTHER
-            if btn.owb_itemInfo then
-                local props = ns:GetButtonProps(btn)
-                local equipLoc = props.equipLoc
-                if equipLoc and equipLoc ~= "" then
-                    slotName = _G[equipLoc] or equipLoc
-                end
-            end
-            if not groups[slotName] then
-                groups[slotName] = {}
-                tinsert(groupOrder, { name = slotName, sortKey = slotName })
-            end
-            tinsert(groups[slotName], btn)
-        end
-        sort(groupOrder, function(a, b) return a.sortKey < b.sortKey end)
-    elseif groupBy == "quality" then
-        for _, btn in ipairs(items) do
-            local q = (btn.owb_itemInfo and btn.owb_itemInfo.quality) or 0
-            local qName = _G["ITEM_QUALITY" .. q .. "_DESC"] or (L["QUALITY_PREFIX"] .. q)
-            if not groups[qName] then
-                groups[qName] = {}
-                tinsert(groupOrder, { name = qName, sortKey = q })
-            end
-            tinsert(groups[qName], btn)
-        end
-        sort(groupOrder, function(a, b) return a.sortKey > b.sortKey end)
-    elseif groupBy == "equipmentset" then
-        local MULTI = L["EQUIPMENT_SET_MULTIPLE"]
-        local NONE  = L["EQUIPMENT_SET_NONE"]
-        for _, btn in ipairs(items) do
-            local key = NONE
-            if btn.owb_itemInfo then
-                local props = ns:GetButtonProps(btn)
-                local list = props.equipmentSetList
-                if list and #list > 1 then
-                    key = MULTI
-                elseif list and #list == 1 then
-                    key = list[1]
-                end
-            end
-            if not groups[key] then
-                groups[key] = {}
-                tinsert(groupOrder, { name = key, sortKey = key })
-            end
-            tinsert(groups[key], btn)
-        end
-        sort(groupOrder, function(a, b)
-            if a.name == MULTI then return false end
-            if b.name == MULTI then return true end
-            if a.name == NONE  then return false end
-            if b.name == NONE  then return true end
-            return a.name < b.name
-        end)
-    else
-        return nil, nil
+        tinsert(groups[displayName], btn)
     end
+
+    sort(groupOrder, function(a, b)
+        if GroupDimensionLess(a.sortPrimary, b.sortPrimary, groupBy) then return true end
+        if GroupDimensionLess(b.sortPrimary, a.sortPrimary, groupBy) then return false end
+        if effectiveSubGroupBy then
+            if GroupDimensionLess(a.sortSecondary, b.sortSecondary, effectiveSubGroupBy) then return true end
+            if GroupDimensionLess(b.sortSecondary, a.sortSecondary, effectiveSubGroupBy) then return false end
+        end
+        return a.name < b.name
+    end)
 
     return groups, groupOrder
 end
@@ -1064,8 +1085,8 @@ function H.LayoutCategoryContent(config)
 
     local function GetCategoryGrouping(categoryName)
         local mod = catMods[categoryName]
-        if mod and mod.groupBy then return mod.groupBy end
-        return nil
+        if not mod then return nil, nil end
+        return mod.groupBy, mod.subGroupBy
     end
 
     local function DoFilterItems(categoryName)
@@ -1076,7 +1097,7 @@ function H.LayoutCategoryContent(config)
         local items = DoFilterItems(categoryName)
         if not items then return end
 
-        local groupBy = GetCategoryGrouping(categoryName)
+        local groupBy, subGroupBy = GetCategoryGrouping(categoryName)
 
         if showHeaders then
             local section = acquireSection(contentFrame)
@@ -1094,7 +1115,7 @@ function H.LayoutCategoryContent(config)
                 section.content:SetHeight(1)
 
                 if groupBy and groupBy ~= "none" then
-                    local groups, groupOrder = H.GroupItemsBy(items, groupBy)
+                    local groups, groupOrder = H.GroupItemsBy(items, groupBy, subGroupBy)
 
                     if groups and groupOrder then
                         local subY = H.RenderGroupedGrids(section.content, groups, groupOrder, {
@@ -1185,11 +1206,13 @@ function H.LayoutCategoryContent(config)
     local function BuildCatInfo(categoryName)
         local items = DoFilterItems(categoryName)
         if not items then return nil end
+        local mod = catMods[categoryName]
         return {
             name = categoryName,
             displayName = H.ResolveCategoryName(categoryName),
             items = items,
-            groupBy = GetCategoryGrouping(categoryName),
+            groupBy = mod and mod.groupBy,
+            subGroupBy = mod and mod.subGroupBy,
         }
     end
 

@@ -300,6 +300,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["CATEGORY_SEARCH_EXPR_DESC"] = "使用 #pet、#mount、#toy、#collected、#soulbound 等关键词，配合运算符 &（与）、|（或）、!（非）。例如：(#pet|#mount)&!#collected",
 
     ["GROUP_BY"] = "分组方式",
+    ["SUB_GROUP_BY"] = "子分组方式",
     ["GROUP_SUBTYPE"] = "子类型",
     ["GROUP_UPGRADE_TRACK"] = "升级轨道",
     ["GROUP_EQUIPMENT_SET"] = "装备方案",

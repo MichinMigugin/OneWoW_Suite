@@ -84,7 +84,7 @@ local function mergeModifications(existingMod, importedMod)
     if type(importedMod) ~= "table" then return existingMod end
     existingMod = existingMod or {}
 
-    for _, field in ipairs({ "sortMode", "subSortMode", "sortDescending", "subSortDescending", "groupBy", "priority", "color" }) do
+    for _, field in ipairs({ "sortMode", "subSortMode", "sortDescending", "subSortDescending", "groupBy", "subGroupBy", "priority", "color" }) do
         if importedMod[field] ~= nil then
             existingMod[field] = importedMod[field]
         end

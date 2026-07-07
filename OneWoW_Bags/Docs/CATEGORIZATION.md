@@ -197,8 +197,9 @@ If **`sectionOrder` is empty**, `GetSectionedLayout` returns `GetSortedCategoryN
 Shared by both `CategoryView` (bags) and `BankCategoryView` (bank) via `H.LayoutCategoryContent` (with category headers enabled and section expanded):
 
 - `categoryModifications[name].groupBy`: `expansion`, `type` (item **class**), `subtype` (item **subclass**), `slot`, `quality`, `track` (upgrade track), `equipmentset`, or `none` / unset.
+- `categoryModifications[name].subGroupBy`: optional second grouping axis with the same values as `groupBy`. Ignored when `groupBy` is `none`, when `subGroupBy` is `none`, or when both match (collapsed to single-axis grouping). Composite buckets label as `group / sub-group` (e.g. `Enchanting / Epic`) with no extra visual nesting — same one-label-plus-grid layout as single-axis grouping.
 - `type` uses cached `_owb_classID` + `C_Item.GetItemClassInfo`; `subtype` uses `_owb_classID` / `_owb_subClassID` + `GetItemSubClassInfo`; `track` uses `_owb_upgradeTrackStringID` / `_owb_upgradeTrackString` from `C_Item.GetItemUpgradeInfo` (same fields as `#explorer` … `#myth` keywords).
-- `H.GroupItemsBy` buckets the items into ordered subgroups. **Stacked** layout draws them via `H.RenderGroupedGrids` (one full-width label + grid per subgroup, stacked vertically).
+- `H.GroupItemsBy` buckets the items into ordered subgroups. Composite order sorts by the primary dimension first, then the secondary (each using that dimension's normal direction). **Stacked** layout draws them via `H.RenderGroupedGrids` (one full-width label + grid per subgroup, stacked vertically).
 - Grouping honored in **both** stacked and compact layouts. Grouping requires category headers to be on (with headers off, both layouts render a flat grid).
 - In **compact** mode a grouped category takes its own line for its title, then its subgroups are packed by `H.PackCompactBlocks` using the same compact rules as categories: single-row subgroups sit side-by-side; multi-row subgroups take their own full-width line. So a bag with small quality tiers packs them onto shared rows, while a bank with large tiers shows each on its own line. Subgroup labels use `TEXT_SECONDARY`; the category title keeps its category color.
 
@@ -232,7 +233,7 @@ Search strings use its expression language (`#keyword`, operators, etc.). `Build
 |-----------|------|
 | `customCategoriesV2` | Custom categories: `items`, `searchExpression`, `itemType` / `itemSubType`, `filterMode`, `typeMatchMode`, `enabled`, `sortOrder`, `isBaganator`, `isTSM`, etc. |
 | `savedSearches` | Named predicate shortcuts expanded from `SAVED(Name)` before custom search categories are evaluated. Referenced entries are included in native OneWoW export v2 — see [`IMPORT_EXPORT.md`](IMPORT_EXPORT.md). |
-| `categoryModifications[name]` | `sortMode`, `subSortMode`, `sortDescending`, `subSortDescending`, `groupBy`, `priority`, `color`, `appliesIn`, `addedItems`, `forceOwnLine` (per-container compact layout) |
+| `categoryModifications[name]` | `sortMode`, `subSortMode`, `sortDescending`, `subSortDescending`, `groupBy`, `subGroupBy`, `priority`, `color`, `appliesIn`, `addedItems`, `forceOwnLine` (per-container compact layout) |
 | `disabledCategories` | Disable builtin/custom by name; classification remaps to **Other** when applicable |
 | `enableJunkCategory` | Separate toggle for **phase B2** (default `true`); disabling skips the 1W Junk check entirely |
 | `enableUpgradeCategory` | Separate toggle for **phase A2** (default `true`); disabling skips the 1W Upgrades overlay entirely |

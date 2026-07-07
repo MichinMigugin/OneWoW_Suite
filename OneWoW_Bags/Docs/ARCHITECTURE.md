@@ -414,7 +414,7 @@ Stable section IDs (`SEC_ONEWOW_BAGS`, `SEC_EQUIPMENT`, `SEC_CRAFTING`, `SEC_HOU
 Shared by `CategoryView` and `BankCategoryView`. Contains the full shared layout pipeline:
 
 - `H.GetSortedCategoryNames` / `H.GetSectionedLayout` — section/display-order resolution, `appliesIn` container filtering, per-container section header visibility (`showHeader` for bags, `showHeaderBank` for bank with fallback to `showHeader` when nil)
-- Grouping: `H.GroupItemsBy` handles `expansion`, `type` (class), `subtype`, `slot`, `quality`, `track`, `equipmentset`
+- Grouping: `H.GroupItemsBy` handles `expansion`, `type` (class), `subtype`, `slot`, `quality`, `track`, `equipmentset`; optional `subGroupBy` composes `group / sub-group` labels
 - `StackItems` / `RestoreItemButtonCounts` — item stacking logic
 - `FilterItems` — per-category search filter evaluation
 - `H.LayoutCategoryContent(config)` — unified entry point for the full render dispatch (sort, stack, group, grid/compact)

@@ -300,6 +300,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["CATEGORY_SEARCH_EXPR_DESC"] = "Use palavras-chave como #pet, #mount, #toy, #collected, #soulbound com os operadores & (e), | (ou), ! (não). Exemplo: (#pet|#mount)&!#collected",
 
     ["GROUP_BY"] = "Agrupar por",
+    ["SUB_GROUP_BY"] = "Subagrupar por",
     ["GROUP_SUBTYPE"] = "Subtipo",
     ["GROUP_UPGRADE_TRACK"] = "Trilha de melhoria",
     ["GROUP_EQUIPMENT_SET"] = "Conjunto de equipamento",

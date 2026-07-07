@@ -252,6 +252,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["CATEGORY_SEARCH_EXPR"] = "Выражение поиска:",
     ["CATEGORY_SEARCH_EXPR_DESC"] = "Используйте ключевые слова вроде #pet, #mount, #toy, #collected, #soulbound с операторами & (и), | (или), ! (не). Пример: (#pet|#mount)&!#collected",
     ["GROUP_BY"] = "Группировать по",
+    ["SUB_GROUP_BY"] = "Подгруппировать по",
     ["GROUP_SUBTYPE"] = "Подтип",
     ["GROUP_UPGRADE_TRACK"] = "Трек улучшений",
     ["GROUP_EQUIPMENT_SET"] = "Комплект экипировки",
