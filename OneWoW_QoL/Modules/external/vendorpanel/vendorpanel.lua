@@ -71,6 +71,8 @@ local state = {
     filteredVendorItems = {},
     clearedSlots = {},
     slotMap = {},
+    _plumberPostRemap = false,
+    _plumberPriceRefresh = false,
 }
 ns.VPState = state
 
@@ -491,6 +493,7 @@ end
 
 --- Plumber's MerchantPrice module reads itemButton:GetID() itself, so when it is
 --- active we must not also re-drive native currency display or we double it up.
+--- Remapped slots must be in place before Plumber's deferred UpdateShopUI pass.
 ---@return boolean
 local function IsPlumberMerchantActive()
     if not C_AddOns.IsAddOnLoaded("Plumber") then return false end
@@ -498,7 +501,13 @@ local function IsPlumberMerchantActive()
     if not db then return false end
     local mp = db["MerchantPrice"]
     if type(mp) == "table" then
-        return mp["enable"] == true
+        local enable = mp["enable"]
+        if type(enable) == "boolean" then
+            return enable
+        elseif type(enable) == "table" then
+            return enable == true
+        end
+        return false
     end
     return mp == true
 end
@@ -526,6 +535,44 @@ local function FixSlotCurrency(btn, merchantIndex)
         MerchantFrame_UpdateAltCurrency(merchantIndex, btn, CanAffordMerchantItem(merchantIndex))
         altCurrency:Show()
     end
+end
+
+--- Second pass: hide stale currency on cleared slots; re-drive Blizzard frames when
+--- Plumber is not painting prices itself.
+---@param perPage integer
+local function FinalizeMerchantGridCurrency(perPage)
+    if not MerchantFrame or not MerchantFrame:IsShown() then return end
+    local usePlumber = IsPlumberMerchantActive()
+    for btn = 1, perPage do
+        if state.clearedSlots[btn] then
+            local altCurrency = _G["MerchantItem" .. btn .. "AltCurrencyFrame"]
+            if altCurrency then altCurrency:Hide() end
+            for j = 1, 3 do
+                local cb = _G["MerchantItem" .. btn .. "AltCurrencyFrameItem" .. j]
+                if cb then cb:Hide() end
+            end
+            local moneyFrame = _G["MerchantItem" .. btn .. "MoneyFrame"]
+            if moneyFrame then moneyFrame:Hide() end
+        elseif not usePlumber and state.slotMap[btn] then
+            FixSlotCurrency(btn, state.slotMap[btn])
+        end
+    end
+end
+
+--- Plumber paints merchant prices on the frame after MerchantFrame_Update using
+--- ItemButton:GetID(). Re-run the update after our remap so it reads mapped indices.
+local function RefreshPlumberMerchantPrices()
+    if not IsPlumberMerchantActive() then return end
+    if not MerchantFrame or not MerchantFrame:IsShown() or MerchantFrame.selectedTab ~= 1 then return end
+    if state._plumberPriceRefresh then return end
+    state._plumberPriceRefresh = true
+    C_Timer.After(0, function()
+        state._plumberPriceRefresh = false
+        if not MerchantFrame or not MerchantFrame:IsShown() then return end
+        state._plumberPostRemap = true
+        MerchantFrame_Update()
+        state._plumberPostRemap = false
+    end)
 end
 
 ---@param btn integer
@@ -657,7 +704,8 @@ end
 
 --- Heavy renderer: repopulate and repaginate the 12 slots from the filtered
 --- index list so excluded / known / non-matching items are physically removed.
-function VendorPanel:RenderMerchantGrid()
+---@param skipPlumberRefresh boolean|nil
+function VendorPanel:RenderMerchantGrid(skipPlumberRefresh)
     if not MerchantFrame or not MerchantFrame:IsShown() then return end
     if MerchantFrame.selectedTab ~= 1 then return end
 
@@ -689,24 +737,38 @@ function VendorPanel:RenderMerchantGrid()
         UpdateMerchantSlot(btn, state.filteredVendorItems[filteredIndex], preferredArmor)
     end
 
-    C_Timer.After(0.05, function()
-        if not MerchantFrame or not MerchantFrame:IsShown() then return end
-        local usePlumber = IsPlumberMerchantActive()
-        for btn = 1, perPage do
-            if state.clearedSlots[btn] then
-                local altCurrency = _G["MerchantItem" .. btn .. "AltCurrencyFrame"]
-                if altCurrency then altCurrency:Hide() end
-                for j = 1, 3 do
-                    local cb = _G["MerchantItem" .. btn .. "AltCurrencyFrameItem" .. j]
-                    if cb then cb:Hide() end
-                end
-                local moneyFrame = _G["MerchantItem" .. btn .. "MoneyFrame"]
-                if moneyFrame then moneyFrame:Hide() end
-            elseif not usePlumber and state.slotMap[btn] then
-                FixSlotCurrency(btn, state.slotMap[btn])
-            end
+    if IsPlumberMerchantActive() then
+        FinalizeMerchantGridCurrency(perPage)
+        if not skipPlumberRefresh then
+            RefreshPlumberMerchantPrices()
         end
-    end)
+    else
+        C_Timer.After(0.05, function()
+            FinalizeMerchantGridCurrency(perPage)
+        end)
+    end
+end
+
+--- Runs after MerchantFrame_Update when our grid filter is active.
+local function DispatchMerchantGridUpdate()
+    if not MerchantFrame or not MerchantFrame:IsShown() then return end
+    local isBuyMode = (MerchantFrame.selectedTab == 1)
+    if not isBuyMode then
+        VendorPanel:ResetMerchantButtons()
+        if state.replacementSellButton then state.replacementSellButton:Hide() end
+        return
+    end
+    local panelShown = state.junkPreviewPanel and state.junkPreviewPanel:IsShown()
+    VendorPanel:ManageBlizzardSellButton(panelShown and true or false)
+    if not panelShown or IsVendorFilterLoaded() then
+        VendorPanel:ResetMerchantButtons()
+        return
+    end
+    if VendorPanel:GridFilteringActive() then
+        VendorPanel:RenderMerchantGrid()
+    else
+        VendorPanel:FadeMerchantGrid()
+    end
 end
 
 function VendorPanel:IsItemInNeverSellList(itemID)
@@ -1695,26 +1757,17 @@ function VendorPanelModule:OnEnable()
     if not self._hookDone and MerchantFrame_Update then
         self._hookDone = true
         hooksecurefunc("MerchantFrame_Update", function()
-            C_Timer.After(0.05, function()
-                if not MerchantFrame or not MerchantFrame:IsShown() then return end
-                local isBuyMode = (MerchantFrame.selectedTab == 1)
-                if not isBuyMode then
-                    VendorPanel:ResetMerchantButtons()
-                    if state.replacementSellButton then state.replacementSellButton:Hide() end
-                    return
-                end
-                local panelShown = state.junkPreviewPanel and state.junkPreviewPanel:IsShown()
-                VendorPanel:ManageBlizzardSellButton(panelShown and true or false)
-                if not panelShown or IsVendorFilterLoaded() then
-                    VendorPanel:ResetMerchantButtons()
-                    return
-                end
+            -- Plumber refresh pass: Blizzard repopulated native slots; restore our
+            -- filtered layout so Plumber's next UpdateShopUI reads mapped GetID().
+            if state._plumberPostRemap then
                 if VendorPanel:GridFilteringActive() then
-                    VendorPanel:RenderMerchantGrid()
-                else
-                    VendorPanel:FadeMerchantGrid()
+                    VendorPanel:RenderMerchantGrid(true)
                 end
-            end)
+                return
+            end
+            -- Remap synchronously so ItemButton:SetID() is correct before Plumber's
+            -- deferred price pass (was 0.05s late, leaving stale slot-position costs).
+            DispatchMerchantGridUpdate()
         end)
     end
 end
