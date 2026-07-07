@@ -56,6 +56,7 @@ Empty strings are **not** cached so pre-streaming evaluations can retry.
 | `GetUsageRequirements(tooltipData)` | `UsageRequirement` lines |
 | `ScanRedRequirementLines(tooltipData)` | Red merchant gate lines |
 | `ScanMerchantBlockReason(index)` | Merchant snapshot + red-line scan |
+| `PopulateTooltipProps(props, opts?)` | Fill lazy PE tooltip fields (`hasUseAbility`, `isAlreadyKnown`, …); optional `opts.recipeAlreadyKnown` bridge |
 
 ## Cache invalidation
 
@@ -73,7 +74,7 @@ Empty strings are **not** cached so pre-streaming evaluations can retry.
 
 | Consumer | Delegation |
 | --- | --- |
-| `PredicateEngine` | `GetPropsData`, `GetPropsText`, `GetBindState`, `GetLearnSpellID`, `HasUseEffect`, cache invalidation |
+| `PredicateEngine` | `GetPropsData`, `GetPropsText`, `PopulateTooltipProps`, `GetBindState`, `GetLearnSpellID`, `HasUseEffect`, cache invalidation |
 | `RecipeKnownUtil` | `ResolveItemData`, `GetLearnSpellID`, `IsAlreadyKnown`, `GetItemByIDData` |
 | `Merchant` | `ScanMerchantBlockReason` |
 
@@ -85,5 +86,4 @@ Empty strings are **not** cached so pre-streaming evaluations can retry.
 - **Recipe IDs vs teach spells:** `GetRecipeInfoForSkillLineAbility` accepts only
   skill-line ability / teach-spell IDs — not trade-skill recipe IDs from profession
   scans (`RecipeKnownUtil` enforces this).
-- **Phase 4:** `ResolveTooltipFields` may move more text-pattern scans into
-  TooltipScanner; `#usable` / bank parity are separate.
+- **Phase 4:** `PopulateTooltipProps` owns tooltip-field population; `#usable` uses per-slot `IsUsableItem(hyperlink or itemID)`.

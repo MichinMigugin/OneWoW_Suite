@@ -631,8 +631,8 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 
 | Keyword | What it matches |
 |---|---|
-| `#usable` | Items you can use (alias: `#use`) |
-| `#unusable` | Items you cannot use |
+| `#usable` | Items the logged-in character can use (level, class, spec, profession — via `C_Item.IsUsableItem`; same in bags and bank) |
+| `#unusable` | Items the logged-in character cannot use |
 | `#new` | Items Blizzard marks as new in the bag slot (`C_NewItems.IsNewItem`), via the shared PredicateEngine `BuildProps` (may lag real client state until the props cache is invalidated) |
 | `#locked` | Bag slot is server-locked (`ContainerItemInfo.isLocked`) — item on cursor, in trade/mail/AH, or pending a move; **not** lockbox lockpicking state |
 | `#hasloot` | Loot containers (`ContainerItemInfo.hasLoot`) — lockboxes, junk boxes, clam shells, etc.; true for locked and unlocked lockboxes; requires bag/slot context (false without it) |
@@ -641,6 +641,8 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 | `#refundable` | Items still eligible for a full vendor refund (same window as the in-game refund indicator) |
 | `#enchanted` | Items whose link includes a permanent enchant (enchant ID in the parsed item link) |
 | `#scrappable` | Items `C_Item.CanScrapItem` reports as scrappable for the bag slot (`ItemLocation` must be valid); always false without a real bag/slot |
+
+> **`#usable` vs `#onuse`:** `#usable` / `#unusable` are character-eligibility (`C_Item.IsUsableItem` on the item hyperlink or ID). `#onuse` means the tooltip has a **Use:** effect — independent of whether you meet the requirements. `#use` is not a registered keyword (use `#usable` or `#onuse` explicitly).
 
 For `#knowledge`, see **Consumable Subtypes** (same predicate).
 

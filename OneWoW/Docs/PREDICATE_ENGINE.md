@@ -136,9 +136,11 @@ All functions are method-style (`PE:Func(...)`). Exported constants use dot synt
 
 `BuildProps` returns a table with a permanent metatable that lazily populates three groups of fields on first read. This avoids paying for tooltip parsing, tooltip-data fetches, or `C_Item.GetItemStats` for items whose predicate never reads those fields.
 
+**Eager per-slot field:** `isUsable` (`#usable` / `#unusable`) is set on every `BuildProps` call from `C_Item.IsUsableItem(hyperlink or itemID)` — not identity-tier — so bags and bank agree for the logged-in character. Props caches are invalidated on `PLAYER_LEVEL_UP`, talent/spec changes, and `SKILL_LINES_CHANGED` (registered in `PredicateEngine.lua` and OneWoW Bags runtime events).
+
 | Group | Fields | Resolver | Marker flag |
 |---|---|---|---|
-| Tooltip | `tooltipText`, `hasCharges`, `hasUseAbility`, `hasEquipAbility`, `isAlreadyKnown`, `isTradeableLoot`, `isUnique`, `isUniqueEquipped` | `ResolveTooltipFields` | `_tooltipResolved` on success; `_tooltipDataMissing` on failure |
+| Tooltip | `tooltipText`, `hasCharges`, `hasUseAbility`, `hasEquipAbility`, `isAlreadyKnown`, `isTradeableLoot`, `isUnique`, `isUniqueEquipped` | `TooltipScanner:PopulateTooltipProps` (via `ResolveTooltipFields`) | `_tooltipResolved` on success; `_tooltipDataMissing` on failure |
 | Bind | `currentbind`, `isSoulbound`, `isBOE`, `isBOA`, `isBOU`, `isWUE`, `isWarbound` | `ResolveBind` (source-aware; see Architecture) | `_bindResolved` |
 | Stats | `statIntellect`, `statAgility`, `statStrength`, `statStamina`, `statCrit`, `statHaste`, `statMastery`, `statVersatility`, `statSpeed`, `statLeech`, `statAvoidance`, `statArmor`, plus all `socket*` counters (`socketPrismatic`, `socketMeta`, color sockets, `socketCogwheel`, `socketHydraulic`, `socketDomination`, `socketCypher`, `socketTinker`, `socketPrimordial`, `socketFragrance`, `socketFiber`, punchcard sockets, and singing sockets) | `ResolveStats` (`C_Item.GetItemStats`) | `_statsResolved` |
 

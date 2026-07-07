@@ -1657,6 +1657,17 @@ local runtimeEventHandlers = {
         PE:InvalidateKnownProfessions()
         Events:OnPredicateInvalidation(...)
     end,
+    PLAYER_LEVEL_UP = function()
+        Events:OnPredicateInvalidation()
+    end,
+    ACTIVE_TALENT_GROUP_CHANGED = function()
+        Events:OnPredicateInvalidation()
+    end,
+    PLAYER_SPECIALIZATION_CHANGED = function(unit)
+        if unit == "player" then
+            Events:OnPredicateInvalidation()
+        end
+    end,
 }
 
 function ns:RegisterRuntimeEvents()

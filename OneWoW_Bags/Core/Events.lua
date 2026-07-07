@@ -35,6 +35,9 @@ Events.RuntimeEvents = {
     "PLAYER_EQUIPMENT_CHANGED",
     "GET_ITEM_INFO_RECEIVED",
     "SKILL_LINES_CHANGED",
+    "PLAYER_LEVEL_UP",
+    "ACTIVE_TALENT_GROUP_CHANGED",
+    "PLAYER_SPECIALIZATION_CHANGED",
 }
 
 local predicateRefreshPending = false

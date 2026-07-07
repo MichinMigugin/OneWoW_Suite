@@ -143,11 +143,6 @@ MapContexts("worldquest", {25, 26, 27, 28, 29, 30, 36, 37, 42, 43, 53, 54, 55, 7
 MapContexts("pvp",        {7, 8, 24, 38, 39, 40, 41, 44, 45, 46, 47, 48, 49, 50, 51, 52, 56, 76, 77, 78, 88})
 MapContexts("store",      {12})
 
--- Locale-aware patterns built from Blizzard globals.
-local chargesPattern = ITEM_SPELL_CHARGES:match("|4(.-):.-%;")
-local tradeablePattern = BIND_TRADE_TIME_REMAINING:match("^(.-)%%s")
-local uniqueEquipPattern = ITEM_UNIQUE_EQUIPPABLE:gsub("%-", "%%-")
-
 -- #currentseason: bonus IDs for crafted/voidforged gear (update each season).
 local CURRENT_SEASON_BONUS_IDS = {
     [13653] = true, -- Voidforged
@@ -1048,7 +1043,7 @@ RegisterKeyword("catalyst",         function(p) return p.isCatalyst end)
 RegisterKeyword("catalystupgrade",  function(p) return p.isCatalystUpgrade end)
 
 -- ---- 7.18  State keywords ----
-RegisterKeyword({"usable", "use"},  function(p) return p.isUsable end)
+RegisterKeyword("usable",           function(p) return p.isUsable end)
 RegisterKeyword("unusable",         function(p) return not p.isUsable end)
 RegisterKeyword("locked",           function(p) return p.isLocked end)
 RegisterKeyword("hasloot",          function(p) return p.hasLoot end)
@@ -1411,55 +1406,17 @@ end
 
 -- ---------- ResolveTooltipFields ----------
 -- Lazily populates the tooltip-derived fields on first access.
--- Called by the propsMT.__index metatable handler.
--- Only the fields that genuinely require tooltip scanning live here.
---
--- Lookup precedence: slot-keyed tooltip first (most accurate, includes
--- current bind state and slot-specific lines like `<Right Click to Open>`,
--- the trade timer, and "Already Known"). Falls back to hyperlink-keyed
--- tooltip when slot context is unavailable -- e.g. callers like toast-loot
--- that only have a hyperlink -- so tooltip~, #onuse, #onequip, etc. still
--- evaluate against the policy tooltip body.
---
--- Returns true when tooltip data was actually available; false when neither
--- lookup yielded text. Callers (propsMT.__index, ResolveBaseCategory) use
--- this to avoid persisting predicate verdicts that depended on missing data.
+-- Delegates to TooltipScanner:PopulateTooltipProps; recipe alreadyKnown
+-- bridge stays here (Collectibles / RecipeKnownUtil context).
 local function ResolveTooltipFields(props)
-    local tt = Scanner:GetPropsText(props)
-
-    if tt == "" then
-        rawset(props, "hasCharges", false)
-        rawset(props, "hasUseAbility", false)
-        rawset(props, "hasEquipAbility", false)
-        rawset(props, "isAlreadyKnown", false)
-        rawset(props, "isTradeableLoot", false)
-        rawset(props, "isUnique", false)
-        rawset(props, "isUniqueEquipped", false)
-        rawset(props, "tooltipText", "")
-        return false
-    end
-
-    local isUniqueEquipped = strfind(tt, "^"..uniqueEquipPattern) ~= nil or strfind(tt, "\n"..ITEM_UNIQUE_EQUIPPABLE, 1, true) ~= nil
-
-    rawset(props, "tooltipText",        tt)
-    rawset(props, "hasCharges",         strfind(tt, "(%d+) |4" .. chargesPattern) ~= nil)
-    rawset(props, "hasUseAbility",      Scanner:HasUseEffect(tt))
-    rawset(props, "hasEquipAbility",    Scanner:HasEquipEffect(tt))
-    rawset(props, "isTradeableLoot",    strfind(tt, tradeablePattern, 1, true) ~= nil)
-
-    local td = Scanner:GetPropsData(props)
-    local alreadyKnown = td and Scanner:IsAlreadyKnown(td)
-        or Scanner:IsAlreadyKnownText(tt)
-    if not alreadyKnown and rawget(props, "isRecipe") then
-        local Util = OneWoW.RecipeKnownUtil
-        if Util and Util:IsRecipeKnown(rawget(props, "id"), GetCollectionContext(props)) == true then
-            alreadyKnown = true
-        end
-    end
-    rawset(props, "isAlreadyKnown", alreadyKnown)
-    rawset(props, "isUniqueEquipped",   isUniqueEquipped)
-    rawset(props, "isUnique",           isUniqueEquipped or strfind(tt, "^"..ITEM_UNIQUE) ~= nil or strfind(tt, "\n"..ITEM_UNIQUE, 1, true) ~= nil)
-    return true
+    return Scanner:PopulateTooltipProps(props, {
+        recipeAlreadyKnown = function(p)
+            if not PropsIsRecipeItem(p) then return false end
+            local Util = OneWoW.RecipeKnownUtil
+            if not Util then return false end
+            return Util:IsRecipeKnown(rawget(p, "id"), GetCollectionContext(p)) == true
+        end,
+    })
 end
 
 -- ---------- ResolveBind ----------
@@ -2122,9 +2079,7 @@ local function PopulateBaseProps(props, itemID, hyperlink)
     props.isEquipment = C_Item.IsEquippableItem(itemID) == true
     props.isProfessionEquipment = props.classID == Enum.ItemClass.Profession and props.isEquipment
 
-    -- 'Usable' in this context is equivalent to the item having a 'Use: ' text in tooltip
-    --props.isUsable = C_Item.IsUsableItem(hyperlink or itemID) == true
-    props.isUsable = C_Item.IsUsableItem(itemID) == true
+    -- isUsable: set in BuildProps slot overlay (character context; not identity-tier).
 
     -- ---- Socket detection (API-based, no tooltip needed) ----
     local socketCount = hyperlink and C_Item.GetItemNumSockets(hyperlink) or 0
@@ -2479,6 +2434,10 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
     end
 
     if Profile then Profile:Stop("PE:BuildProps.PopulateSlotProps") end
+
+    -- Character-usability: evaluated per BuildProps (not identity-tier) so bank
+    -- and bag slots share the same answer for the logged-in character.
+    props.isUsable = C_Item.IsUsableItem(hyperlink or itemID) == true
 
     -- ---- Apply lazy tooltip metatable ----
     setmetatable(props, propsMT)
@@ -3396,8 +3355,9 @@ end
 
 --- Invalidate props and tooltip caches (lighter, for frequent events).
 --- Compiled expressions are still valid since the grammar didn't change.
---- Also wipes identity-tier props since some fields (collection state, player
---- level, equipped status) can shift between bag updates.
+--- Also wipes identity-tier props since some fields (collection state,
+--- equipped status) can shift between bag updates. Character-usability
+--- (`isUsable`) is recomputed per BuildProps, not cached in identityPropsCache.
 function PE:InvalidatePropsCache()
     wipe(propsCache)
     Scanner:InvalidateTooltipCaches()
@@ -3673,3 +3633,19 @@ SlashCmdList["PE_TOOLTIP_DUMP"] = function(msg)
 end
 
 PE.BATTLE_PET_CAGE_ID = BATTLE_PET_CAGE_ID
+
+local function OnCharacterContextChanged()
+    PE:InvalidatePropsCache()
+end
+
+ns.RegisterEvent("PLAYER_LEVEL_UP", "PredicateEngine", OnCharacterContextChanged)
+ns.RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED", "PredicateEngine", OnCharacterContextChanged)
+ns.RegisterEvent("PLAYER_SPECIALIZATION_CHANGED", "PredicateEngine", function(_, unit)
+    if unit == "player" then
+        OnCharacterContextChanged()
+    end
+end)
+ns.RegisterEvent("SKILL_LINES_CHANGED", "PredicateEngine", function()
+    PE:InvalidateKnownProfessions()
+    OnCharacterContextChanged()
+end)

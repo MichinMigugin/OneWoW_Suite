@@ -14,10 +14,15 @@ local C_Container = C_Container
 local strfind = string.find
 local tconcat = table.concat
 local ipairs, wipe, tonumber = ipairs, wipe, tonumber
+local rawset, rawget = rawset, rawget
 
 local LINE_LEARN = Enum.TooltipDataLineType.ItemSpellTriggerLearn
 local LINE_BINDING = Enum.TooltipDataLineType.ItemBinding
 local LINE_USAGE_REQ = Enum.TooltipDataLineType.UsageRequirement
+
+local chargesPattern = ITEM_SPELL_CHARGES:match("|4(.-):.-%;")
+local tradeablePattern = BIND_TRADE_TIME_REMAINING:match("^(.-)%%s")
+local uniqueEquipPattern = ITEM_UNIQUE_EQUIPPABLE:gsub("%-", "%%-")
 
 local bagDataCache = {}
 local linkDataCache = {}
@@ -341,4 +346,47 @@ end
 ---@return string|nil
 function TooltipScanner:ScanMerchantBlockReason(merchantIndex)
     return self:ScanRedRequirementLines(self:GetMerchantItemData(merchantIndex))
+end
+
+--- Populate lazy tooltip-derived fields on a PredicateEngine props table.
+--- opts.recipeAlreadyKnown(props) is an optional PE bridge for legacy recipe items.
+---@param props table
+---@param opts table|nil `{ recipeAlreadyKnown?: fun(props): boolean }`
+---@return boolean true when tooltip text was available
+function TooltipScanner:PopulateTooltipProps(props, opts)
+    if not props then return false end
+
+    local tt = self:GetPropsText(props)
+    if tt == "" then
+        rawset(props, "hasCharges", false)
+        rawset(props, "hasUseAbility", false)
+        rawset(props, "hasEquipAbility", false)
+        rawset(props, "isAlreadyKnown", false)
+        rawset(props, "isTradeableLoot", false)
+        rawset(props, "isUnique", false)
+        rawset(props, "isUniqueEquipped", false)
+        rawset(props, "tooltipText", "")
+        return false
+    end
+
+    local isUniqueEquipped = strfind(tt, "^" .. uniqueEquipPattern) ~= nil
+        or strfind(tt, "\n" .. ITEM_UNIQUE_EQUIPPABLE, 1, true) ~= nil
+
+    rawset(props, "tooltipText", tt)
+    rawset(props, "hasCharges", strfind(tt, "(%d+) |4" .. chargesPattern) ~= nil)
+    rawset(props, "hasUseAbility", self:HasUseEffect(tt))
+    rawset(props, "hasEquipAbility", self:HasEquipEffect(tt))
+    rawset(props, "isTradeableLoot", strfind(tt, tradeablePattern, 1, true) ~= nil)
+
+    local td = self:GetPropsData(props)
+    local alreadyKnown = td and self:IsAlreadyKnown(td) or self:IsAlreadyKnownText(tt)
+    if not alreadyKnown and opts and opts.recipeAlreadyKnown then
+        alreadyKnown = opts.recipeAlreadyKnown(props) == true
+    end
+    rawset(props, "isAlreadyKnown", alreadyKnown)
+    rawset(props, "isUniqueEquipped", isUniqueEquipped)
+    rawset(props, "isUnique", isUniqueEquipped
+        or strfind(tt, "^" .. ITEM_UNIQUE) ~= nil
+        or strfind(tt, "\n" .. ITEM_UNIQUE, 1, true) ~= nil)
+    return true
 end
