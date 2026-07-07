@@ -225,7 +225,33 @@ where possible). Example skeleton:
     enableJunkCategory    = true,
     enableUpgradeCategory = true,
 }
+
+-- Per-category modification example (round-trips via export/import):
+-- modifications = {
+--     ["Mats"] = {
+--         groupBy    = "subtype",
+--         subGroupBy = "quality",
+--         priority   = 0,
+--     },
+-- }
 ```
+
+### Native modification fields (OneWoW v2 export)
+
+`Serializer:BuildExport` deep-copies `categoryModifications` as-is (no field
+filter). `Planner:FromOneWowString` deep-copies `payload.modifications`.
+`Applier:mergeModifications` merges scalar fields when present on import:
+
+| Field | Export | Import merge | Notes |
+|-------|--------|--------------|-------|
+| `sortMode`, `subSortMode`, `sortDescending`, `subSortDescending` | Yes | Yes | |
+| `groupBy` | Yes | Yes | `expansion`, `type`, `subtype`, `slot`, `quality`, `track`, `equipmentset`, `none` |
+| `subGroupBy` | Yes | Yes | OneWoW-only composite axis; same enum as `groupBy` |
+| `priority`, `color` | Yes | Yes | |
+| `appliesIn`, `addedItems`, `forceOwnLine` | Yes | Yes | Separate merge rules (see §5 above) |
+
+Baganator import has no `subGroupBy` source; composite grouping is configured
+only via native OneWoW export or in-game Category Manager.
 
 ### Ordering restore on import
 
@@ -380,7 +406,9 @@ relevant row here and touch the listed code paths:
 - New `PredicateEngine` keyword → `SyntaxTranslators/Syndicator.lua`,
   `SyndicatorLocaleMap.lua`
 - New OneWoW `groupBy` value, modification field, or builtin category →
-  `Planner.lua`, `BaganatorDefaultMap.lua`
+  `ImportExport/Applier.lua` (`mergeModifications` field list),
+  `ImportExport/Planner.lua`, `Docs/IMPORT_EXPORT.md`; Baganator mapping when
+  applicable → `BaganatorImport:MapGroupBy`, `Data/BaganatorDefaultMap.lua`
 - Baganator export format version change → re-read vendored
   `_OneWoW_Offline/Baganator/`, update `Integrations/BaganatorImport.lua`
 - Closing an import bug → mark row **Resolved**, note commit/PR
@@ -430,6 +458,7 @@ relevant row here and touch the listed code paths:
 | `hideIn` → `appliesIn` | **Supported** | Per-container visibility | `InvertHideIn` | |
 | `color` | **Supported** | Category color | Planner → Applier | |
 | `group` → `groupBy` | **Supported** | expansion/slot/quality/track pass through; Baganator `type` → OneWoW `subtype` | `BaganatorImport:MapGroupBy`, Planner | OneWoW `type` = item class; Baganator `type` = subclass |
+| `subGroupBy` | **N/A** | Not in Baganator; set in OneWoW only | Native export / Category Manager | Composite `group / sub-group` labels |
 | `addedItems` `i:ID` | **Supported** | Item pins | Planner | Stored as string IDs |
 | `addedItems` `p:ID` | **Unsupported** | Warn + skip | Planner | No pet-pin model |
 | `showGroupPrefix` | **Unsupported** | Info warn, dropped | Planner | No OneWoW field |

@@ -39,7 +39,8 @@ end
 -- Rules (plan doc, section 5):
 --   items                     -> union (existing + imported)
 --   filterMode search vs type -> search wins; imported search overwrites when both search
---   modifications fields      -> imported wins when present
+--   modifications fields      -> imported wins when present (sortMode, subSortMode,
+--     sortDescending, subSortDescending, groupBy, subGroupBy, priority, color)
 --   enabled                   -> imported=false overrides; otherwise existing stays
 --   sortOrder                 -> existing preserved
 local function mergeItems(existing, incoming)
