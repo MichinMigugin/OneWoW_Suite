@@ -300,6 +300,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["CATEGORY_SEARCH_EXPR_DESC"] = "Verwenden Sie Schlüsselwörter wie #pet, #mount, #toy, #collected, #soulbound mit Operatoren & (und), | (oder), ! (nicht). Beispiel: (#pet|#mount)&!#collected",
 
     ["GROUP_BY"] = "Gruppieren nach",
+    ["GROUP_SUBTYPE"] = "Untertyp",
+    ["GROUP_UPGRADE_TRACK"] = "Aufwertungspfad",
     ["GROUP_EQUIPMENT_SET"] = "Ausrüstungsset",
     ["EQUIPMENT_SET_MULTIPLE"] = "Mehrere",
     ["EQUIPMENT_SET_NONE"] = "Kein Set",
@@ -520,7 +522,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["IMPORT_WARN_EMPTY_KEYWORD"] = "Leeres Schlüsselwort-Token verworfen.",
     ["IMPORT_WARN_BAGANATOR_MISSING_ADDON"] = "Exportzeichenfolge ohne Addon-Markierung; wird als Baganator-Kategorien behandelt.",
     ["IMPORT_WARN_BAGANATOR_PET_PIN_SKIPPED"] = "Kampfhaustier-Anheftungen (p:ID) werden nicht unterstützt; übersprungen.",
-    ["IMPORT_WARN_BAGANATOR_GROUP_TRACK_SKIPPED"] = "Gruppierung nach Aufwertungspfad (group: track) wird nicht unterstützt; übersprungen.",
     ["IMPORT_WARN_BAGANATOR_SHOW_GROUP_PREFIX_SKIPPED"] = "showGroupPrefix hat kein OneWoW-Äquivalent; übersprungen.",
     ["IMPORT_RESULT_SUCCESS"] = "Import abgeschlossen: %d neu, %d umbenannt, %d zusammengeführt, %d übersprungen.",
     ["IMPORT_RESULT_EMPTY"] = "Nichts zu importieren.",

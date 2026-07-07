@@ -473,6 +473,21 @@ function BaganatorImport:ResolveOrderToSections(order)
 end
 
 -- ------------------------------------------------------------------
+-- Baganator group -> OneWoW groupBy (semantic mapping)
+-- ------------------------------------------------------------------
+
+--- Map Baganator category modification group to OneWoW groupBy.
+--- Baganator "type" groups by item subclass; OneWoW "type" is item class.
+---@param baganatorGroup string
+---@return string|nil
+function BaganatorImport:MapGroupBy(baganatorGroup)
+    if baganatorGroup == "type" then
+        return "subtype"
+    end
+    return baganatorGroup
+end
+
+-- ------------------------------------------------------------------
 -- Shared: hideIn -> appliesIn inversion
 -- ------------------------------------------------------------------
 

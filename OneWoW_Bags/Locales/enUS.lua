@@ -299,6 +299,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["CATEGORY_SEARCH_EXPR_DESC"] = "Use keywords like #pet, #mount, #toy, #collected, #soulbound with operators & (and), | (or), ! (not). Example: (#pet|#mount)&!#collected",
 
     ["GROUP_BY"] = "Group By",
+    ["GROUP_SUBTYPE"] = "Sub-Type",
+    ["GROUP_UPGRADE_TRACK"] = "Upgrade Track",
     ["GROUP_EQUIPMENT_SET"] = "Equipment Set",
     ["EQUIPMENT_SET_MULTIPLE"] = "Multiple",
     ["EQUIPMENT_SET_NONE"] = "No Set",
@@ -519,7 +521,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["IMPORT_WARN_EMPTY_KEYWORD"] = "Empty keyword token dropped.",
     ["IMPORT_WARN_BAGANATOR_MISSING_ADDON"] = "Export string has no addon marker; treating as Baganator categories.",
     ["IMPORT_WARN_BAGANATOR_PET_PIN_SKIPPED"] = "Battle pet pins (p:ID) are not supported; skipped.",
-    ["IMPORT_WARN_BAGANATOR_GROUP_TRACK_SKIPPED"] = "Upgrade-track grouping (group: track) is not supported; skipped.",
     ["IMPORT_WARN_BAGANATOR_SHOW_GROUP_PREFIX_SKIPPED"] = "showGroupPrefix has no OneWoW equivalent; skipped.",
     ["IMPORT_RESULT_SUCCESS"] = "Import complete: %d new, %d renamed, %d merged, %d skipped.",
     ["IMPORT_RESULT_EMPTY"] = "Nothing to import.",

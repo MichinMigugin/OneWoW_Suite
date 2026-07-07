@@ -300,6 +300,8 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["CATEGORY_SEARCH_EXPR_DESC"] = "Utilisez des mots-clés comme #pet, #mount, #toy, #collected, #soulbound avec les opérateurs & (et), | (ou), ! (non). Exemple : (#pet|#mount)&!#collected",
 
     ["GROUP_BY"] = "Grouper par",
+    ["GROUP_SUBTYPE"] = "Sous-type",
+    ["GROUP_UPGRADE_TRACK"] = "Piste d'amélioration",
     ["GROUP_EQUIPMENT_SET"] = "Ensemble d'équipement",
     ["EQUIPMENT_SET_MULTIPLE"] = "Plusieurs",
     ["EQUIPMENT_SET_NONE"] = "Aucun ensemble",
@@ -520,7 +522,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["IMPORT_WARN_EMPTY_KEYWORD"] = "Jeton de mot-clé vide supprimé.",
     ["IMPORT_WARN_BAGANATOR_MISSING_ADDON"] = "La chaîne d'export n'a pas de marqueur d'addon ; traitée comme des catégories Baganator.",
     ["IMPORT_WARN_BAGANATOR_PET_PIN_SKIPPED"] = "Les épingles de mascottes de combat (p:ID) ne sont pas prises en charge ; ignorées.",
-    ["IMPORT_WARN_BAGANATOR_GROUP_TRACK_SKIPPED"] = "Le regroupement par piste d'amélioration (group: track) n'est pas pris en charge ; ignoré.",
     ["IMPORT_WARN_BAGANATOR_SHOW_GROUP_PREFIX_SKIPPED"] = "showGroupPrefix n'a pas d'équivalent OneWoW ; ignoré.",
     ["IMPORT_RESULT_SUCCESS"] = "Importation terminée : %d nouvelles, %d renommées, %d fusionnées, %d ignorées.",
     ["IMPORT_RESULT_EMPTY"] = "Rien à importer.",

@@ -177,6 +177,10 @@ local UPGRADE_TRACK_IDS = {
     myth       = 978,
 }
 
+-- Published for category grouping (tier rank: myth → explorer).
+PE.UpgradeTrackIDs  = UPGRADE_TRACK_IDS
+PE.UpgradeTrackOrder = { 978, 974, 973, 972, 971, 970 }
+
 local currentSeasonLabelCache
 
 -- Class token (UnitClass second return, uppercase) -> classID used by

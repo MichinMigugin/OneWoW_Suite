@@ -196,7 +196,8 @@ If **`sectionOrder` is empty**, `GetSectionedLayout` returns `GetSortedCategoryN
 
 Shared by both `CategoryView` (bags) and `BankCategoryView` (bank) via `H.LayoutCategoryContent` (with category headers enabled and section expanded):
 
-- `categoryModifications[name].groupBy`: `expansion`, `type`, `slot`, `quality`, `equipmentset`, or `none` / unset.
+- `categoryModifications[name].groupBy`: `expansion`, `type` (item **class**), `subtype` (item **subclass**), `slot`, `quality`, `track` (upgrade track), `equipmentset`, or `none` / unset.
+- `type` uses cached `_owb_classID` + `C_Item.GetItemClassInfo`; `subtype` uses `_owb_classID` / `_owb_subClassID` + `GetItemSubClassInfo`; `track` uses `_owb_upgradeTrackStringID` / `_owb_upgradeTrackString` from `C_Item.GetItemUpgradeInfo` (same fields as `#explorer` … `#myth` keywords).
 - `H.GroupItemsBy` buckets the items into ordered subgroups. **Stacked** layout draws them via `H.RenderGroupedGrids` (one full-width label + grid per subgroup, stacked vertically).
 - Grouping honored in **both** stacked and compact layouts. Grouping requires category headers to be on (with headers off, both layouts render a flat grid).
 - In **compact** mode a grouped category takes its own line for its title, then its subgroups are packed by `H.PackCompactBlocks` using the same compact rules as categories: single-row subgroups sit side-by-side; multi-row subgroups take their own full-width line. So a bag with small quality tiers packs them onto shared rows, while a bank with large tiers shows each on its own line. Subgroup labels use `TEXT_SECONDARY`; the category title keeps its category color.

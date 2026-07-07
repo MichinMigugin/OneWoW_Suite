@@ -9,11 +9,74 @@ local pairs, ipairs, type = pairs, ipairs, type
 local floor, min, max, ceil, sqrt = math.floor, math.min, math.max, math.ceil, math.sqrt
 local tostring = tostring
 local SetItemButtonCount = SetItemButtonCount
+local C_Item = C_Item
 
 ns.CategoryViewHelpers = {}
 local H = ns.CategoryViewHelpers
 local WH = ns.WindowHelpers
 local filterScratchByCategory = {}
+
+local classDisplayNameCache = {}
+local subClassDisplayNameCache = {}
+
+local upgradeTrackRank = {}
+for rank, trackID in ipairs(OneWoW.PredicateEngine.UpgradeTrackOrder) do
+    upgradeTrackRank[trackID] = rank
+end
+
+---@param classID number
+---@return string|nil
+local function GetClassDisplayName(classID)
+    local cached = classDisplayNameCache[classID]
+    if cached ~= nil then return cached or nil end
+    local name = C_Item.GetItemClassInfo(classID)
+    classDisplayNameCache[classID] = name or false
+    return name
+end
+
+---@param classID number
+---@param subClassID number
+---@return string|nil
+local function GetSubClassDisplayName(classID, subClassID)
+    local subCache = subClassDisplayNameCache[classID]
+    if not subCache then
+        subCache = {}
+        subClassDisplayNameCache[classID] = subCache
+    end
+    local cached = subCache[subClassID]
+    if cached ~= nil then return cached or nil end
+    local name = C_Item.GetItemSubClassInfo(classID, subClassID)
+    subCache[subClassID] = name or false
+    return name
+end
+
+---@param btn table
+---@return number|nil classID
+---@return number|nil subClassID
+local function ResolveButtonClassSubClass(btn)
+    local classID = btn._owb_classID
+    local subClassID = btn._owb_subClassID
+    if classID == nil and btn.owb_itemInfo then
+        local props = ns:GetButtonProps(btn)
+        classID = props.classID
+        subClassID = props.subClassID
+    end
+    return classID, subClassID
+end
+
+---@param btn table
+---@return number|nil trackID
+---@return string|nil trackLabel
+local function ResolveButtonUpgradeTrack(btn)
+    local trackID = btn._owb_upgradeTrackStringID
+    local trackLabel = btn._owb_upgradeTrackString
+    if trackID == nil and btn.owb_itemInfo then
+        local props = ns:GetButtonProps(btn)
+        trackID = props.upgradeTrackStringID
+        trackLabel = props.upgradeTrackString
+    end
+    return trackID, trackLabel
+end
 
 function H.CreateLabelPool()
     local pool = {}
@@ -783,14 +846,53 @@ function H.GroupItemsBy(items, groupBy)
         for _, btn in ipairs(items) do
             local typeName = OTHER
             if btn.owb_itemInfo then
-                local props = ns:GetButtonProps(btn)
-                typeName = props.itemType or OTHER
+                local classID = ResolveButtonClassSubClass(btn)
+                if classID ~= nil then
+                    typeName = GetClassDisplayName(classID) or OTHER
+                end
             end
             if not groups[typeName] then
                 groups[typeName] = {}
                 tinsert(groupOrder, { name = typeName, sortKey = typeName })
             end
             tinsert(groups[typeName], btn)
+        end
+        sort(groupOrder, function(a, b) return a.sortKey < b.sortKey end)
+    elseif groupBy == "subtype" then
+        local OTHER = L["CAT_OTHER"]
+        for _, btn in ipairs(items) do
+            local subTypeName = OTHER
+            if btn.owb_itemInfo then
+                local classID, subClassID = ResolveButtonClassSubClass(btn)
+                if classID ~= nil and subClassID ~= nil then
+                    subTypeName = GetSubClassDisplayName(classID, subClassID) or OTHER
+                end
+            end
+            if not groups[subTypeName] then
+                groups[subTypeName] = {}
+                tinsert(groupOrder, { name = subTypeName, sortKey = subTypeName })
+            end
+            tinsert(groups[subTypeName], btn)
+        end
+        sort(groupOrder, function(a, b) return a.sortKey < b.sortKey end)
+    elseif groupBy == "track" then
+        local OTHER = L["CAT_OTHER"]
+        local UNTRACKED_RANK = 9999
+        for _, btn in ipairs(items) do
+            local groupName = OTHER
+            local sortKey = UNTRACKED_RANK
+            if btn.owb_itemInfo then
+                local trackID, trackLabel = ResolveButtonUpgradeTrack(btn)
+                if trackID and trackLabel and trackLabel ~= "" then
+                    groupName = trackLabel
+                    sortKey = upgradeTrackRank[trackID] or UNTRACKED_RANK
+                end
+            end
+            if not groups[groupName] then
+                groups[groupName] = {}
+                tinsert(groupOrder, { name = groupName, sortKey = sortKey })
+            end
+            tinsert(groups[groupName], btn)
         end
         sort(groupOrder, function(a, b) return a.sortKey < b.sortKey end)
     elseif groupBy == "slot" then

@@ -1026,8 +1026,8 @@ function CatMgrUI:RefreshRight()
 
     local SORT_OPTIONS = { "none", "default", "name", "rarity", "ilvl", "type", "expansion" }
     local SORT_LABELS = { OFF, L["SORT_DEFAULT"], NAME, RARITY, L["SORT_ITEM_LEVEL"], TYPE, L["EXPANSION"] }
-    local GROUP_OPTIONS = { "none", "expansion", "type", "slot", "quality", "equipmentset" }
-    local GROUP_LABELS = { NONE, L["EXPANSION"], TYPE, L["SLOT"], QUALITY, L["GROUP_EQUIPMENT_SET"] }
+    local GROUP_OPTIONS = { "none", "expansion", "type", "subtype", "slot", "quality", "track", "equipmentset" }
+    local GROUP_LABELS = { NONE, L["EXPANSION"], TYPE, L["GROUP_SUBTYPE"], L["SLOT"], QUALITY, L["GROUP_UPGRADE_TRACK"], L["GROUP_EQUIPMENT_SET"] }
     local PRIORITY_OPTIONS = { -2, -1, 0, 1, 2, 3 }
     local PRIORITY_LABELS = { L["PRIORITY_LOWEST"], LOW, L["PRIORITY_NORMAL"], HIGH, L["PRIORITY_HIGHEST"], L["PRIORITY_MAX"] }
 

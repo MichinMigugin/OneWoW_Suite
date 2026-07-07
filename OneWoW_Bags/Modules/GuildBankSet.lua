@@ -199,6 +199,8 @@ local function ClearGuildBankButton(button)
     button._owb_expansionID = nil
     button._owb_classID = nil
     button._owb_subClassID = nil
+    button._owb_upgradeTrackStringID = nil
+    button._owb_upgradeTrackString = nil
     button._owb_itemQuality = nil
     button._owb_reagentQuality = nil
     button._owb_craftedQuality = nil
@@ -361,6 +363,8 @@ local function ApplyCachedItemToButton(button, cached)
         button._owb_expansionID = (props.expansionID ~= -1) and props.expansionID or nil
         button._owb_classID = props.classID
         button._owb_subClassID = props.subClassID
+        button._owb_upgradeTrackStringID = props.upgradeTrackStringID
+        button._owb_upgradeTrackString = props.upgradeTrackString
         button._owb_itemQuality = cached.quality
         button._owb_reagentQuality = props.reagentQuality
         button._owb_craftedQuality = props.craftedQuality

@@ -17,3 +17,5 @@ Sample export strings for manual QA and future offline decode tests.
 4. Paste `v1_legacy.json` → `_EQUIPMENT` becomes section `_1` named `EQUIPMENT`.
 5. Paste a `kind: "profile"` export → clear error, no DB mutation.
 6. **Undo** restores pre-import state.
+7. `migration_v2.json` modifications with `"group": "type"` preview as `groupBy: "subtype"` (Baganator type = subclass).
+8. Modifications with `"group": "track"` preview as `groupBy: "track"` with no skip warning.

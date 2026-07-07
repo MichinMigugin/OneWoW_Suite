@@ -300,6 +300,8 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["CATEGORY_SEARCH_EXPR_DESC"] = "Usa parole chiave come #pet, #mount, #toy, #collected, #soulbound con gli operatori & (e), | (o), ! (non). Esempio: (#pet|#mount)&!#collected",
 
     ["GROUP_BY"] = "Raggruppa per",
+    ["GROUP_SUBTYPE"] = "Sottotipo",
+    ["GROUP_UPGRADE_TRACK"] = "Traccia potenziamento",
     ["GROUP_EQUIPMENT_SET"] = "Set di equipaggiamento",
     ["EQUIPMENT_SET_MULTIPLE"] = "Multipli",
     ["EQUIPMENT_SET_NONE"] = "Nessun set",
@@ -520,7 +522,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["IMPORT_WARN_EMPTY_KEYWORD"] = "Token di parola chiave vuoto scartato.",
     ["IMPORT_WARN_BAGANATOR_MISSING_ADDON"] = "La stringa di esportazione non ha un marcatore addon; trattata come categorie Baganator.",
     ["IMPORT_WARN_BAGANATOR_PET_PIN_SKIPPED"] = "I pin delle mascotte da combattimento (p:ID) non sono supportati; ignorati.",
-    ["IMPORT_WARN_BAGANATOR_GROUP_TRACK_SKIPPED"] = "Il raggruppamento per traccia potenziamento (group: track) non è supportato; ignorato.",
     ["IMPORT_WARN_BAGANATOR_SHOW_GROUP_PREFIX_SKIPPED"] = "showGroupPrefix non ha un equivalente OneWoW; ignorato.",
     ["IMPORT_RESULT_SUCCESS"] = "Importazione completata: %d nuove, %d rinominate, %d unite, %d saltate.",
     ["IMPORT_RESULT_EMPTY"] = "Niente da importare.",

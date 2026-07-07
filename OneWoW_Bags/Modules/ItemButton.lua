@@ -142,6 +142,8 @@ function Mixin:OWB_FullUpdate()
         self._owb_expansionID = (props and props.expansionID ~= -1) and props.expansionID or nil
         self._owb_classID = props and props.classID or nil
         self._owb_subClassID = props and props.subClassID or nil
+        self._owb_upgradeTrackStringID = props and props.upgradeTrackStringID or nil
+        self._owb_upgradeTrackString = props and props.upgradeTrackString or nil
         self._owb_itemQuality = info.quality
         self._owb_reagentQuality = props and props.reagentQuality
         self._owb_craftedQuality = props and props.craftedQuality
@@ -159,6 +161,8 @@ function Mixin:OWB_FullUpdate()
         self._owb_expansionID = nil
         self._owb_classID = nil
         self._owb_subClassID = nil
+        self._owb_upgradeTrackStringID = nil
+        self._owb_upgradeTrackString = nil
         self._owb_itemQuality = nil
         self._owb_reagentQuality = nil
         self._owb_craftedQuality = nil

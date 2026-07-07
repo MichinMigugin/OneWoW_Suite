@@ -300,6 +300,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["CATEGORY_SEARCH_EXPR_DESC"] = "使用 #pet、#mount、#toy、#collected、#soulbound 等关键词，配合运算符 &（与）、|（或）、!（非）。例如：(#pet|#mount)&!#collected",
 
     ["GROUP_BY"] = "分组方式",
+    ["GROUP_SUBTYPE"] = "子类型",
+    ["GROUP_UPGRADE_TRACK"] = "升级轨道",
     ["GROUP_EQUIPMENT_SET"] = "装备方案",
     ["EQUIPMENT_SET_MULTIPLE"] = "多个",
     ["EQUIPMENT_SET_NONE"] = "无方案",
@@ -520,7 +522,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["IMPORT_WARN_EMPTY_KEYWORD"] = "已丢弃空的关键词标记。",
     ["IMPORT_WARN_BAGANATOR_MISSING_ADDON"] = "导出字符串缺少插件标记；按 Baganator 分类处理。",
     ["IMPORT_WARN_BAGANATOR_PET_PIN_SKIPPED"] = "不支持战斗宠物固定（p:ID）；已跳过。",
-    ["IMPORT_WARN_BAGANATOR_GROUP_TRACK_SKIPPED"] = "不支持升级轨道分组（group: track）；已跳过。",
     ["IMPORT_WARN_BAGANATOR_SHOW_GROUP_PREFIX_SKIPPED"] = "showGroupPrefix 在 OneWoW 中无对应项；已跳过。",
     ["IMPORT_RESULT_SUCCESS"] = "导入完成：新增 %d，重命名 %d，合并 %d，跳过 %d。",
     ["IMPORT_RESULT_EMPTY"] = "没有可导入的内容。",

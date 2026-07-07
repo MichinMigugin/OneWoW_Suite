@@ -429,7 +429,7 @@ relevant row here and touch the listed code paths:
 | `priority` | **Supported** | Clamped -2..3 | `applyBaganatorModification` | |
 | `hideIn` → `appliesIn` | **Supported** | Per-container visibility | `InvertHideIn` | |
 | `color` | **Supported** | Category color | Planner → Applier | |
-| `group` → `groupBy` | **Partial** | expansion/type/slot/quality/set OK | Planner | `track` → warn + skip |
+| `group` → `groupBy` | **Supported** | expansion/slot/quality/track pass through; Baganator `type` → OneWoW `subtype` | `BaganatorImport:MapGroupBy`, Planner | OneWoW `type` = item class; Baganator `type` = subclass |
 | `addedItems` `i:ID` | **Supported** | Item pins | Planner | Stored as string IDs |
 | `addedItems` `p:ID` | **Unsupported** | Warn + skip | Planner | No pet-pin model |
 | `showGroupPrefix` | **Unsupported** | Info warn, dropped | Planner | No OneWoW field |
@@ -452,7 +452,6 @@ relevant row here and touch the listed code paths:
 |---------|-------|
 | Full Baganator profile | Export categories only |
 | Battle pet pins | Item pins only |
-| `group: track` | Baganator upgrade-track UI grouping |
 | Baganator junk/upgrade **plugins** | Not the same as OneWoW `enableJunkCategory` / `enableUpgradeCategory` |
 | `showGroupPrefix` | No OneWoW equivalent |
 

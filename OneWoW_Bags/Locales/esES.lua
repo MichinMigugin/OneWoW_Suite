@@ -300,6 +300,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["CATEGORY_SEARCH_EXPR_DESC"] = "Usa palabras clave como #pet, #mount, #toy, #collected, #soulbound con operadores & (y), | (o), ! (no). Ejemplo: (#pet|#mount)&!#collected",
 
     ["GROUP_BY"] = "Agrupar por",
+    ["GROUP_SUBTYPE"] = "Subtipo",
+    ["GROUP_UPGRADE_TRACK"] = "Pista de mejora",
     ["GROUP_EQUIPMENT_SET"] = "Conjunto de equipo",
     ["EQUIPMENT_SET_MULTIPLE"] = "Varios",
     ["EQUIPMENT_SET_NONE"] = "Sin conjunto",
@@ -520,7 +522,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["IMPORT_WARN_EMPTY_KEYWORD"] = "Token de palabra clave vacío descartado.",
     ["IMPORT_WARN_BAGANATOR_MISSING_ADDON"] = "La cadena de exportación no tiene marcador de addon; se trata como categorías de Baganator.",
     ["IMPORT_WARN_BAGANATOR_PET_PIN_SKIPPED"] = "Los anclajes de mascotas de combate (p:ID) no son compatibles; omitidos.",
-    ["IMPORT_WARN_BAGANATOR_GROUP_TRACK_SKIPPED"] = "La agrupación por pista de mejora (group: track) no es compatible; omitida.",
     ["IMPORT_WARN_BAGANATOR_SHOW_GROUP_PREFIX_SKIPPED"] = "showGroupPrefix no tiene equivalente en OneWoW; omitido.",
     ["IMPORT_RESULT_SUCCESS"] = "Importación completada: %d nuevas, %d renombradas, %d fusionadas, %d omitidas.",
     ["IMPORT_RESULT_EMPTY"] = "Nada que importar.",

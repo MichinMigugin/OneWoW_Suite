@@ -300,6 +300,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["CATEGORY_SEARCH_EXPR_DESC"] = "使用 #pet、#mount、#toy、#collected、#soulbound 等關鍵字，搭配運算子 &（且）、|（或）、!（非）。例如：(#pet|#mount)&!#collected",
 
     ["GROUP_BY"] = "分組方式",
+    ["GROUP_SUBTYPE"] = "子類型",
+    ["GROUP_UPGRADE_TRACK"] = "升級軌道",
     ["GROUP_EQUIPMENT_SET"] = "裝備方案",
     ["EQUIPMENT_SET_MULTIPLE"] = "多個",
     ["EQUIPMENT_SET_NONE"] = "無方案",
@@ -520,7 +522,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["IMPORT_WARN_EMPTY_KEYWORD"] = "已丟棄空的關鍵字標記。",
     ["IMPORT_WARN_BAGANATOR_MISSING_ADDON"] = "匯出字串沒有附加元件標記；視為 Baganator 分類。",
     ["IMPORT_WARN_BAGANATOR_PET_PIN_SKIPPED"] = "不支援戰寵固定（p:ID）；已略過。",
-    ["IMPORT_WARN_BAGANATOR_GROUP_TRACK_SKIPPED"] = "不支援升級軌道分組（group: track）；已略過。",
     ["IMPORT_WARN_BAGANATOR_SHOW_GROUP_PREFIX_SKIPPED"] = "showGroupPrefix 在 OneWoW 中無對應項目；已略過。",
     ["IMPORT_RESULT_SUCCESS"] = "匯入完成：新增 %d，重新命名 %d，合併 %d，跳過 %d。",
     ["IMPORT_RESULT_EMPTY"] = "沒有可匯入的內容。",

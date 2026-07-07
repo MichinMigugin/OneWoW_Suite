@@ -414,7 +414,7 @@ Stable section IDs (`SEC_ONEWOW_BAGS`, `SEC_EQUIPMENT`, `SEC_CRAFTING`, `SEC_HOU
 Shared by `CategoryView` and `BankCategoryView`. Contains the full shared layout pipeline:
 
 - `H.GetSortedCategoryNames` / `H.GetSectionedLayout` — section/display-order resolution, `appliesIn` container filtering, per-container section header visibility (`showHeader` for bags, `showHeaderBank` for bank with fallback to `showHeader` when nil)
-- Grouping functions: `GroupItemsByExpansion`, `GroupItemsByType`, `GroupItemsBySlot`, `GroupItemsByQuality`
+- Grouping: `H.GroupItemsBy` handles `expansion`, `type` (class), `subtype`, `slot`, `quality`, `track`, `equipmentset`
 - `StackItems` / `RestoreItemButtonCounts` — item stacking logic
 - `FilterItems` — per-category search filter evaluation
 - `H.LayoutCategoryContent(config)` — unified entry point for the full render dispatch (sort, stack, group, grid/compact)
@@ -544,7 +544,7 @@ Three windows share the same structural pattern (shell from `WindowHelpers:Creat
 
 Modes: `none` (no reorder), `default` (bagID then slotID among occupied slots), `name`, `rarity`, `ilvl`, `type` (item class ID, subclass ID, then name), `expansion` (expansion ID via `WindowHelpers:ResolveExpansionID`, then quality). Empty slots are ordered last where the comparator considers `owb_hasItem`.
 
-**Sort caches on buttons** (`ItemButton:OWB_FullUpdate`, mirrored in `GuildBankSet`): `_owb_sortName`, `_owb_ilvl`, `_owb_classID`, `_owb_subClassID`, `_owb_expansionID`, `_owb_itemQuality` (container `info.quality`), `_owb_reagentQuality` and `_owb_craftedQuality` (copied from `PE:BuildProps` — no `BuildProps` in the sort loop). Cleared in `ItemPool:ResetButton` and empty-slot updates.
+**Sort/group caches on buttons** (`ItemButton:OWB_FullUpdate`, mirrored in `GuildBankSet`): `_owb_sortName`, `_owb_ilvl`, `_owb_classID`, `_owb_subClassID`, `_owb_upgradeTrackStringID`, `_owb_upgradeTrackString`, `_owb_expansionID`, `_owb_itemQuality` (container `info.quality`), `_owb_reagentQuality` and `_owb_craftedQuality` (copied from `PE:BuildProps` — category grouping reads caches first; no `BuildProps` in the sort loop). Cleared in `ItemPool:ResetButton` and empty-slot updates.
 
 **`rarity` mode** (`CompareRarity`): descending comparisons in order — (1) item quality (`_owb_itemQuality`, fallback `owb_itemInfo.quality`), (2) reagent profession tier (`_owb_reagentQuality`), (3) crafted tier (`_owb_craftedQuality`). Item rarity wins globally; profession tiers break ties (e.g. same-name common herbs with different diamond tiers).
 

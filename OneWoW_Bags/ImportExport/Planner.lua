@@ -344,13 +344,9 @@ local function applyBaganatorModification(plan, displayName, mod, BaganatorImpor
         dest.color = mod.color
     end
     if type(mod.group) == "string" then
-        if mod.group == "track" then
-            if not warnedOnce.groupTrack then
-                warnedOnce.groupTrack = true
-                addWarning(plan, "warn", L["IMPORT_WARN_BAGANATOR_GROUP_TRACK_SKIPPED"])
-            end
-        else
-            dest.groupBy = mod.group
+        local mapped = BaganatorImport:MapGroupBy(mod.group)
+        if mapped then
+            dest.groupBy = mapped
         end
     end
     if mod.showGroupPrefix ~= nil and not warnedOnce.showGroupPrefix then
