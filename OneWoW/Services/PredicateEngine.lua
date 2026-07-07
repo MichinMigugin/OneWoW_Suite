@@ -2079,7 +2079,7 @@ local function PopulateBaseProps(props, itemID, hyperlink)
     props.isEquipment = C_Item.IsEquippableItem(itemID) == true
     props.isProfessionEquipment = props.classID == Enum.ItemClass.Profession and props.isEquipment
 
-    -- isUsable: set in BuildProps slot overlay (character context; not identity-tier).
+    -- isUsable: set in BuildProps slot overlay via ResolveCharacterUsable.
 
     -- ---- Socket detection (API-based, no tooltip needed) ----
     local socketCount = hyperlink and C_Item.GetItemNumSockets(hyperlink) or 0
@@ -2282,6 +2282,55 @@ end
 --
 -- Returns an empty {} when no usable identity can be resolved (consistent
 -- early-exit for callers that pass partial information for empty slots, etc.).
+
+--- Character can use this item (level/class/spec/profession), independent of
+--- Blizzard's inventory-gated IsUsableItem (bank-only stacks often false).
+---@param itemID number
+---@param hyperlink string|nil
+---@param bagID number|nil
+---@param slotID number|nil
+---@param containerInfo ContainerItemInfo|nil
+---@param props table identity + slot fields from BuildProps (isEquipment, etc.)
+---@return boolean
+local function ResolveCharacterUsable(itemID, hyperlink, bagID, slotID, containerInfo, props)
+    if containerInfo and containerInfo.isUsable == false then
+        return false
+    end
+
+    local itemRef = hyperlink or itemID
+    if itemRef and C_Item.IsUsableItem(itemRef) == true then
+        return true
+    end
+
+    if not itemID then return false end
+
+    -- Accessible bags: IsUsableItem false means genuinely unusable (combine gates,
+    -- profession reqs, etc.). Bank/warband-only stacks need spell/equip fallback.
+    if not Scanner:NeedsUsabilityFallback(bagID, itemID) then
+        return false
+    end
+
+    local tooltipData = Scanner:GetUsabilityTooltipData(itemID, hyperlink, bagID, slotID)
+    if Scanner:HasUnmetRequirements(tooltipData) then
+        return false
+    end
+    if IdentityIsRecipeItem(itemID) then
+        return false
+    end
+    if Scanner:GetLearnSpellID(tooltipData) then
+        return false
+    end
+    if Scanner:TooltipHasDirectUse(tooltipData) then
+        return true
+    end
+
+    if props.isEquipment and PE:CanClassEquip(itemID, hyperlink) then
+        return true
+    end
+
+    return false
+end
+
 ---@param itemID number|nil
 ---@param bagID number|nil
 ---@param slotID number|nil
@@ -2435,9 +2484,9 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
     if Profile then Profile:Stop("PE:BuildProps.PopulateSlotProps") end
 
-    -- Character-usability: evaluated per BuildProps (not identity-tier) so bank
-    -- and bag slots share the same answer for the logged-in character.
-    props.isUsable = C_Item.IsUsableItem(hyperlink or itemID) == true
+    -- Character-usability: IsUsableItem when inventory allows; else use spell /
+    -- equip checks with contextual tooltip red-line gates (bank-only safe).
+    props.isUsable = ResolveCharacterUsable(itemID, hyperlink, bagID, slotID, containerInfo, props)
 
     -- ---- Apply lazy tooltip metatable ----
     setmetatable(props, propsMT)
@@ -3540,6 +3589,22 @@ function PE:DumpTooltipDebug(itemID, bagID, slotID, hyperlink)
         print(DEBUG_PREFIX .. format(
             ": props.expansionID=%s isEquipment=%s",
             tostring(props.expansionID), tostring(props.isEquipment)
+        ))
+        print(DEBUG_PREFIX .. format(
+            ": IsUsableItem=%s props.isUsable=%s",
+            tostring(C_Item.IsUsableItem(hyperlink or itemID)),
+            tostring(props.isUsable)
+        ))
+        local td = Scanner:GetUsabilityTooltipData(itemID, hyperlink, bagID, slotID)
+        print(DEBUG_PREFIX .. format(
+            ": needsFallback=%s directUse=%s combineUse=%s teachable=%s isRecipe=%s unmetReqs=%s canClassEquip=%s",
+            tostring(Scanner:NeedsUsabilityFallback(bagID, itemID)),
+            tostring(Scanner:TooltipHasDirectUse(td)),
+            tostring(Scanner:TooltipHasCombineUse(td)),
+            tostring(Scanner:GetLearnSpellID(td) ~= nil),
+            tostring(IdentityIsRecipeItem(itemID)),
+            tostring(Scanner:HasUnmetRequirements(td)),
+            tostring(props.isEquipment and self:CanClassEquip(itemID, hyperlink))
         ))
         print(DEBUG_PREFIX .. format(
             ": props.isCurrentSeason=%s resolved=%s tooltipMissing=%s",

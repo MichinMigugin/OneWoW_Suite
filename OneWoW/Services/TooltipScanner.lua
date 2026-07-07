@@ -19,10 +19,33 @@ local rawset, rawget = rawset, rawget
 local LINE_LEARN = Enum.TooltipDataLineType.ItemSpellTriggerLearn
 local LINE_BINDING = Enum.TooltipDataLineType.ItemBinding
 local LINE_USAGE_REQ = Enum.TooltipDataLineType.UsageRequirement
+local LINE_ERROR = Enum.TooltipDataLineType.ErrorLine
+local LINE_DISABLED = Enum.TooltipDataLineType.DisabledLine
+
+-- Backpack + equipped bags + reagent bag; IsUsableItem is authoritative here.
+local PLAYER_INVENTORY_BAG_MAX = 5
+-- Personal bank tabs and warband vault (6+).
+local BANK_BAG_MIN = 6
 
 local chargesPattern = ITEM_SPELL_CHARGES:match("|4(.-):.-%;")
 local tradeablePattern = BIND_TRADE_TIME_REMAINING:match("^(.-)%%s")
 local uniqueEquipPattern = ITEM_UNIQUE_EQUIPPABLE:gsub("%-", "%%-")
+
+---@param color table|nil colorRGB
+---@return boolean
+local function IsRedRequirementColor(color)
+    if not color or not color.r then return false end
+    return color.r > 0.8 and color.g < 0.4 and color.b < 0.4
+end
+
+---@param text string|nil
+---@return string
+local function StripTooltipMarkup(text)
+    if not text or text == "" then return "" end
+    text = text:gsub("|c%x%x%x%x%x%x%x%x", "")
+    text = text:gsub("|r", "")
+    return text
+end
 
 local bagDataCache = {}
 local linkDataCache = {}
@@ -126,21 +149,108 @@ function TooltipScanner:GetMerchantItemData(merchantIndex)
     return C_TooltipInfo.GetMerchantItem(merchantIndex)
 end
 
+--- First player-owned container slot holding itemID (bags 0–5, bank tabs 6–17).
 ---@param itemID number
 ---@return number|nil bagID
 ---@return number|nil slotID
 function TooltipScanner:FindBagSlotForItem(itemID)
     itemID = tonumber(itemID)
     if not itemID then return nil end
-    for bag = 0, 4 do
+    for bag = 0, 17 do
         local slots = C_Container.GetContainerNumSlots(bag)
-        for slot = 1, slots do
-            local info = C_Container.GetContainerItemInfo(bag, slot)
-            if info and info.itemID == itemID then
-                return bag, slot
+        if slots > 0 then
+            for slot = 1, slots do
+                local info = C_Container.GetContainerItemInfo(bag, slot)
+                if info and info.itemID == itemID then
+                    return bag, slot
+                end
             end
         end
     end
+end
+
+--- Player-evaluated tooltip for character-usability checks. Prefer explicit
+--- bag/slot (contextual red requirement lines); else any owned slot, then link.
+---@param itemID number|nil
+---@param hyperlink string|nil
+---@param bagID number|nil
+---@param slotID number|nil
+---@return table|nil tooltipData
+function TooltipScanner:GetUsabilityTooltipData(itemID, hyperlink, bagID, slotID)
+    if bagID and slotID then
+        return self:GetBagItemData(bagID, slotID)
+    end
+    itemID = tonumber(itemID)
+    if itemID then
+        local findBag, findSlot = self:FindBagSlotForItem(itemID)
+        if findBag and findSlot then
+            return self:GetBagItemData(findBag, findSlot)
+        end
+    end
+    if hyperlink then
+        return self:GetHyperlinkData(hyperlink)
+    end
+    if itemID then
+        return self:GetItemByIDData(itemID)
+    end
+end
+
+---@param tooltipData table|nil
+---@return boolean
+function TooltipScanner:HasMissingCombineReagents(tooltipData)
+    if not tooltipData or not tooltipData.lines then return false end
+    for _, line in ipairs(tooltipData.lines) do
+        local fields = {
+            { text = line.leftText, color = line.leftColor },
+            { text = line.rightText, color = line.rightColor },
+        }
+        for _, field in ipairs(fields) do
+            if field.text and IsRedRequirementColor(field.color) then
+                local stripped = StripTooltipMarkup(field.text)
+                if stripped:match("^0%s*/") then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+--- Use: line that combines multiple items (Darkmoon cards, spear parts, etc.).
+---@param tooltipData table|nil
+---@return boolean
+function TooltipScanner:TooltipHasCombineUse(tooltipData)
+    if not tooltipData or not tooltipData.lines then return false end
+    for _, line in ipairs(tooltipData.lines) do
+        local text = line.leftText or ""
+        if self:HasUseEffect(text) and strfind(text, "Combine", 1, true) then
+            return true
+        end
+    end
+    return false
+end
+
+--- Use: line for a direct player action (eat, drink, open, etc.), not combine.
+---@param tooltipData table|nil
+---@return boolean
+function TooltipScanner:TooltipHasDirectUse(tooltipData)
+    if not tooltipData or not tooltipData.lines then return false end
+    for _, line in ipairs(tooltipData.lines) do
+        local text = line.leftText or ""
+        if self:HasUseEffect(text) and not strfind(text, "Combine", 1, true) then
+            return true
+        end
+    end
+    return false
+end
+
+---@param tooltipData table|nil
+---@return boolean
+function TooltipScanner:HasUnmetRequirements(tooltipData)
+    if self:ScanRedRequirementLines(tooltipData) ~= nil then
+        return true
+    end
+    return self:HasMissingCombineReagents(tooltipData)
 end
 
 --- Route to the best available tooltip snapshot for an item context.
@@ -300,6 +410,47 @@ function TooltipScanner:GetBindState(tooltipData)
     return nil
 end
 
+--- True when the item exists in backpack, equipped bags, or reagent bag.
+---@param itemID number
+---@return boolean
+function TooltipScanner:HasItemInAccessibleBags(itemID)
+    itemID = tonumber(itemID)
+    if not itemID then return false end
+    for bag = 0, PLAYER_INVENTORY_BAG_MAX do
+        local slots = C_Container.GetContainerNumSlots(bag)
+        if slots > 0 then
+            for slot = 1, slots do
+                local info = C_Container.GetContainerItemInfo(bag, slot)
+                if info and info.itemID == itemID then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+--- Spell/equip fallback applies only when IsUsableItem is inventory-gated
+--- (bank/warband-only), not when it reflects a real unmet requirement.
+---@param bagID number|nil
+---@param itemID number|nil
+---@return boolean
+function TooltipScanner:NeedsUsabilityFallback(bagID, itemID)
+    if bagID and bagID >= 0 and bagID <= PLAYER_INVENTORY_BAG_MAX then
+        return false
+    end
+    if bagID and bagID >= BANK_BAG_MIN then
+        return true
+    end
+    itemID = tonumber(itemID)
+    if not itemID then return false end
+    if self:HasItemInAccessibleBags(itemID) then
+        return false
+    end
+    local findBag = self:FindBagSlotForItem(itemID)
+    return findBag ~= nil and findBag >= BANK_BAG_MIN
+end
+
 ---@param tooltipData table|nil
 ---@return table|nil requirements `{ { text, requirementType } }`
 function TooltipScanner:GetUsageRequirements(tooltipData)
@@ -317,23 +468,33 @@ function TooltipScanner:GetUsageRequirements(tooltipData)
     return requirements
 end
 
---- Red unmet-requirement lines from a merchant tooltip snapshot.
+--- Red unmet-requirement lines from a player-evaluated tooltip snapshot
+--- (bag slot, merchant row, etc.). Template-only GetHyperlink / GetItemByID
+--- omit these lines.
 ---@param tooltipData table|nil
 ---@return string|nil joined reasons
 function TooltipScanner:ScanRedRequirementLines(tooltipData)
     if not tooltipData or not tooltipData.lines then return nil end
 
     local reasons
+    local function append(text)
+        text = StripTooltipMarkup(text)
+        if text == "" then return end
+        reasons = reasons or {}
+        reasons[#reasons + 1] = text
+    end
+
     for _, line in ipairs(tooltipData.lines) do
-        local c = line.leftColor
-        if c and c.r and c.r > 0.8 and c.g < 0.4 and c.b < 0.4 then
-            local text = line.leftText
-            if text and text ~= "" then
-                text = (text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
-                if text ~= "" then
-                    reasons = reasons or {}
-                    reasons[#reasons + 1] = text
-                end
+        if line.type == LINE_ERROR or line.type == LINE_DISABLED then
+            append(line.leftText)
+        elseif line.type == LINE_USAGE_REQ and IsRedRequirementColor(line.leftColor) then
+            append(line.leftText)
+        else
+            if IsRedRequirementColor(line.leftColor) then
+                append(line.leftText)
+            end
+            if IsRedRequirementColor(line.rightColor) then
+                append(line.rightText)
             end
         end
     end

@@ -136,7 +136,7 @@ All functions are method-style (`PE:Func(...)`). Exported constants use dot synt
 
 `BuildProps` returns a table with a permanent metatable that lazily populates three groups of fields on first read. This avoids paying for tooltip parsing, tooltip-data fetches, or `C_Item.GetItemStats` for items whose predicate never reads those fields.
 
-**Eager per-slot field:** `isUsable` (`#usable` / `#unusable`) is set on every `BuildProps` call from `C_Item.IsUsableItem(hyperlink or itemID)` — not identity-tier — so bags and bank agree for the logged-in character. Props caches are invalidated on `PLAYER_LEVEL_UP`, talent/spec changes, and `SKILL_LINES_CHANGED` (registered in `PredicateEngine.lua` and OneWoW Bags runtime events).
+**Eager per-slot field:** `isUsable` (`#usable` / `#unusable`) is set on every `BuildProps` call via `ResolveCharacterUsable`: `C_Item.IsUsableItem` when true, or when false in accessible bags (0–5). Bank/warband-only stacks use tooltip-led fallback: no unmet requirements, not a recipe (`ITEM_ID_OVERRIDES` + identity), not teachable (`ItemSpellTriggerLearn`), then direct `Use:` (not combine) or equippable gear + `CanClassEquip`. Props caches are invalidated on `PLAYER_LEVEL_UP`, talent/spec changes, and `SKILL_LINES_CHANGED`.
 
 | Group | Fields | Resolver | Marker flag |
 |---|---|---|---|
