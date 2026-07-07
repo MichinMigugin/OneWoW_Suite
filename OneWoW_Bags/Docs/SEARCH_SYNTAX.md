@@ -692,6 +692,7 @@ For `#knowledge`, see **Consumable Subtypes** (same predicate).
 | `#upgrade` | Items flagged as an upgrade for your character (OneWoW upgrade-detection registers this with `PE:RegisterKeyword` at runtime; if that module is not loaded, `#upgrade` is unknown and matches nothing) |
 | `#upgradeable` | Items that can be upgraded (`C_Item.GetItemUpgradeInfo`) |
 | `#fullyupgraded` | Items at max upgrade level |
+| `#upgradetrack` | Items on any upgrade track (Explorer through Myth); includes fully upgraded track gear. Not the same as `#upgradeable` (room left on track) or `#upgrade` (character-relative upgrade) |
 | `#explorer` | Items on the Explorer upgrade track |
 | `#adventurer` | Items on the Adventurer upgrade track |
 | `#veteran` | Items on the Veteran upgrade track |
@@ -705,8 +706,9 @@ For `#knowledge`, see **Consumable Subtypes** (same predicate).
 
 **Related properties:** `upgradelevel` and `upgrademax` are numeric comparisons from
 `C_Item.GetItemUpgradeInfo` (current and max upgrade tier). `maxlevel` is the
-maximum possible **item level** after upgrades — a different field. `#upgradeable`
-and `#fullyupgraded` are boolean keywords derived from the same upgrade info.
+maximum possible **item level** after upgrades — a different field. `#upgradetrack`,
+`#upgradeable`, and `#fullyupgraded` are boolean keywords derived from the same
+upgrade info (`trackStringID` present, level below max, and level at max).
 
 ### Tooltip
 
@@ -884,6 +886,7 @@ expansion==${CURRENTEXPANSION}  Current-expansion items (updates each patch)
 count>1                 Stacked items
 sockets>0               Items with at least one socket
 upgradelevel>0          Partially upgraded items
+#upgradetrack & #gear   Items on any upgrade track
 haste>=200              Items with 200+ haste rating
 crit>0                  Items with any crit (same as #crit)
 pettype=8               Beast battle pets
@@ -1058,6 +1061,7 @@ read more like natural conditions.
 | `IsEnsemble` | `#ensemble` |
 | `IsUpgradeable` | `#upgradeable` |
 | `IsFullyUpgraded` | `#fullyupgraded` |
+| `IsUpgradeTrack` | `#upgradetrack` |
 | `IsCurrentSeason` | `#currentseason` |
 | `IsActiveSeason` | `#activeseason` |
 | `IsProfessionEquipment` | `#professionequipment` |

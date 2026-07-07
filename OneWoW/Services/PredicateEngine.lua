@@ -404,6 +404,7 @@ local FLAG_REGISTRY = {
     isensemble              = "isEnsemble",
     isupgradeable           = "isUpgradeable",
     isfullyupgraded         = "isFullyUpgraded",
+    isupgradetrack          = "isUpgradeTrack",
     isprofessionequipment   = "isProfessionEquipment",
     isequipped              = "isEquipped",
     isequippable            = "isEquipment",
@@ -1148,6 +1149,7 @@ RegisterKeyword("pvp", function(p) return p.itemContextCategory == "pvp" end)
 RegisterKeyword("store", function(p) return p.itemContextCategory == "store" end)
 
 -- ---- 7.27  Item track upgrade keywords ----
+RegisterKeyword("upgradetrack", function(p) return p.isUpgradeTrack end)
 for _, keyword in ipairs({ "explorer", "adventurer", "veteran", "champion", "hero", "myth" }) do
     local trackID = UPGRADE_TRACK_IDS[keyword]
     RegisterKeyword(keyword, function(p) return p.upgradeTrackStringID == trackID end)
@@ -2364,6 +2366,7 @@ local function PopulateBaseProps(props, itemID, hyperlink)
     props.maxLevel        = props.ilvl
     props.isUpgradeable   = false
     props.isFullyUpgraded = false
+    props.isUpgradeTrack  = false
     props.upgradeTrackString = nil
     props.upgradeTrackStringID = nil
 
@@ -2376,6 +2379,7 @@ local function PopulateBaseProps(props, itemID, hyperlink)
         props.isFullyUpgraded      = (props.upgradeLevel >= props.upgradeMax and props.upgradeMax > 0)
         props.upgradeTrackString   = upgradeInfo.trackString
         props.upgradeTrackStringID = upgradeInfo.trackStringID
+        props.isUpgradeTrack       = upgradeInfo.trackStringID ~= nil
     end
 
     -- ---- Transmog / appearance ----
