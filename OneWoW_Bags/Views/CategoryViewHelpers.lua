@@ -8,6 +8,8 @@ local tremove, tinsert, wipe, sort = tremove, tinsert, wipe, sort
 local pairs, ipairs, type = pairs, ipairs, type
 local floor, min, max, ceil, sqrt = math.floor, math.min, math.max, math.ceil, math.sqrt
 local tostring = tostring
+local CreateFrame = CreateFrame
+local GameTooltip = GameTooltip
 local SetItemButtonCount = SetItemButtonCount
 local C_Item = C_Item
 
@@ -78,6 +80,62 @@ local function ResolveButtonUpgradeTrack(btn)
     return trackID, trackLabel
 end
 
+local function ApplySingleLineLabel(label)
+    label:SetWordWrap(false)
+    if label.SetNonSpaceWrap then
+        label:SetNonSpaceWrap(false)
+    end
+    if label.SetMaxLines then
+        label:SetMaxLines(1)
+    end
+end
+
+local function ClearTruncatedLabelTooltip(label)
+    local hit = label._owb_hitFrame
+    if hit then
+        hit:Hide()
+        hit:SetScript("OnEnter", nil)
+    end
+    label._owb_fullText = nil
+end
+
+--- Transparent hit region over a width-constrained label; shows the full text
+--- on hover when the FontString ellipsizes.
+---@param label FontString
+---@param fullText string
+function H.BindTruncatedLabelTooltip(label, fullText)
+    if not fullText or fullText == "" then
+        ClearTruncatedLabelTooltip(label)
+        return
+    end
+
+    local parent = label:GetParent()
+    local hit = label._owb_hitFrame
+    if not hit then
+        hit = CreateFrame("Frame", nil, parent)
+        hit:EnableMouse(true)
+        hit:SetFrameLevel(parent:GetFrameLevel() + 1)
+        label._owb_hitFrame = hit
+        hit:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+    else
+        hit:SetParent(parent)
+        hit:Show()
+    end
+
+    hit:ClearAllPoints()
+    hit:SetAllPoints(label)
+    label._owb_fullText = fullText
+    hit:SetScript("OnEnter", function()
+        if label:IsTruncated() then
+            GameTooltip:SetOwner(hit, "ANCHOR_RIGHT")
+            GameTooltip:SetText(label._owb_fullText, 1, 1, 1)
+            GameTooltip:Show()
+        end
+    end)
+end
+
 function H.CreateLabelPool()
     local pool = {}
     local active = {}
@@ -90,7 +148,7 @@ function H.CreateLabelPool()
         else
             label = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             label:SetJustifyH("LEFT")
-            label:SetWordWrap(false)
+            ApplySingleLineLabel(label)
         end
         label:ClearAllPoints()
         label:Show()
@@ -100,6 +158,7 @@ function H.CreateLabelPool()
 
     local function ReleaseAll()
         for label in pairs(active) do
+            ClearTruncatedLabelTooltip(label)
             label:Hide()
             label:ClearAllPoints()
             tinsert(pool, label)
@@ -207,6 +266,7 @@ function H.RenderGroupedGrids(parent, groups, groupOrder, opts)
             subLabel:SetWidth(labelWidth)
             subLabel:SetText(groupInfo.name)
             subLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            H.BindTruncatedLabelTooltip(subLabel, groupInfo.name)
             subY = subY + 14
 
             local gridH = H.RenderItemGrid(parent, groupItems, subY, x, cellSize, iconSize, gridCols)
@@ -393,6 +453,7 @@ function H.PackCompactBlocks(blockList, contentFrame, opts)
                 label:SetText(groupedCat.displayName)
                 label:SetFontObject(GameFontNormal)
                 H.ApplyCategoryColor(label, catMods, groupedCat.name)
+                H.BindTruncatedLabelTooltip(label, groupedCat.displayName)
             end
             yOffset = yOffset + labelHeight
 
@@ -434,6 +495,7 @@ function H.PackCompactBlocks(blockList, contentFrame, opts)
                     label:SetWidth(cat.blockWidth * cellSize)
                     label:SetText(cat.displayName)
                     labelStyler(label, cat)
+                    H.BindTruncatedLabelTooltip(label, cat.displayName)
                 end
             end
             yOffset = yOffset + labelHeight
