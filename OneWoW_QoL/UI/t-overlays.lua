@@ -686,6 +686,7 @@ local UPGRADE_BG_KEYS = {
     scale = "bgScale",
     color = "bgColor",
     useRarityColor = "bgUseRarityColor",
+    effect = "bgEffect",
 }
 
 local function UpgradeAccessor(refreshPreview)
@@ -737,6 +738,7 @@ local function AccessorPaint(acc)
             scale = acc.bgGet("scale"),
             color = acc.bgGet("color"),
             useRarityColor = acc.bgGet("useRarityColor"),
+            effect = acc.bgGet("effect"),
         } or nil,
     }
 end
@@ -970,8 +972,9 @@ local function BuildPlacementCard(content, acc)
 end
 
 -- Effect picker as radio rows (no dropdown) — its own card between Placement
--- and Background. Values stay stable (none/spinning/zooming/both); only the
--- labels are localized.
+-- and Background. Icon effect uses entry.effect; background effect uses
+-- entry.bg.effect (or overlays/upgrade.bgEffect). Values stay stable
+-- (none/spinning/zooming/both); only the labels are localized.
 local EFFECT_CHOICES = {
     { value = "none",     labelKey = "OVR_EFFECT_NONE" },
     { value = "spinning", labelKey = "OVR_EFFECT_SPINNING" },
@@ -979,14 +982,11 @@ local EFFECT_CHOICES = {
     { value = "both",     labelKey = "OVR_EFFECT_BOTH" },
 }
 
-local function BuildEffectCard(content, acc)
-    local y = 0
-    local current = acc.get("effect") or "none"
-    local radios = {}
-
+local function AddEffectRadioColumn(content, x, yStart, current, radios, onSelect)
+    local y = yStart
     for _, choice in ipairs(EFFECT_CHOICES) do
         local radio = CreateFrame("CheckButton", nil, content, "UIRadioButtonTemplate")
-        radio:SetPoint("TOPLEFT", content, "TOPLEFT", 2, y)
+        radio:SetPoint("TOPLEFT", content, "TOPLEFT", x, y)
         radio:SetChecked(current == choice.value)
 
         local label = OneWoW_GUI:CreateFS(content, 12)
@@ -997,14 +997,41 @@ local function BuildEffectCard(content, acc)
         radio:SetScript("OnClick", function()
             for _, rb in ipairs(radios) do rb:SetChecked(false) end
             radio:SetChecked(true)
-            acc.set("effect", choice.value)
+            onSelect(choice.value)
         end)
 
         radios[#radios + 1] = radio
         y = y - 24
     end
+    return y
+end
 
-    return math.abs(y)
+local function BuildEffectCard(content, acc, w)
+    local colGap = math.floor((w or 280) / 2)
+    local y = 0
+
+    local iconHdr = OneWoW_GUI:CreateFS(content, 12)
+    iconHdr:SetPoint("TOPLEFT", content, "TOPLEFT", 2, y)
+    iconHdr:SetText(L["OVR_ICON_LABEL"])
+    iconHdr:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local bgHdr = OneWoW_GUI:CreateFS(content, 12)
+    bgHdr:SetPoint("TOPLEFT", content, "TOPLEFT", colGap, y)
+    bgHdr:SetText(L["OVR_CARD_BACKGROUND"])
+    bgHdr:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    y = y - 20
+
+    local iconRadios = {}
+    local bgRadios = {}
+    local iconEnd = AddEffectRadioColumn(content, 2, y, acc.get("effect") or "none", iconRadios, function(value)
+        acc.set("effect", value)
+    end)
+    local bgEnd = AddEffectRadioColumn(content, colGap, y, acc.bgGet("effect") or "none", bgRadios, function(value)
+        acc.bgSet("effect", value)
+    end)
+
+    return math.max(math.abs(iconEnd), math.abs(bgEnd))
 end
 
 -- Paint one background-style preview swatch. Named styles (solid shapes,
@@ -1870,8 +1897,8 @@ local function ShowUpgradeDetail(split, feature, selectedRow)
         return BuildPlacementCard(content, acc)
     end)
 
-    stack:AddCard("upgrade-effect", L["OVR_EFFECT_LABEL"], function(content)
-        return BuildEffectCard(content, acc)
+    stack:AddCard("upgrade-effect", L["OVR_EFFECT_LABEL"], function(content, w)
+        return BuildEffectCard(content, acc, w)
     end)
 
     stack:AddCard("upgrade-bg", L["OVR_CARD_BACKGROUND"], function(content, w)
@@ -2095,8 +2122,8 @@ ShowUserOverlayDetail = function(split, id, selectedRow)
         return BuildPlacementCard(content, acc)
     end)
 
-    stack:AddCard("user-effect", L["OVR_EFFECT_LABEL"], function(content)
-        return BuildEffectCard(content, acc)
+    stack:AddCard("user-effect", L["OVR_EFFECT_LABEL"], function(content, w)
+        return BuildEffectCard(content, acc, w)
     end)
 
     stack:AddCard("user-bg", L["OVR_CARD_BACKGROUND"], function(content, w)

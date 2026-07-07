@@ -84,7 +84,7 @@ local DEFAULTS = {
             -- userOverlays[id] = { preset|nil, name|nil, enabled, order,
             --   expression, icon = { kind = "list"|"atlas"|"file", value,
             --   tint = {r,g,b}|nil }, position, scale, alpha, effect,
-            --   bg = { enabled, style, scale, color, useRarityColor },
+            --   bg = { enabled, style, scale, color, useRarityColor, effect },
             --   applyToVendorItems, applyToAuctionHouse,
             --   plus preset extras (showInTooltip, includeGreyItems,
             --   includeWUE) }.

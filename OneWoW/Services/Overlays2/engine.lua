@@ -164,6 +164,7 @@ local function BuildPaint(def)
                 scale = entry.bgScale,
                 color = entry.bgColor,
                 useRarityColor = entry.bgUseRarityColor,
+                effect = entry.bgEffect,
             } or nil,
         }
     end

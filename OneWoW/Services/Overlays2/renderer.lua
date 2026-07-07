@@ -207,6 +207,18 @@ local function SetupIconAnimation(entry)
     entry.iconScaleDown = scaleDown
 end
 
+local ICON_ZOOM_SCALE = 1.5
+local BG_ZOOM_SCALE = 1.8
+
+local function ConfigureSpinZoomAnim(spin1, spin2, scaleUp, scaleDown, effect, zoomScale)
+    local hasSpin = (effect == "spinning" or effect == "both")
+    local hasZoom = (effect == "zooming" or effect == "both")
+    spin1:SetDegrees(hasSpin and -360 or 0)
+    spin2:SetDegrees(hasSpin and -360 or 0)
+    scaleUp:SetScale(hasZoom and zoomScale or 1, hasZoom and zoomScale or 1)
+    scaleDown:SetScale(hasZoom and (1 / zoomScale) or 1, hasZoom and (1 / zoomScale) or 1)
+end
+
 local function ApplyIconEffect(entry, effect)
     if not effect or effect == "none" then
         if entry.iconAnim then
@@ -217,15 +229,9 @@ local function ApplyIconEffect(entry, effect)
 
     SetupIconAnimation(entry)
     entry.iconAnim:Stop()
-
-    local hasSpin = (effect == "spinning" or effect == "both")
-    local hasZoom = (effect == "zooming" or effect == "both")
-
-    entry.iconSpin1:SetDegrees(hasSpin and -360 or 0)
-    entry.iconSpin2:SetDegrees(hasSpin and -360 or 0)
-    entry.iconScaleUp:SetScale(hasZoom and 1.5 or 1, hasZoom and 1.5 or 1)
-    entry.iconScaleDown:SetScale(hasZoom and (1 / 1.5) or 1, hasZoom and (1 / 1.5) or 1)
-
+    ConfigureSpinZoomAnim(
+        entry.iconSpin1, entry.iconSpin2, entry.iconScaleUp, entry.iconScaleDown,
+        effect, ICON_ZOOM_SCALE)
     entry.iconAnim:Play()
 end
 
@@ -277,10 +283,37 @@ local function SetupBackground(entry)
     entry.bgFrame = bf
     entry.bgTexture = tex
     entry.bgAnim = ag
+    entry.bgSpin1 = spin1
+    entry.bgSpin2 = spin2
+    entry.bgScaleUp = scaleUp
+    entry.bgScaleDown = scaleDown
     entry.bgPulseAnim = pulseAg
     entry.bgMask = nil
     entry.bgMaskApplied = false
     bf:Hide()
+end
+
+--- Style-driven spin/zoom backgrounds use the full spin + zoom cycle.
+local function PlayBackgroundStyleSpinZoom(entry)
+    ConfigureSpinZoomAnim(
+        entry.bgSpin1, entry.bgSpin2, entry.bgScaleUp, entry.bgScaleDown,
+        "both", BG_ZOOM_SCALE)
+    entry.bgAnim:Play()
+end
+
+--- User-selected background effect; only runs when bg.effect is not "none".
+local function ApplyBackgroundUserEffect(entry, effect)
+    if not effect or effect == "none" then
+        return false
+    end
+
+    entry.bgPulseAnim:Stop()
+    entry.bgAnim:Stop()
+    ConfigureSpinZoomAnim(
+        entry.bgSpin1, entry.bgSpin2, entry.bgScaleUp, entry.bgScaleDown,
+        effect, BG_ZOOM_SCALE)
+    entry.bgAnim:Play()
+    return true
 end
 
 --- bgFrame is behind entry.frame; icon lives on iconFrame above bg.
@@ -294,7 +327,7 @@ local function SyncEntryLayerLevels(entry)
     end
 end
 
-local function ApplyBackground(entry, bg, iconSize, itemLink)
+local function ApplyBackground(entry, bg, referenceIconSize, itemLink)
     if not bg or not bg.enabled then
         if entry.bgFrame then
             entry.bgAnim:Stop()
@@ -319,7 +352,7 @@ local function ApplyBackground(entry, bg, iconSize, itemLink)
         end
     end
 
-    local baseSize = (iconSize or 20) * 1.6
+    local baseSize = (referenceIconSize or 20) * 1.6
     local finalSize = baseSize * bgScale
 
     entry.bgFrame:SetSize(finalSize, finalSize)
@@ -349,38 +382,33 @@ local function ApplyBackground(entry, bg, iconSize, itemLink)
         end
     end
 
+    local styleUsesPulse = false
+    local styleUsesSpinZoom = false
+
     if style == "Spinning Orbs" then
         RemoveCircleMask()
         entry.bgTexture:SetTexture(nil)
         entry.bgTexture:SetAtlas("ArtifactsFX-SpinningGlowys-Purple", false)
-        entry.bgPulseAnim:Stop()
-        entry.bgAnim:Play()
+        styleUsesSpinZoom = true
     elseif style == "Portal Spiral" then
         RemoveCircleMask()
         entry.bgTexture:SetTexture(nil)
         entry.bgTexture:SetAtlas("UI-Frame-jailerstower-Portrait-QualityEpic", false)
-        entry.bgPulseAnim:Stop()
-        entry.bgAnim:Play()
+        styleUsesSpinZoom = true
     elseif style == "Glow Pulse" then
-        entry.bgAnim:Stop()
         entry.bgTexture:SetAtlas("")
         entry.bgTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
         ApplyCircleMask()
-        entry.bgPulseAnim:Play()
+        styleUsesPulse = true
     elseif C_Texture.GetAtlasInfo(style) then
         RemoveCircleMask()
         entry.bgTexture:SetTexture(nil)
         entry.bgTexture:SetAtlas(style, false)
-        entry.bgPulseAnim:Stop()
         if style:find("PowerSwirlAnimation", 1, true)
             or style:find("ArtifactsFX", 1, true) then
-            entry.bgAnim:Play()
-        else
-            entry.bgAnim:Stop()
+            styleUsesSpinZoom = true
         end
     else
-        entry.bgAnim:Stop()
-        entry.bgPulseAnim:Stop()
         entry.bgTexture:SetAtlas("")
         entry.bgTexture:SetTexture("Interface\\Buttons\\WHITE8x8")
 
@@ -388,6 +416,18 @@ local function ApplyBackground(entry, bg, iconSize, itemLink)
             ApplyCircleMask()
         else
             RemoveCircleMask()
+        end
+    end
+
+    -- User bg.effect overrides style spin/zoom when set; "none" keeps the
+    -- legacy style-driven look (Glow Pulse alpha, animated atlases, etc.).
+    if not ApplyBackgroundUserEffect(entry, bg.effect) then
+        entry.bgAnim:Stop()
+        entry.bgPulseAnim:Stop()
+        if styleUsesPulse then
+            entry.bgPulseAnim:Play()
+        elseif styleUsesSpinZoom then
+            PlayBackgroundStyleSpinZoom(entry)
         end
     end
 
@@ -400,7 +440,7 @@ end
 
 --- Paint one icon overlay into pool slot `index`.
 --- paint = { iconSpec = {kind, value, tint}, position, scale, alpha, effect,
----           bg = {enabled, style, scale, color, useRarityColor}|nil }
+---           bg = {enabled, style, scale, color, useRarityColor, effect}|nil }
 function Renderer:ApplyOverlay(button, paint, index, itemLink)
     local container = GetOrCreateContainer(button)
     local entry = GetOrCreatePoolEntry(button, index)
@@ -437,7 +477,7 @@ function Renderer:ApplyOverlay(button, paint, index, itemLink)
     entry.iconFrame:Show()
 
     ApplyIconEffect(entry, paint.effect)
-    ApplyBackground(entry, paint.bg, finalSize, itemLink)
+    ApplyBackground(entry, paint.bg, baseSize, itemLink)
     SyncEntryLayerLevels(entry)
 end
 
