@@ -631,7 +631,7 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 
 | Keyword | What it matches |
 |---|---|
-| `#usable` | Character can use the item — `IsUsableItem` in accessible bags; bank/warband items with a direct `Use:` tooltip (not combine/teach/recipe) and no red unmet requirements |
+| `#usable` | Character can use the item — `IsUsableItem` in accessible bags; bank/warband fallback: combine items (Darkmoon decks, …) match when every reagent is owned, otherwise a direct `Use:` tooltip (not teach/recipe) with no red unmet requirements |
 | `#unusable` | Items the logged-in character cannot use |
 | `#new` | Items Blizzard marks as new in the bag slot (`C_NewItems.IsNewItem`), via the shared PredicateEngine `BuildProps` (may lag real client state until the props cache is invalidated) |
 | `#locked` | Bag slot is server-locked (`ContainerItemInfo.isLocked`) — item on cursor, in trade/mail/AH, or pending a move; **not** lockbox lockpicking state |
@@ -642,7 +642,7 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 | `#enchanted` | Items whose link includes a permanent enchant (enchant ID in the parsed item link) |
 | `#scrappable` | Items `C_Item.CanScrapItem` reports as scrappable for the bag slot (`ItemLocation` must be valid); always false without a real bag/slot |
 
-> **`#usable` vs `#onuse`:** `#usable` / `#unusable` are character-eligibility (`IsUsableItem` in bags; bank fallback uses tooltip signals — direct `Use:`, not combine/teach/recipe). `#onuse` means the tooltip has a **Use:** effect — independent of whether you meet the requirements. `#use` is not a registered keyword (use `#usable` or `#onuse` explicitly).
+> **`#usable` vs `#onuse`:** `#usable` / `#unusable` are character-eligibility (`IsUsableItem` in bags; bank fallback: combine items match when all reagents are owned, others need a direct `Use:` tooltip — not teach/recipe). `#onuse` means the tooltip has a **Use:** effect — independent of whether you meet the requirements. `#use` is not a registered keyword (use `#usable` or `#onuse` explicitly).
 
 For `#knowledge`, see **Consumable Subtypes** (same predicate).
 

@@ -55,13 +55,9 @@ Empty strings are **not** cached so pre-streaming evaluations can retry.
 | `GetBindState(tooltipData)` | `ItemBinding` line → `Enum.TooltipDataItemBinding` |
 | `GetUsageRequirements(tooltipData)` | `UsageRequirement` lines |
 | `ScanRedRequirementLines(tooltipData)` | Red unmet-requirement lines (bag, merchant, …) |
-| `HasUnmetRequirements(tooltipData)` | Red gates + missing combine reagent counts (`0 / n`) |
-| `HasMissingCombineReagents(tooltipData)` | Red `0 / n` progress on combine ingredient lines |
-| `TooltipHasCombineUse(tooltipData)` | `Use:` line mentions combining items |
-| `TooltipHasDirectUse(tooltipData)` | `Use:` line without combine (eat, drink, open, …) |
+| `GetUsabilityFacts(tooltipData)` | Single-pass `{ learnSpellID?, directUse, unmetRequirements }` for `#usable` fallback. Combine items are **not** detectable from tooltip data (reagent lists on live tooltips are addon-injected); PE detects them via `GetItemSpell` → `GetRecipeSchematic` |
 | `HasItemInAccessibleBags(itemID)` | Copy in backpack / bags / reagent bag (0–5) |
 | `NeedsUsabilityFallback(bagID, itemID)` | Bank-only `IsUsableItem` false-negative gate |
-| `GetUsabilityTooltipData(itemID, hyperlink, bagID, slotID)` | Contextual tooltip for `#usable` fallback |
 | `ScanMerchantBlockReason(index)` | Merchant snapshot + red-line scan |
 | `PopulateTooltipProps(props, opts?)` | Fill lazy PE tooltip fields (`hasUseAbility`, `isAlreadyKnown`, …); optional `opts.recipeAlreadyKnown` bridge |
 
@@ -69,13 +65,15 @@ Empty strings are **not** cached so pre-streaming evaluations can retry.
 
 | Method | When |
 | --- | --- |
-| `InvalidateTooltipCaches()` | Full wipe (bag + link data and text) |
+| `InvalidateTooltipCaches()` | Full wipe (bag + link data and text) — character-context changes, full resets |
+| `InvalidateSlotTooltipCaches()` | Slot tier only (bag data + text) — frequent bag updates; link-tier template tooltips don't change when bag contents move |
 | `InvalidateBagSlot(slotKey)` | Surgical `"bagID:slotID"` eviction |
 | `InvalidateHyperlink(hyperlink)` | Surgical hyperlink eviction |
 
-**PredicateEngine** calls `InvalidateTooltipCaches()` from
-`PE:InvalidatePropsCache()` / `PE:InvalidateCache()` and surgical eviction from
-`PE:InvalidateItemIDs()`.
+**PredicateEngine** calls `InvalidateSlotTooltipCaches()` from
+`PE:InvalidatePropsCache()` (e.g. `BAG_UPDATE_DELAYED`), the full
+`InvalidateTooltipCaches()` from `PE:InvalidateCharacterContext()` /
+`PE:InvalidateCache()`, and surgical eviction from `PE:InvalidateItemIDs()`.
 
 ## Consumers
 
@@ -93,4 +91,4 @@ Empty strings are **not** cached so pre-streaming evaluations can retry.
 - **Recipe IDs vs teach spells:** `GetRecipeInfoForSkillLineAbility` accepts only
   skill-line ability / teach-spell IDs — not trade-skill recipe IDs from profession
   scans (`RecipeKnownUtil` enforces this).
-- **Phase 4:** `PopulateTooltipProps` owns tooltip-field population; `#usable` uses `ResolveCharacterUsable` (`IsUsableItem` + spell/equip fallback, red-line gate).
+- **Phase 4:** `PopulateTooltipProps` owns tooltip-field population; `#usable` uses PE's lazy `ResolveCharacterUsable` (`IsUsableItem` fast path; bank-only fallback = combine-schematic check first, then one contextual tooltip fetch + `GetUsabilityFacts` single pass, identity-cached for non-combine items).

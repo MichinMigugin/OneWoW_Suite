@@ -63,7 +63,9 @@ Other binding values (`BindOnEquip`, `BindOnUse`, `Soulbound`, account variants,
 |---|---|---|---|
 | `propsCache` | `"bagID:slotID"` (slot context) or item-identity key (no slot) | Result of `BuildProps`: per-slot props or identity-only props | `InvalidatePropsCache`, `InvalidateCache`, matching entries in `InvalidateItemIDs` |
 | `identityPropsCache` | item-identity key | Slot-independent base props shared by every slot holding the same item identity | `InvalidatePropsCache`, `InvalidateCache`, matching entries in `InvalidateItemIDs` |
-| `tooltipCache` / `tooltipDataCache` / link variants | — | Owned by **`OneWoW.TooltipScanner`** — see [TOOLTIP_SCANNER.md](TOOLTIP_SCANNER.md) | `TooltipScanner:InvalidateTooltipCaches()` via `PE:InvalidatePropsCache` / `PE:InvalidateCache` / `PE:InvalidateItemIDs` |
+| `characterUsableCache` | item-identity key | `ResolveCharacterUsable` fallback verdicts (`#usable` for bank/warband-only stacks). **Survives bag updates** — inputs are item template + character context, not bag contents. Combine-item verdicts are never stored here (they depend on live inventory counts) | `InvalidateCharacterContext`, `InvalidateCache`, matching entries in `InvalidateItemIDs` |
+| `combineSchematicCache` | `itemID` | Combine-item reagent lists (`GetItemSpell` → `C_TradeSkillUI.GetRecipeSchematic`); `false` for non-combine items. Static game data — survives bag updates **and** character-context changes | `InvalidateCache`, matching entries in `InvalidateItemIDs` |
+| Tooltip data/text caches (slot + link tiers) | — | Owned by **`OneWoW.TooltipScanner`** — see [TOOLTIP_SCANNER.md](TOOLTIP_SCANNER.md) | Slot tier via `PE:InvalidatePropsCache`; both tiers via `PE:InvalidateCharacterContext` / `PE:InvalidateCache`; surgical via `PE:InvalidateItemIDs` |
 | `compiledCache` | Expression string | Compiled `function(props) -> bool` | `InvalidateCache`, `RegisterKeyword`, `RegisterProperty` |
 | `knownProfs` | (single set) | Lowercase profession-name set used by `#myprofs` | `InvalidateCache`, `InvalidateKnownProfessions` |
 
@@ -80,9 +82,10 @@ Use `PE:GetItemCacheKey` / `PE:GetItemIdentityKey` to compute these keys yoursel
 
 | Method | Effect |
 |---|---|
-| `PE:InvalidatePropsCache()` | Wipes props, identity-props, tooltip-text, and tooltip-data caches. Appropriate when item/slot state changed but the set of registered keywords/properties did not (e.g. `BAG_UPDATE_DELAYED`). |
-| `PE:InvalidateCache()` | Wipes props, identity-props, tooltip-text, tooltip-data, and compiled caches, and clears `knownProfs`. Use when keyword set changed or for a full reset. |
-| `PE:InvalidateItemIDs(idSet) -> evictedSlotKeys` | Surgically evicts cached props and tooltip data for item IDs in `idSet` and returns the evicted `"bagID:slotID"` keys. Used by item-info streaming paths to avoid wiping unrelated cache entries. |
+| `PE:InvalidatePropsCache()` | Wipes props, identity-props, and **slot-tier** tooltip caches. Appropriate when item/slot state changed but the set of registered keywords/properties did not (e.g. `BAG_UPDATE_DELAYED`). Preserves `characterUsableCache` and the link-tier tooltip caches (their inputs don't change with bag contents). |
+| `PE:InvalidateCharacterContext()` | Wipes `characterUsableCache` + both tooltip cache tiers, then `InvalidatePropsCache`. Fired by `PLAYER_LEVEL_UP`, `ACTIVE_TALENT_GROUP_CHANGED`, `PLAYER_SPECIALIZATION_CHANGED` (player), and `SKILL_LINES_CHANGED`. |
+| `PE:InvalidateCache()` | Wipes everything above plus compiled caches and `combineSchematicCache`, and clears `knownProfs`. Use when keyword set changed or for a full reset. |
+| `PE:InvalidateItemIDs(idSet) -> evictedSlotKeys` | Surgically evicts cached props, tooltip data, `characterUsableCache`, and `combineSchematicCache` entries for item IDs in `idSet` and returns the evicted `"bagID:slotID"` keys. Used by item-info streaming paths to avoid wiping unrelated cache entries. |
 | `PE:InvalidateKnownProfessions()` | Clears the cached "known professions" set used by `#myprofs`. Call on `SKILL_LINES_CHANGED`. |
 
 `RegisterKeyword` and `RegisterProperty` automatically wipe `compiledCache` (so future evaluations recompile against the new grammar) but leave item and tooltip caches intact.
@@ -136,7 +139,11 @@ All functions are method-style (`PE:Func(...)`). Exported constants use dot synt
 
 `BuildProps` returns a table with a permanent metatable that lazily populates three groups of fields on first read. This avoids paying for tooltip parsing, tooltip-data fetches, or `C_Item.GetItemStats` for items whose predicate never reads those fields.
 
-**Eager per-slot field:** `isUsable` (`#usable` / `#unusable`) is set on every `BuildProps` call via `ResolveCharacterUsable`: `C_Item.IsUsableItem` when true, or when false in accessible bags (0–5). Bank/warband-only stacks use tooltip-led fallback: no unmet requirements, not a recipe (`ITEM_ID_OVERRIDES` + identity), not teachable (`ItemSpellTriggerLearn`), then direct `Use:` (not combine) or equippable gear + `CanClassEquip`. Props caches are invalidated on `PLAYER_LEVEL_UP`, talent/spec changes, and `SKILL_LINES_CHANGED`.
+**Character usability:** `isUsable` (`#usable` / `#unusable`) is resolved lazily via the props metatable (`ResolveCharacterUsable`, marker flag `_usableResolved`) so only expressions that reference it pay anything. Fast path is `C_Item.IsUsableItem`; when that's false for accessible bags (0–5) the item is genuinely unusable. Bank/warband-only stacks fall back in stages:
+
+1. **Recipes** (`IdentityIsRecipeItem`) — never `#usable` via the fallback.
+2. **Combine items** (Darkmoon decks, spear parts, …) — detected structurally via `GetItemSpell` → `C_TradeSkillUI.GetRecipeSchematic` (identity-cached in `combineSchematicCache`; enchant scrolls excluded; a small `COMBINE_QUANTITY_OVERRIDES` table corrects schematics that under-report quantities). Usable when every required reagent/currency is owned in sufficient quantity (`C_Item.GetItemCount` across bags + bank + reagent bank + warband). Readiness is recomputed on every resolution — never memoized in `characterUsableCache` — so looting the last reagent flips the verdict on the next refresh. Tooltip parsing is **not** used for combine detection: the reagent lists players see on live tooltips are injected by other addons (e.g. Plumber) and never appear in `C_TooltipInfo` data.
+3. **Everything else** — a single contextual tooltip fetch (`GetBagItem` when the slot is known, else hyperlink/itemID template) analyzed in one pass by `TooltipScanner:GetUsabilityFacts` (teachable / direct-use / red unmet-requirement gates, plus `PE:CanClassEquip` for equipment). These verdicts are cached per item identity in `characterUsableCache`, which survives bag updates and clears on `PE:InvalidateCharacterContext` (level/spec/talent/skill events), surgical item-ID eviction, and full `InvalidateCache`.
 
 | Group | Fields | Resolver | Marker flag |
 |---|---|---|---|

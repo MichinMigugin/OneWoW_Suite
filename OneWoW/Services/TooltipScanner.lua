@@ -31,6 +31,18 @@ local chargesPattern = ITEM_SPELL_CHARGES:match("|4(.-):.-%;")
 local tradeablePattern = BIND_TRADE_TIME_REMAINING:match("^(.-)%%s")
 local uniqueEquipPattern = ITEM_UNIQUE_EQUIPPABLE:gsub("%-", "%%-")
 
+-- Precomputed search patterns: these were previously rebuilt via string
+-- concatenation on every call (and per tooltip line in the line-walk paths).
+local usePatternHead = "^" .. USE_COLON
+local usePatternBody = "\n" .. USE_COLON
+local equipPatternHead = "^" .. ITEM_SPELL_TRIGGER_ONEQUIP
+local equipPatternBody = "\n" .. ITEM_SPELL_TRIGGER_ONEQUIP
+local uniqueEquipPatternHead = "^" .. uniqueEquipPattern
+local uniqueEquipPlainBody = "\n" .. ITEM_UNIQUE_EQUIPPABLE
+local uniquePatternHead = "^" .. ITEM_UNIQUE
+local uniquePlainBody = "\n" .. ITEM_UNIQUE
+local chargesSearchPattern = "(%d+) |4" .. chargesPattern
+
 ---@param color table|nil colorRGB
 ---@return boolean
 local function IsRedRequirementColor(color)
@@ -45,6 +57,18 @@ local function StripTooltipMarkup(text)
     text = text:gsub("|c%x%x%x%x%x%x%x%x", "")
     text = text:gsub("|r", "")
     return text
+end
+
+--- Nil-safe accumulator for ScanRedRequirementLines (lazily creates the table).
+---@param reasons table|nil
+---@param text string|nil
+---@return table|nil reasons
+local function AppendReason(reasons, text)
+    text = StripTooltipMarkup(text)
+    if text == "" then return reasons end
+    reasons = reasons or {}
+    reasons[#reasons + 1] = text
+    return reasons
 end
 
 local bagDataCache = {}
@@ -77,11 +101,22 @@ local function ProfileStop(name)
     if Profile then Profile:Stop(name) end
 end
 
+--- Full wipe: slot tier + link tier. For character-context changes and full
+--- PE:InvalidateCache. Frequent bag-update invalidation should use
+--- InvalidateSlotTooltipCaches instead — hyperlink tooltips are template-scoped
+--- and do not change when bag contents move.
 function TooltipScanner:InvalidateTooltipCaches()
     wipe(bagDataCache)
     wipe(linkDataCache)
     wipe(bagTextCache)
     wipe(linkTextCache)
+end
+
+--- Slot tier only (bag/slot-keyed data + text). Cheap-path invalidation for
+--- BAG_UPDATE_DELAYED where slot contents changed but item templates did not.
+function TooltipScanner:InvalidateSlotTooltipCaches()
+    wipe(bagDataCache)
+    wipe(bagTextCache)
 end
 
 function TooltipScanner:InvalidateBagSlot(slotKey)
@@ -169,88 +204,53 @@ function TooltipScanner:FindBagSlotForItem(itemID)
     end
 end
 
---- Player-evaluated tooltip for character-usability checks. Prefer explicit
---- bag/slot (contextual red requirement lines); else any owned slot, then link.
----@param itemID number|nil
----@param hyperlink string|nil
----@param bagID number|nil
----@param slotID number|nil
----@return table|nil tooltipData
-function TooltipScanner:GetUsabilityTooltipData(itemID, hyperlink, bagID, slotID)
-    if bagID and slotID then
-        return self:GetBagItemData(bagID, slotID)
-    end
-    itemID = tonumber(itemID)
-    if itemID then
-        local findBag, findSlot = self:FindBagSlotForItem(itemID)
-        if findBag and findSlot then
-            return self:GetBagItemData(findBag, findSlot)
-        end
-    end
-    if hyperlink then
-        return self:GetHyperlinkData(hyperlink)
-    end
-    if itemID then
-        return self:GetItemByIDData(itemID)
-    end
-end
-
+--- Single-pass usability facts for character-usability resolution. One walk
+--- over tooltipData.lines with no per-line table allocations.
+---
+--- Combine-type items (Darkmoon cards, spear parts, etc.) are NOT detectable
+--- from tooltip data — the reagent lists players see are injected into the
+--- displayed GameTooltip by other addons (e.g. Plumber) and never appear in
+--- C_TooltipInfo data. PredicateEngine detects them structurally via
+--- GetItemSpell → C_TradeSkillUI.GetRecipeSchematic before consulting facts.
+---
+--- unmetRequirements mirrors ScanRedRequirementLines: ErrorLine/DisabledLine
+--- with text, or any red-colored left/right field, counts as an unmet
+--- requirement.
 ---@param tooltipData table|nil
----@return boolean
-function TooltipScanner:HasMissingCombineReagents(tooltipData)
-    if not tooltipData or not tooltipData.lines then return false end
+---@return table|nil facts `{ learnSpellID?, directUse, unmetRequirements }`; nil when no tooltip data
+function TooltipScanner:GetUsabilityFacts(tooltipData)
+    if not tooltipData or not tooltipData.lines then return nil end
+
+    local learnSpellID
+    local directUse = false
+    local unmetRequirements = false
+
     for _, line in ipairs(tooltipData.lines) do
-        local fields = {
-            { text = line.leftText, color = line.leftColor },
-            { text = line.rightText, color = line.rightColor },
-        }
-        for _, field in ipairs(fields) do
-            if field.text and IsRedRequirementColor(field.color) then
-                local stripped = StripTooltipMarkup(field.text)
-                if stripped:match("^0%s*/") then
-                    return true
-                end
+        local leftText, rightText = line.leftText, line.rightText
+
+        if not learnSpellID and line.type == LINE_LEARN and line.spellID then
+            learnSpellID = line.spellID
+        end
+
+        if not directUse and leftText and strfind(leftText, usePatternHead) then
+            directUse = true
+        end
+
+        if not unmetRequirements then
+            if line.type == LINE_ERROR or line.type == LINE_DISABLED then
+                unmetRequirements = leftText ~= nil and StripTooltipMarkup(leftText) ~= ""
+            elseif (IsRedRequirementColor(line.leftColor) and leftText and StripTooltipMarkup(leftText) ~= "")
+                or (IsRedRequirementColor(line.rightColor) and rightText and StripTooltipMarkup(rightText) ~= "") then
+                unmetRequirements = true
             end
         end
     end
-    return false
-end
 
---- Use: line that combines multiple items (Darkmoon cards, spear parts, etc.).
----@param tooltipData table|nil
----@return boolean
-function TooltipScanner:TooltipHasCombineUse(tooltipData)
-    if not tooltipData or not tooltipData.lines then return false end
-    for _, line in ipairs(tooltipData.lines) do
-        local text = line.leftText or ""
-        if self:HasUseEffect(text) and strfind(text, "Combine", 1, true) then
-            return true
-        end
-    end
-    return false
-end
-
---- Use: line for a direct player action (eat, drink, open, etc.), not combine.
----@param tooltipData table|nil
----@return boolean
-function TooltipScanner:TooltipHasDirectUse(tooltipData)
-    if not tooltipData or not tooltipData.lines then return false end
-    for _, line in ipairs(tooltipData.lines) do
-        local text = line.leftText or ""
-        if self:HasUseEffect(text) and not strfind(text, "Combine", 1, true) then
-            return true
-        end
-    end
-    return false
-end
-
----@param tooltipData table|nil
----@return boolean
-function TooltipScanner:HasUnmetRequirements(tooltipData)
-    if self:ScanRedRequirementLines(tooltipData) ~= nil then
-        return true
-    end
-    return self:HasMissingCombineReagents(tooltipData)
+    return {
+        learnSpellID = learnSpellID,
+        directUse = directUse,
+        unmetRequirements = unmetRequirements,
+    }
 end
 
 --- Route to the best available tooltip snapshot for an item context.
@@ -386,16 +386,16 @@ end
 ---@return boolean
 function TooltipScanner:HasUseEffect(text)
     if not text or text == "" then return false end
-    return strfind(text, "^" .. USE_COLON) ~= nil
-        or strfind(text, "\n" .. USE_COLON, 1, true) ~= nil
+    return strfind(text, usePatternHead) ~= nil
+        or strfind(text, usePatternBody, 1, true) ~= nil
 end
 
 ---@param text string|nil
 ---@return boolean
 function TooltipScanner:HasEquipEffect(text)
     if not text or text == "" then return false end
-    return strfind(text, "^" .. ITEM_SPELL_TRIGGER_ONEQUIP) ~= nil
-        or strfind(text, "\n" .. ITEM_SPELL_TRIGGER_ONEQUIP, 1, true) ~= nil
+    return strfind(text, equipPatternHead) ~= nil
+        or strfind(text, equipPatternBody, 1, true) ~= nil
 end
 
 ---@param tooltipData table|nil
@@ -477,24 +477,17 @@ function TooltipScanner:ScanRedRequirementLines(tooltipData)
     if not tooltipData or not tooltipData.lines then return nil end
 
     local reasons
-    local function append(text)
-        text = StripTooltipMarkup(text)
-        if text == "" then return end
-        reasons = reasons or {}
-        reasons[#reasons + 1] = text
-    end
-
     for _, line in ipairs(tooltipData.lines) do
         if line.type == LINE_ERROR or line.type == LINE_DISABLED then
-            append(line.leftText)
+            reasons = AppendReason(reasons, line.leftText)
         elseif line.type == LINE_USAGE_REQ and IsRedRequirementColor(line.leftColor) then
-            append(line.leftText)
+            reasons = AppendReason(reasons, line.leftText)
         else
             if IsRedRequirementColor(line.leftColor) then
-                append(line.leftText)
+                reasons = AppendReason(reasons, line.leftText)
             end
             if IsRedRequirementColor(line.rightColor) then
-                append(line.rightText)
+                reasons = AppendReason(reasons, line.rightText)
             end
         end
     end
@@ -530,11 +523,11 @@ function TooltipScanner:PopulateTooltipProps(props, opts)
         return false
     end
 
-    local isUniqueEquipped = strfind(tt, "^" .. uniqueEquipPattern) ~= nil
-        or strfind(tt, "\n" .. ITEM_UNIQUE_EQUIPPABLE, 1, true) ~= nil
+    local isUniqueEquipped = strfind(tt, uniqueEquipPatternHead) ~= nil
+        or strfind(tt, uniqueEquipPlainBody, 1, true) ~= nil
 
     rawset(props, "tooltipText", tt)
-    rawset(props, "hasCharges", strfind(tt, "(%d+) |4" .. chargesPattern) ~= nil)
+    rawset(props, "hasCharges", strfind(tt, chargesSearchPattern) ~= nil)
     rawset(props, "hasUseAbility", self:HasUseEffect(tt))
     rawset(props, "hasEquipAbility", self:HasEquipEffect(tt))
     rawset(props, "isTradeableLoot", strfind(tt, tradeablePattern, 1, true) ~= nil)
@@ -547,7 +540,7 @@ function TooltipScanner:PopulateTooltipProps(props, opts)
     rawset(props, "isAlreadyKnown", alreadyKnown)
     rawset(props, "isUniqueEquipped", isUniqueEquipped)
     rawset(props, "isUnique", isUniqueEquipped
-        or strfind(tt, "^" .. ITEM_UNIQUE) ~= nil
-        or strfind(tt, "\n" .. ITEM_UNIQUE, 1, true) ~= nil)
+        or strfind(tt, uniquePatternHead) ~= nil
+        or strfind(tt, uniquePlainBody, 1, true) ~= nil)
     return true
 end

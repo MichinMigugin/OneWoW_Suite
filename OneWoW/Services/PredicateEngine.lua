@@ -60,6 +60,13 @@ local GetCursorInfo = GetCursorInfo
 local propsCache = {}
 local identityPropsCache = {}
 local compiledCache = {}
+--- Bank usability fallback keyed by GetItemIdentityKey (character-level, not per-slot).
+local characterUsableCache = {}
+--- Combine-item reagent lists keyed by itemID: false = not a combine item,
+--- else an array of { itemID?/currencyID, quantityRequired }. Static game data
+--- (recipe schematics), so it survives bag updates and character-context
+--- changes; evicted per-item by InvalidateItemIDs and wiped by InvalidateCache.
+local combineSchematicCache = {}
 local Scanner = ns.TooltipScanner
 
 -- ============================================================================
@@ -1854,6 +1861,181 @@ end)
 -- SECTION 9: LAYER 1 — BUILDPROPS
 -- ============================================================================
 
+-- ---------- Combine items (Darkmoon decks, spear parts, ...) ----------
+
+-- A handful of recipe schematics under-report quantityRequired; corrections
+-- keyed by [recipeID] = { [reagentItemID] = actualQuantity }.
+local COMBINE_QUANTITY_OVERRIDES = {
+    [404592]  = { [204340] = 30 }, -- Torn Recipe Scrap
+    [428667]  = { [211297] = 2 },  -- Fractured Spark (TWW S1)
+    [467635]  = { [230905] = 2 },  -- Fractured Spark (TWW S2)
+    [468717]  = { [231757] = 2 },  -- Fractured Spark (TWW S3)
+    [1283168] = { [268650] = 5 },  -- Ascendant Voidcore
+}
+
+--- Required reagents when the item's Use: effect is a combine/craft spell,
+--- nil for ordinary items. Detection is structural and locale-independent:
+--- GetItemSpell → C_TradeSkillUI.GetRecipeSchematic (the reagent lists shown
+--- on live tooltips come from other addons and never appear in C_TooltipInfo
+--- data). Enchant scrolls (ItemEnhancement) also carry recipe spells and are
+--- excluded. Schematics are static game data, cached per itemID.
+---@param itemID number
+---@return table|nil reagents array of { itemID?, currencyID?, quantityRequired }
+local function GetCombineReagents(itemID)
+    local cached = combineSchematicCache[itemID]
+    if cached ~= nil then
+        return cached or nil
+    end
+
+    local spellID
+    local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(itemID)
+    if classID ~= Enum.ItemClass.ItemEnhancement then
+        _, spellID = C_Item.GetItemSpell(itemID)
+    end
+
+    local reagents
+    local schematic = spellID and C_TradeSkillUI.GetRecipeSchematic(spellID, false)
+    if schematic and schematic.reagentSlotSchematics then
+        local overrides = COMBINE_QUANTITY_OVERRIDES[schematic.recipeID]
+        for _, slot in ipairs(schematic.reagentSlotSchematics) do
+            local reagent = slot.required and slot.reagents and slot.reagents[1]
+            if reagent and (reagent.itemID or reagent.currencyID) then
+                local quantity = slot.quantityRequired or 1
+                if reagent.itemID and overrides and overrides[reagent.itemID] then
+                    quantity = overrides[reagent.itemID]
+                end
+                reagents = reagents or {}
+                reagents[#reagents + 1] = {
+                    itemID = reagent.itemID,
+                    currencyID = reagent.currencyID,
+                    quantityRequired = quantity,
+                }
+            end
+        end
+    end
+
+    combineSchematicCache[itemID] = reagents or false
+    return reagents
+end
+
+--- Every reagent is owned in sufficient quantity (bags + bank + reagent bank
+--- + warband bank), i.e. the combine can actually be performed. Deliberately
+--- not memoized: the verdict depends on live inventory counts (cheap native
+--- lookups), and recomputes naturally when propsCache is wiped on bag updates.
+---@param reagents table from GetCombineReagents
+---@return boolean
+local function HasAllCombineReagents(reagents)
+    for _, reagent in ipairs(reagents) do
+        local count
+        if reagent.itemID then
+            count = C_Item.GetItemCount(reagent.itemID, true, false, true, true)
+        else
+            local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(reagent.currencyID)
+            count = currencyInfo and currencyInfo.quantity or 0
+        end
+        if count < reagent.quantityRequired then
+            return false
+        end
+    end
+    return true
+end
+
+-- ---------- ResolveCharacterUsable ----------
+
+---@param idSet table<number, boolean>|nil when nil, wipe all
+local function EvictCharacterUsableCache(idSet)
+    if not idSet then
+        wipe(characterUsableCache)
+        return
+    end
+    for key in pairs(characterUsableCache) do
+        local cachedItemID = tonumber(key:match("^(%d+)|"))
+        if cachedItemID and idSet[cachedItemID] then
+            characterUsableCache[key] = nil
+        end
+    end
+end
+
+--- Character can use this item (level/class/spec/profession), independent of
+--- Blizzard's inventory-gated IsUsableItem (bank-only stacks often false).
+--- Resolved lazily via propsMT on first `isUsable` access. Fallback verdicts
+--- are cached per item identity in `characterUsableCache`, which survives bag
+--- updates and is cleared on character-context changes (level/spec/skills),
+--- surgical item-ID eviction, and full InvalidateCache. Combine-item verdicts
+--- (reagent readiness) are the exception: they depend on live inventory
+--- counts and are recomputed on every resolution instead of memoized.
+---@param props table props table (id, hyperlink, _bagID, _slotID, isEquipment)
+---@return boolean
+local function ResolveCharacterUsable(props)
+    local itemID = rawget(props, "id")
+    local hyperlink = rawget(props, "hyperlink")
+
+    local itemRef = hyperlink or itemID
+    if itemRef and C_Item.IsUsableItem(itemRef) == true then
+        return true
+    end
+
+    if not itemID then return false end
+
+    -- Accessible bags: IsUsableItem false means genuinely unusable (combine
+    -- gates, profession reqs, etc.). Bank/warband-only stacks need the
+    -- tooltip fallback below.
+    local bagID, slotID = rawget(props, "_bagID"), rawget(props, "_slotID")
+    if not Scanner:NeedsUsabilityFallback(bagID, itemID) then
+        return false
+    end
+
+    local idKey = GetItemIdentityKey(itemID, hyperlink)
+    local cached = characterUsableCache[idKey]
+    if cached ~= nil then
+        return cached
+    end
+
+    local Profile = OneWoW_Bags_API and OneWoW_Bags_API.GetProfile()
+    if Profile then Profile:Start("PE:ResolveCharacterUsable.fallback") end
+
+    local usable = false
+    local cacheable = true
+    if not IdentityIsRecipeItem(itemID) then
+        local combineReagents = GetCombineReagents(itemID)
+        if combineReagents then
+            -- Combine item: usable when every reagent is owned. Depends on
+            -- live inventory counts, so never memoized in
+            -- characterUsableCache (which survives bag updates).
+            usable = HasAllCombineReagents(combineReagents)
+            cacheable = false
+        else
+            -- Single contextual fetch: bag slot when known (carries the
+            -- player-evaluated red requirement lines), else hyperlink
+            -- template, else itemID template.
+            local tooltipData
+            if bagID and slotID then
+                tooltipData = Scanner:GetBagItemData(bagID, slotID)
+            elseif hyperlink then
+                tooltipData = Scanner:GetHyperlinkData(hyperlink)
+            else
+                tooltipData = Scanner:GetItemByIDData(itemID)
+            end
+
+            local facts = Scanner:GetUsabilityFacts(tooltipData)
+            if facts
+                and not facts.learnSpellID
+                and not facts.unmetRequirements
+                and (facts.directUse
+                    or (props.isEquipment and PE:CanClassEquip(itemID, hyperlink))) then
+                usable = true
+            end
+        end
+    end
+
+    if Profile then Profile:Stop("PE:ResolveCharacterUsable.fallback") end
+
+    if cacheable then
+        characterUsableCache[idKey] = usable
+    end
+    return usable
+end
+
 -- Fields that are resolved lazily via __index (tooltip scan on first access)
 local TOOLTIP_FIELDS_SET = {
     hasCharges          = true,
@@ -1940,6 +2122,15 @@ local SPEC_FIELDS_SET = {
 -- clear the flag at the start of an evaluation window.
 local propsMT = {
     __index = function(self, key)
+        -- Character-usability: IsUsableItem fast path, tooltip fallback for
+        -- bank/warband-only stacks (identity-cached in characterUsableCache).
+        if key == "isUsable" then
+            if not rawget(self, "_usableResolved") then
+                rawset(self, "isUsable", ResolveCharacterUsable(self))
+                rawset(self, "_usableResolved", true)
+            end
+            return rawget(self, key)
+        end
         -- Tooltip-derived fields: scan once, populate all on first access
         if TOOLTIP_FIELDS_SET[key] then
             if not rawget(self, "_tooltipResolved") then
@@ -2079,7 +2270,7 @@ local function PopulateBaseProps(props, itemID, hyperlink)
     props.isEquipment = C_Item.IsEquippableItem(itemID) == true
     props.isProfessionEquipment = props.classID == Enum.ItemClass.Profession and props.isEquipment
 
-    -- isUsable: set in BuildProps slot overlay via ResolveCharacterUsable.
+    -- isUsable: lazy via propsMT (ResolveCharacterUsable); not identity-tier.
 
     -- ---- Socket detection (API-based, no tooltip needed) ----
     local socketCount = hyperlink and C_Item.GetItemNumSockets(hyperlink) or 0
@@ -2283,54 +2474,6 @@ end
 -- Returns an empty {} when no usable identity can be resolved (consistent
 -- early-exit for callers that pass partial information for empty slots, etc.).
 
---- Character can use this item (level/class/spec/profession), independent of
---- Blizzard's inventory-gated IsUsableItem (bank-only stacks often false).
----@param itemID number
----@param hyperlink string|nil
----@param bagID number|nil
----@param slotID number|nil
----@param containerInfo ContainerItemInfo|nil
----@param props table identity + slot fields from BuildProps (isEquipment, etc.)
----@return boolean
-local function ResolveCharacterUsable(itemID, hyperlink, bagID, slotID, containerInfo, props)
-    if containerInfo and containerInfo.isUsable == false then
-        return false
-    end
-
-    local itemRef = hyperlink or itemID
-    if itemRef and C_Item.IsUsableItem(itemRef) == true then
-        return true
-    end
-
-    if not itemID then return false end
-
-    -- Accessible bags: IsUsableItem false means genuinely unusable (combine gates,
-    -- profession reqs, etc.). Bank/warband-only stacks need spell/equip fallback.
-    if not Scanner:NeedsUsabilityFallback(bagID, itemID) then
-        return false
-    end
-
-    local tooltipData = Scanner:GetUsabilityTooltipData(itemID, hyperlink, bagID, slotID)
-    if Scanner:HasUnmetRequirements(tooltipData) then
-        return false
-    end
-    if IdentityIsRecipeItem(itemID) then
-        return false
-    end
-    if Scanner:GetLearnSpellID(tooltipData) then
-        return false
-    end
-    if Scanner:TooltipHasDirectUse(tooltipData) then
-        return true
-    end
-
-    if props.isEquipment and PE:CanClassEquip(itemID, hyperlink) then
-        return true
-    end
-
-    return false
-end
-
 ---@param itemID number|nil
 ---@param bagID number|nil
 ---@param slotID number|nil
@@ -2484,9 +2627,8 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
 
     if Profile then Profile:Stop("PE:BuildProps.PopulateSlotProps") end
 
-    -- Character-usability: IsUsableItem when inventory allows; else use spell /
-    -- equip checks with contextual tooltip red-line gates (bank-only safe).
-    props.isUsable = ResolveCharacterUsable(itemID, hyperlink, bagID, slotID, containerInfo, props)
+    -- isUsable is resolved lazily via propsMT (ResolveCharacterUsable) so only
+    -- expressions that reference #usable / #unusable pay the tooltip cost.
 
     -- ---- Apply lazy tooltip metatable ----
     setmetatable(props, propsMT)
@@ -3398,19 +3540,36 @@ function PE:InvalidateCache()
     wipe(propsCache)
     Scanner:InvalidateTooltipCaches()
     wipe(identityPropsCache)
+    wipe(characterUsableCache)
+    wipe(combineSchematicCache)
     currentSeasonLabelCache = nil
     knownProfs = nil
 end
 
---- Invalidate props and tooltip caches (lighter, for frequent events).
---- Compiled expressions are still valid since the grammar didn't change.
---- Also wipes identity-tier props since some fields (collection state,
---- equipped status) can shift between bag updates. Character-usability
---- (`isUsable`) is recomputed per BuildProps, not cached in identityPropsCache.
+--- Invalidate props and slot-tier tooltip caches (lighter, for frequent events
+--- like BAG_UPDATE_DELAYED). Compiled expressions are still valid since the
+--- grammar didn't change. Also wipes identity-tier props since some fields
+--- (collection state, equipped status) can shift between bag updates.
+---
+--- Deliberately preserved across bag updates (their inputs are item templates
+--- + character context, not bag contents):
+---   - Scanner link-tier tooltip caches (hyperlink-keyed template tooltips)
+---   - characterUsableCache (wiped by InvalidateCharacterContext /
+---     InvalidateCache; surgically evicted by InvalidateItemIDs)
 function PE:InvalidatePropsCache()
     wipe(propsCache)
-    Scanner:InvalidateTooltipCaches()
+    Scanner:InvalidateSlotTooltipCaches()
     wipe(identityPropsCache)
+end
+
+--- Character-context invalidation (level up, spec/talent change, skill lines).
+--- These change red requirement lines and usability verdicts everywhere, so
+--- wipe the character-usability cache and both tooltip cache tiers on top of
+--- the regular props wipe.
+function PE:InvalidateCharacterContext()
+    wipe(characterUsableCache)
+    Scanner:InvalidateTooltipCaches()
+    self:InvalidatePropsCache()
 end
 
 --- Surgical per-itemID invalidation. Used by GET_ITEM_INFO_RECEIVED batches
@@ -3447,6 +3606,14 @@ function PE:InvalidateItemIDs(idSet)
                 Scanner:InvalidateHyperlink(hyperlink)
             end
         end
+    end
+
+    EvictCharacterUsableCache(idSet)
+
+    -- Late-arriving item data can flip GetItemSpell from nil to a spell, so
+    -- drop any schematic verdict cached for these IDs.
+    for id in pairs(idSet) do
+        combineSchematicCache[id] = nil
     end
 
     return evictedSlotKeys
@@ -3595,17 +3762,47 @@ function PE:DumpTooltipDebug(itemID, bagID, slotID, hyperlink)
             tostring(C_Item.IsUsableItem(hyperlink or itemID)),
             tostring(props.isUsable)
         ))
-        local td = Scanner:GetUsabilityTooltipData(itemID, hyperlink, bagID, slotID)
+        -- Same tooltip routing as ResolveCharacterUsable: bag slot → link → itemID.
+        local td
+        if bagID and slotID then
+            td = Scanner:GetBagItemData(bagID, slotID)
+        elseif hyperlink then
+            td = Scanner:GetHyperlinkData(hyperlink)
+        else
+            td = Scanner:GetItemByIDData(itemID)
+        end
+        local facts = Scanner:GetUsabilityFacts(td)
+        local combineReagents = GetCombineReagents(itemID)
         print(DEBUG_PREFIX .. format(
-            ": needsFallback=%s directUse=%s combineUse=%s teachable=%s isRecipe=%s unmetReqs=%s canClassEquip=%s",
+            ": needsFallback=%s directUse=%s combine=%s combineReady=%s teachable=%s isRecipe=%s unmetReqs=%s canClassEquip=%s",
             tostring(Scanner:NeedsUsabilityFallback(bagID, itemID)),
-            tostring(Scanner:TooltipHasDirectUse(td)),
-            tostring(Scanner:TooltipHasCombineUse(td)),
-            tostring(Scanner:GetLearnSpellID(td) ~= nil),
+            tostring(facts and facts.directUse),
+            tostring(combineReagents ~= nil),
+            tostring(combineReagents and HasAllCombineReagents(combineReagents) or false),
+            tostring(facts and facts.learnSpellID ~= nil),
             tostring(IdentityIsRecipeItem(itemID)),
-            tostring(Scanner:HasUnmetRequirements(td)),
+            tostring(facts and facts.unmetRequirements),
             tostring(props.isEquipment and self:CanClassEquip(itemID, hyperlink))
         ))
+        if combineReagents then
+            for i, reagent in ipairs(combineReagents) do
+                local owned
+                if reagent.itemID then
+                    owned = C_Item.GetItemCount(reagent.itemID, true, false, true, true)
+                else
+                    local currencyInfo = C_CurrencyInfo.GetCurrencyInfo(reagent.currencyID)
+                    owned = currencyInfo and currencyInfo.quantity or 0
+                end
+                print(DEBUG_PREFIX .. format(
+                    ":   reagent %d: %s=%s owned=%d required=%d",
+                    i,
+                    reagent.itemID and "item" or "currency",
+                    tostring(reagent.itemID or reagent.currencyID),
+                    owned,
+                    reagent.quantityRequired
+                ))
+            end
+        end
         print(DEBUG_PREFIX .. format(
             ": props.isCurrentSeason=%s resolved=%s tooltipMissing=%s",
             tostring(props.isCurrentSeason),
@@ -3700,7 +3897,7 @@ end
 PE.BATTLE_PET_CAGE_ID = BATTLE_PET_CAGE_ID
 
 local function OnCharacterContextChanged()
-    PE:InvalidatePropsCache()
+    PE:InvalidateCharacterContext()
 end
 
 ns.RegisterEvent("PLAYER_LEVEL_UP", "PredicateEngine", OnCharacterContextChanged)

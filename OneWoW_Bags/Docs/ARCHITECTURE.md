@@ -520,7 +520,7 @@ Lives in OneWoW core as the service `OneWoW.PredicateEngine` (`OneWoW/Services/P
 
 Used by Bags for: search filtering (`WH:FilterBySearch` after saved-search expansion), custom category expressions and builtin category search strings in `Data/Categories.lua`, item button state (`ItemButton` junk / new / upgrade flags), and keyword tooltips in `Integrations/OneWoWTooltips.lua`.
 
-Cache invalidation boundary: `InvalidateCategorization("props")` on `BAG_UPDATE_DELAYED` calls `PE:InvalidatePropsCache()` (props + tooltip only). Full `PE:InvalidateCache()` runs on keyword/property registration, settings changes that reshape categorization, and manual refresh.
+Cache invalidation boundary: `InvalidateCategorization("props")` on `BAG_UPDATE_DELAYED` calls `PE:InvalidatePropsCache()` (props + slot-tier tooltip caches only — link-tier tooltip caches and the character-usability cache survive bag updates; see PREDICATE_ENGINE.md). Full `PE:InvalidateCache()` runs on keyword/property registration, settings changes that reshape categorization, and manual refresh. Character-context events (level up, spec/talent, skill lines) route through `PE:InvalidateCharacterContext()`.
 
 ### Categories
 
