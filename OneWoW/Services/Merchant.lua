@@ -84,8 +84,9 @@ local function ClearTransient()
 end
 
 -- Lazily register the shared core-frame events on 0->1 subscribers and tear them
--- down on 1->0. Because overlay-engine holds a standing subscription this is
--- primarily a correctness/single-owner mechanism, not a perf optimization.
+-- down on 1->0. In practice a standing subscriber (e.g. Overlays2 surfaces) keeps
+-- these live, so this is primarily a correctness/single-owner mechanism, not a
+-- perf optimization.
 local function EnsureEvents()
     if AnySubscribers() then
         if not eventsRegistered then

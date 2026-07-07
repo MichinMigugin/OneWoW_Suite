@@ -109,61 +109,40 @@ function JournalData:DetermineItemSpecial(idata)
     return nil
 end
 
+-- Journal special types that carry a "collected" badge. Others (Achievement,
+-- Quest, Housing, …) intentionally show no badge, so IsItemCollected returns nil
+-- for them regardless of whether Collectibles could resolve a key.
+local BADGE_SPECIAL_TYPES = {
+    TMog = true, Mount = true, Pet = true, Toy = true, Recipe = true,
+}
+
+-- Collection state for a journal item, delegated to the shared Collectibles
+-- facade so journal badges stay in lockstep with tooltips and overlays.
+-- Returns nil to hide the badge: no itemID/specialType, a non-badge special
+-- type, or a Recipe whose taught spell can't be resolved to a collectible key
+-- (showing no badge rather than a misleading "Unknown"). Mount/Pet/Toy/TMog
+-- fall back to false (not owned) when no collectible key resolves, matching the
+-- prior direct-API behavior. `itemData` is retained for signature compatibility.
+---@diagnostic disable-next-line: unused-local
 function JournalData:IsItemCollected(itemID, itemData, specialType)
-    if not itemID or not specialType then
+    if not itemID or not specialType or not BADGE_SPECIAL_TYPES[specialType] then
         return nil
     end
 
-    if specialType == "TMog" then
-        return C_TransmogCollection.PlayerHasTransmog(itemID) or false
+    local Collectibles = OneWoW.Collectibles
+    if Collectibles then
+        local status = Collectibles.GetItemCollectionStatus(itemID)
+        if status then
+            return status.collected
+        end
     end
 
-    if specialType == "Mount" then
-        local mountID = itemData.mountID
-        if not mountID then
-            mountID = C_MountJournal.GetMountFromItem(itemID)
-        end
-        if mountID then
-            local _, _, _, _, _, _, _, _, _, _, isCollected = C_MountJournal.GetMountInfoByID(mountID)
-            return isCollected
-        end
-        return false
-    end
-
-    if specialType == "Pet" then
-        local speciesID = itemData.speciesID
-        if not speciesID then
-            local _, _, _, _, _, _, _, _, _, _, _, _, sid = C_PetJournal.GetPetInfoByItemID(itemID)
-            speciesID = sid
-        end
-        if speciesID and speciesID > 0 then
-            local numCollected = C_PetJournal.GetNumCollectedInfo(speciesID)
-            return (numCollected and numCollected > 0)
-        end
-        return false
-    end
-
-    if specialType == "Toy" then
-        return PlayerHasToy(itemID) or false
-    end
-
+    -- No resolvable collectible key: hide the badge for recipes (indeterminate),
+    -- report not-owned for the deterministic collection types.
     if specialType == "Recipe" then
-        local spellID = itemData.spellID
-        if spellID then
-            local recipeInfo = C_TradeSkillUI.GetRecipeInfo(spellID)
-            if recipeInfo and recipeInfo.learned ~= nil then
-                return recipeInfo.learned
-            end
-        end
-        local Util = OneWoW.RecipeKnownUtil
-        if Util then
-            local result = Util:IsRecipeKnown(itemID)
-            if result ~= nil then return result end
-        end
         return nil
     end
-
-    return nil
+    return false
 end
 
 function JournalData:DetermineItemStatus(itemID, itemData, specialType)
