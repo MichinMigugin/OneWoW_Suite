@@ -213,9 +213,11 @@ end
 --- C_TooltipInfo data. PredicateEngine detects them structurally via
 --- GetItemSpell → C_TradeSkillUI.GetRecipeSchematic before consulting facts.
 ---
---- unmetRequirements mirrors ScanRedRequirementLines: ErrorLine/DisabledLine
---- with text, or any red-colored left/right field, counts as an unmet
---- requirement.
+--- unmetRequirements mirrors ScanRedRequirementLines: a red-colored left/right
+--- field with visible text counts as an unmet requirement. ErrorLine and
+--- DisabledLine are only treated as unmet when they are *also* red — grey
+--- DisabledLines carry inactive off-spec stat variants (e.g. a trinket's
+--- +Agility/+Strength lines while you're a caster), not requirement failures.
 ---@param tooltipData table|nil
 ---@return table|nil facts `{ learnSpellID?, directUse, unmetRequirements }`; nil when no tooltip data
 function TooltipScanner:GetUsabilityFacts(tooltipData)
@@ -237,9 +239,7 @@ function TooltipScanner:GetUsabilityFacts(tooltipData)
         end
 
         if not unmetRequirements then
-            if line.type == LINE_ERROR or line.type == LINE_DISABLED then
-                unmetRequirements = leftText ~= nil and StripTooltipMarkup(leftText) ~= ""
-            elseif (IsRedRequirementColor(line.leftColor) and leftText and StripTooltipMarkup(leftText) ~= "")
+            if (IsRedRequirementColor(line.leftColor) and leftText and StripTooltipMarkup(leftText) ~= "")
                 or (IsRedRequirementColor(line.rightColor) and rightText and StripTooltipMarkup(rightText) ~= "") then
                 unmetRequirements = true
             end
@@ -478,8 +478,12 @@ function TooltipScanner:ScanRedRequirementLines(tooltipData)
 
     local reasons
     for _, line in ipairs(tooltipData.lines) do
+        -- ErrorLine/DisabledLine only count when red: grey DisabledLines carry
+        -- inactive off-spec stat variants, not requirement failures.
         if line.type == LINE_ERROR or line.type == LINE_DISABLED then
-            reasons = AppendReason(reasons, line.leftText)
+            if IsRedRequirementColor(line.leftColor) then
+                reasons = AppendReason(reasons, line.leftText)
+            end
         elseif line.type == LINE_USAGE_REQ and IsRedRequirementColor(line.leftColor) then
             reasons = AppendReason(reasons, line.leftText)
         else

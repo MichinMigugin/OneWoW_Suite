@@ -1940,6 +1940,31 @@ local function HasAllCombineReagents(reagents)
     return true
 end
 
+-- ---------- Teachable collectibles ----------
+
+--- A teachable item (carries a "Use: Teaches you …" learn line) is only usable
+--- while it can still teach something new: an uncollected mount/toy/recipe, or
+--- a pet whose collected count is below its cap (e.g. 1/3). Backed by
+--- `OneWoW.Collectibles.GetItemCollectionStatus`. Returns nil for non-collectible
+--- teach items (spell tomes, etc.) so the caller keeps its conservative
+--- "teachable → not usable" default. Depends on live collection counts, so the
+--- caller must not memoize verdicts derived from it.
+---@return boolean|nil learnable nil when the item is not a tracked collectible
+local function TeachableStillLearnable(itemID, hyperlink, bagID, slotID)
+    local Collectibles = OneWoW.Collectibles
+    if not Collectibles then return nil end
+    local status = Collectibles.GetItemCollectionStatus(itemID, hyperlink, {
+        bagID = bagID,
+        slotID = slotID,
+        hyperlink = hyperlink,
+    })
+    if not status then return nil end
+    if status.limit then
+        return (status.numCollected or 0) < status.limit
+    end
+    return not status.collected
+end
+
 -- ---------- ResolveCharacterUsable ----------
 
 ---@param idSet table<number, boolean>|nil when nil, wipe all
@@ -1961,9 +1986,10 @@ end
 --- Resolved lazily via propsMT on first `isUsable` access. Fallback verdicts
 --- are cached per item identity in `characterUsableCache`, which survives bag
 --- updates and is cleared on character-context changes (level/spec/skills),
---- surgical item-ID eviction, and full InvalidateCache. Combine-item verdicts
---- (reagent readiness) are the exception: they depend on live inventory
---- counts and are recomputed on every resolution instead of memoized.
+--- surgical item-ID eviction, and full InvalidateCache. Combine-item reagent
+--- readiness and teachable-collectible learnability are the exception: they
+--- depend on live inventory/collection counts and are recomputed on every
+--- resolution instead of memoized.
 ---@param props table props table (id, hyperlink, _bagID, _slotID, isEquipment)
 ---@return boolean
 local function ResolveCharacterUsable(props)
@@ -2018,12 +2044,21 @@ local function ResolveCharacterUsable(props)
             end
 
             local facts = Scanner:GetUsabilityFacts(tooltipData)
-            if facts
-                and not facts.learnSpellID
-                and not facts.unmetRequirements
-                and (facts.directUse
-                    or (props.isEquipment and PE:CanClassEquip(itemID, hyperlink))) then
-                usable = true
+            if facts and not facts.unmetRequirements then
+                if facts.learnSpellID then
+                    -- Teachable: usable only while still learnable (uncollected,
+                    -- or a pet below its cap). Verdict tracks live collection
+                    -- counts, so it must not be memoized. Non-collectible teach
+                    -- items (nil) keep the conservative "not usable" default.
+                    local learnable = TeachableStillLearnable(itemID, hyperlink, bagID, slotID)
+                    if learnable ~= nil then
+                        usable = learnable
+                        cacheable = false
+                    end
+                elseif facts.directUse
+                    or (props.isEquipment and PE:CanClassEquip(itemID, hyperlink)) then
+                    usable = true
+                end
             end
         end
     end
@@ -3773,13 +3808,15 @@ function PE:DumpTooltipDebug(itemID, bagID, slotID, hyperlink)
         end
         local facts = Scanner:GetUsabilityFacts(td)
         local combineReagents = GetCombineReagents(itemID)
+        local teachable = facts and facts.learnSpellID ~= nil
         print(DEBUG_PREFIX .. format(
-            ": needsFallback=%s directUse=%s combine=%s combineReady=%s teachable=%s isRecipe=%s unmetReqs=%s canClassEquip=%s",
+            ": needsFallback=%s directUse=%s combine=%s combineReady=%s teachable=%s learnable=%s isRecipe=%s unmetReqs=%s canClassEquip=%s",
             tostring(Scanner:NeedsUsabilityFallback(bagID, itemID)),
             tostring(facts and facts.directUse),
             tostring(combineReagents ~= nil),
             tostring(combineReagents and HasAllCombineReagents(combineReagents) or false),
-            tostring(facts and facts.learnSpellID ~= nil),
+            tostring(teachable),
+            tostring(teachable and TeachableStillLearnable(itemID, hyperlink, bagID, slotID)),
             tostring(IdentityIsRecipeItem(itemID)),
             tostring(facts and facts.unmetRequirements),
             tostring(props.isEquipment and self:CanClassEquip(itemID, hyperlink))

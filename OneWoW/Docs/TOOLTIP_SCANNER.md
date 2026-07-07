@@ -54,8 +54,8 @@ Empty strings are **not** cached so pre-streaming evaluations can retry.
 | `HasEquipEffect(text)` | `ITEM_SPELL_TRIGGER_ONEQUIP` line present |
 | `GetBindState(tooltipData)` | `ItemBinding` line → `Enum.TooltipDataItemBinding` |
 | `GetUsageRequirements(tooltipData)` | `UsageRequirement` lines |
-| `ScanRedRequirementLines(tooltipData)` | Red unmet-requirement lines (bag, merchant, …) |
-| `GetUsabilityFacts(tooltipData)` | Single-pass `{ learnSpellID?, directUse, unmetRequirements }` for `#usable` fallback. Combine items are **not** detectable from tooltip data (reagent lists on live tooltips are addon-injected); PE detects them via `GetItemSpell` → `GetRecipeSchematic` |
+| `ScanRedRequirementLines(tooltipData)` | Red unmet-requirement lines (bag, merchant, …). `ErrorLine`/`DisabledLine` only count when **red** — grey `DisabledLine`s are inactive off-spec stat variants, not failures |
+| `GetUsabilityFacts(tooltipData)` | Single-pass `{ learnSpellID?, directUse, unmetRequirements }` for `#usable` fallback. `unmetRequirements` is red-colored lines only. Combine items are **not** detectable from tooltip data (reagent lists on live tooltips are addon-injected); PE detects them via `GetItemSpell` → `GetRecipeSchematic` |
 | `HasItemInAccessibleBags(itemID)` | Copy in backpack / bags / reagent bag (0–5) |
 | `NeedsUsabilityFallback(bagID, itemID)` | Bank-only `IsUsableItem` false-negative gate |
 | `ScanMerchantBlockReason(index)` | Merchant snapshot + red-line scan |
