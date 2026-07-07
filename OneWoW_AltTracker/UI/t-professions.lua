@@ -348,8 +348,7 @@ local function BuildExpandedPanels(ef, data, row)
 
     local function AddSkillLines(profData)
         if not profData or not profData.name then return end
-        local iconPath = ns.ProfessionData:GetIcon(profData.name)
-        local iconMarkup = CreateTextureMarkup(iconPath, 64, 64, 16, 16, 0, 1, 0, 1)
+        local iconMarkup = ns.ProfessionData:GetProfIconMarkup(profData, 16, 16)
         local nameFS = grid:AddLine(pSkills, iconMarkup .. " " .. profData.name)
         MakeProfClickable(nameFS, pSkills, profData)
         local totalCurrent, totalMax = GetTotalSkill(profData)
@@ -386,8 +385,7 @@ local function BuildExpandedPanels(ef, data, row)
 
     local function AddEquipmentLines(profData)
         if not profData or not profData.name then return end
-        local iconPath = ns.ProfessionData:GetIcon(profData.name)
-        local iconMarkup = CreateTextureMarkup(iconPath, 64, 64, 16, 16, 0, 1, 0, 1)
+        local iconMarkup = ns.ProfessionData:GetProfIconMarkup(profData, 16, 16)
         local nameFS = grid:AddLine(pEquip, iconMarkup .. " " .. profData.name)
         MakeProfClickable(nameFS, pEquip, profData)
 
@@ -420,8 +418,7 @@ local function BuildExpandedPanels(ef, data, row)
 
     local function AddRecipeLines(profData)
         if not profData or not profData.name then return end
-        local iconPath = ns.ProfessionData:GetIcon(profData.name)
-        local iconMarkup = CreateTextureMarkup(iconPath, 64, 64, 16, 16, 0, 1, 0, 1)
+        local iconMarkup = ns.ProfessionData:GetProfIconMarkup(profData, 16, 16)
         local nameFS = grid:AddLine(pRecipes, iconMarkup .. " " .. profData.name)
         MakeProfClickable(nameFS, pRecipes, profData)
 
@@ -586,8 +583,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         primary1Text:SetJustifyH("LEFT")
         if prof1 and prof1.name then
             local totalCurrent, totalMax = GetTotalSkill(prof1)
-            local iconPath = ns.ProfessionData:GetIcon(prof1.name)
-            local iconMarkup = CreateTextureMarkup(iconPath, 64, 64, 14, 14, 0, 1, 0, 1)
+            local iconMarkup = ns.ProfessionData:GetProfIconMarkup(prof1, 14, 14)
             primary1Text:SetText(iconMarkup .. " " .. string.format("%d/%d", totalCurrent, totalMax))
             AddProfessionTooltip(primary1Frame, prof1, recipesByExpansion[prof1.name])
         else
@@ -622,8 +618,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         primary2Text:SetJustifyH("LEFT")
         if prof2 and prof2.name then
             local totalCurrent, totalMax = GetTotalSkill(prof2)
-            local iconPath = ns.ProfessionData:GetIcon(prof2.name)
-            local iconMarkup = CreateTextureMarkup(iconPath, 64, 64, 14, 14, 0, 1, 0, 1)
+            local iconMarkup = ns.ProfessionData:GetProfIconMarkup(prof2, 14, 14)
             primary2Text:SetText(iconMarkup .. " " .. string.format("%d/%d", totalCurrent, totalMax))
             AddProfessionTooltip(primary2Frame, prof2, recipesByExpansion[prof2.name])
         else
@@ -658,8 +653,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         local cooking = professions.Cooking
         if cooking and cooking.name then
             local totalCurrent, totalMax = GetTotalSkill(cooking)
-            local iconPath = ns.ProfessionData:GetIcon(cooking.name)
-            local iconMarkup = CreateTextureMarkup(iconPath, 64, 64, 14, 14, 0, 1, 0, 1)
+            local iconMarkup = ns.ProfessionData:GetProfIconMarkup(cooking, 14, 14)
             cookingText:SetText(iconMarkup .. " " .. string.format("%d/%d", totalCurrent, totalMax))
             AddProfessionTooltip(cookingFrame, cooking, recipesByExpansion["Cooking"])
         else
@@ -676,8 +670,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         local fishing = professions.Fishing
         if fishing and fishing.name then
             local totalCurrent, totalMax = GetTotalSkill(fishing)
-            local iconPath = ns.ProfessionData:GetIcon(fishing.name)
-            local iconMarkup = CreateTextureMarkup(iconPath, 64, 64, 14, 14, 0, 1, 0, 1)
+            local iconMarkup = ns.ProfessionData:GetProfIconMarkup(fishing, 14, 14)
             fishingText:SetText(iconMarkup .. " " .. string.format("%d/%d", totalCurrent, totalMax))
             AddProfessionTooltip(fishingFrame, fishing, recipesByExpansion["Fishing"])
         else
@@ -694,8 +687,7 @@ function ns.UI.RefreshProfessionsTab(professionsTab)
         local archaeology = professions.Archaeology
         if archaeology and archaeology.name then
             local totalCurrent, totalMax = GetTotalSkill(archaeology)
-            local iconPath = ns.ProfessionData:GetIcon(archaeology.name)
-            local iconMarkup = CreateTextureMarkup(iconPath, 64, 64, 14, 14, 0, 1, 0, 1)
+            local iconMarkup = ns.ProfessionData:GetProfIconMarkup(archaeology, 14, 14)
             archeologyText:SetText(iconMarkup .. " " .. string.format("%d/%d", totalCurrent, totalMax))
             AddProfessionTooltip(archeologyFrame, archaeology, recipesByExpansion["Archaeology"])
         else

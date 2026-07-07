@@ -76,9 +76,12 @@ function ProfessionsModule:GetProfessionAbbreviation(professionName)
     return professionName
 end
 
-function ProfessionsModule:GetProfessionIcon(professionName)
+function ProfessionsModule:GetProfessionIcon(profDataOrName, iconFileID, skillLine)
     if ns.ProfessionData then
-        return ns.ProfessionData:GetIcon(professionName)
+        if type(profDataOrName) == "table" then
+            return ns.ProfessionData:GetIconFromProf(profDataOrName)
+        end
+        return ns.ProfessionData:GetIcon(profDataOrName, iconFileID, skillLine)
     end
-    return "Interface\\Icons\\INV_Misc_QuestionMark"
+    return 134400
 end
