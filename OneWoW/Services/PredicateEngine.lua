@@ -401,6 +401,7 @@ local FLAG_REGISTRY = {
     istierset               = "isTierSet",
     isappearancecollected   = "isAppearanceCollected",
     hasappearance           = "hasAppearance",
+    isensemble              = "isEnsemble",
     isupgradeable           = "isUpgradeable",
     isfullyupgraded         = "isFullyUpgraded",
     isprofessionequipment   = "isProfessionEquipment",
@@ -1048,6 +1049,7 @@ RegisterKeyword("pettradeable",    function(p) return p.isPetTradeable end)
 
 -- ---- 7.17  Transmog keywords ----
 RegisterKeyword("transmog",         function(p) return p.hasAppearance end)
+RegisterKeyword("ensemble",         function(p) return p.isEnsemble end)
 RegisterKeyword("knowntransmog",    function(p) return p.isAppearanceCollected end)
 RegisterKeyword("unknowntransmog",  function(p) return not p.isAppearanceCollected end)
 RegisterKeyword("catalyst",         function(p) return p.isCatalyst end)
@@ -2380,14 +2382,19 @@ local function PopulateBaseProps(props, itemID, hyperlink)
     -- PlayerHasTransmog(itemID) is the fast item-keyed check; source-keyed
     -- collection routes through OneWoW.Collectibles.ResolveTransmogSourceID.
     props.hasAppearance         = false
+    props.isEnsemble            = false
     props.isAppearanceCollected = C_TransmogCollection.PlayerHasTransmog(itemID)
 
-    local appearanceKey = OneWoW.Collectibles.ResolveKeyFromItem(itemID, hyperlink)
-    if appearanceKey and appearanceKey:find("^appearance:", 1) == 1 then
-        props.hasAppearance = true
-        if not props.isAppearanceCollected then
-            local st = OneWoW.Collectibles.GetCollectionState(appearanceKey)
-            props.isAppearanceCollected = (st and st.collected) == true
+    local collectibleKey = OneWoW.Collectibles.ResolveKeyFromItem(itemID, hyperlink)
+    if collectibleKey then
+        if collectibleKey:find("^appearance:", 1) == 1 then
+            props.hasAppearance = true
+            if not props.isAppearanceCollected then
+                local st = OneWoW.Collectibles.GetCollectionState(collectibleKey)
+                props.isAppearanceCollected = (st and st.collected) == true
+            end
+        elseif collectibleKey:find("^set:", 1) == 1 then
+            props.isEnsemble = true
         end
     end
 

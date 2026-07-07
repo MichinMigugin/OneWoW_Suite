@@ -502,6 +502,7 @@ context for legacy books where `GetItemByID` omits player-evaluated lines.
 | `#toy` | Toys |
 | `#mount` | Mounts |
 | `#pet` | Battle pets (alias: `#battlepet`) |
+| `#ensemble` | Transmog ensemble items (`set:<setID>` via Collectibles; not saved equipment sets — use `#set` / `#equipmentset` for those) |
 | `#collected` | Collectibles you already own (alias: `#collectionknown`) — toys, mounts, pets, recipes, decor, ensembles, appearances |
 | `#uncollected` | Collectible-shaped items you are missing on the logged-in character (alias: `#collectionmissing`); **not** true on non-collectibles |
 | `#altcollected` | Recipe items known by a scoped alt but not by you (uses Recipe Knowledge alt scope; meaningful for `#recipe` only) |
@@ -563,6 +564,7 @@ These keywords are intended to pair naturally with `#pet`.
 | Keyword | What it matches |
 |---|---|
 | `#transmog` | Items with a transmog appearance |
+| `#ensemble` | Items that teach a transmog set (`Collectibles` key `set:<setID>`) |
 | `#knowntransmog` | Items whose appearance you've collected |
 | `#unknowntransmog` | Items whose appearance you haven't collected |
 | `#catalyst` | **TransmogUpgradeMaster:** first boolean from `IsAppearanceMissing(hyperlink)` is true |
@@ -1053,6 +1055,7 @@ read more like natural conditions.
 | `IsTierSet` | `#tierset` |
 | `IsAppearanceCollected` | `#knowntransmog` |
 | `HasAppearance` | `#transmog` |
+| `IsEnsemble` | `#ensemble` |
 | `IsUpgradeable` | `#upgradeable` |
 | `IsFullyUpgraded` | `#fullyupgraded` |
 | `IsCurrentSeason` | `#currentseason` |
