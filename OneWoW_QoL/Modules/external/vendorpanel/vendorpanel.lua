@@ -50,7 +50,9 @@ local state = {
     _merchantSidebarIndex = nil,
     _merchantToggleHandler = nil,
     replacementSellButton = nil,
-    filtersDialog = nil,
+    addTab = nil,
+    optionsTab = nil,
+    activePanelTab = "sell",
     neverSellDialog = nil,
     updateTicker = nil,
     currentVendorFilter = "Show All",
@@ -62,7 +64,6 @@ local state = {
     oneTimeItems = { ilvlGear = {}, reagents = {}, custom = {} },
     collapsedCategories = { gray = false, marked = false, ilvlGear = false, reagents = false, custom = false, noValueJunk = false },
     vendorDropdown = nil,
-    optionsDialog = nil,
     activeSellTicker = nil,
     activeSellConfirmTicker = nil,
     activeSellErrFrame = nil,
@@ -400,6 +401,24 @@ local function GetExclusions()
     return settings.exclusions
 end
 ns.VPGetExclusions = GetExclusions
+
+local CUSTOM_FILTER_SLOT_COUNT = 5
+
+local function GetCustomFilters()
+    local settings = GetSettings()
+    if not settings.customFilters then
+        settings.customFilters = {}
+    end
+    for i = 1, CUSTOM_FILTER_SLOT_COUNT do
+        if not settings.customFilters[i] then
+            settings.customFilters[i] = { name = nil, expr = nil }
+        end
+    end
+    return settings.customFilters
+end
+
+ns.VPGetCustomFilters = GetCustomFilters
+ns.VPCustomFilterSlotCount = CUSTOM_FILTER_SLOT_COUNT
 
 local function AnyExclusionActive()
     local ex = GetExclusions()
@@ -786,9 +805,7 @@ function VendorPanel:AddToNeverSellList(itemID, itemLink)
         if state.neverSellDialog and state.neverSellDialog:IsShown() then
             VendorPanel:UpdateNeverSellDialog()
         end
-        if state.filtersDialog and state.filtersDialog:IsShown() and state.filtersDialog.neverSellBtnText then
-            VendorPanel:UpdateNeverSellButtonCount()
-        end
+        VendorPanel:UpdateNeverSellButtonCount()
     end)
 end
 
@@ -799,9 +816,7 @@ function VendorPanel:RemoveFromNeverSellList(itemID)
     C_Timer.After(0.1, function()
         VendorPanel:UpdatePreviewPanel()
         VendorPanel:UpdateButton()
-        if state.filtersDialog and state.filtersDialog:IsShown() and state.filtersDialog.neverSellBtnText then
-            VendorPanel:UpdateNeverSellButtonCount()
-        end
+        VendorPanel:UpdateNeverSellButtonCount()
     end)
 end
 
@@ -816,11 +831,37 @@ function VendorPanel:GetNeverSellList()
     return protectedItems
 end
 
+function VendorPanel:GetGearButtonLabel()
+    local settings = GetSettings()
+    local ilvl = settings.gearButtonIlvl and tonumber(settings.gearButtonIlvl)
+    if ilvl and ilvl > 0 then
+        return string.format(L["VENDOR_GEAR_BUTTON"], ilvl)
+    end
+    return string.format(L["VENDOR_GEAR_BUTTON"], "—")
+end
+
+function VendorPanel:RefreshGearButton()
+    if state.addTab then
+        self:RelayoutAddTab()
+    end
+end
+
+function VendorPanel:AddGearFromGearButton()
+    local ilvl = tonumber(GetSettings().gearButtonIlvl)
+    if not ilvl or ilvl <= 0 then
+        print("OneWoW QoL: " .. L["VENDOR_GEAR_NO_ILVL"])
+        return
+    end
+    self:AddGearBelowIlvl(ilvl)
+end
+
 function VendorPanel:UpdateNeverSellButtonCount()
-    if not state.filtersDialog or not state.filtersDialog.neverSellBtnText then return end
     local count = 0
     for _ in pairs(self:GetNeverSellList()) do count = count + 1 end
-    state.filtersDialog.neverSellBtnText:SetText(string.format(L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", count))
+    local text = string.format(L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", count)
+    if state.optionsTab and state.optionsTab.neverSellBtnText then
+        state.optionsTab.neverSellBtnText:SetText(text)
+    end
 end
 
 function VendorPanel:GetOneTimeItems()
@@ -1224,9 +1265,10 @@ end
 
 function VendorPanel:AddGearBelowIlvl(targetIlvl)
     local count = 0
-    local excludeIlvl1 = true
-    if state.filtersDialog and state.filtersDialog.excludeIlvl1 then
-        excludeIlvl1 = state.filtersDialog.excludeIlvl1:GetChecked()
+    local settings = GetSettings()
+    local excludeIlvl1 = settings.gearSkipIlvl1 ~= false
+    if state.optionsTab and state.optionsTab.excludeIlvl1 then
+        excludeIlvl1 = state.optionsTab.excludeIlvl1:GetChecked()
     end
     for bag = 0, NUM_BAG_SLOTS + 1 do
         local numSlots = C_Container.GetContainerNumSlots(bag)
@@ -1270,21 +1312,28 @@ function VendorPanel:AddGearBelowIlvl(targetIlvl)
     end
 end
 
---- Add every bag item matching a bag-search expression (same syntax as the Bags
---- search box) to the sell list. Reuses the shared PredicateEngine.
-function VendorPanel:AddSearchMatches(expr)
+local SEARCH_PREVIEW_ITEM_LIMIT = 50
+
+--- Scan bags for items matching a bag-search expression (same syntax as the Bags
+--- search box). Reuses the shared PredicateEngine.
+---@param expr string
+---@param collectDetails number|nil max item rows to return (0 = IDs/count only)
+---@return table result { valid, empty, error, totalCount, itemIDs, items }
+function VendorPanel:GetSearchMatches(expr, collectDetails)
     expr = expr and strtrim(expr) or ""
     if expr == "" then
-        print("OneWoW QoL: " .. L["VENDOR_SEARCH_EMPTY"])
-        return
+        return { valid = false, empty = true, error = nil, totalCount = 0, itemIDs = {}, items = {} }
     end
     local PE = OneWoW.PredicateEngine
     local compiled, err = PE:Compile(expr)
     if not compiled then
-        print("OneWoW QoL: " .. L["VENDOR_SEARCH_INVALID"] .. (err and (" " .. err) or ""))
-        return
+        return { valid = false, empty = false, error = err, totalCount = 0, itemIDs = {}, items = {} }
     end
-    local count = 0
+    local detailLimit = collectDetails
+    if detailLimit == nil then detailLimit = SEARCH_PREVIEW_ITEM_LIMIT end
+    local itemIDs = {}
+    local items = {}
+    local totalCount = 0
     for bag = 0, NUM_BAG_SLOTS + 1 do
         local numSlots = C_Container.GetContainerNumSlots(bag)
         if numSlots then
@@ -1292,19 +1341,98 @@ function VendorPanel:AddSearchMatches(expr)
                 local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
                 if itemInfo and itemInfo.itemID and not GetItemStatus():IsItemProtected(itemInfo.itemID) then
                     if PE:CheckItem(expr, itemInfo.itemID, bag, slot, itemInfo) then
-                        state.oneTimeItems.custom[itemInfo.itemID] = true
-                        count = count + 1
+                        totalCount = totalCount + 1
+                        itemIDs[itemInfo.itemID] = true
+                        if detailLimit > 0 and #items < detailLimit then
+                            local itemName, itemLink, _, _, _, _, _, _, _, itemTexture, sellPrice =
+                                C_Item.GetItemInfo(itemInfo.itemID)
+                            if not itemName then
+                                C_Item.RequestLoadItemDataByID(itemInfo.itemID)
+                                itemName = "Item " .. itemInfo.itemID
+                            end
+                            local itemLevel, actualItemLink = 0, itemLink
+                            local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot)
+                            if itemLocation and C_Item.DoesItemExist(itemLocation) then
+                                local item = Item:CreateFromItemLocation(itemLocation)
+                                if item and item:IsItemDataCached() then
+                                    itemLevel = item:GetCurrentItemLevel() or 0
+                                    actualItemLink = item:GetItemLink() or itemLink
+                                end
+                            end
+                            items[#items + 1] = {
+                                itemID = itemInfo.itemID,
+                                link = actualItemLink or itemLink,
+                                icon = itemTexture or "Interface\\Icons\\INV_Misc_QuestionMark",
+                                stackCount = itemInfo.stackCount or 1,
+                                itemLevel = itemLevel,
+                                sellPrice = sellPrice or 0,
+                            }
+                        end
                     end
                 end
             end
         end
     end
-    if count > 0 then
-        print("OneWoW QoL: " .. string.format(L["VENDOR_SEARCH_ADDED"], count, expr))
+    return { valid = true, empty = false, error = nil, totalCount = totalCount, itemIDs = itemIDs, items = items }
+end
+
+function VendorPanel:GetCustomFilterSlotLabel(slotIndex)
+    local slot = GetCustomFilters()[slotIndex]
+    if slot and slot.name and slot.name ~= "" then
+        return slot.name
+    end
+    return string.format(L["VENDOR_CUSTOM_SLOT"], slotIndex)
+end
+
+function VendorPanel:CustomFilterSlotIsEmpty(slotIndex)
+    local slot = GetCustomFilters()[slotIndex]
+    return not slot or not slot.expr or slot.expr == ""
+end
+
+function VendorPanel:SaveCustomFilterSlot(slotIndex, name, expr)
+    local filters = GetCustomFilters()
+    filters[slotIndex] = { name = name, expr = expr }
+end
+
+function VendorPanel:ClearCustomFilterSlot(slotIndex)
+    local filters = GetCustomFilters()
+    filters[slotIndex] = { name = nil, expr = nil }
+    print("OneWoW QoL: " .. string.format(L["VENDOR_FILTER_SLOT_CLEARED"], slotIndex))
+end
+
+function VendorPanel:ApplyCustomFilterSlot(slotIndex)
+    local slot = GetCustomFilters()[slotIndex]
+    if not slot or not slot.expr or slot.expr == "" then return end
+    if state.addTab and state.addTab.searchBox then
+        state.addTab.searchBox:SetText(slot.expr)
+        state.addTab.searchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end
+    self:UpdateSearchPreview()
+end
+
+--- Add every bag item matching a bag-search expression to the sell list.
+function VendorPanel:AddSearchMatches(expr)
+    local result = self:GetSearchMatches(expr, 0)
+    if result.empty then
+        print("OneWoW QoL: " .. L["VENDOR_SEARCH_EMPTY"])
+        return
+    end
+    if not result.valid then
+        print("OneWoW QoL: " .. L["VENDOR_SEARCH_INVALID"] .. (result.error and (" " .. result.error) or ""))
+        return
+    end
+    if result.totalCount > 0 then
+        for itemID in pairs(result.itemIDs) do
+            state.oneTimeItems.custom[itemID] = true
+        end
+        print("OneWoW QoL: " .. string.format(L["VENDOR_SEARCH_ADDED"], result.totalCount, expr))
         self:UpdatePreviewPanel()
         self:UpdateButton()
+        self:UpdateSearchPreview()
+        self:SetVendorTab("sell")
     else
         print("OneWoW QoL: " .. string.format(L["VENDOR_SEARCH_NONE"], expr))
+        self:UpdateSearchPreview()
     end
 end
 
@@ -1455,7 +1583,6 @@ function VendorPanel:TogglePreviewPanel()
     if state.junkPreviewPanel:IsShown() then
         state.junkPreviewPanel.manuallyHidden = true
         state.junkPreviewPanel:Hide()
-        if state.filtersDialog then state.filtersDialog:Hide() end
         self:ManageBlizzardSellButton(false)
     else
         state.junkPreviewPanel.manuallyHidden = false
@@ -1464,51 +1591,6 @@ function VendorPanel:TogglePreviewPanel()
         self:ManageBlizzardSellButton(true)
     end
     self:UpdatePanelToggleButton()
-end
-
---- Dock a side dialog to the right of the panel, or centered over it when there
---- isn't room to the right. Shared by the Quick Add and Options dialogs.
-local function DockSideDialog(dialog, minSpace)
-    if not state.junkPreviewPanel then return end
-    local screenWidth = GetScreenWidth() * UIParent:GetEffectiveScale()
-    local panelRight = state.junkPreviewPanel:GetRight()
-    local spaceOnRight = screenWidth - (panelRight or 0)
-    dialog:ClearAllPoints()
-    if spaceOnRight >= (minSpace or 210) then
-        dialog:SetPoint("TOPLEFT", state.junkPreviewPanel, "TOPRIGHT", 5, 0)
-    else
-        dialog:SetPoint("CENTER", state.junkPreviewPanel, "CENTER", 0, 0)
-    end
-end
-
-function VendorPanel:ToggleFiltersDialog()
-    if not state.filtersDialog then self:CreateFiltersDialog() end
-    if state.filtersDialog:IsShown() then
-        state.filtersDialog:Hide()
-        return
-    end
-    if not state.junkPreviewPanel or not state.junkPreviewPanel:IsShown() then return end
-    if state.optionsDialog then state.optionsDialog:Hide() end
-    local neverSellCount = 0
-    for _ in pairs(self:GetNeverSellList()) do neverSellCount = neverSellCount + 1 end
-    if state.filtersDialog.neverSellBtnText then
-        state.filtersDialog.neverSellBtnText:SetText(string.format(L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", neverSellCount))
-    end
-    DockSideDialog(state.filtersDialog, 210)
-    state.filtersDialog:Show()
-end
-
-function VendorPanel:ToggleOptionsDialog()
-    if not state.optionsDialog then self:CreateOptionsDialog() end
-    if state.optionsDialog:IsShown() then
-        state.optionsDialog:Hide()
-        return
-    end
-    if not state.junkPreviewPanel or not state.junkPreviewPanel:IsShown() then return end
-    if state.filtersDialog then state.filtersDialog:Hide() end
-    if state.optionsDialog.Refresh then state.optionsDialog.Refresh() end
-    DockSideDialog(state.optionsDialog, 250)
-    state.optionsDialog:Show()
 end
 
 function VendorPanel:ToggleNeverSellDialog()
@@ -1637,9 +1719,8 @@ function VendorPanel:OnMerchantClosed()
     if state.panelToggleTab then state.panelToggleTab:SetChecked(false) end
     if state.junkPreviewPanel then state.junkPreviewPanel:Hide() end
     self:ManageBlizzardSellButton(false)
-    if state.filtersDialog then state.filtersDialog:Hide() end
-    if state.optionsDialog then state.optionsDialog:Hide() end
     if state.neverSellDialog then state.neverSellDialog:Hide() end
+    state.activePanelTab = "sell"
     state.currentVendorFilter = "Show All"
     wipe(state.availableFilters)
     state.oneTimeItems.ilvlGear = {}
@@ -1655,6 +1736,32 @@ function VendorPanelModule:OnEnable()
     if not db then return end
     if not db.settings then db.settings = {} end
     if not db.settings.panelWidth then db.settings.panelWidth = 320 end
+    GetCustomFilters()
+    local settings = GetSettings()
+    if settings.gearSkipIlvl1 == nil then settings.gearSkipIlvl1 = true end
+
+    if not VendorPanel._saveFilterPopupRegistered then
+        VendorPanel._saveFilterPopupRegistered = true
+        StaticPopupDialogs["ONEWOW_VP_REPLACE_FILTER"] = {
+            text = "",
+            button1 = YES,
+            button2 = NO,
+            OnAccept = function()
+                local pending = state._pendingFilterSave
+                if pending then
+                    VendorPanel:SaveCustomFilterSlot(pending.slotIndex, pending.name, pending.expr)
+                    VendorPanel:RefreshCustomFilterButtons()
+                    if state.saveFilterDialog then state.saveFilterDialog:Hide() end
+                    print("OneWoW QoL: " .. string.format(L["VENDOR_FILTER_SAVED"], pending.name))
+                    state._pendingFilterSave = nil
+                end
+            end,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+            preferredIndex = 3,
+        }
+    end
 
     local coreIS = GetItemStatus()
     if coreIS and (db.itemStatus or db.charItemStatus) then
@@ -1746,7 +1853,8 @@ function VendorPanelModule:OnEnable()
             state._merchantToggleHandler = nil
             state.junkPreviewPanel = nil
             state.replacementSellButton = nil
-            state.filtersDialog = nil
+            state.addTab = nil
+            state.optionsTab = nil
             state.neverSellDialog = nil
         end
         GUI:RegisterSettingsCallback("OnThemeChanged", self, onSettingsChanged)
@@ -1785,15 +1893,15 @@ function VendorPanelModule:OnToggle(toggleId, value)
         if not value and state.junkPreviewPanel and state.junkPreviewPanel:IsShown() then
             state.junkPreviewPanel:Hide()
         end
-        if state.optionsDialog and state.optionsDialog.showPanelCheck then
-            state.optionsDialog.showPanelCheck:SetChecked(value)
+        if state.optionsTab and state.optionsTab.showPanelCheck then
+            state.optionsTab.showPanelCheck:SetChecked(value)
         end
     elseif toggleId == "show_blizz_junk" then
         if state.junkPreviewPanel and state.junkPreviewPanel:IsShown() then
             VendorPanel:UpdatePreviewPanel()
         end
-        if state.optionsDialog and state.optionsDialog.showBlizzCheck then
-            state.optionsDialog.showBlizzCheck:SetChecked(value)
+        if state.optionsTab and state.optionsTab.showBlizzCheck then
+            state.optionsTab.showBlizzCheck:SetChecked(value)
         end
     end
 end

@@ -19,6 +19,58 @@ local backdropIconEdge = {
     edgeSize = 1,
 }
 
+local SEARCH_PREVIEW_HEIGHT = 132
+local SEARCH_PREVIEW_DEBOUNCE = 0.2
+
+local function StyleVendorTab(btn, selected)
+    if selected then
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    else
+        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    end
+end
+
+function VendorPanel:SetVendorTab(tabId)
+    if not state.junkPreviewPanel or not state.junkPreviewPanel.tabSell then return end
+    state.activePanelTab = tabId
+    local panel = state.junkPreviewPanel
+
+    if tabId == "add" and not state.addTab then self:CreateAddTabContent() end
+    if tabId == "options" and not state.optionsTab then self:CreateOptionsTabContent() end
+
+    local isSell = tabId == "sell"
+    local isAdd = tabId == "add"
+    local isOpt = tabId == "options"
+
+    panel.sellTabContent:SetShown(isSell)
+    panel.addTabContent:SetShown(isAdd)
+    panel.optionsTabContent:SetShown(isOpt)
+
+    panel.helpText:SetShown(isSell)
+    panel.totalValueText:SetShown(isSell)
+    panel.destroyButton:SetShown(isSell)
+    panel.sellJunkButton:SetShown(isSell)
+
+    StyleVendorTab(panel.tabSell, isSell)
+    StyleVendorTab(panel.tabAdd, isAdd)
+    StyleVendorTab(panel.tabOptions, isOpt)
+
+    if isAdd then
+        self:RefreshCustomFilterButtons()
+        self:RefreshGearButton()
+        self:UpdateSearchPreview()
+    elseif isOpt and state.optionsTab and state.optionsTab.Refresh then
+        self:UpdateNeverSellButtonCount()
+        state.optionsTab.Refresh()
+    end
+
+    self:RelayoutPreviewPanel()
+end
+
 local function GetBrandIcon()
     local factionTheme = (OneWoW_GUI and OneWoW_GUI.GetSetting and OneWoW_GUI:GetSetting("minimap.theme")) or "horde"
     return OneWoW_GUI:GetBrandIcon(factionTheme)
@@ -101,8 +153,10 @@ function VendorPanel:ClosePreviewPanel()
         state.junkPreviewPanel.manuallyHidden = true
         state.junkPreviewPanel:Hide()
     end
-    if state.filtersDialog then state.filtersDialog:Hide() end
-    if state.optionsDialog then state.optionsDialog:Hide() end
+    if state.addTab and state.addTab._searchPreviewTimer then
+        state.addTab._searchPreviewTimer:Cancel()
+    end
+    state.activePanelTab = "sell"
     self:ManageBlizzardSellButton(false)
     if state.panelToggleTab then
         state.panelToggleTab:SetChecked(false)
@@ -131,6 +185,7 @@ function VendorPanel:CreatePanelToggleButton()
                 if not state.junkPreviewPanel then VendorPanel:CreatePreviewPanel() end
                 state.junkPreviewPanel.manuallyHidden = false
                 state.junkPreviewPanel:Show()
+                VendorPanel:SetVendorTab("sell")
                 VendorPanel:UpdatePreviewPanel()
                 VendorPanel:ManageBlizzardSellButton(true)
                 VendorPanel:RepositionMerchantSidebar()
@@ -226,34 +281,59 @@ function VendorPanel:CreatePreviewPanel()
 
     state.junkPreviewPanel.titleBar = titleBar
 
-    -- Top action row: Quick Add + Options, each opening a docked dialog.
-    local quickAddBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = L["VENDOR_QUICK_ADD"], height = 26, minWidth = 80 })
-    quickAddBtn:SetScript("OnClick", function() VendorPanel:ToggleFiltersDialog() end)
-    quickAddBtn:HookScript("OnEnter", function(myself)
-        GameTooltip:SetOwner(myself, "ANCHOR_TOP")
-        GameTooltip:SetText(L["VENDOR_QUICK_ADD_FILTERS"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(L["UI_VENDOR_FILTER_HINT"], 1, 1, 1, true)
-        GameTooltip:Show()
-    end)
-    quickAddBtn:HookScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
-    state.junkPreviewPanel.quickAddSection = quickAddBtn
+    state.activePanelTab = "sell"
 
-    local optionsBtn = OneWoW_GUI:CreateFitTextButton(state.junkPreviewPanel, { text = OPTIONS, height = 26, minWidth = 80 })
-    optionsBtn:SetScript("OnClick", function() VendorPanel:ToggleOptionsDialog() end)
-    optionsBtn:HookScript("OnEnter", function(myself)
-        GameTooltip:SetOwner(myself, "ANCHOR_TOP")
-        GameTooltip:SetText(OPTIONS, OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(L["VENDOR_OPTIONS_HINT"], 1, 1, 1, true)
-        GameTooltip:Show()
-    end)
-    optionsBtn:HookScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
-    state.junkPreviewPanel.optionsButton = optionsBtn
+    local tabBar = CreateFrame("Frame", nil, state.junkPreviewPanel)
+    state.junkPreviewPanel.tabBar = tabBar
 
-    local scrollFrame = CreateFrame("ScrollFrame", nil, state.junkPreviewPanel, "UIPanelScrollFrameTemplate")
+    local function makeTab(text, tabId)
+        local btn = OneWoW_GUI:CreateFitTextButton(tabBar, { text = text, height = 24, minWidth = 56 })
+        btn:SetScript("OnClick", function() VendorPanel:SetVendorTab(tabId) end)
+        return btn
+    end
+
+    state.junkPreviewPanel.tabSell = makeTab(L["VENDOR_TAB_SELL"], "sell")
+    state.junkPreviewPanel.tabAdd = makeTab(L["VENDOR_TAB_ADD"], "add")
+    state.junkPreviewPanel.tabOptions = makeTab(OPTIONS, "options")
+
+    local contentHost = CreateFrame("Frame", nil, state.junkPreviewPanel)
+    state.junkPreviewPanel.contentHost = contentHost
+
+    local sellTabContent = CreateFrame("Frame", nil, contentHost)
+    sellTabContent:SetAllPoints(contentHost)
+    state.junkPreviewPanel.sellTabContent = sellTabContent
+
+    local addTabContent = CreateFrame("Frame", nil, contentHost)
+    addTabContent:SetAllPoints(contentHost)
+    addTabContent:Hide()
+    state.junkPreviewPanel.addTabContent = addTabContent
+
+    local addScroll = CreateFrame("ScrollFrame", nil, addTabContent, "UIPanelScrollFrameTemplate")
+    addScroll:SetPoint("TOPLEFT", addTabContent, "TOPLEFT", 0, 0)
+    addScroll:SetPoint("BOTTOMRIGHT", addTabContent, "BOTTOMRIGHT", 0, 0)
+    OneWoW_GUI:StyleScrollBar(addScroll, { offset = -5 })
+    local addScrollChild = CreateFrame("Frame", nil, addScroll)
+    addScrollChild:SetWidth(panelWidth - 28)
+    addScroll:SetScrollChild(addScrollChild)
+    state.junkPreviewPanel.addTabScroll = addScroll
+    state.junkPreviewPanel.addTabScrollChild = addScrollChild
+
+    local optionsTabContent = CreateFrame("Frame", nil, contentHost)
+    optionsTabContent:SetAllPoints(contentHost)
+    optionsTabContent:Hide()
+    state.junkPreviewPanel.optionsTabContent = optionsTabContent
+
+    local optionsScroll = CreateFrame("ScrollFrame", nil, optionsTabContent, "UIPanelScrollFrameTemplate")
+    optionsScroll:SetPoint("TOPLEFT", optionsTabContent, "TOPLEFT", 0, 0)
+    optionsScroll:SetPoint("BOTTOMRIGHT", optionsTabContent, "BOTTOMRIGHT", 0, 0)
+    OneWoW_GUI:StyleScrollBar(optionsScroll, { offset = -5 })
+    local optionsScrollChild = CreateFrame("Frame", nil, optionsScroll)
+    optionsScrollChild:SetWidth(panelWidth - 28)
+    optionsScroll:SetScrollChild(optionsScrollChild)
+    state.junkPreviewPanel.optionsTabScroll = optionsScroll
+    state.junkPreviewPanel.optionsTabScrollChild = optionsScrollChild
+
+    local scrollFrame = CreateFrame("ScrollFrame", nil, sellTabContent, "UIPanelScrollFrameTemplate")
     state.junkPreviewPanel.scrollFrame = scrollFrame
 
     OneWoW_GUI:StyleScrollBar(scrollFrame, { offset = -5 })
@@ -346,6 +426,12 @@ function VendorPanel:CreatePreviewPanel()
         if state.junkPreviewPanel.scrollChild then
             state.junkPreviewPanel.scrollChild:SetWidth(width - 28)
         end
+        if state.junkPreviewPanel.addTabScrollChild then
+            state.junkPreviewPanel.addTabScrollChild:SetWidth(width - 28)
+        end
+        if state.junkPreviewPanel.optionsTabScrollChild then
+            state.junkPreviewPanel.optionsTabScrollChild:SetWidth(width - 28)
+        end
         VendorPanel:RelayoutPreviewPanel()
         if myself.sizeChangedTimer then myself.sizeChangedTimer:Cancel() end
         myself.sizeChangedTimer = C_Timer.NewTimer(0.2, function() VendorPanel:UpdatePreviewPanel() end)
@@ -353,10 +439,16 @@ function VendorPanel:CreatePreviewPanel()
 
     -- The panel is docked to MerchantFrame (outside the core window rebuild), so
     -- register it as a font root; RelayoutPreviewPanel re-flows on font/size change.
-    OneWoW_GUI:RegisterFontRoot(state.junkPreviewPanel, function() VendorPanel:RelayoutPreviewPanel() end)
+    OneWoW_GUI:RegisterFontRoot(state.junkPreviewPanel, function()
+        VendorPanel:RelayoutPreviewPanel()
+        if state.addTab then VendorPanel:RelayoutAddTab() end
+        if state.optionsTab then VendorPanel:RelayoutOptionsTab() end
+    end)
 
     VendorPanel:RelayoutPreviewPanel()
     C_Timer.After(0, function() VendorPanel:RelayoutPreviewPanel() end)
+
+    VendorPanel:SetVendorTab("sell")
 
     state.junkPreviewPanel.manuallyHidden = false
     state.junkPreviewPanel:Hide()
@@ -366,70 +458,84 @@ end
 --- the scroll area / footer text never overlap at any font size.
 function VendorPanel:RelayoutPreviewPanel()
     local panel = state.junkPreviewPanel
-    if not panel or not panel.titleBar then return end
+    if not panel or not panel.titleBar or not panel.tabBar then return end
     local pad = OneWoW_GUI:GetSpacing("SM")
     local gap = OneWoW_GUI:GetSpacing("XS")
+    local tabGap = 2
+    local tabH = 24
 
-    local qa, opt = panel.quickAddSection, panel.optionsButton
-    qa:ClearAllPoints()
-    opt:ClearAllPoints()
-    qa:SetPoint("TOPLEFT", panel.titleBar, "BOTTOMLEFT", pad, -gap)
-    opt:SetPoint("TOPRIGHT", panel.titleBar, "BOTTOMRIGHT", -pad, -gap)
+    local tabBar = panel.tabBar
+    tabBar:ClearAllPoints()
+    tabBar:SetPoint("TOPLEFT", panel.titleBar, "BOTTOMLEFT", pad, -gap)
+    tabBar:SetPoint("TOPRIGHT", panel.titleBar, "BOTTOMRIGHT", -pad, -gap)
+    tabBar:SetHeight(tabH)
+
+    local tabs = { panel.tabSell, panel.tabAdd, panel.tabOptions }
+    local barW = tabBar:GetWidth()
+    if barW < 1 then barW = (panel:GetWidth() or 320) - pad * 2 end
+    local tabW = (barW - tabGap * 2) / 3
+    for i, tab in ipairs(tabs) do
+        tab:ClearAllPoints()
+        tab:SetSize(tabW, tabH)
+        tab:SetPoint("TOPLEFT", tabBar, "TOPLEFT", (i - 1) * (tabW + tabGap), 0)
+    end
 
     local closeB, destroyB, sellB = panel.closeButton, panel.destroyButton, panel.sellJunkButton
     local btnGap = 3
     local rowH = math.max(closeB:GetHeight(), destroyB:GetHeight(), sellB:GetHeight())
-    local rowW = closeB:GetWidth() + destroyB:GetWidth() + sellB:GetWidth() + btnGap * 2
+    local isSell = state.activePanelTab == "sell"
+    local rowW = isSell and (closeB:GetWidth() + destroyB:GetWidth() + sellB:GetWidth() + btnGap * 2) or closeB:GetWidth()
     local row = panel.bottomRow
     row:SetSize(rowW, rowH)
     row:ClearAllPoints()
     row:SetPoint("BOTTOM", panel, "BOTTOM", 0, 12)
     closeB:ClearAllPoints(); destroyB:ClearAllPoints(); sellB:ClearAllPoints()
-    closeB:SetPoint("LEFT", row, "LEFT", 0, 0)
-    destroyB:SetPoint("LEFT", closeB, "RIGHT", btnGap, 0)
-    sellB:SetPoint("LEFT", destroyB, "RIGHT", btnGap, 0)
+    if isSell then
+        closeB:SetPoint("LEFT", row, "LEFT", 0, 0)
+        destroyB:SetPoint("LEFT", closeB, "RIGHT", btnGap, 0)
+        sellB:SetPoint("LEFT", destroyB, "RIGHT", btnGap, 0)
+    else
+        closeB:SetPoint("CENTER", row, "CENTER", 0, 0)
+    end
 
-    local help = panel.helpText
-    local helpH = math.ceil(help:GetStringHeight() or 0)
-    if helpH < 12 then helpH = 12 end
-    local helpY = 12 + rowH + 6
-    help:ClearAllPoints()
-    help:SetPoint("BOTTOM", panel, "BOTTOM", 0, helpY)
+    local contentBottom = 12 + rowH + 8
+    if isSell then
+        local help = panel.helpText
+        local helpH = math.ceil(help:GetStringHeight() or 0)
+        if helpH < 12 then helpH = 12 end
+        local helpY = 12 + rowH + 6
+        help:ClearAllPoints()
+        help:SetPoint("BOTTOM", panel, "BOTTOM", 0, helpY)
 
-    local total = panel.totalValueText
-    local totalH = math.ceil(total:GetStringHeight() or 0)
-    if totalH < 14 then totalH = 14 end
-    local totalY = helpY + helpH + 4
-    total:ClearAllPoints()
-    total:SetPoint("BOTTOM", panel, "BOTTOM", 0, totalY)
+        local total = panel.totalValueText
+        local totalH = math.ceil(total:GetStringHeight() or 0)
+        if totalH < 14 then totalH = 14 end
+        local totalY = helpY + helpH + 4
+        total:ClearAllPoints()
+        total:SetPoint("BOTTOM", panel, "BOTTOM", 0, totalY)
+        contentBottom = totalY + totalH + 8
+    end
+
+    local contentHost = panel.contentHost
+    contentHost:ClearAllPoints()
+    contentHost:SetPoint("TOPLEFT", tabBar, "BOTTOMLEFT", 0, -gap)
+    contentHost:SetPoint("TOPRIGHT", tabBar, "BOTTOMRIGHT", 0, -gap)
+    contentHost:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -pad, contentBottom)
 
     local scroll = panel.scrollFrame
     scroll:ClearAllPoints()
-    scroll:SetPoint("TOPLEFT", qa, "BOTTOMLEFT", 0, -gap)
-    scroll:SetPoint("TOPRIGHT", opt, "BOTTOMRIGHT", 0, -gap)
-    scroll:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -pad, totalY + totalH + 8)
+    scroll:SetPoint("TOPLEFT", panel.sellTabContent, "TOPLEFT", 0, 0)
+    scroll:SetPoint("BOTTOMRIGHT", panel.sellTabContent, "BOTTOMRIGHT", 0, 0)
 end
 
-function VendorPanel:CreateOptionsDialog()
-    if state.optionsDialog then return end
+function VendorPanel:CreateOptionsTabContent()
+    if state.optionsTab then return end
+    local panel = state.junkPreviewPanel
+    if not panel or not panel.optionsTabScrollChild then return end
 
-    local result = OneWoW_GUI:CreateDialog({
-        name = "OneWoW_QoL_VendorOptionsDialog",
-        title = OPTIONS,
-        width = 240,
-        height = 360,
-        strata = "MEDIUM",
-        onClose = function(frame) frame:Hide() end,
-        relayout = function() VendorPanel:RelayoutOptionsDialog() end,
-    })
-    state.optionsDialog = result.frame
-    if state.junkPreviewPanel then
-        state.optionsDialog:SetFrameLevel(state.junkPreviewPanel:GetFrameLevel() + 1)
-    end
-    state.optionsDialog:SetClipsChildren(true)
-
-    local content = result.contentFrame
-    local d = state.optionsDialog
+    local content = panel.optionsTabScrollChild
+    local d = { content = content }
+    state.optionsTab = d
 
     -- Filter dropdown (moved out of the panel).
     local filterLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -631,6 +737,56 @@ function VendorPanel:CreateOptionsDialog()
     end)
     d.showBlizzCheck = showBlizzCheck
 
+    d.divider4 = OneWoW_GUI:CreateDivider(content, {})
+
+    d.gearIlvlLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    d.gearIlvlLabel:SetText(L["VENDOR_GEAR_ILVL_LABEL"])
+    d.gearIlvlLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    d.gearIlvlEditBox = OneWoW_GUI:CreateEditBox(content, {
+        width = 60,
+        height = 22,
+        maxLetters = 4,
+    })
+    d.gearIlvlEditBox:SetNumeric(true)
+    d.gearIlvlEditBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    d.gearIlvlHint = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    d.gearIlvlHint:SetText(L["VENDOR_GEAR_ILVL_HINT"])
+    d.gearIlvlHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    d.gearIlvlHint:SetJustifyH("LEFT")
+
+    d.gearIlvlEditBox:SetScript("OnTextChanged", function(myself)
+        local n = tonumber(myself:GetText())
+        GetSettings().gearButtonIlvl = n
+        VendorPanel:RefreshGearButton()
+    end)
+
+    d.excludeIlvl1 = OneWoW_GUI:CreateCheckbox(content, { label = L["VENDOR_SKIP_ILVL1"] })
+    d.excludeIlvl1:SetScript("OnClick", function(myself)
+        GetSettings().gearSkipIlvl1 = myself:GetChecked()
+    end)
+
+    d.divider5 = OneWoW_GUI:CreateDivider(content, {})
+
+    d.neverSellBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "", height = 26, minWidth = 176 })
+    d.neverSellBtnText = d.neverSellBtn.text
+    d.neverSellBtnText:SetText(string.format(L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", 0))
+    d.neverSellBtn:SetScript("OnClick", function() VendorPanel:ToggleNeverSellDialog() end)
+    d.neverSellBtn:HookScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L["VENDOR_PROTECTED_ITEMS"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        GameTooltip:AddLine(L["VENDOR_VIEW_PROTECTED"], 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    d.neverSellBtn:HookScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+
+    local gearIlvl = GetSettings().gearButtonIlvl
+    d.gearIlvlEditBox:SetText(gearIlvl and gearIlvl > 0 and tostring(gearIlvl) or "")
+    d.excludeIlvl1:SetChecked(GetSettings().gearSkipIlvl1 ~= false)
+
     -- Re-sync every control from saved state when the dialog is (re)opened.
     d.Refresh = function()
         dimCheck:SetChecked(state.dimKnownItems)
@@ -640,19 +796,21 @@ function VendorPanel:CreateOptionsDialog()
         showBlizzCheck:SetChecked(GetShowBlizzJunk())
         refreshFilterRadios()
         if vendorDropdown.RefreshFilters then vendorDropdown:RefreshFilters() end
-        VendorPanel:RelayoutOptionsDialog()
+        local gearIlvl = GetSettings().gearButtonIlvl
+        d.gearIlvlEditBox:SetText(gearIlvl and gearIlvl > 0 and tostring(gearIlvl) or "")
+        d.excludeIlvl1:SetChecked(GetSettings().gearSkipIlvl1 ~= false)
+        VendorPanel:UpdateNeverSellButtonCount()
+        VendorPanel:RefreshGearButton()
+        VendorPanel:RelayoutOptionsTab()
     end
 
-    VendorPanel:RelayoutOptionsDialog()
-    C_Timer.After(0, function() VendorPanel:RelayoutOptionsDialog() end)
-
-    state.optionsDialog:Hide()
+    VendorPanel:RelayoutOptionsTab()
+    C_Timer.After(0, function() VendorPanel:RelayoutOptionsTab() end)
 end
 
---- Re-flow the Options dialog rows top-to-bottom with measured heights and size
---- the dialog to fit, so nothing overlaps at any font size.
-function VendorPanel:RelayoutOptionsDialog()
-    local d = state.optionsDialog
+--- Re-flow the Options tab rows top-to-bottom with measured heights.
+function VendorPanel:RelayoutOptionsTab()
+    local d = state.optionsTab
     if not d or not d.filterLabel then return end
     local md = OneWoW_GUI:GetSpacing("MD")
     local gap = OneWoW_GUI:GetSpacing("XS")
@@ -704,205 +862,667 @@ function VendorPanel:RelayoutOptionsDialog()
     placeDivider(d.divider3)
     placeCheck(d.showPanelCheck)
     placeCheck(d.showBlizzCheck)
+    y = y - gap
 
-    local titleH = OneWoW_GUI.Constants.GUI.TITLEBAR_HEIGHT or 30
-    d:SetHeight(titleH + (-y) + OneWoW_GUI:GetSpacing("SM"))
+    placeDivider(d.divider4)
+    d.gearIlvlLabel:ClearAllPoints()
+    d.gearIlvlLabel:SetPoint("TOPLEFT", content, "TOPLEFT", md, y)
+    y = y - measureFS(d.gearIlvlLabel, 12) - 4
+
+    d.gearIlvlEditBox:ClearAllPoints()
+    d.gearIlvlEditBox:SetPoint("TOPLEFT", content, "TOPLEFT", md, y)
+    y = y - d.gearIlvlEditBox:GetHeight() - 4
+
+    d.gearIlvlHint:ClearAllPoints()
+    d.gearIlvlHint:SetPoint("TOPLEFT", content, "TOPLEFT", md, y)
+    d.gearIlvlHint:SetPoint("TOPRIGHT", content, "TOPRIGHT", -md, y)
+    y = y - measureFS(d.gearIlvlHint, 12) - 4
+
+    placeCheck(d.excludeIlvl1)
+    y = y - gap
+
+    placeDivider(d.divider5)
+
+    d.neverSellBtn:ClearAllPoints()
+    d.neverSellBtn:SetPoint("TOPLEFT", content, "TOPLEFT", md, y)
+    d.neverSellBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", -md, y)
+    y = y - d.neverSellBtn:GetHeight() - gap
+
+    content:SetHeight(math.max(-y, 1))
 end
 
-function VendorPanel:CreateFiltersDialog()
-    if state.filtersDialog then return end
+function VendorPanel:CreateAddTabContent()
+    if state.addTab then return end
+    local panel = state.junkPreviewPanel
+    if not panel or not panel.addTabScrollChild then return end
 
-    local result = OneWoW_GUI:CreateDialog({
-        name = "OneWoW_QoL_FiltersDialog",
-        title = L["VENDOR_QUICK_ADD_FILTERS"],
-        width = 230,
-        height = 360,
-        strata = "MEDIUM",
-        onClose = function(frame) frame:Hide() end,
-        relayout = function() VendorPanel:RelayoutFiltersDialog() end,
-    })
-    state.filtersDialog = result.frame
-    local d = state.filtersDialog
-    if state.junkPreviewPanel then
-        d:SetFrameLevel(state.junkPreviewPanel:GetFrameLevel() + 1)
+    local content = panel.addTabScrollChild
+    local d = { content = content }
+    state.addTab = d
+
+    local rowH = 22
+    local clearW = 22
+    d.customSlotBtns = {}
+    d.customClearBtns = {}
+
+    for slotIndex = 1, ns.VPCustomFilterSlotCount do
+        local slotBtn = OneWoW_GUI:CreateFitTextButton(content, {
+            text = self:GetCustomFilterSlotLabel(slotIndex),
+            height = rowH,
+        })
+        slotBtn:SetScript("OnClick", function()
+            VendorPanel:ApplyCustomFilterSlot(slotIndex)
+        end)
+        slotBtn:HookScript("OnEnter", function(myself)
+            local slot = ns.VPGetCustomFilters()[slotIndex]
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            GameTooltip:SetText(VendorPanel:GetCustomFilterSlotLabel(slotIndex), OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            if slot and slot.expr and slot.expr ~= "" then
+                GameTooltip:AddLine(slot.expr, 1, 1, 1, true)
+                GameTooltip:AddLine(L["VENDOR_CUSTOM_SLOT_APPLY"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            else
+                GameTooltip:AddLine(L["VENDOR_SLOT_EMPTY"], OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            end
+            GameTooltip:Show()
+        end)
+        slotBtn:HookScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+        d.customSlotBtns[slotIndex] = slotBtn
+
+        local clearBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "x", height = rowH, minWidth = clearW })
+        clearBtn:SetScript("OnClick", function()
+            if not VendorPanel:CustomFilterSlotIsEmpty(slotIndex) then
+                VendorPanel:ClearCustomFilterSlot(slotIndex)
+                VendorPanel:RefreshCustomFilterButtons()
+            end
+        end)
+        clearBtn:HookScript("OnEnter", function(myself)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L["VENDOR_SLOT_CLEAR_TT"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            GameTooltip:Show()
+        end)
+        clearBtn:HookScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+        d.customClearBtns[slotIndex] = clearBtn
     end
-    d:SetClipsChildren(true)
 
-    local content = result.contentFrame
-
-    local reagentsBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["VENDOR_REAGENTS"], height = 26 })
-    reagentsBtn:SetScript("OnClick", function() VendorPanel:AddNonSoulboundReagents() end)
-    reagentsBtn:HookScript("OnEnter", function(myself)
+    d.gearBtn = OneWoW_GUI:CreateFitTextButton(content, {
+        text = self:GetGearButtonLabel(),
+        height = rowH,
+    })
+    d.gearBtn:SetScript("OnClick", function()
+        VendorPanel:AddGearFromGearButton()
+    end)
+    d.gearBtn:HookScript("OnEnter", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["UI_VENDOR_REAGENTS_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(L["UI_VENDOR_REAGENTS"], 1, 1, 1, true)
-        GameTooltip:AddLine(L["UI_VENDOR_EXCLUDES"], OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        GameTooltip:SetText(L["VENDOR_GEAR_BUTTON_TT_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        GameTooltip:AddLine(L["VENDOR_GEAR_ILVL_HINT"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
-    reagentsBtn:HookScript("OnLeave", function()
+    d.gearBtn:HookScript("OnLeave", function()
         GameTooltip:Hide()
     end)
-    d.reagentsBtn = reagentsBtn
 
-    local consumablesBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["UI_VENDOR_CONSUMABLES_TITLE"], height = 26 })
-    consumablesBtn:SetScript("OnClick", function() VendorPanel:AddConsumables() end)
-    consumablesBtn:HookScript("OnEnter", function(myself)
+    d.gearHelpBtn = OneWoW_GUI:CreateKeywordHelpButton(content, {
+        tooltipTitle = L["VENDOR_GEAR_BUTTON_TT_TITLE"],
+        tooltipDesc = L["VENDOR_GEAR_ILVL_HELP"],
+    })
+    d.gearHelpBtn:SetScript("OnClick", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["UI_VENDOR_CONSUMABLES_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(L["UI_VENDOR_CONSUMABLES"], 1, 1, 1, true)
+        GameTooltip:SetText(L["VENDOR_GEAR_BUTTON_TT_TITLE"], 1, 1, 1)
+        GameTooltip:AddLine(L["VENDOR_GEAR_ILVL_HELP"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
-    consumablesBtn:HookScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
-    d.consumablesBtn = consumablesBtn
 
-    local whiteBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["UI_VENDOR_WHITES_TITLE"], height = 26 })
-    whiteBtn:SetScript("OnClick", function() VendorPanel:AddWhiteQuality() end)
-    whiteBtn:HookScript("OnEnter", function(myself)
-        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["UI_VENDOR_WHITES_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(L["UI_VENDOR_COMMONS"], 1, 1, 1, true)
-        GameTooltip:Show()
-    end)
-    whiteBtn:HookScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
-    d.whiteBtn = whiteBtn
-
-    local soulboundBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["VENDOR_SOULBOUND_EQUIP"], height = 26 })
-    soulboundBtn:SetScript("OnClick", function() VendorPanel:AddSoulboundEquipment() end)
-    soulboundBtn:HookScript("OnEnter", function(myself)
-        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["VENDOR_SOULBOUND_EQUIP"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(L["VENDOR_SOULBOUND_EQUIP_TT"], 1, 1, 1, true)
-        GameTooltip:Show()
-    end)
-    soulboundBtn:HookScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
-    d.soulboundBtn = soulboundBtn
-
-    local clearAllBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["UI_VENDOR_CLEAR_TITLE"], height = 26 })
-    clearAllBtn:SetScript("OnClick", function()
+    d.clearAllBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["UI_VENDOR_CLEAR_TITLE"], height = rowH })
+    d.clearAllBtn:SetScript("OnClick", function()
         state.oneTimeItems.ilvlGear = {}; state.oneTimeItems.reagents = {}; state.oneTimeItems.custom = {}
+        VendorPanel:ClearAddTabSearch()
         VendorPanel:UpdatePreviewPanel(); VendorPanel:UpdateButton()
         print("OneWoW QoL: Cleared all one-time items from sell list.")
     end)
-    clearAllBtn:HookScript("OnEnter", function(myself)
+    d.clearAllBtn:HookScript("OnEnter", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
         GameTooltip:SetText(L["UI_VENDOR_CLEAR_TITLE"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
         GameTooltip:AddLine(L["UI_VENDOR_REMOVE_CATEGORIES"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
-    clearAllBtn:HookScript("OnLeave", function()
+    d.clearAllBtn:HookScript("OnLeave", function()
         GameTooltip:Hide()
     end)
-    d.clearAllBtn = clearAllBtn
 
     d.divider1 = OneWoW_GUI:CreateDivider(content, {})
 
-    -- Bag-search-syntax filter: reuses the shared PredicateEngine + keyword help.
-    local searchLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    searchLabel:SetText(L["VENDOR_SEARCH_FILTER"])
-    searchLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    d.searchLabel = searchLabel
+    d.searchLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    d.searchLabel:SetText(L["VENDOR_SEARCH_FILTER"])
+    d.searchLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local searchBox = OneWoW_GUI:CreateEditBox(content, {
+    d.searchAddingLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    d.searchAddingLabel:SetText(string.format(L["VENDOR_SEARCH_ADDING"], 0))
+    d.searchAddingLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    d.searchAddingLabel:SetJustifyH("RIGHT")
+
+    d.searchBox = OneWoW_GUI:CreateEditBox(content, {
         height = 24,
         placeholderText = L["VENDOR_SEARCH_PLACEHOLDER"],
     })
-    d.searchBox = searchBox
 
-    local searchAddBtn = OneWoW_GUI:CreateFitTextButton(content, { text = ADD, height = 24 })
-    searchAddBtn:SetScript("OnClick", function()
-        VendorPanel:AddSearchMatches(searchBox:GetSearchText())
+    d.searchHelpBtn = OneWoW_GUI:CreateKeywordHelpButton(content, {
+        editBox = d.searchBox,
+        tooltipTitle = L["VENDOR_SEARCH_FILTER"],
+        tooltipDesc = L["VENDOR_SEARCH_HINT"],
+    })
+
+    d.searchAddBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["VENDOR_ADD_ITEMS"], height = rowH })
+    d.searchAddBtn:SetScript("OnClick", function()
+        VendorPanel:AddSearchMatches(d.searchBox:GetSearchText())
     end)
-    d.searchAddBtn = searchAddBtn
 
-    searchBox:SetScript("OnEnterPressed", function(myself)
+    d.saveFilterBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["VENDOR_SAVE_FILTER"], height = rowH })
+    d.saveFilterBtn:SetScript("OnClick", function()
+        VendorPanel:OpenSaveFilterDialog()
+    end)
+
+    d.searchBox:SetScript("OnEnterPressed", function(myself)
         VendorPanel:AddSearchMatches(myself:GetSearchText())
         myself:ClearFocus()
     end)
 
-    local searchHelpBtn = OneWoW_GUI:CreateKeywordHelpButton(content, {
-        editBox = searchBox,
-        tooltipTitle = L["VENDOR_SEARCH_FILTER"],
-        tooltipDesc = L["VENDOR_SEARCH_HINT"],
-    })
-    d.searchHelpBtn = searchHelpBtn
-
-    d.divider2 = OneWoW_GUI:CreateDivider(content, {})
-
-    local ilvlLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    ilvlLabel:SetText(L["VENDOR_ADD_GEAR_BELOW_ILVL"])
-    ilvlLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    d.ilvlLabel = ilvlLabel
-
-    local ilvlEditBox = OneWoW_GUI:CreateEditBox(content, {
-        width = 60,
-        height = 22,
-        maxLetters = 4,
-    })
-    ilvlEditBox:SetNumeric(true)
-    ilvlEditBox:SetText("")
-    ilvlEditBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    d.ilvlEditBox = ilvlEditBox
-
-    local ilvlBtn = OneWoW_GUI:CreateFitTextButton(content, { text = ADD, height = 26 })
-    ilvlBtn:SetScript("OnClick", function()
-        local ilvl = tonumber(state.filtersDialog.ilvlEditBox:GetText())
-        if ilvl and ilvl > 0 then
-            VendorPanel:AddGearBelowIlvl(ilvl)
-            state.filtersDialog.ilvlEditBox:SetText("")
-        else
-            print("OneWoW QoL: Please enter a valid item level.")
-        end
+    d.searchBox:SetScript("OnTextChanged", function()
+        if d._searchPreviewTimer then d._searchPreviewTimer:Cancel() end
+        d._searchPreviewTimer = C_Timer.NewTimer(SEARCH_PREVIEW_DEBOUNCE, function()
+            VendorPanel:UpdateSearchPreview()
+        end)
     end)
-    d.ilvlBtn = ilvlBtn
-
-    local excludeIlvl1 = OneWoW_GUI:CreateCheckbox(content, { label = L["VENDOR_SKIP_ILVL1"] })
-    excludeIlvl1:SetChecked(true)
-    d.excludeIlvl1 = excludeIlvl1
-
-    d.divider3 = OneWoW_GUI:CreateDivider(content, {})
-
-    local neverSellBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "", height = 26, minWidth = 176 })
-    neverSellBtn.text:SetText(string.format(L["VENDOR_PROTECTED_ITEMS"] .. " (%d)", 0))
-    d.neverSellBtnText = neverSellBtn.text
-    neverSellBtn:SetScript("OnClick", function() VendorPanel:ToggleNeverSellDialog() end)
-    neverSellBtn:HookScript("OnEnter", function(myself)
-        GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-        GameTooltip:SetText(L["VENDOR_PROTECTED_ITEMS"], OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        GameTooltip:AddLine(L["VENDOR_VIEW_PROTECTED"], 1, 1, 1, true)
-        GameTooltip:Show()
+    d.searchBox:HookScript("OnEditFocusGained", function()
+        VendorPanel:UpdateSearchPreview()
     end)
-    neverSellBtn:HookScript("OnLeave", function()
-        GameTooltip:Hide()
+    d.searchBox:HookScript("OnEditFocusLost", function()
+        C_Timer.After(0, function() VendorPanel:UpdateSearchPreview() end)
     end)
-    d.neverSellBtn = neverSellBtn
 
-    VendorPanel:RelayoutFiltersDialog()
-    C_Timer.After(0, function() VendorPanel:RelayoutFiltersDialog() end)
+    d.searchPreviewSection = CreateFrame("Frame", nil, content)
+    d.searchPreviewSection:Hide()
 
-    d:Hide()
+    d.searchPreviewHeader = d.searchPreviewSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    d.searchPreviewHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    d.searchPreviewHeader:SetJustifyH("LEFT")
+
+    d.searchPreviewScroll = CreateFrame("ScrollFrame", nil, d.searchPreviewSection, "UIPanelScrollFrameTemplate")
+    OneWoW_GUI:StyleScrollBar(d.searchPreviewScroll, { offset = -4 })
+
+    d.searchPreviewScrollChild = CreateFrame("Frame", nil, d.searchPreviewScroll)
+    d.searchPreviewScrollChild:SetWidth(190)
+    d.searchPreviewScroll:SetScrollChild(d.searchPreviewScrollChild)
+
+    VendorPanel:CreateSaveFilterDialog()
+    VendorPanel:RelayoutAddTab()
+    C_Timer.After(0, function() VendorPanel:RelayoutAddTab() end)
 end
 
---- Re-flow the Quick Add dialog rows top-to-bottom with measured heights and size
---- the dialog to fit, so nothing overlaps at any font size.
-function VendorPanel:RelayoutFiltersDialog()
-    local d = state.filtersDialog
-    if not d or not d.reagentsBtn then return end
-    local content = d.reagentsBtn:GetParent()
+function VendorPanel:ClearAddTabSearch()
+    local d = state.addTab
+    if not d or not d.searchBox then return end
+    d.searchBox:SetText("")
+    d.searchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    self:UpdateSearchPreview()
+end
+
+function VendorPanel:ApplyFixedWidthButtonText(btn, text, btnWidth)
+    local fs = btn.text
+    local textWidth = math.max((btnWidth or btn:GetWidth()) - 8, 24)
+    fs:ClearAllPoints()
+    fs:SetPoint("LEFT", btn, "LEFT", 4, 0)
+    fs:SetPoint("RIGHT", btn, "RIGHT", -4, 0)
+    fs:SetWordWrap(false)
+    fs:SetMaxLines(1)
+    fs:SetJustifyH("CENTER")
+    fs:SetText(text or "")
+    if fs:GetStringWidth() > textWidth then
+        local ellipsis = "…"
+        for i = #text, 1, -1 do
+            local candidate = text:sub(1, i) .. ellipsis
+            fs:SetText(candidate)
+            if fs:GetStringWidth() <= textWidth then
+                return
+            end
+        end
+        fs:SetText(ellipsis)
+    end
+end
+
+function VendorPanel:RefreshCustomFilterButtons()
+    if state.addTab then
+        self:RelayoutAddTab()
+    end
+end
+
+function VendorPanel:CreateSaveFilterDialog()
+    if state.saveFilterDialog then return end
+
+    local result = OneWoW_GUI:CreateDialog({
+        name = "OneWoW_QoL_SaveFilterDialog",
+        title = L["VENDOR_SAVE_FILTER_TITLE"],
+        width = 320,
+        height = 330,
+        strata = "DIALOG",
+        onClose = function(frame) frame:Hide() end,
+        buttons = {
+            { text = CANCEL, onClick = function(frame) frame:Hide() end },
+            { text = SAVE, onClick = function() VendorPanel:ConfirmSaveFilterDialog() end },
+        },
+    })
+    state.saveFilterDialog = result.frame
+    local content = result.contentFrame
+    local sd = { frame = state.saveFilterDialog, content = content, selectedSlot = nil }
+    state.saveFilterDialogData = sd
+
+    sd.hint = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sd.hint:SetText(L["VENDOR_SAVE_FILTER_PICK"])
+    sd.hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    sd.hint:SetJustifyH("LEFT")
+
+    sd.slotBtns = {}
+    for slotIndex = 1, ns.VPCustomFilterSlotCount do
+        local slotBtn = OneWoW_GUI:CreateFitTextButton(content, {
+            text = self:GetCustomFilterSlotLabel(slotIndex),
+            height = 24,
+            toggleable = true,
+        })
+        slotBtn:SetScript("OnClick", function()
+            sd.selectedSlot = slotIndex
+            for i, b in ipairs(sd.slotBtns) do
+                b:SetActive(i == slotIndex)
+            end
+            local slot = ns.VPGetCustomFilters()[slotIndex]
+            if slot and slot.name and slot.name ~= "" then
+                sd.titleBox:SetText(slot.name)
+                sd.titleBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                sd.replaceHint:SetText(string.format(L["VENDOR_FILTER_REPLACE_HINT"], slot.name))
+                sd.replaceHint:Show()
+            else
+                sd.titleBox:SetText("")
+                sd.replaceHint:Hide()
+            end
+            VendorPanel:RelayoutSaveFilterDialog()
+        end)
+        sd.slotBtns[slotIndex] = slotBtn
+    end
+
+    sd.nameLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sd.nameLabel:SetText(L["VENDOR_FILTER_NAME_LABEL"])
+    sd.nameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    sd.titleBox = OneWoW_GUI:CreateEditBox(content, {
+        height = 24,
+        maxLetters = 32,
+    })
+
+    sd.replaceHint = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    sd.replaceHint:SetText("")
+    sd.replaceHint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+    sd.replaceHint:Hide()
+
+    VendorPanel:RelayoutSaveFilterDialog()
+    state.saveFilterDialog:Hide()
+    state.saveFilterDialog:HookScript("OnShow", function()
+        VendorPanel:RelayoutSaveFilterDialog()
+    end)
+end
+
+function VendorPanel:RelayoutSaveFilterDialog()
+    local sd = state.saveFilterDialogData
+    if not sd or not sd.hint then return end
+    local content = sd.content
+    local pad = OneWoW_GUI:GetSpacing("SM")
+    local colGap = 4
+    local y = -pad
+    local contentW = content:GetWidth()
+    if contentW < 1 then contentW = 280 end
+    local colW = (contentW - pad * 2 - colGap) / 2
+
+    sd.hint:ClearAllPoints()
+    sd.hint:SetPoint("TOPLEFT", content, "TOPLEFT", pad, y)
+    sd.hint:SetPoint("TOPRIGHT", content, "TOPRIGHT", -pad, y)
+    y = y - math.max(math.ceil(sd.hint:GetStringHeight() or 0), 14) - 8
+
+    local slotRows = math.ceil(ns.VPCustomFilterSlotCount / 2)
+    for slotIndex, btn in ipairs(sd.slotBtns) do
+        local col = (slotIndex - 1) % 2
+        local row = math.floor((slotIndex - 1) / 2)
+        btn:ClearAllPoints()
+        btn:SetSize(colW, 24)
+        btn:SetPoint("TOPLEFT", content, "TOPLEFT", pad + col * (colW + colGap), y - row * 26)
+    end
+    y = y - slotRows * 26 - 8
+
+    sd.nameLabel:ClearAllPoints()
+    sd.nameLabel:SetPoint("TOPLEFT", content, "TOPLEFT", pad, y)
+    y = y - math.max(math.ceil(sd.nameLabel:GetStringHeight() or 0), 12) - 4
+
+    sd.titleBox:ClearAllPoints()
+    sd.titleBox:SetPoint("TOPLEFT", content, "TOPLEFT", pad, y)
+    sd.titleBox:SetPoint("TOPRIGHT", content, "TOPRIGHT", -pad, y)
+    y = y - sd.titleBox:GetHeight() - 4
+
+    sd.replaceHint:ClearAllPoints()
+    sd.replaceHint:SetPoint("TOPLEFT", content, "TOPLEFT", pad, y)
+    sd.replaceHint:SetPoint("TOPRIGHT", content, "TOPRIGHT", -pad, y)
+end
+
+function VendorPanel:OpenSaveFilterDialog()
+    if not state.addTab or not state.addTab.searchBox then return end
+    local expr = state.addTab.searchBox:GetSearchText()
+    if expr == "" then
+        print("OneWoW QoL: " .. L["VENDOR_SEARCH_EMPTY"])
+        return
+    end
+    local result = self:GetSearchMatches(expr, 0)
+    if result.empty or not result.valid then
+        print("OneWoW QoL: " .. L["VENDOR_SEARCH_INVALID"] .. (result.error and (" " .. result.error) or ""))
+        return
+    end
+
+    if not state.saveFilterDialog then self:CreateSaveFilterDialog() end
+    local sd = state.saveFilterDialogData
+    sd.selectedSlot = nil
+    sd.titleBox:SetText("")
+    sd.replaceHint:Hide()
+    for i, btn in ipairs(sd.slotBtns) do
+        btn:SetActive(false)
+        if btn.SetFitText then
+            btn:SetFitText(self:GetCustomFilterSlotLabel(i))
+        else
+            btn.text:SetText(self:GetCustomFilterSlotLabel(i))
+        end
+    end
+    self:RelayoutSaveFilterDialog()
+    state.saveFilterDialog:Show()
+end
+
+function VendorPanel:ConfirmSaveFilterDialog()
+    local sd = state.saveFilterDialogData
+    if not sd or not state.addTab or not state.addTab.searchBox then return end
+    if not sd.selectedSlot then
+        print("OneWoW QoL: " .. L["VENDOR_SAVE_FILTER_PICK"])
+        return
+    end
+
+    local expr = state.addTab.searchBox:GetSearchText()
+    if expr == "" then
+        print("OneWoW QoL: " .. L["VENDOR_SEARCH_EMPTY"])
+        return
+    end
+
+    local name = strtrim(sd.titleBox:GetSearchText())
+    if name == "" then
+        print("OneWoW QoL: " .. L["VENDOR_SAVE_NEED_TITLE"])
+        return
+    end
+
+    local slotIndex = sd.selectedSlot
+    if not self:CustomFilterSlotIsEmpty(slotIndex) then
+        local existing = self:GetCustomFilterSlotLabel(slotIndex)
+        state._pendingFilterSave = { slotIndex = slotIndex, name = name, expr = expr }
+        local popup = StaticPopupDialogs["ONEWOW_VP_REPLACE_FILTER"]
+        popup.text = string.format(L["VENDOR_FILTER_REPLACE"], existing)
+        StaticPopup_Show("ONEWOW_VP_REPLACE_FILTER")
+        return
+    end
+
+    self:SaveCustomFilterSlot(slotIndex, name, expr)
+    self:RefreshCustomFilterButtons()
+    state.saveFilterDialog:Hide()
+    print("OneWoW QoL: " .. string.format(L["VENDOR_FILTER_SAVED"], name))
+end
+
+function VendorPanel:UpdateSearchAddingCount(count)
+    local d = state.addTab
+    if not d or not d.searchAddingLabel then return end
+    d.searchAddingLabel:SetText(string.format(L["VENDOR_SEARCH_ADDING"], count or 0))
+end
+
+function VendorPanel:ShouldShowSearchPreview()
+    local d = state.addTab
+    if not d or not d.searchBox then return false end
+    if d.searchBox:GetSearchText() ~= "" then return true end
+    return d.searchBox:HasFocus()
+end
+
+function VendorPanel:ClearSearchPreviewRows()
+    local d = state.addTab
+    if not d or not d.searchPreviewScrollChild then return end
+    for _, child in ipairs({ d.searchPreviewScrollChild:GetChildren() }) do
+        child:Hide()
+        child:SetParent(nil)
+    end
+end
+
+function VendorPanel:UpdateSearchPreview()
+    local d = state.addTab
+    if not d or not d.searchPreviewSection then return end
+
+    local expr = d.searchBox:GetSearchText()
+    local show = self:ShouldShowSearchPreview()
+    if not show then
+        d.searchPreviewSection:Hide()
+        if expr == "" then
+            self:UpdateSearchAddingCount(0)
+        else
+            local result = self:GetSearchMatches(expr, 0)
+            self:UpdateSearchAddingCount(result.valid and result.totalCount or 0)
+        end
+        self:RelayoutAddTab()
+        return
+    end
+
+    d.searchPreviewSection:Show()
+    self:RelayoutAddTab()
+    self:ClearSearchPreviewRows()
+
+    local header = d.searchPreviewHeader
+    header:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    if expr == "" then
+        header:SetText(L["VENDOR_SEARCH_PREVIEW_HINT"])
+        self:UpdateSearchAddingCount(0)
+        d.searchPreviewScrollChild:SetHeight(1)
+        self:RelayoutAddTab()
+        return
+    end
+
+    local result = self:GetSearchMatches(expr)
+    if not result.valid then
+        header:SetText(L["VENDOR_SEARCH_INVALID"])
+        header:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+        self:UpdateSearchAddingCount(0)
+        d.searchPreviewScrollChild:SetHeight(1)
+        self:RelayoutAddTab()
+        return
+    end
+
+    if result.totalCount == 0 then
+        header:SetText(string.format(L["VENDOR_SEARCH_NONE"], expr))
+        self:UpdateSearchAddingCount(0)
+        d.searchPreviewScrollChild:SetHeight(1)
+        self:RelayoutAddTab()
+        return
+    end
+
+    header:SetText(string.format(L["VENDOR_SEARCH_PREVIEW_COUNT"], result.totalCount))
+    self:UpdateSearchAddingCount(result.totalCount)
+
+    local scrollChild = d.searchPreviewScrollChild
+    local rowWidth = math.max((d.searchPreviewSection:GetWidth() or 190) - 4, 160)
+    scrollChild:SetWidth(rowWidth)
+    local yOffset = 0
+
+    for _, item in ipairs(result.items) do
+        local itemFrame = CreateFrame("Button", nil, scrollChild, "BackdropTemplate")
+        itemFrame:SetSize(rowWidth, 24)
+        itemFrame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -yOffset)
+        itemFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
+        itemFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        itemFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+        local iconFrame = CreateFrame("Frame", nil, itemFrame, "BackdropTemplate")
+        iconFrame:SetSize(20, 20)
+        iconFrame:SetPoint("LEFT", itemFrame, "LEFT", 3, 0)
+        iconFrame:SetBackdrop(backdropIconEdge)
+        iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+
+        local icon = iconFrame:CreateTexture(nil, "ARTWORK")
+        icon:SetAllPoints(iconFrame)
+        icon:SetTexture(item.icon)
+        icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+
+        local displayText = item.link or ("Item " .. item.itemID)
+        if item.stackCount > 1 then displayText = displayText .. " x" .. item.stackCount end
+        if item.itemLevel and item.itemLevel > 0 then
+            displayText = displayText .. " (" .. item.itemLevel .. ")"
+        end
+
+        local text = itemFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        text:SetPoint("LEFT", iconFrame, "RIGHT", 4, 0)
+        text:SetPoint("RIGHT", itemFrame, "RIGHT", -4, 0)
+        text:SetText(displayText)
+        text:SetJustifyH("LEFT")
+
+        itemFrame:SetScript("OnEnter", function(myself)
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            if item.link then GameTooltip:SetHyperlink(item.link) else GameTooltip:SetItemByID(item.itemID) end
+            GameTooltip:Show()
+        end)
+        itemFrame:SetScript("OnLeave", function(myself)
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            GameTooltip:Hide()
+        end)
+
+        yOffset = yOffset + 26
+    end
+
+    if result.totalCount > #result.items then
+        local moreText = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        moreText:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 4, -yOffset)
+        moreText:SetText(string.format(L["VENDOR_SEARCH_PREVIEW_MORE"], result.totalCount - #result.items))
+        moreText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        yOffset = yOffset + 18
+    end
+
+    scrollChild:SetHeight(math.max(yOffset, 1))
+    self:RelayoutAddTab()
+end
+
+--- Re-flow the Add tab rows top-to-bottom with measured heights.
+function VendorPanel:RelayoutAddTab()
+    local d = state.addTab
+    if not d or not d.customSlotBtns then return end
+    local content = d.content or d.customSlotBtns[1]:GetParent()
     local pad = OneWoW_GUI:GetSpacing("SM")
     local md = OneWoW_GUI:GetSpacing("MD")
+    local rowGap = 2
+    local rowH = 22
+    local clearW = 22
+    local slotClearGap = 4
+    local colGap = 8
     local y = -pad
-
-    local function centerBtn(btn, spacing)
-        btn:ClearAllPoints()
-        btn:SetPoint("TOP", content, "TOP", 0, y)
-        y = y - btn:GetHeight() - (spacing or 2)
+    local contentW = content:GetWidth()
+    if contentW < 1 and state.junkPreviewPanel then
+        contentW = (state.junkPreviewPanel:GetWidth() or 320) - 28
     end
+    local columnW = (contentW - pad * 2 - colGap) / 2
+    local slotW = columnW - clearW - slotClearGap
+
+    local function measureBtnHeight(btn, label, width)
+        if label and width then
+            self:ApplyFixedWidthButtonText(btn, label, width)
+        end
+        local textH = math.ceil(btn.text:GetStringHeight() or 0)
+        if textH < 12 then textH = 12 end
+        return math.max(rowH, textH + 8)
+    end
+
+    local function placeSlotPair(leftIndex, rightIndex, rowY, pairH)
+        local leftBtn = d.customSlotBtns[leftIndex]
+        local leftClear = d.customClearBtns[leftIndex]
+        leftBtn:SetHeight(pairH)
+        leftClear:SetHeight(pairH)
+        leftBtn:ClearAllPoints()
+        leftClear:ClearAllPoints()
+        leftBtn:SetPoint("TOPLEFT", content, "TOPLEFT", pad, rowY)
+        leftBtn:SetWidth(slotW)
+        self:ApplyFixedWidthButtonText(leftBtn, self:GetCustomFilterSlotLabel(leftIndex), slotW)
+        leftClear:SetPoint("LEFT", leftBtn, "RIGHT", slotClearGap, 0)
+        leftClear:SetWidth(clearW)
+
+        local rightBtn = d.customSlotBtns[rightIndex]
+        local rightClear = d.customClearBtns[rightIndex]
+        rightBtn:SetHeight(pairH)
+        rightClear:SetHeight(pairH)
+        rightBtn:ClearAllPoints()
+        rightClear:ClearAllPoints()
+        local x = pad + columnW + colGap
+        rightBtn:SetPoint("TOPLEFT", content, "TOPLEFT", x, rowY)
+        rightBtn:SetWidth(slotW)
+        self:ApplyFixedWidthButtonText(rightBtn, self:GetCustomFilterSlotLabel(rightIndex), slotW)
+        rightClear:SetPoint("LEFT", rightBtn, "RIGHT", slotClearGap, 0)
+        rightClear:SetWidth(clearW)
+    end
+
+    local h0 = math.max(
+        measureBtnHeight(d.customSlotBtns[1], self:GetCustomFilterSlotLabel(1), slotW),
+        measureBtnHeight(d.customSlotBtns[2], self:GetCustomFilterSlotLabel(2), slotW)
+    )
+    local rowY = y
+    placeSlotPair(1, 2, rowY, h0)
+    rowY = rowY - h0 - rowGap
+
+    local h1 = math.max(
+        measureBtnHeight(d.customSlotBtns[3], self:GetCustomFilterSlotLabel(3), slotW),
+        measureBtnHeight(d.customSlotBtns[4], self:GetCustomFilterSlotLabel(4), slotW)
+    )
+    placeSlotPair(3, 4, rowY, h1)
+    rowY = rowY - h1 - rowGap
+
+    local h2 = math.max(
+        measureBtnHeight(d.customSlotBtns[5], self:GetCustomFilterSlotLabel(5), slotW),
+        measureBtnHeight(d.gearBtn, self:GetGearButtonLabel(), slotW)
+    )
+    do
+        local slotBtn = d.customSlotBtns[5]
+        local clearBtn = d.customClearBtns[5]
+        slotBtn:SetHeight(h2)
+        clearBtn:SetHeight(h2)
+        slotBtn:ClearAllPoints()
+        clearBtn:ClearAllPoints()
+        slotBtn:SetPoint("TOPLEFT", content, "TOPLEFT", pad, rowY)
+        slotBtn:SetWidth(slotW)
+        self:ApplyFixedWidthButtonText(slotBtn, self:GetCustomFilterSlotLabel(5), slotW)
+        clearBtn:SetPoint("LEFT", slotBtn, "RIGHT", slotClearGap, 0)
+        clearBtn:SetWidth(clearW)
+
+        d.gearBtn:SetHeight(h2)
+        d.gearHelpBtn:SetSize(clearW, h2)
+        d.gearBtn:ClearAllPoints()
+        d.gearHelpBtn:ClearAllPoints()
+        local x = pad + columnW + colGap
+        d.gearBtn:SetPoint("TOPLEFT", content, "TOPLEFT", x, rowY)
+        d.gearBtn:SetWidth(slotW)
+        self:ApplyFixedWidthButtonText(d.gearBtn, self:GetGearButtonLabel(), slotW)
+        d.gearHelpBtn:SetPoint("LEFT", d.gearBtn, "RIGHT", slotClearGap, 0)
+    end
+    y = rowY - h2 - 6
+
+    local clearH = measureBtnHeight(d.clearAllBtn)
+    d.clearAllBtn:SetHeight(clearH)
+    d.clearAllBtn:ClearAllPoints()
+    d.clearAllBtn:SetPoint("TOPLEFT", content, "TOPLEFT", pad, y)
+    d.clearAllBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", -pad, y)
+    y = y - clearH - 8
+
     local function placeDivider(div)
         div:ClearAllPoints()
         div:SetPoint("TOPLEFT", content, "TOPLEFT", md, y)
@@ -910,53 +1530,58 @@ function VendorPanel:RelayoutFiltersDialog()
         y = y - 10
     end
 
-    centerBtn(d.reagentsBtn)
-    centerBtn(d.consumablesBtn)
-    centerBtn(d.whiteBtn)
-    centerBtn(d.soulboundBtn)
-    centerBtn(d.clearAllBtn, 6)
-
     placeDivider(d.divider1)
 
     d.searchLabel:ClearAllPoints()
     d.searchLabel:SetPoint("TOPLEFT", content, "TOPLEFT", pad, y)
-    d.searchHelpBtn:ClearAllPoints()
-    d.searchHelpBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", -pad, y)
-    local labelH = math.max(math.ceil(d.searchLabel:GetStringHeight() or 0), d.searchHelpBtn:GetHeight())
-    if labelH < 14 then labelH = 14 end
+    d.searchAddingLabel:ClearAllPoints()
+    d.searchAddingLabel:SetPoint("TOPRIGHT", content, "TOPRIGHT", -pad, y)
+    d.searchAddingLabel:SetPoint("LEFT", d.searchLabel, "RIGHT", 8, 0)
+    local labelH = math.max(
+        math.ceil(d.searchLabel:GetStringHeight() or 0),
+        math.ceil(d.searchAddingLabel:GetStringHeight() or 0),
+        14
+    )
     y = y - labelH - 4
 
-    d.searchAddBtn:ClearAllPoints()
-    d.searchAddBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", -pad, y)
+    d.searchHelpBtn:ClearAllPoints()
+    d.searchHelpBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", -pad, y)
     d.searchBox:ClearAllPoints()
     d.searchBox:SetPoint("TOPLEFT", content, "TOPLEFT", pad, y)
-    d.searchBox:SetPoint("RIGHT", d.searchAddBtn, "LEFT", -4, 0)
-    y = y - math.max(d.searchBox:GetHeight(), d.searchAddBtn:GetHeight()) - 8
+    d.searchBox:SetPoint("RIGHT", d.searchHelpBtn, "LEFT", -4, 0)
+    y = y - math.max(d.searchBox:GetHeight(), d.searchHelpBtn:GetHeight()) - 4
 
-    placeDivider(d.divider2)
+    local actionW = (contentW - pad * 2 - colGap) / 2
+    d.searchAddBtn:ClearAllPoints()
+    d.searchAddBtn:SetPoint("TOPLEFT", content, "TOPLEFT", pad, y)
+    d.searchAddBtn:SetWidth(actionW)
+    d.saveFilterBtn:ClearAllPoints()
+    d.saveFilterBtn:SetPoint("TOPLEFT", content, "TOPLEFT", pad + actionW + colGap, y)
+    d.saveFilterBtn:SetWidth(actionW)
+    y = y - math.max(d.searchAddBtn:GetHeight(), d.saveFilterBtn:GetHeight()) - 4
 
-    d.ilvlLabel:ClearAllPoints()
-    d.ilvlLabel:SetPoint("TOP", content, "TOP", 0, y)
-    y = y - math.max(math.ceil(d.ilvlLabel:GetStringHeight() or 0), 14) - 4
+    if d.searchPreviewSection and d.searchPreviewSection:IsShown() then
+        d.searchPreviewSection:ClearAllPoints()
+        d.searchPreviewSection:SetPoint("TOPLEFT", content, "TOPLEFT", pad, y)
+        d.searchPreviewSection:SetPoint("TOPRIGHT", content, "TOPRIGHT", -pad, y)
+        d.searchPreviewSection:SetHeight(SEARCH_PREVIEW_HEIGHT)
 
-    d.ilvlEditBox:ClearAllPoints()
-    d.ilvlEditBox:SetPoint("TOPLEFT", content, "TOPLEFT", pad + 20, y)
-    d.ilvlBtn:ClearAllPoints()
-    d.ilvlBtn:SetPoint("LEFT", d.ilvlEditBox, "RIGHT", 10, 0)
-    y = y - math.max(d.ilvlEditBox:GetHeight(), d.ilvlBtn:GetHeight()) - 4
+        d.searchPreviewHeader:ClearAllPoints()
+        d.searchPreviewHeader:SetPoint("TOPLEFT", d.searchPreviewSection, "TOPLEFT", 0, 0)
+        d.searchPreviewHeader:SetPoint("TOPRIGHT", d.searchPreviewSection, "TOPRIGHT", 0, 0)
+        local headerH = math.max(math.ceil(d.searchPreviewHeader:GetStringHeight() or 0), 12)
 
-    d.excludeIlvl1:ClearAllPoints()
-    d.excludeIlvl1:SetPoint("TOPLEFT", content, "TOPLEFT", pad, y)
-    y = y - math.max(d.excludeIlvl1:GetMeasuredHeight(), d.excludeIlvl1:GetHeight()) - 8
+        d.searchPreviewScroll:ClearAllPoints()
+        d.searchPreviewScroll:SetPoint("TOPLEFT", d.searchPreviewSection, "TOPLEFT", 0, -(headerH + 2))
+        d.searchPreviewScroll:SetPoint("BOTTOMRIGHT", d.searchPreviewSection, "BOTTOMRIGHT", -4, 0)
+        if d.searchPreviewScrollChild then
+            d.searchPreviewScrollChild:SetWidth(d.searchPreviewSection:GetWidth())
+        end
 
-    placeDivider(d.divider3)
+        y = y - SEARCH_PREVIEW_HEIGHT - pad
+    end
 
-    d.neverSellBtn:ClearAllPoints()
-    d.neverSellBtn:SetPoint("TOP", content, "TOP", 0, y)
-    y = y - d.neverSellBtn:GetHeight() - pad
-
-    local titleH = OneWoW_GUI.Constants.GUI.TITLEBAR_HEIGHT or 30
-    d:SetHeight(titleH + (-y) + pad)
+    content:SetHeight(math.max(-y, 1))
 end
 
 function VendorPanel:CreateNeverSellDialog()
