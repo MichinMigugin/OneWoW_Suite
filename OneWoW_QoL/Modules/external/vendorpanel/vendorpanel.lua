@@ -1845,7 +1845,6 @@ function VendorPanelModule:OnEnable()
     end
 
     if IsVendorFilterLoaded() then
-        local settings = GetSettings()
         if not settings.vfNotified then
             settings.vfNotified = true
             C_Timer.After(5, function()

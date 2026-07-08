@@ -798,7 +798,7 @@ function VendorPanel:CreateOptionsTabContent()
         showBlizzCheck:SetChecked(GetShowBlizzJunk())
         refreshFilterRadios()
         if vendorDropdown.RefreshFilters then vendorDropdown:RefreshFilters() end
-        local gearIlvl = GetSettings().gearButtonIlvl
+        gearIlvl = GetSettings().gearButtonIlvl
         d.gearIlvlEditBox:SetText(gearIlvl and gearIlvl > 0 and tostring(gearIlvl) or "")
         d.excludeIlvl1:SetChecked(GetSettings().gearSkipIlvl1 ~= false)
         VendorPanel:UpdateNeverSellButtonCount()
