@@ -27,6 +27,10 @@ local function ScheduleRefresh()
     end)
 end
 
+function ShoppingList:RequestRefresh()
+    ScheduleRefresh()
+end
+
 local function GetDB()
     return ns.db
 end

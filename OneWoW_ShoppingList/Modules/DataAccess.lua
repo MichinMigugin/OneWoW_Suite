@@ -3,22 +3,45 @@ local _, ns = ...
 ns.DataAccess = {}
 local DataAccess = ns.DataAccess
 
-local storageAPI = nil
-local qvCache    = {}
+local qvCache = {}
+local storageWatchRegistered = false
+local storageChangedSubscribed = false
+
+local function NotifyStorageChanged()
+    if ns.ShoppingList and ns.ShoppingList.RequestRefresh then
+        ns.ShoppingList:RequestRefresh()
+    end
+end
+
+local function SubscribeStorageChanged()
+    if storageChangedSubscribed then return end
+    local api = OneWoW_AltTracker_Storage_API
+    if not api or not api.RegisterStorageChanged then return end
+    storageChangedSubscribed = true
+    api.RegisterStorageChanged(NotifyStorageChanged)
+end
+
+local function OnStorageReady()
+    SubscribeStorageChanged()
+    NotifyStorageChanged()
+end
 
 function DataAccess:Initialize()
-    storageAPI = OneWoW_AltTracker_Storage_API
-    qvCache    = {}
+    qvCache = {}
+    if storageWatchRegistered then return end
+    storageWatchRegistered = true
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Storage", OnStorageReady)
 end
 
 function DataAccess:HasAltData()
-    return storageAPI ~= nil
+    return OneWoW_AltTracker_Storage_API ~= nil
 end
 
 -- Read-only view over the Storage unit's data, assembled from its public API so
 -- ShoppingList never touches OneWoW_AltTracker_Storage_DB directly. Shape mirrors
 -- the store globals the iterate helpers below expect.
 local function GetStorageView()
+    local storageAPI = OneWoW_AltTracker_Storage_API
     if not storageAPI then return nil end
     return {
         characters  = storageAPI.GetCharacters(),
@@ -159,7 +182,7 @@ function DataAccess:GetItemInventoryData(itemID, list)
     local locations = {}
 
     local OneWoW_GUI = OneWoW_GUI
-    local currentChar = OneWoW_GUI and OneWoW_GUI:BuildCharKey()
+    local currentChar = OneWoW_GUI:BuildCharKey()
     local currentName = UnitName("player")
 
     for bagID = 0, 5 do
