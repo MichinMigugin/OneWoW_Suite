@@ -76,7 +76,6 @@ ALLOWED_FOREIGN_SV: set[str] = {
     "OneWoW/UI/t-charprofiles.lua",
     # Documented, time-boxed one-time migrations (drain legacy data out of a
     # sibling unit's SV). Remove each entry once the drain is retired.
-    "OneWoW_Trackers/Core/Database.lua::OneWoW_Notes_DB",
     "OneWoW_AltTracker/Core/MigrationFix.lua::OneWoW_CatalogData_Quests_DB",
     "OneWoW_AltTracker/Core/MigrationFix.lua::OneWoW_CatalogData_Tradeskills_DB",
 }
