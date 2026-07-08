@@ -92,11 +92,8 @@ end
 -- Core-driven init: the suite loader calls _G["OneWoW_QoL"]:OnAddonLoaded()
 -- right after it force-loads this module (WoW does not deliver our own
 -- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). The
--- one-shot guard makes the PLAYER_LOGIN safety net below a no-op when already run.
-local didInit = false
+-- DispatchUnitOnAddonLoaded guarantees at-most-once init per session.
 function OneWoW_QoL:OnAddonLoaded()
-    if didInit then return end
-    didInit = true
     OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_QoL)
     -- Toast types export their arming functions on ns; the handler registry
     -- doesn't exist at their file scope.
@@ -108,9 +105,8 @@ function OneWoW_QoL:OnAddonLoaded()
     OnInitialize()
 end
 
--- Core-driven login-phase arming. Runs from the module's own PLAYER_LOGIN at
--- startup, or is driven by the loader (OneWoW:EnsureLoaded) for a mid-session
--- enable, when PLAYER_LOGIN has already fired and won't reach this module.
+-- Login-phase arming via RunManifestLoginPhase (cold start) or Settle
+-- (mid-session enable). didLogin guard: Settle may re-invoke OnPlayerLogin.
 local didLogin = false
 function OneWoW_QoL:OnPlayerLogin()
     if didLogin then return end

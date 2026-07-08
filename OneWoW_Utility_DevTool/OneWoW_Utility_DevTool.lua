@@ -489,10 +489,7 @@ function ns:RebuildUI()
     end
 end
 
-local didInit = false
 function OneWoW_Utility_DevTool:OnAddonLoaded()
-    if didInit then return end
-    didInit = true
     ns:OnInitialize()
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
     OneWoW:RegisterLoadComponent("DevTools", _ver, "/1wdt")

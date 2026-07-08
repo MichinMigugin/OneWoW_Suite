@@ -661,10 +661,7 @@ end
 -- right after it force-loads this module (WoW does not deliver our own
 -- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). This
 -- also registers our runtime events via RegisterRuntimeEvents.
-local didInit = false
 function OneWoW_Bags:OnAddonLoaded()
-    if didInit then return end
-    didInit = true
     OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_Bags)
 
     OneWoW_Bags:RegisterEnteringWorldHandler("zone_refresh", function(isLogin, isReload, isZoning)
@@ -725,12 +722,12 @@ function OneWoW_Bags:OnAddonLoaded()
     OneWoW:RegisterLoadComponent("Bags", _ver, "/1wb")
 end
 
--- Idempotent: runs from the module's own PLAYER_LOGIN at startup, or is driven
--- by the loader (OneWoW:EnsureLoaded) for a mid-session enable, when
--- PLAYER_LOGIN has already fired and won't reach this module.
+-- Login-phase arming via RunManifestLoginPhase (cold start) or Settle
+-- (mid-session enable). didLogin guard: Settle may re-invoke OnPlayerLogin.
+local didLogin = false
 function OneWoW_Bags:OnPlayerLogin()
-    if ns.didLogin then return end
-    ns.didLogin = true
+    if didLogin then return end
+    didLogin = true
 
     OneWoW:RegisterMinimap("OneWoW_Bags", L["CTX_OPEN_BAGS"], nil, function()
         if ns.GUI then ns.GUI:Toggle() end

@@ -66,11 +66,7 @@ function ns:BootStore(storeNs, config)
         return DB:DeleteChar(savedVar, charKey)
     end
 
-    -- Core DispatchUnitOnAddonLoaded guarantees single dispatch; didInit removable later.
-    local didInit = false
     function storeNs.OnAddonLoaded()
-        if didInit then return end
-        didInit = true
         if savedVar then
             -- Ensure the live SavedVariable exists and carries its default shape.
             -- This runs after C_AddOns.LoadAddOn (so _G[savedVar] is the real

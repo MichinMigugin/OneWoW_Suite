@@ -240,21 +240,16 @@ end
 -- Core-driven init: the suite loader calls _G["OneWoW_Notes"]:OnAddonLoaded()
 -- right after it force-loads this module (WoW does not deliver our own
 -- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). The
--- one-shot guard makes the PLAYER_LOGIN safety net below a no-op when already run.
-local didInit = false
+-- DispatchUnitOnAddonLoaded guarantees at-most-once init per session.
 function OneWoW_Notes:OnAddonLoaded()
-    if didInit then return end
-    didInit = true
     OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_Notes)
     OnInitialize()
 end
 
--- Core-driven login-phase arming. Runs from the module's own PLAYER_LOGIN /
--- PLAYER_ENTERING_WORLD at startup, or is driven by the loader
--- (OneWoW:EnsureLoaded) for a mid-session enable, when those one-shot events
--- have already fired and won't reach this module. OnPlayerEnteringWorld is
--- passed isInitialLogin=false for a mid-session enable, so the login-only note
--- reset is skipped while pins/todos still initialize.
+-- Login-phase arming via RunManifestLoginPhase (cold start) or Settle
+-- (mid-session enable). didLogin guard: Settle may re-invoke OnPlayerLogin.
+-- OnPlayerEnteringWorld is passed isInitialLogin=false for a mid-session enable,
+-- so the login-only note reset is skipped while pins/todos still initialize.
 local didLogin = false
 function OneWoW_Notes:OnPlayerLogin()
     if didLogin then return end

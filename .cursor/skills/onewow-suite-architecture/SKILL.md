@@ -34,8 +34,9 @@ Full rationale and tables: `OneWoW/Docs/ARCHITECTURE.md`.
 
 ## Hub module template
 
-Core guarantees at-most-once `OnAddonLoaded` dispatch per unit; authors do not
-need a local `didInit` guard for lifecycle idempotency (the chain-up contract).
+Core guarantees at-most-once `OnAddonLoaded` dispatch per unit (`DispatchUnitOnAddonLoaded`);
+authors do not need a local `didInit` guard. `OnPlayerLogin` may run more than once
+(Settle on mid-session load), so keep a local `didLogin` one-shot guard.
 
 Global surface: `OneWoW/Docs/ARCHITECTURE.md` §6.1.
 
@@ -45,6 +46,8 @@ local ADDON_NAME, ns = ...
 OneWoW_MyHub = {}
 local OneWoW_MyHub = OneWoW_MyHub   -- optional same-name shadow; see OneWoW-Lua-Conventions
 
+local didLogin = false
+
 function OneWoW_MyHub:OnAddonLoaded()
     OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_MyHub)
     ns:InitializeDatabase()  -- sets ns.db
@@ -52,6 +55,8 @@ function OneWoW_MyHub:OnAddonLoaded()
 end
 
 function OneWoW_MyHub:OnPlayerLogin()
+    if didLogin then return end
+    didLogin = true
     OneWoW_MyHub:FireLoginHandlers()
 end
 
