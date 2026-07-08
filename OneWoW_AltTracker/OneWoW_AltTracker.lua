@@ -78,9 +78,7 @@ local function OnInitialize()
     end)
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
-    if OneWoW and OneWoW.RegisterLoadComponent then
-        OneWoW:RegisterLoadComponent("AltTracker", _ver, "/1wat")
-    end
+    OneWoW:RegisterLoadComponent("AltTracker", _ver, "/1wat")
 end
 
 function OneWoW_AltTracker:ApplyTheme()

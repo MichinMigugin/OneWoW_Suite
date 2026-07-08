@@ -700,24 +700,22 @@ function Categories:GetItemCategory(bagID, slotID, itemInfo)
     -- Slot-overlay #1: "1W Upgrades" (depends on ItemLocation / equipped state).
     if itemID and hyperlink and db.global.enableUpgradeCategory and not disabled["1W Upgrades"]
        and CategoryAppliesTo("1W Upgrades", containerType, catMods) then
-        local UD = OneWoW and OneWoW.UpgradeDetection
-        if UD and UD.CheckItemUpgrade then
-            local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
-            local upgrade
-            if itemLocation and C_Item.DoesItemExist(itemLocation) then
-                upgrade = UD:CheckItemUpgrade(hyperlink, itemLocation)
-            else
-                upgrade = UD:CheckItemUpgrade(hyperlink)
+        local UD = OneWoW.UpgradeDetection
+        local itemLocation = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
+        local upgrade
+        if itemLocation and C_Item.DoesItemExist(itemLocation) then
+            upgrade = UD:CheckItemUpgrade(hyperlink, itemLocation)
+        else
+            upgrade = UD:CheckItemUpgrade(hyperlink)
+        end
+        if upgrade then
+            if cacheKey then categoryCache[cacheKey] = "1W Upgrades" end
+            if Profile then
+                Profile:Start("Categories:GetItemCategory.slotOverlayHit")
+                Profile:Stop("Categories:GetItemCategory.slotOverlayHit")
+                Profile:Stop("Categories:GetItemCategory")
             end
-            if upgrade then
-                if cacheKey then categoryCache[cacheKey] = "1W Upgrades" end
-                if Profile then
-                    Profile:Start("Categories:GetItemCategory.slotOverlayHit")
-                    Profile:Stop("Categories:GetItemCategory.slotOverlayHit")
-                    Profile:Stop("Categories:GetItemCategory")
-                end
-                return "1W Upgrades"
-            end
+            return "1W Upgrades"
         end
     end
 

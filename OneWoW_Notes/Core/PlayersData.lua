@@ -283,7 +283,6 @@ end
 function Players:MigrateLegacyMountBlobs()
     if not (ns.db and ns.db.global) then return end
     if ns.db.global.collectibleMountMigrated then return end
-    if not (OneWoW and OneWoW.Collectibles) then return end
 
     -- Snapshot first: SavePlayer/AddCollectibleRef invalidate the merged cache, so
     -- mutating while iterating self:GetAll() would be undefined.

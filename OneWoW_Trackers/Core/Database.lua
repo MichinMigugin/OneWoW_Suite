@@ -121,7 +121,7 @@ end
 -- the user wants Notes again (SV requires the addon to be loaded before drain).
 local function TryNotesAcctDrain(db)
     if db.global._notesAcctDrained then return end
-    if not OneWoW or not OneWoW.IsFeatureWanted or not OneWoW:IsFeatureWanted("OneWoW_Notes") then
+    if not OneWoW:IsFeatureWanted("OneWoW_Notes") then
         return
     end
     local function finishDrain()

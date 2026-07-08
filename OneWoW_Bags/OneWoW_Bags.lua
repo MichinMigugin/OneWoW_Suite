@@ -14,19 +14,12 @@ local hooksecurefunc = hooksecurefunc
 local C_Timer = C_Timer
 local C_Bank = C_Bank
 
-ns.oneWoWHubActive = false
 ns.bankOpen = false
 ns.guildBankOpen = false
 ns.isWarbandOnlyBankAccess = false
 ns.inventoryPresentationState = {
     altShowActive = false,
 }
-
-local function DetectOneWoW()
-    if OneWoW then
-        ns.oneWoWHubActive = true
-    end
-end
 
 local function ApplyTheme()
     OneWoW_Bags:ApplyTheme()
@@ -739,9 +732,7 @@ function OneWoW_Bags:OnAddonLoaded()
     end)
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
-    if OneWoW and OneWoW.RegisterLoadComponent then
-        OneWoW:RegisterLoadComponent("Bags", _ver, "/1wb")
-    end
+    OneWoW:RegisterLoadComponent("Bags", _ver, "/1wb")
 end
 
 -- Idempotent: runs from the module's own PLAYER_LOGIN at startup, or is driven
@@ -750,13 +741,10 @@ end
 function OneWoW_Bags:OnPlayerLogin()
     if ns.didLogin then return end
     ns.didLogin = true
-    DetectOneWoW()
 
-    if OneWoW and OneWoW.RegisterMinimap then
-        OneWoW:RegisterMinimap("OneWoW_Bags", L["CTX_OPEN_BAGS"], nil, function()
-            if ns.GUI then ns.GUI:Toggle() end
-        end)
-    end
+    OneWoW:RegisterMinimap("OneWoW_Bags", L["CTX_OPEN_BAGS"], nil, function()
+        if ns.GUI then ns.GUI:Toggle() end
+    end)
 
     ns.ItemPool:Preallocate(ns.Constants.ITEM_POOL_PREALLOC_SIZE)
     ns.BagSet:Build()

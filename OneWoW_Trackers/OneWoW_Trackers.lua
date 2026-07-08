@@ -28,8 +28,6 @@ function OneWoW_Trackers:ApplyLanguage()
 end
 
 local function RegisterAsOneWoWModule()
-    if not OneWoW or not OneWoW.RegisterModule then return false end
-
     OneWoW:RegisterModule({
         name        = "trackers",
         displayName = function() return ns.L["ADDON_TITLE_SHORT"] end,
@@ -44,7 +42,6 @@ local function RegisterAsOneWoWModule()
         },
     })
 
-    return true
 end
 
 local function OnInitialize()
@@ -88,21 +85,17 @@ local function OnInitialize()
     end)
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
-    if OneWoW and OneWoW.RegisterLoadComponent then
-        OneWoW:RegisterLoadComponent("Trackers", _ver, "/1wt")
-    end
+    OneWoW:RegisterLoadComponent("Trackers", _ver, "/1wt")
 end
 
 local function OnEnable()
     RegisterAsOneWoWModule()
 
-    if OneWoW then
-        OneWoW:RegisterMinimap("OneWoW_Trackers",
-            ns.L["CTX_OPEN_TRACKERS"],
-            "trackers",
-            nil
-        )
-    end
+    OneWoW:RegisterMinimap("OneWoW_Trackers",
+        ns.L["CTX_OPEN_TRACKERS"],
+        "trackers",
+        nil
+    )
 
     if ns.TrackerEngine and ns.TrackerEngine.Initialize then
         ns.TrackerEngine:Initialize()

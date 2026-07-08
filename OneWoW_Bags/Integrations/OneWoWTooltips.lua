@@ -63,7 +63,6 @@ local function KeywordProvider(_, context)
 end
 
 local function RegisterWithOneWoW()
-    if not OneWoW or not OneWoW.TooltipEngine then return end
     OneWoW.TooltipEngine:RegisterProvider({
         id = "bags_keywords",
         order = 99999,

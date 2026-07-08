@@ -191,9 +191,7 @@ function ns_CharacterCleanup:Purge(charKey)
         tinsert(purgedFrom, "Tradeskill Scans")
     end
 
-    if OneWoW and OneWoW.AltScope and OneWoW.AltScope.RemoveCharFromAllRoles then
-        OneWoW.AltScope:RemoveCharFromAllRoles(charKey)
-    end
+    OneWoW.AltScope:RemoveCharFromAllRoles(charKey)
 
     return purgedFrom
 end

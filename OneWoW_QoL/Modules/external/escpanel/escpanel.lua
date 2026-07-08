@@ -48,7 +48,6 @@ end
 
 function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, _, registerRefresh)
     local OneWoW_GUI = OneWoW_GUI
-    if not OneWoW_GUI then return yOffset end
 
     local header = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     header:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)

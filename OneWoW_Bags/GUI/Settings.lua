@@ -433,49 +433,47 @@ local function BuildGeneralTab(sc, db)
     sortY = itemSortFinalY - 8
     yOffset = FinalizeContainer(sortContainer, sortY, yOffset)
 
-    if OneWoW then
-        yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_INTEGRATION"], yOffset = yOffset })
-        local intContainer = BuildContainer(sc, yOffset)
-        local intY = -10
+    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_INTEGRATION"], yOffset = yOffset })
+    local intContainer = BuildContainer(sc, yOffset)
+    local intY = -10
 
-        intY, _, _ = OneWoW_GUI:CreateToggleRow(intContainer, {
-            yOffset = intY,
-            label = L["SETTING_ENABLE_JUNK_CAT"],
-            description = L["DESC_ENABLE_JUNK_CAT"],
-            isEnabled = true,
-            value = db.global.enableJunkCategory,
-            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-            onValueChange = function(newVal)
-                ApplySetting("enableJunkCategory", newVal)
-            end,
-        })
+    intY, _, _ = OneWoW_GUI:CreateToggleRow(intContainer, {
+        yOffset = intY,
+        label = L["SETTING_ENABLE_JUNK_CAT"],
+        description = L["DESC_ENABLE_JUNK_CAT"],
+        isEnabled = true,
+        value = db.global.enableJunkCategory,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            ApplySetting("enableJunkCategory", newVal)
+        end,
+    })
 
-        intY, _, _ = OneWoW_GUI:CreateToggleRow(intContainer, {
-            yOffset = intY,
-            label = L["SETTING_ENABLE_UPGRADE_CAT"],
-            description = L["DESC_ENABLE_UPGRADE_CAT"],
-            isEnabled = true,
-            value = db.global.enableUpgradeCategory,
-            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-            onValueChange = function(newVal)
-                ApplySetting("enableUpgradeCategory", newVal)
-            end,
-        })
+    intY, _, _ = OneWoW_GUI:CreateToggleRow(intContainer, {
+        yOffset = intY,
+        label = L["SETTING_ENABLE_UPGRADE_CAT"],
+        description = L["DESC_ENABLE_UPGRADE_CAT"],
+        isEnabled = true,
+        value = db.global.enableUpgradeCategory,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            ApplySetting("enableUpgradeCategory", newVal)
+        end,
+    })
 
-        intY, _, _ = OneWoW_GUI:CreateToggleRow(intContainer, {
-            yOffset = intY,
-            label = L["SETTING_SHOW_KEYWORDS_TOOLTIP"],
-            description = L["DESC_SHOW_KEYWORDS_TOOLTIP"],
-            isEnabled = true,
-            value = db.global.showKeywordsInTooltips,
-            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-            onValueChange = function(newVal)
-                ApplySetting("showKeywordsInTooltips", newVal)
-            end,
-        })
+    intY, _, _ = OneWoW_GUI:CreateToggleRow(intContainer, {
+        yOffset = intY,
+        label = L["SETTING_SHOW_KEYWORDS_TOOLTIP"],
+        description = L["DESC_SHOW_KEYWORDS_TOOLTIP"],
+        isEnabled = true,
+        value = db.global.showKeywordsInTooltips,
+        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+        onValueChange = function(newVal)
+            ApplySetting("showKeywordsInTooltips", newVal)
+        end,
+    })
 
-        yOffset = FinalizeContainer(intContainer, intY, yOffset)
-    end
+    yOffset = FinalizeContainer(intContainer, intY, yOffset)
 
     if ns.Masque and ns.Masque.available then
         yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_MASQUE"], yOffset = yOffset })

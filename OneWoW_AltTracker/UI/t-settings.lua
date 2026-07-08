@@ -13,10 +13,6 @@ function ns.UI.CreateSettingsTab(parent)
 
     local yOffset = -10
 
-    if not OneWoW then
-        yOffset = OneWoW_GUI:CreateSettingsPanel(scrollContent, { yOffset = yOffset, addonName = "OneWoW_AltTracker" })
-    end
-
     local coreL = OneWoW.Locale:GetTable("OneWoW")
 
     local rolesSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = coreL["ROLES_ALTS_SUBTAB"], yOffset = yOffset })
@@ -42,10 +38,8 @@ function ns.UI.CreateSettingsTab(parent)
     rolesBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     if rolesBtn.text then rolesBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")) end
     rolesBtn:SetScript("OnClick", function()
-        if OneWoW and OneWoW.UI then
-            OneWoW.UI:Show("settings")
-            OneWoW.UI:SelectSubTab("settings", "rolesandalts")
-        end
+        OneWoW.UI:Show("settings")
+        OneWoW.UI:SelectSubTab("settings", "rolesandalts")
     end)
 
     yOffset = yOffset - 50

@@ -15,7 +15,6 @@ end
 
 local function ItemStatusProvider(_, context)
     if not context.itemID then return nil end
-    if not OneWoW.ItemStatus then return nil end
 
     local config = OneWoW.TooltipEngine.TOOLTIP_CONFIG
     local L = ns.L

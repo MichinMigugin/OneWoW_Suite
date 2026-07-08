@@ -230,15 +230,13 @@ function Mixin:OWB_UpdateUnusableOverlay(hasItem, info, props)
 
     local canEquip = true
     if info.hyperlink then
-        if OneWoW and OneWoW.UpgradeDetection then
-            canEquip = OneWoW.UpgradeDetection:CanPlayerUseItem(info.hyperlink)
-        end
+        canEquip = OneWoW.UpgradeDetection:CanPlayerUseItem(info.hyperlink)
+    end
 
-        if canEquip then
-            local reqLevel = props.reqLevel
-            if reqLevel and reqLevel > 0 and UnitLevel("player") < reqLevel then
-                canEquip = false
-            end
+    if canEquip then
+        local reqLevel = props.reqLevel
+        if reqLevel and reqLevel > 0 and UnitLevel("player") < reqLevel then
+            canEquip = false
         end
     end
 

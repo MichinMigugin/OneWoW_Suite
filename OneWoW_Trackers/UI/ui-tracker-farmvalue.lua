@@ -498,13 +498,8 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     warn:SetPoint("TOPRIGHT", box, "TOPRIGHT", -8, -8)
     warn:SetJustifyH("LEFT")
     warn:SetWordWrap(true)
-    if not (OneWoW and OneWoW.ItemPrices) then
-        warn:SetText(L["FARM_NEED_ONEWOW"])
-        warn:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
-    else
-        warn:SetText(L["FARM_HINT"])
-        warn:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    end
+    warn:SetText(L["FARM_HINT"])
+    warn:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local srcLine1 = OneWoW_GUI:CreateFS(box, 10)
     srcLine1:SetPoint("TOPLEFT", warn, "BOTTOMLEFT", 0, -10)
@@ -532,9 +527,7 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
     local openOwBtn = OneWoW_GUI:CreateFitTextButton(box, { text = L["OPEN_ONEWOW"], height = 22 })
     openOwBtn:SetPoint("LEFT", ahSrcBtn, "RIGHT", 8, 0)
     openOwBtn:SetScript("OnClick", function()
-        if OneWoW and OneWoW.UI and OneWoW.UI.Show then
-            OneWoW.UI:Show()
-        end
+        OneWoW.UI:Show()
     end)
     openOwBtn:SetScript("OnEnter", function(myself)
         GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")

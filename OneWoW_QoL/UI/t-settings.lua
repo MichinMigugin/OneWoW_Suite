@@ -1,4 +1,4 @@
-local ADDON_NAME, ns = ...
+local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
@@ -212,10 +212,6 @@ function ns.UI.CreateSettingsTab(parent)
 
     local SIDE = 16
     local yOffset = -20
-
-    if not OneWoW then
-        yOffset = OneWoW_GUI:CreateSettingsPanel(scrollChild, { yOffset = yOffset, addonName = ADDON_NAME })
-    end
 
     -- Relative-anchored layout: each block is anchored to the bottom of the
     -- previous one (full content width), so the panel reflows without overlap

@@ -10,9 +10,6 @@ OneWoW_QoL = {}
 local OneWoW_QoL = OneWoW_QoL
 
 local function RegisterWithOneWoW()
-    if not OneWoW then return false end
-    if not OneWoW.RegisterModule then return false end
-
     local tabs = {
         { name = "features",    displayName = function() return ns.L["TAB_FEATURES"] end, create = function(p) ns.UI.CreateFeaturesTab(p) end },
         { name = "toggles",     displayName = function() return ns.L["TAB_TOGGLES"]  end, create = function(p) ns.UI.CreateTogglesTab(p) end },
@@ -36,7 +33,6 @@ local function RegisterWithOneWoW()
         order       = OneWoW:GetModuleTabOrder("qol"),
         create      = function(p) ns.UI.CreateSettingsTab(p) end,
     })
-    return true
 end
 
 local function OnInitialize()
@@ -52,14 +48,12 @@ local function OnInitialize()
     DB:RegisterSlashCommand("onewowqol", slashHandler)
     DB:RegisterSlashCommand("1wqol", slashHandler)
 
-    if OneWoW_GUI.RegisterSettingsCallback then
-        OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_QoL, function(self)
-            OneWoW_GUI:ApplyTheme(self)
-        end)
-        OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoW_QoL, function()
-            if ns.ApplyLanguage then ns.ApplyLanguage() end
-        end)
-    end
+    OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_QoL, function(self)
+        OneWoW_GUI:ApplyTheme(self)
+    end)
+    OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoW_QoL, function()
+        if ns.ApplyLanguage then ns.ApplyLanguage() end
+    end)
 
     OneWoW:RegisterLoadComponent("QoL", OneWoW:GetAddonVersion(ADDON_NAME), "/1wqol")
 end
@@ -81,9 +75,7 @@ local function OnEnable()
 
     RegisterWithOneWoW()
 
-    if OneWoW then
-        OneWoW:RegisterMinimap("OneWoW_QoL", ns.L["CTX_OPEN_QOL"], "qol", nil)
-    end
+    OneWoW:RegisterMinimap("OneWoW_QoL", ns.L["CTX_OPEN_QOL"], "qol", nil)
 end
 
 function OneWoW_QoL:SlashCommandHandler()

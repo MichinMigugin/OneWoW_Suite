@@ -206,19 +206,12 @@ function ErrorLogger:_ensureBugGrabberLateLoadListener()
         ErrorLogger:_unregisterAuxEvents()
         ErrorLogger:UpdateLuaTabBugGrabberNotice()
     end
-    local function register()
-        OneWoW:RegisterAddonLoadedWatcher(want, function(addonName)
-            if addonName ~= want then
-                return
-            end
-            onBugGrabberLoaded()
-        end)
-    end
-    if OneWoW then
-        register()
-    else
-        C_Timer.After(0, register)
-    end
+    OneWoW:RegisterAddonLoadedWatcher(want, function(addonName)
+        if addonName ~= want then
+            return
+        end
+        onBugGrabberLoaded()
+    end)
 end
 
 function ErrorLogger:_registerBugGrabberBridgeOnce()

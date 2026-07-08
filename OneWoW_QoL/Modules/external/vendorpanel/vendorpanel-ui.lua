@@ -7,7 +7,7 @@ local VendorPanel = ns.VendorPanel
 local state = ns.VPState
 local VPFilters = ns.VPFilters
 local function GetItemStatus()
-    return OneWoW and OneWoW.ItemStatus
+    return OneWoW.ItemStatus
 end
 local GetShowBlizzJunk = ns.VPGetShowBlizzJunk
 local GetShowPanel = ns.VPGetShowPanel

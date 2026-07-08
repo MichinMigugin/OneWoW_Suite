@@ -84,10 +84,6 @@ function ns.UI.CreateSettingsTab(parent)
 
     local yOffset = -20
 
-    if not OneWoW then
-        yOffset = OneWoW_GUI:CreateSettingsPanel(scrollChild, { yOffset = yOffset, addonName = "OneWoW_Notes" })
-    end
-
     yOffset = yOffset - 20
     local detectionSection = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["SETTINGS_DETECTION"], yOffset = yOffset })
     yOffset = detectionSection.bottomY - 16

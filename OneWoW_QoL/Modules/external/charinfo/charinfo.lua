@@ -441,8 +441,6 @@ local enchantSlotLabels = {
 }
 
 function CharInfoModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh)
-    if not OneWoW_GUI then return yOffset end
-
     local sectionHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     sectionHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
     sectionHeader:SetText(L["CHARINFO_ENCHANT_SLOTS_HEADER"])

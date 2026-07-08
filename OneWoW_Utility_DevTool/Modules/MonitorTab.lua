@@ -93,16 +93,9 @@ end
 function MonitorTab:RegisterPinnedRestoreEvents()
     if self._pinnedRestoreRegistered then return end
     self._pinnedRestoreRegistered = true
-    local function register()
-        OneWoW:RegisterAddonLoadedWatcher(nil, function()
-            MonitorTab:RestorePinnedMonitorsPending()
-        end)
-    end
-    if OneWoW then
-        register()
-    else
-        C_Timer.After(0, register)
-    end
+    OneWoW:RegisterAddonLoadedWatcher(nil, function()
+        MonitorTab:RestorePinnedMonitorsPending()
+    end)
 end
 
 function MonitorTab:Initialize()

@@ -672,17 +672,12 @@ function ns.InfoBarFactory:Create(config)
             infoBarFrame.searchTransferBtn = searchTransferBtn
         end
 
-        local bagsHelpBtn
-        if OneWoW_GUI.CreateKeywordHelpButton then
-            bagsHelpBtn = OneWoW_GUI:CreateKeywordHelpButton(infoBarFrame, { editBox = searchBox, size = 20 })
-        end
+        local bagsHelpBtn = OneWoW_GUI:CreateKeywordHelpButton(infoBarFrame, { editBox = searchBox, size = 20 })
 
         infoBarFrame.searchHelpBtn = bagsHelpBtn
         AnchorSearchRowChrome(searchY, leftInset, rightInset, true)
 
-        if OneWoW_GUI.AttachSearchTooltip then
-            OneWoW_GUI:AttachSearchTooltip(searchBox)
-        end
+        OneWoW_GUI:AttachSearchTooltip(searchBox)
         searchBox:HookScript("OnEditFocusGained", function(myself)
             ShowSearchHistoryMenu(myself)
         end)

@@ -366,10 +366,10 @@ OneWoW.TooltipEngine:RegisterProvider({
 })
 
 -- Hook layer for IDs that don't come from TooltipDataProcessor
-local TOOLTIP_CONFIG = OneWoW.TooltipEngine and OneWoW.TooltipEngine.TOOLTIP_CONFIG or {}
+local TOOLTIP_CONFIG = OneWoW.TooltipEngine.TOOLTIP_CONFIG
 
 local function AddHookIDBlock(tooltip, idPairs)
-    if not OneWoW.TooltipEngine or not OneWoW.TooltipEngine:IsEnabled() then return end
+    if not OneWoW.TooltipEngine:IsEnabled() then return end
     if not OneWoW.TooltipEngine:IsFeatureEnabled("technicalids") then return end
     if not tooltip or not tooltip.AddDoubleLine then return end
 

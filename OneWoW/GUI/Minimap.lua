@@ -120,7 +120,7 @@ function OneWoW_GUI:CreateMinimapLauncher(addonName, options)
 end
 
 function OneWoW_GUI:GetMinimapButton(addonName)
-    if OneWoW and OneWoW_MinimapButton then
+    if OneWoW_MinimapButton then
         return OneWoW_MinimapButton
     end
     if libDBIcon then

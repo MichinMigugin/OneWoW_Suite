@@ -143,10 +143,8 @@ function Zones:CheckZones()
                 lastAlertedZone = key
                 print("|cFFFFD100OneWoW - Zones:|r " .. (L["NPC_LABEL_ZONE"]) .. " " .. key)
                 PlaySound(SOUNDKIT.RAID_WARNING)
-                if OneWoW and OneWoW.Toasts and OneWoW.Toasts.FireZoneAlert then
-                    local preview = (zoneData.content and zoneData.content ~= "") and zoneData.content:sub(1, 60) or nil
-                    OneWoW.Toasts.FireZoneAlert(key, preview)
-                end
+                local preview = (zoneData.content and zoneData.content ~= "") and zoneData.content:sub(1, 60) or nil
+                OneWoW.Toasts.FireZoneAlert(key, preview)
             end
         end
     end

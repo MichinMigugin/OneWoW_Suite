@@ -1039,7 +1039,7 @@ local OW_COMPANION_ICONS = {
 ---@param compName string
 ---@return (fun())|nil
 local function FindMinimapEntryAction(compName)
-    local entries = OneWoW and OneWoW.GetMinimapEntries and OneWoW:GetMinimapEntries()
+    local entries = OneWoW:GetMinimapEntries()
     if not entries then return nil end
     local target = compName:lower()
     for _, entry in ipairs(entries) do
@@ -1060,7 +1060,7 @@ local function FindMinimapEntryAction(compName)
 end
 
 local function GetCompanionAction(compName)
-    local companions = OneWoW and OneWoW.GetLoadedComponents and OneWoW:GetLoadedComponents()
+    local companions = OneWoW:GetLoadedComponents()
     if not companions then return nil end
     for _, comp in ipairs(companions) do
         if comp.name == compName then
@@ -1109,7 +1109,7 @@ local function BuildEnhancedRow()
     end
     wipe(enhancedRow)
 
-    local companions = OneWoW and OneWoW.GetLoadedComponents and OneWoW:GetLoadedComponents()
+    local companions = OneWoW:GetLoadedComponents()
     if not companions then return end
 
     enhancedBuiltCount = #companions
@@ -1364,7 +1364,7 @@ local function ShowContainer()
     -- wired to stale actions until a /reload. Rebuild here when the loaded
     -- component count has changed since the last build, so opening the panel
     -- always reflects the fully-populated, correctly-wired set.
-    local companions = OneWoW and OneWoW.GetLoadedComponents and OneWoW:GetLoadedComponents()
+    local companions = OneWoW:GetLoadedComponents()
     if GetSettings().enhancedMenu and companions
         and enhancedBuiltCount ~= #companions then
         BuildEnhancedRow()

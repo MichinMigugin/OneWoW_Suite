@@ -38,10 +38,8 @@ local function GetCharacters()
 end
 
 local function OpenRolesAndAltsTab()
-    if OneWoW and OneWoW.UI then
-        OneWoW.UI:Show("settings")
-        OneWoW.UI:SelectSubTab("settings", "rolesandalts")
-    end
+    OneWoW.UI:Show("settings")
+    OneWoW.UI:SelectSubTab("settings", "rolesandalts")
 end
 
 --- Build the inline "Alt Scope" control block used by tooltip feature panes.

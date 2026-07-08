@@ -7,14 +7,6 @@ local OneWoW_ShoppingList = OneWoW_ShoppingList
 
 local L = ns.L
 
-ns.oneWoWHubActive = false
-
-local function DetectOneWoW()
-    if OneWoW then
-        ns.oneWoWHubActive = true
-    end
-end
-
 local function ApplyLanguage()
     -- Localization lives in the OneWoW Locale service now (scope = ADDON_NAME;
     -- shared vocab in the "shared" scope). SetLanguage refolds every scope in place,
@@ -72,13 +64,10 @@ local didLogin = false
 function OneWoW_ShoppingList:OnPlayerLogin()
     if didLogin then return end
     didLogin = true
-    DetectOneWoW()
 
-    if OneWoW then
-        OneWoW:RegisterMinimap("OneWoW_ShoppingList", L["CTX_OPEN_SL"], nil, function()
-            if ns.MainWindow then ns.MainWindow:Toggle() end
-        end)
-    end
+    OneWoW:RegisterMinimap("OneWoW_ShoppingList", L["CTX_OPEN_SL"], nil, function()
+        if ns.MainWindow then ns.MainWindow:Toggle() end
+    end)
     if OneWoW_ShoppingList.FireLoginHandlers then
         OneWoW_ShoppingList:FireLoginHandlers()
     end
@@ -159,9 +148,7 @@ function OneWoW_ShoppingList:OnAddonLoaded()
     InitializeModules()
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
-    if OneWoW and OneWoW.RegisterLoadComponent then
-        OneWoW:RegisterLoadComponent("ShoppingList", _ver, "/1wsl")
-    end
+    OneWoW:RegisterLoadComponent("ShoppingList", _ver, "/1wsl")
 end
 
 local function HandleSlashCommand(msg)

@@ -25,8 +25,8 @@ function ns:FireItemButtonCallback(button, bagID, slotID)
 	local altShow = self:IsAltShowActive()
 	local db = self:GetDB()
 	if not altShow and db.global.stripJunkOverlays and button._owb_isJunk then
-		local engine = OneWoW and OneWoW.OverlayEngine
-		if engine then engine:CleanButton(button) end
+		local engine = OneWoW.OverlayEngine
+		engine:CleanButton(button)
 		return
 	end
 	for name, callback in pairs(callbacks) do
@@ -65,15 +65,13 @@ function ns:FireCallbacksOnBankButtons()
 end
 
 function ns:ClearBankOverlays()
-	local engine = OneWoW and OneWoW.OverlayEngine
+	local engine = OneWoW.OverlayEngine
 
 	if BankSet.slots then
 		for _, bagSlots in pairs(BankSet.slots) do
 			for _, button in pairs(bagSlots) do
 				if button then
-					if engine then
-						engine:CleanButton(button)
-					end
+					engine:CleanButton(button)
 				end
 			end
 		end
@@ -82,15 +80,13 @@ function ns:ClearBankOverlays()
 end
 
 function ns:ClearGuildBankOverlays()
-	local engine = OneWoW and OneWoW.OverlayEngine
+	local engine = OneWoW.OverlayEngine
 
 	if GuildBankSet.slots then
 		for _, tabSlots in pairs(GuildBankSet.slots) do
 			for _, button in pairs(tabSlots) do
 				if button then
-					if engine then
-						engine:CleanButton(button)
-					end
+					engine:CleanButton(button)
 				end
 			end
 		end

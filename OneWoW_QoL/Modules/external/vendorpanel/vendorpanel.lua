@@ -78,7 +78,7 @@ local state = {
 ns.VPState = state
 
 local function GetItemStatus()
-    return OneWoW and OneWoW.ItemStatus
+    return OneWoW.ItemStatus
 end
 
 -- ============================================================

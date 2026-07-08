@@ -38,13 +38,6 @@ local function GetVendorPrice()
     return sellPrice or 0
 end
 
-local function GetAHPrice(speciesID)
-    if OneWoW_AltTracker_Auctions_API and OneWoW_AltTracker_Auctions_API.GetPriceForSpecies then
-        return OneWoW_AltTracker_Auctions_API.GetPriceForSpecies(speciesID)
-    end
-    return nil
-end
-
 local function FormatAge(timestamp)
     if not timestamp or timestamp == 0 then return nil end
     local age = time() - timestamp
@@ -176,16 +169,7 @@ local function FillPetTooltip(tip, speciesID)
     end
 
     if cfg.showAHValue ~= false then
-        local ahPrice, meta
-        if OneWoW.ItemPrices then
-            ahPrice, meta = OneWoW.ItemPrices:GetUnitAHPriceForSpecies(speciesID, name)
-        else
-            local ahData = GetAHPrice(speciesID)
-            if ahData and ahData.price and ahData.price > 0 then
-                ahPrice = ahData.price
-                meta = { source = "onewow", timestamp = ahData.timestamp }
-            end
-        end
+        local ahPrice, meta = OneWoW.ItemPrices:GetUnitAHPriceForSpecies(speciesID, name)
         if ahPrice and ahPrice > 0 then
             local ageText
             if meta and meta.timestamp then

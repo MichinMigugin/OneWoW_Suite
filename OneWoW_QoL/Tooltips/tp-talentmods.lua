@@ -169,7 +169,7 @@ local function getCachedModifiers(spellID)
 end
 
 local function OnSpellTooltip(tooltip, data)
-    if not OneWoW.TooltipEngine or not OneWoW.TooltipEngine:IsFeatureEnabled("talentmods") then return end
+    if not OneWoW.TooltipEngine:IsFeatureEnabled("talentmods") then return end
     if not data or not data.lines or not data.type then return end
     if data.type ~= Enum.TooltipDataType.Spell and data.type ~= Enum.TooltipDataType.Macro then return end
 

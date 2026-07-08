@@ -7,14 +7,6 @@ local OneWoW_DirectDeposit = OneWoW_DirectDeposit
 
 local L = ns.L
 
-ns.oneWoWHubActive = false
-
-local function DetectOneWoW()
-    if OneWoW then
-        ns.oneWoWHubActive = true
-    end
-end
-
 local function ApplyLanguage()
     -- Localization lives in the OneWoW Locale service now (scope "DirectDeposit";
     -- shared vocab in the "shared" scope). SetLanguage refolds every scope in place,
@@ -102,48 +94,32 @@ function ns:InitTooltipHook()
         return nil
     end
 
-    if ns.oneWoWHubActive and OneWoW and OneWoW.TooltipEngine then
-        OneWoW.TooltipEngine:RegisterProvider({
-            id           = "directdeposit",
-            order        = 50,
-            tooltipTypes = { "item" },
-            callback     = function(_, context)
-                if not context.itemID then return nil end
-                if not ns.db.global.directDeposit.tooltipEnabled then return nil end
-
-                local itemList = ns.db.global.directDeposit.itemList
-                local itemData = itemList[tostring(context.itemID)]
-                if not itemData then return nil end
-
-                local bankTypeName, rr, rg, rb = GetBankTypeDisplay(itemData.bankType)
-                if not bankTypeName then return nil end
-
-                return {
-                    {
-                        type  = "double",
-                        left  = "  " .. L["TOOLTIP_LABEL"],
-                        right = bankTypeName,
-                        lr = 0.2, lg = 1.0, lb = 0.2,
-                        rr = rr,  rg = rg,  rb = rb,
-                    }
-                }
-            end,
-        })
-    else
-        TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, data)
-            if not ns.db.global.directDeposit.tooltipEnabled then return end
-            if not data or not data.id then return end
+    OneWoW.TooltipEngine:RegisterProvider({
+        id           = "directdeposit",
+        order        = 50,
+        tooltipTypes = { "item" },
+        callback     = function(_, context)
+            if not context.itemID then return nil end
+            if not ns.db.global.directDeposit.tooltipEnabled then return nil end
 
             local itemList = ns.db.global.directDeposit.itemList
-            local itemData = itemList[tostring(data.id)]
-            if not itemData then return end
+            local itemData = itemList[tostring(context.itemID)]
+            if not itemData then return nil end
 
             local bankTypeName, rr, rg, rb = GetBankTypeDisplay(itemData.bankType)
-            if bankTypeName then
-                tooltip:AddDoubleLine("  " .. L["TOOLTIP_LABEL"], bankTypeName, 0.2, 1.0, 0.2, rr, rg, rb)
-            end
-        end)
-    end
+            if not bankTypeName then return nil end
+
+            return {
+                {
+                    type  = "double",
+                    left  = "  " .. L["TOOLTIP_LABEL"],
+                    right = bankTypeName,
+                    lr = 0.2, lg = 1.0, lb = 0.2,
+                    rr = rr,  rg = rg,  rb = rb,
+                }
+            }
+        end,
+    })
 end
 
 local function InitializeModules()
@@ -267,9 +243,7 @@ function OneWoW_DirectDeposit:OnAddonLoaded()
     end)
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
-    if OneWoW and OneWoW.RegisterLoadComponent then
-        OneWoW:RegisterLoadComponent("DirectDeposit", _ver, "/1wdd")
-    end
+    OneWoW:RegisterLoadComponent("DirectDeposit", _ver, "/1wdd")
 end
 
 -- Core-driven login-phase arming. Runs from the module's own PLAYER_LOGIN at
@@ -279,15 +253,12 @@ local didLogin = false
 function OneWoW_DirectDeposit:OnPlayerLogin()
     if didLogin then return end
     didLogin = true
-    DetectOneWoW()
     C_Timer.After(0, function()
         ns:InitTooltipHook()
     end)
-    if OneWoW then
-        OneWoW:RegisterMinimap("OneWoW_DirectDeposit", L["CTX_OPEN_DD"], nil, function()
-            if ns.GUI then ns.GUI:Toggle() end
-        end)
-    end
+    OneWoW:RegisterMinimap("OneWoW_DirectDeposit", L["CTX_OPEN_DD"], nil, function()
+        if ns.GUI then ns.GUI:Toggle() end
+    end)
     if OneWoW_DirectDeposit.FireLoginHandlers then
         OneWoW_DirectDeposit:FireLoginHandlers()
     end
