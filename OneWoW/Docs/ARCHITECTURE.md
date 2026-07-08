@@ -74,7 +74,7 @@ flowchart TB
 | **1 — Core hub** | `OneWoW` | Always | Orchestrator, Manage Features, hub UI, shared engines, GUI toolkit (`OneWoW_GUI` global) |
 | **2 — Feature modules** | AltTracker, Catalog, Notes, Trackers, QoL, ShoppingList, DirectDeposit, Bags | On demand | `RequiredDeps: OneWoW` + `LoadOnDemand: 1` |
 | **3 — Data stores** | `OneWoW_AltTracker_*`, `OneWoW_CatalogData_*` | On demand, after parent | `RequiredDeps: …, <parent>` + `LoadOnDemand: 1`; listed in `ModuleManifest.stores` |
-| **4 — Utility** | `OneWoW_Utility_DevTool` | Opt-in | `RequiredDeps: OneWoW`; excluded from recommended preset |
+| **4 — Utility** | `OneWoW_Utility_DevTool` | On demand, opt-in | `RequiredDeps: OneWoW` + `LoadOnDemand: 1`; excluded from recommended preset; `loadPhase = "login"` when wanted |
 
 Verified against current `.toc` files:
 
@@ -89,7 +89,7 @@ Verified against current `.toc` files:
 | **OneWoW_ShoppingList** | OneWoW | — | 1 |
 | **OneWoW_DirectDeposit** | OneWoW | — | 1 |
 | **OneWoW_Bags** | OneWoW | TradeSkillMaster, Baganator, Masque | 1 |
-| **OneWoW_Utility_DevTool** | OneWoW | !BugGrabber | — |
+| **OneWoW_Utility_DevTool** | OneWoW | !BugGrabber | 1 |
 | **OneWoW_AltTracker_\*** | OneWoW, OneWoW_AltTracker | — | 1 |
 | **OneWoW_CatalogData_\*** | OneWoW, OneWoW_Catalog | — | 1 |
 
@@ -130,8 +130,11 @@ slash command, hub `module` name, hub `tabOrder`, `loadPhase`, parent `stores`).
 At the **end of core's `ADDON_LOADED`** (before `PLAYER_LOGIN`),
 `OneWoW.LoadOrchestrator:RunStartupPhase()` walks the manifest in **array order**
 and calls `OneWoW:BringUp(addon)` for each `loadPhase == "login"` entry (feature
-+ stores as one set). DevTool is detect-only — skipped by the orchestrator but
-included in login fan-out when loaded.
++ stores as one set) that is not soft-opted-out. **`OneWoW_Utility_DevTool` uses
+the same path** — it is not skipped by the orchestrator. DevTool is opt-in only:
+excluded from the recommended Manage Features preset (`FirstRun.CATALOG` utility
+group) but force-loaded at login like other manifest entries when the user has
+it wanted (Blizzard-enabled and not soft-opted-out).
 
 **Load order** is manifest array order. **Hub row-1 tab order** is the explicit
 `tabOrder` field on entries with `module` (Notes → AltTracker → Catalog →
@@ -744,8 +747,8 @@ dialog service is `OneWoW.CopyPaste` (`Core/CopyPaste.lua`).
 |---|---|---|---|
 | OneWoW | OneWoW_Bags | `Integrations/OneWoW_Bags.lua` (wired via `RegisterAddonLoadedWatcher`) | Overlay engine with Bags callbacks |
 | OneWoW_ShoppingList | OneWoW_Catalog | `OneWoW_Catalog_TradeskillAPI` | Recipe callback |
-| OneWoW_Trackers | OneWoW_Notes | `OneWoW_Trackers_API` | Tracker sub-tab in Notes |
-| OneWoW_Trackers | OneWoW_Notes_DB | Init bridge (legacy SV drain) | Legacy tracker data drain |
+| OneWoW_QoL | OneWoW_Trackers | `OneWoW_Trackers_API` | Weekly reset region picker (QoL settings tab) |
+| OneWoW_Trackers | OneWoW_Notes_DB | Init bridge (legacy SV drain) | One-time migration of per-character tracker fields from Notes SV |
 
 ### Store access rules
 
@@ -774,7 +777,7 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | `OneWoW.ProfessionRecipe` | `Services/ProfessionRecipe.lua` | AltTracker Professions (persist) + Accounting (trainer costs), Catalog Tradeskills (scanCache), RecipeKnownUtil, Overlays2, Trackers, QoL bagbar/professionspanel/autoopen — see [PROFESSION_RECIPE.md](PROFESSION_RECIPE.md) / §8.7 |
 | `OneWoW.Merchant` | `Services/Merchant.lua` | Catalog Vendors (merge), `OneWoW_Notes` collectibles, Overlays2 / Accounting / Bags / QoL merchant sites — single `MERCHANT_*` owner, scan/show/closed channels, ephemeral snapshots, no SV; see [MERCHANT.md](MERCHANT.md) / §8.8 |
 | `OneWoW.RecipeKnownUtil` | `Services/RecipeKnownUtil.lua` | Overlay engine, tooltip providers; delegates tooltip reads to TooltipScanner |
-| `OneWoW.Collectibles` | `Services/Collectibles.lua` | `OneWoW_Notes` (Collectibles data/tab), ContextMenus, Trackers (planned) — collectible key grammar + live display/state, no SV; see [COLLECTIBLES.md](COLLECTIBLES.md) |
+| `OneWoW.Collectibles` | `Services/Collectibles.lua` | `OneWoW_Notes` (Collectibles data/tab), ContextMenus, `OneWoW_Trackers` (`TrackerEngine` collection-state steps), PredicateEngine, QoL tooltips — collectible key grammar + live display/state, no SV; see [COLLECTIBLES.md](COLLECTIBLES.md) |
 | `OneWoW.AHItemKeys` | `Services/AHItemKeys.lua` | AH scanners (`OneWoW_AltTracker_Auctions`), `ItemPrices` link-aware lookups |
 | `OneWoW.ItemPrices` | `Services/ItemPrices.lua` | Tooltip providers, overlay engine, AH source UI helpers |
 | `OneWoW.Locale` | `Services/LocaleService.lua` | Every addon (each registers its own scope, reads back a view) — see Localization below |
