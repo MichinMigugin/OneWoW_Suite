@@ -25,22 +25,12 @@ local function ApplyTheme()
     OneWoW_Bags:ApplyTheme()
 end
 
-local function ApplyLanguage()
-    -- Localization lives in the OneWoW Locale service now (scope = ADDON_NAME;
-    -- shared vocab in the "shared" scope). SetLanguage refolds every scope in place,
-    -- pushes BINDING_* globals, and fires OnApply; ns.L is a stable view.
-    -- esMX->esES is normalized inside. Kept as a thin shim for the profile-sync loop
-    -- (t-profiles SyncSettingToChildAddons) until Phase 6.
-    local lang = OneWoW_GUI:GetSetting("language") or "enUS"
-    OneWoW.Locale:SetLanguage(lang)
-end
-
 function OneWoW_Bags:ApplyTheme()
     OneWoW_GUI:ApplyTheme(ns)
 end
 
 function OneWoW_Bags:ApplyLanguage()
-    ApplyLanguage()
+    ns.ApplyLanguage()
 end
 
 local GUI_TARGET_KEYS = {
@@ -658,7 +648,7 @@ end
 
 function ns:ReinitForLanguage(langCode)
     OneWoW_GUI:SetSetting("language", langCode)
-    ApplyLanguage()
+    ns.ApplyLanguage()
     if self.GUI then
         self.GUI:FullReset()
         C_Timer.After(0.1, function()
@@ -692,7 +682,7 @@ function OneWoW_Bags:OnAddonLoaded()
     end
 
     ApplyTheme()
-    ApplyLanguage()
+    ns.ApplyLanguage()
 
     ns.Categories:SetCustomCategories(ns.db.global.customCategoriesV2)
     ns.Categories:SetRecentItemDuration(ns.db.global.recentItemDuration)

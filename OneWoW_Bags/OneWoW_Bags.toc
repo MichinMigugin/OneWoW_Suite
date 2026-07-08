@@ -18,6 +18,7 @@
 ## X-BugGrabber-Display: OneWow
 
 # Locales
+Locales\LocaleManager.lua
 Locales\enUS.lua
 Locales\koKR.lua
 Locales\frFR.lua

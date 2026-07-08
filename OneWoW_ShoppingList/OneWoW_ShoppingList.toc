@@ -20,6 +20,7 @@
 Core\Constants.lua
 
 # Locales
+Locales\LocaleManager.lua
 Locales\enUS.lua
 Locales\koKR.lua
 Locales\frFR.lua
