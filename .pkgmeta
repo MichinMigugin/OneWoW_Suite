@@ -1,0 +1,42 @@
+# CurseForge packager config for OneWoW Suite.
+# Docs: https://support.curseforge.com/support/solutions/articles/9000197281-automatic-packaging
+#
+# Repo root is flat sibling addons. The packager wraps the checkout in
+# package-as, then move-folders lifts each addon to zip-root siblings so
+# players can extract straight into Interface\AddOns\.
+
+package-as: OneWoW_Suite
+enable-nolib-creation: no
+
+move-folders:
+  OneWoW_Suite/OneWoW: OneWoW
+  OneWoW_Suite/OneWoW_AltTracker: OneWoW_AltTracker
+  OneWoW_Suite/OneWoW_AltTracker_Accounting: OneWoW_AltTracker_Accounting
+  OneWoW_Suite/OneWoW_AltTracker_Auctions: OneWoW_AltTracker_Auctions
+  OneWoW_Suite/OneWoW_AltTracker_Character: OneWoW_AltTracker_Character
+  OneWoW_Suite/OneWoW_AltTracker_Collections: OneWoW_AltTracker_Collections
+  OneWoW_Suite/OneWoW_AltTracker_Endgame: OneWoW_AltTracker_Endgame
+  OneWoW_Suite/OneWoW_AltTracker_Professions: OneWoW_AltTracker_Professions
+  OneWoW_Suite/OneWoW_AltTracker_Storage: OneWoW_AltTracker_Storage
+  OneWoW_Suite/OneWoW_Bags: OneWoW_Bags
+  OneWoW_Suite/OneWoW_Catalog: OneWoW_Catalog
+  OneWoW_Suite/OneWoW_CatalogData_Journal: OneWoW_CatalogData_Journal
+  OneWoW_Suite/OneWoW_CatalogData_Quests: OneWoW_CatalogData_Quests
+  OneWoW_Suite/OneWoW_CatalogData_Tradeskills: OneWoW_CatalogData_Tradeskills
+  OneWoW_Suite/OneWoW_CatalogData_Vendors: OneWoW_CatalogData_Vendors
+  OneWoW_Suite/OneWoW_DirectDeposit: OneWoW_DirectDeposit
+  OneWoW_Suite/OneWoW_Notes: OneWoW_Notes
+  OneWoW_Suite/OneWoW_QoL: OneWoW_QoL
+  OneWoW_Suite/OneWoW_ShoppingList: OneWoW_ShoppingList
+  OneWoW_Suite/OneWoW_Trackers: OneWoW_Trackers
+  OneWoW_Suite/OneWoW_Utility_DevTool: OneWoW_Utility_DevTool
+
+ignore:
+  # Desktop companion (not a WoW addon)
+  - OneWoW_AccountSync
+  # Repo tooling / docs (dot-dirs like .git .cursor .wow_docs are auto-ignored)
+  - bin
+  - AGENTS.md
+  - CLAUDE.md
+  - CONTRIBUTING.md
+  - README.md
