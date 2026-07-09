@@ -20,56 +20,27 @@ Examples:
 from __future__ import annotations
 
 import argparse
-import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+_BIN = Path(__file__).resolve().parent
+if str(_BIN) not in sys.path:
+    sys.path.insert(0, str(_BIN))
 
-# Desktop companion — not a WoW load unit; never ship in the CurseForge zip.
-SKIP_ADDONS = frozenset({"OneWoW_AccountSync"})
-
-INTERFACE_RE = re.compile(r"^(##\s*Interface:\s*).+$", re.IGNORECASE | re.MULTILINE)
-VERSION_RE = re.compile(r"^(##\s*Version:\s*).+$", re.IGNORECASE | re.MULTILINE)
+from onewow_release_lib import (  # noqa: E402
+    INTERFACE_RE,
+    ROOT,
+    VERSION_RE,
+    discover_tocs,
+    format_interfaces,
+)
 
 
 def compute_version(now: datetime | None = None) -> str:
     """Return R6.YYMM.DDHH in UTC."""
     stamp = now or datetime.now(timezone.utc)
     return f"R6.{stamp:%y%m}.{stamp:%d%H}"
-
-
-def discover_tocs() -> list[Path]:
-    """Shippable addon TOCs: OneWoW/ and OneWoW_*/ with a matching .toc."""
-    tocs: list[Path] = []
-    for path in sorted(ROOT.iterdir()):
-        if not path.is_dir():
-            continue
-        name = path.name
-        if name == "OneWoW" or name.startswith("OneWoW_"):
-            if name in SKIP_ADDONS:
-                continue
-            toc = path / f"{name}.toc"
-            if toc.is_file():
-                tocs.append(toc)
-    return tocs
-
-
-def format_interfaces(values: list[str]) -> str:
-    """Normalize interface args to '120007, 121000'."""
-    parts: list[str] = []
-    for raw in values:
-        for piece in raw.split(","):
-            piece = piece.strip()
-            if not piece:
-                continue
-            if not piece.isdigit():
-                raise SystemExit(f"Invalid interface value (digits only): {piece!r}")
-            parts.append(piece)
-    if not parts:
-        raise SystemExit("--interfaces requires at least one interface number")
-    return ", ".join(parts)
 
 
 def patch_toc(

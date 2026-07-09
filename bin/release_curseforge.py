@@ -1,0 +1,291 @@
+#!/usr/bin/env python3
+"""Build the OneWoW Suite zip from the local tree and upload to CurseForge.
+
+Reads ## Version: and ## Interface: from shippable TOCs (must agree).
+Secrets from repo-root .env: CF_API_TOKEN, CF_PROJECT_ID (see env.example).
+
+No git operations — commit/tag/push yourself after uploading.
+
+Examples:
+  python bin/bump_tocs.py --set-version
+  python bin/release_curseforge.py --dry-run
+  python bin/release_curseforge.py --release-type alpha
+  python bin/release_curseforge.py --release-type release --changelog-file CHANGELOG.md
+
+Requires: pip install -r bin/requirements.txt  (requests)
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import zipfile
+from pathlib import Path
+
+_BIN = Path(__file__).resolve().parent
+if str(_BIN) not in sys.path:
+    sys.path.insert(0, str(_BIN))
+
+from onewow_release_lib import (  # noqa: E402
+    ROOT,
+    discover_addon_dirs,
+    discover_tocs,
+    interface_to_game_version,
+    load_dotenv,
+    require_uniform_interfaces,
+    require_uniform_version,
+)
+
+try:
+    import requests
+except ImportError:
+    print(
+        "Error: 'requests' is required. Install with: pip install -r bin/requirements.txt",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+CF_API_BASE = "https://wow.curseforge.com/api"
+RELEASES_DIR = ROOT / ".releases"
+
+# Paths never included in the zip (relative to ROOT). Dot-dirs are always skipped.
+ZIP_IGNORE_NAMES = frozenset(
+    {
+        "OneWoW_AccountSync",
+        "bin",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CONTRIBUTING.md",
+        "README.md",
+        "env.example",
+    }
+)
+
+
+def should_skip_zip_member(rel: Path) -> bool:
+    """True if this path (relative to addon root or repo) should not be zipped."""
+    parts = rel.parts
+    if not parts:
+        return True
+    if any(p.startswith(".") for p in parts):
+        return True
+    if any(p == "__pycache__" for p in parts):
+        return True
+    return False
+
+
+def build_suite_zip(version: str, addon_dirs: list[Path]) -> Path:
+    """Write sibling-addon zip under .releases/; return the zip path."""
+    RELEASES_DIR.mkdir(parents=True, exist_ok=True)
+    zip_name = f"OneWoW Suite {version}.zip"
+    zip_path = RELEASES_DIR / zip_name
+    if zip_path.exists():
+        zip_path.unlink()
+
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for addon_dir in addon_dirs:
+            addon_name = addon_dir.name
+            for file_path in sorted(addon_dir.rglob("*")):
+                if not file_path.is_file():
+                    continue
+                rel_inside = file_path.relative_to(addon_dir)
+                if should_skip_zip_member(rel_inside):
+                    continue
+                arcname = f"{addon_name}/{rel_inside.as_posix()}"
+                zf.write(file_path, arcname)
+
+    return zip_path
+
+
+def resolve_game_version_ids(
+    session: requests.Session,
+    token: str,
+    interfaces: list[str],
+) -> list[int]:
+    """Map TOC interface numbers to CurseForge gameVersions IDs."""
+    url = f"{CF_API_BASE}/game/versions"
+    resp = session.get(url, headers={"X-Api-Token": token}, timeout=60)
+    if resp.status_code != 200:
+        raise SystemExit(
+            f"CurseForge game/versions failed: HTTP {resp.status_code}\n{resp.text[:500]}"
+        )
+    versions = resp.json()
+    by_name: dict[str, int] = {}
+    for entry in versions:
+        name = entry.get("name")
+        vid = entry.get("id")
+        if isinstance(name, str) and isinstance(vid, int):
+            # Prefer first match; Retail names are unique enough for our use.
+            by_name.setdefault(name, vid)
+
+    ids: list[int] = []
+    missing: list[str] = []
+    for iface in interfaces:
+        game_ver = interface_to_game_version(iface)
+        vid = by_name.get(game_ver)
+        if vid is None:
+            missing.append(f"{iface} -> {game_ver}")
+        else:
+            ids.append(vid)
+            print(f"Game version: {game_ver} (interface {iface}) -> id {vid}")
+
+    if missing:
+        raise SystemExit(
+            "No CurseForge game version id for:\n  "
+            + "\n  ".join(missing)
+            + "\nCheck https://wow.curseforge.com/api/game/versions (with X-Api-Token)."
+        )
+    return ids
+
+
+def upload_file(
+    session: requests.Session,
+    *,
+    token: str,
+    project_id: str,
+    zip_path: Path,
+    display_name: str,
+    release_type: str,
+    changelog: str,
+    changelog_type: str,
+    game_version_ids: list[int],
+) -> int:
+    """Upload zip; return new file id."""
+    metadata = {
+        "changelog": changelog,
+        "changelogType": changelog_type,
+        "displayName": display_name,
+        "releaseType": release_type,
+        "gameVersions": game_version_ids,
+    }
+    url = f"{CF_API_BASE}/projects/{project_id}/upload-file"
+    with zip_path.open("rb") as fh:
+        resp = session.post(
+            url,
+            headers={"X-Api-Token": token},
+            data={"metadata": json.dumps(metadata)},
+            files={"file": (zip_path.name, fh, "application/zip")},
+            timeout=600,
+        )
+    if resp.status_code != 200:
+        raise SystemExit(
+            f"CurseForge upload failed: HTTP {resp.status_code}\n{resp.text[:1000]}"
+        )
+    body = resp.json()
+    file_id = body.get("id")
+    if not isinstance(file_id, int):
+        raise SystemExit(f"Unexpected upload response: {body!r}")
+    return file_id
+
+
+def resolve_changelog(args: argparse.Namespace, version: str) -> tuple[str, str]:
+    if args.changelog_file is not None:
+        path = Path(args.changelog_file)
+        if not path.is_file():
+            raise SystemExit(f"--changelog-file not found: {path}")
+        text = path.read_text(encoding="utf-8")
+        ctype = "markdown" if path.suffix.lower() in {".md", ".markdown"} else "text"
+        return text, ctype
+    if args.changelog is not None:
+        return args.changelog, "text"
+    return f"OneWoW Suite {version}", "text"
+
+
+def get_credentials() -> tuple[str, str]:
+    """CF_API_TOKEN and CF_PROJECT_ID from environment, with .env fill-in."""
+    file_env = load_dotenv()
+    token = os.environ.get("CF_API_TOKEN") or file_env.get("CF_API_TOKEN", "")
+    project_id = os.environ.get("CF_PROJECT_ID") or file_env.get("CF_PROJECT_ID", "")
+    missing = []
+    if not token:
+        missing.append("CF_API_TOKEN")
+    if not project_id:
+        missing.append("CF_PROJECT_ID")
+    if missing:
+        raise SystemExit(
+            "Missing "
+            + ", ".join(missing)
+            + ". Set them in the environment or in a repo-root .env (see env.example)."
+        )
+    return token, project_id
+
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        description="Zip shippable OneWoW addons and upload to CurseForge (no git).",
+    )
+    p.add_argument(
+        "--release-type",
+        choices=("alpha", "beta", "release"),
+        default="release",
+        help="CurseForge release type (default: release).",
+    )
+    p.add_argument(
+        "--changelog",
+        help="Changelog text (default: 'OneWoW Suite {version}').",
+    )
+    p.add_argument(
+        "--changelog-file",
+        metavar="PATH",
+        help="Read changelog from a file (.md => markdown).",
+    )
+    p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Build the zip only; do not upload.",
+    )
+    return p
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    if args.changelog is not None and args.changelog_file is not None:
+        raise SystemExit("Use only one of --changelog or --changelog-file")
+
+    tocs = discover_tocs()
+    version = require_uniform_version(tocs)
+    interfaces = require_uniform_interfaces(tocs)
+    addon_dirs = discover_addon_dirs()
+
+    # Sanity: do not zip ignored root names if they somehow appear.
+    addon_dirs = [d for d in addon_dirs if d.name not in ZIP_IGNORE_NAMES]
+    if not addon_dirs:
+        raise SystemExit("No shippable addon directories to package")
+
+    print(f"Version: {version}")
+    print(f"Interfaces: {', '.join(interfaces)}")
+    print(f"Addons: {len(addon_dirs)}")
+
+    zip_path = build_suite_zip(version, addon_dirs)
+    size_mb = zip_path.stat().st_size / (1024 * 1024)
+    print(f"Zip: {zip_path.relative_to(ROOT).as_posix()} ({size_mb:.2f} MiB)")
+
+    if args.dry_run:
+        print("Dry-run: skipping CurseForge upload.")
+        return 0
+
+    token, project_id = get_credentials()
+    changelog, changelog_type = resolve_changelog(args, version)
+    display_name = f"OneWoW Suite {version}"
+
+    session = requests.Session()
+    game_ids = resolve_game_version_ids(session, token, interfaces)
+    file_id = upload_file(
+        session,
+        token=token,
+        project_id=project_id,
+        zip_path=zip_path,
+        display_name=display_name,
+        release_type=args.release_type,
+        changelog=changelog,
+        changelog_type=changelog_type,
+        game_version_ids=game_ids,
+    )
+    print(f"Uploaded: {display_name} ({args.release_type}) file id={file_id}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
