@@ -544,8 +544,6 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 		end
 	elseif portalData.type == "housing" then
 		ns.PortalHubDetection:ApplyHousingTeleportAttributes(button)
-		local icon = C_Spell.GetSpellTexture(1263273)
-		if icon then button:SetNormalTexture(icon) end
 	end
 
 	button:SetScript("PostClick", function(_, mouseButton)
@@ -570,7 +568,11 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 		elseif portalData.type == "spell" then
 			GameTooltip:SetSpellByID(portalData.id)
 		elseif portalData.type == "housing" then
-			GameTooltip:SetText(L["SETTINGS_PORTALHUB_TELEPORT_HOME"], 1, 1, 1)
+			if myself._onewowHousingIsReturn then
+				GameTooltip:SetText(HOUSING_DASHBOARD_RETURN, 1, 1, 1)
+			else
+				GameTooltip:SetText(HOUSING_DASHBOARD_TELEPORT_TO_PLOT, 1, 1, 1)
+			end
 		end
 		GameTooltip:Show()
 	end)
@@ -607,6 +609,10 @@ function EscMenu:UpdateCooldown(button, portalData)
 			enabled = true
 		end
 	elseif portalData.type == "housing" then
+		if button._onewowHousingIsReturn then
+			button.cooldownFrame:Clear()
+			return
+		end
 		local cdInfo = C_Housing.GetVisitCooldownInfo()
 		start = cdInfo.startTime
 		duration = cdInfo.duration

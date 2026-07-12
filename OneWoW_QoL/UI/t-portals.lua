@@ -251,7 +251,7 @@ function ns.UI.CreatePortalsTab(parent)
 			local cdInfo = C_Housing.GetVisitCooldownInfo()
 			start = cdInfo.startTime
 			duration = cdInfo.duration
-			enabled = cdInfo.isEnabled
+			enabled = cdInfo.isEnabled and not button._onewowHousingIsReturn
 		end
 
 		if enabled and duration and duration > 0 then
@@ -337,10 +337,8 @@ function ns.UI.CreatePortalsTab(parent)
 		elseif portal.type == "housing" then
 			if isAvailable then
 				ns.PortalHubDetection:ApplyHousingTeleportAttributes(button, "1")
-			end
-			local icon = C_Spell.GetSpellTexture(1263273)
-			if icon then
-				button:SetNormalTexture(icon)
+			else
+				button:SetNormalAtlas("dashboard-panel-homestone-teleport-button")
 			end
 		end
 
@@ -405,8 +403,11 @@ function ns.UI.CreatePortalsTab(parent)
 			elseif portal.type == "spell" then
 				GameTooltip:SetSpellByID(portal.id)
 			elseif portal.type == "housing" then
-				GameTooltip:SetText(L["UI_PORTAL_TITLE_TELEPORT"], 1, 1, 1)
-				GameTooltip:AddLine(L["UI_PORTAL_TELEPORT_HOME"], 0.7, 0.7, 0.7, true)
+				if portalButton._onewowHousingIsReturn then
+					GameTooltip:SetText(HOUSING_DASHBOARD_RETURN, 1, 1, 1)
+				else
+					GameTooltip:SetText(HOUSING_DASHBOARD_TELEPORT_TO_PLOT, 1, 1, 1)
+				end
 				local info = C_Housing.GetCurrentHouseInfo()
 				if info and info.houseGUID then
 					GameTooltip:AddLine(" ")

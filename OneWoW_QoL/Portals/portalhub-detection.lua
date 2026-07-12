@@ -33,7 +33,11 @@ local housingHouse = nil
 local housingRequested = false
 local housingLoaded = false
 local housingCallbacks = {}
+local housingButtons = {}
 local housingEventFrame = CreateFrame("Frame")
+
+local HOUSING_ATLAS_TELEPORT = "dashboard-panel-homestone-teleport-button"
+local HOUSING_ATLAS_RETURN = "dashboard-panel-homestone-teleport-out-button"
 
 local function ApplyPendingHousingCallbacks()
 	if OneWoW.Restriction.IsProtectedActionBlocked() then
@@ -47,12 +51,39 @@ local function ApplyPendingHousingCallbacks()
 	wipe(housingCallbacks)
 end
 
+local function TrackHousingButton(button, suffix)
+	for i = 1, #housingButtons do
+		local entry = housingButtons[i]
+		if entry.button == button then
+			entry.suffix = suffix
+			return
+		end
+	end
+	tinsert(housingButtons, { button = button, suffix = suffix })
+end
+
+local function RefreshTrackedHousingButtons()
+	for i = #housingButtons, 1, -1 do
+		local entry = housingButtons[i]
+		local button = entry.button
+		if not button or not button:GetParent() or not button:IsShown() then
+			tremove(housingButtons, i)
+		else
+			Detection:ApplyHousingTeleportAttributes(button, entry.suffix)
+		end
+	end
+end
+
+housingEventFrame:RegisterEvent("HOUSE_PLOT_ENTERED")
+housingEventFrame:RegisterEvent("HOUSE_PLOT_EXITED")
 housingEventFrame:SetScript("OnEvent", function(self, event, houses)
 	if event == "PLAYER_HOUSE_LIST_UPDATED" then
 		housingHouse = houses and houses[1] or nil
 		housingLoaded = true
 		self:UnregisterEvent("PLAYER_HOUSE_LIST_UPDATED")
 		ApplyPendingHousingCallbacks()
+	elseif event == "HOUSE_PLOT_ENTERED" or event == "HOUSE_PLOT_EXITED" then
+		RefreshTrackedHousingButtons()
 	end
 end)
 
@@ -74,10 +105,26 @@ function Detection:RequestHousingHouse(callback)
 	C_Housing.GetPlayerOwnedHouses()
 end
 
+--- True when the housing button should return to the prior location (Blizzard dashboard rule).
+---@param house table|nil
+---@return boolean
+function Detection:ShouldReturnAfterVisitingHouse(house)
+	if not house or not house.neighborhoodGUID then
+		return false
+	end
+	if not C_HousingNeighborhood.CanReturnAfterVisitingHouse() then
+		return false
+	end
+	local currentNeighborhoodGUID = C_Housing.GetCurrentNeighborhoodGUID()
+	return currentNeighborhoodGUID ~= nil and currentNeighborhoodGUID == house.neighborhoodGUID
+end
+
 function Detection:ApplyHousingTeleportAttributes(button, suffix)
 	suffix = suffix or ""
+	TrackHousingButton(button, suffix)
 	button._onewowHousingRequestToken = (button._onewowHousingRequestToken or 0) + 1
 	local requestToken = button._onewowHousingRequestToken
+	button._onewowHousingIsReturn = false
 	button:SetAttribute("type" .. suffix, nil)
 	button:SetAttribute("house-neighborhood-guid" .. suffix, nil)
 	button:SetAttribute("house-guid" .. suffix, nil)
@@ -99,17 +146,41 @@ function Detection:ApplyHousingTeleportAttributes(button, suffix)
 		button:SetAttribute("house-guid" .. suffix, nil)
 		button:SetAttribute("house-plot-id" .. suffix, nil)
 
+		local shouldReturn = Detection:ShouldReturnAfterVisitingHouse(house)
+		button._onewowHousingIsReturn = shouldReturn
+
+		if shouldReturn then
+			button:SetAttribute("type" .. suffix, "returnhome")
+			button:SetNormalAtlas(HOUSING_ATLAS_RETURN)
+			if button.cooldownFrame then
+				button.cooldownFrame:Clear()
+			end
+			return
+		end
+
+		button:SetNormalAtlas(HOUSING_ATLAS_TELEPORT)
+
 		if house and house.neighborhoodGUID and house.houseGUID and house.plotID then
 			button:SetAttribute("type" .. suffix, "teleporthome")
 			button:SetAttribute("house-neighborhood-guid" .. suffix, house.neighborhoodGUID)
 			button:SetAttribute("house-guid" .. suffix, house.houseGUID)
 			button:SetAttribute("house-plot-id" .. suffix, house.plotID)
 		end
+
+		if button.cooldownFrame then
+			local cdInfo = C_Housing.GetVisitCooldownInfo()
+			if cdInfo.isEnabled and not OneWoW.Restriction.IsSecret(cdInfo.duration) and cdInfo.duration > 0 then
+				button.cooldownFrame:SetCooldown(cdInfo.startTime, cdInfo.duration)
+			else
+				button.cooldownFrame:Clear()
+			end
+		end
 	end
 
 	if housingHouse then
 		applyHouse(housingHouse)
 	else
+		button:SetNormalAtlas(HOUSING_ATLAS_TELEPORT)
 		self:RequestHousingHouse(applyHouse)
 	end
 end
