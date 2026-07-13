@@ -6,6 +6,18 @@ local BankTracker = ns.BankTracker
 local goldBeforeBank = 0
 local guildBankOpen = false
 local warbandBankOpen = false
+local pendingTabPurchase = nil
+
+local TAB_PURCHASE_WINDOW = 10
+
+local function bankTypeLabel(bankType)
+    if bankType == Enum.BankType.Account then
+        return "Warband Bank"
+    elseif bankType == Enum.BankType.Guild then
+        return "Guild Bank"
+    end
+    return "Character Bank"
+end
 
 function BankTracker:Initialize()
     self:RegisterEvents()
@@ -23,6 +35,41 @@ function BankTracker:RegisterEvents()
     frame:SetScript("OnEvent", function(_, event)
         BankTracker:HandleEvent(event)
     end)
+
+    -- Post-hook: money may already be deducted, or may arrive on PLAYER_MONEY.
+    -- Prefer goldBeforeBank (maintained while a bank UI is open) as the baseline.
+    hooksecurefunc(C_Bank, "PurchaseBankTab", function(bankType)
+        BankTracker:OnPurchaseBankTab(bankType)
+    end)
+end
+
+function BankTracker:OnPurchaseBankTab(bankType)
+    local goldNow = GetMoney()
+    local baseline = goldBeforeBank
+    if baseline <= 0 then
+        baseline = goldNow
+    end
+
+    pendingTabPurchase = {
+        bankType = bankType,
+        goldBefore = goldNow,
+        time = GetTime(),
+        recorded = false,
+    }
+
+    local immediateCost = baseline - goldNow
+    if immediateCost > 0 then
+        ns.Transactions:RecordExpense(
+            "bank_tab_purchase",
+            immediateCost,
+            bankTypeLabel(bankType),
+            nil,
+            "Bank Tab",
+            nil,
+            "Purchased bank tab")
+        pendingTabPurchase.recorded = true
+        goldBeforeBank = goldNow
+    end
 end
 
 function BankTracker:HandleEvent(event)
@@ -51,6 +98,32 @@ function BankTracker:HandleEvent(event)
         warbandBankOpen = false
 
     elseif event == "PLAYER_MONEY" then
+        if pendingTabPurchase and (GetTime() - pendingTabPurchase.time) <= TAB_PURCHASE_WINDOW then
+            local goldAfter = GetMoney()
+            local cost = pendingTabPurchase.goldBefore - goldAfter
+            if cost > 0 and not pendingTabPurchase.recorded then
+                ns.Transactions:RecordExpense(
+                    "bank_tab_purchase",
+                    cost,
+                    bankTypeLabel(pendingTabPurchase.bankType),
+                    nil,
+                    "Bank Tab",
+                    nil,
+                    "Purchased bank tab")
+                pendingTabPurchase.recorded = true
+                goldBeforeBank = goldAfter
+                pendingTabPurchase = nil
+                return
+            elseif cost > 0 and pendingTabPurchase.recorded then
+                ns.Transactions:ClaimAmount(cost)
+                goldBeforeBank = goldAfter
+                pendingTabPurchase = nil
+                return
+            elseif pendingTabPurchase.recorded then
+                pendingTabPurchase = nil
+            end
+        end
+
         if guildBankOpen or warbandBankOpen then
             C_Timer.After(0.2, function()
                 if guildBankOpen then

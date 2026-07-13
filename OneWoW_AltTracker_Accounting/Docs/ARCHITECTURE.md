@@ -10,22 +10,24 @@
 
 This is a companion data collection addon for OneWoW AltTracker. It automatically tracks gold transactions from multiple sources:
 
-- **Auction House** - Buys, sells, and auction fees
-- **Vendor Sales** - Gold from selling items to vendors
+- **Auction House** - Buys, sells, deposits, house cut, cancel fees, and refunds
+- **Vendor Sales** - Gold from selling items (including junk / Sell All Junk / SellCursorItem)
 - **Vendor Purchases** - Gold spent buying from vendors
 - **Trainer Costs** - Gold spent learning abilities and specializations
 - **Transmogrification** - Gold spent changing item appearance
+- **Taxi / Barber** - Flight path fares and barber shop costs
 - **NPC Orders** - Gold from crafted orders and services
 - **Mail** - Gold sent through the mail system
-- **Bank Operations** - Guild bank deposits and withdrawals
+- **Bank Operations** - Guild/warband bank flows and bank tab purchases
 - **Trade** - Gold from trading with other players
-- **Other Income** - Quests, loot, and other sources
+- **Offline Delta** - Gold that changed while the character was offline
+- **Other Income** - Quests, loot, Mythic+, and uncategorized fallback
 
 ---
 
 ## How It Works
 
-This addon runs silently in the background and automatically records every gold transaction across all your characters. The main AltTracker addon reads this data to display a complete financial overview of your account.
+Specialist trackers record categorized transactions and claim gold deltas. `GoldWatcher` listens to `PLAYER_MONEY` and only writes `uncategorized` rows for amounts that were not claimed. Cross-unit mail collection (Storage) records auction sales/refunds via `OneWoW_AltTracker_Accounting_API`.
 
 ---
 

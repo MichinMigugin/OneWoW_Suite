@@ -157,6 +157,9 @@ local function BuildCategoryMenuItems(includeAll)
     table.insert(items, { value = "auction_sale", text = L["FIN_CAT_AUCTION_SALE"] })
     table.insert(items, { value = "auction_purchase", text = L["FIN_CAT_AUCTION_PURCHASE"] })
     table.insert(items, { value = "auction_deposit", text = L["FIN_CAT_AUCTION_DEPOSIT"] })
+    table.insert(items, { value = "auction_fee", text = L["FIN_CAT_AUCTION_FEE"] })
+    table.insert(items, { value = "auction_refund", text = L["FIN_CAT_AUCTION_REFUND"] })
+    table.insert(items, { value = "auction_cancel_fee", text = L["FIN_CAT_AUCTION_CANCEL"] })
     table.insert(items, { value = "bmah_purchase", text = L["FIN_CAT_BMAH"] })
     table.insert(items, { type = "divider" })
     table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_TRADE"] })
@@ -173,6 +176,7 @@ local function BuildCategoryMenuItems(includeAll)
     table.insert(items, { value = "guild_bank_withdraw", text = L["FIN_CAT_GUILD_WITHDRAW"] })
     table.insert(items, { value = "warband_bank_deposit", text = L["FIN_CAT_WARBAND_DEPOSIT"] })
     table.insert(items, { value = "warband_bank_withdraw", text = L["FIN_CAT_WARBAND_WITHDRAW"] })
+    table.insert(items, { value = "bank_tab_purchase", text = L["FIN_CAT_BANK_TAB"] })
     table.insert(items, { type = "divider" })
     table.insert(items, { type = "header", text = L["FIN_CAT_GROUP_TRANSFER"] })
     table.insert(items, { value = "money_transfer_in", text = L["FIN_CAT_MONEY_IN"] })
@@ -189,7 +193,10 @@ local function BuildCategoryMenuItems(includeAll)
     table.insert(items, { value = "crafting_order_refund", text = L["FIN_CAT_ORDER_REFUND"] })
     table.insert(items, { type = "divider" })
     table.insert(items, { type = "header", text = OTHER })
+    table.insert(items, { value = "taxi", text = L["FIN_CAT_TAXI"] })
+    table.insert(items, { value = "barber", text = L["FIN_CAT_BARBER"] })
     table.insert(items, { value = "death_cost", text = L["FIN_CAT_DEATH_COST"] })
+    table.insert(items, { value = "offline_delta", text = L["FIN_CAT_OFFLINE"] })
     table.insert(items, { value = "uncategorized", text = L["FIN_CAT_UNCATEGORIZED"] })
     return items
 end
@@ -325,6 +332,9 @@ local categoryNames = {
     auction_sale = "FIN_CAT_AUCTION_SALE",
     auction_purchase = "FIN_CAT_AUCTION_PURCHASE",
     auction_deposit = "FIN_CAT_AUCTION_DEPOSIT",
+    auction_fee = "FIN_CAT_AUCTION_FEE",
+    auction_refund = "FIN_CAT_AUCTION_REFUND",
+    auction_cancel_fee = "FIN_CAT_AUCTION_CANCEL",
     trade_buy = "FIN_CAT_TRADE_BUY",
     trade_sale = "FIN_CAT_TRADE_SALE",
     money_transfer_in = "FIN_CAT_MONEY_IN",
@@ -333,6 +343,7 @@ local categoryNames = {
     guild_bank_withdraw = "FIN_CAT_GUILD_WITHDRAW",
     warband_bank_deposit = "FIN_CAT_WARBAND_DEPOSIT",
     warband_bank_withdraw = "FIN_CAT_WARBAND_WITHDRAW",
+    bank_tab_purchase = "FIN_CAT_BANK_TAB",
     mail_send = "FIN_CAT_MAIL_SEND",
     mail_cod_send = "FIN_CAT_MAIL_COD",
     mail_postage = "FIN_CAT_POSTAGE",
@@ -346,6 +357,9 @@ local categoryNames = {
     trainer_purchase = "FIN_CAT_TRAINER",
     mythicplus_reward = "FIN_CAT_MYTHICPLUS",
     bmah_purchase = "FIN_CAT_BMAH",
+    taxi = "FIN_CAT_TAXI",
+    barber = "FIN_CAT_BARBER",
+    offline_delta = "FIN_CAT_OFFLINE",
     uncategorized = "FIN_CAT_UNCATEGORIZED",
 }
 
@@ -446,7 +460,11 @@ function ns.UI.CreateFinancialsTab(parent)
 
     local typeButtons = {}
     for i, filter in ipairs(typeFilters) do
-        local btn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = filter.label, height = 24 })
+        local btn = OneWoW_GUI:CreateFitTextButton(filterPanel, {
+            text = filter.label,
+            height = 24,
+            toggleable = true,
+        })
 
         if i == 1 then
             btn:SetPoint("LEFT", periodDropdown, "RIGHT", 25, 0)
@@ -459,28 +477,14 @@ function ns.UI.CreateFinancialsTab(parent)
         btn:SetScript("OnClick", function(self)
             parent.typeFilter = self.filterKey
             for _, b in ipairs(typeButtons) do
-                if b.filterKey == parent.typeFilter then
-                    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                    b.text:SetTextColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-                else
-                    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-                    b.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                end
+                b:SetActive(b.filterKey == parent.typeFilter)
             end
             if ns.UI.RefreshFinancialsTab then
                 ns.UI.RefreshFinancialsTab(parent)
             end
         end)
 
-        if filter.key == "all" then
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-        else
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        end
-
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+        btn:SetActive(filter.key == "all")
         table.insert(typeButtons, btn)
     end
 
@@ -810,8 +814,8 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
         end
 
         if financialsTab.statBoxes[4] then
-            local roi = stats.expense > 0 and math.floor((stats.income / stats.expense) * 100) or 0
-            financialsTab.statBoxes[4].value:SetText(roi .. "%")
+            local roi = stats.expense > 0 and ((stats.income / stats.expense) * 100) or 0
+            financialsTab.statBoxes[4].value:SetText(string.format("%.2f%%", roi))
         end
 
         if financialsTab.statBoxes[5] then

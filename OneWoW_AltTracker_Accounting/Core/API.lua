@@ -45,6 +45,14 @@ function OneWoW_AltTracker_Accounting_API.RecordExpense(category, amount, source
     return ns.Transactions:RecordExpense(category, amount, source, item, itemName, quantity, notes)
 end
 
+--- Claim a gold delta so GoldWatcher will not fall through to uncategorized,
+--- without writing a ledger row (IGNORE / safety claim after split invoices).
+---@param amount number copper (absolute)
+---@return boolean claimed
+function OneWoW_AltTracker_Accounting_API.ClaimAmount(amount)
+    return ns.Transactions:ClaimAmount(amount)
+end
+
 --- Update mutable fields of an existing transaction by id.
 ---@param txId number
 ---@param fields OneWoWAccountingUpdateFields

@@ -129,14 +129,25 @@ function private.RecordMail(index)
     end
 
     local _, _, sender, _, money, CODAmount = GetInboxHeaderInfo(index)
-    local invoiceType, itemName, buyer, _, _, _, _, count = GetInboxInvoiceInfo(index)
+    local invoiceType, itemName, buyer, _, _, _, consignment, _, _, _, count = GetInboxInvoiceInfo(index)
     local quantity = count or 1
 
     if invoiceType == "seller" or invoiceType == "seller_temp_invoice" then
         if not money or money == 0 then return true end
-        return Accounting.RecordIncome("auction_sale", money, buyer or "Auction House", nil, itemName, quantity, "Auction sold")
+        local fee = consignment or 0
+        local gross = money + fee
+        local ok = Accounting.RecordIncome("auction_sale", gross, buyer or "Auction House", nil, itemName, quantity, "Auction sold")
+        if fee > 0 then
+            Accounting.RecordExpense("auction_fee", fee, "Auction House", nil, itemName, quantity, "AH house cut")
+            -- Net mail gold is what PLAYER_MONEY sees; claim it explicitly.
+            Accounting.ClaimAmount(money)
+        end
+        return ok
 
     elseif invoiceType == "buyer" then
+        if money and money > 0 then
+            return Accounting.RecordIncome("auction_refund", money, "Auction House", nil, itemName or "Auction Item", quantity, "AH refund")
+        end
         return true
 
     elseif money and money > 0 and CODAmount and CODAmount > 0 then

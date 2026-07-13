@@ -532,8 +532,8 @@ function ns.UI.CreateSettingsTab(parent)
         {key = "au_nothing",   label = "No seasonal updates required",               auto = true,  value = function() return "Auction API is stable" end, file = "Nothing to change"},
 
         {section = "Financials Tab"},
-        {key = "fi_events",    label = "Verify gold tracking events still fire",     auto = false, value = function() return "PLAYER_MONEY, MAIL_SEND_SUCCESS, AUCTION_HOUSE_SHOW" end, file = "OneWoW_AltTracker_Accounting/"},
-        {key = "fi_costs",     label = "Verify repair/vendor cost event names",      auto = false, value = function() return "MERCHANT_CLOSED and related events" end, file = "OneWoW_AltTracker_Accounting/"},
+        {key = "fi_events",    label = "Verify gold tracking events still fire",     auto = false, value = function() return "PLAYER_MONEY, SellCursorItem, C_MerchantFrame.SellAllJunkItems, PLAYER_INTERACTION_MANAGER_FRAME_SHOW" end, file = "OneWoW_AltTracker_Accounting/"},
+        {key = "fi_costs",     label = "Verify repair/vendor/AH cost hooks",         auto = false, value = function() return "OneWoW.Merchant + C_AuctionHouse.CancelAuction + C_Bank.PurchaseBankTab" end, file = "OneWoW_AltTracker_Accounting/"},
 
         {section = "Items Tab"},
         {key = "it_ah",        label = "Verify Items tab AH prices read from cache",  auto = false, value = function() return "Open Items tab; confirm AH column from OneWoW_AHPrices (AH Prices panel scan first) or Auctionator/TSM per setting" end, file = "OneWoW_AltTracker/UI/t-items.lua + OneWoW_AltTracker_Auctions/Core/AHPriceCache.lua"},

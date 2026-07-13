@@ -35,6 +35,7 @@ Modules\BankTracker.lua
 Modules\MailSendTracker.lua
 Modules\NpcOrderTracker.lua
 Modules\TrainerTracker.lua
+Modules\InteractionTracker.lua
 Modules\GoldWatcher.lua
 
 # Data Manager (orchestrates all modules)

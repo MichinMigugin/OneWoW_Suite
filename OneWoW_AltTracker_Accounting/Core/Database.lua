@@ -6,16 +6,11 @@ local DB = OneWoW_GUI.DB
 ns.DatabaseDefaults = {
     transactions = {},
     settings = {
-        trackRepairs = true,
-        trackVendor = true,
-        trackMail = true,
-        trackTrade = true,
-        trackGuildBank = true,
-        trackWarbandBank = true,
         guildAsPersonal = false,
         maxRecords = 10000,
         trimToRecords = 8000,
         resetDate = 0,
+        lastMoneyByCharacter = {},
     },
     statistics = {
         totalIncome = 0,

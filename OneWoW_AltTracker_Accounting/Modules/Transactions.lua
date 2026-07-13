@@ -55,14 +55,61 @@ end
 -- bound and can exceed any reasonable sub-window.
 local CLAIM_LIFETIME = 10
 
-function Transactions:IsAmountClaimed(amount)
-    local now = GetTime()
+-- Claim a gold delta without writing a ledger row (Accountant-style IGNORE, or
+-- a safety claim after a split invoice so GoldWatcher does not double-count).
+---@param amount number copper (absolute)
+---@return boolean claimed
+function Transactions:ClaimAmount(amount)
+    if not amount or amount <= 0 then
+        return false
+    end
+    table.insert(recentClaims, {
+        amount = amount,
+        time = GetTime(),
+    })
+    return true
+end
 
+local function pruneExpiredClaims()
+    local now = GetTime()
     for i = #recentClaims, 1, -1 do
         if (now - recentClaims[i].time) > CLAIM_LIFETIME then
             table.remove(recentClaims, i)
         end
     end
+end
+
+-- True if a matching claim exists, without consuming it. Used by merchant-open
+-- income safety nets so they do not steal the claim GoldWatcher still needs.
+---@param amount number copper (absolute)
+---@return boolean
+function Transactions:HasClaimForAmount(amount)
+    if not amount or amount <= 0 then
+        return false
+    end
+    pruneExpiredClaims()
+
+    for _, claim in ipairs(recentClaims) do
+        if math.abs(claim.amount - amount) <= 1 then
+            return true
+        end
+    end
+
+    local remaining = amount
+    for _, claim in ipairs(recentClaims) do
+        if claim.amount <= remaining + 1 then
+            remaining = remaining - claim.amount
+            if remaining <= 1 then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
+function Transactions:IsAmountClaimed(amount)
+    pruneExpiredClaims()
 
     for i, claim in ipairs(recentClaims) do
         if math.abs(claim.amount - amount) <= 1 then

@@ -45,6 +45,10 @@ function DataManager:Initialize()
         ns.TrainerTracker:Initialize()
     end
 
+    if ns.InteractionTracker then
+        ns.InteractionTracker:Initialize()
+    end
+
     if ns.GoldWatcher then
         ns.GoldWatcher:Initialize()
     end

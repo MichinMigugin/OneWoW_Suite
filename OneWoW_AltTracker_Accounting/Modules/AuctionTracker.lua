@@ -17,6 +17,7 @@ local private = {
         timestamp = nil,
     },
     pendingCommodity = nil,
+    pendingCancel = nil,
 }
 
 function Module:Initialize()
@@ -56,6 +57,10 @@ function Module:Initialize()
 
     hooksecurefunc(C_AuctionHouse, "PostCommodity", function(item, _, quantity, unitPrice)
         private.OnPostCommodity(item, quantity, unitPrice)
+    end)
+
+    hooksecurefunc(C_AuctionHouse, "CancelAuction", function(auctionID)
+        private.OnCancelAuction(auctionID)
     end)
 end
 
@@ -122,6 +127,14 @@ function private.OnPostCommodity(item, quantity, unitPrice)
     private.pendingPost.timestamp = GetTime()
 end
 
+function private.OnCancelAuction(auctionID)
+    private.pendingCancel = {
+        auctionID = auctionID,
+        goldBefore = GetMoney(),
+        time = GetTime(),
+    }
+end
+
 function private.OnAuctionCreated()
     if not private.pendingPost.timestamp then return end
     if GetTime() - private.pendingPost.timestamp > 5 then
@@ -132,6 +145,17 @@ function private.OnAuctionCreated()
 end
 
 function private.OnPlayerMoney()
+    if private.pendingCancel and (GetTime() - private.pendingCancel.time) < 10 then
+        local cost = private.pendingCancel.goldBefore - GetMoney()
+        if cost > 0 then
+            ns.Transactions:RecordExpense(
+                "auction_cancel_fee", cost, "Auction House", nil, "Cancel Fee", nil, "Auction cancellation")
+        end
+        private.pendingCancel = nil
+        return
+    end
+    private.pendingCancel = nil
+
     if private.pendingCommodity and (GetTime() - private.pendingCommodity.time) < 10 then
         local cost = private.pendingCommodity.goldBefore - GetMoney()
         if cost > 0 then
