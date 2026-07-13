@@ -139,3 +139,52 @@ end
 function OneWoW_AltTracker_Accounting_API.PurgeCharacter(charKey)
     return ns.Transactions:PurgeCharacter(charKey)
 end
+
+--- Bucket filtered transactions into income/expense/profit time series.
+---@param txs table
+---@param timeStart number|nil
+---@param timeEnd number|nil
+---@return table series
+function OneWoW_AltTracker_Accounting_API.BuildFlowSeries(txs, timeStart, timeEnd)
+    return ns.Analytics.BuildFlowSeries(txs, timeStart, timeEnd)
+end
+
+--- Reconstruct ledger-implied wallet path for sparklines and high/low.
+---@param txs table
+---@param opts table endBalance, timeStart, timeEnd, characterFilter
+---@return table walletSeries
+function OneWoW_AltTracker_Accounting_API.BuildWalletSeries(txs, opts)
+    return ns.Analytics.BuildWalletSeries(txs, opts)
+end
+
+--- Dashboard averages and top category/item rollups.
+---@param txs table
+---@param timeStart number|nil
+---@param timeEnd number|nil
+---@return table summary
+function OneWoW_AltTracker_Accounting_API.BuildDashboardSummary(txs, timeStart, timeEnd)
+    return ns.Analytics.BuildDashboardSummary(txs, timeStart, timeEnd)
+end
+
+---@param series number[]
+---@return number|nil high
+---@return number|nil low
+function OneWoW_AltTracker_Accounting_API.SeriesRange(series)
+    return ns.Analytics.SeriesRange(series)
+end
+
+--- Whether the Financials Dashboard view mode is enabled.
+---@return boolean
+function OneWoW_AltTracker_Accounting_API.GetFinancialsDashboard()
+    local db = OneWoW_AltTracker_Accounting_DB
+    return db and db.settings and db.settings.financialsDashboard == true
+end
+
+--- Persist Financials Dashboard view mode.
+---@param enabled boolean
+function OneWoW_AltTracker_Accounting_API.SetFinancialsDashboard(enabled)
+    local db = OneWoW_AltTracker_Accounting_DB
+    if db and db.settings then
+        db.settings.financialsDashboard = enabled and true or false
+    end
+end

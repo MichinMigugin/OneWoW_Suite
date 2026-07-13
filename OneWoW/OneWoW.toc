@@ -38,6 +38,7 @@ GUI\Constants.lua
 GUI\OneWoW_GUI.lua
 GUI\Buttons.lua
 GUI\Display.lua
+GUI\Charts.lua
 GUI\Controls.lua
 GUI\EditBoxes.lua
 GUI\Layout.lua

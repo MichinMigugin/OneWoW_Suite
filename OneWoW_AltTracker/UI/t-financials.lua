@@ -10,9 +10,251 @@ local currentSortColumn = "date"
 local currentSortAscending = false
 local loginServerTime = 0
 local activeFinancialsTab = nil
+local dashboardMode = false
 
 local amountDialog
 local itemDialog
+
+local function ResolveWalletEndBalance(characterFilter)
+    if characterFilter then
+        local currentKey = ns.AltTrackerFormatters:GetCurrentCharacterKey()
+        if characterFilter == currentKey then
+            return GetMoney()
+        end
+        local charData = OneWoW_AltTracker_Character_API
+            and OneWoW_AltTracker_Character_API.GetCharacterData(characterFilter)
+        return (charData and charData.money) or 0
+    end
+
+    local total, found = 0, false
+    if OneWoW_AltTracker_Character_API then
+        for _, charData in pairs(OneWoW_AltTracker_Character_API.GetAllCharacters()) do
+            if charData.money then
+                total = total + charData.money
+                found = true
+            end
+        end
+    end
+    if found then
+        return total
+    end
+    return GetMoney()
+end
+
+local function FormatBucketDelta(series)
+    if not series or #series < 2 then
+        return nil, "neutral"
+    end
+    local diff = series[#series] - series[#series - 1]
+    if diff == 0 then
+        return ns.AltTrackerFormatters:FormatGold(0), "neutral"
+    end
+    local text = ns.AltTrackerFormatters:FormatGold(math.abs(diff))
+    if diff > 0 then
+        return "+" .. text, "up"
+    end
+    return "-" .. text, "down"
+end
+
+-- GoldWatcher catch-all itemNames; omitting them avoids "Uncategorized / Uncategorized Income".
+local GENERIC_TOP_ITEMS = {
+    ["Uncategorized Income"] = true,
+    ["Uncategorized Expense"] = true,
+}
+
+local function FormatTopSubtitle(catEntry, itemEntry)
+    if not catEntry then
+        return nil
+    end
+    local catName = ns.UI.GetCategoryDisplayName(catEntry.key)
+    local itemName = itemEntry and itemEntry.key
+    if itemName and itemName ~= "" and not GENERIC_TOP_ITEMS[itemName] then
+        return string.format(L["FIN_TOP_LINE_PAIR"], catName, itemName)
+    end
+    return string.format(L["FIN_TOP_LINE"], catName)
+end
+
+local function CreateSummaryChip(parent, labelText)
+    local Constants = OneWoW_GUI.Constants
+    local chip = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    chip:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
+    chip:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    chip:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+    local label = OneWoW_GUI:CreateFS(chip, 9)
+    label:SetPoint("TOPLEFT", chip, "TOPLEFT", 6, -4)
+    label:SetPoint("TOPRIGHT", chip, "TOPRIGHT", -6, -4)
+    label:SetJustifyH("LEFT")
+    label:SetText(labelText or "")
+    label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    chip.label = label
+
+    local value = OneWoW_GUI:CreateFS(chip, 11)
+    value:SetPoint("TOPLEFT", label, "BOTTOMLEFT", 0, -2)
+    value:SetPoint("TOPRIGHT", chip, "TOPRIGHT", -6, 0)
+    value:SetJustifyH("LEFT")
+    value:SetText("0")
+    value:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    chip.value = value
+
+    local sub = OneWoW_GUI:CreateFS(chip, 9)
+    sub:SetPoint("TOPLEFT", value, "BOTTOMLEFT", 0, -1)
+    sub:SetPoint("TOPRIGHT", chip, "TOPRIGHT", -6, 0)
+    sub:SetJustifyH("LEFT")
+    sub:SetText("")
+    sub:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    sub:Hide()
+    chip.sub = sub
+
+    function chip:SetValue(text, colorKey)
+        self.value:SetText(text or "0")
+        if colorKey then
+            self.value:SetTextColor(OneWoW_GUI:GetThemeColor(colorKey))
+        else
+            self.value:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+    end
+
+    function chip:SetSub(text)
+        if not text or text == "" then
+            self.sub:SetText("")
+            self.sub:Hide()
+            return
+        end
+        self.sub:SetText(text)
+        self.sub:Show()
+    end
+
+    return chip
+end
+
+local function RefreshDashboardPanels(financialsTab, allTransactions, timeStart, timeEnd, characterFilter, categoryFilter, typeFilter, stats)
+    local api = OneWoW_AltTracker_Accounting_API
+    local panels = financialsTab.metricPanels
+    if not api or not panels then return end
+
+    local flowTxs, walletTxs, summaryTxs = {}, {}, {}
+    for _, tx in ipairs(allTransactions) do
+        if (tx.timestamp or 0) >= timeStart then
+            if not characterFilter or tx.character == characterFilter then
+                if not categoryFilter or tx.category == categoryFilter then
+                    if tx.type == "income" or tx.type == "expense" or tx.type == "transfer" then
+                        table.insert(walletTxs, tx)
+                    end
+                    if tx.type == "income" or tx.type == "expense" then
+                        table.insert(summaryTxs, tx)
+                        if typeFilter == "all" or tx.type == typeFilter then
+                            table.insert(flowTxs, tx)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    local series = api.BuildFlowSeries(flowTxs, timeStart, timeEnd)
+    local summary = api.BuildDashboardSummary(summaryTxs, timeStart, timeEnd)
+    local fmt = ns.AltTrackerFormatters
+    local deltaLabelFmt = (series.bucketSeconds == 86400) and L["FIN_DELTA_DAY"] or L["FIN_DELTA_VS_PRIOR"]
+
+    local function seriesHasSignal(values)
+        if not values then return false end
+        for _, v in ipairs(values) do
+            if v ~= 0 then return true end
+        end
+        return false
+    end
+
+    local function setFlowPanel(panel, values, total, colorKey, bipolar)
+        panel:SetValue(fmt:FormatGold(total or 0), { color = colorKey })
+        local deltaText, tone = FormatBucketDelta(values)
+        if panel == panels.expense then
+            if tone == "up" then
+                tone = "down"
+            elseif tone == "down" then
+                tone = "up"
+            end
+        end
+
+        local tipLines = {
+            { text = string.format(L["FIN_DASH_SAMPLES"], #flowTxs), r = 0.7, g = 0.7, b = 0.7 },
+        }
+
+        if panel == panels.profit then
+            local roi = (stats and stats.expense and stats.expense > 0)
+                and ((stats.income / stats.expense) * 100) or 0
+            panel:SetDelta(string.format(L["FIN_ROI_DELTA"], string.format("%.2f%%", roi)), {
+                tone = (roi >= 100 and "up") or (roi > 0 and "neutral") or "down",
+            })
+        elseif deltaText then
+            panel:SetDelta(string.format(deltaLabelFmt, deltaText), { tone = tone })
+            table.insert(tipLines, 1, {
+                text = L["TT_FIN_DELTA_DESC"],
+                r = 0.75, g = 0.75, b = 0.75,
+                wrap = true,
+            })
+        else
+            panel:SetDelta(nil)
+        end
+
+        if not seriesHasSignal(values) then
+            panel:SetRange(nil, nil)
+            panel:SetSparkline(nil)
+        else
+            local hi, lo = api.SeriesRange(values)
+            panel:SetRange(
+                string.format(L["FIN_HIGH"], fmt:FormatGoldSimple(hi)),
+                string.format(L["FIN_LOW"], fmt:FormatGoldSimple(lo))
+            )
+            panel:SetSparkline(values, { bipolar = bipolar })
+        end
+        panel:SetTooltipExtra(tipLines)
+    end
+
+    setFlowPanel(panels.income, series.income, stats and stats.income or 0, "TEXT_FEATURES_ENABLED", false)
+    setFlowPanel(panels.expense, series.expense, stats and stats.expense or 0, "TEXT_WARNING", false)
+    local profitColor = (stats and stats.profit or 0) >= 0 and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED"
+    setFlowPanel(panels.profit, series.profit, stats and stats.profit or 0, profitColor, true)
+
+    local endBalance = ResolveWalletEndBalance(characterFilter)
+    local wallet = api.BuildWalletSeries(walletTxs, {
+        endBalance = endBalance,
+        timeStart = timeStart,
+        timeEnd = timeEnd,
+        characterFilter = characterFilter,
+    })
+    panels.wallet:SetValue(fmt:FormatGold(endBalance), { color = "TEXT_PRIMARY" })
+    panels.wallet:SetDelta(nil)
+    if #walletTxs == 0 then
+        panels.wallet:SetRange(nil, nil)
+        panels.wallet:SetSparkline(nil)
+    else
+        panels.wallet:SetRange(
+            string.format(L["FIN_HIGH"], fmt:FormatGoldSimple(wallet.high or endBalance)),
+            string.format(L["FIN_LOW"], fmt:FormatGoldSimple(wallet.low or endBalance))
+        )
+        panels.wallet:SetSparkline(wallet.points)
+    end
+    panels.wallet:SetTooltipExtra({
+        { text = L["TT_FIN_WALLET_LEDGER"], r = 0.85, g = 0.75, b = 0.4, wrap = true },
+        { text = string.format(L["FIN_DASH_SAMPLES"], #walletTxs), r = 0.7, g = 0.7, b = 0.7 },
+    })
+
+    local strip = financialsTab.dashboardSummary
+    if strip and strip.chips then
+        local chips = strip.chips
+        chips.earned:SetValue(fmt:FormatGoldSimple(summary.avgIncomePerDay or 0), "TEXT_FEATURES_ENABLED")
+        chips.earned:SetSub(FormatTopSubtitle(summary.topIncomeCategory, summary.topItemSold))
+
+        chips.spent:SetValue(fmt:FormatGoldSimple(summary.avgExpensePerDay or 0), "TEXT_WARNING")
+        chips.spent:SetSub(FormatTopSubtitle(summary.topExpenseCategory, summary.topItemBought))
+
+        local profitPerDay = summary.avgProfitPerDay or 0
+        local profitDayColor = profitPerDay >= 0 and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED"
+        chips.profit:SetValue(fmt:FormatGoldSimple(profitPerDay), profitDayColor)
+        chips.profit:SetSub(nil)
+    end
+end
 
 local function GetAmountDialog()
     if amountDialog then return amountDialog end
@@ -390,7 +632,11 @@ local onHeaderCreate = function(btn, col)
 end
 
 function ns.UI.CreateFinancialsTab(parent)
-    local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
+    local topHost = CreateFrame("Frame", nil, parent)
+    topHost:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
+    topHost:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
+
+    local overview = OneWoW_GUI:CreateOverviewPanel(topHost, {
         title = L["FINANCIALS_OVERVIEW"],
         height = 70,
         columns = 5,
@@ -403,7 +649,75 @@ function ns.UI.CreateFinancialsTab(parent)
         },
     })
 
-    local filterPanel = OneWoW_GUI:CreateFilterBar(parent, { height = 32, anchorBelow = overview.panel, offset = -8 })
+    local fontOffset = OneWoW_GUI:GetFontSizeOffset() or 0
+    local metricHeight = 88
+    local summaryHeight = 44 + math.max(0, fontOffset) * 4
+    local dashInnerHeight = metricHeight + math.max(0, fontOffset) * 6 + 4 + summaryHeight
+    local overviewHostHeight = (overview.panel._baseHeight or 70) + math.max(0, fontOffset) * 8 + 10
+    local dashHostHeight = dashInnerHeight + 10
+    topHost:SetHeight(overviewHostHeight)
+
+    local dashHost = CreateFrame("Frame", nil, topHost)
+    dashHost:SetPoint("TOPLEFT", topHost, "TOPLEFT", 5, -5)
+    dashHost:SetPoint("TOPRIGHT", topHost, "TOPRIGHT", -5, -5)
+    dashHost:SetHeight(dashInnerHeight)
+    dashHost:Hide()
+
+    local metricDefs = {
+        { key = "income",  label = L["FIN_INCOME"],  ttDesc = L["TT_FIN_INCOME_DESC"] },
+        { key = "expense", label = L["FIN_EXPENSE"], ttDesc = L["TT_FIN_EXPENSE_DESC"] },
+        { key = "profit",  label = L["FIN_PROFIT"],  ttDesc = L["TT_FIN_PROFIT_DESC"] },
+        { key = "wallet",  label = L["FIN_WALLET"],  ttDesc = L["TT_FIN_WALLET_DESC"] },
+    }
+    local metricPanels = {}
+    local metricList = {}
+    for _, def in ipairs(metricDefs) do
+        local panel = OneWoW_GUI:CreateMetricPanel(dashHost, {
+            label = def.label,
+            height = metricHeight,
+            ttTitle = def.label,
+            ttDesc = def.ttDesc,
+        })
+        metricPanels[def.key] = panel
+        table.insert(metricList, panel)
+    end
+
+    local summaryChips = {
+        CreateSummaryChip(dashHost, L["FIN_CHIP_EARNED"]),
+        CreateSummaryChip(dashHost, L["FIN_CHIP_SPENT"]),
+        CreateSummaryChip(dashHost, L["FIN_CHIP_PROFIT"]),
+    }
+    local summaryByKey = {
+        earned = summaryChips[1],
+        spent = summaryChips[2],
+        profit = summaryChips[3],
+    }
+
+    local function LayoutMetricRow()
+        local width = dashHost:GetWidth()
+        if width <= 0 then return end
+        local gap = 6
+        local panelW = (width - gap * (#metricList - 1)) / #metricList
+        for i, panel in ipairs(metricList) do
+            panel:ClearAllPoints()
+            panel:SetWidth(panelW)
+            if i == 1 then
+                panel:SetPoint("TOPLEFT", dashHost, "TOPLEFT", 0, 0)
+            else
+                panel:SetPoint("TOPLEFT", metricList[i - 1], "TOPRIGHT", gap, 0)
+            end
+        end
+        for i, chip in ipairs(summaryChips) do
+            chip:ClearAllPoints()
+            chip:SetHeight(summaryHeight)
+            chip:SetPoint("TOPLEFT", metricList[i], "BOTTOMLEFT", 0, -4)
+            chip:SetPoint("TOPRIGHT", metricList[i], "BOTTOMRIGHT", 0, -4)
+        end
+    end
+    dashHost:SetScript("OnSizeChanged", LayoutMetricRow)
+    LayoutMetricRow()
+
+    local filterPanel = OneWoW_GUI:CreateFilterBar(parent, { height = 32, anchorBelow = topHost, offset = -8 })
 
     parent.timePeriod = "week"
     parent.typeFilter = "all"
@@ -458,38 +772,40 @@ function ns.UI.CreateFinancialsTab(parent)
         {key = "expense", label = L["FIN_EXPENSE"]},
     }
 
-    local typeButtons = {}
-    for i, filter in ipairs(typeFilters) do
-        local btn = OneWoW_GUI:CreateFitTextButton(filterPanel, {
-            text = filter.label,
-            height = 24,
-            toggleable = true,
-        })
+    local typeDropdown = OneWoW_GUI:CreateDropdown(filterPanel, {
+        width = 110,
+        height = 24,
+        text = ALL,
+    })
+    typeDropdown:SetPoint("LEFT", periodDropdown, "RIGHT", 25, 0)
 
-        if i == 1 then
-            btn:SetPoint("LEFT", periodDropdown, "RIGHT", 25, 0)
-        else
-            btn:SetPoint("LEFT", typeButtons[i-1], "RIGHT", 4, 0)
-        end
-
-        btn.filterKey = filter.key
-
-        btn:SetScript("OnClick", function(self)
-            parent.typeFilter = self.filterKey
-            for _, b in ipairs(typeButtons) do
-                b:SetActive(b.filterKey == parent.typeFilter)
+    OneWoW_GUI:AttachFilterMenu(typeDropdown, {
+        searchable = false,
+        menuHeight = #typeFilters * 26 + 8,
+        buildItems = function()
+            local items = {}
+            for _, filter in ipairs(typeFilters) do
+                table.insert(items, {
+                    text = filter.label,
+                    value = filter.key,
+                })
             end
+            return items
+        end,
+        onSelect = function(value, text)
+            parent.typeFilter = value
+            typeDropdown._text:SetText(text)
             if ns.UI.RefreshFinancialsTab then
                 ns.UI.RefreshFinancialsTab(parent)
             end
-        end)
-
-        btn:SetActive(filter.key == "all")
-        table.insert(typeButtons, btn)
-    end
+        end,
+        getActiveValue = function()
+            return parent.typeFilter
+        end,
+    })
 
     local charLabel = OneWoW_GUI:CreateFS(filterPanel, 10)
-    charLabel:SetPoint("LEFT", typeButtons[#typeButtons], "RIGHT", 25, 0)
+    charLabel:SetPoint("LEFT", typeDropdown, "RIGHT", 25, 0)
     charLabel:SetText(L["FIN_CHAR_LABEL"])
     charLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
@@ -499,12 +815,12 @@ function ns.UI.CreateFinancialsTab(parent)
     charBtn:SetScript("OnClick", function(self)
         if parent.characterFilter then
             parent.characterFilter = nil
-            self.text:SetText(ALL)
+            self:SetFitText(ALL)
         else
             local charKey = ns.AltTrackerFormatters:GetCurrentCharacterKey()
             parent.characterFilter = charKey
             local charName = charKey:match("^([^%-]+)")
-            self.text:SetText(charName)
+            self:SetFitText(charName or "?")
         end
         if ns.UI.RefreshFinancialsTab then
             ns.UI.RefreshFinancialsTab(parent)
@@ -513,7 +829,7 @@ function ns.UI.CreateFinancialsTab(parent)
 
     local catLabel = OneWoW_GUI:CreateFS(filterPanel, 10)
     catLabel:SetPoint("LEFT", charBtn, "RIGHT", 25, 0)
-    catLabel:SetText(L["FIN_CAT_LABEL"])
+    catLabel:SetText(CATEGORY)
     catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local catDropdown = OneWoW_GUI:CreateDropdown(filterPanel, { width = 140, height = 24, text = ALL })
@@ -542,8 +858,15 @@ function ns.UI.CreateFinancialsTab(parent)
         end,
     })
 
+    local dashboardBtn = OneWoW_GUI:CreateFitTextButton(filterPanel, {
+        text = L["FIN_DASHBOARD"],
+        height = 24,
+        toggleable = true,
+    })
+    dashboardBtn:SetPoint("LEFT", catDropdown, "RIGHT", 25, 0)
+
     local resetBtn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = L["FIN_RESET_DATA"], height = 24 })
-    resetBtn:SetPoint("LEFT", catDropdown, "RIGHT", 25, 0)
+    resetBtn:SetPoint("RIGHT", filterPanel, "RIGHT", -10, 0)
     resetBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
     resetBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
     resetBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
@@ -591,7 +914,7 @@ function ns.UI.CreateFinancialsTab(parent)
     end)
 
     local guildPersonalCheck = OneWoW_GUI:CreateCheckbox(filterPanel, { label = L["FIN_GUILD_AS_PERSONAL"] })
-    guildPersonalCheck:SetPoint("RIGHT", filterPanel, "RIGHT", -10 - guildPersonalCheck.label:GetStringWidth(), 0)
+    guildPersonalCheck:SetPoint("RIGHT", resetBtn, "LEFT", -12 - guildPersonalCheck.label:GetStringWidth(), 0)
 
     C_Timer.After(0.6, function()
         local val = OneWoW_AltTracker_Accounting_API and
@@ -610,6 +933,51 @@ function ns.UI.CreateFinancialsTab(parent)
         if OneWoW_AltTracker_Accounting_API then
             OneWoW_AltTracker_Accounting_API.SetGuildAsPersonal(self:GetChecked() and true or false)
         end
+    end)
+
+    local function SetDashboardMode(on)
+        dashboardMode = on and true or false
+        parent.dashboardMode = dashboardMode
+        if OneWoW_AltTracker_Accounting_API then
+            OneWoW_AltTracker_Accounting_API.SetFinancialsDashboard(dashboardMode)
+        end
+        dashboardBtn:SetActive(dashboardMode)
+        if dashboardMode then
+            overview.panel:Hide()
+            dashHost:Show()
+            topHost:SetHeight(dashHostHeight)
+            LayoutMetricRow()
+        else
+            dashHost:Hide()
+            overview.panel:Show()
+            topHost:SetHeight(overviewHostHeight)
+        end
+        if ns.UI.RefreshFinancialsTab then
+            ns.UI.RefreshFinancialsTab(parent)
+        end
+    end
+
+    dashboardBtn:SetScript("OnClick", function()
+        SetDashboardMode(not dashboardMode)
+    end)
+    dashboardBtn:SetScript("OnEnter", function(self)
+        if self.isActive then
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+            self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        else
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+            self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        end
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:SetText(L["FIN_DASHBOARD"], 1, 1, 1)
+        GameTooltip:AddLine(L["TT_FIN_DASHBOARD"], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    dashboardBtn:SetScript("OnLeave", function(self)
+        self:SetActive(self.isActive)
+        GameTooltip:Hide()
     end)
 
     local rosterPanel = OneWoW_GUI:CreateRosterPanel(parent, filterPanel)
@@ -633,6 +1001,11 @@ function ns.UI.CreateFinancialsTab(parent)
 
     parent.overviewPanel = overview.panel
     parent.statBoxes = overview.statBoxes
+    parent.topHost = topHost
+    parent.dashHost = dashHost
+    parent.metricPanels = metricPanels
+    parent.dashboardSummary = { chips = summaryByKey }
+    parent.dashboardBtn = dashboardBtn
     parent.filterPanel = filterPanel
     parent.rosterPanel = rosterPanel
     parent.dataTable = dt
@@ -641,9 +1014,14 @@ function ns.UI.CreateFinancialsTab(parent)
     parent.scrollContent = dt.scrollContent
     parent.statusBar = status.bar
     parent.statusText = status.text
+    parent.dashboardMode = false
 
     C_Timer.After(0.5, function()
-        if ns.UI.RefreshFinancialsTab then
+        local saved = OneWoW_AltTracker_Accounting_API
+            and OneWoW_AltTracker_Accounting_API.GetFinancialsDashboard()
+        if saved then
+            SetDashboardMode(true)
+        elseif ns.UI.RefreshFinancialsTab then
             ns.UI.RefreshFinancialsTab(parent)
         end
     end)
@@ -755,6 +1133,19 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
 
     if financialsTab.statBoxes and OneWoW_AltTracker_Accounting_API then
         local stats = OneWoW_AltTracker_Accounting_API.CalculateStatistics(timeStart, now, characterFilter, categoryFilter)
+
+        if financialsTab.dashboardMode or dashboardMode then
+            RefreshDashboardPanels(
+                financialsTab,
+                allTransactions,
+                timeStart,
+                now,
+                characterFilter,
+                categoryFilter,
+                typeFilter,
+                stats
+            )
+        end
 
         if financialsTab.statBoxes[1] then
             financialsTab.statBoxes[1].value:SetText(ns.AltTrackerFormatters:FormatGold(stats.income))

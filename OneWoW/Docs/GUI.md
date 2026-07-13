@@ -1288,6 +1288,7 @@ When building **`OptionsSliderTemplate`** sliders manually (custom layout), call
 - **CreateProgressBar(parent, options)** — progress bar with theme colors
 - **CreateDataTable(parent, options)** — table with `ClearDataRows`, `LayoutDataRows`, `CreateDataRow`, and `SetColumns(newColumns)`. `SetColumns` swaps the column set at runtime: it tears down the old header buttons, rebuilds them for the new columns (re-running `onHeaderCreate`), and relayouts — so one table can switch between column sets / view-modes. Callers re-render their rows against the new layout afterward.
 - **CreateOverviewPanel(parent, options)** — overview layout
+- **CreateMetricPanel(parent, options)** — Splunk-style single-value panel (`label`, `height`, `ttTitle`, `ttDesc`). Header: label left; optional high/low (`SetRange`) stacked upper-right (H above L). Methods: `SetValue(text, {color})`, `SetDelta(text, {tone})` (`up`/`down`/`neutral`) under the hero value, `SetRange(highText, lowText)`, `SetSparkline(values, {bipolar})` (texture-pool spark, max 48 points, no OnUpdate), `SetTooltipExtra(lines)`, `SetLabel(text)`.
 - **CreateStatusBar(parent, anchorFrame, options)** — status bar
 - **CreateRosterPanel(parent, anchorFrame)** — roster layout
 - **CreateItemIcon(parent, options)** — item icon frame (legacy, use CreateSkinnedIcon for new code)

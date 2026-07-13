@@ -29,6 +29,20 @@ This is a companion data collection addon for OneWoW AltTracker. It automaticall
 
 Specialist trackers record categorized transactions and claim gold deltas. `GoldWatcher` listens to `PLAYER_MONEY` and only writes `uncategorized` rows for amounts that were not claimed. Cross-unit mail collection (Storage) records auction sales/refunds via `OneWoW_AltTracker_Accounting_API`.
 
+### Analytics (on-demand)
+
+`Modules/Analytics.lua` exposes pure series builders used by the Financials Dashboard (and available on the public API):
+
+- `BuildFlowSeries` — bucket income / expense / profit over the filtered range
+- `BuildWalletSeries` — reconstruct a ledger-implied wallet path from a live `endBalance` anchor plus signed txs (transfers excluded from all-characters internal warband/guild moves)
+- `BuildDashboardSummary` — per-day averages and top category / item rollups
+
+Nothing is stored continuously for high/low or sparks; values recompute on Financials refresh / filter change / ledger edit.
+
+### Financials Dashboard (AltTracker UI)
+
+The Financials tab keeps a single ledger. An optional **Dashboard** toggle (persisted as `settings.financialsDashboard`) swaps the classic overview boxes for four metric panels (Income, Expense, Profit, Wallet) with sparklines. Shared filters still drive both the panels and the ledger. Wallet reconstruction can drift if the ledger is incomplete — the panel tooltip states that explicitly.
+
 ---
 
 ## Required Addon

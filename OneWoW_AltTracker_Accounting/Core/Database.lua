@@ -7,6 +7,7 @@ ns.DatabaseDefaults = {
     transactions = {},
     settings = {
         guildAsPersonal = false,
+        financialsDashboard = false,
         maxRecords = 10000,
         trimToRecords = 8000,
         resetDate = 0,

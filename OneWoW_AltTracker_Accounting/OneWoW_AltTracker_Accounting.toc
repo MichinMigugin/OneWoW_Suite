@@ -26,6 +26,7 @@ Core\Core.lua
 
 # Data Collection Modules
 Modules\Transactions.lua
+Modules\Analytics.lua
 Modules\AuctionTracker.lua
 Modules\TransmogTracker.lua
 Modules\MiscTracker.lua
