@@ -274,7 +274,9 @@ function BankBar:CreateTabButton(parent, bagID, tabIndex, isPurchased)
             local showWarband = db.global.bankShowWarband
             local bType = showWarband and Enum.BankType.Account or Enum.BankType.Character
             local tabData = BankBar:GetTabData(myself.bagID, myself.tabIndex)
-            if BankFrame and BankFrame.BankPanel then BankFrame.BankPanel:SetBankType(bType) end
+            -- Keep Blizzard bank-type state in sync for the tab-settings menu
+            -- without leaving BankPanel interactive under our UI.
+            ns:PrepareBlizzardBankPanel(bType)
             local menu = BankBar:GetTabSettingsMenu()
             if menu then
                 local capturedBagID = myself.bagID

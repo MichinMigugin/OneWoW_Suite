@@ -143,9 +143,7 @@ function BankGUI:InitMainWindow()
             OneWoW_GUI:SaveWindowPosition(MainWindow, db.global.bankFramePosition)
             if ns.bankOpen then
                 ns.bankOpen = false
-                if BankFrame and BankFrame.BankPanel then
-                    BankFrame.BankPanel:Hide()
-                end
+                ns:ReleaseBlizzardBankPanel()
                 BankSet:ReleaseAll()
                 C_Timer.After(0, function()
                     C_Bank.CloseBankFrame()
@@ -298,6 +296,9 @@ function BankGUI:AttachBlizzardPurchaseButton(bankType)
     blizzardButton:SetAttribute("overrideBankType", bankType)
     blizzardButton:SetFrameStrata(promptFrame:GetFrameStrata())
     blizzardButton:SetFrameLevel(promptFrame.TabCostFrame:GetFrameLevel() + 1)
+    -- Host neutralize disables mouse on the BankPanel tree; re-enable after
+    -- hitchhiking the secure purchase button into our prompt.
+    blizzardButton:EnableMouse(true)
     blizzardButton:Show()
     promptFrame.TabCostFrame.PurchaseButton = blizzardButton
 
@@ -609,10 +610,7 @@ function BankGUI:OnBankTypeChanged()
     local showWarband = db.global.bankShowWarband
 
     local newBankType = showWarband and Enum.BankType.Account or Enum.BankType.Character
-    if BankFrame and BankFrame.BankPanel then
-        BankFrame.BankPanel:Show()
-        BankFrame.BankPanel:SetBankType(newBankType)
-    end
+    ns:PrepareBlizzardBankPanel(newBankType)
 
     -- Mode toggle: Build() now keeps both modes' buttons resident across
     -- toggles (see BankSet.builtTabs). On the first toggle to a given mode

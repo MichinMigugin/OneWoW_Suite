@@ -203,7 +203,7 @@ The `ns` object provides:
 - **Lifecycle:** `OnAddonLoaded`, `OnPlayerLogin` on the thin root; `InitializeControllers`, `InitializeDatabase` on `ns`
 - **Refresh orchestration:** `RequestLayoutRefresh(target)`, `RequestVisualRefresh(target)`, `RequestWindowReset(target)`
 - **Cache invalidation:** `InvalidateCategorization(scope)` — refreshes `Categories` from `customCategoriesV2` / `recentItemDuration` / `recentItems`, clears category caches (`categoryCache` + `baseCategoryCache`); if `scope == "props"` then `OneWoW.PredicateEngine:InvalidatePropsCache()`, else full `OneWoW.PredicateEngine:InvalidateCache()`. **`InvalidateItemIDs(idSet)`** — surgical eviction after coalesced `GET_ITEM_INFO_RECEIVED` so identity-tier caches survive for unrelated items while streaming completes.
-- **Blizzard hooks:** `HookBlizzardBags`, `SuppressBankFrame`, `RestoreBankFrame`, `SuppressGuildBankFrame`, `RestoreGuildBankFrame`
+- **Blizzard hooks:** `HookBlizzardBags`, `BlizzardBankHost` (`SuppressBankFrame` / `PrepareBlizzardBankPanel` / `RestoreBankFrame`), `SuppressGuildBankFrame`, `RestoreGuildBankFrame`
 - **Guild bank orchestration:** `RefreshGuildBankContents`, `QueueGuildBankRefresh`, `TrackGuildBankTransferTab`, `TrackGuildBankTransferSource`, `ProcessPendingGuildBankTransferTabs`, `PurgeClearSource`, plus internal coalescing state for cross-tab moves
 - **Helpers:** `GetDB`, `GetItemSortMode`, `SortButtons`, `ShouldShowItemQuality`, `ShouldDimJunkItem`, `ShouldStripJunkOverlays`, `EnsureCategoryModification`, `EnsureBuiltinCategoryAddedItems`, `IsAltShowActive`, `SetAltShowActive`, `IsBankUIEnabled`, `ReinitForLanguage`, `ApplyItemButtonMixin`, `HookPetCageTooltip`, `GetMoneyDialog`, `ShowMoneyDialog`, `UpdateSlotsForItemIDs`
 - **Shared tables:** `SectionDefaults`, `CategoryViewHelpers`, `BarHelpers` (see Key Components)
@@ -691,13 +691,35 @@ The addon folder includes `API/` (`README.md`, `INTEGRATION_GUIDE.md`, `INDEX.md
 
 `hooksecurefunc` on Blizzard open/close/toggle bag functions; `ContainerFrame1..13` and `ContainerFrameCombinedBags` OnShow hides; override bindings on a secure button where applicable.
 
-### Bank
+### Bank — `Core/BlizzardBankHost.lua`
 
-`SuppressBankFrame` — disable BankFrame scripts, move offscreen, reparent bank container frames 7–13 to a hidden parent. `RestoreBankFrame` reverses when disabling custom bank UI.
+Custom bank UI **hosts** Blizzard's `BankFrame` / `BankPanel` rather than only hiding them. Hosting is required because:
+
+- `BankFrame_Open` → `ShowUIPanel(BankFrame)` is still the Blizzard open path
+- `BankPanel:SetBankType` / `BankPanel:Show` keep bank-type state coherent
+- OneWoW hitchhikes the secure `PurchaseButton` (`overrideBankType`) from `BankPanel.PurchasePrompt`
+
+Contract while `enableBankUI` is on:
+
+| Guarantee | How |
+|-----------|-----|
+| `BankFrame` stays Shown | `Host:Apply()` / `PreparePanel` |
+| Never on-screen | Parked offscreen + `UIPanelLayout-enabled = false` + re-apply hooks on `BankFrame_Open` / `ShowUIPanel` / `UpdateUIPanelPositions` |
+| Never steals mouse | Recursive `EnableMouse(false)` on the BankFrame tree; `SetItemDisplayEnabled(false)` + release of `BankPanel` item slots; AutoSort hidden |
+| Purchase still works | `AttachBlizzardPurchaseButton` reparents the secure button into OneWoW's prompt and re-enables mouse on that button only |
+
+API surface (also wrapped on `ns`):
+
+- `SuppressBankFrame()` / `Host:Begin()` — install host (scripts, UIPanel, hooks, container sink) + `Apply`
+- `PrepareBlizzardBankPanel(bankType)` — `Show` + `SetBankType` + `Apply` (prefer over raw `BankPanel` calls)
+- `ReleaseBlizzardBankPanel()` — hide `BankPanel` on bank close; host stays installed
+- `RestoreBankFrame()` / `Host:End()` — tear down when custom bank UI is disabled
+
+**Do not** early-return past `Apply()` on later opens — `ShowUIPanel` repositions `BankFrame` every open; skipping re-park leaves an alpha-0 BankPanel grid under OneWoW (wrong tooltips / "Clean Up Bank").
 
 ### Guild bank
 
-`SuppressGuildBankFrame` / `RestoreGuildBankFrame` — alpha and position, preserve OnHide hook.
+`SuppressGuildBankFrame` / `RestoreGuildBankFrame` — alpha and position, preserve OnHide hook. (Weaker than the bank host; no `BankPanel`-style item grid is shown under the custom guild UI today.)
 
 ---
 

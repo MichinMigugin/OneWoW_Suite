@@ -808,10 +808,7 @@ function ns:OnBankOpened()
     end
 
     local activeBankType = self.db.global.bankShowWarband and Enum.BankType.Account or Enum.BankType.Character
-    if BankFrame and BankFrame.BankPanel then
-        BankFrame.BankPanel:SetBankType(activeBankType)
-        BankFrame.BankPanel:Show()
-    end
+    self:PrepareBlizzardBankPanel(activeBankType)
 
     C_Bank.FetchPurchasedBankTabData(Enum.BankType.Character)
     C_Bank.FetchNumPurchasedBankTabs(Enum.BankType.Character)
@@ -842,9 +839,7 @@ function ns:OnBankClosed()
     self.bankOpen = false
     self:ClearPendingLayoutRefresh("BankGUI")
     self.isWarbandOnlyBankAccess = false
-    if BankFrame and BankFrame.BankPanel then
-        BankFrame.BankPanel:Hide()
-    end
+    self:ReleaseBlizzardBankPanel()
 
     self.BankGUI:Hide()
     self.BankSet:ReleaseAll()
@@ -1126,72 +1121,6 @@ function ns:OnBankTabsChanged(bankType)
         self.BankBar:UpdateTabHighlights()
         self.BankBar:UpdateGold()
     end
-end
-
-function ns:SuppressBankFrame()
-    if not BankFrame then return end
-    if self._bankFrameSuppressed then return end
-    self._bankFrameSuppressed = true
-
-    self._bankHiddenParent = CreateFrame("Frame")
-    self._bankHiddenParent:Hide()
-
-    self._bankOrigOnShow = BankFrame:GetScript("OnShow")
-    self._bankOrigOnHide = BankFrame:GetScript("OnHide")
-    self._bankOrigOnEvent = BankFrame:GetScript("OnEvent")
-
-    BankFrame:SetScript("OnShow", nil)
-    BankFrame:SetScript("OnHide", nil)
-    BankFrame:SetScript("OnEvent", nil)
-
-    BankFrame:ClearAllPoints()
-    BankFrame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", 0, -10000)
-    BankFrame:SetAlpha(0)
-    BankFrame:EnableMouse(false)
-    BankFrame:Show()
-
-    for i = 7, 13 do
-        local cf = _G["ContainerFrame" .. i]
-        if cf then
-            cf:SetParent(self._bankHiddenParent)
-        end
-    end
-end
-
-function ns:RestoreBankFrame()
-    if not self._bankFrameSuppressed then return end
-    self._bankFrameSuppressed = false
-
-    if BankFrame then
-        if self._bankOrigOnShow then
-            BankFrame:SetScript("OnShow", self._bankOrigOnShow)
-        end
-        if self._bankOrigOnHide then
-            BankFrame:SetScript("OnHide", self._bankOrigOnHide)
-        end
-        if self._bankOrigOnEvent then
-            BankFrame:SetScript("OnEvent", self._bankOrigOnEvent)
-        end
-
-        BankFrame:EnableMouse(true)
-        BankFrame:SetAlpha(1)
-
-        if BankFrame.BankPanel then
-            BankFrame.BankPanel:Hide()
-        end
-
-        for i = 7, 13 do
-            local cf = _G["ContainerFrame" .. i]
-            if cf and self._bankHiddenParent and cf:GetParent() == self._bankHiddenParent then
-                cf:SetParent(UIParent)
-            end
-        end
-    end
-
-    self._bankOrigOnShow = nil
-    self._bankOrigOnHide = nil
-    self._bankOrigOnEvent = nil
-    self._bankHiddenParent = nil
 end
 
 function ns:ProcessBagUpdate(dirtyBags)

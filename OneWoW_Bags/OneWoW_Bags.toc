@@ -41,6 +41,7 @@ Core/API.lua
 Core\BagTypes.lua
 Core\BagEquip.lua
 Core\BankTypes.lua
+Core\BlizzardBankHost.lua
 Core\Events.lua
 
 # Data
