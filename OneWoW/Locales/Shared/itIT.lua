@@ -254,6 +254,7 @@ ns.Locale:RegisterShared("itIT", {
     ["OVR_RESET_ALL_CONFIRM_MSG"] = "Ripristinare tutte le impostazioni delle sovrapposizioni? Tutte le sovrapposizioni aggiunte verranno rimosse.",
     ["OVR_QUALITYBORDER_TITLE"] = "Bordo di qualità",
     ["OVR_QUALITYBORDER_DESC"] = "Disegna attorno alle icone degli oggetti un bordo colorato in stile casa d'aste in base alla qualità dell'oggetto.",
+    ["OVR_QUALITYBORDER_BAGS_NOTE"] = "Sacche, banca personale, banca della Brigata e banca di gilda seguono gli interruttori overlay di OneWoW Bags (la banca di gilda condivide l’impostazione della banca personale). Usa le caselle qui sotto per il mercante e la casa d’aste.",
     ["OVR_QUALITYBORDER_STYLE_ONEWOW"] = "Bordo pulito OneWoW",
     ["OVR_QUALITYBORDER_STYLE_BLIZZARD"] = "Bordo casa d'aste Blizzard",
     ["OVR_ILVL_COLOR_LABEL"] = "Colore del testo",

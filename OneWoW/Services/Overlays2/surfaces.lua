@@ -211,6 +211,11 @@ end
 
 local function RefreshGuildBank()
     if not GuildBankFrame or not GuildBankFrame:IsShown() then return end
+    -- OneWoW_Bags replaces the guild bank UI and suppresses the Blizzard frame
+    -- via SetAlpha(0) + off-screen park (it stays IsShown()). Painting those
+    -- invisible buttons is pure waste (hundreds of paints + item-load requests
+    -- per open); the Bags integration path covers its own buttons.
+    if GuildBankFrame:GetAlpha() == 0 then return end
     for tab = 1, 7 do
         if GuildBankFrame.Columns and GuildBankFrame.Columns[tab] then
             for slot = 1, 14 do
@@ -226,6 +231,18 @@ local function RefreshGuildBank()
             end
         end
     end
+end
+
+-- GUILDBANKBAGSLOTS_CHANGED fires in bursts (~20 per open / tab query wave);
+-- coalesce them into one trailing refresh instead of repainting per event.
+local guildBankRefreshQueued = false
+local function QueueRefreshGuildBank()
+    if guildBankRefreshQueued then return end
+    guildBankRefreshQueued = true
+    C_Timer.After(0.2, function()
+        guildBankRefreshQueued = false
+        RefreshGuildBank()
+    end)
 end
 
 -- ----------------------------------------------------------------------------
@@ -426,7 +443,7 @@ local function InitializeSurfaces()
 
     if GuildBankFrame then
         if GuildBankFrame.Update then
-            hooksecurefunc(GuildBankFrame, "Update", RefreshGuildBank)
+            hooksecurefunc(GuildBankFrame, "Update", QueueRefreshGuildBank)
         end
         GuildBankFrame:HookScript("OnShow", RefreshGuildBank)
     end
@@ -584,7 +601,7 @@ local function InitializeSurfaces()
     surfaceEventFrame:RegisterEvent("AUCTION_HOUSE_THROTTLED_SYSTEM_READY")
     surfaceEventFrame:SetScript("OnEvent", function(_, event)
         if event == "GUILDBANKBAGSLOTS_CHANGED" then
-            RefreshGuildBank()
+            QueueRefreshGuildBank()
         elseif event == "TRANSMOG_COLLECTION_UPDATED" then
             Engine:RequestRefresh()
             C_Timer.After(0.1, RefreshGuildBank)

@@ -74,7 +74,7 @@ local DEFAULTS = {
                 applyToAuctionHouse = false,
             },
             qualityborder = {
-                enabled = false,
+                enabled = true,
                 scale = 2,
                 alpha = 1.0,
                 applyToVendorItems = false,

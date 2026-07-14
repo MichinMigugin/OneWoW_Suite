@@ -230,7 +230,10 @@ function GuildBankGUI:RefreshLayout()
             end
             return ListView:Layout(contentFrame, filteredButtons, contentWidth, tabViewContext)
         end,
-        afterLayout = function()
+        afterLayout = function(buttons)
+            -- Overlay paint only walks buttons from this layout pass (filter token),
+            -- not every tab slot — IsVisible() stays true for hidden-tab buttons.
+            GuildBankGUI._overlayFilterToken = buttons and buttons._owb_filterToken
             GuildBankBar:UpdateFreeSlots(GuildBankSet:GetFreeSlotCount(), GuildBankSet:GetSlotCount())
         end,
     })
@@ -248,6 +251,7 @@ function GuildBankGUI:OnSearchChanged(text)
     text = text or ""
     if text == (self._lastSearchText or "") then return end
     self._lastSearchText = text
+    ns:MarkGuildOverlaysDirty("search")
     ns:RequestLayoutRefresh("guild", "search")
 end
 
@@ -280,7 +284,7 @@ function GuildBankGUI:Show()
         GuildBankSet:Build()
     else
         ns:ClearPendingLayoutRefresh("GuildBankGUI")
-        ns:RequestLayoutRefreshNow("guild")
+        ns:RequestLayoutRefreshNow("guild", "warm_open")
         ns:SetOnShowLayoutSuppressed("guild", false)
     end
 

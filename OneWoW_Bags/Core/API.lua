@@ -21,6 +21,22 @@ function OneWoW_Bags_API.FireCallbacksOnAllButtons()
     ns:FireCallbacksOnAllButtons()
 end
 
+--- Repaint overlays on all visible bank item buttons (gated by bank overlay toggle).
+function OneWoW_Bags_API.FireCallbacksOnBankButtons()
+    ns:FireCallbacksOnBankButtons()
+end
+
+--- Repaint overlays on all visible guild bank item buttons (gated by enableBankOverlays).
+function OneWoW_Bags_API.FireCallbacksOnGuildBankButtons()
+    ns:FireCallbacksOnGuildBankButtons()
+end
+
+--- True when Masque is loaded and enabled for OneWoW_Bags.
+---@return boolean
+function OneWoW_Bags_API.IsMasqueActive()
+    return ns.Masque and ns.Masque:IsActive() == true
+end
+
 --- Optional profiler module for PredicateEngine integration.
 ---@return table|nil
 function OneWoW_Bags_API.GetProfile()

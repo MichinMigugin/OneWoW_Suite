@@ -165,7 +165,13 @@ local function HideDynamicChildren(button)
     local childCount = select("#", button:GetChildren())
     for i = baseCount + 1, childCount do
         local child = select(i, button:GetChildren())
-        if child and child ~= button.ProfessionQualityOverlay then
+        -- Overlay 2.0 frames (Quality Border, overlay container) are renderer
+        -- owned: blind-hiding them here stranded the renderer's state cache and
+        -- made rarity borders blink off on every guild slot-update wave until
+        -- the debounced overlay pass repainted them. Only Engine:CleanButton
+        -- may hide those (see ClearGuildBankButton).
+        if child and child ~= button.ProfessionQualityOverlay
+            and not child.onewow_overlayManaged then
             child:Hide()
         end
     end
@@ -174,6 +180,9 @@ end
 local function ClearGuildBankButton(button)
     ns.ItemPool:ClearNewItemGlow(button)
     HideDynamicChildren(button)
+    -- Slot is now empty: full overlay clean (border off immediately, renderer
+    -- state cleared). No-ops cheaply when nothing is painted.
+    OneWoW.OverlayEngine:CleanButton(button)
 
     button:SetAlpha(1.0)
     if button._owbUnusableOverlay then button._owbUnusableOverlay:Hide() end
@@ -381,11 +390,7 @@ local function ApplyCachedItemToButton(button, cached)
         end
 
         if not masqueActive then
-            if ns:ShouldShowItemQuality(true, cached.quality) then
-                OneWoW_GUI:UpdateIconQuality(button, cached.quality)
-            else
-                OneWoW_GUI:UpdateIconQuality(button, nil)
-            end
+            OneWoW_GUI:UpdateIconQuality(button, nil)
         end
 
         button.owb_hasItem = true
@@ -489,19 +494,6 @@ function GBSet:RefreshLockVisuals(tabSet)
     end
 
     return summary
-end
-
-function GBSet:UpdateQualityColors()
-    for _, tabSlots in pairs(self.slots) do
-        for _, button in pairs(tabSlots) do
-            local quality = button.owb_itemInfo and button.owb_itemInfo.quality
-            if ns:ShouldShowItemQuality(true, quality) then
-                OneWoW_GUI:UpdateIconQuality(button, button.owb_itemInfo.quality)
-            else
-                OneWoW_GUI:UpdateIconQuality(button, nil)
-            end
-        end
-    end
 end
 
 local function ShowTooltipForButton(button)
@@ -713,4 +705,28 @@ end
 
 function GBSet:GetFreeSlotCount()
     return self.freeSlots
+end
+
+--- Stable fingerprint of which items sit where. Used to skip full guild layout
+--- teardown when a slots_changed wave only refreshed textures for the same set.
+---@return number itemCount
+---@return number signature
+function GBSet:GetContentSignature()
+    local count, signature = 0, 0
+    local cache = self.cache
+    if not cache then
+        return 0, 0
+    end
+    for tabID, tabCache in pairs(cache) do
+        for slotID, cached in pairs(tabCache) do
+            local itemID = cached and cached.itemID
+            if itemID then
+                count = count + 1
+                -- Mix tab/slot so moves between slots change the signature even
+                -- when the same itemIDs remain in the bank.
+                signature = signature + itemID * 17 + tabID * 1009 + slotID * 13
+            end
+        end
+    end
+    return count, signature
 end

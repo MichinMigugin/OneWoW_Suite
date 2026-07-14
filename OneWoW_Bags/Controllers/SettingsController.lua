@@ -89,10 +89,6 @@ SettingsController.appliers = {
             self.addon.Categories:SetRecentItemDuration(value)
         end
     end,
-    rarityColor = function(self, db, value)
-        db.global.rarityColor = value
-        self.addon:RequestVisualRefresh("bags")
-    end,
     showNewItems = function(self, db, value)
         db.global.showNewItems = value
         self.addon:RequestVisualRefresh("bags")
@@ -237,18 +233,22 @@ SettingsController.appliers = {
             self.addon.GuildBankGUI:Hide()
         end
     end,
-    bankRarityColor = function(self, db, value)
-        db.global.bankRarityColor = value
-        self.addon:RequestVisualRefresh("bank_related")
-    end,
     enableBankOverlays = function(self, db, value)
         db.global.enableBankOverlays = value
         if value then
             if self.addon.FireCallbacksOnBankButtons then
                 self.addon:FireCallbacksOnBankButtons()
             end
-        elseif self.addon.ClearBankOverlays then
-            self.addon:ClearBankOverlays()
+            if self.addon.FireCallbacksOnGuildBankButtons then
+                self.addon:FireCallbacksOnGuildBankButtons()
+            end
+        else
+            if self.addon.ClearBankOverlays then
+                self.addon:ClearBankOverlays()
+            end
+            if self.addon.ClearGuildBankOverlays then
+                self.addon:ClearGuildBankOverlays()
+            end
         end
     end,
     showBankScrollBar = function(self, db, value)
@@ -309,12 +309,6 @@ SettingsController.appliers = {
     end,
     bankLocked = function(_, db, value)
         db.global.bankLocked = value
-    end,
-    warbandBankRarityColor = function(self, db, value)
-        db.global.warbandBankRarityColor = value
-        if self.addon.BankController:IsWarbandMode() then
-            self.addon:RequestVisualRefresh("bank_related")
-        end
     end,
     enableWarbandBankOverlays = function(self, db, value)
         db.global.enableWarbandBankOverlays = value
@@ -405,6 +399,6 @@ SettingsController.appliers = {
     end,
     showGuildBankEmptySlots = function(self, db, value)
         db.global.guildBankShowEmptySlots = value
-        self.addon:RequestLayoutRefresh("guild")
+        self.addon:RequestLayoutRefresh("guild", "show_empty_slots")
     end,
 }

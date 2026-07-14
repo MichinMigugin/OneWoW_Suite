@@ -254,6 +254,7 @@ ns.Locale:RegisterShared("ruRU", {
     ["OVR_RESET_ALL_CONFIRM_MSG"] = "Сбросить все настройки наложений? Все добавленные наложения будут удалены.",
     ["OVR_QUALITYBORDER_TITLE"] = "Рамка качества",
     ["OVR_QUALITYBORDER_DESC"] = "Рисует вокруг значков предметов цветную рамку в стиле аукционного дома в зависимости от качества предмета.",
+    ["OVR_QUALITYBORDER_BAGS_NOTE"] = "Сумки, личный банк, банк отряда и банк гильдии следуют переключателям оверлеев OneWoW Bags (банк гильдии использует настройку личного банка). Флажки ниже — для торговца и аукциона.",
     ["OVR_QUALITYBORDER_STYLE_ONEWOW"] = "Чистая рамка OneWoW",
     ["OVR_QUALITYBORDER_STYLE_BLIZZARD"] = "Рамка аукциона Blizzard",
     ["OVR_ILVL_COLOR_LABEL"] = "Цвет текста",

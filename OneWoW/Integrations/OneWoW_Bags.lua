@@ -4,6 +4,8 @@ local function IsEnabled()
     return ns.SettingsFeatureRegistry:IsIntegrationEnabled("onewow_bags")
 end
 
+--- Paint overlays for a OneWoW_Bags item button.
+--- Guild bank slots use tab/slot ids with GetGuildBankItemLink (no ItemLocation).
 local function ProcessButton(button, bagID, slotID)
     if not IsEnabled() then
         ns.OverlayEngine:CleanButton(button)
@@ -13,6 +15,17 @@ local function ProcessButton(button, bagID, slotID)
         ns.OverlayEngine:CleanButton(button)
         return
     end
+
+    if button.owb_isGuildBank then
+        local link = GetGuildBankItemLink(bagID, slotID)
+        if link then
+            ns.OverlayEngine:ProcessButton(button, link, nil)
+        else
+            ns.OverlayEngine:CleanButton(button)
+        end
+        return
+    end
+
     local loc    = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
     local exists = C_Item.DoesItemExist(loc)
     if exists then
@@ -39,6 +52,8 @@ local function SetupCallbacks()
 
     local function RefreshOneWoWBags()
         OneWoW_Bags_API.FireCallbacksOnAllButtons()
+        OneWoW_Bags_API.FireCallbacksOnBankButtons()
+        OneWoW_Bags_API.FireCallbacksOnGuildBankButtons()
     end
 
     ns.OverlayEngine:RegisterIntegration(RefreshOneWoWBags)

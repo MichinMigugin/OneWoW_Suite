@@ -254,6 +254,7 @@ ns.Locale:RegisterShared("zhCN", {
     ["OVR_RESET_ALL_CONFIRM_MSG"] = "将所有覆盖层设置重置为默认值？这将移除所有已添加的覆盖层。",
     ["OVR_QUALITYBORDER_TITLE"] = "品质边框",
     ["OVR_QUALITYBORDER_DESC"] = "根据物品品质，在物品图标周围绘制拍卖行风格的彩色边框。",
+    ["OVR_QUALITYBORDER_BAGS_NOTE"] = "背包、个人银行、战团银行与公会银行遵循 OneWoW Bags 的物品覆层开关（公会银行与个人银行共用覆层设置）。下方复选框用于商人和拍卖行。",
     ["OVR_QUALITYBORDER_STYLE_ONEWOW"] = "OneWoW 简洁边框",
     ["OVR_QUALITYBORDER_STYLE_BLIZZARD"] = "暴雪拍卖行边框",
     ["OVR_ILVL_COLOR_LABEL"] = "文字颜色",

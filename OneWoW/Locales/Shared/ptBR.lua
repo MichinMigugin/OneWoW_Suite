@@ -254,6 +254,7 @@ ns.Locale:RegisterShared("ptBR", {
     ["OVR_RESET_ALL_CONFIRM_MSG"] = "Redefinir todas as configurações de sobreposições para o padrão? Isso remove todas as sobreposições adicionadas.",
     ["OVR_QUALITYBORDER_TITLE"] = "Borda de qualidade",
     ["OVR_QUALITYBORDER_DESC"] = "Desenha uma borda colorida no estilo da casa de leilões ao redor dos ícones de itens conforme a qualidade do item.",
+    ["OVR_QUALITYBORDER_BAGS_NOTE"] = "Bolsas, banco pessoal, banco do Bando de Guerra e banco da guilda seguem as opções de sobreposição do OneWoW Bags (o banco da guilda compartilha a opção do banco pessoal). Use as caixas abaixo para o vendedor e a Casa de Leilões.",
     ["OVR_QUALITYBORDER_STYLE_ONEWOW"] = "Borda limpa OneWoW",
     ["OVR_QUALITYBORDER_STYLE_BLIZZARD"] = "Borda da casa de leilões da Blizzard",
     ["OVR_ILVL_COLOR_LABEL"] = "Cor do texto",

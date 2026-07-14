@@ -53,8 +53,9 @@ end
 
 -- Uses Blizzard's BackdropTemplate (not custom OVERLAY textures) so 1px edges
 -- pixel-snap reliably even when the parent lands on non-integer physical pixels.
--- FrameLevel = parent + 1 so the border draws above the icon; overlay containers
--- (ilvl, etc.) render at parent + 2 so they remain above the border.
+-- FrameLevel = parent + 1 so the border draws above the icon (same plane as
+-- Overlays Quality Border chrome). Overlay containers (ilvl, icon overlays)
+-- render at parent + 2 so content stays above chrome.
 local function CreateEdgeBorder(frame, edgeSize)
     local border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     border:SetAllPoints(frame)

@@ -118,12 +118,9 @@ function Mixin:OWB_FullUpdate()
 
         local masqueActive = ns.Masque and ns.Masque:IsActive()
         local quality = info.quality
+        -- Neutral theme chrome only; rarity coloring is Overlay Quality Border.
         if not masqueActive then
-            if ns:ShouldShowItemQuality(self.owb_isBank, quality) then
-                OneWoW_GUI:UpdateIconQuality(self, quality)
-            else
-                OneWoW_GUI:UpdateIconQuality(self, nil)
-            end
+            OneWoW_GUI:UpdateIconQuality(self, nil)
         end
 
         if self.SetItemButtonQuality then

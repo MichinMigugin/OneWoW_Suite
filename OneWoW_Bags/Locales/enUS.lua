@@ -56,8 +56,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["SETTING_LOCK"] = "Lock Window Position",
     ["SETTING_SHOW_BAGS_BAR"] = "Show Bags Bar",
     ["SETTING_HIDE_BLIZZARD_BAGS_BAR"] = "Hide Blizzard Bags Bar",
-    ["SETTING_RARITY_COLOR"] = "Rarity Border Colors",
-    ["SETTING_RARITY_INTENSITY"] = "Rarity Color Intensity",
     ["SETTING_SHOW_NEW"] = "Highlight New Items",
     ["SETTING_RECENT_DURATION"] = "Recent Item Duration (seconds)",
     ["SETTING_CATEGORY_SORT"] = "Category Sort",
@@ -145,9 +143,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["SETTING_ENABLE_BANK"] = "Enable Bank UI",
     ["DESC_ENABLE_BANK"] = "Replace the default bank window with the OneWoW Bags interface.",
     ["SETTING_BANK_OVERLAYS"] = "Bank Item Overlays",
-    ["DESC_BANK_OVERLAYS"] = "Show item overlays on default bank item slots.",
+    ["DESC_BANK_OVERLAYS"] = "Show item overlays on personal bank and guild bank item slots.",
 
-    ["DESC_RARITY_COLOR"] = "Color item slot borders based on item rarity.",
     ["DESC_SHOW_NEW"] = "Show a highlight on newly obtained items.",
     ["SETTING_SHOW_SCROLLBAR"] = "Show Scroll Bar",
     ["DESC_SHOW_SCROLLBAR"] = "Show or hide the scroll bar on the bags window.",
@@ -271,7 +268,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["DESC_SHOW_BANK_BAGS_BAR"] = "Show the bag selection bar at the bottom of the bank window.",
     ["DESC_SHOW_BANK_SCROLLBAR"] = "Show or hide the scroll bar on the bank window.",
 
-    ["DESC_BANK_RARITY_COLOR"] = "Color item slot borders based on item rarity in the bank.",
 
     ["DESC_BANK_LOCK"] = "Prevent the bank window from being moved.",
 

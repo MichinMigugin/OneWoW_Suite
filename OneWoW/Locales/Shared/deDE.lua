@@ -254,6 +254,7 @@ ns.Locale:RegisterShared("deDE", {
     ["OVR_RESET_ALL_CONFIRM_MSG"] = "Alle Overlay-Einstellungen auf Standard zurücksetzen? Dadurch werden alle hinzugefügten Overlays entfernt.",
     ["OVR_QUALITYBORDER_TITLE"] = "Qualitätsrahmen",
     ["OVR_QUALITYBORDER_DESC"] = "Zeichnet einen farbigen Rahmen im Auktionshaus-Stil um Gegenstandssymbole, basierend auf der Gegenstandsqualität.",
+    ["OVR_QUALITYBORDER_BAGS_NOTE"] = "Taschen, persönliche Bank, Kriegsmeutenbank und Gildenbank folgen den Overlay-Schaltern von OneWoW Bags (Gildenbank teilt die Einstellung der persönlichen Bank). Die Kontrollkästchen unten gelten für Händler und Auktionshaus.",
     ["OVR_QUALITYBORDER_STYLE_ONEWOW"] = "Sauberer OneWoW-Rahmen",
     ["OVR_QUALITYBORDER_STYLE_BLIZZARD"] = "Blizzard-Auktionshausrahmen",
     ["OVR_ILVL_COLOR_LABEL"] = "Textfarbe",

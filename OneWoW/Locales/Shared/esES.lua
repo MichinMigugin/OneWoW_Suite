@@ -254,6 +254,7 @@ ns.Locale:RegisterShared("esES", {
     ["OVR_RESET_ALL_CONFIRM_MSG"] = "¿Restablecer todos los ajustes de superposiciones a los valores predeterminados? Esto elimina todas las superposiciones añadidas.",
     ["OVR_QUALITYBORDER_TITLE"] = "Borde de calidad",
     ["OVR_QUALITYBORDER_DESC"] = "Dibuja un borde de color al estilo de la casa de subastas alrededor de los iconos de objeto según su calidad.",
+    ["OVR_QUALITYBORDER_BAGS_NOTE"] = "Bolsas, banco personal, banco de la banda de guerra y banco de hermandad siguen los interruptores de superposición de OneWoW Bags (el banco de hermandad comparte el ajuste del banco personal). Usa las casillas de abajo para el vendedor y la casa de subastas.",
     ["OVR_QUALITYBORDER_STYLE_ONEWOW"] = "Borde limpio de OneWoW",
     ["OVR_QUALITYBORDER_STYLE_BLIZZARD"] = "Borde de la casa de subastas de Blizzard",
     ["OVR_ILVL_COLOR_LABEL"] = "Color del texto",

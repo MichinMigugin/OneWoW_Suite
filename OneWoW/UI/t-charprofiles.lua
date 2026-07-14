@@ -145,7 +145,7 @@ local ADDON_SETTINGS_MAP = {
     {
         dbName = "OneWoW_Bags_DB",
         displayName = "Bags",
-        keys = {"language", "theme", "minimap", "viewMode", "columns", "scale", "iconSize", "autoOpen", "autoClose", "locked", "showBagsBar", "rarityColor", "rarityIntensity", "showNewItems", "recentItemDuration", "categorySort", "showEmptySlots"},
+        keys = {"language", "theme", "minimap", "viewMode", "columns", "scale", "iconSize", "autoOpen", "autoClose", "locked", "showBagsBar", "showNewItems", "recentItemDuration", "categorySort", "showEmptySlots"},
     },
     {
         dbName = "OneWoW_DirectDeposit_DB",

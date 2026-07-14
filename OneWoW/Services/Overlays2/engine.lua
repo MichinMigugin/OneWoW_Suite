@@ -27,6 +27,10 @@ local ipairs, tinsert = ipairs, tinsert
 
 local BATTLE_PET_CAGE_ID = 82800
 
+-- Bumped when overlay definitions rebuild so same-item early-out cannot skip
+-- a settings-driven repaint.
+local paintGeneration = 0
+
 -- LOAD-BEARING INVARIANT: this table is created at file-parse time (not inside
 -- Initialize) and RegisterIntegration is an append-only insert with no
 -- dependency on Initialize-created state. Bag integrations wire themselves via
@@ -267,10 +271,17 @@ local function PaintButton(button, itemID, itemLink, itemLocation, context, clas
 
     local qbCfg = GetQualityBorderCfg()
     if qbCfg.enabled and BuiltinAppliesToContext(qbCfg, context) then
-        Renderer:ApplyQualityBorder(button, qbCfg, quality)
+        -- Only paint when quality is known. Avoid ApplyQualityBorder(nil) which
+        -- hides an existing border during async item-info / re-layout passes.
+        if quality then
+            Renderer:ApplyQualityBorder(button, qbCfg, quality)
+        end
+    else
+        Renderer:HideQualityBorder(button)
     end
 
     Renderer:ShowContainer(button)
+    button._owbOverlayPaintGen = paintGeneration
 end
 
 local function BuildOverlaysForButton(button, itemLink, itemLocation, context)
@@ -304,7 +315,46 @@ local function BuildOverlaysForButton(button, itemLink, itemLocation, context)
         return
     end
 
-    Renderer:CleanButton(button)
+    -- Same-item repaint: compare by itemID (guild bank links can change string
+    -- when tab data finishes loading). Full link equality falsely fails and
+    -- hides→shows the Quality Border (~1s tooltip catchup flash).
+    local sameItem = false
+    if button.onewow_itemLink and itemID then
+        if isBattlePetLink then
+            sameItem = button.onewow_itemLink == itemLink
+        else
+            sameItem = C_Item.GetItemInfoInstant(button.onewow_itemLink) == itemID
+        end
+    end
+
+    -- Guild bank tab-query waves re-fire ProcessButton on unchanged slots.
+    -- Skip Clean+rebuild when this generation already painted this item and
+    -- Quality Border is either done (and still shown) or not required. Settings
+    -- rebuild bumps paintGeneration so live updates still repaint.
+    -- Require IsShown(): layout cleanup Hide()s buttons and can leave the QB
+    -- child hidden while _owbQbQuality stays set — skip_same must not strand it.
+    if sameItem
+        and button._owbOverlayPaintGen == paintGeneration
+        and C_Item.IsItemDataCachedByID(itemID) then
+        local qbCfg = GetQualityBorderCfg()
+        local needsQb = qbCfg.enabled and BuiltinAppliesToContext(qbCfg, context)
+        local qbFrame = button.onewow_qualityBorderFrame
+        local qbOk = not needsQb
+            or (button._owbQbQuality and qbFrame and qbFrame:IsShown())
+        if qbOk then
+            local flashNote = OneWoW._overlayFlashNote
+            if flashNote then
+                flashNote("skip_same")
+            end
+            button.onewow_itemLink = itemLink
+            if needsQb and qbFrame then
+                qbFrame:SetFrameLevel(button:GetFrameLevel() + 1)
+            end
+            return
+        end
+    end
+
+    Renderer:CleanButton(button, sameItem)
     button.onewow_itemLink = itemLink
 
     if not classID then
@@ -315,6 +365,10 @@ local function BuildOverlaysForButton(button, itemLink, itemLocation, context)
     if C_Item.IsItemDataCachedByID(itemID) then
         PaintButton(button, itemID, itemLink, itemLocation, context, classID)
     else
+        local flashNote = OneWoW._overlayFlashNote
+        if flashNote then
+            flashNote("async_sched", { itemID = itemID })
+        end
         C_Item.RequestLoadItemDataByID(itemID)
         local item = Item:CreateFromItemID(itemID)
         item:ContinueOnItemLoad(function()
@@ -322,6 +376,10 @@ local function BuildOverlaysForButton(button, itemLink, itemLocation, context)
             -- Re-check the button still shows this item (async load can
             -- outlive a slot change).
             if button.onewow_itemLink ~= itemLink then return end
+            local note = OneWoW._overlayFlashNote
+            if note then
+                note("async_paint", { itemID = itemID })
+            end
             local _, _, _, _, _, cID = C_Item.GetItemInfoInstant(itemLink)
             PaintButton(button, itemID, itemLink, itemLocation, context, cID)
         end)
@@ -338,6 +396,10 @@ end
 
 function Engine:CleanButton(button)
     Renderer:CleanButton(button)
+end
+
+function Engine:HideQualityBorder(button)
+    Renderer:HideQualityBorder(button)
 end
 
 local function RefreshAll()
@@ -372,6 +434,7 @@ end
 Registry:RegisterListener("OverlayEngine", function(storageTab)
     if storageTab == "overlays" then
         activeDefs = nil
+        paintGeneration = paintGeneration + 1
         Engine:RequestRefresh()
     end
 end)

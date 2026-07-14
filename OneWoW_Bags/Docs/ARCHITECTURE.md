@@ -205,7 +205,7 @@ The `ns` object provides:
 - **Cache invalidation:** `InvalidateCategorization(scope)` — refreshes `Categories` from `customCategoriesV2` / `recentItemDuration` / `recentItems`, clears category caches (`categoryCache` + `baseCategoryCache`); if `scope == "props"` then `OneWoW.PredicateEngine:InvalidatePropsCache()`, else full `OneWoW.PredicateEngine:InvalidateCache()`. **`InvalidateItemIDs(idSet)`** — surgical eviction after coalesced `GET_ITEM_INFO_RECEIVED` so identity-tier caches survive for unrelated items while streaming completes.
 - **Blizzard hooks:** `HookBlizzardBags`, `BlizzardBankHost` (`SuppressBankFrame` / `PrepareBlizzardBankPanel` / `RestoreBankFrame`), `SuppressGuildBankFrame`, `RestoreGuildBankFrame`
 - **Guild bank orchestration:** `RefreshGuildBankContents`, `QueueGuildBankRefresh`, `TrackGuildBankTransferTab`, `TrackGuildBankTransferSource`, `ProcessPendingGuildBankTransferTabs`, `PurgeClearSource`, plus internal coalescing state for cross-tab moves
-- **Helpers:** `GetDB`, `GetItemSortMode`, `SortButtons`, `ShouldShowItemQuality`, `ShouldDimJunkItem`, `ShouldStripJunkOverlays`, `EnsureCategoryModification`, `EnsureBuiltinCategoryAddedItems`, `IsAltShowActive`, `SetAltShowActive`, `IsBankUIEnabled`, `ReinitForLanguage`, `ApplyItemButtonMixin`, `HookPetCageTooltip`, `GetMoneyDialog`, `ShowMoneyDialog`, `UpdateSlotsForItemIDs`
+- **Helpers:** `GetDB`, `GetItemSortMode`, `SortButtons`, `ShouldDimJunkItem`, `ShouldStripJunkOverlays`, `EnsureCategoryModification`, `EnsureBuiltinCategoryAddedItems`, `IsAltShowActive`, `SetAltShowActive`, `IsBankUIEnabled`, `ReinitForLanguage`, `ApplyItemButtonMixin`, `HookPetCageTooltip`, `GetMoneyDialog`, `ShowMoneyDialog`, `UpdateSlotsForItemIDs`
 - **Shared tables:** `SectionDefaults`, `CategoryViewHelpers`, `BarHelpers` (see Key Components)
 
 ---
@@ -631,8 +631,9 @@ Shared: `bankShowWarband` (active mode), `bankFramePosition`, `collapsedBankCate
 
 ### Visual
 
-`rarityColor`, `rarityIntensity`, `bankRarityColor`, `warbandBankRarityColor`, `showNewItems`, `showUnusableOverlay`, `dimJunkItems`, `stripJunkOverlays`
+`showNewItems`, `showUnusableOverlay`, `dimJunkItems`, `stripJunkOverlays`
 
+Item rarity borders are owned by Overlays 2.0 **Quality Border** (not Bags settings). Bags keeps neutral `SkinIconFrame` chrome; bags / personal bank / warband / guild bank visibility follows the Bags overlay master toggles (`overlays` general, `enableBankOverlays`, `enableWarbandBankOverlays` — guild bank shares `enableBankOverlays` with personal bank).
 ### Categories
 
 `customCategoriesV2`, `disabledCategories`, `categoryModifications` (including per-category `sortMode` and `subSortMode`), `categorySort`, `categoryOrder`, `categorySections`, `sectionOrder`, `displayOrder`, `enableJunkCategory`, `enableUpgradeCategory`, `moveRecentToTop`, `moveOtherToBottom`, `pinnedCategoryShowsWhenDisabled`, `pinnedCategories`
@@ -673,7 +674,7 @@ OneWoW_Bags_API.RegisterItemButtonCallback("MyAddon", function(button, bagID, sl
 OneWoW_Bags_API.UnregisterItemButtonCallback("MyAddon")
 ```
 
-After `GUI:RefreshLayout`, visible inventory buttons fire registered callbacks (~50ms delay). After `BankGUI:RefreshLayout`, bank buttons fire when `enableBankOverlays` is true. After `GuildBankGUI:RefreshLayout`, when **`db.global.enableBankOverlays`** is true, the integration **clears** OneWoW overlays on guild bank buttons (`ClearGuildBankOverlays`) rather than invoking the same per-button callback loop. (Guild bank uses this shared key directly—not `BankController`-dispatched warband/personal overlay toggles.)
+After `GUI:RefreshLayout`, visible inventory buttons fire registered callbacks (~50ms delay). After `BankGUI:RefreshLayout`, bank buttons fire when `enableBankOverlays` is true. After `GuildBankGUI:RefreshLayout`, when **`db.global.enableBankOverlays`** is true, guild bank buttons fire `FireCallbacksOnGuildBankButtons` (paint via `GetGuildBankItemLink`); when off, overlays are cleared via `ClearGuildBankOverlays`. (Guild bank uses this shared key directly—not `BankController`-dispatched warband/personal overlay toggles.)
 
 ### TSM / Baganator
 
@@ -765,6 +766,21 @@ Inventory windows share `WindowLayoutController:Refresh`, which runs `cleanup` (
 | `/owblayout dump` | Print scheduler snapshot, per-GUI button stats (`hasItem` vs `IsShown`), and recent events |
 
 Hooks: `RequestLayoutRefresh`, `FlushPendingLayoutRefreshes` (exec / skip_hidden / skip_building / skip_in_progress / flush_drop_stale / reschedule), `KickLayoutScheduler` (`scheduler_kick`), `ScheduleOpenSafetyNet` (`safety_net_blank` / `safety_net_wedged`), `RunGuardedLayoutRefresh`, `RefreshLayout` early exits, `WindowLayoutController` (cleanup / filtered / layout_done / empty_filter). Ring `layout_done` rows include `filtShown`, `hasItem`, and `shown` for diagnosing blank-inventory reports via `/owblayout dump`.
+
+### Overlay flash debug (`/owboverlay`)
+
+[`Core/OverlayFlashDebug.lua`](../Core/OverlayFlashDebug.lua) — live timeline (+offsets from guild open) for guild-bank Quality Border flashes. Correlate the visible flash with chat lines instead of guessing. The historical guild-bank flash (borders off ~350ms per slot-update wave) was `HideDynamicChildren` blind-hiding renderer-owned frames — fixed via the `onewow_overlayManaged` tag (see `ITEM_BUTTON.md`); a healthy open now ends with `skip_same=N qb_update=0`.
+
+| Command | Action |
+|---------|--------|
+| `/owboverlay on` | Enable live prints + ring (epoch reset) |
+| `/owboverlay quiet` | Ring only (no live spam) |
+| `/owboverlay off` | Disable |
+| `/owboverlay mark` | Reset epoch to now |
+| `/owboverlay clear` | Clear the ring (alias: `reset`) |
+| `/owboverlay dump` | Print ring |
+
+Events: `dirty`, `layout_begin`/`layout_end` (ms + reason), `overlay_sched_*`, `pass_begin`/`pass_end` (keep/full/clean_skip/skip_same/qb_noop/qb_create/qb_update/qb_hide/async_sched), `async_paint` (late item-data loads). Guild layout reasons now include `slots_changed`, `warm_open`, `build_done`, etc.
 
 A wedged scheduler shows as `refreshScheduled=true` with `pending` set but no `flush_exec` following the requests. After this fix, a `scheduler_kick` on zone enter or a synchronous open/`safety_net_blank` should break that state without `/reload`.
 

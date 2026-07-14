@@ -1,7 +1,5 @@
 local _, ns = ...
 
-local OneWoW_GUI = OneWoW_GUI
-
 local BankTypes = ns.BankTypes
 local ItemPool = ns.ItemPool
 
@@ -367,19 +365,6 @@ end
 
 function BankSet:RefreshAllVisuals()
     self:UpdateAllSlots("refresh_visuals")
-end
-
-function BankSet:UpdateQualityColors()
-    for _, bagSlots in pairs(self.slots) do
-        for _, button in pairs(bagSlots) do
-            local quality = button.owb_itemInfo and button.owb_itemInfo.quality
-            if ns:ShouldShowItemQuality(true, quality) then
-                OneWoW_GUI:UpdateIconQuality(button, button.owb_itemInfo.quality)
-            else
-                OneWoW_GUI:UpdateIconQuality(button, nil)
-            end
-        end
-    end
 end
 
 function BankSet:GetAllButtons()

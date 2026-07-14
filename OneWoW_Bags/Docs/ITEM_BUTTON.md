@@ -122,14 +122,33 @@ callbacks ~50 ms later (after the layout has settled):
 |---|---|---|---|
 | Bags (`OneWoW_Bags.GUI`) | `RefreshLayout` | `FireCallbacksOnAllButtons` | Always (when window built) |
 | Personal/Warband Bank (`OneWoW_Bags.BankGUI`) | `RefreshLayout` | `FireCallbacksOnBankButtons` | Only when `BankController:Get("overlays")` is true (`enableBankOverlays` in personal bank mode, `enableWarbandBankOverlays` when `bankShowWarband`) |
-| Guild Bank (`OneWoW_Bags.GuildBankGUI`) | `RefreshLayout` | *(no callback dispatch)* | When **`db.global.enableBankOverlays`** is true, OneWoW overlays are **cleared** via `ClearGuildBankOverlays` (same global key as personal bank overlays—not the warband-specific overlay toggle) |
+| Guild Bank (`OneWoW_Bags.GuildBankGUI`) | `RefreshLayout` | `FireCallbacksOnGuildBankButtons` (trailing-debounced ~350 ms, only when `_guildOverlayDirty`) | Dirty on open / slot updates / search. `slots_changed` skips full layout when the guild content signature is unchanged (overlay-only pass) so cleanup does not Hide() borders. Same-item early-out requires the Quality Border frame to still be shown. |
+
+Overlay settings changes also repaint via `OneWoW_Bags_API.FireCallbacksOnAllButtons` /
+`FireCallbacksOnBankButtons` / `FireCallbacksOnGuildBankButtons` (registered as an
+OverlayEngine integration refresher).
 
 Bank dispatch is also fired on `BANKFRAME_OPENED` (after a 100 ms delay) when
 the active bank mode's overlay toggle allows it (`BankController:Get("overlays")`).
 
-The dispatcher iterates only buttons where `button:IsVisible() == true` and
-the slot has been bound (`owb_bagID` / `owb_slotID` set), so empty layout
-slots are skipped automatically.
+Rarity-colored borders on bag/bank/guild slots come from Overlays **Quality Border**
+(painted under ilvl / icon overlays). Bags `SkinIconFrame` chrome stays theme-neutral.
+When Masque is active, Quality Border is suppressed on OneWoW_Bags buttons.
+Guild bank paint uses `GetGuildBankItemLink(tab, slot)` (no bag `ItemLocation`).
+
+The dispatcher iterates guild-bank buttons from the last layout filter token
+(`GuildBankGUI._overlayFilterToken`); bags/bank still use `button:IsVisible()`
+plus bound `owb_bagID` / `owb_slotID`. Empty slots with no overlay state skip
+`CleanButton` work.
+
+Overlay 2.0 frames on a button (`onewow_qualityBorderFrame`,
+`onewow_overlayContainer`) carry `onewow_overlayManaged = true`. The
+`HideDynamicChildren` sweeps in `GuildBankSet` / `ItemPool` must skip tagged
+frames — blind-hiding them strands the renderer's state cache
+(`_owbQbQuality` etc.) and makes rarity borders blink off until the next
+debounced overlay pass (the historical guild-bank border flash). To remove
+overlays, call `OneWoW.OverlayEngine:CleanButton(button)` instead
+(`ClearGuildBankButton` and `ItemPool:ResetButton` do this).
 
 ### Junk-strip suppression
 
@@ -308,7 +327,8 @@ Enum.ItemQuality.WoWToken   = 8
   registration is reached at file load.
 - Bank window: callbacks are gated on `BankController:Get("overlays")`. The
   user can disable bank overlays in OneWoW Bags settings; this is expected.
-- Guild bank: callbacks are not dispatched; overlay clearing runs only when **`enableBankOverlays`** is true in SavedVariables (see [When Callbacks Fire](#when-callbacks-fire)).
+- Guild bank: callbacks are gated on **`enableBankOverlays`** (same SavedVariables
+  key as personal bank overlays). See [When Callbacks Fire](#when-callbacks-fire).
 
 ### My overlay doesn't appear on grey/junk items
 

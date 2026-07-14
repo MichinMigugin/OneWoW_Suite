@@ -122,19 +122,6 @@ function ns:GetButtonProps(button)
     return PE:BuildProps(itemID, button.owb_bagID, button.owb_slotID, info)
 end
 
-function ns:ShouldShowItemQuality(isBank, quality)
-    if self:IsAltShowActive() then return true end
-    if not quality or quality < 1 then return false end
-
-    local db = self:GetDB()
-
-    if isBank then
-        return self.BankController:Get("rarityColor") == true
-    end
-
-    return db.global.rarityColor == true
-end
-
 function ns:ShouldDimJunkItem(isJunk)
     local db = self:GetDB()
     return isJunk and db.global.dimJunkItems and not self:IsAltShowActive()
@@ -372,10 +359,12 @@ end
 --- coalescer's one-frame delay. Skips visibility/build gating so a hidden
 --- window can pre-warm its layout before being shown. Use sparingly.
 ---@param target "bags"|"bank"|"guild"|"bank_related"|"all"|nil
-function ns:RequestLayoutRefreshNow(target)
+function ns:RequestLayoutRefreshNow(target, reason)
     ForEachTarget(self, target, GUI_TARGET_KEYS, function(gui)
         if gui.RefreshLayout then
+            self._currentRefreshReason = reason
             gui:RefreshLayout()
+            self._currentRefreshReason = nil
         end
     end)
 end
@@ -529,7 +518,7 @@ function ns:RequestVisualRefresh(target)
     elseif target == "bank" then
         self:RequestLayoutRefresh("bank")
     elseif target == "guild" then
-        self:RequestLayoutRefresh("guild")
+        self:RequestLayoutRefresh("guild", "visual_refresh")
     elseif target == "bank_related" then
         self:RequestLayoutRefresh("bank_related")
     else
@@ -903,7 +892,20 @@ function ns:RefreshGuildBankContents()
         self.GuildBankBar:UpdateFreeSlots(self.GuildBankSet:GetFreeSlotCount(), self.GuildBankSet:GetSlotCount())
     end
 
-    self:RequestLayoutRefresh("guild")
+    self:MarkGuildOverlaysDirty("slots_changed")
+
+    -- Tab-query waves often re-fire after the item set is already laid out.
+    -- A full RefreshLayout cleanup Hide()s every button (~200ms+ borders off).
+    -- When content signature is unchanged, only repaint overlays.
+    local count, signature = self.GuildBankSet:GetContentSignature()
+    local prev = self._guildBankContentSig
+    local sigKey = count .. ":" .. signature
+    self._guildBankContentSig = sigKey
+    if prev ~= sigKey then
+        self:RequestLayoutRefresh("guild", "slots_changed")
+    else
+        self:ScheduleGuildOverlayRefresh()
+    end
 end
 
 function ns:TrackGuildBankTransferTab(tabID)
@@ -1017,6 +1019,12 @@ function ns:OnGuildBankOpened()
     self._destHadItemBeforeGBOp = nil
     self:SuppressGuildBankFrame()
 
+    local OFD = self.OverlayFlashDebug
+    if OFD and OFD.enabled then
+        OFD:MarkEpoch("guild_open")
+    end
+    self._guildBankContentSig = nil
+    self:MarkGuildOverlaysDirty("open")
     self.GuildBankGUI:Show()
 
     if self.db.global.autoOpenWithBank then
@@ -1036,6 +1044,7 @@ function ns:OnGuildBankClosed()
     self.guildBankOpen = false
     self:ClearPendingLayoutRefresh("GuildBankGUI")
     self._guildBankUpdatePending = false
+    self._guildBankContentSig = nil
     self._guildBankTransferTabs = nil
     self._guildBankTransferSources = nil
     self._guildBankClearSources = nil
@@ -1043,6 +1052,9 @@ function ns:OnGuildBankClosed()
     self._guildBankSeenBagPickup = false
     self._wasPlacingBeforeGBOp = nil
     self._destHadItemBeforeGBOp = nil
+    if self.CancelPendingGuildOverlayRefresh then
+        self:CancelPendingGuildOverlayRefresh()
+    end
     self.GuildBankGUI:Hide()
     self.GuildBankSet:ReleaseAll()
     self.GuildBankSet:ClearCache()
@@ -1063,7 +1075,7 @@ end
 
 function ns:OnGuildBankTabsUpdated()
     if self.guildBankOpen then
-        -- GuildBankSet:Build() already emits a coalesced RequestLayoutRefresh("guild").
+        self:MarkGuildOverlaysDirty("tabs_updated")
         self.GuildBankSet:Build()
         self.GuildBankBar:BuildTabButtons()
     end

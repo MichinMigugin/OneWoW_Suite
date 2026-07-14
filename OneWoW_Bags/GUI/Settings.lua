@@ -559,18 +559,6 @@ local function BuildBagsTab(sc, db)
 
     dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
         yOffset = dispY,
-        label = L["SETTING_RARITY_COLOR"],
-        description = L["DESC_RARITY_COLOR"],
-        isEnabled = true,
-        value = db.global.rarityColor,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("rarityColor", newVal)
-        end,
-    })
-
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
         label = L["SETTING_SHOW_NEW"],
         description = L["DESC_SHOW_NEW"],
         isEnabled = true,
@@ -927,7 +915,6 @@ local MODE_KEYS = {
     personal = {
         sectionTitle = "SECTION_PERSONAL_BANK",
         db = {
-            rarityColor       = "bankRarityColor",
             overlays          = "enableBankOverlays",
             hideScrollBar     = "bankHideScrollBar",
             showBagsBar       = "showBankBagsBar",
@@ -942,7 +929,6 @@ local MODE_KEYS = {
             showEmptySlots    = "bankShowEmptySlots",
         },
         applier = {
-            rarityColor       = "bankRarityColor",
             overlays          = "enableBankOverlays",
             showScrollBar     = "showBankScrollBar",
             showBagsBar       = "showBankBagsBar",
@@ -960,7 +946,6 @@ local MODE_KEYS = {
     warband = {
         sectionTitle = ACCOUNT_BANK_PANEL_TITLE,
         db = {
-            rarityColor       = "warbandBankRarityColor",
             overlays          = "enableWarbandBankOverlays",
             hideScrollBar     = "warbandBankHideScrollBar",
             showBagsBar       = "showWarbandBankBagsBar",
@@ -975,7 +960,6 @@ local MODE_KEYS = {
             showEmptySlots    = "warbandBankShowEmptySlots",
         },
         applier = {
-            rarityColor       = "warbandBankRarityColor",
             overlays          = "enableWarbandBankOverlays",
             showScrollBar     = "showWarbandBankScrollBar",
             showBagsBar       = "showWarbandBankBagsBar",
@@ -1097,20 +1081,6 @@ local function BuildBankTabFor(mode, sc, db)
     yOffset = OneWoW_GUI:CreateSection(sc, { title = DISPLAY, yOffset = yOffset })
     local dispContainer = BuildContainer(sc, yOffset)
     local dispY = -10
-
-    local rarityRefresh
-    dispY, rarityRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_RARITY_COLOR"],
-        description = L["DESC_BANK_RARITY_COLOR"],
-        isEnabled = true,
-        value = db.global[dbKeys.rarityColor],
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting(applierKeys.rarityColor, newVal)
-        end,
-    })
-    addToggle(rarityRefresh, function() return db.global[dbKeys.rarityColor] end)
 
     local overlaysRefresh
     dispY, overlaysRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {

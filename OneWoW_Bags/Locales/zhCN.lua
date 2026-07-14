@@ -57,8 +57,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["SETTING_LOCK"] = "锁定窗口位置",
     ["SETTING_SHOW_BAGS_BAR"] = "显示背包栏",
     ["SETTING_HIDE_BLIZZARD_BAGS_BAR"] = "隐藏暴雪背包栏",
-    ["SETTING_RARITY_COLOR"] = "品质边框颜色",
-    ["SETTING_RARITY_INTENSITY"] = "品质颜色强度",
     ["SETTING_SHOW_NEW"] = "高亮新物品",
     ["SETTING_RECENT_DURATION"] = "最近物品持续时间（秒）",
     ["SETTING_CATEGORY_SORT"] = "分类排序",
@@ -146,9 +144,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["SETTING_ENABLE_BANK"] = "启用银行界面",
     ["DESC_ENABLE_BANK"] = "用 OneWoW Bags 界面替换默认银行窗口。",
     ["SETTING_BANK_OVERLAYS"] = "银行物品覆层",
-    ["DESC_BANK_OVERLAYS"] = "在默认银行物品栏位上显示物品覆层。",
+    ["DESC_BANK_OVERLAYS"] = "在个人银行与公会银行物品栏显示物品覆层。",
 
-    ["DESC_RARITY_COLOR"] = "根据物品品质为物品栏边框上色。",
     ["DESC_SHOW_NEW"] = "高亮显示新获得的物品。",
     ["SETTING_SHOW_SCROLLBAR"] = "显示滚动条",
     ["DESC_SHOW_SCROLLBAR"] = "显示或隐藏背包窗口的滚动条。",
@@ -272,7 +269,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["DESC_SHOW_BANK_BAGS_BAR"] = "在银行窗口底部显示背包选择栏。",
     ["DESC_SHOW_BANK_SCROLLBAR"] = "显示或隐藏银行窗口的滚动条。",
 
-    ["DESC_BANK_RARITY_COLOR"] = "根据物品品质为银行中的物品栏边框上色。",
 
     ["DESC_BANK_LOCK"] = "阻止银行窗口被移动。",
 

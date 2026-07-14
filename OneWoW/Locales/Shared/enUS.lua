@@ -254,6 +254,7 @@ ns.Locale:RegisterShared("enUS", {
     ["OVR_RESET_ALL_CONFIRM_MSG"] = "Reset all overlay settings to defaults? This removes every added overlay.",
     ["OVR_QUALITYBORDER_TITLE"] = "Quality Border",
     ["OVR_QUALITYBORDER_DESC"] = "Draw an Auction House style colored border around item icons based on item quality.",
+    ["OVR_QUALITYBORDER_BAGS_NOTE"] = "Bags, personal bank, warband bank, and guild bank follow OneWoW Bags overlay toggles (guild bank shares the personal bank overlay setting). Use the checkboxes below for vendor and Auction House.",
     ["OVR_QUALITYBORDER_STYLE_ONEWOW"] = "OneWoW clean border",
     ["OVR_QUALITYBORDER_STYLE_BLIZZARD"] = "Blizzard Auction House border",
     ["OVR_ILVL_COLOR_LABEL"] = "Text Color",

@@ -57,8 +57,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["SETTING_LOCK"] = "Verrouiller la position de la fenêtre",
     ["SETTING_SHOW_BAGS_BAR"] = "Afficher la barre des sacs",
     ["SETTING_HIDE_BLIZZARD_BAGS_BAR"] = "Masquer la barre des sacs Blizzard",
-    ["SETTING_RARITY_COLOR"] = "Couleurs de bordure par rareté",
-    ["SETTING_RARITY_INTENSITY"] = "Intensité de couleur de rareté",
     ["SETTING_SHOW_NEW"] = "Mettre en surbrillance les nouveaux objets",
     ["SETTING_RECENT_DURATION"] = "Durée des objets récents (secondes)",
     ["SETTING_CATEGORY_SORT"] = "Tri des catégories",
@@ -146,9 +144,8 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["SETTING_ENABLE_BANK"] = "Activer l'interface Banque",
     ["DESC_ENABLE_BANK"] = "Remplace la fenêtre de banque par défaut par l'interface OneWoW Bags.",
     ["SETTING_BANK_OVERLAYS"] = "Superpositions d'objets de banque",
-    ["DESC_BANK_OVERLAYS"] = "Afficher les superpositions sur les emplacements de la banque par défaut.",
+    ["DESC_BANK_OVERLAYS"] = "Affiche les superpositions d’objets dans la banque personnelle et la banque de guilde.",
 
-    ["DESC_RARITY_COLOR"] = "Colorier les bordures d'emplacement selon la rareté de l'objet.",
     ["DESC_SHOW_NEW"] = "Mettre en surbrillance les objets nouvellement obtenus.",
     ["SETTING_SHOW_SCROLLBAR"] = "Afficher la barre de défilement",
     ["DESC_SHOW_SCROLLBAR"] = "Afficher ou masquer la barre de défilement de la fenêtre des sacs.",
@@ -272,7 +269,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["DESC_SHOW_BANK_BAGS_BAR"] = "Affiche la barre de sélection des sacs en bas de la fenêtre de banque.",
     ["DESC_SHOW_BANK_SCROLLBAR"] = "Affiche ou masque la barre de défilement de la fenêtre de banque.",
 
-    ["DESC_BANK_RARITY_COLOR"] = "Colorie les bordures d'emplacement selon la rareté de l'objet dans la banque.",
 
     ["DESC_BANK_LOCK"] = "Empêche le déplacement de la fenêtre de banque.",
 

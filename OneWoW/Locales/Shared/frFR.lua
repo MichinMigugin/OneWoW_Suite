@@ -254,6 +254,7 @@ ns.Locale:RegisterShared("frFR", {
     ["OVR_RESET_ALL_CONFIRM_MSG"] = "Réinitialiser tous les réglages des incrustations ? Toutes les incrustations ajoutées seront supprimées.",
     ["OVR_QUALITYBORDER_TITLE"] = "Bordure de qualité",
     ["OVR_QUALITYBORDER_DESC"] = "Affiche autour des icônes d'objets une bordure colorée de style hôtel des ventes selon la qualité de l'objet.",
+    ["OVR_QUALITYBORDER_BAGS_NOTE"] = "Sacs, banque personnelle, banque de bataillon et banque de guilde suivent les bascules de superposition de OneWoW Bags (la banque de guilde partage le réglage de la banque personnelle). Utilisez les cases ci-dessous pour le vendeur et l’hôtel des ventes.",
     ["OVR_QUALITYBORDER_STYLE_ONEWOW"] = "Bordure nette OneWoW",
     ["OVR_QUALITYBORDER_STYLE_BLIZZARD"] = "Bordure Blizzard de l'hôtel des ventes",
     ["OVR_ILVL_COLOR_LABEL"] = "Couleur du texte",

@@ -57,8 +57,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["SETTING_LOCK"] = "Blocca posizione della finestra",
     ["SETTING_SHOW_BAGS_BAR"] = "Mostra barra delle borse",
     ["SETTING_HIDE_BLIZZARD_BAGS_BAR"] = "Nascondi barra delle borse di Blizzard",
-    ["SETTING_RARITY_COLOR"] = "Colori del bordo per rarità",
-    ["SETTING_RARITY_INTENSITY"] = "Intensità del colore di rarità",
     ["SETTING_SHOW_NEW"] = "Evidenzia oggetti nuovi",
     ["SETTING_RECENT_DURATION"] = "Durata oggetti recenti (secondi)",
     ["SETTING_CATEGORY_SORT"] = "Ordinamento categorie",
@@ -146,9 +144,8 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["SETTING_ENABLE_BANK"] = "Attiva interfaccia banca",
     ["DESC_ENABLE_BANK"] = "Sostituisce la finestra della banca predefinita con l'interfaccia di OneWoW Bags.",
     ["SETTING_BANK_OVERLAYS"] = "Sovrapposizioni oggetti banca",
-    ["DESC_BANK_OVERLAYS"] = "Mostra le sovrapposizioni sugli spazi oggetto della banca predefinita.",
+    ["DESC_BANK_OVERLAYS"] = "Mostra le sovrapposizioni oggetti negli scomparti della banca personale e della banca di gilda.",
 
-    ["DESC_RARITY_COLOR"] = "Colora i bordi degli spazi oggetto in base alla rarità.",
     ["DESC_SHOW_NEW"] = "Evidenzia gli oggetti appena ottenuti.",
     ["SETTING_SHOW_SCROLLBAR"] = "Mostra barra di scorrimento",
     ["DESC_SHOW_SCROLLBAR"] = "Mostra o nascondi la barra di scorrimento della finestra delle borse.",
@@ -272,7 +269,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["DESC_SHOW_BANK_BAGS_BAR"] = "Mostra la barra di selezione delle borse in fondo alla finestra della banca.",
     ["DESC_SHOW_BANK_SCROLLBAR"] = "Mostra o nascondi la barra di scorrimento nella finestra della banca.",
 
-    ["DESC_BANK_RARITY_COLOR"] = "Colora i bordi degli spazi oggetto nella banca in base alla rarità dell'oggetto.",
 
     ["DESC_BANK_LOCK"] = "Impedisce lo spostamento della finestra della banca.",
 

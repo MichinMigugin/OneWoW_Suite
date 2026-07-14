@@ -29,7 +29,7 @@ function GuildBankController:SetViewMode(mode)
     local db = self.addon:GetDB()
     if db.global.guildBankViewMode == mode then return end
     db.global.guildBankViewMode = mode
-    self.addon:RequestLayoutRefresh("guild")
+    self.addon:RequestLayoutRefresh("guild", "view_mode")
 end
 
 function GuildBankController:GetShowEmptySlots()
@@ -64,7 +64,7 @@ function GuildBankController:ToggleSelectedTab(tabID)
         self.addon.GuildBankBar:UpdateTabHighlights()
     end
 
-    self.addon:RequestLayoutRefresh("guild")
+    self.addon:RequestLayoutRefresh("guild", "tab_toggle")
 
     if self.addon.GuildBankLog then
         self.addon.GuildBankLog:OnTabChanged()

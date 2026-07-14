@@ -24,8 +24,6 @@ local defaults = {
         locked = false,
         showBagsBar = true,
         hideBlizzardBagsBar = false,
-        rarityColor = true,
-        rarityIntensity = 1.0,
         showNewItems = true,
         recentItemDuration = 120,
         customCategoriesV2 = {},
@@ -77,10 +75,8 @@ local defaults = {
         showBankCategoryHeaders = true,
         bankCategorySpacing = 1.0,
         bankLocked = false,
-        bankRarityColor = true,
         warbandBankViewMode = "list",
         warbandBankColumns = 15,
-        warbandBankRarityColor = true,
         enableWarbandBankOverlays = true,
         warbandBankHideScrollBar = false,
         showWarbandBankBagsBar = true,
@@ -136,6 +132,22 @@ function ns:InitializeDatabase()
         defaults = defaults,
     })
     ns.db = db
+    ns:MigrateRarityToQualityBorder()
+end
+
+--- One-time: Bags rarityColor / bank / warband toggles → Overlay Quality Border.
+--- Missing legacy keys count as the old default (true). Sticky flag prevents re-runs.
+function ns:MigrateRarityToQualityBorder()
+    local g = ns.db and ns.db.global
+    if not g or g._migratedRarityToQualityBorder then return end
+
+    -- Legacy SV keys may still be present; nil means old default (on).
+    local anyOn = (g.rarityColor ~= false)
+        or (g.bankRarityColor ~= false)
+        or (g.warbandBankRarityColor ~= false)
+
+    OneWoW.SettingsFeatureRegistry:SetEnabled("overlays", "qualityborder", anyOn)
+    g._migratedRarityToQualityBorder = true
 end
 
 --- Return the addon database handle after initialization.

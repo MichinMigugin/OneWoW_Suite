@@ -1,7 +1,5 @@
 local _, ns = ...
 
-local OneWoW_GUI = OneWoW_GUI
-
 local BagTypes = ns.BagTypes
 local ItemPool = ns.ItemPool
 
@@ -238,19 +236,6 @@ function BagSet:UpdateSlotsForItems(itemIDs)
         self:ProcessDirtySlots("item_info")
     end
     return anyDirty
-end
-
-function BagSet:UpdateQualityColors()
-    for _, bagSlots in pairs(self.slots) do
-        for _, button in pairs(bagSlots) do
-            local quality = button.owb_itemInfo and button.owb_itemInfo.quality
-            if ns:ShouldShowItemQuality(false, quality) then
-                OneWoW_GUI:UpdateIconQuality(button, button.owb_itemInfo.quality)
-            else
-                OneWoW_GUI:UpdateIconQuality(button, nil)
-            end
-        end
-    end
 end
 
 function BagSet:GetAllButtons()

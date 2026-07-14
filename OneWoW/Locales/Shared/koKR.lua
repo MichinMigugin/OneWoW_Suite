@@ -254,6 +254,7 @@ ns.Locale:RegisterShared("koKR", {
     ["OVR_RESET_ALL_CONFIRM_MSG"] = "모든 오버레이 설정을 기본값으로 초기화할까요? 추가한 모든 오버레이가 제거됩니다.",
     ["OVR_QUALITYBORDER_TITLE"] = "품질 테두리",
     ["OVR_QUALITYBORDER_DESC"] = "아이템 품질에 따라 경매장 스타일의 색상 테두리를 아이템 아이콘 주위에 표시합니다.",
+    ["OVR_QUALITYBORDER_BAGS_NOTE"] = "가방, 개인 은행, 전투부대 은행, 길드 은행은 OneWoW Bags 오버레이 설정을 따릅니다(길드 은행은 개인 은행 오버레이 설정을 공유합니다). 아래 확인란은 상인과 경매장에 사용합니다.",
     ["OVR_QUALITYBORDER_STYLE_ONEWOW"] = "OneWoW 깔끔한 테두리",
     ["OVR_QUALITYBORDER_STYLE_BLIZZARD"] = "블리자드 경매장 테두리",
     ["OVR_ILVL_COLOR_LABEL"] = "글자 색상",

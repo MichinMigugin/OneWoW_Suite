@@ -5,8 +5,9 @@ local _, ns = ...
 -- ============================================================================
 -- Pure painting layer: owns the per-button overlay container, the icon pool
 -- (up to MAX_ICON_OVERLAYS entries), the item level FontString, and the
--- quality border texture. Knows nothing about settings storage or matching;
--- the engine hands it normalized paint configs.
+-- quality border frame (button chrome at FrameLevel + 1, under the container).
+-- Knows nothing about settings storage or matching; the engine hands it
+-- normalized paint configs.
 --
 -- Deliberately absent from 1.0's renderer: no reads of Blizzard's
 -- ItemContextOverlay or button alpha (the source of the Warband Bank
@@ -64,10 +65,14 @@ local function GetOrCreateContainer(button)
         local c = CreateFrame("Frame", nil, button)
         c:SetAllPoints(button)
         c:EnableMouse(false)
-        -- OneWoW_GUI's rarity border sits at button FrameLevel + 1; keep the
-        -- overlay container above it so ilvl/quality overlays stay on top.
+        -- Chrome (skin _skinBorder + Quality Border) sits at button + 1.
+        -- Overlay content (ilvl, icon overlays) stays at button + 2 above chrome.
         c:SetFrameLevel(button:GetFrameLevel() + 2)
         c:Hide()
+        -- Host addons (OneWoW_Bags) bulk-hide "dynamic" button children they
+        -- don't recognize; this tag tells them the frame is renderer-owned and
+        -- must only be hidden through Engine:CleanButton.
+        c.onewow_overlayManaged = true
         button.onewow_overlayContainer = c
     end
     return button.onewow_overlayContainer
@@ -84,6 +89,7 @@ function Renderer:PresetContainerOnIcon(button, iconFrame, inset)
     c:EnableMouse(false)
     c:SetFrameStrata("HIGH")
     c:Hide()
+    c.onewow_overlayManaged = true
     button.onewow_overlayContainer = c
 end
 
@@ -96,6 +102,7 @@ function Renderer:PresetContainerFixed(button, parent, w, h, anchorPoint, anchor
     c:EnableMouse(false)
     c:SetFrameStrata("HIGH")
     c:Hide()
+    c.onewow_overlayManaged = true
     button.onewow_overlayContainer = c
 end
 
@@ -120,8 +127,28 @@ end
 -- Clean
 -- ----------------------------------------------------------------------------
 
-function Renderer:CleanButton(button)
+function Renderer:CleanButton(button, keepQualityBorder)
     if not button then return end
+
+    -- Empty-slot repaint storms call Clean on every guild button. Skip when
+    -- there is nothing painted (avoids 600+ no-op cleans per wave).
+    if not keepQualityBorder
+        and not button.onewow_itemLink
+        and not button._owbQbQuality
+        and (not button.onewow_qualityBorderFrame or not button.onewow_qualityBorderFrame:IsShown())
+        and (not button.onewow_overlayContainer or not button.onewow_overlayContainer:IsShown())
+        and (not button.onewow_ilvl or not button.onewow_ilvl:IsShown()) then
+        local flashNote = OneWoW._overlayFlashNote
+        if flashNote then
+            flashNote("clean_skip")
+        end
+        return
+    end
+
+    local flashNote = OneWoW._overlayFlashNote
+    if flashNote then
+        flashNote("clean", { keep = keepQualityBorder and true or false })
+    end
     if button.onewow_overlayContainer then
         button.onewow_overlayContainer:Hide()
     end
@@ -143,8 +170,17 @@ function Renderer:CleanButton(button)
     if button.onewow_qualityBorder then
         button.onewow_qualityBorder:Hide()
     end
-    if button.onewow_qualityBorderFrame then
-        button.onewow_qualityBorderFrame:Hide()
+    -- Keep Quality Border visible across same-item repaints (guild bank layout
+    -- storms / tooltip catchup). Hiding it here then re-showing causes flash.
+    if not keepQualityBorder then
+        if button.onewow_qualityBorderFrame then
+            button.onewow_qualityBorderFrame:Hide()
+        end
+        button._owbQbQuality = nil
+        button._owbQbEdge = nil
+        button._owbQbAlpha = nil
+        button.onewow_itemLink = nil
+        button._owbOverlayPaintGen = nil
     end
 end
 
@@ -535,30 +571,81 @@ end
 -- Quality border
 -- ----------------------------------------------------------------------------
 
---- Paint the Auction-House-style quality border over the button icon.
+--- Paint the quality border as button chrome (under ilvl / icon overlays).
+--- Parent is the button at FrameLevel + 1 — same plane as OneWoW_GUI _skinBorder;
+--- onewow_overlayContainer stays at +2 so content draws above.
 function Renderer:ApplyQualityBorder(button, cfg, quality)
+    local flashNote = OneWoW._overlayFlashNote
     if not quality then
-        if button.onewow_qualityBorderFrame then
-            button.onewow_qualityBorderFrame:Hide()
-        end
+        self:HideQualityBorder(button)
         return
     end
 
-    local container = GetOrCreateContainer(button)
+    -- OneWoW_Bags + Masque: Masque owns chrome; skip QB (covers async paint too).
+    if button.owb_bagID and OneWoW_Bags_API and OneWoW_Bags_API.IsMasqueActive
+        and OneWoW_Bags_API.IsMasqueActive() then
+        self:HideQualityBorder(button)
+        return
+    end
+
+    -- Ensure overlay container exists and stays above chrome even when only QB paints.
+    GetOrCreateContainer(button)
+
     local alpha = math_min(cfg.alpha or 1.0, 1.0)
     -- OneWoW clean border only. scale = edge thickness in pixels (1-6).
     local edge = math.max(1, math.floor((cfg.scale or 2) + 0.5))
 
     local f = button.onewow_qualityBorderFrame
+    -- SetBackdrop recreates edge textures and flashes even when values are
+    -- unchanged (guild tooltip-catchup / layout re-paint). No-op when stable.
+    if f and f:IsShown()
+        and button._owbQbQuality == quality
+        and button._owbQbEdge == edge
+        and button._owbQbAlpha == alpha then
+        f:SetFrameLevel(button:GetFrameLevel() + 1)
+        if flashNote then flashNote("qb_noop") end
+        return
+    end
+
+    local created = not f
     if not f then
-        f = CreateFrame("Frame", nil, container, "BackdropTemplate")
-        f:SetAllPoints(container)
-        f:SetFrameLevel(container:GetFrameLevel() + 1)
+        f = CreateFrame("Frame", nil, button, "BackdropTemplate")
         f:EnableMouse(false)
+        f.onewow_overlayManaged = true
         button.onewow_qualityBorderFrame = f
     end
-    f:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = edge })
-    local r, g, b = C_Item.GetItemQualityColor(quality)
+    if f:GetParent() ~= button then
+        f:SetParent(button)
+    end
+    f:SetAllPoints(button)
+    f:SetFrameLevel(button:GetFrameLevel() + 1)
+    if button._owbQbEdge ~= edge then
+        f:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = edge })
+    elseif not f:GetBackdrop() then
+        f:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = edge })
+    end
+    local r, g, b = OneWoW_GUI:GetItemQualityColor(quality)
     f:SetBackdropBorderColor(r, g, b, alpha)
     f:Show()
+    button._owbQbQuality = quality
+    button._owbQbEdge = edge
+    button._owbQbAlpha = alpha
+    if flashNote then
+        flashNote(created and "qb_create" or "qb_update")
+    end
+end
+
+--- Hide quality border only (Masque owns bag-button chrome when active).
+function Renderer:HideQualityBorder(button)
+    if not button then return end
+    local flashNote = OneWoW._overlayFlashNote
+    if flashNote and button.onewow_qualityBorderFrame and button.onewow_qualityBorderFrame:IsShown() then
+        flashNote("qb_hide")
+    end
+    if button.onewow_qualityBorderFrame then
+        button.onewow_qualityBorderFrame:Hide()
+    end
+    button._owbQbQuality = nil
+    button._owbQbEdge = nil
+    button._owbQbAlpha = nil
 end

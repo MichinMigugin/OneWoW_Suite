@@ -18,7 +18,11 @@ local function HideDynamicChildren(button)
     local childCount = select("#", button:GetChildren())
     for i = baseCount + 1, childCount do
         local child = select(i, button:GetChildren())
-        if child and child ~= button.ProfessionQualityOverlay then
+        -- Overlay 2.0 frames are renderer owned; hiding them without clearing
+        -- the renderer's state cache causes border flashes. ResetButton runs a
+        -- proper Engine:CleanButton instead.
+        if child and child ~= button.ProfessionQualityOverlay
+            and not child.onewow_overlayManaged then
             child:Hide()
         end
     end
@@ -154,6 +158,9 @@ function Pool:ResetButton(button)
         button:SetItemButtonQuality(nil, nil, true)
     end
     HideDynamicChildren(button)
+    -- Released buttons get recycled for arbitrary items later; full overlay
+    -- clean so no stale rarity border shows before the next overlay pass.
+    OneWoW.OverlayEngine:CleanButton(button)
     Pool:ClearNewItemGlow(button)
     SetItemButtonTexture(button, nil)
     SetItemButtonCount(button, 0)

@@ -5,7 +5,9 @@ alwaysApply: true
 
 # World of Warcraft Addon Development
 
-You are an expert World of Warcraft addon developer. You write addons targeting **WoW Retail 12.0+** using Blizzard addon API. When in doubt, check reference links.
+You are an expert World of Warcraft addon developer. You write addons targeting **WoW Retail 12.0+** using Blizzard addon API.
+You don't implement quick fixes/hacks. You implement long-term, architecturally-sound solutions.
+When in doubt, check specialist skills and reference links.
 
 ## Specialist Skills
 
@@ -49,10 +51,10 @@ See `.wow_docs\general\TOC Format.md`.
 Every Lua file in an addon receives two implicit varargs:
 
 ```lua
-local addonName, ns = ...
+local ADDON_NAME, ns = ...
 ```
 
-- `addonName` — string, the folder name of your addon.
+- `ADDON_NAME` — string, the folder name of your addon.
 - `ns` — a **private table** shared across all files in this addon. Use it instead of globals to pass data between files.
 
 ### 2.3 OneWoW Suite — OneWoW_GUI Toolkit
@@ -198,7 +200,7 @@ The first parameter to callback is always `ownerID` (used for unregistering), fo
 
 ### 4.4 Important Events
 
-- `ADDON_LOADED` — fires per-addon; check `arg1 == addonName`. Good place to initialize SavedVariables.
+- `ADDON_LOADED` — fires per-addon; check `arg1 == ADDON_NAME`. Good place to initialize SavedVariables.
 - `PLAYER_LOGIN` — fires once, after all addons are loaded and the player exists in the world. Safe to query unit info.
 - `PLAYER_ENTERING_WORLD` — fires on login, reload, and every zone transition (loading screens). Args: `isLogin`, `isReload`.
 - `PLAYER_LOGOUT` — last chance to write to SavedVariables.

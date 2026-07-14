@@ -57,8 +57,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["SETTING_LOCK"] = "Fensterposition sperren",
     ["SETTING_SHOW_BAGS_BAR"] = "Taschenleiste anzeigen",
     ["SETTING_HIDE_BLIZZARD_BAGS_BAR"] = "Blizzard-Taschenleiste ausblenden",
-    ["SETTING_RARITY_COLOR"] = "Seltenheitsfarben am Rand",
-    ["SETTING_RARITY_INTENSITY"] = "Intensität der Seltenheitsfarbe",
     ["SETTING_SHOW_NEW"] = "Neue Gegenstände hervorheben",
     ["SETTING_RECENT_DURATION"] = "Dauer kürzlicher Gegenstände (Sekunden)",
     ["SETTING_CATEGORY_SORT"] = "Kategorie-Sortierung",
@@ -146,9 +144,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["SETTING_ENABLE_BANK"] = "Bank-UI aktivieren",
     ["DESC_ENABLE_BANK"] = "Ersetzt das Standard-Bankfenster durch die OneWoW-Bags-Oberfläche.",
     ["SETTING_BANK_OVERLAYS"] = "Bank-Gegenstands-Overlays",
-    ["DESC_BANK_OVERLAYS"] = "Overlays auf Standard-Bankgegenstandsplätzen anzeigen.",
+    ["DESC_BANK_OVERLAYS"] = "Zeigt Gegenstand-Overlays in der persönlichen Bank und der Gildenbank an.",
 
-    ["DESC_RARITY_COLOR"] = "Gegenstandsrahmen nach Seltenheit einfärben.",
     ["DESC_SHOW_NEW"] = "Neu erhaltene Gegenstände hervorheben.",
     ["SETTING_SHOW_SCROLLBAR"] = "Scrollleiste anzeigen",
     ["DESC_SHOW_SCROLLBAR"] = "Scrollleiste des Taschenfensters anzeigen oder ausblenden.",
@@ -272,7 +269,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["DESC_SHOW_BANK_BAGS_BAR"] = "Zeigt die Taschenauswahlleiste unten im Bankfenster.",
     ["DESC_SHOW_BANK_SCROLLBAR"] = "Blendet die Scrollleiste im Bankfenster ein oder aus.",
 
-    ["DESC_BANK_RARITY_COLOR"] = "Färbt Gegenstandsränder in der Bank nach Seltenheit ein.",
 
     ["DESC_BANK_LOCK"] = "Verhindert das Verschieben des Bankfensters.",
 

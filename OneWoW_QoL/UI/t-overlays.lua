@@ -1473,12 +1473,17 @@ local function ShowQualityBorderDetail(split, dsc, selectedRow)
         return math.abs(y)
     end)
 
-    stack:AddCard("qb-surfaces", L["OVR_CARD_SURFACES"], function(content)
-        return BuildSurfacesCard(content,
-            function(key) return reg:GetOverlaySetting(featureId, key) end,
-            function(key, value)
-                reg:SetOverlaySetting(featureId, key, value)
+    stack:AddCard("qb-surfaces", L["OVR_CARD_SURFACES"], function(content, w)
+        local y = AddNote(content, 0, L["OVR_QUALITYBORDER_BAGS_NOTE"], w)
+        local _, y1 = AddCheckbox(content, y, L["OVR_VENDOR_LABEL"],
+            reg:GetOverlaySetting(featureId, "applyToVendorItems") == true, function(checked)
+                reg:SetOverlaySetting(featureId, "applyToVendorItems", checked)
             end)
+        local _, y2 = AddCheckbox(content, y1, L["OVR_AH_LABEL"],
+            reg:GetOverlaySetting(featureId, "applyToAuctionHouse") == true, function(checked)
+                reg:SetOverlaySetting(featureId, "applyToAuctionHouse", checked)
+            end)
+        return math.abs(y2)
     end)
 
     stack:Finish()
