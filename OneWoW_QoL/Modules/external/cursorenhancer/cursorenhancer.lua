@@ -10,12 +10,13 @@
 -- tracks the pointer without stepping/jitter. The trail lives on its own
 -- always-shown container so dots keep fading after the ring is hidden.
 --
--- Options UI lives in cursorenhancer-ui.lua; this file exposes the CE table
--- and Apply* refreshers it calls.
+-- Options UI lives in cursorenhancer-ui.lua; situations match/resolve in
+-- cursorenhancer-situations.lua. This file exposes the CE table and Apply*
+-- entry points.
 -- ============================================================================
 
 local _, ns = ...
-local CursorEnhancerModule, L = ns.ModuleRegistry:Current()
+local CursorEnhancerModule = ns.ModuleRegistry:Current()
 if not CursorEnhancerModule then return end
 
 local OneWoW_GUI = OneWoW_GUI
@@ -29,8 +30,13 @@ local GetCursorPosition = GetCursorPosition
 local C_Timer = C_Timer
 local C_Spell = C_Spell
 local UnitClass = UnitClass
+local UnitPower = UnitPower
+local UnitPowerMax = UnitPowerMax
+local UnitPowerDisplayMod = UnitPowerDisplayMod
 local UnitCastingInfo, UnitChannelInfo = UnitCastingInfo, UnitChannelInfo
 local GetUnitEmpowerHoldAtMaxTime = GetUnitEmpowerHoldAtMaxTime
+local GetRuneCooldown = GetRuneCooldown
+local C_SpecializationInfo = C_SpecializationInfo
 local RAID_CLASS_COLORS = RAID_CLASS_COLORS
 local hooksecurefunc = hooksecurefunc
 
@@ -78,72 +84,7 @@ local function GetDB()
 end
 
 local function GetDefaults()
-    local _, class = UnitClass("player")
-    local classColor = RAID_CLASS_COLORS[class] or { r = 1, g = 1, b = 1 }
-    return {
-        ringSize          = 90,
-        offsetX           = 0,
-        offsetY           = 0,
-        combatAlpha       = 1.0,
-        outOfCombatAlpha  = 1.0,
-        showOutOfCombat   = true,
-        showInInstance    = true,
-        onlyWhenHidden    = false,
-        visibility        = "always",
-        outerRingEnabled  = true,
-        outerRingColor    = { classColor.r, classColor.g, classColor.b },
-        outerRingClassColor = false,
-        middleRingEnabled = false,
-        middleRingColor   = { 1.0, 1.0, 1.0 },
-        centerMarker      = "Dot",
-        centerMarkerColor = { 1.0, 1.0, 1.0 },
-        mouseTrail        = false,
-        trailColor        = { 1.0, 1.0, 1.0 },
-        trailFadeTime     = 0.6,
-        trailStyle        = "ring",
-        trailSize         = 36,
-        middleSwipe       = { enabled = false, fill = false },
-        outerSwipe        = { enabled = false, fill = false },
-        pipsEnabled       = false,
-        gcd = {
-            enabled      = false,
-            attached     = true,
-            radius       = 21,
-            ringTex      = "c1",
-            scale        = 100,
-            color        = { 1.0, 1.0, 1.0 },
-            useClassColor = false,
-            alpha        = 0.8,
-            instanceOnly = false,
-        },
-        castCircle = {
-            enabled       = false,
-            attached      = true,
-            radius        = 30,
-            ringTex       = "c1",
-            scale         = 100,
-            color         = { classColor.r, classColor.g, classColor.b },
-            useClassColor = true,
-            alpha         = 0.8,
-            sparkEnabled  = true,
-            instanceOnly  = false,
-        },
-    }
-end
-
---- Fill any keys missing from dst using src (recurses one level into subtables).
---- Backfills new defaults onto profiles saved before those keys existed.
----@param dst table
----@param src table
-local function MergeMissing(dst, src)
-    for k, v in pairs(src) do
-        if type(v) == "table" then
-            if type(dst[k]) ~= "table" then dst[k] = {} end
-            MergeMissing(dst[k], v)
-        elseif dst[k] == nil then
-            dst[k] = v
-        end
-    end
+    return CursorEnhancerModule.Situations.GlobalDefaults()
 end
 
 --- Resolve the active profile's settings table, backfilling missing defaults.
@@ -158,7 +99,7 @@ function CE:GetSettings()
         ceDb.profiles[profileName] = GetDefaults()
     end
     local profile = ceDb.profiles[profileName]
-    MergeMissing(profile, GetDefaults())
+    CursorEnhancerModule.Situations.MigrateProfile(profile)
     return profile
 end
 
@@ -237,58 +178,29 @@ local function ResolveColor(colorTbl, useClassColor)
     return c[1] or 1, c[2] or 1, c[3] or 1
 end
 
-local function InInstanceContent()
-    local inInst, t = IsInInstance()
-    return inInst and (t == "party" or t == "raid" or t == "pvp" or t == "arena" or t == "scenario")
+-- ----------------------------------------------------------------------------
+-- Visibility (situation-driven)
+-- ----------------------------------------------------------------------------
+--- Effective show/look for the current place × combat context.
+---@return table
+function CE:GetResolvedState()
+    return CursorEnhancerModule.Situations.Resolve(self:GetSettings())
 end
 
--- ----------------------------------------------------------------------------
--- Visibility
--- ----------------------------------------------------------------------------
 --- Whether the cursor circle should currently be visible.
 ---@return boolean
 function CE:ShouldShow()
     if not CursorEnhancerModule._moduleEnabled then return false end
-    local settings = self:GetSettings()
-    local inCombat = OneWoW.Restriction.IsInCombat() or UnitAffectingCombat("player")
-
-    local mode = settings.visibility or "always"
-    if mode == "never" then
-        return false
-    elseif mode == "in_combat" then
-        if not inCombat then return false end
-    elseif mode == "out_of_combat" then
-        if inCombat then return false end
-    elseif mode == "in_raid" then
-        if not IsInRaid() then return false end
-    elseif mode == "in_party" then
-        if not (IsInGroup() and not IsInRaid()) then return false end
-    elseif mode == "solo" then
-        if IsInGroup() then return false end
-    end
-
-    -- Base combat / instance rules (legacy toggles, layered on top of mode).
-    local baseShow
-    if inCombat then
-        baseShow = true
-    elseif InInstanceContent() and settings.showInInstance then
-        baseShow = true
-    else
-        baseShow = settings.showOutOfCombat
-    end
-    if not baseShow then return false end
-
-    if settings.onlyWhenHidden and not mouselookActive then
+    local resolved = self:GetResolvedState()
+    if not resolved.anyVisual then return false end
+    if resolved.onlyWhileMouseLook and not mouselookActive then
         return false
     end
     return true
 end
 
 function CE:GetCursorAlpha()
-    local settings = self:GetSettings()
-    local inCombat = OneWoW.Restriction.IsInCombat()
-    local combatContext = inCombat or InInstanceContent()
-    return combatContext and (settings.combatAlpha or 1.0) or (settings.outOfCombatAlpha or 1.0)
+    return self:GetResolvedState().alpha or 1.0
 end
 
 function CE:UpdateVisibility()
@@ -311,8 +223,6 @@ function CE:UpdateVisibility()
     elseif shouldShow then
         mainFrame:SetAlpha(self:GetCursorAlpha())
     end
-
-    self:RefreshSwipeVisibility()
 end
 
 -- ----------------------------------------------------------------------------
@@ -383,65 +293,70 @@ end
 
 function CE:UpdateAll()
     if not mainFrame then return end
-    local settings = self:GetSettings()
-    local size = settings.ringSize or 90
+    local resolved = self:GetResolvedState()
+    local size = resolved.ringSize or 90
 
-    offX = settings.offsetX or 0
-    offY = settings.offsetY or 0
+    offX = resolved.offsetX or 0
+    offY = resolved.offsetY or 0
 
     mainFrame:SetSize(size, size)
 
     outerRing:SetSize(size, size)
-    outerRing:SetVertexColor(ResolveColor(settings.outerRingColor, settings.outerRingClassColor))
-    outerRing:SetShown(settings.outerRingEnabled ~= false)
+    outerRing:SetVertexColor(ResolveColor(resolved.outerRingColor, resolved.outerRingClassColor))
+    outerRing:SetShown(resolved.show.outerRing == true)
 
     middleRing:SetSize(size * 0.75, size * 0.75)
-    middleRing:SetVertexColor(ResolveColor(settings.middleRingColor))
-    middleRing:SetShown(settings.middleRingEnabled == true)
+    middleRing:SetVertexColor(ResolveColor(resolved.middleRingColor))
+    middleRing:SetShown(resolved.show.middleRing == true)
 
     outerSwipeCD:SetSize(size, size)
-    local oR, oG, oB = ResolveColor(settings.outerRingColor, settings.outerRingClassColor)
+    local oR, oG, oB = ResolveColor(resolved.outerRingColor, resolved.outerRingClassColor)
     outerSwipeCD:SetSwipeColor(oR, oG, oB, 1)
-    outerSwipeCD:SetReverse(settings.outerSwipe.fill == true)
-    if not settings.outerSwipe.enabled then outerSwipeCD:Hide() end
+    outerSwipeCD:SetReverse(resolved.outerSwipe.fill == true)
+    if not resolved.outerSwipe.enabled then outerSwipeCD:Hide() end
 
     middleSwipeCD:SetSize(size * 0.75, size * 0.75)
-    local mR, mG, mB = ResolveColor(settings.middleRingColor)
+    local mR, mG, mB = ResolveColor(resolved.middleRingColor)
     middleSwipeCD:SetSwipeColor(mR, mG, mB, 1)
-    middleSwipeCD:SetReverse(settings.middleSwipe.fill == true)
-    if not settings.middleSwipe.enabled then middleSwipeCD:Hide() end
+    middleSwipeCD:SetReverse(resolved.middleSwipe.fill == true)
+    if not resolved.middleSwipe.enabled then middleSwipeCD:Hide() end
 
     self:ApplySwipeDriver()
     self:UpdatePips()
 
-    if settings.centerMarkerHidden then
+    -- Style None is already folded into show by Resolve. Do not call
+    -- SetTexture(nil) after Hide — SetTexture re-shows the region in WoW.
+    local markerType = resolved.centerMarker or "Dot"
+    local showMarker = resolved.show.centerMarker == true and markerType ~= "None"
+    if not showMarker then
         centerMarker:Hide()
     else
-        local markerType = settings.centerMarker or "Dot"
-        if markerType == "None" then
-            centerMarker:Hide()
-        else
-            centerMarker:Show()
-            if markerType == "Dot" then
-                centerMarker:SetTexture(MEDIA .. "sparkle")
-                centerMarker:SetSize(12, 12)
-            elseif markerType == "Star" then
-                centerMarker:SetTexture(MEDIA .. "c3")
-                centerMarker:SetSize(20, 20)
-            elseif markerType == "Cross" then
-                centerMarker:SetAtlas("uitools-icon-plus")
-                centerMarker:SetSize(16, 16)
-            elseif markerType == "Diamond" then
-                centerMarker:SetAtlas("UF-SoulShard-FX-FrameGlow")
-                centerMarker:SetSize(20, 20)
-            elseif markerType == "Ring" then
-                centerMarker:SetTexture(MEDIA .. "c2")
-                centerMarker:SetSize(24, 24)
-            end
-            centerMarker:SetVertexColor(ResolveColor(settings.centerMarkerColor))
+        centerMarker:Show()
+        if markerType == "Dot" then
+            centerMarker:SetTexture(MEDIA .. "sparkle")
+            centerMarker:SetBlendMode("ADD")
+            centerMarker:SetSize(12, 12)
+        elseif markerType == "Star" then
+            centerMarker:SetBlendMode("BLEND")
+            centerMarker:SetTexture(MEDIA .. "c3")
+            centerMarker:SetSize(20, 20)
+        elseif markerType == "Cross" then
+            centerMarker:SetBlendMode("BLEND")
+            centerMarker:SetAtlas("uitools-icon-plus")
+            centerMarker:SetSize(16, 16)
+        elseif markerType == "Diamond" then
+            centerMarker:SetBlendMode("BLEND")
+            centerMarker:SetAtlas("UF-SoulShard-FX-FrameGlow")
+            centerMarker:SetSize(20, 20)
+        elseif markerType == "Ring" then
+            centerMarker:SetBlendMode("BLEND")
+            centerMarker:SetTexture(MEDIA .. "c2")
+            centerMarker:SetSize(24, 24)
         end
+        centerMarker:SetVertexColor(ResolveColor(resolved.centerMarkerColor))
     end
 
+    -- Keep settings.ringSize etc. as global identity; resolved drives display.
     self:UpdateVisibility()
 end
 
@@ -503,7 +418,8 @@ local function TrailOnUpdate(_, elapsed)
     end
 
     local settings = CE:GetSettings()
-    if not (settings.mouseTrail and CE:ShouldShow()) then return end
+    local resolved = CE:GetResolvedState()
+    if not (resolved.show.trail and CE:ShouldShow()) then return end
 
     local s = UIParent:GetEffectiveScale()
     local x, y = GetCursorPosition()
@@ -515,10 +431,11 @@ local function TrailOnUpdate(_, elapsed)
     trailTimer = 0
     trailLastX, trailLastY = x, y
 
-    local c = settings.trailColor
-    local size = settings.trailSize or 36
-    local fade = settings.trailFadeTime or 0.6
-    local stylePath = CE.TRAIL_STYLES[settings.trailStyle or "ring"] or CE.TRAIL_STYLES.ring
+    local trail = resolved.trail
+    local c = trail.color or settings.trailColor
+    local size = trail.size or 36
+    local fade = trail.fadeTime or 0.6
+    local stylePath = CE.TRAIL_STYLES[trail.style or "ring"] or CE.TRAIL_STYLES.ring
 
     local tex = AcquireTrailTex(stylePath)
     tex:SetVertexColor(c[1] or 1, c[2] or 1, c[3] or 1, 0.8)
@@ -546,8 +463,8 @@ local function HideAllTrail()
 end
 
 function CE:ApplyTrail()
-    local settings = self:GetSettings()
-    if settings.mouseTrail and CursorEnhancerModule._moduleEnabled then
+    local resolved = self:GetResolvedState()
+    if resolved.show.trail and CursorEnhancerModule._moduleEnabled then
         if not trailContainer then
             trailContainer = CreateFrame("Frame", "OneWoW_QoL_CursorEnhancerTrail", UIParent)
             trailContainer:SetAllPoints(UIParent)
@@ -704,9 +621,8 @@ local function CreateGCDCircle()
     gcdRoot:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player")
     gcdRoot:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "player")
     gcdRoot:SetScript("OnEvent", function(_, event)
-        local g2 = CE:GetSettings().gcd
+        local g2 = CE:GetResolvedState().gcd
         if not g2.enabled then return end
-        if g2.instanceOnly and not InInstanceContent() then return end
         if event == "UNIT_SPELLCAST_SUCCEEDED" then
             local elapsed, dur = GetGCDCooldown()
             if elapsed then gcdRing:StartRing(elapsed, dur) end
@@ -720,7 +636,7 @@ local function CreateGCDCircle()
 end
 
 function CE:ApplyGCD()
-    local g = self:GetSettings().gcd
+    local g = self:GetResolvedState().gcd
     if not (g.enabled and CursorEnhancerModule._moduleEnabled) then
         if gcdRoot then
             gcdRoot:Hide()
@@ -738,11 +654,6 @@ function CE:ApplyGCD()
     local r, gg, b = ResolveColor(g.color, g.useClassColor)
     gcdRing:SetRingColor(r, gg, b, g.alpha or 0.8)
 
-    if g.instanceOnly and not InInstanceContent() then
-        gcdRoot:Hide()
-        gcdRoot:SetScript("OnUpdate", nil)
-        return
-    end
     gcdRoot:Show()
     ApplySwipeTracking(gcdRoot, g.attached ~= false)
 end
@@ -808,9 +719,8 @@ local function CreateCastCircle()
     castRoot:RegisterUnitEvent("UNIT_SPELLCAST_EMPOWER_STOP", "player")
 
     castRoot:SetScript("OnEvent", function(self, event, _, castID)
-        local c2 = CE:GetSettings().castCircle
+        local c2 = CE:GetResolvedState().castCircle
         if not c2.enabled then return end
-        if c2.instanceOnly and not InInstanceContent() then return end
 
         if event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_DELAYED" then
             local name, _, _, startMS, endMS, _, cID = UnitCastingInfo("player")
@@ -849,7 +759,7 @@ local function CreateCastCircle()
 end
 
 function CE:ApplyCast()
-    local c = self:GetSettings().castCircle
+    local c = self:GetResolvedState().castCircle
     if not (c.enabled and CursorEnhancerModule._moduleEnabled) then
         if castRoot then
             castRoot:Hide()
@@ -871,19 +781,18 @@ function CE:ApplyCast()
         castRoot._spark:SetVertexColor(r, g, b, 1)
     end
 
-    if c.instanceOnly and not InInstanceContent() then
-        castRoot:Hide()
-        castRoot:SetScript("OnUpdate", nil)
-        return
-    end
     castRoot:Show()
     ApplySwipeTracking(castRoot, c.attached ~= false)
 end
 
---- Re-evaluate instance-only gating on the swipe rings when zone/state changes.
+--- Re-evaluate situation-gated pieces when zone/combat/restriction changes.
 function CE:RefreshSwipeVisibility()
-    if gcdRoot then self:ApplyGCD() end
-    if castRoot then self:ApplyCast() end
+    self:UpdateAll()
+    self:ApplyTrail()
+    self:ApplyGCD()
+    self:ApplyCast()
+    self:ApplySwipeDriver()
+    self:ApplyPips()
 end
 
 -- ----------------------------------------------------------------------------
@@ -939,9 +848,9 @@ local SWIPE_GCD_EVENTS = {
 --- Register/unregister the shared on-ring swipe event frame per settings.
 function CE:ApplySwipeDriver()
     if not middleSwipeCD then return end
-    local s = self:GetSettings()
-    local wantMiddle = s.middleSwipe.enabled and CursorEnhancerModule._moduleEnabled
-    local wantOuter  = s.outerSwipe.enabled and CursorEnhancerModule._moduleEnabled
+    local resolved = self:GetResolvedState()
+    local wantMiddle = resolved.middleSwipe.enabled and CursorEnhancerModule._moduleEnabled
+    local wantOuter  = resolved.outerSwipe.enabled and CursorEnhancerModule._moduleEnabled
 
     if not (wantMiddle or wantOuter) then
         if swipeDriver then
@@ -956,7 +865,7 @@ function CE:ApplySwipeDriver()
         swipeDriver = CreateFrame("Frame", "OneWoW_QoL_CursorEnhancerSwipes")
         swipeDriver:SetScript("OnEvent", function(_, event, unit)
             if unit ~= "player" then return end
-            local s2 = CE:GetSettings()
+            local s2 = CE:GetResolvedState()
             if SWIPE_GCD_EVENTS[event] and s2.middleSwipe.enabled then
                 DriveMiddleGCDSwipe(event)
             end
@@ -998,18 +907,11 @@ end
 -- Resource pips — class power (Holy Power, combo points, shards, …) shown as
 -- dots arced along the bottom of the cursor ring. Player-own power values are
 -- not secret, so reading them is safe in instanced content.
+-- Runtime visibility is situation-driven (resolved.pipsEnabled), not the global
+-- pipsEnabled template flag used when adding new situation cards.
 -- ----------------------------------------------------------------------------
-local PIP_COLORS = {
-    HOLY_POWER     = { 1.00, 0.85, 0.30 },
-    COMBO_POINTS   = { 1.00, 0.60, 0.20 },
-    SOUL_SHARDS    = { 0.60, 0.30, 0.90 },
-    ARCANE_CHARGES = { 0.35, 0.60, 1.00 },
-    CHI            = { 0.40, 1.00, 0.70 },
-    ESSENCE        = { 0.20, 0.80, 0.80 },
-    RUNES          = { 0.80, 0.20, 0.30 },
-}
 
--- classFile -> { powerType (or "RUNES"), palette key }
+-- classFile -> { powerType (or "RUNES"), palette key (unused; look uses pipColor) }
 local CLASS_POWER = {
     PALADIN     = { Enum.PowerType.HolyPower,     "HOLY_POWER" },
     ROGUE       = { Enum.PowerType.ComboPoints,   "COMBO_POINTS" },
@@ -1021,7 +923,23 @@ local CLASS_POWER = {
     DEATHKNIGHT = { "RUNES",                      "RUNES" },
 }
 
+local SPEC_WARLOCK_DESTRUCTION = 267
 local pipDriver
+local pipNeedsFrequent
+
+--- Soul Shards: unmodified power is fragment-scaled (× UnitPowerDisplayMod).
+--- Aff/Demo expose whole shards; Destruction keeps fractional fragments.
+local function GetWarlockShards(powerType)
+    local raw = UnitPower("player", powerType, true) or 0
+    local mod = UnitPowerDisplayMod(powerType) or 0
+    local shards = (mod ~= 0) and (raw / mod) or (UnitPower("player", powerType) or 0)
+    local specIndex = C_SpecializationInfo.GetSpecialization()
+    local specID = specIndex and (C_SpecializationInfo.GetSpecializationInfo(specIndex))
+    if specID ~= SPEC_WARLOCK_DESTRUCTION then
+        shards = floor(shards + 1e-6)
+    end
+    return shards
+end
 
 local function GetPipPower()
     local _, class = UnitClass("player")
@@ -1034,52 +952,85 @@ local function GetPipPower()
             local _, _, runeReady = GetRuneCooldown(i)
             if runeReady then ready = ready + 1 end
         end
-        return 6, ready, info[2]
+        return 6, ready, info[2], false
     end
 
-    local maxPower = UnitPowerMax("player", info[1])
+    local powerType = info[1]
+    local maxPower = UnitPowerMax("player", powerType)
     if not maxPower or maxPower <= 0 then return nil end
-    local current = UnitPower("player", info[1])
-    return maxPower, current or 0, info[2]
+
+    local current
+    local frequent = false
+    if class == "WARLOCK" then
+        current = GetWarlockShards(powerType)
+        frequent = current > 0 and current < maxPower and current ~= floor(current)
+    else
+        current = UnitPower("player", powerType) or 0
+    end
+    return maxPower, current, info[2], frequent
 end
 
 --- Rebuild/refresh the pip display from current class power.
 function CE:UpdatePips()
     if not pipFrame then return end
-    local s = self:GetSettings()
-    if not (s.pipsEnabled and CursorEnhancerModule._moduleEnabled) then
+    if not CursorEnhancerModule._moduleEnabled then
         pipFrame:Hide()
+        pipNeedsFrequent = false
         return
     end
 
-    local maxPower, current, paletteKey = GetPipPower()
-    if not maxPower or current <= 0 then
+    local resolved = self:GetResolvedState()
+    if not resolved.pipsEnabled then
         pipFrame:Hide()
+        pipNeedsFrequent = false
         return
     end
 
-    local size = s.ringSize or 90
-    local radius = size * 0.5
-    local pipSize = Clamp(floor(size * 0.13), 8, 16)
+    local maxPower, current, _, frequent = GetPipPower()
+    if not maxPower then
+        pipFrame:Hide()
+        pipNeedsFrequent = false
+        return
+    end
+    current = current or 0
+    pipNeedsFrequent = frequent == true
+
+    local ringSize = resolved.ringSize or 90
+    local radius = ringSize * 0.42 -- sit just inside the outer ring rim
     local spacing = 22 -- degrees between pips
-    local startAngle = 270 + ((maxPower - 1) * spacing * 0.5)
-    local color = PIP_COLORS[paletteKey] or { 1, 1, 1 }
+    -- +1 = left→right along the bottom arc; -1 = right→left (legacy layout).
+    local dir = (resolved.pipFillLtr ~= false) and 1 or -1
+    local startAngle = 270 - dir * ((maxPower - 1) * spacing * 0.5)
+    local pipSize = Clamp(resolved.pipSize or 28, 12, 64)
+    local ox = resolved.pipOffsetX or 0
+    local oy = resolved.pipOffsetY or 0
+    local fr, fg, fb = ResolveColor(resolved.pipColor, resolved.pipClassColor)
+    local filled = floor(current)
+    local partial = current - filled
 
     for i = 1, maxPower do
         local pip = pipTextures[i]
         if not pip then
-            pip = pipFrame:CreateTexture(nil, "OVERLAY")
-            pip:SetTexture(MEDIA .. "sparkle")
+            pip = pipFrame:CreateTexture(nil, "OVERLAY", nil, 7)
             pipTextures[i] = pip
         end
-        local angle = rad(startAngle - ((i - 1) * spacing))
+        -- Same sparkle asset as the mouse trail; ADD blend is required or the
+        -- soft glow reads as invisible even on a black background.
+        pip:SetTexture(MEDIA .. "sparkle")
+        pip:SetBlendMode("ADD")
+        local angle = rad(startAngle + dir * ((i - 1) * spacing))
         pip:SetSize(pipSize, pipSize)
         pip:ClearAllPoints()
-        pip:SetPoint("CENTER", pipFrame, "CENTER", cos(angle) * radius, sin(angle) * radius)
-        if i <= current then
-            pip:SetVertexColor(color[1], color[2], color[3], 1)
+        pip:SetPoint("CENTER", pipFrame, "CENTER",
+            cos(angle) * radius + ox, sin(angle) * radius + oy)
+        if i <= filled then
+            pip:SetVertexColor(fr, fg, fb, 1)
+        elseif i == filled + 1 and partial > 0.05 then
+            local a = 0.40 + (0.60 * Clamp(partial, 0, 1))
+            pip:SetVertexColor(fr, fg, fb, a)
         else
-            pip:SetVertexColor(0.4, 0.4, 0.4, 0.45)
+            -- Dim empty slots still need enough RGB for ADD to show a ghost pip
+            pip:SetVertexColor(fr * 0.45, fg * 0.45, fb * 0.45, 0.70)
         end
         pip:Show()
     end
@@ -1087,16 +1038,45 @@ function CE:UpdatePips()
         pipTextures[i]:Hide()
     end
 
+    -- Keep above ring art / cooldown swipes if mainFrame level shifts.
+    pipFrame:SetFrameLevel(mainFrame:GetFrameLevel() + 5)
     pipFrame:Show()
 end
 
---- Register/unregister the pip power-event frame per settings.
+--- Register/unregister the pip power-event frame per resolved situation.
 function CE:ApplyPips()
-    local s = self:GetSettings()
-    local want = s.pipsEnabled and CursorEnhancerModule._moduleEnabled
+    local resolved = self:GetResolvedState()
+    local want = resolved.pipsEnabled and CursorEnhancerModule._moduleEnabled
+
+    local function SyncFrequentDriver()
+        if not pipDriver then return end
+        if pipNeedsFrequent then
+            if pipDriver._pipFrequent then return end
+            pipDriver._pipFrequent = true
+            local elapsed = 0
+            pipDriver:SetScript("OnUpdate", function(_, dt)
+                elapsed = elapsed + dt
+                if elapsed < 0.05 then return end
+                elapsed = 0
+                CE:UpdatePips()
+                if not pipNeedsFrequent then
+                    pipDriver._pipFrequent = nil
+                    pipDriver:SetScript("OnUpdate", nil)
+                end
+            end)
+        else
+            pipDriver._pipFrequent = nil
+            pipDriver:SetScript("OnUpdate", nil)
+        end
+    end
 
     if not want then
-        if pipDriver then pipDriver:UnregisterAllEvents() end
+        if pipDriver then
+            pipDriver:UnregisterAllEvents()
+            pipDriver._pipFrequent = nil
+            pipDriver:SetScript("OnUpdate", nil)
+        end
+        pipNeedsFrequent = false
         if pipFrame then pipFrame:Hide() end
         return
     end
@@ -1105,22 +1085,27 @@ function CE:ApplyPips()
         pipDriver = CreateFrame("Frame", "OneWoW_QoL_CursorEnhancerPips")
         pipDriver:SetScript("OnEvent", function()
             CE:UpdatePips()
+            SyncFrequentDriver()
         end)
     end
 
     pipDriver:UnregisterAllEvents()
     pipDriver:RegisterUnitEvent("UNIT_POWER_UPDATE", "player")
+    pipDriver:RegisterUnitEvent("UNIT_POWER_FREQUENT", "player")
     pipDriver:RegisterUnitEvent("UNIT_MAXPOWER", "player")
+    pipDriver:RegisterUnitEvent("UNIT_DISPLAYPOWER", "player")
     pipDriver:RegisterEvent("RUNE_POWER_UPDATE")
     pipDriver:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 
     self:UpdatePips()
+    SyncFrequentDriver()
 end
 
 -- ----------------------------------------------------------------------------
--- "Only Show When Hidden" — show the ring only while mouselooking (cursor
+-- Only while mouse look — show the ring only while mouselooking (cursor
 -- hidden). Post-hook WoW's world mouse handlers; a press must be HELD past a
--- short delay to count (ignores quick UI clicks).
+-- short delay to count (ignores quick UI clicks). Always hook when the module
+-- is enabled so situation overrides can gate without reinstalling hooks.
 -- ----------------------------------------------------------------------------
 local mlFeatureOn = false
 local mlLeft, mlRight, mlPending = false, false, false
@@ -1132,6 +1117,7 @@ local function ML_Show()
     if mlFeatureOn and (mlLeft or mlRight) and not mouselookActive then
         mouselookActive = true
         CE:UpdateVisibility()
+        CE:UpdateAll()
     end
 end
 
@@ -1145,6 +1131,7 @@ local function ML_ControlStop()
     if mlFeatureOn and not (mlLeft or mlRight) and mouselookActive then
         mouselookActive = false
         CE:UpdateVisibility()
+        CE:UpdateAll()
     end
 end
 
@@ -1162,8 +1149,7 @@ local function ML_InstallHooks()
 end
 
 function CE:ApplyOnlyWhenHidden()
-    local settings = self:GetSettings()
-    mlFeatureOn = settings.onlyWhenHidden and CursorEnhancerModule._moduleEnabled or false
+    mlFeatureOn = CursorEnhancerModule._moduleEnabled and true or false
     if mlFeatureOn then
         ML_InstallHooks()
     else
@@ -1192,7 +1178,12 @@ function CE:StopUpdateTicker()
     if gcdRoot then gcdRoot:Hide(); gcdRoot:SetScript("OnUpdate", nil) end
     if castRoot then castRoot:Hide(); castRoot:SetScript("OnUpdate", nil) end
     if swipeDriver then swipeDriver:UnregisterAllEvents() end
-    if pipDriver then pipDriver:UnregisterAllEvents() end
+    if pipDriver then
+        pipDriver:UnregisterAllEvents()
+        pipDriver._pipFrequent = nil
+        pipDriver:SetScript("OnUpdate", nil)
+    end
+    pipNeedsFrequent = false
     if pipFrame then pipFrame:Hide() end
 end
 
@@ -1206,19 +1197,21 @@ function CursorEnhancerModule:OnEnable()
     settings.outerRingEnabled   = ns.ModuleRegistry:GetToggleValue("cursorenhancer", "outer_ring")
     settings.middleRingEnabled  = ns.ModuleRegistry:GetToggleValue("cursorenhancer", "middle_ring")
     settings.centerMarkerHidden = not ns.ModuleRegistry:GetToggleValue("cursorenhancer", "center_marker")
-    settings.showOutOfCombat    = ns.ModuleRegistry:GetToggleValue("cursorenhancer", "show_out_of_combat")
-    settings.showInInstance     = ns.ModuleRegistry:GetToggleValue("cursorenhancer", "show_in_instance")
     settings.mouseTrail         = ns.ModuleRegistry:GetToggleValue("cursorenhancer", "mouse_trail")
 
     if not self._eventFrame then
         self._eventFrame = CreateFrame("Frame", "OneWoW_QoL_CursorEnhancerEvents")
         self._eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
         self._eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-        self._eventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+        self._eventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
         self._eventFrame:SetScript("OnEvent", function()
-            CE:UpdateVisibility()
+            CE:RefreshSwipeVisibility()
         end)
     end
+
+    OneWoW.Restriction.RegisterStateCallback("cursorenhancer", function()
+        CE:RefreshSwipeVisibility()
+    end)
 
     OneWoW_QoL:RegisterEnteringWorldHandler("cursorenhancer", function()
         CE:CreateCursorRing()
@@ -1231,6 +1224,7 @@ end
 
 function CursorEnhancerModule:OnDisable()
     self._moduleEnabled = false
+    OneWoW.Restriction.UnregisterStateCallback("cursorenhancer")
     CE:StopUpdateTicker()
     CE:ApplyOnlyWhenHidden()
     OneWoW_QoL:UnregisterEnteringWorldHandler("cursorenhancer")
@@ -1244,348 +1238,10 @@ function CursorEnhancerModule:OnToggle(toggleId, value)
         settings.middleRingEnabled = value
     elseif toggleId == "center_marker" then
         settings.centerMarkerHidden = not value
-    elseif toggleId == "show_out_of_combat" then
-        settings.showOutOfCombat = value
-    elseif toggleId == "show_in_instance" then
-        settings.showInInstance = value
     elseif toggleId == "mouse_trail" then
         settings.mouseTrail = value
-        CE:ApplyTrail()
     end
-    CE:UpdateAll()
-end
-
--- ============================================================================
--- Options panel (feature-panel detail)
--- ============================================================================
--- Rows are appended directly onto the feature panel's detailScrollChild,
--- continuing the layout the framework already built above (labels at x=12,
--- controls right-aligned at -12, sub-controls indented). No container, no
--- rebuild pass: every control is always visible, and the engine's Apply*
--- entry points no-op while the module is disabled.
--- ============================================================================
-
-local function RingTexItems()
-    return {
-        { value = "c1", text = L["CURSORENHANCER_TEX_C1"] },
-        { value = "c2", text = L["CURSORENHANCER_TEX_C2"] },
-    }
-end
-
-local function RingTexLabel(v)
-    return v == "c2" and L["CURSORENHANCER_TEX_C2"] or L["CURSORENHANCER_TEX_C1"]
-end
-
-local TRAIL_STYLE_LABEL = {
-    ring  = "CURSORENHANCER_TRAIL_STYLE_RING",
-    glow  = "CURSORENHANCER_TRAIL_STYLE_GLOW",
-    spark = "CURSORENHANCER_TRAIL_STYLE_SPARK",
-}
-
-local function TrailStyleLabel(v)
-    return L[TRAIL_STYLE_LABEL[v] or "CURSORENHANCER_TRAIL_STYLE_RING"]
-end
-
-local function TrailStyleItems()
-    return {
-        { value = "ring",  text = TrailStyleLabel("ring") },
-        { value = "glow",  text = TrailStyleLabel("glow") },
-        { value = "spark", text = TrailStyleLabel("spark") },
-    }
-end
-
-local MARKER_ORDER = { "Dot", "Star", "Cross", "Diamond", "Ring", "None" }
-local MARKER_LABEL = {
-    Dot     = "CURSORENHANCER_MARKER_DOT",
-    Star    = "CURSORENHANCER_MARKER_STAR",
-    Cross   = "CURSORENHANCER_MARKER_CROSS",
-    Diamond = "CURSORENHANCER_MARKER_DIAMOND",
-    Ring    = "CURSORENHANCER_MARKER_RING",
-}
-
-local function MarkerLabel(v)
-    if v == "None" then return NONE end
-    return L[MARKER_LABEL[v] or "CURSORENHANCER_MARKER_DOT"]
-end
-
-local function MarkerItems()
-    local items = {}
-    for _, key in ipairs(MARKER_ORDER) do
-        items[#items + 1] = { value = key, text = MarkerLabel(key) }
-    end
-    return items
-end
-
-local VIS_ORDER = { "always", "never", "in_combat", "out_of_combat", "in_raid", "in_party", "solo" }
-
-local function VisLabel(v)
-    if v == "never" then return NEVER end
-    if v == "solo" then return SOLO end
-    if v == "in_combat" then return L["CURSORENHANCER_VIS_IN_COMBAT"] end
-    if v == "out_of_combat" then return L["CURSORENHANCER_VIS_OUT_OF_COMBAT"] end
-    if v == "in_raid" then return L["CURSORENHANCER_VIS_IN_RAID"] end
-    if v == "in_party" then return L["CURSORENHANCER_VIS_IN_PARTY"] end
-    return L["CURSORENHANCER_VIS_ALWAYS"]
-end
-
-local function VisItems()
-    local items = {}
-    for _, key in ipairs(VIS_ORDER) do
-        items[#items + 1] = { value = key, text = VisLabel(key) }
-    end
-    return items
-end
-
-function CursorEnhancerModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled)
-    local s = CE:GetSettings()
-    local labelColor = isEnabled and "TEXT_PRIMARY" or "TEXT_MUTED"
-
-    -- Row builders: each appends one row at the current yOffset and advances it.
-    -- Layout mirrors the framework-built rows above: labels at x=12, controls
-    -- right-aligned at -12, sub-controls indented to x=24.
-
-    local function Label(x, text)
-        local fs = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        fs:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", x, yOffset)
-        fs:SetText(text)
-        fs:SetTextColor(OneWoW_GUI:GetThemeColor(labelColor))
-        return fs
-    end
-
-    local function SliderRow(labelText, minV, maxV, step, cur, fmt, onChange)
-        local lbl = Label(12, labelText)
-        yOffset = yOffset - lbl:GetStringHeight() - 4
-        local sl = OneWoW_GUI:CreateSlider(detailScrollChild, {
-            minVal = minV, maxVal = maxV, step = step, currentVal = cur,
-            width = 240, fmt = fmt,
-            onChange = onChange,
-        })
-        sl:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 24, yOffset)
-        yOffset = yOffset - 42
-    end
-
-    local function CheckboxRow(labelText, checked, onClick)
-        local cb = OneWoW_GUI:CreateCheckbox(detailScrollChild, {
-            label = labelText, checked = checked, onClick = onClick,
-        })
-        cb:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-        yOffset = yOffset - 28
-    end
-
-    local function DropdownRow(labelText, curText, buildItems, getActive, onSelect)
-        local lbl = Label(12, labelText)
-        yOffset = yOffset - lbl:GetStringHeight() - 4
-        local dd, ddText = OneWoW_GUI:CreateDropdown(detailScrollChild, {
-            width = 200, height = 22, text = curText,
-        })
-        dd:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 24, yOffset)
-        OneWoW_GUI:AttachFilterMenu(dd, {
-            searchable = false,
-            getActiveValue = getActive,
-            buildItems = buildItems,
-            onSelect = function(value, text)
-                ddText:SetText(text)
-                onSelect(value)
-            end,
-        })
-        yOffset = yOffset - 30
-    end
-
-    -- Same shape as the original color rows: label left, swatch right.
-    local function ColorRow(labelText, colorTbl, apply)
-        Label(12, labelText)
-        local swatch = OneWoW_GUI:CreateColorSwatch(detailScrollChild, {
-            size = 22,
-            getColor = function()
-                return colorTbl[1] or 1, colorTbl[2] or 1, colorTbl[3] or 1
-            end,
-            onColorChanged = function(r, g, b)
-                colorTbl[1], colorTbl[2], colorTbl[3] = r, g, b
-                apply()
-            end,
-        })
-        swatch:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-        yOffset = yOffset - 28 - 6
-    end
-
-    -- ─── Cursor Circle ───────────────────────────────────────────────────────
-    yOffset = OneWoW_GUI:CreateSection(detailScrollChild, {
-        title = L["CURSORENHANCER_SECTION_CURSOR"], yOffset = yOffset,
-    })
-
-    SliderRow(L["CURSORENHANCER_RING_SIZE"], 40, 200, 1, s.ringSize or 90, "%d",
-        function(val)
-            s.ringSize = val
-            CE:UpdateAll()
-        end)
-
-    SliderRow(L["CURSORENHANCER_OFFSET_X"], -200, 200, 1, s.offsetX or 0, "%d",
-        function(val)
-            s.offsetX = val
-            CE:UpdateAll()
-        end)
-
-    SliderRow(L["CURSORENHANCER_OFFSET_Y"], -200, 200, 1, s.offsetY or 0, "%d",
-        function(val)
-            s.offsetY = val
-            CE:UpdateAll()
-        end)
-
-    SliderRow(L["CURSORENHANCER_COMBAT_ALPHA"], 0, 100, 5,
-        floor((s.combatAlpha or 1) * 100 + 0.5), "%d%%",
-        function(val)
-            s.combatAlpha = val / 100
-            CE:UpdateVisibility()
-        end)
-
-    SliderRow(L["CURSORENHANCER_OOC_ALPHA"], 0, 100, 5,
-        floor((s.outOfCombatAlpha or 1) * 100 + 0.5), "%d%%",
-        function(val)
-            s.outOfCombatAlpha = val / 100
-            CE:UpdateVisibility()
-        end)
-
-    SliderRow(L["CURSORENHANCER_TRAIL_FADE"], 0.2, 2.0, 0.1, s.trailFadeTime or 0.6, "%.1f",
-        function(val)
-            s.trailFadeTime = val
-        end)
-
-    SliderRow(L["CURSORENHANCER_TRAIL_SIZE"], 8, 96, 1, s.trailSize or 36, "%d",
-        function(val)
-            s.trailSize = val
-        end)
-
-    DropdownRow(L["CURSORENHANCER_TRAIL_STYLE"], TrailStyleLabel(s.trailStyle or "ring"), TrailStyleItems,
-        function() return s.trailStyle or "ring" end,
-        function(value)
-            s.trailStyle = value
-        end)
-
-    DropdownRow(L["CURSORENHANCER_VISIBILITY"], VisLabel(s.visibility or "always"), VisItems,
-        function() return s.visibility or "always" end,
-        function(value)
-            s.visibility = value
-            CE:UpdateVisibility()
-        end)
-
-    DropdownRow(L["CURSORENHANCER_CENTER_MARKER_STYLE"], MarkerLabel(s.centerMarker or "Dot"), MarkerItems,
-        function() return s.centerMarker or "Dot" end,
-        function(value)
-            s.centerMarker = value
-            CE:UpdateAll()
-        end)
-
-    CheckboxRow(L["CURSORENHANCER_ONLY_WHEN_HIDDEN"], s.onlyWhenHidden, function(myself)
-        s.onlyWhenHidden = myself:GetChecked()
-        CE:ApplyOnlyWhenHidden()
-    end)
-
-    CheckboxRow(L["CURSORENHANCER_USE_CLASS_COLOR"], s.outerRingClassColor, function(myself)
-        s.outerRingClassColor = myself:GetChecked()
-        CE:UpdateAll()
-    end)
-
-    ColorRow(L["CURSORENHANCER_OUTER_RING_COLOR"], s.outerRingColor, function() CE:UpdateAll() end)
-    ColorRow(L["CURSORENHANCER_MIDDLE_RING_COLOR"], s.middleRingColor, function() CE:UpdateAll() end)
-    ColorRow(L["CURSORENHANCER_CENTER_MARKER_COLOR"], s.centerMarkerColor, function() CE:UpdateAll() end)
-    ColorRow(L["CURSORENHANCER_TRAIL_COLOR"], s.trailColor, function() CE:UpdateAll() end)
-
-    -- ─── On-ring swipes (GCD on middle ring, cast on outer ring) ─────────────
-    yOffset = OneWoW_GUI:CreateSection(detailScrollChild, {
-        title = L["CURSORENHANCER_SECTION_SWIPES"], yOffset = yOffset,
-    })
-
-    CheckboxRow(L["CURSORENHANCER_GCD_MIDDLE"], s.middleSwipe.enabled, function(myself)
-        s.middleSwipe.enabled = myself:GetChecked()
-        CE:UpdateAll()
-    end)
-
-    CheckboxRow(L["CURSORENHANCER_SWIPE_FILL"], s.middleSwipe.fill, function(myself)
-        s.middleSwipe.fill = myself:GetChecked()
-        CE:UpdateAll()
-    end)
-
-    CheckboxRow(L["CURSORENHANCER_CAST_OUTER"], s.outerSwipe.enabled, function(myself)
-        s.outerSwipe.enabled = myself:GetChecked()
-        CE:UpdateAll()
-    end)
-
-    CheckboxRow(L["CURSORENHANCER_SWIPE_FILL"], s.outerSwipe.fill, function(myself)
-        s.outerSwipe.fill = myself:GetChecked()
-        CE:UpdateAll()
-    end)
-
-    -- ─── Resource pips ────────────────────────────────────────────────────────
-    yOffset = OneWoW_GUI:CreateSection(detailScrollChild, {
-        title = L["CURSORENHANCER_SECTION_PIPS"], yOffset = yOffset,
-    })
-
-    CheckboxRow(L["CURSORENHANCER_PIPS_ENABLE"], s.pipsEnabled, function(myself)
-        s.pipsEnabled = myself:GetChecked()
-        CE:ApplyPips()
-    end)
-
-    -- ─── GCD / Cast swipe rings (same row shape) ─────────────────────────────
-    local function SwipeSection(sectionKey, cfg, enableLabel, apply, hasSpark)
-        yOffset = OneWoW_GUI:CreateSection(detailScrollChild, {
-            title = L[sectionKey], yOffset = yOffset,
-        })
-
-        CheckboxRow(enableLabel, cfg.enabled, function(myself)
-            cfg.enabled = myself:GetChecked()
-            apply()
-        end)
-
-        DropdownRow(L["CURSORENHANCER_RING_TEXTURE"], RingTexLabel(cfg.ringTex or "c1"), RingTexItems,
-            function() return cfg.ringTex or "c1" end,
-            function(value)
-                cfg.ringTex = value
-                apply()
-            end)
-
-        SliderRow(L["CURSORENHANCER_RADIUS"], 8, 80, 1, cfg.radius or 21, "%d",
-            function(val)
-                cfg.radius = val
-                apply()
-            end)
-
-        SliderRow(OPACITY, 0, 100, 5, floor((cfg.alpha or 0.8) * 100 + 0.5), "%d%%",
-            function(val)
-                cfg.alpha = val / 100
-                apply()
-            end)
-
-        CheckboxRow(L["CURSORENHANCER_ATTACH"], cfg.attached ~= false, function(myself)
-            cfg.attached = myself:GetChecked()
-            apply()
-        end)
-
-        CheckboxRow(L["CURSORENHANCER_INSTANCE_ONLY"], cfg.instanceOnly, function(myself)
-            cfg.instanceOnly = myself:GetChecked()
-            apply()
-        end)
-
-        if hasSpark then
-            CheckboxRow(L["CURSORENHANCER_SHOW_SPARK"], cfg.sparkEnabled ~= false, function(myself)
-                cfg.sparkEnabled = myself:GetChecked()
-                apply()
-            end)
-        end
-
-        CheckboxRow(L["CURSORENHANCER_USE_CLASS_COLOR"], cfg.useClassColor, function(myself)
-            cfg.useClassColor = myself:GetChecked()
-            apply()
-        end)
-
-        ColorRow(COLOR, cfg.color, apply)
-    end
-
-    SwipeSection("CURSORENHANCER_SECTION_GCD", s.gcd, L["CURSORENHANCER_ENABLE_GCD"],
-        function() CE:ApplyGCD() end, false)
-    SwipeSection("CURSORENHANCER_SECTION_CAST", s.castCircle, L["CURSORENHANCER_ENABLE_CAST"],
-        function() CE:ApplyCast() end, true)
-
-    return yOffset
+    CE:ApplyAll()
 end
 
 CursorEnhancerModule.CE = CE

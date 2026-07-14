@@ -140,6 +140,71 @@ function Restriction.IsInCombat()
     return InCombatLockdown()
 end
 
+--- True while the named reviewed restriction type is Active or Activating.
+--- Reads the event-driven cache (EnsureSeeded). Use for place/kind detection
+--- (ChallengeMode, Map, PvPMatch) — never call C_RestrictedActions from consumers.
+---@param restrictionType number Enum.AddOnRestrictionType.*
+---@return boolean
+function Restriction.IsTypeActive(restrictionType)
+    EnsureSeeded()
+    return state.types[restrictionType] == true
+end
+
+-- ---------------------------------------------------------------------------
+-- State-change consumer fan-out
+-- ---------------------------------------------------------------------------
+-- Feature modules must NOT RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED") —
+-- subscribe here instead (enforced by core-event-funnel). Fan-out is deferred
+-- one frame so callers never act during Blizzard's dispatch window where the
+-- query APIs report false.
+-- stateCallbacks[ownerID] = fn(restrictionType, restrictionState)
+local stateCallbacks = {}
+local pendingStateNotify = {} -- array of { type, state } queued for post-dispatch fan-out
+local stateNotifyScheduled = false
+
+local function FlushStateCallbacks()
+    local batch = pendingStateNotify
+    pendingStateNotify = {}
+    stateNotifyScheduled = false
+    if #batch == 0 then return end
+
+    for i = 1, #batch do
+        local entry = batch[i]
+        for ownerID, fn in pairs(stateCallbacks) do
+            local ok, err = pcall(fn, entry.type, entry.state)
+            if not ok then
+                print("|cFFFF0000OneWoW|r Restriction state callback error [" .. tostring(ownerID) .. "]: " .. tostring(err))
+            end
+        end
+    end
+end
+
+local function ScheduleStateNotify(restrictionType, restrictionState)
+    pendingStateNotify[#pendingStateNotify + 1] = { type = restrictionType, state = restrictionState }
+    if stateNotifyScheduled then return end
+    stateNotifyScheduled = true
+    C_Timer.After(0, FlushStateCallbacks)
+end
+
+--- Subscribe to restriction-type state changes. `fn(restrictionType, restrictionState)`
+--- fires one frame after ADDON_RESTRICTION_STATE_CHANGED so IsTypeActive is trustworthy.
+--- Re-registering the same ownerID replaces the prior callback.
+---@param ownerID string
+---@param fn fun(restrictionType: number, restrictionState: number)
+function Restriction.RegisterStateCallback(ownerID, fn)
+    if type(ownerID) ~= "string" or type(fn) ~= "function" then
+        error("RegisterStateCallback(ownerID, fn): ownerID must be a string and fn a function", 2)
+    end
+    EnsureSeeded()
+    stateCallbacks[ownerID] = fn
+end
+
+--- Drop a state-change subscription (e.g. on module disable).
+---@param ownerID string
+function Restriction.UnregisterStateCallback(ownerID)
+    stateCallbacks[ownerID] = nil
+end
+
 -- ---------------------------------------------------------------------------
 -- Deferred-until-unrestricted callbacks
 -- ---------------------------------------------------------------------------
@@ -233,6 +298,7 @@ end
 ns.RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED", "Restriction", function(_, restrictionType, restrictionState)
     local active = restrictionState ~= INACTIVE
     state.types[restrictionType] = active
+    ScheduleStateNotify(restrictionType, restrictionState)
     if not active then
         ScheduleFlush()
     end

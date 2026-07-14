@@ -47,6 +47,7 @@ EVENT_OWNER = {
     "TRADE_SKILL_LIST_UPDATE": "ProfessionRecipe.lua",
     "TRADE_SKILL_CLOSE": "ProfessionRecipe.lua",
     "NEW_RECIPE_LEARNED": "ProfessionRecipe.lua",
+    "ADDON_RESTRICTION_STATE_CHANGED": "Restriction.lua",
 }
 
 # Case-sensitive `RegisterEvent(` (capital R) so `UnregisterEvent(` /

@@ -268,7 +268,9 @@ Modules\external\automount\Locales\itIT.lua
 Modules\external\automount\automount.lua
 
 Modules\external\cursorenhancer\module.lua
+Modules\external\cursorenhancer\cursorenhancer-situations.lua
 Modules\external\cursorenhancer\cursorenhancer.lua
+Modules\external\cursorenhancer\cursorenhancer-ui.lua
 Modules\external\cursorenhancer\Locales\enUS.lua
 Modules\external\cursorenhancer\Locales\koKR.lua
 Modules\external\cursorenhancer\Locales\frFR.lua

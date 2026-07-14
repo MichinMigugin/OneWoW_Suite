@@ -990,6 +990,10 @@ Getters, picked by intent:
 - **`IsAddonRestricted()`** — true in combat lockdown **or** while any reviewed
   restriction type is active/activating (the superset, **including `Map`**). The
   broad gate for actions that must also stand down inside a Delve / restricted map.
+- **`IsTypeActive(restrictionType)`** — true while a named reviewed type
+  (`Enum.AddOnRestrictionType.*`) is Active or Activating. For place/kind
+  detection (e.g. `ChallengeMode`, `Map`, `PvPMatch`) — never call
+  `C_RestrictedActions` from consumers.
 
 `RunWhenUnrestricted(bucket, ownerID, fn)` runs `fn` as soon as the named bucket
 (`"lockdown"` / `"protected"` / `"restricted"`, mapped to the three getters) is
@@ -998,6 +1002,16 @@ transition (flushed one frame after the event settles, since the query APIs repo
 false during dispatch). `CancelWhenUnrestricted(ownerID)` drops a pending callback;
 re-registering the same `ownerID` replaces it (one-shot, no stacking). This is the
 supported replacement for hand-rolled `PLAYER_REGEN_ENABLED` re-arm frames.
+
+**State-change consumers.** `ADDON_RESTRICTION_STATE_CHANGED` is owned solely by
+`Restriction` (core `ns.RegisterEvent`; enforced by `core-event-funnel` —
+`EVENT_OWNER` maps the event to `Restriction.lua`). Feature modules must **not**
+`RegisterEvent` it. Subscribe via:
+
+- **`RegisterStateCallback(ownerID, fn)`** — `fn(restrictionType, restrictionState)`
+  fires **one frame after** the event so `IsTypeActive` is trustworthy (Blizzard's
+  query APIs lie during dispatch). Re-registering the same `ownerID` replaces.
+- **`UnregisterStateCallback(ownerID)`** — drop the subscription (module disable).
 
 State is **event-driven and cached**: `Restriction` listens — via the core
 `ns.RegisterEvent` multiplexer (§3.3) — for `ADDON_RESTRICTION_STATE_CHANGED` and
@@ -1033,6 +1047,8 @@ call does**, not by habit:
 | Action that must also stand down inside a Delve / restricted map | `IsAddonRestricted()` (rare; the broad gate) |
 | Deferring a blocked protected action until it is safe | `RunWhenUnrestricted("protected", ownerID, fn)` |
 | Reading/branching on a possibly-secret value | `IsSecret()` (or `IsSecretValue`/`IsSecretTable`) |
+| Place/kind detection (ChallengeMode, Map, PvPMatch, …) | `IsTypeActive(Enum.AddOnRestrictionType.*)` |
+| Reacting when a restriction type changes | `RegisterStateCallback(ownerID, fn)` |
 
 The common audit fix was `IsAddonRestricted()` → `IsProtectedActionBlocked()`:
 the broad gate (which includes `Map`) was over-gating protected actions that are

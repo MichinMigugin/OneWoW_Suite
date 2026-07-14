@@ -600,14 +600,15 @@ function FM:Initialize()
         self._eventFrame = CreateFrame("Frame", "OneWoW_QoL_FM_Events")
     end
     self._eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-    self._eventFrame:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED")
-    self._eventFrame:SetScript("OnEvent", function(_, event, ...)
+    self._eventFrame:SetScript("OnEvent", function(_, event)
         if event == "PLAYER_REGEN_ENABLED" then
             FM:SchedulePendingDrain()
-        elseif event == "ADDON_RESTRICTION_STATE_CHANGED" then
-            if select(2, ...) == Enum.AddOnRestrictionState.Inactive then
-                FM:SchedulePendingDrain()
-            end
+        end
+    end)
+
+    OneWoW.Restriction.RegisterStateCallback("framemover", function(_, restrictionState)
+        if restrictionState == Enum.AddOnRestrictionState.Inactive then
+            FM:SchedulePendingDrain()
         end
     end)
 
@@ -629,6 +630,7 @@ end
 
 function FM:Shutdown()
     self.active = false
+    OneWoW.Restriction.UnregisterStateCallback("framemover")
     if captureFrame then captureFrame:EnableMouseWheel(false) end
     if self._pendingDrainFrame then self._pendingDrainFrame:Hide() end
     wipe(self.pendingWork)

@@ -92,9 +92,11 @@ Displays your current map coordinates in a small movable frame near the minimap.
 
 ### Cursor Enhancer
 
-Displays a customizable ring around your cursor with optional mouse trail effect.
+Displays a customizable ring around your cursor with optional mouse trail, GCD/cast
+swipes, and situation-based visibility (place × combat cards).
 
 - **Module id:** `cursorenhancer` · **Folder:** `Modules/external/cursorenhancer/`
+- **Docs:** [Docs/Modules/cursorenhancer.md](Docs/Modules/cursorenhancer.md)
 
 ### ESC Menu Panel
 
