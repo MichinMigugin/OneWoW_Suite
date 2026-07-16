@@ -381,6 +381,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 | No lifecycle `RegisterEvent` in orchestrated units | `bin/check_suite_lifecycle.py` (pre-commit `no-suite-lifecycle-events`) |
 | No raw `LoadAddOn` outside the loader funnel (§3.8) | `bin/check_no_raw_loadaddon.py` (pre-commit `no-raw-loadaddon`) |
 | No suite-internal `OptionalDeps` | `bin/check_toc_optional_deps.py` (pre-commit `no-suite-internal-optionaldeps`) |
+| Manifest ↔ CATALOG consumer-graph invariants (§4.1) | `bin/check_manifest_catalog_alignment.py` (pre-commit `manifest-catalog-alignment`) |
 | No direct `db.global.settings` access (§8.5) | `bin/check_no_settings_bypass.py` (pre-commit `no-settings-bypass`) |
 | No direct combat/restriction/secret API calls (§8.6) | `bin/check_no_restriction_bypass.py` (pre-commit `restriction-funnel`) |
 | No registering core-owned events outside their funnel owner (§8.7 / §8.8) | `bin/check_no_core_event_bypass.py` (pre-commit `core-event-funnel`; `EVENT_OWNER` registry: `MERCHANT_*`→`Merchant.lua`, `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED`→`ProfessionRecipe.lua`; escape hatch `-- noqa: core-event-funnel`) |
@@ -524,6 +525,19 @@ that consumer is on. Soft Apply writes per-store `SetFeatureOptOut` and
 opted-in stores whose hub was skipped. See
 [`OneWoW_Catalog/README.md#disabling-data-modules`](../../OneWoW_Catalog/README.md#disabling-data-modules)
 for per-pack impact detail.
+
+**Alignment check** (`bin/check_manifest_catalog_alignment.py`, pre-commit
+`manifest-catalog-alignment`) enforces invariants without collapsing the two
+graphs:
+
+1. Every `FirstRun.CATALOG.addonName` exists in `ModuleManifest`.
+2. Every consumer `datastores` entry appears in some `ModuleManifest.stores`.
+3. Every manifest store has a `STORE_LABEL_KEYS` entry and a TOC folder.
+4. `parentRequiredStores` ⊆ that parent's `stores`; TOC `RequiredDeps` includes
+   the owning hub **iff** the store is parent-required.
+
+It does **not** require hubs to list their own packs in `datastores`, or every
+owned store to appear in some consumer list.
 
 ### 4.2 Home tab live refresh
 
@@ -1205,6 +1219,7 @@ seeded with `MERCHANT_*`→`Merchant.lua`.
 | `.cursor/skills/onewow-suite-architecture/SKILL.md` | On-demand lifecycle / integration authoring guide |
 | `bin/check_suite_lifecycle.py` | Pre-commit: lifecycle `RegisterEvent` ban |
 | `bin/check_toc_optional_deps.py` | Pre-commit: suite-internal OptionalDeps ban |
+| `bin/check_manifest_catalog_alignment.py` | Pre-commit: ModuleManifest ↔ FirstRun.CATALOG ownership/consumer invariants (§4.1) |
 | `bin/check_no_settings_bypass.py` | Pre-commit: direct `db.global.settings` access ban |
 | `bin/check_no_restriction_bypass.py` | Pre-commit: direct combat/restriction/secret API ban (§8.6) |
 | `bin/check_no_namespace_publish.py` | Pre-commit: namespace publish / global-surface anti-patterns (§6.1; enforced) |

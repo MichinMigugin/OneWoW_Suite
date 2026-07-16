@@ -9,7 +9,7 @@
 --     reloads (the only way to truly evict a loaded addon, or to re-enable a
 --     Blizzard-disabled one).
 -- Shared/dependency datastores follow the consumer graph (and BringUp pulls).
--- Parent-required stores (Endgame, Catalog packs) still need their owning hub.
+-- Parent-required stores (Endgame only today) still TOC-require their owning hub.
 
 local _, ns = ...
 

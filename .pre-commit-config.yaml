@@ -257,6 +257,22 @@ repos:
         language: python
         files: \.toc$
 
+      - id: manifest-catalog-alignment
+        name: ModuleManifest ↔ FirstRun.CATALOG consumer-graph alignment
+        description: |
+          Keeps ownership (ModuleManifest.stores / parentRequiredStores /
+          STORE_LABEL_KEYS) and consumer pulls (FirstRun.CATALOG.datastores)
+          consistent without requiring them to be identical. Also checks
+          parent-required TOC RequiredDeps. See ARCHITECTURE.md §4.1.
+        entry: python bin/check_manifest_catalog_alignment.py
+        language: python
+        pass_filenames: false
+        files: |
+          (?x)^(
+            OneWoW/Core/(AddonLoader|FirstRunWizard)\.lua
+            | OneWoW_[^/]+/OneWoW_[^/]+\.toc
+          )$
+
       - id: no-per-addon-media
         name: No per-addon Media folders outside OneWoW hub
         description: |

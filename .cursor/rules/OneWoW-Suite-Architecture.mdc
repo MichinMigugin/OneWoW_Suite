@@ -41,6 +41,7 @@ Only `OneWoW/Core/Events.lua` (the single core event frame) may register them. C
 
 - **Never call `C_AddOns.LoadAddOn` / `UIParentLoadAddOn` directly** — only `OneWoW/Core/AddonLoader.lua` and `OneWoW/Core/Lifecycle.lua` may. Raw loads bypass soft opt-out, combat deferral, and load tracing. Use `OneWoW:EnsureLoaded` / `WithAddon` / `BringUp`; this applies to Blizzard LoD addons too (e.g. `EnsureLoaded("Blizzard_InspectUI")`).
 - No suite-internal `## OptionalDeps` on TOCs — use nil-guards + `OneWoW:EnsureLoaded` / `WithAddon` for explicit user actions only.
+- **Ownership vs consumer graphs:** `ModuleManifest.stores` (BringUp children / Manage Features sub-rows) and `FirstRun.CATALOG[].datastores` (consumer pulls) are distinct — do not collapse them. When adding a store or consumer, update both as needed plus `STORE_LABEL_KEYS` / TOC `RequiredDeps` (`parentRequiredStores` only when the store must TOC-require its hub). Enforced by `manifest-catalog-alignment`.
 - Cross-unit reads: prefer `_API` over `_DB`; route new reads through `DataManager:Query` when available.
 - Hub tab order: hub manifest entries require `module` + `tabOrder`; modules register with `order = OneWoW:GetModuleTabOrder("name")` (reads `tabOrder`, not array position).
 
@@ -64,6 +65,7 @@ Authoritative reference: [`OneWoW/Docs/ARCHITECTURE.md`](OneWoW/Docs/ARCHITECTUR
 - `no-suite-lifecycle-events` — lifecycle `RegisterEvent` ban
 - `no-raw-loadaddon` — raw `LoadAddOn` ban outside the core loader funnel
 - `no-suite-internal-optionaldeps` — TOC OptionalDeps policy
+- `manifest-catalog-alignment` — ModuleManifest ↔ FirstRun.CATALOG ownership/consumer invariants (`ARCHITECTURE.md` §4.1)
 - `no-data-manager-bypass` — cross-load-unit SavedVariables access (enforced; hard-fails off the `ALLOWED_FOREIGN_SV` allowlist)
 - `no-namespace-publish` — namespace publish / global-surface anti-patterns (§6.1; enforced — see `ARCHITECTURE.md` §6.1)
 - `no-per-addon-media` — per-addon `OneWoW_*/Media/` ban (all assets under `OneWoW/Media/`; see `GUI.md`)

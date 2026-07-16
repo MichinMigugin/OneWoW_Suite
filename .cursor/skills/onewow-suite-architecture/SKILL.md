@@ -143,6 +143,23 @@ OneWoW:RegisterModule({
 
 Placeholder tabs when unloaded: `OneWoW:GetAlwaysShowModules()`.
 
+## Ownership vs consumer graphs
+
+Two **intentionally distinct** tables — do not merge them:
+
+| Graph | Where | Role |
+|-------|--------|------|
+| Ownership | `ModuleManifest.stores` / `parentRequiredStores` / `STORE_LABEL_KEYS` | BringUp children, Manage Features sub-rows, parent soft-opt-out |
+| Consumer pulls | `FirstRun.CATALOG[].datastores` | Extra packs BringUp loads for a feature (Bags → Storage+Character; ShoppingList → Storage+Tradeskills) |
+
+Hubs do **not** list their own packs in `datastores`. Parent-required stores
+(Endgame today) TOC-`RequiredDeps` the hub and sit in `parentRequiredStores`;
+independent stores use `RequiredDeps: OneWoW` only.
+
+When adding a store or consumer pull, update both graphs as needed. Pre-commit
+`manifest-catalog-alignment` (`bin/check_manifest_catalog_alignment.py`) enforces
+the §4.1 invariants.
+
 ## OptionalDeps / TOC
 
 - **Never** list suite-internal `OneWoW_*` in `## OptionalDeps` — Blizzard auto-load bypasses soft opt-out.
@@ -236,9 +253,10 @@ When writing, cache the table in a local first — never `(OneWoW:GetCoreGlobal(
 2. No lifecycle `RegisterEvent` in orchestrated units (`no-suite-lifecycle-events`)
 3. No raw `C_AddOns.LoadAddOn` / `UIParentLoadAddOn` outside core (`no-raw-loadaddon`)
 4. No suite-internal `OptionalDeps` in changed TOCs
-5. No cross-load-unit store reads off the allowlist (`no-data-manager-bypass`, enforced/hard-fail) — route through the owner's `_API`
-6. No namespace publish / global-surface anti-patterns (`no-namespace-publish`; enforced — see `ARCHITECTURE.md` §6.1)
-7. No per-addon `Media/` folders (`no-per-addon-media`) — use `OneWoW/Media/` + `MEDIA_BASE`; see `GUI.md`
-8. `local ADDON_NAME, ns = ...`; internal reads via `ns.db`; no `ns.addon` hops; no `.db` on lifecycle root
-9. Hub cross-unit surface on `_API` dot-functions only (not colon-methods on manifest root)
-10. Stores use `BootStore` + `onEnteringWorld` for PEW collection work
+5. Manifest ↔ CATALOG graphs stay aligned (`manifest-catalog-alignment`) when touching stores / `datastores` / parent-required TOC deps
+6. No cross-load-unit store reads off the allowlist (`no-data-manager-bypass`, enforced/hard-fail) — route through the owner's `_API`
+7. No namespace publish / global-surface anti-patterns (`no-namespace-publish`; enforced — see `ARCHITECTURE.md` §6.1)
+8. No per-addon `Media/` folders (`no-per-addon-media`) — use `OneWoW/Media/` + `MEDIA_BASE`; see `GUI.md`
+9. `local ADDON_NAME, ns = ...`; internal reads via `ns.db`; no `ns.addon` hops; no `.db` on lifecycle root
+10. Hub cross-unit surface on `_API` dot-functions only (not colon-methods on manifest root)
+11. Stores use `BootStore` + `onEnteringWorld` for PEW collection work

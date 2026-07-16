@@ -83,6 +83,7 @@ QoL external modules use per-module locale scopes — see [OneWoW_QoL/DEVELOPERS
 - **UI:** use `OneWoW_GUI` components — see [OneWoW/Docs/GUI.md](OneWoW/Docs/GUI.md)
 - **Media:** ship textures/fonts/sounds under `OneWoW/Media/` only (`no-per-addon-media` pre-commit hook)
 - **Lifecycle:** suite load units use orchestrator hooks, not per-file `ADDON_LOADED` for init — see ARCHITECTURE.md §3
+- **Stores / Manage Features:** keep `ModuleManifest.stores` (ownership) and `FirstRun.CATALOG.datastores` (consumer pulls) in sync when adding packs — `manifest-catalog-alignment` pre-commit; see ARCHITECTURE.md §4.1
 - **Comments:** add only where logic is not self-evident
 - **Style:** match surrounding code; localize frequently-used globals at file top
 
