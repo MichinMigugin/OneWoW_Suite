@@ -10,7 +10,7 @@ OneWoW:BootStore(ns, {
         end
     end,
     onLogin = function()
-        ns.DataLoader = OneWoW_Catalog_API.CreateItemDataLoader(ns:GetDB())
+        ns.DataLoader = OneWoW:CreateItemDataLoader(ns:GetDB())
         ns.DataLoader:Initialize()
 
         if ns.JournalData then
@@ -18,10 +18,6 @@ OneWoW:BootStore(ns, {
         end
         if ns.JournalScanner then
             ns.JournalScanner:Initialize()
-        end
-
-        if OneWoW_Catalog_API then
-            OneWoW_Catalog_API.RegisterDataAddon("journal", ns)
         end
     end,
 })

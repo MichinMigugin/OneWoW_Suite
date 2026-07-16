@@ -160,11 +160,11 @@ end
 -- early-returns without it).
 local SOURCE_AVAILABILITY = {
     all     = function() return true end,
-    drops   = function() return ns.Catalog ~= nil and ns.Catalog:GetDataAddon("journal") ~= nil end,
-    vendors = function() return ns.Catalog ~= nil and ns.Catalog:GetDataAddon("vendors") ~= nil end,
-    crafted = function() return ns.Catalog ~= nil and ns.Catalog:GetDataAddon("tradeskills") ~= nil end,
+    drops   = function() return OneWoW_CatalogData_Journal_API ~= nil end,
+    vendors = function() return OneWoW_CatalogData_Vendors_API ~= nil end,
+    crafted = function() return OneWoW_CatalogData_Tradeskills_API ~= nil end,
     owned   = function() return OneWoW_AltTracker_Storage_API ~= nil end,
-    quests  = function() return ns.Catalog ~= nil and ns.Catalog:GetDataAddon("quests") ~= nil end,
+    quests  = function() return OneWoW_CatalogData_Quests_API ~= nil end,
 }
 
 function ItemSearch:IsSourceAvailable(sourceKey)
@@ -306,7 +306,7 @@ function ItemSearch:Query(searchTerm, sourceFilter)
     end
 
     if doQuest and not limitReached then
-        local questAddon = ns.Catalog and ns.Catalog:GetDataAddon("quests")
+        local questAddon = OneWoW_CatalogData_Quests_API
         if questAddon then
             for _, itemID in ipairs(questAddon.GetRewardItemIDs()) do
                 local itemName = C_Item.GetItemNameByID(itemID)
@@ -417,9 +417,9 @@ function ItemSearch:GetDetail(itemID)
             for recipeID, recipe in pairs(data.r) do
                 if recipe.item == itemID then
                     local knownBy
-                    local tsAddon = ns.Catalog and ns.Catalog:GetDataAddon("tradeskills")
-                    if tsAddon and tsAddon.TradeskillScanner then
-                        knownBy = tsAddon.TradeskillScanner:GetRecipeKnownBy(recipeID)
+                    local tsAddon = OneWoW_CatalogData_Tradeskills_API
+                    if tsAddon then
+                        knownBy = tsAddon.GetRecipeKnownBy(recipeID)
                     end
                     tinsert(detail.crafted, {
                         recipeID  = recipeID,
@@ -446,7 +446,7 @@ function ItemSearch:GetDetail(itemID)
         end
     end
 
-    local questAddon = ns.Catalog and ns.Catalog:GetDataAddon("quests")
+    local questAddon = OneWoW_CatalogData_Quests_API
     if questAddon then
         local questIDs = questAddon.GetQuestsRewardingItem(itemID)
         if questIDs then

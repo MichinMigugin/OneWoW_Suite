@@ -13,7 +13,6 @@ local C_TradeSkillUI, C_Spell, C_Timer = C_TradeSkillUI, C_Spell, C_Timer
 local L = ns.L
 ns.UI = ns.UI or {}
 
-local dataAddon = nil
 local selectedProfession = nil
 local selectedRecipe = nil
 local currentSearch = ""
@@ -66,11 +65,7 @@ local RefreshRecipeList
 local ShowRecipeDetail
 
 local function GetDataAddon()
-    if dataAddon then return dataAddon end
-    if ns.Catalog and ns.Catalog.GetDataAddon then
-        dataAddon = ns.Catalog:GetDataAddon("tradeskills")
-    end
-    return dataAddon
+    return OneWoW_CatalogData_Tradeskills_API
 end
 
 local function FilterByKnown(recipes, addon)
@@ -81,7 +76,7 @@ local function FilterByKnown(recipes, addon)
     local charKey = OneWoW_GUI:BuildCharKey()
     local filtered = {}
     for _, recipe in ipairs(recipes) do
-        local knownBy = addon.TradeskillScanner:GetRecipeKnownBy(recipe.id)
+        local knownBy = addon.GetRecipeKnownBy(recipe.id)
         local knownByMe = false
         local knownByAlt = false
         if knownBy then
@@ -257,7 +252,7 @@ local function CreateRecipeRow(parent, recipe, yOffset, rowIdx, onClick)
 
     local addon = GetDataAddon()
     if addon and recipe.item and recipe.item > 0 then
-        local cached = addon.DataLoader:GetCachedItem(recipe.item)
+        local cached = addon.GetCachedItem(recipe.item)
         if cached and cached.name then
             nameText:SetText(cached.name)
             nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(cached.quality))
@@ -266,7 +261,7 @@ local function CreateRecipeRow(parent, recipe, yOffset, rowIdx, onClick)
             nameText:SetText("...")
             nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             icon:SetTexture(recipe.icon)
-            addon.DataLoader:LoadItemData(recipe.item, function(_, itemData)
+            addon.LoadItemData(recipe.item, function(_, itemData)
                 if row:IsVisible() and itemData then
                     nameText:SetText(itemData.name)
                     nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(itemData.quality))
@@ -375,7 +370,7 @@ ShowRecipeDetail = function(recipe)
     recipeName:SetWordWrap(false)
 
     if recipe.item and recipe.item > 0 then
-        local cached = addon.DataLoader:GetCachedItem(recipe.item)
+        local cached = addon.GetCachedItem(recipe.item)
         if cached and cached.name then
             recipeName:SetText(cached.name)
             recipeName:SetTextColor(OneWoW_GUI:GetItemQualityColor(cached.quality))
@@ -384,7 +379,7 @@ ShowRecipeDetail = function(recipe)
             hIcon:SetTexture(recipe.icon)
             recipeName:SetText("...")
             recipeName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            addon.DataLoader:LoadItemData(recipe.item, function(_, itemData)
+            addon.LoadItemData(recipe.item, function(_, itemData)
                 if headerFrame:IsVisible() and itemData then
                     recipeName:SetText(itemData.name)
                     recipeName:SetTextColor(OneWoW_GUI:GetItemQualityColor(itemData.quality))
@@ -491,7 +486,7 @@ ShowRecipeDetail = function(recipe)
         riName:SetJustifyH("LEFT")
         riName:SetWordWrap(false)
 
-        local riCached = addon.DataLoader:GetCachedItem(recipeItemID)
+        local riCached = addon.GetCachedItem(recipeItemID)
         if riCached and riCached.name then
             riName:SetText(riCached.name)
             riIconTex:SetTexture(riCached.icon)
@@ -500,7 +495,7 @@ ShowRecipeDetail = function(recipe)
             riName:SetText("...")
             riName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             riIconTex:SetTexture(134400)
-            addon.DataLoader:LoadItemData(recipeItemID, function(_, itemData)
+            addon.LoadItemData(recipeItemID, function(_, itemData)
                 if riRow:IsVisible() and itemData then
                     riName:SetText(itemData.name)
                     riIconTex:SetTexture(itemData.icon)
@@ -525,7 +520,7 @@ ShowRecipeDetail = function(recipe)
         yOffset = yOffset - REAGENT_ROW_HEIGHT - 8
     end
 
-    local reagents, slots = addon.TradeskillData:GetRecipeReagents(recipe.id)
+    local reagents, slots = addon.GetRecipeReagents(recipe.id)
 
     if reagents and #reagents > 0 then
         local reagentHeader = CreateFrame("Frame", nil, child, "BackdropTemplate")
@@ -594,7 +589,7 @@ ShowRecipeDetail = function(recipe)
                 rgQty:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             end
 
-            local cached = addon.DataLoader:GetCachedItem(reagentItemID)
+            local cached = addon.GetCachedItem(reagentItemID)
             if cached and cached.name then
                 rgName:SetText(cached.name)
                 rgIconTex:SetTexture(cached.icon)
@@ -603,7 +598,7 @@ ShowRecipeDetail = function(recipe)
                 rgName:SetText("...")
                 rgName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 rgIconTex:SetTexture(134400)
-                addon.DataLoader:LoadItemData(reagentItemID, function(_, itemData)
+                addon.LoadItemData(reagentItemID, function(_, itemData)
                     if rgRow:IsVisible() and itemData then
                         rgName:SetText(itemData.name)
                         rgIconTex:SetTexture(itemData.icon)
@@ -658,14 +653,14 @@ ShowRecipeDetail = function(recipe)
                         local optName = OneWoW_GUI:CreateFS(optRow, 10)
                         optName:SetPoint("LEFT", 0, 0)
 
-                        local optCached = addon.DataLoader:GetCachedItem(optItemID)
+                        local optCached = addon.GetCachedItem(optItemID)
                         if optCached and optCached.name then
                             optName:SetText("- " .. optCached.name)
                             optName:SetTextColor(OneWoW_GUI:GetItemQualityColor(optCached.quality))
                         else
                             optName:SetText("- ...")
                             optName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                            addon.DataLoader:LoadItemData(optItemID, function(_, itemData)
+                            addon.LoadItemData(optItemID, function(_, itemData)
                                 if optRow:IsVisible() and itemData then
                                     optName:SetText("- " .. itemData.name)
                                     optName:SetTextColor(OneWoW_GUI:GetItemQualityColor(itemData.quality))
@@ -706,7 +701,7 @@ ShowRecipeDetail = function(recipe)
     knownByTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     yOffset = yOffset - 28
 
-    local knownBy = addon.TradeskillScanner:GetRecipeKnownBy(recipe.id)
+    local knownBy = addon.GetRecipeKnownBy(recipe.id)
     if knownBy and #knownBy > 0 then
         for _, charKey in ipairs(knownBy) do
             local charRow = CreateFrame("Frame", nil, child)
@@ -802,7 +797,7 @@ local EXP_HEADER_HEIGHT = 28
 
 local function RefreshRecipeListGrouped(recipes, addon)
     if not panels then return end
-    local expansions = addon.TradeskillData:GetExpansions()
+    local expansions = addon.GetExpansions()
 
     local grouped = {}
     for _, recipe in ipairs(recipes) do
@@ -913,17 +908,17 @@ RefreshRecipeList = function()
     local recipes
 
     if selectedProfession then
-        recipes = addon.TradeskillData:GetRecipesByProfession(
+        recipes = addon.GetRecipesByProfession(
             selectedProfession.name,
             filterExpansion,
             isSearching and currentSearch or nil
         )
     else
         recipes = {}
-        local professions = addon.TradeskillData:GetProfessions()
+        local professions = addon.GetProfessions()
         for _, prof in ipairs(professions) do
             if prof.hasData then
-                local profRecipes = addon.TradeskillData:GetRecipesByProfession(
+                local profRecipes = addon.GetRecipesByProfession(
                     prof.name,
                     filterExpansion,
                     isSearching and currentSearch or nil
@@ -1019,7 +1014,7 @@ function ns.UI.CreateTradeskillsTab(parent)
         wipe(buttonList)
 
         local addon = GetDataAddon()
-        local professions = addon and addon.TradeskillData:GetProfessions() or {}
+        local professions = addon and addon.GetProfessions() or {}
 
         local allBtn = CreateProfTextButton(profHeader, L["TRADESKILLS_ALL"], nil, true)
         tinsert(profButtons, allBtn)
@@ -1178,7 +1173,7 @@ function ns.UI.CreateTradeskillsTab(parent)
         BuildProfButtons()
         if not wired then
             wired = true
-            addon:RegisterScanCallback(function()
+            addon.RegisterScanCallback(function()
                 if selectedProfession and RefreshRecipeList then
                     RefreshRecipeList()
                 end

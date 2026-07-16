@@ -55,7 +55,7 @@ flowchart TB
     OW --> Modules
 
     subgraph Stores [Data stores — LoadOnDemand: 1]
-        CatalogData[OneWoW_CatalogData_*<br/>RequiredDeps: Catalog]
+        CatalogData[OneWoW_CatalogData_*<br/>RequiredDeps: OneWoW]
         AltData[OneWoW_AltTracker_* most: OneWoW only<br/>Endgame: + AltTracker hub]
     end
     Catalog --> CatalogData
@@ -76,7 +76,7 @@ flowchart TB
 |---|---|---|---|
 | **1 — Core hub** | `OneWoW` | Always | Orchestrator, Manage Features, hub UI, shared engines, GUI toolkit (`OneWoW_GUI` global) |
 | **2 — Feature modules** | AltTracker, Catalog, Notes, Trackers, QoL, ShoppingList, DirectDeposit, Bags | On demand | `RequiredDeps: OneWoW` + `LoadOnDemand: 1` |
-| **3 — Data stores** | `OneWoW_AltTracker_*`, `OneWoW_CatalogData_*` | On demand | Owned under `ModuleManifest.stores`. Most AltTracker stores: `RequiredDeps: OneWoW` (consumers may load without the hub). **Exception:** Endgame + all Catalog packs still `RequiredDeps: …, <parent>`. Listed in `parentRequiredStores` for soft opt-out gating. |
+| **3 — Data stores** | `OneWoW_AltTracker_*`, `OneWoW_CatalogData_*` | On demand | Owned under `ModuleManifest.stores`. Most stores: `RequiredDeps: OneWoW` (consumers may load without the owning hub). **Exception:** Endgame still `RequiredDeps: …, OneWoW_AltTracker` (`parentRequiredStores`). |
 | **4 — Utility** | `OneWoW_Utility_DevTool` | On demand, opt-in | `RequiredDeps: OneWoW` + `LoadOnDemand: 1`; excluded from recommended preset; `loadPhase = "login"` when wanted |
 
 Verified against current `.toc` files:
@@ -95,7 +95,7 @@ Verified against current `.toc` files:
 | **OneWoW_Utility_DevTool** | OneWoW | !BugGrabber | 1 |
 | **OneWoW_AltTracker_\*** (except Endgame) | OneWoW | — | 1 |
 | **OneWoW_AltTracker_Endgame** | OneWoW, OneWoW_AltTracker | — | 1 |
-| **OneWoW_CatalogData_\*** | OneWoW, OneWoW_Catalog | — | 1 |
+| **OneWoW_CatalogData_\*** | OneWoW | — | 1 |
 
 ### OptionalDeps policy
 
@@ -256,10 +256,10 @@ There are **two distinct boundaries** for a provider:
   data is now queryable." Drives populating/refreshing data views.
 
 The two are not interchangeable: providers register/init their queryable data in
-`OnPlayerLogin` (Catalog data units call `OneWoW_Catalog_API.RegisterDataAddon`
-there; stores finish their initial collection), which runs **after**
-`ns.FeatureStateChanged`. Reading provider data on the load boundary therefore sees
-it as still missing (a one-event-delayed reaction). Use the data boundary instead.
+`OnPlayerLogin` (stores finish their initial collection / publish `_API`
+surfaces), which runs **after** `ns.FeatureStateChanged`. Reading provider data
+on the load boundary therefore sees it as still missing (a one-event-delayed
+reaction). Use the data boundary instead.
 
 `RegisterDataReadyWatcher(addonName, fn)` is the data-boundary analogue of
 `RegisterAddonLoadedWatcher`, with the same **registration-time catch-up**: a
@@ -344,12 +344,13 @@ OneWoW:WithAddon(name, onReady, onFail, opts)   -> ok
 OneWoW:BringUp(addonName)                        -- feature + owned stores + CATALOG consumer pulls, then Settle (+ mid-session PEW catch-up)
 OneWoW:GetLoadFailureText(reason)               -> localized string
 OneWoW:StoreRequiresParent(storeName)           -> true when soft parent opt-out must block load
+OneWoW:CreateItemDataLoader(dbTable)            -> ItemDataLoader (shared async item-cache factory)
 ```
 
 - **Soft opt-out enforced:** returns `"OPTED_OUT"` when the unit itself is opted out,
   or when `StoreRequiresParent(unit)` and the manifest parent is opted out
-  (`parentRequiredStores`: Endgame + Catalog packs). Other AltTracker stores load
-  with the hub soft-opted-out.
+  (`parentRequiredStores`: Endgame only). Other AltTracker and all Catalog packs
+  load with the owning hub soft-opted-out.
 - **`BringUp` consumer pulls:** appends `FirstRun.CATALOG[].datastores` for the
   feature (e.g. Bags → Storage + Character) so a Bags-only install loads data
   without AltTracker.
@@ -513,14 +514,14 @@ while working.
 Manage Features' `FirstRun.CATALOG[].datastores` (consumer graph) and
 `ModuleManifest.stores` (ownership graph) remain **distinct** sources of truth.
 Manage Features renders manifest `stores` as indented sub-rows under Catalog and
-AltTracker. `storePolicy` is `optional` for both. Most AltTracker stores toggle
-independently of the AltTracker hub; Endgame and all Catalog packs stay
-parent-required (`parentRequiredStores` / TOC) and mute when the hub is off.
-Consumer pulls (Bags → Storage/Character, ShoppingList → Storage) still show
-“required by …” and stay non-interactive while that consumer is on. Soft Apply
-writes per-store `SetFeatureOptOut` and `EnsureLoaded`s wanted-but-unloaded
-stores; cold start also `EnsureLoaded`s opted-in stores whose hub was skipped.
-See
+AltTracker. `storePolicy` is `optional` for both. AltTracker stores (except
+Endgame) and all Catalog packs toggle independently of their owning hub;
+Endgame stays parent-required (`parentRequiredStores` / TOC) and mutes when
+AltTracker is off. Consumer pulls (Bags → Storage/Character, ShoppingList →
+Storage / Tradeskills) still show “required by …” and stay non-interactive while
+that consumer is on. Soft Apply writes per-store `SetFeatureOptOut` and
+`EnsureLoaded`s wanted-but-unloaded stores; cold start also `EnsureLoaded`s
+opted-in stores whose hub was skipped. See
 [`OneWoW_Catalog/README.md#disabling-data-modules`](../../OneWoW_Catalog/README.md#disabling-data-modules)
 for per-pack impact detail.
 
@@ -790,6 +791,7 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | `OneWoW.Collectibles` | `Services/Collectibles.lua` | `OneWoW_Notes` (Collectibles data/tab), ContextMenus, `OneWoW_Trackers` (`TrackerEngine` collection-state steps), PredicateEngine, QoL tooltips — collectible key grammar + live display/state, no SV; see [COLLECTIBLES.md](COLLECTIBLES.md) |
 | `OneWoW.AHItemKeys` | `Services/AHItemKeys.lua` | AH scanners (`OneWoW_AltTracker_Auctions`), `ItemPrices` link-aware lookups |
 | `OneWoW.ItemPrices` | `Services/ItemPrices.lua` | Tooltip providers, overlay engine, AH source UI helpers |
+| `OneWoW:CreateItemDataLoader` | `Services/ItemDataLoader.lua` | Catalog hub shared loader + CatalogData packs (factory on colon API) |
 | `OneWoW.Locale` | `Services/LocaleService.lua` | Every addon (each registers its own scope, reads back a view) — see Localization below |
 
 Feature content that registers in from QoL: settings catalogs

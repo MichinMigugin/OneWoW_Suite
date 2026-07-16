@@ -49,6 +49,13 @@ function OneWoW_CatalogData_Vendors_API.GetStats()
     return ns.VendorData:GetStats()
 end
 
+--- Sets the user category for a vendor NPC.
+---@param npcID number
+---@param categoryKey string|nil
+function OneWoW_CatalogData_Vendors_API.SetCategory(npcID, categoryKey)
+    return ns.VendorData:SetCategory(npcID, categoryKey)
+end
+
 --- Register a listener invoked after vendor scan data updates.
 ---@param fn fun()|nil
 function OneWoW_CatalogData_Vendors_API.RegisterScanCallback(fn)

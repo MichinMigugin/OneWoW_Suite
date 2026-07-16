@@ -100,7 +100,7 @@ OneWoW:BootStore(ns, {
 
 ## Mid-session load
 
-`OneWoW:BringUp(addon)` loads `{ addon, ...owned stores, ...FirstRun.CATALOG datastores }`, runs `OnPlayerLogin` via `Settle`, then synthetic `OnPlayerEnteringWorld(true, false, false)` for units that missed the real PEW. Raw `RegisterEvent("PLAYER_ENTERING_WORLD")` **misses** mid-session enable. Most AltTracker stores do **not** TOC-require the hub (exception: Endgame); `EnsureLoaded` only applies parent soft-opt-out when `StoreRequiresParent(store)`.
+`OneWoW:BringUp(addon)` loads `{ addon, ...owned stores, ...FirstRun.CATALOG datastores }`, runs `OnPlayerLogin` via `Settle`, then synthetic `OnPlayerEnteringWorld(true, false, false)` for units that missed the real PEW. Raw `RegisterEvent("PLAYER_ENTERING_WORLD")` **misses** mid-session enable. Most AltTracker and all Catalog packs do **not** TOC-require their hub (exception: Endgame); `EnsureLoaded` only applies parent soft-opt-out when `StoreRequiresParent(store)`.
 
 ## Enable model
 

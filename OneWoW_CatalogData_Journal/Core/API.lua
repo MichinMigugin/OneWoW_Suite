@@ -73,3 +73,28 @@ end
 function OneWoW_CatalogData_Journal_API.LoadItemData(itemID, callback)
     return ns.DataLoader:LoadItemData(itemID, callback)
 end
+
+--- Scaled loot hyperlink for a journal encounter item (difficulty-aware).
+---@param instanceID number
+---@param encounterID number
+---@param diffID number
+---@param itemID number
+---@return string|nil link
+function OneWoW_CatalogData_Journal_API.GetScaledLootLink(instanceID, encounterID, diffID, itemID)
+    return ns.EJLiveLoot:GetScaledLootLink(instanceID, encounterID, diffID, itemID)
+end
+
+--- Ensures the journal cache is built and returns the instance for a world map ID.
+---@param mapID number
+---@return table|nil instanceData
+function OneWoW_CatalogData_Journal_API.GetInstanceByMapID(mapID)
+    ns.JournalData:BuildJournalCache()
+    local cache = ns.JournalData.journalCache
+    if not cache then return nil end
+    for _, data in pairs(cache) do
+        if data.mapID == mapID then
+            return data
+        end
+    end
+    return nil
+end

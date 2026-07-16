@@ -141,7 +141,7 @@ local coreEnteringWorldHandlers = {}
 
 -- Data-ready registry: the "data boundary" sibling of the addon-loaded watchers.
 -- A provider's data becomes queryable only after its login init runs (Catalog
--- data units RegisterDataAddon in onLogin; stores finish CollectBags there),
+-- data units finish login init / SignalDataReady; stores finish CollectBags there),
 -- which is strictly after ns.FeatureStateChanged ("load boundary"). dataReadySet
 -- is monotonic per session; watchers get registration-time catch-up so a consumer
 -- built after readiness still fires once.

@@ -55,5 +55,4 @@ UI\t-itemsearch.lua
 UI\t-settings.lua
 
 # Modules
-Modules\t-catalog.lua
 Modules\m-itemsearch.lua

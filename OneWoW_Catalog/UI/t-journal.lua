@@ -18,7 +18,6 @@ local instanceTypeFilter = "all"
 ---@type string|number # "all" sentinel, or a numeric EJ difficulty id
 local selectedDifficulty = "all"
 local expandedEncounters = {}
-local dataAddon = nil
 local panels_ref = nil
 
 -- Multi-select Item Type filter: keys from ITEM_TYPE_DEFS map to item.special values.
@@ -110,11 +109,7 @@ local function GetInstanceBackground(instanceID)
 end
 
 local function GetDataAddon()
-    if dataAddon then return dataAddon end
-    if ns.Catalog and ns.Catalog.GetDataAddon then
-        dataAddon = ns.Catalog:GetDataAddon("journal")
-    end
-    return dataAddon
+    return OneWoW_CatalogData_Journal_API
 end
 
 -- Tooltips use the difficulty-scaled Encounter Journal link (captured per
@@ -167,8 +162,8 @@ local function GetScaledItemLink(item, encounterID)
     end
 
     local addon = GetDataAddon()
-    if addon and addon.EJLiveLoot and selectedInstance and encounterID then
-        local link = addon.EJLiveLoot:GetScaledLootLink(selectedInstance.instanceID, encounterID, diffID, item.itemID)
+    if addon and selectedInstance and encounterID then
+        local link = addon.GetScaledLootLink(selectedInstance.instanceID, encounterID, diffID, item.itemID)
         if link then
             item.linkByDiff = item.linkByDiff or {}
             item.linkByDiff[diffID] = link
@@ -209,8 +204,8 @@ local function ItemMatchesFilters(item, addon)
     end
 
     if filterCollection ~= "all" and item.special then
-        if addon and addon.JournalData then
-            local isCollected = addon.JournalData:IsItemCollected(item.itemID, item.itemData, item.special)
+        if addon then
+            local isCollected = addon.IsItemCollected(item.itemID, item.itemData, item.special)
             if isCollected ~= nil then
                 if filterCollection == "collected" and not isCollected then return false end
                 if filterCollection == "notcollected" and isCollected then return false end
@@ -402,8 +397,8 @@ local function BuildCollectionsSummary(parent, instData, yOffset, addon)
         for _, item in ipairs(enc.items) do
             if item.special and counts[item.special] then
                 counts[item.special].total = counts[item.special].total + 1
-                if addon and addon.JournalData then
-                    local isCollected = addon.JournalData:IsItemCollected(item.itemID, item.itemData, item.special)
+                if addon then
+                    local isCollected = addon.IsItemCollected(item.itemID, item.itemData, item.special)
                     if isCollected then
                         counts[item.special].collected = counts[item.special].collected + 1
                     end
@@ -490,7 +485,7 @@ end
 -- exists in the Quests catalog.
 local function ShowQuestLinks(item)
     local links = {}
-    local questAddon = ns.Catalog and ns.Catalog.GetDataAddon and ns.Catalog:GetDataAddon("quests")
+    local questAddon = OneWoW_CatalogData_Quests_API
     for _, qs in ipairs(item.questSources or {}) do
         local action
         if questAddon and questAddon.GetQuest(qs.id) then
@@ -553,7 +548,7 @@ local function BuildQuestItemRow(parent, item, yOffset)
     -- when that quest exists there. The row also shows the quest's completion
     -- status, pulled from the Quests addon's CompletionTracker.
     local relevantQuestID = ResolveOpenQuestID(item)
-    local questAddon = ns.Catalog and ns.Catalog.GetDataAddon and ns.Catalog:GetDataAddon("quests")
+    local questAddon = OneWoW_CatalogData_Quests_API
     local openInDB =
         relevantQuestID
         and questAddon
@@ -863,11 +858,11 @@ local function RefreshDetailView(isSecondRefresh)
                 local statusText = OneWoW_GUI:CreateFS(itemRow, 10)
                 statusText:SetPoint("RIGHT", itemRow, "RIGHT", COL_STATUS_RIGHT, 0)
                 statusText:SetJustifyH("RIGHT")
-                if item.special and addon and addon.JournalData then
-                    local status = addon.JournalData:DetermineItemStatus(item.itemID, item.itemData, item.special)
+                if item.special and addon then
+                    local status = addon.DetermineItemStatus(item.itemID, item.itemData, item.special)
                     if status then
                         statusText:SetText(status)
-                        local isCollected = addon.JournalData:IsItemCollected(item.itemID, item.itemData, item.special)
+                        local isCollected = addon.IsItemCollected(item.itemID, item.itemData, item.special)
                         if isCollected then
                             statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
                         else
@@ -971,7 +966,7 @@ function RefreshJournalList(panels)
     end
 
     local addon = GetDataAddon()
-    if not addon or not addon.JournalData then
+    if not addon then
         panels.listScrollChild:SetHeight(100)
         panels.UpdateListThumb()
         return
@@ -979,7 +974,7 @@ function RefreshJournalList(panels)
 
     local filtKey = string.format("%d\0%s\0%s", expansionFilter, searchText or "", tostring(instanceTypeFilter or "all"))
     if journalBaseListKey ~= filtKey or not journalBaseList then
-        journalBaseList = addon.JournalData:GetSortedInstances(expansionFilter, searchText, instanceTypeFilter)
+        journalBaseList = addon.GetSortedInstances(expansionFilter, searchText, instanceTypeFilter)
         journalBaseListKey = filtKey
     end
 
@@ -1084,8 +1079,8 @@ local function InitializeDropdowns(panels)
             buildItems = function()
                 local items = { { value = 0, text = L["JOURNAL_EXPANSION_ALL"] } }
                 local da = GetDataAddon()
-                if da and da.JournalData then
-                    local expansions = da.JournalData:GetAvailableExpansions()
+                if da then
+                    local expansions = da.GetAvailableExpansions()
                     for _, exp in ipairs(expansions) do
                         table.insert(items, {
                             value = exp.expansionID,
@@ -1409,7 +1404,7 @@ function ns.UI.CreateJournalTab(parent)
         panels.detailScrollChild:SetHeight(100)
 
         if addon.RegisterScanCallback then
-            addon:RegisterScanCallback(function()
+            addon.RegisterScanCallback(function()
                 InvalidateJournalFilterCache()
                 if ns.UI.journalPanels then
                     RefreshJournalList(ns.UI.journalPanels)
@@ -1425,19 +1420,8 @@ function ns.UI.CreateJournalTab(parent)
 end
 
 function ns.UI.OpenToInstance(mapID)
-    local journalNS = OneWoW_CatalogData_Journal
-    if not journalNS or not journalNS.JournalData then return end
-    local JournalData = journalNS.JournalData
-    JournalData:BuildJournalCache()
-    if not JournalData.journalCache then return end
-
-    local instData
-    for _, data in pairs(JournalData.journalCache) do
-        if data.mapID == mapID then
-            instData = data
-            break
-        end
-    end
+    local instData = OneWoW_CatalogData_Journal_API
+        and OneWoW_CatalogData_Journal_API.GetInstanceByMapID(mapID)
     if not instData then return end
 
     OneWoW.UI:Show("catalog")

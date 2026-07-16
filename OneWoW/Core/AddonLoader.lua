@@ -375,8 +375,8 @@ local function GetManifestParent(storeName)
 end
 
 --- True when a store still TOC-depends on its manifest parent (soft opt-out of
---- the parent must block EnsureLoaded). Most AltTracker stores load with OneWoW
---- only; Endgame and Catalog packs remain parent-required.
+--- the parent must block EnsureLoaded). Most AltTracker and all Catalog packs
+--- load with OneWoW only; Endgame remains parent-required.
 ---@param storeName string
 ---@return boolean
 function ns:StoreRequiresParent(storeName)
@@ -680,13 +680,6 @@ ns.ModuleManifest = {
         } },
     { addon = "OneWoW_Catalog",         display = "Catalog",       cmd = "/owcat", module = "catalog",    tabOrder = 3, loadPhase = "login",
         storePolicy = "optional",
-        -- Catalog packs still TOC-Depends on OneWoW_Catalog.
-        parentRequiredStores = {
-            OneWoW_CatalogData_Tradeskills = true,
-            OneWoW_CatalogData_Vendors = true,
-            OneWoW_CatalogData_Quests = true,
-            OneWoW_CatalogData_Journal = true,
-        },
         stores = {
             "OneWoW_CatalogData_Tradeskills",
             "OneWoW_CatalogData_Vendors",

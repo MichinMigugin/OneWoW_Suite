@@ -20,7 +20,6 @@ local zoneFilter = nil
 local currentZoneOnly = false
 local currencyFilter = nil
 local categoryFilter = nil
-local dataAddon = nil
 local pendingFocusNpcID = nil
 local RefreshVendorList
 
@@ -105,11 +104,7 @@ local function ClearVendorFilters(panels)
 end
 
 local function GetDataAddon()
-    if dataAddon then return dataAddon end
-    if ns.Catalog and ns.Catalog.GetDataAddon then
-        dataAddon = ns.Catalog:GetDataAddon("vendors")
-    end
-    return dataAddon
+    return OneWoW_CatalogData_Vendors_API
 end
 
 local function GetCurrentPlayerZone()
@@ -122,9 +117,9 @@ end
 
 local function BuildZoneList()
     local addon = GetDataAddon()
-    if not addon or not addon.VendorData then return {} end
+    if not addon then return {} end
 
-    local allVendors = addon.VendorData:GetAllVendors()
+    local allVendors = addon.GetAllVendors()
     local zoneSet = {}
     for _, vendor in pairs(allVendors) do
         if vendor.locations then
@@ -146,9 +141,9 @@ end
 
 local function BuildCurrencyList()
     local addon = GetDataAddon()
-    if not addon or not addon.VendorData then return {} end
+    if not addon then return {} end
 
-    local allVendors = addon.VendorData:GetAllVendors()
+    local allVendors = addon.GetAllVendors()
     local seen = {}
     local currencies = {}
 
@@ -234,9 +229,9 @@ end
 
 local function VendorMatchesItemSearch(vendor, term, addon)
     if not vendor or not vendor.items or not term or term == "" then return false end
-    if not addon or not addon.DataLoader then return false end
+    if not addon then return false end
     for itemID in pairs(vendor.items) do
-        local cached = addon.DataLoader:GetCachedItem(itemID)
+        local cached = addon.GetCachedItem(itemID)
         if cached and cached.name and cached.name:lower():find(term, 1, true) then
             return true
         end
@@ -460,8 +455,8 @@ local function ShowVendorDetail(panels, vendor)
             return items
         end,
         onSelect = function(key, text)
-            if addon and addon.VendorData then
-                addon.VendorData:SetCategory(vendor.npcID, key)
+            if addon then
+                addon.SetCategory(vendor.npcID, key)
             end
             vendor.category = key
             typeDropdownText:SetText(text)
@@ -492,8 +487,8 @@ local function ShowVendorDetail(panels, vendor)
 
             local capturedMapID = mapID
             wpBtn:SetScript("OnClick", function()
-                if addon and addon.VendorData then
-                    addon.VendorData:CreateWaypoint(vendor, capturedMapID)
+                if addon then
+                    addon.CreateWaypoint(vendor, capturedMapID)
                 end
             end)
 
@@ -602,7 +597,7 @@ local function ShowVendorDetail(panels, vendor)
                 tinsert(detailElements, limitTag)
             end
 
-            local cachedItem = addon and addon.DataLoader and addon.DataLoader:GetCachedItem(itemID)
+            local cachedItem = addon and addon.GetCachedItem(itemID)
             if cachedItem and cachedItem.name then
                 itemName:SetText(cachedItem.name)
                 itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(cachedItem.quality))
@@ -613,8 +608,8 @@ local function ShowVendorDetail(panels, vendor)
                 itemName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 iconTex:SetTexture(134400)
 
-                if addon and addon.DataLoader then
-                    addon.DataLoader:LoadItemData(itemID, function(_, data)
+                if addon then
+                    addon.LoadItemData(itemID, function(_, data)
                         if data and itemName:IsVisible() then
                             itemName:SetText(data.name or "")
                             itemName:SetTextColor(OneWoW_GUI:GetItemQualityColor(data.quality))
@@ -654,13 +649,13 @@ function RefreshVendorList(panels)
     ClearVendorList()
 
     local addon = GetDataAddon()
-    if not addon or not addon.VendorData then
+    if not addon then
         panels.listScrollChild:SetHeight(100)
         panels.UpdateListThumb()
         return
     end
 
-    local sorted = addon.VendorData:GetSortedVendors(nil)
+    local sorted = addon.GetSortedVendors(nil)
 
     local activeZoneFilter = nil
     if currentZoneOnly then
@@ -715,7 +710,7 @@ function RefreshVendorList(panels)
         end)
     end
 
-    local stats = addon.VendorData:GetStats()
+    local stats = addon.GetStats()
     if panels.statsText then
         panels.statsText:SetText(string.format(L["VENDORS_STATS"], stats.vendorCount, stats.uniqueItems))
     end
@@ -787,9 +782,9 @@ end
 
 local function SelectVendorByNpcID(panels, npcID)
     local addon = GetDataAddon()
-    if not addon or not addon.VendorData then return false end
+    if not addon then return false end
 
-    local vendor = addon.VendorData:GetAllVendors()[npcID]
+    local vendor = addon.GetVendor(npcID)
     if not vendor then return false end
 
     pendingFocusNpcID = npcID
@@ -806,12 +801,12 @@ function ns.UI.OpenToVendor(npcID)
     if not npcID then return end
 
     local addon = GetDataAddon()
-    if not addon or not addon.VendorData then
+    if not addon then
         ns.pendingVendorSelect = npcID
         return
     end
 
-    if not addon.VendorData:GetAllVendors()[npcID] then return end
+    if not addon.GetVendor(npcID) then return end
 
     OneWoW.UI:Show("catalog")
     OneWoW.UI:SelectSubTab("catalog", "vendors")
@@ -1034,7 +1029,7 @@ function ns.UI.CreateVendorsTab(parent)
         panels.detailScrollChild:SetHeight(100)
 
         if addon.RegisterScanCallback then
-            addon:RegisterScanCallback(function()
+            addon.RegisterScanCallback(function()
                 RefreshVendorList(panels)
             end)
         end

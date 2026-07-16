@@ -110,6 +110,7 @@ Services\TooltipScanner.lua
 Services\PredicateEngine.lua
 Services\AHItemKeys.lua
 Services\ItemPrices.lua
+Services\ItemDataLoader.lua
 Services\ProfessionRecipe.lua
 Services\RecipeKnownUtil.lua
 Services\Collectibles.lua

@@ -654,26 +654,27 @@ function ShoppingList:IsItemCraftable(itemID)
         return craftableCache[itemID].result, craftableCache[itemID].recipes
     end
 
-    local profAddon = OneWoW_CatalogData_Tradeskills
-    if not profAddon then
+    local api = OneWoW_CatalogData_Tradeskills_API
+    if not api then
         craftableCache[itemID] = { result = false }
         return false
     end
 
-    local DataAPI = profAddon.GetDataAPI and profAddon:GetDataAPI()
-    if not DataAPI or not DataAPI.IsDataAddonReady or not DataAPI:IsDataAddonReady() then
+    local raw = api.GetRecipesByItem(itemID)
+    if not raw or #raw == 0 then
         craftableCache[itemID] = { result = false }
         return false
     end
 
-    local recipes = DataAPI:FindRecipesByItem(itemID)
-    if recipes and #recipes > 0 then
-        craftableCache[itemID] = { result = true, recipes = recipes }
-        return true, recipes
+    local recipes = {}
+    for _, r in ipairs(raw) do
+        recipes[#recipes + 1] = {
+            recipeID = r.id,
+            name = C_Spell.GetSpellName(r.id) or tostring(r.id),
+        }
     end
-
-    craftableCache[itemID] = { result = false }
-    return false
+    craftableCache[itemID] = { result = true, recipes = recipes }
+    return true, recipes
 end
 
 function ShoppingList:GetCraftableRecipes(itemID)
@@ -685,49 +686,46 @@ end
 function ShoppingList:CalculateCraftIngredients(recipeID, quantity)
     if not recipeID or not quantity then return {} end
 
-    local profAddon = OneWoW_CatalogData_Tradeskills
-    if not profAddon then return {} end
+    local api = OneWoW_CatalogData_Tradeskills_API
+    if not api then return {} end
 
-    local profNS = profAddon.GetNamespace and profAddon:GetNamespace()
-    if not profNS or not profNS.RecipeHelper then return {} end
-
-    local details = profNS.RecipeHelper:GetRecipeDetails(recipeID)
-    if not details or not details.reagents or #details.reagents == 0 then return {} end
+    local reagents = api.GetRecipeReagents(recipeID)
+    if not reagents or #reagents == 0 then return {} end
 
     local ingredients = {}
-    for _, reagent in ipairs(details.reagents) do
-        table.insert(ingredients, {
-            itemID       = reagent.itemID,
-            quantity     = reagent.qtyRequired * quantity,
-            baseQuantity = reagent.qtyRequired,
-        })
+    for _, rg in ipairs(reagents) do
+        local reagentItemID = rg[1]
+        local qtyRequired = rg[2]
+        local reagentType = rg[3]
+        -- Type 0 = optional slot reagents (shown separately in Catalog UI).
+        if reagentType ~= 0 and reagentItemID and qtyRequired then
+            ingredients[#ingredients + 1] = {
+                itemID       = reagentItemID,
+                quantity     = qtyRequired * quantity,
+                baseQuantity = qtyRequired,
+            }
+        end
     end
 
-    return ingredients, details
+    return ingredients
 end
 
 function ShoppingList:GetRecipeKnownBy(recipeID)
     if not recipeID then return {} end
 
-    local profAddon = OneWoW_CatalogData_Tradeskills
-    if not profAddon then return {} end
+    local api = OneWoW_CatalogData_Tradeskills_API
+    if not api then return {} end
 
-    local profNS = profAddon.GetNamespace and profAddon:GetNamespace()
-    if not profNS or not profNS.RecipeHelper then return {} end
-
-    local details = profNS.RecipeHelper:GetRecipeDetails(recipeID)
-    if not details or not details.knownBy then return {} end
+    local keys = api.GetRecipeKnownBy(recipeID)
+    if not keys then return {} end
 
     local knownBy = {}
-    for _, charInfo in ipairs(details.knownBy) do
-        if charInfo.knows then
-            local key = charInfo.characterKey
-            table.insert(knownBy, {
-                characterKey  = key,
-                characterName = key:match("([^%-]+)"),
-                realm         = key:match("%-(.+)"),
-            })
-        end
+    for _, key in ipairs(keys) do
+        knownBy[#knownBy + 1] = {
+            characterKey  = key,
+            characterName = key:match("([^%-]+)"),
+            realm         = key:match("%-(.+)"),
+        }
     end
 
     return knownBy

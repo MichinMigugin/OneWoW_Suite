@@ -92,7 +92,7 @@ Per-pack READMEs have a short summary; this table is the canonical cross-module 
 
 **Still works with any subset:** Catalog shell, Settings, Item Search (owned items via AltTracker), and every Catalog tab whose data pack remains enabled. ShoppingList profession-window hooks that use Blizzard APIs directly are unaffected by disabling Tradeskills.
 
-**Cross-dependencies:** Journal quest-loot links and completion badges need **both** Journal and Quests. ShoppingList recipe features need Tradeskills when Catalog is used for craft planning, not for adding ingredients from the open profession window.
+**Cross-dependencies:** Journal quest-loot links and completion badges need **both** Journal and Quests. ShoppingList recipe features need **Tradeskills** only (Catalog hub UI is not required for craft detection).
 
 ---
 

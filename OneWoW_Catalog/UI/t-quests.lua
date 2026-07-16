@@ -35,7 +35,6 @@ local storyFilter      = "all"
 local runtimeFilter    = "all"
 local advancedOpen     = false
 local availableFilterCache = {}
-local dataAddon        = nil
 local questRowStatusCache = {}
 local questGroupStatusCache = {}
 local activeQuestIDsAcrossAlts = {}
@@ -746,11 +745,7 @@ local function GetAllCharactersActiveQuests(addon)
 end
 
 local function GetDataAddon()
-    if dataAddon then return dataAddon end
-    if ns.Catalog and ns.Catalog.GetDataAddon then
-        dataAddon = ns.Catalog:GetDataAddon("quests")
-    end
-    return dataAddon
+    return OneWoW_CatalogData_Quests_API
 end
 
 local function ClearDetailElements()

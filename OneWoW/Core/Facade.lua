@@ -84,6 +84,7 @@ local COLON_METHODS = {
     "SignalDataReady",
     "RegisterDataReadyWatcher",
     "IsDataReady",
+    "CreateItemDataLoader",
     "RegisterCoreLoginHandler",
     "RegisterCoreEnteringWorldHandler",
     "FireCoreLoginHandlers",
