@@ -283,6 +283,10 @@ OneWoW_AltTracker_Endgame_DB = {
 
 ### Hub configuration access
 
+**Endgame is the AltTracker store that still TOC-depends on the hub**
+(`RequiredDeps: OneWoW, OneWoW_AltTracker`). Other AltTracker stores load with
+`OneWoW` only so Bags/ShoppingList can pull them without the hub shell.
+
 Collection modules read the parent hub's effective progress override lists and
 season definition through **`OneWoW_AltTracker_API`** dot-functions — not colon
 methods on `OneWoW_AltTracker`, and not the hub's `OneWoW_AltTracker_DB` global:
@@ -292,6 +296,8 @@ local currencyIDs = OneWoW_AltTracker_API.GetProgressList("trackedCurrencyIDs")
 local seasonData = OneWoW_AltTracker_API.GetSeasonData()
 ```
 
+Those APIs require the hub loaded; Endgame collectors therefore cannot run with
+the AltTracker hub opted out (by design).
 ## Data Access
 
 Persistence lives in `OneWoW_AltTracker_Endgame_DB` (the WoW `## SavedVariables` root).

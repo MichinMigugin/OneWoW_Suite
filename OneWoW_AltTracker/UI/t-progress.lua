@@ -1710,6 +1710,14 @@ function ns.UI.CreateProgressTab(parent)
         end
     end)
 
+    local function RefreshProgress()
+        if ns.UI.RefreshProgressTab then
+            ns.UI.RefreshProgressTab(parent)
+        end
+    end
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Character", RefreshProgress)
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Endgame", RefreshProgress)
+
     if ns.UI.RegisterRosterTabFrame then
         ns.UI.RegisterRosterTabFrame("progress", parent)
     end

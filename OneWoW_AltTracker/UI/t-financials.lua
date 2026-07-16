@@ -1016,21 +1016,15 @@ function ns.UI.CreateFinancialsTab(parent)
     parent.statusText = status.text
     parent.dashboardMode = false
 
-    C_Timer.After(0.5, function()
-        local saved = OneWoW_AltTracker_Accounting_API
-            and OneWoW_AltTracker_Accounting_API.GetFinancialsDashboard()
-        if saved then
-            SetDashboardMode(true)
-        elseif ns.UI.RefreshFinancialsTab then
-            ns.UI.RefreshFinancialsTab(parent)
-        end
-    end)
-
     parent.financialsDirty = false
     activeFinancialsTab = parent
 
-    local function SetupRefreshCallback()
-        if not OneWoW_AltTracker_Accounting_API then return false end
+    -- Accounting is LoD; wire the live listener and first paint when its data
+    -- boundary fires (catch-up if already ready). Replaces the old timed poll.
+    local listenerWired = false
+    local function WireAccountingListener()
+        if listenerWired or not OneWoW_AltTracker_Accounting_API then return end
+        listenerWired = true
         local refreshPending = false
         OneWoW_AltTracker_Accounting_API.SetTransactionListener(function()
             if refreshPending then return end
@@ -1044,16 +1038,25 @@ function ns.UI.CreateFinancialsTab(parent)
                 end
             end)
         end)
-        return true
     end
 
-    local function TrySetupCallback(attempt)
-        if SetupRefreshCallback() then return end
-        if attempt < 10 then
-            C_Timer.After(1, function() TrySetupCallback(attempt + 1) end)
+    local function OnAccountingReady()
+        WireAccountingListener()
+        local saved = OneWoW_AltTracker_Accounting_API
+            and OneWoW_AltTracker_Accounting_API.GetFinancialsDashboard()
+        if saved then
+            SetDashboardMode(true)
+        elseif ns.UI.RefreshFinancialsTab then
+            ns.UI.RefreshFinancialsTab(parent)
         end
     end
-    TrySetupCallback(1)
+
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Accounting", OnAccountingReady)
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Character", function()
+        if OneWoW_AltTracker_Accounting_API and ns.UI.RefreshFinancialsTab then
+            ns.UI.RefreshFinancialsTab(parent)
+        end
+    end)
 
     parent:HookScript("OnShow", function()
         if parent.financialsDirty then

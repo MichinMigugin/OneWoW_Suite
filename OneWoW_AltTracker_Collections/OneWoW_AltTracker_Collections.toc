@@ -4,7 +4,7 @@
 ## Notes: OneWoW Data Addon that: tracks quests, reputations, and achievements for each of your characters.
 ## Author: OneWoW Dev Team
 
-## RequiredDeps: OneWoW, OneWoW_AltTracker
+## RequiredDeps: OneWoW
 ## LoadOnDemand: 1
 ## Category: OneWoW
 ## Group: OneWoW_AltTracker

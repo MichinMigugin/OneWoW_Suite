@@ -204,7 +204,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["GOLD_TOOLTIP_PERSONAL"] = "个人",
     ["GOLD_TOOLTIP_WARBAND"] = "战团银行",
     ["GOLD_TOOLTIP_OTHERS"] = "+%d 其他角色",
-    ["GOLD_TOOLTIP_NO_ALTTRACKER"] = "安装 AltTracker 以查看其他角色的金币详情",
+    ["GOLD_TOOLTIP_NO_CHARACTER_DATA"] = "在“管理功能”中启用角色数据以查看其他角色的金币详情",
 
     ["GUILD_BANK_MONEY_LOG"] = "金币",
     ["GUILD_BANK_NO_LOG"] = "没有可用的交易记录。",

@@ -1,7 +1,8 @@
 local _, ns = ...
 
--- Public, cross-addon read surface for the AltTracker hub. Companion stores
--- (RequiredDeps: OneWoW_AltTracker) call these dot-functions; ns stays private.
+-- Public, cross-addon read surface for the AltTracker hub. Endgame (RequiredDeps:
+-- OneWoW_AltTracker) and hub UI call these dot-functions; ns stays private.
+-- Most other AltTracker stores no longer TOC-depend on this hub.
 OneWoW_AltTracker_API = {}
 
 --- Effective progress override list (user customization when non-empty, else baseline).

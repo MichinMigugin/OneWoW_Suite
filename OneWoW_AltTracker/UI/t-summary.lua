@@ -107,11 +107,15 @@ function ns.UI.CreateSummaryTab(parent)
 
     OneWoW_GUI:ApplyFontToFrame(parent)
 
-    C_Timer.After(0.5, function()
+    local function RefreshSummary()
         if ns.UI.RefreshSummaryTab then
             ns.UI.RefreshSummaryTab(parent)
         end
-    end)
+    end
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Character", RefreshSummary)
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Storage", RefreshSummary)
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Collections", RefreshSummary)
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Professions", RefreshSummary)
 
     if ns.UI.RegisterRosterTabFrame then
         ns.UI.RegisterRosterTabFrame("summary", parent)

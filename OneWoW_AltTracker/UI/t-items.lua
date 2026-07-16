@@ -478,15 +478,14 @@ function ns.UI.CreateItemsTab(parent)
 
     OneWoW_GUI:ApplyFontToFrame(parent)
 
-    -- Subscribe once to storage changes so the tab live-refreshes. Storage is an
-    -- optional dep here (not guaranteed loaded), so this is genuinely conditional.
+    -- Subscribe once storage's data is queryable (LoD mid-session load included).
     itemsTabRef = parent
-    if not storageSubscribed and OneWoW_AltTracker_Storage_API and OneWoW_AltTracker_Storage_API.RegisterStorageChanged then
-        storageSubscribed = true
-        OneWoW_AltTracker_Storage_API.RegisterStorageChanged(ScheduleItemsRefresh)
-    end
-
-    C_Timer.After(0.2, function()
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Storage", function()
+        if not storageSubscribed and OneWoW_AltTracker_Storage_API
+            and OneWoW_AltTracker_Storage_API.RegisterStorageChanged then
+            storageSubscribed = true
+            OneWoW_AltTracker_Storage_API.RegisterStorageChanged(ScheduleItemsRefresh)
+        end
         if ns.UI.RefreshItemsTab then
             ns.UI.RefreshItemsTab(parent)
         end
@@ -762,6 +761,7 @@ end
 -- secondary, socket) so it's clear what the best copy there looks like.
 local function ComposeCopyLine(m, qty)
     local storageAPI = OneWoW_AltTracker_Storage_API
+    if not storageAPI then return LocationLabel(m) .. "  x" .. qty end
     local p = PE:BuildProps(m.itemID, nil, nil, m.itemLink)
 
     local ilvl = storageAPI.GetEffectiveILvl(m)

@@ -4,7 +4,7 @@
 ## Notes: OneWoW Data Addon that: tracks all gold income and expenses for all your characters.
 ## Author: OneWoW Dev Team
 
-## RequiredDeps: OneWoW, OneWoW_AltTracker
+## RequiredDeps: OneWoW
 ## LoadOnDemand: 1
 ## Category: OneWoW
 ## Group: OneWoW_AltTracker

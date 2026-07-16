@@ -171,7 +171,7 @@ function ns.UI.CreateEquipmentTab(parent)
 
     OneWoW_GUI:ApplyFontToFrame(parent)
 
-    C_Timer.After(0.5, function()
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Character", function()
         if ns.UI.RefreshEquipmentTab then
             ns.UI.RefreshEquipmentTab(parent)
         end
@@ -209,7 +209,9 @@ function ns.UI.CreateEquipmentTab(parent)
 end
 
 local function GetEquipmentStats(charKey, charData)
-    local cd = OneWoW_AltTracker_Character_API.GetCharacterData(charKey)
+    local api = OneWoW_AltTracker_Character_API
+    if not api then return 100, 0, 0, 0, 0 end
+    local cd = api.GetCharacterData(charKey)
     local equipment = cd and cd.equipment
     local totalDurability, durabilityItems, missingEnchants, missingGems, tierCount = 0, 0, 0, 0, 0
     if equipment then

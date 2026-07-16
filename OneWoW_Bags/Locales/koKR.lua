@@ -176,7 +176,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["GOLD_TOOLTIP_PERSONAL"] = "개인",
     ["GOLD_TOOLTIP_WARBAND"] = "전투부대 은행",
     ["GOLD_TOOLTIP_OTHERS"] = "외 %d명",
-    ["GOLD_TOOLTIP_NO_ALTTRACKER"] = "다른 캐릭터 골드는 AltTracker를 설치하세요",
+    ["GOLD_TOOLTIP_NO_CHARACTER_DATA"] = "다른 캐릭터 골드는 기능 관리에서 캐릭터 데이터를 활성화하세요",
     ["GUILD_BANK_MONEY_LOG"] = "골드",
     ["GUILD_BANK_NO_LOG"] = "거래 내역이 없습니다.",
     ["CATEGORY_SELECT_PROMPT"] = "목록에서 분류를 선택해 아이템을 관리하세요.",

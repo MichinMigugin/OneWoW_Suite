@@ -386,7 +386,10 @@ function ns.UI.CreateBankTab(parent)
     OneWoW_AltTracker.UI.RefreshBankDisplay = ns.UI.RefreshBankDisplay
     OneWoW_AltTracker.UI.BankTab = parent
 
-    C_Timer.After(0.3, function()
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Storage", function()
+        if parent.RebuildGuildDropdown then
+            parent.RebuildGuildDropdown()
+        end
         if ns.UI.RefreshBankDisplay then
             ns.UI.RefreshBankDisplay(parent)
         end

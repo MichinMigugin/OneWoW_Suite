@@ -93,11 +93,13 @@ function ns.UI.CreateLockoutsTab(parent)
 
     OneWoW_GUI:ApplyFontToFrame(parent)
 
-    C_Timer.After(0.5, function()
+    local function RefreshLockouts()
         if ns.UI.RefreshLockoutsTab then
             ns.UI.RefreshLockoutsTab(parent)
         end
-    end)
+    end
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Character", RefreshLockouts)
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Endgame", RefreshLockouts)
 
     if ns.UI.RegisterRosterTabFrame then
         ns.UI.RegisterRosterTabFrame("lockouts", parent)

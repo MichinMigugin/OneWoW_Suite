@@ -105,12 +105,6 @@ function ns.UI.CreateProfessionsTab(parent)
 
     OneWoW_GUI:ApplyFontToFrame(parent)
 
-    C_Timer.After(0.5, function()
-        if ns.UI.RefreshProfessionsTab then
-            ns.UI.RefreshProfessionsTab(parent)
-        end
-    end)
-
     if ns.UI.RegisterRosterTabFrame then
         ns.UI.RegisterRosterTabFrame("professions", parent)
     end
@@ -129,6 +123,17 @@ function ns.UI.CreateProfessionsTab(parent)
     -- queryable so the dashes become real numbers. Catch-up fires immediately if
     -- it is already loaded, which is a harmless no-op re-render.
     OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Tradeskills", function()
+        if ns.UI.RefreshProfessionsTab then
+            ns.UI.RefreshProfessionsTab(parent)
+        end
+    end)
+    -- Roster keys come from Character; skill/recipe rows need the Professions store.
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Character", function()
+        if ns.UI.RefreshProfessionsTab then
+            ns.UI.RefreshProfessionsTab(parent)
+        end
+    end)
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Professions", function()
         if ns.UI.RefreshProfessionsTab then
             ns.UI.RefreshProfessionsTab(parent)
         end

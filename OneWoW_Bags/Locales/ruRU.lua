@@ -176,7 +176,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["GOLD_TOOLTIP_PERSONAL"] = "Личное",
     ["GOLD_TOOLTIP_WARBAND"] = "Банк отряда",
     ["GOLD_TOOLTIP_OTHERS"] = "+%d других",
-    ["GOLD_TOOLTIP_NO_ALTTRACKER"] = "Установите AltTracker для золота альтов",
+    ["GOLD_TOOLTIP_NO_CHARACTER_DATA"] = "Включите данные персонажа (Управление функциями) для золота альтов",
     ["GUILD_BANK_MONEY_LOG"] = "Золото",
     ["GUILD_BANK_NO_LOG"] = "Нет доступных операций.",
     ["CATEGORY_SELECT_PROMPT"] = "Выберите категорию в списке, чтобы управлять её предметами.",

@@ -322,11 +322,13 @@ function ns.UI.CreateAuctionsTab(parent)
 
     OneWoW_GUI:ApplyFontToFrame(parent)
 
-    C_Timer.After(0.5, function()
+    local function RefreshAuctions()
         if ns.UI.RefreshAuctionsTab then
             ns.UI.RefreshAuctionsTab(parent)
         end
-    end)
+    end
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Auctions", RefreshAuctions)
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Storage", RefreshAuctions)
 end
 
 local auctionRows = {}

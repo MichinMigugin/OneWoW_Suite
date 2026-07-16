@@ -8,8 +8,8 @@
 --   * Apply & Reload (hard) - writes Blizzard's Enable/DisableAddOn flags and
 --     reloads (the only way to truly evict a loaded addon, or to re-enable a
 --     Blizzard-disabled one).
--- Shared/dependency datastores auto-follow their parent through the orchestrator
--- (soft) or the consumer graph below (hard).
+-- Shared/dependency datastores follow the consumer graph (and BringUp pulls).
+-- Parent-required stores (Endgame, Catalog packs) still need their owning hub.
 
 local _, ns = ...
 
@@ -221,12 +221,12 @@ local function GetStoreOwner(storeAddon)
     return nil
 end
 
--- Consumer feature that forces an optional store on while its owning parent is
--- selected. A store has RequiredDeps on its owning parent, so it cannot load when
--- the parent is off -- in that case no consumer can force it and we return nil.
+-- Consumer feature that forces a store on. Parent soft-opt-out only blocks
+-- stores that still TOC-require their owner (StoreRequiresParent); other stores
+-- can be consumer-pulled with the owning hub off.
 local function GetStoreConsumerForced(storeAddon, selections)
     local owner = GetStoreOwner(storeAddon)
-    if owner and not selections[owner.addon] then
+    if owner and ns:StoreRequiresParent(storeAddon) and not selections[owner.addon] then
         return nil
     end
     for _, entry in ipairs(FirstRun.CATALOG) do
@@ -243,13 +243,16 @@ local function GetStoreConsumerForced(storeAddon, selections)
     return nil
 end
 
--- Denominator pool: manifest stores under selected parents plus consumer pulls.
+-- Denominator pool: owned stores visible under a selected parent, independent
+-- (non-parent-required) stores always, plus consumer pulls.
 local function ComputeEligibleDatastorePool(selections)
     local pool = {}
     for _, entry in ipairs(ns.ModuleManifest) do
-        if entry.stores and selections[entry.addon] then
+        if entry.stores then
             for _, store in ipairs(entry.stores) do
-                pool[store] = true
+                if selections[entry.addon] or not ns:StoreRequiresParent(store) then
+                    pool[store] = true
+                end
             end
         end
     end
@@ -257,7 +260,9 @@ local function ComputeEligibleDatastorePool(selections)
         if selections[entry.addonName] then
             for _, ds in ipairs(entry.datastores) do
                 local owner = GetStoreOwner(ds)
-                if not owner or selections[owner.addon] then
+                if not owner
+                    or selections[owner.addon]
+                    or not ns:StoreRequiresParent(ds) then
                     pool[ds] = true
                 end
             end
@@ -266,7 +271,9 @@ local function ComputeEligibleDatastorePool(selections)
     return pool
 end
 
--- Effective wanted set: consumer graph + bundled parents + optional storeSelections.
+-- Effective wanted set: consumer graph + optional storeSelections.
+-- Parent-required stores (Endgame, Catalog packs) only count when the hub is on.
+-- Other AltTracker stores follow storeSelections even with the hub off.
 local function ComputeDatastoreState(selections, storeSelections)
     storeSelections = storeSelections or {}
     local wanted = {}
@@ -277,24 +284,26 @@ local function ComputeDatastoreState(selections, storeSelections)
         if selections[entry.addonName] then
             for _, ds in ipairs(entry.datastores) do
                 local owner = GetStoreOwner(ds)
-                if not owner or selections[owner.addon] then
+                if not owner
+                    or selections[owner.addon]
+                    or not ns:StoreRequiresParent(ds) then
                     wanted[ds] = true
                 end
             end
         end
     end
     for _, manifest in ipairs(ns:GetManifestParentsWithStores()) do
-        if selections[manifest.addon] then
-            if manifest.storePolicy == "bundled" then
-                for _, store in ipairs(manifest.stores) do
-                    wanted[store] = true
-                end
-            elseif manifest.storePolicy == "optional" then
-                for _, store in ipairs(manifest.stores) do
-                    if storeSelections[store] then
+        if manifest.storePolicy == "optional" then
+            for _, store in ipairs(manifest.stores) do
+                if storeSelections[store] then
+                    if not ns:StoreRequiresParent(store) or selections[manifest.addon] then
                         wanted[store] = true
                     end
                 end
+            end
+        elseif manifest.storePolicy == "bundled" and selections[manifest.addon] then
+            for _, store in ipairs(manifest.stores) do
+                wanted[store] = true
             end
         end
     end
@@ -378,6 +387,13 @@ function FirstRun:Apply(selections, perCharacter, hard, storeSelections)
         if selections[name] and ns:IsAddonEnabled(name, perCharacter)
             and not C_AddOns.IsAddOnLoaded(name) then
             LoadFeatureNow(name)
+        end
+    end
+    -- Wanted consumer-pulled stores when the feature was already loaded (BringUp
+    -- skipped): EnsureLoaded each datastore that Apply just opted in.
+    for _, ds in ipairs(DATASTORE_ADDONS) do
+        if datastoreState[ds] and not C_AddOns.IsAddOnLoaded(ds) then
+            ns:EnsureLoaded(ds)
         end
     end
     return false
@@ -847,11 +863,31 @@ function FirstRun:BuildPanel(parent, opts)
                     checked = selections[addon],
                     onToggle = function(_, checked)
                         selections[addon] = checked and true or false
-                        if not checked then
-                            local manifest = ns:GetManifestByAddon(addon)
-                            if manifest and manifest.storePolicy == "optional" and manifest.stores then
+                        local manifest = ns:GetManifestByAddon(addon)
+                        if manifest and manifest.storePolicy == "optional" and manifest.stores then
+                            if not checked then
+                                -- Unticking the hub only clears parent-required
+                                -- stores (Endgame / Catalog packs). Independent
+                                -- AltTracker stores keep their own selection.
                                 for _, store in ipairs(manifest.stores) do
-                                    storeSelections[store] = false
+                                    if ns:StoreRequiresParent(store) then
+                                        storeSelections[store] = false
+                                    end
+                                end
+                            else
+                                -- Enabling the hub defaults all owned stores on
+                                -- when none are selected yet.
+                                local anySelected = false
+                                for _, store in ipairs(manifest.stores) do
+                                    if storeSelections[store] then
+                                        anySelected = true
+                                        break
+                                    end
+                                end
+                                if not anySelected then
+                                    for _, store in ipairs(manifest.stores) do
+                                        storeSelections[store] = true
+                                    end
                                 end
                             end
                         end
@@ -884,12 +920,11 @@ function FirstRun:BuildPanel(parent, opts)
                 loadBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
                 loadBtn:SetScript("OnClick", function()
                     ns:SetFeatureOptOut(addon, false, perCharacter)
-                    -- Bring the feature's wanted data stores along: clear their soft
-                    -- opt-out so BringUp's EnsureLoaded loads them (a store has
-                    -- RequiredDeps on this parent, so the parent loads first).
+                    -- Clear soft opt-out on owned stores and CATALOG consumer pulls
+                    -- so BringUp's EnsureLoaded can load them.
+                    local effective = ComputeDatastoreState(selections, storeSelections)
                     local manifest = ns:GetManifestByAddon(addon)
                     if manifest and manifest.stores then
-                        local effective = ComputeDatastoreState(selections, storeSelections)
                         for _, store in ipairs(manifest.stores) do
                             if effective[store] then
                                 ns:SetFeatureOptOut(store, false, perCharacter)
@@ -897,10 +932,21 @@ function FirstRun:BuildPanel(parent, opts)
                             end
                         end
                     end
+                    for _, catalogEntry in ipairs(FirstRun.CATALOG) do
+                        if catalogEntry.addonName == addon then
+                            for _, ds in ipairs(catalogEntry.datastores) do
+                                if effective[ds] then
+                                    ns:SetFeatureOptOut(ds, false, perCharacter)
+                                end
+                            end
+                            break
+                        end
+                    end
                     LoadFeatureNow(addon)
                     originalSelections[addon] = true
                     RefreshRow(addon)
                     RefreshStoreRowsForParent(addon)
+                    RefreshAllStoreRows()
                     RefreshActions()
                     RefreshSummary()
                 end)
@@ -931,7 +977,9 @@ function FirstRun:BuildPanel(parent, opts)
                             end or nil,
                             onToggle = isOptional and function(_, checked)
                                 storeSelections[store] = checked and true or false
-                                if checked and not selections[addon] then
+                                -- Only parent-required stores (Endgame, Catalog
+                                -- packs) auto-enable their hub when ticked.
+                                if checked and not selections[addon] and ns:StoreRequiresParent(store) then
                                     selections[addon] = true
                                     if cards[addon] then
                                         cards[addon]:SetChecked(true, true)
@@ -979,12 +1027,25 @@ function FirstRun:BuildPanel(parent, opts)
 
         local childNeedsLoad = false
         if card._checked and ns:IsAddonEnabled(addonName, perCharacter) then
+            local effective = ComputeDatastoreState(selections, storeSelections)
             local manifest = ns:GetManifestByAddon(addonName)
             if manifest and manifest.stores then
-                local effective = ComputeDatastoreState(selections, storeSelections)
                 for _, store in ipairs(manifest.stores) do
                     if effective[store] and NeedsSoftLoad(store) then
                         childNeedsLoad = true
+                        break
+                    end
+                end
+            end
+            if not childNeedsLoad then
+                for _, entry in ipairs(FirstRun.CATALOG) do
+                    if entry.addonName == addonName then
+                        for _, ds in ipairs(entry.datastores) do
+                            if effective[ds] and NeedsSoftLoad(ds) then
+                                childNeedsLoad = true
+                                break
+                            end
+                        end
                         break
                     end
                 end
@@ -1020,24 +1081,29 @@ function FirstRun:BuildPanel(parent, opts)
         local parentWanted = selections[meta.parent] and true or false
         local effective = ComputeDatastoreState(selections, storeSelections)
         local forcedConsumer = GetStoreConsumerForced(storeAddon, selections)
+        local requiresParent = ns:StoreRequiresParent(storeAddon)
         local checked, muted, interactive, badgeText
 
-        if manifest.storePolicy == "bundled" then
-            checked = parentWanted
-            muted = not parentWanted
-            interactive = false
-            badgeText = parentWanted and L["WIZARD_STORE_BUNDLED"] or nil
-        elseif forcedConsumer and not (parentWanted and storeSelections[storeAddon]) then
-            checked = effective[storeAddon] and true or false
-            muted = not parentWanted
-            interactive = false
-            badgeText = format(L["WIZARD_STORE_REQUIRED_BY"], GetCatalogLabel(forcedConsumer))
-        elseif not parentWanted then
+        if requiresParent and not parentWanted then
+            -- Endgame / Catalog packs: dead without their hub.
             checked = false
             muted = true
             interactive = false
             badgeText = nil
+        elseif forcedConsumer and not (parentWanted and storeSelections[storeAddon]) then
+            -- Bags/ShoppingList (etc.) force the store on.
+            checked = effective[storeAddon] and true or false
+            muted = false
+            interactive = false
+            badgeText = format(L["WIZARD_STORE_REQUIRED_BY"], GetCatalogLabel(forcedConsumer))
+        elseif manifest.storePolicy == "bundled" then
+            checked = parentWanted
+            muted = not parentWanted
+            interactive = false
+            badgeText = parentWanted and L["WIZARD_STORE_BUNDLED"] or nil
         else
+            -- Independent optional store (most AltTracker packs): toggle with or
+            -- without the owning hub.
             checked = storeSelections[storeAddon] and true or false
             muted = false
             interactive = true

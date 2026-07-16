@@ -54,12 +54,15 @@ flowchart TB
     end
     OW --> Modules
 
-    subgraph Stores [Data stores — RequiredDeps: parent · LoadOnDemand: 1]
-        CatalogData[OneWoW_CatalogData_*]
-        AltData[OneWoW_AltTracker_*]
+    subgraph Stores [Data stores — LoadOnDemand: 1]
+        CatalogData[OneWoW_CatalogData_*<br/>RequiredDeps: Catalog]
+        AltData[OneWoW_AltTracker_* most: OneWoW only<br/>Endgame: + AltTracker hub]
     end
     Catalog --> CatalogData
     AltTracker --> AltData
+    Bags -.->|consumer pull| AltData
+    ShoppingList -.->|consumer pull| AltData
+    ShoppingList -.->|consumer pull| CatalogData
 
     DevTool[OneWoW_Utility_DevTool<br/>RequiredDeps: OneWoW · opt-in]
     OW --> DevTool
@@ -73,7 +76,7 @@ flowchart TB
 |---|---|---|---|
 | **1 — Core hub** | `OneWoW` | Always | Orchestrator, Manage Features, hub UI, shared engines, GUI toolkit (`OneWoW_GUI` global) |
 | **2 — Feature modules** | AltTracker, Catalog, Notes, Trackers, QoL, ShoppingList, DirectDeposit, Bags | On demand | `RequiredDeps: OneWoW` + `LoadOnDemand: 1` |
-| **3 — Data stores** | `OneWoW_AltTracker_*`, `OneWoW_CatalogData_*` | On demand, after parent | `RequiredDeps: …, <parent>` + `LoadOnDemand: 1`; listed in `ModuleManifest.stores` |
+| **3 — Data stores** | `OneWoW_AltTracker_*`, `OneWoW_CatalogData_*` | On demand | Owned under `ModuleManifest.stores`. Most AltTracker stores: `RequiredDeps: OneWoW` (consumers may load without the hub). **Exception:** Endgame + all Catalog packs still `RequiredDeps: …, <parent>`. Listed in `parentRequiredStores` for soft opt-out gating. |
 | **4 — Utility** | `OneWoW_Utility_DevTool` | On demand, opt-in | `RequiredDeps: OneWoW` + `LoadOnDemand: 1`; excluded from recommended preset; `loadPhase = "login"` when wanted |
 
 Verified against current `.toc` files:
@@ -90,7 +93,8 @@ Verified against current `.toc` files:
 | **OneWoW_DirectDeposit** | OneWoW | — | 1 |
 | **OneWoW_Bags** | OneWoW | TradeSkillMaster, Baganator, Masque | 1 |
 | **OneWoW_Utility_DevTool** | OneWoW | !BugGrabber | 1 |
-| **OneWoW_AltTracker_\*** | OneWoW, OneWoW_AltTracker | — | 1 |
+| **OneWoW_AltTracker_\*** (except Endgame) | OneWoW | — | 1 |
+| **OneWoW_AltTracker_Endgame** | OneWoW, OneWoW_AltTracker | — | 1 |
 | **OneWoW_CatalogData_\*** | OneWoW, OneWoW_Catalog | — | 1 |
 
 ### OptionalDeps policy
@@ -337,18 +341,21 @@ parent:RegisterAddonLoadedWatcher("Blizzard_Foo", fn)
 ```lua
 OneWoW:EnsureLoaded(name [, opts])              -> ok, reason?
 OneWoW:WithAddon(name, onReady, onFail, opts)   -> ok
-OneWoW:BringUp(addonName)                        -- load feature + stores, then Settle (+ mid-session PEW catch-up)
+OneWoW:BringUp(addonName)                        -- feature + owned stores + CATALOG consumer pulls, then Settle (+ mid-session PEW catch-up)
 OneWoW:GetLoadFailureText(reason)               -> localized string
+OneWoW:StoreRequiresParent(storeName)           -> true when soft parent opt-out must block load
 ```
 
-- **Soft opt-out enforced:** returns `"OPTED_OUT"` when unit or parent store's parent
-  is opted out. Explicit user loads (Blizzard "Load Addon", Manage Features per-row
-  button) clear opt-out via the post-hook.
+- **Soft opt-out enforced:** returns `"OPTED_OUT"` when the unit itself is opted out,
+  or when `StoreRequiresParent(unit)` and the manifest parent is opted out
+  (`parentRequiredStores`: Endgame + Catalog packs). Other AltTracker stores load
+  with the hub soft-opted-out.
+- **`BringUp` consumer pulls:** appends `FirstRun.CATALOG[].datastores` for the
+  feature (e.g. Bags → Storage + Character) so a Bags-only install loads data
+  without AltTracker.
 - **`{ deferInCombat = true }`** queues to `PLAYER_REGEN_ENABLED`.
 - **Lazy cross-module data:** reserve `WithAddon` for *explicit user actions* (e.g.
   Catalog AH scan → `OneWoW_AltTracker_Auctions`), not speculative tab opens.
-- **Trackers legacy SV drain** uses `WithAddon("OneWoW_Notes", …)` when Notes is
-  wanted but not loaded; defers when Notes is soft-opted-out.
 - **The funnel is mandatory.** Raw `C_AddOns.LoadAddOn` / `UIParentLoadAddOn` calls
   are forbidden everywhere except `Core/AddonLoader.lua` and `Core/Lifecycle.lua` —
   they bypass soft opt-out and combat deferral, and skip load tracing. This applies
@@ -506,10 +513,14 @@ while working.
 Manage Features' `FirstRun.CATALOG[].datastores` (consumer graph) and
 `ModuleManifest.stores` (ownership graph) remain **distinct** sources of truth.
 Manage Features renders manifest `stores` as indented sub-rows under Catalog and
-AltTracker. `storePolicy` is `optional` (user-toggleable Catalog data packs) or
-`bundled` (AltTracker stores mirror the parent; display-only). Soft Apply writes
-per-store `SetFeatureOptOut`; the consumer graph still pulls stores for Bags and
-Shopping List. See
+AltTracker. `storePolicy` is `optional` for both. Most AltTracker stores toggle
+independently of the AltTracker hub; Endgame and all Catalog packs stay
+parent-required (`parentRequiredStores` / TOC) and mute when the hub is off.
+Consumer pulls (Bags → Storage/Character, ShoppingList → Storage) still show
+“required by …” and stay non-interactive while that consumer is on. Soft Apply
+writes per-store `SetFeatureOptOut` and `EnsureLoaded`s wanted-but-unloaded
+stores; cold start also `EnsureLoaded`s opted-in stores whose hub was skipped.
+See
 [`OneWoW_Catalog/README.md#disabling-data-modules`](../../OneWoW_Catalog/README.md#disabling-data-modules)
 for per-pack impact detail.
 

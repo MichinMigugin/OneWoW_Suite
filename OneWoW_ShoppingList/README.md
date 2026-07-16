@@ -59,11 +59,11 @@ When the Profession Orders page is open, dedicated buttons let you push the orde
 
 Item tooltips show the needed/owned counts whenever the item is on a list.
 
-### Cross-Character Support (with OneWoW_AltTracker)
+### Cross-Character Support (with Storage / Character data)
 
 - Per-list **Search Alts** toggle in the header. When enabled, the addon counts the item across all your alts' bags and personal banks, plus all known guild banks.
 - The warband bank is always counted regardless of the toggle, since it's account-wide.
-- Without OneWoW_AltTracker, only the current character's bags + warband bank are scanned.
+- Without `OneWoW_AltTracker_Storage` (and Character for gold/context), only the current character's bags + warband bank are scanned. Manage Features can enable those stores with Bags/ShoppingList even when the AltTracker hub is off.
 
 ### Loot Alerts
 
@@ -88,8 +88,8 @@ A chat alert prints when an item from any of your lists drops into your bags, wi
 ## Requirements
 
 - **OneWoW** — Core hub addon (required).
-- **OneWoW_AltTracker** — Optional. Enables alt / personal-bank / guild-bank scanning.
-- **OneWoW_Catalog** — Optional. Enables the **Craft** button on item rows, alt-recipe-knowledge lookup, and quality-variant reagent matching.
+- **OneWoW_AltTracker_Storage** — Optional. Enables alt / personal-bank / guild-bank scanning (pulled when ShoppingList is enabled in Manage Features; AltTracker hub not required).
+- **OneWoW_Catalog** / **OneWoW_CatalogData_Tradeskills** — Optional. Enables the **Craft** button on item rows, alt-recipe-knowledge lookup, and quality-variant reagent matching.
 
 ## Slash Commands
 

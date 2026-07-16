@@ -204,7 +204,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["GOLD_TOOLTIP_PERSONAL"] = "Persönlich",
     ["GOLD_TOOLTIP_WARBAND"] = "Kriegsmeutenbank",
     ["GOLD_TOOLTIP_OTHERS"] = "+%d weitere",
-    ["GOLD_TOOLTIP_NO_ALTTRACKER"] = "Installiere AltTracker für Gold-Details der Twinks",
+    ["GOLD_TOOLTIP_NO_CHARACTER_DATA"] = "Aktiviere Charakterdaten (Features verwalten) für Twink-Golddetails",
 
     ["GUILD_BANK_MONEY_LOG"] = "Gold",
     ["GUILD_BANK_NO_LOG"] = "Keine Vorgänge verfügbar.",

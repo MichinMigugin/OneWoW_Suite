@@ -374,6 +374,18 @@ local function GetManifestParent(storeName)
     return nil
 end
 
+--- True when a store still TOC-depends on its manifest parent (soft opt-out of
+--- the parent must block EnsureLoaded). Most AltTracker stores load with OneWoW
+--- only; Endgame and Catalog packs remain parent-required.
+---@param storeName string
+---@return boolean
+function ns:StoreRequiresParent(storeName)
+    local parent = GetManifestParent(storeName)
+    if not parent then return false end
+    local m = self:GetManifestByAddon(parent)
+    return m and m.parentRequiredStores and m.parentRequiredStores[storeName] and true or false
+end
+
 --- Ensures an addon is loaded. Idempotent; LoadAddOn pulls the addon's
 --- RequiredDeps chain. Returns the raw failure token so callers can localize
 --- via GetLoadFailureText.
@@ -390,10 +402,12 @@ function ns:EnsureLoaded(name, opts)
         self:TraceRecord("ensureLoaded.skip", name, { reason = "OPTED_OUT" })
         return false, "OPTED_OUT"
     end
-    local parent = GetManifestParent(name)
-    if parent and self:IsFeatureOptedOut(parent) then
-        self:TraceRecord("ensureLoaded.skip", name, { reason = "OPTED_OUT_PARENT" })
-        return false, "OPTED_OUT"
+    if self:StoreRequiresParent(name) then
+        local parent = GetManifestParent(name)
+        if parent and self:IsFeatureOptedOut(parent) then
+            self:TraceRecord("ensureLoaded.skip", name, { reason = "OPTED_OUT_PARENT" })
+            return false, "OPTED_OUT"
+        end
     end
     if opts and opts.deferInCombat and ns.Restriction.IsInCombat() then
         self:TraceRecord("ensureLoaded.skip", name, { reason = "COMBAT" })
@@ -436,8 +450,40 @@ function ns:IsManifestUnit(name)
     return manifestUnits[name] == true
 end
 
---- Manifest unit set for a feature: { addon, ...stores } in manifest order.
---- Returns nil when name is not a manifest root (caller falls back to { name }).
+--- FirstRun.CATALOG datastores pulled by a feature (consumer graph).
+---@param addonName string
+---@return string[]|nil
+local function CatalogDatastoresFor(addonName)
+    local catalog = ns.FirstRun and ns.FirstRun.CATALOG
+    if not catalog then return nil end
+    for _, entry in ipairs(catalog) do
+        if entry.addonName == addonName and entry.datastores and #entry.datastores > 0 then
+            return entry.datastores
+        end
+    end
+    return nil
+end
+
+--- Append unique names from `extra` onto `units`.
+---@param units string[]
+---@param extra string[]|nil
+local function AppendUnique(units, extra)
+    if not extra then return end
+    local seen = {}
+    for _, name in ipairs(units) do
+        seen[name] = true
+    end
+    for _, name in ipairs(extra) do
+        if not seen[name] then
+            units[#units + 1] = name
+            seen[name] = true
+        end
+    end
+end
+
+--- Manifest unit set for a feature: { addon, ...owned stores, ...consumer pulls }.
+--- Returns nil when name is not a manifest root (caller falls back to { name } plus
+--- any FirstRun.CATALOG datastores for that addon).
 ---@param addonName string
 ---@return string[]|nil
 local function ManifestUnitsFor(addonName)
@@ -451,6 +497,7 @@ local function ManifestUnitsFor(addonName)
                     units[#units + 1] = store
                 end
             end
+            AppendUnique(units, CatalogDatastoresFor(addonName))
             return units
         end
     end
@@ -549,7 +596,12 @@ end)
 ---@param addonName string manifest feature (or any addon) to bring up
 function ns:BringUp(addonName)
     if not addonName then return end
-    local units = ManifestUnitsFor(addonName) or { addonName }
+    -- Non-manifest roots (should be rare) still pull CATALOG datastores when listed.
+    local units = ManifestUnitsFor(addonName)
+    if not units then
+        units = { addonName }
+        AppendUnique(units, CatalogDatastoresFor(addonName))
+    end
     local midSession = ns._playerLoginFired
     self:TraceRecord("bringUp.begin", addonName, { midSession = midSession and true or false, units = #units })
     inBringUp = true
@@ -612,7 +664,11 @@ end
 ns.ModuleManifest = {
     { addon = "OneWoW_Notes",           display = "Notes",         cmd = "/1wn",   module = "notes",      tabOrder = 1, loadPhase = "login" },
     { addon = "OneWoW_AltTracker",      display = "AltTracker",    cmd = "/1wat",  module = "alttracker", tabOrder = 2, loadPhase = "login",
-        storePolicy = "bundled",
+        storePolicy = "optional",
+        -- Endgame still TOC-Depends on the hub (season/progress config API).
+        parentRequiredStores = {
+            OneWoW_AltTracker_Endgame = true,
+        },
         stores = {
             "OneWoW_AltTracker_Storage",
             "OneWoW_AltTracker_Character",
@@ -624,6 +680,13 @@ ns.ModuleManifest = {
         } },
     { addon = "OneWoW_Catalog",         display = "Catalog",       cmd = "/owcat", module = "catalog",    tabOrder = 3, loadPhase = "login",
         storePolicy = "optional",
+        -- Catalog packs still TOC-Depends on OneWoW_Catalog.
+        parentRequiredStores = {
+            OneWoW_CatalogData_Tradeskills = true,
+            OneWoW_CatalogData_Vendors = true,
+            OneWoW_CatalogData_Quests = true,
+            OneWoW_CatalogData_Journal = true,
+        },
         stores = {
             "OneWoW_CatalogData_Tradeskills",
             "OneWoW_CatalogData_Vendors",
@@ -750,8 +813,8 @@ local Orchestrator = ns.LoadOrchestrator
 --- EnsureLoaded drives each unit's OnAddonLoaded hook synchronously, so every
 --- DB is built in core-controlled order before the one-shot PLAYER_LOGIN fires.
 --- A Blizzard-disabled (incl. per-character) module just fails EnsureLoaded with
---- "DISABLED" and is skipped; its stores are skipped too (their RequiredDeps on
---- the parent would fail anyway).
+--- "DISABLED" and is skipped; parent-required stores (Endgame, Catalog packs) are
+--- also skipped when their hub is soft-opted-out via StoreRequiresParent.
 function Orchestrator:RunStartupPhase()
     ns:TraceRecord("startup.begin")
     for _, m in ipairs(Manifest) do
@@ -764,6 +827,18 @@ function Orchestrator:RunStartupPhase()
             -- manifest login phase and the real PLAYER_ENTERING_WORLD drive those.
             if not ns:IsFeatureOptedOut(m.addon) then
                 ns:BringUp(m.addon)
+            end
+        end
+    end
+    -- Independent stores opted in while their owning hub is soft-opted-out
+    -- (e.g. Storage without AltTracker). BringUp skipped them with the hub;
+    -- parent-required stores still refuse via StoreRequiresParent.
+    for _, m in ipairs(Manifest) do
+        if m.stores then
+            for _, store in ipairs(m.stores) do
+                if not ns:IsFeatureOptedOut(store) then
+                    ns:EnsureLoaded(store)
+                end
             end
         end
     end

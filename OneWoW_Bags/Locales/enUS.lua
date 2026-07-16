@@ -203,7 +203,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["GOLD_TOOLTIP_PERSONAL"] = "Personal",
     ["GOLD_TOOLTIP_WARBAND"] = "Warband Bank",
     ["GOLD_TOOLTIP_OTHERS"] = "+%d Others",
-    ["GOLD_TOOLTIP_NO_ALTTRACKER"] = "Install AltTracker for alt gold details",
+    ["GOLD_TOOLTIP_NO_CHARACTER_DATA"] = "Enable Character data (Manage Features) for alt gold details",
 
     ["GUILD_BANK_MONEY_LOG"] = "Gold",
     ["GUILD_BANK_NO_LOG"] = "No transactions available.",

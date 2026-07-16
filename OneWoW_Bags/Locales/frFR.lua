@@ -204,7 +204,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["GOLD_TOOLTIP_PERSONAL"] = "Personnel",
     ["GOLD_TOOLTIP_WARBAND"] = "Banque de bataillon",
     ["GOLD_TOOLTIP_OTHERS"] = "+%d autres",
-    ["GOLD_TOOLTIP_NO_ALTTRACKER"] = "Installez AltTracker pour le détail de l'or des autres personnages",
+    ["GOLD_TOOLTIP_NO_CHARACTER_DATA"] = "Activez les données de personnage (Gérer les fonctionnalités) pour l'or des autres personnages",
 
     ["GUILD_BANK_MONEY_LOG"] = "Or",
     ["GUILD_BANK_NO_LOG"] = "Aucune transaction disponible.",

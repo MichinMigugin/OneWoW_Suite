@@ -315,7 +315,7 @@ function BagsBar:ShowGoldTooltip()
         GameTooltip:SetText(L["GOLD_TOOLTIP_PERSONAL"], 1, 0.82, 0)
         GameTooltip:AddLine(OneWoW.Format.FormatGold(personalCopper), 1, 1, 1)
         GameTooltip:AddLine(" ")
-        GameTooltip:AddLine(L["GOLD_TOOLTIP_NO_ALTTRACKER"], 0.5, 0.5, 0.5, true)
+        GameTooltip:AddLine(L["GOLD_TOOLTIP_NO_CHARACTER_DATA"], 0.5, 0.5, 0.5, true)
         return
     end
 

@@ -74,6 +74,7 @@ local COLON_METHODS = {
     "GetManifestByAddon",
     "GetManifestParentsWithStores",
     "GetStoreLabelKey",
+    "StoreRequiresParent",
     "BootStore",
     "GetSettingsDefaults",
     "InitializeDatabase",
