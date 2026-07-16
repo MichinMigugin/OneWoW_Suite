@@ -268,7 +268,7 @@ def main(argv: list[str] | None = None) -> int:
 
     token, project_id = get_credentials()
     changelog, changelog_type = resolve_changelog(args, version)
-    display_name = f"OneWoW Suite {version}"
+    display_name = f"OneWoW Suite {version}.zip"
 
     session = requests.Session()
     game_ids = resolve_game_version_ids(session, token, interfaces)

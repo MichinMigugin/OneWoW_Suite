@@ -10,8 +10,8 @@ Does not run git. When a version is written, prints the tag name to use.
 
 Examples:
   python bin/bump_tocs.py --set-version
-  python bin/bump_tocs.py --interfaces 120007 121000
-  python bin/bump_tocs.py --interfaces 120007 121000 --set-version
+  python bin/bump_tocs.py --interfaces 120007 120100
+  python bin/bump_tocs.py --interfaces 120007 120100 --set-version
   python bin/bump_tocs.py --set-version --version R6.2607.0906
   python bin/bump_tocs.py --print-version
   python bin/bump_tocs.py --set-version --dry-run
