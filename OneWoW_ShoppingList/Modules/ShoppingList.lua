@@ -656,7 +656,7 @@ function ShoppingList:IsItemCraftable(itemID)
 
     local api = OneWoW_CatalogData_Tradeskills_API
     if not api then
-        craftableCache[itemID] = { result = false }
+        -- Do not cache absence — Tradeskills may load mid-session.
         return false
     end
 

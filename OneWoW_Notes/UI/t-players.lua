@@ -97,15 +97,28 @@ function ns.UI.CreatePlayersTab(parent)
     end)
     addManualBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local altTrackerLoaded = C_AddOns.IsAddOnLoaded("OneWoW_AltTracker_Character")
     local addAltsBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["PLAYER_ADD_ALTS"], height = 25, minWidth = 70 })
     addAltsBtn:SetPoint("LEFT", addManualBtn, "RIGHT", 5, 0)
-    if not altTrackerLoaded then
-        addAltsBtn:Disable()
-        addAltsBtn:SetAlpha(0.4)
+
+    local function CharacterRosterReady()
+        return OneWoW_AltTracker_Character_API ~= nil
     end
+
+    local function ApplyAddAltsEnabled()
+        if CharacterRosterReady() then
+            addAltsBtn:Enable()
+            addAltsBtn:SetAlpha(1)
+        else
+            addAltsBtn:Disable()
+            addAltsBtn:SetAlpha(0.4)
+        end
+    end
+
+    ApplyAddAltsEnabled()
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Character", ApplyAddAltsEnabled)
+
     addAltsBtn:SetScript("OnClick", function()
-        if not altTrackerLoaded and not OneWoW_AltTracker_Character_API then
+        if not CharacterRosterReady() then
             print("|cFFFFD100OneWoW - Players:|r " .. (L["PLAYER_ALTS_NO_DATA"]))
             return
         end
@@ -116,7 +129,7 @@ function ns.UI.CreatePlayersTab(parent)
     addAltsBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(L["PLAYER_ADD_ALTS"], 1, 1, 1)
-        if altTrackerLoaded then
+        if CharacterRosterReady() then
             GameTooltip:AddLine(L["PLAYER_ADD_ALTS_DESC"], 0.8, 0.8, 0.8, true)
         else
             GameTooltip:AddLine(L["PLAYER_ALTS_NOT_INSTALLED"], 1.0, 0.3, 0.3, true)

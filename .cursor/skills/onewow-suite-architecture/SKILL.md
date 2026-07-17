@@ -160,6 +160,21 @@ When adding a store or consumer pull, update both graphs as needed. Pre-commit
 `manifest-catalog-alignment` (`bin/check_manifest_catalog_alignment.py`) enforces
 the §4.1 invariants.
 
+## Data-ready → change → read
+
+Full detail: `ARCHITECTURE.md` §3.4.2. Compose:
+
+| Need | Pattern |
+|------|---------|
+| Unlock long-lived UI after mid-session LoD | `RegisterDataReadyWatcher(addonName, fn)` |
+| Live Storage writes (bags/banks/mail) | After ready: `Storage_API.RegisterStorageChanged(fn)` |
+| Ephemeral read (tooltip, one-shot) | Call-time `if X_API then` — no watcher |
+
+**Nil-guard recovery:** sticky absence (disabled control, cached `false` when API
+nil, one-shot “not detected”) **must** register data-ready so the surface works
+once the provider arrives. Templates: ShoppingList `DataAccess.lua`, AltTracker
+Items tab. Today only Storage has a change bus; Catalog packs are static after ready.
+
 ## OptionalDeps / TOC
 
 - **Never** list suite-internal `OneWoW_*` in `## OptionalDeps` — Blizzard auto-load bypasses soft opt-out.
@@ -169,7 +184,7 @@ the §4.1 invariants.
 
 - Within unit: `local ADDON_NAME, ns = ...`; internal DB via `ns.db`
 - Across units: `OneWoW`, `OneWoW_GUI`, per-unit `_API` globals
-- Prefer `_API` over `_DB`; new cross-unit reads → `DataManager:Query` when implemented
+- Prefer `_API` over `_DB`; long-lived consumers use data-ready (+ provider `Register*Changed` when data mutates)
 - Layering: no direct cross-family store global reads (see `check_no_data_manager_bypass.py`)
 
 ### Global surface (summary)
@@ -254,9 +269,10 @@ When writing, cache the table in a local first — never `(OneWoW:GetCoreGlobal(
 3. No raw `C_AddOns.LoadAddOn` / `UIParentLoadAddOn` outside core (`no-raw-loadaddon`)
 4. No suite-internal `OptionalDeps` in changed TOCs
 5. Manifest ↔ CATALOG graphs stay aligned (`manifest-catalog-alignment`) when touching stores / `datastores` / parent-required TOC deps
-6. No cross-load-unit store reads off the allowlist (`no-data-manager-bypass`, enforced/hard-fail) — route through the owner's `_API`
-7. No namespace publish / global-surface anti-patterns (`no-namespace-publish`; enforced — see `ARCHITECTURE.md` §6.1)
-8. No per-addon `Media/` folders (`no-per-addon-media`) — use `OneWoW/Media/` + `MEDIA_BASE`; see `GUI.md`
-9. `local ADDON_NAME, ns = ...`; internal reads via `ns.db`; no `ns.addon` hops; no `.db` on lifecycle root
-10. Hub cross-unit surface on `_API` dot-functions only (not colon-methods on manifest root)
-11. Stores use `BootStore` + `onEnteringWorld` for PEW collection work
+6. Sticky nil-guards recover via `RegisterDataReadyWatcher` (do not snapshot `IsAddOnLoaded` / missing `_API` forever); Storage live views subscribe `RegisterStorageChanged` only after ready
+7. No cross-load-unit store reads off the allowlist (`no-data-manager-bypass`, enforced/hard-fail) — route through the owner's `_API`
+8. No namespace publish / global-surface anti-patterns (`no-namespace-publish`; enforced — see `ARCHITECTURE.md` §6.1)
+9. No per-addon `Media/` folders (`no-per-addon-media`) — use `OneWoW/Media/` + `MEDIA_BASE`; see `GUI.md`
+10. `local ADDON_NAME, ns = ...`; internal reads via `ns.db`; no `ns.addon` hops; no `.db` on lifecycle root
+11. Hub cross-unit surface on `_API` dot-functions only (not colon-methods on manifest root)
+12. Stores use `BootStore` + `onEnteringWorld` for PEW collection work

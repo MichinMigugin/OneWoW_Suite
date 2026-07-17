@@ -6,6 +6,7 @@ local DataAccess = ns.DataAccess
 local qvCache = {}
 local storageWatchRegistered = false
 local storageChangedSubscribed = false
+local tradeskillsWatchRegistered = false
 
 local function NotifyStorageChanged()
     if ns.ShoppingList and ns.ShoppingList.RequestRefresh then
@@ -24,17 +25,41 @@ end
 local function OnStorageReady()
     SubscribeStorageChanged()
     NotifyStorageChanged()
+    if ns.MainWindow and ns.MainWindow.RefreshAddonStatus then
+        ns.MainWindow:RefreshAddonStatus()
+    end
+end
+
+local function OnTradeskillsReady()
+    if ns.ShoppingList and ns.ShoppingList.InvalidateCraftableCache then
+        ns.ShoppingList:InvalidateCraftableCache()
+    end
+    if ns.ShoppingList and ns.ShoppingList.RequestRefresh then
+        ns.ShoppingList:RequestRefresh()
+    end
+    if ns.MainWindow and ns.MainWindow.RefreshAddonStatus then
+        ns.MainWindow:RefreshAddonStatus()
+    end
 end
 
 function DataAccess:Initialize()
     qvCache = {}
-    if storageWatchRegistered then return end
-    storageWatchRegistered = true
-    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Storage", OnStorageReady)
+    if not storageWatchRegistered then
+        storageWatchRegistered = true
+        OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Storage", OnStorageReady)
+    end
+    if not tradeskillsWatchRegistered then
+        tradeskillsWatchRegistered = true
+        OneWoW:RegisterDataReadyWatcher("OneWoW_CatalogData_Tradeskills", OnTradeskillsReady)
+    end
 end
 
 function DataAccess:HasAltData()
     return OneWoW_AltTracker_Storage_API ~= nil
+end
+
+function DataAccess:HasRecipeData()
+    return OneWoW_CatalogData_Tradeskills_API ~= nil
 end
 
 -- Read-only view over the Storage unit's data, assembled from its public API so

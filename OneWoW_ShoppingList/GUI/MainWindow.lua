@@ -615,14 +615,7 @@ function MainWindow:BuildSettingsPanel()
     end)
     yOff = yOff - 30
 
-    local function AddStatusRow(labelText, detected, y)
-        local lbl = OneWoW_GUI:CreateFS(scrollContent, 12)
-        lbl:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, y)
-        lbl:SetText(labelText)
-        lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-        local status = OneWoW_GUI:CreateFS(scrollContent, 12)
-        status:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 220, y)
+    local function SetStatusText(status, detected)
         if detected then
             status:SetText(L["OWSL_SETTINGS_DETECTED"])
             status:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
@@ -632,12 +625,32 @@ function MainWindow:BuildSettingsPanel()
         end
     end
 
+    local function AddStatusRow(labelText, detected, y)
+        local lbl = OneWoW_GUI:CreateFS(scrollContent, 12)
+        lbl:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", pad, y)
+        lbl:SetText(labelText)
+        lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+        local status = OneWoW_GUI:CreateFS(scrollContent, 12)
+        status:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 220, y)
+        SetStatusText(status, detected)
+        return status
+    end
+
     AddSectionHeader(L["OWSL_SETTINGS_ADDON_STATUS"], yOff)
     yOff = yOff - 22
 
-    AddStatusRow(L["OWSL_SETTINGS_ALT_ACCESS"],    ns.DataAccess:HasAltData(), yOff); yOff = yOff - 20
-    AddStatusRow(L["OWSL_SETTINGS_WARBAND_ACCESS"], ns.DataAccess:HasAltData(), yOff); yOff = yOff - 20
-    AddStatusRow(L["OWSL_SETTINGS_RECIPE_DATA"],    OneWoW_CatalogData_Tradeskills_API ~= nil, yOff); yOff = yOff - 24
+    local altStatus = AddStatusRow(L["OWSL_SETTINGS_ALT_ACCESS"], ns.DataAccess:HasAltData(), yOff); yOff = yOff - 20
+    local warbandStatus = AddStatusRow(L["OWSL_SETTINGS_WARBAND_ACCESS"], ns.DataAccess:HasAltData(), yOff); yOff = yOff - 20
+    local recipeStatus = AddStatusRow(L["OWSL_SETTINGS_RECIPE_DATA"], ns.DataAccess:HasRecipeData(), yOff); yOff = yOff - 24
+
+    function MainWindow:RefreshAddonStatus()
+        if not altStatus then return end
+        local hasAlt = ns.DataAccess:HasAltData()
+        SetStatusText(altStatus, hasAlt)
+        SetStatusText(warbandStatus, hasAlt)
+        SetStatusText(recipeStatus, ns.DataAccess:HasRecipeData())
+    end
 
     AddSectionHeader(L["OWSL_SETTINGS_KEYBINDS"], yOff)
     yOff = yOff - 22
@@ -695,6 +708,9 @@ function MainWindow:ToggleSettings()
     inSettingsView = not inSettingsView
     if inSettingsView then
         settingsPanel:Show()
+        if self.RefreshAddonStatus then
+            self:RefreshAddonStatus()
+        end
         if contentPanel.listContainer then contentPanel.listContainer:Hide() end
         if contentPanel.scrollFrame   then contentPanel.scrollFrame:Hide() end
         if contentHeaderFrame         then contentHeaderFrame:Hide() end

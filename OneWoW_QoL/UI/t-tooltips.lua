@@ -8,6 +8,21 @@ local L = ns.L
 local Registry = OneWoW.SettingsFeatureRegistry
 
 local activePlayermountsRow = nil
+local auctionsDetValRef = nil
+local auctionsDataReadyWatchRegistered = false
+
+local function ApplyAuctionsDetectedLabel()
+    if not auctionsDetValRef then return end
+    local detected = OneWoW_AltTracker_Auctions_API ~= nil
+        or OneWoW:IsDataReady("OneWoW_AltTracker_Auctions")
+    if detected then
+        auctionsDetValRef:SetText(L["TIPS_VALUE_AUCTIONS_DETECTED"])
+        auctionsDetValRef:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+    else
+        auctionsDetValRef:SetText(L["TIPS_VALUE_AUCTIONS_NOT_DETECTED"])
+        auctionsDetValRef:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+    end
+end
 
 function ns.UI.RefreshTooltipsFeatureDot(featureId, value)
     if featureId == "playermounts" and activePlayermountsRow and activePlayermountsRow.dot then
@@ -1399,15 +1414,13 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     auctionsReqLabel:SetText(L["TIPS_VALUE_AUCTIONS_REQUIRES"])
     auctionsReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local auctionsDetected = C_AddOns.IsAddOnLoaded("OneWoW_AltTracker_Auctions")
     local auctionsDetVal = OneWoW_GUI:CreateFS(dsc, 12)
     auctionsDetVal:SetPoint("LEFT", auctionsReqLabel, "RIGHT", 8, 0)
-    if auctionsDetected then
-        auctionsDetVal:SetText(L["TIPS_VALUE_AUCTIONS_DETECTED"])
-        auctionsDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        auctionsDetVal:SetText(L["TIPS_VALUE_AUCTIONS_NOT_DETECTED"])
-        auctionsDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+    auctionsDetValRef = auctionsDetVal
+    ApplyAuctionsDetectedLabel()
+    if not auctionsDataReadyWatchRegistered then
+        auctionsDataReadyWatchRegistered = true
+        OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Auctions", ApplyAuctionsDetectedLabel)
     end
     yOffset = yOffset - math.max(24, auctionsReqLabel:GetStringHeight() + 8)
 

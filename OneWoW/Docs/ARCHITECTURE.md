@@ -280,6 +280,38 @@ included, with no provider-side code. Stores nobody watches fire harmless no-ops
 Non-store (hub) providers may call `SignalDataReady` explicitly when their data is
 ready.
 
+#### Ready → change → read compose
+
+Data-ready is the **precursor**: a provider must be ready before its data can
+change or be safely queried. Consumers compose three layers:
+
+| Layer | API | Cadence | Use when |
+|---|---|---|---|
+| **Data-ready** | `RegisterDataReadyWatcher(addonName, fn)` | Once per addon per session (+ registration catch-up) | Long-lived UI built before a LoD store; enable controls; subscribe to change buses; wipe caches poisoned by absence |
+| **Provider change** | e.g. `OneWoW_AltTracker_Storage_API.RegisterStorageChanged` | Many times after writes | Live views over mutative Storage (bags / banks / mail). Subscribe **only after** data-ready |
+| **Call-time `_API`** | `if OneWoW_X_API then … end` | Each use | Ephemeral UI (tooltips, one-shot dialogs) — next use sees mid-session ready with no watcher |
+
+**Today only Storage exposes a change bus** (`RegisterStorageChanged`). Catalog
+data packs and most other stores are static after ready — data-ready alone is
+enough. Character and other AltTracker stores have no `Register*Changed` yet;
+hub tabs refresh on data-ready plus their own gameplay events.
+
+**Canonical compose** (ShoppingList `DataAccess`, AltTracker Items tab):
+
+1. `RegisterDataReadyWatcher("OneWoW_AltTracker_Storage", …)`
+2. Inside: `RegisterStorageChanged(refresh)` + one immediate refresh
+3. All reads go through `_API` (nil → empty)
+
+**Nil-guard recovery rule:** If UI or logic treats provider absence as a *sticky*
+state (disabled button, cached `false`, “not detected” status), it **must** also
+`RegisterDataReadyWatcher` so the surface becomes usable when the provider
+arrives mid-session. Do not snapshot `IsAddOnLoaded` / missing `_API` into an
+upvalue that never updates. Pure call-time reads (e.g. Bags gold tooltip, QoL
+item-tracker tooltip) need no watcher — they re-check `_API` on each use.
+
+There is no core `DataManager:Query` broker. Cross-unit contracts are explicit
+`OneWoW_<Unit>_API` globals plus the readiness / change patterns above.
+
 ### 3.5 `OnPlayerLogin`
 
 At core `PLAYER_LOGIN`, `Core/Events.lua` invokes `ns:RunCoreLoginSequence()`
@@ -865,7 +897,7 @@ what is intentionally *not* translated and why, and Blizzard-term alignment — 
 |---|---|---|
 | **Sub-addon** | Separate TOC / load unit | `OneWoW_Catalog`, `OneWoW_AltTracker_Storage` |
 | **Feature** | User-facing capability in a sub-addon | Journal tab, AH scanner, bag bar |
-| **Provider** | Registered data source with lifecycle/SV | Future `DataManager` providers |
+| **Provider** | Load unit that publishes queryable data via `_API` (+ optional change callbacks) | `OneWoW_AltTracker_Storage`, `OneWoW_CatalogData_*` |
 | **Service** | Near-stateless utility on `_G.OneWoW` | `OverlayEngine`, `CopyPaste` (target) |
 
 **Hub vs contextual:** hub = tabs in OneWoW window; contextual = own window in
@@ -885,8 +917,11 @@ may register both.
    cross-SV init bridges — see the hook docstring).
 2. **Inverse dependencies via events/callbacks**, not direct calls — core stays
    consumer-agnostic.
-3. **Cross-unit data** should route through `DataManager:Query` (planned broker in
-   core — not yet implemented). Consumers ask; providers register; empty when absent.
+3. **Cross-unit data** goes through the owner’s `OneWoW_<Unit>_API` (nil when
+   absent / not loaded). Long-lived consumers use `RegisterDataReadyWatcher` so
+   mid-session LoD unlocks the same UI; mutative providers add a provider-owned
+   `Register*Changed` after ready (Storage only today). See §3.4.2. Do not build
+   a core query broker — keep contracts greppable on `_API`.
 
 **Promotion discipline:** second consumer → promote to core. Provider → `Providers/`;
 stateless utility → `Services/` on `_G.OneWoW`. Rule of Three before abstracting.
