@@ -11,7 +11,8 @@ local _, ns = ...
 --
 -- Deliberately absent from 1.0's renderer: no reads of Blizzard's
 -- ItemContextOverlay or button alpha (the source of the Warband Bank
--- darkening bug). Blizzard's dim layer is left entirely alone.
+-- darkening bug). Blizzard's dim layer is left entirely alone; surfaces
+-- re-sync UpdateItemContextMatching after bank paint instead.
 -- ============================================================================
 
 local OneWoW_GUI = OneWoW_GUI

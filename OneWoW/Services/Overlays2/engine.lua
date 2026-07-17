@@ -248,6 +248,14 @@ end
 -- Button pipeline
 -- ----------------------------------------------------------------------------
 
+local function SyncItemContextMatching(button)
+    -- BankDepositing (and other) context can stick at Mismatch after an early
+    -- eval; re-sync once overlay paint runs (including async ContinueOnItemLoad).
+    if button.UpdateItemContextMatching then
+        button:UpdateItemContextMatching()
+    end
+end
+
 local function PaintButton(button, itemID, itemLink, itemLocation, context, classID)
     local matches = EvaluateMatches(itemID, itemLink, itemLocation, context)
     for i, def in ipairs(matches) do
@@ -277,6 +285,7 @@ local function PaintButton(button, itemID, itemLink, itemLocation, context, clas
 
     Renderer:ShowContainer(button)
     button._owbOverlayPaintGen = paintGeneration
+    SyncItemContextMatching(button)
 end
 
 local function BuildOverlaysForButton(button, itemLink, itemLocation, context)

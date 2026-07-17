@@ -16,6 +16,10 @@ local _, ns = ...
 --     the selected tab on per-bag BAG_UPDATE (deposit lag fix).
 --   * No INVENTORY_SEARCH_UPDATE / ItemContextOverlay mirroring at all;
 --     Blizzard's own dim layer is never read or copied.
+--   * After each bank paint, re-run UpdateItemContextMatching (immediate +
+--     deferred). BankDepositing can evaluate IsItemAllowedInBankType too
+--     early (Mismatch + ItemContextOverlay stuck) while allow-state is still
+--     false; later allowed=true never clears the overlay without a re-sync.
 -- ============================================================================
 
 local Engine = ns.OverlayEngine
@@ -106,6 +110,29 @@ end
 -- ----------------------------------------------------------------------------
 
 local trackedBankButtons = {}
+local bankContextSyncPending = false
+
+--- Recompute Blizzard BankDepositing match state on tracked bank buttons.
+--- Clears sticky ItemContextOverlay when IsItemAllowedInBankType flipped to
+--- true after an early Mismatch evaluation.
+local function SyncBankItemContextMatching()
+    if not (BankPanel and BankPanel:IsVisible()) then return end
+    for btn in pairs(trackedBankButtons) do
+        if btn.UpdateItemContextMatching then
+            btn:UpdateItemContextMatching()
+        end
+    end
+end
+
+local function QueueBankItemContextSync()
+    SyncBankItemContextMatching()
+    if bankContextSyncPending then return end
+    bankContextSyncPending = true
+    C_Timer.After(0.25, function()
+        bankContextSyncPending = false
+        SyncBankItemContextMatching()
+    end)
+end
 
 local function PaintBankSlot(btn, containerID, slotID)
     local loc = ItemLocation:CreateFromBagAndSlot(containerID, slotID)
@@ -137,6 +164,8 @@ local function RefreshBankPass()
             PaintBankSlot(btn, BankPanel.selectedTabID, i)
         end
     end
+
+    QueueBankItemContextSync()
 end
 
 -- Coalescing throttle (pending-reschedule): unlike the 1.0 bankThrottle,
