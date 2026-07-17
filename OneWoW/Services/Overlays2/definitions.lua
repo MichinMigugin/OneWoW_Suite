@@ -71,9 +71,19 @@ local PRESETS = {
         defaults = { icon = "warband-completed-icon", position = "TOPRIGHT" },
     },
     {
+        id = "altcollected",
+        title = "OVR_ALTCOLLECTED_TITLE", description = "OVR_ALTCOLLECTED_DESC",
+        expression = "#altcollected",
+        defaults = {
+            icon = "transmog-icon-warning",
+            position = "TOPRIGHT",
+            iconTint = {1, 0.82, 0},
+        },
+    },
+    {
         id = "unknownitems",
         title = "OVR_UNKNOWNITEMS_TITLE", description = "OVR_UNKNOWNITEMS_DESC",
-        expression = "#collectionmissing",
+        expression = "#collectionmissing and !#altcollected",
         defaults = { icon = "Warfronts-BaseMapIcons-Horde-Workshop-Minimap", position = "TOPLEFT" },
     },
     {
@@ -219,6 +229,9 @@ function Defs:NewEntry(presetId, name)
         entry.preset = presetId
         if preset.defaults then
             entry.icon.value = preset.defaults.icon or entry.icon.value
+            if preset.defaults.iconTint then
+                entry.icon.tint = preset.defaults.iconTint
+            end
             entry.position = preset.defaults.position or entry.position
             entry.scale = preset.defaults.scale or entry.scale
         end

@@ -526,8 +526,9 @@ For recipe toasts and overlays, prefer `#recipe & !#collected` over
 `#recipe & !#alreadyknown`. Non-collectibles can show “Already known” without
 being a Collectibles key.
 
-**Overlay presets:** `knownitems` → `#collectionknown`; `unknownitems` →
-`#collectionmissing`. See [Item overlays (Overlays 2.0)](#item-overlays-overlays-20).
+**Overlay presets:** `knownitems` → `#collectionknown`; `altcollected` →
+`#altcollected`; `unknownitems` → `#collectionmissing and !#altcollected`.
+See [Item overlays (Overlays 2.0)](#item-overlays-overlays-20).
 
 ### Battle Pet Type
 
@@ -1253,7 +1254,8 @@ same syntax as bag search.
 | `consumables` | `#consumable` | Excludes mis-tagged recipes reclassified as `#recipe` |
 | `housingdecor` | `#housingdecor` | Classification only, not collection |
 | `knownitems` | `#collectionknown` | Alias of `#collected` |
-| `unknownitems` | `#collectionmissing` | Alias of `#uncollected` |
+| `altcollected` | `#altcollected` | Recipe known by scoped alt, not you |
+| `unknownitems` | `#collectionmissing and !#altcollected` | Missing on you; excludes alt-known recipes |
 | `transmog` | `#transmog and #unknowntransmog` | Uncollected appearances |
 | `mounts` | `#mount` | |
 | `pets` | `#pet` | |
