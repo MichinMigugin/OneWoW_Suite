@@ -167,18 +167,8 @@ end
 -- resolution mirrors Blizzard's char-overrides-account model (char entry:
 -- true = out, false = in; nil = inherit account). GUI-free: the char key is
 -- built locally so the loader keeps no GUI dependency.
-local function OptOutStore(create)
-    local db = ns.db and ns.db.global
-    if not db then return nil end
-    local oo = db.featureOptOut
-    if not oo then
-        if not create then return nil end
-        oo = {}
-        db.featureOptOut = oo
-    end
-    oo.account = oo.account or {}
-    oo.char = oo.char or {}
-    return oo
+local function OptOutStore()
+    return ns.db.global.featureOptOut
 end
 
 --- Effective opt-out for the current character (char override wins, else account).
@@ -186,8 +176,7 @@ end
 ---@return boolean optedOut true when OneWoW should not load this unit for this character
 function ns:IsFeatureOptedOut(name)
     if not name then return false end
-    local oo = OptOutStore(false)
-    if not oo then return false end
+    local oo = OptOutStore()
     local charMap = oo.char[OneWoW_GUI:BuildCharKey()]
     local charVal = charMap and charMap[name]
     if charVal ~= nil then return charVal end
@@ -203,9 +192,7 @@ function ns:IsFeatureOptedOutInScope(name, perCharacter)
         return self:IsFeatureOptedOut(name)
     end
     if not name then return false end
-    local oo = OptOutStore(false)
-    if not oo then return false end
-    return oo.account[name] == true
+    return OptOutStore().account[name] == true
 end
 
 --- Writes the opt-out flag in the requested scope. Char scope stores an explicit
@@ -215,8 +202,7 @@ end
 ---@param perCharacter boolean? true = current-character override; false/nil = account-wide
 function ns:SetFeatureOptOut(name, optedOut, perCharacter)
     if not name then return end
-    local oo = OptOutStore(true)
-    if not oo then return end
+    local oo = OptOutStore()
     if perCharacter then
         local key = OneWoW_GUI:BuildCharKey()
         oo.char[key] = oo.char[key] or {}
@@ -245,8 +231,7 @@ end
 ---@return boolean optedOut
 function ns:IsFeatureOptedOutForCharKey(name, charKey)
     if not name or not charKey then return false end
-    local oo = OptOutStore(false)
-    if not oo then return false end
+    local oo = OptOutStore()
     local key = OneWoW_GUI:CanonicalizeCharacterKey(charKey)
     if not key then return false end
     local charMap = oo.char[key]
@@ -285,12 +270,10 @@ local function CollectCharKeysForFeature(name)
         end
     end
     add(OneWoW_GUI:BuildCharKey())
-    local oo = OptOutStore(false)
-    if oo and oo.char then
-        for charKey, charMap in pairs(oo.char) do
-            if charMap[name] ~= nil then
-                add(charKey)
-            end
+    local oo = OptOutStore()
+    for charKey, charMap in pairs(oo.char) do
+        if charMap[name] ~= nil then
+            add(charKey)
         end
     end
     return keys

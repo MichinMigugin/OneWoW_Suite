@@ -110,12 +110,12 @@ end
 
 --- Portal hub settings live on core OneWoW_DB outside SettingsFeatureRegistry.
 function OneWoW:GetPortalHub()
-    return ns.db and ns.db.global.portalHub
+    return ns.db.global.portalHub
 end
 
 --- Global-scope core settings root (portalHub, instanceStats*, lastSubTabs, …).
 function OneWoW:GetCoreGlobal()
-    return ns.db and ns.db.global
+    return ns.db.global
 end
 
 --- Loaded suite components ({ name, ver, cmd }), filled as units register.

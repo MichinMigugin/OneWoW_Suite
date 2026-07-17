@@ -343,9 +343,7 @@ function UI:SelectModuleTab(moduleName)
     currentModuleTab = moduleName
     currentSubTab = nil
 
-    if ns.db and ns.db.global then
-        ns.db.global.lastModuleTab = moduleName
-    end
+    ns.db.global.lastModuleTab = moduleName
 
     if OneWoW_Notes_API and OneWoW_Notes_API.CloseHelpPanel then
         OneWoW_Notes_API.CloseHelpPanel()
@@ -386,7 +384,7 @@ function UI:SelectModuleTab(moduleName)
             row2Container:Show()
             UpdateContentAreaAnchors()
 
-            local lastSub = ns.db and ns.db.global and ns.db.global.lastSubTabs and ns.db.global.lastSubTabs["settings"]
+            local lastSub = ns.db.global.lastSubTabs["settings"]
             local firstTab = UI.settingsTabs[1].name
             local targetTab = lastSub or firstTab
 
@@ -432,7 +430,7 @@ function UI:SelectModuleTab(moduleName)
 
     local mod = ns.ModuleRegistry:GetModule(moduleName)
     if mod and mod.tabs and #mod.tabs > 0 then
-        local lastSub = ns.db and ns.db.global and ns.db.global.lastSubTabs and ns.db.global.lastSubTabs[moduleName]
+        local lastSub = ns.db.global.lastSubTabs[moduleName]
         local firstTab = mod.tabs[1].name
         local targetTab = lastSub or firstTab
 
@@ -507,9 +505,7 @@ end
 function UI:SelectSubTab(moduleName, subTabName)
     currentSubTab = subTabName
 
-    if ns.db and ns.db.global and ns.db.global.lastSubTabs then
-        ns.db.global.lastSubTabs[moduleName] = subTabName
-    end
+    ns.db.global.lastSubTabs[moduleName] = subTabName
 
     if OneWoW_Notes_API and OneWoW_Notes_API.CloseHelpPanel then
         OneWoW_Notes_API.CloseHelpPanel()
@@ -574,7 +570,8 @@ function UI:InitMainWindow()
     local C = ns.Constants.GUI
 
     local screenW, screenH = GetScreenWidth(), GetScreenHeight()
-    local db = ns.db and ns.db.global or {}
+    local db = ns.db.global
+    -- mainFramePosition is optional (nil = center); not a MergeMissing default.
     local storage = db.mainFramePosition or {}
     if db.mainFrameSize and not storage.width then
         storage.width = db.mainFrameSize.width
@@ -607,11 +604,9 @@ function UI:InitMainWindow()
     local maxH = math.min(C.MAX_HEIGHT, screenH)
     MainWindow:SetResizeBounds(C.MIN_WIDTH, C.MIN_HEIGHT, maxW, maxH)
     MainWindow:SetScript("OnHide", function()
-        local g = ns.db and ns.db.global
-        if g then
-            g.mainFramePosition = g.mainFramePosition or {}
-            OneWoW_GUI:SaveWindowPosition(MainWindow, g.mainFramePosition)
-        end
+        local g = ns.db.global
+        g.mainFramePosition = g.mainFramePosition or {}
+        OneWoW_GUI:SaveWindowPosition(MainWindow, g.mainFramePosition)
     end)
     MainWindow:Hide()
 
@@ -695,7 +690,7 @@ function UI:InitMainWindow()
 
     OneWoW_GUI:ApplyFontToFrame(MainWindow)
 
-    local lastTab = ns.db and ns.db.global and ns.db.global.lastModuleTab or "home"
+    local lastTab = ns.db.global.lastModuleTab
     local validTab = false
     for _, btn in ipairs(row1Buttons) do
         if btn.moduleName == lastTab then
@@ -836,14 +831,12 @@ function UI:CreateAggregatorPlaceholderFrame(parent, info)
 end
 
 function UI:ResetUIToDefaults()
-    if ns.db and ns.db.global then
-        local C = ns.Constants.GUI
-        local screenW, screenH = GetScreenWidth(), GetScreenHeight()
-        local defW = math.min(C.WINDOW_WIDTH, screenW)
-        local defH = math.min(C.WINDOW_HEIGHT, screenH)
-        ns.db.global.mainFrameSize = { width = defW, height = defH }
-        ns.db.global.mainFramePosition = nil
-    end
+    local C = ns.Constants.GUI
+    local screenW, screenH = GetScreenWidth(), GetScreenHeight()
+    local defW = math.min(C.WINDOW_WIDTH, screenW)
+    local defH = math.min(C.WINDOW_HEIGHT, screenH)
+    ns.db.global.mainFrameSize = { width = defW, height = defH }
+    ns.db.global.mainFramePosition = nil
     UI:FullReset()
     C_Timer.After(0.1, function() UI:Show() end)
 end

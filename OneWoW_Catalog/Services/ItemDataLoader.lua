@@ -16,15 +16,13 @@ function ns.GetItemDataLoader()
 end
 
 --- Look up a cached item *name* from Catalog's item cache. Returns nil when
---- Catalog has no entry (or is not initialized). Tolerates legacy string-valued
---- cache entries.
+--- Catalog has no entry. Tolerates legacy string-valued cache entries.
 ---@param itemID number
 ---@return string|nil
 function ns.GetCachedItemName(itemID)
     itemID = tonumber(itemID)
-    if not itemID or not ns.db then return nil end
-    local itemCache = ns.db.global and ns.db.global.itemCache
-    local cached = itemCache and itemCache[itemID]
+    if not itemID then return nil end
+    local cached = ns.db.global.itemCache[itemID]
     if type(cached) == "table" then
         return cached.name
     elseif type(cached) == "string" then
@@ -34,18 +32,16 @@ function ns.GetCachedItemName(itemID)
 end
 
 --- Record an item name into Catalog's item cache, filling link/quality/icon from
---- the game the first time the item is seen. No-op (returns false) when Catalog
---- is not loaded.
+--- the game the first time the item is seen.
 ---@param itemID number
 ---@param itemName string
 ---@return boolean changed true if the stored name differs from before
 function ns.RememberItemName(itemID, itemName)
     itemID = tonumber(itemID)
-    if not itemID or not itemName or itemName == "" or not ns.db then
+    if not itemID or not itemName or itemName == "" then
         return false
     end
 
-    ns.db.global.itemCache = ns.db.global.itemCache or {}
     local itemCache = ns.db.global.itemCache
     local previous = itemCache[itemID]
     local previousName =

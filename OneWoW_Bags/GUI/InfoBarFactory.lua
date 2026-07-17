@@ -142,7 +142,7 @@ function ns.InfoBarFactory:Create(config)
         local db = ns:GetDB()
         if not db then return 0 end
 
-        return min(max(floor(db.global.searchHistoryLimit or 0), 0), 10)
+        return min(max(floor(db.global.searchHistoryLimit), 0), 10)
     end
 
     local function NormalizeSearchText(searchBox, text)

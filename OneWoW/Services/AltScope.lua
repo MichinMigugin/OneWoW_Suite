@@ -18,7 +18,7 @@ local pairs, type, next = pairs, type, next
 local sort = sort
 
 local function GetRolesStore()
-    return ns.db and ns.db.global and ns.db.global.roles
+    return ns.db.global.roles
 end
 
 -- Smallest unused "r<n>" id so ids stay short and stable across deletes.
@@ -34,14 +34,13 @@ end
 --- below so storage stays consistent.
 ---@return table<string, table>
 function AltScope:GetRoles()
-    return GetRolesStore() or {}
+    return GetRolesStore()
 end
 
 ---@param id string
 ---@return table|nil role
 function AltScope:GetRole(id)
-    local roles = GetRolesStore()
-    return roles and roles[id] or nil
+    return GetRolesStore()[id]
 end
 
 --- Roles as an array sorted by display name (allocates; not for hot paths).

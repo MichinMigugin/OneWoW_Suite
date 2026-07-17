@@ -138,8 +138,8 @@ end
 --- One-time: Bags rarityColor / bank / warband toggles → Overlay Quality Border.
 --- Missing legacy keys count as the old default (true). Sticky flag prevents re-runs.
 function ns:MigrateRarityToQualityBorder()
-    local g = ns.db and ns.db.global
-    if not g or g._migratedRarityToQualityBorder then return end
+    local g = ns.db.global
+    if g._migratedRarityToQualityBorder then return end
 
     -- Legacy SV keys may still be present; nil means old default (on).
     local anyOn = (g.rarityColor ~= false)

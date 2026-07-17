@@ -9,15 +9,11 @@ ns.InstallNotice = InstallNotice
 local activeDialog = nil
 
 local function getAckFlag()
-    local g = ns.db and ns.db.global
-    if not g then return false end
-    return g.installNoticeAcknowledged and true or false
+    return ns.db.global.installNoticeAcknowledged and true or false
 end
 
 local function setAckFlag(value)
-    local g = ns.db and ns.db.global
-    if not g then return end
-    g.installNoticeAcknowledged = value and true or false
+    ns.db.global.installNoticeAcknowledged = value and true or false
 end
 
 function InstallNotice:IsAcknowledged()

@@ -195,7 +195,7 @@ function GUI:RefreshLayout()
             return WH:FilterByExpansion(filteredButtons, ns.activeExpansionFilter, WH:GetScratchTable("mainExpansion"))
         end,
         layoutButtons = function(filteredButtons)
-            local _, _, _, contentWidth = WH:GetLayoutMetrics("bagColumns", 15)
+            local _, _, _, contentWidth = WH:GetLayoutMetrics("bagColumns")
             local viewMode = db.global.viewMode
             local viewContext = controller:CreateViewContext({
                 sectionManager = CategoryManager,

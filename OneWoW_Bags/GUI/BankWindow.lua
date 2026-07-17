@@ -514,7 +514,7 @@ function BankGUI:RefreshLayout()
                 return PURCHASE_PROMPT_HEIGHT
             end
             local columnsKey = ns.BankController:ActiveKeys().columns
-            local _, _, _, contentWidth = WH:GetLayoutMetrics(columnsKey, 15)
+            local _, _, _, contentWidth = WH:GetLayoutMetrics(columnsKey)
             local viewMode = ns.BankController:Get("viewMode")
             local layoutHeight
             local bankShowEmpty = ns.BankController:GetShowEmptySlots()

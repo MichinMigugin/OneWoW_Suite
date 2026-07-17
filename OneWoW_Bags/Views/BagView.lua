@@ -79,7 +79,7 @@ function View:Layout(contentFrame, width, filteredButtons, viewContext)
             local sectionHeight = 26
 
             if not section.isCollapsed then
-                local cols = db.global.bagColumns or floor((width - padding * 2) / (iconSize + spacing))
+                local cols = db.global.bagColumns
                 cols = max(cols, 1)
 
                 local totalGridWidth = cols * (iconSize + spacing) - spacing

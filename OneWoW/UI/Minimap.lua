@@ -176,7 +176,7 @@ end
 
 local function CreateMinimapButton()
     if minimapBtn then return end
-    position = (ns.db and ns.db.global and ns.db.global.minimap and ns.db.global.minimap.minimapPos) or 220
+    position = ns.db.global.minimap.minimapPos
 
     minimapBtn = CreateFrame("Button", "OneWoW_MinimapButton", Minimap)
     minimapBtn:SetSize(35, 35)
@@ -214,9 +214,7 @@ local function CreateMinimapButton()
             local px, py = GetCursorPosition()
             local scale = Minimap:GetEffectiveScale()
             position = math.deg(math.atan2((py / scale) - my, (px / scale) - mx)) % 360
-            if ns.db and ns.db.global and ns.db.global.minimap then
-                ns.db.global.minimap.minimapPos = position
-            end
+            ns.db.global.minimap.minimapPos = position
             myself:Raise()
             UpdatePosition(myself)
         end)

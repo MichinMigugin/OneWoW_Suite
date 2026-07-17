@@ -150,7 +150,6 @@ end
 local LEGACY_CATEGORY_REMAP = { Mount = "General", Transmog = "General" }
 
 function Collectibles:MigrateLegacyCategories()
-    if not (ns.db and ns.db.global) then return end
     if ns.db.global.collectibleCategoriesMigrated then return end
 
     -- Snapshot keys first: SaveCollectible invalidates the merged cache, so

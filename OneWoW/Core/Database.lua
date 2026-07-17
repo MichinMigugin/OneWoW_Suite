@@ -368,6 +368,9 @@ local DEFAULTS = {
     -- scoping. Map keyed by generated role id: roles[id] = { id, name,
     -- members = { [charKey] = true } }. Owned by OneWoW.AltScope.
     roles = {},
+    -- Soft feature opt-out (Manage Features). Account map + per-character
+    -- override maps; owned by AddonLoader OptOutStore.
+    featureOptOut = { account = {}, char = {} },
 }
 
 --- Fresh copy of the shipped defaults subtree for one settings tab
@@ -424,8 +427,7 @@ local LEGACY_OVERLAY_EXTRAS = {
 -- 2.0 (userOverlays entries). Runs every load but is a no-op once the legacy
 -- feature tables are gone.
 function ns:MigrateOverlays2()
-    local settings = self.db and self.db.global and self.db.global.settings
-    local overlays = settings and settings.overlays
+    local overlays = self.db.global.settings.overlays
     if not overlays then return end
 
     local order = 0
@@ -490,8 +492,7 @@ end
 -- (tooltipAltWhitelistEnabled / tooltipAltWhitelist) into the shared altScope
 -- shape. Runs every load but is a no-op once the legacy keys are gone.
 function ns:MigrateAltScope()
-    local settings = self.db and self.db.global and self.db.global.settings
-    local up = settings and settings.overlays and settings.overlays.upgrade
+    local up = self.db.global.settings.overlays and self.db.global.settings.overlays.upgrade
     if not up then return end
     if up.tooltipAltWhitelistEnabled == nil and up.tooltipAltWhitelist == nil then return end
 

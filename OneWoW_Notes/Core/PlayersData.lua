@@ -281,7 +281,6 @@ end
 --- ref + shared collectible row. Idempotent (gated by a global flag; re-running
 --- is a no-op). Safe to call at login after the Players module is initialized.
 function Players:MigrateLegacyMountBlobs()
-    if not (ns.db and ns.db.global) then return end
     if ns.db.global.collectibleMountMigrated then return end
 
     -- Snapshot first: SavePlayer/AddCollectibleRef invalidate the merged cache, so

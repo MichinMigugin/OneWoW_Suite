@@ -19,6 +19,7 @@ ns.DatabaseDefaults = {
             vendors    = {},
             itemSearch = {},
         },
+        itemCache         = {},
     },
 }
 

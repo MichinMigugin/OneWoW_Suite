@@ -143,15 +143,11 @@ local function EnsureDupeSpec()
     if dupeSpec then return dupeSpec end
     local api = OneWoW_AltTracker_Storage_API
     local defaults = (api and api.GetDefaultDupeSpec and api.GetDefaultDupeSpec()) or {}
-    local stored = ns.db and ns.db.global and ns.db.global.dupeSpec
-    if stored then
-        for k, v in pairs(defaults) do
-            if stored[k] == nil then stored[k] = v end
-        end
-        dupeSpec = stored
-    else
-        dupeSpec = defaults
+    local stored = ns.db.global.dupeSpec
+    for k, v in pairs(defaults) do
+        if stored[k] == nil then stored[k] = v end
     end
+    dupeSpec = stored
     return dupeSpec
 end
 

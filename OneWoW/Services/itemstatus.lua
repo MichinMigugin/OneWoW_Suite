@@ -33,22 +33,18 @@ local function RefreshOverlaysForStatusChange()
 end
 
 local function GetDB()
-    return ns.db and ns.db.global and ns.db.global.itemStatus
+    return ns.db.global.itemStatus
 end
 
 function IS:GetAllStatuses()
-    local db = GetDB()
-    if not db then return {} end
-    return db
+    return GetDB()
 end
 
 function IS:GetItemStatus(itemID)
     if not itemID then return nil end
     itemID = tonumber(itemID)
     if not itemID then return nil end
-    local db = GetDB()
-    if not db then return nil end
-    return db[itemID]
+    return GetDB()[itemID]
 end
 
 function IS:IsItemJunk(itemID)
@@ -69,9 +65,7 @@ end
 
 function IS:GetJunkItems()
     local junkItems = {}
-    local db = GetDB()
-    if not db then return junkItems end
-    for itemID, statusData in pairs(db) do
+    for itemID, statusData in pairs(GetDB()) do
         if statusData.status == "Junk" then
             junkItems[itemID] = statusData
         end
@@ -83,18 +77,14 @@ function IS:SaveItemStatus(itemID, statusData)
     if not itemID or not statusData then return end
     itemID = tonumber(itemID)
     if not itemID then return end
-    local db = GetDB()
-    if not db then return end
-    db[itemID] = statusData
+    GetDB()[itemID] = statusData
 end
 
 function IS:RemoveItemStatus(itemID)
     if not itemID then return end
     itemID = tonumber(itemID)
     if not itemID then return end
-    local db = GetDB()
-    if not db then return end
-    db[itemID] = nil
+    GetDB()[itemID] = nil
     RefreshOverlaysForStatusChange()
 end
 
@@ -112,8 +102,7 @@ function IS:MarkAsJunk(itemID, inputLink)
     end
     if self:IsItemProtected(itemID) then
         self:SaveItemStatus(itemID, nil)
-        local db = GetDB()
-        if db then db[itemID] = nil end
+        GetDB()[itemID] = nil
     end
     self:SaveItemStatus(itemID, {
         itemID = itemID,
@@ -146,8 +135,7 @@ function IS:MarkAsProtected(itemID, inputLink)
         if linkRarity then itemRarity = linkRarity end
     end
     if self:IsItemJunk(itemID) then
-        local db = GetDB()
-        if db then db[itemID] = nil end
+        GetDB()[itemID] = nil
     end
     self:SaveItemStatus(itemID, {
         itemID = itemID,

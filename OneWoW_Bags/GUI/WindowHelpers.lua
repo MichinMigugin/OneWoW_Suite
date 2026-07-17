@@ -559,15 +559,14 @@ end
 
 --- Calculate grid metrics from the current database settings.
 ---@param columnsDBKey string
----@param defaultCols number
 ---@return number cols
 ---@return number iconSize
 ---@return number spacing
 ---@return number contentWidth
-function WH:GetLayoutMetrics(columnsDBKey, defaultCols)
+function WH:GetLayoutMetrics(columnsDBKey)
     local db = ns:GetDB()
-    local cols = db.global[columnsDBKey] or defaultCols
-    local iconSize = Constants.ICON_SIZES[db.global.iconSize or 3] or 37
+    local cols = db.global[columnsDBKey]
+    local iconSize = Constants.ICON_SIZES[db.global.iconSize] or 37
     local spacing = Constants.GUI.ITEM_BUTTON_SPACING
     local contentWidth = cols * (iconSize + spacing) - spacing + 4
     return cols, iconSize, spacing, contentWidth

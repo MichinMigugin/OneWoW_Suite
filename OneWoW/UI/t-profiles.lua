@@ -57,16 +57,14 @@ ns.Profiles = {}
 function ns.Profiles.CaptureSettings()
     local snapshot = {}
 
-    if ns.db and ns.db.global then
-        local g = ns.db.global
-        snapshot.core = {
-            language  = g.language,
-            theme     = g.theme,
-            minimap   = DeepCopy(g.minimap),
-            settings  = DeepCopy(g.settings),
-            portalHub = DeepCopy(g.portalHub),
-        }
-    end
+    local g = ns.db.global
+    snapshot.core = {
+        language  = g.language,
+        theme     = g.theme,
+        minimap   = DeepCopy(g.minimap),
+        settings  = DeepCopy(g.settings),
+        portalHub = DeepCopy(g.portalHub),
+    }
 
     if OneWoW_QoL_API then
         snapshot.qol = OneWoW_QoL_API.CaptureProfileSettings()
@@ -89,7 +87,7 @@ end
 function ns.Profiles.ApplySettings(snapshot, profileName)
     if not snapshot then return end
 
-    if snapshot.core and ns.db and ns.db.global then
+    if snapshot.core then
         local g = ns.db.global
         if snapshot.core.language then g.language = snapshot.core.language end
         if snapshot.core.theme    then g.theme    = snapshot.core.theme    end
@@ -126,8 +124,6 @@ function ns.Profiles.ApplySettings(snapshot, profileName)
 end
 
 function ns.Profiles.AutoSaveDefault()
-    if not ns.db or not ns.db.global then return end
-    if not ns.db.global.profiles then ns.db.global.profiles = {} end
     local snap = ns.Profiles.CaptureSettings()
     snap._isDefault = true
     snap._updatedAt = time()
@@ -166,7 +162,6 @@ end
 function ns.Profiles.ImportProfile(str)
     local data, err = ns.Profiles.DeserializeProfile(str)
     if not data then return false, err end
-    if not ns.db.global.profiles then ns.db.global.profiles = {} end
     local profiles = ns.db.global.profiles
     local name = data._exportName or "Imported"
     if name == RESERVED_DEFAULT then name = "Imported Default" end
@@ -557,7 +552,6 @@ function UI:CreateProfilesTab(parent)
         end
         local snap = ns.Profiles.CaptureSettings()
         snap._updatedAt = time()
-        if not ns.db.global.profiles then ns.db.global.profiles = {} end
         ns.db.global.profiles[name] = snap
         ns.db.global.activeProfile  = name
         nameInput:SetText("")

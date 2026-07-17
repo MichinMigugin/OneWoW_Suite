@@ -35,7 +35,7 @@ end
 
 local function ApplyLanguage()
     local lang = OneWoW_GUI:GetSetting("language")
-    lang = lang or (ns.db and ns.db.global.language) or "enUS"
+    lang = lang or ns.db.global.language
     -- Locale service folds enUS <- selected language, refolds the stable ns.L
     -- view in place, and pushes BINDING_* globals. esMX->esES is normalized inside.
     ns.Locale:SetLanguage(lang)

@@ -7,9 +7,6 @@ local UI = ns.UI
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 local function GetCharProfiles()
-    if not ns.db.global.charProfiles then
-        ns.db.global.charProfiles = {}
-    end
     return ns.db.global.charProfiles
 end
 

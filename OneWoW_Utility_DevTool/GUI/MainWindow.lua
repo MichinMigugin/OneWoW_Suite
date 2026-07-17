@@ -640,12 +640,11 @@ function UI:Initialize()
     combatHide:RegisterEvent("PLAYER_REGEN_DISABLED")
     self.combatHideFrame = combatHide
 
-    if not OneWoW_GUI:RestoreWindowPosition(frame, ns.db.global.position or {}) then
+    if not OneWoW_GUI:RestoreWindowPosition(frame, ns.db.global.position) then
         frame:SetPoint("CENTER")
     end
 
     frame:SetScript("OnHide", function()
-        ns.db.global.position = ns.db.global.position or {}
         OneWoW_GUI:SaveWindowPosition(frame, ns.db.global.position)
         if ns.FrameInspector then
             ns.FrameInspector:ClearHighlight()

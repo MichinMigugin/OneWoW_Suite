@@ -565,7 +565,7 @@ function H.GetSortedCategoryNames(itemsByCategory)
             return a < b
         end)
     else
-        local sortMode = db.global.categorySort or "priority"
+        local sortMode = db.global.categorySort
         Categories:SortCategories(names, sortMode)
     end
 
@@ -723,7 +723,7 @@ local function GetSectionedLayoutImpl(itemsByCategory, containerType)
                 tinsert(leftover, name)
             end
         end
-        Categories:SortCategories(leftover, db.global.categorySort or "priority")
+        Categories:SortCategories(leftover, db.global.categorySort)
         for _, name in ipairs(leftover) do
             tinsert(layout, { type = "category", name = name })
         end
@@ -761,7 +761,7 @@ local function GetSectionedLayoutImpl(itemsByCategory, containerType)
             return a < b
         end)
     else
-        Categories:SortCategories(orphanedCats, db.global.categorySort or "priority")
+        Categories:SortCategories(orphanedCats, db.global.categorySort)
     end
 
     for _, sectionID in ipairs(sectOrder) do

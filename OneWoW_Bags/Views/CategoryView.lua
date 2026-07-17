@@ -26,15 +26,15 @@ function View:Layout(contentFrame, width, filteredButtons, containerType, viewCo
     local padding = 2
     local compact = db.global.compactCategories
     local showHeaders = db.global.showCategoryHeaders ~= false
-    local verticalSpacing = (db.global.categorySpacing or 1.0)
-    local compactGapSlots = db.global.compactGap or 1
+    local verticalSpacing = db.global.categorySpacing
+    local compactGapSlots = db.global.compactGap
 
     local filterToken = filteredButtons and filteredButtons._owb_filterToken
 
     local itemsByCategory = CategoryManager:AssignAndGroupCategories()
     local layout = H.GetSectionedLayout(itemsByCategory, containerType)
 
-    local cols = db.global.bagColumns or floor((width - padding * 2) / (iconSize + spacing))
+    local cols = db.global.bagColumns
     cols = max(cols, 1)
     local cellSize = iconSize + spacing
     local totalGridWidth = cols * cellSize - spacing

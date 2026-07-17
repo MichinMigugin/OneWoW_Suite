@@ -456,7 +456,7 @@ local function updateDetailPanel(tab)
             tinsert(lines, line)
         end
 
-        local bm = ns.db.global and ns.db.global.textureBookmarks and ns.db.global.textureBookmarks[atlasName]
+        local bm = ns.db.global.textureBookmarks[atlasName]
         if bm then
             tinsert(lines, "")
             tinsert(lines, "|cff00ff00[" .. (L["LABEL_BOOKMARKED"]) .. "]|r")
@@ -480,7 +480,7 @@ local function applyListSelection(tab, entryIndex)
         tab.selectedAtlasName = nil
         showTextureSheet(tab, entry.textureKey)
         -- Favorites + By sheet lists whole textures; pick first bookmarked atlas so detail + overlay match that slice.
-        if BR.favoritesOnly and ns.db.global and ns.db.global.textureBookmarks then
+        if BR.favoritesOnly then
             for _, row in ipairs(BR:GetAtlasesForTexture(entry.textureKey)) do
                 if ns.db.global.textureBookmarks[row.atlasName] then
                     selectAtlasFromOverlay(tab, row.atlasName)
@@ -579,7 +579,7 @@ function ns.UI.TextureTab_RefreshToolbarButtons(tab)
     tab.btnByTexture._textureBarActive = (BR:GetViewMode() == BR.VIEW_TEXTURE)
     tab.btnByAtlas._textureBarActive = (BR:GetViewMode() == BR.VIEW_ATLAS)
     tab.favsBtn._textureBarActive = BR.favoritesOnly
-    local bookmarked = tab.selectedAtlasName and ns.db.global and ns.db.global.textureBookmarks and ns.db.global.textureBookmarks[tab.selectedAtlasName]
+    local bookmarked = tab.selectedAtlasName and ns.db.global.textureBookmarks[tab.selectedAtlasName]
     tab.bookmarkBtn._textureBarActive = bookmarked and true or false
     tab.manualToggle._textureBarActive = tab.manualPanel and tab.manualPanel:IsShown() or false
     ns.UI:PaintToolbarBarButton(tab.btnByTexture, TEXTURE_BAR_ACTIVE_KEY)
@@ -744,9 +744,6 @@ function ns.UI:CreateTextureTab(parent)
             ns:Print(L["MSG_SELECT_ATLAS"])
             ns.UI.TextureTab_RefreshToolbarButtons(tab)
             return
-        end
-        if not ns.db.global.textureBookmarks then
-            ns.db.global.textureBookmarks = {}
         end
         local name = tab.selectedAtlasName
         if ns.db.global.textureBookmarks[name] then

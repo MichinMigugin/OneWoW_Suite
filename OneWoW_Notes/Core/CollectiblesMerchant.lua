@@ -27,10 +27,7 @@ local POPUP = "ONEWOW_NOTES_CAPTURE_COLLECTIBLES"
 local pairs, ipairs = pairs, ipairs
 
 local function CaptureMode()
-    if ns.db and ns.db.global and ns.db.global.collectibleCaptureMode then
-        return ns.db.global.collectibleCaptureMode
-    end
-    return "off"
+    return ns.db.global.collectibleCaptureMode
 end
 
 -- Slim vendor-offer junction from a scan + one of its item entries.
@@ -172,9 +169,7 @@ end
 ---@param mode string "off" | "prompt" | "auto"
 function CollectiblesMerchant:SetCaptureMode(mode)
     if mode ~= "prompt" and mode ~= "auto" then mode = "off" end
-    if ns.db and ns.db.global then
-        ns.db.global.collectibleCaptureMode = mode
-    end
+    ns.db.global.collectibleCaptureMode = mode
     self:ApplySubscription()
 end
 

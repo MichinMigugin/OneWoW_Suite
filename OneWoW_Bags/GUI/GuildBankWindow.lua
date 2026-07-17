@@ -205,7 +205,7 @@ function GuildBankGUI:RefreshLayout()
             return WH:FilterBySearch(visibleButtons, GuildBankInfoBar:GetSearchText(), WH:GetScratchTable("guildBankSearch"))
         end,
         layoutButtons = function(filteredButtons)
-            local _, _, _, contentWidth = WH:GetLayoutMetrics("bankColumns", 15)
+            local _, _, _, contentWidth = WH:GetLayoutMetrics("bankColumns")
             local tabViewContext = controller:CreateViewContext({
                 sectionManager = GuildBankCategoryManager,
                 showEmptySlots = ns.GuildBankController:GetShowEmptySlots(),

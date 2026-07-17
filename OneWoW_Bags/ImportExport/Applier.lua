@@ -581,7 +581,6 @@ function Applier:Apply(plan, controller, db)
 
     -- 6. disabledCategories re-key
     if plan.disabledCategories then
-        db.global.disabledCategories = db.global.disabledCategories or {}
         for importedName, v in pairs(plan.disabledCategories) do
             if v then
                 local finalName = nameRemap[importedName] or importedName
