@@ -89,6 +89,10 @@ local ICON_CATEGORIES = {
         nameKey = "OVR_ICON_CAT_BAGS",
         icons   = {
             "bags-junkcoin", "bags-newitem",
+            "bags-icon-consumables", "bags-icon-equipment", "bags-icon-reagents",
+            "bags-icon-tradegoods", "bags-icon-profession-goods", "bags-icon-scrappable",
+            "lootroll-icon-transmog",
+            "transmog-icon-tick", "transmog-icon-warning", "transmog-icon-disabled",
         },
     },
     {
