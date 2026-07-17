@@ -33,3 +33,20 @@ end
 function OneWoW_AltTracker_API.PurgeCharacter(charKey)
     return ns.CharacterCleanup:Purge(charKey)
 end
+
+--- Toggle the AltTracker module in the suite hub (keybinding entry).
+function OneWoW_AltTracker_API.Toggle()
+    local mw = OneWoW.UI:GetMainWindow()
+    local global = OneWoW:GetCoreGlobal()
+    if mw and mw:IsShown() and global.lastModuleTab == "alttracker" then
+        OneWoW.UI:Hide()
+    else
+        OneWoW.UI:Show("alttracker")
+    end
+end
+
+--- Open Roles & Alts setup in suite settings (keybinding entry; former standalone setup).
+function OneWoW_AltTracker_API.OpenSetup()
+    OneWoW.UI:Show("settings")
+    OneWoW.UI:SelectSubTab("settings", "rolesandalts")
+end
