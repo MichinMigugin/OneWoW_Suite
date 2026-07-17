@@ -19,6 +19,7 @@ local _, ns = ...
 
 ns.PredicateEngine = {}
 local PE = ns.PredicateEngine
+local ItemLevel = ns.ItemLevel
 
 local tinsert, wipe = tinsert, wipe
 local ipairs, pairs, tonumber, tostring = ipairs, pairs, tonumber, tostring
@@ -2257,7 +2258,7 @@ local function PopulateBaseProps(props, itemID, hyperlink)
     props.nameRaw     = itemName or (C_Item.GetItemNameByID(itemID) or "")
     props.name        = strlower(props.nameRaw)
     props.quality     = itemQuality or -1 -- don't use 0 since that == "poor" and causes bad matches
-    props.ilvl        = itemLevel or 0
+    props.ilvl        = ItemLevel.Get(hyperlink) or itemLevel or 0
     props.reqLevel    = itemMinLevel or 0
     props.itemType    = itemType
     props.itemSubType = itemSubType
@@ -2636,6 +2637,10 @@ function PE:BuildProps(itemID, bagID, slotID, itemInfo)
         if itemLocation and itemLocation:IsValid() then
             props.isRefundable = C_Item.CanBeRefunded(itemLocation)
             props.isScrappable = C_Item.CanScrapItem(itemLocation)
+            local resolvedIlvl = ItemLevel.Get(hyperlink, itemLocation)
+            if resolvedIlvl then
+                props.ilvl = resolvedIlvl
+            end
         end
     end
 

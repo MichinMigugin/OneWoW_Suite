@@ -19,6 +19,7 @@ local PE = ns.PredicateEngine
 local Defs = ns.Overlays2Defs
 local Renderer = ns.Overlays2Renderer
 local Registry = ns.SettingsFeatureRegistry
+local ItemLevel = ns.ItemLevel
 
 ns.OverlayEngine = {}
 local Engine = ns.OverlayEngine
@@ -232,14 +233,8 @@ local function ComputeItemLevelText(cfg, itemLink, classID, itemLocation)
         return nil
     end
 
-    local ilvl
-    if itemLocation and C_Item.DoesItemExist(itemLocation) then
-        ilvl = C_Item.GetCurrentItemLevel(itemLocation)
-    end
-    if not ilvl or ilvl == 0 then
-        ilvl = C_Item.GetDetailedItemLevelInfo(itemLink)
-    end
-    if not ilvl or ilvl == 0 then return nil end
+    local ilvl = ItemLevel.Get(itemLink, itemLocation)
+    if not ilvl then return nil end
     return ilvl
 end
 

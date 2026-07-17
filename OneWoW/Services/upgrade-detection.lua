@@ -1,6 +1,7 @@
 local _, ns = ...
 
 local PE = ns.PredicateEngine
+local ItemLevel = ns.ItemLevel
 
 local UpgradeDetection = {}
 ns.UpgradeDetection = UpgradeDetection
@@ -25,6 +26,10 @@ local EQUIPLOC_TO_SLOTS = {
     INVTYPE_WEAPONMAINHAND  = {16},
     INVTYPE_WEAPONOFFHAND   = {17},
     INVTYPE_HOLDABLE        = {17},
+    -- Bows / guns / crossbows / wands: no separate ranged slot on Retail;
+    -- they occupy main hand (same mapping as Collectibles / Pawn).
+    INVTYPE_RANGED          = {16},
+    INVTYPE_RANGEDRIGHT     = {16},
 }
 
 local SLOT_NAMES = {
@@ -194,14 +199,8 @@ function UpgradeDetection:CheckItemUpgradeDetailed(itemLink, itemLocation)
 
     if not CanPlayerUseItem(itemLink) then return nil end
 
-    local ilvl
-    if itemLocation and C_Item.DoesItemExist(itemLocation) then
-        ilvl = C_Item.GetCurrentItemLevel(itemLocation)
-    end
-    if not ilvl or ilvl == 0 then
-        ilvl = C_Item.GetDetailedItemLevelInfo(itemLink)
-    end
-    if not ilvl or ilvl == 0 then return nil end
+    local ilvl = ItemLevel.Get(itemLink, itemLocation)
+    if not ilvl then return nil end
 
     local slots = EQUIPLOC_TO_SLOTS[equipLoc]
     if not slots then return nil end
@@ -210,7 +209,7 @@ function UpgradeDetection:CheckItemUpgradeDetailed(itemLink, itemLocation)
     for _, slotIndex in ipairs(slots) do
         local equippedLink = GetInventoryItemLink("player", slotIndex)
         if equippedLink then
-            local equippedIlvl = C_Item.GetDetailedItemLevelInfo(equippedLink)
+            local equippedIlvl = ItemLevel.GetFromEquipmentSlot(slotIndex)
             if equippedIlvl then
                 local diff = ilvl - equippedIlvl
                 if diff > 0 and (not bestDiff or diff > bestDiff) then
@@ -262,14 +261,8 @@ function UpgradeDetection:GetItemComparison(itemLink, itemLocation)
         return { unusable = true }
     end
 
-    local ilvl
-    if itemLocation and C_Item.DoesItemExist(itemLocation) then
-        ilvl = C_Item.GetCurrentItemLevel(itemLocation)
-    end
-    if not ilvl or ilvl == 0 then
-        ilvl = C_Item.GetDetailedItemLevelInfo(itemLink)
-    end
-    if not ilvl or ilvl == 0 then return nil end
+    local ilvl = ItemLevel.Get(itemLink, itemLocation)
+    if not ilvl then return nil end
 
     local slots = EQUIPLOC_TO_SLOTS[equipLoc]
     if not slots then return nil end
@@ -285,7 +278,7 @@ function UpgradeDetection:GetItemComparison(itemLink, itemLocation)
     for _, slotIndex in ipairs(slots) do
         local equippedLink = GetInventoryItemLink("player", slotIndex)
         if equippedLink then
-            local equippedIlvl = C_Item.GetDetailedItemLevelInfo(equippedLink)
+            local equippedIlvl = ItemLevel.GetFromEquipmentSlot(slotIndex)
             if equippedIlvl then
                 local diff = ilvl - equippedIlvl
                 if not bestDiff or diff > bestDiff then
@@ -369,8 +362,8 @@ function UpgradeDetection:IsItemUpgradeForAlt(itemID, itemLink, altData)
         end
     end
 
-    local ilvl = C_Item.GetDetailedItemLevelInfo(itemLink)
-    if not ilvl or ilvl <= 0 then return nil end
+    local ilvl = ItemLevel.Get(itemLink)
+    if not ilvl then return nil end
 
     local slots = EQUIPLOC_TO_SLOTS[equipLoc]
     if not slots then return nil end

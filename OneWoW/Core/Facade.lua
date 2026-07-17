@@ -41,6 +41,7 @@ local SERVICE_KEYS = {
     "Merchant",
     "UpgradeDetection",
     "AltScope",
+    "ItemLevel",
 }
 
 for _, key in ipairs(SERVICE_KEYS) do

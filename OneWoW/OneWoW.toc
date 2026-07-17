@@ -4,7 +4,7 @@
 ## Notes: OneWoW - Central Hub for all OneWoW addons
 ## Author: OneWoW Dev Team
 
-## OptionalDeps: Auctionator, TradeSkillMaster
+## OptionalDeps: Auctionator, Pawn, TradeSkillMaster
 ## Category: OneWoW
 ## Group: OneWoW
 
@@ -101,12 +101,15 @@ Core\FirstRunWizard.lua
 
 # Services (shared OneWoW.* engines/utilities consumed cross-unit — see ARCHITECTURE §6).
 # DO NOT reorder within this block: TooltipScanner before PredicateEngine (PE
-# captures ns.TooltipScanner at file scope); PredicateEngine before upgrade-detection +
-# tooltip-engine (they capture PE at file scope); ItemPrices + RecipeKnownUtil before the
-# overlay engine that consumes them; overlay-icons + upgrade-detection before
-# the Overlays2 block; within Overlays2: definitions -> renderer -> engine ->
-# surfaces (each captures the previous at file scope); engine before itemstatus.
+# captures ns.TooltipScanner at file scope); ItemLevel before PredicateEngine +
+# upgrade-detection (they capture ns.ItemLevel at file scope); PredicateEngine
+# before upgrade-detection + tooltip-engine (they capture PE at file scope);
+# ItemPrices + RecipeKnownUtil before the overlay engine that consumes them;
+# overlay-icons + upgrade-detection before the Overlays2 block; within Overlays2:
+# definitions -> renderer -> engine -> surfaces (each captures the previous at
+# file scope); engine before itemstatus.
 Services\TooltipScanner.lua
+Services\ItemLevel.lua
 Services\PredicateEngine.lua
 Services\AHItemKeys.lua
 Services\ItemPrices.lua
