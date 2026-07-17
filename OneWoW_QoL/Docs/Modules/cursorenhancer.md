@@ -108,7 +108,9 @@ situations.
 On first load of a legacy profile (no `situations`), defaults are created and
 legacy keys are mapped once (`visibility`, `showOutOfCombat`, `showInInstance`,
 `combatAlpha` / `outOfCombatAlpha`, `onlyWhenHidden` → `onlyWhileMouseLook`).
-Orphan legacy keys are left in SV but no longer read.
+Orphan legacy keys are left in SV but no longer read. The situations list is
+**not** index-merged from defaults on later loads — deletes stick; teaching
+cards are only re-seeded when the list is missing or empty.
 
 ## Files
 

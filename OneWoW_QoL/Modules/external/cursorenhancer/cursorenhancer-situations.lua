@@ -116,7 +116,7 @@ function Situations.DefaultSituations()
     }
 end
 
---- Global look/feel defaults (no situations).
+--- Global look/feel defaults (no situations — that list is user-owned).
 ---@return table
 function Situations.GlobalDefaults()
     local _, class = UnitClass("player")
@@ -170,7 +170,6 @@ function Situations.GlobalDefaults()
             alpha         = 0.8,
             sparkEnabled  = true,
         },
-        situations = Situations.DefaultSituations(),
     }
 end
 
@@ -562,6 +561,8 @@ local function MergeMissing(dst, src)
 end
 
 --- Ensure profile has situations model; migrate legacy keys once.
+--- Situations are never MergeMissing'd by index (that resurrected deleted teaching
+--- cards whenever the list had fewer than four entries). Seed only when absent/empty.
 ---@param profile table
 function Situations.MigrateProfile(profile)
     local defaults = Situations.GlobalDefaults()
