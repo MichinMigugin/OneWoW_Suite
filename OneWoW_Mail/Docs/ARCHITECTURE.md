@@ -25,6 +25,7 @@ Standalone LoD load unit that replaces the Blizzard mailbox UI with a OneWoW_GUI
 | `Engine/AddressBook.lua` | Alts (all realms) + normalize + suggestions |
 | `Engine/ShipmentEvaluator.lua` | Expand role → per-member plans; PE match + keep/max/restock; role distribute modes → jobs |
 | `Engine/AutoRun.lua` | Session success map `shipmentId → roleId → charKey`; skip already-successful role members |
+| `Engine/SendResult.lua` | Ack listener for `MAIL_SEND_SUCCESS` / `MAIL_FAILED`; captures mail `UI_ERROR_MESSAGE` for the activity log |
 | `Engine/SendQueue.lua` | Sequential `SendMail` jobs |
 | `Engine/InTransit.lua` | Writes recipient Storage in-transit on suite-alt send (items + gold); restock planning counts in-transit toward the target |
 

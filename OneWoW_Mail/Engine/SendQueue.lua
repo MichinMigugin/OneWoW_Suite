@@ -240,8 +240,13 @@ local function SendJob(job, onDone)
                 ns.Compose:Refresh()
             end
             onDone(true)
-        end, function(sendReason)
-            onDone(false, "send", sendReason or "failed")
+        end, function(sendReason, uiError)
+            -- detail is "timeout" | "failed" | Blizzard UI error text
+            local detail = sendReason or "failed"
+            if detail == "failed" and uiError and uiError ~= "" then
+                detail = uiError
+            end
+            onDone(false, "send", detail)
         end)
         SendMail(sendTo, job.subject or "", "")
     end
@@ -366,11 +371,16 @@ function SendQueue:Start(jobs, onDone, opts)
             if detail == "timeout" then
                 message = stopOnFailure and L["ERR_SEND_TIMEOUT"] or L["LOG_FAIL_TIMEOUT"]
                 logOpts.code = "timeout"
-            else
+                logOpts.detail = message
+            elseif detail == "failed" or not detail or detail == "" then
                 message = stopOnFailure and L["ERR_SEND_FAILED"] or L["LOG_FAIL_SERVER"]
                 logOpts.code = "failed"
+                logOpts.detail = message
+            else
+                -- Already-localized Blizzard UI_ERROR_MESSAGE (e.g. ERR_MAIL_CANT_SEND_REALM).
+                message = detail
+                logOpts.code = nil
             end
-            logOpts.detail = message
         elseif reason == "target" then
             message = L["ERR_NO_TARGET"]
             logOpts.code = "target"
