@@ -3,7 +3,6 @@ local _, ns = ...
 ns.Transactions = {}
 local Transactions = ns.Transactions
 
-local COMBINE_WINDOW = 300
 local recentClaims = {}
 
 function Transactions:RecordTransaction(txData)
@@ -20,17 +19,8 @@ function Transactions:RecordTransaction(txData)
     txData.timestamp = txData.timestamp or GetServerTime()
     txData.id = ns:GetNextTransactionID()
 
-    local matchingTx = self:FindRecentTransaction(txData)
-
-    if matchingTx then
-        matchingTx.amount = matchingTx.amount + txData.amount
-        if txData.quantity then
-            matchingTx.quantity = (matchingTx.quantity or 0) + txData.quantity
-        end
-    else
-        table.insert(OneWoW_AltTracker_Accounting_DB.transactions, 1, txData)
-        ns:TrimTransactions()
-    end
+    table.insert(OneWoW_AltTracker_Accounting_DB.transactions, 1, txData)
+    ns:TrimTransactions()
 
     if txData.category ~= "uncategorized" then
         table.insert(recentClaims, {
@@ -136,31 +126,6 @@ function Transactions:IsAmountClaimed(amount)
     end
 
     return false
-end
-
-function Transactions:FindRecentTransaction(txData)
-    local timeMin = txData.timestamp - COMBINE_WINDOW
-    local timeMax = txData.timestamp + COMBINE_WINDOW
-
-    for _, tx in ipairs(OneWoW_AltTracker_Accounting_DB.transactions) do
-        if tx.character == txData.character and
-           tx.type == txData.type and
-           tx.category == txData.category and
-           tx.source == txData.source and
-           tx.timestamp >= timeMin and
-           tx.timestamp <= timeMax then
-
-            if txData.item then
-                if tx.item == txData.item then
-                    return tx
-                end
-            else
-                return tx
-            end
-        end
-    end
-
-    return nil
 end
 
 function Transactions:RecordIncome(category, amount, source, item, itemName, quantity, notes)

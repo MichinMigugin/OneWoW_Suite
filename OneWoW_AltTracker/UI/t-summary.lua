@@ -9,6 +9,46 @@ local currentSortColumn = nil
 local currentSortAscending = true
 local characterRows = {}
 
+local summaryTabRef
+local summaryRefreshPending = false
+local summaryStorageSubscribed = false
+
+local function ScheduleSummaryStorageRefresh()
+    -- In-transit gold / mail icons; also keep bags column live when Storage writes.
+    if summaryRefreshPending then
+        return
+    end
+    summaryRefreshPending = true
+    C_Timer.After(0.3, function()
+        summaryRefreshPending = false
+        local tab = summaryTabRef
+        if tab and tab:IsVisible() and ns.UI.RefreshSummaryTab then
+            ns.UI.RefreshSummaryTab(tab)
+        end
+    end)
+end
+
+--- Suite mail gold still in flight to this character (Storage in-transit).
+local function GetInTransitGold(charKey)
+    local API = OneWoW_AltTracker_Storage_API
+    if not API or not API.GetInTransitShipments or not charKey then
+        return 0
+    end
+    local total = 0
+    for _, ship in ipairs(API.GetInTransitShipments(charKey) or {}) do
+        total = total + (ship.money or 0)
+    end
+    return total
+end
+
+local function FormatGoldAmount(copper)
+    local fmt = ns.AltTrackerFormatters
+    if fmt and fmt.FormatGold then
+        return fmt:FormatGold(copper or 0)
+    end
+    return tostring(copper or 0)
+end
+
 function ns.UI.CreateSummaryTab(parent)
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
         title = L["ACCOUNT_OVERVIEW"],
@@ -45,7 +85,7 @@ function ns.UI.CreateSummaryTab(parent)
         {key = "rested",    label = L["COL_RESTED_XP"],  width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_RESTED_XP"],  ttDesc = L["TT_COL_RESTED_XP_DESC"]},
         {key = "itemLevel", label = L["COL_ITEM_LEVEL"], width = 50,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_ITEM_LEVEL"], ttDesc = L["TT_COL_ITEM_LEVEL_DESC"]},
         {key = "bags",      label = L["COL_BAGS"],       width = 40,  fixed = true,  align = "center",                   ttTitle = L["TT_COL_BAGS"],       ttDesc = L["TT_COL_BAGS_DESC"]},
-        {key = "money",     label = L["COL_GOLD"],       width = 90,  fixed = false, align = "right",                    ttTitle = L["TT_COL_GOLD"],       ttDesc = L["TT_COL_GOLD_DESC"]},
+        {key = "money",     label = L["COL_GOLD"],       width = 102, fixed = false, align = "right",                    ttTitle = L["TT_COL_GOLD"],       ttDesc = L["TT_COL_GOLD_DESC"]},
         {key = "hearth",    label = L["COL_HEARTH"],     width = 80,  fixed = false, align = "left",                     ttTitle = L["TT_COL_HEARTH"],     ttDesc = L["TT_COL_HEARTH_DESC"]},
         {key = "lastSeen",  label = L["COL_LAST_SEEN"],  width = 80,  fixed = false, align = "left",                     ttTitle = L["COL_LAST_SEEN"],  ttDesc = L["TT_COL_LAST_SEEN_DESC"]},
     }
@@ -107,13 +147,21 @@ function ns.UI.CreateSummaryTab(parent)
 
     OneWoW_GUI:ApplyFontToFrame(parent)
 
+    summaryTabRef = parent
     local function RefreshSummary()
         if ns.UI.RefreshSummaryTab then
             ns.UI.RefreshSummaryTab(parent)
         end
     end
     OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Character", RefreshSummary)
-    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Storage", RefreshSummary)
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Storage", function()
+        if not summaryStorageSubscribed and OneWoW_AltTracker_Storage_API
+            and OneWoW_AltTracker_Storage_API.RegisterStorageChanged then
+            summaryStorageSubscribed = true
+            OneWoW_AltTracker_Storage_API.RegisterStorageChanged(ScheduleSummaryStorageRefresh)
+        end
+        RefreshSummary()
+    end)
     OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Collections", RefreshSummary)
     OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Professions", RefreshSummary)
 
@@ -185,7 +233,7 @@ function ns.UI.RefreshSummaryTab(summaryTab)
             end
             return free
         elseif col == "money" then
-            return charData.money or 0
+            return (charData.money or 0) + GetInTransitGold(charKey)
         elseif col == "hearth" then
             return (charData.location and charData.location.bindLocation) or ""
         elseif col == "lastSeen" then
@@ -572,14 +620,47 @@ function ns.UI.RefreshSummaryTab(summaryTab)
         bagsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         table.insert(charRow.cells, bagsText)
 
-        local goldText = OneWoW_GUI:CreateFS(charRow, 12)
+        local goldContainer = CreateFrame("Frame", nil, charRow)
+        goldContainer:SetHeight(rowHeight)
+        goldContainer:EnableMouse(true)
+
+        local wallet = charData.money or 0
+        local transit = GetInTransitGold(charKey)
+        local virtual = wallet + transit
+
+        local goldDot = goldContainer:CreateTexture(nil, "ARTWORK")
+        goldDot:SetSize(6, 6)
+        goldDot:SetPoint("RIGHT", goldContainer, "RIGHT", -1, 0)
+        goldDot:SetTexture("Interface\\Buttons\\WHITE8x8")
+        goldDot:SetVertexColor(1.00, 0.82, 0.10, 1)
+        if transit > 0 then
+            goldDot:Show()
+        else
+            goldDot:Hide()
+        end
+
+        local goldText = OneWoW_GUI:CreateFS(goldContainer, 12)
         OneWoW_GUI:ApplyFontCapped(goldText, 12, 2)
-        local money = charData.money or 0
-        local goldFormatted = ns.AltTrackerFormatters and ns.AltTrackerFormatters.FormatGold and ns.AltTrackerFormatters:FormatGold(money)
-        goldText:SetText(goldFormatted)
+        goldText:SetText(FormatGoldAmount(wallet))
         goldText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
         goldText:SetJustifyH("RIGHT")
-        table.insert(charRow.cells, goldText)
+        if transit > 0 then
+            goldText:SetPoint("RIGHT", goldDot, "LEFT", -4, 0)
+        else
+            goldText:SetPoint("RIGHT", goldContainer, "RIGHT", -1, 0)
+        end
+
+        goldContainer:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L["TT_COL_GOLD"], 1, 0.82, 0)
+            GameTooltip:AddDoubleLine(L["TT_COL_GOLD_WALLET"], FormatGoldAmount(wallet), 0.8, 0.8, 0.8, 1, 0.82, 0)
+            GameTooltip:AddDoubleLine(L["TT_COL_GOLD_IN_TRANSIT"], FormatGoldAmount(transit), 0.8, 0.8, 0.8, 1, 0.82, 0)
+            GameTooltip:AddDoubleLine(L["TT_COL_GOLD_VIRTUAL"], FormatGoldAmount(virtual), 0.8, 0.8, 0.8, 1, 0.82, 0)
+            GameTooltip:Show()
+        end)
+        goldContainer:SetScript("OnLeave", GameTooltip_Hide)
+
+        table.insert(charRow.cells, goldContainer)
 
         local hearthContainer = CreateFrame("Frame", nil, charRow)
         hearthContainer:SetSize(80, rowHeight)
@@ -891,6 +972,8 @@ function ns.UI.RefreshSummaryStats(summaryTab)
         attention = nil,
         characters = 0,
         totalGold = 0,
+        walletGold = 0,
+        transitGold = 0,
         factions = {Alliance = 0, Horde = 0},
         rested = 0,
         playtime = 0,
@@ -913,9 +996,11 @@ function ns.UI.RefreshSummaryStats(summaryTab)
         local charKey = charInfo.key
         local charData = charInfo.data
 
-        if charData.money then
-            stats.totalGold = stats.totalGold + charData.money
-        end
+        local wallet = charData.money or 0
+        local transit = GetInTransitGold(charKey)
+        stats.walletGold = stats.walletGold + wallet
+        stats.transitGold = stats.transitGold + transit
+        stats.totalGold = stats.totalGold + wallet + transit
 
         if charData.faction then
             if charData.faction == "Alliance" then
@@ -997,7 +1082,7 @@ function ns.UI.RefreshSummaryStats(summaryTab)
         if statBoxes[1] then statBoxes[1].value:SetText(stats.attention or "-") end
         if statBoxes[2] then statBoxes[2].value:SetText(tostring(stats.characters)) end
         if statBoxes[3] then
-            local goldFormatted = ns.AltTrackerFormatters and ns.AltTrackerFormatters.FormatGold and ns.AltTrackerFormatters:FormatGold(stats.totalGold)
+            local goldFormatted = FormatGoldAmount(stats.totalGold)
             statBoxes[3].value:SetText(goldFormatted)
 
             statBoxes[3]:SetScript("OnEnter", function(self)
@@ -1007,14 +1092,12 @@ function ns.UI.RefreshSummaryStats(summaryTab)
                     warbandGold = OneWoW_AltTracker_Storage_API.GetWarbandBankGold() or 0
                 end
                 local grandTotal = stats.totalGold + warbandGold
-                local grandFormatted = ns.AltTrackerFormatters and ns.AltTrackerFormatters.FormatGold and ns.AltTrackerFormatters:FormatGold(grandTotal)
                 GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(L["GOLD_TOTAL"] .. ": " .. (grandFormatted or "0g"), 1, 0.82, 0)
+                GameTooltip:SetText(L["GOLD_TOTAL"] .. ": " .. FormatGoldAmount(grandTotal), 1, 0.82, 0)
                 GameTooltip:AddLine("----------------------------", 0.4, 0.4, 0.4)
-                local charsFormatted = ns.AltTrackerFormatters and ns.AltTrackerFormatters.FormatGold and ns.AltTrackerFormatters:FormatGold(stats.totalGold)
-                GameTooltip:AddDoubleLine(L["TT_GOLD_CHARS_LABEL"], charsFormatted or "0g", 0.8, 0.8, 0.8, 1, 0.82, 0)
-                local warbandFormatted = ns.AltTrackerFormatters and ns.AltTrackerFormatters.FormatGold and ns.AltTrackerFormatters:FormatGold(warbandGold)
-                GameTooltip:AddDoubleLine(L["TT_GOLD_WARBAND_LABEL"], warbandFormatted or "0g", 0.8, 0.8, 0.8, 1, 0.82, 0)
+                GameTooltip:AddDoubleLine(L["TT_GOLD_CHARS_LABEL"], FormatGoldAmount(stats.walletGold), 0.8, 0.8, 0.8, 1, 0.82, 0)
+                GameTooltip:AddDoubleLine(L["TT_GOLD_WARBAND_LABEL"], FormatGoldAmount(warbandGold), 0.8, 0.8, 0.8, 1, 0.82, 0)
+                GameTooltip:AddDoubleLine(L["TT_GOLD_IN_TRANSIT_LABEL"], FormatGoldAmount(stats.transitGold), 0.8, 0.8, 0.8, 1, 0.82, 0)
                 GameTooltip:Show()
             end)
             statBoxes[3]:SetScript("OnLeave", function(self)

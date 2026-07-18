@@ -226,7 +226,8 @@ local function SyncMoneyModeButtons()
 end
 
 --- Thin coin-tinted border so g/s/c fields read at a glance (survives CreateEditBox focus chrome).
-local function StyleMoneyBox(box, r, g, b)
+local function StyleMoneyBox(box, color)
+    local r, g, b = color[1], color[2], color[3]
     local function applyIdle()
         box:SetBackdropBorderColor(r, g, b, 0.85)
     end
@@ -369,10 +370,9 @@ local function WireEvents()
         if event == "MAIL_SEND_SUCCESS" then
             -- Fires for EVERY successful send, not just Compose's. Queue sends
             -- (SendQueue teardown is deferred, so IsRunning is still true here)
-            -- and Other-tab gold sends (holder released in its ack callback)
             -- must not wipe a half-typed draft or remember whatever happens to
             -- sit in the To box.
-            if ns.SendQueue:IsRunning() or ns.NativeSend:HasHolder("other") then
+            if ns.SendQueue:IsRunning() then
                 RefreshAllSlots()
                 UpdatePostage()
                 return
@@ -551,20 +551,21 @@ function Compose:Create(parent)
     end)
     SyncMoneyModeButtons()
 
+    local moneyColors = ns.Constants.MONEY_COLORS
     ui.goldBox = OneWoW_GUI:CreateEditBox(parent, { width = 56, height = 22, placeholderText = GOLD_AMOUNT_SYMBOL })
     ui.goldBox:SetPoint("LEFT", ui.codBtn, "RIGHT", 12, 0)
     ui.goldBox:SetNumeric(true)
-    StyleMoneyBox(ui.goldBox, 1.00, 0.82, 0.10)
+    StyleMoneyBox(ui.goldBox, moneyColors.GOLD)
 
     ui.silverBox = OneWoW_GUI:CreateEditBox(parent, { width = 40, height = 22, placeholderText = SILVER_AMOUNT_SYMBOL })
     ui.silverBox:SetPoint("LEFT", ui.goldBox, "RIGHT", 6, 0)
     ui.silverBox:SetNumeric(true)
-    StyleMoneyBox(ui.silverBox, 0.78, 0.78, 0.82)
+    StyleMoneyBox(ui.silverBox, moneyColors.SILVER)
 
     ui.copperBox = OneWoW_GUI:CreateEditBox(parent, { width = 40, height = 22, placeholderText = COPPER_AMOUNT_SYMBOL })
     ui.copperBox:SetPoint("LEFT", ui.silverBox, "RIGHT", 6, 0)
     ui.copperBox:SetNumeric(true)
-    StyleMoneyBox(ui.copperBox, 0.85, 0.48, 0.22)
+    StyleMoneyBox(ui.copperBox, moneyColors.COPPER)
 
     ui.postage = OneWoW_GUI:CreateFS(parent, 12)
     ui.postage:SetPoint("TOPLEFT", ui.sendMoneyBtn, "BOTTOMLEFT", 0, -10)

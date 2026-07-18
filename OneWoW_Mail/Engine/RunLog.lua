@@ -19,14 +19,19 @@ local onChanged
 ---@param severity "info"|"warn"|"error"
 ---@param shipmentName string|nil
 ---@param target string|nil
----@param message string already localized
-function RunLog:Add(severity, shipmentName, target, message)
+---@param message string already localized short summary
+---@param opts { code?: string, detail?: string, itemLink?: string }|nil
+function RunLog:Add(severity, shipmentName, target, message, opts)
+    opts = opts or {}
     tinsert(entries, {
         time = time(),
         severity = severity,
         shipmentName = shipmentName,
         target = target,
         message = message,
+        code = opts.code,
+        detail = opts.detail,
+        itemLink = opts.itemLink,
     })
     while #entries > MAX_ENTRIES do
         tremove(entries, 1)

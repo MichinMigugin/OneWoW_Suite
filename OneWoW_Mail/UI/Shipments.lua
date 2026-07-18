@@ -27,6 +27,20 @@ local function AttachTooltip(frame, title, body)
     frame:HookScript("OnLeave", GameTooltip_Hide)
 end
 
+--- Thin coin-tinted border (same chrome as Compose money fields).
+local function StyleMoneyBox(box, color)
+    local r, g, b = color[1], color[2], color[3]
+    local function applyIdle()
+        box:SetBackdropBorderColor(r, g, b, 0.85)
+    end
+    local function applyFocus()
+        box:SetBackdropBorderColor(math.min(1, r + 0.12), math.min(1, g + 0.12), math.min(1, b + 0.12), 1)
+    end
+    applyIdle()
+    box:HookScript("OnEditFocusGained", applyFocus)
+    box:HookScript("OnEditFocusLost", applyIdle)
+end
+
 local function SetWidgetEnabled(widget, on)
     if not widget then
         return
@@ -65,6 +79,8 @@ local function MakeShipment(name)
         id = NewShipmentId(),
         name = name,
         mode = "manual",
+        frequency = "session",
+        kind = "items",
         match = "",
         target = "",
         keepQty = 0,
@@ -73,6 +89,10 @@ local function MakeShipment(name)
         restock = false,
         restockSources = { bags = true, bank = true, guild = false },
         exclusions = {},
+        keepCopper = 0,
+        maxCopperEnabled = false,
+        maxCopper = 0,
+        restockCopper = 0,
     }
 end
 
@@ -312,13 +332,25 @@ local function EnsureDetailWidgets()
     dw.empty:SetText(L["SHIPMENT_SELECT"])
     dw.empty:Hide()
 
-    local content = CreateFrame("Frame", nil, detailFrame)
-    content:SetAllPoints(detailFrame)
+    -- Sticky Preview/Send footer so actions stay inside the detail panel even when
+    -- mode/frequency/kind push the form taller than the window.
+    local FOOTER_H = 34
+    local footer = CreateFrame("Frame", nil, detailFrame)
+    footer:SetPoint("BOTTOMLEFT", detailFrame, "BOTTOMLEFT", 0, 4)
+    footer:SetPoint("BOTTOMRIGHT", detailFrame, "BOTTOMRIGHT", 0, 4)
+    footer:SetHeight(FOOTER_H)
+    dw.footer = footer
+
+    local detailScroll, content = OneWoW_GUI:CreateScrollFrame(detailFrame, {})
+    detailScroll:ClearAllPoints()
+    detailScroll:SetPoint("TOPLEFT", detailFrame, "TOPLEFT", 4, -4)
+    detailScroll:SetPoint("BOTTOMRIGHT", detailFrame, "BOTTOMRIGHT", -4, FOOTER_H + 8)
+    dw.detailScroll = detailScroll
     dw.content = content
 
     local SyncActionButtons -- forward: referenced by target commit/typing
 
-    local y = -8
+    local y = -4
     local function nextY(delta)
         y = y - delta
         return y
@@ -356,44 +388,86 @@ local function EnsureDetailWidgets()
             local s = Current()
             if s then
                 s.mode = def.key
+                if def.key == "manual" and ns.AutoRun then
+                    ns.AutoRun:ClearSessionFlags(s.id)
+                end
             end
             dw.SetModeChecked(def.key)
+            if dw.SyncFrequencyEnabled then
+                dw.SyncFrequencyEnabled()
+            end
             RefreshList()
         end)
         AttachTooltip(cb, def.label, def.tt)
         dw.modeButtons[def.key] = cb
         nextY(24)
     end
-    nextY(6)
+    nextY(4)
 
-    dw.matchLabel = OneWoW_GUI:CreateFS(content, 11)
-    dw.matchLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
-    dw.matchLabel:SetText(L["SHIPMENT_MATCH"] .. ":")
-    AttachTooltip(dw.matchLabel, L["SHIPMENT_MATCH"], L["TT_SHIPMENT_MATCH"])
+    dw.freqLabel = OneWoW_GUI:CreateFS(content, 11)
+    dw.freqLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
+    dw.freqLabel:SetText(L["SHIPMENT_FREQUENCY"] .. ":")
     nextY(16)
 
-    dw.matchBox = OneWoW_GUI:CreateEditBox(content, {
-        width = 360,
-        height = 24,
-        placeholderText = "",
-    })
-    dw.matchBox:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
-    dw.matchBox:HookScript("OnEnterPressed", function(myself)
-        local s = Current()
-        if s then
-            s.match = myself:GetSearchText()
+    dw.freqButtons = {}
+    function dw.SetFrequencyChecked(freq)
+        for key, cb in pairs(dw.freqButtons) do
+            cb:SetChecked(key == freq)
         end
-        myself:ClearFocus()
-    end)
-    dw.matchBox:HookScript("OnEditFocusLost", function(myself)
-        local s = Current()
-        if s then
-            s.match = myself:GetSearchText()
-        end
-    end)
-    AttachTooltip(dw.matchBox, L["SHIPMENT_MATCH"], L["TT_SHIPMENT_MATCH"])
-    nextY(32)
+    end
+    for _, def in ipairs({
+        { key = "session", label = L["FREQ_SESSION"], tt = L["TT_FREQ_SESSION"] },
+        { key = "visit", label = L["FREQ_VISIT"], tt = L["TT_FREQ_VISIT"] },
+    }) do
+        local cb = OneWoW_GUI:CreateCheckbox(content, { label = def.label })
+        cb:SetPoint("TOPLEFT", content, "TOPLEFT", 4, y)
+        cb:SetScript("OnClick", function()
+            local s = Current()
+            if s then
+                s.frequency = def.key
+            end
+            dw.SetFrequencyChecked(def.key)
+        end)
+        AttachTooltip(cb, def.label, def.tt)
+        dw.freqButtons[def.key] = cb
+        nextY(24)
+    end
+    nextY(4)
 
+    dw.kindLabel = OneWoW_GUI:CreateFS(content, 11)
+    dw.kindLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
+    dw.kindLabel:SetText(L["SHIPMENT_KIND"] .. ":")
+    nextY(16)
+
+    dw.kindButtons = {}
+    function dw.SetKindChecked(kind)
+        for key, cb in pairs(dw.kindButtons) do
+            cb:SetChecked(key == kind)
+        end
+    end
+    for _, def in ipairs({
+        { key = "items", label = L["KIND_ITEMS"], tt = L["TT_KIND_ITEMS"] },
+        { key = "gold", label = L["KIND_GOLD"], tt = L["TT_KIND_GOLD"] },
+    }) do
+        local cb = OneWoW_GUI:CreateCheckbox(content, { label = def.label })
+        cb:SetPoint("TOPLEFT", content, "TOPLEFT", 4, y)
+        cb:SetScript("OnClick", function()
+            local s = Current()
+            if s then
+                s.kind = def.key
+            end
+            dw.SetKindChecked(def.key)
+            if dw.SyncKindPanels then
+                dw.SyncKindPanels()
+            end
+        end)
+        AttachTooltip(cb, def.label, def.tt)
+        dw.kindButtons[def.key] = cb
+        nextY(24)
+    end
+    nextY(6)
+
+    -- Shared target (both kinds).
     dw.targetLabel = OneWoW_GUI:CreateFS(content, 11)
     dw.targetLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
     dw.targetLabel:SetText(TARGET .. ":")
@@ -425,28 +499,65 @@ local function EnsureDetailWidgets()
     AttachTooltip(dw.targetBox, TARGET, L["TT_SHIPMENT_TARGET"])
     nextY(36)
 
-    dw.rulesHeader = OneWoW_GUI:CreateFS(content, 12)
-    dw.rulesHeader:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
+    local rulesTop = y
+
+    -- Item-specific panel.
+    dw.itemPanel = CreateFrame("Frame", nil, content)
+    dw.itemPanel:SetPoint("TOPLEFT", content, "TOPLEFT", 0, rulesTop)
+    dw.itemPanel:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, rulesTop)
+
+    local iy = 0
+    local function nextIY(delta)
+        iy = iy - delta
+        return iy
+    end
+
+    dw.matchLabel = OneWoW_GUI:CreateFS(dw.itemPanel, 11)
+    dw.matchLabel:SetPoint("TOPLEFT", dw.itemPanel, "TOPLEFT", 8, iy)
+    dw.matchLabel:SetText(L["SHIPMENT_MATCH"] .. ":")
+    AttachTooltip(dw.matchLabel, L["SHIPMENT_MATCH"], L["TT_SHIPMENT_MATCH"])
+    nextIY(16)
+
+    dw.matchBox = OneWoW_GUI:CreateEditBox(dw.itemPanel, {
+        width = 360,
+        height = 24,
+        placeholderText = "",
+    })
+    dw.matchBox:SetPoint("TOPLEFT", dw.itemPanel, "TOPLEFT", 8, iy)
+    dw.matchBox:HookScript("OnEnterPressed", function(myself)
+        local s = Current()
+        if s then
+            s.match = myself:GetSearchText()
+        end
+        myself:ClearFocus()
+    end)
+    dw.matchBox:HookScript("OnEditFocusLost", function(myself)
+        local s = Current()
+        if s then
+            s.match = myself:GetSearchText()
+        end
+    end)
+    AttachTooltip(dw.matchBox, L["SHIPMENT_MATCH"], L["TT_SHIPMENT_MATCH"])
+    nextIY(32)
+
+    dw.rulesHeader = OneWoW_GUI:CreateFS(dw.itemPanel, 12)
+    dw.rulesHeader:SetPoint("TOPLEFT", dw.itemPanel, "TOPLEFT", 8, iy)
     dw.rulesHeader:SetText(L["SHIPMENT_RULES"])
     dw.rulesHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-    nextY(22)
+    nextIY(22)
 
-    -- Keep: label + qty on one row.
-    dw.keepLabel = OneWoW_GUI:CreateFS(content, 12)
-    dw.keepLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y - 2)
+    dw.keepLabel = OneWoW_GUI:CreateFS(dw.itemPanel, 12)
+    dw.keepLabel:SetPoint("TOPLEFT", dw.itemPanel, "TOPLEFT", 8, iy - 2)
     dw.keepLabel:SetText(L["SHIPMENT_KEEP"] .. ":")
     AttachTooltip(dw.keepLabel, L["SHIPMENT_KEEP"], L["TT_SHIPMENT_KEEP"])
 
-    dw.keepBox = OneWoW_GUI:CreateEditBox(content, {
+    dw.keepBox = OneWoW_GUI:CreateEditBox(dw.itemPanel, {
         width = 56,
         height = 22,
         placeholderText = "0",
     })
     dw.keepBox:SetPoint("LEFT", dw.keepLabel, "RIGHT", 8, 0)
     dw.keepBox:SetNumeric(true)
-    -- Commit on every user keystroke, not just focus loss — clicking Send
-    -- does not steal EditBox focus, so an OnEditFocusLost-only commit would
-    -- plan the send with a stale quantity.
     dw.keepBox:HookScript("OnEditFocusLost", function(myself)
         local s = Current()
         if s then
@@ -460,16 +571,15 @@ local function EnsureDetailWidgets()
         end
     end)
     AttachTooltip(dw.keepBox, L["SHIPMENT_KEEP"], L["TT_SHIPMENT_KEEP"])
-    nextY(30)
+    nextIY(30)
 
-    -- Cap: checkbox + qty on one row.
-    dw.maxEnable = OneWoW_GUI:CreateCheckbox(content, {
+    dw.maxEnable = OneWoW_GUI:CreateCheckbox(dw.itemPanel, {
         label = L["SHIPMENT_MAX"] .. ":",
     })
-    dw.maxEnable:SetPoint("TOPLEFT", content, "TOPLEFT", 4, y)
+    dw.maxEnable:SetPoint("TOPLEFT", dw.itemPanel, "TOPLEFT", 4, iy)
     AttachTooltip(dw.maxEnable, L["SHIPMENT_MAX"], L["TT_SHIPMENT_MAX"])
 
-    dw.maxBox = OneWoW_GUI:CreateEditBox(content, {
+    dw.maxBox = OneWoW_GUI:CreateEditBox(dw.itemPanel, {
         width = 56,
         height = 22,
         placeholderText = "0",
@@ -489,12 +599,12 @@ local function EnsureDetailWidgets()
         end
     end)
     AttachTooltip(dw.maxBox, L["SHIPMENT_MAX"], L["TT_SHIPMENT_MAX"])
-    nextY(30)
+    nextIY(30)
 
-    dw.restock = OneWoW_GUI:CreateCheckbox(content, {
+    dw.restock = OneWoW_GUI:CreateCheckbox(dw.itemPanel, {
         label = L["SHIPMENT_RESTOCK"],
     })
-    dw.restock:SetPoint("TOPLEFT", content, "TOPLEFT", 4, y)
+    dw.restock:SetPoint("TOPLEFT", dw.itemPanel, "TOPLEFT", 4, iy)
     dw.restock:SetScript("OnClick", function(myself)
         local s = Current()
         if s then
@@ -502,7 +612,137 @@ local function EnsureDetailWidgets()
         end
     end)
     AttachTooltip(dw.restock, L["SHIPMENT_RESTOCK"], L["TT_SHIPMENT_RESTOCK"])
-    nextY(36)
+    nextIY(28)
+    local itemRulesH = -iy
+    dw.itemPanel:SetHeight(itemRulesH)
+
+    -- Gold-specific panel (same vertical slot as item panel).
+    dw.goldPanel = CreateFrame("Frame", nil, content)
+    dw.goldPanel:SetPoint("TOPLEFT", content, "TOPLEFT", 0, rulesTop)
+    dw.goldPanel:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, rulesTop)
+    dw.goldPanel:Hide()
+
+    local gy = 0
+    local function nextGY(delta)
+        gy = gy - delta
+        return gy
+    end
+
+    dw.goldRulesHeader = OneWoW_GUI:CreateFS(dw.goldPanel, 12)
+    dw.goldRulesHeader:SetPoint("TOPLEFT", dw.goldPanel, "TOPLEFT", 8, gy)
+    dw.goldRulesHeader:SetText(L["SHIPMENT_GOLD_RULES"])
+    dw.goldRulesHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    nextGY(22)
+
+    dw.goldKeepLabel = OneWoW_GUI:CreateFS(dw.goldPanel, 12)
+    dw.goldKeepLabel:SetPoint("TOPLEFT", dw.goldPanel, "TOPLEFT", 8, gy - 2)
+    dw.goldKeepLabel:SetText(L["SHIPMENT_GOLD_KEEP"] .. ":")
+    AttachTooltip(dw.goldKeepLabel, L["SHIPMENT_GOLD_KEEP"], L["TT_SHIPMENT_GOLD_KEEP"])
+
+    dw.goldKeepBox = OneWoW_GUI:CreateEditBox(dw.goldPanel, {
+        width = 80,
+        height = 22,
+        placeholderText = GOLD_AMOUNT_SYMBOL,
+    })
+    dw.goldKeepBox:SetPoint("LEFT", dw.goldKeepLabel, "RIGHT", 8, 0)
+    dw.goldKeepBox:SetNumeric(true)
+    StyleMoneyBox(dw.goldKeepBox, ns.Constants.MONEY_COLORS.GOLD)
+    local function CommitGoldKeep()
+        local s = Current()
+        if s then
+            local gold = tonumber(dw.goldKeepBox:GetSearchText()) or 0
+            s.keepCopper = gold * 10000
+        end
+    end
+    dw.goldKeepBox:HookScript("OnEditFocusLost", CommitGoldKeep)
+    dw.goldKeepBox:HookScript("OnTextChanged", function(_, userInput)
+        if userInput then CommitGoldKeep() end
+    end)
+    AttachTooltip(dw.goldKeepBox, L["SHIPMENT_GOLD_KEEP"], L["TT_SHIPMENT_GOLD_KEEP"])
+    nextGY(30)
+
+    dw.goldMaxEnable = OneWoW_GUI:CreateCheckbox(dw.goldPanel, {
+        label = L["SHIPMENT_GOLD_MAX"] .. ":",
+    })
+    dw.goldMaxEnable:SetPoint("TOPLEFT", dw.goldPanel, "TOPLEFT", 4, gy)
+    AttachTooltip(dw.goldMaxEnable, L["SHIPMENT_GOLD_MAX"], L["TT_SHIPMENT_GOLD_MAX"])
+
+    dw.goldMaxBox = OneWoW_GUI:CreateEditBox(dw.goldPanel, {
+        width = 80,
+        height = 22,
+        placeholderText = GOLD_AMOUNT_SYMBOL,
+    })
+    dw.goldMaxBox:SetPoint("LEFT", dw.goldMaxEnable.label, "RIGHT", 8, 0)
+    dw.goldMaxBox:SetNumeric(true)
+    StyleMoneyBox(dw.goldMaxBox, ns.Constants.MONEY_COLORS.GOLD)
+    local function CommitGoldMax()
+        local s = Current()
+        if s then
+            local gold = tonumber(dw.goldMaxBox:GetSearchText()) or 0
+            s.maxCopper = gold * 10000
+        end
+    end
+    dw.goldMaxBox:HookScript("OnEditFocusLost", CommitGoldMax)
+    dw.goldMaxBox:HookScript("OnTextChanged", function(_, userInput)
+        if userInput then CommitGoldMax() end
+    end)
+    AttachTooltip(dw.goldMaxBox, L["SHIPMENT_GOLD_MAX"], L["TT_SHIPMENT_GOLD_MAX"])
+    nextGY(30)
+
+    dw.goldRestock = OneWoW_GUI:CreateCheckbox(dw.goldPanel, {
+        label = L["SHIPMENT_GOLD_RESTOCK"] .. ":",
+    })
+    dw.goldRestock:SetPoint("TOPLEFT", dw.goldPanel, "TOPLEFT", 4, gy)
+    AttachTooltip(dw.goldRestock, L["SHIPMENT_GOLD_RESTOCK"], L["TT_SHIPMENT_GOLD_RESTOCK"])
+
+    dw.goldRestockBox = OneWoW_GUI:CreateEditBox(dw.goldPanel, {
+        width = 80,
+        height = 22,
+        placeholderText = GOLD_AMOUNT_SYMBOL,
+    })
+    dw.goldRestockBox:SetPoint("LEFT", dw.goldRestock.label, "RIGHT", 8, 0)
+    dw.goldRestockBox:SetNumeric(true)
+    StyleMoneyBox(dw.goldRestockBox, ns.Constants.MONEY_COLORS.GOLD)
+    local function CommitGoldRestock()
+        local s = Current()
+        if s then
+            local gold = tonumber(dw.goldRestockBox:GetSearchText()) or 0
+            s.restockCopper = gold * 10000
+        end
+    end
+    dw.goldRestockBox:HookScript("OnEditFocusLost", CommitGoldRestock)
+    dw.goldRestockBox:HookScript("OnTextChanged", function(_, userInput)
+        if userInput then CommitGoldRestock() end
+    end)
+    AttachTooltip(dw.goldRestockBox, L["SHIPMENT_GOLD_RESTOCK"], L["TT_SHIPMENT_GOLD_RESTOCK"])
+    dw.goldRestock:SetScript("OnClick", function(myself)
+        local s = Current()
+        if s then
+            s.restock = myself:GetChecked() and true or false
+            if s.restock and (s.restockCopper or 0) == 0 and (s.maxCopper or 0) > 0 then
+                s.restockCopper = s.maxCopper
+                dw.goldRestockBox:SetText(tostring(math.floor(s.restockCopper / 10000)))
+            end
+        end
+        if dw.SyncGoldCapDependent then
+            dw.SyncGoldCapDependent()
+        end
+    end)
+    nextGY(28)
+    local goldRulesH = -gy
+    dw.goldPanel:SetHeight(goldRulesH)
+
+    -- Preview sits just under whichever rules panel is showing (item panel is taller).
+    local PREVIEW_H = 160
+    local function LayoutPreviewUnderRules()
+        local panel = dw.goldPanel:IsShown() and dw.goldPanel or dw.itemPanel
+        local rulesH = panel:GetHeight()
+        dw.previewText:ClearAllPoints()
+        dw.previewText:SetPoint("TOPLEFT", panel, "BOTTOMLEFT", 8, -10)
+        dw.previewText:SetPoint("TOPRIGHT", panel, "BOTTOMRIGHT", -8, -10)
+        content:SetHeight(math.max(1, -(rulesTop - rulesH - 10) + PREVIEW_H + 10))
+    end
+    dw.LayoutPreviewUnderRules = LayoutPreviewUnderRules
 
     local function CommitDetailFields()
         local s = Current()
@@ -510,19 +750,32 @@ local function EnsureDetailWidgets()
             return
         end
         s.target = dw.targetSuggest:GetText()
-        s.match = dw.matchBox:GetSearchText()
-        s.keepQty = tonumber(dw.keepBox:GetSearchText()) or 0
-        s.maxQty = tonumber(dw.maxBox:GetSearchText()) or 0
-        s.maxQtyEnabled = dw.maxEnable:GetChecked() and true or false
-        s.restock = dw.restock:GetChecked() and true or false
-        dw.keepBox:ClearFocus()
-        dw.maxBox:ClearFocus()
-        dw.matchBox:ClearFocus()
+        s.kind = (dw.kindButtons.gold:GetChecked() and "gold") or "items"
+        s.frequency = (dw.freqButtons.visit:GetChecked() and "visit") or "session"
+        if s.kind == "gold" then
+            s.keepCopper = (tonumber(dw.goldKeepBox:GetSearchText()) or 0) * 10000
+            s.maxCopper = (tonumber(dw.goldMaxBox:GetSearchText()) or 0) * 10000
+            s.maxCopperEnabled = dw.goldMaxEnable:GetChecked() and true or false
+            s.restock = dw.goldRestock:GetChecked() and true or false
+            s.restockCopper = (tonumber(dw.goldRestockBox:GetSearchText()) or 0) * 10000
+            dw.goldKeepBox:ClearFocus()
+            dw.goldMaxBox:ClearFocus()
+            dw.goldRestockBox:ClearFocus()
+        else
+            s.match = dw.matchBox:GetSearchText()
+            s.keepQty = tonumber(dw.keepBox:GetSearchText()) or 0
+            s.maxQty = tonumber(dw.maxBox:GetSearchText()) or 0
+            s.maxQtyEnabled = dw.maxEnable:GetChecked() and true or false
+            s.restock = dw.restock:GetChecked() and true or false
+            dw.keepBox:ClearFocus()
+            dw.maxBox:ClearFocus()
+            dw.matchBox:ClearFocus()
+        end
         dw.targetBox:ClearFocus()
     end
 
-    dw.previewBtn = OneWoW_GUI:CreateFitTextButton(content, { text = PREVIEW, height = 26 })
-    dw.previewBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
+    dw.previewBtn = OneWoW_GUI:CreateFitTextButton(footer, { text = PREVIEW, height = 26 })
+    dw.previewBtn:SetPoint("LEFT", footer, "LEFT", 8, 0)
     dw.previewBtn:SetScript("OnClick", function()
         local s = Current()
         if not s then
@@ -533,8 +786,21 @@ local function EnsureDetailWidgets()
         local lines = {}
         for _, plan in ipairs(result.plans) do
             for _, entry in ipairs(plan.entries or {}) do
-                local name = C_Item.GetItemNameByID(entry.itemID) or tostring(entry.itemID)
-                tinsert(lines, string.format("%s x%d → %s", name, entry.quantity, plan.target or "?"))
+                if entry.money then
+                    tinsert(lines, string.format("%s → %s", OneWoW.Format.FormatGold(entry.money), plan.target or "?"))
+                else
+                    local name = C_Item.GetItemNameByID(entry.itemID) or tostring(entry.itemID)
+                    local quality = C_Item.GetItemQualityByID(entry.itemID)
+                    local r, g, b = OneWoW_GUI:GetItemQualityColor(quality)
+                    local colored = string.format(
+                        "|cff%02x%02x%02x%s|r",
+                        math.floor(r * 255 + 0.5),
+                        math.floor(g * 255 + 0.5),
+                        math.floor(b * 255 + 0.5),
+                        name
+                    )
+                    tinsert(lines, string.format("%s x%d → %s", colored, entry.quantity, plan.target or "?"))
+                end
             end
         end
         for _, err in ipairs(result.errors) do
@@ -544,9 +810,15 @@ local function EnsureDetailWidgets()
             tinsert(lines, L["PREVIEW_EMPTY"])
         end
         dw.previewText:SetText(table.concat(lines, "\n"))
+        -- Preview text is at the bottom of the form; bring it into view.
+        C_Timer.After(0, function()
+            if dw.detailScroll then
+                dw.detailScroll:SetVerticalScroll(dw.detailScroll:GetVerticalScrollRange())
+            end
+        end)
     end)
 
-    dw.sendBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["BTN_SEND_SHIPMENT"], height = 26 })
+    dw.sendBtn = OneWoW_GUI:CreateFitTextButton(footer, { text = L["BTN_SEND_SHIPMENT"], height = 26 })
     dw.sendBtn:SetPoint("LEFT", dw.previewBtn, "RIGHT", 6, 0)
     dw.sendBtn:SetScript("OnClick", function()
         local s = Current()
@@ -564,20 +836,18 @@ local function EnsureDetailWidgets()
             print(L["ADDON_CHAT_PREFIX"] .. " " .. L["WARN_NON_ROSTER"])
         end
         ns.ShipmentEvaluator:Run({ shipmentId = s.id }, function(ok, _, summary)
-            -- Failures already print their own reason via RunLog.
             if ok then
                 print(L["ADDON_CHAT_PREFIX"] .. " " .. string.format(L["SEND_DONE"], summary.sent))
             end
         end)
     end)
-    nextY(40)
 
     dw.previewText = OneWoW_GUI:CreateFS(content, 11)
-    dw.previewText:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
-    dw.previewText:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -8, 8)
+    dw.previewText:SetHeight(PREVIEW_H)
     dw.previewText:SetJustifyH("LEFT")
     dw.previewText:SetJustifyV("TOP")
     dw.previewText:SetText("")
+    LayoutPreviewUnderRules()
 
     SyncActionButtons = function()
         local hasTarget = strtrim(dw.targetSuggest:GetText() or "") ~= ""
@@ -589,7 +859,7 @@ local function EnsureDetailWidgets()
     local function SyncCapDependent()
         local s = Current()
         local capOn = dw.maxEnable:GetChecked() and true or false
-        if s then
+        if s and (s.kind or "items") ~= "gold" then
             s.maxQtyEnabled = capOn
         end
         if capOn then
@@ -598,7 +868,7 @@ local function EnsureDetailWidgets()
         else
             SetWidgetEnabled(dw.maxBox, false)
             dw.restock:SetChecked(false)
-            if s then
+            if s and (s.kind or "items") ~= "gold" then
                 s.restock = false
             end
             SetWidgetEnabled(dw.restock, false)
@@ -606,7 +876,63 @@ local function EnsureDetailWidgets()
     end
     dw.SyncCapDependent = SyncCapDependent
 
+    local function SyncGoldCapDependent()
+        local s = Current()
+        local capOn = dw.goldMaxEnable:GetChecked() and true or false
+        if s and (s.kind or "items") == "gold" then
+            s.maxCopperEnabled = capOn
+        end
+        if capOn then
+            SetWidgetEnabled(dw.goldMaxBox, true)
+            SetWidgetEnabled(dw.goldRestock, true)
+        else
+            SetWidgetEnabled(dw.goldMaxBox, false)
+            dw.goldRestock:SetChecked(false)
+            if s and (s.kind or "items") == "gold" then
+                s.restock = false
+            end
+            SetWidgetEnabled(dw.goldRestock, false)
+        end
+        local restockOn = capOn and dw.goldRestock:GetChecked()
+        SetWidgetEnabled(dw.goldRestockBox, restockOn)
+    end
+    dw.SyncGoldCapDependent = SyncGoldCapDependent
+
+    local function SyncFrequencyEnabled()
+        local mode = "manual"
+        for key, cb in pairs(dw.modeButtons) do
+            if cb:GetChecked() then
+                mode = key
+                break
+            end
+        end
+        local on = mode ~= "manual"
+        for _, cb in pairs(dw.freqButtons) do
+            SetWidgetEnabled(cb, on)
+        end
+        if dw.freqLabel then
+            dw.freqLabel:SetAlpha(on and 1 or 0.45)
+        end
+    end
+    dw.SyncFrequencyEnabled = SyncFrequencyEnabled
+
+    local function SyncKindPanels()
+        local kind = dw.kindButtons.gold:GetChecked() and "gold" or "items"
+        if kind == "gold" then
+            dw.itemPanel:Hide()
+            dw.goldPanel:Show()
+            SyncGoldCapDependent()
+        else
+            dw.goldPanel:Hide()
+            dw.itemPanel:Show()
+            SyncCapDependent()
+        end
+        LayoutPreviewUnderRules()
+    end
+    dw.SyncKindPanels = SyncKindPanels
+
     dw.maxEnable:SetScript("OnClick", SyncCapDependent)
+    dw.goldMaxEnable:SetScript("OnClick", SyncGoldCapDependent)
 end
 
 --- Bind the selected shipment's values into the (already built) widgets.
@@ -617,27 +943,46 @@ local function RefreshDetail()
     EnsureDetailWidgets()
     local s = Current()
     if not s then
-        dw.content:Hide()
+        dw.detailScroll:Hide()
+        dw.footer:Hide()
         dw.empty:Show()
         return
     end
     dw.empty:Hide()
-    dw.content:Show()
+    dw.detailScroll:Show()
+    dw.footer:Show()
 
     dw.nameFs:SetText(NAME .. ": " .. (s.name or ""))
     dw.SetModeChecked(s.mode or "manual")
+    dw.SetFrequencyChecked(s.frequency or "session")
+    dw.SetKindChecked(s.kind or "items")
+    dw.targetSuggest:SetText(s.target or "")
     dw.matchBox:SetText(s.match or "")
     dw.matchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    dw.targetSuggest:SetText(s.target or "")
     dw.keepBox:SetText(tostring(s.keepQty or 0))
     dw.keepBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     dw.maxEnable:SetChecked(s.maxQtyEnabled and true or false)
     dw.maxBox:SetText(tostring(s.maxQty or 0))
     dw.maxBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     dw.restock:SetChecked(s.restock and true or false)
-    dw.previewText:SetText("") -- stale preview belongs to the previous binding
-    dw.SyncCapDependent()
+
+    local keepGold = math.floor((s.keepCopper or 0) / 10000)
+    dw.goldKeepBox:SetText(tostring(keepGold))
+    dw.goldKeepBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    dw.goldMaxEnable:SetChecked(s.maxCopperEnabled and true or false)
+    local maxGold = math.floor((s.maxCopper or 0) / 10000)
+    dw.goldMaxBox:SetText(tostring(maxGold))
+    dw.goldMaxBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    dw.goldRestock:SetChecked(s.restock and (s.kind or "items") == "gold")
+    local restockGold = math.floor((s.restockCopper or 0) / 10000)
+    dw.goldRestockBox:SetText(tostring(restockGold))
+    dw.goldRestockBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    dw.previewText:SetText("")
+    dw.SyncFrequencyEnabled()
+    dw.SyncKindPanels()
     dw.SyncActionButtons()
+    dw.detailScroll:SetVerticalScroll(0)
 end
 
 function ShipmentsUI:Reset()

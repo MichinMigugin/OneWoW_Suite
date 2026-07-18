@@ -25,7 +25,7 @@ Standalone LoD load unit that replaces the Blizzard mailbox UI with a OneWoW_GUI
 | `Engine/AddressBook.lua` | Alts (all realms) + normalize + suggestions |
 | `Engine/ShipmentEvaluator.lua` | PE match + keepQty/maxQty/restock → jobs |
 | `Engine/SendQueue.lua` | Sequential `SendMail` jobs |
-| `Engine/InTransit.lua` | Writes recipient Storage in-transit on suite-alt send |
+| `Engine/InTransit.lua` | Writes recipient Storage in-transit on suite-alt send (items + gold); restock planning counts in-transit toward the target |
 
 ## Cross-unit
 

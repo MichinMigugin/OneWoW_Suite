@@ -240,8 +240,8 @@ local function SendJob(job, onDone)
                 ns.Compose:Refresh()
             end
             onDone(true)
-        end, function()
-            onDone(false, "send")
+        end, function(sendReason)
+            onDone(false, "send", sendReason or "failed")
         end)
         SendMail(sendTo, job.subject or "", "")
     end
@@ -261,7 +261,7 @@ local function SendJob(job, onDone)
             if not ok then
                 -- Missing attachments would silently mail an incomplete (or
                 -- wrong-quantity) shipment; stop instead.
-                onDone(false, "attach", (loc.link or "?") .. " [" .. (why or "?") .. "]")
+                onDone(false, "attach", why or "?", loc.link)
                 return
             end
             attachIndex = attachIndex + 1
@@ -286,6 +286,30 @@ local function JobShipmentName(job)
         if s.id == job.shipmentId then
             return s.name or s.id
         end
+    end
+end
+
+--- Map an attach-stage reason code to a localized detail line.
+---@param code string
+---@param itemLink string|nil
+---@return string
+local function FormatAttachDetail(code, itemLink)
+    local L = ns.L
+    local item = itemLink or "?"
+    if code == "slot-locked" then
+        return string.format(L["LOG_FAIL_ATTACH_LOCKED"], item)
+    elseif code == "no-free-slot" then
+        return string.format(L["LOG_FAIL_ATTACH_NO_SLOT"], item)
+    elseif code == "slot-empty" or code == "item-moved" then
+        return string.format(L["LOG_FAIL_ATTACH_MOVED"], item)
+    elseif code == "cursor-timeout" or code == "split-timeout" or code == "place-timeout" or code == "attach-timeout" then
+        return string.format(L["LOG_FAIL_ATTACH_TIMEOUT"], item, code)
+    elseif strfind(code, "^qty ") or strfind(code, "^split ") then
+        return string.format(L["LOG_FAIL_ATTACH_QTY"], item, code)
+    elseif code == "wrong-item" or code == "scratch-wrong-item" then
+        return string.format(L["LOG_FAIL_ATTACH_WRONG"], item)
+    else
+        return string.format(L["LOG_FAIL_ATTACH_OTHER"], item, code)
     end
 end
 
@@ -327,17 +351,35 @@ function SendQueue:Start(jobs, onDone, opts)
         if onDone then onDone(ok, summary) end
     end
 
-    local function recordFailure(job, reason, detail)
-        tinsert(summary.failed, { job = job, reason = reason, detail = detail })
+    local function recordFailure(job, reason, detail, itemLink)
+        tinsert(summary.failed, { job = job, reason = reason, detail = detail, itemLink = itemLink })
         local message
+        local logOpts = { code = detail, detail = nil, itemLink = itemLink }
         if reason == "attach" then
-            message = string.format(L[stopOnFailure and "ERR_ATTACH_FAILED" or "LOG_ATTACH_FAILED"], detail or "?")
+            logOpts.detail = FormatAttachDetail(detail or "?", itemLink)
+            if stopOnFailure then
+                message = string.format(L["ERR_ATTACH_FAILED"], itemLink or detail or "?")
+            else
+                message = string.format(L["LOG_ATTACH_FAILED"], itemLink or detail or "?")
+            end
         elseif reason == "send" then
-            message = stopOnFailure and L["ERR_SEND_FAILED"] or L["LOG_SEND_FAILED"]
+            if detail == "timeout" then
+                message = stopOnFailure and L["ERR_SEND_TIMEOUT"] or L["LOG_FAIL_TIMEOUT"]
+                logOpts.code = "timeout"
+            else
+                message = stopOnFailure and L["ERR_SEND_FAILED"] or L["LOG_FAIL_SERVER"]
+                logOpts.code = "failed"
+            end
+            logOpts.detail = message
+        elseif reason == "target" then
+            message = L["ERR_NO_TARGET"]
+            logOpts.code = "target"
+            logOpts.detail = message
         else
             message = reason or "?"
+            logOpts.detail = message
         end
-        ns.RunLog:Add("error", JobShipmentName(job), job.target, message)
+        ns.RunLog:Add("error", JobShipmentName(job), job.target, message, logOpts)
     end
 
     local function step()
@@ -355,12 +397,15 @@ function SendQueue:Start(jobs, onDone, opts)
         local targetKey = strlower(ns.AddressBook:NormalizeRecipient(job.target or ""))
         if failedTargets[targetKey] then
             tinsert(summary.failed, { job = job, reason = "skipped" })
-            ns.RunLog:Add("warn", JobShipmentName(job), job.target, L["LOG_TARGET_SKIPPED"])
+            ns.RunLog:Add("warn", JobShipmentName(job), job.target, L["LOG_TARGET_SKIPPED"], {
+                code = "skipped",
+                detail = L["LOG_TARGET_SKIPPED"],
+            })
             step()
             return
         end
 
-        SendJob(job, function(ok, reason, detail)
+        SendJob(job, function(ok, reason, detail, itemLink)
             if ok then
                 summary.sent = summary.sent + 1
                 C_Timer.After(0.3, step)
@@ -370,7 +415,7 @@ function SendQueue:Start(jobs, onDone, opts)
                 finish(false)
                 return
             end
-            recordFailure(job, reason, detail)
+            recordFailure(job, reason, detail, itemLink)
             if reason == "send" then
                 failedTargets[targetKey] = true
             end
@@ -386,6 +431,8 @@ function SendQueue:Start(jobs, onDone, opts)
     step()
 end
 
+--- True while a cancel has been requested but the current job may still be
+--- finishing its in-flight attach/send step.
 function SendQueue:Cancel()
     cancelRequested = true
 end

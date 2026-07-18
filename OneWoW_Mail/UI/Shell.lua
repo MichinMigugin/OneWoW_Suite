@@ -10,8 +10,9 @@ local shellFrame
 local currentTab = "inbox"
 local selected = {}
 local blizzardHidden = false
+local hideFromMailClosed = false
 
-local TAB_ORDER = { "inbox", "compose", "shipments", "activity", "other" }
+local TAB_ORDER = { "inbox", "compose", "shipments", "activity" }
 
 local function HideBlizzardMail()
     if not MailFrame or blizzardHidden then
@@ -74,8 +75,6 @@ local function SelectTab(tab)
         ns.ShipmentsUI:Refresh()
     elseif tab == "activity" and ns.ActivityUI and ns.ActivityUI.Refresh then
         ns.ActivityUI:Refresh()
-    elseif tab == "other" and ns.OtherUI and ns.OtherUI.Refresh then
-        ns.OtherUI:Refresh()
     end
 end
 
@@ -90,6 +89,18 @@ end
 function Shell:RefreshInbox()
     if ns.Inbox and ns.Inbox.Refresh then
         ns.Inbox:Refresh()
+    end
+end
+
+--- Intentional close (X / Escape / Toggle): confirm if Activity has pending review.
+function Shell:RequestClose()
+    local function proceed()
+        CloseMail()
+    end
+    if ns.AutoRun then
+        ns.AutoRun:RequestClose(proceed)
+    else
+        proceed()
     end
 end
 
@@ -126,12 +137,29 @@ function Shell:Ensure()
     shellFrame:SetToplevel(true)
     shellFrame:Hide()
 
+    -- Escape (UISpecialFrames) hides the shell without CloseMail, which used to
+    -- leave AutoRun.mailOpen stuck. Route through RequestClose / CloseMail.
+    shellFrame:HookScript("OnHide", function(myself)
+        if hideFromMailClosed then
+            return
+        end
+        if ns.AutoRun and ns.AutoRun:HasPending() then
+            C_Timer.After(0, function()
+                if myself then
+                    myself:Show()
+                end
+                Shell:RequestClose()
+            end)
+            return
+        end
+        CloseMail()
+    end)
+
     local titleBar = OneWoW_GUI:CreateTitleBar(shellFrame, {
         title = L["ADDON_TITLE"],
         showBrand = true,
         onClose = function()
-            Shell:Hide()
-            CloseMail()
+            Shell:RequestClose()
         end,
     })
     do
@@ -147,7 +175,6 @@ function Shell:Ensure()
         OneWoW_GUI:SaveWindowPosition(shellFrame, ns.db.global.mainFramePosition)
     end)
 
-    -- Mail glyph sits left of the centered window title — not on the brand row.
     local icon = titleBar:CreateTexture(nil, "ARTWORK")
     icon:SetSize(16, 16)
     icon:SetPoint("RIGHT", titleBar._titleText, "LEFT", -4, 0)
@@ -167,7 +194,6 @@ function Shell:Ensure()
         compose = L["TAB_COMPOSE"],
         shipments = L["TAB_SHIPMENTS"],
         activity = L["TAB_ACTIVITY"],
-        other = OTHER,
     }
 
     local prev
@@ -203,9 +229,6 @@ function Shell:Ensure()
     if ns.ActivityUI and ns.ActivityUI.Create then
         ns.ActivityUI:Create(shellFrame.panels.activity)
     end
-    if ns.OtherUI and ns.OtherUI.Create then
-        ns.OtherUI:Create(shellFrame.panels.other)
-    end
 
     tinsert(UISpecialFrames, "OneWoW_MailShell")
     return shellFrame
@@ -215,8 +238,10 @@ function Shell:Show()
     self:Ensure()
     HideBlizzardMail()
     shellFrame:Show()
+    if currentTab == "other" then
+        currentTab = "inbox"
+    end
     SelectTab(currentTab or "inbox")
-    -- Blizzard may briefly unhide SendMailFrame on MAIL_SHOW; re-park if Compose is up.
     if currentTab == "compose" and ns.NativeSend then
         C_Timer.After(0, function()
             ns.NativeSend:ReassertPark()
@@ -238,7 +263,7 @@ end
 
 function Shell:Toggle()
     if shellFrame and shellFrame:IsShown() then
-        self:Hide()
+        self:RequestClose()
     else
         self:Show()
     end
@@ -248,13 +273,14 @@ function Shell:IsShown()
     return shellFrame and shellFrame:IsShown()
 end
 
---- Tear down the shell so Ensure() recreates chrome/panels with current locales.
 function Shell:FullReset()
     if ns.Compose and ns.Compose.OnHide then
         ns.Compose:OnHide()
     end
     if shellFrame then
+        hideFromMailClosed = true
         shellFrame:Hide()
+        hideFromMailClosed = false
         shellFrame:SetParent(nil)
         for i = #UISpecialFrames, 1, -1 do
             if UISpecialFrames[i] == "OneWoW_MailShell" then
@@ -278,9 +304,6 @@ function Shell:FullReset()
     if ns.ActivityUI and ns.ActivityUI.Reset then
         ns.ActivityUI:Reset()
     end
-    if ns.OtherUI and ns.OtherUI.Reset then
-        ns.OtherUI:Reset()
-    end
 end
 
 function Shell:ApplyTheme()
@@ -297,7 +320,6 @@ function Shell:ApplyTheme()
     OneWoW_GUI:ApplyFontToFrame(shellFrame)
 end
 
---- Wire MAIL_SHOW / MAIL_CLOSED gameplay events.
 function Shell:Initialize()
     if self._wired then
         return
@@ -313,7 +335,9 @@ function Shell:Initialize()
         if event == "MAIL_SHOW" then
             Shell:Show()
         elseif event == "MAIL_CLOSED" then
+            hideFromMailClosed = true
             Shell:Hide()
+            hideFromMailClosed = false
             Shell:ClearSelected()
         elseif event == "MAIL_INBOX_UPDATE" then
             if Shell:IsShown() then
@@ -322,7 +346,9 @@ function Shell:Initialize()
         elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then
             local itype = ...
             if itype == Enum.PlayerInteractionType.MailInfo then
+                hideFromMailClosed = true
                 Shell:Hide()
+                hideFromMailClosed = false
             end
         end
     end)

@@ -15,9 +15,9 @@ local defaults = {
         },
         mail = {
             keepFreeSlots = 1,
+            autoCollectGold = false,
+            autoCollectItems = false,
             autoFillLastRecipient = false,
-            excessGoldKeepCopper = 0,
-            bankerTarget = "",
             lastRecipient = "",
             favorites = {},
             contacts = {}, -- { { name = "Name-Realm", note = "" }, ... }
@@ -53,6 +53,18 @@ function ns:InitializeDatabase()
             shipment.mode = shipment.enabled and "auto_preview" or "manual"
         end
         shipment.enabled = nil
+        if not shipment.frequency then
+            shipment.frequency = "session"
+        end
+        if not shipment.kind then
+            shipment.kind = "items"
+        end
+        if shipment.kind == "gold" then
+            shipment.keepCopper = shipment.keepCopper or 0
+            shipment.maxCopper = shipment.maxCopper or 0
+            shipment.maxCopperEnabled = shipment.maxCopperEnabled and true or false
+            shipment.restockCopper = shipment.restockCopper or shipment.maxCopper or 0
+        end
     end
 end
 
@@ -68,6 +80,8 @@ function ns:EnsurePresetShipments()
             id = "preset_cloth",
             name = "Cloth",
             mode = "manual",
+            frequency = "session",
+            kind = "items",
             match = "#craftingreagentcloth",
             target = "",
             keepQty = 0,
@@ -81,6 +95,8 @@ function ns:EnsurePresetShipments()
             id = "preset_leather",
             name = "Leather",
             mode = "manual",
+            frequency = "session",
+            kind = "items",
             match = "#craftingreagentleather",
             target = "",
             keepQty = 0,
@@ -94,6 +110,8 @@ function ns:EnsurePresetShipments()
             id = "preset_metal",
             name = "Metal / Ore",
             mode = "manual",
+            frequency = "session",
+            kind = "items",
             match = "#craftingreagentmetal",
             target = "",
             keepQty = 0,
@@ -107,6 +125,8 @@ function ns:EnsurePresetShipments()
             id = "preset_herb",
             name = "Herbs",
             mode = "manual",
+            frequency = "session",
+            kind = "items",
             match = "#craftingreagentherb",
             target = "",
             keepQty = 0,
@@ -120,6 +140,8 @@ function ns:EnsurePresetShipments()
             id = "preset_de",
             name = "Disenchantables",
             mode = "manual",
+            frequency = "session",
+            kind = "items",
             match = "#disenchantable & quality<=2",
             target = "",
             keepQty = 0,

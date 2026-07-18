@@ -176,3 +176,16 @@ function OneWoW_AltTracker_Storage_API.ClearInTransitBySubject(charKey, subject)
         ns.DataManager:NotifyStorageChanged("mail", charKey)
     end
 end
+
+--- Drop every in-transit row for a character (inbox fully empty after collect).
+---@param charKey string
+function OneWoW_AltTracker_Storage_API.ClearAllInTransit(charKey)
+    if not charKey then return end
+    local charData = OneWoW_AltTracker_Storage_DB.characters[charKey]
+    if not charData or not charData.inTransitShipments then return end
+    if #charData.inTransitShipments == 0 then return end
+    wipe(charData.inTransitShipments)
+    if ns.DataManager and ns.DataManager.NotifyStorageChanged then
+        ns.DataManager:NotifyStorageChanged("mail", charKey)
+    end
+end

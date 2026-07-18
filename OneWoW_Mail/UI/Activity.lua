@@ -10,15 +10,17 @@ local panel
 local pendingScroll, pendingChild
 local logScroll, logChild
 local processBtn, discardBtn, clearBtn
--- Line pools: WoW never garbage-collects regions, and both lists re-render on
--- every queue event, so recreating FontStrings each refresh would leak.
 local pendingLines = {}
-local logLines = {}
+local logRows = {} -- pooled expandable log rows
+local expandedLogRow
 
 local HEADER_H = 30
 local PENDING_H = 170
 local SECTION_GAP = 14
 local LINE_H = 16
+local LOG_ROW_H = 22
+local LOG_DETAIL_H = 48
+local LOG_ROW_GAP = 2
 local SCROLLBAR_W = 24
 
 local SEVERITY_COLOR = {
@@ -81,6 +83,148 @@ local function SyncChildWidth(scroll, child)
     child:SetWidth(math.max(100, scroll:GetWidth() or 600))
 end
 
+local function EntryContext(e)
+    if e.shipmentName and e.shipmentName ~= "" then
+        local context = e.shipmentName
+        if e.target and e.target ~= "" then
+            context = context .. " → " .. e.target
+        end
+        return context .. ": "
+    elseif e.target and e.target ~= "" then
+        return e.target .. ": "
+    end
+    return ""
+end
+
+local function EntryHasDetail(e)
+    return (e.detail and e.detail ~= "" and e.detail ~= e.message)
+        or (e.itemLink and e.itemLink ~= "")
+        or (e.code and e.code ~= "")
+end
+
+local function CollapseLogRow(row)
+    if not row then
+        return
+    end
+    row.isExpanded = false
+    if row.detail then
+        row.detail:Hide()
+    end
+    if row.expandIcon then
+        row.expandIcon:SetAtlas("Gamepad_Rev_Plus_64")
+    end
+    if expandedLogRow == row then
+        expandedLogRow = nil
+    end
+end
+
+local function ExpandLogRow(row)
+    if expandedLogRow and expandedLogRow ~= row then
+        CollapseLogRow(expandedLogRow)
+    end
+    row.isExpanded = true
+    if row.expandIcon then
+        row.expandIcon:SetAtlas("Gamepad_Rev_Minus_64")
+    end
+    expandedLogRow = row
+    local detail = row.detail
+    detail:ClearAllPoints()
+    detail:SetPoint("TOPLEFT", row, "BOTTOMLEFT", 0, -LOG_ROW_GAP)
+    detail:SetPoint("TOPRIGHT", row, "BOTTOMRIGHT", 0, -LOG_ROW_GAP)
+    detail:SetWidth(row:GetWidth() or logChild:GetWidth() or 600)
+    detail:Show()
+end
+
+--- Inbox-style accordion: row stays fixed height; detail is a sibling under the row.
+local function RelayoutLogRows()
+    local y = 0
+    for _, row in ipairs(logRows) do
+        if row:IsShown() then
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", logChild, "TOPLEFT", 0, -y)
+            row:SetPoint("TOPRIGHT", logChild, "TOPRIGHT", 0, -y)
+            y = y + LOG_ROW_H + LOG_ROW_GAP
+            if row.isExpanded and row.detail and row.detail:IsShown() then
+                row.detail:ClearAllPoints()
+                row.detail:SetPoint("TOPLEFT", row, "BOTTOMLEFT", 0, -LOG_ROW_GAP)
+                row.detail:SetPoint("TOPRIGHT", row, "BOTTOMRIGHT", 0, -LOG_ROW_GAP)
+                y = y + (row.detail:GetHeight() or LOG_DETAIL_H) + LOG_ROW_GAP
+            end
+        end
+    end
+    logChild:SetHeight(math.max(1, y))
+end
+
+local function ToggleLogRow(row)
+    if not row.canExpand then
+        return
+    end
+    if row.isExpanded then
+        CollapseLogRow(row)
+    else
+        ExpandLogRow(row)
+    end
+    RelayoutLogRows()
+end
+
+local function AcquireLogRow()
+    for _, row in ipairs(logRows) do
+        if not row:IsShown() then
+            row:Show()
+            return row
+        end
+    end
+
+    local row = CreateFrame("Button", nil, logChild, "BackdropTemplate")
+    row:SetHeight(LOG_ROW_H)
+    row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+    row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    row.isExpanded = false
+    row.canExpand = false
+
+    row.expandBtn = CreateFrame("Button", nil, row)
+    row.expandBtn:SetSize(20, LOG_ROW_H)
+    row.expandBtn:SetPoint("LEFT", row, "LEFT", 2, 0)
+    row.expandIcon = row.expandBtn:CreateTexture(nil, "ARTWORK")
+    row.expandIcon:SetSize(12, 12)
+    row.expandIcon:SetPoint("CENTER")
+    row.expandIcon:SetAtlas("Gamepad_Rev_Plus_64")
+    row.expandBtn:SetScript("OnClick", function()
+        ToggleLogRow(row)
+    end)
+
+    row.summary = OneWoW_GUI:CreateFS(row, 11)
+    row.summary:SetPoint("LEFT", row.expandBtn, "RIGHT", 4, 0)
+    row.summary:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+    row.summary:SetJustifyH("LEFT")
+    row.summary:SetWordWrap(false)
+
+    -- Sibling of the row (parented to scroll child), same as Inbox expand — keeps the
+    -- summary vertically centered on the short header when the detail opens.
+    row.detail = CreateFrame("Frame", nil, logChild, "BackdropTemplate")
+    row.detail:SetHeight(LOG_DETAIL_H)
+    row.detail:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+    row.detail:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    row.detail:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    row.detail:Hide()
+
+    row.detailText = OneWoW_GUI:CreateFS(row.detail, 11)
+    row.detailText:SetPoint("TOPLEFT", row.detail, "TOPLEFT", 8, -8)
+    row.detailText:SetPoint("BOTTOMRIGHT", row.detail, "BOTTOMRIGHT", -8, 8)
+    row.detailText:SetJustifyH("LEFT")
+    row.detailText:SetJustifyV("TOP")
+    row.detailText:SetWordWrap(true)
+    row.detailText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    row:SetScript("OnClick", function()
+        ToggleLogRow(row)
+    end)
+
+    tinsert(logRows, row)
+    return row
+end
+
 local function RefreshPending()
     ResetPool(pendingLines)
     SyncChildWidth(pendingScroll, pendingChild)
@@ -105,8 +249,17 @@ local function RefreshPending()
                 y = y + LINE_H + 2
             end
             local fs = PlaceLine(pendingLines, pendingChild, y, 12)
-            local name = intent.link or C_Item.GetItemNameByID(intent.itemID) or tostring(intent.itemID)
-            fs:SetText(name .. " ×" .. intent.quantity)
+            local name
+            if intent.money then
+                name = OneWoW.Format.FormatGold(intent.money)
+            else
+                name = intent.link or C_Item.GetItemNameByID(intent.itemID) or tostring(intent.itemID or "?")
+            end
+            if intent.quantity then
+                fs:SetText(name .. " ×" .. intent.quantity)
+            else
+                fs:SetText(name)
+            end
             fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             y = y + LINE_H
         end
@@ -119,32 +272,76 @@ local function RefreshPending()
 end
 
 local function RefreshLog()
-    ResetPool(logLines)
+    for _, row in ipairs(logRows) do
+        if row ~= expandedLogRow then
+            CollapseLogRow(row)
+        end
+        row:Hide()
+        row:ClearAllPoints()
+        if row.detail then
+            row.detail:Hide()
+        end
+    end
     SyncChildWidth(logScroll, logChild)
     local entries = ns.RunLog:GetAll()
     local y = 0
     if #entries == 0 then
-        local fs = PlaceLine(logLines, logChild, y)
+        expandedLogRow = nil
+        -- reuse a plain line for empty state
+        if not logChild.emptyFs then
+            logChild.emptyFs = OneWoW_GUI:CreateFS(logChild, 11)
+        end
+        local fs = logChild.emptyFs
+        fs:ClearAllPoints()
+        fs:SetPoint("TOPLEFT", logChild, "TOPLEFT", 0, 0)
         fs:SetText(L["ACTIVITY_LOG_EMPTY"])
         fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        y = y + LINE_H
+        fs:Show()
+        y = LINE_H
     else
-        for i = #entries, 1, -1 do -- newest first
+        if logChild.emptyFs then
+            logChild.emptyFs:Hide()
+        end
+        for i = #entries, 1, -1 do
             local e = entries[i]
-            local context = ""
-            if e.shipmentName and e.shipmentName ~= "" then
-                context = e.shipmentName
-                if e.target and e.target ~= "" then
-                    context = context .. " → " .. e.target
-                end
-                context = context .. ": "
-            elseif e.target and e.target ~= "" then
-                context = e.target .. ": "
+            local row = AcquireLogRow()
+            local canExpand = EntryHasDetail(e)
+            row.canExpand = canExpand
+            row.expandBtn:SetAlpha(canExpand and 1 or 0.25)
+            row.expandBtn:EnableMouse(canExpand)
+
+            local summary = date("%H:%M ", e.time) .. EntryContext(e) .. e.message
+            row.summary:SetText(summary)
+            row.summary:SetTextColor(OneWoW_GUI:GetThemeColor(SEVERITY_COLOR[e.severity] or "TEXT_SECONDARY"))
+
+            local detailParts = {}
+            if e.detail and e.detail ~= "" and e.detail ~= e.message then
+                tinsert(detailParts, e.detail)
             end
-            local fs = PlaceLine(logLines, logChild, y)
-            fs:SetText(date("%H:%M ", e.time) .. context .. e.message)
-            fs:SetTextColor(OneWoW_GUI:GetThemeColor(SEVERITY_COLOR[e.severity] or "TEXT_SECONDARY"))
-            y = y + LINE_H
+            if e.itemLink and e.itemLink ~= "" then
+                tinsert(detailParts, e.itemLink)
+            end
+            if e.code and e.code ~= "" then
+                tinsert(detailParts, string.format(L["LOG_FAIL_CODE"], e.code))
+            end
+            -- If structured extras collapsed to nothing, still show the message in the panel.
+            if #detailParts == 0 and e.message and e.message ~= "" then
+                tinsert(detailParts, e.message)
+            end
+            row.detailText:SetText(table.concat(detailParts, "\n"))
+
+            local keepExpanded = row.isExpanded and canExpand
+            if not keepExpanded then
+                CollapseLogRow(row)
+            end
+
+            row:SetPoint("TOPLEFT", logChild, "TOPLEFT", 0, -y)
+            row:SetPoint("TOPRIGHT", logChild, "TOPRIGHT", 0, -y)
+            y = y + LOG_ROW_H + LOG_ROW_GAP
+            if keepExpanded then
+                ExpandLogRow(row)
+                y = y + LOG_DETAIL_H + LOG_ROW_GAP
+            end
         end
     end
     logChild:SetHeight(math.max(1, y))
@@ -164,8 +361,9 @@ function ActivityUI:Reset()
     pendingScroll, pendingChild = nil, nil
     logScroll, logChild = nil, nil
     processBtn, discardBtn, clearBtn = nil, nil, nil
+    expandedLogRow = nil
     wipe(pendingLines)
-    wipe(logLines)
+    wipe(logRows)
 end
 
 local function CreateSectionScroll(parent)

@@ -62,10 +62,69 @@ local function WaitPending(done)
     tick()
 end
 
+---@param index number
+---@return number
+local function CountAttachments(index)
+    local n = 0
+    local maxAttach = ATTACHMENTS_MAX_RECEIVE or 16
+    for i = 1, maxAttach do
+        if HasInboxItem(index, i) then
+            n = n + 1
+        end
+    end
+    return n
+end
+
+--- Delete the mail when it has no money and no attachments left.
+---@param index number
+---@param done fun(ok: boolean)
+local function DeleteIfEmpty(index, done)
+    local _, _, _, _, money = GetInboxHeaderInfo(index)
+    if (money or 0) > 0 or CountAttachments(index) > 0 then
+        done(true)
+        return
+    end
+    DeleteInboxItem(index)
+    WaitPending(done)
+end
+
+--- Take gold and/or attachments from one mail per filter rules.
+--- Callback: true = continue, false = abort run, "skip" = ignore this index for the rest of the run.
+---@param index number
+---@param filter string
+---@param after fun(result: boolean|string)
 local function TakeOneMail(index, filter, after)
-    local _, _, _, _, money, CODAmount, _, hasItem, _, _, _, _, isGM = GetInboxHeaderInfo(index)
+    local _, _, _, subject, money, CODAmount, _, hasItem, _, _, _, _, isGM = GetInboxHeaderInfo(index)
     if isGM or (CODAmount or 0) > 0 then
-        after(true)
+        after("skip")
+        return
+    end
+
+    -- Gold / Items are exclusive takes; "all" (and AH/selected) take both.
+    local wantGold = filter == "all" or filter == "gold"
+        or filter == "sold" or filter == "bought" or filter == "canceled"
+        or filter == "expired" or filter == "other" or filter == "selected"
+    local wantItems = filter ~= "gold"
+
+    money = money or 0
+    local attachCount = CountAttachments(index)
+    -- Header hasItem can lag behind real attachments (empty shell after loot).
+    local canTakeGold = wantGold and money > 0
+    local canTakeItems = wantItems and attachCount > 0
+    if not canTakeGold and not canTakeItems then
+        -- Stale item mail or nothing this filter wants — don't spin on it.
+        if (money == 0 and attachCount == 0) or (hasItem and attachCount == 0) then
+            -- Empty suite shells still need in-transit cleared (subject may be
+            -- gone after DeleteInboxItem, so clear before delete).
+            if ns.InTransit then
+                ns.InTransit:ClearMatching(nil, subject)
+            end
+            DeleteIfEmpty(index, function(ok)
+                after(ok and "skip" or false)
+            end)
+            return
+        end
+        after("skip")
         return
     end
 
@@ -73,9 +132,10 @@ local function TakeOneMail(index, filter, after)
     -- generic slots, reagents may also use the reagent bag. Heuristic — one
     -- slot per attachment, ignoring merges into existing partial stacks — so
     -- it errs toward stopping early, never toward overflowing.
-    if hasItem then
+    if canTakeItems then
         local needGeneric, needTotal = 0, 0
-        for i = 1, ATTACHMENTS_MAX_RECEIVE or 16 do
+        local maxAttach = ATTACHMENTS_MAX_RECEIVE or 16
+        for i = 1, maxAttach do
             local _, itemID, _, _, _, _, isCurrency = GetInboxItem(index, i)
             -- Currency attachments go to the currency tab, not bags.
             if itemID and not isCurrency then
@@ -85,6 +145,12 @@ local function TakeOneMail(index, filter, after)
                 end
             end
         end
+        -- Attachments present but itemIDs not cached yet: demand one generic
+        -- slot each so we still gate on keep-free.
+        if needTotal == 0 then
+            needTotal = attachCount
+            needGeneric = attachCount
+        end
         local keepFree = KeepFree()
         local freeGeneric, freeReagentCapable = FreeSlotBudgets()
         if freeGeneric - keepFree < needGeneric or freeReagentCapable - keepFree < needTotal then
@@ -93,62 +159,70 @@ local function TakeOneMail(index, filter, after)
         end
     end
 
-    local wantGold = filter == "all" or filter == "gold" or filter == "sold" or filter == "bought"
-        or filter == "canceled" or filter == "expired" or filter == "other" or filter == "selected"
-    local wantItems = filter ~= "gold"
-
-    -- Mark read so minimap clears.
+    -- Mark read so minimap clears; also creates body text so empty mail can delete.
     GetInboxText(index)
 
     local function takeItemsThen(done)
-        if not wantItems or not hasItem then
-            done()
+        if not canTakeItems then
+            done(true)
             return
         end
-        local attach = ATTACHMENTS_MAX_RECEIVE or 16
+        local maxAttach = ATTACHMENTS_MAX_RECEIVE or 16
         local function nextAttach(i)
             if i < 1 then
-                done()
+                done(true)
                 return
             end
-            if GetInboxItemLink(index, i) then
+            if HasInboxItem(index, i) then
                 TakeInboxItem(index, i)
-                WaitPending(function()
+                WaitPending(function(ok)
+                    if not ok then
+                        done(false)
+                        return
+                    end
                     nextAttach(i - 1)
                 end)
             else
                 nextAttach(i - 1)
             end
         end
-        nextAttach(attach)
+        nextAttach(maxAttach)
     end
 
-    if wantGold and (money or 0) > 0 then
-        if ns.InTransit then
-            ns.InTransit:OnMailTaken(index)
+    local function finishMail(ok)
+        if not ok then
+            after(false)
+            return
         end
+        -- Subject must be captured before take: after loot/delete the inbox
+        -- index is often gone or points at a different mail.
+        if ns.InTransit then
+            ns.InTransit:ClearMatching(nil, subject)
+        end
+        DeleteIfEmpty(index, function(deletedOk)
+            after(deletedOk and true or false)
+        end)
+    end
+
+    -- Money first (Blizzard OpenAll order), then attachments, then delete if empty.
+    if canTakeGold then
         TakeInboxMoney(index)
         WaitPending(function(ok)
             if not ok then
                 after(false)
                 return
             end
-            if ns.OtherUI then
-                ns.OtherUI:AddRake(money)
-            end
-            takeItemsThen(function()
-                after(true)
-            end)
+            takeItemsThen(finishMail)
         end)
     else
-        if ns.InTransit then
-            ns.InTransit:OnMailTaken(index)
-        end
-        takeItemsThen(function()
-            after(true)
-        end)
+        takeItemsThen(finishMail)
     end
 end
+
+-- Inbox headers can arrive after MAIL_SHOW; auto-collect and Open All both
+-- need a short grace period before treating "nothing left" as done.
+local INBOX_EMPTY_RETRIES = 4
+local INBOX_EMPTY_GAP = 0.4
 
 --- Start a filtered collect pass.
 ---@param filter string
@@ -166,8 +240,14 @@ function Collect:Start(filter, selected, onDone)
         ns.Inbox:SyncActionButtons()
     end
 
+    local emptyRetriesLeft = INBOX_EMPTY_RETRIES
+    local skipped = {} -- [index] = true — no-progress / empty shells this run
+
     local function finish(ok)
         running = false
+        if ok and ns.InTransit then
+            ns.InTransit:ClearAllIfInboxEmpty()
+        end
         if onDone then
             onDone(ok)
         end
@@ -192,11 +272,23 @@ function Collect:Start(filter, selected, onDone)
                 CheckInbox()
                 C_Timer.After(1.0, function()
                     if GetInboxNumItems() == 0 then
-                        finish(true)
+                        if emptyRetriesLeft > 0 then
+                            emptyRetriesLeft = emptyRetriesLeft - 1
+                            C_Timer.After(INBOX_EMPTY_GAP, step)
+                        else
+                            finish(true)
+                        end
                     else
+                        emptyRetriesLeft = INBOX_EMPTY_RETRIES
+                        wipe(skipped)
                         step()
                     end
                 end)
+                return
+            end
+            if emptyRetriesLeft > 0 then
+                emptyRetriesLeft = emptyRetriesLeft - 1
+                C_Timer.After(INBOX_EMPTY_GAP, step)
                 return
             end
             finish(true)
@@ -205,25 +297,47 @@ function Collect:Start(filter, selected, onDone)
 
         -- Process high → low so indices stay stable as mails disappear.
         local target
+        local hadMatch = false
         for i = num, 1, -1 do
             if ns.MailClassify:MatchesFilter(i, filter, selected) then
                 local _, _, _, _, _, CODAmount, _, _, _, _, _, _, isGM = GetInboxHeaderInfo(i)
                 if not isGM and (CODAmount or 0) == 0 then
-                    target = i
-                    break
+                    hadMatch = true
+                    if not skipped[i] then
+                        target = i
+                        break
+                    end
                 end
             end
         end
 
         if not target then
+            -- Only unusable leftovers (empty shells / wrong filter payload).
+            if hadMatch then
+                finish(true)
+                return
+            end
+            -- Headers may still be streaming in (common right after MAIL_SHOW).
+            if emptyRetriesLeft > 0 then
+                emptyRetriesLeft = emptyRetriesLeft - 1
+                C_Timer.After(INBOX_EMPTY_GAP, step)
+                return
+            end
             finish(true)
             return
         end
 
-        TakeOneMail(target, filter, function(ok)
-            if not ok then
+        emptyRetriesLeft = INBOX_EMPTY_RETRIES
+        TakeOneMail(target, filter, function(result)
+            if result == false then
                 finish(false)
                 return
+            end
+            if result == "skip" then
+                skipped[target] = true
+            else
+                -- Deletes shift inbox indices; drop skip marks.
+                wipe(skipped)
             end
             C_Timer.After(ns.Constants.COLLECT_SETTLE, step)
         end)

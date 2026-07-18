@@ -54,7 +54,6 @@ UI\Inbox.lua
 UI\Compose.lua
 UI\Shipments.lua
 UI\Activity.lua
-UI\Other.lua
 
 # Main
 OneWoW_Mail.lua

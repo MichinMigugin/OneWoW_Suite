@@ -26,6 +26,7 @@ function InTransit:RecordSend(charKey, job)
         sender = OneWoW_GUI:GetCharacterKey(),
         sentAt = time(),
         subject = job.subject,
+        money = job.money or 0,
         items = items,
     })
 end
@@ -56,4 +57,19 @@ end
 function InTransit:OnMailTaken(index)
     local _, _, _, subject = GetInboxHeaderInfo(index)
     self:ClearMatching(nil, subject)
+end
+
+--- Inbox is empty after a collect pass — any leftover in-transit rows are orphans.
+function InTransit:ClearAllIfInboxEmpty()
+    if GetInboxNumItems() > 0 then
+        return
+    end
+    local API = OneWoW_AltTracker_Storage_API
+    if not API or not API.ClearAllInTransit then
+        return
+    end
+    local charKey = OneWoW_GUI:GetCharacterKey()
+    if charKey then
+        API.ClearAllInTransit(charKey)
+    end
 end

@@ -16,9 +16,6 @@ local function InitializeModules()
     if ns.AutoRun then
         ns.AutoRun:Initialize()
     end
-    if ns.OtherUI then
-        ns.OtherUI:Initialize()
-    end
 end
 
 function OneWoW_Mail:ApplyTheme()

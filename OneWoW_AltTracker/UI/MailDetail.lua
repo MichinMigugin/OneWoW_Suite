@@ -22,6 +22,46 @@ local DIALOG_HEIGHT = 480
 
 local dialogResult -- single reused dialog instance
 local rowPool = {}
+local openMailDetailCharKey
+local mailDetailStorageSubscribed = false
+local mailDetailRefreshPending = false
+
+local function ScheduleMailDetailRefresh(info)
+    if not openMailDetailCharKey then
+        return
+    end
+    if info and info.scope and info.scope ~= "mail" then
+        return
+    end
+    if info and info.charKey and info.charKey ~= openMailDetailCharKey then
+        return
+    end
+    if mailDetailRefreshPending then
+        return
+    end
+    mailDetailRefreshPending = true
+    C_Timer.After(0.3, function()
+        mailDetailRefreshPending = false
+        if openMailDetailCharKey and dialogResult and dialogResult.frame and dialogResult.frame:IsShown() then
+            ns.UI.ShowMailDetail(openMailDetailCharKey)
+        end
+    end)
+end
+
+local function EnsureMailDetailStorageWatch()
+    if mailDetailStorageSubscribed then
+        return
+    end
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Storage", function()
+        if mailDetailStorageSubscribed then
+            return
+        end
+        if OneWoW_AltTracker_Storage_API and OneWoW_AltTracker_Storage_API.RegisterStorageChanged then
+            mailDetailStorageSubscribed = true
+            OneWoW_AltTracker_Storage_API.RegisterStorageChanged(ScheduleMailDetailRefresh)
+        end
+    end)
+end
 
 local function ComputeRemaining(mail)
     if not mail or not mail.daysLeft or not mail.collectedAt then return nil end
@@ -181,6 +221,10 @@ local function EnsureDialog()
         },
     })
 
+    dialogResult.frame:HookScript("OnHide", function()
+        openMailDetailCharKey = nil
+    end)
+
     local subtitle = OneWoW_GUI:CreateFS(dialogResult.contentFrame, 12)
     subtitle:SetPoint("TOPLEFT", dialogResult.contentFrame, "TOPLEFT", 12, -8)
     subtitle:SetPoint("TOPRIGHT", dialogResult.contentFrame, "TOPRIGHT", -12, -8)
@@ -193,6 +237,8 @@ end
 
 function ns.UI.ShowMailDetail(charKey)
     if not charKey then return end
+    EnsureMailDetailStorageWatch()
+    openMailDetailCharKey = charKey
     local dialog = EnsureDialog()
 
     local charData = OneWoW_AltTracker_Character_API

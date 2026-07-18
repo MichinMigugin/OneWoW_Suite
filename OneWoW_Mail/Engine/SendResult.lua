@@ -33,23 +33,24 @@ eventFrame:SetScript("OnEvent", function(_, event)
         if event == "MAIL_SEND_SUCCESS" then
             p.onSuccess()
         else
-            p.onFail()
+            p.onFail("failed")
         end
     end)
 end)
 
 --- Arm a listener for the ack of the next SendMail call; call right before
 --- SendMail. Exactly one of onSuccess/onFail fires (deferred out of event
---- dispatch); no ack within SEND_ACK_TIMEOUT counts as failure.
+--- dispatch); no ack within SEND_ACK_TIMEOUT counts as failure with
+--- reason `"timeout"`. Server rejection is `"failed"`.
 ---@param onSuccess fun()
----@param onFail fun()
+---@param onFail fun(reason: "failed"|"timeout")
 function SendResult:Listen(onSuccess, onFail)
     local token = { onSuccess = onSuccess, onFail = onFail }
     pending = token
     C_Timer.After(SEND_ACK_TIMEOUT, function()
         if pending == token then
             pending = nil
-            onFail()
+            onFail("timeout")
         end
     end)
 end

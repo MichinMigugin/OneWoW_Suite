@@ -589,6 +589,34 @@ function Inbox:Create(parent)
     end)
     AttachTooltip(cancelBtn, CANCEL, L["TT_BTN_CANCEL"])
 
+    -- Auto-collect: [] Gold [] Items — right-aligned on the action row.
+    local autoItems = OneWoW_GUI:CreateCheckbox(btnBar, {
+        label = L["FILTER_ITEMS"],
+        checked = ns.db.global.mail.autoCollectItems,
+        onClick = function(myself)
+            ns.db.global.mail.autoCollectItems = myself:GetChecked() and true or false
+        end,
+    })
+    local itemsInset = (autoItems._labelGap or 0) + autoItems:GetLabelStringWidth()
+    autoItems:SetPoint("TOPRIGHT", btnBar, "TOPRIGHT", -itemsInset, -26)
+    AttachTooltip(autoItems, L["FILTER_ITEMS"], L["TT_AUTO_COLLECT_ITEMS"])
+
+    local autoGold = OneWoW_GUI:CreateCheckbox(btnBar, {
+        label = L["FILTER_GOLD"],
+        checked = ns.db.global.mail.autoCollectGold,
+        onClick = function(myself)
+            ns.db.global.mail.autoCollectGold = myself:GetChecked() and true or false
+        end,
+    })
+    local goldInset = 8 + (autoGold._labelGap or 0) + autoGold:GetLabelStringWidth()
+    autoGold:SetPoint("TOPRIGHT", autoItems, "TOPLEFT", -goldInset, 0)
+    AttachTooltip(autoGold, L["FILTER_GOLD"], L["TT_AUTO_COLLECT_GOLD"])
+
+    local autoLabel = OneWoW_GUI:CreateFS(btnBar, 11)
+    autoLabel:SetText(L["AUTO_COLLECT"])
+    autoLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    autoLabel:SetPoint("RIGHT", autoGold, "LEFT", -6, 0)
+
     local hint = OneWoW_GUI:CreateFS(parent, 11)
     hint:SetPoint("TOPLEFT", btnBar, "BOTTOMLEFT", 0, -6)
     hint:SetPoint("TOPRIGHT", btnBar, "BOTTOMRIGHT", 0, -6)
@@ -708,12 +736,10 @@ function Inbox:Refresh()
                 return
             end
             if IsShiftKeyDown() and (CODAmount or 0) == 0 and not isGM then
+                local _, _, _, subject = GetInboxHeaderInfo(index)
                 AutoLootMailItem(index)
                 if ns.InTransit then
-                    ns.InTransit:OnMailTaken(index)
-                end
-                if ns.OtherUI then
-                    ns.OtherUI:AddRake(money)
+                    ns.InTransit:ClearMatching(nil, subject)
                 end
             elseif IsControlKeyDown() then
                 local _, _, _, _, _, cod, _, _, _, wasReturned, _, canReply = GetInboxHeaderInfo(index)

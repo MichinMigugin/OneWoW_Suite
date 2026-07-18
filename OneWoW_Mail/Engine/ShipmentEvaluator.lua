@@ -5,7 +5,7 @@ local ShipmentEvaluator = ns.ShipmentEvaluator
 
 local PE = OneWoW.PredicateEngine
 
---- Count free-ish mailable quantity for an itemID already matched in bag slots.
+--- Count target inventory for restock (bags/bank/guild + in-transit mail).
 local function CountTargetHave(charKey, itemID, sources)
     local API = OneWoW_AltTracker_Storage_API
     if not API or not charKey then
@@ -32,6 +32,16 @@ local function CountTargetHave(charKey, itemID, sources)
     end
     if sources.guild then
         walkContainer(API.GetGuildBank(charKey))
+    end
+    -- Mail already sent but not yet collected still counts toward the target.
+    if API.GetInTransitShipments then
+        for _, ship in ipairs(API.GetInTransitShipments(charKey) or {}) do
+            for _, it in ipairs(ship.items or {}) do
+                if it.itemID == itemID then
+                    total = total + (it.count or 1)
+                end
+            end
+        end
     end
     return total
 end
@@ -84,12 +94,103 @@ local function BuildMatchExpr(match)
     return "(" .. match .. ") & !#soulbound"
 end
 
+--- Gold on a suite alt for restock: last-login wallet + in-transit mail gold.
+--- Unknown / non-alt → 0. Does not mutate Character.money.
+local function CountTargetGold(charKey)
+    local charAPI = OneWoW_AltTracker_Character_API
+    if not charAPI or not charAPI.GetCharacterData or not charKey then
+        return 0
+    end
+    local data = charAPI.GetCharacterData(charKey)
+    local total = (data and data.money) or 0
+    local storageAPI = OneWoW_AltTracker_Storage_API
+    if storageAPI and storageAPI.GetInTransitShipments then
+        for _, ship in ipairs(storageAPI.GetInTransitShipments(charKey) or {}) do
+            total = total + (ship.money or 0)
+        end
+    end
+    return total
+end
+
+--- Build a money-only send plan.
+local function PlanGoldShipment(shipment)
+    local plan = {
+        shipment = shipment,
+        target = shipment.target,
+        entries = {},
+        jobs = {},
+        error = nil,
+    }
+
+    if not shipment.target or shipment.target == "" then
+        plan.error = "no target"
+        return plan
+    end
+
+    local keep = shipment.keepCopper or 0
+    local postage = GetSendMailPrice() or 30
+    local have = GetMoney()
+    local afterKeep = have - keep - postage
+    if afterKeep < 0 then
+        afterKeep = 0
+    end
+    local send = afterKeep
+
+    local restockNeed
+    local targetHave
+    if shipment.maxCopperEnabled then
+        local cap = shipment.maxCopper or 0
+        local _, charKey = ns.AddressBook:IsSuiteAlt(shipment.target)
+        if shipment.restock and charKey then
+            targetHave = CountTargetGold(charKey)
+            restockNeed = (shipment.restockCopper or 0) - targetHave
+            if restockNeed < 0 then restockNeed = 0 end
+            -- Cap still limits how much leaves this visit; restockCopper is the target balance.
+            send = math.min(send, restockNeed, cap)
+        else
+            send = math.min(send, cap)
+        end
+    end
+
+    if send > 0 then
+        local subject = ns.Constants.SUBJECT_PREFIX .. (shipment.name or shipment.id or "gold")
+        tinsert(plan.entries, { money = send, quantity = nil, slots = {} })
+        tinsert(plan.jobs, {
+            target = shipment.target,
+            subject = subject,
+            money = send,
+            slots = {},
+            shipmentId = shipment.id,
+        })
+    else
+        if restockNeed == 0 and shipment.restock and targetHave ~= nil then
+            plan.skipReason = "restock-met"
+            plan.skipDetail = string.format(
+                ns.L["LOG_SKIP_RESTOCK_DETAIL"],
+                OneWoW.Format.FormatGold(targetHave),
+                OneWoW.Format.FormatGold(shipment.restockCopper or 0)
+            )
+        elseif shipment.maxCopperEnabled and (shipment.maxCopper or 0) == 0 then
+            plan.skipReason = "cap-zero"
+        elseif afterKeep == 0 then
+            plan.skipReason = "keep-holds"
+        else
+            plan.skipReason = "nothing"
+        end
+    end
+    return plan
+end
+
 --- Build send plan for one shipment (does not send). Shipment selection
 --- (explicit id / auto-run mode) is the caller's job — see Preview.
 ---@param shipment table
 ---@param reserved table itemID -> already reserved count
----@return table plan { shipment, target, byItem = { [itemID] = { need, slots } }, jobs }
+---@return table plan
 local function PlanShipment(shipment, reserved)
+    if (shipment.kind or "items") == "gold" then
+        return PlanGoldShipment(shipment)
+    end
+
     local plan = {
         shipment = shipment,
         target = shipment.target,
@@ -184,13 +285,25 @@ local function PlanShipment(shipment, reserved)
     end
     flush()
 
+    if #plan.jobs == 0 then
+        if not next(byItem) then
+            plan.skipReason = "no-match"
+        elseif shipment.maxQtyEnabled and (shipment.maxQty or 0) == 0 then
+            plan.skipReason = "cap-zero"
+        elseif shipment.restock and charKey then
+            plan.skipReason = "restock-met"
+        else
+            plan.skipReason = "keep-holds"
+        end
+    end
+
     return plan
 end
 
 --- Dry-run plan for a selection of shipments. All selected shipments share
 --- one `reserved` table, so the same bag items are never allocated twice
 --- within a pass.
----@param filter string|{ shipmentId?: string, mode?: string }|nil a string (or shipmentId) selects one shipment regardless of mode; mode selects every shipment with that auto-run mode; nil selects nothing
+---@param filter string|{ shipmentId?: string, shipmentIds?: table, mode?: string }|nil a string (or shipmentId) selects one shipment regardless of mode; shipmentIds is a set of ids; mode selects every shipment with that auto-run mode; nil selects nothing
 ---@return table { plans = {}, jobs = {}, errors = {} }
 function ShipmentEvaluator:Preview(filter)
     if type(filter) == "string" then
@@ -201,6 +314,9 @@ function ShipmentEvaluator:Preview(filter)
     local function selected(shipment)
         if filter.shipmentId then
             return shipment.id == filter.shipmentId
+        end
+        if filter.shipmentIds then
+            return filter.shipmentIds[shipment.id] and true or false
         end
         if filter.mode then
             return (shipment.mode or "manual") == filter.mode
