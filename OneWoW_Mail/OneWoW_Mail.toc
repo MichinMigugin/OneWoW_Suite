@@ -41,8 +41,10 @@ Engine\Collect.lua
 Engine\AddressBook.lua
 Engine\NativeSend.lua
 Engine\SendResult.lua
+Engine\RunLog.lua
 Engine\SendQueue.lua
 Engine\ShipmentEvaluator.lua
+Engine\AutoRun.lua
 Engine\InTransit.lua
 
 # UI
@@ -51,6 +53,7 @@ UI\AddressSuggest.lua
 UI\Inbox.lua
 UI\Compose.lua
 UI\Shipments.lua
+UI\Activity.lua
 UI\Other.lua
 
 # Main

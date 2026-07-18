@@ -11,6 +11,9 @@ local _, ns = ...
 ns.SendResult = {}
 local SendResult = ns.SendResult
 
+-- Blind timeout: a very laggy ack gets treated as failure (send stops, user
+-- retries; worst case a duplicate mail). If reports come in, bump the value —
+-- never remove the failure path.
 local SEND_ACK_TIMEOUT = 8
 
 local pending

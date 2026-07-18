@@ -7,6 +7,7 @@ ns.L = OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["TAB_COMPOSE"] = "Compose",
     ["TAB_SHIPMENTS"] = "Shipments",
+    ["TAB_ACTIVITY"] = "Activity",
 
     ["FILTER_ALL"] = "All",
     ["FILTER_GOLD"] = "Gold",
@@ -64,7 +65,10 @@ ns.L = OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["SRC_GUILD"] = "guild",
 
     ["SHIPMENT_SELECT"] = "Select a shipment on the left.",
-    ["SHIPMENT_ENABLE"] = "Enable this shipment",
+    ["SHIPMENT_MODE"] = "Auto-run",
+    ["MODE_MANUAL"] = "Manual only",
+    ["MODE_AUTO_PREVIEW"] = "Auto, review first",
+    ["MODE_AUTO"] = "Auto, send immediately",
     ["SHIPMENT_MATCH"] = "Match (Bags search syntax)",
     ["SHIPMENT_RULES"] = "Send rules",
     ["SHIPMENT_KEEP"] = "Leave on this character (each item)",
@@ -76,7 +80,9 @@ ns.L = OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ERR_SHIPMENT_NAME_EMPTY"] = "Shipment name cannot be empty.",
     ["ERR_SHIPMENT_MISSING"] = "That shipment no longer exists.",
 
-    ["TT_SHIPMENT_ENABLE"] = "When checked, this shipment is active (green dot in the list).\nPreview and Send for this profile honor that state; disabled shipments are skipped in bulk runs.",
+    ["TT_MODE_MANUAL"] = "This shipment only runs when you click Send here.",
+    ["TT_MODE_AUTO_PREVIEW"] = "When a mailbox opens, this shipment is planned and held on the Activity tab until you click Process.",
+    ["TT_MODE_AUTO"] = "When a mailbox opens, this shipment sends immediately, with no confirmation.",
     ["TT_SHIPMENT_MATCH"] = "Bags search syntax for which bag items this shipment picks.\nSoulbound items are always excluded automatically.",
     ["TT_SHIPMENT_TARGET"] = "Character who receives the matched items.\nType to search your address book (alts, favorites, recent, friends, guild).",
     ["TT_SHIPMENT_KEEP"] = "Always leave this many of each matched item in your bags.\n0 means send all of that item (after other caps).",
@@ -91,6 +97,20 @@ ns.L = OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["SENT_GOLD"] = "Sent %s to %s.",
     ["ERR_ATTACH_FAILED"] = "Could not attach %s — send stopped.",
     ["ERR_SEND_FAILED"] = "Mail failed to send — send stopped.",
+
+    ["ACTIVITY_PENDING_HEADER"] = "Pending review",
+    ["ACTIVITY_LOG_HEADER"] = "Log",
+    ["ACTIVITY_EMPTY"] = "Nothing waiting for review.",
+    ["ACTIVITY_LOG_EMPTY"] = "No activity yet this session.",
+    ["BTN_PROCESS"] = "Process",
+    ["TT_BTN_PROCESS"] = "Re-plan the held shipments from your current bags and send them now.",
+    ["TT_BTN_DISCARD"] = "Clear the held shipments without sending anything.",
+    ["LOG_ATTACH_FAILED"] = "Could not attach %s — mail skipped.",
+    ["LOG_SEND_FAILED"] = "Mail failed to send.",
+    ["LOG_TARGET_SKIPPED"] = "Skipped — an earlier mail to this target failed.",
+    ["LOG_QUEUED_PREVIEW"] = "%d mail(s) held for review on the Activity tab.",
+    ["LOG_AUTO_DONE"] = "Auto-run sent %d mail(s).",
+    ["LOG_PROCESS_DONE"] = "Processed %d mail(s).",
 
     ["OTHER_TITLE"] = "Quick actions",
     ["OTHER_BANKER"] = "Banker / excess gold target",

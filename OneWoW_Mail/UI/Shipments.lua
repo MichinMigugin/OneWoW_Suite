@@ -64,7 +64,7 @@ local function MakeShipment(name)
     return {
         id = NewShipmentId(),
         name = name,
-        enabled = false,
+        mode = "manual",
         match = "",
         target = "",
         keepQty = 0,
@@ -276,7 +276,15 @@ local function RefreshList()
         else
             row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
         end
-        local mark = s.enabled and "|cff00ff00●|r " or "|cff888888○|r "
+        local mode = s.mode or "manual"
+        local mark
+        if mode == "auto" then
+            mark = "|cff00ff00●|r " -- runs on mailbox open
+        elseif mode == "auto_preview" then
+            mark = "|cffffd100●|r " -- held for review on mailbox open
+        else
+            mark = "|cff888888○|r " -- manual only
+        end
         row.label:SetText(mark .. (s.name or s.id))
         y = y + 30
     end
@@ -316,18 +324,47 @@ local function EnsureDetailWidgets()
         return y
     end
 
-    -- Header: name, then enable (list dot mirrors this).
+    -- Header: name, then auto-run mode (list dot mirrors the mode).
     dw.nameFs = OneWoW_GUI:CreateFS(content, 13)
     dw.nameFs:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
     dw.nameFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     nextY(20)
 
-    dw.enable = OneWoW_GUI:CreateCheckbox(content, {
-        label = L["SHIPMENT_ENABLE"],
-    })
-    dw.enable:SetPoint("TOPLEFT", content, "TOPLEFT", 4, y)
-    AttachTooltip(dw.enable, L["SHIPMENT_ENABLE"], L["TT_SHIPMENT_ENABLE"])
-    nextY(30)
+    dw.modeLabel = OneWoW_GUI:CreateFS(content, 11)
+    dw.modeLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
+    dw.modeLabel:SetText(L["SHIPMENT_MODE"] .. ":")
+    nextY(16)
+
+    -- Tri-state: three checkboxes acting as a radio group.
+    dw.modeButtons = {}
+
+    --- Check exactly the button for `mode`.
+    function dw.SetModeChecked(mode)
+        for key, cb in pairs(dw.modeButtons) do
+            cb:SetChecked(key == mode)
+        end
+    end
+
+    for _, def in ipairs({
+        { key = "manual", label = L["MODE_MANUAL"], tt = L["TT_MODE_MANUAL"] },
+        { key = "auto_preview", label = L["MODE_AUTO_PREVIEW"], tt = L["TT_MODE_AUTO_PREVIEW"] },
+        { key = "auto", label = L["MODE_AUTO"], tt = L["TT_MODE_AUTO"] },
+    }) do
+        local cb = OneWoW_GUI:CreateCheckbox(content, { label = def.label })
+        cb:SetPoint("TOPLEFT", content, "TOPLEFT", 4, y)
+        cb:SetScript("OnClick", function()
+            local s = Current()
+            if s then
+                s.mode = def.key
+            end
+            dw.SetModeChecked(def.key)
+            RefreshList()
+        end)
+        AttachTooltip(cb, def.label, def.tt)
+        dw.modeButtons[def.key] = cb
+        nextY(24)
+    end
+    nextY(6)
 
     dw.matchLabel = OneWoW_GUI:CreateFS(content, 11)
     dw.matchLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
@@ -408,7 +445,8 @@ local function EnsureDetailWidgets()
     dw.keepBox:SetPoint("LEFT", dw.keepLabel, "RIGHT", 8, 0)
     dw.keepBox:SetNumeric(true)
     -- Commit on every user keystroke, not just focus loss — clicking Send
-    -- does not steal EditBox focus (see FIXES.md history).
+    -- does not steal EditBox focus, so an OnEditFocusLost-only commit would
+    -- plan the send with a stale quantity.
     dw.keepBox:HookScript("OnEditFocusLost", function(myself)
         local s = Current()
         if s then
@@ -477,7 +515,6 @@ local function EnsureDetailWidgets()
         s.maxQty = tonumber(dw.maxBox:GetSearchText()) or 0
         s.maxQtyEnabled = dw.maxEnable:GetChecked() and true or false
         s.restock = dw.restock:GetChecked() and true or false
-        s.enabled = dw.enable:GetChecked() and true or false
         dw.keepBox:ClearFocus()
         dw.maxBox:ClearFocus()
         dw.matchBox:ClearFocus()
@@ -526,11 +563,10 @@ local function EnsureDetailWidgets()
         if not isAlt then
             print(L["ADDON_CHAT_PREFIX"] .. " " .. L["WARN_NON_ROSTER"])
         end
-        ns.ShipmentEvaluator:Run({ shipmentId = s.id }, function(ok, result)
-            -- Failures already print their own reason from the send queue.
+        ns.ShipmentEvaluator:Run({ shipmentId = s.id }, function(ok, _, summary)
+            -- Failures already print their own reason via RunLog.
             if ok then
-                local n = result and result.jobs and #result.jobs or 0
-                print(L["ADDON_CHAT_PREFIX"] .. " " .. string.format(L["SEND_DONE"], n))
+                print(L["ADDON_CHAT_PREFIX"] .. " " .. string.format(L["SEND_DONE"], summary.sent))
             end
         end)
     end)
@@ -543,31 +579,18 @@ local function EnsureDetailWidgets()
     dw.previewText:SetJustifyV("TOP")
     dw.previewText:SetText("")
 
-    local function SetLabelEnabled(fs, on, colorKey)
-        if on then
-            fs:SetAlpha(1)
-            fs:SetTextColor(OneWoW_GUI:GetThemeColor(colorKey or "TEXT_PRIMARY"))
-        else
-            fs:SetAlpha(0.45)
-            fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
-    end
-
     SyncActionButtons = function()
-        local shipmentOn = dw.enable:GetChecked() and true or false
         local hasTarget = strtrim(dw.targetSuggest:GetText() or "") ~= ""
-        SetWidgetEnabled(dw.previewBtn, shipmentOn and hasTarget)
-        SetWidgetEnabled(dw.sendBtn, shipmentOn and hasTarget)
+        SetWidgetEnabled(dw.previewBtn, hasTarget)
+        SetWidgetEnabled(dw.sendBtn, hasTarget)
     end
+    dw.SyncActionButtons = SyncActionButtons
 
     local function SyncCapDependent()
         local s = Current()
         local capOn = dw.maxEnable:GetChecked() and true or false
         if s then
             s.maxQtyEnabled = capOn
-        end
-        if not dw.enable:GetChecked() then
-            return
         end
         if capOn then
             SetWidgetEnabled(dw.maxBox, true)
@@ -581,36 +604,8 @@ local function EnsureDetailWidgets()
             SetWidgetEnabled(dw.restock, false)
         end
     end
+    dw.SyncCapDependent = SyncCapDependent
 
-    local function SyncShipmentEnabled()
-        local s = Current()
-        local on = dw.enable:GetChecked() and true or false
-        if s then
-            s.enabled = on
-        end
-        SetLabelEnabled(dw.matchLabel, on)
-        SetWidgetEnabled(dw.matchBox, on)
-        SetLabelEnabled(dw.targetLabel, on)
-        SetWidgetEnabled(dw.targetBox, on)
-        if not on then
-            dw.targetSuggest:Hide()
-        end
-        SetLabelEnabled(dw.rulesHeader, on, "TEXT_ACCENT")
-        SetLabelEnabled(dw.keepLabel, on)
-        SetWidgetEnabled(dw.keepBox, on)
-        SetWidgetEnabled(dw.maxEnable, on)
-        if on then
-            SyncCapDependent()
-        else
-            SetWidgetEnabled(dw.maxBox, false)
-            SetWidgetEnabled(dw.restock, false)
-        end
-        SyncActionButtons()
-        RefreshList()
-    end
-    dw.SyncShipmentEnabled = SyncShipmentEnabled
-
-    dw.enable:SetScript("OnClick", SyncShipmentEnabled)
     dw.maxEnable:SetScript("OnClick", SyncCapDependent)
 end
 
@@ -630,7 +625,7 @@ local function RefreshDetail()
     dw.content:Show()
 
     dw.nameFs:SetText(NAME .. ": " .. (s.name or ""))
-    dw.enable:SetChecked(s.enabled and true or false)
+    dw.SetModeChecked(s.mode or "manual")
     dw.matchBox:SetText(s.match or "")
     dw.matchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     dw.targetSuggest:SetText(s.target or "")
@@ -641,7 +636,8 @@ local function RefreshDetail()
     dw.maxBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     dw.restock:SetChecked(s.restock and true or false)
     dw.previewText:SetText("") -- stale preview belongs to the previous binding
-    dw.SyncShipmentEnabled()
+    dw.SyncCapDependent()
+    dw.SyncActionButtons()
 end
 
 function ShipmentsUI:Reset()

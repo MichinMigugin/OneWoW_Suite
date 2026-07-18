@@ -16,7 +16,6 @@ local defaults = {
         mail = {
             keepFreeSlots = 1,
             autoFillLastRecipient = false,
-            autoRunOnOpen = false,
             excessGoldKeepCopper = 0,
             bankerTarget = "",
             lastRecipient = "",
@@ -42,15 +41,22 @@ function ns:InitializeDatabase()
         ns:EnsurePresetShipments()
     end
 
-    -- Soulbound exclusion is applied at plan time; strip leftover suffixes from older saves.
     for _, shipment in ipairs(db.global.mail.shipments) do
+        -- Soulbound exclusion is applied at plan time; strip leftover suffixes from older saves.
         if type(shipment.match) == "string" then
             shipment.match = shipment.match:gsub("%s*&%s*!#soulbound%s*$", "")
         end
+        -- Tri-state auto-run `mode` replaced the `enabled` boolean (Jul 2026).
+        -- Old `enabled` only gated the bulk-run path, which auto_preview now
+        -- subsumes (runs on mailbox open, user confirms before sending).
+        if not shipment.mode then
+            shipment.mode = shipment.enabled and "auto_preview" or "manual"
+        end
+        shipment.enabled = nil
     end
 end
 
---- Seed disabled preset shipments once (cloth/leather/metal/herb/DE).
+--- Seed manual-mode preset shipments once (cloth/leather/metal/herb/DE).
 function ns:EnsurePresetShipments()
     local shipments = ns.db.global.mail.shipments
     if #shipments > 0 then
@@ -61,7 +67,7 @@ function ns:EnsurePresetShipments()
         {
             id = "preset_cloth",
             name = "Cloth",
-            enabled = false,
+            mode = "manual",
             match = "#craftingreagentcloth",
             target = "",
             keepQty = 0,
@@ -74,7 +80,7 @@ function ns:EnsurePresetShipments()
         {
             id = "preset_leather",
             name = "Leather",
-            enabled = false,
+            mode = "manual",
             match = "#craftingreagentleather",
             target = "",
             keepQty = 0,
@@ -87,7 +93,7 @@ function ns:EnsurePresetShipments()
         {
             id = "preset_metal",
             name = "Metal / Ore",
-            enabled = false,
+            mode = "manual",
             match = "#craftingreagentmetal",
             target = "",
             keepQty = 0,
@@ -100,7 +106,7 @@ function ns:EnsurePresetShipments()
         {
             id = "preset_herb",
             name = "Herbs",
-            enabled = false,
+            mode = "manual",
             match = "#craftingreagentherb",
             target = "",
             keepQty = 0,
@@ -113,7 +119,7 @@ function ns:EnsurePresetShipments()
         {
             id = "preset_de",
             name = "Disenchantables",
-            enabled = false,
+            mode = "manual",
             match = "#disenchantable & quality<=2",
             target = "",
             keepQty = 0,

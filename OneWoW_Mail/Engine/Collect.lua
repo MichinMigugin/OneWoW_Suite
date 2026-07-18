@@ -29,6 +29,7 @@ end
 
 --- Uncached items (nil GetItemInfo) count as non-reagent: demanding a generic
 --- slot they might not need errs toward stopping early, never overflowing.
+--- (select(17) because C_Item.IsItemCraftingReagentByID does not exist in 12.x.)
 ---@param itemID number
 ---@return boolean
 local function IsCraftingReagentItem(itemID)
@@ -154,7 +155,9 @@ end
 ---@param selected table|nil
 ---@param onDone fun(ok: boolean)|nil
 function Collect:Start(filter, selected, onDone)
-    if running then
+    -- Never overlap with an active send: both pipelines move bag items and
+    -- fight over item locks (see Engine/AutoRun.lua for the other direction).
+    if running or ns.SendQueue:IsRunning() then
         return
     end
     running = true

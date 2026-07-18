@@ -11,7 +11,7 @@ local currentTab = "inbox"
 local selected = {}
 local blizzardHidden = false
 
-local TAB_ORDER = { "inbox", "compose", "shipments", "other" }
+local TAB_ORDER = { "inbox", "compose", "shipments", "activity", "other" }
 
 local function HideBlizzardMail()
     if not MailFrame or blizzardHidden then
@@ -72,6 +72,8 @@ local function SelectTab(tab)
         ns.Inbox:Refresh()
     elseif tab == "shipments" and ns.ShipmentsUI and ns.ShipmentsUI.Refresh then
         ns.ShipmentsUI:Refresh()
+    elseif tab == "activity" and ns.ActivityUI and ns.ActivityUI.Refresh then
+        ns.ActivityUI:Refresh()
     elseif tab == "other" and ns.OtherUI and ns.OtherUI.Refresh then
         ns.OtherUI:Refresh()
     end
@@ -164,6 +166,7 @@ function Shell:Ensure()
         inbox = INBOX,
         compose = L["TAB_COMPOSE"],
         shipments = L["TAB_SHIPMENTS"],
+        activity = L["TAB_ACTIVITY"],
         other = OTHER,
     }
 
@@ -196,6 +199,9 @@ function Shell:Ensure()
     end
     if ns.ShipmentsUI and ns.ShipmentsUI.Create then
         ns.ShipmentsUI:Create(shellFrame.panels.shipments)
+    end
+    if ns.ActivityUI and ns.ActivityUI.Create then
+        ns.ActivityUI:Create(shellFrame.panels.activity)
     end
     if ns.OtherUI and ns.OtherUI.Create then
         ns.OtherUI:Create(shellFrame.panels.other)
@@ -268,6 +274,9 @@ function Shell:FullReset()
     end
     if ns.ShipmentsUI and ns.ShipmentsUI.Reset then
         ns.ShipmentsUI:Reset()
+    end
+    if ns.ActivityUI and ns.ActivityUI.Reset then
+        ns.ActivityUI:Reset()
     end
     if ns.OtherUI and ns.OtherUI.Reset then
         ns.OtherUI:Reset()

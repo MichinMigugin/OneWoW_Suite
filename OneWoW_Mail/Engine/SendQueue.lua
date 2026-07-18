@@ -276,21 +276,46 @@ end
 -- Queue
 -- ============================================================================
 
---- Queue jobs and send sequentially. Stops on the first failure.
+--- Resolve a job's shipment name for log entries (jobs from the evaluator
+--- carry shipmentId; ad-hoc jobs may not).
+local function JobShipmentName(job)
+    if not job.shipmentId then
+        return nil
+    end
+    for _, s in ipairs(ns.db.global.mail.shipments) do
+        if s.id == job.shipmentId then
+            return s.name or s.id
+        end
+    end
+end
+
+--- Queue jobs and send sequentially.
+---
+--- Stop-on-failure (default): the first failed job aborts the whole queue —
+--- right for manual sends the user is watching. With
+--- `opts.stopOnFailure = false` (auto pipeline) a failed job is logged and the
+--- queue continues with the next one; after a server-side send failure (e.g.
+--- recipient not found), remaining jobs to the same target are skipped instead
+--- of eating an ack timeout each. Failures always route through ns.RunLog
+--- (errors mirror to chat there).
 ---@param jobs table
----@param onDone fun(ok: boolean)|nil
-function SendQueue:Start(jobs, onDone)
+---@param onDone fun(ok: boolean, summary: table)|nil summary = { sent = n, failed = { { job, reason, detail? } } }
+---@param opts { stopOnFailure?: boolean }|nil
+function SendQueue:Start(jobs, onDone, opts)
     if running then
         return
     end
+    local summary = { sent = 0, failed = {} }
     if not jobs or #jobs == 0 then
-        if onDone then onDone(true) end
+        if onDone then onDone(true, summary) end
         return
     end
 
     local L = ns.L
     running = true
     cancelRequested = false
+    local stopOnFailure = not opts or opts.stopOnFailure ~= false
+    local failedTargets = {} -- lowercased normalized target -> true after a "send" failure
 
     local i = 1
 
@@ -299,7 +324,20 @@ function SendQueue:Start(jobs, onDone)
         ns.SendResult:Cancel()
         ClearCompose()
         ns.NativeSend:Deactivate("sendqueue")
-        if onDone then onDone(ok) end
+        if onDone then onDone(ok, summary) end
+    end
+
+    local function recordFailure(job, reason, detail)
+        tinsert(summary.failed, { job = job, reason = reason, detail = detail })
+        local message
+        if reason == "attach" then
+            message = string.format(L[stopOnFailure and "ERR_ATTACH_FAILED" or "LOG_ATTACH_FAILED"], detail or "?")
+        elseif reason == "send" then
+            message = stopOnFailure and L["ERR_SEND_FAILED"] or L["LOG_SEND_FAILED"]
+        else
+            message = reason or "?"
+        end
+        ns.RunLog:Add("error", JobShipmentName(job), job.target, message)
     end
 
     local function step()
@@ -308,21 +346,39 @@ function SendQueue:Start(jobs, onDone)
             return
         end
         if i > #jobs then
-            finish(true)
+            finish(#summary.failed == 0)
             return
         end
         local job = jobs[i]
         i = i + 1
+
+        local targetKey = strlower(ns.AddressBook:NormalizeRecipient(job.target or ""))
+        if failedTargets[targetKey] then
+            tinsert(summary.failed, { job = job, reason = "skipped" })
+            ns.RunLog:Add("warn", JobShipmentName(job), job.target, L["LOG_TARGET_SKIPPED"])
+            step()
+            return
+        end
+
         SendJob(job, function(ok, reason, detail)
-            if not ok then
-                if reason == "attach" then
-                    print(L["ADDON_CHAT_PREFIX"] .. " " .. string.format(L["ERR_ATTACH_FAILED"], detail or "?"))
-                elseif reason == "send" then
-                    print(L["ADDON_CHAT_PREFIX"] .. " " .. L["ERR_SEND_FAILED"])
-                end
+            if ok then
+                summary.sent = summary.sent + 1
+                C_Timer.After(0.3, step)
+                return
+            end
+            if reason == "cancelled" then
                 finish(false)
                 return
             end
+            recordFailure(job, reason, detail)
+            if reason == "send" then
+                failedTargets[targetKey] = true
+            end
+            if stopOnFailure then
+                finish(false)
+                return
+            end
+            ClearCompose()
             C_Timer.After(0.3, step)
         end)
     end

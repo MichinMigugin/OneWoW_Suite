@@ -13,6 +13,9 @@ local function InitializeModules()
     if ns.Shell then
         ns.Shell:Initialize()
     end
+    if ns.AutoRun then
+        ns.AutoRun:Initialize()
+    end
     if ns.OtherUI then
         ns.OtherUI:Initialize()
     end

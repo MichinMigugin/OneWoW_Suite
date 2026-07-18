@@ -84,7 +84,8 @@ local function BuildMatchExpr(match)
     return "(" .. match .. ") & !#soulbound"
 end
 
---- Build send plan for one shipment (does not send).
+--- Build send plan for one shipment (does not send). Shipment selection
+--- (explicit id / auto-run mode) is the caller's job — see Preview.
 ---@param shipment table
 ---@param reserved table itemID -> already reserved count
 ---@return table plan { shipment, target, byItem = { [itemID] = { need, slots } }, jobs }
@@ -97,9 +98,6 @@ local function PlanShipment(shipment, reserved)
         error = nil,
     }
 
-    if not shipment.enabled then
-        return plan
-    end
     if not shipment.target or shipment.target == "" then
         plan.error = "no target"
         return plan
@@ -189,25 +187,39 @@ local function PlanShipment(shipment, reserved)
     return plan
 end
 
---- Preview enabled shipments (or one by id). Dry-run.
----@param shipmentId string|nil
+--- Dry-run plan for a selection of shipments. All selected shipments share
+--- one `reserved` table, so the same bag items are never allocated twice
+--- within a pass.
+---@param filter string|{ shipmentId?: string, mode?: string }|nil a string (or shipmentId) selects one shipment regardless of mode; mode selects every shipment with that auto-run mode; nil selects nothing
 ---@return table { plans = {}, jobs = {}, errors = {} }
-function ShipmentEvaluator:Preview(shipmentId)
+function ShipmentEvaluator:Preview(filter)
+    if type(filter) == "string" then
+        filter = { shipmentId = filter }
+    end
+    filter = filter or {}
+
+    local function selected(shipment)
+        if filter.shipmentId then
+            return shipment.id == filter.shipmentId
+        end
+        if filter.mode then
+            return (shipment.mode or "manual") == filter.mode
+        end
+        return false
+    end
+
     local reserved = {}
     local result = { plans = {}, jobs = {}, errors = {} }
-    local list = ns.db.global.mail.shipments or {}
 
-    for _, shipment in ipairs(list) do
-        if not shipmentId or shipment.id == shipmentId then
-            if shipment.enabled or shipmentId then
-                local plan = PlanShipment(shipment, reserved)
-                tinsert(result.plans, plan)
-                if plan.error then
-                    tinsert(result.errors, (shipment.name or shipment.id) .. ": " .. plan.error)
-                end
-                for _, job in ipairs(plan.jobs) do
-                    tinsert(result.jobs, job)
-                end
+    for _, shipment in ipairs(ns.db.global.mail.shipments or {}) do
+        if selected(shipment) then
+            local plan = PlanShipment(shipment, reserved)
+            tinsert(result.plans, plan)
+            if plan.error then
+                tinsert(result.errors, (shipment.name or shipment.id) .. ": " .. plan.error)
+            end
+            for _, job in ipairs(plan.jobs) do
+                tinsert(result.jobs, job)
             end
         end
     end
@@ -215,21 +227,17 @@ function ShipmentEvaluator:Preview(shipmentId)
 end
 
 --- Evaluate and send. Preview first if dryRun.
----@param opts { dryRun?: boolean, shipmentId?: string }
----@param onDone fun(ok: boolean, result: table)|nil
+---@param opts { dryRun?: boolean, shipmentId?: string, mode?: string, stopOnFailure?: boolean }
+---@param onDone fun(ok: boolean, result: table, summary: table)|nil summary as in SendQueue:Start
 function ShipmentEvaluator:Run(opts, onDone)
     opts = opts or {}
-    local result = self:Preview(opts.shipmentId)
-    if opts.dryRun then
-        if onDone then onDone(true, result) end
+    local result = self:Preview({ shipmentId = opts.shipmentId, mode = opts.mode })
+    if opts.dryRun or #result.jobs == 0 then
+        if onDone then onDone(true, result, { sent = 0, failed = {} }) end
         return result
     end
-    if #result.jobs == 0 then
-        if onDone then onDone(true, result) end
-        return result
-    end
-    ns.SendQueue:Start(result.jobs, function(ok)
-        if onDone then onDone(ok, result) end
-    end)
+    ns.SendQueue:Start(result.jobs, function(ok, summary)
+        if onDone then onDone(ok, result, summary) end
+    end, { stopOnFailure = opts.stopOnFailure })
     return result
 end

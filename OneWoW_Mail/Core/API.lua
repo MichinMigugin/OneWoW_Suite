@@ -21,11 +21,11 @@ function OneWoW_Mail_API.Hide()
 end
 
 --- Preview what a shipment would send (dry-run).
----@param shipmentId string|nil
----@return table|nil plan
-function OneWoW_Mail_API.PreviewShipment(shipmentId)
+---@param filter string|{ shipmentId?: string, mode?: string }|nil id selects one shipment; mode selects all with that auto-run mode; nil selects nothing
+---@return table|nil result { plans, jobs, errors }
+function OneWoW_Mail_API.PreviewShipment(filter)
     if ns.ShipmentEvaluator then
-        return ns.ShipmentEvaluator:Preview(shipmentId)
+        return ns.ShipmentEvaluator:Preview(filter)
     end
     return nil
 end

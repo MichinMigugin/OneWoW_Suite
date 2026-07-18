@@ -135,8 +135,8 @@ function AddressBook:GetSuggestions()
         add(contact.name, "contact")
     end
 
-    local n = C_FriendList.GetNumFriends()
-    for i = 1, n do
+    local numFriends = C_FriendList.GetNumFriends()
+    for i = 1, numFriends do
         local info = C_FriendList.GetFriendInfoByIndex(i)
         if info and info.name then
             add(info.name, "friend")
@@ -144,8 +144,8 @@ function AddressBook:GetSuggestions()
     end
 
     if IsInGuild() then
-        local n = GetNumGuildMembers()
-        for i = 1, n do
+        local numMembers = GetNumGuildMembers()
+        for i = 1, numMembers do
             local name = GetGuildRosterInfo(i)
             if name then
                 add(name, "guild")

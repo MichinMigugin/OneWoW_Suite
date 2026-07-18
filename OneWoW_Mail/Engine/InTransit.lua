@@ -31,6 +31,11 @@ function InTransit:RecordSend(charKey, job)
 end
 
 --- Clear in-transit entries that match a collected inbox mail subject.
+---
+--- Subjects carry the shipment *name*, so renaming a shipment while its mail
+--- is in flight orphans the in-transit entry (harmless, but it lingers).
+--- Entries already store shipmentId — clear by id instead if the Storage API
+--- ever grows that lookup.
 ---@param charKey string|nil defaults to current character
 ---@param subject string|nil
 function InTransit:ClearMatching(charKey, subject)
