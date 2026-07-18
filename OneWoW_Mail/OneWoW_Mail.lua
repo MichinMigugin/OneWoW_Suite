@@ -50,10 +50,9 @@ function OneWoW_Mail:OnPlayerLogin()
     if didLogin then return end
     didLogin = true
 
-    -- Bring up Storage / Character / Professions when Mail is wanted (FirstRun datastores).
+    -- Bring up Storage / Character when Mail is wanted (FirstRun datastores).
     OneWoW:EnsureLoaded("OneWoW_AltTracker_Storage")
     OneWoW:EnsureLoaded("OneWoW_AltTracker_Character")
-    OneWoW:EnsureLoaded("OneWoW_AltTracker_Professions")
 
     if OneWoW_Mail.FireLoginHandlers then
         OneWoW_Mail:FireLoginHandlers()

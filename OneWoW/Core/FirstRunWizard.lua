@@ -119,7 +119,6 @@ FirstRun.CATALOG = {
         datastores  = {
             "OneWoW_AltTracker_Storage",
             "OneWoW_AltTracker_Character",
-            "OneWoW_AltTracker_Professions",
         },
     },
 

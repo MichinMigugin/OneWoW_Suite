@@ -6,7 +6,7 @@ Standalone LoD load unit that replaces the Blizzard mailbox UI with a OneWoW_GUI
 
 - TOC: `OneWoW_Mail.toc` (`RequiredDeps: OneWoW`, `LoadOnDemand: 1`)
 - Manifest: `OneWoW/Core/AddonLoader.lua` (`/1wmail`)
-- FirstRun: standalone catalog entry with datastores Storage, Character, Professions
+- FirstRun: standalone catalog entry with datastores Storage, Character
 - Init: `OneWoW_Mail:OnAddonLoaded` / `OnPlayerLogin` (no suite lifecycle `RegisterEvent`)
 - Gameplay: `MAIL_SHOW` / `MAIL_CLOSED` / `MAIL_INBOX_UPDATE` on the Shell frame
 

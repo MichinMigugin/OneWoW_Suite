@@ -17,6 +17,7 @@
 ## New Addon
 - **OneWoW Mail** — a full mailbox replacement focused on multi-character logistics
 - Opens automatically at any mailbox; also `/owmail` or `/1wmail`
+- Manage Features keeps AltTracker Storage and Character on while Mail is enabled
 
 ## Inbox
 - Collect gold and attachments selectively: All, Gold, Items, AH Sold, AH Bought, AH Cancelled, AH Expired, Other, or just the mail you checked
