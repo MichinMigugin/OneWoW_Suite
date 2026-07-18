@@ -103,7 +103,8 @@ Core\FirstRunWizard.lua
 # DO NOT reorder within this block: TooltipScanner before PredicateEngine (PE
 # captures ns.TooltipScanner at file scope); ItemLevel before PredicateEngine +
 # upgrade-detection (they capture ns.ItemLevel at file scope); PredicateEngine
-# before upgrade-detection + tooltip-engine (they capture PE at file scope);
+# before upgrade-detection + disenchant + tooltip-engine (they capture PE at file
+# scope); Disenchant allowlist/blocklist before disenchant.lua;
 # ItemPrices + RecipeKnownUtil before the overlay engine that consumes them;
 # overlay-icons + upgrade-detection before the Overlays2 block; within Overlays2:
 # definitions -> renderer -> engine -> surfaces (each captures the previous at
@@ -120,6 +121,9 @@ Services\Collectibles.lua
 Services\Merchant.lua
 Services\overlay-icons.lua
 Services\upgrade-detection.lua
+Services\Disenchant\allowlist.lua
+Services\Disenchant\blocklist.lua
+Services\disenchant.lua
 Services\AltScope.lua
 Services\Overlays2\definitions.lua
 Services\Overlays2\renderer.lua

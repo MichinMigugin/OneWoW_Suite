@@ -135,6 +135,8 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["WIZARD_FEATURE_SHOPPINGLIST_DESC"] = "購物和製作材料清單，可感知專業和分身物品欄。",
     ["WIZARD_FEATURE_DIRECTDEPOSIT"] = "Direct Deposit",
     ["WIZARD_FEATURE_DIRECTDEPOSIT_DESC"] = "自動在你的角色與戰隊銀行之間轉移金幣和物品。",
+    ["WIZARD_FEATURE_MAIL"] = "Mail",
+    ["WIZARD_FEATURE_MAIL_DESC"] = "帶選擇性收取、通訊錄與分身貨運的郵箱替換。",
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "開發者工具，用於框架檢查、事件、錯誤、全域變數和圖集瀏覽。",
 

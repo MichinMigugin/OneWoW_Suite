@@ -135,6 +135,8 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["WIZARD_FEATURE_SHOPPINGLIST_DESC"] = "Списки покупок и материалов для создания с учётом профессий и инвентаря твинков.",
     ["WIZARD_FEATURE_DIRECTDEPOSIT"] = "Direct Deposit",
     ["WIZARD_FEATURE_DIRECTDEPOSIT_DESC"] = "Автоматизирует перемещение золота и предметов между вашим персонажем и банком отряда.",
+    ["WIZARD_FEATURE_MAIL"] = "Mail",
+    ["WIZARD_FEATURE_MAIL_DESC"] = "Замена почтового ящика с выборочным сбором, адресной книгой и логистическими отправлениями твинкам.",
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "Инструменты разработчика для инспекции рамок, событий, ошибок, глобальных переменных и просмотра атласа.",
 

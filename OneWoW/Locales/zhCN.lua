@@ -135,6 +135,8 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["WIZARD_FEATURE_SHOPPINGLIST_DESC"] = "购物和制作材料清单，可感知专业和小号库存。",
     ["WIZARD_FEATURE_DIRECTDEPOSIT"] = "Direct Deposit",
     ["WIZARD_FEATURE_DIRECTDEPOSIT_DESC"] = "自动在你的角色与战团银行之间转移金币和物品。",
+    ["WIZARD_FEATURE_MAIL"] = "Mail",
+    ["WIZARD_FEATURE_MAIL_DESC"] = "带选择性收取、通讯录与小号货运的邮箱替换。",
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "开发者工具，用于框体检查、事件、错误、全局变量和图集浏览。",
 

@@ -558,6 +558,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["MAIL_DETAIL_ITEM_COUNT"] = "%d Gegenstand",
     ["MAIL_DETAIL_ITEM_COUNT_PLURAL"] = "%d Gegenstände",
     ["MAIL_DETAIL_RETURNED_FLAG"] = " (zurückgesandt)",
+    ["MAIL_DETAIL_IN_TRANSIT"] = "Unterwegs",
+    ["MAIL_DETAIL_IN_TRANSIT_ITEMS"] = "%d Gegenstand/Gegenstände unterwegs",
     ["TT_COL_SERVER_DESC"] = "Der Realm-Server, auf dem sich dieser Charakter befindet",
     ["TT_COL_QTY"] = "Menge",
     ["TT_COL_QTY_DESC"] = "Menge der Gegenstände im Auktionsstapel",

@@ -558,6 +558,8 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["MAIL_DETAIL_ITEM_COUNT"] = "%d objet",
     ["MAIL_DETAIL_ITEM_COUNT_PLURAL"] = "%d objets",
     ["MAIL_DETAIL_RETURNED_FLAG"] = " (retourné)",
+    ["MAIL_DETAIL_IN_TRANSIT"] = "En transit",
+    ["MAIL_DETAIL_IN_TRANSIT_ITEMS"] = "%d objet(s) en transit",
     ["TT_COL_SERVER_DESC"] = "Le serveur de royaume sur lequel se trouve ce personnage",
     ["TT_COL_QTY"] = "Quantité",
     ["TT_COL_QTY_DESC"] = "Quantité d'objets dans la pile d'enchères",

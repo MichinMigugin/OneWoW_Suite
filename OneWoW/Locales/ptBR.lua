@@ -135,6 +135,8 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["WIZARD_FEATURE_SHOPPINGLIST_DESC"] = "Listas de compras e materiais de criação que levam em conta profissões e o inventário dos alts.",
     ["WIZARD_FEATURE_DIRECTDEPOSIT"] = "Direct Deposit",
     ["WIZARD_FEATURE_DIRECTDEPOSIT_DESC"] = "Automatiza a movimentação de ouro e itens entre seu personagem e o banco do Bando de Guerra.",
+    ["WIZARD_FEATURE_MAIL"] = "Mail",
+    ["WIZARD_FEATURE_MAIL_DESC"] = "Substitui a caixa de correio com coleta seletiva, catálogo de endereços e remessas logísticas para alts.",
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "Utilitários de desenvolvimento para inspeção de quadros, eventos, erros, variáveis globais e navegação no atlas.",
 

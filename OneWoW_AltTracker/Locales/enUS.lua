@@ -530,6 +530,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["MAIL_DETAIL_ITEM_COUNT"] = "%d item",
     ["MAIL_DETAIL_ITEM_COUNT_PLURAL"] = "%d items",
     ["MAIL_DETAIL_RETURNED_FLAG"] = " (returned)",
+    ["MAIL_DETAIL_IN_TRANSIT"] = "In transit",
+    ["MAIL_DETAIL_IN_TRANSIT_ITEMS"] = "%d item(s) incoming",
     ["TT_COL_SERVER_DESC"] = "The realm server this character is on",
     ["TT_COL_QTY"] = "Quantity",
     ["TT_COL_QTY_DESC"] = "Quantity of items in auction stack",

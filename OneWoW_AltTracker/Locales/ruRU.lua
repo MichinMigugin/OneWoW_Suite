@@ -558,6 +558,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["MAIL_DETAIL_ITEM_COUNT"] = "%d предмет",
     ["MAIL_DETAIL_ITEM_COUNT_PLURAL"] = "%d предметов",
     ["MAIL_DETAIL_RETURNED_FLAG"] = " (возвращено)",
+    ["MAIL_DETAIL_IN_TRANSIT"] = "В пути",
+    ["MAIL_DETAIL_IN_TRANSIT_ITEMS"] = "%d предмет(ов) в пути",
     ["TT_COL_SERVER_DESC"] = "Сервер игрового мира, на котором находится этот персонаж",
     ["TT_COL_QTY"] = "Количество",
     ["TT_COL_QTY_DESC"] = "Количество предметов в стопке лота",

@@ -129,3 +129,50 @@ end
 function OneWoW_AltTracker_Storage_API.RegisterStorageChanged(callback)
     ns.DataManager:RegisterStorageChanged(callback)
 end
+
+--- In-transit shipments awaiting collection on a character (sibling of inbox mail).
+---@param charKey string
+---@return table list
+function OneWoW_AltTracker_Storage_API.GetInTransitShipments(charKey)
+    if not charKey then return {} end
+    local charData = OneWoW_AltTracker_Storage_DB.characters[charKey]
+    if not charData then return {} end
+    charData.inTransitShipments = charData.inTransitShipments or {}
+    return charData.inTransitShipments
+end
+
+--- Append an in-transit shipment record for a suite alt recipient.
+---@param charKey string
+---@param entry table
+function OneWoW_AltTracker_Storage_API.AddInTransitShipment(charKey, entry)
+    if not charKey or not entry then return end
+    local chars = OneWoW_AltTracker_Storage_DB.characters
+    chars[charKey] = chars[charKey] or {}
+    local list = chars[charKey].inTransitShipments
+    if not list then
+        list = {}
+        chars[charKey].inTransitShipments = list
+    end
+    tinsert(list, entry)
+    if ns.DataManager and ns.DataManager.NotifyStorageChanged then
+        ns.DataManager:NotifyStorageChanged("mail", charKey)
+    end
+end
+
+--- Remove in-transit entries whose subject matches a collected mail.
+---@param charKey string
+---@param subject string
+function OneWoW_AltTracker_Storage_API.ClearInTransitBySubject(charKey, subject)
+    if not charKey or not subject then return end
+    local charData = OneWoW_AltTracker_Storage_DB.characters[charKey]
+    if not charData or not charData.inTransitShipments then return end
+    local list = charData.inTransitShipments
+    for i = #list, 1, -1 do
+        if list[i].subject == subject then
+            tremove(list, i)
+        end
+    end
+    if ns.DataManager and ns.DataManager.NotifyStorageChanged then
+        ns.DataManager:NotifyStorageChanged("mail", charKey)
+    end
+end

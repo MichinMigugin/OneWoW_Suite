@@ -40,6 +40,7 @@ local SERVICE_KEYS = {
     "Collectibles",
     "Merchant",
     "UpgradeDetection",
+    "Disenchant",
     "AltScope",
     "ItemLevel",
 }

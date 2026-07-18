@@ -1084,6 +1084,7 @@ RegisterKeyword("professionequipment", function(p) return p.isProfessionEquipmen
 -- at runtime since "is this an upgrade" is policy (mode, equipped state) that
 -- belongs to that module. Without UpgradeDetection loaded, #upgrade is simply
 -- unregistered and predicates using it evaluate to false.
+-- #disenchantable / #de are registered by ns.Disenchant the same way.
 RegisterKeyword("upgradeable",      function(p) return p.isUpgradeable end)
 RegisterKeyword("fullyupgraded",    function(p) return p.isFullyUpgraded end)
 RegisterKeyword({"currentseason", "activeseason"}, function(p) return p.isCurrentSeason == true end)

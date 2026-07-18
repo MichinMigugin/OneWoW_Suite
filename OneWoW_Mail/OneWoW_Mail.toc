@@ -1,0 +1,57 @@
+## Interface: 120007, 120100
+## Version: R6.2607.1612
+## Title: |cFFFFD100OneWoW|r - |cFF00FF00Mail|r
+## Notes: OneWoW Addon that: replaces the mailbox with selective collect, address book, and logistics Shipments.
+## Author: OneWoW Dev Team
+
+## RequiredDeps: OneWoW
+## LoadOnDemand: 1
+## Category: OneWoW
+## Group: OneWoW
+## IconTexture: Interface\Icons\achievement_guildperk_gmail
+
+## SavedVariables: OneWoW_Mail_DB
+
+## X-Website: https://wow2.xyz/
+## X-Category: |cFFFFD100OneWoW|r
+## X-BugGrabber-Display: OneWow
+
+# Locales
+Locales\LocaleManager.lua
+Locales\enUS.lua
+Locales\koKR.lua
+Locales\frFR.lua
+Locales\deDE.lua
+Locales\zhCN.lua
+Locales\esES.lua
+Locales\zhTW.lua
+Locales\esMX.lua
+Locales\ruRU.lua
+Locales\ptBR.lua
+Locales\itIT.lua
+
+# Core
+Core\Constants.lua
+Core\Database.lua
+Core\API.lua
+
+# Engine
+Engine\MailClassify.lua
+Engine\Collect.lua
+Engine\AddressBook.lua
+Engine\NativeSend.lua
+Engine\SendResult.lua
+Engine\SendQueue.lua
+Engine\ShipmentEvaluator.lua
+Engine\InTransit.lua
+
+# UI
+UI\Shell.lua
+UI\AddressSuggest.lua
+UI\Inbox.lua
+UI\Compose.lua
+UI\Shipments.lua
+UI\Other.lua
+
+# Main
+OneWoW_Mail.lua

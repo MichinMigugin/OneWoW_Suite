@@ -110,6 +110,18 @@ FirstRun.CATALOG = {
         iconTexture = "Interface\\Icons\\achievement_guildperk_mobilebanking",
         datastores  = {},
     },
+    {
+        addonName   = "OneWoW_Mail",
+        labelKey    = "WIZARD_FEATURE_MAIL",
+        summaryKey  = "WIZARD_FEATURE_MAIL_DESC",
+        group       = "standalone",
+        iconTexture = "Interface\\Icons\\achievement_guildperk_gmail",
+        datastores  = {
+            "OneWoW_AltTracker_Storage",
+            "OneWoW_AltTracker_Character",
+            "OneWoW_AltTracker_Professions",
+        },
+    },
 
     -- Utilities
     {

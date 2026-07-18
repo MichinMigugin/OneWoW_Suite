@@ -135,6 +135,8 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["WIZARD_FEATURE_SHOPPINGLIST_DESC"] = "Liste della spesa e dei materiali di creazione che tengono conto di professioni e inventario degli alt.",
     ["WIZARD_FEATURE_DIRECTDEPOSIT"] = "Direct Deposit",
     ["WIZARD_FEATURE_DIRECTDEPOSIT_DESC"] = "Automatizza i trasferimenti di oro e oggetti tra il tuo personaggio e la banca della brigata.",
+    ["WIZARD_FEATURE_MAIL"] = "Mail",
+    ["WIZARD_FEATURE_MAIL_DESC"] = "Sostituisce la casella di posta con raccolta selettiva, rubrica e spedizioni logistiche agli alt.",
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "Utilità per sviluppatori per ispezione dei riquadri, eventi, errori, variabili globali e navigazione dell'atlante.",
 

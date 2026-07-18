@@ -557,6 +557,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["MAIL_DETAIL_ITEM_COUNT"] = "%d개 아이템",
     ["MAIL_DETAIL_ITEM_COUNT_PLURAL"] = "%d개 아이템",
     ["MAIL_DETAIL_RETURNED_FLAG"] = " (반송)",
+    ["MAIL_DETAIL_IN_TRANSIT"] = "배송 중",
+    ["MAIL_DETAIL_IN_TRANSIT_ITEMS"] = "수신 대기 아이템 %d개",
     ["TT_COL_SERVER_DESC"] = "이 캐릭터가 있는 서버",
     ["TT_COL_QTY"] = "수량",
     ["TT_COL_QTY_DESC"] = "경매 묶음의 아이템 수량",

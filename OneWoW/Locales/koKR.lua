@@ -135,6 +135,8 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WIZARD_FEATURE_SHOPPINGLIST_DESC"] = "전문기술 및 부캐릭터 인벤토리 인식이 있는 쇼핑 및 제작 재료 목록.",
     ["WIZARD_FEATURE_DIRECTDEPOSIT"] = "Direct Deposit",
     ["WIZARD_FEATURE_DIRECTDEPOSIT_DESC"] = "캐릭터와 전투부대 은행 간 골드 및 아이템 이동을 자동화합니다.",
+    ["WIZARD_FEATURE_MAIL"] = "Mail",
+    ["WIZARD_FEATURE_MAIL_DESC"] = "선택적 수령, 주소록, 부캐 물류 배송이 있는 우편함 대체.",
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "프레임 검사, 이벤트, 오류, 전역 변수, 아틀라스 탐색 개발자 유틸리티.",
 

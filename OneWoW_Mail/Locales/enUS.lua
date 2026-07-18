@@ -1,0 +1,101 @@
+local ADDON_NAME, ns = ...
+
+ns.L = OneWoW.Locale:Register(ADDON_NAME, "enUS", {
+    ["ADDON_TITLE"] = "Mail",
+    ["ADDON_CHAT_PREFIX"] = "|cFFFFD100OneWoW Mail:|r",
+    ["CTX_OPEN_MAIL"] = "Open Mail",
+
+    ["TAB_COMPOSE"] = "Compose",
+    ["TAB_SHIPMENTS"] = "Shipments",
+
+    ["FILTER_ALL"] = "All",
+    ["FILTER_GOLD"] = "Gold",
+    ["FILTER_ITEMS"] = "Items",
+    ["FILTER_SOLD"] = "AH Sold",
+    ["FILTER_BOUGHT"] = "AH Bought",
+    ["FILTER_CANCELED"] = "AH Cancelled",
+    ["FILTER_EXPIRED"] = "AH Expired",
+    ["FILTER_OTHER"] = "Other",
+    ["FILTER_SELECTED"] = "Selected",
+
+    ["CAT_SOLD"] = "Sold",
+    ["CAT_BOUGHT"] = "Bought",
+    ["CAT_CANCELED"] = "Cancelled",
+    ["CAT_EXPIRED"] = "Expired",
+    ["CAT_GOLD"] = "Gold",
+    ["CAT_ITEMS"] = "Items",
+    ["CAT_OTHER"] = "Other",
+
+    ["BTN_RETURN"] = "Return",
+    ["BTN_SEND_SHIPMENT"] = "Send",
+    ["BTN_SEND_EXCESS_GOLD"] = "Send Excess Gold",
+
+    ["INBOX_MAIL_ONE"] = "%d mail",
+    ["INBOX_MAIL_MANY"] = "%d mails",
+    ["INBOX_ITEMS_ONE"] = "%d item",
+    ["INBOX_ITEMS_MANY"] = "%d items",
+    ["INBOX_STAT_GOLD"] = "Gold: %s",
+
+    ["TT_FILTER_ALL"] = "Collect gold and attachments from every mail.\nDoes not require checkboxes. Skips COD and GM mail.",
+    ["TT_FILTER_GOLD"] = "Collect gold only from every mail that has money.\nLeaves attachments. Does not require checkboxes.",
+    ["TT_FILTER_ITEMS"] = "Collect attachments (and any gold) from mail that has items.\nDoes not require checkboxes.",
+    ["TT_FILTER_SOLD"] = "Collect AH sale mail (seller invoices).\nDoes not require checkboxes.",
+    ["TT_FILTER_BOUGHT"] = "Collect AH purchase mail (buyer invoices).\nDoes not require checkboxes.",
+    ["TT_FILTER_CANCELED"] = "Collect AH cancelled/removed auction mail.\nDoes not require checkboxes.",
+    ["TT_FILTER_EXPIRED"] = "Collect AH expired auction mail.\nDoes not require checkboxes.",
+    ["TT_FILTER_OTHER"] = "Collect mail that is not gold, items, or AH categories.\nDoes not require checkboxes.",
+    ["TT_FILTER_SELECTED"] = "Collect only the mail you have checked.",
+    ["TT_BTN_RETURN"] = "Return checked mail to the sender.\nRequires checkboxes. Skips COD and non-returnable mail.",
+    ["TT_BTN_DELETE"] = "Delete checked mail that is empty (no gold, no items).\nRequires checkboxes.",
+    ["TT_BTN_CANCEL"] = "Stop the collect operation currently in progress.",
+
+    ["INBOX_ROW_HINT"] = "Shift-click a mail to collect it. Ctrl-click to return it.",
+    ["INBOX_EXPAND"] = "Details",
+    ["TT_INBOX_EXPAND"] = "Show the mail body and all attachments.",
+    ["TT_INBOX_EXPAND_DISABLED"] = "Nothing to preview (no message body and at most one attachment).",
+    ["INBOX_NO_BODY"] = "(No message body)",
+
+
+    ["SRC_ALT"] = "alt",
+    ["SRC_FAVORITE"] = "favorite",
+    ["SRC_RECENT"] = "recent",
+    ["SRC_CONTACT"] = "contact",
+    ["SRC_FRIEND"] = "friend",
+    ["SRC_GUILD"] = "guild",
+
+    ["SHIPMENT_SELECT"] = "Select a shipment on the left.",
+    ["SHIPMENT_ENABLE"] = "Enable this shipment",
+    ["SHIPMENT_MATCH"] = "Match (Bags search syntax)",
+    ["SHIPMENT_RULES"] = "Send rules",
+    ["SHIPMENT_KEEP"] = "Leave on this character (each item)",
+    ["SHIPMENT_MAX"] = "Cap send amount (each item)",
+    ["SHIPMENT_RESTOCK"] = "Only send enough to top up the target",
+    ["SHIPMENT_CREATE_ENTER"] = "Enter a name for the new shipment:",
+    ["SHIPMENT_RENAME_ENTER"] = "Enter a new name for this shipment:",
+    ["SHIPMENT_DELETE_CONFIRM"] = "Delete shipment \"%s\"?\nThis cannot be undone.",
+    ["ERR_SHIPMENT_NAME_EMPTY"] = "Shipment name cannot be empty.",
+    ["ERR_SHIPMENT_MISSING"] = "That shipment no longer exists.",
+
+    ["TT_SHIPMENT_ENABLE"] = "When checked, this shipment is active (green dot in the list).\nPreview and Send for this profile honor that state; disabled shipments are skipped in bulk runs.",
+    ["TT_SHIPMENT_MATCH"] = "Bags search syntax for which bag items this shipment picks.\nSoulbound items are always excluded automatically.",
+    ["TT_SHIPMENT_TARGET"] = "Character who receives the matched items.\nType to search your address book (alts, favorites, recent, friends, guild).",
+    ["TT_SHIPMENT_KEEP"] = "Always leave this many of each matched item in your bags.\n0 means send all of that item (after other caps).",
+    ["TT_SHIPMENT_MAX"] = "When checked, never send more than this many of each item per run.\nTurn on Top up to instead mail only what the target still needs to reach this number.",
+    ["TT_SHIPMENT_RESTOCK"] = "Requires Cap. Uses Alt Tracker inventory for the target and only mails the shortfall up to the cap.\nIf the target is not a known suite alt, this is ignored and Cap acts as a plain send limit.",
+
+    ["PREVIEW_EMPTY"] = "Nothing to send.",
+    ["SEND_DONE"] = "Queued %d mail(s).",
+    ["ERR_NO_TARGET"] = "Set a target character first.",
+    ["ERR_NO_EXCESS_GOLD"] = "No excess gold to send.",
+    ["WARN_NON_ROSTER"] = "Recipient is not a known suite alt — double-check the name to avoid mailing a stranger.",
+    ["SENT_GOLD"] = "Sent %s to %s.",
+    ["ERR_ATTACH_FAILED"] = "Could not attach %s — send stopped.",
+    ["ERR_SEND_FAILED"] = "Mail failed to send — send stopped.",
+
+    ["OTHER_TITLE"] = "Quick actions",
+    ["OTHER_BANKER"] = "Banker / excess gold target",
+    ["OTHER_KEEP_GOLD"] = "Gold to keep on this character",
+    ["RAKE_SESSION"] = "Gold collected this visit: %s",
+})
+
+ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

@@ -558,6 +558,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["MAIL_DETAIL_ITEM_COUNT"] = "%d 件物品",
     ["MAIL_DETAIL_ITEM_COUNT_PLURAL"] = "%d 件物品",
     ["MAIL_DETAIL_RETURNED_FLAG"] = "（已退回）",
+    ["MAIL_DETAIL_IN_TRANSIT"] = "運送中",
+    ["MAIL_DETAIL_IN_TRANSIT_ITEMS"] = "%d 件物品運送中",
     ["TT_COL_SERVER_DESC"] = "此角色所在的伺服器",
     ["TT_COL_QTY"] = "數量",
     ["TT_COL_QTY_DESC"] = "拍賣堆疊中的物品數量",

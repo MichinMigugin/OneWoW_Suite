@@ -135,6 +135,8 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["WIZARD_FEATURE_SHOPPINGLIST_DESC"] = "Einkaufs- und Handwerksmateriallisten mit Berücksichtigung von Berufen und Twink-Inventar.",
     ["WIZARD_FEATURE_DIRECTDEPOSIT"] = "Direct Deposit",
     ["WIZARD_FEATURE_DIRECTDEPOSIT_DESC"] = "Automatisiert Gold- und Gegenstandstransfers zwischen eurem Charakter und der Kriegsmeutenbank.",
+    ["WIZARD_FEATURE_MAIL"] = "Mail",
+    ["WIZARD_FEATURE_MAIL_DESC"] = "Ersetzt den Briefkasten mit selektivem Abholen, Adressbuch und Sendungen an Twinks.",
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "Entwicklerwerkzeuge zur Fensterinspektion, für Ereignisse, Fehler, globale Variablen und Atlas-Durchsuchung.",
 

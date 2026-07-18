@@ -216,7 +216,13 @@ function ns.UI.ShowMailDetail(charKey)
     scrollContent:SetPoint("TOPLEFT", dialog.contentFrame, "TOPLEFT", 0, -32)
 
     local mailData = OneWoW_AltTracker_Storage_API and OneWoW_AltTracker_Storage_API.GetMail(charKey)
-    if not mailData or not mailData.mails or not next(mailData.mails) then
+    local inTransit = OneWoW_AltTracker_Storage_API
+        and OneWoW_AltTracker_Storage_API.GetInTransitShipments
+        and OneWoW_AltTracker_Storage_API.GetInTransitShipments(charKey)
+    local hasMail = mailData and mailData.mails and next(mailData.mails)
+    local hasTransit = inTransit and #inTransit > 0
+
+    if not hasMail and not hasTransit then
         local empty = OneWoW_GUI:CreateFS(scrollContent, 13)
         empty:SetPoint("TOP", scrollContent, "TOP", 0, -20)
         empty:SetText(L["MAIL_DETAIL_NEVER_SCANNED"])
@@ -228,10 +234,12 @@ function ns.UI.ShowMailDetail(charKey)
     BuildHeader(scrollContent)
 
     local rows = {}
-    for mailID, mail in pairs(mailData.mails) do
-        local remaining = ComputeRemaining(mail)
-        if not remaining or remaining > 0 then
-            rows[#rows + 1] = { mailID = mailID, mail = mail, remaining = remaining or math.huge }
+    if hasMail then
+        for mailID, mail in pairs(mailData.mails) do
+            local remaining = ComputeRemaining(mail)
+            if not remaining or remaining > 0 then
+                rows[#rows + 1] = { mailID = mailID, mail = mail, remaining = remaining or math.huge }
+            end
         end
     end
 
@@ -263,6 +271,32 @@ function ns.UI.ShowMailDetail(charKey)
         row.expires:SetTextColor(color[1], color[2], color[3])
 
         yOffset = yOffset - (ROW_HEIGHT + 1)
+    end
+
+    if hasTransit then
+        for _, ship in ipairs(inTransit) do
+            local row = AcquireRow(scrollContent)
+            row:SetParent(scrollContent)
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 0, yOffset)
+            row:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", 0, yOffset)
+
+            row.sender:SetText(ship.sender or L["MAIL_DETAIL_IN_TRANSIT"])
+            row.sender:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            row.subject:SetText(ship.subject or L["MAIL_DETAIL_IN_TRANSIT"])
+            row.subject:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+
+            local n = 0
+            for _, it in ipairs(ship.items or {}) do
+                n = n + (it.count or 1)
+            end
+            row.contents:SetText(string.format(L["MAIL_DETAIL_IN_TRANSIT_ITEMS"], n))
+            row.contents:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+            row.expires:SetText(L["MAIL_DETAIL_IN_TRANSIT"])
+            row.expires:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+
+            yOffset = yOffset - (ROW_HEIGHT + 1)
+        end
     end
 
     scrollContent:SetHeight(math.max(1, -yOffset))

@@ -135,6 +135,8 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["WIZARD_FEATURE_SHOPPINGLIST_DESC"] = "Listes d'achats et de matériaux d'artisanat tenant compte des métiers et de l'inventaire des rerolls.",
     ["WIZARD_FEATURE_DIRECTDEPOSIT"] = "Direct Deposit",
     ["WIZARD_FEATURE_DIRECTDEPOSIT_DESC"] = "Automatise les transferts d'or et d'objets entre votre personnage et la banque du bataillon.",
+    ["WIZARD_FEATURE_MAIL"] = "Mail",
+    ["WIZARD_FEATURE_MAIL_DESC"] = "Remplace la boîte aux lettres avec collecte sélective, carnet d'adresses et envois logistiques aux rerolls.",
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "Utilitaires de développement pour l'inspection de cadres, les événements, les erreurs, les variables globales et la navigation dans l'atlas.",
 

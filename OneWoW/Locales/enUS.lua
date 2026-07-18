@@ -135,6 +135,8 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["WIZARD_FEATURE_SHOPPINGLIST_DESC"] = "Shopping and crafting material lists with profession and alt-inventory awareness.",
     ["WIZARD_FEATURE_DIRECTDEPOSIT"] = "Direct Deposit",
     ["WIZARD_FEATURE_DIRECTDEPOSIT_DESC"] = "Automates gold and item moves between your character and Warband Bank.",
+    ["WIZARD_FEATURE_MAIL"] = "Mail",
+    ["WIZARD_FEATURE_MAIL_DESC"] = "Mailbox replacement with selective collect, address book, and logistics Shipments to alts.",
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "Developer utilities for frame inspection, events, errors, globals, and atlas browsing.",
 

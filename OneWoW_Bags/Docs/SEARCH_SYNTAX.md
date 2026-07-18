@@ -644,6 +644,7 @@ Socket type data is resolved lazily via `C_Item.GetItemStats`.
 | `#refundable` | Items still eligible for a full vendor refund (same window as the in-game refund indicator) |
 | `#enchanted` | Items whose link includes a permanent enchant (enchant ID in the parsed item link) |
 | `#scrappable` | Items `C_Item.CanScrapItem` reports as scrappable for the bag slot (`ItemLocation` must be valid); always false without a real bag/slot |
+| `#disenchantable` | `#de` | Items that can be disenchanted. Owned by `OneWoW.Disenchant` (Molinari-style heuristic + curated allow/block lists). Bind-agnostic — combine with `!#soulbound` when mailing. Does **not** require the current character to know Disenchant. Quality caps belong in the expression (`#disenchantable & quality<=2`), not the keyword. |
 
 > **`#usable` vs `#onuse`:** `#usable` / `#unusable` are character-eligibility (`IsUsableItem` in bags; bank fallback: combine items match when all reagents are owned, teachable collectibles while still learnable, others need a direct `Use:` tooltip — not recipes/non-collectible teach items). `#onuse` means the tooltip has a **Use:** effect — independent of whether you meet the requirements. `#use` is not a registered keyword (use `#usable` or `#onuse` explicitly).
 
@@ -1042,6 +1043,7 @@ read more like natural conditions.
 | `IsNew` | `#new` |
 | `IsJunk` | `#junk`, `#trash` |
 | `IsScrappable` | `#scrappable` |
+| `IsDisenchantable` | `#disenchantable`, `#de` (via `OneWoW.Disenchant`) |
 | `IsToy` | `#toy` |
 | `IsMount` | `#mount` |
 | `IsPet` | `#pet` |
