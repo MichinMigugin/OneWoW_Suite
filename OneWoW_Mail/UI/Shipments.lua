@@ -82,7 +82,10 @@ local function MakeShipment(name)
         frequency = "session",
         kind = "items",
         match = "",
+        targetKind = "char",
         target = "",
+        targetRoleId = "",
+        roleDistribute = "fill_first",
         keepQty = 0,
         maxQtyEnabled = false,
         maxQty = 0,
@@ -445,34 +448,81 @@ local function EnsureDetailWidgets()
             cb:SetChecked(key == kind)
         end
     end
-    for _, def in ipairs({
-        { key = "items", label = L["KIND_ITEMS"], tt = L["TT_KIND_ITEMS"] },
-        { key = "gold", label = L["KIND_GOLD"], tt = L["TT_KIND_GOLD"] },
-    }) do
-        local cb = OneWoW_GUI:CreateCheckbox(content, { label = def.label })
-        cb:SetPoint("TOPLEFT", content, "TOPLEFT", 4, y)
-        cb:SetScript("OnClick", function()
-            local s = Current()
-            if s then
-                s.kind = def.key
+    do
+        local prev
+        for _, def in ipairs({
+            { key = "items", label = L["KIND_ITEMS"], tt = L["TT_KIND_ITEMS"] },
+            { key = "gold", label = L["KIND_GOLD"], tt = L["TT_KIND_GOLD"] },
+        }) do
+            local cb = OneWoW_GUI:CreateCheckbox(content, { label = def.label })
+            if prev then
+                cb:SetPoint("LEFT", prev, "LEFT", (prev:GetMeasuredWidth() or 80) + 20, 0)
+            else
+                cb:SetPoint("TOPLEFT", content, "TOPLEFT", 4, y)
             end
-            dw.SetKindChecked(def.key)
-            if dw.SyncKindPanels then
-                dw.SyncKindPanels()
-            end
-        end)
-        AttachTooltip(cb, def.label, def.tt)
-        dw.kindButtons[def.key] = cb
+            cb:SetScript("OnClick", function()
+                local s = Current()
+                if s then
+                    s.kind = def.key
+                end
+                dw.SetKindChecked(def.key)
+                if dw.SyncKindPanels then
+                    dw.SyncKindPanels()
+                end
+            end)
+            AttachTooltip(cb, def.label, def.tt)
+            dw.kindButtons[def.key] = cb
+            prev = cb
+        end
         nextY(24)
     end
     nextY(6)
 
-    -- Shared target (both kinds).
+    -- Shared target (both kinds): Character name or Alt role.
     dw.targetLabel = OneWoW_GUI:CreateFS(content, 11)
     dw.targetLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
     dw.targetLabel:SetText(TARGET .. ":")
     AttachTooltip(dw.targetLabel, TARGET, L["TT_SHIPMENT_TARGET"])
     nextY(16)
+
+    dw.targetKindButtons = {}
+    function dw.SetTargetKindChecked(kind)
+        for key, cb in pairs(dw.targetKindButtons) do
+            cb:SetChecked(key == kind)
+        end
+    end
+    do
+        local prev
+        for _, def in ipairs({
+            { key = "char", label = CHARACTER, tt = L["TT_TARGET_KIND_CHAR"] },
+            { key = "role", label = ROLE, tt = L["TT_TARGET_KIND_ROLE"] },
+        }) do
+            local cb = OneWoW_GUI:CreateCheckbox(content, { label = def.label })
+            if prev then
+                cb:SetPoint("LEFT", prev, "LEFT", (prev:GetMeasuredWidth() or 80) + 20, 0)
+            else
+                cb:SetPoint("TOPLEFT", content, "TOPLEFT", 4, y)
+            end
+            cb:SetScript("OnClick", function()
+                local s = Current()
+                if s then
+                    s.targetKind = def.key
+                end
+                dw.SetTargetKindChecked(def.key)
+                if dw.SyncTargetKind then
+                    dw.SyncTargetKind()
+                end
+                if SyncActionButtons then
+                    SyncActionButtons()
+                end
+            end)
+            AttachTooltip(cb, def.label, def.tt)
+            dw.targetKindButtons[def.key] = cb
+            prev = cb
+        end
+        nextY(24)
+    end
+    nextY(4)
 
     dw.targetBox = OneWoW_GUI:CreateEditBox(content, {
         width = 280,
@@ -497,7 +547,108 @@ local function EnsureDetailWidgets()
         end
     end)
     AttachTooltip(dw.targetBox, TARGET, L["TT_SHIPMENT_TARGET"])
+
+    local DISTRIBUTE_LABELS = {
+        fill_first = L["ROLE_DIST_FILL"],
+        round_robin = L["ROLE_DIST_RR"],
+        equal_split = L["ROLE_DIST_EQUAL"],
+    }
+
+    dw.roleDropdown = OneWoW_GUI:CreateDropdown(content, {
+        width = 200,
+        height = 24,
+        text = L["TARGET_ROLE_PICK"],
+    })
+    dw.roleDropdown:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
+    OneWoW_GUI:AttachFilterMenu(dw.roleDropdown, {
+        searchable = false,
+        menuHeight = 200,
+        buildItems = function()
+            local items = {}
+            for _, role in ipairs(OneWoW.AltScope:GetRolesSorted()) do
+                tinsert(items, {
+                    text = role.name or role.id,
+                    value = role.id,
+                })
+            end
+            if #items == 0 then
+                tinsert(items, { text = L["TARGET_ROLE_NONE"], value = "" })
+            end
+            return items
+        end,
+        onSelect = function(value, text)
+            local s = Current()
+            if s then
+                s.targetRoleId = value or ""
+            end
+            dw.roleDropdown._text:SetText(text)
+            dw.roleDropdown._activeValue = value
+            if SyncActionButtons then
+                SyncActionButtons()
+            end
+        end,
+        getActiveValue = function()
+            local s = Current()
+            return s and s.targetRoleId or nil
+        end,
+    })
+    AttachTooltip(dw.roleDropdown, ROLE, L["TT_TARGET_KIND_ROLE"])
+
+    nextY(28)
+
+    dw.distLabel = OneWoW_GUI:CreateFS(content, 11)
+    dw.distLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
+    dw.distLabel:SetText(L["ROLE_DISTRIBUTE"] .. ":")
+    AttachTooltip(dw.distLabel, L["ROLE_DISTRIBUTE"], L["TT_ROLE_DISTRIBUTE"])
+    nextY(16)
+
+    dw.distDropdown = OneWoW_GUI:CreateDropdown(content, {
+        width = 220,
+        height = 24,
+        text = DISTRIBUTE_LABELS.fill_first,
+    })
+    dw.distDropdown:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
+    OneWoW_GUI:AttachFilterMenu(dw.distDropdown, {
+        searchable = false,
+        menuHeight = 100,
+        buildItems = function()
+            return {
+                { text = DISTRIBUTE_LABELS.fill_first, value = "fill_first", tooltip = L["TT_ROLE_DIST_FILL"] },
+                { text = DISTRIBUTE_LABELS.round_robin, value = "round_robin", tooltip = L["TT_ROLE_DIST_RR"] },
+                { text = DISTRIBUTE_LABELS.equal_split, value = "equal_split", tooltip = L["TT_ROLE_DIST_EQUAL"] },
+            }
+        end,
+        onSelect = function(value, text)
+            local s = Current()
+            if s then
+                s.roleDistribute = value
+            end
+            dw.distDropdown._text:SetText(text)
+            dw.distDropdown._activeValue = value
+        end,
+        getActiveValue = function()
+            local s = Current()
+            return (s and s.roleDistribute) or "fill_first"
+        end,
+    })
+    AttachTooltip(dw.distDropdown, L["ROLE_DISTRIBUTE"], L["TT_ROLE_DISTRIBUTE"])
     nextY(36)
+
+    function dw.SyncTargetKind()
+        local s = Current()
+        local kind = (s and s.targetKind) or "char"
+        if kind == "role" then
+            dw.targetBox:Hide()
+            dw.roleDropdown:Show()
+            dw.distLabel:Show()
+            dw.distDropdown:Show()
+        else
+            dw.targetBox:Show()
+            dw.roleDropdown:Hide()
+            dw.distLabel:Hide()
+            dw.distDropdown:Hide()
+        end
+    end
 
     local rulesTop = y
 
@@ -733,23 +884,131 @@ local function EnsureDetailWidgets()
     dw.goldPanel:SetHeight(goldRulesH)
 
     -- Preview sits just under whichever rules panel is showing (item panel is taller).
-    local PREVIEW_H = 160
+    local PREVIEW_H = 180
+    local PREVIEW_LINE_H = 18
+    local PREVIEW_SCROLL_W = 18
+    dw.previewLines = {}
+
+    local function HidePreviewLines()
+        for _, fs in ipairs(dw.previewLines) do
+            fs:Hide()
+            fs:ClearAllPoints()
+            fs._tipTitle = nil
+            fs._tipBody = nil
+            if fs._hit then
+                fs._hit:Hide()
+            end
+        end
+    end
+
+    local function AcquirePreviewLine()
+        for _, fs in ipairs(dw.previewLines) do
+            if not fs:IsShown() then
+                fs:Show()
+                return fs
+            end
+        end
+        local fs = OneWoW_GUI:CreateFS(dw.previewChild, 11)
+        fs:SetJustifyH("LEFT")
+        fs:SetWordWrap(false)
+        fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        local hit = CreateFrame("Frame", nil, dw.previewChild)
+        hit:SetHeight(PREVIEW_LINE_H)
+        hit:EnableMouse(true)
+        hit:SetScript("OnEnter", function()
+            if not fs._tipTitle then
+                return
+            end
+            GameTooltip:SetOwner(hit, "ANCHOR_RIGHT")
+            GameTooltip:SetText(fs._tipTitle, 1, 1, 1)
+            if fs._tipBody and fs._tipBody ~= "" then
+                GameTooltip:AddLine(fs._tipBody, 0.85, 0.85, 0.85, true)
+            end
+            GameTooltip:Show()
+        end)
+        hit:SetScript("OnLeave", GameTooltip_Hide)
+        fs._hit = hit
+        tinsert(dw.previewLines, fs)
+        return fs
+    end
+
+    local function SetPreviewRows(rows)
+        HidePreviewLines()
+        local width = math.max(100, (dw.previewScroll:GetWidth() or 400) - PREVIEW_SCROLL_W)
+        dw.previewChild:SetWidth(width)
+        local rowY = 0
+        for _, row in ipairs(rows) do
+            local fs = AcquirePreviewLine()
+            fs:SetText(row.text or "")
+            if row.warning then
+                fs:SetTextColor(1, 0.53, 0, 1)
+            else
+                fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            end
+            fs:ClearAllPoints()
+            fs:SetPoint("TOPLEFT", dw.previewChild, "TOPLEFT", 0, -rowY)
+            fs:SetPoint("TOPRIGHT", dw.previewChild, "TOPRIGHT", -4, -rowY)
+            fs._tipTitle = row.tipTitle
+            fs._tipBody = row.tipBody
+            if fs._hit then
+                fs._hit:ClearAllPoints()
+                fs._hit:SetPoint("TOPLEFT", fs, "TOPLEFT", 0, 0)
+                fs._hit:SetPoint("BOTTOMRIGHT", fs, "BOTTOMRIGHT", 0, 0)
+                if row.tipTitle then
+                    fs._hit:Show()
+                else
+                    fs._hit:Hide()
+                end
+            end
+            rowY = rowY + PREVIEW_LINE_H
+        end
+        dw.previewChild:SetHeight(math.max(1, rowY))
+        dw.previewScroll:SetVerticalScroll(0)
+    end
+    dw.SetPreviewRows = SetPreviewRows
+
     local function LayoutPreviewUnderRules()
         local panel = dw.goldPanel:IsShown() and dw.goldPanel or dw.itemPanel
         local rulesH = panel:GetHeight()
-        dw.previewText:ClearAllPoints()
-        dw.previewText:SetPoint("TOPLEFT", panel, "BOTTOMLEFT", 8, -10)
-        dw.previewText:SetPoint("TOPRIGHT", panel, "BOTTOMRIGHT", -8, -10)
+        dw.previewScroll:ClearAllPoints()
+        dw.previewScroll:SetPoint("TOPLEFT", panel, "BOTTOMLEFT", 8, -10)
+        dw.previewScroll:SetPoint("TOPRIGHT", panel, "BOTTOMRIGHT", -8, -10)
+        dw.previewScroll:SetHeight(PREVIEW_H)
         content:SetHeight(math.max(1, -(rulesTop - rulesH - 10) + PREVIEW_H + 10))
+        local width = math.max(100, (dw.previewScroll:GetWidth() or 400) - PREVIEW_SCROLL_W)
+        dw.previewChild:SetWidth(width)
     end
     dw.LayoutPreviewUnderRules = LayoutPreviewUnderRules
+
+    local SKIP_SHORT = {
+        ["restock-met"] = "PREVIEW_SKIP_RESTOCK_MET",
+        ["keep-holds"] = "PREVIEW_SKIP_KEEP_HOLDS",
+        ["underfunded"] = "PREVIEW_SKIP_UNDERFUNDED",
+        ["cap-zero"] = "PREVIEW_SKIP_CAP_ZERO",
+        ["no-match"] = "PREVIEW_SKIP_NO_MATCH",
+        ["nothing"] = "PREVIEW_SKIP_NOTHING",
+    }
+    local SKIP_FULL = {
+        ["restock-met"] = "LOG_SKIP_RESTOCK_MET",
+        ["keep-holds"] = "LOG_SKIP_KEEP_HOLDS",
+        ["underfunded"] = "LOG_SKIP_UNDERFUNDED",
+        ["cap-zero"] = "LOG_SKIP_CAP_ZERO",
+        ["no-match"] = "LOG_SKIP_NO_MATCH",
+        ["nothing"] = "LOG_SKIP_NOTHING",
+    }
 
     local function CommitDetailFields()
         local s = Current()
         if not s then
             return
         end
-        s.target = dw.targetSuggest:GetText()
+        s.targetKind = (dw.targetKindButtons.role:GetChecked() and "role") or "char"
+        if s.targetKind == "role" then
+            s.targetRoleId = dw.roleDropdown._activeValue or s.targetRoleId or ""
+            s.roleDistribute = dw.distDropdown._activeValue or s.roleDistribute or "fill_first"
+        else
+            s.target = dw.targetSuggest:GetText()
+        end
         s.kind = (dw.kindButtons.gold:GetChecked() and "gold") or "items"
         s.frequency = (dw.freqButtons.visit:GetChecked() and "visit") or "session"
         if s.kind == "gold" then
@@ -783,11 +1042,37 @@ local function EnsureDetailWidgets()
         end
         CommitDetailFields()
         local result = ns.ShipmentEvaluator:Preview(s.id)
-        local lines = {}
+        local rows = {}
+        local roleLabel = nil
+        if (s.targetKind or "char") == "role" and s.targetRoleId and s.targetRoleId ~= "" then
+            local role = OneWoW.AltScope:GetRole(s.targetRoleId)
+            roleLabel = (role and role.name) or s.targetRoleId
+        end
+        local function TargetLabel(target)
+            local name = target or "?"
+            local short = strsplit("-", name, 2)
+            if roleLabel then
+                return string.format("%s → %s", roleLabel, short or name)
+            end
+            return short or name
+        end
+        -- GameTooltip fonts often lack the Unicode arrow used in list rows.
+        local function TipTitle(who)
+            return (who or ""):gsub("→", "->")
+        end
         for _, plan in ipairs(result.plans) do
+            local who = TargetLabel(plan.target)
+            local tipWho = TipTitle(who)
+            local hadEntry = false
             for _, entry in ipairs(plan.entries or {}) do
+                hadEntry = true
                 if entry.money then
-                    tinsert(lines, string.format("%s → %s", OneWoW.Format.FormatGold(entry.money), plan.target or "?"))
+                    local amount = OneWoW.Format.FormatGold(entry.money)
+                    tinsert(rows, {
+                        text = string.format("%s  ·  %s", who, amount),
+                        tipTitle = tipWho,
+                        tipBody = amount,
+                    })
                 else
                     local name = C_Item.GetItemNameByID(entry.itemID) or tostring(entry.itemID)
                     local quality = C_Item.GetItemQualityByID(entry.itemID)
@@ -799,18 +1084,41 @@ local function EnsureDetailWidgets()
                         math.floor(b * 255 + 0.5),
                         name
                     )
-                    tinsert(lines, string.format("%s x%d → %s", colored, entry.quantity, plan.target or "?"))
+                    local amount = string.format("%s x%d", colored, entry.quantity)
+                    tinsert(rows, {
+                        text = string.format("%s  ·  %s", who, amount),
+                        tipTitle = tipWho,
+                        tipBody = string.format("%s x%d", name, entry.quantity),
+                    })
                 end
+            end
+            if not hadEntry and not plan.error and plan.skipReason then
+                local shortKey = SKIP_SHORT[plan.skipReason] or "PREVIEW_SKIP_NOTHING"
+                local fullKey = SKIP_FULL[plan.skipReason] or "LOG_SKIP_NOTHING"
+                local tipBody = L[fullKey]
+                if plan.skipDetail then
+                    tipBody = tipBody .. "\n" .. plan.skipDetail
+                end
+                tinsert(rows, {
+                    text = string.format("%s  ·  %s", who, L[shortKey]),
+                    tipTitle = tipWho,
+                    tipBody = tipBody,
+                })
             end
         end
         for _, err in ipairs(result.errors) do
-            tinsert(lines, "|cffff8800" .. err .. "|r")
+            tinsert(rows, { text = err, warning = true, tipTitle = err })
         end
-        if #lines == 0 then
-            tinsert(lines, L["PREVIEW_EMPTY"])
+        local jobCount = #(result.jobs or {})
+        if jobCount > 0 then
+            local postage = (GetSendMailPrice() or 30) * jobCount
+            local postageText = SEND_MAIL_COST .. " " .. OneWoW.Format.FormatGold(postage)
+            tinsert(rows, { text = postageText, tipTitle = postageText })
         end
-        dw.previewText:SetText(table.concat(lines, "\n"))
-        -- Preview text is at the bottom of the form; bring it into view.
+        if #rows == 0 then
+            tinsert(rows, { text = L["PREVIEW_EMPTY"] })
+        end
+        SetPreviewRows(rows)
         C_Timer.After(0, function()
             if dw.detailScroll then
                 dw.detailScroll:SetVerticalScroll(dw.detailScroll:GetVerticalScrollRange())
@@ -827,13 +1135,19 @@ local function EnsureDetailWidgets()
         end
         CommitDetailFields()
         local to = s.target or ""
-        if to == "" then
+        if (s.targetKind or "char") == "role" then
+            if not s.targetRoleId or s.targetRoleId == "" then
+                print(L["ADDON_CHAT_PREFIX"] .. " " .. L["ERR_NO_TARGET"])
+                return
+            end
+        elseif to == "" then
             print(L["ADDON_CHAT_PREFIX"] .. " " .. L["ERR_NO_TARGET"])
             return
-        end
-        local isAlt = ns.AddressBook:IsSuiteAlt(to)
-        if not isAlt then
-            print(L["ADDON_CHAT_PREFIX"] .. " " .. L["WARN_NON_ROSTER"])
+        else
+            local isAlt = ns.AddressBook:IsSuiteAlt(to)
+            if not isAlt then
+                print(L["ADDON_CHAT_PREFIX"] .. " " .. L["WARN_NON_ROSTER"])
+            end
         end
         ns.ShipmentEvaluator:Run({ shipmentId = s.id }, function(ok, _, summary)
             if ok then
@@ -842,15 +1156,19 @@ local function EnsureDetailWidgets()
         end)
     end)
 
-    dw.previewText = OneWoW_GUI:CreateFS(content, 11)
-    dw.previewText:SetHeight(PREVIEW_H)
-    dw.previewText:SetJustifyH("LEFT")
-    dw.previewText:SetJustifyV("TOP")
-    dw.previewText:SetText("")
+    dw.previewScroll, dw.previewChild = OneWoW_GUI:CreateScrollFrame(content, {})
+    dw.previewScroll:SetHeight(PREVIEW_H)
     LayoutPreviewUnderRules()
+    SetPreviewRows({})
 
     SyncActionButtons = function()
-        local hasTarget = strtrim(dw.targetSuggest:GetText() or "") ~= ""
+        local s = Current()
+        local hasTarget = false
+        if s and (s.targetKind or "char") == "role" then
+            hasTarget = s.targetRoleId and s.targetRoleId ~= ""
+        else
+            hasTarget = strtrim(dw.targetSuggest:GetText() or "") ~= ""
+        end
         SetWidgetEnabled(dw.previewBtn, hasTarget)
         SetWidgetEnabled(dw.sendBtn, hasTarget)
     end
@@ -956,7 +1274,25 @@ local function RefreshDetail()
     dw.SetModeChecked(s.mode or "manual")
     dw.SetFrequencyChecked(s.frequency or "session")
     dw.SetKindChecked(s.kind or "items")
+    dw.SetTargetKindChecked(s.targetKind or "char")
     dw.targetSuggest:SetText(s.target or "")
+    local roleId = s.targetRoleId or ""
+    dw.roleDropdown._activeValue = roleId
+    if roleId ~= "" then
+        local role = OneWoW.AltScope:GetRole(roleId)
+        dw.roleDropdown._text:SetText((role and role.name) or roleId)
+    else
+        dw.roleDropdown._text:SetText(L["TARGET_ROLE_PICK"])
+    end
+    local dist = s.roleDistribute or "fill_first"
+    dw.distDropdown._activeValue = dist
+    local distLabels = {
+        fill_first = L["ROLE_DIST_FILL"],
+        round_robin = L["ROLE_DIST_RR"],
+        equal_split = L["ROLE_DIST_EQUAL"],
+    }
+    dw.distDropdown._text:SetText(distLabels[dist] or distLabels.fill_first)
+    dw.SyncTargetKind()
     dw.matchBox:SetText(s.match or "")
     dw.matchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     dw.keepBox:SetText(tostring(s.keepQty or 0))
@@ -978,7 +1314,7 @@ local function RefreshDetail()
     dw.goldRestockBox:SetText(tostring(restockGold))
     dw.goldRestockBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    dw.previewText:SetText("")
+    dw.SetPreviewRows({})
     dw.SyncFrequencyEnabled()
     dw.SyncKindPanels()
     dw.SyncActionButtons()

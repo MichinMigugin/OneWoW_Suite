@@ -59,6 +59,13 @@ function ns:InitializeDatabase()
         if not shipment.kind then
             shipment.kind = "items"
         end
+        if not shipment.targetKind then
+            shipment.targetKind = "char"
+        end
+        if not shipment.roleDistribute then
+            shipment.roleDistribute = "fill_first"
+        end
+        shipment.targetRoleId = shipment.targetRoleId or ""
         if shipment.kind == "gold" then
             shipment.keepCopper = shipment.keepCopper or 0
             shipment.maxCopper = shipment.maxCopper or 0
@@ -84,6 +91,9 @@ function ns:EnsurePresetShipments()
             kind = "items",
             match = "#craftingreagentcloth",
             target = "",
+            targetKind = "char",
+            targetRoleId = "",
+            roleDistribute = "fill_first",
             keepQty = 0,
             maxQtyEnabled = false,
             maxQty = 0,
@@ -99,6 +109,9 @@ function ns:EnsurePresetShipments()
             kind = "items",
             match = "#craftingreagentleather",
             target = "",
+            targetKind = "char",
+            targetRoleId = "",
+            roleDistribute = "fill_first",
             keepQty = 0,
             maxQtyEnabled = false,
             maxQty = 0,
@@ -114,6 +127,9 @@ function ns:EnsurePresetShipments()
             kind = "items",
             match = "#craftingreagentmetal",
             target = "",
+            targetKind = "char",
+            targetRoleId = "",
+            roleDistribute = "fill_first",
             keepQty = 0,
             maxQtyEnabled = false,
             maxQty = 0,
@@ -129,6 +145,9 @@ function ns:EnsurePresetShipments()
             kind = "items",
             match = "#craftingreagentherb",
             target = "",
+            targetKind = "char",
+            targetRoleId = "",
+            roleDistribute = "fill_first",
             keepQty = 0,
             maxQtyEnabled = false,
             maxQty = 0,
@@ -144,6 +163,9 @@ function ns:EnsurePresetShipments()
             kind = "items",
             match = "#disenchantable & quality<=2",
             target = "",
+            targetKind = "char",
+            targetRoleId = "",
+            roleDistribute = "fill_first",
             keepQty = 0,
             maxQtyEnabled = false,
             maxQty = 0,

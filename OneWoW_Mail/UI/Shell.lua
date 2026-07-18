@@ -124,6 +124,11 @@ function Shell:Ensure()
     if not OneWoW_GUI:RestoreWindowPosition(shellFrame, ns.db.global.mainFramePosition) then
         shellFrame:SetPoint("CENTER")
     end
+    -- Grow with the default if a saved size is shorter (e.g. Shipments form grew).
+    if (shellFrame:GetHeight() or 0) < C.WINDOW_HEIGHT then
+        shellFrame:SetHeight(C.WINDOW_HEIGHT)
+        OneWoW_GUI:SaveWindowPosition(shellFrame, ns.db.global.mainFramePosition)
+    end
     shellFrame:SetMovable(true)
     shellFrame:EnableMouse(true)
     shellFrame:RegisterForDrag("LeftButton")

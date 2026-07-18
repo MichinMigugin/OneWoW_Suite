@@ -1152,6 +1152,7 @@ OneWoW_GUI:AttachFilterMenu(dropdown, {
 - Click to open, click again to close
 - Active item highlighted with ACCENT_PRIMARY
 - Hover: BG_HOVER + TEXT_ACCENT
+- Optional per-item `tooltip`: string body (title = `text`), or `{ title, desc }`
 - Auto-closes after 0.5s when mouse leaves both menu and trigger button
 - ESC: clears search text first, closes menu on second press (searchable only)
 - Menu opens at DIALOG strata (above the host window)

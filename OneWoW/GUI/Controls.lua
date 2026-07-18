@@ -501,12 +501,31 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                         b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                         txt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
                     end
+                    local tip = item.tooltip
+                    if tip then
+                        GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
+                        if type(tip) == "table" then
+                            GameTooltip:SetText(tip.title or item.text or "", 1, 1, 1)
+                            if tip.desc and tip.desc ~= "" then
+                                GameTooltip:AddLine(tip.desc, 0.85, 0.85, 0.85, true)
+                            end
+                        else
+                            GameTooltip:SetText(item.text or "", 1, 1, 1)
+                            if tip ~= "" then
+                                GameTooltip:AddLine(tip, 0.85, 0.85, 0.85, true)
+                            end
+                        end
+                        GameTooltip:Show()
+                    end
                     if item.onEnter then item.onEnter(b) end
                 end)
                 btn:SetScript("OnLeave", function(b)
                     if activeValue ~= item.value then
                         b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
                         txt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                    end
+                    if item.tooltip then
+                        GameTooltip:Hide()
                     end
                     if item.onLeave then item.onLeave(b) end
                 end)

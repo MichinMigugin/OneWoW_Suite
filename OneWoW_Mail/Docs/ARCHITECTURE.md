@@ -18,14 +18,21 @@ Standalone LoD load unit that replaces the Blizzard mailbox UI with a OneWoW_GUI
 | `UI/Inbox.lua` | Filtered collect buttons, selection, Shift-loot / Ctrl-return |
 | `UI/Compose.lua` | OneWoW Compose chrome; hidden native `SendMailFrame` via NativeSend |
 | `Engine/NativeSend.lua` | Activate/deactivate `SetSendMailShowing` + park Blizzard send frame |
-| `UI/Shipments.lua` | Shipment editor (PE match, keep/max/restock) |
+| `UI/Shipments.lua` | Shipment editor (char/role target, distribute, PE match, keep/max/restock) |
 | `UI/Other.lua` | DE dump, excess gold, session rake |
 | `Engine/Collect.lua` | `C_Mail.IsCommandPending` paced take; COD/GM skip |
 | `Engine/MailClassify.lua` | AH invoice + subject classification |
 | `Engine/AddressBook.lua` | Alts (all realms) + normalize + suggestions |
-| `Engine/ShipmentEvaluator.lua` | PE match + keepQty/maxQty/restock → jobs |
+| `Engine/ShipmentEvaluator.lua` | Expand role → per-member plans; PE match + keep/max/restock; role distribute modes → jobs |
+| `Engine/AutoRun.lua` | Session success map `shipmentId → roleId → charKey`; skip already-successful role members |
 | `Engine/SendQueue.lua` | Sequential `SendMail` jobs |
 | `Engine/InTransit.lua` | Writes recipient Storage in-transit on suite-alt send (items + gold); restock planning counts in-transit toward the target |
+
+## Role-targeted shipments
+
+- Roles live in core (`OneWoW.AltScope` / `OneWoW_DB.global.roles`); Mail does not depend on AltTracker hub UI.
+- Shipment fields: `targetKind` (`char`|`role`), `target` / `targetRoleId`, `roleDistribute` (`fill_first`|`round_robin`|`equal_split`).
+- Plan-time expand to N recipients (exclude self); keep/cap/restock apply per recipient; shared sender pool uses `roleDistribute` when underfunded.
 
 ## Cross-unit
 

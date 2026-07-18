@@ -32,11 +32,14 @@
 
 ## Shipments
 - Reusable mailing profiles for items or gold (each shipment is one or the other)
+- Target a single character or an alt role (Settings → Roles & Alts); role shipments run once per member (except yourself)
+  - When the sender cannot fully fund every role member: Fill first needy, Round robin, or Equal split (items and gold)
+  - Session-frequency role shipments track per-member success and finish only when every current member has succeeded this login
 - Item profiles pick bag items with search rules (Bags search syntax)
-  - Per-item send rules: keep an amount on this character, cap the amount per run, or only top up what the target is missing (uses AltTracker inventory, including mail still in transit)
+  - Per-item send rules: keep an amount on this character, cap the amount per run, or only top up what the target is missing (uses AltTracker bags/bank inventory, including mail still in transit)
   - Soulbound items are always excluded; stacks are split safely so exactly the planned amount is sent
 - Gold profiles send excess gold with leave-on-character, send-up-to cap, and until-target-has top-up (uses AltTracker gold plus mail still in transit)
-- Preview shows what a shipment would send before you commit; item names use quality colors
+- Preview shows per-recipient amounts (and total postage) in a scrollable list; hover a row for the full reason; item names use quality colors
 - Preset item shipments included to start from: Cloth, Leather, Metal/Ore, Herbs, Disenchantables
 - Auto-run setting per shipment: Manual only, Auto with review, or Auto send immediately
   - Frequency: once per game session (default, retries until success) or every mailbox open

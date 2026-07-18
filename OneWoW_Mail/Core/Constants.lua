@@ -3,7 +3,7 @@ local _, ns = ...
 ns.Constants = {
     GUI = {
         WINDOW_WIDTH = 720,
-        WINDOW_HEIGHT = 620,
+        WINDOW_HEIGHT = 668,
     },
     -- Keep this many free bag slots while collecting mail.
     DEFAULT_KEEP_FREE = 1,

@@ -408,8 +408,27 @@ end
 function Compose:Create(parent)
     wipe(ui)
 
+    local TOP_PAD = 10
+    local FOOTER_PAD = 0
+    local SECTION_GAP = 12
+
+    ui.sendBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = SEND_LABEL, height = 28 })
+    ui.sendBtn:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", FOOTER_PAD, FOOTER_PAD)
+    ui.sendBtn:SetScript("OnClick", DoSend)
+
+    ui.clearBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = CLEAR_ALL, height = 28 })
+    ui.clearBtn:SetPoint("RIGHT", ui.sendBtn, "LEFT", -6, 0)
+    ui.clearBtn:SetScript("OnClick", function()
+        ClearSendMail()
+        ClearFormFields()
+    end)
+
+    ui.postage = OneWoW_GUI:CreateFS(parent, 12)
+    ui.postage:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", FOOTER_PAD, FOOTER_PAD + 6)
+    ui.postage:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
     local toLabel = OneWoW_GUI:CreateFS(parent, 12)
-    toLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
+    toLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -TOP_PAD)
     toLabel:SetText(MAIL_TO_LABEL)
     toLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
@@ -487,53 +506,13 @@ function Compose:Create(parent)
         end
     end)
 
-    local bodyWrap = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    bodyWrap:SetPoint("TOPLEFT", ui.subjectBox, "BOTTOMLEFT", 0, -10)
-    bodyWrap:SetPoint("RIGHT", parent, "RIGHT", 0, 0)
-    bodyWrap:SetHeight(120)
-    bodyWrap:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    bodyWrap:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    bodyWrap:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local bodyScroll, bodyBox = OneWoW_GUI:CreateScrollEditBox(bodyWrap, {
-        fontSize = 12,
-        maxLetters = 500,
-    })
-    bodyScroll:ClearAllPoints()
-    bodyScroll:SetPoint("TOPLEFT", bodyWrap, "TOPLEFT", 4, -4)
-    bodyScroll:SetPoint("BOTTOMRIGHT", bodyWrap, "BOTTOMRIGHT", -4, 4)
-    ui.bodyBox = bodyBox
-    ui.bodyWrap = bodyWrap
-
-    -- Attachments
-    local attachLabel = OneWoW_GUI:CreateFS(parent, 12)
-    attachLabel:SetPoint("TOPLEFT", bodyWrap, "BOTTOMLEFT", 0, -10)
-    attachLabel:SetText(ATTACHMENT_TEXT)
-    attachLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    ui.attachLabel = attachLabel
-
-    local slotRow = CreateFrame("Frame", nil, parent)
-    slotRow:SetPoint("TOPLEFT", attachLabel, "BOTTOMLEFT", 0, -6)
-    slotRow:SetPoint("RIGHT", parent, "RIGHT", 0, 0)
-    slotRow:SetHeight(SLOT_SIZE * 2 + SLOT_GAP)
-    ui.slotRow = slotRow
-    ui.slots = {}
-
-    for i = 1, MAX_SLOTS do
-        local slot = CreateAttachmentSlot(slotRow, i)
-        local col = (i - 1) % 6
-        local row = math.floor((i - 1) / 6)
-        slot:SetPoint("TOPLEFT", slotRow, "TOPLEFT", col * (SLOT_SIZE + SLOT_GAP), -row * (SLOT_SIZE + SLOT_GAP))
-        ui.slots[i] = slot
-    end
-
-    -- Money / COD
+    -- Money / COD — fixed block above the footer row.
     ui.sendMoneyBtn = OneWoW_GUI:CreateFitTextButton(parent, {
         text = SEND_MONEY,
         height = 22,
         toggleable = true,
     })
-    ui.sendMoneyBtn:SetPoint("TOPLEFT", slotRow, "BOTTOMLEFT", 0, -12)
+    ui.sendMoneyBtn:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 28 + SECTION_GAP + 4)
     ui.sendMoneyBtn:SetScript("OnClick", function()
         sendMoneyMode = true
         SyncMoneyModeButtons()
@@ -567,20 +546,45 @@ function Compose:Create(parent)
     ui.copperBox:SetNumeric(true)
     StyleMoneyBox(ui.copperBox, moneyColors.COPPER)
 
-    ui.postage = OneWoW_GUI:CreateFS(parent, 12)
-    ui.postage:SetPoint("TOPLEFT", ui.sendMoneyBtn, "BOTTOMLEFT", 0, -10)
-    ui.postage:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    local slotRow = CreateFrame("Frame", nil, parent)
+    slotRow:SetPoint("BOTTOMLEFT", ui.sendMoneyBtn, "TOPLEFT", 0, SECTION_GAP)
+    slotRow:SetPoint("RIGHT", parent, "RIGHT", 0, 0)
+    slotRow:SetHeight(SLOT_SIZE * 2 + SLOT_GAP)
+    ui.slotRow = slotRow
+    ui.slots = {}
 
-    ui.sendBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = SEND_LABEL, height = 28 })
-    ui.sendBtn:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-    ui.sendBtn:SetScript("OnClick", DoSend)
+    for i = 1, MAX_SLOTS do
+        local slot = CreateAttachmentSlot(slotRow, i)
+        local col = (i - 1) % 6
+        local row = math.floor((i - 1) / 6)
+        slot:SetPoint("TOPLEFT", slotRow, "TOPLEFT", col * (SLOT_SIZE + SLOT_GAP), -row * (SLOT_SIZE + SLOT_GAP))
+        ui.slots[i] = slot
+    end
 
-    ui.clearBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = CLEAR_ALL, height = 28 })
-    ui.clearBtn:SetPoint("RIGHT", ui.sendBtn, "LEFT", -6, 0)
-    ui.clearBtn:SetScript("OnClick", function()
-        ClearSendMail()
-        ClearFormFields()
-    end)
+    local attachLabel = OneWoW_GUI:CreateFS(parent, 12)
+    attachLabel:SetPoint("BOTTOMLEFT", slotRow, "TOPLEFT", 0, 6)
+    attachLabel:SetText(ATTACHMENT_TEXT)
+    attachLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    ui.attachLabel = attachLabel
+
+    -- Message body fills the gap between Subject and Attachments.
+    local bodyWrap = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    bodyWrap:SetPoint("TOPLEFT", ui.subjectBox, "BOTTOMLEFT", 0, -10)
+    bodyWrap:SetPoint("RIGHT", parent, "RIGHT", 0, 0)
+    bodyWrap:SetPoint("BOTTOM", attachLabel, "TOP", 0, SECTION_GAP)
+    bodyWrap:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+    bodyWrap:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    bodyWrap:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+    local bodyScroll, bodyBox = OneWoW_GUI:CreateScrollEditBox(bodyWrap, {
+        fontSize = 12,
+        maxLetters = 500,
+    })
+    bodyScroll:ClearAllPoints()
+    bodyScroll:SetPoint("TOPLEFT", bodyWrap, "TOPLEFT", 4, -4)
+    bodyScroll:SetPoint("BOTTOMRIGHT", bodyWrap, "BOTTOMRIGHT", -4, 4)
+    ui.bodyBox = bodyBox
+    ui.bodyWrap = bodyWrap
 
     suggestionFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     suggestionFrame:SetSize(320, 200)

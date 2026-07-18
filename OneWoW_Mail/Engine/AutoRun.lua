@@ -29,7 +29,9 @@ local visitToken = 0
 local processing = false
 local closing = false
 local pendingIntents = {} -- display rows
-local sessionDone = {} -- [shipmentId] = true
+local sessionDone = {} -- [shipmentId] = true (char targets, or role fully complete)
+-- Role session successes: [shipmentId] = { [roleId] = { [charKey] = true } }
+local sessionTargetDone = {}
 local activeJobShipmentIds = {} -- ids touched by the in-flight auto/process run
 local closeDialog
 
@@ -49,6 +51,7 @@ end
 local SKIP_MSG = {
     ["restock-met"] = "LOG_SKIP_RESTOCK_MET",
     ["keep-holds"] = "LOG_SKIP_KEEP_HOLDS",
+    ["underfunded"] = "LOG_SKIP_UNDERFUNDED",
     ["cap-zero"] = "LOG_SKIP_CAP_ZERO",
     ["no-match"] = "LOG_SKIP_NO_MATCH",
     ["nothing"] = "LOG_SKIP_NOTHING",
@@ -81,13 +84,98 @@ local function ShipmentFrequency(shipment)
     return shipment.frequency or "session"
 end
 
+local function IsRoleTarget(shipment)
+    return (shipment.targetKind or "char") == "role"
+end
+
+local function PlanTargetKey(plan)
+    local _, charKey = ns.AddressBook:IsSuiteAlt(plan.target)
+    return charKey or plan.target
+end
+
+--- Whether every current role member has a success this session.
+--- Missing/deleted/empty roles stay incomplete so Preview keeps surfacing the plan error.
+local function IsRoleSessionComplete(shipment)
+    if not IsRoleTarget(shipment) then
+        return sessionDone[shipment.id] and true or false
+    end
+    local roleId = shipment.targetRoleId
+    if not roleId or roleId == "" then
+        return false
+    end
+    if not OneWoW.AltScope:GetRole(roleId) then
+        return false
+    end
+    local members = ns.ShipmentEvaluator:GetRoleMembers(shipment)
+    if #members == 0 then
+        return false
+    end
+    local byRole = sessionTargetDone[shipment.id]
+    local done = byRole and byRole[roleId]
+    if not done then
+        return false
+    end
+    for _, charKey in ipairs(members) do
+        if not done[charKey] then
+            return false
+        end
+    end
+    return true
+end
+
+local function MarkTargetSuccess(shipment, targetKey)
+    if ShipmentFrequency(shipment) ~= "session" then
+        return
+    end
+    if IsRoleTarget(shipment) then
+        local roleId = shipment.targetRoleId
+        if not roleId or not targetKey then
+            return
+        end
+        sessionTargetDone[shipment.id] = sessionTargetDone[shipment.id] or {}
+        sessionTargetDone[shipment.id][roleId] = sessionTargetDone[shipment.id][roleId] or {}
+        sessionTargetDone[shipment.id][roleId][targetKey] = true
+        if IsRoleSessionComplete(shipment) then
+            sessionDone[shipment.id] = true
+        else
+            sessionDone[shipment.id] = nil
+        end
+    else
+        sessionDone[shipment.id] = true
+    end
+end
+
+--- Skip map for evaluator: already-successful role members this session.
+local function BuildSkipTargets(ids)
+    local skip = {}
+    for id in pairs(ids) do
+        local shipment = GetShipment(id)
+        if shipment and IsRoleTarget(shipment) then
+            local roleId = shipment.targetRoleId
+            local done = sessionTargetDone[id] and roleId and sessionTargetDone[id][roleId]
+            if done then
+                skip[id] = done
+            end
+        end
+    end
+    return skip
+end
+
 --- Eligible for auto-run this open: matching mode, and session not yet done.
 local function CollectEligibleIds(mode)
     local ids = {}
     for _, shipment in ipairs(ns.db.global.mail.shipments or {}) do
         if (shipment.mode or "manual") == mode then
             local freq = ShipmentFrequency(shipment)
-            if freq == "visit" or not sessionDone[shipment.id] then
+            if freq == "visit" then
+                ids[shipment.id] = true
+            elseif IsRoleTarget(shipment) then
+                if not IsRoleSessionComplete(shipment) then
+                    ids[shipment.id] = true
+                else
+                    sessionDone[shipment.id] = true
+                end
+            elseif not sessionDone[shipment.id] then
                 ids[shipment.id] = true
             end
         end
@@ -96,21 +184,28 @@ local function CollectEligibleIds(mode)
 end
 
 local function MarkSessionResults(result, summary)
-    local failedIds = {}
+    local failedTargets = {} -- [shipmentId] = { [targetKey] = true }
     for _, f in ipairs((summary and summary.failed) or {}) do
         if f.job and f.job.shipmentId then
-            failedIds[f.job.shipmentId] = true
+            local key = f.job.target
+            local _, charKey = ns.AddressBook:IsSuiteAlt(key)
+            key = charKey or key
+            failedTargets[f.job.shipmentId] = failedTargets[f.job.shipmentId] or {}
+            if key then
+                failedTargets[f.job.shipmentId][key] = true
+            end
+            sessionDone[f.job.shipmentId] = nil
         end
     end
     for _, plan in ipairs(result.plans or {}) do
-        local id = plan.shipment and plan.shipment.id
-        if id then
-            local shipment = plan.shipment
-            if failedIds[id] then
-                sessionDone[id] = nil
-            elseif ShipmentFrequency(shipment) == "session" then
+        local shipment = plan.shipment
+        local id = shipment and shipment.id
+        if id and ShipmentFrequency(shipment) == "session" and not plan.error then
+            local targetKey = PlanTargetKey(plan)
+            local failed = failedTargets[id] and targetKey and failedTargets[id][targetKey]
+            if not failed then
                 -- Success including empty plan / no jobs.
-                sessionDone[id] = true
+                MarkTargetSuccess(shipment, targetKey)
             end
         end
     end
@@ -158,6 +253,7 @@ end
 function AutoRun:ClearSessionFlags(shipmentId)
     if shipmentId then
         sessionDone[shipmentId] = nil
+        sessionTargetDone[shipmentId] = nil
     end
 end
 
@@ -198,27 +294,23 @@ local function PhaseB(token)
         return
     end
     local ids = CollectEligibleIds("auto_preview")
-    local result = ns.ShipmentEvaluator:Preview({ shipmentIds = ids })
+    local result = ns.ShipmentEvaluator:Preview({
+        shipmentIds = ids,
+        skipTargets = BuildSkipTargets(ids),
+    })
     LogPlanErrors(result)
     LogSkippedPlans(result)
     CaptureIntents(result)
-    -- Session shipments with nothing to send (and no plan error) are done.
+    -- Session shipments with nothing to send (and no plan error) mark per-target success.
     for id in pairs(ids) do
         local shipment = GetShipment(id)
         if shipment and ShipmentFrequency(shipment) == "session" then
-            local hadWork, planErr = false, false
             for _, plan in ipairs(result.plans) do
-                if plan.shipment.id == id then
-                    if plan.error then
-                        planErr = true
-                    end
-                    if #(plan.jobs or {}) > 0 then
-                        hadWork = true
+                if plan.shipment.id == id and not plan.error then
+                    if #(plan.jobs or {}) == 0 then
+                        MarkTargetSuccess(shipment, PlanTargetKey(plan))
                     end
                 end
-            end
-            if not hadWork and not planErr then
-                sessionDone[id] = true
             end
         end
     end
@@ -230,7 +322,10 @@ end
 
 local function PhaseA(token)
     local ids = CollectEligibleIds("auto")
-    local result = ns.ShipmentEvaluator:Preview({ shipmentIds = ids })
+    local result = ns.ShipmentEvaluator:Preview({
+        shipmentIds = ids,
+        skipTargets = BuildSkipTargets(ids),
+    })
     LogPlanErrors(result)
     LogSkippedPlans(result)
     TrackJobs(result.jobs)
@@ -312,7 +407,10 @@ function AutoRun:Process(onDone)
     processing = true
     wipe(pendingIntents)
     NotifyActivity()
-    local result = ns.ShipmentEvaluator:Preview({ shipmentIds = ids })
+    local result = ns.ShipmentEvaluator:Preview({
+        shipmentIds = ids,
+        skipTargets = BuildSkipTargets(ids),
+    })
     TrackJobs(result.jobs)
     if #result.jobs == 0 then
         processing = false
