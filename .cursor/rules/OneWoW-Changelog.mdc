@@ -1,0 +1,73 @@
+---
+description: Format and content conventions for the root OneWoW Suite CHANGELOG.md used for CurseForge releases.
+globs: CHANGELOG.md
+alwaysApply: false
+---
+
+# OneWoW Suite Changelog
+
+`CHANGELOG.md` is the user-facing release note uploaded to CurseForge (via
+`bin/release_curseforge.py`). Keep the dialect simple: the uploader only
+supports `#` / `##` / `###`, `-` lists (2-space nest), `---` rules, blank
+lines, and basic `` `code` `` / `*em*` / `**bold**`.
+
+## Document skeleton
+
+Preserve this order and heading style:
+
+```markdown
+# OneWoW Suite Changelog
+
+## Feature Area
+- User-facing bullet
+
+---
+
+# Notes
+## Optional subsection
+- Cross-cutting or deferred notes
+
+---
+
+# AddonName
+## Feature Area
+- User-facing bullet
+
+---
+
+*No user-facing changes this release for Trackers, Shopping List, …*
+
+---
+
+- **Release**: Mon DD, YYYY
+- **Version**: R6.YYMM.DDHH
+- **Status**: Live on curseforge
+```
+
+1. **Title** — always `# OneWoW Suite Changelog` (H1).
+2. **Suite-wide sections** — `##` under the title for core / shared features
+   (e.g. Overlay System). Separate major blocks with a lone `---` line.
+3. **`# Notes`** — optional H1 block for cross-cutting notes that are not a
+   load-unit section.
+4. **Per-addon sections** — one H1 per load unit (`# AltTracker`, `# Catalog`,
+   `# QoL`, `# Bags`, …). Use `##` for feature areas inside an addon
+   (`## Fixes`, `## Vendor Panel`). If an addon has only a flat list, bullets
+   may sit directly under the H1 (no empty `##`).
+5. **No-changes footer** — italic sentence listing every suite unit with
+   nothing user-facing this release:
+   `*No user-facing changes this release for A, B, or C.*`
+   Omit units that already have an H1 section above. Use “or” before the last
+   name. Drop the whole italic line only when every unit has a section.
+6. **Release metadata** — after a final `---`, exactly three bold-label bullets:
+   - `**Release**`: human date (`Jul 16, 2026`)
+   - `**Version**`: suite version string (`R6.2607.1612`)
+   - `**Status**`: distribution state (`Live on curseforge`, or draft/pre equivalent)
+
+## Writing rules
+
+- Write for players, not developers: what changed in-game, not file/API names.
+- Prefer short `-` bullets; nest with exactly two spaces (`  -`) for sub-options.
+- Do not invent sections for units with no user-facing change — put them in the
+  italic footer instead.
+- Do not add changelog noise to Lua comments; this file is the release record.
+- LF only (repo-wide). No tables, HTML, or unsupported markdown.

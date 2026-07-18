@@ -80,6 +80,7 @@ file before editing files that match its glob(s).
 | --- | --- |
 | `**/*.lua` | `No-Defensive-Guards.mdc`, `OneWoW-Code-Comments.mdc`, `OneWoW-Lua-Conventions.mdc` |
 | `**/Locales/**/*.lua` | `OneWoW-Locale-Workflow.mdc` |
+| `CHANGELOG.md` | `OneWoW-Changelog.mdc` |
 | `OneWoW*/**/*.lua`, `OneWoW/**/*.lua`, `OneWoW*/**/*.toc` | `OneWoW-Suite-Architecture.mdc` |
 | `OneWoW_QoL/Modules/external/**/*.lua` | `OneWoW-QoL-Modules.mdc` |
 <!-- END GENERATED: rules-globs -->
