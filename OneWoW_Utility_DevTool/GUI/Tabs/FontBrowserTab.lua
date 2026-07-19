@@ -673,7 +673,7 @@ function ns.UI:CreateFontBrowserTab(parent)
     leftPanel:SetWidth(initW)
     self:StyleContentPanel(leftPanel)
 
-    local listAPI = OneWoW_GUI:CreateVirtualizedList(leftPanel, {
+    local listAPI = OneWoW_GUI:CreateVirtualizer(leftPanel, {
         name = "FontBrowserListScroll",
         rowHeight = ROW_H,
         numVisibleRows = NUM_ROWS,
@@ -683,8 +683,15 @@ function ns.UI:CreateFontBrowserTab(parent)
             applyFontSelection(tab, idx)
             refreshToolbarState(tab)
         end,
-        renderRow = function(btn, _, name, _)
+        createRow = function(content)
+            local btn = CreateFrame("Button", nil, content)
+            btn:SetHeight(ROW_H)
+            btn:SetNormalFontObject(GameFontNormalSmall)
+            btn:SetHighlightFontObject(GameFontHighlightSmall)
             ensureListRowBookmarkIcon(btn, ROW_H)
+            return btn
+        end,
+        bindRow = function(btn, _, name, state)
             if FB:IsBookmarked(name) then
                 btn._fontBookmarkIcon:SetTexture(BOOKMARK_ICON_PATH)
                 btn._fontBookmarkIcon:Show()
@@ -692,6 +699,7 @@ function ns.UI:CreateFontBrowserTab(parent)
                 btn._fontBookmarkIcon:Hide()
             end
             btn:SetText(name)
+            btn:SetNormalFontObject(state.selected and GameFontHighlightSmall or GameFontNormalSmall)
             btn._tooltipFullText = name
             styleListButtonText(btn)
         end,

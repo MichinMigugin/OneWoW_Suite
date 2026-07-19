@@ -1033,29 +1033,61 @@ Correct pattern for multiline text entry areas. Fixes the focus dead-zone bug in
 Use this instead of manually creating `ScrollFrame + EditBox` pairs. Migrate existing scroll+editbox
 combos to this function to get the focus fix for free.
 
-### Virtualized list (large row counts)
+### Virtualized lists (`GUI/Virtualizer.lua`)
+
+Domain-agnostic scroll-windowing for large flat lists (same “engine + callbacks”
+shape as `CreateReorderDrag`). The engine owns the scroll frame (or an adopted
+one), row pool, scroll→index mapping, content height, selection, and optional
+keyboard nav. Consumers own data getters and row chrome.
+
+**Core API — `CreateVirtualizer`:**
+
 ```lua
-local list = OneWoW_GUI:CreateVirtualizedList(listHostFrame, {
+local list = OneWoW_GUI:CreateVirtualizer(listHostFrame, {
     name = "MyList",
-    rowHeight = 22,
+    rowHeight = 22,                    -- fixed stride (default)
+    -- getRowHeight = function(i) return heights[i] end,  -- optional variable layout
     numVisibleRows = 40,
-    getCount = function() return #myData end,
-    getEntry = function(index) return myData[index] end,
-    onSelect = function(index, entry) end,
-    renderRow = function(btn, index, entry, isSelected)
-        btn:SetText(entry.displayName or tostring(entry))
-        btn._tooltipFullText = entry.tooltipText
+    getCount = function() return #myData end,            -- required
+    getEntry = function(index) return myData[index] end, -- required
+    onSelect = function(index, entry) end,               -- optional; enables click-select
+    createRow = function(content, api)                   -- optional factory
+        local btn = CreateFrame("Button", nil, content)
+        -- build child widgets once
+        return btn
+    end,
+    bindRow = function(row, index, entry, state)         -- rebind on scroll
+        -- state.selected is true when this index is selected
+        row:SetText(entry.displayName or tostring(entry))
+        row._tooltipFullText = entry.tooltipText
     end,
     enableKeyboardNav = true,
     focusCompetitor = searchEditBox,
+    -- scrollFrame / content = adopt an existing scroll pair (optional)
 })
 list.Refresh()
 list.SetSelectedIndex(1)
-local idx = list.GetSelectedIndex()
 ```
-Requires `getCount`, `getEntry`, and `onSelect`. Reuses a fixed pool of row buttons (`numVisibleRows`) and reparents them while scrolling. Optional `renderRow(btn, index, entry, isSelected)`; default row text uses `entry.displayName`. Set `btn._tooltipFullText` on a row button to show a simple `GameTooltip` on hover. With `enableKeyboardNav`, UP/DOWN moves selection; `focusCompetitor` should be an edit box that hooks focus so keyboard nav yields while typing.
 
-Returns: `listPanel` (the parent passed in), `listScroll`, `listContent`, `Refresh`, `SetSelectedIndex`, `GetSelectedIndex`.
+- **Fixed vs variable height:** omit `getRowHeight` for uniform `rowHeight` stride;
+  supply `getRowHeight(index)` to rebuild prefix sums on each `Refresh` (Vendors-style).
+- **Expand-in-list:** not engine-owned. Flatten child rows into `getEntry` (Catalog
+  Quests pattern), then `Refresh()`. Do not use variable-height detail panels under
+  a parent row for virtualized surfaces.
+- **`createRow` / `bindRow`:** create widgets once; bind on every visible update.
+  Nested controls must read `row.entryIndex` (live), not a closed-over create-time index.
+- **Tooltips:** set `row._tooltipFullText`; the engine wires `OnEnter`/`OnLeave` when
+  the row has no `OnEnter` yet.
+- **Adopted scroll:** pass `scrollFrame` + `content` to host inside `CreateSplitPanel`
+  (or similar) instead of creating a new scroll frame.
+
+Returns: `listPanel`, `listScroll`, `listContent`, `Refresh`, `SetSelectedIndex`,
+`GetSelectedIndex`, `ownedScroll`.
+
+**Compatibility — `CreateVirtualizedList`:** thin wrapper that still requires
+`onSelect` and accepts legacy `renderRow(btn, index, entry, isSelected)` (mapped to
+`bindRow`). Prefer `CreateVirtualizer` + `createRow`/`bindRow` for new call sites.
+All four DevTool browse tabs (Texture, Sound, Font, Globals) use `CreateVirtualizer`.
 
 ### Style an existing scroll bar
 ```lua

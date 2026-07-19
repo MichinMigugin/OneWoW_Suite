@@ -792,19 +792,27 @@ function ns.UI:CreateTextureTab(parent)
     leftPanel:SetWidth(initListW)
     self:StyleContentPanel(leftPanel)
 
-    local listAPI = OneWoW_GUI:CreateVirtualizedList(leftPanel, {
+    local listAPI = OneWoW_GUI:CreateVirtualizer(leftPanel, {
         name = "TextureTabListScroll",
         rowHeight = TEX_ROW_H,
         numVisibleRows = NUM_ROWS,
         getCount = function() return BR:GetFilteredCount() end,
         getEntry = function(idx) return BR:GetFilteredEntry(idx) end,
         onSelect = function(idx) applyListSelection(tab, idx) end,
-        renderRow = function(btn, _, entry, _)
+        createRow = function(content)
+            local btn = CreateFrame("Button", nil, content)
+            btn:SetHeight(TEX_ROW_H)
+            btn:SetNormalFontObject(GameFontNormalSmall)
+            btn:SetHighlightFontObject(GameFontHighlightSmall)
+            ensureListRowBookmarkIcon(btn, TEX_ROW_H)
+            -- Tooltip via _tooltipFullText (Virtualizer wires OnEnter when absent).
+            return btn
+        end,
+        bindRow = function(btn, _, entry, state)
             local label = entry.displayName or entry.atlasName or "?"
             if entry.kind == "atlas" and entry.textureKey then
                 label = entry.atlasName
             end
-            ensureListRowBookmarkIcon(btn, TEX_ROW_H)
             local bookmarks = ns.db.global.textureBookmarks
             local showBm = false
             if entry.kind == "atlas" and entry.atlasName and bookmarks[entry.atlasName] then
@@ -819,6 +827,7 @@ function ns.UI:CreateTextureTab(parent)
                 btn.bookmarkIcon:Hide()
             end
             btn:SetText(label)
+            btn:SetNormalFontObject(state.selected and GameFontHighlightSmall or GameFontNormalSmall)
             btn._tooltipFullText = label
             styleListButtonText(btn)
         end,

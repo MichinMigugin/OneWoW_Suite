@@ -597,7 +597,7 @@ function ns.UI:CreateSoundBrowserTab(parent)
     leftPanel:SetWidth(initListW)
     self:StyleContentPanel(leftPanel)
 
-    local listAPI = OneWoW_GUI:CreateVirtualizedList(leftPanel, {
+    local listAPI = OneWoW_GUI:CreateVirtualizer(leftPanel, {
         name = "SoundBrowserListScroll",
         rowHeight = ROW_H,
         numVisibleRows = NUM_ROWS,
@@ -606,8 +606,15 @@ function ns.UI:CreateSoundBrowserTab(parent)
         onSelect = function(idx)
             applyListSelection(tab, idx)
         end,
-        renderRow = function(btn, _, entry, _)
+        createRow = function(content)
+            local btn = CreateFrame("Button", nil, content)
+            btn:SetHeight(ROW_H)
+            btn:SetNormalFontObject(GameFontNormalSmall)
+            btn:SetHighlightFontObject(GameFontHighlightSmall)
             ensureListRowBookmarkIcon(btn, ROW_H)
+            return btn
+        end,
+        bindRow = function(btn, _, entry, state)
             if SB:IsBookmarked(entry) then
                 btn._soundBmTex:SetTexture(BOOKMARK_ICON_PATH)
                 btn._soundBmTex:Show()
@@ -615,6 +622,7 @@ function ns.UI:CreateSoundBrowserTab(parent)
                 btn._soundBmTex:Hide()
             end
             btn:SetText(SB:GetDisplayName(entry))
+            btn:SetNormalFontObject(state.selected and GameFontHighlightSmall or GameFontNormalSmall)
             btn._tooltipFullText = SB:GetFileName(entry) .. "\n" .. SB:GetCategoryLabel(entry) .. "\n" .. SB:GetFileDataIdString(entry) .. "\n" .. SB:GetFullPath(entry)
             styleListButtonText(btn)
         end,

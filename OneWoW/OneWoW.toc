@@ -44,6 +44,7 @@ GUI\EditBoxes.lua
 GUI\Layout.lua
 GUI\SideBarTabs.lua
 GUI\Panels.lua
+GUI\Virtualizer.lua
 GUI\Cards.lua
 GUI\Icons.lua
 GUI\ReorderDrag.lua

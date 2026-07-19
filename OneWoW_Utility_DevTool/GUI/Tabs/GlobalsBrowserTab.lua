@@ -762,7 +762,7 @@ function ns.UI:CreateGlobalsBrowserTab(parent)
     rootCountText:ClearAllPoints()
     rootCountText:SetPoint("LEFT", noisyRootsCheck.label, "RIGHT", 8, 0)
 
-    local listAPI = OneWoW_GUI:CreateVirtualizedList(leftPanel, {
+    local listAPI = OneWoW_GUI:CreateVirtualizer(leftPanel, {
         name = "GlobalsBrowserListScroll",
         rowHeight = rowHeight,
         numVisibleRows = numRows,
@@ -775,19 +775,25 @@ function ns.UI:CreateGlobalsBrowserTab(parent)
         onSelect = function(index)
             applyListSelection(tab, index)
         end,
-        renderRow = function(btn, _, entry)
+        createRow = function(content)
+            local btn = CreateFrame("Button", nil, content)
+            btn:SetHeight(rowHeight)
+            btn:SetNormalFontObject(GameFontNormalSmall)
+            btn:SetHighlightFontObject(GameFontHighlightSmall)
+            ensureListRowBookmarkIcon(btn, rowHeight)
+            return btn
+        end,
+        bindRow = function(btn, _, entry, state)
             local label = GB:GetRootLabel(entry)
             btn:SetText(label)
+            btn:SetNormalFontObject(state.selected and GameFontHighlightSmall or GameFontNormalSmall)
             btn._tooltipFullText = GB:GetRootTooltip(entry)
-            ensureListRowBookmarkIcon(btn, rowHeight)
-            if btn._globalsBookmarkIcon then
-                if GB:IsBookmarked(entry) then
-                    btn._globalsBookmarkIcon:SetTexture(BOOKMARK_ICON_PATH)
-                    btn._globalsBookmarkIcon:SetTexCoord(0, 1, 0, 1)
-                    btn._globalsBookmarkIcon:Show()
-                else
-                    btn._globalsBookmarkIcon:Hide()
-                end
+            if GB:IsBookmarked(entry) then
+                btn._globalsBookmarkIcon:SetTexture(BOOKMARK_ICON_PATH)
+                btn._globalsBookmarkIcon:SetTexCoord(0, 1, 0, 1)
+                btn._globalsBookmarkIcon:Show()
+            else
+                btn._globalsBookmarkIcon:Hide()
             end
             styleListButtonText(btn)
         end,
