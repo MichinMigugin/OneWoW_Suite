@@ -1070,7 +1070,8 @@ list.SetSelectedIndex(1)
 ```
 
 - **Fixed vs variable height:** omit `getRowHeight` for uniform `rowHeight` stride;
-  supply `getRowHeight(index)` to rebuild prefix sums on each `Refresh` (Vendors-style).
+  supply `getRowHeight(index)` to rebuild prefix sums on each `Refresh` (Catalog
+  Vendors is the reference consumer).
 - **Expand-in-list:** not engine-owned. Flatten child rows into `getEntry` (Catalog
   Quests pattern), then `Refresh()`. Do not use variable-height detail panels under
   a parent row for virtualized surfaces.
@@ -1080,8 +1081,8 @@ list.SetSelectedIndex(1)
   the row has no `OnEnter` yet.
 - **Adopted scroll:** pass `scrollFrame` + `content` to host inside `CreateSplitPanel`
   (or similar) instead of creating a new scroll frame. When adopting, the engine
-  hooks `OnVerticalScroll` rather than replacing it. Catalog Item Search and Quests
-  are the reference consumers (Quests also shows flatten-expand via
+  hooks `OnVerticalScroll` rather than replacing it. Catalog Item Search, Quests,
+  and Vendors are the reference consumers (Quests also shows flatten-expand via
   `BuildQuestListEntries` + `Refresh`).
 
 ### Chunked jobs (large data walks)

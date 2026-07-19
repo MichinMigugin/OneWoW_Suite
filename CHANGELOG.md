@@ -67,6 +67,9 @@
 - Quest list uses the shared virtualized list (same flatten-expand grouping as before)
 - Database search/filter walks load in time-budgeted slices so advanced filters stay responsive
 
+## Vendors
+- Vendor list uses the shared virtualized list (variable-height cards; no longer capped at 50)
+
 ---
 
 # AltTracker
