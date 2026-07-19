@@ -470,7 +470,7 @@ function AFKPanelModule:SetAFK(status)
         CloseAllWindows()
 
         self._afkFrame:Show()
-        UIParent:Hide()
+        OneWoW.UIParent:Hide()
 
         local displayData = CollectDisplayData()
 
@@ -514,7 +514,7 @@ function AFKPanelModule:SetAFK(status)
         self.isAFK = true
 
     elseif self.isAFK then
-        UIParent:Show()
+        OneWoW.UIParent:Restore()
         self._afkFrame:Hide()
 
         self:CameraSpin(false)

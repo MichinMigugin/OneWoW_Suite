@@ -120,6 +120,7 @@ Services\ProfessionRecipe.lua
 Services\RecipeKnownUtil.lua
 Services\Collectibles.lua
 Services\ChunkedJob.lua
+Services\UIParent.lua
 Services\Merchant.lua
 Services\overlay-icons.lua
 Services\upgrade-detection.lua

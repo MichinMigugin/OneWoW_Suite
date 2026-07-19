@@ -104,6 +104,12 @@
 
 ---
 
+# QoL
+## Fixes
+- AFK Panel no longer clears the minimap mail icon when you return from Away
+
+---
+
 # Bags
 ## Search
 - New `#combinable` keyword — finds combine-type items (Darkmoon decks, fractured sparks, recipe scraps, …). Use `#combinable & #usable` when you have all the pieces ready to combine
@@ -111,7 +117,7 @@
 
 ---
 
-*No user-facing changes this release for QoL, Notes, Trackers, Shopping List, Direct Deposit, or DevTool.*
+*No user-facing changes this release for Trackers, Shopping List, Direct Deposit, or DevTool.*
 
 ---
 

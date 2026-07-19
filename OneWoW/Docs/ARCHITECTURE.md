@@ -838,6 +838,8 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | `OneWoW.AHItemKeys` | `Services/AHItemKeys.lua` | AH scanners (`OneWoW_AltTracker_Auctions`), `ItemPrices` link-aware lookups |
 | `OneWoW.ItemPrices` | `Services/ItemPrices.lua` | Tooltip providers, overlay engine, AH source UI helpers |
 | `OneWoW:CreateItemDataLoader` | `Services/ItemDataLoader.lua` | Catalog hub shared loader + CatalogData packs (factory on colon API) |
+| `OneWoW.ChunkedJob` | `Services/ChunkedJob.lua` | Catalog / DevTool time-budgeted walks |
+| `OneWoW.UIParent` | `Services/UIParent.lua` | Cinematic fullscreen overlays (AFK panel): refcounted `Hide`/`Restore` of Blizzard `UIParent`, plus re-sync of fragile FrameXML indicators (minimap mail icon) |
 | `OneWoW.Locale` | `Services/LocaleService.lua` | Every addon (each registers its own scope, reads back a view) — see Localization below |
 
 Feature content that registers in from QoL: settings catalogs
@@ -1246,6 +1248,7 @@ seeded with `MERCHANT_*`→`Merchant.lua`.
 | `OneWoW/Core/Restriction.lua` | Combat/restriction funnel: event-driven cache, intent getters, `RunWhenUnrestricted`, `GetSnapshot` + Midnight secret-value guard (§8.6) |
 | `OneWoW/Services/ProfessionRecipe.lua` | Trade-skill recipe scan funnel: single `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED` owner, scan/open/closed callback channels, ephemeral snapshots (§8.7) |
 | `OneWoW/Services/Merchant.lua` | Merchant scan funnel: single `MERCHANT_*` owner, scan/show/closed callback channels, ephemeral vendor snapshots, no SV (§8.8, see [MERCHANT.md](MERCHANT.md)) |
+| `OneWoW/Services/UIParent.lua` | Cinematic `UIParent` hide/restore funnel + fragile FrameXML indicator re-sync (minimap mail) |
 | `OneWoW/Services/Collectibles.lua` | Collectible identity resolver: key grammar (`type[:subtype]:id`), live display + collection state, no SV (see [COLLECTIBLES.md](COLLECTIBLES.md)) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
 | `OneWoW/UI/t-home.lua` | Home tab: read-only status + live refresh |

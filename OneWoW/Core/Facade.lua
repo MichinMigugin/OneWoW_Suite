@@ -44,6 +44,7 @@ local SERVICE_KEYS = {
     "AltScope",
     "ItemLevel",
     "ChunkedJob",
+    "UIParent",
 }
 
 for _, key in ipairs(SERVICE_KEYS) do
