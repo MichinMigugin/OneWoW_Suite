@@ -106,6 +106,7 @@
 # Bags
 ## Search
 - New `#combinable` keyword — finds combine-type items (Darkmoon decks, fractured sparks, recipe scraps, …). Use `#combinable & #usable` when you have all the pieces ready to combine
+- New `CATEGORY(Name)` shortcut — expands a custom search category's rule by display name (same places as `SAVED(Name)`). Matches the category's search expression, not bag assignment order; `!CATEGORY(Name)` negates it
 
 ---
 

@@ -236,14 +236,18 @@ function SavedSearches:Delete(name)
     return true
 end
 
---- Expand SAVED(Name) tokens into PredicateEngine expressions.
---- Public callers should pass only `query`; `depth` and `seen` are used for
---- recursive expansion and cycle detection.
+--- Expand SAVED(Name) / CATEGORY(Name) tokens into PredicateEngine expressions.
+--- When CategoryRefs is loaded, delegates to SearchExpand so SAVED and CATEGORY
+--- nest correctly. `depth`/`seen` remain for the SAVED-only fallback path.
 ---@param query string|nil
 ---@param depth integer|nil Internal recursion depth.
 ---@param seen table<string, boolean>|nil Internal recursion guard.
 ---@return string|nil expandedQuery
 function SavedSearches:Expand(query, depth, seen)
+    if depth == nil and ns.SearchExpand then
+        return ns.SearchExpand:Expand(query)
+    end
+
     if type(query) ~= "string" or query == "" then return query end
 
     depth = depth or 1

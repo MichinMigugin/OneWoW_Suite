@@ -139,11 +139,13 @@ local function InferFilterMode(categoryData)
     return "type"
 end
 
--- True iff the expression references a saved search via SAVED(name). Lets the
--- per-slot loop skip SavedSearches:Expand entirely for expressions that have
--- nothing to expand (the common case for inline expressions).
-local function NeedsSavedExpand(expression)
-    return type(expression) == "string" and strfind(expression, "SAVED(", 1, true) ~= nil
+-- True if the expression references SAVED(name) or CATEGORY(name). Lets the
+-- per-slot loop skip Expand entirely for expressions that have nothing to
+-- expand (the common case for inline expressions).
+local function NeedsRefExpand(expression)
+    return type(expression) == "string"
+        and (strfind(expression, "SAVED(", 1, true) ~= nil
+            or strfind(expression, "CATEGORY(", 1, true) ~= nil)
 end
 
 -- Cache C_Item.GetItemClassInfo(classID):lower(). The returned string is a
@@ -193,7 +195,7 @@ local function RebuildCustomCandsArray()
                 local expr = categoryData.searchExpression
                 if type(expr) == "string" and expr ~= "" then
                     entry.expression  = expr
-                    entry.needsExpand = NeedsSavedExpand(expr)
+                    entry.needsExpand = NeedsRefExpand(expr)
                 end
             else
                 local hasType    = categoryData.itemType and categoryData.itemType ~= ""
@@ -435,6 +437,7 @@ local function CollectCustomPredicateCandidates(itemID, bagID, slotID, itemInfo,
                 local expr = entry.expression
                 if expr then
                     if entry.needsExpand and SavedSearches then
+                        -- Expand also resolves CATEGORY() via SearchExpand.
                         expr = SavedSearches:Expand(expr)
                     end
                     if PE:CheckItem(expr, itemID, bagID, slotID, itemInfo or {}) then

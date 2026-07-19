@@ -206,6 +206,9 @@ function CategoryController:RenameCategory(id, name)
         replaceCategoryNameInAllSections(g, oldName, name)
         if oldName ~= name then
             rekeyCategoryKeys(g, oldName, name)
+            if ns.CategoryRefs then
+                ns.CategoryRefs:ReplaceReferencesInDB(oldName, name)
+            end
             if #db.global.displayOrder > 0 then
                 wipe(db.global.displayOrder)
             end
@@ -226,6 +229,9 @@ function CategoryController:RenameCategory(id, name)
     category.name = name
     replaceCategoryNameInAllSections(g, oldName, name)
     rekeyCategoryKeys(g, oldName, name)
+    if ns.CategoryRefs then
+        ns.CategoryRefs:ReplaceReferencesInDB(oldName, name)
+    end
     if #db.global.displayOrder > 0 then
         wipe(db.global.displayOrder)
     end

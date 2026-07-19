@@ -58,6 +58,7 @@ Core\BankTypes.lua                 ← bank/warband tab constants
 Core\Events.lua                    ← event router (dirtyBags, RuntimeEvents)
 
 Data\SavedSearches.lua             ← user-defined SAVED(Name) search shortcuts
+Data\CategoryRefs.lua              ← CATEGORY(Name) refs + SearchExpand (SAVED+CATEGORY)
 Data\Sorting.lua                   ← item sort comparators (SortButtons)
 Data\Categories.lua                ← builtin category defs, classification engine (consumes OneWoW.PredicateEngine)
 Data\BaganatorDefaultMap.lua       ← Baganator default category name map
@@ -359,7 +360,7 @@ CategoryManager:AssignCategories()
 Search uses `OneWoW.PredicateEngine` (tokenizer, AST, evaluation). For full engine internals and public API, see [`OneWoW/Docs/PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
 
 - Keywords, properties, operators (`&` `|` `!`), parentheses, bare name text
-- `SAVED(Name)` shortcuts are expanded by `Data\SavedSearches.lua` before PredicateEngine evaluation. Saved searches are stored as `db.global.savedSearches[displayName] = predicate`.
+- `SAVED(Name)` / `CATEGORY(Name)` shortcuts are expanded by `Data\SavedSearches.lua` → `SearchExpand` (`Data\CategoryRefs.lua`) before PredicateEngine evaluation. Saved searches are stored as `db.global.savedSearches[displayName] = predicate`. `CATEGORY(Name)` resolves custom search-mode categories by display name.
 - `#recent` is registered at `Data\Categories.lua` load via `PE:RegisterKeyword` (Bags-only): GUID map + duration only. `#new` / `IsNew` in the engine use `C_NewItems` via `BuildProps` (can lag until `InvalidatePropsCache`); `#recent` does not use that cached flag for classification
 - `#catalyst` / `#catalystupgrade` are registered by the engine itself with call-time `TransmogUpgradeMaster_API` checks (no-op if the addon is absent)
 - `WH:FilterBySearch` expands saved searches, then compiles the expression once per refresh and evaluates per button via `PE:CheckItem`

@@ -25,6 +25,7 @@ addons). For the public API, caches, and extension points, see
 
 - [Quick Start](#quick-start)
 - [Saved Search Shortcuts](#saved-search-shortcuts)
+- [Category Search Shortcuts](#category-search-shortcuts)
 - [Text Search](#text-search)
 - [Keywords](#keywords)
 - [Operators](#operators)
@@ -56,6 +57,7 @@ addons). For the public API, caches, and extension points, see
 | `>50s` | Same thing, for any price above 50 silver (shorthand) |
 | `#knowledge` | Profession knowledge study items |
 | `SAVED(Collected Toys)` | Expands a user-saved search shortcut before evaluation |
+| `CATEGORY(My Decks)` | Expands a custom search-category's rule before evaluation |
 
 ---
 
@@ -92,6 +94,51 @@ Saved search name rules:
 
 Saved searches are stored in `db.global.savedSearches` as
 `displayName -> predicate string`.
+
+---
+
+## Category Search Shortcuts
+
+Custom categories that use a **search** rule can be referenced by display name
+anywhere Bags evaluates a search expression (search bar, other custom category
+rules, saved searches).
+
+Syntax:
+
+```text
+CATEGORY(Name)
+```
+
+Example:
+
+```text
+CATEGORY(My Decks)
+```
+
+If the custom category `My Decks` has search expression `#combinable`, the
+token expands to `(#combinable)` before PredicateEngine compiles it.
+`!CATEGORY(My Decks)` therefore negates that rule.
+
+**Semantics:** `CATEGORY(Name)` matches items that satisfy that category's
+**search expression**. It does **not** mean “this item would be assigned to
+that category in the bag layout” — assignment still considers priority, pins,
+overlays, and first-winner order among overlapping rules.
+
+Eligibility:
+
+- **Custom** categories only (not builtins like Toys / Recent Items).
+- Only when the category's filter mode is **search** with a non-empty
+  `searchExpression`.
+- Type-mode, pin-only, and builtin categories fail closed (never match).
+
+Name rules:
+
+- Uses the category's **display name** as the user typed it (any language /
+  characters the category manager accepts). Lookup is case-insensitive;
+  display casing is preserved on rename rewrites.
+- Missing, ineligible, or cyclic references fail closed.
+- Nested `CATEGORY(...)` and `SAVED(...)` are expanded together with a shared
+  recursion limit.
 
 ---
 

@@ -483,7 +483,7 @@ function WH:GetButtonExpansionID(button)
 end
 
 --- Filter item buttons with a PredicateEngine search expression.
---- SAVED(Name) references are expanded before evaluation.
+--- SAVED(Name) / CATEGORY(Name) references are expanded before evaluation.
 ---@param buttons table[]
 ---@param searchText string|nil
 ---@param dest table[]|nil
@@ -494,6 +494,7 @@ function WH:FilterBySearch(buttons, searchText, dest)
     end
 
     if ns.SavedSearches then
+        -- Expand also resolves CATEGORY() via SearchExpand.
         searchText = ns.SavedSearches:Expand(searchText)
     end
 
