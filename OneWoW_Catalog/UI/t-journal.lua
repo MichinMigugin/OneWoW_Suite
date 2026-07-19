@@ -1407,8 +1407,8 @@ function ns.UI.CreateJournalTab(parent)
     end)
 
     -- Empty state labels
-    local emptyList = OneWoW_GUI:CreateFS(panels.listScrollChild, 12)
-    emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)
+    local emptyList = OneWoW_GUI:CreateFS(panels.listScrollFrame, 12)
+    emptyList:SetPoint("CENTER", panels.listScrollFrame, "CENTER", 0, 0)
     emptyList:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyList = emptyList
 

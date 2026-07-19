@@ -1162,8 +1162,8 @@ function ns.UI.CreateTradeskillsTab(parent)
         end,
     })
 
-    emptyList = OneWoW_GUI:CreateFS(panels.listScrollChild, 12)
-    emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)
+    emptyList = OneWoW_GUI:CreateFS(panels.listScrollFrame, 12)
+    emptyList:SetPoint("CENTER", panels.listScrollFrame, "CENTER", 0, 0)
     emptyList:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     emptyDetail = OneWoW_GUI:CreateFS(panels.detailScrollChild, 12)

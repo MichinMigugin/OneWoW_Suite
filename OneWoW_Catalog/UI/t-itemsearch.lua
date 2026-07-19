@@ -891,8 +891,8 @@ function ns.UI.CreateItemSearchTab(parent)
     })
     panels.virtualizedList = listAPI
 
-    emptyList = OneWoW_GUI:CreateFS(panels.listScrollChild, 12)
-    emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)
+    emptyList = OneWoW_GUI:CreateFS(panels.listScrollFrame, 12)
+    emptyList:SetPoint("CENTER", panels.listScrollFrame, "CENTER", 0, 0)
     emptyList:SetText(L["ITEMSEARCH_EMPTY"])
     emptyList:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
