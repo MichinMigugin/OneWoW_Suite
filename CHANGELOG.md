@@ -76,6 +76,12 @@
 ## Vendors
 - Vendor list uses the shared virtualized list (variable-height cards; no longer capped at 50)
 
+## Journal
+- Instance list uses the shared virtualized list (no longer capped at 10 when browsing All expansions)
+
+## Tradeskills
+- Recipe list uses the shared virtualized list (expansion flatten-expand; no longer capped at 50)
+
 ---
 
 # AltTracker

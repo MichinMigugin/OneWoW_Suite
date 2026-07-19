@@ -18,7 +18,8 @@ local selectedRecipe = nil
 local currentSearch = ""
 local panels = nil
 local detailElements = {}
-local listElements = {}
+local listEntries = {}
+local recipeListAPI = nil
 local profButtons = {}
 local searchBox = nil
 local emptyList = nil
@@ -43,6 +44,7 @@ local PROF_BTN_HEIGHT = 22
 local PROF_BTN_PAD_X = 8
 local PROF_BTN_GAP = 3
 local PROF_HEADER_H = 58
+local LIST_ROW_STRIDE = RECIPE_ROW_HEIGHT
 
 local EXPANSION_DISPLAY = {
     Classic = "Classic",
@@ -100,14 +102,6 @@ local function FilterByKnown(recipes, addon)
         end
     end
     return filtered
-end
-
-local function ClearListElements()
-    for _, el in ipairs(listElements) do
-        if el.Hide then el:Hide() end
-        if el.SetParent then el:SetParent(nil) end
-    end
-    wipe(listElements)
 end
 
 local function ClearDetailElements()
@@ -218,19 +212,28 @@ local function CreateProfTextButton(parent, displayText, profData, isAllButton)
     return btn
 end
 
-local function CreateRecipeRow(parent, recipe, yOffset, rowIdx, onClick)
-    local row = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    row:SetHeight(RECIPE_ROW_HEIGHT)
-    row:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
-    row:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, yOffset)
-    row:SetBackdrop(BACKDROP_SIMPLE)
-
-    if rowIdx % 2 == 0 then
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+local function ApplyRecipeRowChrome(row, selected, zebraEven)
+    if selected then
+        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+    elseif row.entry and row.entry.type == "header" then
+        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     else
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        if zebraEven then
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+        else
+            row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        end
+        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end
-    row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+end
+
+local function CreateRecipeListRow(parent, _)
+    local row = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    row:SetHeight(LIST_ROW_STRIDE)
+    row:SetBackdrop(BACKDROP_SIMPLE)
+    ApplyRecipeRowChrome(row, false, false)
 
     local iconFrame = CreateFrame("Frame", nil, row, "BackdropTemplate")
     iconFrame:SetSize(24, 24)
@@ -238,81 +241,132 @@ local function CreateRecipeRow(parent, recipe, yOffset, rowIdx, onClick)
     iconFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     iconFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
     iconFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    row.iconFrame = iconFrame
 
     local icon = iconFrame:CreateTexture(nil, "ARTWORK")
     icon:SetPoint("TOPLEFT", 1, -1)
     icon:SetPoint("BOTTOMRIGHT", -1, 1)
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    row.icon = icon
 
     local nameText = OneWoW_GUI:CreateFS(row, 10)
     nameText:SetPoint("LEFT", iconFrame, "RIGHT", 6, 0)
     nameText:SetPoint("RIGHT", row, "RIGHT", -6, 0)
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
+    row.nameText = nameText
 
+    local arrowText = OneWoW_GUI:CreateFS(row, 12)
+    arrowText:SetPoint("LEFT", row, "LEFT", 8, 0)
+    arrowText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    arrowText:Hide()
+    row.arrowText = arrowText
+
+    local headerName = OneWoW_GUI:CreateFS(row, 12)
+    headerName:SetPoint("LEFT", arrowText, "RIGHT", 6, 0)
+    headerName:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    headerName:Hide()
+    row.headerName = headerName
+
+    local countText = OneWoW_GUI:CreateFS(row, 10)
+    countText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+    countText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    countText:Hide()
+    row.countText = countText
+
+    row:SetScript("OnEnter", function(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+        local entry = myself.entry
+        if entry and entry.type == "recipe" and entry.recipe then
+            local recipe = entry.recipe
+            if recipe.item and recipe.item > 0 then
+                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                GameTooltip:SetItemByID(recipe.item)
+                GameTooltip:Show()
+            elseif recipe.id then
+                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                GameTooltip:SetSpellByID(recipe.id)
+                GameTooltip:Show()
+            end
+        end
+    end)
+    row:SetScript("OnLeave", function(myself)
+        ApplyRecipeRowChrome(myself, myself._rowSelected, myself._zebraEven)
+        GameTooltip:Hide()
+    end)
+    row:SetScript("OnClick", function(myself)
+        local entry = myself.entry
+        if not entry then
+            return
+        end
+        if entry.type == "header" then
+            expandedExpansions[entry.expKey] = not expandedExpansions[entry.expKey]
+            RefreshRecipeList()
+        elseif entry.type == "recipe" and recipeListAPI and myself.entryIndex then
+            recipeListAPI.SetSelectedIndex(myself.entryIndex)
+        end
+    end)
+
+    return row
+end
+
+local function BindRecipeListRow(row, index, entry, state)
+    row.entry = entry
+    row._rowSelected = state.selected and entry.type == "recipe" or false
+    row._zebraEven = (index % 2 == 0)
+
+    if entry.type == "header" then
+        row.iconFrame:Hide()
+        row.nameText:Hide()
+        row.arrowText:Show()
+        row.headerName:Show()
+        row.countText:Show()
+        row.arrowText:SetText(expandedExpansions[entry.expKey] and "v" or ">")
+        row.headerName:SetText(entry.displayName or entry.expKey or "")
+        row.countText:SetText(string.format(L["TRADESKILLS_RECIPES"], entry.count or 0))
+        ApplyRecipeRowChrome(row, false, false)
+        return
+    end
+
+    row.arrowText:Hide()
+    row.headerName:Hide()
+    row.countText:Hide()
+    row.iconFrame:Show()
+    row.nameText:Show()
+    ApplyRecipeRowChrome(row, row._rowSelected, row._zebraEven)
+
+    local recipe = entry.recipe
     local addon = GetDataAddon()
-    if addon and recipe.item and recipe.item > 0 then
+    local bindToken = recipe and recipe.id
+    row._bindToken = bindToken
+
+    if addon and recipe and recipe.item and recipe.item > 0 then
         local cached = addon.GetCachedItem(recipe.item)
         if cached and cached.name then
-            nameText:SetText(cached.name)
-            nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(cached.quality))
-            icon:SetTexture(cached.icon or recipe.icon)
+            row.nameText:SetText(cached.name)
+            row.nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(cached.quality))
+            row.icon:SetTexture(cached.icon or recipe.icon)
         else
-            nameText:SetText("...")
-            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            icon:SetTexture(recipe.icon)
+            row.nameText:SetText("...")
+            row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            row.icon:SetTexture(recipe.icon)
             addon.LoadItemData(recipe.item, function(_, itemData)
-                if row:IsVisible() and itemData then
-                    nameText:SetText(itemData.name)
-                    nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(itemData.quality))
+                if row:IsVisible() and row._bindToken == bindToken and itemData then
+                    row.nameText:SetText(itemData.name)
+                    row.nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(itemData.quality))
                     if itemData.icon then
-                        icon:SetTexture(itemData.icon)
+                        row.icon:SetTexture(itemData.icon)
                     end
                 end
             end)
         end
     else
-        icon:SetTexture(recipe.icon)
-        local spellName = C_Spell.GetSpellName(recipe.id)
-        nameText:SetText(spellName or ("Recipe #" .. recipe.id))
-        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        row.icon:SetTexture(recipe and recipe.icon)
+        local spellName = recipe and C_Spell.GetSpellName(recipe.id)
+        row.nameText:SetText(spellName or (recipe and ("Recipe #" .. recipe.id)) or "")
+        row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end
-
-    row.recipe = recipe
-    row.rowIdx = rowIdx
-
-    row:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-        if recipe.item and recipe.item > 0 then
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetItemByID(recipe.item)
-            GameTooltip:Show()
-        elseif recipe.id then
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetSpellByID(recipe.id)
-            GameTooltip:Show()
-        end
-    end)
-    row:SetScript("OnLeave", function(self)
-        if selectedRecipe and selectedRecipe.id == recipe.id then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-        else
-            if self.rowIdx % 2 == 0 then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-            else
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            end
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        end
-        GameTooltip:Hide()
-    end)
-    row:SetScript("OnClick", function(self)
-        if onClick then onClick(self.recipe) end
-    end)
-
-    return row
 end
 
 ShowRecipeDetail = function(recipe)
@@ -747,56 +801,43 @@ ShowRecipeDetail = function(recipe)
     end
 end
 
-local function RecipeClickHandler(recipeData)
-    selectedRecipe = recipeData
-    for _, el in ipairs(listElements) do
-        if el.recipe and el.recipe.id == recipeData.id then
-            el:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            el:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-        else
-            if el.rowIdx and el.rowIdx % 2 == 0 then
-                el:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-            else
-                el:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+local function PublishRecipeList(totalRecipes, statusText)
+    local keepID = selectedRecipe and selectedRecipe.id
+    local keepIndex = nil
+    if keepID then
+        for i, entry in ipairs(listEntries) do
+            if entry.type == "recipe" and entry.recipe and entry.recipe.id == keepID then
+                keepIndex = i
+                break
             end
-            el:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
         end
     end
-    ShowRecipeDetail(recipeData)
-end
 
-local function RefreshRecipeListFlat(recipes)
-    if not panels then return end
-
-    local MAX_DISPLAY = 50
-    local totalCount = #recipes
-    local displayCount = math.min(totalCount, MAX_DISPLAY)
-
-    local yOffset = -4
-    local rowIdx = 0
-    for i = 1, displayCount do
-        local recipe = recipes[i]
-        local row = CreateRecipeRow(panels.listScrollChild, recipe, yOffset, rowIdx, RecipeClickHandler)
-        tinsert(listElements, row)
-        yOffset = yOffset - RECIPE_ROW_HEIGHT
-        rowIdx = rowIdx + 1
+    if recipeListAPI then
+        if keepIndex then
+            recipeListAPI.SetSelectedIndex(keepIndex)
+        else
+            recipeListAPI.SetSelectedIndex(nil)
+            recipeListAPI.Refresh()
+        end
     end
-
-    panels.listScrollChild:SetHeight(math.abs(yOffset) + 10)
 
     if panels.leftStatusText then
-        if displayCount < totalCount then
-            panels.leftStatusText:SetText(string.format(L["TRADESKILLS_RECIPES_FILTERED"], displayCount, totalCount))
-        else
-            panels.leftStatusText:SetText(string.format(L["TRADESKILLS_RECIPES"], totalCount))
-        end
+        panels.leftStatusText:SetText(statusText or string.format(L["TRADESKILLS_RECIPES"], totalRecipes or 0))
     end
 end
 
-local EXP_HEADER_HEIGHT = 28
+local function BuildFlatRecipeEntries(recipes)
+    wipe(listEntries)
+    for _, recipe in ipairs(recipes) do
+        tinsert(listEntries, { type = "recipe", recipe = recipe })
+    end
+    local totalCount = #recipes
+    PublishRecipeList(totalCount, string.format(L["TRADESKILLS_RECIPES"], totalCount))
+end
 
-local function RefreshRecipeListGrouped(recipes, addon)
-    if not panels then return end
+local function BuildGroupedRecipeEntries(recipes, addon)
+    wipe(listEntries)
     local expansions = addon.GetExpansions()
 
     local grouped = {}
@@ -818,81 +859,32 @@ local function RefreshRecipeListGrouped(recipes, addon)
 
     sort(orderedGroups, function(a, b) return a.order > b.order end)
 
-    local yOffset = -4
     local totalRecipes = 0
-
     for _, group in ipairs(orderedGroups) do
         local expKey = group.key
         local expRecipes = group.recipes
         local count = #expRecipes
         totalRecipes = totalRecipes + count
-        local isExpanded = expandedExpansions[expKey]
-        local displayName = EXPANSION_DISPLAY[expKey] or expKey
-
-        local hdrBtn = CreateFrame("Button", nil, panels.listScrollChild, "BackdropTemplate")
-        hdrBtn:SetPoint("TOPLEFT", panels.listScrollChild, "TOPLEFT", 0, yOffset)
-        hdrBtn:SetPoint("TOPRIGHT", panels.listScrollChild, "TOPRIGHT", 0, yOffset)
-        hdrBtn:SetHeight(EXP_HEADER_HEIGHT)
-        hdrBtn:SetBackdrop(BACKDROP_SIMPLE)
-        hdrBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        hdrBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        tinsert(listElements, hdrBtn)
-
-        local arrowText = OneWoW_GUI:CreateFS(hdrBtn, 12)
-        arrowText:SetPoint("LEFT", hdrBtn, "LEFT", 8, 0)
-        arrowText:SetText(isExpanded and "v" or ">")
-        arrowText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-        local expName = OneWoW_GUI:CreateFS(hdrBtn, 12)
-        expName:SetPoint("LEFT", arrowText, "RIGHT", 6, 0)
-        expName:SetText(displayName)
-        expName:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-        local countText = OneWoW_GUI:CreateFS(hdrBtn, 10)
-        countText:SetPoint("RIGHT", hdrBtn, "RIGHT", -8, 0)
-        countText:SetText(string.format(L["TRADESKILLS_RECIPES"], count))
-        countText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-        local capturedKey = expKey
-        hdrBtn:SetScript("OnClick", function()
-            expandedExpansions[capturedKey] = not expandedExpansions[capturedKey]
-            RefreshRecipeList()
-        end)
-        hdrBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-        end)
-        hdrBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        end)
-
-        yOffset = yOffset - EXP_HEADER_HEIGHT - 2
-
-        if isExpanded then
-            local rowIdx = 0
+        tinsert(listEntries, {
+            type = "header",
+            expKey = expKey,
+            count = count,
+            displayName = EXPANSION_DISPLAY[expKey] or expKey,
+        })
+        if expandedExpansions[expKey] then
             for _, recipe in ipairs(expRecipes) do
-                local row = CreateRecipeRow(panels.listScrollChild, recipe, yOffset, rowIdx, RecipeClickHandler)
-                tinsert(listElements, row)
-                yOffset = yOffset - RECIPE_ROW_HEIGHT
-                rowIdx = rowIdx + 1
+                tinsert(listEntries, { type = "recipe", recipe = recipe })
             end
         end
-
-        yOffset = yOffset - 4
     end
 
-    panels.listScrollChild:SetHeight(math.abs(yOffset) + 10)
-
-    if panels.leftStatusText then
-        local profLabel = selectedProfession and selectedProfession.name or L["TRADESKILLS_ALL"]
-        panels.leftStatusText:SetText(profLabel .. " - " .. string.format(L["TRADESKILLS_RECIPES"], totalRecipes))
-    end
+    local profLabel = selectedProfession and selectedProfession.name or L["TRADESKILLS_ALL"]
+    PublishRecipeList(totalRecipes, profLabel .. " - " .. string.format(L["TRADESKILLS_RECIPES"], totalRecipes))
 end
 
 RefreshRecipeList = function()
     if not panels then return end
-    ClearListElements()
+    wipe(listEntries)
 
     local addon = GetDataAddon()
     if not addon then
@@ -900,7 +892,9 @@ RefreshRecipeList = function()
             emptyList:SetText(L["TRADESKILLS_NO_DATA"])
             emptyList:Show()
         end
-        panels.listScrollChild:SetHeight(100)
+        if recipeListAPI then
+            recipeListAPI.SetSelectedIndex(nil)
+        end
         return
     end
 
@@ -941,16 +935,18 @@ RefreshRecipeList = function()
             emptyList:SetText(L["TRADESKILLS_EMPTY"])
             emptyList:Show()
         end
-        panels.listScrollChild:SetHeight(100)
+        if recipeListAPI then
+            recipeListAPI.SetSelectedIndex(nil)
+        end
         return
     end
 
     if emptyList then emptyList:Hide() end
 
     if isSearching or not selectedProfession then
-        RefreshRecipeListFlat(recipes)
+        BuildFlatRecipeEntries(recipes)
     else
-        RefreshRecipeListGrouped(recipes, addon)
+        BuildGroupedRecipeEntries(recipes, addon)
     end
 end
 
@@ -978,6 +974,31 @@ function ns.UI.CreateTradeskillsTab(parent)
     panels = OneWoW_GUI:CreateSplitPanel(contentArea)
     panels.listTitle:SetText(L["TRADESKILLS_LIST_TITLE"])
     panels.detailTitle:SetText(L["TRADESKILLS_DETAIL_TITLE"])
+
+    recipeListAPI = OneWoW_GUI:CreateVirtualizer(panels.listPanel, {
+        name = "CatalogTradeskillsList",
+        rowHeight = LIST_ROW_STRIDE,
+        minRowHeight = LIST_ROW_STRIDE,
+        numVisibleRows = 20,
+        rowInset = 0,
+        selectOnClick = false,
+        scrollFrame = panels.listScrollFrame,
+        content = panels.listScrollChild,
+        getCount = function()
+            return #listEntries
+        end,
+        getEntry = function(index)
+            return listEntries[index]
+        end,
+        onSelect = function(_, entry)
+            if entry and entry.type == "recipe" and entry.recipe then
+                ShowRecipeDetail(entry.recipe)
+            end
+        end,
+        createRow = CreateRecipeListRow,
+        bindRow = BindRecipeListRow,
+    })
+    panels.virtualizedList = recipeListAPI
 
     local buttonList = {}
 

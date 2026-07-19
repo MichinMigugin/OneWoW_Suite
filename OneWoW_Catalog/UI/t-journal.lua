@@ -10,7 +10,8 @@ local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 ns.UI = ns.UI or {}
 
 local selectedInstance = nil
-local instanceListButtons = {}
+local journalListAPI = nil
+local listResults = {}
 local detailElements = {}
 local searchText = ""
 local expansionFilter = 0
@@ -19,6 +20,7 @@ local instanceTypeFilter = "all"
 local selectedDifficulty = "all"
 local expandedEncounters = {}
 local panels_ref = nil
+local RefreshJournalList
 
 -- Multi-select Item Type filter: keys from ITEM_TYPE_DEFS map to item.special values.
 -- Empty table = "Show All" (no filter applied).
@@ -65,6 +67,7 @@ local function ResetItemTypeFilter()
 end
 
 local CARD_HEIGHT = 85
+local CARD_STRIDE = CARD_HEIGHT + 2
 local ITEM_ROW_HEIGHT = 32
 
 local SPECIAL_COLORS = ns.Constants.SPECIAL_COLORS
@@ -238,26 +241,25 @@ local function ClearDetailElements()
     wipe(detailElements)
 end
 
-local function ClearInstanceList()
-    for _, btn in ipairs(instanceListButtons) do
-        btn:Hide()
-        btn:SetParent(nil)
+local function ApplyInstanceRowChrome(card, selected)
+    if selected then
+        card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+    else
+        card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end
-    wipe(instanceListButtons)
+    if card.bgTex then
+        card.bgTex:SetAlpha(0.3)
+    end
 end
 
-
-local function CreateInstanceCard(parent, instData, yOffset, onClick)
-    local capInstanceID = instData.instanceID
-
+local function CreateInstanceListRow(parent, _)
     local card = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    card:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
-    card:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, yOffset)
     card:SetHeight(CARD_HEIGHT)
     card:SetClipsChildren(true)
     card:SetBackdrop(BACKDROP_SIMPLE)
-    card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    ApplyInstanceRowChrome(card, false)
     -- SetPropagateMouseClicks became a protected function; calling it while the
     -- list refreshes in combat throws ADDON_ACTION_BLOCKED. false is the default
     -- state anyway, so skipping it under restriction is harmless. Gated on the
@@ -266,40 +268,41 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
         card:SetPropagateMouseClicks(false)
     end
 
-    local bgImage = GetInstanceBackground(instData.instanceID)
-    if bgImage and bgImage ~= false then
-        local bgTex = card:CreateTexture(nil, "ARTWORK")
-        bgTex:SetPoint("CENTER", card, "CENTER", 20, -5)
-        bgTex:SetSize(380, 140)
-        bgTex:SetDrawLayer("ARTWORK", -1)
-        bgTex:SetTexture(bgImage)
-        bgTex:SetAlpha(0.3)
-        card.bgTex = bgTex
-    end
+    local bgTex = card:CreateTexture(nil, "ARTWORK")
+    bgTex:SetPoint("CENTER", card, "CENTER", 20, -5)
+    bgTex:SetSize(380, 140)
+    bgTex:SetDrawLayer("ARTWORK", -1)
+    bgTex:SetAlpha(0.3)
+    bgTex:Hide()
+    card.bgTex = bgTex
 
     local nameText = OneWoW_GUI:CreateFS(card, 12)
     nameText:SetPoint("TOPLEFT", card, "TOPLEFT", 8, -6)
     nameText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -34, -6)
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
-    nameText:SetText(instData.name)
     nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    card.nameText = nameText
 
     local favBtn = OneWoW_GUI:CreateFavoriteToggleButton(card, {
-        size     = 20,
-        favorite = ns.Favorites and ns.Favorites:IsFavorite("journal", capInstanceID) or false,
+        size = 20,
+        favorite = false,
         tooltipTitle = L["CATALOG_FAVORITE"],
-        tooltipText  = L["CATALOG_FAVORITE_TT"],
+        tooltipText = L["CATALOG_FAVORITE_TT"],
         onClick = function(_, on)
+            local instData = card.instData
+            if not instData or not instData.instanceID then
+                return
+            end
             if ns.Favorites then
-                ns.Favorites:SetFavorite("journal", capInstanceID, on)
+                ns.Favorites:SetFavorite("journal", instData.instanceID, on)
             end
             local p = panels_ref or ns.UI.journalPanels
             if p then
-                ns.UI.RefreshJournalList(p)
+                RefreshJournalList(p)
                 C_Timer.After(0, function()
                     if (panels_ref or ns.UI.journalPanels) == p then
-                        ns.UI.RefreshJournalList(p)
+                        RefreshJournalList(p)
                     end
                 end)
             end
@@ -307,79 +310,105 @@ local function CreateInstanceCard(parent, instData, yOffset, onClick)
     })
     favBtn:SetPoint("TOPRIGHT", card, "TOPRIGHT", -6, -4)
     favBtn:SetFrameLevel((card:GetFrameLevel() or 0) + 10)
+    card.favBtn = favBtn
 
-    local typeStr = instData.instanceType == "raid" and RAID
-                 or instData.instanceType == "party" and L["JOURNAL_CARD_DUNGEON"]
-                 or ""
     local infoText = OneWoW_GUI:CreateFS(card, 10)
     infoText:SetPoint("TOPLEFT", nameText, "BOTTOMLEFT", 0, -2)
     infoText:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, 0)
     infoText:SetJustifyH("LEFT")
-    infoText:SetText(instData.expansionName .. "  |  " .. typeStr)
     infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    card.infoText = infoText
 
-    local encCount = #instData.encounters
     local countText = OneWoW_GUI:CreateFS(card, 10)
     countText:SetPoint("TOPLEFT", infoText, "BOTTOMLEFT", 0, -2)
     countText:SetJustifyH("LEFT")
-    countText:SetText(string.format(L["JOURNAL_CARD_ENCOUNTERS"], encCount)
-                      .. "  |  " .. string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems))
     countText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
+    card.countText = countText
 
-    local row1 = {
-        { flag = instData.hasMounts,  label = MOUNTS,  color = SPECIAL_COLORS.Mount },
-        { flag = instData.hasPets,    label = PETS,    color = SPECIAL_COLORS.Pet },
-        { flag = instData.hasToys,    label = L["JOURNAL_CARD_TOYS"],    color = SPECIAL_COLORS.Toy },
+    local catDefs = {
+        { label = MOUNTS, color = SPECIAL_COLORS.Mount },
+        { label = PETS, color = SPECIAL_COLORS.Pet },
+        { label = L["JOURNAL_CARD_TOYS"], color = SPECIAL_COLORS.Toy },
+        { label = L["JOURNAL_CARD_RECIPES"], color = SPECIAL_COLORS.Recipe },
+        { label = L["JOURNAL_CARD_HOUSING"], color = SPECIAL_COLORS.Housing },
+        { label = L["JOURNAL_CARD_QUEST"], color = SPECIAL_COLORS.Quest },
     }
-    local row2 = {
-        { flag = instData.hasRecipes, label = L["JOURNAL_CARD_RECIPES"], color = SPECIAL_COLORS.Recipe },
-        { flag = instData.hasHousing, label = L["JOURNAL_CARD_HOUSING"], color = SPECIAL_COLORS.Housing },
-        { flag = instData.hasQuest,   label = L["JOURNAL_CARD_QUEST"],   color = SPECIAL_COLORS.Quest },
-    }
-
     local colWidth = 80
-    for i, cat in ipairs(row1) do
+    card.catTexts = {}
+    for i, cat in ipairs(catDefs) do
         local catText = OneWoW_GUI:CreateFS(card, 10)
-        catText:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 8 + ((i - 1) * colWidth), 18)
+        local row = (i <= 3) and 1 or 2
+        local col = ((i - 1) % 3)
+        local y = (row == 1) and 18 or 6
+        catText:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 8 + (col * colWidth), y)
         catText:SetText(cat.label)
-        if cat.flag then
-            catText:SetTextColor(cat.color[1], cat.color[2], cat.color[3], 1.0)
-        else
-            catText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
-    end
-    for i, cat in ipairs(row2) do
-        local catText = OneWoW_GUI:CreateFS(card, 10)
-        catText:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 8 + ((i - 1) * colWidth), 6)
-        catText:SetText(cat.label)
-        if cat.flag then
-            catText:SetTextColor(cat.color[1], cat.color[2], cat.color[3], 1.0)
-        else
-            catText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
+        catText._activeColor = cat.color
+        card.catTexts[i] = catText
     end
 
-    card:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-        if self.bgTex then self.bgTex:SetAlpha(0.5) end
-    end)
-    card:SetScript("OnLeave", function(self)
-        if selectedInstance and selectedInstance.instanceID == instData.instanceID then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-        else
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    card:SetScript("OnEnter", function(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+        if myself.bgTex and myself.bgTex:IsShown() then
+            myself.bgTex:SetAlpha(0.5)
         end
-        if self.bgTex then self.bgTex:SetAlpha(0.3) end
     end)
-    card:SetScript("OnClick", function()
-        onClick(instData)
+    card:SetScript("OnLeave", function(myself)
+        ApplyInstanceRowChrome(myself, myself._rowSelected)
     end)
 
-    card.instData = instData
     return card
+end
+
+local function BindInstanceListRow(row, _, instData, state)
+    row.instData = instData
+    row._rowSelected = state.selected and true or false
+    ApplyInstanceRowChrome(row, row._rowSelected)
+
+    local bgImage = GetInstanceBackground(instData.instanceID)
+    if bgImage and bgImage ~= false then
+        row.bgTex:SetTexture(bgImage)
+        row.bgTex:Show()
+    else
+        row.bgTex:Hide()
+    end
+
+    row.nameText:SetText(instData.name or "")
+
+    local typeStr = instData.instanceType == "raid" and RAID
+        or instData.instanceType == "party" and L["JOURNAL_CARD_DUNGEON"]
+        or ""
+    row.infoText:SetText((instData.expansionName or "") .. "  |  " .. typeStr)
+
+    local encCount = #(instData.encounters or {})
+    row.countText:SetText(string.format(L["JOURNAL_CARD_ENCOUNTERS"], encCount)
+        .. "  |  " .. string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems or 0))
+
+    local flags = {
+        instData.hasMounts,
+        instData.hasPets,
+        instData.hasToys,
+        instData.hasRecipes,
+        instData.hasHousing,
+        instData.hasQuest,
+    }
+    for i, catText in ipairs(row.catTexts) do
+        if flags[i] then
+            local c = catText._activeColor
+            catText:SetTextColor(c[1], c[2], c[3], 1.0)
+        else
+            catText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+    end
+
+    if row.favBtn and ns.Favorites then
+        if instData.instanceID then
+            row.favBtn:Show()
+            row.favBtn:SetFavorite(ns.Favorites:IsFavorite("journal", instData.instanceID))
+        else
+            row.favBtn:Hide()
+        end
+    end
 end
 
 local function BuildCollectionsSummary(parent, instData, yOffset, addon)
@@ -960,15 +989,19 @@ local function ShowInstanceDetail(panels, instData)
 end
 
 function RefreshJournalList(panels)
-    ClearInstanceList()
+    wipe(listResults)
     if panels.listScrollFrame and panels.listScrollFrame.SetVerticalScroll then
         panels.listScrollFrame:SetVerticalScroll(0)
     end
 
     local addon = GetDataAddon()
     if not addon then
-        panels.listScrollChild:SetHeight(100)
-        panels.UpdateListThumb()
+        if panels.emptyList then
+            panels.emptyList:Show()
+        end
+        if journalListAPI then
+            journalListAPI.SetSelectedIndex(nil)
+        end
         return
     end
 
@@ -995,13 +1028,13 @@ function RefreshJournalList(panels)
         local favInsts, restInsts = {}, {}
         for _, inst in ipairs(sorted) do
             if ns.Favorites:IsFavorite("journal", inst.instanceID) then
-                table.insert(favInsts, inst)
+                tinsert(favInsts, inst)
             else
-                table.insert(restInsts, inst)
+                tinsert(restInsts, inst)
             end
         end
-        table.sort(favInsts, cmpBaseOrder)
-        table.sort(restInsts, cmpBaseOrder)
+        sort(favInsts, cmpBaseOrder)
+        sort(restInsts, cmpBaseOrder)
         local pos = 0
         for _, inst in ipairs(favInsts) do
             pos = pos + 1
@@ -1014,52 +1047,50 @@ function RefreshJournalList(panels)
     end
 
     local totalSorted = #sorted
-    local displayLimit = nil
-    if expansionFilter == 0 then
-        displayLimit = 10
-    end
-    local displayCount = displayLimit and math.min(totalSorted, displayLimit) or totalSorted
 
     if totalSorted == 0 then
-        panels.emptyList:Show()
-        panels.listScrollChild:SetHeight(100)
-        panels.UpdateListThumb()
+        if panels.emptyList then
+            panels.emptyList:Show()
+        end
         if panels.leftStatusText then
             panels.leftStatusText:SetText("")
+        end
+        if journalListAPI then
+            journalListAPI.SetSelectedIndex(nil)
         end
         return
     end
 
-    panels.emptyList:Hide()
-
-    local yOffset = -4
-    for i = 1, displayCount do
-        local instData = sorted[i]
-        local card = CreateInstanceCard(panels.listScrollChild, instData, yOffset, function(inst)
-            for _, btn in ipairs(instanceListButtons) do
-                if btn.instData and btn.instData.instanceID == inst.instanceID then
-                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                else
-                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                end
-            end
-            ShowInstanceDetail(panels, inst)
-        end)
-        table.insert(instanceListButtons, card)
-        yOffset = yOffset - (CARD_HEIGHT + 2)
+    if panels.emptyList then
+        panels.emptyList:Hide()
     end
 
-    panels.listScrollChild:SetHeight(math.abs(yOffset) + 10)
-    panels.UpdateListThumb()
+    for i = 1, totalSorted do
+        listResults[i] = sorted[i]
+    end
+
+    local keepID = selectedInstance and selectedInstance.instanceID
+    local keepIndex = nil
+    if keepID then
+        for i, inst in ipairs(listResults) do
+            if inst.instanceID == keepID then
+                keepIndex = i
+                break
+            end
+        end
+    end
+
+    if journalListAPI then
+        if keepIndex then
+            journalListAPI.SetSelectedIndex(keepIndex)
+        else
+            journalListAPI.SetSelectedIndex(nil)
+            journalListAPI.Refresh()
+        end
+    end
 
     if panels.leftStatusText then
-        if displayLimit and totalSorted > displayLimit then
-            panels.leftStatusText:SetText(string.format(L["JOURNAL_STATS_SHOWING"], displayCount, totalSorted))
-        else
-            panels.leftStatusText:SetText(string.format(L["JOURNAL_STATS"], totalSorted))
-        end
+        panels.leftStatusText:SetText(string.format(L["JOURNAL_STATS"], totalSorted))
     end
 end
 
@@ -1183,6 +1214,30 @@ function ns.UI.CreateJournalTab(parent)
     local panels = OneWoW_GUI:CreateSplitPanel(contentArea)
     panels.listTitle:SetText(L["JOURNAL_LIST_TITLE"])
     panels.detailTitle:SetText(L["JOURNAL_DETAIL_TITLE"])
+
+    journalListAPI = OneWoW_GUI:CreateVirtualizer(panels.listPanel, {
+        name = "CatalogJournalList",
+        rowHeight = CARD_STRIDE,
+        minRowHeight = CARD_STRIDE,
+        numVisibleRows = 10,
+        rowInset = 0,
+        scrollFrame = panels.listScrollFrame,
+        content = panels.listScrollChild,
+        getCount = function()
+            return #listResults
+        end,
+        getEntry = function(index)
+            return listResults[index]
+        end,
+        onSelect = function(_, inst)
+            if inst then
+                ShowInstanceDetail(panels, inst)
+            end
+        end,
+        createRow = CreateInstanceListRow,
+        bindRow = BindInstanceListRow,
+    })
+    panels.virtualizedList = journalListAPI
 
     local clearBtn = OneWoW_GUI:CreateFitTextButton(leftHeader, { text = L["JOURNAL_FILTER_CLEAR"], height = 26, minWidth = 34 })
     clearBtn:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -8, -8)
@@ -1439,16 +1494,23 @@ function ns.UI.OpenToInstance(mapID)
         if panels.expText then
             panels.expText:SetText(instData.expansionName)
         end
+        selectedInstance = instData
         RefreshJournalList(panels)
-        ShowInstanceDetail(panels, instData)
-        for _, btn in ipairs(instanceListButtons) do
-            if btn.instData and btn.instData.instanceID == instData.instanceID then
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            else
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        if journalListAPI then
+            local keepIndex = nil
+            for i, inst in ipairs(listResults) do
+                if inst.instanceID == instData.instanceID then
+                    keepIndex = i
+                    break
+                end
             end
+            if keepIndex then
+                journalListAPI.SetSelectedIndex(keepIndex)
+            else
+                ShowInstanceDetail(panels, instData)
+            end
+        else
+            ShowInstanceDetail(panels, instData)
         end
     end)
 end
