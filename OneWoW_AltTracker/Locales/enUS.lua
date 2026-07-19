@@ -152,6 +152,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TT_HISTORY_GOLD_EARNED"] = "Gold Earned from Sales",
     ["TT_HISTORY_GOLD_EARNED_DESC"] = "Total gold earned from all sold auctions",
     ["NO_AUCTIONS_FOUND"] = "No auctions or bids found",
+    ["AUCTIONS_STATUS_COUNT"] = "%d auctions",
     ["MAIL_PENDING_PICKUP"] = "Mail Pending Pickup",
     ["NO_AUCTION_MAIL"] = "No auction gold waiting",
     ["BANK_PERSONAL"] = "Personal",

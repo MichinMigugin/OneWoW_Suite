@@ -185,6 +185,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["TT_HISTORY_GOLD_EARNED_DESC"] = "Oro total ganado de todas las subastas vendidas",
     ["AUCTION_TIME_ENDED"] = "Finalizada",
     ["NO_AUCTIONS_FOUND"] = "No se encontraron subastas ni pujas",
+    ["AUCTIONS_STATUS_COUNT"] = "%d subastas",
     ["MAIL_PENDING_PICKUP"] = "Correo pendiente de recoger",
     ["NO_AUCTION_MAIL"] = "No hay oro de subasta esperando",
     ["BANK_PERSONAL"] = "Personal",

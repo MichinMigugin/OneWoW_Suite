@@ -185,6 +185,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TT_HISTORY_GOLD_EARNED_DESC"] = "Gesamtes Gold aus allen verkauften Auktionen",
     ["AUCTION_TIME_ENDED"] = "Beendet",
     ["NO_AUCTIONS_FOUND"] = "Keine Auktionen oder Gebote gefunden",
+    ["AUCTIONS_STATUS_COUNT"] = "%d Auktionen",
     ["MAIL_PENDING_PICKUP"] = "Post wartet auf Abholung",
     ["NO_AUCTION_MAIL"] = "Kein Auktionsgold wartet",
     ["BANK_PERSONAL"] = "Persönlich",

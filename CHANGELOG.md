@@ -64,6 +64,9 @@
   - Hover shows on-character, in-transit, and virtual total
 - Summary roster and the mail detail popup refresh when in-transit mail is collected or updated
 
+## Auctions
+- Status bar now shows auction/row count instead of mislabeling it as characters tracked
+
 ## Financials
 - Each gold event is stored as its own ledger row (no more merging same-category mail or other activity within a few minutes)
 

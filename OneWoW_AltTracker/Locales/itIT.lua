@@ -185,6 +185,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["TT_HISTORY_GOLD_EARNED_DESC"] = "Oro totale guadagnato da tutte le aste vendute",
     ["AUCTION_TIME_ENDED"] = "Terminata",
     ["NO_AUCTIONS_FOUND"] = "Nessuna asta o offerta trovata",
+    ["AUCTIONS_STATUS_COUNT"] = "%d aste",
     ["MAIL_PENDING_PICKUP"] = "Posta in attesa di ritiro",
     ["NO_AUCTION_MAIL"] = "Nessun oro d'asta in attesa",
     ["BANK_PERSONAL"] = "Personale",

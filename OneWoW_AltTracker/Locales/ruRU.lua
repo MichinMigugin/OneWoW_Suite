@@ -185,6 +185,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TT_HISTORY_GOLD_EARNED_DESC"] = "Всего золота, заработанного со всех проданных лотов",
     ["AUCTION_TIME_ENDED"] = "Завершён",
     ["NO_AUCTIONS_FOUND"] = "Лоты и ставки не найдены",
+    ["AUCTIONS_STATUS_COUNT"] = "Лотов: %d",
     ["MAIL_PENDING_PICKUP"] = "Почта ожидает получения",
     ["NO_AUCTION_MAIL"] = "Нет ожидающего аукционного золота",
     ["BANK_PERSONAL"] = "Личный",

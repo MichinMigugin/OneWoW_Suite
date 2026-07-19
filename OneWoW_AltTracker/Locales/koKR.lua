@@ -182,6 +182,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TT_HISTORY_GOLD_EARNED"] = "판매 획득 골드",
     ["TT_HISTORY_GOLD_EARNED_DESC"] = "모든 판매 경매에서 획득한 총 골드",
     ["NO_AUCTIONS_FOUND"] = "경매 또는 입찰을 찾을 수 없습니다",
+    ["AUCTIONS_STATUS_COUNT"] = "%d개 경매",
     ["MAIL_PENDING_PICKUP"] = "수령 대기 우편",
     ["NO_AUCTION_MAIL"] = "대기 중인 경매 골드 없음",
     ["BANK_PERSONAL"] = "개인",

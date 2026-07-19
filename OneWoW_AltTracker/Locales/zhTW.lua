@@ -185,6 +185,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TT_HISTORY_GOLD_EARNED_DESC"] = "所有已售出拍賣賺取的金幣總額",
     ["AUCTION_TIME_ENDED"] = "已結束",
     ["NO_AUCTIONS_FOUND"] = "找不到拍賣或競標",
+    ["AUCTIONS_STATUS_COUNT"] = "%d 個拍賣",
     ["MAIL_PENDING_PICKUP"] = "待領取郵件",
     ["NO_AUCTION_MAIL"] = "沒有等待領取的拍賣金幣",
     ["BANK_PERSONAL"] = "個人",

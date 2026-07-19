@@ -308,7 +308,7 @@ function ns.UI.CreateAuctionsTab(parent)
     })
 
     local statusBar = OneWoW_GUI:CreateStatusBar(parent, rosterPanel, {
-        text = string.format(L["CHARACTERS_TRACKED"], 1, ""),
+        text = string.format(L["AUCTIONS_STATUS_COUNT"], 0),
     })
 
     parent.dataTable = dt
@@ -777,8 +777,7 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
     OneWoW_GUI:LayoutDataRows(scrollContent)
 
     if auctionsTab.statusText then
-        local totalItems = #allAuctions
-        auctionsTab.statusText:SetText(string.format(L["CHARACTERS_TRACKED"], totalItems, ""))
+        auctionsTab.statusText:SetText(string.format(L["AUCTIONS_STATUS_COUNT"], #allAuctions))
     end
 
     ns.UI.RefreshAuctionsStats(auctionsTab)

@@ -185,6 +185,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["TT_HISTORY_GOLD_EARNED_DESC"] = "Ouro total ganho de todos os leilões vendidos",
     ["AUCTION_TIME_ENDED"] = "Finalizado",
     ["NO_AUCTIONS_FOUND"] = "Nenhum leilão ou lance encontrado",
+    ["AUCTIONS_STATUS_COUNT"] = "%d leilões",
     ["MAIL_PENDING_PICKUP"] = "Correio pendente de coleta",
     ["NO_AUCTION_MAIL"] = "Nenhum ouro de leilão esperando",
     ["BANK_PERSONAL"] = "Pessoal",

@@ -185,6 +185,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TT_HISTORY_GOLD_EARNED_DESC"] = "Or total gagné sur toutes les enchères vendues",
     ["AUCTION_TIME_ENDED"] = "Terminée",
     ["NO_AUCTIONS_FOUND"] = "Aucune enchère ni offre trouvée",
+    ["AUCTIONS_STATUS_COUNT"] = "%d enchères",
     ["MAIL_PENDING_PICKUP"] = "Courrier en attente de récupération",
     ["NO_AUCTION_MAIL"] = "Aucun or d'enchère en attente",
     ["BANK_PERSONAL"] = "Personnelle",
