@@ -85,6 +85,7 @@
 
 ## Financials
 - Each gold event is stored as its own ledger row (no more merging same-category mail or other activity within a few minutes)
+- Transaction list uses the shared virtualized list (expand-in-place; no longer capped at 100 rows)
 
 ---
 

@@ -5,7 +5,14 @@ local OneWoW_GUI = OneWoW_GUI
 
 ns.UI = ns.UI or {}
 
-local transactionRows = {}
+local listEntries = {}
+local expandedByTxId = {}
+local listAPI = nil
+local FIN_ROW_HEIGHT = 28
+local FIN_ROW_GAP = 2
+local FIN_DETAIL_HEIGHT = 52
+local FIN_TX_STRIDE = FIN_ROW_HEIGHT + FIN_ROW_GAP
+local FIN_DETAIL_STRIDE = FIN_DETAIL_HEIGHT + FIN_ROW_GAP
 local currentSortColumn = "date"
 local currentSortAscending = false
 local loginServerTime = 0
@@ -631,6 +638,246 @@ local onHeaderCreate = function(btn, col)
     end
 end
 
+local function TxExpandKey(tx)
+    if not tx then
+        return ""
+    end
+    if tx.id ~= nil then
+        return tostring(tx.id)
+    end
+    return table.concat({
+        tostring(tx.timestamp or 0),
+        tostring(tx.amount or 0),
+        tostring(tx.character or ""),
+        tostring(tx.itemName or tx.source or ""),
+    }, "\031")
+end
+
+local function BuildFinancialListEntries(transactions)
+    wipe(listEntries)
+    for _, tx in ipairs(transactions or {}) do
+        tinsert(listEntries, { type = "tx", tx = tx })
+        local key = TxExpandKey(tx)
+        if key ~= "" and expandedByTxId[key] then
+            tinsert(listEntries, { type = "detail", tx = tx, key = key })
+        end
+    end
+end
+
+local function LayoutFinancialTxCells(row, dt)
+    if not (dt and dt.headerRow and dt.headerRow.columnButtons and row.cells) then
+        return
+    end
+    for ci, cell in ipairs(row.cells) do
+        local btn = dt.headerRow.columnButtons[ci]
+        if btn and btn.columnWidth and btn.columnX then
+            local width = btn.columnWidth
+            local x = btn.columnX
+            local col = columnsConfig[ci]
+            cell:ClearAllPoints()
+            if col and col.align == "icon" then
+                cell:SetSize(width, FIN_ROW_HEIGHT)
+                cell:SetPoint("LEFT", row, "LEFT", x, 0)
+            elseif col and col.align == "center" then
+                cell:SetWidth(width - 6)
+                cell:SetPoint("CENTER", row, "LEFT", x + width / 2, 0)
+            elseif col and col.align == "right" then
+                cell:SetWidth(width - 6)
+                cell:SetPoint("RIGHT", row, "LEFT", x + width - 3, 0)
+            else
+                cell:SetWidth(width - 6)
+                cell:SetPoint("LEFT", row, "LEFT", x + 3, 0)
+            end
+        end
+    end
+end
+
+local function ToggleFinancialExpand(tx)
+    local key = TxExpandKey(tx)
+    if key == "" then
+        return
+    end
+    expandedByTxId[key] = not expandedByTxId[key]
+    local tab = activeFinancialsTab
+    if not tab then
+        return
+    end
+    BuildFinancialListEntries(tab._transactions)
+    if listAPI then
+        listAPI.Refresh()
+    end
+end
+
+local function CreateFinancialListRow(parent, _)
+    local row = CreateFrame("Frame", nil, parent)
+    row:EnableMouse(true)
+
+    local bg = row:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints(row)
+    bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    bg:SetAlpha(0.6)
+    row.bg = bg
+
+    local expandBtn = CreateFrame("Button", nil, row)
+    expandBtn:SetSize(25, FIN_ROW_HEIGHT)
+    local expandIcon = expandBtn:CreateTexture(nil, "ARTWORK")
+    expandIcon:SetSize(14, 14)
+    expandIcon:SetPoint("CENTER")
+    expandIcon:SetAtlas("Gamepad_Rev_Plus_64")
+    expandBtn.icon = expandIcon
+    row.expandBtn = expandBtn
+
+    expandBtn:SetScript("OnClick", function()
+        local entry = row.entry
+        if entry and entry.tx then
+            ToggleFinancialExpand(entry.tx)
+        end
+    end)
+
+    local dateText = OneWoW_GUI:CreateFS(row, 10)
+    dateText:SetJustifyH("LEFT")
+    row.dateText = dateText
+
+    local charText = OneWoW_GUI:CreateFS(row, 10)
+    charText:SetJustifyH("LEFT")
+    row.charText = charText
+
+    local categoryText = OneWoW_GUI:CreateFS(row, 10)
+    categoryText:SetJustifyH("LEFT")
+    row.categoryText = categoryText
+
+    local itemText = OneWoW_GUI:CreateFS(row, 10)
+    itemText:SetJustifyH("LEFT")
+    row.itemText = itemText
+
+    local amountText = OneWoW_GUI:CreateFS(row, 12)
+    amountText:SetJustifyH("RIGHT")
+    row.amountText = amountText
+
+    row.cells = { expandBtn, dateText, charText, categoryText, itemText, amountText }
+
+    local detailLine1 = OneWoW_GUI:CreateFS(row, 10)
+    detailLine1:SetJustifyH("LEFT")
+    detailLine1:SetWordWrap(false)
+    detailLine1:Hide()
+    row.detailLine1 = detailLine1
+
+    local detailLine2 = OneWoW_GUI:CreateFS(row, 10)
+    detailLine2:SetJustifyH("LEFT")
+    detailLine2:SetWordWrap(false)
+    detailLine2:Hide()
+    row.detailLine2 = detailLine2
+
+    row:SetScript("OnEnter", function(myself)
+        if myself.entry and myself.entry.type == "tx" then
+            myself.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+            GameTooltip:SetOwner(myself, "ANCHOR_TOP")
+            GameTooltip:SetText(L["RIGHT_CLICK_FOR_MORE_OPTIONS"], 1, 1, 1)
+            GameTooltip:Show()
+        end
+    end)
+    row:SetScript("OnLeave", function(myself)
+        if myself.entry and myself.entry.type == "detail" then
+            myself.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            myself.bg:SetAlpha(0.7)
+        else
+            myself.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+            myself.bg:SetAlpha(0.6)
+        end
+        GameTooltip:Hide()
+    end)
+    row:SetScript("OnMouseDown", function(myself, button)
+        if button == "RightButton" and myself.entry and myself.entry.tx then
+            ShowTransactionContextMenu(myself.entry.tx)
+        end
+    end)
+
+    return row
+end
+
+local function BindFinancialListRow(row, _, entry, _)
+    row.entry = entry
+    local tab = activeFinancialsTab
+    local dt = tab and tab.dataTable
+    local tx = entry.tx
+
+    if entry.type == "detail" then
+        for _, cell in ipairs(row.cells) do
+            cell:Hide()
+        end
+        row.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        row.bg:SetAlpha(0.7)
+
+        local line1 = L["ID"] .. " " .. (tx.id or "?") .. "  |  " .. date("%Y-%m-%d %H:%M:%S", tx.timestamp or 0)
+        row.detailLine1:ClearAllPoints()
+        row.detailLine1:SetPoint("TOPLEFT", row, "TOPLEFT", 28, -8)
+        row.detailLine1:SetPoint("TOPRIGHT", row, "TOPRIGHT", -8, -8)
+        row.detailLine1:SetText(line1)
+        row.detailLine1:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        row.detailLine1:Show()
+
+        local extras = {}
+        if tx.quantity and tx.quantity > 1 then
+            tinsert(extras, L["FIN_EXPANDED_QTY"] .. " " .. tx.quantity)
+        end
+        if tx.notes then
+            tinsert(extras, tx.notes)
+        end
+        if #extras > 0 then
+            row.detailLine2:ClearAllPoints()
+            row.detailLine2:SetPoint("TOPLEFT", row.detailLine1, "BOTTOMLEFT", 0, -4)
+            row.detailLine2:SetPoint("TOPRIGHT", row, "TOPRIGHT", -8, 0)
+            row.detailLine2:SetText(table.concat(extras, "  |  "))
+            row.detailLine2:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            row.detailLine2:Show()
+        else
+            row.detailLine2:Hide()
+        end
+        return
+    end
+
+    row.detailLine1:Hide()
+    row.detailLine2:Hide()
+    row.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    row.bg:SetAlpha(0.6)
+
+    for _, cell in ipairs(row.cells) do
+        cell:Show()
+    end
+
+    local key = TxExpandKey(tx)
+    if row.expandBtn.icon then
+        row.expandBtn.icon:SetAtlas(expandedByTxId[key] and "Gamepad_Rev_Minus_64" or "Gamepad_Rev_Plus_64")
+    end
+
+    row.dateText:SetText(date("%m/%d %H:%M", tx.timestamp or 0))
+    row.dateText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local charName = (tx.character or ""):match("^([^%-]+)")
+    row.charText:SetText(charName or "?")
+    row.charText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    row.categoryText:SetText(ns.UI.GetCategoryDisplayName(tx.category))
+    row.categoryText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    row.itemText:SetText(tx.itemName or tx.source or "")
+    row.itemText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local amountFormatted = ns.AltTrackerFormatters:FormatGold(tx.amount or 0)
+    if tx.type == "income" then
+        row.amountText:SetText("+" .. amountFormatted)
+        row.amountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+    elseif tx.type == "transfer" then
+        row.amountText:SetText(amountFormatted)
+        row.amountText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    else
+        row.amountText:SetText("-" .. amountFormatted)
+        row.amountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+    end
+
+    LayoutFinancialTxCells(row, dt)
+end
+
 function ns.UI.CreateFinancialsTab(parent)
     local topHost = CreateFrame("Frame", nil, parent)
     topHost:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
@@ -995,6 +1242,39 @@ function ns.UI.CreateFinancialsTab(parent)
         end,
     })
 
+    listAPI = OneWoW_GUI:CreateVirtualizer(rosterPanel, {
+        name = "AltTrackerFinancialsList",
+        rowHeight = FIN_TX_STRIDE,
+        minRowHeight = FIN_TX_STRIDE,
+        numVisibleRows = 16,
+        selectOnClick = false,
+        scrollFrame = dt.scrollFrame,
+        content = dt.scrollContent,
+        getCount = function()
+            return #listEntries
+        end,
+        getEntry = function(index)
+            return listEntries[index]
+        end,
+        getRowHeight = function(index)
+            local entry = listEntries[index]
+            if entry and entry.type == "detail" then
+                return FIN_DETAIL_STRIDE
+            end
+            return FIN_TX_STRIDE
+        end,
+        createRow = CreateFinancialListRow,
+        bindRow = BindFinancialListRow,
+    })
+
+    local origUpdateColumnLayout = dt.UpdateColumnLayout
+    dt.UpdateColumnLayout = function(...)
+        origUpdateColumnLayout(...)
+        if listAPI then
+            listAPI.Refresh()
+        end
+    end
+
     local status = OneWoW_GUI:CreateStatusBar(parent, rosterPanel, {
         text = string.format(L["FIN_STATUS_COUNT"], 0),
     })
@@ -1012,6 +1292,8 @@ function ns.UI.CreateFinancialsTab(parent)
     parent.columnsConfig = columnsConfig
     parent.headerRow = dt.headerRow
     parent.scrollContent = dt.scrollContent
+    parent.scrollFrame = dt.scrollFrame
+    parent.listAPI = listAPI
     parent.statusBar = status.bar
     parent.statusText = status.text
     parent.dashboardMode = false
@@ -1072,20 +1354,17 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
     if not financialsTab then return end
 
     if not OneWoW_AltTracker_Accounting_API then
+        wipe(listEntries)
+        if listAPI then
+            listAPI.Refresh()
+        end
         if financialsTab.statusText then
             financialsTab.statusText:SetText(L["FIN_INSTALL_ACCOUNTING"])
         end
         return
     end
 
-    local scrollContent = financialsTab.scrollContent
-    if not scrollContent then return end
-
-    local dt = financialsTab.dataTable
-
-    OneWoW_GUI:ClearDataRows(scrollContent)
-    wipe(transactionRows)
-    if dt then dt:ClearRows() end
+    if not financialsTab.scrollContent then return end
 
     local allTransactions = OneWoW_AltTracker_Accounting_API.GetTransactions()
     local timePeriod = financialsTab.timePeriod or "week"
@@ -1218,6 +1497,11 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
     end
 
     if #transactions == 0 then
+        financialsTab._transactions = transactions
+        wipe(listEntries)
+        if listAPI then
+            listAPI.Refresh()
+        end
         if financialsTab.statusText then
             if #allTransactions == 0 then
                 financialsTab.statusText:SetText(L["FIN_NO_TRANSACTIONS"])
@@ -1258,116 +1542,11 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
         end
     end)
 
-    local rowHeight = 28
-    local rowGap = 2
-
-    for i = 1, math.min(100, #transactions) do
-        local tx = transactions[i]
-
-        local txRow = OneWoW_GUI:CreateDataRow(scrollContent, {
-            rowHeight = rowHeight,
-            expandedHeight = 50,
-            rowGap = rowGap,
-            data = { tx = tx },
-            createDetails = function(ef, d)
-                local grid = OneWoW_GUI:CreateExpandedPanelGrid(ef)
-                local p1 = grid:AddPanel(L["FIN_COL_DATE"])
-                grid:AddLine(p1, L["ID"] .. " " .. (d.tx.id or "?") .. "  |  " .. date("%Y-%m-%d %H:%M:%S", d.tx.timestamp or 0))
-                if d.tx.quantity and d.tx.quantity > 1 then
-                    grid:AddLine(p1, L["FIN_EXPANDED_QTY"] .. " " .. d.tx.quantity)
-                end
-                if d.tx.notes then
-                    grid:AddLine(p1, d.tx.notes)
-                end
-                grid:Finish()
-                OneWoW_GUI:ApplyFontToFrame(ef)
-            end,
-        })
-
-        local dateText = OneWoW_GUI:CreateFS(txRow, 10)
-        dateText:SetText(date("%m/%d %H:%M", tx.timestamp or 0))
-        dateText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        dateText:SetJustifyH("LEFT")
-        table.insert(txRow.cells, dateText)
-
-        local charText = OneWoW_GUI:CreateFS(txRow, 10)
-        local charName = (tx.character or ""):match("^([^%-]+)")
-        charText:SetText(charName or "?")
-        charText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        charText:SetJustifyH("LEFT")
-        table.insert(txRow.cells, charText)
-
-        local categoryText = OneWoW_GUI:CreateFS(txRow, 10)
-        categoryText:SetText(ns.UI.GetCategoryDisplayName(tx.category))
-        categoryText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        categoryText:SetJustifyH("LEFT")
-        table.insert(txRow.cells, categoryText)
-
-        local itemText = OneWoW_GUI:CreateFS(txRow, 10)
-        itemText:SetText(tx.itemName or tx.source or "")
-        itemText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        itemText:SetJustifyH("LEFT")
-        table.insert(txRow.cells, itemText)
-
-        local amountText = OneWoW_GUI:CreateFS(txRow, 12)
-        local amountFormatted = ns.AltTrackerFormatters:FormatGold(tx.amount or 0)
-        if tx.type == "income" then
-            amountText:SetText("+" .. amountFormatted)
-            amountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        elseif tx.type == "transfer" then
-            amountText:SetText(amountFormatted)
-            amountText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-        else
-            amountText:SetText("-" .. amountFormatted)
-            amountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
-        end
-        amountText:SetJustifyH("RIGHT")
-        table.insert(txRow.cells, amountText)
-
-        if dt and dt.headerRow and dt.headerRow.columnButtons and columnsConfig then
-            for ci, cell in ipairs(txRow.cells) do
-                local btn = dt.headerRow.columnButtons[ci]
-                if btn and btn.columnWidth and btn.columnX then
-                    local width = btn.columnWidth
-                    local x = btn.columnX
-                    local col = columnsConfig[ci]
-                    cell:ClearAllPoints()
-                    if col and col.align == "icon" then
-                        cell:SetSize(width, rowHeight)
-                        cell:SetPoint("LEFT", txRow, "LEFT", x, 0)
-                    elseif col and col.align == "center" then
-                        cell:SetWidth(width - 6)
-                        cell:SetPoint("CENTER", txRow, "LEFT", x + width / 2, 0)
-                    elseif col and col.align == "right" then
-                        cell:SetWidth(width - 6)
-                        cell:SetPoint("RIGHT", txRow, "LEFT", x + width - 3, 0)
-                    else
-                        cell:SetWidth(width - 6)
-                        cell:SetPoint("LEFT", txRow, "LEFT", x + 3, 0)
-                    end
-                end
-            end
-        end
-
-        txRow:HookScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:SetText(L["RIGHT_CLICK_FOR_MORE_OPTIONS"], 1, 1, 1)
-            GameTooltip:Show()
-        end)
-        txRow:HookScript("OnLeave", function()
-            GameTooltip:Hide()
-        end)
-        txRow:HookScript("OnMouseDown", function(_, button)
-            if button == "RightButton" then
-                ShowTransactionContextMenu(tx)
-            end
-        end)
-
-        table.insert(transactionRows, txRow)
-        if dt then dt:RegisterRow(txRow) end
+    financialsTab._transactions = transactions
+    BuildFinancialListEntries(transactions)
+    if listAPI then
+        listAPI.Refresh()
     end
-
-    OneWoW_GUI:LayoutDataRows(scrollContent, { rowHeight = rowHeight, rowGap = rowGap })
 
     OneWoW_GUI:ApplyFontToFrame(financialsTab)
 
