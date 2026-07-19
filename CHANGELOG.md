@@ -81,6 +81,7 @@
 
 ## Tradeskills
 - Recipe list uses the shared virtualized list (expansion flatten-expand; no longer capped at 50)
+- Known By Me/Alts no longer drops Enchanting (and other) scans stored under expansion skill-line names
 
 ---
 
