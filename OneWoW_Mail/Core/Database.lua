@@ -17,6 +17,7 @@ local defaults = {
             keepFreeSlots = 1,
             autoCollectGold = false,
             autoCollectItems = false,
+            mirrorLogToChat = false,
             autoFillLastRecipient = false,
             lastRecipient = "",
             favorites = {},

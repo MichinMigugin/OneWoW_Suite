@@ -159,6 +159,13 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["LOG_CLOSE_VISIT_DISCARD"] = "Pending review discarded (per-open shipments re-plan next time).",
     ["LOG_CLOSE_SESSION_RETRY"] = "Mailbox closed — session shipments will retry on the next open.",
     ["LOG_CLOSE_MIXED"] = "Mailbox closed — visit pending discarded; session shipments will retry next open.",
+    ["LOG_MIRROR_CHAT"] = "활동 로그를 대화창에도 표시",
+    ["TT_LOG_MIRROR_CHAT"] = "켜면 활동 로그의 정보·경고 줄도 대화창에 출력됩니다. 오류는 항상 출력됩니다.",
+    ["LOG_COLLECT_MAIL"] = "수령: %s",
+    ["LOG_COLLECT_SUMMARY"] = "수령 완료 — %s · 아이템 %d개 (우편 %d통).",
+    ["LOG_SEND_OK"] = "발송: %s",
+    ["LOG_SEND_SUMMARY"] = "발송 완료 — 우편 %d통 · %s · 아이템 %d개.",
+    ["LOG_LOOT_MORE"] = " 외 %d개",
 })
 
 ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

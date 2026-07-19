@@ -159,6 +159,13 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["LOG_CLOSE_VISIT_DISCARD"] = "Pending review discarded (per-open shipments re-plan next time).",
     ["LOG_CLOSE_SESSION_RETRY"] = "Mailbox closed — session shipments will retry on the next open.",
     ["LOG_CLOSE_MIXED"] = "Mailbox closed — visit pending discarded; session shipments will retry next open.",
+    ["LOG_MIRROR_CHAT"] = "Также выводить журнал в чат",
+    ["TT_LOG_MIRROR_CHAT"] = "Если включено, строки сведений и предупреждений журнала «Активность» также выводятся в чат. Ошибки выводятся всегда.",
+    ["LOG_COLLECT_MAIL"] = "Получено: %s",
+    ["LOG_COLLECT_SUMMARY"] = "Сбор завершён — %s · предметов: %d из писем: %d.",
+    ["LOG_SEND_OK"] = "Отправлено: %s",
+    ["LOG_SEND_SUMMARY"] = "Отправка завершена — писем: %d · %s · предметов: %d.",
+    ["LOG_LOOT_MORE"] = " ещё +%d",
 })
 
 ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

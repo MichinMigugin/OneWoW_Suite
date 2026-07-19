@@ -49,7 +49,8 @@
 ## Activity
 - Shows shipments waiting for review, with Process and Discard buttons
 - Closing the mailbox with pending review asks whether to Process, Exit, or Go Back
-- Session log of what was sent, skipped, or failed — expandable rows with timeout vs item vs server detail; errors also go to chat
+- Session log of collects, sends (Compose and shipments), skips, and failures — expandable rows with gold, item links, and error detail
+- Optional "Also send logs to chat" on the Log row (default off); errors always print to chat
 - Failed sends log Blizzard's mail error when available (for example "You can't send mail to that realm") instead of a generic server-rejected line
 - Auto-run logs an info line when a shipment has nothing to send (for example the target already has enough gold), with the reason
 - One failed mail does not stop the rest of an automatic run

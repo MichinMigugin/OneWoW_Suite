@@ -345,6 +345,7 @@ function SendQueue:Start(jobs, onDone, opts)
     cancelRequested = false
     local stopOnFailure = not opts or opts.stopOnFailure ~= false
     local failedTargets = {} -- lowercased normalized target -> true after a "send" failure
+    local passGold, passItems = 0, 0
 
     local i = 1
 
@@ -353,7 +354,36 @@ function SendQueue:Start(jobs, onDone, opts)
         ns.SendResult:Cancel()
         ClearCompose()
         ns.NativeSend:Deactivate("sendqueue")
+        if summary.sent > 0 then
+            local moneyStr = passGold > 0 and OneWoW.Format.FormatGold(passGold) or OneWoW.Format.FormatGold(0)
+            ns.RunLog:Add("info", nil, nil, string.format(
+                L["LOG_SEND_SUMMARY"],
+                summary.sent,
+                moneyStr,
+                passItems
+            ))
+        end
         if onDone then onDone(ok, summary) end
+    end
+
+    local function recordSuccess(job)
+        local items = {}
+        for _, loc in ipairs(job.slots or {}) do
+            if loc.link then
+                tinsert(items, { link = loc.link, count = loc.count or 1 })
+            end
+        end
+        local gold = job.money or 0
+        local short, full, itemCount = ns.RunLog.FormatLoot(gold, items)
+        if short == "" then
+            short = "—"
+        end
+        ns.RunLog:Add("info", JobShipmentName(job), job.target, string.format(L["LOG_SEND_OK"], short), {
+            detail = full ~= "" and full or nil,
+        })
+        passGold = passGold + gold
+        passItems = passItems + itemCount
+        summary.sent = summary.sent + 1
     end
 
     local function recordFailure(job, reason, detail, itemLink)
@@ -417,7 +447,7 @@ function SendQueue:Start(jobs, onDone, opts)
 
         SendJob(job, function(ok, reason, detail, itemLink)
             if ok then
-                summary.sent = summary.sent + 1
+                recordSuccess(job)
                 C_Timer.After(0.3, step)
                 return
             end

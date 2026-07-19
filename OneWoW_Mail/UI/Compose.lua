@@ -354,6 +354,54 @@ local function DoSend()
         end
     end
 
+    -- Snapshot before SendMail — Blizzard clears the send frame on success.
+    local items = {}
+    for i = 1, MAX_SLOTS do
+        if HasSendMailItem(i) then
+            local _, _, _, count = GetSendMailItem(i)
+            local link = GetSendMailItemLink(i)
+            if link then
+                tinsert(items, { link = link, count = count or 1 })
+            end
+        end
+    end
+    local gold = sendMoneyMode and copper or 0
+    local cod = (not sendMoneyMode) and copper or 0
+    local sendTo = to
+
+    ns.SendResult:Listen(function()
+        local short, full = ns.RunLog.FormatLoot(gold, items)
+        if short == "" then
+            short = "—"
+        end
+        local detail = full
+        if cod > 0 then
+            local codLine = COD .. ": " .. OneWoW.Format.FormatGold(cod)
+            detail = (detail ~= "" and (detail .. "\n") or "") .. codLine
+        end
+        if subject and subject ~= "" then
+            detail = subject .. (detail ~= "" and ("\n" .. detail) or "")
+        end
+        ns.RunLog:Add("info", nil, sendTo, string.format(L["LOG_SEND_OK"], short), {
+            detail = detail ~= "" and detail or nil,
+        })
+    end, function(reason, uiError)
+        local message
+        local logOpts = {}
+        if reason == "timeout" then
+            message = L["ERR_SEND_TIMEOUT"]
+            logOpts.code = "timeout"
+            logOpts.detail = message
+        elseif uiError and uiError ~= "" then
+            message = uiError
+        else
+            message = L["ERR_SEND_FAILED"]
+            logOpts.code = "failed"
+            logOpts.detail = message
+        end
+        ns.RunLog:Add("error", nil, sendTo, message, logOpts)
+    end)
+
     SendMail(to, subject, body)
 end
 

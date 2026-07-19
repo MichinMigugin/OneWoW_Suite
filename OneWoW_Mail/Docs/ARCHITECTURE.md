@@ -16,17 +16,18 @@ Standalone LoD load unit that replaces the Blizzard mailbox UI with a OneWoW_GUI
 |------|------|
 | `UI/Shell.lua` | Hide Blizzard `MailFrame`, tab host (Inbox / Compose / Shipments / Other) |
 | `UI/Inbox.lua` | Filtered collect buttons, selection, Shift-loot / Ctrl-return |
-| `UI/Compose.lua` | OneWoW Compose chrome; hidden native `SendMailFrame` via NativeSend |
+| `UI/Compose.lua` | OneWoW Compose chrome; hidden native `SendMailFrame` via NativeSend; success/fail → RunLog |
 | `Engine/NativeSend.lua` | Activate/deactivate `SetSendMailShowing` + park Blizzard send frame |
 | `UI/Shipments.lua` | Shipment editor (char/role target, distribute, PE match, keep/max/restock) |
 | `UI/Other.lua` | DE dump, excess gold, session rake |
-| `Engine/Collect.lua` | `C_Mail.IsCommandPending` paced take; COD/GM skip |
+| `Engine/Collect.lua` | `C_Mail.IsCommandPending` paced take; COD/GM skip; per-mail + pass summary → RunLog |
 | `Engine/MailClassify.lua` | AH invoice + subject classification |
 | `Engine/AddressBook.lua` | Alts (all realms) + normalize + suggestions |
 | `Engine/ShipmentEvaluator.lua` | Expand role → per-member plans; PE match + keep/max/restock; role distribute modes → jobs |
 | `Engine/AutoRun.lua` | Session success map `shipmentId → roleId → charKey`; skip already-successful role members |
 | `Engine/SendResult.lua` | Ack listener for `MAIL_SEND_SUCCESS` / `MAIL_FAILED`; captures mail `UI_ERROR_MESSAGE` for the activity log |
-| `Engine/SendQueue.lua` | Sequential `SendMail` jobs |
+| `Engine/SendQueue.lua` | Sequential `SendMail` jobs; success/fail → RunLog |
+| `Engine/RunLog.lua` | Session activity log; optional chat mirror (`mirrorLogToChat`); errors always print |
 | `Engine/InTransit.lua` | Writes recipient Storage in-transit on suite-alt send (items + gold); restock planning counts in-transit toward the target |
 
 ## Role-targeted shipments

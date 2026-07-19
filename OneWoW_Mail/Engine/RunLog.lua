@@ -3,17 +3,62 @@ local _, ns = ...
 -- ============================================================================
 -- RunLog
 -- ============================================================================
--- Session-scoped ring buffer behind the Activity tab. Errors also mirror to
--- chat so a user who never opens the tab still learns their mail didn't go.
--- Deliberately not persisted to SavedVariables.
+-- Session-scoped ring buffer behind the Activity tab. Errors always mirror to
+-- chat; info/warn mirror when mirrorLogToChat is on. Deliberately not persisted
+-- to SavedVariables.
+-- ============================================================================
 
 ns.RunLog = {}
 local RunLog = ns.RunLog
 
 local MAX_ENTRIES = 200
+local CHAT_ITEM_CAP = 3
 
 local entries = {} -- chronological, oldest first
 local onChanged
+
+--- Build short (chat) and full (Activity detail) loot strings.
+---@param gold number|nil copper
+---@param items { link: string, count: number }[]|nil
+---@return string shortJoined, string fullJoined, number itemCount
+function RunLog.FormatLoot(gold, items)
+    local L = ns.L
+    local shortParts, fullParts = {}, {}
+    local itemCount = 0
+
+    if gold and gold > 0 then
+        local moneyStr = OneWoW.Format.FormatGold(gold)
+        tinsert(shortParts, moneyStr)
+        tinsert(fullParts, moneyStr)
+    end
+
+    local itemShort, itemFull = {}, {}
+    for _, it in ipairs(items or {}) do
+        local n = it.count or 1
+        itemCount = itemCount + n
+        local label = it.link or "?"
+        if n > 1 then
+            label = label .. "x" .. n
+        end
+        tinsert(itemFull, label)
+        if #itemShort < CHAT_ITEM_CAP then
+            tinsert(itemShort, label)
+        end
+    end
+
+    if #itemFull > 0 then
+        local fullStr = table.concat(itemFull, ", ")
+        tinsert(fullParts, fullStr)
+        local shortStr = table.concat(itemShort, ", ")
+        local overflow = #itemFull - CHAT_ITEM_CAP
+        if overflow > 0 then
+            shortStr = shortStr .. string.format(L["LOG_LOOT_MORE"], overflow)
+        end
+        tinsert(shortParts, shortStr)
+    end
+
+    return table.concat(shortParts, " · "), table.concat(fullParts, "\n"), itemCount
+end
 
 --- Append a log entry; oldest entries fall off past MAX_ENTRIES.
 ---@param severity "info"|"warn"|"error"
@@ -37,7 +82,9 @@ function RunLog:Add(severity, shipmentName, target, message, opts)
         tremove(entries, 1)
     end
 
-    if severity == "error" then
+    local mirror = severity == "error"
+        or (ns.db and ns.db.global.mail.mirrorLogToChat)
+    if mirror then
         local context = ""
         if shipmentName and shipmentName ~= "" then
             context = shipmentName
@@ -45,6 +92,8 @@ function RunLog:Add(severity, shipmentName, target, message, opts)
                 context = context .. " → " .. target
             end
             context = context .. ": "
+        elseif target and target ~= "" then
+            context = target .. ": "
         end
         print(ns.L["ADDON_CHAT_PREFIX"] .. " " .. context .. message)
     end

@@ -9,7 +9,7 @@ local ActivityUI = ns.ActivityUI
 local panel
 local pendingScroll, pendingChild
 local logScroll, logChild
-local processBtn, discardBtn, clearBtn
+local processBtn, discardBtn, clearBtn, mirrorChatCb
 local pendingLines = {}
 local logRows = {} -- pooled expandable log rows
 local expandedLogRow
@@ -360,7 +360,7 @@ function ActivityUI:Reset()
     panel = nil
     pendingScroll, pendingChild = nil, nil
     logScroll, logChild = nil, nil
-    processBtn, discardBtn, clearBtn = nil, nil, nil
+    processBtn, discardBtn, clearBtn, mirrorChatCb = nil, nil, nil, nil
     expandedLogRow = nil
     wipe(pendingLines)
     wipe(logRows)
@@ -412,6 +412,17 @@ function ActivityUI:Create(parent)
     clearBtn:SetScript("OnClick", function()
         ns.RunLog:Clear()
     end)
+
+    mirrorChatCb = OneWoW_GUI:CreateCheckbox(parent, {
+        label = L["LOG_MIRROR_CHAT"],
+        checked = ns.db.global.mail.mirrorLogToChat,
+        onClick = function(myself)
+            ns.db.global.mail.mirrorLogToChat = myself:GetChecked() and true or false
+        end,
+    })
+    local mirrorInset = 8 + (mirrorChatCb._labelGap or 0) + mirrorChatCb:GetLabelStringWidth()
+    mirrorChatCb:SetPoint("RIGHT", clearBtn, "LEFT", -mirrorInset, 0)
+    AttachTooltip(mirrorChatCb, L["LOG_MIRROR_CHAT"], L["TT_LOG_MIRROR_CHAT"])
 
     logScroll, logChild = CreateSectionScroll(parent)
     logScroll:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -(HEADER_H + PENDING_H + SECTION_GAP + HEADER_H))

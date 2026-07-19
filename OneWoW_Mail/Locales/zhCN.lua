@@ -159,6 +159,13 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["LOG_CLOSE_VISIT_DISCARD"] = "Pending review discarded (per-open shipments re-plan next time).",
     ["LOG_CLOSE_SESSION_RETRY"] = "Mailbox closed — session shipments will retry on the next open.",
     ["LOG_CLOSE_MIXED"] = "Mailbox closed — visit pending discarded; session shipments will retry next open.",
+    ["LOG_MIRROR_CHAT"] = "也将日志发送到聊天",
+    ["TT_LOG_MIRROR_CHAT"] = "勾选后，活动日志中的信息和警告行也会打印到聊天。错误始终打印。",
+    ["LOG_COLLECT_MAIL"] = "已收取 %s",
+    ["LOG_COLLECT_SUMMARY"] = "收取完成 — %s · %d件物品，来自%d封邮件。",
+    ["LOG_SEND_OK"] = "已发送 %s",
+    ["LOG_SEND_SUMMARY"] = "发送完成 — %d封邮件 · %s · %d件物品。",
+    ["LOG_LOOT_MORE"] = " 另有%d件",
 })
 
 ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

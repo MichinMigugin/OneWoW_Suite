@@ -159,6 +159,13 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["LOG_CLOSE_VISIT_DISCARD"] = "Pending review discarded (per-open shipments re-plan next time).",
     ["LOG_CLOSE_SESSION_RETRY"] = "Mailbox closed — session shipments will retry on the next open.",
     ["LOG_CLOSE_MIXED"] = "Mailbox closed — visit pending discarded; session shipments will retry next open.",
+    ["LOG_MIRROR_CHAT"] = "También enviar registros al chat",
+    ["TT_LOG_MIRROR_CHAT"] = "Si está marcado, las líneas de información y aviso del registro de Actividad también se muestran en el chat. Los errores siempre se muestran.",
+    ["LOG_COLLECT_MAIL"] = "Recogido: %s",
+    ["LOG_COLLECT_SUMMARY"] = "Recogida terminada — %s · %d objeto(s) de %d correo(s).",
+    ["LOG_SEND_OK"] = "Enviado: %s",
+    ["LOG_SEND_SUMMARY"] = "Envío terminado — %d correo(s) · %s · %d objeto(s).",
+    ["LOG_LOOT_MORE"] = " +%d más",
 })
 
 ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

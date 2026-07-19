@@ -89,12 +89,13 @@ local function DeleteIfEmpty(index, done)
 end
 
 --- Take gold and/or attachments from one mail per filter rules.
---- Callback: true = continue, false = abort run, "skip" = ignore this index for the rest of the run.
+--- Callback: true = continue (optional loot snapshot), false = abort run,
+--- "skip" = ignore this index for the rest of the run.
 ---@param index number
 ---@param filter string
----@param after fun(result: boolean|string)
+---@param after fun(result: boolean|string, loot?: { sender: string|nil, subject: string|nil, gold: number, items: { link: string, count: number }[] })
 local function TakeOneMail(index, filter, after)
-    local _, _, _, subject, money, CODAmount, _, hasItem, _, _, _, _, isGM = GetInboxHeaderInfo(index)
+    local _, _, sender, subject, money, CODAmount, _, hasItem, _, _, _, _, isGM = GetInboxHeaderInfo(index)
     if isGM or (CODAmount or 0) > 0 then
         after("skip")
         return
@@ -159,6 +160,30 @@ local function TakeOneMail(index, filter, after)
         end
     end
 
+    -- Snapshot before take — inbox index is unreliable after loot/delete.
+    local lootGold = canTakeGold and money or 0
+    local lootItems = {}
+    if canTakeItems then
+        local maxAttach = ATTACHMENTS_MAX_RECEIVE or 16
+        for i = 1, maxAttach do
+            if HasInboxItem(index, i) then
+                local _, itemID, _, count, _, _, isCurrency = GetInboxItem(index, i)
+                if itemID and not isCurrency then
+                    tinsert(lootItems, {
+                        link = GetInboxItemLink(index, i) or ("item:" .. itemID),
+                        count = count or 1,
+                    })
+                end
+            end
+        end
+    end
+    local loot = {
+        sender = sender,
+        subject = subject,
+        gold = lootGold,
+        items = lootItems,
+    }
+
     -- Mark read so minimap clears; also creates body text so empty mail can delete.
     GetInboxText(index)
 
@@ -200,7 +225,11 @@ local function TakeOneMail(index, filter, after)
             ns.InTransit:ClearMatching(nil, subject)
         end
         DeleteIfEmpty(index, function(deletedOk)
-            after(deletedOk and true or false)
+            if deletedOk then
+                after(true, loot)
+            else
+                after(false)
+            end
         end)
     end
 
@@ -242,11 +271,21 @@ function Collect:Start(filter, selected, onDone)
 
     local emptyRetriesLeft = INBOX_EMPTY_RETRIES
     local skipped = {} -- [index] = true — no-progress / empty shells this run
+    local passGold, passItems, passMails = 0, 0, 0
 
     local function finish(ok)
         running = false
         if ok and ns.InTransit then
             ns.InTransit:ClearAllIfInboxEmpty()
+        end
+        if passMails > 0 then
+            local moneyStr = passGold > 0 and OneWoW.Format.FormatGold(passGold) or OneWoW.Format.FormatGold(0)
+            ns.RunLog:Add("info", nil, nil, string.format(
+                ns.L["LOG_COLLECT_SUMMARY"],
+                moneyStr,
+                passItems,
+                passMails
+            ))
         end
         if onDone then
             onDone(ok)
@@ -328,7 +367,7 @@ function Collect:Start(filter, selected, onDone)
         end
 
         emptyRetriesLeft = INBOX_EMPTY_RETRIES
-        TakeOneMail(target, filter, function(result)
+        TakeOneMail(target, filter, function(result, loot)
             if result == false then
                 finish(false)
                 return
@@ -336,6 +375,19 @@ function Collect:Start(filter, selected, onDone)
             if result == "skip" then
                 skipped[target] = true
             else
+                if loot and ((loot.gold or 0) > 0 or (loot.items and #loot.items > 0)) then
+                    local short, full, itemCount = ns.RunLog.FormatLoot(loot.gold, loot.items)
+                    local detail = full
+                    if loot.subject and loot.subject ~= "" then
+                        detail = loot.subject .. (full ~= "" and ("\n" .. full) or "")
+                    end
+                    ns.RunLog:Add("info", nil, loot.sender, string.format(ns.L["LOG_COLLECT_MAIL"], short), {
+                        detail = detail ~= "" and detail or nil,
+                    })
+                    passGold = passGold + (loot.gold or 0)
+                    passItems = passItems + itemCount
+                    passMails = passMails + 1
+                end
                 -- Deletes shift inbox indices; drop skip marks.
                 wipe(skipped)
             end
