@@ -54,6 +54,18 @@ function OneWoW_CatalogData_Quests_API.GetSortedQuests(...)
     return ns.QuestData:GetSortedQuests(...)
 end
 
+--- Cancel an in-flight StartSortedQuests job.
+function OneWoW_CatalogData_Quests_API.CancelSortedQuery()
+    ns.QuestData:CancelSortedQuery()
+end
+
+--- Time-sliced sorted query into outResults. Prefer for Catalog UI walks.
+--- Args match QuestData:StartSortedQuests (filters…, outResults, opts).
+---@return table jobHandle
+function OneWoW_CatalogData_Quests_API.StartSortedQuests(...)
+    return ns.QuestData:StartSortedQuests(...)
+end
+
 --- Returns an expansion display name.
 ---@param expansionID number
 ---@return string|nil name

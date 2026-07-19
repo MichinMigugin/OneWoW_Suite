@@ -1324,15 +1324,20 @@ end
 -- SORTED QUERYING
 ------------------------------------------------------------
 
-function QuestData:GetSortedQuests(
+--- Fill `results` from the quest source. Optional `shouldYield` (ChunkedJob)
+--- keeps large filter walks off the hitch path.
+local function BuildSortedQuestResults(
+    self,
     expansionFilter,
     zoneFilter,
     typeFilter,
     questTypeFilter,
     searchText,
-    advancedFilters
+    advancedFilters,
+    results,
+    shouldYield
 )
-    local results = {}
+    wipe(results)
     advancedFilters = advancedFilters or {}
 
     typeFilter = advancedFilters.groupType or typeFilter
@@ -1355,9 +1360,14 @@ function QuestData:GetSortedQuests(
 
     local cachedResults = sortedQuestCache[cacheKey]
     if cachedResults then
-        return CopyQuestArray(cachedResults)
+        for i = 1, #cachedResults do
+            results[i] = cachedResults[i]
+        end
+        return
     end
 
+    local YieldIfNeeded = OneWoW.ChunkedJob.YieldIfNeeded
+    local yieldCheck = shouldYield or function() return false end
     local questSource = GetSortedQuestSourceArray(self, expansionFilter)
 
     for _, quest in ipairs(questSource) do
@@ -1539,6 +1549,8 @@ function QuestData:GetSortedQuests(
         if include then
             tinsert(results, quest)
         end
+
+        YieldIfNeeded(yieldCheck)
     end
 
     if ShouldGroupResultsByExpansion(
@@ -1549,12 +1561,100 @@ function QuestData:GetSortedQuests(
         searchTerms,
         advancedFilters
     ) then
-        sort(results, CompareQuestsByExpansionThenName)
+        OneWoW.ChunkedJob.Sort(results, CompareQuestsByExpansionThenName, shouldYield)
     end
 
     RememberSortedQuestCache(cacheKey, results)
+end
 
+function QuestData:GetSortedQuests(
+    expansionFilter,
+    zoneFilter,
+    typeFilter,
+    questTypeFilter,
+    searchText,
+    advancedFilters
+)
+    local results = {}
+    BuildSortedQuestResults(
+        self,
+        expansionFilter,
+        zoneFilter,
+        typeFilter,
+        questTypeFilter,
+        searchText,
+        advancedFilters,
+        results,
+        nil
+    )
     return CopyQuestArray(results)
+end
+
+function QuestData:CancelSortedQuery()
+    if self._sortedQueryJob then
+        self._sortedQueryJob:Cancel()
+        self._sortedQueryJob = nil
+    end
+end
+
+--- Time-sliced sorted query into `outResults` (mutated in place). Cancels any prior job.
+---@param outResults table
+---@param opts table|nil { onProgress, onComplete, onCancel, budgetMs }
+---@return table jobHandle
+function QuestData:StartSortedQuests(
+    expansionFilter,
+    zoneFilter,
+    typeFilter,
+    questTypeFilter,
+    searchText,
+    advancedFilters,
+    outResults,
+    opts
+)
+    opts = opts or {}
+    if type(outResults) ~= "table" then
+        error("QuestData:StartSortedQuests requires an outResults table", 2)
+    end
+
+    self:CancelSortedQuery()
+    wipe(outResults)
+
+    local job
+    job = OneWoW.ChunkedJob.Start({
+        budgetMs = opts.budgetMs,
+        run = function(shouldYield)
+            BuildSortedQuestResults(
+                self,
+                expansionFilter,
+                zoneFilter,
+                typeFilter,
+                questTypeFilter,
+                searchText,
+                advancedFilters,
+                outResults,
+                shouldYield
+            )
+        end,
+        onProgress = opts.onProgress,
+        onComplete = function()
+            if self._sortedQueryJob == job then
+                self._sortedQueryJob = nil
+            end
+            if opts.onComplete then
+                opts.onComplete(outResults)
+            end
+        end,
+        onCancel = function()
+            if self._sortedQueryJob == job then
+                self._sortedQueryJob = nil
+            end
+            if opts.onCancel then
+                opts.onCancel()
+            end
+        end,
+    })
+    self._sortedQueryJob = job
+    return job
 end
 
 ------------------------------------------------------------

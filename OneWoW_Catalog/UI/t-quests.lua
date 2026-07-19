@@ -3775,64 +3775,15 @@ local function MoveQuestSelection(panels, delta)
     end
 end
 
-function RefreshQuestList(panels)
-    local previousScroll = 0
-    if panels
-        and panels.listScrollFrame
-        and panels.listScrollFrame.GetVerticalScroll
-    then
-        previousScroll = panels.listScrollFrame:GetVerticalScroll() or 0
+local function CopyQuestResultArray(source)
+    local copy = {}
+    for i = 1, #(source or {}) do
+        copy[i] = source[i]
     end
+    return copy
+end
 
-    wipe(questRowStatusCache)
-    wipe(questGroupStatusCache)
-    wipe(activeQuestIDsAcrossAlts)
-
-    local addon = GetDataAddon()
-    if not addon then
-        panels._questResults = {}
-        panels._favoriteQuestResults = {}
-        panels._questListEntries = {}
-        if panels.emptyList then
-            panels.emptyList:SetText(L["QUESTS_NO_DATA"])
-            panels.emptyList:Show()
-        end
-        if questListAPI then
-            questListAPI.SetSelectedIndex(nil)
-        else
-            panels.listScrollChild:SetHeight(100)
-        end
-        return
-    end
-
-    local quests
-    local favoriteQuests = {}
-    local databaseMode = IsDatabaseMode()
-    local activeCurrentMode = IsActiveCurrentMode()
-    local activeAllAltsMode = IsActiveAllAltsMode()
-
-    if activeAllAltsMode then
-        quests = GetAllCharactersActiveQuests(addon)
-        favoriteQuests = {}
-    elseif activeCurrentMode then
-        quests = GetActiveQuestLogQuests(addon)
-        favoriteQuests = {}
-    elseif databaseMode then
-        quests = addon.GetSortedQuests(
-            expansionFilter,
-            zoneFilter,
-            "all",
-            "all",
-            searchText,
-            BuildAdvancedFilters()
-        )
-
-        StartRewardItemSearchWarmup(panels, addon, #quests)
-    else
-        quests = GetActiveQuestLogQuests(addon)
-        favoriteQuests = GetFavoriteQuestsOutsideActiveList(addon, quests)
-    end
-
+local function ApplyPostQueryQuestFilters(quests, databaseMode)
     if completionFilter ~= "all" and not IsActiveFilterMode() then
         local filtered = {}
         for _, quest in ipairs(quests) do
@@ -3870,6 +3821,12 @@ function RefreshQuestList(panels)
         end)
     end
 
+    return quests
+end
+
+local function PublishQuestListResults(panels, addon, quests, favoriteQuests, previousScroll, loading)
+    favoriteQuests = favoriteQuests or {}
+
     if selectedQuest then
         local selectedQuestVisible = false
 
@@ -3889,7 +3846,7 @@ function RefreshQuestList(panels)
             end
         end
 
-        if not selectedQuestVisible then
+        if not selectedQuestVisible and not loading then
             selectedQuest = nil
             ClearDetailElements()
 
@@ -3908,12 +3865,17 @@ function RefreshQuestList(panels)
         panels._favoriteQuestResults = {}
         panels._questListEntries = {}
         if panels.emptyList then
-            panels.emptyList:SetText(
-                (addon.GetCapturedQuestCount() == 0)
-                and L["QUESTS_NONE_YET"]
-                or  L["QUESTS_EMPTY"]
-            )
-            panels.emptyList:Show()
+            if loading then
+                panels.emptyList:SetText(string.format(L["QUESTS_LOADING"], 0))
+                panels.emptyList:Show()
+            else
+                panels.emptyList:SetText(
+                    (addon.GetCapturedQuestCount() == 0)
+                    and L["QUESTS_NONE_YET"]
+                    or L["QUESTS_EMPTY"]
+                )
+                panels.emptyList:Show()
+            end
         end
         if questListAPI then
             questListAPI.SetSelectedIndex(nil)
@@ -3921,12 +3883,18 @@ function RefreshQuestList(panels)
             panels.listScrollChild:SetHeight(100)
         end
         if panels.leftStatusText then
-            panels.leftStatusText:SetText(string.format(L["QUESTS_STATUS_COUNT"], 0))
+            if loading then
+                panels.leftStatusText:SetText(string.format(L["QUESTS_LOADING"], 0))
+            else
+                panels.leftStatusText:SetText(string.format(L["QUESTS_STATUS_COUNT"], 0))
+            end
         end
         return
     end
 
-    if panels.emptyList then panels.emptyList:Hide() end
+    if panels.emptyList then
+        panels.emptyList:Hide()
+    end
 
     panels._questResults = quests
     panels._favoriteQuestResults = favoriteQuests
@@ -3944,20 +3912,136 @@ function RefreshQuestList(panels)
                 and panels.listScrollChild:GetHeight()
                 or 0
             local maxScroll = math.max(0, childHeight - frameHeight)
-            sf:SetVerticalScroll(math.max(0, math.min(previousScroll, maxScroll)))
+            sf:SetVerticalScroll(math.max(0, math.min(previousScroll or 0, maxScroll)))
         end
     end
 
     if panels.leftStatusText then
-        panels.leftStatusText:SetText(string.format(L["QUESTS_STATUS_COUNT"], #quests + #favoriteQuests))
+        local n = #quests + #favoriteQuests
+        if loading then
+            panels.leftStatusText:SetText(string.format(L["QUESTS_LOADING"], n))
+        else
+            panels.leftStatusText:SetText(string.format(L["QUESTS_STATUS_COUNT"], n))
+        end
     end
 
-    if selectedQuest then
+    if selectedQuest and not loading then
         ShowQuestDetail(panels, addon.GetQuest(selectedQuest.id))
         if questListAPI then
             questListAPI.Refresh()
         end
     end
+end
+
+function RefreshQuestList(panels)
+    local previousScroll = 0
+    if panels
+        and panels.listScrollFrame
+        and panels.listScrollFrame.GetVerticalScroll
+    then
+        previousScroll = panels.listScrollFrame:GetVerticalScroll() or 0
+    end
+
+    wipe(questRowStatusCache)
+    wipe(questGroupStatusCache)
+    wipe(activeQuestIDsAcrossAlts)
+
+    local addon = GetDataAddon()
+    if addon then
+        addon.CancelSortedQuery()
+    end
+
+    panels._questListGeneration = (panels._questListGeneration or 0) + 1
+    local listGeneration = panels._questListGeneration
+
+    if not addon then
+        panels._questResults = {}
+        panels._favoriteQuestResults = {}
+        panels._questListEntries = {}
+        if panels.emptyList then
+            panels.emptyList:SetText(L["QUESTS_NO_DATA"])
+            panels.emptyList:Show()
+        end
+        if questListAPI then
+            questListAPI.SetSelectedIndex(nil)
+        else
+            panels.listScrollChild:SetHeight(100)
+        end
+        return
+    end
+
+    local databaseMode = IsDatabaseMode()
+    local activeCurrentMode = IsActiveCurrentMode()
+    local activeAllAltsMode = IsActiveAllAltsMode()
+
+    if databaseMode then
+        panels._questQueryResults = panels._questQueryResults or {}
+        wipe(panels._questQueryResults)
+
+        if panels.leftStatusText then
+            panels.leftStatusText:SetText(string.format(L["QUESTS_LOADING"], 0))
+        end
+        if panels.emptyList then
+            panels.emptyList:SetText(string.format(L["QUESTS_LOADING"], 0))
+            panels.emptyList:Show()
+        end
+        if questListAPI then
+            panels._questListEntries = {}
+            questListAPI.SetSelectedIndex(nil)
+        end
+
+        addon.StartSortedQuests(
+            expansionFilter,
+            zoneFilter,
+            "all",
+            "all",
+            searchText,
+            BuildAdvancedFilters(),
+            panels._questQueryResults,
+            {
+                onProgress = function()
+                    if not panels or panels._questListGeneration ~= listGeneration then
+                        return
+                    end
+                    -- Status only: regrouping/flatten on every slice is too costly.
+                    if panels.leftStatusText then
+                        panels.leftStatusText:SetText(
+                            string.format(L["QUESTS_LOADING"], #panels._questQueryResults)
+                        )
+                    end
+                end,
+                onComplete = function(rawResults)
+                    if not panels or panels._questListGeneration ~= listGeneration then
+                        return
+                    end
+                    StartRewardItemSearchWarmup(panels, addon, #rawResults)
+                    local quests = ApplyPostQueryQuestFilters(
+                        CopyQuestResultArray(rawResults),
+                        true
+                    )
+                    PublishQuestListResults(panels, addon, quests, {}, previousScroll, false)
+                end,
+            }
+        )
+        return
+    end
+
+    local quests
+    local favoriteQuests = {}
+
+    if activeAllAltsMode then
+        quests = GetAllCharactersActiveQuests(addon)
+        favoriteQuests = {}
+    elseif activeCurrentMode then
+        quests = GetActiveQuestLogQuests(addon)
+        favoriteQuests = {}
+    else
+        quests = GetActiveQuestLogQuests(addon)
+        favoriteQuests = GetFavoriteQuestsOutsideActiveList(addon, quests)
+    end
+
+    quests = ApplyPostQueryQuestFilters(quests, false)
+    PublishQuestListResults(panels, addon, quests, favoriteQuests, previousScroll, false)
 end
 
 function OpenQuestByID(questID, panels)

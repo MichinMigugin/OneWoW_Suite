@@ -223,6 +223,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["QUESTS_NONE_YET"] = "Aucune quête collectée pour l'instant. Jouez pour remplir cette base de données.",
     ["QUESTS_DEFAULT_EMPTY"] = "Aucune quête active ou favorite. Recherchez ou choisissez un filtre pour parcourir toutes les quêtes.",
     ["QUESTS_STATUS_COUNT"] = "%d quêtes",
+    ["QUESTS_LOADING"] = "Chargement… %d",
     ["QUESTS_STATUS_CAPPED"] = "Affichage de %d sur %d - recherchez ou filtrez pour en voir plus",
     ["QUESTS_SHOW_ON_MAP"] = "Afficher sur la carte",
     ["QUESTS_CHAIN"] = "Chaîne de quêtes",

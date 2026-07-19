@@ -223,6 +223,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["QUESTS_NONE_YET"] = "Nenhuma missão coletada ainda. Jogue para preencher este banco de dados.",
     ["QUESTS_DEFAULT_EMPTY"] = "Nenhuma missão ativa ou favorita. Busque ou escolha um filtro para explorar todas as missões.",
     ["QUESTS_STATUS_COUNT"] = "%d missões",
+    ["QUESTS_LOADING"] = "Carregando… %d",
     ["QUESTS_STATUS_CAPPED"] = "Mostrando %d de %d - busque ou filtre para ver mais",
     ["QUESTS_SHOW_ON_MAP"] = "Mostrar no mapa",
     ["QUESTS_CHAIN"] = "Cadeia de missões",
