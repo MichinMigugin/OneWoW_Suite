@@ -11,8 +11,6 @@ local type, tonumber = type, tonumber
 local strfind = string.find
 
 local ALL_SEARCH_MIN_LENGTH = 3
-local ALL_SEARCH_CHUNK_SIZE = 4000
-local ALL_SEARCH_TICK_SECONDS = 0.01
 
 SB.filtered = {}
 SB.selectedTop = nil
@@ -25,8 +23,7 @@ SB._topKeysCache = nil
 SB._subKeysCache = nil
 SB._subKeysCacheTop = nil
 SB._isRebuilding = false
-SB._searchTicker = nil
-SB._searchGeneration = 0
+SB._searchJob = nil
 SB._filteredReadyCallback = nil
 
 local function getEntryString(entryRef)
@@ -67,9 +64,9 @@ local function compareEntryRefs(a, b)
 end
 
 local function cancelActiveSearch(self)
-    if self._searchTicker then
-        self._searchTicker:Cancel()
-        self._searchTicker = nil
+    if self._searchJob then
+        self._searchJob:Cancel()
+        self._searchJob = nil
     end
     self._isRebuilding = false
 end
@@ -113,7 +110,6 @@ function SB:GetAllSearchMinLength()
 end
 
 function SB:CancelSearch()
-    self._searchGeneration = self._searchGeneration + 1
     cancelActiveSearch(self)
 end
 
@@ -259,36 +255,32 @@ function SB:RebuildFiltered()
 
     if searchingAll then
         self._isRebuilding = true
-        local generation = self._searchGeneration
         local total = #entries
-        local nextIndex = 1
-
-        self._searchTicker = C_Timer.NewTicker(ALL_SEARCH_TICK_SECONDS, function(ticker)
-            if generation ~= self._searchGeneration then
-                ticker:Cancel()
-                return
-            end
-
-            local lastIndex = nextIndex + ALL_SEARCH_CHUNK_SIZE - 1
-            if lastIndex > total then
-                lastIndex = total
-            end
-
-            for index = nextIndex, lastIndex do
-                maybeAppend(index)
-            end
-
-            nextIndex = lastIndex + 1
-            if nextIndex <= total then
-                return
-            end
-
-            ticker:Cancel()
-            self._searchTicker = nil
-            self._isRebuilding = false
-            sort(self.filtered, compareEntryRefs)
-            notifyFilteredReady(self)
-        end)
+        local job
+        job = OneWoW.ChunkedJob.Start({
+            run = function(shouldYield)
+                local YieldIfNeeded = OneWoW.ChunkedJob.YieldIfNeeded
+                for index = 1, total do
+                    maybeAppend(index)
+                    YieldIfNeeded(shouldYield)
+                end
+                OneWoW.ChunkedJob.Sort(self.filtered, compareEntryRefs, shouldYield)
+            end,
+            onComplete = function()
+                if self._searchJob == job then
+                    self._searchJob = nil
+                end
+                self._isRebuilding = false
+                notifyFilteredReady(self)
+            end,
+            onCancel = function()
+                if self._searchJob == job then
+                    self._searchJob = nil
+                end
+                self._isRebuilding = false
+            end,
+        })
+        self._searchJob = job
         return
     end
 

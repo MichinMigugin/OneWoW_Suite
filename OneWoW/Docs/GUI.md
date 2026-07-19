@@ -1106,8 +1106,8 @@ local job = OneWoW.ChunkedJob.Start({
 job:Cancel()
 ```
 
-Catalog Item Search (`StartQuery`) is the first consumer. DevTool SoundBrowser’s
-hand-rolled ticker search is a candidate to migrate later.
+Catalog Item Search (`StartQuery`) and DevTool SoundBrowser (all-catalog filter)
+are the first consumers.
 
 Returns: `listPanel`, `listScroll`, `listContent`, `Refresh`, `SetSelectedIndex`,
 `GetSelectedIndex`, `ownedScroll`.
