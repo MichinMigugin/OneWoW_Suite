@@ -19,8 +19,6 @@ local TRADESKILL_PROFS = {
     "Leatherworking", "Mining", "Skinning", "Tailoring",
 }
 
-local MAX_RESULTS = 200
-
 local function GetRecipeKnownByFromAltTracker(itemID)
     local profsAPI = OneWoW_AltTracker_Professions_API
     if not profsAPI then return nil end
@@ -194,11 +192,10 @@ function ItemSearch:Query(searchTerm, sourceFilter)
     local results = {}
     local resultMap = {}
     local count = 0
-    local limitReached = false
 
     -- Gate each source on its backing data actually being present so an unloaded
-    -- source contributes nothing and never consumes the result cap. "all" pulls
-    -- from every available source; a specific filter pulls only from its own.
+    -- source contributes nothing. "all" pulls from every available source; a
+    -- specific filter pulls only from its own.
     local doJournal = (sourceFilter == "all" or sourceFilter == "drops")   and self:IsSourceAvailable("drops")
     local doVendors = (sourceFilter == "all" or sourceFilter == "vendors") and self:IsSourceAvailable("vendors")
     local doCrafted = (sourceFilter == "all" or sourceFilter == "crafted") and self:IsSourceAvailable("crafted")
@@ -208,10 +205,6 @@ function ItemSearch:Query(searchTerm, sourceFilter)
     local function addOrAnnotate(itemID, name, icon, quality, sourceKey)
         if resultMap[itemID] then
             results[resultMap[itemID]][sourceKey] = true
-            return
-        end
-        if count >= MAX_RESULTS then
-            limitReached = true
             return
         end
         count = count + 1
@@ -260,15 +253,13 @@ function ItemSearch:Query(searchTerm, sourceFilter)
                 for itemID, idata in pairs(items) do
                     if idata.name and idata.name:lower():find(term, 1, true) then
                         addOrAnnotate(itemID, idata.name, idata.icon, idata.quality, "isJournal")
-                        if limitReached then break end
                     end
                 end
             end
-            if limitReached then break end
         end
     end
 
-    if doVendors and not limitReached then
+    if doVendors then
         local vendorsAPI = OneWoW_CatalogData_Vendors_API
         local vendors = vendorsAPI and vendorsAPI.GetAllVendors()
         if vendors then
@@ -278,16 +269,14 @@ function ItemSearch:Query(searchTerm, sourceFilter)
                         local itemName = C_Item.GetItemNameByID(itemID)
                         if itemName and itemName:lower():find(term, 1, true) then
                             addOrAnnotate(itemID, itemName, nil, nil, "isVendor")
-                            if limitReached then break end
                         end
                     end
                 end
-                if limitReached then break end
             end
         end
     end
 
-    if doCrafted and not limitReached then
+    if doCrafted then
         for _, profName in ipairs(TRADESKILL_PROFS) do
             local data = _G["OneWoWTradeskills_" .. profName]
             if data and data.r then
@@ -296,23 +285,20 @@ function ItemSearch:Query(searchTerm, sourceFilter)
                         local itemName = C_Item.GetItemNameByID(recipe.item)
                         if itemName and itemName:lower():find(term, 1, true) then
                             addOrAnnotate(recipe.item, itemName, nil, nil, "isCrafted")
-                            if limitReached then break end
                         end
                     end
                 end
             end
-            if limitReached then break end
         end
     end
 
-    if doQuest and not limitReached then
+    if doQuest then
         local questAddon = OneWoW_CatalogData_Quests_API
         if questAddon then
             for _, itemID in ipairs(questAddon.GetRewardItemIDs()) do
                 local itemName = C_Item.GetItemNameByID(itemID)
                 if itemName and itemName:lower():find(term, 1, true) then
                     addOrAnnotate(itemID, itemName, nil, nil, "isQuestReward")
-                    if limitReached then break end
                 end
             end
         end
@@ -320,14 +306,13 @@ function ItemSearch:Query(searchTerm, sourceFilter)
 
     local ownedMap = GetOwnedItems()
 
-    if doOwned and not limitReached then
+    if doOwned then
         for itemID, od in pairs(ownedMap) do
             -- Prefer the name persisted at scan time so owned items match offline;
             -- fall back to the live cache only when no stored name exists.
             local itemName = od.name or C_Item.GetItemNameByID(itemID)
             if itemName and itemName:lower():find(term, 1, true) then
                 addOrAnnotate(itemID, itemName, nil, nil, "isOwned")
-                if limitReached then break end
             end
         end
     end
@@ -346,7 +331,7 @@ function ItemSearch:Query(searchTerm, sourceFilter)
         return (a.name or "") < (b.name or "")
     end)
 
-    return results, limitReached
+    return results
 end
 
 function ItemSearch:GetDetail(itemID)

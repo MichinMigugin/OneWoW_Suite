@@ -302,7 +302,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["ITEMSEARCH_DETAIL_TITLE"] = "物品详情",
     ["ITEMSEARCH_SELECT"] = "选择一件物品以查看详情。",
     ["ITEMSEARCH_RESULTS"] = "%d 个结果",
-    ["ITEMSEARCH_RESULTS_CAPPED"] = "%d 个结果（已达上限）",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "正在浏览 %d 件物品",
     ["ITEMSEARCH_MIN_CHARS"] = "至少输入 2 个字符以搜索。",
     ["ITEMSEARCH_NOTICE"] = "显示来自商人、副本首领掉落、库存等的物品。这些不仅仅是你拥有的物品，而是你见过或已知会掉落的所有物品。",

@@ -1079,7 +1079,9 @@ list.SetSelectedIndex(1)
 - **Tooltips:** set `row._tooltipFullText`; the engine wires `OnEnter`/`OnLeave` when
   the row has no `OnEnter` yet.
 - **Adopted scroll:** pass `scrollFrame` + `content` to host inside `CreateSplitPanel`
-  (or similar) instead of creating a new scroll frame.
+  (or similar) instead of creating a new scroll frame. When adopting, the engine
+  hooks `OnVerticalScroll` rather than replacing it. Catalog Item Search is the
+  reference consumer.
 
 Returns: `listPanel`, `listScroll`, `listContent`, `Refresh`, `SetSelectedIndex`,
 `GetSelectedIndex`, `ownedScroll`.

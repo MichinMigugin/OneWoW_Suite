@@ -302,7 +302,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["ITEMSEARCH_DETAIL_TITLE"] = "Détails de l'objet",
     ["ITEMSEARCH_SELECT"] = "Sélectionnez un objet pour voir les détails.",
     ["ITEMSEARCH_RESULTS"] = "%d résultats",
-    ["ITEMSEARCH_RESULTS_CAPPED"] = "%d résultats (limite atteinte)",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "Parcours de %d objets",
     ["ITEMSEARCH_MIN_CHARS"] = "Saisissez au moins 2 caractères pour rechercher.",
     ["ITEMSEARCH_NOTICE"] = "Affiche des objets provenant des marchands, des butins de boss d'instance, des inventaires et plus encore. Ce ne sont pas seulement les objets que vous possédez ; ce sont tous les objets que vous avez vus ou connus pour être lâchés.",

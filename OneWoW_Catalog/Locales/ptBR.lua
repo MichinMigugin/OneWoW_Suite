@@ -302,7 +302,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["ITEMSEARCH_DETAIL_TITLE"] = "Detalhes do item",
     ["ITEMSEARCH_SELECT"] = "Selecione um item para ver os detalhes.",
     ["ITEMSEARCH_RESULTS"] = "%d resultados",
-    ["ITEMSEARCH_RESULTS_CAPPED"] = "%d resultados (limite atingido)",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "Explorando %d itens",
     ["ITEMSEARCH_MIN_CHARS"] = "Digite pelo menos 2 caracteres para buscar.",
     ["ITEMSEARCH_NOTICE"] = "Mostra itens de vendedores, despojos de chefes de instância, inventários e mais. Não são apenas os itens que você possui; são todos os itens que você viu ou que se sabe que são saqueados.",

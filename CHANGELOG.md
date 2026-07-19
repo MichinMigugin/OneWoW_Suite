@@ -56,6 +56,13 @@
 
 ---
 
+# Catalog
+## Item Search
+- Result list uses the shared virtualized list (scrolls large result sets without building every row)
+- Search no longer stops at 200 results
+
+---
+
 # AltTracker
 ## Summary
 - Account Overview gold includes suite mail gold still in transit (so mailing an alt does not undercount the account total)
@@ -72,7 +79,7 @@
 
 ---
 
-*No user-facing changes this release for Catalog, QoL, Bags, Notes, Trackers, Shopping List, Direct Deposit, or DevTool.*
+*No user-facing changes this release for QoL, Bags, Notes, Trackers, Shopping List, Direct Deposit, or DevTool.*
 
 ---
 

@@ -402,7 +402,16 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
         createPoolRow()
     end
 
-    scrollFrame:SetScript("OnVerticalScroll", updateVisibleRows)
+    -- Owned scrolls: replace OnVerticalScroll. Adopted (e.g. CreateSplitPanel):
+    -- hook so we do not clobber any pre-existing handler.
+    if ownedScroll then
+        scrollFrame:SetScript("OnVerticalScroll", updateVisibleRows)
+    else
+        if not scrollFrame:GetScript("OnVerticalScroll") then
+            scrollFrame:SetScript("OnVerticalScroll", function() end)
+        end
+        scrollFrame:HookScript("OnVerticalScroll", updateVisibleRows)
+    end
 
     if enableKeyboardNav and focusCompetitor then
         focusCompetitor:HookScript("OnEditFocusGained", function()

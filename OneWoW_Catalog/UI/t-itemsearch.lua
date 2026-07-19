@@ -12,7 +12,7 @@ local selectedItem   = nil
 local currentSearch  = ""
 local currentSource  = "all"
 local panels         = nil
-local listElements   = {}
+local listResults    = {}
 local detailElements = {}
 local sourceButtons  = {}
 local searchBox      = nil
@@ -21,6 +21,7 @@ local emptyDetail    = nil
 local searchTimer    = nil
 local suppressSearchBoxChange = false
 local dataReadyWatchersRegistered = false
+local listAPI        = nil
 
 local function OpenItemNoteFromResult(result)
     if not result or not result.itemID or not ns.Navigation or not ns.Navigation.OpenItemNote then
@@ -58,16 +59,13 @@ local ShowItemDetail
 
 local function SelectVisibleItemResult(itemID)
     itemID = tonumber(itemID)
-    if not itemID then
+    if not itemID or not listAPI then
         return false
     end
 
-    for _, row in ipairs(listElements) do
-        if row.result and tonumber(row.result.itemID) == itemID then
-            local onClick = row:GetScript("OnClick")
-            if onClick then
-                onClick(row)
-            end
+    for i, result in ipairs(listResults) do
+        if tonumber(result.itemID) == itemID then
+            listAPI.SetSelectedIndex(i)
             return true
         end
     end
@@ -86,20 +84,25 @@ local function ApplyLoadedItemData(result, itemData)
     result.link = itemData.link or result.link
 end
 
-local function ClearListElements()
-    for _, el in ipairs(listElements) do
-        if el.Hide then el:Hide() end
-        if el.SetParent then el:SetParent(nil) end
-    end
-    wipe(listElements)
-end
-
 local function ClearDetailElements()
     for _, el in ipairs(detailElements) do
         if el.Hide then el:Hide() end
         if el.SetParent then el:SetParent(nil) end
     end
     wipe(detailElements)
+end
+
+local function ApplyItemRowBackdrop(row, index, selected)
+    if selected then
+        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+    elseif (index % 2) == 1 then
+        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    else
+        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    end
 end
 
 -- Resting (non-hovered) appearance for a single button, honoring availability
@@ -199,18 +202,10 @@ local function CreateSourceButton(parent, def)
     return btn
 end
 
-local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
+local function CreateItemListRow(parent)
     local row = CreateFrame("Button", nil, parent, "BackdropTemplate")
     row:SetHeight(ITEM_ROW_HEIGHT)
-    row:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
-    row:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, yOffset)
     row:SetBackdrop(BACKDROP_SIMPLE)
-
-    if rowIdx % 2 == 0 then
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    else
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    end
     row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local iconFrame = CreateFrame("Frame", nil, row, "BackdropTemplate")
@@ -224,73 +219,127 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
     icon:SetPoint("TOPLEFT", 1, -1)
     icon:SetPoint("BOTTOMRIGHT", -1, 1)
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    row.icon = icon
+    row.iconFrame = iconFrame
 
-    if result.icon then
-        icon:SetTexture(result.icon)
-    else
-        icon:SetTexture(134400)
+    local rightCluster = CreateFrame("Frame", nil, row)
+    rightCluster:SetHeight(ITEM_ROW_HEIGHT)
+    rightCluster:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+    row.rightCluster = rightCluster
+
+    local favBtn
+    if ns.Favorites then
+        favBtn = OneWoW_GUI:CreateFavoriteToggleButton(rightCluster, {
+            size = 16,
+            favorite = false,
+            tooltipTitle = L["CATALOG_FAVORITE"],
+            tooltipText = L["CATALOG_FAVORITE_TT"],
+            onClick = function(_, on)
+                local result = row.result
+                if not result or not result.itemID then
+                    return
+                end
+                ns.Favorites:SetFavorite("itemSearch", result.itemID, on)
+                RefreshItemList()
+            end,
+        })
+        favBtn:SetPoint("RIGHT", rightCluster, "RIGHT", 0, 0)
+        row.favBtn = favBtn
     end
 
-    local hasOwned = result.ownedCount and result.ownedCount > 0
-    local showFav = ns.Favorites and result.itemID
-    local useRightChrome = hasOwned or showFav
-
-    local rightCluster, qtyBadge, favBtn
-    if useRightChrome then
-        -- Right cluster, LTR: name … xN … star (quantity left of star, star flush right).
-        rightCluster = CreateFrame("Frame", nil, row)
-        rightCluster:SetHeight(ITEM_ROW_HEIGHT)
-        rightCluster:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-
-        if showFav then
-            favBtn = OneWoW_GUI:CreateFavoriteToggleButton(rightCluster, {
-                size     = 16,
-                favorite = ns.Favorites:IsFavorite("itemSearch", result.itemID),
-                tooltipTitle = L["CATALOG_FAVORITE"],
-                tooltipText  = L["CATALOG_FAVORITE_TT"],
-                onClick = function(_, on)
-                    ns.Favorites:SetFavorite("itemSearch", result.itemID, on)
-                    RefreshItemList()
-                end,
-            })
-            favBtn:SetPoint("RIGHT", rightCluster, "RIGHT", 0, 0)
-        end
-
-        if hasOwned then
-            qtyBadge = OneWoW_GUI:CreateFS(rightCluster, 10)
-            qtyBadge:SetText("x" .. result.ownedCount)
-            qtyBadge:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-            if favBtn then
-                qtyBadge:SetPoint("RIGHT", favBtn, "LEFT", -4, 0)
-            else
-                qtyBadge:SetPoint("RIGHT", rightCluster, "RIGHT", 0, 0)
-            end
-        end
-
-        local clusterW = 4
-        if favBtn then
-            clusterW = clusterW + 20
-        end
-        if qtyBadge then
-            clusterW = clusterW + math.max(22, qtyBadge:GetStringWidth() + 4)
-        end
-        rightCluster:SetWidth(math.max(clusterW, 28))
-    end
+    local qtyBadge = OneWoW_GUI:CreateFS(rightCluster, 10)
+    qtyBadge:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+    row.qtyBadge = qtyBadge
 
     local nameText = OneWoW_GUI:CreateFS(row, 10)
     nameText:SetPoint("LEFT", iconFrame, "RIGHT", 6, 0)
-    if rightCluster then
-        nameText:SetPoint("RIGHT", rightCluster, "LEFT", -6, 0)
-    else
-        nameText:SetPoint("RIGHT", row, "RIGHT", -6, 0)
-    end
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
-    nameText:SetText(result.name or string.format(L["QUESTS_ITEM_UNNAMED"], result.itemID))
-    nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(result.quality))
+    row.nameText = nameText
 
+    -- Shift-click opens a note; normal click selection is wired by Virtualizer.
+    row:SetScript("OnClick", function(myself)
+        if IsShiftKeyDown() and OpenItemNoteFromResult(myself.result) then
+            return
+        end
+    end)
+
+    row:SetScript("OnEnter", function(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+        local result = myself.result
+        if result and result.itemID then
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            GameTooltip:SetItemByID(result.itemID)
+            GameTooltip:AddLine(L["QUESTS_TT_ITEM_ADD_NOTES"], 0, 1, 0)
+            GameTooltip:Show()
+        end
+    end)
+    row:SetScript("OnLeave", function(myself)
+        ApplyItemRowBackdrop(myself, myself.entryIndex or 0, myself._rowSelected)
+        GameTooltip:Hide()
+    end)
+
+    return row
+end
+
+local function BindItemListRow(row, index, result, state)
     row.result = result
-    row.rowIdx = rowIdx
+    row._rowSelected = state.selected and true or false
+    ApplyItemRowBackdrop(row, index, row._rowSelected)
+
+    row.icon:SetTexture(result.icon or 134400)
+    row.nameText:SetText(result.name or string.format(L["QUESTS_ITEM_UNNAMED"], result.itemID))
+    row.nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(result.quality))
+
+    local hasOwned = result.ownedCount and result.ownedCount > 0
+    local showFav = row.favBtn and result.itemID
+    local useRightChrome = hasOwned or showFav
+
+    if useRightChrome then
+        row.rightCluster:Show()
+        if row.favBtn then
+            if showFav then
+                row.favBtn:SetFavorite(ns.Favorites:IsFavorite("itemSearch", result.itemID))
+                row.favBtn:Show()
+            else
+                row.favBtn:Hide()
+            end
+        end
+        if hasOwned then
+            row.qtyBadge:SetText("x" .. result.ownedCount)
+            row.qtyBadge:ClearAllPoints()
+            if row.favBtn and row.favBtn:IsShown() then
+                row.qtyBadge:SetPoint("RIGHT", row.favBtn, "LEFT", -4, 0)
+            else
+                row.qtyBadge:SetPoint("RIGHT", row.rightCluster, "RIGHT", 0, 0)
+            end
+            row.qtyBadge:Show()
+        else
+            row.qtyBadge:Hide()
+        end
+
+        local clusterW = 4
+        if row.favBtn and row.favBtn:IsShown() then
+            clusterW = clusterW + 20
+        end
+        if hasOwned then
+            clusterW = clusterW + math.max(22, row.qtyBadge:GetStringWidth() + 4)
+        end
+        row.rightCluster:SetWidth(math.max(clusterW, 28))
+        row.nameText:ClearAllPoints()
+        row.nameText:SetPoint("LEFT", row.iconFrame, "RIGHT", 6, 0)
+        row.nameText:SetPoint("RIGHT", row.rightCluster, "LEFT", -6, 0)
+    else
+        row.rightCluster:Hide()
+        if row.favBtn then
+            row.favBtn:Hide()
+        end
+        row.qtyBadge:Hide()
+        row.nameText:ClearAllPoints()
+        row.nameText:SetPoint("LEFT", row.iconFrame, "RIGHT", 6, 0)
+        row.nameText:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+    end
 
     if result.itemID and (not result.name or not result.icon) then
         ns.GetItemDataLoader():LoadItemData(result.itemID, function(_, itemData)
@@ -299,9 +348,9 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
             end
 
             ApplyLoadedItemData(result, itemData)
-            icon:SetTexture(result.icon or 134400)
-            nameText:SetText(result.name or string.format(L["QUESTS_ITEM_UNNAMED"], result.itemID))
-            nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(result.quality))
+            row.icon:SetTexture(result.icon or 134400)
+            row.nameText:SetText(result.name or string.format(L["QUESTS_ITEM_UNNAMED"], result.itemID))
+            row.nameText:SetTextColor(OneWoW_GUI:GetItemQualityColor(result.quality))
 
             if selectedItem and selectedItem.itemID == result.itemID then
                 ApplyLoadedItemData(selectedItem, itemData)
@@ -309,36 +358,6 @@ local function CreateItemRow(parent, result, yOffset, rowIdx, onClick)
             end
         end)
     end
-
-    row:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetItemByID(result.itemID)
-        GameTooltip:AddLine(L["QUESTS_TT_ITEM_ADD_NOTES"], 0, 1, 0)
-        GameTooltip:Show()
-    end)
-    row:SetScript("OnLeave", function(self)
-        if selectedItem and selectedItem.itemID == result.itemID then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-        elseif self.rowIdx % 2 == 0 then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        else
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        end
-        GameTooltip:Hide()
-    end)
-    row:SetScript("OnClick", function(self)
-        if IsShiftKeyDown() and OpenItemNoteFromResult(self.result) then
-            return
-        end
-        if onClick then onClick(self.result) end
-    end)
-
-    return row
 end
 
 ShowItemDetail = function(result)
@@ -608,80 +627,92 @@ ShowItemDetail = function(result)
 end
 
 RefreshItemList = function()
-    if not panels then return end
-    ClearListElements()
+    if not panels or not listAPI then
+        return
+    end
+
+    wipe(listResults)
     panels.listScrollFrame:SetVerticalScroll(0)
 
     if not ns.ItemSearch then
         panels.listScrollChild:SetHeight(100)
-        if emptyList then emptyList:SetText(L["ITEMSEARCH_EMPTY"]); emptyList:Show() end
+        listAPI.Refresh()
+        if emptyList then
+            emptyList:SetText(L["ITEMSEARCH_EMPTY"])
+            emptyList:Show()
+        end
+        if panels.leftStatusText then
+            panels.leftStatusText:SetText("")
+        end
         return
     end
 
     -- Single path: a <2 char term browses all available sources; >=2 filters.
     local hasFilter = #currentSearch >= 2
-    local results, limitReached = ns.ItemSearch:Query(currentSearch, currentSource)
+    local results = ns.ItemSearch:Query(currentSearch, currentSource)
 
     if not results or #results == 0 then
         panels.listScrollChild:SetHeight(100)
+        listAPI.SetSelectedIndex(nil)
+        listAPI.Refresh()
         if emptyList then
             emptyList:SetText(hasFilter and L["ITEMSEARCH_NO_RESULTS"] or L["ITEMSEARCH_EMPTY"])
             emptyList:Show()
         end
-        if panels.leftStatusText then panels.leftStatusText:SetText("") end
+        if panels.leftStatusText then
+            panels.leftStatusText:SetText("")
+        end
         return
     end
 
-    if emptyList then emptyList:Hide() end
+    if emptyList then
+        emptyList:Hide()
+    end
 
     if ns.Favorites and #results > 0 then
         local origOrder = {}
         for i, r in ipairs(results) do
-            if r.itemID then origOrder[tostring(r.itemID)] = i end
+            if r.itemID then
+                origOrder[tostring(r.itemID)] = i
+            end
         end
-        table.sort(results, function(a, b)
+        sort(results, function(a, b)
             local fa = ns.Favorites:IsFavorite("itemSearch", a.itemID)
             local fb = ns.Favorites:IsFavorite("itemSearch", b.itemID)
-            if fa ~= fb then return fa end
+            if fa ~= fb then
+                return fa
+            end
             local oa = a.itemID and origOrder[tostring(a.itemID)] or 0
             local ob = b.itemID and origOrder[tostring(b.itemID)] or 0
             return oa < ob
         end)
     end
 
-    local yOffset = -4
-    local rowIdx  = 0
-
     for _, result in ipairs(results) do
-        local row = CreateItemRow(panels.listScrollChild, result, yOffset, rowIdx, function(r)
-            selectedItem = r
-            for _, el in ipairs(listElements) do
-                if el.result and el.result.itemID == r.itemID then
-                    el:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                    el:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                elseif el.rowIdx and el.rowIdx % 2 == 0 then
-                    el:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-                    el:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                else
-                    el:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                    el:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                end
-            end
-            ShowItemDetail(r)
-        end)
-        table.insert(listElements, row)
-        yOffset = yOffset - ITEM_ROW_HEIGHT
-        rowIdx  = rowIdx + 1
+        tinsert(listResults, result)
     end
 
-    panels.listScrollChild:SetHeight(math.abs(yOffset) + 10)
+    local keepSelection = nil
+    if selectedItem and selectedItem.itemID then
+        for i, result in ipairs(listResults) do
+            if result.itemID == selectedItem.itemID then
+                keepSelection = i
+                break
+            end
+        end
+    end
+
+    if keepSelection then
+        listAPI.SetSelectedIndex(keepSelection)
+    else
+        listAPI.SetSelectedIndex(nil)
+        listAPI.Refresh()
+    end
 
     if panels.leftStatusText then
-        local n = #results
+        local n = #listResults
         if not hasFilter then
             panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_BROWSE_DEFAULT"], n))
-        elseif limitReached then
-            panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_RESULTS_CAPPED"], n))
         else
             panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_RESULTS"], n))
         end
@@ -790,6 +821,33 @@ function ns.UI.CreateItemSearchTab(parent)
     })
     searchBox:SetPoint("TOPLEFT", searchHeader, "TOPLEFT", 8, -8)
     searchBox:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -8)
+
+    listAPI = OneWoW_GUI:CreateVirtualizer(panels.listPanel, {
+        name = "CatalogItemSearchList",
+        rowHeight = ITEM_ROW_HEIGHT,
+        numVisibleRows = 24,
+        rowInset = 0,
+        scrollFrame = panels.listScrollFrame,
+        content = panels.listScrollChild,
+        getCount = function()
+            return #listResults
+        end,
+        getEntry = function(index)
+            return listResults[index]
+        end,
+        onSelect = function(_, entry)
+            local same = selectedItem and entry and selectedItem.itemID == entry.itemID
+            selectedItem = entry
+            if not same then
+                ShowItemDetail(entry)
+            end
+        end,
+        createRow = CreateItemListRow,
+        bindRow = BindItemListRow,
+        enableKeyboardNav = true,
+        focusCompetitor = searchBox,
+    })
+    panels.virtualizedList = listAPI
 
     emptyList = OneWoW_GUI:CreateFS(panels.listScrollChild, 12)
     emptyList:SetPoint("CENTER", panels.listScrollChild, "CENTER", 0, 0)
