@@ -7,12 +7,11 @@ local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local WOW_QUEST_GOLD = OneWoW_GUI.Constants.WOW_QUEST_GOLD
 local QUEST_LIST_ROW_HEIGHT = 48
 local QUEST_LIST_ROW_FRAME_HEIGHT = 44
-local QUEST_LIST_BUFFER_ROWS = 5
 
 ns.UI = ns.UI or {}
 
 local selectedQuest    = nil
-local questListButtons = {}
+local questListAPI     = nil
 local detailElements   = {}
 local visibleRewardItemRows = {}
 local visibleQuestNameRows = {}
@@ -325,7 +324,6 @@ end
 local RefreshQuestList
 local ShowQuestDetail
 local OpenQuestByID
-local UpdateVisibleQuestRows
 
 local QUEST_TYPE_LABELS = {
     standard = L["QUESTS_TYPE_STANDARD"],
@@ -756,14 +754,6 @@ local function ClearDetailElements()
     wipe(detailElements)
     wipe(visibleRewardItemRows)
     wipe(visibleQuestNameRows)
-end
-
-local function ClearQuestList()
-    for _, btn in ipairs(questListButtons) do
-        btn:Hide()
-        btn:SetParent(nil)
-    end
-    wipe(questListButtons)
 end
 
 local function GetQuestTypeLabel(quest)
@@ -3413,138 +3403,6 @@ local function UpdateQuestListEntry(btn, quest, _)
     end
 end
 
-local function CreateQuestListEntry(parent, quest, yOffset, panels, onClick)
-    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    btn:SetHeight(QUEST_LIST_ROW_FRAME_HEIGHT)
-    btn:SetPoint("TOPLEFT",  parent, "TOPLEFT",  4, yOffset)
-    btn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -4, yOffset)
-    btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local nameText = OneWoW_GUI:CreateFS(btn, 12)
-    nameText:SetPoint("TOPLEFT",  btn, "TOPLEFT",  8, -6)
-    nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -44, -6)
-    nameText:SetJustifyH("LEFT")
-    nameText:SetWordWrap(false)
-    nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    btn.nameText = nameText
-
-    local subText = OneWoW_GUI:CreateFS(btn, 10)
-    subText:SetPoint("BOTTOMLEFT",  btn, "BOTTOMLEFT",  8, 6)
-    subText:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -44, 6)
-    subText:SetJustifyH("LEFT")
-    subText:SetWordWrap(false)
-    subText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    btn.subText = subText
-
-    btn.statusIcons = {}
-    for i = 1, QUEST_STATUS_MAX_ICONS do
-        local tex = btn:CreateTexture(nil, "ARTWORK")
-        tex:Hide()
-        btn.statusIcons[i] = tex
-    end
-
-    local checkHit = OneWoW_GUI:CreateLayoutFrame(btn, {
-        width = 28,
-        height = 24,
-    })
-    checkHit:SetPoint("RIGHT", btn, "RIGHT", -22, 0)
-    checkHit:EnableMouseMotion(true)
-    checkHit:SetScript("OnEnter", function(self)
-        ShowQuestStatusLegendTooltip(self)
-    end)
-    checkHit:SetScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
-    checkHit:Hide()
-    btn.checkHit = checkHit
-
-    local groupToggle = CreateFrame("Button", nil, btn, "BackdropTemplate")
-    groupToggle:SetSize(18, 18)
-    groupToggle:SetPoint("RIGHT", btn, "RIGHT", -8, 0)
-    groupToggle:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    groupToggle:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_GROUP_TOGGLE"))
-    groupToggle:SetBackdropBorderColor(unpack(WOW_QUEST_GOLD))
-
-    local groupToggleText = OneWoW_GUI:CreateFS(groupToggle, 16)
-    groupToggleText:SetAllPoints()
-    groupToggleText:SetJustifyH("CENTER")
-    groupToggleText:SetJustifyV("MIDDLE")
-    groupToggleText:SetTextColor(unpack(WOW_QUEST_GOLD))
-
-    groupToggle:SetScript("OnClick", function()
-        if onClick and btn.entry then
-            onClick(btn.entry, btn)
-        end
-    end)
-    groupToggle:Hide()
-    btn.groupToggle = groupToggle
-    btn.groupToggleText = groupToggleText
-
-    if ns.Favorites then
-        local favBtn = OneWoW_GUI:CreateFavoriteToggleButton(btn, {
-            size     = 18,
-            favorite = false,
-            tooltipTitle = L["CATALOG_FAVORITE"],
-            tooltipText  = L["CATALOG_FAVORITE_TT"],
-            onClick = function(_, on)
-                if not btn.quest then return end
-                ns.Favorites:SetFavorite("quests", btn.quest.id, on)
-                RefreshQuestList(panels)
-            end,
-        })
-        favBtn:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -4, -6)
-        btn.favBtn = favBtn
-    end
-
-    btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        if self.nameText then
-            self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        end
-    end)
-    btn:SetScript("OnLeave", function(self)
-        if self.isSection then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_SECTION"))
-            if self.nameText then
-                self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            end
-        elseif selectedQuest and self.quest and selectedQuest.id == self.quest.id then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            if self.nameText then
-                self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-            end
-        elseif self.isGroup then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            if self.nameText then
-                self.nameText:SetTextColor(unpack(WOW_QUEST_GOLD))
-            end
-        elseif self.isChild then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_CHILD"))
-            if self.nameText then
-                self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end
-        else
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            if self.nameText then
-                self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end
-        end
-    end)
-    btn:SetScript("OnClick", function(self)
-        if onClick and self.entry then
-            onClick(self.entry, self)
-        end
-    end)
-
-    if quest then
-        UpdateQuestListEntry(btn, quest, panels)
-    end
-
-    return btn
-end
-
 local function GetQuestListGroupName(quest)
     return quest
         and (
@@ -3679,194 +3537,174 @@ local function BuildQuestListDisplayEntries(quests, favoriteQuests)
     return entries
 end
 
-local function GetQuestListVisibleRowCount(panels)
-    local h =
-        panels
-        and panels.listScrollFrame
-        and panels.listScrollFrame:GetHeight()
-        or 0
-
-    if h <= 0 then
-        h = 560
+local function HandleQuestListEntryClick(entry, index, api)
+    local panels = ns.UI.questsPanels
+    if not panels or not entry or not api then
+        return
     end
 
-    return math.max(1, math.ceil(h / QUEST_LIST_ROW_HEIGHT))
-end
+    panels._questKeyboardNavActive = true
 
-local function GetQuestListVisibleCapacity(panels)
-    local visibleRows = GetQuestListVisibleRowCount(panels)
-
-    return math.max(
-        8,
-        visibleRows + QUEST_LIST_BUFFER_ROWS
-    )
-end
-
-local function EnsureQuestListRows(panels, onClick)
-    local capacity = GetQuestListVisibleCapacity(panels)
-    local rowParent =
-        panels.questListViewport
-        or panels.listScrollFrame
-        or panels.listScrollChild
-
-    for _ = #questListButtons + 1, capacity do
-        local btn = CreateQuestListEntry(
-            rowParent,
-            nil,
-            -4,
-            panels,
-            onClick
+    if entry.type == "group" then
+        questListGroupExpanded[entry.key] = not questListGroupExpanded[entry.key]
+        panels._questListEntries = BuildQuestListDisplayEntries(
+            panels._questResults or {},
+            panels._favoriteQuestResults or {}
         )
-        btn:Hide()
-        table.insert(questListButtons, btn)
+        api.Refresh()
+
+        if selectedQuest then
+            for i, visibleEntry in ipairs(panels._questListEntries) do
+                local q = visibleEntry.quest
+                if q and q.id == selectedQuest.id then
+                    api.SetSelectedIndex(i)
+                    return
+                end
+            end
+        end
+        return
     end
 
-    return capacity
+    if entry.type == "section" then
+        return
+    end
+
+    if index then
+        api.SetSelectedIndex(index)
+    end
 end
 
-UpdateVisibleQuestRows = function(panels)
-    if not panels then return end
+local function CreateQuestListRow(parent, api)
+    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    btn:SetHeight(QUEST_LIST_ROW_FRAME_HEIGHT)
+    btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local entries = panels._questListEntries or panels._questResults or {}
-    local total = #entries
-    local capacity = GetQuestListVisibleCapacity(panels)
-    local visibleRows = GetQuestListVisibleRowCount(panels)
+    local nameText = OneWoW_GUI:CreateFS(btn, 12)
+    nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", 8, -6)
+    nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -44, -6)
+    nameText:SetJustifyH("LEFT")
+    nameText:SetWordWrap(false)
+    nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    btn.nameText = nameText
 
-    if #questListButtons < capacity and panels._questListOnClick then
-        EnsureQuestListRows(panels, panels._questListOnClick)
+    local subText = OneWoW_GUI:CreateFS(btn, 10)
+    subText:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 8, 6)
+    subText:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -44, 6)
+    subText:SetJustifyH("LEFT")
+    subText:SetWordWrap(false)
+    subText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    btn.subText = subText
+
+    btn.statusIcons = {}
+    for i = 1, QUEST_STATUS_MAX_ICONS do
+        local tex = btn:CreateTexture(nil, "ARTWORK")
+        tex:Hide()
+        btn.statusIcons[i] = tex
     end
 
-    local offset = 0
-    if panels.listScrollFrame
-        and panels.listScrollFrame.GetVerticalScroll
-    then
-        offset = panels.listScrollFrame:GetVerticalScroll() or 0
+    local checkHit = OneWoW_GUI:CreateLayoutFrame(btn, {
+        width = 28,
+        height = 24,
+    })
+    checkHit:SetPoint("RIGHT", btn, "RIGHT", -22, 0)
+    checkHit:EnableMouseMotion(true)
+    checkHit:SetScript("OnEnter", function(self)
+        ShowQuestStatusLegendTooltip(self)
+    end)
+    checkHit:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    checkHit:Hide()
+    btn.checkHit = checkHit
+
+    local groupToggle = CreateFrame("Button", nil, btn, "BackdropTemplate")
+    groupToggle:SetSize(18, 18)
+    groupToggle:SetPoint("RIGHT", btn, "RIGHT", -8, 0)
+    groupToggle:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    groupToggle:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_GROUP_TOGGLE"))
+    groupToggle:SetBackdropBorderColor(unpack(WOW_QUEST_GOLD))
+
+    local groupToggleText = OneWoW_GUI:CreateFS(groupToggle, 16)
+    groupToggleText:SetAllPoints()
+    groupToggleText:SetJustifyH("CENTER")
+    groupToggleText:SetJustifyV("MIDDLE")
+    groupToggleText:SetTextColor(unpack(WOW_QUEST_GOLD))
+
+    groupToggle:SetScript("OnClick", function()
+        HandleQuestListEntryClick(btn.entry, btn.entryIndex, api)
+    end)
+    groupToggle:Hide()
+    btn.groupToggle = groupToggle
+    btn.groupToggleText = groupToggleText
+
+    if ns.Favorites then
+        local favBtn = OneWoW_GUI:CreateFavoriteToggleButton(btn, {
+            size = 18,
+            favorite = false,
+            tooltipTitle = L["CATALOG_FAVORITE"],
+            tooltipText = L["CATALOG_FAVORITE_TT"],
+            onClick = function(_, on)
+                if not btn.quest then
+                    return
+                end
+                ns.Favorites:SetFavorite("quests", btn.quest.id, on)
+                local panels = ns.UI.questsPanels
+                if panels then
+                    RefreshQuestList(panels)
+                end
+            end,
+        })
+        favBtn:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -4, -6)
+        btn.favBtn = favBtn
     end
 
-    local firstIndex = math.floor(offset / QUEST_LIST_ROW_HEIGHT) + 1
-    local maxFirst = math.max(1, total - visibleRows + 1)
-
-    if firstIndex > maxFirst then
-        firstIndex = maxFirst
-    end
-
-    for rowIndex, btn in ipairs(questListButtons) do
-        if rowIndex <= capacity then
-            local questIndex = firstIndex + rowIndex - 1
-            local entry = entries[questIndex]
-
-            if entry then
-                btn:ClearAllPoints()
-                btn:SetPoint(
-                    "TOPLEFT",
-                    panels.questListViewport or panels.listScrollFrame or panels.listScrollChild,
-                    "TOPLEFT",
-                    4,
-                    -4 - ((rowIndex - 1) * QUEST_LIST_ROW_HEIGHT)
-                )
-                btn:SetPoint(
-                    "TOPRIGHT",
-                    panels.questListViewport or panels.listScrollFrame or panels.listScrollChild,
-                    "TOPRIGHT",
-                    -4,
-                    -4 - ((rowIndex - 1) * QUEST_LIST_ROW_HEIGHT)
-                )
-                UpdateQuestListEntry(btn, entry, panels)
-                btn:Show()
-            else
-                btn:Hide()
+    btn:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+        if self.nameText then
+            self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        end
+    end)
+    btn:SetScript("OnLeave", function(self)
+        if self.isSection then
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_SECTION"))
+            if self.nameText then
+                self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            end
+        elseif selectedQuest and self.quest and selectedQuest.id == self.quest.id then
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            if self.nameText then
+                self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            end
+        elseif self.isGroup then
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            if self.nameText then
+                self.nameText:SetTextColor(unpack(WOW_QUEST_GOLD))
+            end
+        elseif self.isChild then
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_CHILD"))
+            if self.nameText then
+                self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             end
         else
-            btn:Hide()
+            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            if self.nameText then
+                self.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            end
         end
-    end
+    end)
+    -- Selection / expand handled here; Virtualizer selectOnClick is off so groups
+    -- do not become selected indices.
+    btn:SetScript("OnClick", function(self)
+        HandleQuestListEntryClick(self.entry, self.entryIndex, api)
+    end)
+
+    return btn
 end
 
-local function EnsureQuestVisible(panels, questIndex)
-    if not panels
-        or not questIndex
-        or not panels.listScrollFrame
-        or not panels.listScrollFrame.SetVerticalScroll
-    then
-        return
-    end
-
-    local viewHeight =
-        panels.listScrollFrame.GetHeight
-        and panels.listScrollFrame:GetHeight()
-        or 0
-
-    if viewHeight <= 0 then
-        return
-    end
-
-    local currentScroll =
-        panels.listScrollFrame.GetVerticalScroll
-        and panels.listScrollFrame:GetVerticalScroll()
-        or 0
-
-    local rowTop = (questIndex - 1) * QUEST_LIST_ROW_HEIGHT
-    local rowBottom = rowTop + QUEST_LIST_ROW_HEIGHT
-    local targetScroll = currentScroll
-
-    if rowTop < currentScroll then
-        targetScroll = rowTop
-    elseif rowBottom > currentScroll + viewHeight then
-        targetScroll = rowBottom - viewHeight
-    end
-
-    local maxScroll = math.max(
-        0,
-        (panels.listScrollChild and panels.listScrollChild:GetHeight() or 0) - viewHeight
-    )
-
-    panels.listScrollFrame:SetVerticalScroll(math.max(0, math.min(targetScroll, maxScroll)))
-end
-
-local function ClampQuestListScroll(panels, requestedScroll)
-    if not panels
-        or not panels.listScrollFrame
-        or not panels.listScrollFrame.SetVerticalScroll
-        or not panels.listScrollChild
-    then
-        return 0
-    end
-
-    if panels.listScrollFrame.UpdateScrollChildRect then
-        panels.listScrollFrame:UpdateScrollChildRect()
-    end
-
-    local frameHeight =
-        panels.listScrollFrame.GetHeight
-        and panels.listScrollFrame:GetHeight()
-        or 0
-
-    local childHeight =
-        panels.listScrollChild.GetHeight
-        and panels.listScrollChild:GetHeight()
-        or 0
-
-    local maxScroll = math.max(0, childHeight - frameHeight)
-    local targetScroll = math.max(0, math.min(requestedScroll or 0, maxScroll))
-
-    panels.listScrollFrame:SetVerticalScroll(targetScroll)
-    return targetScroll
-end
-
-local function RefreshQuestListViewport(panels, requestedScroll, listVersion)
-    local function repaint()
-        if not panels or (listVersion and panels._questListVersion ~= listVersion) then
-            return
-        end
-
-        ClampQuestListScroll(panels, requestedScroll)
-        UpdateVisibleQuestRows(panels)
-    end
-
-    repaint()
-
-    C_Timer.After(0, repaint)
-    C_Timer.After(0.05, repaint)
+local function BindQuestListRow(row, _, entry, _)
+    UpdateQuestListEntry(row, entry)
 end
 
 local function SelectQuestFromList(panels, quest, questIndex)
@@ -3875,9 +3713,15 @@ local function SelectQuestFromList(panels, quest, questIndex)
     end
 
     selectedQuest = quest
-    EnsureQuestVisible(panels, questIndex)
+    if questListAPI and questIndex then
+        questListAPI.SetSelectedIndex(questIndex)
+        return
+    end
+
     ShowQuestDetail(panels, quest)
-    UpdateVisibleQuestRows(panels)
+    if questListAPI then
+        questListAPI.Refresh()
+    end
 end
 
 local function MoveQuestSelection(panels, delta)
@@ -3904,7 +3748,7 @@ local function MoveQuestSelection(panels, delta)
     local nextIndex = selectedIndex + delta
     while nextIndex >= 1 and nextIndex <= #entries do
         local entry = entries[nextIndex]
-        if entry and entry.type ~= "group" and entry.quest then
+        if entry and entry.type ~= "group" and entry.type ~= "section" and entry.quest then
             SelectQuestFromList(panels, entry.quest, nextIndex)
             return
         end
@@ -3915,7 +3759,7 @@ local function MoveQuestSelection(panels, delta)
     if nextIndex < 1 then
         for i = 1, #entries do
             local entry = entries[i]
-            if entry and entry.type ~= "group" and entry.quest then
+            if entry and entry.type ~= "group" and entry.type ~= "section" and entry.quest then
                 SelectQuestFromList(panels, entry.quest, i)
                 return
             end
@@ -3923,7 +3767,7 @@ local function MoveQuestSelection(panels, delta)
     elseif nextIndex > #entries then
         for i = #entries, 1, -1 do
             local entry = entries[i]
-            if entry and entry.type ~= "group" and entry.quest then
+            if entry and entry.type ~= "group" and entry.type ~= "section" and entry.quest then
                 SelectQuestFromList(panels, entry.quest, i)
                 return
             end
@@ -3940,9 +3784,6 @@ function RefreshQuestList(panels)
         previousScroll = panels.listScrollFrame:GetVerticalScroll() or 0
     end
 
-    ClearQuestList()
-    panels._questListVersion = (panels._questListVersion or 0) + 1
-    local listVersion = panels._questListVersion
     wipe(questRowStatusCache)
     wipe(questGroupStatusCache)
     wipe(activeQuestIDsAcrossAlts)
@@ -3950,12 +3791,17 @@ function RefreshQuestList(panels)
     local addon = GetDataAddon()
     if not addon then
         panels._questResults = {}
+        panels._favoriteQuestResults = {}
         panels._questListEntries = {}
         if panels.emptyList then
             panels.emptyList:SetText(L["QUESTS_NO_DATA"])
             panels.emptyList:Show()
         end
-        panels.listScrollChild:SetHeight(100)
+        if questListAPI then
+            questListAPI.SetSelectedIndex(nil)
+        else
+            panels.listScrollChild:SetHeight(100)
+        end
         return
     end
 
@@ -4069,7 +3915,11 @@ function RefreshQuestList(panels)
             )
             panels.emptyList:Show()
         end
-        panels.listScrollChild:SetHeight(100)
+        if questListAPI then
+            questListAPI.SetSelectedIndex(nil)
+        else
+            panels.listScrollChild:SetHeight(100)
+        end
         if panels.leftStatusText then
             panels.leftStatusText:SetText(string.format(L["QUESTS_STATUS_COUNT"], 0))
         end
@@ -4082,60 +3932,21 @@ function RefreshQuestList(panels)
     panels._favoriteQuestResults = favoriteQuests
     panels._questListEntries = BuildQuestListDisplayEntries(quests, favoriteQuests)
 
-    local rowOnClick = function(entry)
-        panels._questKeyboardNavActive = true
+    if questListAPI then
+        questListAPI.Refresh()
 
-        if entry and entry.type == "group" then
-            questListGroupExpanded[entry.key] =
-                not questListGroupExpanded[entry.key]
-            panels._questListEntries = BuildQuestListDisplayEntries(
-                panels._questResults or {},
-                panels._favoriteQuestResults or {}
-            )
-
-            panels.listScrollChild:SetHeight(
-                math.max(100, (#panels._questListEntries * QUEST_LIST_ROW_HEIGHT) + 10)
-            )
-
-            if panels.listScrollFrame
-                and panels.listScrollFrame.UpdateScrollChildRect
-            then
-                panels.listScrollFrame:UpdateScrollChildRect()
-            end
-
-            UpdateVisibleQuestRows(panels)
-            return
+        local sf = panels.listScrollFrame
+        if sf and sf.SetVerticalScroll then
+            local frameHeight = sf.GetHeight and sf:GetHeight() or 0
+            local childHeight =
+                panels.listScrollChild
+                and panels.listScrollChild.GetHeight
+                and panels.listScrollChild:GetHeight()
+                or 0
+            local maxScroll = math.max(0, childHeight - frameHeight)
+            sf:SetVerticalScroll(math.max(0, math.min(previousScroll, maxScroll)))
         end
-
-        if entry and entry.type == "section" then
-            return
-        end
-
-        local q = entry and (entry.quest or entry)
-        if not q then
-            return
-        end
-
-        local questIndex
-        for i, visibleEntry in ipairs(panels._questListEntries or {}) do
-            local visibleQuest = visibleEntry.quest or visibleEntry
-            if visibleQuest and visibleQuest.id == q.id then
-                questIndex = i
-                break
-            end
-        end
-
-        SelectQuestFromList(panels, q, questIndex)
     end
-
-    panels._questListOnClick = rowOnClick
-    EnsureQuestListRows(panels, rowOnClick)
-
-    panels.listScrollChild:SetHeight(
-        math.max(100, (#panels._questListEntries * QUEST_LIST_ROW_HEIGHT) + 10)
-    )
-
-    RefreshQuestListViewport(panels, previousScroll, listVersion)
 
     if panels.leftStatusText then
         panels.leftStatusText:SetText(string.format(L["QUESTS_STATUS_COUNT"], #quests + #favoriteQuests))
@@ -4143,6 +3954,9 @@ function RefreshQuestList(panels)
 
     if selectedQuest then
         ShowQuestDetail(panels, addon.GetQuest(selectedQuest.id))
+        if questListAPI then
+            questListAPI.Refresh()
+        end
     end
 end
 
@@ -4561,43 +4375,37 @@ function ns.UI.CreateQuestsTab(parent)
     panels.listTitle:SetText(L["QUESTS_LIST_TITLE"])
     panels.detailTitle:SetText(QUEST_DETAILS)
 
-    if panels.listScrollFrame then
-        local questListViewport = CreateFrame("Frame", nil, panels.listScrollFrame)
-        questListViewport:SetAllPoints(panels.listScrollFrame)
-        if questListViewport.SetClipsChildren then
-            questListViewport:SetClipsChildren(true)
-        end
-        if panels.listScrollFrame.GetFrameLevel and questListViewport.SetFrameLevel then
-            questListViewport:SetFrameLevel((panels.listScrollFrame:GetFrameLevel() or 0) + 1)
-        end
-        questListViewport:EnableMouseWheel(true)
-        questListViewport:SetScript("OnMouseWheel", function(_, delta)
-            if not panels.listScrollFrame or not panels.listScrollFrame.SetVerticalScroll then
+    questListAPI = OneWoW_GUI:CreateVirtualizer(panels.listPanel, {
+        name = "CatalogQuestsList",
+        rowHeight = QUEST_LIST_ROW_HEIGHT,
+        numVisibleRows = 16,
+        rowInset = 4,
+        selectOnClick = false,
+        scrollFrame = panels.listScrollFrame,
+        content = panels.listScrollChild,
+        getCount = function()
+            local entries = panels._questListEntries
+            return entries and #entries or 0
+        end,
+        getEntry = function(index)
+            local entries = panels._questListEntries
+            return entries and entries[index]
+        end,
+        onSelect = function(_, entry)
+            if not entry or entry.type == "group" or entry.type == "section" then
                 return
             end
-
-            local current =
-                panels.listScrollFrame.GetVerticalScroll
-                and panels.listScrollFrame:GetVerticalScroll()
-                or 0
-
-            local frameHeight =
-                panels.listScrollFrame.GetHeight
-                and panels.listScrollFrame:GetHeight()
-                or 0
-
-            local maxScroll = math.max(
-                0,
-                (panels.listScrollChild and panels.listScrollChild:GetHeight() or 0)
-                - frameHeight
-            )
-
-            local target = current - (delta or 0) * QUEST_LIST_ROW_HEIGHT * 3
-            panels.listScrollFrame:SetVerticalScroll(math.max(0, math.min(target, maxScroll)))
-            UpdateVisibleQuestRows(panels)
-        end)
-        panels.questListViewport = questListViewport
-    end
+            local quest = entry.quest
+            if not quest then
+                return
+            end
+            selectedQuest = quest
+            ShowQuestDetail(panels, quest)
+        end,
+        createRow = CreateQuestListRow,
+        bindRow = BindQuestListRow,
+    })
+    panels.virtualizedList = questListAPI
 
     contentArea:EnableKeyboard(true)
     if contentArea.SetPropagateKeyboardInput then
@@ -4628,15 +4436,6 @@ function ns.UI.CreateQuestsTab(parent)
             contentArea:SetPropagateKeyboardInput(true)
         end
     end)
-
-    if panels.listScrollFrame then
-        panels.listScrollFrame:HookScript("OnVerticalScroll", function()
-            UpdateVisibleQuestRows(panels)
-        end)
-        panels.listScrollFrame:HookScript("OnSizeChanged", function()
-            UpdateVisibleQuestRows(panels)
-        end)
-    end
 
     if panels.detailScrollFrame then
         panels.detailScrollFrame:HookScript("OnSizeChanged", function(self, width)

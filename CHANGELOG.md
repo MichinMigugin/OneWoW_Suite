@@ -63,6 +63,9 @@
 - Large catalog walks load in time-budgeted slices so the UI stays responsive
 - Browse no longer stalls after the journal wave: secondary sources annotate without re-fetching names; sorting yields under the same budget
 
+## Quests
+- Quest list uses the shared virtualized list (same flatten-expand grouping as before)
+
 ---
 
 # AltTracker
