@@ -103,7 +103,13 @@
 
 ---
 
-*No user-facing changes this release for QoL, Bags, Notes, Trackers, Shopping List, Direct Deposit, or DevTool.*
+# Bags
+## Search
+- New `#combinable` keyword — finds combine-type items (Darkmoon decks, fractured sparks, recipe scraps, …). Use `#combinable & #usable` when you have all the pieces ready to combine
+
+---
+
+*No user-facing changes this release for QoL, Notes, Trackers, Shopping List, Direct Deposit, or DevTool.*
 
 ---
 

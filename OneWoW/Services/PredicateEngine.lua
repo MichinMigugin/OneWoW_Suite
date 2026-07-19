@@ -1950,6 +1950,14 @@ local function HasAllCombineReagents(reagents)
     return true
 end
 
+-- #combinable: item's Use: effect is a combine/craft spell with required
+-- reagents (Darkmoon decks, fractured sparks, torn recipe scraps, …).
+-- Structural via GetCombineReagents — not tooltip text. Compose with
+-- #usable for "ready to combine now" (#combinable & #usable).
+RegisterKeyword("combinable", function(p)
+    return p.id and GetCombineReagents(p.id) ~= nil
+end)
+
 -- ---------- Teachable collectibles ----------
 
 --- A teachable item (carries a "Use: Teaches you …" learn line) is only usable
