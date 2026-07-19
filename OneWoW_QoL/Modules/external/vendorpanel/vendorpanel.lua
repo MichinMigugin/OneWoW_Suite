@@ -74,8 +74,23 @@ local state = {
     slotMap = {},
     _plumberPostRemap = false,
     _plumberPriceRefresh = false,
+    -- hooksecurefunc("MerchantFrame_Update") cannot be removed; gate the
+    -- callback so OnDisable stops merchant-grid work for the rest of the session.
+    moduleActive = false,
+    -- Set around junkPreviewPanel:Hide() in OnMerchantClosed so OnHide does
+    -- not call MerchantFrame_Update during teardown (redraw storm on close).
+    _closingMerchant = false,
 }
 ns.VPState = state
+
+--- True while the Vendor Panel module may touch the open merchant frame.
+---@return boolean
+local function IsMerchantWorkAllowed()
+    return state.moduleActive
+        and MerchantFrame ~= nil
+        and MerchantFrame:IsShown()
+end
+ns.VPIsMerchantWorkAllowed = IsMerchantWorkAllowed
 
 local function GetItemStatus()
     return OneWoW.ItemStatus
@@ -616,12 +631,12 @@ end
 --- ItemButton:GetID(). Re-run the update after our remap so it reads mapped indices.
 local function RefreshPlumberMerchantPrices()
     if not IsPlumberMerchantActive() then return end
-    if not MerchantFrame or not MerchantFrame:IsShown() or MerchantFrame.selectedTab ~= 1 then return end
+    if not IsMerchantWorkAllowed() or MerchantFrame.selectedTab ~= 1 then return end
     if state._plumberPriceRefresh then return end
     state._plumberPriceRefresh = true
     C_Timer.After(0, function()
         state._plumberPriceRefresh = false
-        if not MerchantFrame or not MerchantFrame:IsShown() then return end
+        if not IsMerchantWorkAllowed() then return end
         state._plumberPostRemap = true
         MerchantFrame_Update()
         state._plumberPostRemap = false
@@ -797,6 +812,7 @@ function VendorPanel:RenderMerchantGrid(skipPlumberRefresh)
         end
     else
         C_Timer.After(0.05, function()
+            if not IsMerchantWorkAllowed() then return end
             FinalizeMerchantGridCurrency(perPage)
         end)
     end
@@ -1562,11 +1578,15 @@ function VendorPanel:FormatSellButtonText(sellCount)
 end
 
 function VendorPanel:UpdateButton()
+    if not state.moduleActive then return end
     if not state.vendorButton then return end
     local sellCount, destroyCount, allCached = self:GetJunkCounts()
     if not allCached then
         if state._buttonRetry then state._buttonRetry:Cancel() end
-        state._buttonRetry = C_Timer.NewTimer(0.3, function() VendorPanel:UpdateButton() end)
+        state._buttonRetry = C_Timer.NewTimer(0.3, function()
+            if not state.moduleActive then return end
+            VendorPanel:UpdateButton()
+        end)
         return
     end
     ---@diagnostic disable-next-line: undefined-field
@@ -1642,6 +1662,7 @@ end
 function VendorPanel:StartUpdates()
     if state.updateTicker then return end
     state.updateTicker = C_Timer.NewTicker(5.0, function()
+        if not state.moduleActive then return end
         if OneWoW.Restriction.IsInCombat() or IsInInstance() then return end
         VendorPanel:UpdateButton()
         VendorPanel:UpdatePreviewPanel()
@@ -1706,6 +1727,7 @@ function VendorPanel:OnMerchantShow()
     if GetShowPanel() then
         if not state.junkPreviewPanel then self:CreatePreviewPanel() end
         C_Timer.After(0.25, function()
+            if not IsMerchantWorkAllowed() then return end
             VPFilters.ScanVendor()
             if state.vendorDropdown and state.vendorDropdown.RefreshFilters then
                 state.vendorDropdown:RefreshFilters()
@@ -1732,13 +1754,15 @@ function VendorPanel:OnMerchantShow()
         end
     end
 
-    C_Timer.After(0, function() VendorPanel:UpdatePanelToggleButton() end)
+    C_Timer.After(0, function()
+        if not state.moduleActive then return end
+        VendorPanel:UpdatePanelToggleButton()
+    end)
 
     -- Apply the persistent default merchant filter (ALL / current spec) on every open.
     C_Timer.After(0, function()
-        if MerchantFrame and MerchantFrame:IsShown() then
-            VendorPanel:SyncMerchantSpecFilter()
-        end
+        if not IsMerchantWorkAllowed() then return end
+        VendorPanel:SyncMerchantSpecFilter()
     end)
 end
 
@@ -1751,7 +1775,10 @@ function VendorPanel:OnMerchantClosed()
     if state.activeSellErrFrame then state.activeSellErrFrame:UnregisterEvent("UI_ERROR_MESSAGE") end
     if state.vendorButton then state.vendorButton:Hide() end
     if state.panelToggleTab then state.panelToggleTab:SetChecked(false) end
+    -- Suppress junkPreviewPanel OnHide → MerchantFrame_Update during teardown.
+    state._closingMerchant = true
     if state.junkPreviewPanel then state.junkPreviewPanel:Hide() end
+    state._closingMerchant = false
     self:ManageBlizzardSellButton(false)
     if state.neverSellDialog then state.neverSellDialog:Hide() end
     state.activePanelTab = "sell"
@@ -1773,6 +1800,7 @@ function VendorPanelModule:OnEnable()
     GetCustomFilters()
     local settings = GetSettings()
     if settings.gearSkipIlvl1 == nil then settings.gearSkipIlvl1 = true end
+    state.moduleActive = true
 
     if not VendorPanel._saveFilterPopupRegistered then
         VendorPanel._saveFilterPopupRegistered = true
@@ -1897,7 +1925,11 @@ function VendorPanelModule:OnEnable()
 
     if not self._hookDone and MerchantFrame_Update then
         self._hookDone = true
+        -- Permanent post-hook: WoW has no unhook for hooksecurefunc. Armed via
+        -- state.moduleActive so soft module disable stops DispatchMerchantGridUpdate
+        -- without requiring a full /reload (same pattern as Frame Mover's FM.active).
         hooksecurefunc("MerchantFrame_Update", function()
+            if not state.moduleActive then return end
             -- Plumber refresh pass: Blizzard repopulated native slots; restore our
             -- filtered layout so Plumber's next UpdateShopUI reads mapped GetID().
             if state._plumberPostRemap then
@@ -1914,6 +1946,7 @@ function VendorPanelModule:OnEnable()
 end
 
 function VendorPanelModule:OnDisable()
+    state.moduleActive = false
     OneWoW.Merchant.UnregisterCallback("QoL_vendorpanel")
     if self._eventFrame then
         self._eventFrame:UnregisterEvent("BAG_UPDATE")

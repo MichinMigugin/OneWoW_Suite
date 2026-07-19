@@ -80,6 +80,36 @@ function TooltipEngine:IsFeatureEnabled(featureId)
     return ns.SettingsFeatureRegistry:IsEnabled("tooltips", featureId)
 end
 
+-- Stand down while Blizzard still shows RETRIEVING_ITEM_INFO (or cache miss).
+-- Decorating that placeholder (providers + AddLine) can leave merchant tooltips
+-- stuck on Retrieving forever; TooltipDataProcessor re-fires once data lands.
+---@param tooltip GameTooltip
+---@param itemID number|nil
+---@return boolean
+local function IsItemTooltipReady(tooltip, itemID)
+    if itemID and not C_Item.IsItemDataCachedByID(itemID) then
+        return false
+    end
+    if not tooltip or not tooltip.GetName or not tooltip.NumLines then
+        return true
+    end
+    local tipName = tooltip:GetName()
+    if not tipName or tooltip:NumLines() < 1 then
+        return true
+    end
+    local line = _G[tipName .. "TextLeft1"]
+    local text = line and line:GetText()
+    if not text then
+        return true
+    end
+    -- Line text can be secret (instanced bags / restricted tooltips); comparing
+    -- it to RETRIEVING_ITEM_INFO throws. Cache check above is the gate then.
+    if ns.Restriction.IsSecret(text) then
+        return itemID ~= nil
+    end
+    return text ~= RETRIEVING_ITEM_INFO
+end
+
 function TooltipEngine:HookTooltips()
     local HANDLED_TYPES = {
         Enum.TooltipDataType.Unit,
@@ -121,13 +151,18 @@ function TooltipEngine:ProcessTooltipData(tooltip, data)
     local tooltipType = tonumber(data.type)
     if not tooltipType then return end
 
+    -- Always clear the re-entrancy flag: an error between set/clear used to
+    -- permanently no-op every tooltip for the rest of the session.
     isProcessingTooltip = true
-
-    local context = self:BuildContext(tooltip, tooltipType, data)
-    if context.type then
-        self:ProcessProviders(tooltip, context)
-    end
-
+    xpcall(function()
+        local context = self:BuildContext(tooltip, tooltipType, data)
+        if context.type == "item" and not IsItemTooltipReady(tooltip, context.itemID) then
+            return
+        end
+        if context.type then
+            self:ProcessProviders(tooltip, context)
+        end
+    end, CallErrorHandler)
     isProcessingTooltip = false
 end
 

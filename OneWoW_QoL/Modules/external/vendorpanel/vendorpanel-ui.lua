@@ -273,9 +273,11 @@ function VendorPanel:CreatePreviewPanel()
     state.junkPreviewPanel:SetScript("OnShow", function()
         if titleBar.brandIcon then titleBar.brandIcon:SetTexture(GetBrandIcon()) end
     end)
-    -- When the panel closes, let Blizzard repopulate any merchant slots our grid
-    -- filtering cleared so the vendor returns to its normal, unfiltered layout.
+    -- When the user closes the side panel while the merchant stays open, let
+    -- Blizzard repopulate slots our grid filtering may have remapped. Skip during
+    -- OnMerchantClosed teardown (_closingMerchant) and when the module is off.
     state.junkPreviewPanel:SetScript("OnHide", function()
+        if state._closingMerchant or not state.moduleActive then return end
         if MerchantFrame and MerchantFrame:IsShown() then MerchantFrame_Update() end
     end)
 
@@ -1767,9 +1769,13 @@ function VendorPanel:GetJunkItemsDetailed()
 end
 
 function VendorPanel:UpdatePreviewPanel()
+    if not state.moduleActive then return end
     if not state.junkPreviewPanel then return end
     if state.junkPreviewPanel.manuallyHidden then return end
     if not GetShowPanel() then return end
+    -- Do not require MerchantFrame:IsShown() here: MERCHANT_SHOW (OnMerchantShow)
+    -- can run before the frame reports shown; gating on it left the tab without a panel
+    -- and skipped FadeMerchantGrid (known-item dim).
 
     if state.vendorDropdown and state.vendorDropdown.RefreshFilters then
         state.vendorDropdown:RefreshFilters()
@@ -1777,7 +1783,11 @@ function VendorPanel:UpdatePreviewPanel()
 
     local grayItems, markedItems, ilvlGearItems, reagentItems, noValueJunkItems, customItems, allCached = self:GetJunkItemsDetailed()
     if not allCached then
-        C_Timer.After(0.3, function() self:UpdatePreviewPanel() end)
+        C_Timer.After(0.3, function()
+            if not state.moduleActive then return end
+            if not OneWoW.Merchant.IsMerchantOpen() then return end
+            self:UpdatePreviewPanel()
+        end)
         return
     end
 
