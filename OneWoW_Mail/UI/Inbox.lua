@@ -259,7 +259,7 @@ local function PopulateDetail(row)
         tinsert(parts, COD .. ": " .. OneWoW.Format.FormatGold(CODAmount))
     end
     if #parts > 0 then
-        detail.moneyLine:SetText(table.concat(parts, "  ·  "))
+        detail.moneyLine:SetText(table.concat(parts, "  |  "))
         detail.moneyLine:Show()
         detail.bodyScroll:ClearAllPoints()
         detail.bodyScroll:SetPoint("TOPLEFT", detail.moneyLine, "BOTTOMLEFT", 0, -6)

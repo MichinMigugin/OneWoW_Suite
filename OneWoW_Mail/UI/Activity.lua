@@ -87,7 +87,7 @@ local function EntryContext(e)
     if e.shipmentName and e.shipmentName ~= "" then
         local context = e.shipmentName
         if e.target and e.target ~= "" then
-            context = context .. " → " .. e.target
+            context = context .. " >> " .. e.target
         end
         return context .. ": "
     elseif e.target and e.target ~= "" then
@@ -244,7 +244,7 @@ local function RefreshPending()
                     y = y + 4
                 end
                 local fs = PlaceLine(pendingLines, pendingChild, y)
-                fs:SetText(intent.shipmentName .. " → " .. (intent.target or "?"))
+                fs:SetText(intent.shipmentName .. " >> " .. (intent.target or "?"))
                 fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
                 y = y + LINE_H + 2
             end

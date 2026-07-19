@@ -162,9 +162,9 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["LOG_MIRROR_CHAT"] = "Também enviar registros para o bate-papo",
     ["TT_LOG_MIRROR_CHAT"] = "Se marcado, linhas de informação e aviso do registro de Atividade também aparecem no bate-papo. Erros sempre aparecem.",
     ["LOG_COLLECT_MAIL"] = "Coletado: %s",
-    ["LOG_COLLECT_SUMMARY"] = "Coleta concluída — %s · %d item(ns) de %d correspondência(s).",
+    ["LOG_COLLECT_SUMMARY"] = "Coleta concluída — %s | %d item(ns) de %d correspondência(s).",
     ["LOG_SEND_OK"] = "Enviado: %s",
-    ["LOG_SEND_SUMMARY"] = "Envio concluído — %d correspondência(s) · %s · %d item(ns).",
+    ["LOG_SEND_SUMMARY"] = "Envio concluído — %d correspondência(s) | %s | %d item(ns).",
     ["LOG_LOOT_MORE"] = " +%d mais",
 })
 

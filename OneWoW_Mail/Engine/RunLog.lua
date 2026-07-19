@@ -57,7 +57,7 @@ function RunLog.FormatLoot(gold, items)
         tinsert(shortParts, shortStr)
     end
 
-    return table.concat(shortParts, " · "), table.concat(fullParts, "\n"), itemCount
+    return table.concat(shortParts, " | "), table.concat(fullParts, "\n"), itemCount
 end
 
 --- Append a log entry; oldest entries fall off past MAX_ENTRIES.
@@ -89,7 +89,7 @@ function RunLog:Add(severity, shipmentName, target, message, opts)
         if shipmentName and shipmentName ~= "" then
             context = shipmentName
             if target and target ~= "" then
-                context = context .. " → " .. target
+                context = context .. " >> " .. target
             end
             context = context .. ": "
         elseif target and target ~= "" then

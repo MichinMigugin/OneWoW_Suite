@@ -162,9 +162,9 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["LOG_MIRROR_CHAT"] = "Invia anche i registri in chat",
     ["TT_LOG_MIRROR_CHAT"] = "Se attivo, le righe di info e avviso del registro Attività vengono mostrate anche in chat. Gli errori vengono sempre mostrati.",
     ["LOG_COLLECT_MAIL"] = "Ritirato: %s",
-    ["LOG_COLLECT_SUMMARY"] = "Ritiro completato — %s · %d oggetto/i da %d messaggio/i.",
+    ["LOG_COLLECT_SUMMARY"] = "Ritiro completato — %s | %d oggetto/i da %d messaggio/i.",
     ["LOG_SEND_OK"] = "Inviato: %s",
-    ["LOG_SEND_SUMMARY"] = "Invio completato — %d messaggio/i · %s · %d oggetto/i.",
+    ["LOG_SEND_SUMMARY"] = "Invio completato — %d messaggio/i | %s | %d oggetto/i.",
     ["LOG_LOOT_MORE"] = " +%d altri",
 })
 

@@ -162,9 +162,9 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["LOG_MIRROR_CHAT"] = "Protokoll auch in den Chat senden",
     ["TT_LOG_MIRROR_CHAT"] = "Wenn aktiviert, erscheinen Info- und Warnzeilen aus dem Aktivitätsprotokoll auch im Chat. Fehler erscheinen immer.",
     ["LOG_COLLECT_MAIL"] = "Eingezogen: %s",
-    ["LOG_COLLECT_SUMMARY"] = "Einsammeln fertig — %s · %d Gegenstand/Gegenstände aus %d Post(en).",
+    ["LOG_COLLECT_SUMMARY"] = "Einsammeln fertig — %s | %d Gegenstand/Gegenstände aus %d Post(en).",
     ["LOG_SEND_OK"] = "Gesendet: %s",
-    ["LOG_SEND_SUMMARY"] = "Senden fertig — %d Post(en) · %s · %d Gegenstand/Gegenstände.",
+    ["LOG_SEND_SUMMARY"] = "Senden fertig — %d Post(en) | %s | %d Gegenstand/Gegenstände.",
     ["LOG_LOOT_MORE"] = " +%d weitere",
 })
 

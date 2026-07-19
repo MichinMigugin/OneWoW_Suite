@@ -162,9 +162,9 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["LOG_MIRROR_CHAT"] = "也將記錄傳送到聊天",
     ["TT_LOG_MIRROR_CHAT"] = "勾選後，活動記錄中的資訊與警告列也會顯示在聊天。錯誤一律會顯示。",
     ["LOG_COLLECT_MAIL"] = "已收取 %s",
-    ["LOG_COLLECT_SUMMARY"] = "收取完成 — %s · %d件物品，來自%d封郵件。",
+    ["LOG_COLLECT_SUMMARY"] = "收取完成 — %s | %d件物品，來自%d封郵件。",
     ["LOG_SEND_OK"] = "已寄送 %s",
-    ["LOG_SEND_SUMMARY"] = "寄送完成 — %d封郵件 · %s · %d件物品。",
+    ["LOG_SEND_SUMMARY"] = "寄送完成 — %d封郵件 | %s | %d件物品。",
     ["LOG_LOOT_MORE"] = " 另有%d件",
 })
 

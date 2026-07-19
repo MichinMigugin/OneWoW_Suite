@@ -271,7 +271,10 @@ local function AcquireListRow()
     row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
     row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     row.label = OneWoW_GUI:CreateFS(row, 12)
-    row.label:SetPoint("LEFT", row, "LEFT", 8, 0)
+    row.statusDot = row:CreateTexture(nil, "ARTWORK")
+    row.statusDot:SetSize(7, 7)
+    row.statusDot:SetPoint("LEFT", row, "LEFT", 8, 0)
+    row.label:SetPoint("LEFT", row.statusDot, "RIGHT", 6, 0)
     row:SetScript("OnClick", function(myself)
         selectedId = myself.shipmentId
         ShipmentsUI:Refresh()
@@ -299,16 +302,16 @@ local function RefreshList()
         else
             row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
         end
+        -- Mode status: texture (not Unicode ●/○ — theme fonts like Poppins lack those glyphs).
         local mode = s.mode or "manual"
-        local mark
         if mode == "auto" then
-            mark = "|cff00ff00●|r " -- runs on mailbox open
+            row.statusDot:SetColorTexture(0, 1, 0, 1)
         elseif mode == "auto_preview" then
-            mark = "|cffffd100●|r " -- held for review on mailbox open
+            row.statusDot:SetColorTexture(1, 0.82, 0, 1)
         else
-            mark = "|cff888888○|r " -- manual only
+            row.statusDot:SetColorTexture(0.53, 0.53, 0.53, 1)
         end
-        row.label:SetText(mark .. (s.name or s.id))
+        row.label:SetText(s.name or s.id)
         y = y + 30
     end
     listChild:SetHeight(math.max(1, y))
@@ -1052,25 +1055,20 @@ local function EnsureDetailWidgets()
             local name = target or "?"
             local short = strsplit("-", name, 2)
             if roleLabel then
-                return string.format("%s → %s", roleLabel, short or name)
+                return string.format("%s >> %s", roleLabel, short or name)
             end
             return short or name
         end
-        -- GameTooltip fonts often lack the Unicode arrow used in list rows.
-        local function TipTitle(who)
-            return (who or ""):gsub("→", "->")
-        end
         for _, plan in ipairs(result.plans) do
             local who = TargetLabel(plan.target)
-            local tipWho = TipTitle(who)
             local hadEntry = false
             for _, entry in ipairs(plan.entries or {}) do
                 hadEntry = true
                 if entry.money then
                     local amount = OneWoW.Format.FormatGold(entry.money)
                     tinsert(rows, {
-                        text = string.format("%s  ·  %s", who, amount),
-                        tipTitle = tipWho,
+                        text = string.format("%s  |  %s", who, amount),
+                        tipTitle = who,
                         tipBody = amount,
                     })
                 else
@@ -1086,8 +1084,8 @@ local function EnsureDetailWidgets()
                     )
                     local amount = string.format("%s x%d", colored, entry.quantity)
                     tinsert(rows, {
-                        text = string.format("%s  ·  %s", who, amount),
-                        tipTitle = tipWho,
+                        text = string.format("%s  |  %s", who, amount),
+                        tipTitle = who,
                         tipBody = string.format("%s x%d", name, entry.quantity),
                     })
                 end
@@ -1100,8 +1098,8 @@ local function EnsureDetailWidgets()
                     tipBody = tipBody .. "\n" .. plan.skipDetail
                 end
                 tinsert(rows, {
-                    text = string.format("%s  ·  %s", who, L[shortKey]),
-                    tipTitle = tipWho,
+                    text = string.format("%s  |  %s", who, L[shortKey]),
+                    tipTitle = who,
                     tipBody = tipBody,
                 })
             end

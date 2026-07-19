@@ -163,9 +163,9 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["LOG_MIRROR_CHAT"] = "También enviar registros al chat",
     ["TT_LOG_MIRROR_CHAT"] = "Si está marcado, las líneas de información y aviso del registro de Actividad también se muestran en el chat. Los errores siempre se muestran.",
     ["LOG_COLLECT_MAIL"] = "Recogido: %s",
-    ["LOG_COLLECT_SUMMARY"] = "Recogida terminada — %s · %d objeto(s) de %d correo(s).",
+    ["LOG_COLLECT_SUMMARY"] = "Recogida terminada — %s | %d objeto(s) de %d correo(s).",
     ["LOG_SEND_OK"] = "Enviado: %s",
-    ["LOG_SEND_SUMMARY"] = "Envío terminado — %d correo(s) · %s · %d objeto(s).",
+    ["LOG_SEND_SUMMARY"] = "Envío terminado — %d correo(s) | %s | %d objeto(s).",
     ["LOG_LOOT_MORE"] = " +%d más",
 })
 

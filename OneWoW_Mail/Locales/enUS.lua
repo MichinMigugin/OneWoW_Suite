@@ -174,9 +174,9 @@ ns.L = OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["LOG_MIRROR_CHAT"] = "Also send logs to chat",
     ["TT_LOG_MIRROR_CHAT"] = "When checked, info and warning Activity log lines also print to chat. Errors always print.",
     ["LOG_COLLECT_MAIL"] = "Collected %s",
-    ["LOG_COLLECT_SUMMARY"] = "Collect done — %s · %d item(s) from %d mail(s).",
+    ["LOG_COLLECT_SUMMARY"] = "Collect done — %s | %d item(s) from %d mail(s).",
     ["LOG_SEND_OK"] = "Sent %s",
-    ["LOG_SEND_SUMMARY"] = "Send done — %d mail(s) · %s · %d item(s).",
+    ["LOG_SEND_SUMMARY"] = "Send done — %d mail(s) | %s | %d item(s).",
     ["LOG_LOOT_MORE"] = " +%d more",
 })
 
