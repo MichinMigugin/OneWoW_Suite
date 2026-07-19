@@ -195,6 +195,9 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
         end
     end
 
+    -- Forward-declared: Refresh grows the pool; createPoolRow is wired below.
+    local ensureRowPool
+
     local function updateVisibleRows()
         local n = getCount()
         local scroll = scrollFrame:GetVerticalScroll()
@@ -241,6 +244,9 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
         if not scrollFrame or not content then
             return
         end
+        -- Adopted scrolls may already be sized when CreateVirtualizer runs, so
+        -- OnSizeChanged alone never grows past the initial numVisibleRows seed.
+        ensureRowPool()
         local n = getCount()
         if n <= 0 then
             state.selectedIndex = nil
@@ -371,7 +377,7 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
         return row
     end
 
-    local function ensureRowPool()
+    ensureRowPool = function()
         local viewH = scrollFrame:GetHeight()
         if viewH <= 0 then
             return
@@ -402,6 +408,10 @@ function OneWoW_GUI:CreateVirtualizer(parent, options)
         createPoolRow()
     end
 
+    -- First layout pass: adopted scrolls are often already sized, so the
+    -- OnSizeChanged hook above may never fire until the next resize.
+    ensureRowPool()
+    Refresh()
     -- Owned scrolls: replace OnVerticalScroll. Adopted (e.g. CreateSplitPanel):
     -- hook so we do not clobber any pre-existing handler.
     if ownedScroll then

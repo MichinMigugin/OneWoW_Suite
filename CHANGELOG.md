@@ -56,6 +56,12 @@
 
 ---
 
+# Notes
+## Fixes
+- Virtualized lists fill the full panel height when they adopt an already-sized scroll frame (e.g. AltTracker Auctions / Financials)
+
+---
+
 # Catalog
 ## Item Search
 - Result list uses the shared virtualized list (scrolls large result sets without building every row)
@@ -82,6 +88,7 @@
 
 ## Auctions
 - Status bar now shows auction/row count instead of mislabeling it as characters tracked
+- Auction list (including History) uses the shared virtualized list so large histories scroll without freezing
 
 ## Financials
 - Each gold event is stored as its own ledger row (no more merging same-category mail or other activity within a few minutes)
