@@ -108,8 +108,9 @@
 # QoL
 ## Fixes
 - AFK Panel no longer clears the minimap mail icon when you return from Away
-- Tooltips wait until item data is loaded before adding OneWoW lines (no more stuck "Retrieving item information" on vendors like Magovu)
+- Tooltips wait until item data is fully ready before adding OneWoW lines (avoids stuck "Retrieving item information" on multi-currency vendors; secret name lines require a filled tooltip, not just an item id)
 - Vendor Panel: turning the module off stops merchant-frame updates without a reload; closing a vendor no longer forces an extra merchant redraw
+- Vendor Panel: known-item dim reapplies after the side panel opens (no longer stuck bright until toggle/reopen)
 
 ---
 

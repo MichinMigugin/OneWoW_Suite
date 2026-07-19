@@ -217,45 +217,26 @@ local function GetPreferredArmor()
     return CLASS_ARMOR[state.playerClass]
 end
 
+-- Known = collected (mounts/pets/toys/recipes/decor/transmog) or ITEM_SPELL_KNOWN.
+-- Prefer Collectibles over a live GameTooltip scan: SetHyperlink often returns
+-- before "Already Known" is filled on first merchant open.
 local function IsAlreadyKnown(itemLink)
     if not itemLink then return false end
 
     local itemID = tonumber(itemLink:match("item:(%d+)"))
-    if itemID then
-        if OneWoW.PredicateEngine:IsRecipeItem(itemID, nil, nil, itemLink) then
-            local Util = OneWoW.RecipeKnownUtil
-            if Util then
-                local result = Util:IsRecipeKnown(itemID, { hyperlink = itemLink })
-                if result ~= nil then return result end
-            end
-        end
+    if not itemID then return false end
+
+    local status = OneWoW.Collectibles.GetItemCollectionStatus(itemID, itemLink, { hyperlink = itemLink })
+    if status and status.collected then
+        return true
     end
 
-    if not _G["OneWoW_QoL_VendorKnownScanner"] then
-        CreateFrame("GameTooltip", "OneWoW_QoL_VendorKnownScanner", nil, "GameTooltipTemplate")
+    local Scanner = OneWoW.TooltipScanner
+    local td = Scanner:GetHyperlinkData(itemLink)
+    if Scanner:IsAlreadyKnown(td) then
+        return true
     end
-    local scanner = _G["OneWoW_QoL_VendorKnownScanner"]
-    scanner:SetOwner(WorldFrame, "ANCHOR_NONE")
-    scanner:ClearLines()
-    scanner:SetHyperlink(itemLink)
-    for i = 1, scanner:NumLines() do
-        local line = _G["OneWoW_QoL_VendorKnownScannerTextLeft" .. i]
-        if line and line:GetText() then
-            local text = line:GetText()
-            local lower = text:lower()
-            if text == ITEM_SPELL_KNOWN then return true end
-            if lower:find("already known") then return true end
-            if IsDecorItem(itemLink) then
-                if text:find("Owned", 1, true) then return true end
-            end
-            local currentCount, maxCount = text:match("^Collected %((%d+)/(%d+)%)$")
-            if currentCount and maxCount then
-                currentCount = tonumber(currentCount)
-                return currentCount and currentCount > 0
-            end
-        end
-    end
-    return false
+    return Scanner:IsAlreadyKnownText(Scanner:GetHyperlinkText(itemLink))
 end
 
 local function GetProfessionFromTooltip(itemLink)
@@ -751,21 +732,37 @@ end
 --- items in place. No repagination.
 function VendorPanel:FadeMerchantGrid()
     local preferredArmor = GetPreferredArmor()
+    local missingLink = false
+    local numItems = GetMerchantNumItems() or 0
     for i = 1, MERCHANT_ITEMS_PER_PAGE do
         local button = _G["MerchantItem" .. i]
+        local itemButton = _G["MerchantItem" .. i .. "ItemButton"]
         local index = i + (MerchantFrame.page - 1) * MERCHANT_ITEMS_PER_PAGE
         local itemLink = GetMerchantItemLink(index)
-        if button and itemLink then
-            local matches = ComputeFilterMatch(itemLink, preferredArmor)
-            button:Show()
-            if matches then
-                local known = state.dimKnownItems and IsAlreadyKnown(itemLink)
-                button:SetAlpha(known and 0.2 or 1.0)
-                if button.icon then button.icon:SetDesaturated(known and true or false) end
+        if button then
+            if not itemLink then
+                if index <= numItems then
+                    missingLink = true
+                end
             else
-                button:SetAlpha(0.4)
-                if button.icon then button.icon:SetDesaturated(true) end
+                local matches = ComputeFilterMatch(itemLink, preferredArmor)
+                button:Show()
+                if matches then
+                    local known = state.dimKnownItems and IsAlreadyKnown(itemLink)
+                    button:SetAlpha(known and 0.2 or 1.0)
+                    if itemButton then SetItemButtonDesaturated(itemButton, known and true or false) end
+                else
+                    button:SetAlpha(0.4)
+                    if itemButton then SetItemButtonDesaturated(itemButton, true) end
+                end
             end
+        end
+    end
+    if missingLink then
+        local retries = (state._merchantLinkRetries or 0) + 1
+        state._merchantLinkRetries = retries
+        if retries <= 3 then
+            self:ScheduleMerchantGridRefresh(0.25)
         end
     end
 end
@@ -838,6 +835,27 @@ local function DispatchMerchantGridUpdate()
     else
         VendorPanel:FadeMerchantGrid()
     end
+end
+
+--- Re-apply fade/dim/repagination after the side panel is shown (or when
+--- merchant links finish loading). DispatchMerchantGridUpdate no-ops until the
+--- panel reports shown, so UpdatePreviewPanel must call this after Show.
+function VendorPanel:RefreshMerchantGrid()
+    if not IsMerchantWorkAllowed() then return end
+    DispatchMerchantGridUpdate()
+end
+
+--- Deferred grid refresh (cancels any prior pending timer).
+---@param delay number|nil
+function VendorPanel:ScheduleMerchantGridRefresh(delay)
+    if state._merchantGridRetry then
+        state._merchantGridRetry:Cancel()
+        state._merchantGridRetry = nil
+    end
+    state._merchantGridRetry = C_Timer.NewTimer(delay or 0.35, function()
+        state._merchantGridRetry = nil
+        VendorPanel:RefreshMerchantGrid()
+    end)
 end
 
 function VendorPanel:IsItemInNeverSellList(itemID)
@@ -1715,6 +1733,8 @@ function VendorPanel:OnMerchantShow()
     local settings = GetSettings()
     state.showAllArmor = settings.showAllArmor or false
     state.dimKnownItems = settings.dimKnownItems or false
+    state._merchantLinkRetries = 0
+    state._knownDimRetryScheduled = false
 
     if not state.vendorButton then
         self:CreateVendorButton()
@@ -1769,6 +1789,7 @@ end
 function VendorPanel:OnMerchantClosed()
     self:StopUpdates()
     if state._buttonRetry then state._buttonRetry:Cancel(); state._buttonRetry = nil end
+    if state._merchantGridRetry then state._merchantGridRetry:Cancel(); state._merchantGridRetry = nil end
     if state.activeSellTicker then state.activeSellTicker:Cancel(); state.activeSellTicker = nil end
     if state.activeSellConfirmTicker then state.activeSellConfirmTicker:Cancel(); state.activeSellConfirmTicker = nil end
     state.vendorSellSeq = (state.vendorSellSeq or 0) + 1

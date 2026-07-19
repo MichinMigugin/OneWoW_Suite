@@ -83,29 +83,31 @@ end
 -- Stand down while Blizzard still shows RETRIEVING_ITEM_INFO (or cache miss).
 -- Decorating that placeholder (providers + AddLine) can leave merchant tooltips
 -- stuck on Retrieving forever; TooltipDataProcessor re-fires once data lands.
+-- Secret first-line text cannot be compared to RETRIEVING_ITEM_INFO; require a
+-- cached itemID plus a multi-line tooltip so mid-retrieve stubs are skipped
+-- without permanently blocking finished instanced-bag tooltips.
 ---@param tooltip GameTooltip
 ---@param itemID number|nil
 ---@return boolean
 local function IsItemTooltipReady(tooltip, itemID)
-    if itemID and not C_Item.IsItemDataCachedByID(itemID) then
+    if not itemID or not C_Item.IsItemDataCachedByID(itemID) then
         return false
     end
     if not tooltip or not tooltip.GetName or not tooltip.NumLines then
-        return true
+        return false
     end
     local tipName = tooltip:GetName()
-    if not tipName or tooltip:NumLines() < 1 then
-        return true
+    local numLines = tooltip:NumLines()
+    if not tipName or numLines < 1 then
+        return false
     end
     local line = _G[tipName .. "TextLeft1"]
     local text = line and line:GetText()
     if not text then
-        return true
+        return false
     end
-    -- Line text can be secret (instanced bags / restricted tooltips); comparing
-    -- it to RETRIEVING_ITEM_INFO throws. Cache check above is the gate then.
     if ns.Restriction.IsSecret(text) then
-        return itemID ~= nil
+        return numLines >= 2
     end
     return text ~= RETRIEVING_ITEM_INFO
 end

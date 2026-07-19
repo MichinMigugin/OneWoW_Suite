@@ -1795,6 +1795,19 @@ function VendorPanel:UpdatePreviewPanel()
 
     state.junkPreviewPanel:Show()
     self:ManageBlizzardSellButton(true)
+    -- MerchantFrame_Update often runs before this Show; re-apply fade/dim now
+    -- that the panel is visible (DispatchMerchantGridUpdate requires IsShown).
+    self:RefreshMerchantGrid()
+    if (state.dimKnownItems or GetSettings().hideKnownEntirely) and not state._knownDimRetryScheduled then
+        -- Recipe / collectible known checks can miss on cold tooltip data.
+        -- Separate from ScheduleMerchantGridRefresh so link-load retries are not cancelled.
+        state._knownDimRetryScheduled = true
+        C_Timer.After(0.4, function()
+            if not state.moduleActive then return end
+            if not OneWoW.Merchant.IsMerchantOpen() then return end
+            self:RefreshMerchantGrid()
+        end)
+    end
 
     local scrollChild = state.junkPreviewPanel.scrollChild
     for _, child in ipairs({scrollChild:GetChildren()}) do child:Hide(); child:SetParent(nil) end
