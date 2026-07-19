@@ -300,6 +300,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ITEMSEARCH_DETAIL_TITLE"] = "아이템 상세",
     ["ITEMSEARCH_SELECT"] = "아이템을 선택하면 상세 정보를 볼 수 있습니다.",
     ["ITEMSEARCH_RESULTS"] = "결과 %d개",
+    ["ITEMSEARCH_LOADING"] = "불러오는 중… %d",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "아이템 %d개 탐색 중",
     ["ITEMSEARCH_MIN_CHARS"] = "검색하려면 글자를 2자 이상 입력하세요.",
     ["ITEMSEARCH_NOTICE"] = "상인, 인스턴스 보스 전리품, 가방 등에서 얻을 수 있는 아이템을 보여줍니다. 직접 소유한 아이템만이 아니라, 본 적이 있거나 전리로 알려진 모든 아이템이 포함됩니다.",

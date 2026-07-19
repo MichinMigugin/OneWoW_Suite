@@ -1083,6 +1083,32 @@ list.SetSelectedIndex(1)
   hooks `OnVerticalScroll` rather than replacing it. Catalog Item Search is the
   reference consumer.
 
+### Chunked jobs (large data walks)
+
+For building or filtering very large result sets without hitching the client, use
+`OneWoW.ChunkedJob` (`Services/ChunkedJob.lua`) — a time-budgeted coroutine runner
+(`budgetMs`, default 8). Pair with a virtualized list: the job fills the data
+array progressively; the virtualizer paints only visible rows.
+
+```lua
+local job = OneWoW.ChunkedJob.Start({
+    budgetMs = 8,
+    run = function(shouldYield)
+        for i = 1, n do
+            doWork(i)
+            OneWoW.ChunkedJob.YieldIfNeeded(shouldYield)
+        end
+        -- Large in-place sorts: OneWoW.ChunkedJob.Sort(arr, cmp, shouldYield)
+    end,
+    onProgress = function() list.Refresh() end,
+    onComplete = function() ... end,
+})
+job:Cancel()
+```
+
+Catalog Item Search (`StartQuery`) is the first consumer. DevTool SoundBrowser’s
+hand-rolled ticker search is a candidate to migrate later.
+
 Returns: `listPanel`, `listScroll`, `listContent`, `Refresh`, `SetSelectedIndex`,
 `GetSelectedIndex`, `ownedScroll`.
 

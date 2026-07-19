@@ -626,70 +626,31 @@ ShowItemDetail = function(result)
     child:SetHeight(math.abs(yOffset) + 20)
 end
 
-RefreshItemList = function()
-    if not panels or not listAPI then
+local function ApplyFavoritesOrder(results, shouldYield)
+    if not (ns.Favorites and #results > 0) then
         return
     end
-
-    wipe(listResults)
-    panels.listScrollFrame:SetVerticalScroll(0)
-
-    if not ns.ItemSearch then
-        panels.listScrollChild:SetHeight(100)
-        listAPI.Refresh()
-        if emptyList then
-            emptyList:SetText(L["ITEMSEARCH_EMPTY"])
-            emptyList:Show()
+    local origOrder = {}
+    for i, r in ipairs(results) do
+        if r.itemID then
+            origOrder[tostring(r.itemID)] = i
         end
-        if panels.leftStatusText then
-            panels.leftStatusText:SetText("")
+    end
+    OneWoW.ChunkedJob.Sort(results, function(a, b)
+        local fa = ns.Favorites:IsFavorite("itemSearch", a.itemID)
+        local fb = ns.Favorites:IsFavorite("itemSearch", b.itemID)
+        if fa ~= fb then
+            return fa
         end
+        local oa = a.itemID and origOrder[tostring(a.itemID)] or 0
+        local ob = b.itemID and origOrder[tostring(b.itemID)] or 0
+        return oa < ob
+    end, shouldYield)
+end
+
+local function SyncListSelectionAndStatus(hasFilter, loading)
+    if not listAPI then
         return
-    end
-
-    -- Single path: a <2 char term browses all available sources; >=2 filters.
-    local hasFilter = #currentSearch >= 2
-    local results = ns.ItemSearch:Query(currentSearch, currentSource)
-
-    if not results or #results == 0 then
-        panels.listScrollChild:SetHeight(100)
-        listAPI.SetSelectedIndex(nil)
-        listAPI.Refresh()
-        if emptyList then
-            emptyList:SetText(hasFilter and L["ITEMSEARCH_NO_RESULTS"] or L["ITEMSEARCH_EMPTY"])
-            emptyList:Show()
-        end
-        if panels.leftStatusText then
-            panels.leftStatusText:SetText("")
-        end
-        return
-    end
-
-    if emptyList then
-        emptyList:Hide()
-    end
-
-    if ns.Favorites and #results > 0 then
-        local origOrder = {}
-        for i, r in ipairs(results) do
-            if r.itemID then
-                origOrder[tostring(r.itemID)] = i
-            end
-        end
-        sort(results, function(a, b)
-            local fa = ns.Favorites:IsFavorite("itemSearch", a.itemID)
-            local fb = ns.Favorites:IsFavorite("itemSearch", b.itemID)
-            if fa ~= fb then
-                return fa
-            end
-            local oa = a.itemID and origOrder[tostring(a.itemID)] or 0
-            local ob = b.itemID and origOrder[tostring(b.itemID)] or 0
-            return oa < ob
-        end)
-    end
-
-    for _, result in ipairs(results) do
-        tinsert(listResults, result)
     end
 
     local keepSelection = nil
@@ -711,17 +672,98 @@ RefreshItemList = function()
 
     if panels.leftStatusText then
         local n = #listResults
-        if not hasFilter then
+        if loading then
+            panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_LOADING"], n))
+        elseif n == 0 then
+            panels.leftStatusText:SetText("")
+        elseif not hasFilter then
             panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_BROWSE_DEFAULT"], n))
         else
             panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_RESULTS"], n))
         end
     end
+end
 
-    local exactItemID = hasFilter and tonumber(currentSearch) or nil
-    if exactItemID and not selectedItem then
-        SelectVisibleItemResult(exactItemID)
+RefreshItemList = function()
+    if not panels or not listAPI then
+        return
     end
+
+    wipe(listResults)
+    panels.listScrollFrame:SetVerticalScroll(0)
+    listAPI.SetSelectedIndex(nil)
+    listAPI.Refresh()
+
+    if not ns.ItemSearch then
+        panels.listScrollChild:SetHeight(100)
+        if emptyList then
+            emptyList:SetText(L["ITEMSEARCH_EMPTY"])
+            emptyList:Show()
+        end
+        if panels.leftStatusText then
+            panels.leftStatusText:SetText("")
+        end
+        return
+    end
+
+    -- Single path: a <2 char term browses all available sources; >=2 filters.
+    local hasFilter = #currentSearch >= 2
+
+    if emptyList then
+        emptyList:SetText(hasFilter and L["ITEMSEARCH_NO_RESULTS"] or L["ITEMSEARCH_EMPTY"])
+        emptyList:Show()
+    end
+    if panels.leftStatusText then
+        panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_LOADING"], 0))
+    end
+
+    ns.ItemSearch:StartQuery(currentSearch, currentSource, listResults, {
+        finalize = function(results, shouldYield)
+            ApplyFavoritesOrder(results, shouldYield)
+        end,
+        onProgress = function()
+            if not panels or not listAPI then
+                return
+            end
+            if #listResults > 0 and emptyList then
+                emptyList:Hide()
+            end
+            listAPI.Refresh()
+            if panels.leftStatusText then
+                panels.leftStatusText:SetText(string.format(L["ITEMSEARCH_LOADING"], #listResults))
+            end
+        end,
+        onComplete = function()
+            if not panels or not listAPI then
+                return
+            end
+
+            if #listResults == 0 then
+                panels.listScrollChild:SetHeight(100)
+                listAPI.SetSelectedIndex(nil)
+                listAPI.Refresh()
+                if emptyList then
+                    emptyList:SetText(hasFilter and L["ITEMSEARCH_NO_RESULTS"] or L["ITEMSEARCH_EMPTY"])
+                    emptyList:Show()
+                end
+                if panels.leftStatusText then
+                    panels.leftStatusText:SetText("")
+                end
+                return
+            end
+
+            if emptyList then
+                emptyList:Hide()
+            end
+
+            SyncListSelectionAndStatus(hasFilter, false)
+
+            local exactItemID = hasFilter and tonumber(currentSearch) or nil
+            if exactItemID and not selectedItem then
+                SelectVisibleItemResult(exactItemID)
+            end
+        end,
+    })
 end
 
 function ns.UI.CreateItemSearchTab(parent)

@@ -301,6 +301,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ITEMSEARCH_DETAIL_TITLE"] = "Item Details",
     ["ITEMSEARCH_SELECT"] = "Select an item to view details.",
     ["ITEMSEARCH_RESULTS"] = "%d results",
+    ["ITEMSEARCH_LOADING"] = "Loading… %d",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "Browsing %d items",
     ["ITEMSEARCH_MIN_CHARS"] = "Type at least 2 characters to search.",
     ["ITEMSEARCH_NOTICE"] = "Shows items from vendors, instance boss drops, inventories and more. These are not just items you own; they are all items you have seen or that are known to drop.",

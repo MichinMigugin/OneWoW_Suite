@@ -302,6 +302,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["ITEMSEARCH_DETAIL_TITLE"] = "Dettagli dell'oggetto",
     ["ITEMSEARCH_SELECT"] = "Seleziona un oggetto per vedere i dettagli.",
     ["ITEMSEARCH_RESULTS"] = "%d risultati",
+    ["ITEMSEARCH_LOADING"] = "Caricamento… %d",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "Esplorazione di %d oggetti",
     ["ITEMSEARCH_MIN_CHARS"] = "Digita almeno 2 caratteri per cercare.",
     ["ITEMSEARCH_NOTICE"] = "Mostra oggetti da venditori, bottino dei boss delle istanze, inventari e altro. Non sono solo gli oggetti che possiedi; sono tutti gli oggetti che hai visto o che è noto rilascino.",

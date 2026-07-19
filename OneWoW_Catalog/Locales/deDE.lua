@@ -302,6 +302,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ITEMSEARCH_DETAIL_TITLE"] = "Gegenstandsdetails",
     ["ITEMSEARCH_SELECT"] = "Wählt einen Gegenstand, um Details anzuzeigen.",
     ["ITEMSEARCH_RESULTS"] = "%d Ergebnisse",
+    ["ITEMSEARCH_LOADING"] = "Lade… %d",
     ["ITEMSEARCH_BROWSE_DEFAULT"] = "Durchsuche %d Gegenstände",
     ["ITEMSEARCH_MIN_CHARS"] = "Gebt mindestens 2 Zeichen zum Suchen ein.",
     ["ITEMSEARCH_NOTICE"] = "Zeigt Gegenstände von Händlern, Bossbeute aus Instanzen, Inventaren und mehr. Es sind nicht nur Gegenstände, die ihr besitzt; es sind alle Gegenstände, die ihr gesehen habt oder die bekanntermaßen droppen.",

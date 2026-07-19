@@ -1,7 +1,7 @@
 local _, ns = ...
 
 local pairs, ipairs = pairs, ipairs
-local tinsert, sort = tinsert, sort
+local tinsert, sort, wipe = tinsert, sort, wipe
 local C_Item, C_TradeSkillUI = C_Item, C_TradeSkillUI
 
 ns.ItemSearch = {}
@@ -99,11 +99,12 @@ local LOC_TYPE_TO_LABEL = {
 -- Gather + normalization the AltTracker Items/Bank tabs use) so the traversal
 -- lives in exactly one place. We only aggregate the normalized instances by
 -- itemID into the { total, name, locations } shape those views expect.
-local function GetOwnedItems()
+local function GetOwnedItems(shouldYield)
     local owned = {}
     local storageAPI = OneWoW_AltTracker_Storage_API
     if not storageAPI or not storageAPI.Gather then return owned end
 
+    local YieldIfNeeded = OneWoW.ChunkedJob.YieldIfNeeded
     local instances = storageAPI.Gather({
         chars = "all",
         containers = { bags = true, personal = true, warband = true, guild = true, mail = true, auction = true },
@@ -146,6 +147,7 @@ local function GetOwnedItems()
 
             tinsert(rec.locations, { charName = charName, locLabel = locLabel, count = count })
         end
+        YieldIfNeeded(shouldYield)
     end
 
     return owned
@@ -182,14 +184,20 @@ ItemSearch.SOURCE_ADDONS = {
     "OneWoW_AltTracker_Storage",
 }
 
-function ItemSearch:Query(searchTerm, sourceFilter)
+-- Fill `results` (array) from sources. `shouldYield` is optional; when provided
+-- (ChunkedJob), YieldIfNeeded is called after each candidate so large walks
+-- stay off the hitch path. When omitted / always-false, this is synchronous.
+local function BuildQueryResults(self, searchTerm, sourceFilter, results, shouldYield)
+    wipe(results)
+    local yieldCheck = shouldYield or function() return false end
+    local YieldIfNeeded = OneWoW.ChunkedJob.YieldIfNeeded
+
     -- A nil or <2 char term means "no text filter": browse every available source.
     -- An empty Lua pattern still matches every name via string.find(s, "", 1, true),
     -- so the source loops below work unchanged for the browse case.
     local hasFilter = searchTerm ~= nil and #searchTerm >= 2
     local term = hasFilter and searchTerm:lower() or ""
     local exactItemID = hasFilter and tonumber(searchTerm) or nil
-    local results = {}
     local resultMap = {}
     local count = 0
 
@@ -244,6 +252,7 @@ function ItemSearch:Query(searchTerm, sourceFilter)
         if resultMap[exactItemID] then
             results[resultMap[exactItemID]].isExactMatch = true
         end
+        YieldIfNeeded(yieldCheck)
     end
 
     if doJournal then
@@ -254,11 +263,16 @@ function ItemSearch:Query(searchTerm, sourceFilter)
                     if idata.name and idata.name:lower():find(term, 1, true) then
                         addOrAnnotate(itemID, idata.name, idata.icon, idata.quality, "isJournal")
                     end
+                    YieldIfNeeded(yieldCheck)
                 end
             end
         end
     end
 
+    -- Secondary sources: most itemIDs already exist from the journal walk.
+    -- Annotate those without GetItemNameByID (that call was the post-26k stall).
+    -- Browse (no text filter) can add unknowns with instant icon only; the list
+    -- row loader fills the name asynchronously. Filtered walks still need a name.
     if doVendors then
         local vendorsAPI = OneWoW_CatalogData_Vendors_API
         local vendors = vendorsAPI and vendorsAPI.GetAllVendors()
@@ -266,10 +280,18 @@ function ItemSearch:Query(searchTerm, sourceFilter)
             for _, vendor in pairs(vendors) do
                 if vendor.items then
                     for itemID in pairs(vendor.items) do
-                        local itemName = C_Item.GetItemNameByID(itemID)
-                        if itemName and itemName:lower():find(term, 1, true) then
-                            addOrAnnotate(itemID, itemName, nil, nil, "isVendor")
+                        if resultMap[itemID] then
+                            results[resultMap[itemID]].isVendor = true
+                        elseif not hasFilter then
+                            local _, _, _, _, icon = C_Item.GetItemInfoInstant(itemID)
+                            addOrAnnotate(itemID, nil, icon, nil, "isVendor")
+                        else
+                            local itemName = C_Item.GetItemNameByID(itemID)
+                            if itemName and itemName:lower():find(term, 1, true) then
+                                addOrAnnotate(itemID, itemName, nil, nil, "isVendor")
+                            end
                         end
+                        YieldIfNeeded(yieldCheck)
                     end
                 end
             end
@@ -281,12 +303,21 @@ function ItemSearch:Query(searchTerm, sourceFilter)
             local data = _G["OneWoWTradeskills_" .. profName]
             if data and data.r then
                 for _, recipe in pairs(data.r) do
-                    if recipe.item and recipe.item > 0 then
-                        local itemName = C_Item.GetItemNameByID(recipe.item)
-                        if itemName and itemName:lower():find(term, 1, true) then
-                            addOrAnnotate(recipe.item, itemName, nil, nil, "isCrafted")
+                    local itemID = recipe.item
+                    if itemID and itemID > 0 then
+                        if resultMap[itemID] then
+                            results[resultMap[itemID]].isCrafted = true
+                        elseif not hasFilter then
+                            local _, _, _, _, icon = C_Item.GetItemInfoInstant(itemID)
+                            addOrAnnotate(itemID, nil, icon, nil, "isCrafted")
+                        else
+                            local itemName = C_Item.GetItemNameByID(itemID)
+                            if itemName and itemName:lower():find(term, 1, true) then
+                                addOrAnnotate(itemID, itemName, nil, nil, "isCrafted")
+                            end
                         end
                     end
+                    YieldIfNeeded(yieldCheck)
                 end
             end
         end
@@ -296,24 +327,42 @@ function ItemSearch:Query(searchTerm, sourceFilter)
         local questAddon = OneWoW_CatalogData_Quests_API
         if questAddon then
             for _, itemID in ipairs(questAddon.GetRewardItemIDs()) do
-                local itemName = C_Item.GetItemNameByID(itemID)
-                if itemName and itemName:lower():find(term, 1, true) then
-                    addOrAnnotate(itemID, itemName, nil, nil, "isQuestReward")
+                if resultMap[itemID] then
+                    results[resultMap[itemID]].isQuestReward = true
+                elseif not hasFilter then
+                    local _, _, _, _, icon = C_Item.GetItemInfoInstant(itemID)
+                    addOrAnnotate(itemID, nil, icon, nil, "isQuestReward")
+                else
+                    local itemName = C_Item.GetItemNameByID(itemID)
+                    if itemName and itemName:lower():find(term, 1, true) then
+                        addOrAnnotate(itemID, itemName, nil, nil, "isQuestReward")
+                    end
                 end
+                YieldIfNeeded(yieldCheck)
             end
         end
     end
 
-    local ownedMap = GetOwnedItems()
+    -- Force a slice boundary before Storage.Gather so the UI can paint journal
+    -- results; Gather itself is still one sync call (no internal yield points).
+    if shouldYield then
+        coroutine.yield()
+    end
+    local ownedMap = GetOwnedItems(yieldCheck)
 
     if doOwned then
         for itemID, od in pairs(ownedMap) do
-            -- Prefer the name persisted at scan time so owned items match offline;
-            -- fall back to the live cache only when no stored name exists.
-            local itemName = od.name or C_Item.GetItemNameByID(itemID)
-            if itemName and itemName:lower():find(term, 1, true) then
-                addOrAnnotate(itemID, itemName, nil, nil, "isOwned")
+            if resultMap[itemID] then
+                results[resultMap[itemID]].isOwned = true
+            else
+                -- Prefer the name persisted at scan time so owned items match offline;
+                -- fall back to the live cache only when no stored name exists.
+                local itemName = od.name or C_Item.GetItemNameByID(itemID)
+                if not hasFilter or (itemName and itemName:lower():find(term, 1, true)) then
+                    addOrAnnotate(itemID, itemName, nil, nil, "isOwned")
+                end
             end
+            YieldIfNeeded(yieldCheck)
         end
     end
 
@@ -323,15 +372,75 @@ function ItemSearch:Query(searchTerm, sourceFilter)
             entry.ownedCount = od.total
             entry.isOwned = true
         end
+        YieldIfNeeded(yieldCheck)
     end
 
-    sort(results, function(a, b)
+    OneWoW.ChunkedJob.Sort(results, function(a, b)
         if a.ownedCount > 0 and b.ownedCount == 0 then return true end
         if a.ownedCount == 0 and b.ownedCount > 0 then return false end
         return (a.name or "") < (b.name or "")
-    end)
+    end, shouldYield)
+end
 
+--- Synchronous query (small callers / tests). Prefer StartQuery for UI walks.
+function ItemSearch:Query(searchTerm, sourceFilter)
+    local results = {}
+    BuildQueryResults(self, searchTerm, sourceFilter, results, nil)
     return results
+end
+
+function ItemSearch:CancelQuery()
+    if self._queryJob then
+        self._queryJob:Cancel()
+        self._queryJob = nil
+    end
+end
+
+--- Time-sliced query into `outResults` (mutated in place). Cancels any prior job.
+---@param searchTerm string|nil
+---@param sourceFilter string|nil
+---@param outResults table
+---@param opts table|nil { onProgress, onComplete, onCancel, finalize, budgetMs }
+--- finalize(results, shouldYield) runs inside the job after the walk (e.g. favorites).
+---@return table jobHandle
+function ItemSearch:StartQuery(searchTerm, sourceFilter, outResults, opts)
+    opts = opts or {}
+    if type(outResults) ~= "table" then
+        error("ItemSearch:StartQuery requires an outResults table", 2)
+    end
+
+    self:CancelQuery()
+    wipe(outResults)
+
+    local job
+    job = OneWoW.ChunkedJob.Start({
+        budgetMs = opts.budgetMs,
+        run = function(shouldYield)
+            BuildQueryResults(self, searchTerm, sourceFilter, outResults, shouldYield)
+            if opts.finalize then
+                opts.finalize(outResults, shouldYield)
+            end
+        end,
+        onProgress = opts.onProgress,
+        onComplete = function()
+            if self._queryJob == job then
+                self._queryJob = nil
+            end
+            if opts.onComplete then
+                opts.onComplete(outResults)
+            end
+        end,
+        onCancel = function()
+            if self._queryJob == job then
+                self._queryJob = nil
+            end
+            if opts.onCancel then
+                opts.onCancel()
+            end
+        end,
+    })
+    self._queryJob = job
+    return job
 end
 
 function ItemSearch:GetDetail(itemID)

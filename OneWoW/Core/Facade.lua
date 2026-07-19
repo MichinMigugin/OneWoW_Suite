@@ -43,6 +43,7 @@ local SERVICE_KEYS = {
     "Disenchant",
     "AltScope",
     "ItemLevel",
+    "ChunkedJob",
 }
 
 for _, key in ipairs(SERVICE_KEYS) do
