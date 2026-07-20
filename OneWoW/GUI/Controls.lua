@@ -493,7 +493,8 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                 txt:SetPoint("LEFT", btn, "LEFT", 8, 0)
                 txt:SetPoint("RIGHT", btn, "RIGHT", -4, 0)
                 txt:SetJustifyH("LEFT")
-                txt:SetText(item.text)
+                local label = item.text or item.value or ""
+                txt:SetText(label)
                 txt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
                 btn:SetScript("OnEnter", function(b)
@@ -505,12 +506,12 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                     if tip then
                         GameTooltip:SetOwner(b, "ANCHOR_RIGHT")
                         if type(tip) == "table" then
-                            GameTooltip:SetText(tip.title or item.text or "", 1, 1, 1)
+                            GameTooltip:SetText(tip.title or label, 1, 1, 1)
                             if tip.desc and tip.desc ~= "" then
                                 GameTooltip:AddLine(tip.desc, 0.85, 0.85, 0.85, true)
                             end
                         else
-                            GameTooltip:SetText(item.text or "", 1, 1, 1)
+                            GameTooltip:SetText(label, 1, 1, 1)
                             if tip ~= "" then
                                 GameTooltip:AddLine(tip, 0.85, 0.85, 0.85, true)
                             end
@@ -533,11 +534,11 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                     menu:Hide()
                     dropdown._activeValue = item.value
                     if onSelect then
-                        onSelect(item.value, item.text)
+                        onSelect(item.value, item.text or item.value)
                     end
                 end)
 
-                btn.filterKey = item.text:lower()
+                btn.filterKey = tostring(label):lower()
                 btn:Hide()
                 tinsert(elements, { frame = btn, type = "item", height = rowHeight + 2, filterKey = btn.filterKey })
             end

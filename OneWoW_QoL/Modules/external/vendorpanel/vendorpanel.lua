@@ -490,7 +490,8 @@ function VendorPanel:GetVendorFilterDisplayLabel(filterType)
     if filterType == "Mounts" then return MOUNTS end
     if filterType == "Pets" then return PETS end
     if filterType == "Toys" then return L["VENDOR_EX_TOYS"] end
-    if filterType == "Decor" then return DECOR end
+    -- Shared locale key — bare DECOR is not a Blizzard global on Retail.
+    if filterType == "Decor" then return L["DECOR"] end
     if filterType == "Housing" then return L["VENDOR_EX_HOUSING"] end
     local invGlobal = slotFilterMap[filterType]
     if invGlobal then
