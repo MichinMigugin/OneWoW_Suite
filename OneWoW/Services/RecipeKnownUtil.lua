@@ -6,11 +6,21 @@ ns.RecipeKnownUtil = RecipeKnownUtil
 local knownRecipeSpells = {}
 local sessionMap = {}
 
+-- Per-item tooltip hot-path memoization. Cleared on profession scan / learn so
+-- Collections tooltips do not re-hit C_TradeSkillUI on every mouseover (that
+-- path was firing SPELLS_CHANGED and thrashing LibRangeCheck / merchant paints).
+local itemKnownCache = {}
+local altKnownCache = {}
+local professionNameByItem = {}
+
 local C_TradeSkillUI = C_TradeSkillUI
 local C_SpellBook = C_SpellBook
+local C_Item = C_Item
 local TooltipScanner = ns.TooltipScanner
+local wipe = wipe
 
 local SPELL_BANK_PLAYER = Enum.SpellBookSpellBank.Player
+local ITEM_CLASS_RECIPE = Enum.ItemClass.Recipe
 
 local function GetSavedMap()
     return OneWoW_AltTracker_Professions_API and OneWoW_AltTracker_Professions_API.GetRecipeItemMap()
@@ -21,6 +31,12 @@ local function SaveToMap(itemID, recipeSpellID)
     if OneWoW_AltTracker_Professions_API then
         OneWoW_AltTracker_Professions_API.SetRecipeItemMapEntry(itemID, recipeSpellID)
     end
+end
+
+local function InvalidateItemCaches()
+    wipe(itemKnownCache)
+    wipe(altKnownCache)
+    wipe(professionNameByItem)
 end
 
 -- Consume scan snapshots from the core ProfessionRecipe funnel instead of owning
@@ -40,6 +56,14 @@ ns.ProfessionRecipe.RegisterScanCallback("RecipeKnownUtil", function(scan)
             sessionMap[itemID] = recipeSpellID
         end
     end
+    InvalidateItemCaches()
+end)
+
+ns.ProfessionRecipe.RegisterLearnedCallback("RecipeKnownUtil", function(recipeID)
+    if recipeID then
+        knownRecipeSpells[recipeID] = true
+    end
+    InvalidateItemCaches()
 end)
 
 local function ResolveTooltipData(itemID, context)
@@ -53,7 +77,13 @@ end
 -- Legacy profession books (e.g. Master Cookbook) expose a teach *spell* on the
 -- tooltip, while AltTracker / GetRecipeInfo use trade-skill *recipe* IDs. Gather
 -- every candidate ID we might match against.
-local function GetRecipeIDCandidates(itemID, context)
+-- Prefer session/saved maps before any C_TradeSkillUI call so tooltip hover stays
+-- off the TradeSkill hot path when the mapping is already known.
+---@param itemID number
+---@param context table|nil
+---@param allowTradeSkillResolve boolean|nil when false, skip GetRecipeInfoForSkillLineAbility
+---@return number[]
+local function GetRecipeIDCandidates(itemID, context, allowTradeSkillResolve)
     local candidates = {}
     local seen = {}
 
@@ -73,19 +103,33 @@ local function GetRecipeIDCandidates(itemID, context)
     local teachSpellID = TooltipScanner:GetLearnSpellID(td)
     if teachSpellID then
         add(teachSpellID)
-        -- Teach-spell line only: map entries from ProfessionRecipe scans are
-        -- already trade-skill recipe IDs and must not be passed here.
-        local info = C_TradeSkillUI.GetRecipeInfoForSkillLineAbility(teachSpellID)
-        if info and info.recipeID then
-            add(info.recipeID)
+        -- Only ask TradeSkill to map teach-spell → recipeID when we do not
+        -- already have an item→recipe mapping (tooltip hot path sets
+        -- allowTradeSkillResolve=false entirely).
+        local mapped = sessionMap[itemID] or (saved and saved[itemID])
+        if allowTradeSkillResolve ~= false and not mapped then
+            local info = C_TradeSkillUI.GetRecipeInfoForSkillLineAbility(teachSpellID)
+            if info and info.recipeID then
+                add(info.recipeID)
+            end
         end
     end
 
     return candidates
 end
 
-local function IsRecipeIDLearned(recipeID)
+local function IsRecipeIDLearned(recipeID, allowTradeSkillResolve)
     if knownRecipeSpells[recipeID] then return true end
+
+    -- Spellbook first: avoids C_TradeSkillUI on the common learned-spell case.
+    if C_SpellBook.IsSpellKnown(recipeID, SPELL_BANK_PLAYER) then
+        knownRecipeSpells[recipeID] = true
+        return true
+    end
+
+    if allowTradeSkillResolve == false then
+        return false
+    end
 
     local info = C_TradeSkillUI.GetRecipeInfo(recipeID)
     if info and info.learned then
@@ -93,14 +137,12 @@ local function IsRecipeIDLearned(recipeID)
         return true
     end
 
-    if C_SpellBook.IsSpellKnown(recipeID, SPELL_BANK_PLAYER) then
-        knownRecipeSpells[recipeID] = true
-        return true
-    end
-
     return false
 end
 
+-- Match alt/current recipe sets by candidate IDs only. Do not call
+-- GetRecipeItemLink here — that is a TradeSkill hot-path that thrash-loads
+-- profession data during tooltip decoration.
 local function CharRecipeSetHasItem(charRecipeSet, itemID, candidates)
     if not charRecipeSet then return false end
 
@@ -110,41 +152,43 @@ local function CharRecipeSetHasItem(charRecipeSet, itemID, candidates)
         end
     end
 
-    for recipeID in pairs(charRecipeSet) do
-        local link = C_TradeSkillUI.GetRecipeItemLink(recipeID)
-        if link then
-            local linkItemID = tonumber(link:match("item:(%d+)"))
-            if linkItemID == itemID then
-                return true
-            end
-        end
-    end
-
     return false
 end
 
 function RecipeKnownUtil:GetRecipeSpellID(itemID, context)
     if not itemID then return nil end
 
-    local candidates = GetRecipeIDCandidates(itemID, context)
+    local candidates = GetRecipeIDCandidates(itemID, context, true)
     if candidates[1] then return candidates[1] end
 
     return nil
 end
 
+--- @param context table|nil may set `light=true` to skip C_TradeSkillUI resolves (tooltip hover)
 function RecipeKnownUtil:IsRecipeKnown(itemID, context)
     if not itemID then return nil end
 
+    local light = context and context.light == true
+    local cached = itemKnownCache[itemID]
+    if cached ~= nil then
+        return cached or nil
+    end
+
     local td = ResolveTooltipData(itemID, context)
     if TooltipScanner:IsAlreadyKnown(td) then
+        itemKnownCache[itemID] = true
         return true
     end
 
-    local candidates = GetRecipeIDCandidates(itemID, context)
-    if #candidates == 0 then return nil end
+    local candidates = GetRecipeIDCandidates(itemID, context, not light)
+    if #candidates == 0 then
+        -- Unresolved: do not cache, so a later pass with warm data can succeed.
+        return nil
+    end
 
     for i = 1, #candidates do
-        if IsRecipeIDLearned(candidates[i]) then
+        if IsRecipeIDLearned(candidates[i], not light) then
+            itemKnownCache[itemID] = true
             return true
         end
     end
@@ -156,24 +200,38 @@ function RecipeKnownUtil:IsRecipeKnown(itemID, context)
         if charData and charData.recipes then
             for _, recipeSet in pairs(charData.recipes) do
                 if CharRecipeSetHasItem(recipeSet, itemID, candidates) then
+                    itemKnownCache[itemID] = true
                     return true
                 end
             end
         end
     end
 
+    -- Light path may only have a teach-spell ID (no TradeSkill recipeID map).
+    -- Do not sticky-cache "unknown" until we have a real item→recipe mapping.
+    if light then
+        local mapped = sessionMap[itemID] or (GetSavedMap() and GetSavedMap()[itemID])
+        if not mapped then
+            return nil
+        end
+    end
+
+    itemKnownCache[itemID] = false
     return nil
 end
 
 function RecipeKnownUtil:IsAltRecipeKnown(charRecipeSet, itemID, context)
     if not charRecipeSet or not itemID then return false end
 
-    return CharRecipeSetHasItem(charRecipeSet, itemID, GetRecipeIDCandidates(itemID, context))
+    local light = context and context.light == true
+    return CharRecipeSetHasItem(charRecipeSet, itemID, GetRecipeIDCandidates(itemID, context, not light))
 end
 
 function RecipeKnownUtil:RegisterMapping(itemID, recipeSpellID)
     if itemID and recipeSpellID then
         SaveToMap(itemID, recipeSpellID)
+        itemKnownCache[itemID] = nil
+        altKnownCache[itemID] = nil
     end
 end
 
@@ -289,25 +347,62 @@ end
 
 --- Profession name required to craft/learn a recipe item (subclass first, tooltip fallback).
 function RecipeKnownUtil:GetRecipeProfessionName(itemID, subClassID)
+    if itemID and professionNameByItem[itemID] then
+        return professionNameByItem[itemID]
+    end
+
+    if not subClassID and itemID then
+        local _, _, _, _, _, classID, subID = C_Item.GetItemInfoInstant(itemID)
+        if classID == ITEM_CLASS_RECIPE then
+            subClassID = subID
+        end
+    end
+
     if subClassID then
-        local name = C_Item.GetItemSubClassInfo(Enum.ItemClass.Recipe, subClassID)
-        if name and name ~= "" then return name end
+        local name = C_Item.GetItemSubClassInfo(ITEM_CLASS_RECIPE, subClassID)
+        if name and name ~= "" then
+            if itemID then professionNameByItem[itemID] = name end
+            return name
+        end
     end
     if not itemID then return nil end
-    return DetectProfessionFromTooltip(itemID)
+    local detected = DetectProfessionFromTooltip(itemID)
+    if detected then
+        professionNameByItem[itemID] = detected
+    end
+    return detected
 end
 
 --- True when a scoped alt (not the logged-in character) knows the recipe and self does not.
 --- `altScope` is the Recipe Knowledge tooltip altScope table.
+--- @param context table|nil may set `light=true` for tooltip hover (no TradeSkill resolves)
 function RecipeKnownUtil:IsRecipeKnownByScopedAlt(itemID, altScope, context)
-    if not itemID or self:IsRecipeKnown(itemID, context) then return false end
-    if not altScope or not OneWoW_AltTracker_Professions_API then return false end
+    if not itemID then return false end
+
+    local cached = altKnownCache[itemID]
+    if cached ~= nil then
+        return cached
+    end
+
+    local light = context and context.light == true
+    if self:IsRecipeKnown(itemID, context) then
+        altKnownCache[itemID] = false
+        return false
+    end
+    if not altScope or not OneWoW_AltTracker_Professions_API then
+        altKnownCache[itemID] = false
+        return false
+    end
 
     local profName = self:GetRecipeProfessionName(itemID)
-    if not profName then return false end
+    if not profName then
+        -- Profession name unresolved (cold tooltip): do not sticky-cache.
+        return false
+    end
 
     local OneWoW_GUI = OneWoW_GUI
     local currentCharKey = OneWoW_GUI and OneWoW_GUI:BuildCharKey()
+    local found = false
 
     for charKey, charData in pairs(OneWoW_AltTracker_Professions_API.GetAllCharacters()) do
         if charKey ~= currentCharKey
@@ -324,11 +419,27 @@ function RecipeKnownUtil:IsRecipeKnownByScopedAlt(itemID, altScope, context)
             if hasProfession then
                 local recipeSet = FindRecipes(charData, profName)
                 if recipeSet and self:IsAltRecipeKnown(recipeSet, itemID, context) then
-                    return true
+                    found = true
+                    break
                 end
             end
         end
     end
 
+    if found then
+        altKnownCache[itemID] = true
+        return true
+    end
+
+    -- Same light caveat as IsRecipeKnown: without an item→recipe map, "not on
+    -- any alt" may be a false negative from teach-spell-only candidates.
+    if light then
+        local mapped = sessionMap[itemID] or (GetSavedMap() and GetSavedMap()[itemID])
+        if not mapped then
+            return false
+        end
+    end
+
+    altKnownCache[itemID] = false
     return false
 end

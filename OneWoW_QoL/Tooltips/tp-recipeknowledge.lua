@@ -125,6 +125,7 @@ local function RecipeKnowledgeProvider(_, context)
     local currentKnows   = Util and Util:IsRecipeKnown(context.itemID, {
         hyperlink = context.itemLink,
         tooltipData = context.data,
+        light = true,
     })
     local altScope       = OneWoW.SettingsFeatureRegistry:GetFeatureSettings("tooltips", "recipeknowledge").altScope
 

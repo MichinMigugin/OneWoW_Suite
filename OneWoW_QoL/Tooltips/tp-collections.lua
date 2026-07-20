@@ -60,6 +60,7 @@ local function CollectionsProvider(_, context)
 
     local status = OneWoW.Collectibles.GetItemCollectionStatus(context.itemID, context.itemLink, {
         tooltipData = context.data,
+        light = true,
     })
     if not status then
         return {

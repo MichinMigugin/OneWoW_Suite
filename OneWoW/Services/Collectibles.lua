@@ -564,6 +564,11 @@ function Collectibles.GetItemCollectionStatus(itemID, hyperlink, context)
     if hyperlink and not context.hyperlink then
         context.hyperlink = hyperlink
     end
+    -- Tooltip decoration already has structured lines; stay off C_TradeSkillUI
+    -- resolves that re-init LibRangeCheck via SPELLS_CHANGED on recipe hover.
+    if context.tooltipData and context.light == nil then
+        context.light = true
+    end
 
     local key = Collectibles.ResolveKeyFromItem(itemID, hyperlink)
     if not key then return nil end
@@ -578,10 +583,15 @@ function Collectibles.GetItemCollectionStatus(itemID, hyperlink, context)
     if descriptor.type == "recipe" and not collected then
         local Registry = OneWoW.SettingsFeatureRegistry
         if Registry then
-            local rk = Registry:GetFeatureSettings("tooltips", "recipeknowledge")
-            local altScope = rk and rk.altScope
-            if altScope and ns.RecipeKnownUtil then
-                collectedByAlt = ns.RecipeKnownUtil:IsRecipeKnownByScopedAlt(itemID, altScope, context) == true
+            local collections = Registry:GetFeatureSettings("tooltips", "collections")
+            local mode = collections and collections.recipeAltDisplay or "differentiated"
+            -- "self" only paints personal collection; skip the alt roster walk.
+            if mode ~= "self" then
+                local rk = Registry:GetFeatureSettings("tooltips", "recipeknowledge")
+                local altScope = rk and rk.altScope
+                if altScope and ns.RecipeKnownUtil then
+                    collectedByAlt = ns.RecipeKnownUtil:IsRecipeKnownByScopedAlt(itemID, altScope, context) == true
+                end
             end
         end
     end
