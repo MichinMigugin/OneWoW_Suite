@@ -66,6 +66,7 @@ Tooltips\tp-collections.lua
 Tooltips\tp-itemtypes.lua
 Tooltips\tp-itemtracker.lua
 Tooltips\tp-recipeknowledge.lua
+Tooltips\tp-reagents.lua
 Tooltips\tp-customnotes.lua
 Tooltips\tp-technicalids.lua
 Tooltips\tp-enhancements.lua

@@ -85,6 +85,13 @@ ns.SearchData = {
         keywords = {"item tracker", "item count", "how many", "character count", "item quantity", "all characters"},
     },
     {
+        path     = function() return L("SRCH_PATH_OW_TOOLTIPS_REAGENTS") end,
+        desc     = function() return L("SRCH_DESC_OW_TOOLTIPS_REAGENTS") end,
+        addonKey = nil, addonLabel = "OneWoW",
+        navType = "module", module = "qol", subtab = "tooltips",
+        keywords = {"reagents", "combine", "combinable", "combineready", "combine reagents", "craft combine", "fractured spark", "darkmoon"},
+    },
+    {
         path     = function() return L("SRCH_PATH_OW_TOOLTIPS_NOTEWARN") end,
         desc     = function() return L("SRCH_DESC_OW_TOOLTIPS_NOTEWARN") end,
         addonKey = nil, addonLabel = "OneWoW",

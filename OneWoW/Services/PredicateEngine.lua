@@ -1952,10 +1952,14 @@ end
 
 -- #combinable: item's Use: effect is a combine/craft spell with required
 -- reagents (Darkmoon decks, fractured sparks, torn recipe scraps, …).
--- Structural via GetCombineReagents — not tooltip text. Compose with
--- #usable for "ready to combine now" (#combinable & #usable).
+-- Structural via GetCombineReagents — not tooltip text.
+-- #combineready: shorthand for (#combinable & #usable) — schematic present
+-- and character can perform the combine (all reagents owned).
 RegisterKeyword("combinable", function(p)
     return p.id and GetCombineReagents(p.id) ~= nil
+end)
+RegisterKeyword("combineready", function(p)
+    return p.id and GetCombineReagents(p.id) ~= nil and p.isUsable
 end)
 
 -- ---------- Teachable collectibles ----------
@@ -3369,6 +3373,17 @@ function PE:IsRecipeItem(itemID, bagID, slotID, itemInfo)
         return true, props
     end
     return false, nil
+end
+
+--- Required reagents when the item's Use: effect is a combine/craft spell.
+--- Returns nil for ordinary items. Same detector as `#combinable` /
+--- `#combineready` (identity-cached schematic; enchant scrolls excluded).
+--- Each entry is `{ itemID?, currencyID?, quantityRequired }`.
+---@param itemID number|nil
+---@return table|nil
+function PE:GetCombineReagents(itemID)
+    if not itemID then return nil end
+    return GetCombineReagents(itemID)
 end
 
 --- High-level: compile + evaluate in one call. Builds props if needed.

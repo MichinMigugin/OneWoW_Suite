@@ -328,6 +328,7 @@ local DEFAULTS = {
                 enabled = true,
                 altScope = { mode = "all", chars = {}, roles = {} },
             },
+            reagents = { enabled = true },
             collections = {
                 enabled = true,
                 recipeAltDisplay = "differentiated",
