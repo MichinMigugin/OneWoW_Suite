@@ -736,7 +736,6 @@ function Inbox:Refresh()
                 return
             end
             if IsShiftKeyDown() and (CODAmount or 0) == 0 and not isGM then
-                local _, _, _, subject = GetInboxHeaderInfo(index)
                 AutoLootMailItem(index)
                 if ns.InTransit then
                     ns.InTransit:ClearMatching(nil, subject)

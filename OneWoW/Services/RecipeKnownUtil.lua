@@ -143,7 +143,7 @@ end
 -- Match alt/current recipe sets by candidate IDs only. Do not call
 -- GetRecipeItemLink here — that is a TradeSkill hot-path that thrash-loads
 -- profession data during tooltip decoration.
-local function CharRecipeSetHasItem(charRecipeSet, itemID, candidates)
+local function CharRecipeSetHasItem(charRecipeSet, candidates)
     if not charRecipeSet then return false end
 
     for i = 1, #candidates do
@@ -199,7 +199,7 @@ function RecipeKnownUtil:IsRecipeKnown(itemID, context)
         local charData = charKey and OneWoW_AltTracker_Professions_API.GetCharacterData(charKey)
         if charData and charData.recipes then
             for _, recipeSet in pairs(charData.recipes) do
-                if CharRecipeSetHasItem(recipeSet, itemID, candidates) then
+                if CharRecipeSetHasItem(recipeSet, candidates) then
                     itemKnownCache[itemID] = true
                     return true
                 end
@@ -224,7 +224,7 @@ function RecipeKnownUtil:IsAltRecipeKnown(charRecipeSet, itemID, context)
     if not charRecipeSet or not itemID then return false end
 
     local light = context and context.light == true
-    return CharRecipeSetHasItem(charRecipeSet, itemID, GetRecipeIDCandidates(itemID, context, not light))
+    return CharRecipeSetHasItem(charRecipeSet, GetRecipeIDCandidates(itemID, context, not light))
 end
 
 function RecipeKnownUtil:RegisterMapping(itemID, recipeSpellID)
