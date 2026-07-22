@@ -304,50 +304,24 @@ local function ShowToggleDetail(split, entry)
         local numVal = tonumber(curVal) or entry.min
         numVal = math.max(entry.min, math.min(entry.max, numVal))
 
-        local valLabel = child:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        valLabel:SetPoint("TOPLEFT", child, "TOPLEFT", 12, yOfs)
-        valLabel:SetText(L["TOGGLES_VALUE_LABEL"] .. " " .. FormatSliderVal(numVal, entry.step))
-        valLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        yOfs = yOfs - valLabel:GetStringHeight() - 8
-
-        local slider = CreateFrame("Slider", nil, child)
-        slider:SetSize(cw, 18)
-        slider:SetPoint("TOPLEFT", child, "TOPLEFT", 12, yOfs)
-        slider:SetMinMaxValues(entry.min, entry.max)
-        slider:SetValue(numVal)
-        if entry.step then
-            slider:SetValueStep(entry.step)
-            slider:SetObeyStepOnDrag(true)
-        end
-        slider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button")
-
-        local trackBg = slider:CreateTexture(nil, "BACKGROUND")
-        trackBg:SetTexture("Interface\\Buttons\\WHITE8x8")
-        trackBg:SetVertexColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        trackBg:SetPoint("TOPLEFT",     slider, "TOPLEFT",     8, -6)
-        trackBg:SetPoint("BOTTOMRIGHT", slider, "BOTTOMRIGHT", -8, 6)
-
         local capturedEntry = entry
-        slider:SetScript("OnValueChanged", function(_, value)
-            local fmt = FormatSliderVal(value, capturedEntry.step)
-            valLabel:SetText(L["TOGGLES_VALUE_LABEL"] .. " " .. fmt)
-            C_CVar.SetCVar(capturedEntry.cvar, fmt)
-            UpdateRowIndicator(selectedRow, capturedEntry)
-        end)
-
-        yOfs = yOfs - 18 - 6
-
-        local minLabel = child:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        minLabel:SetPoint("TOPLEFT", child, "TOPLEFT", 12, yOfs)
-        minLabel:SetText(FormatSliderVal(entry.min, entry.step))
-        minLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-        local maxLabel = child:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        maxLabel:SetPoint("TOPRIGHT", child, "TOPRIGHT", -12, yOfs)
-        maxLabel:SetText(FormatSliderVal(entry.max, entry.step))
-        maxLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-        yOfs = yOfs - minLabel:GetStringHeight() - 8
+        local sliderWrap = OneWoW_GUI:CreateSlider(child, {
+            minVal = entry.min,
+            maxVal = entry.max,
+            step = entry.step or 1,
+            currentVal = numVal,
+            width = cw,
+            getLabel = function(pos)
+                return FormatSliderVal(pos, capturedEntry.step)
+            end,
+            onChange = function(val)
+                local fmt = FormatSliderVal(val, capturedEntry.step)
+                C_CVar.SetCVar(capturedEntry.cvar, fmt)
+                UpdateRowIndicator(selectedRow, capturedEntry)
+            end,
+        })
+        sliderWrap:SetPoint("TOPLEFT", child, "TOPLEFT", 12, yOfs)
+        yOfs = yOfs - 36 - 8
 
     elseif entry.widget == "dropdown" then
         local capturedEntry = entry
