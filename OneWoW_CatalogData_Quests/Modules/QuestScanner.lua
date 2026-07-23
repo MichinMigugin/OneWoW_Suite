@@ -146,7 +146,9 @@ local function GetInteractNPC()
     for _, unit in ipairs(INTERACT_UNITS) do
         if UnitExists(unit) then
             local guid = UnitGUID(unit)
-            if guid then
+            -- Unit identity (GUID/name/ID) is secret in instances; skip until we
+            -- move off GUID string parsing onto UnitCreatureID / UnitIsGameObject.
+            if guid and not OneWoW.Restriction.IsSecret(guid) then
                 local unitType, _, _, _, _, npcID = strsplit("-", guid)
                 npcID = tonumber(npcID)
                 if npcID
