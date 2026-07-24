@@ -39,6 +39,7 @@ local SERVICE_KEYS = {
     "RecipeKnownUtil",
     "Collectibles",
     "Merchant",
+    "Inventory",
     "UpgradeDetection",
     "Disenchant",
     "AltScope",

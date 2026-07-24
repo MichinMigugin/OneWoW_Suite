@@ -209,18 +209,19 @@ function ns.ToastLoot.OnLogin()
 end
 
 local lootFrame = CreateFrame("Frame")
-lootFrame:RegisterEvent("BAG_UPDATE_DELAYED")
 lootFrame:RegisterEvent("NEW_MOUNT_ADDED")
 lootFrame:RegisterEvent("NEW_PET_ADDED")
 lootFrame:RegisterEvent("NEW_TOY_ADDED")
 lootFrame:RegisterEvent("SKILL_LINES_CHANGED")
 
+-- Bag collectible scans route through OneWoW.Inventory (BAG_UPDATE_DELAYED funnel).
+OneWoW.Inventory.RegisterDelayedCallback("ToastLoot", function()
+    ScanBagsForCollectibles()
+end)
+
 lootFrame:SetScript("OnEvent", function(_, event, arg1)
     if event == "SKILL_LINES_CHANGED" then
         PE:InvalidateKnownProfessions()
-
-    elseif event == "BAG_UPDATE_DELAYED" then
-        ScanBagsForCollectibles()
 
     elseif event == "NEW_MOUNT_ADDED" then
         OnNewMount(tonumber(arg1))

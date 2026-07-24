@@ -12,7 +12,7 @@ ns.ModuleRegistry:Define(ADDON_NAME, {
     toggles     = {},
     preview     = true,
     _frame      = nil,
-    _atBank     = false,
+    _atGuildBank = false,
     _atMail     = false,
     _tempBlacklist = {},
 })

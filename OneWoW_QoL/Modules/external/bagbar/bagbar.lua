@@ -141,6 +141,7 @@ function BagBarModule:OnDisable()
     if self._eventFrame then
         self._eventFrame:UnregisterAllEvents()
     end
+    OneWoW.Inventory.UnregisterCallback("QoL_bagbar")
     OneWoW.ProfessionRecipe.UnregisterCallback("QoL_bagbar")
     OneWoW_QoL:UnregisterEnteringWorldHandler("bagbar")
     TeardownBar()
@@ -383,12 +384,17 @@ function BagBarModule:RegisterEvents()
 
     local itemInfoPending = false
 
-    self._eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
     self._eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
     self._eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
     self._eventFrame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
     self._eventFrame:RegisterEvent("UPDATE_BINDINGS")
     self._eventFrame:RegisterEvent("UPDATE_MACROS")
+
+    -- Bag changes funneled through OneWoW.Inventory (single BAG_* owner path for
+    -- this consumer). Re-subscribing by ownerID is idempotent.
+    OneWoW.Inventory.RegisterDelayedCallback("QoL_bagbar", function()
+        BagBarModule:ScheduleUpdate()
+    end)
 
     -- Profession-window suppression funneled through OneWoW.ProfessionRecipe.
     -- Re-subscribing by the same ownerID is idempotent, so it is safe to call
@@ -407,7 +413,7 @@ function BagBarModule:RegisterEvents()
         if event == "UPDATE_BINDINGS" then
             SyncKeybindings()
             return
-        elseif event == "BAG_UPDATE_DELAYED" or event == "UPDATE_MACROS" then
+        elseif event == "UPDATE_MACROS" then
             BagBarModule:ScheduleUpdate()
         elseif event == "PLAYER_REGEN_ENABLED" then
             BagBarModule:UpdateCooldowns()

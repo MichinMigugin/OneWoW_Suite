@@ -122,6 +122,7 @@ Services\Collectibles.lua
 Services\ChunkedJob.lua
 Services\UIParent.lua
 Services\Merchant.lua
+Services\Inventory.lua
 Services\overlay-icons.lua
 Services\upgrade-detection.lua
 Services\Disenchant\allowlist.lua

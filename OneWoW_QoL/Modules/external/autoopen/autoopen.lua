@@ -6,6 +6,7 @@ if not AutoOpenModule then return end
 local Restriction = OneWoW.Restriction
 local OneWoW_GUI = OneWoW_GUI
 local PE = OneWoW.PredicateEngine
+local Inventory = OneWoW.Inventory
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
@@ -48,8 +49,9 @@ end
 function AutoOpenModule:ScanAndOpen()
     -- Merchant and trade-skill state are read live from the core funnels
     -- (OneWoW.Merchant / OneWoW.ProfessionRecipe, the single event owners) rather
-    -- than locally tracked _atMerchant / _atCrafting flags.
-    if self._atBank or self._atMail
+    -- than locally tracked _atMerchant / _atCrafting flags. Character bank open
+    -- state comes from OneWoW.Inventory; guild/mail suppress stay local.
+    if Inventory.IsBankOpen() or self._atGuildBank or self._atMail
         or OneWoW.Merchant.IsMerchantOpen()
         or OneWoW.ProfessionRecipe.IsTradeskillOpen() then
         return
@@ -81,15 +83,18 @@ function AutoOpenModule:ScanAndOpen()
 end
 
 function AutoOpenModule:OnEnable()
+    Inventory.RegisterDelayedCallback("QoL_autoopen", function()
+        AO:ScanAndOpen()
+    end)
+
+    -- Guild bank + mail are not Inventory-owned yet; keep a thin local frame.
     if not self._frame then
         self._frame = CreateFrame("Frame", "OneWoW_QoL_AutoOpen")
         self._frame:SetScript("OnEvent", function(_, event)
-            if event == "BAG_UPDATE_DELAYED" then
-                AO:ScanAndOpen()
-            elseif event == "BANKFRAME_OPENED" or event == "GUILDBANKFRAME_OPENED" then
-                AO._atBank = true
-            elseif event == "BANKFRAME_CLOSED" or event == "GUILDBANKFRAME_CLOSED" then
-                AO._atBank = false
+            if event == "GUILDBANKFRAME_OPENED" then
+                AO._atGuildBank = true
+            elseif event == "GUILDBANKFRAME_CLOSED" then
+                AO._atGuildBank = false
             elseif event == "MAIL_SHOW" then
                 AO._atMail = true
             elseif event == "MAIL_CLOSED" then
@@ -97,12 +102,9 @@ function AutoOpenModule:OnEnable()
             end
         end)
     end
-    self._frame:RegisterEvent("BAG_UPDATE_DELAYED")
     OneWoW_QoL:RegisterEnteringWorldHandler("autoopen", function()
         C_Timer.After(2.5, function() AO:ScanAndOpen() end)
     end)
-    self._frame:RegisterEvent("BANKFRAME_OPENED")
-    self._frame:RegisterEvent("BANKFRAME_CLOSED")
     self._frame:RegisterEvent("MAIL_SHOW")
     self._frame:RegisterEvent("MAIL_CLOSED")
     self._frame:RegisterEvent("GUILDBANKFRAME_OPENED")
@@ -110,11 +112,12 @@ function AutoOpenModule:OnEnable()
 end
 
 function AutoOpenModule:OnDisable()
+    Inventory.UnregisterCallback("QoL_autoopen")
     if self._frame then
         self._frame:UnregisterAllEvents()
     end
     OneWoW_QoL:UnregisterEnteringWorldHandler("autoopen")
-    self._atBank = false
+    self._atGuildBank = false
     self._atMail = false
 end
 

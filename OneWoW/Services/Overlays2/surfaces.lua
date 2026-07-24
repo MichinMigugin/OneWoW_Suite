@@ -12,8 +12,9 @@ local _, ns = ...
 --   * Every throttle COALESCES (pending-reschedule) instead of dropping
 --     concurrent requests — the 1.0 bank throttle dropped the second call,
 --     which left stale visuals after "Cleanup Warband Bank".
---   * The bank listens to BAG_UPDATE_DELAYED while open, and repaints only
---     the selected tab on per-bag BAG_UPDATE (deposit lag fix).
+--   * The bank listens to Inventory delayed callbacks while open, and
+--     repaints only the selected tab on per-bag dirty callbacks (deposit
+--     lag fix). Bag/bank WoW events are owned by OneWoW.Inventory.
 --   * No INVENTORY_SEARCH_UPDATE / ItemContextOverlay mirroring at all;
 --     Blizzard's own dim layer is never read or copied.
 --   * After each bank paint, re-run UpdateItemContextMatching (immediate +
@@ -696,27 +697,21 @@ function Engine:Initialize()
         hooksecurefunc("MerchantFrame_Update", RefreshVendor)
     end
 
-    local eventFrame = CreateFrame("Frame")
-    eventFrame:RegisterEvent("BAG_UPDATE")
-    eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
-    eventFrame:RegisterEvent("BANKFRAME_OPENED")
-    eventFrame:RegisterEvent("PLAYERBANKSLOTS_CHANGED")
-    eventFrame:RegisterEvent("PLAYER_ACCOUNT_BANK_TAB_SLOTS_CHANGED")
-    eventFrame:SetScript("OnEvent", function(_, event, arg1)
-        if event == "BAG_UPDATE" then
-            OnBagUpdate(arg1)
-        elseif event == "BAG_UPDATE_DELAYED" then
-            RefreshBags()
-            for _, fn in ipairs(Engine.integrationRefreshCallbacks) do fn() end
-            -- Warband/character bank deposits fire BAG_UPDATE_DELAYED too;
-            -- the 1.0 engine missed this and left stale slots until reload.
-            if BankPanel and BankPanel:IsVisible() then
-                RefreshBank()
-            end
-        elseif event == "BANKFRAME_OPENED" or event == "PLAYERBANKSLOTS_CHANGED"
-            or event == "PLAYER_ACCOUNT_BANK_TAB_SLOTS_CHANGED" then
+    -- Bag/bank overlay repaints route through the core OneWoW.Inventory funnel
+    -- (single BAG_* / BANKFRAME_* owner path for this consumer).
+    ns.Inventory.RegisterDirtyCallback("OverlayEngine", OnBagUpdate)
+    ns.Inventory.RegisterDelayedCallback("OverlayEngine", function()
+        RefreshBags()
+        for _, fn in ipairs(Engine.integrationRefreshCallbacks) do fn() end
+        -- Warband/character bank deposits fire BAG_UPDATE_DELAYED too;
+        -- the 1.0 engine missed this and left stale slots until reload.
+        if BankPanel and BankPanel:IsVisible() then
             RefreshBank()
         end
+    end)
+    ns.Inventory.RegisterBankOpenCallback("OverlayEngine", RefreshBank)
+    ns.Inventory.RegisterBankSlotsCallback("OverlayEngine", function()
+        RefreshBank()
     end)
 
     -- Vendor overlay repaints route through the core OneWoW.Merchant funnel

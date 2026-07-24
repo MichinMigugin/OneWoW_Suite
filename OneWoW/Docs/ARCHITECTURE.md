@@ -1217,6 +1217,25 @@ consume these channels or `IsMerchantOpen()`, and the single-owner rule is
 enforced by the generalized `core-event-funnel` pre-commit hook (§3.10),
 seeded with `MERCHANT_*`→`Merchant.lua`.
 
+### 8.9 Inventory funnel (`OneWoW.Inventory`)
+
+One core service owns the live bag/bank event funnel for the logged-in character
+(`Services/Inventory.lua`), registered via the core `ns.RegisterEvent` multiplexer
+(§3.3). It mirrors Merchant (§8.8): dirty-bag accumulation, delayed coalesce, and
+bank open/closed/slots channels. Core persists nothing — AltTracker_Storage owns
+cross-alt SV; Bags owns UI layout; PredicateEngine stays pull/eval.
+
+Channels: `RegisterDirtyCallback` (`fn(bagID)`), `RegisterDelayedCallback`
+(`fn(dirtyBags)`), `RegisterBankOpenCallback` / `RegisterBankClosedCallback`,
+`RegisterBankSlotsCallback` (`fn(event, ...)`), plus `UnregisterCallback` and
+`IsBankOpen()`. On each `BAG_UPDATE_DELAYED`, Inventory calls
+`PE:InvalidatePropsCache()` once before fan-out. See [INVENTORY.md](INVENTORY.md).
+
+**Migration status:** Phase 1 consumers (QoL autoopen / bagbar / toast-loot,
+Overlays2 bag/bank surfaces) subscribe to these channels. Bags and Storage still
+register overlapping bag/bank events until later phases; `core-event-funnel` is
+**not** seeded for these events yet.
+
 ---
 
 ## 9. Caveats
@@ -1248,6 +1267,7 @@ seeded with `MERCHANT_*`→`Merchant.lua`.
 | `OneWoW/Core/Restriction.lua` | Combat/restriction funnel: event-driven cache, intent getters, `RunWhenUnrestricted`, `GetSnapshot` + Midnight secret-value guard (§8.6) |
 | `OneWoW/Services/ProfessionRecipe.lua` | Trade-skill recipe scan funnel: single `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED` owner, scan/open/closed callback channels, ephemeral snapshots (§8.7) |
 | `OneWoW/Services/Merchant.lua` | Merchant scan funnel: single `MERCHANT_*` owner, scan/show/closed callback channels, ephemeral vendor snapshots, no SV (§8.8, see [MERCHANT.md](MERCHANT.md)) |
+| `OneWoW/Services/Inventory.lua` | Live bag/bank event funnel: dirty/delayed/bank channels, no SV (§8.9, see [INVENTORY.md](INVENTORY.md)) |
 | `OneWoW/Services/UIParent.lua` | Cinematic `UIParent` hide/restore funnel + fragile FrameXML indicator re-sync (minimap mail) |
 | `OneWoW/Services/Collectibles.lua` | Collectible identity resolver: key grammar (`type[:subtype]:id`), live display + collection state, no SV (see [COLLECTIBLES.md](COLLECTIBLES.md)) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
