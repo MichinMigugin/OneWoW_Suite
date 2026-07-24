@@ -70,6 +70,7 @@ function UI:CreateHomeTab(parent)
     local standaloneChecks = {
         { key = "MODULE_BAGS",          addonName = "OneWoW_Bags" },
         { key = "MODULE_DIRECTDEPOSIT", addonName = "OneWoW_DirectDeposit" },
+        { key = "MAIL",                 addonName = "OneWoW_Mail" },
         { key = "MODULE_SHOPPINGLIST",  addonName = "OneWoW_ShoppingList" },
         { key = "MODULE_TRACKERS",      addonName = "OneWoW_Trackers" },
     }

@@ -95,7 +95,17 @@ end
 --- Intentional close (X / Escape / Toggle): confirm if Activity has pending review.
 function Shell:RequestClose()
     local function proceed()
-        CloseMail()
+        -- Mailbox path: CloseMail → MAIL_CLOSED → Shell:Hide.
+        -- /owmail path: no Blizzard mail session, so CloseMail is a no-op and
+        -- never fires MAIL_CLOSED — hide the shell ourselves.
+        if C_PlayerInteractionManager.IsInteractingWithNpcOfType(Enum.PlayerInteractionType.MailInfo) then
+            CloseMail()
+        else
+            hideFromMailClosed = true
+            Shell:Hide()
+            hideFromMailClosed = false
+            Shell:ClearSelected()
+        end
     end
     if ns.AutoRun then
         ns.AutoRun:RequestClose(proceed)
