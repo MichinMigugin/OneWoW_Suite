@@ -4,6 +4,7 @@
 .cache/
 __pycache__
 CURSEFORGE.md
+.wow_docs/manifest-review.txt
 
 # Ricky's Cursor rules — local only, never commit or push (AccountSync, Triggers, Gitmode, CURSEFORGE, etc.)
 # `git add` will refuse these unless you force; keep them out of the shared repo.
