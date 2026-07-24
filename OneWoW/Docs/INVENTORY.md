@@ -1,8 +1,8 @@
 # Inventory Funnel (`OneWoW.Inventory`)
 
-> **See also:** [ARCHITECTURE.md](ARCHITECTURE.md) §8.9 (summary), §3.3
-> (`ns.RegisterEvent` multiplexer), and [MERCHANT.md](MERCHANT.md) — the funnel
-> shape this mirrors.
+> **See also:** [ARCHITECTURE.md](ARCHITECTURE.md) §8.9 (summary), §8.10
+> (GuildBankTransfer — bag→guild *moves*), §3.3 (`ns.RegisterEvent` multiplexer),
+> and [MERCHANT.md](MERCHANT.md) — the funnel shape this mirrors.
 
 One core service owns the **live** bag/bank/guild-bank event funnel for the
 logged-in character, plus shared container ID vocabulary and slot iteration
@@ -27,6 +27,7 @@ that table).
 | --- | --- |
 | Bag/bank/guild-bank WoW events for this character | `OneWoW.Inventory` |
 | Container ID vocabulary + live slot walk (`C_Container`) | `OneWoW.Inventory` |
+| Bag → guild bank deposit plan + paced moves | `OneWoW.GuildBankTransfer` ([docs](GUILD_BANK_TRANSFER.md)) |
 | Persist bags/banks/mail across alts | `OneWoW_AltTracker_Storage` |
 | Slot enrichment / `#keyword` match | `OneWoW.PredicateEngine` |
 | Bag UI layout | `OneWoW_Bags` |

@@ -1249,11 +1249,23 @@ event names → `Inventory.lua` (PIM is not seeded). Mail remains local;
 
 ### 8.10 Guild bank transfer (`OneWoW.GuildBankTransfer`)
 
-Sibling to Inventory (§8.9): plans bag→guild deposits (partial-stack fill +
-fallback `UseContainerItem`) and runs a single restriction-gated paced queue.
-Does not own `GUILDBANK*` events — consumers gate on `Inventory.IsGuildBankOpen()`.
-See [GUILD_BANK_TRANSFER.md](GUILD_BANK_TRANSFER.md). Consumers: DirectDeposit
-and Bags (search / Ctrl+RMB guild deposit + place-callback for tab refresh).
+Sibling to Inventory (§8.9) for **bag→guild moves**, not events. Inventory owns
+`GUILDBANK*` and `IsGuildBankOpen()`; this service plans deposits and runs one
+restriction-gated paced queue:
+
+1. Fill existing partial stacks (tab/slot order, greedy)
+2. Place overflow onto empty slots (`PickupGuildBankItem`, with
+   `SetCurrentGuildBankTab` before each targeted place)
+3. `UseContainerItem` only as last-resort fallback
+
+`RegisterPlaceCallback` lets Bags track transfer tabs / merge state without
+private flag poking from other units. Busy policy: one global queue; same
+`ownerID` may Cancel+replace, other owners are rejected.
+
+Does **not** own guild withdraw, mail, or `GUILDBANKLOG_UPDATE`. See
+[GUILD_BANK_TRANSFER.md](GUILD_BANK_TRANSFER.md). Consumers: DirectDeposit
+(auto/manual guild deposit) and Bags (search transfer + Ctrl+RMB while the
+guild bank is open).
 
 ---
 

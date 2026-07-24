@@ -7,6 +7,7 @@
 ## Optimizations
 - Bag and bank updates are handled in one place across the suite (Bags, overlays, QoL helpers, and AltTracker storage) for smoother inventory refresh
 - Guild bank open/close and slot updates share the same Inventory funnel suite-wide (Bags, Storage, overlays, Accounting, DirectDeposit, auto-open)
+- Shared guild-bank deposit planner fills partial stacks then empty slots (used by Direct Deposit and Bags)
 
 ---
 
@@ -42,7 +43,19 @@
 
 ---
 
-*No user-facing changes this release for Notes, Trackers, Bags, Shopping List, Direct Deposit, or DevTool.*
+# Bags
+## Features
+- Search transfer and Ctrl+Right-click deposit work while the guild bank is open (fills partial stacks, then empty slots)
+
+---
+
+# Direct Deposit
+## Features
+- Guild-bank auto/manual deposits use the shared suite deposit planner (partial stacks, then empty slots)
+
+---
+
+*No user-facing changes this release for Notes, Trackers, Shopping List, or DevTool.*
 
 ---
 
