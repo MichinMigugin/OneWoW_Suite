@@ -1,6 +1,6 @@
 local _, ns = ...
 
-local BankTypes = ns.BankTypes
+local BankTypes = OneWoW.Inventory.BankTypes
 local ItemPool = ns.ItemPool
 
 local ipairs, pairs, tinsert, wipe = ipairs, pairs, tinsert, wipe

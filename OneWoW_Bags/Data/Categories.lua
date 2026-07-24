@@ -2,7 +2,7 @@ local _, ns = ...
 
 local L = ns.L
 local PE = OneWoW.PredicateEngine
-local BagTypes = ns.BagTypes
+local BagTypes = OneWoW.Inventory.BagTypes
 local Constants = ns.Constants
 
 local tinsert, sort, wipe = tinsert, sort, wipe

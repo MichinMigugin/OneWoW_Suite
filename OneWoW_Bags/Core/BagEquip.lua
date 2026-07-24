@@ -1,6 +1,6 @@
 local _, ns = ...
 
-local BagTypes = ns.BagTypes
+local BagTypes = OneWoW.Inventory.BagTypes
 local L = ns.L
 local C_Container = C_Container
 local C_Item = C_Item

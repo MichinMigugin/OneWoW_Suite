@@ -2,6 +2,8 @@ local ADDON_NAME, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 local PE = OneWoW.PredicateEngine
+local BagTypes = OneWoW.Inventory.BagTypes
+local BankTypes = OneWoW.Inventory.BankTypes
 
 OneWoW_Bags = {}
 
@@ -1144,9 +1146,9 @@ function ns:ProcessBagUpdate(dirtyBags)
     -- need to re-layout for those, and vice versa.
     local bagsDirty, bankDirty = false, false
     for bagID in pairs(dirtyBags) do
-        if self.BagTypes:IsPlayerBag(bagID) then
+        if BagTypes:IsPlayerBag(bagID) then
             bagsDirty = true
-        elseif self.BankTypes:IsPersonalBankTab(bagID) or self.BankTypes:IsWarbandTab(bagID) then
+        elseif BankTypes:IsPersonalBankTab(bagID) or BankTypes:IsWarbandTab(bagID) then
             bankDirty = true
         end
     end
@@ -1354,7 +1356,7 @@ function ns:HookBlizzardBags()
     end)
 
     hooksecurefunc("OpenBag", function(bagID)
-        if self.BagTypes:IsPlayerBag(bagID) then
+        if BagTypes:IsPlayerBag(bagID) then
             OpenOurBags("auto")
         end
     end)

@@ -5,6 +5,7 @@ if not BagBarModule then return end
 local OneWoW_GUI = OneWoW_GUI
 
 local PE = OneWoW.PredicateEngine
+local Inventory = OneWoW.Inventory
 
 local strtrim = strtrim
 local tinsert, sort = tinsert, sort
@@ -477,26 +478,24 @@ function BagBarModule:GetUsableItems()
     local items = {}
     local s = GetSettings()
     local manual = s.manualItems or {}
-    for bag = 0, 4 do
-        for slot = 1, C_Container.GetContainerNumSlots(bag) do
-            local itemID = C_Container.GetContainerItemID(bag, slot)
-            if itemID and self:ShouldShowItem(bag, slot, itemID) then
-                local itemLink = C_Container.GetContainerItemLink(bag, slot)
-                local info     = C_Container.GetContainerItemInfo(bag, slot)
-                if info and info.iconFileID then
-                    tinsert(items, {
-                        bag        = bag,
-                        slot       = slot,
-                        itemID     = itemID,
-                        itemLink   = itemLink,
-                        stackCount = info.stackCount or 1,
-                        iconFileID = info.iconFileID,
-                        manualPin  = manual[itemID] and 1 or 0,
-                    })
-                end
-            end
+    Inventory.ForEachSlot("player", function(bag, slot, info)
+        local itemID = info and info.itemID
+        if not itemID or not self:ShouldShowItem(bag, slot, itemID) then
+            return
         end
-    end
+        local itemLink = C_Container.GetContainerItemLink(bag, slot)
+        if info and info.iconFileID then
+            tinsert(items, {
+                bag        = bag,
+                slot       = slot,
+                itemID     = itemID,
+                itemLink   = itemLink,
+                stackCount = info.stackCount or 1,
+                iconFileID = info.iconFileID,
+                manualPin  = manual[itemID] and 1 or 0,
+            })
+        end
+    end)
     sort(items, function(a, b)
         if a.manualPin ~= b.manualPin then
             return a.manualPin > b.manualPin

@@ -2,7 +2,7 @@ local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local BagTypes = ns.BagTypes
+local BagTypes = OneWoW.Inventory.BagTypes
 local ItemPool = ns.ItemPool
 local PE = OneWoW.PredicateEngine
 

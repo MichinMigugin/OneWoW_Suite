@@ -52,9 +52,7 @@ Core\LayoutDebug.lua               ← /owblayout ring buffer for layout-schedul
 Core\Constants.lua                 ← OneWoW_GUI:RegisterGUIConstants, icon sizes, pool prealloc size
 Core\SectionDefaults.lua           ← stable section IDs, builtin lists, OneWoW Bags catch-all section sync
 Core\Database.lua                  ← DB:Init, defaults, init bridges
-Core\BagTypes.lua                  ← bag ID constants, reagent/player bag helpers
-Core\BagEquip.lua                  ← equipped-bag pickup/swap/empty/move-contents (used by BagsBar)
-Core\BankTypes.lua                 ← bank/warband tab constants
+Core\BagEquip.lua                  ← equipped-bag pickup/swap/empty/move-contents (used by BagsBar; BagTypes via OneWoW.Inventory)
 Core\Events.lua                    ← event router (dirtyBags, RuntimeEvents)
 
 Data\SavedSearches.lua             ← user-defined SAVED(Name) search shortcuts
@@ -172,7 +170,8 @@ OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some o
                              │ reads
 ┌────────────────────────────▼─────────────────────────────────┐
 │                      Data Layer                              │
-│  SavedSearches, Categories, Sorting, BagTypes, BankTypes     │
+│  SavedSearches, Categories, Sorting                          │
+│  (BagTypes / BankTypes: OneWoW.Inventory.*)                  │
 │  ─ Search shortcuts, classification, sort comparators        │
 │  ─ Categories uses OneWoW.PredicateEngine for search     │
 └────────────────────────────┬─────────────────────────────────┘
@@ -423,7 +422,7 @@ Shared by `CategoryView` and `BankCategoryView`. Contains the full shared layout
 
 ### BagEquip (`Core\BagEquip.lua`)
 
-Equipped-bag operations for the bags bar (`GUI\BagsBar.lua`): pickup/swap bag items on character bag slots, equip from cursor or container, empty equipped bags into compatible destinations (paced `BAG_UPDATE_DELAYED` continuation), and reagent/normal bag compatibility checks via `BagTypes` + `C_Item` container subclass.
+Equipped-bag operations for the bags bar (`GUI\BagsBar.lua`): pickup/swap bag items on character bag slots, equip from cursor or container, empty equipped bags into compatible destinations (paced `BAG_UPDATE_DELAYED` continuation), and reagent/normal bag compatibility checks via `OneWoW.Inventory.BagTypes` + `C_Item` container subclass.
 
 ### BarHelpers (`GUI\BarHelpers.lua`)
 
@@ -442,7 +441,7 @@ Acquire/release pool for `ContainerFrameItemButtonTemplate` buttons. `Preallocat
 Applied with `OneWoW_Bags:ApplyItemButtonMixin` (copies `OneWoW_Bags.ItemButtonMixin` methods onto the button once).
 
 - `OWB_SetSlot`, `OWB_MarkDirty`, `OWB_IsDirty`, `OWB_FullUpdate`
-- `OWB_UpdateNewItemGlow` — player bags only (`BagTypes:IsPlayerBag`); uses `OneWoW.PredicateEngine:BuildProps(...).isNew` + template overlays; respects Masque (`Integrations\Masque.lua`) for border/glow ownership when Masque is active
+- `OWB_UpdateNewItemGlow` — player bags only (`OneWoW.Inventory.BagTypes:IsPlayerBag`); uses `OneWoW.PredicateEngine:BuildProps(...).isNew` + template overlays; respects Masque (`Integrations\Masque.lua`) for border/glow ownership when Masque is active
 - `OWB_UpdateJunkDim`, `OWB_UpdateUnusableOverlay` — junk from `BuildProps(...).isJunk`
 - `OWB_RefreshCooldown`, `OWB_RefreshLock`, `OWB_SetIconSize`, `OWB_GetLink`
 

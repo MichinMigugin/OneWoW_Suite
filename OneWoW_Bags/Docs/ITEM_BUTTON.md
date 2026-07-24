@@ -102,7 +102,7 @@ The container index that contains this slot. Possible values come from
   warband/character bank tab indices added with the 11.x bank rework.
 
 Don't hardcode numeric ranges; if you need to filter by bag type, use
-`Enum.BagIndex` constants or `OneWoW_Bags.BagTypes:IsPlayerBag(bagID)`.
+`Enum.BagIndex` constants or `OneWoW.Inventory.BagTypes:IsPlayerBag(bagID)`.
 
 ### `slotID`
 

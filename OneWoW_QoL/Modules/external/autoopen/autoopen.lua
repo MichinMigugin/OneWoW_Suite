@@ -61,25 +61,21 @@ function AutoOpenModule:ScanAndOpen()
     local items = ns.AutoOpenItems
     if not items then return end
 
-    for bag = 0, 4 do
-        local numSlots = C_Container.GetContainerNumSlots(bag)
-        for slot = 1, numSlots do
-            local itemID = C_Container.GetContainerItemID(bag, slot)
-            if itemID and items[itemID] and not self:IsBlacklisted(itemID) then
-                if openPredicate then
-                    local props = PE:BuildProps(itemID, bag, slot)
-                    if PE:SafeEvaluate(openPredicate, props) then
-                        local itemLink = props.hyperlink or C_Container.GetContainerItemLink(bag, slot)
-                        if itemLink then
-                            print(string.format(L["AUTOOPEN_OPENING"], itemLink))
-                        end
-                        C_Container.UseContainerItem(bag, slot)
-                        return
-                    end
-                end
-            end
+    Inventory.ForEachSlot("player", function(bag, slot, info)
+        local itemID = info and info.itemID
+        if not itemID or not items[itemID] or AO:IsBlacklisted(itemID) then
+            return
         end
-    end
+        if not openPredicate then return end
+        local props = PE:BuildProps(itemID, bag, slot, info)
+        if not PE:SafeEvaluate(openPredicate, props) then return end
+        local itemLink = props.hyperlink or C_Container.GetContainerItemLink(bag, slot)
+        if itemLink then
+            print(string.format(L["AUTOOPEN_OPENING"], itemLink))
+        end
+        C_Container.UseContainerItem(bag, slot)
+        return true
+    end)
 end
 
 function AutoOpenModule:OnEnable()

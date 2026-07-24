@@ -4,7 +4,7 @@ local OneWoW_GUI = OneWoW_GUI
 
 local Constants = ns.Constants
 local L = ns.L
-local BagTypes = ns.BagTypes
+local BagTypes = OneWoW.Inventory.BagTypes
 local BagEquip = ns.BagEquip
 local WH = ns.WindowHelpers
 

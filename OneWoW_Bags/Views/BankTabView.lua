@@ -4,7 +4,7 @@ local OneWoW_GUI = OneWoW_GUI
 
 local Constants = ns.Constants
 local BankSet = ns.BankSet
-local BankTypes = ns.BankTypes
+local BankTypes = OneWoW.Inventory.BankTypes
 
 local ipairs = ipairs
 local floor, max = math.floor, math.max

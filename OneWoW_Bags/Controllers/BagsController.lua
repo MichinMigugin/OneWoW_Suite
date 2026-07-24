@@ -1,7 +1,7 @@
 local _, ns = ...
 
 local L = ns.L
-local BagTypes = ns.BagTypes
+local BagTypes = OneWoW.Inventory.BagTypes
 local C_Container = C_Container
 local C_CurrencyInfo = C_CurrencyInfo
 local tinsert, tremove = tinsert, tremove

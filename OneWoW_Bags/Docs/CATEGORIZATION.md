@@ -30,7 +30,7 @@ Classification is split into:
 1. **`GetItemCategory`** — slot-keyed fast path, then **slot overlays** (upgrade / recent), then delegates to the base resolver.
 2. **`ResolveBaseCategory`** (private) — manual pins through merged builtin/custom predicates, with **identity + `containerType` caching** (`baseCategoryCache`).
 
-**`containerType`:** `BagTypes:GetContainerType(bagID)` yields `"backpack"`, `"character_bank"`, or `"warband_bank"`. `CategoryAppliesTo` uses this everywhere. `"Other"` and `"Empty"` always bypass `appliesIn` filtering.
+**`containerType`:** `OneWoW.Inventory.BagTypes:GetContainerType(bagID)` yields `"backpack"`, `"character_bank"`, or `"warband_bank"`. `CategoryAppliesTo` uses this everywhere. `"Other"` and `"Empty"` always bypass `appliesIn` filtering.
 
 ### Phase A — `GetItemCategory` (slot layer)
 

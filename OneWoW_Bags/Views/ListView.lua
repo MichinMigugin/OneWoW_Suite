@@ -1,7 +1,7 @@
 local _, ns = ...
 
 local Constants = ns.Constants
-local BagTypes = ns.BagTypes
+local BagTypes = OneWoW.Inventory.BagTypes
 
 local floor, max = math.floor, math.max
 local ipairs = ipairs

@@ -1,7 +1,11 @@
 local _, ns = ...
 
-ns.BankTypes = {}
-local BankTypes = ns.BankTypes
+-- Suite-wide personal / warband bank tab ID vocabulary.
+-- Display names are locale *keys* resolved by callers (e.g. Bags L[...]).
+-- Attached as OneWoW.Inventory.BankTypes from Inventory.lua.
+
+local BankTypes = {}
+ns.InventoryBankTypes = BankTypes
 
 local bankTabIDs = {
     Enum.BagIndex.CharacterBankTab_1,
@@ -9,7 +13,7 @@ local bankTabIDs = {
     Enum.BagIndex.CharacterBankTab_3,
     Enum.BagIndex.CharacterBankTab_4,
     Enum.BagIndex.CharacterBankTab_5,
-    Enum.BagIndex.CharacterBankTab_6
+    Enum.BagIndex.CharacterBankTab_6,
 }
 
 local warbandTabIDs = {
@@ -17,7 +21,7 @@ local warbandTabIDs = {
     Enum.BagIndex.AccountBankTab_2,
     Enum.BagIndex.AccountBankTab_3,
     Enum.BagIndex.AccountBankTab_4,
-    Enum.BagIndex.AccountBankTab_5
+    Enum.BagIndex.AccountBankTab_5,
 }
 
 local tabNames = {

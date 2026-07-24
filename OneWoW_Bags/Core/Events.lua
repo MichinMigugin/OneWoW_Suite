@@ -4,7 +4,7 @@ local format = string.format
 local ipairs = ipairs
 local GetTime = GetTime
 local C_Timer = C_Timer
-local BagTypes = ns.BagTypes
+local BagTypes = OneWoW.Inventory.BagTypes
 local C_Container = C_Container
 
 ns.Events = {}

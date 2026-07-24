@@ -1,9 +1,13 @@
 local _, ns = ...
 
+-- Suite-wide player-bag ID vocabulary (backpack + bag slots + reagent).
+-- Display names are locale *keys* resolved by callers (e.g. Bags L[...]).
+-- Attached as OneWoW.Inventory.BagTypes from Inventory.lua.
+
 local C_Container = C_Container
 
-ns.BagTypes = {}
-local BagTypes = ns.BagTypes
+local BagTypes = {}
+ns.InventoryBagTypes = BagTypes
 
 local playerBagIDs = {
     Enum.BagIndex.Backpack,
@@ -11,12 +15,11 @@ local playerBagIDs = {
     Enum.BagIndex.Bag_2,
     Enum.BagIndex.Bag_3,
     Enum.BagIndex.Bag_4,
-    Enum.BagIndex.ReagentBag
+    Enum.BagIndex.ReagentBag,
 }
 
 -- Values are locale keys (resolved via L by display callers), so they must match
--- the BAG_* keys in the locale files. Backpack/Reagent previously used "BACKPACK"/
--- "REAGENT_BAG", which had no locale entry and rendered as the raw key in Bag View.
+-- the BAG_* keys in the Bags locale files.
 local bagNames = {
     [Enum.BagIndex.Backpack] = "BAG_BACKPACK",
     [Enum.BagIndex.Bag_1] = "BAG_1",
@@ -57,7 +60,7 @@ function BagTypes:GetBagName(bagID)
 end
 
 function BagTypes:GetContainerType(bagID)
-    local BankTypes = ns.BankTypes
+    local BankTypes = ns.InventoryBankTypes
     if self:IsPlayerBag(bagID) then return "backpack" end
     if BankTypes:IsPersonalBankTab(bagID) then return "character_bank" end
     if BankTypes:IsWarbandTab(bagID) then return "warband_bank" end

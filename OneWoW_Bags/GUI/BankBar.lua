@@ -2,7 +2,7 @@ local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
-local BankTypes = ns.BankTypes
+local BankTypes = OneWoW.Inventory.BankTypes
 local BankSet = ns.BankSet
 local WH = ns.WindowHelpers
 local BH = ns.BarHelpers

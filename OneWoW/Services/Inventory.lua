@@ -9,9 +9,10 @@ local _, ns = ...
 -- to subscribers. Nothing is persisted here — AltTracker_Storage owns SV
 -- writes; Bags owns UI layout; PredicateEngine stays pull/eval.
 --
--- Phase 1 owns a subset of bag/bank events. Bags and Storage still register
--- the same events until later migration phases; core-event-funnel enforcement
--- lands only after Bags is off these events.
+-- Phase 1–2: event funnel + BagTypes/BankTypes + ForEachSlot/GetBagIDs.
+-- Bags and Storage still register overlapping bag/bank events until later
+-- migration phases; core-event-funnel enforcement lands only after Bags is
+-- off these events.
 --
 -- Channels:
 --   RegisterDirtyCallback      fn(bagID)           BAG_UPDATE
@@ -20,16 +21,36 @@ local _, ns = ...
 --   RegisterBankClosedCallback fn()                BANKFRAME_CLOSED
 --   RegisterBankSlotsCallback  fn(event, ...)      bank slot change events
 --
+-- Scan helpers:
+--   BagTypes / BankTypes       container ID vocabulary (subdir modules)
+--   GetBagIDs(scope)           resolve scope -> bagID list
+--   ForEachSlot(scope, fn)     walk slots; fn may return true to stop
+--
 -- Full design: OneWoW/Docs/INVENTORY.md
 -- ============================================================================
 
 local Inventory = {}
 ns.Inventory = Inventory
 
+Inventory.BagTypes = ns.InventoryBagTypes
+Inventory.BankTypes = ns.InventoryBankTypes
+
 local pairs, next, type, ipairs = pairs, next, type, ipairs
-local wipe = wipe
+local wipe, tinsert = wipe, tinsert
+local C_Container = C_Container
 
 local PE = ns.PredicateEngine
+local BagTypes = Inventory.BagTypes
+local BankTypes = Inventory.BankTypes
+
+-- Cached "bank" = personal + warband tab IDs (static Enum ranges).
+local allBankBagIDs = {}
+for _, bagID in ipairs(BankTypes:GetBankTabIDs()) do
+    tinsert(allBankBagIDs, bagID)
+end
+for _, bagID in ipairs(BankTypes:GetWarbandTabIDs()) do
+    tinsert(allBankBagIDs, bagID)
+end
 
 local EVENTS = {
     "BAG_UPDATE",
@@ -209,4 +230,52 @@ end
 ---@return boolean open
 function Inventory.IsBankOpen()
     return bankOpen
+end
+
+--- Resolve a scope to a list of bag IDs.
+--- Named scopes: "player" | "personal" | "warband" | "bank" (personal+warband).
+--- Also accepts a dirtyBags map (bagID -> true) or an array of bag IDs.
+---@param scope string|table
+---@return number[] bagIDs
+function Inventory.GetBagIDs(scope)
+    if scope == "player" then
+        return BagTypes:GetPlayerBagIDs()
+    elseif scope == "personal" then
+        return BankTypes:GetBankTabIDs()
+    elseif scope == "warband" then
+        return BankTypes:GetWarbandTabIDs()
+    elseif scope == "bank" then
+        return allBankBagIDs
+    elseif type(scope) == "table" then
+        if type(scope[1]) == "number" then
+            return scope
+        end
+        local ids = {}
+        for bagID in pairs(scope) do
+            tinsert(ids, bagID)
+        end
+        return ids
+    end
+    error("OneWoW.Inventory.GetBagIDs: scope must be a named string or bagID table", 2)
+end
+
+--- Walk every slot in the resolved bags. `fn(bagID, slotID, containerInfo)` —
+--- `containerInfo` may be nil for empty slots. Return true from `fn` to stop.
+---@param scope string|table
+---@param fn fun(bagID: number, slotID: number, containerInfo: table|nil): boolean|nil
+function Inventory.ForEachSlot(scope, fn)
+    if type(fn) ~= "function" then
+        error("OneWoW.Inventory.ForEachSlot: fn function required", 2)
+    end
+    local bagIDs = Inventory.GetBagIDs(scope)
+    for i = 1, #bagIDs do
+        local bagID = bagIDs[i]
+        local numSlots = C_Container.GetContainerNumSlots(bagID) or 0
+        for slotID = 1, numSlots do
+            local info = C_Container.GetContainerItemInfo(bagID, slotID)
+            if fn(bagID, slotID, info) then
+                return
+            end
+        end
+    end
 end

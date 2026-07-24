@@ -1231,10 +1231,11 @@ Channels: `RegisterDirtyCallback` (`fn(bagID)`), `RegisterDelayedCallback`
 `IsBankOpen()`. On each `BAG_UPDATE_DELAYED`, Inventory calls
 `PE:InvalidatePropsCache()` once before fan-out. See [INVENTORY.md](INVENTORY.md).
 
-**Migration status:** Phase 1 consumers (QoL autoopen / bagbar / toast-loot,
-Overlays2 bag/bank surfaces) subscribe to these channels. Bags and Storage still
-register overlapping bag/bank events until later phases; `core-event-funnel` is
-**not** seeded for these events yet.
+**Migration status:** Phase 1–2 complete — QoL canaries + Overlays2 subscribe to
+channels; `BagTypes` / `BankTypes` / `ForEachSlot` live under Inventory; Bags
+consumes types from core. Bags and Storage still register overlapping bag/bank
+events until later phases; `core-event-funnel` is **not** seeded for these
+events yet.
 
 ---
 
@@ -1267,7 +1268,7 @@ register overlapping bag/bank events until later phases; `core-event-funnel` is
 | `OneWoW/Core/Restriction.lua` | Combat/restriction funnel: event-driven cache, intent getters, `RunWhenUnrestricted`, `GetSnapshot` + Midnight secret-value guard (§8.6) |
 | `OneWoW/Services/ProfessionRecipe.lua` | Trade-skill recipe scan funnel: single `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED` owner, scan/open/closed callback channels, ephemeral snapshots (§8.7) |
 | `OneWoW/Services/Merchant.lua` | Merchant scan funnel: single `MERCHANT_*` owner, scan/show/closed callback channels, ephemeral vendor snapshots, no SV (§8.8, see [MERCHANT.md](MERCHANT.md)) |
-| `OneWoW/Services/Inventory.lua` | Live bag/bank event funnel: dirty/delayed/bank channels, no SV (§8.9, see [INVENTORY.md](INVENTORY.md)) |
+| `OneWoW/Services/Inventory.lua` | Live bag/bank event funnel + `ForEachSlot` / `GetBagIDs`; `BagTypes`/`BankTypes` via subdir (§8.9, see [INVENTORY.md](INVENTORY.md)) |
 | `OneWoW/Services/UIParent.lua` | Cinematic `UIParent` hide/restore funnel + fragile FrameXML indicator re-sync (minimap mail) |
 | `OneWoW/Services/Collectibles.lua` | Collectible identity resolver: key grammar (`type[:subtype]:id`), live display + collection state, no SV (see [COLLECTIBLES.md](COLLECTIBLES.md)) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |

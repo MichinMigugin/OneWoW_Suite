@@ -4,6 +4,7 @@ local OneWoW = OneWoW
 
 local PE = OneWoW.PredicateEngine
 local Toasts = OneWoW.Toasts
+local Inventory = OneWoW.Inventory
 
 local TYPE_COLORS = {
     mount  = {1.00, 0.84, 0.00, 1.0},
@@ -104,15 +105,11 @@ end
 
 local function BuildBagCache()
     bagCache = {}
-    for bag = 0, 4 do
-        local slots = C_Container.GetContainerNumSlots(bag)
-        for slot = 1, slots do
-            local info = C_Container.GetContainerItemInfo(bag, slot)
-            if info and info.itemID then
-                bagCache[GetItemCacheKey(info)] = info.itemID
-            end
+    Inventory.ForEachSlot("player", function(_, _, info)
+        if info and info.itemID then
+            bagCache[GetItemCacheKey(info)] = info.itemID
         end
-    end
+    end)
     bagReady = true
 end
 
@@ -141,38 +138,33 @@ local function ScanBagsForCollectibles()
 
     local newCache = {}
 
-    for bag = 0, 4 do
-        local slots = C_Container.GetContainerNumSlots(bag)
-        for slot = 1, slots do
-            local info = C_Container.GetContainerItemInfo(bag, slot)
-            if info and info.itemID then
-                local guid = GetItemCacheKey(info)
-                newCache[guid] = info.itemID
+    Inventory.ForEachSlot("player", function(bag, slot, info)
+        if not (info and info.itemID) then return end
+        local guid = GetItemCacheKey(info)
+        newCache[guid] = info.itemID
 
-                if not bagCache[guid] then
-                    local props = PE:BuildProps(info.itemID, bag, slot, info)
+        if not bagCache[guid] then
+            local props = PE:BuildProps(info.itemID, bag, slot, info)
 
-                    if props.name and props.icon then
-                        if tmogsEnabled and tmogsCompiled then
-                            local result = PE:SafeEvaluate(tmogsCompiled, props)
+            if props.name and props.icon then
+                if tmogsEnabled and tmogsCompiled then
+                    local result = PE:SafeEvaluate(tmogsCompiled, props)
 
-                            if result then
-                                FireLootToast("tmog", props.nameRaw, props.icon, nil)
-                            end
-                        end
+                    if result then
+                        FireLootToast("tmog", props.nameRaw, props.icon, nil)
+                    end
+                end
 
-                        if recipesEnabled and recipeCompiled then
-                            local result = PE:SafeEvaluate(recipeCompiled, props)
+                if recipesEnabled and recipeCompiled then
+                    local result = PE:SafeEvaluate(recipeCompiled, props)
 
-                            if result then
-                                FireLootToast("recipe", props.nameRaw, props.icon, nil)
-                            end
-                        end
+                    if result then
+                        FireLootToast("recipe", props.nameRaw, props.icon, nil)
                     end
                 end
             end
         end
-    end
+    end)
 
     bagCache = newCache
 end

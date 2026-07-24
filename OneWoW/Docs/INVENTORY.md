@@ -5,22 +5,30 @@
 > shape this mirrors.
 
 One core service owns the **live** bag/bank event funnel for the logged-in
-character. Cross-alt persistence, Query, and dupes stay in
-`OneWoW_AltTracker_Storage`. PredicateEngine stays pull/eval (no bag watches).
+character, plus shared container ID vocabulary and slot iteration helpers.
+Cross-alt persistence, Query, and dupes stay in `OneWoW_AltTracker_Storage`.
+PredicateEngine stays pull/eval (no bag watches).
 
-**File:** [`OneWoW/Services/Inventory.lua`](../Services/Inventory.lua), published
-as `OneWoW.Inventory` via the Facade.
+**Files:**
+
+- [`OneWoW/Services/Inventory.lua`](../Services/Inventory.lua) — funnel + scan helpers
+- [`OneWoW/Services/Inventory/BagTypes.lua`](../Services/Inventory/BagTypes.lua)
+- [`OneWoW/Services/Inventory/BankTypes.lua`](../Services/Inventory/BankTypes.lua)
+
+Published as `OneWoW.Inventory` via the Facade (`BagTypes` / `BankTypes` hang off
+that table).
 
 ## Live vs persisted
 
 | Concern | Owner |
 | --- | --- |
 | Bag/bank WoW events for this character | `OneWoW.Inventory` |
+| Container ID vocabulary + live slot walk | `OneWoW.Inventory` |
 | Persist bags/banks/mail across alts | `OneWoW_AltTracker_Storage` |
 | Slot enrichment / `#keyword` match | `OneWoW.PredicateEngine` |
 | Bag UI layout | `OneWoW_Bags` |
 
-## Ownership (Phase 1)
+## Ownership (events)
 
 The service registers these events through the core multiplexer while at least
 one consumer is subscribed:
@@ -56,15 +64,25 @@ share one event refcount (0→1 arm / 1→0 tear-down).
 On each `BAG_UPDATE_DELAYED`, Inventory calls `PE:InvalidatePropsCache()` once
 before fanning the delayed channel.
 
-## Phase 1 consumers
+## Container types + scan helpers
 
-- QoL `autoopen` — delayed + `IsBankOpen()`; mail/guild suppress stay local
-- QoL `bagbar` — delayed
-- QoL `toast-loot` — delayed
+| API | Use |
+| --- | --- |
+| `Inventory.BagTypes` | Player bag ID lists / predicates (`IsPlayerBag`, `IsReagentBag`, …) |
+| `Inventory.BankTypes` | Personal / warband tab ID lists / predicates |
+| `GetBagIDs(scope)` | `"player"` \| `"personal"` \| `"warband"` \| `"bank"` \| dirty map \| bagID array |
+| `ForEachSlot(scope, fn)` | `fn(bagID, slotID, containerInfo)`; return `true` from `fn` to stop |
+
+`GetBagName` / `GetTabName` return **locale keys** (e.g. `BAG_BACKPACK`); Bags
+resolves them via its own `L`. No core locale entries for those keys.
+
+## Current consumers
+
+- QoL `autoopen` / `bagbar` / `toast-loot` — delayed channel + `ForEachSlot("player")`
 - Overlays2 bag/bank surfaces — dirty + delayed + bank open/slots
+- `OneWoW_Bags` — `Inventory.BagTypes` / `BankTypes` for ID vocabulary (events still local)
 
 ## Later
 
-- Shared `BagTypes` / `BankTypes` + `ForEachSlot` (Phase 2)
 - Storage DataManager arming (Phase 3)
 - Bags event migration + `core-event-funnel` seed (Phase 4)

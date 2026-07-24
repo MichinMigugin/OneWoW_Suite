@@ -1,7 +1,7 @@
 local _, ns = ...
 
-local BagTypes = ns.BagTypes
-local BankTypes = ns.BankTypes
+local BagTypes = OneWoW.Inventory.BagTypes
+local BankTypes = OneWoW.Inventory.BankTypes
 
 local C_Bank = C_Bank
 local C_Container = C_Container
