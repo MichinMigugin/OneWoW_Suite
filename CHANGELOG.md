@@ -24,7 +24,13 @@
 
 ---
 
-*No user-facing changes this release for Notes, AltTracker, Trackers, Bags, Shopping List, Direct Deposit, or DevTool.*
+# AltTracker
+## Financials
+- Looted gold from mobs, auto-loot, and delve end piles is categorized as Looted Gold instead of Uncategorized Income
+
+---
+
+*No user-facing changes this release for Notes, Trackers, Bags, Shopping List, Direct Deposit, or DevTool.*
 
 ---
 
