@@ -1219,27 +1219,35 @@ seeded with `MERCHANT_*`→`Merchant.lua`.
 
 ### 8.9 Inventory funnel (`OneWoW.Inventory`)
 
-One core service owns the live bag/bank event funnel for the logged-in character
-(`Services/Inventory.lua`), registered via the core `ns.RegisterEvent` multiplexer
-(§3.3). It mirrors Merchant (§8.8): dirty-bag accumulation, delayed coalesce, bank
-open/closed/slots/tabs, container, lock, and cooldown channels. Core persists
-nothing — AltTracker_Storage owns cross-alt SV; Bags owns UI layout; PredicateEngine
-stays pull/eval. Also publishes `BagTypes` / `BankTypes` and `ForEachSlot` /
-`GetBagIDs` scan helpers.
+One core service owns the live bag/bank/guild-bank event funnel for the logged-in
+character (`Services/Inventory.lua`), registered via the core `ns.RegisterEvent`
+multiplexer (§3.3). It mirrors Merchant (§8.8): dirty-bag accumulation, delayed
+coalesce, bank open/closed/slots/tabs, container, lock, and cooldown channels,
+plus guild open/closed (PIM `GuildBanker` + `GUILDBANKFRAME_*` dedupe), slots
+(~0.2s coalesce), lock, tabs, and money. Core persists nothing —
+AltTracker_Storage owns cross-alt SV; Bags owns UI layout; PredicateEngine stays
+pull/eval. Also publishes `BagTypes` / `BankTypes` and `ForEachSlot` /
+`GetBagIDs` scan helpers (`C_Container` only — not guild tab APIs).
 
 Channels include `RegisterDirtyCallback`, `RegisterDelayedCallback`,
 `RegisterBankOpenCallback` / `RegisterBankClosedCallback` /
 `RegisterBankSlotsCallback` / `RegisterBankTabsCallback`,
 `RegisterContainerCallback`, `RegisterLockCallback`, `RegisterCooldownCallback`,
-plus `UnregisterCallback` and `IsBankOpen()`. On each `BAG_UPDATE_DELAYED`,
-Inventory calls `PE:InvalidatePropsCache()` once before fan-out. See
-[INVENTORY.md](INVENTORY.md).
+`RegisterGuildOpenCallback` / `RegisterGuildClosedCallback` /
+`RegisterGuildSlotsCallback` / `RegisterGuildLockCallback` /
+`RegisterGuildTabsCallback` / `RegisterGuildMoneyCallback`, plus
+`UnregisterCallback`, `IsBankOpen()`, and `IsGuildBankOpen()`. On each
+`BAG_UPDATE_DELAYED`, Inventory calls `PE:InvalidatePropsCache()` once before
+fan-out. See [INVENTORY.md](INVENTORY.md).
 
 Suite-wide bag/bank consolidation is complete: Bags, Storage, Overlays2, QoL,
 ShoppingList, Trackers, DirectDeposit, and Accounting consume these channels (or
-types/helpers). The single-owner rule is enforced by `core-event-funnel` (§3.10),
-seeded with the Inventory-owned event names → `Inventory.lua`. Guild bank and mail
-events remain with Bags / Storage for now.
+types/helpers). Guild Phase 1 consumers (autoopen, Accounting BankTracker,
+Storage DataManager) use the guild channels; Bags / Overlays2 / AltTracker
+`t-bank` still register guild events locally until later phases. The bag/bank
+single-owner rule is enforced by `core-event-funnel` (§3.10), seeded with the
+Inventory-owned bag/bank event names → `Inventory.lua`. Guild `GUILDBANK*` events
+are not seeded yet (Bags dual-registers); mail remains local.
 
 ---
 
@@ -1272,7 +1280,7 @@ events remain with Bags / Storage for now.
 | `OneWoW/Core/Restriction.lua` | Combat/restriction funnel: event-driven cache, intent getters, `RunWhenUnrestricted`, `GetSnapshot` + Midnight secret-value guard (§8.6) |
 | `OneWoW/Services/ProfessionRecipe.lua` | Trade-skill recipe scan funnel: single `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED` owner, scan/open/closed callback channels, ephemeral snapshots (§8.7) |
 | `OneWoW/Services/Merchant.lua` | Merchant scan funnel: single `MERCHANT_*` owner, scan/show/closed callback channels, ephemeral vendor snapshots, no SV (§8.8, see [MERCHANT.md](MERCHANT.md)) |
-| `OneWoW/Services/Inventory.lua` | Live bag/bank event funnel + `ForEachSlot` / `GetBagIDs`; `BagTypes`/`BankTypes` via subdir (§8.9, see [INVENTORY.md](INVENTORY.md)) |
+| `OneWoW/Services/Inventory.lua` | Live bag/bank/guild-bank event funnel + `ForEachSlot` / `GetBagIDs`; `BagTypes`/`BankTypes` via subdir (§8.9, see [INVENTORY.md](INVENTORY.md)) |
 | `OneWoW/Services/UIParent.lua` | Cinematic `UIParent` hide/restore funnel + fragile FrameXML indicator re-sync (minimap mail) |
 | `OneWoW/Services/Collectibles.lua` | Collectible identity resolver: key grammar (`type[:subtype]:id`), live display + collection state, no SV (see [COLLECTIBLES.md](COLLECTIBLES.md)) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |

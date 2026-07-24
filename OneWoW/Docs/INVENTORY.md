@@ -4,10 +4,11 @@
 > (`ns.RegisterEvent` multiplexer), and [MERCHANT.md](MERCHANT.md) — the funnel
 > shape this mirrors.
 
-One core service owns the **live** bag/bank event funnel for the logged-in
-character, plus shared container ID vocabulary and slot iteration helpers.
-Cross-alt persistence, Query, and dupes stay in `OneWoW_AltTracker_Storage`.
-PredicateEngine stays pull/eval (no bag watches).
+One core service owns the **live** bag/bank/guild-bank event funnel for the
+logged-in character, plus shared container ID vocabulary and slot iteration
+helpers. Cross-alt persistence, Query, and dupes stay in
+`OneWoW_AltTracker_Storage`. PredicateEngine stays pull/eval (no bag watches).
+Guild bank uses tab/slot APIs — not `ForEachSlot` / `GetBagIDs`.
 
 **Files:**
 
@@ -22,16 +23,16 @@ that table).
 
 | Concern | Owner |
 | --- | --- |
-| Bag/bank WoW events for this character | `OneWoW.Inventory` |
-| Container ID vocabulary + live slot walk | `OneWoW.Inventory` |
+| Bag/bank/guild-bank WoW events for this character | `OneWoW.Inventory` |
+| Container ID vocabulary + live slot walk (`C_Container`) | `OneWoW.Inventory` |
 | Persist bags/banks/mail across alts | `OneWoW_AltTracker_Storage` |
 | Slot enrichment / `#keyword` match | `OneWoW.PredicateEngine` |
 | Bag UI layout | `OneWoW_Bags` |
 
 ## Ownership (events)
 
-The service is the single owner of these events, registered through the core
-multiplexer while at least one consumer is subscribed:
+The service is the single owner of these **bag/bank** events, registered through
+the core multiplexer while at least one consumer is subscribed:
 
 - `BAG_UPDATE` / `BAG_UPDATE_DELAYED`
 - `BAG_CONTAINER_UPDATE` / `BAG_UPDATE_COOLDOWN`
@@ -43,7 +44,12 @@ Enforced by the `core-event-funnel` pre-commit hook
 (`bin/check_no_core_event_bypass.py`, `EVENT_OWNER` → `Inventory.lua`; escape
 hatch `-- noqa: core-event-funnel`).
 
-Guild bank and mail events stay with Bags / Storage for now.
+**Guild bank** events (`GUILDBANKFRAME_*`, `GUILDBANKBAGSLOTS_CHANGED`,
+`GUILDBANK_ITEM_LOCK_CHANGED`, `GUILDBANK_UPDATE_TABS`, money/withdraw) are
+already funneled here (plus PIM `GuildBanker` for open/close dedupe). They are
+**not** seeded in `core-event-funnel` yet — Bags still dual-registers until
+guild Phase 3. PIM is a shared bus and is never funnel-enforced. Mail stays
+local to Storage / QoL for now.
 
 ## Channels
 
@@ -58,8 +64,15 @@ Guild bank and mail events stay with Bags / Storage for now.
 | `RegisterLockCallback(ownerID, fn)` | `fn(bagID, slotID)` | Item lock changes |
 | `RegisterCooldownCallback(ownerID, fn)` | `fn()` | Bag item cooldown pulse |
 | `RegisterBankTabsCallback(ownerID, fn)` | `fn(bankType, ...)` | Bank tabs changed |
-| `UnregisterCallback(ownerID)` | — | Drops all channels for an owner |
-| `IsBankOpen()` | — | Event-tracked bank-open flag for suppress gates |
+| `RegisterGuildOpenCallback(ownerID, fn)` | `fn()` | Guild bank opened (PIM + `GUILDBANKFRAME_*`, deduped) |
+| `RegisterGuildClosedCallback(ownerID, fn)` | `fn()` | Guild bank closed (deduped) |
+| `RegisterGuildSlotsCallback(ownerID, fn)` | `fn()` | Guild bag slots changed (~0.2s coalesce) |
+| `RegisterGuildLockCallback(ownerID, fn)` | `fn()` | Guild item lock changed |
+| `RegisterGuildTabsCallback(ownerID, fn)` | `fn()` | Guild tabs updated |
+| `RegisterGuildMoneyCallback(ownerID, fn)` | `fn(event)` | Guild money / withdraw-limit updates |
+| `UnregisterCallback(ownerID)` | — | Drops all channels (bag + guild) for an owner |
+| `IsBankOpen()` | — | Event-tracked character/warband bank-open flag |
+| `IsGuildBankOpen()` | — | Event-tracked guild-bank open flag |
 
 Re-registering an `ownerID` on a channel replaces the prior handler. Fan-out
 uses `Lifecycle.SafeCall` so one bad consumer cannot kill the rest. All channels
@@ -84,7 +97,8 @@ resolves them via its own `L`. No core locale entries for those keys.
 
 - `OneWoW_Bags` — delayed / lock / cooldown / bank open-closed / tabs / container (+ types)
 - Overlays2 bag/bank surfaces — dirty + delayed + bank open/slots
-- `OneWoW_AltTracker_Storage` DataManager — delayed + bank-open (guild/mail local)
-- QoL autoopen / bagbar / toast-loot / questitembar / vendorpanel
+- `OneWoW_AltTracker_Storage` DataManager — delayed + bank-open + guild open/tabs/slots (mail local)
+- QoL autoopen (`IsGuildBankOpen` suppress) / bagbar / toast-loot / questitembar / vendorpanel
 - ShoppingList alerts / bag overlays; Trackers engine / farmvalue
-- DirectDeposit; Accounting BankTracker; Bags integration bank-open
+- DirectDeposit; Accounting BankTracker (character + guild open/closed); Bags integration bank-open
+- Still local for guild: Bags UI, Overlays2 guild surface, AltTracker `t-bank` (Phases 2–3)

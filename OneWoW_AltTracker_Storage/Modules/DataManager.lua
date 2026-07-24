@@ -19,7 +19,7 @@ function DataManager:Initialize()
     initialized = true
 end
 
--- Bag/bank WoW events route through OneWoW.Inventory. Guild / mail / logout stay
+-- Bag/bank/guild WoW events route through OneWoW.Inventory. Mail / logout stay
 -- on a local frame (not Inventory-owned yet).
 function DataManager:RegisterEvents()
     if not inventoryArmed then
@@ -30,6 +30,15 @@ function DataManager:RegisterEvents()
         Inventory.RegisterBankOpenCallback(INVENTORY_OWNER, function()
             DataManager:OnBankOpened()
         end)
+        Inventory.RegisterGuildOpenCallback(INVENTORY_OWNER, function()
+            DataManager:OnGuildBankOpened()
+        end)
+        Inventory.RegisterGuildTabsCallback(INVENTORY_OWNER, function()
+            DataManager:OnGuildBankTabsUpdated()
+        end)
+        Inventory.RegisterGuildSlotsCallback(INVENTORY_OWNER, function()
+            DataManager:OnGuildBankSlotsChanged()
+        end)
     end
 
     if not eventFrame then
@@ -37,10 +46,6 @@ function DataManager:RegisterEvents()
     end
 
     local events = {
-        "GUILDBANKFRAME_OPENED",
-        "GUILDBANKFRAME_CLOSED",
-        "GUILDBANK_UPDATE_TABS",
-        "GUILDBANKBAGSLOTS_CHANGED",
         "MAIL_SHOW",
         "MAIL_CLOSED",
         "MAIL_INBOX_UPDATE",
@@ -95,23 +100,29 @@ function DataManager:OnBankOpened()
     end
 end
 
+--- Inventory guild-open channel.
+function DataManager:OnGuildBankOpened()
+    C_Timer.After(0.5, function()
+        self:CollectGuildBank()
+    end)
+end
+
+--- Inventory guild-tabs channel.
+function DataManager:OnGuildBankTabsUpdated()
+    C_Timer.After(0.2, function()
+        self:CollectGuildBank()
+    end)
+end
+
+--- Inventory guild-slots channel (already coalesced ~0.2s in Inventory).
+function DataManager:OnGuildBankSlotsChanged()
+    C_Timer.After(0.1, function()
+        self:CollectGuildBank()
+    end)
+end
+
 function DataManager:HandleEvent(event)
-    if event == "GUILDBANKFRAME_OPENED" then
-        C_Timer.After(0.5, function()
-            self:CollectGuildBank()
-        end)
-
-    elseif event == "GUILDBANK_UPDATE_TABS" then
-        C_Timer.After(0.2, function()
-            self:CollectGuildBank()
-        end)
-
-    elseif event == "GUILDBANKBAGSLOTS_CHANGED" then
-        C_Timer.After(0.3, function()
-            self:CollectGuildBank()
-        end)
-
-    elseif event == "MAIL_SHOW" then
+    if event == "MAIL_SHOW" then
         C_Timer.After(0.5, function()
             self:CollectMail()
         end)

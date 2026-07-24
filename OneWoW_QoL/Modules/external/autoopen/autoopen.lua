@@ -48,10 +48,9 @@ end
 
 function AutoOpenModule:ScanAndOpen()
     -- Merchant and trade-skill state are read live from the core funnels
-    -- (OneWoW.Merchant / OneWoW.ProfessionRecipe, the single event owners) rather
-    -- than locally tracked _atMerchant / _atCrafting flags. Character bank open
-    -- state comes from OneWoW.Inventory; guild/mail suppress stay local.
-    if Inventory.IsBankOpen() or self._atGuildBank or self._atMail
+    -- (OneWoW.Merchant / OneWoW.ProfessionRecipe). Character + guild bank open
+    -- state come from OneWoW.Inventory; mail suppress stays local.
+    if Inventory.IsBankOpen() or Inventory.IsGuildBankOpen() or self._atMail
         or OneWoW.Merchant.IsMerchantOpen()
         or OneWoW.ProfessionRecipe.IsTradeskillOpen() then
         return
@@ -83,15 +82,11 @@ function AutoOpenModule:OnEnable()
         AO:ScanAndOpen()
     end)
 
-    -- Guild bank + mail are not Inventory-owned yet; keep a thin local frame.
+    -- Mail is not Inventory-owned yet; keep a thin local frame.
     if not self._frame then
         self._frame = CreateFrame("Frame", "OneWoW_QoL_AutoOpen")
         self._frame:SetScript("OnEvent", function(_, event)
-            if event == "GUILDBANKFRAME_OPENED" then
-                AO._atGuildBank = true
-            elseif event == "GUILDBANKFRAME_CLOSED" then
-                AO._atGuildBank = false
-            elseif event == "MAIL_SHOW" then
+            if event == "MAIL_SHOW" then
                 AO._atMail = true
             elseif event == "MAIL_CLOSED" then
                 AO._atMail = false
@@ -103,8 +98,6 @@ function AutoOpenModule:OnEnable()
     end)
     self._frame:RegisterEvent("MAIL_SHOW")
     self._frame:RegisterEvent("MAIL_CLOSED")
-    self._frame:RegisterEvent("GUILDBANKFRAME_OPENED")
-    self._frame:RegisterEvent("GUILDBANKFRAME_CLOSED")
 end
 
 function AutoOpenModule:OnDisable()
@@ -113,7 +106,6 @@ function AutoOpenModule:OnDisable()
         self._frame:UnregisterAllEvents()
     end
     OneWoW_QoL:UnregisterEnteringWorldHandler("autoopen")
-    self._atGuildBank = false
     self._atMail = false
 end
 

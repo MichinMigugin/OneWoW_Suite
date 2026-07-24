@@ -3,16 +3,20 @@ local _, ns = ...
 -- ============================================================================
 -- Inventory
 -- ============================================================================
--- Live bag/bank event funnel for the logged-in character. Mirrors Merchant /
--- ProfessionRecipe: one core service registers the WoW events (only while at
--- least one consumer is subscribed), accumulates dirty bag IDs, and fans out
--- to subscribers. Nothing is persisted here — AltTracker_Storage owns SV
--- writes; Bags owns UI layout; PredicateEngine stays pull/eval.
+-- Live bag/bank/guild-bank event funnel for the logged-in character. Mirrors
+-- Merchant / ProfessionRecipe: one core service registers the WoW events
+-- (only while at least one consumer is subscribed), accumulates dirty bag
+-- IDs, and fans out to subscribers. Nothing is persisted here —
+-- AltTracker_Storage owns SV writes; Bags owns UI layout; PredicateEngine
+-- stays pull/eval.
 --
 -- Suite-wide owner of bag/bank container events (enforced by core-event-funnel).
--- Guild bank / mail stay with their current owners.
+-- Guild GUILDBANK* ownership lands with Phase 3 of the guild funnel; until
+-- then Bags may still register overlapping guild events. PIM is listened to
+-- for GuildBanker open/close only — not funnel-enforced (shared interaction bus).
+-- Mail stays with its current owners.
 --
--- Channels:
+-- Channels (bags / character-warband bank):
 --   RegisterDirtyCallback       fn(bagID)           BAG_UPDATE
 --   RegisterDelayedCallback     fn(dirtyBags)       BAG_UPDATE_DELAYED (coalesced set)
 --   RegisterBankOpenCallback    fn()                BANKFRAME_OPENED
@@ -23,7 +27,15 @@ local _, ns = ...
 --   RegisterCooldownCallback    fn()                BAG_UPDATE_COOLDOWN
 --   RegisterBankTabsCallback    fn(bankType, ...)   BANK_TABS_CHANGED
 --
--- Scan helpers:
+-- Channels (guild bank):
+--   RegisterGuildOpenCallback   fn()                open (PIM GuildBanker + GUILDBANKFRAME_*)
+--   RegisterGuildClosedCallback fn()                closed (deduped)
+--   RegisterGuildSlotsCallback  fn()                GUILDBANKBAGSLOTS_CHANGED (~0.2s coalesce)
+--   RegisterGuildLockCallback   fn()                GUILDBANK_ITEM_LOCK_CHANGED
+--   RegisterGuildTabsCallback   fn()                GUILDBANK_UPDATE_TABS
+--   RegisterGuildMoneyCallback  fn(event)           MONEY / WITHDRAWMONEY
+--
+-- Scan helpers (C_Container only — not guild tab/slot APIs):
 --   BagTypes / BankTypes        container ID vocabulary (subdir modules)
 --   GetBagIDs(scope)            resolve scope -> bagID list
 --   ForEachSlot(scope, fn)      walk slots; fn may return true to stop
@@ -40,6 +52,7 @@ Inventory.BankTypes = ns.InventoryBankTypes
 local pairs, next, type, ipairs = pairs, next, type, ipairs
 local wipe, tinsert = wipe, tinsert
 local C_Container = C_Container
+local C_Timer = C_Timer
 
 local PE = ns.PredicateEngine
 local BagTypes = Inventory.BagTypes
@@ -65,8 +78,18 @@ local EVENTS = {
     "ITEM_LOCK_CHANGED",
     "BAG_UPDATE_COOLDOWN",
     "BANK_TABS_CHANGED",
+    "GUILDBANKFRAME_OPENED",
+    "GUILDBANKFRAME_CLOSED",
+    "GUILDBANKBAGSLOTS_CHANGED",
+    "GUILDBANK_ITEM_LOCK_CHANGED",
+    "GUILDBANK_UPDATE_TABS",
+    "GUILDBANK_UPDATE_MONEY",
+    "GUILDBANK_UPDATE_WITHDRAWMONEY",
+    "PLAYER_INTERACTION_MANAGER_FRAME_SHOW",
+    "PLAYER_INTERACTION_MANAGER_FRAME_HIDE",
 }
 local EVENT_OWNER = "Inventory"
+local GUILD_SLOTS_DEBOUNCE = 0.2
 
 -- ownerID -> fn, one table per channel.
 local dirtyCallbacks = {}
@@ -78,10 +101,18 @@ local containerCallbacks = {}
 local lockCallbacks = {}
 local cooldownCallbacks = {}
 local bankTabsCallbacks = {}
+local guildOpenCallbacks = {}
+local guildClosedCallbacks = {}
+local guildSlotsCallbacks = {}
+local guildLockCallbacks = {}
+local guildTabsCallbacks = {}
+local guildMoneyCallbacks = {}
 
 local eventsRegistered = false
 local bankOpen = false
+local guildBankOpen = false
 local dirtyBags = {}
+local guildSlotsTimer = nil
 
 local OnEvent -- forward declaration
 
@@ -95,6 +126,19 @@ local function AnySubscribers()
         or next(lockCallbacks) ~= nil
         or next(cooldownCallbacks) ~= nil
         or next(bankTabsCallbacks) ~= nil
+        or next(guildOpenCallbacks) ~= nil
+        or next(guildClosedCallbacks) ~= nil
+        or next(guildSlotsCallbacks) ~= nil
+        or next(guildLockCallbacks) ~= nil
+        or next(guildTabsCallbacks) ~= nil
+        or next(guildMoneyCallbacks) ~= nil
+end
+
+local function ClearGuildSlotsTimer()
+    if guildSlotsTimer then
+        guildSlotsTimer:Cancel()
+        guildSlotsTimer = nil
+    end
 end
 
 local function EnsureEvents()
@@ -112,12 +156,26 @@ local function EnsureEvents()
         end
         wipe(dirtyBags)
         bankOpen = false
+        guildBankOpen = false
+        ClearGuildSlotsTimer()
     end
 end
 
 local function FireChannel(callbacks, label, ...)
     for ownerID, fn in pairs(callbacks) do
         ns.Lifecycle.SafeCall("Inventory." .. label .. ":" .. ownerID, fn, ...)
+    end
+end
+
+--- Deduped guild open/closed (PIM GuildBanker and GUILDBANKFRAME_* both fire).
+local function SetGuildBankOpen(open)
+    if guildBankOpen == open then return end
+    guildBankOpen = open
+    if open then
+        FireChannel(guildOpenCallbacks, "guildOpen")
+    else
+        ClearGuildSlotsTimer()
+        FireChannel(guildClosedCallbacks, "guildClosed")
     end
 end
 
@@ -175,6 +233,57 @@ function OnEvent(event, ...)
 
     if event == "BANK_TABS_CHANGED" then
         FireChannel(bankTabsCallbacks, "bankTabs", ...)
+        return
+    end
+
+    if event == "GUILDBANKFRAME_OPENED" then
+        SetGuildBankOpen(true)
+        return
+    end
+
+    if event == "GUILDBANKFRAME_CLOSED" then
+        SetGuildBankOpen(false)
+        return
+    end
+
+    if event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" then
+        local interactType = ...
+        if interactType == Enum.PlayerInteractionType.GuildBanker then
+            SetGuildBankOpen(true)
+        end
+        return
+    end
+
+    if event == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then
+        local interactType = ...
+        if interactType == Enum.PlayerInteractionType.GuildBanker then
+            SetGuildBankOpen(false)
+        end
+        return
+    end
+
+    if event == "GUILDBANKBAGSLOTS_CHANGED" then
+        ClearGuildSlotsTimer()
+        guildSlotsTimer = C_Timer.NewTimer(GUILD_SLOTS_DEBOUNCE, function()
+            guildSlotsTimer = nil
+            FireChannel(guildSlotsCallbacks, "guildSlots")
+        end)
+        return
+    end
+
+    if event == "GUILDBANK_ITEM_LOCK_CHANGED" then
+        FireChannel(guildLockCallbacks, "guildLock")
+        return
+    end
+
+    if event == "GUILDBANK_UPDATE_TABS" then
+        FireChannel(guildTabsCallbacks, "guildTabs")
+        return
+    end
+
+    if event == "GUILDBANK_UPDATE_MONEY"
+        or event == "GUILDBANK_UPDATE_WITHDRAWMONEY" then
+        FireChannel(guildMoneyCallbacks, "guildMoney", event)
     end
 end
 
@@ -251,6 +360,48 @@ function Inventory.RegisterBankTabsCallback(ownerID, fn)
     Subscribe(bankTabsCallbacks, ownerID, fn)
 end
 
+--- Subscribe to guild bank open (deduped PIM GuildBanker + GUILDBANKFRAME_OPENED).
+---@param ownerID string
+---@param fn fun()
+function Inventory.RegisterGuildOpenCallback(ownerID, fn)
+    Subscribe(guildOpenCallbacks, ownerID, fn)
+end
+
+--- Subscribe to guild bank close (deduped).
+---@param ownerID string
+---@param fn fun()
+function Inventory.RegisterGuildClosedCallback(ownerID, fn)
+    Subscribe(guildClosedCallbacks, ownerID, fn)
+end
+
+--- Subscribe to coalesced GUILDBANKBAGSLOTS_CHANGED (~0.2s).
+---@param ownerID string
+---@param fn fun()
+function Inventory.RegisterGuildSlotsCallback(ownerID, fn)
+    Subscribe(guildSlotsCallbacks, ownerID, fn)
+end
+
+--- Subscribe to GUILDBANK_ITEM_LOCK_CHANGED.
+---@param ownerID string
+---@param fn fun()
+function Inventory.RegisterGuildLockCallback(ownerID, fn)
+    Subscribe(guildLockCallbacks, ownerID, fn)
+end
+
+--- Subscribe to GUILDBANK_UPDATE_TABS.
+---@param ownerID string
+---@param fn fun()
+function Inventory.RegisterGuildTabsCallback(ownerID, fn)
+    Subscribe(guildTabsCallbacks, ownerID, fn)
+end
+
+--- Subscribe to guild money / withdraw-limit updates.
+---@param ownerID string
+---@param fn fun(event: string)
+function Inventory.RegisterGuildMoneyCallback(ownerID, fn)
+    Subscribe(guildMoneyCallbacks, ownerID, fn)
+end
+
 --- Drop all channel subscriptions for an owner. May unregister the shared events
 --- when the last subscriber leaves.
 ---@param ownerID string
@@ -264,6 +415,12 @@ function Inventory.UnregisterCallback(ownerID)
     lockCallbacks[ownerID] = nil
     cooldownCallbacks[ownerID] = nil
     bankTabsCallbacks[ownerID] = nil
+    guildOpenCallbacks[ownerID] = nil
+    guildClosedCallbacks[ownerID] = nil
+    guildSlotsCallbacks[ownerID] = nil
+    guildLockCallbacks[ownerID] = nil
+    guildTabsCallbacks[ownerID] = nil
+    guildMoneyCallbacks[ownerID] = nil
     EnsureEvents()
 end
 
@@ -271,6 +428,12 @@ end
 ---@return boolean open
 function Inventory.IsBankOpen()
     return bankOpen
+end
+
+--- Live guild-bank open state (PIM GuildBanker and/or GUILDBANKFRAME_*).
+---@return boolean open
+function Inventory.IsGuildBankOpen()
+    return guildBankOpen
 end
 
 --- Resolve a scope to a list of bag IDs.
