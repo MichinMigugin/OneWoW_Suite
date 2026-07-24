@@ -80,9 +80,9 @@ resolves them via its own `L`. No core locale entries for those keys.
 
 - QoL `autoopen` / `bagbar` / `toast-loot` — delayed channel + `ForEachSlot("player")`
 - Overlays2 bag/bank surfaces — dirty + delayed + bank open/slots
+- `OneWoW_AltTracker_Storage` DataManager — delayed + bank-open (persist bags/banks); guild/mail stay local
 - `OneWoW_Bags` — `Inventory.BagTypes` / `BankTypes` for ID vocabulary (events still local)
 
 ## Later
 
-- Storage DataManager arming (Phase 3)
 - Bags event migration + `core-event-funnel` seed (Phase 4)

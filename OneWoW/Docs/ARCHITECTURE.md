@@ -1231,11 +1231,11 @@ Channels: `RegisterDirtyCallback` (`fn(bagID)`), `RegisterDelayedCallback`
 `IsBankOpen()`. On each `BAG_UPDATE_DELAYED`, Inventory calls
 `PE:InvalidatePropsCache()` once before fan-out. See [INVENTORY.md](INVENTORY.md).
 
-**Migration status:** Phase 1–2 complete — QoL canaries + Overlays2 subscribe to
+**Migration status:** Phase 1–3 complete — QoL canaries + Overlays2 subscribe to
 channels; `BagTypes` / `BankTypes` / `ForEachSlot` live under Inventory; Bags
-consumes types from core. Bags and Storage still register overlapping bag/bank
-events until later phases; `core-event-funnel` is **not** seeded for these
-events yet.
+consumes types from core; Storage DataManager arms bag/bank collects via Inventory
+(guild/mail still local). Bags still registers overlapping bag/bank events until
+Phase 4; `core-event-funnel` is **not** seeded for these events yet.
 
 ---
 

@@ -3,26 +3,40 @@ local _, ns = ...
 ns.DataManager = {}
 local DataManager = ns.DataManager
 
+local Inventory = OneWoW.Inventory
+
 local eventFrame = nil
 local initialized = false
+local inventoryArmed = false
 
 -- Post-write storage-change subscribers (ItemIndex, the AltTracker Items tab).
 local storageListeners = {}
+
+local INVENTORY_OWNER = "AltTracker_Storage"
 
 function DataManager:Initialize()
     if initialized then return end
     initialized = true
 end
 
+-- Bag/bank WoW events route through OneWoW.Inventory. Guild / mail / logout stay
+-- on a local frame (not Inventory-owned yet).
 function DataManager:RegisterEvents()
+    if not inventoryArmed then
+        inventoryArmed = true
+        Inventory.RegisterDelayedCallback(INVENTORY_OWNER, function()
+            DataManager:OnInventoryDelayed()
+        end)
+        Inventory.RegisterBankOpenCallback(INVENTORY_OWNER, function()
+            DataManager:OnBankOpened()
+        end)
+    end
+
     if not eventFrame then
         eventFrame = CreateFrame("Frame")
     end
 
     local events = {
-        "BAG_UPDATE_DELAYED",
-        "BANKFRAME_OPENED",
-        "BANKFRAME_CLOSED",
         "GUILDBANKFRAME_OPENED",
         "GUILDBANKFRAME_CLOSED",
         "GUILDBANK_UPDATE_TABS",
@@ -51,34 +65,38 @@ function DataManager:OnEnteringWorld()
     end)
 end
 
-function DataManager:HandleEvent(event)
-    if event == "BAG_UPDATE_DELAYED" then
-        self:CollectBags()
+--- Inventory delayed channel: bags always; personal/warband when those banks are usable.
+function DataManager:OnInventoryDelayed()
+    self:CollectBags()
 
-        if C_Bank.CanUseBank(Enum.BankType.Character) then
-            C_Timer.After(0.3, function()
-                self:CollectPersonalBank()
-            end)
-        end
-
-        if C_Bank.CanUseBank(Enum.BankType.Account) then
-            C_Timer.After(0.3, function()
-                self:CollectWarbandBank()
-            end)
-        end
-
-    elseif event == "BANKFRAME_OPENED" then
-        C_Timer.After(0.5, function()
+    if C_Bank.CanUseBank(Enum.BankType.Character) then
+        C_Timer.After(0.3, function()
             self:CollectPersonalBank()
         end)
+    end
 
-        if C_Bank.CanUseBank(Enum.BankType.Account) then
-            C_Timer.After(0.5, function()
-                self:CollectWarbandBank()
-            end)
-        end
+    if C_Bank.CanUseBank(Enum.BankType.Account) then
+        C_Timer.After(0.3, function()
+            self:CollectWarbandBank()
+        end)
+    end
+end
 
-    elseif event == "GUILDBANKFRAME_OPENED" then
+--- Inventory bank-open channel: full personal (+ warband when usable) collect.
+function DataManager:OnBankOpened()
+    C_Timer.After(0.5, function()
+        self:CollectPersonalBank()
+    end)
+
+    if C_Bank.CanUseBank(Enum.BankType.Account) then
+        C_Timer.After(0.5, function()
+            self:CollectWarbandBank()
+        end)
+    end
+end
+
+function DataManager:HandleEvent(event)
+    if event == "GUILDBANKFRAME_OPENED" then
         C_Timer.After(0.5, function()
             self:CollectGuildBank()
         end)
@@ -261,8 +279,8 @@ function DataManager:NotifyMailChanged()
 end
 
 -- Subscribe to post-write storage-change signals. Listeners receive a
--- { scope, charKey } table. DataManager is the single storage event owner, so a
--- listener reacts to data the scanner has already written.
+-- { scope, charKey } table. DataManager owns the guild/mail WoW events and the
+-- post-write bus; bag/bank WoW events come from OneWoW.Inventory.
 function DataManager:RegisterStorageChanged(fn)
     if type(fn) == "function" then
         storageListeners[#storageListeners + 1] = fn

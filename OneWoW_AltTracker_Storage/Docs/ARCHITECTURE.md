@@ -60,7 +60,7 @@ mean it keeps its own write path and record shape (see the Mail module below).
 - Last update timestamp
 
 **Event Triggers:**
-- `BAG_UPDATE_DELAYED` - automatically tracks when bag contents change
+- `OneWoW.Inventory` delayed channel (`BAG_UPDATE_DELAYED`) — automatically tracks when bag contents change
 
 **Stored In:** `charData.bags`
 
@@ -81,7 +81,7 @@ mean it keeps its own write path and record shape (see the Mail module below).
 - Last update timestamp
 
 **Event Triggers:**
-- `BANKFRAME_OPENED` - collected when player opens their bank (0.5s delay for data loading)
+- `OneWoW.Inventory` bank-open channel (`BANKFRAME_OPENED`, 0.5s delay) and delayed channel while the character bank is usable
 
 **Stored In:** `charData.personalBank`
 
@@ -104,7 +104,7 @@ mean it keeps its own write path and record shape (see the Mail module below).
 - Last update timestamp
 
 **Event Triggers:**
-- Manual collection only (called by other addons)
+- `OneWoW.Inventory` bank-open / delayed channels when `C_Bank.CanUseBank(Account)`
 - Uses `C_Bank.FetchDepositedMoney` and `C_Bank.FetchPurchasedBankTabData`
 
 **Stored In:** `OneWoW_AltTracker_Storage_DB.warbandBank` (account-level, not per-character)
@@ -309,18 +309,23 @@ OneWoW_AltTracker_Storage_DB.guildBanks["GuildName"] = {
 ### DataManager (Modules/DataManager.lua)
 The DataManager orchestrates all data collection:
 
-1. **Initialization** - Registers all storage-related events
-2. **Event Handling** - Routes events to appropriate collection modules
+1. **Initialization** - Arms Inventory callbacks + local guild/mail events
+2. **Event Handling** - Routes triggers to appropriate collection modules
 3. **Module Coordination** - Calls individual module collection functions
 4. **Settings Respect** - Only collects data if tracking is enabled for that module
 
-The DataManager is the **single owner of storage events** — it registers the bag /
-bank / guild / mail events once, and every other piece of the unit reacts to its
-post-write signal rather than registering its own copies of those events. After a
+Bag/bank *WoW* events (`BAG_UPDATE_DELAYED`, `BANKFRAME_OPENED`) are owned by
+[`OneWoW.Inventory`](../../OneWoW/Docs/INVENTORY.md); DataManager subscribes via
+`RegisterDelayedCallback` / `RegisterBankOpenCallback`. Guild bank, mail, and
+`PLAYER_LOGOUT` stay on DataManager's local frame (not Inventory-owned yet).
+
+DataManager remains the **single owner of the post-write signal** — after a
 `Collect*` writes to SavedVariables it fires `NotifyStorageChanged(scope, charKey)`
 (`scope = "bags"|"personal"|"warband"|"guild"|"mail"`). Subscribe with
 `RegisterStorageChanged(fn)` (also exposed on the public API); each listener is
-called in a `pcall` so one failure can't stop the rest.
+called in a `pcall` so one failure can't stop the rest. Every other piece of the
+unit reacts to that signal rather than registering its own bag/bank/guild/mail
+copies for UI refresh.
 
 Two listeners use this today:
 
@@ -332,17 +337,23 @@ Two listeners use this today:
 
 ### Event Flow
 ```
-Event Triggered
+Bag/bank change
     ↓
-DataManager:HandleEvent()
+OneWoW.Inventory (delayed / bank-open channels)
     ↓
-Adds delay for data loading (0.2-0.5s)
+DataManager:OnInventoryDelayed / OnBankOpened
+    ↓
+Adds delay for data loading (0.2-0.5s) where needed
     ↓
 Calls appropriate module CollectData()
     ↓
 Module stores data in character table
     ↓
-Updates lastUpdate timestamp
+NotifyStorageChanged → ItemIndex / UI
+
+Guild / mail / logout
+    ↓
+DataManager local frame → HandleEvent → Collect* (same write path)
 ```
 
 ## How To Access The Data
@@ -465,11 +476,11 @@ Related API surface:
 ## When Data is Collected
 
 ### Automatic Collection
-- **Bags:** Every time bag contents change (`BAG_UPDATE_DELAYED`)
-- **Personal Bank:** When bank is opened (`BANKFRAME_OPENED`)
-- **Warband Bank:** When the account bank is opened (`BANKFRAME_OPENED`) and on bag changes while it is reachable (`BAG_UPDATE_DELAYED`)
-- **Guild Bank:** When guild bank is opened or tabs switch (`GUILDBANKFRAME_OPENED`, `GUILDBANK_UPDATE_TABS`)
-- **Mail:** When mailbox is opened or inbox updates (`MAIL_SHOW`, `MAIL_INBOX_UPDATE`)
+- **Bags:** Every time bag contents change (`OneWoW.Inventory` delayed channel ← `BAG_UPDATE_DELAYED`)
+- **Personal Bank:** When bank is opened (`OneWoW.Inventory` bank-open channel ← `BANKFRAME_OPENED`) and on bag changes while the character bank is usable
+- **Warband Bank:** Same Inventory bank-open / delayed path when the account bank is usable
+- **Guild Bank:** When guild bank is opened or tabs switch (`GUILDBANKFRAME_OPENED`, `GUILDBANK_UPDATE_TABS` — still owned by DataManager)
+- **Mail:** When mailbox is opened or inbox updates (`MAIL_SHOW`, `MAIL_INBOX_UPDATE` — still owned by DataManager)
 
 ### Login Collection
 - Automatically collects bag data on `PLAYER_LOGIN`
@@ -487,6 +498,7 @@ This addon is designed to be used by:
 - Any other addon that needs storage data across characters
 
 ## Dependencies
+- **Required:** OneWoW (Inventory funnel + suite hub)
 - **Optional:** OneWoW_AltTracker (for UI integration)
 - **Required:** World of Warcraft interface 120000+
 
@@ -506,7 +518,8 @@ OneWoW_AltTracker_Storage/
 │   ├── Mail.lua          - Mail data collection
 │   ├── ItemIndex.lua     - Inverted item -> location index (tooltips)
 │   ├── Query.lua         - Cross-alt gather / filter / group / duplicate finder
-│   └── DataManager.lua   - Orchestrates collection; owns storage events + signal
+│   └── DataManager.lua   - Orchestrates collection; Inventory for bag/bank;
+│                           local frame for guild/mail; post-write signal
 ├── Locales/
 │   └── enUS.lua          - English localization
 ├── OneWoW_AltTracker_Storage.lua  - Main addon file (no public globals; API lives in Core/API.lua)
