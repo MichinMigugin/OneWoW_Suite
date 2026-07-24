@@ -1242,12 +1242,13 @@ fan-out. See [INVENTORY.md](INVENTORY.md).
 
 Suite-wide bag/bank consolidation is complete: Bags, Storage, Overlays2, QoL,
 ShoppingList, Trackers, DirectDeposit, and Accounting consume these channels (or
-types/helpers). Guild Phase 1 consumers (autoopen, Accounting BankTracker,
-Storage DataManager) use the guild channels; Bags / Overlays2 / AltTracker
-`t-bank` still register guild events locally until later phases. The bag/bank
-single-owner rule is enforced by `core-event-funnel` (§3.10), seeded with the
-Inventory-owned bag/bank event names → `Inventory.lua`. Guild `GUILDBANK*` events
-are not seeded yet (Bags dual-registers); mail remains local.
+types/helpers). Guild consumers through Phase 2 (autoopen, Accounting
+BankTracker, Storage DataManager, Overlays2 guild slots, AltTracker `t-bank`)
+use the guild channels; Bags and DirectDeposit still register guild events
+locally until Phase 3. The bag/bank single-owner rule is enforced by
+`core-event-funnel` (§3.10), seeded with the Inventory-owned bag/bank event
+names → `Inventory.lua`. Guild `GUILDBANK*` events are not seeded yet (Bags
+dual-registers); mail remains local.
 
 ---
 

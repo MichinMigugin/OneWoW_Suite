@@ -3,6 +3,9 @@ local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
 local PE = OneWoW.PredicateEngine
+local Inventory = OneWoW.Inventory
+
+local INVENTORY_OWNER = "AltTracker_BankTab"
 
 ns.UI = ns.UI or {}
 
@@ -319,31 +322,21 @@ function ns.UI.CreateBankTab(parent)
 
     parent.RebuildGuildDropdown = InitializeGuildDropdown
 
+    -- Guild slot/tab updates via Inventory; keep a ≥2s UI throttle so Storage
+    -- collects can settle before the AltTracker bank tab repaints.
     parent.lastGuildBankUpdate = 0
-
-    local guildBankEventFrame = CreateFrame("Frame")
-    guildBankEventFrame:RegisterEvent("GUILDBANKBAGSLOTS_CHANGED")
-    guildBankEventFrame:RegisterEvent("GUILDBANK_UPDATE_TABS")
-    guildBankEventFrame:SetScript("OnEvent", function()
+    local function OnGuildBankInventoryUpdate()
         local now = GetTime()
-        if (now - parent.lastGuildBankUpdate) > 2 then
-            parent.lastGuildBankUpdate = now
-            C_Timer.After(1.5, function()
-                if ns.UI.RefreshBankDisplay and parent:IsVisible() then
-                    ns.UI.RefreshBankDisplay(parent)
-                end
-            end)
-        end
-    end)
-    parent.guildBankEventFrame = guildBankEventFrame
-
-    parent:HookScript("OnHide", function()
-        guildBankEventFrame:UnregisterAllEvents()
-    end)
-    parent:HookScript("OnShow", function()
-        guildBankEventFrame:RegisterEvent("GUILDBANKBAGSLOTS_CHANGED")
-        guildBankEventFrame:RegisterEvent("GUILDBANK_UPDATE_TABS")
-    end)
+        if (now - parent.lastGuildBankUpdate) <= 2 then return end
+        parent.lastGuildBankUpdate = now
+        C_Timer.After(1.5, function()
+            if ns.UI.RefreshBankDisplay and parent:IsVisible() then
+                ns.UI.RefreshBankDisplay(parent)
+            end
+        end)
+    end
+    Inventory.RegisterGuildSlotsCallback(INVENTORY_OWNER, OnGuildBankInventoryUpdate)
+    Inventory.RegisterGuildTabsCallback(INVENTORY_OWNER, OnGuildBankInventoryUpdate)
 
     parent:SetScript("OnSizeChanged", function(self)
         if not self.bagScrollFrame then return end

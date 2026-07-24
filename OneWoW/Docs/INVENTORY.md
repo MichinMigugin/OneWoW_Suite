@@ -96,9 +96,10 @@ resolves them via its own `L`. No core locale entries for those keys.
 ## Consumers
 
 - `OneWoW_Bags` — delayed / lock / cooldown / bank open-closed / tabs / container (+ types)
-- Overlays2 bag/bank surfaces — dirty + delayed + bank open/slots
+- Overlays2 bag/bank/guild surfaces — dirty + delayed + bank open/slots + guild slots (frame Update/OnShow hooks remain)
 - `OneWoW_AltTracker_Storage` DataManager — delayed + bank-open + guild open/tabs/slots (mail local)
+- AltTracker `t-bank` — guild slots/tabs (local ≥2s UI throttle)
 - QoL autoopen (`IsGuildBankOpen` suppress) / bagbar / toast-loot / questitembar / vendorpanel
 - ShoppingList alerts / bag overlays; Trackers engine / farmvalue
-- DirectDeposit; Accounting BankTracker (character + guild open/closed); Bags integration bank-open
-- Still local for guild: Bags UI, Overlays2 guild surface, AltTracker `t-bank` (Phases 2–3)
+- Accounting BankTracker (character + guild open/closed); Bags integration bank-open
+- Still local for guild: Bags UI, DirectDeposit (Phase 3)

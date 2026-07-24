@@ -4,7 +4,8 @@ local _, ns = ...
 -- Overlays 2.0 — surfaces
 -- ============================================================================
 -- All Blizzard-UI hook points and refresh passes: bags, bank (character +
--- Warband), guild bank, vendor, mail, loot, group loot, quest rewards,
+-- Warband), guild bank (Inventory guild-slots + frame hooks), vendor, mail,
+-- loot, group loot, quest rewards,
 -- Auction House, Encounter Journal, Black Market, Great Vault, and world
 -- quest map pins.
 --
@@ -263,8 +264,9 @@ local function RefreshGuildBank()
     end
 end
 
--- GUILDBANKBAGSLOTS_CHANGED fires in bursts (~20 per open / tab query wave);
--- coalesce them into one trailing refresh instead of repainting per event.
+-- GuildBankFrame Update/OnShow can still burst; Inventory's guild-slots channel
+-- already coalesces GUILDBANKBAGSLOTS_CHANGED (~0.2s). This queue is only for
+-- the Blizzard frame hooks (and transmog refresh) that bypass Inventory.
 local guildBankRefreshQueued = false
 local function QueueRefreshGuildBank()
     if guildBankRefreshQueued then return end
@@ -620,7 +622,6 @@ local function InitializeSurfaces()
     end)
 
     local surfaceEventFrame = CreateFrame("Frame")
-    surfaceEventFrame:RegisterEvent("GUILDBANKBAGSLOTS_CHANGED")
     surfaceEventFrame:RegisterEvent("TRANSMOG_COLLECTION_UPDATED")
     surfaceEventFrame:RegisterEvent("MAIL_SHOW")
     surfaceEventFrame:RegisterEvent("MAIL_INBOX_UPDATE")
@@ -630,9 +631,7 @@ local function InitializeSurfaces()
     surfaceEventFrame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
     surfaceEventFrame:RegisterEvent("AUCTION_HOUSE_THROTTLED_SYSTEM_READY")
     surfaceEventFrame:SetScript("OnEvent", function(_, event)
-        if event == "GUILDBANKBAGSLOTS_CHANGED" then
-            QueueRefreshGuildBank()
-        elseif event == "TRANSMOG_COLLECTION_UPDATED" then
+        if event == "TRANSMOG_COLLECTION_UPDATED" then
             Engine:RequestRefresh()
             C_Timer.After(0.1, RefreshGuildBank)
         elseif event == "MAIL_SHOW" or event == "MAIL_INBOX_UPDATE" then
@@ -697,8 +696,9 @@ function Engine:Initialize()
         hooksecurefunc("MerchantFrame_Update", RefreshVendor)
     end
 
-    -- Bag/bank overlay repaints route through the core OneWoW.Inventory funnel
-    -- (single BAG_* / BANKFRAME_* owner path for this consumer).
+    -- Bag/bank/guild overlay repaints route through the core OneWoW.Inventory
+    -- funnel (BAG_* / BANKFRAME_* / guild-slots). GuildBankFrame Update/OnShow
+    -- hooks remain for Blizzard-driven paints when the frame is visible.
     ns.Inventory.RegisterDirtyCallback("OverlayEngine", OnBagUpdate)
     ns.Inventory.RegisterDelayedCallback("OverlayEngine", function()
         RefreshBags()
@@ -713,6 +713,8 @@ function Engine:Initialize()
     ns.Inventory.RegisterBankSlotsCallback("OverlayEngine", function()
         RefreshBank()
     end)
+    -- Inventory already coalesces GUILDBANKBAGSLOTS_CHANGED (~0.2s).
+    ns.Inventory.RegisterGuildSlotsCallback("OverlayEngine", RefreshGuildBank)
 
     -- Vendor overlay repaints route through the core OneWoW.Merchant funnel
     -- (single MERCHANT_* owner): show for the instant open refresh, scan for
