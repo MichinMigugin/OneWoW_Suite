@@ -44,7 +44,19 @@ function DirectDeposit:RegisterEvents()
         end
         DirectDeposit.bankSessionHandled = false
     end)
+    Inventory.RegisterGuildOpenCallback(INVENTORY_OWNER, function()
+        DirectDeposit.guildBankOpen = true
+        DirectDeposit.currentOpenBankType = "guild"
+        DirectDeposit:OnBankOpened()
+    end)
+    Inventory.RegisterGuildClosedCallback(INVENTORY_OWNER, function()
+        DirectDeposit.guildBankOpen = false
+        DirectDeposit.currentOpenBankType = nil
+        DirectDeposit.bankSessionHandled = false
+    end)
 
+    -- Warband open still needs PIM (BANKFRAME_* does not distinguish warband).
+    -- Guild open/close is Inventory-owned; personal uses Inventory bank channels.
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
     eventFrame:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
@@ -52,24 +64,13 @@ function DirectDeposit:RegisterEvents()
     eventFrame:SetScript("OnEvent", function(_, event, ...)
         if event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" then
             local interactionType = ...
-            if interactionType == Enum.PlayerInteractionType.GuildBanker then
-                DirectDeposit.guildBankOpen = true
-                DirectDeposit.currentOpenBankType = "guild"
-                DirectDeposit:OnBankOpened()
-            elseif interactionType == 68 then
+            if interactionType == 68 then
                 DirectDeposit.currentOpenBankType = "warband"
-                DirectDeposit:OnBankOpened()
-            elseif interactionType == 67 then
-                DirectDeposit.currentOpenBankType = "personal"
                 DirectDeposit:OnBankOpened()
             end
         elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then
             local interactionType = ...
-            if interactionType == Enum.PlayerInteractionType.GuildBanker then
-                DirectDeposit.guildBankOpen = false
-                DirectDeposit.currentOpenBankType = nil
-                DirectDeposit.bankSessionHandled = false
-            elseif interactionType == 68 or interactionType == 67 then
+            if interactionType == 68 then
                 DirectDeposit.currentOpenBankType = nil
                 DirectDeposit.bankSessionHandled = false
             end

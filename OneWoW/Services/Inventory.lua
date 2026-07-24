@@ -10,11 +10,10 @@ local _, ns = ...
 -- AltTracker_Storage owns SV writes; Bags owns UI layout; PredicateEngine
 -- stays pull/eval.
 --
--- Suite-wide owner of bag/bank container events (enforced by core-event-funnel).
--- Guild GUILDBANK* ownership lands with Phase 3 of the guild funnel; until
--- then Bags may still register overlapping guild events. PIM is listened to
--- for GuildBanker open/close only — not funnel-enforced (shared interaction bus).
--- Mail stays with its current owners.
+-- Suite-wide owner of bag/bank/guild-bank container events (enforced by
+-- core-event-funnel for BAG_* / BANKFRAME_* / GUILDBANK*). PIM is listened to
+-- for GuildBanker open/close only — not funnel-enforced (shared interaction
+-- bus). Mail stays with its current owners.
 --
 -- Channels (bags / character-warband bank):
 --   RegisterDirtyCallback       fn(bagID)           BAG_UPDATE

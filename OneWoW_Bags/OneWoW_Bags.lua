@@ -1528,27 +1528,6 @@ local runtimeEventHandlers = {
     QUEST_REMOVED = function(...)
         Events:OnQuestRemoved(...)
     end,
-    PLAYER_INTERACTION_MANAGER_FRAME_SHOW = function(...)
-        Events:OnPlayerInteractionShow(...)
-    end,
-    PLAYER_INTERACTION_MANAGER_FRAME_HIDE = function(...)
-        Events:OnPlayerInteractionHide(...)
-    end,
-    GUILDBANKBAGSLOTS_CHANGED = function(...)
-        Events:OnGuildBankSlotsChanged(...)
-    end,
-    GUILDBANK_ITEM_LOCK_CHANGED = function(...)
-        Events:OnGuildBankItemLockChanged(...)
-    end,
-    GUILDBANK_UPDATE_TABS = function(...)
-        Events:OnGuildBankTabsUpdated(...)
-    end,
-    GUILDBANK_UPDATE_MONEY = function(...)
-        Events:OnGuildBankMoneyUpdated(...)
-    end,
-    GUILDBANK_UPDATE_WITHDRAWMONEY = function(...)
-        Events:OnGuildBankWithdrawMoneyUpdated(...)
-    end,
     PLAYER_MONEY = function(...)
         Events:OnPlayerMoney(...)
     end,
@@ -1590,7 +1569,7 @@ function ns:RegisterRuntimeEvents()
         eventFrame:RegisterEvent(eventName)
     end
 
-    -- Bag/bank container events route through OneWoW.Inventory (single owner).
+    -- Bag/bank/guild container events route through OneWoW.Inventory (single owner).
     local Inventory = OneWoW.Inventory
     Inventory.RegisterDelayedCallback("OneWoW_Bags", function(dirty)
         Events:OnBagUpdateDelayed(dirty)
@@ -1612,6 +1591,30 @@ function ns:RegisterRuntimeEvents()
     end)
     Inventory.RegisterContainerCallback("OneWoW_Bags", function()
         Events:OnBagContainerUpdate()
+    end)
+    Inventory.RegisterGuildOpenCallback("OneWoW_Bags", function()
+        Events:OnGuildBankOpened()
+    end)
+    Inventory.RegisterGuildClosedCallback("OneWoW_Bags", function()
+        Events:OnGuildBankClosed()
+    end)
+    -- Inventory coalesces GUILDBANKBAGSLOTS_CHANGED (~0.2s); Bags keeps its
+    -- own QueueGuildBankRefresh OnUpdate coalesce on top.
+    Inventory.RegisterGuildSlotsCallback("OneWoW_Bags", function()
+        Events:OnGuildBankSlotsChanged()
+    end)
+    Inventory.RegisterGuildLockCallback("OneWoW_Bags", function()
+        Events:OnGuildBankItemLockChanged()
+    end)
+    Inventory.RegisterGuildTabsCallback("OneWoW_Bags", function()
+        Events:OnGuildBankTabsUpdated()
+    end)
+    Inventory.RegisterGuildMoneyCallback("OneWoW_Bags", function(event)
+        if event == "GUILDBANK_UPDATE_MONEY" then
+            Events:OnGuildBankMoneyUpdated()
+        else
+            Events:OnGuildBankWithdrawMoneyUpdated()
+        end
     end)
 
     -- MERCHANT_SHOW / MERCHANT_CLOSED route through the core OneWoW.Merchant

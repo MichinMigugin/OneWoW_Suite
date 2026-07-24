@@ -416,7 +416,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 | Manifest ↔ CATALOG consumer-graph invariants (§4.1) | `bin/check_manifest_catalog_alignment.py` (pre-commit `manifest-catalog-alignment`) |
 | No direct `db.global.settings` access (§8.5) | `bin/check_no_settings_bypass.py` (pre-commit `no-settings-bypass`) |
 | No direct combat/restriction/secret API calls (§8.6) | `bin/check_no_restriction_bypass.py` (pre-commit `restriction-funnel`) |
-| No registering core-owned events outside their funnel owner (§8.7 / §8.8 / §8.9) | `bin/check_no_core_event_bypass.py` (pre-commit `core-event-funnel`; `EVENT_OWNER` registry: `MERCHANT_*`→`Merchant.lua`, `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED`→`ProfessionRecipe.lua`, bag/bank/`ITEM_LOCK_CHANGED`→`Inventory.lua`; escape hatch `-- noqa: core-event-funnel`) |
+| No registering core-owned events outside their funnel owner (§8.7 / §8.8 / §8.9) | `bin/check_no_core_event_bypass.py` (pre-commit `core-event-funnel`; `EVENT_OWNER` registry: `MERCHANT_*`→`Merchant.lua`, `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED`→`ProfessionRecipe.lua`, bag/bank/`ITEM_LOCK_CHANGED`/`GUILDBANK*`→`Inventory.lua`; escape hatch `-- noqa: core-event-funnel`) |
 | No cross-load-unit SavedVariables access (§6/§7) | `bin/check_no_data_manager_bypass.py` (TOC-derived ownership; **enforced** — hard-fails off the `ALLOWED_FOREIGN_SV` allowlist) |
 | No namespace publish / global-surface anti-patterns (§6.1) | `bin/check_no_namespace_publish.py` (pre-commit `no-namespace-publish`; enforced) |
 | No per-addon `Media/` folders (hub-only assets) | `bin/check_no_per_addon_media.py` (pre-commit `no-per-addon-media`) |
@@ -1240,15 +1240,12 @@ Channels include `RegisterDirtyCallback`, `RegisterDelayedCallback`,
 `BAG_UPDATE_DELAYED`, Inventory calls `PE:InvalidatePropsCache()` once before
 fan-out. See [INVENTORY.md](INVENTORY.md).
 
-Suite-wide bag/bank consolidation is complete: Bags, Storage, Overlays2, QoL,
-ShoppingList, Trackers, DirectDeposit, and Accounting consume these channels (or
-types/helpers). Guild consumers through Phase 2 (autoopen, Accounting
-BankTracker, Storage DataManager, Overlays2 guild slots, AltTracker `t-bank`)
-use the guild channels; Bags and DirectDeposit still register guild events
-locally until Phase 3. The bag/bank single-owner rule is enforced by
-`core-event-funnel` (§3.10), seeded with the Inventory-owned bag/bank event
-names → `Inventory.lua`. Guild `GUILDBANK*` events are not seeded yet (Bags
-dual-registers); mail remains local.
+Suite-wide bag/bank/guild consolidation is complete: Bags, Storage, Overlays2,
+QoL, ShoppingList, Trackers, DirectDeposit, Accounting, and AltTracker `t-bank`
+consume these channels (or types/helpers). The single-owner rule is enforced by
+`core-event-funnel` (§3.10), seeded with Inventory-owned bag/bank/`GUILDBANK*`
+event names → `Inventory.lua` (PIM is not seeded). Mail remains local;
+`GUILDBANKLOG_UPDATE` stays with Bags `GuildBankLog`.
 
 ---
 

@@ -53,7 +53,7 @@ Core\Constants.lua                 ← OneWoW_GUI:RegisterGUIConstants, icon siz
 Core\SectionDefaults.lua           ← stable section IDs, builtin lists, OneWoW Bags catch-all section sync
 Core\Database.lua                  ← DB:Init, defaults, init bridges
 Core\BagEquip.lua                  ← equipped-bag pickup/swap/empty/move-contents (used by BagsBar; BagTypes via OneWoW.Inventory)
-Core\Events.lua                    ← event router (RuntimeEvents; bag/bank via Inventory)
+Core\Events.lua                    ← event router (RuntimeEvents; bag/bank/guild via Inventory)
 
 Data\SavedSearches.lua             ← user-defined SAVED(Name) search shortcuts
 Data\CategoryRefs.lua              ← CATEGORY(Name) refs + SearchExpand (SAVED+CATEGORY)
@@ -179,7 +179,7 @@ OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some o
 ┌────────────────────────────▼─────────────────────────────────┐
 │                      Core Layer                              │
 │  Database (DB:Init, defaults, init bridges)                    │
-│  Events (non-Inventory runtime events; bag/bank via OneWoW.Inventory) │
+│  Events (non-Inventory runtime events; bag/bank/guild via OneWoW.Inventory) │
 │  Constants (GUI metrics, icon sizes)                         │
 │  Profile (optional /owbprof timings)                         │
 │  SectionDefaults (section IDs, builtin ordering, OWB section)  │
@@ -274,7 +274,11 @@ GUI:Hide / GUI:FullReset (start of reset)
   └─→ Categories:EndRecentExpiryTicker → cancel ticker + CleanExpiredRecent
 ```
 
-Guild bank updates use a separate path: `GUILDBANKBAGSLOTS_CHANGED` and related events → `QueueGuildBankRefresh` (OnUpdate-coalesced) → `RefreshGuildBankContents` → slot cache + `GuildBankGUI:RefreshLayout` when visible.
+Guild bank updates use a separate path: `OneWoW.Inventory` guild-slots channel
+(`GUILDBANKBAGSLOTS_CHANGED`, coalesced ~0.2s) → `QueueGuildBankRefresh`
+(OnUpdate-coalesced) → `RefreshGuildBankContents` → slot cache +
+`GuildBankGUI:RefreshLayout` when visible. Open/closed/lock/tabs/money also
+arrive via Inventory guild channels.
 
 ### 3. Layout Pipeline
 
@@ -586,9 +590,9 @@ width = cols × (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 × oute
 | Bag updates | `OneWoW.Inventory` delayed → `InvalidateCategorization("props")` + `ProcessBagUpdate(dirtyBags)` |
 | Lock / cooldown | `ITEM_LOCK_CHANGED` → per-button `OWB_RefreshLock`; `BAG_UPDATE_COOLDOWN` → `OnCooldownUpdate` |
 | Bank | `BANKFRAME_OPENED` / `CLOSED` → suppress/restore Blizzard bank, `BankGUI`, `C_Bank.Fetch*`, `BankPanel` warband vs character |
-| Guild bank | `PLAYER_INTERACTION_MANAGER_FRAME_SHOW/HIDE` + `GuildBanker` |
+| Guild bank | `OneWoW.Inventory` guild channels (open/closed/slots/lock/tabs/money) |
 | Merchant | `MERCHANT_SHOW` / `MERCHANT_CLOSED` (auto open/close with guards in `HookBlizzardBags`) |
-| Money | `PLAYER_MONEY`, `ACCOUNT_MONEY`, guild bank money events |
+| Money | `PLAYER_MONEY`, `ACCOUNT_MONEY`; guild money via Inventory guild-money channel |
 | Quest | `QUEST_ACCEPTED` / `QUEST_REMOVED` → full-bag dirty rebuild |
 | Predicate-related | `EQUIPMENT_SETS_CHANGED` / `PLAYER_EQUIPMENT_CHANGED` → `Events:OnPredicateInvalidation` → `InvalidateCategorization("props")` + deferred `RequestVisualRefresh` for visible windows; `GET_ITEM_INFO_RECEIVED` → trailing-debounced (~0.1s, capped 0.3s) `InvalidateItemIDs` + `UpdateSlotsForItemIDs` so a cold-streaming burst collapses into one relayout instead of one per frame-wave (no blanket categorization wipe) |
 

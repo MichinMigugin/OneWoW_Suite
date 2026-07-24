@@ -129,8 +129,9 @@ mean it keeps its own write path and record shape (see the Mail module below).
 - Last update timestamp
 
 **Event Triggers:**
-- `GUILDBANKFRAME_OPENED` - collected when player opens guild bank (0.5s delay)
-- `GUILDBANK_UPDATE_TABS` - updates when tabs are switched (0.2s delay)
+- `OneWoW.Inventory` guild-open channel (0.5s delay) → `CollectGuildBank`
+- `OneWoW.Inventory` guild-tabs channel (0.2s delay)
+- `OneWoW.Inventory` guild-slots channel (~0.1s after Inventory's ~0.2s coalesce)
 
 **Stored In:** `OneWoW_AltTracker_Storage_DB.guildBanks[guildName]` (account-level, keyed by guild)
 
@@ -309,15 +310,17 @@ OneWoW_AltTracker_Storage_DB.guildBanks["GuildName"] = {
 ### DataManager (Modules/DataManager.lua)
 The DataManager orchestrates all data collection:
 
-1. **Initialization** - Arms Inventory callbacks + local guild/mail events
+1. **Initialization** - Arms Inventory callbacks (bag/bank/guild) + local mail events
 2. **Event Handling** - Routes triggers to appropriate collection modules
 3. **Module Coordination** - Calls individual module collection functions
 4. **Settings Respect** - Only collects data if tracking is enabled for that module
 
-Bag/bank *WoW* events (`BAG_UPDATE_DELAYED`, `BANKFRAME_OPENED`) are owned by
+Bag/bank/guild *WoW* events are owned by
 [`OneWoW.Inventory`](../../OneWoW/Docs/INVENTORY.md); DataManager subscribes via
-`RegisterDelayedCallback` / `RegisterBankOpenCallback`. Guild bank, mail, and
-`PLAYER_LOGOUT` stay on DataManager's local frame (not Inventory-owned yet).
+`RegisterDelayedCallback` / `RegisterBankOpenCallback` /
+`RegisterGuildOpenCallback` / `RegisterGuildTabsCallback` /
+`RegisterGuildSlotsCallback`. Mail and `PLAYER_LOGOUT` stay on DataManager's
+local frame (not Inventory-owned yet).
 
 DataManager remains the **single owner of the post-write signal** — after a
 `Collect*` writes to SavedVariables it fires `NotifyStorageChanged(scope, charKey)`
@@ -337,21 +340,22 @@ Two listeners use this today:
 
 ### Event Flow
 ```
-Bag/bank change
+Bag / bank / guild change
     ↓
-OneWoW.Inventory (delayed / bank-open channels)
+OneWoW.Inventory (delayed / bank-open / guild-* channels)
     ↓
-DataManager:OnInventoryDelayed / OnBankOpened
+DataManager:OnInventoryDelayed / OnBankOpened /
+    OnGuildBankOpened / OnGuildBankTabsUpdated / OnGuildBankSlotsChanged
     ↓
-Adds delay for data loading (0.2-0.5s) where needed
+Adds delay for data loading (0.1-0.5s) where needed
     ↓
 Calls appropriate module CollectData()
     ↓
-Module stores data in character table
+Module stores data in character / guild table
     ↓
 NotifyStorageChanged → ItemIndex / UI
 
-Guild / mail / logout
+Mail / logout
     ↓
 DataManager local frame → HandleEvent → Collect* (same write path)
 ```
@@ -479,7 +483,7 @@ Related API surface:
 - **Bags:** Every time bag contents change (`OneWoW.Inventory` delayed channel ← `BAG_UPDATE_DELAYED`)
 - **Personal Bank:** When bank is opened (`OneWoW.Inventory` bank-open channel ← `BANKFRAME_OPENED`) and on bag changes while the character bank is usable
 - **Warband Bank:** Same Inventory bank-open / delayed path when the account bank is usable
-- **Guild Bank:** When guild bank is opened or tabs switch (`GUILDBANKFRAME_OPENED`, `GUILDBANK_UPDATE_TABS` — still owned by DataManager)
+- **Guild Bank:** When guild bank is opened, tabs switch, or slots change (`OneWoW.Inventory` guild channels)
 - **Mail:** When mailbox is opened or inbox updates (`MAIL_SHOW`, `MAIL_INBOX_UPDATE` — still owned by DataManager)
 
 ### Login Collection
@@ -518,8 +522,8 @@ OneWoW_AltTracker_Storage/
 │   ├── Mail.lua          - Mail data collection
 │   ├── ItemIndex.lua     - Inverted item -> location index (tooltips)
 │   ├── Query.lua         - Cross-alt gather / filter / group / duplicate finder
-│   └── DataManager.lua   - Orchestrates collection; Inventory for bag/bank;
-│                           local frame for guild/mail; post-write signal
+│   └── DataManager.lua   - Orchestrates collection; Inventory for bag/bank/guild;
+│                           local frame for mail; post-write signal
 ├── Locales/
 │   └── enUS.lua          - English localization
 ├── OneWoW_AltTracker_Storage.lua  - Main addon file (no public globals; API lives in Core/API.lua)

@@ -13,15 +13,8 @@ local Events = ns.Events
 Events.RuntimeEvents = {
     "QUEST_ACCEPTED",
     "QUEST_REMOVED",
-    -- BAG_* / BANKFRAME_* / ITEM_LOCK / BAG_CONTAINER / BANK_TABS route through
-    -- OneWoW.Inventory (single owner); see ns:RegisterRuntimeEvents.
-    "PLAYER_INTERACTION_MANAGER_FRAME_SHOW",
-    "PLAYER_INTERACTION_MANAGER_FRAME_HIDE",
-    "GUILDBANKBAGSLOTS_CHANGED",
-    "GUILDBANK_ITEM_LOCK_CHANGED",
-    "GUILDBANK_UPDATE_TABS",
-    "GUILDBANK_UPDATE_MONEY",
-    "GUILDBANK_UPDATE_WITHDRAWMONEY",
+    -- BAG_* / BANKFRAME_* / ITEM_LOCK / BAG_CONTAINER / BANK_TABS and
+    -- GUILDBANK* route through OneWoW.Inventory; see ns:RegisterRuntimeEvents.
     "PLAYER_MONEY",
     "ACCOUNT_MONEY",
     "EQUIPMENT_SETS_CHANGED",
@@ -343,16 +336,12 @@ function Events:OnMerchantClosed()
     ns:OnMerchantClosed()
 end
 
-function Events:OnPlayerInteractionShow(interactType)
-    if interactType == Enum.PlayerInteractionType.GuildBanker then
-        ns:OnGuildBankOpened()
-    end
+function Events:OnGuildBankOpened()
+    ns:OnGuildBankOpened()
 end
 
-function Events:OnPlayerInteractionHide(interactType)
-    if interactType == Enum.PlayerInteractionType.GuildBanker then
-        ns:OnGuildBankClosed()
-    end
+function Events:OnGuildBankClosed()
+    ns:OnGuildBankClosed()
 end
 
 function Events:OnGuildBankSlotsChanged(...)

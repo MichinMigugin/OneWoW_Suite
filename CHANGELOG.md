@@ -6,7 +6,7 @@
 
 ## Optimizations
 - Bag and bank updates are handled in one place across the suite (Bags, overlays, QoL helpers, and AltTracker storage) for smoother inventory refresh
-- Guild bank open/close and slot updates share the same Inventory funnel for Storage, Accounting, and auto-open suppress
+- Guild bank open/close and slot updates share the same Inventory funnel suite-wide (Bags, Storage, overlays, Accounting, DirectDeposit, auto-open)
 
 ---
 

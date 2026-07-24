@@ -45,11 +45,11 @@ Enforced by the `core-event-funnel` pre-commit hook
 hatch `-- noqa: core-event-funnel`).
 
 **Guild bank** events (`GUILDBANKFRAME_*`, `GUILDBANKBAGSLOTS_CHANGED`,
-`GUILDBANK_ITEM_LOCK_CHANGED`, `GUILDBANK_UPDATE_TABS`, money/withdraw) are
-already funneled here (plus PIM `GuildBanker` for open/close dedupe). They are
-**not** seeded in `core-event-funnel` yet — Bags still dual-registers until
-guild Phase 3. PIM is a shared bus and is never funnel-enforced. Mail stays
-local to Storage / QoL for now.
+`GUILDBANK_ITEM_LOCK_CHANGED`, `GUILDBANK_UPDATE_TABS`, money/withdraw) are owned
+here too (plus PIM `GuildBanker` for open/close dedupe). Enforced by
+`core-event-funnel` → `Inventory.lua` for the `GUILDBANK*` names above. PIM is a
+shared bus and is never funnel-enforced. Mail stays local to Storage / QoL for
+now. `GUILDBANKLOG_UPDATE` stays with Bags `GuildBankLog` (single consumer).
 
 ## Channels
 
@@ -95,11 +95,12 @@ resolves them via its own `L`. No core locale entries for those keys.
 
 ## Consumers
 
-- `OneWoW_Bags` — delayed / lock / cooldown / bank open-closed / tabs / container (+ types)
+- `OneWoW_Bags` — delayed / lock / cooldown / bank open-closed / tabs / container / guild open-closed / slots / lock / tabs / money (+ types)
 - Overlays2 bag/bank/guild surfaces — dirty + delayed + bank open/slots + guild slots (frame Update/OnShow hooks remain)
 - `OneWoW_AltTracker_Storage` DataManager — delayed + bank-open + guild open/tabs/slots (mail local)
 - AltTracker `t-bank` — guild slots/tabs (local ≥2s UI throttle)
 - QoL autoopen (`IsGuildBankOpen` suppress) / bagbar / toast-loot / questitembar / vendorpanel
 - ShoppingList alerts / bag overlays; Trackers engine / farmvalue
-- Accounting BankTracker (character + guild open/closed); Bags integration bank-open
-- Still local for guild: Bags UI, DirectDeposit (Phase 3)
+- Accounting BankTracker (character + guild open/closed)
+- DirectDeposit — bank open/closed + guild open/closed (`IsGuildBankOpen`); PIM only for warband distinguish
+- Bags `GuildBankLog` — `GUILDBANKLOG_UPDATE` local (not funneled)
