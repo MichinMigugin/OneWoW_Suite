@@ -2,15 +2,18 @@ local _, ns = ...
 
 local BagTypes = OneWoW.Inventory.BagTypes
 local BankTypes = OneWoW.Inventory.BankTypes
+local GuildBankTransfer = OneWoW.GuildBankTransfer
 
 local C_Bank = C_Bank
 local C_Container = C_Container
+local C_Item = C_Item
 local C_Timer = C_Timer
 local ItemLocation = ItemLocation
 local strtrim = strtrim
 local tinsert, ipairs = tinsert, ipairs
 
 local DEPOSIT_INTERVAL_SEC = 0.12
+local GBT_OWNER = "OneWoW_Bags"
 
 ns.BankController = {}
 local BankController = ns.BankController
@@ -207,7 +210,10 @@ end
 
 function BankController:CanTransferSearch(searchText, direction)
     if not self:NormalizeSearchText(searchText) then return false end
-    if direction == "toBank" or direction == "fromBank" then
+    if direction == "toBank" then
+        return self.addon.bankOpen == true or self.addon.guildBankOpen == true
+    end
+    if direction == "fromBank" then
         return self.addon.bankOpen == true
     end
     return false
@@ -222,6 +228,7 @@ function BankController:CancelTransferTickers()
         self._bankWithdrawTicker:Cancel()
         self._bankWithdrawTicker = nil
     end
+    GuildBankTransfer.Cancel(GBT_OWNER)
 end
 
 local function QueueDepositEntry(queuedSlots, seenSlots, bagID, slotID, bankType)
@@ -242,6 +249,33 @@ local function QueueDepositEntry(queuedSlots, seenSlots, bagID, slotID, bankType
         slotID = slotID,
         itemID = info.itemID,
         hyperlink = info.hyperlink,
+    })
+end
+
+--- Guild deposit queue entry (bind check via ItemLocation; no C_Bank allow API).
+local function QueueGuildDepositEntry(queuedSlots, seenSlots, bagID, slotID)
+    if not bagID or not slotID or not BagTypes:IsPlayerBag(bagID) then return end
+
+    local slotKey = bagID .. ":" .. slotID
+    if seenSlots[slotKey] then return end
+    seenSlots[slotKey] = true
+
+    local info = C_Container.GetContainerItemInfo(bagID, slotID)
+    if not info or info.isLocked or not info.itemID then return end
+
+    local location = ItemLocation:CreateFromBagAndSlot(bagID, slotID)
+    if not location or not location:IsValid() then return end
+
+    local ok, bindType = pcall(C_Item.GetItemBindType, location)
+    if ok and (bindType == Enum.ItemBind.OnAcquire or bindType == Enum.ItemBind.Quest) then
+        return
+    end
+
+    tinsert(queuedSlots, {
+        bagID = bagID,
+        slotID = slotID,
+        itemID = info.itemID,
+        itemName = info.itemName,
     })
 end
 
@@ -298,6 +332,28 @@ function BankController:CollectMatchingBagSlots(searchText)
     return queuedSlots
 end
 
+function BankController:CollectMatchingBagSlotsForGuild(searchText)
+    local normalized = self:NormalizeSearchText(searchText)
+    if not normalized or not self.addon.BagSet then return {} end
+
+    local buttons = self.addon.BagSet:GetAllButtons()
+    local WH = ns.WindowHelpers
+    local bagsController = self.addon.BagsController
+    if bagsController and bagsController:GetViewMode() == "bag" then
+        buttons = WH:FilterByTab(buttons, bagsController:GetSelectedBag(), WH:GetScratchTable("transferGuildBagScope"))
+    end
+    local matched = WH:FilterBySearch(buttons, normalized, WH:GetScratchTable("transferGuildBagSearch"))
+    local expFilter = bagsController and bagsController:GetExpansionFilter() or self.addon.activeExpansionFilter
+    matched = WH:FilterByExpansion(matched, expFilter, WH:GetScratchTable("transferGuildBagExpansion"))
+
+    local queuedSlots = {}
+    local seenSlots = {}
+    for _, button in ipairs(matched) do
+        AppendButtonStackToQueue(queuedSlots, seenSlots, button, QueueGuildDepositEntry)
+    end
+    return queuedSlots
+end
+
 function BankController:CollectMatchingBankSlots(searchText)
     local normalized = self:NormalizeSearchText(searchText)
     if not normalized or not self.addon.BankSet then return {} end
@@ -317,7 +373,13 @@ function BankController:CollectMatchingBankSlots(searchText)
 end
 
 function BankController:TransferSearchToBank(searchText)
-    if OneWoW.Restriction.IsProtectedActionBlocked() or not self.addon.bankOpen then return false end
+    if OneWoW.Restriction.IsProtectedActionBlocked() then return false end
+
+    if self.addon.guildBankOpen then
+        return self:TransferSearchToGuildBank(searchText)
+    end
+
+    if not self.addon.bankOpen then return false end
 
     local bankType = self:GetActiveBankType()
     if not C_Bank.CanUseBank(bankType) then return false end
@@ -326,6 +388,48 @@ function BankController:TransferSearchToBank(searchText)
     if #queue == 0 then return false end
 
     self:QueueBagDeposits(queue, bankType)
+    return true
+end
+
+--- Search-matched bag slots → GuildBankTransfer (partial fill + empty slots).
+function BankController:TransferSearchToGuildBank(searchText)
+    if not self.addon.guildBankOpen then return false end
+    if GuildBankTransfer.IsBusy() then return false end
+
+    local queue = self:CollectMatchingBagSlotsForGuild(searchText)
+    if #queue == 0 then return false end
+
+    return self:EnqueueGuildDeposits(queue)
+end
+
+--- Plan + enqueue bag→guild deposits via OneWoW.GuildBankTransfer.
+---@param slots table[]
+---@return boolean
+function BankController:EnqueueGuildDeposits(slots)
+    if type(slots) ~= "table" or #slots == 0 then return false end
+    if not self.addon.guildBankOpen then return false end
+
+    self:CancelTransferTickers()
+
+    local wantedItemIDs = {}
+    for _, slotInfo in ipairs(slots) do
+        if slotInfo.itemID then
+            wantedItemIDs[slotInfo.itemID] = true
+        end
+    end
+
+    GuildBankTransfer.EnsureTabsQueried(wantedItemIDs, function()
+        if not self.addon.guildBankOpen then return end
+        local ops = GuildBankTransfer.PlanDeposits(slots)
+        if #ops == 0 then return end
+
+        GuildBankTransfer.Enqueue(ops, {
+            ownerID = GBT_OWNER,
+            onComplete = function()
+                self.addon:RequestLayoutRefresh("all")
+            end,
+        })
+    end)
     return true
 end
 
@@ -415,7 +519,17 @@ end
 
 function BankController:DepositBagButtonStack(button)
     if OneWoW.Restriction.IsProtectedActionBlocked() then return false end
-    if not self.addon.bankOpen or not button or not button.owb_hasItem then return false end
+    if not button or not button.owb_hasItem then return false end
+
+    if self.addon.guildBankOpen then
+        local queuedSlots = {}
+        local seenSlots = {}
+        AppendButtonStackToQueue(queuedSlots, seenSlots, button, QueueGuildDepositEntry)
+        if #queuedSlots == 0 then return false end
+        return self:EnqueueGuildDeposits(queuedSlots)
+    end
+
+    if not self.addon.bankOpen then return false end
 
     local bankType = self:GetActiveBankType()
     if not C_Bank.CanUseBank(bankType) then return false end

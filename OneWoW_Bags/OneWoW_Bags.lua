@@ -1617,6 +1617,13 @@ function ns:RegisterRuntimeEvents()
         end
     end)
 
+    -- GuildBankTransfer place notify → existing transfer-tab / merge tracking.
+    OneWoW.GuildBankTransfer.RegisterPlaceCallback("OneWoW_Bags", function(tabID, _, kind)
+        ns._wasPlacingBeforeGBOp = true
+        ns._destHadItemBeforeGBOp = (kind == "stack")
+        ns:TrackGuildBankTransferTab(tabID)
+    end)
+
     -- MERCHANT_SHOW / MERCHANT_CLOSED route through the core OneWoW.Merchant
     -- funnel (single MERCHANT_* owner) instead of this frame.
     OneWoW.Merchant.RegisterShowCallback("OneWoW_Bags", function()

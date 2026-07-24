@@ -31,6 +31,8 @@ local GetGuildBankItemInfo = GetGuildBankItemInfo
 local GetGuildBankItemLink = GetGuildBankItemLink
 local QueryGuildBankTab = QueryGuildBankTab
 local PickupGuildBankItem = PickupGuildBankItem
+local GetCurrentGuildBankTab = GetCurrentGuildBankTab
+local SetCurrentGuildBankTab = SetCurrentGuildBankTab
 local ItemLocation = ItemLocation
 
 local GUILD_BANK_SLOTS_PER_TAB = 98
@@ -61,10 +63,13 @@ end
 
 local function GetItemMaxStack(itemID)
     local maxStack = select(8, C_Item.GetItemInfo(itemID))
-    if type(maxStack) ~= "number" or maxStack < 1 then
-        maxStack = 1
+    if type(maxStack) == "number" and maxStack >= 1 then
+        return maxStack
     end
-    return maxStack
+    -- Uncached: treat as stackable so partials are still indexed; ExecuteOp
+    -- re-checks live capacity. Default 1 would skip every real partial stack.
+    C_Item.RequestLoadItemDataByID(itemID)
+    return 9999
 end
 
 local function GetGuildBankSlotItemID(tabID, slotID)
@@ -144,6 +149,53 @@ local function ReserveStackTargets(index, itemID, count)
     return targets, remaining
 end
 
+--- Collect depositable empty slots (tab/slot order) for overflow after partial fills.
+local function BuildEmptySlotList()
+    local empties = {}
+    local numTabs = GetNumGuildBankTabs() or 0
+    for tabID = 1, numTabs do
+        if CanDepositOnTab(tabID) then
+            for slotID = 1, GUILD_BANK_SLOTS_PER_TAB do
+                local texture = GetGuildBankItemInfo(tabID, slotID)
+                if not texture then
+                    tinsert(empties, { tabID = tabID, slotID = slotID })
+                end
+            end
+        end
+    end
+    return empties
+end
+
+--- Reserve empty slots for remaining count (one op per empty, up to maxStack each).
+local function ReserveEmptyTargets(empties, emptyIndex, itemID, count)
+    local targets = {}
+    local remaining = count or 0
+    if remaining <= 0 or not empties then
+        return targets, remaining
+    end
+
+    local maxStack = GetItemMaxStack(itemID)
+    while remaining > 0 and emptyIndex[1] <= #empties do
+        local slot = empties[emptyIndex[1]]
+        emptyIndex[1] = emptyIndex[1] + 1
+        local moveCount = min(remaining, maxStack)
+        tinsert(targets, {
+            tabID = slot.tabID,
+            slotID = slot.slotID,
+            count = moveCount,
+        })
+        remaining = remaining - moveCount
+    end
+
+    return targets, remaining
+end
+
+local function EnsureGuildTab(tabID)
+    if tabID and tabID ~= GetCurrentGuildBankTab() then
+        SetCurrentGuildBankTab(tabID)
+    end
+end
+
 local function PickupBagStackAmount(bagID, slotID, amount, stackCount)
     if amount and stackCount and amount < stackCount then
         C_Container.SplitContainerItem(bagID, slotID, amount)
@@ -218,11 +270,34 @@ local function ExecuteOp(op)
         end
 
         FirePlaceCallbacks(op.targetTabID, op.targetSlotID, "stack")
+        EnsureGuildTab(op.targetTabID)
         PickupGuildBankItem(op.targetTabID, op.targetSlotID)
         return moveCount
     end
 
-    -- fallback: let Blizzard pick an empty / mergeable slot on the active tab set
+    if op.kind == "empty" then
+        local texture, _, locked = GetGuildBankItemInfo(op.targetTabID, op.targetSlotID)
+        if texture or locked then
+            return 0
+        end
+
+        local moveCount = min(op.count or stackCount, stackCount)
+        if moveCount <= 0 then
+            return 0
+        end
+
+        PickupBagStackAmount(op.bagID, op.slotID, moveCount, stackCount)
+        if GetCursorInfo() ~= "item" then
+            return 0
+        end
+
+        FirePlaceCallbacks(op.targetTabID, op.targetSlotID, "empty")
+        EnsureGuildTab(op.targetTabID)
+        PickupGuildBankItem(op.targetTabID, op.targetSlotID)
+        return moveCount
+    end
+
+    -- Last-resort fallback when no empty slots were available at plan time.
     C_Container.UseContainerItem(op.bagID, op.slotID)
     return stackCount
 end
@@ -244,6 +319,8 @@ function GuildBankTransfer.PlanDeposits(slots)
     end
 
     local index = BuildPartialStackIndex(wantedItemIDs)
+    local empties = BuildEmptySlotList()
+    local emptyIndex = { 1 }
 
     for _, slotInfo in ipairs(slots) do
         local itemInfo = C_Container.GetContainerItemInfo(slotInfo.bagID, slotInfo.slotID)
@@ -261,6 +338,23 @@ function GuildBankTransfer.PlanDeposits(slots)
                 targetTabID = target.tabID,
                 targetSlotID = target.slotID,
             })
+        end
+
+        if remaining and remaining > 0 then
+            local emptyTargets
+            emptyTargets, remaining = ReserveEmptyTargets(empties, emptyIndex, slotInfo.itemID, remaining)
+            for _, target in ipairs(emptyTargets) do
+                tinsert(ops, {
+                    kind = "empty",
+                    bagID = slotInfo.bagID,
+                    slotID = slotInfo.slotID,
+                    itemID = slotInfo.itemID,
+                    itemName = slotInfo.itemName,
+                    count = target.count,
+                    targetTabID = target.tabID,
+                    targetSlotID = target.slotID,
+                })
+            end
         end
 
         if remaining and remaining > 0 then

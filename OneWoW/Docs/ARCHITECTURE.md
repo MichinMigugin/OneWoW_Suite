@@ -1252,8 +1252,8 @@ event names → `Inventory.lua` (PIM is not seeded). Mail remains local;
 Sibling to Inventory (§8.9): plans bag→guild deposits (partial-stack fill +
 fallback `UseContainerItem`) and runs a single restriction-gated paced queue.
 Does not own `GUILDBANK*` events — consumers gate on `Inventory.IsGuildBankOpen()`.
-See [GUILD_BANK_TRANSFER.md](GUILD_BANK_TRANSFER.md). Phase 1 consumer:
-DirectDeposit; Bags search/stack guild deposit is Phase 2.
+See [GUILD_BANK_TRANSFER.md](GUILD_BANK_TRANSFER.md). Consumers: DirectDeposit
+and Bags (search / Ctrl+RMB guild deposit + place-callback for tab refresh).
 
 ---
 

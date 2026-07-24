@@ -661,7 +661,8 @@ function ns.InfoBarFactory:Create(config)
                     GameTooltip:SetText(L[searchTransfer.tooltipKey], 1, 1, 1)
                 elseif searchTransfer.disabledTooltipKey
                     and searchTransfer.direction == "toBank"
-                    and not ns.bankOpen then
+                    and not ns.bankOpen
+                    and not ns.guildBankOpen then
                     GameTooltip:SetText(L[searchTransfer.disabledTooltipKey], 1, 1, 1)
                 elseif searchTransfer.emptyTooltipKey then
                     GameTooltip:SetText(L[searchTransfer.emptyTooltipKey], 1, 1, 1)

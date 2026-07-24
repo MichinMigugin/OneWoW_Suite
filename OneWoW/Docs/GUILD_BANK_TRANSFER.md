@@ -15,7 +15,7 @@ Published as `OneWoW.GuildBankTransfer` via the Facade.
 
 | API | Use |
 | --- | --- |
-| `PlanDeposits(slots)` | Build `stack` / `fallback` ops from live guild slots |
+| `PlanDeposits(slots)` | Build `stack` / `empty` / `fallback` ops from live guild slots |
 | `EnsureTabsQueried(wantedItemIDs, onReady)` | `QueryGuildBankTab` viewable tabs, then `onReady` after settle |
 | `Enqueue(ops, opts)` | Paced queue; `opts.ownerID`, `intervalSec`, `onProgress`, `onOpComplete`, `onComplete` |
 | `Cancel(ownerID?)` | Stop queue (owner-matched when provided) |
@@ -30,9 +30,11 @@ Same `ownerID` cancels and replaces.
 `not Restriction.IsProtectedActionBlocked()`, empty cursor, live re-verify.
 Default interval ~0.6s.
 
-Live guild APIs only — no Storage SV, no Bags private cache.
+Overflow after partial fills is planned onto **empty slots** (targeted
+`PickupGuildBankItem`), with `UseContainerItem` only as a last-resort fallback.
+`SetCurrentGuildBankTab` runs before each targeted place (Bags requirement).
 
 ## Consumers
 
-- Phase 1: `OneWoW_DirectDeposit` guild auto/manual deposit
-- Phase 2 (planned): Bags search / Ctrl+RMB guild deposit + place-callback for refresh tracking
+- `OneWoW_DirectDeposit` — guild auto/manual deposit
+- `OneWoW_Bags` — search transfer + Ctrl+RMB while guild bank open; place-callback for refresh tracking

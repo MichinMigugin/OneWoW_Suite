@@ -262,7 +262,7 @@ function BagSet:ApplyBagScripts(button)
     button:HookScript("OnClick", function(myself, mouseButton)
         if mouseButton == "RightButton"
             and IsControlKeyDown()
-            and ns.bankOpen
+            and (ns.bankOpen or ns.guildBankOpen)
             and myself.owb_hasItem
             and not CursorHasItem()
         then
