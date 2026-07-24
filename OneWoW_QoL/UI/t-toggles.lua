@@ -8,6 +8,28 @@ local CATEGORY_ORDER = {
     "CAMERA", "CHAT", "AUDIO", "GRAPHICS", "NETWORK",
 }
 
+-- Favorites were keyed by cvar name; migrate old → new after Retail 12.0 renames.
+local CVAR_FAV_RENAMES = {
+    autointeract = "autoInteract",
+    nameplateShowFriends = "nameplateShowFriendlyPlayers",
+    ShowClassColorInNameplate = "nameplateShowClassColor",
+    ShowClassColorInFriendlyNameplate = "nameplateShowFriendlyClassColor",
+    floatingCombatTextCombatDamage = "floatingCombatTextCombatDamage_v2",
+    floatingCombatTextCombatHealing = "floatingCombatTextCombatHealing_v2",
+    floatingCombatTextCombatState = "floatingCombatTextCombatState_v2",
+    floatingCombatTextAuras = "floatingCombatTextAuras_v2",
+    floatingCombatTextDodgeParryMiss = "floatingCombatTextDodgeParryMiss_v2",
+    floatingCombatTextHonorGains = "floatingCombatTextHonorGains_v2",
+    floatingCombatTextRepChanges = "floatingCombatTextRepChanges_v2",
+    floatingCombatTextEnergyGains = "floatingCombatTextEnergyGains_v2",
+    floatingCombatTextComboPoints = "floatingCombatTextComboPoints_v2",
+    floatingCombatTextReactives = "floatingCombatTextReactives_v2",
+    floatingCombatTextPetMeleeDamage = "floatingCombatTextPetMeleeDamage_v2",
+    cameraDynamicPitch = "test_cameraDynamicPitch",
+    gxVSync = "vsync",
+    gxMaxFrameLatency = "GxMaxFrameLatency",
+}
+
 local CVAR_DATA = {
     -- GAMEPLAY
     { cat = "GAMEPLAY", widget = "checkbox", cvar = "autoLootDefault",               name = "TOGGLE_NAME_autoLootDefault",               desc = "TOGGLE_DESC_autoLootDefault" },
@@ -21,25 +43,18 @@ local CVAR_DATA = {
     { cat = "GAMEPLAY", widget = "checkbox", cvar = "deselectOnClick",               name = "TOGGLE_NAME_deselectOnClick",               desc = "TOGGLE_DESC_deselectOnClick" },
     { cat = "GAMEPLAY", widget = "checkbox", cvar = "stopAutoAttackOnTargetChange",  name = "TOGGLE_NAME_stopAutoAttackOnTargetChange",  desc = "TOGGLE_DESC_stopAutoAttackOnTargetChange" },
     { cat = "GAMEPLAY", widget = "checkbox", cvar = "lootUnderMouse",                name = "TOGGLE_NAME_lootUnderMouse",                desc = "TOGGLE_DESC_lootUnderMouse" },
-    { cat = "GAMEPLAY", widget = "checkbox", cvar = "lootLeftmostBag",               name = "TOGGLE_NAME_lootLeftmostBag",               desc = "TOGGLE_DESC_lootLeftmostBag" },
     { cat = "GAMEPLAY", widget = "checkbox", cvar = "interactOnLeftClick",           name = "TOGGLE_NAME_interactOnLeftClick",           desc = "TOGGLE_DESC_interactOnLeftClick" },
-    { cat = "GAMEPLAY", widget = "checkbox", cvar = "autointeract",                  name = "TOGGLE_NAME_autointeract",                  desc = "TOGGLE_DESC_autointeract" },
+    { cat = "GAMEPLAY", widget = "checkbox", cvar = "autoInteract",                  name = "TOGGLE_NAME_autointeract",                  desc = "TOGGLE_DESC_autointeract" },
     { cat = "GAMEPLAY", widget = "checkbox", cvar = "autoClearAFK",                  name = "TOGGLE_NAME_autoClearAFK",                  desc = "TOGGLE_DESC_autoClearAFK" },
+    { cat = "GAMEPLAY", widget = "checkbox", cvar = "secureAbilityToggle",           name = "TOGGLE_NAME_secureAbilityToggle",           desc = "TOGGLE_DESC_secureAbilityToggle" },
 
     -- INTERFACE
     { cat = "INTERFACE", widget = "checkbox", cvar = "countdownForCooldowns",               name = "TOGGLE_NAME_countdownForCooldowns",               desc = "TOGGLE_DESC_countdownForCooldowns" },
     { cat = "INTERFACE", widget = "checkbox", cvar = "displaySpellActivationOverlays",      name = "TOGGLE_NAME_displaySpellActivationOverlays",      desc = "TOGGLE_DESC_displaySpellActivationOverlays" },
-    { cat = "INTERFACE", widget = "checkbox", cvar = "alwaysShowActionBars",                name = "TOGGLE_NAME_alwaysShowActionBars",                desc = "TOGGLE_DESC_alwaysShowActionBars" },
     { cat = "INTERFACE", widget = "checkbox", cvar = "lockActionBars",                      name = "TOGGLE_NAME_lockActionBars",                      desc = "TOGGLE_DESC_lockActionBars" },
-    { cat = "INTERFACE", widget = "checkbox", cvar = "bottomLeftActionBar",                 name = "TOGGLE_NAME_bottomLeftActionBar",                 desc = "TOGGLE_DESC_bottomLeftActionBar" },
-    { cat = "INTERFACE", widget = "checkbox", cvar = "bottomRightActionBar",                name = "TOGGLE_NAME_bottomRightActionBar",                desc = "TOGGLE_DESC_bottomRightActionBar" },
-    { cat = "INTERFACE", widget = "checkbox", cvar = "rightActionBar",                      name = "TOGGLE_NAME_rightActionBar",                      desc = "TOGGLE_DESC_rightActionBar" },
-    { cat = "INTERFACE", widget = "checkbox", cvar = "rightTwoActionBar",                   name = "TOGGLE_NAME_rightTwoActionBar",                   desc = "TOGGLE_DESC_rightTwoActionBar" },
-    { cat = "INTERFACE", widget = "checkbox", cvar = "displayFreeBagSlots",                 name = "TOGGLE_NAME_displayFreeBagSlots",                 desc = "TOGGLE_DESC_displayFreeBagSlots" },
     { cat = "INTERFACE", widget = "checkbox", cvar = "buffDurations",                       name = "TOGGLE_NAME_buffDurations",                       desc = "TOGGLE_DESC_buffDurations" },
     { cat = "INTERFACE", widget = "checkbox", cvar = "showTargetOfTarget",                  name = "TOGGLE_NAME_showTargetOfTarget",                  desc = "TOGGLE_DESC_showTargetOfTarget" },
     { cat = "INTERFACE", widget = "checkbox", cvar = "showTargetCastbar",                   name = "TOGGLE_NAME_showTargetCastbar",                   desc = "TOGGLE_DESC_showTargetCastbar" },
-    { cat = "INTERFACE", widget = "checkbox", cvar = "fullSizeFocusFrame",                  name = "TOGGLE_NAME_fullSizeFocusFrame",                  desc = "TOGGLE_DESC_fullSizeFocusFrame" },
     { cat = "INTERFACE", widget = "checkbox", cvar = "breakUpLargeNumbers",                 name = "TOGGLE_NAME_breakUpLargeNumbers",                 desc = "TOGGLE_DESC_breakUpLargeNumbers" },
     { cat = "INTERFACE", widget = "checkbox", cvar = "alwaysCompareItems",                  name = "TOGGLE_NAME_alwaysCompareItems",                  desc = "TOGGLE_DESC_alwaysCompareItems" },
     { cat = "INTERFACE", widget = "checkbox", cvar = "missingTransmogSourceInItemTooltips", name = "TOGGLE_NAME_missingTransmogSourceInItemTooltips", desc = "TOGGLE_DESC_missingTransmogSourceInItemTooltips" },
@@ -49,48 +64,57 @@ local CVAR_DATA = {
     { cat = "INTERFACE", widget = "checkbox", cvar = "rotateMinimap",                       name = "TOGGLE_NAME_rotateMinimap",                       desc = "TOGGLE_DESC_rotateMinimap" },
     { cat = "INTERFACE", widget = "checkbox", cvar = "useUiScale",                          name = "TOGGLE_NAME_useUiScale",                          desc = "TOGGLE_DESC_useUiScale" },
     { cat = "INTERFACE", widget = "slider",   cvar = "uiScale",    name = "TOGGLE_NAME_uiScale",    desc = "TOGGLE_DESC_uiScale",    min = 0.64, max = 1.0,  step = 0.01 },
+    { cat = "INTERFACE", widget = "checkbox", cvar = "noBuffDebuffFilterOnTarget", name = "TOGGLE_NAME_noBuffDebuffFilterOnTarget", desc = "TOGGLE_DESC_noBuffDebuffFilterOnTarget" },
+    { cat = "INTERFACE", widget = "checkbox", cvar = "scriptErrors",               name = "TOGGLE_NAME_scriptErrors",               desc = "TOGGLE_DESC_scriptErrors" },
 
     -- NAMEPLATES
     { cat = "NAMEPLATES", widget = "checkbox", cvar = "nameplateShowEnemies",              name = "TOGGLE_NAME_nameplateShowEnemies",              desc = "TOGGLE_DESC_nameplateShowEnemies" },
-    { cat = "NAMEPLATES", widget = "checkbox", cvar = "nameplateShowFriends",              name = "TOGGLE_NAME_nameplateShowFriends",              desc = "TOGGLE_DESC_nameplateShowFriends" },
+    { cat = "NAMEPLATES", widget = "checkbox", cvar = "nameplateShowFriendlyPlayers",      name = "TOGGLE_NAME_nameplateShowFriends",              desc = "TOGGLE_DESC_nameplateShowFriends" },
     { cat = "NAMEPLATES", widget = "checkbox", cvar = "nameplateShowSelf",                 name = "TOGGLE_NAME_nameplateShowSelf",                 desc = "TOGGLE_DESC_nameplateShowSelf" },
-    { cat = "NAMEPLATES", widget = "checkbox", cvar = "nameplatePersonalShowAlways",       name = "TOGGLE_NAME_nameplatePersonalShowAlways",       desc = "TOGGLE_DESC_nameplatePersonalShowAlways" },
-    { cat = "NAMEPLATES", widget = "checkbox", cvar = "nameplatePersonalShowInCombat",     name = "TOGGLE_NAME_nameplatePersonalShowInCombat",     desc = "TOGGLE_DESC_nameplatePersonalShowInCombat" },
-    { cat = "NAMEPLATES", widget = "checkbox", cvar = "ShowClassColorInNameplate",         name = "TOGGLE_NAME_ShowClassColorInNameplate",         desc = "TOGGLE_DESC_ShowClassColorInNameplate" },
-    { cat = "NAMEPLATES", widget = "checkbox", cvar = "ShowClassColorInFriendlyNameplate", name = "TOGGLE_NAME_ShowClassColorInFriendlyNameplate", desc = "TOGGLE_DESC_ShowClassColorInFriendlyNameplate" },
-    { cat = "NAMEPLATES", widget = "checkbox", cvar = "ShowNamePlateLoseAggroFlash",       name = "TOGGLE_NAME_ShowNamePlateLoseAggroFlash",       desc = "TOGGLE_DESC_ShowNamePlateLoseAggroFlash" },
-    { cat = "NAMEPLATES", widget = "checkbox", cvar = "namePlateEnemyClickThrough",        name = "TOGGLE_NAME_namePlateEnemyClickThrough",        desc = "TOGGLE_DESC_namePlateEnemyClickThrough" },
-    { cat = "NAMEPLATES", widget = "checkbox", cvar = "namePlateFriendlyClickThrough",     name = "TOGGLE_NAME_namePlateFriendlyClickThrough",     desc = "TOGGLE_DESC_namePlateFriendlyClickThrough" },
-    { cat = "NAMEPLATES", widget = "slider", cvar = "nameplateMaxDistance",  name = "TOGGLE_NAME_nameplateMaxDistance",  desc = "TOGGLE_DESC_nameplateMaxDistance",  min = 10,  max = 60,  step = 1    },
-    { cat = "NAMEPLATES", widget = "slider", cvar = "nameplateGlobalScale",  name = "TOGGLE_NAME_nameplateGlobalScale",  desc = "TOGGLE_DESC_nameplateGlobalScale",  min = 0.5, max = 2.0, step = 0.05 },
-    { cat = "NAMEPLATES", widget = "slider", cvar = "namePlateEnemySize",    name = "TOGGLE_NAME_namePlateEnemySize",    desc = "TOGGLE_DESC_namePlateEnemySize",    min = 0.5, max = 2.0, step = 0.05 },
-    { cat = "NAMEPLATES", widget = "slider", cvar = "namePlateFriendlySize", name = "TOGGLE_NAME_namePlateFriendlySize", desc = "TOGGLE_DESC_namePlateFriendlySize", min = 0.5, max = 2.0, step = 0.05 },
+    { cat = "NAMEPLATES", widget = "checkbox", cvar = "nameplateShowClassColor",           name = "TOGGLE_NAME_ShowClassColorInNameplate",         desc = "TOGGLE_DESC_ShowClassColorInNameplate" },
+    { cat = "NAMEPLATES", widget = "checkbox", cvar = "nameplateShowFriendlyClassColor",   name = "TOGGLE_NAME_ShowClassColorInFriendlyNameplate", desc = "TOGGLE_DESC_ShowClassColorInFriendlyNameplate" },
+    { cat = "NAMEPLATES", widget = "checkbox", cvar = "nameplateOtherAtBase",              name = "TOGGLE_NAME_nameplateOtherAtBase",              desc = "TOGGLE_DESC_nameplateOtherAtBase" },
+    { cat = "NAMEPLATES", widget = "slider", cvar = "nameplateMaxDistance",  name = "TOGGLE_NAME_nameplateMaxDistance",  desc = "TOGGLE_DESC_nameplateMaxDistance",  min = 10,  max = 60,  step = 1 },
 
     -- COMBAT_TEXT
-    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "enableFloatingCombatText",         name = "TOGGLE_NAME_enableFloatingCombatText",         desc = "TOGGLE_DESC_enableFloatingCombatText" },
-    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "enableCombatText",                 name = "TOGGLE_NAME_enableCombatText",                 desc = "TOGGLE_DESC_enableCombatText" },
-    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "fctCombatState",                   name = "TOGGLE_NAME_fctCombatState",                   desc = "TOGGLE_DESC_fctCombatState" },
-    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextCombatDamage",   name = "TOGGLE_NAME_floatingCombatTextCombatDamage",   desc = "TOGGLE_DESC_floatingCombatTextCombatDamage" },
-    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextCombatHealing",  name = "TOGGLE_NAME_floatingCombatTextCombatHealing",  desc = "TOGGLE_DESC_floatingCombatTextCombatHealing" },
-    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextCombatState",    name = "TOGGLE_NAME_floatingCombatTextCombatState",    desc = "TOGGLE_DESC_floatingCombatTextCombatState" },
-    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextAuras",          name = "TOGGLE_NAME_floatingCombatTextAuras",          desc = "TOGGLE_DESC_floatingCombatTextAuras" },
-    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextDodgeParryMiss", name = "TOGGLE_NAME_floatingCombatTextDodgeParryMiss", desc = "TOGGLE_DESC_floatingCombatTextDodgeParryMiss" },
-    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextHonorGains",     name = "TOGGLE_NAME_floatingCombatTextHonorGains",     desc = "TOGGLE_DESC_floatingCombatTextHonorGains" },
-    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextRepChanges",     name = "TOGGLE_NAME_floatingCombatTextRepChanges",     desc = "TOGGLE_DESC_floatingCombatTextRepChanges" },
-    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextEnergyGains",    name = "TOGGLE_NAME_floatingCombatTextEnergyGains",    desc = "TOGGLE_DESC_floatingCombatTextEnergyGains" },
-    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextComboPoints",    name = "TOGGLE_NAME_floatingCombatTextComboPoints",    desc = "TOGGLE_DESC_floatingCombatTextComboPoints" },
-    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextReactives",      name = "TOGGLE_NAME_floatingCombatTextReactives",      desc = "TOGGLE_DESC_floatingCombatTextReactives" },
-    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextPetMeleeDamage", name = "TOGGLE_NAME_floatingCombatTextPetMeleeDamage", desc = "TOGGLE_DESC_floatingCombatTextPetMeleeDamage" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "enableFloatingCombatText",                      name = "TOGGLE_NAME_enableFloatingCombatText",                      desc = "TOGGLE_DESC_enableFloatingCombatText" },
+    { cat = "COMBAT_TEXT", widget = "slider",   cvar = "WorldTextScale_v2",                             name = "TOGGLE_NAME_WorldTextScale_v2",                             desc = "TOGGLE_DESC_WorldTextScale_v2", min = 0.5, max = 2.5, step = 0.1 },
+    { cat = "COMBAT_TEXT", widget = "dropdown", cvar = "floatingCombatTextFloatMode_v2",
+        name = "TOGGLE_NAME_floatingCombatTextFloatMode_v2", desc = "TOGGLE_DESC_floatingCombatTextFloatMode_v2",
+        options   = { "1", "2", "3" },
+        optLabels = { "TOGGLE_OPT_floatingCombatTextFloatMode_1", "TOGGLE_OPT_floatingCombatTextFloatMode_2", "TOGGLE_OPT_floatingCombatTextFloatMode_3" } },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextCombatDamage_v2",              name = "TOGGLE_NAME_floatingCombatTextCombatDamage",                desc = "TOGGLE_DESC_floatingCombatTextCombatDamage" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextCombatLogPeriodicSpells_v2",   name = "TOGGLE_NAME_floatingCombatTextCombatLogPeriodicSpells_v2",  desc = "TOGGLE_DESC_floatingCombatTextCombatLogPeriodicSpells_v2" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextCombatHealing_v2",             name = "TOGGLE_NAME_floatingCombatTextCombatHealing",               desc = "TOGGLE_DESC_floatingCombatTextCombatHealing" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextCombatHealingAbsorbTarget_v2", name = "TOGGLE_NAME_floatingCombatTextCombatHealingAbsorbTarget_v2", desc = "TOGGLE_DESC_floatingCombatTextCombatHealingAbsorbTarget_v2" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextCombatDamageDirectionalScale_v2", name = "TOGGLE_NAME_floatingCombatTextCombatDamageDirectionalScale_v2", desc = "TOGGLE_DESC_floatingCombatTextCombatDamageDirectionalScale_v2" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextCombatState_v2",               name = "TOGGLE_NAME_floatingCombatTextCombatState",                 desc = "TOGGLE_DESC_floatingCombatTextCombatState" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextAuras_v2",                     name = "TOGGLE_NAME_floatingCombatTextAuras",                       desc = "TOGGLE_DESC_floatingCombatTextAuras" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextDodgeParryMiss_v2",            name = "TOGGLE_NAME_floatingCombatTextDodgeParryMiss",              desc = "TOGGLE_DESC_floatingCombatTextDodgeParryMiss" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextDamageReduction_v2",           name = "TOGGLE_NAME_floatingCombatTextDamageReduction_v2",          desc = "TOGGLE_DESC_floatingCombatTextDamageReduction_v2" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextHonorGains_v2",                name = "TOGGLE_NAME_floatingCombatTextHonorGains",                  desc = "TOGGLE_DESC_floatingCombatTextHonorGains" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextRepChanges_v2",                name = "TOGGLE_NAME_floatingCombatTextRepChanges",                  desc = "TOGGLE_DESC_floatingCombatTextRepChanges" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextEnergyGains_v2",               name = "TOGGLE_NAME_floatingCombatTextEnergyGains",                 desc = "TOGGLE_DESC_floatingCombatTextEnergyGains" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextPeriodicEnergyGains_v2",       name = "TOGGLE_NAME_floatingCombatTextPeriodicEnergyGains_v2",      desc = "TOGGLE_DESC_floatingCombatTextPeriodicEnergyGains_v2" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextComboPoints_v2",               name = "TOGGLE_NAME_floatingCombatTextComboPoints",                 desc = "TOGGLE_DESC_floatingCombatTextComboPoints" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextReactives_v2",                 name = "TOGGLE_NAME_floatingCombatTextReactives",                   desc = "TOGGLE_DESC_floatingCombatTextReactives" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextLowManaHealth_v2",             name = "TOGGLE_NAME_floatingCombatTextLowManaHealth_v2",            desc = "TOGGLE_DESC_floatingCombatTextLowManaHealth_v2" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextCombatHealingAbsorbSelf_v2",   name = "TOGGLE_NAME_floatingCombatTextCombatHealingAbsorbSelf_v2",  desc = "TOGGLE_DESC_floatingCombatTextCombatHealingAbsorbSelf_v2" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextFriendlyHealers_v2",           name = "TOGGLE_NAME_floatingCombatTextFriendlyHealers_v2",          desc = "TOGGLE_DESC_floatingCombatTextFriendlyHealers_v2" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextPetMeleeDamage_v2",            name = "TOGGLE_NAME_floatingCombatTextPetMeleeDamage",              desc = "TOGGLE_DESC_floatingCombatTextPetMeleeDamage" },
+    { cat = "COMBAT_TEXT", widget = "checkbox", cvar = "floatingCombatTextPetSpellDamage_v2",            name = "TOGGLE_NAME_floatingCombatTextPetSpellDamage_v2",           desc = "TOGGLE_DESC_floatingCombatTextPetSpellDamage_v2" },
 
     -- CAMERA
-    { cat = "CAMERA", widget = "checkbox", cvar = "cameraBobbing",        name = "TOGGLE_NAME_cameraBobbing",        desc = "TOGGLE_DESC_cameraBobbing" },
-    { cat = "CAMERA", widget = "checkbox", cvar = "cameraWaterCollision", name = "TOGGLE_NAME_cameraWaterCollision", desc = "TOGGLE_DESC_cameraWaterCollision" },
-    { cat = "CAMERA", widget = "checkbox", cvar = "flightAngleLookAhead", name = "TOGGLE_NAME_flightAngleLookAhead", desc = "TOGGLE_DESC_flightAngleLookAhead" },
-    { cat = "CAMERA", widget = "checkbox", cvar = "cameraDynamicPitch",   name = "TOGGLE_NAME_cameraDynamicPitch",   desc = "TOGGLE_DESC_cameraDynamicPitch" },
-    { cat = "CAMERA", widget = "slider", cvar = "cameraDistanceMaxZoomFactor", name = "TOGGLE_NAME_cameraDistanceMaxZoomFactor", desc = "TOGGLE_DESC_cameraDistanceMaxZoomFactor", min = 1.0,   max = 2.6,   step = 0.1   },
-    { cat = "CAMERA", widget = "slider", cvar = "cameraYawMoveSpeed",          name = "TOGGLE_NAME_cameraYawMoveSpeed",          desc = "TOGGLE_DESC_cameraYawMoveSpeed",          min = 0.005, max = 0.025, step = 0.001 },
-    { cat = "CAMERA", widget = "slider", cvar = "cameraPitchMoveSpeed",        name = "TOGGLE_NAME_cameraPitchMoveSpeed",        desc = "TOGGLE_DESC_cameraPitchMoveSpeed",        min = 0.005, max = 0.025, step = 0.001 },
-    { cat = "CAMERA", widget = "slider", cvar = "cameraZoomSpeed",             name = "TOGGLE_NAME_cameraZoomSpeed",             desc = "TOGGLE_DESC_cameraZoomSpeed",             min = 1,     max = 50,    step = 1     },
+    { cat = "CAMERA", widget = "checkbox", cvar = "cameraBobbing",              name = "TOGGLE_NAME_cameraBobbing",              desc = "TOGGLE_DESC_cameraBobbing" },
+    { cat = "CAMERA", widget = "checkbox", cvar = "cameraWaterCollision",       name = "TOGGLE_NAME_cameraWaterCollision",       desc = "TOGGLE_DESC_cameraWaterCollision" },
+    { cat = "CAMERA", widget = "checkbox", cvar = "flightAngleLookAhead",       name = "TOGGLE_NAME_flightAngleLookAhead",       desc = "TOGGLE_DESC_flightAngleLookAhead" },
+    { cat = "CAMERA", widget = "checkbox", cvar = "test_cameraDynamicPitch",    name = "TOGGLE_NAME_cameraDynamicPitch",         desc = "TOGGLE_DESC_cameraDynamicPitch" },
+    { cat = "CAMERA", widget = "checkbox", cvar = "cameraIndirectVisibility",   name = "TOGGLE_NAME_cameraIndirectVisibility",   desc = "TOGGLE_DESC_cameraIndirectVisibility" },
+    { cat = "CAMERA", widget = "slider", cvar = "cameraIndirectOffset",         name = "TOGGLE_NAME_cameraIndirectOffset",       desc = "TOGGLE_DESC_cameraIndirectOffset",       min = 1.0, max = 10.0, step = 0.1 },
+    { cat = "CAMERA", widget = "slider", cvar = "cameraDistanceMaxZoomFactor", name = "TOGGLE_NAME_cameraDistanceMaxZoomFactor", desc = "TOGGLE_DESC_cameraDistanceMaxZoomFactor", min = 1.0, max = 2.6, step = 0.1 },
+    { cat = "CAMERA", widget = "slider", cvar = "cameraYawMoveSpeed",          name = "TOGGLE_NAME_cameraYawMoveSpeed",          desc = "TOGGLE_DESC_cameraYawMoveSpeed",          min = 90,  max = 270, step = 5 },
+    { cat = "CAMERA", widget = "slider", cvar = "cameraPitchMoveSpeed",        name = "TOGGLE_NAME_cameraPitchMoveSpeed",        desc = "TOGGLE_DESC_cameraPitchMoveSpeed",        min = 45,  max = 135, step = 5 },
+    { cat = "CAMERA", widget = "slider", cvar = "cameraZoomSpeed",             name = "TOGGLE_NAME_cameraZoomSpeed",             desc = "TOGGLE_DESC_cameraZoomSpeed",             min = 1,   max = 50,  step = 1 },
 
     -- CHAT
     { cat = "CHAT", widget = "checkbox", cvar = "chatBubbles",           name = "TOGGLE_NAME_chatBubbles",           desc = "TOGGLE_DESC_chatBubbles" },
@@ -99,7 +123,6 @@ local CVAR_DATA = {
     { cat = "CHAT", widget = "checkbox", cvar = "blockTrades",           name = "TOGGLE_NAME_blockTrades",           desc = "TOGGLE_DESC_blockTrades" },
     { cat = "CHAT", widget = "checkbox", cvar = "blockChannelInvites",   name = "TOGGLE_NAME_blockChannelInvites",   desc = "TOGGLE_DESC_blockChannelInvites" },
     { cat = "CHAT", widget = "checkbox", cvar = "guildMemberNotify",     name = "TOGGLE_NAME_guildMemberNotify",     desc = "TOGGLE_DESC_guildMemberNotify" },
-    { cat = "CHAT", widget = "checkbox", cvar = "removeChatDelay",       name = "TOGGLE_NAME_removeChatDelay",       desc = "TOGGLE_DESC_removeChatDelay" },
     { cat = "CHAT", widget = "checkbox", cvar = "chatMouseScroll",       name = "TOGGLE_NAME_chatMouseScroll",       desc = "TOGGLE_DESC_chatMouseScroll" },
     { cat = "CHAT", widget = "checkbox", cvar = "profanityFilter",       name = "TOGGLE_NAME_profanityFilter",       desc = "TOGGLE_DESC_profanityFilter" },
     { cat = "CHAT", widget = "dropdown", cvar = "chatStyle",
@@ -125,14 +148,12 @@ local CVAR_DATA = {
     { cat = "GRAPHICS", widget = "checkbox", cvar = "ffxNether",                   name = "TOGGLE_NAME_ffxNether",                   desc = "TOGGLE_DESC_ffxNether" },
     { cat = "GRAPHICS", widget = "checkbox", cvar = "emphasizeMySpellEffects",     name = "TOGGLE_NAME_emphasizeMySpellEffects",     desc = "TOGGLE_DESC_emphasizeMySpellEffects" },
     { cat = "GRAPHICS", widget = "checkbox", cvar = "doNotFlashLowHealthWarning",  name = "TOGGLE_NAME_doNotFlashLowHealthWarning",  desc = "TOGGLE_DESC_doNotFlashLowHealthWarning" },
-    { cat = "GRAPHICS", widget = "checkbox", cvar = "hdPlayerModels",              name = "TOGGLE_NAME_hdPlayerModels",              desc = "TOGGLE_DESC_hdPlayerModels" },
     { cat = "GRAPHICS", widget = "checkbox", cvar = "findYourselfAnywhere",        name = "TOGGLE_NAME_findYourselfAnywhere",        desc = "TOGGLE_DESC_findYourselfAnywhere" },
-    { cat = "GRAPHICS", widget = "checkbox", cvar = "gxVSync",                     name = "TOGGLE_NAME_gxVSync",                     desc = "TOGGLE_DESC_gxVSync" },
-    { cat = "GRAPHICS", widget = "checkbox", cvar = "gxTripleBuffer",              name = "TOGGLE_NAME_gxTripleBuffer",              desc = "TOGGLE_DESC_gxTripleBuffer" },
+    { cat = "GRAPHICS", widget = "checkbox", cvar = "vsync",                       name = "TOGGLE_NAME_gxVSync",                     desc = "TOGGLE_DESC_gxVSync" },
     { cat = "GRAPHICS", widget = "slider", cvar = "particleDensity",   name = "TOGGLE_NAME_particleDensity",   desc = "TOGGLE_DESC_particleDensity",   min = 0,   max = 100, step = 5    },
     { cat = "GRAPHICS", widget = "slider", cvar = "maxFPS",            name = "TOGGLE_NAME_maxFPS",            desc = "TOGGLE_DESC_maxFPS",            min = 0,   max = 200, step = 10   },
     { cat = "GRAPHICS", widget = "slider", cvar = "maxFPSBk",          name = "TOGGLE_NAME_maxFPSBk",          desc = "TOGGLE_DESC_maxFPSBk",          min = 0,   max = 60,  step = 5    },
-    { cat = "GRAPHICS", widget = "slider", cvar = "gxMaxFrameLatency", name = "TOGGLE_NAME_gxMaxFrameLatency", desc = "TOGGLE_DESC_gxMaxFrameLatency", min = 1,   max = 6,   step = 1    },
+    { cat = "GRAPHICS", widget = "slider", cvar = "GxMaxFrameLatency", name = "TOGGLE_NAME_gxMaxFrameLatency", desc = "TOGGLE_DESC_gxMaxFrameLatency", min = 1,   max = 6,   step = 1    },
     { cat = "GRAPHICS", widget = "slider", cvar = "RenderScale",       name = "TOGGLE_NAME_RenderScale",       desc = "TOGGLE_DESC_RenderScale",       min = 0.5, max = 2.0, step = 0.05 },
     { cat = "GRAPHICS", widget = "dropdown", cvar = "graphicsQuality",
         name = "TOGGLE_NAME_graphicsQuality", desc = "TOGGLE_DESC_graphicsQuality",
@@ -149,8 +170,6 @@ local CVAR_DATA = {
 
     -- NETWORK
     { cat = "NETWORK", widget = "checkbox", cvar = "disableServerNagle",  name = "TOGGLE_NAME_disableServerNagle",  desc = "TOGGLE_DESC_disableServerNagle" },
-    { cat = "NETWORK", widget = "checkbox", cvar = "gxFixLag",            name = "TOGGLE_NAME_gxFixLag",            desc = "TOGGLE_DESC_gxFixLag" },
-    { cat = "NETWORK", widget = "checkbox", cvar = "reducedLagTolerance", name = "TOGGLE_NAME_reducedLagTolerance", desc = "TOGGLE_DESC_reducedLagTolerance" },
     { cat = "NETWORK", widget = "slider", cvar = "SpellQueueWindow", name = "TOGGLE_NAME_SpellQueueWindow", desc = "TOGGLE_DESC_SpellQueueWindow", min = 0, max = 400, step = 10 },
 }
 
@@ -158,6 +177,7 @@ ns.GetCVarList = function() return CVAR_DATA end
 
 local selectedEntry = nil
 local selectedRow   = nil
+local favMigrationDone = false
 
 local function QoLToggleFavStore()
     local db = ns.db.global
@@ -166,17 +186,32 @@ local function QoLToggleFavStore()
     return db.uiFavorites
 end
 
+local function MigrateToggleFavorites()
+    if favMigrationDone then return end
+    favMigrationDone = true
+    local u = QoLToggleFavStore()
+    local toggles = u.toggles
+    for oldKey, newKey in pairs(CVAR_FAV_RENAMES) do
+        if toggles[oldKey] then
+            toggles[newKey] = true
+            toggles[oldKey] = nil
+        end
+    end
+end
+
 local function ToggleFavKey(entry)
     if not entry then return "" end
     return entry.cvar or entry.name or ""
 end
 
 local function IsQoLToggleFavorite(entry)
+    MigrateToggleFavorites()
     local u = QoLToggleFavStore()
     return u and entry and u.toggles[ToggleFavKey(entry)] == true
 end
 
 local function SetQoLToggleFavorite(entry, on)
+    MigrateToggleFavorites()
     local u = QoLToggleFavStore()
     if u and entry then
         u.toggles[ToggleFavKey(entry)] = on and true or nil
@@ -193,11 +228,25 @@ local function FormatSliderVal(value, step)
     end
 end
 
+--- FCT *_v2 / WorldTextScale need a refresh flicker to apply (same as AIO).
+local function NeedsFCTRefresh(cvar)
+    return cvar == "WorldTextScale_v2"
+        or (type(cvar) == "string" and cvar:find("^floatingCombatText", 1, true) == 1)
+end
+
+local function SetToggleCVar(cvar, value)
+    C_CVar.SetCVar(cvar, value)
+    if NeedsFCTRefresh(cvar) and C_CVar.GetCVarBool("enableFloatingCombatText") then
+        C_CVar.SetCVar("enableFloatingCombatText", "0")
+        C_CVar.SetCVar("enableFloatingCombatText", "1")
+    end
+end
+
 local function GetRowDisplay(entry)
     local val = C_CVar.GetCVar(entry.cvar)
     if val == nil then return "N/A", nil end
     if entry.widget == "checkbox" then
-        return nil, val == "1"
+        return nil, C_CVar.GetCVarBool(entry.cvar) == true
     elseif entry.widget == "slider" then
         local num = tonumber(val)
         if num then return FormatSliderVal(num, entry.step), nil end
@@ -283,7 +332,7 @@ local function ShowToggleDetail(split, entry)
     local curVal = C_CVar.GetCVar(entry.cvar)
 
     if entry.widget == "checkbox" then
-        local isOn = (curVal == "1")
+        local isOn = C_CVar.GetCVarBool(entry.cvar) == true
         local capturedEntry = entry
 
         OneWoW_GUI:CreateOnOffToggleButtons(child, {
@@ -293,7 +342,7 @@ local function ShowToggleDetail(split, entry)
             isEnabled = true,
             value = isOn,
             onValueChange = function(newVal)
-                C_CVar.SetCVar(capturedEntry.cvar, newVal and "1" or "0")
+                SetToggleCVar(capturedEntry.cvar, newVal and "1" or "0")
                 UpdateRowIndicator(selectedRow, capturedEntry)
             end,
         })
@@ -316,7 +365,7 @@ local function ShowToggleDetail(split, entry)
             end,
             onChange = function(val)
                 local fmt = FormatSliderVal(val, capturedEntry.step)
-                C_CVar.SetCVar(capturedEntry.cvar, fmt)
+                SetToggleCVar(capturedEntry.cvar, fmt)
                 UpdateRowIndicator(selectedRow, capturedEntry)
             end,
         })
@@ -341,7 +390,7 @@ local function ShowToggleDetail(split, entry)
             gap = 4,
             width = child:GetWidth(),
             onSelect = function(value)
-                C_CVar.SetCVar(capturedEntry.cvar, value)
+                SetToggleCVar(capturedEntry.cvar, value)
                 UpdateRowIndicator(selectedRow, capturedEntry)
             end,
         })

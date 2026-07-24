@@ -9,6 +9,12 @@
 # QoL
 ## Fixes
 - Toggles tab sliders (Spell Queue Window, UI scale, volume, camera, nameplates, graphics, …) drag and update CVars correctly again
+- Toggles CVars updated for Retail 12.0 (floating combat text `*_v2`, nameplate class colors, camera speeds, and other renamed/removed settings)
+- Floating combat text toggles refresh immediately when changed
+
+## Toggles
+- Added Secure Ability Toggle, No Debuff Filter on Target, Display Lua Errors, Camera Indirect Visibility/Offset, and Nameplates at Base
+- Expanded Combat Text: world text scale, float mode, periodics, absorbs, directional damage numbers, damage reduction, low mana/health, friendly healers, and pet spell damage
 
 ---
 
