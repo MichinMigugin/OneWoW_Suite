@@ -2,8 +2,11 @@ local _, ns = ...
 
 local PE = OneWoW.PredicateEngine
 local Inventory = OneWoW.Inventory
+local GuildBankTransfer = OneWoW.GuildBankTransfer
+local tinsert = tinsert
 
 local INVENTORY_OWNER = "DirectDeposit"
+local GBT_OWNER = "DirectDeposit"
 
 local L = ns.L
 
@@ -329,7 +332,7 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
         return
     end
 
-    if self.isDepositing then
+    if self.isDepositing or GuildBankTransfer.IsBusy() then
         print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF8800Deposit already in progress. Use /dddeposit pause to stop.|r")
         return
     end
@@ -353,10 +356,7 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
 
     -- Walk the player's live bags once and only queue slots that hold an item
     -- on the deposit list and are compatible with the currently-open bank.
-    -- This keeps the schedule proportional to what's actually being moved
-    -- instead of the full list size (which can be hundreds of entries).
     local slotsToDeposit = {}
-    local hasGuildItems = false
 
     for bagID = 0, 5 do
         local numSlots = C_Container.GetContainerNumSlots(bagID)
@@ -374,10 +374,7 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
                             shouldDeposit = targetType == "personal" or targetType == "warband"
                         end
                         if shouldDeposit then
-                            if targetType == "guild" then
-                                hasGuildItems = true
-                            end
-                            table.insert(slotsToDeposit, {
+                            tinsert(slotsToDeposit, {
                                 bagID    = bagID,
                                 slotID   = slotID,
                                 itemID   = itemInfo.itemID,
@@ -395,6 +392,11 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
         return
     end
 
+    if activeType == "guild" then
+        self:StartGuildDeposit(slotsToDeposit, manualTrigger)
+        return
+    end
+
     self.isDepositing = true
     self.isPaused = false
     self.currentDepositIndex = 0
@@ -407,8 +409,7 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
         print(L["ADDON_CHAT_PREFIX"] .. " |cFF00FF00Starting manual deposit of " .. #slotsToDeposit .. " stack(s)...|r")
     end
 
-    local delayStep = hasGuildItems and 1.0 or 0.3
-
+    local delayStep = 0.3
     local delay = delayStep
     for i, slotInfo in ipairs(slotsToDeposit) do
         local timer = C_Timer.After(delay, function()
@@ -427,8 +428,93 @@ function DirectDeposit:DepositItemsToBank(manualTrigger)
                 end)
             end
         end)
-        table.insert(self.depositTimers, timer)
+        tinsert(self.depositTimers, timer)
         delay = delay + delayStep
+    end
+end
+
+--- Guild path: EnsureTabsQueried → PlanDeposits → Enqueue via GuildBankTransfer.
+function DirectDeposit:StartGuildDeposit(slotsToDeposit, manualTrigger)
+    self.isDepositing = true
+    self.isPaused = false
+    self.currentDepositIndex = 0
+    self.totalDepositItems = #slotsToDeposit
+    self.depositedItems = {}
+    self.failedItems = {}
+    self.depositTimers = {}
+
+    if manualTrigger then
+        print(L["ADDON_CHAT_PREFIX"] .. " |cFF00FF00Starting manual guild deposit...|r")
+    end
+
+    local wantedItemIDs = {}
+    for _, slotInfo in ipairs(slotsToDeposit) do
+        if slotInfo.itemID then
+            wantedItemIDs[slotInfo.itemID] = true
+        end
+    end
+
+    GuildBankTransfer.EnsureTabsQueried(wantedItemIDs, function()
+        if self.isPaused or not self.guildBankOpen or not Inventory.IsGuildBankOpen() then
+            self.isDepositing = false
+            return
+        end
+
+        local ops = GuildBankTransfer.PlanDeposits(slotsToDeposit)
+        if #ops == 0 then
+            self.isDepositing = false
+            return
+        end
+
+        self.totalDepositItems = #ops
+
+        local started = GuildBankTransfer.Enqueue(ops, {
+            ownerID = GBT_OWNER,
+            onProgress = function(i, total, op)
+                self.currentDepositIndex = i
+                if self.progressCallback then
+                    self.progressCallback(i, total, op.itemName)
+                end
+            end,
+            onOpComplete = function(op, moved)
+                if moved and moved > 0 then
+                    self:RecordDepositedItem(op.itemID, op.itemName, moved, "guild")
+                end
+            end,
+            onComplete = function()
+                self:FinishDeposit()
+            end,
+        })
+
+        if not started then
+            self.isDepositing = false
+            if manualTrigger then
+                print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000Could not start guild deposit (queue busy or guild bank closed).|r")
+            end
+        elseif manualTrigger then
+            print(L["ADDON_CHAT_PREFIX"] .. " |cFF00FF00Queued " .. #ops .. " guild move(s)...|r")
+        end
+    end)
+end
+
+function DirectDeposit:RecordDepositedItem(itemID, itemName, count, bankType)
+    local resolvedItemName = itemName or C_Item.GetItemNameByID(itemID) or "Item"
+    local existing
+    for _, rec in ipairs(self.depositedItems) do
+        if rec.itemID == itemID and rec.bankType == bankType then
+            existing = rec
+            break
+        end
+    end
+    if existing then
+        existing.count = existing.count + count
+    else
+        tinsert(self.depositedItems, {
+            itemID   = itemID,
+            itemName = resolvedItemName,
+            count    = count,
+            bankType = bankType,
+        })
     end
 end
 
@@ -441,6 +527,11 @@ function DirectDeposit:DepositSingleSlot(slotInfo)
     local targetBankType = slotInfo.bankType
     local itemName       = slotInfo.itemName
 
+    -- Personal/warband only — guild deposits go through GuildBankTransfer.
+    if targetBankType == "guild" then
+        return
+    end
+
     -- Re-verify the slot still holds the expected item. Bag contents can shift
     -- between the initial scan and the scheduled deposit (prior stack merged,
     -- item consumed, user moved it, etc.), so skip silently if it no longer matches.
@@ -450,24 +541,16 @@ function DirectDeposit:DepositSingleSlot(slotInfo)
     end
 
     local bankTypeEnum
-    local isGuildBank = false
-
     if targetBankType == "warband" then
         bankTypeEnum = Enum.BankType.Account
     elseif targetBankType == "personal" then
         bankTypeEnum = Enum.BankType.Character
-    elseif targetBankType == "guild" then
-        isGuildBank = true
-        if not self.guildBankOpen then
-            table.insert(self.failedItems, {itemID = expectedID, itemName = itemName or "Unknown", reason = "Guild bank not open"})
-            return
-        end
     else
         return
     end
 
-    if not isGuildBank and not C_Bank.CanUseBank(bankTypeEnum) then
-        table.insert(self.failedItems, {itemID = expectedID, itemName = itemName or "Unknown", reason = "Bank not accessible"})
+    if not C_Bank.CanUseBank(bankTypeEnum) then
+        tinsert(self.failedItems, {itemID = expectedID, itemName = itemName or "Unknown", reason = "Bank not accessible"})
         return
     end
 
@@ -476,48 +559,14 @@ function DirectDeposit:DepositSingleSlot(slotInfo)
         return
     end
 
-    if not isGuildBank then
-        local allowed = C_Bank.IsItemAllowedInBankType(bankTypeEnum, itemLocation)
-        if not allowed then
-            table.insert(self.failedItems, {itemID = expectedID, itemName = itemName or "Unknown", reason = "Item binding prevents deposit"})
-            return
-        end
-    else
-        local bindType = itemInfo.hyperlink and select(14, C_Item.GetItemInfo(itemInfo.hyperlink))
-        if bindType == Enum.ItemBind.OnAcquire or bindType == Enum.ItemBind.Quest then
-            table.insert(self.failedItems, {itemID = expectedID, itemName = itemName or "Unknown", reason = "Item binding prevents deposit"})
-            return
-        end
+    local allowed = C_Bank.IsItemAllowedInBankType(bankTypeEnum, itemLocation)
+    if not allowed then
+        tinsert(self.failedItems, {itemID = expectedID, itemName = itemName or "Unknown", reason = "Item binding prevents deposit"})
+        return
     end
 
-    if isGuildBank then
-        C_Container.UseContainerItem(bagID, slotID)
-    else
-        C_Container.UseContainerItem(bagID, slotID, nil, bankTypeEnum)
-    end
-
-    local stackCount = itemInfo.stackCount or 1
-    local resolvedItemName = itemName or C_Item.GetItemNameByID(expectedID) or "Item"
-
-    -- Collapse repeats of the same item+bankType into one summary entry so the
-    -- FinishDeposit readout matches the old per-itemID grouping.
-    local existing
-    for _, rec in ipairs(self.depositedItems) do
-        if rec.itemID == expectedID and rec.bankType == targetBankType then
-            existing = rec
-            break
-        end
-    end
-    if existing then
-        existing.count = existing.count + stackCount
-    else
-        table.insert(self.depositedItems, {
-            itemID   = expectedID,
-            itemName = resolvedItemName,
-            count    = stackCount,
-            bankType = targetBankType,
-        })
-    end
+    C_Container.UseContainerItem(bagID, slotID, nil, bankTypeEnum)
+    self:RecordDepositedItem(expectedID, itemName, itemInfo.stackCount or 1, targetBankType)
 end
 
 function DirectDeposit:DepositItemByID(itemID, targetBankType, itemName)
@@ -797,22 +846,37 @@ function DirectDeposit:FinishDeposit()
 end
 
 function DirectDeposit:PauseDeposit()
-    if not self.isDepositing then
+    if not self.isDepositing and not GuildBankTransfer.IsBusy() then
         return false
     end
 
     self.isPaused = true
+    GuildBankTransfer.Cancel(GBT_OWNER)
+    for _, timer in ipairs(self.depositTimers) do
+        if timer then
+            timer:Cancel()
+        end
+    end
+    self.depositTimers = {}
+    self.isDepositing = false
+    self.depositedItems = {}
+    self.failedItems = {}
+
     print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF8800Deposit paused.|r")
+
+    if self.progressCallback then
+        self.progressCallback(nil, nil, nil)
+    end
     return true
 end
 
 function DirectDeposit:StopDeposit()
-    if not self.isDepositing then
+    if not self.isDepositing and not GuildBankTransfer.IsBusy() then
         return false
     end
 
     self.isPaused = true
-    self.isDepositing = false
+    GuildBankTransfer.Cancel(GBT_OWNER)
 
     for _, timer in ipairs(self.depositTimers) do
         if timer then
@@ -821,6 +885,7 @@ function DirectDeposit:StopDeposit()
     end
 
     self.depositTimers = {}
+    self.isDepositing = false
 
     print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000Deposit stopped.|r")
 

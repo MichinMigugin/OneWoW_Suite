@@ -125,6 +125,7 @@ Services\Merchant.lua
 Services\Inventory\BagTypes.lua
 Services\Inventory\BankTypes.lua
 Services\Inventory.lua
+Services\GuildBankTransfer.lua
 Services\overlay-icons.lua
 Services\upgrade-detection.lua
 Services\Disenchant\allowlist.lua

@@ -8,7 +8,9 @@ One core service owns the **live** bag/bank/guild-bank event funnel for the
 logged-in character, plus shared container ID vocabulary and slot iteration
 helpers. Cross-alt persistence, Query, and dupes stay in
 `OneWoW_AltTracker_Storage`. PredicateEngine stays pull/eval (no bag watches).
-Guild bank uses tab/slot APIs — not `ForEachSlot` / `GetBagIDs`.
+Guild bank uses tab/slot APIs — not `ForEachSlot` / `GetBagIDs`. Bag→guild
+*moves* (partial-stack fill + paced queue) live in
+[`OneWoW.GuildBankTransfer`](GUILD_BANK_TRANSFER.md), not here.
 
 **Files:**
 

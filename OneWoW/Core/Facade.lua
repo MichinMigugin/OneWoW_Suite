@@ -40,6 +40,7 @@ local SERVICE_KEYS = {
     "Collectibles",
     "Merchant",
     "Inventory",
+    "GuildBankTransfer",
     "UpgradeDetection",
     "Disenchant",
     "AltScope",

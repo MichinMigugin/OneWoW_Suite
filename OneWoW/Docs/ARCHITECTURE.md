@@ -1247,6 +1247,14 @@ consume these channels (or types/helpers). The single-owner rule is enforced by
 event names → `Inventory.lua` (PIM is not seeded). Mail remains local;
 `GUILDBANKLOG_UPDATE` stays with Bags `GuildBankLog`.
 
+### 8.10 Guild bank transfer (`OneWoW.GuildBankTransfer`)
+
+Sibling to Inventory (§8.9): plans bag→guild deposits (partial-stack fill +
+fallback `UseContainerItem`) and runs a single restriction-gated paced queue.
+Does not own `GUILDBANK*` events — consumers gate on `Inventory.IsGuildBankOpen()`.
+See [GUILD_BANK_TRANSFER.md](GUILD_BANK_TRANSFER.md). Phase 1 consumer:
+DirectDeposit; Bags search/stack guild deposit is Phase 2.
+
 ---
 
 ## 9. Caveats
@@ -1279,6 +1287,7 @@ event names → `Inventory.lua` (PIM is not seeded). Mail remains local;
 | `OneWoW/Services/ProfessionRecipe.lua` | Trade-skill recipe scan funnel: single `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED` owner, scan/open/closed callback channels, ephemeral snapshots (§8.7) |
 | `OneWoW/Services/Merchant.lua` | Merchant scan funnel: single `MERCHANT_*` owner, scan/show/closed callback channels, ephemeral vendor snapshots, no SV (§8.8, see [MERCHANT.md](MERCHANT.md)) |
 | `OneWoW/Services/Inventory.lua` | Live bag/bank/guild-bank event funnel + `ForEachSlot` / `GetBagIDs`; `BagTypes`/`BankTypes` via subdir (§8.9, see [INVENTORY.md](INVENTORY.md)) |
+| `OneWoW/Services/GuildBankTransfer.lua` | Bag→guild deposit plan + paced queue (§8.10, see [GUILD_BANK_TRANSFER.md](GUILD_BANK_TRANSFER.md)) |
 | `OneWoW/Services/UIParent.lua` | Cinematic `UIParent` hide/restore funnel + fragile FrameXML indicator re-sync (minimap mail) |
 | `OneWoW/Services/Collectibles.lua` | Collectible identity resolver: key grammar (`type[:subtype]:id`), live display + collection state, no SV (see [COLLECTIBLES.md](COLLECTIBLES.md)) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
