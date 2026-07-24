@@ -8,6 +8,10 @@ ns.DatabaseDefaults = {
     settings = {
         guildAsPersonal = false,
         financialsDashboard = false,
+        -- UI: Financials options row (retention / guild / reset) expanded.
+        financialsOptionsOpen = false,
+        -- 0 = Off (no daily rollup); else 30/60/90/180/365.
+        detailRetentionDays = 0,
         maxRecords = 10000,
         trimToRecords = 8000,
         resetDate = 0,

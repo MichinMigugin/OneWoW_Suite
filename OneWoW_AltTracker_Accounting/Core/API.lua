@@ -188,3 +188,42 @@ function OneWoW_AltTracker_Accounting_API.SetFinancialsDashboard(enabled)
         db.settings.financialsDashboard = enabled and true or false
     end
 end
+
+--- Whether the Financials options row (retention / guild / reset) is expanded.
+---@return boolean
+function OneWoW_AltTracker_Accounting_API.GetFinancialsOptionsOpen()
+    local db = OneWoW_AltTracker_Accounting_DB
+    return db and db.settings and db.settings.financialsOptionsOpen == true
+end
+
+--- Persist Financials options row expanded state.
+---@param open boolean
+function OneWoW_AltTracker_Accounting_API.SetFinancialsOptionsOpen(open)
+    local db = OneWoW_AltTracker_Accounting_DB
+    if db and db.settings then
+        db.settings.financialsOptionsOpen = open and true or false
+    end
+end
+
+--- Days of detailed Financials history to keep before daily rollup. 0 = Off.
+---@return number days
+function OneWoW_AltTracker_Accounting_API.GetDetailRetentionDays()
+    local db = OneWoW_AltTracker_Accounting_DB
+    local days = db and db.settings and db.settings.detailRetentionDays
+    return ns.Compaction.NormalizeRetentionDays(days)
+end
+
+--- Set detail retention (0 / 30 / 60 / 90 / 180 / 365) and arm compaction.
+---@param days number
+function OneWoW_AltTracker_Accounting_API.SetDetailRetentionDays(days)
+    local db = OneWoW_AltTracker_Accounting_DB
+    if not db or not db.settings then
+        return
+    end
+    local normalized = ns.Compaction.NormalizeRetentionDays(days)
+    db.settings.detailRetentionDays = normalized
+    if ns.Compaction then
+        ns.Compaction:Cancel()
+        ns.Compaction:Arm()
+    end
+end

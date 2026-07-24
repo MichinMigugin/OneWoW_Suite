@@ -29,6 +29,10 @@ This is a companion data collection addon for OneWoW AltTracker. It automaticall
 
 Specialist trackers record categorized transactions and claim gold deltas. `GoldWatcher` listens to `PLAYER_MONEY` and only writes `uncategorized` rows for amounts that were not claimed. Cross-unit mail collection (Storage) records auction sales/refunds via `OneWoW_AltTracker_Accounting_API`.
 
+### Ledger retention (daily rollup)
+
+`settings.detailRetentionDays` (default `0` = Off; else 30/60/90/180/365) controls optional compaction. When enabled, `Modules/Compaction.lua` arms a `OneWoW.ChunkedJob` on login and when the setting changes: non-rollup rows older than the cutoff are merged into daily synthetic rows (`isRollup`, `rolledCount`, source `"Daily Rollup"`) grouped by character + day + type + category. Existing rollups are left alone. Compaction never runs on logout. Count-based `TrimTransactions` remains a safety net.
+
 ### Analytics (on-demand)
 
 `Modules/Analytics.lua` exposes pure series builders used by the Financials Dashboard (and available on the public API):

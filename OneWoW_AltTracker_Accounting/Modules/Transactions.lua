@@ -177,6 +177,9 @@ function Transactions:UpdateTransaction(txId, newData)
     end
     for _, tx in ipairs(OneWoW_AltTracker_Accounting_DB.transactions) do
         if tx.id == txId then
+            if tx.isRollup then
+                return false
+            end
             if newData.amount ~= nil then tx.amount = newData.amount end
             if newData.itemName ~= nil then tx.itemName = newData.itemName end
             if newData.category ~= nil then tx.category = newData.category end

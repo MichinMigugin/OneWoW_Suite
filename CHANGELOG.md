@@ -27,6 +27,8 @@
 # AltTracker
 ## Financials
 - Looted gold from mobs, auto-loot, and delve end piles is categorized as Looted Gold instead of Uncategorized Income
+- Optional daily rollup for older transactions (Keep detailed history; default Off) to compact the ledger over time
+- Ledger options (detail retention, guild-as-personal, reset) move behind a settings gear into a toggleable row
 
 ---
 

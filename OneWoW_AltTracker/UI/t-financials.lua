@@ -527,19 +527,21 @@ local function ShowTransactionContextMenu(tx)
     MenuUtil.CreateContextMenu(UIParent, function(_, rootDescription)
         rootDescription:CreateTitle(L["FIN_CONTEXT_TITLE"])
 
-        rootDescription:CreateButton(L["FIN_EDIT_AMOUNT"], function()
-            ShowEditAmountDialog(tx)
-        end)
+        if not tx.isRollup then
+            rootDescription:CreateButton(L["FIN_EDIT_AMOUNT"], function()
+                ShowEditAmountDialog(tx)
+            end)
 
-        rootDescription:CreateButton(L["FIN_EDIT_ITEM"], function()
-            ShowEditItemNameDialog(tx)
-        end)
+            rootDescription:CreateButton(L["FIN_EDIT_ITEM"], function()
+                ShowEditItemNameDialog(tx)
+            end)
 
-        rootDescription:CreateButton(L["FIN_EDIT_CATEGORY"], function()
-            ShowChangeCategoryMenu(tx)
-        end)
+            rootDescription:CreateButton(L["FIN_EDIT_CATEGORY"], function()
+                ShowChangeCategoryMenu(tx)
+            end)
 
-        rootDescription:CreateDivider()
+            rootDescription:CreateDivider()
+        end
 
         local deleteBtn = rootDescription:CreateButton(L["FIN_DELETE_TX"], function()
             ShowDeleteConfirmation(tx)
@@ -817,6 +819,9 @@ local function BindFinancialListRow(row, _, entry, _)
         row.detailLine1:Show()
 
         local extras = {}
+        if tx.isRollup and tx.rolledCount then
+            tinsert(extras, string.format(L["FIN_ROLLED_COUNT"], tx.rolledCount))
+        end
         if tx.quantity and tx.quantity > 1 then
             tinsert(extras, L["FIN_EXPANDED_QTY"] .. " " .. tx.quantity)
         end
@@ -839,7 +844,7 @@ local function BindFinancialListRow(row, _, entry, _)
     row.detailLine1:Hide()
     row.detailLine2:Hide()
     row.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    row.bg:SetAlpha(0.6)
+    row.bg:SetAlpha(tx.isRollup and 0.35 or 0.6)
 
     for _, cell in ipairs(row.cells) do
         cell:Show()
@@ -850,29 +855,36 @@ local function BindFinancialListRow(row, _, entry, _)
         row.expandBtn.icon:SetAtlas(expandedByTxId[key] and "Gamepad_Rev_Minus_64" or "Gamepad_Rev_Plus_64")
     end
 
+    local secondaryColor = tx.isRollup and "TEXT_MUTED" or "TEXT_SECONDARY"
+    local primaryColor = tx.isRollup and "TEXT_MUTED" or "TEXT_PRIMARY"
+
     row.dateText:SetText(date("%m/%d %H:%M", tx.timestamp or 0))
-    row.dateText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    row.dateText:SetTextColor(OneWoW_GUI:GetThemeColor(secondaryColor))
 
     local charName = (tx.character or ""):match("^([^%-]+)")
     row.charText:SetText(charName or "?")
-    row.charText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    row.charText:SetTextColor(OneWoW_GUI:GetThemeColor(primaryColor))
 
     row.categoryText:SetText(ns.UI.GetCategoryDisplayName(tx.category))
-    row.categoryText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    row.categoryText:SetTextColor(OneWoW_GUI:GetThemeColor(secondaryColor))
 
-    row.itemText:SetText(tx.itemName or tx.source or "")
-    row.itemText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local itemLabel = tx.itemName or tx.source or ""
+    if tx.isRollup then
+        itemLabel = L["FIN_SOURCE_DAILY_ROLLUP"]
+    end
+    row.itemText:SetText(itemLabel)
+    row.itemText:SetTextColor(OneWoW_GUI:GetThemeColor(primaryColor))
 
     local amountFormatted = ns.AltTrackerFormatters:FormatGold(tx.amount or 0)
     if tx.type == "income" then
         row.amountText:SetText("+" .. amountFormatted)
-        row.amountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        row.amountText:SetTextColor(OneWoW_GUI:GetThemeColor(tx.isRollup and "TEXT_MUTED" or "TEXT_FEATURES_ENABLED"))
     elseif tx.type == "transfer" then
         row.amountText:SetText(amountFormatted)
-        row.amountText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        row.amountText:SetTextColor(OneWoW_GUI:GetThemeColor(tx.isRollup and "TEXT_MUTED" or "ACCENT_PRIMARY"))
     else
         row.amountText:SetText("-" .. amountFormatted)
-        row.amountText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+        row.amountText:SetTextColor(OneWoW_GUI:GetThemeColor(tx.isRollup and "TEXT_MUTED" or "TEXT_WARNING"))
     end
 
     LayoutFinancialTxCells(row, dt)
@@ -1112,8 +1124,91 @@ function ns.UI.CreateFinancialsTab(parent)
     })
     dashboardBtn:SetPoint("LEFT", catDropdown, "RIGHT", 25, 0)
 
-    local resetBtn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = L["FIN_RESET_DATA"], height = 24 })
-    resetBtn:SetPoint("RIGHT", filterPanel, "RIGHT", -10, 0)
+    local settingsBtn = OneWoW_GUI:CreateAtlasIconButton(filterPanel, {
+        atlas = "mechagon-projects",
+        width = 24,
+        height = 24,
+    })
+    settingsBtn:SetPoint("RIGHT", filterPanel, "RIGHT", -10, 0)
+
+    local optionsPanel = OneWoW_GUI:CreateFilterBar(parent, {
+        height = 32,
+        anchorBelow = filterPanel,
+        offset = -4,
+    })
+
+    local RETENTION_DAYS = { 0, 30, 60, 90, 180, 365 }
+
+    local function RetentionLabel(days)
+        if not days or days <= 0 then
+            return OFF
+        end
+        return string.format(L["FIN_RETENTION_DAYS"], days)
+    end
+
+    local retentionLabel = OneWoW_GUI:CreateFS(optionsPanel, 10)
+    retentionLabel:SetPoint("LEFT", optionsPanel, "LEFT", 8, 0)
+    retentionLabel:SetText(L["FIN_DETAIL_RETENTION"])
+    retentionLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+    local retentionDropdown = OneWoW_GUI:CreateDropdown(optionsPanel, {
+        width = 100,
+        height = 24,
+        text = RetentionLabel(0),
+    })
+    retentionDropdown:SetPoint("LEFT", retentionLabel, "RIGHT", 4, 0)
+
+    OneWoW_GUI:AttachFilterMenu(retentionDropdown, {
+        menuHeight = #RETENTION_DAYS * 26 + 8,
+        getActiveValue = function()
+            return OneWoW_AltTracker_Accounting_API
+                and OneWoW_AltTracker_Accounting_API.GetDetailRetentionDays()
+                or 0
+        end,
+        buildItems = function()
+            local items = {}
+            for i = 1, #RETENTION_DAYS do
+                local days = RETENTION_DAYS[i]
+                tinsert(items, { value = days, text = RetentionLabel(days) })
+            end
+            return items
+        end,
+        onSelect = function(value, text)
+            if OneWoW_AltTracker_Accounting_API then
+                OneWoW_AltTracker_Accounting_API.SetDetailRetentionDays(value)
+            end
+            retentionDropdown._text:SetText(text)
+        end,
+    })
+
+    retentionDropdown:HookScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_TOP")
+        GameTooltip:SetText(L["FIN_DETAIL_RETENTION"], 1, 1, 1)
+        GameTooltip:AddLine(L["FIN_DETAIL_RETENTION_TT"], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    retentionDropdown:HookScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+
+    local guildPersonalCheck = OneWoW_GUI:CreateCheckbox(optionsPanel, { label = L["FIN_GUILD_AS_PERSONAL"] })
+    guildPersonalCheck:SetPoint("LEFT", retentionDropdown, "RIGHT", 20, 0)
+
+    guildPersonalCheck:SetScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_TOP")
+        GameTooltip:SetText(L["FIN_GUILD_AS_PERSONAL"], 1, 1, 1)
+        GameTooltip:AddLine(L["FIN_GUILD_AS_PERSONAL_TT"], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    guildPersonalCheck:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    guildPersonalCheck:SetScript("OnClick", function(myself)
+        if OneWoW_AltTracker_Accounting_API then
+            OneWoW_AltTracker_Accounting_API.SetGuildAsPersonal(myself:GetChecked() and true or false)
+        end
+    end)
+
+    local resetBtn = OneWoW_GUI:CreateFitTextButton(optionsPanel, { text = L["FIN_RESET_DATA"], height = 24 })
+    resetBtn:SetPoint("RIGHT", optionsPanel, "RIGHT", -10, 0)
     resetBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
     resetBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
     resetBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
@@ -1147,39 +1242,82 @@ function ns.UI.CreateFinancialsTab(parent)
         result.frame:Show()
     end)
 
-    resetBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    resetBtn:SetScript("OnEnter", function(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
+        GameTooltip:SetOwner(myself, "ANCHOR_TOP")
         GameTooltip:SetText(L["FIN_RESET_TT"], 1, 0.3, 0.3)
         GameTooltip:AddLine(L["FIN_RESET_TT_DESC"], 0.7, 0.7, 0.7, true)
         GameTooltip:Show()
     end)
 
-    resetBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+    resetBtn:SetScript("OnLeave", function(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
         GameTooltip:Hide()
     end)
 
-    local guildPersonalCheck = OneWoW_GUI:CreateCheckbox(filterPanel, { label = L["FIN_GUILD_AS_PERSONAL"] })
-    guildPersonalCheck:SetPoint("RIGHT", resetBtn, "LEFT", -12 - guildPersonalCheck.label:GetStringWidth(), 0)
-
     C_Timer.After(0.6, function()
-        local val = OneWoW_AltTracker_Accounting_API and
-                    OneWoW_AltTracker_Accounting_API.GetGuildAsPersonal()
-        guildPersonalCheck:SetChecked(val)
+        if OneWoW_AltTracker_Accounting_API then
+            retentionDropdown._text:SetText(
+                RetentionLabel(OneWoW_AltTracker_Accounting_API.GetDetailRetentionDays())
+            )
+            guildPersonalCheck:SetChecked(OneWoW_AltTracker_Accounting_API.GetGuildAsPersonal())
+        end
     end)
 
-    guildPersonalCheck:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(L["FIN_GUILD_AS_PERSONAL"], 1, 1, 1)
-        GameTooltip:AddLine(L["FIN_GUILD_AS_PERSONAL_TT"], 0.8, 0.8, 0.8, true)
+    local rosterPanel = OneWoW_GUI:CreateRosterPanel(parent, filterPanel)
+
+    local function SyncSettingsBtn(open)
+        settingsBtn.isActive = open and true or false
+        if open then
+            settingsBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            settingsBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        else
+            settingsBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+            settingsBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        end
+    end
+
+    local function ApplyOptionsOpen(open, persist)
+        open = open and true or false
+        parent.optionsOpen = open
+        if persist and OneWoW_AltTracker_Accounting_API then
+            OneWoW_AltTracker_Accounting_API.SetFinancialsOptionsOpen(open)
+        end
+        SyncSettingsBtn(open)
+        if open then
+            optionsPanel:SetHeight(32)
+            optionsPanel:Show()
+            rosterPanel:ClearAllPoints()
+            rosterPanel:SetPoint("TOPLEFT", optionsPanel, "BOTTOMLEFT", 0, -8)
+            rosterPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -5, 30)
+        else
+            optionsPanel:Hide()
+            optionsPanel:SetHeight(1)
+            rosterPanel:ClearAllPoints()
+            rosterPanel:SetPoint("TOPLEFT", filterPanel, "BOTTOMLEFT", 0, -8)
+            rosterPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -5, 30)
+        end
+    end
+
+    settingsBtn:SetScript("OnClick", function()
+        ApplyOptionsOpen(not parent.optionsOpen, true)
+    end)
+    settingsBtn:HookScript("OnEnter", function(myself)
+        if myself.isActive then
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+        else
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+        end
+        GameTooltip:SetOwner(myself, "ANCHOR_TOP")
+        GameTooltip:SetText(SETTINGS, 1, 1, 1)
+        GameTooltip:AddLine(L["FIN_OPTIONS_TT"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
-    guildPersonalCheck:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    guildPersonalCheck:SetScript("OnClick", function(self)
-        if OneWoW_AltTracker_Accounting_API then
-            OneWoW_AltTracker_Accounting_API.SetGuildAsPersonal(self:GetChecked() and true or false)
-        end
+    settingsBtn:HookScript("OnLeave", function(myself)
+        SyncSettingsBtn(parent.optionsOpen)
+        GameTooltip:Hide()
     end)
 
     local function SetDashboardMode(on)
@@ -1227,7 +1365,13 @@ function ns.UI.CreateFinancialsTab(parent)
         GameTooltip:Hide()
     end)
 
-    local rosterPanel = OneWoW_GUI:CreateRosterPanel(parent, filterPanel)
+    -- Initial options row state (default closed; restore after Accounting is ready).
+    ApplyOptionsOpen(false, false)
+    C_Timer.After(0.6, function()
+        local open = OneWoW_AltTracker_Accounting_API
+            and OneWoW_AltTracker_Accounting_API.GetFinancialsOptionsOpen()
+        ApplyOptionsOpen(open, false)
+    end)
 
     local dt
     dt = OneWoW_GUI:CreateDataTable(rosterPanel, {
@@ -1287,6 +1431,8 @@ function ns.UI.CreateFinancialsTab(parent)
     parent.dashboardSummary = { chips = summaryByKey }
     parent.dashboardBtn = dashboardBtn
     parent.filterPanel = filterPanel
+    parent.optionsPanel = optionsPanel
+    parent.settingsBtn = settingsBtn
     parent.rosterPanel = rosterPanel
     parent.dataTable = dt
     parent.columnsConfig = columnsConfig

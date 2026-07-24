@@ -10,5 +10,8 @@ OneWoW:BootStore(ns, {
             ns.DataManager:Initialize()
             ns.DataManager:RegisterEvents()
         end
+        if ns.Compaction then
+            ns.Compaction:Arm()
+        end
     end,
 })

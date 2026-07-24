@@ -38,6 +38,7 @@ Modules\NpcOrderTracker.lua
 Modules\TrainerTracker.lua
 Modules\InteractionTracker.lua
 Modules\GoldWatcher.lua
+Modules\Compaction.lua
 
 # Data Manager (orchestrates all modules)
 Modules\DataManager.lua
