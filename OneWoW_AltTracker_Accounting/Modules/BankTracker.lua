@@ -1,7 +1,11 @@
 local _, ns = ...
 
+local Inventory = OneWoW.Inventory
+
 ns.BankTracker = {}
 local BankTracker = ns.BankTracker
+
+local INVENTORY_OWNER = "Accounting_BankTracker"
 
 local goldBeforeBank = 0
 local guildBankOpen = false
@@ -24,12 +28,17 @@ function BankTracker:Initialize()
 end
 
 function BankTracker:RegisterEvents()
+    Inventory.RegisterBankOpenCallback(INVENTORY_OWNER, function()
+        BankTracker:HandleEvent("BANKFRAME_OPENED")
+    end)
+    Inventory.RegisterBankClosedCallback(INVENTORY_OWNER, function()
+        BankTracker:HandleEvent("BANKFRAME_CLOSED")
+    end)
+
     local frame = CreateFrame("Frame")
 
     frame:RegisterEvent("GUILDBANKFRAME_OPENED")
     frame:RegisterEvent("GUILDBANKFRAME_CLOSED")
-    frame:RegisterEvent("BANKFRAME_OPENED")
-    frame:RegisterEvent("BANKFRAME_CLOSED")
     frame:RegisterEvent("PLAYER_MONEY")
 
     frame:SetScript("OnEvent", function(_, event)

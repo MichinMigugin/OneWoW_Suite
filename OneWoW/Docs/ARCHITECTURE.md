@@ -416,7 +416,7 @@ All manifest entries are `login` today. `lazy` defers until `EnsureModuleForTab`
 | Manifest ↔ CATALOG consumer-graph invariants (§4.1) | `bin/check_manifest_catalog_alignment.py` (pre-commit `manifest-catalog-alignment`) |
 | No direct `db.global.settings` access (§8.5) | `bin/check_no_settings_bypass.py` (pre-commit `no-settings-bypass`) |
 | No direct combat/restriction/secret API calls (§8.6) | `bin/check_no_restriction_bypass.py` (pre-commit `restriction-funnel`) |
-| No registering core-owned events outside their funnel owner (§8.7 / §8.8) | `bin/check_no_core_event_bypass.py` (pre-commit `core-event-funnel`; `EVENT_OWNER` registry: `MERCHANT_*`→`Merchant.lua`, `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED`→`ProfessionRecipe.lua`; escape hatch `-- noqa: core-event-funnel`) |
+| No registering core-owned events outside their funnel owner (§8.7 / §8.8 / §8.9) | `bin/check_no_core_event_bypass.py` (pre-commit `core-event-funnel`; `EVENT_OWNER` registry: `MERCHANT_*`→`Merchant.lua`, `TRADE_SKILL_*` / `NEW_RECIPE_LEARNED`→`ProfessionRecipe.lua`, bag/bank/`ITEM_LOCK_CHANGED`→`Inventory.lua`; escape hatch `-- noqa: core-event-funnel`) |
 | No cross-load-unit SavedVariables access (§6/§7) | `bin/check_no_data_manager_bypass.py` (TOC-derived ownership; **enforced** — hard-fails off the `ALLOWED_FOREIGN_SV` allowlist) |
 | No namespace publish / global-surface anti-patterns (§6.1) | `bin/check_no_namespace_publish.py` (pre-commit `no-namespace-publish`; enforced) |
 | No per-addon `Media/` folders (hub-only assets) | `bin/check_no_per_addon_media.py` (pre-commit `no-per-addon-media`) |
@@ -1221,21 +1221,25 @@ seeded with `MERCHANT_*`→`Merchant.lua`.
 
 One core service owns the live bag/bank event funnel for the logged-in character
 (`Services/Inventory.lua`), registered via the core `ns.RegisterEvent` multiplexer
-(§3.3). It mirrors Merchant (§8.8): dirty-bag accumulation, delayed coalesce, and
-bank open/closed/slots channels. Core persists nothing — AltTracker_Storage owns
-cross-alt SV; Bags owns UI layout; PredicateEngine stays pull/eval.
+(§3.3). It mirrors Merchant (§8.8): dirty-bag accumulation, delayed coalesce, bank
+open/closed/slots/tabs, container, lock, and cooldown channels. Core persists
+nothing — AltTracker_Storage owns cross-alt SV; Bags owns UI layout; PredicateEngine
+stays pull/eval. Also publishes `BagTypes` / `BankTypes` and `ForEachSlot` /
+`GetBagIDs` scan helpers.
 
-Channels: `RegisterDirtyCallback` (`fn(bagID)`), `RegisterDelayedCallback`
-(`fn(dirtyBags)`), `RegisterBankOpenCallback` / `RegisterBankClosedCallback`,
-`RegisterBankSlotsCallback` (`fn(event, ...)`), plus `UnregisterCallback` and
-`IsBankOpen()`. On each `BAG_UPDATE_DELAYED`, Inventory calls
-`PE:InvalidatePropsCache()` once before fan-out. See [INVENTORY.md](INVENTORY.md).
+Channels include `RegisterDirtyCallback`, `RegisterDelayedCallback`,
+`RegisterBankOpenCallback` / `RegisterBankClosedCallback` /
+`RegisterBankSlotsCallback` / `RegisterBankTabsCallback`,
+`RegisterContainerCallback`, `RegisterLockCallback`, `RegisterCooldownCallback`,
+plus `UnregisterCallback` and `IsBankOpen()`. On each `BAG_UPDATE_DELAYED`,
+Inventory calls `PE:InvalidatePropsCache()` once before fan-out. See
+[INVENTORY.md](INVENTORY.md).
 
-**Migration status:** Phase 1–3 complete — QoL canaries + Overlays2 subscribe to
-channels; `BagTypes` / `BankTypes` / `ForEachSlot` live under Inventory; Bags
-consumes types from core; Storage DataManager arms bag/bank collects via Inventory
-(guild/mail still local). Bags still registers overlapping bag/bank events until
-Phase 4; `core-event-funnel` is **not** seeded for these events yet.
+Suite-wide bag/bank consolidation is complete: Bags, Storage, Overlays2, QoL,
+ShoppingList, Trackers, DirectDeposit, and Accounting consume these channels (or
+types/helpers). The single-owner rule is enforced by `core-event-funnel` (§3.10),
+seeded with the Inventory-owned event names → `Inventory.lua`. Guild bank and mail
+events remain with Bags / Storage for now.
 
 ---
 

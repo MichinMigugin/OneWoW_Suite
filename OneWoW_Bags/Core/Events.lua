@@ -10,20 +10,11 @@ local C_Container = C_Container
 ns.Events = {}
 local Events = ns.Events
 
-Events.dirtyBags = {}
 Events.RuntimeEvents = {
-    "BAG_UPDATE",
-    "BAG_UPDATE_DELAYED",
-    "BAG_CONTAINER_UPDATE",
-    "ITEM_LOCK_CHANGED",
-    "BAG_UPDATE_COOLDOWN",
     "QUEST_ACCEPTED",
     "QUEST_REMOVED",
-    "BANKFRAME_OPENED",
-    "BANKFRAME_CLOSED",
-    "BANK_TABS_CHANGED",
-    -- MERCHANT_SHOW / MERCHANT_CLOSED now route through the core OneWoW.Merchant
-    -- funnel (single MERCHANT_* owner); see ns:RegisterRuntimeEvents.
+    -- BAG_* / BANKFRAME_* / ITEM_LOCK / BAG_CONTAINER / BANK_TABS route through
+    -- OneWoW.Inventory (single owner); see ns:RegisterRuntimeEvents.
     "PLAYER_INTERACTION_MANAGER_FRAME_SHOW",
     "PLAYER_INTERACTION_MANAGER_FRAME_HIDE",
     "GUILDBANKBAGSLOTS_CHANGED",
@@ -206,15 +197,14 @@ function Events:OnPlayerEnteringWorld(isLogin)
     end)
 end
 
-function Events:OnBagUpdate(bagID)
-    self.dirtyBags[bagID] = true
-end
-
-function Events:OnBagUpdateDelayed()
+--- @param dirty table|nil bagID -> true from Inventory delayed channel
+function Events:OnBagUpdateDelayed(dirty)
     local Profile = ns.Profile
     if Profile then Profile:Start("Events:OnBagUpdateDelayed") end
-    local dirty = self.dirtyBags
-    self.dirtyBags = {}
+    dirty = dirty or {}
+    -- Category caches refresh here. PE props were already wiped by Inventory
+    -- on the delayed fan-out; InvalidateCategorization("props") is still needed
+    -- for Bags categoryCache / recent-item state (and re-wipes PE harmlessly).
     ns:InvalidateCategorization("props")
     ns:ProcessBagUpdate(dirty)
 

@@ -1,5 +1,9 @@
 local _, ns = ...
 
+local Inventory = OneWoW.Inventory
+
+local INVENTORY_OWNER = "ShoppingList_BagOverlays"
+
 ns.BagOverlays = {}
 local BagOverlays = ns.BagOverlays
 
@@ -165,8 +169,13 @@ function BagOverlays:UpdateAllSettings()
 end
 
 function BagOverlays:Initialize()
+    Inventory.RegisterDelayedCallback(INVENTORY_OWNER, function()
+        C_Timer.After(0.3, function()
+            BagOverlays:DoRefresh()
+        end)
+    end)
+
     local frame = CreateFrame("Frame")
-    frame:RegisterEvent("BAG_UPDATE_DELAYED")
     frame:RegisterEvent("BAG_OPEN")
     frame:SetScript("OnEvent", function()
         C_Timer.After(0.3, function()

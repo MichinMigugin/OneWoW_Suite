@@ -1522,32 +1522,11 @@ end
 local eventFrame = CreateFrame("Frame")
 
 local runtimeEventHandlers = {
-    BAG_UPDATE = function(...)
-        Events:OnBagUpdate(...)
-    end,
-    BAG_UPDATE_DELAYED = function(...)
-        Events:OnBagUpdateDelayed(...)
-    end,
-    ITEM_LOCK_CHANGED = function(...)
-        Events:OnItemLockChanged(...)
-    end,
-    BAG_UPDATE_COOLDOWN = function(...)
-        Events:OnCooldownUpdate(...)
-    end,
     QUEST_ACCEPTED = function(...)
         Events:OnQuestAccepted(...)
     end,
     QUEST_REMOVED = function(...)
         Events:OnQuestRemoved(...)
-    end,
-    BANKFRAME_OPENED = function(...)
-        Events:OnBankOpened(...)
-    end,
-    BANKFRAME_CLOSED = function(...)
-        Events:OnBankClosed(...)
-    end,
-    BANK_TABS_CHANGED = function(...)
-        Events:OnBankTabsChanged(...)
     end,
     PLAYER_INTERACTION_MANAGER_FRAME_SHOW = function(...)
         Events:OnPlayerInteractionShow(...)
@@ -1583,9 +1562,6 @@ local runtimeEventHandlers = {
         Events:OnPredicateInvalidation()
         Events:OnPlayerEquipmentChanged(inventorySlot)
     end,
-    BAG_CONTAINER_UPDATE = function()
-        Events:OnBagContainerUpdate()
-    end,
     GET_ITEM_INFO_RECEIVED = function(itemID)
         Events:OnItemInfoReceived(itemID)
     end,
@@ -1613,6 +1589,30 @@ function ns:RegisterRuntimeEvents()
     for _, eventName in ipairs(Events.RuntimeEvents) do
         eventFrame:RegisterEvent(eventName)
     end
+
+    -- Bag/bank container events route through OneWoW.Inventory (single owner).
+    local Inventory = OneWoW.Inventory
+    Inventory.RegisterDelayedCallback("OneWoW_Bags", function(dirty)
+        Events:OnBagUpdateDelayed(dirty)
+    end)
+    Inventory.RegisterLockCallback("OneWoW_Bags", function(...)
+        Events:OnItemLockChanged(...)
+    end)
+    Inventory.RegisterCooldownCallback("OneWoW_Bags", function()
+        Events:OnCooldownUpdate()
+    end)
+    Inventory.RegisterBankOpenCallback("OneWoW_Bags", function()
+        Events:OnBankOpened()
+    end)
+    Inventory.RegisterBankClosedCallback("OneWoW_Bags", function()
+        Events:OnBankClosed()
+    end)
+    Inventory.RegisterBankTabsCallback("OneWoW_Bags", function(...)
+        Events:OnBankTabsChanged(...)
+    end)
+    Inventory.RegisterContainerCallback("OneWoW_Bags", function()
+        Events:OnBagContainerUpdate()
+    end)
 
     -- MERCHANT_SHOW / MERCHANT_CLOSED route through the core OneWoW.Merchant
     -- funnel (single MERCHANT_* owner) instead of this frame.

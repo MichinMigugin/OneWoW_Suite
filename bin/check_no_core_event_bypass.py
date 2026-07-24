@@ -48,6 +48,16 @@ EVENT_OWNER = {
     "TRADE_SKILL_CLOSE": "ProfessionRecipe.lua",
     "NEW_RECIPE_LEARNED": "ProfessionRecipe.lua",
     "ADDON_RESTRICTION_STATE_CHANGED": "Restriction.lua",
+    "BAG_UPDATE": "Inventory.lua",
+    "BAG_UPDATE_DELAYED": "Inventory.lua",
+    "BAG_CONTAINER_UPDATE": "Inventory.lua",
+    "BAG_UPDATE_COOLDOWN": "Inventory.lua",
+    "ITEM_LOCK_CHANGED": "Inventory.lua",
+    "BANKFRAME_OPENED": "Inventory.lua",
+    "BANKFRAME_CLOSED": "Inventory.lua",
+    "BANK_TABS_CHANGED": "Inventory.lua",
+    "PLAYERBANKSLOTS_CHANGED": "Inventory.lua",
+    "PLAYER_ACCOUNT_BANK_TAB_SLOTS_CHANGED": "Inventory.lua",
 }
 
 # Case-sensitive `RegisterEvent(` (capital R) so `UnregisterEvent(` /
@@ -173,7 +183,11 @@ def main(argv: list[str]) -> int:
         print("  TRADE_SKILL_* / NEW_RECIPE_LEARNED -> OneWoW.ProfessionRecipe (RegisterScanCallback /")
         print("                RegisterOpenCallback / RegisterShowCallback / RegisterLearnedCallback /")
         print("                RegisterClosedCallback / IsTradeskillOpen). See OneWoW/Docs/PROFESSION_RECIPE.md.")
-        print("Reference: OneWoW/Docs/ARCHITECTURE.md sections 3.10 / 8.7 / 8.8")
+        print("  BAG_* / BANKFRAME_* / ITEM_LOCK_CHANGED / BANK_TABS_CHANGED /")
+        print("  PLAYERBANKSLOTS_* -> OneWoW.Inventory (RegisterDirtyCallback / RegisterDelayedCallback /")
+        print("                RegisterBank* / RegisterLockCallback / RegisterCooldownCallback / …).")
+        print("                See OneWoW/Docs/INVENTORY.md.")
+        print("Reference: OneWoW/Docs/ARCHITECTURE.md sections 3.10 / 8.7 / 8.8 / 8.9")
         print("Suppress (rare): add -- noqa: core-event-funnel on the line.")
     return rc
 

@@ -3,6 +3,9 @@ local QuestItemBarModule, L = ns.ModuleRegistry:Current()
 if not QuestItemBarModule then return end
 
 local OneWoW_GUI = OneWoW_GUI
+local Inventory = OneWoW.Inventory
+
+local INVENTORY_OWNER = "QoL_questitembar"
 
 local barFrame      = nil
 local buttons       = {}
@@ -896,14 +899,34 @@ function QuestItemBarModule:RegisterEvents()
     eventFrame:UnregisterAllEvents()
     eventFrame:RegisterEvent("QUEST_LOG_UPDATE")
     eventFrame:RegisterEvent("QUEST_WATCH_LIST_CHANGED")
-    eventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
     eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
     eventFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
-    eventFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
     eventFrame:RegisterEvent("UPDATE_BINDINGS")
     eventFrame:RegisterEvent("ZONE_CHANGED")
     eventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
     eventFrame:RegisterEvent("SUPER_TRACKING_CHANGED")
+
+    Inventory.RegisterDelayedCallback(INVENTORY_OWNER, function()
+        if not ns.ModuleRegistry:IsEnabled("questitembar") then return end
+
+        -- Refresh settings list when user is viewing it (throttled to avoid event storm)
+        if QuestItemBarModule._detailScrollChild and QuestItemBarModule._refreshCustomDetail then
+            local container = QuestItemBarModule._detailScrollChild._qibContainer
+            if container and container:GetParent() == QuestItemBarModule._detailScrollChild then
+                local now = GetTime()
+                if not QuestItemBarModule._lastDetailRefresh or (now - QuestItemBarModule._lastDetailRefresh) >= 0.5 then
+                    QuestItemBarModule._lastDetailRefresh = now
+                    QuestItemBarModule._refreshCustomDetail()
+                end
+            end
+        end
+        QuestItemBarModule:ScheduleUpdate()
+    end)
+    Inventory.RegisterCooldownCallback(INVENTORY_OWNER, function()
+        if not ns.ModuleRegistry:IsEnabled("questitembar") then return end
+        QuestItemBarModule:NonSecureUpdate()
+    end)
+
     eventFrame:SetScript("OnEvent", function(_, event)
         if event == "UPDATE_BINDINGS" then
             SyncKeybindings()
@@ -917,7 +940,7 @@ function QuestItemBarModule:RegisterEvents()
             return
         end
 
-        if event == "QUEST_LOG_UPDATE" or event == "QUEST_WATCH_LIST_CHANGED" or event == "BAG_UPDATE_DELAYED" or event == "SUPER_TRACKING_CHANGED" then
+        if event == "QUEST_LOG_UPDATE" or event == "QUEST_WATCH_LIST_CHANGED" or event == "SUPER_TRACKING_CHANGED" then
             -- Refresh settings list when user is viewing it (throttled to avoid event storm)
             if QuestItemBarModule._detailScrollChild and QuestItemBarModule._refreshCustomDetail then
                 local container = QuestItemBarModule._detailScrollChild._qibContainer
@@ -954,7 +977,7 @@ function QuestItemBarModule:RegisterEvents()
             return
         end
 
-        if event == "SPELL_UPDATE_COOLDOWN" or event == "BAG_UPDATE_COOLDOWN" then
+        if event == "SPELL_UPDATE_COOLDOWN" then
             QuestItemBarModule:NonSecureUpdate()
             return
         end
@@ -979,6 +1002,7 @@ function QuestItemBarModule:OnDisable()
     if eventFrame then
         eventFrame:UnregisterAllEvents()
     end
+    Inventory.UnregisterCallback(INVENTORY_OWNER)
     OneWoW_QoL:UnregisterEnteringWorldHandler("questitembar")
     if updateTimer then
         updateTimer:Cancel()

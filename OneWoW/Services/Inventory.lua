@@ -9,22 +9,24 @@ local _, ns = ...
 -- to subscribers. Nothing is persisted here — AltTracker_Storage owns SV
 -- writes; Bags owns UI layout; PredicateEngine stays pull/eval.
 --
--- Phase 1–2: event funnel + BagTypes/BankTypes + ForEachSlot/GetBagIDs.
--- Bags and Storage still register overlapping bag/bank events until later
--- migration phases; core-event-funnel enforcement lands only after Bags is
--- off these events.
+-- Suite-wide owner of bag/bank container events (enforced by core-event-funnel).
+-- Guild bank / mail stay with their current owners.
 --
 -- Channels:
---   RegisterDirtyCallback      fn(bagID)           BAG_UPDATE
---   RegisterDelayedCallback    fn(dirtyBags)       BAG_UPDATE_DELAYED (coalesced set)
---   RegisterBankOpenCallback   fn()                BANKFRAME_OPENED
---   RegisterBankClosedCallback fn()                BANKFRAME_CLOSED
---   RegisterBankSlotsCallback  fn(event, ...)      bank slot change events
+--   RegisterDirtyCallback       fn(bagID)           BAG_UPDATE
+--   RegisterDelayedCallback     fn(dirtyBags)       BAG_UPDATE_DELAYED (coalesced set)
+--   RegisterBankOpenCallback    fn()                BANKFRAME_OPENED
+--   RegisterBankClosedCallback  fn()                BANKFRAME_CLOSED
+--   RegisterBankSlotsCallback   fn(event, ...)      bank slot change events
+--   RegisterContainerCallback   fn()                BAG_CONTAINER_UPDATE
+--   RegisterLockCallback        fn(bagID, slotID)   ITEM_LOCK_CHANGED
+--   RegisterCooldownCallback    fn()                BAG_UPDATE_COOLDOWN
+--   RegisterBankTabsCallback    fn(bankType, ...)   BANK_TABS_CHANGED
 --
 -- Scan helpers:
---   BagTypes / BankTypes       container ID vocabulary (subdir modules)
---   GetBagIDs(scope)           resolve scope -> bagID list
---   ForEachSlot(scope, fn)     walk slots; fn may return true to stop
+--   BagTypes / BankTypes        container ID vocabulary (subdir modules)
+--   GetBagIDs(scope)            resolve scope -> bagID list
+--   ForEachSlot(scope, fn)      walk slots; fn may return true to stop
 --
 -- Full design: OneWoW/Docs/INVENTORY.md
 -- ============================================================================
@@ -59,6 +61,10 @@ local EVENTS = {
     "BANKFRAME_CLOSED",
     "PLAYERBANKSLOTS_CHANGED",
     "PLAYER_ACCOUNT_BANK_TAB_SLOTS_CHANGED",
+    "BAG_CONTAINER_UPDATE",
+    "ITEM_LOCK_CHANGED",
+    "BAG_UPDATE_COOLDOWN",
+    "BANK_TABS_CHANGED",
 }
 local EVENT_OWNER = "Inventory"
 
@@ -68,6 +74,10 @@ local delayedCallbacks = {}
 local bankOpenCallbacks = {}
 local bankClosedCallbacks = {}
 local bankSlotsCallbacks = {}
+local containerCallbacks = {}
+local lockCallbacks = {}
+local cooldownCallbacks = {}
+local bankTabsCallbacks = {}
 
 local eventsRegistered = false
 local bankOpen = false
@@ -81,6 +91,10 @@ local function AnySubscribers()
         or next(bankOpenCallbacks) ~= nil
         or next(bankClosedCallbacks) ~= nil
         or next(bankSlotsCallbacks) ~= nil
+        or next(containerCallbacks) ~= nil
+        or next(lockCallbacks) ~= nil
+        or next(cooldownCallbacks) ~= nil
+        or next(bankTabsCallbacks) ~= nil
 end
 
 local function EnsureEvents()
@@ -101,33 +115,9 @@ local function EnsureEvents()
     end
 end
 
-local function FireDirty(bagID)
-    for ownerID, fn in pairs(dirtyCallbacks) do
-        ns.Lifecycle.SafeCall("Inventory.dirty:" .. ownerID, fn, bagID)
-    end
-end
-
-local function FireDelayed(dirty)
-    for ownerID, fn in pairs(delayedCallbacks) do
-        ns.Lifecycle.SafeCall("Inventory.delayed:" .. ownerID, fn, dirty)
-    end
-end
-
-local function FireBankOpen()
-    for ownerID, fn in pairs(bankOpenCallbacks) do
-        ns.Lifecycle.SafeCall("Inventory.bankOpen:" .. ownerID, fn)
-    end
-end
-
-local function FireBankClosed()
-    for ownerID, fn in pairs(bankClosedCallbacks) do
-        ns.Lifecycle.SafeCall("Inventory.bankClosed:" .. ownerID, fn)
-    end
-end
-
-local function FireBankSlots(event, ...)
-    for ownerID, fn in pairs(bankSlotsCallbacks) do
-        ns.Lifecycle.SafeCall("Inventory.bankSlots:" .. ownerID, fn, event, ...)
+local function FireChannel(callbacks, label, ...)
+    for ownerID, fn in pairs(callbacks) do
+        ns.Lifecycle.SafeCall("Inventory." .. label .. ":" .. ownerID, fn, ...)
     end
 end
 
@@ -136,7 +126,7 @@ function OnEvent(event, ...)
         local bagID = ...
         if bagID ~= nil then
             dirtyBags[bagID] = true
-            FireDirty(bagID)
+            FireChannel(dirtyCallbacks, "dirty", bagID)
         end
         return
     end
@@ -144,28 +134,47 @@ function OnEvent(event, ...)
     if event == "BAG_UPDATE_DELAYED" then
         local dirty = dirtyBags
         dirtyBags = {}
-        -- Single props wipe per delayed batch for PE consumers (Overlays, autoopen, …).
-        -- Bags still invalidates on its own path until Phase 4; double wipe is harmless.
+        -- Single props wipe per delayed batch for PE consumers.
         PE:InvalidatePropsCache()
-        FireDelayed(dirty)
+        FireChannel(delayedCallbacks, "delayed", dirty)
         return
     end
 
     if event == "BANKFRAME_OPENED" then
         bankOpen = true
-        FireBankOpen()
+        FireChannel(bankOpenCallbacks, "bankOpen")
         return
     end
 
     if event == "BANKFRAME_CLOSED" then
         bankOpen = false
-        FireBankClosed()
+        FireChannel(bankClosedCallbacks, "bankClosed")
         return
     end
 
     if event == "PLAYERBANKSLOTS_CHANGED"
         or event == "PLAYER_ACCOUNT_BANK_TAB_SLOTS_CHANGED" then
-        FireBankSlots(event, ...)
+        FireChannel(bankSlotsCallbacks, "bankSlots", event, ...)
+        return
+    end
+
+    if event == "BAG_CONTAINER_UPDATE" then
+        FireChannel(containerCallbacks, "container")
+        return
+    end
+
+    if event == "ITEM_LOCK_CHANGED" then
+        FireChannel(lockCallbacks, "lock", ...)
+        return
+    end
+
+    if event == "BAG_UPDATE_COOLDOWN" then
+        FireChannel(cooldownCallbacks, "cooldown")
+        return
+    end
+
+    if event == "BANK_TABS_CHANGED" then
+        FireChannel(bankTabsCallbacks, "bankTabs", ...)
     end
 end
 
@@ -214,6 +223,34 @@ function Inventory.RegisterBankSlotsCallback(ownerID, fn)
     Subscribe(bankSlotsCallbacks, ownerID, fn)
 end
 
+--- Subscribe to BAG_CONTAINER_UPDATE (equipped bag slot count / container changes).
+---@param ownerID string
+---@param fn fun()
+function Inventory.RegisterContainerCallback(ownerID, fn)
+    Subscribe(containerCallbacks, ownerID, fn)
+end
+
+--- Subscribe to ITEM_LOCK_CHANGED.
+---@param ownerID string
+---@param fn fun(bagID: number|nil, slotID: number|nil)
+function Inventory.RegisterLockCallback(ownerID, fn)
+    Subscribe(lockCallbacks, ownerID, fn)
+end
+
+--- Subscribe to BAG_UPDATE_COOLDOWN.
+---@param ownerID string
+---@param fn fun()
+function Inventory.RegisterCooldownCallback(ownerID, fn)
+    Subscribe(cooldownCallbacks, ownerID, fn)
+end
+
+--- Subscribe to BANK_TABS_CHANGED.
+---@param ownerID string
+---@param fn fun(bankType: any, ...)
+function Inventory.RegisterBankTabsCallback(ownerID, fn)
+    Subscribe(bankTabsCallbacks, ownerID, fn)
+end
+
 --- Drop all channel subscriptions for an owner. May unregister the shared events
 --- when the last subscriber leaves.
 ---@param ownerID string
@@ -223,6 +260,10 @@ function Inventory.UnregisterCallback(ownerID)
     bankOpenCallbacks[ownerID] = nil
     bankClosedCallbacks[ownerID] = nil
     bankSlotsCallbacks[ownerID] = nil
+    containerCallbacks[ownerID] = nil
+    lockCallbacks[ownerID] = nil
+    cooldownCallbacks[ownerID] = nil
+    bankTabsCallbacks[ownerID] = nil
     EnsureEvents()
 end
 

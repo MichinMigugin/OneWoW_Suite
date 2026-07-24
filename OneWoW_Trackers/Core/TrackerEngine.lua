@@ -2,6 +2,8 @@ local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 
+local Inventory = OneWoW.Inventory
+
 ns.TrackerEngine = {}
 local TE = ns.TrackerEngine
 local TD
@@ -896,7 +898,6 @@ function TE:Initialize()
     frame:RegisterEvent("ENCOUNTER_END")
     frame:RegisterEvent("MAJOR_FACTION_RENOWN_LEVEL_CHANGED")
     frame:RegisterEvent("UPDATE_FACTION")
-    frame:RegisterEvent("BAG_UPDATE_DELAYED")
     frame:RegisterEvent("PLAYER_LEVEL_UP")
     frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
     frame:RegisterEvent("ZONE_CHANGED")
@@ -909,6 +910,10 @@ function TE:Initialize()
     frame:RegisterEvent("CALENDAR_UPDATE_EVENT_LIST")
 
     frame:SetScript("OnEvent", OnEvent)
+
+    Inventory.RegisterDelayedCallback("Trackers_Engine", function()
+        DeferScan(0.5)
+    end)
 
     -- Trade-skill refresh is funneled through OneWoW.ProfessionRecipe: the open
     -- channel fires once the profession window is loaded/ready (replaces the

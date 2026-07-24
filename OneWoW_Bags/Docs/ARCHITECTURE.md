@@ -53,7 +53,7 @@ Core\Constants.lua                 ← OneWoW_GUI:RegisterGUIConstants, icon siz
 Core\SectionDefaults.lua           ← stable section IDs, builtin lists, OneWoW Bags catch-all section sync
 Core\Database.lua                  ← DB:Init, defaults, init bridges
 Core\BagEquip.lua                  ← equipped-bag pickup/swap/empty/move-contents (used by BagsBar; BagTypes via OneWoW.Inventory)
-Core\Events.lua                    ← event router (dirtyBags, RuntimeEvents)
+Core\Events.lua                    ← event router (RuntimeEvents; bag/bank via Inventory)
 
 Data\SavedSearches.lua             ← user-defined SAVED(Name) search shortcuts
 Data\CategoryRefs.lua              ← CATEGORY(Name) refs + SearchExpand (SAVED+CATEGORY)
@@ -179,7 +179,7 @@ OneWoW_Bags uses a **layered hybrid MVC** pattern. It is not strict MVC—some o
 ┌────────────────────────────▼─────────────────────────────────┐
 │                      Core Layer                              │
 │  Database (DB:Init, defaults, init bridges)                    │
-│  Events (event routing table, dirtyBags accumulator)         │
+│  Events (non-Inventory runtime events; bag/bank via OneWoW.Inventory) │
 │  Constants (GUI metrics, icon sizes)                         │
 │  Profile (optional /owbprof timings)                         │
 │  SectionDefaults (section IDs, builtin ordering, OWB section)  │
@@ -244,23 +244,20 @@ PLAYER_LOGIN (or mid-session EnsureLoaded replay)
 ### 2. Bag Update Pipeline (Primary Data Flow)
 
 ```
-Game event: BAG_UPDATE (per bag, may repeat same frame)
-  └─→ Events:OnBagUpdate(bagID)
-       └─→ dirtyBags[bagID] = true
-
-Game event: BAG_UPDATE_DELAYED (once after coalesced updates)
-  └─→ Events:OnBagUpdateDelayed
-       ├─→ InvalidateCategorization("props")  ← Categories refresh + OneWoW.PredicateEngine:InvalidatePropsCache
-       └─→ OneWoW_Bags:ProcessBagUpdate(dirtyBags)
-            ├─→ Categories:OnPlayerBagDirtySnapshot(dirtyBags) (expire GUID map; stamp GUIDs for Blizzard-new slots in player bags)
-            ├─→ BagSet:UpdateDirtyBags(dirtyBags)
-            │    ├─→ Slot count changed → RebuildBag (release + re-acquire from pool)
-            │    ├─→ Else → OWB_MarkDirty on affected buttons
-            │    └─→ ProcessDirtySlots → OWB_FullUpdate per dirty button
-            │         └─→ C_Container.GetContainerItemInfo → texture, count, quality,
-            │            cooldown, new-item glow, junk dim, unusable overlay, lock refresh
-            ├─→ GUI:RefreshLayout (if bags window built + shown)
-            └─→ BankGUI:RefreshLayout (if bank open, bank set built, window shown)
+Game event: BAG_UPDATE / BAG_UPDATE_DELAYED
+  └─→ OneWoW.Inventory (single owner; dirty coalesce + PE:InvalidatePropsCache)
+       └─→ RegisterDelayedCallback("OneWoW_Bags") → Events:OnBagUpdateDelayed(dirtyBags)
+            ├─→ InvalidateCategorization("props")  ← Bags category caches (+ PE wipe already done)
+            └─→ OneWoW_Bags:ProcessBagUpdate(dirtyBags)
+                 ├─→ Categories:OnPlayerBagDirtySnapshot(dirtyBags) (expire GUID map; stamp GUIDs for Blizzard-new slots in player bags)
+                 ├─→ BagSet:UpdateDirtyBags(dirtyBags)
+                 │    ├─→ Slot count changed → RebuildBag (release + re-acquire from pool)
+                 │    ├─→ Else → OWB_MarkDirty on affected buttons
+                 │    └─→ ProcessDirtySlots → OWB_FullUpdate per dirty button
+                 │         └─→ C_Container.GetContainerItemInfo → texture, count, quality,
+                 │            cooldown, new-item glow, junk dim, unusable overlay, lock refresh
+                 ├─→ GUI:RefreshLayout (if bags window built + shown)
+                 └─→ BankGUI:RefreshLayout (if bank open, bank set built, window shown)
 ```
 
 Main bags window visibility (`GUI:Show` / `GUI:Hide` / `GUI:FullReset` in [`GUI/MainWindow.lua`](../GUI/MainWindow.lua)):
@@ -586,7 +583,7 @@ width = cols × (iconSize + spacing) - spacing + 4 + scrollbarSpace + (2 × oute
 
 | Group | Flow |
 |--------|------|
-| Bag updates | `BAG_UPDATE` → `dirtyBags` → `BAG_UPDATE_DELAYED` → `InvalidateCategorization("props")` + `ProcessBagUpdate` |
+| Bag updates | `OneWoW.Inventory` delayed → `InvalidateCategorization("props")` + `ProcessBagUpdate(dirtyBags)` |
 | Lock / cooldown | `ITEM_LOCK_CHANGED` → per-button `OWB_RefreshLock`; `BAG_UPDATE_COOLDOWN` → `OnCooldownUpdate` |
 | Bank | `BANKFRAME_OPENED` / `CLOSED` → suppress/restore Blizzard bank, `BankGUI`, `C_Bank.Fetch*`, `BankPanel` warband vs character |
 | Guild bank | `PLAYER_INTERACTION_MANAGER_FRAME_SHOW/HIDE` + `GuildBanker` |
@@ -789,7 +786,7 @@ A wedged scheduler shows as `refreshScheduled=true` with `pending` set but no `f
 ## Performance Patterns
 
 - **Pooling:** `ItemPool`, `CategoryManagerBase` section/divider/header frames, `CategoryViewHelpers` compact label pools, bank/guild tab button recycling via `BarHelpers`
-- **Dirty batching:** `dirtyBags` until `BAG_UPDATE_DELAYED`
+- **Dirty batching:** `OneWoW.Inventory` coalesces dirty bags until `BAG_UPDATE_DELAYED`
 - **Predicate / category caches** with targeted invalidation (`props` vs full) and **`InvalidateItemIDs`** for streaming item-info batches
 - **Settings debounce** on high-churn sliders
 - **Combat-deferred cleanup** via `OneWoW.Restriction.RunWhenUnrestricted("lockdown", ...)` when windows hide during lockdown (re-checks the window is still hidden before releasing pools)

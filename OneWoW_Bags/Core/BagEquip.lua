@@ -26,19 +26,25 @@ local function DestSlotKey(bagIndex, slot)
     return bagIndex * 1000 + slot
 end
 
-local emptyBagFrame = CreateFrame("Frame")
-emptyBagFrame:RegisterEvent("BAG_UPDATE_DELAYED")
-emptyBagFrame:SetScript("OnEvent", function()
-    if not BagEquip._emptySourceBag or not BagEquip._emptyContinuePending then
-        return
-    end
-    BagEquip._emptyContinuePending = false
-    if BagEquip._emptyBagFallbackTimer then
-        BagEquip._emptyBagFallbackTimer:Cancel()
-        BagEquip._emptyBagFallbackTimer = nil
-    end
-    BagEquip:ContinueEmptyBag()
-end)
+local emptyBagFrame = nil -- empty-bag continue armed via Inventory delayed channel
+
+local function EnsureEmptyBagListener()
+    if emptyBagFrame then return end
+    emptyBagFrame = true
+    OneWoW.Inventory.RegisterDelayedCallback("Bags_BagEquip", function()
+        if not BagEquip._emptySourceBag or not BagEquip._emptyContinuePending then
+            return
+        end
+        BagEquip._emptyContinuePending = false
+        if BagEquip._emptyBagFallbackTimer then
+            BagEquip._emptyBagFallbackTimer:Cancel()
+            BagEquip._emptyBagFallbackTimer = nil
+        end
+        BagEquip:ContinueEmptyBag()
+    end)
+end
+
+EnsureEmptyBagListener()
 
 ---@param bagIndex number
 ---@return number|nil

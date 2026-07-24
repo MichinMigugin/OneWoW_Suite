@@ -4,6 +4,9 @@
 ## Home
 - Mail now appears under Stand-alone Addons on the home page
 
+## Optimizations
+- Bag and bank updates are handled in one place across the suite (Bags, overlays, QoL helpers, and AltTracker storage) for smoother inventory refresh
+
 ---
 
 # QoL

@@ -1,6 +1,10 @@
 local _, ns = ...
 local L = ns.L
 
+local Inventory = OneWoW.Inventory
+
+local INVENTORY_OWNER = "ShoppingList_Alerts"
+
 ns.Alerts = {}
 local Alerts = ns.Alerts
 
@@ -76,15 +80,16 @@ local function HandleAHShow()
 end
 
 function Alerts:Initialize()
+    Inventory.RegisterDelayedCallback(INVENTORY_OWNER, function()
+        C_Timer.After(0.3, HandleBagUpdate)
+    end)
+
     local frame = CreateFrame("Frame")
-    frame:RegisterEvent("BAG_UPDATE_DELAYED")
     frame:RegisterEvent("CHAT_MSG_LOOT")
     frame:RegisterEvent("AUCTION_HOUSE_SHOW")
 
     frame:SetScript("OnEvent", function(_, event, ...)
-        if event == "BAG_UPDATE_DELAYED" then
-            C_Timer.After(0.3, HandleBagUpdate)
-        elseif event == "CHAT_MSG_LOOT" then
+        if event == "CHAT_MSG_LOOT" then
             HandleLoot(event, ...)
         elseif event == "AUCTION_HOUSE_SHOW" then
             HandleAHShow()

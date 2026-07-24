@@ -2,6 +2,7 @@ local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
+local Inventory = OneWoW.Inventory
 
 local BACKDROP_INNER = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local tinsert, sort, math_max = table.insert, table.sort, math.max
@@ -15,6 +16,26 @@ local TFV = ns.TrackerFarmValue
 
 local ROW_H = 30
 local PIN_HEADER_H = 22
+
+local INVENTORY_OWNER = "Trackers_FarmValue"
+local inventoryArmed = false
+local pinnedBagRefreshHosts = {}
+local bagDelayedDetailFn = nil
+
+local function EnsureInventoryDelayed()
+    if inventoryArmed then return end
+    inventoryArmed = true
+    Inventory.RegisterDelayedCallback(INVENTORY_OWNER, function()
+        for hostFrame in pairs(pinnedBagRefreshHosts) do
+            if hostFrame.Refresh then
+                hostFrame:Refresh()
+            end
+        end
+        if bagDelayedDetailFn then
+            bagDelayedDetailFn()
+        end
+    end)
+end
 
 local function ItemSetFromList(list)
     local s = {}
@@ -368,14 +389,10 @@ local function EnsurePinnedHeader(hostFrame, scrollChild)
 end
 
 function TFV:RenderPinned(list, scrollChild, hostFrame)
+    EnsureInventoryDelayed()
     if not hostFrame._farmBagHook then
         hostFrame._farmBagHook = true
-        hostFrame:RegisterEvent("BAG_UPDATE_DELAYED")
-        hostFrame:SetScript("OnEvent", function(myself, event)
-            if event == "BAG_UPDATE_DELAYED" and myself.Refresh then
-                myself:Refresh()
-            end
-        end)
+        pinnedBagRefreshHosts[hostFrame] = true
     end
 
     hostFrame._farmRows = hostFrame._farmRows or {}
@@ -837,11 +854,11 @@ function TFV:RenderDetailEditor(list, detailScrollChild, detailRows, yOffset, pa
 
     if not box._farmDetailHook then
         box._farmDetailHook = true
-        box:RegisterEvent("BAG_UPDATE_DELAYED")
-        box:SetScript("OnEvent", function()
+        EnsureInventoryDelayed()
+        bagDelayedDetailFn = function()
             RedrawDetailRows()
             RefreshAllFarmWindows()
-        end)
+        end
     end
 
     box:SetScript("OnShow", function()

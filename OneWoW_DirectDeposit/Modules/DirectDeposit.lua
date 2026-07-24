@@ -1,6 +1,9 @@
 local _, ns = ...
 
 local PE = OneWoW.PredicateEngine
+local Inventory = OneWoW.Inventory
+
+local INVENTORY_OWNER = "DirectDeposit"
 
 local L = ns.L
 
@@ -29,24 +32,25 @@ function DirectDeposit:Initialize()
 end
 
 function DirectDeposit:RegisterEvents()
+    Inventory.RegisterBankOpenCallback(INVENTORY_OWNER, function()
+        if not DirectDeposit.guildBankOpen then
+            DirectDeposit.currentOpenBankType = "personal"
+            DirectDeposit:OnBankOpened()
+        end
+    end)
+    Inventory.RegisterBankClosedCallback(INVENTORY_OWNER, function()
+        if DirectDeposit.currentOpenBankType == "personal" then
+            DirectDeposit.currentOpenBankType = nil
+        end
+        DirectDeposit.bankSessionHandled = false
+    end)
+
     local eventFrame = CreateFrame("Frame")
-    eventFrame:RegisterEvent("BANKFRAME_OPENED")
-    eventFrame:RegisterEvent("BANKFRAME_CLOSED")
     eventFrame:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_SHOW")
     eventFrame:RegisterEvent("PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
 
     eventFrame:SetScript("OnEvent", function(_, event, ...)
-        if event == "BANKFRAME_OPENED" then
-            if not DirectDeposit.guildBankOpen then
-                DirectDeposit.currentOpenBankType = "personal"
-                DirectDeposit:OnBankOpened()
-            end
-        elseif event == "BANKFRAME_CLOSED" then
-            if DirectDeposit.currentOpenBankType == "personal" then
-                DirectDeposit.currentOpenBankType = nil
-            end
-            DirectDeposit.bankSessionHandled = false
-        elseif event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" then
+        if event == "PLAYER_INTERACTION_MANAGER_FRAME_SHOW" then
             local interactionType = ...
             if interactionType == Enum.PlayerInteractionType.GuildBanker then
                 DirectDeposit.guildBankOpen = true

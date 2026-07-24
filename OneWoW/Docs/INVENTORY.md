@@ -30,20 +30,20 @@ that table).
 
 ## Ownership (events)
 
-The service registers these events through the core multiplexer while at least
-one consumer is subscribed:
+The service is the single owner of these events, registered through the core
+multiplexer while at least one consumer is subscribed:
 
-- `BAG_UPDATE`
-- `BAG_UPDATE_DELAYED`
-- `BANKFRAME_OPENED` / `BANKFRAME_CLOSED`
-- `PLAYERBANKSLOTS_CHANGED`
-- `PLAYER_ACCOUNT_BANK_TAB_SLOTS_CHANGED`
+- `BAG_UPDATE` / `BAG_UPDATE_DELAYED`
+- `BAG_CONTAINER_UPDATE` / `BAG_UPDATE_COOLDOWN`
+- `ITEM_LOCK_CHANGED`
+- `BANKFRAME_OPENED` / `BANKFRAME_CLOSED` / `BANK_TABS_CHANGED`
+- `PLAYERBANKSLOTS_CHANGED` / `PLAYER_ACCOUNT_BANK_TAB_SLOTS_CHANGED`
 
-**Not yet enforced** by `core-event-funnel` — Bags and Storage still register
-overlapping events until later migration phases. Dual registration during the
-transition is expected (same pattern as the Merchant cutover).
+Enforced by the `core-event-funnel` pre-commit hook
+(`bin/check_no_core_event_bypass.py`, `EVENT_OWNER` → `Inventory.lua`; escape
+hatch `-- noqa: core-event-funnel`).
 
-Guild bank and mail events stay with their current owners for now.
+Guild bank and mail events stay with Bags / Storage for now.
 
 ## Channels
 
@@ -54,6 +54,10 @@ Guild bank and mail events stay with their current owners for now.
 | `RegisterBankOpenCallback(ownerID, fn)` | `fn()` | Character/warband bank opened |
 | `RegisterBankClosedCallback(ownerID, fn)` | `fn()` | Bank closed |
 | `RegisterBankSlotsCallback(ownerID, fn)` | `fn(event, ...)` | Personal/account bank slot change events |
+| `RegisterContainerCallback(ownerID, fn)` | `fn()` | Equipped bag container / slot-count changes |
+| `RegisterLockCallback(ownerID, fn)` | `fn(bagID, slotID)` | Item lock changes |
+| `RegisterCooldownCallback(ownerID, fn)` | `fn()` | Bag item cooldown pulse |
+| `RegisterBankTabsCallback(ownerID, fn)` | `fn(bankType, ...)` | Bank tabs changed |
 | `UnregisterCallback(ownerID)` | — | Drops all channels for an owner |
 | `IsBankOpen()` | — | Event-tracked bank-open flag for suppress gates |
 
@@ -76,13 +80,11 @@ before fanning the delayed channel.
 `GetBagName` / `GetTabName` return **locale keys** (e.g. `BAG_BACKPACK`); Bags
 resolves them via its own `L`. No core locale entries for those keys.
 
-## Current consumers
+## Consumers
 
-- QoL `autoopen` / `bagbar` / `toast-loot` — delayed channel + `ForEachSlot("player")`
+- `OneWoW_Bags` — delayed / lock / cooldown / bank open-closed / tabs / container (+ types)
 - Overlays2 bag/bank surfaces — dirty + delayed + bank open/slots
-- `OneWoW_AltTracker_Storage` DataManager — delayed + bank-open (persist bags/banks); guild/mail stay local
-- `OneWoW_Bags` — `Inventory.BagTypes` / `BankTypes` for ID vocabulary (events still local)
-
-## Later
-
-- Bags event migration + `core-event-funnel` seed (Phase 4)
+- `OneWoW_AltTracker_Storage` DataManager — delayed + bank-open (guild/mail local)
+- QoL autoopen / bagbar / toast-loot / questitembar / vendorpanel
+- ShoppingList alerts / bag overlays; Trackers engine / farmvalue
+- DirectDeposit; Accounting BankTracker; Bags integration bank-open

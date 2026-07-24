@@ -247,15 +247,11 @@ function ns:InstallIntegrationHooks()
 	end
 end
 
--- BANKFRAME_OPENED still needs a direct listener; login hooks run via OnPlayerLogin.
-local integrationEventFrame = CreateFrame("Frame")
-integrationEventFrame:RegisterEvent("BANKFRAME_OPENED")
-integrationEventFrame:SetScript("OnEvent", function(_, event)
-	if event == "BANKFRAME_OPENED" then
-		if ns.BankController:Get("overlays") then
-			C_Timer.After(0.1, function()
-				ns:FireCallbacksOnBankButtons()
-			end)
-		end
+-- Bank-open overlay repaint routes through OneWoW.Inventory (single BANKFRAME_* owner).
+OneWoW.Inventory.RegisterBankOpenCallback("Bags_Integration", function()
+	if ns.BankController:Get("overlays") then
+		C_Timer.After(0.1, function()
+			ns:FireCallbacksOnBankButtons()
+		end)
 	end
 end)
