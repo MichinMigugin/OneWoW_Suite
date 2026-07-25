@@ -69,4 +69,15 @@ function ns:InitializeDatabase()
         end
         db.char._charDBMigrated = true
     end
+
+    -- The warband exclusion rule is a user-authored expression, so a rename or
+    -- delete elsewhere in the suite can report what it would cost here.
+    OneWoW.SearchCatalog:RegisterExpressionSource("directdeposit_warbound", {
+        sourceLabel = "Direct Deposit — Warband Exclusions",
+        Enumerate = function()
+            local expr = ns.db.global.directDeposit.warboundExcludeExpr
+            if type(expr) ~= "string" or expr == "" then return {} end
+            return { { expression = expr, label = "Warband exclude rule" } }
+        end,
+    })
 end

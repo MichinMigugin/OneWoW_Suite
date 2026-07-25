@@ -32,8 +32,11 @@ local tremove = tremove
 local wipe = wipe
 local strlower = string.lower
 local strmatch = string.match
+local strgmatch = string.gmatch
 local strtrim = strtrim
 local format = string.format
+local tconcat = table.concat
+local print = print
 local time = time
 local random = math.random
 
@@ -523,6 +526,372 @@ function SearchCatalog:Delete(kind, id)
     return true
 end
 
+-- ============================================================================
+-- Reference index
+-- ============================================================================
+-- Former-name redirects make renaming safe. They do nothing for delete, or for
+-- taking a name back off an entry that had retired it — both quietly change or
+-- destroy what stored expressions mean. The only way to say what a write will
+-- cost is to know who is referencing what, so every store that persists an
+-- expression registers itself here and the catalog reads them back.
+--
+-- Read-only and pull-based on purpose: each owner keeps its own SavedVariables
+-- (a load unit's SV is not even loaded until it is), and nothing here writes to
+-- a source.
+
+local expressionSources = {} ---@type table<string, table>
+
+-- How a reference to each kind appears in stored expression text.
+local KIND_REF_PATTERN = {
+    token    = "#([%w_]+)",
+    saved    = "SAVED%(([^%)]*)%)",
+    category = "CATEGORY%(([^%)]*)%)",
+}
+
+-- Suite units that persist user-authored expressions. A unit that is installed
+-- but not currently loaded has its SavedVariables unloaded, so its references
+-- are invisible to the walk below — every answer this file gives is then a
+-- lower bound, and says so rather than pretending to be complete.
+local EXPRESSION_OWNING_ADDONS = {
+    "OneWoW_Bags",
+    "OneWoW_Mail",
+    "OneWoW_QoL",
+    "OneWoW_DirectDeposit",
+}
+
+--- Register a store that persists user-authored expressions.
+---
+--- `sourceLabel` names the owner and store for grouping ("Bags — Search
+--- History"); `Enumerate` returns `{ expression, label }` per usage, where
+--- `label` identifies the individual item inside that store (the category name,
+--- the shipment name) so a report can point somewhere rather than count.
+---@param id string
+---@param source table { sourceLabel: string, Enumerate: fun(): table[] }
+function SearchCatalog:RegisterExpressionSource(id, source)
+    expressionSources[id] = source
+end
+
+---@param id string
+function SearchCatalog:UnregisterExpressionSource(id)
+    expressionSources[id] = nil
+end
+
+--- Suite units that own expressions, are installed, and are not loaded.
+--- Non-empty means any reference count is incomplete.
+---@return string[]
+function SearchCatalog:GetUnscannableAddons()
+    local out = {}
+    for _, name in ipairs(EXPRESSION_OWNING_ADDONS) do
+        if C_AddOns.GetAddOnInfo(name) and not C_AddOns.IsAddOnLoaded(name) then
+            tinsert(out, name)
+        end
+    end
+    return out
+end
+
+---@param kind string
+---@param expression string|nil
+---@param key string normalized name
+---@return boolean
+local function ExpressionReferences(kind, expression, key)
+    local pattern = KIND_REF_PATTERN[kind]
+    if not pattern or type(expression) ~= "string" then return false end
+    for captured in strgmatch(expression, pattern) do
+        if NormKey(captured) == key then return true end
+    end
+    return false
+end
+
+--- Every stored usage referencing any of `names` within a kind, grouped by the
+--- store it lives in.
+---@param kind string
+---@param names string[]
+---@return table report { total, groups[], incomplete[] }
+local function CollectReferences(kind, names)
+    local keys = {}
+    for _, name in ipairs(names) do
+        local key = NormKey(name)
+        if key ~= "" then keys[key] = name end
+    end
+
+    local groups = {}
+    local total = 0
+
+    for id, source in pairs(expressionSources) do
+        local usages = {}
+        for _, usage in ipairs(source.Enumerate()) do
+            for key, name in pairs(keys) do
+                if ExpressionReferences(kind, usage.expression, key) then
+                    tinsert(usages, { label = usage.label, name = name })
+                    total = total + 1
+                    break
+                end
+            end
+        end
+        if #usages > 0 then
+            tinsert(groups, { id = id, sourceLabel = source.sourceLabel, usages = usages })
+        end
+    end
+
+    sort(groups, function(a, b) return (a.sourceLabel or "") < (b.sourceLabel or "") end)
+    return { total = total, groups = groups, incomplete = SearchCatalog:GetUnscannableAddons() }
+end
+
+--- Find every stored reference to a name within a kind.
+---
+--- Takes a name rather than an id: expression text holds names, and a reclaim
+--- check has to ask about a name that no longer belongs to the entry being
+--- edited.
+---@param kind string
+---@param name string
+---@return table report
+function SearchCatalog:FindReferences(kind, name)
+    return CollectReferences(kind, { name })
+end
+
+-- ---- Preflight ----
+--
+-- The catalog never prompts. Each mutator has a matching preflight that returns
+-- a structured account of what the write would cost, or nil when it costs
+-- nothing, and the mutators stay unconditional so a caller that means it can
+-- still force through.
+
+local function Loss(name, reason, refs)
+    return { name = name, reason = reason, references = refs }
+end
+
+local function Report(action, kind, losses)
+    local total = 0
+    for _, loss in ipairs(losses) do
+        total = total + loss.references.total
+    end
+    if total == 0 then return nil end
+    return {
+        action = action,
+        kind = kind,
+        losses = losses,
+        total = total,
+        incomplete = SearchCatalog:GetUnscannableAddons(),
+    }
+end
+
+--- What breaks if this entry is deleted: its current name and every former name
+--- it still answers to.
+---@param kind string
+---@param id string
+---@return table|nil report
+function SearchCatalog:PreflightDelete(kind, id)
+    local entry = GetEntryById(kind, id)
+    if not entry then return nil end
+
+    local losses = { Loss(entry.name, "deleted", self:FindReferences(kind, entry.name)) }
+    for _, former in ipairs(entry.formerNames or {}) do
+        tinsert(losses, Loss(former, "deleted", self:FindReferences(kind, former)))
+    end
+    return Report("delete", kind, losses)
+end
+
+--- What breaks if `name` becomes live under this kind.
+---
+--- Reclaiming a name that is another entry's former name is accepted by Set and
+--- Rename, and strips it from that entry — every stale reference silently means
+--- something else afterwards. Worse, deleting the *new* holder later does not
+--- give the name back, so those references degrade to matching nothing. This is
+--- the last way the no-rewrite promise can still change behavior.
+---@param kind string
+---@param name string|nil
+---@param exceptId string|nil entry being renamed, which cannot clash with itself
+---@return table|nil report
+function SearchCatalog:PreflightClaim(kind, name, exceptId)
+    if type(name) ~= "string" then return nil end
+    local entry, status = self:Resolve(kind, name)
+    if not entry or status ~= "former" or entry.id == exceptId then return nil end
+    return Report("claim", kind, { Loss(name, "reclaimed", self:FindReferences(kind, name)) })
+end
+
+--- What breaks if this entry is renamed.
+---
+--- The rename itself is safe — the old name is retained. The hazards are the
+--- new name being someone else's former name, and the per-entry cap evicting
+--- the oldest former name to make room, which is silent data loss if anything
+--- still references it.
+---@param kind string
+---@param id string
+---@param newName string|nil
+---@return table|nil report
+function SearchCatalog:PreflightRename(kind, id, newName)
+    local entry = GetEntryById(kind, id)
+    if not entry then return nil end
+
+    local normalized = ValidateName(kind, newName)
+    if not normalized or NormKey(normalized) == NormKey(entry.name) then return nil end
+
+    local losses = {}
+
+    local clash, status = self:Resolve(kind, normalized)
+    if clash and status == "former" and clash.id ~= id then
+        tinsert(losses, Loss(normalized, "reclaimed", self:FindReferences(kind, normalized)))
+    end
+
+    local formers = entry.formerNames
+    if formers and #formers >= MAX_FORMER_NAMES then
+        local evicted = formers[1]
+        tinsert(losses, Loss(evicted, "capped", self:FindReferences(kind, evicted)))
+    end
+
+    return Report("rename", kind, losses)
+end
+
+-- ---- Former-name pruning ----
+
+--- True when any registered source still references this name for this kind.
+local function AnyReference(kind, name)
+    local key = NormKey(name)
+    if key == "" then return false end
+    for _, source in pairs(expressionSources) do
+        for _, usage in ipairs(source.Enumerate()) do
+            if ExpressionReferences(kind, usage.expression, key) then return true end
+        end
+    end
+    return false
+end
+
+--- Drop former names nothing references any more.
+---
+--- A former name exists only to keep stale text resolving, so once nothing
+--- points at it, it is dead weight taking up a capped slot. Refuses to run when
+--- a suite unit that owns expressions is installed but not loaded: its
+--- references are invisible, and pruning against a partial view would delete
+--- exactly the redirects that unit still needs.
+---
+--- This is the one operation here that destroys data rather than warning about
+--- it, and a source that under-reports makes it silent. Hence `dryRun`, and
+--- hence no automatic invocation — it is driven manually from `/owcatalog`
+--- until the lint UI can show what it would remove.
+---@param opts table|nil { force: boolean, dryRun: boolean } force skips the not-loaded gate
+---@return number|nil pruned count, or would-be count under dryRun; nil when gated
+---@return string[]|nil blockedBy
+---@return table[] dropped { kind, name, owner }
+function SearchCatalog:PruneFormerNames(opts)
+    opts = opts or {}
+
+    local blocked = self:GetUnscannableAddons()
+    if #blocked > 0 and not opts.force then
+        return nil, blocked, {}
+    end
+
+    local dropped = {}
+    local touched = {}
+
+    self:WithBatch(function()
+        for kind in pairs(KINDS) do
+            EachEntry(kind, function(entry)
+                local formers = entry.formerNames
+                if not formers then return end
+                for i = #formers, 1, -1 do
+                    local former = formers[i]
+                    if not AnyReference(kind, former) then
+                        tinsert(dropped, { kind = kind, name = former, owner = entry.name })
+                        if not opts.dryRun then
+                            tremove(formers, i)
+                            touched[kind] = true
+                        end
+                    end
+                end
+            end)
+        end
+        for kind in pairs(touched) do
+            InvalidateKind(kind)
+        end
+    end)
+
+    return #dropped, nil, dropped
+end
+
+-- ---- Lint ----
+
+--- Classify every reference in every registered source.
+---
+--- `former` is not an error — it still resolves — but it is the set that a
+--- prune or a reclaim would break, so it is worth showing.
+---@return table[] findings { kind, name, status, sourceLabel, label }
+---@return string[] incomplete
+function SearchCatalog:Lint()
+    local findings = {}
+
+    for _, source in pairs(expressionSources) do
+        for _, usage in ipairs(source.Enumerate()) do
+            local expression = usage.expression
+            if type(expression) == "string" and expression ~= "" then
+                for kind, pattern in pairs(KIND_REF_PATTERN) do
+                    local spec = KINDS[kind]
+                    for captured in strgmatch(expression, pattern) do
+                        local name = strtrim(captured)
+                        -- A #token that is a built-in keyword is not a catalog
+                        -- reference at all, and neither is a reserved sentinel.
+                        local reserved = spec.isReserved and spec.isReserved(name)
+                        if name ~= "" and not reserved then
+                            local _, status = self:GetBody(kind, name)
+                            if status ~= "current" then
+                                tinsert(findings, {
+                                    kind = kind,
+                                    name = name,
+                                    status = status,
+                                    sourceLabel = source.sourceLabel,
+                                    label = usage.label,
+                                })
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    sort(findings, function(a, b)
+        if a.status ~= b.status then return a.status < b.status end
+        return NormKey(a.name) < NormKey(b.name)
+    end)
+    return findings, self:GetUnscannableAddons()
+end
+
+-- ---- The catalog's own bodies are an expression source ----
+--
+-- Entries reference each other: a SAVED body can contain #token, a token body
+-- can contain SAVED(...) or CATEGORY(...). Those are stored expressions like any
+-- other and have to be in the reference index, or prune drops a former name
+-- that only another entry was relying on — silently, because nothing else
+-- looks at these bodies.
+--
+-- Native kinds only. Provider-backed kinds are registered by their owner (Bags
+-- registers its categories), and enumerating them here would double-count.
+
+local NATIVE_KIND_LABEL = {
+    token = "OneWoW — Keyword Synonyms",
+    saved = "OneWoW — Named Expressions",
+}
+
+local NATIVE_KIND_DISPLAY = {
+    token = function(name) return "#" .. name end,
+    saved = function(name) return "SAVED(" .. name .. ")" end,
+}
+
+for kind, sourceLabel in pairs(NATIVE_KIND_LABEL) do
+    local display = NATIVE_KIND_DISPLAY[kind]
+    SearchCatalog:RegisterExpressionSource("catalog_" .. kind, {
+        sourceLabel = sourceLabel,
+        Enumerate = function()
+            local out = {}
+            EachEntry(kind, function(entry)
+                if type(entry.body) == "string" and entry.body ~= "" then
+                    tinsert(out, { expression = entry.body, label = display(entry.name) })
+                end
+            end)
+            return out
+        end,
+    })
+end
+
 -- ---- Migration ----
 
 --- Lift the pre-catalog `searchShortcuts` store into catalog entries. Aliases
@@ -549,4 +918,123 @@ function SearchCatalog:MigrateFromSearchShortcuts()
     end
 
     store.schemaVersion = SCHEMA_VERSION
+end
+
+-- ---- Maintenance command ----
+--
+-- Dev/maintenance chat tool, hardcoded English, following the /1wtrace and
+-- /owblayout precedent — deliberately not localized and not a settings surface.
+-- The reporting this exposes gets a real UI in the catalog tab; until then this
+-- is the only way to see the reference index, and the only way to prune, which
+-- is not run automatically because it deletes redirects rather than warning
+-- about them.
+
+local CMD_PREFIX = "|cFF33FF99OneWoW Catalog|r"
+
+local STATUS_NOTE = {
+    missing = "no such entry (typo, or deleted)",
+    former  = "resolves via a former name",
+    empty   = "entry exists but has no rule",
+}
+
+local function PrintLint()
+    local findings, incomplete = SearchCatalog:Lint()
+    if #findings == 0 then
+        print(CMD_PREFIX .. ": no broken or stale references found.")
+    else
+        print(CMD_PREFIX .. ": " .. #findings .. " reference(s) worth a look:")
+        for _, f in ipairs(findings) do
+            print(format("  [%s] %s(%s) — %s  |cFF888888(%s: %s)|r",
+                f.status, f.kind, f.name, STATUS_NOTE[f.status] or f.status,
+                f.sourceLabel or "?", f.label or "?"))
+        end
+    end
+    if #incomplete > 0 then
+        print(CMD_PREFIX .. ": |cFFFFAA00" .. #incomplete
+            .. " addon(s) not loaded, so this is incomplete:|r " .. tconcat(incomplete, ", "))
+    end
+end
+
+--- List every registered source and what it currently yields. The reference
+--- index is only ever as good as its sources, and a source that is missing, or
+--- present but returning nothing, looks exactly like "no references found" from
+--- the outside. This is how to tell those apart.
+local function PrintSources()
+    local rows = {}
+    local total = 0
+    for id, source in pairs(expressionSources) do
+        local ok, usages = pcall(source.Enumerate)
+        local count = ok and #usages or -1
+        if count > 0 then total = total + count end
+        tinsert(rows, { id = id, label = source.sourceLabel or "?", count = count })
+    end
+    sort(rows, function(a, b) return a.id < b.id end)
+
+    print(format("%s: %d source(s), %d expression(s) visible:", CMD_PREFIX, #rows, total))
+    for _, row in ipairs(rows) do
+        if row.count < 0 then
+            print(format("  |cFFFF5555%s|r — %s |cFFFF5555(Enumerate errored)|r", row.id, row.label))
+        else
+            print(format("  %s — %s |cFF888888(%d)|r", row.id, row.label, row.count))
+        end
+    end
+
+    local incomplete = SearchCatalog:GetUnscannableAddons()
+    if #incomplete > 0 then
+        print(CMD_PREFIX .. ": |cFFFFAA00not loaded, so their sources are absent:|r "
+            .. tconcat(incomplete, ", "))
+    end
+end
+
+local function PrintPrune(apply, force)
+    local count, blocked, dropped = SearchCatalog:PruneFormerNames({
+        dryRun = not apply,
+        force = force,
+    })
+
+    if not count then
+        print(CMD_PREFIX .. ": |cFFFF5555prune skipped|r — these own expressions but are not loaded: "
+            .. tconcat(blocked or {}, ", "))
+        print(CMD_PREFIX .. ": load them, or use |cFFFFFFFF/owcatalog prune apply force|r to prune anyway.")
+        return
+    end
+
+    if count == 0 then
+        print(CMD_PREFIX .. ": nothing to prune; every former name is still referenced.")
+        return
+    end
+
+    print(format("%s: %d former name(s) %s:", CMD_PREFIX, count,
+        apply and "pruned" or "would be pruned"))
+    for _, d in ipairs(dropped) do
+        print(format("  %s(%s) |cFF888888— former name of '%s'|r", d.kind, d.name, d.owner or "?"))
+    end
+    if not apply then
+        print(CMD_PREFIX .. ": run |cFFFFFFFF/owcatalog prune apply|r to remove them.")
+    end
+end
+
+SLASH_ONEWOW_CATALOG1 = "/owcatalog"
+SLASH_ONEWOW_CATALOG2 = "/1wcatalog"
+SlashCmdList["ONEWOW_CATALOG"] = function(msg)
+    msg = strlower(strtrim(msg or ""))
+
+    if msg == "lint" then
+        PrintLint()
+    elseif msg == "sources" then
+        PrintSources()
+    elseif msg == "prune" then
+        PrintPrune(false, false)
+    elseif msg == "prune apply" then
+        PrintPrune(true, false)
+    elseif msg == "prune apply force" then
+        PrintPrune(true, true)
+    else
+        print(CMD_PREFIX .. ": usage:")
+        print("  |cFFFFFFFF/owcatalog lint|r — list broken, stale, and rule-less references")
+        print("  |cFFFFFFFF/owcatalog sources|r — list registered stores and how many expressions each sees")
+        print("  |cFFFFFFFF/owcatalog prune|r — show which former names are no longer referenced")
+        print("  |cFFFFFFFF/owcatalog prune apply|r — actually remove them")
+        print("  |cFFFFFFFF/owcatalog prune apply force|r — ignore the not-loaded-addon safety gate")
+    end
 end

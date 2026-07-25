@@ -45,4 +45,37 @@ function ns:InitializeDatabase()
         defaults  = defaults,
     })
     ns.db = db
+
+    -- Two modules persist user-authored expressions. Registered here rather
+    -- than inside each module because a disabled module's settings still live
+    -- in SavedVariables — its expressions would still break on a rename, so
+    -- they still have to be visible to the reference index.
+    OneWoW.SearchCatalog:RegisterExpressionSource("qol_bagbar", {
+        sourceLabel = "QoL — Bag Bar",
+        Enumerate = function()
+            local bagbar = ns.db.global.modules.bagbar
+            local expr = bagbar and bagbar.expressionFilter
+            if type(expr) ~= "string" or expr == "" then return {} end
+            return { { expression = expr, label = "Bag Bar filter" } }
+        end,
+    })
+
+    OneWoW.SearchCatalog:RegisterExpressionSource("qol_vendorpanel", {
+        sourceLabel = "QoL — Vendor Panel",
+        Enumerate = function()
+            local out = {}
+            local bucket = ns.db.global.modules.vendorpanel
+            local filters = bucket and bucket.settings and bucket.settings.customFilters
+            for i, filter in ipairs(filters or {}) do
+                if type(filter) == "table" and type(filter.expr) == "string"
+                    and filter.expr ~= "" then
+                    tinsert(out, {
+                        expression = filter.expr,
+                        label = filter.name or ("Filter " .. i),
+                    })
+                end
+            end
+            return out
+        end,
+    })
 end

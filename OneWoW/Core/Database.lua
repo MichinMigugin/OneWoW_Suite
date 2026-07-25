@@ -4,6 +4,8 @@ local OneWoW_GUI = OneWoW_GUI
 
 local DB = OneWoW_GUI.DB
 
+local strfind = string.find
+
 local DEFAULTS = {
     language = GetLocale(),
     theme = "green",
@@ -418,6 +420,90 @@ function ns:InitializeDatabase()
     self:MigrateAltScope()
     self:MigrateOverlays2()
     ns.SearchCatalog:MigrateFromSearchShortcuts()
+
+    -- Custom overlays are the core-owned store of user-authored expressions.
+    -- Registered here rather than beside the overlay engine because the
+    -- settings tree is only reachable from this file (see the settings funnel).
+    -- Preset-backed overlays carry a canned expression from the preset catalog,
+    -- not one the user wrote, so only entries with their own expression count.
+    ns.SearchCatalog:RegisterExpressionSource("core_overlays", {
+        sourceLabel = "OneWoW — Overlays",
+        Enumerate = function()
+            local out = {}
+            local overlays = ns.db.global.settings.overlays
+            for id, entry in pairs(overlays and overlays.userOverlays or {}) do
+                if type(entry) == "table" and type(entry.expression) == "string"
+                    and entry.expression ~= "" then
+                    tinsert(out, { expression = entry.expression, label = entry.name or id })
+                end
+            end
+            return out
+        end,
+    })
+
+    ns:RegisterProfileExpressionSources()
+end
+
+-- Profile snapshots are frozen copies of settings — account profiles hold core
+-- overlays, and character profiles hold whole SavedVariables trees from other
+-- units. Restoring one brings its expressions back, so a former name those
+-- expressions rely on must not be pruned while the snapshot exists.
+--
+-- Scanned generically rather than per-shape: a snapshot is opaque nested data
+-- whose layout changes whenever any unit adds a setting, and a walker that
+-- silently missed a branch would make pruning unsafe. Over-reporting is the
+-- safe direction here — the worst case is keeping a former name a little
+-- longer, where the worst case of under-reporting is breaking a restore.
+local MAX_SNAPSHOT_DEPTH = 12
+
+-- A snapshot is mostly strings that cannot possibly hold a reference — cvar
+-- values, texture names, anchor points, addon names. Keeping only the ones
+-- carrying a reference marker turns hundreds of candidates into a handful
+-- without narrowing what is found: a string with no `#`, `SAVED(`, or
+-- `CATEGORY(` in it cannot reference anything by construction.
+local function MayReference(text)
+    return strfind(text, "#", 1, true) ~= nil
+        or strfind(text, "SAVED(", 1, true) ~= nil
+        or strfind(text, "CATEGORY(", 1, true) ~= nil
+end
+
+local function CollectSnapshotStrings(value, out, label, depth)
+    if depth > MAX_SNAPSHOT_DEPTH or type(value) ~= "table" then return end
+    for _, v in pairs(value) do
+        local t = type(v)
+        if t == "string" then
+            if v ~= "" and MayReference(v) then
+                tinsert(out, { expression = v, label = label })
+            end
+        elseif t == "table" then
+            CollectSnapshotStrings(v, out, label, depth + 1)
+        end
+    end
+end
+
+local function SnapshotSource(sourceLabel, getStore)
+    return {
+        sourceLabel = sourceLabel,
+        Enumerate = function()
+            local out = {}
+            for name, snapshot in pairs(getStore() or {}) do
+                CollectSnapshotStrings(snapshot, out, name, 1)
+            end
+            return out
+        end,
+    }
+end
+
+function ns:RegisterProfileExpressionSources()
+    ns.SearchCatalog:RegisterExpressionSource("core_profiles",
+        SnapshotSource("OneWoW — Saved Profiles", function()
+            return ns.db.global.profiles
+        end))
+
+    ns.SearchCatalog:RegisterExpressionSource("core_charprofiles",
+        SnapshotSource("OneWoW — Character Profiles", function()
+            return ns.db.global.charProfiles
+        end))
 end
 
 -- Legacy 1.0 overlay feature ids in their catalog order. Every legacy entry

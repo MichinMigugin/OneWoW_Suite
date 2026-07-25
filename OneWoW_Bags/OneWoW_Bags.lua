@@ -680,6 +680,60 @@ function OneWoW_Bags:OnAddonLoaded()
         Get = function(id) return ns.CategoryRefs:GetCatalogEntry(id) end,
         SetName = function(id, name) ns.CategoryRefs:SetCatalogEntryName(id, name) end,
     })
+
+    -- Bags' two stores of user-authored expressions, so a rename, delete, or
+    -- name reclaim elsewhere in the suite can report what it would cost here.
+    OneWoW.SearchCatalog:RegisterExpressionSource("bags_categories", {
+        sourceLabel = "Bags — Categories",
+        Enumerate = function()
+            local out = {}
+            for id, rec in pairs(ns.db.global.customCategoriesV2) do
+                if type(rec) == "table" and type(rec.searchExpression) == "string"
+                    and rec.searchExpression ~= "" then
+                    tinsert(out, { expression = rec.searchExpression, label = rec.name or id })
+                end
+            end
+            return out
+        end,
+    })
+
+    OneWoW.SearchCatalog:RegisterExpressionSource("bags_history", {
+        sourceLabel = "Bags — Search History",
+        Enumerate = function()
+            local out = {}
+            for _, query in ipairs(ns.db.global.searchHistory) do
+                if type(query) == "string" and query ~= "" then
+                    tinsert(out, { expression = query, label = query })
+                end
+            end
+            return out
+        end,
+    })
+
+    -- The import undo snapshot holds category rules and saved searches as they
+    -- were before the last import. Rolling back restores them, so a former name
+    -- they depend on has to survive as long as the backup does.
+    OneWoW.SearchCatalog:RegisterExpressionSource("bags_import_backup", {
+        sourceLabel = "Bags — Import Undo Snapshot",
+        Enumerate = function()
+            local out = {}
+            local backup = ns.db.global.importBackup
+            local tables = backup and backup.tables
+            if not tables then return out end
+            for _, rec in pairs(tables.customCategoriesV2 or {}) do
+                if type(rec) == "table" and type(rec.searchExpression) == "string"
+                    and rec.searchExpression ~= "" then
+                    tinsert(out, { expression = rec.searchExpression, label = rec.name or "?" })
+                end
+            end
+            for name, query in pairs(tables.savedSearches or {}) do
+                if type(query) == "string" and query ~= "" then
+                    tinsert(out, { expression = query, label = name })
+                end
+            end
+            return out
+        end,
+    })
     -- One-shot: type-mode categories become ordinary expressions over class and
     -- subclass ids. Type mode compared *localized* names against localized API
     -- output, so it broke silently on a client language change; ids do not.

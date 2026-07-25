@@ -4,6 +4,8 @@
 ## Features
 - Search Shortcuts in Settings: keyword synonyms (`#decks` → `#combinable`) and named expressions (`SAVED(Name)`) work suite-wide anywhere search expressions are used
 - `CATEGORY(Name)` in those expressions expands Bags custom search-category rules when Bags is loaded (Mail shipments, overlays, and other suite filters included)
+- A keyword synonym can stand for a whole expression, not just another keyword — `#sell` can mean `quality<=0 | CATEGORY(Junk)`
+- Renaming a synonym, a named expression, or a Bags category keeps every expression that used the old name working, wherever it was saved — including Mail shipments, QoL filters, Direct Deposit rules, overlays, and saved profiles
 
 ## Fixes
 - Collected / known / missing overlays update when collection status changes (transmog, mounts, pets, toys, heirlooms, decor, recipes) and after login settle; junk/protected marks refresh without a reload
@@ -61,6 +63,15 @@
 # Bags
 ## Features
 - Search transfer and Ctrl+Right-click deposit work while the guild bank is open (fills partial stacks, then empty slots)
+
+## Fixes
+- By Type categories keep matching after a client language change; they compared translated type names before, so switching language silently emptied them
+- A By Type category whose type and subtype cannot occur together (or no longer exist) is reported instead of quietly matching nothing
+- Renaming a category keeps its collapsed or expanded state in the bag and bank windows
+
+## Optimizations
+- Item categorization is faster when opening bags and banks, most noticeably with many custom categories
+
 ## Settings
 - General tab no longer duplicates OneWoW appearance settings (use OneWoW Settings)
 - Named search shortcuts move to OneWoW Settings → Search Shortcuts; Bags Search keeps history limit and a link to that hub tab

@@ -74,6 +74,25 @@ function ns:InitializeDatabase()
             shipment.restockCopper = shipment.restockCopper or shipment.maxCopper or 0
         end
     end
+
+    -- Shipment match rules are user-authored expressions, so renaming or
+    -- deleting a named expression anywhere in the suite can report what it
+    -- would cost here instead of silently breaking these.
+    OneWoW.SearchCatalog:RegisterExpressionSource("mail_shipments", {
+        sourceLabel = "Mail — Shipments",
+        Enumerate = function()
+            local out = {}
+            for i, shipment in ipairs(ns.db.global.mail.shipments) do
+                if type(shipment.match) == "string" and shipment.match ~= "" then
+                    tinsert(out, {
+                        expression = shipment.match,
+                        label = shipment.name or ("#" .. i),
+                    })
+                end
+            end
+            return out
+        end,
+    })
 end
 
 --- Seed manual-mode preset shipments once (cloth/leather/metal/herb/DE).
