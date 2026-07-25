@@ -117,6 +117,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ERR_ATTACH_FAILED"] = "Konnte %s nicht anhängen — Versand gestoppt.",
     ["ERR_SEND_FAILED"] = "Post konnte nicht gesendet werden — Versand gestoppt.",
     ["ERR_SEND_TIMEOUT"] = "No response from the server — send stopped.",
+    ["SUBJECT_NONE"] = "(Kein Betreff)",
     ["ACTIVITY_PENDING_HEADER"] = "Wartet auf Prüfung",
     ["ACTIVITY_LOG_HEADER"] = "Protokoll",
     ["ACTIVITY_EMPTY"] = "Nichts wartet auf Prüfung.",

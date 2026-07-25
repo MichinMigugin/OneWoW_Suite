@@ -117,6 +117,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["ERR_ATTACH_FAILED"] = "Impossibile allegare %s — invio interrotto.",
     ["ERR_SEND_FAILED"] = "Invio della posta non riuscito — invio interrotto.",
     ["ERR_SEND_TIMEOUT"] = "No response from the server — send stopped.",
+    ["SUBJECT_NONE"] = "(Nessun oggetto)",
     ["ACTIVITY_PENDING_HEADER"] = "In attesa di revisione",
     ["ACTIVITY_LOG_HEADER"] = "Registro",
     ["ACTIVITY_EMPTY"] = "Niente in attesa di revisione.",

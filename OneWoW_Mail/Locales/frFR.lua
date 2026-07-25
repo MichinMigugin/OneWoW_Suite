@@ -117,6 +117,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["ERR_ATTACH_FAILED"] = "Impossible de joindre %s — envoi interrompu.",
     ["ERR_SEND_FAILED"] = "L'envoi du courrier a échoué — envoi interrompu.",
     ["ERR_SEND_TIMEOUT"] = "No response from the server — send stopped.",
+    ["SUBJECT_NONE"] = "(Sans sujet)",
     ["ACTIVITY_PENDING_HEADER"] = "En attente de vérification",
     ["ACTIVITY_LOG_HEADER"] = "Journal",
     ["ACTIVITY_EMPTY"] = "Rien en attente de vérification.",

@@ -118,6 +118,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["ERR_ATTACH_FAILED"] = "No se pudo adjuntar %s — envío detenido.",
     ["ERR_SEND_FAILED"] = "No se pudo enviar el correo — envío detenido.",
     ["ERR_SEND_TIMEOUT"] = "No response from the server — send stopped.",
+    ["SUBJECT_NONE"] = "(Sin asunto)",
     ["ACTIVITY_PENDING_HEADER"] = "Pendiente de revisión",
     ["ACTIVITY_LOG_HEADER"] = "Registro",
     ["ACTIVITY_EMPTY"] = "Nada pendiente de revisión.",

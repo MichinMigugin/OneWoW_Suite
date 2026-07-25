@@ -117,6 +117,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["ERR_ATTACH_FAILED"] = "Não foi possível anexar %s — envio interrompido.",
     ["ERR_SEND_FAILED"] = "Falha ao enviar a correspondência — envio interrompido.",
     ["ERR_SEND_TIMEOUT"] = "No response from the server — send stopped.",
+    ["SUBJECT_NONE"] = "(Sem assunto)",
     ["ACTIVITY_PENDING_HEADER"] = "Aguardando revisão",
     ["ACTIVITY_LOG_HEADER"] = "Registro",
     ["ACTIVITY_EMPTY"] = "Nada aguardando revisão.",

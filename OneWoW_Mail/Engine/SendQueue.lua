@@ -248,7 +248,9 @@ local function SendJob(job, onDone)
             end
             onDone(false, "send", detail)
         end)
-        SendMail(sendTo, job.subject or "", "")
+        local subject = ns.Compose.ResolveSendSubject(job.subject, job.money or 0)
+        job.subject = subject
+        SendMail(sendTo, subject, "")
     end
 
     local function attachNext()

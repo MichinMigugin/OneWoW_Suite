@@ -39,6 +39,7 @@
 ## Fixes
 - Closing with the X works when the window was opened via `/owmail` (not only from a mailbox)
 - Selected collect no longer keeps taking mail below the checked rows after each delete shifts the inbox
+- Blank Subject on Compose no longer hangs until timeout; fills item name, gold amount, or "(No subject)" as needed
 
 ---
 

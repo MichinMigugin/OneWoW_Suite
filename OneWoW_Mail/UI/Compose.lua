@@ -320,6 +320,65 @@ local function CreateAttachmentSlot(parent, slotIndex)
     return slot
 end
 
+-- Blizzard rejects blank subjects (send hangs until timeout). Fill only when the
+-- player left Subject empty — do not write back into the edit box.
+local SUBJECT_MAX = 64
+
+---@param s string
+---@return string
+local function TruncateSubject(s)
+    if strlenutf8(s) <= SUBJECT_MAX then
+        return s
+    end
+    return strsubutf8(s, 1, SUBJECT_MAX)
+end
+
+--- Resolve a send subject. Blank → first attachment name (+N extras), else
+--- send-money coin text, else localized "(No subject)".
+---@param subject string|nil
+---@param moneyCopper number|nil send-money copper only (not COD)
+---@return string
+function Compose.ResolveSendSubject(subject, moneyCopper)
+    subject = strtrim(subject or "")
+    if subject ~= "" then
+        return subject
+    end
+
+    local firstName
+    local attachCount = 0
+    for i = 1, MAX_SLOTS do
+        if HasSendMailItem(i) then
+            attachCount = attachCount + 1
+            if not firstName then
+                firstName = GetSendMailItem(i)
+            end
+        end
+    end
+    if attachCount > 0 then
+        local suffix = ""
+        if attachCount > 1 then
+            suffix = " +" .. (attachCount - 1)
+        end
+        local name = firstName or "?"
+        local room = SUBJECT_MAX - strlenutf8(suffix)
+        if room < 1 then
+            return TruncateSubject(suffix)
+        end
+        if strlenutf8(name) > room then
+            name = strsubutf8(name, 1, room)
+        end
+        return name .. suffix
+    end
+
+    if (moneyCopper or 0) > 0 then
+        -- Plain localized coin text — FormatGold textures/colors are not valid
+        -- in mail subjects.
+        return TruncateSubject(C_CurrencyInfo.GetCoinText(moneyCopper))
+    end
+
+    return L["SUBJECT_NONE"]
+end
+
 local function DoSend()
     local to = ns.AddressBook:NormalizeRecipient(GetFieldText(ui.toBox))
     local subject = GetFieldText(ui.subjectBox)
@@ -368,6 +427,7 @@ local function DoSend()
     local gold = sendMoneyMode and copper or 0
     local cod = (not sendMoneyMode) and copper or 0
     local sendTo = to
+    subject = Compose.ResolveSendSubject(subject, gold)
 
     ns.SendResult:Listen(function()
         local short, full = ns.RunLog.FormatLoot(gold, items)
@@ -379,7 +439,7 @@ local function DoSend()
             local codLine = COD .. ": " .. OneWoW.Format.FormatGold(cod)
             detail = (detail ~= "" and (detail .. "\n") or "") .. codLine
         end
-        if subject and subject ~= "" then
+        if subject ~= "" then
             detail = subject .. (detail ~= "" and ("\n" .. detail) or "")
         end
         ns.RunLog:Add("info", nil, sendTo, string.format(L["LOG_SEND_OK"], short), {

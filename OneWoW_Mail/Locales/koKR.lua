@@ -117,6 +117,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ERR_ATTACH_FAILED"] = "%s을(를) 첨부할 수 없습니다 — 발송이 중단되었습니다.",
     ["ERR_SEND_FAILED"] = "우편 발송에 실패했습니다 — 발송이 중단되었습니다.",
     ["ERR_SEND_TIMEOUT"] = "No response from the server — send stopped.",
+    ["SUBJECT_NONE"] = "(제목 없음)",
     ["ACTIVITY_PENDING_HEADER"] = "확인 대기 중",
     ["ACTIVITY_LOG_HEADER"] = "기록",
     ["ACTIVITY_EMPTY"] = "확인을 기다리는 항목이 없습니다.",

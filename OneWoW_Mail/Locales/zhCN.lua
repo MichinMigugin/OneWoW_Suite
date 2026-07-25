@@ -117,6 +117,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["ERR_ATTACH_FAILED"] = "无法附加%s——发送已停止。",
     ["ERR_SEND_FAILED"] = "邮件发送失败——发送已停止。",
     ["ERR_SEND_TIMEOUT"] = "No response from the server — send stopped.",
+    ["SUBJECT_NONE"] = "(无主题)",
     ["ACTIVITY_PENDING_HEADER"] = "待确认",
     ["ACTIVITY_LOG_HEADER"] = "日志",
     ["ACTIVITY_EMPTY"] = "没有等待确认的内容。",

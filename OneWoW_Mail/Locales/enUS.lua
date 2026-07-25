@@ -128,6 +128,7 @@ ns.L = OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ERR_ATTACH_FAILED"] = "Could not attach %s — send stopped.",
     ["ERR_SEND_FAILED"] = "Mail failed to send — send stopped.",
     ["ERR_SEND_TIMEOUT"] = "No response from the server — send stopped.",
+    ["SUBJECT_NONE"] = "(No subject)",
 
     ["ACTIVITY_PENDING_HEADER"] = "Pending review",
     ["ACTIVITY_LOG_HEADER"] = "Log",

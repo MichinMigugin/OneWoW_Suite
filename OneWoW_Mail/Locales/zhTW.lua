@@ -117,6 +117,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["ERR_ATTACH_FAILED"] = "無法附加%s——傳送已停止。",
     ["ERR_SEND_FAILED"] = "郵件傳送失敗——傳送已停止。",
     ["ERR_SEND_TIMEOUT"] = "No response from the server — send stopped.",
+    ["SUBJECT_NONE"] = "(無主題)",
     ["ACTIVITY_PENDING_HEADER"] = "待確認",
     ["ACTIVITY_LOG_HEADER"] = "日誌",
     ["ACTIVITY_EMPTY"] = "沒有等待確認的內容。",

@@ -117,6 +117,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["ERR_ATTACH_FAILED"] = "Не удалось прикрепить %s — отправка остановлена.",
     ["ERR_SEND_FAILED"] = "Не удалось отправить письмо — отправка остановлена.",
     ["ERR_SEND_TIMEOUT"] = "No response from the server — send stopped.",
+    ["SUBJECT_NONE"] = "(Без темы)",
     ["ACTIVITY_PENDING_HEADER"] = "Ожидает проверки",
     ["ACTIVITY_LOG_HEADER"] = "Журнал",
     ["ACTIVITY_EMPTY"] = "Нет писем, ожидающих проверки.",
