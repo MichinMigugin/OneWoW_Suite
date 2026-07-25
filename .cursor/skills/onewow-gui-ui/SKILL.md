@@ -20,7 +20,7 @@ Five rules govern OneWoW UI code:
 ## Authoritative sources
 
 1. `OneWoW/Docs/GUI.md` — component catalog, backdrop templates, GUI dimension keys, media asset policy, icon skinning, dropdown/menu helpers. Read first to find an existing helper before considering raw widgets.
-2. `OneWoW/GUI/Buttons.lua`, `EditBoxes.lua`, `Controls.lua`, `Layout.lua`, `Panels.lua`, `Display.lua`, `Icons.lua`, `Settings.lua`, `ReorderDrag.lua` — implementations. Read when uncertain about a helper's option contract. Shared appearance settings UI lives in hub `OneWoW/UI/settings-shared-panel.lua` (not stamped into suite units).
+2. `OneWoW/GUI/Buttons.lua`, `EditBoxes.lua`, `Controls.lua`, `Layout.lua`, `Panels.lua`, `Display.lua`, `Icons.lua`, `Settings.lua`, `Fonts.lua`, `ReorderDrag.lua` — implementations. Read when uncertain about a helper's option contract. Shared appearance settings UI lives in hub `OneWoW/UI/settings-shared-panel.lua` (not stamped into suite units).
 3. `OneWoW/GUI/Constants.lua` — `BACKDROP_*` templates, `GUI.*` dimension defaults, `MEDIA_BASE` / `ICON_TEXTURES`, `THEMES` table (semantic color keys). Theme color keys live here.
 4. `OneWoW/GUI/OneWoW_GUI.lua` — `GetThemeColor`, `RegisterGUIConstants`, `GetSetting`, `SetSetting`, theme application logic.
 
@@ -219,7 +219,7 @@ panel/dialog file, confirm both apply — it's a font root (auto via `CreateDial
 "wheels" on a panel you're already editing is in scope, not scope creep.
 
 Reference implementation: `OneWoW_AltTracker_Auctions/UI/AHPricesPanel.lua`
-(`RelayoutPanel` + `RegisterFontRoot`). Registry + driver: `OneWoW/GUI/Settings.lua`
+(`RelayoutPanel` + `RegisterFontRoot`). Registry + driver: `OneWoW/GUI/Fonts.lua`
 (`RegisterFontRoot` / `ApplyFontToFrame`).
 
 ## Review checklist — anti-patterns to flag

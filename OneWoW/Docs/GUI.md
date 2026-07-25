@@ -20,6 +20,7 @@ present — no existence guard.
 
 - [How To Get It](#how-to-get-it)
 - [Centralized Settings (Settings.lua)](#centralized-settings-settingslua)
+- [Fonts (Fonts.lua)](#fonts-fontslua)
 - [Media assets](#media-assets)
 - [Theme System](#theme-system)
 - [Frames & Layout](#frames--layout)
@@ -102,6 +103,12 @@ OneWoW_GUI:RegisterSettingsCallback("OnFontSizeChanged", myAddon, function(self,
     -- SafeSetFont automatically applies the offset, so just re-call your font application
 end)
 ```
+
+## Fonts (Fonts.lua)
+
+Font catalog, `SafeSetFont` / `CreateFS` / `ApplyFont*`, and the font-root registry
+live in `OneWoW/GUI/Fonts.lua` (loads after `Settings.lua`). Public API stays on
+`OneWoW_GUI`.
 
 ### Get the current font file path
 ```lua
