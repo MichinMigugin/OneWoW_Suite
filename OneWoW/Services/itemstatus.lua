@@ -15,21 +15,13 @@ local function FireCallbacks()
 end
 
 -- Junk/Protected status feeds PredicateEngine (#markedjunk / #protected /
--- #junk). PE caches per-item props, so a plain overlay repaint would
--- re-evaluate stale data and the newly marked item wouldn't light up in bags
--- until a reload. Wipe the props cache first, then repaint every surface.
+-- #junk). PE caches per-item props, and OverlayEngine same-item skip_same
+-- skips icon rebuild when paintGeneration is unchanged — so a plain Refresh
+-- leaves stale visuals until reload. InvalidateAndRequestRefresh wipes props,
+-- bumps paintGeneration, and coalesces a full icon rebuild.
 local function RefreshOverlaysForStatusChange()
-    if ns.PredicateEngine and ns.PredicateEngine.InvalidatePropsCache then
-        ns.PredicateEngine:InvalidatePropsCache()
-    end
-    if ns.OverlayEngine then
-        C_Timer.After(0.05, function()
-            ns.OverlayEngine:Refresh()
-            FireCallbacks()
-        end)
-    else
-        FireCallbacks()
-    end
+    ns.OverlayEngine:InvalidateAndRequestRefresh()
+    FireCallbacks()
 end
 
 local function GetDB()

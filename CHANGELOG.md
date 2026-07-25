@@ -1,6 +1,9 @@
 # OneWoW Suite Changelog
 
 # OneWoW
+## Fixes
+- Collected / known / missing overlays update when collection status changes (transmog, mounts, pets, toys, heirlooms, decor, recipes) and after login settle; junk/protected marks refresh without a reload
+
 ## Settings
 - Language, theme, font, minimap, and value display are edited only in OneWoW Settings (removed from Bags, Shopping List, Direct Deposit, and DevTool windows)
 

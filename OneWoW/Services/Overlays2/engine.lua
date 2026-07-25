@@ -13,6 +13,15 @@ local _, ns = ...
 -- integration surface as the 1.0 engine (RegisterIntegration, ProcessButton,
 -- CleanButton, Refresh, RequestRefresh), so external bag integrations work
 -- unchanged. Surface hooks live in surfaces.lua.
+--
+-- Refresh contract:
+--   RequestRefresh / Refresh — surface layout (item identity already drives
+--     paint). Same-item skip_same may no-op when paintGeneration is unchanged.
+--   InvalidateAndRequestRefresh — external predicate inputs changed
+--     (collection journals, recipe learned, junk/protected). Wipes PE props,
+--     bumps paintGeneration so skip_same cannot strand stale icons, then
+--     coalesced Refresh. Quality Border stays flash-safe via keepQualityBorder
+--     + qb_noop on same-item rebuilds.
 -- ============================================================================
 
 local PE = ns.PredicateEngine
@@ -28,8 +37,9 @@ local ipairs, tinsert = ipairs, tinsert
 
 local BATTLE_PET_CAGE_ID = 82800
 
--- Bumped when overlay definitions rebuild so same-item early-out cannot skip
--- a settings-driven repaint.
+-- Bumped when overlay definitions rebuild or external predicate inputs change
+-- (InvalidateAndRequestRefresh) so same-item early-out cannot skip a needed
+-- icon rebuild. Unchanged across guild-bank tab-query storms.
 local paintGeneration = 0
 
 -- LOAD-BEARING INVARIANT: this table is created at file-parse time (not inside
@@ -431,6 +441,16 @@ function Engine:RequestRefresh()
         refreshPending = false
         RefreshAll()
     end)
+end
+
+--- Wipe PE props, bump paintGeneration, then RequestRefresh.
+--- Use when overlay predicate inputs changed without a slot item swap
+--- (collection status, recipe known, junk/protected). Bare RequestRefresh
+--- alone hits skip_same and leaves stale icons.
+function Engine:InvalidateAndRequestRefresh()
+    PE:InvalidatePropsCache()
+    paintGeneration = paintGeneration + 1
+    Engine:RequestRefresh()
 end
 
 -- Rebuild definitions and repaint whenever any overlay setting changes,

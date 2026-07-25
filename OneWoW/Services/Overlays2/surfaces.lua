@@ -22,6 +22,9 @@ local _, ns = ...
 --     deferred). BankDepositing can evaluate IsItemAllowedInBankType too
 --     early (Mismatch + ItemContextOverlay stuck) while allow-state is still
 --     false; later allowed=true never clears the overlay without a re-sync.
+--   * Collection/journal/recipe events call Engine:InvalidateAndRequestRefresh
+--     (not bare RequestRefresh) so known/missing icons cannot stick behind
+--     same-item skip_same. Surface layout still uses RequestRefresh.
 -- ============================================================================
 
 local Engine = ns.OverlayEngine
@@ -618,11 +621,17 @@ local function InitializeSurfaces()
     -- NEW_RECIPE_LEARNED is funneled through OneWoW.ProfessionRecipe's learned
     -- channel (un-gated: it fires for trainer / world-drop learns too).
     ns.ProfessionRecipe.RegisterLearnedCallback("OverlayEngine", function()
-        Engine:RequestRefresh()
+        Engine:InvalidateAndRequestRefresh()
     end)
 
     local surfaceEventFrame = CreateFrame("Frame")
     surfaceEventFrame:RegisterEvent("TRANSMOG_COLLECTION_UPDATED")
+    surfaceEventFrame:RegisterEvent("NEW_MOUNT_ADDED")
+    surfaceEventFrame:RegisterEvent("NEW_PET_ADDED")
+    surfaceEventFrame:RegisterEvent("NEW_TOY_ADDED")
+    surfaceEventFrame:RegisterEvent("HEIRLOOMS_UPDATED")
+    surfaceEventFrame:RegisterEvent("HOUSING_STORAGE_UPDATED")
+    surfaceEventFrame:RegisterEvent("HOUSING_STORAGE_ENTRY_UPDATED")
     surfaceEventFrame:RegisterEvent("MAIL_SHOW")
     surfaceEventFrame:RegisterEvent("MAIL_INBOX_UPDATE")
     surfaceEventFrame:RegisterEvent("QUEST_DETAIL")
@@ -631,9 +640,17 @@ local function InitializeSurfaces()
     surfaceEventFrame:RegisterEvent("WEEKLY_REWARDS_UPDATE")
     surfaceEventFrame:RegisterEvent("AUCTION_HOUSE_THROTTLED_SYSTEM_READY")
     surfaceEventFrame:SetScript("OnEvent", function(_, event)
-        if event == "TRANSMOG_COLLECTION_UPDATED" then
-            Engine:RequestRefresh()
-            C_Timer.After(0.1, RefreshGuildBank)
+        if event == "TRANSMOG_COLLECTION_UPDATED"
+            or event == "NEW_MOUNT_ADDED"
+            or event == "NEW_PET_ADDED"
+            or event == "NEW_TOY_ADDED"
+            or event == "HEIRLOOMS_UPDATED"
+            or event == "HOUSING_STORAGE_UPDATED"
+            or event == "HOUSING_STORAGE_ENTRY_UPDATED" then
+            Engine:InvalidateAndRequestRefresh()
+            if event == "TRANSMOG_COLLECTION_UPDATED" then
+                C_Timer.After(0.1, RefreshGuildBank)
+            end
         elseif event == "MAIL_SHOW" or event == "MAIL_INBOX_UPDATE" then
             C_Timer.After(0.1, RefreshMailbox)
         elseif event == "QUEST_DETAIL" then
@@ -727,4 +744,9 @@ end
 
 ns:RegisterCoreLoginHandler("OverlayEngine", function()
     Engine:Initialize()
+    -- Journals can lag first bag paint; one settle pass heals false
+    -- "missing" icons without relying on a collection event.
+    C_Timer.After(1, function()
+        Engine:InvalidateAndRequestRefresh()
+    end)
 end, "early")
