@@ -63,9 +63,11 @@ addons). For the public API, caches, and extension points, see
 
 ## Saved Search Shortcuts
 
-Users can save named predicate expressions from the bags search bar and reuse
-them anywhere Bags evaluates a search expression: the main search bar, custom
-category search rules, and other saved searches.
+Named expressions use `SAVED(Name)` anywhere the suite evaluates a user search
+expression (Bags search bar, custom category rules, Mail shipments, overlays,
+AltTracker search, etc.). Manage them in **OneWoW Settings → Search Shortcuts**;
+Bags keeps a Save button on the search bar and a Settings breadcrumb that opens
+the hub tab.
 
 Syntax:
 
@@ -80,9 +82,9 @@ SAVED(Collected Toys)
 ```
 
 If `Collected Toys` is saved as `#toy & #collected`, the expression above is
-expanded to that predicate string before `OneWoW.PredicateEngine` compiles
-or evaluates it. Nested saved searches are supported with a small recursion
-limit.
+expanded by `OneWoW.SearchExpand` to that predicate string before
+`OneWoW.PredicateEngine` compiles or evaluates it. Nested saved searches are
+supported with a small recursion limit.
 
 Saved search name rules:
 
@@ -92,16 +94,18 @@ Saved search name rules:
 - Missing, invalid, or cyclic references fail closed by expanding to a
   never-match predicate instead of matching everything.
 
-Saved searches are stored in `db.global.savedSearches` as
-`displayName -> predicate string`.
+Stored in core SavedVariables as
+`OneWoW_DB.global.searchShortcuts.saved` (`displayName -> predicate string`).
+Keyword synonyms (`#decks` → `#combinable`) live beside them under
+`searchShortcuts.aliases` and are registered into PredicateEngine on login.
 
 ---
 
 ## Category Search Shortcuts
 
 Custom categories that use a **search** rule can be referenced by display name
-anywhere Bags evaluates a search expression (search bar, other custom category
-rules, saved searches).
+anywhere suite SearchExpand runs (Bags, Mail, QoL, …). Resolution is live via
+`OneWoW_Bags_API.GetCategorySearchExpression` when Bags is loaded.
 
 Syntax:
 
@@ -139,6 +143,8 @@ Name rules:
 - Missing, ineligible, or cyclic references fail closed.
 - Nested `CATEGORY(...)` and `SAVED(...)` are expanded together with a shared
   recursion limit.
+- When Bags is not loaded yet, `CATEGORY` fails closed until Bags registers
+  the resolver.
 
 ---
 
@@ -1211,7 +1217,7 @@ in this document; full API and extension notes are in
 | `ParseItemLink` (internal) | Decomposes retail item link fields (context, bonuses, craft GUID, quality prefix, etc.). |
 | `Tokenize` | Layer 2 input: `&` `and` `\|` `or` `!` `not` `#keyword`, comparisons, flags, `()` , bare `ilvl` / money shorthands, quoted `~` name shorthand, text fallback. Tokenizer also accepts `||` as OR for SV/import strings; users type single `\|` in EditBoxes. |
 | Parser | `ParseExpression` → `ParseAnd` → `ParseNot` → `ParsePrimary` (precedence: `!` tightest, then `&`, then `|` / `or`). |
-| Public `PE:` API | `Compile`, `SafeEvaluate`, `CheckItem`, `BuildProps`, `ResolveParams`, `RegisterKeyword`, `RegisterProperty`, `GetAllKeywords`, `GetMatchingKeywords`, `InvalidateCache`, `InvalidatePropsCache`, `InvalidateKnownProfessions`, `GetBattlePetData`, `GetItemCacheKey`, `GetItemIdentityKey`, `ParseItemLink`, `CanClassEquip`, `GetTooltipText`, `GetExpansionID`, `GetExpansionName`. |
+| Public `PE:` API | `Compile`, `SafeEvaluate`, `CheckItem`, `BuildProps`, `ResolveParams`, `RegisterKeyword`, `RegisterProperty`, `RegisterAlias`, `RegisterAliases`, `GetAllKeywords`, `GetMatchingKeywords`, `GetMatchingAliases`, `InvalidateCache`, `InvalidatePropsCache`, `InvalidateKnownProfessions`, `GetBattlePetData`, `GetItemCacheKey`, `GetItemIdentityKey`, `ParseItemLink`, `CanClassEquip`, `GetTooltipText`, `GetExpansionID`, `GetExpansionName`. |
 | `PE` fields | `ParseMoney`, `BattlePetTypes`, `ClassID`, `BATTLE_PET_CAGE_ID`. |
 
 `#upgrade` is not hardcoded: it is registered at runtime (see

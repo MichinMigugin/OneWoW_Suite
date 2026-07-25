@@ -282,6 +282,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["SETTING_SHOW_KEYWORDS_TOOLTIP"] = "Mostra #parole chiave nei suggerimenti",
     ["DESC_SHOW_KEYWORDS_TOOLTIP"] = "Mentre il gestore di categorie è aperto, aggiunge l'elenco delle #parole chiave corrispondenti (la stessa sintassi usata nelle regole di categoria personalizzate e nella barra di ricerca) ai suggerimenti degli oggetti. Utile per creare regole; nascosto nelle altre occasioni.",
     ["TOOLTIP_KEYWORDS_HEADER"] = "Parole chiave corrispondenti:",
+    ["TOOLTIP_ALIASES_HEADER"] = "Alias corrispondenti:",
 
     ["SETTING_UNUSABLE_OVERLAY"] = "Sovrapposizione rossa su oggetti inutilizzabili",
     ["DESC_UNUSABLE_OVERLAY"] = "Mostra una sovrapposizione rossa semitrasparente sugli oggetti che il tuo personaggio non può usare.",
@@ -539,4 +540,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["CLEANUP_KIND_STALE_SECTION_ORDER"] = "Voci ordine sezione obsolete",
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "Voci ordine categoria obsolete",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "Voci ordine visualizzazione obsolete",
+
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Named expressions and keyword aliases are managed in OneWoW Settings → Search Shortcuts.",
+    ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })

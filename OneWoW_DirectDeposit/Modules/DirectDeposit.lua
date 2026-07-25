@@ -1,6 +1,7 @@
 local _, ns = ...
 
 local PE = OneWoW.PredicateEngine
+local SE = OneWoW.SearchExpand
 local Inventory = OneWoW.Inventory
 local GuildBankTransfer = OneWoW.GuildBankTransfer
 local tinsert = tinsert
@@ -226,7 +227,7 @@ function DirectDeposit:SweepWarboundItems()
     -- (e.g. "#potion | #flask") and skip any slot whose item matches it. nil
     -- when the box is empty or the expression fails to compile, in which case
     -- nothing is excluded by keyword.
-    local excludeCompiled = PE:Compile(dd.warboundExcludeExpr)
+    local excludeCompiled = SE:Compile(dd.warboundExcludeExpr)
 
     local itemsToDeposit = {}
 

@@ -282,6 +282,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["SETTING_SHOW_KEYWORDS_TOOLTIP"] = "在提示中显示 #关键词",
     ["DESC_SHOW_KEYWORDS_TOOLTIP"] = "当分类管理器打开时，将匹配的 #关键词列表（与自定义分类规则和搜索栏相同的语法）添加到物品提示中。便于创建分类规则；其他时候隐藏。",
     ["TOOLTIP_KEYWORDS_HEADER"] = "匹配的关键词：",
+    ["TOOLTIP_ALIASES_HEADER"] = "匹配的别名：",
 
     ["SETTING_UNUSABLE_OVERLAY"] = "不可用物品的红色覆层",
     ["DESC_UNUSABLE_OVERLAY"] = "在你的角色无法使用的物品上显示半透明的红色覆层。",
@@ -539,4 +540,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["CLEANUP_KIND_STALE_SECTION_ORDER"] = "过期的分组顺序条目",
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "过期的分类顺序条目",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "过期的显示顺序条目",
+
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Named expressions and keyword aliases are managed in OneWoW Settings → Search Shortcuts.",
+    ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })

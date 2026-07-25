@@ -14,7 +14,7 @@ local _, ns = ...
 -- rendered separately by the engine (no icon slot, no max-4 cap).
 -- ============================================================================
 
-local PE = ns.PredicateEngine
+local SE = ns.SearchExpand
 
 ns.Overlays2Defs = {}
 local Defs = ns.Overlays2Defs
@@ -201,7 +201,7 @@ function Defs:ValidateExpression(expr)
     if type(expr) ~= "string" or expr == "" then
         return false, "empty expression"
     end
-    local compiled, err = PE:Compile(expr)
+    local compiled, err = SE:Compile(expr)
     if not compiled then
         return false, err or "expression did not compile"
     end
@@ -280,7 +280,7 @@ function Defs:BuildActiveList()
         if entry.enabled then
             local expr = self:ResolveExpression(entry)
             if expr and expr ~= "" then
-                local compiled, err = PE:Compile(expr)
+                local compiled, err = SE:Compile(expr)
                 if compiled then
                     tinsert(list, { id = item.id, entry = entry, compiled = compiled })
                 else

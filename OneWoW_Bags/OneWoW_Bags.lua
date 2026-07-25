@@ -665,6 +665,24 @@ function OneWoW_Bags:OnAddonLoaded()
     ns:InitializeControllers()
     OneWoW_GUI:MigrateSettings(ns.db.global)
 
+    -- Lift Bags savedSearches into core SearchExpand once, then clear local store.
+    local SE = OneWoW.SearchExpand
+    local bagsSaved = ns.db.global.savedSearches
+    if type(bagsSaved) == "table" and next(bagsSaved) then
+        SE:MigrateFromBagsSavedSearches(bagsSaved)
+        wipe(ns.db.global.savedSearches)
+    end
+    SE:SetCategoryResolver(function(name)
+        return ns.CategoryRefs:FindSearchExpression(name)
+    end)
+    SE:RegisterExternalTextRewriter("OneWoW_Bags", function(oldName, newName)
+        ns.CategoryRefs:RewriteSavedReferences(oldName, newName)
+    end)
+    SE:RegisterChangedCallback("OneWoW_Bags", function()
+        ns:InvalidateCategorization()
+        ns:RequestLayoutRefresh("all")
+    end)
+
     if ns.Masque and ns.Masque.OnLoad then
         ns.Masque:OnLoad()
     end

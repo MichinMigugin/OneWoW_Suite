@@ -237,6 +237,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["SETTING_SHOW_KEYWORDS_TOOLTIP"] = "Показывать #ключевые слова в подсказках",
     ["DESC_SHOW_KEYWORDS_TOOLTIP"] = "Пока открыт менеджер категорий, добавляет в подсказки предметов список подходящих #ключевых слов (тот же синтаксис, что у пользовательских правил и строки поиска). Удобно для правил; в остальное время скрыто.",
     ["TOOLTIP_KEYWORDS_HEADER"] = "Совпавшие ключевые слова:",
+    ["TOOLTIP_ALIASES_HEADER"] = "Совпавшие псевдонимы:",
     ["SETTING_UNUSABLE_OVERLAY"] = "Красный оверлей на непригодных предметах",
     ["DESC_UNUSABLE_OVERLAY"] = "Показывает полупрозрачный красный оверлей на предметах, которые персонаж не может использовать.",
     ["SETTING_DIM_JUNK"] = "Затемнять хлам",
@@ -472,4 +473,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["CLEANUP_KIND_STALE_SECTION_ORDER"] = "Устаревшие записи порядка секций",
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "Устаревшие записи порядка категорий",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "Устаревшие записи порядка отображения",
+
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Named expressions and keyword aliases are managed in OneWoW Settings → Search Shortcuts.",
+    ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })

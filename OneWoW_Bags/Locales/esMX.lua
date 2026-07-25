@@ -204,7 +204,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["GOLD_TOOLTIP_PERSONAL"] = "Personal",
     ["GOLD_TOOLTIP_WARBAND"] = "Banco de la banda guerrera",
     ["GOLD_TOOLTIP_OTHERS"] = "+%d más",
-    ["GOLD_TOOLTIP_NO_CHARACTER_DATA"] = "Activa los datos de personaje (Administrar funciones) para el oro de otros personajes",
+    ["GOLD_TOOLTIP_NO_CHARACTER_DATA"] = "Activa los datos de personaje (Gestionar funciones) para el oro de otros personajes",
 
     ["GUILD_BANK_MONEY_LOG"] = "Oro",
     ["GUILD_BANK_NO_LOG"] = "No hay transacciones disponibles.",
@@ -282,6 +282,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["SETTING_SHOW_KEYWORDS_TOOLTIP"] = "Mostrar #palabras clave en descripciones",
     ["DESC_SHOW_KEYWORDS_TOOLTIP"] = "Mientras el gestor de categorías está abierto, añade la lista de #palabras clave coincidentes (la misma sintaxis que las reglas de categoría personalizadas y la barra de búsqueda) a las descripciones de objetos. Útil para crear reglas; oculto el resto del tiempo.",
     ["TOOLTIP_KEYWORDS_HEADER"] = "Palabras clave coincidentes:",
+    ["TOOLTIP_ALIASES_HEADER"] = "Alias coincidentes:",
 
     ["SETTING_UNUSABLE_OVERLAY"] = "Superposición roja en objetos no usables",
     ["DESC_UNUSABLE_OVERLAY"] = "Muestra una superposición roja semitransparente en objetos que tu personaje no puede usar.",
@@ -539,4 +540,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["CLEANUP_KIND_STALE_SECTION_ORDER"] = "Entradas de orden de sección obsoletas",
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "Entradas de orden de categoría obsoletas",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "Entradas de orden de visualización obsoletas",
+
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Named expressions and keyword aliases are managed in OneWoW Settings → Search Shortcuts.",
+    ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })

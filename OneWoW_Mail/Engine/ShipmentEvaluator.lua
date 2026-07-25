@@ -6,6 +6,7 @@ ns.ShipmentEvaluator = {}
 local ShipmentEvaluator = ns.ShipmentEvaluator
 
 local PE = OneWoW.PredicateEngine
+local SE = OneWoW.SearchExpand
 
 local DISTRIBUTE_FILL = "fill_first"
 local DISTRIBUTE_RR = "round_robin"
@@ -540,7 +541,8 @@ local function PlanItemsShipment(shipment, reserved, skipSet)
         return {}
     end
 
-    local pred, compileErr = PE:Compile(BuildMatchExpr(shipment.match))
+    local matchExpr = BuildMatchExpr(shipment.match)
+    local pred, compileErr = SE:Compile(matchExpr)
     if not pred then
         return { {
             shipment = shipment,

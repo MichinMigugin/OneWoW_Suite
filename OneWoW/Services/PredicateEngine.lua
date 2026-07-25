@@ -444,6 +444,31 @@ local KEYWORD_MAP = {}
 local KEYWORD_CANONICAL = {}
 local KEYWORD_CANONICAL_ORDER = {}
 
+-- User synonym aliases: aliasName -> target keyword name (both lowercased,
+-- no leading #). Built-in KEYWORD_MAP always wins; aliases resolve only when
+-- the token is not a registered keyword. Chains are followed with a cycle guard.
+local ALIAS_MAP = {}
+
+--- Resolve a #keyword name to its predicate function.
+--- Built-ins first; then follow ALIAS_MAP until a built-in is found.
+---@param name string lowercased keyword without #
+---@return (fun(props: table): boolean)|nil
+local function ResolveKeywordFn(name)
+    local fn = KEYWORD_MAP[name]
+    if fn then return fn end
+
+    local seen = {}
+    local cur = name
+    while ALIAS_MAP[cur] do
+        if seen[cur] then return nil end
+        seen[cur] = true
+        cur = ALIAS_MAP[cur]
+        fn = KEYWORD_MAP[cur]
+        if fn then return fn end
+    end
+    return nil
+end
+
 local function RegisterKeyword(nameOrNames, func)
     local names
     if type(nameOrNames) == "table" then
@@ -3176,9 +3201,9 @@ ParsePrimary = function(tokens, pos)
         return inner, newPos
     end
 
-    -- #keyword -> lookup in KEYWORD_MAP
+    -- #keyword -> KEYWORD_MAP, then user ALIAS_MAP synonyms
     if token.type == "keyword" then
-        local fn = KEYWORD_MAP[token.value]
+        local fn = ResolveKeywordFn(token.value)
         if fn then
             return fn, pos + 1
         end
@@ -3300,7 +3325,7 @@ function PE:Compile(expr)
 
     local singleKeyword = strmatch(expr, "^%s*#([%w_]+)%s*$")
     if singleKeyword then
-        local fn = KEYWORD_MAP[strlower(singleKeyword)]
+        local fn = ResolveKeywordFn(strlower(singleKeyword))
         if fn then
             compiledCache[expr] = fn
             return fn
@@ -3309,7 +3334,7 @@ function PE:Compile(expr)
 
     local negatedKeyword = strmatch(expr, "^%s*!%s*#([%w_]+)%s*$")
     if negatedKeyword then
-        local fn = KEYWORD_MAP[strlower(negatedKeyword)]
+        local fn = ResolveKeywordFn(strlower(negatedKeyword))
         if fn then
             local compiled = function(props)
                 return not fn(props)
@@ -3520,7 +3545,10 @@ function PE:RegisterKeyword(nameOrNames, func)
         names = { nameOrNames }
     end
     for _, name in ipairs(names) do
-        KEYWORD_MAP[strlower(name)] = func
+        local lower = strlower(name)
+        KEYWORD_MAP[lower] = func
+        -- Built-in wins: drop a user synonym that collides with this name.
+        ALIAS_MAP[lower] = nil
     end
     if not KEYWORD_CANONICAL[func] then
         local firstName = strlower(names[1])
@@ -3530,13 +3558,76 @@ function PE:RegisterKeyword(nameOrNames, func)
     wipe(compiledCache)
 end
 
+--- True when name is a built-in/registered keyword (not merely a user alias).
+---@param name string|nil
+---@return boolean
+function PE:IsBuiltinKeyword(name)
+    if type(name) ~= "string" or name == "" then return false end
+    local lower = strlower(name:gsub("^#", ""))
+    return KEYWORD_MAP[lower] ~= nil
+end
+
+--- Register a user synonym: #alias resolves like #targetKeyword.
+--- Built-in keywords cannot be overwritten. Target must be a registered
+--- built-in keyword (not another user alias). Returns false + errorKey on rejection.
+---@param name string alias without leading #
+---@param targetKeyword string target without leading #
+---@return boolean ok
+---@return string|nil errorKey
+function PE:RegisterAlias(name, targetKeyword)
+    if type(name) ~= "string" or type(targetKeyword) ~= "string" then
+        return false, "ALIAS_INVALID"
+    end
+    local alias = strlower(strtrim(name:gsub("^#", "")))
+    local target = strlower(strtrim(targetKeyword:gsub("^#", "")))
+    if alias == "" or target == "" then return false, "ALIAS_INVALID" end
+    if not strmatch(alias, "^[%w_]+$") then return false, "ALIAS_INVALID_NAME" end
+    if KEYWORD_MAP[alias] then return false, "ALIAS_COLLIDES_BUILTIN" end
+    if not KEYWORD_MAP[target] then return false, "ALIAS_TARGET_MISSING" end
+
+    ALIAS_MAP[alias] = target
+    wipe(compiledCache)
+    return true
+end
+
+--- Replace the entire user-alias table (from SavedVariables). Invalid entries
+--- are skipped. Wipes compiledCache once at the end.
+---@param map table<string, string>|nil aliasName -> targetKeyword
+function PE:RegisterAliases(map)
+    wipe(ALIAS_MAP)
+    if type(map) == "table" then
+        for name, target in pairs(map) do
+            if type(name) == "string" and type(target) == "string" then
+                local alias = strlower(strtrim(name:gsub("^#", "")))
+                local tgt = strlower(strtrim(target:gsub("^#", "")))
+                if alias ~= "" and tgt ~= "" and strmatch(alias, "^[%w_]+$")
+                    and not KEYWORD_MAP[alias] and KEYWORD_MAP[tgt] then
+                    ALIAS_MAP[alias] = tgt
+                end
+            end
+        end
+    end
+    wipe(compiledCache)
+end
+
+--- Copy of the live user-alias map (lowercased keys/values, no leading #).
+---@return table<string, string>
+function PE:GetAliases()
+    local copy = {}
+    for k, v in pairs(ALIAS_MAP) do
+        copy[k] = v
+    end
+    return copy
+end
+
 --- List every registered keyword in registration order.
 --- Returns an ordered array of `{ canonical = "poor", aliases = { "grey", "gray" } }`
 --- entries. Intended for help/reference UIs that want to show every keyword
 --- the engine currently knows about (including addons that registered extras
 --- via RegisterKeyword). Aliases exclude the canonical name itself and are
---- sorted alphabetically for stable display.
----@return { canonical: string, aliases: string[] }[]
+--- sorted alphabetically for stable display. User synonyms from RegisterAlias
+--- are appended as `{ canonical, aliases = {}, target, isUserAlias = true }`.
+---@return { canonical: string, aliases: string[], target?: string, isUserAlias?: boolean }[]
 function PE:GetAllKeywords()
     local results = {}
     local seen = {}
@@ -3556,13 +3647,29 @@ function PE:GetAllKeywords()
             tinsert(results, { canonical = canonical, aliases = aliases })
         end
     end
+
+    local userNames = {}
+    for alias in pairs(ALIAS_MAP) do
+        tinsert(userNames, alias)
+    end
+    table.sort(userNames)
+    for _, alias in ipairs(userNames) do
+        tinsert(results, {
+            canonical = alias,
+            aliases = {},
+            target = ALIAS_MAP[alias],
+            isUserAlias = true,
+        })
+    end
     return results
 end
 
---- List every registered keyword that matches a given item.
+--- List every registered built-in keyword that matches a given item.
 --- Returns an ordered array of canonical keyword names (without the leading "#").
---- Aliases (e.g. #grey / #gray for #poor) are deduplicated by predicate-function
---- identity; the first name a keyword was registered under is treated as canonical.
+--- Built-in PE aliases (e.g. #grey / #gray for #poor) are deduplicated by
+--- predicate-function identity; the first name a keyword was registered under
+--- is treated as canonical. User Search Shortcuts synonyms are not included —
+--- use GetMatchingAliases.
 ---
 --- Tooltip-only mode (bagID/slotID nil):
 ---   * `#boe`/`#bou`/`#warbound`/`#wue` work via a hyperlink-tooltip fallback
@@ -3591,6 +3698,36 @@ function PE:GetMatchingKeywords(itemID, bagID, slotID, itemInfo)
         local ok, matched = pcall(entry.fn, props)
         if ok and matched then
             tinsert(results, entry.name)
+        end
+    end
+    return results
+end
+
+--- User synonym aliases whose target keyword matches this item (alphabetically).
+---@param itemID number|nil
+---@param bagID number|nil
+---@param slotID number|nil
+---@param itemInfo string|table|nil
+---@return string[]
+function PE:GetMatchingAliases(itemID, bagID, slotID, itemInfo)
+    local results = {}
+    if not itemID or not next(ALIAS_MAP) then return results end
+
+    local props = self:BuildProps(itemID, bagID, slotID, itemInfo)
+    if not props then return results end
+
+    local userNames = {}
+    for alias in pairs(ALIAS_MAP) do
+        tinsert(userNames, alias)
+    end
+    table.sort(userNames)
+    for _, alias in ipairs(userNames) do
+        local fn = ResolveKeywordFn(alias)
+        if fn then
+            local ok, matched = pcall(fn, props)
+            if ok and matched then
+                tinsert(results, alias)
+            end
         end
     end
     return results

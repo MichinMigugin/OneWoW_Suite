@@ -26,6 +26,11 @@ local DEFAULTS = {
     lastModuleTab = "home",
     lastSubTabs = {},
     debugTrace = false,
+    -- Named expressions (SAVED) + keyword synonyms for suite-wide SearchExpand.
+    searchShortcuts = {
+        aliases = {}, -- [aliasName] = targetKeyword (no leading #)
+        saved = {},   -- [displayName] = predicate expression string
+    },
     portalHub = {
         escEnabled = true,
         randomHearthstone = true,

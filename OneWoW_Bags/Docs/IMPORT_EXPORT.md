@@ -178,7 +178,7 @@ literal and opens a read-only copy dialog (powered by `OneWoW.CopyPaste`).
 - `displayOrder`.
 - **v2 only:** `savedSearches` — transitive closure of saved searches referenced
   by exported custom category `searchExpression` values (`SAVED(Name)` tokens).
-  Collected from `db.global.savedSearches` at export time via
+  Collected from core `OneWoW.SearchExpand:GetAllSaved()` at export time via
   `ImportExport/Util.lua` (`CollectReferencedSavedSearches`).
 - **v2 only:** `enableJunkCategory`, `enableUpgradeCategory` — whether optional
   **1W Junk** / **1W Upgrades** builtins participate in layout.

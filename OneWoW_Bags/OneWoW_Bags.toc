@@ -44,7 +44,6 @@ Core\BlizzardBankHost.lua
 Core\Events.lua
 
 # Data
-Data\SavedSearches.lua
 Data\CategoryRefs.lua
 Data\Sorting.lua
 Data\Categories.lua

@@ -498,9 +498,8 @@ function Serializer:BuildExport(db)
     end
 
     local IEUtil = ns.ImportExport.Util
-    local savedSearches = IEUtil and IEUtil.CollectReferencedSavedSearches
-        and IEUtil.CollectReferencedSavedSearches(categories, g.savedSearches)
-        or {}
+    local savedStore = OneWoW.SearchExpand:GetAllSaved()
+    local savedSearches = IEUtil.CollectReferencedSavedSearches(categories, savedStore)
 
     local playerName = UnitName and UnitName("player") or "?"
     local realm = GetRealmName and GetRealmName() or ""

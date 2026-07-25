@@ -430,24 +430,19 @@ local function safeRestoreDisplayOrder(plan, db, planIdToDbId, nameRemap, skippe
     return false, dropped
 end
 
-local function applySavedSearches(plan, db)
+local function applySavedSearches(plan)
     if not plan.savedSearches or not next(plan.savedSearches) then
         return 0
     end
 
-    local g = db.global
-    g.savedSearches = g.savedSearches or {}
-    local SS = ns.SavedSearches
+    local SE = OneWoW.SearchExpand
     local merged = 0
-
     for name, query in pairs(plan.savedSearches) do
         if type(name) == "string" and type(query) == "string" then
-            local existingKey = SS and SS.FindKey and SS:FindKey(name)
-            if existingKey and existingKey ~= name then
-                g.savedSearches[existingKey] = nil
+            local ok = SE:SetSaved(name, query)
+            if ok then
+                merged = merged + 1
             end
-            g.savedSearches[name] = query
-            merged = merged + 1
         end
     end
 
@@ -593,7 +588,7 @@ function Applier:Apply(plan, controller, db)
     applyOptionalCategoryToggles(plan, db)
 
     -- 8. Saved searches referenced by imported categories
-    result.savedSearchesMerged = applySavedSearches(plan, db)
+    result.savedSearchesMerged = applySavedSearches(plan)
 
     -- 9. Section and category order (exported first, local extras appended)
     result.sectionOrderRestored = restoreSectionOrder(plan, db, planIdToDbId)

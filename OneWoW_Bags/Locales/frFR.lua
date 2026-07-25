@@ -282,6 +282,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["SETTING_SHOW_KEYWORDS_TOOLTIP"] = "Afficher les #mots-clés dans les infobulles",
     ["DESC_SHOW_KEYWORDS_TOOLTIP"] = "Tant que le gestionnaire de catégories est ouvert, ajoute la liste des #mots-clés correspondants (même syntaxe que les règles de catégorie personnalisées et la barre de recherche) aux infobulles d'objets. Utile pour créer des règles ; masqué le reste du temps.",
     ["TOOLTIP_KEYWORDS_HEADER"] = "Mots-clés correspondants :",
+    ["TOOLTIP_ALIASES_HEADER"] = "Alias correspondants :",
 
     ["SETTING_UNUSABLE_OVERLAY"] = "Superposition rouge sur les objets inutilisables",
     ["DESC_UNUSABLE_OVERLAY"] = "Affiche une superposition rouge semi-transparente sur les objets que votre personnage ne peut pas utiliser.",
@@ -539,4 +540,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["CLEANUP_KIND_STALE_SECTION_ORDER"] = "Entrées d'ordre de section obsolètes",
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "Entrées d'ordre de catégorie obsolètes",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "Entrées d'ordre d'affichage obsolètes",
+
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Named expressions and keyword aliases are managed in OneWoW Settings → Search Shortcuts.",
+    ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })

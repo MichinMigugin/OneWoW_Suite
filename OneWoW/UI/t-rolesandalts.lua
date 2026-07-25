@@ -180,6 +180,7 @@ function UI:CreateRolesAndAltsTab(parent)
                         items[#items + 1] = {
                             type = "checkbox",
                             text = GetClassColoredName(info.name, info.class),
+                            filterKey = info.name,
                             checked = ns.AltScope:IsCharInRole(roleId, charKey),
                             onToggle = function(isOn)
                                 ns.AltScope:SetCharInRole(roleId, charKey, isOn)

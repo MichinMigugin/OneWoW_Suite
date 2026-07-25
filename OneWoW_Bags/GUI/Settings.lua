@@ -5,7 +5,6 @@ local OneWoW_GUI = OneWoW_GUI
 local ipairs, pairs = ipairs, pairs
 local tinsert = tinsert
 local abs, floor = math.abs, math.floor
-local strgsub = string.gsub
 
 local C_Timer = C_Timer
 
@@ -15,9 +14,6 @@ ns.Settings = {}
 local Settings = ns.Settings
 local settingsFrame = nil
 local isCreated = false
-local savedSearchRows = {}
-local savedSearchListContent = nil
-local savedSearchEmptyText = nil
 local COMPACT_GAP_STEPS = { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 2.5, 3 }
 
 local function GetDB()
@@ -153,217 +149,7 @@ local function BuildSliderRow(container, label, yOffset, options)
     return yOffset, slider, lbl
 end
 
-local function ApplySingleLineText(fontString)
-    fontString:SetWordWrap(false)
-    if fontString.SetNonSpaceWrap then
-        fontString:SetNonSpaceWrap(false)
-    end
-    if fontString.SetMaxLines then
-        fontString:SetMaxLines(1)
-    end
-end
 
-local function SingleLinePreview(text)
-    return strgsub(text or "", "[\r\n]+", " ")
-end
-
-local function ShowSavedSearchPredicate(name, query)
-    local title = L["SAVED_SEARCH_COPY_TITLE"]
-    if name and name ~= "" then
-        title = title .. ": " .. name
-    end
-    OneWoW.CopyPaste:Copy(title, query or "", { readOnly = true, frameStrata = "FULLSCREEN_DIALOG" })
-end
-
-local function SetMainSearchText(text)
-    local infoBar = ns.InfoBar
-    local frame = infoBar and infoBar.GetFrame and infoBar:GetFrame()
-    local searchBox = frame and frame.searchBox
-    if not searchBox then return end
-
-    searchBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    searchBox:SetText(text)
-    searchBox:SetFocus()
-end
-
-local function RegisterSavedSearchSettingsPopups()
-    if StaticPopupDialogs["ONEWOW_BAGS_RENAME_SAVED_SEARCH"] then return end
-
-    StaticPopupDialogs["ONEWOW_BAGS_RENAME_SAVED_SEARCH"] = {
-        text = L["SAVED_SEARCH_RENAME_PROMPT"],
-        hasEditBox = true,
-        button1 = L["RENAME"],
-        button2 = CANCEL,
-        timeout = 0,
-        whileDead = true,
-        hideOnEscape = true,
-        OnAccept = function(self, oldName)
-            local SS = ns.SavedSearches
-            if not SS or not oldName then return end
-
-            local newName = self.EditBox:GetText()
-            local ok, err = SS:Rename(oldName, newName)
-            if not ok and err then
-                print(L[err])
-                C_Timer.After(0, function()
-                    local reopened = StaticPopup_Show("ONEWOW_BAGS_RENAME_SAVED_SEARCH", nil, nil, oldName)
-                    if reopened and reopened.EditBox then
-                        reopened.EditBox:SetText(newName or "")
-                        reopened.EditBox:SetFocus()
-                    end
-                end)
-            end
-        end,
-        EditBoxOnEnterPressed = function(self)
-            local parent = self:GetParent()
-            StaticPopupDialogs["ONEWOW_BAGS_RENAME_SAVED_SEARCH"].OnAccept(parent, parent.data)
-            parent:Hide()
-        end,
-        EditBoxOnEscapePressed = function(self)
-            self:GetParent():Hide()
-        end,
-    }
-
-    StaticPopupDialogs["ONEWOW_BAGS_DELETE_SAVED_SEARCH"] = {
-        text = L["SAVED_SEARCH_DELETE_CONFIRM"],
-        button1 = DELETE,
-        button2 = CANCEL,
-        timeout = 0,
-        whileDead = true,
-        hideOnEscape = true,
-        OnAccept = function(_, name)
-            if ns.SavedSearches and name then
-                ns.SavedSearches:Delete(name)
-            end
-        end,
-    }
-end
-
-function Settings:RefreshSavedSearchRows()
-    if not savedSearchListContent then return end
-
-    local SS = ns.SavedSearches
-    if not SS then return end
-
-    local names = SS:GetSortedNames()
-    local rowHeight = 38
-
-    if savedSearchEmptyText then
-        savedSearchEmptyText:SetShown(#names == 0)
-    end
-
-    for i, name in ipairs(names) do
-        local row = savedSearchRows[i]
-        if not row then
-            row = CreateFrame("Button", nil, savedSearchListContent, "BackdropTemplate")
-            row:SetHeight(rowHeight)
-            row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-
-            row.nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-            row.nameText:SetPoint("TOPLEFT", row, "TOPLEFT", 8, -5)
-            row.nameText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
-            row.nameText:SetJustifyH("LEFT")
-            row.nameText:SetHeight(14)
-            ApplySingleLineText(row.nameText)
-
-            row.queryText = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-            row.queryText:SetPoint("TOPLEFT", row.nameText, "BOTTOMLEFT", 0, -2)
-            row.queryText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
-            row.queryText:SetJustifyH("LEFT")
-            row.queryText:SetHeight(14)
-            ApplySingleLineText(row.queryText)
-
-            row:SetScript("OnEnter", function(myself)
-                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            end)
-            row:SetScript("OnLeave", function(myself)
-                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            end)
-            row:SetScript("OnMouseDown", function(myself, button)
-                if button ~= "RightButton" then return end
-                local rowName = myself.savedSearchName
-                local rowQuery = myself.savedSearchQuery
-                MenuUtil.CreateContextMenu(myself, function(_, rootDescription)
-                    rootDescription:CreateButton(L["SAVED_SEARCH_MENU_USE"], function()
-                        SetMainSearchText("SAVED(" .. rowName .. ")")
-                    end)
-                    rootDescription:CreateButton(L["SAVED_SEARCH_MENU_SHOW"], function()
-                        ShowSavedSearchPredicate(rowName, rowQuery)
-                    end)
-                    rootDescription:CreateButton(L["RENAME"], function()
-                        local popup = StaticPopup_Show("ONEWOW_BAGS_RENAME_SAVED_SEARCH", nil, nil, rowName)
-                        if popup and popup.EditBox then
-                            popup.EditBox:SetText(rowName)
-                            popup.EditBox:SetFocus()
-                        end
-                    end)
-                    rootDescription:CreateButton(DELETE, function()
-                        StaticPopup_Show("ONEWOW_BAGS_DELETE_SAVED_SEARCH", rowName, nil, rowName)
-                    end)
-                end)
-            end)
-
-            savedSearchRows[i] = row
-        end
-
-        local query = SS:Get(name) or ""
-        row.savedSearchName = name
-        row.savedSearchQuery = query
-        row:ClearAllPoints()
-        row:SetPoint("TOPLEFT", savedSearchListContent, "TOPLEFT", 0, -((i - 1) * rowHeight))
-        row:SetPoint("TOPRIGHT", savedSearchListContent, "TOPRIGHT", 0, -((i - 1) * rowHeight))
-        row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        row.nameText:SetText(SingleLinePreview(name))
-        row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        row.queryText:SetText(SingleLinePreview(query))
-        row.queryText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        row:Show()
-    end
-
-    for i = #names + 1, #savedSearchRows do
-        savedSearchRows[i]:Hide()
-    end
-
-    savedSearchListContent:SetHeight(math.max(1, #names * rowHeight))
-    RefreshSettingsScrollLayouts()
-end
-
-local function BuildSavedSearchList(container, yOffset)
-    RegisterSavedSearchSettingsPopups()
-
-    local lbl = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    lbl:SetPoint("TOPLEFT", container, "TOPLEFT", 15, yOffset)
-    lbl:SetText(L["SECTION_SAVED_SEARCHES"])
-    lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    yOffset = yOffset - lbl:GetStringHeight() - 6
-
-    local listFrame = CreateFrame("Frame", nil, container, "BackdropTemplate")
-    listFrame:SetPoint("TOPLEFT", container, "TOPLEFT", 15, yOffset)
-    listFrame:SetPoint("TOPRIGHT", container, "TOPRIGHT", -15, yOffset)
-    listFrame:SetHeight(170)
-    listFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    listFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    listFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local scrollFrame, scrollContent = OneWoW_GUI:CreateScrollFrame(listFrame, {})
-    savedSearchListContent = scrollContent
-
-    savedSearchEmptyText = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    savedSearchEmptyText:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 8, -8)
-    savedSearchEmptyText:SetText(L["SAVED_SEARCHES_EMPTY"])
-    savedSearchEmptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-    scrollFrame:HookScript("OnShow", function()
-        Settings:RefreshSavedSearchRows()
-    end)
-
-    Settings:RefreshSavedSearchRows()
-
-    return yOffset - 176
-end
 
 local function BuildSearchSettingsSection(sc, db, yOffset)
     yOffset = OneWoW_GUI:CreateSection(sc, { title = SEARCH, yOffset = yOffset })
@@ -379,8 +165,27 @@ local function BuildSearchSettingsSection(sc, db, yOffset)
         width = 240, fmt = "%d",
     })
 
-    searchY = searchY - 6
-    searchY = BuildSavedSearchList(searchContainer, searchY)
+    searchY = searchY - 12
+    local crumbDesc = OneWoW_GUI:CreateFS(searchContainer, 12)
+    crumbDesc:SetPoint("TOPLEFT", searchContainer, "TOPLEFT", 15, searchY)
+    crumbDesc:SetPoint("TOPRIGHT", searchContainer, "TOPRIGHT", -15, searchY)
+    crumbDesc:SetJustifyH("LEFT")
+    crumbDesc:SetWordWrap(true)
+    crumbDesc:SetText(L["SEARCH_SHORTCUTS_BREADCRUMB_DESC"])
+    crumbDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    searchY = searchY - 36
+
+    local openBtn = OneWoW_GUI:CreateFitTextButton(searchContainer, {
+        text = L["SEARCH_SHORTCUTS_OPEN_HUB"],
+        height = 28,
+    })
+    openBtn:SetPoint("TOPLEFT", searchContainer, "TOPLEFT", 15, searchY)
+    openBtn:SetScript("OnClick", function()
+        if OneWoW.UI and OneWoW.UI.OpenSearchShortcuts then
+            OneWoW.UI:OpenSearchShortcuts()
+        end
+    end)
+    searchY = searchY - 40
 
     return FinalizeContainer(searchContainer, searchY, yOffset)
 end
@@ -1452,9 +1257,6 @@ function Settings:Reset()
     settingsFrame = nil
     isCreated = false
     tabContents = {}
-    savedSearchRows = {}
-    savedSearchListContent = nil
-    savedSearchEmptyText = nil
     settingsSectionDropdownText = nil
     activeSettingsSection = 1
     ResetSharedBankRefreshers()

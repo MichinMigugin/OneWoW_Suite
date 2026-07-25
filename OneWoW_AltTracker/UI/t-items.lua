@@ -3,23 +3,22 @@ local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
 local PE = OneWoW.PredicateEngine
+local SE = OneWoW.SearchExpand
 
 ns.UI = ns.UI or {}
 
 local function MatchesSearch(itemData, searchText)
     if not searchText or searchText == "" then return true end
-    if PE then
-        local itemInfo = {
-            hyperlink = itemData.itemLink,
-            count = itemData.totalQty or 1,
-            quality = itemData.quality,
-        }
-        if itemData.vendorPrice and itemData.vendorPrice > 0 then
-            itemInfo.vendorprice = itemData.vendorPrice
-        end
-        local ok, matched = pcall(PE.CheckItem, PE, searchText, itemData.itemID, nil, nil, itemInfo)
-        if ok then return matched == true end
+    local itemInfo = {
+        hyperlink = itemData.itemLink,
+        count = itemData.totalQty or 1,
+        quality = itemData.quality,
+    }
+    if itemData.vendorPrice and itemData.vendorPrice > 0 then
+        itemInfo.vendorprice = itemData.vendorPrice
     end
+    local ok, matched = pcall(SE.CheckItem, SE, searchText, itemData.itemID, nil, nil, itemInfo)
+    if ok then return matched == true end
     local name = itemData.itemName
     return name and name:lower():find(searchText:lower(), 1, true) ~= nil
 end

@@ -64,7 +64,7 @@ Runs when A2/A3 do not return. Items resolved here can reuse **`baseCategoryCach
 
 **What never enters `baseCategoryCache`:** slot overlays (**Upgrades**, **Recent**) — they only exist in `GetItemCategory`.
 
-**Custom category evaluation:** `InferFilterMode` and **`SavedSearches:Expand`** (via `SearchExpand`, which also resolves `CATEGORY(Name)`) behave as before; expand runs only when the expression contains a literal `SAVED(` or `CATEGORY(` substring (`needsExpand` optimization). `CATEGORY(Name)` expands a **custom search-mode** category's `searchExpression` by display name — rule match only, not assignment membership.
+**Custom category evaluation:** `InferFilterMode` and **`OneWoW.SearchExpand:Expand`** (resolves `SAVED(Name)` from core store and `CATEGORY(Name)` via Bags `_API`) behave as before; expand runs only when the expression contains a literal `SAVED(` or `CATEGORY(` substring (`needsExpand` optimization). `CATEGORY(Name)` expands a **custom search-mode** category's `searchExpression` by display name — rule match only, not assignment membership.
 
 ### Manual pins (`ResolveManualCategoryName`) — detail
 

@@ -282,6 +282,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["SETTING_SHOW_KEYWORDS_TOOLTIP"] = "Mostrar #palavras-chave nas dicas",
     ["DESC_SHOW_KEYWORDS_TOOLTIP"] = "Enquanto o gerenciador de categorias estiver aberto, adiciona a lista de #palavras-chave correspondentes (a mesma sintaxe usada nas regras de categoria personalizadas e na barra de busca) às dicas de item. Útil para criar regras; oculto nas demais ocasiões.",
     ["TOOLTIP_KEYWORDS_HEADER"] = "Palavras-chave correspondentes:",
+    ["TOOLTIP_ALIASES_HEADER"] = "Apelidos correspondentes:",
 
     ["SETTING_UNUSABLE_OVERLAY"] = "Sobreposição vermelha em itens inutilizáveis",
     ["DESC_UNUSABLE_OVERLAY"] = "Mostra uma sobreposição vermelha semitransparente em itens que seu personagem não pode usar.",
@@ -539,4 +540,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["CLEANUP_KIND_STALE_SECTION_ORDER"] = "Entradas de ordem de seção obsoletas",
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "Entradas de ordem de categoria obsoletas",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "Entradas de ordem de exibição obsoletas",
+
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Named expressions and keyword aliases are managed in OneWoW Settings → Search Shortcuts.",
+    ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })

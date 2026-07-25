@@ -2,6 +2,7 @@ local _, ns = ...
 
 local L = ns.L
 local PE = OneWoW.PredicateEngine
+local SE = OneWoW.SearchExpand
 local BagTypes = OneWoW.Inventory.BagTypes
 local Constants = ns.Constants
 
@@ -424,7 +425,6 @@ local function ResolveManualCategoryName(itemID, db, disabled, containerType)
 end
 
 local function CollectCustomPredicateCandidates(itemID, bagID, slotID, itemInfo, disabled, cands)
-    local SavedSearches = ns.SavedSearches
     for i = 1, #precomputedCustomCands do
         local entry = precomputedCustomCands[i]
         local categoryData = entry.categoryData
@@ -436,9 +436,8 @@ local function CollectCustomPredicateCandidates(itemID, bagID, slotID, itemInfo,
             if entry.filterMode == "search" then
                 local expr = entry.expression
                 if expr then
-                    if entry.needsExpand and SavedSearches then
-                        -- Expand also resolves CATEGORY() via SearchExpand.
-                        expr = SavedSearches:Expand(expr)
+                    if entry.needsExpand then
+                        expr = SE:Expand(expr)
                     end
                     if PE:CheckItem(expr, itemID, bagID, slotID, itemInfo or {}) then
                         tinsert(cands, { name = entry.name, tieKey = entry.categoryId, isCustom = true })

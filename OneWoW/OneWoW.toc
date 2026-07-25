@@ -113,6 +113,7 @@ Core\FirstRunWizard.lua
 Services\TooltipScanner.lua
 Services\ItemLevel.lua
 Services\PredicateEngine.lua
+Services\SearchExpand.lua
 Services\AHItemKeys.lua
 Services\ItemPrices.lua
 Services\ItemDataLoader.lua
@@ -168,6 +169,7 @@ UI\t-home.lua
 UI\settings-shared-panel.lua
 UI\t-settings.lua
 UI\t-rolesandalts.lua
+UI\t-searchshortcuts.lua
 UI\t-profiles.lua
 UI\t-charprofiles.lua
 UI\t-managefeatures.lua

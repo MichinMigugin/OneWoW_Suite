@@ -43,6 +43,27 @@ function OneWoW_Bags_API.GetProfile()
     return ns.Profile
 end
 
+--- Live searchExpression for a custom search-mode category (display name).
+--- Nil when missing, type-mode, pin-only, or builtin.
+---@param name string|nil
+---@return string|nil expression
+---@return string|nil displayName
+function OneWoW_Bags_API.GetCategorySearchExpression(name)
+    return ns.CategoryRefs:FindSearchExpression(name)
+end
+
+--- Notify when custom category search rules may have changed.
+---@param id string
+---@param callback fun()
+function OneWoW_Bags_API.RegisterCategoryRulesChanged(id, callback)
+    ns.CategoryRefs:RegisterRulesChanged(id, callback)
+end
+
+---@param id string
+function OneWoW_Bags_API.UnregisterCategoryRulesChanged(id)
+    ns.CategoryRefs:UnregisterRulesChanged(id)
+end
+
 --- Toggle the main Bags window.
 function OneWoW_Bags_API.Toggle()
     if ns.GUI and ns.GUI.Toggle then

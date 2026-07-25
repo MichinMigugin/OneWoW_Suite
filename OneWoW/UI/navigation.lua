@@ -9,8 +9,13 @@ local SetCursor = SetCursor
 local ResetCursor = ResetCursor
 
 function UI:OpenManageFeatures()
-    UI:SelectModuleTab("settings")
+    UI:Show("settings")
     UI:SelectSubTab("settings", "managefeatures")
+end
+
+function UI:OpenSearchShortcuts()
+    UI:Show("settings")
+    UI:SelectSubTab("settings", "searchshortcuts")
 end
 
 --- Pointer text + accent link that opens Settings > Manage Features.

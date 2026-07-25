@@ -154,6 +154,9 @@ function CategoryController:RefreshUI(options)
     options = options or {}
     if options.invalidate ~= false then
         self.addon:InvalidateCategorization(options.scope)
+        if ns.CategoryRefs then
+            ns.CategoryRefs:NotifyRulesChanged()
+        end
     end
     if options.refreshUI ~= false and self.addon.CategoryManagerUI and self.addon.CategoryManagerUI.Refresh then
         self.addon.CategoryManagerUI:Refresh()

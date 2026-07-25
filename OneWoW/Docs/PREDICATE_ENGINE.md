@@ -113,7 +113,12 @@ All functions are method-style (`PE:Func(...)`). Exported constants use dot synt
 | `PE:RegisterKeyword(nameOrNames, func)` | Register a `#keyword` (or a list of aliases — first name is canonical). `func(props)` returns truthy to match. Wipes `compiledCache`. Re-registering the same predicate function under a new name keeps the existing canonical entry. |
 | `PE:RegisterProperty(nameOrNames, def)` | Register a numeric, string, or set property for comparison syntax (e.g. `haste>=200`, `forspec=73`). `def = { field = "fieldName", type = "number"\|"string"\|"set", unit = "money"? }`. `unit = "money"` enables money parsing (`100g`, `5s50c`) on the RHS for number-typed properties. A `set` property's field holds a lookup table `{ [id] = true }`; `=`/`==` test membership and `!=` non-membership (ordered comparators are meaningless for nominal IDs and return false). Wipes `compiledCache`. |
 | `PE:GetAllKeywords() -> { canonical, aliases[] }[]` | Every registered keyword in registration order. `aliases` excludes the canonical name and is alphabetically sorted. Intended for help/reference UIs. |
-| `PE:GetMatchingKeywords(itemID, bagID?, slotID?, itemInfo?) -> string[]` | Return canonical names of every registered keyword that matches this item, in registration order. With only hyperlink context, policy bind keywords such as `#boe`, `#bou`, `#warbound`, and `#wue` can still match via tooltip fallback, while current-bound state (`#bop` / `#soulbound` / `#bound`) cannot be inferred. Current slot-state keywords such as `#new`, `#locked`, `#tradeableloot`, durability, equipment-set membership, count, refund/scrap state, and battle-pay state require `bagID`/`slotID`. |
+| `PE:GetMatchingKeywords(itemID, bagID?, slotID?, itemInfo?) -> string[]` | Return canonical built-in keyword names that match this item, in registration order. With only hyperlink context, policy bind keywords such as `#boe`, `#bou`, `#warbound`, and `#wue` can still match via tooltip fallback, while current-bound state (`#bop` / `#soulbound` / `#bound`) cannot be inferred. Current slot-state keywords such as `#new`, `#locked`, `#tradeableloot`, durability, equipment-set membership, count, refund/scrap state, and battle-pay state require `bagID`/`slotID`. User synonyms are **not** included — use `GetMatchingAliases`. |
+| `PE:GetMatchingAliases(itemID, bagID?, slotID?, itemInfo?) -> string[]` | User synonym aliases whose target built-in matches this item, sorted alphabetically. |
+| `PE:RegisterAlias(name, targetKeyword) -> ok, err?` | Register a one-hop synonym (`#decks` → same fn as `#combinable`). Rejects collisions with built-in `KEYWORD_MAP` names and requires the target to be a built-in keyword (not another alias). Wipes `compiledCache`. |
+| `PE:RegisterAliases(map)` | Wipe + rebuild the user alias map from `{ [alias] = targetKeyword, ... }`, then wipe `compiledCache`. Used by Search Shortcuts on login / profile apply. |
+| `PE:GetAliases() -> table` | Shallow copy of the current user alias map. |
+| `PE:IsBuiltinKeyword(name) -> bool` | Whether `name` is a built-in `KEYWORD_MAP` entry (not a user alias). |
 
 ### Item helpers
 
@@ -196,6 +201,31 @@ end)
 - Keyword callbacks are invoked with only `props`. If the callback needs slot context, read `props._bagID` / `props._slotID` (set when `BuildProps` was called with slot context).
 - Avoid load-time gating on third-party globals. Always register the keyword, and check for the optional dependency **inside** the callback so load-order variability across `OptionalDeps` does not silently drop the keyword.
 - The first name in the list is treated as canonical for `GetAllKeywords` and `GetMatchingKeywords`.
+
+### Keyword synonyms (aliases)
+
+User synonyms are **not** new predicates — they remap an unknown `#token` to an existing built-in keyword function:
+
+```lua
+PE:RegisterAlias("decks", "combinable")  -- #decks → same as #combinable
+PE:RegisterAliases({ decks = "combinable", mats = "craftingreagent" })
+```
+
+Resolution order for `#token`: `KEYWORD_MAP` → `ALIAS_MAP` (one hop / small chain with cycle guard) → fail-closed always-false. Alias names must not collide with built-ins (including `#combineready`). Prefer managing aliases through **OneWoW Settings → Search Shortcuts** (persisted in `OneWoW_DB.global.searchShortcuts.aliases`); that path calls `RegisterAliases` on login.
+
+### Named expressions and CATEGORY expand (`OneWoW.SearchExpand`)
+
+`PE:Compile` / `PE:CheckItem` stay **pure** (no `SAVED` / `CATEGORY` expand). Suite call sites that accept **user-authored** expressions should go through `OneWoW.SearchExpand`:
+
+| Function | Purpose |
+|---|---|
+| `SearchExpand:Expand(expr) -> string` | Expand `SAVED(Name)` from core `searchShortcuts.saved` and `CATEGORY(Name)` via an optional Bags-registered resolver; shared depth/cycle guards; missing refs fail closed |
+| `SearchExpand:Compile(expr) -> compiled, err?` | `Expand` then `PE:Compile` |
+| `SearchExpand:CheckItem(...)` | `Expand` then `PE:CheckItem` |
+| `SearchExpand:SetCategoryResolver(fn)` | Bags registers `GetCategorySearchExpression` on load; without Bags, `CATEGORY` fails closed |
+| Saved CRUD / aliases | `SetSaved` / `RenameSaved` / `DeleteSaved` / `SetAlias` / … — hub Settings + Bags info-bar Save |
+
+Hardcoded internal expressions (e.g. toast-loot / autoopen predicates) may keep using raw `PE:Compile`.
 
 ### Adding a property
 

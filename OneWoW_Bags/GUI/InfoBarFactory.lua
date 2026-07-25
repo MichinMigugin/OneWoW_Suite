@@ -23,12 +23,9 @@ local StaticPopup_Show = StaticPopup_Show
 ns.InfoBarFactory = {}
 
 local function SaveSearch(name, query)
-    local SS = ns.SavedSearches
-    if not SS then return end
-
-    local ok, err = SS:Set(name, query)
+    local ok, err = OneWoW.SearchExpand:SetSaved(name, query)
     if not ok and err then
-        print(L[err])
+        print(L[err] or err)
     end
 end
 
@@ -51,14 +48,14 @@ local function RegisterSavedSearchPopups()
         whileDead = true,
         hideOnEscape = true,
         OnAccept = function(dialog)
-            local SS = ns.SavedSearches
+            local SE = OneWoW.SearchExpand
             local query = dialog.data and dialog.data.query
-            if not SS or not query then return end
+            if not query then return end
 
             local name = dialog.EditBox:GetText()
-            local normalized, err = SS:NormalizeName(name)
+            local normalized, err = SE:NormalizeSavedName(name)
             if not normalized then
-                if err then print(L[err]) end
+                if err then print(L[err] or err) end
                 C_Timer.After(0, function()
                     local reopened = StaticPopup_Show("ONEWOW_BAGS_SAVE_SEARCH", nil, nil, dialog.data)
                     if reopened and reopened.EditBox then
@@ -69,7 +66,7 @@ local function RegisterSavedSearchPopups()
                 return
             end
 
-            local existingKey = SS:FindKey(normalized)
+            local existingKey = SE:FindSavedKey(normalized)
             if existingKey then
                 ShowSavedSearchOverwrite(existingKey, query)
                 return

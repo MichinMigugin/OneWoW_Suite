@@ -282,6 +282,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["SETTING_SHOW_KEYWORDS_TOOLTIP"] = "#Schlüsselwörter in Tooltips anzeigen",
     ["DESC_SHOW_KEYWORDS_TOOLTIP"] = "Solange die Kategorieverwaltung geöffnet ist, die Liste passender #Schlüsselwörter (dieselbe Syntax wie bei benutzerdefinierten Kategorieregeln und der Suchleiste) in Gegenstandstooltips einfügen. Nützlich beim Erstellen von Regeln; sonst ausgeblendet.",
     ["TOOLTIP_KEYWORDS_HEADER"] = "Passende Schlüsselwörter:",
+    ["TOOLTIP_ALIASES_HEADER"] = "Passende Aliase:",
 
     ["SETTING_UNUSABLE_OVERLAY"] = "Rote Überlagerung bei nicht nutzbaren Gegenständen",
     ["DESC_UNUSABLE_OVERLAY"] = "Zeigt eine halbtransparente rote Überlagerung auf Gegenständen, die Ihr Charakter nicht nutzen kann.",
@@ -539,4 +540,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["CLEANUP_KIND_STALE_SECTION_ORDER"] = "Veraltete Sektionsreihenfolge-Einträge",
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "Veraltete Kategoriereihenfolge-Einträge",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "Veraltete Anzeigereihenfolge-Einträge",
+
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Named expressions and keyword aliases are managed in OneWoW Settings → Search Shortcuts.",
+    ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })

@@ -5,6 +5,7 @@ local DB = OneWoW_GUI.DB
 
 local Constants = ns.Constants
 local PE = OneWoW.PredicateEngine
+local SE = OneWoW.SearchExpand
 
 local tinsert, sort, wipe = tinsert, sort, wipe
 local ipairs, pairs = ipairs, pairs
@@ -493,14 +494,9 @@ function WH:FilterBySearch(buttons, searchText, dest)
         return buttons
     end
 
-    if ns.SavedSearches then
-        -- Expand also resolves CATEGORY() via SearchExpand.
-        searchText = ns.SavedSearches:Expand(searchText)
-    end
-
     local filtered = dest or {}
     wipe(filtered)
-    local compiled = PE:Compile(searchText)
+    local compiled = SE:Compile(searchText)
     if not compiled then
         return filtered
     end

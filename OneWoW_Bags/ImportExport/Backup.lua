@@ -4,7 +4,7 @@ ns.ImportExport = ns.ImportExport or {}
 ns.ImportExport.Backup = ns.ImportExport.Backup or {}
 local Backup = ns.ImportExport.Backup
 
-local pairs, time = pairs, time
+local pairs, time, type = pairs, time, type
 local deepCopy = ns.ImportExport.Util.DeepCopy
 
 local BACKUP_FIELDS = {
@@ -15,7 +15,6 @@ local BACKUP_FIELDS = {
     "disabledCategories",
     "categoryOrder",
     "displayOrder",
-    "savedSearches",
     "enableJunkCategory",
     "enableUpgradeCategory",
 }
@@ -35,6 +34,8 @@ function Backup:Snapshot(tag, db)
     for _, key in pairs(BACKUP_FIELDS) do
         snapshot.tables[key] = deepCopy(g[key])
     end
+    local SE = OneWoW.SearchExpand
+    snapshot.tables.savedSearches = deepCopy(SE:GetAllSaved())
     g.importBackup = snapshot
     return true
 end
@@ -72,6 +73,20 @@ function Backup:Restore(db, controller)
             g[key] = val
         else
             g[key] = {}
+        end
+    end
+
+    local SE = OneWoW.SearchExpand
+    local restored = snap.tables.savedSearches
+    local current = SE:GetAllSaved()
+    for name in pairs(current) do
+        SE:DeleteSaved(name)
+    end
+    if type(restored) == "table" then
+        for name, query in pairs(restored) do
+            if type(name) == "string" and type(query) == "string" then
+                SE:SetSaved(name, query)
+            end
         end
     end
 

@@ -1,6 +1,10 @@
 # OneWoW Suite Changelog
 
 # OneWoW
+## Features
+- Search Shortcuts in Settings: keyword synonyms (`#decks` → `#combinable`) and named expressions (`SAVED(Name)`) work suite-wide anywhere search expressions are used
+- `CATEGORY(Name)` in those expressions expands Bags custom search-category rules when Bags is loaded (Mail shipments, overlays, and other suite filters included)
+
 ## Fixes
 - Collected / known / missing overlays update when collection status changes (transmog, mounts, pets, toys, heirlooms, decor, recipes) and after login settle; junk/protected marks refresh without a reload
 
@@ -36,6 +40,9 @@
 ---
 
 # Mail
+## Features
+- Shipment match expressions support `SAVED(Name)`, `CATEGORY(Name)`, and keyword synonyms from Search Shortcuts
+
 ## Fixes
 - Closing with the X works when the window was opened via `/owmail` (not only from a mailbox)
 - Selected collect no longer keeps taking mail below the checked rows after each delete shifts the inbox
@@ -56,6 +63,8 @@
 - Search transfer and Ctrl+Right-click deposit work while the guild bank is open (fills partial stacks, then empty slots)
 ## Settings
 - General tab no longer duplicates OneWoW appearance settings (use OneWoW Settings)
+- Named search shortcuts move to OneWoW Settings → Search Shortcuts; Bags Search keeps history limit and a link to that hub tab
+- Saving from the bags/bank search bar still works; shortcuts are stored suite-wide
 
 ---
 

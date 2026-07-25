@@ -1395,7 +1395,7 @@ function VendorPanel:GetSearchMatches(expr, collectDetails)
         return { valid = false, empty = true, error = nil, totalCount = 0, itemIDs = {}, items = {} }
     end
     local PE = OneWoW.PredicateEngine
-    local compiled, err = PE:Compile(expr)
+    local compiled, err = OneWoW.SearchExpand:Compile(expr)
     if not compiled then
         return { valid = false, empty = false, error = err, totalCount = 0, itemIDs = {}, items = {} }
     end
@@ -1410,7 +1410,8 @@ function VendorPanel:GetSearchMatches(expr, collectDetails)
             for slot = 1, numSlots do
                 local itemInfo = C_Container.GetContainerItemInfo(bag, slot)
                 if itemInfo and itemInfo.itemID and not GetItemStatus():IsItemProtected(itemInfo.itemID) then
-                    if PE:CheckItem(expr, itemInfo.itemID, bag, slot, itemInfo) then
+                    local props = PE:BuildProps(itemInfo.itemID, bag, slot, itemInfo)
+                    if PE:SafeEvaluate(compiled, props) then
                         totalCount = totalCount + 1
                         itemIDs[itemInfo.itemID] = true
                         if detailLimit > 0 and #items < detailLimit then

@@ -2,7 +2,7 @@ local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
-local PE = OneWoW.PredicateEngine
+local SE = OneWoW.SearchExpand
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
@@ -14,7 +14,7 @@ local function MatchesShoppingSearch(searchText, itemID, itemLink, displayName, 
             count = quantity or 1,
             quality = C_Item.GetItemQualityByID(itemID)
         }
-        local ok, matched = pcall(PE.CheckItem, PE, searchText, itemID, nil, nil, itemInfo)
+        local ok, matched = pcall(SE.CheckItem, SE, searchText, itemID, nil, nil, itemInfo)
         if ok then return matched == true end
     end
     return displayName and displayName:lower():find(searchText:lower(), 1, true) ~= nil

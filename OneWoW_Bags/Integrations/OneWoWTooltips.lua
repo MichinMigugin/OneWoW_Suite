@@ -19,11 +19,12 @@ local function IsManagerOpen()
     return ns.CategoryManagerUI:IsOpen()
 end
 
-local function FormatKeywordLines(keywords)
-    local lines = {}
+local function AppendTaggedLines(lines, header, names)
+    if #names == 0 then return end
+
     tinsert(lines, {
         type = "header",
-        text = L["TOOLTIP_KEYWORDS_HEADER"],
+        text = header,
     })
 
     local chunk = {}
@@ -37,15 +38,13 @@ local function FormatKeywordLines(keywords)
         chunk = {}
     end
 
-    for _, kw in ipairs(keywords) do
-        tinsert(chunk, "#" .. kw)
+    for _, name in ipairs(names) do
+        tinsert(chunk, "#" .. name)
         if #chunk >= MAX_KEYWORDS_PER_LINE then
             flush()
         end
     end
     flush()
-
-    return lines
 end
 
 local function KeywordProvider(_, context)
@@ -54,12 +53,15 @@ local function KeywordProvider(_, context)
     if not IsEnabled() then return nil end
     if not IsManagerOpen() then return nil end
 
-    local keywords = PE:GetMatchingKeywords(
-        context.itemID, nil, nil, { hyperlink = context.itemLink }
-    )
-    if #keywords == 0 then return nil end
+    local itemInfo = { hyperlink = context.itemLink }
+    local keywords = PE:GetMatchingKeywords(context.itemID, nil, nil, itemInfo)
+    local aliases = PE:GetMatchingAliases(context.itemID, nil, nil, itemInfo)
+    if #keywords == 0 and #aliases == 0 then return nil end
 
-    return FormatKeywordLines(keywords)
+    local lines = {}
+    AppendTaggedLines(lines, L["TOOLTIP_KEYWORDS_HEADER"], keywords)
+    AppendTaggedLines(lines, L["TOOLTIP_ALIASES_HEADER"], aliases)
+    return lines
 end
 
 local function RegisterWithOneWoW()

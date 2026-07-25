@@ -237,6 +237,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["SETTING_SHOW_KEYWORDS_TOOLTIP"] = "툴팁에 #키워드 표시",
     ["DESC_SHOW_KEYWORDS_TOOLTIP"] = "분류 관리자가 열려 있는 동안 맞는 #키워드 목록(사용자 분류 규칙 및 검색창과 동일한 구문)을 아이템 툴팁에 추가합니다. 규칙 작성에 유용하며, 그 외에는 숨겨집니다.",
     ["TOOLTIP_KEYWORDS_HEADER"] = "일치하는 키워드:",
+    ["TOOLTIP_ALIASES_HEADER"] = "일치하는 별칭:",
     ["SETTING_UNUSABLE_OVERLAY"] = "사용 불가 아이템 빨간 오버레이",
     ["DESC_UNUSABLE_OVERLAY"] = "캐릭터가 사용할 수 없는 아이템에 반투명 빨간 오버레이를 표시합니다.",
     ["SETTING_DIM_JUNK"] = "잡동사니 흐리게",
@@ -472,4 +473,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["CLEANUP_KIND_STALE_SECTION_ORDER"] = "오래된 구역 순서 항목",
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "오래된 분류 순서 항목",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "오래된 표시 순서 항목",
+
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Named expressions and keyword aliases are managed in OneWoW Settings → Search Shortcuts.",
+    ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })

@@ -55,8 +55,7 @@ Core\Database.lua                  ← DB:Init, defaults, init bridges
 Core\BagEquip.lua                  ← equipped-bag pickup/swap/empty/move-contents (used by BagsBar; BagTypes via OneWoW.Inventory)
 Core\Events.lua                    ← event router (RuntimeEvents; bag/bank/guild via Inventory)
 
-Data\SavedSearches.lua             ← user-defined SAVED(Name) search shortcuts
-Data\CategoryRefs.lua              ← CATEGORY(Name) refs + SearchExpand (SAVED+CATEGORY)
+Data\CategoryRefs.lua              ← CATEGORY(Name) lookup + rename rewrite; rules-changed bus (expand lives in core SearchExpand)
 Data\Sorting.lua                   ← item sort comparators (SortButtons)
 Data\Categories.lua                ← builtin category defs, classification engine (consumes OneWoW.PredicateEngine)
 Data\BaganatorDefaultMap.lua       ← Baganator default category name map
@@ -360,12 +359,15 @@ CategoryManager:AssignCategories()
 Search uses `OneWoW.PredicateEngine` (tokenizer, AST, evaluation). For full engine internals and public API, see [`OneWoW/Docs/PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
 
 - Keywords, properties, operators (`&` `|` `!`), parentheses, bare name text
-- `SAVED(Name)` / `CATEGORY(Name)` shortcuts are expanded by `Data\SavedSearches.lua` → `SearchExpand` (`Data\CategoryRefs.lua`) before PredicateEngine evaluation. Saved searches are stored as `db.global.savedSearches[displayName] = predicate`. `CATEGORY(Name)` resolves custom search-mode categories by display name.
+- `SAVED(Name)` / `CATEGORY(Name)` shortcuts are expanded by core
+  `OneWoW.SearchExpand` before PredicateEngine evaluation. Named expressions
+  live in `OneWoW_DB.global.searchShortcuts.saved`. `CATEGORY(Name)` resolves
+  custom search-mode categories via `OneWoW_Bags_API.GetCategorySearchExpression`.
 - `#recent` is registered at `Data\Categories.lua` load via `PE:RegisterKeyword` (Bags-only): GUID map + duration only. `#new` / `IsNew` in the engine use `C_NewItems` via `BuildProps` (can lag until `InvalidatePropsCache`); `#recent` does not use that cached flag for classification
 - `#catalyst` / `#catalystupgrade` are registered by the engine itself with call-time `TransmogUpgradeMaster_API` checks (no-op if the addon is absent)
-- `WH:FilterBySearch` expands saved searches, then compiles the expression once per refresh and evaluates per button via `PE:CheckItem`
+- `WH:FilterBySearch` uses `SearchExpand:Compile` once per refresh and evaluates per button via `PE:SafeEvaluate` / compiled predicates
 - Search history is UI-owned by `InfoBarFactory` on every container search box; stored in `db.global.searchHistory` up to `db.global.searchHistoryLimit` (Settings → General → Search; `0` disables the focus dropdown).
-- Save-search button (`savedSearches = true`) on bags, personal/warband bank, and guild bank info bars; popups register once at `InfoBarFactory` load with query passed via `StaticPopup` data; writes to global `savedSearches`. Manage names in Settings → General → Search (not Bags).
+- Save-search button (`savedSearches = true`) on bags, personal/warband bank, and guild bank info bars writes the **core** Search Shortcuts store. Manage names/aliases in **OneWoW Settings → Search Shortcuts** (Bags Search settings keep history limit + a breadcrumb deep-link).
 
 ```
 InfoBar / BankInfoBar / GuildBankInfoBar: search changed
@@ -373,9 +375,7 @@ InfoBar / BankInfoBar / GuildBankInfoBar: search changed
        (dedupes: unchanged text — incl. the empty fire during open — is dropped)
   └─→ *GUI:RefreshLayout
        └─→ filterButtons → WH:FilterBySearch
-            ├─→ SavedSearches:Expand(expr)
-            └─→ PE:CheckItem(expandedExpr, itemID, bagID, slotID, info)
-                 ├─→ Compile(expandedExpr) → cached AST
+            └─→ SearchExpand:Compile(expr)  -- Expand SAVED/CATEGORY then PE:Compile
                  ├─→ BuildProps(...) → cached props (+ tooltip laziness inside props)
                  └─→ Evaluate AST → true/false
 ```
@@ -508,20 +508,21 @@ Each view exposes `Layout(...)` and returns total content height.
 - Bank category mode: `"category"`, `"section"` (shared section collapse state via `categorySections`); bank tab mode: `"tab"` (with legacy fallbacks to `collapsedBankSections` in getters)
 - Guild bank tab mode: `"tab"` (with legacy fallbacks to `collapsedGuildBankSections`)
 
-### SavedSearches (`Data\SavedSearches.lua`)
+### SearchExpand / CategoryRefs
 
-Stores named search shortcuts in `db.global.savedSearches` and expands
-`SAVED(Name)` tokens before expressions reach PredicateEngine. Names are matched
-case-insensitively while preserving display casing. Missing, invalid, cyclic, or
-too-deep references expand to a never-match predicate. Renaming a saved search
-also updates references in other saved searches, search history, and custom
-category search expressions.
+Named expressions (`SAVED`) and keyword aliases live in core
+`OneWoW.SearchExpand` / `OneWoW_DB.global.searchShortcuts`. Bags
+`Data\CategoryRefs.lua` supplies category name → search-expression lookup for
+`CATEGORY(Name)`, fires `RegisterCategoryRulesChanged` when rules invalidate,
+and rewrites `CATEGORY(...)` / `SAVED(...)` text inside Bags SV on rename.
+Missing, invalid, cyclic, or too-deep references expand to a never-match
+predicate.
 
 ### PredicateEngine
 
 Lives in OneWoW core as the service `OneWoW.PredicateEngine` (`OneWoW/Services/PredicateEngine.lua`, published on the `OneWoW` global). Bags consumes it via `local PE = OneWoW.PredicateEngine`. Full reference: [`OneWoW/Docs/PREDICATE_ENGINE.md`](../../OneWoW/Docs/PREDICATE_ENGINE.md).
 
-Used by Bags for: search filtering (`WH:FilterBySearch` after saved-search expansion), custom category expressions and builtin category search strings in `Data/Categories.lua`, item button state (`ItemButton` junk / new / upgrade flags), and keyword tooltips in `Integrations/OneWoWTooltips.lua`.
+Used by Bags for: search filtering (`WH:FilterBySearch` via `SearchExpand:Compile`), custom category expressions and builtin category search strings in `Data/Categories.lua`, item button state (`ItemButton` junk / new / upgrade flags), and keyword tooltips in `Integrations/OneWoWTooltips.lua`.
 
 Cache invalidation boundary: `InvalidateCategorization("props")` on `BAG_UPDATE_DELAYED` calls `PE:InvalidatePropsCache()` (props + slot-tier tooltip caches only — link-tier tooltip caches and the character-usability cache survive bag updates; see PREDICATE_ENGINE.md). Full `PE:InvalidateCache()` runs on keyword/property registration, settings changes that reshape categorization, and manual refresh. Character-context events (level up, spec/talent, skill lines) route through `PE:InvalidateCharacterContext()`.
 

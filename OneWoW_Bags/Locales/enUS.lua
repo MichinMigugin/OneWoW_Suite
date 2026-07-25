@@ -281,6 +281,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["SETTING_SHOW_KEYWORDS_TOOLTIP"] = "Show #keywords in tooltips",
     ["DESC_SHOW_KEYWORDS_TOOLTIP"] = "While the Category Manager is open, add the list of matching #keywords (the same syntax used in custom category rules and the search bar) to item tooltips. Useful for building category rules; hidden at all other times.",
     ["TOOLTIP_KEYWORDS_HEADER"] = "Matched keywords:",
+    ["TOOLTIP_ALIASES_HEADER"] = "Matched aliases:",
 
     ["SETTING_UNUSABLE_OVERLAY"] = "Red Overlay on Unusable Items",
     ["DESC_UNUSABLE_OVERLAY"] = "Show a semi-transparent red overlay on items your character cannot use.",
@@ -538,6 +539,9 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["CLEANUP_KIND_STALE_SECTION_ORDER"] = "Stale section order entries",
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "Stale category order entries",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "Stale display order entries",
+
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Named expressions and keyword aliases are managed in OneWoW Settings → Search Shortcuts.",
+    ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })
 
 ns.L = OneWoW.Locale:GetTable(ADDON_NAME)

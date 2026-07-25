@@ -4,7 +4,7 @@ if not BagBarModule then return end
 
 local OneWoW_GUI = OneWoW_GUI
 
-local PE = OneWoW.PredicateEngine
+local SE = OneWoW.SearchExpand
 local Inventory = OneWoW.Inventory
 
 local strtrim = strtrim
@@ -470,7 +470,7 @@ function BagBarModule:ShouldShowItem(bag, slot, itemID)
     local s = GetSettings()
     local expr = BuildBagBarEvalExpr(s)
     local info = C_Container.GetContainerItemInfo(bag, slot)
-    if not PE:CheckItem(expr, itemID, bag, slot, info) then return false end
+    if not SE:CheckItem(expr, itemID, bag, slot, info) then return false end
     return self:IsItemUsableForBar(bag, slot, itemID)
 end
 

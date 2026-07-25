@@ -7,6 +7,7 @@ local _, ns = ...
 -- See OneWoW_AltTracker_Storage/Docs/ARCHITECTURE.md.
 
 local PE = OneWoW.PredicateEngine
+local SE = OneWoW.SearchExpand
 local API = OneWoW_AltTracker_Storage_API
 
 ns.Query = {}
@@ -277,7 +278,7 @@ end
 ---@return table[] instances
 function Query.Filter(instances, predicate)
     if not predicate or predicate == "" then return instances end
-    local compiled = PE:Compile(predicate)
+    local compiled = SE:Compile(predicate)
     if not compiled then return {} end
 
     local out = {}

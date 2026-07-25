@@ -471,7 +471,13 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                 end)
 
                 row.checkbox = cb
-                tinsert(elements, { frame = row, type = "checkbox", height = 26 })
+                -- Strip UI escape codes so class-colored names still filter by plain text.
+                local filterSrc = item.filterKey or item.text or ""
+                local filterKey = tostring(filterSrc)
+                    :gsub("|c%x%x%x%x%x%x%x%x", "")
+                    :gsub("|r", "")
+                    :lower()
+                tinsert(elements, { frame = row, type = "checkbox", height = 26, filterKey = filterKey })
 
             else
                 -- Items may opt into rendering their label in a custom font
@@ -549,10 +555,10 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
             local shown = 0
             local isFiltering = filter ~= ""
             for _, elem in ipairs(elements) do
-                if isFiltering and elem.type ~= "item" then
+                if isFiltering and (elem.type == "header" or elem.type == "divider") then
                     elem.frame:Hide()
-                elseif elem.type == "item" then
-                    if not isFiltering or string.find(elem.filterKey, filter, 1, true) then
+                elseif elem.type == "item" or elem.type == "checkbox" then
+                    if not isFiltering or (elem.filterKey and string.find(elem.filterKey, filter, 1, true)) then
                         -- Scroll frame must list every row; do not cap with maxVisible (that hid options 11+).
                         elem.frame:ClearAllPoints()
                         elem.frame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 2, yPos)
@@ -572,12 +578,6 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                     elem.frame:ClearAllPoints()
                     elem.frame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 8, yPos - 4)
                     elem.frame:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -8, yPos - 4)
-                    elem.frame:Show()
-                    yPos = yPos - elem.height
-                elseif elem.type == "checkbox" then
-                    elem.frame:ClearAllPoints()
-                    elem.frame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 2, yPos)
-                    elem.frame:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -2, yPos)
                     elem.frame:Show()
                     yPos = yPos - elem.height
                 end

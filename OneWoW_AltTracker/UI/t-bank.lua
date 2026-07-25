@@ -2,7 +2,7 @@ local ADDON_NAME, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
-local PE = OneWoW.PredicateEngine
+local SE = OneWoW.SearchExpand
 local Inventory = OneWoW.Inventory
 
 local INVENTORY_OWNER = "AltTracker_BankTab"
@@ -15,13 +15,13 @@ local selectedGuildName = nil
 
 local function MatchesSearch(itemData, searchText)
     if not searchText or searchText == "" then return true end
-    if PE and itemData.itemID then
+    if itemData.itemID then
         local itemInfo = {
             hyperlink = itemData.itemLink,
             count = itemData.count or itemData.quantity or 1,
             quality = itemData.quality,
         }
-        local ok, matched = pcall(PE.CheckItem, PE, searchText, itemData.itemID, nil, nil, itemInfo)
+        local ok, matched = pcall(SE.CheckItem, SE, searchText, itemData.itemID, nil, nil, itemInfo)
         if ok then return matched == true end
     end
     local name = itemData.name or itemData.itemName
