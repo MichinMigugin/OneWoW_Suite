@@ -54,6 +54,10 @@ end
 local function mergeCategoryData(existing, imported)
     mergeItems(existing, imported.items)
 
+    -- Matching is always the expression now; filterMode only says which editor a
+    -- category opens. The precedence below is unchanged, but a type-based import
+    -- has to be compiled into an expression on the way in, because a payload
+    -- written before that change carries localized type names and no expression.
     local existingIsSearch = existing.filterMode == "search"
     local importedIsSearch = imported.filterMode == "search"
 
@@ -70,6 +74,12 @@ local function mergeCategoryData(existing, imported)
         existing.itemType      = imported.itemType
         existing.itemSubType   = imported.itemSubType
         existing.typeMatchMode = imported.typeMatchMode
+        -- Resolved against *this* client's locale. A name the importer's locale
+        -- knew and ours does not yields nil, leaving the category on its item
+        -- pins and reported by the lint, which is the same outcome as a local
+        -- category whose type names stopped resolving.
+        existing.searchExpression = imported.searchExpression
+            or ns.ItemTypeExpr:Build(imported.itemType, imported.itemSubType, imported.typeMatchMode)
     end
     -- existing search + imported type: leave existing alone (search > type)
 
@@ -195,6 +205,13 @@ local function applyCategory(category, controller, nameRemap)
             if category.itemType ~= nil then entry.itemType = category.itemType end
             if category.itemSubType ~= nil then entry.itemSubType = category.itemSubType end
             if category.typeMatchMode ~= nil then entry.typeMatchMode = category.typeMatchMode end
+            -- A payload written before type rules became expressions carries
+            -- localized names and no expression; compile it against this
+            -- client's locale so the category actually matches something.
+            if not entry.searchExpression then
+                entry.searchExpression = ns.ItemTypeExpr:Build(
+                    entry.itemType, entry.itemSubType, entry.typeMatchMode)
+            end
             if category.isTSM then entry.isTSM = true end
             if category.isBaganator then entry.isBaganator = true end
             if category.sortOrder ~= nil then entry.sortOrder = category.sortOrder end
@@ -248,6 +265,13 @@ local function applyCategory(category, controller, nameRemap)
             if category.itemType ~= nil then entry.itemType = category.itemType end
             if category.itemSubType ~= nil then entry.itemSubType = category.itemSubType end
             if category.typeMatchMode ~= nil then entry.typeMatchMode = category.typeMatchMode end
+            -- A payload written before type rules became expressions carries
+            -- localized names and no expression; compile it against this
+            -- client's locale so the category actually matches something.
+            if not entry.searchExpression then
+                entry.searchExpression = ns.ItemTypeExpr:Build(
+                    entry.itemType, entry.itemSubType, entry.typeMatchMode)
+            end
             if category.isTSM then entry.isTSM = true end
             if category.isBaganator then entry.isBaganator = true end
             if category.sortOrder ~= nil then entry.sortOrder = category.sortOrder end

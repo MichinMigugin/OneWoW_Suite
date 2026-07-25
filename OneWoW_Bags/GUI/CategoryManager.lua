@@ -1098,12 +1098,17 @@ function CatMgrUI:RefreshRight()
     end
 
     if isCustom and catData then
+        -- Which editor to show. Type fields are checked before searchExpression
+        -- because a type-built category now has *both* — the expression is what
+        -- matches, the type fields are what the editor round-trips — so keying
+        -- off the expression would send every one of them to the wrong editor.
         local filterMode = catData.filterMode
         if not filterMode then
-            if catData.searchExpression and catData.searchExpression ~= "" then
-                filterMode = "search"
-            elseif (catData.itemType and catData.itemType ~= "") or (catData.itemSubType and catData.itemSubType ~= "") then
+            if (catData.itemType and catData.itemType ~= "")
+                or (catData.itemSubType and catData.itemSubType ~= "") then
                 filterMode = "type"
+            elseif catData.searchExpression and catData.searchExpression ~= "" then
+                filterMode = "search"
             else
                 filterMode = "type"
             end

@@ -64,7 +64,7 @@ function ns.Profiles.CaptureSettings()
         minimap   = DeepCopy(g.minimap),
         settings  = DeepCopy(g.settings),
         portalHub = DeepCopy(g.portalHub),
-        searchShortcuts = DeepCopy(g.searchShortcuts),
+        searchCatalog = DeepCopy(g.searchCatalog),
     }
 
     if OneWoW_QoL_API then
@@ -98,9 +98,9 @@ function ns.Profiles.ApplySettings(snapshot, profileName)
         end
         if snapshot.core.settings then DeepMerge(g.settings,  snapshot.core.settings)  end
         if snapshot.core.portalHub then DeepMerge(g.portalHub, snapshot.core.portalHub) end
-        if snapshot.core.searchShortcuts then
-            g.searchShortcuts = DeepCopy(snapshot.core.searchShortcuts)
-            OneWoW.SearchExpand:ApplyAliasesFromDB()
+        if snapshot.core.searchCatalog then
+            g.searchCatalog = DeepCopy(snapshot.core.searchCatalog)
+            OneWoW.SearchCatalog:InvalidateAll()
         end
     end
 

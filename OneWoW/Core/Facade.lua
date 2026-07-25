@@ -9,6 +9,7 @@ local SERVICE_KEYS = {
     "UI",
     "Restriction",
     "PredicateEngine",
+    "SearchCatalog",
     "SearchExpand",
     "TooltipScanner",
     "OverlayEngine",

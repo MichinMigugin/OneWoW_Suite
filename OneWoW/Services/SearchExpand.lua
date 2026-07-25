@@ -8,11 +8,15 @@ local _, ns = ...
 -- SearchExpand:Compile / :CheckItem for user-facing expressions.
 --
 -- Design:
---   - Named expressions live in OneWoW:GetCoreGlobal().searchShortcuts.saved
---   - Keyword synonyms live in searchShortcuts.aliases (pushed to PE)
---   - CATEGORY resolves via an injectable Bags hook (fail-closed when absent)
---   - External text rewriters (Bags searchHistory / category exprs) run on
---     SAVED rename so Bags DB stays consistent without owning the store
+--   - Named expressions and keyword synonyms are entries in OneWoW.SearchCatalog
+--     (kinds "saved" and "token"); this file is the expand/compile front end
+--   - Renames are absorbed by catalog former-name redirects, so no stored
+--     expression text is ever rewritten
+--   - PE holds no user state: it calls back here for any #token it does not
+--     recognize, so a token body can be any expression, not just one keyword
+--   - CATEGORY resolves through the catalog too, over entries contributed by a
+--     Bags-registered provider. With Bags absent the kind is simply empty and
+--     every CATEGORY(...) fails closed, same as before
 
 local strfind = string.find
 local strgsub = string.gsub
@@ -20,83 +24,71 @@ local strlower = string.lower
 local strmatch = string.match
 local strtrim = strtrim
 local type = type
+local ipairs = ipairs
 local pairs = pairs
 local tinsert = tinsert
-local sort = sort
 
 ns.SearchExpand = {}
 local SearchExpand = ns.SearchExpand
 
 local PE = ns.PredicateEngine
+local SC = ns.SearchCatalog
 local MAX_EXPANSION_DEPTH = 5
-local NEVER_MATCH_SAVED = "#onewow_saved_search_missing"
-local NEVER_MATCH_CATEGORY = "#onewow_category_ref_missing"
 
-local categoryResolver ---@type (fun(name: string): string|nil, string|nil)|nil
-local externalTextRewriters = {} ---@type table<string, fun(text: string, oldName: string, newName: string): string>
-local changeCallbacks = {} ---@type table<string, fun()>
+-- Never-match sentinels, distinct per kind *and* reason. `missing` is a typo or
+-- a deleted entry; `empty` is an entry that exists but carries no rule, which
+-- for CATEGORY means a type-mode Bags category. Collapsing the two would leave
+-- the Phase 6 lint unable to tell "you referenced something that is gone" from
+-- "that category matches by item type, so it cannot be referenced".
+--
+-- Cycles and depth overruns report as `missing`: they are a different class of
+-- problem and get their own report rather than being inferred from expanded
+-- text. SearchCatalog reserves the `onewow_` token prefix so a user-defined
+-- token can never resolve one of these and turn a fail-closed into a match.
+local NEVER_MATCH = {
+    saved = {
+        missing = "#onewow_saved_missing",
+        empty   = "#onewow_saved_empty",
+    },
+    category = {
+        missing = "#onewow_category_missing",
+        empty   = "#onewow_category_empty",
+    },
+}
 
-local function GetShortcuts()
-    local g = ns.db and ns.db.global
-    if not g then return nil end
-    local sc = g.searchShortcuts
-    if not sc then
-        sc = { aliases = {}, saved = {} }
-        g.searchShortcuts = sc
-    end
-    sc.aliases = sc.aliases or {}
-    sc.saved = sc.saved or {}
-    return sc
+local function NeverMatch(kind, reason)
+    return "(" .. NEVER_MATCH[kind][reason] .. ")"
 end
 
-local function GetSavedStore()
-    local sc = GetShortcuts()
-    return sc and sc.saved or nil
+-- The catalog speaks generic error keys; these map them onto the locale keys
+-- the Search Shortcuts UI already renders per section.
+local ALIAS_ERRORS = {
+    CATALOG_INVALID_NAME   = "ALIAS_INVALID_NAME",
+    CATALOG_DUPLICATE_NAME = "ALIAS_DUPLICATE",
+    CATALOG_NAME_RESERVED  = "ALIAS_COLLIDES_BUILTIN",
+    CATALOG_EMPTY_BODY     = "ALIAS_INVALID",
+    CATALOG_NOT_FOUND      = "ALIAS_INVALID",
+}
+
+local SAVED_ERRORS = {
+    CATALOG_INVALID_NAME   = "SAVED_SEARCH_INVALID_NAME",
+    CATALOG_DUPLICATE_NAME = "SAVED_SEARCH_DUPLICATE_NAME",
+    CATALOG_EMPTY_BODY     = "SAVED_SEARCH_EMPTY_QUERY",
+    CATALOG_NOT_FOUND      = "SAVED_SEARCH_NOT_FOUND",
+}
+
+local changeCallbacks = {} ---@type table<string, fun()>
+
+-- gsub returns (string, count); the extra parens drop the count so it cannot
+-- land on strtrim's second parameter, which is a set of characters to trim.
+local function StripHash(text)
+    return strtrim((strgsub(text or "", "^#", "")))
 end
 
 local function FireChanged()
     for _, fn in pairs(changeCallbacks) do
         fn()
     end
-end
-
-local function ReplaceSavedReferencesInText(text, oldName, newName)
-    if type(text) ~= "string" or text == "" then return text end
-    local oldLower = strlower(oldName)
-    return strgsub(text, "SAVED%(([^%)]*)%)", function(name)
-        local normalized = strtrim(name or "")
-        if normalized ~= "" and strlower(normalized) == oldLower then
-            return "SAVED(" .. newName .. ")"
-        end
-        return "SAVED(" .. name .. ")"
-    end)
-end
-
---- Register a Bags (or other) CATEGORY resolver.
----@param fn (fun(name: string): string|nil, string|nil)|nil
-function SearchExpand:SetCategoryResolver(fn)
-    categoryResolver = fn
-end
-
---- Rewrite SAVED(old) → SAVED(new) inside an arbitrary string.
----@param text string|nil
----@param oldName string
----@param newName string
----@return string|nil
-function SearchExpand:ReplaceSavedReferencesInText(text, oldName, newName)
-    return ReplaceSavedReferencesInText(text, oldName, newName)
-end
-
---- Bags (etc.) register to rewrite SAVED refs in their own SV on rename.
----@param id string
----@param fn fun(text: string, oldName: string, newName: string): string
-function SearchExpand:RegisterExternalTextRewriter(id, fn)
-    externalTextRewriters[id] = fn
-end
-
----@param id string
-function SearchExpand:UnregisterExternalTextRewriter(id)
-    externalTextRewriters[id] = nil
 end
 
 ---@param id string
@@ -142,36 +134,24 @@ end
 ---@param name string|nil
 ---@return string|nil key
 function SearchExpand:FindSavedKey(name)
-    local normalized = self:NormalizeSavedName(name)
-    if not normalized then return nil end
-    local store = GetSavedStore()
-    if not store then return nil end
-    local wanted = strlower(normalized)
-    for key in pairs(store) do
-        if strlower(key) == wanted then
-            return key
-        end
-    end
-    return nil
+    local entry = SC:Resolve("saved", name)
+    return entry and entry.name or nil
 end
 
 ---@param name string
 ---@return string|nil query
 ---@return string|nil key
 function SearchExpand:GetSaved(name)
-    local key = self:FindSavedKey(name)
-    if not key then return nil end
-    local store = GetSavedStore()
-    return store[key], key
+    local entry = SC:Resolve("saved", name)
+    if not entry then return nil end
+    return entry.body, entry.name
 end
 
 ---@return table<string, string>
 function SearchExpand:GetAllSaved()
     local copy = {}
-    local store = GetSavedStore()
-    if not store then return copy end
-    for name, query in pairs(store) do
-        copy[name] = query
+    for _, entry in ipairs(SC:GetAll("saved")) do
+        copy[entry.name] = entry.body
     end
     return copy
 end
@@ -179,14 +159,9 @@ end
 ---@return string[]
 function SearchExpand:GetSortedSavedNames()
     local names = {}
-    local store = GetSavedStore()
-    if not store then return names end
-    for name in pairs(store) do
-        tinsert(names, name)
+    for _, entry in ipairs(SC:GetAll("saved")) do
+        tinsert(names, entry.name)
     end
-    sort(names, function(a, b)
-        return strlower(a) < strlower(b)
-    end)
     return names
 end
 
@@ -195,72 +170,120 @@ end
 ---@return boolean ok
 ---@return string normalizedNameOrErrorKey
 function SearchExpand:SetSaved(name, query)
-    local normalizedName, nameErr = self:NormalizeSavedName(name)
-    if not normalizedName then return false, nameErr end
-    local normalizedQuery, queryErr = self:NormalizeSavedQuery(query)
-    if not normalizedQuery then return false, queryErr end
-
-    local store = GetSavedStore()
-    if not store then return false, "SAVED_SEARCH_INVALID_NAME" end
-
-    local existingKey = self:FindSavedKey(normalizedName)
-    if existingKey and existingKey ~= normalizedName then
-        store[existingKey] = nil
-    end
-    store[normalizedName] = normalizedQuery
-    FireChanged()
-    return true, normalizedName
+    local entry, err = SC:Set("saved", name, query)
+    if not entry then return false, SAVED_ERRORS[err] or err end
+    return true, entry.name
 end
 
+--- Rename a named expression. Expressions elsewhere that still say SAVED(old)
+--- keep resolving through the catalog's former-name redirect, so nothing that
+--- stores expression text has to be rewritten.
 ---@param oldName string
 ---@param newName string
 ---@return boolean ok
 ---@return string normalizedNameOrErrorKey
 function SearchExpand:RenameSaved(oldName, newName)
-    local existingQuery, existingKey = self:GetSaved(oldName)
-    if not existingKey then return false, "SAVED_SEARCH_NOT_FOUND" end
+    local entry = SC:Resolve("saved", oldName)
+    if not entry then return false, "SAVED_SEARCH_NOT_FOUND" end
 
-    local normalizedNewName, err = self:NormalizeSavedName(newName)
-    if not normalizedNewName then return false, err end
-
-    local collisionKey = self:FindSavedKey(normalizedNewName)
-    if collisionKey and strlower(collisionKey) ~= strlower(existingKey) then
-        return false, "SAVED_SEARCH_DUPLICATE_NAME"
-    end
-
-    local store = GetSavedStore()
-    store[existingKey] = nil
-    store[normalizedNewName] = existingQuery
-
-    for savedName, query in pairs(store) do
-        store[savedName] = ReplaceSavedReferencesInText(query, existingKey, normalizedNewName)
-    end
-
-    for _, rewriter in pairs(externalTextRewriters) do
-        rewriter(existingKey, normalizedNewName)
-    end
-
-    FireChanged()
-    return true, normalizedNewName
+    local ok, err = SC:Rename("saved", entry.id, newName)
+    if not ok then return false, SAVED_ERRORS[err] or err end
+    return true, entry.name
 end
 
 ---@param name string
 ---@return boolean ok
 ---@return string|nil errorKey
 function SearchExpand:DeleteSaved(name)
-    local key = self:FindSavedKey(name)
-    if not key then return false, "SAVED_SEARCH_NOT_FOUND" end
-    GetSavedStore()[key] = nil
-    FireChanged()
+    local entry = SC:Resolve("saved", name)
+    if not entry then return false, "SAVED_SEARCH_NOT_FOUND" end
+    SC:Delete("saved", entry.id)
     return true
 end
 
--- ---- Alias persistence (SV ↔ PE) ----
+-- ---- Tokens (#name): catalog entries, resolved on demand by PE ----
+--
+-- A keyword synonym is a catalog "token" entry whose body is the "#keyword" it
+-- stands for, so tokens share the entry model with SAVED rather than needing a
+-- separate target field. The engine no longer keeps an alias table of its own:
+-- it calls the resolver below for any #token it does not recognize, which means
+-- a token body may be an arbitrary expression, not just one built-in keyword.
+--
+-- The alias-shaped subset is still projected out for the current Search
+-- Shortcuts UI, whose editor is a built-in-keyword dropdown.
 
---- Push searchShortcuts.aliases into PE and return the live map.
-function SearchExpand:ApplyAliasesFromDB()
-    local sc = GetShortcuts()
-    PE:RegisterAliases(sc.aliases)
+---@param entry table
+---@return string|nil keyword
+local function AliasTargetOf(entry)
+    return strmatch(entry.body or "", "^#([%w_]+)$")
+end
+
+--- Resolve a #token to an expression body for PredicateEngine. Catalog lookup
+--- handles current *and* former names, so a renamed token keeps evaluating in
+--- expressions written before the rename. The body is expanded here so it may
+--- contain SAVED(...) / CATEGORY(...); nested #token is left for PE, which
+--- compiles recursively and owns the cycle guard.
+---@param name string lowercased token name, no leading #
+---@return string|nil body
+local function ResolveToken(name)
+    local body = SC:GetBody("token", name)
+    if not body then return nil end
+    return SearchExpand:Expand(body)
+end
+
+--- Every token entry, sorted by name. Includes entries shadowed by a built-in
+--- keyword — call `IsTokenShadowed` to tell them apart.
+---@return table[]
+function SearchExpand:GetTokens()
+    return SC:GetAll("token")
+end
+
+--- True when a built-in keyword of the same name exists, which wins outright.
+---
+--- The catalog rejects reserved names at validation time, but #upgrade,
+--- #combineready and #disenchantable register long after login, and migrations
+--- run before any of them. So a token minted early can be shadowed later
+--- through no fault of the user, and the result is a stored entry that silently
+--- never matches. Surfaced rather than deleted: the body is still their data.
+---@param name string|nil
+---@return boolean
+function SearchExpand:IsTokenShadowed(name)
+    return PE:IsBuiltinKeyword(name)
+end
+
+--- Token entries currently shadowed by a built-in keyword, for lint and UI.
+---@return table[]
+function SearchExpand:GetShadowedTokens()
+    local out = {}
+    for _, entry in ipairs(SC:GetAll("token")) do
+        if PE:IsBuiltinKeyword(entry.name) then tinsert(out, entry) end
+    end
+    return out
+end
+
+--- User tokens whose expression matches this item (alphabetically). The engine
+--- counterpart, `PE:GetMatchingKeywords`, covers built-ins only.
+---@param itemID number|nil
+---@param bagID number|nil
+---@param slotID number|nil
+---@param itemInfo string|table|nil
+---@return string[]
+function SearchExpand:GetMatchingTokens(itemID, bagID, slotID, itemInfo)
+    local results = {}
+    if not itemID then return results end
+
+    local props = PE:BuildProps(itemID, bagID, slotID, itemInfo)
+    if not props then return results end
+
+    for _, entry in ipairs(SC:GetAll("token")) do
+        if not PE:IsBuiltinKeyword(entry.name) then
+            local compiled = PE:Compile("#" .. entry.name)
+            if compiled and PE:SafeEvaluate(compiled, props) then
+                tinsert(results, entry.name)
+            end
+        end
+    end
+    return results
 end
 
 ---@param alias string
@@ -268,66 +291,43 @@ end
 ---@return boolean ok
 ---@return string|nil errorKey
 function SearchExpand:SetAlias(alias, targetKeyword)
-    local ok, err = PE:RegisterAlias(alias, targetKeyword)
-    if not ok then return false, err end
-    local sc = GetShortcuts()
-    local key = strlower(strtrim(alias:gsub("^#", "")))
-    local target = strlower(strtrim(targetKeyword:gsub("^#", "")))
-    sc.aliases[key] = target
-    -- Drop any prior casing variant
-    for k in pairs(sc.aliases) do
-        if k ~= key and strlower(k) == key then
-            sc.aliases[k] = nil
-        end
-    end
-    FireChanged()
+    local target = strlower(StripHash(targetKeyword))
+    if target == "" then return false, "ALIAS_INVALID" end
+    if not PE:IsBuiltinKeyword(target) then return false, "ALIAS_TARGET_MISSING" end
+
+    local entry, err = SC:Set("token", StripHash(alias), "#" .. target)
+    if not entry then return false, ALIAS_ERRORS[err] or err end
     return true
 end
 
---- Rename an existing alias key; target stays the same.
+--- Rename an existing alias; the target keyword stays the same.
 ---@param oldAlias string
 ---@param newAlias string
 ---@return boolean ok
 ---@return string|nil errorKey
 function SearchExpand:RenameAlias(oldAlias, newAlias)
-    local sc = GetShortcuts()
-    local oldKey = strlower(strtrim((oldAlias or ""):gsub("^#", "")))
-    local newKey = strlower(strtrim((newAlias or ""):gsub("^#", "")))
-    if oldKey == "" or not sc.aliases[oldKey] then return false, "ALIAS_INVALID" end
-    if newKey == "" then return false, "ALIAS_INVALID" end
-    if not string.match(newKey, "^[%w_]+$") then return false, "ALIAS_INVALID_NAME" end
-    if newKey == oldKey then return true end
-    if PE:IsBuiltinKeyword(newKey) then return false, "ALIAS_COLLIDES_BUILTIN" end
-    if sc.aliases[newKey] then return false, "ALIAS_DUPLICATE" end
+    local entry = SC:Resolve("token", StripHash(oldAlias))
+    if not entry then return false, "ALIAS_INVALID" end
 
-    local target = sc.aliases[oldKey]
-    local ok, err = PE:RegisterAlias(newKey, target)
-    if not ok then return false, err end
-    sc.aliases[oldKey] = nil
-    sc.aliases[newKey] = target
-    PE:RegisterAliases(sc.aliases)
-    FireChanged()
+    local ok, err = SC:Rename("token", entry.id, StripHash(newAlias))
+    if not ok then return false, ALIAS_ERRORS[err] or err end
     return true
 end
 
 ---@param alias string
 ---@return boolean ok
 function SearchExpand:DeleteAlias(alias)
-    local sc = GetShortcuts()
-    local key = strlower(strtrim((alias or ""):gsub("^#", "")))
-    if key == "" or not sc.aliases[key] then return false end
-    sc.aliases[key] = nil
-    PE:RegisterAliases(sc.aliases)
-    FireChanged()
-    return true
+    local entry = SC:Resolve("token", StripHash(alias))
+    if not entry then return false end
+    return SC:Delete("token", entry.id)
 end
 
 ---@return table<string, string>
 function SearchExpand:GetAliases()
-    local sc = GetShortcuts()
     local copy = {}
-    for k, v in pairs(sc.aliases) do
-        copy[k] = v
+    for _, entry in ipairs(SC:GetAll("token")) do
+        local target = AliasTargetOf(entry)
+        if target then copy[entry.name] = target end
     end
     return copy
 end
@@ -336,73 +336,56 @@ end
 
 local ExpandAll
 
-local function ExpandSavedToken(name, depth, seenSaved, seenCat)
-    local normalized = SearchExpand:NormalizeSavedName(name)
-    if not normalized or depth > MAX_EXPANSION_DEPTH then
-        return "(" .. NEVER_MATCH_SAVED .. ")"
+--- Expand one SAVED(...) or CATEGORY(...) reference. Both kinds now resolve the
+--- same way — through the catalog — so they share one implementation; the only
+--- difference is which kind is looked up and which sentinels are emitted.
+---
+--- The recursion guard keys on kind + entry id rather than on the name text.
+--- One entry can be referenced by its current name in one place and a former
+--- name in another, and only an id-keyed guard sees those as the same entry.
+---@param kind string "saved" | "category"
+---@param name string
+---@param depth number
+---@param seen table<string, boolean>
+---@return string
+local function ExpandRef(kind, name, depth, seen)
+    if depth > MAX_EXPANSION_DEPTH then
+        return NeverMatch(kind, "missing")
     end
 
-    local key = SearchExpand:FindSavedKey(normalized)
-    if not key or seenSaved[strlower(key)] then
-        return "(" .. NEVER_MATCH_SAVED .. ")"
+    local entry = SC:Resolve(kind, name)
+    if not entry then return NeverMatch(kind, "missing") end
+
+    local key = kind .. "\0" .. entry.id
+    if seen[key] then return NeverMatch(kind, "missing") end
+
+    if type(entry.body) ~= "string" or entry.body == "" then
+        return NeverMatch(kind, "empty")
     end
 
-    local query = GetSavedStore()[key]
-    if type(query) ~= "string" or query == "" then
-        return "(" .. NEVER_MATCH_SAVED .. ")"
-    end
-
-    seenSaved[strlower(key)] = true
-    local expanded = ExpandAll(query, depth + 1, seenSaved, seenCat)
-    seenSaved[strlower(key)] = nil
+    seen[key] = true
+    local expanded = ExpandAll(entry.body, depth + 1, seen)
+    seen[key] = nil
     return "(" .. expanded .. ")"
 end
 
-local function ExpandCategoryToken(name, depth, seenSaved, seenCat)
-    local normalized = strtrim(name or "")
-    if normalized == "" or depth > MAX_EXPANSION_DEPTH then
-        return "(" .. NEVER_MATCH_CATEGORY .. ")"
-    end
-
-    local key = strlower(normalized)
-    if seenCat[key] then
-        return "(" .. NEVER_MATCH_CATEGORY .. ")"
-    end
-
-    if not categoryResolver then
-        return "(" .. NEVER_MATCH_CATEGORY .. ")"
-    end
-
-    local expr, displayName = categoryResolver(normalized)
-    if not expr then
-        return "(" .. NEVER_MATCH_CATEGORY .. ")"
-    end
-
-    local seenKey = strlower(displayName or normalized)
-    seenCat[seenKey] = true
-    local expanded = ExpandAll(expr, depth + 1, seenSaved, seenCat)
-    seenCat[seenKey] = nil
-    return "(" .. expanded .. ")"
-end
-
-ExpandAll = function(query, depth, seenSaved, seenCat)
+ExpandAll = function(query, depth, seen)
     if type(query) ~= "string" or query == "" then return query end
 
     depth = depth or 1
-    if depth > MAX_EXPANSION_DEPTH then return NEVER_MATCH_CATEGORY end
+    if depth > MAX_EXPANSION_DEPTH then return NeverMatch("saved", "missing") end
 
-    seenSaved = seenSaved or {}
-    seenCat = seenCat or {}
+    seen = seen or {}
 
     local expanded = query
     if strfind(expanded, "SAVED(", 1, true) then
         expanded = strgsub(expanded, "SAVED%(([^%)]*)%)", function(inner)
-            return ExpandSavedToken(strmatch(inner or "", "^%s*(.-)%s*$"), depth, seenSaved, seenCat)
+            return ExpandRef("saved", strtrim(inner or ""), depth, seen)
         end)
     end
     if strfind(expanded, "CATEGORY(", 1, true) then
         expanded = strgsub(expanded, "CATEGORY%(([^%)]*)%)", function(inner)
-            return ExpandCategoryToken(strmatch(inner or "", "^%s*(.-)%s*$"), depth, seenSaved, seenCat)
+            return ExpandRef("category", strtrim(inner or ""), depth, seen)
         end)
     end
     return expanded
@@ -411,7 +394,7 @@ end
 ---@param query string|nil
 ---@return string|nil
 function SearchExpand:Expand(query)
-    return ExpandAll(query, 1, {}, {})
+    return ExpandAll(query, 1, {})
 end
 
 ---@param expr string|nil
@@ -435,22 +418,27 @@ function SearchExpand:CheckItem(expr, itemID, bagID, slotID, itemInfo)
     return PE:CheckItem(expanded, itemID, bagID, slotID, itemInfo)
 end
 
---- One-time migrate Bags savedSearches into core store.
+--- One-time migrate Bags savedSearches into the core catalog.
 ---@param bagsSaved table<string, string>|nil
 function SearchExpand:MigrateFromBagsSavedSearches(bagsSaved)
     if type(bagsSaved) ~= "table" then return end
-    local store = GetSavedStore()
-    if not store then return end
     for name, query in pairs(bagsSaved) do
-        if type(name) == "string" and type(query) == "string" and name ~= "" and query ~= "" then
-            local existing = self:FindSavedKey(name)
-            if not existing then
-                store[name] = query
-            end
+        if type(name) == "string" and type(query) == "string" and not SC:Resolve("saved", name) then
+            SC:Set("saved", name, query)
         end
     end
 end
 
-ns:RegisterCoreLoginHandler("SearchExpand.ApplyAliases", function()
-    SearchExpand:ApplyAliasesFromDB()
+-- The engine pulls token bodies through this resolver instead of being pushed a
+-- map, so there is nothing to apply on login — the first #token that needs it
+-- resolves on demand.
+PE:SetKeywordResolver(ResolveToken)
+
+-- Every mutation now lands in the catalog, including ones made by other units,
+-- so subscribe once there rather than firing from each wrapper above. PE's
+-- token and expression caches are dropped before subscribers run, so a
+-- re-categorize compiles against the new bodies rather than the old ones.
+SC:RegisterChangedCallback("SearchExpand", function()
+    PE:InvalidateKeywordTokens()
+    FireChanged()
 end)

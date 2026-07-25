@@ -824,7 +824,8 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | Service | File | Consumed by |
 |---|---|---|
 | `OneWoW.PredicateEngine` | `Services/PredicateEngine.lua` | Bags (search/categories), AltTracker, ShoppingList, DirectDeposit, QoL; core overlay + tooltip engines |
-| `OneWoW.SearchExpand` | `Services/SearchExpand.lua` | Suite-wide `SAVED`/`CATEGORY` expand + compile wrappers; keyword aliases from `searchShortcuts`; Bags registers category resolver via `_API` |
+| `OneWoW.SearchCatalog` | `Services/SearchCatalog.lua` | Registry of named search expressions across kinds (`token` = `#alias`, `saved` = `SAVED(Name)`, `category` = Bags rules via a registered provider). Stable ids plus former-name redirects, so renaming never rewrites stored expression text. `WithBatch` coalesces bulk mutations into one change notification |
+| `OneWoW.SearchExpand` | `Services/SearchExpand.lua` | Suite-wide `SAVED`/`CATEGORY` expand + compile wrappers over the catalog; supplies PredicateEngine's `#token` resolver so the engine holds no user state |
 | `OneWoW.TooltipScanner` | `Services/TooltipScanner.lua` | `C_TooltipInfo` routing, tooltip caches, structured line extractors — see [TOOLTIP_SCANNER.md](TOOLTIP_SCANNER.md) |
 | `OneWoW.OverlayEngine` | `Services/Overlays2/engine.lua` (definitions/renderer/surfaces siblings in `Services/Overlays2/`) | Bag integrations (core `Integrations/*`), `OneWoW_Bags`. `RequestRefresh` for surface layout; `InvalidateAndRequestRefresh` when external predicate inputs change (collection journals, recipe learned, junk/protected) so same-item `skip_same` cannot strand stale icons |
 | `OneWoW.OverlayIcons` | `Services/overlay-icons.lua` | Overlay engine rendering, QoL overlays tab |

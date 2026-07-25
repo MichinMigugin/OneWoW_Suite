@@ -361,8 +361,10 @@ Search uses `OneWoW.PredicateEngine` (tokenizer, AST, evaluation). For full engi
 - Keywords, properties, operators (`&` `|` `!`), parentheses, bare name text
 - `SAVED(Name)` / `CATEGORY(Name)` shortcuts are expanded by core
   `OneWoW.SearchExpand` before PredicateEngine evaluation. Named expressions
-  live in `OneWoW_DB.global.searchShortcuts.saved`. `CATEGORY(Name)` resolves
-  custom search-mode categories via `OneWoW_Bags_API.GetCategorySearchExpression`.
+  live in `OneWoW_DB.global.searchCatalog` as `saved`-kind entries.
+  `CATEGORY(Name)` resolves through the same catalog as the `category` kind,
+  over entries Bags contributes from `customCategoriesV2` via a registered
+  provider (see SearchExpand / CategoryRefs below).
 - `#recent` is registered at `Data\Categories.lua` load via `PE:RegisterKeyword` (Bags-only): GUID map + duration only. `#new` / `IsNew` in the engine use `C_NewItems` via `BuildProps` (can lag until `InvalidatePropsCache`); `#recent` does not use that cached flag for classification
 - `#catalyst` / `#catalystupgrade` are registered by the engine itself with call-time `TransmogUpgradeMaster_API` checks (no-op if the addon is absent)
 - `WH:FilterBySearch` uses `SearchExpand:Compile` once per refresh and evaluates per button via `PE:SafeEvaluate` / compiled predicates
@@ -510,13 +512,28 @@ Each view exposes `Layout(...)` and returns total content height.
 
 ### SearchExpand / CategoryRefs
 
-Named expressions (`SAVED`) and keyword aliases live in core
-`OneWoW.SearchExpand` / `OneWoW_DB.global.searchShortcuts`. Bags
-`Data\CategoryRefs.lua` supplies category name → search-expression lookup for
-`CATEGORY(Name)`, fires `RegisterCategoryRulesChanged` when rules invalidate,
-and rewrites `CATEGORY(...)` / `SAVED(...)` text inside Bags SV on rename.
-Missing, invalid, cyclic, or too-deep references expand to a never-match
-predicate.
+Named expressions (`SAVED`) and user tokens (`#name`) live in core
+`OneWoW.SearchCatalog` (`OneWoW_DB.global.searchCatalog`), fronted by
+`OneWoW.SearchExpand`.
+
+Bags `Data\CategoryRefs.lua` registers a **catalog provider** for the
+`category` kind, presenting `customCategoriesV2` records as catalog entries on
+demand (`EnumerateCatalogEntries` / `GetCatalogEntry`). The records themselves
+stay in Bags SavedVariables, so the optional-load-unit boundary holds and
+import/export stays self-contained. `NotifyRulesChanged` invalidates the kind so
+the catalog's name index cannot go stale behind a Bags-side write.
+
+A category with no rule at all — item pins only, or one whose stored type names
+no longer resolve in the current locale — contributes an entry with **no body**.
+That resolves as `empty` rather than `missing`, which is what lets a diagnostic
+tell "you referenced a category with no rule" from "you referenced something
+that does not exist".
+
+Renaming a `SAVED` no longer rewrites anything: the catalog keeps the old name
+as a former name and resolves it to the same entry. Category rename still
+rewrites `CATEGORY(...)` text inside Bags SV; that goes away in the phase that
+gives categories their own `formerNames`. Missing, invalid, cyclic, or too-deep
+references expand to a never-match predicate.
 
 ### PredicateEngine
 
@@ -802,7 +819,9 @@ A wedged scheduler shows as `refreshScheduled=true` with `pending` set but no `f
 
 ## Custom Category System
 
-**Storage (`customCategoriesV2`):** per-row `items` (explicit item IDs, keyed by `tostring(itemID)`), optional `searchExpression` / `filterMode == "search"`, and type / subtype strings vs `C_Item.GetItemClassInfo` / `GetItemSubClassInfo` with `typeMatchMode` where applicable.
+**Storage (`customCategoriesV2`):** per-row `items` (explicit item IDs, keyed by `tostring(itemID)`), `searchExpression` (the rule — **always** the thing that matches), `formerNames`, and `filterMode` plus `itemType` / `itemSubType` / `typeMatchMode`.
+
+`filterMode` is a **UI hint only**: it chooses which editor the Category Manager opens, never how matching works. The type editor's fields are resolved to `class=N & subclass=M` by `Data\ItemTypeExpr.lua` at edit time and stored in `searchExpression`; the typed strings are kept so the editor can round-trip them and so an unresolvable name stays visible. Type mode previously compared *localized* class names against localized API output, which broke silently on a client language change — ids do not.
 
 **Classification:** explicit `items` pins are resolved only in the **manual** stage of `GetItemCategory` (first). Custom predicate categories (search + type/subtype) and builtin search categories are collected into a merged candidate pool; the winner is picked by user-facing **priority** → custom-wins-ties → `defaultOrder` → section index → list order → `searchOrder` → alphabetical name.
 

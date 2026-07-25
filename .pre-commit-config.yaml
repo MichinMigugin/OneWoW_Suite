@@ -10,10 +10,14 @@
 # Bypass for a single commit (use sparingly):
 #   git commit --no-verify
 
+# `(.*/)?Libs/` rather than `Libs/`: these are anchored regexes, and every
+# vendored tree in this repo lives at OneWoW/Libs/, never at the root. A
+# root-anchored `Libs/` silently matched nothing, so `run --all-files` failed on
+# embedded libraries that AGENTS.md forbids editing.
 exclude: |
   (?x)^(
     \.wow_docs/
-    | Libs/
+    | (.*/)?Libs/
   )
 
 repos:
@@ -43,7 +47,7 @@ repos:
         # Mirror .luarc.json workspace.ignoreDir — these are reference / vendored / generated.
         exclude: |
           (?x)^(
-            Libs/
+            (.*/)?Libs/
             | \.lua-defs/
             | \.wow_docs/
             | \.vscode/
@@ -62,7 +66,7 @@ repos:
         types: [lua]
         exclude: |
           (?x)^(
-            Libs/
+            (.*/)?Libs/
             | \.lua-defs/
             | \.wow_docs/
             | \.vscode/
@@ -89,7 +93,7 @@ repos:
         # legitimately poke raw SavedVariables.
         exclude: |
           (?x)^(
-            Libs/
+            (.*/)?Libs/
             | \.lua-defs/
             | \.wow_docs/
             | \.vscode/
@@ -110,7 +114,7 @@ repos:
         types: [lua]
         exclude: |
           (?x)^(
-            Libs/
+            (.*/)?Libs/
             | \.lua-defs/
             | \.wow_docs/
             | \.vscode/
@@ -129,7 +133,7 @@ repos:
         types: [lua]
         exclude: |
           (?x)^(
-            Libs/
+            (.*/)?Libs/
             | \.lua-defs/
             | \.wow_docs/
             | \.vscode/
@@ -149,7 +153,7 @@ repos:
         types: [lua]
         exclude: |
           (?x)^(
-            Libs/
+            (.*/)?Libs/
             | \.lua-defs/
             | \.wow_docs/
             | \.vscode/
@@ -171,7 +175,7 @@ repos:
         types: [lua]
         exclude: |
           (?x)^(
-            Libs/
+            (.*/)?Libs/
             | \.lua-defs/
             | \.wow_docs/
             | \.vscode/
@@ -192,7 +196,7 @@ repos:
         types: [lua]
         exclude: |
           (?x)^(
-            Libs/
+            (.*/)?Libs/
             | \.lua-defs/
             | \.wow_docs/
             | \.vscode/
@@ -212,7 +216,7 @@ repos:
         types: [lua]
         exclude: |
           (?x)^(
-            Libs/
+            (.*/)?Libs/
             | \.lua-defs/
             | \.wow_docs/
             | \.vscode/
@@ -238,7 +242,7 @@ repos:
         # rework — remove that line once it lands.
         exclude: |
           (?x)^(
-            Libs/
+            (.*/)?Libs/
             | \.lua-defs/
             | \.wow_docs/
             | \.vscode/

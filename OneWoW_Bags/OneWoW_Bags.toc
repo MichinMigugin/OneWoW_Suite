@@ -45,6 +45,7 @@ Core\Events.lua
 
 # Data
 Data\CategoryRefs.lua
+Data\ItemTypeExpr.lua
 Data\Sorting.lua
 Data\Categories.lua
 Data\CategoryOrigin.lua

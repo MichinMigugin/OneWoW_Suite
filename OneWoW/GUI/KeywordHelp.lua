@@ -338,9 +338,12 @@ end
 --- Side effects on first build:
 ---   * Populates the module-level `keywordFrame`, `keywordContent`,
 ---     `categoryHeaders`, and `keywordChips` tables.
----   * Queries `ns.PredicateEngine:GetAllKeywords()` and creates one
----     chip per entry. If the engine isn't attached yet, the chip area stays
----     empty (the frame still builds).
+---   * Queries `ns.PredicateEngine:GetAllKeywords()` for built-ins and
+---     `ns.SearchExpand:GetTokens()` for the user's own `#token` entries, and
+---     creates one chip per entry. If neither is attached yet, the chip area
+---     stays empty (the frame still builds).
+---   * Chips are built once and cached, so tokens added afterwards appear the
+---     next time the panel is built rather than immediately.
 ---   * Hooks `OnSizeChanged` / `OnShow` so layout re-runs after resize/reopen.
 ---@return Frame keywordFrame  The shared, hidden-by-default help window.
 local function BuildKeywordFrame()
@@ -448,13 +451,26 @@ local function BuildKeywordFrame()
     footer:SetText("Click any keyword to insert it into the search box. Combine with & | ! (or and / or / not).")
     footer:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    -- Populate chips
+    -- Populate chips: engine built-ins, then the user's own #token entries.
     local PE = GetPE()
     if PE and PE.GetAllKeywords then
-        local keywords = PE:GetAllKeywords()
-        for _, entry in ipairs(keywords) do
-            local chip = MakeKeywordChip(content, entry)
-            tinsert(keywordChips, chip)
+        for _, entry in ipairs(PE:GetAllKeywords()) do
+            tinsert(keywordChips, MakeKeywordChip(content, entry))
+        end
+    end
+    -- Tokens are catalog entries, not engine state, so they come from
+    -- SearchExpand. A token shadowed by a built-in never matches, and the
+    -- built-in already has its own chip, so it is left out rather than shown
+    -- as a duplicate that behaves differently than it reads.
+    local SE = ns.SearchExpand
+    if SE then
+        for _, entry in ipairs(SE:GetTokens()) do
+            if not SE:IsTokenShadowed(entry.name) then
+                tinsert(keywordChips, MakeKeywordChip(content, {
+                    canonical = entry.name,
+                    aliases = {},
+                }))
+            end
         end
     end
 

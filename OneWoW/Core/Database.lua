@@ -26,10 +26,11 @@ local DEFAULTS = {
     lastModuleTab = "home",
     lastSubTabs = {},
     debugTrace = false,
-    -- Named expressions (SAVED) + keyword synonyms for suite-wide SearchExpand.
-    searchShortcuts = {
-        aliases = {}, -- [aliasName] = targetKeyword (no leading #)
-        saved = {},   -- [displayName] = predicate expression string
+    -- Named search expressions (#token, SAVED) for suite-wide SearchExpand.
+    -- Bags contributes CATEGORY entries from its own SV via a catalog provider.
+    searchCatalog = {
+        schemaVersion = 0,
+        entries = {}, -- [id] = { id, kind, name, formerNames, body, created }
     },
     portalHub = {
         escEnabled = true,
@@ -416,6 +417,7 @@ function ns:InitializeDatabase()
 
     self:MigrateAltScope()
     self:MigrateOverlays2()
+    ns.SearchCatalog:MigrateFromSearchShortcuts()
 end
 
 -- Legacy 1.0 overlay feature ids in their catalog order. Every legacy entry

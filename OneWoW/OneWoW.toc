@@ -113,6 +113,7 @@ Core\FirstRunWizard.lua
 Services\TooltipScanner.lua
 Services\ItemLevel.lua
 Services\PredicateEngine.lua
+Services\SearchCatalog.lua
 Services\SearchExpand.lua
 Services\AHItemKeys.lua
 Services\ItemPrices.lua

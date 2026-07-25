@@ -1,6 +1,7 @@
 local _, ns = ...
 
 local PE = OneWoW.PredicateEngine
+local SE = OneWoW.SearchExpand
 local L = ns.L
 
 local tinsert = tinsert
@@ -55,7 +56,7 @@ local function KeywordProvider(_, context)
 
     local itemInfo = { hyperlink = context.itemLink }
     local keywords = PE:GetMatchingKeywords(context.itemID, nil, nil, itemInfo)
-    local aliases = PE:GetMatchingAliases(context.itemID, nil, nil, itemInfo)
+    local aliases = SE:GetMatchingTokens(context.itemID, nil, nil, itemInfo)
     if #keywords == 0 and #aliases == 0 then return nil end
 
     local lines = {}

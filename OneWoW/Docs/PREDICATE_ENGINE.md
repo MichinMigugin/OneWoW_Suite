@@ -112,13 +112,11 @@ All functions are method-style (`PE:Func(...)`). Exported constants use dot synt
 |---|---|
 | `PE:RegisterKeyword(nameOrNames, func)` | Register a `#keyword` (or a list of aliases — first name is canonical). `func(props)` returns truthy to match. Wipes `compiledCache`. Re-registering the same predicate function under a new name keeps the existing canonical entry. |
 | `PE:RegisterProperty(nameOrNames, def)` | Register a numeric, string, or set property for comparison syntax (e.g. `haste>=200`, `forspec=73`). `def = { field = "fieldName", type = "number"\|"string"\|"set", unit = "money"? }`. `unit = "money"` enables money parsing (`100g`, `5s50c`) on the RHS for number-typed properties. A `set` property's field holds a lookup table `{ [id] = true }`; `=`/`==` test membership and `!=` non-membership (ordered comparators are meaningless for nominal IDs and return false). Wipes `compiledCache`. |
-| `PE:GetAllKeywords() -> { canonical, aliases[] }[]` | Every registered keyword in registration order. `aliases` excludes the canonical name and is alphabetically sorted. Intended for help/reference UIs. |
-| `PE:GetMatchingKeywords(itemID, bagID?, slotID?, itemInfo?) -> string[]` | Return canonical built-in keyword names that match this item, in registration order. With only hyperlink context, policy bind keywords such as `#boe`, `#bou`, `#warbound`, and `#wue` can still match via tooltip fallback, while current-bound state (`#bop` / `#soulbound` / `#bound`) cannot be inferred. Current slot-state keywords such as `#new`, `#locked`, `#tradeableloot`, durability, equipment-set membership, count, refund/scrap state, and battle-pay state require `bagID`/`slotID`. User synonyms are **not** included — use `GetMatchingAliases`. |
-| `PE:GetMatchingAliases(itemID, bagID?, slotID?, itemInfo?) -> string[]` | User synonym aliases whose target built-in matches this item, sorted alphabetically. |
-| `PE:RegisterAlias(name, targetKeyword) -> ok, err?` | Register a one-hop synonym (`#decks` → same fn as `#combinable`). Rejects collisions with built-in `KEYWORD_MAP` names and requires the target to be a built-in keyword (not another alias). Wipes `compiledCache`. |
-| `PE:RegisterAliases(map)` | Wipe + rebuild the user alias map from `{ [alias] = targetKeyword, ... }`, then wipe `compiledCache`. Used by Search Shortcuts on login / profile apply. |
-| `PE:GetAliases() -> table` | Shallow copy of the current user alias map. |
-| `PE:IsBuiltinKeyword(name) -> bool` | Whether `name` is a built-in `KEYWORD_MAP` entry (not a user alias). |
+| `PE:GetAllKeywords() -> { canonical, aliases[] }[]` | Every registered **built-in** keyword in registration order. `aliases` excludes the canonical name and is alphabetically sorted. Intended for help/reference UIs. User `#token` entries are not included — use `SearchExpand:GetTokens()`. |
+| `PE:GetMatchingKeywords(itemID, bagID?, slotID?, itemInfo?) -> string[]` | Return canonical built-in keyword names that match this item, in registration order. With only hyperlink context, policy bind keywords such as `#boe`, `#bou`, `#warbound`, and `#wue` can still match via tooltip fallback, while current-bound state (`#bop` / `#soulbound` / `#bound`) cannot be inferred. Current slot-state keywords such as `#new`, `#locked`, `#tradeableloot`, durability, equipment-set membership, count, refund/scrap state, and battle-pay state require `bagID`/`slotID`. User tokens are **not** included — use `SearchExpand:GetMatchingTokens`. |
+| `PE:SetKeywordResolver(fn)` | Install the callback consulted for a `#token` that is not a built-in. `fn(name) -> body\|nil`; the engine compiles the returned body in place. Installed by `SearchExpand`; wipes token + compiled caches. |
+| `PE:InvalidateKeywordTokens()` | Drop every resolved token predicate and the whole `compiledCache`. The resolver's owner calls this on any change to its data. |
+| `PE:IsBuiltinKeyword(name) -> bool` | Whether `name` is a built-in `KEYWORD_MAP` entry (not a user token). |
 
 ### Item helpers
 
@@ -202,16 +200,23 @@ end)
 - Avoid load-time gating on third-party globals. Always register the keyword, and check for the optional dependency **inside** the callback so load-order variability across `OptionalDeps` does not silently drop the keyword.
 - The first name in the list is treated as canonical for `GetAllKeywords` and `GetMatchingKeywords`.
 
-### Keyword synonyms (aliases)
+### User tokens (`#name`)
 
-User synonyms are **not** new predicates — they remap an unknown `#token` to an existing built-in keyword function:
+The engine holds **no** user state. Instead of a synonym table read out of SavedVariables, it holds one resolver callback:
 
 ```lua
-PE:RegisterAlias("decks", "combinable")  -- #decks → same as #combinable
-PE:RegisterAliases({ decks = "combinable", mats = "craftingreagent" })
+PE:SetKeywordResolver(function(name)
+    return MyStore:GetBody(name)  -- an expression string, or nil
+end)
 ```
 
-Resolution order for `#token`: `KEYWORD_MAP` → `ALIAS_MAP` (one hop / small chain with cycle guard) → fail-closed always-false. Alias names must not collide with built-ins (including `#combineready`). Prefer managing aliases through **OneWoW Settings → Search Shortcuts** (persisted in `OneWoW_DB.global.searchShortcuts.aliases`); that path calls `RegisterAliases` on login.
+Resolution order for `#token`: `KEYWORD_MAP` → resolver → fail-closed always-false. Because the engine *compiles* the returned body rather than mapping to one predicate, a token body may be any expression — `#sell` can be `quality<=0 | CATEGORY(Junk)`, not just a rename of one built-in.
+
+- **Built-ins always win.** `#upgrade`, `#combineready`, and `#disenchantable` register long after login, so a token stored earlier can be shadowed later. `RegisterKeyword` drops the token cache so the new built-in takes effect immediately, and the shadowed entry is *reported*, not deleted — see `SearchExpand:GetShadowedTokens()`.
+- **Cycles fail closed.** A token reached while it is already being resolved compiles to always-false, and a resolution that hit a cycle is not cached, so an unrelated token reached through a cyclic walk does not inherit that walk's cut. Every failure mode here fails closed (matches nothing), never open.
+- **Invalidation is the resolver owner's job.** Token bodies are baked into `compiledCache`, so any change to the backing store must call `PE:InvalidateKeywordTokens()`.
+
+`SearchExpand` installs the resolver over the `token` kind of `OneWoW.SearchCatalog` (`OneWoW_DB.global.searchCatalog`), managed through **OneWoW Settings → Search Shortcuts**. It expands `SAVED(...)` / `CATEGORY(...)` in the body before handing it back, and resolves current *and* former names, so a renamed token keeps working in expressions written before the rename.
 
 ### Named expressions and CATEGORY expand (`OneWoW.SearchExpand`)
 
@@ -219,10 +224,12 @@ Resolution order for `#token`: `KEYWORD_MAP` → `ALIAS_MAP` (one hop / small ch
 
 | Function | Purpose |
 |---|---|
-| `SearchExpand:Expand(expr) -> string` | Expand `SAVED(Name)` from core `searchShortcuts.saved` and `CATEGORY(Name)` via an optional Bags-registered resolver; shared depth/cycle guards; missing refs fail closed |
+| `SearchExpand:Expand(expr) -> string` | Expand `SAVED(Name)` and `CATEGORY(Name)`, both from the core `SearchCatalog` (`saved` / `category` kind, current or former name); one depth/cycle guard keyed on kind + entry id; missing refs fail closed |
 | `SearchExpand:Compile(expr) -> compiled, err?` | `Expand` then `PE:Compile` |
 | `SearchExpand:CheckItem(...)` | `Expand` then `PE:CheckItem` |
-| `SearchExpand:SetCategoryResolver(fn)` | Bags registers `GetCategorySearchExpression` on load; without Bags, `CATEGORY` fails closed |
+| `SearchExpand:GetTokens() -> entry[]` | Every `token` catalog entry, sorted by name. Shadowed entries included |
+| `SearchExpand:IsTokenShadowed(name) -> bool` / `GetShadowedTokens() -> entry[]` | Tokens outranked by a built-in keyword of the same name, for lint + UI |
+| `SearchExpand:GetMatchingTokens(itemID, bagID?, slotID?, itemInfo?) -> string[]` | User tokens whose expression matches this item, alphabetically. The user-token counterpart to `PE:GetMatchingKeywords` |
 | Saved CRUD / aliases | `SetSaved` / `RenameSaved` / `DeleteSaved` / `SetAlias` / … — hub Settings + Bags info-bar Save |
 
 Hardcoded internal expressions (e.g. toast-loot / autoopen predicates) may keep using raw `PE:Compile`.
@@ -268,3 +275,4 @@ Identity props also expose `bonusIDs` (parsed once per item link in `PopulateBas
 - The lazy-resolution metatable means a predicate that never references stat / bind / tooltip fields never pays for `C_Item.GetItemStats`, `C_TooltipInfo.GetBagItem`, or tooltip text concatenation.
 - Registering a new keyword or property wipes `compiledCache` (future evaluations recompile). Props and tooltip caches are untouched.
 - `GetMatchingKeywords` and `GetAllKeywords` iterate every registered keyword. Use them for tooltip/diagnostic paths and help UIs, not for hot filter loops — use `CheckItem` with a targeted expression there.
+- User tokens resolve once and are cached by name, so the resolver runs on first use, not per evaluation. A token that resolves to nothing caches that fact too. Any change to the backing store wipes both that cache and `compiledCache`, so an edit costs a full recompile of everything currently in flight.

@@ -103,6 +103,13 @@ When two categories with the same name collide and the user picks `Merge`:
 - **filterMode**
   - If either side is search-based (`filterMode = "search"`), search wins.
   - Otherwise the imported `filterMode` replaces the existing one.
+  - `filterMode` now only selects which editor a category opens; matching is
+    always `searchExpression`. A type-based payload written before that change
+    carries localized type names and no expression, so the applier compiles one
+    against **this** client's locale on the way in. A name the exporter's locale
+    knew and ours does not leaves the category on its item pins and reported by
+    the lint — the same outcome as a local category whose names stopped
+    resolving.
 - **items** — always unioned (pinned item IDs from both sides are kept).
 - **enabled** — sticky; stays enabled if either side was enabled.
 - **modifications** (per category, per scope)

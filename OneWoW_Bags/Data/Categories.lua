@@ -9,7 +9,6 @@ local Constants = ns.Constants
 local tinsert, sort, wipe = tinsert, sort, wipe
 local ipairs, pairs = ipairs, pairs
 local type, time, tostring = type, time, tostring
-local strfind = string.find
 local C_Item = C_Item
 local C_Container = C_Container
 local C_NewItems = C_NewItems
@@ -85,22 +84,16 @@ local recentExpiryTicker = nil
 
 local customCategoriesV2 = {}
 
--- Precomputed mirror of customCategoriesV2 with slot-invariant fields baked
--- in (filterMode, lowercased itemType/itemSubType, needsExpand flag). Rebuilt
--- whenever customCategoriesV2 mutates so the per-slot
--- CollectCustomPredicateCandidates loop can skip a lot of repeat work.
+-- Precomputed mirror of customCategoriesV2 carrying each category's *compiled*
+-- predicate. Rebuilt whenever customCategoriesV2 or the search catalog mutates,
+-- so the per-slot CollectCustomPredicateCandidates loop is one call per
+-- category rather than expand + compile-cache lookup + props fetch.
 local precomputedCustomCands = {}
 
 -- Category display name -> 1-based rank from sectionOrder + section.categories.
 -- Rebuilt on InvalidateCache so assignment ties follow Category Manager list order.
 local categoryListOrderMap = {}
 local UNMAPPED_LIST_RANK = 999999
-
--- C_Item.GetItemClassInfo / GetItemSubClassInfo return localized strings that
--- are stable for the entire session. Cache the lowercased forms so type-mode
--- custom categories don't pay the Blizzard API + :lower() cost per slot.
-local classNameLowerCache = {}
-local subClassNameLowerCache = {}
 
 -- Two-tier category cache:
 --   categoryCache:     slot-keyed final result (per-slot overlays applied).
@@ -131,83 +124,32 @@ local function GetSlotCategoryName(equipLoc)
     return nil
 end
 
-local function InferFilterMode(categoryData)
-    local fm = categoryData.filterMode
-    if fm then return fm end
-    if categoryData.searchExpression and categoryData.searchExpression ~= "" then
-        return "search"
-    end
-    return "type"
-end
-
--- True if the expression references SAVED(name) or CATEGORY(name). Lets the
--- per-slot loop skip Expand entirely for expressions that have nothing to
--- expand (the common case for inline expressions).
-local function NeedsRefExpand(expression)
-    return type(expression) == "string"
-        and (strfind(expression, "SAVED(", 1, true) ~= nil
-            or strfind(expression, "CATEGORY(", 1, true) ~= nil)
-end
-
--- Cache C_Item.GetItemClassInfo(classID):lower(). The returned string is a
--- localized name that is stable for the entire session, so the first lookup
--- per classID is the only one that pays the Blizzard API cost. Cached `false`
--- is used to memoize "no name available" so we don't retry every slot.
-local function GetClassNameLower(classID)
-    if classID == nil then return nil end
-    local cached = classNameLowerCache[classID]
-    if cached ~= nil then return cached or nil end
-    local name = C_Item.GetItemClassInfo(classID)
-    classNameLowerCache[classID] = name and name:lower() or false
-    return classNameLowerCache[classID] or nil
-end
-
-local function GetSubClassNameLower(classID, subClassID)
-    if classID == nil or subClassID == nil then return nil end
-    local subCache = subClassNameLowerCache[classID]
-    if not subCache then
-        subCache = {}
-        subClassNameLowerCache[classID] = subCache
-    end
-    local cached = subCache[subClassID]
-    if cached ~= nil then return cached or nil end
-    local name = C_Item.GetItemSubClassInfo(classID, subClassID)
-    subCache[subClassID] = name and name:lower() or false
-    return subCache[subClassID] or nil
-end
-
--- Rebuild the precomputed mirror of customCategoriesV2 with slot-invariant
--- fields baked in. Called whenever custom categories mutate (Set, Create,
--- Delete, field edits). Per-slot CollectCustomPredicateCandidates iterates
--- this array instead of the raw map so it doesn't have to recompute
--- InferFilterMode, :lower(), or needsExpand on every slot.
+-- Rebuild the precomputed mirror of customCategoriesV2 with slot-invariant work
+-- baked in. Called whenever custom categories mutate (Set, Create, Delete,
+-- field edits) and — via InvalidateCache — whenever the search catalog changes,
+-- which is what keeps the compiled bodies below fresh.
+--
+-- Every category is one expression now; there is no separate type-matching
+-- branch. Expansion and compilation both happen here rather than per slot, so
+-- the per-slot cost is a single call into an already-compiled predicate instead
+-- of Expand + a compiledCache hash of the whole expression string + BuildProps,
+-- once per category per slot.
 local function RebuildCustomCandsArray()
     wipe(precomputedCustomCands)
     for categoryId, categoryData in pairs(customCategoriesV2) do
         if categoryData.name then
-            local fm = InferFilterMode(categoryData)
             local entry = {
                 categoryId   = categoryId,
                 categoryData = categoryData,
                 name         = categoryData.name,
-                filterMode   = fm,
             }
-            if fm == "search" then
-                local expr = categoryData.searchExpression
-                if type(expr) == "string" and expr ~= "" then
-                    entry.expression  = expr
-                    entry.needsExpand = NeedsRefExpand(expr)
-                end
-            else
-                local hasType    = categoryData.itemType and categoryData.itemType ~= ""
-                local hasSubType = categoryData.itemSubType and categoryData.itemSubType ~= ""
-                if hasType or hasSubType then
-                    entry.hasType          = hasType or false
-                    entry.hasSubType       = hasSubType or false
-                    entry.lowerItemType    = hasType and categoryData.itemType:lower() or nil
-                    entry.lowerItemSubType = hasSubType and categoryData.itemSubType:lower() or nil
-                    entry.typeMatchMode    = categoryData.typeMatchMode
-                end
+            local expr = categoryData.searchExpression
+            if type(expr) == "string" and expr ~= "" then
+                entry.expression = expr
+                -- SE:Compile expands SAVED()/CATEGORY() then compiles. A body
+                -- that fails to compile yields nil and the category simply never
+                -- matches, same as any other broken expression.
+                entry.compiled = SE:Compile(expr)
             end
             tinsert(precomputedCustomCands, entry)
         end
@@ -424,53 +366,28 @@ local function ResolveManualCategoryName(itemID, db, disabled, containerType)
     return best and best.name or nil
 end
 
-local function CollectCustomPredicateCandidates(itemID, bagID, slotID, itemInfo, disabled, cands)
+--- Collect the custom categories whose expression matches this item.
+---
+--- `props` is optional: callers that already built it (the full pipeline does,
+--- one line earlier) pass it through so the whole loop shares one props table
+--- rather than reaching back into the props cache per category.
+local function CollectCustomPredicateCandidates(itemID, bagID, slotID, itemInfo, disabled, cands, props)
+    if #precomputedCustomCands == 0 then return end
+
+    props = props or PE:BuildProps(itemID, bagID, slotID, itemInfo)
+    if not props then return end
+
     for i = 1, #precomputedCustomCands do
         local entry = precomputedCustomCands[i]
         local categoryData = entry.categoryData
 
         -- Cheap gates first: category-disabled (live ref, no rebuild required
         -- when toggled) and user-disabled (per-pass parameter). These short-
-        -- circuit before any predicate evaluation or Blizzard API call.
+        -- circuit before any predicate evaluation.
         if categoryData.enabled ~= false and not disabled[entry.name] then
-            if entry.filterMode == "search" then
-                local expr = entry.expression
-                if expr then
-                    if entry.needsExpand then
-                        expr = SE:Expand(expr)
-                    end
-                    if PE:CheckItem(expr, itemID, bagID, slotID, itemInfo or {}) then
-                        tinsert(cands, { name = entry.name, tieKey = entry.categoryId, isCustom = true })
-                    end
-                end
-            elseif entry.hasType or entry.hasSubType then
-                local props = PE:BuildProps(itemID, bagID, slotID, itemInfo)
-                local classID, subClassID = props.classID, props.subClassID
-                local typeMatch    = not entry.hasType
-                local subTypeMatch = not entry.hasSubType
-                if entry.hasType and classID ~= nil then
-                    local cn = GetClassNameLower(classID)
-                    typeMatch = cn ~= nil and cn == entry.lowerItemType
-                end
-                if entry.hasSubType and classID ~= nil and subClassID ~= nil then
-                    local scn = GetSubClassNameLower(classID, subClassID)
-                    subTypeMatch = scn ~= nil and scn == entry.lowerItemSubType
-                end
-                local matched
-                if entry.hasType and entry.hasSubType then
-                    if entry.typeMatchMode == "or" then
-                        matched = typeMatch or subTypeMatch
-                    else
-                        matched = typeMatch and subTypeMatch
-                    end
-                elseif entry.hasType then
-                    matched = typeMatch
-                else
-                    matched = subTypeMatch
-                end
-                if matched then
-                    tinsert(cands, { name = entry.name, tieKey = entry.categoryId, isCustom = true })
-                end
+            local compiled = entry.compiled
+            if compiled and PE:SafeEvaluate(compiled, props) then
+                tinsert(cands, { name = entry.name, tieKey = entry.categoryId, isCustom = true })
             end
         end
     end
@@ -587,7 +504,7 @@ local function ResolveBaseCategory(itemID, hyperlink, containerType, itemInfo, b
 
     if itemID then
         if Profile then Profile:Start("Categories.fullPipeline.customCands") end
-        CollectCustomPredicateCandidates(itemID, bagID, slotID, itemInfo, disabled, allCands)
+        CollectCustomPredicateCandidates(itemID, bagID, slotID, itemInfo, disabled, allCands, props)
         if Profile then Profile:Stop("Categories.fullPipeline.customCands") end
     end
 

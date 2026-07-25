@@ -65,6 +65,18 @@ local function replaceNameInOrderedList(list, oldName, newName)
     end
 end
 
+-- Per-window collapse state is keyed by category display name. These are the
+-- tables actually written with a category key today; `collapsedBankSections` is
+-- a legacy read-only fallback that BankWindow consults with both category and
+-- tab keys, so it is deliberately left alone rather than risk rekeying a tab.
+local NAME_KEYED_COLLAPSE = { "collapsedSections", "collapsedBankCategorySections" }
+
+local function rekeyNameKeyedTable(tbl, oldName, newName)
+    if not tbl or tbl[oldName] == nil then return end
+    tbl[newName] = tbl[oldName]
+    tbl[oldName] = nil
+end
+
 local function purgeCategoryKeys(g, categoryName)
     if not categoryName or categoryName == "" then return end
     if g.categoryModifications then
@@ -73,10 +85,16 @@ local function purgeCategoryKeys(g, categoryName)
     if g.disabledCategories then
         g.disabledCategories[categoryName] = nil
     end
+    for _, key in ipairs(NAME_KEYED_COLLAPSE) do
+        if g[key] then g[key][categoryName] = nil end
+    end
     removeNameFromOrderedList(g.categoryOrder, categoryName)
     removeNameFromOrderedList(g.displayOrder, categoryName)
 end
 
+-- Bags-internal name-keyed state. Separate concern from expression references:
+-- those resolve through the catalog by former name and are never rewritten,
+-- while these are Bags' own lookups and genuinely have to follow the rename.
 local function rekeyCategoryKeys(g, oldName, newName)
     if not oldName or not newName or oldName == newName then return end
 
@@ -88,6 +106,10 @@ local function rekeyCategoryKeys(g, oldName, newName)
     if g.disabledCategories and g.disabledCategories[oldName] then
         g.disabledCategories[newName] = g.disabledCategories[oldName]
         g.disabledCategories[oldName] = nil
+    end
+
+    for _, key in ipairs(NAME_KEYED_COLLAPSE) do
+        rekeyNameKeyedTable(g[key], oldName, newName)
     end
 
     replaceNameInOrderedList(g.categoryOrder, oldName, newName)
@@ -187,12 +209,29 @@ function CategoryController:CreateCategory(name)
         items = {},
         enabled = true,
         sortOrder = order,
+        formerNames = {},
     }
+
+    -- The new name may be some other category's *former* name — the display-name
+    -- check above only looks at current names. Claiming it strips it from that
+    -- entry, so CATEGORY(name) resolves to exactly one category.
+    OneWoW.SearchCatalog:ClaimName("category", name)
 
     self:RefreshUI()
     return id
 end
 
+--- Rename a custom category.
+---
+--- The name change itself goes through SearchCatalog, which records the old
+--- name as a former name so every `CATEGORY(oldName)` still stored anywhere in
+--- the suite keeps resolving to this category. Nothing is rewritten. What still
+--- has to follow the rename is Bags' own name-keyed state — sections, ordering,
+--- per-category modifications, collapse state — which `rekeyCategoryKeys` owns.
+---
+--- The whole thing runs inside one catalog batch so the change notification
+--- fires after that internal state is consistent; otherwise the re-categorize
+--- it triggers would run against a half-renamed database.
 function CategoryController:RenameCategory(id, name)
     if not id then return false end
     name = name and strtrim(name) or ""
@@ -203,45 +242,36 @@ function CategoryController:RenameCategory(id, name)
     local category = g.customCategoriesV2[id]
     if not category then return false end
 
-    if self:NormalizeDisplayNameKey(category.name) == self:NormalizeDisplayNameKey(name) then
-        local oldName = category.name
-        category.name = name
-        replaceCategoryNameInAllSections(g, oldName, name)
-        if oldName ~= name then
-            rekeyCategoryKeys(g, oldName, name)
-            if ns.CategoryRefs then
-                ns.CategoryRefs:ReplaceReferencesInDB(oldName, name)
-            end
-            if #db.global.displayOrder > 0 then
-                wipe(db.global.displayOrder)
-            end
-            if g.categorySections[ns.SectionDefaults.SEC_ONEWOW_BAGS] then
-                ns.SectionDefaults:SyncOnewowSectionCategories(g)
-            end
-            self:RefreshUI()
-        else
-            self:RefreshUI({ invalidate = false })
-        end
-        return true
-    end
-    if not self:IsCategoryDisplayNameAvailable(name, id) then
+    -- A case-only edit ("sell" -> "Sell") is the same category, so it skips the
+    -- suite-wide duplicate check that would otherwise reject it against itself.
+    local caseOnly = self:NormalizeDisplayNameKey(category.name) == self:NormalizeDisplayNameKey(name)
+    if not caseOnly and not self:IsCategoryDisplayNameAvailable(name, id) then
         return false, "DUPLICATE_CATEGORY_NAME"
     end
 
     local oldName = category.name
-    category.name = name
-    replaceCategoryNameInAllSections(g, oldName, name)
-    rekeyCategoryKeys(g, oldName, name)
-    if ns.CategoryRefs then
-        ns.CategoryRefs:ReplaceReferencesInDB(oldName, name)
+    if caseOnly and oldName == name then
+        self:RefreshUI({ invalidate = false })
+        return true
     end
-    if #db.global.displayOrder > 0 then
-        wipe(db.global.displayOrder)
-    end
-    if g.categorySections[ns.SectionDefaults.SEC_ONEWOW_BAGS] then
-        ns.SectionDefaults:SyncOnewowSectionCategories(g)
-    end
-    self:RefreshUI()
+
+    local ok, err
+    OneWoW.SearchCatalog:WithBatch(function()
+        ok, err = OneWoW.SearchCatalog:RenameExternal("category", id, name)
+        if not ok then return end
+
+        replaceCategoryNameInAllSections(g, oldName, name)
+        rekeyCategoryKeys(g, oldName, name)
+        if #g.displayOrder > 0 then
+            wipe(g.displayOrder)
+        end
+        if g.categorySections[ns.SectionDefaults.SEC_ONEWOW_BAGS] then
+            ns.SectionDefaults:SyncOnewowSectionCategories(g)
+        end
+        self:RefreshUI()
+    end)
+
+    if not ok then return false, err end
     return true
 end
 
@@ -554,11 +584,30 @@ function CategoryController:SetCategoryForceOwnLine(categoryName, key, value)
     self:RefreshUI({ invalidate = true })
 end
 
+-- Type-editor fields. They no longer drive matching — they are the inputs the
+-- type editor round-trips, and every edit recompiles them into the category's
+-- searchExpression, which is the only thing that actually matches.
+local TYPE_EDITOR_FIELDS = {
+    itemType = true,
+    itemSubType = true,
+    typeMatchMode = true,
+}
+
 function CategoryController:SetCustomCategoryValue(categoryID, key, value, options)
     local category = self:GetDB().global.customCategoriesV2[categoryID]
     if not category then return end
 
     category[key] = value
+
+    if TYPE_EDITOR_FIELDS[key] then
+        -- Names are resolved to class/subclass ids now, at edit time, against
+        -- the current locale. A name that resolves to nothing leaves the body
+        -- empty: the category falls back to its item pins and reports in the
+        -- lint, rather than silently matching nothing the way type mode did.
+        category.searchExpression = ns.ItemTypeExpr:Build(
+            category.itemType, category.itemSubType, category.typeMatchMode) or nil
+    end
+
     self:RefreshUI(options)
 end
 

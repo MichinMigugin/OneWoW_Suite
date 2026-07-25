@@ -140,20 +140,19 @@ end
 
 local function BuildBuiltinKeywordItems()
     local items = {}
+    -- GetAllKeywords is built-ins only; user tokens live in the catalog.
     for _, entry in ipairs(PE:GetAllKeywords()) do
-        if not entry.isUserAlias then
-            local labels = { "#" .. entry.canonical }
-            local filterParts = { entry.canonical }
-            for _, aliasName in ipairs(entry.aliases or {}) do
-                tinsert(labels, "#" .. aliasName)
-                tinsert(filterParts, aliasName)
-            end
-            tinsert(items, {
-                value = entry.canonical,
-                text = tconcat(labels, ", "),
-                filterKey = tconcat(filterParts, " "),
-            })
+        local labels = { "#" .. entry.canonical }
+        local filterParts = { entry.canonical }
+        for _, aliasName in ipairs(entry.aliases or {}) do
+            tinsert(labels, "#" .. aliasName)
+            tinsert(filterParts, aliasName)
         end
+        tinsert(items, {
+            value = entry.canonical,
+            text = tconcat(labels, ", "),
+            filterKey = tconcat(filterParts, " "),
+        })
     end
     sort(items, function(a, b)
         return a.value < b.value
@@ -353,7 +352,14 @@ RefreshAliasRows = function()
         tinsert(display, { draft = true })
     end
     for _, name in ipairs(names) do
-        tinsert(display, { key = name, target = aliases[name] })
+        -- A keyword registered after this token was stored shadows it outright,
+        -- so the row is flagged rather than rendered as if it still worked.
+        -- Renaming is the fix; the body is kept either way.
+        tinsert(display, {
+            key = name,
+            target = aliases[name],
+            shadowed = SE:IsTokenShadowed(name),
+        })
     end
 
     if aliasEmptyText then
@@ -372,7 +378,7 @@ RefreshAliasRows = function()
             row.nameBox:SetText("#" .. entry.key)
             row.nameBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             SetTargetDropdown(row, entry.target)
-            SetAliasRowWarning(row, false)
+            SetAliasRowWarning(row, entry.shadowed, "ALIAS_COLLIDES_BUILTIN")
         end
         row:ClearAllPoints()
         row:SetPoint("TOPLEFT", aliasListContent, "TOPLEFT", 0, -((i - 1) * (ALIAS_ROW_HEIGHT + 4)))

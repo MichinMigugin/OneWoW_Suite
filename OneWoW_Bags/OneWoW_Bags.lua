@@ -672,12 +672,32 @@ function OneWoW_Bags:OnAddonLoaded()
         SE:MigrateFromBagsSavedSearches(bagsSaved)
         wipe(ns.db.global.savedSearches)
     end
-    SE:SetCategoryResolver(function(name)
-        return ns.CategoryRefs:FindSearchExpression(name)
-    end)
-    SE:RegisterExternalTextRewriter("OneWoW_Bags", function(oldName, newName)
-        ns.CategoryRefs:RewriteSavedReferences(oldName, newName)
-    end)
+    -- Bags owns the "category" kind: records stay in Bags SavedVariables and are
+    -- presented as catalog entries on demand. CategoryRefs:NotifyRulesChanged
+    -- invalidates the kind whenever those records change.
+    OneWoW.SearchCatalog:RegisterProvider("category", {
+        Enumerate = function() return ns.CategoryRefs:EnumerateCatalogEntries() end,
+        Get = function(id) return ns.CategoryRefs:GetCatalogEntry(id) end,
+        SetName = function(id, name) ns.CategoryRefs:SetCatalogEntryName(id, name) end,
+    })
+    -- One-shot: type-mode categories become ordinary expressions over class and
+    -- subclass ids. Type mode compared *localized* names against localized API
+    -- output, so it broke silently on a client language change; ids do not.
+    -- Batched because it rewrites every type-mode category and each write would
+    -- otherwise drag the whole suite through a re-categorize.
+    if not ns.db.global._migratedTypeModeToExpr then
+        OneWoW.SearchCatalog:WithBatch(function()
+            local _, unconverted = ns.ItemTypeExpr:MigrateCategories(ns.db.global.customCategoriesV2)
+            -- Categories whose stored names resolve to nothing in this locale.
+            -- They were already matching nothing, so there is no behavior to
+            -- preserve; the typed strings stay on the record so the user can see
+            -- what to re-pick. The lint recomputes this set rather than trusting
+            -- a stored report, so this is only a convenience for the session.
+            ns._typeModeUnconverted = unconverted
+        end)
+        ns.db.global._migratedTypeModeToExpr = true
+    end
+
     SE:RegisterChangedCallback("OneWoW_Bags", function()
         ns:InvalidateCategorization()
         ns:RequestLayoutRefresh("all")

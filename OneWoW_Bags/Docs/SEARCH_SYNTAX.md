@@ -94,18 +94,24 @@ Saved search name rules:
 - Missing, invalid, or cyclic references fail closed by expanding to a
   never-match predicate instead of matching everything.
 
-Stored in core SavedVariables as
-`OneWoW_DB.global.searchShortcuts.saved` (`displayName -> predicate string`).
-Keyword synonyms (`#decks` → `#combinable`) live beside them under
-`searchShortcuts.aliases` and are registered into PredicateEngine on login.
+Stored in core SavedVariables as `saved`-kind entries in
+`OneWoW_DB.global.searchCatalog`. User tokens (`#decks` → `#combinable`) are
+`token`-kind entries in the same catalog; PredicateEngine resolves an unknown
+`#token` through a callback on first use rather than being handed a map on
+login, so a token body may be any expression, not just one built-in keyword.
+Renaming either kind keeps the old name working: the catalog retains former
+names and resolves them to the same entry, so no stored expression is rewritten.
 
 ---
 
 ## Category Search Shortcuts
 
 Custom categories that use a **search** rule can be referenced by display name
-anywhere suite SearchExpand runs (Bags, Mail, QoL, …). Resolution is live via
-`OneWoW_Bags_API.GetCategorySearchExpression` when Bags is loaded.
+anywhere suite SearchExpand runs (Bags, Mail, QoL, …). Bags contributes its
+categories to `OneWoW.SearchCatalog` as the `category` kind through a registered
+provider, so resolution is live and the records stay in Bags SavedVariables.
+`OneWoW_Bags_API.GetCategorySearchExpression` reads through the same catalog.
+With Bags unloaded the kind is empty and every `CATEGORY(...)` fails closed.
 
 Syntax:
 
@@ -1217,7 +1223,7 @@ in this document; full API and extension notes are in
 | `ParseItemLink` (internal) | Decomposes retail item link fields (context, bonuses, craft GUID, quality prefix, etc.). |
 | `Tokenize` | Layer 2 input: `&` `and` `\|` `or` `!` `not` `#keyword`, comparisons, flags, `()` , bare `ilvl` / money shorthands, quoted `~` name shorthand, text fallback. Tokenizer also accepts `||` as OR for SV/import strings; users type single `\|` in EditBoxes. |
 | Parser | `ParseExpression` → `ParseAnd` → `ParseNot` → `ParsePrimary` (precedence: `!` tightest, then `&`, then `|` / `or`). |
-| Public `PE:` API | `Compile`, `SafeEvaluate`, `CheckItem`, `BuildProps`, `ResolveParams`, `RegisterKeyword`, `RegisterProperty`, `RegisterAlias`, `RegisterAliases`, `GetAllKeywords`, `GetMatchingKeywords`, `GetMatchingAliases`, `InvalidateCache`, `InvalidatePropsCache`, `InvalidateKnownProfessions`, `GetBattlePetData`, `GetItemCacheKey`, `GetItemIdentityKey`, `ParseItemLink`, `CanClassEquip`, `GetTooltipText`, `GetExpansionID`, `GetExpansionName`. |
+| Public `PE:` API | `Compile`, `SafeEvaluate`, `CheckItem`, `BuildProps`, `ResolveParams`, `RegisterKeyword`, `RegisterProperty`, `SetKeywordResolver`, `InvalidateKeywordTokens`, `IsBuiltinKeyword`, `GetAllKeywords`, `GetMatchingKeywords`, `InvalidateCache`, `InvalidatePropsCache`, `InvalidateKnownProfessions`, `GetBattlePetData`, `GetItemCacheKey`, `GetItemIdentityKey`, `ParseItemLink`, `CanClassEquip`, `GetTooltipText`, `GetExpansionID`, `GetExpansionName`. User `#token` entries are not engine state — see `OneWoW.SearchExpand:GetTokens` / `GetMatchingTokens`. |
 | `PE` fields | `ParseMoney`, `BattlePetTypes`, `ClassID`, `BATTLE_PET_CAGE_ID`. |
 
 `#upgrade` is not hardcoded: it is registered at runtime (see

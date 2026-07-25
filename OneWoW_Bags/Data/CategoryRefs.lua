@@ -3,19 +3,26 @@ local _, ns = ...
 -- ============================================================================
 -- CategoryRefs
 -- ============================================================================
--- CATEGORY(Name) resolution for custom search-mode categories, plus rename
--- rewrites of CATEGORY() tokens inside Bags SV. Suite-wide expand lives in
--- OneWoW.SearchExpand; Bags registers FindSearchExpression as the resolver.
+-- Bags' contribution of custom categories to OneWoW.SearchCatalog as the
+-- "category" kind, which is what makes CATEGORY(Name) resolve. Category records
+-- stay in Bags SavedVariables (customCategoriesV2) and are presented to the
+-- catalog through the provider below, so the optional-load-unit boundary holds
+-- and Bags import/export stays self-contained.
+--
+-- Renaming a category rewrites nothing. The catalog keeps the old name in the
+-- record's formerNames and keeps resolving it to the same entry, so expressions
+-- in Bags history, other categories, core overlays, Mail, QoL and DirectDeposit
+-- all keep working without anyone being notified.
 
-local strgsub = string.gsub
-local strlower = string.lower
 local strtrim = strtrim
 local type = type
-local ipairs = ipairs
 local pairs = pairs
+local tinsert = tinsert
 
 ns.CategoryRefs = {}
 local CategoryRefs = ns.CategoryRefs
+
+local CATEGORY_KIND = "category"
 
 local categoryRulesChanged = {} ---@type table<string, fun()>
 
@@ -29,7 +36,83 @@ local function NormalizeCategoryRefName(name)
     return name
 end
 
+--- The search expression a category contributes, or nil when it has none.
+---
+--- Every rule is an expression now, including ones built with the type editor,
+--- so `filterMode` is not consulted: it only says which editor to show. An
+--- empty body means the category matches purely by its item pins, or that its
+--- stored type names did not resolve in this locale. The catalog reports both
+--- as `empty` rather than `missing`, which is how a lint can tell "you
+--- referenced a category with no rule" from "you referenced nothing".
+---@param rec table
+---@return string|nil
+local function SearchExpressionOf(rec)
+    local expr = rec.searchExpression
+    if type(expr) ~= "string" or expr == "" then return nil end
+    return expr
+end
+
+--- Present a category record as a SearchCatalog entry.
+---
+--- An adapter, not the record: the catalog's field names (`body`) and the
+--- record's (`searchExpression`) differ, and the id is the table key rather
+--- than a stored field. So nothing written to the adapter reaches the record —
+--- which is why the provider supplies `SetName`.
+---
+--- `formerNames` is the one exception, passed by reference so the catalog's
+--- rename bookkeeping writes straight into the record. It is created here when
+--- absent rather than only on rename: the alternative is handing the catalog a
+--- nil, which it would fill with a table on the throwaway adapter, silently
+--- discarding the rename. An empty table per category is a cheap price for
+--- making the contract impossible to violate.
+---@param id string
+---@param rec table
+---@return table
+local function ToCatalogEntry(id, rec)
+    rec.formerNames = rec.formerNames or {}
+    return {
+        id = id,
+        kind = CATEGORY_KIND,
+        name = rec.name,
+        formerNames = rec.formerNames,
+        body = SearchExpressionOf(rec),
+    }
+end
+
+--- SearchCatalog provider: every custom category, as catalog entries.
+---@return table[]
+function CategoryRefs:EnumerateCatalogEntries()
+    local out = {}
+    for id, rec in pairs(GetDB().global.customCategoriesV2) do
+        if rec and rec.name then
+            tinsert(out, ToCatalogEntry(id, rec))
+        end
+    end
+    return out
+end
+
+--- SearchCatalog provider: one category by id.
+---@param id string
+---@return table|nil
+function CategoryRefs:GetCatalogEntry(id)
+    local rec = GetDB().global.customCategoriesV2[id]
+    if not rec or not rec.name then return nil end
+    return ToCatalogEntry(id, rec)
+end
+
+--- SearchCatalog provider: write a renamed display name back to the record.
+--- Only the name — the catalog does not own anything else about a category, and
+--- the Bags-internal rekeying that a rename also needs stays in
+--- CategoryController where the rest of that bookkeeping lives.
+---@param id string
+---@param name string
+function CategoryRefs:SetCatalogEntryName(id, name)
+    local rec = GetDB().global.customCategoriesV2[id]
+    if rec then rec.name = name end
+end
+
 --- Find a custom search-mode category by display name (case-insensitive).
+--- Resolves through the catalog, so a former name works here too.
 ---@param name string|nil
 ---@return string|nil expression
 ---@return string|nil displayName
@@ -37,72 +120,9 @@ function CategoryRefs:FindSearchExpression(name)
     local normalized = NormalizeCategoryRefName(name)
     if not normalized then return nil end
 
-    local wanted = strlower(normalized)
-    local customs = GetDB().global.customCategoriesV2
-    for _, categoryData in pairs(customs) do
-        local displayName = categoryData and categoryData.name
-        if displayName and strlower(strtrim(displayName)) == wanted then
-            local fm = categoryData.filterMode
-            if not fm then
-                if categoryData.searchExpression and categoryData.searchExpression ~= "" then
-                    fm = "search"
-                else
-                    fm = "type"
-                end
-            end
-            if fm == "search" then
-                local expr = categoryData.searchExpression
-                if type(expr) == "string" and expr ~= "" then
-                    return expr, displayName
-                end
-            end
-            return nil, displayName
-        end
-    end
-    return nil
-end
-
-local function ReplaceCategoryReferences(text, oldName, newName)
-    if type(text) ~= "string" or text == "" then return text end
-
-    local oldLower = strlower(oldName)
-    return strgsub(text, "CATEGORY%(([^%)]*)%)", function(inner)
-        local normalized = NormalizeCategoryRefName(inner)
-        if normalized and strlower(normalized) == oldLower then
-            return "CATEGORY(" .. newName .. ")"
-        end
-        return "CATEGORY(" .. inner .. ")"
-    end)
-end
-
---- Rewrite CATEGORY(oldName) → CATEGORY(newName) in Bags history/categories
---- and in core named expressions (via SearchExpand).
----@param oldName string
----@param newName string
-function CategoryRefs:ReplaceReferencesInDB(oldName, newName)
-    if type(oldName) ~= "string" or type(newName) ~= "string" then return end
-    if oldName == "" or newName == "" then return end
-
-    local db = GetDB()
-    for i, query in ipairs(db.global.searchHistory) do
-        db.global.searchHistory[i] = ReplaceCategoryReferences(query, oldName, newName)
-    end
-
-    for _, categoryData in pairs(db.global.customCategoriesV2) do
-        if categoryData.searchExpression then
-            categoryData.searchExpression = ReplaceCategoryReferences(
-                categoryData.searchExpression, oldName, newName)
-        end
-    end
-
-    local SE = OneWoW.SearchExpand
-    local all = SE:GetAllSaved()
-    for name, query in pairs(all) do
-        local rewritten = ReplaceCategoryReferences(query, oldName, newName)
-        if rewritten ~= query then
-            SE:SetSaved(name, rewritten)
-        end
-    end
+    local entry = OneWoW.SearchCatalog:Resolve(CATEGORY_KIND, normalized)
+    if not entry then return nil end
+    return entry.body, entry.name
 end
 
 ---@param id string
@@ -117,26 +137,11 @@ function CategoryRefs:UnregisterRulesChanged(id)
 end
 
 function CategoryRefs:NotifyRulesChanged()
+    -- Category names and expressions back the catalog's kind-scoped name index,
+    -- and the catalog cannot see a write to Bags SavedVariables. Without this,
+    -- CATEGORY(...) keeps resolving against the names as they were.
+    OneWoW.SearchCatalog:InvalidateKind(CATEGORY_KIND)
     for _, fn in pairs(categoryRulesChanged) do
         fn()
-    end
-end
-
---- Rewrite SAVED(old) → SAVED(new) inside Bags searchHistory + category exprs.
----@param oldName string
----@param newName string
-function CategoryRefs:RewriteSavedReferences(oldName, newName)
-    local db = GetDB()
-    local SE = OneWoW.SearchExpand
-
-    for i, query in ipairs(db.global.searchHistory) do
-        db.global.searchHistory[i] = SE:ReplaceSavedReferencesInText(query, oldName, newName)
-    end
-
-    for _, categoryData in pairs(db.global.customCategoriesV2) do
-        if categoryData.searchExpression then
-            categoryData.searchExpression = SE:ReplaceSavedReferencesInText(
-                categoryData.searchExpression, oldName, newName)
-        end
     end
 end
