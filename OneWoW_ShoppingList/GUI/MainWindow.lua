@@ -513,8 +513,6 @@ function MainWindow:BuildSettingsPanel()
     local pad  = 12
     local yOff = -pad
 
-    yOff = OneWoW_GUI:CreateSettingsPanel(scrollContent, { yOffset = yOff, addonName = "OneWoW_ShoppingList" })
-
     local curS = GetSettings()
 
     local tooltipCb = OneWoW_GUI:CreateCheckbox(scrollContent, { label = L["OWSL_SETTINGS_ENABLE_TOOLTIP"] })

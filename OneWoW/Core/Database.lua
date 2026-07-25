@@ -14,7 +14,6 @@ local DEFAULTS = {
         minimapPos = 220,
         theme = "horde",
     },
-    minimapLaunchers = {},
     moneyDisplay = {
         useLetters = false,
         useRegionalNumbers = true,

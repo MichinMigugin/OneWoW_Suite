@@ -606,7 +606,7 @@ function ErrorLogger:PreviewSoundChoice(key)
 end
 
 function ErrorLogger:GetMinimapButton()
-    return OneWoW_GUI:GetMinimapButton("OneWoW_Utility_DevTool")
+    return OneWoW_GUI:GetMinimapButton()
 end
 
 function ErrorLogger:HasCurrentSessionErrors()

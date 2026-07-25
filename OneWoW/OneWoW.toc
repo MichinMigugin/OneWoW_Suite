@@ -50,7 +50,6 @@ GUI\Icons.lua
 GUI\ReorderDrag.lua
 GUI\KeywordHelp.lua
 GUI\Settings.lua
-GUI\Minimap.lua
 
 # Locale service — must load before any Locales file and before any reader of
 # OneWoW.L. Lives in Services/ but loads here (ahead of the Services block) for
@@ -165,6 +164,7 @@ UI\navigation.lua
 UI\MainWindow.lua
 UI\Minimap.lua
 UI\t-home.lua
+UI\settings-shared-panel.lua
 UI\t-settings.lua
 UI\t-rolesandalts.lua
 UI\t-profiles.lua

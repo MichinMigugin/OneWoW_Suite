@@ -20,7 +20,7 @@ Five rules govern OneWoW UI code:
 ## Authoritative sources
 
 1. `OneWoW/Docs/GUI.md` — component catalog, backdrop templates, GUI dimension keys, media asset policy, icon skinning, dropdown/menu helpers. Read first to find an existing helper before considering raw widgets.
-2. `OneWoW/GUI/Buttons.lua`, `EditBoxes.lua`, `Controls.lua`, `Layout.lua`, `Panels.lua`, `Display.lua`, `Icons.lua`, `Settings.lua`, `Minimap.lua`, `ReorderDrag.lua` — implementations. Read when uncertain about a helper's option contract.
+2. `OneWoW/GUI/Buttons.lua`, `EditBoxes.lua`, `Controls.lua`, `Layout.lua`, `Panels.lua`, `Display.lua`, `Icons.lua`, `Settings.lua`, `ReorderDrag.lua` — implementations. Read when uncertain about a helper's option contract. Shared appearance settings UI lives in hub `OneWoW/UI/settings-shared-panel.lua` (not stamped into suite units).
 3. `OneWoW/GUI/Constants.lua` — `BACKDROP_*` templates, `GUI.*` dimension defaults, `MEDIA_BASE` / `ICON_TEXTURES`, `THEMES` table (semantic color keys). Theme color keys live here.
 4. `OneWoW/GUI/OneWoW_GUI.lua` — `GetThemeColor`, `RegisterGUIConstants`, `GetSetting`, `SetSetting`, theme application logic.
 
@@ -181,7 +181,11 @@ Every addon should have `Addon/Core/Constants.lua` and `Addon/Locales/<locale>.l
 
 ## Shared suite settings
 
-Theme, language, minimap state — owned by the suite. Use `OneWoW_GUI:GetSetting(key)` / `OneWoW_GUI:SetSetting(key, value)` rather than per-addon storage.
+Theme, language, font, minimap, and value-display options are owned by the suite
+(`OneWoW_GUI:GetSetting` / `SetSetting`). The **UI** for those controls lives only
+on the OneWoW hub Settings tab — do not embed a duplicate shared-settings panel
+in suite unit windows. Feature-specific settings stay in the unit (or via
+`OneWoW:RegisterSettingsPanel`).
 
 ## Live font size & re-flow ("headphones + wheels")
 

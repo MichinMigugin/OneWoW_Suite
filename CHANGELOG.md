@@ -1,6 +1,9 @@
 # OneWoW Suite Changelog
 
 # OneWoW
+## Settings
+- Language, theme, font, minimap, and value display are edited only in OneWoW Settings (removed from Bags, Shopping List, Direct Deposit, and DevTool windows)
+
 ## Home
 - Mail now appears under Stand-alone Addons on the home page
 
@@ -46,16 +49,32 @@
 # Bags
 ## Features
 - Search transfer and Ctrl+Right-click deposit work while the guild bank is open (fills partial stacks, then empty slots)
+## Settings
+- General tab no longer duplicates OneWoW appearance settings (use OneWoW Settings)
 
 ---
 
 # Direct Deposit
 ## Features
 - Guild-bank auto/manual deposits use the shared suite deposit planner (partial stacks, then empty slots)
+## Settings
+- Settings tab no longer duplicates OneWoW appearance settings (use OneWoW Settings)
 
 ---
 
-*No user-facing changes this release for Notes, Trackers, Shopping List, or DevTool.*
+# Shopping List
+## Settings
+- Settings view no longer duplicates OneWoW appearance settings (use OneWoW Settings)
+
+---
+
+# DevTool
+## Settings
+- Settings tab no longer duplicates OneWoW appearance settings (use OneWoW Settings)
+
+---
+
+*No user-facing changes this release for Notes or Trackers.*
 
 ---
 

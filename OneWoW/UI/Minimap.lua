@@ -293,6 +293,13 @@ function MinimapMod:IsShown()
     return minimapBtn and minimapBtn:IsShown()
 end
 
+--- Hub minimap button frame (for badges / attachments). Suite units no longer
+--- create their own LibDBIcon launchers.
+---@return Frame|nil
+function OneWoW_GUI:GetMinimapButton()
+    return OneWoW_MinimapButton
+end
+
 ns:RegisterCoreLoginHandler("Minimap", function()
     MinimapMod:Initialize()
 end, "early")

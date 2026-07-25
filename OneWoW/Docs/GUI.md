@@ -239,21 +239,16 @@ taller text overlaps the next row. Stacked text rows should measure themselves
 `relayout` function. Reference implementation:
 `OneWoW_AltTracker_Auctions/UI/AHPricesPanel.lua` (`RelayoutPanel` + `RegisterFontRoot`).
 
-### Stamp out the standard 4-part settings panel
-```lua
-local yOffset = OneWoW_GUI:CreateSettingsPanel(parentFrame, {
-    yOffset = -10,  -- optional, default -10
-})
--- yOffset is now updated; continue adding addon-specific content below
-```
-This creates four themed split containers:
-1. Language Selection (left) | Color Theme (right) - with dropdowns
-2. Font (left) - dropdown | Font Size (right) - stepper with live preview
-3. Minimap Button checkbox (left) | Icon Theme dropdown (right)
-4. Discord link (left) | Buy Me A Coffee link (right) - copy-paste edit boxes
+### Shared appearance settings (hub Settings only)
 
-All dropdowns read/write the shared settings (`OneWoW_DB`) and fire callbacks.
-The panel consumes ~695px of vertical space.
+Language, color theme, font, font size, hub minimap visibility, icon theme, and
+value-display options live **only** on the OneWoW hub Settings main tab
+(`OneWoW/UI/settings-shared-panel.lua`, built from `UI:BuildSharedSettingsPanel`).
+Suite units must **not** embed that panel — they keep feature-specific settings
+in their own windows or via `OneWoW:RegisterSettingsPanel`.
+
+The panel reads/writes shared settings through `OneWoW_GUI:GetSetting` /
+`SetSetting` (`OneWoW_DB`) and fires the usual callbacks.
 
 ### Import per-addon settings into shared GUI DB (call once at addon init)
 ```lua
@@ -296,11 +291,8 @@ function addon:OnInitialize()
     OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", self, function(self2)
         -- locale view auto-updates; rebuild standalone UI you own
     end)
-    OneWoW_GUI:RegisterSettingsCallback("OnMinimapChanged", self, function(self2, hidden)
-        -- show/hide minimap button
-    end)
     OneWoW_GUI:RegisterSettingsCallback("OnIconThemeChanged", self, function(self2)
-        -- update minimap icon
+        -- update brand icons / title-bar art that use the icon theme
     end)
     OneWoW_GUI:RegisterSettingsCallback("OnFontChanged", self, function(self2, newFontKey)
         -- refresh UI text with OneWoW_GUI:GetFont()
@@ -310,11 +302,9 @@ function addon:OnInitialize()
     end)
 end
 
--- In your settings tab builder:
-function CreateMySettingsTab(parent)
-    local yOffset = OneWoW_GUI:CreateSettingsPanel(parent, { yOffset = -10 })
-    -- add addon-specific settings below using yOffset
-end
+-- Feature settings only (no shared appearance panel):
+-- Prefer OneWoW:RegisterSettingsPanel for hub modules, or a local settings
+-- view for stand-alone windows (Bags, ShoppingList, …).
 ```
 
 ---
@@ -404,48 +394,27 @@ Order stored in `Constants.THEMES_ORDER`.
 local texture = OneWoW_GUI:GetBrandIcon("horde")  -- or "alliance" or "neutral"
 ```
 
-### Minimap launcher (standalone addons)
+### Hub minimap
 
-When OneWoW hub is **not** loaded, addons can create their own minimap button via `CreateMinimapLauncher`:
+The suite uses a single hub minimap button (`OneWoW_MinimapButton`). Suite units
+register context-menu entries via `OneWoW:RegisterMinimap` — they do **not**
+create per-addon LibDBIcon launchers.
 
 ```lua
-local launcher = OneWoW_GUI:CreateMinimapLauncher("OneWoW_MyAddon", {
-    label = "My Addon",
-    onClick = function(_, button)
-        if button == "LeftButton" then MyAddon.GUI:Toggle() end
-    end,
-    onTooltip = function(frame)
-        GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
-        GameTooltip:SetText("My Addon", 1, 0.82, 0)
-        GameTooltip:Show()
-    end,
-})
--- launcher: { Initialize, Show, Hide, Toggle, IsShown, UpdateIcon, SetShown }
--- Register OnMinimapChanged to call launcher:SetShown(not hidden)
--- Register OnIconThemeChanged to call launcher:UpdateIcon()
+OneWoW:RegisterMinimap("OneWoW_MyAddon", "Open My Addon", "myaddon", nil)  -- tabKey opens hub tab
+-- or
+OneWoW:RegisterMinimap("OneWoW_MyAddon", "Open My Addon", nil, function() MyAddon.GUI:Toggle() end)
 ```
 
-When OneWoW hub **is** loaded, `CreateMinimapLauncher` returns a stub (no-ops); addons instead call `OneWoW:RegisterMinimap(addon, label, tabKey, callback)` to add an entry to the hub's context menu.
+Show/hide and icon theme are shared settings (`minimap.hide`, `minimap.theme`)
+edited only on the hub Settings tab.
 
-### Get minimap button frame
+### Get hub minimap button frame
 
 ```lua
-local btn = OneWoW_GUI:GetMinimapButton("OneWoW_MyAddon")
--- When OneWoW loaded: returns OneWoW_MinimapButton (hub button)
--- When standalone: returns LibDBIcon's button for addons that registered via CreateMinimapLauncher
+local btn = OneWoW_GUI:GetMinimapButton()
+-- Returns OneWoW_MinimapButton (or nil before the hub button exists)
 -- Use case: attach UI (e.g. error badge) to the minimap button
-```
-
-### RegisterMinimap (OneWoW hub)
-
-Addons that load with OneWoW call `OneWoW:RegisterMinimap(addon, label, tabKey, callback)` to add an entry to the hub minimap's right-click context menu:
-
-```lua
-if _G.OneWoW then
-    _G.OneWoW:RegisterMinimap("OneWoW_MyAddon", "Open My Addon", "myaddon", nil)  -- tabKey opens hub tab
-    -- or
-    _G.OneWoW:RegisterMinimap("OneWoW_MyAddon", "Open My Addon", nil, function() MyAddon.GUI:Toggle() end)
-end
 ```
 
 ### Register GUI constants with fallback

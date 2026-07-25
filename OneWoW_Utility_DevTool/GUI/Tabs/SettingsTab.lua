@@ -1,4 +1,4 @@
-local ADDON_NAME, ns = ...
+local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
 local L = ns.L
@@ -44,7 +44,7 @@ function ns.UI:CreateSettingsTab(parent)
     self.settingsUnloadCheckboxes = {}
 
     local _, scrollContent = OneWoW_GUI:CreateScrollFrame(tab, {})
-    local nextOffset = OneWoW_GUI:CreateSettingsPanel(scrollContent, { yOffset = -10, addonName = ADDON_NAME }) or -195
+    local nextOffset = -10
 
     local section = OneWoW_GUI:CreateFrame(scrollContent, {
         backdrop = BACKDROP_INNER_NO_INSETS,

@@ -14,7 +14,7 @@ function UI:CreateSettingsMainTab(parent)
 
     local yOffset = -10
 
-    yOffset = OneWoW_GUI:CreateSettingsPanel(content, { yOffset = yOffset })
+    yOffset = UI:BuildSharedSettingsPanel(content, yOffset)
 
     yOffset = yOffset - 10
 

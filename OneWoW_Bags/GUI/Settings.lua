@@ -386,8 +386,7 @@ local function BuildSearchSettingsSection(sc, db, yOffset)
 end
 
 local function BuildGeneralTab(sc, db)
-    local yOffset = OneWoW_GUI:CreateSettingsPanel(sc, { yOffset = -15, addonName = "OneWoW_Bags" })
-    yOffset = yOffset - 10
+    local yOffset = -15
 
     yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SETTING_ICON_SIZE"], yOffset = yOffset })
     local sizeContainer = BuildContainer(sc, yOffset)

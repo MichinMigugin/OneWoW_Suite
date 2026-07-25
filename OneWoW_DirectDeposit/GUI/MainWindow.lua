@@ -939,9 +939,7 @@ function GUI:CreateSettingsPanel(parent)
         name = "OneWoW_DirectDepositSettings",
     })
 
-    local yOffset = OneWoW_GUI:CreateSettingsPanel(scrollContent, { yOffset = -15, addonName = "OneWoW_DirectDeposit" })
-
-    yOffset = yOffset - 10
+    local yOffset = -15
 
     local aboutSection = OneWoW_GUI:CreateSectionHeader(scrollContent, {
         title   = L["ABOUT_SECTION"],
