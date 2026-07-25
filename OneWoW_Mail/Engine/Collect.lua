@@ -372,6 +372,13 @@ function Collect:Start(filter, selected, onDone)
                 finish(false)
                 return
             end
+            -- Selected is keyed by inbox index. Loot/delete shifts higher mails
+            -- down into this slot; drop it from the map so the neighbor that
+            -- slides in is not treated as still checked (high→low keeps any
+            -- remaining lower selected indices valid).
+            if filter == "selected" and selected then
+                selected[target] = nil
+            end
             if result == "skip" then
                 skipped[target] = true
             else
@@ -427,6 +434,11 @@ function Collect:ReturnSelected(selected, onDone)
         end
         local index = indices[i]
         i = i + 1
+        -- Drop before the inbox shifts so a later refresh doesn't paint the
+        -- check on whatever mail slides into this slot.
+        if selected then
+            selected[index] = nil
+        end
         local _, _, _, _, _, CODAmount, _, _, _, wasReturned, _, canReply = GetInboxHeaderInfo(index)
         if (CODAmount or 0) == 0 and canReply and not wasReturned then
             ReturnInboxItem(index)
@@ -461,6 +473,9 @@ function Collect:DeleteSelected(selected, onDone)
         end
         local index = indices[i]
         i = i + 1
+        if selected then
+            selected[index] = nil
+        end
         local _, _, _, _, money, CODAmount, _, hasItem = GetInboxHeaderInfo(index)
         if (CODAmount or 0) == 0 and (money or 0) == 0 and not hasItem then
             DeleteInboxItem(index)
