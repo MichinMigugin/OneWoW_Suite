@@ -367,17 +367,21 @@ function Collect:Start(filter, selected, onDone)
         end
 
         emptyRetriesLeft = INBOX_EMPTY_RETRIES
+        -- Selected is keyed by inbox index. Clear before TakeOneMail so a
+        -- MAIL_INBOX_UPDATE refresh (which can fire on delete before our
+        -- callback) does not paint the check on the mail that slides into
+        -- this slot. High→low keeps any remaining lower indices valid.
+        -- Restore on abort so a bags-full stop leaves the check in place.
+        if filter == "selected" and selected then
+            selected[target] = nil
+        end
         TakeOneMail(target, filter, function(result, loot)
             if result == false then
+                if filter == "selected" and selected then
+                    selected[target] = true
+                end
                 finish(false)
                 return
-            end
-            -- Selected is keyed by inbox index. Loot/delete shifts higher mails
-            -- down into this slot; drop it from the map so the neighbor that
-            -- slides in is not treated as still checked (high→low keeps any
-            -- remaining lower selected indices valid).
-            if filter == "selected" and selected then
-                selected[target] = nil
             end
             if result == "skip" then
                 skipped[target] = true
