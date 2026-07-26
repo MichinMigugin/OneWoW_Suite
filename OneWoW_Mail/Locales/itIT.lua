@@ -27,6 +27,8 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["BTN_RETURN"] = "Return",
     ["BTN_SEND_SHIPMENT"] = "Send",
     ["AUTO_COLLECT"] = "Raccolta auto:",
+    ["SORT_BY_EXPIRY"] = "Ordina per scadenza",
+    ["TT_SORT_BY_EXPIRY"] = "Se attivo, la posta in scadenza prima appare in cima.\nDisattivo = ordine normale della casella.",
     ["TT_AUTO_COLLECT_GOLD"] = "All’apertura della cassetta, raccoglie automaticamente l’oro dalla posta con denaro (prima delle spedizioni).\nLascia gli allegati. Con Oggetti = tutto (come Tutto). Salta COD e posta GM.",
     ["TT_AUTO_COLLECT_ITEMS"] = "All’apertura della cassetta, raccoglie automaticamente solo gli allegati dalla posta con oggetti (prima delle spedizioni).\nLascia l’oro. Con Oro = tutto (come Tutto). Salta COD e posta GM.",
     ["INBOX_MAIL_ONE"] = "%d messaggio",

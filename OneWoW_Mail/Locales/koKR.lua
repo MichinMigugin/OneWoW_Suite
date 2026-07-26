@@ -27,6 +27,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["BTN_RETURN"] = "Return",
     ["BTN_SEND_SHIPMENT"] = "Send",
     ["AUTO_COLLECT"] = "자동 수령:",
+    ["SORT_BY_EXPIRY"] = "만료 정렬",
+    ["TT_SORT_BY_EXPIRY"] = "선택하면 만료가 가까운 우편부터 표시합니다.\n끄면 일반 우편함 순서를 유지합니다.",
     ["TT_AUTO_COLLECT_GOLD"] = "우편함을 열면 골드가 있는 우편에서 골드를 자동 수령합니다(배송 전).\n첨부는 남깁니다. 아이템과 함께 켜면 전체(모두와 동일). COD/GM 우편은 건너뜁니다.",
     ["TT_AUTO_COLLECT_ITEMS"] = "우편함을 열면 아이템이 있는 우편의 첨부만 자동 수령합니다(배송 전).\n골드는 남깁니다. 골드와 함께 켜면 전체(모두와 동일). COD/GM 우편은 건너뜁니다.",
     ["INBOX_MAIL_ONE"] = "우편 %d통",

@@ -27,6 +27,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["BTN_RETURN"] = "Return",
     ["BTN_SEND_SHIPMENT"] = "Send",
     ["AUTO_COLLECT"] = "Coleta auto:",
+    ["SORT_BY_EXPIRY"] = "Ordenar por expiração",
+    ["TT_SORT_BY_EXPIRY"] = "Se marcado, o correio que expira primeiro aparece no topo.\nDesligado = ordem normal da caixa de correio.",
     ["TT_AUTO_COLLECT_GOLD"] = "Ao abrir a caixa de correio, coleta automaticamente ouro de correio com dinheiro (antes das remessas).\nDeixa anexos. Com Itens = tudo (como Todos). Ignora COD e correio de MJ.",
     ["TT_AUTO_COLLECT_ITEMS"] = "Ao abrir a caixa de correio, coleta automaticamente apenas anexos de correio com itens (antes das remessas).\nDeixa o ouro. Com Ouro = tudo (como Todos). Ignora COD e correio de MJ.",
     ["INBOX_MAIL_ONE"] = "%d correio",

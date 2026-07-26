@@ -60,6 +60,7 @@
 ## Features
 - Shipment match expressions support `SAVED(Name)`, `CATEGORY(Name)`, and keyword synonyms from Search Shortcuts
 - Compose To and shipment Character target: click or use the chevron to browse alts (and the rest of the address book), type to filter, and clear with the X
+- Inbox shows remaining mail time (e.g. `30d`, `23h15m`) with Blizzard green/red coloring; optional Expiry sort lists soonest-first
 
 ## Fixes
 - Closing with the X works when the window was opened via `/owmail` (not only from a mailbox)

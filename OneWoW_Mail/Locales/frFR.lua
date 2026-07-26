@@ -27,6 +27,8 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["BTN_RETURN"] = "Return",
     ["BTN_SEND_SHIPMENT"] = "Send",
     ["AUTO_COLLECT"] = "Récup. auto :",
+    ["SORT_BY_EXPIRY"] = "Tri par expiration",
+    ["TT_SORT_BY_EXPIRY"] = "Si coché, les courriers qui expirent bientôt apparaissent en premier.\nDésactivé = ordre normal de la boîte aux lettres.",
     ["TT_AUTO_COLLECT_GOLD"] = "À l’ouverture, récupère automatiquement l’or des courriers qui en contiennent (avant les envois).\nLaisse les pièces jointes. Avec Objets = tout (comme Tout). Ignore COD et courrier MJ.",
     ["TT_AUTO_COLLECT_ITEMS"] = "À l’ouverture, récupère automatiquement uniquement les pièces jointes des courriers avec objets (avant les envois).\nLaisse l’or. Avec Or = tout (comme Tout). Ignore COD et courrier MJ.",
     ["INBOX_MAIL_ONE"] = "%d courrier",

@@ -31,6 +31,8 @@ ns.L = OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["BTN_SEND_SHIPMENT"] = "Send",
 
     ["AUTO_COLLECT"] = "Auto-collect:",
+    ["SORT_BY_EXPIRY"] = "Expiry sort",
+    ["TT_SORT_BY_EXPIRY"] = "When checked, list mail soonest-to-expire first.\nOff keeps the normal mailbox order.",
     ["TT_AUTO_COLLECT_GOLD"] = "When the mailbox opens, automatically collect gold from mail that has money (before shipments run).\nLeaves attachments. Enable with Items to collect everything (same as All). Skips COD and GM mail.",
     ["TT_AUTO_COLLECT_ITEMS"] = "When the mailbox opens, automatically collect attachments from mail that has items (before shipments run).\nLeaves gold on those mails. Enable with Gold to collect everything (same as All). Skips COD and GM mail.",
 

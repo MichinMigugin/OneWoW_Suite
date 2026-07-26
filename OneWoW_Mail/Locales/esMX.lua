@@ -28,6 +28,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["BTN_RETURN"] = "Return",
     ["BTN_SEND_SHIPMENT"] = "Send",
     ["AUTO_COLLECT"] = "Recogida auto:",
+    ["SORT_BY_EXPIRY"] = "Orden por caducidad",
+    ["TT_SORT_BY_EXPIRY"] = "Si está marcado, el correo que caduca antes aparece primero.\nDesactivado = orden normal del buzón.",
     ["TT_AUTO_COLLECT_GOLD"] = "Al abrir el buzón, recoge automáticamente el oro del correo con dinero (antes de los envíos).\nDeja los adjuntos. Con Objetos = todo (como Todos). Omite contrarreembolso y correo de MJ.",
     ["TT_AUTO_COLLECT_ITEMS"] = "Al abrir el buzón, recoge automáticamente solo los adjuntos del correo con objetos (antes de los envíos).\nDeja el oro. Con Oro = todo (como Todos). Omite contrarreembolso y correo de MJ.",
     ["INBOX_MAIL_ONE"] = "%d correo",

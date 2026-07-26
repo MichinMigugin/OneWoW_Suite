@@ -27,6 +27,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["BTN_RETURN"] = "Return",
     ["BTN_SEND_SHIPMENT"] = "Send",
     ["AUTO_COLLECT"] = "自动收取：",
+    ["SORT_BY_EXPIRY"] = "按到期排序",
+    ["TT_SORT_BY_EXPIRY"] = "勾选后，即将到期的邮件排在前面。\n关闭则保持邮箱默认顺序。",
     ["TT_AUTO_COLLECT_GOLD"] = "打开邮箱时，自动收取有金币邮件中的金币（在货运之前）。\n保留附件。与物品同时开启 = 全部（同“全部”）。跳过付款取信和GM邮件。",
     ["TT_AUTO_COLLECT_ITEMS"] = "打开邮箱时，自动仅收取有物品邮件的附件（在货运之前）。\n保留金币。与金币同时开启 = 全部（同“全部”）。跳过付款取信和GM邮件。",
     ["INBOX_MAIL_ONE"] = "%d 封邮件",

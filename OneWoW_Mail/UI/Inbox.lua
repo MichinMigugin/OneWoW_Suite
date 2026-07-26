@@ -71,6 +71,42 @@ local function FormatCount(n, oneKey, manyKey)
     return string.format(L[manyKey], n)
 end
 
+-- Compact inbox expiry. Color threshold mirrors Blizzard InboxFrame_Update
+-- (.wow_docs/mail/MailFrame.lua ~254-257): >= 1 day green, else red.
+---@param daysLeft number|nil fractional days from GetInboxHeaderInfo
+---@return string text
+---@return boolean urgent true when under one day
+local function FormatDaysLeft(daysLeft)
+    daysLeft = tonumber(daysLeft) or 0
+    if daysLeft >= 1 then
+        return string.format("%dd", math.floor(daysLeft)), false
+    end
+    local secs = math.max(0, math.floor(daysLeft * 24 * 60 * 60))
+    local h = math.floor(secs / 3600)
+    local m = math.floor((secs % 3600) / 60)
+    if h > 0 and m > 0 then
+        return string.format("%dh%dm", h, m), true
+    elseif h > 0 then
+        return string.format("%dh", h), true
+    end
+    return string.format("%dm", math.max(1, m)), true
+end
+
+---@param row table
+---@param index number
+---@param daysLeft number|nil
+local function SetRowExpire(row, index, daysLeft)
+    local text, urgent = FormatDaysLeft(daysLeft)
+    row.expire:SetText(text)
+    -- Blizzard MailFrame.lua ~254-257: GREEN_FONT_COLOR vs RED_FONT_COLOR.
+    if urgent then
+        row.expire:SetTextColor(RED_FONT_COLOR:GetRGB())
+    else
+        row.expire:SetTextColor(GREEN_FONT_COLOR:GetRGB())
+    end
+    row.expireHit.mailIndex = index
+end
+
 --- Whether the expand control should be clickable (button always visible).
 local function MailCanExpand(index, attachments, CODAmount)
     if (attachments or 0) > 1 then
@@ -422,6 +458,29 @@ local function AcquireRow(parent)
     end)
     row.expandBtn:SetScript("OnLeave", GameTooltip_Hide)
 
+    -- Expire hit + label: expand | expire | money | badge
+    row.expireHit = CreateFrame("Button", nil, row)
+    row.expireHit:SetSize(44, ROW_H)
+    row.expireHit:SetPoint("RIGHT", row.expandBtn, "LEFT", -2, 0)
+    row.expireHit:SetScript("OnEnter", function(myself)
+        if not myself.mailIndex then
+            return
+        end
+        GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
+        if InboxItemCanDelete(myself.mailIndex) then
+            GameTooltip:SetText(TIME_UNTIL_DELETED, 1, 1, 1)
+        else
+            GameTooltip:SetText(TIME_UNTIL_RETURNED, 1, 1, 1)
+        end
+        GameTooltip:Show()
+    end)
+    row.expireHit:SetScript("OnLeave", GameTooltip_Hide)
+
+    row.expire = OneWoW_GUI:CreateFS(row.expireHit, 11)
+    row.expire:SetAllPoints()
+    row.expire:SetJustifyH("RIGHT")
+    row.expire:SetJustifyV("MIDDLE")
+
     row.check = OneWoW_GUI:CreateCheckbox(row, { label = "" })
     row.check:SetSize(OneWoW_GUI.Constants.GUI.CHECKBOX_SIZE, OneWoW_GUI.Constants.GUI.CHECKBOX_SIZE)
     row.check:SetPoint("LEFT", row, "LEFT", 6, 0)
@@ -443,19 +502,19 @@ local function AcquireRow(parent)
 
     row.sender = OneWoW_GUI:CreateFS(row, 12)
     row.sender:SetPoint("TOPLEFT", row.icon, "TOPRIGHT", 8, -2)
-    row.sender:SetPoint("TOPRIGHT", row.expandBtn, "TOPLEFT", -8, -2)
+    row.sender:SetPoint("TOPRIGHT", row.expireHit, "TOPLEFT", -8, -2)
     row.sender:SetJustifyH("LEFT")
     row.sender:SetWordWrap(false)
 
     row.subject = OneWoW_GUI:CreateFS(row, 11)
     row.subject:SetPoint("BOTTOMLEFT", row.icon, "BOTTOMRIGHT", 8, 2)
-    row.subject:SetPoint("BOTTOMRIGHT", row.expandBtn, "BOTTOMLEFT", -8, 2)
+    row.subject:SetPoint("BOTTOMRIGHT", row.expireHit, "BOTTOMLEFT", -8, 2)
     row.subject:SetJustifyH("LEFT")
     row.subject:SetWordWrap(false)
     row.subject:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     row.money = OneWoW_GUI:CreateFS(row, 12)
-    row.money:SetPoint("RIGHT", row.expandBtn, "LEFT", -6, 0)
+    row.money:SetPoint("RIGHT", row.expireHit, "LEFT", -8, 0)
     row.money:SetJustifyH("RIGHT")
 
     row.badge = OneWoW_GUI:CreateFS(row, 10)
@@ -620,6 +679,21 @@ function Inbox:Create(parent)
     autoLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     autoLabel:SetPoint("RIGHT", autoGold, "LEFT", -6, 0)
 
+    -- Expiry sort — left of Auto-collect cluster; same TOP row as Gold/Items.
+    local sortExpiry = OneWoW_GUI:CreateCheckbox(btnBar, {
+        label = L["SORT_BY_EXPIRY"],
+        checked = ns.db.global.mail.sortByExpiry,
+        onClick = function(myself)
+            ns.db.global.mail.sortByExpiry = myself:GetChecked() and true or false
+            Inbox:Refresh()
+        end,
+    })
+    local sortInset = 12
+        + (sortExpiry._labelGap or 0) + sortExpiry:GetLabelStringWidth()
+        + 6 + (autoLabel:GetStringWidth() or 0) + 6
+    sortExpiry:SetPoint("TOPRIGHT", autoGold, "TOPLEFT", -sortInset, 0)
+    AttachTooltip(sortExpiry, L["SORT_BY_EXPIRY"], L["TT_SORT_BY_EXPIRY"])
+
     local hint = OneWoW_GUI:CreateFS(parent, 11)
     hint:SetPoint("TOPLEFT", btnBar, "BOTTOMLEFT", 0, -6)
     hint:SetPoint("TOPRIGHT", btnBar, "BOTTOMRIGHT", 0, -6)
@@ -672,8 +746,23 @@ function Inbox:Refresh()
     local totalGold = 0
     local totalItems = 0
 
+    local order = {}
     for i = 1, num do
-        local _, stationeryIcon, sender, subject, money, CODAmount, _, itemCount, wasRead = GetInboxHeaderInfo(i)
+        local daysLeft = select(7, GetInboxHeaderInfo(i)) or 0
+        order[#order + 1] = { index = i, daysLeft = daysLeft }
+    end
+    if ns.db.global.mail.sortByExpiry then
+        sort(order, function(a, b)
+            if a.daysLeft ~= b.daysLeft then
+                return a.daysLeft < b.daysLeft
+            end
+            return a.index < b.index
+        end)
+    end
+
+    for _, entry in ipairs(order) do
+        local i = entry.index
+        local _, stationeryIcon, sender, subject, money, CODAmount, daysLeft, itemCount, wasRead = GetInboxHeaderInfo(i)
         local category, hasCOD, isGM = ns.MailClassify:Classify(i)
         money = money or 0
         local attachments = tonumber(itemCount) or 0
@@ -728,6 +817,7 @@ function Inbox:Refresh()
         else
             row.money:SetText("")
         end
+        SetRowExpire(row, i, daysLeft or entry.daysLeft)
 
         SetExpandEnabled(row, MailCanExpand(i, attachments, CODAmount))
 

@@ -27,6 +27,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["BTN_RETURN"] = "Return",
     ["BTN_SEND_SHIPMENT"] = "Send",
     ["AUTO_COLLECT"] = "Auto-Einsammeln:",
+    ["SORT_BY_EXPIRY"] = "Ablaufsortierung",
+    ["TT_SORT_BY_EXPIRY"] = "Wenn aktiviert, werden Mails mit dem kürzesten Restablauf zuerst angezeigt.\nAus = normale Briefkastenreihenfolge.",
     ["TT_AUTO_COLLECT_GOLD"] = "Beim Öffnen des Briefkastens Gold von Post mit Geld automatisch einsammeln (vor Sendungen).\nAnhänge bleiben. Zusammen mit Gegenstände = alles (wie Alle). Überspringt Nachnahme und GM-Post.",
     ["TT_AUTO_COLLECT_ITEMS"] = "Beim Öffnen des Briefkastens nur Anhänge von Post mit Gegenständen automatisch einsammeln (vor Sendungen).\nGold bleibt. Zusammen mit Gold = alles (wie Alle). Überspringt Nachnahme und GM-Post.",
     ["INBOX_MAIL_ONE"] = "%d Brief",
