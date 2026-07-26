@@ -35,4 +35,6 @@ skills:
       - "**/UI/**/*.lua"
       - "**/GUI/**/*.lua"
   wow-tooltip-system:
-    claude_paths: null
+    claude_paths:
+      - "OneWoW/Services/TooltipScanner.lua"
+      - "OneWoW/Docs/TOOLTIP_SCANNER.md"

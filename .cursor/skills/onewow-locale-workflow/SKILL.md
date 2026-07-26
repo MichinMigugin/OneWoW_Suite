@@ -61,6 +61,19 @@ in `.wow_docs/manifest.json`). Find the English value's key in `enUS.lua`, then 
 locale. **Verify — do not assume an existing suite translation is canonical** (the suite's pre-rollout
 terms were partly non-official). Mind per-language grammar (articles, gender, compounds).
 
+### Two uses of GlobalStrings
+
+1. **UI labels / official terms** — bare globals at call sites (`text = ADD`) or drafting suite
+   locale values from Blizzard wording. Covered by this skill + `locale_keydiff` /
+   `locale_verify`.
+2. **Match-source format strings** — deriving Lua `strfind` patterns from globals like
+   `ITEM_SPELL_CHARGES` for tooltip/PE scanning. Format placeholders (`|4…;`, `%d`, `%1$s`)
+   vary by locale; suite `locale_verify` does **not** cover Blizzard GlobalStrings.
+
+For (2), follow `wow-tooltip-system` (structured line types first; placeholder-first pattern
+conversion; no empty-pattern fallbacks) and run / rely on pre-commit
+`tooltip-globalstrings-patterns` (`bin/check_tooltip_patterns.py`).
+
 ## Different meanings per language
 
 Value identity ≠ translation identity. A single English string can need different translations by

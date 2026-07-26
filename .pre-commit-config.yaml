@@ -299,3 +299,20 @@ repos:
         entry: python bin/locale_verify.py
         language: python
         files: (^|/)Locales/.*\.lua$
+
+      - id: tooltip-globalstrings-patterns
+        name: TooltipScanner GlobalStrings pattern coverage
+        description: |
+          Verifies ITEM_SPELL_CHARGES converts to a usable search pattern in
+          all 11 Blizzard GlobalStrings locales (|4 and plain %d forms), and
+          that USE_COLON / equip / unique globals exist and are non-empty.
+          See OneWoW/Docs/TOOLTIP_SCANNER.md and bin/check_tooltip_patterns.py.
+        entry: python bin/check_tooltip_patterns.py
+        language: python
+        pass_filenames: false
+        files: |
+          (?x)^(
+            OneWoW/Services/TooltipScanner\.lua|
+            bin/check_tooltip_patterns\.py|
+            \.wow_docs/blizzard-interface-resources/Resources/GlobalStrings/.*\.lua$
+          )

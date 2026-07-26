@@ -59,7 +59,19 @@ Empty strings are **not** cached so pre-streaming evaluations can retry.
 | `HasItemInAccessibleBags(itemID)` | Copy in backpack / bags / reagent bag (0–5) |
 | `NeedsUsabilityFallback(bagID, itemID)` | Bank-only `IsUsableItem` false-negative gate |
 | `ScanMerchantBlockReason(index)` | Merchant snapshot + red-line scan |
-| `PopulateTooltipProps(props, opts?)` | Fill lazy PE tooltip fields (`hasUseAbility`, `isAlreadyKnown`, …); optional `opts.recipeAlreadyKnown` bridge |
+| `PopulateTooltipProps(props, opts?)` | Fill lazy PE tooltip fields (`hasUseAbility`, `isAlreadyKnown`, `isTradeableLoot` via `TradeTimeRemaining`, …); optional `opts.recipeAlreadyKnown` bridge |
+
+## Locale-safe GlobalStrings patterns
+
+`PopulateTooltipProps` / charges matching must not assume enUS format shapes:
+
+| Concern | Approach |
+| --- | --- |
+| `#charges` (`ITEM_SPELL_CHARGES`) | `BuildChargesSearchPattern`: `|4` locales → raw markup `(%d+) \|4` + first form; plain `%d` locales (zhCN/zhTW/koKR) → placeholder-first escape → `(%d+)…` |
+| `#tradeableloot` | `Enum.TooltipDataLineType.TradeTimeRemaining` (structured; no `BIND_TRADE_TIME_REMAINING` text scrape) |
+| `#onuse` / `#onequip` / unique | Direct `USE_COLON` / `ITEM_SPELL_TRIGGER_ONEQUIP` / `ITEM_UNIQUE*` globals (exist in all 11 locales) |
+
+**Gate:** `bin/check_tooltip_patterns.py` — pre-commit `tooltip-globalstrings-patterns` (fires when `TooltipScanner.lua`, the checker, or GlobalStrings docs change). Suite `locale-parity` does not cover Blizzard GlobalStrings.
 
 ## Cache invalidation
 

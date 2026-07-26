@@ -105,11 +105,32 @@ local tip = CreateFrame("GameTooltip", "MyAddonTooltip", UIParent, "GameTooltipT
 
 ### Locale-safe text matching (when structured fields aren't enough)
 
-When you genuinely must pattern-match — e.g. for `ITEM_SPELL_CHARGES` strings that aren't exposed as a structured field — `C_TooltipInfo` line text is **raw WoW markup**. Patterns must match the markup, not the rendered display text.
+Prefer `Enum.TooltipDataLineType` when it exists (`ItemBinding`, `TradeTimeRemaining`,
+`ItemSpellTriggerLearn`, …). Text matching is the fallback, not the default.
 
-- Raw markup example: `1 |4Charge:Charges;` (singular/plural form selector). Displayed text is `1 Charge`, but `strfind` sees the markup.
-- Use Blizzard global string constants from `GlobalStrings.lua`: `ITEM_SPELL_CHARGES`, `BIND_TRADE_TIME_REMAINING`, `ITEM_UNIQUE`, `ITEM_UNIQUE_EQUIPPABLE`, `ITEM_SPELL_TRIGGER_ONEQUIP`, `USE_COLON`, `ITEM_SPELL_KNOWN`. Never hardcode English literals.
-- Use `strfind(text, pattern, 1, true)` with the plain-match flag when no captures are needed (faster, no pattern interpretation).
+When you must pattern-match — e.g. for `ITEM_SPELL_CHARGES` (no structured line type) —
+`C_TooltipInfo` line text is **raw WoW markup**. Patterns must match the markup, not the
+rendered display text.
+
+- Raw markup example (locales with `|4`): `1 |4Charge:Charges;` — displayed as `1 Charge`.
+- Locales without `|4` (zhCN/zhTW `"%d次"`, koKR `"%d회 사용 가능"`) emit filled format text
+  (`5次`) with no plural selector. Never assume the enUS `|4` / `%s` shape.
+- Positional printf (`%1$s`) also varies by locale — prefer structured line types over
+  scraping format-string prefixes.
+- Use Blizzard globals as match sources: `ITEM_SPELL_CHARGES`, `ITEM_UNIQUE`,
+  `ITEM_UNIQUE_EQUIPPABLE`, `ITEM_SPELL_TRIGGER_ONEQUIP`, `USE_COLON`, `ITEM_SPELL_KNOWN`.
+  Never hardcode English literals. (`#tradeableloot` uses `TradeTimeRemaining`, not
+  `BIND_TRADE_TIME_REMAINING` text.)
+- **Format → Lua pattern:** substitute format specs (`%d`) with placeholders **first**,
+  escape Lua pattern metacharacters, then restore captures (`(%d+)`). Never escape-then-
+  replace `%d` (leaves a stray `%`). See `TooltipScanner` `BuildChargesSearchPattern` and
+  `bin/check_tooltip_patterns.py`.
+- Never use `or ""` / empty search patterns — `strfind` of `""` or `"^"` matches everything
+  (false-positive keywords).
+- Verify all 11 locales under `.wow_docs/.../GlobalStrings/` before shipping. Enforced by
+  pre-commit `tooltip-globalstrings-patterns`.
+- Use `strfind(text, pattern, 1, true)` with the plain-match flag when no captures are needed
+  (faster, no pattern interpretation).
 
 ## Review checklist — anti-patterns to flag
 
@@ -117,7 +138,7 @@ When you genuinely must pattern-match — e.g. for `ITEM_SPELL_CHARGES` strings 
 
 2. **Hidden GameTooltip for scanning.** Creating an off-screen GameTooltip, calling `:SetBagItem` / `:SetHyperlink`, and reading `_G["MyTipTextLeft"..i]` is the legacy pattern. Replace with `C_TooltipInfo.Get*` returning structured data.
 
-3. **Pattern-matching text when structured data exists.** If `Enum.TooltipDataLineType.X` exists for the line you care about, walk `data.lines` and check `line.type` plus the typed field (e.g. `line.bonding`). Locale-fragile pattern matching is the fallback, not the default.
+3. **Pattern-matching text when structured data exists.** If `Enum.TooltipDataLineType.X` exists for the line you care about, walk `data.lines` and check `line.type` plus the typed field (e.g. `line.bonding`, `TradeTimeRemaining`). Locale-fragile pattern matching is the fallback, not the default.
 
 4. **Hardcoded English strings.** `strfind(text, "Bind on Equip")` breaks in every other locale. Pull from `GlobalStrings.lua` constants.
 
@@ -133,6 +154,9 @@ When you genuinely must pattern-match — e.g. for `ITEM_SPELL_CHARGES` strings 
 
 10. **Pattern-matching display text instead of raw markup.** Patterns written against rendered text (e.g. `"1 Charge"`) won't match the raw markup `C_TooltipInfo` returns (e.g. `"1 |4Charge:Charges;"`).
 
+11. **Assumed `|4` / `%s` shape from enUS only.** Format placeholders vary by locale (`|4a:b;`, `|4a:b:c;`, plain `%d`, positional `%1$s`). Derive patterns with placeholder-first escaping and verify all 11 GlobalStrings (pre-commit `tooltip-globalstrings-patterns`). Never `or ""` empty pattern fallbacks.
+
 ## Related rules
 
 - `.cursor/rules/WoW-Lua-Addon-Development.mdc` — Section 7.5 lives in the big rule today; this skill replaces it on extraction. Common-mistakes items 7 and 16 reference the same pitfalls.
+- `onewow-locale-workflow` — GlobalStrings as UI terms vs match-source format strings.

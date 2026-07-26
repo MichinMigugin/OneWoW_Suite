@@ -120,8 +120,10 @@ Non-obvious behavior in Blizzard APIs, locale-fragile patterns, taint considerat
 
 ```lua
 -- C_TooltipInfo line text is raw markup, not displayed text.
--- "1 Charge" displays as "1 |4Charge:Charges;" in the line data.
-local hasCharges = strfind(text, "%d+ |4" .. chargesPattern) ~= nil
+-- Locales with |4 keep plural markup; others emit filled %d text.
+-- Always build charges patterns via TooltipScanner's locale-aware helper
+-- (BuildChargesSearchPattern) — never assume enUS "|4Charge:Charges;" shape.
+local hasCharges = strfind(text, chargesSearchPattern) ~= nil
 ```
 
 ### Grammar, format, and protocol documentation

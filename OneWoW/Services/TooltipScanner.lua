@@ -18,6 +18,7 @@ local rawset, rawget = rawset, rawget
 
 local LINE_LEARN = Enum.TooltipDataLineType.ItemSpellTriggerLearn
 local LINE_BINDING = Enum.TooltipDataLineType.ItemBinding
+local LINE_TRADE_TIME = Enum.TooltipDataLineType.TradeTimeRemaining
 local LINE_USAGE_REQ = Enum.TooltipDataLineType.UsageRequirement
 local LINE_ERROR = Enum.TooltipDataLineType.ErrorLine
 local LINE_DISABLED = Enum.TooltipDataLineType.DisabledLine
@@ -27,8 +28,29 @@ local PLAYER_INVENTORY_BAG_MAX = 5
 -- Personal bank tabs and warband vault (6+).
 local BANK_BAG_MIN = 6
 
-local chargesPattern = ITEM_SPELL_CHARGES:match("|4(.-):.-%;")
-local tradeablePattern = BIND_TRADE_TIME_REMAINING:match("^(.-)%%s")
+-- CHARGES PATTERN NOTE: C_TooltipInfo keeps raw |4 markup when the global uses
+-- plural forms (enUS "1 |4Charge:Charges;"). Locales without |4 (zhCN "%d次",
+-- koKR "%d회 사용 가능") emit filled format text instead. BuildChargesSearchPattern
+-- handles both; placeholder-first escape order is mandatory (escape-then-%d
+-- replacement leaves a stray %). Mirrored by bin/check_tooltip_patterns.py.
+local PATTERN_MAGIC = "([%^%$%(%)%%%.%[%]%*%+%-%?])"
+local CHARGES_DIGIT_PH = "\1"
+
+--- Convert ITEM_SPELL_CHARGES into a Lua pattern that matches C_TooltipInfo text.
+---@param fmt string
+---@return string pattern
+local function BuildChargesSearchPattern(fmt)
+    local firstForm = fmt:match("|4(.-):.-%;")
+    if firstForm then
+        return "(%d+) |4" .. firstForm
+    end
+    -- Non-|4: "%d次" → "(%d+)次". Substitute %d before escaping metacharacters.
+    local withPh = fmt:gsub("%%d", CHARGES_DIGIT_PH, 1)
+    local escaped = withPh:gsub(PATTERN_MAGIC, "%%%1")
+    return (escaped:gsub(CHARGES_DIGIT_PH, "(%%d+)", 1))
+end
+
+local chargesSearchPattern = BuildChargesSearchPattern(ITEM_SPELL_CHARGES)
 local uniqueEquipPattern = ITEM_UNIQUE_EQUIPPABLE:gsub("%-", "%%-")
 
 -- Precomputed search patterns: these were previously rebuilt via string
@@ -41,7 +63,6 @@ local uniqueEquipPatternHead = "^" .. uniqueEquipPattern
 local uniqueEquipPlainBody = "\n" .. ITEM_UNIQUE_EQUIPPABLE
 local uniquePatternHead = "^" .. ITEM_UNIQUE
 local uniquePlainBody = "\n" .. ITEM_UNIQUE
-local chargesSearchPattern = "(%d+) |4" .. chargesPattern
 
 ---@param color table|nil colorRGB
 ---@return boolean
@@ -530,13 +551,23 @@ function TooltipScanner:PopulateTooltipProps(props, opts)
     local isUniqueEquipped = strfind(tt, uniqueEquipPatternHead) ~= nil
         or strfind(tt, uniqueEquipPlainBody, 1, true) ~= nil
 
+    local td = self:GetPropsData(props)
+    local isTradeableLoot = false
+    if td and td.lines then
+        for _, line in ipairs(td.lines) do
+            if line.type == LINE_TRADE_TIME then
+                isTradeableLoot = true
+                break
+            end
+        end
+    end
+
     rawset(props, "tooltipText", tt)
     rawset(props, "hasCharges", strfind(tt, chargesSearchPattern) ~= nil)
     rawset(props, "hasUseAbility", self:HasUseEffect(tt))
     rawset(props, "hasEquipAbility", self:HasEquipEffect(tt))
-    rawset(props, "isTradeableLoot", strfind(tt, tradeablePattern, 1, true) ~= nil)
+    rawset(props, "isTradeableLoot", isTradeableLoot)
 
-    local td = self:GetPropsData(props)
     local alreadyKnown = td and self:IsAlreadyKnown(td) or self:IsAlreadyKnownText(tt)
     if not alreadyKnown and opts and opts.recipeAlreadyKnown then
         alreadyKnown = opts.recipeAlreadyKnown(props) == true

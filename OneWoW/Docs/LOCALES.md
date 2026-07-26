@@ -156,6 +156,7 @@ All under `bin/` unless noted; run from the repo root.
 | `locale_usage.py` | **Scope-leak audit** — keys read cross-scope through the wrong `L` binding (`ns.L` vs `OneWoW.L`). | After moving features between addons. |
 | `locale_migrate.py` | Relocate keys between scopes (remove from src locales, insert into dst), e.g. core→`shared` or core→`OneWoW_QoL`. Inserts a `-- migrated from <scope> scope` provenance line on move. `--remove-migrate-comments all` (or `OneWoW,shared`, …) strips those lines after a scope move is settled. | Restructuring scopes; cleaning provenance after a move is complete. |
 | `check_no_g_literal.py` | Guard: forbids `_G.CLOSE` / `_G["CLOSE"]` (use the bare global). | CI / pre-commit. |
+| `check_tooltip_patterns.py` | **GlobalStrings match-source gate.** Builds `ITEM_SPELL_CHARGES` search patterns for all 11 Blizzard locales (`\|4` and plain `%d`); asserts use/equip/unique globals exist. Distinct from suite `locale-parity`. | When editing TooltipScanner or refreshing GlobalStrings. **Wired as `tooltip-globalstrings-patterns`.** |
 | `/owlocale` (in-game) | Per-scope key counts, shared/scope collisions, registered locales not in `SUPPORTED`. The only locale debug command (no debug builds). | In-client sanity check. |
 
 ---
