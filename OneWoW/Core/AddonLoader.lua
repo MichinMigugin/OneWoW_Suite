@@ -661,7 +661,7 @@ ns.ModuleManifest = {
             "OneWoW_AltTracker_Accounting",
             "OneWoW_AltTracker_Auctions",
         } },
-    { addon = "OneWoW_Catalog",         display = "Catalog",       cmd = "/owcat", module = "catalog",    tabOrder = 3, loadPhase = "login",
+    { addon = "OneWoW_Catalog",         display = "Catalog",       cmd = "/1wcat", module = "catalog",    tabOrder = 3, loadPhase = "login",
         storePolicy = "optional",
         stores = {
             "OneWoW_CatalogData_Tradeskills",

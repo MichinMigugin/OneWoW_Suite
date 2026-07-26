@@ -35,6 +35,7 @@ local function OnInitialize()
     OneWoW_Catalog:ApplyTheme()
     if ns.ApplyLanguage then ns.ApplyLanguage() end
 
+    DB:RegisterSlashCommand("1wcat", function(msg) OneWoW_Catalog:SlashCommandHandler(msg) end)
     DB:RegisterSlashCommand("owcat", function(msg) OneWoW_Catalog:SlashCommandHandler(msg) end)
     DB:RegisterSlashCommand("onewowcatalog", function(msg) OneWoW_Catalog:SlashCommandHandler(msg) end)
 
@@ -63,7 +64,7 @@ local function OnInitialize()
     end)
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
-    OneWoW:RegisterLoadComponent("Catalog", _ver, "/owcat")
+    OneWoW:RegisterLoadComponent("Catalog", _ver, "/1wcat")
 end
 
 local function OnEnable()

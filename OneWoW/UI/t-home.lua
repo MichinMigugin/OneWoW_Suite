@@ -587,8 +587,18 @@ function UI:CreateHomeTab(parent)
             },
         },
         {
-            comingSoon = true,
+            global = "OneWoW_Catalog",
             header = "Catalog",
+            commands = {
+                { cmd = "/1wcat, /owcat, /onewowcatalog", desc = L["CMD_OPEN_CATALOG"] },
+            },
+        },
+        {
+            global = "OneWoW_Trackers",
+            header = "Trackers",
+            commands = {
+                { cmd = "/1wt, /owt, /tracker", desc = L["CMD_OPEN_TRACKERS"] },
+            },
         },
         {
             global = "OneWoW_QoL",
@@ -607,7 +617,6 @@ function UI:CreateHomeTab(parent)
                 { cmd = "/1wdd, /dd, /directdeposit, /directdep", desc = L["CMD_OPEN_DD"] },
                 { cmd = "  /ddeposit",                             desc = L["CMD_MANUAL_DEPOSIT"] },
                 { cmd = "  /ddeposit pause|stop",                  desc = L["CMD_DEPOSIT_PAUSE"] },
-                { cmd = "  /ddeposit clean",                       desc = L["CMD_DEPOSIT_CLEAN"] },
             },
         },
         {
@@ -616,6 +625,21 @@ function UI:CreateHomeTab(parent)
             commands = {
                 { cmd = "/1wsl, /owsl, /shoppinglist", desc = L["CMD_OPEN_SL"] },
                 { cmd = "  /owsl add <id>",            desc = L["CMD_SL_ADD"] },
+            },
+        },
+        {
+            global = "OneWoW_Bags",
+            header = "Bags",
+            commands = {
+                { cmd = "/1wb, /onewowbags, /1wbags", desc = L["CMD_OPEN_BAGS"] },
+                { cmd = "  /owbags-export",           desc = L["CMD_BAGS_EXPORT"] },
+            },
+        },
+        {
+            global = "OneWoW_Mail",
+            header = "Mail",
+            commands = {
+                { cmd = "/1wmail, /owmail", desc = L["CMD_OPEN_MAIL"] },
             },
         },
         {

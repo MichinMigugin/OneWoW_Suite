@@ -5,7 +5,7 @@ Scanned from `SLASH_*` assignments, `SlashCmdList[...]` handlers, and
 `OneWoW_GUI.DB:RegisterSlashCommand(...)` calls (excluding `Libs/` and
 `.wow_docs/`).
 
-**Last audited:** 2026-07-25
+**Last audited:** 2026-07-26
 
 > When you add, rename, or remove a slash command (or a subcommand), update
 > this file in the same change. See **Keeping this file current** at the bottom.
@@ -16,10 +16,10 @@ Scanned from `SLASH_*` assignments, `SlashCmdList[...]` handlers, and
 
 | Addon / unit | Aliases |
 |---|---|
-| OneWoW (core) | `/1w` `/ow` `/one` `/onewow` · `/1wkeys` `/owkeys` `/onewowkeywords` · `/1wtrace` `/owtrace` · `/ow-wizard` · `/owlocale` · `/petooltip` `/owpetooltip` |
+| OneWoW (core) | `/1w` `/ow` `/one` `/onewow` · `/1wkeys` `/owkeys` `/onewowkeywords` · `/1wtrace` `/owtrace` · `/ow-wizard` · `/owlocale` · `/petooltip` `/owpetooltip` · `/owsc` `/1wsc` |
 | OneWoW_Notes | `/1wn` `/own` `/onewownotes` |
 | OneWoW_AltTracker | `/1wat` `/owat` `/onewowat` |
-| OneWoW_Catalog | `/owcat` `/onewowcatalog` |
+| OneWoW_Catalog | `/1wcat` `/owcat` `/onewowcatalog` |
 | OneWoW_Trackers | `/1wt` `/owt` `/tracker` |
 | OneWoW_QoL | `/1wqol` `/owqol` `/onewowqol` · BagBar: `/bagbar` `/owbb` · CopyText: `/copytext` `/ct` |
 | OneWoW_DirectDeposit | `/1wdd` · `/dd` `/directdeposit` `/directdep` · `/ddeposit` |
@@ -37,7 +37,7 @@ Load units with **no** slash commands: `OneWoW_AltTracker_*` data packs,
 
 **Source:** `OneWoW/OneWoW.lua`, `OneWoW/Core/Lifecycle.lua`,
 `OneWoW/Core/FirstRunWizard.lua`, `OneWoW/Services/LocaleService.lua`,
-`OneWoW/Services/PredicateEngine.lua`
+`OneWoW/Services/PredicateEngine.lua`, `OneWoW/Services/SearchCatalog.lua`
 
 | Command | Kind | Description |
 |---|---|---|
@@ -47,6 +47,21 @@ Load units with **no** slash commands: `OneWoW_AltTracker_*` data packs,
 | `/1wtrace` `/owtrace` | Debug | Lifecycle trace ring buffer |
 | `/owlocale` | Debug | Print locale coverage report to chat |
 | `/petooltip` `/owpetooltip` | Debug | Dump PredicateEngine tooltip debug for hovered / cursor / linked item |
+| `/owsc` `/1wsc` | Debug | Search catalog: reference lint, registered sources, former-name prune |
+
+### `/owsc` subcommands
+
+Named for the **search** catalog (`#token`, `SAVED(...)`, `CATEGORY(...)`), not
+the OneWoW_Catalog addon — that one owns `/1wcat` `/owcat` `/onewowcatalog`.
+
+| Args | Effect |
+|---|---|
+| `lint` | List broken, stale, and rule-less references |
+| `sources` | List registered expression stores and how many expressions each sees |
+| `prune` | Show which former names are no longer referenced (dry run) |
+| `prune apply` | Actually remove them |
+| `prune apply force` | Ignore the not-loaded-addon safety gate |
+| _(none / other)_ | Print usage |
 
 ### `/1wtrace` subcommands
 
@@ -83,9 +98,6 @@ Pass nothing (uses hovered bag slot / tooltip item / cursor item), or an
 |---|---|---|
 | `/1wat` `/owat` `/onewowat` | User | Open AltTracker in the OneWoW hub |
 
-> Locale strings still mention `/alttracker` and `/at`; those aliases are **not**
-> registered in current code.
-
 ---
 
 ## OneWoW_Catalog
@@ -94,7 +106,7 @@ Pass nothing (uses hovered bag slot / tooltip item / cursor item), or an
 
 | Command | Kind | Description |
 |---|---|---|
-| `/owcat` `/onewowcatalog` | User | Open Catalog in the OneWoW hub |
+| `/1wcat` `/owcat` `/onewowcatalog` | User | Open Catalog in the OneWoW hub |
 
 ---
 
@@ -154,8 +166,8 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 | _(none)_ | Start manual deposit |
 | `pause` / `stop` | Stop an in-progress deposit |
 
-> Home-tab help still lists `/ddeposit clean`; that subcommand is **not**
-> implemented in the slash handler.
+> Home-tab help previously listed `/ddeposit clean`; that subcommand is **not**
+> implemented and is no longer shown.
 
 ---
 
