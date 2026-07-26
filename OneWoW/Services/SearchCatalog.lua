@@ -83,6 +83,10 @@ local KINDS = {
     },
 }
 
+-- Stable iteration order for anything that walks every kind. `pairs(KINDS)` is
+-- unordered, so a cross-kind search would return a different winner run to run.
+local KIND_ORDER = { "token", "saved", "category" }
+
 local providers = {}       ---@type table<string, table>
 local indexCache = {}      ---@type table<string, table>
 local changeCallbacks = {} ---@type table<string, fun()>
@@ -111,7 +115,12 @@ local function FireChanged()
     end
 end
 
-local function InvalidateKind(kind)
+-- Cache-only, deliberately silent. The notifying counterpart is the public
+-- `SearchCatalog:InvalidateKind`, which is this plus `FireChanged`. They used to
+-- share a name, so a call site that meant "and tell the UI" and one that meant
+-- "just drop the cache" were one `self:` apart and read identically — which is
+-- exactly how the prune ended up mutating former names with nothing listening.
+local function DropIndex(kind)
     indexCache[kind] = nil
 end
 
@@ -237,24 +246,28 @@ end
 ---
 --- The owner calls InvalidateKind whenever names or bodies change, or the
 --- kind-scoped name index goes stale.
+--- Registration is silent on purpose — the only two `DropIndex` calls here that
+--- do not notify. It happens during load, before anything is listening, and a
+--- fire would drag every consumer through a rebuild for a kind whose contents
+--- have not changed yet.
 ---@param kind string
 ---@param provider table
 function SearchCatalog:RegisterProvider(kind, provider)
     providers[kind] = provider
-    InvalidateKind(kind)
+    DropIndex(kind)
 end
 
 ---@param kind string
 function SearchCatalog:UnregisterProvider(kind)
     providers[kind] = nil
-    InvalidateKind(kind)
+    DropIndex(kind)
 end
 
 --- Drop the cached name index for a kind. Providers must call this when their
 --- underlying data changes, or lookups will resolve against stale names.
 ---@param kind string
 function SearchCatalog:InvalidateKind(kind)
-    InvalidateKind(kind)
+    DropIndex(kind)
     FireChanged()
 end
 
@@ -356,6 +369,59 @@ function SearchCatalog:GetAll(kind)
     return out
 end
 
+--- Validate and normalize a display name for a kind.
+---
+--- Public so no other file has to restate a name grammar. Returns the catalog's
+--- own error code; callers map that to their own message keys (see
+--- `SAVED_ERRORS` / `ALIAS_ERRORS` in SearchExpand) rather than letting internal
+--- codes reach user-facing text.
+---@param kind string
+---@param name string|nil
+---@return string|nil normalized
+---@return string|nil errorKey
+function SearchCatalog:ValidateName(kind, name)
+    if not KINDS[kind] then return nil, "CATALOG_INVALID_NAME" end
+    return ValidateName(kind, name)
+end
+
+--- Canonical form of a body for *comparison only*, never for storage.
+---
+--- An edit box returns every typed `|` doubled while code writes single pipes;
+--- PE treats both as one OR token, so two bodies can be the same expression and
+--- still differ byte for byte. Storage keeps whatever the producer wrote — the
+--- doubling is what lets an edit box round-trip its own content.
+---@param body string|nil
+---@return string
+function SearchCatalog:NormalizeBody(body)
+    if type(body) ~= "string" then return "" end
+    return strtrim((strgsub(body, "||", "|")))
+end
+
+--- An entry in any kind whose body is the same expression as `body`.
+---
+--- Kind-scoped namespaces make duplicate *bodies* the easy mistake rather than
+--- name collisions — `#sell` and `SAVED(Sell)` can hold the same rule and drift
+--- apart silently — so this deliberately searches across kinds.
+---@param body string|nil
+---@param exceptKind string|nil
+---@param exceptId string|nil
+---@return table|nil entry
+---@return string|nil kind
+function SearchCatalog:FindDuplicateBody(body, exceptKind, exceptId)
+    local norm = self:NormalizeBody(body)
+    if norm == "" then return nil end
+
+    for _, kind in ipairs(KIND_ORDER) do
+        for _, entry in ipairs(self:GetAll(kind)) do
+            local same = kind == exceptKind and entry.id == exceptId
+            if not same and self:NormalizeBody(entry.body) == norm then
+                return entry, kind
+            end
+        end
+    end
+    return nil
+end
+
 -- ---- Mutation (native kinds only) ----
 
 --- Create an entry, or update the body of an existing one with the same name.
@@ -396,7 +462,7 @@ function SearchCatalog:Set(kind, name, body)
     }
     entries[id] = entry
     ClaimName(kind, normalized)
-    InvalidateKind(kind)
+    DropIndex(kind)
     FireChanged()
     return entry
 end
@@ -422,7 +488,7 @@ function SearchCatalog:Rename(kind, id, newName)
     if NormKey(normalized) == NormKey(entry.name) then
         if normalized == entry.name then return true end
         entry.name = normalized
-        InvalidateKind(kind)
+        DropIndex(kind)
         FireChanged()
         return true
     end
@@ -439,7 +505,7 @@ function SearchCatalog:Rename(kind, id, newName)
     PushFormerName(entry, entry.name)
     entry.name = normalized
     ClaimName(kind, normalized)
-    InvalidateKind(kind)
+    DropIndex(kind)
     FireChanged()
     return true
 end
@@ -456,7 +522,11 @@ end
 ---@param name string
 function SearchCatalog:ClaimName(kind, name)
     ClaimName(kind, name)
-    InvalidateKind(kind)
+    DropIndex(kind)
+    -- Claiming strips the name off whichever entry was holding it as a former
+    -- name, so some other row's redirect list just got shorter. Callers batch
+    -- this with the create that follows, which collapses both into one fire.
+    FireChanged()
 end
 
 --- Rename a provider-owned entry. Keeps every rule about what a rename *means*
@@ -491,7 +561,7 @@ function SearchCatalog:RenameExternal(kind, id, newName)
     if NormKey(normalized) == NormKey(entry.name) then
         if normalized ~= entry.name then
             provider.SetName(id, normalized)
-            InvalidateKind(kind)
+            DropIndex(kind)
             FireChanged()
         end
         return true
@@ -509,7 +579,7 @@ function SearchCatalog:RenameExternal(kind, id, newName)
     PushFormerName(entry, entry.name)
     provider.SetName(id, normalized)
     ClaimName(kind, normalized)
-    InvalidateKind(kind)
+    DropIndex(kind)
     FireChanged()
     return true
 end
@@ -522,7 +592,7 @@ function SearchCatalog:Delete(kind, id)
     local entries = GetStore().entries
     if not entries[id] then return false end
     entries[id] = nil
-    InvalidateKind(kind)
+    DropIndex(kind)
     FireChanged()
     return true
 end
@@ -681,6 +751,38 @@ end
 ---@return table report
 function SearchCatalog:FindReferences(kind, name)
     return CollectReferences(kind, { name })
+end
+
+--- Live reference counts for every referenced name of a kind, in one pass.
+---
+--- `FindReferences` re-walks every source per call, which is right for a single
+--- preflight and wrong for a list: rendering N entries that way is N times the
+--- work for the same scan. This inverts it — walk once, count what is found —
+--- so a list costs the same as a single lookup.
+---
+--- Live sources only. A count beside an entry answers "what breaks if this
+--- goes", and a profile that would restore the reference alongside it does not
+--- belong in that number.
+---@param kind string
+---@return table<string, number> counts keyed by normalized name
+function SearchCatalog:CountReferencesByName(kind)
+    local counts = {}
+    local pattern = KIND_REF_PATTERN[kind]
+    if not pattern then return counts end
+
+    for _, source in pairs(expressionSources) do
+        if source.class ~= "restorable" then
+            for _, usage in ipairs(source.Enumerate()) do
+                if type(usage.expression) == "string" then
+                    for captured in strgmatch(usage.expression, pattern) do
+                        local key = NormKey(captured)
+                        if key ~= "" then counts[key] = (counts[key] or 0) + 1 end
+                    end
+                end
+            end
+        end
+    end
+    return counts
 end
 
 -- ---- Preflight ----
@@ -842,8 +944,12 @@ function SearchCatalog:PruneFormerNames(opts)
             end)
         end
         for kind in pairs(touched) do
-            InvalidateKind(kind)
+            DropIndex(kind)
         end
+        -- Former names are user-visible — a list showing "also answers to X"
+        -- goes stale the moment X is pruned. Inside the batch, so a prune that
+        -- touches every kind still notifies once.
+        if next(touched) then FireChanged() end
     end)
 
     return #dropped, nil, dropped

@@ -66,9 +66,12 @@ local function RegisterSavedSearchPopups()
                 return
             end
 
-            local existingKey = SE:FindSavedKey(normalized)
-            if existingKey then
-                ShowSavedSearchOverwrite(existingKey, query)
+            -- Resolve rather than a name lookup of its own: this has to match on
+            -- former names too, or saving under a name some entry retired looks
+            -- new here and collides in the catalog.
+            local existing = OneWoW.SearchCatalog:Resolve("saved", normalized)
+            if existing then
+                ShowSavedSearchOverwrite(existing.name, query)
                 return
             end
 

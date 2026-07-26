@@ -20,8 +20,6 @@ local _, ns = ...
 
 local strfind = string.find
 local strgsub = string.gsub
-local strlower = string.lower
-local strmatch = string.match
 local strtrim = strtrim
 local type = type
 local ipairs = ipairs
@@ -60,8 +58,11 @@ local function NeverMatch(kind, reason)
     return "(" .. NEVER_MATCH[kind][reason] .. ")"
 end
 
--- The catalog speaks generic error keys; these map them onto the locale keys
--- the Search Shortcuts UI already renders per section.
+-- The catalog speaks generic error codes; these map them onto locale keys. Kept
+-- per kind because the same failure reads differently depending on what the user
+-- was writing — an invalid token name is about `#` syntax, an invalid saved name
+-- is about spaces and punctuation. Exposed via `MapCatalogError` so callers that
+-- write through the catalog directly do not each restate the table.
 local ALIAS_ERRORS = {
     CATALOG_INVALID_NAME   = "ALIAS_INVALID_NAME",
     CATALOG_DUPLICATE_NAME = "ALIAS_DUPLICATE",
@@ -77,13 +78,25 @@ local SAVED_ERRORS = {
     CATALOG_NOT_FOUND      = "SAVED_SEARCH_NOT_FOUND",
 }
 
-local changeCallbacks = {} ---@type table<string, fun()>
+local KIND_ERRORS = {
+    token = ALIAS_ERRORS,
+    saved = SAVED_ERRORS,
+}
 
--- gsub returns (string, count); the extra parens drop the count so it cannot
--- land on strtrim's second parameter, which is a set of characters to trim.
-local function StripHash(text)
-    return strtrim((strgsub(text or "", "^#", "")))
+--- Locale key for a catalog error code, given the kind being written.
+---
+--- Returns the code itself when there is no mapping, so an unmapped error still
+--- prints something traceable rather than vanishing.
+---@param kind string|nil
+---@param errKey string|nil
+---@return string|nil
+function SearchExpand:MapCatalogError(kind, errKey)
+    if not errKey then return nil end
+    local map = KIND_ERRORS[kind or ""]
+    return (map and map[errKey]) or errKey
 end
+
+local changeCallbacks = {} ---@type table<string, fun()>
 
 local function FireChanged()
     for _, fn in pairs(changeCallbacks) do
@@ -112,30 +125,19 @@ function SearchExpand:NeedsExpand(expression)
 end
 
 --- Normalize and validate a saved-expression display name.
+---
+--- Delegates the grammar to the catalog and only maps the error. Phase 1 moved
+--- validation into `SearchCatalog.ValidateName` but left a second copy of the
+--- `^[%w %-%_%+]+$` rule here, so the two agreed by luck; the mapping is what is
+--- actually local knowledge, since callers print `SAVED_SEARCH_*` locale keys
+--- and the catalog speaks in `CATALOG_*` codes.
 ---@param name string|nil
 ---@return string|nil normalizedName
 ---@return string|nil errorKey
 function SearchExpand:NormalizeSavedName(name)
-    name = strtrim(name or "")
-    if name == "" then return nil, "SAVED_SEARCH_INVALID_NAME" end
-    if strfind(name, "[^%w %-%_%+]") then return nil, "SAVED_SEARCH_INVALID_NAME" end
-    return name
-end
-
----@param query string|nil
----@return string|nil normalizedQuery
----@return string|nil errorKey
-function SearchExpand:NormalizeSavedQuery(query)
-    query = strtrim(query or "")
-    if query == "" then return nil, "SAVED_SEARCH_EMPTY_QUERY" end
-    return query
-end
-
----@param name string|nil
----@return string|nil key
-function SearchExpand:FindSavedKey(name)
-    local entry = SC:Resolve("saved", name)
-    return entry and entry.name or nil
+    local normalized, err = SC:ValidateName("saved", name)
+    if not normalized then return nil, SAVED_ERRORS[err] or err end
+    return normalized
 end
 
 ---@param name string
@@ -209,14 +211,12 @@ end
 -- it calls the resolver below for any #token it does not recognize, which means
 -- a token body may be an arbitrary expression, not just one built-in keyword.
 --
--- The alias-shaped subset is still projected out for the current Search
--- Shortcuts UI, whose editor is a built-in-keyword dropdown.
-
----@param entry table
----@return string|nil keyword
-local function AliasTargetOf(entry)
-    return strmatch(entry.body or "", "^#([%w_]+)$")
-end
+-- The alias-shaped write API (`SetAlias` / `RenameAlias` / `DeleteAlias` /
+-- `GetAliases`) was deleted in Phase 8B-2 along with the dropdown that was its
+-- only caller. It re-imposed the one-built-in-keyword restriction the engine had
+-- already dropped, so a token whose body was any real expression could not be
+-- created or even displayed through it. Tokens are ordinary catalog entries now:
+-- write them with `SC:Set("token", …)` like any other kind.
 
 --- Resolve a #token to an expression body for PredicateEngine. Catalog lookup
 --- handles current *and* former names, so a renamed token keeps evaluating in
@@ -286,51 +286,6 @@ function SearchExpand:GetMatchingTokens(itemID, bagID, slotID, itemInfo)
     return results
 end
 
----@param alias string
----@param targetKeyword string
----@return boolean ok
----@return string|nil errorKey
-function SearchExpand:SetAlias(alias, targetKeyword)
-    local target = strlower(StripHash(targetKeyword))
-    if target == "" then return false, "ALIAS_INVALID" end
-    if not PE:IsBuiltinKeyword(target) then return false, "ALIAS_TARGET_MISSING" end
-
-    local entry, err = SC:Set("token", StripHash(alias), "#" .. target)
-    if not entry then return false, ALIAS_ERRORS[err] or err end
-    return true
-end
-
---- Rename an existing alias; the target keyword stays the same.
----@param oldAlias string
----@param newAlias string
----@return boolean ok
----@return string|nil errorKey
-function SearchExpand:RenameAlias(oldAlias, newAlias)
-    local entry = SC:Resolve("token", StripHash(oldAlias))
-    if not entry then return false, "ALIAS_INVALID" end
-
-    local ok, err = SC:Rename("token", entry.id, StripHash(newAlias))
-    if not ok then return false, ALIAS_ERRORS[err] or err end
-    return true
-end
-
----@param alias string
----@return boolean ok
-function SearchExpand:DeleteAlias(alias)
-    local entry = SC:Resolve("token", StripHash(alias))
-    if not entry then return false end
-    return SC:Delete("token", entry.id)
-end
-
----@return table<string, string>
-function SearchExpand:GetAliases()
-    local copy = {}
-    for _, entry in ipairs(SC:GetAll("token")) do
-        local target = AliasTargetOf(entry)
-        if target then copy[entry.name] = target end
-    end
-    return copy
-end
 
 -- ---- Expand / Compile / CheckItem ----
 
