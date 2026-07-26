@@ -531,6 +531,7 @@ local function EnsureDetailWidgets()
         width = 280,
         height = 24,
         placeholderText = "",
+        showClear = true,
     })
     dw.targetBox:SetPoint("TOPLEFT", content, "TOPLEFT", 8, y)
     dw.targetSuggest = ns.AddressSuggest:Attach(dw.targetBox, {
@@ -642,11 +643,20 @@ local function EnsureDetailWidgets()
         local kind = (s and s.targetKind) or "char"
         if kind == "role" then
             dw.targetBox:Hide()
+            if dw.targetSuggest and dw.targetSuggest.chevron then
+                dw.targetSuggest.chevron:Hide()
+            end
+            if dw.targetSuggest then
+                dw.targetSuggest:Hide()
+            end
             dw.roleDropdown:Show()
             dw.distLabel:Show()
             dw.distDropdown:Show()
         else
             dw.targetBox:Show()
+            if dw.targetSuggest and dw.targetSuggest.chevron then
+                dw.targetSuggest.chevron:Show()
+            end
             dw.roleDropdown:Hide()
             dw.distLabel:Hide()
             dw.distDropdown:Hide()
@@ -889,7 +899,7 @@ local function EnsureDetailWidgets()
     -- Preview sits just under whichever rules panel is showing (item panel is taller).
     local PREVIEW_H = 180
     local PREVIEW_LINE_H = 18
-    local PREVIEW_SCROLL_W = 18
+    local PREVIEW_SCROLL_W = ns.Constants.GUI.SCROLLBAR_CONTENT_GUTTER
     dw.previewLines = {}
 
     local function HidePreviewLines()
@@ -1330,8 +1340,9 @@ function ShipmentsUI:Reset()
 end
 
 function ShipmentsUI:Create(parent)
-    local listWidth = 220
+    local listWidth = ns.Constants.GUI.LEFT_PANEL_WIDTH
     local actionH = 30
+    local btnH = ns.Constants.GUI.BUTTON_HEIGHT
     local listScroll
     listScroll, listChild = OneWoW_GUI:CreateScrollFrame(parent, { width = listWidth })
     listScroll:ClearAllPoints()
@@ -1340,13 +1351,13 @@ function ShipmentsUI:Create(parent)
     listScroll:SetWidth(listWidth)
 
     -- Buttons only — no full-width backdrop (FitText widths vary by locale).
-    newBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = NEW, height = 24 })
+    newBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = NEW, height = btnH })
     newBtn:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 2)
     newBtn:SetScript("OnClick", function()
         StaticPopup_Show("ONEWOW_MAIL_SHIPMENT_CREATE")
     end)
 
-    renameBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = L["RENAME"], height = 24 })
+    renameBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = L["RENAME"], height = btnH })
     renameBtn:SetPoint("LEFT", newBtn, "RIGHT", 4, 0)
     renameBtn:SetScript("OnClick", function()
         if not selectedId or not GetShipment(selectedId) then
@@ -1355,7 +1366,7 @@ function ShipmentsUI:Create(parent)
         StaticPopup_Show("ONEWOW_MAIL_SHIPMENT_RENAME", nil, nil, selectedId)
     end)
 
-    deleteBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = DELETE, height = 24 })
+    deleteBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = DELETE, height = btnH })
     deleteBtn:SetPoint("LEFT", renameBtn, "RIGHT", 4, 0)
     deleteBtn:SetScript("OnClick", function()
         if not selectedId or not GetShipment(selectedId) then

@@ -178,17 +178,14 @@ function AddressBook:RememberRecipient(recipient)
 end
 
 --- Filter suggestions by typed prefix.
+--- Empty prefix returns the full GetSuggestions() list (alts first) for browse-on-focus.
 ---@param prefix string
 ---@return table
 function AddressBook:Autocomplete(prefix)
     prefix = strlower(strtrim(prefix or ""))
-    -- Empty prefix is not a filter — callers must type before we suggest.
-    if prefix == "" then
-        return {}
-    end
     local out = {}
     for _, entry in ipairs(self:GetSuggestions()) do
-        if strfind(strlower(entry.text), prefix, 1, true) == 1 then
+        if prefix == "" or strfind(strlower(entry.text), prefix, 1, true) == 1 then
             tinsert(out, entry)
         end
     end

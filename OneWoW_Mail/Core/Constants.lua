@@ -1,10 +1,15 @@
 local _, ns = ...
 
+local OneWoW_GUI = OneWoW_GUI
+
 ns.Constants = {
-    GUI = {
+    GUI = OneWoW_GUI:RegisterGUIConstants({
         WINDOW_WIDTH = 720,
         WINDOW_HEIGHT = 668,
-    },
+        LEFT_PANEL_WIDTH = 220,
+        ROW_HEIGHT = 40,
+        BUTTON_HEIGHT = 24,
+    }),
     -- Keep this many free bag slots while collecting mail.
     DEFAULT_KEEP_FREE = 1,
     -- Delay between collect steps when C_Mail.IsCommandPending is clear.

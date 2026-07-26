@@ -19,12 +19,16 @@ local cancelBtn
 local expandedRow -- exclusive accordion
 local expandRestoreKey -- survive Blizzard CheckInbox / MAIL_INBOX_UPDATE rebuilds
 
-local ROW_H = 40
+local ROW_H = ns.Constants.GUI.ROW_HEIGHT
 local ROW_GAP = 2
 local DETAIL_PAD = 8
 local ATTACH_SIZE = 32
 local ATTACH_GAP = 4
 local MAX_RECV = ATTACHMENTS_MAX_RECEIVE or 16
+
+local function ScrollGutter()
+    return ns.Constants.GUI.SCROLLBAR_CONTENT_GUTTER
+end
 
 local function MailKey(sender, subject, money, attachments, CODAmount)
     return table.concat({
@@ -174,19 +178,13 @@ local function EnsureDetail(row)
     detail.moneyLine:SetJustifyH("LEFT")
     detail.moneyLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    detail.bodyScroll = CreateFrame("ScrollFrame", nil, detail, "UIPanelScrollFrameTemplate")
+    detail.bodyScroll, detail.bodyChild = OneWoW_GUI:CreateScrollFrame(detail, {})
+    detail.bodyScroll:ClearAllPoints()
     detail.bodyScroll:SetPoint("TOPLEFT", detail.moneyLine, "BOTTOMLEFT", 0, -6)
-    detail.bodyScroll:SetPoint("TOPRIGHT", detail.moneyLine, "BOTTOMRIGHT", -24, -6)
+    detail.bodyScroll:SetPoint("TOPRIGHT", detail.moneyLine, "BOTTOMRIGHT", 0, -6)
     detail.bodyScroll:SetHeight(72)
-    OneWoW_GUI:ApplyScrollBarStyle(detail.bodyScroll.ScrollBar, detail.bodyScroll, -2)
 
-    detail.bodyChild = CreateFrame("Frame", nil, detail.bodyScroll)
-    detail.bodyChild:SetWidth(1)
-    detail.bodyChild:SetHeight(1)
-    detail.bodyScroll:SetScrollChild(detail.bodyChild)
-
-    detail.bodyText = detail.bodyChild:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-    OneWoW_GUI:SafeSetFont(detail.bodyText, OneWoW_GUI:GetFont(), 11)
+    detail.bodyText = OneWoW_GUI:CreateFS(detail.bodyChild, 11)
     detail.bodyText:SetPoint("TOPLEFT", detail.bodyChild, "TOPLEFT", 0, 0)
     detail.bodyText:SetJustifyH("LEFT")
     detail.bodyText:SetJustifyV("TOP")
@@ -195,7 +193,7 @@ local function EnsureDetail(row)
 
     detail.attachRow = CreateFrame("Frame", nil, detail)
     detail.attachRow:SetPoint("TOPLEFT", detail.bodyScroll, "BOTTOMLEFT", 0, -8)
-    detail.attachRow:SetPoint("TOPRIGHT", detail.bodyScroll, "BOTTOMRIGHT", 24, -8)
+    detail.attachRow:SetPoint("TOPRIGHT", detail.bodyScroll, "BOTTOMRIGHT", 0, -8)
     detail.attachRow:SetHeight(ATTACH_SIZE)
     detail.slots = {}
 
@@ -213,8 +211,9 @@ local function EnsureDetail(row)
         slot.icon:SetPoint("BOTTOMRIGHT", -2, 2)
         slot.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-        slot.count = slot:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+        slot.count = OneWoW_GUI:CreateFS(slot, 11)
         slot.count:SetPoint("BOTTOMRIGHT", -1, 1)
+        slot.count:SetJustifyH("RIGHT")
         slot.count:Hide()
 
         slot:SetScript("OnEnter", function(myself)
@@ -263,13 +262,13 @@ local function PopulateDetail(row)
         detail.moneyLine:Show()
         detail.bodyScroll:ClearAllPoints()
         detail.bodyScroll:SetPoint("TOPLEFT", detail.moneyLine, "BOTTOMLEFT", 0, -6)
-        detail.bodyScroll:SetPoint("TOPRIGHT", detail, "TOPRIGHT", -(DETAIL_PAD + 24), -DETAIL_PAD - 18)
+        detail.bodyScroll:SetPoint("TOPRIGHT", detail, "TOPRIGHT", -DETAIL_PAD, -DETAIL_PAD - 18)
     else
         detail.moneyLine:SetText("")
         detail.moneyLine:Hide()
         detail.bodyScroll:ClearAllPoints()
         detail.bodyScroll:SetPoint("TOPLEFT", detail, "TOPLEFT", DETAIL_PAD, -DETAIL_PAD)
-        detail.bodyScroll:SetPoint("TOPRIGHT", detail, "TOPRIGHT", -(DETAIL_PAD + 24), -DETAIL_PAD)
+        detail.bodyScroll:SetPoint("TOPRIGHT", detail, "TOPRIGHT", -DETAIL_PAD, -DETAIL_PAD)
     end
 
     local body = GetInboxText(index)
@@ -282,8 +281,11 @@ local function PopulateDetail(row)
         detail.bodyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end
 
-    local scrollW = math.max(100, (detail:GetWidth() or 600) - DETAIL_PAD * 2 - 24)
-    detail.bodyChild:SetWidth(scrollW)
+    local scrollW = math.max(100, (detail.bodyChild:GetWidth() or 0))
+    if scrollW <= 1 then
+        scrollW = math.max(100, (detail:GetWidth() or 600) - DETAIL_PAD * 2 - ScrollGutter())
+        detail.bodyChild:SetWidth(scrollW)
+    end
     detail.bodyText:SetWidth(scrollW)
     local bodyH = detail.bodyText:GetStringHeight() or 12
     detail.bodyChild:SetHeight(math.max(bodyH, 12))
@@ -344,7 +346,7 @@ ExpandRow = function(row)
     detail:ClearAllPoints()
     detail:SetPoint("TOPLEFT", row, "BOTTOMLEFT", 0, -ROW_GAP)
     detail:SetPoint("TOPRIGHT", row, "BOTTOMRIGHT", 0, -ROW_GAP)
-    detail:SetWidth(row:GetWidth() or scrollChild:GetWidth() or 640)
+    detail:SetWidth(row:GetWidth() or scrollChild:GetWidth() or 1)
     PopulateDetail(row)
     RelayoutRows()
 end
@@ -420,8 +422,8 @@ local function AcquireRow(parent)
     end)
     row.expandBtn:SetScript("OnLeave", GameTooltip_Hide)
 
-    row.check = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
-    row.check:SetSize(24, 24)
+    row.check = OneWoW_GUI:CreateCheckbox(row, { label = "" })
+    row.check:SetSize(OneWoW_GUI.Constants.GUI.CHECKBOX_SIZE, OneWoW_GUI.Constants.GUI.CHECKBOX_SIZE)
     row.check:SetPoint("LEFT", row, "LEFT", 6, 0)
 
     row.icon = row:CreateTexture(nil, "ARTWORK")
@@ -524,6 +526,7 @@ end
 
 function Inbox:Create(parent)
     panel = parent
+    local btnH = ns.Constants.GUI.BUTTON_HEIGHT
 
     local btnBar = CreateFrame("Frame", nil, parent)
     btnBar:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
@@ -534,7 +537,7 @@ function Inbox:Create(parent)
     for _, def in ipairs(FILTERS) do
         local btn = OneWoW_GUI:CreateFitTextButton(btnBar, {
             text = L[def.labelKey],
-            height = 24,
+            height = btnH,
         })
         if not prev then
             btn:SetPoint("TOPLEFT", btnBar, "TOPLEFT", 0, 0)
@@ -559,7 +562,7 @@ function Inbox:Create(parent)
         prev = btn
     end
 
-    returnBtn = OneWoW_GUI:CreateFitTextButton(btnBar, { text = L["BTN_RETURN"], height = 24 })
+    returnBtn = OneWoW_GUI:CreateFitTextButton(btnBar, { text = L["BTN_RETURN"], height = btnH })
     returnBtn:SetPoint("TOPLEFT", btnBar, "TOPLEFT", 0, -28)
     returnBtn:SetScript("OnClick", function(myself)
         if not myself._interactive then
@@ -569,7 +572,7 @@ function Inbox:Create(parent)
     end)
     AttachTooltip(returnBtn, L["BTN_RETURN"], L["TT_BTN_RETURN"])
 
-    deleteBtn = OneWoW_GUI:CreateFitTextButton(btnBar, { text = DELETE, height = 24 })
+    deleteBtn = OneWoW_GUI:CreateFitTextButton(btnBar, { text = DELETE, height = btnH })
     deleteBtn:SetPoint("LEFT", returnBtn, "RIGHT", 4, 0)
     deleteBtn:SetScript("OnClick", function(myself)
         if not myself._interactive then
@@ -579,7 +582,7 @@ function Inbox:Create(parent)
     end)
     AttachTooltip(deleteBtn, DELETE, L["TT_BTN_DELETE"])
 
-    cancelBtn = OneWoW_GUI:CreateFitTextButton(btnBar, { text = CANCEL, height = 24 })
+    cancelBtn = OneWoW_GUI:CreateFitTextButton(btnBar, { text = CANCEL, height = btnH })
     cancelBtn:SetPoint("LEFT", deleteBtn, "RIGHT", 4, 0)
     cancelBtn:SetScript("OnClick", function(myself)
         if not myself._interactive then
@@ -647,14 +650,11 @@ function Inbox:Create(parent)
     statusItems:SetJustifyH("RIGHT")
     statusItems:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local scroll = CreateFrame("ScrollFrame", nil, parent, "UIPanelScrollFrameTemplate")
+    local scroll, child = OneWoW_GUI:CreateScrollFrame(parent, {})
+    scroll:ClearAllPoints()
     scroll:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -6)
-    scroll:SetPoint("BOTTOMRIGHT", statusBar, "TOPRIGHT", -24, -4)
-
-    scrollChild = CreateFrame("Frame", nil, scroll)
-    scrollChild:SetWidth(640)
-    scrollChild:SetHeight(1)
-    scroll:SetScrollChild(scrollChild)
+    scroll:SetPoint("BOTTOMRIGHT", statusBar, "TOPRIGHT", 0, -4)
+    scrollChild = child
     panel.scroll = scroll
     panel.statusBar = statusBar
 

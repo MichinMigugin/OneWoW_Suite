@@ -56,11 +56,13 @@
 # Mail
 ## Features
 - Shipment match expressions support `SAVED(Name)`, `CATEGORY(Name)`, and keyword synonyms from Search Shortcuts
+- Compose To and shipment Character target: click or use the chevron to browse alts (and the rest of the address book), type to filter, and clear with the X
 
 ## Fixes
 - Closing with the X works when the window was opened via `/owmail` (not only from a mailbox)
 - Selected collect no longer keeps taking mail below the checked rows after each delete shifts the inbox
 - Blank Subject on Compose no longer hangs until timeout; fills item name, gold amount, or "(No subject)" as needed
+- Inbox and Activity scrollbars match the suite theme and resize with the window instead of a fixed width
 
 ---
 

@@ -65,6 +65,7 @@ ns.L = OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["SRC_CONTACT"] = "contact",
     ["SRC_FRIEND"] = "friend",
     ["SRC_GUILD"] = "guild",
+    ["TT_ADDRESS_BROWSE"] = "Browse alts and address book",
 
     ["SHIPMENT_SELECT"] = "Select a shipment on the left.",
     ["SHIPMENT_MODE"] = "Auto-run",
@@ -101,7 +102,7 @@ ns.L = OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TT_KIND_GOLD"] = "Mail gold only (no item attachments).",
     ["TT_SHIPMENT_MATCH"] = "Bags search syntax for which bag items this shipment picks.\nSoulbound items are always excluded automatically.",
     ["TT_SHIPMENT_TARGET"] = "Who receives the matched items or gold.\nChoose Character to pick one recipient, or Role to send to every alt in that role (Settings → Roles & Alts).",
-    ["TT_TARGET_KIND_CHAR"] = "Send to one character. Type to search your address book.",
+    ["TT_TARGET_KIND_CHAR"] = "Send to one character. Click the field or chevron to browse alts, or type to filter. Use the X to clear.",
     ["TT_TARGET_KIND_ROLE"] = "Send to every suite alt assigned to this role (except the character you are on).\nDefine roles under Settings → Roles & Alts.",
     ["TARGET_ROLE_PICK"] = "Select a role…",
     ["TARGET_ROLE_NONE"] = "No roles defined",

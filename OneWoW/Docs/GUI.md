@@ -746,6 +746,9 @@ local box = OneWoW_GUI:CreateEditBox(parent, {
     height = 22,           -- optional, default SEARCH_HEIGHT
     placeholderText = "Search...",  -- optional
     maxLetters = 50,       -- optional
+    showClear = true,      -- optional; X button when text is non-empty
+    clearTooltip = "Clear", -- optional; tooltip on the X (omit for no tooltip)
+    onClear = function(box) end,  -- optional; after clear click
     onTextChanged = function(text)  -- optional, text has placeholder filtered out
         FilterMyList(text)
     end,
@@ -754,6 +757,7 @@ local box = OneWoW_GUI:CreateEditBox(parent, {
 Themed with focus border highlight and placeholder text behavior.
 When `width` is omitted, only height is set - use anchor points for flexible width.
 Use `box:GetSearchText()` to get current text with placeholder filtered out.
+With `showClear`, right text inset reserves room for the X so glyphs do not sit under it.
 
 Use `CreateEditBox` with `placeholderText` for search boxes. The deprecated `CreateSearchBox` wrapper has been removed.
 

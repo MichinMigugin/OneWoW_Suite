@@ -21,7 +21,10 @@ local LINE_H = 16
 local LOG_ROW_H = 22
 local LOG_DETAIL_H = 48
 local LOG_ROW_GAP = 2
-local SCROLLBAR_W = 24
+
+local function ScrollGutter()
+    return ns.Constants.GUI.SCROLLBAR_CONTENT_GUTTER
+end
 
 local SEVERITY_COLOR = {
     error = "TEXT_FEATURES_DISABLED",
@@ -80,7 +83,11 @@ local function PlaceLine(pool, parent, y, indent)
 end
 
 local function SyncChildWidth(scroll, child)
-    child:SetWidth(math.max(100, scroll:GetWidth() or 600))
+    -- CreateScrollFrame already syncs on size/show; keep a defensive refresh for rebuilds.
+    local w = scroll:GetWidth() or 0
+    if w > 0 then
+        child:SetWidth(math.max(100, w - ScrollGutter()))
+    end
 end
 
 local function EntryContext(e)
@@ -131,7 +138,7 @@ local function ExpandLogRow(row)
     detail:ClearAllPoints()
     detail:SetPoint("TOPLEFT", row, "BOTTOMLEFT", 0, -LOG_ROW_GAP)
     detail:SetPoint("TOPRIGHT", row, "BOTTOMRIGHT", 0, -LOG_ROW_GAP)
-    detail:SetWidth(row:GetWidth() or logChild:GetWidth() or 600)
+    detail:SetWidth(row:GetWidth() or logChild:GetWidth() or 1)
     detail:Show()
 end
 
@@ -367,30 +374,29 @@ function ActivityUI:Reset()
 end
 
 local function CreateSectionScroll(parent)
-    local scroll = CreateFrame("ScrollFrame", nil, parent, "UIPanelScrollFrameTemplate")
-    OneWoW_GUI:ApplyScrollBarStyle(scroll.ScrollBar, scroll, -2)
-    local child = CreateFrame("Frame", nil, scroll)
-    child:SetSize(1, 1)
-    scroll:SetScrollChild(child)
+    local scroll, child = OneWoW_GUI:CreateScrollFrame(parent, {})
+    scroll:ClearAllPoints()
     return scroll, child
 end
 
 function ActivityUI:Create(parent)
     panel = parent
+    local gutter = ScrollGutter()
+    local btnH = ns.Constants.GUI.BUTTON_HEIGHT
 
     local pendingHeader = OneWoW_GUI:CreateFS(parent, 13)
     pendingHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -6)
     pendingHeader:SetText(L["ACTIVITY_PENDING_HEADER"])
     pendingHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
-    discardBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = L["DISCARD"], height = 24 })
-    discardBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -SCROLLBAR_W, 0)
+    discardBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = L["DISCARD"], height = btnH })
+    discardBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -gutter, 0)
     discardBtn:SetScript("OnClick", function()
         ns.AutoRun:Discard()
     end)
     AttachTooltip(discardBtn, L["DISCARD"], L["TT_BTN_DISCARD"])
 
-    processBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = L["BTN_PROCESS"], height = 24 })
+    processBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = L["BTN_PROCESS"], height = btnH })
     processBtn:SetPoint("RIGHT", discardBtn, "LEFT", -6, 0)
     processBtn:SetScript("OnClick", function()
         ns.AutoRun:Process()
@@ -399,7 +405,7 @@ function ActivityUI:Create(parent)
 
     pendingScroll, pendingChild = CreateSectionScroll(parent)
     pendingScroll:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -HEADER_H)
-    pendingScroll:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -SCROLLBAR_W, -HEADER_H)
+    pendingScroll:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -HEADER_H)
     pendingScroll:SetHeight(PENDING_H)
 
     local logHeader = OneWoW_GUI:CreateFS(parent, 13)
@@ -407,8 +413,8 @@ function ActivityUI:Create(parent)
     logHeader:SetText(L["ACTIVITY_LOG_HEADER"])
     logHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
 
-    clearBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = CLEAR_ALL, height = 24 })
-    clearBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -SCROLLBAR_W, -(HEADER_H + PENDING_H + SECTION_GAP))
+    clearBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = CLEAR_ALL, height = btnH })
+    clearBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -gutter, -(HEADER_H + PENDING_H + SECTION_GAP))
     clearBtn:SetScript("OnClick", function()
         ns.RunLog:Clear()
     end)
@@ -426,7 +432,7 @@ function ActivityUI:Create(parent)
 
     logScroll, logChild = CreateSectionScroll(parent)
     logScroll:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -(HEADER_H + PENDING_H + SECTION_GAP + HEADER_H))
-    logScroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -SCROLLBAR_W, 0)
+    logScroll:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
     ns.RunLog:SetOnChanged(function()
         ActivityUI:Refresh()

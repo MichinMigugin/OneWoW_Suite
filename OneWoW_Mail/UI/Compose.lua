@@ -7,9 +7,7 @@ ns.Compose = {}
 local Compose = ns.Compose
 
 local ui = {}
-local suggestionFrame
-local acIndex = 0
-local acList = {}
+local toSuggest
 local sendMoneyMode = true -- true = Send Money, false = COD
 local eventsWired = false
 
@@ -17,8 +15,6 @@ local SLOT_SIZE = 42 -- scaled ShipMission equipment atlases (native 78)
 local SLOT_ICON_INSET = 7
 local SLOT_GAP = 4
 local MAX_SLOTS = ns.Constants.SEND_ATTACH_SLOTS
-local MAX_SUGGESTIONS = 8
-local SUGGEST_ROW_H = 22
 local ATLAS_SLOT_BG = "ShipMission_ShipFollower-EquipmentBG"
 local ATLAS_SLOT_FRAME = "ShipMission_ShipFollower-EquipmentFrame"
 
@@ -43,132 +39,15 @@ local function SetFieldText(box, text)
     elseif box.RestorePlaceholder then
         box:RestorePlaceholder()
     end
+    if box.UpdateClearButton then
+        box:UpdateClearButton()
+    end
 end
 
 local function HideSuggestions()
-    if suggestionFrame then
-        suggestionFrame:Hide()
+    if toSuggest then
+        toSuggest:Hide()
     end
-    acIndex = 0
-    wipe(acList)
-end
-
-local function ApplySuggestion(text)
-    SetFieldText(ui.toBox, text)
-    if ui.toBox then
-        ui.toBox:SetCursorPosition(#text)
-        ui.toBox:SetFocus()
-    end
-    HideSuggestions()
-end
-
-local function SetSuggestionRowHighlight(btn, highlighted)
-    if highlighted then
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-        btn.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-    else
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-        btn.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    end
-end
-
-local function HighlightSuggestion(index)
-    if not suggestionFrame then
-        return
-    end
-    if index < 1 or index > #acList then
-        acIndex = 0
-    else
-        acIndex = index
-    end
-    for i, btn in ipairs(suggestionFrame.buttons) do
-        if btn:IsShown() then
-            SetSuggestionRowHighlight(btn, i == acIndex)
-        end
-    end
-end
-
-local function CreateSuggestionRow(parent)
-    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    btn:SetHeight(SUGGEST_ROW_H - 2)
-    btn:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    btn:Hide()
-
-    btn.label = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    btn.label:SetPoint("LEFT", 6, 0)
-    btn.label:SetPoint("RIGHT", -6, 0)
-    btn.label:SetJustifyH("LEFT")
-    btn.label:SetWordWrap(false)
-    btn.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    btn:SetScript("OnEnter", function(myself)
-        HighlightSuggestion(myself.suggestIndex or 0)
-    end)
-    btn:SetScript("OnLeave", function(myself)
-        if acIndex ~= (myself.suggestIndex or 0) then
-            SetSuggestionRowHighlight(myself, false)
-        end
-    end)
-    return btn
-end
-
-local function ShowSuggestions(prefix)
-    if not suggestionFrame or not ui.toBox then
-        return
-    end
-    prefix = strtrim(prefix or "")
-    -- Empty prefix would dump the entire address book (alts/friends/guild).
-    if prefix == "" then
-        HideSuggestions()
-        return
-    end
-
-    local matches = ns.AddressBook:Autocomplete(prefix)
-    wipe(acList)
-    for i = 1, math.min(#matches, MAX_SUGGESTIONS) do
-        acList[i] = matches[i]
-    end
-    if #acList == 0 then
-        HideSuggestions()
-        return
-    end
-
-    suggestionFrame:ClearAllPoints()
-    suggestionFrame:SetPoint("TOPLEFT", ui.toBox, "BOTTOMLEFT", 0, -2)
-    suggestionFrame:SetPoint("TOPRIGHT", ui.toBox, "BOTTOMRIGHT", 0, -2)
-    suggestionFrame:SetHeight(6 + #acList * SUGGEST_ROW_H)
-    suggestionFrame:Show()
-
-    for _, btn in ipairs(suggestionFrame.buttons) do
-        btn:Hide()
-    end
-
-    local frameW = math.max(120, suggestionFrame:GetWidth() or ui.toBox:GetWidth() or 320)
-    for i, entry in ipairs(acList) do
-        local btn = suggestionFrame.buttons[i]
-        if not btn then
-            btn = CreateSuggestionRow(suggestionFrame)
-            suggestionFrame.buttons[i] = btn
-        end
-        btn.suggestIndex = i
-        btn:ClearAllPoints()
-        btn:SetPoint("TOPLEFT", suggestionFrame, "TOPLEFT", 4, -3 - (i - 1) * SUGGEST_ROW_H)
-        btn:SetPoint("TOPRIGHT", suggestionFrame, "TOPRIGHT", -4, -3 - (i - 1) * SUGGEST_ROW_H)
-        btn:SetWidth(frameW - 8)
-        local src = L["SRC_" .. strupper(entry.source)] or entry.source
-        btn.label:SetText(entry.text .. " (" .. src .. ")")
-        local text = entry.text
-        btn:SetScript("OnClick", function()
-            ApplySuggestion(text)
-        end)
-        btn:Show()
-    end
-    -- No row selected until Down / mouse hover — typing stays in the edit box.
-    HighlightSuggestion(0)
 end
 
 local function SyncAttachmentSlot(slot, slotIndex)
@@ -509,7 +388,7 @@ end
 
 function Compose:Reset()
     wipe(ui)
-    suggestionFrame = nil
+    toSuggest = nil
     HideSuggestions()
 end
 
@@ -519,6 +398,7 @@ function Compose:Create(parent)
     local TOP_PAD = 10
     local FOOTER_PAD = 0
     local SECTION_GAP = 12
+    local btnH = ns.Constants.GUI.BUTTON_HEIGHT
 
     ui.sendBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = SEND_LABEL, height = 28 })
     ui.sendBtn:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", FOOTER_PAD, FOOTER_PAD)
@@ -542,60 +422,18 @@ function Compose:Create(parent)
 
     ui.toBox = OneWoW_GUI:CreateEditBox(parent, {
         width = 320,
-        height = 24,
+        height = btnH,
         placeholderText = "",
+        showClear = true,
     })
     ui.toBox:SetPoint("TOPLEFT", toLabel, "BOTTOMLEFT", 0, -4)
-    -- Only user keystrokes — programmatic SetText (last recipient autofill) must not open the list.
-    ui.toBox:HookScript("OnTextChanged", function(myself, userInput)
-        if not userInput then
-            return
-        end
-        ShowSuggestions(GetFieldText(myself))
-    end)
-    ui.toBox:HookScript("OnArrowPressed", function(_, key)
-        if not suggestionFrame or not suggestionFrame:IsShown() or #acList == 0 then
-            return
-        end
-        if key == "DOWN" then
-            local next = acIndex + 1
-            if next > #acList then
-                next = 1
+    toSuggest = ns.AddressSuggest:Attach(ui.toBox, {
+        onAdvance = function()
+            if ui.subjectBox then
+                ui.subjectBox:SetFocus()
             end
-            HighlightSuggestion(next)
-        elseif key == "UP" then
-            if acIndex <= 1 then
-                HighlightSuggestion(0)
-            else
-                HighlightSuggestion(acIndex - 1)
-            end
-        end
-    end)
-    ui.toBox:HookScript("OnEnterPressed", function()
-        if suggestionFrame and suggestionFrame:IsShown() and acIndex >= 1 and acList[acIndex] then
-            ApplySuggestion(acList[acIndex].text)
-            return
-        end
-        if ui.subjectBox then
-            ui.subjectBox:SetFocus()
-        end
-    end)
-    ui.toBox:HookScript("OnTabPressed", function()
-        if suggestionFrame and suggestionFrame:IsShown() and acIndex >= 1 and acList[acIndex] then
-            ApplySuggestion(acList[acIndex].text)
-        else
-            HideSuggestions()
-        end
-        if ui.subjectBox then
-            ui.subjectBox:SetFocus()
-        end
-    end)
-    ui.toBox:HookScript("OnEscapePressed", function()
-        HideSuggestions()
-    end)
-    ui.toBox:HookScript("OnEditFocusLost", function()
-        C_Timer.After(0.15, HideSuggestions)
-    end)
+        end,
+    })
 
     local subLabel = OneWoW_GUI:CreateFS(parent, 12)
     subLabel:SetPoint("TOPLEFT", ui.toBox, "BOTTOMLEFT", 0, -10)
@@ -604,7 +442,7 @@ function Compose:Create(parent)
 
     ui.subjectBox = OneWoW_GUI:CreateEditBox(parent, {
         width = 420,
-        height = 24,
+        height = btnH,
         placeholderText = "",
     })
     ui.subjectBox:SetPoint("TOPLEFT", subLabel, "BOTTOMLEFT", 0, -4)
@@ -693,22 +531,6 @@ function Compose:Create(parent)
     bodyScroll:SetPoint("BOTTOMRIGHT", bodyWrap, "BOTTOMRIGHT", -4, 4)
     ui.bodyBox = bodyBox
     ui.bodyWrap = bodyWrap
-
-    suggestionFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    suggestionFrame:SetSize(320, 200)
-    suggestionFrame:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SOFT)
-    do
-        local r, g, b = OneWoW_GUI:GetThemeColor("BG_PRIMARY")
-        suggestionFrame:SetBackdropColor(r, g, b, 1)
-    end
-    suggestionFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    suggestionFrame:SetFrameStrata("DIALOG")
-    suggestionFrame:SetFrameLevel(parent:GetFrameLevel() + 20)
-    if suggestionFrame.SetClipsChildren then
-        suggestionFrame:SetClipsChildren(true)
-    end
-    suggestionFrame:Hide()
-    suggestionFrame.buttons = {}
 
     WireEvents()
     UpdatePostage()

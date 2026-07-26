@@ -197,9 +197,11 @@ function Shell:Ensure()
     titleBar.mailIcon = icon
 
     local tabBar = CreateFrame("Frame", nil, shellFrame)
-    tabBar:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 8, -4)
-    tabBar:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", -8, -4)
-    tabBar:SetHeight(30)
+    local pad = OneWoW_GUI.Constants.GUI.PADDING
+    local tabH = OneWoW_GUI.Constants.GUI.TAB_BUTTON_HEIGHT
+    tabBar:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", pad - 4, -4)
+    tabBar:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", -(pad - 4), -4)
+    tabBar:SetHeight(tabH)
 
     shellFrame.tabButtons = {}
     shellFrame.panels = {}
@@ -213,7 +215,11 @@ function Shell:Ensure()
 
     local prev
     for _, id in ipairs(TAB_ORDER) do
-        local btn = OneWoW_GUI:CreateFitTextButton(tabBar, { text = labels[id], height = 26, toggleable = true })
+        local btn = OneWoW_GUI:CreateFitTextButton(tabBar, {
+            text = labels[id],
+            height = math.max(22, tabH - 4),
+            toggleable = true,
+        })
         if not prev then
             btn:SetPoint("LEFT", tabBar, "LEFT", 0, 0)
         else
@@ -227,7 +233,7 @@ function Shell:Ensure()
 
         local panel = CreateFrame("Frame", nil, shellFrame)
         panel:SetPoint("TOPLEFT", tabBar, "BOTTOMLEFT", 0, -6)
-        panel:SetPoint("BOTTOMRIGHT", shellFrame, "BOTTOMRIGHT", -8, 8)
+        panel:SetPoint("BOTTOMRIGHT", shellFrame, "BOTTOMRIGHT", -(pad - 4), pad - 4)
         panel:Hide()
         shellFrame.panels[id] = panel
     end

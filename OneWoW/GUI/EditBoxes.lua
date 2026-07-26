@@ -5,6 +5,9 @@ local unpack = unpack
 
 local Constants = OneWoW_GUI.Constants
 
+local CLEAR_BTN_SIZE = 14
+local CLEAR_RIGHT_INSET = 18 -- room for clear button so glyphs don't sit under the X
+
 function OneWoW_GUI:CreateEditBox(parent, options)
     options = options or {}
     local name = options.name
@@ -13,6 +16,9 @@ function OneWoW_GUI:CreateEditBox(parent, options)
     local placeholderText = options.placeholderText or ""
     local maxLetters = options.maxLetters
     local onTextChanged = options.onTextChanged
+    local onClear = options.onClear
+    local showClear = options.showClear
+    local clearTooltip = options.clearTooltip
     local spacing = OneWoW_GUI:GetSpacing("SM")
 
     local box = CreateFrame("EditBox", name, parent, "BackdropTemplate")
@@ -27,7 +33,8 @@ function OneWoW_GUI:CreateEditBox(parent, options)
     box:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     box:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     box:SetFontObject(GameFontHighlight)
-    box:SetTextInsets(spacing, spacing, 0, 0)
+    local rightInset = showClear and CLEAR_RIGHT_INSET or spacing
+    box:SetTextInsets(spacing, rightInset, 0, 0)
     box:SetAutoFocus(false)
     box:EnableMouse(true)
     box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -52,18 +59,13 @@ function OneWoW_GUI:CreateEditBox(parent, options)
         myself:RestorePlaceholder()
     end)
 
-    if onTextChanged then
-        box:SetScript("OnTextChanged", function(myself)
-            local text = myself:GetText()
-            if text == myself.placeholderText then text = "" end
-            onTextChanged(text)
-        end)
-    end
-
     function box:RestorePlaceholder()
         if self:GetText() == "" and self.placeholderText and self.placeholderText ~= "" then
             self:SetText(self.placeholderText)
             self:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+        if self.UpdateClearButton then
+            self:UpdateClearButton()
         end
     end
 
@@ -71,6 +73,73 @@ function OneWoW_GUI:CreateEditBox(parent, options)
         local text = self:GetText()
         if text == self.placeholderText then return "" end
         return text
+    end
+
+    if showClear then
+        local clearBtn = CreateFrame("Button", nil, box)
+        clearBtn:SetSize(CLEAR_BTN_SIZE, CLEAR_BTN_SIZE)
+        clearBtn:SetPoint("RIGHT", box, "RIGHT", -3, 0)
+        clearBtn:SetFrameLevel((box:GetFrameLevel() or 0) + 2)
+        clearBtn:Hide()
+
+        local clearTex = clearBtn:CreateTexture(nil, "ARTWORK")
+        clearTex:SetAllPoints()
+        clearTex:SetAtlas("common-icon-redx")
+        clearBtn.icon = clearTex
+
+        clearBtn:SetScript("OnEnter", function(myself)
+            myself.icon:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+            if clearTooltip and clearTooltip ~= "" then
+                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                GameTooltip:SetText(clearTooltip, 1, 1, 1)
+                GameTooltip:Show()
+            end
+        end)
+        clearBtn:SetScript("OnLeave", function(myself)
+            myself.icon:SetVertexColor(1, 1, 1)
+            GameTooltip:Hide()
+        end)
+        clearBtn:SetScript("OnClick", function()
+            box:SetText("")
+            box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            if box.placeholderText and box.placeholderText ~= "" then
+                box:RestorePlaceholder()
+            end
+            box:ClearFocus()
+            if box.UpdateClearButton then
+                box:UpdateClearButton()
+            end
+            if onClear then
+                onClear(box)
+            end
+        end)
+
+        box.clearButton = clearBtn
+
+        function box:UpdateClearButton()
+            local text = self:GetSearchText()
+            if text ~= "" then
+                self.clearButton:Show()
+            else
+                self.clearButton:Hide()
+            end
+        end
+
+        box:HookScript("OnTextChanged", function(myself)
+            myself:UpdateClearButton()
+        end)
+        box:HookScript("OnEditFocusGained", function(myself)
+            myself:UpdateClearButton()
+        end)
+        box:UpdateClearButton()
+    end
+
+    if onTextChanged then
+        box:HookScript("OnTextChanged", function(myself)
+            local text = myself:GetText()
+            if text == myself.placeholderText then text = "" end
+            onTextChanged(text)
+        end)
     end
 
     return box

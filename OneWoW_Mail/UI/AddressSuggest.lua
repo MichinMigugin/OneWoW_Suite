@@ -4,14 +4,15 @@ local OneWoW_GUI = OneWoW_GUI
 local L = ns.L
 
 -- ============================================================================
--- AddressSuggest — To-box autocomplete shared by Compose / Other.
+-- AddressSuggest — To-box autocomplete shared by Compose / Shipments.
 -- ============================================================================
 
 ns.AddressSuggest = {}
 local AddressSuggest = ns.AddressSuggest
 
-local MAX_SUGGESTIONS = 8
+local MAX_SUGGESTIONS = 16
 local SUGGEST_ROW_H = 22
+local CHEVRON_W = 22
 
 local function GetBoxText(box)
     if box.GetSearchText then
@@ -27,6 +28,9 @@ local function SetBoxText(box, text)
         box:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     elseif box.RestorePlaceholder then
         box:RestorePlaceholder()
+    end
+    if box.UpdateClearButton then
+        box:UpdateClearButton()
     end
 end
 
@@ -50,7 +54,7 @@ local function CreateRow(parent)
     btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     btn:Hide()
 
-    btn.label = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    btn.label = OneWoW_GUI:CreateFS(btn, 11)
     btn.label:SetPoint("LEFT", 6, 0)
     btn.label:SetPoint("RIGHT", -6, 0)
     btn.label:SetJustifyH("LEFT")
@@ -60,9 +64,10 @@ local function CreateRow(parent)
 end
 
 --- Attach autocomplete + arrow/enter selection to a OneWoW CreateEditBox (or EditBox).
+--- Browse-on-focus: empty text shows alts-first AddressBook list. Optional chevron opens the same list.
 ---@param box EditBox
----@param options table|nil { onCommit?: fun(text: string), width?: number }
----@return table handle { SetText, GetText, Hide }
+---@param options table|nil { onCommit?: fun(text: string), onAdvance?: fun(), width?: number, showChevron?: boolean }
+---@return table handle { SetText, GetText, Hide, Show, box, chevron? }
 function AddressSuggest:Attach(box, options)
     options = options or {}
     local parent = box:GetParent()
@@ -71,6 +76,8 @@ function AddressSuggest:Attach(box, options)
         acList = {},
         box = box,
         onCommit = options.onCommit,
+        onAdvance = options.onAdvance,
+        suppressFocusShow = false,
     }
 
     local suggestionFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
@@ -110,10 +117,12 @@ function AddressSuggest:Attach(box, options)
     end
 
     local function Apply(text)
+        state.suppressFocusShow = true
         SetBoxText(box, text)
         box:SetCursorPosition(#text)
         box:SetFocus()
         Hide()
+        state.suppressFocusShow = false
         if state.onCommit then
             state.onCommit(ns.AddressBook:NormalizeRecipient(text))
         end
@@ -121,10 +130,6 @@ function AddressSuggest:Attach(box, options)
 
     local function Show(prefix)
         prefix = strtrim(prefix or "")
-        if prefix == "" then
-            Hide()
-            return
-        end
         local matches = ns.AddressBook:Autocomplete(prefix)
         wipe(state.acList)
         for i = 1, math.min(#matches, MAX_SUGGESTIONS) do
@@ -135,9 +140,10 @@ function AddressSuggest:Attach(box, options)
             return
         end
 
+        local anchorRight = state.chevron or box
         suggestionFrame:ClearAllPoints()
         suggestionFrame:SetPoint("TOPLEFT", box, "BOTTOMLEFT", 0, -2)
-        suggestionFrame:SetPoint("TOPRIGHT", box, "BOTTOMRIGHT", 0, -2)
+        suggestionFrame:SetPoint("TOPRIGHT", anchorRight, "BOTTOMRIGHT", 0, -2)
         suggestionFrame:SetHeight(6 + #state.acList * SUGGEST_ROW_H)
         suggestionFrame:Show()
 
@@ -176,11 +182,56 @@ function AddressSuggest:Attach(box, options)
         Highlight(0)
     end
 
+    local chevron
+    if options.showChevron ~= false then
+        chevron = CreateFrame("Button", nil, parent, "BackdropTemplate")
+        chevron:SetSize(CHEVRON_W, box:GetHeight() or 24)
+        chevron:SetPoint("LEFT", box, "RIGHT", 2, 0)
+        chevron:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+        chevron:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        chevron:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+        local arrow = chevron:CreateTexture(nil, "OVERLAY")
+        arrow:SetSize(12, 12)
+        arrow:SetPoint("CENTER")
+        arrow:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
+
+        chevron:SetScript("OnEnter", function(myself)
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L["TT_ADDRESS_BROWSE"], 1, 1, 1)
+            GameTooltip:Show()
+        end)
+        chevron:SetScript("OnLeave", function(myself)
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            GameTooltip:Hide()
+        end)
+        chevron:SetScript("OnClick", function()
+            if suggestionFrame:IsShown() then
+                Hide()
+                return
+            end
+            state.suppressFocusShow = true
+            box:SetFocus()
+            -- Chevron always browses the full alts-first list (ignore typed filter).
+            Show("")
+            state.suppressFocusShow = false
+        end)
+        state.chevron = chevron
+    end
+
     box:HookScript("OnTextChanged", function(myself, userInput)
         if not userInput then
             return
         end
         Show(GetBoxText(myself))
+    end)
+    box:HookScript("OnEditFocusGained", function()
+        if state.suppressFocusShow then
+            return
+        end
+        -- User focus opens browse list; programmatic autofill must not call SetFocus.
+        Show(GetBoxText(box))
     end)
     box:HookScript("OnArrowPressed", function(_, key)
         if not suggestionFrame:IsShown() or #state.acList == 0 then
@@ -200,31 +251,33 @@ function AddressSuggest:Attach(box, options)
             end
         end
     end)
-    box:HookScript("OnEnterPressed", function()
-        if suggestionFrame:IsShown() and state.acIndex >= 1 and state.acList[state.acIndex] then
-            Apply(state.acList[state.acIndex].text)
-            return
-        end
+    local function CommitAndAdvance()
         local text = ns.AddressBook:NormalizeRecipient(GetBoxText(box))
         SetBoxText(box, text)
         Hide()
         if state.onCommit then
             state.onCommit(text)
         end
-        box:ClearFocus()
+        if state.onAdvance then
+            state.onAdvance()
+        else
+            box:ClearFocus()
+        end
+    end
+
+    box:HookScript("OnEnterPressed", function()
+        if suggestionFrame:IsShown() and state.acIndex >= 1 and state.acList[state.acIndex] then
+            Apply(state.acList[state.acIndex].text)
+            return
+        end
+        CommitAndAdvance()
     end)
     box:HookScript("OnTabPressed", function()
         if suggestionFrame:IsShown() and state.acIndex >= 1 and state.acList[state.acIndex] then
             Apply(state.acList[state.acIndex].text)
-        else
-            local text = ns.AddressBook:NormalizeRecipient(GetBoxText(box))
-            SetBoxText(box, text)
-            Hide()
-            if state.onCommit then
-                state.onCommit(text)
-            end
+            return
         end
-        box:ClearFocus()
+        CommitAndAdvance()
     end)
     box:HookScript("OnEscapePressed", function()
         Hide()
@@ -240,6 +293,15 @@ function AddressSuggest:Attach(box, options)
         end)
     end)
 
+    if box.clearButton then
+        box.clearButton:HookScript("OnClick", function()
+            Hide()
+            if state.onCommit then
+                state.onCommit("")
+            end
+        end)
+    end
+
     return {
         SetText = function(_, text)
             SetBoxText(box, text)
@@ -248,6 +310,10 @@ function AddressSuggest:Attach(box, options)
             return ns.AddressBook:NormalizeRecipient(GetBoxText(box))
         end,
         Hide = Hide,
+        Show = function(_, prefix)
+            Show(prefix or GetBoxText(box))
+        end,
         box = box,
+        chevron = chevron,
     }
 end
