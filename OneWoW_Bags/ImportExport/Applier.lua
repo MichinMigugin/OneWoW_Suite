@@ -292,10 +292,16 @@ local function wireSectionMembership(plan, controller, planIdToDbId, nameRemap)
     for planSid, section in pairs(plan.sections) do
         local dbSid = planIdToDbId[planSid]
         if dbSid and g.categorySections[dbSid] then
-            for _, rawName in ipairs(section.categories or {}) do
+            -- Position matters: `categories` is an ordered array and the export
+            -- carries it to say where each category sits. Appending happened to
+            -- reproduce that when the section was built from scratch, but an
+            -- import into a section that already exists — re-importing after
+            -- deleting one category — dropped the restored one at the bottom
+            -- instead of back where it came from.
+            for index, rawName in ipairs(section.categories or {}) do
                 local finalName = nameRemap[rawName] or rawName
                 if finalName and finalName ~= "" then
-                    controller:SetSectionMembership(dbSid, finalName, true)
+                    controller:SetSectionMembership(dbSid, finalName, true, index)
                 end
             end
         end
@@ -473,6 +479,29 @@ local function applySavedSearches(plan)
     return merged
 end
 
+--- Apply the catalog half of an import and record what it created.
+---
+--- The created list goes into the backup so an undo can reach it. Without that,
+--- a rollback restores Bags' own tables and leaves the entries this import
+--- minted behind as orphans — referenced by nothing, invisible in any list that
+--- goes by category.
+---@param plan table
+---@param db table
+---@return number applied
+local function applyCatalogEntries(plan, db)
+    local items = plan.catalogPlan
+    if type(items) ~= "table" or #items == 0 then return 0 end
+
+    local created = OneWoW.SearchCatalog:ApplyImportPlan(items)
+
+    local backup = db.global.importBackup
+    if backup then
+        backup.createdCatalogEntries = created
+    end
+
+    return #created
+end
+
 local function applyOptionalCategoryToggles(plan, db)
     local g = db.global
     if plan.enableJunkCategory ~= nil then
@@ -611,8 +640,11 @@ function Applier:Apply(plan, controller, db)
     -- 7. Optional builtin toggles (before ordering restore / ONEWOW sync)
     applyOptionalCategoryToggles(plan, db)
 
-    -- 8. Saved searches referenced by imported categories
+    -- 8. Named expressions referenced by imported categories. v3 payloads carry
+    -- a core-owned catalog blob; v2 carried saved searches only, and the planner
+    -- lifts those into the same shape, so both land here.
     result.savedSearchesMerged = applySavedSearches(plan)
+        + applyCatalogEntries(plan, db)
 
     -- 9. Section and category order (exported first, local extras appended)
     result.sectionOrderRestored = restoreSectionOrder(plan, db, planIdToDbId)

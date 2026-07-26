@@ -183,10 +183,21 @@ literal and opens a read-only copy dialog (powered by `OneWoW.CopyPaste`).
 - `categorySections`, `sectionOrder`.
 - `categoryModifications`, `disabledCategories`, `categoryOrder`.
 - `displayOrder`.
-- **v2 only:** `savedSearches` — transitive closure of saved searches referenced
-  by exported custom category `searchExpression` values (`SAVED(Name)` tokens).
-  Collected from core `OneWoW.SearchExpand:GetAllSaved()` at export time via
-  `ImportExport/Util.lua` (`CollectReferencedSavedSearches`).
+- **v3+:** `searchCatalog` — an opaque, **core-owned** blob holding the
+  transitive closure of every named expression the exported rules depend on,
+  across all three reference kinds (`#token`, `SAVED(Name)`, `CATEGORY(Name)`),
+  built by `OneWoW.SearchCatalog:BuildExportPayload`. Bags carries it without
+  reading inside; if it learned the entry shape, a later core-side export would
+  grow a second, drifting format. References are **canonicalized** on the way
+  out — former names resolved to current ones — so `formerNames` never appear in
+  a payload.
+- **v3+:** `danglingCategories` — categories an exported rule names but that are
+  not themselves in the export. Reported as an import warning rather than
+  emitted silently, since they resolve to nothing on the far side.
+- **v2 only (still imported):** `savedSearches` — the same idea but limited to
+  `SAVED(Name)`, so a rule saying `#sell` shipped a bundle that resolved to
+  nothing. The planner lifts a v2 payload into the v3 shape, so both land on one
+  code path.
 - **v2 only:** `enableJunkCategory`, `enableUpgradeCategory` — whether optional
   **1W Junk** / **1W Upgrades** builtins participate in layout.
 - Envelope metadata: `format`, `version`, `addon`, `exportedAt`, `exportedBy`,

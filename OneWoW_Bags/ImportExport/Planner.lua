@@ -31,7 +31,9 @@ local function newPlan(source)
         modifications = {},
         displayOrder  = {},
         disabledCategories = {},
-        savedSearches = {},
+        -- Core-owned catalog blob plus the per-entry plan PlanImport returns.
+        catalogPayload = nil,
+        catalogPlan = {},
         enableJunkCategory = nil,
         enableUpgradeCategory = nil,
         unmappedDefaults   = {},
@@ -228,7 +230,26 @@ function Planner:FromOneWowString(text, db)
     plan.disabledCategories = deepCopy(payload.disabledCategories or {})
     plan.categoryOrder      = deepCopy(payload.categoryOrder) or {}
     plan.displayOrder       = deepCopy(payload.displayOrder) or {}
-    plan.savedSearches      = deepCopy(payload.savedSearches or {})
+    -- v3 carries a core-owned catalog blob covering every kind; v2 carried only
+    -- saved searches keyed by name. Old payloads are lifted into the same shape
+    -- so everything downstream sees one format.
+    if type(payload.searchCatalog) == "table" then
+        plan.catalogPayload = deepCopy(payload.searchCatalog)
+    elseif type(payload.savedSearches) == "table" then
+        local entries = {}
+        for name, body in pairs(payload.savedSearches) do
+            if type(name) == "string" and type(body) == "string" and body ~= "" then
+                tinsert(entries, { kind = "saved", name = name, body = body })
+            end
+        end
+        plan.catalogPayload = { version = 1, entries = entries }
+    end
+
+    plan.catalogPlan = OneWoW.SearchCatalog:PlanImport(plan.catalogPayload)
+
+    for _, name in ipairs(payload.danglingCategories or {}) do
+        addWarning(plan, "warn", string_format(L["IMPORT_WARN_DANGLING_CATEGORY"], tostring(name)))
+    end
     if payload.enableJunkCategory ~= nil then
         plan.enableJunkCategory = payload.enableJunkCategory
     end

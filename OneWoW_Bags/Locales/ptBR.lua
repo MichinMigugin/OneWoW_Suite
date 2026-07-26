@@ -510,6 +510,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["IMPORT_WARN_NOT_TABLE"] = "O valor decodificado não era uma tabela",
     ["IMPORT_WARN_NOT_OWB_EXPORT"] = "Não é uma exportação do OneWoW_Bags (formato=%s)",
     ["IMPORT_WARN_VERSION_MISMATCH"] = "Versão de exportação %s, esperada %d. Tentando importar da melhor forma possível.",
+    ["IMPORT_WARN_DANGLING_CATEGORY"] = "Uma regra referencia a categoria \"%s\", que não faz parte desta exportação.",
     ["IMPORT_INFO_LOCALE_MISMATCH"] = "Exportado do cliente «%s» para o cliente «%s».",
     ["IMPORT_WARN_BAGANATOR_DIRECT_FAILED"] = "Falha na leitura direta do Baganator",
     ["IMPORT_WARN_BAGANATOR_STRING_FAILED"] = "Falha ao analisar a cadeia do Baganator",

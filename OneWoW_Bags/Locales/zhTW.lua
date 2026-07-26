@@ -510,6 +510,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["IMPORT_WARN_NOT_TABLE"] = "解碼的值不是一個表",
     ["IMPORT_WARN_NOT_OWB_EXPORT"] = "不是 OneWoW_Bags 匯出（格式=%s）",
     ["IMPORT_WARN_VERSION_MISMATCH"] = "匯出版本 %s，預期 %d。正在盡力匯入。",
+    ["IMPORT_WARN_DANGLING_CATEGORY"] = "規則參照了分類「%s」，但該分類不在本次匯出中。",
     ["IMPORT_INFO_LOCALE_MISMATCH"] = "從「%s」客戶端匯出到「%s」客戶端。",
     ["IMPORT_WARN_BAGANATOR_DIRECT_FAILED"] = "Baganator 直接讀取失敗",
     ["IMPORT_WARN_BAGANATOR_STRING_FAILED"] = "Baganator 字串解析失敗",

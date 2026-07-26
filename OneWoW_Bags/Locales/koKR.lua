@@ -443,6 +443,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["IMPORT_WARN_NOT_TABLE"] = "디코딩된 값이 테이블이 아닙니다",
     ["IMPORT_WARN_NOT_OWB_EXPORT"] = "OneWoW_Bags 내보내기가 아닙니다 (형식=%s)",
     ["IMPORT_WARN_VERSION_MISMATCH"] = "내보내기 버전 %s, 예상 %d. 최선의 가져오기를 시도합니다.",
+    ["IMPORT_WARN_DANGLING_CATEGORY"] = "규칙이 이 내보내기에 포함되지 않은 '%s' 분류를 참조합니다.",
     ["IMPORT_INFO_LOCALE_MISMATCH"] = "'%s' 클라이언트에서 '%s' 클라이언트로 내보냈습니다.",
     ["IMPORT_WARN_BAGANATOR_DIRECT_FAILED"] = "Baganator 직접 읽기에 실패했습니다",
     ["IMPORT_WARN_BAGANATOR_STRING_FAILED"] = "Baganator 문자열 구문 분석에 실패했습니다",

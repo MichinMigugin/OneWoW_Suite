@@ -76,6 +76,11 @@ function Backup:Restore(db, controller)
         end
     end
 
+    -- Entries the import minted in the core catalog. Restoring Bags' own tables
+    -- cannot reach them, so the applier records them here and they are removed
+    -- explicitly; otherwise an undo leaves them behind as orphans.
+    OneWoW.SearchCatalog:RollbackImportedEntries(snap.createdCatalogEntries)
+
     local SE = OneWoW.SearchExpand
     local restored = snap.tables.savedSearches
     local current = SE:GetAllSaved()

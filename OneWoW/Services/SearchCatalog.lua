@@ -33,6 +33,7 @@ local wipe = wipe
 local strlower = string.lower
 local strmatch = string.match
 local strgmatch = string.gmatch
+local strgsub = string.gsub
 local strtrim = strtrim
 local format = string.format
 local tconcat = table.concat
@@ -853,6 +854,221 @@ function SearchCatalog:Lint()
         return NormKey(a.name) < NormKey(b.name)
     end)
     return findings, self:GetUnscannableAddons()
+end
+
+-- ============================================================================
+-- Export / import payload
+-- ============================================================================
+-- Core owns this format and other units embed it as an opaque sub-blob. If a
+-- consumer learned the entry shape, a later core-side export — sharing a single
+-- #token without a whole category bundle — would grow a second, drifting
+-- format. So Bags asks for a payload and hands one back; it never reads inside.
+
+local PAYLOAD_VERSION = 1
+
+--- Resolve every reference in a body to its owner's *current* name.
+---
+--- The no-rewrite promise covers stored text, not artifacts: an export is a new
+--- document, and the importer has no idea what our former names were. Doing this
+--- on the way out keeps `formerNames` out of the payload entirely.
+---@param body string|nil
+---@return string|nil
+local function CanonicalizeBody(body)
+    if type(body) ~= "string" then return body end
+
+    local out = strgsub(body, "#([%w_]+)", function(name)
+        local entry = SearchCatalog:Resolve("token", name)
+        return "#" .. (entry and entry.name or name)
+    end)
+    out = strgsub(out, "SAVED%(([^%)]*)%)", function(name)
+        local trimmed = strtrim(name)
+        local entry = SearchCatalog:Resolve("saved", trimmed)
+        return "SAVED(" .. (entry and entry.name or trimmed) .. ")"
+    end)
+    out = strgsub(out, "CATEGORY%(([^%)]*)%)", function(name)
+        local trimmed = strtrim(name)
+        local entry = SearchCatalog:Resolve("category", trimmed)
+        return "CATEGORY(" .. (entry and entry.name or trimmed) .. ")"
+    end)
+    return out
+end
+
+--- Build the catalog payload for a set of seed expressions.
+---
+--- Walks the transitive closure across all three kinds, not just SAVED: a
+--- category rule can say `#sell`, and that token's body can say
+--- `CATEGORY(Junk)`, so stopping at one kind ships a bundle that resolves to
+--- nothing on the far side.
+---
+--- Category entries are *not* in the payload — the unit that owns them exports
+--- them itself — but their names come back so the caller can check them against
+--- its own selection and warn about the ones it is not shipping.
+---@param seeds string[] expressions to start from
+---@return table payload
+---@return string[] referencedCategories current names, deduplicated
+function SearchCatalog:BuildExportPayload(seeds)
+    local entries = {}
+    local categories = {}
+    local seen = {}
+    local queue = {}
+
+    local function Enqueue(text)
+        if type(text) ~= "string" then return end
+        for kind, pattern in pairs(KIND_REF_PATTERN) do
+            local spec = KINDS[kind]
+            for captured in strgmatch(text, pattern) do
+                local name = strtrim(captured)
+                if name ~= "" and not (spec.isReserved and spec.isReserved(name)) then
+                    local entry = self:Resolve(kind, name)
+                    if entry then
+                        local key = kind .. "\0" .. NormKey(entry.name)
+                        if not seen[key] then
+                            seen[key] = true
+                            if spec.native then
+                                tinsert(queue, entry)
+                            else
+                                tinsert(categories, entry.name)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    for _, seed in ipairs(seeds or {}) do
+        Enqueue(seed)
+    end
+
+    local idx = 1
+    while idx <= #queue do
+        local entry = queue[idx]
+        idx = idx + 1
+        tinsert(entries, {
+            kind = entry.kind,
+            name = entry.name,
+            body = CanonicalizeBody(entry.body),
+        })
+        Enqueue(entry.body)
+    end
+
+    -- Stable ordering so re-exporting an unchanged setup produces an identical
+    -- string, which makes diffing and dedup on the receiving end meaningful.
+    sort(entries, function(a, b)
+        if a.kind ~= b.kind then return a.kind < b.kind end
+        return NormKey(a.name) < NormKey(b.name)
+    end)
+    sort(categories, function(a, b) return NormKey(a) < NormKey(b) end)
+
+    return { version = PAYLOAD_VERSION, entries = entries }, categories
+end
+
+--- A free name near `name`, for importing alongside a conflicting local entry.
+local function SuggestImportName(kind, name)
+    -- Token names cannot contain spaces or parentheses, so they get a suffix
+    -- the grammar actually accepts.
+    local template = (kind == "token") and "%s_imported%s" or "%s (imported)%s"
+    local candidate = format(template, name, "")
+    local n = 2
+    while SearchCatalog:Resolve(kind, candidate) do
+        candidate = format(template, name, tostring(n))
+        n = n + 1
+    end
+    return candidate
+end
+
+--- Turn an incoming payload into a plan the caller can present and edit.
+---
+--- Never a boolean, and never applied directly: the caller owns the UI, and a
+--- conflict is a decision rather than an error. Foreign ids are ignored outright
+--- — ids are ours, and trusting theirs would collide two unrelated catalogs.
+---
+--- Actions: `create` (no local entry), `merge` (identical body — the same thing,
+--- so no prompt), `conflict` (same name, different body).
+---@param payload table|nil
+---@return table[] plan
+function SearchCatalog:PlanImport(payload)
+    local plan = {}
+    if type(payload) ~= "table" then return plan end
+
+    for _, incoming in ipairs(payload.entries or {}) do
+        local spec = KINDS[incoming.kind or ""]
+        if spec and spec.native and type(incoming.name) == "string"
+            and type(incoming.body) == "string" and incoming.body ~= "" then
+
+            local existing, status = self:Resolve(incoming.kind, incoming.name)
+            local item = {
+                kind = incoming.kind,
+                name = incoming.name,
+                body = incoming.body,
+            }
+
+            if not existing or status ~= "current" then
+                item.action = "create"
+                -- Importing under a name some entry retired takes it back, and
+                -- every stale reference to it silently changes meaning. Flagged
+                -- so the caller can say so rather than discovering it later.
+                if existing and status == "former" then
+                    item.reclaims = existing.name
+                end
+            elseif strtrim(existing.body or "") == strtrim(incoming.body) then
+                item.action = "merge"
+            else
+                item.action = "conflict"
+                item.existingBody = existing.body
+                item.suggestedName = SuggestImportName(incoming.kind, incoming.name)
+                item.options = { "import_as_new", "keep_mine" }
+            end
+
+            tinsert(plan, item)
+        end
+    end
+    return plan
+end
+
+--- Apply a plan produced by PlanImport, after the caller has resolved conflicts.
+---
+--- Each item's `action` is honoured as given; `conflict` items must have been
+--- turned into `import_as_new` (optionally with a chosen `newName`) or
+--- `keep_mine` first. Returns what was created so a rollback can reach it —
+--- without that record, an undo restores the importing unit's own tables and
+--- leaves catalog entries behind as orphans.
+---@param plan table[]
+---@return table[] created { kind, id }
+function SearchCatalog:ApplyImportPlan(plan)
+    local created = {}
+
+    self:WithBatch(function()
+        for _, item in ipairs(plan or {}) do
+            local action = item.action
+            local name, body
+
+            if action == "create" then
+                name, body = item.name, item.body
+            elseif action == "import_as_new" then
+                name, body = item.newName or item.suggestedName, item.body
+            end
+
+            if name then
+                local entry = self:Set(item.kind, name, body)
+                if entry then
+                    tinsert(created, { kind = item.kind, id = entry.id })
+                end
+            end
+        end
+    end)
+
+    return created
+end
+
+--- Undo the catalog half of an import.
+---@param created table[] as returned by ApplyImportPlan
+function SearchCatalog:RollbackImportedEntries(created)
+    self:WithBatch(function()
+        for _, rec in ipairs(created or {}) do
+            self:Delete(rec.kind, rec.id)
+        end
+    end)
 end
 
 -- ---- The catalog's own bodies are an expression source ----

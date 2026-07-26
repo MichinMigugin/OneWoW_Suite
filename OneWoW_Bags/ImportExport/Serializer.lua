@@ -5,7 +5,10 @@ ns.ImportExport.Serializer = ns.ImportExport.Serializer or {}
 local Serializer = ns.ImportExport.Serializer
 
 Serializer.FORMAT = "ns.Export"
-Serializer.VERSION = 2
+-- 3: `savedSearches` (saved-kind only, keyed by name) replaced by
+-- `searchCatalog`, a core-owned blob carrying every kind. v2 payloads still
+-- import — the planner reads whichever field is present.
+Serializer.VERSION = 3
 
 local pairs, ipairs, type, tostring, tonumber = pairs, ipairs, type, tostring, tonumber
 local tinsert, tconcat = table.insert, table.concat
@@ -497,9 +500,30 @@ function Serializer:BuildExport(db)
         categories[cid] = copyAllowedCategoryFields(cat)
     end
 
+    -- Every named expression the exported categories depend on, transitively and
+    -- across all three kinds. Core builds and owns this blob; Bags carries it
+    -- without reading inside, so a future core-side export cannot drift from it.
+    local seeds = {}
+    for _, cat in pairs(categories) do
+        if type(cat.searchExpression) == "string" and cat.searchExpression ~= "" then
+            tinsert(seeds, cat.searchExpression)
+        end
+    end
+    local catalogPayload, referencedCategories = OneWoW.SearchCatalog:BuildExportPayload(seeds)
+
+    -- A rule naming a category outside this export resolves to nothing on the
+    -- far side. Reported rather than emitted silently.
     local IEUtil = ns.ImportExport.Util
-    local savedStore = OneWoW.SearchExpand:GetAllSaved()
-    local savedSearches = IEUtil.CollectReferencedSavedSearches(categories, savedStore)
+    local exportedNames = {}
+    for _, cat in pairs(categories) do
+        if cat.name then exportedNames[IEUtil.NormKey(cat.name)] = true end
+    end
+    local danglingCategories = {}
+    for _, name in ipairs(referencedCategories) do
+        if not exportedNames[IEUtil.NormKey(name)] then
+            tinsert(danglingCategories, name)
+        end
+    end
 
     local playerName = UnitName and UnitName("player") or "?"
     local realm = GetRealmName and GetRealmName() or ""
@@ -523,7 +547,8 @@ function Serializer:BuildExport(db)
         disabledCategories = deepCopy(g.disabledCategories) or {},
         categoryOrder         = deepCopy(g.categoryOrder) or {},
         displayOrder          = deepCopy(g.displayOrder) or {},
-        savedSearches         = deepCopy(savedSearches),
+        searchCatalog         = catalogPayload,
+        danglingCategories    = (#danglingCategories > 0) and danglingCategories or nil,
         enableJunkCategory    = g.enableJunkCategory,
         enableUpgradeCategory = g.enableUpgradeCategory,
     }

@@ -443,6 +443,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["IMPORT_WARN_NOT_TABLE"] = "Декодированное значение не является таблицей",
     ["IMPORT_WARN_NOT_OWB_EXPORT"] = "Это не экспорт OneWoW_Bags (формат=%s)",
     ["IMPORT_WARN_VERSION_MISMATCH"] = "Версия экспорта %s, ожидалась %d. Попытка импорта по возможности.",
+    ["IMPORT_WARN_DANGLING_CATEGORY"] = "Правило ссылается на категорию «%s», которой нет в этом экспорте.",
     ["IMPORT_INFO_LOCALE_MISMATCH"] = "Экспортировано из клиента «%s» в клиент «%s».",
     ["IMPORT_WARN_BAGANATOR_DIRECT_FAILED"] = "Не удалось прямое чтение Baganator",
     ["IMPORT_WARN_BAGANATOR_STRING_FAILED"] = "Не удалось разобрать строку Baganator",
