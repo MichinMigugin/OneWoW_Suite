@@ -239,41 +239,22 @@ function UI:CreateHomeTab(parent)
     linksRow:SetPoint("TOPLEFT", content, "TOPLEFT", 40, yOffset)
     linksRow:SetPoint("TOPRIGHT", content, "TOPRIGHT", -40, yOffset)
 
-    -- Builds a clickable label that opens ShowCopyURLDialog. Used for the
-    -- compact link row on the home tab.
-    local function CreateLinkButton(parentFrame, title, url)
-        local btn = CreateFrame("Button", nil, parentFrame)
-        btn:SetSize(140, 24)
-        btn:EnableMouse(true)
-
-        local label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-        label:SetPoint("CENTER", btn, "CENTER", 0, 0)
-        label:SetText(title)
-        label:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-        btn:SetScript("OnEnter", function()
-            label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            SetCursor("Interface\\CURSOR\\Point")
-        end)
-        btn:SetScript("OnLeave", function()
-            label:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            ResetCursor()
-        end)
-        btn:SetScript("OnClick", function()
-            OneWoW_GUI:ShowCopyURLDialog(title, url)
-        end)
-
-        return btn
-    end
-
-    local discordBtn = CreateLinkButton(linksRow,
-        L["DISCORD"],
-        L["HOME_DISCORD_LINK"])
+    local discordBtn = OneWoW_GUI:CreateTextLink(linksRow, {
+        text = L["DISCORD"],
+        fontSize = 14,
+        onClick = function()
+            OneWoW_GUI:ShowCopyURLDialog(L["DISCORD"], L["HOME_DISCORD_LINK"])
+        end,
+    })
     discordBtn:SetPoint("LEFT", linksRow, "CENTER", -160, 0)
 
-    local supportBtn = CreateLinkButton(linksRow,
-        L["HOME_SUPPORT"],
-        L["HOME_SUPPORT_LINK"])
+    local supportBtn = OneWoW_GUI:CreateTextLink(linksRow, {
+        text = L["HOME_SUPPORT"],
+        fontSize = 14,
+        onClick = function()
+            OneWoW_GUI:ShowCopyURLDialog(L["HOME_SUPPORT"], L["HOME_SUPPORT_LINK"])
+        end,
+    })
     supportBtn:SetPoint("LEFT", linksRow, "CENTER", 20, 0)
 
     yOffset = yOffset - 34

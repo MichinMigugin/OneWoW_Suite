@@ -2031,6 +2031,16 @@ function CatMgrUI:Refresh()
     self:RefreshRight()
 end
 
+--- Open the Category Manager and select a custom category by id
+--- (`customCategoriesV2` key — the same id SearchCatalog uses for category entries).
+---@param catId string|nil
+function CatMgrUI:ShowAndSelect(catId)
+    if type(catId) == "string" and catId ~= "" then
+        selectedCatKey = catId
+    end
+    self:Show()
+end
+
 function CatMgrUI:Show()
     EnsureDefaultSection()
 

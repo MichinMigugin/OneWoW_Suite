@@ -250,6 +250,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
     local buildItems = options.buildItems
     local onSelect = options.onSelect
     local menuHeight = options.menuHeight or 314
+    local menuWidth = options.menuWidth
     local getActiveValue = options.getActiveValue
 
     dropdown:SetScript("OnClick", function(myself)
@@ -314,7 +315,11 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
         menu:SetFrameLevel(menuLevel)
         menu:SetToplevel(true)
         menu:SetClampedToScreen(true)
-        menu:SetSize(myself:GetWidth() + 20, menuHeight)
+        -- Prefer an explicit width; otherwise grow from the trigger so short labels
+        -- (e.g. "New") do not crush item text into wrapped stubs.
+        local width = menuWidth or ((myself:GetWidth() or 0) + 20)
+        if width < 120 then width = 120 end
+        menu:SetSize(width, menuHeight)
 
         local screenH = UIParent:GetHeight()
         local dropdownBottom = myself:GetBottom() or 0
@@ -494,11 +499,12 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                     btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
                 end
 
-                local txt = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                OneWoW_GUI:SafeSetFont(txt, item.fontPath or OneWoW_GUI:GetFont(), item.fontSize or 10)
+                local txt = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                OneWoW_GUI:SafeSetFont(txt, item.fontPath or OneWoW_GUI:GetFont(), item.fontSize or 12)
                 txt:SetPoint("LEFT", btn, "LEFT", 8, 0)
                 txt:SetPoint("RIGHT", btn, "RIGHT", -4, 0)
                 txt:SetJustifyH("LEFT")
+                txt:SetWordWrap(false)
                 local label = item.text or item.value or ""
                 txt:SetText(label)
                 txt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
@@ -544,7 +550,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                     end
                 end)
 
-                btn.filterKey = tostring(label):lower()
+                btn.filterKey = tostring(item.filterKey or label):lower()
                 btn:Hide()
                 tinsert(elements, { frame = btn, type = "item", height = rowHeight + 2, filterKey = btn.filterKey })
             end

@@ -488,18 +488,8 @@ function UI:CreateProfilesTab(parent)
             local btnY = 6
 
             if not isDefault then
-                local delBtn = OneWoW_GUI:CreateFitTextButton(card, { text = "Delete", height = 26 })
+                local delBtn = OneWoW_GUI:CreateFitTextButton(card, { text = "Delete", height = 26, danger = true })
                 delBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, btnY)
-                delBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
-                delBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
-                delBtn:SetScript("OnEnter", function(myself)
-                    myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
-                    myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER_HOVER"))
-                end)
-                delBtn:SetScript("OnLeave", function(myself)
-                    myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
-                    myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
-                end)
                 local capturedName = name
                 delBtn:SetScript("OnClick", function()
                     ShowDeleteConfirm(capturedName, function()

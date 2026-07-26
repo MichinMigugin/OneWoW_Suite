@@ -25,26 +25,53 @@ function OneWoW_GUI:CreateButton(parent, options)
     btn.text:SetText(text)
     btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
+    local function applyEnabledChrome(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end
+
+    local function applyDisabledChrome(myself)
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+        myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    end
+
     btn:SetScript("OnEnter", function(myself)
+        if not myself:IsEnabled() then return end
         myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
         myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
         myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
     end)
     btn:SetScript("OnLeave", function(myself)
-        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        if myself:IsEnabled() then
+            applyEnabledChrome(myself)
+        else
+            applyDisabledChrome(myself)
+        end
     end)
     btn:SetScript("OnMouseDown", function(myself)
+        if not myself:IsEnabled() then return end
         myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
     end)
     btn:SetScript("OnMouseUp", function(myself)
+        if not myself:IsEnabled() then return end
         if myself:IsMouseOver() then
             myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
         else
             myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
         end
     end)
+
+    local widgetSetEnabled = btn.SetEnabled
+    function btn:SetEnabled(enabled)
+        widgetSetEnabled(self, enabled and true or false)
+        if enabled then
+            applyEnabledChrome(self)
+        else
+            applyDisabledChrome(self)
+        end
+    end
 
     return btn
 end
@@ -95,7 +122,9 @@ function OneWoW_GUI:CreateFitTextButton(parent, options)
     local height = options.height or Constants.GUI.BUTTON_HEIGHT
     local minWidth = options.minWidth or 40
     local paddingX = options.paddingX or 24
-    local toggleable = options.toggleable == true
+    local danger = options.danger == true
+    -- danger and toggleable are mutually exclusive; danger wins.
+    local toggleable = (not danger) and options.toggleable == true
 
     local btn = self:CreateButton(parent, { text = text, width = minWidth, height = height })
     local textWidth = btn.text:GetStringWidth()
@@ -111,7 +140,61 @@ function OneWoW_GUI:CreateFitTextButton(parent, options)
         self:SetWidth(math.max(self._minWidth, w + self._paddingX))
     end
 
-    if toggleable then
+    if danger then
+        local function applyNormal(myself)
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+            myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+
+        local function applyHover(myself)
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER_HOVER"))
+            myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
+
+        local function applyDisabled(myself)
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
+            myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
+            myself.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+
+        btn:SetScript("OnEnter", function(myself)
+            if not myself:IsEnabled() then return end
+            applyHover(myself)
+        end)
+        btn:SetScript("OnLeave", function(myself)
+            if myself:IsEnabled() then
+                applyNormal(myself)
+            else
+                applyDisabled(myself)
+            end
+        end)
+        btn:SetScript("OnMouseDown", function(myself)
+            if not myself:IsEnabled() then return end
+            myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
+        end)
+        btn:SetScript("OnMouseUp", function(myself)
+            if not myself:IsEnabled() then return end
+            if myself:IsMouseOver() then
+                applyHover(myself)
+            else
+                applyNormal(myself)
+            end
+        end)
+
+        local widgetSetEnabled = btn.SetEnabled
+        function btn:SetEnabled(enabled)
+            widgetSetEnabled(self, enabled and true or false)
+            if enabled then
+                applyNormal(self)
+            else
+                applyDisabled(self)
+            end
+        end
+
+        applyNormal(btn)
+    elseif toggleable then
         btn.isActive = false
 
         local function applyNormal(myself)
@@ -161,6 +244,71 @@ function OneWoW_GUI:CreateFitTextButton(parent, options)
         end
 
         applyNormal(btn)
+    end
+
+    return btn
+end
+
+--- Backdrop-less text that acts as a clickable link. Width fits the label.
+--- Idle ACCENT_PRIMARY, hover TEXT_PRIMARY, Point cursor — same as Home links.
+---@param parent Frame
+---@param options { text?: string, fontSize?: number, onClick?: fun(self: Button) }
+---@return Button
+function OneWoW_GUI:CreateTextLink(parent, options)
+    options = options or {}
+    local text = options.text or ""
+    local fontSize = options.fontSize or 12
+    local onClick = options.onClick
+
+    local btn = CreateFrame("Button", nil, parent)
+    btn:EnableMouse(true)
+
+    local label = OneWoW_GUI:CreateFS(btn, fontSize)
+    label:SetPoint("LEFT", btn, "LEFT", 0, 0)
+    label:SetJustifyH("LEFT")
+    label:SetText(text)
+    label:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    btn.text = label
+
+    local function FitWidth()
+        local w = label:GetStringWidth() or 0
+        local h = label:GetStringHeight() or fontSize
+        if w < 1 then w = 1 end
+        if h < fontSize then h = fontSize end
+        btn:SetSize(w, h)
+    end
+    FitWidth()
+
+    function btn:SetText(newText)
+        label:SetText(newText or "")
+        FitWidth()
+    end
+
+    local widgetSetEnabled = btn.SetEnabled
+    function btn:SetEnabled(enabled)
+        widgetSetEnabled(self, enabled and true or false)
+        if enabled then
+            label:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        else
+            label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+    end
+
+    btn:SetScript("OnEnter", function(myself)
+        if not myself:IsEnabled() then return end
+        label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        SetCursor("Interface\\CURSOR\\Point")
+    end)
+    btn:SetScript("OnLeave", function(myself)
+        if myself:IsEnabled() then
+            label:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        else
+            label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+        ResetCursor()
+    end)
+    if onClick then
+        btn:SetScript("OnClick", onClick)
     end
 
     return btn

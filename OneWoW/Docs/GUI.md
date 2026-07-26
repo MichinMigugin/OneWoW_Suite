@@ -383,7 +383,8 @@ TEXT_FEATURES_ENABLED, TEXT_FEATURES_DISABLED,
 DOT_FEATURES_ENABLED, DOT_FEATURES_DISABLED,
 TEXT_WARNING,
 BTN_DANGER_NORMAL, BTN_DANGER_HOVER, BTN_DANGER_BORDER, BTN_DANGER_BORDER_HOVER,
-QUEST_ROW_SECTION, QUEST_ROW_CHILD, QUEST_ROW_GROUP_TOGGLE
+QUEST_ROW_SECTION, QUEST_ROW_CHILD, QUEST_ROW_GROUP_TOGGLE,
+KIND_TOKEN, KIND_SAVED, KIND_CATEGORY
 
 ### Get spacing value
 ```lua
@@ -630,11 +631,28 @@ local btn = OneWoW_GUI:CreateFitTextButton(parent, {
     height = 28,      -- optional, default BUTTON_HEIGHT
     minWidth = 40,    -- optional, default 40
     paddingX = 24,    -- optional, default 24 (12 each side)
+    danger = true,    -- optional; BTN_DANGER_* chrome (ignores toggleable)
+    toggleable = true,-- optional; mutually exclusive with danger
 })
 ```
 Auto-sizes width to fit text content. Handles localization where translated text may be longer.
 Call `btn:SetFitText("New Text")` to update text and auto-resize.
 Access label via `btn.text`.
+`danger = true` uses `BTN_DANGER_NORMAL` / `BTN_DANGER_HOVER` / `BTN_DANGER_BORDER*`. If both `danger` and `toggleable` are set, `danger` wins and `toggleable` is ignored.
+
+### Text Link (backdrop-less clickable label)
+```lua
+local link = OneWoW_GUI:CreateTextLink(parent, {
+    text = "Open in Bags",
+    fontSize = 11,    -- optional, default 12
+    onClick = function()
+        -- handle click
+    end,
+})
+```
+Fit-width button with no backdrop. Idle `ACCENT_PRIMARY`, hover `TEXT_PRIMARY`, Point cursor.
+`link:SetText(s)` refits width; `link:SetEnabled(false)` mutes to `TEXT_MUTED`.
+Access label via `link.text`.
 
 ### Fit Frame Buttons (fill container width)
 ```lua
@@ -1006,7 +1024,8 @@ Correct pattern for multiline text entry areas. Fixes the focus dead-zone bug in
 
 - ScrollFrame uses `UIPanelScrollFrameTemplate` with styled scrollbar.
 - EditBox is the scroll child, starts at height 1 and auto-expands with content.
-- Width auto-syncs to scrollFrame on resize.
+- Width auto-syncs to scrollFrame on resize, minus `SCROLLBAR_CONTENT_GUTTER`, and the right
+  text inset clears the thumb so glyphs do not sit under the scrollbar.
 - `scrollFrame:HookScript("OnMouseDown")` calls `editBox:SetFocus()` so clicks anywhere in the
   visible area work, not just the first pixel row.
 - Font defaults to the user's active GUI font setting, then `ChatFontNormal`.
@@ -1189,6 +1208,7 @@ OneWoW_GUI:AttachFilterMenu(dropdown, {
     getActiveValue = function() return currentZone end,
     maxVisible = 20,     -- optional, default 20 (unlimited when searching)
     menuHeight = 314,    -- optional, default 314
+    menuWidth = 200,     -- optional; default trigger width + 20 (min 120)
 })
 ```
 
@@ -1196,12 +1216,15 @@ OneWoW_GUI:AttachFilterMenu(dropdown, {
 - Click to open, click again to close
 - Active item highlighted with ACCENT_PRIMARY
 - Hover: BG_HOVER + TEXT_ACCENT
+- Item labels use 12pt by default (override with per-item `fontSize`); no word wrap
+- Optional per-item `filterKey`: string used for searchable filtering (defaults to the label). Use when the visible label differs from what should match (e.g. aliases).
 - Optional per-item `tooltip`: string body (title = `text`), or `{ title, desc }`
 - Auto-closes after 0.5s when mouse leaves both menu and trigger button
 - ESC: clears search text first, closes menu on second press (searchable only)
 - Menu opens at DIALOG strata (above the host window)
 - buildItems() called fresh each click (supports dynamic lists)
 - Scroll uses UIPanelScrollFrameTemplate (Lesson 3 compliant)
+- `menuWidth` keeps short triggers (e.g. "New") from crushing item text
 
 ### Dismiss architecture (OnUpdate hybrid)
 

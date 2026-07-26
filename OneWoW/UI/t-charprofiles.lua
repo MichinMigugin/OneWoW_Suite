@@ -884,18 +884,8 @@ function UI:CreateCharProfilesPanel(parent)
             end)
 
             local capturedName = name
-            local deleteBtn = OneWoW_GUI:CreateFitTextButton(card, { text = "Delete", height = 26 })
+            local deleteBtn = OneWoW_GUI:CreateFitTextButton(card, { text = "Delete", height = 26, danger = true })
             deleteBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, 6)
-            deleteBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
-            deleteBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
-            deleteBtn:SetScript("OnEnter", function(myself)
-                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
-                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
-            end)
-            deleteBtn:SetScript("OnLeave", function(myself)
-                myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
-                myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
-            end)
             deleteBtn:SetScript("OnClick", function()
                 local dlg = OneWoW_GUI:CreateConfirmDialog({
                     name    = "OneWoW_CharProfileDeleteConfirm",

@@ -384,6 +384,39 @@ function SearchCatalog:ValidateName(kind, name)
     return ValidateName(kind, name)
 end
 
+--- Name check for create/rename *before* confirm dialogs.
+---
+--- Create (`exceptId` nil): an existing live name is allowed — `Set` updates that
+--- body. Reserved only rejects names that are not already a live entry.
+--- Rename (`exceptId` set): a live clash with another id is `CATALOG_DUPLICATE_NAME`;
+--- reserved names that are not this entry are `CATALOG_NAME_RESERVED`.
+---@param kind string
+---@param name string|nil
+---@param exceptId string|nil
+---@return string|nil normalized
+---@return string|nil errorKey
+function SearchCatalog:ValidateWritableName(kind, name, exceptId)
+    local spec = KINDS[kind]
+    if not spec then return nil, "CATALOG_INVALID_NAME" end
+
+    local normalized, err = ValidateName(kind, name)
+    if not normalized then return nil, err end
+
+    local clash, status = self:Resolve(kind, normalized)
+    if clash and status == "current" then
+        if exceptId and clash.id ~= exceptId then
+            return nil, "CATALOG_DUPLICATE_NAME"
+        end
+        -- Create targeting an existing live name, or rename keeping this entry.
+        return normalized
+    end
+
+    if spec.isReserved and spec.isReserved(normalized) then
+        return nil, "CATALOG_NAME_RESERVED"
+    end
+    return normalized
+end
+
 --- Canonical form of a body for *comparison only*, never for storage.
 ---
 --- An edit box returns every typed `|` doubled while code writes single pipes;

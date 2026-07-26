@@ -62,11 +62,12 @@ SC:GetBody(kind, name)      --> body, status    nil + "missing"/"empty" when unu
 SC:GetById(kind, id)        --> entry
 SC:GetAll(kind)             --> entry[]         sorted by name, case-insensitive
 SC:ValidateName(kind, name) --> normalized, errorKey
+SC:ValidateWritableName(kind, name, exceptId?) --> normalized, errorKey
 ```
 
 `Resolve` returning `status == "former"` is not an error — it resolved, through a redirect. It is the set a prune or a name reclaim would break, which is why the lint reports it separately from a genuine miss.
 
-`ValidateName` is public so no other file restates a name grammar. It returns the catalog's own `CATALOG_*` error code; callers map those to their own message keys (see `SAVED_ERRORS` / `ALIAS_ERRORS` and `SearchExpand:MapCatalogError`) rather than letting internal codes reach user-facing text.
+`ValidateName` is public so no other file restates a name grammar. `ValidateWritableName` adds reserved / live-clash checks for create and rename before confirm dialogs. Both return the catalog's own `CATALOG_*` error codes; callers map those to their own message keys (see `SAVED_ERRORS` / `ALIAS_ERRORS` and `SearchExpand:MapCatalogError`) rather than letting internal codes reach user-facing text.
 
 ---
 

@@ -275,13 +275,8 @@ function UI:CreateRolesAndAltsTab(parent)
         end
 
         y = y - 6
-        local removeBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["CHARS_REMOVE_BTN"], height = 30 })
+        local removeBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["CHARS_REMOVE_BTN"], height = 30, danger = true })
         removeBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 15, y)
-        removeBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
-        removeBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
-        if removeBtn.text then removeBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
-        removeBtn:SetScript("OnEnter", function(btn) btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER")) end)
-        removeBtn:SetScript("OnLeave", function(btn) btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL")) end)
         removeBtn:SetScript("OnClick", function()
             local keys = {}
             for k in pairs(selected) do keys[#keys + 1] = k end

@@ -84,3 +84,16 @@ function OneWoW_Bags_API.Hide()
         ns.GUI:Hide()
     end
 end
+
+--- Open the Custom Category Manager, optionally selecting a custom category by id
+--- (the `customCategoriesV2` key / SearchCatalog category entry id).
+---@param catId string|nil
+function OneWoW_Bags_API.OpenCategoryManager(catId)
+    local ui = ns.CategoryManagerUI
+    if not ui then return end
+    if type(catId) == "string" and catId ~= "" then
+        ui:ShowAndSelect(catId)
+    else
+        ui:Show()
+    end
+end

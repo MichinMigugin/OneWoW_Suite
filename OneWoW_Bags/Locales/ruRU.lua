@@ -485,6 +485,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "Устаревшие записи порядка категорий",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "Устаревшие записи порядка отображения",
 
-    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Named expressions and keyword aliases are managed in OneWoW Settings → Search Shortcuts.",
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Именованные выражения и пользовательские ключевые слова настраиваются в OneWoW Настройки → Ярлыки поиска.",
     ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })

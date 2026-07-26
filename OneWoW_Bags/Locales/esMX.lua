@@ -552,6 +552,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["CLEANUP_KIND_STALE_CATEGORY_ORDER"] = "Entradas de orden de categoría obsoletas",
     ["CLEANUP_KIND_STALE_DISPLAY_ORDER"] = "Entradas de orden de visualización obsoletas",
 
-    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Named expressions and keyword aliases are managed in OneWoW Settings → Search Shortcuts.",
+    ["SEARCH_SHORTCUTS_BREADCRUMB_DESC"] = "Las expresiones con nombre y las palabras clave personalizadas se gestionan en OneWoW Ajustes → Atajos de búsqueda.",
     ["SEARCH_SHORTCUTS_OPEN_HUB"] = "Open Search Shortcuts",
 })

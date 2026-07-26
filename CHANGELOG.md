@@ -2,15 +2,17 @@
 
 # OneWoW
 ## Features
-- Search Shortcuts in Settings: keyword synonyms (`#decks` → `#combinable`) and named expressions (`SAVED(Name)`) work suite-wide anywhere search expressions are used
-- `CATEGORY(Name)` in those expressions expands Bags custom search-category rules when Bags is loaded (Mail shipments, overlays, and other suite filters included)
-- A keyword synonym can stand for a whole expression, not just another keyword — `#sell` can mean `quality<=0 | CATEGORY(Junk)`
-- Renaming a synonym, a named expression, or a Bags category keeps every expression that used the old name working, wherever it was saved — including Mail shipments, QoL filters, Direct Deposit rules, overlays, and saved profiles
+- Search Shortcuts in Settings is a list-and-detail editor: filter by name or expression, pick a type, and edit custom keywords, saved expressions, and Bags categories in one place
+- Custom keywords (`#name`), saved expressions (`SAVED(Name)`), and Bags categories (`CATEGORY(Name)`) work suite-wide anywhere search expressions are used — Bags, Mail shipments, overlays, and more
+- Renaming a shortcut keeps every expression that used the old name working, wherever it was saved — including Mail shipments, QoL filters, Direct Deposit rules, overlays, and saved profiles
 - Deleting or renaming one of these now tells you exactly what would break and where — which addon, which rule, by name — before you commit, and never blocks you
-- Search Shortcuts is a single list you can filter by kind, showing how many rules use each entry and which old names it still answers to
-- Check references finds anything pointing at something that no longer exists, and can clear out old names nothing uses any more
+- Check for broken references finds anything pointing at something that no longer exists, and can clear out old names nothing uses any more
 - Saving an expression that duplicates one you already have offers to point at the original instead, so the two cannot drift apart
-- A synonym that a later built-in keyword has taken over is flagged in the list instead of silently never matching
+- A custom keyword that a later built-in keyword has taken over is flagged in the list instead of silently never matching
+- Bags categories open the Category Manager on the matching category from Search Shortcuts
+- Search Shortcuts polish: kind-colored list names, read-only Name/Expression for Bags categories, Save/Revert muted until something changes, clearer Used by separators, and a usable New menu
+- Search Shortcuts shows name and expression errors on the fields themselves instead of printing to chat
+- Search Shortcuts can insert a built-in keyword at the cursor from a searchable list under the expression
 
 ## Fixes
 - Windows no longer jump to the center of the screen or lose their place on small or scaled displays (e.g. Steam Deck); oversized windows shrink to fit so the bottom stays reachable

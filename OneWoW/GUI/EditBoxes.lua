@@ -168,7 +168,10 @@ function OneWoW_GUI:CreateScrollEditBox(parent, options)
     editBox:SetAutoFocus(false)
     editBox:SetMaxLetters(maxLetters)
     editBox:SetHeight(1)
-    editBox:SetTextInsets(ti[1], ti[2], ti[3], ti[4])
+    -- Right inset clears the scrollbar gutter so glyphs do not sit under the thumb.
+    local gutter = Constants.GUI.SCROLLBAR_CONTENT_GUTTER or 24
+    local rightInset = math.max(ti[2], gutter - 8)
+    editBox:SetTextInsets(ti[1], rightInset, ti[3], ti[4])
 
     local resolvedFont = options.font or self:GetFont()
     if resolvedFont then
@@ -186,11 +189,13 @@ function OneWoW_GUI:CreateScrollEditBox(parent, options)
     scrollFrame:SetScrollChild(editBox)
 
     scrollFrame:HookScript("OnSizeChanged", function(_, w)
-        editBox:SetWidth(math.max(1, w))
+        editBox:SetWidth(math.max(1, w - gutter))
     end)
 
     scrollFrame:HookScript("OnMouseDown", function()
-        editBox:SetFocus()
+        if editBox:IsEnabled() then
+            editBox:SetFocus()
+        end
     end)
 
     editBox:SetScript("OnEscapePressed", function(myself)

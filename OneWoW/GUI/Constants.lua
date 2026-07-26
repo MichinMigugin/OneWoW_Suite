@@ -960,6 +960,26 @@ local function owgFillThemeSemantics(theme)
             1.0,
         }
     end
+
+    -- Search Shortcuts kind rails: fixed hue identity (amber / cyan / green) with a
+    -- light accent blend so they still feel on-theme without collapsing to one color.
+    local function kindTint(r, g, b)
+        return {
+            owgClamp01(r * 0.82 + ap[1] * 0.18),
+            owgClamp01(g * 0.82 + ap[2] * 0.18),
+            owgClamp01(b * 0.82 + ap[3] * 0.18),
+            1.0,
+        }
+    end
+    if not theme.KIND_TOKEN then
+        theme.KIND_TOKEN = kindTint(0.95, 0.72, 0.22)      -- amber — custom keyword
+    end
+    if not theme.KIND_SAVED then
+        theme.KIND_SAVED = kindTint(0.35, 0.72, 0.95)      -- cyan — saved expression
+    end
+    if not theme.KIND_CATEGORY then
+        theme.KIND_CATEGORY = kindTint(0.40, 0.85, 0.45)   -- green — Bags category
+    end
 end
 
 local C = OneWoW_GUI.Constants
