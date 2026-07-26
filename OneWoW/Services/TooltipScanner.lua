@@ -27,21 +27,28 @@ local PLAYER_INVENTORY_BAG_MAX = 5
 -- Personal bank tabs and warband vault (6+).
 local BANK_BAG_MIN = 6
 
-local chargesPattern = ITEM_SPELL_CHARGES:match("|4(.-):.-%;")
-local tradeablePattern = BIND_TRADE_TIME_REMAINING:match("^(.-)%%s")
-local uniqueEquipPattern = ITEM_UNIQUE_EQUIPPABLE:gsub("%-", "%%-")
+local chargesPattern = ITEM_SPELL_CHARGES and ITEM_SPELL_CHARGES:match("|4(.-):.-%;")
+local tradeablePattern = BIND_TRADE_TIME_REMAINING and BIND_TRADE_TIME_REMAINING:match("^(.-)%%s") or ""
+local uniqueEquipPattern = ITEM_UNIQUE_EQUIPPABLE and ITEM_UNIQUE_EQUIPPABLE:gsub("%-", "%%-") or ""
 
 -- Precomputed search patterns: these were previously rebuilt via string
 -- concatenation on every call (and per tooltip line in the line-walk paths).
-local usePatternHead = "^" .. USE_COLON
-local usePatternBody = "\n" .. USE_COLON
-local equipPatternHead = "^" .. ITEM_SPELL_TRIGGER_ONEQUIP
-local equipPatternBody = "\n" .. ITEM_SPELL_TRIGGER_ONEQUIP
+local usePatternHead = "^" .. (USE_COLON or "")
+local usePatternBody = "\n" .. (USE_COLON or "")
+local equipPatternHead = "^" .. (ITEM_SPELL_TRIGGER_ONEQUIP or "")
+local equipPatternBody = "\n" .. (ITEM_SPELL_TRIGGER_ONEQUIP or "")
 local uniqueEquipPatternHead = "^" .. uniqueEquipPattern
-local uniqueEquipPlainBody = "\n" .. ITEM_UNIQUE_EQUIPPABLE
-local uniquePatternHead = "^" .. ITEM_UNIQUE
-local uniquePlainBody = "\n" .. ITEM_UNIQUE
-local chargesSearchPattern = "(%d+) |4" .. chargesPattern
+local uniqueEquipPlainBody = "\n" .. (ITEM_UNIQUE_EQUIPPABLE or "")
+local uniquePatternHead = "^" .. (ITEM_UNIQUE or "")
+local uniquePlainBody = "\n" .. (ITEM_UNIQUE or "")
+local chargesSearchPattern
+if chargesPattern then
+    chargesSearchPattern = "(%d+) |4" .. chargesPattern
+else
+    -- Fallback for locales without plural |4 syntax (like zhCN, zhTW)
+    local esc = (ITEM_SPELL_CHARGES or ""):gsub("([%(%)%.%%%+%-%*%?%[%]%^%$])", "%%%1")
+    chargesSearchPattern = esc:gsub("%%d", "(%%d+)")
+end
 
 ---@param color table|nil colorRGB
 ---@return boolean
