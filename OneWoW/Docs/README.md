@@ -13,6 +13,7 @@ Contributor and integrator documentation for the suite.
 | [GUI.md](GUI.md) | `OneWoW_GUI` toolkit — components, themes, settings, window persistence |
 | [LOCALES.md](LOCALES.md) | Localization routing, scopes, Blizzard-term alignment, tooling |
 | [PREDICATE_ENGINE.md](PREDICATE_ENGINE.md) | Shared `OneWoW.PredicateEngine` — tokenizer, keywords, extension API |
+| [SEARCH_CATALOG.md](SEARCH_CATALOG.md) | Shared `OneWoW.SearchCatalog` — named expressions, former-name redirects, reference index, export/import |
 
 ## Feature addons
 

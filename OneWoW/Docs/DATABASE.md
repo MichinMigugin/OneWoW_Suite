@@ -288,6 +288,23 @@ end
 
 ---
 
+## Stores documented elsewhere
+
+Some `OneWoW_DB.global` subtrees have rules of their own that this API document
+does not cover:
+
+| Store | Owner | Reference |
+| --- | --- | --- |
+| `searchCatalog` | `OneWoW.SearchCatalog` | [SEARCH_CATALOG.md](SEARCH_CATALOG.md) — entry shape, the former-name uniqueness invariant, and why a profile restores it by deep copy rather than re-creating entries by name |
+
+The catalog is worth calling out because it is the one store where **identity is
+load-bearing**. Entry ids are what let a rename avoid rewriting expression text
+across five addons, so any code that swaps the table wholesale must preserve them:
+deleting and re-creating entries by name mints new ids and drops every
+former-name redirect, silently breaking stored expressions the user cannot see.
+
+---
+
 ## Suggested Conventions
 
 1. Defaults describe as much static schema as possible.

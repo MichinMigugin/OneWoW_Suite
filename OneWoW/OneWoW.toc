@@ -51,8 +51,10 @@ GUI\ReorderDrag.lua
 GUI\KeywordHelp.lua
 GUI\Settings.lua
 GUI\Fonts.lua
-# Loads last in this block: registers settings callbacks at file scope (needs
-# Settings.lua) and builds its rows with CreateFS (needs Fonts.lua).
+# Load last in this block, in this order. ReportDialog registers settings
+# callbacks at file scope (needs Settings.lua) and draws with CreateFS (needs
+# Fonts.lua); CatalogConfirm renders through it.
+GUI\ReportDialog.lua
 GUI\CatalogConfirm.lua
 
 # Locale service — must load before any Locales file and before any reader of

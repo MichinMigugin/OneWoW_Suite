@@ -198,6 +198,25 @@ literal and opens a read-only copy dialog (powered by `OneWoW.CopyPaste`).
   `SAVED(Name)`, so a rule saying `#sell` shipped a bundle that resolved to
   nothing. The planner lifts a v2 payload into the v3 shape, so both land on one
   code path.
+
+### Resolving catalog conflicts
+
+`OneWoW.SearchCatalog:PlanImport` classifies each incoming entry as `create`,
+`merge` (identical body — a no-op) or `conflict` (same name, different body).
+Only conflicts need a decision, and the preview surfaces one row each:
+
+- **Import as new** (default) with an editable name, prefilled from the
+  catalog's `suggestedName`.
+- **Keep mine** — the incoming entry is dropped and the local one is untouched.
+
+A `create` that *reclaims* a former name gets a warning line rather than a
+choice: reclaiming is what importing that payload means, but it silently changes
+what older text pointing at that name resolves to.
+
+Because only `create` and `import_as_new` ever write, the applier's record of
+what it created is a complete delta — which is what lets the undo remove exactly
+those entries and nothing else. See
+[`OneWoW/Docs/SEARCH_CATALOG.md`](../../OneWoW/Docs/SEARCH_CATALOG.md).
 - **v2 only:** `enableJunkCategory`, `enableUpgradeCategory` — whether optional
   **1W Junk** / **1W Upgrades** builtins participate in layout.
 - Envelope metadata: `format`, `version`, `addon`, `exportedAt`, `exportedBy`,

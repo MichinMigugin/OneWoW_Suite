@@ -67,6 +67,28 @@ end
 -- ------------------------------------------------------------------
 
 local dlg
+-- Catalog entries arrive as a plan from core: create / merge / conflict. Merge is
+-- a no-op (identical bodies) and needs no row; create only needs one when it
+-- reclaims a retired name. A conflict is the only case that cannot be decided
+-- without the user, and until this UI existed it was silently skipped.
+local CATALOG_REF = {
+    token = function(name) return "#" .. (name or "?") end,
+    saved = function(name) return "SAVED(" .. (name or "?") .. ")" end,
+}
+
+local function catalogRef(item)
+    local fn = CATALOG_REF[item.kind or ""]
+    return fn and fn(item.name) or tostring(item.name)
+end
+
+local CONFLICT_SEQUENCE = { "import_as_new", "keep_mine" }
+
+local function conflictLabel(action)
+    return action == "keep_mine"
+        and L["IMPORT_PREVIEW_CATALOG_KEEP_MINE"]
+        or L["IMPORT_PREVIEW_CATALOG_AS_NEW"]
+end
+
 local renderContent
 
 -- ------------------------------------------------------------------
@@ -403,6 +425,69 @@ renderContent = function(state)
         sort(loose, function(a, b) return (a.name or "") < (b.name or "") end)
         for _, cat in ipairs(loose) do
             renderCategoryRow(cat, 16)
+        end
+    end
+
+    -- ---------- Catalog entries ----------
+    local catalogRows = {}
+    for _, item in ipairs(state.plan.catalogPlan or {}) do
+        if item.action == "conflict" or item.action == "import_as_new"
+            or item.action == "keep_mine" or item.reclaims then
+            tinsert(catalogRows, item)
+        end
+    end
+
+    if #catalogRows > 0 then
+        y = y - 10
+        local ch = makeText(scrollContent, L["IMPORT_PREVIEW_CATALOG_HEADER"], 12, { 0.9, 0.9, 0.6 })
+        ch:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 12, y)
+        addChild(scrollContent, ch)
+        y = y - 18
+
+        for _, item in ipairs(catalogRows) do
+            if item.reclaims then
+                -- A create that takes back a name some entry retired. Not a
+                -- choice — it is what importing this payload means — but it
+                -- silently changes what older text pointing at that name hits.
+                local rf = makeText(scrollContent,
+                    format(L["IMPORT_PREVIEW_CATALOG_RECLAIMS"], catalogRef(item), item.reclaims),
+                    11, { 1, 0.65, 0 })
+                rf:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 28, y)
+                rf:SetWidth(scrollContent:GetWidth() - 48)
+                rf:SetJustifyH("LEFT")
+                addChild(scrollContent, rf)
+                y = y - 20
+            else
+                if item.action == "conflict" then
+                    item.action = "import_as_new"
+                    item.newName = item.newName or item.suggestedName
+                end
+
+                local label = makeText(scrollContent,
+                    format(L["IMPORT_PREVIEW_CATALOG_CONFLICT"], catalogRef(item)),
+                    11, { 0.9, 0.9, 0.9 })
+                label:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 28, y)
+                addChild(scrollContent, label)
+                y = y - 18
+
+                local resBtn = makeSmallBtn(scrollContent, conflictLabel(item.action), function(self)
+                    item.action = cycleValue(CONFLICT_SEQUENCE, item.action)
+                    self.text:SetText(conflictLabel(item.action))
+                    renderContent(state)
+                end)
+                resBtn:SetPoint("TOPLEFT", scrollContent, "TOPLEFT", 44, y)
+                addChild(scrollContent, resBtn)
+
+                if item.action == "import_as_new" then
+                    local nameBox = makeEditBox(scrollContent, 180, item.newName or "")
+                    nameBox:SetPoint("LEFT", resBtn, "RIGHT", 8, 0)
+                    nameBox:SetScript("OnTextChanged", function(eb)
+                        item.newName = eb:GetText()
+                    end)
+                    addChild(scrollContent, nameBox)
+                end
+                y = y - 24
+            end
         end
     end
 

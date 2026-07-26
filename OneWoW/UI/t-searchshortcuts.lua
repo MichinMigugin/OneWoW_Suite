@@ -39,35 +39,6 @@ local MenuUtil = MenuUtil
 -- expressions, so leaving them out made the list a partial answer to "what can I
 -- write in a search box, and what is using it".
 
--- TODO (Phase 8D): move to locale keys across all 11 locales. Kept inline so the
--- strings can settle first; this table is the single lookup point that pass has
--- to relocate. Strings already keyed in the locales stay on `L`.
-local STRINGS = {
-    HELP = "Everything you can reference from a search box. Right-click a row to edit, rename, or delete it.",
-    EMPTY = "Nothing here yet.",
-    EMPTY_FILTERED = "Nothing of this kind yet.",
-
-    FILTER_TOKEN = "Keyword Synonyms",
-    FILTER_SAVED = "Named Expressions",
-    FILTER_CATEGORY = "Bags Categories",
-
-    USAGE = "%d use(s)",
-    USAGE_NONE = "unused",
-    FORMER_NAMES = "also answers to %s",
-    CATEGORY_READONLY = "Managed in Bags",
-
-    EDIT_TITLE = "Edit expression — %s",
-    NEW_TITLE = "New expression — %s",
-    TOKEN_NAME_PROMPT = "Name for this keyword synonym (letters, numbers, _ only):",
-
-    DUPLICATE_TITLE = "%s already holds this exact expression.",
-    DUPLICATE_BODY = "Two copies of one rule drift apart the moment you edit one of them. Point this at %s instead?",
-    DUPLICATE_ACCEPT = "Use a reference",
-    DUPLICATE_KEEP = "Keep both",
-
-    SHADOWED_TIP = "A built-in keyword of this name was registered later and wins, so this entry never matches. Rename it to get it back — the expression is kept either way.",
-}
-
 -- Kinds in display order. `ref` writes a reference the way a user would type it,
 -- which is also what the reference index scans for.
 local KIND_ORDER = { "token", "saved", "category" }
@@ -79,9 +50,9 @@ local KIND_REF = {
 }
 
 local KIND_FILTER_LABEL = {
-    token    = STRINGS.FILTER_TOKEN,
-    saved    = STRINGS.FILTER_SAVED,
-    category = STRINGS.FILTER_CATEGORY,
+    token    = L["SEARCH_SHORTCUTS_FILTER_TOKEN"],
+    saved    = L["SEARCH_SHORTCUTS_FILTER_SAVED"],
+    category = L["SEARCH_SHORTCUTS_FILTER_CATEGORY"],
 }
 
 -- Categories are provider-backed: Bags owns the record, and its editor also owns
@@ -189,8 +160,8 @@ local function RegisterPopups()
     -- one definition, many callers.
     StaticPopupDialogs["ONEWOW_SEARCH_SHORTCUT_DUPLICATE"] = {
         text = "%s",
-        button1 = STRINGS.DUPLICATE_ACCEPT,
-        button2 = STRINGS.DUPLICATE_KEEP,
+        button1 = L["SEARCH_SHORTCUTS_DUPLICATE_ACCEPT"],
+        button2 = L["SEARCH_SHORTCUTS_DUPLICATE_KEEP"],
         timeout = 0,
         whileDead = true,
         hideOnEscape = true,
@@ -237,8 +208,8 @@ local function OfferDuplicateReference(kind, entry)
     if not other or not otherKind then return end
 
     local ref = KIND_REF[otherKind](other.name)
-    local text = format(STRINGS.DUPLICATE_TITLE, ref)
-        .. "\n\n" .. format(STRINGS.DUPLICATE_BODY, ref)
+    local text = format(L["SEARCH_SHORTCUTS_DUPLICATE_TITLE"], ref)
+        .. "\n\n" .. format(L["SEARCH_SHORTCUTS_DUPLICATE_BODY"], ref)
 
     StaticPopup_Show("ONEWOW_SEARCH_SHORTCUT_DUPLICATE", text, nil, {
         onAccept = function()
@@ -259,6 +230,134 @@ local function CommitBody(kind, name, body)
         return
     end
     OfferDuplicateReference(kind, entry)
+end
+
+local LINT_STATUS_NOTE = {
+    missing = L["CATALOG_LINT_STATUS_MISSING"],
+    former  = L["CATALOG_LINT_STATUS_FORMER"],
+    empty   = L["CATALOG_LINT_STATUS_EMPTY"],
+}
+
+local LINT_KEY = "catalog_lint"
+local PRUNE_KEY = "catalog_prune"
+
+local function Row(rows, kind, text)
+    tinsert(rows, { kind = kind, text = text })
+end
+
+--- Flatten the lint into report rows: status, then store, then item.
+---
+--- Grouped by status first because that is the axis a user acts on — a missing
+--- reference is broken now, a former-name one still works and is only a warning
+--- about what a prune would cost.
+local function BuildLintRows()
+    local findings, incomplete = SC:Lint()
+    local rows = {}
+
+    if #findings > 0 then
+        Row(rows, "header", format(L["CATALOG_LINT_HEADER"], #findings))
+
+        local byStatus = {}
+        local statusOrder = {}
+        for _, f in ipairs(findings) do
+            local bucket = byStatus[f.status]
+            if not bucket then
+                bucket = {}
+                byStatus[f.status] = bucket
+                tinsert(statusOrder, f.status)
+            end
+            tinsert(bucket, f)
+        end
+
+        for _, status in ipairs(statusOrder) do
+            Row(rows, "note", LINT_STATUS_NOTE[status] or status)
+            for _, f in ipairs(byStatus[status]) do
+                Row(rows, "source", format("%s (%s)", KIND_REF[f.kind](f.name),
+                    f.sourceLabel or "?"))
+                Row(rows, "usage", f.label or "?")
+            end
+        end
+    end
+
+    local extras = SC:LintExtras()
+    if #extras > 0 then
+        if #rows > 0 then Row(rows, "divider") end
+        Row(rows, "header", L["CATALOG_LINT_EXTRAS_HEADER"])
+        for _, group in ipairs(extras) do
+            Row(rows, "source", group.sourceLabel or "?")
+            for _, finding in ipairs(group.findings) do
+                Row(rows, "usage", format("%s — %s", finding.label or "?", finding.note or ""))
+            end
+        end
+    end
+
+    if #rows == 0 then
+        Row(rows, "header", L["CATALOG_LINT_CLEAN"])
+    end
+
+    if incomplete and #incomplete > 0 then
+        Row(rows, "divider")
+        Row(rows, "note", format(L["CATALOG_LINT_INCOMPLETE"], #incomplete, tconcat(incomplete, ", ")))
+    end
+
+    return rows
+end
+
+local ShowLint
+
+--- Preview what a prune would drop, then offer to do it.
+---
+--- Its own dialog rather than replacing the lint, so cancelling puts the user
+--- back where they were instead of closing the list they were reading.
+local function ShowPrunePreview()
+    local count, blocked, dropped = SC:PruneFormerNames({ dryRun = true })
+    local rows = {}
+
+    if not count then
+        Row(rows, "header", format(L["CATALOG_PRUNE_BLOCKED"], tconcat(blocked or {}, ", ")))
+    elseif count == 0 then
+        Row(rows, "header", L["CATALOG_PRUNE_NONE"])
+    else
+        Row(rows, "header", format(L["CATALOG_PRUNE_HEADER"], count))
+        for _, d in ipairs(dropped) do
+            Row(rows, "usage", format(L["CATALOG_PRUNE_ITEM"],
+                KIND_REF[d.kind](d.name), KIND_REF[d.kind](d.owner or "?")))
+        end
+        Row(rows, "divider")
+        Row(rows, "note", L["CATALOG_PRUNE_TAIL"])
+    end
+
+    local canApply = (count or 0) > 0
+    OneWoW_GUI:ShowReportDialog({
+        key = PRUNE_KEY,
+        title = L["CATALOG_PRUNE_TITLE"],
+        rows = rows,
+        buttons = {
+            { text = CANCEL },
+            {
+                text = canApply and L["CATALOG_PRUNE_CONFIRM"] or CLOSE,
+                danger = canApply,
+                onClick = canApply and function()
+                    SC:PruneFormerNames({})
+                    -- The lint is very likely still open behind this, and what it
+                    -- says about former names just changed.
+                    OneWoW_GUI:UpdateReportDialog(LINT_KEY, BuildLintRows())
+                end or nil,
+            },
+        },
+    })
+end
+
+ShowLint = function()
+    OneWoW_GUI:ShowReportDialog({
+        key = LINT_KEY,
+        title = L["CATALOG_LINT_TITLE"],
+        rows = BuildLintRows(),
+        buttons = {
+            { text = CLOSE },
+            { text = L["CATALOG_PRUNE_BUTTON"], onClick = ShowPrunePreview },
+        },
+    })
 end
 
 function UI:CreateSearchShortcutsTab(parent)
@@ -299,7 +398,7 @@ function UI:CreateSearchShortcutsTab(parent)
     help:SetPoint("TOPRIGHT", content, "TOPRIGHT", -15, y)
     help:SetJustifyH("LEFT")
     help:SetWordWrap(true)
-    help:SetText(STRINGS.HELP)
+    help:SetText(L["SEARCH_SHORTCUTS_HELP"])
     help:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     y = y - 30
 
@@ -348,13 +447,13 @@ function UI:CreateSearchShortcutsTab(parent)
     })
     addToken:SetPoint("TOPLEFT", content, "TOPLEFT", 15, y)
     addToken:SetScript("OnClick", function()
-        ShowNamePopup(STRINGS.TOKEN_NAME_PROMPT, function(nameText)
+        ShowNamePopup(L["SEARCH_SHORTCUTS_TOKEN_NAME_PROMPT"], function(nameText)
             local name = StripHash(nameText)
             if name == "" then return end
             -- Creating under a name some entry retired takes it back, and every
             -- stale reference to it starts meaning something else.
             OneWoW_GUI:ConfirmCatalogClaim("token", name, nil, function()
-                ShowExprDialog(format(STRINGS.NEW_TITLE, KIND_REF.token(name)), "", function(expr)
+                ShowExprDialog(format(L["SEARCH_SHORTCUTS_NEW_TITLE"], KIND_REF.token(name)), "", function(expr)
                     CommitBody("token", name, expr)
                 end)
             end)
@@ -371,12 +470,18 @@ function UI:CreateSearchShortcutsTab(parent)
             local name = strtrim(nameText or "")
             if name == "" then return end
             OneWoW_GUI:ConfirmCatalogClaim("saved", name, nil, function()
-                ShowExprDialog(format(STRINGS.NEW_TITLE, KIND_REF.saved(name)), "", function(expr)
+                ShowExprDialog(format(L["SEARCH_SHORTCUTS_NEW_TITLE"], KIND_REF.saved(name)), "", function(expr)
                     CommitBody("saved", name, expr)
                 end)
             end)
         end)
     end)
+    local lintBtn = OneWoW_GUI:CreateFitTextButton(content, {
+        text = L["CATALOG_LINT_BUTTON"],
+        height = 26,
+    })
+    lintBtn:SetPoint("LEFT", addSaved, "RIGHT", 6, 0)
+    lintBtn:SetScript("OnClick", ShowLint)
     y = y - 34
 
     -- ---- List ----
@@ -410,7 +515,7 @@ function UI:CreateSearchShortcutsTab(parent)
     -- ---- Row actions ----
 
     local function EditEntry(kind, entry)
-        ShowExprDialog(format(STRINGS.EDIT_TITLE, KIND_REF[kind](entry.name)), entry.body or "",
+        ShowExprDialog(format(L["SEARCH_SHORTCUTS_EDIT_TITLE"], KIND_REF[kind](entry.name)), entry.body or "",
             function(text)
                 CommitBody(kind, entry.name, text)
             end)
@@ -544,7 +649,7 @@ function UI:CreateSearchShortcutsTab(parent)
         if not listContent then return end
         local items = CollectEntries()
 
-        emptyText:SetText(activeKind and STRINGS.EMPTY_FILTERED or STRINGS.EMPTY)
+        emptyText:SetText(activeKind and L["SEARCH_SHORTCUTS_EMPTY_FILTERED"] or L["SEARCH_SHORTCUTS_EMPTY"])
         emptyText:SetShown(#items == 0)
 
         local yPos = 0
@@ -552,15 +657,15 @@ function UI:CreateSearchShortcutsTab(parent)
             local row = AcquireRow(i)
             local entry, kind = item.entry, item.kind
             row._kind, row._entry = kind, entry
-            row._tip = item.shadowed and STRINGS.SHADOWED_TIP or nil
+            row._tip = item.shadowed and L["SEARCH_SHORTCUTS_SHADOWED_TIP"] or nil
 
             row.nameText:SetText(KIND_REF[kind](entry.name))
             row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor(
                 item.shadowed and "TEXT_WARNING" or "TEXT_PRIMARY"))
 
             row.usageText:SetText(item.uses > 0
-                and format(STRINGS.USAGE, item.uses)
-                or (KIND_EDITABLE[kind] and STRINGS.USAGE_NONE or STRINGS.CATEGORY_READONLY))
+                and format(L["SEARCH_SHORTCUTS_USAGE"], item.uses)
+                or (KIND_EDITABLE[kind] and L["SEARCH_SHORTCUTS_USAGE_NONE"] or L["SEARCH_SHORTCUTS_CATEGORY_READONLY"]))
             row.usageText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
             row.bodyText:SetText(entry.body or "")
@@ -572,7 +677,7 @@ function UI:CreateSearchShortcutsTab(parent)
                 for _, formerName in ipairs(formers) do
                     tinsert(refs, KIND_REF[kind](formerName))
                 end
-                row.formerText:SetText(format(STRINGS.FORMER_NAMES, tconcat(refs, ", ")))
+                row.formerText:SetText(format(L["SEARCH_SHORTCUTS_FORMER_NAMES"], tconcat(refs, ", ")))
                 row.formerText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
                 row.formerText:Show()
             else

@@ -652,6 +652,14 @@ end
 -- right after it force-loads this module (WoW does not deliver our own
 -- ADDON_LOADED when we are loaded during core's ADDON_LOADED dispatch). This
 -- also registers our runtime events via RegisterRuntimeEvents.
+-- Why a type-mode category failed to resolve, kept distinct per reason. See the
+-- lint source registration below for why collapsing them would be a regression.
+local TYPE_LINT_NOTE = {
+    UNKNOWN_TYPE        = "CATEGORY_TYPE_UNKNOWN_TYPE",
+    UNKNOWN_SUBTYPE     = "CATEGORY_TYPE_UNKNOWN_SUBTYPE",
+    SUBTYPE_NOT_IN_TYPE = "CATEGORY_TYPE_SUBTYPE_MISMATCH",
+}
+
 function OneWoW_Bags:OnAddonLoaded()
     OneWoW.Lifecycle:CreateHandlerRegistry(OneWoW_Bags)
 
@@ -752,6 +760,32 @@ function OneWoW_Bags:OnAddonLoaded()
         end)
         ns.db.global._migratedTypeModeToExpr = true
     end
+
+    -- Categories whose stored type names no longer resolve. Recomputed on demand
+    -- rather than read from the migration's report: a client language change can
+    -- break a category that converted cleanly last session, and can equally fix
+    -- one that did not.
+    --
+    -- The reasons stay distinct on purpose. UNKNOWN_TYPE means the item class is
+    -- unrecognized in this locale, so the whole rule is wrong; SUBTYPE_NOT_IN_TYPE
+    -- means the class is fine and only the subclass does not belong to it.
+    -- Collapsing them would send users to re-pick a name that is already correct.
+    OneWoW.SearchCatalog:RegisterLintSource("bags_type_categories", {
+        sourceLabel = "Bags — Categories (item type)",
+        Enumerate = function()
+            local out = {}
+            local _, unconverted = ns.ItemTypeExpr:MigrateCategories(
+                ns.db.global.customCategoriesV2, true)
+            for _, rec in ipairs(unconverted or {}) do
+                tinsert(out, {
+                    label = rec.name or rec.id or "?",
+                    note = L[TYPE_LINT_NOTE[rec.reason] or "CATEGORY_TYPE_UNRESOLVED"]
+                        :format(rec.itemType or "?", rec.itemSubType or "?"),
+                })
+            end
+            return out
+        end,
+    })
 
     SE:RegisterChangedCallback("OneWoW_Bags", function()
         ns:InvalidateCategorization()

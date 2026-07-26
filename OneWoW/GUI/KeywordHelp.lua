@@ -131,6 +131,11 @@ local categoryHeaders = {}
 ---@type OneWoW_GUI_KeywordChip[]  All keyword chips ever created, kept for re-layout on filter/resize.
 local keywordChips = {}
 
+---@type OneWoW_GUI_KeywordChip[]  User #token chips, pooled: the catalog changes
+--- while the panel is alive and a frame cannot be destroyed, so surplus chips are
+--- flagged `_unused` and hidden rather than discarded.
+local tokenChips = {}
+
 --- Append `token` to `editBox` with a single-space separator, restoring the
 --- normal text color (clearing placeholder/muted styling) and re-running any
 --- registered `OnTextChanged` handler so search results update immediately.
@@ -172,51 +177,72 @@ local function BuildChipLabel(entry)
     return "#" .. entry.canonical, nil
 end
 
+--- Point an existing chip at a different keyword.
+---
+--- Split out from creation so token chips can be pooled: user tokens change
+--- while the panel is alive, and a WoW frame cannot be destroyed. Everything the
+--- scripts need is read off the chip rather than captured, so a reused chip
+--- cannot keep answering as whatever it held last.
+---@param chip OneWoW_GUI_KeywordChip
+---@param entry OneWoW_GUI_KeywordEntry
+local function ApplyChipEntry(chip, entry)
+    local mainLabel, aliasLabel = BuildChipLabel(entry)
+    chip.label:SetText(mainLabel)
+
+    if aliasLabel then
+        if not chip.sub then
+            local sub = chip:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+            sub:SetPoint("LEFT", chip.label, "RIGHT", 6, 0)
+            chip.sub = sub
+        end
+        chip.sub:SetText(aliasLabel)
+        chip.sub:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        chip.sub:Show()
+    elseif chip.sub then
+        chip.sub:Hide()
+    end
+
+    local textWidth = chip.label:GetStringWidth() + 12
+    if chip.sub and chip.sub:IsShown() then
+        textWidth = textWidth + chip.sub:GetStringWidth() + 6
+    end
+    chip:SetSize(math.max(60, textWidth), 20)
+
+    chip.canonical = entry.canonical
+    chip.aliasList = entry.aliases or {}
+    chip._unused = false
+end
+
 --- Create a clickable chip Button representing a single keyword.
 ---
 --- Click behavior: when `currentEditBox` is set, the chip appends `"#canonical"`
 --- to that edit box (see `AppendToEditBox`). When unset, the click is a no-op
 --- and the tooltip omits the "click to insert" hint.
 ---
---- The returned button stashes `canonical` and `aliasList` fields for later
---- filtering/categorization without re-walking the entry table.
+--- The scripts read `canonical` and `aliasList` off the chip rather than from an
+--- upvalue, so `ApplyChipEntry` can repoint a pooled chip at a different keyword.
 ---@param parent Frame
 ---@param entry OneWoW_GUI_KeywordEntry
 ---@return OneWoW_GUI_KeywordChip chip
 local function MakeKeywordChip(parent, entry)
-    local canonical = entry.canonical
     ---@type OneWoW_GUI_KeywordChip
     local chip = CreateFrame("Button", nil, parent, "BackdropTemplate")
     chip:SetBackdrop(Constants.BACKDROP_INNER_NO_INSETS)
     chip:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
     chip:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local mainLabel, aliasLabel = BuildChipLabel(entry)
     local label = chip:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     label:SetPoint("LEFT", chip, "LEFT", 6, 0)
-    label:SetText(mainLabel)
     label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     chip.label = label
 
-    local sub
-    if aliasLabel then
-        sub = chip:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-        sub:SetPoint("LEFT", label, "RIGHT", 6, 0)
-        sub:SetText(aliasLabel)
-        sub:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        chip.sub = sub
-    end
-
-    local textWidth = label:GetStringWidth() + 12
-    if sub then textWidth = textWidth + sub:GetStringWidth() + 6 end
-    chip:SetSize(math.max(60, textWidth), 20)
-
+    -- Read from `self`, never from an upvalue captured at creation.
     chip:SetScript("OnEnter", function(self)
         self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText("#" .. canonical, 1, 1, 1)
-        if entry.aliases and #entry.aliases > 0 then
-            GameTooltip:AddLine("Aliases: #" .. table.concat(entry.aliases, " #"), 0.7, 0.7, 0.7, true)
+        GameTooltip:SetText("#" .. (self.canonical or ""), 1, 1, 1)
+        if self.aliasList and #self.aliasList > 0 then
+            GameTooltip:AddLine("Aliases: #" .. table.concat(self.aliasList, " #"), 0.7, 0.7, 0.7, true)
         end
         if currentEditBox then
             GameTooltip:AddLine("Click to insert into search box.", 0.5, 0.9, 0.5, true)
@@ -227,14 +253,13 @@ local function MakeKeywordChip(parent, entry)
         self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
         GameTooltip:Hide()
     end)
-    chip:SetScript("OnClick", function()
+    chip:SetScript("OnClick", function(self)
         if currentEditBox then
-            AppendToEditBox(currentEditBox, "#" .. canonical)
+            AppendToEditBox(currentEditBox, "#" .. (self.canonical or ""))
         end
     end)
 
-    chip.canonical = canonical
-    chip.aliasList = entry.aliases or {}
+    ApplyChipEntry(chip, entry)
     return chip
 end
 
@@ -261,6 +286,43 @@ end
 --- Safe to call repeatedly. Invoked on filter change, OnSizeChanged, and OnShow.
 --- The `"grammar"` category is intentionally skipped — grammar rows are rendered
 --- statically above the chip area in `BuildKeywordFrame`.
+--- Rebuild the user-token chips from the catalog, reusing pooled frames.
+---
+--- Built-ins are left alone: they are engine state, they only ever grow, and
+--- rebuilding them would throw away chips for no reason. Tokens change whenever
+--- the user edits the catalog, and until Phase 8C the panel showed whatever set
+--- existed the first time it was opened.
+---
+--- A token shadowed by a built-in is skipped: it never matches, and the built-in
+--- already has a chip, so showing it would be a duplicate that behaves
+--- differently than it reads.
+local function RefreshTokenChips()
+    local content = keywordContent
+    if not content then return end
+
+    local SE = ns.SearchExpand
+    local shown = 0
+    if SE then
+        for _, entry in ipairs(SE:GetTokens()) do
+            if not SE:IsTokenShadowed(entry.name) then
+                shown = shown + 1
+                local chip = tokenChips[shown]
+                if chip then
+                    ApplyChipEntry(chip, { canonical = entry.name, aliases = {} })
+                else
+                    tokenChips[shown] = MakeKeywordChip(content,
+                        { canonical = entry.name, aliases = {} })
+                end
+            end
+        end
+    end
+
+    for i = shown + 1, #tokenChips do
+        tokenChips[i]._unused = true
+        tokenChips[i]:Hide()
+    end
+end
+
 local function LayoutChips()
     local content = keywordContent
     if not content then return end
@@ -276,7 +338,11 @@ local function LayoutChips()
     for _, catDef in ipairs(CATEGORIES) do
         grouped[catDef.id] = {}
     end
-    for _, chip in ipairs(keywordChips) do
+    local function Consider(chip)
+        if chip._unused then
+            chip:Hide()
+            return
+        end
         local visible = KeywordMatchesFilter({ canonical = chip.canonical, aliases = chip.aliasList }, currentFilterText)
         chip:SetShown(visible)
         if visible then
@@ -284,6 +350,8 @@ local function LayoutChips()
             tinsert(grouped[catId], chip)
         end
     end
+    for _, chip in ipairs(keywordChips) do Consider(chip) end
+    for _, chip in ipairs(tokenChips) do Consider(chip) end
 
     for _, header in pairs(categoryHeaders) do
         header:Hide()
@@ -451,27 +519,24 @@ local function BuildKeywordFrame()
     footer:SetText("Click any keyword to insert it into the search box. Combine with & | ! (or and / or / not).")
     footer:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    -- Populate chips: engine built-ins, then the user's own #token entries.
+    -- Built-ins are engine state and only ever grow, so they are built once.
     local PE = GetPE()
     if PE and PE.GetAllKeywords then
         for _, entry in ipairs(PE:GetAllKeywords()) do
             tinsert(keywordChips, MakeKeywordChip(content, entry))
         end
     end
-    -- Tokens are catalog entries, not engine state, so they come from
-    -- SearchExpand. A token shadowed by a built-in never matches, and the
-    -- built-in already has its own chip, so it is left out rather than shown
-    -- as a duplicate that behaves differently than it reads.
-    local SE = ns.SearchExpand
-    if SE then
-        for _, entry in ipairs(SE:GetTokens()) do
-            if not SE:IsTokenShadowed(entry.name) then
-                tinsert(keywordChips, MakeKeywordChip(content, {
-                    canonical = entry.name,
-                    aliases = {},
-                }))
-            end
-        end
+
+    RefreshTokenChips()
+
+    -- The catalog is reachable only now, not at file scope: this file loads with
+    -- the GUI block, well before Services/SearchCatalog.lua.
+    local SC = ns.SearchCatalog
+    if SC then
+        SC:RegisterChangedCallback("KeywordHelpChips", function()
+            RefreshTokenChips()
+            LayoutChips()
+        end)
     end
 
     content:HookScript("OnSizeChanged", LayoutChips)

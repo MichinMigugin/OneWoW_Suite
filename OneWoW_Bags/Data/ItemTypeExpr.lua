@@ -172,10 +172,15 @@ end
 --- `itemType` / `itemSubType` / `typeMatchMode` are deliberately kept: they are
 --- what the type editor round-trips, and for a category that could not be
 --- converted they are the only surviving record of what the user meant.
+--- `dryRun` reports without writing, for the lint. Worth recomputing rather than
+--- storing the migration's result: a client language change can break a category
+--- that converted cleanly last session, and can equally repair one that did not,
+--- so a stored report goes stale in exactly the case it matters.
 ---@param categories table<string, table> customCategoriesV2
+---@param dryRun boolean|nil
 ---@return number converted
 ---@return table[] unconverted array of { id, name, itemType, itemSubType, reason }
-function ItemTypeExpr:MigrateCategories(categories)
+function ItemTypeExpr:MigrateCategories(categories, dryRun)
     local converted = 0
     local unconverted = {}
 
@@ -189,8 +194,10 @@ function ItemTypeExpr:MigrateCategories(categories)
             if hasType or hasSubType then
                 local expr, reason = self:Build(rec.itemType, rec.itemSubType, rec.typeMatchMode)
                 if expr then
-                    rec.searchExpression = expr
-                    rec.filterMode = "type"
+                    if not dryRun then
+                        rec.searchExpression = expr
+                        rec.filterMode = "type"
+                    end
                     converted = converted + 1
                 else
                     tinsert(unconverted, {

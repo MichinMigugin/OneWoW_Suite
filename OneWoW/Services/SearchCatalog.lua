@@ -659,6 +659,41 @@ function SearchCatalog:UnregisterExpressionSource(id)
     expressionSources[id] = nil
 end
 
+local lintSources = {} ---@type table<string, table>
+
+--- Register a store that can report problems of its own to the lint.
+---
+--- Separate from `RegisterExpressionSource`, which answers "who references this
+--- name". This answers "what else is wrong in here" — a Bags category whose
+--- stored type names no longer resolve, say. The owner supplies finished text,
+--- because *why* something is wrong is its knowledge, not the catalog's:
+--- collapsing `UNKNOWN_TYPE` and `SUBTYPE_NOT_IN_TYPE` into one message would
+--- send users to re-pick names that are already correct.
+---@param id string
+---@param source table { sourceLabel: string, Enumerate: fun(): table[] } each { label, note }
+function SearchCatalog:RegisterLintSource(id, source)
+    lintSources[id] = source
+end
+
+---@param id string
+function SearchCatalog:UnregisterLintSource(id)
+    lintSources[id] = nil
+end
+
+--- Findings contributed by registered lint sources, grouped by store.
+---@return table[] groups { sourceLabel, findings[] }
+function SearchCatalog:LintExtras()
+    local groups = {}
+    for _, source in pairs(lintSources) do
+        local findings = source.Enumerate()
+        if findings and #findings > 0 then
+            tinsert(groups, { sourceLabel = source.sourceLabel, findings = findings })
+        end
+    end
+    sort(groups, function(a, b) return (a.sourceLabel or "") < (b.sourceLabel or "") end)
+    return groups
+end
+
 --- Suite units that own expressions, are installed, and are not loaded.
 --- Non-empty means any reference count is incomplete.
 ---@return string[]
