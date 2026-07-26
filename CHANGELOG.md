@@ -13,6 +13,7 @@
 - A synonym that a later built-in keyword has taken over is flagged in the list instead of silently never matching
 
 ## Fixes
+- Windows no longer jump to the center of the screen or lose their place on small or scaled displays (e.g. Steam Deck); oversized windows shrink to fit so the bottom stays reachable
 - Collected / known / missing overlays update when collection status changes (transmog, mounts, pets, toys, heirlooms, decor, recipes) and after login settle; junk/protected marks refresh without a reload
 - Chinese and Korean clients no longer error on load when scanning item charges; bag search keywords for charges and tradeable loot work correctly across all client languages
 - The keyword help panel picks up synonyms as soon as you add them, without reopening

@@ -268,6 +268,8 @@ Only runs once (sets `_migrated` flag). Safe to call every load.
 
 Use `SaveWindowPosition` and `RestoreWindowPosition` for movable main windows. Standard DB key: `mainFramePosition` (shape: `{ point, relativePoint, x, y, width?, height? }`). Save on `OnHide` so position persists on close, FullReset, and theme change.
 
+`RestoreWindowPosition` clamps restored width/height to the screen. On first show it nudges the frame if any edge is partially off-screen (UI scale / resolution changes), and only centers when the frame is fully off-screen. Corrected size and point are written back to storage.
+
 ```lua
 -- In addon DB defaults: mainFramePosition = {}
 
