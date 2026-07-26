@@ -9,12 +9,14 @@
 
 ## Fixes
 - Collected / known / missing overlays update when collection status changes (transmog, mounts, pets, toys, heirlooms, decor, recipes) and after login settle; junk/protected marks refresh without a reload
+- Chinese and Korean clients no longer error on load when scanning item charges; bag search keywords for charges and tradeable loot work correctly across all client languages
 
 ## Settings
 - Language, theme, font, minimap, and value display are edited only in OneWoW Settings (removed from Bags, Shopping List, Direct Deposit, and DevTool windows)
 
 ## Home
 - Mail now appears under Stand-alone Addons on the home page
+- Available Commands lists Catalog (`/1wcat`, `/owcat`, `/onewowcatalog`), Bags, Mail, and Trackers; removed the unimplemented `/ddeposit clean` line
 
 ## Optimizations
 - Bag and bank updates are handled in one place across the suite (Bags, overlays, QoL helpers, and AltTracker storage) for smoother inventory refresh
@@ -36,6 +38,9 @@
 ---
 
 # Catalog
+## Features
+- Added `/1wcat` slash alias (alongside `/owcat` and `/onewowcatalog`)
+
 ## Fixes
 - No longer errors when talking to quest NPCs inside instances
 
@@ -53,6 +58,9 @@
 ---
 
 # AltTracker
+## Fixes
+- Chat and README slash commands now match the registered aliases (`/1wat`, `/owat`, `/onewowat`)
+
 ## Financials
 - Looted gold from mobs, auto-loot, and delve end piles is categorized as Looted Gold instead of Uncategorized Income
 - Optional daily rollup for older transactions (Keep detailed history; default Off) to compact the ledger over time

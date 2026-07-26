@@ -19,6 +19,7 @@ Load on demand for deep references — these replace what used to live in this r
 - `wow-tooltip-system` — TooltipDataProcessor, C_TooltipInfo, line types, bind detection
 - `onewow-gui-ui` — component API, theme colors, backdrops, constants/localization
 - `onewow-locale-workflow` — adding/changing locale keys: Blizzard globals vs shared vs scoped, all 11 locales, locale_keydiff / locale_verify
+- `onewow-changelog` — player-felt suite changes (UI or experience) → update root `CHANGELOG.md`
 - `wow-api-specialist` — broader WoW/Blizzard API verification via Cursor's indexed docs
 - `wow-frame-script-pitfalls` — frame scripts, event handlers, or widget callbacks
 

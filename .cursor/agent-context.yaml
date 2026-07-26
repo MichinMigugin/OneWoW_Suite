@@ -28,6 +28,8 @@ skills:
       - "OneWoW*/**/*.lua"
       - "OneWoW/**/*.lua"
       - "OneWoW*/**/*.toc"
+  onewow-changelog:
+    claude_paths: null
   wow-api-specialist:
     claude_paths: null
   wow-frame-script-pitfalls:

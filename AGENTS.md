@@ -94,6 +94,7 @@ in full and follow it.
 <!-- BEGIN GENERATED: skills -->
 | Skill | Use when | Canonical file |
 | --- | --- | --- |
+| `onewow-changelog` | Use when shipping player-felt OneWoW suite changes — visible UI/behavior or experiential wins (performance, snappiness, reliability) — or when editing root CHANGELOG.md / CurseForge release notes. Decide include vs skip, then follow OneWoW-Changelog.mdc for dialect. | `.cursor/skills/onewow-changelog/SKILL.md` |
 | `onewow-database-api` | Use this skill when authoring or reviewing OneWoW addon code that touches SavedVariables, defaults, init bridges, or scope resolution — anything calling OneWoW_GUI.DB or accessing Addon.db.* paths. | `.cursor/skills/onewow-database-api/SKILL.md` |
 | `onewow-gui-ui` | Use this skill when authoring or reviewing OneWoW addon UI code — anything calling CreateFrame, building widgets, applying theme colors, sizing windows, or producing user-facing strings. Covers the OneWoW_GUI-First component policy, theme API, and constants/localization rules. | `.cursor/skills/onewow-gui-ui/SKILL.md` |
 | `onewow-locale-workflow` | Use when adding, changing, or removing user-facing strings or locale keys in any OneWoW addon — UI labels, errors, tooltips, new L["KEY"] entries, or edits under Locales/*.lua. Covers Blizzard globals vs shared vs scoped keys, all 11 locales, and locale_keydiff / locale_verify. | `.cursor/skills/onewow-locale-workflow/SKILL.md` |
@@ -113,6 +114,10 @@ in full and follow it.
 - **Locale changes:** run `python bin/locale_keydiff.py` and
   `python bin/locale_verify.py`; follow [`OneWoW/Docs/LOCALES.md`](OneWoW/Docs/LOCALES.md)
   (11 locales, key parity, Blizzard-global / shared / scoped routing).
+- **Changelog:** after player-felt suite changes (visible UI/behavior **or**
+  experiential wins like speed/snappiness/reliability), update root
+  [`CHANGELOG.md`](CHANGELOG.md) per [`OneWoW-Changelog.mdc`](.cursor/rules/OneWoW-Changelog.mdc);
+  skip pure internals with no felt difference. Load `onewow-changelog` when deciding.
 - **After changing any `.cursor/rules/*.mdc`, `.cursor/skills/`, or
   `.cursor/agent-context.yaml`:** run `python bin/sync_agent_context.py` to
   regenerate the stubs and the tables above (manual; there is no pre-commit hook).

@@ -67,6 +67,11 @@ Preserve this order and heading style:
 
 - Write for players, not developers: what changed in-game, not file/API names.
 - Prefer short `-` bullets; nest with exactly two spaces (`  -`) for sub-options.
+- **Include** player-felt changes: visible UI/behavior/settings **and** experiential
+  wins players feel but may not “see” (performance, snappiness, reliability —
+  e.g. bank opens faster). Player-facing bugfixes count even when the UI looks the same.
+- **Exclude** pure internals with no felt difference (rename, comment/doc-only,
+  formatting, agent-context/rules, dead-code cleanup with identical behavior).
 - Do not invent sections for units with no user-facing change — put them in the
   italic footer instead.
 - Do not add changelog noise to Lua comments; this file is the release record.

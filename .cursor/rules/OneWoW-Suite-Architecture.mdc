@@ -60,6 +60,15 @@ Authoritative reference: [`OneWoW/Docs/ARCHITECTURE.md`](OneWoW/Docs/ARCHITECTUR
 - Cross-unit core global settings: `OneWoW:GetPortalHub()` / `OneWoW:GetCoreGlobal()` — not `OneWoW.db`
 - `_API` uses dot-functions; `OneWoW_GUI` / `OneWoW` use colon-methods (service singletons)
 
+## Release notes (`CHANGELOG.md`)
+
+After suite code changes, ask whether the player would notice a better or different
+experience — visible UI/behavior **or** feel (speed, smoothness, reliability). If yes,
+update root `CHANGELOG.md` under the matching suite-wide or per-addon H1 and follow
+`OneWoW-Changelog.mdc` for dialect/skeleton. If no (pure internals with no felt
+difference), leave the changelog alone. Do not add changelog noise to Lua comments —
+load `onewow-changelog` when deciding or drafting bullets.
+
 ## Pre-commit enforcement
 
 - `no-suite-lifecycle-events` — lifecycle `RegisterEvent` ban
