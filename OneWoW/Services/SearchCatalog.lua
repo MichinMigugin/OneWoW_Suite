@@ -566,8 +566,20 @@ local EXPRESSION_OWNING_ADDONS = {
 --- History"); `Enumerate` returns `{ expression, label }` per usage, where
 --- `label` identifies the individual item inside that store (the category name,
 --- the shipment name) so a report can point somewhere rather than count.
+---
+--- `class` says which timeline the usage lives in, and defaults to `live`:
+---
+---  * `live` — evaluated now. Breaking it breaks something the user can see.
+---  * `restorable` — an alternate state the user can switch to, such as a saved
+---    profile or the import undo snapshot. Nothing breaks today, but restoring
+---    brings back text that would then resolve to nothing.
+---
+--- The split exists because counting the two together inflates a *safety*
+--- number, and a warning that overstates gets dismissed. Pruning still has to see
+--- both — a former name must outlive any snapshot depending on it — so the
+--- reference report carries the two separately rather than filtering one out.
 ---@param id string
----@param source table { sourceLabel: string, Enumerate: fun(): table[] }
+---@param source table { sourceLabel: string, Enumerate: fun(): table[], class: string|nil }
 function SearchCatalog:RegisterExpressionSource(id, source)
     expressionSources[id] = source
 end
@@ -603,11 +615,19 @@ local function ExpressionReferences(kind, expression, key)
     return false
 end
 
+local function SortByLabel(a, b)
+    return (a.sourceLabel or "") < (b.sourceLabel or "")
+end
+
 --- Every stored usage referencing any of `names` within a kind, grouped by the
---- store it lives in.
+--- store it lives in and split by whether that store is live.
+---
+--- Both halves are always returned rather than selected by an argument, so a
+--- caller cannot ask for the wrong one: a confirmation headlines `total` and
+--- mentions `restorableTotal` separately, while pruning adds them.
 ---@param kind string
 ---@param names string[]
----@return table report { total, groups[], incomplete[] }
+---@return table report { total, groups[], restorableTotal, restorableGroups[], incomplete[] }
 local function CollectReferences(kind, names)
     local keys = {}
     for _, name in ipairs(names) do
@@ -615,8 +635,8 @@ local function CollectReferences(kind, names)
         if key ~= "" then keys[key] = name end
     end
 
-    local groups = {}
-    local total = 0
+    local groups, restorableGroups = {}, {}
+    local total, restorableTotal = 0, 0
 
     for id, source in pairs(expressionSources) do
         local usages = {}
@@ -624,18 +644,31 @@ local function CollectReferences(kind, names)
             for key, name in pairs(keys) do
                 if ExpressionReferences(kind, usage.expression, key) then
                     tinsert(usages, { label = usage.label, name = name })
-                    total = total + 1
                     break
                 end
             end
         end
         if #usages > 0 then
-            tinsert(groups, { id = id, sourceLabel = source.sourceLabel, usages = usages })
+            local group = { id = id, sourceLabel = source.sourceLabel, usages = usages }
+            if source.class == "restorable" then
+                tinsert(restorableGroups, group)
+                restorableTotal = restorableTotal + #usages
+            else
+                tinsert(groups, group)
+                total = total + #usages
+            end
         end
     end
 
-    sort(groups, function(a, b) return (a.sourceLabel or "") < (b.sourceLabel or "") end)
-    return { total = total, groups = groups, incomplete = SearchCatalog:GetUnscannableAddons() }
+    sort(groups, SortByLabel)
+    sort(restorableGroups, SortByLabel)
+    return {
+        total            = total,
+        groups           = groups,
+        restorableTotal  = restorableTotal,
+        restorableGroups = restorableGroups,
+        incomplete       = SearchCatalog:GetUnscannableAddons(),
+    }
 end
 
 --- Find every stored reference to a name within a kind.
@@ -661,17 +694,24 @@ local function Loss(name, reason, refs)
     return { name = name, reason = reason, references = refs }
 end
 
+--- A report, or nil when the write costs nothing at all.
+---
+--- A usage found only in a profile or an undo snapshot still counts as a cost:
+--- nothing breaks today, but the text comes back broken when that state is
+--- restored. It is reported separately from the live count, not dropped.
 local function Report(action, kind, losses)
-    local total = 0
+    local total, restorableTotal = 0, 0
     for _, loss in ipairs(losses) do
         total = total + loss.references.total
+        restorableTotal = restorableTotal + loss.references.restorableTotal
     end
-    if total == 0 then return nil end
+    if total == 0 and restorableTotal == 0 then return nil end
     return {
         action = action,
         kind = kind,
         losses = losses,
         total = total,
+        restorableTotal = restorableTotal,
         incomplete = SearchCatalog:GetUnscannableAddons(),
     }
 end
@@ -767,7 +807,7 @@ end
 ---
 --- This is the one operation here that destroys data rather than warning about
 --- it, and a source that under-reports makes it silent. Hence `dryRun`, and
---- hence no automatic invocation — it is driven manually from `/owcatalog`
+--- hence no automatic invocation — it is driven manually from `/owsc`
 --- until the lint UI can show what it would remove.
 ---@param opts table|nil { force: boolean, dryRun: boolean } force skips the not-loaded gate
 ---@return number|nil pruned count, or would-be count under dryRun; nil when gated
@@ -1145,7 +1185,7 @@ end
 -- is not run automatically because it deletes redirects rather than warning
 -- about them.
 
-local CMD_PREFIX = "|cFF33FF99OneWoW Catalog|r"
+local CMD_PREFIX = "|cFF33FF99OneWoW Search Catalog|r"
 
 local STATUS_NOTE = {
     missing = "no such entry (typo, or deleted)",
@@ -1211,7 +1251,7 @@ local function PrintPrune(apply, force)
     if not count then
         print(CMD_PREFIX .. ": |cFFFF5555prune skipped|r — these own expressions but are not loaded: "
             .. tconcat(blocked or {}, ", "))
-        print(CMD_PREFIX .. ": load them, or use |cFFFFFFFF/owcatalog prune apply force|r to prune anyway.")
+        print(CMD_PREFIX .. ": load them, or use |cFFFFFFFF/owsc prune apply force|r to prune anyway.")
         return
     end
 
@@ -1226,13 +1266,19 @@ local function PrintPrune(apply, force)
         print(format("  %s(%s) |cFF888888— former name of '%s'|r", d.kind, d.name, d.owner or "?"))
     end
     if not apply then
-        print(CMD_PREFIX .. ": run |cFFFFFFFF/owcatalog prune apply|r to remove them.")
+        print(CMD_PREFIX .. ": run |cFFFFFFFF/owsc prune apply|r to remove them.")
     end
 end
 
-SLASH_ONEWOW_CATALOG1 = "/owcatalog"
-SLASH_ONEWOW_CATALOG2 = "/1wcatalog"
-SlashCmdList["ONEWOW_CATALOG"] = function(msg)
+-- Named for the *search* catalog, not the OneWoW_Catalog addon, which owns the
+-- word "catalog" for users and will want the obvious command. The globals matter
+-- as much as the visible name: DB:RegisterSlashCommand builds
+-- SLASH_ONEWOW_<UPPER>1, so registering that addon as "catalog" would produce
+-- SLASH_ONEWOW_CATALOG1 and SlashCmdList["ONEWOW_CATALOG"] — exactly what this
+-- used to define, and one would have silently won.
+SLASH_ONEWOW_SEARCHCATALOG1 = "/owsc"
+SLASH_ONEWOW_SEARCHCATALOG2 = "/1wsc"
+SlashCmdList["ONEWOW_SEARCHCATALOG"] = function(msg)
     msg = strlower(strtrim(msg or ""))
 
     if msg == "lint" then
@@ -1247,10 +1293,10 @@ SlashCmdList["ONEWOW_CATALOG"] = function(msg)
         PrintPrune(true, true)
     else
         print(CMD_PREFIX .. ": usage:")
-        print("  |cFFFFFFFF/owcatalog lint|r — list broken, stale, and rule-less references")
-        print("  |cFFFFFFFF/owcatalog sources|r — list registered stores and how many expressions each sees")
-        print("  |cFFFFFFFF/owcatalog prune|r — show which former names are no longer referenced")
-        print("  |cFFFFFFFF/owcatalog prune apply|r — actually remove them")
-        print("  |cFFFFFFFF/owcatalog prune apply force|r — ignore the not-loaded-addon safety gate")
+        print("  |cFFFFFFFF/owsc lint|r — list broken, stale, and rule-less references")
+        print("  |cFFFFFFFF/owsc sources|r — list registered stores and how many expressions each sees")
+        print("  |cFFFFFFFF/owsc prune|r — show which former names are no longer referenced")
+        print("  |cFFFFFFFF/owsc prune apply|r — actually remove them")
+        print("  |cFFFFFFFF/owsc prune apply force|r — ignore the not-loaded-addon safety gate")
     end
 end

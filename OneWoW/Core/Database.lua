@@ -481,9 +481,16 @@ local function CollectSnapshotStrings(value, out, label, depth)
     end
 end
 
+-- A profile is a state the user can switch back to, not one that is running.
+-- Deleting a named expression a profile mentions breaks nothing today; it breaks
+-- when that profile is next loaded. Counting those alongside live rules would
+-- overstate every warning by the number of profiles kept, so they are classed
+-- `restorable` and reported on their own line. Pruning still counts them, which
+-- is what keeps a former name alive as long as a profile depends on it.
 local function SnapshotSource(sourceLabel, getStore)
     return {
         sourceLabel = sourceLabel,
+        class = "restorable",
         Enumerate = function()
             local out = {}
             for name, snapshot in pairs(getStore() or {}) do

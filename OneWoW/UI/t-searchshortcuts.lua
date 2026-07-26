@@ -5,6 +5,7 @@ local OneWoW_GUI = OneWoW_GUI
 local UI = ns.UI
 local SE = ns.SearchExpand
 local PE = ns.PredicateEngine
+local SC = ns.SearchCatalog
 
 local ipairs = ipairs
 local pairs = pairs
@@ -13,6 +14,7 @@ local tinsert = tinsert
 local tconcat = table.concat
 local strlower = string.lower
 local strtrim = strtrim
+local wipe = wipe
 
 local StaticPopupDialogs = StaticPopupDialogs
 local StaticPopup_Show = StaticPopup_Show
@@ -160,6 +162,17 @@ local function BuildBuiltinKeywordItems()
     return items
 end
 
+--- The preflight report for deleting a saved expression, or nil when nothing
+--- references it. Saved rows already have a confirm popup of their own, so the
+--- caller swaps in the reference report only when there is something to say.
+---@param name string
+---@return table|nil
+local function ReportForSavedDelete(name)
+    local entry = SC:Resolve("saved", name)
+    if not entry then return nil end
+    return SC:PreflightDelete("saved", entry.id)
+end
+
 local function AliasErrorMessage(errKey)
     if not errKey then return nil end
     return L[errKey] or errKey
@@ -218,13 +231,22 @@ local function TryCommitAliasRow(row)
 
     if row._committedKey then
         if name ~= row._committedKey then
-            local ok, err = SE:RenameAlias(row._committedKey, name)
-            if not ok then
-                SetAliasRowWarning(row, true, err)
-                ApplyAliasNameDisplay(row, name)
-                return
-            end
-            row._committedKey = name
+            -- Renaming is safe by itself — the old name is retained — but it can
+            -- take back a name another entry retired, or push the oldest former
+            -- name off the cap. Both silently change what stored text means.
+            local oldKey = row._committedKey
+            OneWoW_GUI:ConfirmCatalogRename("token", oldKey, name, function()
+                local ok, err = SE:RenameAlias(oldKey, name)
+                if not ok then
+                    SetAliasRowWarning(row, true, err)
+                    ApplyAliasNameDisplay(row, name)
+                    return
+                end
+                row._committedKey = name
+                RefreshAliasRows()
+            end)
+            ApplyAliasNameDisplay(row, name)
+            return
         end
         local aliases = SE:GetAliases()
         if aliases[row._committedKey] ~= target then
@@ -241,16 +263,20 @@ local function TryCommitAliasRow(row)
         return
     end
 
-    draftAliasPending = false
-    local ok, err = SE:SetAlias(name, target)
-    if not ok then
-        draftAliasPending = true
-        SetAliasRowWarning(row, true, err)
-        ApplyAliasNameDisplay(row, name)
-        return
-    end
-    SetAliasRowWarning(row, false)
-    -- FireChanged from SetAlias rebuilds the list.
+    -- Creating under a name some entry retired takes it back, and every stale
+    -- reference to it starts meaning something else.
+    OneWoW_GUI:ConfirmCatalogClaim("token", name, nil, function()
+        draftAliasPending = false
+        local ok, err = SE:SetAlias(name, target)
+        if not ok then
+            draftAliasPending = true
+            SetAliasRowWarning(row, true, err)
+            ApplyAliasNameDisplay(row, name)
+            return
+        end
+        SetAliasRowWarning(row, false)
+        -- FireChanged from SetAlias rebuilds the list.
+    end)
 end
 
 local function AcquireAliasRow(index)
@@ -326,8 +352,11 @@ local function AcquireAliasRow(index)
 
     deleteBtn:SetScript("OnClick", function()
         if row._committedKey then
-            SE:DeleteAlias(row._committedKey)
-            RefreshAliasRows()
+            local key = row._committedKey
+            OneWoW_GUI:ConfirmCatalogDelete("token", key, function()
+                SE:DeleteAlias(key)
+                RefreshAliasRows()
+            end)
         else
             draftAliasPending = false
             RefreshAliasRows()
@@ -443,12 +472,25 @@ local function RefreshSavedRows()
                     end)
                     root:CreateButton(L["RENAME"], function()
                         ShowNamePopup(L["SEARCH_SHORTCUT_SAVED_RENAME_PROMPT"], function(newName)
-                            local ok, err = SE:RenameSaved(rowName, newName)
-                            if not ok then print(L[err] or err) end
-                            RefreshSavedRows()
+                            OneWoW_GUI:ConfirmCatalogRename("saved", rowName, newName, function()
+                                local ok, err = SE:RenameSaved(rowName, newName)
+                                if not ok then print(L[err] or err) end
+                                RefreshSavedRows()
+                            end)
                         end, rowName)
                     end)
                     root:CreateButton(DELETE, function()
+                        -- Two dialogs would be one too many, so the reference
+                        -- report replaces the plain "are you sure" whenever
+                        -- there is something to report.
+                        local report = ReportForSavedDelete(rowName)
+                        if report then
+                            OneWoW_GUI:ConfirmCatalogWrite(report, function()
+                                SE:DeleteSaved(rowName)
+                                RefreshSavedRows()
+                            end)
+                            return
+                        end
                         StaticPopup_Show("ONEWOW_SEARCH_SHORTCUT_DELETE",
                             L["SEARCH_SHORTCUT_SAVED_DELETE"]:format(rowName), nil, {
                                 onAccept = function()
@@ -492,6 +534,16 @@ end
 
 function UI:CreateSearchShortcutsTab(parent)
     RegisterPopups()
+
+    -- This runs again on every UI:FullReset() — theme, language and minimap
+    -- changes all trigger one. The row caches are file-scope but the frames in
+    -- them belong to the containers built below, so carrying them across a
+    -- rebuild leaves rows parented to a window that no longer exists: refresh
+    -- finds them non-nil, reuses them, and fills frames nobody can see. The
+    -- lists then look empty until a reload, with nothing actually deleted.
+    wipe(aliasRows)
+    wipe(savedRows)
+    draftAliasPending = false
 
     local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_SearchShortcutsScroll" })
     refreshLayouts = function()

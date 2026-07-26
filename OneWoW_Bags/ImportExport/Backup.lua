@@ -20,6 +20,12 @@ local BACKUP_FIELDS = {
 }
 
 --- Save a deep-copy snapshot of import-managed category tables.
+---
+--- Bags' own tables only. Named expressions live in the core catalog and are not
+--- Bags' to snapshot: copying that namespace here would capture entries no Bags
+--- category references — and entries other addons own — which restore would then
+--- treat as authoritative. The catalog half of an undo is a recorded delta
+--- instead; see `Restore`.
 ---@param tag string|nil
 ---@param db table
 ---@return boolean ok
@@ -34,8 +40,6 @@ function Backup:Snapshot(tag, db)
     for _, key in pairs(BACKUP_FIELDS) do
         snapshot.tables[key] = deepCopy(g[key])
     end
-    local SE = OneWoW.SearchExpand
-    snapshot.tables.savedSearches = deepCopy(SE:GetAllSaved())
     g.importBackup = snapshot
     return true
 end
@@ -76,24 +80,17 @@ function Backup:Restore(db, controller)
         end
     end
 
-    -- Entries the import minted in the core catalog. Restoring Bags' own tables
-    -- cannot reach them, so the applier records them here and they are removed
-    -- explicitly; otherwise an undo leaves them behind as orphans.
+    -- The catalog half of the undo, and the whole of it. The applier records the
+    -- entries the import minted, so removing exactly those restores the previous
+    -- state: an import only ever creates (identical bodies merge to a no-op,
+    -- genuine conflicts are skipped), so the created list is a complete delta.
+    --
+    -- Deliberately *not* a wholesale restore of the saved namespace. That
+    -- namespace is core-owned and suite-wide: replacing it from a Bags snapshot
+    -- would re-mint every id and drop every former-name redirect — the redirects
+    -- being the one thing that keeps expression text working across a rename —
+    -- and would delete entries created after the import, including other addons'.
     OneWoW.SearchCatalog:RollbackImportedEntries(snap.createdCatalogEntries)
-
-    local SE = OneWoW.SearchExpand
-    local restored = snap.tables.savedSearches
-    local current = SE:GetAllSaved()
-    for name in pairs(current) do
-        SE:DeleteSaved(name)
-    end
-    if type(restored) == "table" then
-        for name, query in pairs(restored) do
-            if type(name) == "string" and type(query) == "string" then
-                SE:SetSaved(name, query)
-            end
-        end
-    end
 
     local SD = ns.SectionDefaults
     if SD and SD.SyncOnewowSectionCategories then

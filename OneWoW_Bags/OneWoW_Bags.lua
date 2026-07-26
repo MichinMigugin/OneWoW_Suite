@@ -710,11 +710,17 @@ function OneWoW_Bags:OnAddonLoaded()
         end,
     })
 
-    -- The import undo snapshot holds category rules and saved searches as they
-    -- were before the last import. Rolling back restores them, so a former name
-    -- they depend on has to survive as long as the backup does.
+    -- The import undo snapshot holds category rules as they were before the last
+    -- import. Rolling back restores them, so a former name they depend on has to
+    -- survive as long as the backup does.
+    --
+    -- These are not live references — the categories here exist only in the
+    -- post-undo world, and the live ones only in the post-import world, so the
+    -- two sets are alternatives rather than a sum. Prune and lint must see them;
+    -- a delete warning should not count them alongside rules that are running.
     OneWoW.SearchCatalog:RegisterExpressionSource("bags_import_backup", {
         sourceLabel = "Bags — Import Undo Snapshot",
+        class = "restorable",
         Enumerate = function()
             local out = {}
             local backup = ns.db.global.importBackup
@@ -724,11 +730,6 @@ function OneWoW_Bags:OnAddonLoaded()
                 if type(rec) == "table" and type(rec.searchExpression) == "string"
                     and rec.searchExpression ~= "" then
                     tinsert(out, { expression = rec.searchExpression, label = rec.name or "?" })
-                end
-            end
-            for name, query in pairs(tables.savedSearches or {}) do
-                if type(query) == "string" and query ~= "" then
-                    tinsert(out, { expression = query, label = name })
                 end
             end
             return out

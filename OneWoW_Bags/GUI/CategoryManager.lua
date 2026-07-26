@@ -731,11 +731,19 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_CATEGORY"] = {
         if name == "" or not data then return end
         local controller = GetController()
         if not controller or not controller.RenameCategory then return end
-        local ok, err = controller:RenameCategory(data, name)
-        if not ok then
+
+        -- A rename keeps the old name working, so this normally confirms nothing
+        -- and runs straight through. The exceptions are taking back a name
+        -- another category retired, and the per-entry cap dropping the oldest
+        -- former name to make room; both silently change what stored text means.
+        OneWoW_GUI:ConfirmCatalogRenameById("category", data, name, function()
+            local ok, err = controller:RenameCategory(data, name)
+            if ok then return end
             if err then
                 UIErrorsFrame:AddMessage(L[err], 1, 0, 0)
             end
+            -- Reopen on the next frame so this popup has finished hiding, with
+            -- the rejected name still in the box to be corrected.
             C_Timer.After(0, function()
                 local d = StaticPopup_Show("ONEWOW_BAGS_RENAME_CATEGORY", nil, nil, data)
                 if d and d.EditBox then
@@ -743,7 +751,7 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_CATEGORY"] = {
                     d.EditBox:SetFocus()
                 end
             end)
-        end
+        end)
     end,
     EditBoxOnEnterPressed = function(self)
         local p = self:GetParent()
@@ -754,22 +762,29 @@ StaticPopupDialogs["ONEWOW_BAGS_RENAME_CATEGORY"] = {
     timeout=0, whileDead=true, hideOnEscape=true, preferredIndex=3,
 }
 
-StaticPopupDialogs["ONEWOW_BAGS_DELETE_CATEGORY"] = {
-    text = "",
-    button1 = DELETE,
-    button2 = CANCEL,
-    OnShow = function(self) self.Text:SetText(L["CATEGORY_DELETE_CONFIRM"]) end,
-    OnAccept = function(_, data)
-        if data then
-            local controller = GetController()
-            if controller and controller.DeleteCategory then
-                controller:DeleteCategory(data)
-            end
-            if selectedCatKey == data then selectedCatKey = nil end
+-- Deleting a category also removes the name every CATEGORY(...) in the suite
+-- resolves through, so the confirmation is the shared catalog dialog rather than
+-- a StaticPopup: a reference list is a structured thing, and a StaticPopup
+-- centre-justifies it into an unreadable block. The category's own question
+-- leads, because losing the items is a cost the reference report does not cover.
+local function ConfirmDeleteCategory(catKey, catName)
+    if not catKey then return end
+    OneWoW_GUI:ConfirmCatalogDeleteById("category", catKey, function()
+        local controller = GetController()
+        if controller and controller.DeleteCategory then
+            controller:DeleteCategory(catKey)
         end
-    end,
-    timeout=0, whileDead=true, hideOnEscape=true, preferredIndex=3,
-}
+        if selectedCatKey == catKey then selectedCatKey = nil end
+    end, {
+        prompt = L["CATEGORY_DELETE_CONFIRM"]:format(catName or ""),
+        -- The delete removes the category's manual item assignments along with
+        -- the rule. Said explicitly because the dialog lists references directly
+        -- below, and a reader scanning it should not take that list for a list
+        -- of things about to be destroyed.
+        note = L["CATEGORY_DELETE_ITEMS_NOTE"],
+        proceedText = DELETE,
+    })
+end
 
 StaticPopupDialogs["ONEWOW_BAGS_CREATE_SECTION"] = {
     text = "", hasEditBox = true,
@@ -1066,7 +1081,7 @@ function CatMgrUI:RefreshRight()
         local delBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=DELETE, height=22 })
         delBtn:SetPoint("TOPRIGHT", rightTopWrapper, "TOPRIGHT", -6, yPos)
         delBtn:SetScript("OnClick", function()
-            StaticPopup_Show("ONEWOW_BAGS_DELETE_CATEGORY", catData.name, nil, capturedID)
+            ConfirmDeleteCategory(capturedID, catData.name)
         end)
         local renBtn = OneWoW_GUI:CreateFitTextButton(rightTopWrapper, { text=L["RENAME"], height=22 })
         renBtn:SetPoint("RIGHT", delBtn, "LEFT", -4, 0)

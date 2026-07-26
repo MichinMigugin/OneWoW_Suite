@@ -460,25 +460,6 @@ local function safeRestoreDisplayOrder(plan, db, planIdToDbId, nameRemap, skippe
     return false, dropped
 end
 
-local function applySavedSearches(plan)
-    if not plan.savedSearches or not next(plan.savedSearches) then
-        return 0
-    end
-
-    local SE = OneWoW.SearchExpand
-    local merged = 0
-    for name, query in pairs(plan.savedSearches) do
-        if type(name) == "string" and type(query) == "string" then
-            local ok = SE:SetSaved(name, query)
-            if ok then
-                merged = merged + 1
-            end
-        end
-    end
-
-    return merged
-end
-
 --- Apply the catalog half of an import and record what it created.
 ---
 --- The created list goes into the backup so an undo can reach it. Without that,
@@ -643,8 +624,7 @@ function Applier:Apply(plan, controller, db)
     -- 8. Named expressions referenced by imported categories. v3 payloads carry
     -- a core-owned catalog blob; v2 carried saved searches only, and the planner
     -- lifts those into the same shape, so both land here.
-    result.savedSearchesMerged = applySavedSearches(plan)
-        + applyCatalogEntries(plan, db)
+    result.savedSearchesMerged = applyCatalogEntries(plan, db)
 
     -- 9. Section and category order (exported first, local extras appended)
     result.sectionOrderRestored = restoreSectionOrder(plan, db, planIdToDbId)
