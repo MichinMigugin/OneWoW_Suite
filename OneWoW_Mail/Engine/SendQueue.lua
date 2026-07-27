@@ -6,6 +6,39 @@ local SendQueue = ns.SendQueue
 local running = false
 local cancelRequested = false
 
+local MT = ns.MailTrace
+
+local function Trace(event, fields)
+    if MT.enabled then
+        MT:Record("send", event, fields)
+    end
+end
+
+--- Readable label for attach failure logs (nameless hyperlinks print as []).
+---@param itemID number|nil
+---@param link string|nil
+---@return string
+local function ResolveItemLabel(itemID, link)
+    if link and link ~= "" then
+        local name = link:match("%[(.-)%]")
+        if name and name ~= "" then
+            return link
+        end
+    end
+    if itemID then
+        local byID = C_Item.GetItemNameByID(itemID)
+        if byID and byID ~= "" then
+            return byID
+        end
+        local infoName = C_Item.GetItemInfo(itemID)
+        if infoName and infoName ~= "" then
+            return infoName
+        end
+        return "item:" .. tostring(itemID)
+    end
+    return "?"
+end
+
 local function ClearCompose()
     ClearSendMail()
 end
@@ -57,14 +90,24 @@ end
 ---@param attachIndex number
 ---@param onDone fun(ok: boolean, reason?: string)
 local function AttachBagSlot(loc, attachIndex, onDone)
+    local stageMark = MT.enabled and MT:Mark() or nil
+    local take
+
     local function fail(reason)
+        Trace("fail", {
+            reason = reason,
+            bag = loc.bag,
+            slot = loc.slot,
+            itemID = loc.itemID,
+            take = take,
+            attachIndex = attachIndex,
+            _mark = stageMark,
+        })
         ClearCursor()
         onDone(false, reason)
     end
 
     ClearCursor()
-
-    local take
 
     --- Poll `check` every 50ms until it returns non-nil (passed to `next`) or
     --- ~2s elapse (fail with `timeoutReason`).
@@ -99,8 +142,24 @@ local function AttachBagSlot(loc, attachIndex, onDone)
 
     -- Stage 4: click the attach slot, confirm what actually landed there.
     local function attachAndVerify(fromBag, fromSlot)
+        Trace("pickup", {
+            bag = fromBag,
+            slot = fromSlot,
+            itemID = loc.itemID,
+            take = take,
+            attachIndex = attachIndex,
+        })
+        stageMark = MT.enabled and MT:Mark() or nil
         C_Container.PickupContainerItem(fromBag, fromSlot)
         waitFor(cursorHasItem, "cursor-timeout", function()
+            Trace("click", {
+                bag = fromBag,
+                slot = fromSlot,
+                itemID = loc.itemID,
+                take = take,
+                attachIndex = attachIndex,
+            })
+            stageMark = MT.enabled and MT:Mark() or nil
             ClickSendMailItemButton(attachIndex)
             waitFor(function()
                 if HasSendMailItem(attachIndex) then
@@ -111,10 +170,39 @@ local function AttachBagSlot(loc, attachIndex, onDone)
                 local _, itemID, _, qty = GetSendMailItem(attachIndex)
                 ClearCursor()
                 if loc.itemID and itemID and itemID ~= loc.itemID then
+                    Trace("verify_fail", {
+                        reason = "wrong-item",
+                        bag = fromBag,
+                        slot = fromSlot,
+                        itemID = loc.itemID,
+                        gotItemID = itemID,
+                        take = take,
+                        attachIndex = attachIndex,
+                        _mark = stageMark,
+                    })
                     onDone(false, "wrong-item")
                 elseif qty and qty ~= take then
-                    onDone(false, string.format("qty %d/%d", qty, take))
+                    local why = string.format("qty %d/%d", qty, take)
+                    Trace("verify_fail", {
+                        reason = why,
+                        bag = fromBag,
+                        slot = fromSlot,
+                        itemID = loc.itemID,
+                        take = take,
+                        gotQty = qty,
+                        attachIndex = attachIndex,
+                        _mark = stageMark,
+                    })
+                    onDone(false, why)
                 else
+                    Trace("verify_ok", {
+                        bag = fromBag,
+                        slot = fromSlot,
+                        itemID = loc.itemID,
+                        take = take,
+                        attachIndex = attachIndex,
+                        _mark = stageMark,
+                    })
                     onDone(true)
                 end
             end)
@@ -124,8 +212,28 @@ local function AttachBagSlot(loc, attachIndex, onDone)
     -- Stage 3 (partial only): split onto the cursor, park in `scratch`, then
     -- verify the parked stack is exactly `take` before attaching it.
     local function splitToScratch(scratchBag, scratchSlot)
+        Trace("split", {
+            bag = loc.bag,
+            slot = loc.slot,
+            itemID = loc.itemID,
+            take = take,
+            scratchBag = scratchBag,
+            scratchSlot = scratchSlot,
+            attachIndex = attachIndex,
+        })
+        stageMark = MT.enabled and MT:Mark() or nil
         C_Container.SplitContainerItem(loc.bag, loc.slot, take)
         waitFor(cursorHasItem, "split-timeout", function()
+            Trace("place", {
+                bag = loc.bag,
+                slot = loc.slot,
+                itemID = loc.itemID,
+                take = take,
+                scratchBag = scratchBag,
+                scratchSlot = scratchSlot,
+                attachIndex = attachIndex,
+            })
+            stageMark = MT.enabled and MT:Mark() or nil
             C_Container.PickupContainerItem(scratchBag, scratchSlot)
             waitFor(function()
                 local info = C_Container.GetContainerItemInfo(scratchBag, scratchSlot)
@@ -150,6 +258,12 @@ local function AttachBagSlot(loc, attachIndex, onDone)
     end
 
     -- Stage 1: wait out transient locks, re-check identity, compute `take`.
+    Trace("unlock", {
+        bag = loc.bag,
+        slot = loc.slot,
+        itemID = loc.itemID,
+        attachIndex = attachIndex,
+    })
     local lockTries = 0
     local function pickupWhenUnlocked()
         if cancelRequested then
@@ -216,6 +330,7 @@ local function SendJob(job, onDone)
 
     local sendTo = ns.AddressBook:NormalizeRecipient(job.target)
     if sendTo == "" then
+        Trace("job_fail", { reason = "target", target = job.target, shipmentId = job.shipmentId })
         onDone(false, "target")
         return
     end
@@ -224,6 +339,13 @@ local function SendJob(job, onDone)
     local maxSlots = ns.Constants.SEND_ATTACH_SLOTS
     local i = 1
     local attachIndex = 1
+    local jobMark = MT.enabled and MT:Mark() or nil
+    Trace("job_start", {
+        target = job.target,
+        shipmentId = job.shipmentId,
+        slots = #slots,
+        money = job.money or 0,
+    })
 
     local function finishSend()
         if job.money and job.money > 0 then
@@ -239,6 +361,12 @@ local function SendJob(job, onDone)
             if ns.Compose and ns.Compose.Refresh then
                 ns.Compose:Refresh()
             end
+            Trace("job_ok", {
+                target = job.target,
+                shipmentId = job.shipmentId,
+                slots = #slots,
+                _mark = jobMark,
+            })
             onDone(true)
         end, function(sendReason, uiError)
             -- detail is "timeout" | "failed" | Blizzard UI error text
@@ -246,6 +374,13 @@ local function SendJob(job, onDone)
             if detail == "failed" and uiError and uiError ~= "" then
                 detail = uiError
             end
+            Trace("job_fail", {
+                reason = "send",
+                detail = detail,
+                target = job.target,
+                shipmentId = job.shipmentId,
+                _mark = jobMark,
+            })
             onDone(false, "send", detail)
         end)
         local subject = ns.Compose.ResolveSendSubject(job.subject, job.money or 0)
@@ -255,6 +390,12 @@ local function SendJob(job, onDone)
 
     local function attachNext()
         if cancelRequested then
+            Trace("job_fail", {
+                reason = "cancelled",
+                target = job.target,
+                shipmentId = job.shipmentId,
+                _mark = jobMark,
+            })
             onDone(false, "cancelled")
             return
         end
@@ -268,7 +409,18 @@ local function SendJob(job, onDone)
             if not ok then
                 -- Missing attachments would silently mail an incomplete (or
                 -- wrong-quantity) shipment; stop instead.
-                onDone(false, "attach", why or "?", loc.link)
+                Trace("job_fail", {
+                    reason = "attach",
+                    detail = why or "?",
+                    bag = loc.bag,
+                    slot = loc.slot,
+                    itemID = loc.itemID,
+                    attachIndex = attachIndex,
+                    target = job.target,
+                    shipmentId = job.shipmentId,
+                    _mark = jobMark,
+                })
+                onDone(false, "attach", why or "?", loc.link, loc.itemID)
                 return
             end
             attachIndex = attachIndex + 1
@@ -298,11 +450,12 @@ end
 
 --- Map an attach-stage reason code to a localized detail line.
 ---@param code string
+---@param itemID number|nil
 ---@param itemLink string|nil
 ---@return string
-local function FormatAttachDetail(code, itemLink)
+local function FormatAttachDetail(code, itemID, itemLink)
     local L = ns.L
-    local item = itemLink or "?"
+    local item = ResolveItemLabel(itemID, itemLink)
     if code == "slot-locked" then
         return string.format(L["LOG_FAIL_ATTACH_LOCKED"], item)
     elseif code == "no-free-slot" then
@@ -348,6 +501,7 @@ function SendQueue:Start(jobs, onDone, opts)
     local stopOnFailure = not opts or opts.stopOnFailure ~= false
     local failedTargets = {} -- lowercased normalized target -> true after a "send" failure
     local passGold, passItems = 0, 0
+    Trace("queue_start", { jobs = #jobs, stopOnFailure = stopOnFailure })
 
     local i = 1
 
@@ -356,6 +510,11 @@ function SendQueue:Start(jobs, onDone, opts)
         ns.SendResult:Cancel()
         ClearCompose()
         ns.NativeSend:Deactivate("sendqueue")
+        Trace("queue_done", {
+            ok = ok,
+            sent = summary.sent,
+            failed = #summary.failed,
+        })
         if summary.sent > 0 then
             local moneyStr = passGold > 0 and OneWoW.Format.FormatGold(passGold) or OneWoW.Format.FormatGold(0)
             ns.RunLog:Add("info", nil, nil, string.format(
@@ -388,16 +547,17 @@ function SendQueue:Start(jobs, onDone, opts)
         summary.sent = summary.sent + 1
     end
 
-    local function recordFailure(job, reason, detail, itemLink)
-        tinsert(summary.failed, { job = job, reason = reason, detail = detail, itemLink = itemLink })
+    local function recordFailure(job, reason, detail, itemLink, itemID)
+        tinsert(summary.failed, { job = job, reason = reason, detail = detail, itemLink = itemLink, itemID = itemID })
         local message
+        local label = ResolveItemLabel(itemID, itemLink)
         local logOpts = { code = detail, detail = nil, itemLink = itemLink }
         if reason == "attach" then
-            logOpts.detail = FormatAttachDetail(detail or "?", itemLink)
+            logOpts.detail = FormatAttachDetail(detail or "?", itemID, itemLink)
             if stopOnFailure then
-                message = string.format(L["ERR_ATTACH_FAILED"], itemLink or detail or "?")
+                message = string.format(L["ERR_ATTACH_FAILED"], label)
             else
-                message = string.format(L["LOG_ATTACH_FAILED"], itemLink or detail or "?")
+                message = string.format(L["LOG_ATTACH_FAILED"], label)
             end
         elseif reason == "send" then
             if detail == "timeout" then
@@ -447,7 +607,7 @@ function SendQueue:Start(jobs, onDone, opts)
             return
         end
 
-        SendJob(job, function(ok, reason, detail, itemLink)
+        SendJob(job, function(ok, reason, detail, itemLink, itemID)
             if ok then
                 recordSuccess(job)
                 C_Timer.After(0.3, step)
@@ -457,7 +617,7 @@ function SendQueue:Start(jobs, onDone, opts)
                 finish(false)
                 return
             end
-            recordFailure(job, reason, detail, itemLink)
+            recordFailure(job, reason, detail, itemLink, itemID)
             if reason == "send" then
                 failedTargets[targetKey] = true
             end

@@ -6,6 +6,13 @@ local L = ns.L
 ns.Shell = {}
 local Shell = ns.Shell
 
+local MT = ns.MailTrace
+local function Trace(event, fields)
+    if MT.enabled then
+        MT:Record("shell", event, fields)
+    end
+end
+
 local shellFrame
 local currentTab = "inbox"
 local selected = {}
@@ -94,13 +101,20 @@ end
 
 --- Intentional close (X / Escape / Toggle): confirm if Activity has pending review.
 function Shell:RequestClose()
+    Trace("request_close", { pending = ns.AutoRun and ns.AutoRun:HasPending() or false })
     local function proceed()
-        -- Mailbox path: CloseMail → MAIL_CLOSED → Shell:Hide.
-        -- /owmail path: no Blizzard mail session, so CloseMail is a no-op and
-        -- never fires MAIL_CLOSED — hide the shell ourselves.
-        if C_PlayerInteractionManager.IsInteractingWithNpcOfType(Enum.PlayerInteractionType.MailInfo) then
+        -- Prefer CloseMail so Blizzard tears down the mailbox session (MAIL_CLOSED).
+        -- Always hide our shell too: CloseMail can be a no-op while the chrome is
+        -- still up (missed interaction end, /owmail-only, etc.), which made the X
+        -- look dead.
+        local interacting = C_PlayerInteractionManager.IsInteractingWithNpcOfType(
+            Enum.PlayerInteractionType.MailInfo
+        )
+        Trace("proceed_close", { interacting = interacting and true or false })
+        if interacting then
             CloseMail()
-        else
+        end
+        if shellFrame and shellFrame:IsShown() then
             hideFromMailClosed = true
             Shell:Hide()
             hideFromMailClosed = false
@@ -182,6 +196,10 @@ function Shell:Ensure()
         titleBar:SetBackdropColor(tr, tg, tb, 1)
     end
     shellFrame.titleBar = titleBar
+    -- Keep the X above title-bar drag chrome so clicks always reach it.
+    if titleBar._closeBtn then
+        titleBar._closeBtn:SetFrameLevel(titleBar:GetFrameLevel() + 10)
+    end
     titleBar:EnableMouse(true)
     titleBar:RegisterForDrag("LeftButton")
     titleBar:SetScript("OnDragStart", function() shellFrame:StartMoving() end)
@@ -274,6 +292,7 @@ end
 function Shell:Show()
     self:Ensure()
     HideBlizzardMail()
+    Trace("show", { tab = currentTab })
     shellFrame:Show()
     if currentTab == "other" then
         currentTab = "inbox"
@@ -319,14 +338,16 @@ function Shell:UpdateActivityBadge()
 end
 
 function Shell:Hide()
+    if not shellFrame or not shellFrame:IsShown() then
+        return
+    end
+    Trace("hide", {})
     if ns.Compose and ns.Compose.OnMailboxClosed then
         ns.Compose:OnMailboxClosed()
     elseif ns.Compose and ns.Compose.OnHide then
         ns.Compose:OnHide()
     end
-    if shellFrame then
-        shellFrame:Hide()
-    end
+    shellFrame:Hide()
     RestoreBlizzardMail()
 end
 

@@ -12,6 +12,13 @@ local _, ns = ...
 ns.NativeSend = {}
 local NativeSend = ns.NativeSend
 
+local MT = ns.MailTrace
+local function Trace(event, fields)
+    if MT.enabled then
+        MT:Record("shell", event, fields)
+    end
+end
+
 local holders = {}
 local active = false
 
@@ -76,6 +83,7 @@ end
 ---@param holder string
 function NativeSend:Activate(holder)
     holders[holder] = true
+    Trace("nativesend_activate", { holder = holder, wasActive = active })
     EnsureActive()
 end
 
@@ -83,6 +91,7 @@ end
 ---@param holder string
 function NativeSend:Deactivate(holder)
     holders[holder] = nil
+    Trace("nativesend_deactivate", { holder = holder, remaining = next(holders) and true or false })
     if next(holders) then
         return
     end
@@ -91,6 +100,7 @@ end
 
 --- Drop all holders (mailbox closed / shell hide).
 function NativeSend:DeactivateAll()
+    Trace("nativesend_deactivate_all", {})
     wipe(holders)
     TearDown()
 end

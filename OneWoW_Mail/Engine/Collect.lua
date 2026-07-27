@@ -6,6 +6,13 @@ local Collect = ns.Collect
 local running = false
 local cancelRequested = false
 
+local MT = ns.MailTrace
+local function Trace(event, fields)
+    if MT.enabled then
+        MT:Record("collect", event, fields)
+    end
+end
+
 --- Two free-slot budgets: generic slots (bagFamily 0 — hold anything) and
 --- generic + reagent bag (crafting reagents can land in either). Specialty
 --- bags with a non-zero family are excluded from both; they can't take
@@ -199,6 +206,7 @@ local function TakeOneMail(index, filter, after)
                 return
             end
             if HasInboxItem(index, i) then
+                Trace("take_item", { index = index, attach = i })
                 TakeInboxItem(index, i)
                 WaitPending(function(ok)
                     if not ok then
@@ -235,6 +243,7 @@ local function TakeOneMail(index, filter, after)
 
     -- Money first (Blizzard OpenAll order), then attachments, then delete if empty.
     if canTakeGold then
+        Trace("take_money", { index = index })
         TakeInboxMoney(index)
         WaitPending(function(ok)
             if not ok then
@@ -265,6 +274,7 @@ function Collect:Start(filter, selected, onDone)
     end
     running = true
     cancelRequested = false
+    Trace("start", { filter = filter })
     if ns.Inbox and ns.Inbox.SyncActionButtons then
         ns.Inbox:SyncActionButtons()
     end
@@ -275,6 +285,12 @@ function Collect:Start(filter, selected, onDone)
 
     local function finish(ok)
         running = false
+        Trace("done", {
+            ok = ok,
+            gold = passGold,
+            items = passItems,
+            mails = passMails,
+        })
         if ok and ns.InTransit then
             ns.InTransit:ClearAllIfInboxEmpty()
         end

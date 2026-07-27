@@ -24,7 +24,7 @@ Scanned from `SLASH_*` assignments, `SlashCmdList[...]` handlers, and
 | OneWoW_QoL | `/1wqol` `/owqol` `/onewowqol` · BagBar: `/bagbar` `/owbb` · CopyText: `/copytext` `/ct` |
 | OneWoW_DirectDeposit | `/1wdd` · `/dd` `/directdeposit` `/directdep` · `/ddeposit` |
 | OneWoW_ShoppingList | `/1wsl` `/owsl` `/shoppinglist` |
-| OneWoW_Mail | `/1wmail` `/owmail` |
+| OneWoW_Mail | `/1wmail` `/owmail` · debug: `/owmailtrace` `/1wmailtrace` |
 | OneWoW_Bags | `/1wb` `/onewowbags` `/1wbags` · `/owbags-export` · debug: `/owbprof` `/owblayout` `/owboverlay` |
 | OneWoW_Utility_DevTool | `/1wdt` `/dt` `/devtool` `/devtools` |
 
@@ -193,11 +193,22 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 
 ## OneWoW_Mail
 
-**Source:** `OneWoW_Mail/OneWoW_Mail.lua`
+**Source:** `OneWoW_Mail/OneWoW_Mail.lua`, `Engine/MailTrace.lua`
 
 | Command | Kind | Description |
 |---|---|---|
 | `/1wmail` `/owmail` | User | Toggle the OneWoW Mail UI shell |
+| `/owmailtrace` `/1wmailtrace` | Debug | Mail send/shipment pipeline debug ring |
+
+### `/owmailtrace` subcommands
+
+| Args | Effect |
+|---|---|
+| `on` | Enable + clear ring |
+| `off` | Disable (`dump` still works) |
+| `clear` / `reset` | Clear ring |
+| `dump` | Print full ring (chronological) |
+| _(none / other)_ | Print usage |
 
 ---
 

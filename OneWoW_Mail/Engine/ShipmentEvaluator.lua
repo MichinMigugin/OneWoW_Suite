@@ -8,6 +8,24 @@ local ShipmentEvaluator = ns.ShipmentEvaluator
 local PE = OneWoW.PredicateEngine
 local SE = OneWoW.SearchExpand
 
+local MT = ns.MailTrace
+local function Trace(event, fields)
+    if MT.enabled then
+        MT:Record("eval", event, fields)
+    end
+end
+
+--- True when a hyperlink has a non-empty display name (not []).
+---@param link string|nil
+---@return boolean
+local function LinkHasVisibleName(link)
+    if not link or link == "" then
+        return false
+    end
+    local name = link:match("%[(.-)%]")
+    return name ~= nil and name ~= ""
+end
+
 local DISTRIBUTE_FILL = "fill_first"
 local DISTRIBUTE_RR = "round_robin"
 local DISTRIBUTE_EQUAL = "equal_split"
@@ -101,6 +119,10 @@ local function ScanMatchingSlots(pred, blacklist, exclusions)
                 local itemID = info.itemID
                 if not blacklist[itemID] and not exclusions[itemID] then
                     local link = info.hyperlink or C_Container.GetContainerItemLink(bag, slot)
+                    -- Warm item cache for later labels/links; never block attach on load.
+                    if not LinkHasVisibleName(link) then
+                        C_Item.RequestLoadItemDataByID(itemID)
+                    end
                     local props = PE:BuildProps(itemID, bag, slot)
                     if props and not props.isSoulbound and pred(props) then
                         tinsert(out, {
@@ -721,12 +743,25 @@ function ShipmentEvaluator:Preview(filter)
     local result = { plans = {}, jobs = {}, errors = {} }
     local skipAll = filter.skipTargets or {}
 
+    Trace("preview_start", {
+        shipmentId = filter.shipmentId,
+        mode = filter.mode,
+        hasIds = filter.shipmentIds and true or false,
+    })
+
     for _, shipment in ipairs(ns.db.global.mail.shipments or {}) do
         if selected(shipment) then
             local skipSet = skipAll[shipment.id]
             local plans = PlanShipment(shipment, reserved, skipSet)
             for _, plan in ipairs(plans) do
                 tinsert(result.plans, plan)
+                Trace("plan", {
+                    shipmentId = shipment.id,
+                    target = plan.target,
+                    jobs = #(plan.jobs or {}),
+                    skipReason = plan.skipReason,
+                    error = plan.error,
+                })
                 if plan.error then
                     local err = plan.error
                     if err == "no target" then
@@ -738,6 +773,19 @@ function ShipmentEvaluator:Preview(filter)
                 end
                 for _, job in ipairs(plan.jobs) do
                     tinsert(result.jobs, job)
+                    if MT.enabled then
+                        for _, loc in ipairs(job.slots or {}) do
+                            MT:Record("eval", "slot", {
+                                bag = loc.bag,
+                                slot = loc.slot,
+                                itemID = loc.itemID,
+                                count = loc.count,
+                                hasLink = LinkHasVisibleName(loc.link),
+                                target = job.target,
+                                shipmentId = job.shipmentId or shipment.id,
+                            })
+                        end
+                    end
                 end
             end
         end

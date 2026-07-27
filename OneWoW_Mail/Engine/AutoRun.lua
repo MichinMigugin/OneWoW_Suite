@@ -21,6 +21,13 @@ local OneWoW_GUI = OneWoW_GUI
 ns.AutoRun = {}
 local AutoRun = ns.AutoRun
 
+local MT = ns.MailTrace
+local function Trace(event, fields)
+    if MT.enabled then
+        MT:Record("autorun", event, fields)
+    end
+end
+
 local SETTLE_DELAY = 0.5
 local BUSY_RETRY = 1.0
 
@@ -264,6 +271,7 @@ local function CaptureIntents(result)
             })
         end
     end
+    Trace("capture", { pending = #pendingIntents, jobs = #(result.jobs or {}) })
 end
 
 function AutoRun:GetPendingIntents()
@@ -307,6 +315,7 @@ end
 
 --- Apply forced-close / Exit rules: cancel sends, session keeps retry, visit pending wiped.
 function AutoRun:OnMailboxClosing(forced)
+    Trace("mail_closed", { forced = forced and true or false })
     if ns.SendQueue:IsRunning() then
         ns.SendQueue:Cancel()
         MarkActiveIncomplete()
@@ -342,6 +351,11 @@ local function PhaseB(token)
         return
     end
     local ids = CollectEligibleIds("auto_preview")
+    local idCount = 0
+    for _ in pairs(ids) do
+        idCount = idCount + 1
+    end
+    Trace("phase_b_start", { eligible = idCount })
     local result = ns.ShipmentEvaluator:Preview({
         shipmentIds = ids,
         skipTargets = BuildSkipTargets(ids),
@@ -370,6 +384,11 @@ end
 
 local function PhaseA(token)
     local ids = CollectEligibleIds("auto")
+    local idCount = 0
+    for _ in pairs(ids) do
+        idCount = idCount + 1
+    end
+    Trace("phase_a_start", { eligible = idCount })
     local result = ns.ShipmentEvaluator:Preview({
         shipmentIds = ids,
         skipTargets = BuildSkipTargets(ids),
@@ -430,6 +449,10 @@ local function TryStart(token)
         return
     end
     if ns.Collect:IsRunning() or ns.SendQueue:IsRunning() then
+        Trace("busy_retry", {
+            collect = ns.Collect:IsRunning(),
+            send = ns.SendQueue:IsRunning(),
+        })
         C_Timer.After(BUSY_RETRY, function()
             TryStart(token)
         end)
@@ -488,6 +511,12 @@ function AutoRun:Process(onDone, filter)
         return
     end
 
+    Trace("process", {
+        filter = filter and true or false,
+        shipmentId = filter and filter.shipmentId,
+        target = filter and filter.target,
+        pendingBefore = #pendingIntents,
+    })
     processing = true
     wipe(pendingIntents)
     for _, intent in ipairs(kept) do
@@ -533,6 +562,12 @@ end
 function AutoRun:Discard(filter)
     -- Manual discard from Activity: abandon held intents; session shipments
     -- remain eligible (not marked done) so they re-plan next open / Process.
+    Trace("discard", {
+        filter = filter and true or false,
+        shipmentId = filter and filter.shipmentId,
+        target = filter and filter.target,
+        pendingBefore = #pendingIntents,
+    })
     local kept = {}
     local clearedIds = {}
     for _, intent in ipairs(pendingIntents) do
@@ -571,8 +606,19 @@ end
 --- Intentional close while pending review: Process / Exit / Go Back.
 ---@param proceed fun() called to actually close the mailbox
 function AutoRun:RequestClose(proceed)
+    -- `closing` latches while Exit/Process from the confirm dialog runs. If that
+    -- path never got MAIL_CLOSED (shell-only hide), the latch stuck and the X
+    -- became a silent no-op — recover when nothing is actually in flight.
     if closing then
-        return
+        if processing or ns.SendQueue:IsRunning() then
+            Trace("request_close_blocked", {
+                processing = processing,
+                send = ns.SendQueue:IsRunning(),
+            })
+            return
+        end
+        Trace("request_close_unstick", {})
+        closing = false
     end
     if not self:HasPending() then
         proceed()
@@ -602,6 +648,8 @@ function AutoRun:RequestClose(proceed)
                         closing = true
                         AutoRun:OnMailboxClosing(false)
                         proceed()
+                        -- MAIL_CLOSED clears `closing`. If it never fires (shell-only
+                        -- hide), RequestClose recovers the latch on the next X click.
                     end,
                 },
                 {
@@ -643,9 +691,11 @@ function AutoRun:Initialize()
             -- Always accept a new visit. Sticky mailOpen used to block reopens
             -- when MAIL_CLOSED was missed (Escape without CloseMail, etc.).
             HideCloseDialog()
+            closing = false
             mailOpen = true
             visitToken = visitToken + 1
             local token = visitToken
+            Trace("mail_show", { token = token })
             C_Timer.After(SETTLE_DELAY, function()
                 MaybeStartAutoCollect()
                 TryStart(token)

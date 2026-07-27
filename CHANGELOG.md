@@ -1,6 +1,10 @@
 # OneWoW Suite Changelog
 
 # Mail
+## Fixes
+- Attach failure and timeout logs now show readable item names instead of empty `[]` when the bag hyperlink has no display name yet
+- Mail window X close no longer silently fails after a pending-review Exit left the close latch stuck, or when CloseMail did not hide the shell
+
 ## Inbox
 - Expanding Auction House mail now shows a full invoice breakdown (sale price, deposit, house cut, amount received/paid, buyer/seller, and pending-funds ETA)
 

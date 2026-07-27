@@ -113,7 +113,13 @@ local function FormatIntentLine(intent)
     if intent.money then
         name = OneWoW.Format.FormatGold(intent.money)
     else
-        name = intent.link or C_Item.GetItemNameByID(intent.itemID) or tostring(intent.itemID or "?")
+        local link = intent.link
+        local linkName = link and link:match("%[(.-)%]")
+        if linkName and linkName ~= "" then
+            name = link
+        else
+            name = C_Item.GetItemNameByID(intent.itemID) or tostring(intent.itemID or "?")
+        end
     end
     if intent.quantity then
         return name .. " ×" .. intent.quantity
