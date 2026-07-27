@@ -198,7 +198,7 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 | Command | Kind | Description |
 |---|---|---|
 | `/1wmail` `/owmail` | User | Toggle the OneWoW Mail UI shell |
-| `/owmailtrace` `/1wmailtrace` | Debug | Mail send/shipment pipeline debug ring |
+| `/owmailtrace` `/1wmailtrace` | Debug | Mail send/shipment pipeline debug ring (on by default, ring 2048, session-only) |
 
 ### `/owmailtrace` subcommands
 
@@ -208,7 +208,7 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 | `off` | Disable (`dump` still works) |
 | `clear` / `reset` | Clear ring |
 | `dump` | Print full ring (chronological) |
-| _(none / other)_ | Print usage |
+| _(none / other)_ | Print usage (notes default ON) |
 
 ---
 

@@ -1,8 +1,8 @@
 local _, ns = ...
 
--- Session-only Mail pipeline debug ring. Off by default (zero cost).
--- Usage: /owmailtrace on → reproduce → /owmailtrace dump
--- Mirrors Bags /owblayout and core /owtrace; does not persist enabled.
+-- Session-only Mail pipeline debug ring. On by default (support captures);
+-- does not persist across reload. /owmailtrace off to disable.
+-- Usage: reproduce → /owmailtrace dump (or on → clear → reproduce → dump)
 
 local format = string.format
 local tinsert, wipe = tinsert, wipe
@@ -12,7 +12,7 @@ local debugprofilestop = debugprofilestop
 local table_concat = table.concat
 
 local PREFIX = "|cff80c0ffOneWoW_Mail Trace|r"
-local RING_SIZE = 256
+local RING_SIZE = 2048
 
 -- Skip when formatting dump lines (internal / already printed).
 local SKIP_KEYS = {
@@ -25,10 +25,10 @@ local SKIP_KEYS = {
 ns.MailTrace = {}
 local MT = ns.MailTrace
 
-MT.enabled = false
+MT.enabled = true
 MT.ring = {}
 MT.head = 0
-MT.t0 = nil -- GetTime() at enable; dump shows relative seconds
+MT.t0 = GetTime() -- dump shows seconds relative to enable / clear
 
 function MT:IsEnabled()
     return self.enabled
@@ -116,7 +116,7 @@ function MT:Dump()
 
     print(PREFIX .. format(": dump (%d events, recording %s)", count, self.enabled and "ON" or "OFF"))
     if count == 0 then
-        print("  (no events — run /owmailtrace on, reproduce, then dump)")
+        print("  (no events — open mail / send a shipment, then dump)")
         return
     end
 
@@ -155,6 +155,6 @@ SlashCmdList["OWMAILTRACE"] = function(msg)
         MT:Dump()
     else
         print(PREFIX .. ": usage: /owmailtrace on | off | clear | dump  (recording "
-            .. (MT.enabled and "ON" or "OFF") .. ")")
+            .. (MT.enabled and "ON" or "OFF") .. ", default ON)")
     end
 end
