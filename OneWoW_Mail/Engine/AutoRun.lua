@@ -39,6 +39,26 @@ local function NotifyActivity()
     if ns.ActivityUI then
         ns.ActivityUI:Refresh()
     end
+    if ns.Shell and ns.Shell.UpdateActivityBadge then
+        ns.Shell:UpdateActivityBadge()
+    end
+end
+
+local function IntentMatchesFilter(intent, filter)
+    if not filter then
+        return true
+    end
+    if filter.shipmentId and intent.shipmentId ~= filter.shipmentId then
+        return false
+    end
+    if filter.target and intent.target ~= filter.target then
+        return false
+    end
+    return true
+end
+
+local function GroupKey(shipmentId, target)
+    return tostring(shipmentId or "") .. "\0" .. tostring(target or "")
 end
 
 local function LogPlanErrors(result)
@@ -250,6 +270,34 @@ function AutoRun:GetPendingIntents()
     return pendingIntents
 end
 
+--- Collapse flat pending intents into ordered shipment+target groups.
+---@return table[] groups
+function AutoRun:GetPendingGroups()
+    local groups = {}
+    local indexByKey = {}
+    for _, intent in ipairs(pendingIntents) do
+        local key = GroupKey(intent.shipmentId, intent.target)
+        local group = indexByKey[key]
+        if not group then
+            group = {
+                shipmentId = intent.shipmentId,
+                shipmentName = intent.shipmentName,
+                target = intent.target,
+                frequency = intent.frequency,
+                intents = {},
+            }
+            indexByKey[key] = group
+            tinsert(groups, group)
+        end
+        tinsert(group.intents, intent)
+    end
+    return groups
+end
+
+function AutoRun:GetPendingGroupCount()
+    return #self:GetPendingGroups()
+end
+
 function AutoRun:ClearSessionFlags(shipmentId)
     if shipmentId then
         sessionDone[shipmentId] = nil
@@ -390,7 +438,31 @@ local function TryStart(token)
     PhaseA(token)
 end
 
-function AutoRun:Process(onDone)
+--- Narrow Preview result to one mail target (role shipments plan every member).
+local function FilterResultToTarget(result, target)
+    if not target then
+        return
+    end
+    local plans = {}
+    for _, plan in ipairs(result.plans or {}) do
+        if plan.target == target then
+            tinsert(plans, plan)
+        end
+    end
+    result.plans = plans
+    local jobs = {}
+    for _, job in ipairs(result.jobs or {}) do
+        if job.target == target then
+            tinsert(jobs, job)
+        end
+    end
+    result.jobs = jobs
+end
+
+--- Process held preview intents. Optional filter = { shipmentId=, target= } for one group.
+---@param onDone fun(ok: boolean)|nil
+---@param filter { shipmentId?: string, target?: string }|nil
+function AutoRun:Process(onDone, filter)
     if processing or ns.SendQueue:IsRunning() or ns.Collect:IsRunning() then
         if onDone then onDone(false) end
         return
@@ -399,18 +471,37 @@ function AutoRun:Process(onDone)
         if onDone then onDone(true) end
         return
     end
-    -- Re-plan the same shipment ids that were held (fresh bags).
+
     local ids = {}
+    local kept = {}
+    local matched = false
     for _, intent in ipairs(pendingIntents) do
-        ids[intent.shipmentId] = true
+        if IntentMatchesFilter(intent, filter) then
+            ids[intent.shipmentId] = true
+            matched = true
+        else
+            tinsert(kept, intent)
+        end
     end
+    if filter and not matched then
+        if onDone then onDone(true) end
+        return
+    end
+
     processing = true
     wipe(pendingIntents)
+    for _, intent in ipairs(kept) do
+        tinsert(pendingIntents, intent)
+    end
     NotifyActivity()
+
     local result = ns.ShipmentEvaluator:Preview({
         shipmentIds = ids,
         skipTargets = BuildSkipTargets(ids),
     })
+    if filter and filter.target then
+        FilterResultToTarget(result, filter.target)
+    end
     TrackJobs(result.jobs)
     if #result.jobs == 0 then
         processing = false
@@ -437,15 +528,29 @@ function AutoRun:Process(onDone)
     end, { stopOnFailure = false })
 end
 
-function AutoRun:Discard()
+--- Discard held intents. Optional filter = { shipmentId=, target= } for one group.
+---@param filter { shipmentId?: string, target?: string }|nil
+function AutoRun:Discard(filter)
     -- Manual discard from Activity: abandon held intents; session shipments
     -- remain eligible (not marked done) so they re-plan next open / Process.
+    local kept = {}
+    local clearedIds = {}
     for _, intent in ipairs(pendingIntents) do
-        if intent.frequency == "session" then
-            sessionDone[intent.shipmentId] = nil
+        if IntentMatchesFilter(intent, filter) then
+            if intent.frequency == "session" then
+                clearedIds[intent.shipmentId] = true
+            end
+        else
+            tinsert(kept, intent)
         end
     end
+    for id in pairs(clearedIds) do
+        sessionDone[id] = nil
+    end
     wipe(pendingIntents)
+    for _, intent in ipairs(kept) do
+        tinsert(pendingIntents, intent)
+    end
     NotifyActivity()
 end
 

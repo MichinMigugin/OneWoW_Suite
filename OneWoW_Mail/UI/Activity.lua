@@ -10,9 +10,11 @@ local panel
 local pendingScroll, pendingChild
 local logScroll, logChild
 local processBtn, discardBtn, clearBtn, mirrorChatCb
-local pendingLines = {}
+local pendingRows = {} -- pooled expandable pending groups
 local logRows = {} -- pooled expandable log rows
+local expandedPendingRow
 local expandedLogRow
+local expandedPendingKey -- survive refresh
 
 local HEADER_H = 30
 local PENDING_H = 170
@@ -21,6 +23,14 @@ local LINE_H = 16
 local LOG_ROW_H = 22
 local LOG_DETAIL_H = 48
 local LOG_ROW_GAP = 2
+local PENDING_ROW_H = 24
+local PENDING_ROW_GAP = 2
+local PENDING_ICON = 20
+
+local ATLAS_PROCESS = "common-icon-rotateleft"
+local ATLAS_PROCESS_OFF = "common-icon-rotateleft-disable"
+local ATLAS_DISCARD = "common-icon-delete"
+local ATLAS_DISCARD_OFF = "common-icon-delete-disable"
 
 local function ScrollGutter()
     return ns.Constants.GUI.SCROLLBAR_CONTENT_GUTTER
@@ -54,32 +64,61 @@ local function SetWidgetEnabled(widget, on)
     end
 end
 
-local function ResetPool(pool)
-    for _, fs in ipairs(pool) do
-        fs:Hide()
-        fs:ClearAllPoints()
+--- Atlas mirrored to a forward-facing arrow (H + V flip of rotateleft).
+--- H alone points right with the curve on the bottom; V puts the curve on top.
+local function SetMirroredAtlas(tex, atlas)
+    local info = C_Texture.GetAtlasInfo(atlas)
+    local file = info and (info.file or info.filename)
+    if file and info.leftTexCoord then
+        tex:SetTexture(file)
+        tex:SetTexCoord(
+            info.rightTexCoord, info.leftTexCoord,
+            info.bottomTexCoord, info.topTexCoord
+        )
+        return
+    end
+    tex:SetAtlas(atlas)
+end
+
+local function SetProcessIcon(btn, enabled)
+    if enabled then
+        SetMirroredAtlas(btn.icon, ATLAS_PROCESS)
+        btn:Enable()
+        btn:SetAlpha(1)
+    else
+        SetMirroredAtlas(btn.icon, ATLAS_PROCESS_OFF)
+        btn:Disable()
+        btn:SetAlpha(0.45)
     end
 end
 
-local function AcquireLine(pool, parent)
-    for _, fs in ipairs(pool) do
-        if not fs:IsShown() then
-            fs:Show()
-            return fs
-        end
+local function SetDiscardIcon(btn, enabled)
+    if enabled then
+        btn.icon:SetAtlas(ATLAS_DISCARD)
+        btn:Enable()
+        btn:SetAlpha(1)
+    else
+        btn.icon:SetAtlas(ATLAS_DISCARD_OFF)
+        btn:Disable()
+        btn:SetAlpha(0.45)
     end
-    local fs = OneWoW_GUI:CreateFS(parent, 11)
-    fs:SetJustifyH("LEFT")
-    fs:SetWordWrap(false)
-    tinsert(pool, fs)
-    return fs
 end
 
-local function PlaceLine(pool, parent, y, indent)
-    local fs = AcquireLine(pool, parent)
-    fs:SetPoint("TOPLEFT", parent, "TOPLEFT", indent or 0, -y)
-    fs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -y)
-    return fs
+local function PendingGroupKey(group)
+    return tostring(group.shipmentId or "") .. "\0" .. tostring(group.target or "")
+end
+
+local function FormatIntentLine(intent)
+    local name
+    if intent.money then
+        name = OneWoW.Format.FormatGold(intent.money)
+    else
+        name = intent.link or C_Item.GetItemNameByID(intent.itemID) or tostring(intent.itemID or "?")
+    end
+    if intent.quantity then
+        return name .. " ×" .. intent.quantity
+    end
+    return name
 end
 
 local function SyncChildWidth(scroll, child)
@@ -107,6 +146,159 @@ local function EntryHasDetail(e)
     return (e.detail and e.detail ~= "" and e.detail ~= e.message)
         or (e.itemLink and e.itemLink ~= "")
         or (e.code and e.code ~= "")
+end
+
+-- ---------------------------------------------------------------------------
+-- Pending review accordion (per shipment+target group)
+-- ---------------------------------------------------------------------------
+
+local function CollapsePendingRow(row)
+    if not row then
+        return
+    end
+    row.isExpanded = false
+    if row.detail then
+        row.detail:Hide()
+    end
+    if row.expandIcon then
+        row.expandIcon:SetAtlas("Gamepad_Rev_Plus_64")
+    end
+    if expandedPendingRow == row then
+        expandedPendingRow = nil
+    end
+end
+
+local function ExpandPendingRow(row)
+    if expandedPendingRow and expandedPendingRow ~= row then
+        CollapsePendingRow(expandedPendingRow)
+    end
+    row.isExpanded = true
+    if row.expandIcon then
+        row.expandIcon:SetAtlas("Gamepad_Rev_Minus_64")
+    end
+    expandedPendingRow = row
+    expandedPendingKey = row.groupKey
+    local detail = row.detail
+    detail:ClearAllPoints()
+    detail:SetPoint("TOPLEFT", row, "BOTTOMLEFT", 0, -PENDING_ROW_GAP)
+    detail:SetPoint("TOPRIGHT", row, "BOTTOMRIGHT", 0, -PENDING_ROW_GAP)
+    detail:SetWidth(row:GetWidth() or pendingChild:GetWidth() or 1)
+    detail:Show()
+end
+
+local function RelayoutPendingRows()
+    local y = 0
+    for _, row in ipairs(pendingRows) do
+        if row:IsShown() then
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", pendingChild, "TOPLEFT", 0, -y)
+            row:SetPoint("TOPRIGHT", pendingChild, "TOPRIGHT", 0, -y)
+            y = y + PENDING_ROW_H + PENDING_ROW_GAP
+            if row.isExpanded and row.detail and row.detail:IsShown() then
+                row.detail:ClearAllPoints()
+                row.detail:SetPoint("TOPLEFT", row, "BOTTOMLEFT", 0, -PENDING_ROW_GAP)
+                row.detail:SetPoint("TOPRIGHT", row, "BOTTOMRIGHT", 0, -PENDING_ROW_GAP)
+                y = y + (row.detail:GetHeight() or 12) + PENDING_ROW_GAP
+            end
+        end
+    end
+    pendingChild:SetHeight(math.max(1, y))
+end
+
+local function TogglePendingRow(row)
+    if row.isExpanded then
+        CollapsePendingRow(row)
+        expandedPendingKey = nil
+    else
+        ExpandPendingRow(row)
+    end
+    RelayoutPendingRows()
+end
+
+local function AcquirePendingRow()
+    for _, row in ipairs(pendingRows) do
+        if not row:IsShown() then
+            row:Show()
+            return row
+        end
+    end
+
+    local row = CreateFrame("Button", nil, pendingChild, "BackdropTemplate")
+    row:SetHeight(PENDING_ROW_H)
+    row:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+    row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+    row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    row.isExpanded = false
+
+    row.expandBtn = CreateFrame("Button", nil, row)
+    row.expandBtn:SetSize(20, PENDING_ROW_H)
+    row.expandBtn:SetPoint("LEFT", row, "LEFT", 2, 0)
+    row.expandIcon = row.expandBtn:CreateTexture(nil, "ARTWORK")
+    row.expandIcon:SetSize(12, 12)
+    row.expandIcon:SetPoint("CENTER")
+    row.expandIcon:SetAtlas("Gamepad_Rev_Plus_64")
+    row.expandBtn:SetScript("OnClick", function()
+        TogglePendingRow(row)
+    end)
+
+    row.discardBtn = OneWoW_GUI:CreateAtlasIconButton(row, {
+        atlas = ATLAS_DISCARD,
+        width = PENDING_ICON,
+        height = PENDING_ICON,
+        iconInset = 2,
+    })
+    row.discardBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+    AttachTooltip(row.discardBtn, L["DISCARD"], L["TT_BTN_DISCARD_SHIPMENT"])
+    row.discardBtn:SetScript("OnClick", function()
+        if not row.shipmentId then
+            return
+        end
+        ns.AutoRun:Discard({ shipmentId = row.shipmentId, target = row.target })
+    end)
+
+    row.processBtn = OneWoW_GUI:CreateAtlasIconButton(row, {
+        atlas = ATLAS_PROCESS,
+        width = PENDING_ICON,
+        height = PENDING_ICON,
+        iconInset = 2,
+    })
+    SetMirroredAtlas(row.processBtn.icon, ATLAS_PROCESS)
+    row.processBtn:SetPoint("RIGHT", row.discardBtn, "LEFT", -4, 0)
+    AttachTooltip(row.processBtn, L["BTN_PROCESS"], L["TT_BTN_PROCESS_SHIPMENT"])
+    row.processBtn:SetScript("OnClick", function()
+        if not row.shipmentId then
+            return
+        end
+        ns.AutoRun:Process(nil, { shipmentId = row.shipmentId, target = row.target })
+    end)
+
+    row.summary = OneWoW_GUI:CreateFS(row, 11)
+    row.summary:SetPoint("LEFT", row.expandBtn, "RIGHT", 4, 0)
+    row.summary:SetPoint("RIGHT", row.processBtn, "LEFT", -6, 0)
+    row.summary:SetJustifyH("LEFT")
+    row.summary:SetWordWrap(false)
+    row.summary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+
+    row.detail = CreateFrame("Frame", nil, pendingChild, "BackdropTemplate")
+    row.detail:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+    row.detail:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    row.detail:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    row.detail:Hide()
+
+    row.detailText = OneWoW_GUI:CreateFS(row.detail, 11)
+    row.detailText:SetPoint("TOPLEFT", row.detail, "TOPLEFT", 8, -6)
+    row.detailText:SetPoint("TOPRIGHT", row.detail, "TOPRIGHT", -8, -6)
+    row.detailText:SetJustifyH("LEFT")
+    row.detailText:SetJustifyV("TOP")
+    row.detailText:SetWordWrap(true)
+    row.detailText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    row:SetScript("OnClick", function()
+        TogglePendingRow(row)
+    end)
+
+    tinsert(pendingRows, row)
+    return row
 end
 
 local function CollapseLogRow(row)
@@ -233,48 +425,80 @@ local function AcquireLogRow()
 end
 
 local function RefreshPending()
-    ResetPool(pendingLines)
+    for _, row in ipairs(pendingRows) do
+        if row ~= expandedPendingRow then
+            CollapsePendingRow(row)
+        end
+        row:Hide()
+        row:ClearAllPoints()
+        if row.detail then
+            row.detail:Hide()
+        end
+    end
     SyncChildWidth(pendingScroll, pendingChild)
-    local intents = ns.AutoRun:GetPendingIntents()
+
+    local groups = ns.AutoRun:GetPendingGroups()
+    local busy = ns.SendQueue:IsRunning() or ns.AutoRun:IsProcessing()
     local y = 0
-    if #intents == 0 then
-        local fs = PlaceLine(pendingLines, pendingChild, y)
+
+    if #groups == 0 then
+        expandedPendingRow = nil
+        expandedPendingKey = nil
+        if not pendingChild.emptyFs then
+            pendingChild.emptyFs = OneWoW_GUI:CreateFS(pendingChild, 11)
+        end
+        local fs = pendingChild.emptyFs
+        fs:ClearAllPoints()
+        fs:SetPoint("TOPLEFT", pendingChild, "TOPLEFT", 0, 0)
         fs:SetText(L["ACTIVITY_EMPTY"])
         fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        y = y + LINE_H
+        fs:Show()
+        y = LINE_H
     else
-        local lastShipment
-        for _, intent in ipairs(intents) do
-            if intent.shipmentId ~= lastShipment then
-                lastShipment = intent.shipmentId
-                if y > 0 then
-                    y = y + 4
-                end
-                local fs = PlaceLine(pendingLines, pendingChild, y)
-                fs:SetText(intent.shipmentName .. " >> " .. (intent.target or "?"))
-                fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                y = y + LINE_H + 2
+        if pendingChild.emptyFs then
+            pendingChild.emptyFs:Hide()
+        end
+        for _, group in ipairs(groups) do
+            local row = AcquirePendingRow()
+            local key = PendingGroupKey(group)
+            row.groupKey = key
+            row.shipmentId = group.shipmentId
+            row.target = group.target
+            row.summary:SetText((group.shipmentName or group.shipmentId or "?")
+                .. " >> " .. (group.target or "?"))
+
+            local lines = {}
+            for _, intent in ipairs(group.intents) do
+                tinsert(lines, FormatIntentLine(intent))
             end
-            local fs = PlaceLine(pendingLines, pendingChild, y, 12)
-            local name
-            if intent.money then
-                name = OneWoW.Format.FormatGold(intent.money)
+            row.detailText:SetText(table.concat(lines, "\n"))
+            local detailH = math.max(28, 12 + (#lines * LINE_H))
+            row.detail:SetHeight(detailH)
+            local scrollW = math.max(100, (pendingChild:GetWidth() or 100) - 16)
+            row.detailText:SetWidth(scrollW)
+
+            SetProcessIcon(row.processBtn, not busy)
+            SetDiscardIcon(row.discardBtn, true)
+
+            local keepExpanded = expandedPendingKey == key
+            if keepExpanded then
+                ExpandPendingRow(row)
             else
-                name = intent.link or C_Item.GetItemNameByID(intent.itemID) or tostring(intent.itemID or "?")
+                CollapsePendingRow(row)
             end
-            if intent.quantity then
-                fs:SetText(name .. " ×" .. intent.quantity)
-            else
-                fs:SetText(name)
+
+            row:SetPoint("TOPLEFT", pendingChild, "TOPLEFT", 0, -y)
+            row:SetPoint("TOPRIGHT", pendingChild, "TOPRIGHT", 0, -y)
+            y = y + PENDING_ROW_H + PENDING_ROW_GAP
+            if keepExpanded then
+                y = y + detailH + PENDING_ROW_GAP
             end
-            fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            y = y + LINE_H
         end
     end
     pendingChild:SetHeight(math.max(1, y))
 
-    local canAct = #intents > 0
-    SetWidgetEnabled(processBtn, canAct and not ns.SendQueue:IsRunning() and not ns.AutoRun:IsProcessing())
+    local canAct = #groups > 0
+    SetWidgetEnabled(processBtn, canAct and not busy)
     SetWidgetEnabled(discardBtn, canAct)
 end
 
@@ -357,10 +581,16 @@ end
 
 function ActivityUI:Refresh()
     if not panel then
+        if ns.Shell and ns.Shell.UpdateActivityBadge then
+            ns.Shell:UpdateActivityBadge()
+        end
         return
     end
     RefreshPending()
     RefreshLog()
+    if ns.Shell and ns.Shell.UpdateActivityBadge then
+        ns.Shell:UpdateActivityBadge()
+    end
 end
 
 function ActivityUI:Reset()
@@ -368,8 +598,10 @@ function ActivityUI:Reset()
     pendingScroll, pendingChild = nil, nil
     logScroll, logChild = nil, nil
     processBtn, discardBtn, clearBtn, mirrorChatCb = nil, nil, nil, nil
+    expandedPendingRow = nil
     expandedLogRow = nil
-    wipe(pendingLines)
+    expandedPendingKey = nil
+    wipe(pendingRows)
     wipe(logRows)
 end
 

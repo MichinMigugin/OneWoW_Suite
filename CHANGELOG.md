@@ -4,6 +4,10 @@
 ## Inbox
 - Expanding Auction House mail now shows a full invoice breakdown (sale price, deposit, house cut, amount received/paid, buyer/seller, and pending-funds ETA)
 
+## Activity
+- Pending reviews are expandable per shipment (shipment >> character) with Process/Discard on each row; global Process/Discard still applies to all
+- Activity tab shows a count badge for pending shipment groups
+
 ---
 
 # AltTracker

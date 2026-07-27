@@ -231,6 +231,22 @@ function Shell:Ensure()
         shellFrame.tabButtons[id] = btn
         prev = btn
 
+        if id == "activity" then
+            local badge = CreateFrame("Frame", nil, btn, "BackdropTemplate")
+            badge:SetHeight(14)
+            badge:SetFrameLevel(btn:GetFrameLevel() + 5)
+            badge:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
+            badge:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            badge:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
+            badge:SetPoint("TOPRIGHT", btn, "TOPRIGHT", 6, 6)
+            badge.text = OneWoW_GUI:CreateFS(badge, 9)
+            badge.text:SetPoint("CENTER", badge, "CENTER", 0, 0)
+            badge.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+            badge:Hide()
+            btn.pendingBadge = badge
+            btn._baseWidth = btn:GetWidth()
+        end
+
         local panel = CreateFrame("Frame", nil, shellFrame)
         panel:SetPoint("TOPLEFT", tabBar, "BOTTOMLEFT", 0, -6)
         panel:SetPoint("BOTTOMRIGHT", shellFrame, "BOTTOMRIGHT", -(pad - 4), pad - 4)
@@ -263,10 +279,42 @@ function Shell:Show()
         currentTab = "inbox"
     end
     SelectTab(currentTab or "inbox")
+    self:UpdateActivityBadge()
     if currentTab == "compose" and ns.NativeSend then
         C_Timer.After(0, function()
             ns.NativeSend:ReassertPark()
         end)
+    end
+end
+
+--- Count badge on the Activity tab for pending review groups.
+function Shell:UpdateActivityBadge()
+    if not shellFrame or not shellFrame.tabButtons then
+        return
+    end
+    local btn = shellFrame.tabButtons.activity
+    if not btn or not btn.pendingBadge then
+        return
+    end
+    local count = 0
+    if ns.AutoRun and ns.AutoRun.GetPendingGroupCount then
+        count = ns.AutoRun:GetPendingGroupCount()
+    end
+    local badge = btn.pendingBadge
+    if count <= 0 then
+        badge:Hide()
+        if btn._baseWidth then
+            btn:SetWidth(btn._baseWidth)
+        end
+        return
+    end
+    local text = tostring(count)
+    badge.text:SetText(text)
+    local w = math.max(14, (badge.text:GetStringWidth() or 8) + 10)
+    badge:SetWidth(w)
+    badge:Show()
+    if btn._baseWidth then
+        btn:SetWidth(btn._baseWidth + math.floor(w / 2))
     end
 end
 
