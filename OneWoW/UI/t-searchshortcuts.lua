@@ -604,6 +604,9 @@ function UI:CreateSearchShortcutsTab(parent)
     typePill:SetPoint("TOPLEFT", editor, "TOPLEFT", 12, -10)
     typePill:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
+    -- Forward-declared: Copy Name's OnClick closes over nameBox before it is created.
+    local nameBox
+
     local copyNameLink = OneWoW_GUI:CreateTextLink(editor, {
         text = COPY_NAME,
         fontSize = 11,
@@ -630,7 +633,7 @@ function UI:CreateSearchShortcutsTab(parent)
     exprLabel:SetText(L["SEARCH_SHORTCUTS_EXPRESSION_LABEL"])
     exprLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local nameBox = OneWoW_GUI:CreateEditBox(editor, {
+    nameBox = OneWoW_GUI:CreateEditBox(editor, {
         height = 26,
         onTextChanged = function()
             if suppressDirty then return end
