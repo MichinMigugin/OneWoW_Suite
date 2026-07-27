@@ -14,30 +14,7 @@ local function Trace(event, fields)
     end
 end
 
---- Readable label for attach failure logs (nameless hyperlinks print as []).
----@param itemID number|nil
----@param link string|nil
----@return string
-local function ResolveItemLabel(itemID, link)
-    if link and link ~= "" then
-        local name = link:match("%[(.-)%]")
-        if name and name ~= "" then
-            return link
-        end
-    end
-    if itemID then
-        local byID = C_Item.GetItemNameByID(itemID)
-        if byID and byID ~= "" then
-            return byID
-        end
-        local infoName = C_Item.GetItemInfo(itemID)
-        if infoName and infoName ~= "" then
-            return infoName
-        end
-        return "item:" .. tostring(itemID)
-    end
-    return "?"
-end
+local ResolveItemLabel = ns.ItemLabel.ResolveLabel
 
 local function ClearCompose()
     ClearSendMail()

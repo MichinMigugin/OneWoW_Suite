@@ -1048,18 +1048,15 @@ local function EnsureDetailWidgets()
 
     dw.previewBtn = OneWoW_GUI:CreateFitTextButton(footer, { text = PREVIEW, height = 26 })
     dw.previewBtn:SetPoint("LEFT", footer, "LEFT", 8, 0)
-    dw.previewBtn:SetScript("OnClick", function()
-        local s = Current()
-        if not s then
-            return
-        end
-        CommitDetailFields()
-        local result = ns.ShipmentEvaluator:Preview(s.id)
+
+    local function RenderShipmentPreview(shipment, allowRetry)
+        local result = ns.ShipmentEvaluator:Preview(shipment.id)
         local rows = {}
+        local needsRetry = false
         local roleLabel = nil
-        if (s.targetKind or "char") == "role" and s.targetRoleId and s.targetRoleId ~= "" then
-            local role = OneWoW.AltScope:GetRole(s.targetRoleId)
-            roleLabel = (role and role.name) or s.targetRoleId
+        if (shipment.targetKind or "char") == "role" and shipment.targetRoleId and shipment.targetRoleId ~= "" then
+            local role = OneWoW.AltScope:GetRole(shipment.targetRoleId)
+            roleLabel = (role and role.name) or shipment.targetRoleId
         end
         local function TargetLabel(target)
             local name = target or "?"
@@ -1082,7 +1079,12 @@ local function EnsureDetailWidgets()
                         tipBody = amount,
                     })
                 else
-                    local name = C_Item.GetItemNameByID(entry.itemID) or tostring(entry.itemID)
+                    local link = entry.slots and entry.slots[1] and entry.slots[1].link
+                    local name, resolved = ns.ItemLabel.ResolveName(entry.itemID, link)
+                    ns.ItemLabel.RequestLoadIfNeeded(entry.itemID, link)
+                    if not resolved then
+                        needsRetry = true
+                    end
                     local quality = C_Item.GetItemQualityByID(entry.itemID)
                     local r, g, b = OneWoW_GUI:GetItemQualityColor(quality)
                     local colored = string.format(
@@ -1132,6 +1134,23 @@ local function EnsureDetailWidgets()
                 dw.detailScroll:SetVerticalScroll(dw.detailScroll:GetVerticalScrollRange())
             end
         end)
+        if needsRetry and allowRetry then
+            C_Timer.After(0.25, function()
+                if Current() ~= shipment then
+                    return
+                end
+                RenderShipmentPreview(shipment, false)
+            end)
+        end
+    end
+
+    dw.previewBtn:SetScript("OnClick", function()
+        local s = Current()
+        if not s then
+            return
+        end
+        CommitDetailFields()
+        RenderShipmentPreview(s, true)
     end)
 
     dw.sendBtn = OneWoW_GUI:CreateFitTextButton(footer, { text = L["BTN_SEND_SHIPMENT"], height = 26 })

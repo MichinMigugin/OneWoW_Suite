@@ -38,6 +38,7 @@ Core\API.lua
 # Engine
 Engine\MailClassify.lua
 Engine\MailTrace.lua
+Engine\ItemLabel.lua
 Engine\Collect.lua
 Engine\AddressBook.lua
 Engine\NativeSend.lua

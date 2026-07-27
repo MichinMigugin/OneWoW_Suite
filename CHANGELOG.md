@@ -3,6 +3,7 @@
 # Mail
 ## Fixes
 - Attach failure and timeout logs now show readable item names instead of empty `[]` when the bag hyperlink has no display name yet
+- Shipment Preview no longer shows raw item IDs when item data is still loading (shared name/link resolver with Activity and attach logs)
 - Mail window X close no longer silently fails after a pending-review Exit left the close latch stuck, or when CloseMail did not hide the shell
 
 ## Inbox

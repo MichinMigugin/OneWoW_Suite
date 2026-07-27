@@ -15,16 +15,7 @@ local function Trace(event, fields)
     end
 end
 
---- True when a hyperlink has a non-empty display name (not []).
----@param link string|nil
----@return boolean
-local function LinkHasVisibleName(link)
-    if not link or link == "" then
-        return false
-    end
-    local name = link:match("%[(.-)%]")
-    return name ~= nil and name ~= ""
-end
+local LinkHasVisibleName = ns.ItemLabel.LinkHasVisibleName
 
 local DISTRIBUTE_FILL = "fill_first"
 local DISTRIBUTE_RR = "round_robin"
@@ -119,10 +110,7 @@ local function ScanMatchingSlots(pred, blacklist, exclusions)
                 local itemID = info.itemID
                 if not blacklist[itemID] and not exclusions[itemID] then
                     local link = info.hyperlink or C_Container.GetContainerItemLink(bag, slot)
-                    -- Warm item cache for later labels/links; never block attach on load.
-                    if not LinkHasVisibleName(link) then
-                        C_Item.RequestLoadItemDataByID(itemID)
-                    end
+                    ns.ItemLabel.RequestLoadIfNeeded(itemID, link)
                     local props = PE:BuildProps(itemID, bag, slot)
                     if props and not props.isSoulbound and pred(props) then
                         tinsert(out, {
