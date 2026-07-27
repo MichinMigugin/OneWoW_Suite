@@ -107,6 +107,85 @@ local function SetRowExpire(row, index, daysLeft)
     row.expireHit.mailIndex = index
 end
 
+--- Label + gold amount on one line (Blizzard *_COLON globals already include ":").
+---@param label string
+---@param copper number
+---@return string
+local function InvoiceMoneyLine(label, copper)
+    return label .. " " .. OneWoW.Format.FormatGold(copper)
+end
+
+--- Full AH invoice text for the expand panel (Blizzard OpenMail parity + buyout when distinct).
+---@param index number
+---@return string|nil text
+---@return string|nil invoiceType
+local function BuildInvoiceText(index)
+    local invoiceType, itemName, playerName, bid, buyout, deposit, consignment, _, etaHour, etaMin, count, commerceAuction =
+        GetInboxInvoiceInfo(index)
+    if not invoiceType then
+        return nil, nil
+    end
+
+    bid = bid or 0
+    buyout = buyout or 0
+    deposit = deposit or 0
+    consignment = consignment or 0
+    count = count or 1
+
+    if playerName == nil then
+        playerName = (invoiceType == "buyer") and AUCTION_HOUSE_MAIL_MULTIPLE_SELLERS
+            or AUCTION_HOUSE_MAIL_MULTIPLE_BUYERS
+    end
+
+    local multipleSale = count > 1
+    local displayItem = itemName or ""
+    if multipleSale and itemName then
+        displayItem = string.format(AUCTION_MAIL_ITEM_STACK, itemName, count)
+    end
+
+    local lines = {}
+
+    if invoiceType == "buyer" then
+        tinsert(lines, ITEM_PURCHASED_COLON .. " " .. displayItem)
+        if not commerceAuction then
+            tinsert(lines, SOLD_BY_COLON .. " " .. playerName)
+        end
+        tinsert(lines, InvoiceMoneyLine(AMOUNT_PAID_COLON, bid))
+    elseif invoiceType == "seller" then
+        tinsert(lines, ITEM_SOLD_COLON .. " " .. displayItem)
+        if not commerceAuction then
+            tinsert(lines, PURCHASED_BY_COLON .. " " .. playerName)
+        end
+        local saleCopper = multipleSale and math.floor(bid / count) or bid
+        local saleLine = InvoiceMoneyLine(SALE_PRICE_COLON, saleCopper)
+        if multipleSale then
+            saleLine = saleLine .. "  " .. string.format(AUCTION_HOUSE_MAIL_FORMAT_COUNT, count)
+        end
+        tinsert(lines, saleLine)
+        if buyout > 0 and buyout ~= bid then
+            tinsert(lines, BUYOUT_PRICE .. ": " .. OneWoW.Format.FormatGold(buyout))
+        end
+        tinsert(lines, InvoiceMoneyLine(DEPOSIT_COLON, deposit))
+        tinsert(lines, RED_FONT_COLOR:WrapTextInColorCode(
+            InvoiceMoneyLine(AUCTION_HOUSE_CUT_COLON, consignment)))
+        tinsert(lines, InvoiceMoneyLine(AMOUNT_RECEIVED_COLON, bid + deposit - consignment))
+    elseif invoiceType == "seller_temp_invoice" then
+        tinsert(lines, ITEM_SOLD_COLON .. " " .. displayItem)
+        if not commerceAuction then
+            tinsert(lines, PURCHASED_BY_COLON .. " " .. playerName)
+        end
+        tinsert(lines, InvoiceMoneyLine(AUCTION_INVOICE_PENDING_FUNDS_COLON, bid + deposit - consignment))
+        tinsert(lines, AUCTION_INVOICE_FUNDS_NOT_YET_SENT)
+        if etaHour ~= nil and etaMin ~= nil then
+            tinsert(lines, string.format(AUCTION_INVOICE_FUNDS_DELAY, GameTime_GetFormattedTime(etaHour, etaMin, true)))
+        end
+    else
+        return nil, nil
+    end
+
+    return table.concat(lines, "\n"), invoiceType
+end
+
 --- Whether the expand control should be clickable (button always visible).
 local function MailCanExpand(index, attachments, CODAmount)
     if (attachments or 0) > 1 then
@@ -212,6 +291,8 @@ local function EnsureDetail(row)
     detail.moneyLine:SetPoint("TOPLEFT", detail, "TOPLEFT", DETAIL_PAD, -DETAIL_PAD)
     detail.moneyLine:SetPoint("TOPRIGHT", detail, "TOPRIGHT", -DETAIL_PAD, -DETAIL_PAD)
     detail.moneyLine:SetJustifyH("LEFT")
+    detail.moneyLine:SetJustifyV("TOP")
+    detail.moneyLine:SetWordWrap(true)
     detail.moneyLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     detail.bodyScroll, detail.bodyChild = OneWoW_GUI:CreateScrollFrame(detail, {})
@@ -286,46 +367,68 @@ local function PopulateDetail(row)
     money = money or 0
     CODAmount = CODAmount or 0
 
+    local invoiceText = BuildInvoiceText(index)
     local parts = {}
-    if money > 0 then
+    if invoiceText then
+        tinsert(parts, invoiceText)
+        -- Invoice already includes amount received / paid; skip generic Gold line.
+    elseif money > 0 then
         tinsert(parts, string.format(L["INBOX_STAT_GOLD"], OneWoW.Format.FormatGold(money)))
     end
     if CODAmount > 0 then
         tinsert(parts, COD .. ": " .. OneWoW.Format.FormatGold(CODAmount))
     end
+
+    local contentW = math.max(100, (detail:GetWidth() or 600) - DETAIL_PAD * 2)
+    local moneyH = 0
     if #parts > 0 then
-        detail.moneyLine:SetText(table.concat(parts, "  |  "))
+        detail.moneyLine:SetWidth(contentW)
+        detail.moneyLine:SetText(table.concat(parts, "\n"))
         detail.moneyLine:Show()
-        detail.bodyScroll:ClearAllPoints()
-        detail.bodyScroll:SetPoint("TOPLEFT", detail.moneyLine, "BOTTOMLEFT", 0, -6)
-        detail.bodyScroll:SetPoint("TOPRIGHT", detail, "TOPRIGHT", -DETAIL_PAD, -DETAIL_PAD - 18)
+        moneyH = detail.moneyLine:GetStringHeight() or 12
     else
         detail.moneyLine:SetText("")
         detail.moneyLine:Hide()
-        detail.bodyScroll:ClearAllPoints()
-        detail.bodyScroll:SetPoint("TOPLEFT", detail, "TOPLEFT", DETAIL_PAD, -DETAIL_PAD)
-        detail.bodyScroll:SetPoint("TOPRIGHT", detail, "TOPRIGHT", -DETAIL_PAD, -DETAIL_PAD)
     end
 
     local body = GetInboxText(index)
     body = body and strtrim(body) or ""
-    if body == "" then
-        detail.bodyText:SetText(L["INBOX_NO_BODY"])
-        detail.bodyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    else
-        detail.bodyText:SetText(body)
-        detail.bodyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    end
+    -- Invoice-first: skip empty-body placeholder when the breakdown is shown.
+    local showBody = body ~= "" or not invoiceText
+    local bodyScrollH = 0
+    if showBody then
+        if body == "" then
+            detail.bodyText:SetText(L["INBOX_NO_BODY"])
+            detail.bodyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        else
+            detail.bodyText:SetText(body)
+            detail.bodyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        end
 
-    local scrollW = math.max(100, (detail.bodyChild:GetWidth() or 0))
-    if scrollW <= 1 then
-        scrollW = math.max(100, (detail:GetWidth() or 600) - DETAIL_PAD * 2 - ScrollGutter())
-        detail.bodyChild:SetWidth(scrollW)
+        local scrollW = math.max(100, (detail.bodyChild:GetWidth() or 0))
+        if scrollW <= 1 then
+            scrollW = math.max(100, contentW - ScrollGutter())
+            detail.bodyChild:SetWidth(scrollW)
+        end
+        detail.bodyText:SetWidth(scrollW)
+        local bodyH = detail.bodyText:GetStringHeight() or 12
+        detail.bodyChild:SetHeight(math.max(bodyH, 12))
+        bodyScrollH = math.min(96, math.max(36, bodyH + 4))
+        detail.bodyScroll:SetHeight(bodyScrollH)
+        detail.bodyScroll:Show()
+
+        detail.bodyScroll:ClearAllPoints()
+        if detail.moneyLine:IsShown() then
+            detail.bodyScroll:SetPoint("TOPLEFT", detail.moneyLine, "BOTTOMLEFT", 0, -6)
+            detail.bodyScroll:SetPoint("TOPRIGHT", detail, "TOPRIGHT", -DETAIL_PAD, -(DETAIL_PAD + moneyH + 6))
+        else
+            detail.bodyScroll:SetPoint("TOPLEFT", detail, "TOPLEFT", DETAIL_PAD, -DETAIL_PAD)
+            detail.bodyScroll:SetPoint("TOPRIGHT", detail, "TOPRIGHT", -DETAIL_PAD, -DETAIL_PAD)
+        end
+    else
+        detail.bodyScroll:Hide()
+        detail.bodyScroll:SetHeight(1)
     end
-    detail.bodyText:SetWidth(scrollW)
-    local bodyH = detail.bodyText:GetStringHeight() or 12
-    detail.bodyChild:SetHeight(math.max(bodyH, 12))
-    detail.bodyScroll:SetHeight(math.min(96, math.max(36, bodyH + 4)))
 
     local shown = 0
     for i = 1, MAX_RECV do
@@ -350,17 +453,35 @@ local function PopulateDetail(row)
         end
     end
 
+    detail.attachRow:ClearAllPoints()
+    if showBody then
+        detail.attachRow:SetPoint("TOPLEFT", detail.bodyScroll, "BOTTOMLEFT", 0, -8)
+        detail.attachRow:SetPoint("TOPRIGHT", detail.bodyScroll, "BOTTOMRIGHT", 0, -8)
+    elseif detail.moneyLine:IsShown() then
+        detail.attachRow:SetPoint("TOPLEFT", detail.moneyLine, "BOTTOMLEFT", 0, -8)
+        detail.attachRow:SetPoint("TOPRIGHT", detail.moneyLine, "BOTTOMRIGHT", 0, -8)
+    else
+        detail.attachRow:SetPoint("TOPLEFT", detail, "TOPLEFT", DETAIL_PAD, -DETAIL_PAD)
+        detail.attachRow:SetPoint("TOPRIGHT", detail, "TOPRIGHT", -DETAIL_PAD, -DETAIL_PAD)
+    end
+
+    local height = DETAIL_PAD
+    if detail.moneyLine:IsShown() then
+        height = height + moneyH + (showBody and 6 or 0)
+    end
+    if showBody then
+        height = height + bodyScrollH
+    end
     if shown > 0 then
         detail.attachRow:Show()
         detail.attachRow:SetHeight(ATTACH_SIZE)
-        detail:SetHeight(DETAIL_PAD + (detail.moneyLine:IsShown() and 18 or 0) + 6
-            + detail.bodyScroll:GetHeight() + 8 + ATTACH_SIZE + DETAIL_PAD)
+        height = height + 8 + ATTACH_SIZE + DETAIL_PAD
     else
         detail.attachRow:Hide()
         detail.attachRow:SetHeight(1)
-        detail:SetHeight(DETAIL_PAD + (detail.moneyLine:IsShown() and 18 or 0) + 6
-            + detail.bodyScroll:GetHeight() + DETAIL_PAD)
+        height = height + DETAIL_PAD
     end
+    detail:SetHeight(height)
 
     detail:Show()
 end

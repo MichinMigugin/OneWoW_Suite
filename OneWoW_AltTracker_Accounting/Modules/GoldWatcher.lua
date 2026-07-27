@@ -34,23 +34,31 @@ end
 
 local function recordSellerInvoice(entry)
     local consignment = entry.consignment or 0
-    local gross = entry.amount + consignment
+    local deposit = entry.deposit or 0
+    local sale = entry.bid or 0
+    if sale <= 0 then
+        -- Reconstruct from Blizzard: money = bid + deposit - consignment.
+        sale = (entry.amount or 0) - deposit + consignment
+    end
     ns.Transactions:RecordIncome(
-        "auction_sale", gross, entry.buyer, nil, entry.itemName, entry.quantity, "Auction sold")
+        "auction_sale", sale, entry.buyer, nil, entry.itemName, entry.quantity, "Auction sold")
+    if deposit > 0 then
+        ns.Transactions:RecordIncome(
+            "auction_deposit", deposit, "Auction House", nil, entry.itemName, entry.quantity, "AH deposit refund")
+    end
     if consignment > 0 then
         ns.Transactions:RecordExpense(
             "auction_fee", consignment, "Auction House", nil, entry.itemName, entry.quantity, "AH house cut")
     end
-    -- PLAYER_MONEY only moves by the net mail amount; claim that so GoldWatcher
-    -- does not also write uncategorized / re-claim the sale.
-    if consignment > 0 then
-        ns.Transactions:ClaimAmount(entry.amount)
-    end
+    -- PLAYER_MONEY only moves by the net mail amount; claim that so a later
+    -- GoldWatcher pass does not also write uncategorized / re-claim the sale.
+    ns.Transactions:ClaimAmount(entry.amount)
 end
 
 local function recordBuyerRefund(entry)
     ns.Transactions:RecordIncome(
         "auction_refund", entry.amount, "Auction House", nil, entry.itemName, entry.quantity, "AH refund")
+    ns.Transactions:ClaimAmount(entry.amount)
 end
 
 function GoldWatcher:Initialize()
@@ -108,7 +116,7 @@ function GoldWatcher:ScanInboxForAuctionMail()
     for i = 1, numItems do
         local _, _, _, _, money = GetInboxHeaderInfo(i)
         if money and money > 0 then
-            local invoiceType, itemName, playerName, _, _, _, consignment, _, _, _, count = GetInboxInvoiceInfo(i)
+            local invoiceType, itemName, playerName, bid, _, deposit, consignment, _, _, _, count = GetInboxInvoiceInfo(i)
             itemName = itemName or "Auction Item"
             count = count or 1
 
@@ -123,6 +131,8 @@ function GoldWatcher:ScanInboxForAuctionMail()
                 if not already then
                     table.insert(pendingAuctionSales, {
                         amount = money,
+                        bid = bid or 0,
+                        deposit = deposit or 0,
                         itemName = itemName,
                         buyer = playerName or "Auction House",
                         quantity = count,

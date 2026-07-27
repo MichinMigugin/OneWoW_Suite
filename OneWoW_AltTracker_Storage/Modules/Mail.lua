@@ -129,24 +129,38 @@ function private.RecordMail(index)
     end
 
     local _, _, sender, _, money, CODAmount = GetInboxHeaderInfo(index)
-    local invoiceType, itemName, buyer, _, _, _, consignment, _, _, _, count = GetInboxInvoiceInfo(index)
+    local invoiceType, itemName, buyer, bid, _, deposit, consignment, _, _, _, count = GetInboxInvoiceInfo(index)
     local quantity = count or 1
 
     if invoiceType == "seller" or invoiceType == "seller_temp_invoice" then
         if not money or money == 0 then return true end
         local fee = consignment or 0
-        local gross = money + fee
-        local ok = Accounting.RecordIncome("auction_sale", gross, buyer or "Auction House", nil, itemName, quantity, "Auction sold")
-        if fee > 0 then
-            Accounting.RecordExpense("auction_fee", fee, "Auction House", nil, itemName, quantity, "AH house cut")
-            -- Net mail gold is what PLAYER_MONEY sees; claim it explicitly.
-            Accounting.ClaimAmount(money)
+        local dep = deposit or 0
+        -- Blizzard: money = bid + deposit - consignment. Prefer bid; reconstruct if missing.
+        local sale = bid or 0
+        if sale <= 0 then
+            sale = money - dep + fee
         end
+        local ok = Accounting.RecordIncome(
+            "auction_sale", sale, buyer or "Auction House", nil, itemName, quantity, "Auction sold")
+        if dep > 0 then
+            Accounting.RecordIncome(
+                "auction_deposit", dep, "Auction House", nil, itemName, quantity, "AH deposit refund")
+        end
+        if fee > 0 then
+            Accounting.RecordExpense(
+                "auction_fee", fee, "Auction House", nil, itemName, quantity, "AH house cut")
+        end
+        -- Net mail gold is what PLAYER_MONEY sees; claim it so GoldWatcher
+        -- does not also write uncategorized / re-claim the sale (including fee == 0).
+        Accounting.ClaimAmount(money)
         return ok
 
     elseif invoiceType == "buyer" then
         if money and money > 0 then
-            return Accounting.RecordIncome("auction_refund", money, "Auction House", nil, itemName or "Auction Item", quantity, "AH refund")
+            local ok = Accounting.RecordIncome("auction_refund", money, "Auction House", nil, itemName or "Auction Item", quantity, "AH refund")
+            Accounting.ClaimAmount(money)
+            return ok
         end
         return true
 
@@ -157,8 +171,9 @@ function private.RecordMail(index)
         return true
 
     elseif money and money > 0 and not invoiceType then
-        Accounting.RecordIncome("money_transfer_in", money, sender or "Unknown", nil, "Gold Transfer", nil, "Received via mail")
-        return true
+        local ok = Accounting.RecordIncome("money_transfer_in", money, sender or "Unknown", nil, "Gold Transfer", nil, "Received via mail")
+        Accounting.ClaimAmount(money)
+        return ok
     end
 
     return true
