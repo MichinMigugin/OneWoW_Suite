@@ -664,6 +664,11 @@ function OneWoW_GUI:CreateDataTable(parent, options)
         rows = {},
     }
 
+    -- Public API table (filled below). Deferred layout and OnSizeChanged must call
+    -- through this table so callers can wrap UpdateColumnLayout (e.g. virtualizer
+    -- rebind) and still receive those callbacks.
+    local dataTable = {}
+
     local function UpdateAllRowCells()
         if not headerRow or not headerRow.columnButtons then return end
         if not state.rows then return end
@@ -754,6 +759,8 @@ function OneWoW_GUI:CreateDataTable(parent, options)
 
         UpdateAllRowCells()
     end
+
+    dataTable.UpdateColumnLayout = UpdateColumnLayout
 
     local function UpdateSortIndicators()
         if not headerRow or not headerRow.columnButtons then return end
@@ -855,7 +862,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
     end
 
     headerRow:SetScript("OnSizeChanged", function()
-        C_Timer.After(0.1, function() UpdateColumnLayout() end)
+        C_Timer.After(0.1, function() dataTable.UpdateColumnLayout() end)
     end)
 
     local scrollFrame = CreateFrame("ScrollFrame", nil, inner)
@@ -938,21 +945,18 @@ function OneWoW_GUI:CreateDataTable(parent, options)
         UpdateScrollThumb()
     end)
 
-    C_Timer.After(0.2, function() UpdateColumnLayout() end)
+    C_Timer.After(0.2, function() dataTable.UpdateColumnLayout() end)
 
-    local dataTable = {
-        container = container,
-        inner = inner,
-        headerRow = headerRow,
-        scrollFrame = scrollFrame,
-        scrollContent = scrollContent,
-        scrollTrack = scrollTrack,
-        scrollThumb = scrollThumb,
-        state = state,
-        UpdateColumnLayout = UpdateColumnLayout,
-        UpdateSortIndicators = UpdateSortIndicators,
-        UpdateScrollThumb = UpdateScrollThumb,
-    }
+    dataTable.container = container
+    dataTable.inner = inner
+    dataTable.headerRow = headerRow
+    dataTable.scrollFrame = scrollFrame
+    dataTable.scrollContent = scrollContent
+    dataTable.scrollTrack = scrollTrack
+    dataTable.scrollThumb = scrollThumb
+    dataTable.state = state
+    dataTable.UpdateSortIndicators = UpdateSortIndicators
+    dataTable.UpdateScrollThumb = UpdateScrollThumb
 
     function dataTable:SetColumns(newColumns)
         columns = newColumns
@@ -968,7 +972,7 @@ function OneWoW_GUI:CreateDataTable(parent, options)
         for i, col in ipairs(columns) do
             tinsert(headerRow.columnButtons, MakeHeaderButton(col, i))
         end
-        UpdateColumnLayout()
+        dataTable.UpdateColumnLayout()
     end
 
     function dataTable:GetSortState()

@@ -1490,6 +1490,14 @@ function ns.UI.CreateFinancialsTab(parent)
         if parent.financialsDirty then
             parent.financialsDirty = false
             ns.UI.RefreshFinancialsTab(parent)
+        elseif parent.dataTable then
+            -- First open after a create-time refresh can bind rows before column
+            -- geometry exists; re-run layout (wrap also refreshes the list).
+            C_Timer.After(0.1, function()
+                if parent:IsShown() and parent.dataTable then
+                    parent.dataTable.UpdateColumnLayout()
+                end
+            end)
         end
     end)
 
@@ -1655,6 +1663,11 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
                 financialsTab.statusText:SetText(L["FIN_NO_MATCH"])
             end
         end
+        C_Timer.After(0.1, function()
+            if financialsTab.dataTable then
+                financialsTab.dataTable.UpdateColumnLayout()
+            end
+        end)
         return
     end
 
@@ -1699,4 +1712,12 @@ function ns.UI.RefreshFinancialsTab(financialsTab)
     if financialsTab.statusText then
         financialsTab.statusText:SetText(string.format(L["FIN_STATUS_COUNT"], #transactions))
     end
+
+    -- Mirror Summary: deferred layout through the wrapped API so virtualizer
+    -- rows rebind after columnWidth/columnX exist (first paint race).
+    C_Timer.After(0.1, function()
+        if financialsTab.dataTable then
+            financialsTab.dataTable.UpdateColumnLayout()
+        end
+    end)
 end

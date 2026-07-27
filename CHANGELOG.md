@@ -11,4 +11,7 @@
 - Auction sale mail now records sale price, AH deposit refund, and house cut as separate lines (deposit refund uses the AH Deposit category with note "AH deposit refund")
 - Auction sale and refund mail now always claim their net gold so mailbox gold changes are not double-counted when the house cut is zero
 
+## Fixes
+- Financials transaction list no longer stays blank on first open until the timeframe dropdown is toggled
+
 ---
