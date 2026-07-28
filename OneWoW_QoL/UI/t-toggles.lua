@@ -228,6 +228,14 @@ local function FormatSliderVal(value, step)
     end
 end
 
+--- Match display name or cvar (so "floating" finds floatingCombatText* rows).
+local function ToggleMatchesFilter(entry, filter)
+    if not filter then return true end
+    if (L[entry.name]):lower():find(filter, 1, true) then return true end
+    if entry.cvar and entry.cvar:lower():find(filter, 1, true) then return true end
+    return false
+end
+
 --- FCT *_v2 / WorldTextScale need a refresh flicker to apply (same as AIO).
 local function NeedsFCTRefresh(cvar)
     return cvar == "WorldTextScale_v2"
@@ -262,6 +270,23 @@ local function GetRowDisplay(entry)
         return val, nil
     end
     return val, nil
+end
+
+--- Human-readable value for the detail status bar (On/Off, option label, or slider text).
+local function FormatStatusDisplay(entry)
+    local displayText, isOn = GetRowDisplay(entry)
+    if entry.widget == "checkbox" then
+        if isOn == nil then
+            return displayText or "?"
+        end
+        return isOn and L["TOGGLES_ON"] or L["TOGGLES_OFF"]
+    end
+    return displayText or "?"
+end
+
+local function UpdateRightStatus(split, entry)
+    if not split.rightStatusText or not entry then return end
+    split.rightStatusText:SetText(L[entry.name] .. ": " .. FormatStatusDisplay(entry))
 end
 
 local function UpdateRowIndicator(row, entry)
@@ -344,6 +369,7 @@ local function ShowToggleDetail(split, entry)
             onValueChange = function(newVal)
                 SetToggleCVar(capturedEntry.cvar, newVal and "1" or "0")
                 UpdateRowIndicator(selectedRow, capturedEntry)
+                UpdateRightStatus(split, capturedEntry)
             end,
         })
 
@@ -367,6 +393,7 @@ local function ShowToggleDetail(split, entry)
                 local fmt = FormatSliderVal(val, capturedEntry.step)
                 SetToggleCVar(capturedEntry.cvar, fmt)
                 UpdateRowIndicator(selectedRow, capturedEntry)
+                UpdateRightStatus(split, capturedEntry)
             end,
         })
         sliderWrap:SetPoint("TOPLEFT", child, "TOPLEFT", 12, yOfs)
@@ -392,6 +419,7 @@ local function ShowToggleDetail(split, entry)
             onSelect = function(value)
                 SetToggleCVar(capturedEntry.cvar, value)
                 UpdateRowIndicator(selectedRow, capturedEntry)
+                UpdateRightStatus(split, capturedEntry)
             end,
         })
 
@@ -429,19 +457,7 @@ local function BuildTogglesList(split, filterText)
                 selectedEntry = capturedEntry
                 ShowToggleDetail(split, capturedEntry)
                 self:SetActive(true)
-                if split.rightStatusText then
-                    local curVal = C_CVar.GetCVar(capturedEntry.cvar)
-                    local display = curVal or "?"
-                    if capturedEntry.widget == "dropdown" and capturedEntry.options then
-                        for i, opt in ipairs(capturedEntry.options) do
-                            if curVal == tostring(opt) then
-                                display = L[capturedEntry.optLabels[i]] or capturedEntry.optLabels[i]
-                                break
-                            end
-                        end
-                    end
-                    split.rightStatusText:SetText((L[capturedEntry.name]) .. ": " .. display)
-                end
+                UpdateRightStatus(split, capturedEntry)
             end,
             favoriteToggle = {
                 isFavorite = IsQoLToggleFavorite(entry),
@@ -472,10 +488,8 @@ local function BuildTogglesList(split, filterText)
 
     local favEntries = {}
     for _, entry in ipairs(CVAR_DATA) do
-        if IsQoLToggleFavorite(entry) then
-            if not filter or (L[entry.name]):lower():find(filter, 1, true) then
-                table.insert(favEntries, entry)
-            end
+        if IsQoLToggleFavorite(entry) and ToggleMatchesFilter(entry, filter) then
+            table.insert(favEntries, entry)
         end
     end
     table.sort(favEntries, function(a, b)
@@ -501,10 +515,8 @@ local function BuildTogglesList(split, filterText)
     for _, cat in ipairs(CATEGORY_ORDER) do
         local catEntries = {}
         for _, entry in ipairs(CVAR_DATA) do
-            if entry.cat == cat and not IsQoLToggleFavorite(entry) then
-                if not filter or (L[entry.name]):lower():find(filter, 1, true) then
-                    table.insert(catEntries, entry)
-                end
+            if entry.cat == cat and not IsQoLToggleFavorite(entry) and ToggleMatchesFilter(entry, filter) then
+                table.insert(catEntries, entry)
             end
         end
 
