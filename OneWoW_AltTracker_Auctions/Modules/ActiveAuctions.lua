@@ -1,6 +1,6 @@
 local _, ns = ...
 
-local tinsert, tremove = tinsert, tremove
+local tinsert = tinsert
 local ipairs, pairs = ipairs, pairs
 local floor = floor
 local GetServerTime = GetServerTime
@@ -124,11 +124,6 @@ function ActiveAuctions:RecordHistoryEvent(charData, auction, outcome, goldAmoun
     }
 
     tinsert(charData.auctionHistory, 1, historyEntry)
-
-    if #charData.auctionHistory > 100 then
-        tremove(charData.auctionHistory)
-    end
-
 end
 
 function ActiveAuctions:DetectAuctionOutcomes(_, charData, previousAuctions, currentAuctions, serverTime)

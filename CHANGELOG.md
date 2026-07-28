@@ -16,6 +16,12 @@
 ---
 
 # AltTracker
+## Auctions
+- Auction history is no longer capped at 100 entries
+- Auctions list supports sorting, realm filter, and Bags-style item search (`#` keywords, shortcuts, and the search help button)
+- Expanding an auction row shows full details (timestamps, prices, detection, market/mail when available)
+- Large history lists load in the background so the UI stays responsive
+
 ## Accounting
 - Auction sale mail now records sale price, AH deposit refund, and house cut as separate lines (deposit refund uses the AH Deposit category with note "AH deposit refund")
 - Auction sale and refund mail now always claim their net gold so mailbox gold changes are not double-counted when the house cut is zero

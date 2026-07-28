@@ -2,17 +2,23 @@ local _, ns = ...
 local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
+local SE = OneWoW.SearchExpand
 
 ns.UI = ns.UI or {}
 
 local selectedAltKey = nil
+local selectedRealm = nil
+local itemSearchText = ""
+local currentSortColumn = "time"
+local currentSortAscending = false
 local listEntries = {}
 local expandedByKey = {}
 local listAPI = nil
 local activeAuctionsTab = nil
+local historyJob = nil
 local AUC_ROW_HEIGHT = 32
 local AUC_ROW_GAP = 2
-local AUC_DETAIL_HEIGHT = 50
+local AUC_DETAIL_HEIGHT = 110
 local AUC_TX_STRIDE = AUC_ROW_HEIGHT + AUC_ROW_GAP
 local AUC_DETAIL_STRIDE = AUC_DETAIL_HEIGHT + AUC_ROW_GAP
 
@@ -25,6 +31,7 @@ local columnsConfig = {
     {key = "bid", label = BID, width = 60, fixed = false, align = "left", ttTitle = BID, ttDesc = L["TT_COL_BID_DESC"]},
     {key = "time", label = L["TT_COL_TIME"], width = 50, fixed = true, align = "center", ttTitle = L["TT_COL_TIME"], ttDesc = L["TT_COL_TIME_DESC"]},
     {key = "character", label = CHARACTER, width = 100, fixed = false, align = "left", ttTitle = CHARACTER, ttDesc = L["TT_COL_CHARACTER_AUCTION_DESC"]},
+    {key = "server", label = L["COL_SERVER"], width = 70, fixed = false, align = "left", ttTitle = L["COL_SERVER"], ttDesc = L["TT_COL_SERVER_DESC"]},
     {key = "faction", label = L["COL_FACTION"], width = 25, fixed = true, align = "icon", sortable = false, ttTitle = FACTION, ttDesc = L["TT_COL_FACTION_DESC"]},
     {key = "status", label = STATUS, width = 60, fixed = false, align = "left", ttTitle = STATUS, ttDesc = L["TT_COL_AUCTION_STATUS_DESC"]},
     {key = "delete", label = L["AUCTIONS_COL_DELETE"], width = 50, fixed = true, align = "center", sortable = false, ttTitle = DELETE, ttDesc = L["TT_COL_DELETE_DESC"]}
@@ -37,8 +44,6 @@ local onHeaderCreate = function(btn, col, _)
         icon:SetPoint("CENTER")
         icon:SetAtlas("Gamepad_Rev_Plus_64")
         btn.icon = icon
-        if btn.text then btn.text:SetText("") end
-    elseif col.key == "faction" then
         if btn.text then btn.text:SetText("") end
     end
 end
@@ -118,6 +123,370 @@ local function SetFactionIcon(frame, faction)
     end
 end
 
+local function FormatStamp(ts)
+    if not ts or ts <= 0 then
+        return "-"
+    end
+    return date("%Y-%m-%d %H:%M", ts)
+end
+
+local function FormatDurationSecs(secs)
+    if not secs or secs < 0 then
+        return "-"
+    end
+    if secs < 60 then
+        return math.floor(secs) .. "s"
+    elseif secs < 3600 then
+        return math.floor(secs / 60) .. "m"
+    elseif secs < 86400 then
+        local h = math.floor(secs / 3600)
+        local m = math.floor((secs % 3600) / 60)
+        if m > 0 then
+            return h .. "h " .. m .. "m"
+        end
+        return h .. "h"
+    else
+        local d = math.floor(secs / 86400)
+        local h = math.floor((secs % 86400) / 3600)
+        if h > 0 then
+            return d .. "d " .. h .. "h"
+        end
+        return d .. "d"
+    end
+end
+
+local function DetectionMethodLabel(method)
+    if method == "status_field" then
+        return L["AUCTIONS_DETECT_STATUS"]
+    elseif method == "snapshot_comparison" or method == "snapshot" then
+        return L["AUCTIONS_DETECT_SNAPSHOT"]
+    elseif method == "notification" then
+        return L["AUCTIONS_DETECT_NOTIFICATION"]
+    elseif method == "mail" then
+        return L["MAIL"]
+    end
+    return method or "-"
+end
+
+local function BidTimeLeftLabel(timeLeft)
+    if timeLeft == 0 then
+        return AUCTION_TIME_LEFT0
+    elseif timeLeft == 1 then
+        return AUCTION_TIME_LEFT1
+    elseif timeLeft == 2 then
+        return AUCTION_TIME_LEFT2
+    elseif timeLeft == 3 then
+        return AUCTION_TIME_LEFT3
+    elseif timeLeft == 4 then
+        return AUCTION_TIME_LEFT4
+    end
+    return "-"
+end
+
+local function OutcomeLabel(outcome)
+    if outcome == "sold" then
+        return L["OUTCOME_SOLD"]
+    elseif outcome == "expired" then
+        return L["OUTCOME_EXPIRED"]
+    elseif outcome == "canceled" then
+        return L["OUTCOME_CANCELED"]
+    end
+    return outcome or "-"
+end
+
+local function GetMarketPriceText(itemID, itemLink)
+    local info = OneWoW_AltTracker_Auctions_API.GetPrice(itemID, itemLink)
+    if info and info.price and info.price > 0 then
+        return L["AUCTIONS_EXP_MARKET"] .. " " .. ns.AltTrackerFormatters:FormatGold(info.price)
+    end
+    return nil
+end
+
+local function GetAHMailGoldForItem(charKey, itemName)
+    if not OneWoW_AltTracker_Storage_API or not itemName then
+        return 0
+    end
+    local storageData = OneWoW_AltTracker_Storage_API.GetCharacters()[charKey]
+    if not (storageData and storageData.mail and storageData.mail.mails) then
+        return 0
+    end
+    local total = 0
+    for _, mailData in pairs(storageData.mail.mails) do
+        if mailData.sender and (mailData.sender == "Auction House" or mailData.sender == "The Auction House")
+            and mailData.money and mailData.money > 0 then
+            local subjectItem = mailData.subject and mailData.subject:match("Auction successful: (.+)")
+            if subjectItem then
+                subjectItem = subjectItem:match("^(.-)%s*%(%d+%)$") or subjectItem
+                if subjectItem == itemName then
+                    total = total + mailData.money
+                end
+            end
+        end
+    end
+    return total
+end
+
+local function EntryEachAmount(entry)
+    local history = entry.history
+    local auction = entry.auction
+    local bid = entry.bid
+    if history then
+        local qty = history.quantity or 0
+        return qty > 0 and math.floor((history.listPrice or 0) / qty) or 0
+    elseif auction then
+        local qty = auction.quantity or 0
+        return qty > 0 and math.floor((auction.buyoutAmount or 0) / qty) or 0
+    elseif bid then
+        local qty = bid.quantity or 0
+        return qty > 0 and math.floor((bid.bidAmount or 0) / qty) or 0
+    end
+    return 0
+end
+
+local function EntryTotalAmount(entry)
+    local history = entry.history
+    local auction = entry.auction
+    local bid = entry.bid
+    if history then
+        return history.listPrice or 0
+    elseif auction then
+        return auction.buyoutAmount or 0
+    elseif bid then
+        return bid.bidAmount or 0
+    end
+    return 0
+end
+
+local function EntryBidAmount(entry)
+    local history = entry.history
+    local auction = entry.auction
+    local bid = entry.bid
+    if history then
+        return history.salePrice or 0
+    elseif auction then
+        return auction.bidAmount or 0
+    elseif bid then
+        return bid.bidAmount or 0
+    end
+    return 0
+end
+
+local function EntryTimeValue(entry)
+    local history = entry.history
+    local auction = entry.auction
+    local bid = entry.bid
+    if history then
+        return history.timestamp or 0
+    elseif auction then
+        return auction.endsAt or 0
+    elseif bid then
+        return bid.collectedAt or 0
+    end
+    return 0
+end
+
+local function EntryStatusSortKey(entry)
+    if entry.type == "history" and entry.history then
+        return entry.history.outcome or ""
+    elseif entry.type == "auction" then
+        return "active"
+    elseif entry.type == "bid" then
+        return "bidding"
+    end
+    return ""
+end
+
+local function CompareAuctionEntries(a, b)
+    local aVal, bVal
+
+    if currentSortColumn == "item" then
+        local aItem = AuctionItemData(a)
+        local bItem = AuctionItemData(b)
+        aVal = (aItem and aItem.itemName) or ""
+        bVal = (bItem and bItem.itemName) or ""
+    elseif currentSortColumn == "qty" then
+        local aItem = AuctionItemData(a)
+        local bItem = AuctionItemData(b)
+        aVal = (aItem and aItem.quantity) or 0
+        bVal = (bItem and bItem.quantity) or 0
+    elseif currentSortColumn == "each" then
+        aVal = EntryEachAmount(a)
+        bVal = EntryEachAmount(b)
+    elseif currentSortColumn == "total" then
+        aVal = EntryTotalAmount(a)
+        bVal = EntryTotalAmount(b)
+    elseif currentSortColumn == "bid" then
+        aVal = EntryBidAmount(a)
+        bVal = EntryBidAmount(b)
+    elseif currentSortColumn == "time" then
+        aVal = EntryTimeValue(a)
+        bVal = EntryTimeValue(b)
+    elseif currentSortColumn == "character" then
+        aVal = (a.charData and a.charData.name) or a.charKey or ""
+        bVal = (b.charData and b.charData.name) or b.charKey or ""
+    elseif currentSortColumn == "server" then
+        aVal = (a.charData and a.charData.realm) or ""
+        bVal = (b.charData and b.charData.realm) or ""
+    elseif currentSortColumn == "status" then
+        aVal = EntryStatusSortKey(a)
+        bVal = EntryStatusSortKey(b)
+    else
+        aVal = EntryTimeValue(a)
+        bVal = EntryTimeValue(b)
+    end
+
+    if aVal == bVal then
+        return false
+    end
+    if currentSortAscending then
+        return aVal < bVal
+    end
+    return aVal > bVal
+end
+
+-- PredicateEngine + SearchExpand (#tokens / saved shortcuts), matching Items/Bank.
+-- Falls back to literal name substring if compile/eval fails.
+local function MatchesItemSearch(entry, searchText)
+    if not searchText or searchText == "" then
+        return true
+    end
+    local item = AuctionItemData(entry)
+    if not item then
+        return false
+    end
+    if item.itemID then
+        local itemInfo = {
+            hyperlink = item.itemLink,
+            count = item.quantity or 1,
+            quality = item.itemRarity,
+        }
+        local ok, matched = pcall(SE.CheckItem, SE, searchText, item.itemID, nil, nil, itemInfo)
+        if ok then
+            return matched == true
+        end
+    end
+    local name = item.itemName
+    return name and name:lower():find(searchText:lower(), 1, true) ~= nil
+end
+
+local function ApplyRealmAndSearch(auctions)
+    local searchText = itemSearchText or ""
+    local filtered = {}
+    for _, entry in ipairs(auctions) do
+        local realm = entry.charData and entry.charData.realm or ""
+        if (not selectedRealm or realm == selectedRealm) and MatchesItemSearch(entry, searchText) then
+            tinsert(filtered, entry)
+        end
+    end
+    return filtered
+end
+
+local function GatherRealms(auctions)
+    local seen = {}
+    local realms = {}
+    for _, entry in ipairs(auctions) do
+        local realm = entry.charData and entry.charData.realm
+        if realm and realm ~= "" and not seen[realm] then
+            seen[realm] = true
+            tinsert(realms, realm)
+        end
+    end
+    sort(realms)
+    return realms
+end
+
+local function CharDisplayData(charKey)
+    local charInfo = OneWoW_AltTracker_Character_API and OneWoW_AltTracker_Character_API.GetCharacterData(charKey)
+    return {
+        name = (charInfo and charInfo.name) or charKey:match("^([^%-]+)"),
+        class = (charInfo and charInfo.class) or "WARRIOR",
+        faction = (charInfo and charInfo.faction) or "Alliance",
+        realm = (charInfo and charInfo.realm) or charKey:match("-(.+)$") or "",
+    }
+end
+
+local function CollectTypeFilteredAuctions(currentFilter, shouldYield)
+    local allAuctions = {}
+    local YieldIfNeeded = OneWoW.ChunkedJob.YieldIfNeeded
+
+    for charKey, auctionData in pairs(OneWoW_AltTracker_Auctions_API.GetCharacters()) do
+        if not selectedAltKey or charKey == selectedAltKey then
+            local charDisplayData = CharDisplayData(charKey)
+
+            if currentFilter == "history" then
+                if auctionData.auctionHistory then
+                    for _, historyEvent in ipairs(auctionData.auctionHistory) do
+                        tinsert(allAuctions, {
+                            charKey = charKey,
+                            charData = charDisplayData,
+                            history = historyEvent,
+                            type = "history",
+                        })
+                        if shouldYield then
+                            YieldIfNeeded(shouldYield)
+                        end
+                    end
+                end
+            elseif currentFilter == "expiring" then
+                if auctionData.activeAuctions then
+                    local serverTime = GetServerTime()
+                    local twoHours = 7200
+                    for _, auction in ipairs(auctionData.activeAuctions) do
+                        if auction.endsAt then
+                            local timeLeft = auction.endsAt - serverTime
+                            if timeLeft > 0 and timeLeft < twoHours then
+                                tinsert(allAuctions, {
+                                    charKey = charKey,
+                                    charData = charDisplayData,
+                                    auction = auction,
+                                    type = "auction",
+                                    sortValue = timeLeft,
+                                })
+                            end
+                        end
+                        if shouldYield then
+                            YieldIfNeeded(shouldYield)
+                        end
+                    end
+                end
+            else
+                if auctionData.activeAuctions and (currentFilter == "all" or currentFilter == "auctions") then
+                    for _, auction in ipairs(auctionData.activeAuctions) do
+                        tinsert(allAuctions, {
+                            charKey = charKey,
+                            charData = charDisplayData,
+                            auction = auction,
+                            type = "auction",
+                        })
+                        if shouldYield then
+                            YieldIfNeeded(shouldYield)
+                        end
+                    end
+                end
+
+                if auctionData.activeBids and (currentFilter == "all" or currentFilter == "bids") then
+                    for _, bid in ipairs(auctionData.activeBids) do
+                        tinsert(allAuctions, {
+                            charKey = charKey,
+                            charData = charDisplayData,
+                            bid = bid,
+                            type = "bid",
+                        })
+                        if shouldYield then
+                            YieldIfNeeded(shouldYield)
+                        end
+                    end
+                end
+            end
+        end
+        if shouldYield then
+            YieldIfNeeded(shouldYield)
+        end
+    end
+
+    return allAuctions
+end
+
 local function ToggleAuctionExpand(entry)
     local key = AuctionExpandKey(entry)
     if key == "" then
@@ -188,6 +557,141 @@ local function DeleteAuctionEntry(entry)
     if tab and ns.UI.RefreshAuctionsTab then
         ns.UI.RefreshAuctionsTab(tab)
     end
+end
+
+local function HideDetailLines(row)
+    if row.detailLine1 then row.detailLine1:Hide() end
+    if row.detailLine2 then row.detailLine2:Hide() end
+    if row.detailLine3 then row.detailLine3:Hide() end
+    if row.detailLine4 then row.detailLine4:Hide() end
+end
+
+local function ShowDetailLines(row, lines)
+    local prev
+    for i = 1, 4 do
+        local fs = row["detailLine" .. i]
+        local text = lines[i]
+        if text and text ~= "" then
+            fs:ClearAllPoints()
+            if prev then
+                fs:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", 0, -2)
+                fs:SetPoint("TOPRIGHT", row, "TOPRIGHT", -8, 0)
+            else
+                fs:SetPoint("TOPLEFT", row, "TOPLEFT", 28, -6)
+                fs:SetPoint("TOPRIGHT", row, "TOPRIGHT", -8, -6)
+            end
+            fs:SetText(text)
+            fs:SetTextColor(OneWoW_GUI:GetThemeColor(i == 1 and "TEXT_SECONDARY" or "TEXT_MUTED"))
+            fs:Show()
+            prev = fs
+        else
+            fs:Hide()
+        end
+    end
+end
+
+local function BuildExpandDetailLines(entry)
+    local lines = {}
+    local history = entry.history
+    local auction = entry.auction
+    local bid = entry.bid
+    local item = AuctionItemData(entry)
+    local fmt = ns.AltTrackerFormatters
+
+    if history then
+        lines[1] = L["ID"] .. " " .. tostring(history.auctionID or "?")
+        lines[2] = table.concat({
+            L["AUCTIONS_EXP_POSTED"] .. " " .. FormatStamp(history.postedAt),
+            L["AUCTIONS_EXP_ENDED"] .. " " .. FormatStamp(history.timestamp),
+            L["AUCTIONS_EXP_DURATION"] .. " " .. FormatDurationSecs(history.duration),
+        }, "  |  ")
+        local listPrice = history.listPrice or 0
+        local salePrice = history.salePrice or 0
+        local delta = salePrice - listPrice
+        local deltaText = fmt:FormatGold(math.abs(delta))
+        if delta > 0 then
+            deltaText = "+" .. deltaText
+        elseif delta < 0 then
+            deltaText = "-" .. deltaText
+        end
+        lines[3] = table.concat({
+            L["AUCTIONS_EXP_LIST"] .. " " .. fmt:FormatGold(listPrice),
+            L["AUCTIONS_EXP_SALE"] .. " " .. (salePrice > 0 and fmt:FormatGold(salePrice) or "-"),
+            L["AUCTIONS_EXP_DELTA"] .. " " .. deltaText,
+        }, "  |  ")
+
+        local parts = {
+            OutcomeLabel(history.outcome),
+            L["AUCTIONS_EXP_DETECT"] .. " " .. DetectionMethodLabel(history.detectionMethod),
+            L["AUCTIONS_EXP_CONFIRMED"] .. " " .. (history.confirmed and YES or NO),
+            L["AUCTIONS_COL_QTY"] .. " " .. tostring(history.quantity or 1),
+        }
+        if history.itemLevel and history.itemLevel > 0 then
+            tinsert(parts, ITEM_LEVEL_ABBR .. " " .. tostring(history.itemLevel))
+        end
+        local mailGold = GetAHMailGoldForItem(entry.charKey, history.itemName)
+        if mailGold > 0 then
+            tinsert(parts, L["AUCTIONS_EXP_MAIL_GOLD"] .. " " .. fmt:FormatGold(mailGold))
+        end
+        local market = GetMarketPriceText(history.itemID, history.itemLink)
+        if market then
+            tinsert(parts, market)
+        end
+        lines[4] = table.concat(parts, "  |  ")
+    elseif auction then
+        lines[1] = L["ID"] .. " " .. tostring(auction.auctionID or "?")
+        local remaining = auction.endsAt and (auction.endsAt - GetServerTime()) or 0
+        lines[2] = table.concat({
+            L["TT_COL_TIME"] .. ": " .. FormatStamp(auction.endsAt),
+            remaining > 0 and FormatDurationSecs(remaining) or L["AUCTION_TIME_ENDED"],
+        }, "  |  ")
+        local qty = auction.quantity or 1
+        local each = qty > 0 and math.floor((auction.buyoutAmount or 0) / qty) or 0
+        lines[3] = table.concat({
+            BID .. ": " .. fmt:FormatGold(auction.bidAmount or 0),
+            BUYOUT .. ": " .. fmt:FormatGold(auction.buyoutAmount or 0),
+            L["TT_COL_EACH"] .. ": " .. fmt:FormatGold(each),
+        }, "  |  ")
+        local parts = {
+            L["AUCTIONS_EXP_BIDDER"] .. " " .. (auction.bidder or "-"),
+            STATUS .. ": " .. tostring(auction.status or "-"),
+            L["AUCTIONS_EXP_COLLECTED"] .. " " .. FormatStamp(auction.collectedAt),
+            L["AUCTIONS_COL_QTY"] .. " " .. tostring(qty),
+        }
+        if auction.itemLevel and auction.itemLevel > 0 then
+            tinsert(parts, ITEM_LEVEL_ABBR .. " " .. tostring(auction.itemLevel))
+        end
+        local market = GetMarketPriceText(auction.itemID, auction.itemLink)
+        if market then
+            tinsert(parts, market)
+        end
+        lines[4] = table.concat(parts, "  |  ")
+    elseif bid then
+        lines[1] = L["ID"] .. " " .. tostring(bid.auctionID or "?")
+        lines[2] = table.concat({
+            L["AUCTIONS_EXP_MIN_BID"] .. " " .. fmt:FormatGold(bid.minBid or 0),
+            BID .. ": " .. fmt:FormatGold(bid.bidAmount or 0),
+            BUYOUT .. ": " .. fmt:FormatGold(bid.buyoutAmount or 0),
+        }, "  |  ")
+        lines[3] = L["TT_COL_TIME"] .. ": " .. BidTimeLeftLabel(bid.timeLeft)
+        local parts = {
+            L["AUCTIONS_EXP_BIDDER"] .. " " .. (bid.bidder or "-"),
+            L["AUCTIONS_EXP_COLLECTED"] .. " " .. FormatStamp(bid.collectedAt),
+        }
+        if item and item.quantity then
+            tinsert(parts, L["AUCTIONS_COL_QTY"] .. " " .. tostring(item.quantity))
+        end
+        if item and item.itemLevel and item.itemLevel > 0 then
+            tinsert(parts, ITEM_LEVEL_ABBR .. " " .. tostring(item.itemLevel))
+        end
+        local market = GetMarketPriceText(bid.itemID, bid.itemLink)
+        if market then
+            tinsert(parts, market)
+        end
+        lines[4] = table.concat(parts, "  |  ")
+    end
+
+    return lines
 end
 
 local function CreateAuctionListRow(parent, _)
@@ -326,6 +830,10 @@ local function CreateAuctionListRow(parent, _)
     charNameText:SetJustifyH("LEFT")
     row.charNameText = charNameText
 
+    local serverText = OneWoW_GUI:CreateFS(row, 12)
+    serverText:SetJustifyH("LEFT")
+    row.serverText = serverText
+
     local factionCell = OneWoW_GUI:CreateFactionIcon(row, { faction = "Alliance" })
     row.factionCell = factionCell
 
@@ -350,15 +858,19 @@ local function CreateAuctionListRow(parent, _)
         bidText,
         timeContainer,
         charNameText,
+        serverText,
         factionCell,
         statusText,
         deleteBtn,
     }
 
-    local detailText = OneWoW_GUI:CreateFS(row, 12)
-    detailText:SetJustifyH("CENTER")
-    detailText:Hide()
-    row.detailText = detailText
+    for i = 1, 4 do
+        local detailLine = OneWoW_GUI:CreateFS(row, 10)
+        detailLine:SetJustifyH("LEFT")
+        detailLine:SetWordWrap(false)
+        detailLine:Hide()
+        row["detailLine" .. i] = detailLine
+    end
 
     row:SetScript("OnEnter", function(myself)
         if myself.entry and myself.entry.type == "row" then
@@ -399,15 +911,11 @@ local function BindAuctionListRow(row, _, listEntry, _)
         row.normalBgColor = nil
         row.bg:SetColorTexture(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
         row.bg:SetAlpha(0.7)
-        row.detailText:ClearAllPoints()
-        row.detailText:SetPoint("CENTER")
-        row.detailText:SetText(L["EXPANDED_DETAILS_SOON"])
-        row.detailText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        row.detailText:Show()
+        ShowDetailLines(row, BuildExpandDetailLines(entry))
         return
     end
 
-    row.detailText:Hide()
+    HideDetailLines(row)
     for _, cell in ipairs(row.cells) do
         cell:Show()
     end
@@ -551,6 +1059,9 @@ local function BindAuctionListRow(row, _, listEntry, _)
         row.charNameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     end
 
+    row.serverText:SetText(charData.realm or "")
+    row.serverText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
     SetFactionIcon(row.factionCell, charData.faction)
 
     if isHistory then
@@ -576,6 +1087,36 @@ local function BindAuctionListRow(row, _, listEntry, _)
     end
 
     LayoutAuctionCells(row, dt)
+end
+
+local function FinishAuctionsList(auctionsTab, allAuctions)
+    auctionsTab._auctions = allAuctions
+    BuildAuctionListEntries(allAuctions)
+    if listAPI then
+        listAPI.Refresh()
+    end
+
+    if auctionsTab.statusText then
+        if #allAuctions == 0 then
+            auctionsTab.statusText:SetText(L["NO_AUCTIONS_FOUND"])
+        else
+            auctionsTab.statusText:SetText(string.format(L["AUCTIONS_STATUS_COUNT"], #allAuctions))
+        end
+    end
+
+    ns.UI.RefreshAuctionsStats(auctionsTab)
+
+    if auctionsTab.UpdateMailIcon then
+        auctionsTab.UpdateMailIcon()
+    end
+
+    OneWoW_GUI:ApplyFontToFrame(auctionsTab)
+
+    C_Timer.After(0.1, function()
+        if auctionsTab.headerRow then
+            auctionsTab.headerRow:GetScript("OnSizeChanged")(auctionsTab.headerRow)
+        end
+    end)
 end
 
 function ns.UI.CreateAuctionsTab(parent)
@@ -654,7 +1195,7 @@ function ns.UI.CreateAuctionsTab(parent)
                         local itemName = mailData.subject and mailData.subject:match("Auction successful: (.+)")
                         if itemName then
                             itemName = itemName:match("^(.-)%s*%(%d+%)$") or itemName
-                            table.insert(auctionItems, {
+                            tinsert(auctionItems, {
                                 name = itemName,
                                 gold = mailData.money
                             })
@@ -698,6 +1239,35 @@ function ns.UI.CreateAuctionsTab(parent)
     })
     altDropdown:SetPoint("LEFT", mailIconButton, "RIGHT", 4, 0)
 
+    local realmDropdown, realmDropdownText = OneWoW_GUI:CreateDropdown(filterPanel, {
+        width = 130, height = 28, text = L["AUCTIONS_ALL_REALMS"]
+    })
+    realmDropdown:SetPoint("LEFT", altDropdown, "RIGHT", 4, 0)
+
+    local searchDebounce
+    local searchBox = OneWoW_GUI:CreateEditBox(filterPanel, {
+        width = 160,
+        height = 24,
+        placeholderText = L["SEARCH_ITEMS"],
+        onTextChanged = function(text)
+            if searchDebounce then
+                searchDebounce:Cancel()
+                searchDebounce = nil
+            end
+            searchDebounce = C_Timer.NewTimer(0.3, function()
+                searchDebounce = nil
+                itemSearchText = text or ""
+                if ns.UI.RefreshAuctionsTab then
+                    ns.UI.RefreshAuctionsTab(parent)
+                end
+            end)
+        end,
+    })
+    searchBox:SetPoint("LEFT", realmDropdown, "RIGHT", 4, 0)
+    OneWoW_GUI:AttachSearchTooltip(searchBox)
+    local searchHelpBtn = OneWoW_GUI:CreateKeywordHelpButton(filterPanel, { editBox = searchBox, size = 20 })
+    searchHelpBtn:SetPoint("LEFT", searchBox, "RIGHT", 4, 0)
+
     local filterButtons = {}
     local filterOptions = {
         {key = "all", label = ALL, tooltip = L["AUCTIONS_FILTER_ALL_DESC"]},
@@ -710,7 +1280,7 @@ function ns.UI.CreateAuctionsTab(parent)
     for i, option in ipairs(filterOptions) do
         local btn = OneWoW_GUI:CreateFitTextButton(filterPanel, { text = option.label, height = 24 })
         if i == 1 then
-            btn:SetPoint("LEFT", altDropdown, "RIGHT", 4, 0)
+            btn:SetPoint("LEFT", searchHelpBtn, "RIGHT", 4, 0)
         else
             btn:SetPoint("LEFT", filterButtons[i - 1], "RIGHT", 4, 0)
         end
@@ -760,7 +1330,7 @@ function ns.UI.CreateAuctionsTab(parent)
         end
 
         btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-        table.insert(filterButtons, btn)
+        tinsert(filterButtons, btn)
     end
 
     local function InitializeAltDropdown()
@@ -779,11 +1349,11 @@ function ns.UI.CreateAuctionsTab(parent)
             if hasData then
                 local charInfo = OneWoW_AltTracker_Character_API and OneWoW_AltTracker_Character_API.GetCharacterData(charKey)
                 local charName = (charInfo and charInfo.name) or charKey:match("^([^%-]+)") or charKey
-                table.insert(altList, { key = charKey, name = charName })
+                tinsert(altList, { key = charKey, name = charName })
             end
         end
 
-        table.sort(altList, function(a, b) return a.name < b.name end)
+        sort(altList, function(a, b) return a.name < b.name end)
 
         if not selectedAltKey then
             altDropdownText:SetText(L["AUCTIONS_ALL_ALTS"])
@@ -807,12 +1377,12 @@ function ns.UI.CreateAuctionsTab(parent)
             menuHeight = 314,
             buildItems = function()
                 local items = {}
-                table.insert(items, {
+                tinsert(items, {
                     text = L["AUCTIONS_ALL_ALTS"],
                     value = nil,
                 })
                 for _, alt in ipairs(altList) do
-                    table.insert(items, {
+                    tinsert(items, {
                         text = alt.name,
                         value = alt.key,
                     })
@@ -832,9 +1402,65 @@ function ns.UI.CreateAuctionsTab(parent)
         })
     end
 
+    local function RebuildRealmDropdown(realmList)
+        local realms = realmList or {}
+
+        if selectedRealm then
+            local found = false
+            for _, realm in ipairs(realms) do
+                if realm == selectedRealm then
+                    found = true
+                    break
+                end
+            end
+            if not found then
+                selectedRealm = nil
+            end
+        end
+
+        if selectedRealm then
+            realmDropdownText:SetText(selectedRealm)
+        else
+            realmDropdownText:SetText(L["AUCTIONS_ALL_REALMS"])
+        end
+
+        OneWoW_GUI:AttachFilterMenu(realmDropdown, {
+            searchable = (#realms > 5),
+            menuHeight = 314,
+            buildItems = function()
+                local items = {}
+                tinsert(items, {
+                    text = L["AUCTIONS_ALL_REALMS"],
+                    value = nil,
+                })
+                for _, realm in ipairs(realms) do
+                    tinsert(items, {
+                        text = realm,
+                        value = realm,
+                    })
+                end
+                return items
+            end,
+            getActiveValue = function()
+                return selectedRealm
+            end,
+            onSelect = function(value, text)
+                selectedRealm = value
+                realmDropdown._text:SetText(text)
+                if ns.UI.RefreshAuctionsTab then
+                    ns.UI.RefreshAuctionsTab(parent)
+                end
+            end,
+        })
+    end
+
     InitializeAltDropdown()
+    RebuildRealmDropdown({})
     parent.RebuildAltDropdown = InitializeAltDropdown
+    parent.RebuildRealmDropdown = RebuildRealmDropdown
     parent.altDropdown = altDropdown
+    parent.realmDropdown = realmDropdown
+    parent.searchBox = searchBox
 
     local rosterPanel = OneWoW_GUI:CreateFrame(parent, {})
     rosterPanel:SetPoint("TOPLEFT", filterPanel, "BOTTOMLEFT", 0, -5)
@@ -845,7 +1471,9 @@ function ns.UI.CreateAuctionsTab(parent)
         columns = columnsConfig,
         headerHeight = 26,
         onHeaderCreate = onHeaderCreate,
-        onSort = function(_, _)
+        onSort = function(sortColumn, sortAscending)
+            currentSortColumn = sortColumn
+            currentSortAscending = sortAscending
             ns.UI.RefreshAuctionsTab(parent)
             C_Timer.After(0.1, function() dt.UpdateSortIndicators() end)
         end,
@@ -914,6 +1542,11 @@ end
 function ns.UI.RefreshAuctionsTab(auctionsTab)
     if not auctionsTab then return end
 
+    if historyJob then
+        historyJob:Cancel()
+        historyJob = nil
+    end
+
     if not OneWoW_AltTracker_Auctions_API then
         wipe(listEntries)
         if listAPI then
@@ -929,101 +1562,72 @@ function ns.UI.RefreshAuctionsTab(auctionsTab)
     end
 
     local currentFilter = auctionsTab.auctionFilter or "all"
-    local allAuctions = {}
 
-    for charKey, auctionData in pairs(OneWoW_AltTracker_Auctions_API.GetCharacters()) do
-        if not selectedAltKey or charKey == selectedAltKey then
-        local charInfo = OneWoW_AltTracker_Character_API and OneWoW_AltTracker_Character_API.GetCharacterData(charKey)
-
-        local charDisplayData = {
-            name = (charInfo and charInfo.name) or charKey:match("^([^%-]+)"),
-            class = (charInfo and charInfo.class) or "WARRIOR",
-            faction = (charInfo and charInfo.faction) or "Alliance"
-        }
-
-        if currentFilter == "history" then
-            if auctionData.auctionHistory then
-                for _, historyEvent in ipairs(auctionData.auctionHistory) do
-                    tinsert(allAuctions, {
-                        charKey = charKey,
-                        charData = charDisplayData,
-                        history = historyEvent,
-                        type = "history"
-                    })
+    if currentFilter == "history" then
+        local built = {}
+        local realmsForMenu = {}
+        local job
+        job = OneWoW.ChunkedJob.Start({
+            run = function(shouldYield)
+                wipe(built)
+                wipe(realmsForMenu)
+                local typeFiltered = CollectTypeFilteredAuctions(currentFilter, shouldYield)
+                for _, realm in ipairs(GatherRealms(typeFiltered)) do
+                    tinsert(realmsForMenu, realm)
                 end
-            end
-        elseif currentFilter == "expiring" then
-            if auctionData.activeAuctions then
-                local serverTime = GetServerTime()
-                local twoHours = 7200
-                for _, auction in ipairs(auctionData.activeAuctions) do
-                    if auction.endsAt then
-                        local timeLeft = auction.endsAt - serverTime
-                        if timeLeft > 0 and timeLeft < twoHours then
-                            tinsert(allAuctions, {
-                                charKey = charKey,
-                                charData = charDisplayData,
-                                auction = auction,
-                                type = "auction",
-                                sortValue = timeLeft
-                            })
+                if selectedRealm then
+                    local found = false
+                    for _, realm in ipairs(realmsForMenu) do
+                        if realm == selectedRealm then
+                            found = true
+                            break
                         end
                     end
+                    if not found then
+                        selectedRealm = nil
+                    end
                 end
-            end
-        else
-            if auctionData.activeAuctions and (currentFilter == "all" or currentFilter == "auctions") then
-                for _, auction in ipairs(auctionData.activeAuctions) do
-                    tinsert(allAuctions, {
-                        charKey = charKey,
-                        charData = charDisplayData,
-                        auction = auction,
-                        type = "auction"
-                    })
+                local filtered = ApplyRealmAndSearch(typeFiltered)
+                for _, entry in ipairs(filtered) do
+                    tinsert(built, entry)
+                    OneWoW.ChunkedJob.YieldIfNeeded(shouldYield)
                 end
-            end
-
-            if auctionData.activeBids and (currentFilter == "all" or currentFilter == "bids") then
-                for _, bid in ipairs(auctionData.activeBids) do
-                    tinsert(allAuctions, {
-                        charKey = charKey,
-                        charData = charDisplayData,
-                        bid = bid,
-                        type = "bid"
-                    })
+                OneWoW.ChunkedJob.Sort(built, CompareAuctionEntries, shouldYield)
+            end,
+            onProgress = function()
+                if auctionsTab.statusText then
+                    auctionsTab.statusText:SetText(string.format(L["AUCTIONS_STATUS_LOADING"], #built))
                 end
-            end
+            end,
+            onComplete = function()
+                if historyJob == job then
+                    historyJob = nil
+                end
+                if auctionsTab.RebuildRealmDropdown then
+                    auctionsTab.RebuildRealmDropdown(realmsForMenu)
+                end
+                FinishAuctionsList(auctionsTab, built)
+            end,
+            onCancel = function()
+                if historyJob == job then
+                    historyJob = nil
+                end
+            end,
+        })
+        historyJob = job
+        if auctionsTab.statusText then
+            auctionsTab.statusText:SetText(string.format(L["AUCTIONS_STATUS_LOADING"], 0))
         end
-        end
+        return
     end
 
-    auctionsTab._auctions = allAuctions
-    BuildAuctionListEntries(allAuctions)
-    if listAPI then
-        listAPI.Refresh()
+    local typeFiltered = CollectTypeFilteredAuctions(currentFilter, nil)
+    if auctionsTab.RebuildRealmDropdown then
+        auctionsTab.RebuildRealmDropdown(GatherRealms(typeFiltered))
     end
-
-    if auctionsTab.statusText then
-        if #allAuctions == 0 then
-            auctionsTab.statusText:SetText(L["NO_AUCTIONS_FOUND"])
-        else
-            auctionsTab.statusText:SetText(string.format(L["AUCTIONS_STATUS_COUNT"], #allAuctions))
-        end
-    end
-
-    ns.UI.RefreshAuctionsStats(auctionsTab)
-
-    if auctionsTab.UpdateMailIcon then
-        auctionsTab.UpdateMailIcon()
-    end
-
-    OneWoW_GUI:ApplyFontToFrame(auctionsTab)
-
-    C_Timer.After(0.1, function()
-        if auctionsTab.headerRow then
-            auctionsTab.headerRow:GetScript("OnSizeChanged")(auctionsTab.headerRow)
-        end
-    end)
+    local allAuctions = ApplyRealmAndSearch(typeFiltered)
+    sort(allAuctions, CompareAuctionEntries)
+    FinishAuctionsList(auctionsTab, allAuctions)
 end
 
 function ns.UI.RefreshAuctionsStats(auctionsTab)
