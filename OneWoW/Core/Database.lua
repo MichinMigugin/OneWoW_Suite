@@ -5,6 +5,8 @@ local OneWoW_GUI = OneWoW_GUI
 local DB = OneWoW_GUI.DB
 
 local strfind = string.find
+local strmatch = string.match
+local strgsub = string.gsub
 
 local DEFAULTS = {
     language = GetLocale(),
@@ -454,7 +456,29 @@ end
 -- silently missed a branch would make pruning unsafe. Over-reporting is the
 -- safe direction here — the worst case is keeping a former name a little
 -- longer, where the worst case of under-reporting is breaking a restore.
+--
+-- Known-impossible neighborhoods are skipped so Reference check is not flooded
+-- by packed CVar blobs (`v21##…##0G##…`) or macro `#showtooltip` text — search
+-- syntax never lives there. Real expression fields under addonSettings /
+-- searchCatalog keep being walked.
 local MAX_SNAPSHOT_DEPTH = 12
+
+local SNAPSHOT_SKIP_KEYS = {
+    cvars = true,
+    accountMacros = true,
+    characterMacros = true,
+    macros = true,
+}
+
+-- Blizzard packed UI-state CVars (reputation headers, currency categories, …).
+local function IsPackedBlizzardState(text)
+    return strmatch(text, "^v%d+#+") ~= nil
+end
+
+-- Macro UI directives are not catalog tokens.
+local function StripMacroDirectives(text)
+    return (strgsub(text, "#[Ss][Hh][Oo][Ww][%w_]*", ""))
+end
 
 -- A snapshot is mostly strings that cannot possibly hold a reference — cvar
 -- values, texture names, anchor points, addon names. Keeping only the ones
@@ -462,6 +486,8 @@ local MAX_SNAPSHOT_DEPTH = 12
 -- without narrowing what is found: a string with no `#`, `SAVED(`, or
 -- `CATEGORY(` in it cannot reference anything by construction.
 local function MayReference(text)
+    if IsPackedBlizzardState(text) then return false end
+    text = StripMacroDirectives(text)
     return strfind(text, "#", 1, true) ~= nil
         or strfind(text, "SAVED(", 1, true) ~= nil
         or strfind(text, "CATEGORY(", 1, true) ~= nil
@@ -469,13 +495,14 @@ end
 
 local function CollectSnapshotStrings(value, out, label, depth)
     if depth > MAX_SNAPSHOT_DEPTH or type(value) ~= "table" then return end
-    for _, v in pairs(value) do
+    for k, v in pairs(value) do
         local t = type(v)
         if t == "string" then
             if v ~= "" and MayReference(v) then
-                tinsert(out, { expression = v, label = label })
+                -- Store directive-stripped text so Lint does not re-parse #showtooltip.
+                tinsert(out, { expression = StripMacroDirectives(v), label = label })
             end
-        elseif t == "table" then
+        elseif t == "table" and not SNAPSHOT_SKIP_KEYS[k] then
             CollectSnapshotStrings(v, out, label, depth + 1)
         end
     end

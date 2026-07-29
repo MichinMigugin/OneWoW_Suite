@@ -1,5 +1,11 @@
 # OneWoW Suite Changelog
 
+# OneWoW
+## Fixes
+- Reference check no longer flags packed game CVars or macro `#showtooltip` text inside Character Profiles as missing search shortcuts
+
+---
+
 # QoL
 ## Fixes
 - Toggles detail status bar now updates when you change a CVar, and shows On/Off (or option labels) instead of raw `0`/`1`
