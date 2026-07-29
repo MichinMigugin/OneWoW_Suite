@@ -69,6 +69,14 @@ update root `CHANGELOG.md` under the matching suite-wide or per-addon H1 and fol
 difference), leave the changelog alone. Do not add changelog noise to Lua comments —
 load `onewow-changelog` when deciding or drafting bullets.
 
+## Player wiki (`wiki/`)
+
+After player-facing feature, install/setup, slash, or addon `README.md` changes that
+players read, load `onewow-wiki` and update the matching `wiki/` pages (sidebar /
+Sources / catalog parity as needed). Engineering-only Docs changes do not belong on
+the wiki. Wiki-only edits are not CurseForge changelog material. Dialect:
+`OneWoW-Wiki.mdc`.
+
 ## Pre-commit enforcement
 
 - `no-suite-lifecycle-events` — lifecycle `RegisterEvent` ban

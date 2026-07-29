@@ -12,7 +12,7 @@ This wiki is the **player** reference — install, hub setup, slash commands, an
 
 ## Start here
 
-1. **[Install](Install)** — CurseForge, Wago, or Discord zip into `Interface\AddOns\`
+1. **[Install](Install)** — CurseForge or Discord zip into `Interface\AddOns\`
 2. **[Getting started](Getting-Started)** — open `/ow`, run the wizard, enable features
 3. **[Slash commands](Slash-Commands)** — open each part of the suite from chat
 

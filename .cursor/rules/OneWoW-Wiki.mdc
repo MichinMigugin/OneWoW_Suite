@@ -1,0 +1,71 @@
+---
+description: Format and content conventions for the curated OneWoW GitHub wiki under wiki/ (player docs synced by publish-wiki.yml).
+globs: wiki/**
+alwaysApply: false
+---
+
+# OneWoW Player Wiki
+
+`wiki/` is the **player** documentation surface. It syncs one-way to the GitHub
+Wiki tab via `.github/workflows/publish-wiki.yml` (`Andrew-Chen-Wang/github-wiki-action`).
+Never instruct editing pages in the GitHub Wiki UI — the next push from `main`
+overwrites them.
+
+Engineering Docs (`OneWoW/Docs/`, `ADDON/Docs/`) and code remain the source of
+truth. When wiki and Docs disagree, fix the wiki.
+
+## Page mechanics
+
+- **No leading `#` H1** — GitHub Wiki already titles the page from the filename
+  (`Bags-Search-Syntax.md` → “Bags Search Syntax”).
+- **Flat layout** — all pages in `wiki/` root. Shared chrome only:
+  `_Sidebar.md`, `_Footer.md`.
+- **Filenames** — use dashes for multi-word titles; keep basenames unique.
+- **LF only** — repo-wide; never CRLF.
+- **Homepage** — `Home.md` (not `README.md`).
+
+## Related → Sources
+
+Every content page ends with:
+
+```markdown
+## Related
+
+* …wiki and in-game pointers…
+
+### Sources
+
+* [path](https://github.com/kellewic/OneWoW_Suite/blob/main/path) — …
+```
+
+**Sources must use explicit `blob/main/` URLs.** Relative `../README.md` links are
+**not** rewritten correctly for the wiki tab (they become
+`github.com/…/OneWoW_Suite/README.md` without `/blob/main/`). Absolute `https://`
+links pass through the Action’s preprocess unchanged.
+
+## Content rules
+
+- **Rewrite, don’t paste Docs.** Strip API surfaces, file maps, agent/implementer
+  notes, and SV schema. Player example: wiki `Bags-Search-Syntax` vs
+  `OneWoW_Bags/Docs/SEARCH_SYNTAX.md`.
+- **One feature ≈ one overview page**; long how-tos (search syntax) get their own page.
+- **Developers** page stays thin — commentary + links into repo Docs, not a second Docs tree.
+- **Do not** document AccountSync or similar non-player package tools on the wiki
+  unless product policy explicitly changes.
+- Keywords in search docs stay **English-only**; say so when relevant.
+
+## Catalog parity (new feature module)
+
+When adding a public feature load unit, update together:
+
+1. Root `README.md` (catalog table + mermaid if present)
+2. `ADDON/README.md` (player overview)
+3. `wiki/<Feature>.md` + `_Sidebar.md` (and Home feature table if listed)
+4. `OneWoW/Docs/README.md` feature-addons index when contributor Docs exist
+
+## Publish
+
+- Workflow: path-filtered push to `main` on `wiki/**` (+ the workflow file).
+- `contents: write`; `disable-empty-commits: true`; action `@v5`.
+- Wiki backend must already exist (one-time dummy page in GitHub UI — already done
+  for this repo).

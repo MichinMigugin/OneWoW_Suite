@@ -4,7 +4,7 @@ Install **OneWoW** (required) plus only the optional `OneWoW_*` folders you want
 
 | Source | Notes |
 |--------|--------|
-| **CurseForge** or **Wago** | Install and update like any other addon |
+| **CurseForge** | Install and update like any other addon |
 | **Discord** | Community bot command that gives a zip in the same shape CurseForge would |
 | **GitHub** | Fine if you already clone repos — this page does not teach git |
 

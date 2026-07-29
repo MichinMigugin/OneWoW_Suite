@@ -16,8 +16,9 @@ bullets.
 |---|---|
 | Visible UI, behavior, settings, or strings | **Yes** |
 | Experiential: faster open/close, less hitching, more reliable flows (e.g. bank opens ~25% faster) | **Yes** |
-| Player-facing bugfix (UI may look the same) | **Yes** |
+| Player-facing bug fix (UI may look the same) | **Yes** |
 | Rename, comment/doc-only, formatting, agent rules/skills, dead-code with identical behavior | **No** |
+| GitHub wiki / `wiki/**` / player-doc sync only (no in-game change) | **No** — use `onewow-wiki` instead |
 
 If yes → add a short player-facing bullet under the matching suite-wide `##` or
 per-addon `#` section in `CHANGELOG.md`. If no → leave the file alone.

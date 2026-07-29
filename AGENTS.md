@@ -83,6 +83,7 @@ file before editing files that match its glob(s).
 | `CHANGELOG.md` | `OneWoW-Changelog.mdc` |
 | `OneWoW*/**/*.lua`, `OneWoW/**/*.lua`, `OneWoW*/**/*.toc` | `OneWoW-Suite-Architecture.mdc` |
 | `OneWoW_QoL/Modules/external/**/*.lua` | `OneWoW-QoL-Modules.mdc` |
+| `wiki/**` | `OneWoW-Wiki.mdc` |
 <!-- END GENERATED: rules-globs -->
 
 ## Skills — load the matching specialist before related work
@@ -100,6 +101,7 @@ in full and follow it.
 | `onewow-locale-workflow` | Use when adding, changing, or removing user-facing strings or locale keys in any OneWoW addon — UI labels, errors, tooltips, new L["KEY"] entries, or edits under Locales/*.lua. Covers Blizzard globals vs shared vs scoped keys, all 11 locales, and locale_keydiff / locale_verify. | `.cursor/skills/onewow-locale-workflow/SKILL.md` |
 | `onewow-qol-modules` | Use this skill when creating, scaffolding, or reviewing a OneWoW_QoL feature module — anything about the external module hub, module.lua/Define, the ModuleRegistry, Current() capture, per-module locale scopes, toggles, or the OnEnable/OnDisable/OnToggle lifecycle. Especially for "add a new QoL module" prompts where no module file is open yet. | `.cursor/skills/onewow-qol-modules/SKILL.md` |
 | `onewow-suite-architecture` | Use when authoring or reviewing OneWoW suite load units — lifecycle hooks, BootStore, BringUp/EnsureLoaded, enable/opt-out, ModuleManifest, hub tab order, OptionalDeps, or cross-unit integration. | `.cursor/skills/onewow-suite-architecture/SKILL.md` |
+| `onewow-wiki` | Use when editing the GitHub wiki (wiki/**), syncing player docs after feature/README changes, or deciding whether a Docs or addon README change needs a wiki update. Decide include vs skip, then follow OneWoW-Wiki.mdc for dialect. | `.cursor/skills/onewow-wiki/SKILL.md` |
 | `wow-api-specialist` | Use this skill when writing or debugging WoW addon code requiring specific TOC references, Lua functions and syntax, API functions, FrameXML constants, or Event handling. | `.cursor/skills/wow-api-specialist/SKILL.md` |
 | `wow-frame-script-pitfalls` | Use this skill when authoring or reviewing WoW addon code that writes frame scripts, event handlers, or widget callbacks — anything calling SetScript, HookScript, SetBackdrop, ClearAllPoints, SetFontObject, or building popups/dropdowns. Covers closure ordering, stale upvalues, button event ordering, SetScript vs HookScript, backdrop color reset, anchor override, FontString local-override staleness, and the popup-dismiss OnUpdate hybrid pattern. | `.cursor/skills/wow-frame-script-pitfalls/SKILL.md` |
 | `wow-tooltip-system` | Use this skill when authoring or reviewing WoW addon code that creates, hooks, or scans tooltips — anything calling GameTooltip, TooltipDataProcessor, C_TooltipInfo, or walking tooltipData.lines. | `.cursor/skills/wow-tooltip-system/SKILL.md` |

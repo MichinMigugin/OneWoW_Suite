@@ -30,6 +30,11 @@ skills:
       - "OneWoW*/**/*.toc"
   onewow-changelog:
     claude_paths: null
+  onewow-wiki:
+    claude_paths:
+      - "wiki/**"
+      - "README.md"
+      - "OneWoW*/README.md"
   wow-api-specialist:
     claude_paths: null
   wow-frame-script-pitfalls:

@@ -12,7 +12,7 @@ Those features need their companion data folders (`OneWoW_CatalogData_*` / `OneW
 
 ### Where do I get the package?
 
-CurseForge, Wago, or the Discord community bot zip — same layout either way. Site: [https://wow2.xyz/](https://wow2.xyz/).
+CurseForge or the Discord community bot zip — same layout either way. Site: [https://wow2.xyz/](https://wow2.xyz/).
 
 ## Manage Features
 
