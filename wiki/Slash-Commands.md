@@ -1,5 +1,3 @@
-# Slash commands
-
 Player-facing chat commands for the OneWoW suite. Commands only work if that addon is **installed and enabled** (see [Manage Features](Getting-Started)).
 
 Debug and developer-only commands are omitted here.
@@ -62,3 +60,7 @@ These require **QoL** loaded. Some only exist while that module is enabled.
 * [Getting started](Getting-Started)
 * [Install](Install)
 * [Bags search syntax](Bags-Search-Syntax) — expressions used in Bags search (and related suite search UIs), not slash commands
+
+### Sources
+
+* [suitecommands.md](../suitecommands.md) — full slash command inventory (this page uses the User-kind subset)

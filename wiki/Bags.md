@@ -1,5 +1,3 @@
-# Bags
-
 **OneWoW Bags** replaces (or sits alongside) the default bag UI with one window for backpack, bags, and reagent bag — categories, search, and suite themes.
 
 **Requires:** [OneWoW](Home) core. Enable **Bags** under [Manage Features](Getting-Started).
@@ -71,3 +69,8 @@ Full reference: [Search syntax](Bags-Search-Syntax).
 * [Slash commands](Slash-Commands)
 * [Shopping List](Shopping-List)
 * [QoL](QoL) — overlays and other UI helpers that can use the same search language
+
+### Sources
+
+* [OneWoW_Bags/README.md](../OneWoW_Bags/README.md) — player feature overview
+* [suitecommands.md](../suitecommands.md) — Bags slash commands

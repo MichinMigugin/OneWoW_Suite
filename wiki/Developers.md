@@ -1,5 +1,3 @@
-# Developers
-
 Contributor and integrator documentation lives in the **repository**, not as a second copy on this wiki.
 
 Useful starting points (paths in [OneWoW_Suite](https://github.com/kellewic/OneWoW_Suite)):
@@ -13,3 +11,12 @@ Useful starting points (paths in [OneWoW_Suite](https://github.com/kellewic/OneW
 * [OneWoW_Bags/API/README.md](../OneWoW_Bags/API/README.md) — Bags integration API
 
 This page will gain short commentary later; the linked Docs remain the source of truth.
+
+## Related
+
+* [Home](Home) — player wiki entry
+
+### Sources
+
+* [OneWoW/Docs/README.md](../OneWoW/Docs/README.md) — documentation index
+* [CONTRIBUTING.md](../CONTRIBUTING.md)

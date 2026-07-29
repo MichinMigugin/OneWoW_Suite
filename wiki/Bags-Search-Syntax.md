@@ -1,5 +1,3 @@
-# Bags search syntax
-
 One expression language powers the **Bags search bar**, **custom category search rules**, and other OneWoW search UIs (Mail shipments, overlays, AltTracker search, and more). Learn it once; reuse it everywhere those fields appear.
 
 > **Keywords are English-only.** Tokens like `#armor` and `#epic` stay English even if your client is another language. If you paste rules from another addon that used localized keywords, use Bags **Import from…** so they convert to OneWoW’s form.
@@ -349,3 +347,7 @@ SAVED(Collected Toys) & #epic
 * [Bags](Bags) — UI overview
 * Hub **Search Shortcuts** and Bags category editor for saving rules
 * In-game help: `/owkeys` opens the keyword / search-help dialog
+
+### Sources
+
+* [OneWoW_Bags/Docs/SEARCH_SYNTAX.md](../OneWoW_Bags/Docs/SEARCH_SYNTAX.md) — full expression reference (this page is the player-facing subset)

@@ -40,3 +40,13 @@ You do **not** need every folder. Companion data packs for Catalog and AltTracke
 
 * [FAQ](FAQ) — common install and setup questions
 * Community and support: [https://wow2.xyz/](https://wow2.xyz/)
+
+## Related
+
+* [Install](Install) · [Getting started](Getting-Started) · [Slash commands](Slash-Commands)
+* [Developers](Developers)
+
+### Sources
+
+* [README.md](../README.md) — suite overview and addon catalog
+* [OneWoW/README.md](../OneWoW/README.md) — core hub features

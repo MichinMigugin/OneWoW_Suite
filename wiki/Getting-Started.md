@@ -1,5 +1,3 @@
-# Getting started
-
 After [Install](Install), use this path to get a working setup quickly.
 
 ## Open the hub
@@ -46,8 +44,14 @@ Even with no optional modules, **OneWoW** includes:
 3. If you use Bags, open them and try a simple search (full guide: [Bags](Bags), [Search syntax](Bags-Search-Syntax)).
 4. Bookmark [Slash commands](Slash-Commands) for quick opens later.
 
-## Where next
+## Related
 
 * [Slash commands](Slash-Commands)
 * [FAQ](FAQ)
 * Feature pages in the sidebar (some still stubbed until later wiki updates)
+
+### Sources
+
+* [README.md](../README.md) — suite overview and Manage Features model
+* [OneWoW/README.md](../OneWoW/README.md) — hub features (portals, tooltips, toasts, search)
+* [suitecommands.md](../suitecommands.md) — slash command inventory (player subset)

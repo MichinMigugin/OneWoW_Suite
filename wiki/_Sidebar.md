@@ -2,7 +2,7 @@
 
 ### Getting started
 * [Install](Install)
-* [Getting started](Getting-Started) *(start here)*
+* [Getting started](Getting-Started)
 * [Slash commands](Slash-Commands)
 
 ### Features

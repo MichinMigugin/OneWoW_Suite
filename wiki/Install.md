@@ -1,5 +1,3 @@
-# Install
-
 Install **OneWoW** (required) plus only the optional `OneWoW_*` folders you want. You are not required to copy every addon in the package.
 
 ## Get the package
@@ -34,10 +32,16 @@ Site and community: [https://wow2.xyz/](https://wow2.xyz/)
 | **Feature modules** | `OneWoW_Bags`, `OneWoW_QoL`, `OneWoW_AltTracker`, `OneWoW_Catalog`, `OneWoW_Trackers`, `OneWoW_Notes`, `OneWoW_ShoppingList`, `OneWoW_Mail`, `OneWoW_DirectDeposit` | Enable in Manage Features |
 | **Catalog data** | `OneWoW_CatalogData_*` | Companion data for Catalog — enable with Catalog |
 | **AltTracker data** | `OneWoW_AltTracker_*` | Companion data for AltTracker — enable with AltTracker |
-| **Tools** | `OneWoW_Utility_DevTool`, `OneWoW_AccountSync` | Optional; DevTool is an in-game inspector, AccountSync is a separate desktop app |
+| **Tools** | `OneWoW_Utility_DevTool` | Optional in-game developer inspector |
 
 If a feature seems empty after you enable it, confirm its companion data folders are also present under `AddOns` and enabled.
 
-## Next step
+## Related
 
-Continue with [Getting started](Getting-Started).
+* [Getting started](Getting-Started)
+* [FAQ](FAQ)
+
+### Sources
+
+* [README.md](../README.md) — quick start and addon catalog
+* [OneWoW/README.md](../OneWoW/README.md) — core install notes
