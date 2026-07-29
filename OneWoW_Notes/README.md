@@ -1,6 +1,6 @@
 # OneWoW - Notes
 
-**A comprehensive note-taking system for World of Warcraft. Record information about players, NPCs, zones, items, and quests. Everything stays organized and searchable.**
+**A comprehensive note-taking system for World of Warcraft. Record information about players, NPCs, zones, items, collectibles, and quests. Everything stays organized and searchable.**
 
 ---
 
@@ -54,6 +54,17 @@ Notes about items and rewards:
 - Mark items you need to find or obtain
 - Link items directly in notes
 - Search for items to see notes about them
+
+### Collectibles Tab
+Track mounts, pets, toys, transmog, and other collectibles you care about:
+- Build a personal list with intents: **Want**, **Spotted**, **Farming**, or move entries to a **Delete List**
+- Filter by category, type, storage scope, and collected / uncollected status
+- See live collection state from OneWoW’s collectibles service
+- Capture vendor offers for uncollected collectibles (**Off** / **Prompt** / **Automatic** in Notes settings)
+- View “Sold by” vendor info (richer with Catalog Vendors data) and set / ensemble progress where available
+- Optional auto-cleanup: when enabled, collected Want/Spotted/Farming entries move to the Delete List and purge after a delay you choose
+- Custom categories and account- or character-scoped storage, like other Notes tabs
+- Link collectibles into notes and associate sightings on player notes
 
 ---
 

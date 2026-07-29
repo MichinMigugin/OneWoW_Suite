@@ -2,6 +2,8 @@
 
 Standalone LoD load unit that replaces the Blizzard mailbox UI with a OneWoW_GUI shell and adds logistics **Shipments** powered by `OneWoW.PredicateEngine`.
 
+Player overview and install: [`../README.md`](../README.md).
+
 ## Load & lifecycle
 
 - TOC: `OneWoW_Mail.toc` (`RequiredDeps: OneWoW`, `LoadOnDemand: 1`)

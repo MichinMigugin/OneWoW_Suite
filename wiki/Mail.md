@@ -1,8 +1,8 @@
 **OneWoW Mail** replaces the default mailbox UI with a OneWoW-styled shell and adds **Shipments** — planned sends to characters or roles using the same search language as Bags.
 
-**Requires:** [OneWoW](Home) core. Enable **Mail** under [Manage Features](Getting-Started) when it is in your package. Companion Storage / Character data helps alt addressing and in-transit tracking.
+**Requires:** [OneWoW](Home) core. Enable **Mail** under [Manage Features](Getting-Started). Storage / Character data (pulled with Mail) helps alt addressing, restock, and in-transit tracking — AltTracker hub not required.
 
-**Open:** `/1wmail` · `/owmail` (see [Slash commands](Slash-Commands))
+**Open:** at a mailbox, or `/1wmail` · `/owmail` (see [Slash commands](Slash-Commands))
 
 ---
 
@@ -10,23 +10,24 @@
 
 ### Mailbox shell
 
-* Inbox with filtered collect actions (selection, Shift-loot / Ctrl-return style workflows)
-* Compose with OneWoW chrome and address suggestions (alts across realms)
-* Activity / run log for send and collect results
-* Auction House mail can show richer invoice breakdown where supported
+* **Inbox** — filtered collect, selection, Shift-click collect / Ctrl-click return; expandable details
+* Richer Auction House invoice breakdown when recognized
+* **Compose** — address suggestions for alts across realms
+* **Activity** — session log; pending auto-run shipment reviews (Process / Discard)
 
 ### Shipments
 
-Define reusable shipment plans:
+Reusable plans:
 
-* Target a **character** or a **role** (roles are suite-wide alt groups)
-* Match bag items with [search expressions](Bags-Search-Syntax) (keep / max / restock style rules)
-* Distribute across role members (fill first, round-robin, or equal split)
-* Auto-run can skip members already successfully shipped this session
+* Target a **character** or a **role** (Settings → Roles & Alts)
+* **Match** bag items with [search expressions](Bags-Search-Syntax) (soulbound always excluded)
+* Keep / cap / top-up rules for items and gold; in-transit mail counts toward restock targets
+* Role distribute: fill first, round-robin, or equal split
+* Auto-run can plan on mailbox open and hold for review on Activity
 
-### Other helpers
+### Other
 
-Extras such as disenchantable dumps and excess-gold style utilities live on supporting tabs — explore the shell once Mail is enabled.
+Supporting utilities (for example disenchantable dumps and excess-gold helpers) on the Other tab.
 
 ---
 
@@ -34,7 +35,7 @@ Extras such as disenchantable dumps and excess-gold style utilities live on supp
 
 * Practice a simple character shipment before role-wide distributes.
 * Shipment match rules use English `#` keywords like Bags — see [Search syntax](Bags-Search-Syntax).
-* Open the mailbox at a mailbox NPC; Mail takes over the Blizzard frame while enabled.
+* Open a mailbox NPC; Mail takes over the Blizzard frame while enabled.
 
 ## Related
 
@@ -44,5 +45,6 @@ Extras such as disenchantable dumps and excess-gold style utilities live on supp
 
 ### Sources
 
-* [OneWoW_Mail/Docs/ARCHITECTURE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_Mail/Docs/ARCHITECTURE.md) — engineering reference (no separate player README yet)
+* [OneWoW_Mail/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_Mail/README.md) — player overview
+* [OneWoW_Mail/Docs/ARCHITECTURE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_Mail/Docs/ARCHITECTURE.md) — engineering reference
 * [suitecommands.md](https://github.com/kellewic/OneWoW_Suite/blob/main/suitecommands.md)

@@ -1,6 +1,7 @@
 # OneWoW Suite — Documentation Index
 
 Player-facing suite overview and addon catalog: [README.md](../../README.md) (repo root).
+Player docs (install, features, search syntax): [GitHub Wiki](https://github.com/kellewic/OneWoW_Suite/wiki).
 
 Contributor and integrator documentation for the suite.
 
@@ -23,6 +24,7 @@ Contributor and integrator documentation for the suite.
 | [OneWoW_QoL/DEVELOPERS.md](../../OneWoW_QoL/DEVELOPERS.md) | External QoL module authoring (`module.lua`, `ModuleRegistry`, locale scope) |
 | [OneWoW_QoL/MODULES.md](../../OneWoW_QoL/MODULES.md) | QoL external module catalog (34 modules by category) |
 | [OneWoW_Trackers/Docs/ARCHITECTURE.md](../../OneWoW_Trackers/Docs/ARCHITECTURE.md) | Tracker lists, engine, presets, farm value |
+| [OneWoW_Mail/Docs/ARCHITECTURE.md](../../OneWoW_Mail/Docs/ARCHITECTURE.md) | Mail shell, shipments, send/collect pipeline, Storage in-transit |
 | [OneWoW_CatalogData_Quests/Docs/ARCHITECTURE.md](../../OneWoW_CatalogData_Quests/Docs/ARCHITECTURE.md) | Catalog quest data store and scanner |
 
 ## Contributing
@@ -36,6 +38,7 @@ Contributor and integrator documentation for the suite.
 
 | Location | Audience | Content |
 |----------|----------|---------|
+| [GitHub Wiki](https://github.com/kellewic/OneWoW_Suite/wiki) | Players | Install, getting started, feature guides, search syntax |
 | Repo `README.md` | Players | Suite overview, addon catalog, quick start |
 | `ADDON/README.md` | Players | What the addon does, install, slash commands |
 | `ADDON/Docs/` | Contributors | Architecture, APIs, data models |

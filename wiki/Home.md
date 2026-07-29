@@ -29,7 +29,7 @@ This wiki is the **player** reference — install, hub setup, slash commands, an
 | [AltTracker](AltTracker) | Account-wide alts, gold, professions, progress |
 | [Catalog](Catalog) | Instances, vendors, professions, recipes |
 | [Trackers](Trackers) | Custom lists — guides, dailies, todos, farm value |
-| [Notes](Notes) | Notes on players, NPCs, zones, items, quests |
+| [Notes](Notes) | Notes on players, NPCs, zones, items, collectibles, quests |
 | [Shopping List](Shopping-List) | Shopping/crafting lists with stock checks |
 | [Mail](Mail) | Mailbox UI and shipment helpers |
 | [Direct Deposit](Direct-Deposit) | Warband Bank gold and item transfers |
