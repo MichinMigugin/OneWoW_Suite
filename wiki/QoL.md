@@ -9,5 +9,5 @@ Enable **QoL** under Manage Features, then configure modules from the hub.
 
 ### Sources
 
-* [OneWoW_QoL/README.md](../OneWoW_QoL/README.md)
-* [OneWoW_QoL/MODULES.md](../OneWoW_QoL/MODULES.md)
+* [OneWoW_QoL/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_QoL/README.md)
+* [OneWoW_QoL/MODULES.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_QoL/MODULES.md)

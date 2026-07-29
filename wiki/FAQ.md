@@ -13,5 +13,5 @@ Until this page fills in:
 
 ### Sources
 
-* [README.md](../README.md)
-* [OneWoW/README.md](../OneWoW/README.md)
+* [README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/README.md)
+* [OneWoW/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/README.md)

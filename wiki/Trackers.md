@@ -9,4 +9,4 @@ Enable **Trackers** under Manage Features.
 
 ### Sources
 
-* [OneWoW_Trackers/README.md](../OneWoW_Trackers/README.md)
+* [OneWoW_Trackers/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_Trackers/README.md)

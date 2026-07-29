@@ -52,6 +52,6 @@ Even with no optional modules, **OneWoW** includes:
 
 ### Sources
 
-* [README.md](../README.md) — suite overview and Manage Features model
-* [OneWoW/README.md](../OneWoW/README.md) — hub features (portals, tooltips, toasts, search)
-* [suitecommands.md](../suitecommands.md) — slash command inventory (player subset)
+* [README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/README.md) — suite overview and Manage Features model
+* [OneWoW/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/README.md) — hub features (portals, tooltips, toasts, search)
+* [suitecommands.md](https://github.com/kellewic/OneWoW_Suite/blob/main/suitecommands.md) — slash command inventory (player subset)

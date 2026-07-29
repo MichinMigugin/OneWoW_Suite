@@ -9,5 +9,5 @@ Enable **Direct Deposit** under Manage Features.
 
 ### Sources
 
-* [OneWoW_DirectDeposit/README.md](../OneWoW_DirectDeposit/README.md)
-* [suitecommands.md](../suitecommands.md) — Direct Deposit slash commands
+* [OneWoW_DirectDeposit/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_DirectDeposit/README.md)
+* [suitecommands.md](https://github.com/kellewic/OneWoW_Suite/blob/main/suitecommands.md) — Direct Deposit slash commands

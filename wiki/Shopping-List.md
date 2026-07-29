@@ -9,4 +9,4 @@ Enable **Shopping List** under Manage Features.
 
 ### Sources
 
-* [OneWoW_ShoppingList/README.md](../OneWoW_ShoppingList/README.md)
+* [OneWoW_ShoppingList/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_ShoppingList/README.md)

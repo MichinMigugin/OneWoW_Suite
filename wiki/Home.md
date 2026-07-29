@@ -48,5 +48,5 @@ You do **not** need every folder. Companion data packs for Catalog and AltTracke
 
 ### Sources
 
-* [README.md](../README.md) — suite overview and addon catalog
-* [OneWoW/README.md](../OneWoW/README.md) — core hub features
+* [README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/README.md) — suite overview and addon catalog
+* [OneWoW/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/README.md) — core hub features

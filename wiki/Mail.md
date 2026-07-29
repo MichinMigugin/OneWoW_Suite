@@ -9,5 +9,5 @@ Enable **Mail** under Manage Features when available in your package.
 
 ### Sources
 
-* [OneWoW_Mail/Docs/ARCHITECTURE.md](../OneWoW_Mail/Docs/ARCHITECTURE.md) — engineering reference (player guide TBD)
-* [suitecommands.md](../suitecommands.md) — Mail slash commands
+* [OneWoW_Mail/Docs/ARCHITECTURE.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_Mail/Docs/ARCHITECTURE.md) — engineering reference (player guide TBD)
+* [suitecommands.md](https://github.com/kellewic/OneWoW_Suite/blob/main/suitecommands.md) — Mail slash commands

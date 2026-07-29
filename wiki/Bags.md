@@ -72,5 +72,5 @@ Full reference: [Search syntax](Bags-Search-Syntax).
 
 ### Sources
 
-* [OneWoW_Bags/README.md](../OneWoW_Bags/README.md) — player feature overview
-* [suitecommands.md](../suitecommands.md) — Bags slash commands
+* [OneWoW_Bags/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_Bags/README.md) — player feature overview
+* [suitecommands.md](https://github.com/kellewic/OneWoW_Suite/blob/main/suitecommands.md) — Bags slash commands

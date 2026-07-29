@@ -9,4 +9,4 @@ Enable **Notes** under Manage Features.
 
 ### Sources
 
-* [OneWoW_Notes/README.md](../OneWoW_Notes/README.md)
+* [OneWoW_Notes/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_Notes/README.md)

@@ -43,5 +43,5 @@ If a feature seems empty after you enable it, confirm its companion data folders
 
 ### Sources
 
-* [README.md](../README.md) — quick start and addon catalog
-* [OneWoW/README.md](../OneWoW/README.md) — core install notes
+* [README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/README.md) — quick start and addon catalog
+* [OneWoW/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/README.md) — core install notes

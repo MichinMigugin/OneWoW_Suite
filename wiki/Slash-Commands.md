@@ -63,4 +63,4 @@ These require **QoL** loaded. Some only exist while that module is enabled.
 
 ### Sources
 
-* [suitecommands.md](../suitecommands.md) — full slash command inventory (this page uses the User-kind subset)
+* [suitecommands.md](https://github.com/kellewic/OneWoW_Suite/blob/main/suitecommands.md) — full slash command inventory (this page uses the User-kind subset)

@@ -9,5 +9,5 @@ Enable **AltTracker** under Manage Features (companion data stores load with it)
 
 ### Sources
 
-* [OneWoW_AltTracker/README.md](../OneWoW_AltTracker/README.md)
-* [README.md](../README.md) — AltTracker data-store catalog
+* [OneWoW_AltTracker/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_AltTracker/README.md)
+* [README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/README.md) — AltTracker data-store catalog
