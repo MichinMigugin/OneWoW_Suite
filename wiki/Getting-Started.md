@@ -48,7 +48,7 @@ Even with no optional modules, **OneWoW** includes:
 
 * [Slash commands](Slash-Commands)
 * [FAQ](FAQ)
-* Feature pages in the sidebar (some still stubbed until later wiki updates)
+* Feature pages in the sidebar
 
 ### Sources
 

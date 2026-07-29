@@ -1,17 +1,61 @@
-Common questions about installing and using OneWoW. Coming soon.
+Common questions about installing and using OneWoW. More entries will land here as they come up in community support.
 
-Until this page fills in:
+## Install and folders
 
-* You do not need every addon folder — install what you use ([Install](Install))
-* Use **Manage Features** to enable or unload modules ([Getting started](Getting-Started))
-* Help and community: [https://wow2.xyz/](https://wow2.xyz/)
+### Do I need every `OneWoW_*` folder?
+
+No. Install **OneWoW** (required) plus the optional features you want. See [Install](Install).
+
+### Catalog or AltTracker looks empty
+
+Those features need their companion data folders (`OneWoW_CatalogData_*` / `OneWoW_AltTracker_*`) present and enabled. Enable the parent feature in **Manage Features**; companions load with it. See [Catalog](Catalog) and [AltTracker](AltTracker).
+
+### Where do I get the package?
+
+CurseForge, Wago, or the Discord community bot zip — same layout either way. Site: [https://wow2.xyz/](https://wow2.xyz/).
+
+## Manage Features
+
+### I disabled a module but it still feels “there”
+
+Disabling in **Manage Features** **unloads** the addon — it is not just hidden. If something still appears, confirm the folder is not force-enabled only in the character-select AddOns list, then `/reload`.
+
+### Can I use Shopping List without AltTracker?
+
+Yes. Enable Shopping List in Manage Features; Storage can load for alt/bank scanning even when the AltTracker hub is off. See [Shopping List](Shopping-List).
+
+## Search and keywords
+
+### Why don’t localized `#` keywords from another addon work?
+
+OneWoW keywords are **English-only** (`#epic`, `#armor`, …). Import foreign category dialects through Bags **Import from…** so they convert. See [Search syntax](Bags-Search-Syntax).
+
+### Slash commands do nothing
+
+The feature must be **installed and enabled**. Open [Slash commands](Slash-Commands) for the list, then check Manage Features.
+
+## Conflicts and help
+
+### `/dd` opens something else
+
+Another addon already registered `/dd`. Use `/1wdd`, `/directdeposit`, or `/directdep` for [Direct Deposit](Direct-Deposit).
+
+### Bags vs default bags / other bag addons
+
+Enable only one primary bag UI you intend to use, or expect overlapping keybinds and frames. OneWoW Bags opens with `/1wb` (see [Bags](Bags)).
+
+### Where do I get help?
+
+[https://wow2.xyz/](https://wow2.xyz/) — Discord community or the website. Prefer those channels over editing the GitHub wiki UI.
 
 ## Related
 
 * [Install](Install)
 * [Getting started](Getting-Started)
+* [Slash commands](Slash-Commands)
 
 ### Sources
 
 * [README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/README.md)
 * [OneWoW/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/README.md)
+* Feature READMEs linked from each wiki feature page
