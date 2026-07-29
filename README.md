@@ -123,7 +123,7 @@ Companion addons for [OneWoW_AltTracker](OneWoW_AltTracker/README.md). No standa
 
 | Audience | Start here |
 |----------|------------|
-| **Players** | Addon `README.md` files in the catalog above |
+| **Players** | [GitHub Wiki](https://github.com/kellewic/OneWoW_Suite/wiki) · addon `README.md` files in the catalog above |
 | **QoL module list** | [OneWoW_QoL/MODULES.md](OneWoW_QoL/MODULES.md) |
 | **Contributors** | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | **Architecture & APIs** | [OneWoW/Docs/README.md](OneWoW/Docs/README.md) |
