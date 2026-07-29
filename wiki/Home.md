@@ -1,26 +1,40 @@
 # Welcome to the OneWoW Wiki
 
-**OneWoW** is a modular World of Warcraft addon suite for Retail: one shared hub, unified themes, eleven locales, and optional feature addons you enable only when you need them.
+**OneWoW** is a modular World of Warcraft addon suite for **Retail**. One shared hub, unified themes, eleven locales, and optional feature addons you turn on only when you need them.
 
 **Website:** [https://wow2.xyz/](https://wow2.xyz/)
 
-This wiki is the **player** reference. Engineering docs stay in the repository (`OneWoW/Docs/` and per-addon `Docs/`).
+This wiki is the **player** reference — install, hub setup, slash commands, and how each feature works in-game. Engineering docs stay in the [repository](https://github.com/kellewic/OneWoW_Suite) (`OneWoW/Docs/` and per-addon `Docs/`). See [Developers](Developers) for links.
 
 ---
 
-## Sections
+## Start here
 
-* **[Install](Install)** — get the suite into your AddOns folder (CurseForge, Wago, or Discord zip)
-* **[Getting started](Getting-Started)** *(start here)* — open the hub, run the wizard, enable features
-* **[Slash commands](Slash-Commands)** — player-facing commands
+1. **[Install](Install)** — CurseForge, Wago, or Discord zip into `Interface\AddOns\`
+2. **[Getting started](Getting-Started)** — open `/ow`, run the wizard, enable features
+3. **[Slash commands](Slash-Commands)** — open each part of the suite from chat
 
-### Features
+## What you get
 
-* [Bags](Bags) · [Search syntax](Bags-Search-Syntax)
-* [QoL](QoL) · [AltTracker](AltTracker) · [Catalog](Catalog) · [Trackers](Trackers)
-* [Notes](Notes) · [Shopping List](Shopping-List) · [Mail](Mail) · [Direct Deposit](Direct-Deposit)
+**Core hub (OneWoW)** — always installed: portal/teleport hub, smarter item tooltips and status indicators, collection toasts, universal search, shared themes, and **Manage Features** for everything else.
 
-### Help & developers
+**Optional features** (enable what you use):
 
-* [FAQ](FAQ)
-* [Developers](Developers) — links into in-repo contributor docs
+| Feature | What it is |
+|---------|------------|
+| [Bags](Bags) | Bag organization, categories, and [search syntax](Bags-Search-Syntax) |
+| [QoL](QoL) | Dozens of toggleable quality-of-life modules |
+| [AltTracker](AltTracker) | Account-wide alts, gold, professions, progress |
+| [Catalog](Catalog) | Instances, vendors, professions, recipes |
+| [Trackers](Trackers) | Custom lists — guides, dailies, todos, farm value |
+| [Notes](Notes) | Notes on players, NPCs, zones, items, quests |
+| [Shopping List](Shopping-List) | Shopping/crafting lists with stock checks |
+| [Mail](Mail) | Mailbox UI and shipment helpers |
+| [Direct Deposit](Direct-Deposit) | Warband Bank gold and item transfers |
+
+You do **not** need every folder. Companion data packs for Catalog and AltTracker load with their parent when that feature is enabled.
+
+## Help
+
+* [FAQ](FAQ) — common install and setup questions
+* Community and support: [https://wow2.xyz/](https://wow2.xyz/)

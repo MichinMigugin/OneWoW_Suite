@@ -1,28 +1,43 @@
 # Install
 
-You do not need every folder — install **OneWoW** (required) plus the optional `OneWoW_*` addons you want.
+Install **OneWoW** (required) plus only the optional `OneWoW_*` folders you want. You are not required to copy every addon in the package.
 
 ## Get the package
 
-Pick one:
+| Source | Notes |
+|--------|--------|
+| **CurseForge** or **Wago** | Install and update like any other addon |
+| **Discord** | Community bot command that gives a zip in the same shape CurseForge would |
+| **GitHub** | Fine if you already clone repos — this page does not teach git |
 
-* **CurseForge** or **Wago** — install/update like any other addon
-* **Discord bot** — use the community bot command for a zip in the same shape CurseForge would give you
-* **GitHub** — if you already clone repos, use this repository; this page does not cover git
+Site and community: [https://wow2.xyz/](https://wow2.xyz/)
 
-**Website / community:** [https://wow2.xyz/](https://wow2.xyz/)
+## Put folders in AddOns
 
-## Install into WoW
-
-1. Extract so you have folders named `OneWoW`, `OneWoW_Bags`, `OneWoW_QoL`, and so on (not a single nested zip root).
+1. Unpack the zip so you see folders named like `OneWoW`, `OneWoW_Bags`, `OneWoW_QoL` — not one extra wrapper folder around everything.
 2. Copy those folders into:
 
-   `World of Warcraft\_retail_\Interface\AddOns\`
+   ```text
+   World of Warcraft\_retail_\Interface\AddOns\
+   ```
 
-3. Restart WoW or `/reload`, then enable the addons in the character-select **AddOns** list.
-4. Log in and type `/ow` (also `/1w`, `/one`, `/onewow`) to open the hub.
-5. Use **Manage Features** to turn optional modules on or off. Disabling a feature unloads it — you are not stuck with everything installed.
+3. At the character select screen, open **AddOns** and enable `OneWoW` plus any optional modules you installed.
+4. Log in (or `/reload` if you already were in-world).
+5. Type `/ow` (also `/1w`, `/one`, `/onewow`) to open the hub.
+6. Use **Manage Features** to enable or disable optional modules. Disabling a feature **unloads** it — it is not just hidden.
 
-Companion **Catalog** / **AltTracker** data-store folders load with their parent when that feature is enabled.
+## What the folders mean
 
-Next: [Getting started](Getting-Started).
+| Kind | Examples | Notes |
+|------|----------|--------|
+| **Required** | `OneWoW` | Core hub and shared UI |
+| **Feature modules** | `OneWoW_Bags`, `OneWoW_QoL`, `OneWoW_AltTracker`, `OneWoW_Catalog`, `OneWoW_Trackers`, `OneWoW_Notes`, `OneWoW_ShoppingList`, `OneWoW_Mail`, `OneWoW_DirectDeposit` | Enable in Manage Features |
+| **Catalog data** | `OneWoW_CatalogData_*` | Companion data for Catalog — enable with Catalog |
+| **AltTracker data** | `OneWoW_AltTracker_*` | Companion data for AltTracker — enable with AltTracker |
+| **Tools** | `OneWoW_Utility_DevTool`, `OneWoW_AccountSync` | Optional; DevTool is an in-game inspector, AccountSync is a separate desktop app |
+
+If a feature seems empty after you enable it, confirm its companion data folders are also present under `AddOns` and enabled.
+
+## Next step
+
+Continue with [Getting started](Getting-Started).
