@@ -2,8 +2,6 @@
   <img src="onewow_icon.png" alt="OneWoW" width="160">
 </p>
 
-# Welcome to the OneWoW Wiki
-
 **OneWoW** is a modular World of Warcraft addon suite for **Retail**. One shared hub, unified themes, eleven locales, and optional feature addons you turn on only when you need them.
 
 **Website:** [https://wow2.xyz/](https://wow2.xyz/)
