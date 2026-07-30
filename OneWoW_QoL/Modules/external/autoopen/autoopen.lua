@@ -11,10 +11,22 @@ local Inventory = OneWoW.Inventory
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 local AO = AutoOpenModule
+local OWNER = "QoL_autoopen"
 
 -- #openable reads the bag tooltip; hasLoot/isLocked alone cannot detect lockpicking-locked lockboxes.
 local OPEN_PREDICATE_EXPR = "#hasloot&!#locked& #openable"
 local openPredicate = PE:Compile(OPEN_PREDICATE_EXPR)
+
+-- Bag updates while mail/bank/merchant/tradeskill are open are suppressed; those
+-- UIs do not themselves dirty bags on close, so schedule one catch-up scan.
+local RESCAN_AFTER_SUPPRESS = 0.25
+
+local function ScheduleRescanAfterSuppress()
+    C_Timer.After(RESCAN_AFTER_SUPPRESS, function()
+        if not ns.ModuleRegistry:IsEnabled("autoopen") then return end
+        AO:ScanAndOpen()
+    end)
+end
 
 local function GetBlacklist()
     local bucket = ns.ModuleRegistry:GetModuleBucket("autoopen")
@@ -78,9 +90,13 @@ function AutoOpenModule:ScanAndOpen()
 end
 
 function AutoOpenModule:OnEnable()
-    Inventory.RegisterDelayedCallback("QoL_autoopen", function()
+    Inventory.RegisterDelayedCallback(OWNER, function()
         AO:ScanAndOpen()
     end)
+    Inventory.RegisterBankClosedCallback(OWNER, ScheduleRescanAfterSuppress)
+    Inventory.RegisterGuildClosedCallback(OWNER, ScheduleRescanAfterSuppress)
+    OneWoW.Merchant.RegisterClosedCallback(OWNER, ScheduleRescanAfterSuppress)
+    OneWoW.ProfessionRecipe.RegisterClosedCallback(OWNER, ScheduleRescanAfterSuppress)
 
     -- Mail is not Inventory-owned yet; keep a thin local frame.
     if not self._frame then
@@ -90,6 +106,7 @@ function AutoOpenModule:OnEnable()
                 AO._atMail = true
             elseif event == "MAIL_CLOSED" then
                 AO._atMail = false
+                ScheduleRescanAfterSuppress()
             end
         end)
     end
@@ -101,7 +118,9 @@ function AutoOpenModule:OnEnable()
 end
 
 function AutoOpenModule:OnDisable()
-    Inventory.UnregisterCallback("QoL_autoopen")
+    Inventory.UnregisterCallback(OWNER)
+    OneWoW.Merchant.UnregisterCallback(OWNER)
+    OneWoW.ProfessionRecipe.UnregisterCallback(OWNER)
     if self._frame then
         self._frame:UnregisterAllEvents()
     end

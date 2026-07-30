@@ -8,6 +8,7 @@
 
 # QoL
 ## Fixes
+- Auto Open now opens containers taken while mail, bank, merchant, or profession windows were open (rescans shortly after those windows close)
 - Toggles detail status bar now updates when you change a CVar, and shows On/Off (or option labels) instead of raw `0`/`1`
 - Floating Combat Text toggle description now correctly describes personal scrolling combat text (not world damage numbers); Healing Numbers describes healing you deal
 - Toggles search also matches CVar names, so searching "floating" finds the Combat Text family
