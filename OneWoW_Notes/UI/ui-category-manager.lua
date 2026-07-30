@@ -27,9 +27,10 @@ local BUILT_IN_CATEGORIES = {
         "PvP", "Blacklist", "Interesting", "Officer", "Crafter", "Helper", "Other"
     },
     npcs = {
-        "Other", "Quest Givers", "Vendors", "Trainers", "Flight Masters",
-        "Rare Elites", "Bosses", "Event NPCs", "Auctioneers", "Portals",
-        "Repair", "Transmog", "PvP Vendors", "Profession NPCs", "Pet Trainers"
+        "Other", "Auctioneers", "Bosses", "Event NPCs", "Flight Masters",
+        "Pet Trainers", "Portals", "Profession NPCs", "PvP Vendors",
+        "Quartermaster", "Quest Givers", "Rare Elites", "Repair", "Trainers",
+        "Transmog", "Vendors"
     },
     zones = {
         "General", "Quest", "Farming", "Rare", "Treasure", "Dungeon", "Raid", "PvP", "Event"

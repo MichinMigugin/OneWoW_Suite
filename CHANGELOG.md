@@ -44,3 +44,10 @@
 - Financials transaction list no longer stays blank on first open until the timeframe dropdown is toggled
 
 ---
+
+# Notes
+## NPCs
+- Added Quartermaster category
+- Category lists sort as All, Other, then A–Z
+
+---
