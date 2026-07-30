@@ -50,6 +50,12 @@
 - Auction sale mail now records sale price, AH deposit refund, and house cut as separate lines (deposit refund uses the AH Deposit category with note "AH deposit refund")
 - Auction sale and refund mail now always claim their net gold so mailbox gold changes are not double-counted when the house cut is zero
 
+## Action Bars
+- Bar icon rows and Restore buttons now line up with the bar name
+- Bar names are no longer truncated or indented
+- Per-bar Restore sits on the name row (right side), in a compact size
+- More space between set details and the Restore All / Keybinds / Macros buttons
+
 ## Fixes
 - Financials transaction list no longer stays blank on first open until the timeframe dropdown is toggled
 

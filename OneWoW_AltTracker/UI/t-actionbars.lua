@@ -400,7 +400,7 @@ function ns.UI.ShowSetDetails(split, setName)
 
     local yOffset = -10
 
-    local headerBox = OneWoW_GUI:CreateFrame(detailScrollChild, { height = 80, bgColor = "BG_SECONDARY" })
+    local headerBox = OneWoW_GUI:CreateFrame(detailScrollChild, { height = 96, bgColor = "BG_SECONDARY" })
     headerBox:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yOffset)
     headerBox:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, yOffset)
 
@@ -531,7 +531,7 @@ function ns.UI.ShowSetDetails(split, setName)
         restoreMacrosBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     end
 
-    yOffset = yOffset - 80 - 10
+    yOffset = yOffset - 96 - 10
 
     local showAllCheckbox = OneWoW_GUI:CreateCheckbox(detailScrollChild, { label = L["AB_SHOW_ALL_BARS"] })
     showAllCheckbox:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yOffset)
@@ -550,22 +550,54 @@ function ns.UI.ShowSetDetails(split, setName)
         local barData = setData.bars and setData.bars[barNumber]
 
         if showAllBars or (barData and barData.slots) then
-            local barLabelFrame = CreateFrame("Frame", nil, detailScrollChild)
-            barLabelFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yOffset)
-            barLabelFrame:SetSize(70, 20)
-            local barLabel = OneWoW_GUI:CreateFS(barLabelFrame, 12)
-            barLabel:SetAllPoints()
+            local BAR_HEADER_H = 20
+            local slotGap = 6
+            local SLOT_SIZE = 32
+            local SLOT_STEP = 36
+            local slotXStart = 10
+            local iconRowRight = slotXStart + ((12 - 1) * SLOT_STEP) + SLOT_SIZE
+
+            if barData and barData.slots then
+                local restoreBarBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, {
+                    text = L["AB_LABEL_RESTORE"],
+                    height = BAR_HEADER_H,
+                    paddingX = 12,
+                    minWidth = 30,
+                })
+                restoreBarBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPLEFT", iconRowRight, yOffset)
+                restoreBarBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                restoreBarBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                restoreBarBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+                restoreBarBtn:SetScript("OnEnter", function(self)
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+                end)
+                restoreBarBtn:SetScript("OnLeave", function(self)
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
+                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
+                end)
+                local capturedBarNumber = barNumber
+                restoreBarBtn:SetScript("OnClick", function()
+                    ShowRestoreBarDialog(setName, capturedBarNumber)
+                end)
+            end
+
+            local barLabel = OneWoW_GUI:CreateFS(detailScrollChild, 13)
+            barLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, yOffset)
+            barLabel:SetHeight(BAR_HEADER_H)
+            barLabel:SetJustifyH("LEFT")
+            barLabel:SetJustifyV("MIDDLE")
             barLabel:SetText(L[BAR_NAMES[barNumber]] or string.format(L["AB_LABEL_BAR"], barNumber))
             barLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-            local slotXStart = 80
-            local slotYOffset = yOffset - 20
+            local slotYOffset = yOffset - BAR_HEADER_H - slotGap
 
             for slotIndex = 1, 12 do
                 local slotData = barData and barData.slots and barData.slots[slotIndex]
-                local xPos = slotXStart + ((slotIndex - 1) * 36)
+                local xPos = slotXStart + ((slotIndex - 1) * SLOT_STEP)
 
-                local slotFrame = OneWoW_GUI:CreateButton(detailScrollChild, { width = 32, height = 32 })
+                local slotFrame = OneWoW_GUI:CreateButton(detailScrollChild, { width = SLOT_SIZE, height = SLOT_SIZE })
                 slotFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", xPos, slotYOffset)
 
                 if slotData then
@@ -622,28 +654,7 @@ function ns.UI.ShowSetDetails(split, setName)
                 slotFrame:Show()
             end
 
-            if barData and barData.slots then
-                local restoreBarBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, { text = L["AB_LABEL_RESTORE"], height = 26 })
-                restoreBarBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", slotXStart + (12 * 36) + 10, slotYOffset + 3)
-                restoreBarBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                restoreBarBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                restoreBarBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-                restoreBarBtn:SetScript("OnEnter", function(self)
-                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-                end)
-                restoreBarBtn:SetScript("OnLeave", function(self)
-                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                end)
-                local capturedBarNumber = barNumber
-                restoreBarBtn:SetScript("OnClick", function()
-                    ShowRestoreBarDialog(setName, capturedBarNumber)
-                end)
-            end
-
-            yOffset = yOffset - 60
+            yOffset = yOffset - BAR_HEADER_H - slotGap - SLOT_SIZE - 14
         end
     end
 
