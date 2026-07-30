@@ -12,6 +12,7 @@ local selectedSetName = nil
 local selectedRow = nil
 local showAllBars = false
 local activeFilterClass = nil
+local selectedBars = {}
 
 local BAR_NAMES = {
     [1]  = "AB_PAGE_1",
@@ -110,6 +111,43 @@ local function ShowRestoreAllDialog(setName)
                     ns.ActionBarsModule:RestoreAllBarsFromSet(setName)
                 end
                 dialog:Hide()
+            end },
+            { text = CANCEL, onClick = function(dialog) dialog:Hide() end },
+        },
+    })
+    result.frame:Show()
+end
+
+local function BuildSelectedBarList()
+    local list = {}
+    for _, barNumber in ipairs(BAR_DISPLAY_ORDER) do
+        if selectedBars[barNumber] then
+            tinsert(list, barNumber)
+        end
+    end
+    return list
+end
+
+local function ShowRestoreSelectedDialog(setName, barList, split)
+    local nameLines = {}
+    for _, barNumber in ipairs(barList) do
+        tinsert(nameLines, L[BAR_NAMES[barNumber]] or string.format(L["AB_LABEL_BAR"], barNumber))
+    end
+    local result = OneWoW_GUI:CreateConfirmDialog({
+        name = "OneWoW_AT_RestoreSelectedDialog",
+        showBrand = true,
+        title = L["AB_DIALOG_RESTORE_SELECTED_TITLE"],
+        message = string.format(L["AB_DIALOG_RESTORE_SELECTED"], setName, table.concat(nameLines, "\n")),
+        buttons = {
+            { text = L["AB_RESTORE_SELECTED"], color = {OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL")}, onClick = function(dialog)
+                if ns.ActionBarsModule and ns.ActionBarsModule.RestoreSelectedBarsFromSet then
+                    ns.ActionBarsModule:RestoreSelectedBarsFromSet(setName, barList)
+                end
+                dialog:Hide()
+                wipe(selectedBars)
+                if split then
+                    ns.UI.ShowSetDetails(split, setName)
+                end
             end },
             { text = CANCEL, onClick = function(dialog) dialog:Hide() end },
         },
@@ -398,19 +436,26 @@ function ns.UI.ShowSetDetails(split, setName)
 
     split.detailTitle:Hide()
 
+    wipe(selectedBars)
+
     local yOffset = -10
 
     local headerBox = OneWoW_GUI:CreateFrame(detailScrollChild, { height = 96, bgColor = "BG_SECONDARY" })
     headerBox:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yOffset)
     headerBox:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, yOffset)
 
+    local TITLE_ROW_H = 18
+
     local headerTitle = OneWoW_GUI:CreateFS(headerBox, 16)
     headerTitle:SetPoint("TOPLEFT", headerBox, "TOPLEFT", 10, -8)
+    headerTitle:SetHeight(TITLE_ROW_H)
+    headerTitle:SetJustifyH("LEFT")
+    headerTitle:SetJustifyV("MIDDLE")
     headerTitle:SetText(setName)
     headerTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local sourceText = OneWoW_GUI:CreateFS(headerBox, 10)
-    sourceText:SetPoint("TOPLEFT", headerTitle, "BOTTOMLEFT", 0, -4)
+    sourceText:SetPoint("TOPLEFT", headerTitle, "BOTTOMLEFT", 0, -8)
     local charName = setData.sourceChar and setData.sourceChar:match("^([^%-]+)") or "?"
     sourceText:SetText(string.format(L["AB_SET_SOURCE"], charName, setData.sourceSpec or "?"))
     sourceText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -422,13 +467,21 @@ function ns.UI.ShowSetDetails(split, setName)
         updatedText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     end
 
-    local renameBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = L["RENAME"], height = 24 })
+    local renameBtn = OneWoW_GUI:CreateFitTextButton(headerBox, {
+        text = L["RENAME"],
+        height = TITLE_ROW_H,
+        paddingX = 12,
+    })
     renameBtn:SetPoint("TOPRIGHT", headerBox, "TOPRIGHT", -10, -8)
     renameBtn:SetScript("OnClick", function()
         ShowRenameDialog(split, setName)
     end)
 
-    local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = DELETE, height = 24 })
+    local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerBox, {
+        text = DELETE,
+        height = TITLE_ROW_H,
+        paddingX = 12,
+    })
     deleteBtn:SetPoint("RIGHT", renameBtn, "LEFT", -6, 0)
     deleteBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
     deleteBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
@@ -443,22 +496,44 @@ function ns.UI.ShowSetDetails(split, setName)
         ShowDeleteDialog(split, setName)
     end)
 
-    local restoreAllBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = L["AB_RESTORE_ALL_BARS"], height = 24 })
-    restoreAllBtn:SetPoint("BOTTOMLEFT", headerBox, "BOTTOMLEFT", 10, 6)
-    restoreAllBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
-    restoreAllBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
-    restoreAllBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    restoreAllBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER_HOVER"))
-    end)
-    restoreAllBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
-    end)
+    local restoreLabel = OneWoW_GUI:CreateFS(headerBox, 12)
+    restoreLabel:SetPoint("BOTTOMLEFT", headerBox, "BOTTOMLEFT", 10, 6)
+    restoreLabel:SetHeight(24)
+    restoreLabel:SetJustifyH("LEFT")
+    restoreLabel:SetJustifyV("MIDDLE")
+    restoreLabel:SetText(L["AB_LABEL_RESTORE"])
+    restoreLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local restoreAllBtn = OneWoW_GUI:CreateFitTextButton(headerBox, {
+        text = L["AB_BTN_ALL_BARS"],
+        height = 24,
+        paddingX = 12,
+        danger = true,
+    })
+    restoreAllBtn:SetPoint("LEFT", restoreLabel, "RIGHT", 8, 0)
     restoreAllBtn:SetScript("OnClick", function()
         ShowRestoreAllDialog(setName)
     end)
+
+    local restoreSelectedBtn = OneWoW_GUI:CreateFitTextButton(headerBox, {
+        text = L["AB_BTN_SELECTED"],
+        height = 24,
+        paddingX = 12,
+        danger = true,
+    })
+    restoreSelectedBtn:SetPoint("LEFT", restoreAllBtn, "RIGHT", 8, 0)
+    restoreSelectedBtn:SetEnabled(false)
+    restoreSelectedBtn:SetScript("OnClick", function()
+        local barList = BuildSelectedBarList()
+        if #barList == 0 then
+            return
+        end
+        ShowRestoreSelectedDialog(setName, barList, split)
+    end)
+
+    local function refreshRestoreSelectedEnabled()
+        restoreSelectedBtn:SetEnabled(next(selectedBars) ~= nil)
+    end
 
     local keybindCount = 0
     if setData.keybinds and setData.keybinds.bindings then
@@ -467,8 +542,12 @@ function ns.UI.ShowSetDetails(split, setName)
         end
     end
 
-    local restoreKeybindsBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = L["AB_RESTORE_KEYBINDS"], height = 24 })
-    restoreKeybindsBtn:SetPoint("LEFT", restoreAllBtn, "RIGHT", 8, 0)
+    local restoreKeybindsBtn = OneWoW_GUI:CreateFitTextButton(headerBox, {
+        text = L["AB_BTN_KEYBINDS"],
+        height = 24,
+        paddingX = 12,
+    })
+    restoreKeybindsBtn:SetPoint("LEFT", restoreSelectedBtn, "RIGHT", 8, 0)
 
     if keybindCount > 0 then
         restoreKeybindsBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
@@ -488,10 +567,7 @@ function ns.UI.ShowSetDetails(split, setName)
             end
         end)
     else
-        restoreKeybindsBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        restoreKeybindsBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        restoreKeybindsBtn:SetAlpha(0.5)
-        restoreKeybindsBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        restoreKeybindsBtn:SetEnabled(false)
     end
 
     local accountMacros = 0
@@ -506,7 +582,11 @@ function ns.UI.ShowSetDetails(split, setName)
     end
     local macroCount = accountMacros + charMacros
 
-    local restoreMacrosBtn = OneWoW_GUI:CreateFitTextButton(headerBox, { text = L["AB_RESTORE_MACROS"], height = 24 })
+    local restoreMacrosBtn = OneWoW_GUI:CreateFitTextButton(headerBox, {
+        text = MACROS,
+        height = 24,
+        paddingX = 12,
+    })
     restoreMacrosBtn:SetPoint("LEFT", restoreKeybindsBtn, "RIGHT", 8, 0)
 
     if macroCount > 0 then
@@ -525,10 +605,7 @@ function ns.UI.ShowSetDetails(split, setName)
             ShowRestoreMacrosDialog(setName, setData)
         end)
     else
-        restoreMacrosBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        restoreMacrosBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        restoreMacrosBtn:SetAlpha(0.5)
-        restoreMacrosBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        restoreMacrosBtn:SetEnabled(false)
     end
 
     yOffset = yOffset - 96 - 10
@@ -542,9 +619,12 @@ function ns.UI.ShowSetDetails(split, setName)
             ns.UI.ShowSetDetails(split, selectedSetName)
         end
     end)
-    yOffset = yOffset - 28
+
+    yOffset = yOffset - 36
 
     local barOrder = BAR_DISPLAY_ORDER
+    local CHECKBOX_SIZE = OneWoW_GUI.Constants.GUI.CHECKBOX_SIZE
+    local CHECK_GAP = 4
 
     for _, barNumber in ipairs(barOrder) do
         local barData = setData.bars and setData.bars[barNumber]
@@ -554,7 +634,7 @@ function ns.UI.ShowSetDetails(split, setName)
             local slotGap = 6
             local SLOT_SIZE = 32
             local SLOT_STEP = 36
-            local slotXStart = 10
+            local slotXStart = 10 + CHECKBOX_SIZE + CHECK_GAP
             local iconRowRight = slotXStart + ((12 - 1) * SLOT_STEP) + SLOT_SIZE
 
             if barData and barData.slots then
@@ -592,6 +672,23 @@ function ns.UI.ShowSetDetails(split, setName)
             barLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
             local slotYOffset = yOffset - BAR_HEADER_H - slotGap
+
+            if barData and barData.slots then
+                local capturedBarNumber = barNumber
+                local barCheck = OneWoW_GUI:CreateCheckbox(detailScrollChild, {
+                    label = "",
+                    checked = selectedBars[capturedBarNumber],
+                    onClick = function(myself)
+                        if myself:GetChecked() then
+                            selectedBars[capturedBarNumber] = true
+                        else
+                            selectedBars[capturedBarNumber] = nil
+                        end
+                        refreshRestoreSelectedEnabled()
+                    end,
+                })
+                barCheck:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 10, slotYOffset - ((SLOT_SIZE - CHECKBOX_SIZE) / 2))
+            end
 
             for slotIndex = 1, 12 do
                 local slotData = barData and barData.slots and barData.slots[slotIndex]

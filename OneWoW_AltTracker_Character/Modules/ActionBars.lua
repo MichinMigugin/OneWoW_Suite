@@ -662,8 +662,14 @@ local function RestoreBars(mod, barsData, petBarData, options)
 
     local singleBar = options and options.singleBar
     local targetBarOverride = options and options.targetBar
+    local barList = options and options.barList
 
-    if singleBar then
+    if barList then
+        if type(barList) ~= "table" or #barList == 0 then
+            print("|cFFFFD100OneWoW|r AltTracker: No bars selected to restore")
+            return false
+        end
+    elseif singleBar then
         local sourceBarData = barsData[singleBar]
         if not sourceBarData or not sourceBarData.slots then
             print(string.format("|cFFFFD100OneWoW|r AltTracker: No data found for source bar %d", singleBar))
@@ -685,38 +691,51 @@ local function RestoreBars(mod, barsData, petBarData, options)
     local mountCache = mod:CreateMountCache()
     local spellOverride = mod:CreateSpellOverrideMap()
 
-    local startBar = singleBar or 1
-    local endBar = singleBar or 15
-
-    for barNumber = startBar, endBar do
-        local barData = barsData[barNumber]
-        if barData and barData.slots then
-            local targetBar = (singleBar and targetBarOverride) or barNumber
-            local slots = ACTION_BAR_SLOTS[targetBar]
-            if slots then
-                for slotIndex = 1, 12 do
-                    local slotData = barData.slots[slotIndex]
-                    if slotData then
-                        local slotID = slots[slotIndex]
-                        local success, failReason = mod:RestoreActionSlot(slotID, slotData, flyouts, mountCache, spellOverride)
-                        if success then
-                            restoredCount = restoredCount + 1
-                        else
-                            failedCount = failedCount + 1
-                            table.insert(failedItems, {
-                                slotData = slotData,
-                                barNumber = targetBar,
-                                slotIndex = slotIndex,
-                                reason = failReason or "Unknown error"
-                            })
-                        end
-                    end
+    ---@param sourceBarNumber number
+    ---@param targetBar number
+    local function restoreOneBar(sourceBarNumber, targetBar)
+        local barData = barsData[sourceBarNumber]
+        if not barData or not barData.slots then
+            return
+        end
+        local slots = ACTION_BAR_SLOTS[targetBar]
+        if not slots then
+            return
+        end
+        for slotIndex = 1, 12 do
+            local slotData = barData.slots[slotIndex]
+            if slotData then
+                local slotID = slots[slotIndex]
+                local success, failReason = mod:RestoreActionSlot(slotID, slotData, flyouts, mountCache, spellOverride)
+                if success then
+                    restoredCount = restoredCount + 1
+                else
+                    failedCount = failedCount + 1
+                    table.insert(failedItems, {
+                        slotData = slotData,
+                        barNumber = targetBar,
+                        slotIndex = slotIndex,
+                        reason = failReason or "Unknown error"
+                    })
                 end
             end
         end
     end
 
-    if not singleBar and petBarData and IsPetActive() then
+    if barList then
+        for _, barNumber in ipairs(barList) do
+            restoreOneBar(barNumber, barNumber)
+        end
+    else
+        local startBar = singleBar or 1
+        local endBar = singleBar or 15
+        for barNumber = startBar, endBar do
+            local targetBar = (singleBar and targetBarOverride) or barNumber
+            restoreOneBar(barNumber, targetBar)
+        end
+    end
+
+    if not singleBar and not barList and petBarData and IsPetActive() then
         for i = 1, NUM_PET_ACTION_SLOTS do
             local petActionData = petBarData[i]
             if petActionData then
@@ -739,6 +758,8 @@ local function RestoreBars(mod, barsData, petBarData, options)
     if singleBar then
         local targetBar = targetBarOverride or singleBar
         print(string.format("|cFFFFD100OneWoW|r AltTracker: Bar %d to %d restore: %d restored, %d failed", singleBar, targetBar, restoredCount, failedCount))
+    elseif barList then
+        print(string.format("|cFFFFD100OneWoW|r AltTracker: Selected bars restore: %d restored, %d failed", restoredCount, failedCount))
     else
         print(string.format("|cFFFFD100OneWoW|r AltTracker: Restore complete: %d restored, %d failed", restoredCount, failedCount))
     end
@@ -774,6 +795,15 @@ function Module:RestoreSingleBarFromSet(setName, sourceBarNumber, targetBarNumbe
         return false
     end
     return RestoreBars(self, setData.bars, nil, { singleBar = sourceBarNumber, targetBar = targetBarNumber })
+end
+
+function Module:RestoreSelectedBarsFromSet(setName, barList)
+    local setData = self:GetActionBarSet(setName)
+    if not setData or not setData.bars then
+        print("|cFFFFD100OneWoW|r AltTracker: No action bar data found")
+        return false
+    end
+    return RestoreBars(self, setData.bars, nil, { barList = barList })
 end
 
 function Module:RestoreAllBarsFromSet(setName)

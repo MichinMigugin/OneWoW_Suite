@@ -18,7 +18,7 @@
 | **Auctions** | Active auctions/bids, sales, mail gold, history and filters |
 | **Financials** | Income/expense tracking, sources, profit/loss over time |
 | **Items** | Search what you own and where it lives |
-| **Profiles** | Backup/restore action bars, macros, keybinds (multi-spec) |
+| **Profiles** | Backup/restore action bars, macros, keybinds (multi-spec); restore all bars, one bar (with remap), or a selected set of bars |
 | **Lockouts** | Raid/dungeon/M+ style lockouts and weekly planning |
 
 Exact tabs depend on which companion data stores you have enabled.

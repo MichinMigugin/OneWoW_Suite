@@ -54,7 +54,9 @@
 - Bar icon rows and Restore buttons now line up with the bar name
 - Bar names are no longer truncated or indented
 - Per-bar Restore sits on the name row (right side), in a compact size
-- More space between set details and the Restore All / Keybinds / Macros buttons
+- Check the bars you want and use Selected to restore several at once (same bar numbers)
+- Restore actions share one row: All Bars, Selected, Keybinds, Macros
+- More space between set details and the restore action row
 
 ## Fixes
 - Financials transaction list no longer stays blank on first open until the timeframe dropdown is toggled
