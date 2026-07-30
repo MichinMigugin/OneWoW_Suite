@@ -212,14 +212,11 @@ function Module:GetActionInfo(slotID)
             actionData.displayName = "Equipment Set"
         end
     elseif actionType == "flyout" then
-        if GetFlyoutInfo then
-            ---@cast id number
-            local flyoutName = GetFlyoutInfo(id)
-            actionData.flyoutName = flyoutName
-            actionData.displayName = flyoutName and string.format("Flyout: %s", flyoutName) or "Flyout"
-        else
-            actionData.displayName = "Flyout"
-        end
+        actionData.flyoutID = id
+        ---@cast id number
+        local flyoutName = GetFlyoutInfo(id)
+        actionData.flyoutName = flyoutName
+        actionData.displayName = flyoutName and string.format("Flyout: %s", flyoutName) or "Flyout"
     end
 
     return actionData
@@ -930,21 +927,83 @@ end
 
 function Module:CreateFlyoutSpellbookMap()
     local flyouts = {}
+    local playerBank = Enum.SpellBookSpellBank.Player
+
+    local function consider(spellIndex)
+        local info = C_SpellBook.GetSpellBookItemInfo(spellIndex, playerBank)
+        if not info or info.itemType ~= Enum.SpellBookItemType.Flyout then
+            return
+        end
+        local flyoutID = info.actionID
+        if not flyoutID then
+            return
+        end
+        local existing = flyouts[flyoutID]
+        local isOffSpec = info.isOffSpec and true or false
+        -- Prefer an on-spec spellbook entry when both exist.
+        if not existing or (existing.offSpec and not isOffSpec) then
+            flyouts[flyoutID] = { spellIndex, playerBank, offSpec = isOffSpec }
+        end
+    end
 
     for skillLineIndex = 1, C_SpellBook.GetNumSpellBookSkillLines() do
         local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(skillLineIndex)
-        if skillLineInfo then
-            for i = 1, skillLineInfo.numSpellBookItems do
-                local spellIndex = skillLineInfo.itemIndexOffset + i
-                local spellTypeEnum, spellId = C_SpellBook.GetSpellBookItemType(spellIndex, Enum.SpellBookSpellBank.Player)
-                if spellId and spellTypeEnum == Enum.SpellBookItemType.Flyout then
-                    flyouts[spellId] = { spellIndex, Enum.SpellBookSpellBank.Player }
-                end
+        if skillLineInfo and skillLineInfo.numSpellBookItems and skillLineInfo.numSpellBookItems > 0 then
+            local first = skillLineInfo.itemIndexOffset + 1
+            local last = skillLineInfo.itemIndexOffset + skillLineInfo.numSpellBookItems
+            for spellIndex = first, last do
+                consider(spellIndex)
             end
         end
     end
 
     return flyouts
+end
+
+--- Find a spellbook slot for a flyout ID (and optional display name fallback).
+---@param flyoutID number
+---@param flyoutName string|nil
+---@return number|nil spellIndex
+---@return number|nil spellBank
+function Module:FindFlyoutSpellBookSlot(flyoutID, flyoutName)
+    if not flyoutID and not flyoutName then
+        return nil, nil
+    end
+
+    local playerBank = Enum.SpellBookSpellBank.Player
+    local nameMatchIndex, nameMatchBank
+
+    for skillLineIndex = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+        local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(skillLineIndex)
+        if skillLineInfo and skillLineInfo.numSpellBookItems and skillLineInfo.numSpellBookItems > 0 then
+            local first = skillLineInfo.itemIndexOffset + 1
+            local last = skillLineInfo.itemIndexOffset + skillLineInfo.numSpellBookItems
+            for spellIndex = first, last do
+                local info = C_SpellBook.GetSpellBookItemInfo(spellIndex, playerBank)
+                if info and info.itemType == Enum.SpellBookItemType.Flyout then
+                    if flyoutID and info.actionID == flyoutID then
+                        if not info.isOffSpec then
+                            return spellIndex, playerBank
+                        end
+                        nameMatchIndex, nameMatchBank = spellIndex, playerBank
+                    elseif flyoutName and not nameMatchIndex then
+                        local name = info.name
+                        if not name or name == "" then
+                            name = GetFlyoutInfo(info.actionID)
+                        end
+                        if name == flyoutName then
+                            if not info.isOffSpec then
+                                return spellIndex, playerBank
+                            end
+                            nameMatchIndex, nameMatchBank = spellIndex, playerBank
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return nameMatchIndex, nameMatchBank
 end
 
 function Module:CreateMountCache()
@@ -1159,10 +1218,14 @@ local function PickupActionTable(actionData, flyouts, mountCache)
 
     elseif actionData.actionType == "flyout" then
         local flyoutID = actionData.flyoutID or actionData.id
-        if flyoutID and flyouts then
-            local flyout = flyouts[flyoutID]
-            if flyout then
-                C_SpellBook.PickupSpellBookItem(flyout[1], flyout[2])
+        local flyout = flyoutID and flyouts and flyouts[flyoutID]
+        if flyout then
+            C_SpellBook.PickupSpellBookItem(flyout[1], flyout[2])
+        end
+        if not GetCursorInfo() then
+            local slotIndex, spellBank = Module:FindFlyoutSpellBookSlot(flyoutID, actionData.flyoutName)
+            if slotIndex and spellBank then
+                C_SpellBook.PickupSpellBookItem(slotIndex, spellBank)
             end
         end
         if not GetCursorInfo() then

@@ -60,6 +60,7 @@
 
 ## Fixes
 - Financials transaction list no longer stays blank on first open until the timeframe dropdown is toggled
+- Action bar restore now places flyouts like Summon Demon (and similar spellbook flyouts) instead of failing with "Flyout not available"
 
 ---
 
