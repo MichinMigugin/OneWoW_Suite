@@ -5,10 +5,15 @@ Scanned from `SLASH_*` assignments, `SlashCmdList[...]` handlers, and
 `OneWoW_GUI.DB:RegisterSlashCommand(...)` calls (excluding `Libs/` and
 `.wow_docs/`).
 
-**Last audited:** 2026-07-26
+**Last audited:** 2026-07-30
 
 > When you add, rename, or remove a slash command (or a subcommand), update
 > this file in the same change. See **Keeping this file current** at the bottom.
+>
+> **Player-facing canonical set:** the Home tab (`OneWoW/UI/t-home.lua`) and
+> wiki `Slash-Commands` list only the `/1w…` survival set. Aliases below that
+> are not on Home still work this release and are scheduled for removal next
+> release (except debug/dev commands, which stay inventory-only).
 
 ---
 
@@ -16,13 +21,13 @@ Scanned from `SLASH_*` assignments, `SlashCmdList[...]` handlers, and
 
 | Addon / unit | Aliases |
 |---|---|
-| OneWoW (core) | `/1w` `/ow` `/one` `/onewow` · `/1wkeys` `/owkeys` `/onewowkeywords` · `/1wtrace` `/owtrace` · `/ow-wizard` · `/owlocale` · `/petooltip` `/owpetooltip` · `/owsc` `/1wsc` |
+| OneWoW (core) | `/1w` `/ow` `/one` `/onewow` · `/1wkeys` `/owkeys` `/onewowkeywords` · `/1wtrace` `/owtrace` · `/owlocale` · `/petooltip` `/owpetooltip` · `/owsc` `/1wsc` |
 | OneWoW_Notes | `/1wn` `/own` `/onewownotes` |
 | OneWoW_AltTracker | `/1wat` `/owat` `/onewowat` |
 | OneWoW_Catalog | `/1wcat` `/owcat` `/onewowcatalog` |
 | OneWoW_Trackers | `/1wt` `/owt` `/tracker` |
 | OneWoW_QoL | `/1wqol` `/owqol` `/onewowqol` · BagBar: `/bagbar` `/owbb` · CopyText: `/copytext` `/ct` |
-| OneWoW_DirectDeposit | `/1wdd` · `/dd` `/directdeposit` `/directdep` · `/ddeposit` |
+| OneWoW_DirectDeposit | `/1wdd` (`deposit` / `pause` / `stop`) · `/dd` `/directdeposit` `/directdep` · `/ddeposit` |
 | OneWoW_ShoppingList | `/1wsl` `/owsl` `/shoppinglist` |
 | OneWoW_Mail | `/1wmail` `/owmail` · debug: `/owmailtrace` `/1wmailtrace` |
 | OneWoW_Bags | `/1wb` `/onewowbags` `/1wbags` · `/owbags-export` · debug: `/owbprof` `/owblayout` `/owboverlay` |
@@ -36,14 +41,13 @@ Load units with **no** slash commands: `OneWoW_AltTracker_*` data packs,
 ## OneWoW (core)
 
 **Source:** `OneWoW/OneWoW.lua`, `OneWoW/Core/Lifecycle.lua`,
-`OneWoW/Core/FirstRunWizard.lua`, `OneWoW/Services/LocaleService.lua`,
+`OneWoW/Services/LocaleService.lua`,
 `OneWoW/Services/PredicateEngine.lua`, `OneWoW/Services/SearchCatalog.lua`
 
 | Command | Kind | Description |
 |---|---|---|
 | `/1w` `/ow` `/one` `/onewow` | User | Toggle the OneWoW hub window |
 | `/1wkeys` `/owkeys` `/onewowkeywords` | User | Show keyword / search-help dialog |
-| `/ow-wizard` | User | Re-open the first-run setup wizard |
 | `/1wtrace` `/owtrace` | Debug | Lifecycle trace ring buffer |
 | `/owlocale` | Debug | Print locale coverage report to chat |
 | `/petooltip` `/owpetooltip` | Debug | Dump PredicateEngine tooltip debug for hovered / cursor / linked item |
@@ -155,15 +159,16 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 
 | Command | Kind | Description |
 |---|---|---|
-| `/1wdd` | User | Toggle Direct Deposit window |
+| `/1wdd` | User | Toggle Direct Deposit window; `deposit` starts a manual run; `pause` / `stop` cancel |
 | `/dd` `/directdeposit` `/directdep` | User | Toggle Direct Deposit window (`/dd` skipped if another addon already owns `SlashCmdList["DD"]`) |
-| `/ddeposit` | User | Start a manual deposit run |
+| `/ddeposit` | User | Start a manual deposit run (alias; prefer `/1wdd deposit`) |
 
-### `/ddeposit` subcommands
+### `/1wdd` / `/ddeposit` subcommands
 
 | Args | Effect |
 |---|---|
-| _(none)_ | Start manual deposit |
+| _(none on `/1wdd`)_ | Toggle Direct Deposit window |
+| `deposit` (on `/1wdd`) or _(none on `/ddeposit`)_ | Start manual deposit |
 | `pause` / `stop` | Stop an in-progress deposit |
 
 > Home-tab help previously listed `/ddeposit clean`; that subcommand is **not**

@@ -104,6 +104,8 @@ Core\Lifecycle.lua
 Core\StoreBootstrap.lua
 Core\SettingsFeatureRegistry.lua
 Core\FirstRunWizard.lua
+Core\WhatsNewData.lua
+Core\WhatsNew.lua
 
 # Services (shared OneWoW.* engines/utilities consumed cross-unit — see ARCHITECTURE §6).
 # DO NOT reorder within this block: TooltipScanner before PredicateEngine (PE

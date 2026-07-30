@@ -1364,9 +1364,3 @@ function FirstRun:ShowWizard()
     dialog:Show()
     dialog:Raise()
 end
-
--- Slash command to re-open the wizard anytime.
-SLASH_ONEWOW_WIZARD1 = "/ow-wizard"
-SlashCmdList["ONEWOW_WIZARD"] = function()
-    FirstRun:ShowWizard()
-end

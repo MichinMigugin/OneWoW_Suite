@@ -30,6 +30,8 @@ local DEFAULTS = {
     lastModuleTab = "home",
     lastSubTabs = {},
     debugTrace = false,
+    -- TOC Version string last dismissed in the What's New dialog (account-wide).
+    whatsNewDismissedVersion = "",
     -- Named search expressions (#token, SAVED) for suite-wide SearchExpand.
     -- Bags contributes CATEGORY entries from its own SV via a catalog provider.
     searchCatalog = {

@@ -1,6 +1,15 @@
 # OneWoW Suite Changelog
 
 # OneWoW
+## What's New
+- After login (when the first-run wizard is not pending), a What's New dialog highlights this release; check "Don't show again this release" to dismiss it for this account until the next version
+- Home has a What's New link to reopen the dialog anytime
+
+## Slash commands
+- Home Available Commands now lists only the canonical `/1w…` set (hub `/1w`, Bags `/1wbags`, Direct Deposit `/1wdd` with `deposit` / `pause` / `stop`, Shopping List `/1wsl add`, and the other `/1w` feature opens)
+- Other aliases still work this release; the next release will remove every slash command that is not shown on Home
+- `/ow-wizard` removed — re-open the feature picker from Home → Manage Features (or Settings → Manage Features)
+
 ## Fixes
 - Reference check no longer flags packed game CVars or macro `#showtooltip` text inside Character Profiles as missing search shortcuts
 

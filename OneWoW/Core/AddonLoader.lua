@@ -674,7 +674,7 @@ ns.ModuleManifest = {
     { addon = "OneWoW_DirectDeposit",   display = "DirectDeposit", cmd = "/1wdd",  loadPhase = "login" },
     { addon = "OneWoW_ShoppingList",    display = "ShoppingList",  cmd = "/1wsl",  loadPhase = "login" },
     { addon = "OneWoW_Mail",            display = "Mail",          cmd = "/1wmail", loadPhase = "login" },
-    { addon = "OneWoW_Bags",            display = "Bags",          cmd = "/1wb",   loadPhase = "login" },
+    { addon = "OneWoW_Bags",            display = "Bags",          cmd = "/1wbags", loadPhase = "login" },
     { addon = "OneWoW_Utility_DevTool", display = "DevTools",      cmd = "/1wdt",  loadPhase = "login" },
 }
 local Manifest = ns.ModuleManifest

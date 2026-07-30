@@ -61,7 +61,7 @@
 1. Extract the `OneWoW_Bags` folder to your `World of Warcraft\_retail_\Interface\AddOns\` directory
 2. Extract the `OneWoW` folder (required dependency) to the same directory
 3. Restart World of Warcraft or type `/reload` in-game
-4. Type `/bags` or `/1wb` to open the addon
+4. Type `/1wbags` to open the addon
 
 ## Requirements
 
@@ -81,9 +81,7 @@ Addon authors: start with [`API/INTEGRATION_GUIDE.md`](API/INTEGRATION_GUIDE.md)
 
 ## Slash Commands
 
-- `/bags` - Open Bags
-- `/1wb` - Open Bags
-- `/owbags` - Open Bags
+- `/1wbags` — Open Bags (canonical; also `/1wb`, `/onewowbags` this release)
 
 ## Localization
 

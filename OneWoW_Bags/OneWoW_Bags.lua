@@ -837,7 +837,7 @@ function OneWoW_Bags:OnAddonLoaded()
     end)
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
-    OneWoW:RegisterLoadComponent("Bags", _ver, "/1wb")
+    OneWoW:RegisterLoadComponent("Bags", _ver, "/1wbags")
 end
 
 -- Login-phase arming via RunManifestLoginPhase (cold start) or Settle
@@ -1324,9 +1324,9 @@ function ns:OnCooldownUpdate()
 end
 
 function ns:RegisterSlashCommands()
-    SLASH_ONEWOW_BAGS1 = "/1wb"
-    SLASH_ONEWOW_BAGS2 = "/onewowbags"
-    SLASH_ONEWOW_BAGS3 = "/1wbags"
+    SLASH_ONEWOW_BAGS1 = "/1wbags"
+    SLASH_ONEWOW_BAGS2 = "/1wb"
+    SLASH_ONEWOW_BAGS3 = "/onewowbags"
 
     SlashCmdList["ONEWOW_BAGS"] = function()
         self.GUI:Toggle()

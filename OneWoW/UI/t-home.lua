@@ -279,13 +279,29 @@ function UI:CreateHomeTab(parent)
 
     yOffset = yOffset - 42
 
-    -- Home is read-only for enable/disable; point users to Manage Features.
+    -- Link row between thanks and the feature panels: Manage Features left,
+    -- What's New right — same 10px outer / 15px inner inset as the panels.
     local manageRow = CreateFrame("Frame", nil, content)
     manageRow:SetHeight(20)
-    manageRow:SetPoint("TOPLEFT", content, "TOPLEFT", 15, yOffset)
-    manageRow:SetPoint("TOPRIGHT", content, "TOPRIGHT", -15, yOffset)
+    manageRow:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
+    manageRow:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
 
-    UI:CreateManageFeaturesLinkRow(manageRow, { pointerKey = "HOME_MANAGE_POINTER", center = true })
+    local manageLeft = CreateFrame("Frame", nil, manageRow)
+    manageLeft:SetHeight(20)
+    manageLeft:SetPoint("LEFT", manageRow, "LEFT", 15, 0)
+    manageLeft:SetWidth(500)
+    UI:CreateManageFeaturesLinkRow(manageLeft, { pointerKey = "HOME_MANAGE_POINTER" })
+
+    local whatsNewLink = OneWoW_GUI:CreateTextLink(manageRow, {
+        text = L["HOME_WHATS_NEW"],
+        fontSize = 12,
+        onClick = function()
+            if ns.WhatsNew then
+                ns.WhatsNew:Show(true)
+            end
+        end,
+    })
+    whatsNewLink:SetPoint("RIGHT", manageRow, "RIGHT", -15, 0)
 
     yOffset = yOffset - 28
 
@@ -505,6 +521,8 @@ function UI:CreateHomeTab(parent)
     cmdRight:SetPoint("TOPLEFT",    cmdContainer, "TOP",         0, -40)
     cmdRight:SetPoint("BOTTOMRIGHT", cmdContainer, "BOTTOMRIGHT", 0, 0)
 
+    -- Canonical /1w* set only (next-release survival contract). Other aliases
+    -- remain registered this release — see Whats New / suitecommands.md.
     local function RenderSets(panel, sets)
         local pY = -8
         for _, set in ipairs(sets) do
@@ -532,7 +550,7 @@ function UI:CreateHomeTab(parent)
                         cmdText:SetText("|cFFFFFFFF" .. cmdInfo.cmd .. "|r")
                         cmdText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
                         local descText = OneWoW_GUI:CreateFS(panel, 12)
-                        descText:SetPoint("TOPLEFT", panel, "TOPLEFT", 210, pY)
+                        descText:SetPoint("TOPLEFT", panel, "TOPLEFT", 160, pY)
                         descText:SetText("- " .. cmdInfo.desc)
                         descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
                         pY = pY - 20
@@ -549,43 +567,42 @@ function UI:CreateHomeTab(parent)
             always = true,
             header = "OneWoW",
             commands = {
-                { cmd = "/1w, /ow, /one, /onewow", desc = L["CMD_TOGGLE_ONEWOW"] },
-                { cmd = "/1wkeys, /owkeys", desc = L["CMD_KEYWORD_HELP"] },
+                { cmd = "/1w", desc = L["CMD_TOGGLE_ONEWOW"] },
             },
         },
         {
             global = "OneWoW_Notes",
             header = "Notes",
             commands = {
-                { cmd = "/1wn, /own, /onewownotes", desc = L["CMD_OPEN_NOTES"] },
+                { cmd = "/1wn", desc = L["CMD_OPEN_NOTES"] },
             },
         },
         {
             global = "OneWoW_AltTracker",
             header = "AltTracker",
             commands = {
-                { cmd = "/1wat, /owat, /onewowat", desc = L["CMD_OPEN_ALTTRACKER"] },
+                { cmd = "/1wat", desc = L["CMD_OPEN_ALTTRACKER"] },
             },
         },
         {
             global = "OneWoW_Catalog",
             header = "Catalog",
             commands = {
-                { cmd = "/1wcat, /owcat, /onewowcatalog", desc = L["CMD_OPEN_CATALOG"] },
+                { cmd = "/1wcat", desc = L["CMD_OPEN_CATALOG"] },
             },
         },
         {
             global = "OneWoW_Trackers",
             header = "Trackers",
             commands = {
-                { cmd = "/1wt, /owt, /tracker", desc = L["CMD_OPEN_TRACKERS"] },
+                { cmd = "/1wt", desc = L["CMD_OPEN_TRACKERS"] },
             },
         },
         {
             global = "OneWoW_QoL",
             header = "QoL",
             commands = {
-                { cmd = "/1wqol, /owqol, /onewowqol", desc = L["CMD_OPEN_QOL"] },
+                { cmd = "/1wqol", desc = L["CMD_OPEN_QOL"] },
             },
         },
     }
@@ -595,39 +612,38 @@ function UI:CreateHomeTab(parent)
             global = "OneWoW_DirectDeposit",
             header = "Direct Deposit",
             commands = {
-                { cmd = "/1wdd, /dd, /directdeposit, /directdep", desc = L["CMD_OPEN_DD"] },
-                { cmd = "  /ddeposit",                             desc = L["CMD_MANUAL_DEPOSIT"] },
-                { cmd = "  /ddeposit pause|stop",                  desc = L["CMD_DEPOSIT_PAUSE"] },
+                { cmd = "/1wdd",                    desc = L["CMD_OPEN_DD"] },
+                { cmd = "  /1wdd deposit",          desc = L["CMD_MANUAL_DEPOSIT"] },
+                { cmd = "  /1wdd pause|stop",       desc = L["CMD_DEPOSIT_PAUSE"] },
             },
         },
         {
             global = "OneWoW_ShoppingList",
             header = "Shopping List",
             commands = {
-                { cmd = "/1wsl, /owsl, /shoppinglist", desc = L["CMD_OPEN_SL"] },
-                { cmd = "  /owsl add <id>",            desc = L["CMD_SL_ADD"] },
+                { cmd = "/1wsl",              desc = L["CMD_OPEN_SL"] },
+                { cmd = "  /1wsl add <id>",   desc = L["CMD_SL_ADD"] },
             },
         },
         {
             global = "OneWoW_Bags",
             header = "Bags",
             commands = {
-                { cmd = "/1wb, /onewowbags, /1wbags", desc = L["CMD_OPEN_BAGS"] },
-                { cmd = "  /owbags-export",           desc = L["CMD_BAGS_EXPORT"] },
+                { cmd = "/1wbags", desc = L["CMD_OPEN_BAGS"] },
             },
         },
         {
             global = "OneWoW_Mail",
             header = "Mail",
             commands = {
-                { cmd = "/1wmail, /owmail", desc = L["CMD_OPEN_MAIL"] },
+                { cmd = "/1wmail", desc = L["CMD_OPEN_MAIL"] },
             },
         },
         {
             global = "OneWoW_Utility_DevTool",
             header = "DevTools",
             commands = {
-                { cmd = "/1wdt, /dt, /devtool, /devtools", desc = L["CMD_OPEN_DEVTOOLS"] },
+                { cmd = "/1wdt", desc = L["CMD_OPEN_DEVTOOLS"] },
             },
         },
     }

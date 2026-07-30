@@ -168,11 +168,18 @@ function ns:RunCoreLoginSequence()
 
     -- First-run feature picker: show once per account. Delayed a few
     -- seconds so it appears AFTER the suite's load banner and any error
-    -- popups have cleared.
+    -- popups have cleared. What's New only auto-shows when the wizard
+    -- will not (upgrades, not brand-new installs).
     if ns.FirstRun and ns.FirstRun:ShouldShowWizard() then
         C_Timer.After(3, function()
             if ns.FirstRun and ns.FirstRun:ShouldShowWizard() then
                 ns.FirstRun:ShowWizard()
+            end
+        end)
+    elseif ns.WhatsNew then
+        C_Timer.After(3, function()
+            if ns.WhatsNew then
+                ns.WhatsNew:TryAutoShow()
             end
         end)
     end
