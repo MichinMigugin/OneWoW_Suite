@@ -42,7 +42,7 @@ Another addon already registered `/dd`. Use `/1wdd`, `/directdeposit`, or `/dire
 
 ### Bags vs default bags / other bag addons
 
-Enable only one primary bag UI you intend to use, or expect overlapping keybinds and frames. OneWoW Bags opens with `/1wb` (see [Bags](Bags)).
+Enable only one primary bag UI you intend to use, or expect overlapping keybinds and frames. OneWoW Bags opens with `/1wbags` (see [Bags](Bags)).
 
 ### Where do I get help?
 

@@ -2,9 +2,9 @@ After [Install](Install), use this path to get a working setup quickly.
 
 ## Open the hub
 
-In chat, type any of:
+In chat, type:
 
-* `/ow` · `/1w` · `/one` · `/onewow`
+* `/1w`
 
 That toggles the OneWoW hub window: portals, settings, and tabs for every feature you have enabled.
 
@@ -12,12 +12,12 @@ That toggles the OneWoW hub window: portals, settings, and tabs for every featur
 
 On a fresh install, OneWoW can open a **feature picker** so you choose which modules to load. The same panel lives under hub settings as **Manage Features**.
 
-* Re-open the wizard anytime with `/ow-wizard`
+* Re-open Manage Features anytime from the Home tab link, or **Settings → Manage Features**
 * You can change your mind later — enabling or disabling modules is normal
 
 ## Manage Features
 
-Open **Manage Features** from the hub (or the wizard):
+Open **Manage Features** from the hub (Home link or Settings):
 
 * Turn on only what you use (Bags, QoL, AltTracker, Catalog, and so on)
 * A disabled module is **unloaded**, not merely hidden — less overhead, cleaner UI
@@ -47,6 +47,7 @@ Even with no optional modules, **OneWoW** includes:
 ## Related
 
 * [Slash commands](Slash-Commands)
+* [Release notes](Release-Notes)
 * [FAQ](FAQ)
 * Feature pages in the sidebar
 
@@ -54,4 +55,4 @@ Even with no optional modules, **OneWoW** includes:
 
 * [README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/README.md) — suite overview and Manage Features model
 * [OneWoW/README.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/README.md) — hub features (portals, tooltips, toasts, search)
-* [suitecommands.md](https://github.com/kellewic/OneWoW_Suite/blob/main/suitecommands.md) — slash command inventory (player subset)
+* [suitecommands.md](https://github.com/kellewic/OneWoW_Suite/blob/main/suitecommands.md) — slash command inventory (full registry; Home shows the canonical subset)

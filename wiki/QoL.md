@@ -2,7 +2,7 @@
 
 **Requires:** [OneWoW](Home) core. Enable **QoL** under [Manage Features](Getting-Started).
 
-**Open:** `/1wqol` · `/owqol` · `/onewowqol` (see [Slash commands](Slash-Commands))
+**Open:** `/1wqol` (see [Slash commands](Slash-Commands))
 
 ---
 

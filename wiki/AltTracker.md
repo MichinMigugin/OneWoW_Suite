@@ -2,7 +2,7 @@
 
 **Requires:** [OneWoW](Home) core. Enable **AltTracker** under [Manage Features](Getting-Started). Install the companion `OneWoW_AltTracker_*` data folders for full coverage.
 
-**Open:** `/1wat` · `/owat` · `/onewowat` (see [Slash commands](Slash-Commands))
+**Open:** `/1wat` (see [Slash commands](Slash-Commands))
 
 ---
 

@@ -29,6 +29,10 @@ alone (see `onewow-changelog`).
 If yes → edit `wiki/`, keep **Related → Sources** accurate, do not paste engineering
 depth from Docs. If no → leave `wiki/` alone.
 
+**Release notes:** when shipping a CurseForge release, prepend that release’s
+`CHANGELOG.md` body onto `wiki/Release-Notes.md` (newest first) before clearing
+the repo changelog. See `OneWoW-Wiki.mdc` § Release notes archive.
+
 ## Writing
 
 - Players, not developers: what to do in-game, not file/API maps.

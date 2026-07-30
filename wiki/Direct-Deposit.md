@@ -2,7 +2,7 @@
 
 **Requires:** [OneWoW](Home) core. Enable **Direct Deposit** under [Manage Features](Getting-Started).
 
-**Open:** `/1wdd` · `/dd` · `/directdeposit` · `/directdep` (see [Slash commands](Slash-Commands)). `/dd` is skipped if another addon already owns it.
+**Open:** `/1wdd` (see [Slash commands](Slash-Commands)). Manual deposit: `/1wdd deposit`; pause/stop: `/1wdd pause` or `stop`.
 
 ---
 
@@ -20,7 +20,7 @@
 * Build a list by item ID, drag-and-drop, or **quick-add keybindings** while hovering a bag item
 * Per-item destination: Warband Bank, Personal Bank, or Guild Bank
 * Deposits run when you open a matching bank
-* **Deposit Now** or `/ddeposit` for an on-demand sweep; `/ddeposit pause` or `stop` to halt mid-run
+* **Deposit Now** or `/1wdd deposit` for an on-demand sweep; `/1wdd pause` or `stop` to halt mid-run
 * Tooltips can show the queued destination for listed items
 
 ### Warbound sweep

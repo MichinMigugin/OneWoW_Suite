@@ -13,8 +13,9 @@ This wiki is the **player** reference — install, hub setup, slash commands, an
 ## Start here
 
 1. **[Install](Install)** — CurseForge or Discord zip into `Interface\AddOns\`
-2. **[Getting started](Getting-Started)** — open `/ow`, run the wizard, enable features
+2. **[Getting started](Getting-Started)** — open `/1w`, run the wizard, enable features
 3. **[Slash commands](Slash-Commands)** — open each part of the suite from chat
+4. **[Release notes](Release-Notes)** — what changed in recent ships
 
 ## What you get
 
@@ -43,7 +44,7 @@ You do **not** need every folder. Companion data packs for Catalog and AltTracke
 
 ## Related
 
-* [Install](Install) · [Getting started](Getting-Started) · [Slash commands](Slash-Commands)
+* [Install](Install) · [Getting started](Getting-Started) · [Slash commands](Slash-Commands) · [Release notes](Release-Notes)
 * [Developers](Developers)
 
 ### Sources

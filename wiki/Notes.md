@@ -2,7 +2,7 @@
 
 **Requires:** [OneWoW](Home) core. Enable **Notes** under [Manage Features](Getting-Started).
 
-**Open:** `/1wn` · `/own` · `/onewownotes` (see [Slash commands](Slash-Commands))
+**Open:** `/1wn` (see [Slash commands](Slash-Commands))
 
 ---
 

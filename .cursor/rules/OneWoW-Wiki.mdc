@@ -69,3 +69,10 @@ When adding a public feature load unit, update together:
 - `contents: write`; `disable-empty-commits: true`; action `@v5`.
 - Wiki backend must already exist (one-time dummy page in GitHub UI — already done
   for this repo).
+
+## Release notes archive
+
+`wiki/Release-Notes.md` is the player archive of shipped notes. When preparing a
+CurseForge release, **prepend** that release’s `CHANGELOG.md` body onto
+`Release-Notes.md` (newest first) before clearing or resetting the repo changelog.
+The in-game What’s New dialog links to this wiki page for the full write-up.

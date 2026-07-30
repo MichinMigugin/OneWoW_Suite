@@ -2,7 +2,7 @@
 
 **Requires:** [OneWoW](Home) core. Enable **Bags** under [Manage Features](Getting-Started).
 
-**Open:** `/1wb` · `/1wbags` · `/onewowbags` (see [Slash commands](Slash-Commands))
+**Open:** `/1wbags` (see [Slash commands](Slash-Commands))
 
 ---
 
@@ -43,7 +43,6 @@ Full reference: [Search syntax](Bags-Search-Syntax).
 * Lock window position
 * Highlight recently acquired items
 * Optional Shopping List integration for what you still need
-* Export Bags settings with `/owbags-export`
 
 ### Layout tweaks
 
@@ -57,7 +56,7 @@ Full reference: [Search syntax](Bags-Search-Syntax).
 
 1. Install `OneWoW` and `OneWoW_Bags` ([Install](Install)).
 2. Enable **Bags** in Manage Features.
-3. Open Bags with `/1wb` and pick a view mode you like.
+3. Open Bags with `/1wbags` and pick a view mode you like.
 4. Skim [Search syntax](Bags-Search-Syntax) — start with the quick-start table.
 5. Create a custom category or saved search when you outgrow typing the same filter every time.
 

@@ -2,7 +2,7 @@
 
 **Requires:** [OneWoW](Home) core. Enable **Trackers** under [Manage Features](Getting-Started).
 
-**Open:** `/1wt` · `/owt` · `/tracker` (see [Slash commands](Slash-Commands))
+**Open:** `/1wt` (see [Slash commands](Slash-Commands))
 
 ---
 

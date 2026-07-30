@@ -4,6 +4,7 @@
 * [Install](Install)
 * [Getting started](Getting-Started)
 * [Slash commands](Slash-Commands)
+* [Release notes](Release-Notes)
 
 ### Features
 * [Bags](Bags)

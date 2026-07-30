@@ -21,7 +21,7 @@ Site and community: [https://wow2.xyz/](https://wow2.xyz/)
 
 3. At the character select screen, open **AddOns** and enable `OneWoW` plus any optional modules you installed.
 4. Log in (or `/reload` if you already were in-world).
-5. Type `/ow` (also `/1w`, `/one`, `/onewow`) to open the hub.
+5. Type `/1w` to open the hub.
 6. Use **Manage Features** to enable or disable optional modules. Disabling a feature **unloads** it — it is not just hidden.
 
 ## What the folders mean

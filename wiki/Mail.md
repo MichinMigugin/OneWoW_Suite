@@ -2,7 +2,7 @@
 
 **Requires:** [OneWoW](Home) core. Enable **Mail** under [Manage Features](Getting-Started). Storage / Character data (pulled with Mail) helps alt addressing, restock, and in-transit tracking — AltTracker hub not required.
 
-**Open:** at a mailbox, or `/1wmail` · `/owmail` (see [Slash commands](Slash-Commands))
+**Open:** at a mailbox, or `/1wmail` (see [Slash commands](Slash-Commands))
 
 ---
 

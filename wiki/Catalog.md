@@ -2,7 +2,7 @@
 
 **Requires:** [OneWoW](Home) core. Enable **Catalog** under [Manage Features](Getting-Started). Companion `OneWoW_CatalogData_*` packs fill each tab.
 
-**Open:** `/1wcat` · `/owcat` · `/onewowcatalog` (see [Slash commands](Slash-Commands))
+**Open:** `/1wcat` (see [Slash commands](Slash-Commands))
 
 ---
 

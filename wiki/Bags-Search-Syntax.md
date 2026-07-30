@@ -346,7 +346,7 @@ SAVED(Collected Toys) & #epic
 
 * [Bags](Bags) — UI overview
 * Hub **Search Shortcuts** and Bags category editor for saving rules
-* In-game help: `/owkeys` opens the keyword / search-help dialog
+* In-game help: the search help icon (keyword / search-help dialog) on Bags and related search UIs
 
 ### Sources
 

@@ -2,7 +2,7 @@
 
 **Requires:** [OneWoW](Home) core. Enable **Shopping List** under [Manage Features](Getting-Started).
 
-**Open:** `/1wsl` · `/owsl` · `/shoppinglist` (see [Slash commands](Slash-Commands))
+**Open:** `/1wsl` (see [Slash commands](Slash-Commands))
 
 ---
 
