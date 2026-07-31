@@ -40,11 +40,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["CHARS_REMOVE_NONE_SELECTED"] = "선택된 캐릭터가 없습니다.",
     ["SETTINGS_ROLES_ALTS_POINTER"] = "캐릭터 역할, 툴팁 부캐 필터, 삭제된 캐릭터의 OneWoW 데이터베이스 제거는 설정 \226\134\146 역할 및 부캐에서 관리합니다.",
     ["SETTINGS_ROLES_ALTS_BTN"] = "역할 및 부캐 열기",
-
-    ["HOME_VERSION"] = "버전",
     ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
-    ["HOME_REQUIRED_ADDONS"] = "필수 애드온",
-    ["HOME_DETECTED_MODULES"] = "감지된 모듈",
     ["HOME_STANDALONE_ADDONS"] = "독립형 애드온",
     ["HOME_STATUS_NOT_FOUND"] = "찾을 수 없음",
     ["PLACEHOLDER_ENABLE_POINTER"] = "다음에서 활성화:",
@@ -61,7 +57,6 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
 
     ["MODULE_BAGS"] = "Bags",
     ["MODULE_DEVTOOLS"] = "DevTools",
-    ["MODULE_EXTRACTOR"] = "Extractor",
 
     ["MINIMAP_TOOLTIP_HINT"] = "클릭하여 OneWoW 전환",
     ["MINIMAP_MODULES_LOADED"] = "%d개 모듈 로드됨",
@@ -140,7 +135,9 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "프레임 검사, 이벤트, 오류, 전역 변수, 아틀라스 탐색 개발자 유틸리티.",
 
-    ["HOME_COMMANDS"] = "사용 가능한 명령어",
+    ["HOME_COMMAND_OPTIONS"] = "명령어 옵션",
+    ["HOME_SUMMARY_FORMAT"] = "애드온 %d개 로드됨 · %d개 주의 필요",
+    ["HOME_NOT_INSTALLED"] = "설치되지 않음",
     ["HOME_WHATS_NEW"] = "새로운 기능",
     ["WHATS_NEW_TITLE"] = "새로운 기능 — %s",
     ["WHATS_NEW_DONT_SHOW"] = "이 버전에서는 다시 표시하지 않음",
@@ -148,7 +145,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WHATS_NEW_URL"] = "https://github.com/kellewic/OneWoW_Suite/wiki/Release-Notes",
     ["WHATS_NEW_RELEASE_NOTES_BTN"] = "릴리스 노트",
     ["WHATS_NEW_H_SLASH_TITLE"] = "슬래시 명령어",
-    ["WHATS_NEW_H_SLASH_BODY"] = "홈 탭에 표준 /1w… 명령어만 표시됩니다. 다른 별칭은 이번 버전에서도 동작하며 — 다음 버전에서는 홈에 없는 슬래시 명령어가 모두 제거됩니다.",
+    ["WHATS_NEW_H_SLASH_BODY"] = "홈 애드온 카드에 각 기능의 기본 /1w… 명령이 표시됩니다. 명령어 옵션에는 Direct Deposit 및 Shopping List 하위 명령이 나열됩니다. 다른 별칭은 이번 릴리스에서도 동작하며, 다음 릴리스에서는 홈에 표시되지 않는 슬래시 명령이 모두 제거됩니다.",
     ["WHATS_NEW_H_MAIL_BODY"] = "경매장 우편을 펼치면 전체 거래 내역이 표시됩니다.",
     ["WHATS_NEW_H_QOL_TITLE"] = "QoL — Auto Open",
     ["WHATS_NEW_H_QOL_BODY"] = "우편·은행·상인·전문 기술 창이 열려 있는 동안 습득한 용기도 Auto Open이 엽니다.",
@@ -178,17 +175,15 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["VALUE_AUCTIONATOR_POPUP_TEXT"] = "Auctionator가 OneWoW 툴팁의 경매장 가격 소스가 되었습니다. OneWoW가 겹치는 Auctionator 툴팁 줄을 껐습니다. Auctionator로 AH를 스캔하여 가격을 갱신하세요. 이 옵션이 켜져 있으면 OneWoW 전체 AH 스캐너 버튼이 숨겨집니다.",
     ["VALUE_TSM_POPUP_TEXT"] = "OneWoW가 툴팁에 TSM 가격 줄을 표시합니다. 중복 정보를 피하려면 TSM > 설정 > 툴팁 설정에서 \"TSM 툴팁 사용\"을 끄거나, 필요 없는 개별 TSM 툴팁 줄을 지우세요.",
 
-    ["HOME_DETECTED_DATA_MODULES"] = "감지된 데이터 모듈",
     ["HOME_STATUS_ALL"] = "모든 캐릭터에서 사용",
     ["HOME_STATUS_SOME"] = "일부 캐릭터에서 사용",
     ["HOME_STATUS_NOTLOADED"] = "사용 중이지만 불러오지 않음. 기능 관리에서 불러오세요.",
     ["HOME_STATUS_PENDING_DISABLE"] = "사용 및 불러옴, 다음 재시작 후 불러오지 않음.",
     ["HOME_STATUS_NONE"] = "이 캐릭터에서 사용 안 함",
-    ["HOME_NOTLOADED_TAG"] = "(불러오지 않음)",
-    ["HOME_PENDING_DISABLE_TAG"] = "(다음 재시작 후 비활성)",
     ["HOME_MANAGE_POINTER"] = "다음에서 기능 사용/사용 안 함:",
     ["HOME_MANAGE_LINK"] = "기능 관리",
-    ["HOME_VERSION_MISMATCH_NOTICE"] = "일부 OneWoW 애드온이 최신이 아니며 코어 버전 %s와(과) 일치하지 않습니다. 모든 모듈이 동일한 버전이 되도록 전체 OneWoW 모음을 다시 다운로드하세요.",
+    ["HOME_VERSION_MISMATCH_NOTICE"] = "일부 OneWoW 애드온이 최신이 아니며 코어 버전 %s와(과) 일치하지 않습니다. 모든 애드온이 동일한 버전이 되도록 전체 OneWoW 모음을 다시 다운로드하세요.",
+    ["HOME_VERSION_MISMATCH_NAMED"] = "오래됨: %s. 모든 애드온을 %s(으)로 맞추려면 모음을 다시 설치하세요.",
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",
@@ -204,8 +199,6 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["CAT_MOD_VENDORS"] = "Vendors",
 
     ["HOME_UTILITIES"] = "유틸리티",
-    ["HOME_ALTTRACKER_MODULES"] = "AltTracker 모듈",
-    ["HOME_CATALOG_DATA_MODULES"] = "Catalog 데이터 모듈",
     ["HOME_SUPPORT"] = "OneWoW 후원",
     ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "특별 감사",

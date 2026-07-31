@@ -40,11 +40,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["CHARS_REMOVE_NONE_SELECTED"] = "Nessun personaggio selezionato.",
     ["SETTINGS_ROLES_ALTS_POINTER"] = "Ruoli personaggio, filtri alt nelle descrizioni e rimozione personaggi cancellati dai database OneWoW si gestiscono in Impostazioni \226\134\146 Ruoli e alt.",
     ["SETTINGS_ROLES_ALTS_BTN"] = "Apri Ruoli e alt",
-
-    ["HOME_VERSION"] = "Versione",
     ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
-    ["HOME_REQUIRED_ADDONS"] = "Addon richiesti",
-    ["HOME_DETECTED_MODULES"] = "Moduli rilevati",
     ["HOME_STANDALONE_ADDONS"] = "Addon autonomi",
     ["HOME_STATUS_NOT_FOUND"] = "Non trovato",
     ["PLACEHOLDER_ENABLE_POINTER"] = "Attiva da",
@@ -61,7 +57,6 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
 
     ["MODULE_BAGS"] = "Bags",
     ["MODULE_DEVTOOLS"] = "DevTools",
-    ["MODULE_EXTRACTOR"] = "Extractor",
 
     ["MINIMAP_TOOLTIP_HINT"] = "Clicca per attivare/disattivare OneWoW",
     ["MINIMAP_MODULES_LOADED"] = "%d moduli caricati",
@@ -140,7 +135,9 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "Utilità per sviluppatori per ispezione dei riquadri, eventi, errori, variabili globali e navigazione dell'atlante.",
 
-    ["HOME_COMMANDS"] = "Comandi disponibili",
+    ["HOME_COMMAND_OPTIONS"] = "Opzioni comandi",
+    ["HOME_SUMMARY_FORMAT"] = "%d addon caricati · %d richiedono attenzione",
+    ["HOME_NOT_INSTALLED"] = "Non installato",
     ["HOME_WHATS_NEW"] = "Novità",
     ["WHATS_NEW_TITLE"] = "Novità — %s",
     ["WHATS_NEW_DONT_SHOW"] = "Non mostrare di nuovo in questa versione",
@@ -148,7 +145,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["WHATS_NEW_URL"] = "https://github.com/kellewic/OneWoW_Suite/wiki/Release-Notes",
     ["WHATS_NEW_RELEASE_NOTES_BTN"] = "Note di rilascio",
     ["WHATS_NEW_H_SLASH_TITLE"] = "Comandi slash",
-    ["WHATS_NEW_H_SLASH_BODY"] = "La scheda Home elenca ora i comandi canonici /1w…. Gli altri alias funzionano ancora in questa versione — la prossima rimuoverà ogni comando slash non mostrato in Home.",
+    ["WHATS_NEW_H_SLASH_BODY"] = "Le schede addon della Home mostrano il comando /1w… principale di ogni funzione. Opzioni comandi elenca i sottocomandi di Direct Deposit e Shopping List. Gli altri alias funzionano ancora in questa versione — la prossima rimuoverà ogni comando slash non mostrato nella Home.",
     ["WHATS_NEW_H_MAIL_BODY"] = "La posta della Casa d'Aste mostra un riepilogo completo della fattura quando la espandi.",
     ["WHATS_NEW_H_QOL_TITLE"] = "QoL — Auto Open",
     ["WHATS_NEW_H_QOL_BODY"] = "Auto Open ora apre i contenitori raccolti mentre posta, banca, mercante o professione erano aperti.",
@@ -178,17 +175,15 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["VALUE_AUCTIONATOR_POPUP_TEXT"] = "Auctionator è ora la fonte dei prezzi della casa d'aste nei tooltip di OneWoW. OneWoW ha disattivato le righe tooltip di Auctionator che si sovrapponevano. Scansiona la CA con Auctionator per aggiornare i prezzi. I pulsanti dello scanner CA completo di OneWoW sono nascosti mentre questa opzione è attiva.",
     ["VALUE_TSM_POPUP_TEXT"] = "OneWoW mostrerà una riga di prezzo TSM nei tooltip. Per evitare informazioni duplicate, apri TSM > Settings > Tooltip Settings e disattiva «Enable TSM tooltips», o cancella le singole righe tooltip TSM che non ti servono.",
 
-    ["HOME_DETECTED_DATA_MODULES"] = "Moduli dati rilevati",
     ["HOME_STATUS_ALL"] = "Attivato per tutti i personaggi",
     ["HOME_STATUS_SOME"] = "Attivato per alcuni personaggi",
     ["HOME_STATUS_NOTLOADED"] = "Attivato, ma non caricato. Caricalo in Gestisci funzioni.",
     ["HOME_STATUS_PENDING_DISABLE"] = "Attivato e caricato, ma non si caricherà al prossimo ricaricamento.",
     ["HOME_STATUS_NONE"] = "Disattivato per questo personaggio",
-    ["HOME_NOTLOADED_TAG"] = "(non caricato)",
-    ["HOME_PENDING_DISABLE_TAG"] = "(disattivato al prossimo ricaricamento)",
     ["HOME_MANAGE_POINTER"] = "Attiva o disattiva le funzioni in",
     ["HOME_MANAGE_LINK"] = "Gestisci funzioni",
-    ["HOME_VERSION_MISMATCH_NOTICE"] = "Alcuni addon di OneWoW non sono aggiornati e non corrispondono alla versione %s del core. Scarica di nuovo la suite completa di OneWoW in modo che tutti i moduli siano alla stessa versione.",
+    ["HOME_VERSION_MISMATCH_NOTICE"] = "Alcuni addon di OneWoW non sono aggiornati e non corrispondono alla versione %s del core. Scarica di nuovo la suite completa di OneWoW in modo che tutti gli addon siano alla stessa versione.",
+    ["HOME_VERSION_MISMATCH_NAMED"] = "Non aggiornato: %s. Reinstalla la suite per portare tutti gli addon a %s.",
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",
@@ -204,8 +199,6 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["CAT_MOD_VENDORS"] = "Vendors",
 
     ["HOME_UTILITIES"] = "Utilità",
-    ["HOME_ALTTRACKER_MODULES"] = "Moduli di AltTracker",
-    ["HOME_CATALOG_DATA_MODULES"] = "Moduli dati di Catalog",
     ["HOME_SUPPORT"] = "Sostieni OneWoW",
     ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "Ringraziamenti speciali",

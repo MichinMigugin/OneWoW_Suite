@@ -573,14 +573,22 @@ owned store to appear in some consumer list.
 
 ### 4.2 Home tab live refresh
 
-`UI/t-home.lua` builds module rows once; each row's `ApplyState()` re-reads
-`GetFeatureUnitState`. `MainWindow` registers `EventRegistry` on
-`ns.FeatureStateChanged` (fired from `SetFeatureOptOut` and the post-`LoadAddOn` hook)
-to call `GUI:RefreshHomeStatus()` while Home is visible.
+`UI/t-home.lua` builds a `FirstRun.CATALOG` addon card grid once (identity chrome
+above it unchanged). Each card's `ApplyState()` re-reads `GetFeatureUnitState`;
+a summary bar recounts loaded / needs-attention among CATALOG roots (attention
+also includes TOC version mismatches on roots and Manifest-owned stores).
+`MainWindow` registers `EventRegistry` on `ns.FeatureStateChanged` (fired from
+`SetFeatureOptOut` and the post-`LoadAddOn` hook) to call `GUI:RefreshHomeStatus()`
+while Home is visible.
 
-Visual mapping: green = fully wanted; grey = mixed across chars; amber check =
-not loaded or `pending_disable` (tag `(off next reload)` for the latter); red X =
-Blizzard-disabled.
+Visual mapping on cards: green = loaded and wanted (`all`, or `pending_disable`
+as current-session loaded); grey = mixed across chars (`some`); amber check =
+`not_loaded`; red X = Blizzard-disabled; muted X = missing. Version mismatch on a
+root lifts the card border and fills the footer-right version slot. Healthy cards
+open the hub tab or standalone window; disabled / not-loaded cards offer Enable →
+Manage Features. Data modules are not listed on Home (Manage Features owns them).
+Command Options under the grid lists only Direct Deposit and Shopping List
+subcommands; primary `/1w…` commands live on the cards.
 
 ---
 
@@ -1305,7 +1313,7 @@ guild bank is open).
 | `OneWoW/Services/UIParent.lua` | Cinematic `UIParent` hide/restore funnel + fragile FrameXML indicator re-sync (minimap mail) |
 | `OneWoW/Services/Collectibles.lua` | Collectible identity resolver: key grammar (`type[:subtype]:id`), live display + collection state, no SV (see [COLLECTIBLES.md](COLLECTIBLES.md)) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
-| `OneWoW/UI/t-home.lua` | Home tab: read-only status + live refresh |
+| `OneWoW/UI/t-home.lua` | Home tab: addon cards, summary, Command Options + live refresh |
 | `OneWoW/UI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |
 | `.cursor/rules/OneWoW-Suite-Architecture.mdc` | Scoped agent rule for suite load-unit patterns |
 | `.cursor/skills/onewow-suite-architecture/SKILL.md` | On-demand lifecycle / integration authoring guide |

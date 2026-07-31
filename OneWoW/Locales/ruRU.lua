@@ -40,11 +40,7 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["CHARS_REMOVE_NONE_SELECTED"] = "Персонажи не выбраны.",
     ["SETTINGS_ROLES_ALTS_POINTER"] = "Роли персонажей, фильтр твинков в подсказках и удаление персонажей из баз OneWoW — в Настройки \226\134\146 Роли и твинки.",
     ["SETTINGS_ROLES_ALTS_BTN"] = "Открыть Роли и твинки",
-
-    ["HOME_VERSION"] = "Версия",
     ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
-    ["HOME_REQUIRED_ADDONS"] = "Необходимые аддоны",
-    ["HOME_DETECTED_MODULES"] = "Обнаруженные модули",
     ["HOME_STANDALONE_ADDONS"] = "Отдельные аддоны",
     ["HOME_STATUS_NOT_FOUND"] = "Не найдено",
     ["PLACEHOLDER_ENABLE_POINTER"] = "Включить из",
@@ -61,7 +57,6 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
 
     ["MODULE_BAGS"] = "Bags",
     ["MODULE_DEVTOOLS"] = "DevTools",
-    ["MODULE_EXTRACTOR"] = "Extractor",
 
     ["MINIMAP_TOOLTIP_HINT"] = "Нажмите, чтобы переключить OneWoW",
     ["MINIMAP_MODULES_LOADED"] = "Загружено модулей: %d",
@@ -140,7 +135,9 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "Инструменты разработчика для инспекции рамок, событий, ошибок, глобальных переменных и просмотра атласа.",
 
-    ["HOME_COMMANDS"] = "Доступные команды",
+    ["HOME_COMMAND_OPTIONS"] = "Параметры команд",
+    ["HOME_SUMMARY_FORMAT"] = "%d аддонов загружено · %d требуют внимания",
+    ["HOME_NOT_INSTALLED"] = "Не установлено",
     ["HOME_WHATS_NEW"] = "Что нового",
     ["WHATS_NEW_TITLE"] = "Что нового — %s",
     ["WHATS_NEW_DONT_SHOW"] = "Не показывать снова в этой версии",
@@ -148,7 +145,7 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["WHATS_NEW_URL"] = "https://github.com/kellewic/OneWoW_Suite/wiki/Release-Notes",
     ["WHATS_NEW_RELEASE_NOTES_BTN"] = "Заметки о выпуске",
     ["WHATS_NEW_H_SLASH_TITLE"] = "Слэш-команды",
-    ["WHATS_NEW_H_SLASH_BODY"] = "На вкладке «Главная» теперь только канонические команды /1w…. Другие псевдонимы ещё работают в этом выпуске — в следующем будут удалены все слэш-команды, которых нет на «Главной».",
+    ["WHATS_NEW_H_SLASH_BODY"] = "Карточки аддонов на главной показывают основную команду /1w… каждой функции. Параметры команд перечисляют подкоманды Direct Deposit и Shopping List. Другие псевдонимы ещё работают в этом выпуске — в следующем будут удалены все slash-команды, которых нет на главной.",
     ["WHATS_NEW_H_MAIL_BODY"] = "При раскрытии писем аукциона показывается полная разбивка счёта.",
     ["WHATS_NEW_H_QOL_TITLE"] = "QoL — Auto Open",
     ["WHATS_NEW_H_QOL_BODY"] = "Auto Open теперь открывает контейнеры, полученные при открытой почте, банке, торговце или окне профессии.",
@@ -178,17 +175,15 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["VALUE_AUCTIONATOR_POPUP_TEXT"] = "Auctionator теперь является источником цен аукциона в подсказках OneWoW. OneWoW отключил перекрывающиеся строки подсказок Auctionator. Сканируйте аукцион через Auctionator, чтобы обновить цены. Кнопки полного сканера аукциона OneWoW скрыты, пока эта опция включена.",
     ["VALUE_TSM_POPUP_TEXT"] = "OneWoW будет показывать строку цены TSM в подсказках. Чтобы избежать дублирования информации, откройте TSM > Settings > Tooltip Settings и отключите «Enable TSM tooltips», или очистите ненужные вам отдельные строки подсказок TSM.",
 
-    ["HOME_DETECTED_DATA_MODULES"] = "Обнаруженные модули данных",
     ["HOME_STATUS_ALL"] = "Включено для всех персонажей",
     ["HOME_STATUS_SOME"] = "Включено для некоторых персонажей",
     ["HOME_STATUS_NOTLOADED"] = "Включено, но не загружено. Загрузите в «Управлении функциями».",
     ["HOME_STATUS_PENDING_DISABLE"] = "Включено и загружено, но не загрузится при следующей перезагрузке.",
     ["HOME_STATUS_NONE"] = "Отключено для этого персонажа",
-    ["HOME_NOTLOADED_TAG"] = "(не загружено)",
-    ["HOME_PENDING_DISABLE_TAG"] = "(выкл. при следующей перезагрузке)",
     ["HOME_MANAGE_POINTER"] = "Включайте или отключайте функции в",
     ["HOME_MANAGE_LINK"] = "Управление функциями",
-    ["HOME_VERSION_MISMATCH_NOTICE"] = "Некоторые аддоны OneWoW устарели и не соответствуют версии ядра %s. Пожалуйста, повторно загрузите полный набор OneWoW, чтобы все модули были одной версии.",
+    ["HOME_VERSION_MISMATCH_NOTICE"] = "Некоторые аддоны OneWoW устарели и не соответствуют версии ядра %s. Пожалуйста, повторно загрузите полный набор OneWoW, чтобы все аддоны были одной версии.",
+    ["HOME_VERSION_MISMATCH_NAMED"] = "Устарело: %s. Переустановите набор, чтобы все аддоны были на версии %s.",
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",
@@ -204,8 +199,6 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["CAT_MOD_VENDORS"] = "Vendors",
 
     ["HOME_UTILITIES"] = "Утилиты",
-    ["HOME_ALTTRACKER_MODULES"] = "Модули AltTracker",
-    ["HOME_CATALOG_DATA_MODULES"] = "Модули данных Catalog",
     ["HOME_SUPPORT"] = "Поддержать OneWoW",
     ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "Особая благодарность",

@@ -40,11 +40,7 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["CHARS_REMOVE_NONE_SELECTED"] = "No characters selected.",
     ["SETTINGS_ROLES_ALTS_POINTER"] = "Character roles, tooltip alt filtering, and removing deleted characters from OneWoW databases are managed in Settings → Roles & Alts.",
     ["SETTINGS_ROLES_ALTS_BTN"] = "Open Roles & Alts",
-
-    ["HOME_VERSION"] = "Version",
     ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
-    ["HOME_REQUIRED_ADDONS"] = "Required Addons",
-    ["HOME_DETECTED_MODULES"] = "Detected Modules",
     ["HOME_STANDALONE_ADDONS"] = "Stand-alone Addons",
     ["HOME_STATUS_NOT_FOUND"] = "Not Found",
     ["PLACEHOLDER_ENABLE_POINTER"] = "Enable from",
@@ -61,7 +57,6 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
 
     ["MODULE_BAGS"] = "Bags",
     ["MODULE_DEVTOOLS"] = "DevTools",
-    ["MODULE_EXTRACTOR"] = "Extractor",
 
     ["MINIMAP_TOOLTIP_HINT"] = "Click to toggle OneWoW",
     ["MINIMAP_MODULES_LOADED"] = "%d modules loaded",
@@ -140,7 +135,9 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "Developer utilities for frame inspection, events, errors, globals, and atlas browsing.",
 
-    ["HOME_COMMANDS"] = "Available Commands",
+    ["HOME_COMMAND_OPTIONS"] = "Command Options",
+    ["HOME_SUMMARY_FORMAT"] = "%d addons loaded · %d need attention",
+    ["HOME_NOT_INSTALLED"] = "Not installed",
     ["HOME_WHATS_NEW"] = "What's New",
     ["WHATS_NEW_TITLE"] = "What's New — %s",
     ["WHATS_NEW_DONT_SHOW"] = "Don't show again this release",
@@ -148,7 +145,7 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["WHATS_NEW_URL"] = "https://github.com/kellewic/OneWoW_Suite/wiki/Release-Notes",
     ["WHATS_NEW_RELEASE_NOTES_BTN"] = "Release notes",
     ["WHATS_NEW_H_SLASH_TITLE"] = "Slash commands",
-    ["WHATS_NEW_H_SLASH_BODY"] = "The Home tab now lists the canonical /1w… commands. Other aliases still work this release — the next release will remove every slash command that is not shown on Home.",
+    ["WHATS_NEW_H_SLASH_BODY"] = "Home addon cards show each feature's primary /1w… command. Command Options lists Direct Deposit and Shopping List subcommands. Other aliases still work this release — the next release will remove every slash command that is not shown on Home.",
     ["WHATS_NEW_H_MAIL_BODY"] = "Auction House mail shows a full invoice breakdown when you expand it.",
     ["WHATS_NEW_H_QOL_TITLE"] = "QoL — Auto Open",
     ["WHATS_NEW_H_QOL_BODY"] = "Auto Open now opens containers taken while mail, bank, merchant, or profession windows were open.",
@@ -178,17 +175,15 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["VALUE_AUCTIONATOR_POPUP_TEXT"] = "Auctionator is now the source for Auction House prices in OneWoW tooltips. OneWoW has turned off overlapping Auctionator tooltip lines. Scan the AH with Auctionator to refresh prices. The OneWoW full AH scanner buttons are hidden while this option is on.",
     ["VALUE_TSM_POPUP_TEXT"] = "OneWoW will show a TSM price line in tooltips. To avoid duplicate information, open TSM > Settings > Tooltip Settings and turn off \"Enable TSM tooltips\", or clear the individual TSM tooltip lines you do not need.",
 
-    ["HOME_DETECTED_DATA_MODULES"] = "Detected Data Modules",
     ["HOME_STATUS_ALL"] = "Enabled for all characters",
     ["HOME_STATUS_SOME"] = "Enabled for some characters",
     ["HOME_STATUS_NOTLOADED"] = "Enabled, but not loaded. Load it in Manage Features.",
     ["HOME_STATUS_PENDING_DISABLE"] = "Enabled and loaded, but will not load on next reload.",
     ["HOME_STATUS_NONE"] = "Disabled for this character",
-    ["HOME_NOTLOADED_TAG"] = "(not loaded)",
-    ["HOME_PENDING_DISABLE_TAG"] = "(off next reload)",
     ["HOME_MANAGE_POINTER"] = "Enable or disable features in",
     ["HOME_MANAGE_LINK"] = "Manage Features",
-    ["HOME_VERSION_MISMATCH_NOTICE"] = "Some OneWoW addons are out of date and don't match core version %s. Please redownload the complete OneWoW suite so every module is on the same version.",
+    ["HOME_VERSION_MISMATCH_NOTICE"] = "Some OneWoW addons are out of date and don't match core version %s. Please redownload the complete OneWoW suite so every addon is on the same version.",
+    ["HOME_VERSION_MISMATCH_NAMED"] = "Out of date: %s. Reinstall the suite to bring all addons to %s.",
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",
@@ -204,8 +199,6 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["CAT_MOD_VENDORS"] = "Vendors",
 
     ["HOME_UTILITIES"] = "Utilities",
-    ["HOME_ALTTRACKER_MODULES"] = "AltTracker Modules",
-    ["HOME_CATALOG_DATA_MODULES"] = "Catalog Data Modules",
     ["HOME_SUPPORT"] = "Support OneWoW",
     ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "Special Thanks",

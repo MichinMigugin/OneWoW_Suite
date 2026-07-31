@@ -10,10 +10,11 @@ Scanned from `SLASH_*` assignments, `SlashCmdList[...]` handlers, and
 > When you add, rename, or remove a slash command (or a subcommand), update
 > this file in the same change. See **Keeping this file current** at the bottom.
 >
-> **Player-facing canonical set:** the Home tab (`OneWoW/UI/t-home.lua`) and
-> wiki `Slash-Commands` list only the `/1w…` survival set. Aliases below that
-> are not on Home still work this release and are scheduled for removal next
-> release (except debug/dev commands, which stay inventory-only).
+> **Player-facing canonical set:** Home addon cards + Command Options
+> (`OneWoW/UI/t-home.lua`) and wiki `Slash-Commands` list only the `/1w…`
+> survival set. Aliases below that are not on Home still work this release and
+> are scheduled for removal next release (except debug/dev commands, which stay
+> inventory-only).
 
 ---
 
@@ -290,8 +291,8 @@ Commands are registered in three ways:
 3. **`OneWoW_GUI.DB:RegisterSlashCommand(name, handler)`** — creates
    `SLASH_ONEWOW_<NAME>1 = "/<name>"` and `SlashCmdList["ONEWOW_<NAME>"]`
 
-In-hub documentation: `OneWoW/UI/t-home.lua` (Home tab command list). Keep that
-list in sync when changing user-facing commands.
+In-hub documentation: `OneWoW/UI/t-home.lua` (Home addon cards + Command Options).
+Keep that list in sync when changing user-facing commands.
 
 ---
 

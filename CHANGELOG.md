@@ -5,8 +5,13 @@
 - After login (when the first-run wizard is not pending), a What's New dialog highlights this release; check "Don't show again this release" to dismiss it for this account until the next version
 - Home has a What's New link to reopen the dialog anytime
 
+## Home
+- Home now shows addon cards for each suite feature (status, description, primary `/1w…` command); click a loaded card to open it, or Enable to jump to Manage Features
+- Summary bar reports how many addons are loaded and how many need attention; version mismatches highlight the card and a footer banner
+- Command Options lists Direct Deposit and Shopping List subcommands; other primary opens live on the cards
+
 ## Slash commands
-- Home Available Commands now lists only the canonical `/1w…` set (hub `/1w`, Bags `/1wbags`, Direct Deposit `/1wdd` with `deposit` / `pause` / `stop`, Shopping List `/1wsl add`, and the other `/1w` feature opens)
+- Home cards and Command Options are the canonical `/1w…` set (hub `/1w`, feature opens on cards, Direct Deposit `/1wdd` with `deposit` / `pause` / `stop`, Shopping List `/1wsl add`)
 - Other aliases still work this release; the next release will remove every slash command that is not shown on Home
 - `/ow-wizard` removed — re-open the feature picker from Home → Manage Features (or Settings → Manage Features)
 

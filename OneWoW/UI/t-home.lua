@@ -9,19 +9,34 @@ local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local STATUS_TEX_OK  = "Interface\\RaidFrame\\ReadyCheck-Ready"
 local STATUS_TEX_BAD = "Interface\\RaidFrame\\ReadyCheck-NotReady"
 
+-- Affordance glyphs beside the card title:
+--   common-icon-forwardarrow = hub tab (UI:Show)
+--   common-icon-exit         = standalone window (SlashCmdList toggle).
+-- "exit" here means "opens outside the hub," not leave UI.
+local ATLAS_HUB_TAB    = "common-icon-forwardarrow"
+local ATLAS_STANDALONE = "common-icon-exit"
+
+local COLS = 3
+local CARD_HEIGHT = 118
+local CARD_GAP = 8
+local ICON_SIZE = 36
+
+-- Standalone open via each addon's existing slash handler (empty msg = toggle).
+local STANDALONE_SLASH = {
+    OneWoW_Bags            = "ONEWOW_BAGS",
+    OneWoW_DirectDeposit   = "ONEWOW_DD_TOGGLE",
+    OneWoW_ShoppingList    = "ONEWOW_SHOPPINGLIST",
+    OneWoW_Mail            = "ONEWOW_MAIL",
+    OneWoW_Utility_DevTool = "ONEWOW_DEVTOOL",
+}
+
 -- The Home tab is read-only: it mirrors effective feature state (Blizzard enable
 -- flags + OneWoW soft opt-out via ns:GetFeatureUnitState). Enabling/disabling
--- lives in Settings > Manage Features (storage addons have dependencies users
--- shouldn't toggle blind).
---   all            -> green check  (wanted for every known character, loaded here)
---   some           -> grey check   (wanted for some characters only, loaded here)
---   notloaded      -> amber check + "(not loaded)" tag (Blizzard-enabled but not
---                     wanted or not loaded on this character — soft opt-out or
---                     orchestrator skip)
---   pendingdisable -> amber check + "(off next reload)" tag (loaded and working
---                     this session, but soft-disabled — will not load next reload)
---   none           -> red X        (Blizzard-disabled for this character)
---   missing        -> muted grey X (addon not installed)
+-- lives in Settings > Manage Features.
+--   all / some / pending_disable -> green check (pending_disable is loaded *now*)
+--   notloaded                    -> amber check
+--   none (disabled)              -> red X
+--   missing                      -> muted grey X
 local STATE_ALL, STATE_SOME, STATE_NOTLOADED, STATE_PENDING_DISABLE, STATE_NONE, STATE_MISSING =
     "all", "some", "notloaded", "pendingdisable", "none", "missing"
 
@@ -34,168 +49,72 @@ local function MapFeatureUnitState(unitState)
     else return STATE_MISSING end
 end
 
+local function IsOpenableState(state)
+    return state == STATE_ALL or state == STATE_SOME or state == STATE_PENDING_DISABLE
+end
+
+local function IsAttentionState(state)
+    return state == STATE_MISSING or state == STATE_NONE or state == STATE_NOTLOADED
+end
+
 function UI:CreateHomeTab(parent)
     local L = ns.L
     local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_HomeScroll" })
 
-    -- Each status row registers its ApplyState() here so RefreshAll() (OnShow +
-    -- ns.FeatureStateChanged) can re-query live state without rebuilding rows.
+    -- Each card + the summary bar register ApplyState() here so RefreshAll()
+    -- (OnShow + ns.FeatureStateChanged) can re-query live state without rebuild.
     local rowRefreshers = {}
 
     -- The suite ships as one bundle: every addon's TOC Version bumps together, so
     -- core's version is the canonical one. A per-addon mismatch means the user has
-    -- a stale/partial install (e.g. an installer only replaced some folders) and
-    -- should redownload the whole suite. Dev-only utilities are excluded — they
-    -- ship on a separate cadence from a private repo and legitimately differ.
+    -- a stale/partial install. DevTool is excluded (separate cadence).
     local coreVersion = ns:GetAddonVersion("OneWoW")
+    local catalog = ns.FirstRun.CATALOG
 
-    --- True when an installed suite addon's TOC version differs from core's.
-    --- Missing addons (nil version) and core itself never count as a mismatch.
     ---@param addonName string
+    ---@param skipParity boolean?
     ---@return boolean
-    local function IsVersionMismatch(addonName)
-        if addonName == "OneWoW" or not coreVersion then return false end
+    local function IsVersionMismatch(addonName, skipParity)
+        if skipParity or addonName == "OneWoW" or not coreVersion then return false end
         local ver = ns:GetAddonVersion(addonName)
         return ver ~= nil and ver ~= coreVersion
     end
 
-    -- Addon groups shown on the left/right columns. Hoisted so the version-parity
-    -- pre-scan (below) and the layout loops share one source of truth.
-    local moduleChecks = {
-        { key = "MODULE_ALTTRACKER", addonName = "OneWoW_AltTracker" },
-        { key = "MODULE_CATALOG",    addonName = "OneWoW_Catalog" },
-        { key = "MODULE_NOTES",      addonName = "OneWoW_Notes" },
-        { key = "MODULE_QOL",        addonName = "OneWoW_QoL" },
-    }
-    local standaloneChecks = {
-        { key = "MODULE_BAGS",          addonName = "OneWoW_Bags" },
-        { key = "MODULE_DIRECTDEPOSIT", addonName = "OneWoW_DirectDeposit" },
-        { key = "MAIL",                 addonName = "OneWoW_Mail" },
-        { key = "MODULE_SHOPPINGLIST",  addonName = "OneWoW_ShoppingList" },
-        { key = "MODULE_TRACKERS",      addonName = "OneWoW_Trackers" },
-    }
-    local dataModuleChecks = {
-        { key = "DATA_MOD_ACCOUNTING",  addonName = "OneWoW_AltTracker_Accounting" },
-        { key = "DATA_MOD_AUCTIONS",    addonName = "OneWoW_AltTracker_Auctions" },
-        { key = "DATA_MOD_CHARACTER",   addonName = "OneWoW_AltTracker_Character" },
-        { key = "DATA_MOD_COLLECTIONS", addonName = "OneWoW_AltTracker_Collections" },
-        { key = "DATA_MOD_ENDGAME",     addonName = "OneWoW_AltTracker_Endgame" },
-        { key = "DATA_MOD_PROFESSIONS", addonName = "OneWoW_AltTracker_Professions" },
-        { key = "DATA_MOD_STORAGE",     addonName = "OneWoW_AltTracker_Storage" },
-    }
-    local catalogDataChecks = {
-        { key = "CAT_MOD_JOURNAL",     addonName = "OneWoW_CatalogData_Journal" },
-        { key = "CAT_MOD_QUESTS",      addonName = "OneWoW_CatalogData_Quests" },
-        { key = "CAT_MOD_TRADESKILLS", addonName = "OneWoW_CatalogData_Tradeskills" },
-        { key = "CAT_MOD_VENDORS",     addonName = "OneWoW_CatalogData_Vendors" },
-    }
-
-    --- Scan every parity-checked addon group once to decide whether to surface the
-    --- redownload notice (and reserve layout space for it). Static per session.
-    ---@return boolean
-    local function HasAnyVersionMismatch()
-        for _, group in ipairs({ moduleChecks, standaloneChecks, dataModuleChecks, catalogDataChecks }) do
-            for _, mod in ipairs(group) do
-                if IsVersionMismatch(mod.addonName) then return true end
+    --- Display label for a root or store in the version footer.
+    ---@param addonName string
+    ---@return string
+    local function MismatchLabel(addonName)
+        for _, entry in ipairs(catalog) do
+            if entry.addonName == addonName then
+                return L[entry.labelKey]
             end
         end
-        return false
+        local storeKey = ns:GetStoreLabelKey(addonName)
+        if storeKey then return L[storeKey] end
+        return addonName
     end
 
-    -- Read-only status row: a tri-state checkmark + name + version. No toggle.
-    -- Widgets are built once; ApplyState() re-reads GetFeatureUnitState and restyles
-    -- so the row stays accurate when addons load/unload or opt-out changes.
-    local function CreateModuleRow(panel, localeKey, addonName, rowY, skipParity)
-        local localizedName = L[localeKey]
-        local state  -- live, updated by ApplyState(); read by the tooltip handler
-
-        local light = panel:CreateTexture(nil, "ARTWORK")
-        light:SetSize(14, 14)
-        light:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, rowY - 1)
-
-        local lightHit = CreateFrame("Frame", nil, panel)
-        lightHit:SetSize(16, 16)
-        lightHit:SetPoint("CENTER", light, "CENTER")
-        lightHit:EnableMouse(true)
-        lightHit:SetScript("OnEnter", function(myself)
-            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-            if state == STATE_ALL then
-                GameTooltip:SetText(L["HOME_STATUS_ALL"], 0.2, 0.8, 0.2)
-            elseif state == STATE_SOME then
-                GameTooltip:SetText(L["HOME_STATUS_SOME"], 0.7, 0.7, 0.7)
-            elseif state == STATE_NOTLOADED then
-                GameTooltip:SetText(L["HOME_STATUS_NOTLOADED"], 1, 0.82, 0, 1, true)
-            elseif state == STATE_PENDING_DISABLE then
-                GameTooltip:SetText(L["HOME_STATUS_PENDING_DISABLE"], 1, 0.82, 0, 1, true)
-            elseif state == STATE_NONE then
-                GameTooltip:SetText(L["HOME_STATUS_NONE"], 1, 0.4, 0.4)
-            else
-                GameTooltip:SetText(L["HOME_STATUS_NOT_FOUND"], 0.6, 0.6, 0.6)
-            end
-            GameTooltip:Show()
-        end)
-        lightHit:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-        local nameText = OneWoW_GUI:CreateFS(panel, 12)
-        nameText:SetPoint("LEFT", light, "RIGHT", 8, 0)
-        nameText:SetWidth(120)
-        nameText:SetText(localizedName)
-        nameText:SetJustifyH("LEFT")
-
-        local verText = OneWoW_GUI:CreateFS(panel, 10)
-        verText:SetPoint("LEFT", nameText, "RIGHT", 4, 0)
-        verText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-        local tag = OneWoW_GUI:CreateFS(panel, 10)
-        tag:SetPoint("LEFT", verText, "RIGHT", 4, 0)
-        tag:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
-
-        local function ApplyState()
-            state = MapFeatureUnitState(ns:GetFeatureUnitState(addonName))
-
-            if state == STATE_ALL then
-                light:SetTexture(STATUS_TEX_OK)
-                light:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-            elseif state == STATE_SOME then
-                light:SetTexture(STATUS_TEX_OK)
-                light:SetVertexColor(0.5, 0.5, 0.5, 1)
-            elseif state == STATE_NOTLOADED or state == STATE_PENDING_DISABLE then
-                light:SetTexture(STATUS_TEX_OK)
-                light:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))  -- amber: enabled, not loaded / disabling on reload
-            elseif state == STATE_NONE then
-                light:SetTexture(STATUS_TEX_BAD)
-                light:SetVertexColor(1, 1, 1, 1)
-            else
-                light:SetTexture(STATUS_TEX_BAD)
-                light:SetVertexColor(0.45, 0.45, 0.45, 0.8)  -- missing: muted X
-            end
-
-            if state == STATE_MISSING then
-                nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            else
-                nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            end
-
-            verText:SetText(ns:GetAddonVersion(addonName) or "")
-            if not skipParity and IsVersionMismatch(addonName) then
-                verText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))  -- red: stale/partial install
-            else
-                verText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            end
-
-            if state == STATE_NOTLOADED then
-                tag:SetText(L["HOME_NOTLOADED_TAG"])
-                tag:Show()
-            elseif state == STATE_PENDING_DISABLE then
-                tag:SetText(L["HOME_PENDING_DISABLE_TAG"])
-                tag:Show()
-            else
-                tag:Hide()
+    --- Collect version mismatches across CATALOG roots (except DevTool) and all
+    --- Manifest-owned stores. Used for summary attention + footer banner.
+    ---@return string[] labels
+    local function CollectMismatchLabels()
+        local labels = {}
+        local seen = {}
+        local function add(addonName, skipParity)
+            if seen[addonName] or not IsVersionMismatch(addonName, skipParity) then return end
+            seen[addonName] = true
+            labels[#labels + 1] = MismatchLabel(addonName)
+        end
+        for _, entry in ipairs(catalog) do
+            local skip = entry.addonName == "OneWoW_Utility_DevTool"
+            add(entry.addonName, skip)
+        end
+        for _, mParent in ipairs(ns:GetManifestParentsWithStores()) do
+            for _, store in ipairs(mParent.stores) do
+                add(store, false)
             end
         end
-
-        ApplyState()
-        rowRefreshers[#rowRefreshers + 1] = ApplyState
+        return labels
     end
 
     content:SetHeight(1200)
@@ -205,48 +124,24 @@ function UI:CreateHomeTab(parent)
     logo:SetSize(128, 128)
     logo:SetPoint("TOP", content, "TOP", 0, yOffset)
     logo:SetTexture("Interface\\AddOns\\OneWoW\\Media\\neutral-large.png")
-    yOffset = yOffset - 150
+    yOffset = yOffset - 140
 
-    local versionLabel = OneWoW_GUI:CreateFS(content, 16)
-    versionLabel:SetPoint("TOP", content, "TOP", 0, yOffset)
-    versionLabel:SetText("OneWoW " .. (L["HOME_VERSION"]) .. " " .. (coreVersion or ""))
-    versionLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    yOffset = yOffset - 35
-
-    -- Surfaced only when a suite addon's version drifts from core (stale/partial
-    -- install). Reserves flow space only when shown so the normal case has no gap.
-    if HasAnyVersionMismatch() then
-        local mismatchNotice = OneWoW_GUI:CreateFS(content, 12)
-        mismatchNotice:SetPoint("TOPLEFT",  content, "TOPLEFT",  40, yOffset)
-        mismatchNotice:SetPoint("TOPRIGHT", content, "TOPRIGHT", -40, yOffset)
-        mismatchNotice:SetJustifyH("CENTER")
-        mismatchNotice:SetText(string.format(L["HOME_VERSION_MISMATCH_NOTICE"], coreVersion or ""))
-        mismatchNotice:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        -- Fixed reserve: the notice wraps to 2-3 lines and content width isn't
-        -- resolved yet at build time, so GetStringHeight would under-report.
-        yOffset = yOffset - 52
-    end
-
-    local divider1 = content:CreateTexture(nil, "ARTWORK")
-    divider1:SetHeight(1)
-    divider1:SetPoint("TOPLEFT", content, "TOPLEFT", 40, yOffset)
-    divider1:SetPoint("TOPRIGHT", content, "TOPRIGHT", -40, yOffset)
-    divider1:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    yOffset = yOffset - 20
-
+    -- What's New left; Discord / Support right (same link size).
     local linksRow = CreateFrame("Frame", nil, content)
     linksRow:SetHeight(24)
-    linksRow:SetPoint("TOPLEFT", content, "TOPLEFT", 40, yOffset)
-    linksRow:SetPoint("TOPRIGHT", content, "TOPRIGHT", -40, yOffset)
+    linksRow:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
+    linksRow:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
 
-    local discordBtn = OneWoW_GUI:CreateTextLink(linksRow, {
-        text = L["DISCORD"],
+    local whatsNewLink = OneWoW_GUI:CreateTextLink(linksRow, {
+        text = L["HOME_WHATS_NEW"],
         fontSize = 14,
         onClick = function()
-            OneWoW_GUI:ShowCopyURLDialog(L["DISCORD"], L["HOME_DISCORD_LINK"])
+            if ns.WhatsNew then
+                ns.WhatsNew:Show(true)
+            end
         end,
     })
-    discordBtn:SetPoint("LEFT", linksRow, "CENTER", -160, 0)
+    whatsNewLink:SetPoint("LEFT", linksRow, "LEFT", 5, 0)
 
     local supportBtn = OneWoW_GUI:CreateTextLink(linksRow, {
         text = L["HOME_SUPPORT"],
@@ -255,240 +150,411 @@ function UI:CreateHomeTab(parent)
             OneWoW_GUI:ShowCopyURLDialog(L["HOME_SUPPORT"], L["HOME_SUPPORT_LINK"])
         end,
     })
-    supportBtn:SetPoint("LEFT", linksRow, "CENTER", 20, 0)
+    supportBtn:SetPoint("RIGHT", linksRow, "RIGHT", -5, 0)
 
-    yOffset = yOffset - 34
-
-    local thanksBar = CreateFrame("Frame", nil, content, "BackdropTemplate")
-    thanksBar:SetPoint("TOPLEFT",  content, "TOPLEFT",  10, yOffset)
-    thanksBar:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
-    thanksBar:SetHeight(30)
-    thanksBar:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    thanksBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    thanksBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local thanksTitle = OneWoW_GUI:CreateFS(thanksBar, 12)
-    thanksTitle:SetPoint("LEFT", thanksBar, "LEFT", 15, 0)
-    thanksTitle:SetText(L["HOME_SPECIAL_THANKS"])
-    thanksTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    local thanksNames = OneWoW_GUI:CreateFS(thanksBar, 12)
-    thanksNames:SetPoint("LEFT", thanksTitle, "RIGHT", 12, 0)
-    thanksNames:SetText(L["HOME_THANKS_NAMES"])
-    thanksNames:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-    yOffset = yOffset - 42
-
-    -- Link row between thanks and the feature panels: Manage Features left,
-    -- What's New right — same 10px outer / 15px inner inset as the panels.
-    local manageRow = CreateFrame("Frame", nil, content)
-    manageRow:SetHeight(20)
-    manageRow:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
-    manageRow:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
-
-    local manageLeft = CreateFrame("Frame", nil, manageRow)
-    manageLeft:SetHeight(20)
-    manageLeft:SetPoint("LEFT", manageRow, "LEFT", 15, 0)
-    manageLeft:SetWidth(500)
-    UI:CreateManageFeaturesLinkRow(manageLeft, { pointerKey = "HOME_MANAGE_POINTER" })
-
-    local whatsNewLink = OneWoW_GUI:CreateTextLink(manageRow, {
-        text = L["HOME_WHATS_NEW"],
-        fontSize = 12,
+    local discordBtn = OneWoW_GUI:CreateTextLink(linksRow, {
+        text = L["DISCORD"],
+        fontSize = 14,
         onClick = function()
-            if ns.WhatsNew then
-                ns.WhatsNew:Show(true)
-            end
+            OneWoW_GUI:ShowCopyURLDialog(L["DISCORD"], L["HOME_DISCORD_LINK"])
         end,
     })
-    whatsNewLink:SetPoint("RIGHT", manageRow, "RIGHT", -15, 0)
+    discordBtn:SetPoint("RIGHT", supportBtn, "LEFT", -20, 0)
 
     yOffset = yOffset - 28
 
-    local splitContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
-    splitContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
-    splitContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
-    splitContainer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    splitContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    splitContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    local thanksRow = CreateFrame("Frame", nil, content)
+    thanksRow:SetHeight(20)
+    thanksRow:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
+    thanksRow:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
 
-    local modHDiv = splitContainer:CreateTexture(nil, "ARTWORK")
-    modHDiv:SetHeight(1)
-    modHDiv:SetPoint("TOPLEFT",  splitContainer, "TOPLEFT",  8, -36)
-    modHDiv:SetPoint("TOPRIGHT", splitContainer, "TOPRIGHT", -8, -36)
-    modHDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    local thanksTitle = OneWoW_GUI:CreateFS(thanksRow, 11)
+    thanksTitle:SetPoint("LEFT", thanksRow, "LEFT", 5, 0)
+    thanksTitle:SetText(L["HOME_SPECIAL_THANKS"])
+    thanksTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local modVDiv = splitContainer:CreateTexture(nil, "ARTWORK")
-    modVDiv:SetWidth(1)
-    modVDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    local thanksNames = OneWoW_GUI:CreateFS(thanksRow, 11)
+    thanksNames:SetPoint("LEFT", thanksTitle, "RIGHT", 10, 0)
+    thanksNames:SetText(L["HOME_THANKS_NAMES"])
+    thanksNames:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local leftPanel  = CreateFrame("Frame", nil, splitContainer)
-    local rightPanel = CreateFrame("Frame", nil, splitContainer)
-    local modVDivBottomY = nil
+    yOffset = yOffset - 24
 
-    local function LayoutColumns()
-        local w = splitContainer:GetWidth()
-        if not w or w <= 0 then return end
-        local col = math.floor(w / 2)
+    local divider2 = content:CreateTexture(nil, "ARTWORK")
+    divider2:SetHeight(1)
+    divider2:SetPoint("TOPLEFT", content, "TOPLEFT", 40, yOffset)
+    divider2:SetPoint("TOPRIGHT", content, "TOPRIGHT", -40, yOffset)
+    divider2:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    yOffset = yOffset - 16
 
-        leftPanel:ClearAllPoints()
-        leftPanel:SetPoint("TOPLEFT",    splitContainer, "TOPLEFT",    0, -40)
-        leftPanel:SetPoint("BOTTOMLEFT", splitContainer, "BOTTOMLEFT", 0,   0)
-        leftPanel:SetWidth(col)
+    -- ---- Summary bar: status | version | Manage Features ----
+    local summaryBar = CreateFrame("Frame", nil, content, "BackdropTemplate")
+    summaryBar:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
+    summaryBar:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
+    summaryBar:SetHeight(28)
+    summaryBar:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+    summaryBar:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    summaryBar:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-        rightPanel:ClearAllPoints()
-        rightPanel:SetPoint("TOPLEFT",     splitContainer, "TOPLEFT",     col, -40)
-        rightPanel:SetPoint("BOTTOMRIGHT", splitContainer, "BOTTOMRIGHT",   0,   0)
+    local summaryLight = summaryBar:CreateTexture(nil, "ARTWORK")
+    summaryLight:SetSize(14, 14)
+    summaryLight:SetPoint("LEFT", summaryBar, "LEFT", 12, 0)
+    summaryLight:SetTexture(STATUS_TEX_OK)
 
-        modVDiv:ClearAllPoints()
-        modVDiv:SetPoint("TOPLEFT",    splitContainer, "TOPLEFT",    col, -40)
-        if modVDivBottomY then
-            modVDiv:SetPoint("BOTTOMLEFT", splitContainer, "TOPLEFT", col, modVDivBottomY + 4)
-        else
-            modVDiv:SetPoint("BOTTOMLEFT", splitContainer, "BOTTOMLEFT", col, 8)
+    local summaryText = OneWoW_GUI:CreateFS(summaryBar, 12)
+    summaryText:SetPoint("LEFT", summaryLight, "RIGHT", 8, 0)
+    summaryText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+    local summaryVersion = OneWoW_GUI:CreateFS(summaryBar, 12)
+    summaryVersion:SetPoint("CENTER", summaryBar, "CENTER", 0, 0)
+    summaryVersion:SetText(coreVersion or "")
+    summaryVersion:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+    local manageLink = OneWoW_GUI:CreateTextLink(summaryBar, {
+        text = L["HOME_MANAGE_LINK"],
+        fontSize = 12,
+        onClick = function()
+            UI:OpenManageFeatures()
+        end,
+    })
+    manageLink:SetPoint("RIGHT", summaryBar, "RIGHT", -12, 0)
+
+    yOffset = yOffset - 36
+
+    local gridHost = CreateFrame("Frame", nil, content)
+    gridHost:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
+    gridHost:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
+
+    local cards = {}
+
+    ---@param entry table FirstRun.CATALOG entry
+    ---@return Frame card
+    local function CreateAddonCard(entry)
+        local addonName = entry.addonName
+        local manifest = ns:GetManifestByAddon(addonName)
+        local isHub = manifest and manifest.module ~= nil
+        local skipParity = addonName == "OneWoW_Utility_DevTool"
+        local state
+
+        local card = CreateFrame("Button", nil, gridHost, "BackdropTemplate")
+        card:SetHeight(CARD_HEIGHT)
+        card:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+        card:RegisterForClicks("LeftButtonUp")
+        card:EnableMouse(true)
+        card._mismatch = false
+        card._hoverable = false
+
+        local function ApplyCardChrome(hovered)
+            if hovered and card._hoverable then
+                card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                if card._mismatch then
+                    card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+                else
+                    card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+                end
+                SetCursor("Interface\\CURSOR\\Point")
+            else
+                card:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                if card._mismatch then
+                    card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+                else
+                    card:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                end
+                ResetCursor()
+            end
         end
+
+        local light = card:CreateTexture(nil, "ARTWORK")
+        light:SetSize(14, 14)
+        light:SetPoint("TOPLEFT", card, "TOPLEFT", 8, -8)
+
+        local lightHit = CreateFrame("Frame", nil, card)
+        lightHit:SetSize(16, 16)
+        lightHit:SetPoint("CENTER", light, "CENTER")
+        lightHit:EnableMouse(true)
+        lightHit:SetScript("OnEnter", function(myself)
+            ApplyCardChrome(true)
+            GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+            if state == STATE_ALL or state == STATE_PENDING_DISABLE then
+                GameTooltip:SetText(L["HOME_STATUS_ALL"], 0.2, 0.8, 0.2)
+            elseif state == STATE_SOME then
+                GameTooltip:SetText(L["HOME_STATUS_SOME"], 0.7, 0.7, 0.7)
+            elseif state == STATE_NOTLOADED then
+                GameTooltip:SetText(L["HOME_STATUS_NOTLOADED"], 1, 0.82, 0, 1, true)
+            elseif state == STATE_NONE then
+                GameTooltip:SetText(L["HOME_STATUS_NONE"], 1, 0.4, 0.4)
+            else
+                GameTooltip:SetText(L["HOME_STATUS_NOT_FOUND"], 0.6, 0.6, 0.6)
+            end
+            GameTooltip:Show()
+        end)
+        lightHit:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+            if not card:IsMouseOver() then
+                ApplyCardChrome(false)
+            end
+        end)
+
+        local iconFrame = OneWoW_GUI:CreateFrame(card, {
+            width = ICON_SIZE + 6,
+            height = ICON_SIZE + 6,
+            backdrop = BACKDROP_INNER_NO_INSETS,
+            bgColor = "BG_TERTIARY",
+            borderColor = "BORDER_SUBTLE",
+        })
+        iconFrame:SetPoint("TOPLEFT", light, "BOTTOMLEFT", 0, -6)
+
+        local icon = iconFrame:CreateTexture(nil, "ARTWORK")
+        icon:SetSize(ICON_SIZE, ICON_SIZE)
+        icon:SetPoint("CENTER", iconFrame, "CENTER", 0, 0)
+        if entry.iconAtlas then
+            icon:SetAtlas(entry.iconAtlas, false)
+        else
+            icon:SetTexture(entry.iconTexture or OneWoW_GUI:GetBrandIcon())
+        end
+        if entry.iconTexCoords then
+            icon:SetTexCoord(unpack(entry.iconTexCoords))
+        end
+
+        local title = OneWoW_GUI:CreateFS(card, 13)
+        title:SetPoint("TOPLEFT", iconFrame, "TOPRIGHT", 8, -2)
+        title:SetJustifyH("LEFT")
+        title:SetText(L[entry.labelKey])
+        title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+        local afford = card:CreateTexture(nil, "ARTWORK")
+        afford:SetSize(12, 12)
+        afford:SetPoint("TOPRIGHT", card, "TOPRIGHT", -10, -10)
+        -- exit = opens outside the hub; forwardarrow = hub tab
+        afford:SetAtlas(isHub and ATLAS_HUB_TAB or ATLAS_STANDALONE, false)
+        title:SetPoint("RIGHT", afford, "LEFT", -4, 0)
+
+        local summary = OneWoW_GUI:CreateFS(card, 11)
+        summary:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -4)
+        summary:SetPoint("RIGHT", card, "RIGHT", -10, 0)
+        summary:SetJustifyH("LEFT")
+        summary:SetJustifyV("TOP")
+        summary:SetWordWrap(true)
+        summary:SetText(L[entry.summaryKey])
+        summary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        summary:SetHeight(44)
+
+        local footerLeft = OneWoW_GUI:CreateFS(card, 11)
+        footerLeft:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 10, 8)
+        footerLeft:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+        local footerRight = OneWoW_GUI:CreateFS(card, 11)
+        footerRight:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -10, 8)
+        footerRight:SetJustifyH("RIGHT")
+        footerRight:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+
+        local enableBtn = OneWoW_GUI:CreateFitTextButton(card, {
+            text = ENABLE,
+            height = 18,
+            minWidth = 48,
+            paddingX = 12,
+        })
+        enableBtn:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, 6)
+        enableBtn:SetScript("OnClick", function()
+            UI:OpenManageFeatures()
+        end)
+        enableBtn:Hide()
+
+        local function OpenFeature()
+            if isHub then
+                UI:Show(manifest.module)
+                return
+            end
+            local slashKey = STANDALONE_SLASH[addonName]
+            local handler = slashKey and SlashCmdList[slashKey]
+            if handler then
+                handler("")
+            end
+        end
+
+        card:SetScript("OnClick", function()
+            if IsOpenableState(state) then
+                OpenFeature()
+            end
+        end)
+        card:SetScript("OnEnter", function()
+            ApplyCardChrome(true)
+        end)
+        card:SetScript("OnLeave", function()
+            if not lightHit:IsMouseOver() then
+                ApplyCardChrome(false)
+            end
+        end)
+
+        local function ApplyState()
+            state = MapFeatureUnitState(ns:GetFeatureUnitState(addonName))
+            local mismatch = IsVersionMismatch(addonName, skipParity)
+            local openable = IsOpenableState(state)
+            local inactive = state == STATE_MISSING or state == STATE_NONE or state == STATE_NOTLOADED
+            card._mismatch = mismatch
+            -- Openable cards and Enable-target cards react to hover; missing does not.
+            card._hoverable = openable or state == STATE_NONE or state == STATE_NOTLOADED
+
+            if state == STATE_ALL or state == STATE_PENDING_DISABLE then
+                light:SetTexture(STATUS_TEX_OK)
+                light:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+            elseif state == STATE_SOME then
+                light:SetTexture(STATUS_TEX_OK)
+                light:SetVertexColor(0.5, 0.5, 0.5, 1)
+            elseif state == STATE_NOTLOADED then
+                light:SetTexture(STATUS_TEX_OK)
+                light:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+            elseif state == STATE_NONE then
+                light:SetTexture(STATUS_TEX_BAD)
+                light:SetVertexColor(1, 1, 1, 1)
+            else
+                light:SetTexture(STATUS_TEX_BAD)
+                light:SetVertexColor(0.45, 0.45, 0.45, 0.8)
+            end
+
+            if inactive then
+                title:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                summary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                afford:SetVertexColor(0.45, 0.45, 0.45, 0.7)
+                icon:SetDesaturated(true)
+                icon:SetVertexColor(0.55, 0.55, 0.55, 1)
+            else
+                title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                summary:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+                afford:SetVertexColor(1, 1, 1, 1)
+                icon:SetDesaturated(false)
+                icon:SetVertexColor(1, 1, 1, 1)
+            end
+
+            if mismatch then
+                footerRight:SetText(ns:GetAddonVersion(addonName) or "")
+                footerRight:Show()
+            else
+                footerRight:SetText("")
+                footerRight:Hide()
+            end
+
+            -- Footer-left / Enable share the bottom edge; Enable replaces the
+            -- right-slot peer when the card is soft/hard disabled (not missing).
+            if state == STATE_MISSING then
+                footerLeft:SetText(L["HOME_NOT_INSTALLED"])
+                footerLeft:Show()
+                enableBtn:Hide()
+                afford:Hide()
+                title:SetPoint("RIGHT", card, "RIGHT", -10, 0)
+            elseif state == STATE_NONE or state == STATE_NOTLOADED then
+                footerLeft:SetText(manifest and manifest.cmd or "")
+                if footerLeft:GetText() == "" then
+                    footerLeft:Hide()
+                else
+                    footerLeft:Show()
+                end
+                enableBtn:Show()
+                -- Keep version stamp visible beside Enable when mismatched.
+                if mismatch then
+                    footerRight:ClearAllPoints()
+                    footerRight:SetPoint("RIGHT", enableBtn, "LEFT", -8, 0)
+                    footerRight:Show()
+                end
+                afford:Hide()
+                title:SetPoint("RIGHT", card, "RIGHT", -10, 0)
+            else
+                footerLeft:SetText(manifest and manifest.cmd or "")
+                footerLeft:Show()
+                enableBtn:Hide()
+                afford:Show()
+                title:SetPoint("RIGHT", afford, "LEFT", -4, 0)
+                footerRight:ClearAllPoints()
+                footerRight:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -10, 8)
+            end
+
+            card._openable = openable
+            ApplyCardChrome(card:IsMouseOver() or lightHit:IsMouseOver())
+        end
+
+        ApplyState()
+        rowRefreshers[#rowRefreshers + 1] = ApplyState
+        return card
     end
 
-    splitContainer:HookScript("OnSizeChanged", LayoutColumns)
-    C_Timer.After(0, LayoutColumns)
-
-    -- === LEFT: Required Addons ===
-    local requiredTitle = OneWoW_GUI:CreateFS(leftPanel, 16)
-    requiredTitle:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, -12)
-    requiredTitle:SetText(L["HOME_REQUIRED_ADDONS"])
-    requiredTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    local modY = -38
-    CreateModuleRow(leftPanel, "MODULE_ONEWOW", "OneWoW", modY)
-    modY = modY - 28
-
-    local leftDiv1Y = modY - 4
-    local leftDiv1 = leftPanel:CreateTexture(nil, "ARTWORK")
-    leftDiv1:SetHeight(1)
-    leftDiv1:SetPoint("TOPLEFT",  leftPanel, "TOPLEFT",  8, leftDiv1Y)
-    leftDiv1:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -8, leftDiv1Y)
-    leftDiv1:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local detectedTitleY = leftDiv1Y - 18
-    local detectedTitle = OneWoW_GUI:CreateFS(leftPanel, 16)
-    detectedTitle:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, detectedTitleY)
-    detectedTitle:SetText(L["HOME_DETECTED_MODULES"])
-    detectedTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    modY = detectedTitleY - 24
-    for _, mod in ipairs(moduleChecks) do
-        CreateModuleRow(leftPanel, mod.key, mod.addonName, modY)
-        modY = modY - 28
+    for _, entry in ipairs(catalog) do
+        cards[#cards + 1] = CreateAddonCard(entry)
     end
 
-    local leftDiv2Y = modY - 4
-    local leftDiv2 = leftPanel:CreateTexture(nil, "ARTWORK")
-    leftDiv2:SetHeight(1)
-    leftDiv2:SetPoint("TOPLEFT",  leftPanel, "TOPLEFT",  8, leftDiv2Y)
-    leftDiv2:SetPoint("TOPRIGHT", leftPanel, "TOPRIGHT", -8, leftDiv2Y)
-    leftDiv2:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local standaloneTitleY = leftDiv2Y - 18
-    local standaloneTitle = OneWoW_GUI:CreateFS(leftPanel, 16)
-    standaloneTitle:SetPoint("TOPLEFT", leftPanel, "TOPLEFT", 15, standaloneTitleY)
-    standaloneTitle:SetText(L["HOME_STANDALONE_ADDONS"])
-    standaloneTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    modY = standaloneTitleY - 24
-    for _, mod in ipairs(standaloneChecks) do
-        CreateModuleRow(leftPanel, mod.key, mod.addonName, modY)
-        modY = modY - 28
-    end
-
-    local leftEndModY = modY
-
-    -- === RIGHT: Detected Data Modules ===
-    local dataTitle = OneWoW_GUI:CreateFS(rightPanel, 16)
-    dataTitle:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, -12)
-    dataTitle:SetText(L["HOME_DETECTED_DATA_MODULES"])
-    dataTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    local rightY = -38
-
-    local atSubHeader = OneWoW_GUI:CreateFS(rightPanel, 12)
-    atSubHeader:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, rightY)
-    atSubHeader:SetText(L["HOME_ALTTRACKER_MODULES"])
-    atSubHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    rightY = rightY - 22
-
-    for _, mod in ipairs(dataModuleChecks) do
-        CreateModuleRow(rightPanel, mod.key, mod.addonName, rightY)
-        rightY = rightY - 28
-    end
-
-    local rightSectDivY = rightY - 4
-    local rightSectDiv = rightPanel:CreateTexture(nil, "ARTWORK")
-    rightSectDiv:SetHeight(1)
-    rightSectDiv:SetPoint("TOPLEFT",  rightPanel, "TOPLEFT",  8, rightSectDivY)
-    rightSectDiv:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -8, rightSectDivY)
-    rightSectDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local catSubHeaderY = rightSectDivY - 18
-    local catSubHeader = OneWoW_GUI:CreateFS(rightPanel, 12)
-    catSubHeader:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 15, catSubHeaderY)
-    catSubHeader:SetText(L["HOME_CATALOG_DATA_MODULES"])
-    catSubHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    rightY = catSubHeaderY - 22
-
-    for _, mod in ipairs(catalogDataChecks) do
-        CreateModuleRow(rightPanel, mod.key, mod.addonName, rightY)
-        rightY = rightY - 28
-    end
-
-    local leftDepth  = math.abs(leftEndModY) + 4
-    local rightDepth = math.abs(rightY) + 4
-    local columnsDepth = 40 + math.max(leftDepth, rightDepth)
-
-    local utilFullDivY = -(columnsDepth + 4)
-    modVDivBottomY = utilFullDivY
-    local utilFullDiv = splitContainer:CreateTexture(nil, "ARTWORK")
-    utilFullDiv:SetHeight(1)
-    utilFullDiv:SetPoint("TOPLEFT",  splitContainer, "TOPLEFT",  8, utilFullDivY)
-    utilFullDiv:SetPoint("TOPRIGHT", splitContainer, "TOPRIGHT", -8, utilFullDivY)
-    utilFullDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local utilTitleY = utilFullDivY - 18
-    local utilTitle = OneWoW_GUI:CreateFS(splitContainer, 16)
-    utilTitle:SetPoint("TOPLEFT", splitContainer, "TOPLEFT", 15, utilTitleY)
-    utilTitle:SetText(L["HOME_UTILITIES"])
-    utilTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    local utilLeftPanel = CreateFrame("Frame", nil, splitContainer)
-    local utilRightPanel = CreateFrame("Frame", nil, splitContainer)
-
-    local function LayoutUtilColumns()
-        local w = splitContainer:GetWidth()
+    local function LayoutGrid()
+        local w = gridHost:GetWidth()
         if not w or w <= 0 then return end
-        local col = math.floor(w / 2)
-        local utilRowY = utilTitleY - 24
-
-        utilLeftPanel:ClearAllPoints()
-        utilLeftPanel:SetPoint("TOPLEFT", splitContainer, "TOPLEFT", 0, utilRowY)
-        utilLeftPanel:SetWidth(col)
-        utilLeftPanel:SetHeight(32)
-
-        utilRightPanel:ClearAllPoints()
-        utilRightPanel:SetPoint("TOPLEFT", splitContainer, "TOPLEFT", col, utilRowY)
-        utilRightPanel:SetWidth(col)
-        utilRightPanel:SetHeight(32)
+        local colW = math.floor((w - CARD_GAP * (COLS - 1)) / COLS)
+        local rows = math.ceil(#cards / COLS)
+        for i, card in ipairs(cards) do
+            local col = (i - 1) % COLS
+            local row = math.floor((i - 1) / COLS)
+            card:ClearAllPoints()
+            card:SetWidth(colW)
+            card:SetPoint(
+                "TOPLEFT",
+                gridHost,
+                "TOPLEFT",
+                col * (colW + CARD_GAP),
+                -row * (CARD_HEIGHT + CARD_GAP)
+            )
+        end
+        local gridH = rows * CARD_HEIGHT + math.max(0, rows - 1) * CARD_GAP
+        gridHost:SetHeight(gridH)
     end
 
-    splitContainer:HookScript("OnSizeChanged", LayoutUtilColumns)
-    C_Timer.After(0, LayoutUtilColumns)
+    gridHost:HookScript("OnSizeChanged", LayoutGrid)
+    C_Timer.After(0, LayoutGrid)
 
-    CreateModuleRow(utilLeftPanel,  "MODULE_DEVTOOLS",  "OneWoW_Utility_DevTool",  -4, true)
-    CreateModuleRow(utilRightPanel, "MODULE_EXTRACTOR", "OneWoW_Utility_Extractor", -4, true)
+    local gridRows = math.ceil(#catalog / COLS)
+    local gridH = gridRows * CARD_HEIGHT + math.max(0, gridRows - 1) * CARD_GAP
+    gridHost:SetHeight(gridH)
+    yOffset = yOffset - gridH - 12
 
-    local containerH = columnsDepth + 8 + 18 + 24 + 32 + 20
-    splitContainer:SetHeight(containerH)
+    -- Version alert footer (static per session; TOC versions do not change live).
+    local mismatchLabels = CollectMismatchLabels()
+    if #mismatchLabels > 0 then
+        local footer = CreateFrame("Frame", nil, content, "BackdropTemplate")
+        footer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
+        footer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
+        footer:SetHeight(36)
+        footer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+        footer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        footer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
 
-    yOffset = yOffset - containerH - 20
+        local warnIcon = footer:CreateTexture(nil, "ARTWORK")
+        warnIcon:SetSize(16, 16)
+        warnIcon:SetPoint("LEFT", footer, "LEFT", 10, 0)
+        warnIcon:SetAtlas("transmog-icon-warning", false)
+        warnIcon:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
 
+        local footerText = OneWoW_GUI:CreateFS(footer, 12)
+        footerText:SetPoint("LEFT", warnIcon, "RIGHT", 8, 0)
+        footerText:SetPoint("RIGHT", footer, "RIGHT", -10, 0)
+        footerText:SetJustifyH("LEFT")
+        footerText:SetWordWrap(true)
+        footerText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+
+        if #mismatchLabels <= 3 then
+            local joined = mismatchLabels[1]
+            for i = 2, #mismatchLabels do
+                joined = joined .. ", " .. mismatchLabels[i]
+            end
+            footerText:SetText(string.format(
+                L["HOME_VERSION_MISMATCH_NAMED"],
+                joined,
+                coreVersion or ""
+            ))
+        else
+            footerText:SetText(string.format(L["HOME_VERSION_MISMATCH_NOTICE"], coreVersion or ""))
+        end
+
+        yOffset = yOffset - 44
+    end
+
+    -- ---- Command Options (DD + Shopping List subcommands only) ----
     local cmdContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
     cmdContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
     cmdContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
@@ -498,7 +564,7 @@ function UI:CreateHomeTab(parent)
 
     local cmdTitle = OneWoW_GUI:CreateFS(cmdContainer, 16)
     cmdTitle:SetPoint("TOPLEFT", cmdContainer, "TOPLEFT", 15, -12)
-    cmdTitle:SetText(L["HOME_COMMANDS"])
+    cmdTitle:SetText(L["HOME_COMMAND_OPTIONS"])
     cmdTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
     local cmdHDiv = cmdContainer:CreateTexture(nil, "ARTWORK")
@@ -514,152 +580,104 @@ function UI:CreateHomeTab(parent)
     cmdVDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local cmdLeft = CreateFrame("Frame", nil, cmdContainer)
-    cmdLeft:SetPoint("TOPLEFT",    cmdContainer, "TOPLEFT", 0, -40)
+    cmdLeft:SetPoint("TOPLEFT",     cmdContainer, "TOPLEFT", 0, -40)
     cmdLeft:SetPoint("BOTTOMRIGHT", cmdContainer, "BOTTOM",  0, 0)
 
     local cmdRight = CreateFrame("Frame", nil, cmdContainer)
-    cmdRight:SetPoint("TOPLEFT",    cmdContainer, "TOP",         0, -40)
+    cmdRight:SetPoint("TOPLEFT",     cmdContainer, "TOP",         0, -40)
     cmdRight:SetPoint("BOTTOMRIGHT", cmdContainer, "BOTTOMRIGHT", 0, 0)
 
-    -- Canonical /1w* set only (next-release survival contract). Other aliases
-    -- remain registered this release — see Whats New / suitecommands.md.
     local function RenderSets(panel, sets)
         local pY = -8
         for _, set in ipairs(sets) do
-            if set.comingSoon then
+            local show = set.always or (_G[set.global] ~= nil)
+            if show then
                 local hdr = OneWoW_GUI:CreateFS(panel, 10)
                 hdr:SetPoint("TOPLEFT", panel, "TOPLEFT", 15, pY)
                 hdr:SetText(set.header)
-                hdr:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                local soon = OneWoW_GUI:CreateFS(panel, 10)
-                soon:SetPoint("LEFT", hdr, "RIGHT", 6, 0)
-                soon:SetText("(" .. (L["HOME_MINIMAP_PLACEHOLDER"]) .. ")")
-                soon:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                pY = pY - 26
-            else
-                local show = set.always or (_G[set.global] ~= nil)
-                if show then
-                    local hdr = OneWoW_GUI:CreateFS(panel, 10)
-                    hdr:SetPoint("TOPLEFT", panel, "TOPLEFT", 15, pY)
-                    hdr:SetText(set.header)
-                    hdr:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                    pY = pY - 18
-                    for _, cmdInfo in ipairs(set.commands) do
-                        local cmdText = OneWoW_GUI:CreateFS(panel, 12)
-                        cmdText:SetPoint("TOPLEFT", panel, "TOPLEFT", 30, pY)
-                        cmdText:SetText("|cFFFFFFFF" .. cmdInfo.cmd .. "|r")
-                        cmdText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-                        local descText = OneWoW_GUI:CreateFS(panel, 12)
-                        descText:SetPoint("TOPLEFT", panel, "TOPLEFT", 160, pY)
-                        descText:SetText("- " .. cmdInfo.desc)
-                        descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-                        pY = pY - 20
-                    end
-                    pY = pY - 8
+                hdr:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                pY = pY - 18
+                for _, cmdInfo in ipairs(set.commands) do
+                    local cmdText = OneWoW_GUI:CreateFS(panel, 12)
+                    cmdText:SetPoint("TOPLEFT", panel, "TOPLEFT", 30, pY)
+                    cmdText:SetText("|cFFFFFFFF" .. cmdInfo.cmd .. "|r")
+                    cmdText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                    local descText = OneWoW_GUI:CreateFS(panel, 12)
+                    descText:SetPoint("TOPLEFT", panel, "TOPLEFT", 160, pY)
+                    descText:SetText("- " .. cmdInfo.desc)
+                    descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+                    pY = pY - 20
                 end
+                pY = pY - 8
             end
         end
         return pY
     end
 
-    local leftSets = {
-        {
-            always = true,
-            header = "OneWoW",
-            commands = {
-                { cmd = "/1w", desc = L["CMD_TOGGLE_ONEWOW"] },
-            },
-        },
-        {
-            global = "OneWoW_Notes",
-            header = "Notes",
-            commands = {
-                { cmd = "/1wn", desc = L["CMD_OPEN_NOTES"] },
-            },
-        },
-        {
-            global = "OneWoW_AltTracker",
-            header = "AltTracker",
-            commands = {
-                { cmd = "/1wat", desc = L["CMD_OPEN_ALTTRACKER"] },
-            },
-        },
-        {
-            global = "OneWoW_Catalog",
-            header = "Catalog",
-            commands = {
-                { cmd = "/1wcat", desc = L["CMD_OPEN_CATALOG"] },
-            },
-        },
-        {
-            global = "OneWoW_Trackers",
-            header = "Trackers",
-            commands = {
-                { cmd = "/1wt", desc = L["CMD_OPEN_TRACKERS"] },
-            },
-        },
-        {
-            global = "OneWoW_QoL",
-            header = "QoL",
-            commands = {
-                { cmd = "/1wqol", desc = L["CMD_OPEN_QOL"] },
-            },
-        },
-    }
-
-    local rightSets = {
+    local leftEndY = RenderSets(cmdLeft, {
         {
             global = "OneWoW_DirectDeposit",
             header = "Direct Deposit",
             commands = {
-                { cmd = "/1wdd",                    desc = L["CMD_OPEN_DD"] },
-                { cmd = "  /1wdd deposit",          desc = L["CMD_MANUAL_DEPOSIT"] },
-                { cmd = "  /1wdd pause|stop",       desc = L["CMD_DEPOSIT_PAUSE"] },
+                { cmd = "/1wdd",              desc = L["CMD_OPEN_DD"] },
+                { cmd = "  /1wdd deposit",    desc = L["CMD_MANUAL_DEPOSIT"] },
+                { cmd = "  /1wdd pause|stop", desc = L["CMD_DEPOSIT_PAUSE"] },
             },
         },
+    })
+
+    local rightEndY = RenderSets(cmdRight, {
         {
             global = "OneWoW_ShoppingList",
             header = "Shopping List",
             commands = {
-                { cmd = "/1wsl",              desc = L["CMD_OPEN_SL"] },
-                { cmd = "  /1wsl add <id>",   desc = L["CMD_SL_ADD"] },
+                { cmd = "/1wsl",            desc = L["CMD_OPEN_SL"] },
+                { cmd = "  /1wsl add <id>", desc = L["CMD_SL_ADD"] },
             },
         },
-        {
-            global = "OneWoW_Bags",
-            header = "Bags",
-            commands = {
-                { cmd = "/1wbags", desc = L["CMD_OPEN_BAGS"] },
-            },
-        },
-        {
-            global = "OneWoW_Mail",
-            header = "Mail",
-            commands = {
-                { cmd = "/1wmail", desc = L["CMD_OPEN_MAIL"] },
-            },
-        },
-        {
-            global = "OneWoW_Utility_DevTool",
-            header = "DevTools",
-            commands = {
-                { cmd = "/1wdt", desc = L["CMD_OPEN_DEVTOOLS"] },
-            },
-        },
-    }
+    })
 
-    local leftEndY  = RenderSets(cmdLeft,  leftSets)
-    local rightEndY = RenderSets(cmdRight, rightSets)
-
-    local cmdHeight = 40 + math.max(math.abs(leftEndY), math.abs(rightEndY)) + 15
+    local cmdHeight = 40 + math.max(math.abs(leftEndY), math.abs(rightEndY), 24) + 15
     cmdContainer:SetHeight(cmdHeight)
 
     yOffset = yOffset - cmdHeight - 20
-
     content:SetHeight(math.abs(yOffset) + 50)
 
-    -- Re-query every row's live state. Driven on panel show (navigate back to Home)
-    -- and by ns.FeatureStateChanged (load/opt-out change while Home is visible).
+    local function RefreshSummary()
+        local loaded, attention = 0, 0
+        for _, entry in ipairs(catalog) do
+            local st = MapFeatureUnitState(ns:GetFeatureUnitState(entry.addonName))
+            if IsOpenableState(st) then
+                loaded = loaded + 1
+            end
+            if IsAttentionState(st) then
+                attention = attention + 1
+            end
+            -- Root version mismatch while otherwise healthy still needs attention.
+            local skip = entry.addonName == "OneWoW_Utility_DevTool"
+            if IsVersionMismatch(entry.addonName, skip) and not IsAttentionState(st) then
+                attention = attention + 1
+            end
+        end
+        for _, mParent in ipairs(ns:GetManifestParentsWithStores()) do
+            for _, store in ipairs(mParent.stores) do
+                if IsVersionMismatch(store, false) then
+                    attention = attention + 1
+                end
+            end
+        end
+
+        summaryText:SetText(string.format(L["HOME_SUMMARY_FORMAT"], loaded, attention))
+        if attention > 0 then
+            summaryLight:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+        else
+            summaryLight:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        end
+    end
+
+    rowRefreshers[#rowRefreshers + 1] = RefreshSummary
+    RefreshSummary()
+
     local function RefreshAll()
         for _, fn in ipairs(rowRefreshers) do fn() end
     end

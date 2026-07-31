@@ -40,11 +40,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["CHARS_REMOVE_NONE_SELECTED"] = "未选择角色。",
     ["SETTINGS_ROLES_ALTS_POINTER"] = "角色分组、提示信息小号筛选以及从 OneWoW 数据库移除已删角色，均在设置 \226\134\146 角色与小号 中管理。",
     ["SETTINGS_ROLES_ALTS_BTN"] = "打开角色与小号",
-
-    ["HOME_VERSION"] = "版本",
     ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
-    ["HOME_REQUIRED_ADDONS"] = "必需的插件",
-    ["HOME_DETECTED_MODULES"] = "检测到的模块",
     ["HOME_STANDALONE_ADDONS"] = "独立插件",
     ["HOME_STATUS_NOT_FOUND"] = "未找到",
     ["PLACEHOLDER_ENABLE_POINTER"] = "启用位置",
@@ -61,7 +57,6 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
 
     ["MODULE_BAGS"] = "Bags",
     ["MODULE_DEVTOOLS"] = "DevTools",
-    ["MODULE_EXTRACTOR"] = "Extractor",
 
     ["MINIMAP_TOOLTIP_HINT"] = "点击切换 OneWoW",
     ["MINIMAP_MODULES_LOADED"] = "已加载 %d 个模块",
@@ -140,7 +135,9 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["WIZARD_FEATURE_DEVTOOL"] = "DevTool",
     ["WIZARD_FEATURE_DEVTOOL_DESC"] = "开发者工具，用于框体检查、事件、错误、全局变量和图集浏览。",
 
-    ["HOME_COMMANDS"] = "可用命令",
+    ["HOME_COMMAND_OPTIONS"] = "命令选项",
+    ["HOME_SUMMARY_FORMAT"] = "已加载 %d 个插件 · %d 个需要注意",
+    ["HOME_NOT_INSTALLED"] = "未安装",
     ["HOME_WHATS_NEW"] = "更新内容",
     ["WHATS_NEW_TITLE"] = "更新内容 — %s",
     ["WHATS_NEW_DONT_SHOW"] = "本版本不再显示",
@@ -148,7 +145,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["WHATS_NEW_URL"] = "https://github.com/kellewic/OneWoW_Suite/wiki/Release-Notes",
     ["WHATS_NEW_RELEASE_NOTES_BTN"] = "发行说明",
     ["WHATS_NEW_H_SLASH_TITLE"] = "斜杠命令",
-    ["WHATS_NEW_H_SLASH_BODY"] = "主页现在只列出规范的 /1w… 命令。其他别名在本版本仍可用——下一版本将移除主页未列出的所有斜杠命令。",
+    ["WHATS_NEW_H_SLASH_BODY"] = "主页插件卡片显示各功能的主 /1w… 命令。命令选项列出 Direct Deposit 与 Shopping List 的子命令。其他别名在本版本仍可用——下一版本将移除主页未列出的所有斜杠命令。",
     ["WHATS_NEW_H_MAIL_BODY"] = "展开拍卖行邮件时可查看完整账单明细。",
     ["WHATS_NEW_H_QOL_TITLE"] = "QoL — Auto Open",
     ["WHATS_NEW_H_QOL_BODY"] = "在邮件、银行、商人或专业窗口打开时获得的容器，Auto Open 现在也会打开。",
@@ -178,17 +175,15 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["VALUE_AUCTIONATOR_POPUP_TEXT"] = "Auctionator 现在是 OneWoW 鼠标提示中拍卖行价格的来源。OneWoW 已关闭重叠的 Auctionator 鼠标提示行。用 Auctionator 扫描拍卖行以刷新价格。此选项开启期间，OneWoW 的完整拍卖行扫描按钮将被隐藏。",
     ["VALUE_TSM_POPUP_TEXT"] = "OneWoW 将在鼠标提示中显示一条 TSM 价格行。为避免信息重复，请打开 TSM > Settings > Tooltip Settings 并关闭“Enable TSM tooltips”，或清除你不需要的单条 TSM 鼠标提示行。",
 
-    ["HOME_DETECTED_DATA_MODULES"] = "检测到的数据模块",
     ["HOME_STATUS_ALL"] = "对所有角色启用",
     ["HOME_STATUS_SOME"] = "对部分角色启用",
     ["HOME_STATUS_NOTLOADED"] = "已启用，但未加载。请在“管理功能”中加载它。",
     ["HOME_STATUS_PENDING_DISABLE"] = "已启用并加载，但下次重载时将不会加载。",
     ["HOME_STATUS_NONE"] = "对此角色禁用",
-    ["HOME_NOTLOADED_TAG"] = "（未加载）",
-    ["HOME_PENDING_DISABLE_TAG"] = "（下次重载时关闭）",
     ["HOME_MANAGE_POINTER"] = "在此处启用或禁用功能",
     ["HOME_MANAGE_LINK"] = "管理功能",
-    ["HOME_VERSION_MISMATCH_NOTICE"] = "部分 OneWoW 插件已过期，与核心版本 %s 不一致。请重新下载完整的 OneWoW 套件，使所有模块保持相同版本。",
+    ["HOME_VERSION_MISMATCH_NOTICE"] = "部分 OneWoW 插件已过期，与核心版本 %s 不一致。请重新下载完整的 OneWoW 套件，使所有插件保持相同版本。",
+    ["HOME_VERSION_MISMATCH_NAMED"] = "已过期：%s。请重新安装套件，使所有插件达到 %s。",
 
     ["DATA_MOD_ACCOUNTING"] = "Accounting",
     ["DATA_MOD_AUCTIONS"] = "Auctions",
@@ -204,8 +199,6 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["CAT_MOD_VENDORS"] = "Vendors",
 
     ["HOME_UTILITIES"] = "实用工具",
-    ["HOME_ALTTRACKER_MODULES"] = "AltTracker 模块",
-    ["HOME_CATALOG_DATA_MODULES"] = "Catalog 数据模块",
     ["HOME_SUPPORT"] = "支持 OneWoW",
     ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "特别鸣谢",
