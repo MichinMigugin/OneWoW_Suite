@@ -224,6 +224,7 @@ function OneWoW_GUI:CreateSectionHeader(parent, options)
     options = options or {}
     local title = options.title or ""
     local yOffset = options.yOffset or 0
+    local fontSize = options.fontSize or 12
     local section = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     section:SetPoint("TOPLEFT", 0, yOffset)
     section:SetPoint("TOPRIGHT", 0, yOffset)
@@ -233,8 +234,8 @@ function OneWoW_GUI:CreateSectionHeader(parent, options)
     section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
     local titleText = section:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    OneWoW_GUI:SetFontBaseSize(titleText, 12)
-    OneWoW_GUI:SafeSetFont(titleText, OneWoW_GUI:GetFont(), 12)
+    OneWoW_GUI:SetFontBaseSize(titleText, fontSize)
+    OneWoW_GUI:SafeSetFont(titleText, OneWoW_GUI:GetFont(), fontSize)
     titleText:SetPoint("LEFT", 12, 0)
     titleText:SetText(title)
     titleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))

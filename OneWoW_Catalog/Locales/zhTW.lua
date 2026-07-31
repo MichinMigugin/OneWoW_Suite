@@ -354,8 +354,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["ITEMSEARCH_AH_AGE_DAYS"] = "%d 天",
     ["ITEMSEARCH_AH_AUCTIONS"] = "件拍賣",
 
-    ["DATA_MANAGER_TITLE"] = "資料管理員",
-    ["DATA_MANAGER_DESC"] = "管理插件資料庫。點擊重置以徹底清空資料庫並強制重新載入介面。",
 
     ["SETTINGS_DB_NAME_CATALOG"] = "Catalog 核心",
     ["SETTINGS_DB_DESC_CATALOG"] = "插件主要設定和介面狀態。",
@@ -365,10 +363,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["SETTINGS_DB_DESC_VENDORS"] = "商人和物品資料。",
     ["SETTINGS_DB_NAME_TRADESKILLS"] = "專業資料",
     ["SETTINGS_DB_DESC_TRADESKILLS"] = "專業和配方資料。",
-    ["SETTINGS_DB_ENTRIES"] = "項目：%d",
-    ["SETTINGS_DB_NOT_LOADED"] = "未載入",
-    ["SETTINGS_DB_RESET_TITLE"] = "重置 %s",
-    ["SETTINGS_DB_RESET_TEXT"] = "確定要重置 %s 嗎？\n\n這將永久刪除此資料庫中的所有資料。",
 
     ["ITEMSEARCH_ALTTRACKER_AUCTIONS_REQUIRED"] = "拍賣場掃描需要 AltTracker Auctions。",
     ["ITEMSEARCH_AH_SCAN_COOLDOWN"] = "拍賣場完整掃描將在 %d 分鐘後可用。",

@@ -59,6 +59,7 @@ ns.Locale:RegisterShared("zhTW", {
 
     -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "贊助",
+    ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "小地圖按鈕",
@@ -383,6 +384,14 @@ ns.Locale:RegisterShared("zhTW", {
     ["TOAST_NEW_RECIPE"] = "新配方！",
     ["TOAST_NEW_TMOG"] = "新外觀！",
     ["TOAST_INSTANCE_CLICK"] = "點擊在圖鑑中查看",
+
+    ["DATABASE_MANAGER_TITLE"] = "資料庫管理員",
+    ["DATABASE_MANAGER_DESC"] = "管理插件資料庫。點擊重置以徹底清空資料庫並強制重新載入介面。",
+    ["DATABASE_MANAGER_RESET_DISABLED"] = "此插件尚未啟用。請在「管理功能」中啟用後再重置其資料庫。",
+    ["DATABASE_MANAGER_ENTRIES"] = "項目：%d",
+    ["DATABASE_MANAGER_NOT_LOADED"] = "未載入",
+    ["DATABASE_MANAGER_RESET_TITLE"] = "重置 %s",
+    ["DATABASE_MANAGER_RESET_TEXT"] = "確定要重置 %s 嗎？\n\n這將永久刪除此資料庫中的所有資料。",
 
   -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "拍賣價格資料",

@@ -354,8 +354,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["ITEMSEARCH_AH_AGE_DAYS"] = "%d j",
     ["ITEMSEARCH_AH_AUCTIONS"] = "enchères",
 
-    ["DATA_MANAGER_TITLE"] = "Gestionnaire de données",
-    ["DATA_MANAGER_DESC"] = "Gérez les bases de données de l'addon. Cliquez sur Réinitialiser pour effacer complètement une base de données et forcer un rechargement de l'interface.",
 
     ["SETTINGS_DB_NAME_CATALOG"] = "Cœur de Catalog",
     ["SETTINGS_DB_DESC_CATALOG"] = "Paramètres principaux de l'addon et état de l'interface.",
@@ -365,10 +363,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["SETTINGS_DB_DESC_VENDORS"] = "Données de marchands et d'objets.",
     ["SETTINGS_DB_NAME_TRADESKILLS"] = "Données de métiers",
     ["SETTINGS_DB_DESC_TRADESKILLS"] = "Données de métiers et de recettes.",
-    ["SETTINGS_DB_ENTRIES"] = "Entrées : %d",
-    ["SETTINGS_DB_NOT_LOADED"] = "Non chargé",
-    ["SETTINGS_DB_RESET_TITLE"] = "Réinitialiser %s",
-    ["SETTINGS_DB_RESET_TEXT"] = "Voulez-vous vraiment réinitialiser %s ?\n\nCela supprimera définitivement toutes les données de cette base de données.",
 
     ["ITEMSEARCH_ALTTRACKER_AUCTIONS_REQUIRED"] = "AltTracker Auctions est requis pour le scan de l'HV.",
     ["ITEMSEARCH_AH_SCAN_COOLDOWN"] = "Scan complet de l'HV disponible dans %d minutes.",

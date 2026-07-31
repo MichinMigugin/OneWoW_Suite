@@ -213,13 +213,15 @@ local function StartDismissWatcher()
     end)
 end
 
-function Search:Init(titleBar, closeBtn)
-    local box = CreateFrame("EditBox", "OneWoWSearchBox", titleBar, "BackdropTemplate")
-    box:SetSize(200, 14)
-    box:SetPoint("RIGHT", closeBtn, "LEFT", -6, 0)
+--- Parent is the hub toolbar; search anchors to the right edge of rightAnchor (defaults to parent).
+function Search:Init(parent, rightAnchor)
+    rightAnchor = rightAnchor or parent
+    local box = CreateFrame("EditBox", "OneWoWSearchBox", parent, "BackdropTemplate")
+    box:SetSize(200, 22)
+    box:SetPoint("RIGHT", rightAnchor, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
     box:SetBackdrop(BACKDROP_INNER)
     box:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    box:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    box:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
     OneWoW_GUI:ApplyFont(box, 10)
     box:SetTextInsets(6, 6, 0, 0)
     box:SetAutoFocus(false)
@@ -236,11 +238,11 @@ function Search:Init(titleBar, closeBtn)
             myself:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
             isPlaceholder = false
         end
-        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
     end)
 
     box:SetScript("OnEditFocusLost", function(myself)
-        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
         if myself:GetText() == "" then
             myself:SetText("Search...")
             myself:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))

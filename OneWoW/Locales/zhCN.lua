@@ -8,7 +8,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["LOAD_FAIL_OPTED_OUT"] = "该插件已对此角色软禁用 — 请先在“管理功能”中启用它。",
     ["LOAD_FAIL_UNKNOWN"] = "无法加载该插件。",
 
-    ["HOME_TAB"] = "OneWoW",
+    ["HOME_TAB"] = "首页",
     ["PROFILES_SUBTAB"] = "配置文件",
     ["MANAGE_FEATURES_SUBTAB"] = "管理功能",
 
@@ -38,9 +38,8 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["CHARS_REMOVE_CONFIRM_TITLE"] = "确认移除",
     ["CHARS_REMOVE_CONFIRM"] = "从所有 OneWoW 数据库中永久删除 %d 个角色？\n\n|cFFFF6666%s|r\n\n此操作无法撤销。将重新加载界面。",
     ["CHARS_REMOVE_NONE_SELECTED"] = "未选择角色。",
-    ["SETTINGS_ROLES_ALTS_POINTER"] = "角色分组、提示信息小号筛选以及从 OneWoW 数据库移除已删角色，均在设置 \226\134\146 角色与小号 中管理。",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "角色分组、提示信息小号筛选以及从 OneWoW 数据库移除已删角色，均在设置 / %s 中管理。",
     ["SETTINGS_ROLES_ALTS_BTN"] = "打开角色与小号",
-    ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
     ["HOME_STANDALONE_ADDONS"] = "独立插件",
     ["HOME_STATUS_NOT_FOUND"] = "未找到",
     ["PLACEHOLDER_ENABLE_POINTER"] = "启用位置",
@@ -199,8 +198,6 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["CAT_MOD_VENDORS"] = "Vendors",
 
     ["HOME_UTILITIES"] = "实用工具",
-    ["HOME_SUPPORT"] = "支持 OneWoW",
-    ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "特别鸣谢",
     ["HOME_THANKS_NAMES"] = "MacMode、SnerkDevil、tiradox、kellzilla，以及所有的 Beta 测试者",
 
@@ -235,10 +232,10 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "无法识别%s的坐骑。",
 
     -- Search paths
-    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > 设置",
-    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > 设置 > 语言",
-    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > 设置 > 主题",
-    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > 设置 > 小地图按钮",
+    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > 设置 > 显示",
+    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > 设置 > 显示 > 语言",
+    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > 设置 > 显示 > 主题",
+    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > 设置 > 显示 > 小地图按钮",
     ["SRCH_PATH_OW_TOOLTIPS"] = "OneWoW > 设置 > 鼠标提示",
     ["SRCH_PATH_OW_TOOLTIPS_ITEMTYPES"] = "OneWoW > 设置 > 鼠标提示 > 物品类型",
     ["SRCH_PATH_OW_TOOLTIPS_TECHIDS"] = "OneWoW > 设置 > 鼠标提示 > 技术 ID",

@@ -57,8 +57,9 @@ ns.Locale:RegisterShared("enUS", {
     ["VALUE_DISPLAY_REGIONAL"] = "Use regional number grouping (client locale)",
     ["VALUE_DISPLAY_WHITE"] = "Use white values (letter mode; classic look when off)",
 
-    -- Footer links (Discord / OneWoW are proper nouns)
+    -- Footer links (Discord / OneWoW Home are proper nouns)
     ["LINK_DONATE"] = "Donate",
+    ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "Minimap Button",
@@ -383,6 +384,14 @@ ns.Locale:RegisterShared("enUS", {
     ["TOAST_NEW_RECIPE"] = "New Recipe!",
     ["TOAST_NEW_TMOG"] = "New Appearance!",
     ["TOAST_INSTANCE_CLICK"] = "Click to view in Journal",
+
+    ["DATABASE_MANAGER_TITLE"] = "Database Manager",
+    ["DATABASE_MANAGER_DESC"] = "Manage addon databases. Click Reset to completely clear a database and force a UI reload.",
+    ["DATABASE_MANAGER_RESET_DISABLED"] = "This addon is not enabled. Enable it in Manage Features to reset its database.",
+    ["DATABASE_MANAGER_ENTRIES"] = "Entries: %d",
+    ["DATABASE_MANAGER_NOT_LOADED"] = "Not Loaded",
+    ["DATABASE_MANAGER_RESET_TITLE"] = "Reset %s",
+    ["DATABASE_MANAGER_RESET_TEXT"] = "Are you sure you want to reset %s?\n\nThis will permanently delete all data in this database.",
 
   -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "AH price data",

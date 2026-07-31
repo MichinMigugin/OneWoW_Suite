@@ -59,6 +59,7 @@ ns.Locale:RegisterShared("ptBR", {
 
     -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "Doar",
+    ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "Botão do minimapa",
@@ -383,6 +384,14 @@ ns.Locale:RegisterShared("ptBR", {
     ["TOAST_NEW_RECIPE"] = "Nova receita!",
     ["TOAST_NEW_TMOG"] = "Nova aparência!",
     ["TOAST_INSTANCE_CLICK"] = "Clique para ver no Diário",
+
+    ["DATABASE_MANAGER_TITLE"] = "Gerenciador de bancos de dados",
+    ["DATABASE_MANAGER_DESC"] = "Gerencie os bancos de dados do addon. Clique em Redefinir para limpar completamente um banco de dados e forçar o recarregamento da interface.",
+    ["DATABASE_MANAGER_RESET_DISABLED"] = "Este addon não está ativado. Ative-o em Gerenciar recursos para redefinir o banco de dados.",
+    ["DATABASE_MANAGER_ENTRIES"] = "Entradas: %d",
+    ["DATABASE_MANAGER_NOT_LOADED"] = "Não carregado",
+    ["DATABASE_MANAGER_RESET_TITLE"] = "Redefinir %s",
+    ["DATABASE_MANAGER_RESET_TEXT"] = "Tem certeza de que deseja redefinir %s?\n\nIsso excluirá permanentemente todos os dados deste banco de dados.",
 
   -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "Dados de preço da CL",

@@ -51,6 +51,7 @@ GUI\ReorderDrag.lua
 GUI\KeywordHelp.lua
 GUI\Settings.lua
 GUI\Fonts.lua
+GUI\DatabaseManager.lua
 # Load last in this block, in this order. ReportDialog registers settings
 # callbacks at file scope (needs Settings.lua) and draws with CreateFS (needs
 # Fonts.lua); CatalogConfirm renders through it.

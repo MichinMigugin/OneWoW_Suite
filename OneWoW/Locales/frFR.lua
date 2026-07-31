@@ -8,7 +8,7 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["LOAD_FAIL_OPTED_OUT"] = "Cet addon est désactivé en douceur pour ce personnage — activez-le d'abord dans Gérer les fonctionnalités.",
     ["LOAD_FAIL_UNKNOWN"] = "Cet addon n'a pas pu être chargé.",
 
-    ["HOME_TAB"] = "OneWoW",
+    ["HOME_TAB"] = "Accueil",
     ["PROFILES_SUBTAB"] = "Profils",
     ["MANAGE_FEATURES_SUBTAB"] = "Gérer les fonctionnalités",
 
@@ -38,9 +38,8 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["CHARS_REMOVE_CONFIRM_TITLE"] = "Confirmer la suppression",
     ["CHARS_REMOVE_CONFIRM"] = "Supprimer définitivement %d personnage(s) de TOUTES les bases OneWoW ?\n\n|cFFFF6666%s|r\n\nCette action est irréversible. Un rechargement de l'interface suivra.",
     ["CHARS_REMOVE_NONE_SELECTED"] = "Aucun personnage sélectionné.",
-    ["SETTINGS_ROLES_ALTS_POINTER"] = "Les rôles de personnages, le filtrage d'alt des infobulles et la suppression des personnages effacés des bases OneWoW se gèrent dans Paramètres \226\134\146 Rôles et alts.",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "Les rôles de personnages, le filtrage d'alt des infobulles et la suppression des personnages effacés des bases OneWoW se gèrent dans Paramètres / %s.",
     ["SETTINGS_ROLES_ALTS_BTN"] = "Ouvrir Rôles et alts",
-    ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
     ["HOME_STANDALONE_ADDONS"] = "Addons autonomes",
     ["HOME_STATUS_NOT_FOUND"] = "Introuvable",
     ["PLACEHOLDER_ENABLE_POINTER"] = "Activer depuis",
@@ -199,8 +198,6 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["CAT_MOD_VENDORS"] = "Vendors",
 
     ["HOME_UTILITIES"] = "Utilitaires",
-    ["HOME_SUPPORT"] = "Soutenir OneWoW",
-    ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "Remerciements spéciaux",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla, et tous les bêta-testeurs",
 
@@ -235,10 +232,10 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "Impossible d'identifier la monture de %s.",
 
     -- Search paths
-    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Paramètres",
-    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Paramètres > Langue",
-    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Paramètres > Thème",
-    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > Paramètres > Bouton de mini-carte",
+    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Paramètres > Affichage",
+    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Paramètres > Affichage > Langue",
+    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Paramètres > Affichage > Thème",
+    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > Paramètres > Affichage > Bouton de mini-carte",
     ["SRCH_PATH_OW_TOOLTIPS"] = "OneWoW > Paramètres > Infobulles",
     ["SRCH_PATH_OW_TOOLTIPS_ITEMTYPES"] = "OneWoW > Paramètres > Infobulles > Types d'objet",
     ["SRCH_PATH_OW_TOOLTIPS_TECHIDS"] = "OneWoW > Paramètres > Infobulles > ID techniques",

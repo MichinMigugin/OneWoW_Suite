@@ -354,8 +354,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["ITEMSEARCH_AH_AGE_DAYS"] = "%d d",
     ["ITEMSEARCH_AH_AUCTIONS"] = "subastas",
 
-    ["DATA_MANAGER_TITLE"] = "Gestor de datos",
-    ["DATA_MANAGER_DESC"] = "Gestiona las bases de datos del addon. Haz clic en Restablecer para borrar por completo una base de datos y forzar una recarga de la interfaz.",
 
     ["SETTINGS_DB_NAME_CATALOG"] = "Núcleo de Catalog",
     ["SETTINGS_DB_DESC_CATALOG"] = "Ajustes principales del addon y estado de la interfaz.",
@@ -365,10 +363,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["SETTINGS_DB_DESC_VENDORS"] = "Datos de vendedores y objetos.",
     ["SETTINGS_DB_NAME_TRADESKILLS"] = "Datos de profesiones",
     ["SETTINGS_DB_DESC_TRADESKILLS"] = "Datos de profesiones y recetas.",
-    ["SETTINGS_DB_ENTRIES"] = "Entradas: %d",
-    ["SETTINGS_DB_NOT_LOADED"] = "No cargado",
-    ["SETTINGS_DB_RESET_TITLE"] = "Restablecer %s",
-    ["SETTINGS_DB_RESET_TEXT"] = "¿Seguro que quieres restablecer %s?\n\nEsto eliminará permanentemente todos los datos de esta base de datos.",
 
     ["ITEMSEARCH_ALTTRACKER_AUCTIONS_REQUIRED"] = "Se requiere AltTracker Auctions para escanear la CdS.",
     ["ITEMSEARCH_AH_SCAN_COOLDOWN"] = "Escaneo completo de la CdS disponible en %d minutos.",

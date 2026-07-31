@@ -9,6 +9,15 @@
 - Home now shows addon cards for each suite feature (status, description, primary `/1w…` command); click a loaded card to open it, or Enable to jump to Manage Features
 - Summary bar reports how many addons are loaded and how many need attention; version mismatches highlight the card and a footer banner
 - Command Options lists Direct Deposit and Shopping List subcommands; other primary opens live on the cards
+- Hub navigation uses a section dropdown (Home, features, Settings) under the title bar, with search on the same toolbar; the Home entry is labeled Home (window title stays OneWoW)
+- Text links use dedicated theme colors (idle / hover / underline) so they no longer match section headers; in-hub links like Manage Features show a small `>`
+- Community links live on Home (Discord, Donate, OneWoW Home) with the same labels as before; they are no longer on Settings
+
+## Settings
+- Profiles shows UI & Addon Settings and Character Backup on one scroll (section headers; no mode toggle)
+- Catalog and AltTracker Database Manager share the same title/description and row layout; Reset is disabled (with a tooltip) when that addon is not enabled
+- Discord / Donate / OneWoW Home removed from Settings (use Home)
+- The first Settings sub-tab is labeled Display (language, theme, font, minimap, value display)
 
 ## Slash commands
 - Home cards and Command Options are the canonical `/1w…` set (hub `/1w`, feature opens on cards, Direct Deposit `/1wdd` with `deposit` / `pause` / `stop`, Shopping List `/1wsl add`)
@@ -21,6 +30,11 @@
 ---
 
 # QoL
+## Settings
+- Developer Help removed from the QoL settings tab (module authoring lives in QoL docs / the Developers wiki)
+- Weekly Reset Day section layout matches Catalog and AltTracker settings (full-width header, no extra divider)
+- Weekly Reset Day no longer repeats the selected region beside the dropdown
+
 ## Fixes
 - Auto Open now opens containers taken while mail, bank, merchant, or profession windows were open (rescans shortly after those windows close)
 - Toggles detail status bar now updates when you change a CVar, and shows On/Off (or option labels) instead of raw `0`/`1`
@@ -45,6 +59,9 @@
 ---
 
 # AltTracker
+## Settings
+- Roles & Alts pointer embeds the destination as an in-sentence text link (`Settings / Roles & Alts`); Database Manager uses the shared suite strings
+
 ## Auctions
 - Auction history is no longer capped at 100 entries
 - Auctions list supports sorting, realm filter, and Bags-style item search (`#` keywords, shortcuts, and the search help button)

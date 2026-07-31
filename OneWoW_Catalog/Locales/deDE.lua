@@ -354,8 +354,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ITEMSEARCH_AH_AGE_DAYS"] = "%d T",
     ["ITEMSEARCH_AH_AUCTIONS"] = "Auktionen",
 
-    ["DATA_MANAGER_TITLE"] = "Datenmanager",
-    ["DATA_MANAGER_DESC"] = "Verwaltet die Addon-Datenbanken. Klickt auf Zurücksetzen, um eine Datenbank vollständig zu leeren und einen UI-Neuladen zu erzwingen.",
 
     ["SETTINGS_DB_NAME_CATALOG"] = "Catalog-Kern",
     ["SETTINGS_DB_DESC_CATALOG"] = "Haupteinstellungen des Addons und UI-Zustand.",
@@ -365,10 +363,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["SETTINGS_DB_DESC_VENDORS"] = "Händler- und Gegenstandsdaten.",
     ["SETTINGS_DB_NAME_TRADESKILLS"] = "Berufsdaten",
     ["SETTINGS_DB_DESC_TRADESKILLS"] = "Berufs- und Rezeptdaten.",
-    ["SETTINGS_DB_ENTRIES"] = "Einträge: %d",
-    ["SETTINGS_DB_NOT_LOADED"] = "Nicht geladen",
-    ["SETTINGS_DB_RESET_TITLE"] = "%s zurücksetzen",
-    ["SETTINGS_DB_RESET_TEXT"] = "Möchtet ihr %s wirklich zurücksetzen?\n\nDadurch werden alle Daten in dieser Datenbank dauerhaft gelöscht.",
 
     ["ITEMSEARCH_ALTTRACKER_AUCTIONS_REQUIRED"] = "AltTracker Auctions wird für den AH-Scan benötigt.",
     ["ITEMSEARCH_AH_SCAN_COOLDOWN"] = "Vollständiger AH-Scan in %d Minuten verfügbar.",

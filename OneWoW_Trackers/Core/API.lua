@@ -46,13 +46,13 @@ function OneWoW_Trackers_API.GetWeeklyResetRegionOptions()
     return {}
 end
 
---- Localized title/description/current-format strings for the region picker UI.
----@return string title, string desc, string currentFmt
+--- Localized title/description for the region picker UI.
+---@return string title, string desc
 function OneWoW_Trackers_API.GetWeeklyResetUIText()
     if ns.TrackerData and ns.TrackerData.GetWeeklyResetUIText then
         return ns.TrackerData:GetWeeklyResetUIText()
     end
-    return "", "", "%s"
+    return "", ""
 end
 
 --- Set the weekly reset region and immediately reconcile any pending resets.

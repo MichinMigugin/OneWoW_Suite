@@ -354,8 +354,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["ITEMSEARCH_AH_AGE_DAYS"] = "%d g",
     ["ITEMSEARCH_AH_AUCTIONS"] = "aste",
 
-    ["DATA_MANAGER_TITLE"] = "Gestore dati",
-    ["DATA_MANAGER_DESC"] = "Gestisci i database dell'addon. Clicca su Reimposta per cancellare completamente un database e forzare il ricaricamento dell'interfaccia.",
 
     ["SETTINGS_DB_NAME_CATALOG"] = "Nucleo di Catalog",
     ["SETTINGS_DB_DESC_CATALOG"] = "Impostazioni principali dell'addon e stato dell'interfaccia.",
@@ -365,10 +363,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["SETTINGS_DB_DESC_VENDORS"] = "Dati di venditori e oggetti.",
     ["SETTINGS_DB_NAME_TRADESKILLS"] = "Dati delle professioni",
     ["SETTINGS_DB_DESC_TRADESKILLS"] = "Dati di professioni e ricette.",
-    ["SETTINGS_DB_ENTRIES"] = "Voci: %d",
-    ["SETTINGS_DB_NOT_LOADED"] = "Non caricato",
-    ["SETTINGS_DB_RESET_TITLE"] = "Reimposta %s",
-    ["SETTINGS_DB_RESET_TEXT"] = "Vuoi davvero reimpostare %s?\n\nQuesto eliminerà definitivamente tutti i dati di questo database.",
 
     ["ITEMSEARCH_ALTTRACKER_AUCTIONS_REQUIRED"] = "AltTracker Auctions è richiesto per la scansione della CdA.",
     ["ITEMSEARCH_AH_SCAN_COOLDOWN"] = "Scansione completa della CdA disponibile tra %d minuti.",

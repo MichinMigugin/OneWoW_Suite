@@ -8,7 +8,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["LOAD_FAIL_OPTED_OUT"] = "Quell'addon è disattivato in modo leggero per questo personaggio — attivalo prima in Gestisci funzioni.",
     ["LOAD_FAIL_UNKNOWN"] = "Impossibile caricare quell'addon.",
 
-    ["HOME_TAB"] = "OneWoW",
+    ["HOME_TAB"] = "Principale",
     ["PROFILES_SUBTAB"] = "Profili",
     ["MANAGE_FEATURES_SUBTAB"] = "Gestisci funzioni",
 
@@ -38,9 +38,8 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["CHARS_REMOVE_CONFIRM_TITLE"] = "Conferma rimozione",
     ["CHARS_REMOVE_CONFIRM"] = "Eliminare definitivamente %d personaggio/i da TUTTI i database OneWoW?\n\n|cFFFF6666%s|r\n\nOperazione irreversibile. Seguirà un ricaricamento dell'interfaccia.",
     ["CHARS_REMOVE_NONE_SELECTED"] = "Nessun personaggio selezionato.",
-    ["SETTINGS_ROLES_ALTS_POINTER"] = "Ruoli personaggio, filtri alt nelle descrizioni e rimozione personaggi cancellati dai database OneWoW si gestiscono in Impostazioni \226\134\146 Ruoli e alt.",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "Ruoli personaggio, filtri alt nelle descrizioni e rimozione personaggi cancellati dai database OneWoW si gestiscono in Impostazioni / %s.",
     ["SETTINGS_ROLES_ALTS_BTN"] = "Apri Ruoli e alt",
-    ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
     ["HOME_STANDALONE_ADDONS"] = "Addon autonomi",
     ["HOME_STATUS_NOT_FOUND"] = "Non trovato",
     ["PLACEHOLDER_ENABLE_POINTER"] = "Attiva da",
@@ -199,8 +198,6 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["CAT_MOD_VENDORS"] = "Vendors",
 
     ["HOME_UTILITIES"] = "Utilità",
-    ["HOME_SUPPORT"] = "Sostieni OneWoW",
-    ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "Ringraziamenti speciali",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla, e tutti i beta tester",
 
@@ -235,10 +232,10 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "Impossibile identificare la cavalcatura di %s.",
 
     -- Search paths
-    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Impostazioni",
-    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Impostazioni > Lingua",
-    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Impostazioni > Tema",
-    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > Impostazioni > Pulsante minimappa",
+    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Impostazioni > Schermo",
+    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Impostazioni > Schermo > Lingua",
+    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Impostazioni > Schermo > Tema",
+    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > Impostazioni > Schermo > Pulsante minimappa",
     ["SRCH_PATH_OW_TOOLTIPS"] = "OneWoW > Impostazioni > Tooltip",
     ["SRCH_PATH_OW_TOOLTIPS_ITEMTYPES"] = "OneWoW > Impostazioni > Tooltip > Tipi di oggetto",
     ["SRCH_PATH_OW_TOOLTIPS_TECHIDS"] = "OneWoW > Impostazioni > Tooltip > ID tecnici",

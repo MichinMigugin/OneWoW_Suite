@@ -59,6 +59,7 @@ ns.Locale:RegisterShared("frFR", {
 
     -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "Faire un don",
+    ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "Bouton de la minicarte",
@@ -383,6 +384,14 @@ ns.Locale:RegisterShared("frFR", {
     ["TOAST_NEW_RECIPE"] = "Nouvelle recette !",
     ["TOAST_NEW_TMOG"] = "Nouvelle apparence !",
     ["TOAST_INSTANCE_CLICK"] = "Cliquez pour voir dans le Journal",
+
+    ["DATABASE_MANAGER_TITLE"] = "Gestionnaire de bases de données",
+    ["DATABASE_MANAGER_DESC"] = "Gérez les bases de données de l'addon. Cliquez sur Réinitialiser pour effacer complètement une base de données et forcer un rechargement de l'interface.",
+    ["DATABASE_MANAGER_RESET_DISABLED"] = "Cet addon n'est pas activé. Activez-le dans Gérer les fonctionnalités pour réinitialiser sa base de données.",
+    ["DATABASE_MANAGER_ENTRIES"] = "Entrées : %d",
+    ["DATABASE_MANAGER_NOT_LOADED"] = "Non chargé",
+    ["DATABASE_MANAGER_RESET_TITLE"] = "Réinitialiser %s",
+    ["DATABASE_MANAGER_RESET_TEXT"] = "Voulez-vous vraiment réinitialiser %s ?\n\nCela supprimera définitivement toutes les données de cette base de données.",
 
   -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "Données de prix HV",

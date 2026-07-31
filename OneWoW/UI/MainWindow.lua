@@ -9,7 +9,6 @@ local MainWindow = nil
 local isInitialized = false
 local currentModuleTab = "home"
 local currentSubTab = nil
-local row1Buttons = {}
 local row2Buttons = {}
 local moduleContentFrames = {}
 local row1Container = nil
@@ -18,6 +17,10 @@ local contentArea = nil
 local homePanel = nil
 local settingsPanel = nil
 local placeholderData = {}
+local sectionNavDropdown = nil
+local sectionNavText = nil
+local sectionModuleNames = {}  -- hub module names between home and settings (refresh detection)
+local sectionLabels = {}       -- moduleName -> display text
 local FRAME_NAME = "OneWoWMainWindow"
 
 local function RemoveFromUISpecialFrames(name)
@@ -43,36 +46,6 @@ hooksecurefunc("ToggleGameMenu", function()
         end
     end
 end)
-
-local function CreateRow1TabButton(parent, text, moduleName)
-    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    btn:SetHeight(30)
-    btn:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
-    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    btn.text = OneWoW_GUI:CreateFS(btn, 12)
-    btn.text:SetPoint("CENTER")
-    btn.text:SetText(text)
-    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    btn.moduleName = moduleName
-
-    btn:SetScript("OnEnter", function(self)
-        if self.moduleName ~= currentModuleTab then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        end
-    end)
-    btn:SetScript("OnLeave", function(self)
-        if self.moduleName ~= currentModuleTab then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        end
-    end)
-    btn:SetScript("OnClick", function(self)
-        UI:SelectModuleTab(self.moduleName)
-    end)
-
-    return btn
-end
 
 local function CreateRow2TabButton(parent, text, subTabName, disabled)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
@@ -111,20 +84,6 @@ local function CreateRow2TabButton(parent, text, subTabName, disabled)
     end)
 
     return btn
-end
-
-local function UpdateRow1Styling()
-    for _, btn in ipairs(row1Buttons) do
-        if btn.moduleName == currentModuleTab then
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        else
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        end
-    end
 end
 
 local function UpdateRow2Styling()
@@ -168,28 +127,8 @@ local function HideAllContent()
     end
 end
 
-local function LayoutRow1Buttons()
-    if not row1Container or #row1Buttons == 0 then return end
-    local containerWidth = row1Container:GetWidth()
-    if containerWidth <= 0 then containerWidth = 1380 end
-    local numBtns = #row1Buttons
-    local spacing = OneWoW_GUI:GetSpacing("XS")
-    local btnWidth = (containerWidth - (numBtns - 1) * spacing) / numBtns
-
-    for i, btn in ipairs(row1Buttons) do
-        btn:ClearAllPoints()
-        btn:SetWidth(btnWidth)
-        if i == 1 then
-            btn:SetPoint("TOPLEFT", row1Container, "TOPLEFT", 0, 0)
-        else
-            btn:SetPoint("TOPLEFT", row1Buttons[i - 1], "TOPRIGHT", spacing, 0)
-        end
-    end
-end
-
--- Row-1 module tabs (between Home and Settings): registered modules plus
--- ALWAYS_SHOW placeholders for units not loaded yet. Rebuilt when the registry
--- gains a module after MainWindow has already initialized (mid-session Load Addon).
+-- Hub sections for the toolbar dropdown: Home, always-show / registered modules,
+-- Settings. Rebuilt when the registry gains a module after MainWindow init.
 local function BuildDisplayModules()
     wipe(placeholderData)
 
@@ -220,57 +159,61 @@ local function BuildDisplayModules()
     return displayModules
 end
 
-local function CollectRow1ModuleTabNames()
-    local names = {}
-    for i = 2, #row1Buttons - 1 do
-        tinsert(names, row1Buttons[i].moduleName)
+--- Ordered section entries for the nav dropdown: { value, text }.
+---@return table[]
+local function BuildSectionList()
+    local sections = {
+        { value = "home", text = L["HOME_TAB"] },
+    }
+    wipe(sectionModuleNames)
+    wipe(sectionLabels)
+    sectionLabels.home = L["HOME_TAB"]
+    for _, mod in ipairs(BuildDisplayModules()) do
+        local displayText = type(mod.displayName) == "function" and mod.displayName() or mod.displayName
+        tinsert(sections, { value = mod.name, text = displayText })
+        tinsert(sectionModuleNames, mod.name)
+        sectionLabels[mod.name] = displayText
     end
-    return names
+    tinsert(sections, { value = "settings", text = SETTINGS })
+    sectionLabels.settings = SETTINGS
+    return sections
 end
 
-local function Row1ModuleTabsMatch(displayModules)
-    if #row1Buttons < 2 then return false end
-    local expected = {}
-    for _, mod in ipairs(displayModules) do
-        tinsert(expected, mod.name)
+local function SectionLabelFor(moduleName)
+    return sectionLabels[moduleName] or moduleName
+end
+
+local function UpdateSectionNavLabel()
+    if sectionNavText then
+        sectionNavText:SetText(SectionLabelFor(currentModuleTab))
     end
-    local current = CollectRow1ModuleTabNames()
-    if #current ~= #expected then return false end
-    for i = 1, #current do
-        if current[i] ~= expected[i] then return false end
+    if sectionNavDropdown then
+        sectionNavDropdown._activeValue = currentModuleTab
+    end
+end
+
+local function IsValidSection(moduleName)
+    return sectionLabels[moduleName] ~= nil
+end
+
+local function SectionModuleNamesMatch(displayModules)
+    if #sectionModuleNames ~= #displayModules then return false end
+    for i, mod in ipairs(displayModules) do
+        if sectionModuleNames[i] ~= mod.name then return false end
     end
     return true
 end
 
 function UI:RefreshRow1ModuleTabs()
-    if not isInitialized or not row1Container or #row1Buttons < 2 then return end
+    if not isInitialized or not sectionNavDropdown then return end
 
     local displayModules = BuildDisplayModules()
-    if Row1ModuleTabsMatch(displayModules) then return end
+    if SectionModuleNamesMatch(displayModules) then return end
 
-    local homeBtn = row1Buttons[1]
-    local settingsBtn = row1Buttons[#row1Buttons]
+    BuildSectionList()
+    UpdateSectionNavLabel()
 
-    for i = #row1Buttons - 1, 2, -1 do
-        local btn = row1Buttons[i]
-        btn:Hide()
-        btn:ClearAllPoints()
-        btn:SetParent(nil)
-    end
-
-    row1Buttons = { homeBtn }
-    for _, mod in ipairs(displayModules) do
-        local displayText = type(mod.displayName) == "function" and mod.displayName() or mod.displayName
-        local btn = CreateRow1TabButton(row1Container, displayText, mod.name)
-        tinsert(row1Buttons, btn)
-    end
-    tinsert(row1Buttons, settingsBtn)
-
-    LayoutRow1Buttons()
-    OneWoW_GUI:ApplyFontToFrame(row1Container)
-    UpdateRow1Styling()
-
-    -- A placeholder tab may have been showing; re-select so real module content loads.
+    -- A placeholder section may have been showing; re-select so real module content loads.
     if currentModuleTab ~= "home" and currentModuleTab ~= "settings" then
         if ns.ModuleRegistry:IsRegistered(currentModuleTab) then
             UI:SelectModuleTab(currentModuleTab)
@@ -349,7 +292,7 @@ function UI:SelectModuleTab(moduleName)
         OneWoW_Notes_API.CloseHelpPanel()
     end
 
-    UpdateRow1Styling()
+    UpdateSectionNavLabel()
     HideAllContent()
 
     if moduleName == "home" then
@@ -624,10 +567,6 @@ function UI:InitMainWindow()
     titleBar:SetScript("OnDragStart", function() MainWindow:StartMoving() end)
     titleBar:SetScript("OnDragStop", function() MainWindow:StopMovingOrSizing() end)
 
-    if ns.Search then
-        ns.Search:Init(titleBar, titleBar._closeBtn)
-    end
-
     row1Container = CreateFrame("Frame", nil, MainWindow)
     row1Container:SetHeight(C.ROW1_HEIGHT)
     row1Container:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 0, -OneWoW_GUI:GetSpacing("XS"))
@@ -642,26 +581,44 @@ function UI:InitMainWindow()
     contentArea = CreateFrame("Frame", nil, MainWindow)
     UpdateContentAreaAnchors()
 
-    local homeBtn = CreateRow1TabButton(row1Container, L["HOME_TAB"], "home")
-    table.insert(row1Buttons, homeBtn)
-
-    for _, mod in ipairs(BuildDisplayModules()) do
-        local displayText = type(mod.displayName) == "function" and mod.displayName() or mod.displayName
-        local btn = CreateRow1TabButton(row1Container, displayText, mod.name)
-        table.insert(row1Buttons, btn)
-    end
-
-    local settingsBtn = CreateRow1TabButton(row1Container, SETTINGS, "settings")
-    table.insert(row1Buttons, settingsBtn)
-
-    row1Container:SetScript("OnSizeChanged", function()
-        LayoutRow1Buttons()
+    BuildSectionList()
+    sectionNavDropdown, sectionNavText = OneWoW_GUI:CreateDropdown(row1Container, {
+        width = 170,
+        height = 26,
+        text = SectionLabelFor(currentModuleTab),
+    })
+    sectionNavDropdown:SetPoint("LEFT", row1Container, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
+    -- Toolbar twin of search: readable edge without full accent chrome.
+    sectionNavDropdown:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    sectionNavDropdown:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    sectionNavDropdown:SetScript("OnEnter", function(myself)
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
     end)
+    sectionNavDropdown:SetScript("OnLeave", function(myself)
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    end)
+    OneWoW_GUI:AttachFilterMenu(sectionNavDropdown, {
+        searchable = false,
+        menuWidth = 180,
+        buildItems = function()
+            return BuildSectionList()
+        end,
+        onSelect = function(value, displayText)
+            sectionNavText:SetText(displayText)
+            UI:SelectModuleTab(value)
+        end,
+        getActiveValue = function()
+            return currentModuleTab
+        end,
+    })
+
+    if ns.Search then
+        ns.Search:Init(row1Container)
+    end
 
     row2Container:SetScript("OnSizeChanged", function()
         LayoutRow2Buttons()
     end)
-    LayoutRow1Buttons()
 
     if UI.BuildSettingsTabs then
         UI:BuildSettingsTabs()
@@ -691,14 +648,9 @@ function UI:InitMainWindow()
     OneWoW_GUI:ApplyFontToFrame(MainWindow)
 
     local lastTab = ns.db.global.lastModuleTab
-    local validTab = false
-    for _, btn in ipairs(row1Buttons) do
-        if btn.moduleName == lastTab then
-            validTab = true
-            break
-        end
+    if not IsValidSection(lastTab) then
+        lastTab = "home"
     end
-    if not validTab then lastTab = "home" end
 
     UI:SelectModuleTab(lastTab)
 end
@@ -851,7 +803,6 @@ function UI:FullReset()
     isInitialized = false
     currentModuleTab = "home"
     currentSubTab = nil
-    row1Buttons = {}
     row2Buttons = {}
     moduleContentFrames = {}
     row1Container = nil
@@ -860,6 +811,10 @@ function UI:FullReset()
     homePanel = nil
     settingsPanel = nil
     placeholderData = {}
+    sectionNavDropdown = nil
+    sectionNavText = nil
+    wipe(sectionModuleNames)
+    wipe(sectionLabels)
 end
 
 EventRegistry:RegisterCallback("ns.ModuleRegistered", function()

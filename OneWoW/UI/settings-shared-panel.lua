@@ -1,9 +1,9 @@
 local _, ns = ...
 
 -- ============================================================================
--- Shared settings panel (hub Settings main tab)
+-- Shared settings panel (hub Settings → Display sub-tab)
 -- ============================================================================
--- Language, theme, font, minimap, value display, and community links.
+-- Language, theme, font, minimap, and value display.
 -- Lives in hub UI (not OneWoW_GUI) — suite units no longer embed this panel.
 -- Reads/writes via OneWoW_GUI:GetSetting / SetSetting.
 -- ============================================================================
@@ -181,91 +181,6 @@ function UI:BuildSharedSettingsPanel(parent, yOffset)
         rp:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", 0, 0)
 
         return container, lp, rp
-    end
-
-    local function CreateThreeColumnRow(height)
-        height = height or 88
-        local container = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-        container:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-        container:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-        container:SetHeight(height)
-        container:SetBackdrop(panelBackdrop)
-        container:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        container:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-        local lp = CreateFrame("Frame", nil, container)
-
-        local leftDiv = container:CreateTexture(nil, "ARTWORK")
-        leftDiv:SetWidth(1)
-        leftDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-        local mp = CreateFrame("Frame", nil, container)
-
-        local rightDiv = container:CreateTexture(nil, "ARTWORK")
-        rightDiv:SetWidth(1)
-        rightDiv:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-        local rp = CreateFrame("Frame", nil, container)
-
-        local function LayoutColumns()
-            local width = container:GetWidth()
-            if width <= 0 then return end
-
-            local colWidth = width / 3
-
-            lp:ClearAllPoints()
-            lp:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
-            lp:SetSize(colWidth, height)
-
-            mp:ClearAllPoints()
-            mp:SetPoint("TOPLEFT", container, "TOPLEFT", colWidth, 0)
-            mp:SetSize(colWidth, height)
-
-            rp:ClearAllPoints()
-            rp:SetPoint("TOPLEFT", container, "TOPLEFT", colWidth * 2, 0)
-            rp:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", 0, 0)
-
-            leftDiv:ClearAllPoints()
-            leftDiv:SetPoint("TOPLEFT", container, "TOPLEFT", colWidth, -8)
-            leftDiv:SetPoint("BOTTOMLEFT", container, "BOTTOMLEFT", colWidth, 8)
-
-            rightDiv:ClearAllPoints()
-            rightDiv:SetPoint("TOPLEFT", container, "TOPLEFT", colWidth * 2, -8)
-            rightDiv:SetPoint("BOTTOMLEFT", container, "BOTTOMLEFT", colWidth * 2, 8)
-        end
-
-        container:SetScript("OnSizeChanged", LayoutColumns)
-        container:HookScript("OnShow", LayoutColumns)
-        LayoutColumns()
-
-        return container, lp, mp, rp
-    end
-
-    -- Builds a centered clickable label inside a column. Clicking opens
-    -- ShowCopyURLDialog so the user can copy the URL.
-    local function CreateLinkPanel(panel, title, url)
-        local btn = CreateFrame("Button", nil, panel)
-        btn:SetAllPoints(panel)
-        btn:EnableMouse(true)
-
-        local label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-        label:SetPoint("CENTER", btn, "CENTER", 0, 0)
-        label:SetText(title)
-        label:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-        btn:SetScript("OnEnter", function()
-            label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            SetCursor("Interface\\CURSOR\\Point")
-        end)
-        btn:SetScript("OnLeave", function()
-            label:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            ResetCursor()
-        end)
-        btn:SetScript("OnClick", function()
-            OneWoW_GUI:ShowCopyURLDialog(title, url)
-        end)
-
-        return btn
     end
 
     ----------------------------------------------------------------
@@ -839,18 +754,6 @@ function UI:BuildSharedSettingsPanel(parent, yOffset)
     end)
 
     yOffset = yOffset - 178
-
-    ----------------------------------------------------------------
-    -- ROW 5: Discord | Donate | OneWoW Home
-    ----------------------------------------------------------------
-    -- Compact row of clickable labels. Each opens a copy-URL dialog.
-    local _, discordPanel, donatePanel, homePanel = CreateThreeColumnRow(36)
-
-    CreateLinkPanel(discordPanel, "Discord", "https://discord.gg/6vnabDVnDu")
-    CreateLinkPanel(donatePanel, L["LINK_DONATE"], "https://buymeacoffee.com/migugin")
-    CreateLinkPanel(homePanel, "OneWoW Home", "https://wow2.xyz/")
-
-    yOffset = yOffset - 56
 
     local function refreshThemePickerLabels()
         OneWoW_GUI:ApplyTheme()

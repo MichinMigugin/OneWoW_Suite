@@ -804,12 +804,10 @@ function TD:GetWeeklyResetRegionOptions()
     return out
 end
 
---- Localized title/description/current-format strings for the region picker UI.
----@return string title, string desc, string currentFmt
+--- Localized title/description for the region picker UI.
+---@return string title, string desc
 function TD:GetWeeklyResetUIText()
-    return ns.L["SETTINGS_RESET_TITLE"],
-        ns.L["SETTINGS_RESET_DESC"],
-        ns.L["CURRENT_VALUE"]
+    return ns.L["SETTINGS_RESET_TITLE"], ns.L["SETTINGS_RESET_DESC"]
 end
 
 --- Set the weekly reset region and immediately reconcile any pending resets.

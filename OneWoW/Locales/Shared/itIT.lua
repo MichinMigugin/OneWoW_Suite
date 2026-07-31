@@ -59,6 +59,7 @@ ns.Locale:RegisterShared("itIT", {
 
     -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "Dona",
+    ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "Pulsante minimappa",
@@ -383,6 +384,14 @@ ns.Locale:RegisterShared("itIT", {
     ["TOAST_NEW_RECIPE"] = "Nuova ricetta!",
     ["TOAST_NEW_TMOG"] = "Nuovo aspetto!",
     ["TOAST_INSTANCE_CLICK"] = "Clicca per vedere nel Diario",
+
+    ["DATABASE_MANAGER_TITLE"] = "Gestore database",
+    ["DATABASE_MANAGER_DESC"] = "Gestisci i database dell'addon. Clicca su Reimposta per cancellare completamente un database e forzare il ricaricamento dell'interfaccia.",
+    ["DATABASE_MANAGER_RESET_DISABLED"] = "Questo addon non è attivo. Attivalo in Gestisci funzionalità per reimpostare il database.",
+    ["DATABASE_MANAGER_ENTRIES"] = "Voci: %d",
+    ["DATABASE_MANAGER_NOT_LOADED"] = "Non caricato",
+    ["DATABASE_MANAGER_RESET_TITLE"] = "Reimposta %s",
+    ["DATABASE_MANAGER_RESET_TEXT"] = "Vuoi davvero reimpostare %s?\n\nQuesto eliminerà definitivamente tutti i dati di questo database.",
 
   -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "Dati di prezzo CA",

@@ -8,7 +8,7 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["LOAD_FAIL_OPTED_OUT"] = "該插件已對此角色軟停用 — 請先在「管理功能」中啟用它。",
     ["LOAD_FAIL_UNKNOWN"] = "無法載入該插件。",
 
-    ["HOME_TAB"] = "OneWoW",
+    ["HOME_TAB"] = "首頁",
     ["PROFILES_SUBTAB"] = "設定檔",
     ["MANAGE_FEATURES_SUBTAB"] = "管理功能",
 
@@ -38,9 +38,8 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["CHARS_REMOVE_CONFIRM_TITLE"] = "確認移除",
     ["CHARS_REMOVE_CONFIRM"] = "從所有 OneWoW 資料庫中永久刪除 %d 個角色？\n\n|cFFFF6666%s|r\n\n此動作無法復原。將重新載入介面。",
     ["CHARS_REMOVE_NONE_SELECTED"] = "未選擇角色。",
-    ["SETTINGS_ROLES_ALTS_POINTER"] = "角色群組、提示小號篩選以及從 OneWoW 資料庫移除已刪角色，均在設定 \226\134\146 角色與分身 中管理。",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "角色群組、提示小號篩選以及從 OneWoW 資料庫移除已刪角色，均在設定 / %s 中管理。",
     ["SETTINGS_ROLES_ALTS_BTN"] = "開啟角色與分身",
-    ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
     ["HOME_STANDALONE_ADDONS"] = "獨立插件",
     ["HOME_STATUS_NOT_FOUND"] = "未找到",
     ["PLACEHOLDER_ENABLE_POINTER"] = "啟用位置",
@@ -199,8 +198,6 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["CAT_MOD_VENDORS"] = "Vendors",
 
     ["HOME_UTILITIES"] = "實用工具",
-    ["HOME_SUPPORT"] = "支持 OneWoW",
-    ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "特別鳴謝",
     ["HOME_THANKS_NAMES"] = "MacMode、SnerkDevil、tiradox、kellzilla，以及所有的 Beta 測試者",
 
@@ -235,10 +232,10 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "無法辨識%s的坐騎。",
 
     -- Search paths
-    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > 設定",
-    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > 設定 > 語言",
-    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > 設定 > 主題",
-    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > 設定 > 小地圖按鈕",
+    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > 設定 > 顯示",
+    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > 設定 > 顯示 > 語言",
+    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > 設定 > 顯示 > 主題",
+    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > 設定 > 顯示 > 小地圖按鈕",
     ["SRCH_PATH_OW_TOOLTIPS"] = "OneWoW > 設定 > 滑鼠提示",
     ["SRCH_PATH_OW_TOOLTIPS_ITEMTYPES"] = "OneWoW > 設定 > 滑鼠提示 > 物品類型",
     ["SRCH_PATH_OW_TOOLTIPS_TECHIDS"] = "OneWoW > 設定 > 滑鼠提示 > 技術 ID",

@@ -8,7 +8,7 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["LOAD_FAIL_OPTED_OUT"] = "That addon is soft-disabled for this character — enable it in Manage Features first.",
     ["LOAD_FAIL_UNKNOWN"] = "That addon could not be loaded.",
 
-    ["HOME_TAB"] = "OneWoW",
+    ["HOME_TAB"] = "Home",
     ["PROFILES_SUBTAB"] = "Profiles",
     ["MANAGE_FEATURES_SUBTAB"] = "Manage Features",
 
@@ -38,9 +38,8 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["CHARS_REMOVE_CONFIRM_TITLE"] = "Confirm Removal",
     ["CHARS_REMOVE_CONFIRM"] = "Permanently delete %d character(s) from ALL OneWoW databases?\n\n|cFFFF6666%s|r\n\nThis cannot be undone. A UI reload will follow.",
     ["CHARS_REMOVE_NONE_SELECTED"] = "No characters selected.",
-    ["SETTINGS_ROLES_ALTS_POINTER"] = "Character roles, tooltip alt filtering, and removing deleted characters from OneWoW databases are managed in Settings → Roles & Alts.",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "Character roles, tooltip alt filtering, and removing deleted characters from OneWoW databases are managed in Settings / %s.",
     ["SETTINGS_ROLES_ALTS_BTN"] = "Open Roles & Alts",
-    ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
     ["HOME_STANDALONE_ADDONS"] = "Stand-alone Addons",
     ["HOME_STATUS_NOT_FOUND"] = "Not Found",
     ["PLACEHOLDER_ENABLE_POINTER"] = "Enable from",
@@ -199,8 +198,6 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["CAT_MOD_VENDORS"] = "Vendors",
 
     ["HOME_UTILITIES"] = "Utilities",
-    ["HOME_SUPPORT"] = "Support OneWoW",
-    ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "Special Thanks",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla, and all Beta testers",
 
@@ -235,10 +232,10 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "Could not identify %s's mount.",
 
     -- Search paths
-    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Settings",
-    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Settings > Language",
-    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Settings > Theme",
-    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > Settings > Minimap Button",
+    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Settings > Display",
+    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Settings > Display > Language",
+    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Settings > Display > Theme",
+    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > Settings > Display > Minimap Button",
     ["SRCH_PATH_OW_TOOLTIPS"] = "OneWoW > Settings > Tooltips",
     ["SRCH_PATH_OW_TOOLTIPS_ITEMTYPES"] = "OneWoW > Settings > Tooltips > Item Types",
     ["SRCH_PATH_OW_TOOLTIPS_TECHIDS"] = "OneWoW > Settings > Tooltips > Technical IDs",

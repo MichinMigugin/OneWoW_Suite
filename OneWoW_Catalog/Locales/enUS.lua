@@ -353,8 +353,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ITEMSEARCH_AH_AGE_DAYS"] = "%d d",
     ["ITEMSEARCH_AH_AUCTIONS"] = "auctions",
 
-    ["DATA_MANAGER_TITLE"] = "Data Manager",
-    ["DATA_MANAGER_DESC"] = "Manage addon databases. Click Reset to completely clear a database and force a UI reload.",
 
     ["SETTINGS_DB_NAME_CATALOG"] = "Catalog Core",
     ["SETTINGS_DB_DESC_CATALOG"] = "Main addon settings and UI state.",
@@ -364,10 +362,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["SETTINGS_DB_DESC_VENDORS"] = "Vendor and item data.",
     ["SETTINGS_DB_NAME_TRADESKILLS"] = "Tradeskills Data",
     ["SETTINGS_DB_DESC_TRADESKILLS"] = "Profession and recipe data.",
-    ["SETTINGS_DB_ENTRIES"] = "Entries: %d",
-    ["SETTINGS_DB_NOT_LOADED"] = "Not Loaded",
-    ["SETTINGS_DB_RESET_TITLE"] = "Reset %s",
-    ["SETTINGS_DB_RESET_TEXT"] = "Are you sure you want to reset %s?\n\nThis will permanently delete all data in this database.",
 
     ["ITEMSEARCH_ALTTRACKER_AUCTIONS_REQUIRED"] = "AltTracker Auctions is required for AH scanning.",
     ["ITEMSEARCH_AH_SCAN_COOLDOWN"] = "AH full scan available in %d minutes.",

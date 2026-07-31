@@ -10,7 +10,7 @@ ns.SearchData = {
         desc     = function() return L("SRCH_DESC_OW_SETTINGS") end,
         addonKey = nil, addonLabel = "OneWoW",
         navType = "module", module = "settings", subtab = "settings",
-        keywords = {"settings", "options", "config", "configure", "preferences", "general"},
+        keywords = {"settings", "options", "config", "configure", "preferences", "general", "display", "appearance"},
     },
     {
         path     = function() return L("SRCH_PATH_OW_SETTINGS_LANGUAGE") end,

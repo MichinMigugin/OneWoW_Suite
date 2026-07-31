@@ -354,8 +354,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["ITEMSEARCH_AH_AGE_DAYS"] = "%d дн.",
     ["ITEMSEARCH_AH_AUCTIONS"] = "лотов",
 
-    ["DATA_MANAGER_TITLE"] = "Менеджер данных",
-    ["DATA_MANAGER_DESC"] = "Управление базами данных аддона. Нажмите «Сбросить», чтобы полностью очистить базу данных и перезагрузить интерфейс.",
 
     ["SETTINGS_DB_NAME_CATALOG"] = "Ядро Catalog",
     ["SETTINGS_DB_DESC_CATALOG"] = "Основные настройки аддона и состояние интерфейса.",
@@ -365,10 +363,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["SETTINGS_DB_DESC_VENDORS"] = "Данные о торговцах и предметах.",
     ["SETTINGS_DB_NAME_TRADESKILLS"] = "Данные профессий",
     ["SETTINGS_DB_DESC_TRADESKILLS"] = "Данные о профессиях и рецептах.",
-    ["SETTINGS_DB_ENTRIES"] = "Записей: %d",
-    ["SETTINGS_DB_NOT_LOADED"] = "Не загружено",
-    ["SETTINGS_DB_RESET_TITLE"] = "Сбросить %s",
-    ["SETTINGS_DB_RESET_TEXT"] = "Вы уверены, что хотите сбросить %s?\n\nЭто навсегда удалит все данные в этой базе данных.",
 
     ["ITEMSEARCH_ALTTRACKER_AUCTIONS_REQUIRED"] = "Для сканирования аукциона требуется AltTracker Auctions.",
     ["ITEMSEARCH_AH_SCAN_COOLDOWN"] = "Полное сканирование аукциона будет доступно через %d мин.",

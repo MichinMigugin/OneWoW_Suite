@@ -59,6 +59,7 @@ ns.Locale:RegisterShared("ruRU", {
 
     -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "Поддержать",
+    ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "Кнопка миникарты",
@@ -383,6 +384,14 @@ ns.Locale:RegisterShared("ruRU", {
     ["TOAST_NEW_RECIPE"] = "Новый рецепт!",
     ["TOAST_NEW_TMOG"] = "Новый облик!",
     ["TOAST_INSTANCE_CLICK"] = "Нажмите, чтобы посмотреть в журнале",
+
+    ["DATABASE_MANAGER_TITLE"] = "Менеджер баз данных",
+    ["DATABASE_MANAGER_DESC"] = "Управление базами данных аддона. Нажмите «Сбросить», чтобы полностью очистить базу данных и перезагрузить интерфейс.",
+    ["DATABASE_MANAGER_RESET_DISABLED"] = "Этот аддон не включён. Включите его в «Управление функциями», чтобы сбросить базу данных.",
+    ["DATABASE_MANAGER_ENTRIES"] = "Записей: %d",
+    ["DATABASE_MANAGER_NOT_LOADED"] = "Не загружено",
+    ["DATABASE_MANAGER_RESET_TITLE"] = "Сбросить %s",
+    ["DATABASE_MANAGER_RESET_TEXT"] = "Вы уверены, что хотите сбросить %s?\n\nЭто навсегда удалит все данные в этой базе данных.",
 
   -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "Данные цены аукциона",

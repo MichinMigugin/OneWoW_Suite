@@ -8,7 +8,7 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["LOAD_FAIL_OPTED_OUT"] = "Этот аддон мягко отключён для данного персонажа — сначала включите его в «Управлении функциями».",
     ["LOAD_FAIL_UNKNOWN"] = "Не удалось загрузить этот аддон.",
 
-    ["HOME_TAB"] = "OneWoW",
+    ["HOME_TAB"] = "Главная",
     ["PROFILES_SUBTAB"] = "Профили",
     ["MANAGE_FEATURES_SUBTAB"] = "Управление функциями",
 
@@ -38,9 +38,8 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["CHARS_REMOVE_CONFIRM_TITLE"] = "Подтвердить удаление",
     ["CHARS_REMOVE_CONFIRM"] = "Безвозвратно удалить %d персонаж(ей) из ВСЕХ баз OneWoW?\n\n|cFFFF6666%s|r\n\nОтменить нельзя. Интерфейс будет перезагружен.",
     ["CHARS_REMOVE_NONE_SELECTED"] = "Персонажи не выбраны.",
-    ["SETTINGS_ROLES_ALTS_POINTER"] = "Роли персонажей, фильтр твинков в подсказках и удаление персонажей из баз OneWoW — в Настройки \226\134\146 Роли и твинки.",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "Роли персонажей, фильтр твинков в подсказках и удаление персонажей из баз OneWoW — в Настройки / %s.",
     ["SETTINGS_ROLES_ALTS_BTN"] = "Открыть Роли и твинки",
-    ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
     ["HOME_STANDALONE_ADDONS"] = "Отдельные аддоны",
     ["HOME_STATUS_NOT_FOUND"] = "Не найдено",
     ["PLACEHOLDER_ENABLE_POINTER"] = "Включить из",
@@ -199,8 +198,6 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["CAT_MOD_VENDORS"] = "Vendors",
 
     ["HOME_UTILITIES"] = "Утилиты",
-    ["HOME_SUPPORT"] = "Поддержать OneWoW",
-    ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "Особая благодарность",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla и всем бета-тестерам",
 
@@ -235,10 +232,10 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "Не удалось определить ездовое животное %s.",
 
     -- Search paths
-    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Настройки",
-    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Настройки > Язык",
-    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Настройки > Тема",
-    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > Настройки > Кнопка мини-карты",
+    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Настройки > Графика",
+    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Настройки > Графика > Язык",
+    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Настройки > Графика > Тема",
+    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > Настройки > Графика > Кнопка мини-карты",
     ["SRCH_PATH_OW_TOOLTIPS"] = "OneWoW > Настройки > Подсказки",
     ["SRCH_PATH_OW_TOOLTIPS_ITEMTYPES"] = "OneWoW > Настройки > Подсказки > Типы предметов",
     ["SRCH_PATH_OW_TOOLTIPS_TECHIDS"] = "OneWoW > Настройки > Подсказки > Технические ID",

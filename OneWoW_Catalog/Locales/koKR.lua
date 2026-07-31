@@ -352,8 +352,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ITEMSEARCH_AH_AGE_DAYS"] = "%d일",
     ["ITEMSEARCH_AH_AUCTIONS"] = "경매",
 
-    ["DATA_MANAGER_TITLE"] = "데이터 관리",
-    ["DATA_MANAGER_DESC"] = "애드온 데이터베이스를 관리합니다. 초기화를 누르면 해당 DB가 완전히 비워지고 UI를 다시 불러옵니다.",
 
     ["SETTINGS_DB_NAME_CATALOG"] = "카탈로그 코어",
     ["SETTINGS_DB_DESC_CATALOG"] = "애드온 설정 및 UI 상태.",
@@ -363,10 +361,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["SETTINGS_DB_DESC_VENDORS"] = "상인 및 아이템 데이터.",
     ["SETTINGS_DB_NAME_TRADESKILLS"] = "전문 기술 데이터",
     ["SETTINGS_DB_DESC_TRADESKILLS"] = "전문 기술 및 조합법 데이터.",
-    ["SETTINGS_DB_ENTRIES"] = "항목 수: %d",
-    ["SETTINGS_DB_NOT_LOADED"] = "불러오지 않음",
-    ["SETTINGS_DB_RESET_TITLE"] = "%s 초기화",
-    ["SETTINGS_DB_RESET_TEXT"] = "%s을(를) 초기화하시겠습니까?\n\n이 데이터베이스의 모든 데이터가 영구적으로 삭제됩니다.",
 
     ["ITEMSEARCH_ALTTRACKER_AUCTIONS_REQUIRED"] = "AH 스캔에는 AltTracker Auctions 애드온이 필요합니다.",
     ["ITEMSEARCH_AH_SCAN_COOLDOWN"] = "전체 AH 스캔은 %d분 후에 가능합니다.",

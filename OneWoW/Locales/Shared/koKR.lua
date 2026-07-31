@@ -59,6 +59,7 @@ ns.Locale:RegisterShared("koKR", {
 
     -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "후원",
+    ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "미니맵 버튼",
@@ -383,6 +384,14 @@ ns.Locale:RegisterShared("koKR", {
     ["TOAST_NEW_RECIPE"] = "새 제조법!",
     ["TOAST_NEW_TMOG"] = "새 외형!",
     ["TOAST_INSTANCE_CLICK"] = "클릭하여 저널에서 보기",
+
+    ["DATABASE_MANAGER_TITLE"] = "데이터베이스 관리",
+    ["DATABASE_MANAGER_DESC"] = "애드온 데이터베이스를 관리합니다. 초기화를 누르면 해당 DB가 완전히 비워지고 UI를 다시 불러옵니다.",
+    ["DATABASE_MANAGER_RESET_DISABLED"] = "이 애드온이 활성화되어 있지 않습니다. 데이터베이스를 초기화하려면 기능 관리에서 활성화하세요.",
+    ["DATABASE_MANAGER_ENTRIES"] = "항목 수: %d",
+    ["DATABASE_MANAGER_NOT_LOADED"] = "불러오지 않음",
+    ["DATABASE_MANAGER_RESET_TITLE"] = "%s 초기화",
+    ["DATABASE_MANAGER_RESET_TEXT"] = "%s을(를) 초기화하시겠습니까?\n\n이 데이터베이스의 모든 데이터가 영구적으로 삭제됩니다.",
 
   -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "AH 가격 데이터",

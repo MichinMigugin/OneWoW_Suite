@@ -717,11 +717,16 @@ end
 -- Section UI Builder
 -- ============================================================
 
-function UI:CreateCharProfilesPanel(parent)
+function UI:CreateCharProfilesPanel(parent, opts)
+    opts = opts or {}
     local M = ns.CharProfiles
 
-    local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_CharProfilesScroll" })
-    local yOffset = -10
+    local content = opts.content
+    local yOffset = opts.yOffset
+    if not content then
+        _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_CharProfilesScroll" })
+        yOffset = -10
+    end
 
     local descText = OneWoW_GUI:CreateFS(content, 12)
     descText:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
@@ -742,7 +747,7 @@ function UI:CreateCharProfilesPanel(parent)
     newProfileContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     newProfileContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
-    local newTitle = OneWoW_GUI:CreateFS(newProfileContainer, 16)
+    local newTitle = OneWoW_GUI:CreateFS(newProfileContainer, 12)
     newTitle:SetPoint("TOPLEFT", newProfileContainer, "TOPLEFT", 15, -12)
     newTitle:SetText("New Character Profile")
     newTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -787,6 +792,16 @@ function UI:CreateCharProfilesPanel(parent)
     listContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset - 185)
     listContainer:SetHeight(20)
 
+    local function UpdateScrollHeight()
+        local listH = listContainer:GetHeight() or 0
+        local height = math.abs(yOffset) + listH + 40
+        if opts.onHeightChanged then
+            opts.onHeightChanged(height)
+        else
+            content:SetHeight(height)
+        end
+    end
+
     local function RefreshListing()
         for _, child in ipairs({ listContainer:GetChildren() }) do
             child:Hide()
@@ -802,6 +817,7 @@ function UI:CreateCharProfilesPanel(parent)
             empty:SetText("No character profiles saved yet")
             empty:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             listContainer:SetHeight(40)
+            UpdateScrollHeight()
             return
         end
 
@@ -908,11 +924,12 @@ function UI:CreateCharProfilesPanel(parent)
         end
 
         listContainer:SetHeight(math.abs(yOff) + CARD_GAP)
+        UpdateScrollHeight()
     end
 
     saveBtn:SetScript("OnClick", function()
         local name = nameEdit:GetText():trim()
-        local opts = {
+        local saveOpts = {
             keybinds        = cbKeybinds:GetChecked()  and true or false,
             accountMacros   = cbAccMacros:GetChecked() and true or false,
             characterMacros = cbCharMacro:GetChecked() and true or false,
@@ -920,7 +937,7 @@ function UI:CreateCharProfilesPanel(parent)
             addonSet        = cbAddonSet:GetChecked()  and true or false,
             addonSettings   = cbAddonSett:GetChecked() and true or false,
         }
-        if M:SaveProfile(name, opts) then
+        if M:SaveProfile(name, saveOpts) then
             nameEdit:SetText("")
             cbKeybinds:SetChecked(false)
             cbAccMacros:SetChecked(false)
@@ -932,7 +949,7 @@ function UI:CreateCharProfilesPanel(parent)
         end
     end)
 
-    local savedProfilesHeader = OneWoW_GUI:CreateFS(content, 16)
+    local savedProfilesHeader = OneWoW_GUI:CreateFS(content, 12)
     savedProfilesHeader:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset - 190)
     savedProfilesHeader:SetText("Saved Character Profiles")
     savedProfilesHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
@@ -951,6 +968,6 @@ function UI:CreateCharProfilesPanel(parent)
     C_Timer.After(0.05, function()
         RefreshListing()
         OneWoW_GUI:ApplyFontToFrame(parent)
-        content:SetHeight(math.abs(yOffset) + listContainer:GetHeight() + 40)
+        UpdateScrollHeight()
     end)
 end

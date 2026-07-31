@@ -14,37 +14,57 @@ function ns.UI.CreateSettingsTab(parent)
     local yOffset = -10
 
     local coreL = OneWoW.Locale:GetTable("OneWoW")
+    local sharedL = OneWoW.Locale:GetTable("shared")
 
     local rolesSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = coreL["ROLES_ALTS_SUBTAB"], yOffset = yOffset })
     yOffset = rolesSection.bottomY - 8
 
-    local rolesDesc = OneWoW_GUI:CreateFS(scrollContent, 12)
-    rolesDesc:SetPoint("TOPLEFT", 15, yOffset)
-    rolesDesc:SetPoint("TOPRIGHT", -15, yOffset)
-    rolesDesc:SetJustifyH("LEFT")
-    rolesDesc:SetWordWrap(true)
-    rolesDesc:SetSpacing(3)
-    rolesDesc:SetText(coreL["SETTINGS_ROLES_ALTS_POINTER"])
-    rolesDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    -- Width may still be 0 on first create; fall back so wrap height is usable.
+    local wrapWidth = (scrollContent:GetWidth() or 0) - 30
+    if wrapWidth < 200 then wrapWidth = 740 end
 
-    C_Timer.After(0.01, function()
-        local textHeight = rolesDesc:GetStringHeight()
-        yOffset = yOffset - textHeight - 12
-    end)
-    yOffset = yOffset - 20
+    -- Pointer copy is "... Settings / %s." — prefix/suffix stay body text; %s is the nav link.
+    local pointerFmt = coreL["SETTINGS_ROLES_ALTS_POINTER"]
+    local linkLabel = coreL["ROLES_ALTS_SUBTAB"]
+    local beforeText, afterText = pointerFmt:match("^(.-)%%s(.*)$")
+    if not beforeText then
+        beforeText = pointerFmt
+        afterText = ""
+    end
 
-    local rolesBtn = OneWoW_GUI:CreateFitTextButton(scrollContent, { text = coreL["SETTINGS_ROLES_ALTS_BTN"], height = 35 })
-    rolesBtn:SetPoint("TOPLEFT", 25, yOffset)
-    rolesBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    if rolesBtn.text then rolesBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY")) end
-    rolesBtn:SetScript("OnClick", function()
-        OneWoW.UI:Show("settings")
-        OneWoW.UI:SelectSubTab("settings", "rolesandalts")
-    end)
+    local rolesBefore = OneWoW_GUI:CreateFS(scrollContent, 12)
+    rolesBefore:SetPoint("TOPLEFT", 15, yOffset)
+    rolesBefore:SetPoint("TOPRIGHT", -15, yOffset)
+    rolesBefore:SetJustifyH("LEFT")
+    rolesBefore:SetWordWrap(true)
+    rolesBefore:SetSpacing(3)
+    rolesBefore:SetText(beforeText)
+    rolesBefore:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    rolesBefore:SetWidth(wrapWidth)
+    local rolesBeforeHeight = math.max(rolesBefore:GetStringHeight() or 12, 12)
 
-    yOffset = yOffset - 50
+    local rolesLink = OneWoW_GUI:CreateTextLink(scrollContent, {
+        text = linkLabel,
+        fontSize = 12,
+        nav = true,
+        onClick = function()
+            OneWoW.UI:Show("settings")
+            OneWoW.UI:SelectSubTab("settings", "rolesandalts")
+        end,
+    })
+    rolesLink:SetPoint("TOPLEFT", 15, yOffset - rolesBeforeHeight - 2)
 
-    local dbSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = "Database Manager", yOffset = yOffset })
+    if afterText ~= "" then
+        local rolesAfter = OneWoW_GUI:CreateFS(scrollContent, 12)
+        rolesAfter:SetPoint("LEFT", rolesLink, "RIGHT", 0, 0)
+        rolesAfter:SetJustifyH("LEFT")
+        rolesAfter:SetText(afterText)
+        rolesAfter:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    end
+
+    yOffset = yOffset - rolesBeforeHeight - 2 - (rolesLink:GetHeight() or 12) - 20
+
+    local dbSection = OneWoW_GUI:CreateSectionHeader(scrollContent, { title = sharedL["DATABASE_MANAGER_TITLE"], yOffset = yOffset })
     yOffset = dbSection.bottomY - 8
 
     local dbDesc = OneWoW_GUI:CreateFS(scrollContent, 12)
@@ -52,15 +72,12 @@ function ns.UI.CreateSettingsTab(parent)
     dbDesc:SetPoint("TOPRIGHT", -15, yOffset)
     dbDesc:SetJustifyH("LEFT")
     dbDesc:SetWordWrap(true)
-    dbDesc:SetText("Manage addon databases. Click Reset to completely clear a database and force a UI reload.")
+    dbDesc:SetText(sharedL["DATABASE_MANAGER_DESC"])
     dbDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     dbDesc:SetSpacing(3)
-
-    C_Timer.After(0.01, function()
-        local textHeight = dbDesc:GetStringHeight()
-        yOffset = yOffset - textHeight - 12
-    end)
-    yOffset = yOffset - 25
+    dbDesc:SetWidth(wrapWidth)
+    local dbDescHeight = math.max(dbDesc:GetStringHeight() or 12, 12)
+    yOffset = yOffset - dbDescHeight - 16
 
     local databases = {
         { key = "OneWoW_AltTracker", name = "AltTracker Core", desc = "Main addon settings and UI state" },
@@ -73,92 +90,30 @@ function ns.UI.CreateSettingsTab(parent)
         { key = "OneWoW_AltTracker_Collections", name = "Collections", desc = "Mounts, pets, and transmog" },
     }
 
-    local function GetTableSize(dbKey)
-        if not _G[dbKey .. "_DB"] then return 0 end
+    local function GetEntryCount(dbKey)
         local db = _G[dbKey .. "_DB"]
-
+        if not db then return nil end
         if db.characters then
             local size = 0
             for _ in pairs(db.characters) do size = size + 1 end
             return size
-        else
-            local size = 0
-            for _ in pairs(db) do size = size + 1 end
-            return math.max(0, size - 5)
         end
-    end
-
-    local function CreateDatabaseEntry(entryParent, dbData, yPos)
-        local container = OneWoW_GUI:CreateFrame(entryParent, { width = 770, height = 60, bgColor = "BG_TERTIARY" })
-        container:SetPoint("TOPLEFT", entryParent, "TOPLEFT", 15, yPos)
-
-        local nameText = OneWoW_GUI:CreateFS(container, 12)
-        nameText:SetPoint("TOPLEFT", 12, -10)
-        nameText:SetText(dbData.name)
-        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-        local descText = OneWoW_GUI:CreateFS(container, 10)
-        descText:SetPoint("TOPLEFT", 12, -28)
-        descText:SetText(dbData.desc)
-        descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-        descText:SetWidth(400)
-
-        local sizeText = OneWoW_GUI:CreateFS(container, 10)
-        sizeText:SetPoint("TOPLEFT", 450, -18)
-
-        local function UpdateSize()
-            local db = _G[dbData.key .. "_DB"]
-            if db then
-                local size = GetTableSize(dbData.key)
-                sizeText:SetText("Entries: " .. size)
-                sizeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-            else
-                sizeText:SetText("Not Loaded")
-                sizeText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
-            end
-        end
-        UpdateSize()
-
-        local resetBtn = OneWoW_GUI:CreateFitTextButton(container, { text = "Reset", height = 28 })
-        resetBtn:SetPoint("TOPRIGHT", -12, -16)
-        resetBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
-        resetBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_BORDER"))
-        if resetBtn.text then resetBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
-
-        resetBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_HOVER"))
-            if self.text then self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
-        end)
-
-        resetBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_DANGER_NORMAL"))
-            if self.text then self.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY")) end
-        end)
-
-        resetBtn:SetScript("OnClick", function()
-            local confirmResult = OneWoW_GUI:CreateConfirmDialog({
-                title = "Reset Database",
-                message = "Are you sure you want to reset " .. dbData.name .. "?\n\nThis will permanently delete all data in this database.",
-                width = 420,
-                buttons = {
-                    { text = "Reset", onClick = function(f)
-                        _G[dbData.key .. "_DB"] = nil
-                        f:Hide()
-                        C_UI.Reload()
-                    end },
-                    { text = "Cancel", onClick = function(f) f:Hide() end },
-                },
-            })
-            OneWoW_GUI:ApplyFontToFrame(confirmResult.frame)
-            confirmResult.frame:Show()
-        end)
-
-        return 65
+        local size = 0
+        for _ in pairs(db) do size = size + 1 end
+        return math.max(0, size - 5)
     end
 
     for _, dbData in ipairs(databases) do
-        local height = CreateDatabaseEntry(scrollContent, dbData, yOffset)
-        yOffset = yOffset - height - 8
+        local key = dbData.key
+        yOffset = yOffset - OneWoW_GUI:CreateDatabaseManagerRow(scrollContent, {
+            name = dbData.name,
+            description = dbData.desc,
+            addonKey = key,
+            yOffset = yOffset,
+            getEntryCount = function()
+                return GetEntryCount(key)
+            end,
+        })
     end
 
     yOffset = yOffset - 10

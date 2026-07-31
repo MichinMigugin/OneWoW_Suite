@@ -60,6 +60,7 @@ ns.Locale:RegisterShared("esMX", {
 
     -- Footer links (Discord / OneWoW are proper nouns)
     ["LINK_DONATE"] = "Donar",
+    ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)
     ["MINIMAP_SECTION"] = "Botón del minimapa",
@@ -384,6 +385,14 @@ ns.Locale:RegisterShared("esMX", {
     ["TOAST_NEW_RECIPE"] = "¡Nueva receta!",
     ["TOAST_NEW_TMOG"] = "¡Nueva apariencia!",
     ["TOAST_INSTANCE_CLICK"] = "Haz clic para ver en el Diario",
+
+    ["DATABASE_MANAGER_TITLE"] = "Gestor de bases de datos",
+    ["DATABASE_MANAGER_DESC"] = "Gestiona las bases de datos del addon. Haz clic en Restablecer para borrar por completo una base de datos y forzar una recarga de la interfaz.",
+    ["DATABASE_MANAGER_RESET_DISABLED"] = "Este addon no está activado. Actívalo en Administrar funciones para restablecer su base de datos.",
+    ["DATABASE_MANAGER_ENTRIES"] = "Entradas: %d",
+    ["DATABASE_MANAGER_NOT_LOADED"] = "No cargado",
+    ["DATABASE_MANAGER_RESET_TITLE"] = "Restablecer %s",
+    ["DATABASE_MANAGER_RESET_TEXT"] = "¿Seguro que quieres restablecer %s?\n\nEsto eliminará permanentemente todos los datos de esta base de datos.",
 
   -- AH price source (shared across QoL tooltips, Trackers farm value, AH panel)
     ["SHARED_AH_SOURCE_LABEL"] = "Datos de precio de CS",

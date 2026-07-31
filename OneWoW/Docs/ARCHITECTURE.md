@@ -140,11 +140,11 @@ excluded from the recommended Manage Features preset (`FirstRun.CATALOG` utility
 group) but force-loaded at login like other manifest entries when the user has
 it wanted (Blizzard-enabled and not soft-opted-out).
 
-**Load order** is manifest array order. **Hub row-1 tab order** is the explicit
-`tabOrder` field on entries with `module` (Notes → AltTracker → Catalog →
-Trackers → QoL today). `GetModuleTabOrder` / `GetAlwaysShowModules` read
-`tabOrder`; missing or unknown module names fall back to 99. New hub modules must
-set both `module` and `tabOrder`.
+**Load order** is manifest array order. **Hub section dropdown order** is the
+explicit `tabOrder` field on entries with `module` (Notes → AltTracker → Catalog →
+Trackers → QoL today), between Home and Settings. `GetModuleTabOrder` /
+`GetAlwaysShowModules` read `tabOrder`; missing or unknown module names fall back
+to 99. New hub modules must set both `module` and `tabOrder`.
 
 ```lua
 { addon = "OneWoW_Notes", module = "notes", tabOrder = 1, loadPhase = "login", ... }
@@ -594,9 +594,15 @@ subcommands; primary `/1w…` commands live on the cards.
 
 ## 5. Hub UI
 
+The hub chrome under the title bar is a **toolbar**: a **section dropdown** on the
+left (Home → always-show hub modules by `tabOrder` → Settings) and **search** on
+the right. Selecting a section calls `UI:SelectModuleTab`. Unloaded modules still
+appear (placeholders unchanged). Row-2 subtabs stay under the toolbar when the
+current section has them. Last selection persists in `ns.db.global.lastModuleTab`.
+
 ### 5.1 ModuleRegistry
 
-Modules that appear as row-1 tabs register via `OneWoW:RegisterModule()`:
+Modules that appear in the hub section dropdown register via `OneWoW:RegisterModule()`:
 
 ```lua
 _G.OneWoW:RegisterModule({
@@ -640,17 +646,23 @@ feature list and selected detail pane with fresh registry reads, which keeps the
 tooltips/`gearupgrades` ↔ overlays/`upgrade` mirror visually synced) do this
 today.
 
-**Placeholder tabs:** when a hub module is not loaded, `GetAlwaysShowModules()` still
-shows its tab (same `tabOrder`, locale key label). Selecting a placeholder prompts load or
-Manage Features. The same pattern extends to row-2 sub-tabs via `requiresAddon` /
-`requiresAnyAddon` / `isAvailable` (above): an unavailable sub-tab renders the
-placeholder, and when a backing addon loads, the `ns.FeatureStateChanged` handler
-rebuilds the on-screen tab in place (matching either `_requiresAddon == name` or
-`name` being a member of `_requiresAnyAddon`; off-screen ones rebuild lazily on next
-selection via the `_isPlaceholder` staleness check in `SelectSubTab`).
+**Placeholder sections:** when a hub module is not loaded, `GetAlwaysShowModules()` still
+lists it in the section dropdown (same `tabOrder`, locale key label). Selecting a
+placeholder prompts load or Manage Features. The same pattern extends to row-2
+sub-tabs via `requiresAddon` / `requiresAnyAddon` / `isAvailable` (above): an
+unavailable sub-tab renders the placeholder, and when a backing addon loads, the
+`ns.FeatureStateChanged` handler rebuilds the on-screen tab in place (matching
+either `_requiresAddon == name` or `name` being a member of `_requiresAnyAddon`;
+off-screen ones rebuild lazily on next selection via the `_isPlaceholder`
+staleness check in `SelectSubTab`).
 
 Standalone-window modules (Bags, ShoppingList, DirectDeposit) open via slash commands,
-not hub tabs.
+not hub sections.
+
+**Settings Profiles** (`UI/t-profiles.lua` + `UI/t-charprofiles.lua`): one scroll with
+**UI & Addon Settings** then **Character Backup** (section headers, no mode toggle).
+**Roles & Alts** remains a core Settings row-2 tab (suite-wide), with a text-link
+pointer from AltTracker settings.
 
 ### 5.2 Pin pattern
 
@@ -1314,7 +1326,7 @@ guild bank is open).
 | `OneWoW/Services/Collectibles.lua` | Collectible identity resolver: key grammar (`type[:subtype]:id`), live display + collection state, no SV (see [COLLECTIBLES.md](COLLECTIBLES.md)) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
 | `OneWoW/UI/t-home.lua` | Home tab: addon cards, summary, Command Options + live refresh |
-| `OneWoW/UI/MainWindow.lua` | Hub window; module tabs, placeholders, `FeatureStateChanged` |
+| `OneWoW/UI/MainWindow.lua` | Hub window; section dropdown, placeholders, `FeatureStateChanged` |
 | `.cursor/rules/OneWoW-Suite-Architecture.mdc` | Scoped agent rule for suite load-unit patterns |
 | `.cursor/skills/onewow-suite-architecture/SKILL.md` | On-demand lifecycle / integration authoring guide |
 | `bin/check_suite_lifecycle.py` | Pre-commit: lifecycle `RegisterEvent` ban |

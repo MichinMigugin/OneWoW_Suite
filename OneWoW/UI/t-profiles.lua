@@ -312,45 +312,37 @@ end
 -- ============================================================
 
 function UI:CreateProfilesTab(parent)
+    local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_ProfilesScroll" })
 
-    local panelA = CreateFrame("Frame", nil, parent)
-    local panelB = CreateFrame("Frame", nil, parent)
-    panelB:Hide()
+    local settingsHost = CreateFrame("Frame", nil, content)
+    settingsHost:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+    settingsHost:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, 0)
+    settingsHost:SetHeight(200)
 
-    local _, tabsBottomY = OneWoW_GUI:CreateFitFrameButtons(parent, {
-        yOffset = -4,
-        items = {
-            { text = "UI & Addon Settings", value = "settings",    isActive = true },
-            { text = "Character Backup",    value = "charprofiles"                 },
-        },
-        height = 30,
-        gap    = 6,
-        onSelect = function(value)
-            panelA:SetShown(value == "settings")
-            panelB:SetShown(value == "charprofiles")
-        end,
-    })
+    local charHost = CreateFrame("Frame", nil, content)
+    charHost:SetPoint("TOPLEFT", settingsHost, "BOTTOMLEFT", 0, -8)
+    charHost:SetPoint("TOPRIGHT", settingsHost, "BOTTOMRIGHT", 0, -8)
+    charHost:SetHeight(200)
 
-    local contentTop = tabsBottomY - 6
-
-    panelA:SetPoint("TOPLEFT",     parent, "TOPLEFT",     0, contentTop)
-    panelA:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-
-    panelB:SetPoint("TOPLEFT",     parent, "TOPLEFT",     0, contentTop)
-    panelB:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-
-    if UI.CreateCharProfilesPanel then
-        UI:CreateCharProfilesPanel(panelB)
+    local function RecalcContentHeight()
+        local sh = settingsHost:GetHeight() or 0
+        local ch = charHost:GetHeight() or 0
+        content:SetHeight(sh + 8 + ch + 20)
     end
 
-    -- ── Panel A: UI & Addon Settings Profiles ─────────────────
-    local _, content = OneWoW_GUI:CreateScrollFrame(panelA, { name = "OneWoW_ProfilesScroll" })
-
+    -- ── UI & Addon Settings ───────────────────────────────────
     local yOffset = -10
 
-    local descText = OneWoW_GUI:CreateFS(content, 12)
-    descText:SetPoint("TOPLEFT",  content, "TOPLEFT",  10, yOffset)
-    descText:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
+    local settingsHeader = OneWoW_GUI:CreateSectionHeader(settingsHost, {
+        title = "UI & Addon Settings",
+        yOffset = yOffset,
+        fontSize = 14,
+    })
+    yOffset = settingsHeader.bottomY - 8
+
+    local descText = OneWoW_GUI:CreateFS(settingsHost, 12)
+    descText:SetPoint("TOPLEFT",  settingsHost, "TOPLEFT",  10, yOffset)
+    descText:SetPoint("TOPRIGHT", settingsHost, "TOPRIGHT", -10, yOffset)
     descText:SetJustifyH("LEFT")
     descText:SetWordWrap(true)
     descText:SetSpacing(2)
@@ -359,27 +351,27 @@ function UI:CreateProfilesTab(parent)
 
     yOffset = yOffset - 36
 
-    local saveSection = OneWoW_GUI:CreateSectionHeader(content, { title = "Save New Profile", yOffset = yOffset })
+    local saveSection = OneWoW_GUI:CreateSectionHeader(settingsHost, { title = "Save New Profile", yOffset = yOffset })
     yOffset = saveSection.bottomY - 8
 
-    local nameInput = OneWoW_GUI:CreateEditBox(content, { name = "OneWoW_ProfileNameInput", width = 280, height = 26 })
-    nameInput:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
+    local nameInput = OneWoW_GUI:CreateEditBox(settingsHost, { name = "OneWoW_ProfileNameInput", width = 280, height = 26 })
+    nameInput:SetPoint("TOPLEFT", settingsHost, "TOPLEFT", 10, yOffset)
     nameInput:SetAutoFocus(false)
 
-    local saveBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "Save Profile", height = 26 })
+    local saveBtn = OneWoW_GUI:CreateFitTextButton(settingsHost, { text = "Save Profile", height = 26 })
     saveBtn:SetPoint("LEFT", nameInput, "RIGHT", 8, 0)
 
     yOffset = yOffset - 40
 
-    local listHeaderSection = OneWoW_GUI:CreateSectionHeader(content, { title = "Saved Profiles", yOffset = yOffset })
+    local listHeaderSection = OneWoW_GUI:CreateSectionHeader(settingsHost, { title = "Saved Profiles", yOffset = yOffset })
     yOffset = listHeaderSection.bottomY - 8
 
-    local importBtn = OneWoW_GUI:CreateFitTextButton(content, { text = "Import Profile", height = 24 })
-    importBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset + 32)
+    local importBtn = OneWoW_GUI:CreateFitTextButton(settingsHost, { text = "Import Profile", height = 24 })
+    importBtn:SetPoint("TOPRIGHT", settingsHost, "TOPRIGHT", -10, yOffset + 32)
 
-    local listContainer = CreateFrame("Frame", nil, content)
-    listContainer:SetPoint("TOPLEFT",  content, "TOPLEFT",  10, yOffset)
-    listContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
+    local listContainer = CreateFrame("Frame", nil, settingsHost)
+    listContainer:SetPoint("TOPLEFT",  settingsHost, "TOPLEFT",  10, yOffset)
+    listContainer:SetPoint("TOPRIGHT", settingsHost, "TOPRIGHT", -10, yOffset)
     listContainer:SetHeight(20)
 
     local function RefreshListing()
@@ -411,6 +403,8 @@ function UI:CreateProfilesTab(parent)
             empty:SetText("No profiles saved yet. Save one above.")
             empty:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
             listContainer:SetHeight(40)
+            settingsHost:SetHeight(math.abs(yOffset) + listContainer:GetHeight() + 20)
+            RecalcContentHeight()
             return
         end
 
@@ -532,7 +526,8 @@ function UI:CreateProfilesTab(parent)
         end
 
         listContainer:SetHeight(math.abs(yOff) + CARD_GAP)
-        content:SetHeight(math.abs(yOffset) + listContainer:GetHeight() + 40)
+        settingsHost:SetHeight(math.abs(yOffset) + listContainer:GetHeight() + 20)
+        RecalcContentHeight()
     end
 
     saveBtn:SetScript("OnClick", function()
@@ -558,9 +553,29 @@ function UI:CreateProfilesTab(parent)
         UI:ShowSettingsProfileImportDialog(RefreshListing)
     end)
 
+    -- ── Character Backup ──────────────────────────────────────
+    local charHeader = OneWoW_GUI:CreateSectionHeader(charHost, {
+        title = "Character Backup",
+        yOffset = -10,
+        fontSize = 14,
+    })
+    local charBodyY = charHeader.bottomY - 8
+
+    if UI.CreateCharProfilesPanel then
+        UI:CreateCharProfilesPanel(parent, {
+            content = charHost,
+            yOffset = charBodyY,
+            onHeightChanged = function(height)
+                charHost:SetHeight(height)
+                RecalcContentHeight()
+            end,
+        })
+    end
+
     C_Timer.After(0.05, function()
         ns.Profiles.AutoSaveDefault()
         RefreshListing()
-        OneWoW_GUI:ApplyFontToFrame(panelA)
+        OneWoW_GUI:ApplyFontToFrame(parent)
+        RecalcContentHeight()
     end)
 end

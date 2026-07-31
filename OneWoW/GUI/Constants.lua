@@ -961,6 +961,35 @@ local function owgFillThemeSemantics(theme)
         }
     end
 
+    -- Text links: distinct from ACCENT_PRIMARY (section headers). Idle leans on
+    -- TEXT_ACCENT; hover matches body TEXT_PRIMARY; underline stays a soft accent.
+    local tp = theme.TEXT_PRIMARY or { 0.88, 0.90, 0.88, 1.0 }
+    local ta = theme.TEXT_ACCENT or theme.ACCENT_HIGHLIGHT or ap
+    if not theme.LINK_IDLE then
+        theme.LINK_IDLE = {
+            owgClamp01(ta[1]),
+            owgClamp01(ta[2]),
+            owgClamp01(ta[3]),
+            1.0,
+        }
+    end
+    if not theme.LINK_HOVER then
+        theme.LINK_HOVER = {
+            owgClamp01(tp[1]),
+            owgClamp01(tp[2]),
+            owgClamp01(tp[3]),
+            1.0,
+        }
+    end
+    if not theme.LINK_UNDERLINE then
+        theme.LINK_UNDERLINE = {
+            owgClamp01(ap[1]),
+            owgClamp01(ap[2]),
+            owgClamp01(ap[3]),
+            0.40,
+        }
+    end
+
     -- Search Shortcuts kind rails: fixed hue identity (amber / cyan / green) with a
     -- light accent blend so they still feel on-theme without collapsing to one color.
     local function kindTint(r, g, b)

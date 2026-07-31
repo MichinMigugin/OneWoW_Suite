@@ -250,15 +250,17 @@ function OneWoW_GUI:CreateFitTextButton(parent, options)
 end
 
 --- Backdrop-less text that acts as a clickable link. Width fits the label.
---- Idle ACCENT_PRIMARY, hover TEXT_PRIMARY, Point cursor — same as Home links.
+--- Idle LINK_IDLE + LINK_UNDERLINE, hover LINK_HOVER, Point cursor.
+--- `nav = true` appends a smaller ASCII `>` (font-safe) after the label.
 ---@param parent Frame
----@param options { text?: string, fontSize?: number, onClick?: fun(self: Button) }
+---@param options { text?: string, fontSize?: number, nav?: boolean, onClick?: fun(self: Button) }
 ---@return Button
 function OneWoW_GUI:CreateTextLink(parent, options)
     options = options or {}
     local text = options.text or ""
     local fontSize = options.fontSize or 12
     local onClick = options.onClick
+    local nav = options.nav and true or false
 
     local btn = CreateFrame("Button", nil, parent)
     btn:EnableMouse(true)
@@ -267,16 +269,59 @@ function OneWoW_GUI:CreateTextLink(parent, options)
     label:SetPoint("LEFT", btn, "LEFT", 0, 0)
     label:SetJustifyH("LEFT")
     label:SetText(text)
-    label:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
     btn.text = label
+
+    local chevron
+    if nav then
+        local chevronSize = math.max(fontSize - 2, 9)
+        chevron = OneWoW_GUI:CreateFS(btn, chevronSize)
+        chevron:SetPoint("LEFT", label, "RIGHT", 3, 0)
+        chevron:SetJustifyH("LEFT")
+        chevron:SetText(">")
+        btn.chevron = chevron
+    end
+
+    local underline = btn:CreateTexture(nil, "ARTWORK")
+    underline:SetHeight(1)
+    underline:SetPoint("TOPLEFT", label, "BOTTOMLEFT", 0, -1)
+    if chevron then
+        underline:SetPoint("TOPRIGHT", chevron, "BOTTOMRIGHT", 0, -1)
+    else
+        underline:SetPoint("TOPRIGHT", label, "BOTTOMRIGHT", 0, -1)
+    end
+    btn.underline = underline
+
+    local function ApplyLinkColors(state)
+        if state == "disabled" then
+            local r, g, b, a = OneWoW_GUI:GetThemeColor("TEXT_MUTED")
+            label:SetTextColor(r, g, b, a)
+            if chevron then chevron:SetTextColor(r, g, b, a) end
+            underline:SetColorTexture(r, g, b, 0.25)
+            return
+        end
+        if state == "hover" then
+            label:SetTextColor(OneWoW_GUI:GetThemeColor("LINK_HOVER"))
+            if chevron then chevron:SetTextColor(OneWoW_GUI:GetThemeColor("LINK_HOVER")) end
+            underline:SetColorTexture(OneWoW_GUI:GetThemeColor("LINK_UNDERLINE"))
+            return
+        end
+        label:SetTextColor(OneWoW_GUI:GetThemeColor("LINK_IDLE"))
+        if chevron then chevron:SetTextColor(OneWoW_GUI:GetThemeColor("LINK_IDLE")) end
+        underline:SetColorTexture(OneWoW_GUI:GetThemeColor("LINK_UNDERLINE"))
+    end
 
     local function FitWidth()
         local w = label:GetStringWidth() or 0
+        if chevron then
+            w = w + 3 + (chevron:GetStringWidth() or 0)
+        end
         local h = label:GetStringHeight() or fontSize
         if w < 1 then w = 1 end
         if h < fontSize then h = fontSize end
-        btn:SetSize(w, h)
+        -- +2 leaves room for the underline below the baseline.
+        btn:SetSize(w, h + 2)
     end
+    ApplyLinkColors("idle")
     FitWidth()
 
     function btn:SetText(newText)
@@ -288,22 +333,22 @@ function OneWoW_GUI:CreateTextLink(parent, options)
     function btn:SetEnabled(enabled)
         widgetSetEnabled(self, enabled and true or false)
         if enabled then
-            label:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            ApplyLinkColors("idle")
         else
-            label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            ApplyLinkColors("disabled")
         end
     end
 
     btn:SetScript("OnEnter", function(myself)
         if not myself:IsEnabled() then return end
-        label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        ApplyLinkColors("hover")
         SetCursor("Interface\\CURSOR\\Point")
     end)
     btn:SetScript("OnLeave", function(myself)
         if myself:IsEnabled() then
-            label:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            ApplyLinkColors("idle")
         else
-            label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            ApplyLinkColors("disabled")
         end
         ResetCursor()
     end)

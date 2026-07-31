@@ -67,6 +67,7 @@ Semantic keys (defined per-theme in `Constants.lua`):
 - **Backgrounds:** `BG_PRIMARY`, `BG_SECONDARY`, `BG_TERTIARY`, `BG_HOVER`, `BG_ACTIVE`
 - **Accents:** `ACCENT_PRIMARY`, `ACCENT_SECONDARY`, `ACCENT_HIGHLIGHT`, `ACCENT_MUTED`
 - **Text:** `TEXT_PRIMARY`, `TEXT_SECONDARY`, `TEXT_MUTED`, `TEXT_ACCENT`, `TEXT_WARNING`
+- **Links:** `LINK_IDLE`, `LINK_HOVER`, `LINK_UNDERLINE` (text links; distinct from section-header `ACCENT_PRIMARY`)
 - **Borders:** `BORDER_DEFAULT`, `BORDER_SUBTLE`, `BORDER_FOCUS`, `BORDER_ACCENT`
 - **Buttons:** `BTN_NORMAL`, `BTN_HOVER`, `BTN_PRESSED`, `BTN_BORDER`, `BTN_BORDER_HOVER`
 - **Titlebar:** `TITLEBAR_BG`, `TITLEBAR_BORDER`

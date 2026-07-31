@@ -354,8 +354,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["ITEMSEARCH_AH_AGE_DAYS"] = "%d d",
     ["ITEMSEARCH_AH_AUCTIONS"] = "leilões",
 
-    ["DATA_MANAGER_TITLE"] = "Gerenciador de dados",
-    ["DATA_MANAGER_DESC"] = "Gerencie os bancos de dados do addon. Clique em Redefinir para limpar completamente um banco de dados e forçar o recarregamento da interface.",
 
     ["SETTINGS_DB_NAME_CATALOG"] = "Núcleo do Catalog",
     ["SETTINGS_DB_DESC_CATALOG"] = "Configurações principais do addon e estado da interface.",
@@ -365,10 +363,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["SETTINGS_DB_DESC_VENDORS"] = "Dados de vendedores e itens.",
     ["SETTINGS_DB_NAME_TRADESKILLS"] = "Dados de profissões",
     ["SETTINGS_DB_DESC_TRADESKILLS"] = "Dados de profissões e receitas.",
-    ["SETTINGS_DB_ENTRIES"] = "Entradas: %d",
-    ["SETTINGS_DB_NOT_LOADED"] = "Não carregado",
-    ["SETTINGS_DB_RESET_TITLE"] = "Redefinir %s",
-    ["SETTINGS_DB_RESET_TEXT"] = "Tem certeza de que deseja redefinir %s?\n\nIsso excluirá permanentemente todos os dados deste banco de dados.",
 
     ["ITEMSEARCH_ALTTRACKER_AUCTIONS_REQUIRED"] = "AltTracker Auctions é necessário para a varredura da CL.",
     ["ITEMSEARCH_AH_SCAN_COOLDOWN"] = "Varredura completa da CL disponível em %d minutos.",

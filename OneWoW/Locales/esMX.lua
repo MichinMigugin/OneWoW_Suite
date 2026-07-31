@@ -9,7 +9,7 @@ ns.Locale:Register(ADDON_NAME, "esMX", {
     ["LOAD_FAIL_OPTED_OUT"] = "Ese addon está desactivado de forma suave para este personaje — actívalo primero en Gestionar funciones.",
     ["LOAD_FAIL_UNKNOWN"] = "No se pudo cargar ese addon.",
 
-    ["HOME_TAB"] = "OneWoW",
+    ["HOME_TAB"] = "Principal",
     ["PROFILES_SUBTAB"] = "Perfiles",
     ["MANAGE_FEATURES_SUBTAB"] = "Gestionar funciones",
 
@@ -39,9 +39,8 @@ ns.Locale:Register(ADDON_NAME, "esMX", {
     ["CHARS_REMOVE_CONFIRM_TITLE"] = "Confirmar eliminación",
     ["CHARS_REMOVE_CONFIRM"] = "¿Eliminar permanentemente %d personaje(s) de TODAS las bases de OneWoW?\n\n|cFFFF6666%s|r\n\nEsta acción no se puede deshacer. Se recargará la interfaz.",
     ["CHARS_REMOVE_NONE_SELECTED"] = "Ningún personaje seleccionado.",
-    ["SETTINGS_ROLES_ALTS_POINTER"] = "Los roles de personajes, el filtrado de alts en descripciones y la eliminación de personajes borrados de las bases de OneWoW se gestionan en Ajustes \226\134\146 Roles y alts.",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "Los roles de personajes, el filtrado de alts en descripciones y la eliminación de personajes borrados de las bases de OneWoW se gestionan en Ajustes / %s.",
     ["SETTINGS_ROLES_ALTS_BTN"] = "Abrir Roles y alts",
-    ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
     ["HOME_STANDALONE_ADDONS"] = "Addons independientes",
     ["HOME_STATUS_NOT_FOUND"] = "No encontrado",
     ["PLACEHOLDER_ENABLE_POINTER"] = "Activar desde",
@@ -200,8 +199,6 @@ ns.Locale:Register(ADDON_NAME, "esMX", {
     ["CAT_MOD_VENDORS"] = "Vendors",
 
     ["HOME_UTILITIES"] = "Utilidades",
-    ["HOME_SUPPORT"] = "Apoyar a OneWoW",
-    ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "Agradecimientos especiales",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla, y todos los probadores Beta",
 
@@ -236,10 +233,10 @@ ns.Locale:Register(ADDON_NAME, "esMX", {
     ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "No se pudo identificar la montura de %s.",
 
     -- Search paths
-    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Ajustes",
-    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Ajustes > Idioma",
-    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Ajustes > Tema",
-    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > Ajustes > Botón de minimapa",
+    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Ajustes > Pantalla",
+    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Ajustes > Pantalla > Idioma",
+    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Ajustes > Pantalla > Tema",
+    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > Ajustes > Pantalla > Botón de minimapa",
     ["SRCH_PATH_OW_TOOLTIPS"] = "OneWoW > Ajustes > Tooltips",
     ["SRCH_PATH_OW_TOOLTIPS_ITEMTYPES"] = "OneWoW > Ajustes > Tooltips > Tipos de objeto",
     ["SRCH_PATH_OW_TOOLTIPS_TECHIDS"] = "OneWoW > Ajustes > Tooltips > ID técnicos",

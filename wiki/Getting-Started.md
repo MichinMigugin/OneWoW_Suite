@@ -6,13 +6,13 @@ In chat, type:
 
 * `/1w`
 
-That toggles the OneWoW hub window: portals, settings, and tabs for every feature you have enabled.
+That toggles the OneWoW hub window: portals, settings, and a section menu for every feature you have enabled.
 
 ## First-run wizard
 
 On a fresh install, OneWoW can open a **feature picker** so you choose which modules to load. The same panel lives under hub settings as **Manage Features**.
 
-* Re-open Manage Features anytime from the Home tab link, or **Settings → Manage Features**
+* Re-open Manage Features anytime from the Home section link, or **Settings → Manage Features**
 * You can change your mind later — enabling or disabling modules is normal
 
 ## Manage Features

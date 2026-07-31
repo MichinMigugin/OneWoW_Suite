@@ -8,7 +8,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["LOAD_FAIL_OPTED_OUT"] = "해당 애드온은 이 캐릭터에서 소프트 비활성화되어 있습니다. 먼저 기능 관리에서 활성화하세요.",
     ["LOAD_FAIL_UNKNOWN"] = "해당 애드온을 불러올 수 없습니다.",
 
-    ["HOME_TAB"] = "OneWoW",
+    ["HOME_TAB"] = "처음으로",
     ["PROFILES_SUBTAB"] = "프로필",
     ["MANAGE_FEATURES_SUBTAB"] = "기능 관리",
 
@@ -38,9 +38,8 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["CHARS_REMOVE_CONFIRM_TITLE"] = "제거 확인",
     ["CHARS_REMOVE_CONFIRM"] = "모든 OneWoW 데이터베이스에서 캐릭터 %d명을 영구 삭제할까요?\n\n|cFFFF6666%s|r\n\n되돌릴 수 없습니다. UI가 다시 로드됩니다.",
     ["CHARS_REMOVE_NONE_SELECTED"] = "선택된 캐릭터가 없습니다.",
-    ["SETTINGS_ROLES_ALTS_POINTER"] = "캐릭터 역할, 툴팁 부캐 필터, 삭제된 캐릭터의 OneWoW 데이터베이스 제거는 설정 \226\134\146 역할 및 부캐에서 관리합니다.",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "캐릭터 역할, 툴팁 부캐 필터, 삭제된 캐릭터의 OneWoW 데이터베이스 제거는 설정 / %s에서 관리합니다.",
     ["SETTINGS_ROLES_ALTS_BTN"] = "역할 및 부캐 열기",
-    ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
     ["HOME_STANDALONE_ADDONS"] = "독립형 애드온",
     ["HOME_STATUS_NOT_FOUND"] = "찾을 수 없음",
     ["PLACEHOLDER_ENABLE_POINTER"] = "다음에서 활성화:",
@@ -199,8 +198,6 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["CAT_MOD_VENDORS"] = "Vendors",
 
     ["HOME_UTILITIES"] = "유틸리티",
-    ["HOME_SUPPORT"] = "OneWoW 후원",
-    ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "특별 감사",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla, 그리고 모든 베타 테스터",
 
@@ -235,10 +232,10 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "%s님의 탈것을 식별할 수 없습니다.",
 
     -- Search paths
-    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > 설정",
-    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > 설정 > 언어",
-    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > 설정 > 테마",
-    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > 설정 > 미니맵 버튼",
+    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > 설정 > 화면 설정",
+    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > 설정 > 화면 설정 > 언어",
+    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > 설정 > 화면 설정 > 테마",
+    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > 설정 > 화면 설정 > 미니맵 버튼",
     ["SRCH_PATH_OW_TOOLTIPS"] = "OneWoW > 설정 > 툴팁",
     ["SRCH_PATH_OW_TOOLTIPS_ITEMTYPES"] = "OneWoW > 설정 > 툴팁 > 아이템 유형",
     ["SRCH_PATH_OW_TOOLTIPS_TECHIDS"] = "OneWoW > 설정 > 툴팁 > 기술 ID",

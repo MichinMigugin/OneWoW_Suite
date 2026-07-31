@@ -8,7 +8,7 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["LOAD_FAIL_OPTED_OUT"] = "Dieses Addon ist für diesen Charakter weich deaktiviert — aktiviert es zuerst unter Funktionen verwalten.",
     ["LOAD_FAIL_UNKNOWN"] = "Dieses Addon konnte nicht geladen werden.",
 
-    ["HOME_TAB"] = "OneWoW",
+    ["HOME_TAB"] = "Start",
     ["PROFILES_SUBTAB"] = "Profile",
     ["MANAGE_FEATURES_SUBTAB"] = "Funktionen verwalten",
 
@@ -38,9 +38,8 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["CHARS_REMOVE_CONFIRM_TITLE"] = "Entfernen bestätigen",
     ["CHARS_REMOVE_CONFIRM"] = "%d Charakter(e) dauerhaft aus ALLEN OneWoW-Datenbanken löschen?\n\n|cFFFF6666%s|r\n\nDas kann nicht rückgängig gemacht werden. Danach folgt ein UI-Reload.",
     ["CHARS_REMOVE_NONE_SELECTED"] = "Keine Charaktere ausgewählt.",
-    ["SETTINGS_ROLES_ALTS_POINTER"] = "Charakterrollen, Tooltip-Alt-Filter und das Entfernen gelöschter Charaktere aus OneWoW-Datenbanken werden unter Einstellungen \226\134\146 Rollen & Twinks verwaltet.",
+    ["SETTINGS_ROLES_ALTS_POINTER"] = "Charakterrollen, Tooltip-Alt-Filter und das Entfernen gelöschter Charaktere aus OneWoW-Datenbanken werden unter Einstellungen / %s verwaltet.",
     ["SETTINGS_ROLES_ALTS_BTN"] = "Rollen & Twinks öffnen",
-    ["HOME_DISCORD_LINK"] = "https://discord.gg/6vnabDVnDu",
     ["HOME_STANDALONE_ADDONS"] = "Eigenständige Addons",
     ["HOME_STATUS_NOT_FOUND"] = "Nicht gefunden",
     ["PLACEHOLDER_ENABLE_POINTER"] = "Aktivieren über",
@@ -199,8 +198,6 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["CAT_MOD_VENDORS"] = "Vendors",
 
     ["HOME_UTILITIES"] = "Werkzeuge",
-    ["HOME_SUPPORT"] = "OneWoW unterstützen",
-    ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "Besonderer Dank",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla und alle Betatester",
 
@@ -235,10 +232,10 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["UNIT_CTX_MOUNT_UNIDENTIFIED"] = "Reittier von %s konnte nicht identifiziert werden.",
 
     -- Search paths
-    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Einstellungen",
-    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Einstellungen > Sprache",
-    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Einstellungen > Design",
-    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > Einstellungen > Minikartenschaltfläche",
+    ["SRCH_PATH_OW_SETTINGS"] = "OneWoW > Einstellungen > Anzeige",
+    ["SRCH_PATH_OW_SETTINGS_LANGUAGE"] = "OneWoW > Einstellungen > Anzeige > Sprache",
+    ["SRCH_PATH_OW_SETTINGS_THEME"] = "OneWoW > Einstellungen > Anzeige > Design",
+    ["SRCH_PATH_OW_SETTINGS_MINIMAP"] = "OneWoW > Einstellungen > Anzeige > Minikartenschaltfläche",
     ["SRCH_PATH_OW_TOOLTIPS"] = "OneWoW > Einstellungen > Tooltips",
     ["SRCH_PATH_OW_TOOLTIPS_ITEMTYPES"] = "OneWoW > Einstellungen > Tooltips > Gegenstandstypen",
     ["SRCH_PATH_OW_TOOLTIPS_TECHIDS"] = "OneWoW > Einstellungen > Tooltips > Technische IDs",

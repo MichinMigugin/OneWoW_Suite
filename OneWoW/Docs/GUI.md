@@ -383,6 +383,7 @@ TEXT_FEATURES_ENABLED, TEXT_FEATURES_DISABLED,
 DOT_FEATURES_ENABLED, DOT_FEATURES_DISABLED,
 TEXT_WARNING,
 BTN_DANGER_NORMAL, BTN_DANGER_HOVER, BTN_DANGER_BORDER, BTN_DANGER_BORDER_HOVER,
+LINK_IDLE, LINK_HOVER, LINK_UNDERLINE,
 QUEST_ROW_SECTION, QUEST_ROW_CHILD, QUEST_ROW_GROUP_TOGGLE,
 KIND_TOKEN, KIND_SAVED, KIND_CATEGORY
 
@@ -645,14 +646,18 @@ Access label via `btn.text`.
 local link = OneWoW_GUI:CreateTextLink(parent, {
     text = "Open in Bags",
     fontSize = 11,    -- optional, default 12
+    nav = true,       -- optional: smaller ASCII `>` after the label (in-hub navigation)
     onClick = function()
         -- handle click
     end,
 })
 ```
-Fit-width button with no backdrop. Idle `ACCENT_PRIMARY`, hover `TEXT_PRIMARY`, Point cursor.
+Fit-width button with no backdrop. Idle `LINK_IDLE` + subtle `LINK_UNDERLINE`, hover `LINK_HOVER`, Point cursor.
+`nav = true` appends a smaller `>` (ASCII — safe across fonts) for “go elsewhere” links; omit for actions / external URLs.
 `link:SetText(s)` refits width; `link:SetEnabled(false)` mutes to `TEXT_MUTED`.
-Access label via `link.text`.
+Access label via `link.text` (chevron via `link.chevron` when `nav`).
+
+Theme fill (`Constants.lua` `owgFillThemeSemantics`) supplies `LINK_*` for every theme from `TEXT_ACCENT` / `TEXT_PRIMARY` / accent@0.4 — override per-theme when a palette needs a hand tune.
 
 ### Fit Frame Buttons (fill container width)
 ```lua
@@ -898,6 +903,26 @@ local section = OneWoW_GUI:CreateSectionHeader(parent, {
 ```
 Creates a themed bar with background, border, and accent-colored title text.
 Auto-grows in height when the title wraps (e.g. larger fonts).
+Optional `fontSize` (default 12) for larger top-level headers.
+
+### Database Manager row
+```lua
+local step = OneWoW_GUI:CreateDatabaseManagerRow(parent, {
+    name = "Catalog Core",
+    description = "Main addon settings and UI state.",
+    addonKey = "OneWoW_Catalog",
+    yOffset = yOffset,
+    getEntryCount = function()
+        -- return number, or nil when the SV is not loaded
+        return 2
+    end,
+})
+yOffset = yOffset - step
+```
+Shared Catalog/AltTracker settings row: left-aligned name + description, right column
+Entries + Reset (same width/chrome). Reset is soft-disabled with a tooltip when
+`OneWoW:GetFeatureUnitState(addonKey)` is not enabled. Confirm wipe uses shared
+`DATABASE_MANAGER_*` locale keys. Implemented in `GUI/DatabaseManager.lua`.
 
 ### Hero panel
 ```lua

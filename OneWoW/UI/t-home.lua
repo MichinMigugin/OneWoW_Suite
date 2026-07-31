@@ -126,7 +126,11 @@ function UI:CreateHomeTab(parent)
     logo:SetTexture("Interface\\AddOns\\OneWoW\\Media\\neutral-large.png")
     yOffset = yOffset - 140
 
-    -- What's New left; Discord / Support right (same link size).
+    -- What's New (Home-only); Discord / Donate / OneWoW Home match former Settings labels+URLs.
+    local DISCORD_URL = "https://discord.gg/6vnabDVnDu"
+    local DONATE_URL = "https://buymeacoffee.com/migugin"
+    local WEBSITE_URL = "https://wow2.xyz/"
+
     local linksRow = CreateFrame("Frame", nil, content)
     linksRow:SetHeight(24)
     linksRow:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
@@ -143,23 +147,32 @@ function UI:CreateHomeTab(parent)
     })
     whatsNewLink:SetPoint("LEFT", linksRow, "LEFT", 5, 0)
 
-    local supportBtn = OneWoW_GUI:CreateTextLink(linksRow, {
-        text = L["HOME_SUPPORT"],
+    local websiteBtn = OneWoW_GUI:CreateTextLink(linksRow, {
+        text = L["LINK_ONEWOW_HOME"],
         fontSize = 14,
         onClick = function()
-            OneWoW_GUI:ShowCopyURLDialog(L["HOME_SUPPORT"], L["HOME_SUPPORT_LINK"])
+            OneWoW_GUI:ShowCopyURLDialog(L["LINK_ONEWOW_HOME"], WEBSITE_URL)
         end,
     })
-    supportBtn:SetPoint("RIGHT", linksRow, "RIGHT", -5, 0)
+    websiteBtn:SetPoint("RIGHT", linksRow, "RIGHT", -5, 0)
+
+    local donateBtn = OneWoW_GUI:CreateTextLink(linksRow, {
+        text = L["LINK_DONATE"],
+        fontSize = 14,
+        onClick = function()
+            OneWoW_GUI:ShowCopyURLDialog(L["LINK_DONATE"], DONATE_URL)
+        end,
+    })
+    donateBtn:SetPoint("RIGHT", websiteBtn, "LEFT", -20, 0)
 
     local discordBtn = OneWoW_GUI:CreateTextLink(linksRow, {
         text = L["DISCORD"],
         fontSize = 14,
         onClick = function()
-            OneWoW_GUI:ShowCopyURLDialog(L["DISCORD"], L["HOME_DISCORD_LINK"])
+            OneWoW_GUI:ShowCopyURLDialog(L["DISCORD"], DISCORD_URL)
         end,
     })
-    discordBtn:SetPoint("RIGHT", supportBtn, "LEFT", -20, 0)
+    discordBtn:SetPoint("RIGHT", donateBtn, "LEFT", -20, 0)
 
     yOffset = yOffset - 28
 
@@ -213,6 +226,7 @@ function UI:CreateHomeTab(parent)
     local manageLink = OneWoW_GUI:CreateTextLink(summaryBar, {
         text = L["HOME_MANAGE_LINK"],
         fontSize = 12,
+        nav = true,
         onClick = function()
             UI:OpenManageFeatures()
         end,
