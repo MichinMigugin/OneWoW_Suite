@@ -209,7 +209,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["HOME_SUPPORT"] = "OneWoW 후원",
     ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "특별 감사",
-    ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellewic, kellzilla, 그리고 모든 베타 테스터 여러분 — 감사합니다!",
+    ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla, 그리고 모든 베타 테스터",
 
     ["MODULE_ONEWOW"] = "OneWoW",
 

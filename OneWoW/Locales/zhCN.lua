@@ -209,7 +209,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["HOME_SUPPORT"] = "支持 OneWoW",
     ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "特别鸣谢",
-    ["HOME_THANKS_NAMES"] = "MacMode、SnerkDevil、tiradox、kellewic、kellzilla，以及所有的 Beta 测试者 - 谢谢你们！",
+    ["HOME_THANKS_NAMES"] = "MacMode、SnerkDevil、tiradox、kellzilla，以及所有的 Beta 测试者",
 
     ["MODULE_ONEWOW"] = "OneWoW",
 

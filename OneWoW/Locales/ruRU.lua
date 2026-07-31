@@ -209,7 +209,7 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["HOME_SUPPORT"] = "Поддержать OneWoW",
     ["HOME_SUPPORT_LINK"] = "https://buymeacoffee.com/migugin",
     ["HOME_SPECIAL_THANKS"] = "Особая благодарность",
-    ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellewic, kellzilla и всем нашим бета-тестерам - спасибо!",
+    ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla и всем бета-тестерам",
 
     ["MODULE_ONEWOW"] = "OneWoW",
 
