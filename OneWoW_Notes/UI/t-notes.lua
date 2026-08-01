@@ -37,8 +37,11 @@ function ns.UI.CreateNotesTab(parent)
 
     do
         local p = ns.db.global.tabSortPrefs.notes
-        currentSort.by        = p.by or "modified"
+        currentSort.by        = ns.UI.NormalizeSortBy(p.by) or "modified"
         currentSort.ascending = p.ascending ~= false
+        if p.by == "manual" then
+            ns.db.global.tabSortPrefs.notes = { by = "custom", ascending = p.ascending ~= false }
+        end
     end
 
     local controlPanel = ns.UI.CreateThemedBar(nil, parent)
@@ -63,11 +66,55 @@ function ns.UI.CreateNotesTab(parent)
 
     local categoryDropdown = ns.UI.CreateThemedDropdown(controlPanel, CATEGORY, 140, 25)
     categoryDropdown:SetPoint("LEFT", addNoteBtn, "RIGHT", 8, 0)
+    local storageDropdown
+    local function CountNotesForFilters(ignoreDim)
+        local counts = { all = 0, byCategory = {}, byStorage = { All = 0, account = 0, character = 0 } }
+        local NotesData = ns.NotesData
+        if not NotesData then return counts end
+        local searchLower = (currentFilters.search or ""):lower()
+        for _, noteData in pairs(NotesData:GetAllNotes()) do
+            if type(noteData) == "table" then
+                local ok = true
+                if ignoreDim ~= "category" and currentFilters.category ~= "All"
+                    and noteData.category ~= currentFilters.category then
+                    ok = false
+                end
+                if ignoreDim ~= "storage" and currentFilters.storage ~= "All"
+                    and noteData.storage ~= currentFilters.storage then
+                    ok = false
+                end
+                if searchLower ~= "" then
+                    local titleLower = (noteData.title or ""):lower()
+                    if not titleLower:find(searchLower, 1, true) then
+                        ok = false
+                    end
+                end
+                if ok then
+                    counts.all = counts.all + 1
+                    local cat = noteData.category or "General"
+                    counts.byCategory[cat] = (counts.byCategory[cat] or 0) + 1
+                    local stor = noteData.storage == "character" and "character" or "account"
+                    counts.byStorage[stor] = (counts.byStorage[stor] or 0) + 1
+                    counts.byStorage.All = counts.byStorage.All + 1
+                end
+            end
+        end
+        return counts
+    end
     local function RefreshCatOpts()
-        local catOpts = {{text = ALL, value = "All"}}
+        local catCounts = CountNotesForFilters("category")
+        local catOpts = {{
+            text = ALL,
+            value = "All",
+            rightText = ns.UI.FormatSectionCount(catCounts.all),
+        }}
         if ns.NotesCategories then
             for _, category in ipairs(ns.NotesCategories:GetCategories()) do
-                catOpts[#catOpts + 1] = {text = category, value = category}
+                catOpts[#catOpts + 1] = {
+                    text = category,
+                    value = category,
+                    rightText = ns.UI.FormatSectionCount(catCounts.byCategory[category] or 0),
+                }
             end
         end
         categoryDropdown:SetOptions(catOpts)
@@ -100,14 +147,21 @@ function ns.UI.CreateNotesTab(parent)
     end)
     manageCategoriesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local storageDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
+    storageDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storageDropdown:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
-    storageDropdown:SetOptions({
-        {text = ALL,               value = "All"},
-        {text = L["UI_STORAGE_ACCOUNT"],   value = "account"},
-        {text = CHARACTER, value = "character"},
-    })
-    storageDropdown:SetSelected("All")
+    local function RefreshStorageOpts()
+        local storCounts = CountNotesForFilters("storage")
+        storageDropdown:SetOptions({
+            {text = ALL, value = "All",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.All)},
+            {text = L["UI_STORAGE_ACCOUNT"], value = "account",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.account)},
+            {text = CHARACTER, value = "character",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.character)},
+        })
+        storageDropdown:SetSelected(currentFilters.storage)
+    end
+    RefreshStorageOpts()
     storageDropdown.onSelect = function(value)
         currentFilters.storage = value
         if parent.RefreshNotesList then parent.RefreshNotesList() end
@@ -117,10 +171,11 @@ function ns.UI.CreateNotesTab(parent)
         sortFields = {
             {key = "title",    label = L["NOTE_SORT_TITLE"]},
             {key = "created",  label = L["NOTE_SORT_CREATED"]},
+            {key = "modified", label = L["NOTE_SORT_MODIFIED"]},
             {key = "category", label = CATEGORY},
             {key = "color",    label = COLOR},
             {key = "type",     label = TYPE},
-            {key = "manual",   label = L["NOTE_SORT_MANUAL"]},
+            {key = "custom",   label = CUSTOM},
         },
         defaultField  = currentSort.by,
         defaultAsc    = currentSort.ascending,
@@ -186,6 +241,40 @@ function ns.UI.CreateNotesTab(parent)
     scrollChild = listScroll.scrollChild
     listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
+
+    local sectionRowFrames = {}
+    local sectionDataBags = {}
+    local sectionReorders = {}
+    local function GetOrCreateSectionReorder(sectionKey)
+        if sectionReorders[sectionKey] then
+            return sectionReorders[sectionKey]
+        end
+        local ctrl = ns.UI.CreateNotesListReorderDrag({
+            getItems = function()
+                return sectionRowFrames[sectionKey]
+            end,
+            getScrollFrame = function()
+                return listScroll.scrollFrame
+            end,
+            onReorder = function(fromIdx, toIdx, insertBefore)
+                local bag = sectionDataBags[sectionKey]
+                if ns.UI.ApplySectionReorder(bag, fromIdx, toIdx, insertBefore) then
+                    ns.UI.EnsureCustomSort(sortHandle, currentSort, "notes")
+                    parent.RefreshNotesList()
+                end
+            end,
+        })
+        sectionReorders[sectionKey] = ctrl
+        return ctrl
+    end
+    local function IsAnyNotesReorderActive()
+        for _, ctrl in pairs(sectionReorders) do
+            if ctrl:IsActive() or ctrl:ShouldSuppressClick() then
+                return true
+            end
+        end
+        return false
+    end
 
     local detailPanel = ns.UI.CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT", listingPanel, "TOPRIGHT", 10, 0)
@@ -890,28 +979,27 @@ function ns.UI.CreateNotesTab(parent)
     end
 
     function parent.RefreshNotesList()
+        for _, ctrl in pairs(sectionReorders) do
+            ctrl:Cancel()
+        end
         for _, item in pairs(noteListItems) do
             item:Hide()
         end
         noteListItems = {}
+        wipe(sectionRowFrames)
+        wipe(sectionDataBags)
+
+        RefreshCatOpts()
+        RefreshStorageOpts()
 
         local NotesData = ns.NotesData
         if not NotesData then return end
 
         local allNotes = NotesData:GetAllNotes()
         local notesList = {}
-        local currentTime = GetServerTime()
 
         for noteID, noteData in pairs(allNotes) do
             if type(noteData) == "table" then
-                if noteData.isNew and noteData.newTimestamp then
-                    local elapsed = currentTime - noteData.newTimestamp
-                    if elapsed > 3600 then
-                        noteData.isNew = false
-                        noteData.newTimestamp = nil
-                    end
-                end
-
                 local matches = true
 
                 if currentFilters.category ~= "All" and noteData.category ~= currentFilters.category then
@@ -934,17 +1022,17 @@ function ns.UI.CreateNotesTab(parent)
             end
         end
 
-        local special = {}
-        local newNotes = {}
+        local dailies = {}
+        local weeklies = {}
         local favorites = {}
         local regular = {}
 
         for _, note in ipairs(notesList) do
             local nt = note.data.noteType
-            if nt == "daily" or nt == "weekly" then
-                table.insert(special, note)
-            elseif note.data.isNew then
-                table.insert(newNotes, note)
+            if nt == "daily" then
+                table.insert(dailies, note)
+            elseif nt == "weekly" then
+                table.insert(weeklies, note)
             elseif note.data.favorite then
                 table.insert(favorites, note)
             else
@@ -960,6 +1048,9 @@ function ns.UI.CreateNotesTab(parent)
             elseif currentSort.by == "created" then
                 if currentSort.ascending then return (a.data.created or 0) < (b.data.created or 0)
                 else return (a.data.created or 0) > (b.data.created or 0) end
+            elseif currentSort.by == "modified" then
+                if currentSort.ascending then return (a.data.modified or 0) < (b.data.modified or 0)
+                else return (a.data.modified or 0) > (b.data.modified or 0) end
             elseif currentSort.by == "category" then
                 local ca = a.data.category or ""
                 local cb = b.data.category or ""
@@ -975,7 +1066,7 @@ function ns.UI.CreateNotesTab(parent)
                 local tb = b.data.noteType or "standard"
                 if ta == tb then return (a.data.title or "") < (b.data.title or "") end
                 if currentSort.ascending then return ta < tb else return ta > tb end
-            elseif currentSort.by == "manual" then
+            elseif currentSort.by == "custom" then
                 local sa = a.data.sortOrder or 0
                 local sb = b.data.sortOrder or 0
                 if sa == sb then return (a.data.title or "") < (b.data.title or "") end
@@ -986,18 +1077,22 @@ function ns.UI.CreateNotesTab(parent)
             end
         end
 
-        table.sort(special, sortNotes)
-        table.sort(newNotes, sortNotes)
+        table.sort(dailies, sortNotes)
+        table.sort(weeklies, sortNotes)
         table.sort(favorites, sortNotes)
         table.sort(regular, sortNotes)
 
-        local function CreateSectionHeader(text, yPos)
-            local section = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = text, yOffset = yPos })
+        local function CreateSectionHeader(text, yPos, count)
+            local section = OneWoW_GUI:CreateSectionHeader(scrollChild, {
+                title = text,
+                yOffset = yPos,
+                rightText = ns.UI.FormatSectionCount(count),
+            })
             table.insert(noteListItems, section)
             return section
         end
 
-        local function BuildNoteRow(note, yOffset, groupArray, groupIndex)
+        local function BuildNoteRow(note, yOffset, sectionKey)
             local colorConfig = ns.Config:GetResolvedColorConfig(note.data.pinColor or "hunter")
             local bg = colorConfig.background
 
@@ -1008,18 +1103,6 @@ function ns.UI.CreateNotesTab(parent)
                 iconAtlas = "questlog-questtypeicon-Weekly"
             end
 
-            local canMoveUp   = groupArray ~= nil and groupIndex ~= nil and groupIndex > 1
-            local canMoveDown = groupArray ~= nil and groupIndex ~= nil and groupIndex < #groupArray
-
-            local function EnsureManualSort()
-                if currentSort.by ~= "manual" then
-                    currentSort.by = "manual"
-                    currentSort.ascending = true
-                    sortHandle:SetSort("manual", true)
-                    ns.db.global.tabSortPrefs.notes = { by = "manual", ascending = true }
-                end
-            end
-
             local rowOpts = {
                 yOffset     = yOffset,
                 barColor    = { bg[1], bg[2], bg[3] },
@@ -1028,6 +1111,7 @@ function ns.UI.CreateNotesTab(parent)
                 title       = note.data.title or L["NOTE_UNTITLED"],
                 storageText = note.data.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
                 selected    = (selectedNote == note.id),
+                shouldSuppressSelect = IsAnyNotesReorderActive,
                 onSelect    = function()
                     selectedNote = note.id
                     ShowEditor()
@@ -1092,86 +1176,40 @@ function ns.UI.CreateNotesTab(parent)
                         StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE")
                     end,
                 },
-                reorder = {
-                    canUp = canMoveUp, canDown = canMoveDown,
-                    onUp = function()
-                        EnsureManualSort()
-                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                        groupArray[groupIndex].data.sortOrder     = groupIndex - 1
-                        groupArray[groupIndex - 1].data.sortOrder = groupIndex
-                        parent.RefreshNotesList()
-                    end,
-                    onDown = function()
-                        EnsureManualSort()
-                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                        groupArray[groupIndex].data.sortOrder     = groupIndex + 1
-                        groupArray[groupIndex + 1].data.sortOrder = groupIndex
-                        parent.RefreshNotesList()
-                    end,
-                },
             }
-
-            if note.data.isNew then
-                rowOpts.newFlag = {
-                    tooltip = { title = L["TOOLTIP_NOTE_NEW"], desc = L["UI_NOTE_REMOVE_FLAG_HINT"] },
-                    onClick = function()
-                        if ns.NotesData then
-                            local noteData2 = ns.NotesData:FindNote(note.id)
-                            if noteData2 then
-                                noteData2.isNew = false
-                                noteData2.newTimestamp = nil
-                                parent.RefreshNotesList()
-                            end
-                        end
-                    end,
-                }
-            end
 
             local row = ns.UI.CreateNotesListRow(scrollChild, rowOpts)
             table.insert(noteListItems, row)
+            local frames = sectionRowFrames[sectionKey]
+            frames[#frames + 1] = row
+            GetOrCreateSectionReorder(sectionKey):Attach(row, #frames)
+        end
+
+        local function PaintSection(sectionKey, title, bag, yOffset)
+            if #bag == 0 then
+                return yOffset
+            end
+            sectionDataBags[sectionKey] = bag
+            sectionRowFrames[sectionKey] = {}
+            CreateSectionHeader(title, yOffset, #bag)
+            yOffset = yOffset - 30
+            for _, note in ipairs(bag) do
+                BuildNoteRow(note, yOffset, sectionKey)
+                yOffset = yOffset - ns.UI.LIST_ROW_SPACING
+            end
+            return yOffset
         end
 
         local yOffset = 0
-
-        if #special > 0 then
-            CreateSectionHeader(SPECIAL, yOffset)
-            yOffset = yOffset - 30
-        end
-        for i, note in ipairs(special) do
-            BuildNoteRow(note, yOffset, special, i)
-            yOffset = yOffset - ns.UI.LIST_ROW_SPACING
-        end
-
-        if #newNotes > 0 then
-            CreateSectionHeader(NEW, yOffset)
-            yOffset = yOffset - 30
-        end
-        for i, note in ipairs(newNotes) do
-            BuildNoteRow(note, yOffset, newNotes, i)
-            yOffset = yOffset - ns.UI.LIST_ROW_SPACING
-        end
-
-        if #favorites > 0 then
-            CreateSectionHeader(FAVORITES, yOffset)
-            yOffset = yOffset - 30
-        end
-        for i, note in ipairs(favorites) do
-            BuildNoteRow(note, yOffset, favorites, i)
-            yOffset = yOffset - ns.UI.LIST_ROW_SPACING
-        end
-
-        if #regular > 0 then
-            CreateSectionHeader(L["TAB_NOTES"], yOffset)
-            yOffset = yOffset - 30
-        end
-        for i, note in ipairs(regular) do
-            BuildNoteRow(note, yOffset, regular, i)
-            yOffset = yOffset - ns.UI.LIST_ROW_SPACING
-        end
+        yOffset = PaintSection("daily", DAILY, dailies, yOffset)
+        yOffset = PaintSection("weekly", WEEKLY, weeklies, yOffset)
+        yOffset = PaintSection("favorites", FAVORITES, favorites, yOffset)
+        yOffset = PaintSection("regular", L["TAB_NOTES"], regular, yOffset)
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
         if leftStatusText then
-            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_NOTES"], #special + #newNotes + #favorites + #regular))
+            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_NOTES"],
+                #dailies + #weeklies + #favorites + #regular))
         end
     end
 

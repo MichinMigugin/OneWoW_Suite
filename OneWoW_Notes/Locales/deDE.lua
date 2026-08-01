@@ -132,7 +132,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["NOTE_SORT_TITLE"] = "Titel",
     ["NOTE_SORT_CREATED"] = "Erstellt",
     ["NOTE_SORT_MODIFIED"] = "Geändert",
-    ["NOTE_SORT_MANUAL"] = "Manuell",
 
 -- Notes UI labels
     ["UI_CATEGORY_WITH_VALUE"] = "Kategorie: %s",
@@ -143,7 +142,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["UI_TASKS"] = "Aufgaben:",
     ["UI_MANAGE_CATEGORIES_DESC"] = "Benutzerdefinierte Kategorien hinzufügen oder entfernen",
     ["UI_NOTES_HYPERLINK_HINT"] = "Klicken, um die Hilfe zur Verwendung von Links in Notizen ein-/auszublenden",
-    ["UI_NOTE_REMOVE_FLAG_HINT"] = "Klicken, um die „Neu“-Markierung zu entfernen",
 
 -- Note types
     ["NOTE_TYPE_STANDARD"] = "Standard",
@@ -177,7 +175,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TOOLTIP_NOTE_DELETE_DESC"] = "Diese Notiz entfernen",
     ["TOOLTIP_NOTE_FAVORITE"] = "Favorit",
     ["TOOLTIP_NOTE_FAVORITE_DESC"] = "Notiz als Favorit markieren",
-    ["TOOLTIP_NOTE_NEW"] = "Neue Notiz",
     ["TOOLTIP_NOTE_PIN"] = "Notiz anheften",
     ["TOOLTIP_NOTE_PIN_DESC"] = "Heftet die Notiz an den Bildschirm",
     ["TOOLTIP_NOTE_PROPERTIES"] = "Notizeneigenschaften",

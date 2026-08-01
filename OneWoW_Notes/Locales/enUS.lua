@@ -132,7 +132,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["NOTE_SORT_TITLE"] = "Title",
     ["NOTE_SORT_CREATED"] = "Created",
     ["NOTE_SORT_MODIFIED"] = "Modified",
-    ["NOTE_SORT_MANUAL"] = "Manual",
 
 -- Notes UI labels
     ["UI_CATEGORY_WITH_VALUE"] = "Category: %s",
@@ -143,7 +142,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["UI_TASKS"] = "Tasks:",
     ["UI_MANAGE_CATEGORIES_DESC"] = "Add or remove custom categories",
     ["UI_NOTES_HYPERLINK_HINT"] = "Click to show/hide help about using hyperlinks in notes",
-    ["UI_NOTE_REMOVE_FLAG_HINT"] = "Click to remove new flag",
 
 -- Note types
     ["NOTE_TYPE_STANDARD"] = "Standard",
@@ -177,7 +175,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TOOLTIP_NOTE_DELETE_DESC"] = "Remove this note",
     ["TOOLTIP_NOTE_FAVORITE"] = "Favorite",
     ["TOOLTIP_NOTE_FAVORITE_DESC"] = "Mark note as favorite",
-    ["TOOLTIP_NOTE_NEW"] = "New Note",
     ["TOOLTIP_NOTE_PIN"] = "Pin Note",
     ["TOOLTIP_NOTE_PIN_DESC"] = "Pins Note to Screen",
     ["TOOLTIP_NOTE_PROPERTIES"] = "Note Properties",

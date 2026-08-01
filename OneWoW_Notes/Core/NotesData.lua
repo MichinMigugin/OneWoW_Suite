@@ -68,11 +68,6 @@ function NotesData:AddNote(noteTitle, noteData)
         }
     end
 
-    if ns.mainFrame and ns.mainFrame:IsShown() then
-        noteData.isNew = true
-        noteData.newTimestamp = GetServerTime()
-    end
-
     local targetDB = self:GetDataDB(storageType)
     targetDB[noteID] = noteData
     self:InvalidateCache()

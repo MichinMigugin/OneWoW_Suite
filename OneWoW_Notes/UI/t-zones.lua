@@ -33,8 +33,11 @@ end
 function ns.UI.CreateZonesTab(parent)
     do
         local p = ns.db.global.tabSortPrefs.zones
-        currentSort.by        = p.by or "name"
+        currentSort.by        = ns.UI.NormalizeSortBy(p.by) or "name"
         currentSort.ascending = p.ascending ~= false
+        if p.by == "manual" then
+            ns.db.global.tabSortPrefs.zones = { by = "custom", ascending = p.ascending ~= false }
+        end
     end
 
     local controlPanel = ns.UI.CreateThemedBar(nil, parent)
@@ -130,11 +133,58 @@ function ns.UI.CreateZonesTab(parent)
 
     local categoryDropdown = ns.UI.CreateThemedDropdown(controlPanel, CATEGORY, 140, 25)
     categoryDropdown:SetPoint("LEFT", addParentBtn, "RIGHT", 8, 0)
+    local storageDropdown
+    local function CountZonesForFilters(ignoreDim)
+        local counts = { all = 0, byCategory = {}, byStorage = { All = 0, account = 0, character = 0 } }
+        if not ns.Zones then return counts end
+        local searchLower = (searchFilter or ""):lower()
+        local allZones = ns.Zones:GetAllZones()
+        for _, data in pairs(allZones) do
+            if type(data) == "table" then
+                local title = ns.Zones:FormatTitleFromData(data)
+                local ok = true
+                if ignoreDim ~= "category" and categoryFilter ~= "All"
+                    and data.category ~= categoryFilter then
+                    ok = false
+                end
+                if ignoreDim ~= "storage" and storageFilter ~= "All"
+                    and data.storage ~= storageFilter then
+                    ok = false
+                end
+                if searchLower ~= "" then
+                    if not title:lower():find(searchLower, 1, true)
+                        and not (data.zone and data.zone:lower():find(searchLower, 1, true))
+                        and not (data.subzone and data.subzone ~= ""
+                            and data.subzone:lower():find(searchLower, 1, true)) then
+                        ok = false
+                    end
+                end
+                if ok then
+                    counts.all = counts.all + 1
+                    local cat = data.category or "General"
+                    counts.byCategory[cat] = (counts.byCategory[cat] or 0) + 1
+                    local stor = data.storage == "character" and "character" or "account"
+                    counts.byStorage[stor] = (counts.byStorage[stor] or 0) + 1
+                    counts.byStorage.All = counts.byStorage.All + 1
+                end
+            end
+        end
+        return counts
+    end
     local function RefreshCatOpts()
-        local catOpts = {{text = ALL, value = "All"}}
+        local catCounts = CountZonesForFilters("category")
+        local catOpts = {{
+            text = ALL,
+            value = "All",
+            rightText = ns.UI.FormatSectionCount(catCounts.all),
+        }}
         if ns.Zones then
             for _, c in ipairs(ns.Zones:GetCategories()) do
-                catOpts[#catOpts + 1] = {text = c, value = c}
+                catOpts[#catOpts + 1] = {
+                    text = c,
+                    value = c,
+                    rightText = ns.UI.FormatSectionCount(catCounts.byCategory[c] or 0),
+                }
             end
         end
         categoryDropdown:SetOptions(catOpts)
@@ -167,14 +217,21 @@ function ns.UI.CreateZonesTab(parent)
     end)
     manageCategoriesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local storageDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
+    storageDropdown = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storageDropdown:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
-    storageDropdown:SetOptions({
-        {text = ALL,                     value = "All"},
-        {text = L["UI_STORAGE_ACCOUNT"],     value = "account"},
-        {text = CHARACTER, value = "character"},
-    })
-    storageDropdown:SetSelected("All")
+    local function RefreshStorageOpts()
+        local storCounts = CountZonesForFilters("storage")
+        storageDropdown:SetOptions({
+            {text = ALL, value = "All",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.All)},
+            {text = L["UI_STORAGE_ACCOUNT"], value = "account",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.account)},
+            {text = CHARACTER, value = "character",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.character)},
+        })
+        storageDropdown:SetSelected(storageFilter)
+    end
+    RefreshStorageOpts()
     storageDropdown.onSelect = function(value)
         storageFilter = value
         parent.RefreshZonesList()
@@ -185,7 +242,7 @@ function ns.UI.CreateZonesTab(parent)
             {key = "name",     label = NAME},
             {key = "category", label = CATEGORY},
             {key = "color",    label = COLOR},
-            {key = "manual",   label = L["NOTE_SORT_MANUAL"]},
+            {key = "custom",   label = CUSTOM},
         },
         defaultField  = currentSort.by,
         defaultAsc    = currentSort.ascending,
@@ -251,6 +308,40 @@ function ns.UI.CreateZonesTab(parent)
     scrollChild = listScroll.scrollChild
     listScroll.container:SetPoint("TOPLEFT", listingPanel, "TOPLEFT", 10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
+
+    local sectionRowFrames = {}
+    local sectionDataBags = {}
+    local sectionReorders = {}
+    local function GetOrCreateSectionReorder(sectionKey)
+        if sectionReorders[sectionKey] then
+            return sectionReorders[sectionKey]
+        end
+        local ctrl = ns.UI.CreateNotesListReorderDrag({
+            getItems = function()
+                return sectionRowFrames[sectionKey]
+            end,
+            getScrollFrame = function()
+                return listScroll.scrollFrame
+            end,
+            onReorder = function(fromIdx, toIdx, insertBefore)
+                local bag = sectionDataBags[sectionKey]
+                if ns.UI.ApplySectionReorder(bag, fromIdx, toIdx, insertBefore) then
+                    ns.UI.EnsureCustomSort(zoneSortHandle, currentSort, "zones")
+                    parent.RefreshZonesList()
+                end
+            end,
+        })
+        sectionReorders[sectionKey] = ctrl
+        return ctrl
+    end
+    local function IsAnyZonesReorderActive()
+        for _, ctrl in pairs(sectionReorders) do
+            if ctrl:IsActive() or ctrl:ShouldSuppressClick() then
+                return true
+            end
+        end
+        return false
+    end
 
     detailPanel = ns.UI.CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT", listingPanel, "TOPRIGHT", 10, 0)
@@ -970,19 +1061,20 @@ function ns.UI.CreateZonesTab(parent)
     end
 
     parent.RefreshZonesList = function()
+        for _, ctrl in pairs(sectionReorders) do
+            ctrl:Cancel()
+        end
         for _, item in ipairs(zoneListItems) do
             item:Hide()
         end
         wipe(zoneListItems)
-
-        local regions = { scrollChild:GetRegions() }
-        for _, r in ipairs(regions) do r:Hide() end
-        local children = { scrollChild:GetChildren() }
-        for _, c in ipairs(children) do c:Hide() end
+        wipe(sectionRowFrames)
+        wipe(sectionDataBags)
 
         if not ns.Zones then return end
 
         RefreshCatOpts()
+        RefreshStorageOpts()
 
         local allZones = ns.Zones:GetAllZones()
         local filtered = {}
@@ -1010,14 +1102,11 @@ function ns.UI.CreateZonesTab(parent)
         end
 
         local currentZones = {}
-        local newZones  = {}
         local favorites = {}
         local regular   = {}
         for _, zone in ipairs(filtered) do
             if isCurrentZoneNote(zone) then
                 currentZones[#currentZones + 1] = zone
-            elseif zone.data.isNew then
-                newZones[#newZones + 1] = zone
             elseif zone.data.favorite then
                 favorites[#favorites + 1] = zone
             else
@@ -1041,7 +1130,7 @@ function ns.UI.CreateZonesTab(parent)
             elseif currentSort.by == "modified" then
                 if currentSort.ascending then return (a.data.modified or 0) < (b.data.modified or 0)
                 else return (a.data.modified or 0) > (b.data.modified or 0) end
-            elseif currentSort.by == "manual" then
+            elseif currentSort.by == "custom" then
                 local sa = a.data.sortOrder or 0
                 local sb = b.data.sortOrder or 0
                 if sa == sb then return nameA < nameB end
@@ -1051,31 +1140,22 @@ function ns.UI.CreateZonesTab(parent)
             end
         end
         table.sort(currentZones, sortZones)
-        table.sort(newZones,  sortZones)
         table.sort(favorites, sortZones)
         table.sort(regular,   sortZones)
 
-        local function CreateSectionHeader(title, yOfs)
-            local section = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = title, yOffset = yOfs })
+        local function CreateSectionHeader(title, yOfs, count)
+            local section = OneWoW_GUI:CreateSectionHeader(scrollChild, {
+                title = title,
+                yOffset = yOfs,
+                rightText = ns.UI.FormatSectionCount(count),
+            })
             table.insert(zoneListItems, section)
             return section
         end
 
-        local function BuildZoneRow(zone, yOfs, groupArray, groupIndex)
+        local function BuildZoneRow(zone, yOfs, sectionKey)
             local resolvedColor = ns.Config:GetResolvedColorConfig(zone.data.pinColor)
             local bg = resolvedColor.background
-
-            local canMoveUp   = groupArray ~= nil and groupIndex ~= nil and groupIndex > 1
-            local canMoveDown = groupArray ~= nil and groupIndex ~= nil and groupIndex < #groupArray
-
-            local function EnsureManualSort()
-                if currentSort.by ~= "manual" then
-                    currentSort.by = "manual"
-                    currentSort.ascending = true
-                    zoneSortHandle:SetSort("manual", true)
-                    ns.db.global.tabSortPrefs.zones = { by = "manual", ascending = true }
-                end
-            end
 
             local rowOpts = {
                 yOffset     = yOfs,
@@ -1084,12 +1164,8 @@ function ns.UI.CreateZonesTab(parent)
                 title       = zone.title or (ns.Zones and ns.Zones:FormatTitleFromData(zone.data)) or zone.name,
                 storageText = zone.data.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
                 selected    = (selectedZone == zone.name),
+                shouldSuppressSelect = IsAnyZonesReorderActive,
                 onSelect    = function()
-                    if zone.data.isNew then
-                        zone.data.isNew = false
-                        zone.data.newTimestamp = nil
-                        if ns.Zones then ns.Zones:SaveZone(zone.name, zone.data) end
-                    end
                     selectedZone = zone.name
                     ShowEditor()
                     parent.RefreshZonesList()
@@ -1137,58 +1213,39 @@ function ns.UI.CreateZonesTab(parent)
                         end
                     end,
                 },
-                reorder = {
-                    canUp = canMoveUp, canDown = canMoveDown,
-                    onUp = function()
-                        EnsureManualSort()
-                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                        groupArray[groupIndex].data.sortOrder     = groupIndex - 1
-                        groupArray[groupIndex - 1].data.sortOrder = groupIndex
-                        parent.RefreshZonesList()
-                    end,
-                    onDown = function()
-                        EnsureManualSort()
-                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                        groupArray[groupIndex].data.sortOrder     = groupIndex + 1
-                        groupArray[groupIndex + 1].data.sortOrder = groupIndex
-                        parent.RefreshZonesList()
-                    end,
-                },
             }
 
             local row = ns.UI.CreateNotesListRow(scrollChild, rowOpts)
             table.insert(zoneListItems, row)
+            local frames = sectionRowFrames[sectionKey]
+            frames[#frames + 1] = row
+            GetOrCreateSectionReorder(sectionKey):Attach(row, #frames)
+        end
+
+        local function PaintSection(sectionKey, title, bag, yOffset)
+            if #bag == 0 then
+                return yOffset
+            end
+            sectionDataBags[sectionKey] = bag
+            sectionRowFrames[sectionKey] = {}
+            CreateSectionHeader(title, yOffset, #bag)
+            yOffset = yOffset - 30
+            for _, zone in ipairs(bag) do
+                BuildZoneRow(zone, yOffset, sectionKey)
+                yOffset = yOffset - ns.UI.LIST_ROW_SPACING
+            end
+            return yOffset
         end
 
         local yOffset = 0
-
-        if #newZones > 0 then
-            CreateSectionHeader(NEW, yOffset)
-            yOffset = yOffset - 30
-        end
-        for i, zone in ipairs(newZones) do BuildZoneRow(zone, yOffset, newZones, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
-
-        if #currentZones > 0 then
-            CreateSectionHeader(L["ZONES_CURRENT_SECTION"], yOffset)
-            yOffset = yOffset - 30
-        end
-        for i, zone in ipairs(currentZones) do BuildZoneRow(zone, yOffset, currentZones, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
-
-        if #favorites > 0 then
-            CreateSectionHeader(FAVORITES, yOffset)
-            yOffset = yOffset - 30
-        end
-        for i, zone in ipairs(favorites) do BuildZoneRow(zone, yOffset, favorites, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
-
-        if #regular > 0 then
-            CreateSectionHeader(L["TAB_ZONES"], yOffset)
-            yOffset = yOffset - 30
-        end
-        for i, zone in ipairs(regular) do BuildZoneRow(zone, yOffset, regular, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
+        yOffset = PaintSection("current", L["ZONES_CURRENT_SECTION"], currentZones, yOffset)
+        yOffset = PaintSection("favorites", FAVORITES, favorites, yOffset)
+        yOffset = PaintSection("regular", L["TAB_ZONES"], regular, yOffset)
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
         if leftStatusText then
-            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_ZONES"], #currentZones + #newZones + #favorites + #regular))
+            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_ZONES"],
+                #currentZones + #favorites + #regular))
         end
     end
 

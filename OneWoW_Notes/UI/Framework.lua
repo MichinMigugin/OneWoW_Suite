@@ -88,7 +88,11 @@ function ns.UI.CreateThemedDropdown(parent, labelPrefix, width, height)
         buildItems = function()
             local items = {}
             for _, opt in ipairs(dropdown._options) do
-                table.insert(items, { value = opt.value, text = opt.text })
+                table.insert(items, {
+                    value     = opt.value,
+                    text      = opt.text,
+                    rightText = opt.rightText,
+                })
             end
             return items
         end,
@@ -291,8 +295,11 @@ end
 --   icon = texturePath | nil, iconAtlas = atlasName | nil
 --   title, detail, storageText        -- text block (title wraps to 2 lines)
 --   pin/alert/fav = { active, onToggle, tooltip }  (toggles)
---   gotoAction/props/delete/newFlag = { onClick, tooltip }  (buttons)
---   reorder = { canUp, canDown, onUp, onDown }
+--   gotoAction/props/delete = { onClick, tooltip }  (buttons)
+--   getReorderActive / shouldSuppressSelect = function() -> bool
+--     Prefer shouldSuppressSelect (active drag OR completed drag this click).
+--     Selection runs on MouseUp so MouseDown can start a reorder without
+--     rebuilding the list and killing the drag ghost.
 function ns.UI.CreateNotesListRow(scrollChild, opts)
     local height = opts.height or ns.UI.LIST_ROW_HEIGHT
 
@@ -354,30 +361,6 @@ function ns.UI.CreateNotesListRow(scrollChild, opts)
     end
 
     local rightReserve = 6
-    if opts.reorder then
-        local up = CreateFrame("Button", nil, row)
-        up:SetSize(18, 22)
-        up:SetPoint("TOPRIGHT", row, "TOPRIGHT", -4, -3)
-        up:SetNormalAtlas("common-button-collapseExpand-up")
-        up:SetHighlightAtlas("common-button-collapseExpand-up")
-        if opts.reorder.canUp then up:Show() else up:Hide() end
-        up:SetScript("OnClick", function()
-            if opts.reorder.canUp and opts.reorder.onUp then opts.reorder.onUp() end
-        end)
-
-        local down = CreateFrame("Button", nil, row)
-        down:SetSize(18, 22)
-        down:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -4, 3)
-        down:SetNormalAtlas("common-button-collapseExpand-down")
-        down:SetHighlightAtlas("common-button-collapseExpand-down")
-        OneWoW_GUI:TintScrollReorderButtons(up, down)
-        if opts.reorder.canDown then down:Show() else down:Hide() end
-        down:SetScript("OnClick", function()
-            if opts.reorder.canDown and opts.reorder.onDown then opts.reorder.onDown() end
-        end)
-        row.reorderUp, row.reorderDown = up, down
-        rightReserve = 26
-    end
 
     -- Action cluster: pinned to the bottom-right, filling right -> left. Living
     -- in the bottom band (not vertically centered) keeps it from stealing the
@@ -425,16 +408,9 @@ function ns.UI.CreateNotesListRow(scrollChild, opts)
         AttachRowTooltip(b, opts.pin.tooltip)
         place(b); row.pinBtn = b
     end
-    if opts.newFlag then
-        local b = MakeActionButton(row, MEDIA .. "icon-flag.png")
-        b:SetScript("OnClick", opts.newFlag.onClick)
-        AttachRowTooltip(b, opts.newFlag.tooltip)
-        place(b); row.newFlagBtn = b
-    end
 
-    -- Title spans the top band, nearly full width (only the reorder-arrow column
-    -- is reserved). The action cluster lives in the bottom band, so it does not
-    -- constrain the title. Storage/detail are pinned to the bottom, in the box.
+    -- Title spans the top band nearly full width. The action cluster lives in
+    -- the bottom band, so it does not constrain the title.
     local titleRight = -(rightReserve + 4)
 
     local title = OneWoW_GUI:CreateFS(row, 12)
@@ -472,7 +448,12 @@ function ns.UI.CreateNotesListRow(scrollChild, opts)
     end
 
     row:EnableMouse(true)
-    row:SetScript("OnMouseDown", function()
+    -- Select on MouseUp, not MouseDown: MouseDown must stay free for
+    -- CreateReorderDrag. Selecting (and Refresh*List) on press was destroying
+    -- the row before the ghost could follow the cursor.
+    row:SetScript("OnMouseUp", function()
+        local suppress = opts.shouldSuppressSelect or opts.getReorderActive
+        if suppress and suppress() then return end
         if opts.onSelect then opts.onSelect() end
     end)
     row:SetScript("OnEnter", function(self)
@@ -485,6 +466,7 @@ function ns.UI.CreateNotesListRow(scrollChild, opts)
         row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
         row:SetBackdropBorderColor(1, 0.82, 0, 1)
     end
+    row._notesListSelected = opts.selected and true or false
 
     return row
 end

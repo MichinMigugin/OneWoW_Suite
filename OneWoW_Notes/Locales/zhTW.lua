@@ -132,7 +132,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["NOTE_SORT_TITLE"] = "標題",
     ["NOTE_SORT_CREATED"] = "建立時間",
     ["NOTE_SORT_MODIFIED"] = "修改時間",
-    ["NOTE_SORT_MANUAL"] = "手動",
 
 -- Notes UI labels
     ["UI_CATEGORY_WITH_VALUE"] = "分類：%s",
@@ -143,7 +142,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["UI_TASKS"] = "待辦：",
     ["UI_MANAGE_CATEGORIES_DESC"] = "新增或移除自訂分類",
     ["UI_NOTES_HYPERLINK_HINT"] = "點擊以顯示/隱藏關於在筆記中使用超連結的說明",
-    ["UI_NOTE_REMOVE_FLAG_HINT"] = "點擊以移除「新」標記",
 
 -- Note types
     ["NOTE_TYPE_STANDARD"] = "標準",
@@ -177,7 +175,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TOOLTIP_NOTE_DELETE_DESC"] = "移除此筆記",
     ["TOOLTIP_NOTE_FAVORITE"] = "最愛",
     ["TOOLTIP_NOTE_FAVORITE_DESC"] = "將筆記標記為最愛",
-    ["TOOLTIP_NOTE_NEW"] = "新增筆記",
     ["TOOLTIP_NOTE_PIN"] = "釘選筆記",
     ["TOOLTIP_NOTE_PIN_DESC"] = "將筆記釘選到螢幕",
     ["TOOLTIP_NOTE_PROPERTIES"] = "筆記屬性",

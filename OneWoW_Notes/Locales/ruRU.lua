@@ -132,7 +132,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["NOTE_SORT_TITLE"] = "Заголовок",
     ["NOTE_SORT_CREATED"] = "Создание",
     ["NOTE_SORT_MODIFIED"] = "Изменение",
-    ["NOTE_SORT_MANUAL"] = "Вручную",
 
 -- Notes UI labels
     ["UI_CATEGORY_WITH_VALUE"] = "Категория: %s",
@@ -143,7 +142,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["UI_TASKS"] = "Задачи:",
     ["UI_MANAGE_CATEGORIES_DESC"] = "Добавить или удалить пользовательские категории",
     ["UI_NOTES_HYPERLINK_HINT"] = "Нажмите, чтобы показать/скрыть справку об использовании ссылок в заметках",
-    ["UI_NOTE_REMOVE_FLAG_HINT"] = "Нажмите, чтобы убрать метку «новое»",
 
 -- Note types
     ["NOTE_TYPE_STANDARD"] = "Стандартная",
@@ -177,7 +175,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TOOLTIP_NOTE_DELETE_DESC"] = "Убрать эту заметку",
     ["TOOLTIP_NOTE_FAVORITE"] = "Избранное",
     ["TOOLTIP_NOTE_FAVORITE_DESC"] = "Отметить заметку как избранную",
-    ["TOOLTIP_NOTE_NEW"] = "Новая заметка",
     ["TOOLTIP_NOTE_PIN"] = "Закрепить заметку",
     ["TOOLTIP_NOTE_PIN_DESC"] = "Закрепляет заметку на экране",
     ["TOOLTIP_NOTE_PROPERTIES"] = "Свойства заметки",

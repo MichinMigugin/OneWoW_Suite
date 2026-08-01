@@ -25,8 +25,11 @@ local Detail = ns.Constants.Detail
 function ns.UI.CreatePlayersTab(parent)
     do
         local p = ns.db.global.tabSortPrefs.players
-        currentSort.by        = p.by or "name"
+        currentSort.by        = ns.UI.NormalizeSortBy(p.by) or "name"
         currentSort.ascending = p.ascending ~= false
+        if p.by == "manual" then
+            ns.db.global.tabSortPrefs.players = { by = "custom", ascending = p.ascending ~= false }
+        end
     end
 
     local controlPanel = ns.UI.CreateThemedBar(nil, parent)
@@ -134,11 +137,55 @@ function ns.UI.CreatePlayersTab(parent)
 
     local catDD = ns.UI.CreateThemedDropdown(controlPanel, CATEGORY, 140, 25)
     catDD:SetPoint("LEFT", addGuildBtn, "RIGHT", 8, 0)
+    local storeDD
+    local function CountPlayersForFilters(ignoreDim)
+        local counts = { all = 0, byCategory = {}, byStorage = { All = 0, account = 0, character = 0 } }
+        if not ns.Players then return counts end
+        local searchLower = (searchFilter or ""):lower()
+        local allPlayers = ns.Players:GetAllPlayers()
+        for fullName, pd in pairs(allPlayers) do
+            if type(pd) == "table" then
+                local ok = true
+                if ignoreDim ~= "category" and categoryFilter ~= "All"
+                    and pd.category ~= categoryFilter then
+                    ok = false
+                end
+                if ignoreDim ~= "storage" and storageFilter ~= "All"
+                    and pd.storage ~= storageFilter then
+                    ok = false
+                end
+                if searchLower ~= "" then
+                    local nameLower = (pd.name or fullName):lower()
+                    if not nameLower:find(searchLower, 1, true) then
+                        ok = false
+                    end
+                end
+                if ok then
+                    counts.all = counts.all + 1
+                    local cat = pd.category or "General"
+                    counts.byCategory[cat] = (counts.byCategory[cat] or 0) + 1
+                    local stor = pd.storage == "character" and "character" or "account"
+                    counts.byStorage[stor] = (counts.byStorage[stor] or 0) + 1
+                    counts.byStorage.All = counts.byStorage.All + 1
+                end
+            end
+        end
+        return counts
+    end
     local function RefreshCatOpts()
-        local opts = {{text = ALL, value = "All"}}
+        local catCounts = CountPlayersForFilters("category")
+        local opts = {{
+            text = ALL,
+            value = "All",
+            rightText = ns.UI.FormatSectionCount(catCounts.all),
+        }}
         if ns.Players then
             for _, c in ipairs(ns.Players:GetCategories()) do
-                opts[#opts + 1] = {text = c, value = c}
+                opts[#opts + 1] = {
+                    text = c,
+                    value = c,
+                    rightText = ns.UI.FormatSectionCount(catCounts.byCategory[c] or 0),
+                }
             end
         end
         catDD:SetOptions(opts)
@@ -171,14 +218,21 @@ function ns.UI.CreatePlayersTab(parent)
     end)
     manageCategoriesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
+    storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
-    storeDD:SetOptions({
-        {text = ALL,               value = "All"},
-        {text = L["UI_STORAGE_ACCOUNT"],   value = "account"},
-        {text = CHARACTER, value = "character"},
-    })
-    storeDD:SetSelected("All")
+    local function RefreshStorageOpts()
+        local storCounts = CountPlayersForFilters("storage")
+        storeDD:SetOptions({
+            {text = ALL, value = "All",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.All)},
+            {text = L["UI_STORAGE_ACCOUNT"], value = "account",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.account)},
+            {text = CHARACTER, value = "character",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.character)},
+        })
+        storeDD:SetSelected(storageFilter)
+    end
+    RefreshStorageOpts()
     storeDD.onSelect = function(value)
         storageFilter = value
         parent.RefreshPlayersList()
@@ -191,7 +245,7 @@ function ns.UI.CreatePlayersTab(parent)
             {key = "faction",  label = FACTION},
             {key = "level",    label = LEVEL},
             {key = "category", label = CATEGORY},
-            {key = "manual",   label = L["NOTE_SORT_MANUAL"]},
+            {key = "custom",   label = CUSTOM},
         },
         defaultField  = currentSort.by,
         defaultAsc    = currentSort.ascending,
@@ -257,6 +311,40 @@ function ns.UI.CreatePlayersTab(parent)
     scrollChild = listScroll.scrollChild
     listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
+
+    local sectionRowFrames = {}
+    local sectionDataBags = {}
+    local sectionReorders = {}
+    local function GetOrCreateSectionReorder(sectionKey)
+        if sectionReorders[sectionKey] then
+            return sectionReorders[sectionKey]
+        end
+        local ctrl = ns.UI.CreateNotesListReorderDrag({
+            getItems = function()
+                return sectionRowFrames[sectionKey]
+            end,
+            getScrollFrame = function()
+                return listScroll.scrollFrame
+            end,
+            onReorder = function(fromIdx, toIdx, insertBefore)
+                local bag = sectionDataBags[sectionKey]
+                if ns.UI.ApplySectionReorder(bag, fromIdx, toIdx, insertBefore) then
+                    ns.UI.EnsureCustomSort(playerSortHandle, currentSort, "players")
+                    parent.RefreshPlayersList()
+                end
+            end,
+        })
+        sectionReorders[sectionKey] = ctrl
+        return ctrl
+    end
+    local function IsAnyPlayersReorderActive()
+        for _, ctrl in pairs(sectionReorders) do
+            if ctrl:IsActive() or ctrl:ShouldSuppressClick() then
+                return true
+            end
+        end
+        return false
+    end
 
     detailPanel = ns.UI.CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT",     listingPanel, "TOPRIGHT",    10, 0)
@@ -620,30 +708,38 @@ function ns.UI.CreatePlayersTab(parent)
         end
     end)
 
-    local function CreateSectionHeader(text, yPos)
-        local section = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = text, yOffset = yPos })
+    local function CreateSectionHeader(text, yPos, count)
+        local section = OneWoW_GUI:CreateSectionHeader(scrollChild, {
+            title = text,
+            yOffset = yPos,
+            rightText = ns.UI.FormatSectionCount(count),
+        })
         table.insert(playerListItems, section)
         return section
     end
 
     function parent.RefreshPlayersList()
+        for _, ctrl in pairs(sectionReorders) do
+            ctrl:Cancel()
+        end
         for _, item in pairs(playerListItems) do item:Hide() end
         playerListItems = {}
+        wipe(sectionRowFrames)
+        wipe(sectionDataBags)
 
         if not ns.Players then
             if leftStatusText then leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_PLAYERS"], 0)) end
             return
         end
 
+        RefreshCatOpts()
+        RefreshStorageOpts()
+
         local allPlayers = ns.Players:GetAllPlayers()
         local playersList = {}
-        local now = GetServerTime()
 
         for fullName, pd in pairs(allPlayers) do
             if type(pd) == "table" then
-                if pd.isNew and pd.newTimestamp and (now - pd.newTimestamp) > 3600 then
-                    pd.isNew = false pd.newTimestamp = nil
-                end
                 local matches = true
                 if categoryFilter ~= "All" and pd.category ~= categoryFilter then matches = false end
                 if storageFilter  ~= "All" and pd.storage  ~= storageFilter  then matches = false end
@@ -657,13 +753,14 @@ function ns.UI.CreatePlayersTab(parent)
             end
         end
 
-        local newPlayers = {}
         local favorites  = {}
         local regular    = {}
         for _, p in ipairs(playersList) do
-            if p.data.isNew then table.insert(newPlayers, p)
-            elseif p.data.favorite then table.insert(favorites, p)
-            else table.insert(regular, p) end
+            if p.data.favorite then
+                table.insert(favorites, p)
+            else
+                table.insert(regular, p)
+            end
         end
 
         local function sortPlayers(a, b)
@@ -692,7 +789,7 @@ function ns.UI.CreatePlayersTab(parent)
             elseif currentSort.by == "modified" then
                 if currentSort.ascending then return (a.data.modified or 0) < (b.data.modified or 0)
                 else return (a.data.modified or 0) > (b.data.modified or 0) end
-            elseif currentSort.by == "manual" then
+            elseif currentSort.by == "custom" then
                 local sa = a.data.sortOrder or 0
                 local sb = b.data.sortOrder or 0
                 if sa == sb then return nameA < nameB end
@@ -701,16 +798,13 @@ function ns.UI.CreatePlayersTab(parent)
                 if currentSort.ascending then return nameA < nameB else return nameA > nameB end
             end
         end
-        table.sort(newPlayers, sortPlayers)
         table.sort(favorites,  sortPlayers)
         table.sort(regular,    sortPlayers)
 
-        local function BuildPlayerRow(player, yOffset, groupArray, groupIndex)
+        local function BuildPlayerRow(player, yOffset, sectionKey)
             local classFile = player.data.class
             local barColor
             if classFile and RAID_CLASS_COLORS[classFile] then
-                -- Dim the (full-bright) class color to match the dimmer pin-color
-                -- bars used by the other tabs.
                 local c = RAID_CLASS_COLORS[classFile]
                 barColor = { c.r * 0.7, c.g * 0.7, c.b * 0.7 }
             end
@@ -723,18 +817,6 @@ function ns.UI.CreatePlayersTab(parent)
             if player.data.realm and player.data.realm ~= "" then detail = player.data.realm .. " " end
             if player.data.class and player.data.class ~= "" then detail = detail .. player.data.class end
 
-            local canMoveUp   = groupArray ~= nil and groupIndex ~= nil and groupIndex > 1
-            local canMoveDown = groupArray ~= nil and groupIndex ~= nil and groupIndex < #groupArray
-
-            local function EnsureManualSort()
-                if currentSort.by ~= "manual" then
-                    currentSort.by = "manual"
-                    currentSort.ascending = true
-                    playerSortHandle:SetSort("manual", true)
-                    ns.db.global.tabSortPrefs.players = { by = "manual", ascending = true }
-                end
-            end
-
             local rowOpts = {
                 yOffset     = yOffset,
                 barColor    = barColor,
@@ -744,6 +826,7 @@ function ns.UI.CreatePlayersTab(parent)
                 detail      = detail,
                 storageText = player.data.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
                 selected    = (selectedPlayer == player.fullName),
+                shouldSuppressSelect = IsAnyPlayersReorderActive,
                 onSelect    = function()
                     selectedPlayer = player.fullName
                     ShowEditor()
@@ -813,49 +896,37 @@ function ns.UI.CreatePlayersTab(parent)
                         StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE_PLAYER")
                     end,
                 },
-                reorder = {
-                    canUp = canMoveUp, canDown = canMoveDown,
-                    onUp = function()
-                        EnsureManualSort()
-                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                        groupArray[groupIndex].data.sortOrder     = groupIndex - 1
-                        groupArray[groupIndex - 1].data.sortOrder = groupIndex
-                        parent.RefreshPlayersList()
-                    end,
-                    onDown = function()
-                        EnsureManualSort()
-                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                        groupArray[groupIndex].data.sortOrder     = groupIndex + 1
-                        groupArray[groupIndex + 1].data.sortOrder = groupIndex
-                        parent.RefreshPlayersList()
-                    end,
-                },
             }
 
             local row = ns.UI.CreateNotesListRow(scrollChild, rowOpts)
             table.insert(playerListItems, row)
+            local frames = sectionRowFrames[sectionKey]
+            frames[#frames + 1] = row
+            GetOrCreateSectionReorder(sectionKey):Attach(row, #frames)
+        end
+
+        local function PaintSection(sectionKey, title, bag, yOffset)
+            if #bag == 0 then
+                return yOffset
+            end
+            sectionDataBags[sectionKey] = bag
+            sectionRowFrames[sectionKey] = {}
+            CreateSectionHeader(title, yOffset, #bag)
+            yOffset = yOffset - 30
+            for _, player in ipairs(bag) do
+                BuildPlayerRow(player, yOffset, sectionKey)
+                yOffset = yOffset - ns.UI.LIST_ROW_SPACING
+            end
+            return yOffset
         end
 
         local yOffset = 0
-
-        if #newPlayers > 0 then
-            CreateSectionHeader(NEW, yOffset) yOffset = yOffset - 30
-        end
-        for i, p in ipairs(newPlayers) do BuildPlayerRow(p, yOffset, newPlayers, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
-
-        if #favorites > 0 then
-            CreateSectionHeader(FAVORITES, yOffset) yOffset = yOffset - 30
-        end
-        for i, p in ipairs(favorites) do BuildPlayerRow(p, yOffset, favorites, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
-
-        if #regular > 0 then
-            CreateSectionHeader(L["TAB_PLAYERS"], yOffset) yOffset = yOffset - 30
-        end
-        for i, p in ipairs(regular) do BuildPlayerRow(p, yOffset, regular, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
+        yOffset = PaintSection("favorites", FAVORITES, favorites, yOffset)
+        yOffset = PaintSection("regular", L["TAB_PLAYERS"], regular, yOffset)
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
         if leftStatusText then
-            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_PLAYERS"], #newPlayers + #favorites + #regular))
+            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_PLAYERS"], #favorites + #regular))
         end
     end
 

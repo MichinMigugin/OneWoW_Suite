@@ -56,6 +56,7 @@ OneWoW_Notes.lua
 
 # UI - Framework
 UI\Framework.lua
+UI\ui-list-reorder.lua
 UI\ui-dialog.lua
 UI\ui-detail-editor.lua
 

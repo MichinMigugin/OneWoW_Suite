@@ -132,7 +132,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["NOTE_SORT_TITLE"] = "제목",
     ["NOTE_SORT_CREATED"] = "생성일",
     ["NOTE_SORT_MODIFIED"] = "수정일",
-    ["NOTE_SORT_MANUAL"] = "수동",
 
 -- Notes UI labels
     ["UI_CATEGORY_WITH_VALUE"] = "분류: %s",
@@ -143,7 +142,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["UI_TASKS"] = "작업:",
     ["UI_MANAGE_CATEGORIES_DESC"] = "사용자 지정 분류 추가 또는 제거",
     ["UI_NOTES_HYPERLINK_HINT"] = "클릭하여 메모에서 하이퍼링크 사용에 대한 도움말 표시/숨기기",
-    ["UI_NOTE_REMOVE_FLAG_HINT"] = "클릭하여 '신규' 표시 제거",
 
 -- Note types
     ["NOTE_TYPE_STANDARD"] = "표준",
@@ -177,7 +175,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TOOLTIP_NOTE_DELETE_DESC"] = "이 메모 제거",
     ["TOOLTIP_NOTE_FAVORITE"] = "즐겨찾기",
     ["TOOLTIP_NOTE_FAVORITE_DESC"] = "메모를 즐겨찾기로 표시",
-    ["TOOLTIP_NOTE_NEW"] = "새 메모",
     ["TOOLTIP_NOTE_PIN"] = "메모 고정",
     ["TOOLTIP_NOTE_PIN_DESC"] = "메모를 화면에 고정합니다",
     ["TOOLTIP_NOTE_PROPERTIES"] = "메모 속성",

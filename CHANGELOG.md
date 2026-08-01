@@ -100,6 +100,10 @@
 - Zone note header shows Category on the lower right above Map (no storage label; storage stays on the list card)
 - Detail headers and note bodies share the same sizes across Notes types; tooltip line fields use the same themed inputs as Players
 - Player note header shows Profession 1/2 under Category (e.g. Professions: Alchemy, Inscription)
+- Notes list splits Daily and Weekly into their own sections (then Favorites, then Notes); the old New section is gone
+- Drag rows within a section to set Custom order (replaces Manual and up/down arrows); other sort modes still work until Custom is set
+- Section headers and Category/Storage filter menus show counts; Collectibles Type and Status menus do too
+- Notes sort menu includes Modified; Custom replaces Manual across list tabs
 
 ## Categories
 - NPC default category is General (was Other); existing Other notes remap to General

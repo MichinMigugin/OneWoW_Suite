@@ -499,10 +499,24 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                     btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
                 end
 
+                local rightFS
+                if item.rightText and item.rightText ~= "" then
+                    rightFS = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                    OneWoW_GUI:SafeSetFont(rightFS, OneWoW_GUI:GetFont(), item.fontSize or 12)
+                    rightFS:SetPoint("RIGHT", btn, "RIGHT", -8, 0)
+                    rightFS:SetJustifyH("RIGHT")
+                    rightFS:SetText(item.rightText)
+                    rightFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+                end
+
                 local txt = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                 OneWoW_GUI:SafeSetFont(txt, item.fontPath or OneWoW_GUI:GetFont(), item.fontSize or 12)
                 txt:SetPoint("LEFT", btn, "LEFT", 8, 0)
-                txt:SetPoint("RIGHT", btn, "RIGHT", -4, 0)
+                if rightFS then
+                    txt:SetPoint("RIGHT", rightFS, "LEFT", -8, 0)
+                else
+                    txt:SetPoint("RIGHT", btn, "RIGHT", -4, 0)
+                end
                 txt:SetJustifyH("LEFT")
                 txt:SetWordWrap(false)
                 local label = item.text or item.value or ""
@@ -513,6 +527,9 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                     if activeValue ~= item.value then
                         b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
                         txt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                        if rightFS then
+                            rightFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+                        end
                     end
                     local tip = item.tooltip
                     if tip then
@@ -536,6 +553,9 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                     if activeValue ~= item.value then
                         b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
                         txt:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                        if rightFS then
+                            rightFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+                        end
                     end
                     if item.tooltip then
                         GameTooltip:Hide()

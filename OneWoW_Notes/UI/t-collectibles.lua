@@ -189,8 +189,11 @@ end
 function ns.UI.CreateCollectiblesTab(parent)
     do
         local p = ns.db.global.tabSortPrefs.collectibles
-        currentSort.by        = p.by or "name"
+        currentSort.by        = ns.UI.NormalizeSortBy(p.by) or "name"
         currentSort.ascending = p.ascending ~= false
+        if p.by == "manual" then
+            ns.db.global.tabSortPrefs.collectibles = { by = "custom", ascending = p.ascending ~= false }
+        end
     end
 
     -- Re-resolves display when the item cache fills in (appearance sources are
@@ -205,10 +208,105 @@ function ns.UI.CreateCollectiblesTab(parent)
 
     local catDD = ns.UI.CreateThemedDropdown(controlPanel, CATEGORY, 140, 25)
     catDD:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -10)
+
+    local TYPE_FILTER_OPTS = {
+        {text = MOUNTS,                  value = "mount"},
+        {text = WARDROBE,                value = "appearance"},
+        {text = WARDROBE_SETS,           value = "set"},
+        {text = PETS,                    value = "pet"},
+        {text = TOY_BOX,                 value = "toy"},
+        {text = HEIRLOOMS,               value = "heirloom"},
+        {text = CATALOG_SHOP_TYPE_DECOR, value = "decor"},
+        {text = AUCTION_CATEGORY_RECIPES, value = "recipe"},
+    }
+
+    local function EntryMatchesFilters(key, record, name, ignoreDim)
+        if categoryFilter ~= "All" and ignoreDim ~= "category"
+            and record.category ~= categoryFilter then
+            return false
+        end
+        if typeFilter ~= "All" and ignoreDim ~= "type" then
+            local descriptor = OneWoW.Collectibles.ParseKey(key)
+            if not descriptor or descriptor.type ~= typeFilter then
+                return false
+            end
+        end
+        if storageFilter ~= "All" and ignoreDim ~= "storage"
+            and record.storage ~= storageFilter then
+            return false
+        end
+        if collectedFilter ~= "All" and ignoreDim ~= "status" then
+            local state = OneWoW.Collectibles.GetCollectionState(key)
+            local isCollected = state and state.collected or false
+            if collectedFilter == "collected" and not isCollected then return false end
+            if collectedFilter == "uncollected" and isCollected then return false end
+        end
+        if searchFilter ~= "" then
+            if not name:lower():find(searchFilter:lower(), 1, true) then
+                return false
+            end
+        end
+        return true
+    end
+
+    local function CountCollectiblesForFilters(ignoreDim)
+        local counts = {
+            all = 0,
+            byCategory = {},
+            byStorage = { All = 0, account = 0, character = 0 },
+            byType = { All = 0 },
+            byStatus = { All = 0, collected = 0, uncollected = 0 },
+        }
+        for _, opt in ipairs(TYPE_FILTER_OPTS) do
+            counts.byType[opt.value] = 0
+        end
+        local all = ns.Collectibles:GetAll()
+        for key, record in pairs(all) do
+            if type(record) == "table" then
+                local name = select(1, ResolveRow(key, record))
+                if EntryMatchesFilters(key, record, name, ignoreDim) then
+                    counts.all = counts.all + 1
+                    local cat = record.category or "General"
+                    counts.byCategory[cat] = (counts.byCategory[cat] or 0) + 1
+                    local stor = record.storage == "character" and "character" or "account"
+                    counts.byStorage[stor] = (counts.byStorage[stor] or 0) + 1
+                    counts.byStorage.All = counts.byStorage.All + 1
+                    if ignoreDim == "type" then
+                        local descriptor = OneWoW.Collectibles.ParseKey(key)
+                        if descriptor and descriptor.type then
+                            counts.byType[descriptor.type] = (counts.byType[descriptor.type] or 0) + 1
+                        end
+                        counts.byType.All = counts.byType.All + 1
+                    end
+                    if ignoreDim == "status" then
+                        local state = OneWoW.Collectibles.GetCollectionState(key)
+                        local isCollected = state and state.collected or false
+                        if isCollected then
+                            counts.byStatus.collected = counts.byStatus.collected + 1
+                        else
+                            counts.byStatus.uncollected = counts.byStatus.uncollected + 1
+                        end
+                        counts.byStatus.All = counts.byStatus.All + 1
+                    end
+                end
+            end
+        end
+        return counts
+    end
+
     local function RefreshCatOptions()
-        local opts = {{text = ALL, value = "All"}}
+        local catCounts = CountCollectiblesForFilters("category")
+        local opts = {{
+            text = ALL,
+            value = "All",
+            rightText = ns.UI.FormatSectionCount(catCounts.all),
+        }}
         for _, c in ipairs(ns.Collectibles:GetCategories()) do
-            table.insert(opts, {text = c, value = c})
+            opts[#opts + 1] = {
+                text = c,
+                value = c,
+                rightText = ns.UI.FormatSectionCount(catCounts.byCategory[c] or 0),
+            }
         end
         catDD:SetOptions(opts)
         catDD:SetSelected(categoryFilter)
@@ -240,23 +338,26 @@ function ns.UI.CreateCollectiblesTab(parent)
     end)
     manageCategoriesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    -- Type filter: derived live from the canonical key (mount:… / appearance:…),
-    -- not a stored user field. Labels come from Blizzard globals so no new locale
-    -- keys are needed. Only resolved types are offered.
     local typeDD = ns.UI.CreateThemedDropdown(controlPanel, TYPE, 120, 25)
     typeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
-    typeDD:SetOptions({
-        {text = ALL,                     value = "All"},
-        {text = MOUNTS,                  value = "mount"},
-        {text = WARDROBE,                value = "appearance"},
-        {text = WARDROBE_SETS,           value = "set"},
-        {text = PETS,                    value = "pet"},
-        {text = TOY_BOX,                 value = "toy"},
-        {text = HEIRLOOMS,               value = "heirloom"},
-        {text = CATALOG_SHOP_TYPE_DECOR, value = "decor"},
-        {text = AUCTION_CATEGORY_RECIPES, value = "recipe"},
-    })
-    typeDD:SetSelected("All")
+    local function RefreshTypeOpts()
+        local typeCounts = CountCollectiblesForFilters("type")
+        local opts = {{
+            text = ALL,
+            value = "All",
+            rightText = ns.UI.FormatSectionCount(typeCounts.byType.All),
+        }}
+        for _, opt in ipairs(TYPE_FILTER_OPTS) do
+            opts[#opts + 1] = {
+                text = opt.text,
+                value = opt.value,
+                rightText = ns.UI.FormatSectionCount(typeCounts.byType[opt.value] or 0),
+            }
+        end
+        typeDD:SetOptions(opts)
+        typeDD:SetSelected(typeFilter)
+    end
+    RefreshTypeOpts()
     typeDD.onSelect = function(value)
         typeFilter = value
         parent.RefreshCollectiblesList()
@@ -264,27 +365,39 @@ function ns.UI.CreateCollectiblesTab(parent)
 
     local storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storeDD:SetPoint("LEFT", typeDD, "RIGHT", 4, 0)
-    storeDD:SetOptions({
-        {text = ALL,                     value = "All"},
-        {text = L["UI_STORAGE_ACCOUNT"], value = "account"},
-        {text = CHARACTER,               value = "character"},
-    })
-    storeDD:SetSelected("All")
+    local function RefreshStorageOpts()
+        local storCounts = CountCollectiblesForFilters("storage")
+        storeDD:SetOptions({
+            {text = ALL, value = "All",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.All)},
+            {text = L["UI_STORAGE_ACCOUNT"], value = "account",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.account)},
+            {text = CHARACTER, value = "character",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.character)},
+        })
+        storeDD:SetSelected(storageFilter)
+    end
+    RefreshStorageOpts()
     storeDD.onSelect = function(value)
         storageFilter = value
         parent.RefreshCollectiblesList()
     end
 
-    -- Collected filter: live state (GetCollectionState), not a stored field. Lets
-    -- users who keep everything narrow to what they still need vs. already own.
     local collectedDD = ns.UI.CreateThemedDropdown(controlPanel, STATUS, 130, 25)
     collectedDD:SetPoint("LEFT", storeDD, "RIGHT", 4, 0)
-    collectedDD:SetOptions({
-        {text = ALL,           value = "All"},
-        {text = COLLECTED,     value = "collected"},
-        {text = NOT_COLLECTED, value = "uncollected"},
-    })
-    collectedDD:SetSelected("All")
+    local function RefreshCollectedOpts()
+        local statusCounts = CountCollectiblesForFilters("status")
+        collectedDD:SetOptions({
+            {text = ALL, value = "All",
+                rightText = ns.UI.FormatSectionCount(statusCounts.byStatus.All)},
+            {text = COLLECTED, value = "collected",
+                rightText = ns.UI.FormatSectionCount(statusCounts.byStatus.collected)},
+            {text = NOT_COLLECTED, value = "uncollected",
+                rightText = ns.UI.FormatSectionCount(statusCounts.byStatus.uncollected)},
+        })
+        collectedDD:SetSelected(collectedFilter)
+    end
+    RefreshCollectedOpts()
     collectedDD.onSelect = function(value)
         collectedFilter = value
         parent.RefreshCollectiblesList()
@@ -294,6 +407,7 @@ function ns.UI.CreateCollectiblesTab(parent)
         sortFields = {
             {key = "name",     label = NAME},
             {key = "category", label = CATEGORY},
+            {key = "custom",   label = CUSTOM},
         },
         defaultField  = currentSort.by,
         defaultAsc    = currentSort.ascending,
@@ -359,6 +473,40 @@ function ns.UI.CreateCollectiblesTab(parent)
     scrollChild = listScroll.scrollChild
     listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
+
+    local sectionRowFrames = {}
+    local sectionDataBags = {}
+    local sectionReorders = {}
+    local function GetOrCreateSectionReorder(sectionKey)
+        if sectionReorders[sectionKey] then
+            return sectionReorders[sectionKey]
+        end
+        local ctrl = ns.UI.CreateNotesListReorderDrag({
+            getItems = function()
+                return sectionRowFrames[sectionKey]
+            end,
+            getScrollFrame = function()
+                return listScroll.scrollFrame
+            end,
+            onReorder = function(fromIdx, toIdx, insertBefore)
+                local bag = sectionDataBags[sectionKey]
+                if ns.UI.ApplySectionReorder(bag, fromIdx, toIdx, insertBefore) then
+                    ns.UI.EnsureCustomSort(sortHandle, currentSort, "collectibles")
+                    parent.RefreshCollectiblesList()
+                end
+            end,
+        })
+        sectionReorders[sectionKey] = ctrl
+        return ctrl
+    end
+    local function IsAnyCollectiblesReorderActive()
+        for _, ctrl in pairs(sectionReorders) do
+            if ctrl:IsActive() or ctrl:ShouldSuppressClick() then
+                return true
+            end
+        end
+        return false
+    end
 
     detailPanel = ns.UI.CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT",     listingPanel, "TOPRIGHT",    10, 0)
@@ -874,43 +1022,39 @@ function ns.UI.CreateCollectiblesTab(parent)
         parent.RefreshCollectiblesList()
     end)
 
-    local function CreateSectionHeader(text, yPos)
-        local section = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = text, yOffset = yPos })
+    local function CreateSectionHeader(text, yPos, count)
+        local section = OneWoW_GUI:CreateSectionHeader(scrollChild, {
+            title = text,
+            yOffset = yPos,
+            rightText = ns.UI.FormatSectionCount(count),
+        })
         table.insert(collListRows, section)
         return section
     end
 
     function parent.RefreshCollectiblesList()
+        for _, ctrl in pairs(sectionReorders) do
+            ctrl:Cancel()
+        end
         for _, row in pairs(collListRows) do
             row:Hide()
         end
         collListRows = {}
+        wipe(sectionRowFrames)
+        wipe(sectionDataBags)
+
+        RefreshCatOptions()
+        RefreshTypeOpts()
+        RefreshStorageOpts()
+        RefreshCollectedOpts()
 
         local all = ns.Collectibles:GetAll()
         local list = {}
         for key, record in pairs(all) do
             if type(record) == "table" then
                 local name = select(1, ResolveRow(key, record))
-                local matches = true
-                if categoryFilter ~= "All" and record.category ~= categoryFilter then matches = false end
-                if matches and typeFilter ~= "All" then
-                    -- The canonical key is authoritative for type (record.type is a
-                    -- create-time convenience copy); derive it live.
-                    local descriptor = OneWoW.Collectibles.ParseKey(key)
-                    if not descriptor or descriptor.type ~= typeFilter then matches = false end
-                end
-                if matches and storageFilter ~= "All" and record.storage ~= storageFilter then matches = false end
-                if matches and collectedFilter ~= "All" then
-                    local state = OneWoW.Collectibles.GetCollectionState(key)
-                    local isCollected = state and state.collected or false
-                    if collectedFilter == "collected" and not isCollected then matches = false end
-                    if collectedFilter == "uncollected" and isCollected then matches = false end
-                end
-                if matches and searchFilter ~= "" then
-                    if not name:lower():find(searchFilter:lower(), 1, true) then matches = false end
-                end
-                if matches then
-                    list[#list + 1] = { key = key, record = record, name = name }
+                if EntryMatchesFilters(key, record, name, nil) then
+                    list[#list + 1] = { key = key, data = record, name = name }
                 end
             end
         end
@@ -918,17 +1062,22 @@ function ns.UI.CreateCollectiblesTab(parent)
         local function sortEntries(a, b)
             -- Recycle-bin (delete-intent) rows always sink to the bottom, whatever
             -- the active sort; within each group the chosen sort applies.
-            local aDel = a.record.intent == "delete"
-            local bDel = b.record.intent == "delete"
+            local aDel = a.data.intent == "delete"
+            local bDel = b.data.intent == "delete"
             if aDel ~= bDel then return bDel end
             if currentSort.by == "category" then
-                local ca = a.record.category or ""
-                local cb = b.record.category or ""
+                local ca = a.data.category or ""
+                local cb = b.data.category or ""
                 if ca == cb then return a.name < b.name end
                 if currentSort.ascending then return ca < cb else return ca > cb end
+            elseif currentSort.by == "custom" then
+                local sa = a.data.sortOrder or 0
+                local sb = b.data.sortOrder or 0
+                if sa == sb then return a.name < b.name end
+                if currentSort.ascending then return sa < sb else return sa > sb end
             elseif currentSort.by == "modified" then
-                if currentSort.ascending then return (a.record.modified or 0) < (b.record.modified or 0)
-                else return (a.record.modified or 0) > (b.record.modified or 0) end
+                if currentSort.ascending then return (a.data.modified or 0) < (b.data.modified or 0)
+                else return (a.data.modified or 0) > (b.data.modified or 0) end
             else
                 if currentSort.ascending then return a.name < b.name else return a.name > b.name end
             end
@@ -937,12 +1086,14 @@ function ns.UI.CreateCollectiblesTab(parent)
 
         local yOffset = 0
         if #list > 0 then
-            CreateSectionHeader(L["TAB_COLLECTIBLES"], yOffset)
+            sectionDataBags["all"] = list
+            sectionRowFrames["all"] = {}
+            CreateSectionHeader(L["TAB_COLLECTIBLES"], yOffset, #list)
             yOffset = yOffset - 30
         end
 
         for _, entry in ipairs(list) do
-            local _, icon = ResolveRow(entry.key, entry.record)
+            local _, icon = ResolveRow(entry.key, entry.data)
             local state = OneWoW.Collectibles.GetCollectionState(entry.key)
             local barColor
             if state then
@@ -951,7 +1102,7 @@ function ns.UI.CreateCollectiblesTab(parent)
                 barColor = { cr, cg, cb }
             end
 
-            local intent = entry.record.intent or "none"
+            local intent = entry.data.intent or "none"
             local detailText = intent ~= "none" and IntentLabel(intent) or nil
 
             local key = entry.key
@@ -972,8 +1123,9 @@ function ns.UI.CreateCollectiblesTab(parent)
                 icon        = icon,
                 title       = entry.name,
                 detail      = rowDetail,
-                storageText = entry.record.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
+                storageText = entry.data.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
                 selected    = (selectedKey == key),
+                shouldSuppressSelect = IsAnyCollectiblesReorderActive,
                 onSelect    = function()
                     selectedKey = key
                     ShowEditor()
@@ -1001,8 +1153,11 @@ function ns.UI.CreateCollectiblesTab(parent)
             local row = ns.UI.CreateNotesListRow(scrollChild, rowOpts)
             -- Recycle-bin rows read as "on the way out": dimmed but still fully
             -- interactive (select to restore its intent, or delete now).
-            row:SetAlpha(entry.record.intent == "delete" and 0.5 or 1)
+            row:SetAlpha(entry.data.intent == "delete" and 0.5 or 1)
             table.insert(collListRows, row)
+            local frames = sectionRowFrames["all"]
+            frames[#frames + 1] = row
+            GetOrCreateSectionReorder("all"):Attach(row, #frames)
             yOffset = yOffset - ns.UI.LIST_ROW_SPACING
 
             -- Expanded set: render its per-slot member appearances as read-only,

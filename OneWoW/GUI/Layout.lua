@@ -223,6 +223,7 @@ end
 function OneWoW_GUI:CreateSectionHeader(parent, options)
     options = options or {}
     local title = options.title or ""
+    local rightText = options.rightText
     local yOffset = options.yOffset or 0
     local fontSize = options.fontSize or 12
     local section = CreateFrame("Frame", nil, parent, "BackdropTemplate")
@@ -233,12 +234,32 @@ function OneWoW_GUI:CreateSectionHeader(parent, options)
     section:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     section:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
 
+    local countFS
+    if rightText and rightText ~= "" then
+        countFS = section:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        OneWoW_GUI:SetFontBaseSize(countFS, fontSize)
+        OneWoW_GUI:SafeSetFont(countFS, OneWoW_GUI:GetFont(), fontSize)
+        countFS:SetPoint("RIGHT", -12, 0)
+        countFS:SetJustifyH("RIGHT")
+        countFS:SetText(rightText)
+        countFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        section.rightText = countFS
+    end
+
     local titleText = section:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     OneWoW_GUI:SetFontBaseSize(titleText, fontSize)
     OneWoW_GUI:SafeSetFont(titleText, OneWoW_GUI:GetFont(), fontSize)
     titleText:SetPoint("LEFT", 12, 0)
+    if countFS then
+        titleText:SetPoint("RIGHT", countFS, "LEFT", -8, 0)
+    else
+        titleText:SetPoint("RIGHT", -12, 0)
+    end
+    titleText:SetJustifyH("LEFT")
+    titleText:SetWordWrap(false)
     titleText:SetText(title)
     titleText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    section.titleText = titleText
 
     local sectionHeight = max(30, titleText:GetStringHeight() + 14)
     section:SetHeight(sectionHeight)

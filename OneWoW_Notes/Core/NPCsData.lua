@@ -79,11 +79,6 @@ function NPCs:AddNPC(npcID, npcInfo)
         sortOrder    = 0,
     }
 
-    if ns.mainFrame and ns.mainFrame:IsShown() then
-        newData.isNew = true
-        newData.newTimestamp = GetServerTime()
-    end
-
     local targetDB = self:GetDataDB(newData.storage)
     targetDB[npcID] = newData
     self:InvalidateCache()

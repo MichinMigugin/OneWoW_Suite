@@ -132,7 +132,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["NOTE_SORT_TITLE"] = "标题",
     ["NOTE_SORT_CREATED"] = "创建时间",
     ["NOTE_SORT_MODIFIED"] = "修改时间",
-    ["NOTE_SORT_MANUAL"] = "手动",
 
 -- Notes UI labels
     ["UI_CATEGORY_WITH_VALUE"] = "分类：%s",
@@ -143,7 +142,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["UI_TASKS"] = "待办：",
     ["UI_MANAGE_CATEGORIES_DESC"] = "添加或移除自定义分类",
     ["UI_NOTES_HYPERLINK_HINT"] = "点击以显示/隐藏关于在笔记中使用超链接的帮助",
-    ["UI_NOTE_REMOVE_FLAG_HINT"] = "点击以移除“新”标记",
 
 -- Note types
     ["NOTE_TYPE_STANDARD"] = "标准",
@@ -177,7 +175,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TOOLTIP_NOTE_DELETE_DESC"] = "移除此笔记",
     ["TOOLTIP_NOTE_FAVORITE"] = "收藏",
     ["TOOLTIP_NOTE_FAVORITE_DESC"] = "将笔记标记为收藏",
-    ["TOOLTIP_NOTE_NEW"] = "新建笔记",
     ["TOOLTIP_NOTE_PIN"] = "固定笔记",
     ["TOOLTIP_NOTE_PIN_DESC"] = "将笔记固定到屏幕",
     ["TOOLTIP_NOTE_PROPERTIES"] = "笔记属性",

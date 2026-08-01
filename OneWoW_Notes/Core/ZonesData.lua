@@ -323,11 +323,6 @@ function Zones:AddZone(zoneData)
     zoneData.modified      = GetServerTime()
     zoneData.sortOrder     = zoneData.sortOrder or 0
 
-    if ns.mainFrame and ns.mainFrame:IsShown() then
-        zoneData.isNew          = true
-        zoneData.newTimestamp   = GetServerTime()
-    end
-
     local targetDB = (zoneData.storage == "character") and ns.db.char.zones or ns.db.global.zones
     targetDB[noteId] = zoneData
     self:InvalidateCache()

@@ -132,7 +132,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["NOTE_SORT_TITLE"] = "Título",
     ["NOTE_SORT_CREATED"] = "Criação",
     ["NOTE_SORT_MODIFIED"] = "Modificação",
-    ["NOTE_SORT_MANUAL"] = "Manual",
 
 -- Notes UI labels
     ["UI_CATEGORY_WITH_VALUE"] = "Categoria: %s",
@@ -143,7 +142,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["UI_TASKS"] = "Tarefas:",
     ["UI_MANAGE_CATEGORIES_DESC"] = "Adicionar ou remover categorias personalizadas",
     ["UI_NOTES_HYPERLINK_HINT"] = "Clique para mostrar/ocultar a ajuda sobre o uso de links nas notas",
-    ["UI_NOTE_REMOVE_FLAG_HINT"] = "Clique para remover a marca de «novo»",
 
 -- Note types
     ["NOTE_TYPE_STANDARD"] = "Padrão",
@@ -177,7 +175,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["TOOLTIP_NOTE_DELETE_DESC"] = "Remover esta nota",
     ["TOOLTIP_NOTE_FAVORITE"] = "Favorito",
     ["TOOLTIP_NOTE_FAVORITE_DESC"] = "Marcar a nota como favorita",
-    ["TOOLTIP_NOTE_NEW"] = "Nova nota",
     ["TOOLTIP_NOTE_PIN"] = "Fixar nota",
     ["TOOLTIP_NOTE_PIN_DESC"] = "Fixa a nota na tela",
     ["TOOLTIP_NOTE_PROPERTIES"] = "Propriedades da nota",

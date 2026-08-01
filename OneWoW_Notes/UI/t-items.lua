@@ -23,8 +23,11 @@ local Detail = ns.Constants.Detail
 function ns.UI.CreateItemsTab(parent)
     do
         local p = ns.db.global.tabSortPrefs.items
-        currentSort.by        = p.by or "name"
+        currentSort.by        = ns.UI.NormalizeSortBy(p.by) or "name"
         currentSort.ascending = p.ascending ~= false
+        if p.by == "manual" then
+            ns.db.global.tabSortPrefs.items = { by = "custom", ascending = p.ascending ~= false }
+        end
     end
 
     local controlPanel = ns.UI.CreateThemedBar(nil, parent)
@@ -106,11 +109,54 @@ function ns.UI.CreateItemsTab(parent)
 
     local catDD = ns.UI.CreateThemedDropdown(controlPanel, CATEGORY, 140, 25)
     catDD:SetPoint("LEFT", addByIDBtn, "RIGHT", 8, 0)
+    local storeDD
+    local function CountItemsForFilters(ignoreDim)
+        local counts = { all = 0, byCategory = {}, byStorage = { All = 0, account = 0, character = 0 } }
+        if not ns.Items then return counts end
+        local searchLower = (searchFilter or ""):lower()
+        for _, itemData in pairs(ns.Items:GetAllItems()) do
+            if type(itemData) == "table" then
+                local ok = true
+                if ignoreDim ~= "category" and categoryFilter ~= "All"
+                    and itemData.category ~= categoryFilter then
+                    ok = false
+                end
+                if ignoreDim ~= "storage" and storageFilter ~= "All"
+                    and itemData.storage ~= storageFilter then
+                    ok = false
+                end
+                if searchLower ~= "" then
+                    local nameLower = (itemData.name or ""):lower()
+                    if not nameLower:find(searchLower, 1, true) then
+                        ok = false
+                    end
+                end
+                if ok then
+                    counts.all = counts.all + 1
+                    local cat = itemData.category or "General"
+                    counts.byCategory[cat] = (counts.byCategory[cat] or 0) + 1
+                    local stor = itemData.storage == "character" and "character" or "account"
+                    counts.byStorage[stor] = (counts.byStorage[stor] or 0) + 1
+                    counts.byStorage.All = counts.byStorage.All + 1
+                end
+            end
+        end
+        return counts
+    end
     local function RefreshCatOptions()
-        local opts = {{text = ALL, value = "All"}}
+        local catCounts = CountItemsForFilters("category")
+        local opts = {{
+            text = ALL,
+            value = "All",
+            rightText = ns.UI.FormatSectionCount(catCounts.all),
+        }}
         if ns.Items then
             for _, c in ipairs(ns.Items:GetCategories()) do
-                table.insert(opts, {text = c, value = c})
+                opts[#opts + 1] = {
+                    text = c,
+                    value = c,
+                    rightText = ns.UI.FormatSectionCount(catCounts.byCategory[c] or 0),
+                }
             end
         end
         catDD:SetOptions(opts)
@@ -143,14 +189,21 @@ function ns.UI.CreateItemsTab(parent)
     end)
     manageCategoriesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
+    storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
-    storeDD:SetOptions({
-        {text = ALL,               value = "All"},
-        {text = L["UI_STORAGE_ACCOUNT"],   value = "account"},
-        {text = CHARACTER, value = "character"},
-    })
-    storeDD:SetSelected("All")
+    local function RefreshStorageOpts()
+        local storCounts = CountItemsForFilters("storage")
+        storeDD:SetOptions({
+            {text = ALL, value = "All",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.All)},
+            {text = L["UI_STORAGE_ACCOUNT"], value = "account",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.account)},
+            {text = CHARACTER, value = "character",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.character)},
+        })
+        storeDD:SetSelected(storageFilter)
+    end
+    RefreshStorageOpts()
     storeDD.onSelect = function(value)
         storageFilter = value
         parent.RefreshItemsList()
@@ -160,6 +213,7 @@ function ns.UI.CreateItemsTab(parent)
         sortFields = {
             {key = "name",     label = NAME},
             {key = "category", label = CATEGORY},
+            {key = "custom",   label = CUSTOM},
         },
         defaultField  = currentSort.by,
         defaultAsc    = currentSort.ascending,
@@ -230,6 +284,40 @@ function ns.UI.CreateItemsTab(parent)
     scrollChild = listScroll.scrollChild
     listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
+
+    local sectionRowFrames = {}
+    local sectionDataBags = {}
+    local sectionReorders = {}
+    local function GetOrCreateSectionReorder(sectionKey)
+        if sectionReorders[sectionKey] then
+            return sectionReorders[sectionKey]
+        end
+        local ctrl = ns.UI.CreateNotesListReorderDrag({
+            getItems = function()
+                return sectionRowFrames[sectionKey]
+            end,
+            getScrollFrame = function()
+                return listScroll.scrollFrame
+            end,
+            onReorder = function(fromIdx, toIdx, insertBefore)
+                local bag = sectionDataBags[sectionKey]
+                if ns.UI.ApplySectionReorder(bag, fromIdx, toIdx, insertBefore) then
+                    ns.UI.EnsureCustomSort(itemSortHandle, currentSort, "items")
+                    parent.RefreshItemsList()
+                end
+            end,
+        })
+        sectionReorders[sectionKey] = ctrl
+        return ctrl
+    end
+    local function IsAnyItemsReorderActive()
+        for _, ctrl in pairs(sectionReorders) do
+            if ctrl:IsActive() or ctrl:ShouldSuppressClick() then
+                return true
+            end
+        end
+        return false
+    end
 
     detailPanel = ns.UI.CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT",     listingPanel, "TOPRIGHT",    10, 0)
@@ -563,17 +651,29 @@ function ns.UI.CreateItemsTab(parent)
         end
     end
 
-    local function CreateSectionHeader(text, yPos)
-        local section = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = text, yOffset = yPos })
+    local function CreateSectionHeader(text, yPos, count)
+        local section = OneWoW_GUI:CreateSectionHeader(scrollChild, {
+            title = text,
+            yOffset = yPos,
+            rightText = ns.UI.FormatSectionCount(count),
+        })
         table.insert(itemListItems, section)
         return section
     end
 
     function parent.RefreshItemsList()
+        for _, ctrl in pairs(sectionReorders) do
+            ctrl:Cancel()
+        end
         for _, item in pairs(itemListItems) do
             item:Hide()
         end
         itemListItems = {}
+        wipe(sectionRowFrames)
+        wipe(sectionDataBags)
+
+        RefreshCatOptions()
+        RefreshStorageOpts()
 
         if not ns.Items then
             if leftStatusText then leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_ITEMS"], 0)) end
@@ -598,23 +698,10 @@ function ns.UI.CreateItemsTab(parent)
             end
         end
 
-        local now = GetServerTime()
-        for _, item in ipairs(itemsList) do
-            if item.data.isNew and item.data.newTimestamp then
-                if (now - item.data.newTimestamp) > 3600 then
-                    item.data.isNew = false
-                    item.data.newTimestamp = nil
-                end
-            end
-        end
-
-        local newItems  = {}
         local favorites = {}
         local regular   = {}
         for _, item in ipairs(itemsList) do
-            if item.data.isNew then
-                table.insert(newItems, item)
-            elseif item.data.favorite then
+            if item.data.favorite then
                 table.insert(favorites, item)
             else
                 table.insert(regular, item)
@@ -629,6 +716,11 @@ function ns.UI.CreateItemsTab(parent)
                 local cb = b.data.category or ""
                 if ca == cb then return nameA < nameB end
                 if currentSort.ascending then return ca < cb else return ca > cb end
+            elseif currentSort.by == "custom" then
+                local sa = a.data.sortOrder or 0
+                local sb = b.data.sortOrder or 0
+                if sa == sb then return nameA < nameB end
+                if currentSort.ascending then return sa < sb else return sa > sb end
             elseif currentSort.by == "modified" then
                 if currentSort.ascending then return (a.data.modified or 0) < (b.data.modified or 0)
                 else return (a.data.modified or 0) > (b.data.modified or 0) end
@@ -636,11 +728,10 @@ function ns.UI.CreateItemsTab(parent)
                 if currentSort.ascending then return nameA < nameB else return nameA > nameB end
             end
         end
-        table.sort(newItems,  sortItems)
         table.sort(favorites, sortItems)
         table.sort(regular,   sortItems)
 
-        local function BuildItemRow(item, yOffset)
+        local function BuildItemRow(item, yOffset, sectionKey)
             local barColor
             local qc = ITEM_QUALITY_COLORS[item.data.rarity or 1]
             if qc then
@@ -655,6 +746,7 @@ function ns.UI.CreateItemsTab(parent)
                 title       = item.data.name or ("Item " .. item.id),
                 storageText = item.data.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
                 selected    = (selectedItem == item.id),
+                shouldSuppressSelect = IsAnyItemsReorderActive,
                 onSelect    = function()
                     selectedItem = item.id
                     ShowEditor()
@@ -728,31 +820,33 @@ function ns.UI.CreateItemsTab(parent)
 
             local row = ns.UI.CreateNotesListRow(scrollChild, rowOpts)
             table.insert(itemListItems, row)
+            local frames = sectionRowFrames[sectionKey]
+            frames[#frames + 1] = row
+            GetOrCreateSectionReorder(sectionKey):Attach(row, #frames)
+        end
+
+        local function PaintSection(sectionKey, title, bag, yOffset)
+            if #bag == 0 then
+                return yOffset
+            end
+            sectionDataBags[sectionKey] = bag
+            sectionRowFrames[sectionKey] = {}
+            CreateSectionHeader(title, yOffset, #bag)
+            yOffset = yOffset - 30
+            for _, item in ipairs(bag) do
+                BuildItemRow(item, yOffset, sectionKey)
+                yOffset = yOffset - ns.UI.LIST_ROW_SPACING
+            end
+            return yOffset
         end
 
         local yOffset = 0
-
-        if #newItems > 0 then
-            CreateSectionHeader(NEW, yOffset)
-            yOffset = yOffset - 30
-        end
-        for _, item in ipairs(newItems) do BuildItemRow(item, yOffset) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
-
-        if #favorites > 0 then
-            CreateSectionHeader(FAVORITES, yOffset)
-            yOffset = yOffset - 30
-        end
-        for _, item in ipairs(favorites) do BuildItemRow(item, yOffset) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
-
-        if #regular > 0 then
-            CreateSectionHeader(L["TAB_ITEMS"], yOffset)
-            yOffset = yOffset - 30
-        end
-        for _, item in ipairs(regular) do BuildItemRow(item, yOffset) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
+        yOffset = PaintSection("favorites", FAVORITES, favorites, yOffset)
+        yOffset = PaintSection("items", L["TAB_ITEMS"], regular, yOffset)
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
         if leftStatusText then
-            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_ITEMS"], #newItems + #favorites + #regular))
+            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_ITEMS"], #favorites + #regular))
         end
     end
 

@@ -21,8 +21,6 @@ function Items:AddItem(itemID, itemData)
     itemID = tonumber(itemID)
     if not itemID then return false end
 
-    local addon = ns
-
     local existing = self:GetItem(itemID)
     if existing then
         for k, v in pairs(itemData) do existing[k] = v end
@@ -66,11 +64,6 @@ function Items:AddItem(itemID, itemData)
 
     for k, v in pairs(itemData) do
         if k ~= "text" then newItemData[k] = v end
-    end
-
-    if addon.mainFrame and addon.mainFrame:IsShown() then
-        newItemData.isNew = true
-        newItemData.newTimestamp = GetServerTime()
     end
 
     self:SaveItem(itemID, newItemData)

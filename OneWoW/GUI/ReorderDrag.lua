@@ -407,6 +407,7 @@ local function OnUpdate(controller, elapsed)
         local dy = y - st.startY
         if dx * dx + dy * dy >= controller.minDistSq then
             st.active = true
+            st.suppressClick = true
             if st.sourceItem and not st.pickupApplied then
                 st.pickupApplied = true
                 ApplyPickupVisual(controller, st.sourceItem)
@@ -462,6 +463,7 @@ local function BeginDrag(controller, item, index)
     st.fromIndex     = index
     st.active        = false
     st.pickupApplied = false
+    st.suppressClick = false
     st.startX, st.startY = GetCursorPosition()
     st.sourceItem    = item
     controller._watch:SetScript("OnUpdate", function(_, elapsed) OnUpdate(controller, elapsed) end)
@@ -500,6 +502,12 @@ function ControllerMethods:IsActive()
     return self._state.active == true
 end
 
+-- True after this press crossed the drag threshold (stays set through mouse-up
+-- so list rows can skip click-to-select without racing FinishDrag).
+function ControllerMethods:ShouldSuppressClick()
+    return self._state.suppressClick == true
+end
+
 function ControllerMethods:SetIndicatorVisible(visible)
     self._indicatorSuppressed = not visible
     if not self._indicator then return end
@@ -532,6 +540,7 @@ function OneWoW_GUI:CreateReorderDrag(options)
             fromIndex     = nil,
             active        = false,
             pickupApplied = false,
+            suppressClick = false,
             startX        = 0,
             startY        = 0,
             sourceItem    = nil,

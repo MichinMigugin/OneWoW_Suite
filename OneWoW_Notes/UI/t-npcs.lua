@@ -66,8 +66,11 @@ end
 function ns.UI.CreateNPCsTab(parent)
     do
         local p = ns.db.global.tabSortPrefs.npcs
-        currentSort.by        = p.by or "name"
+        currentSort.by        = ns.UI.NormalizeSortBy(p.by) or "name"
         currentSort.ascending = p.ascending ~= false
+        if p.by == "manual" then
+            ns.db.global.tabSortPrefs.npcs = { by = "custom", ascending = p.ascending ~= false }
+        end
     end
 
     local controlPanel = ns.UI.CreateThemedBar(nil, parent)
@@ -119,10 +122,56 @@ function ns.UI.CreateNPCsTab(parent)
 
     local catDD = ns.UI.CreateThemedDropdown(controlPanel, CATEGORY, 140, 25)
     catDD:SetPoint("LEFT", addManualBtn, "RIGHT", 8, 0)
+    local storeDD
+    local function CountNPCsForFilters(ignoreDim)
+        local counts = { all = 0, byCategory = {}, byStorage = { All = 0, account = 0, character = 0 } }
+        if not ns.NPCs then return counts end
+        local searchLower = (searchFilter or ""):lower()
+        local allNPCs = ns.NPCs:GetAllNPCs()
+        for npcID, nd in pairs(allNPCs) do
+            if type(nd) == "table" then
+                local ok = true
+                if ignoreDim ~= "category" and categoryFilter ~= "All"
+                    and nd.category ~= categoryFilter then
+                    ok = false
+                end
+                if ignoreDim ~= "storage" and storageFilter ~= "All"
+                    and nd.storage ~= storageFilter then
+                    ok = false
+                end
+                if searchLower ~= "" then
+                    local nameLower = (nd.name or tostring(npcID)):lower()
+                    if not nameLower:find(searchLower, 1, true) then
+                        ok = false
+                    end
+                end
+                if ok then
+                    counts.all = counts.all + 1
+                    local cat = nd.category or "General"
+                    counts.byCategory[cat] = (counts.byCategory[cat] or 0) + 1
+                    local stor = nd.storage == "character" and "character" or "account"
+                    counts.byStorage[stor] = (counts.byStorage[stor] or 0) + 1
+                    counts.byStorage.All = counts.byStorage.All + 1
+                end
+            end
+        end
+        return counts
+    end
     local function RefreshCatOpts()
-        local opts = {{text = ALL, value = "All"}}
+        local catCounts = CountNPCsForFilters("category")
+        local opts = {{
+            text = ALL,
+            value = "All",
+            rightText = ns.UI.FormatSectionCount(catCounts.all),
+        }}
         if ns.NPCs then
-            for _, c in ipairs(ns.NPCs:GetCategories()) do opts[#opts + 1] = {text = c, value = c} end
+            for _, c in ipairs(ns.NPCs:GetCategories()) do
+                opts[#opts + 1] = {
+                    text = c,
+                    value = c,
+                    rightText = ns.UI.FormatSectionCount(catCounts.byCategory[c] or 0),
+                }
+            end
         end
         catDD:SetOptions(opts)
         catDD:SetSelected(categoryFilter)
@@ -154,14 +203,21 @@ function ns.UI.CreateNPCsTab(parent)
     end)
     manageCategoriesBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
+    storeDD = ns.UI.CreateThemedDropdown(controlPanel, L["LABEL_STORAGE"], 130, 25)
     storeDD:SetPoint("LEFT", manageCategoriesBtn, "RIGHT", 4, 0)
-    storeDD:SetOptions({
-        {text = ALL,               value = "All"},
-        {text = L["UI_STORAGE_ACCOUNT"],   value = "account"},
-        {text = CHARACTER, value = "character"},
-    })
-    storeDD:SetSelected("All")
+    local function RefreshStorageOpts()
+        local storCounts = CountNPCsForFilters("storage")
+        storeDD:SetOptions({
+            {text = ALL, value = "All",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.All)},
+            {text = L["UI_STORAGE_ACCOUNT"], value = "account",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.account)},
+            {text = CHARACTER, value = "character",
+                rightText = ns.UI.FormatSectionCount(storCounts.byStorage.character)},
+        })
+        storeDD:SetSelected(storageFilter)
+    end
+    RefreshStorageOpts()
     storeDD.onSelect = function(value)
         storageFilter = value
         parent.RefreshNPCsList()
@@ -172,7 +228,7 @@ function ns.UI.CreateNPCsTab(parent)
             {key = "name",     label = NAME},
             {key = "zone",     label = ZONE},
             {key = "category", label = CATEGORY},
-            {key = "manual",   label = L["NOTE_SORT_MANUAL"]},
+            {key = "custom",   label = CUSTOM},
         },
         defaultField  = currentSort.by,
         defaultAsc    = currentSort.ascending,
@@ -238,6 +294,40 @@ function ns.UI.CreateNPCsTab(parent)
     scrollChild = listScroll.scrollChild
     listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
+
+    local sectionRowFrames = {}
+    local sectionDataBags = {}
+    local sectionReorders = {}
+    local function GetOrCreateSectionReorder(sectionKey)
+        if sectionReorders[sectionKey] then
+            return sectionReorders[sectionKey]
+        end
+        local ctrl = ns.UI.CreateNotesListReorderDrag({
+            getItems = function()
+                return sectionRowFrames[sectionKey]
+            end,
+            getScrollFrame = function()
+                return listScroll.scrollFrame
+            end,
+            onReorder = function(fromIdx, toIdx, insertBefore)
+                local bag = sectionDataBags[sectionKey]
+                if ns.UI.ApplySectionReorder(bag, fromIdx, toIdx, insertBefore) then
+                    ns.UI.EnsureCustomSort(npcSortHandle, currentSort, "npcs")
+                    parent.RefreshNPCsList()
+                end
+            end,
+        })
+        sectionReorders[sectionKey] = ctrl
+        return ctrl
+    end
+    local function IsAnyNPCsReorderActive()
+        for _, ctrl in pairs(sectionReorders) do
+            if ctrl:IsActive() or ctrl:ShouldSuppressClick() then
+                return true
+            end
+        end
+        return false
+    end
 
     detailPanel = ns.UI.CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT",     listingPanel, "TOPRIGHT",    10, 0)
@@ -725,17 +815,24 @@ function ns.UI.CreateNPCsTab(parent)
     end)
 
     function parent.RefreshNPCsList()
+        for _, ctrl in pairs(sectionReorders) do
+            ctrl:Cancel()
+        end
         for _, item in pairs(npcListItems) do item:Hide() end
         npcListItems = {}
+        wipe(sectionRowFrames)
+        wipe(sectionDataBags)
 
         if not ns.NPCs then
             if leftStatusText then leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_NPCS"], 0)) end
             return
         end
 
+        RefreshCatOpts()
+        RefreshStorageOpts()
+
         local allNPCs = ns.NPCs:GetAllNPCs()
         local npcsList = {}
-        local now = GetServerTime()
 
         for npcID, nd in pairs(allNPCs) do
             if type(nd) == "table" then
@@ -745,9 +842,6 @@ function ns.UI.CreateNPCsTab(parent)
                     ns.NPCs:SaveNPC(npcID, nd)
                 end
 
-                if nd.isNew and nd.newTimestamp and (now - nd.newTimestamp) > 3600 then
-                    nd.isNew = false nd.newTimestamp = nil
-                end
                 local matches = true
                 if categoryFilter ~= "All" and nd.category ~= categoryFilter then matches = false end
                 if storageFilter  ~= "All" and nd.storage  ~= storageFilter  then matches = false end
@@ -759,13 +853,14 @@ function ns.UI.CreateNPCsTab(parent)
             end
         end
 
-        local newNPCs   = {}
         local favorites = {}
         local regular   = {}
         for _, n in ipairs(npcsList) do
-            if n.data.isNew then table.insert(newNPCs, n)
-            elseif n.data.favorite then table.insert(favorites, n)
-            else table.insert(regular, n) end
+            if n.data.favorite then
+                table.insert(favorites, n)
+            else
+                table.insert(regular, n)
+            end
         end
 
         local function sortNPCs(a, b)
@@ -784,7 +879,7 @@ function ns.UI.CreateNPCsTab(parent)
             elseif currentSort.by == "modified" then
                 if currentSort.ascending then return (a.data.modified or 0) < (b.data.modified or 0)
                 else return (a.data.modified or 0) > (b.data.modified or 0) end
-            elseif currentSort.by == "manual" then
+            elseif currentSort.by == "custom" then
                 local sa = a.data.sortOrder or 0
                 local sb = b.data.sortOrder or 0
                 if sa == sb then return nameA < nameB end
@@ -793,23 +888,20 @@ function ns.UI.CreateNPCsTab(parent)
                 if currentSort.ascending then return nameA < nameB else return nameA > nameB end
             end
         end
-        table.sort(newNPCs,   sortNPCs)
         table.sort(favorites, sortNPCs)
         table.sort(regular,   sortNPCs)
 
-        local function BuildNPCRow(npc, yOffset, groupArray, groupIndex)
-            local canMoveUp   = groupArray ~= nil and groupIndex ~= nil and groupIndex > 1
-            local canMoveDown = groupArray ~= nil and groupIndex ~= nil and groupIndex < #groupArray
+        local function CreateSectionHeader(text, yOffset, count)
+            local section = OneWoW_GUI:CreateSectionHeader(scrollChild, {
+                title = text,
+                yOffset = yOffset,
+                rightText = ns.UI.FormatSectionCount(count),
+            })
+            table.insert(npcListItems, section)
+            return section
+        end
 
-            local function EnsureManualSort()
-                if currentSort.by ~= "manual" then
-                    currentSort.by = "manual"
-                    currentSort.ascending = true
-                    npcSortHandle:SetSort("manual", true)
-                    ns.db.global.tabSortPrefs.npcs = { by = "manual", ascending = true }
-                end
-            end
-
+        local function BuildNPCRow(npc, yOffset, sectionKey)
             local rowOpts = {
                 yOffset     = yOffset,
                 barColor    = { 0.5, 0.5, 0.5 },
@@ -818,6 +910,7 @@ function ns.UI.CreateNPCsTab(parent)
                 detail      = npc.data.zone or "",
                 storageText = npc.data.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
                 selected    = (selectedNPC == npc.id),
+                shouldSuppressSelect = IsAnyNPCsReorderActive,
                 onSelect    = function()
                     selectedNPC = npc.id
                     ShowEditor()
@@ -903,55 +996,37 @@ function ns.UI.CreateNPCsTab(parent)
                         StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE_NPC")
                     end,
                 },
-                reorder = {
-                    canUp = canMoveUp, canDown = canMoveDown,
-                    onUp = function()
-                        EnsureManualSort()
-                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                        groupArray[groupIndex].data.sortOrder     = groupIndex - 1
-                        groupArray[groupIndex - 1].data.sortOrder = groupIndex
-                        parent.RefreshNPCsList()
-                    end,
-                    onDown = function()
-                        EnsureManualSort()
-                        for i, item in ipairs(groupArray) do item.data.sortOrder = i end
-                        groupArray[groupIndex].data.sortOrder     = groupIndex + 1
-                        groupArray[groupIndex + 1].data.sortOrder = groupIndex
-                        parent.RefreshNPCsList()
-                    end,
-                },
             }
 
             local row = ns.UI.CreateNotesListRow(scrollChild, rowOpts)
             table.insert(npcListItems, row)
+            local frames = sectionRowFrames[sectionKey]
+            frames[#frames + 1] = row
+            GetOrCreateSectionReorder(sectionKey):Attach(row, #frames)
+        end
+
+        local function PaintSection(sectionKey, title, bag, yOffset)
+            if #bag == 0 then
+                return yOffset
+            end
+            sectionDataBags[sectionKey] = bag
+            sectionRowFrames[sectionKey] = {}
+            CreateSectionHeader(title, yOffset, #bag)
+            yOffset = yOffset - 30
+            for _, npc in ipairs(bag) do
+                BuildNPCRow(npc, yOffset, sectionKey)
+                yOffset = yOffset - ns.UI.LIST_ROW_SPACING
+            end
+            return yOffset
         end
 
         local yOffset = 0
-
-        if #newNPCs > 0 then
-            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = NEW, yOffset = yOffset })
-            table.insert(npcListItems, sh)
-            yOffset = yOffset - 30
-        end
-        for i, n in ipairs(newNPCs) do BuildNPCRow(n, yOffset, newNPCs, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
-
-        if #favorites > 0 then
-            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = FAVORITES, yOffset = yOffset })
-            table.insert(npcListItems, sh)
-            yOffset = yOffset - 30
-        end
-        for i, n in ipairs(favorites) do BuildNPCRow(n, yOffset, favorites, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
-
-        if #regular > 0 then
-            local sh = OneWoW_GUI:CreateSectionHeader(scrollChild, { title = L["TAB_NPCS"], yOffset = yOffset })
-            table.insert(npcListItems, sh)
-            yOffset = yOffset - 30
-        end
-        for i, n in ipairs(regular) do BuildNPCRow(n, yOffset, regular, i) yOffset = yOffset - ns.UI.LIST_ROW_SPACING end
+        yOffset = PaintSection("favorites", FAVORITES, favorites, yOffset)
+        yOffset = PaintSection("regular", L["TAB_NPCS"], regular, yOffset)
 
         scrollChild:SetHeight(math.abs(yOffset) + 50)
         if leftStatusText then
-            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_NPCS"], #newNPCs + #favorites + #regular))
+            leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_NPCS"], #favorites + #regular))
         end
     end
 
