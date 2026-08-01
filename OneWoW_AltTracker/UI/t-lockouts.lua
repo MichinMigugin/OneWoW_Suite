@@ -52,7 +52,6 @@ end
 
 function ns.UI.CreateLockoutsTab(parent)
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
-        title = L["LOCKOUTS_OVERVIEW"],
         height = 70,
         columns = 5,
         stats = {

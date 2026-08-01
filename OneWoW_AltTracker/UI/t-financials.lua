@@ -896,7 +896,6 @@ function ns.UI.CreateFinancialsTab(parent)
     topHost:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
 
     local overview = OneWoW_GUI:CreateOverviewPanel(topHost, {
-        title = L["FINANCIALS_OVERVIEW"],
         height = 70,
         columns = 5,
         stats = {

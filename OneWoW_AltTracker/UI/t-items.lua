@@ -304,7 +304,6 @@ end
 function ns.UI.CreateItemsTab(parent)
     local SetDupeMode, AnchorRoster, dupeControls
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
-        title = L["ITEMS_OVERVIEW"],
         height = 70,
         columns = 5,
         stats = {

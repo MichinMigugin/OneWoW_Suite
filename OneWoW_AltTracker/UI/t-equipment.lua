@@ -71,7 +71,6 @@ end
 
 function ns.UI.CreateEquipmentTab(parent)
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
-        title = L["EQUIPMENT_OVERVIEW"],
         height = 110,
         columns = 5,
         stats = {

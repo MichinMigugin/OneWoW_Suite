@@ -51,7 +51,6 @@ end
 
 function ns.UI.CreateSummaryTab(parent)
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
-        title = L["ACCOUNT_OVERVIEW"],
         height = 110,
         columns = 5,
         stats = {

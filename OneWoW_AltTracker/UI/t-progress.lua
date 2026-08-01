@@ -1542,7 +1542,6 @@ end
 
 function ns.UI.CreateProgressTab(parent)
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
-        title = L["PROGRESS_OVERVIEW"],
         height = 70,
         columns = 7,
         stats = {

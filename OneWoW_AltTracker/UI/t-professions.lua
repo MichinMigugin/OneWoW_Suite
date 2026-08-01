@@ -59,7 +59,6 @@ end
 
 function ns.UI.CreateProfessionsTab(parent)
     local overview = OneWoW_GUI:CreateOverviewPanel(parent, {
-        title = L["PROFESSIONS_OVERVIEW"],
         height = 110,
         columns = 5,
         stats = {
