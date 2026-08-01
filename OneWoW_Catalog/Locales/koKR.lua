@@ -227,6 +227,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["QUESTS_QUEST_GIVER"] = "퀘스트 제공자",
     ["QUESTS_TURN_IN"] = "완료 NPC",
     ["QUESTS_NPC_UNNAMED"] = "NPC %d",
+    ["QUESTS_NPC_FILTER"] = "NPC: %s",
+    ["QUESTS_NPC_FILTER_CLEAR"] = "NPC 필터 지우기",
     ["QUESTS_SEE_NOTE"] = "메모 보기",
     ["QUESTS_MAKE_NOTE"] = "메모 작성",
     ["QUESTS_TT_SEE_NOTE"] = "Ctrl-클릭하여 메모 보기",

@@ -231,6 +231,8 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["QUESTS_QUEST_GIVER"] = "Assegnatario di missioni",
     ["QUESTS_TURN_IN"] = "Consegna a",
     ["QUESTS_NPC_UNNAMED"] = "PNG %d",
+    ["QUESTS_NPC_FILTER"] = "PNG: %s",
+    ["QUESTS_NPC_FILTER_CLEAR"] = "Rimuovi filtro PNG",
     ["QUESTS_SEE_NOTE"] = "Vedi nota",
     ["QUESTS_MAKE_NOTE"] = "Crea nota",
     ["QUESTS_TT_SEE_NOTE"] = "Ctrl+clic per vedere la nota",

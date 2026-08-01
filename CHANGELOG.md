@@ -107,5 +107,18 @@
 
 ## NPCs
 - Added Quartermaster category
+- Selecting an NPC note no longer stalls on first open; associated quests open in Catalog with an NPC filter instead of listing them inline
+
+## Zones
+- Zone notes link to Catalog Quests with that zone’s filter pre-filled
+- Zone notes store zone and subzone separately (opaque ids); titles still show “Zone - Subzone”; Catalog uses map/zone name so subzone notes find the right quests
+- Existing zone notes migrate once to the new shape on login
+
+---
+
+# Catalog
+## Quests
+- OpenQuestsFiltered deep-link applies zone and/or NPC (giver or turn-in) filters from Notes
+- Active NPC filter shows as a clearable chip next to Clear on the Quests search bar
 
 ---

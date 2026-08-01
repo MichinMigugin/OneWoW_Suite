@@ -231,6 +231,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["QUESTS_QUEST_GIVER"] = "Doador de missão",
     ["QUESTS_TURN_IN"] = "Entregar a",
     ["QUESTS_NPC_UNNAMED"] = "NPC %d",
+    ["QUESTS_NPC_FILTER"] = "NPC: %s",
+    ["QUESTS_NPC_FILTER_CLEAR"] = "Limpar filtro de NPC",
     ["QUESTS_SEE_NOTE"] = "Ver nota",
     ["QUESTS_MAKE_NOTE"] = "Criar nota",
     ["QUESTS_TT_SEE_NOTE"] = "Ctrl+clique para ver a nota",

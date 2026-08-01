@@ -303,6 +303,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["POPUP_DELETE_ZONE"] = "刪除區域筆記？",
     ["DIALOG_ZONE_PROPERTIES"] = "區域屬性",
     ["LABEL_ZONE_NAME"] = "區域名稱：",
+    ["LABEL_SUBZONE"] = "子區域：",
     ["ZONE_ERROR_NAME_REQUIRED"] = "需要區域名稱。",
 
 -- Notes dialog extras
@@ -355,6 +356,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["MSG_NPC_NO_LOCATION"] = "未記錄此 NPC 的位置。",
     ["NOTES_NPC_ALERT_FOUND"] = "選定了有筆記的 NPC：%s",
     ["NOTES_NPC_ASSOC_QUESTS"] = "相關任務：",
+    ["NOTES_OPEN_QUESTS_IN_CATALOG"] = "在 Catalog 中開啟",
     ["TOOLTIP_NPC_DELETE"] = "刪除 NPC",
     ["TOOLTIP_NPC_DELETE_DESC"] = "移除此 NPC 筆記",
     ["TOOLTIP_NPC_PROPERTIES_DESC"] = "編輯 NPC 設定",

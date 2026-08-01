@@ -541,7 +541,36 @@ function ns.UI.CreateNPCsTab(parent)
                 end
             end)
 
-            local tip = ns.UI.CreateTooltipLinesSection(editorParent, contentBg, {
+            -- Catalog Quests link directly under the note body
+            local associatedSection = ns.UI.CreateThemedBar(nil, editorParent)
+            associatedSection:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -Detail.SECTION_GAP)
+            associatedSection:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -Detail.SECTION_GAP)
+            associatedSection:SetHeight(36)
+
+            local assocLabel = OneWoW_GUI:CreateFS(associatedSection, 12)
+            assocLabel:SetPoint("TOPLEFT", associatedSection, "TOPLEFT", 10, -10)
+            assocLabel:SetText(L["NOTES_NPC_ASSOC_QUESTS"])
+            assocLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+            local catalogLink = OneWoW_GUI:CreateTextLink(associatedSection, {
+                text = L["NOTES_OPEN_QUESTS_IN_CATALOG"],
+                fontSize = 12,
+                nav = true,
+                onClick = function()
+                    if OneWoW_Catalog_API and OneWoW_Catalog_API.OpenQuestsFiltered and selectedNPC then
+                        local note = ns.NPCs and ns.NPCs:GetNPC(selectedNPC)
+                        OneWoW_Catalog_API.OpenQuestsFiltered({
+                            npcID = selectedNPC,
+                            npcName = note and note.name or nil,
+                        })
+                    end
+                end,
+            })
+            catalogLink:SetPoint("LEFT", assocLabel, "RIGHT", 12, 0)
+            associatedSection.label = assocLabel
+            associatedSection.catalogLink = catalogLink
+
+            local tip = ns.UI.CreateTooltipLinesSection(editorParent, associatedSection, {
                 onLineChanged = function(index, text, userInput)
                     if userInput and selectedNPC and ns.NPCs then
                         local nd = ns.NPCs:GetNPC(selectedNPC)
@@ -555,36 +584,14 @@ function ns.UI.CreateNPCsTab(parent)
             local tooltipSection = tip.section
             local tooltipEdits = tip.edits
 
-            -- Associated quests (from OneWoW_CatalogData_Quests, optional) - quests
-            -- this NPC gives or turns in, clickable to open in the Catalog.
-            local associatedSection = ns.UI.CreateThemedBar(nil, editorParent)
-            associatedSection:SetPoint("TOPLEFT",  tooltipSection, "BOTTOMLEFT",  0, -Detail.SECTION_GAP)
-            associatedSection:SetPoint("TOPRIGHT", tooltipSection, "BOTTOMRIGHT", 0, -Detail.SECTION_GAP)
-            associatedSection:SetHeight(1)
-
-            local assocLabel = OneWoW_GUI:CreateFS(associatedSection, 12)
-            assocLabel:SetPoint("TOPLEFT", associatedSection, "TOPLEFT", 10, -8)
-            assocLabel:SetText(L["NOTES_NPC_ASSOC_QUESTS"])
-            assocLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-            local associatedScroll, associatedContent = OneWoW_GUI:CreateScrollFrame(associatedSection, {})
-            associatedScroll:ClearAllPoints()
-            associatedScroll:SetPoint("TOPLEFT", associatedSection, "TOPLEFT", 8, -28)
-            associatedScroll:SetPoint("BOTTOMRIGHT", associatedSection, "BOTTOMRIGHT", -8, 8)
-
-            associatedSection.label = assocLabel
-            associatedSection.questRows = {}
-            associatedSection.scroll = associatedScroll
-            associatedSection.content = associatedContent
-
             detailPanel.editorContent = {
                 parent             = editorParent,
                 header             = editorHeader,
                 contentBg          = contentBg,
                 contentScroll      = contentScroll,
+                associatedSection  = associatedSection,
                 tooltipSection     = tooltipSection,
                 tooltipEdits       = tooltipEdits,
-                associatedSection  = associatedSection,
             }
         end
 
@@ -668,68 +675,35 @@ function ns.UI.CreateNPCsTab(parent)
                 end
 
                 local assoc = detailPanel.editorContent.associatedSection
-                if assoc then
-                    for _, r in ipairs(assoc.questRows) do
-                        r:Hide()
-                        r:SetParent(nil)
-                    end
-                    wipe(assoc.questRows)
-
-                    local questIDs = OneWoW_CatalogData_Quests_API
-                        and OneWoW_CatalogData_Quests_API.GetQuestsForNPC
-                        and OneWoW_CatalogData_Quests_API.GetQuestsForNPC(selectedNPC)
-
-                    if questIDs and #questIDs > 0 then
-                        local content = assoc.content or assoc
-                        local y = -2
-                        for _, qid in ipairs(questIDs) do
-                            local q = OneWoW_CatalogData_Quests_API.GetQuest(qid)
-                            local qname = (q and q.name) or ("Quest " .. qid)
-
-                            local row = CreateFrame("Button", nil, content)
-                            row:SetHeight(18)
-                            row:SetPoint("TOPLEFT",  content, "TOPLEFT", 8, y)
-                            row:SetPoint("TOPRIGHT", content, "TOPRIGHT", -8, y)
-
-                            local fs = OneWoW_GUI:CreateFS(row, 11)
-                            fs:SetPoint("LEFT", 0, 0)
-                            fs:SetText(qname)
-                            fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-
-                            row:SetScript("OnEnter", function() fs:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT")) end)
-                            row:SetScript("OnLeave", function() fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT")) end)
-                            row:SetScript("OnClick", function()
-                                OneWoW.UI:Show("catalog")
-                                OneWoW.UI:SelectSubTab("catalog", "quests")
-
-                                C_Timer.After(0.05, function()
-                                    if OneWoW_Catalog_API then
-                                        OneWoW_Catalog_API.OpenQuest(qid)
-                                    end
-                                end)
-                            end)
-
-                            assoc.questRows[#assoc.questRows + 1] = row
-                            y = y - 20
-                        end
-                        if assoc.content then
-                            assoc.content:SetHeight(math.max(1, 6 + #questIDs * 20))
-                        end
-                        assoc.label:Show()
-                        if assoc.scroll then assoc.scroll:Show() end
-                        assoc:SetHeight(math.min(230, 36 + #questIDs * 20))
+                local tipSec = detailPanel.editorContent.tooltipSection
+                local contentBg = detailPanel.editorContent.contentBg
+                if assoc and tipSec and contentBg then
+                    local hasCatalog = OneWoW_Catalog_API and OneWoW_Catalog_API.OpenQuestsFiltered
+                    if hasCatalog then
+                        assoc:SetHeight(36)
                         assoc:Show()
-                        if detailPanel.detailContent then
-                            detailPanel.detailContent:SetHeight(85 + 10 + 160 + 10 + (38 + 4 * 28) + 10 + assoc:GetHeight() + 20)
-                        end
+                        if assoc.label then assoc.label:Show() end
+                        if assoc.catalogLink then assoc.catalogLink:Show() end
+                        tipSec:ClearAllPoints()
+                        tipSec:SetPoint("TOPLEFT",  assoc, "BOTTOMLEFT",  0, -Detail.SECTION_GAP)
+                        tipSec:SetPoint("TOPRIGHT", assoc, "BOTTOMRIGHT", 0, -Detail.SECTION_GAP)
                     else
-                        assoc.label:Hide()
-                        if assoc.scroll then assoc.scroll:Hide() end
                         assoc:SetHeight(1)
                         assoc:Hide()
-                        if detailPanel.detailContent then
-                            detailPanel.detailContent:SetHeight(85 + 10 + 160 + 10 + (38 + 4 * 28) + 20)
-                        end
+                        tipSec:ClearAllPoints()
+                        tipSec:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -Detail.SECTION_GAP)
+                        tipSec:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -Detail.SECTION_GAP)
+                    end
+                    if detailPanel.detailContent then
+                        local assocH = hasCatalog and (Detail.SECTION_GAP + 36) or 0
+                        detailPanel.detailContent:SetHeight(
+                            Detail.HEADER_HEIGHT + Detail.SECTION_GAP
+                            + Detail.BODY_HEIGHT
+                            + assocH
+                            + Detail.SECTION_GAP
+                            + ns.UI.GetTooltipLinesSectionHeight()
+                            + 20
+                        )
                     end
                 end
             end

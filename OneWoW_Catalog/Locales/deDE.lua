@@ -231,6 +231,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["QUESTS_QUEST_GIVER"] = "Questgeber",
     ["QUESTS_TURN_IN"] = "Abgabe bei",
     ["QUESTS_NPC_UNNAMED"] = "NSC %d",
+    ["QUESTS_NPC_FILTER"] = "NSC: %s",
+    ["QUESTS_NPC_FILTER_CLEAR"] = "NSC-Filter löschen",
     ["QUESTS_SEE_NOTE"] = "Notiz ansehen",
     ["QUESTS_MAKE_NOTE"] = "Notiz erstellen",
     ["QUESTS_TT_SEE_NOTE"] = "Strg+Klick, um Notiz anzusehen",

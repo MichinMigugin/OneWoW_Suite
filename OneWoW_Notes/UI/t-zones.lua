@@ -52,28 +52,37 @@ function ns.UI.CreateZonesTab(parent)
     detectBtn:SetPoint("LEFT", addZoneBtn, "RIGHT", 6, 0)
     detectBtn:SetScript("OnClick", function()
         if not ns.Zones then return end
-        local zoneName = ns.Zones:GetCurrentZoneName()
-        if not zoneName or zoneName == "" then
+        local zone, subzone, mapInfo = ns.Zones:GetCurrentZoneParts()
+        if not zone or zone == "" then
             print("|cFFFFD100OneWoW - Zones:|r " .. (L["ZONE_DETECT_FAIL"]))
             return
         end
-        if ns.Zones:GetZone(zoneName) then
-            selectedZone = zoneName
-            if parent.SelectZone then parent.SelectZone(zoneName) end
-            print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_EXISTS"], zoneName))
+        local title = ns.Zones:FormatTitle(zone, subzone)
+        local existingId = ns.Zones:FindIdByParts(zone, subzone)
+        if existingId then
+            selectedZone = existingId
+            if parent.SelectZone then parent.SelectZone(existingId) end
+            print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_EXISTS"], title))
             return
         end
-        local mapInfo = ns.Zones:GetCurrentMapInfo()
-        local zoneData = { content = "", category = "General", storage = "account", pinColor = "sync", fontColor = "match" }
+        local zoneData = {
+            zone = zone,
+            subzone = subzone or "",
+            content = "",
+            category = "General",
+            storage = "account",
+            pinColor = "sync",
+            fontColor = "match",
+        }
         if mapInfo then
             zoneData.mapID = mapInfo.mapID
             zoneData.parentMapID = mapInfo.parentMapID
         end
-        ns.Zones:AddZone(zoneName, zoneData)
-        selectedZone = zoneName
+        local noteId = ns.Zones:AddZone(zoneData)
+        selectedZone = noteId
         parent.RefreshZonesList()
-        if parent.SelectZone then parent.SelectZone(zoneName) end
-        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"], zoneName))
+        if parent.SelectZone then parent.SelectZone(noteId) end
+        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"], title))
     end)
 
     local addParentBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["ZONE_ADD_PARENT"], height = 25, minWidth = 80 })
@@ -85,14 +94,23 @@ function ns.UI.CreateZonesTab(parent)
             print("|cFFFFD100OneWoW - Zones:|r " .. (L["MSG_NO_PARENT_ZONE"]))
             return
         end
-        if ns.Zones:GetZone(parentZoneName) then
-            selectedZone = parentZoneName
-            if parent.SelectZone then parent.SelectZone(parentZoneName) end
+        local existingId = ns.Zones:FindIdByParts(parentZoneName, "")
+        if existingId then
+            selectedZone = existingId
+            if parent.SelectZone then parent.SelectZone(existingId) end
             print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_EXISTS"], parentZoneName))
             return
         end
         local mapInfo = ns.Zones:GetCurrentMapInfo()
-        local zoneData = { content = "", category = "General", storage = "account", pinColor = "sync", fontColor = "match" }
+        local zoneData = {
+            zone = parentZoneName,
+            subzone = "",
+            content = "",
+            category = "General",
+            storage = "account",
+            pinColor = "sync",
+            fontColor = "match",
+        }
         if mapInfo and mapInfo.parentMapID and mapInfo.parentMapID > 0 then
             local parentMapInfo = C_Map.GetMapInfo(mapInfo.parentMapID)
             if parentMapInfo then
@@ -103,10 +121,10 @@ function ns.UI.CreateZonesTab(parent)
             zoneData.mapID = mapInfo.mapID
             zoneData.parentMapID = mapInfo.parentMapID
         end
-        ns.Zones:AddZone(parentZoneName, zoneData)
-        selectedZone = parentZoneName
+        local noteId = ns.Zones:AddZone(zoneData)
+        selectedZone = noteId
         parent.RefreshZonesList()
-        if parent.SelectZone then parent.SelectZone(parentZoneName) end
+        if parent.SelectZone then parent.SelectZone(noteId) end
         print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"], parentZoneName))
     end)
 
@@ -290,18 +308,20 @@ function ns.UI.CreateZonesTab(parent)
             deleteBtn:GetHighlightTexture():SetAlpha(0.5)
             deleteBtn:SetScript("OnClick", function()
                 if selectedZone then
-                    local zName = selectedZone
+                    local zId = selectedZone
+                    local zd = ns.Zones and ns.Zones:GetZone(zId)
+                    local title = zd and ns.Zones:FormatTitleFromData(zd) or zId
                     local confirmResult = OneWoW_GUI:CreateConfirmDialog({
                         name = "OneWoW_NotesDeleteZoneConfirm",
                         title = L["DIALOG_CONFIRM_DELETE"],
-                        message = string.format(L["ZONE_CONFIRM_DELETE"], zName),
+                        message = string.format(L["ZONE_CONFIRM_DELETE"], title),
                         buttons = {
                             {
                                 text = DELETE,
                                 color = {0.8, 0.2, 0.2},
                                 onClick = function(dlg)
-                                    if ns.ZonePins then ns.ZonePins:DestroyZonePin(zName) end
-                                    if ns.Zones then ns.Zones:RemoveZone(zName) end
+                                    if ns.ZonePins then ns.ZonePins:DestroyZonePin(zId) end
+                                    if ns.Zones then ns.Zones:RemoveZone(zId) end
                                     selectedZone = nil
                                     if detailPanel.editorContent then
                                         for _, frame in pairs(detailPanel.editorContent) do
@@ -576,8 +596,39 @@ function ns.UI.CreateZonesTab(parent)
                 end
             end)
 
+            -- Catalog Quests link directly under the note body (same chrome as NPCs)
+            local associatedSection = ns.UI.CreateThemedBar(nil, detailPanel)
+            associatedSection:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -Detail.SECTION_GAP)
+            associatedSection:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -Detail.SECTION_GAP)
+            associatedSection:SetHeight(36)
+
+            local assocLabel = OneWoW_GUI:CreateFS(associatedSection, 12)
+            assocLabel:SetPoint("TOPLEFT", associatedSection, "TOPLEFT", 10, -10)
+            assocLabel:SetText(L["NOTES_NPC_ASSOC_QUESTS"])
+            assocLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+            local catalogLink = OneWoW_GUI:CreateTextLink(associatedSection, {
+                text = L["NOTES_OPEN_QUESTS_IN_CATALOG"],
+                fontSize = 12,
+                nav = true,
+                onClick = function()
+                    if not (OneWoW_Catalog_API and OneWoW_Catalog_API.OpenQuestsFiltered) then
+                        return
+                    end
+                    if not selectedZone or not ns.Zones then return end
+                    local d = ns.Zones:GetZone(selectedZone)
+                    local zoneName = d and ns.Zones:ResolveCatalogZoneName(d)
+                    if zoneName and zoneName ~= "" then
+                        OneWoW_Catalog_API.OpenQuestsFiltered({ zoneName = zoneName })
+                    end
+                end,
+            })
+            catalogLink:SetPoint("LEFT", assocLabel, "RIGHT", 12, 0)
+            associatedSection.label = assocLabel
+            associatedSection.catalogLink = catalogLink
+
             local todoSection = CreateFrame("Frame", nil, detailPanel)
-            todoSection:SetPoint("TOPLEFT", contentBg, "BOTTOMLEFT", 0, -Detail.SECTION_GAP)
+            todoSection:SetPoint("TOPLEFT", associatedSection, "BOTTOMLEFT", 0, -Detail.SECTION_GAP)
             todoSection:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -8, 10)
             todoSection:SetClipsChildren(true)
 
@@ -673,15 +724,16 @@ function ns.UI.CreateZonesTab(parent)
 
             local separatorLine = OneWoW_GUI:CreateDivider(detailPanel, { yOffset = 0 })
             separatorLine:ClearAllPoints()
-            separatorLine:SetPoint("TOPLEFT", contentBg, "BOTTOMLEFT", 0, -5)
-            separatorLine:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -5)
+            separatorLine:SetPoint("TOPLEFT", associatedSection, "BOTTOMLEFT", 0, -5)
+            separatorLine:SetPoint("TOPRIGHT", associatedSection, "BOTTOMRIGHT", 0, -5)
 
             detailPanel.editorContent = {
-                header        = editorHeader,
-                contentScroll = contentScroll,
-                contentBg     = contentBg,
-                todoSection   = todoSection,
-                separatorLine = separatorLine,
+                header             = editorHeader,
+                contentScroll      = contentScroll,
+                contentBg          = contentBg,
+                associatedSection  = associatedSection,
+                todoSection        = todoSection,
+                separatorLine      = separatorLine,
             }
         end
 
@@ -696,7 +748,7 @@ function ns.UI.CreateZonesTab(parent)
                 local header = detailPanel.editorContent.header
 
                 if header.zoneTitleFS then
-                    header.zoneTitleFS:SetText(selectedZone)
+                    header.zoneTitleFS:SetText(ns.Zones:FormatTitleFromData(zoneData))
                 end
 
                 if detailPanel.contentEditBox then
@@ -745,6 +797,39 @@ function ns.UI.CreateZonesTab(parent)
                             end
                         else
                             header.mapLine:SetText("")
+                        end
+                    end
+
+                    local assoc = detailPanel.editorContent.associatedSection
+                    local todoSec = detailPanel.editorContent.todoSection
+                    local sep = detailPanel.editorContent.separatorLine
+                    local contentBgFrame = detailPanel.editorContent.contentBg
+                    if assoc and todoSec and contentBgFrame then
+                        local hasCatalog = OneWoW_Catalog_API and OneWoW_Catalog_API.OpenQuestsFiltered
+                        if hasCatalog then
+                            assoc:SetHeight(36)
+                            assoc:Show()
+                            if assoc.label then assoc.label:Show() end
+                            if assoc.catalogLink then assoc.catalogLink:Show() end
+                            todoSec:ClearAllPoints()
+                            todoSec:SetPoint("TOPLEFT", assoc, "BOTTOMLEFT", 0, -Detail.SECTION_GAP)
+                            todoSec:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -8, 10)
+                            if sep then
+                                sep:ClearAllPoints()
+                                sep:SetPoint("TOPLEFT", assoc, "BOTTOMLEFT", 0, -5)
+                                sep:SetPoint("TOPRIGHT", assoc, "BOTTOMRIGHT", 0, -5)
+                            end
+                        else
+                            assoc:SetHeight(1)
+                            assoc:Hide()
+                            todoSec:ClearAllPoints()
+                            todoSec:SetPoint("TOPLEFT", contentBgFrame, "BOTTOMLEFT", 0, -Detail.SECTION_GAP)
+                            todoSec:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -8, 10)
+                            if sep then
+                                sep:ClearAllPoints()
+                                sep:SetPoint("TOPLEFT", contentBgFrame, "BOTTOMLEFT", 0, -5)
+                                sep:SetPoint("TOPRIGHT", contentBgFrame, "BOTTOMRIGHT", 0, -5)
+                            end
                         end
                     end
 
@@ -901,23 +986,27 @@ function ns.UI.CreateZonesTab(parent)
 
         local allZones = ns.Zones:GetAllZones()
         local filtered = {}
-        for name, data in pairs(allZones) do
-            local passCategory = (categoryFilter == "All") or (data.category == categoryFilter)
-            local passStorage  = (storageFilter == "All") or (data.storage == storageFilter)
-            local passSearch   = (searchFilter == "") or name:lower():find(searchFilter:lower(), 1, true)
-            if passCategory and passStorage and passSearch then
-                filtered[#filtered + 1] = { name = name, data = data }
+        for noteId, data in pairs(allZones) do
+            if type(data) == "table" then
+                local title = ns.Zones:FormatTitleFromData(data)
+                local passCategory = (categoryFilter == "All") or (data.category == categoryFilter)
+                local passStorage  = (storageFilter == "All") or (data.storage == storageFilter)
+                local needle = searchFilter:lower()
+                local passSearch = (searchFilter == "")
+                    or title:lower():find(needle, 1, true)
+                    or (data.zone and data.zone:lower():find(needle, 1, true))
+                    or (data.subzone and data.subzone ~= "" and data.subzone:lower():find(needle, 1, true))
+                if passCategory and passStorage and passSearch then
+                    filtered[#filtered + 1] = { name = noteId, title = title, data = data }
+                end
             end
         end
 
-        -- Names of the zone(s) the player is currently in (main + sub + combined),
-        -- so notes for the current location can be surfaced in their own section.
         local czText = GetZoneText() or ""
         local czSub  = GetSubZoneText() or ""
-        local czFull = czText
-        if czSub ~= "" and czSub ~= czText then czFull = czText .. " - " .. czSub end
-        local function isCurrentZoneName(name)
-            return name == czFull or name == czText or (czSub ~= "" and name == czSub)
+        if czSub == czText then czSub = "" end
+        local function isCurrentZoneNote(zone)
+            return ns.Zones:NoteMatchesLocation(zone.data, czText, czSub)
         end
 
         local currentZones = {}
@@ -925,7 +1014,7 @@ function ns.UI.CreateZonesTab(parent)
         local favorites = {}
         local regular   = {}
         for _, zone in ipairs(filtered) do
-            if isCurrentZoneName(zone.name) then
+            if isCurrentZoneNote(zone) then
                 currentZones[#currentZones + 1] = zone
             elseif zone.data.isNew then
                 newZones[#newZones + 1] = zone
@@ -937,8 +1026,8 @@ function ns.UI.CreateZonesTab(parent)
         end
 
         local function sortZones(a, b)
-            local nameA = a.name or ""
-            local nameB = b.name or ""
+            local nameA = a.title or a.name or ""
+            local nameB = b.title or b.name or ""
             if currentSort.by == "category" then
                 local ca = a.data.category or ""
                 local cb = b.data.category or ""
@@ -992,7 +1081,7 @@ function ns.UI.CreateZonesTab(parent)
                 yOffset     = yOfs,
                 barColor    = { bg[1], bg[2], bg[3] },
                 icon        = ns.UI.ResolveNoteIcon(zone.data.iconKey) or "Interface\\Icons\\INV_Misc_Map_01",
-                title       = zone.name,
+                title       = zone.title or (ns.Zones and ns.Zones:FormatTitleFromData(zone.data)) or zone.name,
                 storageText = zone.data.storage == "character" and CHARACTER or L["UI_STORAGE_ACCOUNT"],
                 selected    = (selectedZone == zone.name),
                 onSelect    = function()
@@ -1178,20 +1267,24 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
         name            = "OneWoW_NotesManualZoneEntry",
         title           = L["BUTTON_ADD_CURRENT_ZONE"],
         width           = 580,
-        height          = 610,
+        height          = 640,
         destroyOnClose  = true,
         buttons = {
             {
                 text = L["BUTTON_ADD_NOTE"],
                 onClick = function(dlg)
-                    local name = dlg._nameInput and dlg._nameInput:GetText() or ""
-                    if name == "" then
+                    local zone = dlg._zoneInput and dlg._zoneInput:GetText() or ""
+                    local subzone = dlg._subzoneInput and dlg._subzoneInput:GetText() or ""
+                    if zone == "" then
                         print("|cFFFFD100OneWoW - Zones:|r " .. (L["ZONE_ERROR_NAME_REQUIRED"]))
                         return
                     end
+                    if subzone == zone then subzone = "" end
 
-                    if ns.Zones and ns.Zones:GetZone(name) then
-                        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_EXISTS"], name))
+                    local existingId = ns.Zones and ns.Zones:FindIdByParts(zone, subzone)
+                    if existingId then
+                        local title = ns.Zones:FormatTitle(zone, subzone)
+                        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_EXISTS"], title))
                         return
                     end
 
@@ -1207,17 +1300,20 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
 
                     local mapID = dlg._validatedMapID
                     if ns.Zones then
-                        ns.Zones:AddZone(name, {
+                        local noteId = ns.Zones:AddZone({
+                            zone = zone,
+                            subzone = subzone,
                             content = noteContent, category = cat, storage = store,
                             pinColor = pinColor, fontColor = fontCol,
                             fontFamily = fontFamily,
                             fontSize = fontSize, opacity = opacity,
                             mapID = mapID,
                         })
-                        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"], name))
+                        local title = ns.Zones:FormatTitle(zone, subzone)
+                        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"], title))
                         dlg:Hide()
                         if refreshParent and refreshParent.RefreshZonesList then refreshParent.RefreshZonesList() end
-                        if refreshParent and refreshParent.SelectZone then refreshParent.SelectZone(name) end
+                        if refreshParent and refreshParent.SelectZone then refreshParent.SelectZone(noteId) end
                     end
                 end,
             },
@@ -1231,9 +1327,12 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     local content = dialog.content
     local yPos = -10
 
-    MakeZoneLabel(content, L["LABEL_ZONE_NAME"], COL1_X, yPos)
-    dialog._nameInput = MakeZoneInput(content, COL1_X, yPos - LBL_GAP, COL_W * 2 + (COL2_X - COL1_X - COL_W))
-    dialog._nameInput:SetAutoFocus(true)
+    MakeZoneLabel(content, ZONE_COLON, COL1_X, yPos)
+    dialog._zoneInput = MakeZoneInput(content, COL1_X, yPos - LBL_GAP, COL_W)
+    dialog._zoneInput:SetAutoFocus(true)
+
+    MakeZoneLabel(content, L["LABEL_SUBZONE"], COL2_X, yPos)
+    dialog._subzoneInput = MakeZoneInput(content, COL2_X, yPos - LBL_GAP, COL_W)
     yPos = yPos - ROW_H
 
     MakeZoneLabel(content, L["LABEL_MAP_ID_OPTIONAL"], COL1_X, yPos)
@@ -1261,8 +1360,11 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
         if mapInfo and mapInfo.name then
             validationFS:SetText(mapInfo.name)
             validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-            dialog._nameInput:SetText(mapInfo.name)
             dialog._validatedMapID = mapID
+            -- Prefill zone from map name when empty; never overwrite subzone.
+            if dialog._zoneInput and (dialog._zoneInput:GetText() or "") == "" then
+                dialog._zoneInput:SetText(mapInfo.name)
+            end
         else
             validationFS:SetText(L["ZONE_MAP_NOT_FOUND"])
             validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
@@ -1421,9 +1523,9 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     dialog:Show()
 end
 
-function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
-    if not zoneName or not ns.Zones then return end
-    local zoneData = ns.Zones:GetZone(zoneName)
+function ns.UI.ShowZonePropertiesDialog(noteId, refreshParent)
+    if not noteId or not ns.Zones then return end
+    local zoneData = ns.Zones:GetZone(noteId)
     if not zoneData then return end
 
     local COL1_X  = 10
@@ -1432,9 +1534,10 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     local ROW_H   = 50
     local LBL_GAP = 18
 
+    local title = ns.Zones:FormatTitleFromData(zoneData)
     local dialog = ns.UI.CreateThemedDialog({
         name            = "OneWoW_NotesZoneProperties",
-        title           = (L["DIALOG_ZONE_PROPERTIES"]) .. ": " .. zoneName,
+        title           = (L["DIALOG_ZONE_PROPERTIES"]) .. ": " .. title,
         width           = 580,
         height          = 600,
         destroyOnClose  = true,
@@ -1450,38 +1553,42 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     local yPos = -10
 
     local function SaveField(field, value)
-        local d = ns.Zones:GetZone(zoneName)
+        local d = ns.Zones:GetZone(noteId)
         if d then
             d[field] = value
-            ns.Zones:SaveZone(zoneName, d)
+            ns.Zones:SaveZone(noteId, d)
         end
         if refreshParent and refreshParent.RefreshZonesList then refreshParent.RefreshZonesList() end
     end
 
     local function RefreshEditor()
         if refreshParent and refreshParent.SelectZone then
-            refreshParent.SelectZone(zoneName)
+            refreshParent.SelectZone(noteId)
         end
         if ns.ZonePins and ns.ZonePins.RefreshZonePinColors then
-            ns.ZonePins:RefreshZonePinColors(zoneName)
+            ns.ZonePins:RefreshZonePinColors(noteId)
         end
     end
 
-    MakeZoneLabel(content, L["LABEL_ZONE_NAME"], COL1_X, yPos)
-    local nameInput = MakeZoneInput(content, COL1_X, yPos - LBL_GAP, COL_W * 2 + (COL2_X - COL1_X - COL_W))
-    nameInput:SetText(zoneName)
-    nameInput:SetScript("OnEnterPressed", function(self)
-        local newName = self:GetText()
-        if newName ~= "" and newName ~= zoneName then
-            local d = ns.Zones:GetZone(zoneName)
-            if d then
-                ns.Zones:RemoveZone(zoneName)
-                ns.Zones:AddZone(newName, d)
-                zoneName = newName
-                if refreshParent and refreshParent.RefreshZonesList then refreshParent.RefreshZonesList() end
-                if refreshParent and refreshParent.SelectZone then refreshParent.SelectZone(newName) end
-            end
+    MakeZoneLabel(content, ZONE_COLON, COL1_X, yPos)
+    local zoneInput = MakeZoneInput(content, COL1_X, yPos - LBL_GAP, COL_W)
+    zoneInput:SetText(zoneData.zone or "")
+    zoneInput:SetScript("OnEnterPressed", function(self)
+        local newZone = self:GetText() or ""
+        if newZone ~= "" then
+            SaveField("zone", newZone)
+            RefreshEditor()
         end
+        self:ClearFocus()
+    end)
+
+    MakeZoneLabel(content, L["LABEL_SUBZONE"], COL2_X, yPos)
+    local subzoneInput = MakeZoneInput(content, COL2_X, yPos - LBL_GAP, COL_W)
+    subzoneInput:SetText(zoneData.subzone or "")
+    subzoneInput:SetScript("OnEnterPressed", function(self)
+        local newSub = self:GetText() or ""
+        SaveField("subzone", newSub)
+        RefreshEditor()
         self:ClearFocus()
     end)
     yPos = yPos - ROW_H
@@ -1522,15 +1629,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
             validationFS:SetText(mapInfo.name)
             validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
             SaveField("mapID", mapID)
-            nameInput:SetText(mapInfo.name)
-            local d = ns.Zones:GetZone(zoneName)
-            if d then
-                ns.Zones:RemoveZone(zoneName)
-                ns.Zones:AddZone(mapInfo.name, d)
-                zoneName = mapInfo.name
-                if refreshParent and refreshParent.RefreshZonesList then refreshParent.RefreshZonesList() end
-                RefreshEditor()
-            end
+            RefreshEditor()
         else
             validationFS:SetText(L["ZONE_MAP_NOT_FOUND"])
             validationFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
@@ -1560,8 +1659,8 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     })
     storeDD:SetSelected(zoneData.storage or "account")
     storeDD.onSelect = function(value)
-        local d = ns.Zones:GetZone(zoneName)
-        if d then d.storage = value ns.Zones:SaveZone(zoneName, d) end
+        local d = ns.Zones:GetZone(noteId)
+        if d then d.storage = value ns.Zones:SaveZone(noteId, d) end
         if refreshParent and refreshParent.RefreshZonesList then refreshParent.RefreshZonesList() end
     end
     yPos = yPos - ROW_H
@@ -1630,7 +1729,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
         RefreshEditor()
         if propPreviewEditBox then
             local fp = ns.Config:ResolveFontPath(fontValue)
-            local d = ns.Zones:GetZone(zoneName)
+            local d = ns.Zones:GetZone(noteId)
             propPreviewEditBox:SetFont(fp, d and d.fontSize or 12, d and d.fontOutline or "")
         end
     end
@@ -1649,7 +1748,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
         SaveField("fontOutline", value)
         RefreshEditor()
         if propPreviewEditBox then
-            local d = ns.Zones:GetZone(zoneName)
+            local d = ns.Zones:GetZone(noteId)
             local fp = ns.Config:ResolveFontPath(d and d.fontFamily)
             propPreviewEditBox:SetFont(fp, d and d.fontSize or 12, value)
         end

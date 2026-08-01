@@ -303,6 +303,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["POPUP_DELETE_ZONE"] = "Supprimer la note de zone ?",
     ["DIALOG_ZONE_PROPERTIES"] = "Propriétés de la zone",
     ["LABEL_ZONE_NAME"] = "Nom de la zone :",
+    ["LABEL_SUBZONE"] = "Sous-zone :",
     ["ZONE_ERROR_NAME_REQUIRED"] = "Le nom de la zone est requis.",
 
 -- Notes dialog extras
@@ -355,6 +356,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["MSG_NPC_NO_LOCATION"] = "Aucune position enregistrée pour ce PNJ.",
     ["NOTES_NPC_ALERT_FOUND"] = "PNJ ciblé avec une note : %s",
     ["NOTES_NPC_ASSOC_QUESTS"] = "Quêtes associées :",
+    ["NOTES_OPEN_QUESTS_IN_CATALOG"] = "Ouvrir dans Catalog",
     ["TOOLTIP_NPC_DELETE"] = "Supprimer le PNJ",
     ["TOOLTIP_NPC_DELETE_DESC"] = "Retirer cette note de PNJ",
     ["TOOLTIP_NPC_PROPERTIES_DESC"] = "Modifier les paramètres du PNJ",

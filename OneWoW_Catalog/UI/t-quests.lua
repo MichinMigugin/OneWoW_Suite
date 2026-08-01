@@ -21,6 +21,8 @@ local questChainGroupExpanded = {}
 local searchText       = ""
 local expansionFilter  = -1
 local zoneFilter       = ""
+local npcFilter        = nil
+local npcFilterLabel   = nil
 local typeFilter       = "all"
 local questTypeFilter  = "all"
 local completionFilter = "all"
@@ -421,6 +423,7 @@ local function IsDatabaseMode()
     return (searchText and NormalizeQuestSearchText(searchText) ~= "")
         or expansionFilter ~= -1
         or zoneFilter ~= ""
+        or npcFilter ~= nil
         or (completionFilter ~= "all"
             and completionFilter ~= "active_current"
             and completionFilter ~= "active_all")
@@ -461,7 +464,33 @@ local function BuildAdvancedFilters()
         faction    = factionFilter,
         story      = storyFilter,
         runtime    = runtimeFilter,
+        npcID      = npcFilter,
     }
+end
+
+local function ClearNpcFilter()
+    npcFilter = nil
+    npcFilterLabel = nil
+end
+
+local function UpdateNpcFilterChip(panels)
+    panels = panels or ns.UI.questsPanels
+    if not panels or not panels.npcFilterBtn or not panels.searchBox or not panels.clearBtn then
+        return
+    end
+
+    if npcFilter then
+        local label = npcFilterLabel
+        if not label or label == "" then
+            label = string.format(L["QUESTS_NPC_UNNAMED"], npcFilter)
+        end
+        panels.npcFilterBtn:SetText(string.format(L["QUESTS_NPC_FILTER"], label))
+        panels.npcFilterBtn:Show()
+        panels.searchBox:SetPoint("TOPRIGHT", panels.npcFilterBtn, "TOPLEFT", -4, 0)
+    else
+        panels.npcFilterBtn:Hide()
+        panels.searchBox:SetPoint("TOPRIGHT", panels.clearBtn, "TOPLEFT", -4, 0)
+    end
 end
 
 local function CountAdvancedFilters()
@@ -4064,6 +4093,7 @@ function OpenQuestByID(questID, panels)
     searchText = "\"" .. tostring(questID) .. "\""
     expansionFilter = -1
     zoneFilter = ""
+    ClearNpcFilter()
     completionFilter = "all"
     ResetAdvancedFilters()
 
@@ -4077,6 +4107,7 @@ function OpenQuestByID(questID, panels)
         if panels.zoneText then panels.zoneText:SetText(L["QUESTS_ZONE_ALL"]) end
         if panels.progText then panels.progText:SetText(L["QUESTS_PROGRESS_ALL"]) end
         if panels.UpdateAdvancedTexts then panels.UpdateAdvancedTexts() end
+        UpdateNpcFilterChip(panels)
 
         RefreshQuestList(panels)
         ShowQuestDetail(panels, quest)
@@ -4087,6 +4118,60 @@ end
 
 ns.UI.OpenQuest = function(questID)
     return OpenQuestByID(questID, ns.UI.questsPanels)
+end
+
+--- Open Catalog Quests with zone and/or NPC filters applied.
+---@param opts { zoneName?: string, npcID?: number, npcName?: string }
+function ns.UI.OpenQuestsFiltered(opts)
+    opts = opts or {}
+
+    OneWoW.UI:Show("catalog")
+    OneWoW.UI:SelectSubTab("catalog", "quests")
+
+    local function applyFilters()
+        local panels = ns.UI.questsPanels
+        if not panels then
+            return false
+        end
+
+        searchText = ""
+        expansionFilter = -1
+        completionFilter = "all"
+        ResetAdvancedFilters()
+        ClearNpcFilter()
+        zoneFilter = ""
+
+        if type(opts.zoneName) == "string" and opts.zoneName ~= "" then
+            zoneFilter = opts.zoneName
+        end
+
+        local npcID = tonumber(opts.npcID)
+        if npcID then
+            npcFilter = npcID
+            if type(opts.npcName) == "string" and opts.npcName ~= "" then
+                npcFilterLabel = opts.npcName
+            end
+        end
+
+        if panels.searchBox then
+            panels.searchBox:SetText("")
+            panels.searchBox:ClearFocus()
+        end
+        if panels.expText then panels.expText:SetText(L["QUESTS_EXPANSION_ALL"]) end
+        if panels.zoneText then
+            panels.zoneText:SetText(zoneFilter ~= "" and zoneFilter or L["QUESTS_ZONE_ALL"])
+        end
+        if panels.progText then panels.progText:SetText(L["QUESTS_PROGRESS_ALL"]) end
+        if panels.UpdateAdvancedTexts then panels.UpdateAdvancedTexts() end
+        UpdateNpcFilterChip(panels)
+        RefreshQuestList(panels)
+        return true
+    end
+
+    if not applyFilters() then
+        C_Timer.After(0.15, applyFilters)
+        C_Timer.After(0.35, applyFilters)
+    end
 end
 
 local PopulateZoneDropdown = function(panels)
@@ -4558,6 +4643,21 @@ function ns.UI.CreateQuestsTab(parent)
     local clearBtn = OneWoW_GUI:CreateFitTextButton(leftHeader, { text = L["QUESTS_CLEAR"], height = 26, minWidth = 34 })
     clearBtn:SetPoint("TOPRIGHT", favFilterBtn, "TOPLEFT", -4, 0)
 
+    local npcFilterBtn = OneWoW_GUI:CreateFitTextButton(leftHeader, { text = "", height = 26, minWidth = 72 })
+    npcFilterBtn:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -4, 0)
+    npcFilterBtn:Hide()
+    npcFilterBtn:SetScript("OnClick", function()
+        ClearNpcFilter()
+        UpdateNpcFilterChip(panels)
+        RefreshQuestList(panels)
+    end)
+    npcFilterBtn:HookScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(L["QUESTS_NPC_FILTER_CLEAR"], 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    npcFilterBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
+
     local searchBox = OneWoW_GUI:CreateEditBox(leftHeader, {
         height = 26,
         placeholderText = L["QUESTS_SEARCH_ADVANCED"],
@@ -4685,6 +4785,8 @@ function ns.UI.CreateQuestsTab(parent)
     panels.progDropdown  = progDropdown
     panels.progText      = progText
     panels.searchBox     = searchBox
+    panels.clearBtn      = clearBtn
+    panels.npcFilterBtn  = npcFilterBtn
     panels.favFilterBtn  = favFilterBtn
     panels.advancedBtn   = advancedBtn
     panels.advancedDrawer = advancedDrawer
@@ -4740,6 +4842,7 @@ function ns.UI.CreateQuestsTab(parent)
         searchText      = ""
         expansionFilter = -1
         zoneFilter      = ""
+        ClearNpcFilter()
         completionFilter = "all"
         ResetAdvancedFilters()
         searchBox:SetText("")
@@ -4748,6 +4851,7 @@ function ns.UI.CreateQuestsTab(parent)
         zoneText:SetText(L["QUESTS_ZONE_ALL"])
         progText:SetText(L["QUESTS_PROGRESS_ALL"])
         panels.UpdateAdvancedTexts()
+        UpdateNpcFilterChip(panels)
         RefreshQuestList(panels)
     end)
 

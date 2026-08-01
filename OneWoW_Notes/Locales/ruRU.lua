@@ -303,6 +303,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["POPUP_DELETE_ZONE"] = "Удалить заметку о зоне?",
     ["DIALOG_ZONE_PROPERTIES"] = "Свойства зоны",
     ["LABEL_ZONE_NAME"] = "Название зоны:",
+    ["LABEL_SUBZONE"] = "Подзона:",
     ["ZONE_ERROR_NAME_REQUIRED"] = "Требуется название зоны.",
 
 -- Notes dialog extras
@@ -355,6 +356,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["MSG_NPC_NO_LOCATION"] = "Для этого НИП не записано местоположение.",
     ["NOTES_NPC_ALERT_FOUND"] = "Выбран целью НИП с заметкой: %s",
     ["NOTES_NPC_ASSOC_QUESTS"] = "Связанные задания:",
+    ["NOTES_OPEN_QUESTS_IN_CATALOG"] = "Открыть в Catalog",
     ["TOOLTIP_NPC_DELETE"] = "Удалить НИП",
     ["TOOLTIP_NPC_DELETE_DESC"] = "Убрать эту заметку о НИП",
     ["TOOLTIP_NPC_PROPERTIES_DESC"] = "Изменить настройки НИП",

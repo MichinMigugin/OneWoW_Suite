@@ -303,6 +303,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["POPUP_DELETE_ZONE"] = "删除区域笔记？",
     ["DIALOG_ZONE_PROPERTIES"] = "区域属性",
     ["LABEL_ZONE_NAME"] = "区域名称：",
+    ["LABEL_SUBZONE"] = "子区域：",
     ["ZONE_ERROR_NAME_REQUIRED"] = "需要区域名称。",
 
 -- Notes dialog extras
@@ -355,6 +356,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["MSG_NPC_NO_LOCATION"] = "未记录此 NPC 的位置。",
     ["NOTES_NPC_ALERT_FOUND"] = "选定了有笔记的 NPC：%s",
     ["NOTES_NPC_ASSOC_QUESTS"] = "相关任务：",
+    ["NOTES_OPEN_QUESTS_IN_CATALOG"] = "在 Catalog 中打开",
     ["TOOLTIP_NPC_DELETE"] = "删除 NPC",
     ["TOOLTIP_NPC_DELETE_DESC"] = "移除此 NPC 笔记",
     ["TOOLTIP_NPC_PROPERTIES_DESC"] = "编辑 NPC 设置",

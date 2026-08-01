@@ -230,6 +230,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["QUESTS_QUEST_GIVER"] = "Quest Giver",
     ["QUESTS_TURN_IN"] = "Turn In",
     ["QUESTS_NPC_UNNAMED"] = "NPC %d",
+    ["QUESTS_NPC_FILTER"] = "NPC: %s",
+    ["QUESTS_NPC_FILTER_CLEAR"] = "Clear NPC filter",
     ["QUESTS_SEE_NOTE"] = "See Note",
     ["QUESTS_MAKE_NOTE"] = "Make Note",
     ["QUESTS_TT_SEE_NOTE"] = "Ctrl-Click to see note",

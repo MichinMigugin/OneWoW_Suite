@@ -303,6 +303,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["POPUP_DELETE_ZONE"] = "Zonennotiz löschen?",
     ["DIALOG_ZONE_PROPERTIES"] = "Zoneneigenschaften",
     ["LABEL_ZONE_NAME"] = "Zonenname:",
+    ["LABEL_SUBZONE"] = "Unterzone:",
     ["ZONE_ERROR_NAME_REQUIRED"] = "Ein Zonenname ist erforderlich.",
 
 -- Notes dialog extras
@@ -355,6 +356,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["MSG_NPC_NO_LOCATION"] = "Für diesen NSC ist keine Position aufgezeichnet.",
     ["NOTES_NPC_ALERT_FOUND"] = "NSC mit Notiz anvisiert: %s",
     ["NOTES_NPC_ASSOC_QUESTS"] = "Zugehörige Quests:",
+    ["NOTES_OPEN_QUESTS_IN_CATALOG"] = "Im Catalog öffnen",
     ["TOOLTIP_NPC_DELETE"] = "NSC löschen",
     ["TOOLTIP_NPC_DELETE_DESC"] = "Diese NSC-Notiz entfernen",
     ["TOOLTIP_NPC_PROPERTIES_DESC"] = "NSC-Einstellungen bearbeiten",

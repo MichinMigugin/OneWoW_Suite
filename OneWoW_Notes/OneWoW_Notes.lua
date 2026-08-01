@@ -105,6 +105,12 @@ local function OnEnable()
     RegisterWithOneWoW()
     OneWoW:RegisterMinimap("OneWoW_Notes", ns.L["CTX_OPEN_NOTES"], "notes", nil)
 
+    if ns.MigrateNpcAndPlayerOtherCategories then
+        ns:MigrateNpcAndPlayerOtherCategories()
+    end
+    if ns.MigrateZoneStructuredNotes then
+        ns:MigrateZoneStructuredNotes()
+    end
     if ns.ZonePins and ns.ZonePins.Initialize then
         ns.ZonePins:Initialize()
     end
@@ -119,9 +125,6 @@ local function OnEnable()
     end
     if ns.Collectibles and ns.Collectibles.MigrateLegacyCategories then
         ns.Collectibles:MigrateLegacyCategories()
-    end
-    if ns.MigrateNpcAndPlayerOtherCategories then
-        ns:MigrateNpcAndPlayerOtherCategories()
     end
     if ns.NPCs and ns.NPCs.Initialize then
         ns.NPCs:Initialize()

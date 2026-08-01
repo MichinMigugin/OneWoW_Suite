@@ -47,6 +47,14 @@ function OneWoW_Catalog_API.OpenQuest(questID)
     end
 end
 
+--- Open the quests tab with zone and/or NPC filters applied.
+---@param opts { zoneName?: string, npcID?: number, npcName?: string }
+function OneWoW_Catalog_API.OpenQuestsFiltered(opts)
+    if ns.UI and ns.UI.OpenQuestsFiltered then
+        ns.UI.OpenQuestsFiltered(opts)
+    end
+end
+
 --- Open the vendors tab focused on an NPC vendor.
 ---@param npcID number
 function OneWoW_Catalog_API.OpenToVendor(npcID)

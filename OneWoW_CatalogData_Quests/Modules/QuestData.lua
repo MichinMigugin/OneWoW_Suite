@@ -783,7 +783,34 @@ local function BuildSortedQuestCacheKey(
         CachePart(advancedFilters.faction),
         CachePart(advancedFilters.story),
         CachePart(advancedFilters.runtime),
+        CachePart(advancedFilters.npcID),
     }, "\031")
+end
+
+--- True if npcID is this quest's giver or turn-in (legacy fields or starts/ends lists).
+local function QuestAssociatedWithNPC(quest, npcID)
+    npcID = tonumber(npcID)
+    if not quest or not npcID then
+        return false
+    end
+
+    if tonumber(quest.questGiverID) == npcID or tonumber(quest.questTurnInID) == npcID then
+        return true
+    end
+
+    local function listHasNPC(list)
+        if not list then
+            return false
+        end
+        for _, entry in ipairs(list) do
+            if type(entry) == "table" and tonumber(entry.npcID) == npcID then
+                return true
+            end
+        end
+        return false
+    end
+
+    return listHasNPC(quest.starts) or listHasNPC(quest.ends)
 end
 
 local function RememberSortedQuestCache(key, results)
@@ -1539,6 +1566,16 @@ local function BuildSortedQuestResults(
                 ) then
                     include = false
                 end
+            end
+        end
+
+        ----------------------------------------------------
+        -- NPC (giver or turn-in)
+        ----------------------------------------------------
+
+        if include and advancedFilters.npcID then
+            if not QuestAssociatedWithNPC(quest, advancedFilters.npcID) then
+                include = false
             end
         end
 

@@ -53,6 +53,8 @@ local defaults = {
         -- One-time guards: NPC/Player catch-all category "Other" → "General".
         npcCategoryOtherMigrated    = false,
         playerCategoryOtherMigrated = false,
+        -- One-time: zone notes title-keys → opaque ids with zone/subzone fields.
+        zoneStructuredMigrated = false,
     },
     char = {
         notes        = {},
@@ -101,6 +103,71 @@ function ns:MigrateNpcAndPlayerOtherCategories()
         ns.db.global.playerCategoryOtherMigrated = true
         if ns.Players then ns.Players:InvalidateCache() end
     end
+end
+
+--- Rekey legacy title-keyed zone notes to opaque ids with zone/subzone fields.
+--- Also remaps zonePinPositions keys. One-time per account SV.
+function ns:MigrateZoneStructuredNotes()
+    if ns.db.global.zoneStructuredMigrated then
+        return
+    end
+    if not ns.Zones then
+        return
+    end
+
+    local function migrateStore(store)
+        if type(store) ~= "table" then return end
+        local moves = {}
+        for oldKey, data in pairs(store) do
+            if type(data) == "table" then
+                -- Already migrated (opaque id + zone field).
+                if type(oldKey) == "string"
+                    and oldKey:match("^zn_")
+                    and data.zone
+                    and data.zone ~= ""
+                then
+                    -- ensure subzone field exists
+                    if data.subzone == nil then
+                        data.subzone = ""
+                    end
+                    data.id = oldKey
+                else
+                    local zone = data.zone
+                    local subzone = data.subzone
+                    if not zone or zone == "" then
+                        zone, subzone = ns.Zones:ParseLegacyKey(oldKey)
+                    end
+                    subzone = subzone or ""
+                    local newId = data.id
+                    if type(newId) ~= "string" or not newId:match("^zn_") then
+                        newId = ns.Zones:MakeNewId()
+                    end
+                    data.id = newId
+                    data.zone = zone
+                    data.subzone = subzone
+                    if newId ~= oldKey then
+                        moves[#moves + 1] = { oldKey = oldKey, newId = newId, data = data }
+                    end
+                end
+            end
+        end
+        for _, m in ipairs(moves) do
+            store[m.newId] = m.data
+            if store[m.oldKey] == m.data or store[m.oldKey] ~= nil then
+                store[m.oldKey] = nil
+            end
+            local pinPos = ns.db.global.zonePinPositions
+            if type(pinPos) == "table" and pinPos[m.oldKey] ~= nil then
+                pinPos[m.newId] = pinPos[m.oldKey]
+                pinPos[m.oldKey] = nil
+            end
+        end
+    end
+
+    migrateStore(ns.db.global.zones)
+    migrateStore(ns.db.char.zones)
+    ns.db.global.zoneStructuredMigrated = true
+    ns.Zones:InvalidateCache()
 end
 
 function ns:InitializeDatabase()

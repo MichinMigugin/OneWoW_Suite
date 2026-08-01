@@ -15,6 +15,119 @@ local currentSubZone  = ""
 local currentInstanceID = nil
 local zoneEventFrame  = CreateFrame("Frame")
 local zoneWatchStarted = false
+local idSeq = 0
+
+------------------------------------------------------------
+-- Title / id / location helpers
+------------------------------------------------------------
+
+function Zones:FormatTitle(zone, subzone)
+    zone = zone or ""
+    subzone = subzone or ""
+    if subzone ~= "" and subzone ~= zone then
+        return zone .. " - " .. subzone
+    end
+    return zone
+end
+
+function Zones:FormatTitleFromData(data)
+    if not data or type(data) ~= "table" then return "" end
+    return self:FormatTitle(data.zone, data.subzone)
+end
+
+function Zones:MakeNewId()
+    idSeq = idSeq + 1
+    return string.format("zn_%d_%d", GetServerTime() or 0, idSeq)
+end
+
+--- Split a legacy title-key ("Zone - Subzone" or plain zone) into parts.
+function Zones:ParseLegacyKey(key)
+    if not key or key == "" then
+        return "", ""
+    end
+    local zone, subzone = string.match(key, "^(.-) %- (.+)$")
+    if zone and subzone then
+        return zone, subzone
+    end
+    return key, ""
+end
+
+--- Catalog Quests zone filter name: map display name when mapID is set, else zone field.
+function Zones:ResolveCatalogZoneName(data)
+    if not data or type(data) ~= "table" then
+        return nil
+    end
+    local mapID = tonumber(data.mapID)
+    if mapID then
+        local mapInfo = C_Map.GetMapInfo(mapID)
+        if mapInfo and mapInfo.name and mapInfo.name ~= "" then
+            return mapInfo.name
+        end
+    end
+    if data.zone and data.zone ~= "" then
+        return data.zone
+    end
+    return nil
+end
+
+function Zones:GetCurrentZoneParts()
+    local zone = GetZoneText() or ""
+    local subzone = GetSubZoneText() or ""
+    if subzone == zone then
+        subzone = ""
+    end
+    return zone, subzone, self:GetCurrentMapInfo()
+end
+
+--- Display helper for current location (not an SV key).
+function Zones:GetCurrentZoneName()
+    local zone, subzone = self:GetCurrentZoneParts()
+    return self:FormatTitle(zone, subzone)
+end
+
+--- Parent note (empty subzone) matches any subzone in that zone; specific notes need both.
+function Zones:NoteMatchesLocation(data, zoneText, subZoneText)
+    if not data or type(data) ~= "table" then
+        return false
+    end
+    local z = data.zone or ""
+    if z == "" or z ~= (zoneText or "") then
+        return false
+    end
+    local sz = data.subzone or ""
+    if sz == "" then
+        return true
+    end
+    return sz == (subZoneText or "")
+end
+
+function Zones:FindMatchingNotes(zoneText, subZoneText)
+    local results = {}
+    for id, data in pairs(self:GetAll()) do
+        if type(data) == "table" and self:NoteMatchesLocation(data, zoneText, subZoneText) then
+            results[#results + 1] = { id = id, data = data }
+        end
+    end
+    return results
+end
+
+--- Exact zone+subzone match (for "already exists" on create).
+function Zones:FindIdByParts(zone, subzone)
+    zone = zone or ""
+    subzone = subzone or ""
+    if zone == "" then
+        return nil
+    end
+    for id, data in pairs(self:GetAll()) do
+        if type(data) == "table"
+            and data.zone == zone
+            and (data.subzone or "") == subzone
+        then
+            return id
+        end
+    end
+    return nil
+end
 
 function Zones:Initialize()
     -- Always watch zone changes so pinned zone notes trigger even when the zone
@@ -76,6 +189,9 @@ function Zones:CheckZones()
 
     local zoneText    = GetZoneText()    or ""
     local subZoneText = GetSubZoneText() or ""
+    if subZoneText == zoneText then
+        subZoneText = ""
+    end
     local _, instanceType, _, _, _, _, _, instanceID = GetInstanceInfo()
 
     local previousZone       = currentZone
@@ -85,16 +201,6 @@ function Zones:CheckZones()
     currentZone       = zoneText
     currentSubZone    = subZoneText
     currentInstanceID = instanceID
-
-    local fullZone = zoneText
-    if subZoneText ~= "" and subZoneText ~= zoneText then
-        fullZone = zoneText .. " - " .. subZoneText
-    end
-
-    local previousFullZone = previousZone or ""
-    if previousSubZone and previousSubZone ~= "" and previousSubZone ~= previousZone then
-        previousFullZone = previousZone .. " - " .. previousSubZone
-    end
 
     local mainZoneChanged = (previousZone ~= zoneText)
     local subZoneChanged  = (previousSubZone ~= subZoneText)
@@ -106,67 +212,50 @@ function Zones:CheckZones()
     if instanceType == "party" or instanceType == "raid" or instanceType == "scenario" then
         shouldHidePins = instanceChanged
     else
-        shouldHidePins = (mainZoneChanged or subZoneChanged or fullZone ~= previousFullZone)
+        shouldHidePins = (mainZoneChanged or subZoneChanged)
     end
 
-    if shouldHidePins and ns.ZonePins then
-        if ns.zonePins then
-            local toHide = {}
-            for zoneName in pairs(ns.zonePins) do
-                if zoneName ~= fullZone and zoneName ~= zoneText and zoneName ~= subZoneText then
-                    table.insert(toHide, zoneName)
-                end
+    local matching = self:FindMatchingNotes(zoneText, subZoneText)
+    local matchSet = {}
+    for _, entry in ipairs(matching) do
+        matchSet[entry.id] = true
+    end
+
+    if shouldHidePins and ns.ZonePins and ns.zonePins then
+        local toHide = {}
+        for noteId in pairs(ns.zonePins) do
+            if not matchSet[noteId] then
+                toHide[#toHide + 1] = noteId
             end
-            for _, zoneName in ipairs(toHide) do
-                ns.ZonePins:HideZonePin(zoneName)
-            end
+        end
+        for _, noteId in ipairs(toHide) do
+            ns.ZonePins:HideZonePin(noteId)
         end
     end
 
-    local allZones = self:GetAll()
-
-    local function tryZone(key)
-        local zoneData = allZones[key]
-        if not zoneData or type(zoneData) ~= "table" then return end
-
+    for _, entry in ipairs(matching) do
+        local noteId = entry.id
+        local zoneData = entry.data
         local dismissed = zoneData.dismissedUntil and GetTime() < zoneData.dismissedUntil
+        local title = self:FormatTitleFromData(zoneData)
 
         -- Pins always trigger, regardless of the alert setting.
         if zoneData.pinEnabled and not dismissed and ns.ZonePins then
-            ns.ZonePins:ShowZonePin(key, zoneData)
+            ns.ZonePins:ShowZonePin(noteId, zoneData)
         end
 
         -- Alert message / sound / toast only when zone alerts are enabled.
         if alertsOn and zoneData.alertEnabled ~= false and not dismissed then
-            if not (lastAlertedZone == key and (now - lastAlertTime) < 30) then
+            if not (lastAlertedZone == noteId and (now - lastAlertTime) < 30) then
                 lastAlertTime   = now
-                lastAlertedZone = key
-                print("|cFFFFD100OneWoW - Zones:|r " .. (L["NPC_LABEL_ZONE"]) .. " " .. key)
+                lastAlertedZone = noteId
+                print("|cFFFFD100OneWoW - Zones:|r " .. (L["NPC_LABEL_ZONE"]) .. " " .. title)
                 PlaySound(SOUNDKIT.RAID_WARNING)
                 local preview = (zoneData.content and zoneData.content ~= "") and zoneData.content:sub(1, 60) or nil
-                OneWoW.Toasts.FireZoneAlert(key, preview)
+                OneWoW.Toasts.FireZoneAlert(title, preview)
             end
         end
     end
-
-    if allZones[fullZone] then
-        tryZone(fullZone)
-    end
-    if subZoneText ~= "" and subZoneText ~= zoneText and allZones[subZoneText] then
-        tryZone(subZoneText)
-    end
-    if allZones[zoneText] then
-        tryZone(zoneText)
-    end
-end
-
-function Zones:GetCurrentZoneName()
-    local zoneText = GetZoneText() or ""
-    local subZoneText = GetSubZoneText() or ""
-    if subZoneText ~= "" and subZoneText ~= zoneText then
-        return zoneText .. " - " .. subZoneText
-    end
-    return zoneText
 end
 
 function Zones:GetParentZoneName()
@@ -190,13 +279,32 @@ function Zones:GetCurrentMapInfo()
     }
 end
 
-function Zones:GetZone(zoneName)
-    if not zoneName then return nil end
-    return self:GetAll()[zoneName]
+--- Look up a zone note by opaque id.
+function Zones:GetZone(noteId)
+    if not noteId then return nil end
+    return self:GetAll()[noteId]
 end
 
-function Zones:AddZone(zoneName, zoneData)
-    if not zoneName or not zoneData then return false end
+--- Create a zone note. Requires zoneData.zone. Returns the opaque note id.
+---@param zoneData table
+---@return string|nil noteId
+function Zones:AddZone(zoneData)
+    if not zoneData or type(zoneData) ~= "table" then return nil end
+    local zone = zoneData.zone
+    if not zone or zone == "" then return nil end
+
+    local subzone = zoneData.subzone or ""
+    if subzone == zone then
+        subzone = ""
+    end
+
+    local noteId = zoneData.id or self:MakeNewId()
+    zoneData.id      = noteId
+    zoneData.zone    = zone
+    zoneData.subzone = subzone
+    if zoneData.mapID ~= nil then
+        zoneData.mapID = tonumber(zoneData.mapID) or zoneData.mapID
+    end
 
     zoneData.content       = zoneData.content or zoneData.text or ""
     zoneData.text          = nil
@@ -221,26 +329,36 @@ function Zones:AddZone(zoneName, zoneData)
     end
 
     local targetDB = (zoneData.storage == "character") and ns.db.char.zones or ns.db.global.zones
-    targetDB[zoneName] = zoneData
+    targetDB[noteId] = zoneData
     self:InvalidateCache()
-    return true
+    return noteId
 end
 
-function Zones:SaveZone(zoneName, zoneData)
-    if not zoneName or not zoneData then return end
+function Zones:SaveZone(noteId, zoneData)
+    if not noteId or not zoneData then return end
+    zoneData.id = noteId
     zoneData.modified = GetServerTime()
+    if zoneData.zone and zoneData.subzone == zoneData.zone then
+        zoneData.subzone = ""
+    end
     local targetDB = (zoneData.storage == "character") and ns.db.char.zones or ns.db.global.zones
-    targetDB[zoneName] = zoneData
+    -- Drop from the other storage if storage changed.
+    if zoneData.storage == "character" then
+        ns.db.global.zones[noteId] = nil
+    else
+        ns.db.char.zones[noteId] = nil
+    end
+    targetDB[noteId] = zoneData
     self:InvalidateCache()
 end
 
-function Zones:RemoveZone(zoneName)
-    if not zoneName then return end
-    self:Remove(zoneName)
+function Zones:RemoveZone(noteId)
+    if not noteId then return end
+    self:Remove(noteId)
 end
 
-function Zones:AddTodo(zoneName, todoText)
-    local zoneData = self:GetZone(zoneName)
+function Zones:AddTodo(noteId, todoText)
+    local zoneData = self:GetZone(noteId)
     if not zoneData then return end
     if not zoneData.todos then zoneData.todos = {} end
 
@@ -250,35 +368,35 @@ function Zones:AddTodo(zoneName, todoText)
         completed = false,
         created   = GetServerTime(),
     }
-    table.insert(zoneData.todos, todo)
+    tinsert(zoneData.todos, todo)
     zoneData.modified = GetServerTime()
-    self:SaveZone(zoneName, zoneData)
+    self:SaveZone(noteId, zoneData)
     return todo
 end
 
-function Zones:UpdateTodo(zoneName, todoId, newText, completed)
-    local zoneData = self:GetZone(zoneName)
+function Zones:UpdateTodo(noteId, todoId, newText, completed)
+    local zoneData = self:GetZone(noteId)
     if not zoneData or not zoneData.todos then return end
     for _, todo in ipairs(zoneData.todos) do
         if todo.id == todoId then
             if newText    ~= nil then todo.text      = newText    end
             if completed  ~= nil then todo.completed = completed  end
             zoneData.modified = GetServerTime()
-            self:SaveZone(zoneName, zoneData)
+            self:SaveZone(noteId, zoneData)
             return true
         end
     end
     return false
 end
 
-function Zones:RemoveTodo(zoneName, todoId)
-    local zoneData = self:GetZone(zoneName)
+function Zones:RemoveTodo(noteId, todoId)
+    local zoneData = self:GetZone(noteId)
     if not zoneData or not zoneData.todos then return end
     for i, todo in ipairs(zoneData.todos) do
         if todo.id == todoId then
-            table.remove(zoneData.todos, i)
+            tremove(zoneData.todos, i)
             zoneData.modified = GetServerTime()
-            self:SaveZone(zoneName, zoneData)
+            self:SaveZone(noteId, zoneData)
             return true
         end
     end

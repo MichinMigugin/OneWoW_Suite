@@ -303,6 +303,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["POPUP_DELETE_ZONE"] = "Eliminare la nota zona?",
     ["DIALOG_ZONE_PROPERTIES"] = "Proprietà della zona",
     ["LABEL_ZONE_NAME"] = "Nome della zona:",
+    ["LABEL_SUBZONE"] = "Sottozona:",
     ["ZONE_ERROR_NAME_REQUIRED"] = "Il nome della zona è obbligatorio.",
 
 -- Notes dialog extras
@@ -355,6 +356,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["MSG_NPC_NO_LOCATION"] = "Nessuna posizione registrata per questo PNG.",
     ["NOTES_NPC_ALERT_FOUND"] = "PNG con nota selezionato: %s",
     ["NOTES_NPC_ASSOC_QUESTS"] = "Missioni associate:",
+    ["NOTES_OPEN_QUESTS_IN_CATALOG"] = "Apri in Catalog",
     ["TOOLTIP_NPC_DELETE"] = "Elimina PNG",
     ["TOOLTIP_NPC_DELETE_DESC"] = "Rimuovi questa nota PNG",
     ["TOOLTIP_NPC_PROPERTIES_DESC"] = "Modifica le impostazioni del PNG",

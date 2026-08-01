@@ -223,21 +223,30 @@ function OneWoW_Notes_API.AddOrUpdateItem(itemID, itemData)
     return true
 end
 
---- Returns the resolved current zone name (main + sub when applicable).
----@return string|nil zoneName
+--- Returns the resolved current zone display title (zone + subzone when present).
+---@return string|nil
 function OneWoW_Notes_API.GetCurrentZoneName()
     if not ns.Zones then return nil end
     return ns.Zones:GetCurrentZoneName()
 end
 
---- Returns a zone note.
----@param zoneName string
+--- Returns live zone / subzone / map info for the player.
+---@return string zone
+---@return string subzone
+---@return table|nil mapInfo
+function OneWoW_Notes_API.GetCurrentZoneParts()
+    if not ns.Zones then return "", "", nil end
+    return ns.Zones:GetCurrentZoneParts()
+end
+
+--- Returns a zone note by opaque id.
+---@param noteId string
 ---@return table|nil zoneData
-function OneWoW_Notes_API.GetZone(zoneName)
-    if not zoneName or zoneName == "" or not ns.Zones then
+function OneWoW_Notes_API.GetZone(noteId)
+    if not noteId or noteId == "" or not ns.Zones then
         return nil
     end
-    return ns.Zones:GetZone(zoneName)
+    return ns.Zones:GetZone(noteId)
 end
 
 --- Map context for the current player location.
@@ -247,33 +256,40 @@ function OneWoW_Notes_API.GetCurrentMapInfo()
     return ns.Zones:GetCurrentMapInfo()
 end
 
---- Adds a new zone note.
----@param zoneName string
+--- Adds a new zone note. zoneData.zone is required. Returns the opaque note id.
 ---@param zoneData table
----@return boolean saved
-function OneWoW_Notes_API.AddZone(zoneName, zoneData)
-    if not zoneName or zoneName == "" or not ns.Zones then
-        return false
+---@return string|nil noteId
+function OneWoW_Notes_API.AddZone(zoneData)
+    if type(zoneData) ~= "table" or not zoneData.zone or zoneData.zone == "" or not ns.Zones then
+        return nil
     end
-    ns.Zones:AddZone(zoneName, zoneData)
-    return true
+    return ns.Zones:AddZone(zoneData)
 end
 
---- Opens a zone note, selecting it when the Zones tab is ready.
----@param zoneName string
+--- Opens a zone note by opaque id (or by exact zone+subzone when given a legacy title string that FindIdByParts can resolve after migration).
+---@param noteIdOrTitle string
 ---@return boolean opened
-function OneWoW_Notes_API.OpenZone(zoneName)
-    if not zoneName or zoneName == "" then
+function OneWoW_Notes_API.OpenZone(noteIdOrTitle)
+    if not noteIdOrTitle or noteIdOrTitle == "" or not ns.Zones then
         return false
     end
 
-    ns.pendingZoneSelect = zoneName
+    local noteId = noteIdOrTitle
+    if not ns.Zones:GetZone(noteId) then
+        local zone, subzone = ns.Zones:ParseLegacyKey(noteIdOrTitle)
+        noteId = ns.Zones:FindIdByParts(zone, subzone)
+        if not noteId then
+            return false
+        end
+    end
+
+    ns.pendingZoneSelect = noteId
     OneWoW.UI:Show("notes")
     OneWoW.UI:SelectSubTab("notes", "zones")
 
     local tabFrame = OneWoW.UI:GetContentFrame("notes", "zones")
     if tabFrame and tabFrame.SelectZone then
-        tabFrame.SelectZone(zoneName)
+        tabFrame.SelectZone(noteId)
         ns.pendingZoneSelect = nil
     end
 

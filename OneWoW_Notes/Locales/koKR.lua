@@ -303,6 +303,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["POPUP_DELETE_ZONE"] = "지역 메모를 삭제하시겠습니까?",
     ["DIALOG_ZONE_PROPERTIES"] = "지역 속성",
     ["LABEL_ZONE_NAME"] = "지역 이름:",
+    ["LABEL_SUBZONE"] = "세부 지역:",
     ["ZONE_ERROR_NAME_REQUIRED"] = "지역 이름이 필요합니다.",
 
 -- Notes dialog extras
@@ -355,6 +356,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["MSG_NPC_NO_LOCATION"] = "이 NPC에 대해 기록된 위치가 없습니다.",
     ["NOTES_NPC_ALERT_FOUND"] = "메모가 있는 NPC를 대상으로 지정함: %s",
     ["NOTES_NPC_ASSOC_QUESTS"] = "연관 퀘스트:",
+    ["NOTES_OPEN_QUESTS_IN_CATALOG"] = "Catalog에서 열기",
     ["TOOLTIP_NPC_DELETE"] = "NPC 삭제",
     ["TOOLTIP_NPC_DELETE_DESC"] = "이 NPC 메모 제거",
     ["TOOLTIP_NPC_PROPERTIES_DESC"] = "NPC 설정 편집",

@@ -231,6 +231,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["QUESTS_QUEST_GIVER"] = "Otorgante de misión",
     ["QUESTS_TURN_IN"] = "Entregar a",
     ["QUESTS_NPC_UNNAMED"] = "PNJ %d",
+    ["QUESTS_NPC_FILTER"] = "PNJ: %s",
+    ["QUESTS_NPC_FILTER_CLEAR"] = "Quitar filtro de PNJ",
     ["QUESTS_SEE_NOTE"] = "Ver nota",
     ["QUESTS_MAKE_NOTE"] = "Crear nota",
     ["QUESTS_TT_SEE_NOTE"] = "Ctrl+clic para ver la nota",

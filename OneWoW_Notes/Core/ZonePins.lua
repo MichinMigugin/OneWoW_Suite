@@ -14,20 +14,16 @@ function ZonePins:Initialize()
         C_Timer.After(0.5, function()
             local zoneText    = GetZoneText()    or ""
             local subZoneText = GetSubZoneText() or ""
-            local fullZone    = zoneText
-            if subZoneText ~= "" and subZoneText ~= zoneText then
-                fullZone = zoneText .. " - " .. subZoneText
+            if subZoneText == zoneText then
+                subZoneText = ""
             end
-            local allZones = ns.Zones:GetAllZones()
-            if allZones then
-                for zoneName, zoneData in pairs(allZones) do
-                    if zoneData and type(zoneData) == "table" and zoneData.pinEnabled then
-                        if zoneName == fullZone or zoneName == zoneText or zoneName == subZoneText then
-                            local dismissed = zoneData.dismissedUntil and GetTime() < zoneData.dismissedUntil
-                            if not dismissed then
-                                self:ShowZonePin(zoneName, zoneData)
-                            end
-                        end
+            local matching = ns.Zones:FindMatchingNotes(zoneText, subZoneText)
+            for _, entry in ipairs(matching) do
+                local zoneData = entry.data
+                if zoneData and zoneData.pinEnabled then
+                    local dismissed = zoneData.dismissedUntil and GetTime() < zoneData.dismissedUntil
+                    if not dismissed then
+                        self:ShowZonePin(entry.id, zoneData)
                     end
                 end
             end
@@ -35,15 +31,19 @@ function ZonePins:Initialize()
     end
 end
 
-function ZonePins:ShowZonePin(zoneName, zoneData)
+function ZonePins:ShowZonePin(noteId, zoneData)
     local addon = ns
-    if not zoneName or not zoneData then return end
+    if not noteId or not zoneData then return end
     if not addon.zonePins then addon.zonePins = {} end
 
-    if addon.zonePins[zoneName] then
-        local pin = addon.zonePins[zoneName]
+    if addon.zonePins[noteId] then
+        local pin = addon.zonePins[noteId]
         if pin.contentText then
             pin.contentText:SetText(zoneData.content or "")
+        end
+        if pin.titleText and ns.Zones then
+            pin.titleText:SetText(ns.Zones:FormatTitleFromData(zoneData))
+            if pin.UpdateTitleHeight then pin:UpdateTitleHeight() end
         end
         pin:Show()
         if pin.RefreshTodos then pin:RefreshTodos() end
@@ -54,7 +54,7 @@ function ZonePins:ShowZonePin(zoneName, zoneData)
         return pin
     end
 
-    return self:CreateZonePin(zoneName, zoneData)
+    return self:CreateZonePin(noteId, zoneData)
 end
 
 function ZonePins:HideZonePin(zoneName)
@@ -171,6 +171,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     pin:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
     pin:SetAlpha(1.0)
     pin.zoneName = zoneName
+    pin.noteId = zoneName
 
     -- Title bar
     local titleBar = CreateFrame("Frame", nil, pin, "BackdropTemplate")
@@ -199,7 +200,7 @@ function ZonePins:CreateZonePin(zoneName, zoneData)
     local titleText = OneWoW_GUI:CreateFS(titleBar, 10)
     titleText:SetPoint("LEFT",  titleBar, "LEFT",  5, 0)
     titleText:SetPoint("RIGHT", titleBar, "RIGHT", -25, 0)
-    titleText:SetText(zoneName)
+    titleText:SetText(ns.Zones and ns.Zones:FormatTitleFromData(zoneData) or zoneName)
     titleText:SetJustifyH("LEFT")
     titleText:SetTextColor(titleColor[1], titleColor[2], titleColor[3], 1)
     pin.titleText = titleText
@@ -624,10 +625,16 @@ function ZonePins:RefreshZonePinColors(zoneName)
     if not ns.zonePins or not ns.zonePins[zoneName] then return end
 
     local pinFrame = ns.zonePins[zoneName]
-    if not pinFrame or not pinFrame:IsShown() then return end
+    if not pinFrame then return end
 
     local zoneData = ns.Zones and ns.Zones:GetZone(zoneName)
     if not zoneData then return end
+
+    if pinFrame.titleText and ns.Zones then
+        pinFrame.titleText:SetText(ns.Zones:FormatTitleFromData(zoneData))
+        if pinFrame.UpdateTitleHeight then pinFrame:UpdateTitleHeight() end
+    end
+    if not pinFrame:IsShown() then return end
 
     local pinColorKey = zoneData.pinColor or "hunter"
     local colorConfig = ns.Config:GetResolvedColorConfig(pinColorKey)
