@@ -1213,6 +1213,36 @@ function ns.UI.CreateZonesTab(parent)
                         end
                     end,
                 },
+                delete = {
+                    tooltip = { title = L["TOOLTIP_ZONE_DELETE"], desc = L["TOOLTIP_ZONE_DELETE_DESC"] },
+                    onClick = function()
+                        local zId = zone.name
+                        local title = zone.title
+                            or (ns.Zones and ns.Zones:FormatTitleFromData(zone.data))
+                            or zId
+                        StaticPopupDialogs["ONEWOW_NOTES_CONFIRM_DELETE_ZONE"] = {
+                            text = string.format(L["ZONE_CONFIRM_DELETE"], title),
+                            button1 = DELETE,
+                            button2 = CANCEL,
+                            OnAccept = function()
+                                if ns.ZonePins then ns.ZonePins:DestroyZonePin(zId) end
+                                if ns.Zones then ns.Zones:RemoveZone(zId) end
+                                if selectedZone == zId then
+                                    selectedZone = nil
+                                    if emptyMessage then emptyMessage:Show() end
+                                    if detailPanel.editorContent then
+                                        for _, frame in pairs(detailPanel.editorContent) do
+                                            if frame and frame.Hide then frame:Hide() end
+                                        end
+                                    end
+                                end
+                                parent.RefreshZonesList()
+                            end,
+                            timeout = 0, whileDead = true, hideOnEscape = true,
+                        }
+                        StaticPopup_Show("ONEWOW_NOTES_CONFIRM_DELETE_ZONE")
+                    end,
+                },
             }
 
             local row = ns.UI.CreateNotesListRow(scrollChild, rowOpts)

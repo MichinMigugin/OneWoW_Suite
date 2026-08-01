@@ -119,6 +119,7 @@
 - Zone notes link to Catalog Quests with that zone’s filter pre-filled
 - Zone notes store zone and subzone separately (opaque ids); titles still show “Zone - Subzone”; Catalog uses map/zone name so subzone notes find the right quests
 - Existing zone notes migrate once to the new shape on login
+- Zone list cards include a delete icon (same place as other Notes lists)
 
 ---
 
