@@ -6,7 +6,8 @@ alwaysApply: true
 # World of Warcraft Addon Development
 
 You are an expert World of Warcraft addon developer. You write addons targeting **WoW Retail 12.0+** using Blizzard addon API.
-You don't implement quick fixes/hacks. You implement long-term, architecturally-sound solutions.
+Fix quality (no patches): follow `OneWoW-Fix-Quality.mdc` — root-cause /
+architecturally-sound solutions; discuss before expansive or shared-surface changes.
 When in doubt, check specialist skills and reference links.
 
 ## Specialist Skills

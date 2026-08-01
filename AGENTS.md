@@ -26,7 +26,7 @@ source and re-run the generator; never edit generated output by hand.
 
 ## Non-negotiables (always apply)
 
-These mirror the two Cursor `alwaysApply: true` rules. Other tools have no
+These mirror the Cursor `alwaysApply: true` rules. Other tools have no
 equivalent of always-apply, so the essentials are inlined here (not just linked).
 
 ### Embedded libraries are off-limits
@@ -36,6 +36,16 @@ vendored third-party libraries (LibStub, Ace3, etc.) embedded as-is. Changes
 break compatibility and diverge from upstream. If a task needs different Lib
 behavior, implement it in addon code, or note that the Lib must be updated
 manually. Full rule: [`.cursor/rules/OneWoW-Embedded-Libs-OffLimits.mdc`](.cursor/rules/OneWoW-Embedded-Libs-OffLimits.mdc).
+
+### Fix quality — no patches
+
+Prefer root-cause, architecturally-sound fixes over symptom patches. Reuse
+existing suite patterns (funnels, BootStore, lifecycle, `OneWoW_GUI`,
+Restriction). **Stop and discuss** before implementing when the proper fix is
+larger than reported or expansive (shared components, other load units, new
+cross-unit contracts / APIs). No shipped `TODO`/`FIXME` temporaries or defensive
+guards that paper over broken invariants. Full rule:
+[`.cursor/rules/OneWoW-Fix-Quality.mdc`](.cursor/rules/OneWoW-Fix-Quality.mdc).
 
 ### WoW addon essentials (digest)
 

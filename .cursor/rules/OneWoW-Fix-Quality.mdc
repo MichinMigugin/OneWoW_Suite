@@ -1,0 +1,72 @@
+---
+description: Prefer long-term, architecturally-sound fixes over symptom patches. Discuss before expansive or shared-surface changes.
+alwaysApply: true
+---
+
+# Fix Quality — No Patches
+
+Do **not** ship quick fixes, local workarounds, or symptom patches. Prefer the
+root-cause fix that fits existing suite architecture (funnels, BootStore,
+lifecycle hooks, `OneWoW_GUI`, Restriction, shared helpers).
+
+## Decision checklist
+
+Before coding a fix, ask:
+
+1. **Where does ownership live?** Fix the producer / shared layer, not only the
+   call site that failed.
+2. **Is there an existing pattern?** Reuse it; do not invent a parallel path.
+3. **Is the proper fix larger than the reported bug?** If yes → **stop and
+   discuss** (see below). Do not silently expand scope.
+4. **Would this leave a temporary?** No `TODO`/`FIXME` “fix later,” commented-out
+   dead paths, or defensive guards that paper over broken invariants.
+
+## Always discuss first (expansive fixes)
+
+**Stop and discuss with the user before implementing** when the sound fix would:
+
+- Change shared components (`OneWoW_GUI`, core services, Restriction, DB helpers)
+- Touch multiple load units / other addons beyond the reported surface
+- Add or change cross-unit contracts (`_API`, lifecycle, BootStore, manifests)
+- Require a new shared API, funnel, or architectural pattern
+- Be substantially larger in scope than the bug or request described
+
+State the root cause, the proposed proper fix, what else it touches, and any
+narrower alternatives. Wait for direction. A tactical patch is allowed only when
+the user explicitly accepts a short-term fix (ideally with a follow-up plan).
+
+## Suite anti-patterns
+
+```lua
+-- BAD: local lifecycle bypass because a module "wasn't ready"
+f:RegisterEvent("PLAYER_LOGIN")
+
+-- GOOD: suite lifecycle
+OneWoW_MyHub:RegisterLoginHandler("feature", fn)
+-- or BootStore onLogin / onEnteringWorld
+```
+
+```lua
+-- BAD: paper over missing init / RequiredDeps
+if OneWoW_GUI and OneWoW_GUI.SomeMethod then ...
+
+-- GOOD: call directly; fix load order or invariants
+OneWoW_GUI:SomeMethod(...)
+```
+
+```lua
+-- BAD: one-off widget / helper copied into a feature module
+-- GOOD: check OneWoW_GUI (or the owning service) first; propose extending
+--       the shared surface if missing — discuss before adding it
+```
+
+```lua
+-- BAD: silent pcall / nil-swallow to hide a real bug at the call site
+-- GOOD: fix the producer, or let the error surface so it gets fixed
+```
+
+## Related
+
+- Architecture details → load `onewow-suite-architecture` / `OneWoW-Suite-Architecture.mdc`
+- GUI reuse → load `onewow-gui-ui`
+- Nil/existence papering → `No-Defensive-Guards.mdc`
