@@ -29,6 +29,8 @@ local DEFAULTS = {
     },
     lastModuleTab = "home",
     lastSubTabs = {},
+    -- Per-section ordered favorite sub-tab ids (hub row-2 pins).
+    subTabFavorites = {},
     debugTrace = false,
     -- TOC Version string last dismissed in the What's New dialog (account-wide).
     whatsNewDismissedVersion = "",

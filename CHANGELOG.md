@@ -10,6 +10,7 @@
 - Summary bar reports how many addons are loaded and how many need attention; version mismatches highlight the card and a footer banner
 - Command Options lists Direct Deposit and Shopping List subcommands; other primary opens live on the cards
 - Hub navigation uses a section dropdown (Home, features, Settings) under the title bar, with search on the same toolbar; the Home entry is labeled Home (window title stays OneWoW)
+- Sections with more than one page get a second dropdown for that section’s pages, plus a favorite star; favorited pages pin on a short row under the toolbar (drag to reorder; overflow returns to the top of the page menu)
 - Text links use dedicated theme colors (idle / hover / underline) so they no longer match section headers; in-hub links like Manage Features show a small `>`
 - Community links live on Home (Discord, Donate, OneWoW Home) with the same labels as before; they are no longer on Settings
 
@@ -59,6 +60,9 @@
 ---
 
 # AltTracker
+## UI
+- Overview panels no longer repeat the tab name (Account Overview, Auctions Overview, Items Overview, and the other … Overview headers)
+
 ## Settings
 - Roles & Alts pointer embeds the destination as an in-sentence text link (`Settings / Roles & Alts`); Database Manager uses the shared suite strings
 
@@ -87,6 +91,9 @@
 ---
 
 # Notes
+## UI
+- List tabs no longer show a redundant "… Controls" label above the toolbar (Notes, Items, Collectibles, Zones, Players, NPCs)
+
 ## NPCs
 - Added Quartermaster category
 - Category lists sort as All, Other, then A–Z

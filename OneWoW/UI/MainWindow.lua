@@ -19,9 +19,20 @@ local settingsPanel = nil
 local placeholderData = {}
 local sectionNavDropdown = nil
 local sectionNavText = nil
+local subNavDropdown = nil
+local subNavText = nil
+local subNavChevron = nil
+local favoriteStar = nil
+local pinReorder = nil
+local allPinFrames = {}        -- every pin created this refresh (visible + spilled)
+local spilledFavoriteNames = {}
 local sectionModuleNames = {}  -- hub module names between home and settings (refresh detection)
 local sectionLabels = {}       -- moduleName -> display text
 local FRAME_NAME = "OneWoWMainWindow"
+local PIN_HEIGHT = 20
+local PIN_FONT_SIZE = 11
+local PIN_PAD_X = 14
+local FAVORITE_MARK = "★ "
 
 local function RemoveFromUISpecialFrames(name)
     for i = #UISpecialFrames, 1, -1 do
@@ -47,23 +58,108 @@ hooksecurefunc("ToggleGameMenu", function()
     end
 end)
 
-local function CreateRow2TabButton(parent, text, subTabName, disabled)
+local function GetSectionTabs(moduleName)
+    if moduleName == "settings" then
+        return UI.settingsTabs or {}
+    end
+    local mod = ns.ModuleRegistry:GetModule(moduleName)
+    if mod and mod.tabs then
+        return mod.tabs
+    end
+    return {}
+end
+
+local function GetTabDisplayName(tabInfo)
+    if not tabInfo then return "" end
+    return type(tabInfo.displayName) == "function" and tabInfo.displayName() or (tabInfo.displayName or tabInfo.name or "")
+end
+
+local function FindSectionTab(moduleName, subTabName)
+    for _, tabInfo in ipairs(GetSectionTabs(moduleName)) do
+        if tabInfo.name == subTabName then
+            return tabInfo
+        end
+    end
+    return nil
+end
+
+local function GetFavoritesList(moduleName)
+    local root = ns.db.global.subTabFavorites
+    if not root[moduleName] then
+        root[moduleName] = {}
+    end
+    return root[moduleName]
+end
+
+local function PruneFavorites(moduleName)
+    local list = GetFavoritesList(moduleName)
+    local valid = {}
+    for _, tabInfo in ipairs(GetSectionTabs(moduleName)) do
+        valid[tabInfo.name] = true
+    end
+    for i = #list, 1, -1 do
+        if not valid[list[i]] then
+            tremove(list, i)
+        end
+    end
+    return list
+end
+
+local function IsFavorited(moduleName, subTabName)
+    for _, name in ipairs(GetFavoritesList(moduleName)) do
+        if name == subTabName then
+            return true
+        end
+    end
+    return false
+end
+
+local function SetFavorited(moduleName, subTabName, on)
+    local list = GetFavoritesList(moduleName)
+    for i, name in ipairs(list) do
+        if name == subTabName then
+            if not on then
+                tremove(list, i)
+            end
+            return
+        end
+    end
+    if on then
+        tinsert(list, subTabName)
+    end
+end
+
+local function MoveFavoriteEntry(moduleName, fromIndex, toIndex)
+    local list = GetFavoritesList(moduleName)
+    local n = #list
+    if fromIndex < 1 or fromIndex > n or toIndex < 1 or toIndex > n or fromIndex == toIndex then
+        return
+    end
+    local entry = tremove(list, fromIndex)
+    tinsert(list, toIndex, entry)
+end
+
+local function StyleToolbarDropdown(dropdown)
+    dropdown:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+    dropdown:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    dropdown:SetScript("OnEnter", function(myself)
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+    end)
+    dropdown:SetScript("OnLeave", function(myself)
+        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    end)
+end
+
+local function CreateFavoritePinButton(parent, text, subTabName)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    btn:SetHeight(26)
+    btn:SetHeight(PIN_HEIGHT)
     btn:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER)
     btn.subTabName = subTabName
-    btn.disabled = disabled or false
 
-    btn.text = OneWoW_GUI:CreateFS(btn, 12)
+    btn.text = OneWoW_GUI:CreateFS(btn, PIN_FONT_SIZE)
     btn.text:SetPoint("CENTER")
     btn.text:SetText(text)
-
-    if disabled then
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        return btn
-    end
+    btn:SetWidth((btn.text:GetStringWidth() or 40) + PIN_PAD_X)
 
     btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
@@ -88,8 +184,7 @@ end
 
 local function UpdateRow2Styling()
     for _, btn in ipairs(row2Buttons) do
-        if btn.disabled then
-        elseif btn.subTabName == currentSubTab then
+        if btn.subTabName == currentSubTab then
             btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
             btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
             btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
@@ -102,15 +197,219 @@ local function UpdateRow2Styling()
 end
 
 local function UpdateContentAreaAnchors()
-    if not contentArea then return end
+    if not contentArea or not row1Container then return end
     contentArea:ClearAllPoints()
+    local gap = OneWoW_GUI:GetSpacing("XS")
+    local topOffset = -gap
     if row2Container and row2Container:IsShown() then
-        contentArea:SetPoint("TOPLEFT", row2Container, "BOTTOMLEFT", 0, -OneWoW_GUI:GetSpacing("XS"))
-    else
-        contentArea:SetPoint("TOPLEFT", row1Container, "BOTTOMLEFT", 0, -OneWoW_GUI:GetSpacing("XS"))
+        topOffset = -(gap + (row2Container:GetHeight() or 22) + gap)
     end
+    -- Keep content full-bleed with the toolbar; pin row may be inset to nav/search.
+    contentArea:SetPoint("TOPLEFT", row1Container, "BOTTOMLEFT", 0, topOffset)
     local resizeInset = 18  -- Clear 16px resize handle + 2px margin
     contentArea:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -resizeInset, resizeInset)
+end
+
+local function ClearPinRow()
+    for _, btn in ipairs(allPinFrames) do
+        if pinReorder then
+            pinReorder:Detach(btn)
+        end
+        btn:Hide()
+        btn:ClearAllPoints()
+        btn:SetParent(nil)
+    end
+    wipe(allPinFrames)
+    wipe(row2Buttons)
+    wipe(spilledFavoriteNames)
+end
+
+local function EnsurePinReorder()
+    if pinReorder then return pinReorder end
+    pinReorder = OneWoW_GUI:CreateReorderDrag({
+        getItems = function()
+            return row2Buttons
+        end,
+        onReorder = function(from, to)
+            local fromBtn = row2Buttons[from]
+            local toBtn = row2Buttons[to]
+            if not fromBtn or not toBtn then return end
+            local list = GetFavoritesList(currentModuleTab)
+            local fromIdx, toIdx
+            for i, name in ipairs(list) do
+                if name == fromBtn.subTabName then fromIdx = i end
+                if name == toBtn.subTabName then toIdx = i end
+            end
+            if fromIdx and toIdx then
+                MoveFavoriteEntry(currentModuleTab, fromIdx, toIdx)
+                UI:RefreshSubNav()
+            end
+        end,
+        onPickup = function(btn)
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+        end,
+        onRestore = function()
+            UpdateRow2Styling()
+        end,
+        onHover = function(btn)
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+        end,
+        onUnhover = function()
+            UpdateRow2Styling()
+        end,
+    })
+    return pinReorder
+end
+
+local function LayoutFavoritePins(allPins)
+    wipe(spilledFavoriteNames)
+    wipe(row2Buttons)
+
+    if not row2Container or not allPins or #allPins == 0 then
+        if row2Container then
+            row2Container:Hide()
+            UpdateContentAreaAnchors()
+        end
+        return
+    end
+
+    local containerWidth = row2Container:GetWidth()
+    if containerWidth <= 0 then containerWidth = 1380 end
+    local spacing = OneWoW_GUI:GetSpacing("XS")
+    local x = 0
+    local visibleCount = 0
+    local reorder = EnsurePinReorder()
+
+    for i, btn in ipairs(allPins) do
+        local w = btn:GetWidth() or 40
+        local gap = (visibleCount > 0) and spacing or 0
+        if x + gap + w <= containerWidth + 0.5 then
+            btn:ClearAllPoints()
+            btn:SetPoint("TOPLEFT", row2Container, "TOPLEFT", x + gap, 0)
+            x = x + gap + w
+            btn:Show()
+            visibleCount = visibleCount + 1
+            row2Buttons[visibleCount] = btn
+            reorder:Attach(btn, visibleCount)
+        else
+            for j = i, #allPins do
+                local spilled = allPins[j]
+                spilled:Hide()
+                spilled:ClearAllPoints()
+                reorder:Detach(spilled)
+                spilledFavoriteNames[#spilledFavoriteNames + 1] = spilled.subTabName
+            end
+            break
+        end
+    end
+
+    if visibleCount > 0 then
+        row2Container:Show()
+    else
+        row2Container:Hide()
+    end
+    UpdateContentAreaAnchors()
+end
+
+local function SetSubNavVisible(visible)
+    if subNavChevron then
+        if visible then subNavChevron:Show() else subNavChevron:Hide() end
+    end
+    if subNavDropdown then
+        if visible then subNavDropdown:Show() else subNavDropdown:Hide() end
+    end
+    if favoriteStar then
+        if visible then favoriteStar:Show() else favoriteStar:Hide() end
+    end
+end
+
+local function BuildSubNavItems()
+    local items = {}
+    local moduleName = currentModuleTab
+    local tabs = GetSectionTabs(moduleName)
+    local favSet = {}
+    for _, name in ipairs(GetFavoritesList(moduleName)) do
+        favSet[name] = true
+    end
+
+    if #spilledFavoriteNames > 0 then
+        items[#items + 1] = { type = "header", text = FAVORITES }
+        for _, name in ipairs(spilledFavoriteNames) do
+            local tabInfo = FindSectionTab(moduleName, name)
+            if tabInfo and not tabInfo.disabled then
+                items[#items + 1] = {
+                    value = name,
+                    text = GetTabDisplayName(tabInfo),
+                    filterKey = GetTabDisplayName(tabInfo),
+                }
+            end
+        end
+        items[#items + 1] = { type = "divider" }
+    end
+
+    for _, tabInfo in ipairs(tabs) do
+        local label = GetTabDisplayName(tabInfo)
+        if favSet[tabInfo.name] then
+            label = FAVORITE_MARK .. label
+        end
+        items[#items + 1] = {
+            value = tabInfo.name,
+            text = label,
+            filterKey = GetTabDisplayName(tabInfo),
+        }
+    end
+    return items
+end
+
+function UI:RefreshSubNav()
+    if not isInitialized then return end
+
+    local moduleName = currentModuleTab
+    local tabs = GetSectionTabs(moduleName)
+    local showSubNav = moduleName ~= "home" and #tabs > 1
+
+    SetSubNavVisible(showSubNav)
+
+    if not showSubNav then
+        ClearPinRow()
+        if row2Container then
+            row2Container:Hide()
+            UpdateContentAreaAnchors()
+        end
+        return
+    end
+
+    PruneFavorites(moduleName)
+
+    local tabInfo = FindSectionTab(moduleName, currentSubTab)
+    local label = tabInfo and GetTabDisplayName(tabInfo) or (currentSubTab or "")
+    if subNavText then
+        subNavText:SetText(label)
+    end
+    if subNavDropdown then
+        subNavDropdown._activeValue = currentSubTab
+    end
+
+    if favoriteStar then
+        favoriteStar:SetFavorite(currentSubTab and IsFavorited(moduleName, currentSubTab) or false)
+    end
+
+    ClearPinRow()
+    local allPins = {}
+    for _, name in ipairs(GetFavoritesList(moduleName)) do
+        local info = FindSectionTab(moduleName, name)
+        if info and not info.disabled then
+            local pin = CreateFavoritePinButton(row2Container, GetTabDisplayName(info), name)
+            allPins[#allPins + 1] = pin
+            allPinFrames[#allPinFrames + 1] = pin
+        end
+    end
+
+    LayoutFavoritePins(allPins)
+    if row2Container and #row2Buttons > 0 then
+        OneWoW_GUI:ApplyFontToFrame(row2Container)
+    end
+    UpdateRow2Styling()
 end
 
 local activeContentFrame = nil
@@ -229,52 +528,6 @@ function UI:RefreshHomeStatus()
     end
 end
 
-local function LayoutRow2Buttons()
-    if not row2Container or #row2Buttons == 0 then return end
-    local containerWidth = row2Container:GetWidth()
-    if containerWidth <= 0 then containerWidth = 1380 end
-    local numBtns = #row2Buttons
-    local spacing = OneWoW_GUI:GetSpacing("XS")
-    local btnWidth = (containerWidth - (numBtns - 1) * spacing) / numBtns
-
-    for i, btn in ipairs(row2Buttons) do
-        btn:ClearAllPoints()
-        btn:SetWidth(btnWidth)
-        if i == 1 then
-            btn:SetPoint("TOPLEFT", row2Container, "TOPLEFT", 0, 0)
-        else
-            btn:SetPoint("TOPLEFT", row2Buttons[i - 1], "TOPRIGHT", spacing, 0)
-        end
-    end
-end
-
-local function BuildRow2ForModule(moduleName)
-    for _, btn in ipairs(row2Buttons) do
-        btn:Hide()
-        btn:ClearAllPoints()
-        btn:SetParent(nil)
-    end
-    row2Buttons = {}
-
-    local mod = ns.ModuleRegistry:GetModule(moduleName)
-    if not mod or not mod.tabs or #mod.tabs == 0 then
-        row2Container:Hide()
-        UpdateContentAreaAnchors()
-        return
-    end
-
-    for _, tabInfo in ipairs(mod.tabs) do
-        local displayText = type(tabInfo.displayName) == "function" and tabInfo.displayName() or tabInfo.displayName
-        local btn = CreateRow2TabButton(row2Container, displayText, tabInfo.name)
-        table.insert(row2Buttons, btn)
-    end
-
-    LayoutRow2Buttons()
-    OneWoW_GUI:ApplyFontToFrame(row2Container)
-
-    row2Container:Show()
-    UpdateContentAreaAnchors()
-end
 
 function UI:SelectModuleTab(moduleName)
     -- Lazy modules load the first time their tab is opened. Dormant until modules
@@ -296,8 +549,7 @@ function UI:SelectModuleTab(moduleName)
     HideAllContent()
 
     if moduleName == "home" then
-        row2Container:Hide()
-        UpdateContentAreaAnchors()
+        UI:RefreshSubNav()
         if not homePanel then
             homePanel = CreateFrame("Frame", nil, contentArea)
             homePanel:SetAllPoints()
@@ -310,23 +562,6 @@ function UI:SelectModuleTab(moduleName)
 
     if moduleName == "settings" then
         if UI.settingsTabs and #UI.settingsTabs > 0 then
-            for _, btn in ipairs(row2Buttons) do
-                btn:Hide()
-                btn:ClearAllPoints()
-                btn:SetParent(nil)
-            end
-            row2Buttons = {}
-
-            for _, tabInfo in ipairs(UI.settingsTabs) do
-                local btn = CreateRow2TabButton(row2Container, type(tabInfo.displayName) == "function" and tabInfo.displayName() or tabInfo.displayName, tabInfo.name, tabInfo.disabled)
-                table.insert(row2Buttons, btn)
-            end
-
-            LayoutRow2Buttons()
-            OneWoW_GUI:ApplyFontToFrame(row2Container)
-            row2Container:Show()
-            UpdateContentAreaAnchors()
-
             local lastSub = ns.db.global.lastSubTabs["settings"]
             local firstTab = UI.settingsTabs[1].name
             local targetTab = lastSub or firstTab
@@ -342,8 +577,7 @@ function UI:SelectModuleTab(moduleName)
 
             UI:SelectSubTab("settings", targetTab)
         else
-            row2Container:Hide()
-            UpdateContentAreaAnchors()
+            UI:RefreshSubNav()
             if not settingsPanel then
                 settingsPanel = CreateFrame("Frame", nil, contentArea)
                 settingsPanel:SetAllPoints()
@@ -355,8 +589,7 @@ function UI:SelectModuleTab(moduleName)
     end
 
     if placeholderData[moduleName] then
-        row2Container:Hide()
-        UpdateContentAreaAnchors()
+        UI:RefreshSubNav()
         local key = moduleName .. ":placeholder"
         if not moduleContentFrames[key] then
             local frame = CreateFrame("Frame", nil, contentArea)
@@ -369,16 +602,14 @@ function UI:SelectModuleTab(moduleName)
         return
     end
 
-    BuildRow2ForModule(moduleName)
-
-    local mod = ns.ModuleRegistry:GetModule(moduleName)
-    if mod and mod.tabs and #mod.tabs > 0 then
+    local tabs = GetSectionTabs(moduleName)
+    if #tabs > 0 then
         local lastSub = ns.db.global.lastSubTabs[moduleName]
-        local firstTab = mod.tabs[1].name
+        local firstTab = tabs[1].name
         local targetTab = lastSub or firstTab
 
         local found = false
-        for _, tabInfo in ipairs(mod.tabs) do
+        for _, tabInfo in ipairs(tabs) do
             if tabInfo.name == targetTab then
                 found = true
                 break
@@ -387,6 +618,8 @@ function UI:SelectModuleTab(moduleName)
         if not found then targetTab = firstTab end
 
         UI:SelectSubTab(moduleName, targetTab)
+    else
+        UI:RefreshSubNav()
     end
 end
 
@@ -454,7 +687,7 @@ function UI:SelectSubTab(moduleName, subTabName)
         OneWoW_Notes_API.CloseHelpPanel()
     end
 
-    UpdateRow2Styling()
+    UI:RefreshSubNav()
     HideAllContent()
 
     local key = moduleName .. ":" .. subTabName
@@ -573,9 +806,7 @@ function UI:InitMainWindow()
     row1Container:SetPoint("TOPRIGHT", titleBar, "BOTTOMRIGHT", 0, -OneWoW_GUI:GetSpacing("XS"))
 
     row2Container = CreateFrame("Frame", nil, MainWindow)
-    row2Container:SetHeight(C.ROW2_HEIGHT)
-    row2Container:SetPoint("TOPLEFT", row1Container, "BOTTOMLEFT", 0, -OneWoW_GUI:GetSpacing("XS"))
-    row2Container:SetPoint("TOPRIGHT", row1Container, "BOTTOMRIGHT", 0, -OneWoW_GUI:GetSpacing("XS"))
+    row2Container:SetHeight(C.ROW2_FAVORITE_HEIGHT or 22)
     row2Container:Hide()
 
     contentArea = CreateFrame("Frame", nil, MainWindow)
@@ -588,15 +819,7 @@ function UI:InitMainWindow()
         text = SectionLabelFor(currentModuleTab),
     })
     sectionNavDropdown:SetPoint("LEFT", row1Container, "LEFT", OneWoW_GUI:GetSpacing("SM"), 0)
-    -- Toolbar twin of search: readable edge without full accent chrome.
-    sectionNavDropdown:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    sectionNavDropdown:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    sectionNavDropdown:SetScript("OnEnter", function(myself)
-        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-    end)
-    sectionNavDropdown:SetScript("OnLeave", function(myself)
-        myself:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    end)
+    StyleToolbarDropdown(sectionNavDropdown)
     OneWoW_GUI:AttachFilterMenu(sectionNavDropdown, {
         searchable = false,
         menuWidth = 180,
@@ -612,12 +835,79 @@ function UI:InitMainWindow()
         end,
     })
 
+    subNavChevron = row1Container:CreateTexture(nil, "ARTWORK")
+    subNavChevron:SetSize(14, 14)
+    subNavChevron:SetPoint("LEFT", sectionNavDropdown, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
+    subNavChevron:SetAtlas("shop-header-arrow-disabled")
+    -- Mirror horizontally so the shop arrow reads as a breadcrumb ">".
+    subNavChevron:SetTexCoord(1, 0, 0, 1)
+    subNavChevron:Hide()
+
+    subNavDropdown, subNavText = OneWoW_GUI:CreateDropdown(row1Container, {
+        width = 190,
+        height = 26,
+        text = "",
+    })
+    subNavDropdown:SetPoint("LEFT", subNavChevron, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
+    StyleToolbarDropdown(subNavDropdown)
+    OneWoW_GUI:AttachFilterMenu(subNavDropdown, {
+        searchable = false,
+        menuWidth = 220,
+        buildItems = function()
+            return BuildSubNavItems()
+        end,
+        onSelect = function(value, displayText)
+            local tabInfo = FindSectionTab(currentModuleTab, value)
+            if tabInfo and tabInfo.disabled then
+                return
+            end
+            local clean = displayText or value
+            if type(clean) == "string" and clean:sub(1, #FAVORITE_MARK) == FAVORITE_MARK then
+                clean = clean:sub(#FAVORITE_MARK + 1)
+            end
+            subNavText:SetText(clean)
+            UI:SelectSubTab(currentModuleTab, value)
+        end,
+        getActiveValue = function()
+            return currentSubTab
+        end,
+    })
+    subNavDropdown:Hide()
+
+    favoriteStar = OneWoW_GUI:CreateFavoriteToggleButton(row1Container, {
+        size = 16,
+        favorite = false,
+        tooltipTitle = FAVORITES,
+        tooltipText = L["SUBNAV_FAVORITE_TIP"],
+        onClick = function(_, isFavorite)
+            if not currentSubTab then return end
+            SetFavorited(currentModuleTab, currentSubTab, isFavorite)
+            UI:RefreshSubNav()
+        end,
+    })
+    favoriteStar:SetPoint("LEFT", subNavDropdown, "RIGHT", OneWoW_GUI:GetSpacing("SM"), 0)
+    favoriteStar:Hide()
+
+    local searchBoxFrame = nil
     if ns.Search then
-        ns.Search:Init(row1Container)
+        searchBoxFrame = ns.Search:Init(row1Container)
+    end
+
+    -- Pin row matches section dropdown left / search right (not full window bleed).
+    local row2Gap = OneWoW_GUI:GetSpacing("XS")
+    row2Container:ClearAllPoints()
+    row2Container:SetPoint("TOP", row1Container, "BOTTOM", 0, -row2Gap)
+    row2Container:SetPoint("LEFT", sectionNavDropdown, "LEFT", 0, 0)
+    if searchBoxFrame then
+        row2Container:SetPoint("RIGHT", searchBoxFrame, "RIGHT", 0, 0)
+    else
+        row2Container:SetPoint("RIGHT", row1Container, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
     end
 
     row2Container:SetScript("OnSizeChanged", function()
-        LayoutRow2Buttons()
+        if isInitialized then
+            UI:RefreshSubNav()
+        end
     end)
 
     if UI.BuildSettingsTabs then
@@ -813,6 +1103,13 @@ function UI:FullReset()
     placeholderData = {}
     sectionNavDropdown = nil
     sectionNavText = nil
+    subNavDropdown = nil
+    subNavText = nil
+    subNavChevron = nil
+    favoriteStar = nil
+    pinReorder = nil
+    wipe(allPinFrames)
+    wipe(spilledFavoriteNames)
     wipe(sectionModuleNames)
     wipe(sectionLabels)
 end

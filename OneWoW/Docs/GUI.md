@@ -467,7 +467,7 @@ OneWoW_MyAddon.Constants = {
 **Base GUI keys** (override any; add custom keys as needed):
 WINDOW_WIDTH, WINDOW_HEIGHT, MIN_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT,
 PADDING, BUTTON_HEIGHT, BUTTON_WIDTH, SEARCH_HEIGHT, SEARCH_WIDTH,
-CHECKBOX_SIZE, ROW1_HEIGHT, ROW2_HEIGHT, LEFT_PANEL_WIDTH, PANEL_GAP, TAB_BUTTON_HEIGHT,
+CHECKBOX_SIZE, ROW1_HEIGHT, ROW2_HEIGHT, ROW2_FAVORITE_HEIGHT, LEFT_PANEL_WIDTH, PANEL_GAP, TAB_BUTTON_HEIGHT,
 TOGGLE_BUTTON_WIDTH, TOGGLE_BUTTON_HEIGHT, SCROLLBAR_WIDTH, SCROLLBAR_THUMB_WIDTH, SCROLLBAR_CONTENT_GUTTER
 
 **Common overrides (standalone windows only):** WINDOW_WIDTH, WINDOW_HEIGHT, MIN_WIDTH, MIN_HEIGHT, SIDEBAR_WIDTH, SEARCH_HEIGHT, ROW_HEIGHT, SUBTAB_BUTTON_HEIGHT.
@@ -1380,7 +1380,7 @@ These components exist in the library but are not fully documented here. See sou
 When building **`OptionsSliderTemplate`** sliders manually (custom layout), call **`OneWoW_GUI:ConfigureOptionsSliderEnds(slider, lowText, highText)`** after **`SetMinMaxValues`** / value setup. It applies **`slider.Low` / `slider.High`** (with **`_G[name.."Low"]`** fallback), **`HookScript("OnShow", …)`** once per slider, and stores texts so endpoints stay correct after **`ClearFrame`** + widget reuse (Blizzard otherwise restores localized “Low”/“High”).
 - **CreateProgressBar(parent, options)** — progress bar with theme colors
 - **CreateDataTable(parent, options)** — table with `ClearDataRows`, `LayoutDataRows`, `CreateDataRow`, and `SetColumns(newColumns)`. `SetColumns` swaps the column set at runtime: it tears down the old header buttons, rebuilds them for the new columns (re-running `onHeaderCreate`), and relayouts — so one table can switch between column sets / view-modes. Callers re-render their rows against the new layout afterward.
-- **CreateOverviewPanel(parent, options)** — overview layout
+- **CreateOverviewPanel(parent, options)** — overview layout; optional `title` (omit when the hub nav already names the screen)
 - **CreateMetricPanel(parent, options)** — Splunk-style single-value panel (`label`, `height`, `ttTitle`, `ttDesc`). Header: label left; optional high/low (`SetRange`) stacked upper-right (H above L). Methods: `SetValue(text, {color})`, `SetDelta(text, {tone})` (`up`/`down`/`neutral`) under the hero value, `SetRange(highText, lowText)`, `SetSparkline(values, {bipolar})` (texture-pool spark, max 48 points, no OnUpdate), `SetTooltipExtra(lines)`, `SetLabel(text)`.
 - **CreateStatusBar(parent, anchorFrame, options)** — status bar
 - **CreateRosterPanel(parent, anchorFrame)** — roster layout
@@ -1466,7 +1466,7 @@ WINDOW_WIDTH = 1075     MIN_WIDTH = 1075      MAX_WIDTH = 2000
 WINDOW_HEIGHT = 900     MIN_HEIGHT = 700      MAX_HEIGHT = 1200
 PADDING = 12            BUTTON_HEIGHT = 28    BUTTON_WIDTH = 100
 SEARCH_HEIGHT = 22      SEARCH_WIDTH = 200    CHECKBOX_SIZE = 24
-ROW1_HEIGHT = 35        ROW2_HEIGHT = 30
+ROW1_HEIGHT = 35        ROW2_HEIGHT = 30        ROW2_FAVORITE_HEIGHT = 22
 LEFT_PANEL_WIDTH = 320  PANEL_GAP = 10        TAB_BUTTON_HEIGHT = 30
 TOGGLE_BUTTON_WIDTH = 50  TOGGLE_BUTTON_HEIGHT = 22
 HERO_PANEL_HEIGHT = 118  SUMMARY_STRIP_HEIGHT = 66

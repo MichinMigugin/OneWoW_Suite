@@ -601,6 +601,8 @@ end
 function OneWoW_GUI:CreateFavoriteToggleButton(parent, options)
     options = options or {}
     local size = options.size or 22
+    local atlasOn = options.atlasOn or self:GetFavoriteAtlas()
+    local atlasOff = options.atlasOff or "auctionhouse-icon-favorite-off"
     local btn = CreateFrame("Button", nil, parent)
     btn:SetSize(size, size)
     btn:EnableMouse(true)
@@ -608,16 +610,17 @@ function OneWoW_GUI:CreateFavoriteToggleButton(parent, options)
 
     local tex = btn:CreateTexture(nil, "ARTWORK")
     tex:SetAllPoints()
-    tex:SetAtlas(self:GetFavoriteAtlas())
 
     local function applyVisual(on)
         btn._favorite = on and true or false
         if on then
+            tex:SetAtlas(atlasOn)
             tex:SetDesaturated(false)
             tex:SetAlpha(1)
         else
-            tex:SetDesaturated(true)
-            tex:SetAlpha(0.38)
+            tex:SetAtlas(atlasOff)
+            tex:SetDesaturated(false)
+            tex:SetAlpha(1)
         end
     end
 

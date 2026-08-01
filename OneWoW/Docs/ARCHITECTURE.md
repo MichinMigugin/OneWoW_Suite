@@ -594,11 +594,18 @@ subcommands; primary `/1w…` commands live on the cards.
 
 ## 5. Hub UI
 
-The hub chrome under the title bar is a **toolbar**: a **section dropdown** on the
-left (Home → always-show hub modules by `tabOrder` → Settings) and **search** on
-the right. Selecting a section calls `UI:SelectModuleTab`. Unloaded modules still
-appear (placeholders unchanged). Row-2 subtabs stay under the toolbar when the
-current section has them. Last selection persists in `ns.db.global.lastModuleTab`.
+The hub chrome under the title bar is a **toolbar**: a **section dropdown** (L1)
+on the left (Home → always-show hub modules by `tabOrder` → Settings), then a
+mirrored breadcrumb chevron and **context sub-nav dropdown** (L2) for the active
+section’s tabs, a **favorite star** that pins the current sub-tab, and **search**
+on the right. Selecting a section calls `UI:SelectModuleTab`. Unloaded modules
+still appear (placeholders unchanged). L2 + star hide when the section has ≤1
+sub-tab (e.g. Home). Row 2 shows **favorites-only** pins for the active section
+(shorter strip; empty when none); drag-reorder via `CreateReorderDrag`; pins that
+do not fit (rightmost overflow) stay favorited and appear under a Favorites group
+at the top of the L2 menu. Order persists in `ns.db.global.subTabFavorites`
+(`[moduleName] = { subTabName, ... }`). Last section/sub-tab selection persists in
+`ns.db.global.lastModuleTab` / `lastSubTabs`.
 
 ### 5.1 ModuleRegistry
 
@@ -1326,7 +1333,7 @@ guild bank is open).
 | `OneWoW/Services/Collectibles.lua` | Collectible identity resolver: key grammar (`type[:subtype]:id`), live display + collection state, no SV (see [COLLECTIBLES.md](COLLECTIBLES.md)) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
 | `OneWoW/UI/t-home.lua` | Home tab: addon cards, summary, Command Options + live refresh |
-| `OneWoW/UI/MainWindow.lua` | Hub window; section dropdown, placeholders, `FeatureStateChanged` |
+| `OneWoW/UI/MainWindow.lua` | Hub window; L1/L2 nav, favorite pins, placeholders, `FeatureStateChanged` |
 | `.cursor/rules/OneWoW-Suite-Architecture.mdc` | Scoped agent rule for suite load-unit patterns |
 | `.cursor/skills/onewow-suite-architecture/SKILL.md` | On-demand lifecycle / integration authoring guide |
 | `bin/check_suite_lifecycle.py` | Pre-commit: lifecycle `RegisterEvent` ban |

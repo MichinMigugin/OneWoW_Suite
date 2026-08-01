@@ -200,6 +200,7 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["HOME_UTILITIES"] = "實用工具",
     ["HOME_SPECIAL_THANKS"] = "特別鳴謝",
     ["HOME_THANKS_NAMES"] = "MacMode、SnerkDevil、tiradox、kellzilla，以及所有的 Beta 測試者",
+    ["SUBNAV_FAVORITE_TIP"] = "點擊以釘選或取消釘選目前頁面。拖曳圖釘可調整順序。放不下的圖釘會出現在子導覽選單頂部。",
 
     ["MODULE_ONEWOW"] = "OneWoW",
 

@@ -200,6 +200,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["HOME_UTILITIES"] = "Utilità",
     ["HOME_SPECIAL_THANKS"] = "Ringraziamenti speciali",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla, e tutti i beta tester",
+    ["SUBNAV_FAVORITE_TIP"] = "Fai clic per fissare o rimuovere la pagina corrente. Trascina i pin per riordinarli. Quelli che non entrano compaiono in cima al menu di sotto-navigazione.",
 
     ["MODULE_ONEWOW"] = "OneWoW",
 

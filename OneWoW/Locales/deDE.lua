@@ -200,6 +200,7 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["HOME_UTILITIES"] = "Werkzeuge",
     ["HOME_SPECIAL_THANKS"] = "Besonderer Dank",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla und alle Betatester",
+    ["SUBNAV_FAVORITE_TIP"] = "Klicken, um die aktuelle Seite anzuheften oder zu lösen. Pins per Ziehen neu anordnen. Pins, die nicht passen, erscheinen oben im Untermenü.",
 
     ["MODULE_ONEWOW"] = "OneWoW",
 

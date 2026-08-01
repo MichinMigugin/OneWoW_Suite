@@ -1194,8 +1194,13 @@ end
 
 function OneWoW_GUI:CreateOverviewPanel(parent, options)
     options = options or {}
-    local title = options.title or ""
+    local title = options.title
+    local hasTitle = type(title) == "string" and title ~= ""
     local height = options.height or 110
+    -- Reclaim the title row when callers omit a redundant section label.
+    if not hasTitle then
+        height = height - 22
+    end
     local stats = options.stats or {}
     local numCols = options.columns or 5
 
@@ -1214,15 +1219,22 @@ function OneWoW_GUI:CreateOverviewPanel(parent, options)
     panel:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     panel:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local titleFS = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    OneWoW_GUI:SetFontBaseSize(titleFS, 12)
-    OneWoW_GUI:SafeSetFont(titleFS, OneWoW_GUI:GetFont(), 12)
-    titleFS:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -6)
-    titleFS:SetText(title)
-    titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    local titleFS
+    if hasTitle then
+        titleFS = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        OneWoW_GUI:SetFontBaseSize(titleFS, 12)
+        OneWoW_GUI:SafeSetFont(titleFS, OneWoW_GUI:GetFont(), 12)
+        titleFS:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -6)
+        titleFS:SetText(title)
+        titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    end
 
     local statsContainer = CreateFrame("Frame", nil, panel)
-    statsContainer:SetPoint("TOPLEFT", titleFS, "BOTTOMLEFT", 0, -8)
+    if titleFS then
+        statsContainer:SetPoint("TOPLEFT", titleFS, "BOTTOMLEFT", 0, -8)
+    else
+        statsContainer:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -8)
+    end
     statsContainer:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -10, 6)
 
     local statBoxes = {}

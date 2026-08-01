@@ -200,6 +200,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["HOME_UTILITIES"] = "实用工具",
     ["HOME_SPECIAL_THANKS"] = "特别鸣谢",
     ["HOME_THANKS_NAMES"] = "MacMode、SnerkDevil、tiradox、kellzilla，以及所有的 Beta 测试者",
+    ["SUBNAV_FAVORITE_TIP"] = "点击以固定或取消固定当前页面。拖动图钉可调整顺序。放不下的图钉会出现在子导航菜单顶部。",
 
     ["MODULE_ONEWOW"] = "OneWoW",
 

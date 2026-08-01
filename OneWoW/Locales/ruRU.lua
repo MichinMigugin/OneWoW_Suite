@@ -200,6 +200,7 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
     ["HOME_UTILITIES"] = "Утилиты",
     ["HOME_SPECIAL_THANKS"] = "Особая благодарность",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla и всем бета-тестерам",
+    ["SUBNAV_FAVORITE_TIP"] = "Нажмите, чтобы закрепить или открепить текущую страницу. Перетаскивайте значки, чтобы менять порядок. Те, что не помещаются, появляются вверху меню подразделов.",
 
     ["MODULE_ONEWOW"] = "OneWoW",
 

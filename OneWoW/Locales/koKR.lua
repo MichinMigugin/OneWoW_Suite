@@ -200,6 +200,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["HOME_UTILITIES"] = "유틸리티",
     ["HOME_SPECIAL_THANKS"] = "특별 감사",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla, 그리고 모든 베타 테스터",
+    ["SUBNAV_FAVORITE_TIP"] = "클릭하여 현재 페이지를 고정하거나 해제합니다. 핀을 드래그하여 순서를 바꿉니다. 공간이 부족한 핀은 하위 탐색 메뉴 맨 위에 나타납니다.",
 
     ["MODULE_ONEWOW"] = "OneWoW",
 

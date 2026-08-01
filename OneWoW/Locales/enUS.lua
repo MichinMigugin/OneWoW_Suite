@@ -200,6 +200,7 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["HOME_UTILITIES"] = "Utilities",
     ["HOME_SPECIAL_THANKS"] = "Special Thanks",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla, and all Beta testers",
+    ["SUBNAV_FAVORITE_TIP"] = "Click to pin or unpin the current page. Drag pins to reorder. Pins that don't fit appear at the top of the sub-nav menu.",
 
     ["MODULE_ONEWOW"] = "OneWoW",
 

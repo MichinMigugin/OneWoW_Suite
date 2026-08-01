@@ -200,6 +200,7 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["HOME_UTILITIES"] = "Utilitaires",
     ["HOME_SPECIAL_THANKS"] = "Remerciements spéciaux",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla, et tous les bêta-testeurs",
+    ["SUBNAV_FAVORITE_TIP"] = "Cliquez pour épingler ou désépingler la page actuelle. Faites glisser les épingles pour les réordonner. Celles qui ne tiennent pas apparaissent en haut du menu de sous-navigation.",
 
     ["MODULE_ONEWOW"] = "OneWoW",
 

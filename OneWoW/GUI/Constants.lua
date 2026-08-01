@@ -94,6 +94,7 @@ OneWoW_GUI.Constants = {
         CHECKBOX_SIZE = 24,
         ROW1_HEIGHT = 35,
         ROW2_HEIGHT = 30,
+        ROW2_FAVORITE_HEIGHT = 22,
         LEFT_PANEL_WIDTH = 320,
         PANEL_GAP = 10,
         SCROLLBAR_WIDTH = 10,

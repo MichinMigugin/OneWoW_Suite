@@ -297,4 +297,5 @@ function Search:Init(parent, rightAnchor)
     drop:Hide()
 
     resultsFrame = drop
+    return box
 end

@@ -200,6 +200,7 @@ ns.Locale:Register(ADDON_NAME, "esES", {
     ["HOME_UTILITIES"] = "Utilidades",
     ["HOME_SPECIAL_THANKS"] = "Agradecimientos especiales",
     ["HOME_THANKS_NAMES"] = "MacMode, SnerkDevil, tiradox, kellzilla, y todos los probadores Beta",
+    ["SUBNAV_FAVORITE_TIP"] = "Haz clic para fijar o soltar la página actual. Arrastra los pines para reordenarlos. Los que no quepan aparecen arriba en el menú de subnavegación.",
 
     ["MODULE_ONEWOW"] = "OneWoW",
 
