@@ -92,7 +92,6 @@ function ns.UI.CreateNPCsTab(parent)
                 return
             end
             ns.NPCs:AddNPC(npcInfo.id, npcInfo)
-            print("|cFFFFD100OneWoW - NPCs:|r " .. string.format(L["ADDED_NPC_S"], npcInfo.name or npcInfo.id))
             parent.RefreshNPCsList()
             if parent.SelectNPC then parent.SelectNPC(npcInfo.id) end
         end
@@ -1107,7 +1106,6 @@ function ns.UI.ShowManualNPCEntryDialog(refreshParent)
                             name = npcName, category = cat, storage = store,
                             content = noteContent,
                         })
-                        print("|cFFFFD100OneWoW - NPCs:|r " .. string.format(L["ADDED_NPC_S"], npcName))
                         dlg:Hide()
                         if refreshParent and refreshParent.RefreshNPCsList then refreshParent.RefreshNPCsList() end
                         if refreshParent and refreshParent.SelectNPC then refreshParent.SelectNPC(npcID) end

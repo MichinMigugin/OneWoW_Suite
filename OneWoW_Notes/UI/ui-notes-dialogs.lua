@@ -73,7 +73,6 @@ function ns.UI.ShowAddNoteDialog()
                     if ns.NotesData then
                         local noteID = ns.NotesData:AddNote(noteTitle, noteData)
                         if noteID then
-                            print("|cFFFFD100OneWoW - Notes:|r " .. string.format(L["SUCCESS_NOTE_ADDED"], noteTitle))
                             dlg:Hide()
                             if ns.UI.notesFrame and ns.UI.notesFrame.RefreshNotesList then
                                 ns.UI.notesFrame.RefreshNotesList()

@@ -85,7 +85,6 @@ function ns.UI.CreateZonesTab(parent)
         selectedZone = noteId
         parent.RefreshZonesList()
         if parent.SelectZone then parent.SelectZone(noteId) end
-        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"], title))
     end)
 
     local addParentBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["ZONE_ADD_PARENT"], height = 25, minWidth = 80 })
@@ -128,7 +127,6 @@ function ns.UI.CreateZonesTab(parent)
         selectedZone = noteId
         parent.RefreshZonesList()
         if parent.SelectZone then parent.SelectZone(noteId) end
-        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"], parentZoneName))
     end)
 
     local categoryDropdown = ns.UI.CreateThemedDropdown(controlPanel, CATEGORY, 140, 25)
@@ -1396,8 +1394,6 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
                             fontSize = fontSize, opacity = opacity,
                             mapID = mapID,
                         })
-                        local title = ns.Zones:FormatTitle(zone, subzone)
-                        print("|cFFFFD100OneWoW - Zones:|r " .. string.format(L["MSG_ZONE_ADDED"], title))
                         dlg:Hide()
                         if refreshParent and refreshParent.RefreshZonesList then refreshParent.RefreshZonesList() end
                         if refreshParent and refreshParent.SelectZone then refreshParent.SelectZone(noteId) end

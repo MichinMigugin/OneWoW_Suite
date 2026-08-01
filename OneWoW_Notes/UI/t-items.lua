@@ -50,7 +50,6 @@ function ns.UI.CreateItemsTab(parent)
                     return
                 end
                 ns.Items:AddItem(itemID, { category = "General", storage = "account" })
-                print("|cFFFFD100OneWoW - Items:|r " .. string.format(L["MSG_ITEM_ADDED"], (itemName or itemID)))
                 parent.RefreshItemsList()
                 ClearCursor()
             end

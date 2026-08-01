@@ -93,6 +93,7 @@
 
 # Notes
 ## UI
+- Adding notes no longer spams chat with success lines (vendor collectible capture still reports how many were added)
 - List tabs no longer show a redundant "… Controls" label above the toolbar (Notes, Items, Collectibles, Zones, Players, NPCs)
 - Categories sort A–Z in every Notes type filter and dialog (All stays first in filters)
 - Note bodies focus when clicked anywhere and keep the cursor in view while typing

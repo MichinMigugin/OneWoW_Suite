@@ -51,7 +51,6 @@ function ns.UI.CreatePlayersTab(parent)
                 return
             end
             local fullName = ns.Players:AddPlayer(playerInfo.fullName, playerInfo)
-            print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["ADDED_PLAYER_S"], playerInfo.name or fullName))
             parent.RefreshPlayersList()
             if parent.SelectPlayer and fullName then parent.SelectPlayer(fullName) end
         end
@@ -1030,7 +1029,6 @@ function ns.UI.ShowManualPlayerEntryDialog(refreshParent)
                             profession2 = prof2 ~= "None" and prof2 or nil,
                             content = noteContent,
                         })
-                        print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["ADDED_PLAYER_S"], name))
                         dlg:Hide()
                         if refreshParent and refreshParent.RefreshPlayersList then
                             refreshParent.RefreshPlayersList()
@@ -1416,7 +1414,6 @@ function ns.UI.ShowAddAltsDialog(refreshParent)
                         end
                     end
                     if count > 0 then
-                        print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["PLAYER_ALTS_ADDED_COUNT"], count))
                         if refreshParent and refreshParent.RefreshPlayersList then
                             refreshParent.RefreshPlayersList()
                         end
@@ -1560,7 +1557,6 @@ function ns.UI.ShowAddGuildDialog(refreshParent)
                         end
                     end
                     if count > 0 then
-                        print("|cFFFFD100OneWoW - Players:|r " .. string.format(L["PLAYER_GUILD_ADDED_COUNT"], count))
                         if refreshParent and refreshParent.RefreshPlayersList then
                             refreshParent.RefreshPlayersList()
                         end
