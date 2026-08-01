@@ -121,7 +121,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["CTX_DESCRIPTION"] = "Label:",
 
 -- Notes controls and list
-    ["NOTES_CONTROLS"] = "Notes Controls",
     ["NOTES_LIST"] = "Notes List",
     ["MESSAGE_SELECT_NOTE"] = "Select a note to edit",
     -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
@@ -236,7 +235,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["CORE_PIN_HOVER_TASKS"] = "Hover tasks",
 
 -- Items tab
-    ["ITEMS_CONTROLS"] = "Items Controls",
     ["ITEMS_LIST"] = "Items List",
     ["TOOLTIP_BUTTON_ADD_ITEM_DESC"] = "Drag an item here to add a note for it.",
     ["TOOLTIP_BUTTON_ADD_BY_ID"] = "Add by Item ID",
@@ -260,7 +258,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ITEM_LOADING"] = "Loading...",
 
 -- Collectibles tab
-    ["COLLECTIBLES_CONTROLS"] = "Collectibles Controls",
     ["COLLECTIBLES_SELECT"] = "Select a collectible to view its details.",
     ["COLLECTIBLE_INTENT_LABEL"] = "Intent",
     ["COLLECTIBLE_INTENT_WANT"] = "Want",
@@ -282,7 +279,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["POPUP_EMPTY_DELETE_LIST"] = "Permanently delete all %d item(s) in the Delete List?",
 
 -- Zones tab
-    ["ZONES_CONTROLS"] = "Zones Controls",
     ["ZONES_LIST"] = "Zones List",
     ["ZONES_CURRENT_SECTION"] = "Current Zone(s)",
     ["BUTTON_ADD_CURRENT_ZONE"] = "Add Zone",
@@ -315,7 +311,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["UI_TOOLTIP_LINES"] = "Tooltip Lines:",
 
 -- Players tab
-    ["PLAYERS_CONTROLS"] = "Players Controls",
     ["PLAYERS_LIST"] = "Players List",
     ["BUTTON_ADD_TARGET"] = "Add Target",
     ["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"] = "Add a note for your current player target.",
@@ -353,7 +348,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["PLAYER_ADD_SELECTED"] = "Add Selected",
 
 -- NPCs tab
-    ["NPCS_CONTROLS"] = "NPCs Controls",
     ["NPCS_LIST"] = "NPCs List",
     ["TOOLTIP_BUTTON_ADD_TARGET_NPC_DESC"] = "Add a note for your current NPC target.",
     ["TOOLTIP_BUTTON_MANUAL_ENTRY_NPC_DESC"] = "Enter an NPC ID manually.",

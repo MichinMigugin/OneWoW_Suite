@@ -121,7 +121,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["CTX_DESCRIPTION"] = "Bezeichnung:",
 
 -- Notes controls and list
-    ["NOTES_CONTROLS"] = "Notizensteuerung",
     ["NOTES_LIST"] = "Notizenliste",
     ["MESSAGE_SELECT_NOTE"] = "Wähle eine Notiz zum Bearbeiten",
     -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
@@ -236,7 +235,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["CORE_PIN_HOVER_TASKS"] = "Aufgaben beim Überfahren",
 
 -- Items tab
-    ["ITEMS_CONTROLS"] = "Gegenstandssteuerung",
     ["ITEMS_LIST"] = "Gegenstandsliste",
     ["TOOLTIP_BUTTON_ADD_ITEM_DESC"] = "Ziehe einen Gegenstand hierher, um eine Notiz dafür hinzuzufügen.",
     ["TOOLTIP_BUTTON_ADD_BY_ID"] = "Per Gegenstands-ID hinzufügen",
@@ -260,7 +258,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ITEM_LOADING"] = "Lädt...",
 
 -- Collectibles tab
-    ["COLLECTIBLES_CONTROLS"] = "Sammelobjekt-Steuerung",
     ["COLLECTIBLES_SELECT"] = "Wähle ein Sammelobjekt, um Details anzuzeigen.",
     ["COLLECTIBLE_INTENT_LABEL"] = "Absicht",
     ["COLLECTIBLE_INTENT_WANT"] = "Gewünscht",
@@ -282,7 +279,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["POPUP_EMPTY_DELETE_LIST"] = "Alle %d Objekt(e) in der Löschliste endgültig löschen?",
 
 -- Zones tab
-    ["ZONES_CONTROLS"] = "Zonensteuerung",
     ["ZONES_LIST"] = "Zonenliste",
     ["ZONES_CURRENT_SECTION"] = "Aktuelle Zone(n)",
     ["BUTTON_ADD_CURRENT_ZONE"] = "Zone hinzufügen",
@@ -315,7 +311,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["UI_TOOLTIP_LINES"] = "Tooltip-Zeilen:",
 
 -- Players tab
-    ["PLAYERS_CONTROLS"] = "Spielersteuerung",
     ["PLAYERS_LIST"] = "Spielerliste",
     ["BUTTON_ADD_TARGET"] = "Ziel hinzufügen",
     ["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"] = "Eine Notiz für dein aktuelles Spielerziel hinzufügen.",
@@ -353,7 +348,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["PLAYER_ADD_SELECTED"] = "Auswahl hinzufügen",
 
 -- NPCs tab
-    ["NPCS_CONTROLS"] = "NSC-Steuerung",
     ["NPCS_LIST"] = "NSC-Liste",
     ["TOOLTIP_BUTTON_ADD_TARGET_NPC_DESC"] = "Eine Notiz für dein aktuelles NSC-Ziel hinzufügen.",
     ["TOOLTIP_BUTTON_MANUAL_ENTRY_NPC_DESC"] = "Eine NSC-ID manuell eingeben.",

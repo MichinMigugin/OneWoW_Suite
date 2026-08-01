@@ -121,7 +121,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["CTX_DESCRIPTION"] = "Étiquette :",
 
 -- Notes controls and list
-    ["NOTES_CONTROLS"] = "Contrôles des notes",
     ["NOTES_LIST"] = "Liste des notes",
     ["MESSAGE_SELECT_NOTE"] = "Sélectionnez une note à modifier",
     -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
@@ -236,7 +235,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["CORE_PIN_HOVER_TASKS"] = "Tâches au survol",
 
 -- Items tab
-    ["ITEMS_CONTROLS"] = "Contrôles des objets",
     ["ITEMS_LIST"] = "Liste des objets",
     ["TOOLTIP_BUTTON_ADD_ITEM_DESC"] = "Glissez un objet ici pour lui ajouter une note.",
     ["TOOLTIP_BUTTON_ADD_BY_ID"] = "Ajouter par ID d'objet",
@@ -260,7 +258,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["ITEM_LOADING"] = "Chargement...",
 
 -- Collectibles tab
-    ["COLLECTIBLES_CONTROLS"] = "Contrôles des objets de collection",
     ["COLLECTIBLES_SELECT"] = "Sélectionnez un objet de collection pour voir ses détails.",
     ["COLLECTIBLE_INTENT_LABEL"] = "Intention",
     ["COLLECTIBLE_INTENT_WANT"] = "Souhaité",
@@ -282,7 +279,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["POPUP_EMPTY_DELETE_LIST"] = "Supprimer définitivement les %d objet(s) de la liste de suppression ?",
 
 -- Zones tab
-    ["ZONES_CONTROLS"] = "Contrôles des zones",
     ["ZONES_LIST"] = "Liste des zones",
     ["ZONES_CURRENT_SECTION"] = "Zone(s) actuelle(s)",
     ["BUTTON_ADD_CURRENT_ZONE"] = "Ajouter une zone",
@@ -315,7 +311,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["UI_TOOLTIP_LINES"] = "Lignes d'infobulle :",
 
 -- Players tab
-    ["PLAYERS_CONTROLS"] = "Contrôles des joueurs",
     ["PLAYERS_LIST"] = "Liste des joueurs",
     ["BUTTON_ADD_TARGET"] = "Ajouter la cible",
     ["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"] = "Ajouter une note pour votre cible joueur actuelle.",
@@ -353,7 +348,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["PLAYER_ADD_SELECTED"] = "Ajouter la sélection",
 
 -- NPCs tab
-    ["NPCS_CONTROLS"] = "Contrôles des PNJ",
     ["NPCS_LIST"] = "Liste des PNJ",
     ["TOOLTIP_BUTTON_ADD_TARGET_NPC_DESC"] = "Ajouter une note pour votre cible PNJ actuelle.",
     ["TOOLTIP_BUTTON_MANUAL_ENTRY_NPC_DESC"] = "Saisir un ID de PNJ manuellement.",

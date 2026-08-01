@@ -121,7 +121,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["CTX_DESCRIPTION"] = "Etichetta:",
 
 -- Notes controls and list
-    ["NOTES_CONTROLS"] = "Controlli note",
     ["NOTES_LIST"] = "Elenco note",
     ["MESSAGE_SELECT_NOTE"] = "Seleziona una nota da modificare",
     -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
@@ -236,7 +235,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["CORE_PIN_HOVER_TASKS"] = "Attività al passaggio",
 
 -- Items tab
-    ["ITEMS_CONTROLS"] = "Controlli oggetti",
     ["ITEMS_LIST"] = "Elenco oggetti",
     ["TOOLTIP_BUTTON_ADD_ITEM_DESC"] = "Trascina un oggetto qui per aggiungere una nota.",
     ["TOOLTIP_BUTTON_ADD_BY_ID"] = "Aggiungi per ID oggetto",
@@ -260,7 +258,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["ITEM_LOADING"] = "Caricamento...",
 
 -- Collectibles tab
-    ["COLLECTIBLES_CONTROLS"] = "Controlli oggetti da collezione",
     ["COLLECTIBLES_SELECT"] = "Seleziona un oggetto da collezione per vederne i dettagli.",
     ["COLLECTIBLE_INTENT_LABEL"] = "Intenzione",
     ["COLLECTIBLE_INTENT_WANT"] = "Desiderato",
@@ -282,7 +279,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["POPUP_EMPTY_DELETE_LIST"] = "Eliminare definitivamente %d oggetto/i nella lista di eliminazione?",
 
 -- Zones tab
-    ["ZONES_CONTROLS"] = "Controlli zone",
     ["ZONES_LIST"] = "Elenco zone",
     ["ZONES_CURRENT_SECTION"] = "Zone attuali",
     ["BUTTON_ADD_CURRENT_ZONE"] = "Aggiungi zona",
@@ -315,7 +311,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["UI_TOOLTIP_LINES"] = "Righe del suggerimento:",
 
 -- Players tab
-    ["PLAYERS_CONTROLS"] = "Controlli giocatori",
     ["PLAYERS_LIST"] = "Elenco giocatori",
     ["BUTTON_ADD_TARGET"] = "Aggiungi bersaglio",
     ["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"] = "Aggiungi una nota per il tuo bersaglio giocatore attuale.",
@@ -353,7 +348,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["PLAYER_ADD_SELECTED"] = "Aggiungi selezionati",
 
 -- NPCs tab
-    ["NPCS_CONTROLS"] = "Controlli PNG",
     ["NPCS_LIST"] = "Elenco PNG",
     ["TOOLTIP_BUTTON_ADD_TARGET_NPC_DESC"] = "Aggiungi una nota per il tuo bersaglio PNG attuale.",
     ["TOOLTIP_BUTTON_MANUAL_ENTRY_NPC_DESC"] = "Inserisci un ID PNG manualmente.",

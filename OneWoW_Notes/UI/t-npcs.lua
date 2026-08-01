@@ -89,15 +89,10 @@ function ns.UI.CreateNPCsTab(parent)
     local controlPanel = CreateThemedBar(nil, parent)
     controlPanel:SetPoint("TOPLEFT",  parent, "TOPLEFT",  0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
-    controlPanel:SetHeight(75)
-
-    local controlTitle = OneWoW_GUI:CreateFS(controlPanel, 10)
-    controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
-    controlTitle:SetText(L["NPCS_CONTROLS"])
-    controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    controlPanel:SetHeight(45)
 
     local addTargetBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, { text = L["BUTTON_ADD_TARGET"], height = 25, minWidth = 80 })
-    addTargetBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -28)
+    addTargetBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -10)
     addTargetBtn:SetScript("OnClick", function()
         if ns.NPCs then
             local npcInfo = ns.NPCs:GetTargetNPCInfo()

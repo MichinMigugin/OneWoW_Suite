@@ -216,15 +216,10 @@ function ns.UI.CreateCollectiblesTab(parent)
     local controlPanel = CreateThemedBar(nil, parent)
     controlPanel:SetPoint("TOPLEFT",  parent, "TOPLEFT",  0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
-    controlPanel:SetHeight(75)
-
-    local controlTitle = OneWoW_GUI:CreateFS(controlPanel, 10)
-    controlTitle:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -8)
-    controlTitle:SetText(L["COLLECTIBLES_CONTROLS"])
-    controlTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    controlPanel:SetHeight(45)
 
     local catDD = ns.UI.CreateThemedDropdown(controlPanel, CATEGORY, 140, 25)
-    catDD:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -30)
+    catDD:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -10)
     local function RefreshCatOptions()
         local opts = {{text = ALL, value = "All"}}
         for _, c in ipairs(ns.Collectibles:GetCategories()) do

@@ -121,7 +121,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["CTX_DESCRIPTION"] = "이름표:",
 
 -- Notes controls and list
-    ["NOTES_CONTROLS"] = "메모 제어",
     ["NOTES_LIST"] = "메모 목록",
     ["MESSAGE_SELECT_NOTE"] = "편집할 메모를 선택하세요",
     -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
@@ -236,7 +235,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["CORE_PIN_HOVER_TASKS"] = "마우스 오버 작업",
 
 -- Items tab
-    ["ITEMS_CONTROLS"] = "아이템 제어",
     ["ITEMS_LIST"] = "아이템 목록",
     ["TOOLTIP_BUTTON_ADD_ITEM_DESC"] = "아이템을 여기에 끌어다 놓아 메모를 추가하세요.",
     ["TOOLTIP_BUTTON_ADD_BY_ID"] = "아이템 ID로 추가",
@@ -260,7 +258,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ITEM_LOADING"] = "불러오는 중...",
 
 -- Collectibles tab
-    ["COLLECTIBLES_CONTROLS"] = "수집품 관리",
     ["COLLECTIBLES_SELECT"] = "세부 정보를 보려면 수집품을 선택하세요.",
     ["COLLECTIBLE_INTENT_LABEL"] = "의도",
     ["COLLECTIBLE_INTENT_WANT"] = "원함",
@@ -282,7 +279,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["POPUP_EMPTY_DELETE_LIST"] = "삭제 목록에 있는 %d개의 항목을 영구적으로 삭제하시겠습니까?",
 
 -- Zones tab
-    ["ZONES_CONTROLS"] = "지역 제어",
     ["ZONES_LIST"] = "지역 목록",
     ["ZONES_CURRENT_SECTION"] = "현재 지역",
     ["BUTTON_ADD_CURRENT_ZONE"] = "지역 추가",
@@ -315,7 +311,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["UI_TOOLTIP_LINES"] = "툴팁 줄 수:",
 
 -- Players tab
-    ["PLAYERS_CONTROLS"] = "플레이어 제어",
     ["PLAYERS_LIST"] = "플레이어 목록",
     ["BUTTON_ADD_TARGET"] = "대상 추가",
     ["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"] = "현재 플레이어 대상에 대한 메모를 추가합니다.",
@@ -353,7 +348,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["PLAYER_ADD_SELECTED"] = "선택 항목 추가",
 
 -- NPCs tab
-    ["NPCS_CONTROLS"] = "NPC 제어",
     ["NPCS_LIST"] = "NPC 목록",
     ["TOOLTIP_BUTTON_ADD_TARGET_NPC_DESC"] = "현재 NPC 대상에 대한 메모를 추가합니다.",
     ["TOOLTIP_BUTTON_MANUAL_ENTRY_NPC_DESC"] = "NPC ID를 수동으로 입력합니다.",

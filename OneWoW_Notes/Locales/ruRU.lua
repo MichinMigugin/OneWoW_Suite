@@ -121,7 +121,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["CTX_DESCRIPTION"] = "Метка:",
 
 -- Notes controls and list
-    ["NOTES_CONTROLS"] = "Управление заметками",
     ["NOTES_LIST"] = "Список заметок",
     ["MESSAGE_SELECT_NOTE"] = "Выберите заметку для редактирования",
     -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
@@ -236,7 +235,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["CORE_PIN_HOVER_TASKS"] = "Задачи при наведении",
 
 -- Items tab
-    ["ITEMS_CONTROLS"] = "Управление предметами",
     ["ITEMS_LIST"] = "Список предметов",
     ["TOOLTIP_BUTTON_ADD_ITEM_DESC"] = "Перетащите предмет сюда, чтобы добавить к нему заметку.",
     ["TOOLTIP_BUTTON_ADD_BY_ID"] = "Добавить по ID предмета",
@@ -260,7 +258,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["ITEM_LOADING"] = "Загрузка...",
 
 -- Collectibles tab
-    ["COLLECTIBLES_CONTROLS"] = "Управление коллекцией",
     ["COLLECTIBLES_SELECT"] = "Выберите коллекционный предмет, чтобы просмотреть подробности.",
     ["COLLECTIBLE_INTENT_LABEL"] = "Намерение",
     ["COLLECTIBLE_INTENT_WANT"] = "Хочу",
@@ -282,7 +279,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["POPUP_EMPTY_DELETE_LIST"] = "Безвозвратно удалить все предметы (%d) из списка удаления?",
 
 -- Zones tab
-    ["ZONES_CONTROLS"] = "Управление зонами",
     ["ZONES_LIST"] = "Список зон",
     ["ZONES_CURRENT_SECTION"] = "Текущие зоны",
     ["BUTTON_ADD_CURRENT_ZONE"] = "Добавить зону",
@@ -315,7 +311,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["UI_TOOLTIP_LINES"] = "Строки подсказки:",
 
 -- Players tab
-    ["PLAYERS_CONTROLS"] = "Управление игроками",
     ["PLAYERS_LIST"] = "Список игроков",
     ["BUTTON_ADD_TARGET"] = "Добавить цель",
     ["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"] = "Добавить заметку для вашей текущей цели-игрока.",
@@ -353,7 +348,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["PLAYER_ADD_SELECTED"] = "Добавить выбранных",
 
 -- NPCs tab
-    ["NPCS_CONTROLS"] = "Управление НИП",
     ["NPCS_LIST"] = "Список НИП",
     ["TOOLTIP_BUTTON_ADD_TARGET_NPC_DESC"] = "Добавить заметку для вашей текущей цели-НИП.",
     ["TOOLTIP_BUTTON_MANUAL_ENTRY_NPC_DESC"] = "Ввести ID НИП вручную.",

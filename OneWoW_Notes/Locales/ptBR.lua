@@ -121,7 +121,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["CTX_DESCRIPTION"] = "Rótulo:",
 
 -- Notes controls and list
-    ["NOTES_CONTROLS"] = "Controles de notas",
     ["NOTES_LIST"] = "Lista de notas",
     ["MESSAGE_SELECT_NOTE"] = "Selecione uma nota para editar",
     -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
@@ -236,7 +235,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["CORE_PIN_HOVER_TASKS"] = "Tarefas ao passar o mouse",
 
 -- Items tab
-    ["ITEMS_CONTROLS"] = "Controles de itens",
     ["ITEMS_LIST"] = "Lista de itens",
     ["TOOLTIP_BUTTON_ADD_ITEM_DESC"] = "Arraste um item até aqui para adicionar uma nota a ele.",
     ["TOOLTIP_BUTTON_ADD_BY_ID"] = "Adicionar por ID de item",
@@ -260,7 +258,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["ITEM_LOADING"] = "Carregando...",
 
 -- Collectibles tab
-    ["COLLECTIBLES_CONTROLS"] = "Controles de colecionáveis",
     ["COLLECTIBLES_SELECT"] = "Selecione um colecionável para ver seus detalhes.",
     ["COLLECTIBLE_INTENT_LABEL"] = "Intenção",
     ["COLLECTIBLE_INTENT_WANT"] = "Desejado",
@@ -282,7 +279,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["POPUP_EMPTY_DELETE_LIST"] = "Excluir permanentemente %d item(ns) da lista de exclusão?",
 
 -- Zones tab
-    ["ZONES_CONTROLS"] = "Controles de zonas",
     ["ZONES_LIST"] = "Lista de zonas",
     ["ZONES_CURRENT_SECTION"] = "Zona(s) atual(is)",
     ["BUTTON_ADD_CURRENT_ZONE"] = "Adicionar zona",
@@ -315,7 +311,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["UI_TOOLTIP_LINES"] = "Linhas da dica:",
 
 -- Players tab
-    ["PLAYERS_CONTROLS"] = "Controles de jogadores",
     ["PLAYERS_LIST"] = "Lista de jogadores",
     ["BUTTON_ADD_TARGET"] = "Adicionar alvo",
     ["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"] = "Adicionar uma nota para seu alvo jogador atual.",
@@ -353,7 +348,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["PLAYER_ADD_SELECTED"] = "Adicionar selecionados",
 
 -- NPCs tab
-    ["NPCS_CONTROLS"] = "Controles de NPCs",
     ["NPCS_LIST"] = "Lista de NPCs",
     ["TOOLTIP_BUTTON_ADD_TARGET_NPC_DESC"] = "Adicionar uma nota para seu alvo NPC atual.",
     ["TOOLTIP_BUTTON_MANUAL_ENTRY_NPC_DESC"] = "Inserir um ID de NPC manualmente.",

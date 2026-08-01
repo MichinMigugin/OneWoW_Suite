@@ -121,7 +121,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["CTX_DESCRIPTION"] = "標籤：",
 
 -- Notes controls and list
-    ["NOTES_CONTROLS"] = "筆記控制",
     ["NOTES_LIST"] = "筆記清單",
     ["MESSAGE_SELECT_NOTE"] = "選擇一筆筆記以編輯",
     -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
@@ -236,7 +235,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["CORE_PIN_HOVER_TASKS"] = "滑鼠移過待辦",
 
 -- Items tab
-    ["ITEMS_CONTROLS"] = "物品控制",
     ["ITEMS_LIST"] = "物品清單",
     ["TOOLTIP_BUTTON_ADD_ITEM_DESC"] = "將物品拖到此處為其新增筆記。",
     ["TOOLTIP_BUTTON_ADD_BY_ID"] = "依物品 ID 新增",
@@ -260,7 +258,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["ITEM_LOADING"] = "載入中……",
 
 -- Collectibles tab
-    ["COLLECTIBLES_CONTROLS"] = "收藏品控制",
     ["COLLECTIBLES_SELECT"] = "選擇一個收藏品以檢視詳細資訊。",
     ["COLLECTIBLE_INTENT_LABEL"] = "意向",
     ["COLLECTIBLE_INTENT_WANT"] = "想要",
@@ -282,7 +279,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["POPUP_EMPTY_DELETE_LIST"] = "永久刪除刪除清單中的全部 %d 個物品？",
 
 -- Zones tab
-    ["ZONES_CONTROLS"] = "區域控制",
     ["ZONES_LIST"] = "區域清單",
     ["ZONES_CURRENT_SECTION"] = "目前區域",
     ["BUTTON_ADD_CURRENT_ZONE"] = "新增區域",
@@ -315,7 +311,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["UI_TOOLTIP_LINES"] = "提示行數：",
 
 -- Players tab
-    ["PLAYERS_CONTROLS"] = "玩家控制",
     ["PLAYERS_LIST"] = "玩家清單",
     ["BUTTON_ADD_TARGET"] = "新增目標",
     ["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"] = "為你目前的玩家目標新增筆記。",
@@ -353,7 +348,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["PLAYER_ADD_SELECTED"] = "新增所選",
 
 -- NPCs tab
-    ["NPCS_CONTROLS"] = "NPC 控制",
     ["NPCS_LIST"] = "NPC 清單",
     ["TOOLTIP_BUTTON_ADD_TARGET_NPC_DESC"] = "為你目前的 NPC 目標新增筆記。",
     ["TOOLTIP_BUTTON_MANUAL_ENTRY_NPC_DESC"] = "手動輸入 NPC ID。",

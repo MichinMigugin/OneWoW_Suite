@@ -122,7 +122,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["CTX_DESCRIPTION"] = "Etiqueta:",
 
 -- Notes controls and list
-    ["NOTES_CONTROLS"] = "Controles de notas",
     ["NOTES_LIST"] = "Lista de notas",
     ["MESSAGE_SELECT_NOTE"] = "Selecciona una nota para editarla",
     -- "Untitled" (NOTE_UNTITLED / CORE_PIN_UNTITLED) intentionally NOT deduped —
@@ -237,7 +236,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["CORE_PIN_HOVER_TASKS"] = "Tareas al pasar el mouse",
 
 -- Items tab
-    ["ITEMS_CONTROLS"] = "Controles de objetos",
     ["ITEMS_LIST"] = "Lista de objetos",
     ["TOOLTIP_BUTTON_ADD_ITEM_DESC"] = "Arrastra un objeto aquí para añadirle una nota.",
     ["TOOLTIP_BUTTON_ADD_BY_ID"] = "Añadir por ID de objeto",
@@ -261,7 +259,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["ITEM_LOADING"] = "Cargando...",
 
 -- Collectibles tab
-    ["COLLECTIBLES_CONTROLS"] = "Controles de coleccionables",
     ["COLLECTIBLES_SELECT"] = "Selecciona un coleccionable para ver sus detalles.",
     ["COLLECTIBLE_INTENT_LABEL"] = "Intención",
     ["COLLECTIBLE_INTENT_WANT"] = "Deseado",
@@ -283,7 +280,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["POPUP_EMPTY_DELETE_LIST"] = "¿Eliminar permanentemente los %d objeto(s) de la lista de eliminación?",
 
 -- Zones tab
-    ["ZONES_CONTROLS"] = "Controles de zonas",
     ["ZONES_LIST"] = "Lista de zonas",
     ["ZONES_CURRENT_SECTION"] = "Zona(s) actual(es)",
     ["BUTTON_ADD_CURRENT_ZONE"] = "Añadir zona",
@@ -316,7 +312,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["UI_TOOLTIP_LINES"] = "Líneas de la información:",
 
 -- Players tab
-    ["PLAYERS_CONTROLS"] = "Controles de jugadores",
     ["PLAYERS_LIST"] = "Lista de jugadores",
     ["BUTTON_ADD_TARGET"] = "Añadir objetivo",
     ["TOOLTIP_BUTTON_ADD_TARGET_PLAYER_DESC"] = "Añadir una nota para tu objetivo jugador actual.",
@@ -354,7 +349,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["PLAYER_ADD_SELECTED"] = "Añadir seleccionados",
 
 -- NPCs tab
-    ["NPCS_CONTROLS"] = "Controles de PNJ",
     ["NPCS_LIST"] = "Lista de PNJ",
     ["TOOLTIP_BUTTON_ADD_TARGET_NPC_DESC"] = "Añadir una nota para tu objetivo PNJ actual.",
     ["TOOLTIP_BUTTON_MANUAL_ENTRY_NPC_DESC"] = "Introducir un ID de PNJ manualmente.",
