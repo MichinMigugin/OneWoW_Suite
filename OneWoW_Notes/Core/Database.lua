@@ -50,9 +50,11 @@ local defaults = {
         -- One-time guard for remapping the retired "Mount"/"Transmog" built-in
         -- collectible categories onto "General" (set true after the pass).
         collectibleCategoriesMigrated = false,
-        -- One-time guards: NPC/Player catch-all category "Other" → "General".
+        -- One-shot guards: NPC/Player catch-all category "Other" → "General".
         npcCategoryOtherMigrated    = false,
         playerCategoryOtherMigrated = false,
+        -- One-shot: Items builtin "Collectible" retired → remap notes to "General".
+        itemCategoryCollectibleMigrated = false,
         -- One-time: zone notes title-keys → opaque ids with zone/subzone fields.
         zoneStructuredMigrated = false,
     },
@@ -103,6 +105,39 @@ function ns:MigrateNpcAndPlayerOtherCategories()
         ns.db.global.playerCategoryOtherMigrated = true
         if ns.Players then ns.Players:InvalidateCache() end
     end
+end
+
+--- Remap Items category "Collectible" → "General" (one-time). Drops
+--- "Collectible" from custom categories so it does not linger after the
+--- builtin was removed (Collectibles tab owns that domain now).
+function ns:MigrateItemCollectibleCategory()
+    if ns.db.global.itemCategoryCollectibleMigrated then
+        return
+    end
+
+    local function remapStore(store)
+        if type(store) ~= "table" then return end
+        for _, record in pairs(store) do
+            if type(record) == "table" and record.category == "Collectible" then
+                record.category = "General"
+            end
+        end
+    end
+
+    local function dropCollectibleFromCustom(list)
+        if type(list) ~= "table" then return end
+        for i = #list, 1, -1 do
+            if list[i] == "Collectible" then
+                tremove(list, i)
+            end
+        end
+    end
+
+    remapStore(ns.db.global.items)
+    remapStore(ns.db.char.items)
+    dropCollectibleFromCustom(ns.db.global.itemCustomCategories)
+    ns.db.global.itemCategoryCollectibleMigrated = true
+    if ns.Items then ns.Items:InvalidateCache() end
 end
 
 --- Rekey legacy title-keyed zone notes to opaque ids with zone/subzone fields.

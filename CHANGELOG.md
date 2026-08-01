@@ -11,6 +11,7 @@
 - Command Options lists Direct Deposit and Shopping List subcommands; other primary opens live on the cards
 - Hub navigation uses a section dropdown (Home, features, Settings) under the title bar, with search on the same toolbar; the Home entry is labeled Home (window title stays OneWoW)
 - Sections with more than one page get a second dropdown for that section’s pages, plus a favorite star; favorited pages pin on a short row under the toolbar (drag to reorder; overflow returns to the top of the page menu)
+- Favorited pages in the page dropdown show a Camp Collection star atlas (not a font glyph)
 - Text links use dedicated theme colors (idle / hover / underline) so they no longer match section headers; in-hub links like Manage Features show a small `>`
 - Community links live on Home (Discord, Donate, OneWoW Home) with the same labels as before; they are no longer on Settings
 
@@ -108,6 +109,7 @@
 ## Categories
 - NPC default category is General (was Other); existing Other notes remap to General
 - Players no longer list Other as a built-in (same as General); existing Other notes remap to General
+- Items no longer list Collectible as a built-in; existing Collectible item notes remap to General
 
 ## NPCs
 - Added Quartermaster category

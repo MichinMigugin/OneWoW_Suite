@@ -110,6 +110,11 @@ Font catalog, `SafeSetFont` / `CreateFS` / `ApplyFont*`, and the font-root regis
 live in `OneWoW/GUI/Fonts.lua` (loads after `Settings.lua`). Public API stays on
 `OneWoW_GUI`.
 
+**Do not put decorative Unicode in FontStrings** (stars, checkmarks, emoji, etc. as
+icon substitutes). Player-selected suite fonts often lack those glyphs. Prefer
+textures, atlases, or helpers such as `CreateFavoriteToggleButton`. See agent skill
+`onewow-gui-ui`.
+
 ### Get the current font file path
 ```lua
 local fontPath = OneWoW_GUI:GetFont()

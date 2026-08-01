@@ -499,6 +499,21 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                     btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
                 end
 
+                local iconTex
+                local leftPad = 8
+                if item.iconAtlas or item.icon then
+                    local iconSize = item.iconSize or 14
+                    iconTex = btn:CreateTexture(nil, "ARTWORK")
+                    iconTex:SetSize(iconSize, iconSize)
+                    iconTex:SetPoint("LEFT", btn, "LEFT", 8, 0)
+                    if item.iconAtlas then
+                        iconTex:SetAtlas(item.iconAtlas)
+                    else
+                        iconTex:SetTexture(item.icon)
+                    end
+                    leftPad = 8 + iconSize + 6
+                end
+
                 local rightFS
                 if item.rightText and item.rightText ~= "" then
                     rightFS = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -511,7 +526,7 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
 
                 local txt = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                 OneWoW_GUI:SafeSetFont(txt, item.fontPath or OneWoW_GUI:GetFont(), item.fontSize or 12)
-                txt:SetPoint("LEFT", btn, "LEFT", 8, 0)
+                txt:SetPoint("LEFT", btn, "LEFT", leftPad, 0)
                 if rightFS then
                     txt:SetPoint("RIGHT", rightFS, "LEFT", -8, 0)
                 else

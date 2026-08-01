@@ -2,7 +2,7 @@ local _, ns = ...
 local L = ns.L
 
 local Items = ns.DataModule:New("items", "itemCustomCategories", {
-    "General", "Transmog", "Crafting", "Quest", "Rare", "Collectible"
+    "General", "Transmog", "Crafting", "Quest", "Rare"
 })
 ns.Items = Items
 

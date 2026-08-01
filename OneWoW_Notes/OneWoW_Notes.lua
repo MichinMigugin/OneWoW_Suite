@@ -108,6 +108,9 @@ local function OnEnable()
     if ns.MigrateNpcAndPlayerOtherCategories then
         ns:MigrateNpcAndPlayerOtherCategories()
     end
+    if ns.MigrateItemCollectibleCategory then
+        ns:MigrateItemCollectibleCategory()
+    end
     if ns.MigrateZoneStructuredNotes then
         ns:MigrateZoneStructuredNotes()
     end

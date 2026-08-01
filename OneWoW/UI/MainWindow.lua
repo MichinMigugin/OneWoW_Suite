@@ -35,7 +35,6 @@ local FRAME_NAME = "OneWoWMainWindow"
 local PIN_HEIGHT = 20
 local PIN_FONT_SIZE = 11
 local PIN_PAD_X = 14
-local FAVORITE_MARK = "★ "
 
 local function RemoveFromUISpecialFrames(name)
     for i = #UISpecialFrames, 1, -1 do
@@ -421,6 +420,8 @@ local function BuildSubNavItems()
                     value = name,
                     text = GetTabDisplayName(tabInfo),
                     filterKey = GetTabDisplayName(tabInfo),
+                    iconAtlas = "CampCollection-icon-star",
+                    iconSize = 11,
                 }
             end
         end
@@ -428,15 +429,16 @@ local function BuildSubNavItems()
     end
 
     for _, tabInfo in ipairs(tabs) do
-        local label = GetTabDisplayName(tabInfo)
-        if favSet[tabInfo.name] then
-            label = FAVORITE_MARK .. label
-        end
-        items[#items + 1] = {
+        local entry = {
             value = tabInfo.name,
-            text = label,
+            text = GetTabDisplayName(tabInfo),
             filterKey = GetTabDisplayName(tabInfo),
         }
+        if favSet[tabInfo.name] then
+            entry.iconAtlas = "CampCollection-icon-star"
+            entry.iconSize = 11
+        end
+        items[#items + 1] = entry
     end
     return items
 end
@@ -961,11 +963,7 @@ function UI:InitMainWindow()
             if tabInfo and tabInfo.disabled then
                 return
             end
-            local clean = displayText or value
-            if type(clean) == "string" and clean:sub(1, #FAVORITE_MARK) == FAVORITE_MARK then
-                clean = clean:sub(#FAVORITE_MARK + 1)
-            end
-            subNavText:SetText(clean)
+            subNavText:SetText(displayText or value)
             UI:SelectSubTab(currentModuleTab, value)
         end,
         getActiveValue = function()
