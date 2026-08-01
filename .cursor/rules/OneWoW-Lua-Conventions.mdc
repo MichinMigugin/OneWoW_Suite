@@ -114,7 +114,15 @@ end
 
 Internal helpers that aren't on a hot path don't need full annotation. Reserve the effort for the two categories above where it pays off.
 
+## No decorative font glyphs in UI text
+
+Suite UI fonts are player-selectable. Decorative Unicode (★, ▸, ✓, emoji, …) often
+missing from those faces and renders as boxes or blank. **Do not** use glyphs as
+icons in `SetText` / menu labels. Use textures, atlases, or `OneWoW_GUI` helpers
+(`CreateFavoriteToggleButton`, Media icons, …). Depth: `onewow-gui-ui` skill.
+
 ## Related rules
 
 - `.cursor/rules/No-Defensive-Guards.mdc` — covers when not to guard global / API existence checks.
 - `.cursor/rules/OneWoW-Code-Comments.mdc` — covers comment style and broader guidance on LuaCATS for public API.
+- `.cursor/skills/onewow-gui-ui/SKILL.md` — OneWoW_GUI-first UI policy, including no decorative glyphs.

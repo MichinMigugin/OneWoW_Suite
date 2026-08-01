@@ -9,13 +9,14 @@ description: Use this skill when authoring or reviewing OneWoW addon UI code —
 
 OneWoW_GUI is the shared UI library for the OneWoW Suite. Every addon depends on it. The policy is **OneWoW_GUI-First**: when a OneWoW_GUI helper exists for a UI need, addon code uses it. Raw `CreateFrame` / `CreateFontString` / hand-rolled backdrops are last resorts, not first reach.
 
-Five rules govern OneWoW UI code:
+Six rules govern OneWoW UI code:
 
 1. **OneWoW_GUI-First** — check for an existing helper before building raw widgets.
 2. **`(parent, options)` component API** — uniform shape across the library.
 3. **`GetThemeColor` only** — never touch raw theme data, never wrap the call.
 4. **No static user-facing strings** — everything goes through `L.X` translations or `Addon.Constants.X`.
 5. **Auto-sizing buttons by default** — fixed width only when layout demands it.
+6. **No decorative font glyphs** — icons/marks use textures or atlases; never Unicode symbols in UI text.
 
 ## Authoritative sources
 
@@ -223,6 +224,32 @@ Reference implementation: `OneWoW_AltTracker_Auctions/UI/AHPricesPanel.lua`
 (`RelayoutPanel` + `RegisterFontRoot`). Registry + driver: `OneWoW/GUI/Fonts.lua`
 (`RegisterFontRoot` / `ApplyFontToFrame`).
 
+## No decorative font glyphs
+
+Players pick from the suite font catalog (`OneWoW_GUI:GetSetting("font")`). Many of
+those faces **omit** decorative Unicode (stars, arrows, checkmarks, emoji,
+box-drawing, private-use "icons"). A glyph that looks fine in one font shows as a
+`.notdef` box or blank under another allowed font.
+
+**Never** use Unicode symbols in `SetText` / menu labels / status chrome as a
+stand-in for an icon:
+
+```lua
+-- BAD — depends on the active UI font having ★
+label = "★ " .. tabName
+caret:SetText("▸")
+
+-- GOOD — texture / atlas / OneWoW_GUI helper
+OneWoW_GUI:CreateFavoriteToggleButton(parent, { … })  -- Media icon-fav
+icon:SetAtlas("common-icon-checkmark")
+icon:SetTexture(MEDIA_BASE .. "icon-fav.png")
+```
+
+Allowed in text: letters/digits for the player's language, Blizzard globals, locale
+strings, and ordinary ASCII punctuation (`-`, `/`, `:`, and deliberately ASCII
+expand carets like `>` / `v`). If it would be an **icon** in a modern UI kit, ship a
+texture/atlas (or extend `OneWoW_GUI`) — do not paste a glyph into a FontString.
+
 ## Review checklist — anti-patterns to flag
 
 1. **Raw `CreateFrame`/`CreateFontString` for components OneWoW_GUI provides.** Buttons, edit boxes, scroll frames, section headers, skinned icons, dropdowns, panels — all have helpers. Search the README catalog before approving raw widget construction.
@@ -251,9 +278,12 @@ Reference implementation: `OneWoW_AltTracker_Auctions/UI/AHPricesPanel.lua`
 
 13. **Panels that don't survive a live font-size change.** A dialog/panel outside the main window that isn't a font root (built via raw `CreateFrame` without `RegisterFontRoot`), or a stacked layout with hard-coded text-row heights that overlaps when the font grows. See "Live font size & re-flow" above. Check this on every panel/dialog you touch, even incidentally.
 
+14. **Decorative Unicode in UI text.** Stars, checkmarks, arrows, emoji, or other symbols used as icons inside `SetText` / dropdown labels. Suite fonts do not all carry those glyphs — use textures/atlases (see "No decorative font glyphs").
+
 ## Related rules
 
 - `.cursor/rules/OneWoW-Locale-Workflow.mdc` — mandatory when editing `Locales/` or adding translation keys.
+- `.cursor/rules/OneWoW-Lua-Conventions.mdc` — includes the no-decorative-glyphs convention for all `**/*.lua`.
 - `.cursor/rules/WoW-Lua-Addon-Development.mdc` — sections 2.3, 2.3.1, 2.3.2, 2.4, 2.5 live in the big rule today; this skill replaces them on extraction.
 - `.cursor/rules/No-Defensive-Guards.mdc` — overlaps with item #10.
 - `wow-database-api` skill — overlaps with item #11 (shared settings).
