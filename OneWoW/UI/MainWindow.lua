@@ -24,8 +24,11 @@ local subNavText = nil
 local subNavChevron = nil
 local favoriteStar = nil
 local pinReorder = nil
+local pinSink = nil             -- hidden host so retired pins never orphan onto UIParent
 local allPinFrames = {}        -- every pin created this refresh (visible + spilled)
 local spilledFavoriteNames = {}
+local pinLayoutPending = false
+local refreshingSubNav = false
 local sectionModuleNames = {}  -- hub module names between home and settings (refresh detection)
 local sectionLabels = {}       -- moduleName -> display text
 local FRAME_NAME = "OneWoWMainWindow"
@@ -179,6 +182,12 @@ local function CreateFavoritePinButton(parent, text, subTabName)
         UI:SelectSubTab(currentModuleTab, self.subTabName)
     end)
 
+    btn.Remeasure = function(self)
+        if self.text then
+            self:SetWidth((self.text:GetStringWidth() or 40) + PIN_PAD_X)
+        end
+    end
+
     return btn
 end
 
@@ -210,14 +219,34 @@ local function UpdateContentAreaAnchors()
     contentArea:SetPoint("BOTTOMRIGHT", MainWindow, "BOTTOMRIGHT", -resizeInset, resizeInset)
 end
 
+local function RetirePin(btn)
+    if not btn or not btn.Hide then return end
+    if pinReorder then
+        pinReorder:Detach(btn)
+    end
+    -- Keep retired pins under a hidden sink on MainWindow — never SetParent(nil)
+    -- (orphans can keep painting) and never leave them on the visible pin row.
+    btn:Hide()
+    btn:EnableMouse(false)
+    btn:ClearAllPoints()
+    local sink = pinSink or MainWindow
+    if sink then
+        btn:SetParent(sink)
+    end
+end
+
 local function ClearPinRow()
+    if pinReorder and pinReorder.Cancel then
+        pinReorder:Cancel()
+    end
     for _, btn in ipairs(allPinFrames) do
-        if pinReorder then
-            pinReorder:Detach(btn)
+        RetirePin(btn)
+    end
+    -- Catch any pin that escaped allPinFrames (re-entrant refresh / deferred layout).
+    if row2Container and row2Container.GetChildren then
+        for _, child in ipairs({ row2Container:GetChildren() }) do
+            RetirePin(child)
         end
-        btn:Hide()
-        btn:ClearAllPoints()
-        btn:SetParent(nil)
     end
     wipe(allPinFrames)
     wipe(row2Buttons)
@@ -261,6 +290,33 @@ local function EnsurePinReorder()
     return pinReorder
 end
 
+local function ResolvePinRowWidth()
+    if not row2Container then return 0 end
+    local w = row2Container:GetWidth() or 0
+    if w > 1 then return w end
+    -- Hidden / pre-layout: derive from the same anchors (section dropdown → search).
+    if sectionNavDropdown then
+        local left = sectionNavDropdown:GetLeft()
+        local right
+        local searchBox = OneWoWSearchBox
+        if searchBox then
+            right = searchBox:GetRight()
+        elseif row1Container then
+            right = row1Container:GetRight()
+        end
+        if left and right and right > left then
+            return right - left
+        end
+    end
+    if MainWindow then
+        local mw = MainWindow:GetWidth() or 0
+        if mw > 1 then
+            return math.max(1, mw - 80)
+        end
+    end
+    return 0
+end
+
 local function LayoutFavoritePins(allPins)
     wipe(spilledFavoriteNames)
     wipe(row2Buttons)
@@ -273,30 +329,54 @@ local function LayoutFavoritePins(allPins)
         return
     end
 
-    local containerWidth = row2Container:GetWidth()
-    if containerWidth <= 0 then containerWidth = 1380 end
+    local containerWidth = ResolvePinRowWidth()
+    if containerWidth <= 1 then
+        -- Defer until anchors have a real width. Hide the just-created pins so a
+        -- later refresh cannot leave them stacked on the row.
+        for _, btn in ipairs(allPins) do
+            RetirePin(btn)
+        end
+        wipe(allPinFrames)
+        row2Container:Hide()
+        UpdateContentAreaAnchors()
+        if not pinLayoutPending then
+            pinLayoutPending = true
+            C_Timer.After(0, function()
+                pinLayoutPending = false
+                if isInitialized and currentModuleTab then
+                    UI:RefreshSubNav()
+                end
+            end)
+        end
+        return
+    end
+
     local spacing = OneWoW_GUI:GetSpacing("XS")
     local x = 0
     local visibleCount = 0
     local reorder = EnsurePinReorder()
 
     for i, btn in ipairs(allPins) do
+        if btn.Remeasure then btn:Remeasure() end
         local w = btn:GetWidth() or 40
         local gap = (visibleCount > 0) and spacing or 0
         if x + gap + w <= containerWidth + 0.5 then
+            btn:SetParent(row2Container)
+            btn:EnableMouse(true)
             btn:ClearAllPoints()
             btn:SetPoint("TOPLEFT", row2Container, "TOPLEFT", x + gap, 0)
             x = x + gap + w
             btn:Show()
             visibleCount = visibleCount + 1
             row2Buttons[visibleCount] = btn
-            reorder:Attach(btn, visibleCount)
+            if not btn._oneWoWPinReorderAttached then
+                reorder:Attach(btn, visibleCount)
+                btn._oneWoWPinReorderAttached = true
+            end
         else
             for j = i, #allPins do
                 local spilled = allPins[j]
-                spilled:Hide()
-                spilled:ClearAllPoints()
-                reorder:Detach(spilled)
+                RetirePin(spilled)
                 spilledFavoriteNames[#spilledFavoriteNames + 1] = spilled.subTabName
             end
             break
@@ -362,7 +442,12 @@ local function BuildSubNavItems()
 end
 
 function UI:RefreshSubNav()
-    if not isInitialized then return end
+    if not isInitialized or refreshingSubNav then return end
+    refreshingSubNav = true
+
+    local function finish()
+        refreshingSubNav = false
+    end
 
     local moduleName = currentModuleTab
     local tabs = GetSectionTabs(moduleName)
@@ -376,6 +461,7 @@ function UI:RefreshSubNav()
             row2Container:Hide()
             UpdateContentAreaAnchors()
         end
+        finish()
         return
     end
 
@@ -405,11 +491,16 @@ function UI:RefreshSubNav()
         end
     end
 
-    LayoutFavoritePins(allPins)
-    if row2Container and #row2Buttons > 0 then
-        OneWoW_GUI:ApplyFontToFrame(row2Container)
+    -- Font before measure/fit so pin widths match what players actually see.
+    if #allPins > 0 then
+        for _, pin in ipairs(allPins) do
+            OneWoW_GUI:ApplyFontToFrame(pin)
+            if pin.Remeasure then pin:Remeasure() end
+        end
     end
+    LayoutFavoritePins(allPins)
     UpdateRow2Styling()
+    finish()
 end
 
 local activeContentFrame = nil
@@ -783,6 +874,11 @@ function UI:InitMainWindow()
         local g = ns.db.global
         g.mainFramePosition = g.mainFramePosition or {}
         OneWoW_GUI:SaveWindowPosition(MainWindow, g.mainFramePosition)
+        -- Cancel any in-flight pin drag (reparents to UIParent) and retire pins.
+        ClearPinRow()
+        if row2Container then
+            row2Container:Hide()
+        end
     end)
     MainWindow:Hide()
 
@@ -807,7 +903,11 @@ function UI:InitMainWindow()
 
     row2Container = CreateFrame("Frame", nil, MainWindow)
     row2Container:SetHeight(C.ROW2_FAVORITE_HEIGHT or 22)
+    row2Container:SetClipsChildren(true)
     row2Container:Hide()
+
+    pinSink = CreateFrame("Frame", nil, MainWindow)
+    pinSink:Hide()
 
     contentArea = CreateFrame("Frame", nil, MainWindow)
     UpdateContentAreaAnchors()
@@ -904,10 +1004,12 @@ function UI:InitMainWindow()
         row2Container:SetPoint("RIGHT", row1Container, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
     end
 
+    local refreshingPinRow = false
     row2Container:SetScript("OnSizeChanged", function()
-        if isInitialized then
-            UI:RefreshSubNav()
-        end
+        if not isInitialized or refreshingPinRow or refreshingSubNav then return end
+        refreshingPinRow = true
+        UI:RefreshSubNav()
+        refreshingPinRow = false
     end)
 
     if UI.BuildSettingsTabs then
@@ -956,11 +1058,15 @@ function UI:Show(moduleName)
         MainWindow:Raise()
         if moduleName then
             UI:SelectModuleTab(moduleName)
+        else
+            -- Init selects the last tab while the window is still hidden; refit pins now.
+            UI:RefreshSubNav()
         end
     end
 end
 
 function UI:Hide()
+    ClearPinRow()
     if MainWindow then
         MainWindow:Hide()
     end
@@ -1085,6 +1191,7 @@ end
 
 function UI:FullReset()
     RemoveFromUISpecialFrames(FRAME_NAME)
+    ClearPinRow()
     if MainWindow then
         MainWindow:Hide()
         MainWindow:SetParent(nil)
@@ -1097,6 +1204,7 @@ function UI:FullReset()
     moduleContentFrames = {}
     row1Container = nil
     row2Container = nil
+    pinSink = nil
     contentArea = nil
     homePanel = nil
     settingsPanel = nil
@@ -1110,6 +1218,8 @@ function UI:FullReset()
     pinReorder = nil
     wipe(allPinFrames)
     wipe(spilledFavoriteNames)
+    pinLayoutPending = false
+    refreshingSubNav = false
     wipe(sectionModuleNames)
     wipe(sectionLabels)
 end
