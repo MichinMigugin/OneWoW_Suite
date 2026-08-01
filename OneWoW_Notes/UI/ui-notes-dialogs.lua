@@ -115,7 +115,7 @@ function ns.UI.ShowAddNoteDialog()
     MakeLabel(content, CATEGORY, COL1_X, yPos)
     local catDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     catDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - LBL_GAP)
-    local catOpts = {{text = GENERAL, value = "General"}}
+    local catOpts = {}
     if ns.NotesCategories then
         for _, c in ipairs(ns.NotesCategories:GetCategories()) do
             catOpts[#catOpts + 1] = {text = c, value = c}
@@ -129,7 +129,7 @@ function ns.UI.ShowAddNoteDialog()
     local storeDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     storeDD:SetOptions({
-        {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
+        {text = L["UI_STORAGE_ACCOUNT"],   value = "account"},
         {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected("account")
@@ -301,15 +301,11 @@ function ns.UI.ShowAddNoteDialog()
     contentBg:SetBackdropColor(initCC.background[1], initCC.background[2], initCC.background[3], 0.9)
     contentBg:SetBackdropBorderColor(initCC.border[1], initCC.border[2], initCC.border[3], 0.8)
 
-    local contentScroll = OneWoW_GUI:CreateScrollFrame(contentBg, {})
+    local contentScroll, contentEditBox = OneWoW_GUI:CreateScrollEditBox(contentBg, {})
+    contentScroll:ClearAllPoints()
     contentScroll:SetPoint("TOPLEFT",     contentBg, "TOPLEFT",     4, -4)
     contentScroll:SetPoint("BOTTOMRIGHT", contentBg, "BOTTOMRIGHT", -26, 4)
 
-    local contentEditBox = CreateFrame("EditBox", nil, contentScroll)
-    contentEditBox:SetMultiLine(true)
-    contentEditBox:SetFontObject("ChatFontNormal")
-    contentEditBox:SetAutoFocus(false)
-    contentEditBox:SetMaxLetters(0)
     contentEditBox:SetHyperlinksEnabled(true)
     contentEditBox:SetScript("OnHyperlinkClick", function(_, link, text, button)
         SetItemRef(link, text, button)
@@ -320,9 +316,11 @@ function ns.UI.ShowAddNoteDialog()
         end
     end)
     if ns.NotesHyperlinks then ns.NotesHyperlinks:EnhanceEditBox(contentEditBox) end
-    contentScroll:SetScrollChild(contentEditBox)
-    contentScroll:HookScript("OnSizeChanged", function(_, w)
-        contentEditBox:SetWidth(math.max(1, w))
+    contentBg:EnableMouse(true)
+    contentBg:SetScript("OnMouseDown", function()
+        if contentEditBox:IsEnabled() then
+            contentEditBox:SetFocus()
+        end
     end)
     contentEditBox._skipGlobalFont = true
     dialog.contentEditBox = contentEditBox
@@ -391,8 +389,23 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
             if ns.UI.notesFrame and ns.UI.notesFrame.RefreshNotesList then
                 ns.UI.notesFrame.RefreshNotesList()
             end
+            if ns.UI.notesFrame and ns.UI.notesFrame.setSelectedNote then
+                ns.UI.notesFrame.setSelectedNote(noteID)
+            end
         end
         self:ClearFocus()
+    end)
+    titleInput:SetScript("OnEditFocusLost", function(self)
+        local newTitle = self:GetText()
+        if newTitle ~= "" and ns.NotesData then
+            ns.NotesData:UpdateNoteTitle(noteID, newTitle)
+            if ns.UI.notesFrame and ns.UI.notesFrame.RefreshNotesList then
+                ns.UI.notesFrame.RefreshNotesList()
+            end
+            if ns.UI.notesFrame and ns.UI.notesFrame.setSelectedNote then
+                ns.UI.notesFrame.setSelectedNote(noteID)
+            end
+        end
     end)
     yPos = yPos - ROW_H - 4
 
@@ -422,7 +435,7 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     local storeDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     storeDD:SetOptions({
-        {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
+        {text = L["UI_STORAGE_ACCOUNT"],   value = "account"},
         {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected(noteData.storage or "account")
@@ -704,25 +717,24 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
     contentBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X,  yPos)
     contentBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)
 
-    local contentScroll = OneWoW_GUI:CreateScrollFrame(contentBg, {})
+    local initFontPath = ns.Config:ResolveFontPath(noteData.fontFamily)
+    local contentScroll, contentEditBox = OneWoW_GUI:CreateScrollEditBox(contentBg, {
+        font = initFontPath,
+        fontSize = noteData.fontSize or 12,
+        onTextChanged = function(self, userInput)
+            if userInput and ns.NotesData then
+                ns.NotesData:UpdateNote(noteID, self:GetText())
+            end
+        end,
+    })
+    contentScroll:ClearAllPoints()
     contentScroll:SetPoint("TOPLEFT",     contentBg, "TOPLEFT",     4, -4)
     contentScroll:SetPoint("BOTTOMRIGHT", contentBg, "BOTTOMRIGHT", -26, 4)
 
-    local contentEditBox = CreateFrame("EditBox", nil, contentScroll)
-    contentEditBox:SetMultiLine(true)
-    local initFontPath = ns.Config:ResolveFontPath(noteData.fontFamily)
-    contentEditBox:SetFont(initFontPath, noteData.fontSize or 12, "")
-    contentEditBox:SetAutoFocus(false)
-    contentEditBox:SetMaxLetters(0)
     contentEditBox:SetHyperlinksEnabled(true)
     contentEditBox:SetText(noteData.content or "")
     contentEditBox:SetScript("OnHyperlinkClick", function(_, link, text, button)
         SetItemRef(link, text, button)
-    end)
-    contentEditBox:SetScript("OnTextChanged", function(self, userInput)
-        if userInput and ns.NotesData then
-            ns.NotesData:UpdateNote(noteID, self:GetText())
-        end
     end)
     contentEditBox:SetScript("OnMouseUp", function(self, button)
         if button == "RightButton" and ns.NotesContextMenu then
@@ -730,9 +742,11 @@ function ns.UI.ShowNotePropertiesDialog(noteID)
         end
     end)
     if ns.NotesHyperlinks then ns.NotesHyperlinks:EnhanceEditBox(contentEditBox) end
-    contentScroll:SetScrollChild(contentEditBox)
-    contentScroll:HookScript("OnSizeChanged", function(_, w)
-        contentEditBox:SetWidth(math.max(1, w))
+    contentBg:EnableMouse(true)
+    contentBg:SetScript("OnMouseDown", function()
+        if contentEditBox:IsEnabled() then
+            contentEditBox:SetFocus()
+        end
     end)
     contentEditBox._skipGlobalFont = true
     dialog.contentEditBox = contentEditBox

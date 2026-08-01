@@ -11,7 +11,7 @@ local Players = ns.DataModule:New(
     "players",
     "playerCustomCategories",
     {"General", "Friend", "Guild Member", "Acquaintance", "Trader",
-     "PvP", "Blacklist", "Interesting", "Officer", "Crafter", "Helper", "Other"}
+     "PvP", "Blacklist", "Interesting", "Officer", "Crafter", "Helper"}
 )
 ns.Players = Players
 

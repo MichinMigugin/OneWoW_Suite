@@ -136,6 +136,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
 -- Notes UI labels
     ["UI_CATEGORY_WITH_VALUE"] = "분류: %s",
+    ["UI_PROFESSIONS_WITH_VALUE"] = "전문 기술: %s",
     ["UI_STORAGE_WITH_VALUE"] = "저장소: %s",
     ["UI_STORAGE_ACCOUNT"] = "계정",
     ["UI_COUNT_FORMAT"] = "%s: %d",
@@ -183,7 +184,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TOOLTIP_NOTE_PROPERTIES_DESC"] = "메모 설정 편집",
 
 -- Storage / Category labels
-    ["STORAGE_ACCOUNT_WIDE"] = "계정 전체",
     ["LABEL_ICON"] = "아이콘",
 
 -- Label fields (for dialogs)

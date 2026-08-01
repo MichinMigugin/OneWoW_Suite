@@ -198,6 +198,14 @@ function OneWoW_GUI:CreateScrollEditBox(parent, options)
         end
     end)
 
+    -- Keep the caret in view while typing / moving the cursor (Blizzard helpers).
+    editBox:SetScript("OnCursorChanged", function(myself, x, y, w, h)
+        ScrollingEdit_OnCursorChanged(myself, x, y, w, h)
+    end)
+    editBox:HookScript("OnUpdate", function(myself, elapsed)
+        ScrollingEdit_OnUpdate(myself, elapsed, scrollFrame)
+    end)
+
     editBox:SetScript("OnEscapePressed", function(myself)
         myself:ClearFocus()
         if onEscapePressed then onEscapePressed(myself) end

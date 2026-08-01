@@ -24,10 +24,10 @@ local BUILT_IN_CATEGORIES = {
     },
     players = {
         "General", "Friend", "Guild Member", "Acquaintance", "Trader",
-        "PvP", "Blacklist", "Interesting", "Officer", "Crafter", "Helper", "Other"
+        "PvP", "Blacklist", "Interesting", "Officer", "Crafter", "Helper"
     },
     npcs = {
-        "Other", "Auctioneers", "Bosses", "Event NPCs", "Flight Masters",
+        "General", "Auctioneers", "Bosses", "Event NPCs", "Flight Masters",
         "Pet Trainers", "Portals", "Profession NPCs", "PvP Vendors",
         "Quartermaster", "Quest Givers", "Rare Elites", "Repair", "Trainers",
         "Transmog", "Vendors"

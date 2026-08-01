@@ -136,6 +136,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
 -- Notes UI labels
     ["UI_CATEGORY_WITH_VALUE"] = "Категория: %s",
+    ["UI_PROFESSIONS_WITH_VALUE"] = "Профессии: %s",
     ["UI_STORAGE_WITH_VALUE"] = "Хранилище: %s",
     ["UI_STORAGE_ACCOUNT"] = "Аккаунт",
     ["UI_COUNT_FORMAT"] = "%s: %d",
@@ -183,7 +184,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TOOLTIP_NOTE_PROPERTIES_DESC"] = "Изменить настройки заметки",
 
 -- Storage / Category labels
-    ["STORAGE_ACCOUNT_WIDE"] = "Весь аккаунт",
     ["LABEL_ICON"] = "Значок",
 
 -- Label fields (for dialogs)

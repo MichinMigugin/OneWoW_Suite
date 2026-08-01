@@ -5,6 +5,7 @@ local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local MEDIA = OneWoW_GUI.Constants.MEDIA_BASE
+local Detail = ns.Constants.Detail
 
 ns.UI = ns.UI or {}
 
@@ -47,22 +48,6 @@ local function IntentLabel(intent)
         return L["COLLECTIBLE_INTENT_DELETE"]
     end
     return NONE
-end
-
-local function CreateThemedPanel(name, parentFrame)
-    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    return f
-end
-
-local function CreateThemedBar(name, parentFrame)
-    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    return f
 end
 
 -- Live display comes from core at render time; a record only carries a fallback
@@ -213,7 +198,7 @@ function ns.UI.CreateCollectiblesTab(parent)
     -- incomplete display data, disarmed once it resolves.
     local infoWatcher = CreateFrame("Frame")
 
-    local controlPanel = CreateThemedBar(nil, parent)
+    local controlPanel = ns.UI.CreateThemedBar(nil, parent)
     controlPanel:SetPoint("TOPLEFT",  parent, "TOPLEFT",  0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     controlPanel:SetHeight(45)
@@ -350,7 +335,7 @@ function ns.UI.CreateCollectiblesTab(parent)
         end
     end)
 
-    local listingPanel = CreateThemedPanel(nil, parent)
+    local listingPanel = ns.UI.CreateThemedPanel(nil, parent)
     listingPanel:SetPoint("TOPLEFT",    controlPanel, "BOTTOMLEFT", 0, -10)
     listingPanel:SetPoint("BOTTOMLEFT", parent,       "BOTTOMLEFT", 0, 35)
     listingPanel:SetWidth(OneWoW_GUI.Constants.GUI.LEFT_PANEL_WIDTH)
@@ -375,7 +360,7 @@ function ns.UI.CreateCollectiblesTab(parent)
     listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
 
-    detailPanel = CreateThemedPanel(nil, parent)
+    detailPanel = ns.UI.CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT",     listingPanel, "TOPRIGHT",    10, 0)
     detailPanel:SetPoint("BOTTOMRIGHT", parent,       "BOTTOMRIGHT",  0, 35)
     detailPanel:SetClipsChildren(true)
@@ -385,7 +370,7 @@ function ns.UI.CreateCollectiblesTab(parent)
     emptyMessage:SetText(L["COLLECTIBLES_SELECT"])
     emptyMessage:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local leftStatusBar = CreateThemedBar(nil, parent)
+    local leftStatusBar = ns.UI.CreateThemedBar(nil, parent)
     leftStatusBar:SetPoint("TOPLEFT",  listingPanel, "BOTTOMLEFT",  0, -5)
     leftStatusBar:SetPoint("TOPRIGHT", listingPanel, "BOTTOMRIGHT", 0, -5)
     leftStatusBar:SetHeight(25)
@@ -395,7 +380,7 @@ function ns.UI.CreateCollectiblesTab(parent)
     leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_COLLECTIBLES"], 0))
 
-    local rightStatusBar = CreateThemedBar(nil, parent)
+    local rightStatusBar = ns.UI.CreateThemedBar(nil, parent)
     rightStatusBar:SetPoint("TOPLEFT",  detailPanel, "BOTTOMLEFT",  0, -5)
     rightStatusBar:SetPoint("TOPRIGHT", detailPanel, "BOTTOMRIGHT", 0, -5)
     rightStatusBar:SetHeight(25)
@@ -419,16 +404,16 @@ function ns.UI.CreateCollectiblesTab(parent)
         if total == 0 then
             section:Hide()
             ec.tooltipSection:ClearAllPoints()
-            ec.tooltipSection:SetPoint("TOPLEFT",  ec.contentBg, "BOTTOMLEFT",  0, -10)
-            ec.tooltipSection:SetPoint("TOPRIGHT", ec.contentBg, "BOTTOMRIGHT", 0, -10)
+            ec.tooltipSection:SetPoint("TOPLEFT",  ec.contentBg, "BOTTOMLEFT",  0, -Detail.SECTION_GAP)
+            ec.tooltipSection:SetPoint("TOPRIGHT", ec.contentBg, "BOTTOMRIGHT", 0, -Detail.SECTION_GAP)
             return
         end
 
         section.label:SetText(string.format("%s (%d)", L["COLLECTIBLE_SOLD_BY"], total))
         section:Show()
         ec.tooltipSection:ClearAllPoints()
-        ec.tooltipSection:SetPoint("TOPLEFT",  section, "BOTTOMLEFT",  0, -10)
-        ec.tooltipSection:SetPoint("TOPRIGHT", section, "BOTTOMRIGHT", 0, -10)
+        ec.tooltipSection:SetPoint("TOPLEFT",  section, "BOTTOMLEFT",  0, -Detail.SECTION_GAP)
+        ec.tooltipSection:SetPoint("TOPRIGHT", section, "BOTTOMRIGHT", 0, -Detail.SECTION_GAP)
 
         local api = OneWoW_CatalogData_Vendors_API
         for i, row in ipairs(section.rows) do
@@ -642,10 +627,7 @@ function ns.UI.CreateCollectiblesTab(parent)
         end
 
         if not detailPanel.editorContent then
-            local editorHeader = CreateThemedBar(nil, detailPanel)
-            editorHeader:SetPoint("TOPLEFT",  detailPanel, "TOPLEFT",  10, -10)
-            editorHeader:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
-            editorHeader:SetHeight(90)
+            local editorHeader = ns.UI.CreateDetailHeader(detailPanel)
 
             local iconFrame = CreateFrame("Frame", nil, editorHeader)
             iconFrame:SetSize(48, 48)
@@ -705,9 +687,9 @@ function ns.UI.CreateCollectiblesTab(parent)
             deleteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.deleteBtn = deleteBtn
 
-            local infoBar = CreateThemedBar(nil, detailPanel)
-            infoBar:SetPoint("TOPLEFT",  editorHeader, "BOTTOMLEFT",  0, -10)
-            infoBar:SetPoint("TOPRIGHT", editorHeader, "BOTTOMRIGHT", 0, -10)
+            local infoBar = ns.UI.CreateThemedBar(nil, detailPanel)
+            infoBar:SetPoint("TOPLEFT",  editorHeader, "BOTTOMLEFT",  0, -Detail.SECTION_GAP)
+            infoBar:SetPoint("TOPRIGHT", editorHeader, "BOTTOMRIGHT", 0, -Detail.SECTION_GAP)
             infoBar:SetHeight(40)
 
             local editorCatDD = ns.UI.CreateThemedDropdown(infoBar, CATEGORY, 150, 26)
@@ -742,36 +724,23 @@ function ns.UI.CreateCollectiblesTab(parent)
                 parent.RefreshCollectiblesList()
             end
 
-            local contentBg = CreateThemedBar(nil, detailPanel)
-            contentBg:SetPoint("TOPLEFT",  infoBar, "BOTTOMLEFT",  0, -10)
-            contentBg:SetPoint("TOPRIGHT", infoBar, "BOTTOMRIGHT", 0, -10)
-            contentBg:SetHeight(150)
-            contentBg:EnableMouse(true)
-
-            local contentScroll = OneWoW_GUI:CreateScrollFrame(contentBg, {})
-            contentScroll:SetPoint("TOPLEFT",     contentBg, "TOPLEFT",     4, -4)
-            contentScroll:SetPoint("BOTTOMRIGHT", contentBg, "BOTTOMRIGHT", -26, 4)
-            contentBg:SetFrameLevel(contentScroll:GetFrameLevel() - 1)
-
-            local contentEditBox = CreateFrame("EditBox", nil, contentScroll)
-            contentEditBox:SetMultiLine(true)
-            contentEditBox:SetFontObject("ChatFontNormal")
-            contentEditBox:SetWidth(contentScroll:GetWidth() - 20)
-            contentEditBox:SetAutoFocus(false)
-            contentEditBox:SetMaxLetters(0)
+            local body = ns.UI.CreateDetailBody(detailPanel, infoBar, {
+                onTextChanged = function(self, userInput)
+                    if userInput and selectedKey then
+                        local record = ns.Collectibles:GetCollectible(selectedKey)
+                        if record then
+                            record.content  = self:GetText()
+                            record.modified = GetServerTime()
+                        end
+                    end
+                end,
+            })
+            local contentBg = body.contentBg
+            local contentScroll = body.contentScroll
+            local contentEditBox = body.contentEditBox
             contentEditBox:SetHyperlinksEnabled(true)
             contentEditBox:SetScript("OnHyperlinkClick", function(_, link, text, button)
                 SetItemRef(link, text, button)
-            end)
-            contentEditBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-            contentEditBox:SetScript("OnTextChanged", function(self, userInput)
-                if userInput and selectedKey then
-                    local record = ns.Collectibles:GetCollectible(selectedKey)
-                    if record then
-                        record.content  = self:GetText()
-                        record.modified = GetServerTime()
-                    end
-                end
             end)
             contentEditBox:SetScript("OnMouseUp", function(self, button)
                 if button == "RightButton" and ns.NotesContextMenu then
@@ -779,7 +748,7 @@ function ns.UI.CreateCollectiblesTab(parent)
                 end
             end)
             if ns.NotesHyperlinks then ns.NotesHyperlinks:EnhanceEditBox(contentEditBox) end
-            contentScroll:SetScrollChild(contentEditBox)
+            contentEditBox._skipGlobalFont = true
             detailPanel.contentEditBox = contentEditBox
 
             contentBg:SetScript("OnMouseDown", function(_, button)
@@ -795,9 +764,9 @@ function ns.UI.CreateCollectiblesTab(parent)
             -- the tooltip lines; shown only when the record carries vendor offers,
             -- so non-vendor collectibles keep the compact layout (tooltipSection is
             -- re-anchored live in PopulateEditor).
-            local soldBySection = CreateThemedBar(nil, detailPanel)
-            soldBySection:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -10)
-            soldBySection:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -10)
+            local soldBySection = ns.UI.CreateThemedBar(nil, detailPanel)
+            soldBySection:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -Detail.SECTION_GAP)
+            soldBySection:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -Detail.SECTION_GAP)
             soldBySection:SetHeight(SOLD_BY_BASE_HEIGHT)
 
             local soldByLabel = OneWoW_GUI:CreateFS(soldBySection, 12)
@@ -858,48 +827,20 @@ function ns.UI.CreateCollectiblesTab(parent)
             reasonFS:Hide()
             soldBySection.reasonFS = reasonFS
 
-            local tooltipSection = CreateThemedBar(nil, detailPanel)
-            tooltipSection:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -10)
-            tooltipSection:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -10)
-
-            local ttLabel = OneWoW_GUI:CreateFS(tooltipSection, 12)
-            ttLabel:SetPoint("TOPLEFT", tooltipSection, "TOPLEFT", 10, -8)
-            ttLabel:SetText(L["UI_TOOLTIP_LINES"])
-            ttLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-            local tooltipEdits = {}
-            for i = 1, 4 do
-                local edit = CreateFrame("EditBox", nil, tooltipSection, "InputBoxTemplate")
-                edit:SetHeight(22)
-                edit:SetPoint("TOPLEFT",  tooltipSection, "TOPLEFT",  10, -30 - (i - 1) * 28)
-                edit:SetPoint("TOPRIGHT", tooltipSection, "TOPRIGHT", -10, -30 - (i - 1) * 28)
-                edit:SetAutoFocus(false)
-                edit:SetMaxLetters(255)
-                edit:SetHyperlinksEnabled(true)
-                edit:SetScript("OnHyperlinkClick", function(_, link, text, button)
-                    SetItemRef(link, text, button)
-                end)
-                edit:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-                edit:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-                edit:SetScript("OnTextChanged", function(self, userInput)
+            local tip = ns.UI.CreateTooltipLinesSection(detailPanel, contentBg, {
+                onLineChanged = function(index, text, userInput)
                     if userInput and selectedKey then
                         local record = ns.Collectibles:GetCollectible(selectedKey)
                         if record then
                             if not record.tooltipLines then record.tooltipLines = {"", "", "", ""} end
-                            record.tooltipLines[i] = self:GetText()
+                            record.tooltipLines[index] = text
                             record.modified = GetServerTime()
                         end
                     end
-                end)
-                edit:SetScript("OnMouseUp", function(self, button)
-                    if button == "RightButton" and ns.NotesContextMenu then
-                        ns.NotesContextMenu:ShowEditBoxContextMenu(self)
-                    end
-                end)
-                if ns.NotesHyperlinks then ns.NotesHyperlinks:EnhanceEditBox(edit) end
-                tooltipEdits[i] = edit
-            end
-            tooltipSection:SetHeight(38 + 4 * 28)
+                end,
+            })
+            local tooltipSection = tip.section
+            local tooltipEdits = tip.edits
 
             editorHeader.catDD    = editorCatDD
             editorHeader.intentDD = intentDD

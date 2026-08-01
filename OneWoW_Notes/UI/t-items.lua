@@ -3,8 +3,6 @@ local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
 
-local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-
 ns.UI = ns.UI or {}
 
 local selectedItem  = nil
@@ -20,22 +18,7 @@ local leftStatusText = nil
 local scrollChild    = nil
 
 local MEDIA = OneWoW_GUI.Constants.MEDIA_BASE
-
-local function CreateThemedPanel(name, parentFrame)
-    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    return f
-end
-
-local function CreateThemedBar(name, parentFrame)
-    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    return f
-end
+local Detail = ns.Constants.Detail
 
 function ns.UI.CreateItemsTab(parent)
     do
@@ -44,7 +27,7 @@ function ns.UI.CreateItemsTab(parent)
         currentSort.ascending = p.ascending ~= false
     end
 
-    local controlPanel = CreateThemedBar(nil, parent)
+    local controlPanel = ns.UI.CreateThemedBar(nil, parent)
     controlPanel:SetPoint("TOPLEFT",  parent, "TOPLEFT",  0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     controlPanel:SetHeight(45)
@@ -218,7 +201,7 @@ function ns.UI.CreateItemsTab(parent)
         end
     end)
 
-    local listingPanel = CreateThemedPanel(nil, parent)
+    local listingPanel = ns.UI.CreateThemedPanel(nil, parent)
     listingPanel:SetPoint("TOPLEFT",  controlPanel, "BOTTOMLEFT",  0, -10)
     listingPanel:SetPoint("BOTTOMLEFT", parent,     "BOTTOMLEFT",  0, 35)
     listingPanel:SetWidth(OneWoW_GUI.Constants.GUI.LEFT_PANEL_WIDTH)
@@ -248,7 +231,7 @@ function ns.UI.CreateItemsTab(parent)
     listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
 
-    detailPanel = CreateThemedPanel(nil, parent)
+    detailPanel = ns.UI.CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT",     listingPanel, "TOPRIGHT",    10, 0)
     detailPanel:SetPoint("BOTTOMRIGHT", parent,       "BOTTOMRIGHT",  0, 35)
     detailPanel:SetClipsChildren(true)
@@ -258,7 +241,7 @@ function ns.UI.CreateItemsTab(parent)
     emptyMessage:SetText(L["ITEMS_SELECT"])
     emptyMessage:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local leftStatusBar = CreateThemedBar(nil, parent)
+    local leftStatusBar = ns.UI.CreateThemedBar(nil, parent)
     leftStatusBar:SetPoint("TOPLEFT",  listingPanel, "BOTTOMLEFT",  0, -5)
     leftStatusBar:SetPoint("TOPRIGHT", listingPanel, "BOTTOMRIGHT", 0, -5)
     leftStatusBar:SetHeight(25)
@@ -268,7 +251,7 @@ function ns.UI.CreateItemsTab(parent)
     leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_ITEMS"], 0))
 
-    local rightStatusBar = CreateThemedBar(nil, parent)
+    local rightStatusBar = ns.UI.CreateThemedBar(nil, parent)
     rightStatusBar:SetPoint("TOPLEFT",     detailPanel, "BOTTOMLEFT",  0, -5)
     rightStatusBar:SetPoint("TOPRIGHT",    detailPanel, "BOTTOMRIGHT", 0, -5)
     rightStatusBar:SetHeight(25)
@@ -286,10 +269,7 @@ function ns.UI.CreateItemsTab(parent)
         end
 
         if not detailPanel.editorContent then
-            local editorHeader = CreateThemedBar(nil, detailPanel)
-            editorHeader:SetPoint("TOPLEFT",  detailPanel, "TOPLEFT",  10, -10)
-            editorHeader:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
-            editorHeader:SetHeight(85)
+            local editorHeader = ns.UI.CreateDetailHeader(detailPanel)
 
             local itemIconFrame = CreateFrame("Frame", nil, editorHeader)
             itemIconFrame:SetSize(48, 48)
@@ -311,7 +291,7 @@ function ns.UI.CreateItemsTab(parent)
             editorHeader.nameText = nameText
 
             local categoryLine = OneWoW_GUI:CreateFS(editorHeader, 10)
-            categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
+            categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, Detail.META_LINE_Y_LOWER)
             categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], GENERAL))
             categoryLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             categoryLine:SetJustifyH("RIGHT")
@@ -460,36 +440,23 @@ function ns.UI.CreateItemsTab(parent)
             favoriteBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
             editorHeader.favoriteBtn = favoriteBtn
 
-            local contentBg = CreateThemedBar(nil, detailPanel)
-            contentBg:SetPoint("TOPLEFT",  editorHeader, "BOTTOMLEFT",  0, -10)
-            contentBg:SetPoint("TOPRIGHT", editorHeader, "BOTTOMRIGHT", 0, -10)
-            contentBg:SetHeight(160)
-            contentBg:EnableMouse(true)
-
-            local contentScroll = OneWoW_GUI:CreateScrollFrame(contentBg, {})
-            contentScroll:SetPoint("TOPLEFT",     contentBg, "TOPLEFT",     4, -4)
-            contentScroll:SetPoint("BOTTOMRIGHT", contentBg, "BOTTOMRIGHT", -26, 4)
-            contentBg:SetFrameLevel(contentScroll:GetFrameLevel() - 1)
-
-            local contentEditBox = CreateFrame("EditBox", nil, contentScroll)
-            contentEditBox:SetMultiLine(true)
-            contentEditBox:SetFontObject("ChatFontNormal")
-            contentEditBox:SetWidth(contentScroll:GetWidth() - 20)
-            contentEditBox:SetAutoFocus(false)
-            contentEditBox:SetMaxLetters(0)
+            local body = ns.UI.CreateDetailBody(detailPanel, editorHeader, {
+                onTextChanged = function(self, userInput)
+                    if userInput and selectedItem and ns.Items then
+                        local itemData = ns.Items:GetItem(selectedItem)
+                        if itemData then
+                            itemData.content  = self:GetText()
+                            itemData.modified = GetServerTime()
+                        end
+                    end
+                end,
+            })
+            local contentBg = body.contentBg
+            local contentScroll = body.contentScroll
+            local contentEditBox = body.contentEditBox
             contentEditBox:SetHyperlinksEnabled(true)
             contentEditBox:SetScript("OnHyperlinkClick", function(_, link, text, button)
                 SetItemRef(link, text, button)
-            end)
-            contentEditBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-            contentEditBox:SetScript("OnTextChanged", function(self, userInput)
-                if userInput and selectedItem and ns.Items then
-                    local itemData = ns.Items:GetItem(selectedItem)
-                    if itemData then
-                        itemData.content  = self:GetText()
-                        itemData.modified = GetServerTime()
-                    end
-                end
             end)
             contentEditBox:SetScript("OnReceiveDrag", function(self)
                 local cursorType, _, itemLink = GetCursorInfo()
@@ -504,7 +471,7 @@ function ns.UI.CreateItemsTab(parent)
                 end
             end)
             if ns.NotesHyperlinks then ns.NotesHyperlinks:EnhanceEditBox(contentEditBox) end
-            contentScroll:SetScrollChild(contentEditBox)
+            contentEditBox._skipGlobalFont = true
             detailPanel.contentEditBox = contentEditBox
 
             contentBg:SetScript("OnMouseDown", function(_, button)
@@ -516,51 +483,19 @@ function ns.UI.CreateItemsTab(parent)
                 end
             end)
 
-            local tooltipSection = CreateThemedBar(nil, detailPanel)
-            tooltipSection:SetPoint("TOPLEFT",  contentBg, "BOTTOMLEFT",  0, -10)
-            tooltipSection:SetPoint("TOPRIGHT", contentBg, "BOTTOMRIGHT", 0, -10)
-
-            local ttLabel = OneWoW_GUI:CreateFS(tooltipSection, 12)
-            ttLabel:SetPoint("TOPLEFT", tooltipSection, "TOPLEFT", 10, -8)
-            ttLabel:SetText(L["UI_TOOLTIP_LINES"])
-            ttLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-            local tooltipEdits = {}
-            for i = 1, 4 do
-                local edit = CreateFrame("EditBox", nil, tooltipSection, "InputBoxTemplate")
-                edit:SetHeight(22)
-                edit:SetPoint("TOPLEFT",  tooltipSection, "TOPLEFT",  10, -30 - (i - 1) * 28)
-                edit:SetPoint("TOPRIGHT", tooltipSection, "TOPRIGHT", -10, -30 - (i - 1) * 28)
-                edit:SetAutoFocus(false)
-                edit:SetMaxLetters(255)
-                edit:SetHyperlinksEnabled(true)
-                edit:SetScript("OnHyperlinkClick", function(_, link, text, button)
-                    SetItemRef(link, text, button)
-                end)
-                edit:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-                edit:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-                edit:SetScript("OnTextChanged", function(self, userInput)
+            local tip = ns.UI.CreateTooltipLinesSection(detailPanel, contentBg, {
+                onLineChanged = function(index, text, userInput)
                     if userInput and selectedItem and ns.Items then
                         local itemData = ns.Items:GetItem(selectedItem)
                         if itemData then
                             if not itemData.tooltipLines then itemData.tooltipLines = {"","","",""} end
-                            itemData.tooltipLines[i] = self:GetText()
+                            itemData.tooltipLines[index] = text
                         end
                     end
-                end)
-                edit:SetScript("OnReceiveDrag", function(self)
-                    local cursorType, _, itemLink = GetCursorInfo()
-                    if cursorType == "item" and itemLink then self:Insert(itemLink) ClearCursor() end
-                end)
-                edit:SetScript("OnMouseUp", function(self, button)
-                    if button == "RightButton" and ns.NotesContextMenu then
-                        ns.NotesContextMenu:ShowEditBoxContextMenu(self)
-                    end
-                end)
-                if ns.NotesHyperlinks then ns.NotesHyperlinks:EnhanceEditBox(edit) end
-                tooltipEdits[i] = edit
-            end
-            tooltipSection:SetHeight(38 + 4 * 28)
+                end,
+            })
+            local tooltipSection = tip.section
+            local tooltipEdits = tip.edits
 
             detailPanel.editorContent = {
                 header         = editorHeader,
@@ -962,7 +897,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
     local validateBtn = OneWoW_GUI:CreateButton(content, { text = L["ITEM_VALIDATE"], width = 80, height = 26 })
     validateBtn:SetPoint("LEFT", idInput, "RIGHT", 6, 0)
 
-    local resultFrame = CreateThemedBar(nil, content)
+    local resultFrame = ns.UI.CreateThemedBar(nil, content)
     resultFrame:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos - 56)
     resultFrame:SetPoint("TOPRIGHT", content, "TOPRIGHT", -COL1_X, yPos - 56)
     resultFrame:SetHeight(40)
@@ -1068,7 +1003,7 @@ function ns.UI.ShowAddItemByIDDialog(refreshParent)
     local storeDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - 18)
     storeDD:SetOptions({
-        {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
+        {text = L["UI_STORAGE_ACCOUNT"],   value = "account"},
         {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected("account")
@@ -1114,7 +1049,7 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
         if refreshParent and refreshParent.RefreshItemsList then refreshParent.RefreshItemsList() end
     end
 
-    local itemHeader = CreateThemedBar(nil, content)
+    local itemHeader = ns.UI.CreateThemedBar(nil, content)
     itemHeader:SetPoint("TOPLEFT", content, "TOPLEFT", COL1_X, yPos)
     itemHeader:SetPoint("TOPRIGHT", content, "TOPRIGHT", -COL1_X, yPos)
     itemHeader:SetHeight(42)
@@ -1166,7 +1101,7 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
     local storeDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - 18)
     storeDD:SetOptions({
-        {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
+        {text = L["UI_STORAGE_ACCOUNT"],   value = "account"},
         {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected(itemData.storage or "account")
@@ -1200,25 +1135,16 @@ function ns.UI.ShowItemPropertiesDialog(itemID, refreshParent)
     MakeItemLabel(content, L["LABEL_NOTE_PREVIEW"], COL1_X, yPos)
     yPos = yPos - LBL_GAP
 
-    local noteBg = CreateThemedBar(nil, content)
+    local noteBg = ns.UI.CreateThemedBar(nil, content)
     noteBg:SetPoint("TOPLEFT",     content, "TOPLEFT",     COL1_X, yPos)
     noteBg:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -COL1_X, 6)
 
-    local noteScroll = OneWoW_GUI:CreateScrollFrame(noteBg, {})
+    local noteScroll, noteEditBox = OneWoW_GUI:CreateScrollEditBox(noteBg, {})
+    noteScroll:ClearAllPoints()
     noteScroll:SetPoint("TOPLEFT",     noteBg, "TOPLEFT",     4, -4)
     noteScroll:SetPoint("BOTTOMRIGHT", noteBg, "BOTTOMRIGHT", -26, 4)
-
-    local noteEditBox = CreateFrame("EditBox", nil, noteScroll)
-    noteEditBox:SetMultiLine(true)
-    noteEditBox:SetFontObject("ChatFontNormal")
-    noteEditBox:SetAutoFocus(false)
-    noteEditBox:SetMaxLetters(0)
     noteEditBox:SetText(itemData.content or "")
     noteEditBox:EnableMouse(false)
-    noteScroll:SetScrollChild(noteEditBox)
-    noteScroll:HookScript("OnSizeChanged", function(_, w)
-        noteEditBox:SetWidth(math.max(1, w))
-    end)
 
     dialog:Show()
 end

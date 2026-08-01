@@ -3,7 +3,7 @@ local _, ns = ...
 local DataModule = {}
 ns.DataModule = DataModule
 
-local pairs, ipairs, type, tinsert = pairs, ipairs, type, table.insert
+local pairs, ipairs, type, tinsert, sort = pairs, ipairs, type, tinsert, sort
 
 function DataModule:New(dbKey, categoryCustomKey, builtinCategories)
     local obj = setmetatable({}, { __index = self })
@@ -58,5 +58,6 @@ function DataModule:GetCategories()
     if self._categoryCustomKey then
         for _, c in ipairs(addon.db.global[self._categoryCustomKey]) do tinsert(all, c) end
     end
+    sort(all)
     return all
 end

@@ -1,6 +1,8 @@
 local _, ns = ...
 local L = ns.L
 
+local tinsert, sort = tinsert, sort
+
 local NotesCategories = {}
 ns.NotesCategories = NotesCategories
 
@@ -22,13 +24,14 @@ function NotesCategories:GetCategories()
     local allCategories = {}
 
     for _, category in ipairs(BUILT_IN_CATEGORIES) do
-        table.insert(allCategories, category)
+        tinsert(allCategories, category)
     end
 
     for _, customCategory in ipairs(ns.db.global.notesCustomCategories) do
-        table.insert(allCategories, customCategory)
+        tinsert(allCategories, customCategory)
     end
 
+    sort(allCategories)
     return allCategories
 end
 

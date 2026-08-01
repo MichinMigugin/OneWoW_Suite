@@ -24,22 +24,7 @@ local todoContainer       = nil
 local contentUpdateTimer  = nil
 
 local MEDIA = OneWoW_GUI.Constants.MEDIA_BASE
-
-local function CreateThemedPanel(name, parentFrame)
-    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    return f
-end
-
-local function CreateThemedBar(name, parentFrame)
-    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    return f
-end
+local Detail = ns.Constants.Detail
 
 local function GetFontColorFromKey(fontColorKey, pinColorKey)
     return ns.Config:GetResolvedFontColor(fontColorKey, pinColorKey)
@@ -52,7 +37,7 @@ function ns.UI.CreateZonesTab(parent)
         currentSort.ascending = p.ascending ~= false
     end
 
-    local controlPanel = CreateThemedBar(nil, parent)
+    local controlPanel = ns.UI.CreateThemedBar(nil, parent)
     controlPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     controlPanel:SetHeight(45)
@@ -224,7 +209,7 @@ function ns.UI.CreateZonesTab(parent)
     end)
     helpButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local listingPanel = CreateThemedPanel(nil, parent)
+    local listingPanel = ns.UI.CreateThemedPanel(nil, parent)
     listingPanel:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -10)
     listingPanel:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 35)
     listingPanel:SetWidth(OneWoW_GUI.Constants.GUI.LEFT_PANEL_WIDTH)
@@ -249,7 +234,7 @@ function ns.UI.CreateZonesTab(parent)
     listScroll.container:SetPoint("TOPLEFT", listingPanel, "TOPLEFT", 10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
 
-    detailPanel = CreateThemedPanel(nil, parent)
+    detailPanel = ns.UI.CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT", listingPanel, "TOPRIGHT", 10, 0)
     detailPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 35)
 
@@ -258,7 +243,7 @@ function ns.UI.CreateZonesTab(parent)
     emptyMessage:SetText(L["ZONES_SELECT_PROMPT"])
     emptyMessage:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local leftStatusBar = CreateThemedBar(nil, parent)
+    local leftStatusBar = ns.UI.CreateThemedBar(nil, parent)
     leftStatusBar:SetPoint("TOPLEFT", listingPanel, "BOTTOMLEFT", 0, -5)
     leftStatusBar:SetPoint("TOPRIGHT", listingPanel, "BOTTOMRIGHT", 0, -5)
     leftStatusBar:SetHeight(25)
@@ -268,7 +253,7 @@ function ns.UI.CreateZonesTab(parent)
     leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_ZONES"], 0))
 
-    local rightStatusBar = CreateThemedBar(nil, parent)
+    local rightStatusBar = ns.UI.CreateThemedBar(nil, parent)
     rightStatusBar:SetPoint("TOPLEFT", detailPanel, "BOTTOMLEFT", 0, -5)
     rightStatusBar:SetPoint("TOPRIGHT", detailPanel, "BOTTOMRIGHT", 0, -5)
     rightStatusBar:SetHeight(25)
@@ -286,10 +271,7 @@ function ns.UI.CreateZonesTab(parent)
         end
 
         if not detailPanel.editorContent then
-            local editorHeader = CreateThemedBar(nil, detailPanel)
-            editorHeader:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 10, -10)
-            editorHeader:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
-            editorHeader:SetHeight(85)
+            local editorHeader = ns.UI.CreateDetailHeader(detailPanel)
 
             local zoneTitleFS = OneWoW_GUI:CreateFS(editorHeader, 16)
             zoneTitleFS:SetPoint("TOPLEFT", editorHeader, "TOPLEFT", 12, -8)
@@ -509,62 +491,50 @@ function ns.UI.CreateZonesTab(parent)
             editorHeader.favoriteBtn = favoriteBtn
 
             local categoryLine = OneWoW_GUI:CreateFS(editorHeader, 10)
-            categoryLine:SetPoint("BOTTOMLEFT", editorHeader, "BOTTOMLEFT", 12, 8)
+            categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, Detail.META_LINE_Y_UPPER)
+            categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], GENERAL))
             categoryLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            categoryLine:SetJustifyH("LEFT")
+            categoryLine:SetJustifyH("RIGHT")
             editorHeader.categoryLine = categoryLine
 
             local mapLine = OneWoW_GUI:CreateFS(editorHeader, 10)
-            mapLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
+            mapLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, Detail.META_LINE_Y_LOWER)
             mapLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             mapLine:SetJustifyH("RIGHT")
             editorHeader.mapLine = mapLine
 
-            local contentBg = CreateThemedBar(nil, detailPanel)
-            contentBg:SetPoint("TOPLEFT", editorHeader, "BOTTOMLEFT", 0, -10)
-            contentBg:SetPoint("TOPRIGHT", editorHeader, "BOTTOMRIGHT", 0, -10)
-            contentBg:SetHeight(190)
-            contentBg:EnableMouse(true)
+            local body = ns.UI.CreateDetailBody(detailPanel, editorHeader, {
+                onTextChanged = function(self, userInput)
+                    if userInput and selectedZone and ns.Zones then
+                        local d = ns.Zones:GetZone(selectedZone)
+                        if d then
+                            d.content = self:GetText()
+                            d.modified = GetServerTime()
+                            ns.Zones:SaveZone(selectedZone, d)
 
-            local contentScroll = OneWoW_GUI:CreateScrollFrame(contentBg, {})
-            contentScroll:SetPoint("TOPLEFT", contentBg, "TOPLEFT", 4, -4)
-            contentScroll:SetPoint("BOTTOMRIGHT", contentBg, "BOTTOMRIGHT", -26, 4)
-            contentBg:SetFrameLevel(contentScroll:GetFrameLevel() - 1)
-
-            contentEditBox = CreateFrame("EditBox", nil, contentScroll)
-            contentEditBox:SetMultiLine(true)
-            contentEditBox:SetFontObject("ChatFontNormal")
-            contentEditBox:SetWidth(contentScroll:GetWidth() - 20)
-            contentEditBox:SetAutoFocus(false)
-            contentEditBox:SetMaxLetters(0)
+                            if contentUpdateTimer then contentUpdateTimer:Cancel() end
+                            contentUpdateTimer = C_Timer.NewTimer(2, function()
+                                if selectedZone and ns.zonePins and ns.zonePins[selectedZone] then
+                                    local pinFrame = ns.zonePins[selectedZone]
+                                    if pinFrame and pinFrame.contentText then
+                                        local zone = ns.Zones:GetZone(selectedZone)
+                                        if zone then
+                                            pinFrame.contentText:SetText(zone.content or "")
+                                        end
+                                    end
+                                end
+                                contentUpdateTimer = nil
+                            end)
+                        end
+                    end
+                end,
+            })
+            local contentBg = body.contentBg
+            local contentScroll = body.contentScroll
+            contentEditBox = body.contentEditBox
             contentEditBox:SetHyperlinksEnabled(true)
             contentEditBox:SetScript("OnHyperlinkClick", function(_, link, text, button)
                 SetItemRef(link, text, button)
-            end)
-            contentEditBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-            contentEditBox:SetScript("OnTextChanged", function(self, userInput)
-                if userInput and selectedZone and ns.Zones then
-                    local d = ns.Zones:GetZone(selectedZone)
-                    if d then
-                        d.content = self:GetText()
-                        d.modified = GetServerTime()
-                        ns.Zones:SaveZone(selectedZone, d)
-
-                        if contentUpdateTimer then contentUpdateTimer:Cancel() end
-                        contentUpdateTimer = C_Timer.NewTimer(2, function()
-                            if selectedZone and ns.zonePins and ns.zonePins[selectedZone] then
-                                local pinFrame = ns.zonePins[selectedZone]
-                                if pinFrame and pinFrame.contentText then
-                                    local zone = ns.Zones:GetZone(selectedZone)
-                                    if zone then
-                                        pinFrame.contentText:SetText(zone.content or "")
-                                    end
-                                end
-                            end
-                            contentUpdateTimer = nil
-                        end)
-                    end
-                end
             end)
             contentEditBox:SetScript("OnReceiveDrag", function(self)
                 local cursorType, _, itemLink = GetCursorInfo()
@@ -582,7 +552,6 @@ function ns.UI.CreateZonesTab(parent)
                 ns.NotesHyperlinks:EnhanceEditBox(contentEditBox)
             end
             contentEditBox._skipGlobalFont = true
-            contentScroll:SetScrollChild(contentEditBox)
             detailPanel.contentEditBox = contentEditBox
 
             contentBg:SetScript("OnMouseDown", function(_, button)
@@ -608,7 +577,7 @@ function ns.UI.CreateZonesTab(parent)
             end)
 
             local todoSection = CreateFrame("Frame", nil, detailPanel)
-            todoSection:SetPoint("TOPLEFT", contentBg, "BOTTOMLEFT", 0, -10)
+            todoSection:SetPoint("TOPLEFT", contentBg, "BOTTOMLEFT", 0, -Detail.SECTION_GAP)
             todoSection:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -8, 10)
             todoSection:SetClipsChildren(true)
 
@@ -762,9 +731,7 @@ function ns.UI.CreateZonesTab(parent)
 
                     if header.categoryLine then
                         header.categoryLine:SetTextColor(textColor[1], textColor[2], textColor[3])
-                        local catText = zoneData.category or "General"
-                        local storeText = zoneData.storage == "character" and (CHARACTER) or (L["STORAGE_ACCOUNT_WIDE"])
-                        header.categoryLine:SetText(catText .. "  |  " .. storeText)
+                        header.categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], zoneData.category or GENERAL))
                     end
 
                     if header.mapLine then
@@ -1321,7 +1288,7 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     local storeDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     storeDD:SetOptions({
-        {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
+        {text = L["UI_STORAGE_ACCOUNT"],   value = "account"},
         {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected("account")
@@ -1439,19 +1406,14 @@ function ns.UI.ShowManualZoneEntryDialog(refreshParent)
     noteBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     noteBg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local noteScroll = OneWoW_GUI:CreateScrollFrame(noteBg, {})
+    local noteScroll, noteEditBox = OneWoW_GUI:CreateScrollEditBox(noteBg, {
+        font = ns.Config:ResolveFontPath(dialog._fontFamily),
+        fontSize = dialog._fontSize or 12,
+        fontFlags = dialog._fontOutline or "",
+    })
+    noteScroll:ClearAllPoints()
     noteScroll:SetPoint("TOPLEFT",     noteBg, "TOPLEFT",     4, -4)
     noteScroll:SetPoint("BOTTOMRIGHT", noteBg, "BOTTOMRIGHT", -26, 4)
-
-    local noteEditBox = CreateFrame("EditBox", nil, noteScroll)
-    noteEditBox:SetMultiLine(true)
-    noteEditBox:SetFont(ns.Config:ResolveFontPath(dialog._fontFamily), dialog._fontSize or 12, dialog._fontOutline or "")
-    noteEditBox:SetAutoFocus(false)
-    noteEditBox:SetMaxLetters(0)
-    noteScroll:SetScrollChild(noteEditBox)
-    noteScroll:HookScript("OnSizeChanged", function(_, w)
-        noteEditBox:SetWidth(math.max(1, w))
-    end)
     noteEditBox._skipGlobalFont = true
     addPreviewEditBox = noteEditBox
     dialog._noteEditBox = noteEditBox
@@ -1593,7 +1555,7 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     local storeDD = ns.UI.CreateThemedDropdown(content, "", COL_W, 26)
     storeDD:SetPoint("TOPLEFT", content, "TOPLEFT", COL2_X, yPos - LBL_GAP)
     storeDD:SetOptions({
-        {text = L["STORAGE_ACCOUNT_WIDE"],   value = "account"},
+        {text = L["UI_STORAGE_ACCOUNT"],   value = "account"},
         {text = CHARACTER, value = "character"},
     })
     storeDD:SetSelected(zoneData.storage or "account")
@@ -1731,24 +1693,18 @@ function ns.UI.ShowZonePropertiesDialog(zoneName, refreshParent)
     noteBg:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     noteBg:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
 
-    local noteScroll = OneWoW_GUI:CreateScrollFrame(noteBg, {})
+    local noteScroll, noteEditBox = OneWoW_GUI:CreateScrollEditBox(noteBg, {
+        font = ns.Config:ResolveFontPath(zoneData.fontFamily),
+        fontSize = zoneData.fontSize or 12,
+        fontFlags = zoneData.fontOutline or "",
+    })
+    noteScroll:ClearAllPoints()
     noteScroll:SetPoint("TOPLEFT",     noteBg, "TOPLEFT",     4, -4)
     noteScroll:SetPoint("BOTTOMRIGHT", noteBg, "BOTTOMRIGHT", -26, 4)
-
-    local noteEditBox = CreateFrame("EditBox", nil, noteScroll)
-    noteEditBox:SetMultiLine(true)
-    local propInitFontPath = ns.Config:ResolveFontPath(zoneData.fontFamily)
-    noteEditBox:SetFont(propInitFontPath, zoneData.fontSize or 12, zoneData.fontOutline or "")
-    noteEditBox:SetAutoFocus(false)
-    noteEditBox:SetMaxLetters(0)
     noteEditBox:SetText(zoneData.content or "")
     noteEditBox._skipGlobalFont = true
     propPreviewEditBox = noteEditBox
     noteEditBox:EnableMouse(false)
-    noteScroll:SetScrollChild(noteEditBox)
-    noteScroll:HookScript("OnSizeChanged", function(_, w)
-        noteEditBox:SetWidth(math.max(1, w))
-    end)
 
     dialog:Show()
 end

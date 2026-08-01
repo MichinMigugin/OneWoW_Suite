@@ -93,9 +93,19 @@
 # Notes
 ## UI
 - List tabs no longer show a redundant "… Controls" label above the toolbar (Notes, Items, Collectibles, Zones, Players, NPCs)
+- Categories sort A–Z in every Notes type filter and dialog (All stays first in filters)
+- Note bodies focus when clicked anywhere and keep the cursor in view while typing
+- Existing note titles are wrapping text (edit the title in note settings)
+- Storage dropdowns in create/edit dialogs say Account (same as the list filter), not Account-wide
+- Zone note header shows Category on the lower right above Map (no storage label; storage stays on the list card)
+- Detail headers and note bodies share the same sizes across Notes types; tooltip line fields use the same themed inputs as Players
+- Player note header shows Profession 1/2 under Category (e.g. Professions: Alchemy, Inscription)
+
+## Categories
+- NPC default category is General (was Other); existing Other notes remap to General
+- Players no longer list Other as a built-in (same as General); existing Other notes remap to General
 
 ## NPCs
 - Added Quartermaster category
-- Category lists sort as All, Other, then A–Z
 
 ---

@@ -120,6 +120,9 @@ local function OnEnable()
     if ns.Collectibles and ns.Collectibles.MigrateLegacyCategories then
         ns.Collectibles:MigrateLegacyCategories()
     end
+    if ns.MigrateNpcAndPlayerOtherCategories then
+        ns:MigrateNpcAndPlayerOtherCategories()
+    end
     if ns.NPCs and ns.NPCs.Initialize then
         ns.NPCs:Initialize()
     end

@@ -1046,6 +1046,8 @@ local scrollFrame, editBox = OneWoW_GUI:CreateScrollEditBox(parent, {
 ```
 Correct pattern for multiline text entry areas. Fixes the focus dead-zone bug inherent to
 `SetHeight(1)` scroll children: clicking anywhere in the visible area always focuses the edit box.
+Also wires Blizzard `ScrollingEdit_OnCursorChanged` / `ScrollingEdit_OnUpdate` so the scroll
+frame follows the caret while typing.
 
 - ScrollFrame uses `UIPanelScrollFrameTemplate` with styled scrollbar.
 - EditBox is the scroll child, starts at height 1 and auto-expands with content.
@@ -1053,11 +1055,12 @@ Correct pattern for multiline text entry areas. Fixes the focus dead-zone bug in
   text inset clears the thumb so glyphs do not sit under the scrollbar.
 - `scrollFrame:HookScript("OnMouseDown")` calls `editBox:SetFocus()` so clicks anywhere in the
   visible area work, not just the first pixel row.
+- Cursor scroll-follow via `ScrollingEdit_OnCursorChanged` + `ScrollingEdit_OnUpdate`.
 - Font defaults to the user's active GUI font setting, then `ChatFontNormal`.
 - Default anchor: TOPLEFT +8,-8 / BOTTOMRIGHT -8,8 relative to parent. Override after creation if needed.
 
 Use this instead of manually creating `ScrollFrame + EditBox` pairs. Migrate existing scroll+editbox
-combos to this function to get the focus fix for free.
+combos to this function to get the focus fix and caret scroll-follow for free.
 
 ### Virtualized lists (`GUI/Virtualizer.lua`)
 

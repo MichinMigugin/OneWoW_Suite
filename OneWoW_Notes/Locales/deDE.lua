@@ -136,6 +136,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
 -- Notes UI labels
     ["UI_CATEGORY_WITH_VALUE"] = "Kategorie: %s",
+    ["UI_PROFESSIONS_WITH_VALUE"] = "Berufe: %s",
     ["UI_STORAGE_WITH_VALUE"] = "Speicher: %s",
     ["UI_STORAGE_ACCOUNT"] = "Account",
     ["UI_COUNT_FORMAT"] = "%s: %d",
@@ -183,7 +184,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TOOLTIP_NOTE_PROPERTIES_DESC"] = "Notizeneinstellungen bearbeiten",
 
 -- Storage / Category labels
-    ["STORAGE_ACCOUNT_WIDE"] = "Accountweit",
     ["LABEL_ICON"] = "Symbol",
 
 -- Label fields (for dialogs)

@@ -4,7 +4,7 @@ local OneWoW_GUI = OneWoW_GUI
 
 local DB = OneWoW_GUI.DB
 
-local pairs, ipairs, type = pairs, ipairs, type
+local pairs, ipairs, type, tremove = pairs, ipairs, type, tremove
 
 local defaults = {
     global = {
@@ -50,6 +50,9 @@ local defaults = {
         -- One-time guard for remapping the retired "Mount"/"Transmog" built-in
         -- collectible categories onto "General" (set true after the pass).
         collectibleCategoriesMigrated = false,
+        -- One-time guards: NPC/Player catch-all category "Other" → "General".
+        npcCategoryOtherMigrated    = false,
+        playerCategoryOtherMigrated = false,
     },
     char = {
         notes        = {},
@@ -60,6 +63,45 @@ local defaults = {
         collectibles = {},
     },
 }
+
+--- Remap saved category "Other" → "General" on NPC and Player records (one-time).
+--- Also drops "Other" from the matching custom-category lists so it does not
+--- reappear after the builtin rename / removal.
+function ns:MigrateNpcAndPlayerOtherCategories()
+    local function remapStore(store)
+        if type(store) ~= "table" then return end
+        for _, record in pairs(store) do
+            if type(record) == "table" and record.category == "Other" then
+                record.category = "General"
+            end
+        end
+    end
+
+    local function dropOtherFromCustom(list)
+        if type(list) ~= "table" then return end
+        for i = #list, 1, -1 do
+            if list[i] == "Other" then
+                tremove(list, i)
+            end
+        end
+    end
+
+    if not ns.db.global.npcCategoryOtherMigrated then
+        remapStore(ns.db.global.npcs)
+        remapStore(ns.db.char.npcs)
+        dropOtherFromCustom(ns.db.global.npcCustomCategories)
+        ns.db.global.npcCategoryOtherMigrated = true
+        if ns.NPCs then ns.NPCs:InvalidateCache() end
+    end
+
+    if not ns.db.global.playerCategoryOtherMigrated then
+        remapStore(ns.db.global.players)
+        remapStore(ns.db.char.players)
+        dropOtherFromCustom(ns.db.global.playerCustomCategories)
+        ns.db.global.playerCategoryOtherMigrated = true
+        if ns.Players then ns.Players:InvalidateCache() end
+    end
+end
 
 function ns:InitializeDatabase()
     -- Bridge from legacy DB:NewCompat (sv.char[charKey]) layout to DB:Init single mode (sv.chars[charKey]).

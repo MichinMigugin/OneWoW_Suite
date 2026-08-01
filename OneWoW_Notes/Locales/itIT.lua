@@ -136,6 +136,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
 -- Notes UI labels
     ["UI_CATEGORY_WITH_VALUE"] = "Categoria: %s",
+    ["UI_PROFESSIONS_WITH_VALUE"] = "Professioni: %s",
     ["UI_STORAGE_WITH_VALUE"] = "Archiviazione: %s",
     ["UI_STORAGE_ACCOUNT"] = "Account",
     ["UI_COUNT_FORMAT"] = "%s: %d",
@@ -183,7 +184,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["TOOLTIP_NOTE_PROPERTIES_DESC"] = "Modifica le impostazioni della nota",
 
 -- Storage / Category labels
-    ["STORAGE_ACCOUNT_WIDE"] = "Tutto l'account",
     ["LABEL_ICON"] = "Icona",
 
 -- Label fields (for dialogs)

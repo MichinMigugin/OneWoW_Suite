@@ -136,6 +136,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
 -- Notes UI labels
     ["UI_CATEGORY_WITH_VALUE"] = "分类：%s",
+    ["UI_PROFESSIONS_WITH_VALUE"] = "专业：%s",
     ["UI_STORAGE_WITH_VALUE"] = "存储：%s",
     ["UI_STORAGE_ACCOUNT"] = "账号",
     ["UI_COUNT_FORMAT"] = "%s：%d",
@@ -183,7 +184,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TOOLTIP_NOTE_PROPERTIES_DESC"] = "编辑笔记设置",
 
 -- Storage / Category labels
-    ["STORAGE_ACCOUNT_WIDE"] = "全账号",
     ["LABEL_ICON"] = "图标",
 
 -- Label fields (for dialogs)

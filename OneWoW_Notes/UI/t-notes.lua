@@ -3,8 +3,6 @@ local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
 
-local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-
 ns.UI = ns.UI or {}
 
 local selectedNote = nil
@@ -28,22 +26,7 @@ local rightStatusText = nil
 local scrollChild = nil
 
 local MEDIA = OneWoW_GUI.Constants.MEDIA_BASE
-
-local function CreateThemedPanel(name, parentFrame)
-    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
-    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    return f
-end
-
-local function CreateThemedBar(name, parentFrame)
-    local f = CreateFrame("Frame", name, parentFrame, "BackdropTemplate")
-    f:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    f:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    f:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
-    return f
-end
+local Detail = ns.Constants.Detail
 
 local function GetFontColorFromKey(fontColorKey, pinColorKey)
     return ns.Config:GetResolvedFontColor(fontColorKey, pinColorKey)
@@ -58,7 +41,7 @@ function ns.UI.CreateNotesTab(parent)
         currentSort.ascending = p.ascending ~= false
     end
 
-    local controlPanel = CreateThemedBar(nil, parent)
+    local controlPanel = ns.UI.CreateThemedBar(nil, parent)
     controlPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     controlPanel:SetHeight(45)
@@ -179,7 +162,7 @@ function ns.UI.CreateNotesTab(parent)
     end)
     helpButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    local listingPanel = CreateThemedPanel(nil, parent)
+    local listingPanel = ns.UI.CreateThemedPanel(nil, parent)
     listingPanel:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -10)
     listingPanel:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 35)
     listingPanel:SetWidth(OneWoW_GUI.Constants.GUI.LEFT_PANEL_WIDTH)
@@ -204,7 +187,7 @@ function ns.UI.CreateNotesTab(parent)
     listScroll.container:SetPoint("TOPLEFT",     listingPanel, "TOPLEFT",     10, -62)
     listScroll.container:SetPoint("BOTTOMRIGHT", listingPanel, "BOTTOMRIGHT", -10, 10)
 
-    local detailPanel = CreateThemedPanel(nil, parent)
+    local detailPanel = ns.UI.CreateThemedPanel(nil, parent)
     detailPanel:SetPoint("TOPLEFT", listingPanel, "TOPRIGHT", 10, 0)
     detailPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 35)
 
@@ -215,7 +198,7 @@ function ns.UI.CreateNotesTab(parent)
     emptyMessage:SetText(L["MESSAGE_SELECT_NOTE"])
     emptyMessage:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local leftStatusBar = CreateThemedBar(nil, parent)
+    local leftStatusBar = ns.UI.CreateThemedBar(nil, parent)
     leftStatusBar:SetPoint("TOPLEFT", listingPanel, "BOTTOMLEFT", 0, -5)
     leftStatusBar:SetPoint("TOPRIGHT", listingPanel, "BOTTOMRIGHT", 0, -5)
     leftStatusBar:SetHeight(25)
@@ -225,7 +208,7 @@ function ns.UI.CreateNotesTab(parent)
     leftStatusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
     leftStatusText:SetText(string.format(L["UI_COUNT_FORMAT"], L["TAB_NOTES"], 0))
 
-    local rightStatusBar = CreateThemedBar(nil, parent)
+    local rightStatusBar = ns.UI.CreateThemedBar(nil, parent)
     rightStatusBar:SetPoint("TOPLEFT", detailPanel, "BOTTOMLEFT", 0, -5)
     rightStatusBar:SetPoint("TOPRIGHT", detailPanel, "BOTTOMRIGHT", 0, -5)
     rightStatusBar:SetHeight(25)
@@ -245,31 +228,19 @@ function ns.UI.CreateNotesTab(parent)
         end
 
         if not detailPanel.editorContent then
-            local editorHeader = CreateThemedBar(nil, detailPanel)
-            editorHeader:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 10, -10)
-            editorHeader:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
-            editorHeader:SetHeight(85)
+            local editorHeader = ns.UI.CreateDetailHeader(detailPanel)
 
-            local titleEditBox = CreateFrame("EditBox", nil, editorHeader, "InputBoxTemplate")
-            titleEditBox:SetPoint("TOPLEFT", editorHeader, "TOPLEFT", 12, -8)
-            titleEditBox:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -110, -8)
-            titleEditBox:SetHeight(30)
-            titleEditBox:SetFontObject("GameFontNormalLarge")
-            titleEditBox:SetAutoFocus(false)
-            titleEditBox:SetScript("OnEnterPressed", function(self)
-                if selectedNote and ns.NotesData then
-                    ns.NotesData:UpdateNoteTitle(selectedNote, self:GetText())
-                    parent.RefreshNotesList()
-                end
-                self:ClearFocus()
-            end)
-            titleEditBox:SetScript("OnEditFocusLost", function(self)
-                if selectedNote and ns.NotesData then
-                    ns.NotesData:UpdateNoteTitle(selectedNote, self:GetText())
-                    parent.RefreshNotesList()
-                end
-            end)
-            editorHeader.titleEditBox = titleEditBox
+            -- Title is display-only here so long titles can wrap; edit via note settings.
+            local titleFS = OneWoW_GUI:CreateFS(editorHeader, 16)
+            titleFS:SetPoint("TOPLEFT", editorHeader, "TOPLEFT", 12, -8)
+            titleFS:SetPoint("TOPRIGHT", editorHeader, "TOPRIGHT", -110, -8)
+            titleFS:SetHeight(44)
+            titleFS:SetJustifyH("LEFT")
+            titleFS:SetJustifyV("TOP")
+            titleFS:SetWordWrap(true)
+            titleFS:SetNonSpaceWrap(true)
+            titleFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            editorHeader.titleFS = titleFS
 
             local deleteBtn = CreateFrame("Button", nil, editorHeader)
             deleteBtn:SetSize(22, 22)
@@ -427,14 +398,14 @@ function ns.UI.CreateNotesTab(parent)
             editorHeader.favoriteBtn = favoriteBtn
 
             local noteTypeLine = OneWoW_GUI:CreateFS(editorHeader, 10)
-            noteTypeLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 24)
+            noteTypeLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, Detail.META_LINE_Y_UPPER)
             noteTypeLine:SetText(string.format(L["TYPE_S"], L["NOTE_TYPE_STANDARD"]))
             noteTypeLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             noteTypeLine:SetJustifyH("RIGHT")
             editorHeader.noteTypeLine = noteTypeLine
 
             local categoryLine = OneWoW_GUI:CreateFS(editorHeader, 10)
-            categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, 8)
+            categoryLine:SetPoint("BOTTOMRIGHT", editorHeader, "BOTTOMRIGHT", -12, Detail.META_LINE_Y_LOWER)
             categoryLine:SetText(string.format(L["UI_CATEGORY_WITH_VALUE"], GENERAL))
             categoryLine:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
             categoryLine:SetJustifyH("RIGHT")
@@ -461,48 +432,35 @@ function ns.UI.CreateNotesTab(parent)
             end)
             editorHeader.autoPinCheckbox = autoPinCheckbox
 
-            local contentBg = CreateThemedBar(nil, detailPanel)
-            contentBg:SetPoint("TOPLEFT", editorHeader, "BOTTOMLEFT", 0, -10)
-            contentBg:SetPoint("TOPRIGHT", editorHeader, "BOTTOMRIGHT", 0, -10)
-            contentBg:SetHeight(190)
-            contentBg:EnableMouse(true)
+            local body = ns.UI.CreateDetailBody(detailPanel, editorHeader, {
+                onTextChanged = function(self, userInput)
+                    if userInput and selectedNote and ns.NotesData then
+                        ns.NotesData:UpdateNote(selectedNote, self:GetText())
 
-            local contentScroll = OneWoW_GUI:CreateScrollFrame(contentBg, {})
-            contentScroll:SetPoint("TOPLEFT", contentBg, "TOPLEFT", 4, -4)
-            contentScroll:SetPoint("BOTTOMRIGHT", contentBg, "BOTTOMRIGHT", -26, 4)
-            contentBg:SetFrameLevel(contentScroll:GetFrameLevel() - 1)
+                        if contentUpdateTimer then contentUpdateTimer:Cancel() end
 
-            contentEditBox = CreateFrame("EditBox", nil, contentScroll)
-            contentEditBox:SetMultiLine(true)
-            contentEditBox:SetFontObject("ChatFontNormal")
-            contentEditBox:SetWidth(contentScroll:GetWidth() - 20)
-            contentEditBox:SetAutoFocus(false)
-            contentEditBox:SetMaxLetters(0)
+                        contentUpdateTimer = C_Timer.NewTimer(2, function()
+                            if selectedNote and ns.notePins and ns.notePins[selectedNote] then
+                                local pinFrame = ns.notePins[selectedNote]
+                                if pinFrame and pinFrame.contentText then
+                                    local allNotes = ns.NotesData:GetAllNotes()
+                                    local note = allNotes[selectedNote]
+                                    if note then
+                                        pinFrame.contentText:SetText(note.content or "")
+                                    end
+                                end
+                            end
+                            contentUpdateTimer = nil
+                        end)
+                    end
+                end,
+            })
+            local contentBg = body.contentBg
+            local contentScroll = body.contentScroll
+            contentEditBox = body.contentEditBox
             contentEditBox:SetHyperlinksEnabled(true)
             contentEditBox:SetScript("OnHyperlinkClick", function(_, link, text, button)
                 SetItemRef(link, text, button)
-            end)
-            contentEditBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-            contentEditBox:SetScript("OnTextChanged", function(self, userInput)
-                if userInput and selectedNote and ns.NotesData then
-                    ns.NotesData:UpdateNote(selectedNote, self:GetText())
-
-                    if contentUpdateTimer then contentUpdateTimer:Cancel() end
-
-                    contentUpdateTimer = C_Timer.NewTimer(2, function()
-                        if selectedNote and ns.notePins and ns.notePins[selectedNote] then
-                            local pinFrame = ns.notePins[selectedNote]
-                            if pinFrame and pinFrame.contentText then
-                                local allNotes = ns.NotesData:GetAllNotes()
-                                local note = allNotes[selectedNote]
-                                if note then
-                                    pinFrame.contentText:SetText(note.content or "")
-                                end
-                            end
-                        end
-                        contentUpdateTimer = nil
-                    end)
-                end
             end)
             contentEditBox:SetScript("OnReceiveDrag", function(self)
                 local cursorType, _, itemLink = GetCursorInfo()
@@ -518,7 +476,7 @@ function ns.UI.CreateNotesTab(parent)
                     ClearCursor()
                 end
             end)
-            contentEditBox:SetScript("OnMouseDown", function(self, button)
+            contentEditBox:HookScript("OnMouseDown", function(self, button)
                 if button == "LeftButton" then
                     local cursorType = GetCursorInfo()
                     if cursorType == "item" or cursorType == "spell" then
@@ -547,7 +505,6 @@ function ns.UI.CreateNotesTab(parent)
                 ns.NotesHyperlinks:EnhanceEditBox(contentEditBox)
             end
             contentEditBox._skipGlobalFont = true
-            contentScroll:SetScrollChild(contentEditBox)
             detailPanel.contentEditBox = contentEditBox
 
             contentBg:SetScript("OnMouseDown", function(_, button)
@@ -573,7 +530,7 @@ function ns.UI.CreateNotesTab(parent)
             end)
 
             local todoSection = CreateFrame("Frame", nil, detailPanel)
-            todoSection:SetPoint("TOPLEFT", contentBg, "BOTTOMLEFT", 0, -10)
+            todoSection:SetPoint("TOPLEFT", contentBg, "BOTTOMLEFT", 0, -Detail.SECTION_GAP)
             todoSection:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -8, 10)
             todoSection:SetClipsChildren(true)
 
@@ -680,8 +637,8 @@ function ns.UI.CreateNotesTab(parent)
             local allNotes = ns.NotesData:GetAllNotes()
             local note = allNotes[selectedNote]
             if note and type(note) == "table" then
-                if detailPanel.editorContent.header.titleEditBox then
-                    detailPanel.editorContent.header.titleEditBox:SetText(note.title or "")
+                if detailPanel.editorContent.header.titleFS then
+                    detailPanel.editorContent.header.titleFS:SetText(note.title or "")
                 end
                 if detailPanel.contentEditBox then
                     detailPanel.contentEditBox:SetText(note.content or "")
@@ -716,8 +673,8 @@ function ns.UI.CreateNotesTab(parent)
                     header:SetBackdropColor(listItemColor[1], listItemColor[2], listItemColor[3], listItemColor[4] or 0.9)
                     header:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
 
-                    if header.titleEditBox then
-                        header.titleEditBox:SetTextColor(textColor[1], textColor[2], textColor[3])
+                    if header.titleFS then
+                        header.titleFS:SetTextColor(textColor[1], textColor[2], textColor[3])
                     end
                     if header.categoryLine then
                         header.categoryLine:SetTextColor(textColor[1], textColor[2], textColor[3])
@@ -817,8 +774,8 @@ function ns.UI.CreateNotesTab(parent)
             local textColor = GetFontColorFromKey(fontColor, pinColor)
             detailPanel.editorContent.header:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], opacity)
             detailPanel.editorContent.header:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
-            if detailPanel.editorContent.header.titleEditBox then
-                detailPanel.editorContent.header.titleEditBox:SetTextColor(textColor[1], textColor[2], textColor[3])
+            if detailPanel.editorContent.header.titleFS then
+                detailPanel.editorContent.header.titleFS:SetTextColor(textColor[1], textColor[2], textColor[3])
             end
             if detailPanel.editorContent.header.categoryLine then
                 detailPanel.editorContent.header.categoryLine:SetTextColor(textColor[1], textColor[2], textColor[3])

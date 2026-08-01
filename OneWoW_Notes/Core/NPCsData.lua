@@ -1,40 +1,15 @@
 local _, ns = ...
 local L = ns.L
 
-local sort = sort
-
 local NPCs = ns.DataModule:New(
     "npcs",
     "npcCustomCategories",
-    {"Other", "Auctioneers", "Bosses", "Event NPCs", "Flight Masters",
+    {"General", "Auctioneers", "Bosses", "Event NPCs", "Flight Masters",
      "Pet Trainers", "Portals", "Profession NPCs", "PvP Vendors",
      "Quartermaster", "Quest Givers", "Rare Elites", "Repair", "Trainers",
      "Transmog", "Vendors"}
 )
 ns.NPCs = NPCs
-
--- Filter dropdowns prepend "All"; built-ins + customs then: Other, rest A–Z.
-function NPCs:GetCategories()
-    local raw = ns.DataModule.GetCategories(self)
-    local rest = {}
-    local hasOther = false
-    for _, c in ipairs(raw) do
-        if c == "Other" then
-            hasOther = true
-        else
-            rest[#rest + 1] = c
-        end
-    end
-    sort(rest)
-    local sorted = {}
-    if hasOther then
-        sorted[1] = "Other"
-    end
-    for i = 1, #rest do
-        sorted[#sorted + 1] = rest[i]
-    end
-    return sorted
-end
 
 function NPCs:GetNotesDB(storageType)
     return self:GetDataDB(storageType)
@@ -92,7 +67,7 @@ function NPCs:AddNPC(npcID, npcInfo)
         zone         = npcInfo.zone or "",
         mapID        = npcInfo.mapID or nil,
         coords       = npcInfo.coords or nil,
-        category     = npcInfo.category or "Other",
+        category     = npcInfo.category or "General",
         storage      = npcInfo.storage or "account",
         content      = npcInfo.content or "",
         tooltipLines = npcInfo.tooltipLines or {"", "", "", ""},

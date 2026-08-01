@@ -136,6 +136,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
 -- Notes UI labels
     ["UI_CATEGORY_WITH_VALUE"] = "分類：%s",
+    ["UI_PROFESSIONS_WITH_VALUE"] = "專業技能：%s",
     ["UI_STORAGE_WITH_VALUE"] = "儲存：%s",
     ["UI_STORAGE_ACCOUNT"] = "帳號",
     ["UI_COUNT_FORMAT"] = "%s：%d",
@@ -183,7 +184,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TOOLTIP_NOTE_PROPERTIES_DESC"] = "編輯筆記設定",
 
 -- Storage / Category labels
-    ["STORAGE_ACCOUNT_WIDE"] = "全帳號",
     ["LABEL_ICON"] = "圖示",
 
 -- Label fields (for dialogs)
