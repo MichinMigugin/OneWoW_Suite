@@ -1,6 +1,7 @@
 local _, ns = ...
 
 local OneWoW = OneWoW
+local OneWoW_GUI = OneWoW_GUI
 
 local L = ns.L
 
@@ -92,9 +93,14 @@ local function CollectionsProvider(_, context)
                 text = "  " .. L["TIPS_COLLECTIONS_NOT_COLLECTED"],
             }
             for i = 1, #missing do
+                local row = missing[i]
+                local r, g, b = OneWoW_GUI:GetItemQualityColor(row.quality)
                 lines[#lines + 1] = {
                     type = "text",
-                    text = "    " .. missing[i].name,
+                    text = "    " .. row.name,
+                    r = r,
+                    g = g,
+                    b = b,
                 }
             end
         else

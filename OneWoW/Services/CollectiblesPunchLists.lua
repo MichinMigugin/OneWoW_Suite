@@ -1,93 +1,198 @@
 local _, ns = ...
 
 -- ============================================================================
--- Collectibles — punch-list contents maps
+-- Collectibles — container contents maps (punch-list + direct)
 -- ============================================================================
--- Blizzard "Contains one of the following items:" tooltips (punch-list /
--- voidcache) list content as name-only lines with no itemIDs. This curated
--- map is cacheItemID → candidate content itemIDs (armor/weapons only —
--- rings/necks/trinkets are not transmog-collectible and are omitted).
+-- Shared content groups (e.g. Preyseeker armor/weapons) are referenced by
+-- container itemIDs in two modes:
+--   punchList — Blizzard "Contains one of the following items:" name-only
+--               lines matched against a class-filtered candidate pool
+--   direct    — no punch-list lines; evaluate the whole class-filtered pool
 --
--- Matching is locale-safe: candidate names come from C_Item.GetItemNameByID
--- at call time; tooltip lines after PUNCH_LIST_ITEM_CACHE_TOOLTIP are
--- matched by stripped display name. Uncached candidates are requested and
--- the live GameTooltip is rebuilt once names land. See Docs/COLLECTIBLES.md.
+-- Candidates are filtered once per group with class FilterIDs
+-- (armor/weapon proficiency + cloaks). PlayerCanCollectSource is too broad
+-- (e.g. shields for cloth casters); DoesItemContainSpec is too narrow (loot
+-- eligibility). Lazy session cache. Rings/necks/trinkets stay off the lists.
+-- See Docs/COLLECTIBLES.md.
 -- ============================================================================
 
 local Collectibles = ns.Collectibles
+local PE = ns.PredicateEngine -- debug dump only
 
---- Curated punch-list contents. Extend with more cache itemIDs as needed.
---- Values are armor/weapon itemIDs only (no rings / necks / trinkets).
-local PUNCH_LIST_CONTENTS = {
-    -- Nebulous Voidcache: Prey — Preyseeker armor + weapons (all armor types)
-    -- https://www.wowhead.com/items/name:preyseeker/quality:2:3:4/slot:16:5:8:10:1:23:7:21:22:13:15:26:14:4:3:19:17:6:9?filter=195:251;1:2;0:0#items;0+2+20
-    [269768] = {
-        -- Cloth (Refined)
-        259909, -- Shawl
-        259917, -- Vestments
-        259918, -- Slippers
-        259919, -- Gloves
-        259920, -- Crown
-        259921, -- Tights
-        259922, -- Epaulet
-        259923, -- Cord
-        259924, -- Cuffs
-        -- Leather (Sleek)
-        259910, -- Capelet
-        259925, -- Jerkin
-        259926, -- Boots
-        259927, -- Gauntlets
-        259928, -- Mask
-        259929, -- Trousers
-        259930, -- Shoulderpads
-        259931, -- Belt
-        259932, -- Armlets
-        -- Mail (Rugged)
-        258532, -- Stole
-        259933, -- Haubergeon
-        259934, -- Sabatons
-        259935, -- Grips
-        259936, -- Plume
-        259937, -- Legguards
-        259938, -- Shoulderguards
-        259939, -- Clasp
-        259940, -- Bindings
-        -- Plate (Polished)
-        258533, -- Cloak
-        259941, -- Brigandine
-        259942, -- Greatboots
-        259943, -- Handguards
-        259944, -- Helmet
-        259945, -- Tassets
-        259946, -- Pauldrons
-        259947, -- Greatbelt
-        259948, -- Vambraces
-        -- Weapons / off-hands
-        259949, -- Hatchet
-        259950, -- Kukri
-        259951, -- Shiv
-        259952, -- Cudgel
-        259953, -- Scepter
-        259955, -- Hammer
-        259956, -- Scimitar
-        259957, -- Ritual Blade
-        259958, -- Longsword
-        259959, -- Warglaive
-        259960, -- Longbow
-        259961, -- Spear
-        259962, -- Staff
-        259963, -- Spire
-        259964, -- Falchion
-        259965, -- Lantern
-        259966, -- Tower Shield
-    },
+-- https://www.wowhead.com/items/name:preyseeker/quality:2:3:4/slot:16:5:8:10:1:23:7:21:22:13:15:26:14:4:3:19:17:6:9?filter=195:251;1:2;0:0#items;0+2+20
+local PREYSEEKER_CONTENTS = {
+    -- Cloth (Refined)
+    259909, -- Shawl
+    259917, -- Vestments
+    259918, -- Slippers
+    259919, -- Gloves
+    259920, -- Crown
+    259921, -- Tights
+    259922, -- Epaulet
+    259923, -- Cord
+    259924, -- Cuffs
+    -- Leather (Sleek)
+    259910, -- Capelet
+    259925, -- Jerkin
+    259926, -- Boots
+    259927, -- Gauntlets
+    259928, -- Mask
+    259929, -- Trousers
+    259930, -- Shoulderpads
+    259931, -- Belt
+    259932, -- Armlets
+    -- Mail (Rugged)
+    258532, -- Stole
+    259933, -- Haubergeon
+    259934, -- Sabatons
+    259935, -- Grips
+    259936, -- Plume
+    259937, -- Legguards
+    259938, -- Shoulderguards
+    259939, -- Clasp
+    259940, -- Bindings
+    -- Plate (Polished)
+    258533, -- Cloak
+    259941, -- Brigandine
+    259942, -- Greatboots
+    259943, -- Handguards
+    259944, -- Helmet
+    259945, -- Tassets
+    259946, -- Pauldrons
+    259947, -- Greatbelt
+    259948, -- Vambraces
+    -- Weapons / off-hands
+    259949, -- Hatchet
+    259950, -- Kukri
+    259951, -- Shiv
+    259952, -- Cudgel
+    259953, -- Scepter
+    259955, -- Hammer
+    259956, -- Scimitar
+    259957, -- Ritual Blade
+    259958, -- Longsword
+    259959, -- Warglaive
+    259960, -- Longbow
+    259961, -- Spear
+    259962, -- Staff
+    259963, -- Spire
+    259964, -- Falchion
+    259965, -- Lantern
+    259966, -- Tower Shield
+}
+
+local CONTENT_GROUPS = {
+    preyseeker = { contents = PREYSEEKER_CONTENTS },
+}
+
+--- cacheItemID → { group, mode }  mode = "punchList" | "direct"
+local CACHE_ENTRIES = {
+    [269768] = { group = "preyseeker", mode = "punchList" }, -- Nebulous Voidcache: Prey
+    [257023] = { group = "preyseeker", mode = "direct" },    -- Preyseeker's Adventurer Chest
+    [257026] = { group = "preyseeker", mode = "direct" },    -- Preyseeker's Veteran Chest
+    [262346] = { group = "preyseeker", mode = "direct" },    -- Preyseeker's Champion Chest
+}
+
+-- FilterID for armor/weapons.
+-- Cloaks are always f=3
+local WEAPON_SUBCLASS_FILTER = {
+    [0] = 21,  -- 1H Axe
+    [1] = 22,  -- 2H Axe
+    [2] = 32,  -- Bow
+    [3] = 31,  -- Gun
+    [4] = 23,  -- 1H Mace
+    [5] = 24,  -- 2H Mace
+    [6] = 29,  -- Polearm
+    [7] = 25,  -- 1H Sword
+    [8] = 26,  -- 2H Sword
+    [9] = 35,  -- Warglaive
+    [10] = 28, -- Staff
+    [13] = 34, -- Fist
+    [15] = 20, -- Dagger
+    [18] = 33, -- Crossbow
+    [19] = 27, -- Wand
+}
+local ARMOR_SUBCLASS_FILTER = {
+    [1] = 4, -- Cloth
+    [2] = 5, -- Leather
+    [3] = 6, -- Mail
+    [4] = 7, -- Plate
+    [6] = 8, -- Shield
+}
+
+-- Per-class allowed FilterIDs
+local CLASS_FILTER_IDS = {
+    DEATHKNIGHT = { [1] = true, [2] = true, [3] = true, [7] = true, [9] = true, [10] = true, [11] = true, [21] = true, [22] = true, [23] = true, [24] = true, [25] = true, [26] = true, [29] = true },
+    DEMONHUNTER = { [1] = true, [2] = true, [3] = true, [5] = true, [9] = true, [10] = true, [11] = true, [21] = true, [25] = true, [34] = true, [35] = true },
+    DRUID       = { [1] = true, [2] = true, [3] = true, [5] = true, [9] = true, [10] = true, [11] = true, [20] = true, [23] = true, [24] = true, [28] = true, [29] = true, [34] = true },
+    EVOKER      = { [1] = true, [2] = true, [3] = true, [6] = true, [9] = true, [10] = true, [11] = true, [20] = true, [21] = true, [22] = true, [23] = true, [24] = true, [25] = true, [26] = true, [28] = true, [34] = true },
+    HUNTER      = { [1] = true, [2] = true, [3] = true, [6] = true, [9] = true, [10] = true, [11] = true, [20] = true, [21] = true, [22] = true, [25] = true, [26] = true, [28] = true, [29] = true, [31] = true, [32] = true, [33] = true, [34] = true },
+    MAGE        = { [1] = true, [2] = true, [3] = true, [4] = true, [9] = true, [10] = true, [11] = true, [20] = true, [25] = true, [27] = true, [28] = true },
+    MONK        = { [1] = true, [2] = true, [3] = true, [5] = true, [9] = true, [10] = true, [11] = true, [21] = true, [23] = true, [25] = true, [28] = true, [29] = true, [34] = true },
+    PALADIN     = { [1] = true, [2] = true, [3] = true, [7] = true, [8] = true, [9] = true, [10] = true, [11] = true, [21] = true, [22] = true, [23] = true, [24] = true, [25] = true, [26] = true, [29] = true },
+    PRIEST      = { [1] = true, [2] = true, [3] = true, [4] = true, [9] = true, [10] = true, [11] = true, [20] = true, [23] = true, [27] = true, [28] = true },
+    ROGUE       = { [1] = true, [2] = true, [3] = true, [5] = true, [9] = true, [10] = true, [11] = true, [20] = true, [21] = true, [23] = true, [25] = true, [31] = true, [32] = true, [33] = true, [34] = true },
+    SHAMAN      = { [1] = true, [2] = true, [3] = true, [6] = true, [8] = true, [9] = true, [10] = true, [11] = true, [20] = true, [21] = true, [22] = true, [23] = true, [24] = true, [28] = true, [34] = true },
+    WARLOCK     = { [1] = true, [2] = true, [3] = true, [4] = true, [9] = true, [10] = true, [11] = true, [20] = true, [25] = true, [27] = true, [28] = true },
+    WARRIOR     = { [1] = true, [2] = true, [3] = true, [7] = true, [8] = true, [9] = true, [10] = true, [11] = true, [20] = true, [21] = true, [22] = true, [23] = true, [24] = true, [25] = true, [26] = true, [28] = true, [29] = true, [31] = true, [32] = true, [33] = true, [34] = true },
 }
 
 local LINE_NONE = Enum.TooltipDataLineType.None
 local LINE_BLANK = Enum.TooltipDataLineType.Blank
 
--- In-flight ContinueOnItemLoad batches keyed by cache itemID (avoid re-arm storms).
-local punchListLoadPending = {}
+-- Lazy class-filtered contents keyed by group id (class cannot change mid-session).
+local filteredByGroup = {}
+-- In-flight ContinueOnItemLoad batches keyed by hovered cache itemID.
+local loadPendingByCache = {}
+
+--- FilterID for an item (cloaks → 3, holdables → 1, else armor/weapon subclass).
+---@param itemID number
+---@return number|nil filterID
+local function ResolveItemFilterID(itemID)
+    local _, _, _, equipLoc, _, classID, subClassID = C_Item.GetItemInfoInstant(itemID)
+    if not classID then return nil end
+    if equipLoc == "INVTYPE_CLOAK" then
+        return 3
+    end
+    if equipLoc == "INVTYPE_HOLDABLE" then
+        return 1
+    end
+    if classID == Enum.ItemClass.Armor then
+        return ARMOR_SUBCLASS_FILTER[subClassID]
+    end
+    if classID == Enum.ItemClass.Weapon then
+        return WEAPON_SUBCLASS_FILTER[subClassID]
+    end
+    return nil
+end
+
+---@return table<number, boolean>|nil
+local function GetPlayerClassFilterIDs()
+    local _, classToken = UnitClass("player")
+    return classToken and CLASS_FILTER_IDS[classToken] or nil
+end
+
+--- Whether this class's proficiency preset includes the item.
+---@param itemID number
+---@return boolean
+local function ClassProficiencyAllows(itemID)
+    local allowed = GetPlayerClassFilterIDs()
+    if not allowed then return true end
+    local filterID = ResolveItemFilterID(itemID)
+    if not filterID then return true end
+    return allowed[filterID] == true
+end
+
+---@param itemID number
+---@param name string
+---@return table row `{ itemID, name, quality }`
+local function MissingRow(itemID, name)
+    return {
+        itemID = itemID,
+        name = name,
+        quality = C_Item.GetItemQualityByID(itemID),
+    }
+end
 
 --- Normalize apostrophes so tooltip lines match C_Item names (’ vs ').
 ---@param s string
@@ -102,28 +207,36 @@ end
 local function StripPunchListName(leftText)
     local text = leftText:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
     text = strtrim(text)
-    -- ASCII hyphen, en-dash, em-dash, or bullet
     local stripped = text:match("^[-–—•]%s*(.+)$")
     return NormalizeItemName(stripped or text)
 end
 
---- Rebuild the open GameTooltip once candidate names for this cache are ready.
 ---@param cacheItemID number
-local function SchedulePunchListTooltipRefresh(cacheItemID)
-    if punchListLoadPending[cacheItemID] then return end
-    punchListLoadPending[cacheItemID] = true
-
-    local candidates = PUNCH_LIST_CONTENTS[cacheItemID]
-    if not candidates then
-        punchListLoadPending[cacheItemID] = nil
-        return
+---@return string
+local function ResolveCacheName(cacheItemID)
+    local cacheName = C_Item.GetItemNameByID(cacheItemID) or C_Item.GetItemInfo(cacheItemID)
+    if not cacheName or cacheName == "" then
+        return tostring(cacheItemID)
     end
+    return cacheName
+end
+
+--- Rebuild the open GameTooltip once group content item data is ready.
+---@param cacheItemID number
+---@param rawContents number[]
+local function ScheduleTooltipRefresh(cacheItemID, rawContents)
+    if loadPendingByCache[cacheItemID] then return end
+    loadPendingByCache[cacheItemID] = true
 
     local pending = 0
     local function onOneLoaded()
         pending = pending - 1
         if pending > 0 then return end
-        punchListLoadPending[cacheItemID] = nil
+        loadPendingByCache[cacheItemID] = nil
+        local entry = CACHE_ENTRIES[cacheItemID]
+        if entry then
+            filteredByGroup[entry.group] = nil
+        end
         if not GameTooltip:IsShown() then return end
         local _, link = GameTooltip:GetItem()
         local tipItemID = link and C_Item.GetItemInfoInstant(link)
@@ -133,8 +246,8 @@ local function SchedulePunchListTooltipRefresh(cacheItemID)
         end
     end
 
-    for i = 1, #candidates do
-        local itemID = candidates[i]
+    for i = 1, #rawContents do
+        local itemID = rawContents[i]
         if not C_Item.IsItemDataCachedByID(itemID) then
             pending = pending + 1
             C_Item.RequestLoadItemDataByID(itemID)
@@ -144,14 +257,36 @@ local function SchedulePunchListTooltipRefresh(cacheItemID)
     end
 
     if pending == 0 then
-        punchListLoadPending[cacheItemID] = nil
+        loadPendingByCache[cacheItemID] = nil
     end
+end
+
+--- Class-filtered contents for a group.
+---@param groupId string
+---@return number[]|nil filtered
+local function GetFilteredContents(groupId)
+    local cached = filteredByGroup[groupId]
+    if cached then return cached end
+
+    local group = CONTENT_GROUPS[groupId]
+    if not group then return nil end
+    local raw = group.contents
+
+    local filtered = {}
+    for i = 1, #raw do
+        local itemID = raw[i]
+        if ClassProficiencyAllows(itemID) then
+            filtered[#filtered + 1] = itemID
+        end
+    end
+    filteredByGroup[groupId] = filtered
+    return filtered
 end
 
 --- Build localized name → itemID for a candidate list.
 ---@param candidates number[]
 ---@return table<string, number> index
----@return boolean anyUncached true when at least one candidate name was missing
+---@return boolean anyUncached
 local function BuildNameIndex(candidates)
     local index = {}
     local anyUncached = false
@@ -175,7 +310,7 @@ end
 
 --- Collect display names listed under the punch-list header in tooltipData.
 ---@param tooltipData table
----@return string[]|nil names ordered as on the tooltip, or nil if no punch list
+---@return string[]|nil
 local function ExtractPunchListNames(tooltipData)
     local lines = tooltipData and tooltipData.lines
     if not lines then return nil end
@@ -204,27 +339,17 @@ local function ExtractPunchListNames(tooltipData)
     return names
 end
 
---- Resolve punch-list tooltip rows for a known cache.
---- Returns nil when not applicable (unknown cache, no punch-list header yet,
---- or no listed row resolved as a collectible). Uncached candidates arm a
---- one-shot tooltip rebuild.
+---@param candidates number[]
+---@param tooltipData table|nil
 ---@param cacheItemID number
----@param tooltipData table|nil live or C_TooltipInfo tooltip data
----@return table|nil summary `{ cacheName, missing = { { itemID, name }, ... } }`
----  `missing` is empty when every matched collectible is already owned
-function Collectibles.GetPunchListSummary(cacheItemID, tooltipData)
-    cacheItemID = tonumber(cacheItemID)
-    if not cacheItemID then return nil end
-
-    local candidates = PUNCH_LIST_CONTENTS[cacheItemID]
-    if not candidates then return nil end
-
+---@return table|nil summary
+local function SummarizePunchList(candidates, tooltipData, cacheItemID)
     local listedNames = ExtractPunchListNames(tooltipData)
     if not listedNames or #listedNames == 0 then return nil end
 
     local nameIndex, anyUncached = BuildNameIndex(candidates)
     if anyUncached then
-        SchedulePunchListTooltipRefresh(cacheItemID)
+        ScheduleTooltipRefresh(cacheItemID, candidates)
     end
 
     local missing = {}
@@ -237,22 +362,235 @@ function Collectibles.GetPunchListSummary(cacheItemID, tooltipData)
             if status then
                 matched = matched + 1
                 if not status.collected then
-                    missing[#missing + 1] = { itemID = itemID, name = name }
+                    missing[#missing + 1] = MissingRow(itemID, name)
                 end
             end
         end
     end
 
-    -- Wait for names / a real collectible match before claiming complete.
     if matched == 0 then return nil end
 
-    local cacheName = C_Item.GetItemNameByID(cacheItemID) or C_Item.GetItemInfo(cacheItemID)
-    if not cacheName or cacheName == "" then
-        cacheName = tostring(cacheItemID)
-    end
-
     return {
-        cacheName = cacheName,
+        cacheName = ResolveCacheName(cacheItemID),
         missing = missing,
     }
+end
+
+---@param candidates number[]
+---@param cacheItemID number
+---@return table|nil summary
+local function SummarizeDirect(candidates, cacheItemID)
+    local missing = {}
+    local matched = 0
+    local anyUncachedName = false
+
+    for i = 1, #candidates do
+        local itemID = candidates[i]
+        local name = C_Item.GetItemNameByID(itemID) or C_Item.GetItemInfo(itemID)
+        if not name or name == "" then
+            anyUncachedName = true
+        end
+        local status = Collectibles.GetItemCollectionStatus(itemID, nil, { light = true })
+        if status then
+            matched = matched + 1
+            if not status.collected then
+                missing[#missing + 1] = MissingRow(
+                    itemID,
+                    (name and name ~= "") and name or ("item:" .. itemID)
+                )
+            end
+        end
+    end
+
+    if anyUncachedName then
+        ScheduleTooltipRefresh(cacheItemID, candidates)
+    end
+
+    if matched == 0 then return nil end
+
+    return {
+        cacheName = ResolveCacheName(cacheItemID),
+        missing = missing,
+    }
+end
+
+--- Resolve container tooltip collection summary for a known cache/chest.
+--- Returns nil when not applicable. `missing` is empty when every evaluated
+--- collectible is already owned.
+---@param cacheItemID number
+---@param tooltipData table|nil
+---@return table|nil summary `{ cacheName, missing = { { itemID, name, quality }, ... } }`
+function Collectibles.GetPunchListSummary(cacheItemID, tooltipData)
+    cacheItemID = tonumber(cacheItemID)
+    if not cacheItemID then return nil end
+
+    local entry = CACHE_ENTRIES[cacheItemID]
+    if not entry then return nil end
+
+    local filtered = GetFilteredContents(entry.group)
+    if not filtered then return nil end
+    if #filtered == 0 then return nil end
+
+    if entry.mode == "direct" then
+        return SummarizeDirect(filtered, cacheItemID)
+    end
+    return SummarizePunchList(filtered, tooltipData, cacheItemID)
+end
+
+-- ---------------------------------------------------------------------------
+-- DEBUG: punch-list / direct contents dump (/owpunch, /owpunchlist)
+-- ---------------------------------------------------------------------------
+
+local PUNCH_DEBUG_PREFIX = "|cFF55CCFFPunchList|r"
+
+local function PunchDebugPrint(msg)
+    print(PUNCH_DEBUG_PREFIX .. ": " .. msg)
+end
+
+local function ResolvePunchDumpTarget(msg)
+    msg = strtrim(msg or "")
+    if msg ~= "" then
+        local hyperlink = msg:match("(|c.-|Hitem:.-|h.-|h|r)")
+        if not hyperlink and msg:find("item:", 1, true) then
+            hyperlink = msg
+        end
+        if hyperlink then
+            return C_Item.GetItemInfoInstant(hyperlink)
+        end
+        local itemID = tonumber(msg)
+        if itemID then
+            return itemID
+        end
+    end
+
+    local _, link = GameTooltip:GetItem()
+    if link then
+        return C_Item.GetItemInfoInstant(link)
+    end
+
+    local infoType, itemID = GetCursorInfo()
+    if infoType == "item" and itemID then
+        return itemID
+    end
+end
+
+--- Chat dump: class filter + collection status for every group candidate.
+---@param cacheItemID number|nil
+function Collectibles.DumpPunchListDebug(cacheItemID)
+    cacheItemID = tonumber(cacheItemID)
+    if not cacheItemID then
+        PunchDebugPrint("hover a cache/chest tooltip, or pass itemID (e.g. /owpunch 257026)")
+        return
+    end
+
+    local entry = CACHE_ENTRIES[cacheItemID]
+    local cacheName = ResolveCacheName(cacheItemID)
+    local _, classToken, classID = UnitClass("player")
+    PunchDebugPrint("=== Punch-list debug ===")
+    PunchDebugPrint(format(
+        "cacheItemID=%d name=%q class=%s classID=%s",
+        cacheItemID, cacheName, tostring(classToken), tostring(classID)
+    ))
+
+    if not entry then
+        PunchDebugPrint("no CACHE_ENTRIES for this itemID")
+        return
+    end
+
+    PunchDebugPrint(format("group=%s mode=%s", entry.group, entry.mode))
+    local group = CONTENT_GROUPS[entry.group]
+    if not group then
+        PunchDebugPrint("missing CONTENT_GROUPS." .. entry.group)
+        return
+    end
+
+    filteredByGroup[entry.group] = nil
+
+    local raw = group.contents
+    local passFilter, failFilter = 0, 0
+    local noStatus, collectedN, missingN = 0, 0, 0
+    PunchDebugPrint(format("rawContents=%d — per-item:", #raw))
+
+    for i = 1, #raw do
+        local itemID = raw[i]
+        local name = C_Item.GetItemNameByID(itemID) or C_Item.GetItemInfo(itemID) or "?"
+        local filterID = ResolveItemFilterID(itemID)
+        local allowed = ClassProficiencyAllows(itemID)
+        local link = "item:" .. itemID
+        local canEquip = PE:CanClassEquip(itemID, link)
+        local sourceID = Collectibles.ResolveTransmogSourceID(itemID, nil)
+        local hasItemData, canCollectSrc
+        if sourceID then
+            hasItemData, canCollectSrc = C_TransmogCollection.PlayerCanCollectSource(sourceID)
+        end
+        local status = Collectibles.GetItemCollectionStatus(itemID, nil, { light = true })
+        local statusBits
+        if status then
+            statusBits = format("status collected=%s", tostring(status.collected))
+            if status.collected then
+                collectedN = collectedN + 1
+            else
+                missingN = missingN + 1
+            end
+        else
+            statusBits = "status=nil"
+            noStatus = noStatus + 1
+        end
+
+        if allowed then
+            passFilter = passFilter + 1
+        else
+            failFilter = failFilter + 1
+        end
+
+        PunchDebugPrint(format(
+            "  [%d] %d %q f=%s allowed=%s canEquip=%s PlayerCanCollect=%s/%s %s",
+            i, itemID, name, tostring(filterID), tostring(allowed), tostring(canEquip),
+            tostring(hasItemData), tostring(canCollectSrc), statusBits
+        ))
+    end
+
+    local filtered = GetFilteredContents(entry.group)
+    PunchDebugPrint(format(
+        "filter: allowed=%d denied=%d filtered=%s",
+        passFilter, failFilter, filtered and tostring(#filtered) or "nil"
+    ))
+    PunchDebugPrint(format(
+        "collection among raw: collected=%d missing=%d noStatus=%d",
+        collectedN, missingN, noStatus
+    ))
+
+    if filtered then
+        local summary
+        if entry.mode == "direct" then
+            summary = SummarizeDirect(filtered, cacheItemID)
+        else
+            local tipData = GameTooltip.GetTooltipData and GameTooltip:GetTooltipData()
+            summary = SummarizePunchList(filtered, tipData, cacheItemID)
+        end
+        if not summary then
+            PunchDebugPrint("GetPunchListSummary result=nil")
+        else
+            PunchDebugPrint(format(
+                "summary cacheName=%q missingCount=%d",
+                summary.cacheName, #summary.missing
+            ))
+            for i = 1, #summary.missing do
+                local row = summary.missing[i]
+                PunchDebugPrint(format(
+                    "  missing[%d] %d %q quality=%s",
+                    i, row.itemID, row.name, tostring(row.quality)
+                ))
+            end
+            if #summary.missing == 0 then
+                PunchDebugPrint("(empty missing → tooltip shows All collected)")
+            end
+        end
+    end
+end
+
+SLASH_OW_PUNCH_DUMP1 = "/owpunch"
+SLASH_OW_PUNCH_DUMP2 = "/owpunchlist"
+SlashCmdList["OW_PUNCH_DUMP"] = function(msg)
+    Collectibles.DumpPunchListDebug(ResolvePunchDumpTarget(msg))
 end
