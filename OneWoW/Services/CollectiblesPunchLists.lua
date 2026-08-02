@@ -79,8 +79,40 @@ local PREYSEEKER_CONTENTS = {
     259966, -- Tower Shield
 }
 
+-- Bulging Ethereal Pack weapons / off-hands / shield
+local ETHEREAL_PACK_CONTENTS = {
+    274877, -- Phaseblade Headsplitter
+    274878, -- Hal'hadar Shadowripper's Blade
+    274879, -- Mana-Amplified Crusher
+    274880, -- Hal'hadar Adjutant's Gavel
+    274881, -- Phase Igniter
+    274882, -- Hal'hadar Pulse Rifle
+    274883, -- Hal'hadar Warpguard's Poleaxe
+    274884, -- Arcanografter's Beacon
+    274885, -- Phase-Edged Falchion
+    274886, -- Eradicator's Censer
+    274887, -- Mana-Overloaded Bulwark
+    274888, -- Hal'hadar Legion Glaives
+    274889, -- Hal'hadar Darkblade's Edge
+}
+
+-- Bulging Winter Pack armor (+ cloak)
+local WINTER_PACK_CONTENTS = {
+    249755, -- Void-Touched Winter Hood
+    249756, -- Void-Touched Winter Pauldrons
+    249757, -- Void-Touched Winter Tunic
+    249758, -- Void-Touched Winter Belt
+    249759, -- Void-Touched Winter Leggings
+    249760, -- Void-Touched Winter Boots
+    249761, -- Void-Touched Winter Gloves
+    249762, -- Void-Touched Winter Cloak
+    249864, -- Void-Touched Winter Spaulders
+}
+
 local CONTENT_GROUPS = {
     preyseeker = { contents = PREYSEEKER_CONTENTS },
+    etherealPack = { contents = ETHEREAL_PACK_CONTENTS },
+    winterPack = { contents = WINTER_PACK_CONTENTS },
 }
 
 --- cacheItemID → { group, mode }  mode = "punchList" | "direct"
@@ -89,6 +121,8 @@ local CACHE_ENTRIES = {
     [257023] = { group = "preyseeker", mode = "direct" },    -- Preyseeker's Adventurer Chest
     [257026] = { group = "preyseeker", mode = "direct" },    -- Preyseeker's Veteran Chest
     [262346] = { group = "preyseeker", mode = "direct" },    -- Preyseeker's Champion Chest
+    [278026] = { group = "etherealPack", mode = "direct" },  -- Bulging Ethereal Pack
+    [278027] = { group = "winterPack", mode = "direct" },    -- Bulging Winter Pack
 }
 
 local LINE_NONE = Enum.TooltipDataLineType.None

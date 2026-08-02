@@ -213,7 +213,8 @@ known loot pool.
   `DoesItemContainSpec`.
 - **Ship:** `GetPunchListSummary` + QoL Collections footer (quality-colored
   missing names). Voidcache Prey (`269768`, punchList); Preyseeker chests
-  (`257023` / `257026` / `262346`, direct).
+  (`257023` / `257026` / `262346`, direct); Bulging Ethereal / Winter packs
+  (`278026` / `278027`, direct).
 - **Out of scope:** loot-spec filtering; per-chest content subsets.
 
 ---

@@ -33,7 +33,7 @@
 
 # QoL
 ## Tooltips
-- Collections now shows a footer on Preyseeker voidcaches and chests: Not Collected pieces for your class (quality-colored names), or All items collected when you have them all
+- Collections now shows a footer on Preyseeker voidcaches/chests and Bulging Ethereal/Winter packs: Not Collected pieces for your class (quality-colored names), or All items collected when you have them all
 
 ## Settings
 - Developer Help removed from the QoL settings tab (module authoring lives in QoL docs / the Developers wiki)

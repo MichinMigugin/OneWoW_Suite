@@ -170,7 +170,7 @@ plus a **mode**:
 | Mode | Containers | Evaluation |
 | --- | --- | --- |
 | `punchList` | Nebulous Voidcache: Prey (`269768`) | Match Blizzard `PUNCH_LIST_ITEM_CACHE_TOOLTIP` name-only lines against the class-filtered pool |
-| `direct` | Preyseeker Adventurer / Veteran / Champion chests (`257023`, `257026`, `262346`) | No punch-list lines; evaluate every class-filtered ID |
+| `direct` | Preyseeker Adventurer / Veteran / Champion chests (`257023`, `257026`, `262346`); Bulging Ethereal Pack (`278026`); Bulging Winter Pack (`278027`) | No punch-list lines; evaluate every class-filtered ID |
 
 Contents are armor/weapons only (rings/necks/trinkets omitted). Candidates are
 filtered once per group with [`OneWoW.GearProficiency`](GEAR_PROFICIENCY.md)
