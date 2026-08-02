@@ -864,6 +864,7 @@ files live under `OneWoW/Services/` (a single TOC block; consumers reference the
 | `OneWoW.Merchant` | `Services/Merchant.lua` | Catalog Vendors (merge), `OneWoW_Notes` collectibles, Overlays2 / Accounting / Bags / QoL merchant sites — single `MERCHANT_*` owner, scan/show/closed channels, ephemeral snapshots, no SV; see [MERCHANT.md](MERCHANT.md) / §8.8 |
 | `OneWoW.RecipeKnownUtil` | `Services/RecipeKnownUtil.lua` | Overlay engine, tooltip providers; delegates tooltip reads to TooltipScanner |
 | `OneWoW.Collectibles` | `Services/Collectibles.lua` (+ `CollectiblesPunchLists.lua`) | `OneWoW_Notes` (Collectibles data/tab), ContextMenus, `OneWoW_Trackers` (`TrackerEngine` collection-state steps), PredicateEngine, QoL tooltips — collectible key grammar + live display/state + Preyseeker content groups (punchList / direct), no SV; see [COLLECTIBLES.md](COLLECTIBLES.md) |
+| `OneWoW.GearProficiency` | `Services/GearProficiency.lua` | Collectibles punch/direct lists (first); class weapon/armor proficiency masks via `FlagsUtil` — not loot-spec / not transmog-collect alone; see [GEAR_PROFICIENCY.md](GEAR_PROFICIENCY.md) |
 | `OneWoW.AHItemKeys` | `Services/AHItemKeys.lua` | AH scanners (`OneWoW_AltTracker_Auctions`), `ItemPrices` link-aware lookups |
 | `OneWoW.ItemPrices` | `Services/ItemPrices.lua` | Tooltip providers, overlay engine, AH source UI helpers |
 | `OneWoW:CreateItemDataLoader` | `Services/ItemDataLoader.lua` | Catalog hub shared loader + CatalogData packs (factory on colon API) |
@@ -1331,6 +1332,7 @@ guild bank is open).
 | `OneWoW/Services/GuildBankTransfer.lua` | Bag→guild deposit plan + paced queue (§8.10, see [GUILD_BANK_TRANSFER.md](GUILD_BANK_TRANSFER.md)) |
 | `OneWoW/Services/UIParent.lua` | Cinematic `UIParent` hide/restore funnel + fragile FrameXML indicator re-sync (minimap mail) |
 | `OneWoW/Services/Collectibles.lua` | Collectible identity resolver: key grammar (`type[:subtype]:id`), live display + collection state, no SV (see [COLLECTIBLES.md](COLLECTIBLES.md)) |
+| `OneWoW/Services/GearProficiency.lua` | Class weapon/armor proficiency masks (`ClassAllowsItem`); see [GEAR_PROFICIENCY.md](GEAR_PROFICIENCY.md) |
 | `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
 | `OneWoW/UI/t-home.lua` | Home tab: addon cards, summary, Command Options + live refresh |
 | `OneWoW/UI/MainWindow.lua` | Hub window; L1/L2 nav, favorite pins, placeholders, `FeatureStateChanged` |

@@ -9,15 +9,13 @@ local _, ns = ...
 --               lines matched against a class-filtered candidate pool
 --   direct    — no punch-list lines; evaluate the whole class-filtered pool
 --
--- Candidates are filtered once per group with class FilterIDs
--- (armor/weapon proficiency + cloaks). PlayerCanCollectSource is too broad
--- (e.g. shields for cloth casters); DoesItemContainSpec is too narrow (loot
--- eligibility). Lazy session cache. Rings/necks/trinkets stay off the lists.
--- See Docs/COLLECTIBLES.md.
+-- Candidates are filtered once per group via OneWoW.GearProficiency
+-- (class weapon/armor proficiency + cloaks/holdables). Lazy session cache.
+-- Rings/necks/trinkets stay off the lists. See Docs/COLLECTIBLES.md.
 -- ============================================================================
 
 local Collectibles = ns.Collectibles
-local PE = ns.PredicateEngine -- debug dump only
+local GearProficiency = ns.GearProficiency
 
 -- https://www.wowhead.com/items/name:preyseeker/quality:2:3:4/slot:16:5:8:10:1:23:7:21:22:13:15:26:14:4:3:19:17:6:9?filter=195:251;1:2;0:0#items;0+2+20
 local PREYSEEKER_CONTENTS = {
@@ -93,50 +91,6 @@ local CACHE_ENTRIES = {
     [262346] = { group = "preyseeker", mode = "direct" },    -- Preyseeker's Champion Chest
 }
 
--- FilterID for armor/weapons.
--- Cloaks are always f=3
-local WEAPON_SUBCLASS_FILTER = {
-    [0] = 21,  -- 1H Axe
-    [1] = 22,  -- 2H Axe
-    [2] = 32,  -- Bow
-    [3] = 31,  -- Gun
-    [4] = 23,  -- 1H Mace
-    [5] = 24,  -- 2H Mace
-    [6] = 29,  -- Polearm
-    [7] = 25,  -- 1H Sword
-    [8] = 26,  -- 2H Sword
-    [9] = 35,  -- Warglaive
-    [10] = 28, -- Staff
-    [13] = 34, -- Fist
-    [15] = 20, -- Dagger
-    [18] = 33, -- Crossbow
-    [19] = 27, -- Wand
-}
-local ARMOR_SUBCLASS_FILTER = {
-    [1] = 4, -- Cloth
-    [2] = 5, -- Leather
-    [3] = 6, -- Mail
-    [4] = 7, -- Plate
-    [6] = 8, -- Shield
-}
-
--- Per-class allowed FilterIDs
-local CLASS_FILTER_IDS = {
-    DEATHKNIGHT = { [1] = true, [2] = true, [3] = true, [7] = true, [9] = true, [10] = true, [11] = true, [21] = true, [22] = true, [23] = true, [24] = true, [25] = true, [26] = true, [29] = true },
-    DEMONHUNTER = { [1] = true, [2] = true, [3] = true, [5] = true, [9] = true, [10] = true, [11] = true, [21] = true, [25] = true, [34] = true, [35] = true },
-    DRUID       = { [1] = true, [2] = true, [3] = true, [5] = true, [9] = true, [10] = true, [11] = true, [20] = true, [23] = true, [24] = true, [28] = true, [29] = true, [34] = true },
-    EVOKER      = { [1] = true, [2] = true, [3] = true, [6] = true, [9] = true, [10] = true, [11] = true, [20] = true, [21] = true, [22] = true, [23] = true, [24] = true, [25] = true, [26] = true, [28] = true, [34] = true },
-    HUNTER      = { [1] = true, [2] = true, [3] = true, [6] = true, [9] = true, [10] = true, [11] = true, [20] = true, [21] = true, [22] = true, [25] = true, [26] = true, [28] = true, [29] = true, [31] = true, [32] = true, [33] = true, [34] = true },
-    MAGE        = { [1] = true, [2] = true, [3] = true, [4] = true, [9] = true, [10] = true, [11] = true, [20] = true, [25] = true, [27] = true, [28] = true },
-    MONK        = { [1] = true, [2] = true, [3] = true, [5] = true, [9] = true, [10] = true, [11] = true, [21] = true, [23] = true, [25] = true, [28] = true, [29] = true, [34] = true },
-    PALADIN     = { [1] = true, [2] = true, [3] = true, [7] = true, [8] = true, [9] = true, [10] = true, [11] = true, [21] = true, [22] = true, [23] = true, [24] = true, [25] = true, [26] = true, [29] = true },
-    PRIEST      = { [1] = true, [2] = true, [3] = true, [4] = true, [9] = true, [10] = true, [11] = true, [20] = true, [23] = true, [27] = true, [28] = true },
-    ROGUE       = { [1] = true, [2] = true, [3] = true, [5] = true, [9] = true, [10] = true, [11] = true, [20] = true, [21] = true, [23] = true, [25] = true, [31] = true, [32] = true, [33] = true, [34] = true },
-    SHAMAN      = { [1] = true, [2] = true, [3] = true, [6] = true, [8] = true, [9] = true, [10] = true, [11] = true, [20] = true, [21] = true, [22] = true, [23] = true, [24] = true, [28] = true, [34] = true },
-    WARLOCK     = { [1] = true, [2] = true, [3] = true, [4] = true, [9] = true, [10] = true, [11] = true, [20] = true, [25] = true, [27] = true, [28] = true },
-    WARRIOR     = { [1] = true, [2] = true, [3] = true, [7] = true, [8] = true, [9] = true, [10] = true, [11] = true, [20] = true, [21] = true, [22] = true, [23] = true, [24] = true, [25] = true, [26] = true, [28] = true, [29] = true, [31] = true, [32] = true, [33] = true, [34] = true },
-}
-
 local LINE_NONE = Enum.TooltipDataLineType.None
 local LINE_BLANK = Enum.TooltipDataLineType.Blank
 
@@ -144,44 +98,6 @@ local LINE_BLANK = Enum.TooltipDataLineType.Blank
 local filteredByGroup = {}
 -- In-flight ContinueOnItemLoad batches keyed by hovered cache itemID.
 local loadPendingByCache = {}
-
---- FilterID for an item (cloaks → 3, holdables → 1, else armor/weapon subclass).
----@param itemID number
----@return number|nil filterID
-local function ResolveItemFilterID(itemID)
-    local _, _, _, equipLoc, _, classID, subClassID = C_Item.GetItemInfoInstant(itemID)
-    if not classID then return nil end
-    if equipLoc == "INVTYPE_CLOAK" then
-        return 3
-    end
-    if equipLoc == "INVTYPE_HOLDABLE" then
-        return 1
-    end
-    if classID == Enum.ItemClass.Armor then
-        return ARMOR_SUBCLASS_FILTER[subClassID]
-    end
-    if classID == Enum.ItemClass.Weapon then
-        return WEAPON_SUBCLASS_FILTER[subClassID]
-    end
-    return nil
-end
-
----@return table<number, boolean>|nil
-local function GetPlayerClassFilterIDs()
-    local _, classToken = UnitClass("player")
-    return classToken and CLASS_FILTER_IDS[classToken] or nil
-end
-
---- Whether this class's proficiency preset includes the item.
----@param itemID number
----@return boolean
-local function ClassProficiencyAllows(itemID)
-    local allowed = GetPlayerClassFilterIDs()
-    if not allowed then return true end
-    local filterID = ResolveItemFilterID(itemID)
-    if not filterID then return true end
-    return allowed[filterID] == true
-end
 
 ---@param itemID number
 ---@param name string
@@ -275,7 +191,7 @@ local function GetFilteredContents(groupId)
     local filtered = {}
     for i = 1, #raw do
         local itemID = raw[i]
-        if ClassProficiencyAllows(itemID) then
+        if GearProficiency.ClassAllowsItem(itemID) then
             filtered[#filtered + 1] = itemID
         end
     end
@@ -514,15 +430,9 @@ function Collectibles.DumpPunchListDebug(cacheItemID)
     for i = 1, #raw do
         local itemID = raw[i]
         local name = C_Item.GetItemNameByID(itemID) or C_Item.GetItemInfo(itemID) or "?"
-        local filterID = ResolveItemFilterID(itemID)
-        local allowed = ClassProficiencyAllows(itemID)
-        local link = "item:" .. itemID
-        local canEquip = PE:CanClassEquip(itemID, link)
-        local sourceID = Collectibles.ResolveTransmogSourceID(itemID, nil)
-        local hasItemData, canCollectSrc
-        if sourceID then
-            hasItemData, canCollectSrc = C_TransmogCollection.PlayerCanCollectSource(sourceID)
-        end
+        local flag = GearProficiency.GetItemFlag(itemID)
+        local flagName = GearProficiency.GetFlagName(flag) or "nil"
+        local allowed = GearProficiency.ClassAllowsItem(itemID)
         local status = Collectibles.GetItemCollectionStatus(itemID, nil, { light = true })
         local statusBits
         if status then
@@ -544,9 +454,8 @@ function Collectibles.DumpPunchListDebug(cacheItemID)
         end
 
         PunchDebugPrint(format(
-            "  [%d] %d %q f=%s allowed=%s canEquip=%s PlayerCanCollect=%s/%s %s",
-            i, itemID, name, tostring(filterID), tostring(allowed), tostring(canEquip),
-            tostring(hasItemData), tostring(canCollectSrc), statusBits
+            "  [%d] %d %q flag=%s allowed=%s %s",
+            i, itemID, name, flagName, tostring(allowed), statusBits
         ))
     end
 

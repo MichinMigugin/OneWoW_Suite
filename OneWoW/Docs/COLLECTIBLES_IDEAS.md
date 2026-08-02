@@ -208,13 +208,13 @@ known loot pool.
 
 - **Build:** shared **content groups** (e.g. Preyseeker) + `CACHE_ENTRIES`
   (`group` + `mode`: `punchList` vs `direct`). Armor/weapons only; class-filter
-  via ATT-style class FilterIDs (proficiency presets; cloaks=`f=3`). Not
-  `PlayerCanCollectSource` (too broad) or `DoesItemContainSpec` (too narrow).
+  via `OneWoW.GearProficiency.ClassAllowsItem` (named proficiency flags; see
+  [GEAR_PROFICIENCY.md](GEAR_PROFICIENCY.md)). Not `PlayerCanCollectSource` or
+  `DoesItemContainSpec`.
 - **Ship:** `GetPunchListSummary` + QoL Collections footer (quality-colored
   missing names). Voidcache Prey (`269768`, punchList); Preyseeker chests
   (`257023` / `257026` / `262346`, direct).
-- **Out of scope:** ATT-scale encyclopedia; loot-spec filtering;
-  per-chest content subsets; mirroring ATT’s user FilterID checkbox overrides.
+- **Out of scope:** loot-spec filtering; per-chest content subsets.
 
 ---
 

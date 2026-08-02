@@ -173,9 +173,10 @@ plus a **mode**:
 | `direct` | Preyseeker Adventurer / Veteran / Champion chests (`257023`, `257026`, `262346`) | No punch-list lines; evaluate every class-filtered ID |
 
 Contents are armor/weapons only (rings/necks/trinkets omitted). Candidates are
-filtered once per group with class FilterIDs (armor/weapon proficiency + cloaks;
-not `PlayerCanCollectSource` or `DoesItemContainSpec`). Lazy session
-cache, no login preload. `GetPunchListSummary` returns `{ cacheName, missing }` (rows include
+filtered once per group with [`OneWoW.GearProficiency`](GEAR_PROFICIENCY.md)
+(`ClassAllowsItem` — class weapon/armor proficiency + cloaks/holdables; not
+`PlayerCanCollectSource` or `DoesItemContainSpec`). Lazy session cache, no login
+preload. `GetPunchListSummary` returns `{ cacheName, missing }` (rows include
 `quality` for tooltip coloring)
 for the QoL Collections tooltip footer (`missing` empty → “All items collected
 from …”). Uncached item data arms `ContinueOnItemLoad` +
