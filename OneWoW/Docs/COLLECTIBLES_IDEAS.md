@@ -39,10 +39,12 @@ fields + UI** (assignment, priority, dashboard). We are assembling, not inventin
 | Vendor scan funnel + encyclopedia | `OneWoW.Merchant`, `OneWoW_CatalogData_Vendors_API` | core service / CatalogData unit |
 | Live per-offer affordability | `OneWoW.Collectibles.GetOfferAffordability(offer)` | `OneWoW/Services/Collectibles.lua` |
 | Ensemble/set progress rollup | `GetEnsembleProgress` / `GetSetMembers` | same service |
+| Punch-list voidcache → content itemIDs | `Collectibles.GetPunchListSummary` + curated map | `OneWoW/Services/CollectiblesPunchLists.lua` (QoL Collections tooltip footer) |
 
-**Genuinely new work:** two curated data maps (achievement→reward, collectible→
-daily-lock-quest), a temporal-availability service, and Notes record fields + UI
-(assignment, priority, dashboard, Wowhead builder).
+**Genuinely new work:** curated data maps (achievement→reward, collectible→
+daily-lock-quest, **punch-list cache→content itemIDs**), a temporal-availability
+service, and Notes record fields + UI (assignment, priority, dashboard, Wowhead
+builder).
 
 ---
 
@@ -193,6 +195,24 @@ resets, spawns, windows.
 - **Localize the host, not the path:** base `wowhead.com` as a constant/locale key;
   pick the subdomain from `GetLocale()` (`de.`, `fr.`, `es.`, `it.`, `pt.`, `ru.`,
   `ko.`). zhCN/zhTW are hosted separately — verify before mapping; fall back to base.
+
+---
+
+## 10. Punch-list / voidcache contents (curated map)
+
+Blizzard “Contains one of the following items:” tooltips (`PUNCH_LIST_ITEM_CACHE_TOOLTIP`)
+list content as **name-only** lines — no itemIDs, no NestedBlock. There is no
+FrameXML / C_* API to enumerate punch-list contents (validated against `.wow_docs`
+and wow-ui-source).
+
+- **Build:** curated **cache itemID → content itemIDs** (armor/weapons only;
+  rings/necks/trinkets are not transmog-collectible and stay off the map).
+  Locale-safe match via `C_Item.GetItemNameByID` against stripped tooltip lines.
+- **Ship:** `OneWoW.Collectibles.GetPunchListSummary` + QoL Collections tooltip
+  footer (“Not Collected:” or “All items collected from …” under the OneWoW
+  block). First entry: Nebulous Voidcache: Prey (`269768`).
+- **Out of scope:** ATT-scale loot encyclopedia — keep the map narrow and
+  extend one cache at a time.
 
 ---
 

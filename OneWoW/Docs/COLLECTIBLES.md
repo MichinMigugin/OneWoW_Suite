@@ -96,6 +96,7 @@ whereas keying them as heirlooms would make `PlayerHasHeirloom` report them
 | `GetEnsembleProgress(setID)` | `{ collected, total, name }` or `nil` | Live set completion; matches Blizzard's Sets tab (primary appearances) |
 | `GetSetMembers(setID)` | `{ { key?, name?, icon?, link?, collected }, … }` or `nil` | Live, read-only per-slot member rows for the set's detail/tree view (never persisted) |
 | `GetContainingSets(key)` | `{ setID, … }` or `nil` | Sets that contain an `appearance:source` key |
+| `GetPunchListSummary(cacheItemID, tooltipData?)` | `{ cacheName, missing = { { itemID, name }, … } }` or `nil` | Punch-list / voidcache tooltips: match listed names to a curated content-ID map. `missing` is empty when every matched collectible is owned (see Punch-list contents) |
 
 `GetCollectionState` always returns a table with a common `collected` boolean
 plus type-specific detail (so callers never branch on the return **type**):
@@ -159,6 +160,20 @@ fishing poles where `GetItemInfo`/`TryOn` fail but `PlayerHasTransmog(itemID)`
 is authoritative. TryOn falls back to `C_Transmog.GetSlotForInventoryType` for
 inv types outside the static slot map (via `C_Item.GetItemInventoryTypeByID` →
 `C_Transmog.GetSlotForInventoryType`).
+
+## Punch-list contents (voidcaches)
+
+Some items (e.g. Nebulous Voidcache: Prey) show Blizzard’s
+`PUNCH_LIST_ITEM_CACHE_TOOLTIP` list — plain `"- Name"` lines with **no**
+itemIDs. [`CollectiblesPunchLists.lua`](../Services/CollectiblesPunchLists.lua)
+holds a curated `cacheItemID → { contentItemID, … }` map (armor/weapons only;
+rings/necks/trinkets omitted). `GetPunchListSummary(cacheItemID, tooltipData)`
+builds a localized name index, matches tooltip rows after the punch-list header,
+and returns `{ cacheName, missing }` for the QoL Collections tooltip footer
+(`missing` empty → “All items collected from …”). When candidate item data is
+not yet cached, it requests loads and rebuilds the live `GameTooltip` once names
+are ready. Unknown caches or tooltips without the header return `nil`. Extend
+the map when adding more voidcaches — do not scrape English names as keys.
 
 ## Secret-value caveat (12.0)
 

@@ -32,6 +32,9 @@
 ---
 
 # QoL
+## Tooltips
+- Collections now shows a punch-list footer on known voidcaches: Not Collected pieces you still need, or All items collected from the cache when you have them all (Prey first)
+
 ## Settings
 - Developer Help removed from the QoL settings tab (module authoring lives in QoL docs / the Developers wiki)
 - Weekly Reset Day section layout matches Catalog and AltTracker settings (full-width header, no extra divider)

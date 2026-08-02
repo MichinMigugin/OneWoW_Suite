@@ -58,20 +58,57 @@ local function CollectionsProvider(_, context)
 
     typeColor = ITEM_TYPE_COLORS[classID] or {0.9, 0.9, 0.9}
 
+    local lines = {}
+
     local status = OneWoW.Collectibles.GetItemCollectionStatus(context.itemID, context.itemLink, {
         tooltipData = context.data,
         light = true,
     })
-    if not status then
-        return {
-            {type = "headerRight", text = typeString, r = typeColor[1], g = typeColor[2], b = typeColor[3]}
+    if status then
+        local text = GetCollectionStatusText(status) .. " | " .. typeString
+        lines[#lines + 1] = {
+            type = "headerRight",
+            text = text,
+            r = typeColor[1],
+            g = typeColor[2],
+            b = typeColor[3],
+        }
+    else
+        lines[#lines + 1] = {
+            type = "headerRight",
+            text = typeString,
+            r = typeColor[1],
+            g = typeColor[2],
+            b = typeColor[3],
         }
     end
 
-    local text = GetCollectionStatusText(status) .. " | " .. typeString
-    return {
-        {type = "headerRight", text = text, r = typeColor[1], g = typeColor[2], b = typeColor[3]}
-    }
+    local punch = OneWoW.Collectibles.GetPunchListSummary(context.itemID, context.data)
+    if punch then
+        local missing = punch.missing
+        if #missing > 0 then
+            lines[#lines + 1] = {
+                type = "header",
+                text = "  " .. L["TIPS_COLLECTIONS_NOT_COLLECTED"],
+            }
+            for i = 1, #missing do
+                lines[#lines + 1] = {
+                    type = "text",
+                    text = "    " .. missing[i].name,
+                }
+            end
+        else
+            lines[#lines + 1] = {
+                type = "text",
+                text = "  " .. format(L["TIPS_COLLECTIONS_PUNCH_ALL_COLLECTED"], punch.cacheName),
+                r = 0.4,
+                g = 0.8,
+                b = 0.4,
+            }
+        end
+    end
+
+    return lines
 end
 
 OneWoW.TooltipEngine:RegisterProvider({
