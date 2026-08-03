@@ -947,6 +947,9 @@ function Inbox:Refresh()
                 return
             end
             if IsShiftKeyDown() and (CODAmount or 0) == 0 and not isGM then
+                -- Mark read so the minimap mail icon clears (Collect does the same;
+                -- Blizzard's modified click opens the letter, which also marks read).
+                GetInboxText(index)
                 AutoLootMailItem(index)
                 if ns.InTransit then
                     ns.InTransit:ClearMatching(nil, subject)
