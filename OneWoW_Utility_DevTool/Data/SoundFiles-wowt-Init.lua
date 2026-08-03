@@ -2,7 +2,7 @@
 -- https://wago.tools/
 local _, ns = ...
 
-ns.soundDataVersionPTR = { "12.0.7.68182" }
+ns.soundDataVersionPTR = { "12.0.7.68887" }
 if not ns.ValidateDataBuildGameBuild("Sound PTR", ns.soundDataVersionPTR) then
 	return
 end

@@ -2,7 +2,7 @@
 -- https://www.townlong-yak.com/framexml/live/Helix/AtlasInfo.lua
 local _, ns = ...
 
-ns.atlasDataVersionLIVE = { "12.0.7.68182" }
+ns.atlasDataVersionLIVE = { "12.0.7.68887" }
 if not ns.ValidateDataBuildGameBuild("Atlas", ns.atlasDataVersionLIVE, true) then
 	return
 end
