@@ -57,6 +57,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["JOURNAL_FILTER_N_SELECTED"] = "已选 %d 项",
 
     ["JOURNAL_CARD_DUNGEON"] = "地下城",
+    ["JOURNAL_CARD_ENCOUNTER_ONE"] = "%d 个首领",
     ["JOURNAL_CARD_ENCOUNTERS"] = "%d 个首领",
     ["JOURNAL_CARD_ITEMS"] = "%d 件物品",
     ["JOURNAL_CARD_TMOG"] = "幻化",
@@ -82,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["JOURNAL_COL_OR"] = "或",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "有未收集",
+    ["JOURNAL_LOADING_LOOT"] = "正在加载掉落…",
 
     ["JOURNAL_GENERAL_LOOT"] = "通用战利品",
     ["JOURNAL_ITEMS_COUNT"] = "%d 件物品",
@@ -90,7 +92,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["JOURNAL_ITEMID"] = "物品 ID",
     ["JOURNAL_QUEST_COMPLETED"] = "已完成",
     ["JOURNAL_QUEST_NOT_COMPLETED"] = "未完成",
-    ["JOURNAL_CLICK_FOR_LINK"] = "WoWHead 链接",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Wowhead",
     ["JOURNAL_OPEN"] = "查看任务",
     ["JOURNAL_OPEN_QUEST"] = "查看任务",
     ["JOURNAL_QUEST_LINK_INSTRUCT"] = "点击链接将其高亮，然后按 Ctrl+C 复制。使用「查看任务」可在任务图鉴中查看它。",

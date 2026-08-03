@@ -56,6 +56,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["JOURNAL_FILTER_N_SELECTED"] = "%d개 선택",
 
     ["JOURNAL_CARD_DUNGEON"] = "던전",
+    ["JOURNAL_CARD_ENCOUNTER_ONE"] = "보스 %d명",
     ["JOURNAL_CARD_ENCOUNTERS"] = "보스 %d명",
     ["JOURNAL_CARD_ITEMS"] = "아이템 %d개",
     ["JOURNAL_CARD_TMOG"] = "형상변환",
@@ -81,6 +82,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["JOURNAL_COL_OR"] = "또는",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "미수집 있음",
+    ["JOURNAL_LOADING_LOOT"] = "전리품 불러오는 중…",
 
     ["JOURNAL_GENERAL_LOOT"] = "일반 전리품",
     ["JOURNAL_ITEMS_COUNT"] = "아이템 %d개",
@@ -89,7 +91,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["JOURNAL_ITEMID"] = "아이템 ID",
     ["JOURNAL_QUEST_COMPLETED"] = "완료",
     ["JOURNAL_QUEST_NOT_COMPLETED"] = "미완료",
-    ["JOURNAL_CLICK_FOR_LINK"] = "WoWHead 링크",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Wowhead",
     ["JOURNAL_OPEN"] = "퀘스트 보기",
     ["JOURNAL_OPEN_QUEST"] = "퀘스트 보기",
     ["JOURNAL_QUEST_LINK_INSTRUCT"] = "링크를 눌러 강조한 다음 Ctrl+C를 눌러 복사하세요. '퀘스트 보기'를 사용하면 퀘스트 도감에서 볼 수 있습니다.",

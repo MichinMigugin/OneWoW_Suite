@@ -89,6 +89,12 @@ Data\Midnight-instances.lua
 Data\Midnight-encounters.lua
 Data\Midnight-tables.lua
 
+# Generated membership / difficulties (from .wow_db2 via bin/journal_db2_tools.py)
+Data\Generated\TierMembership.lua
+Data\Generated\MapDifficulties.lua
+Data\Generated\InstanceFlags.lua
+Data\JournalListingOverrides.lua
+
 # Core
 Core\Database.lua
 Core\API.lua

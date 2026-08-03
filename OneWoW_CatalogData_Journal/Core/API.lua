@@ -84,17 +84,22 @@ function OneWoW_CatalogData_Journal_API.GetScaledLootLink(instanceID, encounterI
     return ns.EJLiveLoot:GetScaledLootLink(instanceID, encounterID, diffID, itemID)
 end
 
---- Ensures the journal cache is built and returns the instance for a world map ID.
+--- Preferred instance card for a world map ID (highest expansionID when dual-listed).
 ---@param mapID number
 ---@return table|nil instanceData
 function OneWoW_CatalogData_Journal_API.GetInstanceByMapID(mapID)
-    ns.JournalData:BuildJournalCache()
-    local cache = ns.JournalData.journalCache
-    if not cache then return nil end
-    for _, data in pairs(cache) do
-        if data.mapID == mapID then
-            return data
-        end
-    end
-    return nil
+    return ns.JournalData:GetInstanceByMapID(mapID)
+end
+
+--- All instance cards for a world map ID (dual remakes may return multiple).
+---@param mapID number
+---@return table instances
+function OneWoW_CatalogData_Journal_API.GetInstancesByMapID(mapID)
+    return ns.JournalData:GetInstancesByMapID(mapID)
+end
+
+--- Whether live EJ loot merge has finished for the current cache.
+---@return boolean
+function OneWoW_CatalogData_Journal_API.IsLiveMergeComplete()
+    return ns.EJLiveLoot and ns.EJLiveLoot.ejMergeComplete == true
 end

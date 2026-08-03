@@ -18,6 +18,11 @@ local expansionList = {
     { name = "Midnight",           expansionID = 12, displayName = "Midnight" },
 }
 
+local expansionByID = {}
+for _, exp in ipairs(expansionList) do
+    expansionByID[exp.expansionID] = exp
+end
+
 JournalData.journalCache = nil
 JournalData.initialized = false
 
@@ -28,6 +33,14 @@ local ACHIEVEMENT_ENC_ID = -2
 local QUEST_ENC_ID = -3
 JournalData.ACHIEVEMENT_ENC_ID = ACHIEVEMENT_ENC_ID
 JournalData.QUEST_ENC_ID = QUEST_ENC_ID
+
+--- Composite cache / favorites key for a journal card.
+---@param expansionID number
+---@param instanceID number
+---@return string
+function JournalData.CacheKey(expansionID, instanceID)
+    return tostring(expansionID) .. ":" .. tostring(instanceID)
+end
 
 -- Encounter display order: bosses (by bossIndex) -> Achievement -> Quest -> General.
 local function EncounterSortRank(enc)
@@ -197,199 +210,140 @@ function JournalData:DetermineItemStatus(itemID, itemData, specialType)
     return nil
 end
 
-function JournalData:BuildJournalCache()
-    if self.journalCache then return end
-    self.journalCache = {}
+--- Deduped item-location rows for one instanceID across every expansion tables file.
+---@param itemsByEncByInst table
+---@param itemID number
+---@param itemData table
+---@param loc table
+local function AddLocationEntry(itemsByEncByInst, itemID, itemData, loc)
+    local instID = loc.instanceID
+    local encID = loc.encounterID or 0
+    if not instID then
+        return
+    end
+    itemsByEncByInst[instID] = itemsByEncByInst[instID] or {}
+    itemsByEncByInst[instID][encID] = itemsByEncByInst[instID][encID] or {}
+    local bucket = itemsByEncByInst[instID][encID]
+    for _, existing in ipairs(bucket) do
+        if existing.itemID == itemID then
+            -- Same item already placed on this encounter from another tables file.
+            return
+        end
+    end
+    tinsert(bucket, {
+        itemID       = itemID,
+        itemData     = itemData,
+        difficulties = loc.difficulties,
+        source       = loc.source,
+        encounterID  = encID,
+        instanceID   = instID,
+    })
+end
 
+---@param encByID table
+---@param encountersGlobal table|nil
+---@param fallbackEncounters table
+---@return table encounters
+function JournalData:BuildEncountersForInstance(encByID, encountersGlobal, fallbackEncounters)
     local L = ns.L
+    local encounters = {}
 
-    for _, expansion in ipairs(expansionList) do
-        local instancesGlobal  = _G["OneWoWInstances_"  .. expansion.name]
-        local encountersGlobal = _G["OneWoWEncounters_" .. expansion.name]
-        local itemsGlobal      = _G["OneWoWItems_"      .. expansion.name]
+    local function MakeItemRow(entry)
+        local idata = entry.itemData
+        return {
+            itemID       = entry.itemID,
+            itemData     = idata,
+            name         = idata.name or L["JOURNAL_UNKNOWN_ITEM"],
+            icon         = idata.icon or 134400,
+            quality      = idata.quality or 1,
+            special      = self:DetermineItemSpecial(idata),
+            difficulties = entry.difficulties or {},
+            source       = entry.source,
+            questSources = idata.questSources,
+        }
+    end
 
-        if instancesGlobal and encountersGlobal and itemsGlobal then
-            local itemsByEncByInst = {}
-            for itemID, itemData in pairs(itemsGlobal) do
-                if itemData.locations then
-                    for _, loc in ipairs(itemData.locations) do
-                        local instID = loc.instanceID
-                        local encID  = loc.encounterID or 0
-                        if instID then
-                            itemsByEncByInst[instID] = itemsByEncByInst[instID] or {}
-                            itemsByEncByInst[instID][encID] = itemsByEncByInst[instID][encID] or {}
-                            local entry = {
-                                itemID       = itemID,
-                                itemData     = itemData,
-                                difficulties = loc.difficulties,
-                                source       = loc.source,
-                                encounterID  = encID,
-                                instanceID   = instID,
-                            }
-                            table.insert(itemsByEncByInst[instID][encID], entry)
-                        end
-                    end
+    local function ByName(a, b)
+        return a.name < b.name
+    end
+
+    for encID, entries in pairs(encByID) do
+        if encID == 0 then
+            local generalItems, achievementItems, questItems = {}, {}, {}
+            for _, entry in ipairs(entries) do
+                local itemRow = MakeItemRow(entry)
+                if itemRow.questSources and #itemRow.questSources > 0 then
+                    tinsert(questItems, itemRow)
+                elseif itemRow.special == "Achievement" then
+                    tinsert(achievementItems, itemRow)
+                else
+                    tinsert(generalItems, itemRow)
                 end
             end
 
-            for instanceID, instInfo in pairs(instancesGlobal) do
-                local encByID = itemsByEncByInst[instanceID] or {}
-                local encounters = {}
-
-                local function MakeItemRow(entry)
-                    local idata = entry.itemData
-                    return {
-                        itemID       = entry.itemID,
-                        itemData     = idata,
-                        name         = idata.name or L["JOURNAL_UNKNOWN_ITEM"],
-                        icon         = idata.icon or 134400,
-                        quality      = idata.quality or 1,
-                        special      = self:DetermineItemSpecial(idata),
-                        difficulties = entry.difficulties or {},
-                        source       = entry.source,
-                        questSources = idata.questSources,
-                    }
-                end
-
-                local function ByName(a, b)
-                    return a.name < b.name
-                end
-
-                for encID, entries in pairs(encByID) do
-                    if encID == 0 then
-                        -- General loot: pull quest-obtained and achievement-tied items
-                        -- into their own encounters so true general loot stays clean.
-                        -- Priority: a quest source (how you obtain it) wins over an
-                        -- achievement tag.
-                        local generalItems, achievementItems, questItems = {}, {}, {}
-                        for _, entry in ipairs(entries) do
-                            local itemRow = MakeItemRow(entry)
-                            if itemRow.questSources and #itemRow.questSources > 0 then
-                                table.insert(questItems, itemRow)
-                            elseif itemRow.special == "Achievement" then
-                                table.insert(achievementItems, itemRow)
-                            else
-                                table.insert(generalItems, itemRow)
-                            end
-                        end
-
-                        if #generalItems > 0 then
-                            table.sort(generalItems, ByName)
-                            table.insert(encounters, {
-                                encounterID = 0,
-                                name        = L["JOURNAL_GENERAL_LOOT"],
-                                bossIndex   = 0,
-                                items       = generalItems,
-                            })
-                        end
-                        if #achievementItems > 0 then
-                            table.sort(achievementItems, ByName)
-                            table.insert(encounters, {
-                                encounterID = ACHIEVEMENT_ENC_ID,
-                                name        = L["JOURNAL_ACHIEVEMENT_LOOT"],
-                                bossIndex   = 0,
-                                items       = achievementItems,
-                            })
-                        end
-                        if #questItems > 0 then
-                            table.sort(questItems, ByName)
-                            table.insert(encounters, {
-                                encounterID  = QUEST_ENC_ID,
-                                name         = L["JOURNAL_QUEST_LOOT"],
-                                bossIndex    = 0,
-                                items        = questItems,
-                                questCategory = true,
-                            })
-                        end
-                    else
-                        local encInfo = encountersGlobal[encID]
-                        local encName = L["JOURNAL_UNKNOWN_INST"]
-                        local bossIndex = 0
-                        if encInfo then
-                            encName = encInfo.name or L["JOURNAL_UNKNOWN_INST"]
-                            bossIndex = encInfo.bossIndex or 0
-                        end
-
-                        local items = {}
-                        for _, entry in ipairs(entries) do
-                            table.insert(items, MakeItemRow(entry))
-                        end
-                        table.sort(items, ByName)
-
-                        table.insert(encounters, {
-                            encounterID = encID,
-                            name        = encName,
-                            bossIndex   = bossIndex,
-                            items       = items,
-                        })
-                    end
-                end
-
-                table.sort(encounters, SortEncounters)
-
-                local hasTMog, hasMounts, hasPets, hasToys, hasRecipes, hasQuest, hasHousing =
-                    false, false, false, false, false, false, false
-                local totalItems = 0
-                -- Count each unique itemID once regardless of how many encounter
-                -- locations it appears in (e.g. both general loot and a boss drop).
-                -- Achievement-gated items are excluded from the loot count entirely.
-                local seenItemIDs = {}
-                for _, enc in ipairs(encounters) do
-                    for _, item in ipairs(enc.items) do
-                        if item.special ~= "Achievement" and not seenItemIDs[item.itemID] then
-                            seenItemIDs[item.itemID] = true
-                            totalItems = totalItems + 1
-                            if item.special == "TMog"    then hasTMog    = true end
-                            if item.special == "Mount"   then hasMounts  = true end
-                            if item.special == "Pet"     then hasPets    = true end
-                            if item.special == "Toy"     then hasToys    = true end
-                            if item.special == "Recipe"  then hasRecipes = true end
-                            if item.special == "Quest"   then hasQuest   = true end
-                            if item.special == "Housing" then hasHousing = true end
-                        end
-                    end
-                end
-
-                self.journalCache[instanceID] = {
-                    instanceID    = instanceID,
-                    name          = instInfo.name or L["JOURNAL_UNKNOWN_INST"],
-                    mapID         = instInfo.mapID,
-                    instanceType  = instInfo.instanceType or "party",
-                    expansionID   = instInfo.expansionID or expansion.expansionID,
-                    expansionName = expansion.displayName,
-                    encounters    = encounters,
-                    hasTMog       = hasTMog,
-                    hasMounts     = hasMounts,
-                    hasPets       = hasPets,
-                    hasToys       = hasToys,
-                    hasRecipes    = hasRecipes,
-                    hasQuest      = hasQuest,
-                    hasHousing    = hasHousing,
-                    totalItems    = totalItems,
-                }
+            if #generalItems > 0 then
+                sort(generalItems, ByName)
+                tinsert(encounters, {
+                    encounterID = 0,
+                    name        = L["JOURNAL_GENERAL_LOOT"],
+                    bossIndex   = 0,
+                    items       = generalItems,
+                })
             end
+            if #achievementItems > 0 then
+                sort(achievementItems, ByName)
+                tinsert(encounters, {
+                    encounterID = ACHIEVEMENT_ENC_ID,
+                    name        = L["JOURNAL_ACHIEVEMENT_LOOT"],
+                    bossIndex   = 0,
+                    items       = achievementItems,
+                })
+            end
+            if #questItems > 0 then
+                sort(questItems, ByName)
+                tinsert(encounters, {
+                    encounterID   = QUEST_ENC_ID,
+                    name          = L["JOURNAL_QUEST_LOOT"],
+                    bossIndex     = 0,
+                    items         = questItems,
+                    questCategory = true,
+                })
+            end
+        else
+            local encInfo = (encountersGlobal and encountersGlobal[encID])
+                or (fallbackEncounters and fallbackEncounters[encID])
+            local encName = L["JOURNAL_UNKNOWN_INST"]
+            local bossIndex = 0
+            if encInfo then
+                encName = encInfo.name or L["JOURNAL_UNKNOWN_INST"]
+                bossIndex = encInfo.bossIndex or 0
+            end
+
+            local items = {}
+            for _, entry in ipairs(entries) do
+                tinsert(items, MakeItemRow(entry))
+            end
+            sort(items, ByName)
+
+            tinsert(encounters, {
+                encounterID = encID,
+                name        = encName,
+                bossIndex   = bossIndex,
+                items       = items,
+            })
         end
     end
 
-    collectgarbage("collect")
-
-    if ns.EJLiveLoot and ns.EJLiveLoot.ScheduleAfterStaticBuild then
-        ns.EJLiveLoot:ScheduleAfterStaticBuild()
-    end
+    sort(encounters, SortEncounters)
+    return encounters
 end
 
-function JournalData:SortEncountersInPlace(inst)
-    if not inst or not inst.encounters then return end
-    table.sort(inst.encounters, SortEncounters)
-end
-
-function JournalData:RecalculateInstanceTotals(inst)
-    if not inst or not inst.encounters then return end
+local function ApplyTotals(inst, encounters)
     local hasTMog, hasMounts, hasPets, hasToys, hasRecipes, hasQuest, hasHousing =
         false, false, false, false, false, false, false
     local totalItems = 0
     local seenItemIDs = {}
-    for _, enc in ipairs(inst.encounters) do
+    for _, enc in ipairs(encounters) do
         for _, item in ipairs(enc.items) do
             if item.special ~= "Achievement" and not seenItemIDs[item.itemID] then
                 seenItemIDs[item.itemID] = true
@@ -414,11 +368,171 @@ function JournalData:RecalculateInstanceTotals(inst)
     inst.totalItems    = totalItems
 end
 
+---@param expansionID number
+---@param instanceID number
+---@param orderIndex number|nil
+---@param instInfo table|nil
+---@param encounters table
+---@return table
+local function MakeCacheEntry(expansionID, instanceID, orderIndex, instInfo, encounters)
+    local L = ns.L
+    local exp = expansionByID[expansionID]
+    local ejMeta = ns.JournalInstanceMeta and ns.JournalInstanceMeta[instanceID]
+    local flags = (ejMeta and ejMeta.flags) or 0
+    local mapID = (instInfo and instInfo.mapID)
+        or (ejMeta and ejMeta.mapID)
+        or nil
+    local name = (instInfo and instInfo.name)
+        or (ejMeta and ejMeta.name)
+        or L["JOURNAL_UNKNOWN_INST"]
+    local instanceType = (instInfo and instInfo.instanceType) or "party"
+    local validDifficulties = nil
+    if mapID and ns.JournalMapDifficulties then
+        validDifficulties = ns.JournalMapDifficulties[mapID]
+    end
+
+    local entry = {
+        cacheKey           = JournalData.CacheKey(expansionID, instanceID),
+        instanceID         = instanceID,
+        name               = name,
+        mapID              = mapID,
+        instanceType       = instanceType,
+        expansionID        = expansionID,
+        expansionName      = exp and exp.displayName or tostring(expansionID),
+        orderIndex         = orderIndex or 0,
+        encounters         = encounters,
+        flags              = flags,
+        isTimewalker       = (flags % 2) ~= 0,
+        validDifficulties  = validDifficulties,
+    }
+    ApplyTotals(entry, encounters)
+    return entry
+end
+
+function JournalData:BuildJournalCache()
+    if self.journalCache then return end
+    self.journalCache = {}
+
+    local membership = ns.JournalTierMembership
+    local overrides = ns.JournalListingOverrides or { forceHide = {}, forceShow = {} }
+
+    -- Index ATT instances / encounters per expansion, and union loot by instanceID.
+    local instancesByExp = {}
+    local encountersByExp = {}
+    local itemsByEncByInst = {}
+    local anyEncounterByID = {}
+
+    for _, expansion in ipairs(expansionList) do
+        local instancesGlobal  = _G["OneWoWInstances_"  .. expansion.name]
+        local encountersGlobal = _G["OneWoWEncounters_" .. expansion.name]
+        local itemsGlobal      = _G["OneWoWItems_"      .. expansion.name]
+
+        if instancesGlobal then
+            instancesByExp[expansion.expansionID] = instancesGlobal
+        end
+        if encountersGlobal then
+            encountersByExp[expansion.expansionID] = encountersGlobal
+            for encID, encInfo in pairs(encountersGlobal) do
+                if not anyEncounterByID[encID] then
+                    anyEncounterByID[encID] = encInfo
+                end
+            end
+        end
+        if itemsGlobal then
+            for itemID, itemData in pairs(itemsGlobal) do
+                if itemData.locations then
+                    for _, loc in ipairs(itemData.locations) do
+                        AddLocationEntry(itemsByEncByInst, itemID, itemData, loc)
+                    end
+                end
+            end
+        end
+    end
+
+    local function ResolveInstInfo(expansionID, instanceID)
+        local primary = instancesByExp[expansionID] and instancesByExp[expansionID][instanceID]
+        if primary then
+            return primary
+        end
+        for _, expansion in ipairs(expansionList) do
+            local bag = instancesByExp[expansion.expansionID]
+            if bag and bag[instanceID] then
+                return bag[instanceID]
+            end
+        end
+        return nil
+    end
+
+    local function AddCard(expansionID, instanceID, orderIndex)
+        local key = self.CacheKey(expansionID, instanceID)
+        if overrides.forceHide and overrides.forceHide[key] then
+            return
+        end
+        local encByID = itemsByEncByInst[instanceID] or {}
+        local encounters = self:BuildEncountersForInstance(
+            encByID,
+            encountersByExp[expansionID],
+            anyEncounterByID
+        )
+        local instInfo = ResolveInstInfo(expansionID, instanceID)
+        self.journalCache[key] = MakeCacheEntry(
+            expansionID, instanceID, orderIndex, instInfo, encounters
+        )
+    end
+
+    if membership then
+        for expansionID, cards in pairs(membership) do
+            for instanceID, orderIndex in pairs(cards) do
+                AddCard(expansionID, instanceID, orderIndex)
+            end
+        end
+    else
+        -- Membership missing: fall back to ATT instances (legacy single-key behavior avoided).
+        for _, expansion in ipairs(expansionList) do
+            local instancesGlobal = instancesByExp[expansion.expansionID]
+            if instancesGlobal then
+                for instanceID in pairs(instancesGlobal) do
+                    AddCard(expansion.expansionID, instanceID, 0)
+                end
+            end
+        end
+    end
+
+    if overrides.forceShow then
+        for key in pairs(overrides.forceShow) do
+            if not self.journalCache[key] then
+                local expansionID, instanceID = strsplit(":", key)
+                expansionID = tonumber(expansionID)
+                instanceID = tonumber(instanceID)
+                if expansionID and instanceID then
+                    AddCard(expansionID, instanceID, 0)
+                end
+            end
+        end
+    end
+
+    collectgarbage("collect")
+
+    if ns.EJLiveLoot and ns.EJLiveLoot.ScheduleAfterStaticBuild then
+        ns.EJLiveLoot:ScheduleAfterStaticBuild()
+    end
+end
+
+function JournalData:SortEncountersInPlace(inst)
+    if not inst or not inst.encounters then return end
+    sort(inst.encounters, SortEncounters)
+end
+
+function JournalData:RecalculateInstanceTotals(inst)
+    if not inst or not inst.encounters then return end
+    ApplyTotals(inst, inst.encounters)
+end
+
 function JournalData:GetAllInstances()
     self:BuildJournalCache()
     local result = {}
     for _, inst in pairs(self.journalCache) do
-        table.insert(result, inst)
+        tinsert(result, inst)
     end
     return result
 end
@@ -435,14 +549,18 @@ function JournalData:GetSortedInstances(expansionFilter, searchText, instanceTyp
         local passesType = (not instanceTypeFilter or instanceTypeFilter == "all"
                             or inst.instanceType == instanceTypeFilter)
 
-        if passesExpansion and passesSearch and passesType and #inst.encounters > 0 then
-            table.insert(result, inst)
+        -- Membership cards with empty encounters stay visible (live merge pending).
+        if passesExpansion and passesSearch and passesType then
+            tinsert(result, inst)
         end
     end
 
-    table.sort(result, function(a, b)
+    sort(result, function(a, b)
         if a.expansionID ~= b.expansionID then
             return a.expansionID > b.expansionID
+        end
+        if (a.orderIndex or 0) ~= (b.orderIndex or 0) then
+            return (a.orderIndex or 0) < (b.orderIndex or 0)
         end
         return a.name < b.name
     end)
@@ -459,10 +577,41 @@ function JournalData:GetAvailableExpansions()
     local result = {}
     for _, exp in ipairs(expansionList) do
         if present[exp.expansionID] then
-            table.insert(result, { expansionID = exp.expansionID, displayName = exp.displayName })
+            tinsert(result, { expansionID = exp.expansionID, displayName = exp.displayName })
         end
     end
     return result
+end
+
+--- All journal cards for a world map ID (dual-listed remakes may return two).
+---@param mapID number
+---@return table instances sorted by expansionID ascending
+function JournalData:GetInstancesByMapID(mapID)
+    self:BuildJournalCache()
+    local result = {}
+    if not mapID or not self.journalCache then
+        return result
+    end
+    for _, data in pairs(self.journalCache) do
+        if data.mapID == mapID then
+            tinsert(result, data)
+        end
+    end
+    sort(result, function(a, b)
+        return a.expansionID < b.expansionID
+    end)
+    return result
+end
+
+--- Preferred card for a map ID (highest expansionID — remake face when dual-listed).
+---@param mapID number
+---@return table|nil instanceData
+function JournalData:GetInstanceByMapID(mapID)
+    local all = self:GetInstancesByMapID(mapID)
+    if #all == 0 then
+        return nil
+    end
+    return all[#all]
 end
 
 function JournalData:ClearCache()

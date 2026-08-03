@@ -134,6 +134,13 @@
 - Instance cards show only present collectible tags (including Transmog), flowing to fit
 - Collections summary lists progress for categories that drop loot, with a muted “No Mount, Pet, or Toy” line for what’s missing (or No Collections when none)
 - Has uncollected checkbox hides instances where every tracked collectible (and quest reward) is already done
+- Journal listing matches the Adventure Guide by expansion (dual-listed remakes like Deadmines; Onyxia under Wrath only)
+- Difficulty filter uses valid difficulties for the instance (including classic 10/25 and Timewalking) with Adventure Guide-style size labels
+- Timewalking instances show a Timewalking tag; empty cards show Loading loot… until live Adventure Guide data arrives
+- Detail header shows only Instance ID and Map ID (expansion and type stay on the list cards)
+- Quest loot rows use Wowhead and View Quest text links instead of buttons; ItemID and Quest ID are omitted so names fit at narrow widths
+- Instance cards count real bosses only (General Loot / Quest / Achievement buckets are excluded); singular “1 Boss” vs “N Bosses”
+- Loot table Item column has more width; column header Special renamed to Type
 
 ## Quests
 - OpenQuestsFiltered deep-link applies zone and/or NPC (giver or turn-in) filters from Notes

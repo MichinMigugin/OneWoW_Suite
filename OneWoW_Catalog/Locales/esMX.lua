@@ -57,6 +57,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["JOURNAL_FILTER_N_SELECTED"] = "%d seleccionados",
 
     ["JOURNAL_CARD_DUNGEON"] = "Mazmorra",
+    ["JOURNAL_CARD_ENCOUNTER_ONE"] = "%d jefe",
     ["JOURNAL_CARD_ENCOUNTERS"] = "%d jefes",
     ["JOURNAL_CARD_ITEMS"] = "%d objetos",
     ["JOURNAL_CARD_TMOG"] = "Transfig.",
@@ -82,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["JOURNAL_COL_OR"] = "o",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Tiene sin coleccionar",
+    ["JOURNAL_LOADING_LOOT"] = "Cargando botín…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Botín general",
     ["JOURNAL_ITEMS_COUNT"] = "%d objetos",
@@ -90,7 +92,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["JOURNAL_ITEMID"] = "ID de objeto",
     ["JOURNAL_QUEST_COMPLETED"] = "Completada",
     ["JOURNAL_QUEST_NOT_COMPLETED"] = "No completada",
-    ["JOURNAL_CLICK_FOR_LINK"] = "Enlace de WoWHead",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Wowhead",
     ["JOURNAL_OPEN"] = "Ver misión",
     ["JOURNAL_OPEN_QUEST"] = "Ver misión",
     ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Haz clic en un enlace para resaltarlo y luego presiona Ctrl+C para copiarlo. Usa «Ver misión» para abrirla en el catálogo de Misiones.",

@@ -57,6 +57,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["JOURNAL_FILTER_N_SELECTED"] = "%d ausgewählt",
 
     ["JOURNAL_CARD_DUNGEON"] = "Dungeon",
+    ["JOURNAL_CARD_ENCOUNTER_ONE"] = "%d Boss",
     ["JOURNAL_CARD_ENCOUNTERS"] = "%d Bosse",
     ["JOURNAL_CARD_ITEMS"] = "%d Gegenstände",
     ["JOURNAL_CARD_TMOG"] = "Transmog",
@@ -82,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["JOURNAL_COL_OR"] = "oder",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Hat Ungesammeltes",
+    ["JOURNAL_LOADING_LOOT"] = "Beute wird geladen…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Allgemeine Beute",
     ["JOURNAL_ITEMS_COUNT"] = "%d Gegenstände",
@@ -90,7 +92,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["JOURNAL_ITEMID"] = "Gegenstands-ID",
     ["JOURNAL_QUEST_COMPLETED"] = "Abgeschlossen",
     ["JOURNAL_QUEST_NOT_COMPLETED"] = "Nicht abgeschlossen",
-    ["JOURNAL_CLICK_FOR_LINK"] = "WoWHead-Link",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Wowhead",
     ["JOURNAL_OPEN"] = "Quest anzeigen",
     ["JOURNAL_OPEN_QUEST"] = "Quest anzeigen",
     ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Klickt auf einen Link, um ihn hervorzuheben, und drückt dann Strg+C zum Kopieren. Nutzt „Quest anzeigen“, um sie im Quest-Katalog zu öffnen.",

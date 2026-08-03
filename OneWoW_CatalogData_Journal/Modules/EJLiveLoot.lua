@@ -57,21 +57,93 @@ local EJ_SLOT_FILTER_NO_FILTER = 15
 
 local WORLD_BOSS_INSTANCE_ID = 1312
 
+-- Candidate difficulty ids scanned when MapDifficulties / IsValid is unavailable.
+-- Includes legacy 10/25 and dungeon Timewalking (not only primary flex).
 local DUNGEON_DIFFS = {
-    { id = 1,  key = "N" },
-    { id = 2,  key = "H" },
-    { id = 23, key = "M" },
-    { id = 8,  key = "M+" },
+    { id = 1 },
+    { id = 2 },
+    { id = 23 },
+    { id = 8 },
+    { id = 24 }, -- Timewalking
 }
 
 local RAID_DIFFS = {
-    { id = 17, key = "LFR" },
-    { id = 14, key = "N" },
-    { id = 15, key = "H" },
-    { id = 16, key = "M" },
+    { id = 3 },  -- 10 Player
+    { id = 4 },  -- 25 Player
+    { id = 5 },  -- 10 Player (Heroic)
+    { id = 6 },  -- 25 Player (Heroic)
+    { id = 17 }, -- Looking For Raid
+    { id = 14 }, -- Normal (flex)
+    { id = 15 }, -- Heroic (flex)
+    { id = 16 }, -- Mythic
 }
 
 local WB_TRY_DIFFS = { 0, 14, 15 }
+
+local function EJ_SelectTierCompat(tier)
+    return EJ_Call("SelectTier", "EJ_SelectTier", tier)
+end
+
+local function EJ_IsValidInstanceDifficultyCompat(diffID)
+    local ok, valid = pcall(function()
+        return EJ_Call("IsValidInstanceDifficulty", "EJ_IsValidInstanceDifficulty", diffID)
+    end)
+    if ok then
+        return valid ~= false
+    end
+    return true
+end
+
+local function difficultyLabel(diffID)
+    local meta = ns.JournalDifficultyMeta and ns.JournalDifficultyMeta[diffID]
+    if GetDifficultyInfo then
+        local name = GetDifficultyInfo(diffID)
+        if name and name ~= "" then
+            return name
+        end
+    end
+    if meta and meta.name then
+        return meta.name
+    end
+    if diffID == 0 then return "World" end
+    return "Difficulty " .. tostring(diffID)
+end
+
+--- Ordered difficulty ids to scan for an instance card.
+---@param inst table
+---@return number[]
+local function ResolveScanDifficulties(inst)
+    local ids = {}
+    local seen = {}
+    local function add(diffID)
+        if not diffID or seen[diffID] then return end
+        seen[diffID] = true
+        ids[#ids + 1] = diffID
+    end
+
+    if inst.validDifficulties then
+        for _, diffID in ipairs(inst.validDifficulties) do
+            add(diffID)
+        end
+    else
+        local list = (inst.instanceType == "party") and DUNGEON_DIFFS or RAID_DIFFS
+        for _, d in ipairs(list) do
+            add(d.id)
+        end
+    end
+
+    local filtered = {}
+    for _, diffID in ipairs(ids) do
+        if EJ_IsValidInstanceDifficultyCompat(diffID) then
+            filtered[#filtered + 1] = diffID
+        end
+    end
+    if #filtered > 0 then
+        return filtered
+    end
+    return ids
+end
+
 
 local ejOriginalOnEvent = nil
 local ejSuppressCount = 0
@@ -121,17 +193,6 @@ local function UnsuppressEJ()
     EncounterJournal:RegisterEvent("UNIT_LEVEL")
 end
 
-local function difficultyLabel(diffID)
-    if GetDifficultyInfo then
-        local name = GetDifficultyInfo(diffID)
-        if name and name ~= "" then
-            return name
-        end
-    end
-    if diffID == 0 then return "World" end
-    return "Difficulty " .. tostring(diffID)
-end
-
 local function applyLootFilterForScan()
     local ok = pcall(function()
         EJ_SetLootFilterCompat(0, 0)
@@ -173,7 +234,12 @@ local function dungeonHasNormalLoot(instanceID, firstEncounterID)
     return itemLevel >= 200
 end
 
-function EJLive:ScanEncounterDifficulties(instanceID, encounterID, instanceType, iidWorldBoss, skipNormalDungeon)
+---@param instanceID number
+---@param encounterID number
+---@param inst table
+---@param iidWorldBoss boolean
+---@param skipNormalDungeon boolean
+function EJLive:ScanEncounterDifficulties(instanceID, encounterID, inst, iidWorldBoss, skipNormalDungeon)
     local results = {}
     local function addDiff(diffID)
         EJ_SelectInstanceCompat(instanceID)
@@ -199,7 +265,7 @@ function EJLive:ScanEncounterDifficulties(instanceID, encounterID, instanceType,
                 if d.id == diffID then seen = true break end
             end
             if not seen then
-                table.insert(row.difficulties, { id = diffID, name = difficultyLabel(diffID) })
+                tinsert(row.difficulties, { id = diffID, name = difficultyLabel(diffID) })
             end
         end
     end
@@ -211,17 +277,10 @@ function EJLive:ScanEncounterDifficulties(instanceID, encounterID, instanceType,
         return results
     end
 
-    if instanceType == "party" then
-        for _, d in ipairs(DUNGEON_DIFFS) do
-            if not (skipNormalDungeon and d.id == 1) then
-                addDiff(d.id)
-            end
+    for _, diffID in ipairs(ResolveScanDifficulties(inst)) do
+        if not (skipNormalDungeon and diffID == 1) then
+            addDiff(diffID)
         end
-        return results
-    end
-
-    for _, d in ipairs(RAID_DIFFS) do
-        addDiff(d.id)
     end
     return results
 end
@@ -287,8 +346,12 @@ EJLive.mergeAbort = false
 local function enqueueMergeJobs()
     wipe(mergeQueue)
     if not JournalData.journalCache then return end
-    for instanceID, inst in pairs(JournalData.journalCache) do
-        mergeQueue[#mergeQueue + 1] = { instanceID = instanceID, inst = inst }
+    for _, inst in pairs(JournalData.journalCache) do
+        mergeQueue[#mergeQueue + 1] = {
+            instanceID = inst.instanceID,
+            expansionID = inst.expansionID,
+            inst = inst,
+        }
     end
     table.sort(mergeQueue, function(a, b)
         return (a.inst.name or "") < (b.inst.name or "")
@@ -349,7 +412,7 @@ local function mergeEJRowsIntoEncounter(enc, ejMap, JournalDataRef)
                 end
                 if not seen then
                     row.difficulties = row.difficulties or {}
-                    table.insert(row.difficulties, d)
+                    tinsert(row.difficulties, d)
                 end
             end
             if ejRow.linkByDiff then
@@ -361,11 +424,11 @@ local function mergeEJRowsIntoEncounter(enc, ejMap, JournalDataRef)
             row.fromLiveEJ = true
         else
             local newRow = buildItemRowFromEJ(itemID, ejRow, JournalDataRef)
-            table.insert(enc.items, newRow)
+            tinsert(enc.items, newRow)
             byItemID[itemID] = newRow
         end
     end
-    table.sort(enc.items, function(a, b)
+    sort(enc.items, function(a, b)
         return (a.name or "") < (b.name or "")
     end)
 end
@@ -374,12 +437,16 @@ local function processOneInstance(job)
     if EJLive.mergeAbort then return end
     local inst = job.inst
     local instanceID = job.instanceID
+    local expansionID = job.expansionID or inst.expansionID
     local iidWorld = (instanceID == WORLD_BOSS_INSTANCE_ID)
     local skipNormal = false
     if inst.instanceType == "party" then
         if dungeonNormalCache[instanceID] == nil then
             SuppressEJ()
             local ok, hasN = pcall(function()
+                if expansionID then
+                    EJ_SelectTierCompat(expansionID)
+                end
                 EJ_SelectInstanceCompat(instanceID)
                 local bn, _, bid = EJ_GetEncounterInfoByIndexCompat(1)
                 if not bn or not bid then return false end
@@ -393,6 +460,9 @@ local function processOneInstance(job)
 
     SuppressEJ()
     local ok, err = pcall(function()
+        if expansionID then
+            EJ_SelectTierCompat(expansionID)
+        end
         EJ_SelectInstanceCompat(instanceID)
         local bi = 1
         while true do
@@ -406,7 +476,7 @@ local function processOneInstance(job)
                     bossIndex   = bi,
                     items       = {},
                 }
-                table.insert(inst.encounters, enc)
+                tinsert(inst.encounters, enc)
             else
                 if (not enc.name or enc.name == (ns.L and ns.L["JOURNAL_UNKNOWN_INST"])) and bossName then
                     enc.name = bossName
@@ -415,7 +485,7 @@ local function processOneInstance(job)
                     enc.bossIndex = bi
                 end
             end
-            local ejMap = EJLive:ScanEncounterDifficulties(instanceID, bossID, inst.instanceType, iidWorld, skipNormal)
+            local ejMap = EJLive:ScanEncounterDifficulties(instanceID, bossID, inst, iidWorld, skipNormal)
             mergeEJRowsIntoEncounter(enc, ejMap, JournalData)
             bi = bi + 1
         end
@@ -461,6 +531,7 @@ function EJLive:OnJournalCacheCleared()
     self.mergeAbort = true
     wipe(mergeQueue)
     mergeRunning = false
+    EJLive.ejMergeComplete = false
     if self.debounceTimer and self.debounceTimer.Cancel then
         self.debounceTimer:Cancel()
     end

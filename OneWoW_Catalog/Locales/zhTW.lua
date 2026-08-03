@@ -57,6 +57,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["JOURNAL_FILTER_N_SELECTED"] = "已選 %d 項",
 
     ["JOURNAL_CARD_DUNGEON"] = "地城",
+    ["JOURNAL_CARD_ENCOUNTER_ONE"] = "%d 個首領",
     ["JOURNAL_CARD_ENCOUNTERS"] = "%d 個首領",
     ["JOURNAL_CARD_ITEMS"] = "%d 件物品",
     ["JOURNAL_CARD_TMOG"] = "幻化",
@@ -82,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["JOURNAL_COL_OR"] = "或",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "有未收集",
+    ["JOURNAL_LOADING_LOOT"] = "正在載入掉落物…",
 
     ["JOURNAL_GENERAL_LOOT"] = "一般戰利品",
     ["JOURNAL_ITEMS_COUNT"] = "%d 件物品",
@@ -90,7 +92,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["JOURNAL_ITEMID"] = "物品 ID",
     ["JOURNAL_QUEST_COMPLETED"] = "已完成",
     ["JOURNAL_QUEST_NOT_COMPLETED"] = "未完成",
-    ["JOURNAL_CLICK_FOR_LINK"] = "WoWHead 連結",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Wowhead",
     ["JOURNAL_OPEN"] = "檢視任務",
     ["JOURNAL_OPEN_QUEST"] = "檢視任務",
     ["JOURNAL_QUEST_LINK_INSTRUCT"] = "點擊連結將其反白，然後按 Ctrl+C 複製。使用「檢視任務」可在任務圖鑑中檢視它。",

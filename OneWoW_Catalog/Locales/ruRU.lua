@@ -57,6 +57,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["JOURNAL_FILTER_N_SELECTED"] = "Выбрано: %d",
 
     ["JOURNAL_CARD_DUNGEON"] = "Подземелье",
+    ["JOURNAL_CARD_ENCOUNTER_ONE"] = "Босс: %d",
     ["JOURNAL_CARD_ENCOUNTERS"] = "Боссов: %d",
     ["JOURNAL_CARD_ITEMS"] = "Предметов: %d",
     ["JOURNAL_CARD_TMOG"] = "Трансмог.",
@@ -82,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["JOURNAL_COL_OR"] = "или",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Есть несобранное",
+    ["JOURNAL_LOADING_LOOT"] = "Загрузка добычи…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Общая добыча",
     ["JOURNAL_ITEMS_COUNT"] = "%d предметов",
@@ -90,7 +92,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["JOURNAL_ITEMID"] = "ID предмета",
     ["JOURNAL_QUEST_COMPLETED"] = "Выполнено",
     ["JOURNAL_QUEST_NOT_COMPLETED"] = "Не выполнено",
-    ["JOURNAL_CLICK_FOR_LINK"] = "Ссылка WoWHead",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Wowhead",
     ["JOURNAL_OPEN"] = "Открыть задание",
     ["JOURNAL_OPEN_QUEST"] = "Открыть задание",
     ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Нажмите на ссылку, чтобы выделить её, затем нажмите Ctrl+C для копирования. Используйте «Открыть задание», чтобы просмотреть его в каталоге заданий.",

@@ -26,20 +26,10 @@ local function InstanceEnabled()
 end
 
 local function GetCatalogData(mapID)
-    local journalNS = OneWoW_CatalogData_Journal
-    if not journalNS or not journalNS.JournalData then return nil end
+    local api = OneWoW_CatalogData_Journal_API
+    if not api or not api.GetInstanceByMapID then return nil end
 
-    local JournalData = journalNS.JournalData
-    JournalData:BuildJournalCache()
-    if not JournalData.journalCache then return nil end
-
-    local instData
-    for _, data in pairs(JournalData.journalCache) do
-        if data.mapID == mapID then
-            instData = data
-            break
-        end
-    end
+    local instData = api.GetInstanceByMapID(mapID)
     if not instData then return nil end
 
     local keyMap = {
@@ -61,12 +51,12 @@ local function GetCatalogData(mapID)
         housing = { current = 0, total = 0 },
     }
 
-    for _, enc in ipairs(instData.encounters) do
-        for _, item in ipairs(enc.items) do
+    for _, enc in ipairs(instData.encounters or {}) do
+        for _, item in ipairs(enc.items or {}) do
             local key = keyMap[item.special]
             if key then
                 counts[key].total = counts[key].total + 1
-                local collected = JournalData:IsItemCollected(item.itemID, item.itemData, item.special)
+                local collected = api.IsItemCollected(item.itemID, item.itemData, item.special)
                 if collected then
                     counts[key].current = counts[key].current + 1
                 end

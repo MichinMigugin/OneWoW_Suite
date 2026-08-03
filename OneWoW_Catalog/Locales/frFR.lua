@@ -57,6 +57,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["JOURNAL_FILTER_N_SELECTED"] = "%d sélectionné(s)",
 
     ["JOURNAL_CARD_DUNGEON"] = "Donjon",
+    ["JOURNAL_CARD_ENCOUNTER_ONE"] = "%d boss",
     ["JOURNAL_CARD_ENCOUNTERS"] = "%d boss",
     ["JOURNAL_CARD_ITEMS"] = "%d objets",
     ["JOURNAL_CARD_TMOG"] = "Transmog.",
@@ -82,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["JOURNAL_COL_OR"] = "ou",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "A des non collectés",
+    ["JOURNAL_LOADING_LOOT"] = "Chargement du butin…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Butin général",
     ["JOURNAL_ITEMS_COUNT"] = "%d objets",
@@ -90,7 +92,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["JOURNAL_ITEMID"] = "ID d'objet",
     ["JOURNAL_QUEST_COMPLETED"] = "Terminée",
     ["JOURNAL_QUEST_NOT_COMPLETED"] = "Non terminée",
-    ["JOURNAL_CLICK_FOR_LINK"] = "Lien WoWHead",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Wowhead",
     ["JOURNAL_OPEN"] = "Voir la quête",
     ["JOURNAL_OPEN_QUEST"] = "Voir la quête",
     ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Cliquez sur un lien pour le surligner, puis appuyez sur Ctrl+C pour le copier. Utilisez « Voir la quête » pour l'ouvrir dans le catalogue des Quêtes.",

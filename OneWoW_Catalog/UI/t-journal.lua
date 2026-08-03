@@ -77,6 +77,24 @@ local function ResetItemTypeFilter()
     wipe(filterItemTypes)
 end
 
+local function CountBossEncounters(instData)
+    local n = 0
+    for _, enc in ipairs(instData.encounters or {}) do
+        -- Real bosses only; skip General (0), Achievement (-2), Quest (-3).
+        if enc.encounterID and enc.encounterID > 0 then
+            n = n + 1
+        end
+    end
+    return n
+end
+
+local function FormatBossCount(n)
+    if n == 1 then
+        return string.format(L["JOURNAL_CARD_ENCOUNTER_ONE"], n)
+    end
+    return string.format(L["JOURNAL_CARD_ENCOUNTERS"], n)
+end
+
 local CARD_HEIGHT = 85
 local CARD_STRIDE = CARD_HEIGHT + 2
 local ITEM_ROW_HEIGHT = 32
@@ -133,13 +151,52 @@ end
 local DIFF_ILVL_RANK = {
     [17] = 1,  -- Raid: Looking For Raid
     [1]  = 1,  -- Dungeon: Normal
+    [3]  = 1,  -- Raid: 10 Player
     [14] = 2,  -- Raid: Normal
     [2]  = 2,  -- Dungeon: Heroic
+    [4]  = 2,  -- Raid: 25 Player
+    [24] = 2,  -- Dungeon: Timewalking
     [15] = 3,  -- Raid: Heroic
+    [5]  = 3,  -- Raid: 10 Player (Heroic)
     [23] = 3,  -- Dungeon: Mythic
     [16] = 4,  -- Raid: Mythic
+    [6]  = 4,  -- Raid: 25 Player (Heroic)
     [8]  = 4,  -- Mythic+
 }
+
+local function JournalCacheKey(inst)
+    if not inst then return "" end
+    if inst.cacheKey then return inst.cacheKey end
+    if inst.expansionID and inst.instanceID then
+        return tostring(inst.expansionID) .. ":" .. tostring(inst.instanceID)
+    end
+    return tostring(inst.instanceID or "")
+end
+
+local function IsJournalFavorite(inst)
+    if not ns.Favorites or not inst then return false end
+    local key = JournalCacheKey(inst)
+    if ns.Favorites:IsFavorite("journal", key) then
+        return true
+    end
+    -- Legacy favorites keyed by bare instanceID.
+    return inst.instanceID ~= nil and ns.Favorites:IsFavorite("journal", inst.instanceID)
+end
+
+local function FormatDifficultyMenuLabel(diff)
+    local name = diff.name
+    local maxPlayers = diff.maxPlayers
+    if (not name or name == "") and GetDifficultyInfo then
+        local infoName, _, _, _, _, _, _, _, _, infoMax = GetDifficultyInfo(diff.id)
+        name = infoName
+        maxPlayers = maxPlayers or infoMax
+    end
+    name = name or ("?" .. tostring(diff.id))
+    if ENCOUNTER_JOURNAL_DIFF_TEXT and maxPlayers and maxPlayers > 0 then
+        return format(ENCOUNTER_JOURNAL_DIFF_TEXT, maxPlayers, name)
+    end
+    return name
+end
 
 --- Pick the difficulty id whose scaled item level should drive the tooltip.
 --- Honors the active difficulty filter; with "all" selected, returns the highest
@@ -306,7 +363,7 @@ local function CreateInstanceListRow(parent, _)
                 return
             end
             if ns.Favorites then
-                ns.Favorites:SetFavorite("journal", instData.instanceID, on)
+                ns.Favorites:SetFavorite("journal", JournalCacheKey(instData), on)
             end
             local p = panels_ref or ns.UI.journalPanels
             if p then
@@ -381,11 +438,21 @@ local function BindInstanceListRow(row, _, instData, state)
     local typeStr = instData.instanceType == "raid" and RAID
         or instData.instanceType == "party" and L["JOURNAL_CARD_DUNGEON"]
         or ""
+    if instData.isTimewalker then
+        typeStr = typeStr ~= "" and (typeStr .. "  |  " .. PLAYER_DIFFICULTY_TIMEWALKER)
+            or PLAYER_DIFFICULTY_TIMEWALKER
+    end
     row.infoText:SetText((instData.expansionName or "") .. "  |  " .. typeStr)
 
-    local encCount = #(instData.encounters or {})
-    row.countText:SetText(string.format(L["JOURNAL_CARD_ENCOUNTERS"], encCount)
-        .. "  |  " .. string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems or 0))
+    local encCount = CountBossEncounters(instData)
+    if encCount == 0 and #(instData.encounters or {}) == 0
+            and (not GetDataAddon() or not GetDataAddon().IsLiveMergeComplete
+            or not GetDataAddon().IsLiveMergeComplete()) then
+        row.countText:SetText(L["JOURNAL_LOADING_LOOT"])
+    else
+        row.countText:SetText(FormatBossCount(encCount)
+            .. "  |  " .. string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems or 0))
+    end
 
     local availW = (row:GetWidth() > 0 and row:GetWidth() or 260) - CARD_TAG_PAD_X * 2
     local xPos = CARD_TAG_PAD_X
@@ -417,7 +484,7 @@ local function BindInstanceListRow(row, _, instData, state)
     if row.favBtn and ns.Favorites then
         if instData.instanceID then
             row.favBtn:Show()
-            row.favBtn:SetFavorite(ns.Favorites:IsFavorite("journal", instData.instanceID))
+            row.favBtn:SetFavorite(IsJournalFavorite(instData))
         else
             row.favBtn:Hide()
         end
@@ -543,19 +610,41 @@ end
 local function GetUniqueDifficulties(instData)
     local seen = {}
     local result = {}
-    for _, enc in ipairs(instData.encounters) do
-        for _, item in ipairs(enc.items) do
+    local function addDiff(diff)
+        local id = diff.id
+        if not id or seen[id] then return end
+        seen[id] = true
+        tinsert(result, {
+            id = id,
+            name = diff.name,
+            maxPlayers = diff.maxPlayers,
+        })
+    end
+
+    for _, enc in ipairs(instData.encounters or {}) do
+        for _, item in ipairs(enc.items or {}) do
             if item.difficulties then
                 for _, diff in ipairs(item.difficulties) do
-                    if diff.id and not seen[diff.id] then
-                        seen[diff.id] = true
-                        table.insert(result, { id = diff.id, name = diff.name })
-                    end
+                    addDiff(diff)
                 end
             end
         end
     end
-    table.sort(result, function(a, b) return a.id < b.id end)
+
+    -- Include MapDifficulty-valid diffs even before live loot arrives.
+    if instData.validDifficulties then
+        for _, diffID in ipairs(instData.validDifficulties) do
+            if not seen[diffID] then
+                local name, maxPlayers
+                if GetDifficultyInfo then
+                    name, _, _, _, _, _, _, _, _, maxPlayers = GetDifficultyInfo(diffID)
+                end
+                addDiff({ id = diffID, name = name, maxPlayers = maxPlayers })
+            end
+        end
+    end
+
+    sort(result, function(a, b) return a.id < b.id end)
     return result
 end
 
@@ -563,8 +652,8 @@ end
 local journalBaseListKey  = nil
 local journalBaseList     = nil
 
-local function JournalInstanceOrderKey(id)
-    return id ~= nil and tostring(id) or ""
+local function JournalInstanceOrderKey(inst)
+    return JournalCacheKey(inst)
 end
 
 local function InvalidateJournalFilterCache()
@@ -636,9 +725,8 @@ local function BuildQuestItemRow(parent, item, yOffset)
     iconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     iconTex:SetTexture(item.icon or 134400)
 
-    -- [View Quest] jumps straight to the quest in the Quests catalog; shown only
-    -- when that quest exists there. The row also shows the quest's completion
-    -- status, pulled from the Quests addon's CompletionTracker.
+    -- View Quest / Wowhead are text links (fit-width); View Quest only when the
+    -- quest exists in the Quests catalog. Status comes from CompletionTracker.
     local relevantQuestID = ResolveOpenQuestID(item)
     local questAddon = OneWoW_CatalogData_Quests_API
     local openInDB =
@@ -646,28 +734,33 @@ local function BuildQuestItemRow(parent, item, yOffset)
         and questAddon
         and questAddon.GetQuest(relevantQuestID)
 
-    local openBtn
+    local openLink
     if openInDB then
-        openBtn = OneWoW_GUI:CreateButton(itemRow, { text = L["JOURNAL_OPEN"], width = 88, height = 22 })
-        openBtn:SetPoint("RIGHT", itemRow, "RIGHT", -6, 0)
-        table.insert(detailElements, openBtn)
-        openBtn:SetScript("OnClick", function()
-            if ns.UI and ns.UI.OpenToQuest then ns.UI.OpenToQuest(relevantQuestID) end
-        end)
+        openLink = OneWoW_GUI:CreateTextLink(itemRow, {
+            text = L["JOURNAL_OPEN"],
+            fontSize = 11,
+            onClick = function()
+                if ns.UI and ns.UI.OpenToQuest then ns.UI.OpenToQuest(relevantQuestID) end
+            end,
+        })
+        openLink:SetPoint("RIGHT", itemRow, "RIGHT", -6, 0)
+        table.insert(detailElements, openLink)
     end
 
-    local linkBtn = OneWoW_GUI:CreateButton(itemRow, { text = L["JOURNAL_CLICK_FOR_LINK"], width = 110, height = 22 })
-    if openBtn then
-        linkBtn:SetPoint("RIGHT", openBtn, "LEFT", -6, 0)
+    local wowheadLink = OneWoW_GUI:CreateTextLink(itemRow, {
+        text = L["JOURNAL_CLICK_FOR_LINK"],
+        fontSize = 11,
+        onClick = function() ShowQuestLinks(item) end,
+    })
+    if openLink then
+        wowheadLink:SetPoint("RIGHT", openLink, "LEFT", -12, 0)
     else
-        linkBtn:SetPoint("RIGHT", itemRow, "RIGHT", -6, 0)
+        wowheadLink:SetPoint("RIGHT", itemRow, "RIGHT", -6, 0)
     end
-    table.insert(detailElements, linkBtn)
-    linkBtn:SetScript("OnClick", function() ShowQuestLinks(item) end)
+    table.insert(detailElements, wowheadLink)
 
-    local infoText = OneWoW_GUI:CreateFS(itemRow, 10)
-    infoText:SetPoint("RIGHT", linkBtn, "LEFT", -10, 0)
-    infoText:SetJustifyH("RIGHT")
+    -- Status only (no ItemID / Quest ID — tooltip + View Quest cover that).
+    local nameRightAnchor = wowheadLink
     if relevantQuestID then
         local completed
         if questAddon then
@@ -676,17 +769,21 @@ local function BuildQuestItemRow(parent, item, yOffset)
             completed = C_QuestLog.IsQuestFlaggedCompleted(relevantQuestID) == true
         end
         local statusStr = completed and L["JOURNAL_QUEST_COMPLETED"] or L["JOURNAL_QUEST_NOT_COMPLETED"]
-        local statusHex = completed and "ff40ff40" or "ffff8040"
-        infoText:SetText(string.format("%s:%d    %s:%d    |c%s%s|r",
-            L["JOURNAL_ITEMID"], item.itemID, L["JOURNAL_QUEST_PREFIX"], relevantQuestID, statusHex, statusStr))
-    else
-        infoText:SetText(string.format("%s:%d", L["JOURNAL_ITEMID"], item.itemID))
+        local infoText = OneWoW_GUI:CreateFS(itemRow, 10)
+        infoText:SetPoint("RIGHT", wowheadLink, "LEFT", -10, 0)
+        infoText:SetJustifyH("RIGHT")
+        infoText:SetText(statusStr)
+        if completed then
+            infoText:SetTextColor(0.25, 1, 0.25, 1)
+        else
+            infoText:SetTextColor(1, 0.5, 0.25, 1)
+        end
+        nameRightAnchor = infoText
     end
-    infoText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     local itemName = OneWoW_GUI:CreateFS(itemRow, 12)
     itemName:SetPoint("LEFT", iconFrame, "RIGHT", 8, 0)
-    itemName:SetPoint("RIGHT", infoText, "LEFT", -10, 0)
+    itemName:SetPoint("RIGHT", nameRightAnchor, "LEFT", -10, 0)
     itemName:SetJustifyH("LEFT")
     itemName:SetWordWrap(false)
     itemName:SetText(item.name)
@@ -731,19 +828,15 @@ local function RefreshDetailView(isSecondRefresh)
     table.insert(detailElements, nameHeader)
     yOffset = yOffset - 22
 
-    local typeStr = instData.instanceType == "raid" and RAID
-                 or instData.instanceType == "party" and L["JOURNAL_CARD_DUNGEON"]
-                 or ""
     local infoLine = OneWoW_GUI:CreateFS(parent, 12)
     infoLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     infoLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
     infoLine:SetJustifyH("LEFT")
-    local infoParts = {}
-    table.insert(infoParts, L["EXPANSION"] .. ": " .. instData.expansionName)
-    table.insert(infoParts, TYPE .. ": " .. typeStr)
-    table.insert(infoParts, L["JOURNAL_DETAIL_INST_ID"] .. ": " .. instData.instanceID)
+    local infoParts = {
+        L["JOURNAL_DETAIL_INST_ID"] .. ": " .. instData.instanceID,
+    }
     if instData.mapID then
-        table.insert(infoParts, L["QUESTS_MAPID"] .. ": " .. instData.mapID)
+        tinsert(infoParts, L["QUESTS_MAPID"] .. ": " .. instData.mapID)
     end
     infoLine:SetText(table.concat(infoParts, "  |  "))
     infoLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
@@ -755,6 +848,24 @@ local function RefreshDetailView(isSecondRefresh)
     yOffset = yOffset - 8
 
     yOffset = BuildCollectionsSummary(parent, instData, yOffset, addon)
+
+    if #(instData.encounters or {}) == 0 then
+        local loadingLine = OneWoW_GUI:CreateFS(parent, 12)
+        loadingLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+        loadingLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+        loadingLine:SetJustifyH("LEFT")
+        local mergeDone = addon and addon.IsLiveMergeComplete and addon.IsLiveMergeComplete()
+        loadingLine:SetText(mergeDone and L["JOURNAL_EMPTY"] or L["JOURNAL_LOADING_LOOT"])
+        loadingLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        table.insert(detailElements, loadingLine)
+        yOffset = yOffset - 24
+        parent:SetHeight(math.abs(yOffset) + 20)
+        panels.UpdateDetailThumb()
+        if panels.rightStatusText then
+            panels.rightStatusText:SetText(instData.name .. " - " .. L["JOURNAL_LOADING_LOOT"])
+        end
+        return
+    end
 
     local divider2 = OneWoW_GUI:CreateDivider(parent, { yOffset = yOffset })
     table.insert(detailElements, divider2)
@@ -769,8 +880,8 @@ local function RefreshDetailView(isSecondRefresh)
     colHdrFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     table.insert(detailElements, colHdrFrame)
 
-    local COL_DIFF_RIGHT    = -220
-    local COL_SPECIAL_RIGHT = -130
+    local COL_DIFF_RIGHT    = -170
+    local COL_TYPE_RIGHT    = -100
     local COL_STATUS_RIGHT  = -8
 
     -- Header toggle: collapses/expands every encounter at once. Shows minus when
@@ -810,11 +921,11 @@ local function RefreshDetailView(isSecondRefresh)
     hdrDiff:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     hdrDiff:SetJustifyH("RIGHT")
 
-    local hdrSpecial = OneWoW_GUI:CreateFS(colHdrFrame, 10)
-    hdrSpecial:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_SPECIAL_RIGHT, 0)
-    hdrSpecial:SetText(SPECIAL)
-    hdrSpecial:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    hdrSpecial:SetJustifyH("RIGHT")
+    local hdrType = OneWoW_GUI:CreateFS(colHdrFrame, 10)
+    hdrType:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_TYPE_RIGHT, 0)
+    hdrType:SetText(TYPE)
+    hdrType:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    hdrType:SetJustifyH("RIGHT")
 
     local hdrStatus = OneWoW_GUI:CreateFS(colHdrFrame, 10)
     hdrStatus:SetPoint("RIGHT", colHdrFrame, "RIGHT", COL_STATUS_RIGHT, 0)
@@ -934,7 +1045,7 @@ local function RefreshDetailView(isSecondRefresh)
                 diffText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
                 local specialText = OneWoW_GUI:CreateFS(itemRow, 10)
-                specialText:SetPoint("RIGHT", itemRow, "RIGHT", COL_SPECIAL_RIGHT, 0)
+                specialText:SetPoint("RIGHT", itemRow, "RIGHT", COL_TYPE_RIGHT, 0)
                 specialText:SetJustifyH("RIGHT")
                 if item.special then
                     local labelKey = SPECIAL_LABELS[item.special]
@@ -998,7 +1109,7 @@ local function RefreshDetailView(isSecondRefresh)
     panels.UpdateDetailThumb()
 
     if panels.rightStatusText and instData then
-        panels.rightStatusText:SetText(instData.name .. " - " .. string.format(L["JOURNAL_CARD_ENCOUNTERS"], #instData.encounters) .. ", " .. string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems))
+        panels.rightStatusText:SetText(instData.name .. " - " .. FormatBossCount(CountBossEncounters(instData)) .. ", " .. string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems))
     end
 
     if not isSecondRefresh then
@@ -1031,7 +1142,7 @@ local function ShowInstanceDetail(panels, instData)
                     for _, diff in ipairs(curDiffs) do
                         table.insert(items, {
                             value = diff.id,
-                            text  = diff.name or "?",
+                            text  = FormatDifficultyMenuLabel(diff),
                         })
                     end
                     return items
@@ -1110,14 +1221,14 @@ function RefreshJournalList(panels)
         local keyFn = JournalInstanceOrderKey
         local origOrder = {}
         for i, inst in ipairs(sorted) do
-            origOrder[keyFn(inst.instanceID)] = i
+            origOrder[keyFn(inst)] = i
         end
         local function cmpBaseOrder(a, b)
-            return (origOrder[keyFn(a.instanceID)] or 0) < (origOrder[keyFn(b.instanceID)] or 0)
+            return (origOrder[keyFn(a)] or 0) < (origOrder[keyFn(b)] or 0)
         end
         local favInsts, restInsts = {}, {}
         for _, inst in ipairs(sorted) do
-            if ns.Favorites:IsFavorite("journal", inst.instanceID) then
+            if IsJournalFavorite(inst) then
                 tinsert(favInsts, inst)
             else
                 tinsert(restInsts, inst)
@@ -1162,11 +1273,11 @@ function RefreshJournalList(panels)
         listResults[i] = sorted[i]
     end
 
-    local keepID = selectedInstance and selectedInstance.instanceID
+    local keepKey = selectedInstance and JournalCacheKey(selectedInstance)
     local keepIndex = nil
-    if keepID then
+    if keepKey ~= "" then
         for i, inst in ipairs(listResults) do
-            if inst.instanceID == keepID then
+            if JournalCacheKey(inst) == keepKey then
                 keepIndex = i
                 break
             end
@@ -1520,8 +1631,19 @@ function ns.UI.CreateJournalTab(parent)
         if addon.RegisterScanCallback then
             addon.RegisterScanCallback(function()
                 InvalidateJournalFilterCache()
-                if ns.UI.journalPanels then
-                    RefreshJournalList(ns.UI.journalPanels)
+                local p = ns.UI.journalPanels
+                if p then
+                    RefreshJournalList(p)
+                    if selectedInstance then
+                        local keepKey = JournalCacheKey(selectedInstance)
+                        for _, inst in ipairs(listResults) do
+                            if JournalCacheKey(inst) == keepKey then
+                                selectedInstance = inst
+                                break
+                            end
+                        end
+                        ShowInstanceDetail(p, selectedInstance)
+                    end
                 end
             end)
         end
@@ -1564,8 +1686,9 @@ function ns.UI.OpenToInstance(mapID)
         RefreshJournalList(panels)
         if journalListAPI then
             local keepIndex = nil
+            local keepKey = JournalCacheKey(instData)
             for i, inst in ipairs(listResults) do
-                if inst.instanceID == instData.instanceID then
+                if JournalCacheKey(inst) == keepKey then
                     keepIndex = i
                     break
                 end

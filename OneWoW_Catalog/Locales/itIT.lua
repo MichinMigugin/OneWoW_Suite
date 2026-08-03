@@ -57,6 +57,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["JOURNAL_FILTER_N_SELECTED"] = "%d selezionati",
 
     ["JOURNAL_CARD_DUNGEON"] = "Spedizione",
+    ["JOURNAL_CARD_ENCOUNTER_ONE"] = "%d boss",
     ["JOURNAL_CARD_ENCOUNTERS"] = "%d boss",
     ["JOURNAL_CARD_ITEMS"] = "%d oggetti",
     ["JOURNAL_CARD_TMOG"] = "Trasmog.",
@@ -82,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["JOURNAL_COL_OR"] = "o",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Ha non raccolti",
+    ["JOURNAL_LOADING_LOOT"] = "Caricamento bottino…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Bottino generale",
     ["JOURNAL_ITEMS_COUNT"] = "%d oggetti",
@@ -90,7 +92,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["JOURNAL_ITEMID"] = "ID oggetto",
     ["JOURNAL_QUEST_COMPLETED"] = "Completata",
     ["JOURNAL_QUEST_NOT_COMPLETED"] = "Non completata",
-    ["JOURNAL_CLICK_FOR_LINK"] = "Link WoWHead",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Wowhead",
     ["JOURNAL_OPEN"] = "Vedi missione",
     ["JOURNAL_OPEN_QUEST"] = "Vedi missione",
     ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Clicca su un link per evidenziarlo, poi premi Ctrl+C per copiarlo. Usa «Vedi missione» per aprirla nel catalogo delle Missioni.",

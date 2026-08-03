@@ -57,6 +57,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["JOURNAL_FILTER_N_SELECTED"] = "%d selecionados",
 
     ["JOURNAL_CARD_DUNGEON"] = "Masmorra",
+    ["JOURNAL_CARD_ENCOUNTER_ONE"] = "%d chefe",
     ["JOURNAL_CARD_ENCOUNTERS"] = "%d chefes",
     ["JOURNAL_CARD_ITEMS"] = "%d itens",
     ["JOURNAL_CARD_TMOG"] = "Transmog.",
@@ -82,6 +83,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["JOURNAL_COL_OR"] = "ou",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Tem não coletados",
+    ["JOURNAL_LOADING_LOOT"] = "Carregando saque…",
 
     ["JOURNAL_GENERAL_LOOT"] = "Despojo geral",
     ["JOURNAL_ITEMS_COUNT"] = "%d itens",
@@ -90,7 +92,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["JOURNAL_ITEMID"] = "ID do item",
     ["JOURNAL_QUEST_COMPLETED"] = "Concluída",
     ["JOURNAL_QUEST_NOT_COMPLETED"] = "Não concluída",
-    ["JOURNAL_CLICK_FOR_LINK"] = "Link da WoWHead",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Wowhead",
     ["JOURNAL_OPEN"] = "Ver missão",
     ["JOURNAL_OPEN_QUEST"] = "Ver missão",
     ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Clique em um link para destacá-lo e pressione Ctrl+C para copiar. Use «Ver missão» para abri-la no catálogo de Missões.",

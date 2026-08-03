@@ -56,6 +56,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["JOURNAL_FILTER_N_SELECTED"] = "%d selected",
 
     ["JOURNAL_CARD_DUNGEON"] = "Dungeon",
+    ["JOURNAL_CARD_ENCOUNTER_ONE"] = "%d Boss",
     ["JOURNAL_CARD_ENCOUNTERS"] = "%d Bosses",
     ["JOURNAL_CARD_ITEMS"] = "%d Items",
     ["JOURNAL_CARD_TMOG"] = "Transmog",
@@ -81,6 +82,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["JOURNAL_COL_OR"] = "or",
 
     ["JOURNAL_HAS_UNCOLLECTED"] = "Has uncollected",
+    ["JOURNAL_LOADING_LOOT"] = "Loading loot…",
 
     ["JOURNAL_GENERAL_LOOT"] = "General Loot",
     ["JOURNAL_ITEMS_COUNT"] = "%d items",
@@ -89,7 +91,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["JOURNAL_ITEMID"] = "ItemID",
     ["JOURNAL_QUEST_COMPLETED"] = "Completed",
     ["JOURNAL_QUEST_NOT_COMPLETED"] = "Not Completed",
-    ["JOURNAL_CLICK_FOR_LINK"] = "WoWHead Link",
+    ["JOURNAL_CLICK_FOR_LINK"] = "Wowhead",
     ["JOURNAL_OPEN"] = "View Quest",
     ["JOURNAL_OPEN_QUEST"] = "View Quest",
     ["JOURNAL_QUEST_LINK_INSTRUCT"] = "Click a link to highlight it, then press Ctrl+C to copy. Use 'Open Quest' to view it in the Quests catalog.",
