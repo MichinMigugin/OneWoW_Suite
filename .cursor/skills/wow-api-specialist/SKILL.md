@@ -23,3 +23,5 @@ Prioritize modern `C_` namespaces (e.g., `C_Timer`, `C_Item`). Functions marked 
 6. `https://www.lua.org/manual/5.1/`: Lua 5.1 manual.
 7. `wowhead.com`: use for general game information.
 8. `google.com`: use as a search engine to reach allowed sources.
+
+**Client data tables (DB2):** For JournalInstance, MapDifficulty, Difficulty, and other game-data extracts — not FrameXML — load the **`onewow-db2`** skill and use `.wow_db2/`. This skill stays on UI/API/FrameXML sources above.

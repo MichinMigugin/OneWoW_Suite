@@ -35,6 +35,8 @@ skills:
       - "wiki/**"
       - "README.md"
       - "OneWoW*/README.md"
+  onewow-db2:
+    claude_paths: null
   wow-api-specialist:
     claude_paths: null
   wow-frame-script-pitfalls:

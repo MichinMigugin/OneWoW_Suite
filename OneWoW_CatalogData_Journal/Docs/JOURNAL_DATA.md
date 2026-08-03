@@ -39,6 +39,7 @@ python bin/journal_db2_tools.py report
 
 CSV schema / mermaid: [`.wow_db2/docs/journal.md`](../../.wow_db2/docs/journal.md).
 Extract build pin: [`.wow_db2/README.md`](../../.wow_db2/README.md).
+Agent skill: `onewow-db2` (when to use extracts vs FrameXML / ATT).
 
 ## Live EJ merge
 
