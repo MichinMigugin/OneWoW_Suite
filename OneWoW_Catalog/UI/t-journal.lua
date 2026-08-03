@@ -5,7 +5,6 @@ local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_SIMPLE = OneWoW_GUI.Constants.BACKDROP_SIMPLE
 local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
-local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 
 ns.UI = ns.UI or {}
 
@@ -27,18 +26,30 @@ local RefreshJournalList
 local filterItemTypes = {}
 local filterCollection = "all"
 local hideNonCollectable = false
+local hasUncollectedOnly = false
 
--- Ordered definition for the Item Type filter menu. Keys here drive both the menu rows
--- and the filterItemTypes set; the `special` field is what each entry matches against
+-- Ordered definition for the Item Type filter menu (taxonomy order; Show All is
+-- the empty-selection sentinel). Keys drive filterItemTypes; `special` matches
 -- item.special in ItemMatchesFilters.
 local ITEM_TYPE_DEFS = {
     { key = "tmog",    special = "TMog",    labelKey = "JOURNAL_FILTER_TMOG"    },
-    { key = "mounts",  special = "Mount",   labelKey = "JOURNAL_FILTER_MOUNTS"  },
-    { key = "pets",    special = "Pet",     labelKey = "JOURNAL_FILTER_PETS"    },
-    { key = "recipes", special = "Recipe",  labelKey = "JOURNAL_FILTER_RECIPES" },
-    { key = "toys",    special = "Toy",     labelKey = "JOURNAL_FILTER_TOYS"    },
-    { key = "quest",   special = "Quest",   labelKey = "JOURNAL_FILTER_QUEST"   },
+    { key = "mounts",  special = "Mount",   labelKey = "JOURNAL_FILTER_MOUNT"   },
+    { key = "pets",    special = "Pet",     labelKey = "JOURNAL_FILTER_PET"     },
+    { key = "toys",    special = "Toy",     labelKey = "JOURNAL_FILTER_TOY"     },
     { key = "housing", special = "Housing", labelKey = "JOURNAL_FILTER_HOUSING" },
+    { key = "recipes", special = "Recipe",  labelKey = "JOURNAL_FILTER_RECIPE"  },
+    { key = "quest",   special = "Quest",   labelKey = "JOURNAL_FILTER_QUEST"   },
+}
+
+-- Card / Collections taxonomy: Transmog → Mount → Pet → Toy → Housing → Recipe → Quest.
+local TAXONOMY_DEFS = {
+    { special = "TMog",    flag = "hasTMog",    labelKey = "JOURNAL_CARD_TMOG",    colFmt = "JOURNAL_COL_TMOG",    colorKey = "TMog" },
+    { special = "Mount",   flag = "hasMounts",  labelKey = "JOURNAL_CARD_MOUNT",   colFmt = "JOURNAL_COL_MOUNT",   colorKey = "Mount" },
+    { special = "Pet",     flag = "hasPets",    labelKey = "JOURNAL_CARD_PET",     colFmt = "JOURNAL_COL_PET",     colorKey = "Pet" },
+    { special = "Toy",     flag = "hasToys",    labelKey = "JOURNAL_CARD_TOY",     colFmt = "JOURNAL_COL_TOY",     colorKey = "Toy" },
+    { special = "Housing", flag = "hasHousing", labelKey = "JOURNAL_CARD_HOUSING", colFmt = "JOURNAL_COL_HOUSING", colorKey = "Housing" },
+    { special = "Recipe",  flag = "hasRecipes", labelKey = "JOURNAL_CARD_RECIPE",  colFmt = "JOURNAL_COL_RECIPE",  colorKey = "Recipe" },
+    { special = "Quest",   flag = "hasQuest",   labelKey = "JOURNAL_CARD_QUEST",   colFmt = "JOURNAL_COL_QUEST",   colorKey = "Quest" },
 }
 
 local function CountSelectedItemTypes()
@@ -325,24 +336,11 @@ local function CreateInstanceListRow(parent, _)
     countText:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
     card.countText = countText
 
-    local catDefs = {
-        { label = MOUNTS, color = SPECIAL_COLORS.Mount },
-        { label = PETS, color = SPECIAL_COLORS.Pet },
-        { label = L["JOURNAL_CARD_TOYS"], color = SPECIAL_COLORS.Toy },
-        { label = L["JOURNAL_CARD_RECIPES"], color = SPECIAL_COLORS.Recipe },
-        { label = L["JOURNAL_CARD_HOUSING"], color = SPECIAL_COLORS.Housing },
-        { label = L["JOURNAL_CARD_QUEST"], color = SPECIAL_COLORS.Quest },
-    }
-    local colWidth = 80
+    -- Pool of taxonomy tag FontStrings; BindInstanceListRow shows only present ones.
     card.catTexts = {}
-    for i, cat in ipairs(catDefs) do
+    for i = 1, #TAXONOMY_DEFS do
         local catText = OneWoW_GUI:CreateFS(card, 10)
-        local row = (i <= 3) and 1 or 2
-        local col = ((i - 1) % 3)
-        local y = (row == 1) and 18 or 6
-        catText:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 8 + (col * colWidth), y)
-        catText:SetText(cat.label)
-        catText._activeColor = cat.color
+        catText:Hide()
         card.catTexts[i] = catText
     end
 
@@ -359,6 +357,11 @@ local function CreateInstanceListRow(parent, _)
 
     return card
 end
+
+local CARD_TAG_GAP = 10
+local CARD_TAG_PAD_X = 8
+local CARD_TAG_ROW1_Y = 18
+local CARD_TAG_ROW2_Y = 6
 
 local function BindInstanceListRow(row, _, instData, state)
     row.instData = instData
@@ -384,21 +387,31 @@ local function BindInstanceListRow(row, _, instData, state)
     row.countText:SetText(string.format(L["JOURNAL_CARD_ENCOUNTERS"], encCount)
         .. "  |  " .. string.format(L["JOURNAL_CARD_ITEMS"], instData.totalItems or 0))
 
-    local flags = {
-        instData.hasMounts,
-        instData.hasPets,
-        instData.hasToys,
-        instData.hasRecipes,
-        instData.hasHousing,
-        instData.hasQuest,
-    }
-    for i, catText in ipairs(row.catTexts) do
-        if flags[i] then
-            local c = catText._activeColor
+    local availW = (row:GetWidth() > 0 and row:GetWidth() or 260) - CARD_TAG_PAD_X * 2
+    local xPos = CARD_TAG_PAD_X
+    local yPos = CARD_TAG_ROW1_Y
+    local tagIndex = 0
+    for _, def in ipairs(TAXONOMY_DEFS) do
+        if instData[def.flag] then
+            tagIndex = tagIndex + 1
+            local catText = row.catTexts[tagIndex]
+            local label = L[def.labelKey]
+            catText:SetText(label)
+            local c = SPECIAL_COLORS[def.colorKey]
             catText:SetTextColor(c[1], c[2], c[3], 1.0)
-        else
-            catText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            local w = catText:GetStringWidth()
+            if xPos > CARD_TAG_PAD_X and (xPos + w) > (CARD_TAG_PAD_X + availW) then
+                xPos = CARD_TAG_PAD_X
+                yPos = CARD_TAG_ROW2_Y
+            end
+            catText:ClearAllPoints()
+            catText:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", xPos, yPos)
+            catText:Show()
+            xPos = xPos + w + CARD_TAG_GAP
         end
+    end
+    for i = tagIndex + 1, #row.catTexts do
+        row.catTexts[i]:Hide()
     end
 
     if row.favBtn and ns.Favorites then
@@ -411,16 +424,31 @@ local function BindInstanceListRow(row, _, instData, state)
     end
 end
 
+local function FormatAbsentCategories(names)
+    if #names == 0 then
+        return nil
+    end
+    local joined
+    if #names == 1 then
+        joined = names[1]
+    elseif #names == 2 then
+        joined = names[1] .. " " .. L["JOURNAL_COL_OR"] .. " " .. names[2]
+    else
+        local parts = {}
+        for i = 1, #names - 1 do
+            parts[i] = names[i]
+        end
+        joined = table.concat(parts, ", ")
+            .. ", " .. L["JOURNAL_COL_OR"] .. " " .. names[#names]
+    end
+    return string.format(L["JOURNAL_COL_ABSENT"], joined)
+end
+
 local function BuildCollectionsSummary(parent, instData, yOffset, addon)
-    local counts = {
-        TMog    = { total = 0, collected = 0 },
-        Mount   = { total = 0, collected = 0 },
-        Pet     = { total = 0, collected = 0 },
-        Recipe  = { total = 0, collected = 0 },
-        Toy     = { total = 0, collected = 0 },
-        Quest   = { total = 0, collected = 0 },
-        Housing = { total = 0, collected = 0 },
-    }
+    local counts = {}
+    for _, def in ipairs(TAXONOMY_DEFS) do
+        counts[def.special] = { total = 0, collected = 0 }
+    end
 
     for _, enc in ipairs(instData.encounters) do
         for _, item in ipairs(enc.items) do
@@ -436,6 +464,25 @@ local function BuildCollectionsSummary(parent, instData, yOffset, addon)
         end
     end
 
+    local anyPresent = false
+    local absentNames = {}
+    for _, def in ipairs(TAXONOMY_DEFS) do
+        if counts[def.special].total > 0 then
+            anyPresent = true
+        else
+            tinsert(absentNames, L[def.labelKey])
+        end
+    end
+
+    if not anyPresent then
+        local headerText = OneWoW_GUI:CreateFS(parent, 12)
+        headerText:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+        headerText:SetText(L["JOURNAL_NO_COLLECTIONS"])
+        headerText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        table.insert(detailElements, headerText)
+        return yOffset - 22
+    end
+
     local headerText = OneWoW_GUI:CreateFS(parent, 12)
     headerText:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
     headerText:SetText(L["JOURNAL_COLLECTIONS"])
@@ -443,37 +490,53 @@ local function BuildCollectionsSummary(parent, instData, yOffset, addon)
     table.insert(detailElements, headerText)
     yOffset = yOffset - 18
 
-    local catDefs = {
-        { key = "TMog",    fmt = "JOURNAL_COL_TMOG",    color = SPECIAL_COLORS.TMog },
-        { key = "Mount",   fmt = "JOURNAL_COL_MOUNTS",  color = SPECIAL_COLORS.Mount },
-        { key = "Pet",     fmt = "JOURNAL_COL_PETS",     color = SPECIAL_COLORS.Pet },
-        { key = "Recipe",  fmt = "JOURNAL_COL_RECIPES",  color = SPECIAL_COLORS.Recipe },
-        { key = "Toy",     fmt = "JOURNAL_COL_TOYS",     color = SPECIAL_COLORS.Toy },
-        { key = "Quest",   fmt = "JOURNAL_COL_QUEST",    color = SPECIAL_COLORS.Quest },
-        { key = "Housing", fmt = "JOURNAL_COL_HOUSING",  color = SPECIAL_COLORS.Housing },
-    }
-
+    local parentWidth = parent:GetWidth()
+    if parentWidth <= 0 then
+        parentWidth = 400
+    end
+    local maxX = parentWidth - 10
     local xPos = 10
-    for _, def in ipairs(catDefs) do
-        local c = counts[def.key]
-        local catLabel = OneWoW_GUI:CreateFS(parent, 10)
-        catLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", xPos, yOffset)
-        catLabel:SetJustifyH("LEFT")
-        catLabel:SetText(string.format(L[def.fmt], c.collected, c.total))
+    local rowY = yOffset
 
-        if c.total == 0 then
-            catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        elseif c.collected >= c.total then
-            catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        else
-            catLabel:SetTextColor(def.color[1], def.color[2], def.color[3], 1.0)
+    for _, def in ipairs(TAXONOMY_DEFS) do
+        local c = counts[def.special]
+        if c.total > 0 then
+            local catLabel = OneWoW_GUI:CreateFS(parent, 10)
+            catLabel:SetJustifyH("LEFT")
+            catLabel:SetText(string.format(L[def.colFmt], c.collected, c.total))
+
+            if c.collected >= c.total then
+                catLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+            else
+                local sc = SPECIAL_COLORS[def.colorKey]
+                catLabel:SetTextColor(sc[1], sc[2], sc[3], 1.0)
+            end
+
+            local w = catLabel:GetStringWidth()
+            if xPos > 10 and (xPos + w) > maxX then
+                xPos = 10
+                rowY = rowY - 14
+            end
+            catLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", xPos, rowY)
+            table.insert(detailElements, catLabel)
+            xPos = xPos + w + 12
         end
-        table.insert(detailElements, catLabel)
-
-        xPos = xPos + catLabel:GetStringWidth() + 12
     end
 
-    yOffset = yOffset - 16
+    yOffset = rowY - 16
+
+    local absentLine = FormatAbsentCategories(absentNames)
+    if absentLine then
+        local absentText = OneWoW_GUI:CreateFS(parent, 10)
+        absentText:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+        absentText:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+        absentText:SetJustifyH("LEFT")
+        absentText:SetText(absentLine)
+        absentText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        table.insert(detailElements, absentText)
+        yOffset = yOffset - 14
+    end
+
     return yOffset - 4
 end
 
@@ -988,6 +1051,23 @@ local function ShowInstanceDetail(panels, instData)
     RefreshDetailView(false)
 end
 
+local function InstanceHasUncollected(inst, addon)
+    if not addon or not inst or not inst.encounters then
+        return false
+    end
+    for _, enc in ipairs(inst.encounters) do
+        for _, item in ipairs(enc.items or {}) do
+            if item.special then
+                local collected = addon.IsItemCollected(item.itemID, item.itemData, item.special)
+                if collected == false then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
 function RefreshJournalList(panels)
     wipe(listResults)
     if panels.listScrollFrame and panels.listScrollFrame.SetVerticalScroll then
@@ -1014,6 +1094,16 @@ function RefreshJournalList(panels)
     local sorted = {}
     for i = 1, #journalBaseList do
         sorted[i] = journalBaseList[i]
+    end
+
+    if hasUncollectedOnly then
+        local filtered = {}
+        for _, inst in ipairs(sorted) do
+            if InstanceHasUncollected(inst, addon) then
+                tinsert(filtered, inst)
+            end
+        end
+        sorted = filtered
     end
 
     if ns.Favorites then
@@ -1043,6 +1133,9 @@ function RefreshJournalList(panels)
         for _, inst in ipairs(restInsts) do
             pos = pos + 1
             sorted[pos] = inst
+        end
+        for i = pos + 1, #sorted do
+            sorted[i] = nil
         end
     end
 
@@ -1124,6 +1217,31 @@ local function InitializeDropdowns(panels)
             onSelect = function(value, text)
                 expansionFilter = value
                 panels.expText:SetText(value == 0 and L["JOURNAL_EXPANSION_ALL"] or text)
+                RefreshJournalList(panels)
+            end,
+        })
+    end
+
+    if panels.typeDropdown then
+        local typeLabelFor = {
+            all   = L["JOURNAL_FILTER_SHOW_ALL"],
+            party = DUNGEONS,
+            raid  = RAIDS,
+        }
+        panels.typeText:SetText(typeLabelFor[instanceTypeFilter] or L["JOURNAL_FILTER_SHOW_ALL"])
+        OneWoW_GUI:AttachFilterMenu(panels.typeDropdown, {
+            searchable = false,
+            getActiveValue = function() return instanceTypeFilter end,
+            buildItems = function()
+                return {
+                    { value = "all",   text = L["JOURNAL_FILTER_SHOW_ALL"] },
+                    { value = "party", text = DUNGEONS },
+                    { value = "raid",  text = RAIDS },
+                }
+            end,
+            onSelect = function(value, text)
+                instanceTypeFilter = value
+                panels.typeText:SetText(text)
                 RefreshJournalList(panels)
             end,
         })
@@ -1256,112 +1374,57 @@ function ns.UI.CreateJournalTab(parent)
     searchBox:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -8)
     searchBox:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -4, 0)
 
-    -- LEFT HEADER: Row 2 - Expansion label + dropdown
-    local expLabel = OneWoW_GUI:CreateFS(leftHeader, 10)
-    expLabel:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -38)
-    expLabel:SetText(L["EXPANSION"])
-    expLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
+    -- LEFT HEADER: Expansion dropdown (no label — dropdown text is self-explanatory)
+    -- then "Has uncollected" checkbox under it.
     local expDropdown, expText = OneWoW_GUI:CreateDropdown(leftHeader, { width = LEFT_W - 16, text = L["JOURNAL_EXPANSION_ALL"] })
-    expDropdown:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -54)
+    expDropdown:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -38)
 
-    -- RIGHT HEADER: Row 1 left - Instance Type label + [All][Raids][Dungeons] buttons
+    local hasUncollectedChk = OneWoW_GUI:CreateCheckbox(leftHeader, {
+        label = L["JOURNAL_HAS_UNCOLLECTED"],
+        checked = false,
+        onClick = function()
+            hasUncollectedOnly = not hasUncollectedOnly
+            RefreshJournalList(panels)
+        end,
+    })
+    hasUncollectedChk:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -64)
+
+    -- RIGHT HEADER: Instance Type → Item Type → Collection (left-packed)
+    local DROP_W = 130
+    local DROP_GAP = 6
+
     local typeLabel = OneWoW_GUI:CreateFS(rightHeader, 10)
     typeLabel:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", 8, -8)
     typeLabel:SetText(L["JOURNAL_LABEL_INST_TYPE"])
     typeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local typeButtonDefs = {
-        { text = L["JOURNAL_TYPE_ALL"],      value = "all"   },
-        { text = RAIDS,    value = "raid"  },
-        { text = DUNGEONS, value = "party" },
-    }
-    local typeButtons = {}
-    local BTN_PAD_X = 8
-    local BTN_H     = 22
-    local BTN_GAP   = 3
-    local xOff      = 8
-    for _, def in ipairs(typeButtonDefs) do
-        local btn = CreateFrame("Button", nil, rightHeader, "BackdropTemplate")
-        btn:SetHeight(BTN_H)
-        btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-        btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    local typeDropdown, typeText = OneWoW_GUI:CreateDropdown(rightHeader, {
+        width = DROP_W,
+        text = L["JOURNAL_FILTER_SHOW_ALL"],
+    })
+    typeDropdown:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", 8, -22)
 
-        local lbl = OneWoW_GUI:CreateFS(btn, 10)
-        lbl:SetPoint("CENTER", 0, 0)
-        lbl:SetText(def.text)
-        lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        btn:SetWidth(math.max(30, lbl:GetStringWidth() + BTN_PAD_X * 2))
+    local itemTypeLabel = OneWoW_GUI:CreateFS(rightHeader, 10)
+    itemTypeLabel:SetText(L["JOURNAL_LABEL_ITEM_TYPE"])
+    itemTypeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-        btn.highlight = btn:CreateTexture(nil, "OVERLAY")
-        btn.highlight:SetAllPoints()
-        btn.highlight:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-        btn.highlight:SetAlpha(0.15)
-        btn.highlight:Hide()
-
-        btn:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", xOff, -22)
-        xOff = xOff + btn:GetWidth() + BTN_GAP
-
-        btn.value = def.value
-        btn.label = lbl
-        table.insert(typeButtons, btn)
-
-        btn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-        end)
-        btn:SetScript("OnLeave", function(self)
-            if instanceTypeFilter == self.value then
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            else
-                self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            end
-        end)
-        btn:SetScript("OnClick", function(self)
-            instanceTypeFilter = self.value
-            for _, b in ipairs(typeButtons) do
-                if b.value == instanceTypeFilter then
-                    b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                    b.highlight:Show()
-                else
-                    b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                    b.highlight:Hide()
-                end
-            end
-            RefreshJournalList(panels)
-        end)
-    end
-
-    -- Set initial active state on All button
-    for _, b in ipairs(typeButtons) do
-        if b.value == "all" then
-            b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            b.highlight:Show()
-        end
-    end
-
-    -- RIGHT HEADER: Row 1 right - Collection + Item Type dropdowns with labels
-    local collectionFilterDropdown, collectionFilterText = OneWoW_GUI:CreateDropdown(rightHeader, { width = 130, text = L["JOURNAL_FILTER_SHOW_ALL"] })
-    collectionFilterDropdown:SetPoint("TOPRIGHT", rightHeader, "TOPRIGHT", -8, -22)
+    local itemFilterDropdown, itemFilterText = OneWoW_GUI:CreateDropdown(rightHeader, {
+        width = DROP_W,
+        text = L["JOURNAL_FILTER_SHOW_ALL"],
+    })
+    itemFilterDropdown:SetPoint("TOPLEFT", typeDropdown, "TOPRIGHT", DROP_GAP, 0)
+    itemTypeLabel:SetPoint("BOTTOMLEFT", itemFilterDropdown, "TOPLEFT", 0, 2)
 
     local collLabel = OneWoW_GUI:CreateFS(rightHeader, 10)
-    collLabel:SetPoint("BOTTOMLEFT", collectionFilterDropdown, "TOPLEFT", 0, 2)
     collLabel:SetText(L["JOURNAL_LABEL_COLLECTION"])
     collLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    local itemFilterDropdown, itemFilterText = OneWoW_GUI:CreateDropdown(rightHeader, { width = 130, text = L["JOURNAL_FILTER_SHOW_ALL"] })
-    itemFilterDropdown:SetPoint("TOPRIGHT", collectionFilterDropdown, "TOPLEFT", -6, 0)
-
-    local itemTypeLabel = OneWoW_GUI:CreateFS(rightHeader, 10)
-    itemTypeLabel:SetPoint("BOTTOMLEFT", itemFilterDropdown, "TOPLEFT", 0, 2)
-    itemTypeLabel:SetText(L["JOURNAL_LABEL_ITEM_TYPE"])
-    itemTypeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    local collectionFilterDropdown, collectionFilterText = OneWoW_GUI:CreateDropdown(rightHeader, {
+        width = DROP_W,
+        text = L["JOURNAL_FILTER_SHOW_ALL"],
+    })
+    collectionFilterDropdown:SetPoint("TOPLEFT", itemFilterDropdown, "TOPRIGHT", DROP_GAP, 0)
+    collLabel:SetPoint("BOTTOMLEFT", collectionFilterDropdown, "TOPLEFT", 0, 2)
 
     local chkBox = OneWoW_GUI:CreateCheckbox(rightHeader, {
         label = L["JOURNAL_HIDE_NON_COLLECTABLE"],
@@ -1383,23 +1446,15 @@ function ns.UI.CreateJournalTab(parent)
         ResetItemTypeFilter()
         filterCollection   = "all"
         hideNonCollectable = false
+        hasUncollectedOnly = false
         searchBox:SetText("")
         searchBox:ClearFocus()
         expText:SetText(L["JOURNAL_EXPANSION_ALL"])
+        typeText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
         itemFilterText:SetText(GetItemTypeFilterLabel())
         collectionFilterText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
         chkBox:SetChecked(false)
-        for _, b in ipairs(typeButtons) do
-            if b.value == "all" then
-                b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-                b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                b.highlight:Show()
-            else
-                b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                b.highlight:Hide()
-            end
-        end
+        hasUncollectedChk:SetChecked(false)
         RefreshJournalList(panels)
         if selectedInstance then
             RefreshDetailView(false)
@@ -1430,10 +1485,14 @@ function ns.UI.CreateJournalTab(parent)
 
     panels.expDropdown              = expDropdown
     panels.expText                  = expText
+    panels.typeDropdown             = typeDropdown
+    panels.typeText                 = typeText
     panels.itemFilterDropdown       = itemFilterDropdown
     panels.itemFilterText           = itemFilterText
     panels.collectionFilterDropdown = collectionFilterDropdown
     panels.collectionFilterText     = collectionFilterText
+    panels.searchBox                = searchBox
+    panels.hasUncollectedChk        = hasUncollectedChk
 
     ns.UI.journalPanels = panels
     panels_ref = panels
@@ -1488,11 +1547,18 @@ function ns.UI.OpenToInstance(mapID)
         expansionFilter    = instData.expansionID
         searchText         = ""
         instanceTypeFilter = "all"
+        hasUncollectedOnly = false
         if panels.searchBox then
             panels.searchBox:SetText("")
         end
         if panels.expText then
             panels.expText:SetText(instData.expansionName)
+        end
+        if panels.typeText then
+            panels.typeText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
+        end
+        if panels.hasUncollectedChk then
+            panels.hasUncollectedChk:SetChecked(false)
         end
         selectedInstance = instData
         RefreshJournalList(panels)

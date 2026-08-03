@@ -109,32 +109,56 @@ function JournalData:DetermineItemSpecial(idata)
     return nil
 end
 
--- Journal special types that carry a "collected" badge. Others (Achievement,
--- Quest, Housing, …) intentionally show no badge, so IsItemCollected returns nil
--- for them regardless of whether Collectibles could resolve a key.
-local BADGE_SPECIAL_TYPES = {
-    TMog = true, Mount = true, Pet = true, Toy = true, Recipe = true,
+-- Prefer the player's faction source quest, else the first listed source.
+---@param itemData table|nil
+---@return number|nil questID
+local function ResolveQuestIDFromItemData(itemData)
+    local sources = itemData and itemData.questSources
+    if not sources or #sources == 0 then
+        return nil
+    end
+    local faction = UnitFactionGroup("player")
+    local fallback
+    for _, qs in ipairs(sources) do
+        if not fallback then fallback = qs.id end
+        if qs.faction == faction then return qs.id end
+    end
+    return fallback
+end
+
+-- Specials answered by OneWoW.Collectibles (item-facing facade).
+local COLLECTIBLES_SPECIAL_TYPES = {
+    TMog = true, Mount = true, Pet = true, Toy = true, Recipe = true, Housing = true,
 }
 
--- Collection state for a journal item, delegated to the shared Collectibles
--- facade so journal badges stay in lockstep with tooltips and overlays.
--- Returns nil to hide the badge: no itemID/specialType, a non-badge special
--- type, or a Recipe whose taught spell can't be resolved to a collectible key
--- (showing no badge rather than a misleading "Unknown"). Mount/Pet/Toy/TMog
--- fall back to false (not owned) when no collectible key resolves, matching the
--- prior direct-API behavior. `itemData` is retained for signature compatibility.
----@diagnostic disable-next-line: unused-local
+-- Collection state for a journal item.
+-- Collectibles specials → OneWoW.Collectibles.GetItemCollectionStatus.
+-- Quest → Catalog Quests CompletionTracker (soft dep) or C_QuestLog fallback.
+-- Returns nil when status is indeterminate (hide badge; ignore for "Has uncollected").
 function JournalData:IsItemCollected(itemID, itemData, specialType)
-    if not itemID or not specialType or not BADGE_SPECIAL_TYPES[specialType] then
+    if not specialType then
         return nil
     end
 
-    local Collectibles = OneWoW.Collectibles
-    if Collectibles then
-        local status = Collectibles.GetItemCollectionStatus(itemID)
-        if status then
-            return status.collected
+    if specialType == "Quest" then
+        local questID = ResolveQuestIDFromItemData(itemData)
+        if not questID then
+            return nil
         end
+        local questAddon = OneWoW_CatalogData_Quests_API
+        if questAddon then
+            return questAddon.IsCompletedByCurrentChar(questID) == true
+        end
+        return C_QuestLog.IsQuestFlaggedCompleted(questID) == true
+    end
+
+    if not itemID or not COLLECTIBLES_SPECIAL_TYPES[specialType] then
+        return nil
+    end
+
+    local status = OneWoW.Collectibles.GetItemCollectionStatus(itemID)
+    if status then
+        return status.collected == true
     end
 
     -- No resolvable collectible key: hide the badge for recipes (indeterminate),
@@ -146,7 +170,7 @@ function JournalData:IsItemCollected(itemID, itemData, specialType)
 end
 
 function JournalData:DetermineItemStatus(itemID, itemData, specialType)
-    if not itemID or not specialType then
+    if not specialType then
         return nil
     end
 
@@ -161,7 +185,12 @@ function JournalData:DetermineItemStatus(itemID, itemData, specialType)
         return collected and COLLECTED or NOT_COLLECTED
     end
 
-    if specialType == "Mount" or specialType == "Pet" or specialType == "Toy" or specialType == "Recipe" then
+    if specialType == "Quest" then
+        return collected and L["JOURNAL_QUEST_COMPLETED"] or L["JOURNAL_QUEST_NOT_COMPLETED"]
+    end
+
+    if specialType == "Mount" or specialType == "Pet" or specialType == "Toy"
+        or specialType == "Recipe" or specialType == "Housing" then
         return collected and L["JOURNAL_STATUS_KNOWN"] or L["JOURNAL_STATUS_UNKNOWN"]
     end
 
@@ -298,7 +327,8 @@ function JournalData:BuildJournalCache()
 
                 table.sort(encounters, SortEncounters)
 
-                local hasMounts, hasPets, hasToys, hasRecipes, hasQuest, hasHousing = false, false, false, false, false, false
+                local hasTMog, hasMounts, hasPets, hasToys, hasRecipes, hasQuest, hasHousing =
+                    false, false, false, false, false, false, false
                 local totalItems = 0
                 -- Count each unique itemID once regardless of how many encounter
                 -- locations it appears in (e.g. both general loot and a boss drop).
@@ -309,6 +339,7 @@ function JournalData:BuildJournalCache()
                         if item.special ~= "Achievement" and not seenItemIDs[item.itemID] then
                             seenItemIDs[item.itemID] = true
                             totalItems = totalItems + 1
+                            if item.special == "TMog"    then hasTMog    = true end
                             if item.special == "Mount"   then hasMounts  = true end
                             if item.special == "Pet"     then hasPets    = true end
                             if item.special == "Toy"     then hasToys    = true end
@@ -327,6 +358,7 @@ function JournalData:BuildJournalCache()
                     expansionID   = instInfo.expansionID or expansion.expansionID,
                     expansionName = expansion.displayName,
                     encounters    = encounters,
+                    hasTMog       = hasTMog,
                     hasMounts     = hasMounts,
                     hasPets       = hasPets,
                     hasToys       = hasToys,
@@ -353,7 +385,8 @@ end
 
 function JournalData:RecalculateInstanceTotals(inst)
     if not inst or not inst.encounters then return end
-    local hasMounts, hasPets, hasToys, hasRecipes, hasQuest, hasHousing = false, false, false, false, false, false
+    local hasTMog, hasMounts, hasPets, hasToys, hasRecipes, hasQuest, hasHousing =
+        false, false, false, false, false, false, false
     local totalItems = 0
     local seenItemIDs = {}
     for _, enc in ipairs(inst.encounters) do
@@ -361,6 +394,7 @@ function JournalData:RecalculateInstanceTotals(inst)
             if item.special ~= "Achievement" and not seenItemIDs[item.itemID] then
                 seenItemIDs[item.itemID] = true
                 totalItems = totalItems + 1
+                if item.special == "TMog"    then hasTMog    = true end
                 if item.special == "Mount"   then hasMounts  = true end
                 if item.special == "Pet"     then hasPets    = true end
                 if item.special == "Toy"     then hasToys    = true end
@@ -370,6 +404,7 @@ function JournalData:RecalculateInstanceTotals(inst)
             end
         end
     end
+    inst.hasTMog       = hasTMog
     inst.hasMounts     = hasMounts
     inst.hasPets       = hasPets
     inst.hasToys       = hasToys

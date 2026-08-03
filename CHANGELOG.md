@@ -129,6 +129,12 @@
 ---
 
 # Catalog
+## Journal
+- Instance Type is a Show All / Dungeons / Raids dropdown; Item Type uses singular labels in taxonomy order
+- Instance cards show only present collectible tags (including Transmog), flowing to fit
+- Collections summary lists progress for categories that drop loot, with a muted “No Mount, Pet, or Toy” line for what’s missing (or No Collections when none)
+- Has uncollected checkbox hides instances where every tracked collectible (and quest reward) is already done
+
 ## Quests
 - OpenQuestsFiltered deep-link applies zone and/or NPC (giver or turn-in) filters from Notes
 - Active NPC filter shows as a clearable chip next to Clear on the Quests search bar
