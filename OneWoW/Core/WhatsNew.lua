@@ -6,8 +6,10 @@ local OneWoW_GUI = OneWoW_GUI
 -- What's New dialog
 -- ============================================================================
 -- Account-scoped dismiss (whatsNewDismissedVersion). Auto-show on login when
--- releaseId matches TOC Version, highlights exist, and FirstRun wizard is not
--- pending. Home force-opens via Show(true).
+-- TOC Version is known, highlights exist, this version is not dismissed, and
+-- FirstRun wizard is not pending. Closing with the checkbox checked stores
+-- this TOC version; unchecking clears a matching dismiss so auto-show can
+-- fire again. Home force-opens via Show(true).
 -- ============================================================================
 
 local WhatsNew = {}
@@ -34,8 +36,8 @@ local function BuildMessage()
     return table.concat(parts, "\n\n")
 end
 
---- Auto-show gate: TOC Version must match WhatsNewData.releaseId, highlights
---- non-empty, and this account has not dismissed this version.
+--- Auto-show gate: TOC Version known, highlights non-empty, and this account
+--- has not dismissed this version.
 ---@return boolean
 function WhatsNew:ShouldAutoShow()
     local data = ns.WhatsNewData
@@ -46,13 +48,26 @@ function WhatsNew:ShouldAutoShow()
     if ver == "" or ver == "Unknown" then
         return false
     end
-    if data.releaseId ~= ver then
-        return false
-    end
     if ns.db.global.whatsNewDismissedVersion == ver then
         return false
     end
     return true
+end
+
+--- Persist "Don't show again this release" from the dialog checkbox.
+--- Checked stores this version; unchecked clears a matching dismiss so the
+--- dialog can auto-show again on the next login/reload.
+---@param checkbox CheckButton|nil
+---@param ver string
+local function ApplyDismissPreference(checkbox, ver)
+    if not checkbox or ver == "" then
+        return
+    end
+    if checkbox:GetChecked() then
+        ns.db.global.whatsNewDismissedVersion = ver
+    elseif ns.db.global.whatsNewDismissedVersion == ver then
+        ns.db.global.whatsNewDismissedVersion = ""
+    end
 end
 
 --- Show the What's New dialog.
@@ -75,6 +90,16 @@ function WhatsNew:Show(force)
     local L = ns.L
     local ver = CurrentVersion()
     local result
+    local preferenceApplied = false
+    local function FinishDialog()
+        if preferenceApplied then
+            return
+        end
+        preferenceApplied = true
+        ApplyDismissPreference(result and result.checkbox, ver)
+        activeDialog = nil
+    end
+
     result = OneWoW_GUI:CreateConfirmDialog({
         name       = "OneWoW_WhatsNew",
         addonTitle = "OneWoW",
@@ -91,22 +116,20 @@ function WhatsNew:Show(force)
                 text    = CLOSE,
                 color   = { 0.2, 0.6, 0.2 },
                 onClick = function(dialog)
-                    local checked = result and result.checkbox and result.checkbox:GetChecked()
-                    if checked then
-                        ns.db.global.whatsNewDismissedVersion = ver
-                    end
+                    FinishDialog()
                     dialog:Hide()
-                    activeDialog = nil
                 end,
             },
         },
         onClose = function()
-            activeDialog = nil
+            FinishDialog()
         end,
     })
 
+    -- Reflect stored dismiss; leave unchecked when not yet dismissed this
+    -- release (changelog: check the box to dismiss).
     if result and result.checkbox then
-        result.checkbox:SetChecked(true)
+        result.checkbox:SetChecked(ns.db.global.whatsNewDismissedVersion == ver)
     end
 
     -- Left of the Close button row: opens the shared copy-URL dialog (WoW
@@ -122,6 +145,11 @@ function WhatsNew:Show(force)
             OneWoW_GUI:ShowCopyURLDialog(L["WHATS_NEW_RELEASE_NOTES_BTN"], L["WHATS_NEW_URL"])
         end)
         result.releaseNotesButton = releaseBtn
+
+        -- ESC (UISpecialFrames) only Hides — apply preference there too.
+        result.frame:HookScript("OnHide", function()
+            FinishDialog()
+        end)
     end
 
     activeDialog = result

@@ -27,6 +27,7 @@
 - `/ow-wizard` removed — re-open the feature picker from Home → Manage Features (or Settings → Manage Features)
 
 ## Fixes
+- What's New "Don't show again this release" now clears on uncheck (so the dialog can auto-show again after reload); the box starts unchecked until you dismiss this version
 - Reference check no longer flags packed game CVars or macro `#showtooltip` text inside Character Profiles as missing search shortcuts
 
 ---
@@ -155,3 +156,11 @@
 - Vendors and Vendor Details panel titles removed
 
 ---
+
+*No user-facing changes this release for Bags, Trackers, Shopping List, or Direct Deposit.*
+
+---
+
+- **Release**: Aug 3, 2026
+- **Version**: R6.2607.2702
+- **Status**: Draft
