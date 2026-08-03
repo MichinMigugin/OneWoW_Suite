@@ -147,4 +147,11 @@
 - OpenQuestsFiltered deep-link applies zone and/or NPC (giver or turn-in) filters from Notes
 - Active NPC filter shows as a clearable chip next to Clear on the Quests search bar
 
+## Vendors
+- Filter bar matches other Catalog tabs (search + Clear on the left; currency/type on row one and zone + Current Zone Only on row two, with wider dropdowns)
+- Vendor list cards show NPC portraits (when scanned), level/type, zone and item count, and type category
+- Detail shows the NPC subtitle under the name (e.g. `<Quartermaster>`), then NPC ID with zone coords and a Pin link; scan stats sit above the item list
+- Type sits above the vendor name; opening a merchant auto-fills Type from the NPC title when still Uncategorized (manual Type always wins)
+- Vendors and Vendor Details panel titles removed
+
 ---

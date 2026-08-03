@@ -64,6 +64,9 @@ when the last subscriber leaves:
   creatureType = "<UnitCreatureType>",
   classification = "normal" | "elite" | …,
   level        = <number>,
+  displayID    = <number> | nil,   -- PlayerModel:SetUnit("npc"):GetDisplayInfo(); nil triggers retry
+  subtitle     = "<NPC SubName>" | nil,  -- C_TooltipInfo.GetUnit("npc") line after name
+  canRepair    = <bool>,           -- CanMerchantRepair()
   location     = { mapID, zone, subzone, x, y } | nil,
   items = {
     [itemID] = {
@@ -80,6 +83,14 @@ when the last subscriber leaves:
   scannedAt = <time()>,
 }
 ```
+
+`displayID` / `subtitle` / `canRepair` are optional extras for consumers (Catalog
+vendor portraits + auto-category). Other subscribers may ignore them.
+
+`displayID` is captured via an off-screen shown `PlayerModel` (`SetUnit("npc")`,
+then `SetCreature(npcID)` fallback). A fully hidden model often returns `0` from
+`GetDisplayInfo` even when the rest of the scan succeeds; missing IDs still arm
+the existing one-shot rescan.
 
 ### First-visit retry
 

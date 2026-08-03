@@ -114,8 +114,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["JOURNAL_HIDE_NON_COLLECTABLE"] = "Hide Non-Collectable",
     ["JOURNAL_FILTER_CLEAR"] = "Clear",
 
-    ["VENDORS_LIST_TITLE"] = "Vendors",
-    ["VENDORS_DETAIL_TITLE"] = "Vendor Details",
     ["VENDORS_EMPTY"] = "No vendor data loaded.",
     ["VENDORS_SELECT"] = "Select a vendor to view their items.",
     ["VENDORS_SEARCH"] = "Search vendors or items...",

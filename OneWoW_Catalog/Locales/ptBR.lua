@@ -115,8 +115,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["JOURNAL_HIDE_NON_COLLECTABLE"] = "Ocultar não colecionáveis",
     ["JOURNAL_FILTER_CLEAR"] = "Limpar",
 
-    ["VENDORS_LIST_TITLE"] = "Vendedores",
-    ["VENDORS_DETAIL_TITLE"] = "Detalhes do vendedor",
     ["VENDORS_EMPTY"] = "Nenhum dado de vendedor carregado.",
     ["VENDORS_SELECT"] = "Selecione um vendedor para ver os itens dele.",
     ["VENDORS_SEARCH"] = "Buscar vendedores ou itens...",

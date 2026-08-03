@@ -115,8 +115,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["JOURNAL_HIDE_NON_COLLECTABLE"] = "Masquer non-collectables",
     ["JOURNAL_FILTER_CLEAR"] = "Effacer",
 
-    ["VENDORS_LIST_TITLE"] = "Marchands",
-    ["VENDORS_DETAIL_TITLE"] = "Détails du marchand",
     ["VENDORS_EMPTY"] = "Aucune donnée de marchand chargée.",
     ["VENDORS_SELECT"] = "Sélectionnez un marchand pour voir ses objets.",
     ["VENDORS_SEARCH"] = "Rechercher marchands ou objets...",

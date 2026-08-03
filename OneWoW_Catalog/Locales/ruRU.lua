@@ -115,8 +115,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["JOURNAL_HIDE_NON_COLLECTABLE"] = "Скрыть несобираемые",
     ["JOURNAL_FILTER_CLEAR"] = "Очистить",
 
-    ["VENDORS_LIST_TITLE"] = "Торговцы",
-    ["VENDORS_DETAIL_TITLE"] = "Сведения о торговце",
     ["VENDORS_EMPTY"] = "Данные о торговцах не загружены.",
     ["VENDORS_SELECT"] = "Выберите торговца, чтобы просмотреть его товары.",
     ["VENDORS_SEARCH"] = "Поиск торговцев или предметов...",

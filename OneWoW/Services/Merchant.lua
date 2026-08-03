@@ -42,6 +42,9 @@ local UnitCreatureType, UnitClassification, UnitLevel = UnitCreatureType, UnitCl
 local GetSubZoneText, GetZoneText = GetSubZoneText, GetZoneText
 local GetMerchantNumItems, GetMerchantItemLink, GetMerchantItemID = GetMerchantNumItems, GetMerchantItemLink, GetMerchantItemID
 local GetMerchantItemCostInfo, GetMerchantItemCostItem = GetMerchantItemCostInfo, GetMerchantItemCostItem
+local CanMerchantRepair = CanMerchantRepair
+local CreateFrame = CreateFrame
+local C_TooltipInfo = C_TooltipInfo
 
 local EVENTS = {
     "MERCHANT_SHOW",
@@ -182,8 +185,66 @@ local function ScanBlockReason(merchantIndex)
     return ns.TooltipScanner:ScanMerchantBlockReason(merchantIndex)
 end
 
+-- Reused off-screen model for displayID capture (no GetCreatureDisplayID unit API).
+-- Must be shown and parented: a 1×1 Hide()'d model often returns GetDisplayInfo() == 0
+-- even when SetUnit succeeds (subtitle/items still scan fine).
+local displayModel
+
+local function EnsureDisplayModel()
+    if displayModel then
+        return displayModel
+    end
+    displayModel = CreateFrame("PlayerModel", nil, UIParent)
+    displayModel:SetSize(2, 2)
+    displayModel:SetPoint("TOPLEFT", UIParent, "BOTTOMRIGHT", 64, -64)
+    displayModel:SetAlpha(0)
+    displayModel:Show()
+    return displayModel
+end
+
+---@param npcID number|nil
+---@return number|nil displayID
+local function CaptureDisplayID(npcID)
+    local model = EnsureDisplayModel()
+    if model:SetUnit("npc") then
+        local id = model:GetDisplayInfo()
+        if id and id > 0 then
+            return id
+        end
+    end
+    -- Default creature appearance when the live unit model has not settled yet.
+    if npcID and npcID > 0 and model.SetCreature then
+        model:SetCreature(npcID)
+        local id = model:GetDisplayInfo()
+        if id and id > 0 then
+            return id
+        end
+    end
+    return nil
+end
+
+-- NPC SubName from the unit tooltip (line after UnitName). Locale-specific.
+local function CaptureNpcSubtitle()
+    local data = C_TooltipInfo.GetUnit("npc")
+    if not data or not data.lines then
+        return nil
+    end
+    local afterName = false
+    for _, line in ipairs(data.lines) do
+        local text = line.leftText
+        if text and text ~= "" then
+            if not afterName then
+                afterName = true
+            else
+                return text
+            end
+        end
+    end
+    return nil
+end
+
 -- Build an ephemeral snapshot of the currently open merchant. Returns the
--- snapshot plus whether a deferred rescan is warranted (uncached rows).
+-- snapshot plus whether a deferred rescan is warranted (uncached rows / display).
 local function BuildScan()
     local guid = UnitGUID("npc")
     local npcID = ExtractNPCID(guid)
@@ -237,12 +298,20 @@ local function BuildScan()
         end
     end
 
+    local displayID = CaptureDisplayID(npcID)
+    if not displayID then
+        needsRetry.value = true
+    end
+
     local scan = {
         npcID = npcID,
         name = UnitName("npc") or "",
         creatureType = UnitCreatureType("npc") or "",
         classification = UnitClassification("npc") or "normal",
         level = UnitLevel("npc") or 0,
+        displayID = displayID,
+        subtitle = CaptureNpcSubtitle(),
+        canRepair = CanMerchantRepair() and true or false,
         location = GetCurrentLocation(),
         items = items,
         scannedAt = now,
@@ -270,6 +339,27 @@ end
 
 local ArmScan -- forward declaration (DoScan re-arms on retry)
 
+-- When the live model has not settled, GetDisplayInfo is often 0 on the first
+-- pass. A short follow-up reuses lastScan so consumers get displayID without
+-- waiting on the item-uncached retry (and without a full ArmScan debounce).
+local function PushDisplayIDFollowUp(npcID)
+    if not (MerchantFrame and MerchantFrame:IsShown()) then
+        return
+    end
+    if not lastScan or lastScan.npcID ~= npcID then
+        return
+    end
+    if lastScan.displayID and lastScan.displayID > 0 then
+        return
+    end
+    local id = CaptureDisplayID(npcID)
+    if not id then
+        return
+    end
+    lastScan.displayID = id
+    FireScan(lastScan)
+end
+
 -- Debounced scan body. `GetMerchantNumItems` reflects the frame's active filter,
 -- so a filtered view scans a subset (known limitation, not fixed here).
 local function DoScan()
@@ -281,6 +371,16 @@ local function DoScan()
 
     lastScan = scan
     FireScan(scan)
+
+    if not (scan.displayID and scan.displayID > 0) then
+        local npcID = scan.npcID
+        C_Timer.After(0.1, function()
+            PushDisplayIDFollowUp(npcID)
+        end)
+        C_Timer.After(0.35, function()
+            PushDisplayIDFollowUp(npcID)
+        end)
+    end
 
     -- One deferred rescan pass for a first-ever visit whose item/cost data was
     -- still loading. Consumers must be idempotent (catch-up + retry re-deliver).

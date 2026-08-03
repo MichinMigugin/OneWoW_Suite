@@ -37,6 +37,7 @@ Core\Core.lua
 # Modules
 Modules\DataLoader.lua
 Modules\VendorData.lua
+Modules\VendorCategoryMap.lua
 Modules\VendorScanner.lua
 
 # Main

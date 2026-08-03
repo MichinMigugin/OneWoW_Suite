@@ -114,8 +114,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["JOURNAL_HIDE_NON_COLLECTABLE"] = "수집 불가 항목 숨기기",
     ["JOURNAL_FILTER_CLEAR"] = "지우기",
 
-    ["VENDORS_LIST_TITLE"] = "상인",
-    ["VENDORS_DETAIL_TITLE"] = "상인 상세",
     ["VENDORS_EMPTY"] = "불러온 상인 데이터가 없습니다.",
     ["VENDORS_SELECT"] = "상인을 선택하면 품목을 볼 수 있습니다.",
     ["VENDORS_SEARCH"] = "상인 또는 아이템 검색...",

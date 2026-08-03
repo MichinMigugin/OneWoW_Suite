@@ -272,6 +272,8 @@ end
 -- for a vendor. If the vendor exists only in the static index, a minimal
 -- record is materialized so the category can be persisted; the static items
 -- are carried over so subsequent reads still see them.
+-- Clearing restores Uncategorized and drops categorySource so the next scan
+-- may auto-fill again. Setting marks categorySource = "user" (scan never overwrites).
 function VendorData:SetCategory(npcID, categoryKey)
     if not npcID then return false end
     local db = ns:GetDB()
@@ -291,8 +293,10 @@ function VendorData:SetCategory(npcID, categoryKey)
 
     if not categoryKey or categoryKey == "" then
         vendor.category = nil
+        vendor.categorySource = nil
     else
         vendor.category = categoryKey
+        vendor.categorySource = "user"
     end
     return true
 end

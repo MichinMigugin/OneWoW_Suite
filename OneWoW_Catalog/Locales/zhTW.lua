@@ -115,8 +115,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["JOURNAL_HIDE_NON_COLLECTABLE"] = "隱藏不可收集項目",
     ["JOURNAL_FILTER_CLEAR"] = "清除",
 
-    ["VENDORS_LIST_TITLE"] = "商人",
-    ["VENDORS_DETAIL_TITLE"] = "商人詳細資料",
     ["VENDORS_EMPTY"] = "未載入商人資料。",
     ["VENDORS_SELECT"] = "選擇一個商人以檢視其物品。",
     ["VENDORS_SEARCH"] = "搜尋商人或物品……",

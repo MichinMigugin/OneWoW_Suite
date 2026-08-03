@@ -8,6 +8,8 @@ local BACKDROP_EDGE = OneWoW_GUI.Constants.BACKDROP_EDGE
 local ipairs, pairs = ipairs, pairs
 local tinsert, sort, wipe, tconcat = tinsert, sort, wipe, table.concat
 local C_Item, C_CurrencyInfo, C_Map, C_Timer = C_Item, C_CurrencyInfo, C_Map, C_Timer
+local SetPortraitTextureFromCreatureDisplayID = SetPortraitTextureFromCreatureDisplayID
+local math = math
 
 local L = ns.L
 ns.UI = ns.UI or {}
@@ -24,8 +26,8 @@ local categoryFilter = nil
 local pendingFocusNpcID = nil
 local RefreshVendorList
 
--- List card layout (3 rows). Stride includes inter-card gap; measured once so
--- getRowHeight stays cheap for the virtualizer prefix sums.
+-- List card stride includes inter-card gap; measured once so getRowHeight
+-- stays cheap for the virtualizer prefix sums.
 local VENDOR_CARD_TOP_PAD = 6
 local VENDOR_CARD_BOTTOM_PAD = 6
 local VENDOR_CARD_ROW_GAP = 2
@@ -79,6 +81,15 @@ local function FormatTimestamp(timestamp)
     return date("%Y-%m-%d %H:%M", timestamp)
 end
 
+-- List card layout (portrait + 4 text rows):
+--   NAME
+--   Level | Humanoid
+--   Zone | N items
+--   Type category
+local VENDOR_CARD_PORTRAIT = 40
+local VENDOR_CARD_PORTRAIT_GAP = 8
+local VENDOR_PORTRAIT_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
+
 local function EnsureVendorCardStride()
     if vendorCardStrideMeasured then
         return vendorCardStride
@@ -90,20 +101,26 @@ local function EnsureVendorCardStride()
 
     local nameText = OneWoW_GUI:CreateFS(probe, 12)
     nameText:SetText("Ag")
-    local zoneText = OneWoW_GUI:CreateFS(probe, 11)
-    zoneText:SetText("Ag")
     local metaText = OneWoW_GUI:CreateFS(probe, 11)
     metaText:SetText("Ag")
+    local zoneText = OneWoW_GUI:CreateFS(probe, 11)
+    zoneText:SetText("Ag")
+    local categoryText = OneWoW_GUI:CreateFS(probe, 11)
+    categoryText:SetText("Ag")
 
-    vendorCardStride =
+    local textH =
         VENDOR_CARD_TOP_PAD
         + nameText:GetStringHeight()
         + VENDOR_CARD_ROW_GAP
+        + metaText:GetStringHeight()
+        + VENDOR_CARD_ROW_GAP
         + zoneText:GetStringHeight()
         + VENDOR_CARD_ROW_GAP
-        + metaText:GetStringHeight()
+        + categoryText:GetStringHeight()
         + VENDOR_CARD_BOTTOM_PAD
-        + VENDOR_CARD_GAP
+
+    local portraitH = VENDOR_CARD_TOP_PAD + VENDOR_CARD_PORTRAIT + VENDOR_CARD_BOTTOM_PAD
+    vendorCardStride = math.max(textH, portraitH) + VENDOR_CARD_GAP
 
     probe:SetParent(nil)
     vendorCardStrideMeasured = true
@@ -280,39 +297,52 @@ local function ApplyVendorRowChrome(row, selected)
     end
 end
 
--- List card layout (3 rows):
---   Row 1: vendor name (favorite star sits on the right side of this row)
---   Row 2: zone (full width)
---   Row 3: category label (left) | item count (right)
+-- List card layout (portrait + 4 text rows):
+--   NAME
+--   Level | Humanoid
+--   Zone | N items
+--   Type category
 local function CreateVendorListRow(parent, _)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
     btn:SetHeight(EnsureVendorCardStride())
     btn:SetBackdrop(BACKDROP_SIMPLE)
     ApplyVendorRowChrome(btn, false)
 
+    local portrait = btn:CreateTexture(nil, "ARTWORK")
+    portrait:SetSize(VENDOR_CARD_PORTRAIT, VENDOR_CARD_PORTRAIT)
+    portrait:SetPoint("TOPLEFT", btn, "TOPLEFT", VENDOR_CARD_SIDE_PAD, -VENDOR_CARD_TOP_PAD)
+    -- Mask is applied in BindVendorListRow after the portrait/texture is set;
+    -- SetPortraitTextureFromCreatureDisplayID on an already-masked placeholder
+    -- does not repaint until the row is recreated (/reload).
+    btn.portrait = portrait
+    btn._portraitDisplayID = nil
+
+    local textLeft = VENDOR_CARD_SIDE_PAD + VENDOR_CARD_PORTRAIT + VENDOR_CARD_PORTRAIT_GAP
+
     local nameText = OneWoW_GUI:CreateFS(btn, 12)
-    nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", VENDOR_CARD_SIDE_PAD, -VENDOR_CARD_TOP_PAD)
+    nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", textLeft, -VENDOR_CARD_TOP_PAD)
     nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -VENDOR_CARD_FAV_RESERVE, -VENDOR_CARD_TOP_PAD)
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
     btn.nameText = nameText
 
+    local metaText = OneWoW_GUI:CreateFS(btn, 11)
+    metaText:SetPoint("TOPLEFT", nameText, "BOTTOMLEFT", 0, -VENDOR_CARD_ROW_GAP)
+    metaText:SetPoint("RIGHT", btn, "RIGHT", -VENDOR_CARD_SIDE_PAD, 0)
+    metaText:SetJustifyH("LEFT")
+    metaText:SetWordWrap(false)
+    btn.metaText = metaText
+
     local zoneText = OneWoW_GUI:CreateFS(btn, 11)
-    zoneText:SetPoint("TOPLEFT", nameText, "BOTTOMLEFT", 0, -VENDOR_CARD_ROW_GAP)
+    zoneText:SetPoint("TOPLEFT", metaText, "BOTTOMLEFT", 0, -VENDOR_CARD_ROW_GAP)
     zoneText:SetPoint("RIGHT", btn, "RIGHT", -VENDOR_CARD_SIDE_PAD, 0)
     zoneText:SetJustifyH("LEFT")
     zoneText:SetWordWrap(false)
     btn.zoneText = zoneText
 
-    local countText = OneWoW_GUI:CreateFS(btn, 11)
-    countText:SetPoint("TOPRIGHT", zoneText, "BOTTOMRIGHT", 0, -VENDOR_CARD_ROW_GAP)
-    countText:SetJustifyH("RIGHT")
-    countText:SetWordWrap(false)
-    btn.countText = countText
-
     local categoryText = OneWoW_GUI:CreateFS(btn, 11)
     categoryText:SetPoint("TOPLEFT", zoneText, "BOTTOMLEFT", 0, -VENDOR_CARD_ROW_GAP)
-    categoryText:SetPoint("RIGHT", countText, "LEFT", -8, 0)
+    categoryText:SetPoint("RIGHT", btn, "RIGHT", -VENDOR_CARD_SIDE_PAD, 0)
     categoryText:SetJustifyH("LEFT")
     categoryText:SetWordWrap(false)
     btn.categoryText = categoryText
@@ -350,10 +380,31 @@ local function CreateVendorListRow(parent, _)
     return btn
 end
 
+local function ApplyVendorPortrait(row, displayID)
+    local tex = row.portrait
+    local id = (displayID and displayID > 0) and displayID or nil
+    if id and row._portraitDisplayID == id then
+        return
+    end
+    row._portraitDisplayID = id
+
+    -- SetPortraitTextureFromCreatureDisplayID paints a circular RT portrait and
+    -- conflicts with Texture:SetMask — masking after it blanks the image until
+    -- the row texture is recreated. Do not SetMask on live IDs.
+    if id then
+        SetPortraitTextureFromCreatureDisplayID(tex, id)
+    else
+        tex:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+        tex:SetMask(VENDOR_PORTRAIT_MASK)
+    end
+end
+
 local function BindVendorListRow(row, _, vendor, state)
     row.vendor = vendor
     row._rowSelected = state.selected and true or false
     ApplyVendorRowChrome(row, row._rowSelected)
+
+    ApplyVendorPortrait(row, vendor.displayID)
 
     if vendor.name and vendor.name ~= "" then
         row.nameText:SetText(vendor.name)
@@ -363,6 +414,20 @@ local function BindVendorListRow(row, _, vendor, state)
         row.nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
 
+    local metaParts = {}
+    if vendor.level and vendor.level > 0 then
+        tinsert(metaParts, LEVEL .. " " .. vendor.level)
+    end
+    if vendor.creatureType and vendor.creatureType ~= "" then
+        tinsert(metaParts, vendor.creatureType)
+    end
+    if #metaParts > 0 then
+        row.metaText:SetText(tconcat(metaParts, " | "))
+    else
+        row.metaText:SetText("")
+    end
+    row.metaText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
     local primaryLoc
     if vendor.locations then
         for _, loc in pairs(vendor.locations) do
@@ -370,17 +435,15 @@ local function BindVendorListRow(row, _, vendor, state)
             break
         end
     end
-    row.zoneText:SetText(primaryLoc and primaryLoc.zone or L["VENDORS_UNKNOWN_LOCATION"])
-    row.zoneText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
     local itemCount = 0
     if vendor.items then
         for _ in pairs(vendor.items) do
             itemCount = itemCount + 1
         end
     end
-    row.countText:SetText(itemCount .. " " .. L["VENDORS_ITEMS_SHORT"])
-    row.countText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    local zoneLabel = primaryLoc and primaryLoc.zone or L["VENDORS_UNKNOWN_LOCATION"]
+    row.zoneText:SetText(zoneLabel .. " | " .. itemCount .. " " .. L["VENDORS_ITEMS_SHORT"])
+    row.zoneText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     if vendor.category then
         row.categoryText:SetText(ns.VendorCategories:GetLabel(vendor.category))
@@ -410,13 +473,57 @@ end
 
 -- Detail panel layout uses font-height-driven spacing so larger user font
 -- offsets don't cause overlap. Every row advances yOffset by the actual
--- rendered height of its content + ROW_GAP; rows that mix text and a fixed
--- widget (location + Pin button, type label + dropdown) advance by the
--- larger of the two.
+-- rendered height of its content + ROW_GAP; rows that mix text and a link
+-- advance by the larger of the two.
 local DETAIL_ROW_GAP = 4
 
 local function StepRow(yOffset, height, gap)
     return yOffset - height - (gap or DETAIL_ROW_GAP)
+end
+
+local function BindVendorTypeControls(panels, vendor)
+    local typeDropdown = panels.vendorTypeDropdown
+    local typeDropdownText = panels.vendorTypeDropdownText
+    local typeLabel = panels.vendorTypeLabel
+    if not typeDropdown or not typeDropdownText then
+        return
+    end
+    if not vendor then
+        typeDropdown:Hide()
+        if typeLabel then typeLabel:Hide() end
+        return
+    end
+    if typeLabel then typeLabel:Show() end
+    typeDropdown:Show()
+    typeDropdownText:SetText(
+        vendor.category and ns.VendorCategories:GetLabel(vendor.category)
+            or L["VENDORS_CATEGORY_NONE"]
+    )
+    OneWoW_GUI:AttachFilterMenu(typeDropdown, {
+        searchable     = true,
+        maxVisible     = 12,
+        getActiveValue = function()
+            return selectedVendor and selectedVendor.category
+        end,
+        buildItems = function()
+            local items = { { value = nil, text = L["VENDORS_CATEGORY_NONE"] } }
+            for _, key in ipairs(ns.VendorCategories:GetSortedKeys()) do
+                tinsert(items, { value = key, text = ns.VendorCategories:GetLabel(key) })
+            end
+            return items
+        end,
+        onSelect = function(key, text)
+            local current = selectedVendor
+            if not current then return end
+            local addon = GetDataAddon()
+            if addon then
+                addon.SetCategory(current.npcID, key)
+            end
+            current.category = key
+            typeDropdownText:SetText(text)
+            RefreshVendorList(panels)
+        end,
+    })
 end
 
 local function ShowVendorDetail(panels, vendor)
@@ -427,6 +534,7 @@ local function ShowVendorDetail(panels, vendor)
     if panels.emptyDetail then panels.emptyDetail:Hide() end
 
     ClearDetailElements()
+    BindVendorTypeControls(panels, vendor)
 
     local parent = panels.detailScrollChild
     local yOffset = -8
@@ -445,95 +553,90 @@ local function ShowVendorDetail(panels, vendor)
         nameHeader:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
     tinsert(detailElements, nameHeader)
-    yOffset = StepRow(yOffset, nameHeader:GetStringHeight(), 6)
+    yOffset = StepRow(yOffset, nameHeader:GetStringHeight(), 4)
 
-    local infoLine = OneWoW_GUI:CreateFS(parent, 12)
-    infoLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-    infoLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-    infoLine:SetJustifyH("LEFT")
+    if vendor.subtitle and vendor.subtitle ~= "" then
+        local subtitleLine = OneWoW_GUI:CreateFS(parent, 12)
+        subtitleLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+        subtitleLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+        subtitleLine:SetJustifyH("LEFT")
+        subtitleLine:SetText("<" .. vendor.subtitle .. ">")
+        subtitleLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        tinsert(detailElements, subtitleLine)
+        yOffset = StepRow(yOffset, subtitleLine:GetStringHeight(), 6)
+    else
+        yOffset = yOffset - 2
+    end
+
     local infoParts = {}
     tinsert(infoParts, L["VENDORS_NPC_ID"] .. ": " .. (vendor.npcID or "?"))
-    if vendor.level and vendor.level > 0 then
-        tinsert(infoParts, LEVEL .. ": " .. vendor.level)
-    end
-    if vendor.creatureType and vendor.creatureType ~= "" then
-        tinsert(infoParts, vendor.creatureType)
-    end
-    infoLine:SetText(tconcat(infoParts, "  |  "))
-    infoLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    tinsert(detailElements, infoLine)
-    yOffset = StepRow(yOffset, infoLine:GetStringHeight())
 
-    -- Type setter row: label + dropdown.
-    local typeLabel = OneWoW_GUI:CreateFS(parent, 12)
-    typeLabel:SetText(TYPE .. ":")
-    typeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    typeLabel:SetJustifyH("LEFT")
-    tinsert(detailElements, typeLabel)
-
-    local DROPDOWN_H = 24
-    local typeDropdown, typeDropdownText = OneWoW_GUI:CreateDropdown(parent, {
-        width  = 220,
-        height = DROPDOWN_H,
-        text   = vendor.category and ns.VendorCategories:GetLabel(vendor.category)
-                                  or L["VENDORS_CATEGORY_NONE"],
-    })
-    typeDropdown:SetPoint("TOPLEFT", parent, "TOPLEFT",
-        10 + typeLabel:GetStringWidth() + 8, yOffset)
-    typeLabel:SetPoint("RIGHT", typeDropdown, "LEFT", -6, 0)
-    tinsert(detailElements, typeDropdown)
-
-    OneWoW_GUI:AttachFilterMenu(typeDropdown, {
-        searchable    = true,
-        maxVisible    = 12,
-        getActiveValue = function() return vendor.category end,
-        buildItems = function()
-            local items = { { value = nil, text = L["VENDORS_CATEGORY_NONE"] } }
-            for _, key in ipairs(ns.VendorCategories:GetSortedKeys()) do
-                tinsert(items, { value = key, text = ns.VendorCategories:GetLabel(key) })
-            end
-            return items
-        end,
-        onSelect = function(key, text)
-            if addon then
-                addon.SetCategory(vendor.npcID, key)
-            end
-            vendor.category = key
-            typeDropdownText:SetText(text)
-            RefreshVendorList(panels)
-        end,
-    })
-
-    yOffset = StepRow(yOffset, math.max(typeLabel:GetStringHeight(), DROPDOWN_H), 6)
-
+    local locPinHeight = 0
     if vendor.locations then
+        local firstLoc = true
         for mapID, loc in pairs(vendor.locations) do
-            local locLine = OneWoW_GUI:CreateFS(parent, 12)
-            locLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-            locLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -60, yOffset)
-            locLine:SetJustifyH("LEFT")
+            local zonePart = loc.zone or ""
             local coordStr = ""
             if loc.x and loc.y and loc.x > 0 then
                 coordStr = string.format(" (%.1f, %.1f)", loc.x, loc.y)
             end
-            locLine:SetText(L["VENDORS_LOCATION"] .. ": " .. (loc.zone or "") .. coordStr)
-            locLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-            tinsert(detailElements, locLine)
+            if firstLoc then
+                tinsert(infoParts, zonePart .. coordStr)
+                firstLoc = false
 
-            local WP_H = 18
-            local wpBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = L["VENDORS_WAYPOINT"], height = WP_H, minWidth = 50 })
-            wpBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-            tinsert(detailElements, wpBtn)
+                local infoLine = OneWoW_GUI:CreateFS(parent, 12)
+                infoLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+                infoLine:SetJustifyH("LEFT")
+                infoLine:SetText(tconcat(infoParts, "  |  "))
+                infoLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+                tinsert(detailElements, infoLine)
 
-            local capturedMapID = mapID
-            wpBtn:SetScript("OnClick", function()
-                if addon then
-                    addon.CreateWaypoint(vendor, capturedMapID)
-                end
-            end)
+                local capturedMapID = mapID
+                local pinLink = OneWoW_GUI:CreateTextLink(parent, {
+                    text = L["VENDORS_WAYPOINT"],
+                    fontSize = 11,
+                    onClick = function()
+                        if addon then
+                            addon.CreateWaypoint(vendor, capturedMapID)
+                        end
+                    end,
+                })
+                pinLink:SetPoint("LEFT", infoLine, "RIGHT", 8, 0)
+                tinsert(detailElements, pinLink)
+                locPinHeight = math.max(infoLine:GetStringHeight(), pinLink:GetHeight() or 12)
+                yOffset = StepRow(yOffset, locPinHeight)
+            else
+                local locLine = OneWoW_GUI:CreateFS(parent, 12)
+                locLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+                locLine:SetJustifyH("LEFT")
+                locLine:SetText(zonePart .. coordStr)
+                locLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+                tinsert(detailElements, locLine)
 
-            yOffset = StepRow(yOffset, math.max(locLine:GetStringHeight(), WP_H))
+                local capturedMapID = mapID
+                local pinLink = OneWoW_GUI:CreateTextLink(parent, {
+                    text = L["VENDORS_WAYPOINT"],
+                    fontSize = 11,
+                    onClick = function()
+                        if addon then
+                            addon.CreateWaypoint(vendor, capturedMapID)
+                        end
+                    end,
+                })
+                pinLink:SetPoint("LEFT", locLine, "RIGHT", 8, 0)
+                tinsert(detailElements, pinLink)
+                yOffset = StepRow(yOffset, math.max(locLine:GetStringHeight(), pinLink:GetHeight() or 12))
+            end
         end
+    else
+        local infoLine = OneWoW_GUI:CreateFS(parent, 12)
+        infoLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
+        infoLine:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
+        infoLine:SetJustifyH("LEFT")
+        infoLine:SetText(tconcat(infoParts, "  |  "))
+        infoLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        tinsert(detailElements, infoLine)
+        yOffset = StepRow(yOffset, infoLine:GetStringHeight())
     end
 
     yOffset = yOffset - 4
@@ -561,17 +664,15 @@ local function ShowVendorDetail(panels, vendor)
     tinsert(detailElements, scanInfo)
     yOffset = StepRow(yOffset, scanInfo:GetStringHeight(), 6)
 
-    local itemsHeader = OneWoW_GUI:CreateFS(parent, 12)
-    itemsHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-    itemsHeader:SetJustifyH("LEFT")
     local itemCount = 0
     if vendor.items then
         for _ in pairs(vendor.items) do itemCount = itemCount + 1 end
     end
-    itemsHeader:SetText(L["VENDORS_ITEM_COUNT"] .. ": " .. itemCount)
-    itemsHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    tinsert(detailElements, itemsHeader)
-    yOffset = StepRow(yOffset, itemsHeader:GetStringHeight(), 6)
+
+    yOffset = yOffset - 4
+    local itemsDivider = OneWoW_GUI:CreateDivider(parent, { yOffset = yOffset })
+    tinsert(detailElements, itemsDivider)
+    yOffset = yOffset - 8
 
     if panels.rightStatusText then
         panels.rightStatusText:SetText(((vendor.name and vendor.name ~= "") and vendor.name or ("NPC #" .. (vendor.npcID or "?"))) .. " - " .. itemCount .. " " .. L["VENDORS_ITEMS_SHORT"])
@@ -878,21 +979,28 @@ function ns.UI.OpenToVendor(npcID)
 end
 
 function ns.UI.CreateVendorsTab(parent)
+    local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
     local GAP    = ns.Constants.GUI.PANEL_GAP
-    local HDR_H  = 42
+    local HDR_H  = 70  -- two filter rows on the right
+    local DD_PAD = 8
+    local DD_GAP = 6
+    local ROW2_Y = -38
 
-    local headerBar = OneWoW_GUI:CreateFilterBar(parent, { height = HDR_H, offset = 0 })
-    headerBar:ClearAllPoints()
-    headerBar:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
-    headerBar:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
+    local leftHeader = OneWoW_GUI:CreateFilterBar(parent, { height = HDR_H, offset = 0 })
+    leftHeader:ClearAllPoints()
+    leftHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
+    leftHeader:SetWidth(LEFT_W)
+
+    local rightHeader = OneWoW_GUI:CreateFilterBar(parent, { height = HDR_H, offset = 0 })
+    rightHeader:ClearAllPoints()
+    rightHeader:SetPoint("TOPLEFT", leftHeader, "TOPRIGHT", GAP, 0)
+    rightHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
 
     local contentArea = CreateFrame("Frame", nil, parent)
-    contentArea:SetPoint("TOPLEFT", headerBar, "BOTTOMLEFT", 0, -GAP)
+    contentArea:SetPoint("TOPLEFT", leftHeader, "BOTTOMLEFT", 0, -GAP)
     contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
-    local panels = OneWoW_GUI:CreateSplitPanel(contentArea)
-    panels.listTitle:SetText(L["VENDORS_LIST_TITLE"])
-    panels.detailTitle:SetText(L["VENDORS_DETAIL_TITLE"])
+    local panels = OneWoW_GUI:CreateSplitPanel(contentArea, { hideTitles = true })
 
     EnsureVendorCardStride()
     vendorListAPI = OneWoW_GUI:CreateVirtualizer(panels.listPanel, {
@@ -922,8 +1030,10 @@ function ns.UI.CreateVendorsTab(parent)
     })
     panels.virtualizedList = vendorListAPI
 
-    local searchBox = OneWoW_GUI:CreateEditBox(headerBar, {
-        width = 280,
+    local clearBtn = OneWoW_GUI:CreateFitTextButton(leftHeader, { text = L["VENDORS_FILTER_CLEAR"], height = 26, minWidth = 34 })
+    clearBtn:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -8, -8)
+
+    local searchBox = OneWoW_GUI:CreateEditBox(leftHeader, {
         height = 26,
         placeholderText = L["VENDORS_SEARCH"],
         onTextChanged = function(text)
@@ -934,87 +1044,16 @@ function ns.UI.CreateVendorsTab(parent)
             end)
         end,
     })
-    searchBox:SetPoint("TOPLEFT", headerBar, "TOPLEFT", 8, -8)
+    searchBox:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -8)
+    searchBox:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -4, 0)
     panels.searchBox = searchBox
 
-    local clearBtn = OneWoW_GUI:CreateFitTextButton(headerBar, { text = L["VENDORS_FILTER_CLEAR"], height = 26, minWidth = 34 })
-    clearBtn:SetPoint("LEFT", searchBox, "RIGHT", 4, 0)
-
-    local chkBox = OneWoW_GUI:CreateCheckbox(headerBar, { label = L["VENDORS_ZONE_CURRENT"] })
-    -- CreateCheckbox sizes the frame to just the box; its label fontstring is anchored
-    -- LEFT-to-RIGHT outside the frame, so anchoring the box's TOPRIGHT alone leaves the
-    -- localized label spilling past the parent. Inset by (label gap + measured label
-    -- width) so the entire checkbox+label fits regardless of locale string length.
-    local chkLabelGap   = OneWoW_GUI:GetSpacing("XS")
-    local chkLabelWidth = chkBox.label:GetStringWidth()
-    chkBox:SetPoint("TOPRIGHT", headerBar, "TOPRIGHT", -8 - chkLabelGap - chkLabelWidth, -13)
-    panels.zoneCurrentCheckbox = chkBox
-
-    local zoneDropdown, zoneDropdownText = OneWoW_GUI:CreateDropdown(headerBar, {
-        width = 200,
-        height = 26,
-        text = L["QUESTS_ZONE_ALL"],
-    })
-    zoneDropdown:SetPoint("RIGHT", chkBox, "LEFT", -10, 0)
-    panels.zoneDropdownText = zoneDropdownText
-
-    OneWoW_GUI:AttachFilterMenu(zoneDropdown, {
-        searchable = true,
-        getActiveValue = function() return zoneFilter end,
-        buildItems = function()
-            local items = {}
-            tinsert(items, { value = nil, text = L["QUESTS_ZONE_ALL"] })
-            for _, zone in ipairs(BuildZoneList()) do
-                tinsert(items, { value = zone, text = zone })
-            end
-            return items
-        end,
-        onSelect = function(zone, text)
-            zoneFilter = zone
-            zoneDropdownText:SetText(text)
-            if zone then
-                currentZoneOnly = false
-                chkBox:SetChecked(false)
-            end
-            RefreshVendorList(panels)
-        end,
-    })
-
-    local categoryDropdown, categoryDropdownText = OneWoW_GUI:CreateDropdown(headerBar, {
-        width = 180,
-        height = 26,
-        text = L["VENDORS_CATEGORY_ALL"],
-    })
-    categoryDropdown:SetPoint("RIGHT", zoneDropdown, "LEFT", -10, 0)
-    panels.categoryDropdownText = categoryDropdownText
-
-    OneWoW_GUI:AttachFilterMenu(categoryDropdown, {
-        searchable    = true,
-        maxVisible    = 12,
-        getActiveValue = function() return categoryFilter end,
-        buildItems = function()
-            local items = {
-                { value = nil, text = L["VENDORS_CATEGORY_ALL"] },
-                { value = UNCATEGORIZED_KEY, text = L["VENDORS_CATEGORY_NONE"] },
-            }
-            for _, key in ipairs(ns.VendorCategories:GetSortedKeys()) do
-                tinsert(items, { value = key, text = ns.VendorCategories:GetLabel(key) })
-            end
-            return items
-        end,
-        onSelect = function(key, text)
-            categoryFilter = key
-            categoryDropdownText:SetText(text)
-            RefreshVendorList(panels)
-        end,
-    })
-
-    local currencyDropdown, currencyDropdownText = OneWoW_GUI:CreateDropdown(headerBar, {
-        width = 200,
+    -- Right 2x2: [Currency] [Types] / [Zones] [Current Zone Only]
+    local currencyDropdown, currencyDropdownText = OneWoW_GUI:CreateDropdown(rightHeader, {
+        width = 10,
         height = 26,
         text = L["VENDORS_CURRENCY_ALL"],
     })
-    currencyDropdown:SetPoint("RIGHT", categoryDropdown, "LEFT", -10, 0)
     panels.currencyDropdownText = currencyDropdownText
 
     OneWoW_GUI:AttachFilterMenu(currencyDropdown, {
@@ -1052,6 +1091,100 @@ function ns.UI.CreateVendorsTab(parent)
         end,
     })
 
+    local categoryDropdown, categoryDropdownText = OneWoW_GUI:CreateDropdown(rightHeader, {
+        width = 10,
+        height = 26,
+        text = L["VENDORS_CATEGORY_ALL"],
+    })
+    panels.categoryDropdownText = categoryDropdownText
+
+    OneWoW_GUI:AttachFilterMenu(categoryDropdown, {
+        searchable    = true,
+        maxVisible    = 12,
+        getActiveValue = function() return categoryFilter end,
+        buildItems = function()
+            local items = {
+                { value = nil, text = L["VENDORS_CATEGORY_ALL"] },
+                { value = UNCATEGORIZED_KEY, text = L["VENDORS_CATEGORY_NONE"] },
+            }
+            for _, key in ipairs(ns.VendorCategories:GetSortedKeys()) do
+                tinsert(items, { value = key, text = ns.VendorCategories:GetLabel(key) })
+            end
+            return items
+        end,
+        onSelect = function(key, text)
+            categoryFilter = key
+            categoryDropdownText:SetText(text)
+            RefreshVendorList(panels)
+        end,
+    })
+
+    local zoneDropdown, zoneDropdownText = OneWoW_GUI:CreateDropdown(rightHeader, {
+        width = 10,
+        height = 26,
+        text = L["QUESTS_ZONE_ALL"],
+    })
+    panels.zoneDropdownText = zoneDropdownText
+
+    local chkBox = OneWoW_GUI:CreateCheckbox(rightHeader, { label = L["VENDORS_ZONE_CURRENT"] })
+    panels.zoneCurrentCheckbox = chkBox
+
+    OneWoW_GUI:AttachFilterMenu(zoneDropdown, {
+        searchable = true,
+        getActiveValue = function() return zoneFilter end,
+        buildItems = function()
+            local items = {}
+            tinsert(items, { value = nil, text = L["QUESTS_ZONE_ALL"] })
+            for _, zone in ipairs(BuildZoneList()) do
+                tinsert(items, { value = zone, text = zone })
+            end
+            return items
+        end,
+        onSelect = function(zone, text)
+            zoneFilter = zone
+            zoneDropdownText:SetText(text)
+            if zone then
+                currentZoneOnly = false
+                chkBox:SetChecked(false)
+            end
+            RefreshVendorList(panels)
+        end,
+    })
+
+    local function LayoutRightFilters(w)
+        w = w or rightHeader:GetWidth() or 0
+        if w < 1 then return end
+        local chkGap = OneWoW_GUI:GetSpacing("XS")
+        local chkLabelW = chkBox.label:GetStringWidth() or 0
+        -- Checkbox frame is just the box; label sits to its right outside the frame.
+        local chkInset = chkGap + chkLabelW
+
+        local dropW = math.floor((w - (DD_PAD * 2) - DD_GAP) / 2)
+
+        currencyDropdown:ClearAllPoints()
+        currencyDropdown:SetSize(dropW, 26)
+        currencyDropdown:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", DD_PAD, -8)
+
+        categoryDropdown:ClearAllPoints()
+        categoryDropdown:SetSize(dropW, 26)
+        categoryDropdown:SetPoint("TOPLEFT", currencyDropdown, "TOPRIGHT", DD_GAP, 0)
+
+        chkBox:ClearAllPoints()
+        chkBox:SetPoint("TOPRIGHT", rightHeader, "TOPRIGHT", -DD_PAD - chkInset, ROW2_Y - 3)
+
+        zoneDropdown:ClearAllPoints()
+        zoneDropdown:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", DD_PAD, ROW2_Y)
+        zoneDropdown:SetPoint("RIGHT", chkBox, "LEFT", -10, 0)
+        zoneDropdown:SetHeight(26)
+    end
+
+    rightHeader:SetScript("OnSizeChanged", function(_, w)
+        LayoutRightFilters(w)
+    end)
+    C_Timer.After(0, function()
+        LayoutRightFilters(rightHeader:GetWidth())
+    end)
+
     chkBox:HookScript("OnClick", function(self)
         currentZoneOnly = self:GetChecked()
         if currentZoneOnly then
@@ -1085,6 +1218,28 @@ function ns.UI.CreateVendorsTab(parent)
     emptyDetail:SetPoint("CENTER", panels.detailPanel, "CENTER", 0, 0)
     emptyDetail:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyDetail = emptyDetail
+
+    -- Type control stays fixed at the top of the detail panel (Journal difficulty pattern).
+    local vendorTypeLabel = OneWoW_GUI:CreateFS(panels.detailPanel, 12)
+    vendorTypeLabel:SetText(TYPE .. ":")
+    vendorTypeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    vendorTypeLabel:Hide()
+    panels.vendorTypeLabel = vendorTypeLabel
+
+    local vendorTypeDropdown, vendorTypeDropdownText = OneWoW_GUI:CreateDropdown(panels.detailPanel, {
+        width = 180,
+        text = L["VENDORS_CATEGORY_NONE"],
+    })
+    vendorTypeDropdown:SetPoint("TOPLEFT", panels.detailPanel, "TOPLEFT",
+        8 + vendorTypeLabel:GetStringWidth() + 8, -8)
+    vendorTypeLabel:SetPoint("RIGHT", vendorTypeDropdown, "LEFT", -6, 0)
+    vendorTypeDropdown:Hide()
+    panels.vendorTypeDropdown = vendorTypeDropdown
+    panels.vendorTypeDropdownText = vendorTypeDropdownText
+
+    panels.detailScrollFrame:ClearAllPoints()
+    panels.detailScrollFrame:SetPoint("TOPLEFT", panels.detailPanel, "TOPLEFT", 0, -38)
+    panels.detailScrollFrame:SetPoint("BOTTOMRIGHT", panels.detailPanel, "BOTTOMRIGHT", -18, 8)
 
     -- Start in the no-data state; the data-ready watcher swaps to the live view
     -- once the Vendors data unit's data is queryable. Catch-up covers a tab opened

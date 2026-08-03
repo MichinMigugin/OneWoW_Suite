@@ -16,6 +16,24 @@ local pairs, time = pairs, time
 
 local OWNER_ID = "CatalogData_Vendors"
 
+local function ApplyScanCategory(vendor, scan)
+    -- User-assigned types are never overwritten. Existing category with no
+    -- source is grandfathered as user (pre-categorySource SavedVariables).
+    if vendor.categorySource == "user" then
+        return
+    end
+    if vendor.category and not vendor.categorySource then
+        vendor.categorySource = "user"
+        return
+    end
+
+    local key = ns.VendorCategoryMap.Resolve(scan.subtitle, scan.canRepair)
+    if key then
+        vendor.category = key
+        vendor.categorySource = "scan"
+    end
+end
+
 -- Merge one ephemeral snapshot from the core funnel into the vendor DB. Item
 -- entries arrive in persist shape (cost, limited, maxStack, isPurchasable,
 -- isUsable, lastSeen, currencies), so they merge directly.
@@ -39,6 +57,13 @@ function VendorScanner:MergeScanIntoDB(scan)
         existing.lastScanned = now
         existing.scanCount = (existing.scanCount or 0) + 1
 
+        if scan.displayID and scan.displayID > 0 then
+            existing.displayID = scan.displayID
+        end
+        if scan.subtitle and scan.subtitle ~= "" then
+            existing.subtitle = scan.subtitle
+        end
+
         if location and location.mapID then
             if not existing.locations then existing.locations = {} end
             existing.locations[location.mapID] = {
@@ -53,6 +78,8 @@ function VendorScanner:MergeScanIntoDB(scan)
         for itemID, itemData in pairs(scan.items) do
             existing.items[itemID] = itemData
         end
+
+        ApplyScanCategory(existing, scan)
     else
         local locations = {}
         if location and location.mapID then
@@ -64,18 +91,22 @@ function VendorScanner:MergeScanIntoDB(scan)
             }
         end
 
-        db.vendors[npcID] = {
+        local vendor = {
             name = name,
             npcID = npcID,
             locations = locations,
             creatureType = scan.creatureType,
             classification = scan.classification,
             level = scan.level,
+            displayID = (scan.displayID and scan.displayID > 0) and scan.displayID or nil,
+            subtitle = (scan.subtitle and scan.subtitle ~= "") and scan.subtitle or nil,
             items = scan.items,
             firstSeen = now,
             lastScanned = now,
             scanCount = 1,
         }
+        db.vendors[npcID] = vendor
+        ApplyScanCategory(vendor, scan)
     end
 
     if name ~= "" then
