@@ -20,8 +20,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes를 사용할 수 없습니다 (비활성화되었거나 불러오지 못했습니다).",
 
-    ["JOURNAL_LIST_TITLE"] = "인스턴스",
-    ["JOURNAL_DETAIL_TITLE"] = "상세 정보",
     ["JOURNAL_EMPTY"] = "불러온 일지 데이터가 없습니다.",
     ["JOURNAL_SELECT"] = "항목을 선택하면 상세 정보를 볼 수 있습니다.",
     ["JOURNAL_NO_DATA"] = "인스턴스 데이터를 보려면 OneWoW CatalogData: Journal을 설치하세요.",

@@ -1440,9 +1440,7 @@ function ns.UI.CreateJournalTab(parent)
     contentArea:SetPoint("TOPLEFT", leftHeader, "BOTTOMLEFT", 0, -GAP)
     contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
-    local panels = OneWoW_GUI:CreateSplitPanel(contentArea)
-    panels.listTitle:SetText(L["JOURNAL_LIST_TITLE"])
-    panels.detailTitle:SetText(L["JOURNAL_DETAIL_TITLE"])
+    local panels = OneWoW_GUI:CreateSplitPanel(contentArea, { hideTitles = true })
 
     journalListAPI = OneWoW_GUI:CreateVirtualizer(panels.listPanel, {
         name = "CatalogJournalList",
@@ -1583,15 +1581,15 @@ function ns.UI.CreateJournalTab(parent)
     emptyDetail:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     panels.emptyDetail = emptyDetail
 
-    -- Difficulty dropdown stays in detail panel
+    -- Difficulty dropdown stays in detail panel (no Instances/Details titles).
     local diffDropdown, diffText = OneWoW_GUI:CreateDropdown(panels.detailPanel, { width = 180, text = L["ALL_DIFFICULTIES"] })
-    diffDropdown:SetPoint("TOPLEFT", panels.detailPanel, "TOPLEFT", 8, -28)
+    diffDropdown:SetPoint("TOPLEFT", panels.detailPanel, "TOPLEFT", 8, -8)
     diffDropdown:Hide()
     panels.diffDropdown = diffDropdown
     panels.diffText = diffText
 
     panels.detailScrollFrame:ClearAllPoints()
-    panels.detailScrollFrame:SetPoint("TOPLEFT", panels.detailPanel, "TOPLEFT", 0, -58)
+    panels.detailScrollFrame:SetPoint("TOPLEFT", panels.detailPanel, "TOPLEFT", 0, -38)
     panels.detailScrollFrame:SetPoint("BOTTOMRIGHT", panels.detailPanel, "BOTTOMRIGHT", -18, 8)
 
     panels.expDropdown              = expDropdown

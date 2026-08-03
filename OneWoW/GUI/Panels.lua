@@ -491,6 +491,7 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
 
     options = options or {}
     local showSearch = options.showSearch
+    local hideTitles = options.hideTitles and true or false
 
     _splitPanelCount = _splitPanelCount + 1
     local uid = _splitPanelCount
@@ -510,17 +511,26 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     listTitle:SetPoint("TOPRIGHT", listPanel, "TOPRIGHT", -10, -10)
     listTitle:SetJustifyH("LEFT")
     listTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    if hideTitles then
+        listTitle:Hide()
+    end
 
     local searchBox
     if showSearch then
         searchBox = self:CreateEditBox(listPanel, {
             placeholderText = options.searchPlaceholder or "",
         })
-        searchBox:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 8, -30)
-        searchBox:SetPoint("TOPRIGHT", listPanel, "TOPRIGHT", -8, -30)
+        local searchY = hideTitles and -8 or -30
+        searchBox:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 8, searchY)
+        searchBox:SetPoint("TOPRIGHT", listPanel, "TOPRIGHT", -8, searchY)
     end
 
-    local containerTopY = showSearch and -58 or -32
+    local containerTopY
+    if showSearch then
+        containerTopY = hideTitles and -36 or -58
+    else
+        containerTopY = hideTitles and -8 or -32
+    end
     local listContainer = CreateFrame("Frame", nil, listPanel)
     listContainer:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 8, containerTopY)
     listContainer:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -8, 8)
@@ -553,9 +563,12 @@ function OneWoW_GUI:CreateSplitPanel(parent, options)
     detailTitle:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -10, -10)
     detailTitle:SetJustifyH("LEFT")
     detailTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    if hideTitles then
+        detailTitle:Hide()
+    end
 
     local detailContainer = CreateFrame("Frame", nil, detailPanel)
-    detailContainer:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 8, -32)
+    detailContainer:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 8, hideTitles and -8 or -32)
     detailContainer:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -8, 8)
 
     local detailScrollFrame = CreateFrame("ScrollFrame", "OneWoWGUI_Split_Detail" .. uid, detailContainer, "UIPanelScrollFrameTemplate")

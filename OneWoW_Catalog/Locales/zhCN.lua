@@ -21,8 +21,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes 不可用（已禁用或加载失败）。",
 
-    ["JOURNAL_LIST_TITLE"] = "副本",
-    ["JOURNAL_DETAIL_TITLE"] = "详情",
     ["JOURNAL_EMPTY"] = "未加载日志数据。",
     ["JOURNAL_SELECT"] = "选择一个条目以查看详情。",
     ["JOURNAL_NO_DATA"] = "安装 OneWoW CatalogData: Journal 以查看副本数据。",

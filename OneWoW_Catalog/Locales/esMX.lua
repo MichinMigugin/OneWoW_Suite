@@ -21,8 +21,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes no está disponible (desactivado o error de carga).",
 
-    ["JOURNAL_LIST_TITLE"] = "Instancias",
-    ["JOURNAL_DETAIL_TITLE"] = "Detalles",
     ["JOURNAL_EMPTY"] = "No hay datos de diario cargados.",
     ["JOURNAL_SELECT"] = "Selecciona una entrada para ver los detalles.",
     ["JOURNAL_NO_DATA"] = "Instala OneWoW CatalogData: Journal para ver los datos de instancia.",

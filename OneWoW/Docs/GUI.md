@@ -1171,6 +1171,7 @@ Lower-level (same styling as above): `OneWoW_GUI:ApplyScrollBarStyle(scrollFrame
 local panels = OneWoW_GUI:CreateSplitPanel(parent, {
     showSearch = true,              -- optional search box in list panel
     searchPlaceholder = "Search...",-- optional placeholder text for search box
+    hideTitles = false,             -- optional; omit Instances/Details-style panel titles and reclaim space
 })
 ```
 

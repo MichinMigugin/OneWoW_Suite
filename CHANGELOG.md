@@ -141,6 +141,7 @@
 - Quest loot rows use Wowhead and View Quest text links instead of buttons; ItemID and Quest ID are omitted so names fit at narrow widths
 - Instance cards count real bosses only (General Loot / Quest / Achievement buckets are excluded); singular “1 Boss” vs “N Bosses”
 - Loot table Item column has more width; column header Special renamed to Type
+- Instances and Details panel titles removed (filters and content speak for themselves)
 
 ## Quests
 - OpenQuestsFiltered deep-link applies zone and/or NPC (giver or turn-in) filters from Notes

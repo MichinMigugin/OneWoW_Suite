@@ -21,8 +21,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes недоступен (отключен или не удалось загрузить).",
 
-    ["JOURNAL_LIST_TITLE"] = "Подземелья",
-    ["JOURNAL_DETAIL_TITLE"] = "Подробности",
     ["JOURNAL_EMPTY"] = "Данные журнала не загружены.",
     ["JOURNAL_SELECT"] = "Выберите запись, чтобы просмотреть подробности.",
     ["JOURNAL_NO_DATA"] = "Установите OneWoW CatalogData: Journal, чтобы просмотреть данные подземелий.",

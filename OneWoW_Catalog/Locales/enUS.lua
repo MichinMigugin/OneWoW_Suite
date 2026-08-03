@@ -20,8 +20,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["NAV_NOTES_UNAVAILABLE"] = "OneWoW Notes is unavailable (disabled or failed to load).",
 
-    ["JOURNAL_LIST_TITLE"] = "Instances",
-    ["JOURNAL_DETAIL_TITLE"] = "Details",
     ["JOURNAL_EMPTY"] = "No journal data loaded.",
     ["JOURNAL_SELECT"] = "Select an entry to view details.",
     ["JOURNAL_NO_DATA"] = "Install OneWoW CatalogData: Journal to view instance data.",
