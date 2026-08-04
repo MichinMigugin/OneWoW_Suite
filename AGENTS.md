@@ -105,14 +105,14 @@ in full and follow it.
 <!-- BEGIN GENERATED: skills -->
 | Skill | Use when | Canonical file |
 | --- | --- | --- |
-| `onewow-changelog` | Use when shipping player-felt OneWoW suite changes — visible UI/behavior or experiential wins (performance, snappiness, reliability) — or when editing root CHANGELOG.md / CurseForge release notes. Decide include vs skip, then follow OneWoW-Changelog.mdc for dialect. | `.cursor/skills/onewow-changelog/SKILL.md` |
+| `onewow-changelog` | Use when shipping player-felt OneWoW suite changes — visible UI/behavior or experiential wins (performance, snappiness, reliability) — or when editing root CHANGELOG.md / CurseForge release notes. Decide include vs skip, then follow OneWoW-Changelog.mdc for dialect. Owns the release-notes pipeline (CHANGELOG → wiki Release-Notes Current → What’s New reassessment). | `.cursor/skills/onewow-changelog/SKILL.md` |
 | `onewow-database-api` | Use this skill when authoring or reviewing OneWoW addon code that touches SavedVariables, defaults, init bridges, or scope resolution — anything calling OneWoW_GUI.DB or accessing Addon.db.* paths. | `.cursor/skills/onewow-database-api/SKILL.md` |
 | `onewow-db2` | Use when reasoning about client DB2 game-data tables — Journal/EJ membership, instance flags, MapDifficulty, Difficulty, DungeonEncounter, or other extracts under .wow_db2 — validating ATT vs Retail listing, regenerating Generated Lua, or deciding CSV vs FrameXML vs ATT Data/. Not for C_* APIs, FrameXML, or GlobalStrings (use wow-api-specialist / onewow-locale-workflow). | `.cursor/skills/onewow-db2/SKILL.md` |
 | `onewow-gui-ui` | Use this skill when authoring or reviewing OneWoW addon UI code — anything calling CreateFrame, building widgets, applying theme colors, sizing windows, or producing user-facing strings. Covers the OneWoW_GUI-First component policy, theme API, and constants/localization rules. | `.cursor/skills/onewow-gui-ui/SKILL.md` |
 | `onewow-locale-workflow` | Use when adding, changing, or removing user-facing strings or locale keys in any OneWoW addon — UI labels, errors, tooltips, new L["KEY"] entries, or edits under Locales/*.lua. Covers Blizzard globals vs shared vs scoped keys, all 11 locales, and locale_keydiff / locale_verify. | `.cursor/skills/onewow-locale-workflow/SKILL.md` |
 | `onewow-qol-modules` | Use this skill when creating, scaffolding, or reviewing a OneWoW_QoL feature module — anything about the external module hub, module.lua/Define, the ModuleRegistry, Current() capture, per-module locale scopes, toggles, or the OnEnable/OnDisable/OnToggle lifecycle. Especially for "add a new QoL module" prompts where no module file is open yet. | `.cursor/skills/onewow-qol-modules/SKILL.md` |
 | `onewow-suite-architecture` | Use when authoring or reviewing OneWoW suite load units — lifecycle hooks, BootStore, BringUp/EnsureLoaded, enable/opt-out, ModuleManifest, hub tab order, OptionalDeps, or cross-unit integration. | `.cursor/skills/onewow-suite-architecture/SKILL.md` |
-| `onewow-wiki` | Use when editing the GitHub wiki (wiki/**), syncing player docs after feature/README changes, or deciding whether a Docs or addon README change needs a wiki update. Decide include vs skip, then follow OneWoW-Wiki.mdc for dialect. | `.cursor/skills/onewow-wiki/SKILL.md` |
+| `onewow-wiki` | Use when editing the GitHub wiki (wiki/**), syncing player docs after feature/README changes, mirroring CHANGELOG into wiki/Release-Notes.md ## Current, or deciding whether a Docs or addon README change needs a wiki update. Decide include vs skip, then follow OneWoW-Wiki.mdc for dialect. | `.cursor/skills/onewow-wiki/SKILL.md` |
 | `wow-api-specialist` | Use this skill when writing or debugging WoW addon code requiring specific TOC references, Lua functions and syntax, API functions, FrameXML constants, or Event handling. | `.cursor/skills/wow-api-specialist/SKILL.md` |
 | `wow-frame-script-pitfalls` | Use this skill when authoring or reviewing WoW addon code that writes frame scripts, event handlers, or widget callbacks — anything calling SetScript, HookScript, SetBackdrop, ClearAllPoints, SetFontObject, or building popups/dropdowns. Covers closure ordering, stale upvalues, button event ordering, SetScript vs HookScript, backdrop color reset, anchor override, FontString local-override staleness, and the popup-dismiss OnUpdate hybrid pattern. | `.cursor/skills/wow-frame-script-pitfalls/SKILL.md` |
 | `wow-tooltip-system` | Use this skill when authoring or reviewing WoW addon code that creates, hooks, or scans tooltips — anything calling GameTooltip, TooltipDataProcessor, C_TooltipInfo, or walking tooltipData.lines. | `.cursor/skills/wow-tooltip-system/SKILL.md` |
@@ -129,8 +129,10 @@ in full and follow it.
   (11 locales, key parity, Blizzard-global / shared / scoped routing).
 - **Changelog:** after player-felt suite changes (visible UI/behavior **or**
   experiential wins like speed/snappiness/reliability), update root
-  [`CHANGELOG.md`](CHANGELOG.md) per [`OneWoW-Changelog.mdc`](.cursor/rules/OneWoW-Changelog.mdc);
-  skip pure internals with no felt difference. Load `onewow-changelog` when deciding.
+  [`CHANGELOG.md`](CHANGELOG.md) per [`OneWoW-Changelog.mdc`](.cursor/rules/OneWoW-Changelog.mdc),
+  then mirror into [`wiki/Release-Notes.md`](wiki/Release-Notes.md) `## Current` and
+  reassess What’s New (`OneWoW/Core/WhatsNewData.lua`, up to 7 highlights). Skip pure
+  internals with no felt difference. Load `onewow-changelog` when deciding.
 - **After changing any `.cursor/rules/*.mdc`, `.cursor/skills/`, or
   `.cursor/agent-context.yaml`:** run `python bin/sync_agent_context.py` to
   regenerate the stubs and the tables above (manual; there is no pre-commit hook).

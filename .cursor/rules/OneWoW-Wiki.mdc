@@ -70,9 +70,39 @@ When adding a public feature load unit, update together:
 - Wiki backend must already exist (one-time dummy page in GitHub UI — already done
   for this repo).
 
-## Release notes archive
+## Release notes
 
-`wiki/Release-Notes.md` is the player archive of shipped notes. When preparing a
-CurseForge release, **prepend** that release’s `CHANGELOG.md` body onto
-`Release-Notes.md` (newest first) before clearing or resetting the repo changelog.
-The in-game What’s New dialog links to this wiki page for the full write-up.
+`wiki/Release-Notes.md` is the player-facing release-notes page (in-game What’s
+New “Release notes” button links here). Editable source is this repo’s `wiki/`;
+`publish-wiki.yml` pushes to GitHub’s wiki repo — never edit the Wiki UI.
+
+**Direction:** always mirror from root `CHANGELOG.md` → this page. Never draft
+release-note bullets here first (changelog pipeline owns that decision).
+
+### `## Current` (as you go)
+
+While a release is in progress, keep `## Current` in lockstep with
+`CHANGELOG.md`:
+
+1. Copy the changelog **body** (everything after `# OneWoW Suite Changelog`,
+   excluding that title H1).
+2. **Demote headings one level** under `## Current`: changelog `# Addon` →
+   `### Addon`, changelog `## Area` → `#### Area`. Preserve `-` bullets, `---`,
+   the italic no-changes footer, and nesting.
+3. Keep the Current metadata block (Release / Version / Status: Draft) and the
+   trailing Related / Sources chrome; update **Last Updated**-equivalent fields
+   only when product policy already uses them on this page.
+4. Sources should keep the explicit `blob/main/` link to `CHANGELOG.md`.
+
+Triggered whenever `onewow-changelog` adds or changes player-facing bullets.
+
+### At CurseForge release
+
+1. **Archive** the Current body under a versioned / dated heading (newest
+   shipped section first — above older archives, below a fresh Current).
+2. Stamp shipped metadata (date, version, status) on the archived section.
+3. **Reset** `## Current` to an empty draft shell and reset root `CHANGELOG.md`
+   to its skeleton (`OneWoW-Changelog.mdc`).
+4. What’s New highlights reset/rebuild with the next changelog cycle
+   (`OneWoW-Changelog.mdc` § What’s New) — not a wiki concern beyond the
+   archive step above.

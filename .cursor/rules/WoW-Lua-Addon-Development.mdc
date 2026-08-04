@@ -20,8 +20,8 @@ Load on demand for deep references — these replace what used to live in this r
 - `wow-tooltip-system` — TooltipDataProcessor, C_TooltipInfo, line types, bind detection
 - `onewow-gui-ui` — component API, theme colors, backdrops, constants/localization
 - `onewow-locale-workflow` — adding/changing locale keys: Blizzard globals vs shared vs scoped, all 11 locales, locale_keydiff / locale_verify
-- `onewow-changelog` — player-felt suite changes (UI or experience) → update root `CHANGELOG.md`
-- `onewow-wiki` — player docs under `wiki/` / GitHub Wiki sync after feature or README changes
+- `onewow-changelog` — player-felt suite changes → `CHANGELOG.md`, then wiki Release-Notes `## Current` + What’s New reassessment
+- `onewow-wiki` — player docs under `wiki/` / GitHub Wiki sync; Release-Notes Current mirror (from changelog)
 - `onewow-db2` — client DB2 extracts under `.wow_db2` (Journal membership, difficulties, flags, …); not FrameXML
 - `wow-api-specialist` — broader WoW/Blizzard API verification via Cursor's indexed docs
 - `wow-frame-script-pitfalls` — frame scripts, event handlers, or widget callbacks

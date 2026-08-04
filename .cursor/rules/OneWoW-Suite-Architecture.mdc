@@ -65,17 +65,20 @@ Authoritative reference: [`OneWoW/Docs/ARCHITECTURE.md`](OneWoW/Docs/ARCHITECTUR
 After suite code changes, ask whether the player would notice a better or different
 experience — visible UI/behavior **or** feel (speed, smoothness, reliability). If yes,
 update root `CHANGELOG.md` under the matching suite-wide or per-addon H1 and follow
-`OneWoW-Changelog.mdc` for dialect/skeleton. If no (pure internals with no felt
-difference), leave the changelog alone. Do not add changelog noise to Lua comments —
-load `onewow-changelog` when deciding or drafting bullets.
+`OneWoW-Changelog.mdc` for dialect/skeleton, then run the changelog **downstream
+pipeline** (mirror `wiki/Release-Notes.md` → `## Current`; reassess What’s New
+highlights). If no (pure internals with no felt difference), leave the changelog
+alone. Do not add changelog noise to Lua comments — load `onewow-changelog` when
+deciding or drafting bullets.
 
 ## Player wiki (`wiki/`)
 
 After player-facing feature, install/setup, slash, or addon `README.md` changes that
 players read, load `onewow-wiki` and update the matching `wiki/` pages (sidebar /
 Sources / catalog parity as needed). Engineering-only Docs changes do not belong on
-the wiki. Wiki-only edits are not CurseForge changelog material. Dialect:
-`OneWoW-Wiki.mdc`.
+the wiki. Wiki-only edits are not CurseForge changelog material. Release-notes
+mirroring from CHANGELOG into `Release-Notes.md` → `## Current` is owned by the
+changelog pipeline (see above). Dialect: `OneWoW-Wiki.mdc`.
 
 ## Pre-commit enforcement
 

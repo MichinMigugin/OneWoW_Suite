@@ -39,9 +39,7 @@ Preserve this order and heading style:
 
 ---
 
-- **Release**: Mon DD, YYYY
-- **Version**: R6.YYMM.DDHH
-- **Status**: Live on curseforge
+- **Last Updated**: Mon DD, YYYY
 ```
 
 1. **Title** — always `# OneWoW Suite Changelog` (H1).
@@ -58,10 +56,8 @@ Preserve this order and heading style:
    `*No user-facing changes this release for A, B, or C.*`
    Omit units that already have an H1 section above. Use “or” before the last
    name. Drop the whole italic line only when every unit has a section.
-6. **Release metadata** — after a final `---`, exactly three bold-label bullets:
-   - `**Release**`: human date (`Jul 16, 2026`)
-   - `**Version**`: suite version string (`R6.2607.1612`)
-   - `**Status**`: distribution state (`Live on curseforge`, or draft/pre equivalent)
+6. **Metadata** — after a final `---`, exactly one bold-label bullet:
+   - `**Last Updated**`: human date (`Jul 16, 2026`)
 
 ## Writing rules
 
@@ -76,3 +72,36 @@ Preserve this order and heading style:
   italic footer instead.
 - Do not add changelog noise to Lua comments; this file is the release record.
 - LF only (repo-wide). No tables, HTML, or unsupported markdown.
+
+## Downstream mirrors
+
+`CHANGELOG.md` is the source of truth for the in-progress release. After adding
+or changing player-facing bullets, keep these in sync (**changelog → others**;
+never the reverse):
+
+1. **`wiki/Release-Notes.md` → `## Current`** — full mirror of this file’s body
+   under Current (heading demotion + wiki chrome). Format and release archive:
+   `onewow-wiki` / `OneWoW-Wiki.mdc`.
+2. **What’s New** — concise in-game highlights derived from this changelog (below).
+
+At CurseForge release: archive wiki Current, reset this file’s skeleton, and
+clear or rebuild What’s New for the next cycle (see wiki release-notes section).
+
+## What’s New
+
+`OneWoW/Core/WhatsNewData.lua` drives the in-game What’s New dialog (Home link +
+login auto-show). It is a **short summary** of the current CHANGELOG cycle — not
+a second full changelog.
+
+- **Reassess** whenever this changelog changes; **edit only when** the highlight
+  set or wording should change (new high-impact item, merge into an existing
+  body, drop/replace a weaker item, or leave alone if the bullet is minor).
+- **Count:** up to **7** `{ titleKey, bodyKey }` entries — fewer is fine (3–5 is
+  normal when the cycle is small). Never pad to fill 7.
+- **Titles:** reuse an existing player-facing locale key when it fits
+  (`HOME_TAB`, `MAIL`, …); otherwise add `WHATS_NEW_H_*_TITLE`.
+- **Bodies:** dedicated `WHATS_NEW_H_*_BODY` strings — player voice, one short
+  paragraph each.
+- **Locales:** any key add/change → `onewow-locale-workflow` (all 11 locales).
+- **Lifetime:** same cycle as this file. Players see the highlights shipped in
+  their TOC; after release reset, rebuild for the next cycle as CHANGELOG grows.
