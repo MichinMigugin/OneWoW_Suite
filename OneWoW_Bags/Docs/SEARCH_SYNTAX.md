@@ -217,7 +217,7 @@ These keywords match **Blizzard item quality** only.
 |---|---|---|
 | `#weapon` | | All weapons |
 | `#armor` | | All armor |
-| `#consumable` | | Consumables (excludes mis-tagged profession recipes reclassified as `#recipe` via `ITEM_ID_OVERRIDES`) |
+| `#consumable` | | Consumables (excludes mis-tagged profession recipes reclassified as `#recipe` via `ItemIDOverrides`) |
 | `#container` | `#bag` | Bags and containers |
 | `#gem` | | Gems |
 | `#reagent` | | Reagents |
@@ -467,7 +467,7 @@ The known-profession set is cached until
 
 | Keyword | What it matches |
 |---|---|
-| `#contexttoken` | Context tokens |
+| `#contexttoken` | Context tokens (Reagent.ContextToken — season/upgrade tokens). Not the same as `#geartoken` |
 
 ### Recipe Subtypes
 
@@ -809,6 +809,7 @@ These keywords scan the item's tooltip text (or tooltip-derived fields filled by
 | `#hearthstone` | Hearthstone and all hearthstone toy variants |
 | `#keystone` | Mythic Keystones |
 | `#tierset` | Items belonging to a tier set |
+| `#geartoken` | Use: creates soulbound gear for your loot specialization (Baleful and similar). Curated ID set — not `#contexttoken` |
 | `#currency` | Currency items (hyperlink resolves via `C_CurrencyInfo.GetCurrencyInfoFromLink`) |
 
 ---
@@ -1120,6 +1121,7 @@ read more like natural conditions.
 | `IsUniqueEquipped` | `#uniqueequipped` |
 | `IsQuestItem` | `#quest` |
 | `IsTierSet` | `#tierset` |
+| `IsGearToken` | `#geartoken` |
 | `IsAppearanceCollected` | `#knowntransmog` |
 | `HasAppearance` | `#transmog` |
 | `IsEnsemble` | `#ensemble` |
@@ -1213,8 +1215,8 @@ in this document; full API and extension notes are in
 | Area | What lives there (approx.) |
 |---|---|
 | Caches | `propsCache`, `tooltipCache`, `compiledCache` — keyed by expression string and `bagID:slotID` where applicable. |
-| Overrides | `ITEM_ID_OVERRIDES` — small hardcoded `itemID → classID/subClassID` fixes for mis-tagged recipes/items. Programmatic callers outside bag search should use `OneWoW.PredicateEngine:IsRecipeItem` instead of raw `GetItemInfoInstant` class checks. |
-| Data / patterns | Hearthstone ID set (`HS_IDS`), knowledge-study icon set (`KNOWLEDGE_ICONS`), `ITEM_CONTEXT_CATEGORY` → `#raid` / `#dungeon` / `#delves` / `#worldquest` / `#pvp` / `#store`, locale patterns for charges / tradeable / unique-equip, `CLASS_ID` (including Evoker, for `CanClassEquip` alt checks); `C_HousingCatalog.GetCatalogEntryInfoByItem` in `PopulateBaseProps` for decor quantity fields. |
+| Overrides | `ns.ItemIDOverrides` (`Services/PredicateEngine/item-overrides.lua`) — small `itemID → classID/subClassID` fixes for mis-tagged recipes/items. Programmatic callers outside bag search should use `OneWoW.PredicateEngine:IsRecipeItem` instead of raw `GetItemInfoInstant` class checks. |
+| Data / patterns | Curated ID sets under `Services/PredicateEngine/` (`HearthstoneIDs`, generated `GearTokenIDs`); knowledge-study icon set (`KNOWLEDGE_ICONS`), `ITEM_CONTEXT_CATEGORY` → `#raid` / `#dungeon` / `#delves` / `#worldquest` / `#pvp` / `#store`, locale patterns for charges / tradeable / unique-equip, `CLASS_ID` (including Evoker, for `CanClassEquip` alt checks); `C_HousingCatalog.GetCatalogEntryInfoByItem` in `PopulateBaseProps` for decor quantity fields. |
 | `CONSTANT_MAP` | `${POOR}` … `${HEIRLOOM}` and expansion `${CURRENTEXPANSION}`, `${CLASSIC}` … `${LASTTITAN}` for `ResolveParams` / vendor templates. |
 | `PROP_REGISTRY` | Built-in numeric and string property names and aliases (including money units on `vendorprice` / `totalvalue` and housing decor counts: `decorstorage`, `decorplaced`, `decorredeemable`, `decortotal`). Exposed to callers via `RegisterProperty` merges. |
 | `FLAG_REGISTRY` | Lowercased `IsEquipment`-style words → `props` field names (vendor-style verbose rules). |

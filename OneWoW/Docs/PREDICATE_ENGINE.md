@@ -2,7 +2,7 @@
 
 PredicateEngine is a shared expression engine published on the `OneWoW` global as `OneWoW.PredicateEngine` (a core service in `OneWoW/Services/`). It turns textual expressions such as `#epic & ilvl>=600` or `haste>=200` into compiled predicate functions over a rich per-item property table. Any OneWoW addon that has `OneWoW` as a dependency can use it.
 
-Source: [`OneWoW/Services/PredicateEngine.lua`](../Services/PredicateEngine.lua).
+Source: [`OneWoW/Services/PredicateEngine.lua`](../Services/PredicateEngine.lua). Curated / generated ID sets (`ItemIDOverrides`, `HearthstoneIDs`, `GearTokenIDs`) live under [`OneWoW/Services/PredicateEngine/`](../Services/PredicateEngine/) and load before the engine via TOC (same pattern as Disenchant allow/block lists).
 
 For the user-facing expression syntax (the full keyword catalog, operator semantics, examples), see [`OneWoW_Bags/Docs/SEARCH_SYNTAX.md`](../../OneWoW_Bags/Docs/SEARCH_SYNTAX.md). Suite architecture context: [`ARCHITECTURE.md`](ARCHITECTURE.md). This document is the **developer reference** for the API surface, caches, and extension points.
 

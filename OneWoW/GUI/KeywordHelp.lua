@@ -89,7 +89,7 @@ local CATEGORY_RULES = {
     socket  = { prismatic = true, metasocket = true, redsocket = true, yellowsocket = true, bluesocket = true, cogwheel = true, tinkersocket = true, dominationsocket = true, primordial = true },
     context = { raid = true, dungeon = true, delves = true, worldquest = true, pvp = true, store = true },
     state   = { usable = true, unusable = true, combinable = true, combineready = true, locked = true, hasloot = true, new = true, socket = true, equipped = true, refundable = true, enchanted = true, charges = true, onuse = true, onequip = true, unique = true, uniqueequipped = true, reputation = true, tradeableloot = true, openable = true, sellable = true, unsellable = true, quest = true, questitem = true, scrappable = true },
-    special = { hearthstone = true, keystone = true, tierset = true, battlepay = true, wowtoken = true, housing = true, decor = true, dye = true, room = true, roomcustomization = true, exteriorcustomization = true, serviceitem = true, currency = true, recent = true },
+    special = { hearthstone = true, keystone = true, tierset = true, geartoken = true, battlepay = true, wowtoken = true, housing = true, decor = true, dye = true, room = true, roomcustomization = true, exteriorcustomization = true, serviceitem = true, currency = true, recent = true },
 }
 
 --- Resolve the display category for a canonical keyword name. Falls back to

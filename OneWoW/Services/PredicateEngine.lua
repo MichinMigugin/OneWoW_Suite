@@ -74,37 +74,10 @@ local Scanner = ns.TooltipScanner
 -- SECTION 3: CONSTANTS AND LOCALE PATTERNS
 -- ============================================================================
 
--- Some items have broken properties so we override them here
-local ITEM_ID_OVERRIDES = {
-    -- RECIPE: BLACKSMITHING
-    [265530] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
-    [259319] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
-    [259317] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
-    [259237] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
-    [265536] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
-    [259322] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
-    [259318] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
-    [265528] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
-    [265534] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
-    [259235] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
-    [259233] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
-    [265532] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
-    [259231] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Blacksmithing },
-    -- RECIPE: ENGINEERING
-    [259180] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
-    [259174] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
-    [259178] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
-    [259184] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
-    [268480] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
-    [259176] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
-    [259172] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
-    [259182] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Engineering },
-    -- RECIPE: INSCRIPTION
-    [259206] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Inscription },
-    [259210] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Inscription },
-    [259208] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Inscription },
-    [257028] = { classID = Enum.ItemClass.Recipe, subClassID = Enum.ItemRecipeSubclass.Inscription },
-}
+-- Curated / generated ID sets (loaded before this file via TOC).
+local ITEM_ID_OVERRIDES = ns.ItemIDOverrides
+local HS_IDS = ns.HearthstoneIDs
+local GEAR_TOKEN_IDS = ns.GearTokenIDs
 
 local BATTLE_PET_CAGE_ID = 82800
 local BATTLE_PET_TYPES = {
@@ -121,17 +94,6 @@ local BATTLE_PET_TYPES = {
 }
 
 PE.BattlePetTypes = BATTLE_PET_TYPES
-
--- Hearthstone item IDs: base + all known toy variants.
--- Module-level so it's not recreated per-call.
-local HS_IDS = {
-    [6948]=true,[64488]=true,[54452]=true,[93672]=true,[110560]=true,
-    [140192]=true,[141605]=true,[162973]=true,[163045]=true,[165669]=true,
-    [165670]=true,[165802]=true,[166746]=true,[166747]=true,[168907]=true,
-    [172179]=true,[180290]=true,[182773]=true,[183716]=true,[184353]=true,
-    [188952]=true,[190196]=true,[193588]=true,[200630]=true,[206195]=true,
-    [208704]=true,[209035]=true,[210455]=true,[212337]=true,[228940]=true,
-}
 
 -- icons shared by knowledge items (Use: Study to increase your ... knowledge by #)
 local KNOWLEDGE_ICONS = {[236225]=true, [136175]=true}
@@ -400,6 +362,7 @@ local FLAG_REGISTRY = {
     isuniqueequipped        = "isUniqueEquipped",
     isquestitem             = "isQuestItem",
     istierset               = "isTierSet",
+    isgeartoken             = "isGearToken",
     isappearancecollected   = "isAppearanceCollected",
     hasappearance           = "hasAppearance",
     isensemble              = "isEnsemble",
@@ -1165,6 +1128,7 @@ end)
 RegisterKeyword("hearthstone",  function(p) return p.isHearthstone end)
 RegisterKeyword("keystone",     function(p) return p.isKeystone end)
 RegisterKeyword("tierset",      function(p) return p.isTierSet end)
+RegisterKeyword("geartoken",    function(p) return p.isGearToken end)
 RegisterKeyword("battlepay",    function(p) return p.isBattlePayItem end)
 RegisterKeyword("currency",     function(p) return p.isCurrency end)
 
@@ -2438,6 +2402,7 @@ local function PopulateBaseProps(props, itemID, hyperlink)
             props.isHearthstone = true
         end
     end
+    props.isGearToken = GEAR_TOKEN_IDS[itemID] or false
 
     -- ---- Upgrade track info ----
     props.upgradeLevel    = 0

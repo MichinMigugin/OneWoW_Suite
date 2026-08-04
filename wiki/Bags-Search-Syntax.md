@@ -231,7 +231,7 @@ For thresholds use properties: `haste>=200`.
 | `#sellable` / `#unsellable` | Vendor price or not |
 | `#disenchantable` (`#de`) | Can be disenchanted (no profession required) |
 | `#recent` | Same idea as Bags **Recent Items** (Bags-specific) |
-| `#hearthstone` `#keystone` `#tierset` `#currency` | Specials |
+| `#hearthstone` `#keystone` `#tierset` `#geartoken` `#currency` | Specials |
 
 ### Crafting and professions
 
