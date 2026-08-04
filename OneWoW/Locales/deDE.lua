@@ -136,6 +136,11 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
 
     ["HOME_COMMAND_OPTIONS"] = "Befehlsoptionen",
     ["HOME_SUMMARY_FORMAT"] = "%d Addons geladen · %d brauchen Aufmerksamkeit",
+    ["HOME_SUMMARY_FORMAT_ONE"] = "%d Addons geladen · %d braucht Aufmerksamkeit",
+    ["HOME_ATTENTION_LOAD_PENDING"] = "%s ist aktiviert, aber nicht geladen. Lade es unter Funktionen verwalten.",
+    ["HOME_ATTENTION_DIMINISHED"] = "%s läuft ohne %s. Einige Funktionen sind eingeschränkt — siehe Funktionen verwalten.",
+    ["HOME_ATTENTION_BROKEN"] = "%s kann nicht geladen werden: %s",
+    ["HOME_ATTENTION_DISMISS"] = "Verwerfen",
     ["HOME_NOT_INSTALLED"] = "Nicht installiert",
     ["HOME_WHATS_NEW"] = "Neuigkeiten",
     ["WHATS_NEW_TITLE"] = "Neuigkeiten — %s",

@@ -136,6 +136,11 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
 
     ["HOME_COMMAND_OPTIONS"] = "Opzioni comandi",
     ["HOME_SUMMARY_FORMAT"] = "%d addon caricati · %d richiedono attenzione",
+    ["HOME_SUMMARY_FORMAT_ONE"] = "%d addon caricati · %d richiede attenzione",
+    ["HOME_ATTENTION_LOAD_PENDING"] = "%s è abilitato ma non caricato. Caricalo in Gestisci funzioni.",
+    ["HOME_ATTENTION_DIMINISHED"] = "%s è in esecuzione senza %s. Alcune funzioni sono limitate — vedi Gestisci funzioni.",
+    ["HOME_ATTENTION_BROKEN"] = "%s non può essere caricato: %s",
+    ["HOME_ATTENTION_DISMISS"] = "Ignora",
     ["HOME_NOT_INSTALLED"] = "Non installato",
     ["HOME_WHATS_NEW"] = "Novità",
     ["WHATS_NEW_TITLE"] = "Novità — %s",

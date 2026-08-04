@@ -338,23 +338,30 @@ end
 ---@class ns.LoadOpts
 ---@field deferInCombat boolean? report "COMBAT" instead of loading while in combat (WithAddon queues the retry)
 
---- Manifest parent for a store load unit (nil when name is a root module).
----@param storeName string
----@return string|nil parentAddon
-local function GetManifestParent(storeName)
-    local manifest = ns.ModuleManifest
-    if not manifest then return nil end
-    for _, m in ipairs(manifest) do
+--- Manifest entry that owns a store load unit, or nil.
+---@param storeAddon string
+---@return table|nil
+function ns:GetManifestStoreOwner(storeAddon)
+    if not storeAddon then return nil end
+    for _, m in ipairs(ns.ModuleManifest) do
         local stores = m.stores
         if stores then
             for _, store in ipairs(stores) do
-                if store == storeName then
-                    return m.addon
+                if store == storeAddon then
+                    return m
                 end
             end
         end
     end
     return nil
+end
+
+--- Manifest parent addon name for a store load unit (nil when name is a root).
+---@param storeName string
+---@return string|nil parentAddon
+local function GetManifestParent(storeName)
+    local owner = ns:GetManifestStoreOwner(storeName)
+    return owner and owner.addon or nil
 end
 
 --- True when a store still TOC-depends on its manifest parent (soft opt-out of
@@ -367,6 +374,38 @@ function ns:StoreRequiresParent(storeName)
     if not parent then return false end
     local m = self:GetManifestByAddon(parent)
     return m and m.parentRequiredStores and m.parentRequiredStores[storeName] and true or false
+end
+
+--- FirstRun.CATALOG datastores pulled by a feature (consumer graph), or empty.
+---@param addonName string
+---@return string[]
+function ns:GetCatalogDatastores(addonName)
+    local catalog = ns.FirstRun and ns.FirstRun.CATALOG
+    if not catalog or not addonName then return {} end
+    for _, entry in ipairs(catalog) do
+        if entry.addonName == addonName and entry.datastores then
+            return entry.datastores
+        end
+    end
+    return {}
+end
+
+--- CATALOG roots that list this store in datastores (consumer graph reverse).
+---@param storeAddon string
+---@return string[] consumerAddonNames
+function ns:GetStoreCatalogConsumers(storeAddon)
+    local result = {}
+    local catalog = ns.FirstRun and ns.FirstRun.CATALOG
+    if not catalog or not storeAddon then return result end
+    for _, entry in ipairs(catalog) do
+        for _, ds in ipairs(entry.datastores) do
+            if ds == storeAddon then
+                result[#result + 1] = entry.addonName
+                break
+            end
+        end
+    end
+    return result
 end
 
 --- Ensures an addon is loaded. Idempotent; LoadAddOn pulls the addon's
@@ -433,20 +472,6 @@ function ns:IsManifestUnit(name)
     return manifestUnits[name] == true
 end
 
---- FirstRun.CATALOG datastores pulled by a feature (consumer graph).
----@param addonName string
----@return string[]|nil
-local function CatalogDatastoresFor(addonName)
-    local catalog = ns.FirstRun and ns.FirstRun.CATALOG
-    if not catalog then return nil end
-    for _, entry in ipairs(catalog) do
-        if entry.addonName == addonName and entry.datastores and #entry.datastores > 0 then
-            return entry.datastores
-        end
-    end
-    return nil
-end
-
 --- Append unique names from `extra` onto `units`.
 ---@param units string[]
 ---@param extra string[]|nil
@@ -480,7 +505,10 @@ local function ManifestUnitsFor(addonName)
                     units[#units + 1] = store
                 end
             end
-            AppendUnique(units, CatalogDatastoresFor(addonName))
+            local pulls = ns:GetCatalogDatastores(addonName)
+            if #pulls > 0 then
+                AppendUnique(units, pulls)
+            end
             return units
         end
     end
@@ -583,7 +611,10 @@ function ns:BringUp(addonName)
     local units = ManifestUnitsFor(addonName)
     if not units then
         units = { addonName }
-        AppendUnique(units, CatalogDatastoresFor(addonName))
+        local pulls = self:GetCatalogDatastores(addonName)
+        if #pulls > 0 then
+            AppendUnique(units, pulls)
+        end
     end
     local midSession = ns._playerLoginFired
     self:TraceRecord("bringUp.begin", addonName, { midSession = midSession and true or false, units = #units })

@@ -34,6 +34,8 @@ local DEFAULTS = {
     debugTrace = false,
     -- TOC Version string last dismissed in the What's New dialog (account-wide).
     whatsNewDismissedVersion = "",
+    -- Account-dismissed FeatureHealth attention ids (load_pending / diminished).
+    featureHealthDismissed = {},
     -- Named search expressions (#token, SAVED) for suite-wide SearchExpand.
     -- Bags contributes CATEGORY entries from its own SV via a catalog provider.
     searchCatalog = {

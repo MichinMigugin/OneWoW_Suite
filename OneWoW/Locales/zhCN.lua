@@ -136,6 +136,11 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
 
     ["HOME_COMMAND_OPTIONS"] = "命令选项",
     ["HOME_SUMMARY_FORMAT"] = "已加载 %d 个插件 · %d 个需要注意",
+    ["HOME_SUMMARY_FORMAT_ONE"] = "已加载 %d 个插件 · %d 个需要注意",
+    ["HOME_ATTENTION_LOAD_PENDING"] = "%s 已启用但未加载。请在“管理功能”中加载。",
+    ["HOME_ATTENTION_DIMINISHED"] = "%s 在缺少 %s 的情况下运行。部分功能受限 — 请查看“管理功能”。",
+    ["HOME_ATTENTION_BROKEN"] = "%s 无法加载：%s",
+    ["HOME_ATTENTION_DISMISS"] = "忽略",
     ["HOME_NOT_INSTALLED"] = "未安装",
     ["HOME_WHATS_NEW"] = "更新内容",
     ["WHATS_NEW_TITLE"] = "更新内容 — %s",

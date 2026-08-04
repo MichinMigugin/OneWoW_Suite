@@ -105,6 +105,7 @@ Core\Lifecycle.lua
 Core\StoreBootstrap.lua
 Core\SettingsFeatureRegistry.lua
 Core\FirstRunWizard.lua
+Core\FeatureHealth.lua
 Core\WhatsNewData.lua
 Core\WhatsNew.lua
 

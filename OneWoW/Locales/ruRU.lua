@@ -136,6 +136,11 @@ ns.Locale:Register(ADDON_NAME, "ruRU", {
 
     ["HOME_COMMAND_OPTIONS"] = "Параметры команд",
     ["HOME_SUMMARY_FORMAT"] = "%d аддонов загружено · %d требуют внимания",
+    ["HOME_SUMMARY_FORMAT_ONE"] = "%d аддонов загружено · %d требует внимания",
+    ["HOME_ATTENTION_LOAD_PENDING"] = "%s включён, но не загружен. Загрузите его в «Управление функциями».",
+    ["HOME_ATTENTION_DIMINISHED"] = "%s работает без %s. Некоторые функции ограничены — см. «Управление функциями».",
+    ["HOME_ATTENTION_BROKEN"] = "%s не удаётся загрузить: %s",
+    ["HOME_ATTENTION_DISMISS"] = "Скрыть",
     ["HOME_NOT_INSTALLED"] = "Не установлено",
     ["HOME_WHATS_NEW"] = "Что нового",
     ["WHATS_NEW_TITLE"] = "Что нового — %s",

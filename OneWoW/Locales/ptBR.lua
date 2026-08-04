@@ -136,6 +136,11 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
 
     ["HOME_COMMAND_OPTIONS"] = "Opções de comandos",
     ["HOME_SUMMARY_FORMAT"] = "%d addons carregados · %d precisam de atenção",
+    ["HOME_SUMMARY_FORMAT_ONE"] = "%d addons carregados · %d precisa de atenção",
+    ["HOME_ATTENTION_LOAD_PENDING"] = "%s está ativado, mas não carregado. Carregue em Gerenciar recursos.",
+    ["HOME_ATTENTION_DIMINISHED"] = "%s está em execução sem %s. Alguns recursos são limitados — veja Gerenciar recursos.",
+    ["HOME_ATTENTION_BROKEN"] = "%s não pode ser carregado: %s",
+    ["HOME_ATTENTION_DISMISS"] = "Dispensar",
     ["HOME_NOT_INSTALLED"] = "Não instalado",
     ["HOME_WHATS_NEW"] = "Novidades",
     ["WHATS_NEW_TITLE"] = "Novidades — %s",

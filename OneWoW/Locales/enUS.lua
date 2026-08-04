@@ -136,6 +136,11 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
 
     ["HOME_COMMAND_OPTIONS"] = "Command Options",
     ["HOME_SUMMARY_FORMAT"] = "%d addons loaded · %d need attention",
+    ["HOME_SUMMARY_FORMAT_ONE"] = "%d addons loaded · %d needs attention",
+    ["HOME_ATTENTION_LOAD_PENDING"] = "%s is enabled but not loaded. Load it in Manage Features.",
+    ["HOME_ATTENTION_DIMINISHED"] = "%s is running without %s. Some features are limited — see Manage Features.",
+    ["HOME_ATTENTION_BROKEN"] = "%s cannot load: %s",
+    ["HOME_ATTENTION_DISMISS"] = "Dismiss",
     ["HOME_NOT_INSTALLED"] = "Not installed",
     ["HOME_WHATS_NEW"] = "What's New",
     ["WHATS_NEW_TITLE"] = "What's New — %s",

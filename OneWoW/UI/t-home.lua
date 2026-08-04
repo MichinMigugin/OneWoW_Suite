@@ -53,10 +53,6 @@ local function IsOpenableState(state)
     return state == STATE_ALL or state == STATE_SOME or state == STATE_PENDING_DISABLE
 end
 
-local function IsAttentionState(state)
-    return state == STATE_MISSING or state == STATE_NONE or state == STATE_NOTLOADED
-end
-
 function UI:CreateHomeTab(parent)
     local L = ns.L
     local _, content = OneWoW_GUI:CreateScrollFrame(parent, { name = "OneWoW_HomeScroll" })
@@ -78,43 +74,6 @@ function UI:CreateHomeTab(parent)
         if skipParity or addonName == "OneWoW" or not coreVersion then return false end
         local ver = ns:GetAddonVersion(addonName)
         return ver ~= nil and ver ~= coreVersion
-    end
-
-    --- Display label for a root or store in the version footer.
-    ---@param addonName string
-    ---@return string
-    local function MismatchLabel(addonName)
-        for _, entry in ipairs(catalog) do
-            if entry.addonName == addonName then
-                return L[entry.labelKey]
-            end
-        end
-        local storeKey = ns:GetStoreLabelKey(addonName)
-        if storeKey then return L[storeKey] end
-        return addonName
-    end
-
-    --- Collect version mismatches across CATALOG roots (except DevTool) and all
-    --- Manifest-owned stores. Used for summary attention + footer banner.
-    ---@return string[] labels
-    local function CollectMismatchLabels()
-        local labels = {}
-        local seen = {}
-        local function add(addonName, skipParity)
-            if seen[addonName] or not IsVersionMismatch(addonName, skipParity) then return end
-            seen[addonName] = true
-            labels[#labels + 1] = MismatchLabel(addonName)
-        end
-        for _, entry in ipairs(catalog) do
-            local skip = entry.addonName == "OneWoW_Utility_DevTool"
-            add(entry.addonName, skip)
-        end
-        for _, mParent in ipairs(ns:GetManifestParentsWithStores()) do
-            for _, store in ipairs(mParent.stores) do
-                add(store, false)
-            end
-        end
-        return labels
     end
 
     content:SetHeight(1200)
@@ -527,51 +486,18 @@ function UI:CreateHomeTab(parent)
     gridHost:SetHeight(gridH)
     yOffset = yOffset - gridH - 12
 
-    -- Version alert footer (static per session; TOC versions do not change live).
-    local mismatchLabels = CollectMismatchLabels()
-    if #mismatchLabels > 0 then
-        local footer = CreateFrame("Frame", nil, content, "BackdropTemplate")
-        footer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
-        footer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
-        footer:SetHeight(36)
-        footer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-        footer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        footer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+    -- Attention list from FeatureHealth (version / broken / diminished / load_pending).
+    local attentionHost = CreateFrame("Frame", nil, content)
+    attentionHost:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
+    attentionHost:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
+    attentionHost:SetHeight(1)
 
-        local warnIcon = footer:CreateTexture(nil, "ARTWORK")
-        warnIcon:SetSize(16, 16)
-        warnIcon:SetPoint("LEFT", footer, "LEFT", 10, 0)
-        warnIcon:SetAtlas("transmog-icon-warning", false)
-        warnIcon:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
-
-        local footerText = OneWoW_GUI:CreateFS(footer, 12)
-        footerText:SetPoint("LEFT", warnIcon, "RIGHT", 8, 0)
-        footerText:SetPoint("RIGHT", footer, "RIGHT", -10, 0)
-        footerText:SetJustifyH("LEFT")
-        footerText:SetWordWrap(true)
-        footerText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
-
-        if #mismatchLabels <= 3 then
-            local joined = mismatchLabels[1]
-            for i = 2, #mismatchLabels do
-                joined = joined .. ", " .. mismatchLabels[i]
-            end
-            footerText:SetText(string.format(
-                L["HOME_VERSION_MISMATCH_NAMED"],
-                joined,
-                coreVersion or ""
-            ))
-        else
-            footerText:SetText(string.format(L["HOME_VERSION_MISMATCH_NOTICE"], coreVersion or ""))
-        end
-
-        yOffset = yOffset - 44
-    end
+    local attentionRowPool = {}
 
     -- ---- Command Options (DD + Shopping List subcommands only) ----
     local cmdContainer = CreateFrame("Frame", nil, content, "BackdropTemplate")
-    cmdContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 10, yOffset)
-    cmdContainer:SetPoint("TOPRIGHT", content, "TOPRIGHT", -10, yOffset)
+    cmdContainer:SetPoint("TOPLEFT", attentionHost, "BOTTOMLEFT", 0, -12)
+    cmdContainer:SetPoint("TOPRIGHT", attentionHost, "BOTTOMRIGHT", 0, -12)
     cmdContainer:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     cmdContainer:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
     cmdContainer:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
@@ -654,39 +580,89 @@ function UI:CreateHomeTab(parent)
     local cmdHeight = 40 + math.max(math.abs(leftEndY), math.abs(rightEndY), 24) + 15
     cmdContainer:SetHeight(cmdHeight)
 
-    yOffset = yOffset - cmdHeight - 20
-    content:SetHeight(math.abs(yOffset) + 50)
+    local function UpdateContentHeight()
+        local top = math.abs(select(5, attentionHost:GetPoint(1)) or yOffset)
+        local attH = attentionHost:GetHeight() or 0
+        content:SetHeight(top + attH + 12 + cmdHeight + 50)
+    end
 
     local function RefreshSummary()
-        local loaded, attention = 0, 0
-        for _, entry in ipairs(catalog) do
-            local st = MapFeatureUnitState(ns:GetFeatureUnitState(entry.addonName))
-            if IsOpenableState(st) then
-                loaded = loaded + 1
-            end
-            if IsAttentionState(st) then
-                attention = attention + 1
-            end
-            -- Root version mismatch while otherwise healthy still needs attention.
-            local skip = entry.addonName == "OneWoW_Utility_DevTool"
-            if IsVersionMismatch(entry.addonName, skip) and not IsAttentionState(st) then
-                attention = attention + 1
-            end
-        end
-        for _, mParent in ipairs(ns:GetManifestParentsWithStores()) do
-            for _, store in ipairs(mParent.stores) do
-                if IsVersionMismatch(store, false) then
-                    attention = attention + 1
-                end
-            end
-        end
-
-        summaryText:SetText(string.format(L["HOME_SUMMARY_FORMAT"], loaded, attention))
+        local items, loaded = ns:EvaluateSuiteAttention()
+        local attention = #items
+        local fmt = (attention == 1) and L["HOME_SUMMARY_FORMAT_ONE"] or L["HOME_SUMMARY_FORMAT"]
+        summaryText:SetText(string.format(fmt, loaded, attention))
         if attention > 0 then
             summaryLight:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
         else
             summaryLight:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         end
+
+        for _, row in ipairs(attentionRowPool) do
+            row:Hide()
+        end
+
+        local rowY = 0
+        local ROW_H = 36
+        local ROW_GAP = 8
+        for i, item in ipairs(items) do
+            local row = attentionRowPool[i]
+            if not row then
+                row = CreateFrame("Frame", nil, attentionHost, "BackdropTemplate")
+                row:SetHeight(ROW_H)
+                row:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+                row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+                row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+
+                local warnIcon = row:CreateTexture(nil, "ARTWORK")
+                warnIcon:SetSize(16, 16)
+                warnIcon:SetPoint("LEFT", row, "LEFT", 10, 0)
+                warnIcon:SetAtlas("transmog-icon-warning", false)
+                warnIcon:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+                row.warnIcon = warnIcon
+
+                local dismissLink = OneWoW_GUI:CreateTextLink(row, {
+                    text = L["HOME_ATTENTION_DISMISS"],
+                    fontSize = 11,
+                    onClick = function()
+                        if row._attentionId then
+                            ns:DismissFeatureAttention(row._attentionId)
+                        end
+                    end,
+                })
+                dismissLink:SetPoint("RIGHT", row, "RIGHT", -12, 0)
+                row.dismissLink = dismissLink
+
+                local footerText = OneWoW_GUI:CreateFS(row, 12)
+                footerText:SetPoint("LEFT", warnIcon, "RIGHT", 8, 0)
+                footerText:SetPoint("RIGHT", dismissLink, "LEFT", -8, 0)
+                footerText:SetJustifyH("LEFT")
+                footerText:SetWordWrap(true)
+                footerText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+                row.footerText = footerText
+
+                attentionRowPool[i] = row
+            end
+
+            row._attentionId = item.id
+            row.footerText:SetText(item.text)
+            row.footerText:ClearAllPoints()
+            row.footerText:SetPoint("LEFT", row.warnIcon, "RIGHT", 8, 0)
+            if item.dismissable then
+                row.dismissLink:Show()
+                row.footerText:SetPoint("RIGHT", row.dismissLink, "LEFT", -8, 0)
+            else
+                row.dismissLink:Hide()
+                row.footerText:SetPoint("RIGHT", row, "RIGHT", -10, 0)
+            end
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", attentionHost, "TOPLEFT", 0, -rowY)
+            row:SetPoint("TOPRIGHT", attentionHost, "TOPRIGHT", 0, -rowY)
+            row:Show()
+            rowY = rowY + ROW_H + (i < #items and ROW_GAP or 0)
+        end
+
+        attentionHost:SetHeight(math.max(rowY, 1))
+        UpdateContentHeight()
     end
 
     rowRefreshers[#rowRefreshers + 1] = RefreshSummary

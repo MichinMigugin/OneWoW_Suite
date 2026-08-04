@@ -136,6 +136,11 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
 
     ["HOME_COMMAND_OPTIONS"] = "명령어 옵션",
     ["HOME_SUMMARY_FORMAT"] = "애드온 %d개 로드됨 · %d개 주의 필요",
+    ["HOME_SUMMARY_FORMAT_ONE"] = "애드온 %d개 로드됨 · %d개 주의 필요",
+    ["HOME_ATTENTION_LOAD_PENDING"] = "%s이(가) 활성화되어 있지만 로드되지 않았습니다. 기능 관리에서 로드하세요.",
+    ["HOME_ATTENTION_DIMINISHED"] = "%s이(가) %s 없이 실행 중입니다. 일부 기능이 제한됩니다 — 기능 관리를 확인하세요.",
+    ["HOME_ATTENTION_BROKEN"] = "%s을(를) 로드할 수 없음: %s",
+    ["HOME_ATTENTION_DISMISS"] = "닫기",
     ["HOME_NOT_INSTALLED"] = "설치되지 않음",
     ["HOME_WHATS_NEW"] = "새로운 기능",
     ["WHATS_NEW_TITLE"] = "새로운 기능 — %s",

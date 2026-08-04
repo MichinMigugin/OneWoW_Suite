@@ -527,6 +527,11 @@ OneWoW:GetFeatureUnitState(name)                   -> state string
 OneWoW:GetAddonStatus(name, perCharacter)
 OneWoW:IsFeatureOptedOut(name)
 OneWoW:SetFeatureOptOut(name, optedOut, perCharacter)
+OneWoW:GetManifestStoreOwner(store)                -> ModuleManifest entry|nil
+OneWoW:GetCatalogDatastores(addonName)             -> string[] consumer pulls
+OneWoW:GetStoreCatalogConsumers(store)             -> string[] CATALOG roots
+OneWoW:EvaluateSuiteAttention()                    -> items[], loadedCount
+OneWoW:DismissFeatureAttention(id)                 -- account dismiss (dismissable only)
 ```
 
 **`GetFeatureUnitState` return values:**
@@ -574,12 +579,29 @@ owned store to appear in some consumer list.
 ### 4.2 Home tab live refresh
 
 `UI/t-home.lua` builds a `FirstRun.CATALOG` addon card grid once (identity chrome
-above it unchanged). Each card's `ApplyState()` re-reads `GetFeatureUnitState`;
-a summary bar recounts loaded / needs-attention among CATALOG roots (attention
-also includes TOC version mismatches on roots and Manifest-owned stores).
+above it unchanged). Each card's `ApplyState()` re-reads `GetFeatureUnitState`.
+The summary bar and named attention list come from
+`OneWoW:EvaluateSuiteAttention()` in `Core/FeatureHealth.lua` (composes the §4.1
+enable API + ownership/consumer graphs — not a third enable layer).
+
+**Attention classes** (intentional soft or hard off of a unit is silent for that
+unit unless a still-wanted dependent is impacted):
+
+| Class | Meaning | Dismissable? |
+|---|---|---|
+| `load_pending` | Soft-wanted (`IsFeatureWanted`) but not in memory | Yes (account `featureHealthDismissed`) |
+| `diminished` | Wanted consumer/hub running without a store/pack | Yes (account) |
+| `broken` | Wanted unit cannot load (load-failure warning) | No |
+| `version_mismatch` | TOC version ≠ core (DevTool skipped for root parity) | No |
+
+Dismiss keys clear when the condition ends; escalating to `broken` uses a
+different id so a prior diminished dismiss does not silence it. Manage Features
+keeps staged Apply / What’s affected UI; live “who needs whom” reads
+`GetManifestStoreOwner` / `GetStoreCatalogConsumers` / `GetCatalogDatastores`.
+
 `MainWindow` registers `EventRegistry` on `ns.FeatureStateChanged` (fired from
-`SetFeatureOptOut` and the post-`LoadAddOn` hook) to call `GUI:RefreshHomeStatus()`
-while Home is visible.
+`SetFeatureOptOut`, the post-`LoadAddOn` hook, and `DismissFeatureAttention`) to
+call `GUI:RefreshHomeStatus()` while Home is visible.
 
 Visual mapping on cards: green = loaded and wanted (`all`, or `pending_disable`
 as current-session loaded); grey = mixed across chars (`some`); amber check =
@@ -1318,7 +1340,9 @@ guild bank is open).
 
 | File | Purpose |
 |---|---|
-| `OneWoW/Core/AddonLoader.lua` | Manifest, orchestrator, `BringUp`/`EnsureLoaded`, enable API, tab-order helpers |
+| `OneWoW/Core/AddonLoader.lua` | Manifest, orchestrator, `BringUp`/`EnsureLoaded`, enable API, graph helpers, tab-order helpers |
+| `OneWoW/Core/FeatureHealth.lua` | Suite attention evaluator for Home (`EvaluateSuiteAttention` / dismiss) |
+| `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
 | `OneWoW/Core/Events.lua` | Single core WoW event frame: lifecycle routing + core-only `ns.RegisterEvent` gameplay-event multiplexer (§3.3) |
 | `OneWoW/Core/Lifecycle.lua` | Lifecycle dispatch, `RegisterUnit` / `ResolveUnit`, handler registries, addon-loaded watchers, `/1wtrace` tracer (§3.11) |
 | `OneWoW/Core/Facade.lua` | Curated `OneWoW` orchestrator global (colon API + public services; `GetPortalHub` / `GetCoreGlobal`) |
@@ -1333,8 +1357,7 @@ guild bank is open).
 | `OneWoW/Services/UIParent.lua` | Cinematic `UIParent` hide/restore funnel + fragile FrameXML indicator re-sync (minimap mail) |
 | `OneWoW/Services/Collectibles.lua` | Collectible identity resolver: key grammar (`type[:subtype]:id`), live display + collection state, no SV (see [COLLECTIBLES.md](COLLECTIBLES.md)) |
 | `OneWoW/Services/GearProficiency.lua` | Class weapon/armor proficiency masks (`ClassAllowsItem`); see [GEAR_PROFICIENCY.md](GEAR_PROFICIENCY.md) |
-| `OneWoW/Core/FirstRunWizard.lua` | First-run picker + Manage Features (read/write enable state) |
-| `OneWoW/UI/t-home.lua` | Home tab: addon cards, summary, Command Options + live refresh |
+| `OneWoW/UI/t-home.lua` | Home tab: addon cards, FeatureHealth attention list, Command Options + live refresh |
 | `OneWoW/UI/MainWindow.lua` | Hub window; L1/L2 nav, favorite pins, placeholders, `FeatureStateChanged` |
 | `.cursor/rules/OneWoW-Suite-Architecture.mdc` | Scoped agent rule for suite load-unit patterns |
 | `.cursor/skills/onewow-suite-architecture/SKILL.md` | On-demand lifecycle / integration authoring guide |

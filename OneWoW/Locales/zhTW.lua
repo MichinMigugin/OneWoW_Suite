@@ -136,6 +136,11 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
 
     ["HOME_COMMAND_OPTIONS"] = "指令選項",
     ["HOME_SUMMARY_FORMAT"] = "已載入 %d 個插件 · %d 個需要注意",
+    ["HOME_SUMMARY_FORMAT_ONE"] = "已載入 %d 個插件 · %d 個需要注意",
+    ["HOME_ATTENTION_LOAD_PENDING"] = "%s 已啟用但尚未載入。請在「管理功能」中載入。",
+    ["HOME_ATTENTION_DIMINISHED"] = "%s 在缺少 %s 的情況下執行。部分功能受限 — 請查看「管理功能」。",
+    ["HOME_ATTENTION_BROKEN"] = "%s 無法載入：%s",
+    ["HOME_ATTENTION_DISMISS"] = "忽略",
     ["HOME_NOT_INSTALLED"] = "未安裝",
     ["HOME_WHATS_NEW"] = "更新內容",
     ["WHATS_NEW_TITLE"] = "更新內容 — %s",

@@ -219,24 +219,12 @@ local function LoadFeatureNow(addonName)
     ns:BringUp(addonName)
 end
 
-local function GetStoreOwner(storeAddon)
-    for _, entry in ipairs(ns.ModuleManifest) do
-        if entry.stores then
-            for _, store in ipairs(entry.stores) do
-                if store == storeAddon then
-                    return entry
-                end
-            end
-        end
-    end
-    return nil
-end
-
 -- Consumer feature that forces a store on. Parent soft-opt-out only blocks
 -- stores that still TOC-require their owner (StoreRequiresParent); other stores
--- can be consumer-pulled with the owning hub off.
+-- can be consumer-pulled with the owning hub off. Uses staged checkbox
+-- selections (not live IsFeatureWanted) for Apply preview.
 local function GetStoreConsumerForced(storeAddon, selections)
-    local owner = GetStoreOwner(storeAddon)
+    local owner = ns:GetManifestStoreOwner(storeAddon)
     if owner and ns:StoreRequiresParent(storeAddon) and not selections[owner.addon] then
         return nil
     end
@@ -270,7 +258,7 @@ local function ComputeEligibleDatastorePool(selections)
     for _, entry in ipairs(FirstRun.CATALOG) do
         if selections[entry.addonName] then
             for _, ds in ipairs(entry.datastores) do
-                local owner = GetStoreOwner(ds)
+                local owner = ns:GetManifestStoreOwner(ds)
                 if not owner
                     or selections[owner.addon]
                     or not ns:StoreRequiresParent(ds) then
@@ -294,7 +282,7 @@ local function ComputeDatastoreState(selections, storeSelections)
     for _, entry in ipairs(FirstRun.CATALOG) do
         if selections[entry.addonName] then
             for _, ds in ipairs(entry.datastores) do
-                local owner = GetStoreOwner(ds)
+                local owner = ns:GetManifestStoreOwner(ds)
                 if not owner
                     or selections[owner.addon]
                     or not ns:StoreRequiresParent(ds) then
