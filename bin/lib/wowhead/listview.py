@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 import json
+import random
 import re
 import sys
+import time
 from pathlib import Path
 
 try:
-    import requests
+    from curl_cffi import requests
 except ImportError:
-    print("Error: 'requests' is required. Install with: pip install requests", file=sys.stderr)
+    print(
+        "Error: 'curl_cffi' is required. Install with: pip install curl_cffi",
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 LISTVIEW_PATTERN = re.compile(r"var\s+listviewitems\s*=\s*", re.IGNORECASE)
@@ -20,14 +25,17 @@ UNQUOTED_KEY_PATTERN = re.compile(r"([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)(\s*:)")
 
 LUA_ID_PATTERN = re.compile(r"\[(\d+)\]=true")
 
+WARMUP_URL = "https://www.wowhead.com/"
+# Let curl_cffi impersonate own User-Agent / TLS fingerprint; only set extras.
 HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    "Accept": (
+        "text/html,application/xhtml+xml,application/xml;q=0.9,"
+        "image/avif,image/webp,image/apng,*/*;q=0.8"
     ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
 }
+# Seconds between listview fetches (after warmup).
+DELAY_RANGE = (1.5, 3.5)
 
 
 def extract_listview_json(html: str) -> str | None:
@@ -104,11 +112,23 @@ def parse_items_json(raw: str) -> list[dict]:
 def extract_ids_from_page(url: str, session: requests.Session) -> set[int]:
     """Fetch a Wowhead page and extract all item IDs from listviewitems."""
     ids: set[int] = set()
+    headers = {
+        **HEADERS,
+        "Referer": WARMUP_URL,
+    }
     try:
-        resp = session.get(url, headers=HEADERS, timeout=30)
+        resp = session.get(url, headers=headers, timeout=30)
         resp.raise_for_status()
     except requests.RequestException as e:
         print(f"  Warning: Failed to fetch {url}: {e}", file=sys.stderr)
+        return ids
+
+    # Cloudflare challenge pages are often 200 with no listview payload.
+    if "cdn-cgi/challenge" in resp.text or "Just a moment" in resp.text[:500]:
+        print(
+            f"  Warning: Cloudflare challenge page for {url} (not real HTML)",
+            file=sys.stderr,
+        )
         return ids
 
     raw_json = extract_listview_json(resp.text)
@@ -134,9 +154,20 @@ def extract_ids_from_page(url: str, session: requests.Session) -> set[int]:
 
 def scrape_urls(urls: list[str]) -> set[int]:
     """Fetch each URL and return the union of scraped item IDs."""
-    session = requests.Session()
+    session = requests.Session(impersonate="chrome")
+    try:
+        warm = session.get(WARMUP_URL, headers=HEADERS, timeout=30)
+        warm.raise_for_status()
+        print(f"  Warmup {WARMUP_URL} -> {warm.status_code}")
+    except requests.RequestException as e:
+        print(f"  Warning: Warmup failed: {e}", file=sys.stderr)
+
     all_ids: set[int] = set()
-    for url in urls:
+    for i, url in enumerate(urls):
+        if i > 0:
+            delay = random.uniform(*DELAY_RANGE)
+            print(f"  (waiting {delay:.1f}s)")
+            time.sleep(delay)
         print(f"  {url}")
         ids = extract_ids_from_page(url, session)
         all_ids.update(ids)
