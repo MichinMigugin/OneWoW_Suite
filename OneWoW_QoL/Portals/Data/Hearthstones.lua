@@ -82,6 +82,7 @@ Hearthstones.List = {
 	[246565] = true,
 	[263489] = true,
 	[263933] = true,
+	[265100] = true,
 }
 
 function Hearthstones:GetAvailable(showAll)
@@ -99,7 +100,7 @@ function Hearthstones:GetAvailable(showAll)
 			end
 
 			if shouldInclude then
-				table.insert(available, {type = "toy", id = id})
+				tinsert(available, {type = "toy", id = id})
 			end
 		end
 	end
