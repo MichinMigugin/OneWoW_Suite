@@ -607,9 +607,9 @@ RegisterKeyword("needsrepair",                          function(p) return p.nee
 RegisterKeyword("broken",                               function(p) return p.isBroken end)
 
 RegisterKeyword("myclass", function(p)
-    if not p.isEquipment then return false end
     if p.classID == Enum.ItemClass.Profession then return false end -- some tradeskill items show up as equipment
-    return PE:CanClassEquip(p.id, p.hyperlink)
+    local _, _, classID = UnitClass("player")
+    return classID and p.eligibleClasses[classID] == true
 end)
 RegisterKeyword("myspec", function(p)
     if not p.isEquipment then return false end
@@ -1605,30 +1605,46 @@ end
 
 -- ---------- ResolveSpecs ----------
 -- Lazily populates the item's eligible-class and eligible-spec membership SETS,
--- backing the forclass/forspec "set" props. Viewer-independent: it asks
--- C_Item.DoesItemContainSpec with explicit class/spec IDs (the basis of #myspec)
--- rather than reading the link's viewer-stamped specialization field. Only
--- equippable gear is probed, so non-gear short-circuits with zero API calls.
+-- backing the forclass/forspec "set" props. Viewer-independent.
+-- Equippable gear: C_Item.DoesItemContainSpec with explicit class/spec IDs.
+-- Fallback: tooltip ITEM_CLASSES_ALLOWED line (UsageRequirement) via
+-- TooltipScanner:GetAllowedClassIDs — covers non-equippable class-locked
+-- tokens (Baleful, …). eligibleSpecs stays empty for tooltip-only items.
 local function ResolveSpecs(props)
     local classes, specs = {}, {}
     rawset(props, "eligibleClasses", classes)
     rawset(props, "eligibleSpecs", specs)
 
-    if not rawget(props, "isEquipment") then return end
     local item = rawget(props, "hyperlink") or rawget(props, "id")
-    if not item then return end
-
-    -- Probe ONLY with the 3-arg form (explicit specID). The 2-arg form
-    -- (specID defaulting to 0) ignores the passed classID and tests the CURRENT
-    -- player, which makes forclass/forspec viewer-relative. Class eligibility is
-    -- derived from any matching spec, since loot eligibility is spec-driven.
-    for classID = 1, GetNumClasses() do
-        for specIndex = 1, C_SpecializationInfo.GetNumSpecializationsForClassID(classID) do
-            local specID = GetSpecializationInfoForClassID(classID, specIndex)
-            if specID and C_Item.DoesItemContainSpec(item, classID, specID) then
-                specs[specID] = true
-                classes[classID] = true
+    if rawget(props, "isEquipment") and item then
+        -- Probe ONLY with the 3-arg form (explicit specID). The 2-arg form
+        -- (specID defaulting to 0) ignores the passed classID and tests the CURRENT
+        -- player, which makes forclass/forspec viewer-relative. Class eligibility is
+        -- derived from any matching spec, since loot eligibility is spec-driven.
+        for classID = 1, GetNumClasses() do
+            for specIndex = 1, C_SpecializationInfo.GetNumSpecializationsForClassID(classID) do
+                local specID = GetSpecializationInfoForClassID(classID, specIndex)
+                if specID and C_Item.DoesItemContainSpec(item, classID, specID) then
+                    specs[specID] = true
+                    classes[classID] = true
+                end
             end
+        end
+    end
+
+    if next(classes) then return end
+
+    local tooltipData = Scanner:GetPropsData(props)
+    if not tooltipData then
+        local itemID = rawget(props, "id")
+        if itemID then
+            tooltipData = Scanner:GetItemByIDData(itemID)
+        end
+    end
+    local allowed = Scanner:GetAllowedClassIDs(tooltipData)
+    if allowed then
+        for classID in pairs(allowed) do
+            classes[classID] = true
         end
     end
 end
@@ -3977,6 +3993,27 @@ function PE:DumpTooltipDebug(itemID, bagID, slotID, hyperlink)
                 tostring(CheckSeasonTooltipMention(props, currentLabel))
             ))
         end
+
+        -- Compact class-eligibility snapshot (no per-line spam).
+        rawset(props, "_specsResolved", nil)
+        rawset(props, "eligibleClasses", nil)
+        rawset(props, "eligibleSpecs", nil)
+        local eligible = props.eligibleClasses
+        local parts = {}
+        if eligible then
+            for classID in pairs(eligible) do
+                parts[#parts + 1] = tostring(classID)
+            end
+            sort(parts)
+        end
+        local _, _, playerClassID = UnitClass("player")
+        print(DEBUG_PREFIX .. format(
+            ": eligibleClasses={%s} isGearToken=%s playerClass=%s #myclass=%s",
+            table.concat(parts, ","),
+            tostring(props.isGearToken),
+            tostring(playerClassID),
+            tostring(playerClassID and eligible and eligible[playerClassID] == true)
+        ))
     end
 end
 

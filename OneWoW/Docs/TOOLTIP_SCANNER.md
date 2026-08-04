@@ -54,6 +54,7 @@ Empty strings are **not** cached so pre-streaming evaluations can retry.
 | `HasEquipEffect(text)` | `ITEM_SPELL_TRIGGER_ONEQUIP` line present |
 | `GetBindState(tooltipData)` | `ItemBinding` line → `Enum.TooltipDataItemBinding` |
 | `GetUsageRequirements(tooltipData)` | `UsageRequirement` lines |
+| `GetAllowedClassIDs(tooltipData)` | `UsageRequirement` + `ITEM_CLASSES_ALLOWED` → `{ [classID]=true }` for `#myclass` / `forclass=` (nil when no Classes line; ignores red/white) |
 | `ScanRedRequirementLines(tooltipData)` | Red unmet-requirement lines (bag, merchant, …). `ErrorLine`/`DisabledLine` only count when **red** — grey `DisabledLine`s are inactive off-spec stat variants, not failures |
 | `GetUsabilityFacts(tooltipData)` | Single-pass `{ learnSpellID?, directUse, unmetRequirements }` for `#usable` fallback. `unmetRequirements` is red-colored lines only. Combine items are **not** detectable from tooltip data (reagent lists on live tooltips are addon-injected); PE detects them via `GetItemSpell` → `GetRecipeSchematic` |
 | `HasItemInAccessibleBags(itemID)` | Copy in backpack / bags / reagent bag (0–5) |
@@ -70,6 +71,7 @@ Empty strings are **not** cached so pre-streaming evaluations can retry.
 | `#charges` (`ITEM_SPELL_CHARGES`) | `BuildChargesSearchPattern`: `|4` locales → raw markup `(%d+) \|4` + first form; plain `%d` locales (zhCN/zhTW/koKR) → placeholder-first escape → `(%d+)…` |
 | `#tradeableloot` | `Enum.TooltipDataLineType.TradeTimeRemaining` (structured; no `BIND_TRADE_TIME_REMAINING` text scrape) |
 | `#onuse` / `#onequip` / unique | Direct `USE_COLON` / `ITEM_SPELL_TRIGGER_ONEQUIP` / `ITEM_UNIQUE*` globals (exist in all 11 locales) |
+| `GetAllowedClassIDs` (`ITEM_CLASSES_ALLOWED`) | Capture pattern from the GlobalString; map localized `C_CreatureInfo` class names as whole list segments |
 
 **Gate:** `bin/check_tooltip_patterns.py` — pre-commit `tooltip-globalstrings-patterns` (fires when `TooltipScanner.lua`, the checker, or GlobalStrings docs change). Suite `locale-parity` does not cover Blizzard GlobalStrings.
 

@@ -167,7 +167,7 @@ For gray quality only, use `#poor` / `#grey` / `#gray`.
 |---|---|---|
 | `#gear` | `#equipment`, `#equippable` | Any equippable item |
 | `#set` | `#equipmentset` | In an equipment set |
-| `#myclass` | | Usable by your class |
+| `#myclass` | | Usable by your class (gear or Classes: tokens) |
 | `#myspec` | | Usable by your current spec |
 | `#needsrepair` | | Damaged (needs bag slot context) |
 | `#broken` | | Zero durability (needs bag slot context) |
@@ -286,7 +286,7 @@ You can compare two properties: `ilvl>=reqlevel`, `reqlevel<=mylevel`.
 
 ### Spec / class eligibility
 
-`forspec=269` / `forclass=9` test whether gear is **loot-eligible** for that spec or class (independent of who you are logged in as). Only `=` / `!=` — no ranges. Prefer `#myspec` / `#myclass` when you mean “for me right now.”
+`forspec=269` / `forclass=9` test whether an item is **loot-eligible** for that spec or class (independent of who you are logged in as). `forclass` / `#myclass` also match non-equippable items with a Classes: tooltip line (e.g. Baleful tokens). Only `=` / `!=` — no ranges. Prefer `#myspec` / `#myclass` when you mean “for me right now.”
 
 ---
 

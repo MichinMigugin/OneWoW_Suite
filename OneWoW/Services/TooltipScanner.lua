@@ -15,6 +15,7 @@ local strfind = string.find
 local tconcat = table.concat
 local ipairs, wipe, tonumber = ipairs, wipe, tonumber
 local rawset, rawget = rawset, rawget
+local sort = sort
 
 local LINE_LEARN = Enum.TooltipDataLineType.ItemSpellTriggerLearn
 local LINE_BINDING = Enum.TooltipDataLineType.ItemBinding
@@ -63,6 +64,56 @@ local uniqueEquipPatternHead = "^" .. uniqueEquipPattern
 local uniqueEquipPlainBody = "\n" .. ITEM_UNIQUE_EQUIPPABLE
 local uniquePatternHead = "^" .. ITEM_UNIQUE
 local uniquePlainBody = "\n" .. ITEM_UNIQUE
+
+-- ITEM_CLASSES_ALLOWED = "Classes: %s" — capture the class-list substring.
+local CLASS_LIST_CAPTURE_PH = "\1"
+local function BuildClassesAllowedCapturePattern(fmt)
+    local withPh = fmt:gsub("%%s", CLASS_LIST_CAPTURE_PH, 1)
+    local escaped = withPh:gsub(PATTERN_MAGIC, "%%%1")
+    return "^" .. escaped:gsub(CLASS_LIST_CAPTURE_PH, "(.+)", 1) .. "$"
+end
+local classesAllowedCapture = BuildClassesAllowedCapturePattern(ITEM_CLASSES_ALLOWED)
+
+-- Localized className → classID. Built lazily (C_CreatureInfo can be empty at
+-- file-load in some load orders); longest names first for segment matching.
+local classNameToID = {}
+local classNamesByLen = {}
+
+local function EnsureClassNameMap()
+    if #classNamesByLen > 0 then return end
+    wipe(classNameToID)
+    wipe(classNamesByLen)
+    local n = GetNumClasses() or 0
+    for classID = 1, n do
+        local info = C_CreatureInfo.GetClassInfo(classID)
+        local name = info and info.className
+        if name and name ~= "" then
+            classNameToID[name] = classID
+            classNamesByLen[#classNamesByLen + 1] = name
+        end
+    end
+    sort(classNamesByLen, function(a, b)
+        return #a > #b
+    end)
+end
+
+--- True when `name` appears as a whole list segment in `list` (comma-separated
+--- or the sole entry). Avoids substring false positives.
+---@param list string
+---@param name string
+---@return boolean
+local function ClassListContainsName(list, name)
+    if list == name then return true end
+    local pos = 1
+    while true do
+        local startPos, endPos = list:find(name, pos, true)
+        if not startPos then return false end
+        local beforeOK = startPos == 1 or list:sub(startPos - 1, startPos - 1):match("[,，、%s]")
+        local afterOK = endPos == #list or list:sub(endPos + 1, endPos + 1):match("[,，、%s]")
+        if beforeOK and afterOK then return true end
+        pos = startPos + 1
+    end
+end
 
 ---@param color table|nil colorRGB
 ---@return boolean
@@ -487,6 +538,38 @@ function TooltipScanner:GetUsageRequirements(tooltipData)
         end
     end
     return requirements
+end
+
+--- Allowed class IDs from an ITEM_CLASSES_ALLOWED UsageRequirement line
+--- ("Classes: Hunter, Shaman, …"). Viewer-independent membership — line color
+--- (red unmet vs white met) is ignored. Returns nil when no Classes line.
+---@param tooltipData table|nil
+---@return table|nil classSet `{ [classID] = true }`
+function TooltipScanner:GetAllowedClassIDs(tooltipData)
+    EnsureClassNameMap()
+    if not tooltipData or not tooltipData.lines then return nil end
+
+    local list
+    for _, line in ipairs(tooltipData.lines) do
+        if line.type == LINE_USAGE_REQ and line.leftText then
+            local text = StripTooltipMarkup(line.leftText)
+            local captured = text:match(classesAllowedCapture)
+            if captured then
+                list = captured
+                break
+            end
+        end
+    end
+    if not list or list == "" then return nil end
+
+    local classSet
+    for _, name in ipairs(classNamesByLen) do
+        if ClassListContainsName(list, name) then
+            classSet = classSet or {}
+            classSet[classNameToID[name]] = true
+        end
+    end
+    return classSet
 end
 
 --- Red unmet-requirement lines from a player-evaluated tooltip snapshot

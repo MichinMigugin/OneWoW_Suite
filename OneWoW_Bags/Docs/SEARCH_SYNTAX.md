@@ -281,8 +281,8 @@ These match the **Glyph** item class with a **class-specific** subclass (as in
 |---|---|---|
 | `#gear` | `#equipment`, `#equippable` | Any equippable item |
 | `#set` | `#equipmentset` | Items in an equipment set |
-| `#myclass` | | Equipment your class can use |
-| `#myspec` | | Equipment usable by your current spec (universal gear included) |
+| `#myclass` | | Items your class can use — equippable gear via spec API, or any item with a Classes: tooltip restriction that includes you |
+| `#myspec` | | Equipment usable by your current spec (universal gear included; equippable only) |
 | `#needsrepair` | | Current durability differs from max (requires bag/slot context; see note below) |
 | `#broken` | | Zero durability (`durability==0`; requires bag/slot context) |
 
@@ -1031,10 +1031,15 @@ reqlevel:70-80          Items requiring level 70-80
 
 `forspec` and `forclass` test whether an item is **eligible** for a given
 specialization or class — i.e. whether that spec/class would be offered the item
-as loot. They are **viewer-independent**: the result depends only on the item, not
-on which character you are logged into (unlike the item link's specialization
-field, which always reflects the *current* character). Internally they use
-`C_Item.DoesItemContainSpec` — the same primitive behind `#myspec`.
+as loot (or, for class-restricted Use: tokens, whether the Classes: line lists
+that class). They are **viewer-independent**: the result depends only on the
+item, not on which character you are logged into (unlike the item link's
+specialization field, which always reflects the *current* character).
+
+**Equippable gear** uses `C_Item.DoesItemContainSpec` (same primitive behind
+`#myspec`). **Non-equippable items** with a tooltip `Classes:` line
+(`ITEM_CLASSES_ALLOWED`) also populate `forclass` / `#myclass` via tooltip
+parse; they do **not** populate `forspec` / `#myspec`.
 
 Because an item can be eligible for **several** specs and classes at once, these
 are *membership* tests, not numeric comparisons:
@@ -1047,8 +1052,7 @@ are *membership* tests, not numeric comparisons:
 | `forclass!=2` | `!=` | NOT eligible for class 2 (Paladin) |
 
 Ordered comparators (`>`, `<`, `>=`, `<=`) and range syntax (`forspec:1-100`) are
-**not** supported — spec and class IDs are identifiers, not magnitudes. Only
-equippable gear is eligible for any spec/class; everything else matches none.
+**not** supported — spec and class IDs are identifiers, not magnitudes.
 
 Specialization IDs are listed at <https://warcraft.wiki.gg/wiki/SpecializationID>.
 Class IDs are 1–13 in the usual order: 1 Warrior, 2 Paladin, 3 Hunter, 4 Rogue,
@@ -1058,6 +1062,7 @@ Class IDs are 1–13 in the usual order: 1 Warrior, 2 Paladin, 3 Hunter, 4 Rogue
 ```
 forspec=269                Gear a Windwalker Monk could roll on
 #gear & forclass=9         All gear usable by a Warlock
+#geartoken & #myclass      Loot-spec tokens your class can use (e.g. Baleful)
 #epic & forspec=270        Epic gear for Mistweaver Monk
 #gear & forspec!=265       Gear NOT for Affliction Warlock
 ```
