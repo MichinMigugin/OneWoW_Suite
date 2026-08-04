@@ -1943,7 +1943,10 @@ local COMBINE_QUANTITY_OVERRIDES = {
 --- GetItemSpell → C_TradeSkillUI.GetRecipeSchematic (the reagent lists shown
 --- on live tooltips come from other addons and never appear in C_TooltipInfo
 --- data). Enchant scrolls (ItemEnhancement) also carry recipe spells and are
---- excluded. Schematics are static game data, cached per itemID.
+--- excluded. Trivial schematics — a single required reagent at quantity 1
+--- (Baleful tokens and similar "Use: create …" items) — are treated as
+--- ordinary Use: items, not combines. Schematics are static game data,
+--- cached per itemID.
 ---@param itemID number
 ---@return table|nil reagents array of { itemID?, currencyID?, quantityRequired }
 local function GetCombineReagents(itemID)
@@ -1979,6 +1982,12 @@ local function GetCombineReagents(itemID)
         end
     end
 
+    -- Single reagent at qty 1 is just "click Use", not a combine (gathering
+    -- multiple reagents / stacks). Fall through to normal #usable / #onuse.
+    if reagents and #reagents == 1 and reagents[1].quantityRequired == 1 then
+        reagents = nil
+    end
+
     combineSchematicCache[itemID] = reagents or false
     return reagents
 end
@@ -2007,7 +2016,8 @@ end
 
 -- #combinable: item's Use: effect is a combine/craft spell with required
 -- reagents (Darkmoon decks, fractured sparks, torn recipe scraps, …).
--- Structural via GetCombineReagents — not tooltip text.
+-- Structural via GetCombineReagents — not tooltip text. Excludes trivial
+-- single-reagent qty-1 schematics (ordinary Use: tokens).
 -- #combineready: shorthand for (#combinable & #usable) — schematic present
 -- and character can perform the combine (all reagents owned).
 RegisterKeyword("combinable", function(p)
@@ -3432,7 +3442,8 @@ end
 
 --- Required reagents when the item's Use: effect is a combine/craft spell.
 --- Returns nil for ordinary items. Same detector as `#combinable` /
---- `#combineready` (identity-cached schematic; enchant scrolls excluded).
+--- `#combineready` (identity-cached schematic; enchant scrolls and trivial
+--- single-reagent qty-1 schematics excluded).
 --- Each entry is `{ itemID?, currencyID?, quantityRequired }`.
 ---@param itemID number|nil
 ---@return table|nil

@@ -29,6 +29,7 @@
 ## Fixes
 - What's New "Don't show again this release" now clears on uncheck (so the dialog can auto-show again after reload); the box starts unchecked until you dismiss this version
 - Reference check no longer flags packed game CVars or macro `#showtooltip` text inside Character Profiles as missing search shortcuts
+- `#combinable` / `#combineready` no longer match Use: tokens that only need one of a single item (e.g. Baleful gear); those follow normal `#usable` rules (including class restrictions).
 
 ---
 
