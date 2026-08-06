@@ -183,8 +183,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
     ["VENDORS_CATEGORY_OTHER"] = "Sonstige",
 
-    ["TRADESKILLS_LIST_TITLE"] = "Berufe",
-    ["TRADESKILLS_DETAIL_TITLE"] = "Rezeptdetails",
     ["TRADESKILLS_EMPTY"] = "Keine Berufsdaten geladen.",
     ["TRADESKILLS_SELECT"] = "Wählt einen Beruf, um Rezepte anzuzeigen.",
     ["TRADESKILLS_NO_DATA"] = "Installiert OneWoW CatalogData: Tradeskills, um Berufsdaten anzuzeigen.",

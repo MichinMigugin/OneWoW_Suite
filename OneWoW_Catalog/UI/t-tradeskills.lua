@@ -971,9 +971,7 @@ function ns.UI.CreateTradeskillsTab(parent)
     contentArea:SetPoint("TOPLEFT", searchHeader, "BOTTOMLEFT", 0, -2)
     contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
-    panels = OneWoW_GUI:CreateSplitPanel(contentArea)
-    panels.listTitle:SetText(L["TRADESKILLS_LIST_TITLE"])
-    panels.detailTitle:SetText(L["TRADESKILLS_DETAIL_TITLE"])
+    panels = OneWoW_GUI:CreateSplitPanel(contentArea, { hideTitles = true })
 
     recipeListAPI = OneWoW_GUI:CreateVirtualizer(panels.listPanel, {
         name = "CatalogTradeskillsList",

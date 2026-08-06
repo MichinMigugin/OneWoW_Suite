@@ -182,8 +182,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["VENDORS_CATEGORY_OTHER"] = "Other",
 
-    ["TRADESKILLS_LIST_TITLE"] = "Professions",
-    ["TRADESKILLS_DETAIL_TITLE"] = "Recipe Details",
     ["TRADESKILLS_EMPTY"] = "No tradeskill data loaded.",
     ["TRADESKILLS_SELECT"] = "Select a profession to view recipes.",
     ["TRADESKILLS_NO_DATA"] = "Install OneWoW CatalogData: Tradeskills to view profession data.",

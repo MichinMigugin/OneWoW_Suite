@@ -183,8 +183,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
     ["VENDORS_CATEGORY_OTHER"] = "Outro",
 
-    ["TRADESKILLS_LIST_TITLE"] = "Profissões",
-    ["TRADESKILLS_DETAIL_TITLE"] = "Detalhes da receita",
     ["TRADESKILLS_EMPTY"] = "Nenhum dado de profissão carregado.",
     ["TRADESKILLS_SELECT"] = "Selecione uma profissão para ver as receitas.",
     ["TRADESKILLS_NO_DATA"] = "Instale OneWoW CatalogData: Tradeskills para ver os dados de profissão.",

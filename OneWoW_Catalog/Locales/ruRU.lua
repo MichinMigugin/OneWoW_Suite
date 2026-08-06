@@ -183,8 +183,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
     ["VENDORS_CATEGORY_OTHER"] = "Прочее",
 
-    ["TRADESKILLS_LIST_TITLE"] = "Профессии",
-    ["TRADESKILLS_DETAIL_TITLE"] = "Сведения о рецепте",
     ["TRADESKILLS_EMPTY"] = "Данные о профессиях не загружены.",
     ["TRADESKILLS_SELECT"] = "Выберите профессию, чтобы просмотреть рецепты.",
     ["TRADESKILLS_NO_DATA"] = "Установите OneWoW CatalogData: Tradeskills, чтобы просмотреть данные о профессиях.",

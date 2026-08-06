@@ -183,8 +183,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
     ["VENDORS_CATEGORY_OTHER"] = "其他",
 
-    ["TRADESKILLS_LIST_TITLE"] = "專業技能",
-    ["TRADESKILLS_DETAIL_TITLE"] = "配方詳細資料",
     ["TRADESKILLS_EMPTY"] = "未載入專業技能資料。",
     ["TRADESKILLS_SELECT"] = "選擇一個專業以檢視配方。",
     ["TRADESKILLS_NO_DATA"] = "安裝 OneWoW CatalogData: Tradeskills 以檢視專業資料。",

@@ -24,9 +24,14 @@
 #### Fixes
 - Shipments no longer try to mail the character you are on (Character targets and Role members); Blizzard rejects self-mail
 
+### Catalog
+
+#### Tradeskills
+- Dropped the “Professions” and “Recipe Details” panel titles so more room goes to the list and detail
+
 ---
 
-*No user-facing changes this release for AltTracker, Bags, Catalog, DirectDeposit, Notes, ShoppingList, Trackers, or Vendors.*
+*No user-facing changes this release for AltTracker, Bags, DirectDeposit, Notes, ShoppingList, Trackers, or Vendors.*
 
 ---
 
