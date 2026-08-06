@@ -300,13 +300,12 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["QUESTS_PROGRESS_WARBAND"] = "Выполнено (Отряд)",
 
     ["ITEMSEARCH_TITLE"] = "Поиск предметов",
-    ["ITEMSEARCH_PLACEHOLDER"] = "Поиск предмета...",
+    ["ITEMSEARCH_PLACEHOLDER"] = "Поиск предметов...",
+    ["ITEMSEARCH_FILTER_CLEAR"] = "Очистить",
     ["ITEMSEARCH_EMPTY"] = "Нет предметов для отображения.",
     ["ITEMSEARCH_SOURCE_UNAVAIL"] = "Недоступно. Загрузите соответствующий аддон данных в разделе «Управление функциями».",
     ["ITEMSEARCH_NO_RESULTS"] = "Результаты не найдены.",
 
-    ["ITEMSEARCH_LIST_TITLE"] = "Результаты",
-    ["ITEMSEARCH_DETAIL_TITLE"] = "Сведения о предмете",
     ["ITEMSEARCH_SELECT"] = "Выберите предмет, чтобы просмотреть подробности.",
     ["ITEMSEARCH_RESULTS"] = "%d результатов",
     ["ITEMSEARCH_LOADING"] = "Загрузка… %d",

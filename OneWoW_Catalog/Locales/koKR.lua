@@ -299,13 +299,12 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["QUESTS_PROGRESS_WARBAND"] = "완료 (전투부대)",
 
     ["ITEMSEARCH_TITLE"] = "아이템 검색",
-    ["ITEMSEARCH_PLACEHOLDER"] = "아이템 이름 검색...",
+    ["ITEMSEARCH_PLACEHOLDER"] = "아이템 검색...",
+    ["ITEMSEARCH_FILTER_CLEAR"] = "지우기",
     ["ITEMSEARCH_EMPTY"] = "표시할 아이템이 없습니다.",
     ["ITEMSEARCH_SOURCE_UNAVAIL"] = "사용할 수 없습니다. 기능 관리에서 해당 데이터 애드온을 불러오세요.",
     ["ITEMSEARCH_NO_RESULTS"] = "결과가 없습니다.",
 
-    ["ITEMSEARCH_LIST_TITLE"] = "결과",
-    ["ITEMSEARCH_DETAIL_TITLE"] = "아이템 상세",
     ["ITEMSEARCH_SELECT"] = "아이템을 선택하면 상세 정보를 볼 수 있습니다.",
     ["ITEMSEARCH_RESULTS"] = "결과 %d개",
     ["ITEMSEARCH_LOADING"] = "불러오는 중… %d",

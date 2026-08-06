@@ -299,13 +299,11 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["QUESTS_PROGRESS_WARBAND"] = "Completed (Warband)",
 
     ["ITEMSEARCH_TITLE"] = "Item Search",
-    ["ITEMSEARCH_PLACEHOLDER"] = "Search for an item...",
+    ["ITEMSEARCH_PLACEHOLDER"] = "Search items...",
+    ["ITEMSEARCH_FILTER_CLEAR"] = "Clear",
     ["ITEMSEARCH_EMPTY"] = "No items to show.",
     ["ITEMSEARCH_SOURCE_UNAVAIL"] = "Not available. Load its data add-on in Manage Features.",
     ["ITEMSEARCH_NO_RESULTS"] = "No results found.",
-
-    ["ITEMSEARCH_LIST_TITLE"] = "Results",
-    ["ITEMSEARCH_DETAIL_TITLE"] = "Item Details",
     ["ITEMSEARCH_SELECT"] = "Select an item to view details.",
     ["ITEMSEARCH_RESULTS"] = "%d results",
     ["ITEMSEARCH_LOADING"] = "Loading… %d",

@@ -300,13 +300,12 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["QUESTS_PROGRESS_WARBAND"] = "Abgeschlossen (Kriegsmeute)",
 
     ["ITEMSEARCH_TITLE"] = "Gegenstandssuche",
-    ["ITEMSEARCH_PLACEHOLDER"] = "Nach einem Gegenstand suchen...",
+    ["ITEMSEARCH_PLACEHOLDER"] = "Gegenstände suchen...",
+    ["ITEMSEARCH_FILTER_CLEAR"] = "Leeren",
     ["ITEMSEARCH_EMPTY"] = "Keine Gegenstände vorhanden.",
     ["ITEMSEARCH_SOURCE_UNAVAIL"] = "Nicht verfügbar. Lade das zugehörige Daten-Add-on unter „Funktionen verwalten“.",
     ["ITEMSEARCH_NO_RESULTS"] = "Keine Ergebnisse gefunden.",
 
-    ["ITEMSEARCH_LIST_TITLE"] = "Ergebnisse",
-    ["ITEMSEARCH_DETAIL_TITLE"] = "Gegenstandsdetails",
     ["ITEMSEARCH_SELECT"] = "Wählt einen Gegenstand, um Details anzuzeigen.",
     ["ITEMSEARCH_RESULTS"] = "%d Ergebnisse",
     ["ITEMSEARCH_LOADING"] = "Lade… %d",

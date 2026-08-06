@@ -801,9 +801,7 @@ function ns.UI.CreateItemSearchTab(parent)
     contentArea:SetPoint("TOPLEFT", noticeBar, "BOTTOMLEFT", 0, -2)
     contentArea:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
-    panels = OneWoW_GUI:CreateSplitPanel(contentArea)
-    panels.listTitle:SetText(L["ITEMSEARCH_LIST_TITLE"])
-    panels.detailTitle:SetText(L["ITEMSEARCH_DETAIL_TITLE"])
+    panels = OneWoW_GUI:CreateSplitPanel(contentArea, { hideTitles = true })
 
     for _, def in ipairs(SOURCE_DEFS) do
         local btn = CreateSourceButton(filterHeader, def)
@@ -826,6 +824,13 @@ function ns.UI.CreateItemSearchTab(parent)
         btn:SetPoint("TOPLEFT", filterHeader, "TOPLEFT", xOff, yOff)
         xOff = xOff + btnWidth + SOURCE_BTN_GAP
     end
+
+    local clearBtn = OneWoW_GUI:CreateFitTextButton(searchHeader, {
+        text = L["ITEMSEARCH_FILTER_CLEAR"],
+        height = 26,
+        minWidth = 34,
+    })
+    clearBtn:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -8)
 
     searchBox = OneWoW_GUI:CreateEditBox(searchHeader, {
         height = 26,
@@ -862,7 +867,29 @@ function ns.UI.CreateItemSearchTab(parent)
         end,
     })
     searchBox:SetPoint("TOPLEFT", searchHeader, "TOPLEFT", 8, -8)
-    searchBox:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -8)
+    searchBox:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -4, 0)
+
+    clearBtn:SetScript("OnClick", function()
+        if searchTimer then
+            searchTimer:Cancel()
+            searchTimer = nil
+        end
+        currentSearch = ""
+        currentSource = "all"
+        selectedItem = nil
+        ClearDetailElements()
+        if emptyDetail then
+            emptyDetail:SetText(L["ITEMSEARCH_SELECT"])
+            emptyDetail:Show()
+        end
+        UpdateSourceButtonStates()
+        suppressSearchBoxChange = true
+        searchBox:SetText("")
+        searchBox:ClearFocus()
+        searchBox:RestorePlaceholder()
+        suppressSearchBoxChange = false
+        RefreshItemList()
+    end)
 
     listAPI = OneWoW_GUI:CreateVirtualizer(panels.listPanel, {
         name = "CatalogItemSearchList",

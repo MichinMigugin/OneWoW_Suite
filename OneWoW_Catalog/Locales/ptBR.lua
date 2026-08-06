@@ -300,13 +300,12 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["QUESTS_PROGRESS_WARBAND"] = "Concluída (Bando de Guerra)",
 
     ["ITEMSEARCH_TITLE"] = "Busca de itens",
-    ["ITEMSEARCH_PLACEHOLDER"] = "Buscar um item...",
+    ["ITEMSEARCH_PLACEHOLDER"] = "Buscar itens...",
+    ["ITEMSEARCH_FILTER_CLEAR"] = "Limpar",
     ["ITEMSEARCH_EMPTY"] = "Nenhum item para mostrar.",
     ["ITEMSEARCH_SOURCE_UNAVAIL"] = "Indisponível. Carregue o complemento de dados em Gerenciar funcionalidades.",
     ["ITEMSEARCH_NO_RESULTS"] = "Nenhum resultado encontrado.",
 
-    ["ITEMSEARCH_LIST_TITLE"] = "Resultados",
-    ["ITEMSEARCH_DETAIL_TITLE"] = "Detalhes do item",
     ["ITEMSEARCH_SELECT"] = "Selecione um item para ver os detalhes.",
     ["ITEMSEARCH_RESULTS"] = "%d resultados",
     ["ITEMSEARCH_LOADING"] = "Carregando… %d",

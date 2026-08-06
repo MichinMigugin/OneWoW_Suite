@@ -301,12 +301,11 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
     ["ITEMSEARCH_TITLE"] = "物品搜索",
     ["ITEMSEARCH_PLACEHOLDER"] = "搜索物品……",
+    ["ITEMSEARCH_FILTER_CLEAR"] = "清除",
     ["ITEMSEARCH_EMPTY"] = "没有可显示的物品。",
     ["ITEMSEARCH_SOURCE_UNAVAIL"] = "不可用。请在管理功能中加载其数据插件。",
     ["ITEMSEARCH_NO_RESULTS"] = "未找到结果。",
 
-    ["ITEMSEARCH_LIST_TITLE"] = "结果",
-    ["ITEMSEARCH_DETAIL_TITLE"] = "物品详情",
     ["ITEMSEARCH_SELECT"] = "选择一件物品以查看详情。",
     ["ITEMSEARCH_RESULTS"] = "%d 个结果",
     ["ITEMSEARCH_LOADING"] = "正在加载… %d",

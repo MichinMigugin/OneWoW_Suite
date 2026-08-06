@@ -300,13 +300,12 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["QUESTS_PROGRESS_WARBAND"] = "Terminée (Bataillon)",
 
     ["ITEMSEARCH_TITLE"] = "Recherche d'objets",
-    ["ITEMSEARCH_PLACEHOLDER"] = "Rechercher un objet...",
+    ["ITEMSEARCH_PLACEHOLDER"] = "Rechercher des objets...",
+    ["ITEMSEARCH_FILTER_CLEAR"] = "Effacer",
     ["ITEMSEARCH_EMPTY"] = "Aucun objet à afficher.",
     ["ITEMSEARCH_SOURCE_UNAVAIL"] = "Indisponible. Chargez son add-on de données dans Gérer les fonctionnalités.",
     ["ITEMSEARCH_NO_RESULTS"] = "Aucun résultat trouvé.",
 
-    ["ITEMSEARCH_LIST_TITLE"] = "Résultats",
-    ["ITEMSEARCH_DETAIL_TITLE"] = "Détails de l'objet",
     ["ITEMSEARCH_SELECT"] = "Sélectionnez un objet pour voir les détails.",
     ["ITEMSEARCH_RESULTS"] = "%d résultats",
     ["ITEMSEARCH_LOADING"] = "Chargement… %d",

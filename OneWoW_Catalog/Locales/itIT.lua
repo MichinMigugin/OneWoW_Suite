@@ -300,13 +300,12 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["QUESTS_PROGRESS_WARBAND"] = "Completata (Brigata)",
 
     ["ITEMSEARCH_TITLE"] = "Ricerca oggetti",
-    ["ITEMSEARCH_PLACEHOLDER"] = "Cerca un oggetto...",
+    ["ITEMSEARCH_PLACEHOLDER"] = "Cerca oggetti...",
+    ["ITEMSEARCH_FILTER_CLEAR"] = "Cancella",
     ["ITEMSEARCH_EMPTY"] = "Nessun oggetto da mostrare.",
     ["ITEMSEARCH_SOURCE_UNAVAIL"] = "Non disponibile. Carica il relativo add-on dati in Gestisci funzioni.",
     ["ITEMSEARCH_NO_RESULTS"] = "Nessun risultato trovato.",
 
-    ["ITEMSEARCH_LIST_TITLE"] = "Risultati",
-    ["ITEMSEARCH_DETAIL_TITLE"] = "Dettagli dell'oggetto",
     ["ITEMSEARCH_SELECT"] = "Seleziona un oggetto per vedere i dettagli.",
     ["ITEMSEARCH_RESULTS"] = "%d risultati",
     ["ITEMSEARCH_LOADING"] = "Caricamento… %d",
