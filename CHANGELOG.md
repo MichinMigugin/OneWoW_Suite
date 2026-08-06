@@ -25,6 +25,9 @@
 # Catalog
 - Soft-requires AltTracker Storage (BringUp pulls it with Catalog); without Storage, Catalog stays usable but Home marks it diminished
 
+## Journal
+- Clear restores the search placeholder instead of leaving the box blank
+
 ## Tradeskills
 - Dropped the “Professions” and “Recipe Details” panel titles so more room goes to the list and detail
 - Recipe detail matches Journal/Vendors: `Expansion | Profession` under the name, one `Recipe ID | Item ID` line (Item ID omitted when none), no repeated Profession/Expansion rows
@@ -33,6 +36,8 @@
 - Reagent quantities show account-wide have/need (`12/15`) when Storage is available; otherwise the old `x15` style
 - On Hand section lists owned reagents for the selected recipe; expand a row for owner / location / quantity breakdown
 - Have Materials filter (right header) shows only recipes whose required reagents you own across Storage; expansion dropdown sits above the known checkboxes like Journal
+- Search placeholder shows again when you open the tab (reset no longer leaves the box blank until you click away)
+- Clear next to search resets filters like Journal/Vendors and restores the placeholder
 
 ---
 

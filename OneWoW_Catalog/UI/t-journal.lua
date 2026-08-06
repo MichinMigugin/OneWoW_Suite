@@ -1558,6 +1558,7 @@ function ns.UI.CreateJournalTab(parent)
         hasUncollectedOnly = false
         searchBox:SetText("")
         searchBox:ClearFocus()
+        searchBox:RestorePlaceholder()
         expText:SetText(L["JOURNAL_EXPANSION_ALL"])
         typeText:SetText(L["JOURNAL_FILTER_SHOW_ALL"])
         itemFilterText:SetText(GetItemTypeFilterLabel())
@@ -1670,6 +1671,7 @@ function ns.UI.OpenToInstance(mapID)
         hasUncollectedOnly = false
         if panels.searchBox then
             panels.searchBox:SetText("")
+            panels.searchBox:RestorePlaceholder()
         end
         if panels.expText then
             panels.expText:SetText(instData.expansionName)

@@ -187,6 +187,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["TRADESKILLS_SELECT"] = "Selecciona una profesión para ver las recetas.",
     ["TRADESKILLS_NO_DATA"] = "Instala OneWoW CatalogData: Tradeskills para ver los datos de profesión.",
     ["TRADESKILLS_SEARCH"] = "Buscar recetas...",
+    ["TRADESKILLS_FILTER_CLEAR"] = "Limpiar",
     ["TRADESKILLS_EXPANSION_ALL"] = "Todas las expansiones",
     ["TRADESKILLS_RECIPES"] = "%d recetas",
     ["TRADESKILLS_RECIPES_FILTERED"] = "%d de %d recetas",

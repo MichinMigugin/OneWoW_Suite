@@ -1475,6 +1475,13 @@ function ns.UI.CreateTradeskillsTab(parent)
         end,
     })
 
+    local clearBtn = OneWoW_GUI:CreateFitTextButton(searchHeader, {
+        text = L["TRADESKILLS_FILTER_CLEAR"],
+        height = 26,
+        minWidth = 34,
+    })
+    clearBtn:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -8)
+
     searchBox = OneWoW_GUI:CreateEditBox(searchHeader, {
         height = 26,
         placeholderText = L["TRADESKILLS_SEARCH"],
@@ -1487,7 +1494,7 @@ function ns.UI.CreateTradeskillsTab(parent)
         end,
     })
     searchBox:SetPoint("TOPLEFT", searchHeader, "TOPLEFT", 8, -8)
-    searchBox:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -8)
+    searchBox:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -4, 0)
 
     local EXPANSION_OPTIONS = {
         {key = nil,                 label = L["TRADESKILLS_ALL_EXPANSIONS"]},
@@ -1575,6 +1582,32 @@ function ns.UI.CreateTradeskillsTab(parent)
         function(v) filterKnownByAlts = v end,
         function(v) filterNotKnownByAlts = v end)
 
+    clearBtn:SetScript("OnClick", function()
+        currentSearch = ""
+        selectedProfession = nil
+        filterKnownByMe = false
+        filterKnownByAlts = false
+        filterNotKnownByMe = false
+        filterNotKnownByAlts = false
+        filterHaveMaterials = false
+        filterExpansion = nil
+        wipe(expandedExpansions)
+
+        searchBox:SetText("")
+        searchBox:ClearFocus()
+        searchBox:RestorePlaceholder()
+        knownMeCheck:SetChecked(false)
+        knownAltsCheck:SetChecked(false)
+        notKnownMeCheck:SetChecked(false)
+        notKnownAltsCheck:SetChecked(false)
+        haveMatsCheck:SetChecked(false)
+        expDropText:SetText(L["TRADESKILLS_ALL_EXPANSIONS"])
+        profDropText:SetText(L["TRADESKILLS_ALL"])
+        SyncHaveMaterialsCheckbox()
+        ClearRecipeSelection()
+        RefreshRecipeList()
+    end)
+
     SyncHaveMaterialsCheckbox()
 
     emptyList = OneWoW_GUI:CreateFS(panels.listScrollFrame, 12)
@@ -1652,7 +1685,10 @@ function ns.UI.CreateTradeskillsTab(parent)
         wipe(expandedOnHand)
         onHandRecipeID = nil
 
-        if searchBox then searchBox:SetText("") end
+        if searchBox then
+            searchBox:SetText("")
+            searchBox:RestorePlaceholder()
+        end
         if knownMeCheck then knownMeCheck:SetChecked(false) end
         if knownAltsCheck then knownAltsCheck:SetChecked(false) end
         if notKnownMeCheck then notKnownMeCheck:SetChecked(false) end

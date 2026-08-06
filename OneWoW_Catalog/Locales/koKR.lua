@@ -186,6 +186,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRADESKILLS_SELECT"] = "전문 기술을 선택하면 도안을 볼 수 있습니다.",
     ["TRADESKILLS_NO_DATA"] = "전문 기술 데이터를 보려면 OneWoW CatalogData: Tradeskills를 설치하세요.",
     ["TRADESKILLS_SEARCH"] = "도안 검색...",
+    ["TRADESKILLS_FILTER_CLEAR"] = "지우기",
     ["TRADESKILLS_EXPANSION_ALL"] = "모든 확장팩",
     ["TRADESKILLS_RECIPES"] = "도안 %d개",
     ["TRADESKILLS_RECIPES_FILTERED"] = "도안 %d/%d개",
