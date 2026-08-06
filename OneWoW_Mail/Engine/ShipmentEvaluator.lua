@@ -178,11 +178,10 @@ local function ExpandTargets(shipment, skipSet)
         if not role then
             return nil, "no target"
         end
-        local selfKey = OneWoW_GUI:GetCharacterKey()
         local members = {}
         local anyMember = false
         for charKey in pairs(role.members or {}) do
-            if charKey ~= selfKey then
+            if not ns.AddressBook:IsSelfRecipient(charKey) then
                 anyMember = true
                 if not skipSet[charKey] then
                     tinsert(members, charKey)
@@ -199,6 +198,9 @@ local function ExpandTargets(shipment, skipSet)
     local target = shipment.target
     if not target or target == "" then
         return nil, "no target"
+    end
+    if ns.AddressBook:IsSelfRecipient(target) then
+        return nil, "to self"
     end
     local _, charKey = ns.AddressBook:IsSuiteAlt(target)
     local skipKey = charKey or target
@@ -756,6 +758,8 @@ function ShipmentEvaluator:Preview(filter)
                         err = ns.L["ERR_NO_TARGET"]
                     elseif err == "empty role" then
                         err = ns.L["ERR_EMPTY_ROLE"]
+                    elseif err == "to self" then
+                        err = ERR_MAIL_TO_SELF
                     end
                     tinsert(result.errors, (shipment.name or shipment.id) .. ": " .. err)
                 end
@@ -809,10 +813,9 @@ function ShipmentEvaluator:GetRoleMembers(shipment)
     if not role then
         return {}
     end
-    local selfKey = OneWoW_GUI:GetCharacterKey()
     local members = {}
     for charKey in pairs(role.members or {}) do
-        if charKey ~= selfKey then
+        if not ns.AddressBook:IsSelfRecipient(charKey) then
             tinsert(members, charKey)
         end
     end

@@ -93,6 +93,42 @@ function AddressBook:IsSuiteAlt(recipient)
     return charKey ~= nil, charKey
 end
 
+--- True when mailing `recipient` would be Blizzard self-mail (ERR_MAIL_TO_SELF).
+---@param recipient string|nil
+---@return boolean
+function AddressBook:IsSelfRecipient(recipient)
+    recipient = strtrim(recipient or "")
+    if recipient == "" then
+        return false
+    end
+
+    local selfKey = OneWoW_GUI:GetCharacterKey()
+    local _, charKey = self:IsSuiteAlt(recipient)
+    if selfKey and charKey and strlower(charKey) == strlower(selfKey) then
+        return true
+    end
+
+    local sendTo = self:NormalizeRecipient(recipient)
+    if sendTo == "" then
+        return false
+    end
+    local sendLower = strlower(sendTo)
+
+    local playerName = UnitName("player")
+    if playerName and sendLower == strlower(playerName) then
+        return true
+    end
+
+    if selfKey then
+        local selfSend = self:NormalizeRecipient(selfKey)
+        if selfSend ~= "" and sendLower == strlower(selfSend) then
+            return true
+        end
+    end
+
+    return false
+end
+
 --- Build address suggestions: alts → favorites → recent → contacts → friends → guild.
 ---@return table entries { { text, source, classFile? }, ... }
 function AddressBook:GetSuggestions()

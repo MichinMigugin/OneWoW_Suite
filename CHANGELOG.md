@@ -17,6 +17,9 @@
 ## Settings
 - Gear on the tab bar opens a compact settings popover with a slider for how long to wait for send confirmation (5–30 seconds; default 8) — raise it if laggy connections cause false timeouts
 
+## Fixes
+- Shipments no longer try to mail the character you are on (Character targets and Role members); Blizzard rejects self-mail
+
 ---
 
 *No user-facing changes this release for AltTracker, Bags, Catalog, DirectDeposit, Notes, ShoppingList, Trackers, or Vendors.*
