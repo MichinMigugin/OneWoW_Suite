@@ -216,7 +216,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TRADESKILLS_RECIPE_ITEM"] = "Objet de recette",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Toutes les extensions",
 
-    ["QUESTS_LIST_TITLE"] = "Quêtes",
     ["QUESTS_EMPTY"] = "Aucune quête ne correspond aux filtres.",
     ["QUESTS_SELECT"] = "Sélectionnez une quête pour voir les détails.",
     ["QUESTS_SEARCH"] = "Rechercher des quêtes...",
@@ -233,7 +232,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["QUESTS_STATUS_CAPPED"] = "Affichage de %d sur %d - recherchez ou filtrez pour en voir plus",
     ["QUESTS_SHOW_ON_MAP"] = "Afficher sur la carte",
     ["QUESTS_CHAIN"] = "Chaîne de quêtes",
-    ["QUESTS_SEARCH_ADVANCED"] = "Recherchez ou ajustez les filtres pour parcourir les quêtes.",
     ["QUESTS_QUEST_GIVER"] = "Donneur de quête",
     ["QUESTS_TURN_IN"] = "Rendre à",
     ["QUESTS_NPC_UNNAMED"] = "PNJ %d",

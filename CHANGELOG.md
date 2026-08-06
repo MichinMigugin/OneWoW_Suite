@@ -28,6 +28,13 @@
 ## Journal
 - Clear restores the search placeholder instead of leaving the box blank
 
+## Quests
+- Dropped the “Quests” and “Quest Details” panel titles
+- Expansion filter sits under search on the left (full width); Zone and Progress share the right row; Advanced is a compact control on the second row
+- Search placeholder is “Search quests…”; Clear restores it
+- List cards match Journal: name, `Expansion | Quest Type`, colored category tags; status icons stack under the favorite/group caret
+- Detail drops the duplicate favorite star; meta is Zone|Faction, Categories|Traits, then Quest ID|Map ID (no repeated Expansion/Type)
+
 ## Tradeskills
 - Dropped the “Professions” and “Recipe Details” panel titles so more room goes to the list and detail
 - Recipe detail matches Journal/Vendors: `Expansion | Profession` under the name, one `Recipe ID | Item ID` line (Item ID omitted when none), no repeated Profession/Expansion rows

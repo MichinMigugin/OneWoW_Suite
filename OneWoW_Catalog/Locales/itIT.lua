@@ -216,7 +216,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["TRADESKILLS_RECIPE_ITEM"] = "Oggetto ricetta",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Tutte le espansioni",
 
-    ["QUESTS_LIST_TITLE"] = "Missioni",
     ["QUESTS_EMPTY"] = "Nessuna missione corrisponde ai filtri.",
     ["QUESTS_SELECT"] = "Seleziona una missione per vedere i dettagli.",
     ["QUESTS_SEARCH"] = "Cerca missioni...",
@@ -233,7 +232,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["QUESTS_STATUS_CAPPED"] = "Visualizzazione di %d di %d - cerca o filtra per vederne altre",
     ["QUESTS_SHOW_ON_MAP"] = "Mostra sulla mappa",
     ["QUESTS_CHAIN"] = "Catena di missioni",
-    ["QUESTS_SEARCH_ADVANCED"] = "Cerca o regola i filtri per sfogliare le missioni.",
     ["QUESTS_QUEST_GIVER"] = "Assegnatario di missioni",
     ["QUESTS_TURN_IN"] = "Consegna a",
     ["QUESTS_NPC_UNNAMED"] = "PNG %d",

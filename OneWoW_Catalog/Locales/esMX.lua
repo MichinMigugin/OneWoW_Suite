@@ -216,7 +216,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["TRADESKILLS_RECIPE_ITEM"] = "Objeto de receta",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Todas las expansiones",
 
-    ["QUESTS_LIST_TITLE"] = "Misiones",
     ["QUESTS_EMPTY"] = "Ninguna misión coincide con los filtros.",
     ["QUESTS_SELECT"] = "Selecciona una misión para ver los detalles.",
     ["QUESTS_SEARCH"] = "Buscar misiones...",
@@ -233,7 +232,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["QUESTS_STATUS_CAPPED"] = "Mostrando %d de %d - busca o filtra para ver más",
     ["QUESTS_SHOW_ON_MAP"] = "Mostrar en el mapa",
     ["QUESTS_CHAIN"] = "Cadena de misiones",
-    ["QUESTS_SEARCH_ADVANCED"] = "Busca o ajusta los filtros para explorar misiones.",
     ["QUESTS_QUEST_GIVER"] = "Otorgante de misión",
     ["QUESTS_TURN_IN"] = "Entregar a",
     ["QUESTS_NPC_UNNAMED"] = "PNJ %d",

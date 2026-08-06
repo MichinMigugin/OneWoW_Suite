@@ -215,7 +215,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRADESKILLS_RECIPE_ITEM"] = "Recipe Item",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "All Expansions",
 
-    ["QUESTS_LIST_TITLE"] = "Quests",
     ["QUESTS_EMPTY"] = "No quests match filters.",
     ["QUESTS_SELECT"] = "Select a quest to view details.",
     ["QUESTS_SEARCH"] = "Search quests...",
@@ -232,7 +231,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["QUESTS_STATUS_CAPPED"] = "Showing %d of %d - search or filter to see more",
     ["QUESTS_SHOW_ON_MAP"] = "Show on Map",
     ["QUESTS_CHAIN"] = "Quest Chain",
-    ["QUESTS_SEARCH_ADVANCED"] = "Search or adjust filters to browse quests.",
     ["QUESTS_QUEST_GIVER"] = "Quest Giver",
     ["QUESTS_TURN_IN"] = "Turn In",
     ["QUESTS_NPC_UNNAMED"] = "NPC %d",

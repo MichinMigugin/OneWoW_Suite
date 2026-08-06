@@ -5,8 +5,12 @@ local OneWoW_GUI = OneWoW_GUI
 
 local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
 local WOW_QUEST_GOLD = OneWoW_GUI.Constants.WOW_QUEST_GOLD
-local QUEST_LIST_ROW_HEIGHT = 48
-local QUEST_LIST_ROW_FRAME_HEIGHT = 44
+local QUEST_LIST_ROW_HEIGHT = 60
+local QUEST_LIST_ROW_FRAME_HEIGHT = 56
+local QUEST_LIST_RIGHT_GUTTER = 28
+local QUEST_LIST_TAG_GAP = 8
+local QUEST_LIST_TAG_PAD_X = 8
+local QUEST_CATEGORY_TAG_MAX = 8
 
 ns.UI = ns.UI or {}
 
@@ -47,8 +51,12 @@ local QUEST_STATUS_ATLAS_WARBAND   = "warband-completed-icon"
 local QUEST_STATUS_ATLAS_ACCOUNT   = "questlog-questtypeicon-group"
 local QUEST_STATUS_ATLAS_PENDING   = "Islands-QuestBangDisable"
 
-local QUEST_STATUS_ICON_SLOT = 17
+local QUEST_STATUS_ICON_DISPLAY = 12
+local QUEST_STATUS_ICON_SLOT = 14
 local QUEST_STATUS_MAX_ICONS = 4
+local QUEST_STATUS_BOTTOM = 6
+local QUEST_STATUS_RIGHT = -8
+local QUEST_LIST_STATUS_RESERVE = QUEST_STATUS_MAX_ICONS * QUEST_STATUS_ICON_SLOT + 8
 
 local function IsCompletedByOtherCharacter(questID, tracker)
     if not questID or not tracker then
@@ -173,39 +181,34 @@ local function ResolveGroupStatusFlags(groupQuests, tracker)
     return flags
 end
 
---- Styles a single status texture for the given icon kind.
+--- Styles a single status texture for the given icon kind (~12px for vertical stack).
 ---@param tex table
 ---@param kind string
 local function StyleStatusIcon(tex, kind)
     tex:SetAlpha(1)
+    tex:SetSize(QUEST_STATUS_ICON_DISPLAY, QUEST_STATUS_ICON_DISPLAY)
 
     if kind == "completed_current" then
-        tex:SetSize(13, 13)
         tex:SetAtlas("")
         tex:SetTexture(QUEST_STATUS_TEXTURE_CHECK)
         tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
     elseif kind == "active_current" then
-        tex:SetSize(16, 16)
         tex:SetTexture(nil)
         tex:SetAtlas(QUEST_STATUS_ATLAS_BANG)
         tex:SetVertexColor(unpack(WOW_QUEST_GOLD))
     elseif kind == "active_other" then
-        tex:SetSize(16, 16)
         tex:SetTexture(nil)
         tex:SetAtlas(QUEST_STATUS_ATLAS_BANG_ALT)
         tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     elseif kind == "completed_warband" then
-        tex:SetSize(14, 16)
         tex:SetTexture(nil)
         tex:SetAtlas(QUEST_STATUS_ATLAS_WARBAND)
         tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     elseif kind == "completed_account" then
-        tex:SetSize(15, 15)
         tex:SetTexture(nil)
         tex:SetAtlas(QUEST_STATUS_ATLAS_ACCOUNT)
         tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     else
-        tex:SetSize(16, 16)
         tex:SetTexture(nil)
         tex:SetAtlas(QUEST_STATUS_ATLAS_PENDING)
         tex:SetVertexColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
@@ -238,11 +241,10 @@ local function BuildStatusIconKinds(flags)
     return kinds
 end
 
---- Lays out a button's status icon cluster, right-aligned from baseRight.
+--- Lays out a button's status icon cluster horizontally from the bottom-right.
 ---@param btn table
 ---@param flags table
----@param baseRight number
-local function ApplyQuestListStatusIcons(btn, flags, baseRight)
+local function ApplyQuestListStatusIcons(btn, flags)
     local icons = btn.statusIcons
     if not icons then return end
 
@@ -255,13 +257,21 @@ local function ApplyQuestListStatusIcons(btn, flags, baseRight)
         if kind then
             StyleStatusIcon(tex, kind)
             tex:ClearAllPoints()
-            tex:SetPoint("RIGHT", btn, "RIGHT",
-                baseRight - (count - i) * QUEST_STATUS_ICON_SLOT, 0)
+            -- Right-aligned: last kind sits at the corner; earlier kinds extend left.
+            tex:SetPoint(
+                "BOTTOMRIGHT",
+                btn,
+                "BOTTOMRIGHT",
+                QUEST_STATUS_RIGHT - (count - i) * QUEST_STATUS_ICON_SLOT,
+                QUEST_STATUS_BOTTOM
+            )
             tex:Show()
         else
             tex:Hide()
         end
     end
+
+    return count
 end
 
 local function QuestStatusLegendTextureMarkup(displayW, displayH)
@@ -356,6 +366,35 @@ local QUEST_CATEGORY_LABELS = {
     meta = L["QUESTS_CATEGORY_META"],
     threat = L["QUESTS_CATEGORY_THREAT"],
 }
+
+-- Distinct hues for standout categories; others fall back to muted text.
+local QUEST_CATEGORY_COLORS = {
+    campaign = { 0.95, 0.78, 0.20 },
+    legendary = { 1.0, 0.50, 0.0 },
+    seasonal = { 0.40, 0.85, 1.0 },
+    worldboss = { 1.0, 0.35, 0.35 },
+    story = { 0.55, 0.80, 1.0 },
+    artifact = { 0.90, 0.75, 0.40 },
+    renown = { 0.50, 1.0, 0.55 },
+    calling = { 0.70, 0.50, 1.0 },
+}
+
+local function GetQuestCategoryColor(categoryKey)
+    local color = QUEST_CATEGORY_COLORS[categoryKey]
+    if color then
+        return color[1], color[2], color[3]
+    end
+    return OneWoW_GUI:GetThemeColor("TEXT_MUTED")
+end
+
+local function HideQuestListCategoryTags(btn)
+    if not btn.catTexts then
+        return
+    end
+    for _, catText in ipairs(btn.catTexts) do
+        catText:Hide()
+    end
+end
 
 local QUEST_FLAG_LABELS = {
     daily = DAILY,
@@ -850,6 +889,61 @@ local function FormatQuestMetadataList(values)
 
     table.sort(labels)
     return table.concat(labels, ", ")
+end
+
+local function FormatQuestListMetaLine(quest, expansionName)
+    local expPart = expansionName or ""
+    local typePart = GetQuestTypeLabel(quest) or ""
+    if expPart ~= "" and typePart ~= "" then
+        return expPart .. "  |  " .. typePart
+    end
+    return expPart ~= "" and expPart or typePart
+end
+
+local function BindQuestListCategoryTags(btn, quest)
+    if not btn.catTexts then
+        return
+    end
+
+    local categories = quest and quest.categories
+    if type(categories) ~= "table" or #categories == 0 then
+        HideQuestListCategoryTags(btn)
+        return
+    end
+
+    local leftPad = btn.isChild and 28 or QUEST_LIST_TAG_PAD_X
+    local availW = (btn:GetWidth() > 0 and btn:GetWidth() or 260)
+        - leftPad
+        - QUEST_LIST_STATUS_RESERVE
+        - 4
+    local xPos = leftPad
+    local tagIndex = 0
+
+    for _, categoryKey in ipairs(categories) do
+        if tagIndex >= QUEST_CATEGORY_TAG_MAX then
+            break
+        end
+        local label = QUEST_CATEGORY_LABELS[categoryKey] or FormatQuestMetadataValue(categoryKey)
+        if label and label ~= "" and label ~= "-" then
+            local catText = btn.catTexts[tagIndex + 1]
+            catText:SetText(label)
+            catText:SetTextColor(GetQuestCategoryColor(categoryKey))
+            local w = catText:GetStringWidth() or 0
+            if xPos > leftPad and (xPos + w) > (leftPad + availW) then
+                break
+            end
+            tagIndex = tagIndex + 1
+            catText:ClearAllPoints()
+            -- Same bottom inset as status icons so tags share one baseline row.
+            catText:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", xPos, QUEST_STATUS_BOTTOM)
+            catText:Show()
+            xPos = xPos + w + QUEST_LIST_TAG_GAP
+        end
+    end
+
+    for i = tagIndex + 1, #btn.catTexts do
+        btn.catTexts[i]:Hide()
+    end
 end
 
 local function ResolveQuestZoneName(quest)
@@ -1996,7 +2090,7 @@ function ShowQuestDetail(panels, questData)
     titleText:SetPoint("TOPLEFT", titleFrame, "TOPLEFT", 0, 0)
     titleText:SetJustifyH("LEFT")
     titleText:SetWordWrap(true)
-    titleText:SetWidth(ns.Favorites and (W - 22) or W)
+    titleText:SetWidth(W)
     titleText:SetText(
         FormatAndHighlightQuestText(
             questData.name
@@ -2005,38 +2099,11 @@ function ShowQuestDetail(panels, questData)
     )
     titleText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    if ns.Favorites then
-        titleText:SetWidth(math.min((titleText:GetStringWidth() or 0) + 2, W - 22))
-    end
-
-    if ns.Favorites then
-        local detailFavBtn = OneWoW_GUI:CreateFavoriteToggleButton(titleFrame, {
-            size = 14,
-            favorite = ns.Favorites:IsFavorite("quests", questData.id),
-            tooltipTitle = L["CATALOG_FAVORITE"],
-            tooltipText = L["CATALOG_FAVORITE_TT"],
-            onClick = function(_, on)
-                ns.Favorites:SetFavorite("quests", questData.id, on)
-                if panels and RefreshQuestList then
-                    RefreshQuestList(panels)
-                end
-            end,
-        })
-        detailFavBtn:SetPoint("LEFT", titleText, "RIGHT", 4, 4)
-        track(detailFavBtn)
-    end
-
     local titleHeight = math.max(titleText:GetStringHeight() or 18, 18)
     titleFrame:SetHeight(titleHeight)
     yOffset = yOffset - titleHeight - 8
 
-    local expName  =
-        (questData.expansion ~= nil)
-        and addon.GetExpansionName(questData.expansion)
-        or UNKNOWN
-
     local zoneName = ResolveQuestZoneName(questData)
-    local questTypeName = GetQuestTypeLabel(questData)
     local categoryName = FormatQuestMetadataList(questData.categories)
     local factionName = GetFactionDisplayName(questData.faction)
     local flagName = FormatQuestMetadataList(questData.flags)
@@ -2207,61 +2274,63 @@ function ShowQuestDetail(panels, questData)
 
     metaFrame:SetSize(W, 38)
 
-    local metaLeft = OneWoW_GUI:CreateFS(metaFrame, 10)
+    local metaY = 0
+    local META_LINE_GAP = 2
+    local function AddMetaLine(parts)
+        if not parts or #parts == 0 then
+            return
+        end
+        local line = OneWoW_GUI:CreateFS(metaFrame, 10)
+        line:SetPoint("TOPLEFT", metaFrame, "TOPLEFT", 0, metaY)
+        line:SetPoint("TOPRIGHT", metaFrame, "TOPRIGHT", 0, metaY)
+        line:SetJustifyH("LEFT")
+        line:SetWordWrap(true)
+        line:SetWidth(W)
+        line:SetText(table.concat(parts, "  |  "))
+        line:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        metaY = metaY - math.max(line:GetStringHeight() or 12, 12) - META_LINE_GAP
+    end
 
-    metaLeft:SetPoint("TOPLEFT", metaFrame, "TOPLEFT", 0, 0)
-    metaLeft:SetPoint("TOPRIGHT", metaFrame, "TOPRIGHT", 0, 0)
-    metaLeft:SetJustifyH("LEFT")
-    metaLeft:SetWordWrap(true)
-    metaLeft:SetWidth(W)
-
-    local metaParts = {
-        string.format("%s: %s", L["EXPANSION"], expName),
+    AddMetaLine({
         string.format("%s: %s", ZONE, zoneName),
         string.format("%s: %s", FACTION, factionName),
-        string.format("%s: %s", L["QUESTS_QUEST_TYPE"], questTypeName),
-    }
+    })
 
+    local categoryTraitParts = {}
     if categoryName ~= "-" then
         table.insert(
-            metaParts,
+            categoryTraitParts,
             string.format("%s: %s", CATEGORIES, categoryName)
         )
     end
-
     if flagName ~= "-" then
         table.insert(
-            metaParts,
+            categoryTraitParts,
             string.format("%s: %s", L["QUESTS_TRAITS"], flagName)
         )
     end
+    AddMetaLine(categoryTraitParts)
 
-    metaLeft:SetText(table.concat(metaParts, "  |  "))
-
-    metaLeft:SetTextColor(
-        OneWoW_GUI:GetThemeColor("TEXT_MUTED")
-    )
-
-    local metaHeight = math.max(metaLeft:GetStringHeight() or 12, 12)
     local idMapFrame = track(CreateFrame("Frame", nil, metaFrame))
-    idMapFrame:SetPoint("TOPLEFT", metaFrame, "TOPLEFT", 0, -metaHeight - 2)
-    idMapFrame:SetSize(W, 16)
+    idMapFrame:SetPoint("TOPLEFT", metaFrame, "TOPLEFT", 0, metaY)
+    idMapFrame:SetSize(W, 12)
 
     local questIDText = OneWoW_GUI:CreateFS(idMapFrame, 10)
-    questIDText:SetPoint("LEFT", idMapFrame, "LEFT", 0, 0)
+    questIDText:SetPoint("TOPLEFT", idMapFrame, "TOPLEFT", 0, 0)
     questIDText:SetText(HighlightSearchText(string.format("%s: %d  |  ", L["QUESTS_QUESTID"], questID)))
     questIDText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
     local mapBtn = track(CreateFrame("Button", nil, idMapFrame))
-    mapBtn:SetPoint("LEFT", questIDText, "RIGHT", 0, 0)
+    mapBtn:SetPoint("TOPLEFT", questIDText, "TOPRIGHT", 0, 0)
 
     local mapText = OneWoW_GUI:CreateFS(mapBtn, 10)
-    mapText:SetPoint("LEFT", mapBtn, "LEFT", 0, 0)
+    mapText:SetPoint("TOPLEFT", mapBtn, "TOPLEFT", 0, 0)
     mapText:SetText(string.format("%s: %d", L["QUESTS_MAPID"], displayMapID or 0))
     mapText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-    mapBtn:SetSize((mapText:GetStringWidth() or 0) + 4, 16)
+    mapBtn:SetSize((mapText:GetStringWidth() or 0) + 4, 12)
 
-    metaFrame:SetHeight(metaHeight + 18)
+    metaY = metaY - 12 - META_LINE_GAP
+    metaFrame:SetHeight(math.abs(metaY))
 
     mapBtn:SetScript("OnEnter", function(self)
         mapText:SetTextColor(unpack(WOW_QUEST_GOLD))
@@ -3312,6 +3381,7 @@ local function UpdateQuestListEntry(btn, quest, _)
         if btn.checkHit then btn.checkHit:Hide() end
         if btn.favBtn then btn.favBtn:Hide() end
         if btn.subText then btn.subText:SetText("") end
+        HideQuestListCategoryTags(btn)
 
         if btn.nameText then
             btn.nameText:ClearAllPoints()
@@ -3360,9 +3430,8 @@ local function UpdateQuestListEntry(btn, quest, _)
     end
     statusFlags = statusFlags or { pending = true }
 
-    local statusBaseRight = btn.isGroup and -40 or -26
-    local statusCount = #BuildStatusIconKinds(statusFlags)
-    local statusReserve = (btn.isGroup and 42 or 28) + statusCount * QUEST_STATUS_ICON_SLOT
+    local leftPad = btn.isChild and 28 or 8
+    local rightGutter = -QUEST_LIST_RIGHT_GUTTER
 
     if btn.nameText then
         local nameText =
@@ -3374,8 +3443,8 @@ local function UpdateQuestListEntry(btn, quest, _)
             )
 
         btn.nameText:ClearAllPoints()
-        btn.nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", btn.isChild and 28 or 8, -6)
-        btn.nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -statusReserve, -6)
+        btn.nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", leftPad, -6)
+        btn.nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", rightGutter, -6)
         btn.nameText:SetText(nameText)
 
         if selectedQuest and quest and selectedQuest.id == quest.id then
@@ -3396,17 +3465,26 @@ local function UpdateQuestListEntry(btn, quest, _)
 
     if btn.subText then
         btn.subText:ClearAllPoints()
-        btn.subText:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", btn.isChild and 28 or 8, 6)
-        btn.subText:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -statusReserve, 6)
-        btn.subText:SetText(expName)
+        btn.subText:SetPoint("TOPLEFT", btn.nameText, "BOTTOMLEFT", 0, -2)
+        btn.subText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", rightGutter, 0)
+        btn.subText:SetText(FormatQuestListMetaLine(quest, expName))
     end
 
-    ApplyQuestListStatusIcons(btn, statusFlags, statusBaseRight)
+    if btn.isGroup then
+        HideQuestListCategoryTags(btn)
+    else
+        BindQuestListCategoryTags(btn, quest)
+    end
+
+    local statusCount = ApplyQuestListStatusIcons(btn, statusFlags) or 0
 
     if btn.checkHit then
         btn.checkHit:ClearAllPoints()
-        btn.checkHit:SetPoint("RIGHT", btn, "RIGHT", statusBaseRight + 10, 0)
-        btn.checkHit:SetSize(statusCount * QUEST_STATUS_ICON_SLOT + 8, 24)
+        btn.checkHit:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -4, QUEST_STATUS_BOTTOM - 2)
+        btn.checkHit:SetSize(
+            math.max(statusCount, 1) * QUEST_STATUS_ICON_SLOT + 8,
+            QUEST_STATUS_ICON_DISPLAY + 8
+        )
         btn.checkHit:Show()
     end
 
@@ -3612,19 +3690,26 @@ local function CreateQuestListRow(parent, api)
 
     local nameText = OneWoW_GUI:CreateFS(btn, 12)
     nameText:SetPoint("TOPLEFT", btn, "TOPLEFT", 8, -6)
-    nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -44, -6)
+    nameText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -QUEST_LIST_RIGHT_GUTTER, -6)
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
     nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     btn.nameText = nameText
 
     local subText = OneWoW_GUI:CreateFS(btn, 10)
-    subText:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 8, 6)
-    subText:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -44, 6)
+    subText:SetPoint("TOPLEFT", nameText, "BOTTOMLEFT", 0, -2)
+    subText:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -QUEST_LIST_RIGHT_GUTTER, 0)
     subText:SetJustifyH("LEFT")
     subText:SetWordWrap(false)
     subText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     btn.subText = subText
+
+    btn.catTexts = {}
+    for i = 1, QUEST_CATEGORY_TAG_MAX do
+        local catText = OneWoW_GUI:CreateFS(btn, 10)
+        catText:Hide()
+        btn.catTexts[i] = catText
+    end
 
     btn.statusIcons = {}
     for i = 1, QUEST_STATUS_MAX_ICONS do
@@ -3637,7 +3722,7 @@ local function CreateQuestListRow(parent, api)
         width = 28,
         height = 24,
     })
-    checkHit:SetPoint("RIGHT", btn, "RIGHT", -22, 0)
+    checkHit:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -4, QUEST_STATUS_BOTTOM - 2)
     checkHit:EnableMouseMotion(true)
     checkHit:SetScript("OnEnter", function(self)
         ShowQuestStatusLegendTooltip(self)
@@ -3650,7 +3735,7 @@ local function CreateQuestListRow(parent, api)
 
     local groupToggle = CreateFrame("Button", nil, btn, "BackdropTemplate")
     groupToggle:SetSize(18, 18)
-    groupToggle:SetPoint("RIGHT", btn, "RIGHT", -8, 0)
+    groupToggle:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -4, -6)
     groupToggle:SetBackdrop(BACKDROP_INNER_NO_INSETS)
     groupToggle:SetBackdropColor(OneWoW_GUI:GetThemeColor("QUEST_ROW_GROUP_TOGGLE"))
     groupToggle:SetBackdropBorderColor(unpack(WOW_QUEST_GOLD))
@@ -4502,7 +4587,7 @@ function ns.UI.CreateQuestsTab(parent)
 
     local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
     local GAP    = ns.Constants.GUI.PANEL_GAP
-    local HDR_H  = 42
+    local HDR_H  = 70
     local DRAWER_H = 132
 
     local leftHeader = OneWoW_GUI:CreateFilterBar(parent, { height = HDR_H, offset = 0 })
@@ -4540,14 +4625,12 @@ function ns.UI.CreateQuestsTab(parent)
 
     PositionContentArea()
 
-    local panels = OneWoW_GUI:CreateSplitPanel(contentArea)
-    panels.listTitle:SetText(L["QUESTS_LIST_TITLE"])
-    panels.detailTitle:SetText(QUEST_DETAILS)
+    local panels = OneWoW_GUI:CreateSplitPanel(contentArea, { hideTitles = true })
 
     questListAPI = OneWoW_GUI:CreateVirtualizer(panels.listPanel, {
         name = "CatalogQuestsList",
         rowHeight = QUEST_LIST_ROW_HEIGHT,
-        numVisibleRows = 16,
+        numVisibleRows = 10,
         rowInset = 4,
         selectOnClick = false,
         scrollFrame = panels.listScrollFrame,
@@ -4660,7 +4743,7 @@ function ns.UI.CreateQuestsTab(parent)
 
     local searchBox = OneWoW_GUI:CreateEditBox(leftHeader, {
         height = 26,
-        placeholderText = L["QUESTS_SEARCH_ADVANCED"],
+        placeholderText = L["QUESTS_SEARCH"],
         onTextChanged = function(text)
             searchText = text
             CancelRewardItemSearchWarmup()
@@ -4676,10 +4759,19 @@ function ns.UI.CreateQuestsTab(parent)
     local DD_GAP = 4
     local DD_PAD = 8
 
-    local expDropdown, expText = OneWoW_GUI:CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_EXPANSION_ALL"] })
+    local expDropdown, expText = OneWoW_GUI:CreateDropdown(leftHeader, {
+        width = LEFT_W - 16,
+        text = L["QUESTS_EXPANSION_ALL"],
+    })
+    expDropdown:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -38)
+
     local zoneDropdown, zoneText = OneWoW_GUI:CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_ZONE_ALL"] })
     local progDropdown, progText = OneWoW_GUI:CreateDropdown(rightHeader, { width = 10, text = L["QUESTS_PROGRESS_ALL"] })
-    local advancedBtn = OneWoW_GUI:CreateFitTextButton(rightHeader, { text = GetAdvancedButtonText(), height = 26, minWidth = 92 })
+    local advancedBtn = OneWoW_GUI:CreateFitTextButton(rightHeader, {
+        text = GetAdvancedButtonText(),
+        height = 22,
+        minWidth = 72,
+    })
 
     local drawerTitle = OneWoW_GUI:CreateFS(advancedDrawer, 11)
     drawerTitle:SetPoint("TOPLEFT", advancedDrawer, "TOPLEFT", 10, -8)
@@ -4701,22 +4793,17 @@ function ns.UI.CreateQuestsTab(parent)
     local advRuntime = CreateAdvancedDropdown(advancedDrawer, L["QUESTS_DATA"], L["QUESTS_FILTER_DATA_ALL"])
 
     local function LayoutFilterDropdowns(w)
-        local ddW = math.floor((w - (DD_PAD * 2) - (DD_GAP * 3)) / 4)
-        expDropdown:ClearAllPoints()
-        expDropdown:SetSize(ddW, 26)
-        expDropdown:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", DD_PAD, -8)
-
+        local ddW = math.floor((w - (DD_PAD * 2) - DD_GAP) / 2)
         zoneDropdown:ClearAllPoints()
         zoneDropdown:SetSize(ddW, 26)
-        zoneDropdown:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", DD_PAD + (ddW + DD_GAP), -8)
+        zoneDropdown:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", DD_PAD, -8)
 
         progDropdown:ClearAllPoints()
         progDropdown:SetSize(ddW, 26)
-        progDropdown:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", DD_PAD + (ddW + DD_GAP) * 2, -8)
+        progDropdown:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", DD_PAD + ddW + DD_GAP, -8)
 
         advancedBtn:ClearAllPoints()
-        advancedBtn:SetSize(ddW, 26)
-        advancedBtn:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", DD_PAD + (ddW + DD_GAP) * 3, -8)
+        advancedBtn:SetPoint("TOPRIGHT", rightHeader, "TOPRIGHT", -DD_PAD, -38)
     end
 
     local function LayoutAdvancedDrawer(w)
@@ -4847,6 +4934,7 @@ function ns.UI.CreateQuestsTab(parent)
         ResetAdvancedFilters()
         searchBox:SetText("")
         searchBox:ClearFocus()
+        searchBox:RestorePlaceholder()
         expText:SetText(L["QUESTS_EXPANSION_ALL"])
         zoneText:SetText(L["QUESTS_ZONE_ALL"])
         progText:SetText(L["QUESTS_PROGRESS_ALL"])

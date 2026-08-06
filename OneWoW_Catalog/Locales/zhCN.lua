@@ -216,7 +216,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TRADESKILLS_RECIPE_ITEM"] = "配方物品",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "所有资料片",
 
-    ["QUESTS_LIST_TITLE"] = "任务",
     ["QUESTS_EMPTY"] = "没有符合筛选条件的任务。",
     ["QUESTS_SELECT"] = "选择一个任务以查看详情。",
     ["QUESTS_SEARCH"] = "搜索任务……",
@@ -233,7 +232,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["QUESTS_STATUS_CAPPED"] = "显示 %d/%d ——搜索或筛选以查看更多",
     ["QUESTS_SHOW_ON_MAP"] = "在地图上显示",
     ["QUESTS_CHAIN"] = "任务链",
-    ["QUESTS_SEARCH_ADVANCED"] = "搜索或调整筛选条件以浏览任务。",
     ["QUESTS_QUEST_GIVER"] = "任务发布者",
     ["QUESTS_TURN_IN"] = "交付给",
     ["QUESTS_NPC_UNNAMED"] = "NPC %d",

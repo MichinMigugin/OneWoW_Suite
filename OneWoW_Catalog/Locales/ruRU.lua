@@ -216,7 +216,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TRADESKILLS_RECIPE_ITEM"] = "Предмет рецепта",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Все дополнения",
 
-    ["QUESTS_LIST_TITLE"] = "Задания",
     ["QUESTS_EMPTY"] = "Нет заданий, соответствующих фильтрам.",
     ["QUESTS_SELECT"] = "Выберите задание, чтобы просмотреть подробности.",
     ["QUESTS_SEARCH"] = "Поиск заданий...",
@@ -233,7 +232,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["QUESTS_STATUS_CAPPED"] = "Показано %d из %d - выполните поиск или фильтр, чтобы увидеть больше",
     ["QUESTS_SHOW_ON_MAP"] = "Показать на карте",
     ["QUESTS_CHAIN"] = "Цепочка заданий",
-    ["QUESTS_SEARCH_ADVANCED"] = "Выполните поиск или настройте фильтры для просмотра заданий.",
     ["QUESTS_QUEST_GIVER"] = "Дающий задание",
     ["QUESTS_TURN_IN"] = "Сдать",
     ["QUESTS_NPC_UNNAMED"] = "НИП %d",

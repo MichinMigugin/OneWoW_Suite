@@ -216,7 +216,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TRADESKILLS_RECIPE_ITEM"] = "配方物品",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "所有資料片",
 
-    ["QUESTS_LIST_TITLE"] = "任務",
     ["QUESTS_EMPTY"] = "沒有符合篩選條件的任務。",
     ["QUESTS_SELECT"] = "選擇一個任務以檢視詳細資料。",
     ["QUESTS_SEARCH"] = "搜尋任務……",
@@ -233,7 +232,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["QUESTS_STATUS_CAPPED"] = "顯示 %d/%d ——搜尋或篩選以檢視更多",
     ["QUESTS_SHOW_ON_MAP"] = "在地圖上顯示",
     ["QUESTS_CHAIN"] = "任務鏈",
-    ["QUESTS_SEARCH_ADVANCED"] = "搜尋或調整篩選條件以瀏覽任務。",
     ["QUESTS_QUEST_GIVER"] = "任務發布者",
     ["QUESTS_TURN_IN"] = "交付給",
     ["QUESTS_NPC_UNNAMED"] = "NPC %d",

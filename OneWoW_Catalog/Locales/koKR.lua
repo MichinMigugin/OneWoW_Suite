@@ -215,7 +215,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRADESKILLS_RECIPE_ITEM"] = "제조법 아이템",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "모든 확장팩",
 
-    ["QUESTS_LIST_TITLE"] = "퀘스트",
     ["QUESTS_EMPTY"] = "필터에 맞는 퀘스트가 없습니다.",
     ["QUESTS_SELECT"] = "퀘스트를 선택하면 상세 정보를 볼 수 있습니다.",
     ["QUESTS_SEARCH"] = "퀘스트 검색...",
@@ -376,7 +375,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["BINDING_HEADER_ONEWOW_CATALOG"] = "|cFF00FF00OneWoW|r 도감",
     ["BINDING_NAME_ONEWOW_CATALOG_OPEN"] = "도감 열기",
     ["BINDING_NAME_ONEWOW_CATALOG_ITEM_SEARCH"] = "아이템 검색",
-    ["QUESTS_SEARCH_ADVANCED"] = "퀘스트를 찾아보려면 검색하거나 필터를 조정하세요.",
 
     -- Machine-drafted quest relationship and taxonomy filters; pending native review.
     ["QUESTS_ADVANCED_FILTERS"] = "고급 필터",

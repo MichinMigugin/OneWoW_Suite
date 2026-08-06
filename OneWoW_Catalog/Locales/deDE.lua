@@ -216,7 +216,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TRADESKILLS_RECIPE_ITEM"] = "Rezeptgegenstand",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Alle Erweiterungen",
 
-    ["QUESTS_LIST_TITLE"] = "Quests",
     ["QUESTS_EMPTY"] = "Keine Quests passen zu den Filtern.",
     ["QUESTS_SELECT"] = "Wählt eine Quest, um Details anzuzeigen.",
     ["QUESTS_SEARCH"] = "Quests suchen...",
@@ -233,7 +232,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["QUESTS_STATUS_CAPPED"] = "Zeige %d von %d - sucht oder filtert für mehr",
     ["QUESTS_SHOW_ON_MAP"] = "Auf Karte zeigen",
     ["QUESTS_CHAIN"] = "Questreihe",
-    ["QUESTS_SEARCH_ADVANCED"] = "Sucht oder passt Filter an, um Quests zu durchsuchen.",
     ["QUESTS_QUEST_GIVER"] = "Questgeber",
     ["QUESTS_TURN_IN"] = "Abgabe bei",
     ["QUESTS_NPC_UNNAMED"] = "NSC %d",
