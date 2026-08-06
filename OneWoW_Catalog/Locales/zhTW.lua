@@ -200,6 +200,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TRADESKILLS_REAGENTS"] = "材料",
     ["TRADESKILLS_REAGENT_REQ"] = "必需",
     ["TRADESKILLS_REAGENT_OPT"] = "可選",
+    ["TRADESKILLS_ON_HAND"] = "已有材料",
     ["TRADESKILLS_KNOWN_BY"] = "已學會角色",
     ["TRADESKILLS_NOT_SCANNED"] = "在遊戲中開啟專業以進行追蹤。",
     ["TRADESKILLS_ALL"] = "所有專業",
@@ -210,6 +211,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "其他角色已學會",
     ["TRADESKILLS_SHOW_NOT_KNOWN_ME"] = "本角色未學會",
     ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "其他角色未學會",
+    ["TRADESKILLS_HAVE_MATERIALS"] = "已有材料",
     ["TRADESKILLS_RECIPE_ITEM"] = "配方物品",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "所有資料片",
 

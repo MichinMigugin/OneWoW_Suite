@@ -200,6 +200,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TRADESKILLS_REAGENTS"] = "Reagenzien",
     ["TRADESKILLS_REAGENT_REQ"] = "Erforderlich",
     ["TRADESKILLS_REAGENT_OPT"] = "Optional",
+    ["TRADESKILLS_ON_HAND"] = "Vorrätig",
     ["TRADESKILLS_KNOWN_BY"] = "Bekannt bei",
     ["TRADESKILLS_NOT_SCANNED"] = "Öffnet Berufe im Spiel, um sie zu erfassen.",
     ["TRADESKILLS_ALL"] = "Alle Berufe",
@@ -210,6 +211,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "Twinks bekannt",
     ["TRADESKILLS_SHOW_NOT_KNOWN_ME"] = "Mir unbekannt",
     ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "Twinks unbekannt",
+    ["TRADESKILLS_HAVE_MATERIALS"] = "Materialien vorhanden",
     ["TRADESKILLS_RECIPE_ITEM"] = "Rezeptgegenstand",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Alle Erweiterungen",
 

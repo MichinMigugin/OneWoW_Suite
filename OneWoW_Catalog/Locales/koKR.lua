@@ -199,6 +199,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRADESKILLS_REAGENTS"] = "재료",
     ["TRADESKILLS_REAGENT_REQ"] = "필수",
     ["TRADESKILLS_REAGENT_OPT"] = "선택",
+    ["TRADESKILLS_ON_HAND"] = "보유 중",
     ["TRADESKILLS_KNOWN_BY"] = "습득 캐릭터",
     ["TRADESKILLS_NOT_SCANNED"] = "게임에서 전문 기술을 열어 추적하세요.",
     ["TRADESKILLS_ALL"] = "모든 전문 기술",
@@ -209,6 +210,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "다른 캐릭터가 습득",
     ["TRADESKILLS_SHOW_NOT_KNOWN_ME"] = "내 캐릭터 미습득",
     ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "다른 캐릭터 미습득",
+    ["TRADESKILLS_HAVE_MATERIALS"] = "재료 보유",
     ["TRADESKILLS_RECIPE_ITEM"] = "제조법 아이템",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "모든 확장팩",
 

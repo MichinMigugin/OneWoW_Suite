@@ -330,6 +330,7 @@
     "NAME",
     "TARGET",
     "ENABLE",
+    "EQUIPPED",
     "NEVER",
     "NEW",
     "NEXT",

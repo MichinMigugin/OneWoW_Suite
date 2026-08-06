@@ -200,6 +200,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TRADESKILLS_REAGENTS"] = "Реагенты",
     ["TRADESKILLS_REAGENT_REQ"] = "Обязательно",
     ["TRADESKILLS_REAGENT_OPT"] = "Необязательно",
+    ["TRADESKILLS_ON_HAND"] = "В наличии",
     ["TRADESKILLS_KNOWN_BY"] = "Известно у",
     ["TRADESKILLS_NOT_SCANNED"] = "Откройте профессии в игре для отслеживания.",
     ["TRADESKILLS_ALL"] = "Все профессии",
@@ -210,6 +211,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "Известно соратникам",
     ["TRADESKILLS_SHOW_NOT_KNOWN_ME"] = "Не изучено мной",
     ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "Не изучено соратниками",
+    ["TRADESKILLS_HAVE_MATERIALS"] = "Есть материалы",
     ["TRADESKILLS_RECIPE_ITEM"] = "Предмет рецепта",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Все дополнения",
 

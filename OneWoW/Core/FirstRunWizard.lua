@@ -52,7 +52,9 @@ FirstRun.CATALOG = {
         summaryKey  = "WIZARD_FEATURE_CATALOG_DESC",
         group       = "feature",
         iconTexture = "Interface\\Icons\\INV_Misc_Book_11",
-        datastores  = {},
+        datastores  = {
+            "OneWoW_AltTracker_Storage",
+        },
     },
     {
         addonName   = "OneWoW_Notes",

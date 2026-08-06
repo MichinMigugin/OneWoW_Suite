@@ -25,12 +25,16 @@
 - Shipments no longer try to mail the character you are on (Character targets and Role members); Blizzard rejects self-mail
 
 ### Catalog
+- Soft-requires AltTracker Storage (BringUp pulls it with Catalog); without Storage, Catalog stays usable but Home marks it diminished
 
 #### Tradeskills
 - Dropped the “Professions” and “Recipe Details” panel titles so more room goes to the list and detail
 - Recipe detail matches Journal/Vendors: `Expansion | Profession` under the name, one `Recipe ID | Item ID` line (Item ID omitted when none), no repeated Profession/Expansion rows
 - Profession filter is a dropdown (not a button grid); filter bars are shorter so the list starts higher
 - Recipe list rows show a muted `Expansion | Profession` line under the name (omits what’s already implied by the active filters / expansion groups)
+- Reagent quantities show account-wide have/need (`12/15`) when Storage is available; otherwise the old `x15` style
+- On Hand section lists owned reagents for the selected recipe; expand a row for owner / location / quantity breakdown
+- Have Materials filter (right header) shows only recipes whose required reagents you own across Storage; expansion dropdown sits above the known checkboxes like Journal
 
 ---
 

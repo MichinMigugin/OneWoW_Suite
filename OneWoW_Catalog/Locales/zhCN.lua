@@ -200,6 +200,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TRADESKILLS_REAGENTS"] = "材料",
     ["TRADESKILLS_REAGENT_REQ"] = "必需",
     ["TRADESKILLS_REAGENT_OPT"] = "可选",
+    ["TRADESKILLS_ON_HAND"] = "已有材料",
     ["TRADESKILLS_KNOWN_BY"] = "已学会角色",
     ["TRADESKILLS_NOT_SCANNED"] = "在游戏中打开专业以进行追踪。",
     ["TRADESKILLS_ALL"] = "所有专业",
@@ -210,6 +211,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "其他角色已学会",
     ["TRADESKILLS_SHOW_NOT_KNOWN_ME"] = "本角色未学会",
     ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "其他角色未学会",
+    ["TRADESKILLS_HAVE_MATERIALS"] = "已有材料",
     ["TRADESKILLS_RECIPE_ITEM"] = "配方物品",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "所有资料片",
 

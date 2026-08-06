@@ -200,6 +200,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["TRADESKILLS_REAGENTS"] = "Reagentes",
     ["TRADESKILLS_REAGENT_REQ"] = "Obrigatório",
     ["TRADESKILLS_REAGENT_OPT"] = "Opcional",
+    ["TRADESKILLS_ON_HAND"] = "Em mãos",
     ["TRADESKILLS_KNOWN_BY"] = "Conhecida por",
     ["TRADESKILLS_NOT_SCANNED"] = "Abra as profissões no jogo para rastreá-las.",
     ["TRADESKILLS_ALL"] = "Todas as profissões",
@@ -210,6 +211,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["TRADESKILLS_SHOW_KNOWN_ALTS"] = "Conhecida por secundários",
     ["TRADESKILLS_SHOW_NOT_KNOWN_ME"] = "Não conhecida por mim",
     ["TRADESKILLS_SHOW_NOT_KNOWN_ALTS"] = "Não conhecida por secundários",
+    ["TRADESKILLS_HAVE_MATERIALS"] = "Tenho materiais",
     ["TRADESKILLS_RECIPE_ITEM"] = "Item de receita",
     ["TRADESKILLS_ALL_EXPANSIONS"] = "Todas as expansões",
 

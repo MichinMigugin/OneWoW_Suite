@@ -29,6 +29,7 @@ local filterKnownByMe = false
 local filterKnownByAlts = false
 local filterNotKnownByMe = false
 local filterNotKnownByAlts = false
+local filterHaveMaterials = false
 local filterExpansion = nil
 
 OneWoW_Catalog_TradeskillAPI = {
@@ -58,12 +59,280 @@ local EXPANSION_DISPLAY = {
 }
 
 local expandedExpansions = {}
+local expandedOnHand = {}
+local onHandRecipeID = nil
 
 local RefreshRecipeList
 local ShowRecipeDetail
 
 local function GetDataAddon()
     return OneWoW_CatalogData_Tradeskills_API
+end
+
+--- Soft Storage surface (no TOC OptionalDeps). Sticky nil when Storage is off.
+local function IsStorageReady()
+    return OneWoW_AltTracker_Storage_API ~= nil
+end
+
+local function GetStorageItemIndex()
+    local api = OneWoW_AltTracker_Storage_API
+    if not api or not api.GetItemIndex then
+        return nil
+    end
+    return api.GetItemIndex()
+end
+
+--- Account-wide owned count for an item family (includes craft-rank siblings).
+--- Returns nil when Storage is unavailable (caller should fall back to xN).
+---@param itemID number|nil
+---@return number|nil
+local function GetFamilyOwnedCount(itemID)
+    if not itemID then
+        return nil
+    end
+    local idx = GetStorageItemIndex()
+    if not idx or not idx.GetFamilyLocations then
+        return nil
+    end
+    local locs = idx:GetFamilyLocations(itemID)
+    if not locs then
+        return 0
+    end
+    local total = 0
+    for _, loc in ipairs(locs) do
+        total = total + (loc.count or 0)
+    end
+    return total
+end
+
+--- Format reagent qty: have/need when Storage is ready, else legacy xN.
+---@param need number
+---@param have number|nil
+---@return string text
+---@return boolean|nil met nil when have is unknown
+local function FormatReagentHaveNeed(need, have)
+    need = need or 0
+    if have == nil then
+        return "x" .. need, nil
+    end
+    return string.format("%d/%d", have, need), have >= need
+end
+
+local function GetLocationTypeLabel(locType)
+    if locType == "bags" then
+        return L["ITEMSEARCH_LOC_BAGS"]
+    elseif locType == "bank" then
+        return BANK
+    elseif locType == "warband" then
+        return L["ITEMSEARCH_LOC_WARBAND"]
+    elseif locType == "guild" then
+        return GUILD_BANK
+    elseif locType == "auction" then
+        return L["ITEMSEARCH_LOC_AH"]
+    elseif locType == "mail" then
+        return L["MAIL"]
+    elseif locType == "equipped" then
+        return EQUIPPED
+    end
+    return locType
+end
+
+--- Bucket GetFamilyLocations into owner · location rows (one per bucket).
+---@param itemID number
+---@return table[] rows { ownerName, locLabel, count }
+local function AggregateFamilyLocationRows(itemID)
+    local rows = {}
+    local idx = GetStorageItemIndex()
+    if not idx or not idx.GetFamilyLocations then
+        return rows
+    end
+    local locs = idx:GetFamilyLocations(itemID)
+    if not locs then
+        return rows
+    end
+
+    local buckets = {}
+    local order = {}
+    for _, loc in ipairs(locs) do
+        local locType = loc.locationType
+        if locType then
+            local ownerName
+            local ownerKind
+            local key
+            if locType == "warband" then
+                ownerName = L["ITEMSEARCH_LOC_WARBAND"]
+                ownerKind = "warband"
+                key = "WARBAND"
+            elseif locType == "guild" then
+                ownerName = loc.guildName or GUILD_BANK
+                ownerKind = "guild"
+                key = "GUILD|" .. ownerName
+            elseif loc.charKey then
+                ownerName = loc.name or loc.charKey
+                if loc.realm and loc.realm ~= "" and not (loc.name and loc.name:find("-", 1, true)) then
+                    ownerName = ownerName .. "-" .. loc.realm
+                end
+                ownerKind = "char"
+                key = loc.charKey .. "|" .. locType
+            else
+                ownerName = GetLocationTypeLabel(locType)
+                ownerKind = "other"
+                key = locType
+            end
+
+            local bucketKey = key .. "|" .. locType
+            local b = buckets[bucketKey]
+            if not b then
+                local locLabel = GetLocationTypeLabel(locType)
+                if locType == "warband" then
+                    locLabel = BANK
+                end
+                b = {
+                    ownerName = ownerName,
+                    ownerKind = ownerKind,
+                    locLabel = locLabel,
+                    count = 0,
+                }
+                buckets[bucketKey] = b
+                tinsert(order, bucketKey)
+            end
+            b.count = b.count + (loc.count or 0)
+        end
+    end
+
+    sort(order, function(a, b)
+        local ea, eb = buckets[a], buckets[b]
+        local kindOrder = { char = 1, warband = 2, guild = 3, other = 4 }
+        local ka, kb = kindOrder[ea.ownerKind] or 9, kindOrder[eb.ownerKind] or 9
+        if ka ~= kb then return ka < kb end
+        if (ea.ownerName or "") ~= (eb.ownerName or "") then
+            return (ea.ownerName or "") < (eb.ownerName or "")
+        end
+        return (ea.locLabel or "") < (eb.locLabel or "")
+    end)
+
+    for _, key in ipairs(order) do
+        tinsert(rows, buckets[key])
+    end
+    return rows
+end
+
+--- Owned reagents for On Hand: required fixed lines with have>0, plus owned optional slot choices.
+---@return table[] entries { itemID, have }
+local function CollectOnHandEntries(reagents, slots)
+    local entries = {}
+    local seen = {}
+
+    if reagents then
+        for _, rg in ipairs(reagents) do
+            local itemID = rg[1]
+            local reagentType = rg[3]
+            -- type 0 = schematic slot (handled via slots); type 2 = optional finishing reagent
+            if itemID and reagentType ~= 0 and reagentType ~= 2 and not seen[itemID] then
+                local have = GetFamilyOwnedCount(itemID)
+                if have and have > 0 then
+                    seen[itemID] = true
+                    tinsert(entries, { itemID = itemID, have = have })
+                end
+            end
+        end
+    end
+
+    if slots then
+        for _, sl in ipairs(slots) do
+            local opts = sl[5]
+            if opts then
+                for _, optItemID in ipairs(opts) do
+                    if optItemID and not seen[optItemID] then
+                        local have = GetFamilyOwnedCount(optItemID)
+                        if have and have > 0 then
+                            seen[optItemID] = true
+                            tinsert(entries, { itemID = optItemID, have = have })
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return entries
+end
+
+--- True when every required reagent (fixed + required slots) is owned at need qty.
+--- Optional finishing reagents / optional slots are ignored. Uses ownedCache when provided.
+---@param recipe table
+---@param addon table
+---@param ownedCache table|nil
+---@return boolean
+local function RecipeHasRequiredMaterials(recipe, addon, ownedCache)
+    if not recipe or not addon or not IsStorageReady() then
+        return false
+    end
+
+    local function owned(itemID)
+        if not itemID then return 0 end
+        if ownedCache then
+            local cached = ownedCache[itemID]
+            if cached ~= nil then
+                return cached
+            end
+            local have = GetFamilyOwnedCount(itemID) or 0
+            ownedCache[itemID] = have
+            return have
+        end
+        return GetFamilyOwnedCount(itemID) or 0
+    end
+
+    local reagents, slots = addon.GetRecipeReagents(recipe.id)
+
+    if reagents then
+        for _, rg in ipairs(reagents) do
+            local itemID = rg[1]
+            local qty = rg[2] or 0
+            local reagentType = rg[3]
+            if itemID and reagentType ~= 0 and reagentType ~= 2 then
+                if owned(itemID) < qty then
+                    return false
+                end
+            end
+        end
+    end
+
+    if slots then
+        for _, sl in ipairs(slots) do
+            local qty = sl[2] or 0
+            local required = sl[3]
+            local opts = sl[5]
+            if required and opts and #opts > 0 then
+                local ok = false
+                for _, optItemID in ipairs(opts) do
+                    if owned(optItemID) >= qty then
+                        ok = true
+                        break
+                    end
+                end
+                if not ok then
+                    return false
+                end
+            end
+        end
+    end
+
+    return true
+end
+
+local function FilterByHaveMaterials(recipes, addon)
+    if not filterHaveMaterials or not IsStorageReady() then
+        return recipes
+    end
+    local ownedCache = {}
+    local filtered = {}
+    for _, recipe in ipairs(recipes) do
+        if RecipeHasRequiredMaterials(recipe, addon, ownedCache) then
+            tinsert(filtered, recipe)
+        end
+    end
+    return filtered
 end
 
 local function FilterByKnown(recipes, addon)
@@ -605,18 +874,22 @@ ShowRecipeDetail = function(recipe)
 
             local rgName = OneWoW_GUI:CreateFS(rgRow, 10)
             rgName:SetPoint("LEFT", rgIcon, "RIGHT", 6, 0)
-            rgName:SetPoint("RIGHT", rgRow, "RIGHT", -60, 0)
+            rgName:SetPoint("RIGHT", rgRow, "RIGHT", -72, 0)
             rgName:SetJustifyH("LEFT")
             rgName:SetWordWrap(false)
 
             local rgQty = OneWoW_GUI:CreateFS(rgRow, 10)
             rgQty:SetPoint("RIGHT", rgRow, "RIGHT", -4, 0)
-            rgQty:SetWidth(50)
+            rgQty:SetWidth(64)
             rgQty:SetJustifyH("RIGHT")
-            rgQty:SetText("x" .. reagentQty)
 
-            if reagentType == 0 then
+            local have = GetFamilyOwnedCount(reagentItemID)
+            local qtyText, met = FormatReagentHaveNeed(reagentQty, have)
+            rgQty:SetText(qtyText)
+            if met == true then
                 rgQty:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+            elseif met == false then
+                rgQty:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
             elseif reagentType == 2 then
                 rgQty:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_HIGHLIGHT"))
             else
@@ -719,6 +992,144 @@ ShowRecipeDetail = function(recipe)
     end
 
     yOffset = yOffset - 12
+
+    -- On Hand: account-owned reagents for this recipe (Storage soft). Expand for locations.
+    if IsStorageReady() then
+        if onHandRecipeID ~= recipe.id then
+            wipe(expandedOnHand)
+            onHandRecipeID = recipe.id
+        end
+
+        local onHandEntries = CollectOnHandEntries(reagents, slots)
+        if #onHandEntries > 0 then
+            local onHandHeader = CreateFrame("Frame", nil, child, "BackdropTemplate")
+            onHandHeader:SetHeight(24)
+            onHandHeader:SetPoint("TOPLEFT", child, "TOPLEFT", 0, yOffset)
+            onHandHeader:SetPoint("TOPRIGHT", child, "TOPRIGHT", 0, yOffset)
+            onHandHeader:SetBackdrop(BACKDROP_SIMPLE)
+            onHandHeader:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
+            onHandHeader:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            tinsert(detailElements, onHandHeader)
+
+            local onHandTitle = OneWoW_GUI:CreateFS(onHandHeader, 12)
+            onHandTitle:SetPoint("LEFT", 8, 0)
+            onHandTitle:SetText(L["TRADESKILLS_ON_HAND"])
+            onHandTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+            yOffset = yOffset - 28
+
+            for _, entry in ipairs(onHandEntries) do
+                local itemID = entry.itemID
+                local isExpanded = expandedOnHand[itemID] == true
+
+                local ohBtn = CreateFrame("Button", nil, child, "BackdropTemplate")
+                ohBtn:SetHeight(REAGENT_ROW_HEIGHT)
+                ohBtn:SetPoint("TOPLEFT", child, "TOPLEFT", 8, yOffset)
+                ohBtn:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
+                ohBtn:SetBackdrop(BACKDROP_SIMPLE)
+                ohBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+                ohBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                tinsert(detailElements, ohBtn)
+
+                local expandIcon = ohBtn:CreateTexture(nil, "ARTWORK")
+                expandIcon:SetSize(14, 14)
+                expandIcon:SetPoint("LEFT", ohBtn, "LEFT", 6, 0)
+                expandIcon:SetAtlas(isExpanded and "Gamepad_Rev_Minus_64" or "Gamepad_Rev_Plus_64")
+
+                local ohIcon = CreateFrame("Frame", nil, ohBtn, "BackdropTemplate")
+                ohIcon:SetSize(22, 22)
+                ohIcon:SetPoint("LEFT", expandIcon, "RIGHT", 6, 0)
+                ohIcon:SetBackdrop(BACKDROP_INNER_NO_INSETS)
+                ohIcon:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+                ohIcon:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+
+                local ohIconTex = ohIcon:CreateTexture(nil, "ARTWORK")
+                ohIconTex:SetPoint("TOPLEFT", 1, -1)
+                ohIconTex:SetPoint("BOTTOMRIGHT", -1, 1)
+                ohIconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+                local ohName = OneWoW_GUI:CreateFS(ohBtn, 10)
+                ohName:SetPoint("LEFT", ohIcon, "RIGHT", 6, 0)
+                ohName:SetPoint("RIGHT", ohBtn, "RIGHT", -48, 0)
+                ohName:SetJustifyH("LEFT")
+                ohName:SetWordWrap(false)
+
+                local ohQty = OneWoW_GUI:CreateFS(ohBtn, 10)
+                ohQty:SetPoint("RIGHT", ohBtn, "RIGHT", -8, 0)
+                ohQty:SetJustifyH("RIGHT")
+                ohQty:SetText(tostring(entry.have))
+                ohQty:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+
+                local cached = addon.GetCachedItem(itemID)
+                if cached and cached.name then
+                    ohName:SetText(cached.name)
+                    ohIconTex:SetTexture(cached.icon)
+                    ohName:SetTextColor(OneWoW_GUI:GetItemQualityColor(cached.quality))
+                else
+                    ohName:SetText("...")
+                    ohName:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                    ohIconTex:SetTexture(134400)
+                    addon.LoadItemData(itemID, function(_, itemData)
+                        if ohBtn:IsVisible() and itemData then
+                            ohName:SetText(itemData.name)
+                            ohIconTex:SetTexture(itemData.icon)
+                            ohName:SetTextColor(OneWoW_GUI:GetItemQualityColor(itemData.quality))
+                        end
+                    end)
+                end
+
+                local capturedItemID = itemID
+                ohBtn:SetScript("OnClick", function()
+                    expandedOnHand[capturedItemID] = not expandedOnHand[capturedItemID]
+                    if selectedRecipe then
+                        ShowRecipeDetail(selectedRecipe)
+                    end
+                end)
+                ohBtn:SetScript("OnEnter", function(self)
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
+                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                    GameTooltip:SetItemByID(capturedItemID)
+                    GameTooltip:Show()
+                end)
+                ohBtn:SetScript("OnLeave", function(self)
+                    self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_PRIMARY"))
+                    self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                    GameTooltip:Hide()
+                end)
+
+                yOffset = yOffset - REAGENT_ROW_HEIGHT
+
+                if isExpanded then
+                    local locRows = AggregateFamilyLocationRows(itemID)
+                    for _, locRow in ipairs(locRows) do
+                        local locFrame = CreateFrame("Frame", nil, child)
+                        locFrame:SetHeight(18)
+                        locFrame:SetPoint("TOPLEFT", child, "TOPLEFT", 28, yOffset)
+                        locFrame:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
+                        tinsert(detailElements, locFrame)
+
+                        local locText = OneWoW_GUI:CreateFS(locFrame, 10)
+                        locText:SetPoint("LEFT", 0, 0)
+                        locText:SetPoint("RIGHT", locFrame, "RIGHT", -40, 0)
+                        locText:SetJustifyH("LEFT")
+                        locText:SetWordWrap(false)
+                        locText:SetText(locRow.ownerName .. "  |  " .. locRow.locLabel)
+                        locText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+                        local locQty = OneWoW_GUI:CreateFS(locFrame, 10)
+                        locQty:SetPoint("RIGHT", locFrame, "RIGHT", 0, 0)
+                        locQty:SetJustifyH("RIGHT")
+                        locQty:SetText(tostring(locRow.count))
+                        locQty:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+                        yOffset = yOffset - 18
+                    end
+                end
+            end
+
+            yOffset = yOffset - 12
+        end
+    end
 
     local knownByHeader = CreateFrame("Frame", nil, child, "BackdropTemplate")
     knownByHeader:SetHeight(24)
@@ -910,6 +1321,10 @@ RefreshRecipeList = function()
         recipes = FilterByKnown(recipes, addon)
     end
 
+    if filterHaveMaterials and recipes then
+        recipes = FilterByHaveMaterials(recipes, addon)
+    end
+
     if not recipes or #recipes == 0 then
         if emptyList then
             emptyList:SetText(L["TRADESKILLS_EMPTY"])
@@ -997,6 +1412,32 @@ function ns.UI.CreateTradeskillsTab(parent)
     profDropdown:SetPoint("TOPLEFT", profHeader, "TOPLEFT", 8, -8)
     profDropdown:SetPoint("RIGHT", profHeader, "RIGHT", -8, 0)
 
+    local haveMatsCheck = OneWoW_GUI:CreateCheckbox(profHeader, {
+        label = L["TRADESKILLS_HAVE_MATERIALS"],
+        checked = false,
+    })
+    haveMatsCheck:SetPoint("TOPLEFT", profDropdown, "BOTTOMLEFT", 0, -6)
+
+    local function SyncHaveMaterialsCheckbox()
+        if IsStorageReady() then
+            haveMatsCheck:Enable()
+        else
+            filterHaveMaterials = false
+            haveMatsCheck:SetChecked(false)
+            haveMatsCheck:Disable()
+        end
+    end
+
+    haveMatsCheck:SetScript("OnClick", function(self)
+        if not IsStorageReady() then
+            filterHaveMaterials = false
+            self:SetChecked(false)
+            return
+        end
+        filterHaveMaterials = self:GetChecked() and true or false
+        RefreshRecipeList()
+    end)
+
     local function SyncProfessionDropdownText()
         if selectedProfession then
             local still = FindProfessionByName(selectedProfession.name)
@@ -1048,8 +1489,50 @@ function ns.UI.CreateTradeskillsTab(parent)
     searchBox:SetPoint("TOPLEFT", searchHeader, "TOPLEFT", 8, -8)
     searchBox:SetPoint("TOPRIGHT", searchHeader, "TOPRIGHT", -8, -8)
 
+    local EXPANSION_OPTIONS = {
+        {key = nil,                 label = L["TRADESKILLS_ALL_EXPANSIONS"]},
+        {key = "Midnight",          label = EXPANSION_DISPLAY["Midnight"]},
+        {key = "TheWarWithin",      label = EXPANSION_DISPLAY["TheWarWithin"]},
+        {key = "Dragonflight",      label = EXPANSION_DISPLAY["Dragonflight"]},
+        {key = "Shadowlands",       label = EXPANSION_DISPLAY["Shadowlands"]},
+        {key = "BattleForAzeroth",  label = EXPANSION_DISPLAY["BattleForAzeroth"]},
+        {key = "Legion",            label = EXPANSION_DISPLAY["Legion"]},
+        {key = "WarlordsOfDraenor", label = EXPANSION_DISPLAY["WarlordsOfDraenor"]},
+        {key = "MistsOfPandaria",   label = EXPANSION_DISPLAY["MistsOfPandaria"]},
+        {key = "Cataclysm",         label = EXPANSION_DISPLAY["Cataclysm"]},
+        {key = "WrathOfTheLichKing",label = EXPANSION_DISPLAY["WrathOfTheLichKing"]},
+        {key = "BurningCrusade",    label = EXPANSION_DISPLAY["BurningCrusade"]},
+        {key = "Classic",           label = EXPANSION_DISPLAY["Classic"]},
+    }
+
+    local expDropdown, expDropText = OneWoW_GUI:CreateDropdown(searchHeader, {
+        width = 10,
+        height = 22,
+        text = L["TRADESKILLS_ALL_EXPANSIONS"],
+    })
+    expDropdown:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", 0, -4)
+    expDropdown:SetPoint("RIGHT", searchHeader, "RIGHT", -8, 0)
+
+    OneWoW_GUI:AttachFilterMenu(expDropdown, {
+        searchable = false,
+        getActiveValue = function() return filterExpansion end,
+        buildItems = function()
+            local items = {}
+            for _, opt in ipairs(EXPANSION_OPTIONS) do
+                tinsert(items, { value = opt.key, text = opt.label })
+            end
+            return items
+        end,
+        onSelect = function(value, text)
+            filterExpansion = value
+            expDropText:SetText(value and text or L["TRADESKILLS_ALL_EXPANSIONS"])
+            wipe(expandedExpansions)
+            RefreshRecipeList()
+        end,
+    })
+
     local knownMeCheck = OneWoW_GUI:CreateCheckbox(searchHeader, { label = L["TRADESKILLS_SHOW_KNOWN_ME"] })
-    knownMeCheck:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", 0, -4)
+    knownMeCheck:SetPoint("TOPLEFT", expDropdown, "BOTTOMLEFT", 0, -4)
     knownMeCheck:SetChecked(false)
 
     local notKnownMeCheck = OneWoW_GUI:CreateCheckbox(searchHeader, { label = L["TRADESKILLS_SHOW_NOT_KNOWN_ME"] })
@@ -1092,47 +1575,7 @@ function ns.UI.CreateTradeskillsTab(parent)
         function(v) filterKnownByAlts = v end,
         function(v) filterNotKnownByAlts = v end)
 
-    local EXPANSION_OPTIONS = {
-        {key = nil,                 label = L["TRADESKILLS_ALL_EXPANSIONS"]},
-        {key = "Midnight",          label = EXPANSION_DISPLAY["Midnight"]},
-        {key = "TheWarWithin",      label = EXPANSION_DISPLAY["TheWarWithin"]},
-        {key = "Dragonflight",      label = EXPANSION_DISPLAY["Dragonflight"]},
-        {key = "Shadowlands",       label = EXPANSION_DISPLAY["Shadowlands"]},
-        {key = "BattleForAzeroth",  label = EXPANSION_DISPLAY["BattleForAzeroth"]},
-        {key = "Legion",            label = EXPANSION_DISPLAY["Legion"]},
-        {key = "WarlordsOfDraenor", label = EXPANSION_DISPLAY["WarlordsOfDraenor"]},
-        {key = "MistsOfPandaria",   label = EXPANSION_DISPLAY["MistsOfPandaria"]},
-        {key = "Cataclysm",         label = EXPANSION_DISPLAY["Cataclysm"]},
-        {key = "WrathOfTheLichKing",label = EXPANSION_DISPLAY["WrathOfTheLichKing"]},
-        {key = "BurningCrusade",    label = EXPANSION_DISPLAY["BurningCrusade"]},
-        {key = "Classic",           label = EXPANSION_DISPLAY["Classic"]},
-    }
-
-    local expDropdown, expDropText = OneWoW_GUI:CreateDropdown(searchHeader, {
-        width = 10,
-        height = 22,
-        text = L["TRADESKILLS_ALL_EXPANSIONS"],
-    })
-    expDropdown:SetPoint("TOPLEFT", knownAltsCheck, "BOTTOMLEFT", 0, -4)
-    expDropdown:SetPoint("RIGHT", searchHeader, "RIGHT", -8, 0)
-
-    OneWoW_GUI:AttachFilterMenu(expDropdown, {
-        searchable = false,
-        getActiveValue = function() return filterExpansion end,
-        buildItems = function()
-            local items = {}
-            for _, opt in ipairs(EXPANSION_OPTIONS) do
-                tinsert(items, { value = opt.key, text = opt.label })
-            end
-            return items
-        end,
-        onSelect = function(value, text)
-            filterExpansion = value
-            expDropText:SetText(value and text or L["TRADESKILLS_ALL_EXPANSIONS"])
-            wipe(expandedExpansions)
-            RefreshRecipeList()
-        end,
-    })
+    SyncHaveMaterialsCheckbox()
 
     emptyList = OneWoW_GUI:CreateFS(panels.listScrollFrame, 12)
     emptyList:SetPoint("CENTER", panels.listScrollFrame, "CENTER", 0, 0)
@@ -1171,6 +1614,30 @@ function ns.UI.CreateTradeskillsTab(parent)
         end
     end)
 
+    -- Soft Storage: refresh open recipe detail / Have Materials list when bags change.
+    local storageWired = false
+    OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Storage", function()
+        SyncHaveMaterialsCheckbox()
+        if selectedRecipe then
+            ShowRecipeDetail(selectedRecipe)
+        end
+        if filterHaveMaterials and RefreshRecipeList then
+            RefreshRecipeList()
+        end
+        if storageWired then return end
+        local api = OneWoW_AltTracker_Storage_API
+        if not api or not api.RegisterStorageChanged then return end
+        storageWired = true
+        api.RegisterStorageChanged(function()
+            if selectedRecipe then
+                ShowRecipeDetail(selectedRecipe)
+            end
+            if filterHaveMaterials and RefreshRecipeList then
+                RefreshRecipeList()
+            end
+        end)
+    end)
+
     parent:SetScript("OnShow", function()
         selectedProfession = nil
         selectedRecipe = nil
@@ -1179,16 +1646,21 @@ function ns.UI.CreateTradeskillsTab(parent)
         filterKnownByAlts = false
         filterNotKnownByMe = false
         filterNotKnownByAlts = false
+        filterHaveMaterials = false
         filterExpansion = nil
         wipe(expandedExpansions)
+        wipe(expandedOnHand)
+        onHandRecipeID = nil
 
         if searchBox then searchBox:SetText("") end
         if knownMeCheck then knownMeCheck:SetChecked(false) end
         if knownAltsCheck then knownAltsCheck:SetChecked(false) end
         if notKnownMeCheck then notKnownMeCheck:SetChecked(false) end
         if notKnownAltsCheck then notKnownAltsCheck:SetChecked(false) end
+        if haveMatsCheck then haveMatsCheck:SetChecked(false) end
         if expDropText then expDropText:SetText(L["TRADESKILLS_ALL_EXPANSIONS"]) end
         if profDropText then profDropText:SetText(L["TRADESKILLS_ALL"]) end
+        SyncHaveMaterialsCheckbox()
 
         ClearDetailElements()
         if emptyDetail then
