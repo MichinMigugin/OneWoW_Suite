@@ -46,11 +46,24 @@ local function RestoreBlizzardMail()
     blizzardHidden = false
 end
 
+local function HideSettingsPopover()
+    if not shellFrame then
+        return
+    end
+    if shellFrame.settingsDismisser then
+        shellFrame.settingsDismisser:Hide()
+    end
+    if shellFrame.settingsPopover then
+        shellFrame.settingsPopover:Hide()
+    end
+end
+
 local function SelectTab(tab)
     currentTab = tab
     if not shellFrame then
         return
     end
+    HideSettingsPopover()
     for _, id in ipairs(TAB_ORDER) do
         local panel = shellFrame.panels[id]
         local btn = shellFrame.tabButtons[id]
@@ -272,6 +285,92 @@ function Shell:Ensure()
         shellFrame.panels[id] = panel
     end
 
+    local settingsBtn = OneWoW_GUI:CreateAtlasIconButton(tabBar, {
+        atlas = "mechagon-projects",
+        width = 22,
+        height = 22,
+    })
+    settingsBtn:SetPoint("RIGHT", tabBar, "RIGHT", 0, 0)
+    settingsBtn:HookScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_TOP")
+        GameTooltip:SetText(SETTINGS, 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    settingsBtn:HookScript("OnLeave", GameTooltip_Hide)
+    shellFrame.settingsBtn = settingsBtn
+
+    local settingsDismisser = CreateFrame("Button", nil, shellFrame)
+    settingsDismisser:SetAllPoints(shellFrame)
+    settingsDismisser:SetFrameLevel(tabBar:GetFrameLevel() + 20)
+    settingsDismisser:Hide()
+    settingsDismisser:SetScript("OnClick", HideSettingsPopover)
+    shellFrame.settingsDismisser = settingsDismisser
+
+    local popover = CreateFrame("Frame", nil, shellFrame, "BackdropTemplate")
+    popover:SetSize(300, 150)
+    popover:SetPoint("TOPRIGHT", settingsBtn, "BOTTOMRIGHT", 0, -4)
+    popover:SetFrameLevel(settingsDismisser:GetFrameLevel() + 1)
+    popover:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_SOFT)
+    popover:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+    popover:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    popover:EnableMouse(true)
+    popover:Hide()
+    shellFrame.settingsPopover = popover
+
+    local popTitle = OneWoW_GUI:CreateFS(popover, 12)
+    popTitle:SetPoint("TOPLEFT", popover, "TOPLEFT", 12, -10)
+    popTitle:SetPoint("TOPRIGHT", popover, "TOPRIGHT", -12, -10)
+    popTitle:SetJustifyH("LEFT")
+    popTitle:SetText(SETTINGS)
+    popTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    shellFrame.settingsPopoverTitle = popTitle
+
+    local ackLabel = OneWoW_GUI:CreateFS(popover, 11)
+    ackLabel:SetPoint("TOPLEFT", popTitle, "BOTTOMLEFT", 0, -10)
+    ackLabel:SetPoint("RIGHT", popover, "RIGHT", -12, 0)
+    ackLabel:SetJustifyH("LEFT")
+    ackLabel:SetText(L["SETTINGS_SEND_ACK_TIMEOUT"])
+    ackLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    shellFrame.settingsAckLabel = ackLabel
+
+    local Const = ns.Constants
+    local ackSlider = OneWoW_GUI:CreateSlider(popover, {
+        minVal = Const.SEND_ACK_TIMEOUT_MIN,
+        maxVal = Const.SEND_ACK_TIMEOUT_MAX,
+        step = 1,
+        currentVal = ns.SendResult:GetAckTimeout(),
+        width = 276,
+        getLabel = function(pos)
+            return string.format("%ds", pos)
+        end,
+        onChange = function(seconds)
+            ns.db.global.mail.sendAckTimeout = seconds
+        end,
+    })
+    ackSlider:SetPoint("TOPLEFT", ackLabel, "BOTTOMLEFT", 0, -6)
+    shellFrame.settingsAckSlider = ackSlider
+
+    local ackTip = OneWoW_GUI:CreateFS(popover, 10)
+    ackTip:SetPoint("TOPLEFT", ackSlider, "BOTTOMLEFT", 0, -8)
+    ackTip:SetPoint("RIGHT", popover, "RIGHT", -12, 0)
+    ackTip:SetJustifyH("LEFT")
+    ackTip:SetWordWrap(true)
+    ackTip:SetText(L["TT_SETTINGS_SEND_ACK_TIMEOUT"])
+    ackTip:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    shellFrame.settingsAckTip = ackTip
+
+    -- Keep the gear above the dismisser so toggle still works while open.
+    settingsBtn:SetFrameLevel(settingsDismisser:GetFrameLevel() + 2)
+    settingsBtn:SetScript("OnClick", function()
+        if popover:IsShown() then
+            HideSettingsPopover()
+            return
+        end
+        ackSlider.slider:SetValue(ns.SendResult:GetAckTimeout())
+        settingsDismisser:Show()
+        popover:Show()
+    end)
+
     if ns.Inbox and ns.Inbox.Create then
         ns.Inbox:Create(shellFrame.panels.inbox)
     end
@@ -342,6 +441,7 @@ function Shell:Hide()
         return
     end
     Trace("hide", {})
+    HideSettingsPopover()
     if ns.Compose and ns.Compose.OnMailboxClosed then
         ns.Compose:OnMailboxClosed()
     elseif ns.Compose and ns.Compose.OnHide then
@@ -406,6 +506,19 @@ function Shell:ApplyTheme()
     if shellFrame.titleBar then
         local tr, tg, tb = OneWoW_GUI:GetThemeColor("TITLEBAR_BG")
         shellFrame.titleBar:SetBackdropColor(tr, tg, tb, 1)
+    end
+    if shellFrame.settingsPopover then
+        shellFrame.settingsPopover:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+        shellFrame.settingsPopover:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_DEFAULT"))
+    end
+    if shellFrame.settingsPopoverTitle then
+        shellFrame.settingsPopoverTitle:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+    end
+    if shellFrame.settingsAckLabel then
+        shellFrame.settingsAckLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    end
+    if shellFrame.settingsAckTip then
+        shellFrame.settingsAckTip:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
     OneWoW_GUI:ApplyFontToFrame(shellFrame)
 end

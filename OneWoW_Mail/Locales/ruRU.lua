@@ -8,6 +8,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TAB_COMPOSE"] = "ÐÐ°Ð¿Ð¸ÑÐ°Ñ‚ÑŒ",
     ["TAB_SHIPMENTS"] = "ÐžÑ‚Ð¿Ñ€Ð°Ð²Ð»ÐµÐ½Ð¸Ñ",
     ["TAB_ACTIVITY"] = "ÐÐºÑ‚Ð¸Ð²Ð½Ð¾ÑÑ‚ÑŒ",
+    ["SETTINGS_SEND_ACK_TIMEOUT"] = "Ждать подтверждения отправки",
+    ["TT_SETTINGS_SEND_ACK_TIMEOUT"] = "Сколько ждать подтверждения сервера после отправки, прежде чем считать её неудачной.\nСлишком малое значение даёт ложные тайм-ауты при задержках; слишком большое дольше держит зависшую отправку.",
     ["FILTER_ALL"] = "All",
     ["FILTER_GOLD"] = "Gold",
     ["FILTER_ITEMS"] = "Items",

@@ -18,9 +18,8 @@ ns.SendResult = {}
 local SendResult = ns.SendResult
 
 -- Blind timeout: a very laggy ack gets treated as failure (send stops, user
--- retries; worst case a duplicate mail). If reports come in, bump the value —
--- never remove the failure path.
-local SEND_ACK_TIMEOUT = 8
+-- retries; worst case a duplicate mail). Duration is player-tunable
+-- (db.global.mail.sendAckTimeout); never remove the failure path.
 
 -- Whitelist by localized message (not errorType — those IDs shift by patch).
 -- Omit non-send strings (ERR_MAIL_SENT, delete/return).
@@ -97,9 +96,28 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
     end)
 end)
 
+--- Clamped send-ack wait from SavedVariables (seconds).
+---@return number
+function SendResult:GetAckTimeout()
+    local C = ns.Constants
+    local raw = ns.db.global.mail.sendAckTimeout
+    local v = tonumber(raw)
+    if not v then
+        return C.SEND_ACK_TIMEOUT_DEFAULT
+    end
+    v = math.floor(v + 0.5)
+    if v < C.SEND_ACK_TIMEOUT_MIN then
+        return C.SEND_ACK_TIMEOUT_MIN
+    end
+    if v > C.SEND_ACK_TIMEOUT_MAX then
+        return C.SEND_ACK_TIMEOUT_MAX
+    end
+    return v
+end
+
 --- Arm a listener for the ack of the next SendMail call; call right before
 --- SendMail. Exactly one of onSuccess/onFail fires (deferred out of event
---- dispatch); no ack within SEND_ACK_TIMEOUT counts as failure with
+--- dispatch); no ack within the configured ack timeout counts as failure with
 --- reason `"timeout"`. Server rejection is `"failed"`; when Blizzard also
 --- emits a mail UI_ERROR_MESSAGE, `uiError` is that already-localized string.
 ---@param onSuccess fun()
@@ -107,7 +125,8 @@ end)
 function SendResult:Listen(onSuccess, onFail)
     local token = { onSuccess = onSuccess, onFail = onFail, uiError = nil, settled = false }
     pending = token
-    C_Timer.After(SEND_ACK_TIMEOUT, function()
+    local timeout = self:GetAckTimeout()
+    C_Timer.After(timeout, function()
         if pending == token then
             pending = nil
             onFail("timeout")

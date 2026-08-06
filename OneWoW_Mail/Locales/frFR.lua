@@ -8,6 +8,8 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TAB_COMPOSE"] = "RÃ©diger",
     ["TAB_SHIPMENTS"] = "Envois",
     ["TAB_ACTIVITY"] = "ActivitÃ©",
+    ["SETTINGS_SEND_ACK_TIMEOUT"] = "Attendre la confirmation d'envoi",
+    ["TT_SETTINGS_SEND_ACK_TIMEOUT"] = "Délai d'attente de la confirmation du serveur avant de considérer l'envoi comme échoué.\nTrop bas peut provoquer de faux délais sur une connexion lente ; trop haut fait attendre plus longtemps un envoi bloqué.",
     ["FILTER_ALL"] = "All",
     ["FILTER_GOLD"] = "Gold",
     ["FILTER_ITEMS"] = "Items",

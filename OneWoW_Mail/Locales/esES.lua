@@ -8,6 +8,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["TAB_COMPOSE"] = "Redactar",
     ["TAB_SHIPMENTS"] = "EnvÃ­os",
     ["TAB_ACTIVITY"] = "Actividad",
+    ["SETTINGS_SEND_ACK_TIMEOUT"] = "Esperar confirmación de envío",
+    ["TT_SETTINGS_SEND_ACK_TIMEOUT"] = "Cuánto tiempo esperar a que el servidor confirme un envío antes de considerarlo fallido.\nDemasiado bajo puede causar tiempos de espera falsos con latencia; demasiado alto hace esperar más un envío atascado.",
     ["FILTER_ALL"] = "All",
     ["FILTER_GOLD"] = "Gold",
     ["FILTER_ITEMS"] = "Items",

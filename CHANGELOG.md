@@ -12,3 +12,15 @@
 
 ## Portals
 - Added Corewarden's Hearthstone
+
+# Mail
+## Settings
+- Gear on the tab bar opens a compact settings popover with a slider for how long to wait for send confirmation (5–30 seconds; default 8) — raise it if laggy connections cause false timeouts
+
+---
+
+*No user-facing changes this release for AltTracker, Bags, Catalog, DirectDeposit, Notes, ShoppingList, Trackers, or Vendors.*
+
+---
+
+- **Last Updated**: Aug 6, 2026

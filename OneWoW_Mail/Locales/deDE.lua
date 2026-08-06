@@ -8,6 +8,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TAB_COMPOSE"] = "Schreiben",
     ["TAB_SHIPMENTS"] = "Sendungen",
     ["TAB_ACTIVITY"] = "AktivitÃ¤t",
+    ["SETTINGS_SEND_ACK_TIMEOUT"] = "Auf Sende-Bestätigung warten",
+    ["TT_SETTINGS_SEND_ACK_TIMEOUT"] = "Wie lange auf die Server-Bestätigung eines Versands gewartet wird, bevor er als fehlgeschlagen gilt.\nZu kurz kann bei Latenz falsche Timeouts verursachen; zu lang lässt einen hängenden Versand länger warten.",
     ["FILTER_ALL"] = "All",
     ["FILTER_GOLD"] = "Gold",
     ["FILTER_ITEMS"] = "Items",

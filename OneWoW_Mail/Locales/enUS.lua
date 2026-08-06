@@ -9,6 +9,9 @@ ns.L = OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TAB_SHIPMENTS"] = "Shipments",
     ["TAB_ACTIVITY"] = "Activity",
 
+    ["SETTINGS_SEND_ACK_TIMEOUT"] = "Wait for send confirmation",
+    ["TT_SETTINGS_SEND_ACK_TIMEOUT"] = "How long to wait for the server to confirm a send before treating it as failed.\nToo low can cause false timeouts on laggy connections; too high makes a stuck send wait longer.",
+
     ["FILTER_ALL"] = "All",
     ["FILTER_GOLD"] = "Gold",
     ["FILTER_ITEMS"] = "Items",

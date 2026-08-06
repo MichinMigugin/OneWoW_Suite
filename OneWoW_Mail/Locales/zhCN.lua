@@ -8,6 +8,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TAB_COMPOSE"] = "æ’°å†™",
     ["TAB_SHIPMENTS"] = "è´§è¿",
     ["TAB_ACTIVITY"] = "æ´»åŠ¨",
+    ["SETTINGS_SEND_ACK_TIMEOUT"] = "等待发送确认",
+    ["TT_SETTINGS_SEND_ACK_TIMEOUT"] = "在将发送视为失败之前，等待服务器确认的时间。\n过短可能在延迟时产生误报超时；过长会使卡住的发送等待更久。",
     ["FILTER_ALL"] = "All",
     ["FILTER_GOLD"] = "Gold",
     ["FILTER_ITEMS"] = "Items",

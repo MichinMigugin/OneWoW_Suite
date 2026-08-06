@@ -8,6 +8,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TAB_COMPOSE"] = "ë³´ë‚´ê¸°",
     ["TAB_SHIPMENTS"] = "ë°°ì†¡",
     ["TAB_ACTIVITY"] = "í™œë™",
+    ["SETTINGS_SEND_ACK_TIMEOUT"] = "발송 확인 대기",
+    ["TT_SETTINGS_SEND_ACK_TIMEOUT"] = "발송을 실패로 처리하기 전에 서버 확인을 기다리는 시간입니다.\n너무 짧으면 지연 시 잘못된 시간 초과가 날 수 있고, 너무 길면 멈춘 발송이 더 오래 기다립니다.",
     ["FILTER_ALL"] = "All",
     ["FILTER_GOLD"] = "Gold",
     ["FILTER_ITEMS"] = "Items",

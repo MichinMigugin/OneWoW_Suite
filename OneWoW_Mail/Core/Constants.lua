@@ -12,6 +12,10 @@ ns.Constants = {
     }),
     -- Keep this many free bag slots while collecting mail.
     DEFAULT_KEEP_FREE = 1,
+    -- Blind wait for MAIL_SEND_SUCCESS / MAIL_FAILED (SendResult).
+    SEND_ACK_TIMEOUT_DEFAULT = 8,
+    SEND_ACK_TIMEOUT_MIN = 5,
+    SEND_ACK_TIMEOUT_MAX = 30,
     -- Delay between collect steps when C_Mail.IsCommandPending is clear.
     COLLECT_POLL = 0.05,
     COLLECT_SETTLE = 0.15,

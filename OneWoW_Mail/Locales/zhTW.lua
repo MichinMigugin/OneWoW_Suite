@@ -8,6 +8,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TAB_COMPOSE"] = "æ’°å¯«",
     ["TAB_SHIPMENTS"] = "è²¨é‹",
     ["TAB_ACTIVITY"] = "æ´»å‹•",
+    ["SETTINGS_SEND_ACK_TIMEOUT"] = "等待寄送確認",
+    ["TT_SETTINGS_SEND_ACK_TIMEOUT"] = "在將寄送視為失敗之前，等待伺服器確認的時間。\n過短可能在延遲時產生誤報逾時；過長會使卡住的寄送等待更久。",
     ["FILTER_ALL"] = "All",
     ["FILTER_GOLD"] = "Gold",
     ["FILTER_ITEMS"] = "Items",

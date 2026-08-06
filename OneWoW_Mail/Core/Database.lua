@@ -19,6 +19,7 @@ local defaults = {
             autoCollectItems = false,
             sortByExpiry = false,
             mirrorLogToChat = false,
+            sendAckTimeout = 8,
             autoFillLastRecipient = false,
             lastRecipient = "",
             favorites = {},
