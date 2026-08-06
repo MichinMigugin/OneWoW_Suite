@@ -28,6 +28,9 @@
 
 #### Tradeskills
 - Dropped the “Professions” and “Recipe Details” panel titles so more room goes to the list and detail
+- Recipe detail matches Journal/Vendors: `Expansion | Profession` under the name, one `Recipe ID | Item ID` line (Item ID omitted when none), no repeated Profession/Expansion rows
+- Profession filter is a dropdown (not a button grid); filter bars are shorter so the list starts higher
+- Recipe list rows show a muted `Expansion | Profession` line under the name (omits what’s already implied by the active filters / expansion groups)
 
 ---
 

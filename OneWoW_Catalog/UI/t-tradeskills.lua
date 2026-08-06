@@ -20,7 +20,6 @@ local panels = nil
 local detailElements = {}
 local listEntries = {}
 local recipeListAPI = nil
-local profButtons = {}
 local searchBox = nil
 local emptyList = nil
 local emptyDetail = nil
@@ -38,13 +37,10 @@ OneWoW_Catalog_TradeskillAPI = {
     end,
 }
 
-local RECIPE_ROW_HEIGHT = 30
+local RECIPE_ROW_HEIGHT = 40
 local REAGENT_ROW_HEIGHT = 28
-local PROF_BTN_HEIGHT = 22
-local PROF_BTN_PAD_X = 8
-local PROF_BTN_GAP = 3
-local PROF_HEADER_H = 58
 local LIST_ROW_STRIDE = RECIPE_ROW_HEIGHT
+local FILTER_HEADER_H = 116
 
 local EXPANSION_DISPLAY = {
     Classic = "Classic",
@@ -112,26 +108,6 @@ local function ClearDetailElements()
     wipe(detailElements)
 end
 
-local function UpdateProfButtonStates()
-    for _, btn in ipairs(profButtons) do
-        local isActive = false
-        if btn.isAllButton then
-            isActive = (selectedProfession == nil)
-        else
-            isActive = (selectedProfession and btn.profName == selectedProfession.name)
-        end
-        if isActive then
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            btn.highlight:Show()
-        else
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            btn.highlight:Hide()
-        end
-    end
-end
-
 local function GetLocalizedProfName(profData)
     local name = C_TradeSkillUI.GetTradeSkillDisplayName(profData.id)
     if name and name ~= "" then return name end
@@ -144,72 +120,16 @@ local function GetLocalizedProfName(profData)
     return profData.name
 end
 
-local function CreateProfTextButton(parent, displayText, profData, isAllButton)
-    local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    btn:SetHeight(PROF_BTN_HEIGHT)
-    btn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local label = OneWoW_GUI:CreateFS(btn, 10)
-    label:SetPoint("CENTER", 0, 0)
-    label:SetText(displayText)
-    label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local textWidth = label:GetStringWidth()
-    btn:SetWidth(math.max(30, textWidth + PROF_BTN_PAD_X * 2))
-
-    btn.label = label
-    btn.isAllButton = isAllButton or false
-    btn.profName = profData and profData.name or nil
-    btn.profData = profData
-
-    btn.highlight = btn:CreateTexture(nil, "OVERLAY")
-    btn.highlight:SetAllPoints()
-    btn.highlight:SetColorTexture(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    btn.highlight:SetAlpha(0.15)
-    btn.highlight:Hide()
-
-    btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-    end)
-    btn:SetScript("OnLeave", function(self)
-        local isActive = false
-        if self.isAllButton then
-            isActive = (selectedProfession == nil)
-        else
-            isActive = (selectedProfession and self.profName == selectedProfession.name)
+local function FindProfessionByName(profName)
+    if not profName then return nil end
+    local addon = GetDataAddon()
+    local professions = addon and addon.GetProfessions() or {}
+    for _, prof in ipairs(professions) do
+        if prof.hasData and prof.name == profName then
+            return prof
         end
-        if isActive then
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-        else
-            self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        end
-    end)
-    btn:SetScript("OnClick", function(self)
-        if self.isAllButton then
-            selectedProfession = nil
-        else
-            selectedProfession = self.profData
-        end
-        selectedRecipe = nil
-        wipe(expandedExpansions)
-        UpdateProfButtonStates()
-        RefreshRecipeList()
-        ClearDetailElements()
-        if emptyDetail then
-            emptyDetail:SetText(L["TRADESKILLS_SELECT"])
-            emptyDetail:Show()
-        end
-        for _, cb in ipairs(recipeDetailCallbacks) do
-            cb(nil, nil, panels)
-        end
-    end)
-
-    return btn
+    end
+    return nil
 end
 
 local function ApplyRecipeRowChrome(row, selected, zebraEven)
@@ -227,6 +147,29 @@ local function ApplyRecipeRowChrome(row, selected, zebraEven)
         end
         row:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
     end
+end
+
+local function FormatRecipeListMeta(recipe)
+    if not recipe then return nil end
+
+    local isSearching = currentSearch ~= "" and currentSearch ~= nil
+    -- Grouped list puts recipes under expansion headers while a profession is selected.
+    local underExpansionHeader = selectedProfession ~= nil and not isSearching
+    local showExpansion = not filterExpansion and not underExpansionHeader
+    local showProfession = not selectedProfession
+
+    local parts = {}
+    if showExpansion then
+        local expDisplay = EXPANSION_DISPLAY[recipe.exp] or recipe.exp
+        if expDisplay and expDisplay ~= "" then
+            tinsert(parts, expDisplay)
+        end
+    end
+    if showProfession and recipe.prof and recipe.prof ~= "" then
+        tinsert(parts, recipe.prof)
+    end
+    if #parts == 0 then return nil end
+    return table.concat(parts, "  |  ")
 end
 
 local function CreateRecipeListRow(parent, _)
@@ -250,11 +193,16 @@ local function CreateRecipeListRow(parent, _)
     row.icon = icon
 
     local nameText = OneWoW_GUI:CreateFS(row, 10)
-    nameText:SetPoint("LEFT", iconFrame, "RIGHT", 6, 0)
-    nameText:SetPoint("RIGHT", row, "RIGHT", -6, 0)
     nameText:SetJustifyH("LEFT")
     nameText:SetWordWrap(false)
     row.nameText = nameText
+
+    local metaText = OneWoW_GUI:CreateFS(row, 9)
+    metaText:SetJustifyH("LEFT")
+    metaText:SetWordWrap(false)
+    metaText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    metaText:Hide()
+    row.metaText = metaText
 
     local arrowText = OneWoW_GUI:CreateFS(row, 12)
     arrowText:SetPoint("LEFT", row, "LEFT", 8, 0)
@@ -311,6 +259,23 @@ local function CreateRecipeListRow(parent, _)
     return row
 end
 
+local function LayoutRecipeNameMeta(row, hasMeta)
+    row.nameText:ClearAllPoints()
+    row.metaText:ClearAllPoints()
+    if hasMeta then
+        row.nameText:SetPoint("TOPLEFT", row.iconFrame, "TOPRIGHT", 6, 2)
+        row.nameText:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+        row.metaText:SetPoint("TOPLEFT", row.nameText, "BOTTOMLEFT", 0, -1)
+        row.metaText:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+        row.metaText:Show()
+    else
+        row.nameText:SetPoint("LEFT", row.iconFrame, "RIGHT", 6, 0)
+        row.nameText:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+        row.metaText:Hide()
+        row.metaText:SetText("")
+    end
+end
+
 local function BindRecipeListRow(row, index, entry, state)
     row.entry = entry
     row._rowSelected = state.selected and entry.type == "recipe" or false
@@ -319,6 +284,7 @@ local function BindRecipeListRow(row, index, entry, state)
     if entry.type == "header" then
         row.iconFrame:Hide()
         row.nameText:Hide()
+        row.metaText:Hide()
         row.arrowText:Show()
         row.headerName:Show()
         row.countText:Show()
@@ -340,6 +306,14 @@ local function BindRecipeListRow(row, index, entry, state)
     local addon = GetDataAddon()
     local bindToken = recipe and recipe.id
     row._bindToken = bindToken
+
+    local meta = FormatRecipeListMeta(recipe)
+    if meta then
+        row.metaText:SetText(meta)
+        LayoutRecipeNameMeta(row, true)
+    else
+        LayoutRecipeNameMeta(row, false)
+    end
 
     if addon and recipe and recipe.item and recipe.item > 0 then
         local cached = addon.GetCachedItem(recipe.item)
@@ -452,10 +426,23 @@ ShowRecipeDetail = function(recipe)
     local subInfo = OneWoW_GUI:CreateFS(headerFrame, 10)
     subInfo:SetPoint("TOPLEFT", recipeName, "BOTTOMLEFT", 0, -2)
     local expDisplay = EXPANSION_DISPLAY[recipe.exp] or recipe.exp or ""
-    subInfo:SetText(recipe.prof .. "  |  " .. expDisplay)
+    subInfo:SetText(expDisplay .. "  |  " .. (recipe.prof or ""))
     subInfo:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
     yOffset = yOffset - 58
+
+    local idParts = { L["TRADESKILLS_RECIPE_ID"] .. ": " .. tostring(recipe.id) }
+    if recipe.item and recipe.item > 0 then
+        tinsert(idParts, L["TRADESKILLS_ITEM_ID"] .. ": " .. tostring(recipe.item))
+    end
+    local idLine = OneWoW_GUI:CreateFS(child, 10)
+    idLine:SetPoint("TOPLEFT", child, "TOPLEFT", 8, yOffset)
+    idLine:SetPoint("TOPRIGHT", child, "TOPRIGHT", -8, yOffset)
+    idLine:SetJustifyH("LEFT")
+    idLine:SetText(table.concat(idParts, "  |  "))
+    idLine:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    tinsert(detailElements, idLine)
+    yOffset = yOffset - 20
 
     local function AddInfoRow(label, value)
         local row = CreateFrame("Frame", nil, child)
@@ -478,13 +465,6 @@ ShowRecipeDetail = function(recipe)
 
         yOffset = yOffset - 20
     end
-
-    AddInfoRow(L["TRADESKILLS_RECIPE_ID"], tostring(recipe.id))
-    if recipe.item then
-        AddInfoRow(L["TRADESKILLS_ITEM_ID"], tostring(recipe.item))
-    end
-    AddInfoRow(L["TRADESKILLS_PROFESSION"], recipe.prof)
-    AddInfoRow(L["EXPANSION"], expDisplay)
 
     if recipe.qual then
         AddInfoRow(QUALITY, string.format(L["TRADESKILLS_QUALITY_FMT"], recipe.maxQ or 3))
@@ -953,16 +933,14 @@ end
 function ns.UI.CreateTradeskillsTab(parent)
     local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
     local GAP = ns.Constants.GUI.PANEL_GAP
-
-    local SEARCH_HEADER_H = PROF_HEADER_H + 88
     local KNOWN_FILTER_COL_OFFSET = 148
 
-    local searchHeader = OneWoW_GUI:CreateFilterBar(parent, { height = SEARCH_HEADER_H, offset = 0 })
+    local searchHeader = OneWoW_GUI:CreateFilterBar(parent, { height = FILTER_HEADER_H, offset = 0 })
     searchHeader:ClearAllPoints()
     searchHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     searchHeader:SetWidth(LEFT_W)
 
-    local profHeader = OneWoW_GUI:CreateFilterBar(parent, { height = SEARCH_HEADER_H, offset = 0 })
+    local profHeader = OneWoW_GUI:CreateFilterBar(parent, { height = FILTER_HEADER_H, offset = 0 })
     profHeader:ClearAllPoints()
     profHeader:SetPoint("TOPLEFT", searchHeader, "TOPRIGHT", GAP, 0)
     profHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
@@ -998,67 +976,63 @@ function ns.UI.CreateTradeskillsTab(parent)
     })
     panels.virtualizedList = recipeListAPI
 
-    local buttonList = {}
-
-    local function LayoutProfButtons()
-        local w = profHeader:GetWidth()
-        if not w or w < 100 then return end
-        local padLeft = 6
-        local padTop = 5
-        local xOff = padLeft
-        local row = 0
-        for _, btn in ipairs(buttonList) do
-            local btnWidth = btn:GetWidth()
-            if xOff + btnWidth + PROF_BTN_GAP > w - padLeft and xOff > padLeft then
-                row = row + 1
-                xOff = padLeft
-            end
-            local yOff = -padTop - (row * (PROF_BTN_HEIGHT + PROF_BTN_GAP))
-            btn:ClearAllPoints()
-            btn:SetPoint("TOPLEFT", profHeader, "TOPLEFT", xOff, yOff)
-            xOff = xOff + btnWidth + PROF_BTN_GAP
+    local function ClearRecipeSelection()
+        selectedRecipe = nil
+        wipe(expandedExpansions)
+        ClearDetailElements()
+        if emptyDetail then
+            emptyDetail:SetText(L["TRADESKILLS_SELECT"])
+            emptyDetail:Show()
+        end
+        for _, cb in ipairs(recipeDetailCallbacks) do
+            cb(nil, nil, panels)
         end
     end
 
-    -- (Re)build the profession filter buttons from current data. Tradeskills data
-    -- registers in onLogin (after the tab may have been rebuilt on the load
-    -- boundary), so the data-ready watcher calls this again to surface the
-    -- profession list without a reload.
-    local function BuildProfButtons()
-        for _, btn in ipairs(profButtons) do
-            btn:Hide()
-            btn:SetParent(nil)
-        end
-        wipe(profButtons)
-        wipe(buttonList)
+    local profDropdown, profDropText = OneWoW_GUI:CreateDropdown(profHeader, {
+        width = 10,
+        height = 26,
+        text = L["TRADESKILLS_ALL"],
+    })
+    profDropdown:SetPoint("TOPLEFT", profHeader, "TOPLEFT", 8, -8)
+    profDropdown:SetPoint("RIGHT", profHeader, "RIGHT", -8, 0)
 
-        local addon = GetDataAddon()
-        local professions = addon and addon.GetProfessions() or {}
-
-        local allBtn = CreateProfTextButton(profHeader, L["TRADESKILLS_ALL"], nil, true)
-        tinsert(profButtons, allBtn)
-        tinsert(buttonList, allBtn)
-
-        for _, prof in ipairs(professions) do
-            if prof.hasData then
-                local displayName = GetLocalizedProfName(prof)
-                local btn = CreateProfTextButton(profHeader, displayName, prof, false)
-                tinsert(profButtons, btn)
-                tinsert(buttonList, btn)
+    local function SyncProfessionDropdownText()
+        if selectedProfession then
+            local still = FindProfessionByName(selectedProfession.name)
+            if still then
+                selectedProfession = still
+                profDropText:SetText(GetLocalizedProfName(still))
+                return
             end
+            selectedProfession = nil
         end
-
-        LayoutProfButtons()
+        profDropText:SetText(L["TRADESKILLS_ALL"])
     end
 
-    BuildProfButtons()
-
-    profHeader:SetScript("OnSizeChanged", function()
-        LayoutProfButtons()
-    end)
-    C_Timer.After(0, function()
-        LayoutProfButtons()
-    end)
+    OneWoW_GUI:AttachFilterMenu(profDropdown, {
+        searchable = true,
+        getActiveValue = function()
+            return selectedProfession and selectedProfession.name or nil
+        end,
+        buildItems = function()
+            local items = { { value = nil, text = L["TRADESKILLS_ALL"] } }
+            local addon = GetDataAddon()
+            local professions = addon and addon.GetProfessions() or {}
+            for _, prof in ipairs(professions) do
+                if prof.hasData then
+                    tinsert(items, { value = prof.name, text = GetLocalizedProfName(prof) })
+                end
+            end
+            return items
+        end,
+        onSelect = function(value, text)
+            selectedProfession = value and FindProfessionByName(value) or nil
+            profDropText:SetText(selectedProfession and text or L["TRADESKILLS_ALL"])
+            ClearRecipeSelection()
+            RefreshRecipeList()
+        end,
+    })
 
     searchBox = OneWoW_GUI:CreateEditBox(searchHeader, {
         height = 26,
@@ -1172,11 +1146,8 @@ function ns.UI.CreateTradeskillsTab(parent)
 
     ns.UI.tradeskillsPanels = panels
 
-    -- Start in the no-data state; the data-ready watcher swaps to the live view,
-    -- rebuilds the profession buttons, and wires the scan callback once the
-    -- Tradeskills data unit's data is queryable. Catch-up covers a tab opened
-    -- after data was already ready; the signal covers a mid-session load. `wired`
-    -- keeps scan-callback registration idempotent.
+    -- Start in the no-data state; the data-ready watcher swaps to the live view
+    -- and refreshes the profession dropdown once Tradeskills data is queryable.
     if GetDataAddon() then
         emptyList:SetText(L["TRADESKILLS_SELECT"])
     else
@@ -1189,7 +1160,7 @@ function ns.UI.CreateTradeskillsTab(parent)
         local addon = GetDataAddon()
         if not addon then return end
         emptyList:SetText(L["TRADESKILLS_SELECT"])
-        BuildProfButtons()
+        SyncProfessionDropdownText()
         if not wired then
             wired = true
             addon.RegisterScanCallback(function()
@@ -1217,8 +1188,8 @@ function ns.UI.CreateTradeskillsTab(parent)
         if notKnownMeCheck then notKnownMeCheck:SetChecked(false) end
         if notKnownAltsCheck then notKnownAltsCheck:SetChecked(false) end
         if expDropText then expDropText:SetText(L["TRADESKILLS_ALL_EXPANSIONS"]) end
+        if profDropText then profDropText:SetText(L["TRADESKILLS_ALL"]) end
 
-        UpdateProfButtonStates()
         ClearDetailElements()
         if emptyDetail then
             emptyDetail:SetText(L["TRADESKILLS_SELECT"])
