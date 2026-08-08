@@ -20,6 +20,7 @@
 #### Features
 - Module On/Off sits in the detail header; Details is a text link under Category when a module has author/contact/link info
 - “Mount Status” on the bottom bar only appears for Auto Mount (no longer sticks when switching modules)
+- AutoOpen blacklist and BagBar item / macro / blacklist lists share the same add-by-ID, drag chip, and list layout (empty lists show “No items”)
 
 #### Player Mounts
 - Display Mode is a single dropdown (Name / Name + Type / Full Details) instead of three buttons
@@ -76,7 +77,12 @@
 
 ---
 
-*No user-facing changes this release for AltTracker, DirectDeposit, Notes, ShoppingList, Trackers, or Vendors.*
+### DirectDeposit
+- Keep Specific Items and Item Auto-Deposit use the same add-by-ID / drag / list chrome as QoL Features; empty lists show “No items”
+
+---
+
+*No user-facing changes this release for AltTracker, Notes, ShoppingList, Trackers, or Vendors.*
 
 ---
 

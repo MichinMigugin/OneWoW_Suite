@@ -53,8 +53,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
     ["DEPOSIT_NOW"] = "立即存入",
-    ["ITEM_DRAG_HINT"] = "將物品拖曳至此處以新增",
-    ["ITEM_EMPTY_LIST"] = "自動存入清單中沒有物品。\n將物品拖曳至此處以新增。",
 
     ["TAB_KEYBINDS"] = "快捷鍵",
 

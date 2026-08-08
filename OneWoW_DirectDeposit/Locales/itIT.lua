@@ -53,8 +53,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
     ["DEPOSIT_NOW"] = "Deposita Ora",
-    ["ITEM_DRAG_HINT"] = "Trascina qui gli oggetti per aggiungerli",
-    ["ITEM_EMPTY_LIST"] = "Nessun oggetto nella lista di deposito automatico.\nTrascina qui gli oggetti per aggiungerli.",
 
     ["TAB_KEYBINDS"] = "Scorciatoie",
 

@@ -53,8 +53,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
     ["DEPOSIT_NOW"] = "Depositar Agora",
-    ["ITEM_DRAG_HINT"] = "Arraste itens aqui para adicionar",
-    ["ITEM_EMPTY_LIST"] = "Nenhum item na lista de depósito automático.\nArraste itens aqui para adicioná-los.",
 
     ["TAB_KEYBINDS"] = "Atalhos",
 

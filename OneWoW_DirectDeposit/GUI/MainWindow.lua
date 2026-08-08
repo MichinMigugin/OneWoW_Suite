@@ -35,8 +35,6 @@ local isInitialized = false
 local currentTab    = 1
 local tabPanels     = {}
 local tabButtons    = {}
-local isRefreshing  = false
-local pendingRefresh = nil
 
 function GUI:InitMainWindow()
     if isInitialized then return end
@@ -502,14 +500,14 @@ function GUI:CreateItemsPanel(parent)
     })
     excludeAdd:AttachDropTarget(excludeBox)
 
-    local listTop = -10 - excludeAdd:GetHeight() - 8
-    local listHeight = 180 + listTop - 10
+    local excludeListTop = -10 - excludeAdd:GetHeight() - 8
+    local excludeListHeight = 180 + excludeListTop - 10
 
     excludeList = OneWoW_GUI:CreateEntryList(excludeBox, {
-        yOffset = listTop,
+        yOffset = excludeListTop,
         x = 10,
         rightInset = 10,
-        height = listHeight,
+        height = excludeListHeight,
         scrollName = "OneWoW_DirectDepositExcludeList",
         emptyText = L["NO_ITEMS"],
         getEntries = function()
@@ -578,176 +576,100 @@ function GUI:CreateItemsPanel(parent)
     dropZoneFrame:EnableMouse(true)
     dropZoneFrame:RegisterForDrag("LeftButton")
 
-    local function AddItemFromCursor()
-        local infoType, itemID = GetCursorInfo()
-        if infoType == "item" and itemID then
+    local iconSize = OneWoW_GUI.Constants.GUI.ENTRY_LIST_ICON_SIZE
+    local itemList
+    local itemAdd = OneWoW_GUI:CreateValueAddRow(dropZoneFrame, {
+        yOffset = -10,
+        x = 10,
+        rightInset = 10,
+        label = L["ITEM_ID"],
+        addText = ADD,
+        input = { kind = "itemId", width = 100 },
+        drop = {
+            mode = "chip",
+            text = L["DRAG_ITEM_HERE"],
+        },
+        onAdd = function(itemID)
             local success, msg = ns.DirectDeposit:AddItemToList(itemID, "personal")
-            if success then
-                GUI:RefreshItemList(panel)
-            else
+            if not success then
                 print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000" .. (msg or "Failed to add item") .. "|r")
+                return false
             end
-            ClearCursor()
-        end
-    end
-
-    dropZoneFrame:SetScript("OnReceiveDrag", AddItemFromCursor)
-    dropZoneFrame:SetScript("OnMouseUp",     AddItemFromCursor)
-
-    local dropHintText = OneWoW_GUI:CreateFS(dropZoneFrame, 10)
-    dropHintText:SetPoint("TOPRIGHT", dropZoneFrame, "TOPRIGHT", -10, -8)
-    dropHintText:SetText(L["ITEM_DRAG_HINT"])
-    dropHintText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-    local addItemLabel = OneWoW_GUI:CreateFS(dropZoneFrame, 12)
-    addItemLabel:SetPoint("TOPLEFT", dropZoneFrame, "TOPLEFT", 10, -10)
-    addItemLabel:SetText(L["ITEM_ID"])
-    addItemLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local itemInputBox = OneWoW_GUI:CreateEditBox(dropZoneFrame, { width = 100, height = 26 })
-    itemInputBox:SetPoint("LEFT", addItemLabel, "RIGHT", 10, 0)
-    itemInputBox:SetNumeric(true)
-
-    local addBtn = OneWoW_GUI:CreateFitTextButton(dropZoneFrame, { text = L["ADD_ITEM"], height = 26 })
-    addBtn:SetPoint("LEFT", itemInputBox, "RIGHT", 10, 0)
-    addBtn:SetScript("OnClick", function()
-        local itemIDText = itemInputBox:GetText()
-        if itemIDText and itemIDText ~= "" then
-            local itemID = tonumber(itemIDText)
-            if itemID then
-                local success, msg = ns.DirectDeposit:AddItemToList(itemID, "personal")
-                if success then
-                    itemInputBox:SetText("")
-                    GUI:RefreshItemList(panel)
-                else
-                    print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000" .. (msg or "Failed to add item") .. "|r")
+            if itemList then
+                itemList:Refresh()
+            end
+            C_Item.RequestLoadItemDataByID(itemID)
+            C_Timer.After(0.3, function()
+                if itemList then
+                    itemList:Refresh()
                 end
-            else
-                print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF0000Invalid item ID|r")
-            end
-        end
-        itemInputBox:ClearFocus()
-    end)
-
-    itemInputBox:SetScript("OnEnterPressed", function()
-        addBtn:Click()
-    end)
-
-    local scrollAreaFrame = CreateFrame("Frame", nil, dropZoneFrame)
-    scrollAreaFrame:SetPoint("TOPLEFT",     dropZoneFrame, "TOPLEFT",     10, -44)
-    scrollAreaFrame:SetPoint("BOTTOMRIGHT", dropZoneFrame, "BOTTOMRIGHT", -10, 10)
-
-    local itemScrollFrame, itemScrollChild = OneWoW_GUI:CreateScrollFrame(scrollAreaFrame, {
-        name = "OneWoW_DirectDepositItemList",
+            end)
+        end,
     })
-    itemScrollFrame:SetScript("OnReceiveDrag", AddItemFromCursor)
-    itemScrollFrame:SetScript("OnMouseUp",     AddItemFromCursor)
+    itemAdd:AttachDropTarget(dropZoneFrame)
 
-    panel.itemScrollChild = itemScrollChild
-    panel.itemScrollFrame = itemScrollFrame
-    panel.scrollContent   = scrollContent
-    panel.dropZoneFrame   = dropZoneFrame
+    local itemListTop = -10 - itemAdd:GetHeight() - 8
+    local itemListHeight = 340 + itemListTop - 10
 
-    GUI:RefreshItemList(panel)
-
-    yOffset = yOffset - 350
-    scrollContent:SetHeight(math.abs(yOffset) + 40)
-
-    return panel
-end
-
-function GUI:RefreshItemList(panel, preserveScrollPos)
-    if not panel or not panel.itemScrollChild then return end
-
-    if isRefreshing then
-        pendingRefresh = panel
-        return
-    end
-
-    isRefreshing = true
-    local itemScrollChild = panel.itemScrollChild
-
-    local savedScrollPos = 0
-    if preserveScrollPos and panel.itemScrollFrame then
-        local scrollBar = panel.itemScrollFrame.ScrollBar
-        if scrollBar then savedScrollPos = scrollBar:GetValue() end
-    end
-
-    local itemList = ns.DirectDeposit:GetItemList()
-    local sortedItems = {}
-    for itemID, itemData in pairs(itemList) do
-        C_Item.RequestLoadItemDataByID(tonumber(itemID))
-        table.insert(sortedItems, { id = tonumber(itemID), data = itemData })
-    end
-    table.sort(sortedItems, function(a, b) return (a.data.addedTime or 0) < (b.data.addedTime or 0) end)
-
-    C_Timer.After(0.1, function()
-        for i = 1, itemScrollChild:GetNumChildren() do
-            local child = select(i, itemScrollChild:GetChildren())
-            if child then
-                child:Hide()
-                child:SetParent(nil)
+    itemList = OneWoW_GUI:CreateEntryList(dropZoneFrame, {
+        yOffset = itemListTop,
+        x = 10,
+        rightInset = 10,
+        height = itemListHeight,
+        rowHeight = 32,
+        scrollName = "OneWoW_DirectDepositItemList",
+        emptyText = L["NO_ITEMS"],
+        getEntries = function()
+            local itemData = ns.DirectDeposit:GetItemList()
+            local sorted = {}
+            for itemID, data in pairs(itemData) do
+                tinsert(sorted, { id = tonumber(itemID), data = data })
             end
-        end
-
-        local scrollWidth = panel.dropZoneFrame:GetWidth() - 40
-        itemScrollChild:SetWidth(scrollWidth)
-
-        local yOffset = 0
-
-        for _, item in ipairs(sortedItems) do
-            local itemRow = OneWoW_GUI:CreateFrame(itemScrollChild, {
-                backdrop    = BACKDROP_INNER_NO_INSETS,
-                bgColor     = "BG_TERTIARY",
-                borderColor = "BORDER_SUBTLE",
-            })
-            itemRow:SetPoint("TOPLEFT",  itemScrollChild, "TOPLEFT",  5, yOffset)
-            itemRow:SetPoint("TOPRIGHT", itemScrollChild, "TOPRIGHT", -5, yOffset)
-            itemRow:SetHeight(32)
-
-            local removeBtn = OneWoW_GUI:CreateButton(itemRow, { text = "X", width = 22, height = 22 })
-            removeBtn:SetPoint("LEFT", itemRow, "LEFT", 5, 0)
+            sort(sorted, function(a, b)
+                return (a.data.addedTime or 0) < (b.data.addedTime or 0)
+            end)
+            local entries = {}
+            for _, item in ipairs(sorted) do
+                C_Item.RequestLoadItemDataByID(item.id)
+                local _, _, _, _, _, _, _, _, _, icon = C_Item.GetItemInfo(item.id)
+                tinsert(entries, {
+                    id = item.id,
+                    label = item.data.itemName or C_Item.GetItemNameByID(item.id) or ("Item " .. item.id),
+                    icon = icon,
+                    data = item.data,
+                })
+            end
+            return entries
+        end,
+        createRow = function(row, entry, api)
+            local removeBtn = CreateFrame("Button", nil, row)
+            removeBtn:SetSize(iconSize, iconSize)
+            removeBtn:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+            removeBtn:SetNormalTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
+            removeBtn:SetHighlightTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Highlight")
+            local capturedID = entry.id
             removeBtn:SetScript("OnClick", function()
-                itemRow:Hide()
-                ns.DirectDeposit:RemoveItemFromList(item.id)
-                GUI:RefreshItemList(panel)
+                if not api.IsEnabled() then return end
+                ns.DirectDeposit:RemoveItemFromList(capturedID)
+                api.RequestRefresh()
             end)
 
-            local itemNameFrame = CreateFrame("Frame", nil, itemRow)
-            itemNameFrame:SetPoint("LEFT",  removeBtn, "RIGHT",  5, 0)
-            itemNameFrame:SetPoint("RIGHT", itemRow,   "RIGHT", -280, 0)
-            itemNameFrame:SetHeight(32)
-            itemNameFrame:EnableMouse(true)
-            itemNameFrame:SetScript("OnEnter", function(myself)
-                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
-                GameTooltip:SetItemByID(item.id)
-                GameTooltip:Show()
-            end)
-            itemNameFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-            local itemNameText = OneWoW_GUI:CreateFS(itemNameFrame, 12)
-            itemNameText:SetPoint("LEFT",  itemNameFrame, "LEFT",  0, 0)
-            itemNameText:SetPoint("RIGHT", itemNameFrame, "RIGHT", 0, 0)
-            itemNameText:SetText(item.data.itemName or ("Item " .. item.id))
-            itemNameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            itemNameText:SetJustifyH("LEFT")
-            itemNameText:SetWordWrap(false)
-
-            local bindingInfo = item.data.bindingInfo
+            local bindingInfo = entry.data.bindingInfo
             if not bindingInfo then
-                bindingInfo = ns.DirectDeposit:GetItemBindingInfo(item.id)
+                bindingInfo = ns.DirectDeposit:GetItemBindingInfo(entry.id)
             end
 
             local canWarband = bindingInfo == nil or bindingInfo.canUseWarband ~= false
             local canPersonal = bindingInfo == nil or bindingInfo.canUsePersonal ~= false
-            local canGuild    = bindingInfo == nil or bindingInfo.canUseGuild ~= false
+            local canGuild = bindingInfo == nil or bindingInfo.canUseGuild ~= false
 
-            local warbandRadio = CreateFrame("CheckButton", nil, itemRow, "UIRadioButtonTemplate")
-            warbandRadio:SetPoint("RIGHT", itemRow, "RIGHT", -230, 0)
-            warbandRadio:SetChecked(item.data.bankType == "warband")
+            -- Radios sit left of the remove control; offsets mirror the prior layout.
+            local warbandRadio = CreateFrame("CheckButton", nil, row, "UIRadioButtonTemplate")
+            warbandRadio:SetPoint("RIGHT", row, "RIGHT", -250, 0)
+            warbandRadio:SetChecked(entry.data.bankType == "warband")
             warbandRadio:SetEnabled(canWarband)
 
-            local warbandLabel = OneWoW_GUI:CreateFS(itemRow, 10)
+            local warbandLabel = OneWoW_GUI:CreateFS(row, 10)
             warbandLabel:SetPoint("LEFT", warbandRadio, "RIGHT", 3, 0)
             warbandLabel:SetText(L["ITEM_DEPOSIT_WARBAND"])
             if canWarband then
@@ -756,12 +678,12 @@ function GUI:RefreshItemList(panel, preserveScrollPos)
                 warbandLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
 
-            local personalRadio = CreateFrame("CheckButton", nil, itemRow, "UIRadioButtonTemplate")
-            personalRadio:SetPoint("RIGHT", itemRow, "RIGHT", -135, 0)
-            personalRadio:SetChecked(item.data.bankType == "personal")
+            local personalRadio = CreateFrame("CheckButton", nil, row, "UIRadioButtonTemplate")
+            personalRadio:SetPoint("RIGHT", row, "RIGHT", -155, 0)
+            personalRadio:SetChecked(entry.data.bankType == "personal")
             personalRadio:SetEnabled(canPersonal)
 
-            local personalLabel = OneWoW_GUI:CreateFS(itemRow, 10)
+            local personalLabel = OneWoW_GUI:CreateFS(row, 10)
             personalLabel:SetPoint("LEFT", personalRadio, "RIGHT", 3, 0)
             personalLabel:SetText(L["ITEM_DEPOSIT_PERSONAL"])
             if canPersonal then
@@ -770,12 +692,12 @@ function GUI:RefreshItemList(panel, preserveScrollPos)
                 personalLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
             end
 
-            local guildRadio = CreateFrame("CheckButton", nil, itemRow, "UIRadioButtonTemplate")
-            guildRadio:SetPoint("RIGHT", itemRow, "RIGHT", -55, 0)
-            guildRadio:SetChecked(item.data.bankType == "guild")
+            local guildRadio = CreateFrame("CheckButton", nil, row, "UIRadioButtonTemplate")
+            guildRadio:SetPoint("RIGHT", row, "RIGHT", -75, 0)
+            guildRadio:SetChecked(entry.data.bankType == "guild")
             guildRadio:SetEnabled(canGuild)
 
-            local guildLabel = OneWoW_GUI:CreateFS(itemRow, 10)
+            local guildLabel = OneWoW_GUI:CreateFS(row, 10)
             guildLabel:SetPoint("LEFT", guildRadio, "RIGHT", 3, 0)
             guildLabel:SetText(GUILD)
             if canGuild then
@@ -789,8 +711,7 @@ function GUI:RefreshItemList(panel, preserveScrollPos)
                     warbandRadio:SetChecked(true)
                     personalRadio:SetChecked(false)
                     guildRadio:SetChecked(false)
-                    ns.DirectDeposit:UpdateItemBankType(item.id, "warband")
-                    GUI:RefreshItemList(panel, true)
+                    ns.DirectDeposit:UpdateItemBankType(entry.id, "warband")
                 else
                     warbandRadio:SetChecked(false)
                 end
@@ -801,8 +722,7 @@ function GUI:RefreshItemList(panel, preserveScrollPos)
                     personalRadio:SetChecked(true)
                     warbandRadio:SetChecked(false)
                     guildRadio:SetChecked(false)
-                    ns.DirectDeposit:UpdateItemBankType(item.id, "personal")
-                    GUI:RefreshItemList(panel, true)
+                    ns.DirectDeposit:UpdateItemBankType(entry.id, "personal")
                 else
                     personalRadio:SetChecked(false)
                 end
@@ -813,43 +733,69 @@ function GUI:RefreshItemList(panel, preserveScrollPos)
                     guildRadio:SetChecked(true)
                     warbandRadio:SetChecked(false)
                     personalRadio:SetChecked(false)
-                    ns.DirectDeposit:UpdateItemBankType(item.id, "guild")
-                    GUI:RefreshItemList(panel, true)
+                    ns.DirectDeposit:UpdateItemBankType(entry.id, "guild")
                 else
                     guildRadio:SetChecked(false)
                 end
             end)
 
-            itemRow:Show()
-            yOffset = yOffset - 35
-        end
+            local left = 0
+            if entry.icon then
+                local iconTex = row:CreateTexture(nil, "ARTWORK")
+                iconTex:SetSize(iconSize, iconSize)
+                iconTex:SetPoint("LEFT", row, "LEFT", 0, 0)
+                iconTex:SetTexture(entry.icon)
+                iconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+                left = iconSize + 6
+            end
 
-        if #sortedItems == 0 then
-            local noItemsText = OneWoW_GUI:CreateFS(itemScrollChild, 10)
-            noItemsText:SetPoint("TOP", itemScrollChild, "TOP", 0, -10)
-            noItemsText:SetText(L["ITEM_EMPTY_LIST"])
-            noItemsText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            noItemsText:SetJustifyH("CENTER")
-            yOffset = yOffset - 40
-        end
-
-        itemScrollChild:SetHeight(math.max(math.abs(yOffset) + 10, 1))
-
-        if preserveScrollPos and panel.itemScrollFrame and savedScrollPos > 0 then
-            C_Timer.After(0.05, function()
-                local scrollBar = panel.itemScrollFrame.ScrollBar
-                if scrollBar then scrollBar:SetValue(savedScrollPos) end
+            local nameFrame = CreateFrame("Frame", nil, row)
+            nameFrame:SetPoint("LEFT", row, "LEFT", left, 0)
+            nameFrame:SetPoint("RIGHT", warbandRadio, "LEFT", -8, 0)
+            nameFrame:SetHeight(32)
+            nameFrame:EnableMouse(true)
+            nameFrame:SetScript("OnEnter", function(myself)
+                GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
+                GameTooltip:SetItemByID(entry.id)
+                GameTooltip:Show()
             end)
-        end
+            nameFrame:SetScript("OnLeave", function()
+                GameTooltip:Hide()
+            end)
 
-        isRefreshing = false
+            local nameText = OneWoW_GUI:CreateFS(nameFrame, 12)
+            nameText:SetPoint("LEFT", nameFrame, "LEFT", 0, 0)
+            nameText:SetPoint("RIGHT", nameFrame, "RIGHT", 0, 0)
+            nameText:SetJustifyH("LEFT")
+            nameText:SetWordWrap(false)
+            nameText:SetText(entry.label)
+            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-        if pendingRefresh then
-            local nextPanel = pendingRefresh
-            pendingRefresh = nil
-            GUI:RefreshItemList(nextPanel, true)
-        end
-    end)
+            return 32
+        end,
+    })
+    itemAdd:AttachDropTarget(itemList:GetFrame())
+    if itemList.scrollFrame then
+        itemAdd:AttachDropTarget(itemList.scrollFrame)
+    end
+
+    panel.itemList = itemList
+    panel.itemAdd = itemAdd
+    panel.itemScrollFrame = itemList.scrollFrame
+    panel.scrollContent = scrollContent
+    panel.dropZoneFrame = dropZoneFrame
+
+    GUI:RefreshItemList(panel)
+
+    yOffset = yOffset - 350
+    scrollContent:SetHeight(math.abs(yOffset) + 40)
+
+    return panel
+end
+
+function GUI:RefreshItemList(panel)
+    if not panel or not panel.itemList then return end
+    panel.itemList:Refresh()
 end
 
 function GUI:RefreshExcludeList(panel)
@@ -1046,6 +992,4 @@ function GUI:FullReset()
     currentTab     = 1
     tabPanels      = {}
     tabButtons     = {}
-    isRefreshing   = false
-    pendingRefresh = nil
 end

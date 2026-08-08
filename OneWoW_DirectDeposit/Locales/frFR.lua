@@ -52,8 +52,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
 
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
     ["DEPOSIT_NOW"] = "Déposer Maintenant",
-    ["ITEM_DRAG_HINT"] = "Glissez des objets ici pour les ajouter",
-    ["ITEM_EMPTY_LIST"] = "Aucun objet dans la liste de dépôt automatique.\nGlissez des objets ici pour les ajouter.",
 
     ["TAB_KEYBINDS"] = "Raccourcis",
 

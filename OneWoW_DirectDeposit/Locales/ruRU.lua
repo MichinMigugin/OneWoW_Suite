@@ -52,8 +52,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
 
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
     ["DEPOSIT_NOW"] = "Внести сейчас",
-    ["ITEM_DRAG_HINT"] = "Перетащите предметы сюда для добавления",
-    ["ITEM_EMPTY_LIST"] = "В списке автовнесения нет предметов.\nПеретащите предметы сюда, чтобы добавить их.",
 
     ["TAB_KEYBINDS"] = "Горячие клавиши",
 

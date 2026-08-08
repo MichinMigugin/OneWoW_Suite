@@ -53,8 +53,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
     ["DEPOSIT_NOW"] = "立即存入",
-    ["ITEM_DRAG_HINT"] = "将物品拖到此处以添加",
-    ["ITEM_EMPTY_LIST"] = "自动存入列表中没有物品。\n将物品拖到此处以添加。",
 
     ["TAB_KEYBINDS"] = "快捷键",
 

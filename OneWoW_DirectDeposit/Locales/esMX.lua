@@ -53,8 +53,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
     ["DEPOSIT_NOW"] = "Depositar Ahora",
-    ["ITEM_DRAG_HINT"] = "Arrastra objetos aquí para añadirlos",
-    ["ITEM_EMPTY_LIST"] = "No hay objetos en la lista de depósito automático.\nArrastra objetos aquí para añadirlos.",
 
     ["TAB_KEYBINDS"] = "Atajos de Teclado",
 

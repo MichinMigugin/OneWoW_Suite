@@ -52,8 +52,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
     ["DEPOSIT_NOW"] = "지금 입금",
-    ["ITEM_DRAG_HINT"] = "여기로 아이템을 끌어와 추가",
-    ["ITEM_EMPTY_LIST"] = "자동 입금 목록에 아이템이 없습니다.\n여기로 아이템을 끌어와 추가하세요.",
 
     ["TAB_KEYBINDS"] = "단축키",
 

@@ -52,8 +52,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
     ["ADDON_CHAT_PREFIX"] = "|cFFFFD100Direct Deposit:|r",
     ["DEPOSIT_NOW"] = "Jetzt einzahlen",
-    ["ITEM_DRAG_HINT"] = "Gegenstände hierher ziehen zum Hinzufügen",
-    ["ITEM_EMPTY_LIST"] = "Keine Gegenstände in der Auto-Einzahlungsliste.\nGegenstände hierher ziehen, um sie hinzuzufügen.",
 
     ["TAB_KEYBINDS"] = "Tastenbelegung",
 
