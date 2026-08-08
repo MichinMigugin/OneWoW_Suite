@@ -291,19 +291,17 @@ function UI:Build(detailScrollChild, yOffset, isEnabled, registerRefresh)
                         scaleFs:SetText(FormatScalePct(FM and FM:GetDisplayScale(frameName) or 1))
                         UI.scaleLabels[frameName] = scaleFs
 
-                        resetOneBtn = OneWoW_GUI:CreateFitTextButton(container, {
+                        resetOneBtn = OneWoW_GUI:CreateTextLink(container, {
                             text = RESET,
-                            height = 20,
-                            minWidth = 40,
-                            paddingX = 16,
+                            fontSize = 10,
+                            onClick = function()
+                                if not FM then return end
+                                FM:ResetScale(frameName)
+                                scaleFs:SetText(FormatScalePct(FM:GetDisplayScale(frameName)))
+                            end,
                         })
                         resetOneBtn:SetPoint("LEFT", scaleFs, "RIGHT", 8, 0)
                         resetOneBtn:SetEnabled(isEnabled)
-                        resetOneBtn:SetScript("OnClick", function()
-                            if not FM then return end
-                            FM:ResetScale(frameName)
-                            scaleFs:SetText(FormatScalePct(FM:GetDisplayScale(frameName)))
-                        end)
 
                         return nil, 22
                     end,

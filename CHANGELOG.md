@@ -28,6 +28,9 @@
 ## Minimap Button Collector
 - Enhanced OneWoW row icons match Home / Manage Features (including Mail); Core still uses the brand mark
 
+## FrameMover
+- Per-frame Reset next to the scale percent is a text link instead of a chunky button (Reset All Positions / Scales stay buttons)
+
 # Mail
 ## Settings
 - Gear on the tab bar opens a compact settings popover with a slider for how long to wait for send confirmation (5–30 seconds; default 8) — raise it if laggy connections cause false timeouts
