@@ -73,7 +73,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["WARBOUND_EXCLUDE_KEYWORD_PLACEHOLDER"] = "예: #potion | #flask",
     ["WARBOUND_EXCLUDE_ITEMS_LABEL"] = "특정 아이템 보관",
     ["WARBOUND_EXCLUDE_ITEMS_DESC"] = "이 아이템은 전투부대 귀속이더라도 항상 가방에 보관됩니다. 아이템을 여기로 끌어오거나 아이템 ID를 입력하세요.",
-    ["WARBOUND_EXCLUDE_EMPTY"] = "보관 중인 아이템이 없습니다.\n여기로 아이템을 끌어와 가방에 보관하세요.",
 
     ["TOOLTIP_SECTION"] = "툴팁 오버레이",
     ["TOOLTIP_ENABLE"] = "툴팁에 입금 상태 표시",

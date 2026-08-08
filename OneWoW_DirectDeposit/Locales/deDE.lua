@@ -73,7 +73,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["WARBOUND_EXCLUDE_KEYWORD_PLACEHOLDER"] = "z. B. #potion | #flask",
     ["WARBOUND_EXCLUDE_ITEMS_LABEL"] = "Bestimmte Gegenstände behalten",
     ["WARBOUND_EXCLUDE_ITEMS_DESC"] = "Diese Gegenstände werden immer in Ihren Taschen behalten, auch wenn sie kriegsmeutengebunden sind. Ziehen Sie einen Gegenstand hierher oder geben Sie seine Gegenstands-ID ein.",
-    ["WARBOUND_EXCLUDE_EMPTY"] = "Keine behaltenen Gegenstände.\nGegenstände hierher ziehen, um sie in Ihren Taschen zu behalten.",
 
     ["TOOLTIP_SECTION"] = "Tooltip-Overlay",
     ["TOOLTIP_ENABLE"] = "Einzahlungsstatus in Tooltips anzeigen",

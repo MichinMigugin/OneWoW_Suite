@@ -73,7 +73,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["WARBOUND_EXCLUDE_KEYWORD_PLACEHOLDER"] = "напр. #potion | #flask",
     ["WARBOUND_EXCLUDE_ITEMS_LABEL"] = "Сохранять определённые предметы",
     ["WARBOUND_EXCLUDE_ITEMS_DESC"] = "Эти предметы всегда сохраняются в ваших сумках, даже если они привязаны к отряду. Перетащите предмет сюда или введите его ID предмета.",
-    ["WARBOUND_EXCLUDE_EMPTY"] = "Нет сохранённых предметов.\nПеретащите предметы сюда, чтобы сохранить их в сумках.",
 
     ["TOOLTIP_SECTION"] = "Наложение подсказки",
     ["TOOLTIP_ENABLE"] = "Показывать статус внесения в подсказках",

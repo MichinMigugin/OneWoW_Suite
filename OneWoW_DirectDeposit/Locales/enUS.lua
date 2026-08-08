@@ -73,7 +73,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["WARBOUND_EXCLUDE_KEYWORD_PLACEHOLDER"] = "e.g. #potion | #flask",
     ["WARBOUND_EXCLUDE_ITEMS_LABEL"] = "Keep Specific Items",
     ["WARBOUND_EXCLUDE_ITEMS_DESC"] = "These items are always kept in your bags, even when warbound. Drag an item here or enter its Item ID.",
-    ["WARBOUND_EXCLUDE_EMPTY"] = "No kept items.\nDrag items here to keep them in your bags.",
 
     ["TOOLTIP_SECTION"] = "Tooltip Overlay",
     ["TOOLTIP_ENABLE"] = "Show Deposit Status in Tooltips",

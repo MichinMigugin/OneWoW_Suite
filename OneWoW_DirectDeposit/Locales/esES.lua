@@ -73,7 +73,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["WARBOUND_EXCLUDE_KEYWORD_PLACEHOLDER"] = "p. ej. #potion | #flask",
     ["WARBOUND_EXCLUDE_ITEMS_LABEL"] = "Conservar Objetos Específicos",
     ["WARBOUND_EXCLUDE_ITEMS_DESC"] = "Estos objetos siempre se conservan en tus bolsas, incluso si están vinculados a la banda guerrera. Arrastra un objeto aquí o introduce su ID de objeto.",
-    ["WARBOUND_EXCLUDE_EMPTY"] = "No hay objetos conservados.\nArrastra objetos aquí para conservarlos en tus bolsas.",
 
     ["TOOLTIP_SECTION"] = "Superposición de Información",
     ["TOOLTIP_ENABLE"] = "Mostrar Estado de Depósito en la Información",

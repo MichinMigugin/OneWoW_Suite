@@ -74,7 +74,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["WARBOUND_EXCLUDE_KEYWORD_PLACEHOLDER"] = "ex.: #potion | #flask",
     ["WARBOUND_EXCLUDE_ITEMS_LABEL"] = "Manter Itens Específicos",
     ["WARBOUND_EXCLUDE_ITEMS_DESC"] = "Estes itens são sempre mantidos nas suas bolsas, mesmo quando vinculados ao Bando de Guerra. Arraste um item aqui ou insira o ID do item.",
-    ["WARBOUND_EXCLUDE_EMPTY"] = "Nenhum item mantido.\nArraste itens aqui para mantê-los nas suas bolsas.",
 
     ["TOOLTIP_SECTION"] = "Sobreposição de Dica",
     ["TOOLTIP_ENABLE"] = "Mostrar Status de Depósito nas Dicas",

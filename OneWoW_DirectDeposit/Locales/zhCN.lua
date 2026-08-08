@@ -74,7 +74,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["WARBOUND_EXCLUDE_KEYWORD_PLACEHOLDER"] = "例如 #potion | #flask",
     ["WARBOUND_EXCLUDE_ITEMS_LABEL"] = "保留特定物品",
     ["WARBOUND_EXCLUDE_ITEMS_DESC"] = "这些物品将始终保留在你的包裹中，即使是战团绑定物品。将物品拖到此处或输入其物品 ID。",
-    ["WARBOUND_EXCLUDE_EMPTY"] = "没有保留的物品。\n将物品拖到此处以将其保留在包裹中。",
 
     ["TOOLTIP_SECTION"] = "工具提示叠加",
     ["TOOLTIP_ENABLE"] = "在工具提示中显示存入状态",

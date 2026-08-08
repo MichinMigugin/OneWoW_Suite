@@ -73,7 +73,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["WARBOUND_EXCLUDE_KEYWORD_PLACEHOLDER"] = "p. ex. #potion | #flask",
     ["WARBOUND_EXCLUDE_ITEMS_LABEL"] = "Conserver des Objets Spécifiques",
     ["WARBOUND_EXCLUDE_ITEMS_DESC"] = "Ces objets sont toujours conservés dans vos sacs, même s'ils sont liés au bataillon. Glissez un objet ici ou saisissez son ID d'objet.",
-    ["WARBOUND_EXCLUDE_EMPTY"] = "Aucun objet conservé.\nGlissez des objets ici pour les conserver dans vos sacs.",
 
     ["TOOLTIP_SECTION"] = "Superposition d'Infobulle",
     ["TOOLTIP_ENABLE"] = "Afficher l'État de Dépôt dans les Infobulles",

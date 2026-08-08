@@ -74,7 +74,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["WARBOUND_EXCLUDE_KEYWORD_PLACEHOLDER"] = "es. #potion | #flask",
     ["WARBOUND_EXCLUDE_ITEMS_LABEL"] = "Mantieni Oggetti Specifici",
     ["WARBOUND_EXCLUDE_ITEMS_DESC"] = "Questi oggetti vengono sempre mantenuti nelle tue borse, anche se legati alla brigata. Trascina qui un oggetto o inserisci il suo ID oggetto.",
-    ["WARBOUND_EXCLUDE_EMPTY"] = "Nessun oggetto mantenuto.\nTrascina qui gli oggetti per mantenerli nelle tue borse.",
 
     ["TOOLTIP_SECTION"] = "Sovrapposizione Descrizione",
     ["TOOLTIP_ENABLE"] = "Mostra Stato del Deposito nelle Descrizioni",

@@ -344,6 +344,8 @@ function OneWoW_GUI:CreateEntryList(parent, options)
 
     local emptyFS = listFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     emptyFS:SetPoint("CENTER", listFrame, "CENTER", 0, 0)
+    emptyFS:SetJustifyH("CENTER")
+    emptyFS:SetWordWrap(true)
     emptyFS:SetText(emptyText)
     emptyFS:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     emptyFS:Hide()
