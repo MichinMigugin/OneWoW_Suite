@@ -837,7 +837,7 @@ function OneWoW_Bags:OnAddonLoaded()
     end)
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
-    OneWoW:RegisterLoadComponent("Bags", _ver, "/1wbags")
+    OneWoW:RegisterLoadComponent("Bags", _ver, "/1wbags", ADDON_NAME)
 end
 
 -- Login-phase arming via RunManifestLoginPhase (cold start) or Settle

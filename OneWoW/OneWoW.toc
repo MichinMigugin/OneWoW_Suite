@@ -104,6 +104,7 @@ Core\AddonLoader.lua
 Core\Lifecycle.lua
 Core\StoreBootstrap.lua
 Core\SettingsFeatureRegistry.lua
+Core\FeatureIcons.lua
 Core\FirstRunWizard.lua
 Core\FeatureHealth.lua
 Core\WhatsNewData.lua

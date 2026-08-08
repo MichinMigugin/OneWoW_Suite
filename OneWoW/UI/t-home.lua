@@ -282,13 +282,14 @@ function UI:CreateHomeTab(parent)
         local icon = iconFrame:CreateTexture(nil, "ARTWORK")
         icon:SetSize(ICON_SIZE, ICON_SIZE)
         icon:SetPoint("CENTER", iconFrame, "CENTER", 0, 0)
-        if entry.iconAtlas then
-            icon:SetAtlas(entry.iconAtlas, false)
+        local iconInfo = OneWoW:GetFeatureIcon(entry.addonName)
+        if iconInfo and iconInfo.atlas then
+            icon:SetAtlas(iconInfo.atlas, false)
         else
-            icon:SetTexture(entry.iconTexture or OneWoW_GUI:GetBrandIcon())
+            icon:SetTexture((iconInfo and iconInfo.texture) or OneWoW_GUI:GetBrandIcon())
         end
-        if entry.iconTexCoords then
-            icon:SetTexCoord(unpack(entry.iconTexCoords))
+        if iconInfo and iconInfo.texCoords then
+            icon:SetTexCoord(unpack(iconInfo.texCoords))
         end
 
         local title = OneWoW_GUI:CreateFS(card, 13)

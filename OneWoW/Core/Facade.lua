@@ -132,9 +132,16 @@ function OneWoW:GetCoreGlobal()
     return ns.db.global
 end
 
---- Loaded suite components ({ name, ver, cmd }), filled as units register.
+--- Loaded suite components ({ name, ver, cmd, addon }), filled as units register.
 function OneWoW:GetLoadedComponents()
     return ns._loadedComponents
+end
+
+--- Suite feature face for a load-unit folder name ({ texture?, atlas?, texCoords? }).
+---@param addonName string
+---@return table|nil
+function OneWoW:GetFeatureIcon(addonName)
+    return ns:GetFeatureIcon(addonName)
 end
 
 --- Registered minimap launcher entries ({ addon, label, tabKey, callback }).

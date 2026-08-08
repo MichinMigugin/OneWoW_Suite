@@ -16,6 +16,9 @@
 #### Portals
 - Added Corewarden's Hearthstone
 
+#### Minimap Button Collector
+- Enhanced OneWoW row icons match Home / Manage Features (including Mail); Core still uses the brand mark
+
 ### Mail
 
 #### Settings

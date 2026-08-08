@@ -55,7 +55,7 @@ local function OnInitialize()
         if ns.ApplyLanguage then ns.ApplyLanguage() end
     end)
 
-    OneWoW:RegisterLoadComponent("QoL", OneWoW:GetAddonVersion(ADDON_NAME), "/1wqol")
+    OneWoW:RegisterLoadComponent("QoL", OneWoW:GetAddonVersion(ADDON_NAME), "/1wqol", ADDON_NAME)
 end
 
 function OneWoW_QoL:ApplyTheme()

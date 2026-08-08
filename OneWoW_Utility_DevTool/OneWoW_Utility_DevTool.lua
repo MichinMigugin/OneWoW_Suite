@@ -492,7 +492,7 @@ end
 function OneWoW_Utility_DevTool:OnAddonLoaded()
     ns:OnInitialize()
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
-    OneWoW:RegisterLoadComponent("DevTools", _ver, "/1wdt")
+    OneWoW:RegisterLoadComponent("DevTools", _ver, "/1wdt", ADDON_NAME)
 end
 
 local didLogin = false

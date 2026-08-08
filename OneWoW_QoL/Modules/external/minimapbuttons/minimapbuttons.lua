@@ -1016,35 +1016,17 @@ end
 
 -- ─── Enhanced OneWoW Row ────────────────────────────────────────────────────
 
-local OW_COMPANION_ICONS = {
-    Core          = "Interface\\ICONS\\INV_Misc_Map_01",
-    QoL           = "Interface\\ICONS\\INV_Misc_Gear_01",
-    DevTools      = "Interface\\ICONS\\Trade_Engineering",
-    AltTracker    = "Interface\\ICONS\\INV_Misc_GroupNeedMore",
-    ShoppingList  = "Interface\\ICONS\\INV_Misc_Note_01",
-    DirectDeposit = "Interface\\ICONS\\INV_Misc_Coin_01",
-    Notes         = "Interface\\ICONS\\INV_Scroll_03",
-    Trackers      = "Interface\\ICONS\\INV_Misc_Spyglass_03",
-    Catalog       = "Interface\\ICONS\\INV_Misc_Book_09",
-    Bags          = "Interface\\ICONS\\INV_Misc_Bag_07_Green",
-    GUI           = "Interface\\ICONS\\Spell_Holy_MagicalSentry",
-}
-
 -- Resolves a loaded component to the open action the owning addon registered
--- via OneWoW:RegisterMinimap (callback, or hub tabKey -> GUI:Show). This is the
--- same deterministic path the hub's own minimap context menu uses, so it does
--- not depend on slash-command registration timing or SlashCmdList iteration
--- order. _minimapEntries are keyed by addon global name (e.g. "OneWoW_QoL");
--- match it against the component's display name ("QoL").
----@param compName string
+-- via OneWoW:RegisterMinimap (callback, or hub tabKey -> GUI:Show). Match by
+-- addon folder name stored on the load component.
+---@param addonName string|nil
 ---@return (fun())|nil
-local function FindMinimapEntryAction(compName)
+local function FindMinimapEntryAction(addonName)
+    if not addonName then return nil end
     local entries = OneWoW:GetMinimapEntries()
     if not entries then return nil end
-    local target = compName:lower()
     for _, entry in ipairs(entries) do
-        local stripped = (entry.addon or ""):gsub("^OneWoW_?", ""):gsub("_", ""):lower()
-        if stripped == target then
+        if entry.addon == addonName then
             if entry.callback then
                 return entry.callback
             elseif entry.tabKey then
@@ -1059,46 +1041,60 @@ local function FindMinimapEntryAction(compName)
     return nil
 end
 
-local function GetCompanionAction(compName)
-    local companions = OneWoW:GetLoadedComponents()
-    if not companions then return nil end
-    for _, comp in ipairs(companions) do
-        if comp.name == compName then
-            -- Core and GUI both ultimately just toggle the main OneWoW window.
-            -- Skip the slash dispatch (pairs(SlashCmdList) iteration order can
-            -- mis-resolve "/1w" on some clients, leaving the Core tile dead).
-            if comp.name == "Core" or comp.name == "GUI" then
-                return function()
-                    OneWoW.UI:Toggle()
-                end
-            end
-            local entryAction = FindMinimapEntryAction(comp.name)
-            if entryAction then
-                return entryAction
-            end
-            if comp.cmd then
-                return function()
-                    local cmd = comp.cmd:gsub("^/", "")
-                    local slashKey
-                    for k, _ in pairs(SlashCmdList) do
-                        for i = 1, 10 do
-                            local s = _G["SLASH_" .. k .. i]
-                            if s and s:lower() == ("/" .. cmd):lower() then
-                                slashKey = k
-                                break
-                            end
-                        end
-                        if slashKey then break end
-                    end
-                    if slashKey then
-                        SlashCmdList[slashKey]("")
+local function GetCompanionAction(comp)
+    if not comp then return nil end
+    -- Core and GUI both ultimately just toggle the main OneWoW window.
+    -- Skip the slash dispatch (pairs(SlashCmdList) iteration order can
+    -- mis-resolve "/1w" on some clients, leaving the Core tile dead).
+    if comp.name == "Core" or comp.name == "GUI" then
+        return function()
+            OneWoW.UI:Toggle()
+        end
+    end
+    local entryAction = FindMinimapEntryAction(comp.addon)
+    if entryAction then
+        return entryAction
+    end
+    if comp.cmd then
+        return function()
+            local cmd = comp.cmd:gsub("^/", "")
+            local slashKey
+            for k, _ in pairs(SlashCmdList) do
+                for i = 1, 10 do
+                    local s = _G["SLASH_" .. k .. i]
+                    if s and s:lower() == ("/" .. cmd):lower() then
+                        slashKey = k
+                        break
                     end
                 end
+                if slashKey then break end
             end
-            return nil
+            if slashKey then
+                SlashCmdList[slashKey]("")
+            end
         end
     end
     return nil
+end
+
+local function ApplyCompanionIcon(tex, comp)
+    local brand = OneWoW_GUI:GetBrandIcon(OneWoW_GUI:GetSetting("minimap.theme"))
+    if comp.name == "Core" or not comp.addon then
+        tex:SetTexture(brand)
+        tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        return
+    end
+    local info = OneWoW:GetFeatureIcon(comp.addon)
+    if info and info.atlas then
+        tex:SetAtlas(info.atlas, false)
+    else
+        tex:SetTexture((info and info.texture) or brand)
+    end
+    if info and info.texCoords then
+        tex:SetTexCoord(unpack(info.texCoords))
+    else
+        tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    end
 end
 
 local function BuildEnhancedRow()
@@ -1118,16 +1114,14 @@ local function BuildEnhancedRow()
         -- GUI only opens the main OneWoW window, identical to the Core tile, so
         -- it would be a redundant duplicate launcher. Skip it.
         if comp.name ~= "GUI" then
-            local icon = OW_COMPANION_ICONS[comp.name] or "Interface\\ICONS\\INV_Misc_QuestionMark"
-            local action = GetCompanionAction(comp.name)
+            local action = GetCompanionAction(comp)
 
             local btn = CreateFrame("Button", nil, containerFrame)
             btn:SetSize(28, 28)
 
             local tex = btn:CreateTexture(nil, "ARTWORK")
             tex:SetAllPoints()
-            tex:SetTexture(icon)
-            tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+            ApplyCompanionIcon(tex, comp)
 
             OneWoW_GUI:SkinIconFrame(btn, { preset = "clean" })
 

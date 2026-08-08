@@ -132,7 +132,7 @@ function OneWoW_ShoppingList:OnAddonLoaded()
     InitializeModules()
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
-    OneWoW:RegisterLoadComponent("ShoppingList", _ver, "/1wsl")
+    OneWoW:RegisterLoadComponent("ShoppingList", _ver, "/1wsl", ADDON_NAME)
 end
 
 local function HandleSlashCommand(msg)

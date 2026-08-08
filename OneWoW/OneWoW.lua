@@ -16,9 +16,14 @@ function ns:RegisterMinimap(addon, label, tabKey, callback)
     tinsert(self._minimapEntries, { addon = addon, label = label, tabKey = tabKey, callback = callback })
 end
 
-function ns:RegisterLoadComponent(displayName, version, command)
+function ns:RegisterLoadComponent(displayName, version, command, addonName)
     self._registeredAddons[displayName] = true
-    table.insert(self._loadedComponents, { name = displayName, ver = version, cmd = command })
+    table.insert(self._loadedComponents, {
+        name = displayName,
+        ver = version,
+        cmd = command,
+        addon = addonName,
+    })
 end
 
 local _defaultSaveTimer = nil
@@ -127,7 +132,7 @@ function ns:OnAddonLoaded(loadedAddon)
     end)
 
     local _ver = ns:GetAddonVersion(ADDON_NAME)
-    self:RegisterLoadComponent("Core", _ver, "/1w")
+    self:RegisterLoadComponent("Core", _ver, "/1w", ADDON_NAME)
 
     self:RegisterMinimap("OneWoW", L["OPEN_ONEWOW"], nil, function()
         if self.UI then self.UI:Show() end
@@ -152,7 +157,7 @@ function ns:RunCoreLoginSequence()
 
     for _, comp in ipairs(ns.ModuleManifest or {}) do
         if not ns._registeredAddons[comp.display] and C_AddOns.IsAddOnLoaded(comp.addon) then
-            ns:RegisterLoadComponent(comp.display, ns:GetAddonVersion(comp.addon), comp.cmd)
+            ns:RegisterLoadComponent(comp.display, ns:GetAddonVersion(comp.addon), comp.cmd, comp.addon)
         end
     end
 

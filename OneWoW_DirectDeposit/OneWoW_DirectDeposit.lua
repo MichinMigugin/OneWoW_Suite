@@ -261,7 +261,7 @@ function OneWoW_DirectDeposit:OnAddonLoaded()
     end)
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
-    OneWoW:RegisterLoadComponent("DirectDeposit", _ver, "/1wdd")
+    OneWoW:RegisterLoadComponent("DirectDeposit", _ver, "/1wdd", ADDON_NAME)
 end
 
 -- Login-phase arming via RunManifestLoginPhase (cold start) or Settle

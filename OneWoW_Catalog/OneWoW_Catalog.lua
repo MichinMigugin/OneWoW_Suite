@@ -64,7 +64,7 @@ local function OnInitialize()
     end)
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
-    OneWoW:RegisterLoadComponent("Catalog", _ver, "/1wcat")
+    OneWoW:RegisterLoadComponent("Catalog", _ver, "/1wcat", ADDON_NAME)
 end
 
 local function OnEnable()

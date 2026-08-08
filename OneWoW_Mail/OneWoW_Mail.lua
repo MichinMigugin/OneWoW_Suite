@@ -90,5 +90,5 @@ function OneWoW_Mail:OnAddonLoaded()
     end)
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
-    OneWoW:RegisterLoadComponent("Mail", _ver, "/1wmail")
+    OneWoW:RegisterLoadComponent("Mail", _ver, "/1wmail", ADDON_NAME)
 end

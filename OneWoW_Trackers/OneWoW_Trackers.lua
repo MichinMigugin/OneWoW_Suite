@@ -85,7 +85,7 @@ local function OnInitialize()
     end)
 
     local _ver = OneWoW:GetAddonVersion(ADDON_NAME)
-    OneWoW:RegisterLoadComponent("Trackers", _ver, "/1wt")
+    OneWoW:RegisterLoadComponent("Trackers", _ver, "/1wt", ADDON_NAME)
 end
 
 local function OnEnable()

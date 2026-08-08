@@ -29,10 +29,8 @@ local FirstRun = ns.FirstRun
 --   labelKey       - localized display name key
 --   summaryKey     - localized short description key
 --   group          - "feature" | "standalone" | "utility" - grouping in the UI
---   iconTexture    - card icon texture path (fallback when iconAtlas is absent)
---   iconAtlas      - optional atlas name; takes precedence over iconTexture
---   iconTextCoords - coordinates for cropping or transforming the texture
 --   datastores     - list of sibling data addons this feature needs loaded
+-- Feature faces come from OneWoW:GetFeatureIcon(addonName) (Core/FeatureIcons.lua).
 -- Datastores are "pulled in" if any checked feature needs them.
 FirstRun.CATALOG = {
     -- Core features
@@ -41,9 +39,6 @@ FirstRun.CATALOG = {
         labelKey    = "WIZARD_FEATURE_ALTTRACKER",
         summaryKey  = "WIZARD_FEATURE_ALTTRACKER_DESC",
         group       = "feature",
-        iconTexture = "Interface\\Icons\\achievement_guildperk_everybodysfriend",
-        --iconAtlas   = "plunderstorm-glues-queueselector-trio",
-        --iconTexCoords = {0.27, 0.74, 0.27, 0.70},
         datastores  = {},
     },
     {
@@ -51,7 +46,6 @@ FirstRun.CATALOG = {
         labelKey    = "WIZARD_FEATURE_CATALOG",
         summaryKey  = "WIZARD_FEATURE_CATALOG_DESC",
         group       = "feature",
-        iconTexture = "Interface\\Icons\\INV_Misc_Book_11",
         datastores  = {
             "OneWoW_AltTracker_Storage",
         },
@@ -61,7 +55,6 @@ FirstRun.CATALOG = {
         labelKey    = "WIZARD_FEATURE_NOTES",
         summaryKey  = "WIZARD_FEATURE_NOTES_DESC",
         group       = "feature",
-        iconTexture = "Interface\\Icons\\INV_Inscription_Scroll",
         datastores  = {},
     },
     {
@@ -69,7 +62,6 @@ FirstRun.CATALOG = {
         labelKey    = "WIZARD_FEATURE_TRACKERS",
         summaryKey  = "WIZARD_FEATURE_TRACKERS_DESC",
         group       = "feature",
-        iconTexture = "Interface\\Icons\\Ability_Hunter_MarkedForDeath",
         datastores  = {},
     },
     {
@@ -77,7 +69,6 @@ FirstRun.CATALOG = {
         labelKey    = "WIZARD_FEATURE_QOL",
         summaryKey  = "WIZARD_FEATURE_QOL_DESC",
         group       = "feature",
-        iconTexture = "Interface\\Icons\\INV_Gizmo_RocketBoot_01",
         datastores  = {},
     },
 
@@ -87,7 +78,6 @@ FirstRun.CATALOG = {
         labelKey    = "WIZARD_FEATURE_BAGS",
         summaryKey  = "WIZARD_FEATURE_BAGS_DESC",
         group       = "standalone",
-        iconTexture = "Interface\\Icons\\INV_Misc_Bag_08",
         datastores  = {
             "OneWoW_AltTracker_Storage",
             "OneWoW_AltTracker_Character",
@@ -98,7 +88,6 @@ FirstRun.CATALOG = {
         labelKey    = "WIZARD_FEATURE_SHOPPINGLIST",
         summaryKey  = "WIZARD_FEATURE_SHOPPINGLIST_DESC",
         group       = "standalone",
-        iconTexture = "Interface\\Icons\\INV_Misc_Coin_01",
         datastores  = {
             "OneWoW_AltTracker_Storage",
             "OneWoW_CatalogData_Tradeskills",
@@ -109,7 +98,6 @@ FirstRun.CATALOG = {
         labelKey    = "WIZARD_FEATURE_DIRECTDEPOSIT",
         summaryKey  = "WIZARD_FEATURE_DIRECTDEPOSIT_DESC",
         group       = "standalone",
-        iconTexture = "Interface\\Icons\\achievement_guildperk_mobilebanking",
         datastores  = {},
     },
     {
@@ -117,7 +105,6 @@ FirstRun.CATALOG = {
         labelKey    = "WIZARD_FEATURE_MAIL",
         summaryKey  = "WIZARD_FEATURE_MAIL_DESC",
         group       = "standalone",
-        iconTexture = "Interface\\Icons\\achievement_guildperk_gmail",
         datastores  = {
             "OneWoW_AltTracker_Storage",
             "OneWoW_AltTracker_Character",
@@ -130,7 +117,6 @@ FirstRun.CATALOG = {
         labelKey    = "WIZARD_FEATURE_DEVTOOL",
         summaryKey  = "WIZARD_FEATURE_DEVTOOL_DESC",
         group       = "utility",
-        iconTexture = "Interface\\Icons\\INV_Gizmo_02",
         datastores  = {},
     },
 }
@@ -854,13 +840,13 @@ function FirstRun:BuildPanel(parent, opts)
         for _, entry in ipairs(FirstRun.CATALOG) do
             if entry.group == group then
                 local addon = entry.addonName
+                local iconInfo = ns:GetFeatureIcon(addon) or {}
                 local card = OneWoW_GUI:CreateSelectableCard(listContainer, {
                     title = L[entry.labelKey],
                     summary = L[entry.summaryKey],
-                    iconTexture = entry.iconTexture,
-                    iconAtlas = entry.iconAtlas,
-                    iconSize = entry.iconSize,
-                    iconTexCoords = entry.iconTexCoords,
+                    iconTexture = iconInfo.texture,
+                    iconAtlas = iconInfo.atlas,
+                    iconTexCoords = iconInfo.texCoords,
                     checked = selections[addon],
                     onToggle = function(_, checked)
                         selections[addon] = checked and true or false
