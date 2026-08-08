@@ -175,8 +175,7 @@ local CVAR_DATA = {
 
 ns.GetCVarList = function() return CVAR_DATA end
 
-local selectedEntry = nil
-local selectedRow   = nil
+local selectedRow = nil
 local favMigrationDone = false
 
 local function QoLToggleFavStore()
@@ -272,23 +271,7 @@ local function GetRowDisplay(entry)
     return val, nil
 end
 
---- Human-readable value for the detail status bar (On/Off, option label, or slider text).
-local function FormatStatusDisplay(entry)
-    local displayText, isOn = GetRowDisplay(entry)
-    if entry.widget == "checkbox" then
-        if isOn == nil then
-            return displayText or "?"
-        end
-        return isOn and L["TOGGLES_ON"] or L["TOGGLES_OFF"]
-    end
-    return displayText or "?"
-end
-
-local function UpdateRightStatus(split, entry)
-    if not split.rightStatusText or not entry then return end
-    split.rightStatusText:SetText(L[entry.name] .. ": " .. FormatStatusDisplay(entry))
-end
-
+--- Human-readable value for list-row indicators (On/Off, option label, or slider text).
 local function UpdateRowIndicator(row, entry)
     if not row then return end
     local displayText, isOn = GetRowDisplay(entry)
@@ -368,7 +351,6 @@ local function ShowToggleDetail(split, entry)
             onValueChange = function(newVal)
                 SetToggleCVar(capturedEntry.cvar, newVal and "1" or "0")
                 UpdateRowIndicator(selectedRow, capturedEntry)
-                UpdateRightStatus(split, capturedEntry)
             end,
         })
         toggleBtn:SetPoint("TOPLEFT", child, "TOPLEFT", 12, yOfs)
@@ -393,7 +375,6 @@ local function ShowToggleDetail(split, entry)
                 local fmt = FormatSliderVal(val, capturedEntry.step)
                 SetToggleCVar(capturedEntry.cvar, fmt)
                 UpdateRowIndicator(selectedRow, capturedEntry)
-                UpdateRightStatus(split, capturedEntry)
             end,
         })
         sliderWrap:SetPoint("TOPLEFT", child, "TOPLEFT", 12, yOfs)
@@ -419,7 +400,6 @@ local function ShowToggleDetail(split, entry)
             onSelect = function(value)
                 SetToggleCVar(capturedEntry.cvar, value)
                 UpdateRowIndicator(selectedRow, capturedEntry)
-                UpdateRightStatus(split, capturedEntry)
             end,
         })
 
@@ -433,8 +413,7 @@ end
 local function BuildTogglesList(split, filterText)
     local child = split.listScrollChild
     OneWoW_GUI:ClearFrame(child)
-    selectedRow   = nil
-    selectedEntry = nil
+    selectedRow = nil
 
     local filter    = (filterText and #filterText > 0) and filterText:lower() or nil
     local shownCount = 0
@@ -453,11 +432,9 @@ local function BuildTogglesList(split, filterText)
                 if selectedRow and selectedRow ~= self then
                     selectedRow:SetActive(false)
                 end
-                selectedRow   = self
-                selectedEntry = capturedEntry
+                selectedRow = self
                 ShowToggleDetail(split, capturedEntry)
                 self:SetActive(true)
-                UpdateRightStatus(split, capturedEntry)
             end,
             favoriteToggle = {
                 isFavorite = IsQoLToggleFavorite(entry),
@@ -561,9 +538,6 @@ function ns.UI.CreateTogglesTab(parent)
     if split.searchBox then
         split.searchBox:SetScript("OnTextChanged", function(self)
             BuildTogglesList(split, self:GetSearchText())
-            if split.rightStatusText and selectedEntry == nil then
-                split.rightStatusText:SetText("")
-            end
         end)
     end
 

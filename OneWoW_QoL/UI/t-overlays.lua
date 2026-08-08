@@ -306,50 +306,31 @@ local function AddHeroBlock(stack, opts)
 
     local title = OneWoW_GUI:CreateFS(hero, 15)
     title:SetPoint("TOPLEFT", hero, "TOPLEFT", textLeft, -12)
-    title:SetWidth(math.max(120, stack.contentWidth - textLeft - 100))
     title:SetJustifyH("LEFT")
     title:SetWordWrap(false)
     title:SetText(opts.title or "")
     title:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
 
-    local toggleBtn, statusDot, statusText
+    local toggleBtn
     if opts.isEnabled then
-        statusDot = OneWoW_GUI:CreateStatusDot(hero, { enabled = opts.isEnabled() })
-        statusDot:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 1, -9)
-
-        statusText = OneWoW_GUI:CreateFS(hero, 11)
-        statusText:SetPoint("LEFT", statusDot, "RIGHT", 5, 0)
-        statusText:SetJustifyH("LEFT")
-
-        toggleBtn = OneWoW_GUI:CreateFitTextButton(hero, { text = L["FEATURE_ENABLE_BTN"], height = 24 })
+        toggleBtn = OneWoW_GUI:CreateFeatureHeaderToggle(hero, {
+            isEnabled = opts.isEnabled,
+            onToggle = opts.onToggle,
+            selectedRow = opts.selectedRow,
+        })
         toggleBtn:SetPoint("TOPRIGHT", hero, "TOPRIGHT", -10, -10)
-
-        local function SyncToggle()
-            local enabled = opts.isEnabled()
-            statusDot:SetStatus(enabled)
-            if enabled then
-                statusText:SetText(L["FEATURE_ENABLED"])
-                statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-                toggleBtn:SetFitText(L["FEATURE_DISABLE_BTN"])
-            else
-                statusText:SetText(L["FEATURE_DISABLED"])
-                statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-                toggleBtn:SetFitText(L["FEATURE_ENABLE_BTN"])
-            end
-        end
-        SyncToggle()
-
-        toggleBtn:SetScript("OnClick", function()
-            local newState = not opts.isEnabled()
-            if opts.onToggle then opts.onToggle(newState) end
-            SyncToggle()
-            if opts.selectedRow and opts.selectedRow.dot then
-                opts.selectedRow.dot:SetStatus(newState)
-            end
-        end)
+        title:SetPoint("TOPRIGHT", toggleBtn, "TOPLEFT", -8, 0)
+    else
+        title:SetWidth(math.max(120, stack.contentWidth - textLeft - 20))
     end
 
-    local bottomY = sidePreview and -50 or -(10 + PREVIEW_SLOT_SIZE)
+    -- Header clearance (title/toggle), matching Toast/Tooltips spacing.
+    -- Inline preview slots (no side panel) still set the floor when taller.
+    local headerBottom = -12 - title:GetStringHeight()
+    if toggleBtn then
+        headerBottom = math.min(headerBottom, -10 - toggleBtn:GetHeight())
+    end
+    local bottomY = sidePreview and headerBottom or math.min(headerBottom, -(10 + PREVIEW_SLOT_SIZE))
 
     local desc
     if opts.desc then
@@ -2453,7 +2434,7 @@ local function BuildOverlayList(split)
             yOffset = yOffset - 34
         end
 
-        local function RowClick(rowId, displayName)
+        local function RowClick(rowId)
             return function(myself)
                 if reorderCtrl and reorderCtrl:IsActive() then return end
                 if selectedRow and selectedRow ~= myself then
@@ -2463,9 +2444,6 @@ local function BuildOverlayList(split)
                 selectedId = rowId
                 myself:SetActive(true)
                 ShowDetailFor(rowId, myself)
-                if split.rightStatusText then
-                    split.rightStatusText:SetText(displayName)
-                end
             end
         end
 
@@ -2477,7 +2455,7 @@ local function BuildOverlayList(split)
                     label = displayName,
                     showDot = true,
                     dotEnabled = IsRowEnabled(builtin.id),
-                    onClick = RowClick(builtin.id, displayName),
+                    onClick = RowClick(builtin.id),
                 })
                 PlaceRow(row, builtin.id)
             end
@@ -2493,7 +2471,7 @@ local function BuildOverlayList(split)
                     enabled = item.entry.enabled == true,
                     iconSpec = type(item.entry.icon) == "table" and item.entry.icon or nil,
                     canMove = canDrag,
-                    onClick = RowClick(capturedId, displayName),
+                    onClick = RowClick(capturedId),
                 })
                 row._ovrId = capturedId
                 PlaceRow(row, capturedId)

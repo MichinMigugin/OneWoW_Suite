@@ -717,6 +717,33 @@ Defaults: height `TOGGLE_BUTTON_HEIGHT` (18), horizontal padding `TOGGLE_BUTTON_
 Caller must `SetPoint` the button, or use `CreateToggleRow` below.
 Returns `btn, refresh`.
 
+### Feature header toggle (Enabled / Disabled)
+```lua
+local toggleBtn, refresh = OneWoW_GUI:CreateFeatureHeaderToggle(parent, {
+    isEnabled = function()
+        return Registry:IsEnabled("tooltips", featureId)
+    end,
+    onToggle = function(newState)
+        Registry:SetEnabled("tooltips", featureId, newState)
+    end,
+    selectedRow = selectedRow,  -- optional; syncs list-row status dot
+    -- optional; defaults to shared FEATURE_ENABLED / FEATURE_DISABLED
+    onLabel = L["FEATURE_ENABLED"],
+    offLabel = L["FEATURE_DISABLED"],
+})
+toggleBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
+title:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
+title:SetPoint("TOPRIGHT", toggleBtn, "TOPLEFT", -8, 0)
+local headerHeight = math.max(title:GetStringHeight(), toggleBtn:GetHeight())
+yOffset = yOffset - headerHeight - 8
+-- After external enable changes:
+refresh()
+```
+Thin wrapper around `CreateOnOffToggleButtons` for feature-master chrome on detail
+headers (Toast Alerts, Tooltips, Overlays). Shows current state (not action verbs).
+Caller owns layout (Features-style title left / toggle right). Replaces the old
+`CreateFeatureStatusBlock` (`Status:` + Enable/Disable button).
+
 ### Toggle row (label + description/custom + On/Off)
 ```lua
 local newYOffset, refresh, refs = OneWoW_GUI:CreateToggleRow(parent, {

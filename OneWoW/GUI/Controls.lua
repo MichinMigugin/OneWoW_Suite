@@ -987,71 +987,48 @@ function OneWoW_GUI:CreateIntegrationRow(parent, options)
     return row
 end
 
-function OneWoW_GUI:CreateFeatureStatusBlock(parent, options)
+--- Feature detail header toggle — Enabled/Disabled state chrome (same as Features On/Off).
+--- Caller SetPoints the button (typically TOPRIGHT) and pins the title to it.
+--- options: isEnabled (fun(): boolean), onToggle (fun(newState: boolean)|nil),
+--- selectedRow (optional, syncs .dot), onLabel/offLabel/clickTooltipFormat (optional).
+---@param parent Frame
+---@param options table|nil
+---@return Button toggleBtn
+---@return fun() refresh
+function OneWoW_GUI:CreateFeatureHeaderToggle(parent, options)
     options = options or {}
-    local yOff       = options.yOffset or 0
-    local xOff       = options.xOffset or 12
-    local isEnabled  = options.isEnabled
-    local onToggle   = options.onToggle
-    local statusLbl  = options.statusLabel
-    local enText     = options.enabledText
-    local disText    = options.disabledText
-    local enBtnTxt   = options.enableBtnText
-    local disBtnTxt  = options.disableBtnText
+    local isEnabledFn = options.isEnabled
+    local onToggle = options.onToggle
+    local selectedRow = options.selectedRow
+    local onLabel = options.onLabel
+        or OneWoW.Locale:GetOptional("shared", "FEATURE_ENABLED")
+        or "Enabled"
+    local offLabel = options.offLabel
+        or OneWoW.Locale:GetOptional("shared", "FEATURE_DISABLED")
+        or "Disabled"
 
-    local statusPrefix = self:CreateFS(parent, 12)
-    statusPrefix:SetPoint("TOPLEFT", parent, "TOPLEFT", xOff, yOff)
-    if statusLbl then statusPrefix:SetText(statusLbl) end
-    statusPrefix:SetTextColor(self:GetThemeColor("TEXT_PRIMARY"))
+    local current = isEnabledFn and isEnabledFn() or false
 
-    local statusValue = self:CreateFS(parent, 12)
-    statusValue:SetPoint("LEFT", statusPrefix, "RIGHT", 4, 0)
-
-    local currentState = isEnabled and isEnabled() or false
-    if currentState then
-        if enText then statusValue:SetText(enText) end
-        statusValue:SetTextColor(self:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        if disText then statusValue:SetText(disText) end
-        statusValue:SetTextColor(self:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
-
-    local toggleBtn = self:CreateFitTextButton(parent, {
-        text = currentState and (disBtnTxt or "") or (enBtnTxt or ""),
-        height = 24,
+    local toggleBtn, onOffRefresh = self:CreateOnOffToggleButtons(parent, {
+        onLabel = onLabel,
+        offLabel = offLabel,
+        isEnabled = true,
+        value = current,
+        clickTooltipFormat = options.clickTooltipFormat,
+        onValueChange = function(newVal)
+            if onToggle then
+                onToggle(newVal)
+            end
+            if selectedRow and selectedRow.dot then
+                selectedRow.dot:SetStatus(newVal)
+            end
+        end,
     })
-    toggleBtn:SetPoint("LEFT", statusValue, "RIGHT", 12, 0)
 
-    local block = {
-        statusPrefix = statusPrefix,
-        statusValue  = statusValue,
-        toggleBtn    = toggleBtn,
-    }
-
-    function block.refresh()
-        local enabled = isEnabled and isEnabled() or false
-        if enabled then
-            if enText then statusValue:SetText(enText) end
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-        else
-            if disText then statusValue:SetText(disText) end
-            statusValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-        end
-        toggleBtn.text:SetText(enabled and (disBtnTxt or "") or (enBtnTxt or ""))
+    local function refresh()
+        local enabled = isEnabledFn and isEnabledFn() or false
+        onOffRefresh(true, enabled)
     end
 
-    function block.getBottomY()
-        return yOff - 30
-    end
-
-    toggleBtn:SetScript("OnClick", function()
-        local nowEnabled = isEnabled and isEnabled() or false
-        local newState = not nowEnabled
-        if onToggle then
-            onToggle(newState)
-        end
-        block.refresh()
-    end)
-
-    return block
+    return toggleBtn, refresh
 end

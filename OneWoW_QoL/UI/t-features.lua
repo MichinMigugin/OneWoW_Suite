@@ -247,10 +247,6 @@ local function ShowModuleDetail(split, module)
                 selectedRow.dot:SetStatus(newVal)
             end
 
-            if split.rightStatusText then
-                local modName = ML(module.id, module.title) or module.title
-                split.rightStatusText:SetText(modName .. (newVal and " (" .. L["FEATURES_ENABLED"] .. ")" or " (" .. L["FEATURES_DISABLED"] .. ")"))
-            end
             if split.leftStatusText then
                 local filterText = split.searchBox and split.searchBox:GetSearchText() or ""
                 if #filterText == 0 then
@@ -470,11 +466,6 @@ local function BuildFeaturesList(split, filterText)
                     selectedRow = self
                     ShowModuleDetail(split, capturedModule)
                     self:SetActive(true)
-                    if split.rightStatusText then
-                        local isEnabled = ns.ModuleRegistry:IsEnabled(capturedModule.id)
-                        local modName = ML(capturedModule.id, capturedModule.title) or capturedModule.title
-                        split.rightStatusText:SetText(modName .. (isEnabled and " (" .. L["FEATURES_ENABLED"] .. ")" or " (" .. L["FEATURES_DISABLED"] .. ")"))
-                    end
                 end,
             })
             row:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 4, yOffset)
@@ -533,11 +524,6 @@ local function BuildFeaturesList(split, filterText)
                         selectedRow = self
                         ShowModuleDetail(split, capturedModule)
                         self:SetActive(true)
-                        if split.rightStatusText then
-                            local isEnabled = ns.ModuleRegistry:IsEnabled(capturedModule.id)
-                            local modName = ML(capturedModule.id, capturedModule.title) or capturedModule.title
-                            split.rightStatusText:SetText(modName .. (isEnabled and " (" .. L["FEATURES_ENABLED"] .. ")" or " (" .. L["FEATURES_DISABLED"] .. ")"))
-                        end
                     end,
                 })
                 row:SetPoint("TOPLEFT", listScrollChild, "TOPLEFT", 4, yOffset)
@@ -629,12 +615,6 @@ function ns.UI.SelectFeature(moduleId)
             selectedRow = nil
             ShowModuleDetail(split, module)
             detailShown = true
-
-            if split.rightStatusText then
-                local isEnabled = ns.ModuleRegistry:IsEnabled(module.id)
-                local modName = ML(module.id, module.title) or module.title
-                split.rightStatusText:SetText(modName .. (isEnabled and " (" .. L["FEATURES_ENABLED"] .. ")" or " (" .. L["FEATURES_DISABLED"] .. ")"))
-            end
         end
 
         if split.featureRows and split.featureRows[moduleId] then

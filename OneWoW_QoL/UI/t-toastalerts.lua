@@ -208,13 +208,27 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
 
     local yOffset = -10
 
+    local enableBtn = OneWoW_GUI:CreateFeatureHeaderToggle(dsc, {
+        selectedRow = selectedRow,
+        isEnabled = function()
+            return OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id)
+        end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled(tabName, feature.id, newState)
+        end,
+    })
+    enableBtn:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+
     local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    titleLabel:SetPoint("TOPRIGHT", enableBtn, "TOPLEFT", -8, 0)
     titleLabel:SetJustifyH("LEFT")
+    titleLabel:SetWordWrap(false)
     titleLabel:SetText(L[feature.title])
     titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+
+    local headerHeight = math.max(titleLabel:GetStringHeight(), enableBtn:GetHeight())
+    yOffset = yOffset - headerHeight - 8
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -228,24 +242,6 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
-
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
-        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id) end,
-        onToggle = function(newState)
-            OneWoW.SettingsFeatureRegistry:SetEnabled(tabName, feature.id, newState)
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
-            end
-        end,
-    })
-
-    yOffset = statusBlock.getBottomY() - 14
 
     if feature.id == "general" then
         yOffset = AddGeneralExtras(dsc, yOffset)
@@ -293,10 +289,6 @@ local function BuildFeatureList(split, tabName)
                         selectedRow = self
                         self:SetActive(true)
                         ShowFeatureDetail(split, capturedFeature, tabName, self)
-                        if split.rightStatusText then
-                            local fe = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, capturedFeature.id)
-                            split.rightStatusText:SetText(displayName .. (fe and " (Enabled)" or " (Disabled)"))
-                        end
                     end,
                 })
                 row:SetPoint("TOPLEFT", lsc, "TOPLEFT", 4, yOffset)

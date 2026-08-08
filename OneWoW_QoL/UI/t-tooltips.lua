@@ -30,16 +30,34 @@ function ns.UI.RefreshTooltipsFeatureDot(featureId, value)
     end
 end
 
+--- Title (left) + Enabled/Disabled header toggle (right). Returns new yOffset.
+local function PlaceFeatureHeader(dsc, yOffset, titleText, headerOpts)
+    local enableBtn = OneWoW_GUI:CreateFeatureHeaderToggle(dsc, headerOpts)
+    enableBtn:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
+
+    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
+    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
+    titleLabel:SetPoint("TOPRIGHT", enableBtn, "TOPLEFT", -8, 0)
+    titleLabel:SetJustifyH("LEFT")
+    titleLabel:SetWordWrap(false)
+    titleLabel:SetText(titleText)
+    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+    local headerHeight = math.max(titleLabel:GetStringHeight(), enableBtn:GetHeight())
+    return yOffset - headerHeight - 8
+end
+
+
 local function ShowGeneralDetail(split, dsc, selectedRow)
     local yOffset = -10
 
-    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L["TIPS_GENERAL_TITLE"])
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+    yOffset = PlaceFeatureHeader(dsc, yOffset, L["TIPS_GENERAL_TITLE"], {
+        selectedRow = selectedRow,
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", "general") end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", "general", newState)
+        end,
+    })
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -54,23 +72,6 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
-        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", "general") end,
-        onToggle = function(newState)
-            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", "general", newState)
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
-            end
-        end,
-    })
-
-    yOffset = statusBlock.getBottomY() - 20
 
     local noteLabel = OneWoW_GUI:CreateFS(dsc, 12)
     noteLabel:SetPoint("TOPLEFT",  dsc, "TOPLEFT",  12, yOffset)
@@ -124,14 +125,21 @@ end
 
 local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
+    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+    local toggleBtnSets = {}
 
-    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title])
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+    yOffset = PlaceFeatureHeader(dsc, yOffset, L[feature.title], {
+        selectedRow = selectedRow,
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            for _, tbs in ipairs(toggleBtnSets) do
+                local val = Registry:GetFeatureSettings("tooltips", "customnotes")[tbs.key]
+                tbs.refresh(newState, val ~= false)
+                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
+            end
+        end,
+    })
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -145,32 +153,6 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
-
-    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-    local toggleBtnSets = {}
-
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
-        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
-        onToggle = function(newState)
-            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
-            end
-            for _, tbs in ipairs(toggleBtnSets) do
-                local val = Registry:GetFeatureSettings("tooltips", "customnotes")[tbs.key]
-                tbs.refresh(newState, val ~= false)
-                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
-            end
-        end,
-    })
-
-    yOffset = statusBlock.getBottomY() - 14
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -283,14 +265,21 @@ local TECHID_TOGGLES = {
 
 local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
+    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+    local toggleBtnSets = {}
 
-    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title])
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+    yOffset = PlaceFeatureHeader(dsc, yOffset, L[feature.title], {
+        selectedRow = selectedRow,
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            for _, tbs in ipairs(toggleBtnSets) do
+                local val = Registry:GetFeatureSettings("tooltips", "technicalids")[tbs.key]
+                tbs.refresh(newState, val ~= false)
+                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
+            end
+        end,
+    })
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -304,32 +293,6 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
     descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
-
-    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-    local toggleBtnSets = {}
-
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
-        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
-        onToggle = function(newState)
-            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
-            end
-            for _, tbs in ipairs(toggleBtnSets) do
-                local val = Registry:GetFeatureSettings("tooltips", "technicalids")[tbs.key]
-                tbs.refresh(newState, val ~= false)
-                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
-            end
-        end,
-    })
-
-    yOffset = statusBlock.getBottomY() - 14
 
     local toggleHeader = OneWoW_GUI:CreateFS(dsc, 12)
     toggleHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
@@ -363,14 +326,21 @@ local ITEMTRACKER_TOGGLES = {
 
 local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
+    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+    local toggleBtnSets = {}
 
-    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title])
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+    yOffset = PlaceFeatureHeader(dsc, yOffset, L[feature.title], {
+        selectedRow = selectedRow,
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            for _, tbs in ipairs(toggleBtnSets) do
+                local val = Registry:GetFeatureSettings("tooltips", "itemtracker")[tbs.key]
+                tbs.refresh(newState, val ~= false)
+                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
+            end
+        end,
+    })
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -384,32 +354,6 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
-
-    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-    local toggleBtnSets = {}
-
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
-        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
-        onToggle = function(newState)
-            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
-            end
-            for _, tbs in ipairs(toggleBtnSets) do
-                local val = Registry:GetFeatureSettings("tooltips", "itemtracker")[tbs.key]
-                tbs.refresh(newState, val ~= false)
-                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
-            end
-        end,
-    })
-
-    yOffset = statusBlock.getBottomY() - 14
 
     local toggleHeader = OneWoW_GUI:CreateFS(dsc, 12)
     toggleHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
@@ -505,13 +449,17 @@ end
 local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
 
-    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title])
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+    yOffset = PlaceFeatureHeader(dsc, yOffset, L[feature.title], {
+        selectedRow = selectedRow,
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            if feature.id == "playermounts" then
+                ns.ModuleRegistry:SetEnabled("playmounts", newState)
+                ns.UI.RefreshModuleDot("playmounts", newState)
+            end
+        end,
+    })
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -526,27 +474,6 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
-        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
-        onToggle = function(newState)
-            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
-            if feature.id == "playermounts" then
-                ns.ModuleRegistry:SetEnabled("playmounts", newState)
-                ns.UI.RefreshModuleDot("playmounts", newState)
-            end
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
-            end
-        end,
-    })
-
-    yOffset = statusBlock.getBottomY() - 14
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -585,14 +512,19 @@ end
 
 local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
+    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+    local allRefreshFuncs = {}
 
-    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title])
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+    yOffset = PlaceFeatureHeader(dsc, yOffset, L[feature.title], {
+        selectedRow = selectedRow,
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            for _, refreshFn in ipairs(allRefreshFuncs) do
+                refreshFn(newState)
+            end
+        end,
+    })
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -606,30 +538,6 @@ local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
     descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
-
-    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-    local allRefreshFuncs = {}
-
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
-        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
-        onToggle = function(newState)
-            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
-            end
-            for _, refreshFn in ipairs(allRefreshFuncs) do
-                refreshFn(newState)
-            end
-        end,
-    })
-
-    yOffset = statusBlock.getBottomY() - 14
 
     -- Live block, read-only; all writes go through Registry:SetSetting.
     local tmSettings = Registry:GetFeatureSettings("tooltips", "talentmods")
@@ -683,14 +591,19 @@ end
 
 local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
+    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+    local allRefreshFuncs = {}
 
-    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title])
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+    yOffset = PlaceFeatureHeader(dsc, yOffset, L[feature.title], {
+        selectedRow = selectedRow,
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            for _, refreshFn in ipairs(allRefreshFuncs) do
+                refreshFn(newState)
+            end
+        end,
+    })
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -704,30 +617,6 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
-
-    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-    local allRefreshFuncs = {}
-
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
-        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
-        onToggle = function(newState)
-            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
-            end
-            for _, refreshFn in ipairs(allRefreshFuncs) do
-                refreshFn(newState)
-            end
-        end,
-    })
-
-    yOffset = statusBlock.getBottomY() - 14
 
     -- Live block, read-only; all writes go through Registry:SetSetting.
     local enhSettings = Registry:GetFeatureSettings("tooltips", "enhancements")
@@ -1175,14 +1064,19 @@ end
 
 local function ShowValueDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
+    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+    local allRefreshFuncs = {}
 
-    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title])
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+    yOffset = PlaceFeatureHeader(dsc, yOffset, L[feature.title], {
+        selectedRow = selectedRow,
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            for _, refreshFn in ipairs(allRefreshFuncs) do
+                refreshFn(newState)
+            end
+        end,
+    })
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -1196,30 +1090,6 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
-
-    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-    local allRefreshFuncs = {}
-
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
-        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
-        onToggle = function(newState)
-            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
-            end
-            for _, refreshFn in ipairs(allRefreshFuncs) do
-                refreshFn(newState)
-            end
-        end,
-    })
-
-    yOffset = statusBlock.getBottomY() - 14
 
     -- Live block, read-only; all writes go through Registry:SetSetting, which
     -- also drives ExternalTooltipSync via its registered listener.
@@ -1419,14 +1289,21 @@ local PETS_TOGGLES = {
 
 local function ShowPetsDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
+    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
+    local toggleBtnSets = {}
 
-    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title])
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+    yOffset = PlaceFeatureHeader(dsc, yOffset, L[feature.title], {
+        selectedRow = selectedRow,
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+            for _, tbs in ipairs(toggleBtnSets) do
+                local val = Registry:GetFeatureSettings("tooltips", "pets")[tbs.key]
+                tbs.refresh(newState, val ~= false)
+                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
+            end
+        end,
+    })
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -1440,32 +1317,6 @@ local function ShowPetsDetail(split, dsc, feature, selectedRow)
     descLabel:SetText(L[feature.description])
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
-
-    local isEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id)
-    local toggleBtnSets = {}
-
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
-        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
-        onToggle = function(newState)
-            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
-            end
-            for _, tbs in ipairs(toggleBtnSets) do
-                local val = Registry:GetFeatureSettings("tooltips", "pets")[tbs.key]
-                tbs.refresh(newState, val ~= false)
-                tbs.label:SetTextColor(OneWoW_GUI:GetThemeColor(newState and "TEXT_PRIMARY" or "TEXT_MUTED"))
-            end
-        end,
-    })
-
-    yOffset = statusBlock.getBottomY() - 14
 
     local toggleHeader = OneWoW_GUI:CreateFS(dsc, 12)
     toggleHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
@@ -1488,13 +1339,13 @@ end
 local function ShowCollectionsDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
 
-    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title])
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+    yOffset = PlaceFeatureHeader(dsc, yOffset, L[feature.title], {
+        selectedRow = selectedRow,
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+        end,
+    })
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -1509,22 +1360,6 @@ local function ShowCollectionsDetail(split, dsc, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
-        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
-        onToggle = function(newState)
-            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
-            end
-        end,
-    })
-    yOffset = statusBlock.getBottomY() - 14
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -1585,13 +1420,13 @@ end
 local function ShowRecipeKnowledgeDetail(split, dsc, feature, selectedRow)
     local yOffset = -10
 
-    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title])
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+    yOffset = PlaceFeatureHeader(dsc, yOffset, L[feature.title], {
+        selectedRow = selectedRow,
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
+        end,
+    })
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -1606,22 +1441,6 @@ local function ShowRecipeKnowledgeDetail(split, dsc, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
-        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled("tooltips", feature.id) end,
-        onToggle = function(newState)
-            OneWoW.SettingsFeatureRegistry:SetEnabled("tooltips", feature.id, newState)
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
-            end
-        end,
-    })
-    yOffset = statusBlock.getBottomY() - 14
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -1720,13 +1539,13 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
 
     local yOffset = -10
 
-    local titleLabel = OneWoW_GUI:CreateFS(dsc, 16)
-    titleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    titleLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(L[feature.title])
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
+    yOffset = PlaceFeatureHeader(dsc, yOffset, L[feature.title], {
+        selectedRow = selectedRow,
+        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id) end,
+        onToggle = function(newState)
+            OneWoW.SettingsFeatureRegistry:SetEnabled(tabName, feature.id, newState)
+        end,
+    })
 
     OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
     yOffset = yOffset - 12
@@ -1741,23 +1560,6 @@ local function ShowFeatureDetail(split, feature, tabName, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    local statusBlock = OneWoW_GUI:CreateFeatureStatusBlock(dsc, {
-        yOffset = yOffset,
-        statusLabel = L["FEATURE_STATUS_LABEL"],
-        enabledText = L["FEATURE_ENABLED"],
-        disabledText = L["FEATURE_DISABLED"],
-        enableBtnText = L["FEATURE_ENABLE_BTN"],
-        disableBtnText = L["FEATURE_DISABLE_BTN"],
-        isEnabled = function() return OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, feature.id) end,
-        onToggle = function(newState)
-            OneWoW.SettingsFeatureRegistry:SetEnabled(tabName, feature.id, newState)
-            if selectedRow and selectedRow.dot then
-                selectedRow.dot:SetStatus(newState)
-            end
-        end,
-    })
-
-    yOffset = statusBlock.getBottomY() - 14
 
     dsc:SetHeight(math.abs(yOffset) + 20)
     OneWoW_GUI:ApplyFontToFrame(dsc)
@@ -1811,10 +1613,6 @@ local function BuildFeatureList(split, tabName)
                         end
                         self:SetActive(true)
                         ShowFeatureDetail(split, capturedFeature, tabName, self)
-                        if split.rightStatusText then
-                            local fe = OneWoW.SettingsFeatureRegistry:IsEnabled(tabName, capturedFeature.id)
-                            split.rightStatusText:SetText(displayName .. (fe and " (Enabled)" or " (Disabled)"))
-                        end
                     end,
                 })
                 row:SetPoint("TOPLEFT", lsc, "TOPLEFT", 4, yOffset)

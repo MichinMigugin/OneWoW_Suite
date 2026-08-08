@@ -14,6 +14,9 @@
 
 # QoL
 
+## Settings
+- Toast Alerts, Tooltips, and Overlays use an Enabled/Disabled control in the detail header (same style as Features On/Off); the old Status line and repeating name on the bottom bar are gone on Features, Toggles, Toast, Tooltips, and Overlays
+
 ## Features
 - Module On/Off sits in the detail header; Details is a text link under Category when a module has author/contact/link info
 - “Mount Status” on the bottom bar only appears for Auto Mount (no longer sticks when switching modules)
