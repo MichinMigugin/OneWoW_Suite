@@ -8,9 +8,5 @@ OneWoW.Locale:Register(M._scope, "esES", {
     ["AUTOOPEN_DESC"] = "Abre automáticamente bolsas, cajas y otros objetos contenedores cuando aparecen en tu inventario. No abre objetos en un banco, buzón o comerciante. Los objetos que aún no puedes abrir (cofres cerrados, nivel/clase/profesión incorrectos, o mientras la ranura está ocupada) se omiten automáticamente.",
     ["AUTOOPEN_OPENING"] = "Abriendo automáticamente: %s",
     ["AUTOOPEN_BLACKLIST_DESC"] = "Añade objetos para evitar que Apertura automática los abra.",
-    ["AUTOOPEN_BLACKLIST_ADD"] = "Añadir ID de objeto:",
-    ["AUTOOPEN_BLACKLIST_EMPTY"] = "No hay objetos en la lista negra",
     ["AUTOOPEN_BLACKLIST_REMOVED"] = "Eliminado de la lista negra: %s",
-    ["AUTOOPEN_BLACKLIST_ADDED"] = "Añadido a la lista negra: %s",
-    ["AUTOOPEN_BLACKLIST_CLEARED"] = "Lista negra vaciada.",
 })

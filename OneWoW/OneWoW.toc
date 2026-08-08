@@ -31,7 +31,8 @@ Media\fonts.lua
 
 # GUI toolkit (absorbed OneWoW_GUI library — publishes the OneWoW_GUI global).
 # Widget files - DO NOT reorder. Dependencies: Controls needs Buttons+Display;
-# Layout needs Buttons+Controls; Panels needs Buttons+Layout+EditBoxes.
+# Layout needs Buttons+Controls; Panels needs Buttons+Layout+EditBoxes;
+# ItemListEditor needs Buttons+EditBoxes+Panels (CreateScrollFrame).
 GUI\Core.lua
 GUI\Database.lua
 GUI\Constants.lua
@@ -44,6 +45,7 @@ GUI\EditBoxes.lua
 GUI\Layout.lua
 GUI\SideBarTabs.lua
 GUI\Panels.lua
+GUI\ItemListEditor.lua
 GUI\Virtualizer.lua
 GUI\Cards.lua
 GUI\Icons.lua

@@ -21,6 +21,9 @@
 - Module On/Off sits in the detail header; Details is a text link under Category when a module has author/contact/link info
 - “Mount Status” on the bottom bar only appears for Auto Mount (no longer sticks when switching modules)
 
+#### Player Mounts
+- Display Mode is a single dropdown (Name / Name + Type / Full Details) instead of three buttons
+
 #### Portals
 - Added Corewarden's Hearthstone
 

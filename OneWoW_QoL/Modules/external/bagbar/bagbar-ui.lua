@@ -3,317 +3,41 @@ local BagBarModule, L = ns.ModuleRegistry:Current()
 
 local OneWoW_GUI = OneWoW_GUI
 
-local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-
-StaticPopupDialogs["ONEWOW_QOL_CLEAR_BAGBAR_BLACKLIST"] = {
-    text = "",
-    button1 = YES,
-    button2 = NO,
-    OnAccept = function()
-        local bucket = ns.ModuleRegistry:GetModuleBucket("bagbar")
-        if bucket.blacklist then
-            wipe(bucket.blacklist)
-        end
-        BagBarModule:ClearTempBlacklist()
-        if ns.ModuleRegistry:IsEnabled("bagbar") then
-            BagBarModule:ScheduleUpdate()
-        end
-        print("|cFF00FF00" .. (L["BAGBAR_BLACKLIST_CLEARED"]) .. "|r")
-        if BagBarModule._refreshCustomDetail then
-            BagBarModule._refreshCustomDetail()
-        end
-    end,
-    timeout = 0,
-    whileDead = true,
-    hideOnEscape = true,
-    preferredIndex = 3,
-}
-
 local function GetSettings()
     return BagBarModule.GetSettings()
 end
 
-local function MakeItemDropZone(parent, label, yOffset, onReceive)
-    local itemIDLabel = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    itemIDLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    itemIDLabel:SetText(label)
-    itemIDLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-    local itemIDBox = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
-    itemIDBox:SetPoint("LEFT", itemIDLabel, "RIGHT", 8, 0)
-    itemIDBox:SetSize(90, 22)
-    itemIDBox:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    itemIDBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    itemIDBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    itemIDBox:SetFontObject(GameFontHighlight)
-    itemIDBox:SetTextInsets(4, 4, 0, 0)
-    itemIDBox:SetAutoFocus(false)
-    itemIDBox:SetMaxLetters(10)
-    itemIDBox:SetNumeric(true)
-    itemIDBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    itemIDBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    itemIDBox:SetScript("OnEditFocusGained", function(self)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-    end)
-    itemIDBox:SetScript("OnEditFocusLost", function(self)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    end)
-
-    local addBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = ADD, height = 24 })
-    addBtn:SetPoint("LEFT", itemIDBox, "RIGHT", 6, 0)
-    addBtn:SetScript("OnClick", function()
-        local id = tonumber(itemIDBox:GetText())
-        if id and id > 0 then
-            onReceive(id)
-            itemIDBox:SetText("")
-        end
-    end)
-
-    local dropZone = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    dropZone:SetPoint("LEFT", addBtn, "RIGHT", 8, 0)
-    dropZone:SetSize(110, 24)
-    dropZone:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    dropZone:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    dropZone:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    dropZone:EnableMouse(true)
-
-    local dropText = dropZone:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    dropText:SetPoint("CENTER")
-    dropText:SetText(L["DRAG_ITEM_HERE"])
-    dropText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-    local function handleDrop()
-        local infoType, itemID = GetCursorInfo()
-        if infoType == "item" and itemID and itemID > 0 then
-            ClearCursor()
-            onReceive(itemID)
-        end
-    end
-
-    dropZone:SetScript("OnReceiveDrag", handleDrop)
-    dropZone:SetScript("OnMouseUp",     handleDrop)
-    dropZone:SetScript("OnEnter", function(self)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-    end)
-    dropZone:SetScript("OnLeave", function(self)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    end)
-
-    return yOffset - 30, itemIDBox, addBtn, dropZone
-end
-
-local function MakeItemList(parent, itemTable, yOffset, onRemove, uiEnabled)
-    local listFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    listFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    listFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
-    listFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    listFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    listFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local rowOffset = -5
-    local hasItems  = false
-
-    for itemID, _ in pairs(itemTable) do
-        hasItems = true
+local function ItemTableEntries(itemTable)
+    local entries = {}
+    for itemID in pairs(itemTable) do
         C_Item.RequestLoadItemDataByID(itemID)
         local itemName = C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
         local _, _, _, _, _, _, _, _, _, icon = C_Item.GetItemInfo(itemID)
-
-        local row = CreateFrame("Frame", nil, listFrame)
-        row:SetHeight(20)
-        row:SetPoint("TOPLEFT",  listFrame, "TOPLEFT",  10, rowOffset)
-        row:SetPoint("TOPRIGHT", listFrame, "TOPRIGHT", -10, rowOffset)
-
-        if icon then
-            local iconTex = row:CreateTexture(nil, "ARTWORK")
-            iconTex:SetSize(16, 16)
-            iconTex:SetPoint("LEFT", row, "LEFT", 0, 0)
-            iconTex:SetTexture(icon)
-            iconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-        end
-
-        local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        nameText:SetPoint("LEFT", row, "LEFT", 22, 0)
-        nameText:SetPoint("RIGHT", row, "RIGHT", -20, 0)
-        nameText:SetJustifyH("LEFT")
-        nameText:SetText(itemName)
-        nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-        local removeBtn = CreateFrame("Button", nil, row)
-        removeBtn:SetSize(16, 16)
-        removeBtn:SetPoint("RIGHT", row, "RIGHT", 0, 0)
-        removeBtn:SetNormalTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
-        removeBtn:SetHighlightTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Highlight")
-        local capturedID = itemID
-        removeBtn:SetScript("OnClick", function()
-            onRemove(capturedID)
-        end)
-        if not uiEnabled then
-            removeBtn:Disable()
-        end
-
-        rowOffset = rowOffset - 22
+        tinsert(entries, { id = itemID, label = itemName, icon = icon })
     end
-
-    local frameHeight = hasItems and (math.abs(rowOffset) + 8) or 28
-    listFrame:SetHeight(frameHeight)
-
-    if not hasItems then
-        local emptyText = listFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        emptyText:SetPoint("CENTER")
-        emptyText:SetText("---")
-        emptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    end
-
-    return yOffset - frameHeight - 8
+    return entries
 end
 
-local function MakeMacroDropZone(parent, label, yOffset, onReceive)
-    local nameLabel = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    nameLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    nameLabel:SetText(label)
-    nameLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-    local nameBox = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
-    nameBox:SetPoint("LEFT", nameLabel, "RIGHT", 8, 0)
-    nameBox:SetSize(120, 22)
-    nameBox:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    nameBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    nameBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    nameBox:SetFontObject(GameFontHighlight)
-    nameBox:SetTextInsets(4, 4, 0, 0)
-    nameBox:SetAutoFocus(false)
-    nameBox:SetMaxLetters(64)
-    nameBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    nameBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    nameBox:SetScript("OnEditFocusGained", function(self)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-    end)
-    nameBox:SetScript("OnEditFocusLost", function(self)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    end)
-
-    local addBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = ADD, height = 24 })
-    addBtn:SetPoint("LEFT", nameBox, "RIGHT", 6, 0)
-    addBtn:SetScript("OnClick", function()
-        local text = strtrim(nameBox:GetText() or "")
-        if text ~= "" and GetMacroIndexByName(text) > 0 then
-            local mName = GetMacroInfo(text)
-            if mName then
-                onReceive(mName)
-                nameBox:SetText("")
-            end
-        end
-    end)
-
-    local dropZone = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    dropZone:SetPoint("LEFT", addBtn, "RIGHT", 8, 0)
-    dropZone:SetSize(120, 24)
-    dropZone:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    dropZone:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    dropZone:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    dropZone:EnableMouse(true)
-
-    local dropText = dropZone:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    dropText:SetPoint("CENTER")
-    dropText:SetText(L["BAGBAR_DRAG_MACRO_HERE"])
-    dropText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-
-    local function handleDrop()
-        local infoType, macroIndex = GetCursorInfo()
-        if infoType == "macro" and macroIndex then
-            local mName = GetMacroInfo(macroIndex)
-            ClearCursor()
-            if mName then
-                onReceive(mName)
-            end
-        end
-    end
-
-    dropZone:SetScript("OnReceiveDrag", handleDrop)
-    dropZone:SetScript("OnMouseUp",     handleDrop)
-    dropZone:SetScript("OnEnter", function(self)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-    end)
-    dropZone:SetScript("OnLeave", function(self)
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    end)
-
-    return yOffset - 30, nameBox, addBtn, dropZone
-end
-
-local function MakeMacroList(parent, macroTable, yOffset, onRemove, uiEnabled)
-    local listFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    listFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    listFrame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
-    listFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    listFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
-    listFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
+local function MacroTableEntries(macroTable)
     local names = {}
     for name in pairs(macroTable) do
         tinsert(names, name)
     end
     sort(names)
-
-    local rowOffset = -5
-    local hasItems  = #names > 0
-
+    local entries = {}
     for _, macroName in ipairs(names) do
         local mName, mIcon = GetMacroInfo(macroName)
-
-        local row = CreateFrame("Frame", nil, listFrame)
-        row:SetHeight(20)
-        row:SetPoint("TOPLEFT",  listFrame, "TOPLEFT",  10, rowOffset)
-        row:SetPoint("TOPRIGHT", listFrame, "TOPRIGHT", -10, rowOffset)
-
-        if mIcon then
-            local iconTex = row:CreateTexture(nil, "ARTWORK")
-            iconTex:SetSize(16, 16)
-            iconTex:SetPoint("LEFT", row, "LEFT", 0, 0)
-            iconTex:SetTexture(mIcon)
-            iconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-        end
-
-        local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        nameText:SetPoint("LEFT", row, "LEFT", 22, 0)
-        nameText:SetPoint("RIGHT", row, "RIGHT", -20, 0)
-        nameText:SetJustifyH("LEFT")
         if mName then
-            nameText:SetText(mName)
-            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            tinsert(entries, { id = macroName, label = mName, icon = mIcon })
         else
-            nameText:SetText(macroName .. " " .. L["BAGBAR_MACRO_MISSING"])
-            nameText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            tinsert(entries, {
+                id = macroName,
+                label = macroName .. " " .. L["BAGBAR_MACRO_MISSING"],
+                icon = mIcon,
+            })
         end
-
-        local removeBtn = CreateFrame("Button", nil, row)
-        removeBtn:SetSize(16, 16)
-        removeBtn:SetPoint("RIGHT", row, "RIGHT", 0, 0)
-        removeBtn:SetNormalTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
-        removeBtn:SetHighlightTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Highlight")
-        local capturedName = macroName
-        removeBtn:SetScript("OnClick", function()
-            onRemove(capturedName)
-        end)
-        if not uiEnabled then
-            removeBtn:Disable()
-        end
-
-        rowOffset = rowOffset - 22
     end
-
-    local frameHeight = hasItems and (math.abs(rowOffset) + 8) or 28
-    listFrame:SetHeight(frameHeight)
-
-    if not hasItems then
-        local emptyText = listFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        emptyText:SetPoint("CENTER")
-        emptyText:SetText("---")
-        emptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    end
-
-    return yOffset - frameHeight - 8
+    return entries
 end
 
 local function BuildContent(container, _)
@@ -543,22 +267,49 @@ local function BuildContent(container, _)
     manualIntro:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     cy = cy - manualIntro:GetStringHeight() - 8
 
-    local manualItemBox, manualAddBtn, manualDrop
-    cy, manualItemBox, manualAddBtn, manualDrop = MakeItemDropZone(container, L["ITEM_ID"], cy,
-        function(itemID)
+    local manualAdd = OneWoW_GUI:CreateValueAddRow(container, {
+        yOffset = cy,
+        label = L["ITEM_ID"],
+        addText = ADD,
+        input = { kind = "itemId" },
+        drop = { mode = "chip", text = L["DRAG_ITEM_HERE"] },
+        onAdd = function(itemID)
             local cur = GetSettings()
             cur.manualItems[itemID] = true
             C_Item.RequestLoadItemDataByID(itemID)
             BagBarModule:ScheduleUpdate()
-            C_Timer.After(0.5, function() BagBarModule._refreshCustomDetail() end)
-        end)
+            C_Timer.After(0, function()
+                if BagBarModule._refreshCustomDetail then
+                    BagBarModule._refreshCustomDetail()
+                end
+            end)
+            C_Timer.After(0.5, function()
+                if BagBarModule._refreshCustomDetail then
+                    BagBarModule._refreshCustomDetail()
+                end
+            end)
+        end,
+    })
+    cy = cy - manualAdd:GetHeight() - 8
 
-    cy = MakeItemList(container, s.manualItems, cy,
-        function(itemID)
+    local manualList = OneWoW_GUI:CreateEntryList(container, {
+        yOffset = cy,
+        grow = true,
+        emptyText = L["NO_ITEMS"],
+        getEntries = function()
+            return ItemTableEntries(GetSettings().manualItems)
+        end,
+        onRemove = function(itemID)
             GetSettings().manualItems[itemID] = nil
             BagBarModule:ScheduleUpdate()
-            BagBarModule._refreshCustomDetail()
-        end, uiEnabled)
+            C_Timer.After(0, function()
+                if BagBarModule._refreshCustomDetail then
+                    BagBarModule._refreshCustomDetail()
+                end
+            end)
+        end,
+    })
+    cy = cy - manualList:GetHeight() - 8
 
     cy = OneWoW_GUI:CreateSection(container, { title = L["BAGBAR_MACROS_HEADER"], yOffset = cy })
 
@@ -572,21 +323,60 @@ local function BuildContent(container, _)
     macroIntro:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     cy = cy - macroIntro:GetStringHeight() - 8
 
-    local macroNameBox, macroAddBtn, macroDrop
-    cy, macroNameBox, macroAddBtn, macroDrop = MakeMacroDropZone(container, L["BAGBAR_MACRO_NAME_LABEL"], cy,
-        function(macroName)
+    local macroAdd = OneWoW_GUI:CreateValueAddRow(container, {
+        yOffset = cy,
+        label = L["BAGBAR_MACRO_NAME_LABEL"],
+        addText = ADD,
+        input = { kind = "text", width = 120, maxLetters = 64 },
+        drop = {
+            mode = "chip",
+            text = L["BAGBAR_DRAG_MACRO_HERE"],
+            width = 120,
+            cursorTypes = { "macro" },
+        },
+        onAdd = function(macroName)
+            if GetMacroIndexByName(macroName) <= 0 then
+                return false
+            end
+            local mName = GetMacroInfo(macroName)
+            if not mName then
+                return false
+            end
             local cur = GetSettings()
-            cur.manualMacros[macroName] = true
+            cur.manualMacros[mName] = true
             BagBarModule:ScheduleUpdate()
-            C_Timer.After(0.2, function() BagBarModule._refreshCustomDetail() end)
-        end)
+            C_Timer.After(0, function()
+                if BagBarModule._refreshCustomDetail then
+                    BagBarModule._refreshCustomDetail()
+                end
+            end)
+            C_Timer.After(0.2, function()
+                if BagBarModule._refreshCustomDetail then
+                    BagBarModule._refreshCustomDetail()
+                end
+            end)
+        end,
+    })
+    cy = cy - macroAdd:GetHeight() - 8
 
-    cy = MakeMacroList(container, s.manualMacros, cy,
-        function(macroName)
+    local macroList = OneWoW_GUI:CreateEntryList(container, {
+        yOffset = cy,
+        grow = true,
+        emptyText = L["NO_MACROS"],
+        getEntries = function()
+            return MacroTableEntries(GetSettings().manualMacros)
+        end,
+        onRemove = function(macroName)
             GetSettings().manualMacros[macroName] = nil
             BagBarModule:ScheduleUpdate()
-            BagBarModule._refreshCustomDetail()
-        end, uiEnabled)
+            C_Timer.After(0, function()
+                if BagBarModule._refreshCustomDetail then
+                    BagBarModule._refreshCustomDetail()
+                end
+            end)
+        end,
+    })
+    cy = cy - macroList:GetHeight() - 8
 
     cy = OneWoW_GUI:CreateSection(container, { title = L["BLACKLIST"], yOffset = cy })
 
@@ -600,30 +390,49 @@ local function BuildContent(container, _)
     blDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     cy = cy - blDesc:GetStringHeight() - 10
 
-    local blItemBox, blAddBtn, blDrop
-    cy, blItemBox, blAddBtn, blDrop = MakeItemDropZone(container, L["ITEM_ID"], cy,
-        function(itemID)
+    local blAdd = OneWoW_GUI:CreateValueAddRow(container, {
+        yOffset = cy,
+        label = L["ITEM_ID"],
+        addText = ADD,
+        input = { kind = "itemId" },
+        drop = { mode = "chip", text = L["DRAG_ITEM_HERE"] },
+        onAdd = function(itemID)
             local cur = GetSettings()
             cur.blacklist[itemID] = true
             C_Item.RequestLoadItemDataByID(itemID)
             BagBarModule:ScheduleUpdate()
-            C_Timer.After(0.5, function() BagBarModule._refreshCustomDetail() end)
-        end)
+            C_Timer.After(0, function()
+                if BagBarModule._refreshCustomDetail then
+                    BagBarModule._refreshCustomDetail()
+                end
+            end)
+            C_Timer.After(0.5, function()
+                if BagBarModule._refreshCustomDetail then
+                    BagBarModule._refreshCustomDetail()
+                end
+            end)
+        end,
+    })
+    cy = cy - blAdd:GetHeight() - 8
 
-    cy = MakeItemList(container, s.blacklist, cy,
-        function(itemID)
+    local blList = OneWoW_GUI:CreateEntryList(container, {
+        yOffset = cy,
+        grow = true,
+        emptyText = L["NO_ITEMS"],
+        getEntries = function()
+            return ItemTableEntries(GetSettings().blacklist)
+        end,
+        onRemove = function(itemID)
             GetSettings().blacklist[itemID] = nil
             BagBarModule:ScheduleUpdate()
-            BagBarModule._refreshCustomDetail()
-        end, uiEnabled)
-
-    local clearBtn = OneWoW_GUI:CreateFitTextButton(container, { text = L["BAGBAR_CLEAR_BLACKLIST"], height = 26 })
-    clearBtn:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
-    clearBtn:SetScript("OnClick", function()
-        StaticPopupDialogs["ONEWOW_QOL_CLEAR_BAGBAR_BLACKLIST"].text = L["BAGBAR_CLEAR_BLACKLIST_CONFIRM"]
-        StaticPopup_Show("ONEWOW_QOL_CLEAR_BAGBAR_BLACKLIST")
-    end)
-    cy = cy - 34
+            C_Timer.After(0, function()
+                if BagBarModule._refreshCustomDetail then
+                    BagBarModule._refreshCustomDetail()
+                end
+            end)
+        end,
+    })
+    cy = cy - blList:GetHeight() - 8
 
     if not uiEnabled then
         previewBtn:Disable()
@@ -636,16 +445,12 @@ local function BuildContent(container, _)
         spacingSlider:Disable()
         exprBox:Disable()
         if exprHelpBtn then exprHelpBtn:Disable() end
-        manualItemBox:Disable()
-        manualAddBtn:Disable()
-        manualDrop:EnableMouse(false)
-        macroNameBox:Disable()
-        macroAddBtn:Disable()
-        macroDrop:EnableMouse(false)
-        blItemBox:Disable()
-        blAddBtn:Disable()
-        blDrop:EnableMouse(false)
-        clearBtn:Disable()
+        manualAdd:SetEnabled(false)
+        manualList:SetEnabled(false)
+        macroAdd:SetEnabled(false)
+        macroList:SetEnabled(false)
+        blAdd:SetEnabled(false)
+        blList:SetEnabled(false)
     end
 
     container:SetHeight(math.abs(cy))

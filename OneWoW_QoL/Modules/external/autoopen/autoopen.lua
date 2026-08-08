@@ -8,8 +8,6 @@ local OneWoW_GUI = OneWoW_GUI
 local PE = OneWoW.PredicateEngine
 local Inventory = OneWoW.Inventory
 
-local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-
 local AO = AutoOpenModule
 local OWNER = "QoL_autoopen"
 
@@ -51,11 +49,6 @@ end
 function AutoOpenModule:RemoveFromBlacklist(itemID)
     self._tempBlacklist[itemID] = nil
     GetBlacklist()[itemID] = nil
-end
-
-function AutoOpenModule:ClearBlacklist()
-    wipe(self._tempBlacklist)
-    wipe(GetBlacklist())
 end
 
 function AutoOpenModule:ScanAndOpen()
@@ -152,194 +145,48 @@ function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
     blDesc:SetJustifyH("LEFT")
     blDesc:SetWordWrap(true)
     blDesc:SetText(L["AUTOOPEN_BLACKLIST_DESC"])
-    yOffset = yOffset - blDesc:GetStringHeight() - 10
+    yOffset = yOffset - blDesc:GetStringHeight() - 16
 
-    local addLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    addLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    addLabel:SetText(L["AUTOOPEN_BLACKLIST_ADD"])
-
-    local idBox = CreateFrame("EditBox", nil, detailScrollChild, "BackdropTemplate")
-    idBox:SetPoint("LEFT", addLabel, "RIGHT", 8, 0)
-    idBox:SetSize(80, 22)
-    idBox:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    idBox:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    idBox:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    idBox:SetFontObject(GameFontHighlight)
-    idBox:SetTextInsets(6, 6, 0, 0)
-    idBox:SetAutoFocus(false)
-    idBox:SetMaxLetters(10)
-    idBox:SetNumeric(true)
-    idBox:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    idBox:SetScript("OnEscapePressed", function(eb) eb:ClearFocus() end)
-    idBox:SetScript("OnEditFocusGained", function(eb)
-        eb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-    end)
-    idBox:SetScript("OnEditFocusLost", function(eb)
-        eb:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    end)
-
-    local addBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, { text = ADD, height = 22 })
-    addBtn:SetPoint("LEFT", idBox, "RIGHT", 6, 0)
-
-    local dropZone = CreateFrame("Frame", nil, detailScrollChild, "BackdropTemplate")
-    dropZone:SetPoint("LEFT", addBtn, "RIGHT", 8, 0)
-    dropZone:SetSize(110, 22)
-    dropZone:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    dropZone:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    dropZone:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    dropZone:EnableMouse(true)
-
-    local dropText = dropZone:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    dropText:SetPoint("CENTER")
-    dropText:SetText(L["DRAG_ITEM_HERE"])
-
-    local function AddItemToBlacklist(itemID)
-        if not itemID or itemID <= 0 then return end
-        AO:AddToBlacklist(itemID, true)
-        local itemName = C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
-        print(string.format("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_ADDED"]), itemName))
+    local function BuildBlacklistEntries()
+        local entries = {}
+        for itemID in pairs(GetBlacklist()) do
+            C_Item.RequestLoadItemDataByID(itemID)
+            local itemName = C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
+            local _, _, _, _, _, _, _, _, _, icon = C_Item.GetItemInfo(itemID)
+            tinsert(entries, { id = itemID, label = itemName, icon = icon })
+        end
+        return entries
     end
 
-    addBtn:SetScript("OnClick", function()
-        local itemID = tonumber(idBox:GetText())
-        if itemID and itemID > 0 then
-            AddItemToBlacklist(itemID)
-            idBox:SetText("")
-            idBox:ClearFocus()
-        end
-    end)
-
-    idBox:SetScript("OnEnterPressed", function(eb)
-        local itemID = tonumber(eb:GetText())
-        if itemID and itemID > 0 then
-            AddItemToBlacklist(itemID)
-            eb:SetText("")
-        end
-        eb:ClearFocus()
-    end)
-
-    dropZone:SetScript("OnEnter", function(dz)
-        dz:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        dz:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-    end)
-    dropZone:SetScript("OnLeave", function(dz)
-        dz:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        dz:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    end)
-    dropZone:SetScript("OnReceiveDrag", function()
-        local infoType, itemID = GetCursorInfo()
-        if infoType == "item" and itemID then
-            ClearCursor()
-            AddItemToBlacklist(itemID)
-        end
-    end)
-    dropZone:SetScript("OnMouseUp", function()
-        local infoType, itemID = GetCursorInfo()
-        if infoType == "item" and itemID then
-            ClearCursor()
-            AddItemToBlacklist(itemID)
-        end
-    end)
-
-    yOffset = yOffset - 28 - 10
-
-    local listFrame = CreateFrame("Frame", nil, detailScrollChild, "BackdropTemplate")
-    listFrame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    listFrame:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-    listFrame:SetHeight(120)
-    listFrame:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    listFrame:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    listFrame:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-
-    local blacklist = GetBlacklist()
-    local listY = -5
-    local hasItems = false
-    local removeBtns = {}
-
-    for itemID, _ in pairs(blacklist) do
-        hasItems = true
-        local itemName = C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
-        local _, _, _, _, _, _, _, _, _, icon = C_Item.GetItemInfo(itemID)
-
-        local row = CreateFrame("Frame", nil, listFrame)
-        row:SetPoint("TOPLEFT", listFrame, "TOPLEFT", 8, listY)
-        row:SetPoint("TOPRIGHT", listFrame, "TOPRIGHT", -8, listY)
-        row:SetHeight(20)
-
-        if icon then
-            local rowIcon = row:CreateTexture(nil, "ARTWORK")
-            rowIcon:SetSize(16, 16)
-            rowIcon:SetPoint("LEFT", row, "LEFT", 0, 0)
-            rowIcon:SetTexture(icon)
-        end
-
-        local rowText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        rowText:SetPoint("LEFT", row, "LEFT", 20, 0)
-        rowText:SetText(itemName)
-        rowText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-        local removeBtn = CreateFrame("Button", nil, row)
-        removeBtn:SetSize(16, 16)
-        removeBtn:SetPoint("RIGHT", row, "RIGHT", 0, 0)
-        removeBtn:SetNormalTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Up")
-        removeBtn:SetHighlightTexture("Interface\\Buttons\\UI-GroupLoot-Pass-Highlight")
-        local capturedID = itemID
-        removeBtn:SetScript("OnClick", function()
-            AO:RemoveFromBlacklist(capturedID)
-            local rName = C_Item.GetItemNameByID(capturedID) or ("Item " .. capturedID)
+    local editor
+    yOffset, editor = OneWoW_GUI:CreateItemListEditor(detailScrollChild, {
+        yOffset = yOffset,
+        label = L["ITEM_ID"],
+        addText = ADD,
+        emptyText = L["NO_ITEMS"],
+        drop = { text = L["DRAG_ITEM_HERE"] },
+        height = 120,
+        getEntries = BuildBlacklistEntries,
+        onAdd = function(itemID)
+            AO:AddToBlacklist(itemID, true)
+            local itemName = C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
+            print(string.format("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_ADDED"]), itemName))
+            C_Item.RequestLoadItemDataByID(itemID)
+            C_Timer.After(0.3, function()
+                if editor then editor:Refresh() end
+            end)
+        end,
+        onRemove = function(itemID)
+            AO:RemoveFromBlacklist(itemID)
+            local rName = C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
             print(string.format("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_REMOVED"]), rName))
-        end)
-        tinsert(removeBtns, removeBtn)
-
-        listY = listY - 22
-    end
-
-    if not hasItems then
-        local emptyText = listFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        emptyText:SetPoint("CENTER", listFrame, "CENTER", 0, 0)
-        emptyText:SetText(L["AUTOOPEN_BLACKLIST_EMPTY"])
-        emptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    end
-
-    local neededHeight = math.max(60, math.abs(listY) + 10)
-    listFrame:SetHeight(neededHeight)
-
-    yOffset = yOffset - neededHeight - 8
-
-    local clearBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, { text = CLEAR_ALL, height = 22 })
-    clearBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    clearBtn:SetScript("OnClick", function()
-        AO:ClearBlacklist()
-        print("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_CLEARED"]))
-    end)
-    yOffset = yOffset - 30
+        end,
+    })
 
     local function UpdateBlacklist()
         local isEnabledNow = ns.ModuleRegistry:IsEnabled("autoopen")
-        if isEnabledNow then
-            blDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-            addLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            dropText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            idBox:EnableKeyboard(true)
-        else
-            blDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            addLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            dropText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            idBox:ClearFocus()
-            idBox:EnableKeyboard(false)
-        end
-        idBox:EnableMouse(isEnabledNow)
-        addBtn:EnableMouse(isEnabledNow)
-        dropZone:EnableMouse(isEnabledNow)
-        for _, btn in ipairs(removeBtns) do
-            btn:EnableMouse(isEnabledNow)
-        end
-        clearBtn:EnableMouse(isEnabledNow)
-        if isEnabledNow then
-            clearBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        else
-            clearBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
+        blDesc:SetTextColor(OneWoW_GUI:GetThemeColor(isEnabledNow and "TEXT_SECONDARY" or "TEXT_MUTED"))
+        editor:SetEnabled(isEnabledNow)
     end
 
     if registerRefresh then registerRefresh(UpdateBlacklist) end

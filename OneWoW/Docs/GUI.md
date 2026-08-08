@@ -797,6 +797,67 @@ With `showClear`, right text inset reserves room for the X so glyphs do not sit 
 
 Use `CreateEditBox` with `placeholderText` for search boxes. The deprecated `CreateSearchBox` wrapper has been removed.
 
+### Value add row / entry list / item list editor
+
+Shared chrome for “Item ID + Add + drop + list” panels (AutoOpen blacklist, BagBar
+manual/blacklist, DirectDeposit keep/deposit). Callers own the data; these own
+layout, theme, enable/disable, and refresh.
+
+```lua
+-- Add row only (chip drop beside Add, or panel drop via AttachDropTarget)
+local addRow = OneWoW_GUI:CreateValueAddRow(parent, {
+    yOffset = yOffset,           -- optional; else SetPoint yourself
+    x = 12,                      -- optional with yOffset
+    label = L["ITEM_ID"],
+    addText = ADD,               -- or Keep / Add Item
+    input = { kind = "itemId", width = 90, maxLetters = 10 },  -- or kind = "text"
+    drop = {
+        mode = "chip",           -- "chip" | "panel" | "none"
+        text = L["DRAG_ITEM_HERE"],
+        align = "right",         -- default: top-right of the row (above the list); "left" packs after Add
+    },
+    onAdd = function(value)      -- itemID or string; return false to keep input
+        Save(value)
+    end,
+})
+-- Panel drop: build outer frame, then:
+-- addRow:AttachDropTarget(panelFrame)
+addRow:SetEnabled(true)
+addRow:Clear()
+
+-- Entry list (grow packs height; height=N uses a scroll frame)
+local list = OneWoW_GUI:CreateEntryList(parent, {
+    yOffset = yOffset,
+    grow = true,                 -- or height = 120 for fixed+scroll
+    emptyText = L["NO_ITEMS"],
+    getEntries = function()      -- must return an array
+        return { { id = 12345, label = "Name", icon = texturePath, data = {} } }
+    end,
+    onRemove = function(id) Remove(id) end,
+    -- optional: createRow(row, entry, api) -> height; api.RequestRefresh / IsEnabled
+})
+list:Refresh()
+list:SetEnabled(true)
+
+-- Composite (chip add-row + list + optional Clear All) — Features-style detail
+local newY, editor = OneWoW_GUI:CreateItemListEditor(parent, {
+    yOffset = yOffset,
+    label = L["ITEM_ID"],
+    addText = ADD,
+    emptyText = L["NO_ITEMS"],
+    drop = { text = L["DRAG_ITEM_HERE"] },  -- mode defaults to chip
+    getEntries = function() ... end,
+    onAdd = function(value) ... end,
+    onRemove = function(id) ... end,
+    -- optional: onClearAll / clearText for a Clear footer under the list
+})
+editor:SetEnabled(moduleEnabled)
+editor:Refresh()
+```
+
+`CreateItemListEditor` returns `(newYOffset, handle)`. Grow lists change height on
+refresh; Features detail panels typically rebuild on toggle, so stacking below is fine.
+
 ### Status dot
 ```lua
 local dot = OneWoW_GUI:CreateStatusDot(parent, {
@@ -1484,6 +1545,8 @@ SEARCH_HEIGHT = 22      SEARCH_WIDTH = 200    CHECKBOX_SIZE = 24
 ROW1_HEIGHT = 35        ROW2_HEIGHT = 30        ROW2_FAVORITE_HEIGHT = 22
 LEFT_PANEL_WIDTH = 320  PANEL_GAP = 10        TAB_BUTTON_HEIGHT = 30
 TOGGLE_BUTTON_WIDTH = 50  TOGGLE_BUTTON_HEIGHT = 18  TOGGLE_BUTTON_PADDING_X = 14
+VALUE_ADD_ROW_HEIGHT = 22  VALUE_ADD_INPUT_WIDTH = 90  VALUE_ADD_CHIP_WIDTH = 110
+ENTRY_LIST_ROW_HEIGHT = 22  ENTRY_LIST_EMPTY_HEIGHT = 28
 HERO_PANEL_HEIGHT = 118  SUMMARY_STRIP_HEIGHT = 66
 SELECTABLE_CARD_HEIGHT = 68  SELECTABLE_CARD_ICON_SIZE = 38
 BADGE_HEIGHT = 18       ACTION_BAR_HEIGHT = 34

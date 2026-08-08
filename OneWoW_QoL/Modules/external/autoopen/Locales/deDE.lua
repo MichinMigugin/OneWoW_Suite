@@ -8,9 +8,5 @@ OneWoW.Locale:Register(M._scope, "deDE", {
     ["AUTOOPEN_DESC"] = "Öffnet automatisch Taschen, Kisten und andere Behältergegenstände, wenn sie in deinem Inventar erscheinen. Öffnet keine Gegenstände an einer Bank, einem Briefkasten oder Händler. Gegenstände, die du noch nicht öffnen kannst (verschlossene Truhen, falsche Stufe/Klasse/Beruf oder während der Platz beschäftigt ist), werden automatisch übersprungen.",
     ["AUTOOPEN_OPENING"] = "Automatisch öffnen: %s",
     ["AUTOOPEN_BLACKLIST_DESC"] = "Füge Gegenstände hinzu, damit Auto-Öffnen sie nicht öffnet.",
-    ["AUTOOPEN_BLACKLIST_ADD"] = "Gegenstands-ID hinzufügen:",
-    ["AUTOOPEN_BLACKLIST_EMPTY"] = "Keine gesperrten Gegenstände",
     ["AUTOOPEN_BLACKLIST_REMOVED"] = "Von der Sperrliste entfernt: %s",
-    ["AUTOOPEN_BLACKLIST_ADDED"] = "Zur Sperrliste hinzugefügt: %s",
-    ["AUTOOPEN_BLACKLIST_CLEARED"] = "Sperrliste geleert.",
 })

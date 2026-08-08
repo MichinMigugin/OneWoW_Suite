@@ -228,64 +228,59 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, _, registerRefresh
         { id = "all",      labelKey = "PLAYMOUNTS_MODE_ALL"      },
     }
 
+    local function ModeLabel(modeId)
+        for _, mode in ipairs(modes) do
+            if mode.id == modeId then
+                return L[mode.labelKey]
+            end
+        end
+        return L["PLAYMOUNTS_MODE_ALL"]
+    end
+
     local currentMode = GetDisplayMode()
-    local modeBtns = {}
+    local modeDropdown, modeDropdownText = OneWoW_GUI:CreateDropdown(parent, {
+        width = 160,
+        height = 26,
+        text = ModeLabel(currentMode),
+    })
+    modeDropdown:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
+    modeDropdown._activeValue = currentMode
 
-    local function UpdateModeButtons()
+    OneWoW_GUI:AttachFilterMenu(modeDropdown, {
+        searchable = false,
+        menuHeight = 110,
+        buildItems = function()
+            local items = {}
+            for _, mode in ipairs(modes) do
+                items[#items + 1] = { value = mode.id, text = L[mode.labelKey] }
+            end
+            return items
+        end,
+        onSelect = function(value, text)
+            SetDisplayMode(value)
+            modeDropdown._activeValue = value
+            modeDropdownText:SetText(text)
+        end,
+        getActiveValue = function()
+            return GetDisplayMode()
+        end,
+    })
+
+    local function UpdateModeDropdown()
         local isEnabledNow = ns.ModuleRegistry:IsEnabled("playmounts")
-        for _, btn in ipairs(modeBtns) do
-            if not isEnabledNow then
-                btn:EnableMouse(false)
-                btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-                btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            else
-                btn:EnableMouse(true)
-                if btn.isActive then
-                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-                    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-                else
-                    btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-                    btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-                    btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                end
-            end
-        end
-    end
-
-    local prevModeBtn = nil
-    for _, mode in ipairs(modes) do
-        local capturedMode = mode
-        local isActive = (currentMode == mode.id)
-        local btn = OneWoW_GUI:CreateFitTextButton(parent, { text = L[mode.labelKey], height = 22 })
-        if prevModeBtn then
-            btn:SetPoint("TOPLEFT", prevModeBtn, "TOPRIGHT", 6, 0)
+        if isEnabledNow then
+            modeDropdown:Enable()
+            modeDropdownText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         else
-            btn:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
+            modeDropdown:Disable()
+            modeDropdownText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         end
-        prevModeBtn = btn
-        btn.isActive = isActive
-
-        btn:HookScript("OnLeave", function()
-            UpdateModeButtons()
-        end)
-
-        btn:SetScript("OnClick", function(myself)
-            SetDisplayMode(capturedMode.id)
-            for _, b in ipairs(modeBtns) do
-                b.isActive = (b == myself)
-            end
-            UpdateModeButtons()
-        end)
-
-        table.insert(modeBtns, btn)
     end
 
-    if registerRefresh then registerRefresh(UpdateModeButtons) end
-    UpdateModeButtons()
+    if registerRefresh then registerRefresh(UpdateModeDropdown) end
+    UpdateModeDropdown()
 
-    yOffset = yOffset - 22 - 6
+    yOffset = yOffset - 26 - 6
 
     local modeDivider = parent:CreateTexture(nil, "ARTWORK")
     modeDivider:SetHeight(1)
