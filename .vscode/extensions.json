@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "bierner.github-markdown-preview",
+    "sumneko.lua",
+    "bierner.markdown-preview-github-styles",
+    "bierner.markdown-mermaid",
+    "ms-python.python"
+  ]
+}

@@ -2,12 +2,23 @@
 
 Thanks for your interest in contributing! The OneWoW Suite is a multi-addon World of Warcraft Retail project. We welcome help with translations, bug fixes, and feature improvements.
 
+## Dev environment
+
+For the dual-root Cursor / VS Code workspace (`OneWoW_Suite` + sibling
+`_OneWoW_Offline`), Python 3.12+, Lua/Ketho extensions, and pre-commit hooks:
+
+- **In Cursor:** ask *“Set up my OneWoW development environment”* (loads the
+  `onewow-dev-setup` skill).
+- **Manual / details:** [devconfig/README.md](devconfig/README.md) and
+  `python bin/setup_dev_env.py`.
+
 ## Before You Start
 
 1. **Fork** this repository
 2. Create a **feature branch** from `main` (e.g. `feature/my-improvement`)
-3. Read [OneWoW/Docs/ARCHITECTURE.md](OneWoW/Docs/ARCHITECTURE.md) for suite structure and lifecycle expectations
-4. Follow existing code style in the addon you are editing
+3. Set up the [dev environment](#dev-environment) (workspace, extensions, pre-commit)
+4. Read [OneWoW/Docs/ARCHITECTURE.md](OneWoW/Docs/ARCHITECTURE.md) for suite structure and lifecycle expectations
+5. Follow existing code style in the addon you are editing
 
 ## Translation Contributions (Localizations)
 

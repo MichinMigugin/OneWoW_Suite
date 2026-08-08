@@ -47,3 +47,5 @@ skills:
     claude_paths:
       - "OneWoW/Services/TooltipScanner.lua"
       - "OneWoW/Docs/TOOLTIP_SCANNER.md"
+  onewow-dev-setup:
+    claude_paths: null
