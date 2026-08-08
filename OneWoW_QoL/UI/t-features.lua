@@ -213,6 +213,16 @@ local function ShowModuleDetail(split, module)
     end
     OneWoW_GUI:ClearFrame(detailScrollChild)
 
+    -- Module CreateCustomDetail may parent frame extras onto rightStatusBar (e.g.
+    -- AutoMount "Mount Status"). Hide those when rebuilding so they do not leak
+    -- across modules. rightStatusText is a FontString region, not a child frame.
+    local rightStatusBar = split.rightStatusBar
+    if rightStatusBar then
+        for _, child in ipairs({ rightStatusBar:GetChildren() }) do
+            child:Hide()
+        end
+    end
+
     local yOffset = -10
     local hasDetails = module.author or module.contact or module.link
 
