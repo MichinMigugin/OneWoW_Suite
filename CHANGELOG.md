@@ -19,6 +19,7 @@
 
 ## Fixes
 - Shipments no longer try to mail the character you are on (Character targets and Role members); Blizzard rejects self-mail
+- Title bar no longer shows a second mail icon next to the window title (brand mark only, like other OneWoW windows)
 
 ---
 

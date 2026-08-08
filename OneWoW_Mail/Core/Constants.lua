@@ -21,8 +21,6 @@ ns.Constants = {
     COLLECT_SETTLE = 0.15,
     SEND_ATTACH_SLOTS = ATTACHMENTS_MAX_SEND or 12,
     SUBJECT_PREFIX = "OneWoW Mail: ",
-    ICON_ATLAS = "Crosshair_mail_64",
-    ICON_TEXTURE = "Interface\\Icons\\achievement_guildperk_gmail",
     -- Coin-tinted edit-box borders (Compose money row + gold shipment fields).
     MONEY_COLORS = {
         GOLD = { 1.00, 0.82, 0.10 },

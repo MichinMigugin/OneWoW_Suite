@@ -221,12 +221,6 @@ function Shell:Ensure()
         OneWoW_GUI:SaveWindowPosition(shellFrame, ns.db.global.mainFramePosition)
     end)
 
-    local icon = titleBar:CreateTexture(nil, "ARTWORK")
-    icon:SetSize(16, 16)
-    icon:SetPoint("RIGHT", titleBar._titleText, "LEFT", -4, 0)
-    icon:SetAtlas(ns.Constants.ICON_ATLAS)
-    titleBar.mailIcon = icon
-
     local tabBar = CreateFrame("Frame", nil, shellFrame)
     local pad = OneWoW_GUI.Constants.GUI.PADDING
     local tabH = OneWoW_GUI.Constants.GUI.TAB_BUTTON_HEIGHT
