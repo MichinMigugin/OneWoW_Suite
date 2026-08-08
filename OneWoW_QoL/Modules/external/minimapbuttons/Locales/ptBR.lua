@@ -41,7 +41,6 @@ OneWoW.Locale:Register(M._scope, "ptBR", {
     ["MMBTNS_ICONS_EMPTY"] = "Nenhum ícone do minimapa detectado ainda. Abra o coletor uma vez para que ele possa escanear e depois reabra as configurações.",
     ["MMBTNS_ICONS_MINI"] = "Coletor",
     ["MMBTNS_ICONS_MAP"] = "Mapa",
-    ["MMBTNS_ICONS_MAP_STATE"] = "Mapa",
     ["MMBTNS_ICONS_ENABLED"] = "Ativado",
     ["MMBTNS_ICONS_DISABLED"] = "Desativado",
     ["MMBTNS_ICONS_REMOVE_TT"] = "Remover esta entrada da lista",

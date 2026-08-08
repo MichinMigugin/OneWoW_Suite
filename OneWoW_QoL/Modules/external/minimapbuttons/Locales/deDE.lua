@@ -41,7 +41,6 @@ OneWoW.Locale:Register(M._scope, "deDE", {
     ["MMBTNS_ICONS_EMPTY"] = "Noch keine Minikarten-Symbole erkannt. Öffne den Sammler einmal, damit er scannen kann, und öffne dann die Einstellungen erneut.",
     ["MMBTNS_ICONS_MINI"] = "Sammler",
     ["MMBTNS_ICONS_MAP"] = "Karte",
-    ["MMBTNS_ICONS_MAP_STATE"] = "Karte",
     ["MMBTNS_ICONS_ENABLED"] = "Aktiviert",
     ["MMBTNS_ICONS_DISABLED"] = "Deaktiviert",
     ["MMBTNS_ICONS_REMOVE_TT"] = "Diesen Eintrag aus der Liste entfernen",

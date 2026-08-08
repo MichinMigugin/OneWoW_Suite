@@ -41,7 +41,6 @@ OneWoW.Locale:Register(M._scope, "ruRU", {
     ["MMBTNS_ICONS_EMPTY"] = "Значки мини-карты пока не обнаружены. Откройте сборщик один раз, чтобы он просканировал, затем снова откройте настройки.",
     ["MMBTNS_ICONS_MINI"] = "Сборщик",
     ["MMBTNS_ICONS_MAP"] = "Карта",
-    ["MMBTNS_ICONS_MAP_STATE"] = "Карта",
     ["MMBTNS_ICONS_ENABLED"] = "Включено",
     ["MMBTNS_ICONS_DISABLED"] = "Отключено",
     ["MMBTNS_ICONS_REMOVE_TT"] = "Удалить эту запись из списка",

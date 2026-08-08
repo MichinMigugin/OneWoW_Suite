@@ -607,38 +607,52 @@ local function BuildContent(container)
             { key = "clickBtn5",   label = L["MMSKIN_CLICK_BTN5"]   },
         }
 
-        -- Column width per option is derived from the measured localized label
-        -- so longer translations (e.g. "Tracking" in non-EN locales) do not
-        -- visually overlap the next column.
-        local COL_GAP = 20
-        for _, bind in ipairs(bindings) do
-            local _, newCy = AddLabelIndented(container, cy, bind.label)
-            cy = newCy
+        local function ClickActionLabel(opt)
+            return L[CLICK_LABEL_KEYS[opt]] or tostring(opt)
+        end
 
-            local checkboxes = {}
-            local xOff = INDENT_SLIDER
+        local clickMenuItems
+        local function BuildClickActionItems()
+            if clickMenuItems then return clickMenuItems end
+            clickMenuItems = {}
             for _, opt in ipairs(CLICK_OPTIONS) do
-                local capturedOpt = opt
-                local capturedKey = bind.key
-                local cb = OneWoW_GUI:CreateCheckbox(container, {
-                    label   = L[CLICK_LABEL_KEYS[opt]],
-                    checked = s[capturedKey] == capturedOpt,
-                    onClick = function(self)
-                        s[capturedKey] = capturedOpt
-                        for _, other in ipairs(checkboxes) do
-                            other:SetChecked(false)
-                        end
-                        self:SetChecked(true)
-                    end,
-                })
-                cb:SetPoint("TOPLEFT", container, "TOPLEFT", xOff, cy)
-                track(cb)
-                table.insert(checkboxes, cb)
-                local cbWidth = cb:GetWidth() or 24
-                local labelWidth = cb.label and cb.label:GetStringWidth() or 0
-                xOff = xOff + cbWidth + labelWidth + COL_GAP
+                tinsert(clickMenuItems, { value = opt, text = ClickActionLabel(opt) })
             end
-            cy = cy - ROW_HEIGHT
+            return clickMenuItems
+        end
+
+        for _, bind in ipairs(bindings) do
+            local capturedKey = bind.key
+            local cur = s[capturedKey] or "none"
+
+            local bindLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            bindLabel:SetPoint("TOPLEFT", container, "TOPLEFT", INDENT_LABEL, cy)
+            bindLabel:SetText(bind.label .. ":")
+            bindLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+
+            local drop, dropText = OneWoW_GUI:CreateDropdown(container, {
+                width = 140,
+                height = 26,
+                text = ClickActionLabel(cur),
+            })
+            drop:SetPoint("LEFT", bindLabel, "RIGHT", 8, 0)
+            drop._activeValue = cur
+            track(drop)
+
+            OneWoW_GUI:AttachFilterMenu(drop, {
+                searchable = false,
+                menuHeight = 160,
+                buildItems = BuildClickActionItems,
+                getActiveValue = function()
+                    return s[capturedKey] or "none"
+                end,
+                onSelect = function(value, text)
+                    s[capturedKey] = value
+                    drop._activeValue = value
+                    dropText:SetText(text)
+                end,
+            })
+            cy = cy - 32
         end
     end
 

@@ -41,7 +41,6 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["MMBTNS_ICONS_EMPTY"] = "아직 감지된 미니맵 아이콘이 없습니다. 수집기를 한 번 열어 검색하게 한 뒤 설정을 다시 여세요.",
     ["MMBTNS_ICONS_MINI"] = "수집기",
     ["MMBTNS_ICONS_MAP"] = "지도",
-    ["MMBTNS_ICONS_MAP_STATE"] = "지도",
     ["MMBTNS_ICONS_ENABLED"] = "활성화됨",
     ["MMBTNS_ICONS_DISABLED"] = "비활성화됨",
     ["MMBTNS_ICONS_REMOVE_TT"] = "이 항목을 목록에서 제거",

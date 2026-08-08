@@ -30,6 +30,10 @@
 
 #### Minimap Button Collector
 - Enhanced OneWoW row icons match Home / Manage Features (including Mail); Core still uses the brand mark
+- Close Behavior, Grow Direction, and each icon’s Collector / Map / Hide choice are dropdowns; Enabled / Disabled still shows whether that addon is loaded
+
+#### Map Mini Tools
+- Click Actions bindings (Right / Middle / Button 4 / Button 5) are dropdowns instead of a row of radio-checkboxes
 
 #### FrameMover
 - Per-frame Reset next to the scale percent is a text link instead of a chunky button (Reset All Positions / Scales stay buttons)

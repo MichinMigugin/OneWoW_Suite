@@ -41,7 +41,6 @@ OneWoW.Locale:Register(M._scope, "frFR", {
     ["MMBTNS_ICONS_EMPTY"] = "Aucune icône de minicarte détectée pour l'instant. Ouvrez le collecteur une fois pour qu'il puisse analyser, puis rouvrez les paramètres.",
     ["MMBTNS_ICONS_MINI"] = "Collecteur",
     ["MMBTNS_ICONS_MAP"] = "Carte",
-    ["MMBTNS_ICONS_MAP_STATE"] = "Carte",
     ["MMBTNS_ICONS_ENABLED"] = "Activé",
     ["MMBTNS_ICONS_DISABLED"] = "Désactivé",
     ["MMBTNS_ICONS_REMOVE_TT"] = "Retirer cette entrée de la liste",

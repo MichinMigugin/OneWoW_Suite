@@ -9,33 +9,30 @@ local function GetSettings()
     return MinimapButtonsModule.GetSettings()
 end
 
--- ─── Detected minimap icons (per-button Mini / Map / Hide) ─────────────────
+-- ─── Detected minimap icons (per-button Collector / Map / Hide) ────────────
 
 -- Build one row for a single detected (or previously-detected) minimap icon:
 --
---   [X]  Outfitter             Enabled : Mini    [Mini][Map][Hide]
+--   [X]  Outfitter             Enabled    [Collector ▼]
 --
 -- The X drops the entry from the DB (useful for stale addons that were
--- uninstalled). The three toggleable buttons set the user's preference; the
--- module's ApplyButtonPref moves the button between the collector panel
--- (Mini), the minimap (Map), or an offscreen hidden frame (Hide).
+-- uninstalled). The dropdown sets the user's preference; ApplyButtonPref
+-- moves the button between the collector panel, the minimap, or an offscreen
+-- hidden frame. Enabled/Disabled reflects whether the owning addon is loaded.
 local ROW_PADDING_X   = 12
-local ICON_ROW_HEIGHT = 26
+local ICON_ROW_HEIGHT = 28
 local ICON_ROW_GAP    = 4
--- The "Collector" label is the widest of the three, so minWidth covers it
--- (CreateFitTextButton grows further to fit any localized text).
-local TOGGLE_BTN_W    = 70
-local TOGGLE_BTN_H    = 20
 
-local function LabelForPref(pref)
+local function PrefLabel(pref)
     if pref == "mini" then return L["MMBTNS_ICONS_MINI"] end
-    if pref == "map"  then return L["MMBTNS_ICONS_MAP_STATE"]       end
-    if pref == "hide" then return HIDE      end
-    return tostring(pref)
+    if pref == "map" then return L["MMBTNS_ICONS_MAP"] end
+    if pref == "hide" then return HIDE end
+    return L["MMBTNS_ICONS_MINI"]
 end
 
 local function BuildIconRow(parent, info, yOffset, refreshFn)
     local capturedName = info.name
+    local pref = info.pref or "mini"
 
     local row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     row:SetHeight(ICON_ROW_HEIGHT)
@@ -59,9 +56,7 @@ local function BuildIconRow(parent, info, yOffset, refreshFn)
         if tex then tex:SetVertexColor(0.4, 0.4, 0.4, 0.6) end
         removeBtn:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:AddLine(L["MMBTNS_ICONS_REMOVE_LOCKED_TT"]
-                or "This addon is currently loaded. Hide its icon if you don't want it collected; you can only remove the entry once the addon is disabled.",
-                1, 1, 1, true)
+            GameTooltip:AddLine(L["MMBTNS_ICONS_REMOVE_LOCKED_TT"], 1, 1, 1, true)
             GameTooltip:Show()
         end)
         removeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -85,65 +80,42 @@ local function BuildIconRow(parent, info, yOffset, refreshFn)
     label:SetText(info.displayName or capturedName)
     label:SetTextColor(OneWoW_GUI:GetThemeColor(info.seen and "TEXT_PRIMARY" or "TEXT_MUTED"))
 
-    -- Right-to-left: Hide, Map, Mini, then the status text.
-    local hideBtn = OneWoW_GUI:CreateFitTextButton(row, {
-        text       = HIDE,
-        height     = TOGGLE_BTN_H,
-        minWidth   = TOGGLE_BTN_W,
-        toggleable = true,
+    local prefDropdown, prefDropdownText = OneWoW_GUI:CreateDropdown(row, {
+        width = 110,
+        height = 22,
+        text = PrefLabel(pref),
     })
-    hideBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+    prefDropdown:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+    prefDropdown._activeValue = pref
 
-    local mapBtn = OneWoW_GUI:CreateFitTextButton(row, {
-        text       = L["MMBTNS_ICONS_MAP"],
-        height     = TOGGLE_BTN_H,
-        minWidth   = TOGGLE_BTN_W,
-        toggleable = true,
+    OneWoW_GUI:AttachFilterMenu(prefDropdown, {
+        searchable = false,
+        menuHeight = 110,
+        buildItems = function()
+            return {
+                { value = "mini", text = L["MMBTNS_ICONS_MINI"] },
+                { value = "map", text = L["MMBTNS_ICONS_MAP"] },
+                { value = "hide", text = HIDE },
+            }
+        end,
+        getActiveValue = function()
+            return prefDropdown._activeValue
+        end,
+        onSelect = function(value, text)
+            prefDropdown._activeValue = value
+            prefDropdownText:SetText(text)
+            MinimapButtonsModule:ApplyButtonPref(capturedName, value)
+        end,
     })
-    mapBtn:SetPoint("RIGHT", hideBtn, "LEFT", -3, 0)
-
-    local miniBtn = OneWoW_GUI:CreateFitTextButton(row, {
-        text       = L["MMBTNS_ICONS_MINI"],
-        height     = TOGGLE_BTN_H,
-        minWidth   = TOGGLE_BTN_W,
-        toggleable = true,
-    })
-    miniBtn:SetPoint("RIGHT", mapBtn, "LEFT", -3, 0)
 
     local statusText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    statusText:SetPoint("RIGHT", miniBtn, "LEFT", -10, 0)
+    statusText:SetPoint("RIGHT", prefDropdown, "LEFT", -10, 0)
     statusText:SetJustifyH("RIGHT")
-    -- Stop the label from running into the status text on narrow detail panels.
+    statusText:SetText(info.seen and L["MMBTNS_ICONS_ENABLED"] or L["MMBTNS_ICONS_DISABLED"])
+    statusText:SetTextColor(OneWoW_GUI:GetThemeColor(
+        info.seen and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED"))
+
     label:SetPoint("RIGHT", statusText, "LEFT", -8, 0)
-
-    local function refresh(pref)
-        miniBtn:SetActive(pref == "mini")
-        mapBtn:SetActive(pref == "map")
-        hideBtn:SetActive(pref == "hide")
-
-        local seenLbl = info.seen
-            and (L["MMBTNS_ICONS_ENABLED"])
-            or  (L["MMBTNS_ICONS_DISABLED"])
-        statusText:SetText(seenLbl .. " : " .. LabelForPref(pref))
-
-        local color = info.seen and "TEXT_FEATURES_ENABLED" or "TEXT_FEATURES_DISABLED"
-        statusText:SetTextColor(OneWoW_GUI:GetThemeColor(color))
-    end
-
-    miniBtn:SetScript("OnClick", function()
-        MinimapButtonsModule:ApplyButtonPref(capturedName, "mini")
-        refresh("mini")
-    end)
-    mapBtn:SetScript("OnClick", function()
-        MinimapButtonsModule:ApplyButtonPref(capturedName, "map")
-        refresh("map")
-    end)
-    hideBtn:SetScript("OnClick", function()
-        MinimapButtonsModule:ApplyButtonPref(capturedName, "hide")
-        refresh("hide")
-    end)
-
-    refresh(info.pref or "mini")
 
     return yOffset - ICON_ROW_HEIGHT - ICON_ROW_GAP
 end
@@ -247,38 +219,52 @@ local function BuildContent(container)
     -- ═══════════════════════════════════════════════════════════════════════
     cy = OneWoW_GUI:CreateSection(container, { title = L["MMBTNS_BEHAVIOR_HEADER"], yOffset = cy })
 
-    -- Close mode label
-    local _, newCy = AddLabel(container, cy, L["MMBTNS_CLOSE_MODE"])
-    cy = newCy
+    -- Close Behavior dropdown (Stay Open / Auto Close)
+    local closeMode = s.closeMode or "autoclose"
+    local closeLabels = {
+        stayopen = L["MMBTNS_STAY_OPEN"],
+        autoclose = L["MMBTNS_AUTO_CLOSE"],
+    }
 
-    -- Close mode radios (manual mutual exclusion)
-    local radioStay, radioAuto
+    local closeLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    closeLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+    closeLabel:SetText(L["MMBTNS_CLOSE_MODE"] .. ":")
+    closeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    radioStay = OneWoW_GUI:CreateCheckbox(container, {
-        label  = L["MMBTNS_STAY_OPEN"],
-        checked = s.closeMode == "stayopen",
-        onClick = function(self)
-            s.closeMode = "stayopen"
-            self:SetChecked(true)
-            if radioAuto then radioAuto:SetChecked(false) end
-            MinimapButtonsModule:CancelAutoCloseTimer()
-            MinimapButtonsModule._refreshCustomDetail()
+    local closeDropdown, closeDropdownText = OneWoW_GUI:CreateDropdown(container, {
+        width = 140,
+        height = 26,
+        text = closeLabels[closeMode] or closeLabels.autoclose,
+    })
+    closeDropdown:SetPoint("LEFT", closeLabel, "RIGHT", 8, 0)
+    closeDropdown._activeValue = closeMode
+
+    OneWoW_GUI:AttachFilterMenu(closeDropdown, {
+        searchable = false,
+        menuHeight = 90,
+        buildItems = function()
+            return {
+                { value = "stayopen", text = L["MMBTNS_STAY_OPEN"] },
+                { value = "autoclose", text = L["MMBTNS_AUTO_CLOSE"] },
+            }
+        end,
+        getActiveValue = function()
+            return GetSettings().closeMode or "autoclose"
+        end,
+        onSelect = function(value, text)
+            local prev = s.closeMode
+            s.closeMode = value
+            closeDropdown._activeValue = value
+            closeDropdownText:SetText(text)
+            if value == "stayopen" then
+                MinimapButtonsModule:CancelAutoCloseTimer()
+            end
+            if prev ~= value then
+                MinimapButtonsModule._refreshCustomDetail()
+            end
         end,
     })
-    radioStay:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
-
-    radioAuto = OneWoW_GUI:CreateCheckbox(container, {
-        label  = L["MMBTNS_AUTO_CLOSE"],
-        checked = s.closeMode == "autoclose",
-        onClick = function(self)
-            s.closeMode = "autoclose"
-            self:SetChecked(true)
-            if radioStay then radioStay:SetChecked(false) end
-            MinimapButtonsModule._refreshCustomDetail()
-        end,
-    })
-    radioAuto:SetPoint("TOPLEFT", container, "TOPLEFT", 160, cy)
-    cy = cy - ROW_HEIGHT
+    cy = cy - 32
 
     -- Auto-close delay slider (only when autoclose is active)
     if s.closeMode == "autoclose" then
@@ -355,47 +341,50 @@ local function BuildContent(container)
     tipCB:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
     cy = cy - ROW_HEIGHT
 
-    -- Grow direction (4-way radio: Down / Up / Left / Right)
-    _, cy = AddLabel(container, cy, L["GROW_DIRECTION"])
+    -- Grow direction dropdown
+    local growDir = s.growDirection or "down"
+    local growDirLabels = {
+        down = L["DOWN"],
+        up = L["UP"],
+        left = L["MMBTNS_GROW_LEFT"],
+        right = L["MMBTNS_GROW_RIGHT"],
+    }
 
-    local growDown, growUp, growLeft, growRight
+    local growDirLabel = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    growDirLabel:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+    growDirLabel:SetText(L["GROW_DIRECTION"] .. ":")
+    growDirLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
 
-    local function SetGrowDir(dir)
-        s.growDirection = dir
-        if growDown  then growDown:SetChecked(dir  == "down")  end
-        if growUp    then growUp:SetChecked(dir    == "up")    end
-        if growLeft  then growLeft:SetChecked(dir   == "left")  end
-        if growRight then growRight:SetChecked(dir  == "right") end
-    end
-
-    growDown = OneWoW_GUI:CreateCheckbox(container, {
-        label   = L["DOWN"],
-        checked = s.growDirection == "down",
-        onClick = function() SetGrowDir("down") end,
+    local growDirDropdown, growDirDropdownText = OneWoW_GUI:CreateDropdown(container, {
+        width = 120,
+        height = 26,
+        text = growDirLabels[growDir] or growDirLabels.down,
     })
-    growDown:SetPoint("TOPLEFT", container, "TOPLEFT", 12, cy)
+    growDirDropdown:SetPoint("LEFT", growDirLabel, "RIGHT", 8, 0)
+    growDirDropdown._activeValue = growDir
 
-    growUp = OneWoW_GUI:CreateCheckbox(container, {
-        label   = L["UP"],
-        checked = s.growDirection == "up",
-        onClick = function() SetGrowDir("up") end,
+    OneWoW_GUI:AttachFilterMenu(growDirDropdown, {
+        searchable = false,
+        menuHeight = 140,
+        buildItems = function()
+            return {
+                { value = "down", text = L["DOWN"] },
+                { value = "up", text = L["UP"] },
+                { value = "left", text = L["MMBTNS_GROW_LEFT"] },
+                { value = "right", text = L["MMBTNS_GROW_RIGHT"] },
+            }
+        end,
+        getActiveValue = function()
+            return GetSettings().growDirection or "down"
+        end,
+        onSelect = function(value, text)
+            s.growDirection = value
+            growDirDropdown._activeValue = value
+            growDirDropdownText:SetText(text)
+            MinimapButtonsModule:LayoutContainer()
+        end,
     })
-    growUp:SetPoint("TOPLEFT", container, "TOPLEFT", 110, cy)
-
-    growLeft = OneWoW_GUI:CreateCheckbox(container, {
-        label   = L["MMBTNS_GROW_LEFT"],
-        checked = s.growDirection == "left",
-        onClick = function() SetGrowDir("left") end,
-    })
-    growLeft:SetPoint("TOPLEFT", container, "TOPLEFT", 190, cy)
-
-    growRight = OneWoW_GUI:CreateCheckbox(container, {
-        label   = L["MMBTNS_GROW_RIGHT"],
-        checked = s.growDirection == "right",
-        onClick = function() SetGrowDir("right") end,
-    })
-    growRight:SetPoint("TOPLEFT", container, "TOPLEFT", 280, cy)
-    cy = cy - ROW_HEIGHT
+    cy = cy - 32
 
     -- ═══════════════════════════════════════════════════════════════════════
     -- Layout Section

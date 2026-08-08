@@ -41,7 +41,6 @@ OneWoW.Locale:Register(M._scope, "itIT", {
     ["MMBTNS_ICONS_EMPTY"] = "Nessuna icona della minimappa rilevata finora. Apri il raccoglitore una volta affinché possa eseguire la scansione, poi riapri le impostazioni.",
     ["MMBTNS_ICONS_MINI"] = "Raccoglitore",
     ["MMBTNS_ICONS_MAP"] = "Mappa",
-    ["MMBTNS_ICONS_MAP_STATE"] = "Mappa",
     ["MMBTNS_ICONS_ENABLED"] = "Attivato",
     ["MMBTNS_ICONS_DISABLED"] = "Disattivato",
     ["MMBTNS_ICONS_REMOVE_TT"] = "Rimuovi questa voce dalla lista",

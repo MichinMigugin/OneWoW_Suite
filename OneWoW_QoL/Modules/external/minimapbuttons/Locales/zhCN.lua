@@ -41,7 +41,6 @@ OneWoW.Locale:Register(M._scope, "zhCN", {
     ["MMBTNS_ICONS_EMPTY"] = "尚未检测到小地图图标。先打开一次收集器让它扫描，然后重新打开设置。",
     ["MMBTNS_ICONS_MINI"] = "收集器",
     ["MMBTNS_ICONS_MAP"] = "地图",
-    ["MMBTNS_ICONS_MAP_STATE"] = "地图",
     ["MMBTNS_ICONS_ENABLED"] = "已启用",
     ["MMBTNS_ICONS_DISABLED"] = "已禁用",
     ["MMBTNS_ICONS_REMOVE_TT"] = "从列表中移除此条目",
