@@ -226,62 +226,16 @@ local function ShowModuleDetail(split, module)
     local yOffset = -10
     local hasDetails = module.author or module.contact or module.link
 
-    local titleLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    titleLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    if hasDetails then
-        titleLabel:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -96, yOffset)
-    else
-        titleLabel:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-    end
-    titleLabel:SetJustifyH("LEFT")
-    titleLabel:SetText(ML(module.id, module.title) or module.title)
-    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
-
-    if hasDetails then
-        local capturedModule = module
-        local detailsBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, { text = L["FEATURES_DETAILS_BTN"], height = 24 })
-        detailsBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-        detailsBtn:SetScript("OnClick", function() ShowModuleDetailsDialog(capturedModule) end)
-    end
-
-    yOffset = yOffset - titleLabel:GetStringHeight() - 8
-
-    local catText = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    catText:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    catText:SetText(L["FEATURES_CATEGORY_LABEL"] .. " " .. ns.L["CATEGORY_" .. (module.category or "UTILITY")])
-    catText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - catText:GetStringHeight() - 12
-
-    local divider = detailScrollChild:CreateTexture(nil, "ARTWORK")
-    divider:SetHeight(1)
-    divider:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    divider:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-    divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    yOffset = yOffset - 12
-
-    if module.description then
-        local descText = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        descText:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-        descText:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-        descText:SetJustifyH("LEFT")
-        descText:SetWordWrap(true)
-        descText:SetSpacing(3)
-        descText:SetText(ML(module.id, module.description) or module.description)
-        descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        yOffset = yOffset - descText:GetStringHeight() - 16
-    end
-
     local isEnabled = ns.ModuleRegistry:IsEnabled(module.id)
     local toggleBtnSets = {}
     local customRefreshCallbacks = {}
     local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
 
-    yOffset, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
-        yOffset = yOffset,
-        label = "",
-        align = "left",
+    local enableBtn, _ = ns.UI.CreateSingleStateToggle(detailScrollChild, {
         value = isEnabled,
         isEnabled = true,
+        onLabel = L["FEATURES_ON"],
+        offLabel = L["FEATURES_OFF"],
         onValueChange = function(newVal)
             ns.ModuleRegistry:SetEnabled(module.id, newVal)
             if module.id == "playmounts" then
@@ -315,9 +269,56 @@ local function ShowModuleDetail(split, module)
             end
             for _, fn in ipairs(customRefreshCallbacks) do fn() end
         end,
-        onLabel = L["FEATURES_ON"],
-        offLabel = L["FEATURES_OFF"],
     })
+    enableBtn:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
+
+    local titleLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    titleLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+    titleLabel:SetPoint("TOPRIGHT", enableBtn, "TOPLEFT", -8, 0)
+    titleLabel:SetJustifyH("LEFT")
+    titleLabel:SetText(ML(module.id, module.title) or module.title)
+    titleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+
+    local headerHeight = math.max(titleLabel:GetStringHeight(), enableBtn:GetHeight())
+    yOffset = yOffset - headerHeight - 8
+
+    local catText = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    catText:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+    catText:SetText(L["FEATURES_CATEGORY_LABEL"] .. " " .. ns.L["CATEGORY_" .. (module.category or "UTILITY")])
+    catText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    yOffset = yOffset - catText:GetStringHeight() - 4
+
+    if hasDetails then
+        local capturedModule = module
+        local detailsLink = OneWoW_GUI:CreateTextLink(detailScrollChild, {
+            text = L["FEATURES_DETAILS_BTN"],
+            fontSize = 11,
+            onClick = function() ShowModuleDetailsDialog(capturedModule) end,
+        })
+        detailsLink:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+        yOffset = yOffset - detailsLink:GetHeight() - 10
+    else
+        yOffset = yOffset - 8
+    end
+
+    local divider = detailScrollChild:CreateTexture(nil, "ARTWORK")
+    divider:SetHeight(1)
+    divider:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+    divider:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
+    divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+    yOffset = yOffset - 12
+
+    if module.description then
+        local descText = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        descText:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
+        descText:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
+        descText:SetJustifyH("LEFT")
+        descText:SetWordWrap(true)
+        descText:SetSpacing(3)
+        descText:SetText(ML(module.id, module.description) or module.description)
+        descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        yOffset = yOffset - descText:GetStringHeight() - 16
+    end
 
     if module.toggles and #module.toggles > 0 then
         local lastGroup = nil
@@ -367,7 +368,7 @@ local function ShowModuleDetail(split, module)
                 local currentVal = ns.ModuleRegistry:GetToggleValue(module.id, toggle.id)
 
                 local rowRefresh
-                yOffset, rowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
+                yOffset, rowRefresh, _ = ns.UI.CreateSingleStateToggleRow(detailScrollChild, {
                     yOffset = yOffset,
                     label = ML(module.id, toggle.label) or toggle.label,
                     description = toggle.description and (ML(module.id, toggle.description) or toggle.description) or nil,

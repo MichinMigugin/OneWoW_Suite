@@ -374,6 +374,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["FEATURES_TOGGLES_HEADER"] = "모듈 토글",
     ["FEATURES_ON"] = "켜기",
     ["FEATURES_OFF"] = "끄기",
+    ["FEATURES_TOGGLE_CLICK"] = "클릭하여 %s(으)로 전환",
     ["FEATURES_PREVIEW_LABEL"] = "미리보기:",
 
     ["CATEGORY_AUTOMATION"] = "자동화",

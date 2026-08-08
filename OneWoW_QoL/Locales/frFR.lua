@@ -375,6 +375,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["FEATURES_TOGGLES_HEADER"] = "Options du module",
     ["FEATURES_ON"] = "Activé",
     ["FEATURES_OFF"] = "Désactivé",
+    ["FEATURES_TOGGLE_CLICK"] = "Cliquer pour passer à %s",
     ["FEATURES_PREVIEW_LABEL"] = "Aperçu :",
 
     ["CATEGORY_AUTOMATION"] = "Automatisation",

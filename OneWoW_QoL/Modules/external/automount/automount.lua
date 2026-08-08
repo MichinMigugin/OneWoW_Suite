@@ -564,7 +564,7 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
         local rowRefresh
 
         local prefs = GetPreferences()
-        yOffset, rowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
+        yOffset, rowRefresh, _ = ns.UI.CreateSingleStateToggleRow(detailScrollChild, {
             yOffset = yOffset,
             label = mountInfo.label,
             createContent = function(container)
@@ -807,7 +807,7 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
     local druidPrefs = GetPreferences()
     local druidRowRefresh
     local UpdateDruidRow
-    yOffset, druidRowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
+    yOffset, druidRowRefresh, _ = ns.UI.CreateSingleStateToggleRow(detailScrollChild, {
         yOffset = yOffset,
         label = L["AUTOMOUNT_DRUID_MODE_LABEL"],
         description = L["AUTOMOUNT_DRUID_MODE_DESC"],
@@ -837,7 +837,7 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
     local cancelPrefs = GetPreferences()
     local cancelRowRefresh
     local UpdateCancelRow
-    yOffset, cancelRowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
+    yOffset, cancelRowRefresh, _ = ns.UI.CreateSingleStateToggleRow(detailScrollChild, {
         yOffset = yOffset,
         label = L["AUTOMOUNT_DRUID_CANCEL_LABEL"],
         description = L["AUTOMOUNT_DRUID_CANCEL_DESC"],

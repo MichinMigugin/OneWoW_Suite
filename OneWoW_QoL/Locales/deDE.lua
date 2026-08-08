@@ -375,6 +375,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["FEATURES_TOGGLES_HEADER"] = "Modulschalter",
     ["FEATURES_ON"] = "An",
     ["FEATURES_OFF"] = "Aus",
+    ["FEATURES_TOGGLE_CLICK"] = "Klicken, um auf %s zu stellen",
     ["FEATURES_PREVIEW_LABEL"] = "Vorschau:",
 
     ["CATEGORY_AUTOMATION"] = "Automatisierung",

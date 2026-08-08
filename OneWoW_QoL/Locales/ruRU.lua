@@ -375,6 +375,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["FEATURES_TOGGLES_HEADER"] = "Переключатели модуля",
     ["FEATURES_ON"] = "Вкл.",
     ["FEATURES_OFF"] = "Выкл.",
+    ["FEATURES_TOGGLE_CLICK"] = "Нажмите, чтобы переключить на «%s»",
     ["FEATURES_PREVIEW_LABEL"] = "Предпросмотр:",
 
     ["CATEGORY_AUTOMATION"] = "Автоматизация",

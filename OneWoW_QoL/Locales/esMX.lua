@@ -375,6 +375,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["FEATURES_TOGGLES_HEADER"] = "Interruptores del módulo",
     ["FEATURES_ON"] = "Sí",
     ["FEATURES_OFF"] = "No",
+    ["FEATURES_TOGGLE_CLICK"] = "Clic para cambiar a %s",
     ["FEATURES_PREVIEW_LABEL"] = "Vista previa:",
 
     ["CATEGORY_AUTOMATION"] = "Automatización",

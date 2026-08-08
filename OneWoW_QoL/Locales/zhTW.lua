@@ -375,6 +375,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["FEATURES_TOGGLES_HEADER"] = "模組開關",
     ["FEATURES_ON"] = "開",
     ["FEATURES_OFF"] = "關",
+    ["FEATURES_TOGGLE_CLICK"] = "點擊切換為%s",
     ["FEATURES_PREVIEW_LABEL"] = "預覽：",
 
     ["CATEGORY_AUTOMATION"] = "自動化",
