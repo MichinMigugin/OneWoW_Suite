@@ -56,8 +56,14 @@
 
 ---
 
-*No user-facing changes this release for AltTracker, Bags, DirectDeposit, Notes, ShoppingList, Trackers, or Vendors.*
+# Bags
+## Sorting
+- Item Level sort orders bags and reagent bags by slot count (same number the Item Level overlay shows), then by your sub-sort
 
 ---
 
-- **Last Updated**: Aug 6, 2026
+*No user-facing changes this release for AltTracker, DirectDeposit, Notes, ShoppingList, Trackers, or Vendors.*
+
+---
+
+- **Last Updated**: Aug 8, 2026

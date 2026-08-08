@@ -181,7 +181,7 @@ If **`sectionOrder` is empty**, `GetSectionedLayout` returns `GetSortedCategoryN
 
 ### Items inside a category
 
-`OneWoW_Bags:SortButtons` (`Data/Sorting.lua`): `none`, `default` (bag ID then slot), `name`, `rarity`, `ilvl`, `type`, `expansion`.
+`OneWoW_Bags:SortButtons` (`Data/Sorting.lua`): `none`, `default` (bag ID then slot), `name`, `rarity`, `ilvl` (containers sort by slot count), `type`, `expansion`.
 
 - Default mode from `db.global.itemSort` via `WindowLayoutController:CreateViewContext`.
 - **Per-category override**: `categoryModifications[categoryName].sortMode`. In both `CategoryView` and `BankCategoryView`, if set, it is passed as the primary override argument to `sortButtons`. Mode **`none`** leaves order unchanged (typically bag/slot from the pool).

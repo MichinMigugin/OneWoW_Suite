@@ -1,5 +1,7 @@
 local _, ns = ...
 
+local ItemLevel = OneWoW.ItemLevel
+
 local function CompareValues(aValue, bValue, descending)
     if aValue == bValue then return 0 end
     if descending then
@@ -67,6 +69,19 @@ local function GetSortName(button, itemID)
 end
 
 local function GetItemLevel(button, itemLink)
+    -- Containers: use bag capacity (matches Item Level overlay), not equipment ilvl.
+    local classID = button and button._owb_classID
+    local itemID = GetItemID(button)
+    if classID == nil and itemID then
+        classID = select(6, C_Item.GetItemInfoInstant(itemID))
+    end
+    if classID == Enum.ItemClass.Container and itemID then
+        local slots = ItemLevel.GetContainerSlotCount(itemID)
+        if slots then
+            return slots
+        end
+    end
+
     local ilvl = button and button._owb_ilvl
     if ilvl == nil or (ilvl == 0 and itemLink) then
         ilvl = itemLink and (select(4, C_Item.GetItemInfo(itemLink)) or 0) or 0

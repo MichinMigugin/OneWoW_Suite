@@ -561,7 +561,7 @@ Three windows share the same structural pattern (shell from `WindowHelpers:Creat
 
 ### Sorting (`Data\Sorting.lua` → `OneWoW_Bags:SortButtons`)
 
-Modes: `none` (no reorder), `default` (bagID then slotID among occupied slots), `name`, `rarity`, `ilvl`, `type` (item class ID, subclass ID, then name), `expansion` (expansion ID via `WindowHelpers:ResolveExpansionID`, then quality). Empty slots are ordered last where the comparator considers `owb_hasItem`.
+Modes: `none` (no reorder), `default` (bagID then slotID among occupied slots), `name`, `rarity`, `ilvl` (equipment item level; **containers use bag slot count**, matching the Item Level overlay), `type` (item class ID, subclass ID, then name), `expansion` (expansion ID via `WindowHelpers:ResolveExpansionID`, then quality). Empty slots are ordered last where the comparator considers `owb_hasItem`.
 
 **Sort/group caches on buttons** (`ItemButton:OWB_FullUpdate`, mirrored in `GuildBankSet`): `_owb_sortName`, `_owb_ilvl`, `_owb_classID`, `_owb_subClassID`, `_owb_upgradeTrackStringID`, `_owb_upgradeTrackString`, `_owb_expansionID`, `_owb_itemQuality` (container `info.quality`), `_owb_reagentQuality` and `_owb_craftedQuality` (copied from `PE:BuildProps` — category grouping reads caches first; no `BuildProps` in the sort loop). Cleared in `ItemPool:ResetButton` and empty-slot updates.
 

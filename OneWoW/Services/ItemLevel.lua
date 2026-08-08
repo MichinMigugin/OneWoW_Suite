@@ -9,10 +9,64 @@ local _, ns = ...
 -- Why: GetDetailedItemLevelInfo returns pre-squish / wrong levels for a
 -- minority of legacy items (WoWUIBugs #828). Tooltips and equipment-slot
 -- GetCurrentItemLevel are correct; link-only detailed is the last resort.
+--
+-- Container slot counts (bag capacity) are resolved separately for the
+-- Item Level overlay and Bags ilvl sort — bags have no useful equipment
+-- ilvl; the meaningful number is slots (CONTAINER_SLOTS tooltip line).
 -- ============================================================================
 
 local ItemLevel = {}
 ns.ItemLevel = ItemLevel
+
+local containerSlotByItemID = {}
+
+--- Pattern matching CONTAINER_SLOTS ("%d Slot %s", positional/%s variants, |4 plurals).
+---@return string
+local function ContainerSlotsLinePattern()
+    local s = CONTAINER_SLOTS
+    s = s:gsub("|4[^;]*;", "\002")
+    s = s:gsub("%%%d+%$d", "\001"):gsub("%%d", "\001")
+    s = s:gsub("%%%d+%$s", "\002"):gsub("%%s", "\002")
+    s = s:gsub("([%^%$%(%)%.%[%]%*%+%-%?])", "%%%1")
+    s = s:gsub("\001", "(%%d+)"):gsub("\002", ".-")
+    return s
+end
+
+local containerSlotsPattern
+
+--- Resolve bag/container capacity from the item tooltip (cached per itemID).
+---@param itemID number
+---@return number|nil
+function ItemLevel.GetContainerSlotCount(itemID)
+    if not itemID then
+        return nil
+    end
+    local cached = containerSlotByItemID[itemID]
+    if cached then
+        return cached
+    end
+
+    containerSlotsPattern = containerSlotsPattern or ContainerSlotsLinePattern()
+    local slots
+    local td = C_TooltipInfo.GetItemByID(itemID)
+    if td and td.lines then
+        for _, line in ipairs(td.lines) do
+            local text = line.leftText
+            if text then
+                slots = tonumber(text:match(containerSlotsPattern))
+                if slots then
+                    break
+                end
+            end
+        end
+    end
+
+    -- Cache hits only; misses may be empty tooltip data that fills in later.
+    if slots then
+        containerSlotByItemID[itemID] = slots
+    end
+    return slots
+end
 
 --- Resolve the current item level for a link and/or live item location.
 ---@param itemLink string|nil

@@ -202,19 +202,6 @@ local function GetPetLevelFromLink(itemLink)
     return level and tonumber(level)
 end
 
-local function GetContainerSlotCount(itemID)
-    local td = C_TooltipInfo.GetItemByID(itemID)
-    if td and td.lines then
-        for _, line in ipairs(td.lines) do
-            if line.leftText then
-                local slots = line.leftText:match("(%d+)%s+Slot")
-                if slots then return tonumber(slots) end
-            end
-        end
-    end
-    return nil
-end
-
 --- Value shown by the item level overlay for this item, or nil to skip it:
 --- pet level for battle pets, slot count for containers, ilvl for equipment.
 local function ComputeItemLevelText(cfg, itemLink, classID, itemLocation)
@@ -232,7 +219,7 @@ local function ComputeItemLevelText(cfg, itemLink, classID, itemLocation)
     if isContainer then
         if cfg.showContainerSlots == false then return nil end
         local itemID = C_Item.GetItemInfoInstant(itemLink)
-        local slots = GetContainerSlotCount(itemID)
+        local slots = ItemLevel.GetContainerSlotCount(itemID)
         if not slots or slots == 0 then return nil end
         return slots
     end
