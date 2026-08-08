@@ -2,14 +2,28 @@
 OneWoW_AltTracker2/
 
 .releases/
-.gitignore
-.git/
 .cache/
-__pycache__
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
 CURSEFORGE.md
 .wow_docs/manifest-review.txt
 
-# Ricky's Cursor rules — local only, never commit or push
+# OS / editor junk
+Thumbs.db
+.DS_Store
+.idea/
+
+# AccountSync / Go build artifacts
+*.exe
+*.syso
+
+# Local scratch
+temp.txt
+
+# Ricky's Cursor rules - local only, never commit or push
 # (AccountSync, Triggers, Gitmode, Audit, BugReport, ChangeLog, Dev-AddOn-Links, Update-Time, etc.)
 # `git add` will refuse these unless you force; keep them out of the shared repo.
 .cursor/rules/1W-Ricky-*.mdc
@@ -22,17 +36,10 @@ CURSEFORGE.md
 .env
 .env.*
 
-# Legacy local Discord send scripts / payloads (obsolete — server bot only; ignore if leftover)
-scripts/Load-DiscordEnv.ps1
-scripts/Send-ChangelogToDiscord.ps1
-scripts/Update-DevToolChangelogOnServer.ps1
-.discord-changelog-send.json*
-
 # Local Documentation - Never Commit
 guiplanner.md
 apiplanner.md
 dbplanner.md
-
 
 # Local Developer Tools - Never Commit
 ONEWOW_SUITE.code-workspace
