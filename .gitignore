@@ -9,7 +9,8 @@ __pycache__
 CURSEFORGE.md
 .wow_docs/manifest-review.txt
 
-# Ricky's Cursor rules — local only, never commit or push (AccountSync, Triggers, Gitmode, CURSEFORGE, etc.)
+# Ricky's Cursor rules — local only, never commit or push
+# (AccountSync, Triggers, Gitmode, Audit, BugReport, ChangeLog, Dev-AddOn-Links, Update-Time, etc.)
 # `git add` will refuse these unless you force; keep them out of the shared repo.
 .cursor/rules/1W-Ricky-*.mdc
 .cursor/rules/Git-Commit-Rules.mdc
@@ -21,12 +22,10 @@ CURSEFORGE.md
 .env
 .env.*
 
-# Local Discord automation (deprecated — keep local only; use server bot)
+# Legacy local Discord send scripts / payloads (obsolete — server bot only; ignore if leftover)
 scripts/Load-DiscordEnv.ps1
 scripts/Send-ChangelogToDiscord.ps1
 scripts/Update-DevToolChangelogOnServer.ps1
-
-# Ephemeral Discord API payloads (Send-ChangelogToDiscord.ps1)
 .discord-changelog-send.json*
 
 # Local Documentation - Never Commit
