@@ -10,6 +10,7 @@
 
 ## Settings
 - On/Off controls are a single button that shows the current state (soft green On, muted Off with red text); click to toggle — used across Bags, QoL Features, Tooltips, and other settings
+- Toggle rows put title and description on the left with On/Off on the right; the button is slightly smaller; Auto Mount setting titles no longer end with a colon
 
 # QoL
 

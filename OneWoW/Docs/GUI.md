@@ -695,7 +695,7 @@ local btn, refresh = OneWoW_GUI:CreateOnOffToggleButtons(parent, {
     onLabel = "On",
     offLabel = "Off",
     width = 50,
-    height = 22,
+    height = 18,
     isEnabled = true,
     value = true,
     onValueChange = function(newValue)
@@ -713,6 +713,7 @@ with the *destination* label (`%s`).
 On: `BG_FEATURES_ENABLED` fill + `TEXT_FEATURES_ENABLED` label.
 Off: muted `BTN_NORMAL` chrome + `TEXT_FEATURES_DISABLED` label.
 When disabled (`isEnabled=false`): muted / non-interactive (distinct from Off).
+Defaults: height `TOGGLE_BUTTON_HEIGHT` (18), horizontal padding `TOGGLE_BUTTON_PADDING_X` (14).
 Caller must `SetPoint` the button, or use `CreateToggleRow` below.
 Returns `btn, refresh`.
 
@@ -732,8 +733,10 @@ local newYOffset, refresh, refs = OneWoW_GUI:CreateToggleRow(parent, {
 refresh(isEnabled, newValue)
 -- refs.label, refs.button, refs.contentArea (nil if description used)
 ```
-Layout: Row 1: [Label] ... [On/Off] (right-aligned by default). Row 2: [Description] or custom content.
-Use `align = "left"` for [Label] [On/Off] left-aligned (or button alone at TOPLEFT when label is empty).
+Two-column layout (default): left = title then description/`createContent`; right = On/Off
+top-aligned with the title. Description/`createContent` anchor to the title’s bottom so wrap
+changes on resize keep title→desc spacing. Description wraps in the left column only.
+Use `align = "left"` for [Label] [On/Off] on one line (description still stacks under the label).
 Use `createContent` instead of `description` for custom widgets (e.g. mount picker). Must return `(widget, height)`:
 ```lua
 local newYOffset, refresh, refs = OneWoW_GUI:CreateToggleRow(parent, {
@@ -1480,7 +1483,7 @@ PADDING = 12            BUTTON_HEIGHT = 28    BUTTON_WIDTH = 100
 SEARCH_HEIGHT = 22      SEARCH_WIDTH = 200    CHECKBOX_SIZE = 24
 ROW1_HEIGHT = 35        ROW2_HEIGHT = 30        ROW2_FAVORITE_HEIGHT = 22
 LEFT_PANEL_WIDTH = 320  PANEL_GAP = 10        TAB_BUTTON_HEIGHT = 30
-TOGGLE_BUTTON_WIDTH = 50  TOGGLE_BUTTON_HEIGHT = 22
+TOGGLE_BUTTON_WIDTH = 50  TOGGLE_BUTTON_HEIGHT = 18  TOGGLE_BUTTON_PADDING_X = 14
 HERO_PANEL_HEIGHT = 118  SUMMARY_STRIP_HEIGHT = 66
 SELECTABLE_CARD_HEIGHT = 68  SELECTABLE_CARD_ICON_SIZE = 38
 BADGE_HEIGHT = 18       ACTION_BAR_HEIGHT = 34

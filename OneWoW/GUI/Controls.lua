@@ -39,6 +39,10 @@ function OneWoW_GUI:CreateToggleRow(parent, options)
     local buttonHeight = options.buttonHeight or Constants.GUI.TOGGLE_BUTTON_HEIGHT
     local alignLeft = (options.align == "left")
 
+    local BTN_GAP = 8
+    local LABEL_DESC_GAP = 3
+    local ROW_BOTTOM_PAD = 10
+
     local labelFs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     OneWoW_GUI:SetFontBaseSize(labelFs, 12)
     OneWoW_GUI:SafeSetFont(labelFs, OneWoW_GUI:GetFont(), 12)
@@ -63,7 +67,7 @@ function OneWoW_GUI:CreateToggleRow(parent, options)
     if alignLeft then
         if label ~= "" then
             btn:ClearAllPoints()
-            btn:SetPoint("LEFT", labelFs, "RIGHT", 8, 0)
+            btn:SetPoint("LEFT", labelFs, "RIGHT", BTN_GAP, 0)
         else
             btn:ClearAllPoints()
             btn:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
@@ -72,44 +76,70 @@ function OneWoW_GUI:CreateToggleRow(parent, options)
         btn:ClearAllPoints()
         btn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
         if label ~= "" then
-            labelFs:SetPoint("RIGHT", btn, "LEFT", -8, 0)
+            labelFs:ClearAllPoints()
+            labelFs:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
+            labelFs:SetPoint("RIGHT", btn, "LEFT", -BTN_GAP, 0)
         end
     end
 
+    -- Left column: title, then description/content anchored under the title so wrap
+    -- changes on resize keep title→desc spacing (absolute Y from GetStringHeight does not).
     local labelHeight = (label ~= "" and labelFs:GetStringHeight()) or 0
-    local rowHeight = math.max(buttonHeight, labelHeight)
-    local newYOffset = yOffset - rowHeight - 4
+    local reserveRight = 12 + btn:GetWidth() + BTN_GAP
 
     local descFs
     local contentArea
+    local belowHeight = 0
 
     if description then
         descFs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         OneWoW_GUI:SetFontBaseSize(descFs, 10)
         OneWoW_GUI:SafeSetFont(descFs, OneWoW_GUI:GetFont(), 10)
-        descFs:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, newYOffset)
-        descFs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, newYOffset)
         descFs:SetJustifyH("LEFT")
         descFs:SetWordWrap(true)
-        local parentW = parent:GetWidth()
-        local wrapW = (parentW and parentW > Constants.GUI.TOGGLE_ROW_DESC_WRAP_MIN)
-            and (parentW - 24)
-            or Constants.GUI.TOGGLE_ROW_DESC_WRAP_FALLBACK
-        descFs:SetWidth(wrapW)
         descFs:SetText(description)
         descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        newYOffset = newYOffset - descFs:GetStringHeight() - 6
+
+        if label ~= "" then
+            descFs:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -LABEL_DESC_GAP)
+            descFs:SetPoint("TOPRIGHT", labelFs, "BOTTOMRIGHT", 0, -LABEL_DESC_GAP)
+            belowHeight = LABEL_DESC_GAP + descFs:GetStringHeight() + 6
+        else
+            descFs:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
+            if alignLeft then
+                descFs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
+            else
+                descFs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -reserveRight, yOffset)
+            end
+            belowHeight = descFs:GetStringHeight() + 6
+        end
     elseif createContent then
         contentArea = CreateFrame("Frame", nil, parent)
-        contentArea:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, newYOffset)
-        contentArea:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, newYOffset)
+        if label ~= "" then
+            contentArea:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -LABEL_DESC_GAP)
+            contentArea:SetPoint("TOPRIGHT", labelFs, "BOTTOMRIGHT", 0, -LABEL_DESC_GAP)
+        else
+            contentArea:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
+            if alignLeft then
+                contentArea:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
+            else
+                contentArea:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -reserveRight, yOffset)
+            end
+        end
         local _, contentHeight = createContent(contentArea)
         contentHeight = contentHeight or 0
         contentArea:SetHeight(contentHeight)
-        newYOffset = newYOffset - contentHeight - 6
+        if label ~= "" then
+            belowHeight = LABEL_DESC_GAP + contentHeight + 6
+        else
+            belowHeight = contentHeight + 6
+        end
     end
 
-    newYOffset = newYOffset - 10
+    local leftBottom = yOffset - labelHeight - belowHeight
+    local buttonBottom = yOffset - buttonHeight
+    local stackBottom = math.min(leftBottom, buttonBottom)
+    local newYOffset = stackBottom - ROW_BOTTOM_PAD
 
     local function rowRefresh(enabled, val)
         refresh(enabled, val)

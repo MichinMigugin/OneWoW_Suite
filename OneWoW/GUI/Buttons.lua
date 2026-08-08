@@ -490,6 +490,7 @@ function OneWoW_GUI:CreateOnOffToggleButtons(parent, options)
         text = onLabel,
         height = height,
         minWidth = width,
+        paddingX = options.paddingX or Constants.GUI.TOGGLE_BUTTON_PADDING_X,
     })
 
     -- Size to the wider of On/Off so the control does not jump when toggled.
