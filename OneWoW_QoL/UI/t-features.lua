@@ -231,7 +231,7 @@ local function ShowModuleDetail(split, module)
     local customRefreshCallbacks = {}
     local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
 
-    local enableBtn, _ = ns.UI.CreateSingleStateToggle(detailScrollChild, {
+    local enableBtn, _ = OneWoW_GUI:CreateOnOffToggleButtons(detailScrollChild, {
         value = isEnabled,
         isEnabled = true,
         onLabel = L["FEATURES_ON"],
@@ -368,7 +368,7 @@ local function ShowModuleDetail(split, module)
                 local currentVal = ns.ModuleRegistry:GetToggleValue(module.id, toggle.id)
 
                 local rowRefresh
-                yOffset, rowRefresh, _ = ns.UI.CreateSingleStateToggleRow(detailScrollChild, {
+                yOffset, rowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
                     yOffset = yOffset,
                     label = ML(module.id, toggle.label) or toggle.label,
                     description = toggle.description and (ML(module.id, toggle.description) or toggle.description) or nil,

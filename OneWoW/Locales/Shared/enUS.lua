@@ -89,6 +89,7 @@ ns.Locale:RegisterShared("enUS", {
     ["ALL_DIFFICULTIES"] = "All Difficulties",
     ["BAR_SETTINGS"] = "Bar Settings",
     ["CLICK_AND_DRAG_TO_MOVE"] = "Click and drag to move",
+    ["TOGGLE_CLICK"] = "Click to turn %s",
     ["DISCORD"] = "Discord",
     ["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"] = "Double-click or Shift+click to collapse or expand",
     ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "Hide Anchor (show on hover)",

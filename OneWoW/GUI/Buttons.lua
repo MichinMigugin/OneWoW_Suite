@@ -457,9 +457,25 @@ function OneWoW_GUI:CreateFitFrameButtons(parent, options)
     return buttons, finalY
 end
 
+--- Single-state On/Off toggle. Button shows current state; click flips it.
+--- On: soft BG_FEATURES_ENABLED fill + green label. Off: muted chrome + red label.
+--- Parent-disabled (isEnabled=false): fully muted / non-interactive.
+--- Caller must SetPoint the button (or use CreateToggleRow).
+---@param parent Frame
+---@param options {
+---  onLabel?: string,
+---  offLabel?: string,
+---  width?: number,
+---  height?: number,
+---  isEnabled?: boolean,
+---  value?: boolean,
+---  onValueChange?: fun(newValue: boolean),
+---  clickTooltipFormat?: string,
+--- }
+---@return Button btn
+---@return fun(enabled: boolean, value: boolean) refresh
 function OneWoW_GUI:CreateOnOffToggleButtons(parent, options)
     options = options or {}
-    local yOffset = options.yOffset or 0
     local onLabel = options.onLabel or "On"
     local offLabel = options.offLabel or "Off"
     local width = options.width or Constants.GUI.TOGGLE_BUTTON_WIDTH
@@ -467,124 +483,112 @@ function OneWoW_GUI:CreateOnOffToggleButtons(parent, options)
     local isEnabled = options.isEnabled
     local value = options.value
     local onValueChange = options.onValueChange
+    local clickFmt = options.clickTooltipFormat
+        or OneWoW.Locale:GetOptional("shared", "TOGGLE_CLICK")
 
-    local onBtn = self:CreateFitTextButton(parent, { text = onLabel, height = height, minWidth = width })
-    local offBtn = self:CreateFitTextButton(parent, { text = offLabel, height = height, minWidth = width })
+    local btn = self:CreateFitTextButton(parent, {
+        text = onLabel,
+        height = height,
+        minWidth = width,
+    })
 
-    local maxW = math.max(onBtn:GetWidth(), offBtn:GetWidth())
-    onBtn:SetWidth(maxW)
-    offBtn:SetWidth(maxW)
+    -- Size to the wider of On/Off so the control does not jump when toggled.
+    local wOn = btn:GetWidth()
+    btn:SetFitText(offLabel)
+    local wOff = btn:GetWidth()
+    local maxW = math.max(wOn, wOff)
+    btn._minWidth = maxW
+    btn:SetWidth(maxW)
 
-    local statusPfx = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    OneWoW_GUI:SetFontBaseSize(statusPfx, 10)
-    OneWoW_GUI:SafeSetFont(statusPfx, OneWoW_GUI:GetFont(), 10)
-    statusPfx:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    statusPfx:SetText("Status:")
-    statusPfx:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    local currentValue = value == true
 
-    local statusVal = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    OneWoW_GUI:SetFontBaseSize(statusVal, 10)
-    OneWoW_GUI:SafeSetFont(statusVal, OneWoW_GUI:GetFont(), 10)
-    statusVal:SetPoint("LEFT", statusPfx, "RIGHT", 4, 0)
-
-    onBtn:SetPoint("LEFT", statusVal, "RIGHT", 10, 0)
-    offBtn:SetPoint("LEFT", onBtn, "RIGHT", 4, 0)
-
-    local function applyHover(btn)
-        if btn.isActive then
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-        else
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    local function applyNormal()
+        if not btn:GetParent() then return end
+        if isEnabled ~= true then
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            return
         end
-    end
-
-    local function applyNormal(btn)
-        if btn.isActive then
-            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_ACTIVE"))
-            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_ACCENT"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+        if currentValue then
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_FEATURES_ENABLED"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("DOT_FEATURES_ENABLED"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
         else
             btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
             btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
     end
 
-    for _, btn in ipairs({ onBtn, offBtn }) do
-        btn:SetScript("OnEnter", function(myself) applyHover(myself) end)
-        btn:SetScript("OnLeave", function(myself) applyNormal(myself) end)
-        btn:SetScript("OnMouseDown", function(myself) myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED")) end)
-        btn:SetScript("OnMouseUp", function(myself) applyNormal(myself) end)
+    local function applyHover()
+        if not btn:GetParent() or isEnabled ~= true then return end
+        if currentValue then
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_FEATURES_ENABLED_HOVER"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        else
+            btn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
+            btn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
+            btn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+        end
+    end
+
+    local function showTooltip(owner)
+        if isEnabled ~= true or not clickFmt then return end
+        GameTooltip:SetOwner(owner, "ANCHOR_TOP")
+        local nextLabel = currentValue and offLabel or onLabel
+        GameTooltip:SetText(string.format(clickFmt, nextLabel), 1, 1, 1)
+        GameTooltip:Show()
     end
 
     local function refresh(enabled, val)
         isEnabled = enabled
-        if not onBtn:GetParent() or not offBtn:GetParent() then
-            return
-        end
-        enabled = enabled == true
-        val = val == true
-        onBtn.isActive = enabled and val
-        offBtn.isActive = enabled and not val
-        onBtn:EnableMouse(enabled)
-        offBtn:EnableMouse(enabled)
-        if not enabled then
-            onBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            onBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            offBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            offBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            onBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            offBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            statusPfx:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            statusVal:SetText(val and onLabel or offLabel)
-            statusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        currentValue = val == true
+        if not btn:GetParent() then return end
+        btn:EnableMouse(enabled == true)
+        btn:SetFitText(currentValue and onLabel or offLabel)
+        if btn:IsMouseOver() and enabled == true then
+            applyHover()
         else
-            applyNormal(onBtn)
-            applyNormal(offBtn)
-            statusPfx:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-            if val then
-                statusVal:SetText(onLabel)
-                statusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-            else
-                statusVal:SetText(offLabel)
-                statusVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-            end
+            applyNormal()
         end
     end
 
-    onBtn:SetScript("OnClick", function()
-        onValueChange(true)
-        refresh(isEnabled, true)
-        C_Timer.After(0, function()
-            if onBtn:GetParent() and offBtn:GetParent() then
-                if onBtn:IsMouseOver() then
-                    applyHover(onBtn)
-                elseif offBtn:IsMouseOver() then
-                    applyHover(offBtn)
-                end
-            end
-        end)
+    btn:SetScript("OnEnter", function(myself)
+        applyHover()
+        showTooltip(myself)
     end)
-    offBtn:SetScript("OnClick", function()
-        onValueChange(false)
-        refresh(isEnabled, false)
+    btn:SetScript("OnLeave", function()
+        applyNormal()
+        GameTooltip:Hide()
+    end)
+    btn:SetScript("OnMouseDown", function(myself)
+        if isEnabled ~= true then return end
+        myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_PRESSED"))
+    end)
+    btn:SetScript("OnMouseUp", function(myself)
+        if myself:IsMouseOver() and isEnabled == true then
+            applyHover()
+        else
+            applyNormal()
+        end
+    end)
+    btn:SetScript("OnClick", function()
+        if isEnabled ~= true or not onValueChange then return end
+        local newVal = not currentValue
+        onValueChange(newVal)
+        refresh(isEnabled, newVal)
         C_Timer.After(0, function()
-            if onBtn:GetParent() and offBtn:GetParent() then
-                if onBtn:IsMouseOver() then
-                    applyHover(onBtn)
-                elseif offBtn:IsMouseOver() then
-                    applyHover(offBtn)
-                end
+            if btn:GetParent() and btn:IsMouseOver() and isEnabled == true then
+                applyHover()
+                showTooltip(btn)
             end
         end)
     end)
 
     refresh(isEnabled, value)
-    return onBtn, offBtn, refresh, statusPfx, statusVal
+    return btn, refresh
 end
 
 function OneWoW_GUI:GetFavoriteAtlas()

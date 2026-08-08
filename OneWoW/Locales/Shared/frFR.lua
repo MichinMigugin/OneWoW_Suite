@@ -89,6 +89,7 @@ ns.Locale:RegisterShared("frFR", {
     ["ALL_DIFFICULTIES"] = "Toutes les difficultés",
     ["BAR_SETTINGS"] = "Réglages de la barre",
     ["CLICK_AND_DRAG_TO_MOVE"] = "Cliquez-glissez pour déplacer",
+    ["TOGGLE_CLICK"] = "Cliquer pour passer à %s",
     ["DISCORD"] = "Discord",
     ["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"] = "Double-cliquez ou Maj+clic pour réduire ou développer",
     ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "Masquer l'ancre (afficher au survol)",

@@ -89,6 +89,7 @@ ns.Locale:RegisterShared("ptBR", {
     ["ALL_DIFFICULTIES"] = "Todas as dificuldades",
     ["BAR_SETTINGS"] = "Configurações da barra",
     ["CLICK_AND_DRAG_TO_MOVE"] = "Clique e arraste para mover",
+    ["TOGGLE_CLICK"] = "Clique para mudar para %s",
     ["DISCORD"] = "Discord",
     ["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"] = "Clique duplo ou Shift+clique para recolher ou expandir",
     ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "Ocultar âncora (mostrar ao passar o mouse)",

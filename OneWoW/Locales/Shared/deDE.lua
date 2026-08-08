@@ -89,6 +89,7 @@ ns.Locale:RegisterShared("deDE", {
     ["ALL_DIFFICULTIES"] = "Alle Schwierigkeitsgrade",
     ["BAR_SETTINGS"] = "Leisteneinstellungen",
     ["CLICK_AND_DRAG_TO_MOVE"] = "Zum Verschieben klicken und ziehen",
+    ["TOGGLE_CLICK"] = "Klicken, um auf %s zu stellen",
     ["DISCORD"] = "Discord",
     ["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"] = "Doppelklick oder Umschalt+Klick zum Ein- oder Ausklappen",
     ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "Anker ausblenden (beim Überfahren anzeigen)",

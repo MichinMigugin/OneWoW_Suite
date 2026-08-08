@@ -689,10 +689,9 @@ Clicking a button auto-toggles active state across all buttons.
 Use `buttons.SetActiveByValue(value)` to update selection externally.
 Returns buttons table and finalY offset for layout continuation.
 
-### On/Off toggle pair
+### On/Off toggle (single-state)
 ```lua
-local onBtn, offBtn, refresh, statusPfx, statusVal = OneWoW_GUI:CreateOnOffToggleButtons(parent, {
-    yOffset = 0,
+local btn, refresh = OneWoW_GUI:CreateOnOffToggleButtons(parent, {
     onLabel = "On",
     offLabel = "Off",
     width = 50,
@@ -702,16 +701,20 @@ local onBtn, offBtn, refresh, statusPfx, statusVal = OneWoW_GUI:CreateOnOffToggl
     onValueChange = function(newValue)
         -- handle value change
     end,
+    -- optional; defaults to shared TOGGLE_CLICK ("Click to turn %s")
+    clickTooltipFormat = L["TOGGLE_CLICK"],
 })
+btn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
 -- Update state later:
 refresh(isEnabled, newValue)
 ```
-Layout: `Status: On [On] [Off]` - statusPfx anchors TOPLEFT at x=12, buttons follow.
-Active button: BG_ACTIVE + BORDER_ACCENT + TEXT_ACCENT. Inactive: BTN_NORMAL + TEXT_MUTED.
-Status text: TEXT_FEATURES_ENABLED (green) when on, TEXT_FEATURES_DISABLED (red) when off.
-When disabled (isEnabled=false): all elements muted, buttons non-interactive.
-To right-align, clear points on offBtn/onBtn/statusVal/statusPfx and re-anchor from TOPRIGHT.
-To reposition the cluster after a label, call `statusPfx:ClearAllPoints()` + `statusPfx:SetPoint(...)`.
+Single button shows the current state; click flips it. Tooltip uses `clickTooltipFormat`
+with the *destination* label (`%s`).
+On: `BG_FEATURES_ENABLED` fill + `TEXT_FEATURES_ENABLED` label.
+Off: muted `BTN_NORMAL` chrome + `TEXT_FEATURES_DISABLED` label.
+When disabled (`isEnabled=false`): muted / non-interactive (distinct from Off).
+Caller must `SetPoint` the button, or use `CreateToggleRow` below.
+Returns `btn, refresh`.
 
 ### Toggle row (label + description/custom + On/Off)
 ```lua
@@ -727,10 +730,10 @@ local newYOffset, refresh, refs = OneWoW_GUI:CreateToggleRow(parent, {
 })
 -- Update state later:
 refresh(isEnabled, newValue)
--- refs.label, refs.contentArea (nil if description used)
+-- refs.label, refs.button, refs.contentArea (nil if description used)
 ```
-Layout: Row 1: [Label] ... [Status: On] [On] [Off] (right-aligned by default). Row 2: [Description] or custom content.
-Use `align = "left"` for module-level Enable: [Label] [Status: On] [On] [Off] all left-aligned.
+Layout: Row 1: [Label] ... [On/Off] (right-aligned by default). Row 2: [Description] or custom content.
+Use `align = "left"` for [Label] [On/Off] left-aligned (or button alone at TOPLEFT when label is empty).
 Use `createContent` instead of `description` for custom widgets (e.g. mount picker). Must return `(widget, height)`:
 ```lua
 local newYOffset, refresh, refs = OneWoW_GUI:CreateToggleRow(parent, {

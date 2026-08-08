@@ -49,8 +49,7 @@ function OneWoW_GUI:CreateToggleRow(parent, options)
         labelFs:Hide()
     end
 
-    local onBtn, offBtn, refresh, statusPfx, statusVal = self:CreateOnOffToggleButtons(parent, {
-        yOffset = yOffset,
+    local btn, refresh = self:CreateOnOffToggleButtons(parent, {
         onLabel = onLabel,
         offLabel = offLabel,
         width = buttonWidth,
@@ -58,24 +57,23 @@ function OneWoW_GUI:CreateToggleRow(parent, options)
         isEnabled = isEnabled,
         value = value,
         onValueChange = onValueChange,
+        clickTooltipFormat = options.clickTooltipFormat,
     })
 
     if alignLeft then
         if label ~= "" then
-            statusPfx:ClearAllPoints()
-            statusPfx:SetPoint("LEFT", labelFs, "RIGHT", 8, 0)
+            btn:ClearAllPoints()
+            btn:SetPoint("LEFT", labelFs, "RIGHT", 8, 0)
+        else
+            btn:ClearAllPoints()
+            btn:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
         end
-        -- when label is empty, statusPfx stays at default TOPLEFT 12 from CreateOnOffToggleButtons
     else
-        offBtn:ClearAllPoints()
-        offBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
-        onBtn:ClearAllPoints()
-        onBtn:SetPoint("RIGHT", offBtn, "LEFT", -4, 0)
-        statusVal:ClearAllPoints()
-        statusVal:SetPoint("RIGHT", onBtn, "LEFT", -10, 0)
-        statusPfx:ClearAllPoints()
-        statusPfx:SetPoint("RIGHT", statusVal, "LEFT", -4, 0)
-        labelFs:SetPoint("RIGHT", statusPfx, "LEFT", -8, 0)
+        btn:ClearAllPoints()
+        btn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
+        if label ~= "" then
+            labelFs:SetPoint("RIGHT", btn, "LEFT", -8, 0)
+        end
     end
 
     local labelHeight = (label ~= "" and labelFs:GetStringHeight()) or 0
@@ -130,7 +128,7 @@ function OneWoW_GUI:CreateToggleRow(parent, options)
 
     rowRefresh(isEnabled, value)
 
-    return newYOffset, rowRefresh, { label = labelFs, contentArea = contentArea }
+    return newYOffset, rowRefresh, { label = labelFs, contentArea = contentArea, button = btn }
 end
 
 function OneWoW_GUI:CreateCheckbox(parent, options)

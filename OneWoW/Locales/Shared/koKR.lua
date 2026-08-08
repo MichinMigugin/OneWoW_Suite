@@ -89,6 +89,7 @@ ns.Locale:RegisterShared("koKR", {
     ["ALL_DIFFICULTIES"] = "모든 난이도",
     ["BAR_SETTINGS"] = "바 설정",
     ["CLICK_AND_DRAG_TO_MOVE"] = "클릭한 채 끌어서 이동",
+    ["TOGGLE_CLICK"] = "클릭하여 %s(으)로 전환",
     ["DISCORD"] = "Discord",
     ["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"] = "두 번 클릭 또는 Shift+클릭으로 접거나 펼치기",
     ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "고정점 숨기기 (마우스를 올리면 표시)",

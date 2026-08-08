@@ -89,6 +89,7 @@ ns.Locale:RegisterShared("ruRU", {
     ["ALL_DIFFICULTIES"] = "Все сложности",
     ["BAR_SETTINGS"] = "Настройки панели",
     ["CLICK_AND_DRAG_TO_MOVE"] = "Зажмите и перетащите для перемещения",
+    ["TOGGLE_CLICK"] = "Нажмите, чтобы переключить на «%s»",
     ["DISCORD"] = "Discord",
     ["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"] = "Двойной щелчок или Shift+щелчок, чтобы свернуть или развернуть",
     ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "Скрыть якорь (показывать при наведении)",

@@ -89,6 +89,7 @@ ns.Locale:RegisterShared("zhCN", {
     ["ALL_DIFFICULTIES"] = "所有难度",
     ["BAR_SETTINGS"] = "栏设置",
     ["CLICK_AND_DRAG_TO_MOVE"] = "点击并拖动以移动",
+    ["TOGGLE_CLICK"] = "点击切换为%s",
     ["DISCORD"] = "Discord",
     ["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"] = "双击或 Shift+单击以折叠或展开",
     ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "隐藏锚点（悬停时显示）",

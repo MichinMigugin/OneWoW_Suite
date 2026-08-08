@@ -900,9 +900,18 @@ local function owgFillThemeSemantics(theme)
             1.0,
         }
     end
+    -- Soft On fill for single-state toggles (DOT RGB at reduced alpha; not neon TEXT_*).
+    local dotOn = theme.DOT_FEATURES_ENABLED
+    if not theme.BG_FEATURES_ENABLED then
+        theme.BG_FEATURES_ENABLED = { dotOn[1], dotOn[2], dotOn[3], 0.40 }
+    end
+    if not theme.BG_FEATURES_ENABLED_HOVER then
+        theme.BG_FEATURES_ENABLED_HOVER = { dotOn[1], dotOn[2], dotOn[3], 0.55 }
+    end
     if not theme.TEXT_WARNING then
         theme.TEXT_WARNING = { 1.0, 0.62, 0.12, 1.0 }
     end
+
     local bs = theme.BG_SECONDARY or bg
     local as = theme.ACCENT_SECONDARY or ap
     if not theme.QUEST_ROW_SECTION then

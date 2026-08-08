@@ -90,6 +90,7 @@ ns.Locale:RegisterShared("esMX", {
     ["ALL_DIFFICULTIES"] = "Todas las dificultades",
     ["BAR_SETTINGS"] = "Ajustes de la barra",
     ["CLICK_AND_DRAG_TO_MOVE"] = "Haz clic y arrastra para mover",
+    ["TOGGLE_CLICK"] = "Clic para cambiar a %s",
     ["DISCORD"] = "Discord",
     ["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"] = "Doble clic o Mayús+clic para contraer o expandir",
     ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "Ocultar ancla (mostrar al pasar el mouse)",
@@ -388,7 +389,7 @@ ns.Locale:RegisterShared("esMX", {
 
     ["DATABASE_MANAGER_TITLE"] = "Gestor de bases de datos",
     ["DATABASE_MANAGER_DESC"] = "Gestiona las bases de datos del addon. Haz clic en Restablecer para borrar por completo una base de datos y forzar una recarga de la interfaz.",
-    ["DATABASE_MANAGER_RESET_DISABLED"] = "Este addon no está activado. Actívalo en Administrar funciones para restablecer su base de datos.",
+    ["DATABASE_MANAGER_RESET_DISABLED"] = "Este addon no está activado. Actívalo en Gestionar funciones para restablecer su base de datos.",
     ["DATABASE_MANAGER_ENTRIES"] = "Entradas: %d",
     ["DATABASE_MANAGER_NOT_LOADED"] = "No cargado",
     ["DATABASE_MANAGER_RESET_TITLE"] = "Restablecer %s",

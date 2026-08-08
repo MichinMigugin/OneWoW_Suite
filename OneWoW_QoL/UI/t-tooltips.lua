@@ -102,44 +102,21 @@ local function CreateSettingToggleRows(dsc, toggleList, toggleBtnSets, isEnabled
         local capturedKey = toggle.key
         local currentVal = settingsTable[capturedKey] ~= false
 
-        local onBtn, offBtn, refresh, statusPfx, statusVal = OneWoW_GUI:CreateOnOffToggleButtons(dsc, {
+        local rowRefresh, refs
+        yOffset, rowRefresh, refs = OneWoW_GUI:CreateToggleRow(dsc, {
             yOffset = yOffset,
+            label = L[toggle.localeKey],
+            value = currentVal,
+            isEnabled = isEnabled,
             onLabel = L["TIPS_TOGGLE_ON"],
             offLabel = L["TIPS_TOGGLE_OFF"],
-            width = 50,
-            height = 22,
-            isEnabled = isEnabled,
-            value = currentVal,
+            buttonWidth = 50,
             onValueChange = function(newVal)
                 Registry:SetSetting("tooltips", dbPath, capturedKey, newVal)
             end,
         })
 
-        offBtn:ClearAllPoints()
-        offBtn:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-        onBtn:ClearAllPoints()
-        onBtn:SetPoint("RIGHT", offBtn, "LEFT", -4, 0)
-        statusVal:ClearAllPoints()
-        statusVal:SetPoint("RIGHT", onBtn, "LEFT", -6, 0)
-        statusPfx:ClearAllPoints()
-        statusPfx:SetPoint("RIGHT", statusVal, "LEFT", -2, 0)
-
-        local toggleLabel = OneWoW_GUI:CreateFS(dsc, 12)
-        toggleLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset - 3)
-        toggleLabel:SetPoint("RIGHT", statusPfx, "LEFT", -8, 0)
-        toggleLabel:SetJustifyH("LEFT")
-        toggleLabel:SetText(L[toggle.localeKey])
-
-        if isEnabled then
-            toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        else
-            toggleLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
-
-        tinsert(toggleBtnSets, { onBtn = onBtn, offBtn = offBtn, label = toggleLabel, statusPrefix = statusPfx, statusVal = statusVal, key = capturedKey, refresh = refresh })
-
-        local rowH = math.max(22, toggleLabel:GetStringHeight() + 4)
-        yOffset = yOffset - rowH - 10
+        tinsert(toggleBtnSets, { label = refs.label, key = capturedKey, refresh = rowRefresh })
     end
 
     return yOffset

@@ -89,6 +89,7 @@ ns.Locale:RegisterShared("esES", {
     ["ALL_DIFFICULTIES"] = "Todas las dificultades",
     ["BAR_SETTINGS"] = "Ajustes de la barra",
     ["CLICK_AND_DRAG_TO_MOVE"] = "Haz clic y arrastra para mover",
+    ["TOGGLE_CLICK"] = "Clic para cambiar a %s",
     ["DISCORD"] = "Discord",
     ["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"] = "Doble clic o Mayús+clic para contraer o expandir",
     ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "Ocultar ancla (mostrar al pasar el ratón)",

@@ -375,7 +375,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["FEATURES_TOGGLES_HEADER"] = "模块开关",
     ["FEATURES_ON"] = "开",
     ["FEATURES_OFF"] = "关",
-    ["FEATURES_TOGGLE_CLICK"] = "点击切换为%s",
     ["FEATURES_PREVIEW_LABEL"] = "预览：",
 
     ["CATEGORY_AUTOMATION"] = "自动化",

@@ -360,8 +360,7 @@ local function ShowToggleDetail(split, entry)
         local isOn = C_CVar.GetCVarBool(entry.cvar) == true
         local capturedEntry = entry
 
-        OneWoW_GUI:CreateOnOffToggleButtons(child, {
-            yOffset = yOfs,
+        local toggleBtn, _ = OneWoW_GUI:CreateOnOffToggleButtons(child, {
             onLabel = L["TOGGLES_ON"],
             offLabel = L["TOGGLES_OFF"],
             isEnabled = true,
@@ -372,6 +371,7 @@ local function ShowToggleDetail(split, entry)
                 UpdateRightStatus(split, capturedEntry)
             end,
         })
+        toggleBtn:SetPoint("TOPLEFT", child, "TOPLEFT", 12, yOfs)
 
         yOfs = yOfs - 22 - 8
 

@@ -11,7 +11,14 @@
 - `#geartoken` finds Use: loot-spec gear tokens (e.g. Baleful); distinct from `#contexttoken` (season/reagent context tokens)
 - `#myclass` / `forclass=` also match class-restricted Use: tokens (Classes: tooltip line), not only equippable gear; `#myspec` stays equipment-only
 
+#### Settings
+- On/Off controls are a single button that shows the current state (soft green On, muted Off with red text); click to toggle — used across Bags, QoL Features, Tooltips, and other settings
+
 ### QoL
+
+#### Features
+- Module On/Off sits in the detail header; Details is a text link under Category when a module has author/contact/link info
+- “Mount Status” on the bottom bar only appears for Auto Mount (no longer sticks when switching modules)
 
 #### Portals
 - Added Corewarden's Hearthstone

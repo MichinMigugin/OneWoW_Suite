@@ -43,7 +43,6 @@ OneWoW_QoL.lua
 Modules\ModuleRegistry.lua
 
 # UI - Tabs
-UI\toggle-single.lua
 UI\t-features.lua
 UI\t-toggles.lua
 UI\t-settings.lua

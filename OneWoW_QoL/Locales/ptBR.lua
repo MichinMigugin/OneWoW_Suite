@@ -375,7 +375,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["FEATURES_TOGGLES_HEADER"] = "Interruptores do módulo",
     ["FEATURES_ON"] = "Sim",
     ["FEATURES_OFF"] = "Não",
-    ["FEATURES_TOGGLE_CLICK"] = "Clique para mudar para %s",
     ["FEATURES_PREVIEW_LABEL"] = "Pré-visualização:",
 
     ["CATEGORY_AUTOMATION"] = "Automação",

@@ -89,6 +89,7 @@ ns.Locale:RegisterShared("itIT", {
     ["ALL_DIFFICULTIES"] = "Tutte le difficoltà",
     ["BAR_SETTINGS"] = "Impostazioni barra",
     ["CLICK_AND_DRAG_TO_MOVE"] = "Clicca e trascina per spostare",
+    ["TOGGLE_CLICK"] = "Clicca per impostare su %s",
     ["DISCORD"] = "Discord",
     ["DOUBLE_CLICK_OR_SHIFT_CLICK_TO_COLLAPSE_OR_EXPAND"] = "Doppio clic o Maiusc+clic per comprimere o espandere",
     ["HIDE_ANCHOR_SHOW_ON_HOVER"] = "Nascondi ancora (mostra al passaggio del mouse)",
