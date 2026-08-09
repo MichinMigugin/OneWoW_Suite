@@ -179,6 +179,10 @@ function UI:Build(detailScrollChild, yOffset, isEnabled, registerRefresh)
 
     -- Relayout skips hidden category cards (search filter).
     function stack:Relayout()
+        if self._inLayout then
+            return
+        end
+        self._inLayout = true
         local marginX = 4
         local startY = -6
         local gap = 8
@@ -199,8 +203,12 @@ function UI:Build(detailScrollChild, yOffset, isEnabled, registerRefresh)
                 y = y - gap
             end
         end
-        self.parent:SetHeight(math.max(1, math.abs(y)))
+        local newH = math.max(1, math.abs(y))
+        if math.abs((self.parent:GetHeight() or 0) - newH) >= 0.5 then
+            self.parent:SetHeight(newH)
+        end
         if self.OnRelayout then self.OnRelayout() end
+        self._inLayout = false
     end
     stack.OnRelayout = applyHostHeight
 

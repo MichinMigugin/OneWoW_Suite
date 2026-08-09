@@ -596,14 +596,22 @@ function QuestItemBarModule:CreateCustomDetail(detailScrollChild, yOffset, _)
 
     local function applyHostHeight(cy)
         cy = cy or -container:GetHeight()
-        detailScrollChild:SetHeight(math.abs(capturedYOffset) + math.abs(cy) + 20)
+        local newH = math.abs(capturedYOffset) + math.abs(cy) + 20
+        if math.abs((detailScrollChild:GetHeight() or 0) - newH) < 0.5 then
+            return
+        end
+        detailScrollChild:SetHeight(newH)
     end
 
+    local refreshing = false
     local function doRefresh()
+        if refreshing then return end
         if container:GetParent() ~= detailScrollChild then return end
+        refreshing = true
         OneWoW_GUI:ClearFrame(container)
         local cy = BuildContent(container, applyHostHeight, capturedYOffset)
         applyHostHeight(cy)
+        refreshing = false
     end
 
     self._refreshCustomDetail = function()
@@ -626,8 +634,15 @@ function QuestItemBarModule:CreateCustomDetail(detailScrollChild, yOffset, _)
     local detailPanel = detailContainer and detailContainer:GetParent()
     if detailScrollFrame and not detailScrollChild._qibResizeHooked then
         detailScrollChild._qibResizeHooked = true
-        local function onResize()
-            if container:GetParent() == detailScrollChild and QuestItemBarModule._refreshCustomDetail then
+        local lastW = -1
+        local function onResize(_, width, _)
+            if container:GetParent() ~= detailScrollChild then return end
+            local w = tonumber(width) or (detailScrollFrame:GetWidth() or 0)
+            if lastW >= 0 and math.abs(w - lastW) < 2 then
+                return
+            end
+            lastW = w
+            if QuestItemBarModule._refreshCustomDetail then
                 QuestItemBarModule._refreshCustomDetail()
             end
         end

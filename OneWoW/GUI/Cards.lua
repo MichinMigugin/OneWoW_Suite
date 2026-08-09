@@ -197,6 +197,13 @@ function OneWoW_GUI:CreateCardStack(parent, options)
     end
 
     function stack:Relayout()
+        -- OnRelayout often SetHeights the scroll child; that fires OnSizeChanged on
+        -- the host and used to re-enter Relayout/ReflowContents (C stack overflow).
+        if self._inLayout then
+            return
+        end
+        self._inLayout = true
+
         local y = startY
         local n = #self.items
         for i, frame in ipairs(self.items) do
@@ -210,12 +217,21 @@ function OneWoW_GUI:CreateCardStack(parent, options)
                 y = y - gap
             end
         end
-        self.parent:SetHeight(math.abs(y))
-        if self.OnRelayout then self.OnRelayout() end
+        local newH = math.abs(y)
+        if math.abs((self.parent:GetHeight() or 0) - newH) >= 0.5 then
+            self.parent:SetHeight(newH)
+        end
+        if self.OnRelayout then
+            self.OnRelayout()
+        end
+        self._inLayout = false
     end
 
     --- Rebuild card bodies for the current contentWidth (wrap + control stretch).
     function stack:ReflowContents()
+        if self._inLayout then
+            return
+        end
         local cw = self.contentWidth
         for _, frame in ipairs(self.items) do
             local build = frame._cardBuild
@@ -303,11 +319,21 @@ function OneWoW_GUI:CreateCardStack(parent, options)
             self._widthHooked = true
             local pending
             local function scheduleReflow()
+                -- Relayout holds _inLayout through OnRelayout (scroll-child
+                -- SetHeight). Ignoring those events prevents re-entrant reflow.
+                if self._inLayout then
+                    return
+                end
                 if pending then return end
                 pending = true
                 C_Timer.After(0.05, function()
                     pending = false
+                    if self._inLayout then return end
                     if not self.parent or not self.parent.GetWidth then return end
+                    -- Stack host was ClearFrame'd / unparented when switching features.
+                    if self.parent.GetParent and not self.parent:GetParent() then
+                        return
+                    end
                     if self:SyncContentWidth() then
                         self:ReflowContents()
                     end

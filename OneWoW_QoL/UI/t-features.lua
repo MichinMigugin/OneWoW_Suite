@@ -215,6 +215,10 @@ local function ShowModuleDetail(split, module)
         detailScrollChild:SetWidth(fw)
     end
     OneWoW_GUI:ClearFrame(detailScrollChild)
+    -- Module-owned markers left on the shared scroll child (ClearFrame only
+    -- unparents children; it does not wipe custom keys).
+    detailScrollChild._qibContainer = nil
+    detailScrollChild.UpdateDetailHeight = nil
 
     -- Module CreateCustomDetail may parent frame extras onto rightStatusBar (e.g.
     -- AutoMount "Mount Status"). Hide those when rebuilding so they do not leak
