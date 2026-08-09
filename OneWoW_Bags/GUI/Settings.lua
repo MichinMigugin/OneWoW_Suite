@@ -3,7 +3,7 @@ local _, ns = ...
 local OneWoW_GUI = OneWoW_GUI
 
 local ipairs, pairs = ipairs, pairs
-local tinsert = tinsert
+local tinsert, wipe = tinsert, wipe
 local abs, floor = math.abs, math.floor
 
 local C_Timer = C_Timer
@@ -109,610 +109,693 @@ local function SwitchTab(n)
     C_Timer.After(0, RefreshSettingsScrollLayouts)
 end
 
-local function BuildContainer(parent, yOffset)
-    local container = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    container:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, yOffset)
-    container:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -10, yOffset)
-    container:SetBackdrop(OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS)
-    container:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-    container:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    return container
-end
-
-local function FinalizeContainer(container, innerY, yOffset)
-    container:SetHeight(abs(innerY) + 4)
-    return yOffset - abs(innerY) - 4 - 15
-end
-
 local function BuildSliderRow(container, label, yOffset, options)
+    local padX = options.padX or 15
+    local contentWidth = tonumber(options.contentWidth) or 0
+
     local lbl = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    lbl:SetPoint("TOPLEFT", container, "TOPLEFT", 15, yOffset)
+    lbl:SetPoint("TOPLEFT", container, "TOPLEFT", padX, yOffset)
     lbl:SetText(label)
     lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    if contentWidth > 40 then
+        lbl:SetWidth(contentWidth - padX * 2)
+        lbl:SetJustifyH("LEFT")
+        lbl:SetWordWrap(true)
+    end
     yOffset = yOffset - lbl:GetStringHeight() - 4
 
     if options.description then
         local desc = container:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        desc:SetPoint("TOPLEFT", container, "TOPLEFT", 15, yOffset)
-        desc:SetPoint("RIGHT", container, "RIGHT", -15, 0)
+        desc:SetPoint("TOPLEFT", container, "TOPLEFT", padX, yOffset)
         desc:SetJustifyH("LEFT")
         desc:SetWordWrap(true)
+        if contentWidth > 40 then
+            desc:SetWidth(contentWidth - padX * 2)
+        else
+            desc:SetPoint("RIGHT", container, "RIGHT", -padX, 0)
+        end
         desc:SetText(options.description)
         desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         yOffset = yOffset - desc:GetStringHeight() - 6
     end
 
-    local slider = OneWoW_GUI:CreateSlider(container, options)
-    slider:SetPoint("TOPLEFT", container, "TOPLEFT", 15, yOffset)
+    local sliderOpts = {}
+    for k, v in pairs(options) do
+        sliderOpts[k] = v
+    end
+    if contentWidth > 40 and not options.width then
+        sliderOpts.width = math.max(140, contentWidth - padX * 2)
+    end
+    local slider = OneWoW_GUI:CreateSlider(container, sliderOpts)
+    slider:SetPoint("TOPLEFT", container, "TOPLEFT", padX, yOffset)
     yOffset = yOffset - 40
 
     return yOffset, slider, lbl
 end
 
+local collapsedSettingsCards = {}
 
+local function BeginSettingsCardStack(sc)
+    local cardsHost = CreateFrame("Frame", nil, sc)
+    cardsHost:SetPoint("TOPLEFT", sc, "TOPLEFT", 0, -6)
+    cardsHost:SetPoint("TOPRIGHT", sc, "TOPRIGHT", 0, -6)
 
-local function BuildSearchSettingsSection(sc, db, yOffset)
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = SEARCH, yOffset = yOffset })
-    local searchContainer = BuildContainer(sc, yOffset)
-    local searchY = -10
+    local stack = OneWoW_GUI:CreateCardStack(cardsHost, {
+        getCollapsed = function(key) return collapsedSettingsCards[key] end,
+        setCollapsed = function(key, collapsed) collapsedSettingsCards[key] = collapsed end,
+    })
+    stack._host = cardsHost
+    stack.OnRelayout = function()
+        sc:SetHeight((cardsHost:GetHeight() or 0) + 20)
+    end
+    return stack
+end
 
-    searchY = BuildSliderRow(searchContainer, L["SETTING_SEARCH_HISTORY_LIMIT"], searchY, {
-        description = L["DESC_SEARCH_HISTORY_LIMIT"],
-        minVal = 0, maxVal = 10, step = 1, currentVal = db.global.searchHistoryLimit,
-        onChange = function(val)
-            ApplySetting("searchHistoryLimit", val)
+local function FinishSettingsCardStack(stack, sc)
+    stack:Finish()
+    sc:SetHeight((stack._host:GetHeight() or 0) + 20)
+end
+
+local function PlaceLabeledDropdown(content, y, labelText, dropdownWidth)
+    local lbl = OneWoW_GUI:CreateFS(content, 12)
+    lbl:SetPoint("TOPLEFT", content, "TOPLEFT", 12, y)
+    lbl:SetText(labelText)
+    lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    y = y - 18
+
+    local dd, ddText = OneWoW_GUI:CreateDropdown(content, {
+        width = dropdownWidth,
+        text = "",
+    })
+    dd:SetPoint("TOPLEFT", content, "TOPLEFT", 12, y)
+    return y - 34, dd, ddText
+end
+
+local function BuildCompactGapSlider(parent, y, contentWidth, currentGap, onChange)
+    local padX = 12
+    local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    lbl:SetPoint("TOPLEFT", parent, "TOPLEFT", padX, y)
+    lbl:SetText(L["SETTING_COMPACT_GAP"])
+    lbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    y = y - lbl:GetStringHeight() - 4
+
+    local curIdx = CompactGapToIndex(currentGap)
+    local width = math.max(140, (contentWidth or 200) - padX * 2)
+    local wrap = OneWoW_GUI:CreateSlider(parent, {
+        width = width,
+        minVal = 1,
+        maxVal = #COMPACT_GAP_STEPS,
+        step = 1,
+        currentVal = curIdx,
+        getLabel = function(pos) return string.format("%.1f", CompactGapFromIndex(pos)) end,
+        getValue = function(pos) return CompactGapFromIndex(pos) end,
+        onChange = function(value)
+            onChange(value)
         end,
-        width = 240, fmt = "%d",
     })
-
-    searchY = searchY - 12
-    local crumbDesc = OneWoW_GUI:CreateFS(searchContainer, 12)
-    crumbDesc:SetPoint("TOPLEFT", searchContainer, "TOPLEFT", 15, searchY)
-    crumbDesc:SetPoint("TOPRIGHT", searchContainer, "TOPRIGHT", -15, searchY)
-    crumbDesc:SetJustifyH("LEFT")
-    crumbDesc:SetWordWrap(true)
-    crumbDesc:SetText(L["SEARCH_SHORTCUTS_BREADCRUMB_DESC"])
-    crumbDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    searchY = searchY - 36
-
-    local openBtn = OneWoW_GUI:CreateFitTextButton(searchContainer, {
-        text = L["SEARCH_SHORTCUTS_OPEN_HUB"],
-        height = 28,
-    })
-    openBtn:SetPoint("TOPLEFT", searchContainer, "TOPLEFT", 15, searchY)
-    openBtn:SetScript("OnClick", function()
-        if OneWoW.UI and OneWoW.UI.OpenSearchShortcuts then
-            OneWoW.UI:OpenSearchShortcuts()
-        end
-    end)
-    searchY = searchY - 40
-
-    return FinalizeContainer(searchContainer, searchY, yOffset)
+    wrap:SetPoint("TOPLEFT", parent, "TOPLEFT", padX, y)
+    return y - 40, wrap, lbl
 end
 
 local function BuildGeneralTab(sc, db)
-    local yOffset = -15
+    local stack = BeginSettingsCardStack(sc)
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SETTING_ICON_SIZE"], yOffset = yOffset })
-    local sizeContainer = BuildContainer(sc, yOffset)
-    local sizeY = -12
-    local sizeItems = {
-        { text = SMALL,  value = 1, isActive = (db.global.iconSize == 1) },
-        { text = L["ICON_SIZE_M"],  value = 2, isActive = (db.global.iconSize == 2) },
-        { text = LARGE,  value = 3, isActive = (db.global.iconSize == 3) },
-        { text = L["ICON_SIZE_XL"], value = 4, isActive = (db.global.iconSize == 4) },
+    local ICON_SIZE_OPTIONS = {
+        { value = 1, text = SMALL },
+        { value = 2, text = L["ICON_SIZE_M"] },
+        { value = 3, text = LARGE },
+        { value = 4, text = L["ICON_SIZE_XL"] },
     }
-    local sizeBtns, sizeFinalY = OneWoW_GUI:CreateFitFrameButtons(sizeContainer, {
-        yOffset = sizeY,
-        items = sizeItems,
-        height = 24, gap = 8, marginX = 15, width = 510,
-        onSelect = function(value)
-            ApplySetting("iconSize", value)
-        end,
-    })
-    Settings.sizeBtns = sizeBtns
-    sizeY = sizeFinalY - 8
-    yOffset = FinalizeContainer(sizeContainer, sizeY, yOffset)
+    local function GetIconSizeLabel(val)
+        for _, o in ipairs(ICON_SIZE_OPTIONS) do
+            if o.value == val then return o.text end
+        end
+        return LARGE
+    end
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SETTING_ITEM_SORT"], yOffset = yOffset })
-    local sortContainer = BuildContainer(sc, yOffset)
-    local sortY = -12
-    local itemSortItems = {
-        { text = OFF,        value = "none",    isActive = (db.global.itemSort == "none") },
-        { text = L["SORT_DEFAULT"],    value = "default", isActive = (db.global.itemSort == "default") },
-        { text = NAME,       value = "name",    isActive = (db.global.itemSort == "name") },
-        { text = RARITY,     value = "rarity",  isActive = (db.global.itemSort == "rarity") },
-        { text = L["SORT_ITEM_LEVEL"], value = "ilvl",    isActive = (db.global.itemSort == "ilvl") },
-        { text = TYPE,       value = "type",    isActive = (db.global.itemSort == "type") },
+    local ITEM_SORT_OPTIONS = {
+        { value = "none",    text = OFF },
+        { value = "default", text = L["SORT_DEFAULT"] },
+        { value = "name",    text = NAME },
+        { value = "rarity",  text = RARITY },
+        { value = "ilvl",    text = L["SORT_ITEM_LEVEL"] },
+        { value = "type",    text = TYPE },
     }
-    local itemSortBtns, itemSortFinalY = OneWoW_GUI:CreateFitFrameButtons(sortContainer, {
-        yOffset = sortY,
-        items = itemSortItems,
-        height = 24, gap = 8, marginX = 15, width = 510,
-        onSelect = function(value)
-            ApplySetting("itemSort", value)
-        end,
-    })
-    Settings.itemSortBtns = itemSortBtns
-    sortY = itemSortFinalY - 8
-    yOffset = FinalizeContainer(sortContainer, sortY, yOffset)
+    local function GetItemSortLabel(val)
+        for _, o in ipairs(ITEM_SORT_OPTIONS) do
+            if o.value == val then return o.text end
+        end
+        return OFF
+    end
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_INTEGRATION"], yOffset = yOffset })
-    local intContainer = BuildContainer(sc, yOffset)
-    local intY = -10
+    stack:AddCard("bags:general:display", DISPLAY, function(content, w)
+        local y = 0
+        local controlWidth = math.max(160, (w or 200) - 24)
 
-    intY, _, _ = OneWoW_GUI:CreateToggleRow(intContainer, {
-        yOffset = intY,
-        label = L["SETTING_ENABLE_JUNK_CAT"],
-        description = L["DESC_ENABLE_JUNK_CAT"],
-        isEnabled = true,
-        value = db.global.enableJunkCategory,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("enableJunkCategory", newVal)
-        end,
-    })
+        local iconY, iconDD, iconDDText = PlaceLabeledDropdown(content, y, L["SETTING_ICON_SIZE"], controlWidth)
+        iconDDText:SetText(GetIconSizeLabel(db.global.iconSize))
+        OneWoW_GUI:AttachFilterMenu(iconDD, {
+            searchable = false,
+            buildItems = function() return ICON_SIZE_OPTIONS end,
+            onSelect = function(value, text)
+                iconDDText:SetText(text)
+                ApplySetting("iconSize", value)
+            end,
+            getActiveValue = function()
+                return GetDB().global.iconSize
+            end,
+        })
+        Settings.iconSizeDDText = iconDDText
+        y = iconY - 8
 
-    intY, _, _ = OneWoW_GUI:CreateToggleRow(intContainer, {
-        yOffset = intY,
-        label = L["SETTING_ENABLE_UPGRADE_CAT"],
-        description = L["DESC_ENABLE_UPGRADE_CAT"],
-        isEnabled = true,
-        value = db.global.enableUpgradeCategory,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("enableUpgradeCategory", newVal)
-        end,
-    })
+        local sortY, sortDD, sortDDText = PlaceLabeledDropdown(content, y, L["SETTING_ITEM_SORT"], controlWidth)
+        sortDDText:SetText(GetItemSortLabel(db.global.itemSort))
+        OneWoW_GUI:AttachFilterMenu(sortDD, {
+            searchable = false,
+            buildItems = function() return ITEM_SORT_OPTIONS end,
+            onSelect = function(value, text)
+                sortDDText:SetText(text)
+                ApplySetting("itemSort", value)
+            end,
+            getActiveValue = function()
+                return GetDB().global.itemSort
+            end,
+        })
+        Settings.itemSortDDText = sortDDText
+        y = sortY
 
-    intY, _, _ = OneWoW_GUI:CreateToggleRow(intContainer, {
-        yOffset = intY,
-        label = L["SETTING_SHOW_KEYWORDS_TOOLTIP"],
-        description = L["DESC_SHOW_KEYWORDS_TOOLTIP"],
-        isEnabled = true,
-        value = db.global.showKeywordsInTooltips,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("showKeywordsInTooltips", newVal)
-        end,
-    })
+        return math.max(1, abs(y))
+    end)
 
-    yOffset = FinalizeContainer(intContainer, intY, yOffset)
+    stack:AddCard("bags:general:integration", L["SECTION_INTEGRATION"], function(content, w)
+        local y = 0
 
-    if ns.Masque and ns.Masque.available then
-        yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_MASQUE"], yOffset = yOffset })
-        local masqueContainer = BuildContainer(sc, yOffset)
-        local masqueY = -10
-
-        masqueY, _, _ = OneWoW_GUI:CreateToggleRow(masqueContainer, {
-            yOffset = masqueY,
-            label = L["SETTING_USE_MASQUE"],
-            description = L["DESC_USE_MASQUE"],
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_ENABLE_JUNK_CAT"],
+            description = L["DESC_ENABLE_JUNK_CAT"],
             isEnabled = true,
-            value = db.global.useMasque ~= false,
+            value = db.global.enableJunkCategory,
             onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
             onValueChange = function(newVal)
-                ApplySetting("useMasque", newVal)
+                ApplySetting("enableJunkCategory", newVal)
             end,
         })
 
-        yOffset = FinalizeContainer(masqueContainer, masqueY, yOffset)
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_ENABLE_UPGRADE_CAT"],
+            description = L["DESC_ENABLE_UPGRADE_CAT"],
+            isEnabled = true,
+            value = db.global.enableUpgradeCategory,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("enableUpgradeCategory", newVal)
+            end,
+        })
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_KEYWORDS_TOOLTIP"],
+            description = L["DESC_SHOW_KEYWORDS_TOOLTIP"],
+            isEnabled = true,
+            value = db.global.showKeywordsInTooltips,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("showKeywordsInTooltips", newVal)
+            end,
+        })
+
+        return math.max(1, abs(y))
+    end)
+
+    if ns.Masque and ns.Masque.available then
+        stack:AddCard("bags:general:masque", L["SECTION_MASQUE"], function(content, w)
+            local y = OneWoW_GUI:CreateToggleRow(content, {
+                yOffset = 0,
+                contentWidth = w,
+                label = L["SETTING_USE_MASQUE"],
+                description = L["DESC_USE_MASQUE"],
+                isEnabled = true,
+                value = db.global.useMasque ~= false,
+                onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+                onValueChange = function(newVal)
+                    ApplySetting("useMasque", newVal)
+                end,
+            })
+            return math.max(1, abs(y))
+        end)
     end
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_CAT_PLACEMENT"], yOffset = yOffset })
-    local placeContainer = BuildContainer(sc, yOffset)
-    local placeY = -10
+    stack:AddCard("bags:general:placement", L["SECTION_CAT_PLACEMENT"], function(content, w)
+        local y = 0
 
-    placeY, _, _ = OneWoW_GUI:CreateToggleRow(placeContainer, {
-        yOffset = placeY,
-        label = L["SETTING_MOVE_UPGRADES_TOP"],
-        description = L["DESC_MOVE_UPGRADES_TOP"],
-        isEnabled = true,
-        value = db.global.moveRecentToTop,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("moveRecentToTop", newVal)
-        end,
-    })
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_MOVE_UPGRADES_TOP"],
+            description = L["DESC_MOVE_UPGRADES_TOP"],
+            isEnabled = true,
+            value = db.global.moveRecentToTop,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("moveRecentToTop", newVal)
+            end,
+        })
 
-    placeY, _, _ = OneWoW_GUI:CreateToggleRow(placeContainer, {
-        yOffset = placeY,
-        label = L["SETTING_MOVE_OTHER_BOTTOM"],
-        description = L["DESC_MOVE_OTHER_BOTTOM"],
-        isEnabled = true,
-        value = db.global.moveOtherToBottom,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("moveOtherToBottom", newVal)
-        end,
-    })
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_MOVE_OTHER_BOTTOM"],
+            description = L["DESC_MOVE_OTHER_BOTTOM"],
+            isEnabled = true,
+            value = db.global.moveOtherToBottom,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("moveOtherToBottom", newVal)
+            end,
+        })
 
-    placeY, _, _ = OneWoW_GUI:CreateToggleRow(placeContainer, {
-        yOffset = placeY,
-        label = L["SETTING_PINNED_CATEGORY_SHOWS_WHEN_DISABLED"],
-        description = L["DESC_PINNED_CATEGORY_SHOWS_WHEN_DISABLED"],
-        isEnabled = true,
-        value = db.global.pinnedCategoryShowsWhenDisabled,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("pinnedCategoryShowsWhenDisabled", newVal)
-        end,
-    })
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_PINNED_CATEGORY_SHOWS_WHEN_DISABLED"],
+            description = L["DESC_PINNED_CATEGORY_SHOWS_WHEN_DISABLED"],
+            isEnabled = true,
+            value = db.global.pinnedCategoryShowsWhenDisabled,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("pinnedCategoryShowsWhenDisabled", newVal)
+            end,
+        })
 
-    placeY = BuildSliderRow(placeContainer, L["SETTING_RECENT_DURATION"], placeY, {
-        minVal = 15, maxVal = 600, step = 15, currentVal = db.global.recentItemDuration,
-        onChange = function(val)
-            ApplySetting("recentItemDuration", val)
-        end,
-        width = 240, fmt = "%d",
-    })
+        y = BuildSliderRow(content, L["SETTING_RECENT_DURATION"], y, {
+            padX = 12,
+            contentWidth = w,
+            minVal = 15, maxVal = 600, step = 15, currentVal = db.global.recentItemDuration,
+            onChange = function(val)
+                ApplySetting("recentItemDuration", val)
+            end,
+            fmt = "%d",
+        })
 
-    yOffset = FinalizeContainer(placeContainer, placeY, yOffset)
+        return math.max(1, abs(y))
+    end)
 
-    yOffset = BuildSearchSettingsSection(sc, db, yOffset)
+    stack:AddCard("bags:general:search", SEARCH, function(content, w)
+        local y = BuildSliderRow(content, L["SETTING_SEARCH_HISTORY_LIMIT"], 0, {
+            padX = 12,
+            contentWidth = w,
+            description = L["DESC_SEARCH_HISTORY_LIMIT"],
+            minVal = 0, maxVal = 10, step = 1, currentVal = db.global.searchHistoryLimit,
+            onChange = function(val)
+                ApplySetting("searchHistoryLimit", val)
+            end,
+            fmt = "%d",
+        })
 
-    sc:SetHeight(abs(yOffset) + 40)
+        y = y - 8
+        local crumbDesc = OneWoW_GUI:CreateFS(content, 12)
+        crumbDesc:SetPoint("TOPLEFT", content, "TOPLEFT", 12, y)
+        crumbDesc:SetJustifyH("LEFT")
+        crumbDesc:SetWordWrap(true)
+        if w and w > 40 then
+            crumbDesc:SetWidth(w - 24)
+        else
+            crumbDesc:SetPoint("TOPRIGHT", content, "TOPRIGHT", -12, y)
+        end
+        crumbDesc:SetText(L["SEARCH_SHORTCUTS_BREADCRUMB_DESC"])
+        crumbDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        y = y - (crumbDesc:GetStringHeight() or 14) - 10
+
+        local openLink = OneWoW_GUI:CreateTextLink(content, {
+            text = L["SEARCH_SHORTCUTS_OPEN_HUB"],
+            fontSize = 12,
+            nav = true,
+            onClick = function()
+                if OneWoW.UI and OneWoW.UI.OpenSearchShortcuts then
+                    OneWoW.UI:OpenSearchShortcuts()
+                end
+            end,
+        })
+        openLink:SetPoint("TOPLEFT", content, "TOPLEFT", 12, y)
+        y = y - (openLink:GetHeight() or 14) - 4
+
+        return math.max(1, abs(y))
+    end)
+
+    FinishSettingsCardStack(stack, sc)
 end
 
 local function BuildBagsTab(sc, db)
-    local yOffset = -15
+    local stack = BeginSettingsCardStack(sc)
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = DISPLAY, yOffset = yOffset })
-    local dispContainer = BuildContainer(sc, yOffset)
-    local dispY = -10
+    stack:AddCard("bags:bags:display", DISPLAY, function(content, w)
+        local y = 0
 
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_NEW"],
-        description = L["DESC_SHOW_NEW"],
-        isEnabled = true,
-        value = db.global.showNewItems,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("showNewItems", newVal)
-        end,
-    })
-
-    do
-        local overlayEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", "general")
-        dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
-            yOffset = dispY,
-            label = L["OVERLAY_SECTION"],
-            description = L["DESC_OVERLAY"],
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_NEW"],
+            description = L["DESC_SHOW_NEW"],
             isEnabled = true,
-            value = overlayEnabled,
+            value = db.global.showNewItems,
             onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
             onValueChange = function(newVal)
-                ApplySetting("overlaysEnabled", newVal)
+                ApplySetting("showNewItems", newVal)
             end,
         })
-    end
 
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_SCROLLBAR"],
-        description = L["DESC_SHOW_SCROLLBAR"],
-        isEnabled = true,
-        value = not db.global.hideScrollBar,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("showScrollBar", newVal)
-        end,
-    })
-
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_BAGS_BAR"],
-        description = L["DESC_SHOW_BAGS_BAR"],
-        isEnabled = true,
-        value = db.global.showBagsBar,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("showBagsBar", newVal)
-        end,
-    })
-
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_HIDE_BLIZZARD_BAGS_BAR"],
-        description = L["DESC_HIDE_BLIZZARD_BAGS_BAR"],
-        isEnabled = true,
-        value = db.global.hideBlizzardBagsBar,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("hideBlizzardBagsBar", newVal)
-        end,
-    })
-
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_MONEY_BAR"],
-        description = L["DESC_SHOW_MONEY_BAR"],
-        isEnabled = true,
-        value = db.global.showMoneyBar,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("showMoneyBar", newVal)
-        end,
-    })
-
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_TRACKER_CAP_HIGHLIGHT"],
-        description = L["DESC_TRACKER_CAP_HIGHLIGHT"],
-        isEnabled = true,
-        value = db.global.showCurrencyTrackerCapHighlight,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("showCurrencyTrackerCapHighlight", newVal)
-        end,
-    })
-
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_HEADER_BAR"],
-        description = L["DESC_SHOW_HEADER_BAR"],
-        isEnabled = true,
-        value = db.global.showHeaderBar,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("showHeaderBar", newVal)
-        end,
-    })
-
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_SEARCH_BAR"],
-        description = L["DESC_SHOW_SEARCH_BAR"],
-        isEnabled = true,
-        value = db.global.showSearchBar,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("showSearchBar", newVal)
-        end,
-    })
-
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_ENABLE_EXPAC_FILTER"],
-        description = L["DESC_ENABLE_EXPAC_FILTER"],
-        isEnabled = true,
-        value = db.global.enableExpansionFilter,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("enableExpansionFilter", newVal)
-        end,
-    })
-
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_CAT_HEADERS"],
-        description = L["DESC_SHOW_CAT_HEADERS"],
-        isEnabled = true,
-        value = db.global.showCategoryHeaders,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("showCategoryHeaders", newVal)
-        end,
-    })
-
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_EMPTY_SLOTS"],
-        description = L["DESC_SHOW_EMPTY_SLOTS"],
-        isEnabled = true,
-        value = db.global.showEmptySlots,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("showEmptySlots", newVal)
-        end,
-    })
-
-    dispY = dispY - 6
-
-    dispY = BuildSliderRow(dispContainer, L["SETTING_BAG_COLUMNS"], dispY, {
-        minVal = 10, maxVal = 30, step = 1, currentVal = db.global.bagColumns,
-        onChange = function(val)
-            ApplySetting("bagColumns", val)
-        end,
-        width = 240, fmt = "%d",
-    })
-
-    dispY = BuildSliderRow(dispContainer, L["SETTING_CATEGORY_SPACING"], dispY, {
-        minVal = 0.1, maxVal = 2.0, step = 0.1, currentVal = db.global.categorySpacing,
-        onChange = function(val)
-            ApplySetting("categorySpacing", val)
-        end,
-        width = 240, fmt = "%.1f",
-    })
-
-    yOffset = FinalizeContainer(dispContainer, dispY, yOffset)
-
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = CATEGORIES, yOffset = yOffset })
-    local catContainer = BuildContainer(sc, yOffset)
-    local catY = -10
-
-    catY, _, _ = OneWoW_GUI:CreateToggleRow(catContainer, {
-        yOffset = catY,
-        label = L["SETTING_INVENTORY_SLOTS"],
-        description = L["DESC_INVENTORY_SLOTS"],
-        isEnabled = true,
-        value = db.global.enableInventorySlots,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("enableInventorySlots", newVal)
-        end,
-    })
-
-    catY, _, _ = OneWoW_GUI:CreateToggleRow(catContainer, {
-        yOffset = catY,
-        label = L["SETTING_STACK_ITEMS"],
-        description = L["DESC_STACK_ITEMS"],
-        isEnabled = true,
-        value = db.global.stackItems,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("stackItems", newVal)
-        end,
-    })
-
-    catY, _, _ = OneWoW_GUI:CreateToggleRow(catContainer, {
-        yOffset = catY,
-        label = L["SETTING_COMPACT_CATEGORIES"],
-        description = L["DESC_COMPACT_CATEGORIES"],
-        isEnabled = true,
-        value = db.global.compactCategories,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("compactCategories", newVal)
-        end,
-    })
-
-    do
-        local gapLbl = catContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        gapLbl:SetPoint("TOPLEFT", catContainer, "TOPLEFT", 15, catY)
-        gapLbl:SetText(L["SETTING_COMPACT_GAP"])
-        gapLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        catY = catY - gapLbl:GetStringHeight() - 4
-
-        local curIdx = CompactGapToIndex(db.global.compactGap)
-        local gapSlider = OneWoW_GUI:CreateSlider(catContainer, {
-            minVal = 1, maxVal = #COMPACT_GAP_STEPS, step = 1, currentVal = curIdx,
-            onChange = function(val)
-                local idx = floor(val + 0.5)
-                local realVal = CompactGapFromIndex(idx)
-                ApplySetting("compactGap", realVal)
-            end,
-            width = 240, fmt = "%d",
-        })
-        gapSlider:SetPoint("TOPLEFT", catContainer, "TOPLEFT", 15, catY)
-
-        local slider = gapSlider:GetChildren()
-        if slider then
-            slider:HookScript("OnValueChanged", function(_, val)
-                local idx = floor(val + 0.5)
-                local realVal = CompactGapFromIndex(idx)
-                for _, region in pairs({gapSlider:GetRegions()}) do
-                    if region:IsObjectType("FontString") and region:GetText() then
-                        region:SetText(string.format("%.1f", realVal))
-                        break
-                    end
-                end
-            end)
-            local idx = floor(curIdx + 0.5)
-            C_Timer.After(0, function()
-                for _, region in pairs({gapSlider:GetRegions()}) do
-                    if region:IsObjectType("FontString") and region:GetText() then
-                        region:SetText(string.format("%.1f", CompactGapFromIndex(idx)))
-                        break
-                    end
-                end
-            end)
+        do
+            local overlayEnabled = OneWoW.SettingsFeatureRegistry:IsEnabled("overlays", "general")
+            y = OneWoW_GUI:CreateToggleRow(content, {
+                yOffset = y,
+                contentWidth = w,
+                label = L["OVERLAY_SECTION"],
+                description = L["DESC_OVERLAY"],
+                isEnabled = true,
+                value = overlayEnabled,
+                onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+                onValueChange = function(newVal)
+                    ApplySetting("overlaysEnabled", newVal)
+                end,
+            })
         end
-        catY = catY - 40
-    end
 
-    yOffset = FinalizeContainer(catContainer, catY, yOffset)
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_SCROLLBAR"],
+            description = L["DESC_SHOW_SCROLLBAR"],
+            isEnabled = true,
+            value = not db.global.hideScrollBar,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("showScrollBar", newVal)
+            end,
+        })
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_ITEM_DISPLAY"], yOffset = yOffset })
-    local itemDispContainer = BuildContainer(sc, yOffset)
-    local itemDispY = -10
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_BAGS_BAR"],
+            description = L["DESC_SHOW_BAGS_BAR"],
+            isEnabled = true,
+            value = db.global.showBagsBar,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("showBagsBar", newVal)
+            end,
+        })
 
-    itemDispY, _, _ = OneWoW_GUI:CreateToggleRow(itemDispContainer, {
-        yOffset = itemDispY,
-        label = L["SETTING_UNUSABLE_OVERLAY"],
-        description = L["DESC_UNUSABLE_OVERLAY"],
-        isEnabled = true,
-        value = db.global.showUnusableOverlay,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("showUnusableOverlay", newVal)
-        end,
-    })
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_HIDE_BLIZZARD_BAGS_BAR"],
+            description = L["DESC_HIDE_BLIZZARD_BAGS_BAR"],
+            isEnabled = true,
+            value = db.global.hideBlizzardBagsBar,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("hideBlizzardBagsBar", newVal)
+            end,
+        })
 
-    itemDispY, _, _ = OneWoW_GUI:CreateToggleRow(itemDispContainer, {
-        yOffset = itemDispY,
-        label = L["SETTING_DIM_JUNK"],
-        description = L["DESC_DIM_JUNK"],
-        isEnabled = true,
-        value = db.global.dimJunkItems,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("dimJunkItems", newVal)
-        end,
-    })
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_MONEY_BAR"],
+            description = L["DESC_SHOW_MONEY_BAR"],
+            isEnabled = true,
+            value = db.global.showMoneyBar,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("showMoneyBar", newVal)
+            end,
+        })
 
-    itemDispY, _, _ = OneWoW_GUI:CreateToggleRow(itemDispContainer, {
-        yOffset = itemDispY,
-        label = L["SETTING_STRIP_JUNK_OVERLAYS"],
-        description = L["DESC_STRIP_JUNK_OVERLAYS"],
-        isEnabled = true,
-        value = db.global.stripJunkOverlays,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("stripJunkOverlays", newVal)
-        end,
-    })
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_TRACKER_CAP_HIGHLIGHT"],
+            description = L["DESC_TRACKER_CAP_HIGHLIGHT"],
+            isEnabled = true,
+            value = db.global.showCurrencyTrackerCapHighlight,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("showCurrencyTrackerCapHighlight", newVal)
+            end,
+        })
 
-    itemDispY, _, _ = OneWoW_GUI:CreateToggleRow(itemDispContainer, {
-        yOffset = itemDispY,
-        label = L["SETTING_ALT_TO_SHOW"],
-        description = L["DESC_ALT_TO_SHOW"],
-        isEnabled = true,
-        value = db.global.altToShow,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal) ApplySetting("altToShow", newVal) end,
-    })
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_HEADER_BAR"],
+            description = L["DESC_SHOW_HEADER_BAR"],
+            isEnabled = true,
+            value = db.global.showHeaderBar,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("showHeaderBar", newVal)
+            end,
+        })
 
-    yOffset = FinalizeContainer(itemDispContainer, itemDispY, yOffset)
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_SEARCH_BAR"],
+            description = L["DESC_SHOW_SEARCH_BAR"],
+            isEnabled = true,
+            value = db.global.showSearchBar,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("showSearchBar", newVal)
+            end,
+        })
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = L["SECTION_BEHAVIOR"], yOffset = yOffset })
-    local behContainer = BuildContainer(sc, yOffset)
-    local behY = -10
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_ENABLE_EXPAC_FILTER"],
+            description = L["DESC_ENABLE_EXPAC_FILTER"],
+            isEnabled = true,
+            value = db.global.enableExpansionFilter,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("enableExpansionFilter", newVal)
+            end,
+        })
 
-    behY, _, _ = OneWoW_GUI:CreateToggleRow(behContainer, {
-        yOffset = behY,
-        label = L["SETTING_AUTO_OPEN"],
-        description = L["DESC_AUTO_OPEN"],
-        isEnabled = true,
-        value = db.global.autoOpen,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal) ApplySetting("autoOpen", newVal) end,
-    })
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_CAT_HEADERS"],
+            description = L["DESC_SHOW_CAT_HEADERS"],
+            isEnabled = true,
+            value = db.global.showCategoryHeaders,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("showCategoryHeaders", newVal)
+            end,
+        })
 
-    behY, _, _ = OneWoW_GUI:CreateToggleRow(behContainer, {
-        yOffset = behY,
-        label = L["SETTING_AUTO_CLOSE"],
-        description = L["DESC_AUTO_CLOSE"],
-        isEnabled = true,
-        value = db.global.autoClose,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal) ApplySetting("autoClose", newVal) end,
-    })
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_EMPTY_SLOTS"],
+            description = L["DESC_SHOW_EMPTY_SLOTS"],
+            isEnabled = true,
+            value = db.global.showEmptySlots,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("showEmptySlots", newVal)
+            end,
+        })
 
-    behY, _, _ = OneWoW_GUI:CreateToggleRow(behContainer, {
-        yOffset = behY,
-        label = L["SETTING_AUTO_OPEN_WITH_BANK"],
-        description = L["DESC_AUTO_OPEN_WITH_BANK"],
-        isEnabled = true,
-        value = db.global.autoOpenWithBank,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal) ApplySetting("autoOpenWithBank", newVal) end,
-    })
+        y = y - 6
 
-    behY, _, _ = OneWoW_GUI:CreateToggleRow(behContainer, {
-        yOffset = behY,
-        label = L["SETTING_LOCK"],
-        description = L["DESC_LOCK"],
-        isEnabled = true,
-        value = db.global.locked,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal) ApplySetting("locked", newVal) end,
-    })
+        y = BuildSliderRow(content, L["SETTING_BAG_COLUMNS"], y, {
+            padX = 12,
+            contentWidth = w,
+            minVal = 10, maxVal = 30, step = 1, currentVal = db.global.bagColumns,
+            onChange = function(val)
+                ApplySetting("bagColumns", val)
+            end,
+            fmt = "%d",
+        })
 
-    yOffset = FinalizeContainer(behContainer, behY, yOffset)
+        y = BuildSliderRow(content, L["SETTING_CATEGORY_SPACING"], y, {
+            padX = 12,
+            contentWidth = w,
+            minVal = 0.1, maxVal = 2.0, step = 0.1, currentVal = db.global.categorySpacing,
+            onChange = function(val)
+                ApplySetting("categorySpacing", val)
+            end,
+            fmt = "%.1f",
+        })
 
-    sc:SetHeight(abs(yOffset) + 40)
+        return math.max(1, abs(y))
+    end)
+
+    stack:AddCard("bags:bags:categories", CATEGORIES, function(content, w)
+        local y = 0
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_INVENTORY_SLOTS"],
+            description = L["DESC_INVENTORY_SLOTS"],
+            isEnabled = true,
+            value = db.global.enableInventorySlots,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("enableInventorySlots", newVal)
+            end,
+        })
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_STACK_ITEMS"],
+            description = L["DESC_STACK_ITEMS"],
+            isEnabled = true,
+            value = db.global.stackItems,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("stackItems", newVal)
+            end,
+        })
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_COMPACT_CATEGORIES"],
+            description = L["DESC_COMPACT_CATEGORIES"],
+            isEnabled = true,
+            value = db.global.compactCategories,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("compactCategories", newVal)
+            end,
+        })
+
+        y = BuildCompactGapSlider(content, y, w, db.global.compactGap, function(realVal)
+            ApplySetting("compactGap", realVal)
+        end)
+
+        return math.max(1, abs(y))
+    end)
+
+    stack:AddCard("bags:bags:itemdisplay", L["SECTION_ITEM_DISPLAY"], function(content, w)
+        local y = 0
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_UNUSABLE_OVERLAY"],
+            description = L["DESC_UNUSABLE_OVERLAY"],
+            isEnabled = true,
+            value = db.global.showUnusableOverlay,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("showUnusableOverlay", newVal)
+            end,
+        })
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_DIM_JUNK"],
+            description = L["DESC_DIM_JUNK"],
+            isEnabled = true,
+            value = db.global.dimJunkItems,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("dimJunkItems", newVal)
+            end,
+        })
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_STRIP_JUNK_OVERLAYS"],
+            description = L["DESC_STRIP_JUNK_OVERLAYS"],
+            isEnabled = true,
+            value = db.global.stripJunkOverlays,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("stripJunkOverlays", newVal)
+            end,
+        })
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_ALT_TO_SHOW"],
+            description = L["DESC_ALT_TO_SHOW"],
+            isEnabled = true,
+            value = db.global.altToShow,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal) ApplySetting("altToShow", newVal) end,
+        })
+
+        return math.max(1, abs(y))
+    end)
+
+    stack:AddCard("bags:bags:behavior", L["SECTION_BEHAVIOR"], function(content, w)
+        local y = 0
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_AUTO_OPEN"],
+            description = L["DESC_AUTO_OPEN"],
+            isEnabled = true,
+            value = db.global.autoOpen,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal) ApplySetting("autoOpen", newVal) end,
+        })
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_AUTO_CLOSE"],
+            description = L["DESC_AUTO_CLOSE"],
+            isEnabled = true,
+            value = db.global.autoClose,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal) ApplySetting("autoClose", newVal) end,
+        })
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_AUTO_OPEN_WITH_BANK"],
+            description = L["DESC_AUTO_OPEN_WITH_BANK"],
+            isEnabled = true,
+            value = db.global.autoOpenWithBank,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal) ApplySetting("autoOpenWithBank", newVal) end,
+        })
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_LOCK"],
+            description = L["DESC_LOCK"],
+            isEnabled = true,
+            value = db.global.locked,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal) ApplySetting("locked", newVal) end,
+        })
+
+        return math.max(1, abs(y))
+    end)
+
+    FinishSettingsCardStack(stack, sc)
 end
 
 local MODE_KEYS = {
@@ -806,13 +889,21 @@ local function ResetSharedBankRefreshers()
     sharedApplyEnabledFns = {}
 end
 
+local function BankSectionTitle(keys)
+    if keys.sectionTitle == ACCOUNT_BANK_PANEL_TITLE then
+        return ACCOUNT_BANK_PANEL_TITLE
+    end
+    return L[keys.sectionTitle]
+end
+
 local function BuildBankTabFor(mode, sc, db)
     local keys = MODE_KEYS[mode]
     local dbKeys = keys.db
     local applierKeys = keys.applier
+    local cardPrefix = "bags:bank:" .. mode
 
-    local yOffset = -15
     local dependents = {}
+    local sharedEnableIdx, sharedLockIdx
 
     local function addToggle(refresh, getValue)
         tinsert(dependents, function(enabled)
@@ -845,268 +936,260 @@ local function BuildBankTabFor(mode, sc, db)
     end
     tinsert(sharedApplyEnabledFns, applyEnabled)
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = L[keys.sectionTitle], yOffset = yOffset })
-    local bankTopContainer = BuildContainer(sc, yOffset)
-    local topY = -10
-
-    local enableRefresh
-    topY, enableRefresh = OneWoW_GUI:CreateToggleRow(bankTopContainer, {
-        yOffset = topY,
-        label = L["SETTING_ENABLE_BANK"],
-        description = L["DESC_ENABLE_BANK"],
-        isEnabled = true,
-        value = db.global.enableBankUI,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("enableBankUI", newVal)
-            BroadcastSharedEnable(newVal)
-        end,
-    })
-    tinsert(sharedEnableRefreshers, enableRefresh)
-
-    local lockRefresh
-    topY, lockRefresh = OneWoW_GUI:CreateToggleRow(bankTopContainer, {
-        yOffset = topY,
-        label = L["SETTING_LOCK"],
-        description = L["DESC_BANK_LOCK"],
-        isEnabled = true,
-        value = db.global.bankLocked,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("bankLocked", newVal)
-            BroadcastSharedLock(newVal)
-        end,
-    })
-    tinsert(sharedLockRefreshers, lockRefresh)
-    addToggle(lockRefresh, function() return db.global.bankLocked end)
-
-    yOffset = FinalizeContainer(bankTopContainer, topY, yOffset)
-
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = DISPLAY, yOffset = yOffset })
-    local dispContainer = BuildContainer(sc, yOffset)
-    local dispY = -10
-
-    local overlaysRefresh
-    dispY, overlaysRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_BANK_OVERLAYS"],
-        description = L["DESC_BANK_OVERLAYS"],
-        isEnabled = true,
-        value = db.global[dbKeys.overlays],
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting(applierKeys.overlays, newVal)
-        end,
-    })
-    addToggle(overlaysRefresh, function() return db.global[dbKeys.overlays] end)
-
-    local scrollbarRefresh
-    dispY, scrollbarRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_SCROLLBAR"],
-        description = L["DESC_SHOW_BANK_SCROLLBAR"],
-        isEnabled = true,
-        value = not db.global[dbKeys.hideScrollBar],
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting(applierKeys.showScrollBar, newVal)
-        end,
-    })
-    addToggle(scrollbarRefresh, function() return not db.global[dbKeys.hideScrollBar] end)
-
-    local bagsBarRefresh
-    dispY, bagsBarRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_BANK_BAGS_BAR"],
-        description = L["DESC_SHOW_BANK_BAGS_BAR"],
-        isEnabled = true,
-        value = db.global[dbKeys.showBagsBar],
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting(applierKeys.showBagsBar, newVal)
-        end,
-    })
-    addToggle(bagsBarRefresh, function() return db.global[dbKeys.showBagsBar] end)
-
-    local headerBarRefresh
-    dispY, headerBarRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_HEADER_BAR"],
-        description = L["DESC_SHOW_BANK_HEADER_BAR"],
-        isEnabled = true,
-        value = db.global[dbKeys.showHeaderBar],
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting(applierKeys.showHeaderBar, newVal)
-        end,
-    })
-    addToggle(headerBarRefresh, function() return db.global[dbKeys.showHeaderBar] end)
-
-    local searchBarRefresh
-    dispY, searchBarRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_SEARCH_BAR"],
-        description = L["DESC_SHOW_BANK_SEARCH_BAR"],
-        isEnabled = true,
-        value = db.global[dbKeys.showSearchBar],
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting(applierKeys.showSearchBar, newVal)
-        end,
-    })
-    addToggle(searchBarRefresh, function() return db.global[dbKeys.showSearchBar] end)
-
-    local expacFilterRefresh
-    dispY, expacFilterRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_ENABLE_EXPAC_FILTER"],
-        description = L["DESC_ENABLE_BANK_EXPAC_FILTER"],
-        isEnabled = true,
-        value = db.global[dbKeys.expacFilter],
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting(applierKeys.expacFilter, newVal)
-        end,
-    })
-    addToggle(expacFilterRefresh, function() return db.global[dbKeys.expacFilter] end)
-
-    local catHeadersRefresh
-    dispY, catHeadersRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_CAT_HEADERS"],
-        description = L["DESC_SHOW_BANK_CAT_HEADERS"],
-        isEnabled = true,
-        value = db.global[dbKeys.showCatHeaders],
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting(applierKeys.showCatHeaders, newVal)
-        end,
-    })
-    addToggle(catHeadersRefresh, function() return db.global[dbKeys.showCatHeaders] end)
-
-    local emptySlotsRefresh
-    dispY, emptySlotsRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_EMPTY_SLOTS"],
-        description = L["DESC_SHOW_EMPTY_SLOTS"],
-        isEnabled = true,
-        value = db.global[dbKeys.showEmptySlots],
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting(applierKeys.showEmptySlots, newVal)
-        end,
-    })
-    addToggle(emptySlotsRefresh, function() return db.global[dbKeys.showEmptySlots] end)
-
-    dispY = dispY - 6
-
-    local colSliderContainer, colSliderLbl
-    dispY, colSliderContainer, colSliderLbl = BuildSliderRow(dispContainer, L["SETTING_BANK_COLUMNS"], dispY, {
-        minVal = 15, maxVal = 30, step = 1, currentVal = db.global[dbKeys.columns],
-        onChange = function(val)
-            ApplySetting(applierKeys.columns, val)
-        end,
-        width = 240, fmt = "%d",
-    })
-    addSlider(colSliderContainer, colSliderLbl)
-
-    local spaceSliderContainer, spaceSliderLbl
-    dispY, spaceSliderContainer, spaceSliderLbl = BuildSliderRow(dispContainer, L["SETTING_CATEGORY_SPACING"], dispY, {
-        minVal = 0.1, maxVal = 2.0, step = 0.1, currentVal = db.global[dbKeys.categorySpacing],
-        onChange = function(val)
-            ApplySetting(applierKeys.categorySpacing, val)
-        end,
-        width = 240, fmt = "%.1f",
-    })
-    addSlider(spaceSliderContainer, spaceSliderLbl)
-
-    local compactRefresh
-    dispY, compactRefresh = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_COMPACT_CATEGORIES"],
-        description = L["DESC_COMPACT_CATEGORIES"],
-        isEnabled = true,
-        value = db.global[dbKeys.compactCategories],
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting(applierKeys.compactCategories, newVal)
-        end,
-    })
-    addToggle(compactRefresh, function() return db.global[dbKeys.compactCategories] end)
-
-    do
-        local gapLbl = dispContainer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        gapLbl:SetPoint("TOPLEFT", dispContainer, "TOPLEFT", 15, dispY)
-        gapLbl:SetText(L["SETTING_COMPACT_GAP"])
-        gapLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        dispY = dispY - gapLbl:GetStringHeight() - 4
-
-        local curIdx = CompactGapToIndex(db.global[dbKeys.compactGap])
-        local gapSlider = OneWoW_GUI:CreateSlider(dispContainer, {
-            minVal = 1, maxVal = #COMPACT_GAP_STEPS, step = 1, currentVal = curIdx,
-            onChange = function(val)
-                local idx = floor(val + 0.5)
-                local realVal = CompactGapFromIndex(idx)
-                ApplySetting(applierKeys.compactGap, realVal)
-            end,
-            width = 240, fmt = "%d",
-        })
-        gapSlider:SetPoint("TOPLEFT", dispContainer, "TOPLEFT", 15, dispY)
-
-        local slider = gapSlider:GetChildren()
-        if slider then
-            slider:HookScript("OnValueChanged", function(_, val)
-                local idx = floor(val + 0.5)
-                local realVal = CompactGapFromIndex(idx)
-                for _, region in pairs({gapSlider:GetRegions()}) do
-                    if region:IsObjectType("FontString") and region:GetText() then
-                        region:SetText(string.format("%.1f", realVal))
-                        break
-                    end
-                end
-            end)
-            C_Timer.After(0, function()
-                for _, region in pairs({gapSlider:GetRegions()}) do
-                    if region:IsObjectType("FontString") and region:GetText() then
-                        region:SetText(string.format("%.1f", CompactGapFromIndex(curIdx)))
-                        break
-                    end
-                end
-            end)
-        end
-        addSlider(gapSlider, gapLbl)
-        dispY = dispY - 40
+    local stack = BeginSettingsCardStack(sc)
+    local prevOnRelayout = stack.OnRelayout
+    stack.OnRelayout = function()
+        if prevOnRelayout then prevOnRelayout() end
+        applyEnabled(GetDB().global.enableBankUI and true or false)
     end
 
-    yOffset = FinalizeContainer(dispContainer, dispY, yOffset)
+    stack:AddCard(cardPrefix .. ":top", BankSectionTitle(keys), function(content, w)
+        wipe(dependents)
+        local y = 0
 
+        local enableRefresh
+        y, enableRefresh = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_ENABLE_BANK"],
+            description = L["DESC_ENABLE_BANK"],
+            isEnabled = true,
+            value = db.global.enableBankUI,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("enableBankUI", newVal)
+                BroadcastSharedEnable(newVal)
+            end,
+        })
+        if sharedEnableIdx then
+            sharedEnableRefreshers[sharedEnableIdx] = enableRefresh
+        else
+            tinsert(sharedEnableRefreshers, enableRefresh)
+            sharedEnableIdx = #sharedEnableRefreshers
+        end
+
+        local lockRefresh
+        y, lockRefresh = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_LOCK"],
+            description = L["DESC_BANK_LOCK"],
+            isEnabled = true,
+            value = db.global.bankLocked,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("bankLocked", newVal)
+                BroadcastSharedLock(newVal)
+            end,
+        })
+        if sharedLockIdx then
+            sharedLockRefreshers[sharedLockIdx] = lockRefresh
+        else
+            tinsert(sharedLockRefreshers, lockRefresh)
+            sharedLockIdx = #sharedLockRefreshers
+        end
+        addToggle(lockRefresh, function() return db.global.bankLocked end)
+
+        return math.max(1, abs(y))
+    end)
+
+    stack:AddCard(cardPrefix .. ":display", DISPLAY, function(content, w)
+        local y = 0
+
+        local overlaysRefresh
+        y, overlaysRefresh = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_BANK_OVERLAYS"],
+            description = L["DESC_BANK_OVERLAYS"],
+            isEnabled = true,
+            value = db.global[dbKeys.overlays],
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting(applierKeys.overlays, newVal)
+            end,
+        })
+        addToggle(overlaysRefresh, function() return db.global[dbKeys.overlays] end)
+
+        local scrollbarRefresh
+        y, scrollbarRefresh = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_SCROLLBAR"],
+            description = L["DESC_SHOW_BANK_SCROLLBAR"],
+            isEnabled = true,
+            value = not db.global[dbKeys.hideScrollBar],
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting(applierKeys.showScrollBar, newVal)
+            end,
+        })
+        addToggle(scrollbarRefresh, function() return not db.global[dbKeys.hideScrollBar] end)
+
+        local bagsBarRefresh
+        y, bagsBarRefresh = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_BANK_BAGS_BAR"],
+            description = L["DESC_SHOW_BANK_BAGS_BAR"],
+            isEnabled = true,
+            value = db.global[dbKeys.showBagsBar],
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting(applierKeys.showBagsBar, newVal)
+            end,
+        })
+        addToggle(bagsBarRefresh, function() return db.global[dbKeys.showBagsBar] end)
+
+        local headerBarRefresh
+        y, headerBarRefresh = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_HEADER_BAR"],
+            description = L["DESC_SHOW_BANK_HEADER_BAR"],
+            isEnabled = true,
+            value = db.global[dbKeys.showHeaderBar],
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting(applierKeys.showHeaderBar, newVal)
+            end,
+        })
+        addToggle(headerBarRefresh, function() return db.global[dbKeys.showHeaderBar] end)
+
+        local searchBarRefresh
+        y, searchBarRefresh = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_SEARCH_BAR"],
+            description = L["DESC_SHOW_BANK_SEARCH_BAR"],
+            isEnabled = true,
+            value = db.global[dbKeys.showSearchBar],
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting(applierKeys.showSearchBar, newVal)
+            end,
+        })
+        addToggle(searchBarRefresh, function() return db.global[dbKeys.showSearchBar] end)
+
+        local expacFilterRefresh
+        y, expacFilterRefresh = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_ENABLE_EXPAC_FILTER"],
+            description = L["DESC_ENABLE_BANK_EXPAC_FILTER"],
+            isEnabled = true,
+            value = db.global[dbKeys.expacFilter],
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting(applierKeys.expacFilter, newVal)
+            end,
+        })
+        addToggle(expacFilterRefresh, function() return db.global[dbKeys.expacFilter] end)
+
+        local catHeadersRefresh
+        y, catHeadersRefresh = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_CAT_HEADERS"],
+            description = L["DESC_SHOW_BANK_CAT_HEADERS"],
+            isEnabled = true,
+            value = db.global[dbKeys.showCatHeaders],
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting(applierKeys.showCatHeaders, newVal)
+            end,
+        })
+        addToggle(catHeadersRefresh, function() return db.global[dbKeys.showCatHeaders] end)
+
+        local emptySlotsRefresh
+        y, emptySlotsRefresh = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_SHOW_EMPTY_SLOTS"],
+            description = L["DESC_SHOW_EMPTY_SLOTS"],
+            isEnabled = true,
+            value = db.global[dbKeys.showEmptySlots],
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting(applierKeys.showEmptySlots, newVal)
+            end,
+        })
+        addToggle(emptySlotsRefresh, function() return db.global[dbKeys.showEmptySlots] end)
+
+        y = y - 6
+
+        local colSliderContainer, colSliderLbl
+        y, colSliderContainer, colSliderLbl = BuildSliderRow(content, L["SETTING_BANK_COLUMNS"], y, {
+            padX = 12,
+            contentWidth = w,
+            minVal = 15, maxVal = 30, step = 1, currentVal = db.global[dbKeys.columns],
+            onChange = function(val)
+                ApplySetting(applierKeys.columns, val)
+            end,
+            fmt = "%d",
+        })
+        addSlider(colSliderContainer, colSliderLbl)
+
+        local spaceSliderContainer, spaceSliderLbl
+        y, spaceSliderContainer, spaceSliderLbl = BuildSliderRow(content, L["SETTING_CATEGORY_SPACING"], y, {
+            padX = 12,
+            contentWidth = w,
+            minVal = 0.1, maxVal = 2.0, step = 0.1, currentVal = db.global[dbKeys.categorySpacing],
+            onChange = function(val)
+                ApplySetting(applierKeys.categorySpacing, val)
+            end,
+            fmt = "%.1f",
+        })
+        addSlider(spaceSliderContainer, spaceSliderLbl)
+
+        local compactRefresh
+        y, compactRefresh = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_COMPACT_CATEGORIES"],
+            description = L["DESC_COMPACT_CATEGORIES"],
+            isEnabled = true,
+            value = db.global[dbKeys.compactCategories],
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting(applierKeys.compactCategories, newVal)
+            end,
+        })
+        addToggle(compactRefresh, function() return db.global[dbKeys.compactCategories] end)
+
+        local gapSlider, gapLbl
+        y, gapSlider, gapLbl = BuildCompactGapSlider(content, y, w, db.global[dbKeys.compactGap], function(realVal)
+            ApplySetting(applierKeys.compactGap, realVal)
+        end)
+        addSlider(gapSlider, gapLbl)
+
+        return math.max(1, abs(y))
+    end)
+
+    FinishSettingsCardStack(stack, sc)
     applyEnabled(db.global.enableBankUI)
-
-    sc:SetHeight(abs(yOffset) + 40)
 end
 
 local function BuildGuildBankTab(sc, db)
-    local yOffset = -15
+    local stack = BeginSettingsCardStack(sc)
 
-    yOffset = OneWoW_GUI:CreateSection(sc, { title = GUILD_BANK, yOffset = yOffset })
-    local dispContainer = BuildContainer(sc, yOffset)
-    local dispY = -10
+    stack:AddCard("bags:guild:display", GUILD_BANK, function(content, w)
+        local y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = 0,
+            contentWidth = w,
+            label = L["SETTING_SHOW_EMPTY_SLOTS"],
+            description = L["DESC_SHOW_EMPTY_SLOTS"],
+            isEnabled = true,
+            value = db.global.guildBankShowEmptySlots,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("showGuildBankEmptySlots", newVal)
+            end,
+        })
+        return math.max(1, abs(y))
+    end)
 
-    dispY, _, _ = OneWoW_GUI:CreateToggleRow(dispContainer, {
-        yOffset = dispY,
-        label = L["SETTING_SHOW_EMPTY_SLOTS"],
-        description = L["DESC_SHOW_EMPTY_SLOTS"],
-        isEnabled = true,
-        value = db.global.guildBankShowEmptySlots,
-        onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-        onValueChange = function(newVal)
-            ApplySetting("showGuildBankEmptySlots", newVal)
-        end,
-    })
-
-    yOffset = FinalizeContainer(dispContainer, dispY, yOffset)
-
-    sc:SetHeight(abs(yOffset) + 40)
+    FinishSettingsCardStack(stack, sc)
 end
 
 function Settings:Create()
@@ -1215,21 +1298,31 @@ function Settings:Create()
     return settingsFrame
 end
 
-function Settings:UpdateSizeButtons(btns)
-    if not btns then btns = Settings.sizeBtns end
-    if not btns then return end
-    if btns.SetActiveByValue then
-        local db = GetDB()
-        btns.SetActiveByValue(db.global.iconSize)
+function Settings:UpdateSizeButtons()
+    local db = GetDB()
+    if Settings.iconSizeDDText then
+        local map = {
+            [1] = SMALL,
+            [2] = L["ICON_SIZE_M"],
+            [3] = LARGE,
+            [4] = L["ICON_SIZE_XL"],
+        }
+        Settings.iconSizeDDText:SetText(map[db.global.iconSize] or LARGE)
     end
 end
 
-function Settings:UpdateItemSortButtons(btns)
-    if not btns then btns = Settings.itemSortBtns end
-    if not btns then return end
-    if btns.SetActiveByValue then
-        btns.SetActiveByValue(GetDB().global.itemSort)
-    end
+function Settings:UpdateItemSortButtons()
+    if not Settings.itemSortDDText then return end
+    local sort = GetDB().global.itemSort
+    local map = {
+        none = OFF,
+        default = L["SORT_DEFAULT"],
+        name = NAME,
+        rarity = RARITY,
+        ilvl = L["SORT_ITEM_LEVEL"],
+        type = TYPE,
+    }
+    Settings.itemSortDDText:SetText(map[sort] or OFF)
 end
 
 function Settings:Toggle()
@@ -1258,6 +1351,8 @@ function Settings:Reset()
     isCreated = false
     tabContents = {}
     settingsSectionDropdownText = nil
+    Settings.iconSizeDDText = nil
+    Settings.itemSortDDText = nil
     activeSettingsSection = 1
     ResetSharedBankRefreshers()
 end

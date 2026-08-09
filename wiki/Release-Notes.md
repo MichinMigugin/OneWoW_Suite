@@ -87,6 +87,10 @@
 
 ### Bags
 
+#### Settings
+- Settings sections use collapsible cards across General, Bags, Personal Bank, Warband Bank, and Guild Bank
+- General: Icon Size and Item Sort are dropdowns in a Display card; Open Search Shortcuts is a text link (fixes Recent Item Duration overlapping long descriptions)
+
 #### Sorting
 - Item Level sort orders bags and reagent bags by slot count (same number the Item Level overlay shows), then by your sub-sort
 
