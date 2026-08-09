@@ -6,8 +6,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["ADDON_TITLE"] = "Dépôt Direct",
     ["ADDON_SUBTITLE"] = "Gestion Automatique de l'Or de la Banque de bataillon",
 
-    ["ENABLED"] = "Activé",
-    ["DISABLED"] = "Désactivé",
 
     ["TAB_GOLD"] = "Or",
 
@@ -45,8 +43,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
 
     ["CLEAR"] = "Effacer",
 
-    ["ABOUT_SECTION"] = "À propos de Dépôt Direct",
-    ["ABOUT_TEXT"] = "Dépôt Direct est un addon de qualité de vie de la suite OneWoW. Cet addon est également disponible dans le cadre de la suite complète OneWoW Suite, qui comprend de nombreux autres addons utiles pour améliorer votre expérience World of Warcraft. Découvrez d'autres addons qui peuvent vous aider à organiser vos aventures et à améliorer votre gameplay !",
 
     ["MINIMAP_TOOLTIP_HINT"] = "Cliquez pour afficher les paramètres",
 

@@ -6,8 +6,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["ADDON_TITLE"] = "자동 입금",
     ["ADDON_SUBTITLE"] = "전투부대 은행 골드 자동 관리",
 
-    ["ENABLED"] = "활성화됨",
-    ["DISABLED"] = "비활성화됨",
 
     ["TAB_GOLD"] = "골드",
 
@@ -45,8 +43,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
 
     ["CLEAR"] = "지우기",
 
-    ["ABOUT_SECTION"] = "자동 입금 정보",
-    ["ABOUT_TEXT"] = "자동 입금은 OneWoW Suite의 편의성 애드온입니다. 이 애드온은 또한 World of Warcraft 경험을 향상시키는 많은 다른 유용한 애드온을 포함하는 완전한 OneWoW Suite의 일부로 제공됩니다. 모험을 정리하고 게임 플레이를 개선하는 데 도움이 되는 더 많은 애드온을 찾아보세요!",
 
     ["MINIMAP_TOOLTIP_HINT"] = "클릭하여 설정 전환",
 

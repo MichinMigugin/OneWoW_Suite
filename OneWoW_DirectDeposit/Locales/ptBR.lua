@@ -7,8 +7,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["ADDON_TITLE"] = "Depósito Direto",
     ["ADDON_SUBTITLE"] = "Gerenciamento Automático de Ouro do Banco do Bando de Guerra",
 
-    ["ENABLED"] = "Ativado",
-    ["DISABLED"] = "Desativado",
 
     ["TAB_GOLD"] = "Ouro",
 
@@ -46,8 +44,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
     ["CLEAR"] = "Limpar",
 
-    ["ABOUT_SECTION"] = "Sobre o Depósito Direto",
-    ["ABOUT_TEXT"] = "Depósito Direto é um addon de qualidade de vida do OneWoW Suite. Este addon também está disponível como parte do OneWoW Suite completo, que inclui muitos outros addons úteis para aprimorar sua experiência em World of Warcraft. Descubra mais addons que podem ajudar você a organizar suas aventuras e melhorar sua jogabilidade!",
 
     ["MINIMAP_TOOLTIP_HINT"] = "Clique para alternar as configurações",
 

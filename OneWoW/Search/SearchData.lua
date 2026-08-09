@@ -873,18 +873,6 @@ ns.SearchData = {
         end,
         keywords = {"item deposit", "send to bank", "deposit bag", "bank items", "move to bank"},
     },
-    {
-        path    = function() return L("SRCH_PATH_DD_SETTINGS") end,
-        desc    = function() return L("SRCH_DESC_DD_SETTINGS") end,
-        addonKey = "OneWoW_DirectDeposit", addonLabel = "DirectDeposit",
-        navType = "external",
-        navFunc = function()
-            if OneWoW_DirectDeposit_API then
-                OneWoW_DirectDeposit_API.Toggle()
-            end
-        end,
-        keywords = {"directdeposit settings", "deposit settings", "deposit options"},
-    },
 
     -- ShoppingList
     {

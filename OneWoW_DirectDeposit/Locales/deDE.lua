@@ -6,8 +6,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["ADDON_TITLE"] = "Direkte Einzahlung",
     ["ADDON_SUBTITLE"] = "Automatische Kriegsmeutenbank Gold-Verwaltung",
 
-    ["ENABLED"] = "Aktiviert",
-    ["DISABLED"] = "Deaktiviert",
 
     ["TAB_GOLD"] = "Gold",
 
@@ -45,8 +43,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
     ["CLEAR"] = "Löschen",
 
-    ["ABOUT_SECTION"] = "Über Direkte Einzahlung",
-    ["ABOUT_TEXT"] = "Direkte Einzahlung ist ein Quality-of-Life-Addon aus der OneWoW Suite. Dieses Addon ist auch als Teil der vollständigen OneWoW Suite erhältlich, die viele andere nützliche Addons enthält, um Ihr World of Warcraft-Erlebnis zu verbessern. Entdecken Sie weitere Addons, die Ihnen helfen können, Ihre Abenteuer zu organisieren und Ihr Gameplay zu verbessern!",
 
     ["MINIMAP_TOOLTIP_HINT"] = "Klicken, um Einstellungen umzuschalten",
 

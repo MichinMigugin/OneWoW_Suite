@@ -7,8 +7,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["ADDON_TITLE"] = "直接存款",
     ["ADDON_SUBTITLE"] = "战团银行金币自动管理",
 
-    ["ENABLED"] = "已启用",
-    ["DISABLED"] = "已禁用",
 
     ["TAB_GOLD"] = "金币",
 
@@ -46,8 +44,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
     ["CLEAR"] = "清除",
 
-    ["ABOUT_SECTION"] = "关于直接存款",
-    ["ABOUT_TEXT"] = "直接存款是 OneWoW Suite 中的一款便利性插件。本插件也作为完整 OneWoW Suite 的一部分提供，其中包含许多其他实用插件，可提升你的《魔兽世界》体验。探索更多能帮助你规划冒险、改善游戏体验的插件吧！",
 
     ["MINIMAP_TOOLTIP_HINT"] = "点击以切换设置",
 

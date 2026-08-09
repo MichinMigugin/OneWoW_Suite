@@ -95,6 +95,8 @@
 
 # DirectDeposit
 - Keep Specific Items and Item Auto-Deposit use the same add-by-ID / drag / list chrome as QoL Features; empty lists show “No items”
+- Removed the empty Settings tab (old About text); tabs are Gold, Items, and Keybinds
+- Footer no longer repeats Status Enabled/Disabled (Gold tab already has Enable Direct Deposit)
 
 ---
 

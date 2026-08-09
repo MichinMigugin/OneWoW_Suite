@@ -29,7 +29,6 @@ end
 ---@field pauseBtn table
 ---@field progressText FontString
 ---@field contentArea Frame
----@field statusText FontString
 local MainWindow = nil ---@type DirectDepositMainWindowFrame?
 local isInitialized = false
 local currentTab    = 1
@@ -102,8 +101,7 @@ function GUI:CreateTabSystem(parent)
     local tabDefs = {
         { text = L["TAB_GOLD"],     id = 1 },
         { text = ITEMS,             id = 2 },
-        { text = SETTINGS,          id = 3 },
-        { text = L["TAB_KEYBINDS"], id = 4 },
+        { text = L["TAB_KEYBINDS"], id = 3 },
     }
 
     local prevTab = nil
@@ -164,18 +162,12 @@ function GUI:CreateTabSystem(parent)
 
     tabPanels[1] = GUI:CreateGoldPanel(contentArea)
     tabPanels[2] = GUI:CreateItemsPanel(contentArea)
-    tabPanels[3] = GUI:CreateSettingsPanel(contentArea)
-    tabPanels[4] = GUI:CreateKeybindsPanel(contentArea)
+    tabPanels[3] = GUI:CreateKeybindsPanel(contentArea)
 
     local bottomBar = CreateFrame("Frame", nil, parent)
     bottomBar:SetHeight(36)
     bottomBar:SetPoint("BOTTOMLEFT",  parent, "BOTTOMLEFT",  0, 0)
     bottomBar:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-
-    local statusText = OneWoW_GUI:CreateFS(bottomBar, 12)
-    statusText:SetPoint("LEFT", OneWoW_GUI:GetSpacing("MD"), 0)
-    statusText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    MainWindow.statusText = statusText
 
     local closeBtn = OneWoW_GUI:CreateFitTextButton(bottomBar, { text = CLOSE, height = Constants.GUI.BUTTON_HEIGHT })
     closeBtn:SetPoint("RIGHT", bottomBar, "RIGHT", -OneWoW_GUI:GetSpacing("SM"), 0)
@@ -184,7 +176,6 @@ function GUI:CreateTabSystem(parent)
     end)
 
     GUI:SelectTab(1)
-    GUI:UpdateStatusText()
 end
 
 function GUI:SelectTab(tabID)
@@ -205,8 +196,6 @@ function GUI:SelectTab(tabID)
     for i, panel in ipairs(tabPanels) do
         if i == tabID then panel:Show() else panel:Hide() end
     end
-
-    GUI:UpdateStatusText()
 end
 
 function GUI:CreateGoldPanel(parent)
@@ -231,7 +220,6 @@ function GUI:CreateGoldPanel(parent)
     accountEnabled:SetChecked(GetDB().global.directDeposit.enabled)
     accountEnabled:SetScript("OnClick", function(myself)
         GetDB().global.directDeposit.enabled = myself:GetChecked()
-        GUI:UpdateStatusText()
     end)
     panel.accountEnabled = accountEnabled
     yOffset = yOffset - 30
@@ -803,53 +791,6 @@ function GUI:RefreshExcludeList(panel)
     panel.excludeList:Refresh()
 end
 
-function GUI:CreateSettingsPanel(parent)
-    local panel = CreateFrame("Frame", nil, parent)
-    panel:SetAllPoints()
-    panel:Hide()
-
-    local _, scrollContent = OneWoW_GUI:CreateScrollFrame(panel, {
-        name = "OneWoW_DirectDepositSettings",
-    })
-
-    local yOffset = -15
-
-    local aboutSection = OneWoW_GUI:CreateSectionHeader(scrollContent, {
-        title   = L["ABOUT_SECTION"],
-        yOffset = yOffset,
-    })
-    yOffset = aboutSection.bottomY - 10
-
-    local aboutContainer = OneWoW_GUI:CreateFrame(scrollContent, {
-        backdrop    = BACKDROP_INNER_NO_INSETS,
-        bgColor     = "BG_TERTIARY",
-        borderColor = "BORDER_SUBTLE",
-    })
-    aboutContainer:SetPoint("TOPLEFT",  scrollContent, "TOPLEFT",  20, yOffset)
-    aboutContainer:SetPoint("TOPRIGHT", scrollContent, "TOPRIGHT", -20, yOffset)
-    aboutContainer:SetHeight(120)
-
-    local aboutText = OneWoW_GUI:CreateFS(aboutContainer, 12)
-    aboutText:SetPoint("TOPLEFT",  aboutContainer, "TOPLEFT",  15, -15)
-    aboutText:SetPoint("TOPRIGHT", aboutContainer, "TOPRIGHT", -15, -15)
-    aboutText:SetJustifyH("LEFT")
-    aboutText:SetWordWrap(true)
-    aboutText:SetText(L["ABOUT_TEXT"])
-    aboutText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    aboutText:SetSpacing(3)
-
-    C_Timer.After(0.01, function()
-        aboutContainer:SetHeight(aboutText:GetStringHeight() + 35)
-    end)
-
-    yOffset = yOffset - 140
-
-    scrollContent:SetHeight(math.abs(yOffset) + 40)
-    panel.scrollContent = scrollContent
-
-    return panel
-end
-
 function GUI:CreateKeybindsPanel(parent)
     local panel = CreateFrame("Frame", nil, parent)
     panel:SetAllPoints()
@@ -945,13 +886,6 @@ function GUI:RefreshCurrentTab()
     elseif currentTab == 2 then
         GUI:RefreshItemList(tabPanels[2])
     end
-    GUI:UpdateStatusText()
-end
-
-function GUI:UpdateStatusText()
-    if not MainWindow or not MainWindow.statusText then return end
-    local status = GetDB().global.directDeposit.enabled and L["ENABLED"] or L["DISABLED"]
-    MainWindow.statusText:SetText(STATUS .. ": " .. status)
 end
 
 function GUI:Show()

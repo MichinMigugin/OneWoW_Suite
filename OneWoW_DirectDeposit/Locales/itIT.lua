@@ -7,8 +7,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["ADDON_TITLE"] = "Deposito Diretto",
     ["ADDON_SUBTITLE"] = "Gestione Automatica dell'Oro della Banca della Brigata",
 
-    ["ENABLED"] = "Attivato",
-    ["DISABLED"] = "Disattivato",
 
     ["TAB_GOLD"] = "Oro",
 
@@ -46,8 +44,6 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
     ["CLEAR"] = "Cancella",
 
-    ["ABOUT_SECTION"] = "Informazioni su Deposito Diretto",
-    ["ABOUT_TEXT"] = "Deposito Diretto è un addon per la qualità della vita della OneWoW Suite. Questo addon è disponibile anche come parte della OneWoW Suite completa, che include molti altri addon utili per migliorare la tua esperienza in World of Warcraft. Scopri altri addon che possono aiutarti a organizzare le tue avventure e migliorare il tuo gioco!",
 
     ["MINIMAP_TOOLTIP_HINT"] = "Clicca per aprire le impostazioni",
 

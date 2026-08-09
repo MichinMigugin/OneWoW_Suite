@@ -7,8 +7,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["ADDON_TITLE"] = "直接存款",
     ["ADDON_SUBTITLE"] = "戰隊銀行金幣自動管理",
 
-    ["ENABLED"] = "已啟用",
-    ["DISABLED"] = "已停用",
 
     ["TAB_GOLD"] = "金幣",
 
@@ -46,8 +44,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
     ["CLEAR"] = "清除",
 
-    ["ABOUT_SECTION"] = "關於直接存款",
-    ["ABOUT_TEXT"] = "直接存款是 OneWoW Suite 中的一款便利性插件。本插件也作為完整 OneWoW Suite 的一部分提供，其中包含許多其他實用插件，可提升你的《魔獸世界》體驗。探索更多能幫助你規劃冒險、改善遊戲體驗的插件吧！",
 
     ["MINIMAP_TOOLTIP_HINT"] = "點擊以切換設定",
 

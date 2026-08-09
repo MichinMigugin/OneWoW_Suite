@@ -7,8 +7,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["ADDON_TITLE"] = "Depósito Directo",
     ["ADDON_SUBTITLE"] = "Gestión Automática de Oro del Banco de la banda guerrera",
 
-    ["ENABLED"] = "Habilitado",
-    ["DISABLED"] = "Deshabilitado",
 
     ["TAB_GOLD"] = "Oro",
 
@@ -46,8 +44,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
     ["CLEAR"] = "Limpiar",
 
-    ["ABOUT_SECTION"] = "Acerca de Depósito Directo",
-    ["ABOUT_TEXT"] = "Depósito Directo es un addon de calidad de vida del conjunto OneWoW. Este addon también está disponible como parte del conjunto completo OneWoW Suite, que incluye muchos otros addons útiles para mejorar tu experiencia en World of Warcraft. ¡Descubre más addons que pueden ayudarte a organizar tus aventuras y mejorar tu juego!",
 
     ["MINIMAP_TOOLTIP_HINT"] = "Clic para alternar la configuración",
 

@@ -6,8 +6,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ADDON_TITLE"] = "Direct Deposit",
     ["ADDON_SUBTITLE"] = "Automatic Warband Bank Gold Management",
 
-    ["ENABLED"] = "Enabled",
-    ["DISABLED"] = "Disabled",
 
     ["TAB_GOLD"] = "Gold",
 
@@ -45,8 +43,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["CLEAR"] = "Clear",
 
-    ["ABOUT_SECTION"] = "About Direct Deposit",
-    ["ABOUT_TEXT"] = "Direct Deposit is a quality-of-life addon from the OneWoW Suite. This addon is also available as part of the complete OneWoW Suite, which includes many other useful addons to enhance your World of Warcraft experience. Discover more addons that can help you organize your adventures and improve your gameplay!",
 
     ["MINIMAP_TOOLTIP_HINT"] = "Click to toggle settings",
 
