@@ -83,6 +83,7 @@ Hearthstones.List = {
 	[263489] = true,
 	[263933] = true,
 	[265100] = true,
+	[257736] = true, -- Lightcalled Hearthstone
 }
 
 function Hearthstones:GetAvailable(showAll)

@@ -30,7 +30,8 @@
 - Display Mode is a single dropdown (Name / Name + Type / Full Details) instead of three buttons
 
 #### Portals
-- Added Corewarden's Hearthstone
+- Redesigned Portals settings: always-visible categories with usable/total counts, a Settings page for ESC options, Known/Unknown cards, inline Custom add, and width-based icon wrap
+- ESC Portals only shows portals you can use; added Lightcalled Hearthstone
 
 #### Minimap Button Collector
 - Enhanced OneWoW row icons match Home / Manage Features (including Mail); Core still uses the brand mark

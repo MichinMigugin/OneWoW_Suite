@@ -85,15 +85,29 @@ function OneWoW_GUI:CreateListRowBasic(parent, options)
 
     if showValueText then
         row.valueText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        row.valueText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
         row.valueText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
         row.valueText:SetJustifyH("RIGHT")
         row.valueText:SetText(valueText)
     end
 
+    -- Right-edge stack: dot (outer) → favorite → valueText → label.
+    if row.valueText then
+        if row.favoriteBtn then
+            row.valueText:SetPoint("RIGHT", row.favoriteBtn, "LEFT", -6, 0)
+        elseif row.favoriteGlyph then
+            row.valueText:SetPoint("RIGHT", row.favoriteGlyph, "LEFT", -6, 0)
+        elseif row.dot then
+            row.valueText:SetPoint("RIGHT", row.dot, "LEFT", -6, 0)
+        else
+            row.valueText:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+        end
+    end
+
     row.label = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     row.label:SetPoint("LEFT", row, "LEFT", 10, 0)
-    if showDot then
+    if row.valueText then
+        row.label:SetPoint("RIGHT", row.valueText, "LEFT", -4, 0)
+    elseif showDot then
         local labelRightPad = -24
         if row.favoriteBtn then
             labelRightPad = -48
@@ -101,8 +115,6 @@ function OneWoW_GUI:CreateListRowBasic(parent, options)
             labelRightPad = -40
         end
         row.label:SetPoint("RIGHT", row, "RIGHT", labelRightPad, 0)
-    elseif showValueText and row.valueText then
-        row.label:SetPoint("RIGHT", row.valueText, "LEFT", -4, 0)
     else
         row.label:SetPoint("RIGHT", row, "RIGHT", -10, 0)
     end
@@ -138,15 +150,6 @@ function OneWoW_GUI:CreateListRowBasic(parent, options)
 
     if onClick then
         row:SetScript("OnClick", function(myself) onClick(myself) end)
-    end
-
-    if row.favoriteBtn and row.valueText then
-        row.valueText:ClearAllPoints()
-        row.valueText:SetPoint("RIGHT", row.favoriteBtn, "LEFT", -6, 0)
-        row.label:ClearAllPoints()
-        row.label:SetPoint("LEFT", row, "LEFT", 10, 0)
-        row.label:SetPoint("RIGHT", row.valueText, "LEFT", -4, 0)
-        row.label:SetJustifyH("LEFT")
     end
 
     return row

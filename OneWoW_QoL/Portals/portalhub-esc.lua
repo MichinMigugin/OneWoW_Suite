@@ -225,7 +225,8 @@ end
 function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 	local ph = OneWoW:GetPortalHub()
 	if not ph or not ph.escPortalsEnabled then return end
-	local showAll = ph.showAllOnEsc or false
+	-- ESC never lists portals the player cannot use (showAllOnEsc ignored).
+	local showAll = false
 	local flyoutOrient = growLeft and "LEFT" or "RIGHT"
 	local yOffset = 0
 	local xOffset = 0
@@ -233,27 +234,27 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 	if not ns.PortalHubFlyouts then return end
 
 	local hearthButtons = {}
-	if ph.showHearthstone ~= false or showAll then
+	if ph.showHearthstone ~= false then
 		local hsType = ph.randomHearthstone and "randomhearth" or "item"
 		table.insert(hearthButtons, {type = hsType, id = 6948})
 	end
 	if ph.showDalaranHearth ~= false then
-		if showAll or (PlayerHasToy(140192) and C_QuestLog.IsQuestFlaggedCompleted(44663)) then
+		if PlayerHasToy(140192) and C_QuestLog.IsQuestFlaggedCompleted(44663) then
 			table.insert(hearthButtons, {type = "toy", id = 140192})
 		end
 	end
 	if ph.showGarrisonHearth ~= false then
-		if showAll or (PlayerHasToy(110560) and C_QuestLog.IsQuestFlaggedCompleted(34378)) then
+		if PlayerHasToy(110560) and C_QuestLog.IsQuestFlaggedCompleted(34378) then
 			table.insert(hearthButtons, {type = "toy", id = 110560})
 		end
 	end
 	if ph.showFlightWhistle ~= false then
-		if showAll or C_Item.GetItemCount(141605) > 0 or PlayerHasToy(141605) then
+		if C_Item.GetItemCount(141605) > 0 or PlayerHasToy(141605) then
 			table.insert(hearthButtons, {type = "item", id = 141605})
 		end
 	end
 	if ph.showHousingPortal ~= false then
-		local housingPortal = ns.PortalHubDetection:GetHousingPortal(showAll)
+		local housingPortal = ns.PortalHubDetection:GetHousingPortal(false)
 		if housingPortal then
 			table.insert(hearthButtons, housingPortal)
 		end
@@ -275,10 +276,9 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 			table.insert(favAvailable, fav)
 		end
 	end
-	if #favAvailable > 0 or showAll then
-		local displayFav = #favAvailable > 0 and favAvailable or {{type = "spell", id = 6948}}
+	if #favAvailable > 0 then
 		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
-			parent, 1506458, iconSize, 0, yOffset, displayFav, flyoutOrient, "Fav", growLeft
+			parent, 1506458, iconSize, 0, yOffset, favAvailable, flyoutOrient, "Fav", growLeft
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)
@@ -299,10 +299,9 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 	for _, p in ipairs(covenant) do table.insert(allAbilities, p) end
 	for _, p in ipairs(racial) do table.insert(allAbilities, p) end
 
-	if #allAbilities > 0 or showAll then
-		local displayAbilities = #allAbilities > 0 and allAbilities or {{type = "spell", id = 556}}
+	if #allAbilities > 0 then
 		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
-			parent, "Interface\\Icons\\Achievement_BG_winAB_underXminutes", iconSize, 0, yOffset, displayAbilities, flyoutOrient, "Abilities", growLeft
+			parent, "Interface\\Icons\\Achievement_BG_winAB_underXminutes", iconSize, 0, yOffset, allAbilities, flyoutOrient, "Abilities", growLeft
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)
@@ -317,10 +316,9 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 	for _, r in ipairs(rippers) do table.insert(allEng, r) end
 	for _, t in ipairs(transporters) do table.insert(allEng, t) end
 	for _, o in ipairs(engOther) do table.insert(allEng, o) end
-	if #allEng > 0 or showAll then
-		local displayEng = #allEng > 0 and allEng or {{type = "toy", id = 48933}}
+	if #allEng > 0 then
 		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
-			parent, "Interface\\Icons\\Trade_Engineering", iconSize, 0, yOffset, displayEng, flyoutOrient, "Prof", growLeft
+			parent, "Interface\\Icons\\Trade_Engineering", iconSize, 0, yOffset, allEng, flyoutOrient, "Prof", growLeft
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)
@@ -331,11 +329,10 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 	local allMage = {}
 	for _, t in ipairs(mageT) do table.insert(allMage, t) end
 	for _, p in ipairs(mageP) do table.insert(allMage, p) end
-	if #allMage > 0 or showAll then
+	if #allMage > 0 then
 		local icon = C_Spell.GetSpellTexture(3561) or 237509
-		local displayMage = #allMage > 0 and allMage or {{type = "spell", id = 3561}}
 		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
-			parent, icon, iconSize, 0, yOffset, displayMage, flyoutOrient, "Mage", growLeft
+			parent, icon, iconSize, 0, yOffset, allMage, flyoutOrient, "Mage", growLeft
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)
@@ -358,7 +355,7 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 
 		local hasDungeons = false
 		for _, exp in ipairs(dungeonExpansions) do
-			if #exp.portals > 0 or (showAll and exp.id == "mid") then
+			if #exp.portals > 0 then
 				hasDungeons = true
 				break
 			end
@@ -384,7 +381,7 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 
 		local hasRaids = false
 		for _, exp in ipairs(raidExpansions) do
-			if #exp.portals > 0 or (showAll and exp.id == "mid") then
+			if #exp.portals > 0 then
 				hasRaids = true
 				break
 			end
@@ -398,23 +395,21 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 	end
 
 	local showSeasonal = OneWoW:GetPortalHub().showSeasonal ~= false
-	local seasonPortals = ns.PortalHubDetection:GetCurrentSeasonPortals(showAll or showSeasonal)
-	if (#seasonPortals > 0) then
-		local displaySeason = #seasonPortals > 0 and seasonPortals or {{type = "spell", id = 1254400}}
+	local seasonPortals = showSeasonal and ns.PortalHubDetection:GetCurrentSeasonPortals(false) or {}
+	if #seasonPortals > 0 then
 		local seasonIcon = C_Spell.GetSpellTexture(1254400) or "Interface\\Icons\\Achievement_Boss_Archaedas"
 		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
-			parent, seasonIcon, iconSize, 0, yOffset, displaySeason, flyoutOrient, "S.1", growLeft
+			parent, seasonIcon, iconSize, 0, yOffset, seasonPortals, flyoutOrient, "S.1", growLeft
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)
 	end
 
 	if ns.PortalHubItems then
-		local allItems = ns.PortalHubItems:GetAllItems(showAll, true)
-		if #allItems > 0 or showAll then
-			local displayItems = #allItems > 0 and allItems or {{type = "item", id = 6948}}
+		local allItems = ns.PortalHubItems:GetAllItems(false, true)
+		if #allItems > 0 then
 			local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
-				parent, "Interface\\Icons\\INV_Misc_Bag_10", iconSize, 0, yOffset, displayItems, flyoutOrient, "Items", growLeft
+				parent, "Interface\\Icons\\INV_Misc_Bag_10", iconSize, 0, yOffset, allItems, flyoutOrient, "Items", growLeft
 			)
 			table.insert(flyoutButtons, button)
 			yOffset = yOffset - (iconSize + iconGap)
