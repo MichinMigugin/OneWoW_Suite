@@ -2526,9 +2526,11 @@ local function BuildOverlayList(split)
 end
 
 function ns.UI.CreateOverlaysTab(parent)
-    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_HINT"] })
-    split.listTitle:SetText(L["OVERLAYS_LIST_TITLE"])
-    split.detailTitle:SetText(L["OVERLAYS_DETAIL_TITLE"])
+    local split = OneWoW_GUI:CreateSplitPanel(parent, {
+        showSearch = true,
+        searchPlaceholder = L["SEARCH_HINT"],
+        hideTitles = true,
+    })
 
     CreateSidePreviewPanel(split)
 

@@ -359,9 +359,8 @@ function ns.UI.CreateToastAlertsTab(parent)
     local split = OneWoW_GUI:CreateSplitPanel(parent, {
         showSearch = true,
         searchPlaceholder = L["SEARCH_HINT"],
+        hideTitles = true,
     })
-    split.listTitle:SetText(L["TOAST_ALERTS_LIST_TITLE"])
-    split.detailTitle:SetText(L["TOAST_ALERTS_DETAIL_TITLE"])
 
     C_Timer.After(0.1, function()
         BuildFeatureList(split, "toastalerts")

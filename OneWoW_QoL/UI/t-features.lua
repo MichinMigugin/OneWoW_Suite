@@ -642,11 +642,9 @@ function ns.UI.CreateFeaturesTab(parent)
     local split = OneWoW_GUI:CreateSplitPanel(parent, {
         showSearch = true,
         searchPlaceholder = L["SEARCH_HINT"],
+        hideTitles = true,
     })
     ns.UI._featuresSplit = split
-
-    split.listTitle:SetText(L["FEATURES_LIST_TITLE"])
-    split.detailTitle:SetText(L["FEATURES_DETAIL_TITLE"])
 
     if split.searchBox then
         split.searchBox:SetScript("OnTextChanged", function(self)

@@ -1517,9 +1517,11 @@ function ns.UI.SelectTooltipFeature(featureId)
 end
 
 function ns.UI.CreateTooltipsTab(parent)
-    local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_HINT"] })
-    split.listTitle:SetText(L["TOOLTIPS_LIST_TITLE"])
-    split.detailTitle:SetText(L["TOOLTIPS_DETAIL_TITLE"])
+    local split = OneWoW_GUI:CreateSplitPanel(parent, {
+        showSearch = true,
+        searchPlaceholder = L["SEARCH_HINT"],
+        hideTitles = true,
+    })
     ns.UI._tooltipsSplit = split
 
     C_Timer.After(0.1, function()

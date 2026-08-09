@@ -530,10 +530,8 @@ function ns.UI.CreateTogglesTab(parent)
     local split = OneWoW_GUI:CreateSplitPanel(parent, {
         showSearch = true,
         searchPlaceholder = L["SEARCH_HINT"],
+        hideTitles = true,
     })
-
-    split.listTitle:SetText(L["TOGGLES_LIST_TITLE"])
-    split.detailTitle:SetText(L["TOGGLES_DETAIL_TITLE"])
 
     if split.searchBox then
         split.searchBox:SetScript("OnTextChanged", function(self)
