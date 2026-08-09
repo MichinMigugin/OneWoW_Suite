@@ -1,6 +1,7 @@
 local OneWoW_GUI = OneWoW_GUI
 
 local CreateFrame = CreateFrame
+local C_Timer = C_Timer
 local ipairs, math_floor, math_max = ipairs, math.floor, math.max
 local strlower, strfind = strlower, string.find
 local tinsert = tinsert
@@ -59,11 +60,16 @@ function OneWoW_GUI:CreateCard(parent, options)
     content:SetHeight(1)
     card.content = content
 
+    -- Clip content when collapsed instead of Hide(): hiding can zero content
+    -- width, so wrapped FontStrings reflow on re-show while absolute points stay.
+    card:SetClipsChildren(true)
+    header:SetFrameLevel(card:GetFrameLevel() + 2)
+
     local function UpdateArrow()
         if card.collapsed then
-            arrow:SetAtlas("UI-HUD-ActionBar-PageNextButton-Up", false)
-        else
             arrow:SetAtlas("UI-HUD-ActionBar-PageDownArrow-Up", false)
+        else
+            arrow:SetAtlas("UI-HUD-ActionBar-PageUpArrow-Up", false)
         end
     end
     UpdateArrow()
@@ -75,12 +81,13 @@ function OneWoW_GUI:CreateCard(parent, options)
     --- Size the card to its content (or to the header alone when collapsed).
     function card:SetContentHeight(h)
         self._contentHeight = h
+        self.content:Show()
+        self.content:SetHeight(h)
         if self.collapsed then
-            self.content:Hide()
+            self.content:EnableMouse(false)
             self:SetHeight(headerHeight + 2)
         else
-            self.content:Show()
-            self.content:SetHeight(h)
+            self.content:EnableMouse(true)
             self:SetHeight(headerHeight + padTop + h + padBottom)
         end
     end
@@ -124,22 +131,104 @@ function OneWoW_GUI:CreateCardStack(parent, options)
     local marginX = options.marginX or 4
     local startY = options.startY or -6
     local gap = options.gap or 8
+    local padX, padTop = 10, 8
 
-    local parentWidth = parent:GetWidth()
-    if not parentWidth or parentWidth < 100 then parentWidth = 400 end
-    -- side margins + card border + card content padding
-    stack.contentWidth = parentWidth - (marginX * 2) - 22
+    --- Live host width from the stack parent or its parent (detail scroll child).
+    local function resolveHostContentWidth()
+        local w = parent:GetWidth() or 0
+        if w < 100 then
+            local hostParent = parent.GetParent and parent:GetParent()
+            if hostParent and hostParent.GetWidth then
+                w = hostParent:GetWidth() or 0
+            end
+        end
+        if w < 100 then
+            return nil
+        end
+        local cw = w - (marginX * 2) - 22
+        if cw < 50 then
+            return nil
+        end
+        return cw
+    end
+
+    -- Seed from live width when available; otherwise a temporary fallback used
+    -- only until Finish/OnSizeChanged can resolve the real host width.
+    stack.contentWidth = resolveHostContentWidth() or (400 - (marginX * 2) - 22)
+    stack._builtAtWidth = nil
+
+    --- Resolve wrap width for builders. Prefer live content stretch once the
+    --- host has a real width; otherwise pin to stack.contentWidth so metrics
+    --- are not a collapsed zero-width column.
+    local function prepareCardContent(card, cw)
+        local content = card.content
+        content:ClearAllPoints()
+        content:SetPoint("TOPLEFT", card.header, "BOTTOMLEFT", padX, -padTop)
+        content:SetPoint("TOPRIGHT", card.header, "BOTTOMRIGHT", -padX, -padTop)
+        local measured = content:GetWidth() or 0
+        if measured >= 50 then
+            return measured
+        end
+        content:ClearAllPoints()
+        content:SetPoint("TOPLEFT", card.header, "BOTTOMLEFT", padX, -padTop)
+        content:SetWidth(cw)
+        return cw
+    end
+
+    function stack:EnsureContentWidth()
+        local cw = resolveHostContentWidth()
+        if not cw then
+            return false
+        end
+        self.contentWidth = cw
+        return true
+    end
+
+    function stack:SyncContentWidth()
+        local cw = resolveHostContentWidth()
+        if not cw then
+            return false
+        end
+        if math.abs(cw - self.contentWidth) < 2 then
+            return false
+        end
+        self.contentWidth = cw
+        return true
+    end
 
     function stack:Relayout()
         local y = startY
-        for _, frame in ipairs(self.items) do
+        local n = #self.items
+        for i, frame in ipairs(self.items) do
             frame:ClearAllPoints()
             frame:SetPoint("TOPLEFT", self.parent, "TOPLEFT", marginX, y)
             frame:SetPoint("TOPRIGHT", self.parent, "TOPRIGHT", -marginX, y)
-            y = y - frame:GetHeight() - gap
+            y = y - frame:GetHeight()
+            -- Gap only between cards — trailing gap + bottom pad used to inflate
+            -- nested hosts (e.g. Features toggle cardsHost → CreateCustomDetail).
+            if i < n then
+                y = y - gap
+            end
         end
-        self.parent:SetHeight(math.abs(y) + 10)
+        self.parent:SetHeight(math.abs(y))
         if self.OnRelayout then self.OnRelayout() end
+    end
+
+    --- Rebuild card bodies for the current contentWidth (wrap + control stretch).
+    function stack:ReflowContents()
+        local cw = self.contentWidth
+        for _, frame in ipairs(self.items) do
+            local build = frame._cardBuild
+            if build then
+                OneWoW_GUI:ClearFrame(frame.content)
+                local useW = prepareCardContent(frame, cw)
+                frame:SetContentHeight(build(frame.content, useW) or 1)
+                frame._needsBuild = false
+            end
+        end
+        self._builtAtWidth = cw
+        self:Relayout()
+        OneWoW_GUI:ApplyFontToFrame(self.parent)
     end
 
     function stack:AddFrame(frame)
@@ -158,14 +247,80 @@ function OneWoW_GUI:CreateCardStack(parent, options)
                 stack:Relayout()
             end,
         })
+        card._cardBuild = build
         self:AddFrame(card)
-        card:SetContentHeight(build(card.content, self.contentWidth) or 1)
+        -- Only build when the host already has a real width. Building against the
+        -- fallback width then reflowing one frame later is what flashed on select.
+        if self:EnsureContentWidth() then
+            local useW = prepareCardContent(card, self.contentWidth)
+            card:SetContentHeight(build(card.content, useW) or 1)
+            card._needsBuild = false
+            self._builtAtWidth = self.contentWidth
+        else
+            card:SetContentHeight(1)
+            card._needsBuild = true
+        end
         return card
     end
 
     function stack:Finish()
-        self:Relayout()
-        OneWoW_GUI:ApplyFontToFrame(self.parent)
+        local function paint(reveal)
+            if not self.parent or not self.parent.GetWidth then
+                return
+            end
+            local hadWidth = self:EnsureContentWidth()
+            local needsBuild = false
+            for _, frame in ipairs(self.items) do
+                if frame._needsBuild then
+                    needsBuild = true
+                    break
+                end
+            end
+            local widthDrift = self._builtAtWidth
+                and math.abs(self._builtAtWidth - self.contentWidth) >= 2
+            if hadWidth and (needsBuild or widthDrift or not self._builtAtWidth) then
+                self:ReflowContents()
+            else
+                self:Relayout()
+                OneWoW_GUI:ApplyFontToFrame(self.parent)
+            end
+            if reveal then
+                self.parent:SetAlpha(1)
+            end
+        end
+
+        if self:EnsureContentWidth() then
+            paint(false)
+        else
+            -- Hide until the scroll child has a width so we never show the fallback layout.
+            self.parent:SetAlpha(0)
+            C_Timer.After(0, function()
+                paint(true)
+            end)
+        end
+
+        if not self._widthHooked then
+            self._widthHooked = true
+            local pending
+            local function scheduleReflow()
+                if pending then return end
+                pending = true
+                C_Timer.After(0.05, function()
+                    pending = false
+                    if not self.parent or not self.parent.GetWidth then return end
+                    if self:SyncContentWidth() then
+                        self:ReflowContents()
+                    end
+                end)
+            end
+            self.parent:HookScript("OnSizeChanged", scheduleReflow)
+            -- Detail hosts often get width via the scroll child one level up;
+            -- the stack parent may not see OnSizeChanged until after that.
+            local hostParent = self.parent.GetParent and self.parent:GetParent()
+            if hostParent and hostParent.HookScript then
+                hostParent:HookScript("OnSizeChanged", scheduleReflow)
+            end
+        end
     end
 
     return stack

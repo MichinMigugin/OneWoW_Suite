@@ -21,7 +21,7 @@ Six rules govern OneWoW UI code:
 ## Authoritative sources
 
 1. `OneWoW/Docs/GUI.md` — component catalog, backdrop templates, GUI dimension keys, media asset policy, icon skinning, dropdown/menu helpers. Read first to find an existing helper before considering raw widgets.
-2. `OneWoW/GUI/Buttons.lua`, `EditBoxes.lua`, `Controls.lua`, `Layout.lua`, `Panels.lua`, `Display.lua`, `Icons.lua`, `Settings.lua`, `Fonts.lua`, `ReorderDrag.lua` — implementations. Read when uncertain about a helper's option contract. Shared appearance settings UI lives in hub `OneWoW/UI/settings-shared-panel.lua` (not stamped into suite units).
+2. `OneWoW/GUI/Buttons.lua`, `EditBoxes.lua`, `Controls.lua`, `Layout.lua`, `Cards.lua`, `Panels.lua`, `Display.lua`, `Icons.lua`, `Settings.lua`, `Fonts.lua`, `ReorderDrag.lua` — implementations. Read when uncertain about a helper's option contract. Shared appearance settings UI lives in hub `OneWoW/UI/settings-shared-panel.lua` (not stamped into suite units).
 3. `OneWoW/GUI/Constants.lua` — `BACKDROP_*` templates, `GUI.*` dimension defaults, `MEDIA_BASE` / `ICON_TEXTURES`, `THEMES` table (semantic color keys). Theme color keys live here.
 4. `OneWoW/GUI/OneWoW_GUI.lua` — `GetThemeColor`, `RegisterGUIConstants`, `GetSetting`, `SetSetting`, theme application logic.
 
@@ -52,7 +52,8 @@ OneWoW_GUI:CreateFrame(parent, {
 
 OneWoW_GUI:CreateFitTextButton(parent, { text = L.SAVE, height = 24 })
 OneWoW_GUI:CreateScrollFrame(parent, { name = "MyScroll" })
-OneWoW_GUI:CreateSectionHeader(parent, { title = L.SECTION, yOffset = 0 })
+OneWoW_GUI:CreateCardStack(parent, { getCollapsed = ..., setCollapsed = ... })  -- settings sections
+OneWoW_GUI:CreateSectionHeader(parent, { title = L.SECTION, yOffset = 0 })     -- legacy banded header
 OneWoW_GUI:CreateEditBox(parent, { placeholderText = L.SEARCH, width = 200 })
 OneWoW_GUI:CreateSkinnedIcon(parent, { itemID = 12345, showCount = true, count = 5 })
 ```

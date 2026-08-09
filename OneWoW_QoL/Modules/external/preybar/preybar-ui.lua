@@ -384,47 +384,94 @@ function PreyBarModule:Refresh()
     end
 end
 
+-- Session-only collapse for the Sample Bar card (cleared on /reload).
+local collapsedSampleCards = {}
+
 -- ---- Settings-panel detail (drives the sample bar) ----
---- Rendered inside the QoL feature detail panel. Shows a positioning hint and
---- starts the sample-bar preview; preview ends when the panel closes.
----@param parent table detail scroll child
+--- Rendered inside the QoL feature detail panel. Sample hint + opacity live in a
+--- card so wrap width is available at build time (loose TOPLEFT/TOPRIGHT on the
+--- belowHost truncated and then exploded on detail OnSizeChanged).
+---@param parent table detail scroll child or Features belowHost
 ---@param yOffset number
 ---@return number yOffset
-function PreyBarModule:CreateCustomDetail(parent, yOffset)
+function PreyBarModule:CreateCustomDetail(parent, yOffset, _, registerRefresh)
+    local cardsHost = CreateFrame("Frame", nil, parent)
+    cardsHost:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
+    cardsHost:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, yOffset)
 
-    local hint = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    hint:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    hint:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
-    hint:SetJustifyH("LEFT")
-    hint:SetWordWrap(true)
-    hint:SetSpacing(3)
-    hint:SetText(L["PREYBAR_SETTINGS_HINT"])
-    hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    yOffset = yOffset - hint:GetStringHeight() - 10
-
-    local opacityPct = math.floor(self:GetOpacity() * 100 + 0.5)
-    local opacityLabel = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    opacityLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    opacityLabel:SetText(string.format(L["PREYBAR_OPACITY_FMT"], opacityPct))
-    opacityLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    yOffset = yOffset - opacityLabel:GetStringHeight() - 4
-
-    local opacitySlider = OneWoW_GUI:CreateSlider(parent, {
-        width      = 220,
-        minVal     = 10,
-        maxVal     = 100,
-        step       = 5,
-        currentVal = opacityPct,
-        fmt        = "%d%%",
-        onChange   = function(val)
-            self:SetOpacity(val / 100)
-            opacityLabel:SetText(string.format(L["PREYBAR_OPACITY_FMT"], val))
-        end,
+    local stack = OneWoW_GUI:CreateCardStack(cardsHost, {
+        getCollapsed = function(key) return collapsedSampleCards[key] end,
+        setCollapsed = function(key, collapsed) collapsedSampleCards[key] = collapsed end,
     })
-    opacitySlider:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    yOffset = yOffset - 36 - 10
+
+    local function applyHostHeight()
+        local h = math.max(1, cardsHost:GetHeight())
+        if parent.UpdateDetailHeight then
+            -- Features belowHost under Module Toggles cards.
+            parent:SetHeight(h)
+            parent.UpdateDetailHeight()
+        else
+            parent:SetHeight(math.abs(yOffset) + h + 20)
+            if parent.updateThumb then
+                parent.updateThumb()
+            end
+        end
+    end
+    stack.OnRelayout = applyHostHeight
+
+    stack:AddCard("preybar:sample", L["PREYBAR_SAMPLE_BAR_HEADER"], function(content, contentWidth)
+        local gap = 10
+        local hint = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        hint:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+        hint:SetJustifyH("LEFT")
+        hint:SetWordWrap(true)
+        hint:SetSpacing(3)
+        local w = tonumber(contentWidth) or 0
+        if w < 1 then
+            w = content:GetWidth() or 0
+        end
+        if w >= 1 then
+            hint:SetWidth(w)
+        else
+            hint:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, 0)
+        end
+        hint:SetText(L["PREYBAR_SETTINGS_HINT"])
+        hint:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+        local opacityPct = math.floor(self:GetOpacity() * 100 + 0.5)
+        local opacityLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        opacityLabel:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -gap)
+        opacityLabel:SetText(string.format(L["PREYBAR_OPACITY_FMT"], opacityPct))
+        opacityLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+        local opacitySlider = OneWoW_GUI:CreateSlider(content, {
+            width      = 220,
+            minVal     = 10,
+            maxVal     = 100,
+            step       = 5,
+            currentVal = opacityPct,
+            fmt        = "%d%%",
+            onChange   = function(val)
+                self:SetOpacity(val / 100)
+                opacityLabel:SetText(string.format(L["PREYBAR_OPACITY_FMT"], val))
+            end,
+        })
+        opacitySlider:SetPoint("TOPLEFT", opacityLabel, "BOTTOMLEFT", 0, -4)
+
+        local hintH = hint:GetStringHeight() or 14
+        local labelH = opacityLabel:GetStringHeight() or 12
+        local sliderH = opacitySlider:GetHeight() or 36
+        return math.max(1, hintH + gap + labelH + 4 + sliderH + 8)
+    end)
+
+    stack:Finish()
+    applyHostHeight()
+
+    if registerRefresh then
+        registerRefresh(applyHostHeight)
+    end
 
     self:StartPreview(parent)
 
-    return yOffset
+    return yOffset - cardsHost:GetHeight()
 end

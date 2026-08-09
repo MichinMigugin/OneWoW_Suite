@@ -43,5 +43,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["PREYBAR_DRAG_HINT"] = "Unlock to drag  -  Prey Hunt Bar",
     ["PREYBAR_CLICK_WAYPOINT_HINT"] = "Click to set a waypoint to your prey",
     ["PREYBAR_OPACITY_FMT"] = "Opacity: %d%%",
+    ["PREYBAR_SAMPLE_BAR_HEADER"] = "Sample Bar",
     ["PREYBAR_SETTINGS_HINT"] = "A sample bar is shown while this panel is open so you can position it. Turn off Lock Position to drag it, then lock it again. Outside of this panel the bar only appears during an active prey hunt.",
 })

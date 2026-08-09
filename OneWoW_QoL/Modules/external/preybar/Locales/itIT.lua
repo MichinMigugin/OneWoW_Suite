@@ -44,5 +44,6 @@ OneWoW.Locale:Register(M._scope, "itIT", {
     ["PREYBAR_DRAG_HINT"] = "Sblocca per trascinare  -  Barra di caccia alla preda",
     ["PREYBAR_CLICK_WAYPOINT_HINT"] = "Clicca per impostare un waypoint verso la tua preda",
     ["PREYBAR_OPACITY_FMT"] = "Opacità: %d%%",
+    ["PREYBAR_SAMPLE_BAR_HEADER"] = "Barra di esempio",
     ["PREYBAR_SETTINGS_HINT"] = "Mentre questo pannello è aperto viene mostrata una barra di esempio così puoi posizionarla. Disattiva Blocca posizione per trascinarla, poi bloccala di nuovo. Al di fuori di questo pannello la barra appare solo durante una caccia alla preda attiva.",
 })

@@ -11,6 +11,9 @@ local Inventory = OneWoW.Inventory
 local AO = AutoOpenModule
 local OWNER = "QoL_autoopen"
 
+-- Session-only collapse memory (survives tab switches; cleared on /reload)
+local collapsedCards = {}
+
 -- #openable reads the bag tooltip; hasLoot/isLocked alone cannot detect lockpicking-locked lockboxes.
 local OPEN_PREDICATE_EXPR = "#hasloot&!#locked& #openable"
 local openPredicate = PE:Compile(OPEN_PREDICATE_EXPR)
@@ -125,72 +128,109 @@ function AutoOpenModule:OnToggle()
 end
 
 function AutoOpenModule:CreateCustomDetail(detailScrollChild, yOffset, _, registerRefresh)
+    local cardsHost = CreateFrame("Frame", nil, detailScrollChild)
+    cardsHost:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yOffset)
+    cardsHost:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, yOffset)
 
-    local blHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    blHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    blHeader:SetText(L["BLACKLIST"])
-    blHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-    yOffset = yOffset - blHeader:GetStringHeight() - 8
-
-    local blDivider = detailScrollChild:CreateTexture(nil, "ARTWORK")
-    blDivider:SetHeight(1)
-    blDivider:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    blDivider:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-    blDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    yOffset = yOffset - 8
-
-    local blDesc = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    blDesc:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    blDesc:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-    blDesc:SetJustifyH("LEFT")
-    blDesc:SetWordWrap(true)
-    blDesc:SetText(L["AUTOOPEN_BLACKLIST_DESC"])
-    yOffset = yOffset - blDesc:GetStringHeight() - 16
-
-    local function BuildBlacklistEntries()
-        local entries = {}
-        for itemID in pairs(GetBlacklist()) do
-            C_Item.RequestLoadItemDataByID(itemID)
-            local itemName = C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
-            local _, _, _, _, _, _, _, _, _, icon = C_Item.GetItemInfo(itemID)
-            tinsert(entries, { id = itemID, label = itemName, icon = icon })
-        end
-        return entries
-    end
-
-    local editor
-    yOffset, editor = OneWoW_GUI:CreateItemListEditor(detailScrollChild, {
-        yOffset = yOffset,
-        label = L["ITEM_ID"],
-        addText = ADD,
-        emptyText = L["NO_ITEMS"],
-        drop = { text = L["DRAG_ITEM_HERE"] },
-        height = 120,
-        getEntries = BuildBlacklistEntries,
-        onAdd = function(itemID)
-            AO:AddToBlacklist(itemID, true)
-            local itemName = C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
-            print(string.format("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_ADDED"]), itemName))
-            C_Item.RequestLoadItemDataByID(itemID)
-            C_Timer.After(0.3, function()
-                if editor then editor:Refresh() end
-            end)
-        end,
-        onRemove = function(itemID)
-            AO:RemoveFromBlacklist(itemID)
-            local rName = C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
-            print(string.format("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_REMOVED"]), rName))
-        end,
+    local stack = OneWoW_GUI:CreateCardStack(cardsHost, {
+        getCollapsed = function(key) return collapsedCards[key] end,
+        setCollapsed = function(key, collapsed) collapsedCards[key] = collapsed end,
     })
 
-    local function UpdateBlacklist()
-        local isEnabledNow = ns.ModuleRegistry:IsEnabled("autoopen")
-        blDesc:SetTextColor(OneWoW_GUI:GetThemeColor(isEnabledNow and "TEXT_SECONDARY" or "TEXT_MUTED"))
-        editor:SetEnabled(isEnabledNow)
+    local function applyHostHeight()
+        local h = math.max(1, cardsHost:GetHeight())
+        if detailScrollChild.UpdateDetailHeight then
+            detailScrollChild:SetHeight(h)
+            detailScrollChild.UpdateDetailHeight()
+        else
+            detailScrollChild:SetHeight(math.abs(yOffset) + h + 20)
+            if detailScrollChild.updateThumb then
+                detailScrollChild.updateThumb()
+            end
+        end
+    end
+    stack.OnRelayout = applyHostHeight
+
+    local blacklistRefresh
+
+    stack:AddCard("autoopen:blacklist", L["BLACKLIST"], function(content, contentWidth)
+        local gap = 8
+        local blDesc = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        blDesc:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+        blDesc:SetJustifyH("LEFT")
+        blDesc:SetWordWrap(true)
+        blDesc:SetSpacing(2)
+        local w = tonumber(contentWidth) or 0
+        if w < 1 then
+            w = content:GetWidth() or 0
+        end
+        if w >= 1 then
+            blDesc:SetWidth(w)
+        else
+            blDesc:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, 0)
+        end
+        blDesc:SetText(L["AUTOOPEN_BLACKLIST_DESC"])
+
+        local function BuildBlacklistEntries()
+            local entries = {}
+            for itemID in pairs(GetBlacklist()) do
+                C_Item.RequestLoadItemDataByID(itemID)
+                local itemName = C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
+                local _, _, _, _, _, _, _, _, _, icon = C_Item.GetItemInfo(itemID)
+                tinsert(entries, { id = itemID, label = itemName, icon = icon })
+            end
+            return entries
+        end
+
+        local introH = blDesc:GetStringHeight() or 14
+        local editor
+        local listY
+        listY, editor = OneWoW_GUI:CreateItemListEditor(content, {
+            yOffset = -(introH + gap),
+            x = 0,
+            rightInset = 0,
+            label = L["ITEM_ID"],
+            addText = ADD,
+            emptyText = L["NO_ITEMS"],
+            drop = { text = L["DRAG_ITEM_HERE"] },
+            height = 120,
+            getEntries = BuildBlacklistEntries,
+            onAdd = function(itemID)
+                AO:AddToBlacklist(itemID, true)
+                local itemName = C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
+                print(string.format("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_ADDED"]), itemName))
+                C_Item.RequestLoadItemDataByID(itemID)
+                C_Timer.After(0.3, function()
+                    if editor then editor:Refresh() end
+                end)
+            end,
+            onRemove = function(itemID)
+                AO:RemoveFromBlacklist(itemID)
+                local rName = C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
+                print(string.format("|cFFFFD700OneWoW QoL:|r " .. (L["AUTOOPEN_BLACKLIST_REMOVED"]), rName))
+            end,
+        })
+
+        blacklistRefresh = function()
+            local isEnabledNow = ns.ModuleRegistry:IsEnabled("autoopen")
+            blDesc:SetTextColor(OneWoW_GUI:GetThemeColor(isEnabledNow and "TEXT_SECONDARY" or "TEXT_MUTED"))
+            editor:SetEnabled(isEnabledNow)
+        end
+        blacklistRefresh()
+
+        return math.max(1, math.abs(listY))
+    end)
+
+    stack:Finish()
+    applyHostHeight()
+
+    if registerRefresh then
+        registerRefresh(function()
+            if blacklistRefresh then
+                blacklistRefresh()
+            end
+        end)
     end
 
-    if registerRefresh then registerRefresh(UpdateBlacklist) end
-    UpdateBlacklist()
-
-    return yOffset
+    return yOffset - cardsHost:GetHeight()
 end

@@ -44,5 +44,6 @@ OneWoW.Locale:Register(M._scope, "frFR", {
     ["PREYBAR_DRAG_HINT"] = "Déverrouiller pour déplacer  -  Barre de chasse à la proie",
     ["PREYBAR_CLICK_WAYPOINT_HINT"] = "Cliquez pour définir un point de passage vers votre proie",
     ["PREYBAR_OPACITY_FMT"] = "Opacité : %d%%",
+    ["PREYBAR_SAMPLE_BAR_HEADER"] = "Barre d'exemple",
     ["PREYBAR_SETTINGS_HINT"] = "Une barre d'exemple est affichée tant que ce panneau est ouvert afin que vous puissiez la positionner. Désactivez Verrouiller la position pour la déplacer, puis verrouillez-la à nouveau. En dehors de ce panneau, la barre n'apparaît que pendant une chasse à la proie active.",
 })

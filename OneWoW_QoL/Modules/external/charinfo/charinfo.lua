@@ -4,6 +4,9 @@ if not CharInfoModule then return end
 
 local OneWoW_GUI = OneWoW_GUI
 
+-- Session-only collapse memory (survives tab switches; cleared on /reload)
+local collapsedCards = {}
+
 local SECONDARY_HAND_SLOT = GetInventorySlotInfo("SECONDARYHANDSLOT")
 
 local enchantSlotDefaults = {
@@ -441,85 +444,125 @@ local enchantSlotLabels = {
 }
 
 function CharInfoModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh)
-    local sectionHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    sectionHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    sectionHeader:SetText(L["CHARINFO_ENCHANT_SLOTS_HEADER"])
-    sectionHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-    yOffset = yOffset - sectionHeader:GetStringHeight() - 8
+    local cardsHost = CreateFrame("Frame", nil, detailScrollChild)
+    cardsHost:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yOffset)
+    cardsHost:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, yOffset)
 
-    local divider = detailScrollChild:CreateTexture(nil, "ARTWORK")
-    divider:SetHeight(1)
-    divider:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    divider:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-    divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    yOffset = yOffset - 10
+    local stack = OneWoW_GUI:CreateCardStack(cardsHost, {
+        getCollapsed = function(key) return collapsedCards[key] end,
+        setCollapsed = function(key, collapsed) collapsedCards[key] = collapsed end,
+    })
 
-    local descText = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    descText:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    descText:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-    descText:SetText(L["CHARINFO_ENCHANT_SLOTS_DESC"])
-    descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    descText:SetJustifyH("LEFT")
-    descText:SetWordWrap(true)
-    yOffset = yOffset - descText:GetStringHeight() - 12
-
-    local columnsTop = yOffset
-
-    local leftContainer = CreateFrame("Frame", nil, detailScrollChild)
-    leftContainer:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, columnsTop)
-    leftContainer:SetPoint("RIGHT", detailScrollChild, "CENTER", 0, 0)
-    leftContainer:SetHeight(1)
-
-    local rightContainer = CreateFrame("Frame", nil, detailScrollChild)
-    rightContainer:SetPoint("TOPLEFT", detailScrollChild, "TOP", 0, columnsTop)
-    rightContainer:SetPoint("RIGHT", detailScrollChild, "RIGHT", 0, 0)
-    rightContainer:SetHeight(1)
+    local function applyHostHeight()
+        local h = math.max(1, cardsHost:GetHeight())
+        if detailScrollChild.UpdateDetailHeight then
+            detailScrollChild:SetHeight(h)
+            detailScrollChild.UpdateDetailHeight()
+        else
+            detailScrollChild:SetHeight(math.abs(yOffset) + h + 20)
+            if detailScrollChild.updateThumb then
+                detailScrollChild.updateThumb()
+            end
+        end
+    end
+    stack.OnRelayout = applyHostHeight
 
     local allSlotRefreshes = {}
 
-    local leftY = 0
-    for _, slotId in ipairs(enchantSlotOrder.left) do
-        local capturedSlotId = slotId
-        local currentVal = GetSlotEnchantToggle(slotId)
-        local rowRefresh
-        leftY, rowRefresh = OneWoW_GUI:CreateToggleRow(leftContainer, {
-            yOffset = leftY,
-            label = L[enchantSlotLabels[slotId]] or enchantSlotLabels[slotId],
-            value = currentVal,
-            isEnabled = isEnabled,
-            onValueChange = function(newVal)
-                ns.ModuleRegistry:SetToggleValue("charinfo", "enchant_slot_" .. capturedSlotId, newVal)
-            end,
-            onLabel = L["FEATURES_ON"],
-            offLabel = L["FEATURES_OFF"],
-            buttonWidth = 40,
-        })
-        if rowRefresh then
-            tinsert(allSlotRefreshes, { refresh = rowRefresh, slotId = capturedSlotId })
-        end
-    end
+    stack:AddCard("charinfo:enchant_slots", L["CHARINFO_ENCHANT_SLOTS_HEADER"], function(content, contentWidth)
+        wipe(allSlotRefreshes)
 
-    local rightY = 0
-    for _, slotId in ipairs(enchantSlotOrder.right) do
-        local capturedSlotId = slotId
-        local currentVal = GetSlotEnchantToggle(slotId)
-        local rowRefresh
-        rightY, rowRefresh = OneWoW_GUI:CreateToggleRow(rightContainer, {
-            yOffset = rightY,
-            label = L[enchantSlotLabels[slotId]] or enchantSlotLabels[slotId],
-            value = currentVal,
-            isEnabled = isEnabled,
-            onValueChange = function(newVal)
-                ns.ModuleRegistry:SetToggleValue("charinfo", "enchant_slot_" .. capturedSlotId, newVal)
-            end,
-            onLabel = L["FEATURES_ON"],
-            offLabel = L["FEATURES_OFF"],
-            buttonWidth = 40,
-        })
-        if rowRefresh then
-            tinsert(allSlotRefreshes, { refresh = rowRefresh, slotId = capturedSlotId })
+        local gap = 8
+        local descText = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        descText:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+        descText:SetJustifyH("LEFT")
+        descText:SetWordWrap(true)
+        descText:SetSpacing(2)
+        local w = tonumber(contentWidth) or 0
+        if w < 1 then
+            w = content:GetWidth() or 0
         end
-    end
+        if w >= 1 then
+            descText:SetWidth(w)
+        else
+            descText:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, 0)
+        end
+        descText:SetText(L["CHARINFO_ENCHANT_SLOTS_DESC"])
+        descText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+        local descH = descText:GetStringHeight() or 14
+        local columnsTop = -(descH + gap)
+
+        local leftContainer = CreateFrame("Frame", nil, content)
+        leftContainer:SetPoint("TOPLEFT", content, "TOPLEFT", 0, columnsTop)
+        leftContainer:SetPoint("RIGHT", content, "CENTER", 0, 0)
+        leftContainer:SetHeight(1)
+
+        local rightContainer = CreateFrame("Frame", nil, content)
+        rightContainer:SetPoint("TOPLEFT", content, "TOP", 0, columnsTop)
+        rightContainer:SetPoint("RIGHT", content, "RIGHT", 0, 0)
+        rightContainer:SetHeight(1)
+
+        local colWidth = 0
+        if w >= 1 then
+            colWidth = math.max(50, (w / 2) - 4)
+        end
+
+        local leftY = 0
+        for _, slotId in ipairs(enchantSlotOrder.left) do
+            local capturedSlotId = slotId
+            local currentVal = GetSlotEnchantToggle(slotId)
+            local rowRefresh
+            leftY, rowRefresh = OneWoW_GUI:CreateToggleRow(leftContainer, {
+                yOffset = leftY,
+                contentWidth = colWidth > 0 and colWidth or nil,
+                label = L[enchantSlotLabels[slotId]] or enchantSlotLabels[slotId],
+                value = currentVal,
+                isEnabled = isEnabled,
+                onValueChange = function(newVal)
+                    ns.ModuleRegistry:SetToggleValue("charinfo", "enchant_slot_" .. capturedSlotId, newVal)
+                end,
+                onLabel = L["FEATURES_ON"],
+                offLabel = L["FEATURES_OFF"],
+                buttonWidth = 40,
+            })
+            if rowRefresh then
+                tinsert(allSlotRefreshes, { refresh = rowRefresh, slotId = capturedSlotId })
+            end
+        end
+
+        local rightY = 0
+        for _, slotId in ipairs(enchantSlotOrder.right) do
+            local capturedSlotId = slotId
+            local currentVal = GetSlotEnchantToggle(slotId)
+            local rowRefresh
+            rightY, rowRefresh = OneWoW_GUI:CreateToggleRow(rightContainer, {
+                yOffset = rightY,
+                contentWidth = colWidth > 0 and colWidth or nil,
+                label = L[enchantSlotLabels[slotId]] or enchantSlotLabels[slotId],
+                value = currentVal,
+                isEnabled = isEnabled,
+                onValueChange = function(newVal)
+                    ns.ModuleRegistry:SetToggleValue("charinfo", "enchant_slot_" .. capturedSlotId, newVal)
+                end,
+                onLabel = L["FEATURES_ON"],
+                offLabel = L["FEATURES_OFF"],
+                buttonWidth = 40,
+            })
+            if rowRefresh then
+                tinsert(allSlotRefreshes, { refresh = rowRefresh, slotId = capturedSlotId })
+            end
+        end
+
+        local maxHeight = math.max(math.abs(leftY), math.abs(rightY))
+        leftContainer:SetHeight(maxHeight)
+        rightContainer:SetHeight(maxHeight)
+
+        return math.max(1, descH + gap + maxHeight + 4)
+    end)
+
+    stack:Finish()
+    applyHostHeight()
 
     if registerRefresh then
         registerRefresh(function()
@@ -531,11 +574,5 @@ function CharInfoModule:CreateCustomDetail(detailScrollChild, yOffset, isEnabled
         end)
     end
 
-    local maxHeight = math.max(math.abs(leftY), math.abs(rightY))
-    leftContainer:SetHeight(maxHeight)
-    rightContainer:SetHeight(maxHeight)
-
-    yOffset = columnsTop - maxHeight - 10
-
-    return yOffset
+    return yOffset - cardsHost:GetHeight()
 end

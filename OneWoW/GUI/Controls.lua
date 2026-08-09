@@ -64,6 +64,20 @@ function OneWoW_GUI:CreateToggleRow(parent, options)
         clickTooltipFormat = options.clickTooltipFormat,
     })
 
+    -- Card hosts often have width 0 when rows are built (scroll child not sized
+    -- yet). Prefer options.contentWidth so wrap/measure is not a collapsed column
+    -- that truncates with "..." and then explodes on the first OnSizeChanged.
+    local fixedWrap = tonumber(options.contentWidth) or 0
+    if fixedWrap < 50 then
+        fixedWrap = 0
+    end
+    local btnW = btn:GetWidth() or buttonWidth
+    local reserveRight = 12 + btnW + BTN_GAP
+    local textColW = 0
+    if fixedWrap > 0 then
+        textColW = math.max(50, fixedWrap - 12 - (alignLeft and 0 or reserveRight))
+    end
+
     if alignLeft then
         if label ~= "" then
             btn:ClearAllPoints()
@@ -72,20 +86,26 @@ function OneWoW_GUI:CreateToggleRow(parent, options)
             btn:ClearAllPoints()
             btn:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
         end
+        if textColW > 0 and label ~= "" then
+            labelFs:SetWidth(textColW)
+        end
     else
         btn:ClearAllPoints()
         btn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
         if label ~= "" then
             labelFs:ClearAllPoints()
             labelFs:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-            labelFs:SetPoint("RIGHT", btn, "LEFT", -BTN_GAP, 0)
+            if textColW > 0 then
+                labelFs:SetWidth(textColW)
+            else
+                labelFs:SetPoint("RIGHT", btn, "LEFT", -BTN_GAP, 0)
+            end
         end
     end
 
     -- Left column: title, then description/content anchored under the title so wrap
     -- changes on resize keep title→desc spacing (absolute Y from GetStringHeight does not).
     local labelHeight = (label ~= "" and labelFs:GetStringHeight()) or 0
-    local reserveRight = 12 + btn:GetWidth() + BTN_GAP
 
     local descFs
     local contentArea
@@ -97,30 +117,41 @@ function OneWoW_GUI:CreateToggleRow(parent, options)
         OneWoW_GUI:SafeSetFont(descFs, OneWoW_GUI:GetFont(), 10)
         descFs:SetJustifyH("LEFT")
         descFs:SetWordWrap(true)
-        descFs:SetText(description)
         descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
         if label ~= "" then
             descFs:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -LABEL_DESC_GAP)
-            descFs:SetPoint("TOPRIGHT", labelFs, "BOTTOMRIGHT", 0, -LABEL_DESC_GAP)
-            belowHeight = LABEL_DESC_GAP + descFs:GetStringHeight() + 6
+            if textColW > 0 then
+                descFs:SetWidth(textColW)
+            else
+                descFs:SetPoint("TOPRIGHT", labelFs, "BOTTOMRIGHT", 0, -LABEL_DESC_GAP)
+            end
         else
             descFs:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-            if alignLeft then
+            if textColW > 0 then
+                descFs:SetWidth(textColW)
+            elseif alignLeft then
                 descFs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
             else
                 descFs:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -reserveRight, yOffset)
             end
-            belowHeight = descFs:GetStringHeight() + 6
         end
+        descFs:SetText(description)
+        belowHeight = (label ~= "" and LABEL_DESC_GAP or 0) + (descFs:GetStringHeight() or 14) + 6
     elseif createContent then
         contentArea = CreateFrame("Frame", nil, parent)
         if label ~= "" then
             contentArea:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -LABEL_DESC_GAP)
-            contentArea:SetPoint("TOPRIGHT", labelFs, "BOTTOMRIGHT", 0, -LABEL_DESC_GAP)
+            if textColW > 0 then
+                contentArea:SetWidth(textColW)
+            else
+                contentArea:SetPoint("TOPRIGHT", labelFs, "BOTTOMRIGHT", 0, -LABEL_DESC_GAP)
+            end
         else
             contentArea:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-            if alignLeft then
+            if textColW > 0 then
+                contentArea:SetWidth(textColW)
+            elseif alignLeft then
                 contentArea:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
             else
                 contentArea:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -reserveRight, yOffset)

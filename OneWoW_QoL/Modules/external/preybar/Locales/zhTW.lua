@@ -44,5 +44,6 @@ OneWoW.Locale:Register(M._scope, "zhTW", {
     ["PREYBAR_DRAG_HINT"] = "解鎖以拖曳  -  獵物狩獵列",
     ["PREYBAR_CLICK_WAYPOINT_HINT"] = "點擊設定前往獵物的路徑點",
     ["PREYBAR_OPACITY_FMT"] = "不透明度：%d%%",
+    ["PREYBAR_SAMPLE_BAR_HEADER"] = "範例列",
     ["PREYBAR_SETTINGS_HINT"] = "此面板開啟時會顯示一個範例列，便於你擺放它。關閉「鎖定位置」即可拖曳它，然後再次鎖定。在此面板之外，該列僅在進行中的獵物狩獵期間出現。",
 })

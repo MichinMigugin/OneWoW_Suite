@@ -4,6 +4,9 @@ if not PlayMountsModule then return end
 
 local OneWoW_GUI = OneWoW_GUI
 
+-- Session-only collapse memory (survives tab switches; cleared on /reload)
+local collapsedCards = {}
+
 local MAXIMUM_BUFF_COUNT = 40
 
 local MOUNT_TYPES = {
@@ -199,28 +202,30 @@ function PlayMountsModule:OnTargetChanged()
 end
 
 function PlayMountsModule:CreateCustomDetail(parent, yOffset, _, registerRefresh)
+    local cardsHost = CreateFrame("Frame", nil, parent)
+    cardsHost:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
+    cardsHost:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, yOffset)
 
-    local divider = parent:CreateTexture(nil, "ARTWORK")
-    divider:SetHeight(1)
-    divider:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    divider:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
-    divider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    yOffset = yOffset - 12
+    local stack = OneWoW_GUI:CreateCardStack(cardsHost, {
+        getCollapsed = function(key) return collapsedCards[key] end,
+        setCollapsed = function(key, collapsed) collapsedCards[key] = collapsed end,
+    })
 
-    local modeHeader = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    modeHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    modeHeader:SetText(DISPLAY_MODE)
-    modeHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-    yOffset = yOffset - modeHeader:GetStringHeight() - 8
+    local function applyHostHeight()
+        local h = math.max(1, cardsHost:GetHeight())
+        if parent.UpdateDetailHeight then
+            parent:SetHeight(h)
+            parent.UpdateDetailHeight()
+        else
+            parent:SetHeight(math.abs(yOffset) + h + 20)
+            if parent.updateThumb then
+                parent.updateThumb()
+            end
+        end
+    end
+    stack.OnRelayout = applyHostHeight
 
-    local modeDesc = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    modeDesc:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    modeDesc:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
-    modeDesc:SetJustifyH("LEFT")
-    modeDesc:SetWordWrap(true)
-    modeDesc:SetText(L["PLAYMOUNTS_DISPLAYMODE_DESC"])
-    modeDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    yOffset = yOffset - modeDesc:GetStringHeight() - 8
+    local modeRefresh
 
     local modes = {
         { id = "name",     labelKey = "PLAYMOUNTS_MODE_NAME"     },
@@ -237,105 +242,126 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, _, registerRefresh
         return L["PLAYMOUNTS_MODE_ALL"]
     end
 
-    local currentMode = GetDisplayMode()
-    local modeDropdown, modeDropdownText = OneWoW_GUI:CreateDropdown(parent, {
-        width = 160,
-        height = 26,
-        text = ModeLabel(currentMode),
-    })
-    modeDropdown:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    modeDropdown._activeValue = currentMode
-
-    OneWoW_GUI:AttachFilterMenu(modeDropdown, {
-        searchable = false,
-        menuHeight = 110,
-        buildItems = function()
-            local items = {}
-            for _, mode in ipairs(modes) do
-                items[#items + 1] = { value = mode.id, text = L[mode.labelKey] }
-            end
-            return items
-        end,
-        onSelect = function(value, text)
-            SetDisplayMode(value)
-            modeDropdown._activeValue = value
-            modeDropdownText:SetText(text)
-        end,
-        getActiveValue = function()
-            return GetDisplayMode()
-        end,
-    })
-
-    local function UpdateModeDropdown()
-        local isEnabledNow = ns.ModuleRegistry:IsEnabled("playmounts")
-        if isEnabledNow then
-            modeDropdown:Enable()
-            modeDropdownText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        else
-            modeDropdown:Disable()
-            modeDropdownText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+    stack:AddCard("playmounts:display", DISPLAY_MODE, function(content, contentWidth)
+        local gap = 8
+        local modeDesc = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        modeDesc:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+        modeDesc:SetJustifyH("LEFT")
+        modeDesc:SetWordWrap(true)
+        modeDesc:SetSpacing(2)
+        local w = tonumber(contentWidth) or 0
+        if w < 1 then
+            w = content:GetWidth() or 0
         end
-    end
+        if w >= 1 then
+            modeDesc:SetWidth(w)
+        else
+            modeDesc:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, 0)
+        end
+        modeDesc:SetText(L["PLAYMOUNTS_DISPLAYMODE_DESC"])
+        modeDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
-    if registerRefresh then registerRefresh(UpdateModeDropdown) end
-    UpdateModeDropdown()
+        local currentMode = GetDisplayMode()
+        local modeDropdown, modeDropdownText = OneWoW_GUI:CreateDropdown(content, {
+            width = 160,
+            height = 26,
+            text = ModeLabel(currentMode),
+        })
+        modeDropdown:SetPoint("TOPLEFT", modeDesc, "BOTTOMLEFT", 0, -gap)
+        modeDropdown._activeValue = currentMode
 
-    yOffset = yOffset - 26 - 6
+        OneWoW_GUI:AttachFilterMenu(modeDropdown, {
+            searchable = false,
+            menuHeight = 110,
+            buildItems = function()
+                local items = {}
+                for _, mode in ipairs(modes) do
+                    items[#items + 1] = { value = mode.id, text = L[mode.labelKey] }
+                end
+                return items
+            end,
+            onSelect = function(value, text)
+                SetDisplayMode(value)
+                modeDropdown._activeValue = value
+                modeDropdownText:SetText(text)
+            end,
+            getActiveValue = function()
+                return GetDisplayMode()
+            end,
+        })
 
-    local modeDivider = parent:CreateTexture(nil, "ARTWORK")
-    modeDivider:SetHeight(1)
-    modeDivider:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    modeDivider:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
-    modeDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-    yOffset = yOffset - 12
+        modeRefresh = function()
+            local isEnabledNow = ns.ModuleRegistry:IsEnabled("playmounts")
+            if isEnabledNow then
+                modeDropdown:Enable()
+                modeDropdownText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            else
+                modeDropdown:Disable()
+                modeDropdownText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            end
+        end
+        modeRefresh()
 
-    local coreHeader = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    coreHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    coreHeader:SetText(L["PLAYMOUNTS_TOOLTIP_HEADER"])
-    coreHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-    yOffset = yOffset - coreHeader:GetStringHeight() - 8
+        local descH = modeDesc:GetStringHeight() or 14
+        return math.max(1, descH + gap + 26 + 4)
+    end)
 
-    local reqLabel = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    reqLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    reqLabel:SetText(L["PLAYMOUNTS_TOOLTIP_REQUIRES"])
-    reqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+    stack:AddCard("playmounts:tooltip", L["PLAYMOUNTS_TOOLTIP_HEADER"], function(content, _)
+        local reqLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        reqLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+        reqLabel:SetText(L["PLAYMOUNTS_TOOLTIP_REQUIRES"])
+        reqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local coreLoaded = (OneWoW ~= nil)
-    local detectedLabel = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    detectedLabel:SetPoint("LEFT", reqLabel, "RIGHT", 8, 0)
-    if coreLoaded then
-        detectedLabel:SetText(L["PLAYMOUNTS_TOOLTIP_DETECTED"])
-        detectedLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        detectedLabel:SetText(L["PLAYMOUNTS_TOOLTIP_NOT_DETECTED"])
-        detectedLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
-    yOffset = yOffset - 24
+        local coreLoaded = (OneWoW ~= nil)
+        local detectedLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        detectedLabel:SetPoint("LEFT", reqLabel, "RIGHT", 8, 0)
+        if coreLoaded then
+            detectedLabel:SetText(L["PLAYMOUNTS_TOOLTIP_DETECTED"])
+            detectedLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        else
+            detectedLabel:SetText(L["PLAYMOUNTS_TOOLTIP_NOT_DETECTED"])
+            detectedLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+        end
 
-    local viewBtn = OneWoW_GUI:CreateFitTextButton(parent, { text = L["PLAYMOUNTS_TOOLTIP_VIEW_BTN"], height = 22 })
-    viewBtn:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
-    if coreLoaded then
-        viewBtn:SetScript("OnClick", function()
-            OneWoW.UI:Show("settings")
-            OneWoW.UI:SelectSubTab("settings", "tooltips")
+        local viewBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["PLAYMOUNTS_TOOLTIP_VIEW_BTN"], height = 22 })
+        viewBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, -24)
+        if coreLoaded then
+            viewBtn:SetScript("OnClick", function()
+                OneWoW.UI:Show("settings")
+                OneWoW.UI:SelectSubTab("settings", "tooltips")
+            end)
+        else
+            viewBtn:EnableMouse(false)
+            viewBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
+            viewBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+            viewBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        end
+
+        local coreNote = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        coreNote:SetPoint("TOPLEFT", reqLabel, "BOTTOMLEFT", 0, -10)
+        coreNote:SetPoint("RIGHT", viewBtn, "LEFT", -8, 0)
+        coreNote:SetJustifyH("LEFT")
+        coreNote:SetWordWrap(true)
+        coreNote:SetText(L["PLAYMOUNTS_TOOLTIP_NOTE"])
+        coreNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+        local reqH = reqLabel:GetStringHeight() or 14
+        local noteH = coreNote:GetStringHeight() or 14
+        return math.max(1, reqH + 10 + math.max(noteH, 22) + 4)
+    end)
+
+    stack:Finish()
+    applyHostHeight()
+
+    if registerRefresh then
+        registerRefresh(function()
+            if modeRefresh then
+                modeRefresh()
+            end
         end)
-    else
-        viewBtn:EnableMouse(false)
-        viewBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-        viewBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-        viewBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
     end
 
-    local coreNote = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    coreNote:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset - 3)
-    coreNote:SetPoint("RIGHT", viewBtn, "LEFT", -8, 0)
-    coreNote:SetJustifyH("LEFT")
-    coreNote:SetWordWrap(true)
-    coreNote:SetText(L["PLAYMOUNTS_TOOLTIP_NOTE"])
-    coreNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    yOffset = yOffset - math.max(coreNote:GetStringHeight(), 22) - 10
-
-    return yOffset
+    return yOffset - cardsHost:GetHeight()
 end
 
 function PlayMountsModule:OnEnable()

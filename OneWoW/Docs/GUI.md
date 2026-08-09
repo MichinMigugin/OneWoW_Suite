@@ -27,6 +27,7 @@ present — no existence guard.
 - [Buttons & Controls](#buttons--controls)
 - [Text & Dividers](#text--dividers)
 - [Section Headers](#section-headers)
+- [Settings Cards](#settings-cards)
 - [Stacking & Action Bars](#stacking--action-bars)
 - [Scroll Frames](#scroll-frames)
 - [Split Panel (List + Detail Layout)](#split-panel-list--detail-layout)
@@ -748,6 +749,7 @@ Caller owns layout (Features-style title left / toggle right). Replaces the old
 ```lua
 local newYOffset, refresh, refs = OneWoW_GUI:CreateToggleRow(parent, {
     yOffset = 0,
+    contentWidth = contentWidth, -- optional; required inside CreateCard (host width often 0 at build)
     label = "Show Lockouts Panel",
     description = "Show the lockouts panel when the Group Finder opens.",  -- optional
     value = true,
@@ -763,6 +765,9 @@ refresh(isEnabled, newValue)
 Two-column layout (default): left = title then description/`createContent`; right = On/Off
 top-aligned with the title. Description/`createContent` anchor to the title’s bottom so wrap
 changes on resize keep title→desc spacing. Description wraps in the left column only.
+When `contentWidth` is set, the left column uses that fixed wrap width (avoids zero-width
+truncation inside cards before the detail scroll child is sized). Without it, the label
+stretches to the toggle via `RIGHT` anchors (fine when the parent already has a real width).
 Use `align = "left"` for [Label] [On/Off] on one line (description still stacks under the label).
 Use `createContent` instead of `description` for custom widgets (e.g. mount picker). Must return `(widget, height)`:
 ```lua
@@ -948,6 +953,10 @@ local newYOffset = OneWoW_GUI:CreateSection(parent, {
 })
 -- Returns updated yOffset to continue laying out below
 ```
+Label + hairline only (not collapsible). Prefer
+[Settings Cards](#settings-cards) (`CreateCard` / `CreateCardStack`) for new
+multi-section settings detail panes. Keep using `CreateSection` where an
+existing caller already depends on it.
 
 ### Vertical pane resizer (list + detail columns)
 ```lua
@@ -1003,6 +1012,8 @@ local section = OneWoW_GUI:CreateSectionHeader(parent, {
 Creates a themed bar with background, border, and accent-colored title text.
 Auto-grows in height when the title wraps (e.g. larger fonts).
 Optional `fontSize` (default 12) for larger top-level headers.
+Not collapsible — for collapsible bordered sections use
+[Settings Cards](#settings-cards).
 
 ### Database Manager row
 ```lua
@@ -1063,6 +1074,75 @@ local card = OneWoW_GUI:CreateSelectableCard(parent, {
 card:SetChecked(false)
 ```
 Creates a checkbox-backed feature card with icon, badge, hover state, and selected styling. The card **self-measures** its real height from the wrapped summary text (and icon), so it never clips at large fonts. Use `card:GetMeasuredHeight()` or `card:OnHeightChanged(...)` if a parent layout needs to re-flow when text wraps.
+
+---
+
+## Settings Cards
+
+Collapsible titled settings sections (`GUI/Cards.lua`). Prefer these over
+`CreateSection` / `CreateSectionHeader` for new multi-section settings detail
+panes (QoL Overlays is the reference consumer). Distinct from
+`CreateSelectableCard` (feature-picker checkboxes above).
+
+### CreateCard
+```lua
+local card = OneWoW_GUI:CreateCard(parent, {
+    title = L["SECTION_TITLE"],
+    collapsed = false,  -- optional; default expanded
+    onToggle = function(collapsed)
+        -- optional; fired after the header click flips state
+    end,
+})
+-- Build into card.content, then size:
+card:SetContentHeight(contentHeight)
+```
+Full-width bordered card: themed header bar (chevron + title) over a padded
+`card.content` area. Header click toggles collapse; when collapsed only the
+header height remains. Methods: `card:IsCollapsed()`, `card:SetContentHeight(h)`.
+
+Callers usually go through `CreateCardStack` rather than wiring cards by hand.
+
+### CreateCardStack
+```lua
+-- Session-only collapse memory (survives tab switches; cleared on /reload)
+local collapsedCards = {}
+
+local stack = OneWoW_GUI:CreateCardStack(detailScrollChild, {
+    getCollapsed = function(key) return collapsedCards[key] end,
+    setCollapsed = function(key, collapsed) collapsedCards[key] = collapsed end,
+    -- marginX = 4, startY = -6, gap = 8  -- optional layout knobs
+})
+stack.OnRelayout = function()
+    split.UpdateDetailThumb()  -- when hosted in a split detail pane
+end
+
+-- Optional non-card frame above the cards (hero / title block):
+stack:AddFrame(heroFrame)
+
+stack:AddCard("detection", L["DETECTION"], function(content, contentWidth)
+    -- parent widgets to `content`; return content height
+    -- Pass contentWidth into CreateToggleRow / SetWidth wrapped intros before
+    -- GetStringHeight. Card hosts often still have width 0 at build time —
+    -- LEFT+RIGHT anchors then truncate with "..." and absolute yOffsets explode
+    -- on the first detail OnSizeChanged (e.g. clicking the resize handle).
+    return height
+end)
+
+stack:Finish()  -- Relayout + ApplyFontToFrame + host width reflow hook
+```
+Owns vertical packing, content-width measurement, and optional collapse
+persistence via `getCollapsed` / `setCollapsed`. Default expanded when the
+store has no entry for a key. `Relayout` sizes the host flush to the last
+card (gap only *between* cards); scroll breathing room stays on the caller
+(`SetHeight(... + 20)`). After `Finish`, the stack watches host `OnSizeChanged`
+and rebuilds card bodies when width changes (debounced) so wrap/controls track
+window resize. Initial build waits for a real host width (or stays hidden for
+one frame) so selecting a feature does not flash a fallback-width layout.
+
+**Migration template:** QoL Overlays (`OneWoW_QoL/UI/t-overlays.lua`) —
+`NewCardStack` + hero via `AddFrame` + section bodies via `AddCard` +
+`Finish`. Keep feature title / Enabled chrome above or in the hero; put only
+settings **sections** in cards.
 
 ---
 

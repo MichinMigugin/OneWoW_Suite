@@ -43,5 +43,6 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["PREYBAR_DRAG_HINT"] = "잠금 해제 후 끌어 이동  -  사냥감 추적 막대",
     ["PREYBAR_CLICK_WAYPOINT_HINT"] = "클릭하여 사냥감으로 가는 경로를 설정합니다",
     ["PREYBAR_OPACITY_FMT"] = "불투명도: %d%%",
+    ["PREYBAR_SAMPLE_BAR_HEADER"] = "예시 막대",
     ["PREYBAR_SETTINGS_HINT"] = "이 패널이 열려 있는 동안 위치를 잡을 수 있도록 예시 막대가 표시됩니다. 위치 고정을 끄고 끌어다 놓은 뒤 다시 고정하세요. 이 패널 밖에서는 사냥이 진행 중일 때만 막대가 표시됩니다.",
 })

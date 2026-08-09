@@ -44,5 +44,6 @@ OneWoW.Locale:Register(M._scope, "deDE", {
     ["PREYBAR_DRAG_HINT"] = "Entsperren zum Ziehen  -  Beutejagd-Leiste",
     ["PREYBAR_CLICK_WAYPOINT_HINT"] = "Klicken, um einen Wegpunkt zu deiner Beute zu setzen",
     ["PREYBAR_OPACITY_FMT"] = "Deckkraft: %d%%",
+    ["PREYBAR_SAMPLE_BAR_HEADER"] = "Beispielleiste",
     ["PREYBAR_SETTINGS_HINT"] = "Während dieses Panel geöffnet ist, wird eine Beispielleiste angezeigt, damit du sie positionieren kannst. Schalte „Position sperren“ aus, um sie zu ziehen, und sperre sie dann wieder. Außerhalb dieses Panels erscheint die Leiste nur während einer aktiven Beutejagd.",
 })

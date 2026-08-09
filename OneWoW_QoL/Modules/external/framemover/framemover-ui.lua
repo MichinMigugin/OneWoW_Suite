@@ -5,9 +5,14 @@ local OneWoW_GUI = OneWoW_GUI
 local format = format
 local floor = math.floor
 local C_Timer = C_Timer
+local wipe = wipe
+local tinsert = tinsert
 
 local UI = {}
 ns.FrameMoverUI = UI
+
+-- Session-only collapse memory (survives tab switches; cleared on /reload)
+local collapsedCards = {}
 
 local HUD_DURATION = 5
 local hudFrame
@@ -20,15 +25,6 @@ local hudFrameName
 
 local function ThemeColor(key)
     return OneWoW_GUI:GetThemeColor(key)
-end
-
-local function CreateDivider(parent, yOffset)
-    local tex = parent:CreateTexture(nil, "ARTWORK")
-    tex:SetHeight(1)
-    tex:SetPoint("TOPLEFT", parent, "TOPLEFT", 12, yOffset)
-    tex:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, yOffset)
-    tex:SetColorTexture(ThemeColor("BORDER_SUBTLE"))
-    return tex
 end
 
 local function FormatScalePct(scale)
@@ -159,246 +155,320 @@ function UI:Build(detailScrollChild, yOffset, isEnabled, registerRefresh)
 
     wipe(self.scaleLabels)
 
-    -- Header --------------------------------------------------
-    local header = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    header:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    header:SetText(L["FRAMEMOVER_FRAMES_HEADER"])
-    header:SetTextColor(ThemeColor("ACCENT_SECONDARY"))
-    yOffset = yOffset - 22
+    local cardsHost = CreateFrame("Frame", nil, detailScrollChild)
+    cardsHost:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, yOffset)
+    cardsHost:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, yOffset)
 
-    CreateDivider(detailScrollChild, yOffset)
-    yOffset = yOffset - 10
-
-    -- Reset buttons -------------------------------------------
-    local resetPosBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, {
-        text = L["FRAMEMOVER_RESET_POSITIONS"],
-        height = 22,
-        minWidth = 120,
-        paddingX = 16,
+    local stack = OneWoW_GUI:CreateCardStack(cardsHost, {
+        getCollapsed = function(key) return collapsedCards[key] end,
+        setCollapsed = function(key, collapsed) collapsedCards[key] = collapsed end,
     })
-    resetPosBtn:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    resetPosBtn:SetEnabled(isEnabled)
-    resetPosBtn:SetScript("OnClick", function()
-        if FM then
-            FM:ResetAllPositions()
-            print("|cFF00FF00OneWoW QoL:|r " .. L["FRAMEMOVER_RESET_POS_DONE"])
-        end
-    end)
 
-    local resetScaleBtn = OneWoW_GUI:CreateFitTextButton(detailScrollChild, {
-        text = L["FRAMEMOVER_RESET_SCALES"],
-        height = 22,
-        minWidth = 120,
-        paddingX = 16,
-    })
-    resetScaleBtn:SetPoint("LEFT", resetPosBtn, "RIGHT", 6, 0)
-    resetScaleBtn:SetEnabled(isEnabled)
-    resetScaleBtn:SetScript("OnClick", function()
-        if FM then
-            FM:ResetAllScales()
-            UI:RefreshScaleLabels()
-            print("|cFF00FF00OneWoW QoL:|r " .. L["FRAMEMOVER_RESET_SCALE_DONE"])
+    local function applyHostHeight()
+        local h = math.max(1, cardsHost:GetHeight())
+        if detailScrollChild.UpdateDetailHeight then
+            detailScrollChild:SetHeight(h)
+            detailScrollChild.UpdateDetailHeight()
+        else
+            detailScrollChild:SetHeight(math.abs(yOffset) + h + 20)
+            if detailScrollChild.updateThumb then
+                detailScrollChild.updateThumb()
+            end
         end
-    end)
+    end
+
+    -- Relayout skips hidden category cards (search filter).
+    function stack:Relayout()
+        local marginX = 4
+        local startY = -6
+        local gap = 8
+        local y = startY
+        local visible = {}
+        for _, frame in ipairs(self.items) do
+            if frame:IsShown() then
+                tinsert(visible, frame)
+            end
+        end
+        local n = #visible
+        for i, frame in ipairs(visible) do
+            frame:ClearAllPoints()
+            frame:SetPoint("TOPLEFT", self.parent, "TOPLEFT", marginX, y)
+            frame:SetPoint("TOPRIGHT", self.parent, "TOPRIGHT", -marginX, y)
+            y = y - frame:GetHeight()
+            if i < n then
+                y = y - gap
+            end
+        end
+        self.parent:SetHeight(math.max(1, math.abs(y)))
+        if self.OnRelayout then self.OnRelayout() end
+    end
+    stack.OnRelayout = applyHostHeight
+
+    local onLabel  = L["FEATURES_ON"]
+    local offLabel = L["FEATURES_OFF"]
+    local catStates = {}
+    local emptyLabel
+    local searchBox
+    local actionsRefresh
+    local rowRefreshers = {}
+    local framesCard
+    local framesCardBaseH = 22 + 8 + 24 + 4
+    local ApplyFilter
 
     if registerRefresh then
         registerRefresh(function()
-            local on = ns.ModuleRegistry:IsEnabled("framemover")
-            resetPosBtn:SetEnabled(on)
-            resetScaleBtn:SetEnabled(on)
+            if actionsRefresh then
+                actionsRefresh()
+            end
+            for _, fn in ipairs(rowRefreshers) do
+                fn()
+            end
+            UI:RefreshScaleLabels()
         end)
     end
 
-    yOffset = yOffset - 32
+    framesCard = stack:AddCard("framemover:frames", L["FRAMEMOVER_FRAMES_HEADER"], function(content, contentWidth)
+        wipe(rowRefreshers)
+        local resetPosBtn = OneWoW_GUI:CreateFitTextButton(content, {
+            text = L["FRAMEMOVER_RESET_POSITIONS"],
+            height = 22,
+            minWidth = 120,
+            paddingX = 16,
+        })
+        resetPosBtn:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
+        resetPosBtn:SetEnabled(isEnabled)
+        resetPosBtn:SetScript("OnClick", function()
+            if FM then
+                FM:ResetAllPositions()
+                print("|cFF00FF00OneWoW QoL:|r " .. L["FRAMEMOVER_RESET_POS_DONE"])
+            end
+        end)
 
-    -- Search filter -------------------------------------------
-    local searchBox = OneWoW_GUI:CreateEditBox(detailScrollChild, {
-        height = 24,
-        placeholderText = L["SEARCH"],
-    })
-    searchBox:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-    searchBox:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-    searchBox:SetEnabled(isEnabled)
-    yOffset = yOffset - 30
+        local resetScaleBtn = OneWoW_GUI:CreateFitTextButton(content, {
+            text = L["FRAMEMOVER_RESET_SCALES"],
+            height = 22,
+            minWidth = 120,
+            paddingX = 16,
+        })
+        resetScaleBtn:SetPoint("LEFT", resetPosBtn, "RIGHT", 6, 0)
+        resetScaleBtn:SetEnabled(isEnabled)
+        resetScaleBtn:SetScript("OnClick", function()
+            if FM then
+                FM:ResetAllScales()
+                UI:RefreshScaleLabels()
+                print("|cFF00FF00OneWoW QoL:|r " .. L["FRAMEMOVER_RESET_SCALE_DONE"])
+            end
+        end)
 
-    local emptyLabel = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    emptyLabel:SetTextColor(ThemeColor("TEXT_MUTED"))
-    emptyLabel:SetText(L["FRAMEMOVER_FILTER_EMPTY"])
-    emptyLabel:Hide()
+        searchBox = OneWoW_GUI:CreateEditBox(content, {
+            height = 24,
+            placeholderText = L["SEARCH"],
+        })
+        searchBox:SetPoint("TOPLEFT", resetPosBtn, "BOTTOMLEFT", 0, -8)
+        local w = tonumber(contentWidth) or 0
+        if w < 1 then
+            w = content:GetWidth() or 0
+        end
+        if w >= 1 then
+            searchBox:SetWidth(w)
+        else
+            searchBox:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, -30)
+        end
+        searchBox:SetEnabled(isEnabled)
 
-    -- Per-category frame lists (filterable containers) --------
-    local onLabel  = L["FEATURES_ON"]
-    local offLabel = L["FEATURES_OFF"]
-    local layoutItems = {}
-    local listStartY = yOffset
+        emptyLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        emptyLabel:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", 0, -8)
+        emptyLabel:SetTextColor(ThemeColor("TEXT_MUTED"))
+        emptyLabel:SetText(L["FRAMEMOVER_FILTER_EMPTY"])
+        emptyLabel:Hide()
+
+        searchBox:SetScript("OnTextChanged", function(myself)
+            local text = myself:GetText()
+            if text == myself.placeholderText then text = "" end
+            if ApplyFilter then
+                ApplyFilter(text)
+            end
+            UI:RefreshScaleLabels()
+        end)
+
+        actionsRefresh = function()
+            local on = ns.ModuleRegistry:IsEnabled("framemover")
+            resetPosBtn:SetEnabled(on)
+            resetScaleBtn:SetEnabled(on)
+            searchBox:SetEnabled(on)
+        end
+
+        return framesCardBaseH
+    end)
 
     for _, cat in ipairs(REG.CATEGORIES) do
         local frames = REG:GetFramesByCategory(cat.id)
         if #frames > 0 then
-            local catFrame = CreateFrame("Frame", nil, detailScrollChild)
-            catFrame:SetPoint("LEFT", detailScrollChild, "LEFT", 0, 0)
-            catFrame:SetPoint("RIGHT", detailScrollChild, "RIGHT", 0, 0)
-            catFrame:SetHeight(26)
+            local state = { catId = cat.id, rows = {} }
+            catStates[cat.id] = state
 
-            local catHeader = catFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            catHeader:SetPoint("TOPLEFT", catFrame, "TOPLEFT", 12, 0)
-            catHeader:SetText(L[cat.label])
-            if isEnabled then
-                catHeader:SetTextColor(ThemeColor("ACCENT_SECONDARY"))
-            else
-                catHeader:SetTextColor(ThemeColor("TEXT_MUTED"))
-            end
+            local card = stack:AddCard("framemover:cat:" .. cat.id, L[cat.label], function(content, contentWidth)
+                wipe(state.rows)
+                state.content = content
 
-            local catDiv = catFrame:CreateTexture(nil, "ARTWORK")
-            catDiv:SetHeight(1)
-            catDiv:SetPoint("TOPLEFT", catFrame, "TOPLEFT", 12, -16)
-            catDiv:SetPoint("TOPRIGHT", catFrame, "TOPRIGHT", -12, -16)
-            catDiv:SetColorTexture(ThemeColor("BORDER_SUBTLE"))
+                local rowY = 0
+                for _, entry in ipairs(frames) do
+                    local frameName   = entry.name
+                    local prettyName  = REG:PrettyName(frameName)
+                    local frameOn     = FM and FM:IsFrameEnabled(frameName) or true
 
-            tinsert(layoutItems, { kind = "cat", frame = catFrame, id = cat.id })
+                    local rowFrame = CreateFrame("Frame", nil, content)
+                    rowFrame:SetPoint("LEFT", content, "LEFT", 0, 0)
+                    rowFrame:SetPoint("RIGHT", content, "RIGHT", 0, 0)
+                    rowFrame:SetPoint("TOP", content, "TOP", 0, rowY)
+                    rowFrame:SetHeight(1)
 
-            for _, entry in ipairs(frames) do
-                local frameName   = entry.name
-                local prettyName  = REG:PrettyName(frameName)
-                local frameOn     = FM and FM:IsFrameEnabled(frameName) or true
+                    local scaleFs
+                    local resetOneBtn
 
-                local rowFrame = CreateFrame("Frame", nil, detailScrollChild)
-                rowFrame:SetPoint("LEFT", detailScrollChild, "LEFT", 0, 0)
-                rowFrame:SetPoint("RIGHT", detailScrollChild, "RIGHT", 0, 0)
-                rowFrame:SetHeight(1)
+                    local newY, rowRefresh = OneWoW_GUI:CreateToggleRow(rowFrame, {
+                        yOffset        = 0,
+                        contentWidth   = contentWidth,
+                        label          = prettyName,
+                        value          = frameOn,
+                        isEnabled      = isEnabled,
+                        onValueChange  = function(newVal)
+                            if FM then FM:SetFrameEnabled(frameName, newVal) end
+                        end,
+                        onLabel     = onLabel,
+                        offLabel    = offLabel,
+                        buttonWidth = 50,
+                        createContent = function(container)
+                            scaleFs = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                            OneWoW_GUI:SetFontBaseSize(scaleFs, 10)
+                            OneWoW_GUI:SafeSetFont(scaleFs, OneWoW_GUI:GetFont(), 10)
+                            scaleFs:SetPoint("TOPLEFT", container, "TOPLEFT", 0, -2)
+                            scaleFs:SetJustifyH("LEFT")
+                            scaleFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                            scaleFs:SetText(FormatScalePct(FM and FM:GetDisplayScale(frameName) or 1))
+                            UI.scaleLabels[frameName] = scaleFs
 
-                local scaleFs
-                local resetOneBtn
+                            resetOneBtn = OneWoW_GUI:CreateTextLink(container, {
+                                text = RESET,
+                                fontSize = 10,
+                                onClick = function()
+                                    if not FM then return end
+                                    FM:ResetScale(frameName)
+                                    scaleFs:SetText(FormatScalePct(FM:GetDisplayScale(frameName)))
+                                end,
+                            })
+                            resetOneBtn:SetPoint("LEFT", scaleFs, "RIGHT", 8, 0)
+                            resetOneBtn:SetEnabled(isEnabled)
 
-                local newY, rowRefresh = OneWoW_GUI:CreateToggleRow(rowFrame, {
-                    yOffset        = 0,
-                    label          = prettyName,
-                    value          = frameOn,
-                    isEnabled      = isEnabled,
-                    onValueChange  = function(newVal)
-                        if FM then FM:SetFrameEnabled(frameName, newVal) end
-                    end,
-                    onLabel     = onLabel,
-                    offLabel    = offLabel,
-                    buttonWidth = 50,
-                    createContent = function(container)
-                        scaleFs = container:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                        OneWoW_GUI:SetFontBaseSize(scaleFs, 10)
-                        OneWoW_GUI:SafeSetFont(scaleFs, OneWoW_GUI:GetFont(), 10)
-                        scaleFs:SetPoint("TOPLEFT", container, "TOPLEFT", 0, -2)
-                        scaleFs:SetJustifyH("LEFT")
-                        scaleFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                        scaleFs:SetText(FormatScalePct(FM and FM:GetDisplayScale(frameName) or 1))
-                        UI.scaleLabels[frameName] = scaleFs
+                            return nil, 22
+                        end,
+                    })
 
-                        resetOneBtn = OneWoW_GUI:CreateTextLink(container, {
-                            text = RESET,
-                            fontSize = 10,
-                            onClick = function()
-                                if not FM then return end
-                                FM:ResetScale(frameName)
-                                scaleFs:SetText(FormatScalePct(FM:GetDisplayScale(frameName)))
-                            end,
-                        })
-                        resetOneBtn:SetPoint("LEFT", scaleFs, "RIGHT", 8, 0)
-                        resetOneBtn:SetEnabled(isEnabled)
+                    rowFrame:SetHeight(math.max(1, -newY))
+                    rowY = rowY - rowFrame:GetHeight()
 
-                        return nil, 22
-                    end,
-                })
+                    local rowInfo = {
+                        frame  = rowFrame,
+                        name   = frameName,
+                        pretty = prettyName,
+                        refresh = rowRefresh,
+                        resetOneBtn = resetOneBtn,
+                    }
+                    tinsert(state.rows, rowInfo)
 
-                rowFrame:SetHeight(math.max(1, -newY))
-
-                tinsert(layoutItems, {
-                    kind   = "row",
-                    frame  = rowFrame,
-                    name   = frameName,
-                    pretty = prettyName,
-                    catId  = cat.id,
-                })
-
-                if registerRefresh and rowRefresh then
-                    local capturedName = frameName
-                    registerRefresh(function()
-                        local modOn = ns.ModuleRegistry:IsEnabled("framemover")
-                        local val   = FM and FM:IsFrameEnabled(capturedName) or true
-                        rowRefresh(modOn, val)
-                        UI:RefreshScaleLabel(capturedName)
-                        if resetOneBtn then
-                            resetOneBtn:SetEnabled(modOn)
-                        end
-                    end)
+                    if rowRefresh then
+                        local capturedName = frameName
+                        tinsert(rowRefreshers, function()
+                            local modOn = ns.ModuleRegistry:IsEnabled("framemover")
+                            local val   = FM and FM:IsFrameEnabled(capturedName) or true
+                            if rowInfo.refresh then
+                                rowInfo.refresh(modOn, val)
+                            end
+                            UI:RefreshScaleLabel(capturedName)
+                            if rowInfo.resetOneBtn then
+                                rowInfo.resetOneBtn:SetEnabled(modOn)
+                            end
+                        end)
+                    end
                 end
-            end
+
+                function state.relayoutRows()
+                    local y = 0
+                    local any = false
+                    for _, r in ipairs(state.rows) do
+                        if r.frame:IsShown() then
+                            any = true
+                            r.frame:ClearAllPoints()
+                            r.frame:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+                            r.frame:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
+                            y = y - r.frame:GetHeight()
+                        end
+                    end
+                    return math.max(1, math.abs(y)), any
+                end
+
+                local h = state.relayoutRows()
+                return h
+            end)
+            state.card = card
         end
     end
 
-    local function ApplyFilter(text)
+    ApplyFilter = function(text)
         local filter = (text or ""):lower()
-        local catVisible = {}
-
-        for _, item in ipairs(layoutItems) do
-            if item.kind == "row" then
-                item.match = filter == ""
-                    or item.pretty:lower():find(filter, 1, true)
-                    or item.name:lower():find(filter, 1, true)
-                if item.match then
-                    catVisible[item.catId] = true
-                end
-            end
-        end
-
-        local y = listStartY
         local anyVisible = false
 
-        for _, item in ipairs(layoutItems) do
-            local show = false
-            if item.kind == "cat" then
-                show = catVisible[item.id]
-            else
-                show = item.match
-            end
+        for _, cat in ipairs(REG.CATEGORIES) do
+            local state = catStates[cat.id]
+            if state and state.card then
+                local catAny = false
+                for _, r in ipairs(state.rows) do
+                    local match = filter == ""
+                        or r.pretty:lower():find(filter, 1, true)
+                        or r.name:lower():find(filter, 1, true)
+                    r.frame:SetShown(match)
+                    if match then
+                        catAny = true
+                        anyVisible = true
+                    end
+                end
 
-            if show then
-                anyVisible = true
-                item.frame:ClearAllPoints()
-                item.frame:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, y)
-                item.frame:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, y)
-                item.frame:Show()
-                y = y - item.frame:GetHeight()
-            else
-                item.frame:Hide()
+                if catAny and state.relayoutRows then
+                    state.card:Show()
+                    local h = state.relayoutRows()
+                    state.card:SetContentHeight(h)
+                else
+                    state.card:Hide()
+                end
             end
         end
 
-        if anyVisible then
-            emptyLabel:Hide()
-        else
-            emptyLabel:ClearAllPoints()
-            emptyLabel:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, listStartY)
-            emptyLabel:Show()
-            y = listStartY - 20
+        if emptyLabel and framesCard then
+            if anyVisible then
+                emptyLabel:Hide()
+                framesCard:SetContentHeight(framesCardBaseH)
+            else
+                emptyLabel:Show()
+                framesCard:SetContentHeight(framesCardBaseH + 8 + 16)
+            end
         end
 
-        detailScrollChild:SetHeight(math.abs(y) + 20)
-        return y
+        stack:Relayout()
     end
 
-    searchBox:SetScript("OnTextChanged", function(myself)
-        local text = myself:GetText()
-        if text == myself.placeholderText then text = "" end
+    stack:Finish()
+    ApplyFilter("")
+    -- Finish may defer ReflowContents until host width resolves; re-apply after.
+    C_Timer.After(0, function()
+        local text = ""
+        if searchBox then
+            text = searchBox:GetText() or ""
+            if text == searchBox.placeholderText then text = "" end
+        end
         ApplyFilter(text)
-        UI:RefreshScaleLabels()
+        applyHostHeight()
     end)
+    applyHostHeight()
 
-    if registerRefresh then
-        registerRefresh(function()
-            local on = ns.ModuleRegistry:IsEnabled("framemover")
-            searchBox:SetEnabled(on)
-            UI:RefreshScaleLabels()
-        end)
-    end
-
-    yOffset = ApplyFilter("")
-    return yOffset
+    return yOffset - cardsHost:GetHeight()
 end

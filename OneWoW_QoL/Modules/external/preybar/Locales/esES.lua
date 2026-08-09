@@ -44,5 +44,6 @@ OneWoW.Locale:Register(M._scope, "esES", {
     ["PREYBAR_DRAG_HINT"] = "Desbloquear para arrastrar  -  Barra de caza de presa",
     ["PREYBAR_CLICK_WAYPOINT_HINT"] = "Haz clic para marcar una ruta hacia tu presa",
     ["PREYBAR_OPACITY_FMT"] = "Opacidad: %d%%",
+    ["PREYBAR_SAMPLE_BAR_HEADER"] = "Barra de ejemplo",
     ["PREYBAR_SETTINGS_HINT"] = "Se muestra una barra de ejemplo mientras este panel está abierto para que puedas posicionarla. Desactiva Bloquear posición para arrastrarla y luego vuelve a bloquearla. Fuera de este panel, la barra solo aparece durante una caza de presa activa.",
 })

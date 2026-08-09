@@ -47,6 +47,55 @@ local function PlaceFeatureHeader(dsc, yOffset, titleText, headerOpts)
     return yOffset - headerHeight - 8
 end
 
+-- Session-only collapse memory for Tooltips settings cards (cleared on /reload).
+local collapsedTooltipCards = {}
+
+local function PlaceCardSectionDesc(content, text, yOffset, contentWidth)
+    local fs = OneWoW_GUI:CreateFS(content, 10)
+    fs:SetPoint("TOPLEFT", content, "TOPLEFT", 0, yOffset)
+    fs:SetJustifyH("LEFT")
+    fs:SetWordWrap(true)
+    fs:SetSpacing(2)
+    local w = tonumber(contentWidth) or 0
+    if w < 1 then
+        w = content:GetWidth() or 0
+    end
+    if w >= 1 then
+        fs:SetWidth(w)
+    else
+        fs:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, yOffset)
+    end
+    fs:SetText(text)
+    fs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+    return yOffset - (fs:GetStringHeight() or 14) - 10
+end
+
+--- Card stack under feature chrome. Returns stack, finishFn (Finish + height + fonts).
+local function BeginDetailCardStack(split, dsc, headerBottom)
+    local cardsHost = CreateFrame("Frame", nil, dsc)
+    cardsHost:SetPoint("TOPLEFT", dsc, "TOPLEFT", 0, headerBottom)
+    cardsHost:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", 0, headerBottom)
+
+    local stack = OneWoW_GUI:CreateCardStack(cardsHost, {
+        getCollapsed = function(key) return collapsedTooltipCards[key] end,
+        setCollapsed = function(key, collapsed) collapsedTooltipCards[key] = collapsed end,
+    })
+
+    local function updateDetailHeight()
+        dsc:SetHeight(math.abs(headerBottom) + cardsHost:GetHeight() + 20)
+        split.UpdateDetailThumb()
+    end
+    stack.OnRelayout = updateDetailHeight
+
+    local function finish()
+        stack:Finish()
+        updateDetailHeight()
+        OneWoW_GUI:ApplyFontToFrame(dsc)
+    end
+
+    return stack, finish
+end
+
 
 local function ShowGeneralDetail(split, dsc, selectedRow)
     local yOffset = -10
@@ -98,14 +147,15 @@ local CUSTOMNOTES_WARNING_TOGGLES = {
     { key = "showNoteWarning", localeKey = "TIPS_CUSTOMNOTES_SHOW_NOTEWARNING" },
 }
 
-local function CreateSettingToggleRows(dsc, toggleList, toggleBtnSets, isEnabled, settingsTable, dbPath, yOffset)
+local function CreateSettingToggleRows(parent, toggleList, toggleBtnSets, isEnabled, settingsTable, dbPath, yOffset, contentWidth)
     for _, toggle in ipairs(toggleList) do
         local capturedKey = toggle.key
         local currentVal = settingsTable[capturedKey] ~= false
 
         local rowRefresh, refs
-        yOffset, rowRefresh, refs = OneWoW_GUI:CreateToggleRow(dsc, {
+        yOffset, rowRefresh, refs = OneWoW_GUI:CreateToggleRow(parent, {
             yOffset = yOffset,
+            contentWidth = contentWidth,
             label = L[toggle.localeKey],
             value = currentVal,
             isEnabled = isEnabled,
@@ -154,76 +204,42 @@ local function ShowCustomNotesDetail(split, dsc, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 12
-
-    local reqLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    reqLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    reqLabel:SetText(L["TIPS_CUSTOMNOTES_REQUIRES"])
-    reqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local notesLoaded = (OneWoW_Notes ~= nil)
-    local detectedValue = OneWoW_GUI:CreateFS(dsc, 12)
-    detectedValue:SetPoint("LEFT", reqLabel, "RIGHT", 8, 0)
-    if notesLoaded then
-        detectedValue:SetText(L["TIPS_CUSTOMNOTES_DETECTED"])
-        detectedValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        detectedValue:SetText(L["TIPS_CUSTOMNOTES_NOT_DETECTED"])
-        detectedValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
-
-    yOffset = yOffset - math.max(24, reqLabel:GetStringHeight() + 8)
-
     local cnSettings = Registry:GetFeatureSettings("tooltips", "customnotes")
+    local stack, finish = BeginDetailCardStack(split, dsc, yOffset)
 
-    local linesHeader = OneWoW_GUI:CreateFS(dsc, 12)
-    linesHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    linesHeader:SetText(L["TIPS_CUSTOMNOTES_SECTION_LINES"])
-    linesHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-    yOffset = yOffset - linesHeader:GetStringHeight() - 4
+    stack:AddCard("tips:cn:requires", L["TIPS_ITEMTRACKER_REQUIRES_SECTION"], function(content, _)
+        local rowY = 0
+        local reqLabel = OneWoW_GUI:CreateFS(content, 12)
+        reqLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+        reqLabel:SetText(L["TIPS_CUSTOMNOTES_REQUIRES"])
+        reqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local linesDesc = OneWoW_GUI:CreateFS(dsc, 10)
-    linesDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    linesDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    linesDesc:SetJustifyH("LEFT")
-    linesDesc:SetWordWrap(true)
-    linesDesc:SetSpacing(2)
-    linesDesc:SetText(L["TIPS_CUSTOMNOTES_SECTION_LINES_DESC"])
-    linesDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - linesDesc:GetStringHeight() - 6
+        local notesLoaded = (OneWoW_Notes ~= nil)
+        local detectedValue = OneWoW_GUI:CreateFS(content, 12)
+        detectedValue:SetPoint("LEFT", reqLabel, "RIGHT", 8, 0)
+        if notesLoaded then
+            detectedValue:SetText(L["TIPS_CUSTOMNOTES_DETECTED"])
+            detectedValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        else
+            detectedValue:SetText(L["TIPS_CUSTOMNOTES_NOT_DETECTED"])
+            detectedValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+        end
+        return math.max(1, math.max(24, reqLabel:GetStringHeight() + 8))
+    end)
 
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 10
+    stack:AddCard("tips:cn:lines", L["TIPS_CUSTOMNOTES_SECTION_LINES"], function(content, contentWidth)
+        local rowY = PlaceCardSectionDesc(content, L["TIPS_CUSTOMNOTES_SECTION_LINES_DESC"], 0, contentWidth)
+        rowY = CreateSettingToggleRows(content, CUSTOMNOTES_LINE_TOGGLES, toggleBtnSets, isEnabled, cnSettings, "customnotes", rowY, contentWidth)
+        return math.max(1, math.abs(rowY))
+    end)
 
-    yOffset = CreateSettingToggleRows(dsc, CUSTOMNOTES_LINE_TOGGLES, toggleBtnSets, isEnabled, cnSettings, "customnotes", yOffset)
+    stack:AddCard("tips:cn:warning", L["TIPS_CUSTOMNOTES_SECTION_WARNING"], function(content, contentWidth)
+        local rowY = PlaceCardSectionDesc(content, L["TIPS_CUSTOMNOTES_SECTION_WARNING_DESC"], 0, contentWidth)
+        rowY = CreateSettingToggleRows(content, CUSTOMNOTES_WARNING_TOGGLES, toggleBtnSets, isEnabled, cnSettings, "customnotes", rowY, contentWidth)
+        return math.max(1, math.abs(rowY))
+    end)
 
-    yOffset = yOffset - 6
-
-    local warnHeader = OneWoW_GUI:CreateFS(dsc, 12)
-    warnHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    warnHeader:SetText(L["TIPS_CUSTOMNOTES_SECTION_WARNING"])
-    warnHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-    yOffset = yOffset - warnHeader:GetStringHeight() - 4
-
-    local warnDesc = OneWoW_GUI:CreateFS(dsc, 10)
-    warnDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    warnDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    warnDesc:SetJustifyH("LEFT")
-    warnDesc:SetWordWrap(true)
-    warnDesc:SetSpacing(2)
-    warnDesc:SetText(L["TIPS_CUSTOMNOTES_SECTION_WARNING_DESC"])
-    warnDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - warnDesc:GetStringHeight() - 6
-
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 10
-
-    yOffset = CreateSettingToggleRows(dsc, CUSTOMNOTES_WARNING_TOGGLES, toggleBtnSets, isEnabled, cnSettings, "customnotes", yOffset)
-
-    dsc:SetHeight(math.abs(yOffset) + 20)
-    OneWoW_GUI:ApplyFontToFrame(dsc)
-    split.UpdateDetailThumb()
+    finish()
 end
 
 local TECHID_TOGGLES = {
@@ -294,22 +310,15 @@ local function ShowTechnicalIDsDetail(split, dsc, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    local toggleHeader = OneWoW_GUI:CreateFS(dsc, 12)
-    toggleHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    toggleHeader:SetText(L["TIPS_MODULE_TOGGLES"])
-    toggleHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-    yOffset = yOffset - toggleHeader:GetStringHeight() - 8
-
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 10
-
     local tidSettings = Registry:GetFeatureSettings("tooltips", "technicalids")
+    local stack, finish = BeginDetailCardStack(split, dsc, yOffset)
 
-    yOffset = CreateSettingToggleRows(dsc, TECHID_TOGGLES, toggleBtnSets, isEnabled, tidSettings, "technicalids", yOffset)
+    stack:AddCard("tips:tid:toggles", L["TIPS_MODULE_TOGGLES"], function(content, contentWidth)
+        local rowY = CreateSettingToggleRows(content, TECHID_TOGGLES, toggleBtnSets, isEnabled, tidSettings, "technicalids", 0, contentWidth)
+        return math.max(1, math.abs(rowY))
+    end)
 
-    dsc:SetHeight(math.abs(yOffset) + 20)
-    OneWoW_GUI:ApplyFontToFrame(dsc)
-    split.UpdateDetailThumb()
+    finish()
 end
 
 local ITEMTRACKER_TOGGLES = {
@@ -355,95 +364,72 @@ local function ShowItemTrackerDetail(split, dsc, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    local toggleHeader = OneWoW_GUI:CreateFS(dsc, 12)
-    toggleHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    toggleHeader:SetText(L["TIPS_ITEMTRACKER_TRACK_SECTION"])
-    toggleHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-    yOffset = yOffset - toggleHeader:GetStringHeight() - 4
-
-    local trackDesc = OneWoW_GUI:CreateFS(dsc, 10)
-    trackDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    trackDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    trackDesc:SetJustifyH("LEFT")
-    trackDesc:SetWordWrap(true)
-    trackDesc:SetSpacing(2)
-    trackDesc:SetText(L["TIPS_ITEMTRACKER_TRACK_SECTION_DESC"])
-    trackDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - trackDesc:GetStringHeight() - 6
-
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 10
-
     local itSettings = Registry:GetFeatureSettings("tooltips", "itemtracker")
+    local stack, finish = BeginDetailCardStack(split, dsc, yOffset)
 
-    yOffset = CreateSettingToggleRows(dsc, ITEMTRACKER_TOGGLES, toggleBtnSets, isEnabled, itSettings, "itemtracker", yOffset)
+    stack:AddCard("tips:it:requires", L["TIPS_ITEMTRACKER_REQUIRES_SECTION"], function(content, _)
+        local rowY = 0
+        local vendorReqLabel = OneWoW_GUI:CreateFS(content, 12)
+        vendorReqLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+        vendorReqLabel:SetText(L["TIPS_ITEMTRACKER_VENDORS_REQUIRES"])
+        vendorReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    yOffset = yOffset - 6
+        local vendorDetected = (OneWoW_CatalogData_Vendors_API ~= nil)
+        local vendorDetVal = OneWoW_GUI:CreateFS(content, 12)
+        vendorDetVal:SetPoint("LEFT", vendorReqLabel, "RIGHT", 8, 0)
+        if vendorDetected then
+            vendorDetVal:SetText(L["TIPS_ITEMTRACKER_VENDORS_DETECTED"])
+            vendorDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        else
+            vendorDetVal:SetText(L["TIPS_ITEMTRACKER_VENDORS_NOT_DETECTED"])
+            vendorDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+        end
+        rowY = rowY - math.max(24, vendorReqLabel:GetStringHeight() + 8)
 
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 12
+        local instReqLabel = OneWoW_GUI:CreateFS(content, 12)
+        instReqLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+        instReqLabel:SetText(L["TIPS_ITEMTRACKER_INSTANCES_REQUIRES"])
+        instReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    yOffset = ns.UI.BuildAltScopeSection(dsc, {
-        yOffset = yOffset,
-        x = 12,
-        getScope = function()
-            local s = Registry:GetFeatureSettings("tooltips", "itemtracker").altScope
-            if type(s) ~= "table" then s = { mode = "all", chars = {}, roles = {} } end
-            return s
-        end,
-        saveScope = function(s)
-            Registry:SetSetting("tooltips", "itemtracker", "altScope", s)
-        end,
-    })
+        local instDetected = (OneWoW_CatalogData_Journal ~= nil)
+        local instDetVal = OneWoW_GUI:CreateFS(content, 12)
+        instDetVal:SetPoint("LEFT", instReqLabel, "RIGHT", 8, 0)
+        if instDetected then
+            instDetVal:SetText(L["TIPS_ITEMTRACKER_INSTANCES_DETECTED"])
+            instDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        else
+            instDetVal:SetText(L["TIPS_ITEMTRACKER_INSTANCES_NOT_DETECTED"])
+            instDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+        end
+        rowY = rowY - math.max(24, instReqLabel:GetStringHeight() + 8)
+        return math.max(1, math.abs(rowY))
+    end)
 
-    yOffset = yOffset - 6
+    stack:AddCard("tips:it:track", L["TIPS_ITEMTRACKER_TRACK_SECTION"], function(content, contentWidth)
+        local rowY = PlaceCardSectionDesc(content, L["TIPS_ITEMTRACKER_TRACK_SECTION_DESC"], 0, contentWidth)
+        rowY = CreateSettingToggleRows(content, ITEMTRACKER_TOGGLES, toggleBtnSets, isEnabled, itSettings, "itemtracker", rowY, contentWidth)
+        return math.max(1, math.abs(rowY))
+    end)
 
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 12
+    stack:AddCard("tips:it:scope", L["TIPS_SCOPE_HEADER"], function(content, contentWidth)
+        local rowY = ns.UI.BuildAltScopeSection(content, {
+            yOffset = 0,
+            x = 0,
+            omitHeader = true,
+            contentWidth = contentWidth,
+            getScope = function()
+                local s = Registry:GetFeatureSettings("tooltips", "itemtracker").altScope
+                if type(s) ~= "table" then s = { mode = "all", chars = {}, roles = {} } end
+                return s
+            end,
+            saveScope = function(s)
+                Registry:SetSetting("tooltips", "itemtracker", "altScope", s)
+            end,
+        })
+        return math.max(1, math.abs(rowY))
+    end)
 
-    local reqHeader = OneWoW_GUI:CreateFS(dsc, 12)
-    reqHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    reqHeader:SetText(L["TIPS_ITEMTRACKER_REQUIRES_SECTION"])
-    reqHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-    yOffset = yOffset - reqHeader:GetStringHeight() - 8
-
-    local vendorReqLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    vendorReqLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    vendorReqLabel:SetText(L["TIPS_ITEMTRACKER_VENDORS_REQUIRES"])
-    vendorReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local vendorDetected = (OneWoW_CatalogData_Vendors_API ~= nil)
-    local vendorDetVal = OneWoW_GUI:CreateFS(dsc, 12)
-    vendorDetVal:SetPoint("LEFT", vendorReqLabel, "RIGHT", 8, 0)
-    if vendorDetected then
-        vendorDetVal:SetText(L["TIPS_ITEMTRACKER_VENDORS_DETECTED"])
-        vendorDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        vendorDetVal:SetText(L["TIPS_ITEMTRACKER_VENDORS_NOT_DETECTED"])
-        vendorDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
-    yOffset = yOffset - math.max(24, vendorReqLabel:GetStringHeight() + 8)
-
-    local instReqLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    instReqLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    instReqLabel:SetText(L["TIPS_ITEMTRACKER_INSTANCES_REQUIRES"])
-    instReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    local instDetected = (OneWoW_CatalogData_Journal ~= nil)
-    local instDetVal = OneWoW_GUI:CreateFS(dsc, 12)
-    instDetVal:SetPoint("LEFT", instReqLabel, "RIGHT", 8, 0)
-    if instDetected then
-        instDetVal:SetText(L["TIPS_ITEMTRACKER_INSTANCES_DETECTED"])
-        instDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        instDetVal:SetText(L["TIPS_ITEMTRACKER_INSTANCES_NOT_DETECTED"])
-        instDetVal:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
-    yOffset = yOffset - math.max(24, instReqLabel:GetStringHeight() + 8)
-
-    dsc:SetHeight(math.abs(yOffset) + 20)
-    OneWoW_GUI:ApplyFontToFrame(dsc)
-    split.UpdateDetailThumb()
+    finish()
 end
 
 local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
@@ -474,40 +460,45 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
+    local stack, finish = BeginDetailCardStack(split, dsc, yOffset)
 
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 12
+    stack:AddCard("tips:pm:requires", L["TIPS_ITEMTRACKER_REQUIRES_SECTION"], function(content, contentWidth)
+        local rowY = 0
+        local reqLabel = OneWoW_GUI:CreateFS(content, 12)
+        reqLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+        reqLabel:SetText(L["TIPS_PLAYERMOUNTS_REQUIRES"])
+        reqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local reqLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    reqLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    reqLabel:SetText(L["TIPS_PLAYERMOUNTS_REQUIRES"])
-    reqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        local qolLoaded = (OneWoW_QoL ~= nil)
+        local detectedValue = OneWoW_GUI:CreateFS(content, 12)
+        detectedValue:SetPoint("LEFT", reqLabel, "RIGHT", 8, 0)
+        if qolLoaded then
+            detectedValue:SetText(L["TIPS_PLAYERMOUNTS_DETECTED"])
+            detectedValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
+        else
+            detectedValue:SetText(L["TIPS_PLAYERMOUNTS_NOT_DETECTED"])
+            detectedValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
+        end
+        rowY = rowY - math.max(24, reqLabel:GetStringHeight() + 8)
 
-    local qolLoaded = (OneWoW_QoL ~= nil)
-    local detectedValue = OneWoW_GUI:CreateFS(dsc, 12)
-    detectedValue:SetPoint("LEFT", reqLabel, "RIGHT", 8, 0)
-    if qolLoaded then
-        detectedValue:SetText(L["TIPS_PLAYERMOUNTS_DETECTED"])
-        detectedValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-    else
-        detectedValue:SetText(L["TIPS_PLAYERMOUNTS_NOT_DETECTED"])
-        detectedValue:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-    end
-    yOffset = yOffset - math.max(24, reqLabel:GetStringHeight() + 8)
+        local noteLabel = OneWoW_GUI:CreateFS(content, 10)
+        noteLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+        local w = tonumber(contentWidth) or 0
+        if w >= 1 then
+            noteLabel:SetWidth(math.max(1, w - 24))
+        else
+            noteLabel:SetPoint("TOPRIGHT", content, "TOPRIGHT", -12, rowY)
+        end
+        noteLabel:SetJustifyH("LEFT")
+        noteLabel:SetWordWrap(true)
+        noteLabel:SetSpacing(2)
+        noteLabel:SetText(L["TIPS_PLAYERMOUNTS_SETTINGS_NOTE"])
+        noteLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
+        rowY = rowY - (noteLabel:GetStringHeight() or 14) - 8
+        return math.max(1, math.abs(rowY))
+    end)
 
-    local noteLabel = OneWoW_GUI:CreateFS(dsc, 10)
-    noteLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    noteLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    noteLabel:SetJustifyH("LEFT")
-    noteLabel:SetWordWrap(true)
-    noteLabel:SetSpacing(2)
-    noteLabel:SetText(L["TIPS_PLAYERMOUNTS_SETTINGS_NOTE"])
-    noteLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - noteLabel:GetStringHeight() - 10
-
-    dsc:SetHeight(math.abs(yOffset) + 20)
-    OneWoW_GUI:ApplyFontToFrame(dsc)
-    split.UpdateDetailThumb()
+    finish()
 end
 
 local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
@@ -539,54 +530,44 @@ local function ShowTalentModsDetail(split, dsc, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    -- Live block, read-only; all writes go through Registry:SetSetting.
     local tmSettings = Registry:GetFeatureSettings("tooltips", "talentmods")
+    local stack, finish = BeginDetailCardStack(split, dsc, yOffset)
 
-    local section1 = OneWoW_GUI:CreateSectionHeader(dsc, {
-        title = L["TIPS_TALENTMODS_SECTION_SETTINGS"],
-        yOffset = yOffset,
-    })
-    yOffset = section1.bottomY - 6
+    stack:AddCard("tips:talentmods:settings", L["TIPS_TALENTMODS_SECTION_SETTINGS"], function(content, contentWidth)
+        local rowY = PlaceCardSectionDesc(content, L["TIPS_TALENTMODS_SECTION_SETTINGS_DESC"], 0, contentWidth)
 
-    local sec1Desc = OneWoW_GUI:CreateFS(dsc, 10)
-    sec1Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    sec1Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    sec1Desc:SetJustifyH("LEFT")
-    sec1Desc:SetWordWrap(true)
-    sec1Desc:SetSpacing(2)
-    sec1Desc:SetText(L["TIPS_TALENTMODS_SECTION_SETTINGS_DESC"])
-    sec1Desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - sec1Desc:GetStringHeight() - 10
+        local newY1, refresh1 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_TALENTMODS_INCLUDE_ACTIVE"],
+            description = L["TIPS_TALENTMODS_INCLUDE_ACTIVE_DESC"],
+            value = tmSettings.includeActive == true,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "talentmods", "includeActive", newVal)
+            end,
+        })
+        rowY = newY1
+        tinsert(allRefreshFuncs, function(enabled) refresh1(enabled, tmSettings.includeActive == true) end)
 
-    local newY1, refresh1 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_TALENTMODS_INCLUDE_ACTIVE"],
-        description = L["TIPS_TALENTMODS_INCLUDE_ACTIVE_DESC"],
-        value = tmSettings.includeActive == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "talentmods", "includeActive", newVal)
-        end,
-    })
-    yOffset = newY1
-    table.insert(allRefreshFuncs, function(enabled) refresh1(enabled, tmSettings.includeActive == true) end)
+        local newY2, refresh2 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_TALENTMODS_HIDE_COMBAT"],
+            description = L["TIPS_TALENTMODS_HIDE_COMBAT_DESC"],
+            value = tmSettings.hideInCombat == true,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "talentmods", "hideInCombat", newVal)
+            end,
+        })
+        rowY = newY2
+        tinsert(allRefreshFuncs, function(enabled) refresh2(enabled, tmSettings.hideInCombat == true) end)
 
-    local newY2, refresh2 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_TALENTMODS_HIDE_COMBAT"],
-        description = L["TIPS_TALENTMODS_HIDE_COMBAT_DESC"],
-        value = tmSettings.hideInCombat == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "talentmods", "hideInCombat", newVal)
-        end,
-    })
-    yOffset = newY2
-    table.insert(allRefreshFuncs, function(enabled) refresh2(enabled, tmSettings.hideInCombat == true) end)
+        return math.max(1, math.abs(rowY))
+    end)
 
-    dsc:SetHeight(math.abs(yOffset) + 20)
-    OneWoW_GUI:ApplyFontToFrame(dsc)
-    split.UpdateDetailThumb()
+    finish()
 end
 
 local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
@@ -618,448 +599,337 @@ local function ShowEnhancementsDetail(split, dsc, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    -- Live block, read-only; all writes go through Registry:SetSetting.
     local enhSettings = Registry:GetFeatureSettings("tooltips", "enhancements")
+    local stack, finish = BeginDetailCardStack(split, dsc, yOffset)
 
-    local sectionItems = OneWoW_GUI:CreateSectionHeader(dsc, {
-        title = L["TIPS_ENHANCEMENTS_SECTION_ITEMS"],
-        yOffset = yOffset,
-    })
-    yOffset = sectionItems.bottomY - 6
+    stack:AddCard("tips:enh:items", L["TIPS_ENHANCEMENTS_SECTION_ITEMS"], function(content, contentWidth)
+        local rowY = PlaceCardSectionDesc(content, L["TIPS_ENHANCEMENTS_SECTION_ITEMS_DESC"], 0, contentWidth)
+        local newY0, refresh0 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_ENHANCEMENTS_REMOVE_BLIZZ_VENDOR"],
+            description = L["TIPS_ENHANCEMENTS_REMOVE_BLIZZ_VENDOR_DESC"],
+            value = enhSettings.removeBlizzardVendorValue ~= false,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "enhancements", "removeBlizzardVendorValue", newVal)
+            end,
+        })
+        tinsert(allRefreshFuncs, function(enabled) refresh0(enabled, enhSettings.removeBlizzardVendorValue ~= false) end)
+        return math.max(1, math.abs(newY0))
+    end)
 
-    local secItemsDesc = OneWoW_GUI:CreateFS(dsc, 10)
-    secItemsDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    secItemsDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    secItemsDesc:SetJustifyH("LEFT")
-    secItemsDesc:SetWordWrap(true)
-    secItemsDesc:SetSpacing(2)
-    secItemsDesc:SetText(L["TIPS_ENHANCEMENTS_SECTION_ITEMS_DESC"])
-    secItemsDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - secItemsDesc:GetStringHeight() - 10
+    stack:AddCard("tips:enh:appearance", L["TIPS_ENHANCEMENTS_SECTION_APPEARANCE"], function(content, contentWidth)
+        local rowY = PlaceCardSectionDesc(content, L["TIPS_ENHANCEMENTS_SECTION_APPEARANCE_DESC"], 0, contentWidth)
 
-    local newY0, refresh0 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_REMOVE_BLIZZ_VENDOR"],
-        description = L["TIPS_ENHANCEMENTS_REMOVE_BLIZZ_VENDOR_DESC"],
-        value = enhSettings.removeBlizzardVendorValue ~= false,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "removeBlizzardVendorValue", newVal)
-        end,
-    })
-    yOffset = newY0
-    table.insert(allRefreshFuncs, function(enabled) refresh0(enabled, enhSettings.removeBlizzardVendorValue ~= false) end)
+        local newY1, refresh1 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_ENHANCEMENTS_HIDE_HEALTHBAR"],
+            description = L["TIPS_ENHANCEMENTS_HIDE_HEALTHBAR_DESC"],
+            value = enhSettings.hideHealthbar == true,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "enhancements", "hideHealthbar", newVal)
+            end,
+        })
+        rowY = newY1
+        tinsert(allRefreshFuncs, function(enabled) refresh1(enabled, enhSettings.hideHealthbar == true) end)
 
-    local section1 = OneWoW_GUI:CreateSectionHeader(dsc, {
-        title = L["TIPS_ENHANCEMENTS_SECTION_APPEARANCE"],
-        yOffset = yOffset,
-    })
-    yOffset = section1.bottomY - 6
+        local newY2, refresh2 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_ENHANCEMENTS_HIDE_COMBAT"],
+            description = L["TIPS_ENHANCEMENTS_HIDE_COMBAT_DESC"],
+            value = enhSettings.hideInCombat == true,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "enhancements", "hideInCombat", newVal)
+            end,
+        })
+        rowY = newY2
+        tinsert(allRefreshFuncs, function(enabled) refresh2(enabled, enhSettings.hideInCombat == true) end)
 
-    local sec1Desc = OneWoW_GUI:CreateFS(dsc, 10)
-    sec1Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    sec1Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    sec1Desc:SetJustifyH("LEFT")
-    sec1Desc:SetWordWrap(true)
-    sec1Desc:SetSpacing(2)
-    sec1Desc:SetText(L["TIPS_ENHANCEMENTS_SECTION_APPEARANCE_DESC"])
-    sec1Desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - sec1Desc:GetStringHeight() - 10
+        local newY3, refresh3 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_ENHANCEMENTS_SCALE"],
+            createContent = function(container)
+                local currentScale = enhSettings.tooltipScale or 100
+                local slider = OneWoW_GUI:CreateSlider(container, {
+                    minVal = 50,
+                    maxVal = 250,
+                    step = 5,
+                    currentVal = currentScale,
+                    width = 280,
+                    fmt = "%d%%",
+                    onChange = function(val)
+                        Registry:SetSetting("tooltips", "enhancements", "tooltipScale", val)
+                    end,
+                })
+                slider:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+                return slider, 36
+            end,
+            value = enhSettings.scaleEnabled == true,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "enhancements", "scaleEnabled", newVal)
+            end,
+        })
+        rowY = newY3
+        tinsert(allRefreshFuncs, function(enabled) refresh3(enabled, enhSettings.scaleEnabled == true) end)
 
-    local newY1, refresh1 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_HIDE_HEALTHBAR"],
-        description = L["TIPS_ENHANCEMENTS_HIDE_HEALTHBAR_DESC"],
-        value = enhSettings.hideHealthbar == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "hideHealthbar", newVal)
-        end,
-    })
-    yOffset = newY1
-    table.insert(allRefreshFuncs, function(enabled) refresh1(enabled, enhSettings.hideHealthbar == true) end)
+        local newY4, refresh4 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_ENHANCEMENTS_ANCHOR"],
+            createContent = function(container)
+                local currentAnchor = enhSettings.anchorPosition or "ANCHOR_CURSOR_RIGHT"
+                local displayText = L["TIPS_ENHANCEMENTS_ANCHOR_RIGHT"]
+                if currentAnchor == "ANCHOR_CURSOR_LEFT" then displayText = L["TIPS_ENHANCEMENTS_ANCHOR_LEFT"]
+                elseif currentAnchor == "ANCHOR_CURSOR" then displayText = L["TIPS_ENHANCEMENTS_ANCHOR_CENTER"] end
 
-    local newY2, refresh2 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_HIDE_COMBAT"],
-        description = L["TIPS_ENHANCEMENTS_HIDE_COMBAT_DESC"],
-        value = enhSettings.hideInCombat == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "hideInCombat", newVal)
-        end,
-    })
-    yOffset = newY2
-    table.insert(allRefreshFuncs, function(enabled) refresh2(enabled, enhSettings.hideInCombat == true) end)
+                local dropdown, dropdownText = OneWoW_GUI:CreateDropdown(container, {
+                    width = 160,
+                    height = 26,
+                    text = displayText,
+                })
+                dropdown:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
 
-    local newY3, refresh3 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_SCALE"],
-        createContent = function(container)
-            local currentScale = enhSettings.tooltipScale or 100
-            local slider = OneWoW_GUI:CreateSlider(container, {
-                minVal = 50,
-                maxVal = 250,
-                step = 5,
-                currentVal = currentScale,
-                width = 280,
-                fmt = "%d%%",
-                onChange = function(val)
-                    Registry:SetSetting("tooltips", "enhancements", "tooltipScale", val)
+                OneWoW_GUI:AttachFilterMenu(dropdown, {
+                    searchable = false,
+                    buildItems = function()
+                        return {
+                            { value = "ANCHOR_CURSOR_LEFT", text = L["TIPS_ENHANCEMENTS_ANCHOR_LEFT"] },
+                            { value = "ANCHOR_CURSOR", text = L["TIPS_ENHANCEMENTS_ANCHOR_CENTER"] },
+                            { value = "ANCHOR_CURSOR_RIGHT", text = L["TIPS_ENHANCEMENTS_ANCHOR_RIGHT"] },
+                        }
+                    end,
+                    onSelect = function(value, text)
+                        Registry:SetSetting("tooltips", "enhancements", "anchorPosition", value)
+                        dropdownText:SetText(text)
+                    end,
+                    getActiveValue = function() return enhSettings.anchorPosition or "ANCHOR_CURSOR_RIGHT" end,
+                })
+                return dropdown, 26
+            end,
+            value = enhSettings.anchorEnabled == true,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "enhancements", "anchorEnabled", newVal)
+            end,
+        })
+        rowY = newY4
+        tinsert(allRefreshFuncs, function(enabled) refresh4(enabled, enhSettings.anchorEnabled == true) end)
+
+        return math.max(1, math.abs(rowY))
+    end)
+
+    stack:AddCard("tips:enh:playerinfo", L["TIPS_ENHANCEMENTS_SECTION_PLAYERINFO"], function(content, contentWidth)
+        local rowY = PlaceCardSectionDesc(content, L["TIPS_ENHANCEMENTS_SECTION_PLAYERINFO_DESC"], 0, contentWidth)
+
+        local defs = {
+            { label = "TIPS_ENHANCEMENTS_CLASS_COLORS", desc = "TIPS_ENHANCEMENTS_CLASS_COLORS_DESC", key = "classColorNames" },
+            { label = "TIPS_ENHANCEMENTS_GUILD_RANK", desc = "TIPS_ENHANCEMENTS_GUILD_RANK_DESC", key = "guildRank" },
+            { label = "TIPS_ENHANCEMENTS_PLAYER_TARGET", desc = "TIPS_ENHANCEMENTS_PLAYER_TARGET_DESC", key = "playerTarget" },
+            { label = "TIPS_ENHANCEMENTS_MYTHIC_SCORE", desc = "TIPS_ENHANCEMENTS_MYTHIC_SCORE_DESC", key = "mythicScore" },
+            { label = "TIPS_ENHANCEMENTS_HIDE_SERVER", desc = "TIPS_ENHANCEMENTS_HIDE_SERVER_DESC", key = "hideServerName" },
+            { label = "TIPS_ENHANCEMENTS_HIDE_TITLES", desc = "TIPS_ENHANCEMENTS_HIDE_TITLES_DESC", key = "hideTitles" },
+            { label = "TIPS_ENHANCEMENTS_REMOVE_PVP_TAG", desc = "TIPS_ENHANCEMENTS_REMOVE_PVP_TAG_DESC", key = "removePvpTag" },
+        }
+        for _, def in ipairs(defs) do
+            local key = def.key
+            local newY, refresh = OneWoW_GUI:CreateToggleRow(content, {
+                contentWidth = contentWidth,
+                yOffset = rowY,
+                label = L[def.label],
+                description = L[def.desc],
+                value = enhSettings[key] == true,
+                isEnabled = isEnabled,
+                onValueChange = function(newVal)
+                    Registry:SetSetting("tooltips", "enhancements", key, newVal)
                 end,
             })
-            slider:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
-            return slider, 36
-        end,
-        value = enhSettings.scaleEnabled == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "scaleEnabled", newVal)
-        end,
-    })
-    yOffset = newY3
-    table.insert(allRefreshFuncs, function(enabled) refresh3(enabled, enhSettings.scaleEnabled == true) end)
-
-    local newY4, refresh4 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_ANCHOR"],
-        createContent = function(container)
-            local currentAnchor = enhSettings.anchorPosition or "ANCHOR_CURSOR_RIGHT"
-            local displayText = L["TIPS_ENHANCEMENTS_ANCHOR_RIGHT"]
-            if currentAnchor == "ANCHOR_CURSOR_LEFT" then displayText = L["TIPS_ENHANCEMENTS_ANCHOR_LEFT"]
-            elseif currentAnchor == "ANCHOR_CURSOR" then displayText = L["TIPS_ENHANCEMENTS_ANCHOR_CENTER"] end
-
-            local dropdown, dropdownText = OneWoW_GUI:CreateDropdown(container, {
-                width = 160,
-                height = 26,
-                text = displayText,
-            })
-            dropdown:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
-
-            OneWoW_GUI:AttachFilterMenu(dropdown, {
-                searchable = false,
-                buildItems = function()
-                    return {
-                        { value = "ANCHOR_CURSOR_LEFT", text = L["TIPS_ENHANCEMENTS_ANCHOR_LEFT"] },
-                        { value = "ANCHOR_CURSOR", text = L["TIPS_ENHANCEMENTS_ANCHOR_CENTER"] },
-                        { value = "ANCHOR_CURSOR_RIGHT", text = L["TIPS_ENHANCEMENTS_ANCHOR_RIGHT"] },
-                    }
-                end,
-                onSelect = function(value, text)
-                    Registry:SetSetting("tooltips", "enhancements", "anchorPosition", value)
-                    dropdownText:SetText(text)
-                end,
-                getActiveValue = function() return enhSettings.anchorPosition or "ANCHOR_CURSOR_RIGHT" end,
-            })
-            return dropdown, 26
-        end,
-        value = enhSettings.anchorEnabled == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "anchorEnabled", newVal)
-        end,
-    })
-    yOffset = newY4
-    table.insert(allRefreshFuncs, function(enabled) refresh4(enabled, enhSettings.anchorEnabled == true) end)
-
-    local section2 = OneWoW_GUI:CreateSectionHeader(dsc, {
-        title = L["TIPS_ENHANCEMENTS_SECTION_PLAYERINFO"],
-        yOffset = yOffset,
-    })
-    yOffset = section2.bottomY - 6
-
-    local sec2Desc = OneWoW_GUI:CreateFS(dsc, 10)
-    sec2Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    sec2Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    sec2Desc:SetJustifyH("LEFT")
-    sec2Desc:SetWordWrap(true)
-    sec2Desc:SetSpacing(2)
-    sec2Desc:SetText(L["TIPS_ENHANCEMENTS_SECTION_PLAYERINFO_DESC"])
-    sec2Desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - sec2Desc:GetStringHeight() - 10
-
-    local newY5, refresh5 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_CLASS_COLORS"],
-        description = L["TIPS_ENHANCEMENTS_CLASS_COLORS_DESC"],
-        value = enhSettings.classColorNames == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "classColorNames", newVal)
-        end,
-    })
-    yOffset = newY5
-    table.insert(allRefreshFuncs, function(enabled) refresh5(enabled, enhSettings.classColorNames == true) end)
-
-    local newY6, refresh6 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_GUILD_RANK"],
-        description = L["TIPS_ENHANCEMENTS_GUILD_RANK_DESC"],
-        value = enhSettings.guildRank == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "guildRank", newVal)
-        end,
-    })
-    yOffset = newY6
-    table.insert(allRefreshFuncs, function(enabled) refresh6(enabled, enhSettings.guildRank == true) end)
-
-    local newY7, refresh7 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_PLAYER_TARGET"],
-        description = L["TIPS_ENHANCEMENTS_PLAYER_TARGET_DESC"],
-        value = enhSettings.playerTarget == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "playerTarget", newVal)
-        end,
-    })
-    yOffset = newY7
-    table.insert(allRefreshFuncs, function(enabled) refresh7(enabled, enhSettings.playerTarget == true) end)
-
-    local newY8, refresh8 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_MYTHIC_SCORE"],
-        description = L["TIPS_ENHANCEMENTS_MYTHIC_SCORE_DESC"],
-        value = enhSettings.mythicScore == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "mythicScore", newVal)
-        end,
-    })
-    yOffset = newY8
-    table.insert(allRefreshFuncs, function(enabled) refresh8(enabled, enhSettings.mythicScore == true) end)
-
-    local newY9, refresh9 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_HIDE_SERVER"],
-        description = L["TIPS_ENHANCEMENTS_HIDE_SERVER_DESC"],
-        value = enhSettings.hideServerName == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "hideServerName", newVal)
-        end,
-    })
-    yOffset = newY9
-    table.insert(allRefreshFuncs, function(enabled) refresh9(enabled, enhSettings.hideServerName == true) end)
-
-    local newY10, refresh10 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_HIDE_TITLES"],
-        description = L["TIPS_ENHANCEMENTS_HIDE_TITLES_DESC"],
-        value = enhSettings.hideTitles == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "hideTitles", newVal)
-        end,
-    })
-    yOffset = newY10
-    table.insert(allRefreshFuncs, function(enabled) refresh10(enabled, enhSettings.hideTitles == true) end)
-
-    local newY11, refresh11 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_REMOVE_PVP_TAG"],
-        description = L["TIPS_ENHANCEMENTS_REMOVE_PVP_TAG_DESC"],
-        value = enhSettings.removePvpTag == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "removePvpTag", newVal)
-        end,
-    })
-    yOffset = newY11
-    table.insert(allRefreshFuncs, function(enabled) refresh11(enabled, enhSettings.removePvpTag == true) end)
-
-    local section3 = OneWoW_GUI:CreateSectionHeader(dsc, {
-        title = L["TIPS_ENHANCEMENTS_SECTION_OPACITY"],
-        yOffset = yOffset,
-    })
-    yOffset = section3.bottomY - 6
-
-    local sec3Desc = OneWoW_GUI:CreateFS(dsc, 10)
-    sec3Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    sec3Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    sec3Desc:SetJustifyH("LEFT")
-    sec3Desc:SetWordWrap(true)
-    sec3Desc:SetSpacing(2)
-    sec3Desc:SetText(L["TIPS_ENHANCEMENTS_SECTION_OPACITY_DESC"])
-    sec3Desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - sec3Desc:GetStringHeight() - 10
-
-    local newY12, refresh12 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_BORDER_OPACITY"],
-        createContent = function(container)
-            local currentVal = enhSettings.borderOpacity or 100
-            local slider = OneWoW_GUI:CreateSlider(container, {
-                minVal = 0,
-                maxVal = 100,
-                step = 5,
-                currentVal = currentVal,
-                width = 280,
-                fmt = "%d%%",
-                onChange = function(val)
-                    Registry:SetSetting("tooltips", "enhancements", "borderOpacity", val)
-                end,
-            })
-            slider:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
-            return slider, 36
-        end,
-        value = enhSettings.borderOpacityEnabled == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "borderOpacityEnabled", newVal)
-        end,
-    })
-    yOffset = newY12
-    table.insert(allRefreshFuncs, function(enabled) refresh12(enabled, enhSettings.borderOpacityEnabled == true) end)
-
-    local newY13, refresh13 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_BG_OPACITY"],
-        createContent = function(container)
-            local currentVal = enhSettings.bgOpacity or 100
-            local slider = OneWoW_GUI:CreateSlider(container, {
-                minVal = 0,
-                maxVal = 100,
-                step = 5,
-                currentVal = currentVal,
-                width = 280,
-                fmt = "%d%%",
-                onChange = function(val)
-                    Registry:SetSetting("tooltips", "enhancements", "bgOpacity", val)
-                end,
-            })
-            slider:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
-            return slider, 36
-        end,
-        value = enhSettings.bgOpacityEnabled == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "bgOpacityEnabled", newVal)
-        end,
-    })
-    yOffset = newY13
-    table.insert(allRefreshFuncs, function(enabled) refresh13(enabled, enhSettings.bgOpacityEnabled == true) end)
-
-    local section4 = OneWoW_GUI:CreateSectionHeader(dsc, {
-        title = L["TIPS_ENHANCEMENTS_SECTION_UNITCOLORS"],
-        yOffset = yOffset,
-    })
-    yOffset = section4.bottomY - 6
-
-    local sec4Desc = OneWoW_GUI:CreateFS(dsc, 10)
-    sec4Desc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    sec4Desc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    sec4Desc:SetJustifyH("LEFT")
-    sec4Desc:SetWordWrap(true)
-    sec4Desc:SetSpacing(2)
-    sec4Desc:SetText(L["TIPS_ENHANCEMENTS_SECTION_UNITCOLORS_DESC"])
-    sec4Desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - sec4Desc:GetStringHeight() - 10
-
-    local function ensureColor(colorKey, defaultR, defaultG, defaultB)
-        if not enhSettings[colorKey] then
-            enhSettings[colorKey] = { r = defaultR, g = defaultG, b = defaultB }
+            rowY = newY
+            tinsert(allRefreshFuncs, function(enabled) refresh(enabled, enhSettings[key] == true) end)
         end
-    end
 
-    ensureColor("partyColor", 0.5, 0.2, 0.65)
-    ensureColor("guildColor", 0.2, 0.6, 0.6)
-    ensureColor("factionFriendlyColor", 0.15, 0.15, 0.5)
-    ensureColor("factionEnemyColor", 0.5, 0.15, 0.12)
+        return math.max(1, math.abs(rowY))
+    end)
 
-    local newY14, refresh14 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_COLOR_PARTY"],
-        createContent = function(container)
-            local descFs = OneWoW_GUI:CreateFS(container, 10)
-            descFs:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
-            descFs:SetPoint("RIGHT", container, "RIGHT", -34, 0)
-            descFs:SetJustifyH("LEFT")
-            descFs:SetWordWrap(true)
-            descFs:SetText(L["TIPS_ENHANCEMENTS_COLOR_PARTY_DESC"])
-            descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            local swatch = OneWoW_GUI:CreateColorSwatch(container, {
-                getColor = function() return enhSettings.partyColor.r, enhSettings.partyColor.g, enhSettings.partyColor.b end,
-                onColorChanged = function(r, g, b) enhSettings.partyColor.r, enhSettings.partyColor.g, enhSettings.partyColor.b = r, g, b end,
-            })
-            swatch:SetPoint("RIGHT", container, "RIGHT", 0, 0)
-            local h = math.max(descFs:GetStringHeight(), 24)
-            return descFs, h
-        end,
-        value = enhSettings.colorParty == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "colorParty", newVal)
-        end,
-    })
-    yOffset = newY14
-    table.insert(allRefreshFuncs, function(enabled) refresh14(enabled, enhSettings.colorParty == true) end)
+    stack:AddCard("tips:enh:opacity", L["TIPS_ENHANCEMENTS_SECTION_OPACITY"], function(content, contentWidth)
+        local rowY = PlaceCardSectionDesc(content, L["TIPS_ENHANCEMENTS_SECTION_OPACITY_DESC"], 0, contentWidth)
 
-    local newY15, refresh15 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_COLOR_GUILD"],
-        createContent = function(container)
-            local descFs = OneWoW_GUI:CreateFS(container, 10)
-            descFs:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
-            descFs:SetPoint("RIGHT", container, "RIGHT", -34, 0)
-            descFs:SetJustifyH("LEFT")
-            descFs:SetWordWrap(true)
-            descFs:SetText(L["TIPS_ENHANCEMENTS_COLOR_GUILD_DESC"])
-            descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            local swatch = OneWoW_GUI:CreateColorSwatch(container, {
-                getColor = function() return enhSettings.guildColor.r, enhSettings.guildColor.g, enhSettings.guildColor.b end,
-                onColorChanged = function(r, g, b) enhSettings.guildColor.r, enhSettings.guildColor.g, enhSettings.guildColor.b = r, g, b end,
-            })
-            swatch:SetPoint("RIGHT", container, "RIGHT", 0, 0)
-            local h = math.max(descFs:GetStringHeight(), 24)
-            return descFs, h
-        end,
-        value = enhSettings.colorGuild == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "colorGuild", newVal)
-        end,
-    })
-    yOffset = newY15
-    table.insert(allRefreshFuncs, function(enabled) refresh15(enabled, enhSettings.colorGuild == true) end)
+        local newY12, refresh12 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_ENHANCEMENTS_BORDER_OPACITY"],
+            createContent = function(container)
+                local currentVal = enhSettings.borderOpacity or 100
+                local slider = OneWoW_GUI:CreateSlider(container, {
+                    minVal = 0,
+                    maxVal = 100,
+                    step = 5,
+                    currentVal = currentVal,
+                    width = 280,
+                    fmt = "%d%%",
+                    onChange = function(val)
+                        Registry:SetSetting("tooltips", "enhancements", "borderOpacity", val)
+                    end,
+                })
+                slider:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+                return slider, 36
+            end,
+            value = enhSettings.borderOpacityEnabled == true,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "enhancements", "borderOpacityEnabled", newVal)
+            end,
+        })
+        rowY = newY12
+        tinsert(allRefreshFuncs, function(enabled) refresh12(enabled, enhSettings.borderOpacityEnabled == true) end)
 
-    local newY16, refresh16 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_ENHANCEMENTS_COLOR_FACTION"],
-        createContent = function(container)
-            local descFs = OneWoW_GUI:CreateFS(container, 10)
-            descFs:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
-            descFs:SetPoint("RIGHT", container, "RIGHT", -60, 0)
-            descFs:SetJustifyH("LEFT")
-            descFs:SetWordWrap(true)
-            descFs:SetText(L["TIPS_ENHANCEMENTS_COLOR_FACTION_DESC"])
-            descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            local friendSwatch = OneWoW_GUI:CreateColorSwatch(container, {
-                getColor = function() return enhSettings.factionFriendlyColor.r, enhSettings.factionFriendlyColor.g, enhSettings.factionFriendlyColor.b end,
-                onColorChanged = function(r, g, b) enhSettings.factionFriendlyColor.r, enhSettings.factionFriendlyColor.g, enhSettings.factionFriendlyColor.b = r, g, b end,
-            })
-            friendSwatch:SetPoint("RIGHT", container, "RIGHT", -30, 0)
-            local enemySwatch = OneWoW_GUI:CreateColorSwatch(container, {
-                getColor = function() return enhSettings.factionEnemyColor.r, enhSettings.factionEnemyColor.g, enhSettings.factionEnemyColor.b end,
-                onColorChanged = function(r, g, b) enhSettings.factionEnemyColor.r, enhSettings.factionEnemyColor.g, enhSettings.factionEnemyColor.b = r, g, b end,
-            })
-            enemySwatch:SetPoint("RIGHT", container, "RIGHT", 0, 0)
-            local h = math.max(descFs:GetStringHeight(), 24)
-            return descFs, h
-        end,
-        value = enhSettings.colorFaction == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "enhancements", "colorFaction", newVal)
-        end,
-    })
-    yOffset = newY16
-    table.insert(allRefreshFuncs, function(enabled) refresh16(enabled, enhSettings.colorFaction == true) end)
+        local newY13, refresh13 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_ENHANCEMENTS_BG_OPACITY"],
+            createContent = function(container)
+                local currentVal = enhSettings.bgOpacity or 100
+                local slider = OneWoW_GUI:CreateSlider(container, {
+                    minVal = 0,
+                    maxVal = 100,
+                    step = 5,
+                    currentVal = currentVal,
+                    width = 280,
+                    fmt = "%d%%",
+                    onChange = function(val)
+                        Registry:SetSetting("tooltips", "enhancements", "bgOpacity", val)
+                    end,
+                })
+                slider:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+                return slider, 36
+            end,
+            value = enhSettings.bgOpacityEnabled == true,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "enhancements", "bgOpacityEnabled", newVal)
+            end,
+        })
+        rowY = newY13
+        tinsert(allRefreshFuncs, function(enabled) refresh13(enabled, enhSettings.bgOpacityEnabled == true) end)
 
-    dsc:SetHeight(math.abs(yOffset) + 20)
-    OneWoW_GUI:ApplyFontToFrame(dsc)
-    split.UpdateDetailThumb()
+        return math.max(1, math.abs(rowY))
+    end)
+
+    stack:AddCard("tips:enh:unitcolors", L["TIPS_ENHANCEMENTS_SECTION_UNITCOLORS"], function(content, contentWidth)
+        local rowY = PlaceCardSectionDesc(content, L["TIPS_ENHANCEMENTS_SECTION_UNITCOLORS_DESC"], 0, contentWidth)
+
+        local function ensureColor(colorKey, defaultR, defaultG, defaultB)
+            if not enhSettings[colorKey] then
+                enhSettings[colorKey] = { r = defaultR, g = defaultG, b = defaultB }
+            end
+        end
+        ensureColor("partyColor", 0.5, 0.2, 0.65)
+        ensureColor("guildColor", 0.2, 0.6, 0.6)
+        ensureColor("factionFriendlyColor", 0.15, 0.15, 0.5)
+        ensureColor("factionEnemyColor", 0.5, 0.15, 0.12)
+
+        local newY14, refresh14 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_ENHANCEMENTS_COLOR_PARTY"],
+            createContent = function(container)
+                local descFs = OneWoW_GUI:CreateFS(container, 10)
+                descFs:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+                descFs:SetPoint("RIGHT", container, "RIGHT", -34, 0)
+                descFs:SetJustifyH("LEFT")
+                descFs:SetWordWrap(true)
+                descFs:SetText(L["TIPS_ENHANCEMENTS_COLOR_PARTY_DESC"])
+                descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                local swatch = OneWoW_GUI:CreateColorSwatch(container, {
+                    getColor = function() return enhSettings.partyColor.r, enhSettings.partyColor.g, enhSettings.partyColor.b end,
+                    onColorChanged = function(r, g, b) enhSettings.partyColor.r, enhSettings.partyColor.g, enhSettings.partyColor.b = r, g, b end,
+                })
+                swatch:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+                local h = math.max(descFs:GetStringHeight(), 24)
+                return descFs, h
+            end,
+            value = enhSettings.colorParty == true,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "enhancements", "colorParty", newVal)
+            end,
+        })
+        rowY = newY14
+        tinsert(allRefreshFuncs, function(enabled) refresh14(enabled, enhSettings.colorParty == true) end)
+
+        local newY15, refresh15 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_ENHANCEMENTS_COLOR_GUILD"],
+            createContent = function(container)
+                local descFs = OneWoW_GUI:CreateFS(container, 10)
+                descFs:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+                descFs:SetPoint("RIGHT", container, "RIGHT", -34, 0)
+                descFs:SetJustifyH("LEFT")
+                descFs:SetWordWrap(true)
+                descFs:SetText(L["TIPS_ENHANCEMENTS_COLOR_GUILD_DESC"])
+                descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                local swatch = OneWoW_GUI:CreateColorSwatch(container, {
+                    getColor = function() return enhSettings.guildColor.r, enhSettings.guildColor.g, enhSettings.guildColor.b end,
+                    onColorChanged = function(r, g, b) enhSettings.guildColor.r, enhSettings.guildColor.g, enhSettings.guildColor.b = r, g, b end,
+                })
+                swatch:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+                local h = math.max(descFs:GetStringHeight(), 24)
+                return descFs, h
+            end,
+            value = enhSettings.colorGuild == true,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "enhancements", "colorGuild", newVal)
+            end,
+        })
+        rowY = newY15
+        tinsert(allRefreshFuncs, function(enabled) refresh15(enabled, enhSettings.colorGuild == true) end)
+
+        local newY16, refresh16 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_ENHANCEMENTS_COLOR_FACTION"],
+            createContent = function(container)
+                local descFs = OneWoW_GUI:CreateFS(container, 10)
+                descFs:SetPoint("TOPLEFT", container, "TOPLEFT", 0, 0)
+                descFs:SetPoint("RIGHT", container, "RIGHT", -60, 0)
+                descFs:SetJustifyH("LEFT")
+                descFs:SetWordWrap(true)
+                descFs:SetText(L["TIPS_ENHANCEMENTS_COLOR_FACTION_DESC"])
+                descFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+                local friendSwatch = OneWoW_GUI:CreateColorSwatch(container, {
+                    getColor = function() return enhSettings.factionFriendlyColor.r, enhSettings.factionFriendlyColor.g, enhSettings.factionFriendlyColor.b end,
+                    onColorChanged = function(r, g, b) enhSettings.factionFriendlyColor.r, enhSettings.factionFriendlyColor.g, enhSettings.factionFriendlyColor.b = r, g, b end,
+                })
+                friendSwatch:SetPoint("RIGHT", container, "RIGHT", -30, 0)
+                local enemySwatch = OneWoW_GUI:CreateColorSwatch(container, {
+                    getColor = function() return enhSettings.factionEnemyColor.r, enhSettings.factionEnemyColor.g, enhSettings.factionEnemyColor.b end,
+                    onColorChanged = function(r, g, b) enhSettings.factionEnemyColor.r, enhSettings.factionEnemyColor.g, enhSettings.factionEnemyColor.b = r, g, b end,
+                })
+                enemySwatch:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+                local h = math.max(descFs:GetStringHeight(), 24)
+                return descFs, h
+            end,
+            value = enhSettings.colorFaction == true,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "enhancements", "colorFaction", newVal)
+            end,
+        })
+        rowY = newY16
+        tinsert(allRefreshFuncs, function(enabled) refresh16(enabled, enhSettings.colorFaction == true) end)
+
+        return math.max(1, math.abs(rowY))
+    end)
+
+    finish()
 end
 
 local function ShowValueDetail(split, dsc, feature, selectedRow)
@@ -1091,189 +961,153 @@ local function ShowValueDetail(split, dsc, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    -- Live block, read-only; all writes go through Registry:SetSetting, which
-    -- also drives ExternalTooltipSync via its registered listener.
     local valSettings = Registry:GetFeatureSettings("tooltips", "value")
     local fontOffset = math.max(0, OneWoW_GUI:GetFontSizeOffset() or 0)
+    local stack, finish = BeginDetailCardStack(split, dsc, yOffset)
 
-    local secDisplay = OneWoW_GUI:CreateSectionHeader(dsc, {
-        title = L["TIPS_VALUE_SECTION_DISPLAY"],
-        yOffset = yOffset,
-    })
-    yOffset = secDisplay.bottomY - 12
+    stack:AddCard("tips:value:requires", L["TIPS_VALUE_REQUIRES_SECTION"], function(content, _)
+        local rowY = 0
+        local auctionsReqLabel = OneWoW_GUI:CreateFS(content, 12)
+        auctionsReqLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+        auctionsReqLabel:SetText(L["TIPS_VALUE_AUCTIONS_REQUIRES"])
+        auctionsReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local dispDesc = OneWoW_GUI:CreateFS(dsc, 10)
-    dispDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    dispDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    dispDesc:SetJustifyH("LEFT")
-    dispDesc:SetWordWrap(true)
-    dispDesc:SetSpacing(2)
-    dispDesc:SetText(L["TIPS_VALUE_SECTION_DISPLAY_DESC"])
-    dispDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - dispDesc:GetStringHeight() - 10
-
-    local newY1, refresh1 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_VALUE_SHOW_VENDOR_PRICE"],
-        description = L["TIPS_VALUE_SHOW_VENDOR_PRICE_DESC"],
-        value = valSettings.showVendorPrice ~= false,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "value", "showVendorPrice", newVal)
-        end,
-    })
-    yOffset = newY1
-    table.insert(allRefreshFuncs, function(enabled) refresh1(enabled, valSettings.showVendorPrice ~= false) end)
-
-    local newY2, refresh2 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_VALUE_SHOW_AH_VALUE"],
-        description = L["TIPS_VALUE_SHOW_AH_VALUE_DESC"],
-        value = valSettings.showAHValue ~= false,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "value", "showAHValue", newVal)
-        end,
-    })
-    yOffset = newY2
-    table.insert(allRefreshFuncs, function(enabled) refresh2(enabled, valSettings.showAHValue ~= false) end)
-
-    yOffset = yOffset - 16
-
-    local secAH = OneWoW_GUI:CreateSectionHeader(dsc, {
-        title = L["TIPS_VALUE_SECTION_AH"],
-        yOffset = yOffset,
-    })
-    yOffset = secAH.bottomY - 12
-
-    local ahIntro = OneWoW_GUI:CreateFS(dsc, 10)
-    ahIntro:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    ahIntro:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    ahIntro:SetJustifyH("LEFT")
-    ahIntro:SetWordWrap(true)
-    ahIntro:SetSpacing(2)
-    ahIntro:SetText(L["TIPS_VALUE_SECTION_AH_DESC"])
-    ahIntro:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - ahIntro:GetStringHeight() - 8
-
-    local ahSourceWidgets = OneWoW.ItemPrices:AttachAHSourceControl(dsc, { yOffset = yOffset, width = 220 })
-    yOffset = ahSourceWidgets.bottomY
-
-    local function refreshAhSourceRow(enabled, ahOn)
-        local on = enabled and ahOn
-        if on then
-            ahSourceWidgets.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        else
-            ahSourceWidgets.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        local auctionsDetVal = OneWoW_GUI:CreateFS(content, 12)
+        auctionsDetVal:SetPoint("LEFT", auctionsReqLabel, "RIGHT", 8, 0)
+        auctionsDetValRef = auctionsDetVal
+        ApplyAuctionsDetectedLabel()
+        if not auctionsDataReadyWatchRegistered then
+            auctionsDataReadyWatchRegistered = true
+            OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Auctions", ApplyAuctionsDetectedLabel)
         end
-        ahSourceWidgets.desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        ahSourceWidgets.dropdown:SetAlpha(on and 1 or 0.45)
-    end
-    table.insert(allRefreshFuncs, function(enabled) refreshAhSourceRow(enabled, valSettings.showAHValue ~= false) end)
-    refreshAhSourceRow(isEnabled, valSettings.showAHValue ~= false)
-
-    yOffset = yOffset - 14
-
-    local secTSM = OneWoW_GUI:CreateSectionHeader(dsc, {
-        title = L["TIPS_VALUE_SECTION_TSM"],
-        yOffset = yOffset,
-    })
-    yOffset = secTSM.bottomY - 12
-
-    local tsmIntro = OneWoW_GUI:CreateFS(dsc, 10)
-    tsmIntro:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    tsmIntro:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    tsmIntro:SetJustifyH("LEFT")
-    tsmIntro:SetWordWrap(true)
-    tsmIntro:SetSpacing(2)
-    tsmIntro:SetText(L["TIPS_VALUE_SECTION_TSM_DESC"])
-    tsmIntro:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-    yOffset = yOffset - tsmIntro:GetStringHeight() - 8
-
-    local newY3, refresh3 = OneWoW_GUI:CreateToggleRow(dsc, {
-        yOffset = yOffset,
-        label = L["TIPS_VALUE_SHOW_TSM"],
-        description = L["TIPS_VALUE_SHOW_TSM_DESC"],
-        value = valSettings.showTSMValue == true,
-        isEnabled = isEnabled,
-        onValueChange = function(newVal)
-            Registry:SetSetting("tooltips", "value", "showTSMValue", newVal)
-        end,
-    })
-    yOffset = newY3
-    table.insert(allRefreshFuncs, function(enabled) refresh3(enabled, valSettings.showTSMValue == true) end)
-
-    local tsmStrLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    tsmStrLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    tsmStrLabel:SetJustifyH("LEFT")
-    tsmStrLabel:SetText(L["TIPS_VALUE_TSM_STRING_LABEL"])
-    tsmStrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    yOffset = yOffset - tsmStrLabel:GetStringHeight() - 4
-
-    local tsmStrEb = OneWoW_GUI:CreateEditBox(dsc, {
-        width = 240,
-        height = 26,
-        placeholderText = "",
-    })
-    tsmStrEb:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    tsmStrEb:SetText(valSettings.tsmPriceString or "dbmarket")
-    tsmStrEb:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    tsmStrEb:HookScript("OnEditFocusLost", function(self)
-        local t = self:GetText()
-        Registry:SetSetting("tooltips", "value", "tsmPriceString", (t and t ~= "") and t or "dbmarket")
+        rowY = rowY - math.max(24, auctionsReqLabel:GetStringHeight() + 8)
+        return math.max(1, math.abs(rowY))
     end)
-    tsmStrEb:SetScript("OnEnterPressed", function(self)
-        self:ClearFocus()
+
+    stack:AddCard("tips:value:display", L["TIPS_VALUE_SECTION_DISPLAY"], function(content, contentWidth)
+        local rowY = PlaceCardSectionDesc(content, L["TIPS_VALUE_SECTION_DISPLAY_DESC"], 0, contentWidth)
+
+        local newY1, refresh1 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_VALUE_SHOW_VENDOR_PRICE"],
+            description = L["TIPS_VALUE_SHOW_VENDOR_PRICE_DESC"],
+            value = valSettings.showVendorPrice ~= false,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "value", "showVendorPrice", newVal)
+            end,
+        })
+        rowY = newY1
+        tinsert(allRefreshFuncs, function(enabled) refresh1(enabled, valSettings.showVendorPrice ~= false) end)
+
+        local newY2, refresh2 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_VALUE_SHOW_AH_VALUE"],
+            description = L["TIPS_VALUE_SHOW_AH_VALUE_DESC"],
+            value = valSettings.showAHValue ~= false,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "value", "showAHValue", newVal)
+            end,
+        })
+        rowY = newY2
+        tinsert(allRefreshFuncs, function(enabled) refresh2(enabled, valSettings.showAHValue ~= false) end)
+
+        return math.max(1, math.abs(rowY))
     end)
-    yOffset = yOffset - (32 + fontOffset)
 
-    local tsmStrDesc = OneWoW_GUI:CreateFS(dsc, 10)
-    tsmStrDesc:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    tsmStrDesc:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    tsmStrDesc:SetJustifyH("LEFT")
-    tsmStrDesc:SetWordWrap(true)
-    tsmStrDesc:SetSpacing(2)
-    tsmStrDesc:SetText(L["TIPS_VALUE_TSM_STRING_DESC"])
-    tsmStrDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    yOffset = yOffset - tsmStrDesc:GetStringHeight() - 10
+    stack:AddCard("tips:value:ah", L["TIPS_VALUE_SECTION_AH"], function(content, contentWidth)
+        local rowY = PlaceCardSectionDesc(content, L["TIPS_VALUE_SECTION_AH_DESC"], 0, contentWidth)
 
-    local function refreshTsmStrRow(enabled, tsmOn)
-        local on = enabled and tsmOn
-        if on then
-            tsmStrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-        else
-            tsmStrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        local ahSourceWidgets = OneWoW.ItemPrices:AttachAHSourceControl(content, { yOffset = rowY, width = 220 })
+        rowY = ahSourceWidgets.bottomY
+
+        local function refreshAhSourceRow(enabled, ahOn)
+            local on = enabled and ahOn
+            if on then
+                ahSourceWidgets.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            else
+                ahSourceWidgets.label:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            end
+            ahSourceWidgets.desc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            ahSourceWidgets.dropdown:SetAlpha(on and 1 or 0.45)
         end
+        tinsert(allRefreshFuncs, function(enabled) refreshAhSourceRow(enabled, valSettings.showAHValue ~= false) end)
+        refreshAhSourceRow(isEnabled, valSettings.showAHValue ~= false)
+
+        return math.max(1, math.abs(rowY))
+    end)
+
+    stack:AddCard("tips:value:tsm", L["TIPS_VALUE_SECTION_TSM"], function(content, contentWidth)
+        local rowY = PlaceCardSectionDesc(content, L["TIPS_VALUE_SECTION_TSM_DESC"], 0, contentWidth)
+
+        local newY3, refresh3 = OneWoW_GUI:CreateToggleRow(content, {
+            contentWidth = contentWidth,
+            yOffset = rowY,
+            label = L["TIPS_VALUE_SHOW_TSM"],
+            description = L["TIPS_VALUE_SHOW_TSM_DESC"],
+            value = valSettings.showTSMValue == true,
+            isEnabled = isEnabled,
+            onValueChange = function(newVal)
+                Registry:SetSetting("tooltips", "value", "showTSMValue", newVal)
+            end,
+        })
+        rowY = newY3
+        tinsert(allRefreshFuncs, function(enabled) refresh3(enabled, valSettings.showTSMValue == true) end)
+
+        local tsmStrLabel = OneWoW_GUI:CreateFS(content, 12)
+        tsmStrLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+        tsmStrLabel:SetJustifyH("LEFT")
+        tsmStrLabel:SetText(L["TIPS_VALUE_TSM_STRING_LABEL"])
+        tsmStrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        rowY = rowY - tsmStrLabel:GetStringHeight() - 4
+
+        local tsmStrEb = OneWoW_GUI:CreateEditBox(content, {
+            width = 240,
+            height = 26,
+            placeholderText = "",
+        })
+        tsmStrEb:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+        tsmStrEb:SetText(valSettings.tsmPriceString or "dbmarket")
+        tsmStrEb:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        tsmStrEb:HookScript("OnEditFocusLost", function(self)
+            local t = self:GetText()
+            Registry:SetSetting("tooltips", "value", "tsmPriceString", (t and t ~= "") and t or "dbmarket")
+        end)
+        tsmStrEb:SetScript("OnEnterPressed", function(self)
+            self:ClearFocus()
+        end)
+        rowY = rowY - (32 + fontOffset)
+
+        local tsmStrDesc = OneWoW_GUI:CreateFS(content, 10)
+        tsmStrDesc:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+        tsmStrDesc:SetPoint("TOPRIGHT", content, "TOPRIGHT", -12, rowY)
+        tsmStrDesc:SetJustifyH("LEFT")
+        tsmStrDesc:SetWordWrap(true)
+        tsmStrDesc:SetSpacing(2)
+        tsmStrDesc:SetText(L["TIPS_VALUE_TSM_STRING_DESC"])
         tsmStrDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        tsmStrEb:SetAlpha(on and 1 or 0.45)
-    end
-    table.insert(allRefreshFuncs, function(enabled) refreshTsmStrRow(enabled, valSettings.showTSMValue == true) end)
-    refreshTsmStrRow(isEnabled, valSettings.showTSMValue == true)
+        rowY = rowY - tsmStrDesc:GetStringHeight() - 10
 
-    local reqSection = OneWoW_GUI:CreateSectionHeader(dsc, {
-        title = L["TIPS_VALUE_REQUIRES_SECTION"],
-        yOffset = yOffset,
-    })
-    yOffset = reqSection.bottomY - 12
+        local function refreshTsmStrRow(enabled, tsmOn)
+            local on = enabled and tsmOn
+            if on then
+                tsmStrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+            else
+                tsmStrLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            end
+            tsmStrDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+            tsmStrEb:SetAlpha(on and 1 or 0.45)
+        end
+        tinsert(allRefreshFuncs, function(enabled) refreshTsmStrRow(enabled, valSettings.showTSMValue == true) end)
+        refreshTsmStrRow(isEnabled, valSettings.showTSMValue == true)
 
-    local auctionsReqLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    auctionsReqLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    auctionsReqLabel:SetText(L["TIPS_VALUE_AUCTIONS_REQUIRES"])
-    auctionsReqLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+        return math.max(1, math.abs(rowY))
+    end)
 
-    local auctionsDetVal = OneWoW_GUI:CreateFS(dsc, 12)
-    auctionsDetVal:SetPoint("LEFT", auctionsReqLabel, "RIGHT", 8, 0)
-    auctionsDetValRef = auctionsDetVal
-    ApplyAuctionsDetectedLabel()
-    if not auctionsDataReadyWatchRegistered then
-        auctionsDataReadyWatchRegistered = true
-        OneWoW:RegisterDataReadyWatcher("OneWoW_AltTracker_Auctions", ApplyAuctionsDetectedLabel)
-    end
-    yOffset = yOffset - math.max(24, auctionsReqLabel:GetStringHeight() + 8)
-
-    dsc:SetHeight(math.abs(yOffset) + 20)
-    OneWoW_GUI:ApplyFontToFrame(dsc)
-    split.UpdateDetailThumb()
+    finish()
 end
 
 local PETS_TOGGLES = {
@@ -1318,22 +1152,15 @@ local function ShowPetsDetail(split, dsc, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
-    local toggleHeader = OneWoW_GUI:CreateFS(dsc, 12)
-    toggleHeader:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    toggleHeader:SetText(L["TIPS_MODULE_TOGGLES"])
-    toggleHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-    yOffset = yOffset - toggleHeader:GetStringHeight() - 8
-
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 10
-
     local petsSettings = Registry:GetFeatureSettings("tooltips", "pets")
+    local stack, finish = BeginDetailCardStack(split, dsc, yOffset)
 
-    yOffset = CreateSettingToggleRows(dsc, PETS_TOGGLES, toggleBtnSets, isEnabled, petsSettings, "pets", yOffset)
+    stack:AddCard("tips:pets:toggles", L["TIPS_MODULE_TOGGLES"], function(content, contentWidth)
+        local rowY = CreateSettingToggleRows(content, PETS_TOGGLES, toggleBtnSets, isEnabled, petsSettings, "pets", 0, contentWidth)
+        return math.max(1, math.abs(rowY))
+    end)
 
-    dsc:SetHeight(math.abs(yOffset) + 20)
-    OneWoW_GUI:ApplyFontToFrame(dsc)
-    split.UpdateDetailThumb()
+    finish()
 end
 
 local function ShowCollectionsDetail(split, dsc, feature, selectedRow)
@@ -1360,61 +1187,47 @@ local function ShowCollectionsDetail(split, dsc, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
+    local stack, finish = BeginDetailCardStack(split, dsc, yOffset)
 
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 12
+    stack:AddCard("tips:col:recipe_alt", L["TIPS_COLLECTIONS_RECIPE_ALT_DISPLAY"], function(content, contentWidth)
+        local rowY = PlaceCardSectionDesc(content, L["TIPS_COLLECTIONS_RECIPE_ALT_DISPLAY_DESC"], 0, contentWidth)
 
-    local settingsLabel = OneWoW_GUI:CreateFS(dsc, 12)
-    settingsLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    settingsLabel:SetText(L["TIPS_COLLECTIONS_RECIPE_ALT_DISPLAY"])
-    settingsLabel:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-    yOffset = yOffset - settingsLabel:GetStringHeight() - 6
+        local DISPLAY_MODE_KEYS = {
+            differentiated = "TIPS_COLLECTIONS_RECIPE_ALT_DIFFERENTIATED",
+            combined = "TIPS_COLLECTIONS_RECIPE_ALT_COMBINED",
+            self_only = "TIPS_COLLECTIONS_RECIPE_ALT_SELF_ONLY",
+        }
 
-    local hintLabel = OneWoW_GUI:CreateFS(dsc, 11)
-    hintLabel:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    hintLabel:SetPoint("TOPRIGHT", dsc, "TOPRIGHT", -12, yOffset)
-    hintLabel:SetJustifyH("LEFT")
-    hintLabel:SetWordWrap(true)
-    hintLabel:SetSpacing(2)
-    hintLabel:SetText(L["TIPS_COLLECTIONS_RECIPE_ALT_DISPLAY_DESC"])
-    hintLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    yOffset = yOffset - hintLabel:GetStringHeight() - 10
+        local currentMode = Registry:GetFeatureSettings("tooltips", "collections").recipeAltDisplay or "differentiated"
+        local currentKey = DISPLAY_MODE_KEYS[currentMode] or DISPLAY_MODE_KEYS.differentiated
 
-    local DISPLAY_MODE_KEYS = {
-        differentiated = "TIPS_COLLECTIONS_RECIPE_ALT_DIFFERENTIATED",
-        combined = "TIPS_COLLECTIONS_RECIPE_ALT_COMBINED",
-        self_only = "TIPS_COLLECTIONS_RECIPE_ALT_SELF_ONLY",
-    }
+        local dropdown, dropdownText = OneWoW_GUI:CreateDropdown(content, {
+            width = 220,
+            height = 26,
+            text = L[currentKey],
+        })
+        dropdown:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+        rowY = rowY - 34
 
-    local currentMode = Registry:GetFeatureSettings("tooltips", "collections").recipeAltDisplay or "differentiated"
-    local currentKey = DISPLAY_MODE_KEYS[currentMode] or DISPLAY_MODE_KEYS.differentiated
+        OneWoW_GUI:AttachFilterMenu(dropdown, {
+            searchable = false,
+            buildItems = function()
+                return {
+                    { value = "differentiated", text = L["TIPS_COLLECTIONS_RECIPE_ALT_DIFFERENTIATED"] },
+                    { value = "combined", text = L["TIPS_COLLECTIONS_RECIPE_ALT_COMBINED"] },
+                    { value = "self_only", text = L["TIPS_COLLECTIONS_RECIPE_ALT_SELF_ONLY"] },
+                }
+            end,
+            onSelect = function(value, text)
+                Registry:SetSetting("tooltips", "collections", "recipeAltDisplay", value)
+                dropdownText:SetText(text)
+            end,
+        })
 
-    local dropdown, dropdownText = OneWoW_GUI:CreateDropdown(dsc, {
-        width = 220,
-        height = 26,
-        text = L[currentKey],
-    })
-    dropdown:SetPoint("TOPLEFT", dsc, "TOPLEFT", 12, yOffset)
-    yOffset = yOffset - 34
+        return math.max(1, math.abs(rowY))
+    end)
 
-    OneWoW_GUI:AttachFilterMenu(dropdown, {
-        searchable = false,
-        buildItems = function()
-            return {
-                { value = "differentiated", text = L["TIPS_COLLECTIONS_RECIPE_ALT_DIFFERENTIATED"] },
-                { value = "combined", text = L["TIPS_COLLECTIONS_RECIPE_ALT_COMBINED"] },
-                { value = "self_only", text = L["TIPS_COLLECTIONS_RECIPE_ALT_SELF_ONLY"] },
-            }
-        end,
-        onSelect = function(value, text)
-            Registry:SetSetting("tooltips", "collections", "recipeAltDisplay", value)
-            dropdownText:SetText(text)
-        end,
-    })
-
-    dsc:SetHeight(math.abs(yOffset) + 20)
-    OneWoW_GUI:ApplyFontToFrame(dsc)
-    split.UpdateDetailThumb()
+    finish()
 end
 
 local function ShowRecipeKnowledgeDetail(split, dsc, feature, selectedRow)
@@ -1441,26 +1254,27 @@ local function ShowRecipeKnowledgeDetail(split, dsc, feature, selectedRow)
     descLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
     yOffset = yOffset - descLabel:GetStringHeight() - 16
 
+    local stack, finish = BeginDetailCardStack(split, dsc, yOffset)
 
-    OneWoW_GUI:CreateDivider(dsc, { yOffset = yOffset })
-    yOffset = yOffset - 12
+    stack:AddCard("tips:rk:scope", L["TIPS_SCOPE_HEADER"], function(content, contentWidth)
+        local rowY = ns.UI.BuildAltScopeSection(content, {
+            yOffset = 0,
+            x = 0,
+            omitHeader = true,
+            contentWidth = contentWidth,
+            getScope = function()
+                local s = Registry:GetFeatureSettings("tooltips", "recipeknowledge").altScope
+                if type(s) ~= "table" then s = { mode = "all", chars = {}, roles = {} } end
+                return s
+            end,
+            saveScope = function(s)
+                Registry:SetSetting("tooltips", "recipeknowledge", "altScope", s)
+            end,
+        })
+        return math.max(1, math.abs(rowY))
+    end)
 
-    yOffset = ns.UI.BuildAltScopeSection(dsc, {
-        yOffset = yOffset,
-        x = 12,
-        getScope = function()
-            local s = Registry:GetFeatureSettings("tooltips", "recipeknowledge").altScope
-            if type(s) ~= "table" then s = { mode = "all", chars = {}, roles = {} } end
-            return s
-        end,
-        saveScope = function(s)
-            Registry:SetSetting("tooltips", "recipeknowledge", "altScope", s)
-        end,
-    })
-
-    dsc:SetHeight(math.abs(yOffset) + 20)
-    OneWoW_GUI:ApplyFontToFrame(dsc)
-    split.UpdateDetailThumb()
+    finish()
 end
 
 local function ShowFeatureDetail(split, feature, tabName, selectedRow)

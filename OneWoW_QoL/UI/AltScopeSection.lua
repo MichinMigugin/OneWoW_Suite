@@ -48,13 +48,16 @@ end
 --- tab. All state is read/written through opts.getScope / opts.saveScope so each
 --- feature keeps its own storage.
 ---@param parent Frame scroll child / detail frame
----@param opts table { yOffset, x, getScope, saveScope }
+---@param opts table { yOffset, x, getScope, saveScope, omitHeader?: boolean, width?: number, contentWidth?: number }
 ---@return number newYOffset
 ---@return table scopeControls `{ SetEnabled = fun(enabled: boolean) }`
 function ns.UI.BuildAltScopeSection(parent, opts)
     local L = ns.L
     local y = opts.yOffset or 0
     local x = opts.x or 12
+    -- Card builders pass contentWidth; overlays pass width. Either must be set
+    -- before measuring wrapped note height — card content rects are often 0.
+    local layoutWidth = tonumber(opts.width) or tonumber(opts.contentWidth)
 
     -- getScope must return a live table already shaped { mode, chars, roles }.
     local scope = opts.getScope()
@@ -68,11 +71,13 @@ function ns.UI.BuildAltScopeSection(parent, opts)
 
     local characters = GetCharacters()
 
-    local header = OneWoW_GUI:CreateFS(parent, 12)
-    header:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-    header:SetText(L["TIPS_SCOPE_HEADER"])
-    header:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-    y = y - 22
+    if not opts.omitHeader then
+        local header = OneWoW_GUI:CreateFS(parent, 12)
+        header:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
+        header:SetText(L["TIPS_SCOPE_HEADER"])
+        header:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
+        y = y - 22
+    end
 
     local allCb = OneWoW_GUI:CreateCheckbox(parent, { label = L["TIPS_SCOPE_ALL"] })
     allCb:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
@@ -89,13 +94,12 @@ function ns.UI.BuildAltScopeSection(parent, opts)
     addRoleBtn:SetPoint("LEFT", addAltBtn, "RIGHT", 8, 0)
     y = y - 28
 
-    -- opts.width: explicit layout width for wrapped-text measurement. Freshly
-    -- created parents (card contents) have unresolved rects, so anchoring to
-    -- TOPRIGHT and measuring GetStringHeight would return single-line heights.
+    local textWidth = layoutWidth and math.max(1, layoutWidth - x - 18) or nil
+
     local summary = OneWoW_GUI:CreateFS(parent, 11)
     summary:SetPoint("TOPLEFT", parent, "TOPLEFT", x + 18, y)
-    if opts.width then
-        summary:SetWidth(opts.width - x - 18)
+    if textWidth then
+        summary:SetWidth(textWidth)
     else
         summary:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, y)
     end
@@ -105,8 +109,8 @@ function ns.UI.BuildAltScopeSection(parent, opts)
 
     local note = OneWoW_GUI:CreateFS(parent, 10)
     note:SetPoint("TOPLEFT", parent, "TOPLEFT", x + 18, y)
-    if opts.width then
-        note:SetWidth(opts.width - x - 18)
+    if textWidth then
+        note:SetWidth(textWidth)
     else
         note:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -12, y)
     end
@@ -115,7 +119,8 @@ function ns.UI.BuildAltScopeSection(parent, opts)
     note:SetSpacing(2)
     note:SetText(L["TIPS_SCOPE_EXCLUDE_NOTE"])
     note:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-    y = y - note:GetStringHeight() - 8
+    local noteH = note:GetStringHeight() or 14
+    y = y - noteH - 8
 
     local function RefreshSummary()
         local parts = {}
@@ -237,9 +242,10 @@ function ns.UI.BuildAltScopeSection(parent, opts)
     linkBtn:HookScript("OnLeave", function()
         linkArrow:SetVertexColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
     end)
-    linkBtn:SetPoint("TOPLEFT", parent, "TOPLEFT", x + 18, y)
+    -- Anchor below the note so wrap height never overlaps the manage button.
+    linkBtn:SetPoint("TOPLEFT", note, "BOTTOMLEFT", 0, -8)
     linkBtn:SetScript("OnClick", OpenRolesAndAltsTab)
-    y = y - 30
+    y = y - 22 - 8
 
     -- Master gate for callers that disable the whole alt block (e.g. Gear
     -- Upgrades when "Show alt upgrades" is off).

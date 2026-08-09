@@ -44,5 +44,6 @@ OneWoW.Locale:Register(M._scope, "zhCN", {
     ["PREYBAR_DRAG_HINT"] = "解锁以拖动  -  猎物狩猎栏",
     ["PREYBAR_CLICK_WAYPOINT_HINT"] = "点击设置前往猎物的路径点",
     ["PREYBAR_OPACITY_FMT"] = "不透明度：%d%%",
+    ["PREYBAR_SAMPLE_BAR_HEADER"] = "示例栏",
     ["PREYBAR_SETTINGS_HINT"] = "此面板打开时会显示一个示例栏，便于你摆放它。关闭“锁定位置”即可拖动它，然后再次锁定。在此面板之外，该栏仅在进行中的猎物狩猎期间出现。",
 })

@@ -25,6 +25,9 @@ local selectedRow       = nil
 local modDetailsDialog  = nil
 local modDetailsContent = nil
 
+-- Session-only collapse memory for Features toggle cards (cleared on /reload).
+local collapsedToggleCards = {}
+
 local function QoLUiFavorites()
     local db = ns.db.global
     db.uiFavorites = db.uiFavorites or { features = {}, toggles = {} }
@@ -229,7 +232,20 @@ local function ShowModuleDetail(split, module)
     local isEnabled = ns.ModuleRegistry:IsEnabled(module.id)
     local toggleBtnSets = {}
     local customRefreshCallbacks = {}
-    local function registerRefresh(fn) tinsert(customRefreshCallbacks, fn) end
+    local cardsHost
+    local belowHost
+    local updateDetailHeight
+
+    local function registerRefresh(fn)
+        tinsert(customRefreshCallbacks, function()
+            fn()
+            -- Custom detail may live on belowHost under toggle cards; remeasure
+            -- the scroll child after module rebuilds (CardStack collapse/refresh).
+            if belowHost then
+                updateDetailHeight()
+            end
+        end)
+    end
 
     local enableBtn, _ = OneWoW_GUI:CreateOnOffToggleButtons(detailScrollChild, {
         value = isEnabled,
@@ -316,79 +332,134 @@ local function ShowModuleDetail(split, module)
         yOffset = yOffset - descText:GetStringHeight() - 16
     end
 
+    local headerBottom = yOffset
+
+    updateDetailHeight = function()
+        local cardsH = cardsHost and cardsHost:GetHeight() or 0
+        local belowH = belowHost and belowHost:GetHeight() or 0
+        local gap = (cardsHost and belowHost) and 8 or 0
+        local topChrome = math.abs(headerBottom)
+        detailScrollChild:SetHeight(topChrome + cardsH + gap + belowH + 20)
+        split.UpdateDetailThumb()
+    end
+
     if module.toggles and #module.toggles > 0 then
-        local lastGroup = nil
         local hasGroups = false
         for _, t in ipairs(module.toggles) do
-            if t.group and not t.detailOnly then hasGroups = true; break end
-        end
-
-        if not hasGroups then
-            local toggleHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            toggleHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-            toggleHeader:SetText(L["FEATURES_TOGGLES_HEADER"])
-            toggleHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-            yOffset = yOffset - toggleHeader:GetStringHeight() - 8
-
-            local toggleDivider = detailScrollChild:CreateTexture(nil, "ARTWORK")
-            toggleDivider:SetHeight(1)
-            toggleDivider:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-            toggleDivider:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-            toggleDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            yOffset = yOffset - 10
-        end
-
-        for _, toggle in ipairs(module.toggles) do
-            if not toggle.detailOnly then
-                if hasGroups and toggle.group and toggle.group ~= lastGroup then
-                    lastGroup = toggle.group
-                    if lastGroup ~= module.toggles[1].group then
-                        yOffset = yOffset - 6
-                    end
-                    local groupHeader = detailScrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                    groupHeader:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-                    groupHeader:SetText(ML(module.id, toggle.group) or toggle.group)
-                    groupHeader:SetTextColor(OneWoW_GUI:GetThemeColor("ACCENT_SECONDARY"))
-                    yOffset = yOffset - groupHeader:GetStringHeight() - 8
-
-                    local groupDivider = detailScrollChild:CreateTexture(nil, "ARTWORK")
-                    groupDivider:SetHeight(1)
-                    groupDivider:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 12, yOffset)
-                    groupDivider:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", -12, yOffset)
-                    groupDivider:SetColorTexture(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-                    yOffset = yOffset - 10
-                end
-
-                local capturedToggle = toggle
-                local capturedModule = module
-                local currentVal = ns.ModuleRegistry:GetToggleValue(module.id, toggle.id)
-
-                local rowRefresh
-                yOffset, rowRefresh, _ = OneWoW_GUI:CreateToggleRow(detailScrollChild, {
-                    yOffset = yOffset,
-                    label = ML(module.id, toggle.label) or toggle.label,
-                    description = toggle.description and (ML(module.id, toggle.description) or toggle.description) or nil,
-                    value = currentVal,
-                    isEnabled = isEnabled,
-                    onValueChange = function(newVal)
-                        ns.ModuleRegistry:SetToggleValue(capturedModule.id, capturedToggle.id, newVal)
-                    end,
-                    onLabel = L["FEATURES_ON"],
-                    offLabel = L["FEATURES_OFF"],
-                    buttonWidth = 50,
-                })
-
-                tinsert(toggleBtnSets, { refresh = rowRefresh, toggle = capturedToggle })
+            if t.group and not t.detailOnly then
+                hasGroups = true
+                break
             end
+        end
+
+        local cards = {}
+        if not hasGroups then
+            local list = {}
+            for _, t in ipairs(module.toggles) do
+                if not t.detailOnly then
+                    tinsert(list, t)
+                end
+            end
+            if #list > 0 then
+                tinsert(cards, {
+                    key = module.id .. ":toggles",
+                    title = L["FEATURES_TOGGLES_HEADER"],
+                    toggles = list,
+                })
+            end
+        else
+            local lastGroup = nil
+            local current = nil
+            for _, t in ipairs(module.toggles) do
+                if not t.detailOnly then
+                    if t.group and t.group ~= lastGroup then
+                        lastGroup = t.group
+                        current = {
+                            key = module.id .. ":group:" .. tostring(t.group),
+                            title = ML(module.id, t.group) or t.group,
+                            toggles = {},
+                        }
+                        tinsert(cards, current)
+                    end
+                    if not current then
+                        current = {
+                            key = module.id .. ":toggles",
+                            title = L["FEATURES_TOGGLES_HEADER"],
+                            toggles = {},
+                        }
+                        tinsert(cards, current)
+                    end
+                    tinsert(current.toggles, t)
+                end
+            end
+        end
+
+        if #cards > 0 then
+            cardsHost = CreateFrame("Frame", nil, detailScrollChild)
+            cardsHost:SetPoint("TOPLEFT", detailScrollChild, "TOPLEFT", 0, headerBottom)
+            cardsHost:SetPoint("TOPRIGHT", detailScrollChild, "TOPRIGHT", 0, headerBottom)
+
+            local stack = OneWoW_GUI:CreateCardStack(cardsHost, {
+                getCollapsed = function(key) return collapsedToggleCards[key] end,
+                setCollapsed = function(key, collapsed) collapsedToggleCards[key] = collapsed end,
+            })
+            stack.OnRelayout = updateDetailHeight
+
+            for _, cardDef in ipairs(cards) do
+                local toggles = cardDef.toggles
+                stack:AddCard(cardDef.key, cardDef.title, function(content, contentWidth)
+                    local rowY = 0
+                    for _, toggle in ipairs(toggles) do
+                        local capturedToggle = toggle
+                        local capturedModule = module
+                        local currentVal = ns.ModuleRegistry:GetToggleValue(module.id, toggle.id)
+                        local rowRefresh
+                        rowY, rowRefresh = OneWoW_GUI:CreateToggleRow(content, {
+                            yOffset = rowY,
+                            contentWidth = contentWidth,
+                            label = ML(module.id, toggle.label) or toggle.label,
+                            description = toggle.description and (ML(module.id, toggle.description) or toggle.description) or nil,
+                            value = currentVal,
+                            isEnabled = isEnabled,
+                            onValueChange = function(newVal)
+                                ns.ModuleRegistry:SetToggleValue(capturedModule.id, capturedToggle.id, newVal)
+                            end,
+                            onLabel = L["FEATURES_ON"],
+                            offLabel = L["FEATURES_OFF"],
+                            buttonWidth = 50,
+                        })
+                        tinsert(toggleBtnSets, { refresh = rowRefresh, toggle = capturedToggle })
+                    end
+                    return math.max(1, math.abs(rowY))
+                end)
+            end
+
+            stack:Finish()
         end
     end
 
     if module.CreateCustomDetail then
-        yOffset = module:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh, split.rightStatusBar) or yOffset
+        if cardsHost then
+            belowHost = CreateFrame("Frame", nil, detailScrollChild)
+            belowHost:SetPoint("TOPLEFT", cardsHost, "BOTTOMLEFT", 0, -8)
+            belowHost:SetPoint("TOPRIGHT", cardsHost, "BOTTOMRIGHT", 0, -8)
+            local customY = 0
+            -- Nested CardStacks (e.g. Prey Sample Bar) call this from OnRelayout.
+            belowHost.UpdateDetailHeight = updateDetailHeight
+            customY = module:CreateCustomDetail(belowHost, customY, isEnabled, registerRefresh, split.rightStatusBar) or customY
+            belowHost:SetHeight(math.max(1, math.abs(customY) + 20))
+            updateDetailHeight()
+        else
+            yOffset = module:CreateCustomDetail(detailScrollChild, yOffset, isEnabled, registerRefresh, split.rightStatusBar) or yOffset
+            detailScrollChild:SetHeight(math.abs(yOffset) + 20)
+            split.UpdateDetailThumb()
+        end
+    elseif cardsHost then
+        updateDetailHeight()
+    else
+        detailScrollChild:SetHeight(math.abs(yOffset) + 20)
+        split.UpdateDetailThumb()
     end
-
-    detailScrollChild:SetHeight(math.abs(yOffset) + 20)
-    split.UpdateDetailThumb()
 end
 
 local function BuildFeaturesList(split, filterText)
