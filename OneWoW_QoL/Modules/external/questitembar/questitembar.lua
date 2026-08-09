@@ -91,16 +91,19 @@ function QuestItemBarModule:GetDynamicOrder()
     return s.dynamicOrder
 end
 
-function QuestItemBarModule:SwapDynamicOrder(index, direction)
+function QuestItemBarModule:MoveDynamicOrder(fromIndex, toIndex)
     local s = GetSettings()
     local order = s.dynamicOrder
     if not order or #order == 0 then
         order = { "supertracked", "proximity", "zone", "tracked" }
         s.dynamicOrder = order
     end
-    local other = index + direction
-    if other < 1 or other > #order then return order end
-    order[index], order[other] = order[other], order[index]
+    local n = #order
+    if fromIndex < 1 or fromIndex > n or toIndex < 1 or toIndex > n or fromIndex == toIndex then
+        return order
+    end
+    local entry = tremove(order, fromIndex)
+    tinsert(order, toIndex, entry)
     QuestItemBarModule:ScheduleUpdate()
     return order
 end

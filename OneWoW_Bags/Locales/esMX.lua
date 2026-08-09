@@ -85,7 +85,7 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["TRACKER_ADD_ID"] = "Introduce ID de objeto o moneda a rastrear:",
     ["TRACKER_MENU_REMOVE"] = "Quitar rastreador",
     ["TRACKER_HINT_REMOVE"] = "Clic derecho para quitar este rastreador.",
-    ["TRACKER_HINT_DRAG_REORDER"] = "Arrastra con el botón izquierdo para reordenar.",
+    ["TRACKER_HINT_DRAG_REORDER"] = "Arrastra para reordenar.",
     ["TRACKER_ALREADY_TRACKED"] = "Ese objeto o moneda ya se está rastreando.",
 
     ["CATEGORY_MANAGER_TITLE"] = "Administrador de categorías personalizadas",
@@ -230,8 +230,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
 
     ["SECTION_CREATE"] = "Nueva sección",
     ["SECTION_CREATE_ENTER"] = "Introduce el nombre de la sección:",
-    ["SECTION_DRAG_HINT"] = "Arrastra con el botón izquierdo para reordenar las secciones.",
-    ["CATEGORY_REORDER_HINT"] = "Arrastra con el botón izquierdo para reordenar o mover entre secciones.",
+    ["SECTION_DRAG_HINT"] = "Arrastra para reordenar las secciones.",
+    ["CATEGORY_REORDER_HINT"] = "Arrastra para reordenar o mover entre secciones.",
     ["SECTION_RENAME_ENTER"] = "Introduce el nuevo nombre de la sección:",
     ["SECTION_DELETE_CONFIRM"] = "¿Eliminar esta sección? Las categorías volverán a la lista principal.",
     ["CATEGORY_IN_SECTION"] = "Activa o desactiva las categorías que incluir en esta sección:",

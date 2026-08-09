@@ -84,7 +84,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_ADD_ID"] = "Enter Item ID or Currency ID to track:",
     ["TRACKER_MENU_REMOVE"] = "Remove tracker",
     ["TRACKER_HINT_REMOVE"] = "Right-click to remove this tracker.",
-    ["TRACKER_HINT_DRAG_REORDER"] = "Drag left to reorder.",
+    ["TRACKER_HINT_DRAG_REORDER"] = "Drag to reorder.",
     ["TRACKER_ALREADY_TRACKED"] = "That item or currency is already being tracked.",
 
     ["CATEGORY_MANAGER_TITLE"] = "Custom Category Manager",
@@ -229,8 +229,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
 
     ["SECTION_CREATE"] = "New Section",
     ["SECTION_CREATE_ENTER"] = "Enter section name:",
-    ["SECTION_DRAG_HINT"] = "Drag left to reorder sections.",
-    ["CATEGORY_REORDER_HINT"] = "Drag left to reorder or move between sections.",
+    ["SECTION_DRAG_HINT"] = "Drag to reorder sections.",
+    ["CATEGORY_REORDER_HINT"] = "Drag to reorder or move between sections.",
     ["SECTION_RENAME_ENTER"] = "Enter new section name:",
     ["SECTION_DELETE_CONFIRM"] = "Delete this section? Categories will return to the main list.",
     ["CATEGORY_IN_SECTION"] = "Toggle categories to include in this section:",

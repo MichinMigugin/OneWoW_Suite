@@ -85,7 +85,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["TRACKER_ADD_ID"] = "Inserisci l'ID dell'oggetto o della valuta da tracciare:",
     ["TRACKER_MENU_REMOVE"] = "Rimuovi tracciatore",
     ["TRACKER_HINT_REMOVE"] = "Clic destro per rimuovere questo tracciatore.",
-    ["TRACKER_HINT_DRAG_REORDER"] = "Trascina a sinistra per riordinare.",
+    ["TRACKER_HINT_DRAG_REORDER"] = "Trascina per riordinare.",
     ["TRACKER_ALREADY_TRACKED"] = "Quell'oggetto o valuta è già tracciato.",
 
     ["CATEGORY_MANAGER_TITLE"] = "Gestore di categorie personalizzate",
@@ -230,8 +230,8 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
     ["SECTION_CREATE"] = "Nuova sezione",
     ["SECTION_CREATE_ENTER"] = "Inserisci il nome della sezione:",
-    ["SECTION_DRAG_HINT"] = "Trascina a sinistra per riordinare le sezioni.",
-    ["CATEGORY_REORDER_HINT"] = "Trascina a sinistra per riordinare o spostare tra le sezioni.",
+    ["SECTION_DRAG_HINT"] = "Trascina per riordinare le sezioni.",
+    ["CATEGORY_REORDER_HINT"] = "Trascina per riordinare o spostare tra le sezioni.",
     ["SECTION_RENAME_ENTER"] = "Inserisci il nuovo nome della sezione:",
     ["SECTION_DELETE_CONFIRM"] = "Eliminare questa sezione? Le categorie torneranno all'elenco principale.",
     ["CATEGORY_IN_SECTION"] = "Attiva/disattiva le categorie da includere in questa sezione:",

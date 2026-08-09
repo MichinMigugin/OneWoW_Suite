@@ -60,7 +60,7 @@ local function BuildContent(container, onRelayout, contentYOffset)
         end
     end
 
-    stack:AddCard("qib:settings", L["BAR_SETTINGS"], function(content, _)
+    stack:AddCard("qib:settings", L["BAR_SETTINGS"], function(content, contentWidth)
         local y = 0
 
         -- Row 1: Show Bar | Lock Position | Sort: [Button]
@@ -233,77 +233,98 @@ local function BuildContent(container, onRelayout, contentYOffset)
         end)
         y = y - 34
 
-        -- Dynamic order panel (only when sortMode == 5)
+        -- Dynamic order panel (only when sortMode == 5): horizontal drag chips
         local TIER_LABEL_KEYS = {
             supertracked = "QUESTITEMBAR_TIER_SUPERTRACKED",
             proximity    = "QUESTITEMBAR_TIER_PROXIMITY",
-            zone        = "QUESTITEMBAR_TIER_ZONE",
-            tracked     = "QUESTITEMBAR_TIER_TRACKED",
+            zone         = "QUESTITEMBAR_TIER_ZONE",
+            tracked      = "QUESTITEMBAR_TIER_TRACKED",
         }
-        local DYNAMIC_ROW_HEIGHT = 24
+        local CHIP_H = 26
+        local CHIP_GAP = 6
+        local CHIP_PAD_X = 10
         if s.sortMode == 5 then
             local orderLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             orderLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
             orderLabel:SetText(L["QUESTITEMBAR_DYNAMIC_ORDER"])
             orderLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-            y = y - (orderLabel:GetStringHeight() + 4)
+            y = y - (orderLabel:GetStringHeight() + 6)
 
+            local orderHost = CreateFrame("Frame", nil, content)
+            orderHost:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
+            orderHost:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
+
+            local chips = {}
+            local reorder = OneWoW_GUI:CreateReorderDrag({
+                getItems = function()
+                    return chips
+                end,
+                onReorder = function(from, to)
+                    QuestItemBarModule:MoveDynamicOrder(from, to)
+                    QuestItemBarModule._refreshCustomDetail()
+                end,
+                onPickup = function(chip)
+                    chip:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_FOCUS"))
+                end,
+                onRestore = function(chip)
+                    chip:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                end,
+                onHover = function(chip)
+                    chip:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("ACCENT_PRIMARY"))
+                end,
+                onUnhover = function(chip)
+                    chip:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
+                end,
+            })
+
+            local availW = tonumber(contentWidth) or 0
+            if availW < 1 then
+                availW = orderHost:GetWidth() or 400
+            end
+            local x, rowY = 0, 0
             local order = QuestItemBarModule:GetDynamicOrder()
             for i = 1, #order do
                 local key = order[i]
-                local row = CreateFrame("Frame", nil, content)
-                row:SetHeight(DYNAMIC_ROW_HEIGHT)
-                row:SetPoint("TOPLEFT", content, "TOPLEFT", 0, y)
-                row:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, y)
-
-                local labelText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                labelText:SetPoint("LEFT", row, "LEFT", 0, 0)
+                local chip = OneWoW_GUI:CreateFrame(orderHost, {
+                    height = CHIP_H,
+                    bgColor = "BG_TERTIARY",
+                    borderColor = "BORDER_SUBTLE",
+                })
+                local labelText = OneWoW_GUI:CreateFS(chip, 11)
+                labelText:SetPoint("LEFT", chip, "LEFT", CHIP_PAD_X, 0)
                 labelText:SetText(L[TIER_LABEL_KEYS[key]] or key)
                 labelText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+                local chipW = math.max(48, (labelText:GetStringWidth() or 0) + CHIP_PAD_X * 2)
+                chip:SetWidth(chipW)
 
-                local canMoveUp = i > 1
-                local canMoveDown = i < #order
+                if x > 0 and (x + chipW) > availW then
+                    x = 0
+                    rowY = rowY - (CHIP_H + CHIP_GAP)
+                end
+                chip:SetPoint("TOPLEFT", orderHost, "TOPLEFT", x, rowY)
+                x = x + chipW + CHIP_GAP
 
-                local upBtn = CreateFrame("Button", nil, row)
-                upBtn:SetSize(18, 22)
-                upBtn:SetPoint("RIGHT", row, "RIGHT", -28, 0)
-                upBtn:SetNormalAtlas("common-button-collapseExpand-up")
-                upBtn:SetHighlightAtlas("common-button-collapseExpand-up")
-                if canMoveUp then upBtn:Show() else upBtn:Hide() end
-                upBtn:SetScript("OnEnter", function(self)
-                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    GameTooltip:SetText(L["QUESTITEMBAR_MOVE_UP"])
+                chip:EnableMouse(true)
+                chip:SetScript("OnEnter", function(self)
+                    if reorder:IsActive() then
+                        return
+                    end
+                    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                    GameTooltip:SetText(L[TIER_LABEL_KEYS[key]] or key)
+                    GameTooltip:AddLine(L["QUESTITEMBAR_HINT_DRAG_REORDER"], 0.7, 0.7, 0.7, true)
                     GameTooltip:Show()
                 end)
-                upBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-                upBtn:SetScript("OnClick", function()
-                    if not canMoveUp then return end
-                    QuestItemBarModule:SwapDynamicOrder(i, -1)
-                    QuestItemBarModule._refreshCustomDetail()
+                chip:SetScript("OnLeave", function()
+                    GameTooltip:Hide()
                 end)
 
-                local downBtn = CreateFrame("Button", nil, row)
-                downBtn:SetSize(18, 22)
-                downBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-                downBtn:SetNormalAtlas("common-button-collapseExpand-down")
-                downBtn:SetHighlightAtlas("common-button-collapseExpand-down")
-                OneWoW_GUI:TintScrollReorderButtons(upBtn, downBtn)
-                if canMoveDown then downBtn:Show() else downBtn:Hide() end
-                downBtn:SetScript("OnEnter", function(self)
-                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    GameTooltip:SetText(L["QUESTITEMBAR_MOVE_DOWN"])
-                    GameTooltip:Show()
-                end)
-                downBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-                downBtn:SetScript("OnClick", function()
-                    if not canMoveDown then return end
-                    QuestItemBarModule:SwapDynamicOrder(i, 1)
-                    QuestItemBarModule._refreshCustomDetail()
-                end)
-
-                y = y - (DYNAMIC_ROW_HEIGHT + 2)
+                chips[i] = chip
+                reorder:Attach(chip, i)
             end
-            y = y - 8
+
+            local totalH = (-rowY) + CHIP_H
+            orderHost:SetHeight(totalH)
+            y = y - totalH - 8
         end
 
         -- Row 3: Sliders (Button Size left, Columns right)

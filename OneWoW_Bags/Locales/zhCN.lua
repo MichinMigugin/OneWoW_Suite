@@ -85,7 +85,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["TRACKER_ADD_ID"] = "输入要追踪的物品 ID 或货币 ID：",
     ["TRACKER_MENU_REMOVE"] = "移除追踪",
     ["TRACKER_HINT_REMOVE"] = "右键点击移除此追踪。",
-    ["TRACKER_HINT_DRAG_REORDER"] = "向左拖动以重新排序。",
+    ["TRACKER_HINT_DRAG_REORDER"] = "拖动以重新排序。",
     ["TRACKER_ALREADY_TRACKED"] = "该物品或货币已在追踪中。",
 
     ["CATEGORY_MANAGER_TITLE"] = "自定义分类管理器",
@@ -230,8 +230,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
     ["SECTION_CREATE"] = "新建区块",
     ["SECTION_CREATE_ENTER"] = "输入区块名称：",
-    ["SECTION_DRAG_HINT"] = "向左拖动以重新排序区块。",
-    ["CATEGORY_REORDER_HINT"] = "向左拖动以重新排序或在区块之间移动。",
+    ["SECTION_DRAG_HINT"] = "拖动以重新排序区块。",
+    ["CATEGORY_REORDER_HINT"] = "拖动以重新排序或在区块之间移动。",
     ["SECTION_RENAME_ENTER"] = "输入新的区块名称：",
     ["SECTION_DELETE_CONFIRM"] = "删除此区块？分类将返回主列表。",
     ["CATEGORY_IN_SECTION"] = "切换要包含在此区块中的分类：",

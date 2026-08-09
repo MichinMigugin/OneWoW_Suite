@@ -27,8 +27,7 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["QUESTITEMBAR_TIER_PROXIMITY"] = "Proximity",
     ["QUESTITEMBAR_TIER_ZONE"] = "Current Zone",
     ["QUESTITEMBAR_TIER_TRACKED"] = "Tracked",
-    ["QUESTITEMBAR_MOVE_UP"] = "Move up",
-    ["QUESTITEMBAR_MOVE_DOWN"] = "Move down",
+    ["QUESTITEMBAR_HINT_DRAG_REORDER"] = "Drag to reorder.",
     ["QUESTITEMBAR_QUEST_LABEL"] = "Quest:",
 
     ["QUESTITEMBAR_ALL_USABLE_ITEMS"] = "All Usable Quest Items",

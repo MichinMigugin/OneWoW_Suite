@@ -28,8 +28,7 @@ OneWoW.Locale:Register(M._scope, "ruRU", {
     ["QUESTITEMBAR_TIER_PROXIMITY"] = "Близость",
     ["QUESTITEMBAR_TIER_ZONE"] = "Текущая зона",
     ["QUESTITEMBAR_TIER_TRACKED"] = "Отслеживаемое",
-    ["QUESTITEMBAR_MOVE_UP"] = "Вверх",
-    ["QUESTITEMBAR_MOVE_DOWN"] = "Вниз",
+    ["QUESTITEMBAR_HINT_DRAG_REORDER"] = "Перетащите, чтобы изменить порядок.",
     ["QUESTITEMBAR_QUEST_LABEL"] = "Задание:",
 
     ["QUESTITEMBAR_ALL_USABLE_ITEMS"] = "Все используемые предметы заданий",

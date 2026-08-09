@@ -28,8 +28,7 @@ OneWoW.Locale:Register(M._scope, "itIT", {
     ["QUESTITEMBAR_TIER_PROXIMITY"] = "Prossimità",
     ["QUESTITEMBAR_TIER_ZONE"] = "Zona attuale",
     ["QUESTITEMBAR_TIER_TRACKED"] = "Tracciata",
-    ["QUESTITEMBAR_MOVE_UP"] = "Sposta su",
-    ["QUESTITEMBAR_MOVE_DOWN"] = "Sposta giù",
+    ["QUESTITEMBAR_HINT_DRAG_REORDER"] = "Trascina per riordinare.",
     ["QUESTITEMBAR_QUEST_LABEL"] = "Missione:",
 
     ["QUESTITEMBAR_ALL_USABLE_ITEMS"] = "Tutti gli oggetti missione utilizzabili",

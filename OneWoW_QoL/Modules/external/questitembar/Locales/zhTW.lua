@@ -28,8 +28,7 @@ OneWoW.Locale:Register(M._scope, "zhTW", {
     ["QUESTITEMBAR_TIER_PROXIMITY"] = "距離",
     ["QUESTITEMBAR_TIER_ZONE"] = "目前區域",
     ["QUESTITEMBAR_TIER_TRACKED"] = "追蹤中",
-    ["QUESTITEMBAR_MOVE_UP"] = "上移",
-    ["QUESTITEMBAR_MOVE_DOWN"] = "下移",
+    ["QUESTITEMBAR_HINT_DRAG_REORDER"] = "拖曳以重新排序。",
     ["QUESTITEMBAR_QUEST_LABEL"] = "任務：",
 
     ["QUESTITEMBAR_ALL_USABLE_ITEMS"] = "所有可用任務物品",

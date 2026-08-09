@@ -85,7 +85,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TRACKER_ADD_ID"] = "Entrez l'ID d'objet ou de monnaie à suivre :",
     ["TRACKER_MENU_REMOVE"] = "Retirer le suivi",
     ["TRACKER_HINT_REMOVE"] = "Clic droit pour retirer ce suivi.",
-    ["TRACKER_HINT_DRAG_REORDER"] = "Glisser vers la gauche pour réordonner.",
+    ["TRACKER_HINT_DRAG_REORDER"] = "Glisser pour réordonner.",
     ["TRACKER_ALREADY_TRACKED"] = "Cet objet ou cette monnaie est déjà suivi.",
 
     ["CATEGORY_MANAGER_TITLE"] = "Gestionnaire de catégories personnalisées",
@@ -230,8 +230,8 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
 
     ["SECTION_CREATE"] = "Nouvelle section",
     ["SECTION_CREATE_ENTER"] = "Entrez le nom de la section :",
-    ["SECTION_DRAG_HINT"] = "Glisser vers la gauche pour réordonner les sections.",
-    ["CATEGORY_REORDER_HINT"] = "Glisser vers la gauche pour réordonner ou déplacer entre sections.",
+    ["SECTION_DRAG_HINT"] = "Glisser pour réordonner les sections.",
+    ["CATEGORY_REORDER_HINT"] = "Glisser pour réordonner ou déplacer entre sections.",
     ["SECTION_RENAME_ENTER"] = "Entrez le nouveau nom de la section :",
     ["SECTION_DELETE_CONFIRM"] = "Supprimer cette section ? Les catégories reviennent à la liste principale.",
     ["CATEGORY_IN_SECTION"] = "Activez ou désactivez les catégories à inclure dans cette section :",

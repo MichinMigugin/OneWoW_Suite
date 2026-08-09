@@ -28,8 +28,7 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["QUESTITEMBAR_TIER_PROXIMITY"] = "근접도",
     ["QUESTITEMBAR_TIER_ZONE"] = "현재 지역",
     ["QUESTITEMBAR_TIER_TRACKED"] = "추적 중",
-    ["QUESTITEMBAR_MOVE_UP"] = "위로 이동",
-    ["QUESTITEMBAR_MOVE_DOWN"] = "아래로 이동",
+    ["QUESTITEMBAR_HINT_DRAG_REORDER"] = "드래그하여 순서를 바꿉니다.",
     ["QUESTITEMBAR_QUEST_LABEL"] = "퀘스트:",
 
     ["QUESTITEMBAR_ALL_USABLE_ITEMS"] = "사용 가능한 모든 퀘스트 아이템",

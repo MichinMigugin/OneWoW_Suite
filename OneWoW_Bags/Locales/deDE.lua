@@ -85,7 +85,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TRACKER_ADD_ID"] = "Gegenstands-ID oder Währungs-ID zum Verfolgen eingeben:",
     ["TRACKER_MENU_REMOVE"] = "Tracker entfernen",
     ["TRACKER_HINT_REMOVE"] = "Rechtsklick, um diesen Tracker zu entfernen.",
-    ["TRACKER_HINT_DRAG_REORDER"] = "Mit links ziehen zum Sortieren.",
+    ["TRACKER_HINT_DRAG_REORDER"] = "Ziehen zum Sortieren.",
     ["TRACKER_ALREADY_TRACKED"] = "Dieser Gegenstand oder diese Währung wird bereits verfolgt.",
 
     ["CATEGORY_MANAGER_TITLE"] = "Eigene Kategorien verwalten",
@@ -230,8 +230,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
     ["SECTION_CREATE"] = "Neuer Abschnitt",
     ["SECTION_CREATE_ENTER"] = "Abschnittsname eingeben:",
-    ["SECTION_DRAG_HINT"] = "Mit links ziehen, um Abschnitte zu sortieren.",
-    ["CATEGORY_REORDER_HINT"] = "Mit links ziehen, um Kategorien zu sortieren oder zwischen Abschnitten zu verschieben.",
+    ["SECTION_DRAG_HINT"] = "Ziehen, um Abschnitte zu sortieren.",
+    ["CATEGORY_REORDER_HINT"] = "Ziehen, um Kategorien zu sortieren oder zwischen Abschnitten zu verschieben.",
     ["SECTION_RENAME_ENTER"] = "Neuen Abschnittsnamen eingeben:",
     ["SECTION_DELETE_CONFIRM"] = "Diesen Abschnitt löschen? Kategorien kehren zur Hauptliste zurück.",
     ["CATEGORY_IN_SECTION"] = "Kategorien umschalten, die in diesen Abschnitt aufgenommen werden:",

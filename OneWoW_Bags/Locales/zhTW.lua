@@ -85,7 +85,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TRACKER_ADD_ID"] = "輸入要追蹤的物品 ID 或貨幣 ID：",
     ["TRACKER_MENU_REMOVE"] = "移除追蹤",
     ["TRACKER_HINT_REMOVE"] = "右鍵點擊移除此追蹤。",
-    ["TRACKER_HINT_DRAG_REORDER"] = "向左拖曳以重新排序。",
+    ["TRACKER_HINT_DRAG_REORDER"] = "拖曳以重新排序。",
     ["TRACKER_ALREADY_TRACKED"] = "該物品或貨幣已在追蹤中。",
 
     ["CATEGORY_MANAGER_TITLE"] = "自訂分類管理員",
@@ -230,8 +230,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
     ["SECTION_CREATE"] = "新增區塊",
     ["SECTION_CREATE_ENTER"] = "輸入區塊名稱：",
-    ["SECTION_DRAG_HINT"] = "向左拖曳以重新排序區塊。",
-    ["CATEGORY_REORDER_HINT"] = "向左拖曳以重新排序或在區塊之間移動。",
+    ["SECTION_DRAG_HINT"] = "拖曳以重新排序區塊。",
+    ["CATEGORY_REORDER_HINT"] = "拖曳以重新排序或在區塊之間移動。",
     ["SECTION_RENAME_ENTER"] = "輸入新的區塊名稱：",
     ["SECTION_DELETE_CONFIRM"] = "刪除此區塊？分類將返回主清單。",
     ["CATEGORY_IN_SECTION"] = "切換要包含在此區塊中的分類：",
