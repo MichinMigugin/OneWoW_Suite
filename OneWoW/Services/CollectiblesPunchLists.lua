@@ -79,6 +79,75 @@ local PREYSEEKER_CONTENTS = {
     259966, -- Tower Shield
 }
 
+-- Midnight delve gear (Nebulous Voidcache: Delver's Trove punch-list pool).
+-- Jewelry (rings/necks/trinkets) omitted — same policy as Preyseeker.
+local DELVERS_TROVE_CONTENTS = {
+    -- Cloaks
+    249619, -- Sprawling Mycoshroud
+    249624, -- Osseoclad Paledrape
+    249625, -- Elder Mossveil
+    249628, -- Rampant Bramblecloak
+    -- Cloth (Sprawling)
+    249629, -- Rootunic
+    249630, -- Rootpads
+    249631, -- Tendrils
+    249632, -- Stoloncollar
+    249633, -- Rootstockings
+    249634, -- Fibershells
+    249635, -- Rhizomecord
+    249636, -- Wristroots
+    -- Leather (Osseoclad)
+    249637, -- Marrowvest
+    249638, -- Bonecrushers
+    249639, -- Spinegrapplers
+    249640, -- Saberteeth
+    249641, -- Bonesteppers
+    249642, -- Razorspaulders
+    249643, -- Waistbone
+    249644, -- Ivory Wrist
+    -- Mail (Elder Moss)
+    249645, -- Mossmail
+    249646, -- Mossclogs
+    249647, -- Mossfeelers
+    249648, -- Mosshorns
+    249649, -- Mossvein Breeches
+    249650, -- Mossvein Greatleaves
+    249651, -- Mosscinch
+    249652, -- Mossbands
+    -- Plate (Rampant Bramble)
+    249653, -- Brambleplate
+    249654, -- Thistlestompers
+    249655, -- Creepers
+    249656, -- Briarhelm
+    249657, -- Bramblegreaves
+    249658, -- Thornmantles
+    249659, -- Thornstrap
+    249660, -- Briarcuffs
+    -- Weapons / off-hands / shield
+    249610, -- Resinous Blossomblade
+    249661, -- Root Sculptor's Verdaxe
+    249662, -- Wild Fiberknife
+    249664, -- Gnarled Thornmace
+    249665, -- Blooming Seedpod
+    249667, -- Barbed Rootwand
+    249669, -- Organ Piercer's Briarspear
+    249670, -- Elderoot Spire
+    249671, -- Gnarlroot Spinecleaver
+    249672, -- Elderbloom Lantern
+    249676, -- Bramblebarricade
+    249677, -- Twinthorn Wildglaive
+    251884, -- Abyss Sabre
+    251885, -- Radiant Foil
+    251935, -- Lightgrasp Worldroot
+    259462, -- Thorneedle
+    260187, -- Underbrush Render
+    260188, -- Savage Briaredge
+    260189, -- Rootkeeper's Dancing Needle
+    262729, -- Hand of the Rootkeeper
+    262731, -- Wildthorn Razorfang
+    262732, -- Heavy Bramblebolter
+}
+
 -- Bulging Ethereal Pack weapons / off-hands / shield
 local ETHEREAL_PACK_CONTENTS = {
     274877, -- Phaseblade Headsplitter
@@ -111,6 +180,7 @@ local WINTER_PACK_CONTENTS = {
 
 local CONTENT_GROUPS = {
     preyseeker = { contents = PREYSEEKER_CONTENTS },
+    delversTrove = { contents = DELVERS_TROVE_CONTENTS },
     etherealPack = { contents = ETHEREAL_PACK_CONTENTS },
     winterPack = { contents = WINTER_PACK_CONTENTS },
 }
@@ -118,6 +188,7 @@ local CONTENT_GROUPS = {
 --- cacheItemID → { group, mode }  mode = "punchList" | "direct"
 local CACHE_ENTRIES = {
     [269768] = { group = "preyseeker", mode = "punchList" }, -- Nebulous Voidcache: Prey
+    [268969] = { group = "delversTrove", mode = "punchList" }, -- Nebulous Voidcache: Delver's Trove
     [257023] = { group = "preyseeker", mode = "direct" },    -- Preyseeker's Adventurer Chest
     [257026] = { group = "preyseeker", mode = "direct" },    -- Preyseeker's Veteran Chest
     [262346] = { group = "preyseeker", mode = "direct" },    -- Preyseeker's Champion Chest

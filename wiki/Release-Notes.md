@@ -31,6 +31,9 @@
 - “Mount Status” on the bottom bar only appears for Auto Mount (no longer sticks when switching modules)
 - AutoOpen blacklist and BagBar item / macro / blacklist lists share the same add-by-ID, drag chip, and list layout (empty lists show “No items”)
 
+#### Tooltips
+- Collections footer also covers Nebulous Voidcache: Delver's Trove (same Not Collected / All collected punch-list summary as Prey)
+
 #### Player Mounts
 - Display Mode is a single dropdown (Name / Name + Type / Full Details) instead of three buttons
 

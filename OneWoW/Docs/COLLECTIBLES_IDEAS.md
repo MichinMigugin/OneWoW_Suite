@@ -212,9 +212,9 @@ known loot pool.
   [GEAR_PROFICIENCY.md](GEAR_PROFICIENCY.md)). Not `PlayerCanCollectSource` or
   `DoesItemContainSpec`.
 - **Ship:** `GetPunchListSummary` + QoL Collections footer (quality-colored
-  missing names). Voidcache Prey (`269768`, punchList); Preyseeker chests
-  (`257023` / `257026` / `262346`, direct); Bulging Ethereal / Winter packs
-  (`278026` / `278027`, direct).
+  missing names). Voidcache Prey (`269768`, punchList); Voidcache Delver's Trove
+  (`268969`, punchList); Preyseeker chests (`257023` / `257026` / `262346`,
+  direct); Bulging Ethereal / Winter packs (`278026` / `278027`, direct).
 - **Out of scope:** loot-spec filtering; per-chest content subsets.
 
 ---
