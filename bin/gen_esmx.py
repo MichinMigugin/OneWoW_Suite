@@ -50,7 +50,8 @@ def gen(locales_dir: Path) -> str:
             if not done and ln.strip() == "":
                 out.append(HEADER + "\n"); done = True
         txt = "".join(out)
-    (locales_dir / "esMX.lua").write_text(txt, encoding="utf-8")
+    # newline="\n": Path.write_text otherwise translates to os.linesep (CRLF on Windows).
+    (locales_dir / "esMX.lua").write_text(txt, encoding="utf-8", newline="\n")
     return f"OK {locales_dir}/esMX.lua"
 
 if __name__ == "__main__":

@@ -116,7 +116,7 @@ def main(argv):
     if not done:
         print("!! never found table close `})` — aborting", file=sys.stderr)
         return 2
-    Path(args.out).write_text("\n".join(out_lines) + "\n", encoding="utf-8")
+    Path(args.out).write_text("\n".join(out_lines) + "\n", encoding="utf-8", newline="\n")
     print(f"wrote {args.out}  ({len(out_lines)} lines)")
     if todo:
         print(f"   {len(todo)} keys fell back to enUS (untranslated):")
