@@ -941,17 +941,15 @@ function OneWoW_GUI:CreateIntegrationRow(parent, options)
     local height = options.height or 30
     local isEnabled = options.isEnabled
     local onToggle = options.onToggle
-    local statusLabel = options.statusLabel or "Status:"
-    local detectedText = options.detectedText or "Detected"
     local notDetectedText = options.notDetectedText or "Not Detected"
     local enabledText = options.enabledText or "Enabled"
     local disabledText = options.disabledText or "Disabled"
-    local enableBtnText = options.enableBtnText or "Enable"
-    local disableBtnText = options.disableBtnText or "Disable"
     local notCompatible = options.notCompatible
     local notCompatibleText = options.notCompatibleText or "Not Compatible"
+    local detectedText = options.detectedText or "Detected"
 
     local detected = C_AddOns.IsAddOnLoaded(addonName)
+    local canToggle = detected and not notCompatible and isEnabled and onToggle
 
     local row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     row:SetHeight(height)
@@ -961,58 +959,37 @@ function OneWoW_GUI:CreateIntegrationRow(parent, options)
 
     local nameFs = OneWoW_GUI:CreateFS(row, 12)
     nameFs:SetPoint("LEFT", row, "LEFT", 10, 0)
+    nameFs:SetJustifyH("LEFT")
+    nameFs:SetWordWrap(false)
     nameFs:SetText(displayName)
     nameFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
 
-    local statusLabelFs = OneWoW_GUI:CreateFS(row, 12)
-    statusLabelFs:SetPoint("LEFT", nameFs, "RIGHT", 16, 0)
-    statusLabelFs:SetText(statusLabel)
-    statusLabelFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
-
-    local statusValueFs = OneWoW_GUI:CreateFS(row, 12)
-    statusValueFs:SetPoint("LEFT", statusLabelFs, "RIGHT", 4, 0)
-
-    local toggleBtn
-
-    local function refresh()
-        detected = C_AddOns.IsAddOnLoaded(addonName)
-        if not detected then
-            statusValueFs:SetText(notDetectedText)
-            statusValueFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-            if toggleBtn then toggleBtn:Hide() end
-        elseif notCompatible then
-            statusValueFs:SetText(detectedText .. " (" .. notCompatibleText .. ")")
-            statusValueFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
-            if toggleBtn then toggleBtn:Hide() end
-        else
-            local enabled = isEnabled and isEnabled() or false
-            if enabled then
-                statusValueFs:SetText(detectedText .. " (" .. enabledText .. ")")
-                statusValueFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_ENABLED"))
-            else
-                statusValueFs:SetText(detectedText .. " (" .. disabledText .. ")")
-                statusValueFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
-            end
-            if toggleBtn then
-                toggleBtn.text:SetText(enabled and disableBtnText or enableBtnText)
-                toggleBtn:Show()
-            end
-        end
-    end
-
-    if detected and not notCompatible then
-        local enabled = isEnabled and isEnabled() or false
-        toggleBtn = OneWoW_GUI:CreateFitTextButton(row, { text = enabled and disableBtnText or enableBtnText, height = 22 })
+    local refresh
+    if canToggle then
+        -- Detected + compatible: Enabled/Disabled only (same chrome as feature headers).
+        local toggleBtn, toggleRefresh = self:CreateFeatureHeaderToggle(row, {
+            isEnabled = isEnabled,
+            onToggle = onToggle,
+            onLabel = enabledText,
+            offLabel = disabledText,
+        })
         toggleBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
-        toggleBtn:SetScript("OnClick", function()
-            local currentEnabled = isEnabled and isEnabled() or false
-            local newState = not currentEnabled
-            if onToggle then onToggle(newState) end
-            refresh()
-        end)
+        nameFs:SetPoint("RIGHT", toggleBtn, "LEFT", -8, 0)
+        refresh = toggleRefresh
+    else
+        local statusFs = OneWoW_GUI:CreateFS(row, 12)
+        statusFs:SetPoint("RIGHT", row, "RIGHT", -10, 0)
+        statusFs:SetJustifyH("RIGHT")
+        nameFs:SetPoint("RIGHT", statusFs, "LEFT", -8, 0)
+        if not detected then
+            statusFs:SetText(notDetectedText)
+            statusFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+        else
+            statusFs:SetText(detectedText .. " (" .. notCompatibleText .. ")")
+            statusFs:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_WARNING"))
+        end
+        refresh = function() end
     end
-
-    refresh()
 
     row.refresh = refresh
     return row

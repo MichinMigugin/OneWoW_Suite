@@ -1140,13 +1140,10 @@ local function ShowGeneralDetail(split, dsc, selectedRow)
             local opts = {
                 addonName         = def.addonName,
                 displayName       = def.displayName,
-                statusLabel       = L["FEATURE_STATUS_LABEL"],
                 detectedText      = L["OVR_INT_DETECTED"],
                 notDetectedText   = L["OVR_INT_NOT_DETECTED"],
                 enabledText       = L["FEATURE_ENABLED"],
                 disabledText      = L["FEATURE_DISABLED"],
-                enableBtnText     = L["FEATURE_ENABLE_BTN"],
-                disableBtnText    = L["FEATURE_DISABLE_BTN"],
                 notCompatible     = def.notCompatible,
                 notCompatibleText = L["OVR_INT_NOT_COMPATIBLE"],
             }
@@ -1735,7 +1732,7 @@ local function ShowUpgradeDetail(split, feature, selectedRow)
         end
 
         local altLimitLbl = OneWoW_GUI:CreateFS(content, 12)
-        altLimitLbl:SetPoint("TOPLEFT", content, "TOPLEFT", 36, y - 4)
+        altLimitLbl:SetPoint("TOPLEFT", content, "TOPLEFT", 36, y)
         altLimitLbl:SetText(L["OVR_UPGRADE_TOOLTIP_ALT_LIMIT"])
         altLimitLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         altLimitLbl:SetScript("OnEnter", function(myself)
@@ -1745,10 +1742,12 @@ local function ShowUpgradeDetail(split, feature, selectedRow)
             GameTooltip:Show()
         end)
         altLimitLbl:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        y = y - 18
 
+        local controlWidth = math.max(140, (w or 200) - 36)
         local currentLimit = reg:GetOverlaySetting(featureId, "tooltipAltLimit") or 10
         local altLimitSliderWrap = OneWoW_GUI:CreateSlider(content, {
-            width = 200,
+            width = controlWidth,
             minVal = 1,
             maxVal = #ALT_LIMIT_VALUES,
             step = 1,
@@ -1759,8 +1758,8 @@ local function ShowUpgradeDetail(split, feature, selectedRow)
                 reg:SetOverlaySetting(featureId, "tooltipAltLimit", value)
             end,
         })
-        altLimitSliderWrap:SetPoint("TOPLEFT", content, "TOPLEFT", 180, y - 2)
-        y = y - 36
+        altLimitSliderWrap:SetPoint("TOPLEFT", content, "TOPLEFT", 36, y)
+        y = y - 40
 
         local ALT_SORT_OPTIONS = {
             { value = "UPGRADE_DESC", text = L["OVR_UPGRADE_ALT_SORT_UPGRADE_DESC"] },
@@ -1777,7 +1776,7 @@ local function ShowUpgradeDetail(split, feature, selectedRow)
         end
 
         local altSortLbl = OneWoW_GUI:CreateFS(content, 12)
-        altSortLbl:SetPoint("TOPLEFT", content, "TOPLEFT", 36, y - 4)
+        altSortLbl:SetPoint("TOPLEFT", content, "TOPLEFT", 36, y)
         altSortLbl:SetText(L["OVR_UPGRADE_TOOLTIP_ALT_SORT"])
         altSortLbl:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
         altSortLbl:SetScript("OnEnter", function(myself)
@@ -1787,13 +1786,14 @@ local function ShowUpgradeDetail(split, feature, selectedRow)
             GameTooltip:Show()
         end)
         altSortLbl:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        y = y - 18
 
         local currentSort = reg:GetOverlaySetting(featureId, "tooltipAltSort") or "UPGRADE_DESC"
         local altSortDD, altSortDDText = OneWoW_GUI:CreateDropdown(content, {
-            width = 200,
+            width = controlWidth,
             text = GetAltSortLabel(currentSort),
         })
-        altSortDD:SetPoint("TOPLEFT", content, "TOPLEFT", 180, y - 2)
+        altSortDD:SetPoint("TOPLEFT", content, "TOPLEFT", 36, y)
         OneWoW_GUI:AttachFilterMenu(altSortDD, {
             searchable = false,
             buildItems = function() return ALT_SORT_OPTIONS end,

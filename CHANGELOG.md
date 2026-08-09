@@ -17,6 +17,8 @@
 ## Settings
 - Toast Alerts, Tooltips, and Overlays use an Enabled/Disabled control in the detail header (same style as Features On/Off); the old Status line and repeating name on the bottom bar are gone on Features, Toggles, Toast, Tooltips, and Overlays
 - Features (including module settings), Toast Alerts, and Tooltips use the same collapsible section cards as Overlays — click a section header to fold or expand; remembered until you reload
+- Overlay Integrations use the same Enabled/Disabled control when an addon is detected (no overlapping status text + button)
+- Gear Upgrade Overlay (and Tooltips → Gear Upgrades): Max alts shown and Sort alts by sit below their labels so they no longer clip in a narrow window
 
 ## Features
 - Module On/Off sits in the detail header; Details is a text link under Category when a module has author/contact/link info
