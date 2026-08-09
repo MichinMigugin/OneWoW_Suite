@@ -102,6 +102,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TIPS_PLAYERMOUNTS_DETECTED"] = "已載入",
     ["TIPS_PLAYERMOUNTS_NOT_DETECTED"] = "未偵測到",
     ["TIPS_PLAYERMOUNTS_SETTINGS_NOTE"] = "顯示模式和聊天選項在 QoL 模組設定中配置。",
+    ["TIPS_PLAYERMOUNTS_VIEW_BTN"] = "檢視設定",
     ["TIPS_TECHNICALIDS_TITLE"] = "技術 ID",
     ["TIPS_TECHNICALIDS_DESC"] = "顯示物品 ID 和技術資訊。每種 ID 類型都可在下方單獨切換。",
     ["TIPS_TECHID_SHOW_ITEMID"] = "物品 ID",

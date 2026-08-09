@@ -22,6 +22,6 @@ OneWoW.Locale:Register(M._scope, "itIT", {
     ["PLAYMOUNTS_TOOLTIP_REQUIRES"] = "Richiede: OneWoW Core",
     ["PLAYMOUNTS_TOOLTIP_DETECTED"] = "Stato: rilevato",
     ["PLAYMOUNTS_TOOLTIP_NOT_DETECTED"] = "Stato: non rilevato",
-    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "Le descrizioni vengono mostrate tramite OneWoW Core. Attivale o disattivale nelle impostazioni delle descrizioni di OneWoW Core.",
+    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "Attiva o disattiva le righe sul tooltip della cavalcatura in QoL → Tooltip → Cavalcature dei giocatori.",
     ["PLAYMOUNTS_TOOLTIP_VIEW_BTN"] = "Mostra impostazioni",
 })

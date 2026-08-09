@@ -102,6 +102,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["TIPS_PLAYERMOUNTS_DETECTED"] = "Carregado",
     ["TIPS_PLAYERMOUNTS_NOT_DETECTED"] = "Não detectado",
     ["TIPS_PLAYERMOUNTS_SETTINGS_NOTE"] = "O modo de exibição e as opções de bate-papo são configurados nas configurações do módulo QoL.",
+    ["TIPS_PLAYERMOUNTS_VIEW_BTN"] = "Ver configurações",
     ["TIPS_TECHNICALIDS_TITLE"] = "IDs técnicos",
     ["TIPS_TECHNICALIDS_DESC"] = "Mostra os IDs de item e informações técnicas. Cada tipo de ID pode ser alternado individualmente abaixo.",
     ["TIPS_TECHID_SHOW_ITEMID"] = "ID do item",

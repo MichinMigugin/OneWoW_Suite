@@ -22,6 +22,6 @@ OneWoW.Locale:Register(M._scope, "zhTW", {
     ["PLAYMOUNTS_TOOLTIP_REQUIRES"] = "需要：OneWoW Core",
     ["PLAYMOUNTS_TOOLTIP_DETECTED"] = "狀態：已偵測到",
     ["PLAYMOUNTS_TOOLTIP_NOT_DETECTED"] = "狀態：未偵測到",
-    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "提示資訊透過 OneWoW Core 顯示。在 OneWoW Core 提示資訊設定中啟用或停用它們。",
+    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "可在 QoL → 滑鼠提示 → 玩家坐騎 中啟用或停用坐騎提示行。",
     ["PLAYMOUNTS_TOOLTIP_VIEW_BTN"] = "檢視設定",
 })

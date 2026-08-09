@@ -102,6 +102,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TIPS_PLAYERMOUNTS_DETECTED"] = "Chargé",
     ["TIPS_PLAYERMOUNTS_NOT_DETECTED"] = "Non détecté",
     ["TIPS_PLAYERMOUNTS_SETTINGS_NOTE"] = "Le mode d'affichage et les options de discussion se configurent dans les paramètres du module QoL.",
+    ["TIPS_PLAYERMOUNTS_VIEW_BTN"] = "Voir les paramètres",
     ["TIPS_TECHNICALIDS_TITLE"] = "ID techniques",
     ["TIPS_TECHNICALIDS_DESC"] = "Affiche les ID d'objet et les informations techniques. Chaque type d'ID peut être activé individuellement ci-dessous.",
     ["TIPS_TECHID_SHOW_ITEMID"] = "ID d'objet",

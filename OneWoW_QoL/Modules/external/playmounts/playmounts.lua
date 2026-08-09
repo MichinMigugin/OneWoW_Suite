@@ -306,7 +306,7 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, _, registerRefresh
         return math.max(1, descH + gap + 26 + 4)
     end)
 
-    stack:AddCard("playmounts:tooltip", L["PLAYMOUNTS_TOOLTIP_HEADER"], function(content, _)
+    stack:AddCard("playmounts:tooltip", L["PLAYMOUNTS_TOOLTIP_HEADER"], function(content, contentWidth)
         local reqLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         reqLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
         reqLabel:SetText(L["PLAYMOUNTS_TOOLTIP_REQUIRES"])
@@ -323,31 +323,34 @@ function PlayMountsModule:CreateCustomDetail(parent, yOffset, _, registerRefresh
             detectedLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_FEATURES_DISABLED"))
         end
 
-        local viewBtn = OneWoW_GUI:CreateFitTextButton(content, { text = L["PLAYMOUNTS_TOOLTIP_VIEW_BTN"], height = 22 })
-        viewBtn:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, -24)
-        if coreLoaded then
-            viewBtn:SetScript("OnClick", function()
-                OneWoW.UI:Show("settings")
-                OneWoW.UI:SelectSubTab("settings", "tooltips")
-            end)
-        else
-            viewBtn:EnableMouse(false)
-            viewBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_SECONDARY"))
-            viewBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BORDER_SUBTLE"))
-            viewBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-        end
-
         local coreNote = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         coreNote:SetPoint("TOPLEFT", reqLabel, "BOTTOMLEFT", 0, -10)
-        coreNote:SetPoint("RIGHT", viewBtn, "LEFT", -8, 0)
+        local w = tonumber(contentWidth) or 0
+        if w >= 1 then
+            coreNote:SetWidth(math.max(1, w))
+        else
+            coreNote:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, -((reqLabel:GetStringHeight() or 14) + 10))
+        end
         coreNote:SetJustifyH("LEFT")
         coreNote:SetWordWrap(true)
         coreNote:SetText(L["PLAYMOUNTS_TOOLTIP_NOTE"])
         coreNote:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
 
+        local viewLink = OneWoW_GUI:CreateTextLink(content, {
+            text = L["PLAYMOUNTS_TOOLTIP_VIEW_BTN"],
+            fontSize = 11,
+            nav = true,
+            onClick = function()
+                ns.UI.SelectTooltipFeature("playermounts")
+            end,
+        })
+        viewLink:SetPoint("TOPLEFT", coreNote, "BOTTOMLEFT", 0, -8)
+        viewLink:SetEnabled(coreLoaded)
+
         local reqH = reqLabel:GetStringHeight() or 14
         local noteH = coreNote:GetStringHeight() or 14
-        return math.max(1, reqH + 10 + math.max(noteH, 22) + 4)
+        local linkH = viewLink:GetHeight() or 14
+        return math.max(1, reqH + 10 + noteH + 8 + linkH + 4)
     end)
 
     stack:Finish()

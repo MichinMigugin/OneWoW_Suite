@@ -22,6 +22,6 @@ OneWoW.Locale:Register(M._scope, "ptBR", {
     ["PLAYMOUNTS_TOOLTIP_REQUIRES"] = "Requer: OneWoW Core",
     ["PLAYMOUNTS_TOOLTIP_DETECTED"] = "Status: detectado",
     ["PLAYMOUNTS_TOOLTIP_NOT_DETECTED"] = "Status: não detectado",
-    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "As dicas são exibidas pelo OneWoW Core. Ative ou desative-as nas configurações de dicas do OneWoW Core.",
+    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "Ative ou desative as linhas de montaria nas dicas em QoL → Dicas → Montarias de jogadores.",
     ["PLAYMOUNTS_TOOLTIP_VIEW_BTN"] = "Ver configurações",
 })

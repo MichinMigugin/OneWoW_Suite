@@ -22,6 +22,6 @@ OneWoW.Locale:Register(M._scope, "deDE", {
     ["PLAYMOUNTS_TOOLTIP_REQUIRES"] = "Benötigt: OneWoW Core",
     ["PLAYMOUNTS_TOOLTIP_DETECTED"] = "Status: Erkannt",
     ["PLAYMOUNTS_TOOLTIP_NOT_DETECTED"] = "Status: Nicht erkannt",
-    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "Tooltips werden über OneWoW Core angezeigt. Aktiviere oder deaktiviere sie in den Tooltip-Einstellungen von OneWoW Core.",
+    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "Reittier-Tooltipzeilen unter QoL → Tooltips → Spielerreittiere aktivieren oder deaktivieren.",
     ["PLAYMOUNTS_TOOLTIP_VIEW_BTN"] = "Einstellungen anzeigen",
 })

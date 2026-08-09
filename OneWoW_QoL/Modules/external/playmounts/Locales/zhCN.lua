@@ -22,6 +22,6 @@ OneWoW.Locale:Register(M._scope, "zhCN", {
     ["PLAYMOUNTS_TOOLTIP_REQUIRES"] = "需要：OneWoW Core",
     ["PLAYMOUNTS_TOOLTIP_DETECTED"] = "状态：已检测到",
     ["PLAYMOUNTS_TOOLTIP_NOT_DETECTED"] = "状态：未检测到",
-    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "工具提示通过 OneWoW Core 显示。在 OneWoW Core 工具提示设置中启用或禁用它们。",
+    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "可在 QoL → 鼠标提示 → 玩家坐骑 中启用或禁用坐骑提示行。",
     ["PLAYMOUNTS_TOOLTIP_VIEW_BTN"] = "查看设置",
 })

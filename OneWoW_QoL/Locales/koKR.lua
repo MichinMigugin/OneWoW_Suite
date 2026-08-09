@@ -101,6 +101,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TIPS_PLAYERMOUNTS_DETECTED"] = "불러옴",
     ["TIPS_PLAYERMOUNTS_NOT_DETECTED"] = "감지되지 않음",
     ["TIPS_PLAYERMOUNTS_SETTINGS_NOTE"] = "표시 모드 및 채팅 옵션은 QoL 모듈 설정에서 구성합니다.",
+    ["TIPS_PLAYERMOUNTS_VIEW_BTN"] = "설정 보기",
     ["TIPS_TECHNICALIDS_TITLE"] = "기술 ID",
     ["TIPS_TECHNICALIDS_DESC"] = "아이템 ID 및 기술 정보를 표시합니다. 아래에서 각 ID 유형을 개별적으로 전환할 수 있습니다.",
     ["TIPS_TECHID_SHOW_ITEMID"] = "아이템 ID",

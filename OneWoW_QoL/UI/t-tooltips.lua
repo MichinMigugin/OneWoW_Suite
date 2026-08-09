@@ -495,6 +495,18 @@ local function ShowPlayerMountsDetail(split, dsc, feature, selectedRow)
         noteLabel:SetText(L["TIPS_PLAYERMOUNTS_SETTINGS_NOTE"])
         noteLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_SECONDARY"))
         rowY = rowY - (noteLabel:GetStringHeight() or 14) - 8
+
+        local viewLink = OneWoW_GUI:CreateTextLink(content, {
+            text = L["TIPS_PLAYERMOUNTS_VIEW_BTN"],
+            fontSize = 11,
+            nav = true,
+            onClick = function()
+                ns.UI.SelectFeature("playmounts")
+            end,
+        })
+        viewLink:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+        viewLink:SetEnabled(qolLoaded)
+        rowY = rowY - (viewLink:GetHeight() or 14) - 4
         return math.max(1, math.abs(rowY))
     end)
 
@@ -1401,9 +1413,16 @@ local function BuildFeatureList(split, tabName)
         OneWoW_GUI:ClearFrame(lsc)
         selectedRow = nil
         allRows = {}
+        split.featureRows = {}
         local rowToSelect = nil
         local yOffset = -5
         local filter = (filterText or ""):lower()
+        local preferredId = selectedFeatureId
+        if ns.UI._pendingTooltipFeatureId then
+            preferredId = ns.UI._pendingTooltipFeatureId
+            selectedFeatureId = preferredId
+            ns.UI._pendingTooltipFeatureId = nil
+        end
 
         for _, feature in ipairs(features) do
             local displayName = L[feature.title]
@@ -1431,7 +1450,8 @@ local function BuildFeatureList(split, tabName)
                 })
                 row:SetPoint("TOPLEFT", lsc, "TOPLEFT", 4, yOffset)
                 row:SetPoint("TOPRIGHT", lsc, "TOPRIGHT", -4, yOffset)
-                if capturedFeature.id == selectedFeatureId then
+                split.featureRows[capturedFeature.id] = row
+                if capturedFeature.id == preferredId then
                     rowToSelect = row
                 end
                 table.insert(allRows, row)
@@ -1464,10 +1484,43 @@ local function BuildFeatureList(split, tabName)
     end
 end
 
+--- Jump to QoL → Tooltips and select a feature row (e.g. playermounts).
+function ns.UI.SelectTooltipFeature(featureId)
+    if not featureId then return end
+
+    ns.UI._pendingTooltipFeatureId = featureId
+    OneWoW.UI:Show("qol")
+    OneWoW.UI:SelectSubTab("qol", "tooltips")
+
+    local attempts = 0
+    local function trySelect()
+        attempts = attempts + 1
+        local split = ns.UI._tooltipsSplit
+        if not split then
+            if attempts < 20 then C_Timer.After(0.05, trySelect) end
+            return
+        end
+        if split.featureRows and split.featureRows[featureId] then
+            split.featureRows[featureId]:Click()
+        elseif split.RefreshList then
+            split.RefreshList()
+            if split.featureRows and split.featureRows[featureId] then
+                split.featureRows[featureId]:Click()
+            elseif attempts < 20 then
+                C_Timer.After(0.05, trySelect)
+            end
+        elseif attempts < 20 then
+            C_Timer.After(0.05, trySelect)
+        end
+    end
+    C_Timer.After(0.05, trySelect)
+end
+
 function ns.UI.CreateTooltipsTab(parent)
     local split = OneWoW_GUI:CreateSplitPanel(parent, { showSearch = true, searchPlaceholder = L["SEARCH_HINT"] })
     split.listTitle:SetText(L["TOOLTIPS_LIST_TITLE"])
     split.detailTitle:SetText(L["TOOLTIPS_DETAIL_TITLE"])
+    ns.UI._tooltipsSplit = split
 
     C_Timer.After(0.1, function()
         BuildFeatureList(split, "tooltips")

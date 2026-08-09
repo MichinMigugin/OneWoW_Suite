@@ -102,6 +102,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TIPS_PLAYERMOUNTS_DETECTED"] = "Загружено",
     ["TIPS_PLAYERMOUNTS_NOT_DETECTED"] = "Не обнаружено",
     ["TIPS_PLAYERMOUNTS_SETTINGS_NOTE"] = "Режим отображения и параметры чата настраиваются в настройках модуля QoL.",
+    ["TIPS_PLAYERMOUNTS_VIEW_BTN"] = "Открыть настройки",
     ["TIPS_TECHNICALIDS_TITLE"] = "Технические ID",
     ["TIPS_TECHNICALIDS_DESC"] = "Показывает ID предметов и техническую информацию. Каждый тип ID можно переключить отдельно ниже.",
     ["TIPS_TECHID_SHOW_ITEMID"] = "ID предмета",

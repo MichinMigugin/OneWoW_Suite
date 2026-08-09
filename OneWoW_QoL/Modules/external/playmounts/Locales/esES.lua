@@ -22,6 +22,6 @@ OneWoW.Locale:Register(M._scope, "esES", {
     ["PLAYMOUNTS_TOOLTIP_REQUIRES"] = "Requiere: OneWoW Core",
     ["PLAYMOUNTS_TOOLTIP_DETECTED"] = "Estado: detectado",
     ["PLAYMOUNTS_TOOLTIP_NOT_DETECTED"] = "Estado: no detectado",
-    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "La información se muestra a través de OneWoW Core. Actívala o desactívala en los ajustes de información de OneWoW Core.",
+    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "Activa o desactiva las líneas de montura en los tooltips en QoL → Tooltips → Monturas de jugadores.",
     ["PLAYMOUNTS_TOOLTIP_VIEW_BTN"] = "Ver ajustes",
 })

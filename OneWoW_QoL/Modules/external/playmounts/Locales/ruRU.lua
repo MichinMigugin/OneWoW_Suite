@@ -22,6 +22,6 @@ OneWoW.Locale:Register(M._scope, "ruRU", {
     ["PLAYMOUNTS_TOOLTIP_REQUIRES"] = "Требуется: OneWoW Core",
     ["PLAYMOUNTS_TOOLTIP_DETECTED"] = "Статус: обнаружено",
     ["PLAYMOUNTS_TOOLTIP_NOT_DETECTED"] = "Статус: не обнаружено",
-    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "Подсказки отображаются через OneWoW Core. Включите или отключите их в настройках подсказок OneWoW Core.",
+    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "Включайте или отключайте строки подсказки о транспорте в QoL → Подсказки → Транспорт игроков.",
     ["PLAYMOUNTS_TOOLTIP_VIEW_BTN"] = "Открыть настройки",
 })

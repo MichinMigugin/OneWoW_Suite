@@ -102,6 +102,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TIPS_PLAYERMOUNTS_DETECTED"] = "Loaded",
     ["TIPS_PLAYERMOUNTS_NOT_DETECTED"] = "Not Detected",
     ["TIPS_PLAYERMOUNTS_SETTINGS_NOTE"] = "Display mode and chat options are configured in the QoL module settings.",
+    ["TIPS_PLAYERMOUNTS_VIEW_BTN"] = "View Settings",
     ["TIPS_TECHNICALIDS_TITLE"] = "Technical IDs",
     ["TIPS_TECHNICALIDS_DESC"] = "Display item IDs and technical information. Each ID type can be individually toggled below.",
     ["TIPS_TECHID_SHOW_ITEMID"] = "Item ID",

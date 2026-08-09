@@ -102,6 +102,7 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["TIPS_PLAYERMOUNTS_DETECTED"] = "Caricato",
     ["TIPS_PLAYERMOUNTS_NOT_DETECTED"] = "Non rilevato",
     ["TIPS_PLAYERMOUNTS_SETTINGS_NOTE"] = "La modalità di visualizzazione e le opzioni della chat si configurano nelle impostazioni del modulo QoL.",
+    ["TIPS_PLAYERMOUNTS_VIEW_BTN"] = "Mostra impostazioni",
     ["TIPS_TECHNICALIDS_TITLE"] = "ID tecnici",
     ["TIPS_TECHNICALIDS_DESC"] = "Mostra gli ID degli oggetti e le informazioni tecniche. Ogni tipo di ID può essere attivato singolarmente sotto.",
     ["TIPS_TECHID_SHOW_ITEMID"] = "ID oggetto",

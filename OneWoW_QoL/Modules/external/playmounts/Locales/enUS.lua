@@ -21,6 +21,6 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["PLAYMOUNTS_TOOLTIP_REQUIRES"] = "Requires: OneWoW Core",
     ["PLAYMOUNTS_TOOLTIP_DETECTED"] = "Status: Detected",
     ["PLAYMOUNTS_TOOLTIP_NOT_DETECTED"] = "Status: Not Detected",
-    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "Tooltips are displayed through OneWoW Core. Enable or disable them in the OneWoW Core tooltip settings.",
+    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "Enable or disable mount tooltip lines under QoL → Tooltips → Player Mounts.",
     ["PLAYMOUNTS_TOOLTIP_VIEW_BTN"] = "View Settings",
 })

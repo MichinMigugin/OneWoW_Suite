@@ -22,6 +22,6 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["PLAYMOUNTS_TOOLTIP_REQUIRES"] = "필요: OneWoW Core",
     ["PLAYMOUNTS_TOOLTIP_DETECTED"] = "상태: 감지됨",
     ["PLAYMOUNTS_TOOLTIP_NOT_DETECTED"] = "상태: 감지되지 않음",
-    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "툴팁은 OneWoW Core를 통해 표시됩니다. OneWoW Core 툴팁 설정에서 켜거나 끄세요.",
+    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "탈것 툴팁 줄은 QoL → 툴팁 → 플레이어 탈것에서 켜거나 끌 수 있습니다.",
     ["PLAYMOUNTS_TOOLTIP_VIEW_BTN"] = "설정 보기",
 })

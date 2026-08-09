@@ -22,6 +22,6 @@ OneWoW.Locale:Register(M._scope, "frFR", {
     ["PLAYMOUNTS_TOOLTIP_REQUIRES"] = "Nécessite : OneWoW Core",
     ["PLAYMOUNTS_TOOLTIP_DETECTED"] = "État : détecté",
     ["PLAYMOUNTS_TOOLTIP_NOT_DETECTED"] = "État : non détecté",
-    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "Les infobulles sont affichées via OneWoW Core. Activez-les ou désactivez-les dans les paramètres d'infobulles d'OneWoW Core.",
+    ["PLAYMOUNTS_TOOLTIP_NOTE"] = "Activez ou désactivez les lignes d'infobulle de monture dans QoL → Infobulles → Montures des joueurs.",
     ["PLAYMOUNTS_TOOLTIP_VIEW_BTN"] = "Voir les paramètres",
 })

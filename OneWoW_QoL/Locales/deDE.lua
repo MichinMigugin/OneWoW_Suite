@@ -102,6 +102,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TIPS_PLAYERMOUNTS_DETECTED"] = "Geladen",
     ["TIPS_PLAYERMOUNTS_NOT_DETECTED"] = "Nicht erkannt",
     ["TIPS_PLAYERMOUNTS_SETTINGS_NOTE"] = "Anzeigemodus und Chatoptionen werden in den Einstellungen des QoL-Moduls konfiguriert.",
+    ["TIPS_PLAYERMOUNTS_VIEW_BTN"] = "Einstellungen anzeigen",
     ["TIPS_TECHNICALIDS_TITLE"] = "Technische IDs",
     ["TIPS_TECHNICALIDS_DESC"] = "Zeigt Gegenstands-IDs und technische Informationen an. Jeder ID-Typ kann unten einzeln umgeschaltet werden.",
     ["TIPS_TECHID_SHOW_ITEMID"] = "Gegenstands-ID",
