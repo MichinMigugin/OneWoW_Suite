@@ -98,7 +98,7 @@ Supports all 11 suite locales — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
 1. Extract the `OneWoW_QoL` folder to your `World of Warcraft\_retail_\Interface\AddOns\` directory
 2. Extract the `OneWoW` folder (required dependency) to the same directory
 3. Restart World of Warcraft or type `/reload` in-game
-4. Type `/1wqol` or `/owqol` to open the addon
+4. Type `/1wqol` to open the addon
 
 ## Requirements
 
@@ -107,8 +107,6 @@ Supports all 11 suite locales — see [LOCALES.md](../OneWoW/Docs/LOCALES.md).
 ## Slash Commands
 
 - `/1wqol` - Open Quality of Life
-- `/owqol` - Open Quality of Life
-- `/onewowqol` - Open Quality of Life
 
 ## Localization
 

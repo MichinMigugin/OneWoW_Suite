@@ -1,6 +1,6 @@
 Player-facing chat commands for the OneWoW suite. Commands only work if that addon is **installed and enabled** (see [Manage Features](Getting-Started)).
 
-Home **addon cards** show each feature's primary `/1w…` command. **Command Options** on Home lists Direct Deposit and Shopping List subcommands. Other aliases (for example `/ow`, `/dd`, long `/onewow…` names) still work this release; the **next** release will remove every slash command that is not shown on Home. See [What’s New](Release-Notes) / the in-game What’s New dialog.
+Home **addon cards** show each feature's primary `/1w…` command. **Command Options** on Home lists Direct Deposit and Shopping List subcommands.
 
 Debug and developer-only commands are omitted here.
 
@@ -37,6 +37,15 @@ Re-open the feature picker anytime from **Settings → Manage Features** (link o
 | `help` | Print help |
 | `add <itemID>` | Add that item to the active list (quantity 1) |
 
+## QoL module shortcuts
+
+These require **QoL** loaded. Some only exist while that module is enabled.
+
+| Command | Module | What it does |
+|---------|--------|----------------|
+| `/bagbar` `/owbb` | Bag Bar | Toggle the Bag Bar module on or off |
+| `/copytext` `/ct` | Copy Text | Capture UI text under the cursor into the copy dialog (only while CopyText is enabled) |
+
 ## Related
 
 * [Getting started](Getting-Started)
@@ -46,5 +55,5 @@ Re-open the feature picker anytime from **Settings → Manage Features** (link o
 
 ### Sources
 
-* [suitecommands.md](https://github.com/kellewic/OneWoW_Suite/blob/main/suitecommands.md) — full slash command inventory (includes aliases still registered this release)
-* [OneWoW/UI/t-home.lua](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/UI/t-home.lua) — Home addon cards + Command Options (canonical contract)
+* [suitecommands.md](https://github.com/kellewic/OneWoW_Suite/blob/main/suitecommands.md) — full slash command inventory (including debug)
+* [OneWoW/UI/t-home.lua](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW/UI/t-home.lua) — Home addon cards + Command Options

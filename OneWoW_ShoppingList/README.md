@@ -83,7 +83,7 @@ A chat alert prints when an item from any of your lists drops into your bags, wi
 1. Extract the `OneWoW_ShoppingList` folder to your `World of Warcraft\_retail_\Interface\AddOns\` directory.
 2. Extract the `OneWoW` folder (required dependency) to the same directory.
 3. Restart World of Warcraft or type `/reload` in-game.
-4. Type `/owsl` in-game to open the addon.
+4. Type `/1wsl` in-game to open the addon.
 
 ## Requirements
 
@@ -95,13 +95,11 @@ A chat alert prints when an item from any of your lists drops into your bags, wi
 
 ## Slash Commands
 
-- `/owsl` — toggle the main window.
-- `/owsl show` — show the main window.
-- `/owsl hide` — hide the main window.
-- `/owsl add <itemID>` — add an item to the active list.
-- `/owsl help` — print the command list.
-- `/shoppinglist` — alias for `/owsl`.
-- `/1wsl` — alias for `/owsl`.
+- `/1wsl` — toggle the main window.
+- `/1wsl show` — show the main window.
+- `/1wsl hide` — hide the main window.
+- `/1wsl add <itemID>` — add an item to the active list.
+- `/1wsl help` — print the command list.
 
 ## Keybindings
 

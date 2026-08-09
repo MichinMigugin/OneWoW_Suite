@@ -67,8 +67,6 @@ local function OnInitialize()
     ns.ApplyLanguage()
 
     local function slashHandler(msg) ns:SlashCommandHandler(msg) end
-    DB:RegisterSlashCommand("own", slashHandler)
-    DB:RegisterSlashCommand("onewownotes", slashHandler)
     DB:RegisterSlashCommand("1wn", slashHandler)
 
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_Notes, function(myself)

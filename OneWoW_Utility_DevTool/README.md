@@ -17,7 +17,7 @@
 1. Extract the `OneWoW` folder (required dependency) to your AddOns folder
 2. Extract the `OneWoW_Utility_DevTool` folder to `World of Warcraft\_retail_\Interface\AddOns\`
 3. Restart World of Warcraft or type `/reload` in-game
-4. Open the addon with `/dt` or `/1wdt`
+4. Open the addon with `/1wdt`
 
 Cross-addon integration uses `OneWoW_Utility_DevTool_API` (`Core/API.lua`); the
 lifecycle root `OneWoW_Utility_DevTool` exposes colon hooks only (`OnAddonLoaded`,
@@ -27,12 +27,9 @@ lifecycle root `OneWoW_Utility_DevTool` exposes colon hooks only (`OnAddonLoaded
 
 ## Slash Commands
 
-| Command    | Description              |
-|------------|--------------------------|
-| `/dt`      | Toggle DevTool window    |
-| `/devtool` | Toggle DevTool window    |
-| `/devtools`| Toggle DevTool window    |
-| `/1wdt`    | Toggle DevTool window    |
+| Command | Description              |
+|---------|--------------------------|
+| `/1wdt` | Toggle DevTool window    |
 
 The addon also registers in the **Addon Compartment** (game menu) for quick access.
 

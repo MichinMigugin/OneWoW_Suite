@@ -12,7 +12,7 @@
 
 **RequiredDeps:** `OneWoW`. **OptionalDeps:** `TradeSkillMaster`, `Auctionator` (farm value pricing).
 
-**Slash commands** (via `OneWoW_GUI.DB:RegisterSlashCommand`): `/1wt`, `/owt`, `/tracker`.
+**Slash commands** (via `OneWoW_GUI.DB:RegisterSlashCommand`): `/1wt`.
 
 ## File Tree & Load Order
 

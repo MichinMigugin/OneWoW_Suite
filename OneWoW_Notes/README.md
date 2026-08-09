@@ -115,7 +115,7 @@ Track mounts, pets, toys, transmog, and other collectibles you care about:
 1. Extract the `OneWoW_Notes` folder to your `World of Warcraft\_retail_\Interface\AddOns\` directory
 2. Extract the `OneWoW` folder (required dependency) to the same directory
 3. Restart World of Warcraft or type `/reload` in-game
-4. Type `/own`, `/1wn`, or `/onewownotes` to open the addon
+4. Type `/1wn` to open the addon
 
 ## Requirements
 
@@ -123,9 +123,7 @@ Track mounts, pets, toys, transmog, and other collectibles you care about:
 
 ## Slash Commands
 
-- `/own` - Open Notes
 - `/1wn` - Open Notes
-- `/onewownotes` - Open Notes
 
 ## Localization
 

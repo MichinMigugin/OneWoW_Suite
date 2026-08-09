@@ -5,11 +5,11 @@ OneWoW.Locale:Register(ADDON_NAME, "esES", {
     ["CTX_OPEN_DEVTOOLS"] = "Abrir DevTools",
     ["ADDON_TITLE"] = "DevTool",
     ["ADDON_SUBTITLE"] = "Inspector de marcos y utilidades de desarrollo",
-    ["LOADED"] = "Cargado v{version} - Usa /devtools para abrir",
+    ["LOADED"] = "Cargado v{version} - Usa /1wdt para abrir",
 
     -- Commands
-    ["COMMAND_DEVTOOLS"] = "/devtools",
-    ["COMMAND_DT"] = "/dt",
+    ["COMMAND_DEVTOOLS"] = "/1wdt",
+    ["COMMAND_DT"] = "/1wdt",
     ["BINDING_HEADER_ONEWOW_DEVTOOL"] = "|cFF00FF00OneWoW|r DevTool",
     ["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"] = "Abrir DevTools (pestaña Errores)",
 

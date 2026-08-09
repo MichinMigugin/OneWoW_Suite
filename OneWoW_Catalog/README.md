@@ -121,7 +121,7 @@ Supports all 11 suite locales via **OneWoW** — see [LOCALES.md](../OneWoW/Docs
 2. Extract the `OneWoW` folder (required dependency) to the same directory
 3. (Optional but recommended) Extract the `OneWoW_CatalogData_*` folders for complete data
 4. Restart World of Warcraft or type `/reload` in-game
-5. Type `/1wcat`, `/owcat`, or `/onewowcatalog` to open the addon
+5. Type `/1wcat` to open the addon
 
 ## Requirements
 
@@ -134,8 +134,6 @@ Supports all 11 suite locales via **OneWoW** — see [LOCALES.md](../OneWoW/Docs
 ## Slash Commands
 
 - `/1wcat` - Open Catalog
-- `/owcat` - Open Catalog
-- `/onewowcatalog` - Open Catalog
 
 ## Localization
 

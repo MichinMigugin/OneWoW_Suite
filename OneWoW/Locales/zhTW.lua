@@ -150,7 +150,7 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["WHATS_NEW_RELEASE_NOTES_BTN"] = "發行說明",
     ["WHATS_NEW_H_HOME_BODY"] = "插件卡片顯示狀態、說明以及各功能的主 /1w… 指令。標題列下有分區與頁面下拉選單，收藏頁面固定在短列。社群連結移至首頁；設定從「顯示」開始。",
     ["WHATS_NEW_H_SLASH_TITLE"] = "斜線指令",
-    ["WHATS_NEW_H_SLASH_BODY"] = "首頁插件卡片顯示各功能的主 /1w… 指令。指令選項列出 Direct Deposit 與 Shopping List 的子指令。其他別名在本版本仍可用——下一版本將移除首頁未列出的所有斜線指令。",
+    ["WHATS_NEW_H_SLASH_BODY"] = "首頁插件卡片顯示各功能的主 /1w… 指令。指令選項列出 Direct Deposit 與 Shopping List 的子指令。舊的套件別名已移除——請使用首頁上的 /1w… 指令。QoL 模組快捷指令（如 /bagbar、/copytext）維持不變。",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — 冒險指南",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "冒險指南依資料片對齊，含地城/團隊篩選、難度、收藏進度以及「有未收集」。副本卡片顯示收藏標籤與真實首領數量。",
     ["WHATS_NEW_H_VENDORS_TITLE"] = "Catalog — 商人",

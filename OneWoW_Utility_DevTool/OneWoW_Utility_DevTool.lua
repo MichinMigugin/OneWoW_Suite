@@ -529,10 +529,7 @@ function OneWoW_Utility_DevTool:OnPlayerLogin()
     end
 end
 
-SLASH_ONEWOW_DEVTOOL1 = "/dt"
-SLASH_ONEWOW_DEVTOOL2 = "/devtool"
-SLASH_ONEWOW_DEVTOOL3 = "/devtools"
-SLASH_ONEWOW_DEVTOOL4 = "/1wdt"
+SLASH_ONEWOW_DEVTOOL1 = "/1wdt"
 SlashCmdList["ONEWOW_DEVTOOL"] = function(msg)
     msg = (type(msg) == "string") and msg:lower():gsub("^%s+", ""):gsub("%s+$", "") or ""
 

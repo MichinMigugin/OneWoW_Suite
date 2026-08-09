@@ -36,8 +36,6 @@ local function OnInitialize()
     if ns.ApplyLanguage then ns.ApplyLanguage() end
 
     DB:RegisterSlashCommand("1wcat", function(msg) OneWoW_Catalog:SlashCommandHandler(msg) end)
-    DB:RegisterSlashCommand("owcat", function(msg) OneWoW_Catalog:SlashCommandHandler(msg) end)
-    DB:RegisterSlashCommand("onewowcatalog", function(msg) OneWoW_Catalog:SlashCommandHandler(msg) end)
 
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_Catalog, function(self)
         self:ApplyTheme()

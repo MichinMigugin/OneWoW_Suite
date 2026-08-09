@@ -81,7 +81,7 @@ Addon authors: start with [`API/INTEGRATION_GUIDE.md`](API/INTEGRATION_GUIDE.md)
 
 ## Slash Commands
 
-- `/1wbags` — Open Bags (canonical; also `/1wb`, `/onewowbags` this release)
+- `/1wbags` — Open Bags
 
 ## Localization
 

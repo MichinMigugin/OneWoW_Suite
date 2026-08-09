@@ -53,9 +53,7 @@ local function OnInitialize()
     ApplyLanguage()
 
     local function slashHandler(msg) ns:SlashCommandHandler(msg) end
-    DB:RegisterSlashCommand("1wt",     slashHandler)
-    DB:RegisterSlashCommand("owt",     slashHandler)
-    DB:RegisterSlashCommand("tracker", slashHandler)
+    DB:RegisterSlashCommand("1wt", slashHandler)
 
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_Trackers, function(myself)
         myself:ApplyTheme()

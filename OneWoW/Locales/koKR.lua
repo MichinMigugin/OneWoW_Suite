@@ -150,7 +150,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WHATS_NEW_RELEASE_NOTES_BTN"] = "릴리스 노트",
     ["WHATS_NEW_H_HOME_BODY"] = "애드온 카드에 상태, 설명, 각 기능의 기본 /1w… 명령이 표시됩니다. 제목 아래 구역·페이지 드롭다운과 즐겨찾기 고정 줄이 있습니다. 커뮤니티 링크는 홈으로 옮겼으며, 설정은 화면부터 시작합니다.",
     ["WHATS_NEW_H_SLASH_TITLE"] = "슬래시 명령어",
-    ["WHATS_NEW_H_SLASH_BODY"] = "홈 애드온 카드에 각 기능의 기본 /1w… 명령이 표시됩니다. 명령어 옵션에는 Direct Deposit 및 Shopping List 하위 명령이 나열됩니다. 다른 별칭은 이번 릴리스에서도 동작하며, 다음 릴리스에서는 홈에 표시되지 않는 슬래시 명령이 모두 제거됩니다.",
+    ["WHATS_NEW_H_SLASH_BODY"] = "홈 애드온 카드에 각 기능의 기본 /1w… 명령이 표시됩니다. 명령어 옵션에는 Direct Deposit 및 Shopping List 하위 명령이 나열됩니다. 이전 스위트 별칭은 제거되었습니다 — 홈의 /1w… 명령을 사용하세요. /bagbar, /copytext 같은 QoL 모듈 단축키는 그대로입니다.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — 모험 안내서",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "모험 안내서를 확장팩별로 맞추고, 던전/공격대 필터·난이도·수집 진행도·미수집 있음 체크를 지원합니다. 인스턴스 카드에 수집품 태그와 실제 우두머리 수가 표시됩니다.",
     ["WHATS_NEW_H_VENDORS_TITLE"] = "Catalog — 상인",

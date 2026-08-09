@@ -58,22 +58,10 @@ local function ResetGUIOnSettingChange(self2)
 end
 
 local function RegisterSlashCommands()
-    SLASH_ONEWOW1 = "/ow"
-    SLASH_ONEWOW2 = "/one"
-    SLASH_ONEWOW3 = "/onewow"
-    SLASH_ONEWOW4 = "/1w"
+    SLASH_ONEWOW1 = "/1w"
     SlashCmdList["ONEWOW"] = function()
         if ns.UI then
             ns.UI:Toggle()
-        end
-    end
-
-    SLASH_ONEWOWKEYWORDS1 = "/owkeys"
-    SLASH_ONEWOWKEYWORDS2 = "/1wkeys"
-    SLASH_ONEWOWKEYWORDS3 = "/onewowkeywords"
-    SlashCmdList["ONEWOWKEYWORDS"] = function()
-        if OneWoW_GUI and OneWoW_GUI.ShowKeywordHelp then
-            OneWoW_GUI:ShowKeywordHelp()
         end
     end
 end

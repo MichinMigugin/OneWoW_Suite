@@ -150,7 +150,7 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["WHATS_NEW_RELEASE_NOTES_BTN"] = "Notas de lançamento",
     ["WHATS_NEW_H_HOME_BODY"] = "Os cartões de addon mostram status, descrição e o comando /1w… principal de cada recurso. Menus de seção e página sob a barra de título, com páginas favoritas em uma fileira de pins. Links da comunidade foram para o Início; Configurações começa em Exibição.",
     ["WHATS_NEW_H_SLASH_TITLE"] = "Comandos de barra",
-    ["WHATS_NEW_H_SLASH_BODY"] = "Os cartões de addon da Home mostram o comando /1w… principal de cada recurso. Opções de comandos lista os subcomandos de Direct Deposit e Shopping List. Outros aliases ainda funcionam nesta versão — a próxima removerá todo comando slash que não aparecer na Home.",
+    ["WHATS_NEW_H_SLASH_BODY"] = "Os cartões de addon da Home mostram o comando /1w… principal de cada recurso. Opções de comandos lista os subcomandos de Direct Deposit e Shopping List. Aliases antigos da suíte foram removidos — use os comandos /1w… da Home. Atalhos de módulos QoL como /bagbar e /copytext permanecem.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Diário",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "O diário acompanha o Guia de Aventura por expansão, com filtros de masmorra/raid, dificuldades, progresso de coleções e a opção Não coletado. Os cartões de instância mostram tags de colecionáveis e a contagem real de chefes.",
     ["WHATS_NEW_H_VENDORS_TITLE"] = "Catalog — Vendedores",

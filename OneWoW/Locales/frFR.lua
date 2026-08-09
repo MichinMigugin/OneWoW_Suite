@@ -150,7 +150,7 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["WHATS_NEW_RELEASE_NOTES_BTN"] = "Notes de version",
     ["WHATS_NEW_H_HOME_BODY"] = "Les cartes d'addons affichent le statut, la description et la commande /1w… principale de chaque fonction. Menus de section et de page sous la barre de titre, pages favorites sur une rangée d'épingles. Liens communautaires déplacés vers l'accueil ; les réglages commencent sur Affichage.",
     ["WHATS_NEW_H_SLASH_TITLE"] = "Commandes slash",
-    ["WHATS_NEW_H_SLASH_BODY"] = "Les cartes d'addons de l'accueil affichent la commande /1w… principale de chaque fonction. Options de commandes liste les sous-commandes Direct Deposit et Shopping List. Les autres alias fonctionnent encore dans cette version — la prochaine version retirera toute commande slash absente de l'accueil.",
+    ["WHATS_NEW_H_SLASH_BODY"] = "Les cartes d'addons de l'accueil affichent la commande /1w… principale de chaque fonction. Options de commandes liste les sous-commandes Direct Deposit et Shopping List. Les anciens alias de la suite sont retirés — utilisez les commandes /1w… de l'accueil. Les raccourcis de modules QoL comme /bagbar et /copytext restent inchangés.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "Le journal suit le guide de l'aventurier par extension, avec filtres donjon/raid, difficultés, progression des collections et la case Non collecté. Les cartes d'instance montrent les tags de collection et le vrai nombre de boss.",
     ["WHATS_NEW_H_VENDORS_TITLE"] = "Catalog — Marchands",

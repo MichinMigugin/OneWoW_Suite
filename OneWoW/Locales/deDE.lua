@@ -150,7 +150,7 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["WHATS_NEW_RELEASE_NOTES_BTN"] = "Versionshinweise",
     ["WHATS_NEW_H_HOME_BODY"] = "Addon-Karten zeigen Status, Beschreibung und den primären /1w…-Befehl jeder Funktion. Abschnitts- und Seiten-Dropdowns unter der Titelleiste, favorisierte Seiten in einer Pin-Zeile. Community-Links sind auf Start; Einstellungen beginnen bei Anzeige.",
     ["WHATS_NEW_H_SLASH_TITLE"] = "Slash-Befehle",
-    ["WHATS_NEW_H_SLASH_BODY"] = "Home-Addon-Karten zeigen den primären /1w…-Befehl jeder Funktion. Unter Befehlsoptionen stehen Unterbefehle für Direct Deposit und Shopping List. Andere Aliase funktionieren in diesem Release weiterhin — im nächsten Release werden alle Slash-Befehle entfernt, die nicht auf Home angezeigt werden.",
+    ["WHATS_NEW_H_SLASH_BODY"] = "Home-Addon-Karten zeigen den primären /1w…-Befehl jeder Funktion. Unter Befehlsoptionen stehen Unterbefehle für Direct Deposit und Shopping List. Ältere Suite-Aliase sind entfernt — nutzen Sie die Home-/1w…-Befehle. QoL-Modulkürzel wie /bagbar und /copytext bleiben unverändert.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "Das Journal folgt dem Abenteuerführer nach Erweiterung, mit Dungeon-/Schlachtzugsfiltern, Schwierigkeitswahl, Sammlungsfortschritt und der Option „Nicht gesammelt“. Instanzkarten zeigen Sammler-Tags und echte Bossanzahlen.",
     ["WHATS_NEW_H_VENDORS_TITLE"] = "Catalog — Händler",

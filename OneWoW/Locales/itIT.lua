@@ -150,7 +150,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["WHATS_NEW_RELEASE_NOTES_BTN"] = "Note di rilascio",
     ["WHATS_NEW_H_HOME_BODY"] = "Le schede addon mostrano stato, descrizione e il comando /1w… principale di ogni funzione. Menu di sezione e pagina sotto la barra del titolo, con pagine preferite su una riga di pin. I link della community sono su Principale; le impostazioni iniziano da Schermo.",
     ["WHATS_NEW_H_SLASH_TITLE"] = "Comandi slash",
-    ["WHATS_NEW_H_SLASH_BODY"] = "Le schede addon della Home mostrano il comando /1w… principale di ogni funzione. Opzioni comandi elenca i sottocomandi di Direct Deposit e Shopping List. Gli altri alias funzionano ancora in questa versione — la prossima rimuoverà ogni comando slash non mostrato nella Home.",
+    ["WHATS_NEW_H_SLASH_BODY"] = "Le schede addon della Home mostrano il comando /1w… principale di ogni funzione. Opzioni comandi elenca i sottocomandi di Direct Deposit e Shopping List. I vecchi alias della suite sono stati rimossi — usa i comandi /1w… della Home. Le scorciatoie dei moduli QoL come /bagbar e /copytext restano invariate.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Diario",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "Il diario segue la Guida alle avventure per espansione, con filtri dungeon/incursione, difficoltà, progresso collezioni e la casella Non raccolto. Le schede istanza mostrano tag collezionabili e il vero conteggio dei boss.",
     ["WHATS_NEW_H_VENDORS_TITLE"] = "Catalog — Mercanti",

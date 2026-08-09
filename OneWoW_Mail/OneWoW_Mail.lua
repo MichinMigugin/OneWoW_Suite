@@ -75,7 +75,6 @@ function OneWoW_Mail:OnAddonLoaded()
     InitializeModules()
 
     SLASH_ONEWOW_MAIL1 = "/1wmail"
-    SLASH_ONEWOW_MAIL2 = "/owmail"
     SlashCmdList["ONEWOW_MAIL"] = function()
         if ns.Shell then
             ns.Shell:Toggle()

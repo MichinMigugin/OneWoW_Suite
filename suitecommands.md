@@ -5,16 +5,15 @@ Scanned from `SLASH_*` assignments, `SlashCmdList[...]` handlers, and
 `OneWoW_GUI.DB:RegisterSlashCommand(...)` calls (excluding `Libs/` and
 `.wow_docs/`).
 
-**Last audited:** 2026-07-30
+**Last audited:** 2026-08-09
 
 > When you add, rename, or remove a slash command (or a subcommand), update
 > this file in the same change. See **Keeping this file current** at the bottom.
 >
-> **Player-facing canonical set:** Home addon cards + Command Options
-> (`OneWoW/UI/t-home.lua`) and wiki `Slash-Commands` list only the `/1w…`
-> survival set. Aliases below that are not on Home still work this release and
-> are scheduled for removal next release (except debug/dev commands, which stay
-> inventory-only).
+> **Player-facing suite set:** Home addon cards + Command Options
+> (`OneWoW/UI/t-home.lua`) and wiki `Slash-Commands` — one `/1w…` command per
+> feature. QoL module shortcuts (BagBar, CopyText) are separate. Debug/dev
+> commands stay inventory-only.
 
 ---
 
@@ -22,17 +21,17 @@ Scanned from `SLASH_*` assignments, `SlashCmdList[...]` handlers, and
 
 | Addon / unit | Aliases |
 |---|---|
-| OneWoW (core) | `/1w` `/ow` `/one` `/onewow` · `/1wkeys` `/owkeys` `/onewowkeywords` · `/1wtrace` `/owtrace` · `/owlocale` · `/petooltip` `/owpetooltip` · `/owsc` `/1wsc` |
-| OneWoW_Notes | `/1wn` `/own` `/onewownotes` |
-| OneWoW_AltTracker | `/1wat` `/owat` `/onewowat` |
-| OneWoW_Catalog | `/1wcat` `/owcat` `/onewowcatalog` |
-| OneWoW_Trackers | `/1wt` `/owt` `/tracker` |
-| OneWoW_QoL | `/1wqol` `/owqol` `/onewowqol` · BagBar: `/bagbar` `/owbb` · CopyText: `/copytext` `/ct` |
-| OneWoW_DirectDeposit | `/1wdd` (`deposit` / `pause` / `stop`) · `/dd` `/directdeposit` `/directdep` · `/ddeposit` |
-| OneWoW_ShoppingList | `/1wsl` `/owsl` `/shoppinglist` |
-| OneWoW_Mail | `/1wmail` `/owmail` · debug: `/owmailtrace` `/1wmailtrace` |
-| OneWoW_Bags | `/1wb` `/onewowbags` `/1wbags` · `/owbags-export` · debug: `/owbprof` `/owblayout` `/owboverlay` |
-| OneWoW_Utility_DevTool | `/1wdt` `/dt` `/devtool` `/devtools` |
+| OneWoW (core) | `/1w` · debug: `/1wtrace` `/owtrace` · `/owlocale` · `/petooltip` `/owpetooltip` · `/owsc` `/1wsc` · `/owpunch` `/owpunchlist` |
+| OneWoW_Notes | `/1wn` |
+| OneWoW_AltTracker | `/1wat` |
+| OneWoW_Catalog | `/1wcat` |
+| OneWoW_Trackers | `/1wt` |
+| OneWoW_QoL | `/1wqol` · BagBar: `/bagbar` `/owbb` · CopyText: `/copytext` `/ct` |
+| OneWoW_DirectDeposit | `/1wdd` (`deposit` / `pause` / `stop`) |
+| OneWoW_ShoppingList | `/1wsl` |
+| OneWoW_Mail | `/1wmail` · debug: `/owmailtrace` `/1wmailtrace` |
+| OneWoW_Bags | `/1wbags` · debug: `/owbprof` `/owblayout` `/owboverlay` |
+| OneWoW_Utility_DevTool | `/1wdt` |
 
 Load units with **no** slash commands: `OneWoW_AltTracker_*` data packs,
 `OneWoW_CatalogData_*` data packs.
@@ -43,21 +42,22 @@ Load units with **no** slash commands: `OneWoW_AltTracker_*` data packs,
 
 **Source:** `OneWoW/OneWoW.lua`, `OneWoW/Core/Lifecycle.lua`,
 `OneWoW/Services/LocaleService.lua`,
-`OneWoW/Services/PredicateEngine.lua`, `OneWoW/Services/SearchCatalog.lua`
+`OneWoW/Services/PredicateEngine.lua`, `OneWoW/Services/SearchCatalog.lua`,
+`OneWoW/Services/CollectiblesPunchLists.lua`
 
 | Command | Kind | Description |
 |---|---|---|
-| `/1w` `/ow` `/one` `/onewow` | User | Toggle the OneWoW hub window |
-| `/1wkeys` `/owkeys` `/onewowkeywords` | User | Show keyword / search-help dialog |
+| `/1w` | User | Toggle the OneWoW hub window |
 | `/1wtrace` `/owtrace` | Debug | Lifecycle trace ring buffer |
 | `/owlocale` | Debug | Print locale coverage report to chat |
 | `/petooltip` `/owpetooltip` | Debug | Dump PredicateEngine tooltip debug for hovered / cursor / linked item |
 | `/owsc` `/1wsc` | Debug | Search catalog: reference lint, registered sources, former-name prune |
+| `/owpunch` `/owpunchlist` | Debug | Collectibles punch-list dump |
 
 ### `/owsc` subcommands
 
 Named for the **search** catalog (`#token`, `SAVED(...)`, `CATEGORY(...)`), not
-the OneWoW_Catalog addon — that one owns `/1wcat` `/owcat` `/onewowcatalog`.
+the OneWoW_Catalog addon — that one owns `/1wcat`.
 
 | Args | Effect |
 |---|---|
@@ -91,7 +91,7 @@ Pass nothing (uses hovered bag slot / tooltip item / cursor item), or an
 
 | Command | Kind | Description |
 |---|---|---|
-| `/1wn` `/own` `/onewownotes` | User | Open Notes in the OneWoW hub |
+| `/1wn` | User | Open Notes in the OneWoW hub |
 
 ---
 
@@ -101,7 +101,7 @@ Pass nothing (uses hovered bag slot / tooltip item / cursor item), or an
 
 | Command | Kind | Description |
 |---|---|---|
-| `/1wat` `/owat` `/onewowat` | User | Open AltTracker in the OneWoW hub |
+| `/1wat` | User | Open AltTracker in the OneWoW hub |
 
 ---
 
@@ -111,7 +111,7 @@ Pass nothing (uses hovered bag slot / tooltip item / cursor item), or an
 
 | Command | Kind | Description |
 |---|---|---|
-| `/1wcat` `/owcat` `/onewowcatalog` | User | Open Catalog in the OneWoW hub |
+| `/1wcat` | User | Open Catalog in the OneWoW hub |
 
 ---
 
@@ -121,7 +121,7 @@ Pass nothing (uses hovered bag slot / tooltip item / cursor item), or an
 
 | Command | Kind | Description |
 |---|---|---|
-| `/1wt` `/owt` `/tracker` | User | Open Trackers in the OneWoW hub |
+| `/1wt` | User | Open Trackers in the OneWoW hub |
 
 ---
 
@@ -134,7 +134,7 @@ Pass nothing (uses hovered bag slot / tooltip item / cursor item), or an
 
 | Command | Kind | Description |
 |---|---|---|
-| `/1wqol` `/owqol` `/onewowqol` | User | Open QoL in the OneWoW hub |
+| `/1wqol` | User | Open QoL in the OneWoW hub |
 
 ### Module: BagBar (`bagbar/bagbar.lua`)
 
@@ -161,19 +161,14 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 | Command | Kind | Description |
 |---|---|---|
 | `/1wdd` | User | Toggle Direct Deposit window; `deposit` starts a manual run; `pause` / `stop` cancel |
-| `/dd` `/directdeposit` `/directdep` | User | Toggle Direct Deposit window (`/dd` skipped if another addon already owns `SlashCmdList["DD"]`) |
-| `/ddeposit` | User | Start a manual deposit run (alias; prefer `/1wdd deposit`) |
 
-### `/1wdd` / `/ddeposit` subcommands
+### `/1wdd` subcommands
 
 | Args | Effect |
 |---|---|
-| _(none on `/1wdd`)_ | Toggle Direct Deposit window |
-| `deposit` (on `/1wdd`) or _(none on `/ddeposit`)_ | Start manual deposit |
+| _(none)_ | Toggle Direct Deposit window |
+| `deposit` | Start manual deposit |
 | `pause` / `stop` | Stop an in-progress deposit |
-
-> Home-tab help previously listed `/ddeposit clean`; that subcommand is **not**
-> implemented and is no longer shown.
 
 ---
 
@@ -183,9 +178,9 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 
 | Command | Kind | Description |
 |---|---|---|
-| `/1wsl` `/owsl` `/shoppinglist` | User | Toggle shopping-list window (default) |
+| `/1wsl` | User | Toggle shopping-list window (default) |
 
-### Subcommands (any alias)
+### Subcommands
 
 | Args | Effect |
 |---|---|
@@ -203,7 +198,7 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 
 | Command | Kind | Description |
 |---|---|---|
-| `/1wmail` `/owmail` | User | Toggle the OneWoW Mail UI shell |
+| `/1wmail` | User | Toggle the OneWoW Mail UI shell |
 | `/owmailtrace` `/1wmailtrace` | Debug | Mail send/shipment pipeline debug ring (on by default, ring 2048, session-only) |
 
 ### `/owmailtrace` subcommands
@@ -225,8 +220,7 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 
 | Command | Kind | Description |
 |---|---|---|
-| `/1wb` `/onewowbags` `/1wbags` | User | Toggle bags UI |
-| `/owbags-export` | User | Export bags settings payload into the copy dialog |
+| `/1wbags` | User | Toggle bags UI |
 | `/owbprof` | Debug | Bags performance profiler |
 | `/owblayout` | Debug | Layout refresh debug ring |
 | `/owboverlay` | Debug | Overlay-flash debug ring (guild bank, etc.) |
@@ -271,7 +265,7 @@ Registered only while the CopyText module is **enabled**; cleared on disable.
 
 | Command | Kind | Description |
 |---|---|---|
-| `/1wdt` `/dt` `/devtool` `/devtools` | Dev | Toggle DevTools main window |
+| `/1wdt` | Dev | Toggle DevTools main window |
 
 ### Subcommands
 

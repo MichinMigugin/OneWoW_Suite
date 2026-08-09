@@ -140,10 +140,10 @@ local function HandleSlashCommand(msg)
 
     if msg == "help" then
         print(L["ADDON_CHAT_PREFIX"] .. " commands:")
-        print("  |cFFFFFFFF/owsl|r - Toggle main window")
-        print("  |cFFFFFFFF/owsl show|r - Show main window")
-        print("  |cFFFFFFFF/owsl hide|r - Hide main window")
-        print("  |cFFFFFFFF/owsl add <itemID>|r - Add item to active list")
+        print("  |cFFFFFFFF/1wsl|r - Toggle main window")
+        print("  |cFFFFFFFF/1wsl show|r - Show main window")
+        print("  |cFFFFFFFF/1wsl hide|r - Hide main window")
+        print("  |cFFFFFFFF/1wsl add <itemID>|r - Add item to active list")
         return
     end
 
@@ -176,7 +176,5 @@ local function HandleSlashCommand(msg)
     if ns.MainWindow then ns.MainWindow:Toggle() end
 end
 
-SLASH_ONEWOW_SHOPPINGLIST1 = "/owsl"
-SLASH_ONEWOW_SHOPPINGLIST2 = "/shoppinglist"
-SLASH_ONEWOW_SHOPPINGLIST3 = "/1wsl"
+SLASH_ONEWOW_SHOPPINGLIST1 = "/1wsl"
 SlashCmdList["ONEWOW_SHOPPINGLIST"] = HandleSlashCommand

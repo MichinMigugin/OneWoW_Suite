@@ -36,7 +36,7 @@ Supporting utilities on the Other tab (for example disenchantable dumps and exce
 3. (Recommended) Keep `OneWoW_AltTracker_Storage` and `OneWoW_AltTracker_Character` available — Manage Features can pull them with Mail for alt addressing, restock, and in-transit tracking
 4. Restart World of Warcraft or type `/reload` in-game
 5. Enable **Mail** under OneWoW **Manage Features**
-6. Open a mailbox, or type `/1wmail` / `/owmail`
+6. Open a mailbox, or type `/1wmail`
 
 ## Requirements
 
@@ -46,7 +46,6 @@ Supporting utilities on the Other tab (for example disenchantable dumps and exce
 ## Slash Commands
 
 - `/1wmail` — Toggle the Mail UI shell
-- `/owmail` — Alias
 
 ## Localization
 

@@ -657,7 +657,7 @@ end
 
 -- Simple slash command registration without AceConsole.
 -- Multiple commands can be registered by calling this multiple times.
----@param commandName string base name without the slash (e.g. "owcat" → /owcat)
+---@param commandName string base name without the slash (e.g. "1wcat" → /1wcat)
 ---@param handler fun(msg: string) receives the argument string after the command
 function DB:RegisterSlashCommand(commandName, handler)
     local upper = commandName:upper()

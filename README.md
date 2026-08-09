@@ -10,7 +10,7 @@
 
 1. Install **[OneWoW](OneWoW/README.md)** (required core hub).
 2. Copy any optional `OneWoW_*` folders from this package into `World of Warcraft\_retail_\Interface\AddOns\`.
-3. Log in and open **OneWoW** (`/ow`, `/1w`, `/onewow`) to enable features under **Manage Features**.
+3. Log in and open **OneWoW** (`/1w`) to enable features under **Manage Features**.
 4. Configure each addon from its tab in the hub or its slash command.
 
 You do not need every folder — install the addons you want. Companion data stores load with their parent module when enabled.

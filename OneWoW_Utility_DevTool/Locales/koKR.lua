@@ -5,11 +5,11 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["CTX_OPEN_DEVTOOLS"] = "DevTools 열기",
     ["ADDON_TITLE"] = "DevTool",
     ["ADDON_SUBTITLE"] = "프레임 검사기 및 개발 유틸리티",
-    ["LOADED"] = "v{version} 로드됨 - /devtools로 열기",
+    ["LOADED"] = "v{version} 로드됨 - /1wdt로 열기",
 
     -- Commands
-    ["COMMAND_DEVTOOLS"] = "/devtools",
-    ["COMMAND_DT"] = "/dt",
+    ["COMMAND_DEVTOOLS"] = "/1wdt",
+    ["COMMAND_DT"] = "/1wdt",
     ["BINDING_HEADER_ONEWOW_DEVTOOL"] = "|cFF00FF00OneWoW|r DevTool",
     ["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"] = "DevTools 열기 (오류 탭)",
 

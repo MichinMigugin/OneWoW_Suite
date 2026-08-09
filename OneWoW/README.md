@@ -54,13 +54,10 @@ Quickly search through all your items, portals, and data without opening menus.
 
 1. Extract the `OneWoW` folder to your `World of Warcraft\_retail_\Interface\AddOns\` directory
 2. Restart World of Warcraft or type `/reload` in-game
-3. Type `/ow`, `/one`, `/onewow`, or `/1w` to open the addon
+3. Type `/1w` to open the addon
 
 ## Slash Commands
 
-- `/ow` - Open OneWoW
-- `/one` - Open OneWoW
-- `/onewow` - Open OneWoW
 - `/1w` - Open OneWoW
 
 ## Localization

@@ -150,7 +150,7 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["WHATS_NEW_RELEASE_NOTES_BTN"] = "Release notes",
     ["WHATS_NEW_H_HOME_BODY"] = "Addon cards show status, description, and each feature's primary /1w… command. Section and page dropdowns sit under the title bar, with favorited pages on a pin row. Community links moved to Home; Settings starts on Display.",
     ["WHATS_NEW_H_SLASH_TITLE"] = "Slash commands",
-    ["WHATS_NEW_H_SLASH_BODY"] = "Home addon cards show each feature's primary /1w… command. Command Options lists Direct Deposit and Shopping List subcommands. Other aliases still work this release — the next release will remove every slash command that is not shown on Home.",
+    ["WHATS_NEW_H_SLASH_BODY"] = "Home addon cards show each feature's primary /1w… command. Command Options lists Direct Deposit and Shopping List subcommands. Older suite aliases are removed — use the Home /1w… commands. QoL module shortcuts like /bagbar and /copytext are unchanged.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "Journal matches the Adventure Guide by expansion, with dungeon/raid filters, difficulty choices, collections progress, and a Has uncollected checkbox. Instance cards show collectible tags and real boss counts.",
     ["WHATS_NEW_H_VENDORS_TITLE"] = "Catalog — Vendors",

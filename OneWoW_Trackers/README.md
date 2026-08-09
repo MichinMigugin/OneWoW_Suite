@@ -45,8 +45,6 @@
 ## Slash Commands
 
 - `/1wt` — Open Trackers (hub tab or standalone window)
-- `/owt` — Alias
-- `/tracker` — Alias
 
 ## Documentation
 

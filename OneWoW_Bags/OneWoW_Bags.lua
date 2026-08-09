@@ -1325,28 +1325,9 @@ end
 
 function ns:RegisterSlashCommands()
     SLASH_ONEWOW_BAGS1 = "/1wbags"
-    SLASH_ONEWOW_BAGS2 = "/1wb"
-    SLASH_ONEWOW_BAGS3 = "/onewowbags"
 
     SlashCmdList["ONEWOW_BAGS"] = function()
         self.GUI:Toggle()
-    end
-
-    SLASH_ONEWOW_BAGS_EXPORT1 = "/owbags-export"
-    SlashCmdList["ONEWOW_BAGS_EXPORT"] = function()
-        local Serializer = ns.ImportExport and ns.ImportExport.Serializer
-        if not Serializer then
-            print("|cFFFF6060" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. L["EXPORT_UNAVAILABLE_SERIALIZER"])
-            return
-        end
-        local db = ns.db
-        if not db or not db.global then
-            print("|cFFFF6060" .. L["ADDON_CHAT_PREFIX"] .. "|r " .. L["EXPORT_UNAVAILABLE_DB"])
-            return
-        end
-        local title = L["EXPORT_DIALOG_TITLE"]
-        local payload = Serializer:Encode(Serializer:BuildExport(db))
-        OneWoW.CopyPaste:Copy(title, payload, { readOnly = true, frameStrata = "FULLSCREEN_DIALOG" })
     end
 end
 

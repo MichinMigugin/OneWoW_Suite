@@ -151,7 +151,7 @@ ns.Locale:Register(ADDON_NAME, "esMX", {
     ["WHATS_NEW_RELEASE_NOTES_BTN"] = "Notas de la versión",
     ["WHATS_NEW_H_HOME_BODY"] = "Las tarjetas de addons muestran estado, descripción y el comando /1w… principal de cada función. Menús de sección y página bajo la barra de título, con páginas favoritas en una fila de pines. Los enlaces de la comunidad están en Principal; Ajustes empieza en Pantalla.",
     ["WHATS_NEW_H_SLASH_TITLE"] = "Comandos de barra",
-    ["WHATS_NEW_H_SLASH_BODY"] = "Las tarjetas de addons de Inicio muestran el comando /1w… principal de cada función. Opciones de comandos lista los subcomandos de Direct Deposit y Shopping List. Otros alias siguen funcionando en esta versión; la próxima eliminará todo comando slash que no aparezca en Inicio.",
+    ["WHATS_NEW_H_SLASH_BODY"] = "Las tarjetas de addons de Inicio muestran el comando /1w… principal de cada función. Opciones de comandos lista los subcomandos de Direct Deposit y Shopping List. Los alias antiguos de la suite se han eliminado: usa los comandos /1w… de Inicio. Los atajos de módulos QoL como /bagbar y /copytext no cambian.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Diario",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "El diario sigue la guía de aventuras por expansión, con filtros de mazmorra/banda, dificultades, progreso de colecciones y la casilla Sin recolectar. Las tarjetas de instancia muestran etiquetas de coleccionables y el número real de jefes.",
     ["WHATS_NEW_H_VENDORS_TITLE"] = "Catalog — Vendedores",

@@ -224,7 +224,7 @@ Because only `create` and `import_as_new` write, `ApplyImportPlan`'s returned `c
 
 ## Slash command
 
-`/owsc` (`/1wsc`) — `lint`, `sources`, `prune`, `prune apply`, `prune apply force`. Named for the **search** catalog; the OneWoW_Catalog addon owns `/owcat`. See [`suitecommands.md`](../../suitecommands.md).
+`/owsc` (`/1wsc`) — `lint`, `sources`, `prune`, `prune apply`, `prune apply force`. Named for the **search** catalog; the OneWoW_Catalog addon owns `/1wcat`. See [`suitecommands.md`](../../suitecommands.md).
 
 ---
 

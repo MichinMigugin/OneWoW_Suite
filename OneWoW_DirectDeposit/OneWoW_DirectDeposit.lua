@@ -129,38 +129,7 @@ local function InitializeModules()
 end
 
 local function RegisterSlashCommands()
-    local existingDD = SlashCmdList["DD"]
-
-    if not existingDD then
-        SLASH_ONEWOW_DIRECTDEPOSIT1 = "/dd"
-        SLASH_ONEWOW_DIRECTDEPOSIT2 = "/directdeposit"
-        SLASH_ONEWOW_DIRECTDEPOSIT3 = "/directdep"
-    else
-        print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF8800/dd is already in use by another addon. Use /directdeposit or /directdep instead.|r")
-        SLASH_ONEWOW_DIRECTDEPOSIT1 = "/directdeposit"
-        SLASH_ONEWOW_DIRECTDEPOSIT2 = "/directdep"
-    end
-
-    SlashCmdList["ONEWOW_DIRECTDEPOSIT"] = function()
-        if ns.GUI then
-            ns.GUI:Toggle()
-        end
-    end
-
-    local function HandleDepositArgs(msg)
-        local lowerMsg = strlower(strtrim(msg or ""))
-
-        if lowerMsg == "pause" or lowerMsg == "stop" then
-            if not ns.DirectDeposit:StopDeposit() then
-                print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF8800No deposit in progress.|r")
-            end
-        else
-            ns.DirectDeposit:ManualDeposit()
-        end
-    end
-
-    -- Canonical /1wdd: no args toggles the window; deposit|pause|stop run the
-    -- deposit actions (aliases like /ddeposit remain registered this release).
+    -- /1wdd: no args toggles the window; deposit|pause|stop run deposit actions.
     SLASH_ONEWOW_DD_TOGGLE1 = "/1wdd"
     SlashCmdList["ONEWOW_DD_TOGGLE"] = function(msg)
         local lowerMsg = strlower(strtrim(msg or ""))
@@ -181,11 +150,6 @@ local function RegisterSlashCommands()
             return
         end
         print(L["ADDON_CHAT_PREFIX"] .. " |cFFFF8800Usage: /1wdd | /1wdd deposit | /1wdd pause|stop|r")
-    end
-
-    SLASH_ONEWOW_DDEPOSIT1 = "/ddeposit"
-    SlashCmdList["ONEWOW_DDEPOSIT"] = function(msg)
-        HandleDepositArgs(msg)
     end
 end
 

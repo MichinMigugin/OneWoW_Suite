@@ -118,7 +118,7 @@ function Shell:RequestClose()
     local function proceed()
         -- Prefer CloseMail so Blizzard tears down the mailbox session (MAIL_CLOSED).
         -- Always hide our shell too: CloseMail can be a no-op while the chrome is
-        -- still up (missed interaction end, /owmail-only, etc.), which made the X
+        -- still up (missed interaction end, /1wmail-only, etc.), which made the X
         -- look dead.
         local interacting = C_PlayerInteractionManager.IsInteractingWithNpcOfType(
             Enum.PlayerInteractionType.MailInfo

@@ -134,7 +134,7 @@ English, Korean, and more coming soon.
 1. Extract the `OneWoW_AltTracker` folder and all `OneWoW_AltTracker_*` companion addons to your `World of Warcraft\_retail_\Interface\AddOns\` directory
 2. Extract the `OneWoW` folder (required dependency) to the same directory
 3. Restart World of Warcraft or type `/reload` in-game
-4. Type `/1wat`, `/owat`, or `/onewowat` to open the addon
+4. Type `/1wat` to open the addon
 
 ## Requirements
 
@@ -151,8 +151,6 @@ English, Korean, and more coming soon.
 ## Slash Commands
 
 - `/1wat` - Open AltTracker
-- `/owat` - Open AltTracker
-- `/onewowat` - Open AltTracker
 
 ## Localization
 

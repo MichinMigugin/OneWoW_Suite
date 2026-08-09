@@ -46,8 +46,6 @@ local function OnInitialize()
     end
 
     local function slashHandler(msg) OneWoW_AltTracker:SlashCommandHandler(msg) end
-    DB:RegisterSlashCommand("onewowat", slashHandler)
-    DB:RegisterSlashCommand("owat", slashHandler)
     DB:RegisterSlashCommand("1wat", slashHandler)
 
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_AltTracker, function(self)

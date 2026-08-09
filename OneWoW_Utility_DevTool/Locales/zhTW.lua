@@ -6,11 +6,11 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["CTX_OPEN_DEVTOOLS"] = "開啟 DevTools",
     ["ADDON_TITLE"] = "DevTool",
     ["ADDON_SUBTITLE"] = "框架檢查器與開發工具",
-    ["LOADED"] = "已載入 v{version} - 使用 /devtools 開啟",
+    ["LOADED"] = "已載入 v{version} - 使用 /1wdt 開啟",
 
     -- Commands
-    ["COMMAND_DEVTOOLS"] = "/devtools",
-    ["COMMAND_DT"] = "/dt",
+    ["COMMAND_DEVTOOLS"] = "/1wdt",
+    ["COMMAND_DT"] = "/1wdt",
     ["BINDING_HEADER_ONEWOW_DEVTOOL"] = "|cFF00FF00OneWoW|r DevTool",
     ["BINDING_NAME_ONEWOW_DEVTOOL_OPEN_ERRORS"] = "開啟 DevTools（錯誤分頁）",
 

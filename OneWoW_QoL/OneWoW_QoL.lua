@@ -44,8 +44,6 @@ local function OnInitialize()
     if ns.ApplyLanguage then ns.ApplyLanguage() end
 
     local function slashHandler() OneWoW_QoL:SlashCommandHandler() end
-    DB:RegisterSlashCommand("owqol", slashHandler)
-    DB:RegisterSlashCommand("onewowqol", slashHandler)
     DB:RegisterSlashCommand("1wqol", slashHandler)
 
     OneWoW_GUI:RegisterSettingsCallback("OnThemeChanged", OneWoW_QoL, function(self)

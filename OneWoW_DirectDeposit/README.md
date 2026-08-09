@@ -21,7 +21,7 @@ Beyond gold, you can also auto-deposit specific items:
 - Build an item list by typing an Item ID, dragging items into the addon window, or pressing a quick-add keybinding while hovering an item
 - Choose the destination per item: Warband Bank, Personal Bank, or Guild Bank
 - Items are automatically deposited when you open a matching bank
-- Trigger an on-demand sweep with the **Deposit Now** button or `/ddeposit`, with a **Pause** button (or `/ddeposit pause`) to stop mid-run
+- Trigger an on-demand sweep with the **Deposit Now** button or `/1wdd deposit`, with a **Pause** button (or `/1wdd pause`) to stop mid-run
 - Tooltip overlay shows the queued destination for any item already on the list
 
 ### Warband Auto-Deposit (Warbound Items)
@@ -39,14 +39,11 @@ You can keep specific warbound items in your bags instead of sweeping them:
 ## Slash Commands
 
 Open / close the addon window:
-- `/dd` (falls back to `/directdeposit` if another addon already owns `/dd`)
-- `/directdeposit`
-- `/directdep`
-- `/1wdd` (also registered with the OneWoW hub)
+- `/1wdd`
 
 Manual deposit control:
-- `/ddeposit` - Run a manual item deposit now (uses the currently open bank)
-- `/ddeposit pause` or `/ddeposit stop` - Halt an in-progress deposit
+- `/1wdd deposit` - Run a manual item deposit now (uses the currently open bank)
+- `/1wdd pause` or `/1wdd stop` - Halt an in-progress deposit
 
 ## Keybindings
 
@@ -62,7 +59,7 @@ The in-addon **Keybinds** tab also shows your current assignments at a glance.
 1. Extract the `OneWoW_DirectDeposit` folder to your `World of Warcraft\_retail_\Interface\AddOns\` directory
 2. Extract the `OneWoW` folder (required dependency) to the same directory
 3. Restart World of Warcraft or type `/reload` in-game
-4. Type `/dd` or `/1wdd` to open the addon
+4. Type `/1wdd` to open the addon
 
 ## Requirements
 
