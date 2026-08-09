@@ -639,83 +639,91 @@ function ns.UI.CreatePortalsTab(parent)
 				buttonWidth = 50,
 			})
 
+			rowY = OneWoW_GUI:CreateToggleRow(content, {
+				yOffset = rowY,
+				contentWidth = contentWidth,
+				label = L["PORTAL_FAVORITES_ALWAYS_EXPANDED"],
+				description = L["PORTAL_FAVORITES_ALWAYS_EXPANDED_DESC"],
+				value = ph.escFavoritesAlwaysExpanded == true,
+				isEnabled = true,
+				onValueChange = function(newVal)
+					OneWoW:GetPortalHub().escFavoritesAlwaysExpanded = newVal
+					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+						ns.PortalHubEsc:Reload()
+					end
+				end,
+				onLabel = L["FEATURES_ON"],
+				offLabel = L["FEATURES_OFF"],
+				buttonWidth = 50,
+			})
+
 			return math.max(1, math.abs(rowY))
 		end)
 
 		stack:AddCard("settings:toprow", L["PORTAL_ESC_TOP_ROW"], function(content, contentWidth)
 			local rowY = 0
+			local topRowOn = ph.showEscTopRow ~= false
+			local pinRefreshes = {}
+
+			local function ReloadEsc()
+				if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+					ns.PortalHubEsc:Reload()
+				end
+			end
 
 			rowY = OneWoW_GUI:CreateToggleRow(content, {
 				yOffset = rowY,
 				contentWidth = contentWidth,
-				label = L["PORTAL_DALARAN_HEARTH"],
-				description = L["PORTAL_DALARAN_HEARTH_DESC"],
-				value = ph.showDalaranHearth ~= false,
+				label = L["PORTAL_SHOW_ESC_TOP_ROW"],
+				description = L["PORTAL_SHOW_ESC_TOP_ROW_DESC"],
+				value = topRowOn,
 				isEnabled = true,
 				onValueChange = function(newVal)
-					OneWoW:GetPortalHub().showDalaranHearth = newVal
-					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
-						ns.PortalHubEsc:Reload()
+					OneWoW:GetPortalHub().showEscTopRow = newVal
+					for _, refreshPin in ipairs(pinRefreshes) do
+						refreshPin(newVal)
 					end
+					ReloadEsc()
 				end,
 				onLabel = L["FEATURES_ON"],
 				offLabel = L["FEATURES_OFF"],
 				buttonWidth = 50,
 			})
 
-			rowY = OneWoW_GUI:CreateToggleRow(content, {
-				yOffset = rowY,
-				contentWidth = contentWidth,
-				label = L["PORTAL_GARRISON_HEARTH"],
-				description = L["PORTAL_GARRISON_HEARTH_DESC"],
-				value = ph.showGarrisonHearth ~= false,
-				isEnabled = true,
-				onValueChange = function(newVal)
-					OneWoW:GetPortalHub().showGarrisonHearth = newVal
-					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
-						ns.PortalHubEsc:Reload()
-					end
-				end,
-				onLabel = L["FEATURES_ON"],
-				offLabel = L["FEATURES_OFF"],
-				buttonWidth = 50,
-			})
+			local function AddPinToggle(label, desc, getValue, setValue)
+				local refresh
+				rowY, refresh = OneWoW_GUI:CreateToggleRow(content, {
+					yOffset = rowY,
+					contentWidth = contentWidth,
+					label = label,
+					description = desc,
+					value = getValue(),
+					isEnabled = OneWoW:GetPortalHub().showEscTopRow ~= false,
+					onValueChange = function(newVal)
+						setValue(newVal)
+						ReloadEsc()
+					end,
+					onLabel = L["FEATURES_ON"],
+					offLabel = L["FEATURES_OFF"],
+					buttonWidth = 50,
+				})
+				tinsert(pinRefreshes, function(enabled)
+					refresh(enabled, getValue())
+				end)
+			end
 
-			rowY = OneWoW_GUI:CreateToggleRow(content, {
-				yOffset = rowY,
-				contentWidth = contentWidth,
-				label = L["PORTAL_FLIGHT_WHISTLE"],
-				description = L["PORTAL_FLIGHT_WHISTLE_DESC"],
-				value = ph.showFlightWhistle ~= false,
-				isEnabled = true,
-				onValueChange = function(newVal)
-					OneWoW:GetPortalHub().showFlightWhistle = newVal
-					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
-						ns.PortalHubEsc:Reload()
-					end
-				end,
-				onLabel = L["FEATURES_ON"],
-				offLabel = L["FEATURES_OFF"],
-				buttonWidth = 50,
-			})
-
-			rowY = OneWoW_GUI:CreateToggleRow(content, {
-				yOffset = rowY,
-				contentWidth = contentWidth,
-				label = L["PORTAL_HOUSING_PORTAL"],
-				description = L["PORTAL_HOUSING_PORTAL_DESC"],
-				value = ph.showHousingPortal ~= false,
-				isEnabled = true,
-				onValueChange = function(newVal)
-					OneWoW:GetPortalHub().showHousingPortal = newVal
-					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
-						ns.PortalHubEsc:Reload()
-					end
-				end,
-				onLabel = L["FEATURES_ON"],
-				offLabel = L["FEATURES_OFF"],
-				buttonWidth = 50,
-			})
+			AddPinToggle(L["PORTAL_DALARAN_HEARTH"], L["PORTAL_DALARAN_HEARTH_DESC"],
+				function() return OneWoW:GetPortalHub().showDalaranHearth ~= false end,
+				function(v) OneWoW:GetPortalHub().showDalaranHearth = v end)
+			AddPinToggle(L["PORTAL_GARRISON_HEARTH"], L["PORTAL_GARRISON_HEARTH_DESC"],
+				function() return OneWoW:GetPortalHub().showGarrisonHearth ~= false end,
+				function(v) OneWoW:GetPortalHub().showGarrisonHearth = v end)
+			AddPinToggle(L["PORTAL_FLIGHT_WHISTLE"], L["PORTAL_FLIGHT_WHISTLE_DESC"],
+				function() return OneWoW:GetPortalHub().showFlightWhistle ~= false end,
+				function(v) OneWoW:GetPortalHub().showFlightWhistle = v end)
+			AddPinToggle(L["PORTAL_HOUSING_PORTAL"], L["PORTAL_HOUSING_PORTAL_DESC"],
+				function() return OneWoW:GetPortalHub().showHousingPortal ~= false end,
+				function(v) OneWoW:GetPortalHub().showHousingPortal = v end)
 
 			return math.max(1, math.abs(rowY))
 		end)

@@ -29,6 +29,7 @@
 ## Portals
 - Redesigned Portals settings: always-visible categories with usable/total counts, a Settings page for ESC options, Known/Unknown cards, inline Custom add, and width-based icon wrap
 - ESC Portals only shows portals you can use; added Lightcalled Hearthstone
+- Optional Keep Favorites Expanded on ESC; Show ESC Top Row master toggle for the hearth/pins row
 
 ## Minimap Button Collector
 - Enhanced OneWoW row icons match Home / Manage Features (including Mail); Core still uses the brand mark

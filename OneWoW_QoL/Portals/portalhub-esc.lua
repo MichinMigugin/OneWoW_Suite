@@ -233,41 +233,46 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 
 	if not ns.PortalHubFlyouts then return end
 
-	local hearthButtons = {}
-	if ph.showHearthstone ~= false then
-		local hsType = ph.randomHearthstone and "randomhearth" or "item"
-		table.insert(hearthButtons, {type = hsType, id = 6948})
-	end
-	if ph.showDalaranHearth ~= false then
-		if PlayerHasToy(140192) and C_QuestLog.IsQuestFlaggedCompleted(44663) then
-			table.insert(hearthButtons, {type = "toy", id = 140192})
+	local showTopRow = ph.showEscTopRow ~= false
+	if showTopRow then
+		local hearthButtons = {}
+		if ph.showHearthstone ~= false then
+			local hsType = ph.randomHearthstone and "randomhearth" or "item"
+			table.insert(hearthButtons, {type = hsType, id = 6948})
 		end
-	end
-	if ph.showGarrisonHearth ~= false then
-		if PlayerHasToy(110560) and C_QuestLog.IsQuestFlaggedCompleted(34378) then
-			table.insert(hearthButtons, {type = "toy", id = 110560})
+		if ph.showDalaranHearth ~= false then
+			if PlayerHasToy(140192) and C_QuestLog.IsQuestFlaggedCompleted(44663) then
+				table.insert(hearthButtons, {type = "toy", id = 140192})
+			end
 		end
-	end
-	if ph.showFlightWhistle ~= false then
-		if C_Item.GetItemCount(141605) > 0 or PlayerHasToy(141605) then
-			table.insert(hearthButtons, {type = "item", id = 141605})
+		if ph.showGarrisonHearth ~= false then
+			if PlayerHasToy(110560) and C_QuestLog.IsQuestFlaggedCompleted(34378) then
+				table.insert(hearthButtons, {type = "toy", id = 110560})
+			end
 		end
-	end
-	if ph.showHousingPortal ~= false then
-		local housingPortal = ns.PortalHubDetection:GetHousingPortal(false)
-		if housingPortal then
-			table.insert(hearthButtons, housingPortal)
+		if ph.showFlightWhistle ~= false then
+			if C_Item.GetItemCount(141605) > 0 or PlayerHasToy(141605) then
+				table.insert(hearthButtons, {type = "item", id = 141605})
+			end
 		end
-	end
+		if ph.showHousingPortal ~= false then
+			local housingPortal = ns.PortalHubDetection:GetHousingPortal(false)
+			if housingPortal then
+				table.insert(hearthButtons, housingPortal)
+			end
+		end
 
-	xOffset = 0
-	for _, hearth in ipairs(hearthButtons) do
-		local button = self:CreatePortalButton(parent, hearth, xOffset, yOffset, iconSize, growLeft)
-		table.insert(secureButtons, button)
-		xOffset = xOffset + iconSize + iconGap
+		xOffset = 0
+		for _, hearth in ipairs(hearthButtons) do
+			local button = self:CreatePortalButton(parent, hearth, xOffset, yOffset, iconSize, growLeft)
+			table.insert(secureButtons, button)
+			xOffset = xOffset + iconSize + iconGap
+		end
+		if #hearthButtons > 0 then
+			yOffset = yOffset - (iconSize + iconGap)
+		end
+		xOffset = 0
 	end
-	yOffset = yOffset - (iconSize + iconGap)
-	xOffset = 0
 
 	local favorites = ns.PortalHubModule:GetFavorites()
 	local favAvailable = {}
@@ -277,8 +282,9 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 		end
 	end
 	if #favAvailable > 0 then
+		local keepFavOpen = ph.escFavoritesAlwaysExpanded == true
 		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
-			parent, 1506458, iconSize, 0, yOffset, favAvailable, flyoutOrient, "Fav", growLeft
+			parent, 1506458, iconSize, 0, yOffset, favAvailable, flyoutOrient, "Fav", growLeft, keepFavOpen
 		)
 		table.insert(flyoutButtons, button)
 		yOffset = yOffset - (iconSize + iconGap)

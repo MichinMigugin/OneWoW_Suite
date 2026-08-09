@@ -32,10 +32,17 @@ function Flyouts:CreateFlyoutFrame(parent, side)
 	flyoutFrame.buttons = {}
 	flyoutFrame.side = side
 	flyoutFrame.parentButton = nil
+	flyoutFrame.alwaysExpanded = false
 
 	flyoutFrame:SetScript("OnLeave", function(myself)
+		if myself.alwaysExpanded then
+			return
+		end
 		C_Timer.After(0.3, function()
-			if not myself:IsMouseOver() and not myself.parentButton:IsMouseOver() then
+			if myself.alwaysExpanded then
+				return
+			end
+			if not myself:IsMouseOver() and myself.parentButton and not myself.parentButton:IsMouseOver() then
 				myself:Hide()
 			end
 		end)
@@ -180,7 +187,7 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 	return button
 end
 
-function Flyouts:CreateFlyoutParentButton(parent, iconTexture, iconSize, xOffset, yOffset, portals, side, label, layoutGrowLeft)
+function Flyouts:CreateFlyoutParentButton(parent, iconTexture, iconSize, xOffset, yOffset, portals, side, label, layoutGrowLeft, alwaysExpanded)
 	local button = CreateFrame("Button", nil, parent)
 	button:SetSize(iconSize, iconSize)
 	if layoutGrowLeft then
@@ -203,6 +210,7 @@ function Flyouts:CreateFlyoutParentButton(parent, iconTexture, iconSize, xOffset
 	end
 
 	local flyoutFrame = self:CreateFlyoutFrame(button, side)
+	flyoutFrame.alwaysExpanded = alwaysExpanded and true or false
 	local maxPerRow = 12
 	local iconGap = 2
 	local numPortals = #portals
@@ -244,13 +252,22 @@ function Flyouts:CreateFlyoutParentButton(parent, iconTexture, iconSize, xOffset
 	local tipAnchor = layoutGrowLeft and "ANCHOR_LEFT" or "ANCHOR_RIGHT"
 	button:SetScript("OnEnter", function(myself)
 		flyoutFrame:Show()
-		GameTooltip:SetOwner(myself, tipAnchor)
-		GameTooltip:SetText(L["SETTINGS_PORTALHUB_HOVER_TO_EXPAND"], 1, 1, 1)
-		GameTooltip:Show()
+		if not alwaysExpanded then
+			GameTooltip:SetOwner(myself, tipAnchor)
+			GameTooltip:SetText(L["SETTINGS_PORTALHUB_HOVER_TO_EXPAND"], 1, 1, 1)
+			GameTooltip:Show()
+		end
 	end)
 
 	button:SetScript("OnLeave", function()
+		if alwaysExpanded then
+			GameTooltip:Hide()
+			return
+		end
 		C_Timer.After(0.5, function()
+			if flyoutFrame.alwaysExpanded then
+				return
+			end
 			if not flyoutFrame:IsMouseOver() and not button:IsMouseOver() then
 				flyoutFrame:Hide()
 			end
@@ -258,7 +275,11 @@ function Flyouts:CreateFlyoutParentButton(parent, iconTexture, iconSize, xOffset
 		GameTooltip:Hide()
 	end)
 
-	flyoutFrame:Hide()
+	if alwaysExpanded then
+		flyoutFrame:Show()
+	else
+		flyoutFrame:Hide()
+	end
 	button:Show()
 
 	button.flyoutFrame = flyoutFrame
