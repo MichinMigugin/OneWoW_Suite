@@ -115,19 +115,18 @@ local function InvoiceMoneyLine(label, copper)
     return label .. " " .. OneWoW.Format.FormatGold(copper)
 end
 
---- Full AH invoice text for the expand panel (Blizzard OpenMail parity + buyout when distinct).
+--- Full AH invoice text for the expand panel (Blizzard OpenMail parity).
 ---@param index number
 ---@return string|nil text
 ---@return string|nil invoiceType
 local function BuildInvoiceText(index)
-    local invoiceType, itemName, playerName, bid, buyout, deposit, consignment, _, etaHour, etaMin, count, commerceAuction =
+    local invoiceType, itemName, playerName, bid, _, deposit, consignment, _, etaHour, etaMin, count, commerceAuction =
         GetInboxInvoiceInfo(index)
     if not invoiceType then
         return nil, nil
     end
 
     bid = bid or 0
-    buyout = buyout or 0
     deposit = deposit or 0
     consignment = consignment or 0
     count = count or 1
@@ -162,9 +161,6 @@ local function BuildInvoiceText(index)
             saleLine = saleLine .. "  " .. string.format(AUCTION_HOUSE_MAIL_FORMAT_COUNT, count)
         end
         tinsert(lines, saleLine)
-        if buyout > 0 and buyout ~= bid then
-            tinsert(lines, BUYOUT_PRICE .. ": " .. OneWoW.Format.FormatGold(buyout))
-        end
         tinsert(lines, InvoiceMoneyLine(DEPOSIT_COLON, deposit))
         tinsert(lines, RED_FONT_COLOR:WrapTextInColorCode(
             InvoiceMoneyLine(AUCTION_HOUSE_CUT_COLON, consignment)))

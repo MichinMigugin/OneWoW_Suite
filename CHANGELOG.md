@@ -56,6 +56,7 @@
 ## Fixes
 - Shipments no longer try to mail the character you are on (Character targets and Role members); Blizzard rejects self-mail
 - Title bar no longer shows a second mail icon next to the window title (brand mark only, like other OneWoW windows)
+- Auction House sale receipts no longer show a misleading Buyout line (matches Blizzard; commodity mail often had a 1c×qty placeholder)
 
 ---
 
