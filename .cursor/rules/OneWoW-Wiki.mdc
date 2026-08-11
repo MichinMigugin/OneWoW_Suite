@@ -72,37 +72,62 @@ When adding a public feature load unit, update together:
 
 ## Release notes
 
-`wiki/Release-Notes.md` is the player-facing release-notes page (in-game What’s
-New “Release notes” button links here). Editable source is this repo’s `wiki/`;
-`publish-wiki.yml` pushes to GitHub’s wiki repo — never edit the Wiki UI.
+`wiki/Release-Notes.md` is the **index** (in-game What’s New “Release notes”
+button links here). Full shipped notes live on per-version pages
+`wiki/Release-Notes-<TOCVersion>.md` (e.g. `Release-Notes-R6.2608.1105.md`).
+Editable source is this repo’s `wiki/`; `publish-wiki.yml` pushes to GitHub’s
+wiki repo — never edit the Wiki UI.
 
-**Direction:** always mirror from root `CHANGELOG.md` → this page. Never draft
-release-note bullets here first (changelog pipeline owns that decision).
+**Direction:** always mirror from root `CHANGELOG.md` → `## Current` on the
+index. Never draft release-note bullets on the wiki first (changelog pipeline
+owns that decision).
+
+**Index shape** (`Release-Notes.md`):
+
+1. `## Current` — in-progress draft body (or empty Draft shell).
+2. Shipped versions newest-first — each `## <TOCVersion>` with:
+   - One short theme paragraph: `Released <Mon DD, YYYY>. <player themes…>`
+   - `[Read full release notes](Release-Notes-<TOCVersion>)`
+3. Trailing Related / Sources (Sources keep the `blob/main/` CHANGELOG link).
+
+Do **not** paste full changelog bodies into the index for shipped versions.
+
+**Archive page shape** (`Release-Notes-<TOCVersion>.md`):
+
+- No leading H1 (wiki titles from the filename).
+- Leading `- **Release**` / `- **Version**` metadata.
+- Full demoted changelog body for that ship.
+- Related links back to `[Release notes](Release-Notes)` plus the usual chrome;
+  Sources include CHANGELOG + in-game What’s New pointer.
 
 ### `## Current` (as you go)
 
-While a release is in progress, keep `## Current` in lockstep with
-`CHANGELOG.md`:
+While a release is in progress, keep `## Current` on the **index** in lockstep
+with `CHANGELOG.md`:
 
 1. Copy the changelog **body** (everything after `# OneWoW Suite Changelog`,
    excluding that title H1).
 2. **Demote headings one level** under `## Current`: changelog `# Addon` →
    `### Addon`, changelog `## Area` → `#### Area`. Preserve `-` bullets, `---`,
    the italic no-changes footer, and nesting.
-3. Keep the Current metadata block (Release / Version / Status: Draft) and the
-   trailing Related / Sources chrome; update **Last Updated**-equivalent fields
-   only when product policy already uses them on this page.
+3. Keep the Current metadata block (Status: Draft) and the trailing Related /
+   Sources chrome on the index; leave shipped version summary blocks below
+   Current untouched.
 4. Sources should keep the explicit `blob/main/` link to `CHANGELOG.md`.
 
 Triggered whenever `onewow-changelog` adds or changes player-facing bullets.
 
 ### At CurseForge release
 
-1. **Archive** the Current body under a versioned / dated heading (newest
-   shipped section first — above older archives, below a fresh Current).
-2. Stamp shipped metadata (date, version, status) on the archived section.
-3. **Reset** `## Current` to an empty draft shell and reset root `CHANGELOG.md`
-   to its skeleton (`OneWoW-Changelog.mdc`).
+1. **Create** `wiki/Release-Notes-<TOCVersion>.md` from the Current body;
+   stamp `- **Release**` / `- **Version**` (TOC `## Version`) at the top;
+   add Related / Sources (link back to the index).
+2. **Index:** replace Current with an empty Draft shell; insert a new
+   `## <TOCVersion>` summary block (newest first, above older summaries) —
+   one theme paragraph + `[Read full release notes](Release-Notes-<TOCVersion>)`.
+   Author the summary from player themes (do not dump the full changelog).
+3. **Reset** root `CHANGELOG.md` to its skeleton (`OneWoW-Changelog.mdc`) when
+   the release bot does not already clear it.
 4. What’s New highlights reset/rebuild with the next changelog cycle
    (`OneWoW-Changelog.mdc` § What’s New) — not a wiki concern beyond the
    archive step above.

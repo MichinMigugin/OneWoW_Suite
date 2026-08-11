@@ -1,6 +1,6 @@
 ---
 name: onewow-changelog
-description: "Use when shipping player-felt OneWoW suite changes — visible UI/behavior or experiential wins (performance, snappiness, reliability) — or when editing root CHANGELOG.md / CurseForge release notes. Decide include vs skip, then follow OneWoW-Changelog.mdc for dialect. Owns the release-notes pipeline (CHANGELOG → wiki Release-Notes Current → What’s New reassessment)."
+description: "Use when shipping player-felt OneWoW suite changes — visible UI/behavior or experiential wins (performance, snappiness, reliability) — or when editing root CHANGELOG.md / CurseForge release notes. Decide include vs skip, then follow OneWoW-Changelog.mdc for dialect. Owns the release-notes pipeline (CHANGELOG → wiki Release-Notes Current / per-version archives → What’s New reassessment)."
 ---
 # Stub — not the source of truth
 

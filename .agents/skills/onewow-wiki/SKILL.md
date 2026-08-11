@@ -1,6 +1,6 @@
 ---
 name: onewow-wiki
-description: "Use when editing the GitHub wiki (wiki/**), syncing player docs after feature/README changes, mirroring CHANGELOG into wiki/Release-Notes.md ## Current, or deciding whether a Docs or addon README change needs a wiki update. Decide include vs skip, then follow OneWoW-Wiki.mdc for dialect."
+description: "Use when editing the GitHub wiki (wiki/**), syncing player docs after feature/README changes, mirroring CHANGELOG into wiki/Release-Notes.md ## Current (index) or archiving to Release-Notes-<TOCVersion>.md, or deciding whether a Docs or addon README change needs a wiki update. Decide include vs skip, then follow OneWoW-Wiki.mdc for dialect."
 metadata:
   canonical: .cursor/skills/onewow-wiki/SKILL.md
   stub-for: codex

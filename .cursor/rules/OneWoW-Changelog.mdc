@@ -80,12 +80,15 @@ or changing player-facing bullets, keep these in sync (**changelog → others**;
 never the reverse):
 
 1. **`wiki/Release-Notes.md` → `## Current`** — full mirror of this file’s body
-   under Current (heading demotion + wiki chrome). Format and release archive:
-   `onewow-wiki` / `OneWoW-Wiki.mdc`.
+   under Current on the **index** (heading demotion + wiki chrome). Shipped
+   versions are summaries + links to `Release-Notes-<TOCVersion>.md`. Format and
+   release archive: `onewow-wiki` / `OneWoW-Wiki.mdc`.
 2. **What’s New** — concise in-game highlights derived from this changelog (below).
 
-At CurseForge release: archive wiki Current, reset this file’s skeleton, and
-clear or rebuild What’s New for the next cycle (see wiki release-notes section).
+At CurseForge release: move Current into `wiki/Release-Notes-<TOCVersion>.md`,
+add an index summary + link, reset this file’s skeleton (unless the release bot
+already cleared it), and clear or rebuild What’s New for the next cycle (see
+wiki release-notes section).
 
 ## What’s New
 

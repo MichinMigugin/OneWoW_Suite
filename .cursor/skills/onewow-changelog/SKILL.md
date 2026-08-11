@@ -1,6 +1,6 @@
 ---
 name: onewow-changelog
-description: Use when shipping player-felt OneWoW suite changes — visible UI/behavior or experiential wins (performance, snappiness, reliability) — or when editing root CHANGELOG.md / CurseForge release notes. Decide include vs skip, then follow OneWoW-Changelog.mdc for dialect. Owns the release-notes pipeline (CHANGELOG → wiki Release-Notes Current → What’s New reassessment).
+description: Use when shipping player-felt OneWoW suite changes — visible UI/behavior or experiential wins (performance, snappiness, reliability) — or when editing root CHANGELOG.md / CurseForge release notes. Decide include vs skip, then follow OneWoW-Changelog.mdc for dialect. Owns the release-notes pipeline (CHANGELOG → wiki Release-Notes Current / per-version archives → What’s New reassessment).
 ---
 
 # OneWoW Changelog
@@ -32,8 +32,9 @@ Changelog owns the decision; other skills/rules own the format:
 
 1. **`CHANGELOG.md`** — write the bullet(s) here first (`OneWoW-Changelog.mdc`).
 2. **Wiki release notes** — mirror into `wiki/Release-Notes.md` → `## Current`
-   (always CHANGELOG → wiki; never wiki-first). Load `onewow-wiki` /
-   `OneWoW-Wiki.mdc` for heading demotion, chrome, and release archive steps.
+   on the index (always CHANGELOG → wiki; never wiki-first). At release, archive
+   to `Release-Notes-<TOCVersion>.md` and add an index summary link. Load
+   `onewow-wiki` / `OneWoW-Wiki.mdc` for demotion, chrome, and archive steps.
 3. **What’s New** — reassess `OneWoW/Core/WhatsNewData.lua` against the full
    current CHANGELOG. Update only when the highlight set or wording should
    change (see `OneWoW-Changelog.mdc` § What’s New). Locale key add/change →
