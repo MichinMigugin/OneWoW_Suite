@@ -2,6 +2,8 @@
 
 - **Status**: Draft
 
+## R6.2608.1105
+
 ### OneWoW
 
 #### Home
@@ -115,6 +117,9 @@
 *No user-facing changes this release for AltTracker, Notes, ShoppingList, Trackers, or Vendors.*
 
 ---
+
+- **Release**: Aug 11, 2026
+- **Version**: R6.2608.1105
 
 ## R6.2608.0406
 
