@@ -14,12 +14,12 @@ local _, ns = ...
 
 ns.WhatsNewData = {
     highlights = {
-        { titleKey = "HOME_TAB",                   bodyKey = "WHATS_NEW_H_HOME_BODY" },
-        { titleKey = "WHATS_NEW_H_SLASH_TITLE",    bodyKey = "WHATS_NEW_H_SLASH_BODY" },
-        { titleKey = "WHATS_NEW_H_JOURNAL_TITLE",  bodyKey = "WHATS_NEW_H_JOURNAL_BODY" },
-        { titleKey = "WHATS_NEW_H_VENDORS_TITLE",  bodyKey = "WHATS_NEW_H_VENDORS_BODY" },
-        { titleKey = "WIZARD_FEATURE_NOTES",       bodyKey = "WHATS_NEW_H_NOTES_BODY" },
-        { titleKey = "WHATS_NEW_H_ALT_TITLE",      bodyKey = "WHATS_NEW_H_ALT_BODY" },
-        { titleKey = "MAIL",                       bodyKey = "WHATS_NEW_H_MAIL_BODY" },
+        { titleKey = "HOME_TAB",                      bodyKey = "WHATS_NEW_H_HOME_BODY" },
+        { titleKey = "WHATS_NEW_H_SLASH_TITLE",       bodyKey = "WHATS_NEW_H_SLASH_BODY" },
+        { titleKey = "WHATS_NEW_H_SETTINGS_TITLE",    bodyKey = "WHATS_NEW_H_SETTINGS_BODY" },
+        { titleKey = "WHATS_NEW_H_PORTALS_TITLE",     bodyKey = "WHATS_NEW_H_PORTALS_BODY" },
+        { titleKey = "WHATS_NEW_H_TRADESKILLS_TITLE", bodyKey = "WHATS_NEW_H_TRADESKILLS_BODY" },
+        { titleKey = "WHATS_NEW_H_QUESTS_TITLE",      bodyKey = "WHATS_NEW_H_QUESTS_BODY" },
+        { titleKey = "MAIL",                          bodyKey = "WHATS_NEW_H_MAIL_BODY" },
     },
 }
