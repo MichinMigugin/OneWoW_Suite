@@ -140,6 +140,17 @@ local function WasCastingNonMount()
     return (GetTime() - lastCastingNonMountTime) <= 1.0
 end
 
+-- Icon families that block remount (food/drink/etc.). Stealth uses IsStealthed()
+-- instead — those texture IDs map to hundreds of spell IDs, so icons stay the
+-- compression. 12.1+: only scan while auras are readable (see IsPollIdle).
+local SPECIAL_BUFF_ICONS = {
+    [774121] = true,
+    [134062] = true, -- food
+    [132805] = true, -- drink
+    [266311] = true,
+    [136074] = true,
+}
+
 local lastBuffCheckTime   = 0
 local lastBuffCheckResult = false
 
@@ -148,17 +159,17 @@ local function IsUsingSpecialBuff()
     if now - lastBuffCheckTime < 2.0 then return lastBuffCheckResult end
     lastBuffCheckTime   = now
     lastBuffCheckResult = false
+    -- 12.1+: index UnitAura APIs Lua-error while auras are secret (tainted).
+    if OneWoW.Restriction.ShouldAurasBeSecret() then
+        return false
+    end
     for i = 1, 40 do
         local buffData = C_UnitAuras.GetBuffDataByIndex("player", i)
         if not buffData then break end
         local icon = buffData.icon
-        if not OneWoW.Restriction.IsSecret(icon) then
-            if icon == 774121 or icon == 134062 or icon == 132293 or
-               icon == 132320 or icon == 266311 or icon == 132805 or
-               icon == 136074 then
-                lastBuffCheckResult = true
-                return true
-            end
+        if not OneWoW.Restriction.IsSecret(icon) and SPECIAL_BUFF_ICONS[icon] then
+            lastBuffCheckResult = true
+            return true
         end
     end
     return false
@@ -302,6 +313,7 @@ local function CanMount(opts)
     if updateMountFailedReason("InVehicle", UnitInVehicle("player")) then blocked = true end
     if updateMountFailedReason("UsingVehicle", UnitUsingVehicle("player")) then blocked = true end
     if updateMountFailedReason("InCombat", UnitAffectingCombat("player")) then blocked = true end
+    if updateMountFailedReason("Stealthed", IsStealthed()) then blocked = true end
     if updateMountFailedReason("SpecialBuff", IsUsingSpecialBuff()) then blocked = true end
     if updateMountFailedReason("FeignDeath", IsFeignDeath()) then blocked = true end
     if updateMountFailedReason("IsFalling", IsFalling()) then blocked = true end
@@ -372,13 +384,13 @@ end
 function AutoMountModule:UpdateDruidFlightWatcher()
     if not self._eventFrame then return end
 
+    -- PLAYER_REGEN_* stay registered for poll idle (UpdatePollingState). Druid
+    -- cancel-form only toggles the mount-usability watcher.
     if GetPreferences().druidCancelTravelForm and UnitClassBase("player") == "DRUID" then
         self._eventFrame:RegisterEvent("MOUNT_JOURNAL_USABILITY_CHANGED")
-        self._eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
         EvaluateDruidFlightForm()
     else
         self._eventFrame:UnregisterEvent("MOUNT_JOURNAL_USABILITY_CHANGED")
-        self._eventFrame:UnregisterEvent("PLAYER_REGEN_ENABLED")
     end
 end
 
@@ -393,17 +405,68 @@ local function ShouldAutoMountPoll()
     return true
 end
 
+--- True while Automount must not poll (cannot mount / cannot safely scan auras).
+local function IsPollIdle()
+    return UnitAffectingCombat("player") or OneWoW.Restriction.ShouldAurasBeSecret()
+end
+
+local function StopCombatClearRecheck()
+    if AM._combatClearTicker then
+        AM._combatClearTicker:Cancel()
+        AM._combatClearTicker = nil
+    end
+end
+
+local function StopPollTicker()
+    if AM._ticker then
+        AM._ticker:Cancel()
+        AM._ticker = nil
+    end
+end
+
+local function ScheduleCombatClearRecheck()
+    if AM._combatClearTicker then return end
+    AM._combatClearTicker = C_Timer.NewTicker(0.5, function()
+        if not ns.ModuleRegistry:IsEnabled(AM.id) then
+            StopCombatClearRecheck()
+            return
+        end
+        if not UnitAffectingCombat("player") then
+            StopCombatClearRecheck()
+            AM:UpdatePollingState()
+        end
+    end)
+end
+
 function AutoMountModule:UpdatePollingState()
     if not ns.ModuleRegistry:IsEnabled(self.id) then
-        if self._ticker then
-            self._ticker:Cancel()
-            self._ticker = nil
-        end
+        StopPollTicker()
+        StopCombatClearRecheck()
         return
     end
+
+    if IsPollIdle() then
+        if UnitAffectingCombat("player") then
+            lastCombatTime = GetTime()
+            ScheduleCombatClearRecheck()
+        else
+            StopCombatClearRecheck()
+        end
+        StopPollTicker()
+        mountFailedReason = nil
+        return
+    end
+
+    StopCombatClearRecheck()
+
     if not self._ticker then
         self._ticker = C_Timer.NewTicker(TICK_INTERVAL, function()
             if not ns.ModuleRegistry:IsEnabled(AM.id) then return end
+            if IsPollIdle() then
+                AM:UpdatePollingState()
+                return
+            end
+
             local mountedNow = IsMounted()
             if wasMounted and not mountedNow then
                 lastDismountTime = GetTime()
@@ -414,15 +477,10 @@ function AutoMountModule:UpdatePollingState()
             if IsMounted()              then lastMountedTime         = GetTime() end
             if IsPlayerMoving()         then lastMovingTime          = GetTime() end
             if IsCastingMountSpell()    then lastCastingMountTime    = GetTime() end
-            if UnitAffectingCombat("player") then lastCombatTime     = GetTime() end
 
             CancelAutoMountingIfNeeded()
-            if not mountedNow then
-                if ShouldAutoMountPoll() then
-                    TryMount(false)
-                else
-                    CanMount()
-                end
+            if not mountedNow and ShouldAutoMountPoll() then
+                TryMount(false)
             end
         end)
     end
@@ -454,8 +512,13 @@ function AutoMountModule:OnEnable()
                 end
             elseif event == "MOUNT_JOURNAL_USABILITY_CHANGED" then
                 EvaluateDruidFlightForm()
+            elseif event == "PLAYER_REGEN_DISABLED" then
+                AM:UpdatePollingState()
             elseif event == "PLAYER_REGEN_ENABLED" then
-                C_Timer.After(0.2, EvaluateDruidFlightForm)
+                AM:UpdatePollingState()
+                if GetPreferences().druidCancelTravelForm and UnitClassBase("player") == "DRUID" then
+                    C_Timer.After(0.2, EvaluateDruidFlightForm)
+                end
             end
         end)
     end
@@ -463,6 +526,12 @@ function AutoMountModule:OnEnable()
     self._eventFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     self._eventFrame:RegisterEvent("UNIT_SPELLCAST_CHANNEL_STOP")
     self._eventFrame:RegisterEvent("LOOT_CLOSED")
+    self._eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+    self._eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+
+    OneWoW.Restriction.RegisterStateCallback("automount", function()
+        AM:UpdatePollingState()
+    end)
 
     OneWoW_QoL:RegisterEnteringWorldHandler("automount", function()
         lastMapUpdate = GetTime()
@@ -478,10 +547,9 @@ function AutoMountModule:OnEnable()
 end
 
 function AutoMountModule:OnDisable()
-    if self._ticker then
-        self._ticker:Cancel()
-        self._ticker = nil
-    end
+    StopPollTicker()
+    StopCombatClearRecheck()
+    OneWoW.Restriction.UnregisterStateCallback("automount")
     if self._eventFrame then
         self._eventFrame:UnregisterAllEvents()
     end
@@ -514,15 +582,32 @@ function AutoMountModule:CreateCustomDetail(detailScrollChild, yOffset, isEnable
                 GameTooltip:SetText(L["AUTOMOUNT_STATUS_LABEL"], 1, 1, 1)
                 if not ns.ModuleRegistry:IsEnabled(AM.id) then
                     GameTooltip:AddLine(L["AUTOMOUNT_STATUS_DISABLED"], 0.6, 0.6, 0.6, true)
-                elseif mountFailedReason then
-                    local reasons = { strsplit("|", mountFailedReason) }
-                    for _, reason in ipairs(reasons) do
-                        GameTooltip:AddLine(reason, 1, 0.5, 0.5)
+                elseif IsPollIdle() then
+                    -- Idle poll: no CanMount / aura scan. Show the hard stop only.
+                    if UnitAffectingCombat("player") then
+                        GameTooltip:AddLine("InCombat", 1, 0.5, 0.5)
                     end
-                elseif IsMounted() then
-                    GameTooltip:AddLine(L["AUTOMOUNT_STATUS_MOUNTED"], 0.5, 1, 0.5)
+                    if OneWoW.Restriction.ShouldAurasBeSecret() then
+                        GameTooltip:AddLine("AurasRestricted", 1, 0.5, 0.5)
+                    end
                 else
-                    GameTooltip:AddLine(L["AUTOMOUNT_STATUS_READY"], 0.5, 1, 0.5)
+                    if IsMounted() then
+                        GameTooltip:AddLine(L["AUTOMOUNT_STATUS_MOUNTED"], 0.5, 1, 0.5)
+                    else
+                        -- Refresh reasons on hover when the live ticker is not assembling
+                        -- them (Druid mode / categories off suppress TryMount).
+                        if not ShouldAutoMountPoll() or not mountFailedReason then
+                            CanMount()
+                        end
+                        if mountFailedReason then
+                            local reasons = { strsplit("|", mountFailedReason) }
+                            for _, reason in ipairs(reasons) do
+                                GameTooltip:AddLine(reason, 1, 0.5, 0.5)
+                            end
+                        else
+                            GameTooltip:AddLine(L["AUTOMOUNT_STATUS_READY"], 0.5, 1, 0.5)
+                        end
+                    end
                 end
                 GameTooltip:Show()
             end)

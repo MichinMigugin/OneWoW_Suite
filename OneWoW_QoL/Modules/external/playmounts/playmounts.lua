@@ -53,6 +53,8 @@ end
 
 function PlayMountsModule:DetectMountOnUnit(unit)
     if not unit or not UnitIsPlayer(unit) then return nil end
+    -- 12.1+: index-based UnitAura APIs Lua-error while auras are secret.
+    if OneWoW.Restriction.ShouldAurasBeSecret() then return nil end
 
     local buffCount = 0
     while true do

@@ -96,6 +96,16 @@ function Restriction.IsSecret(value)
     return Restriction.IsSecretValue(value) or Restriction.IsSecretTable(value)
 end
 
+--- True while unit-aura queries will generally produce secrets (Combat /
+--- Encounter / ChallengeMode / PvPMatch aura restriction). 12.1+: index, slot,
+--- and instance-ID UnitAura / TooltipInfo aura APIs Lua-error when called from
+--- tainted code in this state — gate those call sites here (or use spell-ID /
+--- spell-name APIs, which return nil for secret auras instead of erroring).
+---@return boolean
+function Restriction.ShouldAurasBeSecret()
+    return C_Secrets.ShouldAurasBeSecret()
+end
+
 --- True while in combat lockdown or while any reviewed addon-restriction type
 --- (RESTRICTED_ACTION_TYPES, including Map) is active or activating. The
 --- `~= Inactive` test covers both Active and the transient Activating state.

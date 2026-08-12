@@ -2,6 +2,18 @@
 
 - **Status**: Draft
 
+### QoL
+#### Fixes
+- Auto Mount pauses polling in combat and other aura-restricted situations (12.1), detects stealth without scanning secret buffs, and no longer errors when aura data is restricted. Play Mounts tooltips use the same guard.
+
+---
+
+*No user-facing changes this release for AltTracker, Bags, Catalog, Mail, Notes, Portals, Shopping List, or Trackers.*
+
+---
+
+- **Last Updated**: Aug 12, 2026
+
 ## R6.2608.1105
 
 Released Aug 11, 2026. Home attention filtering, suite On/Off settings chrome, Portals and Catalog Tradeskills/Quests polish, plus Mail shipment and AH receipt fixes.

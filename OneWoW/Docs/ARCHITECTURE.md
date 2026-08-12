@@ -1151,6 +1151,13 @@ for callers that must distinguish the two (e.g. the DevTool globals inspector,
 which only iterates a table when `IsSecretTable` is false). `IsSecret` is simply
 `IsSecretValue(value) or IsSecretTable(value)`.
 
+**Aura-access gate (12.1+).** `Restriction.ShouldAurasBeSecret()` mirrors
+`C_Secrets.ShouldAurasBeSecret()`. While true, index / slot / instance-ID
+`C_UnitAuras` and aura `C_TooltipInfo` APIs **Lua-error** when called from
+tainted code — do not call them. Prefer spell-ID / spell-name aura APIs
+(`GetPlayerAuraBySpellID`, `GetAuraDataBySpellName`, …), which return nil for
+secret auras instead of erroring.
+
 #### Choosing a gate (suite convention)
 
 Reclassified suite-wide during the 12.0 restriction audit. Pick by **what the
@@ -1163,6 +1170,7 @@ call does**, not by habit:
 | Action that must also stand down inside a Delve / restricted map | `IsAddonRestricted()` (rare; the broad gate) |
 | Deferring a blocked protected action until it is safe | `RunWhenUnrestricted("protected", ownerID, fn)` |
 | Reading/branching on a possibly-secret value | `IsSecret()` (or `IsSecretValue`/`IsSecretTable`) |
+| Calling index/slot/instance UnitAura (or aura TooltipInfo) APIs | `ShouldAurasBeSecret()` — skip those APIs while true; use spell-ID/name lookups instead |
 | Place/kind detection (ChallengeMode, Map, PvPMatch, …) | `IsTypeActive(Enum.AddOnRestrictionType.*)` |
 | Reacting when a restriction type changes | `RegisterStateCallback(ownerID, fn)` |
 
