@@ -302,7 +302,7 @@ function GuildBankFrameMixin:UpdateTabs()
 			
 			if ( disableAll or self.mode == "log" or self.mode == "tabinfo" ) then
 				tabButton:SetChecked(false);
-				SetDesaturation(iconTexture, true);
+				iconTexture:SetDesaturation(1);
 				tabButton:SetButtonState("NORMAL");
 				tabButton:Disable();
 				if ( self.mode == "log" and i == currentTab and numTabs > 0 ) then
@@ -313,12 +313,12 @@ function GuildBankFrameMixin:UpdateTabs()
 				if ( i == currentTab ) then
 					tabButton:SetChecked(true);
 					tabButton:Disable();
-					SetDesaturation(iconTexture, false);
+					iconTexture:SetDesaturation(0);
 					titleText = BUY_GUILDBANK_TAB;
 				else
 					tabButton:SetChecked(false);
 					tabButton:Enable();
-					SetDesaturation(iconTexture, false);
+					iconTexture:SetDesaturation(0);
 				end
 			end
 		elseif ( i > numTabs ) then
@@ -343,14 +343,14 @@ function GuildBankFrameMixin:UpdateTabs()
 				end
 				if ( disableAll ) then
 					tabButton:Disable();
-					SetDesaturation(iconTexture, true);
+					iconTexture:SetDesaturation(1);
 				else
-					SetDesaturation(iconTexture, false);
+					iconTexture:SetDesaturation(0);
 				end
 			else
 				unviewableCount = unviewableCount+1;
 				tabButton:Disable();
-				SetDesaturation(iconTexture, true);
+				iconTexture:SetDesaturation(1);
 				tabButton:SetChecked(false);
 			end
 			
@@ -461,7 +461,7 @@ end
 
 function GuildBankFrameMixin:DesaturateColumns(isDesaturated)
 	for i=1, NUM_GUILDBANK_COLUMNS do
-		SetDesaturation(self.Columns[i].Background, isDesaturated);
+		self.Columns[i].Background:SetDesaturation(isDesaturated and 1 or 0);
 	end
 end
 
@@ -772,7 +772,7 @@ function GuildBankFrame_UpdateLog()
 			msg = format(GUILDBANK_MOVE_FORMAT, name, itemLink, count, GetGuildBankTabInfo(tab1), GetGuildBankTabInfo(tab2));
 		end
 		if ( msg ) then
-			GuildBankMessageFrame:AddMessage( msg..GUILD_BANK_LOG_TIME:format(RecentTimeDate(year, month, day, hour)) );
+			GuildBankMessageFrame:AddMessage( msg..GUILD_BANK_LOG_TIME:format(TimeUtil.GetRecentTimeDate(year, month, day, hour)) );
 		end
 	end
 end
@@ -813,7 +813,7 @@ function GuildBankFrame_UpdateMoneyLog()
 		end
 
 		if msg then
-			GuildBankMessageFrame:AddMessage(msg..GUILD_BANK_LOG_TIME:format(RecentTimeDate(year, month, day, hour)) );
+			GuildBankMessageFrame:AddMessage(msg..GUILD_BANK_LOG_TIME:format(TimeUtil.GetRecentTimeDate(year, month, day, hour)) );
 		end
 	end
 end

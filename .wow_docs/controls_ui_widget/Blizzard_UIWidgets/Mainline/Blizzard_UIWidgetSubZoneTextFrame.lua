@@ -2,7 +2,7 @@ UIWidgetSubZoneTextContainerMixin = {}
 
 local function WidgetsLayout(widgetContainer, sortedWidgets)
 	DefaultWidgetLayout(widgetContainer, sortedWidgets);
-	UIParent_ManageFramePositions();
+	ManageFramePositions();
 end
 
 function UIWidgetSubZoneTextContainerMixin:OnLoad()

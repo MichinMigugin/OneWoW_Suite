@@ -77,7 +77,7 @@ end
 function InspectFrame_UnitChanged(self)
 	local unit = self.unit;
 	NotifyInspect(unit);
-	InspectPaperDollFrame_OnShow(self);
+	InspectPaperDollFrame_OnShow();
 	InspectFrame:SetPortraitToUnit(unit);
 	InspectFrame:SetTitle(GetUnitName(unit, true));
 	InspectFrame_UpdateTabs();

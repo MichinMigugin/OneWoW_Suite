@@ -12,6 +12,7 @@ local fillTextureKitFormatString = "%s-barfill";
 local textureKitOffsets = {
 	["evergreen-scenario"] = {timerBarYOffset = 7, timerBarWidth = 239},
 	["thewarwithin-scenario"] = {timerBarXOffset = -1, timerBarYOffset = 5, timerBarWidth = 239},
+	["midnight-scenario"] = {timerBarWidth = 240},
 };
 
 local defaultTimerBarXOffset = 0;

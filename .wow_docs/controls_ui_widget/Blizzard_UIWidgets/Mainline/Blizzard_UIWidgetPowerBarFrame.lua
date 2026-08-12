@@ -5,7 +5,7 @@ local function WidgetsLayout(widgetContainer, sortedWidgets)
 
 	EncounterBar:Layout();
 	if EncounterBar:IsInDefaultPosition() then
-		UIParent_ManageFramePositions();
+		ManageFramePositions();
 	end
 end
 

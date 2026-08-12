@@ -1,31 +1,10 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
-..\..\..\..\..\WoW\Data\Interface\AddOns\Blizzard_SharedXML\UI.xsd">
-	<Script file="InspectGuildFrame.lua"/>
-	
-	<!--
-	<Texture name="GuildInspect-BG" file="GuildInspect-Parts" virtual="true" >
-		<Size x="321" y="334"/>	
-		<TexCoords left="0.00195313" right="0.62890625" top="0.00195313" bottom="0.65429688"/>	
-	</Texture>
-	<Texture name="GuildInspect-ClassBreakdownLine" file="GuildInspect-Parts" virtual="true" >
-		<Size x="217" y="20"/>	
-		<TexCoords left="0.00195313" right="0.42578125" top="0.65820313" bottom="0.69726563"/>	
-	</Texture>
-	<Texture name="GuildInspect-BannerBorder" file="GuildInspect-Parts" virtual="true" >
-		<Size x="118" y="144"/>	
-		<TexCoords left="0.00195313" right="0.23242188" top="0.70117188" bottom="0.98242188"/>	
-	</Texture>
-	<Texture name="GuildInspect-Banner" file="GuildInspect-Parts" virtual="true" >
-		<Size x="118" y="144"/>	
-		<TexCoords left="0.23632813" right="0.46679688" top="0.70117188" bottom="0.98242188"/>	
-	</Texture>
-	-->
-	
-	<Frame name="InspectGuildFrame" enableMouse="true" parent="InspectFrame" hidden="true" useParentLevel="true" setAllPoints="true" id="2">
+..\..\Blizzard_SharedXML\UI.xsd">
+	<Frame name="InspectGuildFrame" enableMouse="true" parent="InspectFrame" hidden="true" useParentLevel="true" setAllPoints="true" id="2" mixin="InspectGuildFrameMixin">
 		<Layers>
 			<Layer level="BACKGROUND">
 				<Texture name="$parentBG" file="Interface\GuildFrame\GuildInspect-Parts">
-					<Size x="321" y="334"/>	
+					<Size x="321" y="334"/>
 					<Anchors>
 						<Anchor point="TOPLEFT" relativeTo="InspectFrameInset" x="4" y="-4"/>
 					</Anchors>
@@ -33,17 +12,17 @@
 				</Texture>
 			</Layer>
 			<Layer level="BACKGROUND" textureSubLevel="1">
-				<Texture name="InspectGuildFrameBanner" file="Interface\GuildFrame\GuildInspect-Parts" virtual="true" >
-					<Size x="118" y="144"/>	
+				<Texture name="InspectGuildFrameBanner" file="Interface\GuildFrame\GuildInspect-Parts">
+					<Size x="118" y="144"/>
 					<Anchors>
 						<Anchor point="TOPLEFT" relativeTo="InspectFrameInset" x="104" y="-4"/>
 					</Anchors>
-					<TexCoords left="0.23632813" right="0.46679688" top="0.70117188" bottom="0.98242188"/>	
+					<TexCoords left="0.23632813" right="0.46679688" top="0.70117188" bottom="0.98242188"/>
 				</Texture>
 			</Layer>
 			<Layer level="BACKGROUND" textureSubLevel="2">
-				<Texture name="InspectGuildFrameBannerBorder" file="Interface\GuildFrame\GuildInspect-Parts" virtual="true" >
-					<Size x="118" y="144"/>	
+				<Texture name="InspectGuildFrameBannerBorder" file="Interface\GuildFrame\GuildInspect-Parts">
+					<Size x="118" y="144"/>
 					<Anchors>
 						<Anchor point="TOPLEFT" relativeTo="InspectGuildFrameBanner"/>
 					</Anchors>
@@ -72,16 +51,10 @@
 						<Anchor point="TOP" relativePoint="CENTER" y="-18"/>
 					</Anchors>
 				</FontString>
-				<FontString name="$parentGuildRealmName" inherits="GameFontNormalLarge" parentKey="guildRealmName">
-					<Size x="300" y="0"/>
-					<Anchors>
-						<Anchor point="TOP" relativeKey="$parent.guildName" relativePoint="BOTTOM" x="0" y="-10"/>
-					</Anchors>
-				</FontString>
 				<FontString name="$parentGuildLevel" inherits="GameFontNormalLarge" parentKey="guildLevel">
 					<Size x="300" y="0"/>
 					<Anchors>
-						<Anchor point="TOP" relativeTo="$parentGuildRealmName" relativePoint="BOTTOM" x="0" y="-4"/>
+						<Anchor point="TOP" relativeTo="$parentGuildName" relativePoint="BOTTOM" x="0" y="-10"/>
 					</Anchors>
 				</FontString>
 				<FontString name="$parentGuildNumMembers" inherits="GameFontNormalLarge" parentKey="guildNumMembers">
@@ -92,6 +65,11 @@
 				</FontString>
 			</Layer>
 		</Layers>
+		<Scripts>
+			<OnLoad method="OnLoad"/>
+			<OnShow method="OnShow"/>
+			<OnEvent method="OnEvent"/>
+		</Scripts>
 		<Frames>
 			<Frame parentKey="Points">
 				<Size x="264" y="30"/>
@@ -114,7 +92,7 @@
 							<Anchors>
 								<Anchor point="LEFT" relativeKey="$parent.LeftCap" relativePoint="RIGHT" x="4" y="0"/>
 							</Anchors>
-							<Size x="0" y="0"/>	
+							<Size x="0" y="0"/>
 							<Color r="0" g="1" b="0"/>
 						</FontString>
 						<Texture parentKey="Icon" file="Interface\AchievementFrame\UI-Achievement-Shields-NoPoints">
@@ -130,7 +108,7 @@
 							<Size x="46" y="18"/>
 							<Anchors>
 								<Anchor point="LEFT" relativeKey="$parent.Icon" relativePoint="RIGHT" x="4" y="2"/>
-							</Anchors>	
+							</Anchors>
 							<Color r="1" g="1" b="1" a="1"/>
 							<TexCoords left="1.0" right="0" top="0" bottom="1.0"/>
 						</Texture>
@@ -138,10 +116,5 @@
 				</Layers>
 			</Frame>
 		</Frames>
-		<Scripts>
-			<OnLoad function="InspectGuildFrame_OnLoad"/>
-			<OnShow function="InspectGuildFrame_OnShow"/>
-			<OnEvent function="InspectGuildFrame_OnEvent"/>
-		</Scripts>
 	</Frame>
 </Ui>

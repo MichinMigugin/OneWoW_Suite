@@ -1,35 +1,39 @@
 
-function InspectGuildFrame_OnLoad(self)
+InspectGuildFrameMixin = {};
+
+function InspectGuildFrameMixin:OnLoad()
 	self:RegisterEvent("INSPECT_READY");
 end
 
-function InspectGuildFrame_OnEvent(self, event, unit, ...)
+function InspectGuildFrameMixin:OnEvent(event, unit, ...)
 	if ( event == "INSPECT_READY" and InspectFrame.unit and (UnitGUID(InspectFrame.unit) == unit) ) then
-		InspectGuildFrame_Update();
+		self:Update();
 	end
 end
 
-function InspectGuildFrame_OnShow()
+function InspectGuildFrameMixin:OnShow()
 	ButtonFrameTemplate_ShowButtonBar(InspectFrame);
-	InspectGuildFrame_Update();
+	self:Update();
 end
 
-function InspectGuildFrame_Update()
-	local guildPoints, guildNumMembers, guildName, guildRealmName = C_PaperDollInfo.GetInspectGuildInfo(InspectFrame.unit);
+function InspectGuildFrameMixin:Update()
+	local guildPoints, guildNumMembers, guildName = C_PaperDollInfo.GetInspectGuildInfo(InspectFrame.unit);
 	local _, guildFactionName = UnitFactionGroup(InspectFrame.unit);
 
 	InspectGuildFrame.guildName:SetText(guildName);
-	InspectGuildFrame.guildRealmName:SetFormattedText(INSPECT_GUILD_REALM, guildRealmName);
 
-	if ( guildFactionName and guildNumMembers ) then
+	if (guildFactionName) then
 		InspectGuildFrame.guildLevel:SetFormattedText(INSPECT_GUILD_FACTION, guildFactionName);
+	end
+	if(guildNumMembers) then
 		InspectGuildFrame.guildNumMembers:SetFormattedText(INSPECT_GUILD_NUM_MEMBERS, guildNumMembers);
 	end
-	
+
 	local pointFrame = InspectGuildFrame.Points;
 	pointFrame.SumText:SetText(guildPoints);
 	local width = pointFrame.SumText:GetStringWidth() + pointFrame.LeftCap:GetWidth() + pointFrame.RightCap:GetWidth() + pointFrame.Icon:GetWidth();
-	pointFrame:SetWidth(width); 
+	pointFrame:SetWidth(width);
 	
 	SetDoubleGuildTabardTextures(InspectFrame.unit, InspectGuildFrameTabardLeftIcon, InspectGuildFrameTabardRightIcon, InspectGuildFrameBanner, InspectGuildFrameBannerBorder);
+	
 end

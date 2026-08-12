@@ -874,7 +874,7 @@ end
 
 function UIWidgetBaseStatusBarTemplateMixin:UpdateBar(elapsed)
 	if self.value ~= self.displayedValue then
-		self.displayedValue = GetSmoothProgressChange(self.value, self.displayedValue, self.range, elapsed);
+		self.displayedValue = InterpolatorUtil.GetSmoothProgressChange(self.value, self.displayedValue, self.range, elapsed);
 	end
 
 	self:DisplayBarValue();
