@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Monture auto",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Monture auto se met en pause en combat et dans les autres situations où les auras sont restreintes, détecte la furtivité sans scanner les buffs secrets, et ne provoque plus d’erreur quand les données d’aura sont restreintes. Les infobulles de Montures des joueurs utilisent la même protection.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "Les listes Journal de Midnight incluent désormais La grotte des Marées, L’abîme Venimeux et Autel des crochets.",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "Le Journal Midnight inclut désormais les rencontres et le butin de La grotte des Marées, L’abîme Venimeux et Autel des crochets.",
     ["CMD_TOGGLE_ONEWOW"] = "Basculer OneWoW",
     ["CMD_KEYWORD_HELP"] = "Ouvrir l'aide des mots-clés de recherche",
     ["CMD_OPEN_ALTTRACKER"] = "Ouvrir AltTracker",

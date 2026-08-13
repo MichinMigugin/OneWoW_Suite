@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "自动坐骑",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "自动坐骑会在战斗及其他光环受限情况下暂停，无需扫描保密增益即可检测潜行，并在光环数据受限时不再报错。玩家坐骑的鼠标提示使用同样的保护。",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "至暗之夜的 Journal 列表现已包含潮缚石窟、烈毒之渊和毒牙祭坛。",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "至暗之夜的 Journal 现已包含潮缚石窟、烈毒之渊和毒牙祭坛的首领与掉落。",
     ["CMD_TOGGLE_ONEWOW"] = "切换 OneWoW",
     ["CMD_KEYWORD_HELP"] = "打开搜索关键词帮助",
     ["CMD_OPEN_ALTTRACKER"] = "打开 AltTracker",

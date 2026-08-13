@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Montaria automática",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Montaria automática pausa em combate e em outras situações com auras restritas, detecta furtividade sem varrer bônus secretos e não dá mais erro quando os dados de aura estão restritos. As dicas de Montarias dos jogadores usam a mesma proteção.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "As listas de Journal de Midnight agora incluem Gruta Marejante, Abismo Peçonhento e Altar das Presas.",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "O Journal de Midnight agora inclui encontros e saque de Gruta Marejante, Abismo Peçonhento e Altar das Presas.",
     ["CMD_TOGGLE_ONEWOW"] = "Alternar OneWoW",
     ["CMD_KEYWORD_HELP"] = "Abrir a ajuda de palavras-chave de busca",
     ["CMD_OPEN_ALTTRACKER"] = "Abrir AltTracker",

@@ -391,12 +391,6 @@ OneWoWEncounters_WrathoftheLichKing = {
 		expansionID = 3,
 		bossIndex = 5,
 	},
-	[833] = {
-		encounterID = 833,
-		name = "Commander Kolurg",
-		instanceID = 281,
-		expansionID = 3,
-	},
 	[618] = {
 		encounterID = 618,
 		name = "Grand Magus Telestra",
@@ -649,11 +643,12 @@ OneWoWEncounters_WrathoftheLichKing = {
 		expansionID = 3,
 		bossIndex = 4,
 	},
-	[634] = {
-		encounterID = 634,
+	[834] = {
+		encounterID = 834,
 		name = "Grand Champions",
 		instanceID = 284,
 		expansionID = 3,
+		bossIndex = 1,
 	},
 	[636] = {
 		encounterID = 636,
@@ -661,13 +656,6 @@ OneWoWEncounters_WrathoftheLichKing = {
 		instanceID = 284,
 		expansionID = 3,
 		bossIndex = 3,
-	},
-	[834] = {
-		encounterID = 834,
-		name = "Grand Champions",
-		instanceID = 284,
-		expansionID = 3,
-		bossIndex = 1,
 	},
 	[1602] = {
 		encounterID = 1602,

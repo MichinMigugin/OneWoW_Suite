@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "자동 탈것",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "자동 탈것은 전투 및 다른 오라 제한 상황에서 감지를 멈추고, 비밀 강화 효과를 검사하지 않고 은신을 감지하며, 오라 데이터가 제한되어도 오류가 나지 않습니다. 플레이어 탈것 툴팁도 같은 보호를 사용합니다.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "한밤 Journal 목록에 해일결속 동굴, 맹독 심연, 송곳니의 제단이 추가되었습니다.",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "한밤 Journal에 해일결속 동굴, 맹독 심연, 송곳니의 제단의 우두머리와 전리품이 포함됩니다.",
     ["CMD_TOGGLE_ONEWOW"] = "OneWoW 전환",
     ["CMD_KEYWORD_HELP"] = "검색 키워드 도움말 열기",
     ["CMD_OPEN_ALTTRACKER"] = "AltTracker 열기",

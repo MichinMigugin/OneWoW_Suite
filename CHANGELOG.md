@@ -8,7 +8,7 @@
 
 # Catalog
 ## Journal
-- Midnight Journal listings now include The Tidebound Grotto, The Venomous Abyss, and Altar of Fangs.
+- Midnight Journal now includes encounters and loot for The Tidebound Grotto, The Venomous Abyss, and Altar of Fangs.
 
 ---
 

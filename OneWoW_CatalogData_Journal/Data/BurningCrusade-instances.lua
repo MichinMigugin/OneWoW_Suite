@@ -72,13 +72,6 @@ OneWoWInstances_BurningCrusade = {
 		instanceType = "raid",
 		expansionID = 2,
 	},
-	[751] = {
-		instanceID = 751,
-		name = "Black Temple",
-		mapID = 564,
-		instanceType = "raid",
-		expansionID = 2,
-	},
 	[749] = {
 		instanceID = 749,
 		name = "The Eye",
@@ -86,10 +79,10 @@ OneWoWInstances_BurningCrusade = {
 		instanceType = "raid",
 		expansionID = 2,
 	},
-	[752] = {
-		instanceID = 752,
-		name = "Sunwell Plateau",
-		mapID = 580,
+	[751] = {
+		instanceID = 751,
+		name = "Black Temple",
+		mapID = 564,
 		instanceType = "raid",
 		expansionID = 2,
 	},
@@ -100,11 +93,11 @@ OneWoWInstances_BurningCrusade = {
 		instanceType = "raid",
 		expansionID = 2,
 	},
-	[259] = {
-		instanceID = 259,
-		name = "The Shattered Halls",
-		mapID = 540,
-		instanceType = "party",
+	[752] = {
+		instanceID = 752,
+		name = "Sunwell Plateau",
+		mapID = 580,
+		instanceType = "raid",
 		expansionID = 2,
 	},
 	[250] = {
@@ -128,17 +121,10 @@ OneWoWInstances_BurningCrusade = {
 		instanceType = "party",
 		expansionID = 2,
 	},
-	[261] = {
-		instanceID = 261,
-		name = "The Steamvault",
-		mapID = 545,
-		instanceType = "party",
-		expansionID = 2,
-	},
-	[257] = {
-		instanceID = 257,
-		name = "The Botanica",
-		mapID = 553,
+	[259] = {
+		instanceID = 259,
+		name = "The Shattered Halls",
+		mapID = 540,
 		instanceType = "party",
 		expansionID = 2,
 	},
@@ -149,10 +135,17 @@ OneWoWInstances_BurningCrusade = {
 		instanceType = "party",
 		expansionID = 2,
 	},
-	[77] = {
-		instanceID = 77,
-		name = "Zul'Aman",
-		mapID = 333,
+	[257] = {
+		instanceID = 257,
+		name = "The Botanica",
+		mapID = 553,
+		instanceType = "party",
+		expansionID = 2,
+	},
+	[261] = {
+		instanceID = 261,
+		name = "The Steamvault",
+		mapID = 545,
 		instanceType = "party",
 		expansionID = 2,
 	},

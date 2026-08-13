@@ -6984,7 +6984,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2503, instanceID=1202, source="att"},
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193691] = {
+		itemID = 193691,
+		name = "Sky Saddle Cord",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 1,
+		itemType = "Armor",
+		itemSubType = "Cloth",
+		link = "|cnIQ3:|Hitem:193691::::::::90:251:::::::::|h[Sky Saddle Cord]|h|r",
+		icon = 4182955,
+		isTransmog = true,
+		locations = {
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193692] = {
@@ -7601,7 +7617,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2488, instanceID=1202, source="att"},
+			{encounterID=2488, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193728] = {
+		itemID = 193728,
+		name = "Scaleguard's Stalwart Greatboots",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 4,
+		itemType = "Armor",
+		itemSubType = "Plate",
+		link = "|cnIQ3:|Hitem:193728::::::::90:251:::::::::|h[Scaleguard's Stalwart Greatboots]|h|r",
+		icon = 4633272,
+		isTransmog = true,
+		locations = {
+			{encounterID=2488, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193729] = {
@@ -7892,7 +7924,24 @@ OneWoWItems_Dragonflight = {
 		spellID = 384649,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2503, instanceID=1202, source="att"},
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193748] = {
+		itemID = 193748,
+		name = "Kyrakka's Searing Embers",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 0,
+		itemType = "Armor",
+		itemSubType = "Miscellaneous",
+		link = "|cnIQ3:|Hitem:193748::::::::90:251:::::::::|h[Kyrakka's Searing Embers]|h|r",
+		icon = 4638716,
+		isTransmog = false,
+		spellID = 384649,
+		locations = {
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193750] = {
@@ -7909,7 +7958,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2503, instanceID=1202, source="att"},
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193750] = {
+		itemID = 193750,
+		name = "Wind Soarer's Breeches",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 1,
+		itemType = "Armor",
+		itemSubType = "Cloth",
+		link = "|cnIQ3:|Hitem:193750::::::::90:251:::::::::|h[Wind Soarer's Breeches]|h|r",
+		icon = 4182962,
+		isTransmog = true,
+		locations = {
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193751] = {
@@ -7926,7 +7991,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2503, instanceID=1202, source="att"},
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193751] = {
+		itemID = 193751,
+		name = "Crown of Roaring Storms",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 2,
+		itemType = "Armor",
+		itemSubType = "Leather",
+		link = "|cnIQ3:|Hitem:193751::::::::90:251:::::::::|h[Crown of Roaring Storms]|h|r",
+		icon = 4095090,
+		isTransmog = true,
+		locations = {
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193752] = {
@@ -7943,7 +8024,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2503, instanceID=1202, source="att"},
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193752] = {
+		itemID = 193752,
+		name = "Galerattle Gauntlets",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 3,
+		itemType = "Armor",
+		itemSubType = "Mail",
+		link = "|cnIQ3:|Hitem:193752::::::::90:251:::::::::|h[Galerattle Gauntlets]|h|r",
+		icon = 4326059,
+		isTransmog = true,
+		locations = {
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193753] = {
@@ -7960,7 +8057,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2503, instanceID=1202, source="att"},
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193753] = {
+		itemID = 193753,
+		name = "Breastplate of Soaring Terror",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 4,
+		itemType = "Armor",
+		itemSubType = "Plate",
+		link = "|cnIQ3:|Hitem:193753::::::::90:251:::::::::|h[Breastplate of Soaring Terror]|h|r",
+		icon = 4295886,
+		isTransmog = true,
+		locations = {
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193754] = {
@@ -7977,7 +8090,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2503, instanceID=1202, source="att"},
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193754] = {
+		itemID = 193754,
+		name = "Drake Rider's Stecktarge",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 6,
+		itemType = "Armor",
+		itemSubType = "Shields",
+		link = "|cnIQ3:|Hitem:193754::::::::90:251:::::::::|h[Drake Rider's Stecktarge]|h|r",
+		icon = 4549844,
+		isTransmog = true,
+		locations = {
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193755] = {
@@ -7994,7 +8123,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2503, instanceID=1202, source="att"},
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193755] = {
+		itemID = 193755,
+		name = "Backdraft Cleaver",
+		expansionID = 10,
+		quality = 3,
+		classID = 2,
+		subclassID = 1,
+		itemType = "Weapon",
+		itemSubType = "Two-Handed Axes",
+		link = "|cnIQ3:|Hitem:193755::::::::90:251:::::::::|h[Backdraft Cleaver]|h|r",
+		icon = 4394687,
+		isTransmog = true,
+		locations = {
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193756] = {
@@ -8011,7 +8156,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2503, instanceID=1202, source="att"},
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193756] = {
+		itemID = 193756,
+		name = "Skyferno Rondel",
+		expansionID = 10,
+		quality = 3,
+		classID = 2,
+		subclassID = 15,
+		itemType = "Weapon",
+		itemSubType = "Daggers",
+		link = "|cnIQ3:|Hitem:193756::::::::90:251:::::::::|h[Skyferno Rondel]|h|r",
+		icon = 4327583,
+		isTransmog = true,
+		locations = {
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193757] = {
@@ -8029,7 +8190,24 @@ OneWoWItems_Dragonflight = {
 		spellID = 389843,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2488, instanceID=1202, source="att"},
+			{encounterID=2488, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193757] = {
+		itemID = 193757,
+		name = "Ruby Whelp Shell",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 0,
+		itemType = "Armor",
+		itemSubType = "Miscellaneous",
+		link = "|cnIQ3:|Hitem:193757::::::::90:251:::::::::|h[Ruby Whelp Shell]|h|r",
+		icon = 4509422,
+		isTransmog = false,
+		spellID = 389843,
+		locations = {
+			{encounterID=2488, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193758] = {
@@ -8046,7 +8224,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2488, instanceID=1202, source="att"},
+			{encounterID=2488, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193758] = {
+		itemID = 193758,
+		name = "Subjugator's Chilling Grips",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 2,
+		itemType = "Armor",
+		itemSubType = "Leather",
+		link = "|cnIQ3:|Hitem:193758::::::::90:251:::::::::|h[Subjugator's Chilling Grips]|h|r",
+		icon = 4095089,
+		isTransmog = true,
+		locations = {
+			{encounterID=2488, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193759] = {
@@ -8063,7 +8257,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2488, instanceID=1202, source="att"},
+			{encounterID=2488, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193759] = {
+		itemID = 193759,
+		name = "Egg Tender's Leggings",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 3,
+		itemType = "Armor",
+		itemSubType = "Mail",
+		link = "|cnIQ3:|Hitem:193759::::::::90:251:::::::::|h[Egg Tender's Leggings]|h|r",
+		icon = 4326061,
+		isTransmog = true,
+		locations = {
+			{encounterID=2488, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193760] = {
@@ -8097,7 +8307,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2488, instanceID=1202, source="att"},
+			{encounterID=2488, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193761] = {
+		itemID = 193761,
+		name = "Chillworn's Infusion Staff",
+		expansionID = 10,
+		quality = 3,
+		classID = 2,
+		subclassID = 10,
+		itemType = "Weapon",
+		itemSubType = "Staves",
+		link = "|cnIQ3:|Hitem:193761::::::::90:251:::::::::|h[Chillworn's Infusion Staff]|h|r",
+		icon = 4420063,
+		isTransmog = true,
+		locations = {
+			{encounterID=2488, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193762] = {
@@ -8115,7 +8341,24 @@ OneWoWItems_Dragonflight = {
 		spellID = 383926,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2485, instanceID=1202, source="att"},
+			{encounterID=2485, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193762] = {
+		itemID = 193762,
+		name = "Blazebinder's Hoof",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 0,
+		itemType = "Armor",
+		itemSubType = "Miscellaneous",
+		link = "|cnIQ3:|Hitem:193762::::::::90:251:::::::::|h[Blazebinder's Hoof]|h|r",
+		icon = 4638646,
+		isTransmog = false,
+		spellID = 383926,
+		locations = {
+			{encounterID=2485, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193763] = {
@@ -8132,7 +8375,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2485, instanceID=1202, source="att"},
+			{encounterID=2485, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193763] = {
+		itemID = 193763,
+		name = "Fireproof Drape",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 1,
+		itemType = "Armor",
+		itemSubType = "Cloth",
+		link = "|cnIQ3:|Hitem:193763::::::::90:251:::::::::|h[Fireproof Drape]|h|r",
+		icon = 4326057,
+		isTransmog = true,
+		locations = {
+			{encounterID=2485, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193764] = {
@@ -8149,7 +8408,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2485, instanceID=1202, source="att"},
+			{encounterID=2485, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193764] = {
+		itemID = 193764,
+		name = "Invader's Firestorm Chestguard",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 2,
+		itemType = "Armor",
+		itemSubType = "Leather",
+		link = "|cnIQ3:|Hitem:193764::::::::90:251:::::::::|h[Invader's Firestorm Chestguard]|h|r",
+		icon = 4095088,
+		isTransmog = true,
+		locations = {
+			{encounterID=2485, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193765] = {
@@ -8166,7 +8441,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2485, instanceID=1202, source="att"},
+			{encounterID=2485, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193765] = {
+		itemID = 193765,
+		name = "Blazebound Lieutenant's Helm",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 3,
+		itemType = "Armor",
+		itemSubType = "Mail",
+		link = "|cnIQ3:|Hitem:193765::::::::90:251:::::::::|h[Blazebound Lieutenant's Helm]|h|r",
+		icon = 4326060,
+		isTransmog = true,
+		locations = {
+			{encounterID=2485, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193766] = {
@@ -8183,7 +8474,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2485, instanceID=1202, source="att"},
+			{encounterID=2485, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193766] = {
+		itemID = 193766,
+		name = "Kokia's Burnout Rod",
+		expansionID = 10,
+		quality = 3,
+		classID = 4,
+		subclassID = 0,
+		itemType = "Armor",
+		itemSubType = "Miscellaneous",
+		link = "|cnIQ3:|Hitem:193766::::::::90:251:::::::::|h[Kokia's Burnout Rod]|h|r",
+		icon = 4526077,
+		isTransmog = true,
+		locations = {
+			{encounterID=2485, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193767] = {
@@ -8200,7 +8507,23 @@ OneWoWItems_Dragonflight = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2485, instanceID=1202, source="att"},
+			{encounterID=2485, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
+		},
+	},
+	[193767] = {
+		itemID = 193767,
+		name = "Havoc Crusher",
+		expansionID = 10,
+		quality = 3,
+		classID = 2,
+		subclassID = 4,
+		itemType = "Weapon",
+		itemSubType = "One-Handed Maces",
+		link = "|cnIQ3:|Hitem:193767::::::::90:251:::::::::|h[Havoc Crusher]|h|r",
+		icon = 4266751,
+		isTransmog = true,
+		locations = {
+			{encounterID=2485, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[193768] = {
@@ -17096,7 +17419,7 @@ OneWoWItems_Dragonflight = {
 			{id=69602},
 		},
 		locations = {
-			{encounterID=2503, instanceID=1202, source="att"},
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[197598] = {
@@ -17136,7 +17459,7 @@ OneWoWItems_Dragonflight = {
 			{id=69805},
 		},
 		locations = {
-			{encounterID=2503, instanceID=1202, source="att"},
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[197625] = {
@@ -17307,8 +17630,8 @@ OneWoWItems_Dragonflight = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=1197, source="journal", difficulties={{id=1,name="Normal"}}},
+			{encounterID=0, instanceID=1201, source="journal", difficulties={{id=1,name="Normal"}}},
 			{encounterID=0, instanceID=1198, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"}}},
 			{encounterID=0, instanceID=1199, source="journal", difficulties={{id=1,name="Normal"}}},
 			{encounterID=0, instanceID=1203, source="journal", difficulties={{id=1,name="Normal"}}},
 			{encounterID=0, instanceID=1196, source="journal", difficulties={{id=1,name="Normal"}}},
@@ -17329,8 +17652,8 @@ OneWoWItems_Dragonflight = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=1197, source="journal", difficulties={{id=2,name="Heroic"}}},
+			{encounterID=0, instanceID=1201, source="journal", difficulties={{id=2,name="Heroic"}}},
 			{encounterID=0, instanceID=1198, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=2,name="Heroic"}}},
 			{encounterID=0, instanceID=1199, source="journal", difficulties={{id=2,name="Heroic"}}},
 			{encounterID=0, instanceID=1203, source="journal", difficulties={{id=2,name="Heroic"}}},
 			{encounterID=0, instanceID=1196, source="journal", difficulties={{id=2,name="Heroic"}}},
@@ -17351,8 +17674,8 @@ OneWoWItems_Dragonflight = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=1197, source="journal", difficulties={{id=23,name="Mythic"}}},
+			{encounterID=0, instanceID=1201, source="journal", difficulties={{id=23,name="Mythic"}}},
 			{encounterID=0, instanceID=1198, source="journal", difficulties={{id=23,name="Mythic"}}},
-			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=23,name="Mythic"}}},
 			{encounterID=0, instanceID=1199, source="journal", difficulties={{id=23,name="Mythic"}}},
 			{encounterID=0, instanceID=1203, source="journal", difficulties={{id=23,name="Mythic"}}},
 			{encounterID=0, instanceID=1196, source="journal", difficulties={{id=23,name="Mythic"}}},
@@ -27445,7 +27768,7 @@ OneWoWItems_Dragonflight = {
 		isTransmog = false,
 		spellID = 383586,
 		locations = {
-			{encounterID=2503, instanceID=1202, source="att"},
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[201743] = {
@@ -71112,7 +71435,7 @@ OneWoWItems_Dragonflight = {
 		spellID = 1260364,
 		locations = {
 			{encounterID=0, instanceID=1202, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=23,name="Mythic"},{id=24,name="Timewalking"}}},
-			{encounterID=2503, instanceID=1202, source="att"},
+			{encounterID=2503, instanceID=1202, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[258529] = {
@@ -71128,7 +71451,6 @@ OneWoWItems_Dragonflight = {
 		icon = 4322743,
 		isTransmog = true,
 		locations = {
-			{encounterID=0, instanceID=1201, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=2509, instanceID=1201, source="att"},
 		},
 	},
@@ -71145,7 +71467,6 @@ OneWoWItems_Dragonflight = {
 		icon = 4181501,
 		isTransmog = true,
 		locations = {
-			{encounterID=0, instanceID=1201, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=2495, instanceID=1201, source="att"},
 		},
 	},

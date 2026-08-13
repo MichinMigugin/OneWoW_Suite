@@ -79,18 +79,11 @@ OneWoWInstances_Classic = {
 		instanceType = "party",
 		expansionID = 1,
 	},
-	[76] = {
-		instanceID = 76,
-		name = "Zul'Gurub",
-		mapID = 233,
+	[241] = {
+		instanceID = 241,
+		name = "Zul'Farrak",
+		mapID = 209,
 		instanceType = "party",
-		expansionID = 1,
-	},
-	[744] = {
-		instanceID = 744,
-		name = "Temple of Ahn'Qiraj",
-		mapID = 531,
-		instanceType = "raid",
 		expansionID = 1,
 	},
 	[1276] = {
@@ -135,10 +128,10 @@ OneWoWInstances_Classic = {
 		instanceType = "party",
 		expansionID = 1,
 	},
-	[760] = {
-		instanceID = 760,
-		name = "Onyxia's Lair",
-		mapID = 248,
+	[744] = {
+		instanceID = 744,
+		name = "Temple of Ahn'Qiraj",
+		mapID = 531,
 		instanceType = "raid",
 		expansionID = 1,
 	},
@@ -149,17 +142,17 @@ OneWoWInstances_Classic = {
 		instanceType = "party",
 		expansionID = 1,
 	},
+	[232] = {
+		instanceID = 232,
+		name = "Maraudon",
+		mapID = 349,
+		instanceType = "party",
+		expansionID = 1,
+	},
 	[64] = {
 		instanceID = 64,
 		name = "Shadowfang Keep",
 		mapID = 33,
-		instanceType = "party",
-		expansionID = 1,
-	},
-	[240] = {
-		instanceID = 240,
-		name = "Wailing Caverns",
-		mapID = 43,
 		instanceType = "party",
 		expansionID = 1,
 	},
@@ -198,10 +191,10 @@ OneWoWInstances_Classic = {
 		instanceType = "raid",
 		expansionID = 1,
 	},
-	[232] = {
-		instanceID = 232,
-		name = "Maraudon",
-		mapID = 349,
+	[240] = {
+		instanceID = 240,
+		name = "Wailing Caverns",
+		mapID = 43,
 		instanceType = "party",
 		expansionID = 1,
 	},
@@ -212,11 +205,11 @@ OneWoWInstances_Classic = {
 		instanceType = "party",
 		expansionID = 1,
 	},
-	[241] = {
-		instanceID = 241,
-		name = "Zul'Farrak",
-		mapID = 209,
-		instanceType = "party",
+	[760] = {
+		instanceID = 760,
+		name = "Onyxia's Lair",
+		mapID = 248,
+		instanceType = "raid",
 		expansionID = 1,
 	},
 }

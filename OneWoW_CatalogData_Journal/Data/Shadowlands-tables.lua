@@ -20354,6 +20354,7 @@ OneWoWItems_Shadowlands = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1194, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
+			{encounterID=2449, instanceID=1194, source="att"},
 		},
 	},
 	[185777] = {
@@ -20556,6 +20557,7 @@ OneWoWItems_Shadowlands = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1194, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
+			{encounterID=2448, instanceID=1194, source="att"},
 		},
 	},
 	[185789] = {
@@ -20589,6 +20591,7 @@ OneWoWItems_Shadowlands = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1194, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
+			{encounterID=2448, instanceID=1194, source="att"},
 		},
 	},
 	[185791] = {
@@ -20656,6 +20659,7 @@ OneWoWItems_Shadowlands = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1194, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
+			{encounterID=2454, instanceID=1194, source="att"},
 		},
 	},
 	[185795] = {
@@ -20757,6 +20761,7 @@ OneWoWItems_Shadowlands = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1194, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
+			{encounterID=2451, instanceID=1194, source="att"},
 		},
 	},
 	[185801] = {
@@ -20858,6 +20863,7 @@ OneWoWItems_Shadowlands = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=1194, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
+			{encounterID=2452, instanceID=1194, source="att"},
 		},
 	},
 	[185807] = {
@@ -21182,6 +21188,7 @@ OneWoWItems_Shadowlands = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=1194, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
+			{encounterID=2454, instanceID=1194, source="att"},
 		},
 	},
 	[185841] = {

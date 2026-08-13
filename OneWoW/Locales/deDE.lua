@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Auto-Reittier",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Auto-Reittier pausiert im Kampf und in anderen aura-beschränkten Situationen, erkennt Verstohlenheit ohne geheime Stärkungszauber zu scannen und löst keinen Fehler mehr aus, wenn Auradaten eingeschränkt sind. Spieler-Reittiere-Tooltips nutzen denselben Schutz.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "Midnight-Journal-Einträge umfassen jetzt Die Gezeitengebundene Grotte, Der Giftige Abgrund und Altar der Fänge.",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "Das Midnight-Journal enthält jetzt Begegnungen und Beute für Die Gezeitengebundene Grotte, Der Giftige Abgrund und Altar der Fänge.",
     ["CMD_TOGGLE_ONEWOW"] = "OneWoW umschalten",
     ["CMD_KEYWORD_HELP"] = "Hilfe zu Suchbegriffen öffnen",
     ["CMD_OPEN_ALTTRACKER"] = "AltTracker öffnen",

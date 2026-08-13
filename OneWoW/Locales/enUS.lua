@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Auto Mount",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Auto Mount pauses in combat and other aura-restricted situations, detects stealth without scanning secret buffs, and no longer errors when aura data is restricted. Play Mounts tooltips use the same guard.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "Midnight Journal listings now include The Tidebound Grotto, The Venomous Abyss, and Altar of Fangs.",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "Midnight Journal now includes encounters and loot for The Tidebound Grotto, The Venomous Abyss, and Altar of Fangs.",
     ["CMD_TOGGLE_ONEWOW"] = "Toggle OneWoW",
     ["CMD_KEYWORD_HELP"] = "Open Search Keywords help",
     ["CMD_OPEN_ALTTRACKER"] = "Open AltTracker",

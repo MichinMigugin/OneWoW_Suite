@@ -2,52 +2,12 @@
 -- Encounter data for Cataclysm
 
 OneWoWEncounters_Cataclysm = {
-	[2626] = {
-		encounterID = 2626,
-		name = "Sneed",
-		instanceID = 63,
-		expansionID = 4,
-		bossIndex = 2,
-	},
-	[92] = {
-		encounterID = 92,
-		name = "Admiral Ripsnarl",
-		instanceID = 63,
-		expansionID = 4,
-	},
-	[2628] = {
-		encounterID = 2628,
-		name = "Gilnid",
-		instanceID = 63,
-		expansionID = 4,
-		bossIndex = 3,
-	},
-	[93] = {
-		encounterID = 93,
-		name = "\"Captain\" Cookie",
-		instanceID = 63,
-		expansionID = 4,
-	},
-	[2629] = {
-		encounterID = 2629,
-		name = "Mr. Smite",
-		instanceID = 63,
-		expansionID = 4,
-		bossIndex = 4,
-	},
 	[2630] = {
 		encounterID = 2630,
 		name = "Captain Greenskin",
 		instanceID = 63,
 		expansionID = 4,
 		bossIndex = 5,
-	},
-	[2613] = {
-		encounterID = 2613,
-		name = "Rhahk'Zor",
-		instanceID = 63,
-		expansionID = 4,
-		bossIndex = 1,
 	},
 	[2631] = {
 		encounterID = 2631,
@@ -56,24 +16,6 @@ OneWoWEncounters_Cataclysm = {
 		expansionID = 4,
 		bossIndex = 6,
 	},
-	[90] = {
-		encounterID = 90,
-		name = "Helix Gearbreaker",
-		instanceID = 63,
-		expansionID = 4,
-	},
-	[91] = {
-		encounterID = 91,
-		name = "Foe Reaper 5000",
-		instanceID = 63,
-		expansionID = 4,
-	},
-	[95] = {
-		encounterID = 95,
-		name = "Vanessa VanCleef",
-		instanceID = 63,
-		expansionID = 4,
-	},
 	[2632] = {
 		encounterID = 2632,
 		name = "Cookie",
@@ -81,11 +23,33 @@ OneWoWEncounters_Cataclysm = {
 		expansionID = 4,
 		bossIndex = 7,
 	},
-	[89] = {
-		encounterID = 89,
-		name = "Glubtok",
+	[2626] = {
+		encounterID = 2626,
+		name = "Sneed",
 		instanceID = 63,
 		expansionID = 4,
+		bossIndex = 2,
+	},
+	[2613] = {
+		encounterID = 2613,
+		name = "Rhahk'Zor",
+		instanceID = 63,
+		expansionID = 4,
+		bossIndex = 1,
+	},
+	[2628] = {
+		encounterID = 2628,
+		name = "Gilnid",
+		instanceID = 63,
+		expansionID = 4,
+		bossIndex = 3,
+	},
+	[2629] = {
+		encounterID = 2629,
+		name = "Mr. Smite",
+		instanceID = 63,
+		expansionID = 4,
+		bossIndex = 4,
 	},
 	[99] = {
 		encounterID = 99,
@@ -562,25 +526,12 @@ OneWoWEncounters_Cataclysm = {
 		expansionID = 4,
 		bossIndex = 4,
 	},
-	[133] = {
-		encounterID = 133,
-		name = "Drahga Shadowburner",
-		instanceID = 71,
-		expansionID = 4,
-	},
 	[2617] = {
 		encounterID = 2617,
 		name = "General Umbriss",
 		instanceID = 71,
 		expansionID = 4,
 		bossIndex = 1,
-	},
-	[2618] = {
-		encounterID = 2618,
-		name = "Drahga Shadowburner",
-		instanceID = 71,
-		expansionID = 4,
-		bossIndex = 3,
 	},
 	[2619] = {
 		encounterID = 2619,
@@ -596,23 +547,12 @@ OneWoWEncounters_Cataclysm = {
 		expansionID = 4,
 		bossIndex = 2,
 	},
-	[132] = {
-		encounterID = 132,
-		name = "Forgemaster Throngus",
+	[2618] = {
+		encounterID = 2618,
+		name = "Drahga Shadowburner",
 		instanceID = 71,
 		expansionID = 4,
-	},
-	[131] = {
-		encounterID = 131,
-		name = "General Umbriss",
-		instanceID = 71,
-		expansionID = 4,
-	},
-	[134] = {
-		encounterID = 134,
-		name = "Erudax, the Duke of Below",
-		instanceID = 71,
-		expansionID = 4,
+		bossIndex = 3,
 	},
 	[172] = {
 		encounterID = 172,

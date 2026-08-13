@@ -95183,6 +95183,7 @@ OneWoWItems_Legion = {
 		icon = 656681,
 		isTransmog = false,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1981, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -95231,6 +95232,7 @@ OneWoWItems_Legion = {
 		icon = 1115906,
 		isTransmog = false,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1982, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -95279,6 +95281,7 @@ OneWoWItems_Legion = {
 		icon = 425954,
 		isTransmog = false,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1981, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -95327,6 +95330,7 @@ OneWoWItems_Legion = {
 		icon = 135855,
 		isTransmog = false,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1979, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -95375,6 +95379,7 @@ OneWoWItems_Legion = {
 		icon = 633004,
 		isTransmog = false,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1982, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -95423,6 +95428,7 @@ OneWoWItems_Legion = {
 		icon = 236517,
 		isTransmog = false,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1979, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -95471,6 +95477,7 @@ OneWoWItems_Legion = {
 		icon = 132885,
 		isTransmog = false,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1980, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -95519,6 +95526,7 @@ OneWoWItems_Legion = {
 		icon = 249173,
 		isTransmog = false,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1980, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -95567,6 +95575,7 @@ OneWoWItems_Legion = {
 		icon = 1035041,
 		isTransmog = false,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1982, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -95615,6 +95624,7 @@ OneWoWItems_Legion = {
 		icon = 134896,
 		isTransmog = false,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1981, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -95936,6 +95946,7 @@ OneWoWItems_Legion = {
 		icon = 1575408,
 		isTransmog = true,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1979, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -96462,6 +96473,7 @@ OneWoWItems_Legion = {
 		icon = 1544134,
 		isTransmog = true,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1979, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -96510,6 +96522,7 @@ OneWoWItems_Legion = {
 		icon = 1544132,
 		isTransmog = true,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1981, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -96904,6 +96917,7 @@ OneWoWItems_Legion = {
 		icon = 1574625,
 		isTransmog = true,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1982, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -97001,6 +97015,7 @@ OneWoWItems_Legion = {
 		icon = 1574620,
 		isTransmog = true,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1979, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -97245,6 +97260,7 @@ OneWoWItems_Legion = {
 		icon = 1586625,
 		isTransmog = true,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1979, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -97492,6 +97508,7 @@ OneWoWItems_Legion = {
 		icon = 1574626,
 		isTransmog = true,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1981, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -97540,6 +97557,7 @@ OneWoWItems_Legion = {
 		icon = 1586624,
 		isTransmog = true,
 		locations = {
+			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1982, instanceID=945, source="att", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 		},
 	},
@@ -121964,7 +121982,6 @@ OneWoWItems_Legion = {
 		icon = 3461503,
 		isTransmog = true,
 		locations = {
-			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1979, instanceID=945, source="att"},
 		},
 	},
@@ -121981,7 +121998,6 @@ OneWoWItems_Legion = {
 		icon = 1003750,
 		isTransmog = true,
 		locations = {
-			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1980, instanceID=945, source="att"},
 		},
 	},
@@ -121998,7 +122014,6 @@ OneWoWItems_Legion = {
 		icon = 3229469,
 		isTransmog = true,
 		locations = {
-			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1981, instanceID=945, source="att"},
 		},
 	},
@@ -122015,7 +122030,6 @@ OneWoWItems_Legion = {
 		icon = 976063,
 		isTransmog = true,
 		locations = {
-			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1981, instanceID=945, source="att"},
 		},
 	},
@@ -122032,7 +122046,6 @@ OneWoWItems_Legion = {
 		icon = 463830,
 		isTransmog = true,
 		locations = {
-			{encounterID=0, instanceID=945, source="journal", difficulties={{id=2,name="Heroic"},{id=23,name="Mythic"}}},
 			{encounterID=1982, instanceID=945, source="att"},
 		},
 	},

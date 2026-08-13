@@ -2,6 +2,20 @@
 -- Instance data for Midnight
 
 OneWoWInstances_Midnight = {
+	[1317] = {
+		instanceID = 1317,
+		name = "The Tidebound Grotto",
+		mapID = 2987,
+		instanceType = "raid",
+		expansionID = 12,
+	},
+	[1322] = {
+		instanceID = 1322,
+		name = "Altar of Fangs",
+		mapID = 2993,
+		instanceType = "party",
+		expansionID = 12,
+	},
 	[1314] = {
 		instanceID = 1314,
 		name = "The Dreamrift",
@@ -9,11 +23,18 @@ OneWoWInstances_Midnight = {
 		instanceType = "raid",
 		expansionID = 12,
 	},
-	[1315] = {
-		instanceID = 1315,
-		name = "Maisara Caverns",
-		mapID = 2874,
+	[1299] = {
+		instanceID = 1299,
+		name = "Windrunner Spire",
+		mapID = 2805,
 		instanceType = "party",
+		expansionID = 12,
+	},
+	[1305] = {
+		instanceID = 1305,
+		name = "Sporefall",
+		mapID = 1592,
+		instanceType = "raid",
 		expansionID = 12,
 	},
 	[1307] = {
@@ -65,10 +86,10 @@ OneWoWInstances_Midnight = {
 		instanceType = "party",
 		expansionID = 12,
 	},
-	[1305] = {
-		instanceID = 1305,
-		name = "Sporefall",
-		mapID = 1592,
+	[1320] = {
+		instanceID = 1320,
+		name = "The Venomous Abyss",
+		mapID = 3004,
 		instanceType = "raid",
 		expansionID = 12,
 	},
@@ -86,10 +107,10 @@ OneWoWInstances_Midnight = {
 		instanceType = "party",
 		expansionID = 12,
 	},
-	[1299] = {
-		instanceID = 1299,
-		name = "Windrunner Spire",
-		mapID = 2805,
+	[1315] = {
+		instanceID = 1315,
+		name = "Maisara Caverns",
+		mapID = 2874,
 		instanceType = "party",
 		expansionID = 12,
 	},

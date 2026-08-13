@@ -163,7 +163,7 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Cavalcatura automatica",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Cavalcatura automatica si mette in pausa in combattimento e in altre situazioni con auree riservate, rileva lo stealth senza scansionare i buff segreti e non genera più errori quando i dati delle auree sono riservati. I tooltip di Cavalcature dei giocatori usano la stessa protezione.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "Le liste Journal di Midnight ora includono Grotta Vincolata alla Marea, Abissi Velenosi e Altare delle Zanne.",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "Il Journal di Midnight ora include scontri e bottino di Grotta Vincolata alla Marea, Abissi Velenosi e Altare delle Zanne.",
     ["CMD_TOGGLE_ONEWOW"] = "Attiva/disattiva OneWoW",
     ["CMD_KEYWORD_HELP"] = "Apri l'aiuto sulle parole chiave di ricerca",
     ["CMD_OPEN_ALTTRACKER"] = "Apri AltTracker",

@@ -16,72 +16,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=92, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=2613, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[872] = {
-		itemID = 872,
-		name = "Rockslicer",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 1,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Axes",
-		link = "|cnIQ3:|Hitem:872::::::::90:251:::::::::|h[Rockslicer]|h|r",
-		icon = 135419,
-		isTransmog = true,
-		locations = {
-			{encounterID=92, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[872] = {
-		itemID = 872,
-		name = "Rockslicer",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 1,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Axes",
-		link = "|cnIQ3:|Hitem:872::::::::90:251:::::::::|h[Rockslicer]|h|r",
-		icon = 135419,
-		isTransmog = true,
-		locations = {
-			{encounterID=2613, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[915] = {
-		itemID = 915,
-		name = "Red Silk Bandana",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:915::::::::90:251:::::::::|h[Red Silk Bandana]|h|r",
-		icon = 133694,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[932] = {
-		itemID = 932,
-		name = "Fel Steed Saddlebags",
-		expansionID = 4,
-		quality = 1,
-		classID = 1,
-		subclassID = 0,
-		itemType = "Container",
-		itemSubType = "Bag",
-		link = "|cnIQ1:|Hitem:932::::::::90:251:::::::::|h[Fel Steed Saddlebags]|h|r",
-		icon = 133633,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[1156] = {
@@ -98,40 +32,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=92, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=2628, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[1156] = {
-		itemID = 1156,
-		name = "Lavishly Jeweled Ring",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:1156::::::::90:251:::::::::|h[Lavishly Jeweled Ring]|h|r",
-		icon = 133351,
-		isTransmog = false,
-		locations = {
-			{encounterID=92, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1156] = {
-		itemID = 1156,
-		name = "Lavishly Jeweled Ring",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:1156::::::::90:251:::::::::|h[Lavishly Jeweled Ring]|h|r",
-		icon = 133351,
-		isTransmog = false,
-		locations = {
-			{encounterID=2628, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[1292] = {
@@ -148,360 +48,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1292] = {
-		itemID = 1292,
-		name = "Butcher's Cleaver",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ3:|Hitem:1292::::::::90:251:::::::::|h[Butcher's Cleaver]|h|r",
-		icon = 132417,
-		isTransmog = true,
-		locations = {
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1318] = {
-		itemID = 1318,
-		name = "Night Reaver",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 1,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Axes",
-		link = "|cnIQ3:|Hitem:1318::::::::90:251:::::::::|h[Night Reaver]|h|r",
-		icon = 135424,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1318] = {
-		itemID = 1318,
-		name = "Night Reaver",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 1,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Axes",
-		link = "|cnIQ3:|Hitem:1318::::::::90:251:::::::::|h[Night Reaver]|h|r",
-		icon = 135424,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1482] = {
-		itemID = 1482,
-		name = "Shadowfang",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:1482::::::::90:251:::::::::|h[Shadowfang]|h|r",
-		icon = 135311,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1482] = {
-		itemID = 1482,
-		name = "Shadowfang",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:1482::::::::90:251:::::::::|h[Shadowfang]|h|r",
-		icon = 135311,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1483] = {
-		itemID = 1483,
-		name = "Face Smasher",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:1483::::::::90:251:::::::::|h[Face Smasher]|h|r",
-		icon = 133045,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1483] = {
-		itemID = 1483,
-		name = "Face Smasher",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:1483::::::::90:251:::::::::|h[Face Smasher]|h|r",
-		icon = 133045,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1484] = {
-		itemID = 1484,
-		name = "Witching Stave",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:1484::::::::90:251:::::::::|h[Witching Stave]|h|r",
-		icon = 135466,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1484] = {
-		itemID = 1484,
-		name = "Witching Stave",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:1484::::::::90:251:::::::::|h[Witching Stave]|h|r",
-		icon = 135466,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1489] = {
-		itemID = 1489,
-		name = "Gloomshroud Armor",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:1489::::::::90:251:::::::::|h[Gloomshroud Armor]|h|r",
-		icon = 132723,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1489] = {
-		itemID = 1489,
-		name = "Gloomshroud Armor",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:1489::::::::90:251:::::::::|h[Gloomshroud Armor]|h|r",
-		icon = 132723,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1875] = {
-		itemID = 1875,
-		name = "Thistlenettle's Badge",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:1875::::::::90:251:::::::::|h[Thistlenettle's Badge]|h|r",
-		icon = 133278,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[1894] = {
-		itemID = 1894,
-		name = "Miners' Union Card",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:1894::::::::90:251:::::::::|h[Miners' Union Card]|h|r",
-		icon = 133469,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[1925] = {
-		itemID = 1925,
-		name = "Defias Rapier",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:1925::::::::90:251:::::::::|h[Defias Rapier]|h|r",
-		icon = 135340,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[1926] = {
-		itemID = 1926,
-		name = "Weighted Sap",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:1926::::::::90:251:::::::::|h[Weighted Sap]|h|r",
-		icon = 133481,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[1928] = {
-		itemID = 1928,
-		name = "Defias Mage Staff",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:1928::::::::90:251:::::::::|h[Defias Mage Staff]|h|r",
-		icon = 135155,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[1929] = {
-		itemID = 1929,
-		name = "Silk-Threaded Trousers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:1929::::::::90:251:::::::::|h[Silk-Threaded Trousers]|h|r",
-		icon = 134582,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[1930] = {
-		itemID = 1930,
-		name = "Stonemason Cloak",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:1930::::::::90:251:::::::::|h[Stonemason Cloak]|h|r",
-		icon = 133763,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[1933] = {
-		itemID = 1933,
-		name = "Staff of Conjuring",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:1933::::::::90:251:::::::::|h[Staff of Conjuring]|h|r",
-		icon = 135150,
-		isTransmog = true,
-		spellID = 8736,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[1935] = {
-		itemID = 1935,
-		name = "Assassin's Blade",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:1935::::::::90:251:::::::::|h[Assassin's Blade]|h|r",
-		icon = 135660,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1935] = {
-		itemID = 1935,
-		name = "Assassin's Blade",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:1935::::::::90:251:::::::::|h[Assassin's Blade]|h|r",
-		icon = 135660,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1936] = {
-		itemID = 1936,
-		name = "Goblin Screwdriver",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:1936::::::::90:251:::::::::|h[Goblin Screwdriver]|h|r",
-		icon = 135641,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
 		},
 	},
 	[1937] = {
@@ -518,216 +64,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1937] = {
-		itemID = 1937,
-		name = "Buzz Saw",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:1937::::::::90:251:::::::::|h[Buzz Saw]|h|r",
-		icon = 135325,
-		isTransmog = true,
-		locations = {
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1937] = {
-		itemID = 1937,
-		name = "Buzz Saw",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:1937::::::::90:251:::::::::|h[Buzz Saw]|h|r",
-		icon = 135325,
-		isTransmog = true,
-		locations = {
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[1943] = {
-		itemID = 1943,
-		name = "Goblin Mail Leggings",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:1943::::::::90:251:::::::::|h[Goblin Mail Leggings]|h|r",
-		icon = 134583,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[1944] = {
-		itemID = 1944,
-		name = "Metalworking Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:1944::::::::90:251:::::::::|h[Metalworking Gloves]|h|r",
-		icon = 132938,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[1945] = {
-		itemID = 1945,
-		name = "Woodworking Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:1945::::::::90:251:::::::::|h[Woodworking Gloves]|h|r",
-		icon = 132955,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[1951] = {
-		itemID = 1951,
-		name = "Blackwater Cutlass",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:1951::::::::90:251:::::::::|h[Blackwater Cutlass]|h|r",
-		icon = 135325,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[1958] = {
-		itemID = 1958,
-		name = "Petrified Shinbone",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:1958::::::::90:251:::::::::|h[Petrified Shinbone]|h|r",
-		icon = 133718,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[1959] = {
-		itemID = 1959,
-		name = "Cold Iron Pick",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 1,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Axes",
-		link = "|cnIQ3:|Hitem:1959::::::::90:251:::::::::|h[Cold Iron Pick]|h|r",
-		icon = 134707,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[1974] = {
-		itemID = 1974,
-		name = "Mindthrust Bracers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:1974::::::::90:251:::::::::|h[Mindthrust Bracers]|h|r",
-		icon = 132606,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[1974] = {
-		itemID = 1974,
-		name = "Mindthrust Bracers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:1974::::::::90:251:::::::::|h[Mindthrust Bracers]|h|r",
-		icon = 132606,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[2166] = {
-		itemID = 2166,
-		name = "Foreman's Leggings",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:2166::::::::90:251:::::::::|h[Foreman's Leggings]|h|r",
-		icon = 134583,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[2167] = {
-		itemID = 2167,
-		name = "Foreman's Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:2167::::::::90:251:::::::::|h[Foreman's Gloves]|h|r",
-		icon = 132955,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[2168] = {
-		itemID = 2168,
-		name = "Corpse Rompers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:2168::::::::90:251:::::::::|h[Corpse Rompers]|h|r",
-		icon = 132537,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
 		},
 	},
 	[2169] = {
@@ -744,152 +80,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[2169] = {
-		itemID = 2169,
-		name = "Buzzer Blade",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:2169::::::::90:251:::::::::|h[Buzzer Blade]|h|r",
-		icon = 135641,
-		isTransmog = true,
-		locations = {
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[2169] = {
-		itemID = 2169,
-		name = "Buzzer Blade",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:2169::::::::90:251:::::::::|h[Buzzer Blade]|h|r",
-		icon = 135641,
-		isTransmog = true,
-		locations = {
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[2205] = {
-		itemID = 2205,
-		name = "Duskbringer",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 8,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Swords",
-		link = "|cnIQ3:|Hitem:2205::::::::90:251:::::::::|h[Duskbringer]|h|r",
-		icon = 135351,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[2205] = {
-		itemID = 2205,
-		name = "Duskbringer",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 8,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Swords",
-		link = "|cnIQ3:|Hitem:2205::::::::90:251:::::::::|h[Duskbringer]|h|r",
-		icon = 135351,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[2292] = {
-		itemID = 2292,
-		name = "Necrology Robes",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:2292::::::::90:251:::::::::|h[Necrology Robes]|h|r",
-		icon = 132677,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[2292] = {
-		itemID = 2292,
-		name = "Necrology Robes",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:2292::::::::90:251:::::::::|h[Necrology Robes]|h|r",
-		icon = 132677,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[2807] = {
-		itemID = 2807,
-		name = "Guillotine Axe",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ3:|Hitem:2807::::::::90:251:::::::::|h[Guillotine Axe]|h|r",
-		icon = 132418,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[2807] = {
-		itemID = 2807,
-		name = "Guillotine Axe",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ3:|Hitem:2807::::::::90:251:::::::::|h[Guillotine Axe]|h|r",
-		icon = 132418,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[3019] = {
-		itemID = 3019,
-		name = "Noble's Robe",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:3019::::::::90:251:::::::::|h[Noble's Robe]|h|r",
-		icon = 132679,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
 		},
 	},
 	[3191] = {
@@ -906,55 +96,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[3191] = {
-		itemID = 3191,
-		name = "Arced War Axe",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 1,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Axes",
-		link = "|cnIQ3:|Hitem:3191::::::::90:251:::::::::|h[Arced War Axe]|h|r",
-		icon = 132397,
-		isTransmog = true,
-		locations = {
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[3194] = {
-		itemID = 3194,
-		name = "Black Malice",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 5,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Maces",
-		link = "|cnIQ3:|Hitem:3194::::::::90:251:::::::::|h[Black Malice]|h|r",
-		icon = 133476,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[3194] = {
-		itemID = 3194,
-		name = "Black Malice",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 5,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Maces",
-		link = "|cnIQ3:|Hitem:3194::::::::90:251:::::::::|h[Black Malice]|h|r",
-		icon = 133476,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[3230] = {
@@ -971,23 +112,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[3230] = {
-		itemID = 3230,
-		name = "Black Wolf Bracers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:3230::::::::90:251:::::::::|h[Black Wolf Bracers]|h|r",
-		icon = 132606,
-		isTransmog = true,
-		locations = {
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[3748] = {
@@ -1004,71 +128,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[3748] = {
-		itemID = 3748,
-		name = "Feline Mantle",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:3748::::::::90:251:::::::::|h[Feline Mantle]|h|r",
-		icon = 135036,
-		isTransmog = true,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[3902] = {
-		itemID = 3902,
-		name = "Staff of Nobles",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:3902::::::::90:251:::::::::|h[Staff of Nobles]|h|r",
-		icon = 135466,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[4660] = {
-		itemID = 4660,
-		name = "Walking Boots",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:4660::::::::90:251:::::::::|h[Walking Boots]|h|r",
-		icon = 132540,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[4676] = {
-		itemID = 4676,
-		name = "Skeletal Gauntlets",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:4676::::::::90:251:::::::::|h[Skeletal Gauntlets]|h|r",
-		icon = 132937,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
 		},
 	},
 	[5187] = {
@@ -1085,23 +144,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5187] = {
-		itemID = 5187,
-		name = "Foe Reaper",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 5,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Maces",
-		link = "|cnIQ3:|Hitem:5187::::::::90:251:::::::::|h[Foe Reaper]|h|r",
-		icon = 133046,
-		isTransmog = true,
-		locations = {
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[5191] = {
@@ -1118,40 +160,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=2631, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5191] = {
-		itemID = 5191,
-		name = "Cruel Barb",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:5191::::::::90:251:::::::::|h[Cruel Barb]|h|r",
-		icon = 135325,
-		isTransmog = true,
-		locations = {
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5191] = {
-		itemID = 5191,
-		name = "Cruel Barb",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:5191::::::::90:251:::::::::|h[Cruel Barb]|h|r",
-		icon = 135325,
-		isTransmog = true,
-		locations = {
-			{encounterID=2631, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[5192] = {
@@ -1168,40 +176,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[5192] = {
-		itemID = 5192,
-		name = "Thief's Blade",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:5192::::::::90:251:::::::::|h[Thief's Blade]|h|r",
-		icon = 135325,
-		isTransmog = true,
-		locations = {
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5192] = {
-		itemID = 5192,
-		name = "Thief's Blade",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:5192::::::::90:251:::::::::|h[Thief's Blade]|h|r",
-		icon = 135325,
-		isTransmog = true,
-		locations = {
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[5193] = {
@@ -1218,40 +192,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=2631, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[5193] = {
-		itemID = 5193,
-		name = "Cape of the Brotherhood",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:5193::::::::90:251:::::::::|h[Cape of the Brotherhood]|h|r",
-		icon = 133760,
-		isTransmog = true,
-		locations = {
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5193] = {
-		itemID = 5193,
-		name = "Cape of the Brotherhood",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:5193::::::::90:251:::::::::|h[Cape of the Brotherhood]|h|r",
-		icon = 133760,
-		isTransmog = true,
-		locations = {
-			{encounterID=2631, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[5194] = {
@@ -1268,23 +208,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[5194] = {
-		itemID = 5194,
-		name = "Taskmaster Axe",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 1,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Axes",
-		link = "|cnIQ3:|Hitem:5194::::::::90:251:::::::::|h[Taskmaster Axe]|h|r",
-		icon = 135424,
-		isTransmog = true,
-		locations = {
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[5195] = {
@@ -1301,40 +224,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5195] = {
-		itemID = 5195,
-		name = "Gold-Flecked Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:5195::::::::90:251:::::::::|h[Gold-Flecked Gloves]|h|r",
-		icon = 132957,
-		isTransmog = true,
-		locations = {
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5195] = {
-		itemID = 5195,
-		name = "Gold-Flecked Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:5195::::::::90:251:::::::::|h[Gold-Flecked Gloves]|h|r",
-		icon = 132957,
-		isTransmog = true,
-		locations = {
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[5196] = {
@@ -1351,40 +240,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=92, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[5196] = {
-		itemID = 5196,
-		name = "Smite's Reaver",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ3:|Hitem:5196::::::::90:251:::::::::|h[Smite's Reaver]|h|r",
-		icon = 132416,
-		isTransmog = true,
-		locations = {
-			{encounterID=92, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5196] = {
-		itemID = 5196,
-		name = "Smite's Reaver",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ3:|Hitem:5196::::::::90:251:::::::::|h[Smite's Reaver]|h|r",
-		icon = 132416,
-		isTransmog = true,
-		locations = {
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[5197] = {
@@ -1401,40 +256,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=2632, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[5197] = {
-		itemID = 5197,
-		name = "Cookie's Tenderizer",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:5197::::::::90:251:::::::::|h[Cookie's Tenderizer]|h|r",
-		icon = 132906,
-		isTransmog = true,
-		locations = {
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5197] = {
-		itemID = 5197,
-		name = "Cookie's Tenderizer",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:5197::::::::90:251:::::::::|h[Cookie's Tenderizer]|h|r",
-		icon = 132906,
-		isTransmog = true,
-		locations = {
-			{encounterID=2632, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[5198] = {
@@ -1451,40 +272,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=2632, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[5198] = {
-		itemID = 5198,
-		name = "Cookie's Stirring Rod",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 19,
-		itemType = "Weapon",
-		itemSubType = "Wands",
-		link = "|cnIQ3:|Hitem:5198::::::::90:251:::::::::|h[Cookie's Stirring Rod]|h|r",
-		icon = 135139,
-		isTransmog = true,
-		locations = {
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5198] = {
-		itemID = 5198,
-		name = "Cookie's Stirring Rod",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 19,
-		itemType = "Weapon",
-		itemSubType = "Wands",
-		link = "|cnIQ3:|Hitem:5198::::::::90:251:::::::::|h[Cookie's Stirring Rod]|h|r",
-		icon = 135139,
-		isTransmog = true,
-		locations = {
-			{encounterID=2632, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[5199] = {
@@ -1501,40 +288,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=2628, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5199] = {
-		itemID = 5199,
-		name = "Smelting Pants",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:5199::::::::90:251:::::::::|h[Smelting Pants]|h|r",
-		icon = 134582,
-		isTransmog = true,
-		locations = {
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5199] = {
-		itemID = 5199,
-		name = "Smelting Pants",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:5199::::::::90:251:::::::::|h[Smelting Pants]|h|r",
-		icon = 134582,
-		isTransmog = true,
-		locations = {
-			{encounterID=2628, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[5200] = {
@@ -1551,40 +304,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=2630, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5200] = {
-		itemID = 5200,
-		name = "Impaling Harpoon",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 6,
-		itemType = "Weapon",
-		itemSubType = "Polearms",
-		link = "|cnIQ3:|Hitem:5200::::::::90:251:::::::::|h[Impaling Harpoon]|h|r",
-		icon = 135130,
-		isTransmog = true,
-		locations = {
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5200] = {
-		itemID = 5200,
-		name = "Impaling Harpoon",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 6,
-		itemType = "Weapon",
-		itemSubType = "Polearms",
-		link = "|cnIQ3:|Hitem:5200::::::::90:251:::::::::|h[Impaling Harpoon]|h|r",
-		icon = 135130,
-		isTransmog = true,
-		locations = {
-			{encounterID=2630, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[5201] = {
@@ -1601,40 +320,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=2630, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5201] = {
-		itemID = 5201,
-		name = "Emberstone Staff",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:5201::::::::90:251:::::::::|h[Emberstone Staff]|h|r",
-		icon = 135150,
-		isTransmog = true,
-		locations = {
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5201] = {
-		itemID = 5201,
-		name = "Emberstone Staff",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:5201::::::::90:251:::::::::|h[Emberstone Staff]|h|r",
-		icon = 135150,
-		isTransmog = true,
-		locations = {
-			{encounterID=2630, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[5202] = {
@@ -1651,40 +336,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=24,name="Timewalking"}}},
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=2631, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[5202] = {
-		itemID = 5202,
-		name = "Corsair's Overshirt",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:5202::::::::90:251:::::::::|h[Corsair's Overshirt]|h|r",
-		icon = 135012,
-		isTransmog = true,
-		locations = {
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5202] = {
-		itemID = 5202,
-		name = "Corsair's Overshirt",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:5202::::::::90:251:::::::::|h[Corsair's Overshirt]|h|r",
-		icon = 135012,
-		isTransmog = true,
-		locations = {
-			{encounterID=2631, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[5254] = {
@@ -1701,23 +352,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5254] = {
-		itemID = 5254,
-		name = "Rugged Spaulders",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:5254::::::::90:251:::::::::|h[Rugged Spaulders]|h|r",
-		icon = 135039,
-		isTransmog = true,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[5443] = {
@@ -1734,23 +368,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5443] = {
-		itemID = 5443,
-		name = "Gold-Plated Buckler",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 6,
-		itemType = "Armor",
-		itemSubType = "Shields",
-		link = "|cnIQ3:|Hitem:5443::::::::90:251:::::::::|h[Gold-Plated Buckler]|h|r",
-		icon = 134948,
-		isTransmog = true,
-		locations = {
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[5444] = {
@@ -1767,40 +384,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5444] = {
-		itemID = 5444,
-		name = "Miner's Cape",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:5444::::::::90:251:::::::::|h[Miner's Cape]|h|r",
-		icon = 133763,
-		isTransmog = true,
-		locations = {
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5787] = {
-		itemID = 5787,
-		name = "Pattern: Murloc Scale Breastplate",
-		expansionID = 4,
-		quality = 1,
-		classID = 9,
-		subclassID = 1,
-		itemType = "Recipe",
-		itemSubType = "Leatherworking",
-		link = "|cnIQ1:|Hitem:5787::::::::90:251:::::::::|h[Pattern: Murloc Scale Breastplate]|h|r",
-		icon = 134939,
-		isTransmog = false,
-		spellID = 6703,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
 		},
 	},
 	[5943] = {
@@ -1817,39 +400,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5943] = {
-		itemID = 5943,
-		name = "Rift Bracers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:5943::::::::90:251:::::::::|h[Rift Bracers]|h|r",
-		icon = 132602,
-		isTransmog = true,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[5967] = {
-		itemID = 5967,
-		name = "Girdle of Nobility",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:5967::::::::90:251:::::::::|h[Girdle of Nobility]|h|r",
-		icon = 132499,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
 		},
 	},
 	[6220] = {
@@ -1864,27 +414,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:6220::::::::90:251:::::::::|h[Meteor Shard]|h|r",
 		icon = 135661,
 		isTransmog = true,
-		spellID = 245729,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[6220] = {
-		itemID = 6220,
-		name = "Meteor Shard",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:6220::::::::90:251:::::::::|h[Meteor Shard]|h|r",
-		icon = 135661,
-		isTransmog = true,
-		spellID = 245729,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[6314] = {
@@ -1901,23 +432,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[6314] = {
-		itemID = 6314,
-		name = "Wolfmaster Cape",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:6314::::::::90:251:::::::::|h[Wolfmaster Cape]|h|r",
-		icon = 133762,
-		isTransmog = true,
-		locations = {
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[6318] = {
@@ -1934,23 +448,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[6318] = {
-		itemID = 6318,
-		name = "Odo's Ley Staff",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:6318::::::::90:251:::::::::|h[Odo's Ley Staff]|h|r",
-		icon = 135164,
-		isTransmog = true,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[6319] = {
@@ -1967,23 +464,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[6319] = {
-		itemID = 6319,
-		name = "Girdle of the Blindwatcher",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:6319::::::::90:251:::::::::|h[Girdle of the Blindwatcher]|h|r",
-		icon = 132492,
-		isTransmog = true,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[6320] = {
@@ -2000,23 +480,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[6320] = {
-		itemID = 6320,
-		name = "Commander's Crest",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 6,
-		itemType = "Armor",
-		itemSubType = "Shields",
-		link = "|cnIQ3:|Hitem:6320::::::::90:251:::::::::|h[Commander's Crest]|h|r",
-		icon = 134949,
-		isTransmog = true,
-		locations = {
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[6321] = {
@@ -2033,23 +496,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[6321] = {
-		itemID = 6321,
-		name = "Silverlaine's Family Seal",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:6321::::::::90:251:::::::::|h[Silverlaine's Family Seal]|h|r",
-		icon = 132518,
-		isTransmog = false,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[6323] = {
@@ -2066,25 +512,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[6323] = {
-		itemID = 6323,
-		name = "Baron's Scepter",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:6323::::::::90:251:::::::::|h[Baron's Scepter]|h|r",
-		icon = 133477,
-		isTransmog = true,
-		locations = {
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[6324] = {
@@ -2101,23 +528,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[6324] = {
-		itemID = 6324,
-		name = "Robes of Arugal",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:6324::::::::90:251:::::::::|h[Robes of Arugal]|h|r",
-		icon = 132672,
-		isTransmog = true,
-		locations = {
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[6341] = {
@@ -2134,24 +544,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[6341] = {
-		itemID = 6341,
-		name = "Eerie Stable Lantern",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:6341::::::::90:251:::::::::|h[Eerie Stable Lantern]|h|r",
-		icon = 134249,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[6641] = {
@@ -2168,24 +560,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[6641] = {
-		itemID = 6641,
-		name = "Haunting Blade",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 8,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Swords",
-		link = "|cnIQ3:|Hitem:6641::::::::90:251:::::::::|h[Haunting Blade]|h|r",
-		icon = 135315,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[6642] = {
@@ -2202,24 +576,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[6642] = {
-		itemID = 6642,
-		name = "Phantom Armor",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:6642::::::::90:251:::::::::|h[Phantom Armor]|h|r",
-		icon = 132627,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[7230] = {
@@ -2236,57 +592,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[7230] = {
-		itemID = 7230,
-		name = "Smite's Mighty Hammer",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 5,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Maces",
-		link = "|cnIQ3:|Hitem:7230::::::::90:251:::::::::|h[Smite's Mighty Hammer]|h|r",
-		icon = 133046,
-		isTransmog = true,
-		locations = {
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[7997] = {
-		itemID = 7997,
-		name = "Red Defias Mask",
-		expansionID = 4,
-		quality = 0,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ0:|Hitem:7997::::::::90:251:::::::::|h[Red Defias Mask]|h|r",
-		icon = 133694,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[8492] = {
-		itemID = 8492,
-		name = "Parrot Cage (Green Wing Macaw)",
-		expansionID = 4,
-		quality = 2,
-		classID = 15,
-		subclassID = 2,
-		itemType = "Miscellaneous",
-		itemSubType = "Companion Pets",
-		link = "|cnIQ2:|Hitem:8492::::::::90:251:::::::::|h[Parrot Cage (Green Wing Macaw)]|h|r",
-		icon = 136036,
-		isTransmog = false,
-		speciesID = 50,
-		spellID = 10683,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
 		},
 	},
 	[10399] = {
@@ -2303,55 +608,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2631, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[10399] = {
-		itemID = 10399,
-		name = "Blackened Defias Armor",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:10399::::::::90:251:::::::::|h[Blackened Defias Armor]|h|r",
-		icon = 132723,
-		isTransmog = true,
-		locations = {
-			{encounterID=2631, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[10400] = {
-		itemID = 10400,
-		name = "Blackened Defias Leggings",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:10400::::::::90:251:::::::::|h[Blackened Defias Leggings]|h|r",
-		icon = 134592,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[10401] = {
-		itemID = 10401,
-		name = "Blackened Defias Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:10401::::::::90:251:::::::::|h[Blackened Defias Gloves]|h|r",
-		icon = 132952,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
 		},
 	},
 	[10403] = {
@@ -2368,460 +624,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2630, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[10403] = {
-		itemID = 10403,
-		name = "Blackened Defias Belt",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:10403::::::::90:251:::::::::|h[Blackened Defias Belt]|h|r",
-		icon = 132515,
-		isTransmog = true,
-		locations = {
-			{encounterID=2630, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[22206] = {
-		itemID = 22206,
-		name = "Bouquet of Red Roses",
-		expansionID = 4,
-		quality = 2,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ2:|Hitem:22206::::::::90:251:::::::::|h[Bouquet of Red Roses]|h|r",
-		icon = 134927,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=66, source="att", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=67, source="att", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=71, source="att", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[22206] = {
-		itemID = 22206,
-		name = "Bouquet of Red Roses",
-		expansionID = 4,
-		quality = 2,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ2:|Hitem:22206::::::::90:251:::::::::|h[Bouquet of Red Roses]|h|r",
-		icon = 134927,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=66, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=0, instanceID=67, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=0, instanceID=71, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[22206] = {
-		itemID = 22206,
-		name = "Bouquet of Red Roses",
-		expansionID = 4,
-		quality = 2,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ2:|Hitem:22206::::::::90:251:::::::::|h[Bouquet of Red Roses]|h|r",
-		icon = 134927,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=66, source="att", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=67, source="att", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=71, source="att", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[44731] = {
-		itemID = 44731,
-		name = "Bouquet of Ebon Roses",
-		expansionID = 4,
-		quality = 2,
-		classID = 2,
-		subclassID = 14,
-		itemType = "Weapon",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ2:|Hitem:44731::::::::90:251:::::::::|h[Bouquet of Ebon Roses]|h|r",
-		icon = 133436,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[44731] = {
-		itemID = 44731,
-		name = "Bouquet of Ebon Roses",
-		expansionID = 4,
-		quality = 2,
-		classID = 2,
-		subclassID = 14,
-		itemType = "Weapon",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ2:|Hitem:44731::::::::90:251:::::::::|h[Bouquet of Ebon Roses]|h|r",
-		icon = 133436,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[55260] = {
-		itemID = 55260,
-		name = "Alpheus Legguards",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:55260::::::::90:251:::::::::|h[Alpheus Legguards]|h|r",
-		icon = 427633,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=65, source="att"},
-		},
-	},
-	[55261] = {
-		itemID = 55261,
-		name = "Ring of the Great Whale",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:55261::::::::90:251:::::::::|h[Ring of the Great Whale]|h|r",
-		icon = 133392,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=65, source="att"},
-		},
-	},
-	[55262] = {
-		itemID = 55262,
-		name = "Barnacle Pendant",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:55262::::::::90:251:::::::::|h[Barnacle Pendant]|h|r",
-		icon = 133297,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=65, source="att"},
-		},
-	},
-	[55789] = {
-		itemID = 55789,
-		name = "Berto's Staff",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:55789::::::::90:251:::::::::|h[Berto's Staff]|h|r",
-		icon = 446916,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=66, source="att"},
-		},
-	},
-	[55790] = {
-		itemID = 55790,
-		name = "Toxidunk Dagger",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:55790::::::::90:251:::::::::|h[Toxidunk Dagger]|h|r",
-		icon = 460715,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=66, source="att"},
-		},
-	},
-	[55791] = {
-		itemID = 55791,
-		name = "Acanthia's Lost Pendant",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:55791::::::::90:251:::::::::|h[Acanthia's Lost Pendant]|h|r",
-		icon = 133323,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=66, source="att"},
-		},
-	},
-	[55822] = {
-		itemID = 55822,
-		name = "Heavy Geode Mace",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:55822::::::::90:251:::::::::|h[Heavy Geode Mace]|h|r",
-		icon = 460671,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=67, source="att"},
-		},
-	},
-	[55823] = {
-		itemID = 55823,
-		name = "Wand of Dark Worship",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 19,
-		itemType = "Weapon",
-		itemSubType = "Wands",
-		link = "|cnIQ3:|Hitem:55823::::::::90:251:::::::::|h[Wand of Dark Worship]|h|r",
-		icon = 461149,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=67, source="att"},
-		},
-	},
-	[55824] = {
-		itemID = 55824,
-		name = "Skin of Stone",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:55824::::::::90:251:::::::::|h[Skin of Stone]|h|r",
-		icon = 464508,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=67, source="att"},
-		},
-	},
-	[55854] = {
-		itemID = 55854,
-		name = "Rainsong",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:55854::::::::90:251:::::::::|h[Rainsong]|h|r",
-		icon = 132844,
-		isTransmog = false,
-		spellID = 91142,
-		locations = {
-			{encounterID=0, instanceID=68, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[55854] = {
-		itemID = 55854,
-		name = "Rainsong",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:55854::::::::90:251:::::::::|h[Rainsong]|h|r",
-		icon = 132844,
-		isTransmog = false,
-		spellID = 91142,
-		locations = {
-			{encounterID=0, instanceID=68, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[55855] = {
-		itemID = 55855,
-		name = "Darksky Treads",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:55855::::::::90:251:::::::::|h[Darksky Treads]|h|r",
-		icon = 427628,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=68, source="att"},
-		},
-	},
-	[55881] = {
-		itemID = 55881,
-		name = "Impetuous Query",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:55881::::::::90:251:::::::::|h[Impetuous Query]|h|r",
-		icon = 134394,
-		isTransmog = false,
-		spellID = 92199,
-		locations = {
-			{encounterID=0, instanceID=69, source="att"},
-		},
-	},
-	[55882] = {
-		itemID = 55882,
-		name = "Oasis Bracers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:55882::::::::90:251:::::::::|h[Oasis Bracers]|h|r",
-		icon = 132615,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=69, source="att"},
-		},
-	},
-	[55884] = {
-		itemID = 55884,
-		name = "Mirage Ring",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:55884::::::::90:251:::::::::|h[Mirage Ring]|h|r",
-		icon = 414303,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=69, source="att"},
-		},
-	},
-	[56109] = {
-		itemID = 56109,
-		name = "Book of Origination",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:56109::::::::90:251:::::::::|h[Book of Origination]|h|r",
-		icon = 133742,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=70, source="att"},
-		},
-	},
-	[56110] = {
-		itemID = 56110,
-		name = "Charm of the Muse",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:56110::::::::90:251:::::::::|h[Charm of the Muse]|h|r",
-		icon = 133317,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=70, source="att"},
-		},
-	},
-	[56111] = {
-		itemID = 56111,
-		name = "Temple Band",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:56111::::::::90:251:::::::::|h[Temple Band]|h|r",
-		icon = 133390,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=70, source="att"},
-		},
-	},
-	[56218] = {
-		itemID = 56218,
-		name = "Curse-Tainted Leggings",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:56218::::::::90:251:::::::::|h[Curse-Tainted Leggings]|h|r",
-		icon = 422807,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=71, source="att"},
-		},
-	},
-	[56219] = {
-		itemID = 56219,
-		name = "Shroud of Dark Memories",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:56219::::::::90:251:::::::::|h[Shroud of Dark Memories]|h|r",
-		icon = 464508,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=71, source="att"},
-		},
-	},
-	[56220] = {
-		itemID = 56220,
-		name = "Abandoned Dark Iron Ring",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:56220::::::::90:251:::::::::|h[Abandoned Dark Iron Ring]|h|r",
-		icon = 414304,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=71, source="att"},
 		},
 	},
 	[56266] = {
@@ -2838,7 +640,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=101, instanceID=65, source="att"},
 		},
 	},
 	[56267] = {
@@ -2855,7 +656,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=101, instanceID=65, source="att"},
 		},
 	},
 	[56268] = {
@@ -2872,7 +672,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=101, instanceID=65, source="att"},
 		},
 	},
 	[56269] = {
@@ -2889,7 +688,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=101, instanceID=65, source="att"},
 		},
 	},
 	[56270] = {
@@ -2906,7 +704,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=101, instanceID=65, source="att"},
 		},
 	},
 	[56271] = {
@@ -2923,7 +720,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=102, instanceID=65, source="att"},
 		},
 	},
 	[56272] = {
@@ -2940,7 +736,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=102, instanceID=65, source="att"},
 		},
 	},
 	[56273] = {
@@ -2957,7 +752,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=102, instanceID=65, source="att"},
 		},
 	},
 	[56274] = {
@@ -2974,7 +768,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=102, instanceID=65, source="att"},
 		},
 	},
 	[56275] = {
@@ -2991,7 +784,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=102, instanceID=65, source="att"},
 		},
 	},
 	[56276] = {
@@ -3008,7 +800,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=103, instanceID=65, source="att"},
 		},
 	},
 	[56277] = {
@@ -3025,7 +816,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=103, instanceID=65, source="att"},
 		},
 	},
 	[56278] = {
@@ -3042,7 +832,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=103, instanceID=65, source="att"},
 		},
 	},
 	[56280] = {
@@ -3057,10 +846,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56280::::::::90:251:::::::::|h[Porcelain Crab]|h|r",
 		icon = 237239,
 		isTransmog = false,
-		spellID = 92175,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=103, instanceID=65, source="att"},
 		},
 	},
 	[56281] = {
@@ -3077,7 +864,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=104, instanceID=65, source="att"},
 		},
 	},
 	[56282] = {
@@ -3094,7 +880,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=104, instanceID=65, source="att"},
 		},
 	},
 	[56283] = {
@@ -3111,7 +896,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=104, instanceID=65, source="att"},
 		},
 	},
 	[56284] = {
@@ -3128,7 +912,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=104, instanceID=65, source="att"},
 		},
 	},
 	[56285] = {
@@ -3143,10 +926,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56285::::::::90:251:::::::::|h[Might of the Ocean]|h|r",
 		icon = 135228,
 		isTransmog = false,
-		spellID = 91340,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=104, instanceID=65, source="att"},
 		},
 	},
 	[56286] = {
@@ -3163,7 +944,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=104, instanceID=65, source="att"},
 		},
 	},
 	[56288] = {
@@ -3180,7 +960,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=104, instanceID=65, source="att"},
 		},
 	},
 	[56289] = {
@@ -3197,7 +976,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=104, instanceID=65, source="att"},
 		},
 	},
 	[56290] = {
@@ -3212,10 +990,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56290::::::::90:251:::::::::|h[Sea Star]|h|r",
 		icon = 132779,
 		isTransmog = false,
-		spellID = 91136,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=104, instanceID=65, source="att"},
 		},
 	},
 	[56291] = {
@@ -3232,7 +1008,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=104, instanceID=65, source="att"},
 		},
 	},
 	[56295] = {
@@ -3247,10 +1022,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56295::::::::90:251:::::::::|h[Grace of the Herald]|h|r",
 		icon = 134228,
 		isTransmog = false,
-		spellID = 92088,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=106, instanceID=66, source="att"},
 		},
 	},
 	[56296] = {
@@ -3267,7 +1040,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=106, instanceID=66, source="att"},
 		},
 	},
 	[56297] = {
@@ -3284,7 +1056,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=106, instanceID=66, source="att"},
 		},
 	},
 	[56298] = {
@@ -3301,7 +1072,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=106, instanceID=66, source="att"},
 		},
 	},
 	[56299] = {
@@ -3318,7 +1088,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=106, instanceID=66, source="att"},
 		},
 	},
 	[56300] = {
@@ -3335,7 +1104,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=107, instanceID=66, source="att"},
 		},
 	},
 	[56301] = {
@@ -3352,7 +1120,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=107, instanceID=66, source="att"},
 		},
 	},
 	[56302] = {
@@ -3369,7 +1136,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=107, instanceID=66, source="att"},
 		},
 	},
 	[56303] = {
@@ -3386,7 +1152,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=107, instanceID=66, source="att"},
 		},
 	},
 	[56304] = {
@@ -3403,7 +1168,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=107, instanceID=66, source="att"},
 		},
 	},
 	[56305] = {
@@ -3420,7 +1184,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=108, instanceID=66, source="att"},
 		},
 	},
 	[56306] = {
@@ -3437,7 +1200,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=108, instanceID=66, source="att"},
 		},
 	},
 	[56307] = {
@@ -3454,7 +1216,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=108, instanceID=66, source="att"},
 		},
 	},
 	[56308] = {
@@ -3471,7 +1232,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=108, instanceID=66, source="att"},
 		},
 	},
 	[56309] = {
@@ -3488,7 +1248,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=108, instanceID=66, source="att"},
 		},
 	},
 	[56310] = {
@@ -3505,7 +1264,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=105, instanceID=66, source="att"},
 		},
 	},
 	[56311] = {
@@ -3522,7 +1280,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=105, instanceID=66, source="att"},
 		},
 	},
 	[56312] = {
@@ -3539,7 +1296,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=105, instanceID=66, source="att"},
 		},
 	},
 	[56313] = {
@@ -3556,7 +1312,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=105, instanceID=66, source="att"},
 		},
 	},
 	[56314] = {
@@ -3573,7 +1328,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=105, instanceID=66, source="att"},
 		},
 	},
 	[56315] = {
@@ -3590,7 +1344,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=109, instanceID=66, source="att"},
 		},
 	},
 	[56317] = {
@@ -3607,7 +1360,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=109, instanceID=66, source="att"},
 		},
 	},
 	[56318] = {
@@ -3624,7 +1376,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=109, instanceID=66, source="att"},
 		},
 	},
 	[56319] = {
@@ -3641,7 +1392,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=109, instanceID=66, source="att"},
 		},
 	},
 	[56320] = {
@@ -3656,10 +1406,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56320::::::::90:251:::::::::|h[Witching Hourglass]|h|r",
 		icon = 133018,
 		isTransmog = false,
-		spellID = 90888,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=109, instanceID=66, source="att"},
 		},
 	},
 	[56321] = {
@@ -3676,7 +1424,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=109, instanceID=66, source="att"},
 		},
 	},
 	[56322] = {
@@ -3693,7 +1440,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=109, instanceID=66, source="att"},
 		},
 	},
 	[56323] = {
@@ -3710,7 +1456,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=109, instanceID=66, source="att"},
 		},
 	},
 	[56324] = {
@@ -3727,7 +1472,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=109, instanceID=66, source="att"},
 		},
 	},
 	[56328] = {
@@ -3742,10 +1486,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56328::::::::90:251:::::::::|h[Key to the Endless Chamber]|h|r",
 		icon = 134244,
 		isTransmog = false,
-		spellID = 92093,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=110, instanceID=67, source="att"},
 		},
 	},
 	[56329] = {
@@ -3762,7 +1504,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=110, instanceID=67, source="att"},
 		},
 	},
 	[56330] = {
@@ -3779,7 +1520,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=110, instanceID=67, source="att"},
 		},
 	},
 	[56331] = {
@@ -3796,7 +1536,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=110, instanceID=67, source="att"},
 		},
 	},
 	[56332] = {
@@ -3813,7 +1552,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=110, instanceID=67, source="att"},
 		},
 	},
 	[56333] = {
@@ -3830,7 +1568,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=111, instanceID=67, source="att"},
 		},
 	},
 	[56334] = {
@@ -3847,7 +1584,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=111, instanceID=67, source="att"},
 		},
 	},
 	[56335] = {
@@ -3864,7 +1600,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=111, instanceID=67, source="att"},
 		},
 	},
 	[56336] = {
@@ -3881,7 +1616,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=111, instanceID=67, source="att"},
 		},
 	},
 	[56338] = {
@@ -3898,7 +1632,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=112, instanceID=67, source="att"},
 		},
 	},
 	[56339] = {
@@ -3913,10 +1646,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56339::::::::90:251:::::::::|h[Tendrils of Burrowing Dark]|h|r",
 		icon = 463569,
 		isTransmog = false,
-		spellID = 90899,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=112, instanceID=67, source="att"},
 		},
 	},
 	[56340] = {
@@ -3933,7 +1664,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=112, instanceID=67, source="att"},
 		},
 	},
 	[56341] = {
@@ -3950,7 +1680,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=112, instanceID=67, source="att"},
 		},
 	},
 	[56342] = {
@@ -3967,7 +1696,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=112, instanceID=67, source="att"},
 		},
 	},
 	[56343] = {
@@ -3984,7 +1712,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=113, instanceID=67, source="att"},
 		},
 	},
 	[56344] = {
@@ -4001,7 +1728,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=113, instanceID=67, source="att"},
 		},
 	},
 	[56345] = {
@@ -4016,10 +1742,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56345::::::::90:251:::::::::|h[Magnetite Mirror]|h|r",
 		icon = 135252,
 		isTransmog = false,
-		spellID = 91352,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=113, instanceID=67, source="att"},
 		},
 	},
 	[56346] = {
@@ -4036,7 +1760,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=113, instanceID=67, source="att"},
 		},
 	},
 	[56347] = {
@@ -4051,10 +1774,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56347::::::::90:251:::::::::|h[Leaden Despair]|h|r",
 		icon = 394617,
 		isTransmog = false,
-		spellID = 92185,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=113, instanceID=67, source="att"},
 		},
 	},
 	[56348] = {
@@ -4071,7 +1792,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=113, instanceID=67, source="att"},
 		},
 	},
 	[56349] = {
@@ -4088,7 +1808,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=113, instanceID=67, source="att"},
 		},
 	},
 	[56351] = {
@@ -4103,10 +1822,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56351::::::::90:251:::::::::|h[Tear of Blood]|h|r",
 		icon = 136168,
 		isTransmog = false,
-		spellID = 91140,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=113, instanceID=67, source="att"},
 		},
 	},
 	[56352] = {
@@ -4123,7 +1840,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=113, instanceID=67, source="att"},
 		},
 	},
 	[56356] = {
@@ -4140,7 +1856,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=114, instanceID=68, source="att"},
 		},
 	},
 	[56357] = {
@@ -4157,7 +1872,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=114, instanceID=68, source="att"},
 		},
 	},
 	[56358] = {
@@ -4174,7 +1888,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=114, instanceID=68, source="att"},
 		},
 	},
 	[56359] = {
@@ -4191,7 +1904,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=114, instanceID=68, source="att"},
 		},
 	},
 	[56360] = {
@@ -4208,7 +1920,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=114, instanceID=68, source="att"},
 		},
 	},
 	[56361] = {
@@ -4225,7 +1936,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=115, instanceID=68, source="att"},
 		},
 	},
 	[56362] = {
@@ -4242,7 +1952,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=115, instanceID=68, source="att"},
 		},
 	},
 	[56363] = {
@@ -4259,7 +1968,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=115, instanceID=68, source="att"},
 		},
 	},
 	[56364] = {
@@ -4276,7 +1984,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=115, instanceID=68, source="att"},
 		},
 	},
 	[56365] = {
@@ -4293,7 +2000,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=115, instanceID=68, source="att"},
 		},
 	},
 	[56366] = {
@@ -4310,7 +2016,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=116, instanceID=68, source="att"},
 		},
 	},
 	[56367] = {
@@ -4327,7 +2032,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=116, instanceID=68, source="att"},
 		},
 	},
 	[56368] = {
@@ -4344,7 +2048,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=116, instanceID=68, source="att"},
 		},
 	},
 	[56369] = {
@@ -4361,7 +2064,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=116, instanceID=68, source="att"},
 		},
 	},
 	[56370] = {
@@ -4376,10 +2078,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56370::::::::90:251:::::::::|h[Heart of Thunder]|h|r",
 		icon = 136099,
 		isTransmog = false,
-		spellID = 92187,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=116, instanceID=68, source="att"},
 		},
 	},
 	[56371] = {
@@ -4396,7 +2096,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=116, instanceID=68, source="att"},
 		},
 	},
 	[56373] = {
@@ -4413,7 +2112,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=116, instanceID=68, source="att"},
 		},
 	},
 	[56374] = {
@@ -4430,7 +2128,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=116, instanceID=68, source="att"},
 		},
 	},
 	[56375] = {
@@ -4447,7 +2144,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=116, instanceID=68, source="att"},
 		},
 	},
 	[56376] = {
@@ -4480,7 +2176,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=117, instanceID=69, source="att"},
 		},
 	},
 	[56380] = {
@@ -4497,7 +2192,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=117, instanceID=69, source="att"},
 		},
 	},
 	[56381] = {
@@ -4514,7 +2208,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=117, instanceID=69, source="att"},
 		},
 	},
 	[56382] = {
@@ -4531,7 +2224,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=117, instanceID=69, source="att"},
 		},
 	},
 	[56383] = {
@@ -4548,7 +2240,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=117, instanceID=69, source="att"},
 		},
 	},
 	[56384] = {
@@ -4565,7 +2256,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=118, instanceID=69, source="att"},
 		},
 	},
 	[56385] = {
@@ -4582,7 +2272,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=118, instanceID=69, source="att"},
 		},
 	},
 	[56386] = {
@@ -4599,7 +2288,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=118, instanceID=69, source="att"},
 		},
 	},
 	[56387] = {
@@ -4616,7 +2304,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=118, instanceID=69, source="att"},
 		},
 	},
 	[56388] = {
@@ -4633,7 +2320,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=118, instanceID=69, source="att"},
 		},
 	},
 	[56389] = {
@@ -4650,7 +2336,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=119, instanceID=69, source="att"},
 		},
 	},
 	[56390] = {
@@ -4667,7 +2352,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=119, instanceID=69, source="att"},
 		},
 	},
 	[56391] = {
@@ -4684,7 +2368,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=119, instanceID=69, source="att"},
 		},
 	},
 	[56392] = {
@@ -4701,7 +2384,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=119, instanceID=69, source="att"},
 		},
 	},
 	[56393] = {
@@ -4716,10 +2398,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56393::::::::90:251:::::::::|h[Heart of Solace]|h|r",
 		icon = 237546,
 		isTransmog = false,
-		spellID = 91365,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=119, instanceID=69, source="att"},
 		},
 	},
 	[56394] = {
@@ -4734,10 +2414,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56394::::::::90:251:::::::::|h[Tia's Grace]|h|r",
 		icon = 249172,
 		isTransmog = false,
-		spellID = 92090,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=122, instanceID=69, source="att"},
 		},
 	},
 	[56395] = {
@@ -4754,7 +2432,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=122, instanceID=69, source="att"},
 		},
 	},
 	[56396] = {
@@ -4771,7 +2448,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=122, instanceID=69, source="att"},
 		},
 	},
 	[56397] = {
@@ -4788,7 +2464,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=122, instanceID=69, source="att"},
 		},
 	},
 	[56398] = {
@@ -4805,7 +2480,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=122, instanceID=69, source="att"},
 		},
 	},
 	[56399] = {
@@ -4822,7 +2496,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=122, instanceID=69, source="att"},
 		},
 	},
 	[56400] = {
@@ -4837,10 +2510,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56400::::::::90:251:::::::::|h[Sorrowsong]|h|r",
 		icon = 136046,
 		isTransmog = false,
-		spellID = 91003,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=122, instanceID=69, source="att"},
 		},
 	},
 	[56401] = {
@@ -4857,7 +2528,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=122, instanceID=69, source="att"},
 		},
 	},
 	[56402] = {
@@ -4874,7 +2544,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=122, instanceID=69, source="att"},
 		},
 	},
 	[56403] = {
@@ -4891,7 +2560,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=122, instanceID=69, source="att"},
 		},
 	},
 	[56407] = {
@@ -4906,10 +2574,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56407::::::::90:251:::::::::|h[Anhuur's Hymnal]|h|r",
 		icon = 354719,
 		isTransmog = false,
-		spellID = 90993,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=124, instanceID=70, source="att"},
 		},
 	},
 	[56408] = {
@@ -4926,7 +2592,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=124, instanceID=70, source="att"},
 		},
 	},
 	[56409] = {
@@ -4943,7 +2608,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=124, instanceID=70, source="att"},
 		},
 	},
 	[56410] = {
@@ -4960,7 +2624,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=124, instanceID=70, source="att"},
 		},
 	},
 	[56411] = {
@@ -4977,7 +2640,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=124, instanceID=70, source="att"},
 		},
 	},
 	[56412] = {
@@ -4994,7 +2656,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=127, instanceID=70, source="att"},
 		},
 	},
 	[56413] = {
@@ -5011,7 +2672,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=127, instanceID=70, source="att"},
 		},
 	},
 	[56414] = {
@@ -5026,10 +2686,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56414::::::::90:251:::::::::|h[Blood of Isiset]|h|r",
 		icon = 134835,
 		isTransmog = false,
-		spellID = 91150,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=127, instanceID=70, source="att"},
 		},
 	},
 	[56415] = {
@@ -5046,7 +2704,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=127, instanceID=70, source="att"},
 		},
 	},
 	[56416] = {
@@ -5063,7 +2720,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=127, instanceID=70, source="att"},
 		},
 	},
 	[56417] = {
@@ -5080,7 +2736,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=128, instanceID=70, source="att"},
 		},
 	},
 	[56418] = {
@@ -5097,7 +2752,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=128, instanceID=70, source="att"},
 		},
 	},
 	[56419] = {
@@ -5114,7 +2768,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=128, instanceID=70, source="att"},
 		},
 	},
 	[56421] = {
@@ -5131,7 +2784,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=128, instanceID=70, source="att"},
 		},
 	},
 	[56422] = {
@@ -5148,7 +2800,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=125, instanceID=70, source="att"},
 		},
 	},
 	[56423] = {
@@ -5165,7 +2816,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=125, instanceID=70, source="att"},
 		},
 	},
 	[56424] = {
@@ -5182,7 +2832,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=125, instanceID=70, source="att"},
 		},
 	},
 	[56425] = {
@@ -5199,7 +2848,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=125, instanceID=70, source="att"},
 		},
 	},
 	[56426] = {
@@ -5216,7 +2864,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=125, instanceID=70, source="att"},
 		},
 	},
 	[56427] = {
@@ -5231,10 +2878,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56427::::::::90:251:::::::::|h[Left Eye of Rajh]|h|r",
 		icon = 237185,
 		isTransmog = false,
-		spellID = 92095,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=130, instanceID=70, source="att"},
 		},
 	},
 	[56428] = {
@@ -5251,7 +2896,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=130, instanceID=70, source="att"},
 		},
 	},
 	[56429] = {
@@ -5268,7 +2912,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=130, instanceID=70, source="att"},
 		},
 	},
 	[56430] = {
@@ -5285,7 +2928,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=130, instanceID=70, source="att"},
 		},
 	},
 	[56431] = {
@@ -5300,10 +2942,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56431::::::::90:251:::::::::|h[Right Eye of Rajh]|h|r",
 		icon = 237185,
 		isTransmog = false,
-		spellID = 91366,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=130, instanceID=70, source="att"},
 		},
 	},
 	[56432] = {
@@ -5320,7 +2960,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=130, instanceID=70, source="att"},
 		},
 	},
 	[56433] = {
@@ -5337,7 +2976,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=130, instanceID=70, source="att"},
 		},
 	},
 	[56434] = {
@@ -5354,7 +2992,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=130, instanceID=70, source="att"},
 		},
 	},
 	[56435] = {
@@ -5371,7 +3008,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=130, instanceID=70, source="att"},
 		},
 	},
 	[56436] = {
@@ -5388,7 +3024,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=130, instanceID=70, source="att"},
 		},
 	},
 	[56440] = {
@@ -5403,10 +3038,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56440::::::::90:251:::::::::|h[Skardyn's Grace]|h|r",
 		icon = 133791,
 		isTransmog = false,
-		spellID = 92099,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=131, instanceID=71, source="att"},
 		},
 	},
 	[56441] = {
@@ -5423,7 +3056,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=131, instanceID=71, source="att"},
 		},
 	},
 	[56442] = {
@@ -5440,7 +3072,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=131, instanceID=71, source="att"},
 		},
 	},
 	[56443] = {
@@ -5457,7 +3088,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=131, instanceID=71, source="att"},
 		},
 	},
 	[56444] = {
@@ -5474,7 +3104,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=131, instanceID=71, source="att"},
 		},
 	},
 	[56445] = {
@@ -5491,7 +3120,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=132, instanceID=71, source="att"},
 		},
 	},
 	[56446] = {
@@ -5508,7 +3136,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=132, instanceID=71, source="att"},
 		},
 	},
 	[56447] = {
@@ -5525,7 +3152,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=132, instanceID=71, source="att"},
 		},
 	},
 	[56448] = {
@@ -5542,7 +3168,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=132, instanceID=71, source="att"},
 		},
 	},
 	[56449] = {
@@ -5557,10 +3182,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56449::::::::90:251:::::::::|h[Throngus's Finger]|h|r",
 		icon = 133011,
 		isTransmog = false,
-		spellID = 92207,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=132, instanceID=71, source="att"},
 		},
 	},
 	[56450] = {
@@ -5577,7 +3200,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=133, instanceID=71, source="att"},
 		},
 	},
 	[56451] = {
@@ -5594,7 +3216,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=133, instanceID=71, source="att"},
 		},
 	},
 	[56452] = {
@@ -5611,7 +3232,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=133, instanceID=71, source="att"},
 		},
 	},
 	[56453] = {
@@ -5628,7 +3248,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=133, instanceID=71, source="att"},
 		},
 	},
 	[56454] = {
@@ -5645,7 +3264,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=133, instanceID=71, source="att"},
 		},
 	},
 	[56455] = {
@@ -5662,7 +3280,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=134, instanceID=71, source="att"},
 		},
 	},
 	[56456] = {
@@ -5679,7 +3296,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=134, instanceID=71, source="att"},
 		},
 	},
 	[56457] = {
@@ -5696,7 +3312,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=134, instanceID=71, source="att"},
 		},
 	},
 	[56458] = {
@@ -5711,10 +3326,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56458::::::::90:251:::::::::|h[Mark of Khardros]|h|r",
 		icon = 133041,
 		isTransmog = false,
-		spellID = 91374,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=134, instanceID=71, source="att"},
 		},
 	},
 	[56459] = {
@@ -5731,7 +3344,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=134, instanceID=71, source="att"},
 		},
 	},
 	[56460] = {
@@ -5748,7 +3360,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=134, instanceID=71, source="att"},
 		},
 	},
 	[56461] = {
@@ -5765,7 +3376,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=134, instanceID=71, source="att"},
 		},
 	},
 	[56462] = {
@@ -5780,10 +3390,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56462::::::::90:251:::::::::|h[Gale of Shadows]|h|r",
 		icon = 136160,
 		isTransmog = false,
-		spellID = 90986,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=134, instanceID=71, source="att"},
 		},
 	},
 	[56463] = {
@@ -5798,10 +3406,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:56463::::::::90:251:::::::::|h[Corrupted Egg Shell]|h|r",
 		icon = 443378,
 		isTransmog = false,
-		spellID = 91308,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=134, instanceID=71, source="att"},
 		},
 	},
 	[56464] = {
@@ -5818,7 +3424,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=134, instanceID=71, source="att"},
 		},
 	},
 	[57866] = {
@@ -5835,7 +3440,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=126, instanceID=70, source="att"},
 		},
 	},
 	[57867] = {
@@ -5852,7 +3456,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=126, instanceID=70, source="att"},
 		},
 	},
 	[57868] = {
@@ -5869,7 +3472,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=126, instanceID=70, source="att"},
 		},
 	},
 	[57869] = {
@@ -5886,7 +3488,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=126, instanceID=70, source="att"},
 		},
 	},
 	[57870] = {
@@ -5903,7 +3504,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=126, instanceID=70, source="att"},
 		},
 	},
 	[57871] = {
@@ -5920,7 +3520,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=129, instanceID=70, source="att"},
 		},
 	},
 	[57872] = {
@@ -5937,7 +3536,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=129, instanceID=70, source="att"},
 		},
 	},
 	[57873] = {
@@ -5954,7 +3552,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=129, instanceID=70, source="att"},
 		},
 	},
 	[57874] = {
@@ -5971,7 +3568,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=129, instanceID=70, source="att"},
 		},
 	},
 	[57875] = {
@@ -5988,7 +3584,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=129, instanceID=70, source="att"},
 		},
 	},
 	[59117] = {
@@ -10379,214 +7974,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=139, instanceID=75, source="att"},
 		},
 	},
-	[60871] = {
-		itemID = 60871,
-		name = "Moontouched Wood",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:60871::::::::90:251:::::::::|h[Moontouched Wood]|h|r",
-		icon = 135435,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[60872] = {
-		itemID = 60872,
-		name = "Moonsteel Ingots",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:60872::::::::90:251:::::::::|h[Moonsteel Ingots]|h|r",
-		icon = 133226,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[60873] = {
-		itemID = 60873,
-		name = "Book of Lost Souls",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:60873::::::::90:251:::::::::|h[Book of Lost Souls]|h|r",
-		icon = 354719,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[60874] = {
-		itemID = 60874,
-		name = "Deathless Sinew",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:60874::::::::90:251:::::::::|h[Deathless Sinew]|h|r",
-		icon = 134266,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[60875] = {
-		itemID = 60875,
-		name = "Ghostly Essence",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:60875::::::::90:251:::::::::|h[Ghostly Essence]|h|r",
-		icon = 133851,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[60876] = {
-		itemID = 60876,
-		name = "Walden's Elixirs",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:60876::::::::90:251:::::::::|h[Walden's Elixirs]|h|r",
-		icon = 236996,
-		isTransmog = false,
-		locations = {
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[60877] = {
-		itemID = 60877,
-		name = "Godfrey's Crystal Scope",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:60877::::::::90:251:::::::::|h[Godfrey's Crystal Scope]|h|r",
-		icon = 133033,
-		isTransmog = false,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[60878] = {
-		itemID = 60878,
-		name = "Silverlaine's Enchanted Crystal",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:60878::::::::90:251:::::::::|h[Silverlaine's Enchanted Crystal]|h|r",
-		icon = 132882,
-		isTransmog = false,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[60879] = {
-		itemID = 60879,
-		name = "Commander's Holy Symbol",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:60879::::::::90:251:::::::::|h[Commander's Holy Symbol]|h|r",
-		icon = 133439,
-		isTransmog = false,
-		locations = {
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[60880] = {
-		itemID = 60880,
-		name = "Springvale's Sharpening Stone",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:60880::::::::90:251:::::::::|h[Springvale's Sharpening Stone]|h|r",
-		icon = 135252,
-		isTransmog = false,
-		locations = {
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[60881] = {
-		itemID = 60881,
-		name = "Walden's Talisman",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:60881::::::::90:251:::::::::|h[Walden's Talisman]|h|r",
-		icon = 134903,
-		isTransmog = false,
-		locations = {
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[60882] = {
-		itemID = 60882,
-		name = "Tenebrous Orb",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:60882::::::::90:251:::::::::|h[Tenebrous Orb]|h|r",
-		icon = 134336,
-		isTransmog = false,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[60885] = {
-		itemID = 60885,
-		name = "Silverlaine Family Sword",
-		expansionID = 4,
-		quality = 1,
-		classID = 12,
-		subclassID = 0,
-		itemType = "Quest",
-		itemSubType = "Quest",
-		link = "|cnIQ1:|Hitem:60885::::::::90:251:::::::::|h[Silverlaine Family Sword]|h|r",
-		icon = 135327,
-		isTransmog = false,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
 	[61026] = {
 		itemID = 61026,
 		name = "Vicious Gladiator's Emblem of Cruelty",
@@ -10718,11 +8105,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ4:|Hitem:63040::::::::90:251:::::::::|h[Reins of the Drake of the North Wind]|h|r",
 		icon = 461144,
 		isTransmog = false,
-		mountID = 88742,
-		spellID = 88742,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=24,name="Timewalking"}}},
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[63041] = {
@@ -10755,11 +8139,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ4:|Hitem:63043::::::::90:251:::::::::|h[Reins of the Vitreous Stone Drake]|h|r",
 		icon = 461139,
 		isTransmog = false,
-		mountID = 88746,
-		spellID = 88746,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"},{id=24,name="Timewalking"}}},
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[63433] = {
@@ -10776,23 +8157,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63433] = {
-		itemID = 63433,
-		name = "Robes of Arugal",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:63433::::::::90:251:::::::::|h[Robes of Arugal]|h|r",
-		icon = 422801,
-		isTransmog = true,
-		locations = {
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63434] = {
@@ -10809,23 +8173,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63434] = {
-		itemID = 63434,
-		name = "Gloves of the Greymane Wall",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:63434::::::::90:251:::::::::|h[Gloves of the Greymane Wall]|h|r",
-		icon = 427631,
-		isTransmog = true,
-		locations = {
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63435] = {
@@ -10842,23 +8189,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63435] = {
-		itemID = 63435,
-		name = "Boots of the Predator",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:63435::::::::90:251:::::::::|h[Boots of the Predator]|h|r",
-		icon = 436836,
-		isTransmog = true,
-		locations = {
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63436] = {
@@ -10875,23 +8205,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63436] = {
-		itemID = 63436,
-		name = "Traitor's Grips",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:63436::::::::90:251:::::::::|h[Traitor's Grips]|h|r",
-		icon = 430973,
-		isTransmog = true,
-		locations = {
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63437] = {
@@ -10908,23 +8221,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63437] = {
-		itemID = 63437,
-		name = "Baron Ashbury's Cuffs",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:63437::::::::90:251:::::::::|h[Baron Ashbury's Cuffs]|h|r",
-		icon = 132612,
-		isTransmog = true,
-		locations = {
-			{encounterID=96, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63438] = {
@@ -10941,23 +8237,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63438] = {
-		itemID = 63438,
-		name = "Baroness Silverlaine's Locket",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:63438::::::::90:251:::::::::|h[Baroness Silverlaine's Locket]|h|r",
-		icon = 466968,
-		isTransmog = false,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63439] = {
@@ -10974,23 +8253,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63439] = {
-		itemID = 63439,
-		name = "Gloves of the Uplifted Cup",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:63439::::::::90:251:::::::::|h[Gloves of the Uplifted Cup]|h|r",
-		icon = 132959,
-		isTransmog = true,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63440] = {
@@ -11007,23 +8269,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63440] = {
-		itemID = 63440,
-		name = "Boots of Lingering Sorrow",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:63440::::::::90:251:::::::::|h[Boots of Lingering Sorrow]|h|r",
-		icon = 422797,
-		isTransmog = true,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63441] = {
@@ -11040,23 +8285,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63441] = {
-		itemID = 63441,
-		name = "Pendant of the Keep",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:63441::::::::90:251:::::::::|h[Pendant of the Keep]|h|r",
-		icon = 466967,
-		isTransmog = false,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63444] = {
@@ -11073,23 +8301,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63444] = {
-		itemID = 63444,
-		name = "Baron Silverlaine's Greaves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:63444::::::::90:251:::::::::|h[Baron Silverlaine's Greaves]|h|r",
-		icon = 427628,
-		isTransmog = true,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63445] = {
@@ -11106,23 +8317,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63445] = {
-		itemID = 63445,
-		name = "Arced War Axe",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 1,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Axes",
-		link = "|cnIQ3:|Hitem:63445::::::::90:251:::::::::|h[Arced War Axe]|h|r",
-		icon = 132397,
-		isTransmog = true,
-		locations = {
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63446] = {
@@ -11139,23 +8333,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63446] = {
-		itemID = 63446,
-		name = "Haunting Footfalls",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:63446::::::::90:251:::::::::|h[Haunting Footfalls]|h|r",
-		icon = 430970,
-		isTransmog = true,
-		locations = {
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63447] = {
@@ -11172,23 +8349,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63447] = {
-		itemID = 63447,
-		name = "Breastplate of the Stilled Heart",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:63447::::::::90:251:::::::::|h[Breastplate of the Stilled Heart]|h|r",
-		icon = 430972,
-		isTransmog = true,
-		locations = {
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63448] = {
@@ -11205,23 +8365,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63448] = {
-		itemID = 63448,
-		name = "Springvale's Cloak",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:63448::::::::90:251:::::::::|h[Springvale's Cloak]|h|r",
-		icon = 465110,
-		isTransmog = true,
-		locations = {
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63449] = {
@@ -11238,23 +8381,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63449] = {
-		itemID = 63449,
-		name = "Thieving Spaulders",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:63449::::::::90:251:::::::::|h[Thieving Spaulders]|h|r",
-		icon = 436842,
-		isTransmog = true,
-		locations = {
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63450] = {
@@ -11319,23 +8445,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63454] = {
-		itemID = 63454,
-		name = "Double Dealing Bracers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:63454::::::::90:251:::::::::|h[Double Dealing Bracers]|h|r",
-		icon = 436837,
-		isTransmog = true,
-		locations = {
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63455] = {
@@ -11366,27 +8475,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:63456::::::::90:251:::::::::|h[Meteor Shard]|h|r",
 		icon = 135661,
 		isTransmog = true,
-		spellID = 265353,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63456] = {
-		itemID = 63456,
-		name = "Meteor Shard",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:63456::::::::90:251:::::::::|h[Meteor Shard]|h|r",
-		icon = 135661,
-		isTransmog = true,
-		spellID = 265353,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63457] = {
@@ -11403,23 +8493,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63457] = {
-		itemID = 63457,
-		name = "Shackles of Undeath",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:63457::::::::90:251:::::::::|h[Shackles of Undeath]|h|r",
-		icon = 427629,
-		isTransmog = true,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63458] = {
@@ -11436,23 +8509,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63458] = {
-		itemID = 63458,
-		name = "Lord Walden's Breastplate",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:63458::::::::90:251:::::::::|h[Lord Walden's Breastplate]|h|r",
-		icon = 427630,
-		isTransmog = true,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63459] = {
@@ -11469,23 +8525,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63459] = {
-		itemID = 63459,
-		name = "Worgen Hunter's Helm",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:63459::::::::90:251:::::::::|h[Worgen Hunter's Helm]|h|r",
-		icon = 430974,
-		isTransmog = true,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63461] = {
@@ -11502,23 +8541,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63461] = {
-		itemID = 63461,
-		name = "Staff of Isolation",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:63461::::::::90:251:::::::::|h[Staff of Isolation]|h|r",
-		icon = 135164,
-		isTransmog = true,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63462] = {
@@ -11535,23 +8557,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63462] = {
-		itemID = 63462,
-		name = "Helm of Untold Stories",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:63462::::::::90:251:::::::::|h[Helm of Untold Stories]|h|r",
-		icon = 427632,
-		isTransmog = true,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63463] = {
@@ -11568,23 +8573,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63463] = {
-		itemID = 63463,
-		name = "Mantle of the Eastern Lords",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:63463::::::::90:251:::::::::|h[Mantle of the Eastern Lords]|h|r",
-		icon = 422809,
-		isTransmog = true,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63464] = {
@@ -11601,23 +8589,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63464] = {
-		itemID = 63464,
-		name = "Greaves of the Misguided",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:63464::::::::90:251:::::::::|h[Greaves of the Misguided]|h|r",
-		icon = 427633,
-		isTransmog = true,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63465] = {
@@ -11634,23 +8605,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63465] = {
-		itemID = 63465,
-		name = "Mantle of Loss",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:63465::::::::90:251:::::::::|h[Mantle of Loss]|h|r",
-		icon = 422809,
-		isTransmog = true,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63467] = {
@@ -11667,23 +8621,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63467] = {
-		itemID = 63467,
-		name = "Shadow of the Past",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:63467::::::::90:251:::::::::|h[Shadow of the Past]|h|r",
-		icon = 133758,
-		isTransmog = true,
-		locations = {
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63468] = {
@@ -11748,23 +8685,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63473] = {
-		itemID = 63473,
-		name = "Cloak of Thredd",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:63473::::::::90:251:::::::::|h[Cloak of Thredd]|h|r",
-		icon = 463832,
-		isTransmog = true,
-		locations = {
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63474] = {
@@ -11781,23 +8701,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63474] = {
-		itemID = 63474,
-		name = "Gear-Marked Gauntlets",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:63474::::::::90:251:::::::::|h[Gear-Marked Gauntlets]|h|r",
-		icon = 427631,
-		isTransmog = true,
-		locations = {
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63475] = {
@@ -11814,23 +8717,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63475] = {
-		itemID = 63475,
-		name = "Old Friend's Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:63475::::::::90:251:::::::::|h[Old Friend's Gloves]|h|r",
-		icon = 430973,
-		isTransmog = true,
-		locations = {
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63476] = {
@@ -11847,23 +8733,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63476] = {
-		itemID = 63476,
-		name = "Gearbreaker's Bindings",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:63476::::::::90:251:::::::::|h[Gearbreaker's Bindings]|h|r",
-		icon = 132608,
-		isTransmog = true,
-		locations = {
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63478] = {
@@ -11880,23 +8749,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63478] = {
-		itemID = 63478,
-		name = "Stonemason's Helm",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:63478::::::::90:251:::::::::|h[Stonemason's Helm]|h|r",
-		icon = 427632,
-		isTransmog = true,
-		locations = {
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63479] = {
@@ -11913,23 +8765,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63479] = {
-		itemID = 63479,
-		name = "Bracers of Some Consequence",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:63479::::::::90:251:::::::::|h[Bracers of Some Consequence]|h|r",
-		icon = 132606,
-		isTransmog = true,
-		locations = {
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63482] = {
@@ -11946,23 +8781,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63482] = {
-		itemID = 63482,
-		name = "Daughter's Hands",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:63482::::::::90:251:::::::::|h[Daughter's Hands]|h|r",
-		icon = 422803,
-		isTransmog = true,
-		locations = {
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63483] = {
@@ -11979,23 +8797,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63483] = {
-		itemID = 63483,
-		name = "Guildmaster's Greaves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:63483::::::::90:251:::::::::|h[Guildmaster's Greaves]|h|r",
-		icon = 427628,
-		isTransmog = true,
-		locations = {
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63484] = {
@@ -12012,23 +8813,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63484] = {
-		itemID = 63484,
-		name = "Armbands of Exiled Architects",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:63484::::::::90:251:::::::::|h[Armbands of Exiled Architects]|h|r",
-		icon = 422799,
-		isTransmog = true,
-		locations = {
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63485] = {
@@ -12045,23 +8829,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63485] = {
-		itemID = 63485,
-		name = "Cowl of Rebellion",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:63485::::::::90:251:::::::::|h[Cowl of Rebellion]|h|r",
-		icon = 133084,
-		isTransmog = true,
-		locations = {
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63486] = {
@@ -12078,23 +8845,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[63486] = {
-		itemID = 63486,
-		name = "Shackles of the Betrayed",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:63486::::::::90:251:::::::::|h[Shackles of the Betrayed]|h|r",
-		icon = 132606,
-		isTransmog = true,
-		locations = {
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[63488] = {
@@ -14770,23 +11520,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65163] = {
-		itemID = 65163,
-		name = "Buzzer Blade",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:65163::::::::90:251:::::::::|h[Buzzer Blade]|h|r",
-		icon = 135641,
-		isTransmog = true,
-		locations = {
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[65164] = {
@@ -14803,23 +11536,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65164] = {
-		itemID = 65164,
-		name = "Cruel Barb",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:65164::::::::90:251:::::::::|h[Cruel Barb]|h|r",
-		icon = 135325,
-		isTransmog = true,
-		locations = {
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[65165] = {
@@ -14836,23 +11552,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65165] = {
-		itemID = 65165,
-		name = "Foe Reaper",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 5,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Maces",
-		link = "|cnIQ3:|Hitem:65165::::::::90:251:::::::::|h[Foe Reaper]|h|r",
-		icon = 133046,
-		isTransmog = true,
-		locations = {
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[65166] = {
@@ -14869,23 +11568,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65166] = {
-		itemID = 65166,
-		name = "Buzz Saw",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:65166::::::::90:251:::::::::|h[Buzz Saw]|h|r",
-		icon = 135325,
-		isTransmog = true,
-		locations = {
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[65167] = {
@@ -14902,23 +11584,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65167] = {
-		itemID = 65167,
-		name = "Emberstone Staff",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65167::::::::90:251:::::::::|h[Emberstone Staff]|h|r",
-		icon = 135150,
-		isTransmog = true,
-		locations = {
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[65168] = {
@@ -14935,23 +11600,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=92, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65168] = {
-		itemID = 65168,
-		name = "Rockslicer",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 1,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Axes",
-		link = "|cnIQ3:|Hitem:65168::::::::90:251:::::::::|h[Rockslicer]|h|r",
-		icon = 135419,
-		isTransmog = true,
-		locations = {
-			{encounterID=92, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[65169] = {
@@ -14968,23 +11616,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=92, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65169] = {
-		itemID = 65169,
-		name = "Lavishly Jeweled Ring",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:65169::::::::90:251:::::::::|h[Lavishly Jeweled Ring]|h|r",
-		icon = 133418,
-		isTransmog = false,
-		locations = {
-			{encounterID=92, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[65170] = {
@@ -15001,23 +11632,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=92, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65170] = {
-		itemID = 65170,
-		name = "Smite's Reaver",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ3:|Hitem:65170::::::::90:251:::::::::|h[Smite's Reaver]|h|r",
-		icon = 132416,
-		isTransmog = true,
-		locations = {
-			{encounterID=92, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[65171] = {
@@ -15034,23 +11648,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65171] = {
-		itemID = 65171,
-		name = "Cookie's Tenderizer",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:65171::::::::90:251:::::::::|h[Cookie's Tenderizer]|h|r",
-		icon = 132906,
-		isTransmog = true,
-		locations = {
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[65172] = {
@@ -15067,23 +11664,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65172] = {
-		itemID = 65172,
-		name = "Cookie's Stirring Rod",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 19,
-		itemType = "Weapon",
-		itemSubType = "Wands",
-		link = "|cnIQ3:|Hitem:65172::::::::90:251:::::::::|h[Cookie's Stirring Rod]|h|r",
-		icon = 135139,
-		isTransmog = true,
-		locations = {
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[65173] = {
@@ -15100,23 +11680,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65173] = {
-		itemID = 65173,
-		name = "Thief's Blade",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:65173::::::::90:251:::::::::|h[Thief's Blade]|h|r",
-		icon = 135325,
-		isTransmog = true,
-		locations = {
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[65174] = {
@@ -15133,23 +11696,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65174] = {
-		itemID = 65174,
-		name = "Corsair's Overshirt",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:65174::::::::90:251:::::::::|h[Corsair's Overshirt]|h|r",
-		icon = 422801,
-		isTransmog = true,
-		locations = {
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[65177] = {
@@ -15166,23 +11712,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65177] = {
-		itemID = 65177,
-		name = "Cape of the Brotherhood",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:65177::::::::90:251:::::::::|h[Cape of the Brotherhood]|h|r",
-		icon = 463832,
-		isTransmog = true,
-		locations = {
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[65178] = {
@@ -15199,23 +11728,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65178] = {
-		itemID = 65178,
-		name = "VanCleef's Boots",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:65178::::::::90:251:::::::::|h[VanCleef's Boots]|h|r",
-		icon = 436836,
-		isTransmog = true,
-		locations = {
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[65367] = {
@@ -15536,1836 +12048,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=155, instanceID=74, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[65461] = {
-		itemID = 65461,
-		name = "Staff of the Green Circle",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65461::::::::90:251:::::::::|h[Staff of the Green Circle]|h|r",
-		icon = 135179,
-		isTransmog = true,
-		questSources = {
-			{id=27356, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65462] = {
-		itemID = 65462,
-		name = "Staff of the Verdant Circle",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65462::::::::90:251:::::::::|h[Staff of the Verdant Circle]|h|r",
-		icon = 135179,
-		isTransmog = true,
-		questSources = {
-			{id=27356, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65463] = {
-		itemID = 65463,
-		name = "Staff of the Green Circle",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65463::::::::90:251:::::::::|h[Staff of the Green Circle]|h|r",
-		icon = 135179,
-		isTransmog = true,
-		questSources = {
-			{id=27404, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65464] = {
-		itemID = 65464,
-		name = "Staff of the Verdant Circle",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65464::::::::90:251:::::::::|h[Staff of the Verdant Circle]|h|r",
-		icon = 135179,
-		isTransmog = true,
-		questSources = {
-			{id=27404, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65465] = {
-		itemID = 65465,
-		name = "Crossbow of the Crown",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 18,
-		itemType = "Weapon",
-		itemSubType = "Crossbows",
-		link = "|cnIQ3:|Hitem:65465::::::::90:251:::::::::|h[Crossbow of the Crown]|h|r",
-		icon = 135533,
-		isTransmog = true,
-		questSources = {
-			{id=27344, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65466] = {
-		itemID = 65466,
-		name = "Bow of the Great Hunter",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 2,
-		itemType = "Weapon",
-		itemSubType = "Bows",
-		link = "|cnIQ3:|Hitem:65466::::::::90:251:::::::::|h[Bow of the Great Hunter]|h|r",
-		icon = 135499,
-		isTransmog = true,
-		questSources = {
-			{id=27395, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65467] = {
-		itemID = 65467,
-		name = "Staff of the Royal Wizard",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65467::::::::90:251:::::::::|h[Staff of the Royal Wizard]|h|r",
-		icon = 135224,
-		isTransmog = true,
-		questSources = {
-			{id=27354, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65468] = {
-		itemID = 65468,
-		name = "Staff of the Arcane Path",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65468::::::::90:251:::::::::|h[Staff of the Arcane Path]|h|r",
-		icon = 135224,
-		isTransmog = true,
-		questSources = {
-			{id=27400, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65469] = {
-		itemID = 65469,
-		name = "Morningstar of the Order",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:65469::::::::90:251:::::::::|h[Morningstar of the Order]|h|r",
-		icon = 133481,
-		isTransmog = true,
-		questSources = {
-			{id=27434},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65470] = {
-		itemID = 65470,
-		name = "Battlemace of the Order",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:65470::::::::90:251:::::::::|h[Battlemace of the Order]|h|r",
-		icon = 133483,
-		isTransmog = true,
-		questSources = {
-			{id=27434},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65471] = {
-		itemID = 65471,
-		name = "Greatmace of the Order",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 5,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Maces",
-		link = "|cnIQ3:|Hitem:65471::::::::90:251:::::::::|h[Greatmace of the Order]|h|r",
-		icon = 133510,
-		isTransmog = true,
-		questSources = {
-			{id=27434},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65472] = {
-		itemID = 65472,
-		name = "Mace of the Sunwalker",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:65472::::::::90:251:::::::::|h[Mace of the Sunwalker]|h|r",
-		icon = 334463,
-		isTransmog = true,
-		questSources = {
-			{id=27403},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65473] = {
-		itemID = 65473,
-		name = "Battlehammer of the Sunwalker",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:65473::::::::90:251:::::::::|h[Battlehammer of the Sunwalker]|h|r",
-		icon = 334463,
-		isTransmog = true,
-		questSources = {
-			{id=27403},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65474] = {
-		itemID = 65474,
-		name = "Greatsword of the Sunwalker",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 8,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Swords",
-		link = "|cnIQ3:|Hitem:65474::::::::90:251:::::::::|h[Greatsword of the Sunwalker]|h|r",
-		icon = 331151,
-		isTransmog = true,
-		questSources = {
-			{id=27403},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65475] = {
-		itemID = 65475,
-		name = "Mace of the Order",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:65475::::::::90:251:::::::::|h[Mace of the Order]|h|r",
-		icon = 133048,
-		isTransmog = true,
-		questSources = {
-			{id=27343, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65476] = {
-		itemID = 65476,
-		name = "Gavel of the Order",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:65476::::::::90:251:::::::::|h[Gavel of the Order]|h|r",
-		icon = 133060,
-		isTransmog = true,
-		questSources = {
-			{id=27343, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65477] = {
-		itemID = 65477,
-		name = "Warhammer of the Order",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 5,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Maces",
-		link = "|cnIQ3:|Hitem:65477::::::::90:251:::::::::|h[Warhammer of the Order]|h|r",
-		icon = 293753,
-		isTransmog = true,
-		questSources = {
-			{id=27343, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65478] = {
-		itemID = 65478,
-		name = "Staff of the Sunchaser",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65478::::::::90:251:::::::::|h[Staff of the Sunchaser]|h|r",
-		icon = 135175,
-		isTransmog = true,
-		questSources = {
-			{id=27439},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65479] = {
-		itemID = 65479,
-		name = "Staff of Forsaken Faith",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65479::::::::90:251:::::::::|h[Staff of Forsaken Faith]|h|r",
-		icon = 135166,
-		isTransmog = true,
-		questSources = {
-			{id=27437},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65480] = {
-		itemID = 65480,
-		name = "Staff of the Technocrat",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65480::::::::90:251:::::::::|h[Staff of the Technocrat]|h|r",
-		icon = 135223,
-		isTransmog = true,
-		questSources = {
-			{id=27363},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65481] = {
-		itemID = 65481,
-		name = "Staff of Golden Worship",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65481::::::::90:251:::::::::|h[Staff of Golden Worship]|h|r",
-		icon = 135222,
-		isTransmog = true,
-		questSources = {
-			{id=27441},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65482] = {
-		itemID = 65482,
-		name = "Staff of the Hallowed",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65482::::::::90:251:::::::::|h[Staff of the Hallowed]|h|r",
-		icon = 135167,
-		isTransmog = true,
-		questSources = {
-			{id=27361, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65483] = {
-		itemID = 65483,
-		name = "Moon Staff of Elune",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65483::::::::90:251:::::::::|h[Moon Staff of Elune]|h|r",
-		icon = 135168,
-		isTransmog = true,
-		questSources = {
-			{id=27362},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65484] = {
-		itemID = 65484,
-		name = "Staff of the Earthmother",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65484::::::::90:251:::::::::|h[Staff of the Earthmother]|h|r",
-		icon = 135225,
-		isTransmog = true,
-		questSources = {
-			{id=27435},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65485] = {
-		itemID = 65485,
-		name = "Shadow-Walker Staff",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65485::::::::90:251:::::::::|h[Shadow-Walker Staff]|h|r",
-		icon = 133445,
-		isTransmog = true,
-		questSources = {
-			{id=27436},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65486] = {
-		itemID = 65486,
-		name = "SI:7 Special Issue Dagger",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:65486::::::::90:251:::::::::|h[SI:7 Special Issue Dagger]|h|r",
-		icon = 326804,
-		isTransmog = true,
-		questSources = {
-			{id=27351, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65487] = {
-		itemID = 65487,
-		name = "Blade of the Shattered Hand",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:65487::::::::90:251:::::::::|h[Blade of the Shattered Hand]|h|r",
-		icon = 326804,
-		isTransmog = true,
-		questSources = {
-			{id=27396, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65488] = {
-		itemID = 65488,
-		name = "Battleaxe of the Farseer",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ3:|Hitem:65488::::::::90:251:::::::::|h[Battleaxe of the Farseer]|h|r",
-		icon = 330603,
-		isTransmog = true,
-		questSources = {
-			{id=27353, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65489] = {
-		itemID = 65489,
-		name = "Spell Axe of the Farseer",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ3:|Hitem:65489::::::::90:251:::::::::|h[Spell Axe of the Farseer]|h|r",
-		icon = 330603,
-		isTransmog = true,
-		questSources = {
-			{id=27353, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65490] = {
-		itemID = 65490,
-		name = "Battleaxe of the Speaker",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ3:|Hitem:65490::::::::90:251:::::::::|h[Battleaxe of the Speaker]|h|r",
-		icon = 330603,
-		isTransmog = true,
-		questSources = {
-			{id=27397, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65491] = {
-		itemID = 65491,
-		name = "Spell Axe of the Speaker",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ3:|Hitem:65491::::::::90:251:::::::::|h[Spell Axe of the Speaker]|h|r",
-		icon = 330603,
-		isTransmog = true,
-		questSources = {
-			{id=27397, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65492] = {
-		itemID = 65492,
-		name = "Broadsword of the Crown",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:65492::::::::90:251:::::::::|h[Broadsword of the Crown]|h|r",
-		icon = 331151,
-		isTransmog = true,
-		questSources = {
-			{id=27337, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65493] = {
-		itemID = 65493,
-		name = "Greatsword of the Crown",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 8,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Swords",
-		link = "|cnIQ3:|Hitem:65493::::::::90:251:::::::::|h[Greatsword of the Crown]|h|r",
-		icon = 135338,
-		isTransmog = true,
-		questSources = {
-			{id=27337, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65494] = {
-		itemID = 65494,
-		name = "Broadaxe of the Horde",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ3:|Hitem:65494::::::::90:251:::::::::|h[Broadaxe of the Horde]|h|r",
-		icon = 132462,
-		isTransmog = true,
-		questSources = {
-			{id=27365, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65495] = {
-		itemID = 65495,
-		name = "Greataxe of the Horde",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 1,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Axes",
-		link = "|cnIQ3:|Hitem:65495::::::::90:251:::::::::|h[Greataxe of the Horde]|h|r",
-		icon = 132406,
-		isTransmog = true,
-		questSources = {
-			{id=27365, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65496] = {
-		itemID = 65496,
-		name = "Staff of Justified Sins",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65496::::::::90:251:::::::::|h[Staff of Justified Sins]|h|r",
-		icon = 135576,
-		isTransmog = true,
-		questSources = {
-			{id=27355, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65497] = {
-		itemID = 65497,
-		name = "Staff of the Left Hand Path",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:65497::::::::90:251:::::::::|h[Staff of the Left Hand Path]|h|r",
-		icon = 135576,
-		isTransmog = true,
-		questSources = {
-			{id=27402, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65654] = {
-		itemID = 65654,
-		name = "Belt of a Thousand Deaths",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:65654::::::::90:251:::::::::|h[Belt of a Thousand Deaths]|h|r",
-		icon = 427627,
-		isTransmog = true,
-		questSources = {
-			{id=28834, faction="Horde"},
-			{id=28833, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=65, source="att"},
-		},
-	},
-	[65655] = {
-		itemID = 65655,
-		name = "Leggings of Opportune Strikes",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:65655::::::::90:251:::::::::|h[Leggings of Opportune Strikes]|h|r",
-		icon = 430976,
-		isTransmog = true,
-		questSources = {
-			{id=28834, faction="Horde"},
-			{id=28833, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=65, source="att"},
-		},
-	},
-	[65656] = {
-		itemID = 65656,
-		name = "Sea Witch Charm",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:65656::::::::90:251:::::::::|h[Sea Witch Charm]|h|r",
-		icon = 133314,
-		isTransmog = false,
-		questSources = {
-			{id=28834, faction="Horde"},
-			{id=28833, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=65, source="att"},
-		},
-	},
-	[65657] = {
-		itemID = 65657,
-		name = "Deepmist Robes",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:65657::::::::90:251:::::::::|h[Deepmist Robes]|h|r",
-		icon = 422801,
-		isTransmog = true,
-		questSources = {
-			{id=28836, faction="Horde"},
-			{id=28843, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=65, source="att"},
-		},
-	},
-	[65658] = {
-		itemID = 65658,
-		name = "Stonespeaker's Belt",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:65658::::::::90:251:::::::::|h[Stonespeaker's Belt]|h|r",
-		icon = 430969,
-		isTransmog = true,
-		questSources = {
-			{id=28836, faction="Horde"},
-			{id=28843, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=65, source="att"},
-		},
-	},
-	[65659] = {
-		itemID = 65659,
-		name = "Kelp Forest Vest",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:65659::::::::90:251:::::::::|h[Kelp Forest Vest]|h|r",
-		icon = 436838,
-		isTransmog = true,
-		questSources = {
-			{id=28836, faction="Horde"},
-			{id=28843, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=65, source="att"},
-		},
-	},
-	[65910] = {
-		itemID = 65910,
-		name = "Godfrey's Britches",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:65910::::::::90:251:::::::::|h[Godfrey's Britches]|h|r",
-		icon = 134588,
-		isTransmog = true,
-		questSources = {
-			{id=27968, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65935] = {
-		itemID = 65935,
-		name = "Cookie's Meat Mallet",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:65935::::::::90:251:::::::::|h[Cookie's Meat Mallet]|h|r",
-		icon = 133046,
-		isTransmog = true,
-		questSources = {
-			{id=27790, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[65936] = {
-		itemID = 65936,
-		name = "Sandals of Sacrifice",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:65936::::::::90:251:::::::::|h[Sandals of Sacrifice]|h|r",
-		icon = 132558,
-		isTransmog = true,
-		questSources = {
-			{id=27968, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65959] = {
-		itemID = 65959,
-		name = "Cookie's Stirring Stick",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 19,
-		itemType = "Weapon",
-		itemSubType = "Wands",
-		link = "|cnIQ3:|Hitem:65959::::::::90:251:::::::::|h[Cookie's Stirring Stick]|h|r",
-		icon = 135471,
-		isTransmog = true,
-		questSources = {
-			{id=27790, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[65960] = {
-		itemID = 65960,
-		name = "Shadowfang Shoulderpads",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:65960::::::::90:251:::::::::|h[Shadowfang Shoulderpads]|h|r",
-		icon = 135044,
-		isTransmog = true,
-		questSources = {
-			{id=27968, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[65983] = {
-		itemID = 65983,
-		name = "Cookie's Table Cloth",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:65983::::::::90:251:::::::::|h[Cookie's Table Cloth]|h|r",
-		icon = 133767,
-		isTransmog = true,
-		questSources = {
-			{id=27790, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[65984] = {
-		itemID = 65984,
-		name = "Breastplate of the Terrible Price",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:65984::::::::90:251:::::::::|h[Breastplate of the Terrible Price]|h|r",
-		icon = 132634,
-		isTransmog = true,
-		questSources = {
-			{id=27968, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[66002] = {
-		itemID = 66002,
-		name = "Packleader's Pauldrons",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:66002::::::::90:251:::::::::|h[Packleader's Pauldrons]|h|r",
-		icon = 135046,
-		isTransmog = true,
-		questSources = {
-			{id=27968, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[66011] = {
-		itemID = 66011,
-		name = "Godfrey's Britches",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:66011::::::::90:251:::::::::|h[Godfrey's Britches]|h|r",
-		icon = 134588,
-		isTransmog = true,
-		questSources = {
-			{id=27998, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[66019] = {
-		itemID = 66019,
-		name = "Cookie's Meat Mallet",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:66019::::::::90:251:::::::::|h[Cookie's Meat Mallet]|h|r",
-		icon = 133046,
-		isTransmog = true,
-		questSources = {
-			{id=27850, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[66020] = {
-		itemID = 66020,
-		name = "Sandals of Sacrifice",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:66020::::::::90:251:::::::::|h[Sandals of Sacrifice]|h|r",
-		icon = 132558,
-		isTransmog = true,
-		questSources = {
-			{id=27998, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[66028] = {
-		itemID = 66028,
-		name = "Cookie's Stirring Stick",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 19,
-		itemType = "Weapon",
-		itemSubType = "Wands",
-		link = "|cnIQ3:|Hitem:66028::::::::90:251:::::::::|h[Cookie's Stirring Stick]|h|r",
-		icon = 135471,
-		isTransmog = true,
-		questSources = {
-			{id=27850, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[66029] = {
-		itemID = 66029,
-		name = "Shadowfang Shoulderpads",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:66029::::::::90:251:::::::::|h[Shadowfang Shoulderpads]|h|r",
-		icon = 135044,
-		isTransmog = true,
-		questSources = {
-			{id=27998, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[66037] = {
-		itemID = 66037,
-		name = "Cookie's Table Cloth",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:66037::::::::90:251:::::::::|h[Cookie's Table Cloth]|h|r",
-		icon = 133767,
-		isTransmog = true,
-		questSources = {
-			{id=27850, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
-	[66038] = {
-		itemID = 66038,
-		name = "Breastplate of the Terrible Price",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:66038::::::::90:251:::::::::|h[Breastplate of the Terrible Price]|h|r",
-		icon = 132634,
-		isTransmog = true,
-		questSources = {
-			{id=27998, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[66044] = {
-		itemID = 66044,
-		name = "Deathstalker Pauldrons",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:66044::::::::90:251:::::::::|h[Deathstalker Pauldrons]|h|r",
-		icon = 135046,
-		isTransmog = true,
-		questSources = {
-			{id=27998, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[66884] = {
-		itemID = 66884,
-		name = "Raz's Breastplate",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:66884::::::::90:251:::::::::|h[Raz's Breastplate]|h|r",
-		icon = 427630,
-		isTransmog = true,
-		questSources = {
-			{id=28741},
-		},
-		locations = {
-			{encounterID=0, instanceID=66, source="att"},
-		},
-	},
-	[66885] = {
-		itemID = 66885,
-		name = "Diamond-Studded Helm",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:66885::::::::90:251:::::::::|h[Diamond-Studded Helm]|h|r",
-		icon = 430974,
-		isTransmog = true,
-		questSources = {
-			{id=28741},
-		},
-		locations = {
-			{encounterID=0, instanceID=66, source="att"},
-		},
-	},
-	[66886] = {
-		itemID = 66886,
-		name = "Acid-Eaten Vest",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:66886::::::::90:251:::::::::|h[Acid-Eaten Vest]|h|r",
-		icon = 132656,
-		isTransmog = true,
-		questSources = {
-			{id=28741},
-		},
-		locations = {
-			{encounterID=0, instanceID=66, source="att"},
-		},
-	},
-	[66887] = {
-		itemID = 66887,
-		name = "Beauty Jr.'s Collar",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:66887::::::::90:251:::::::::|h[Beauty Jr.'s Collar]|h|r",
-		icon = 430969,
-		isTransmog = true,
-		questSources = {
-			{id=28740},
-		},
-		locations = {
-			{encounterID=0, instanceID=66, source="att"},
-		},
-	},
-	[66889] = {
-		itemID = 66889,
-		name = "Beauty's Cootie-Ridden Blankie",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:66889::::::::90:251:::::::::|h[Beauty's Cootie-Ridden Blankie]|h|r",
-		icon = 465110,
-		isTransmog = true,
-		questSources = {
-			{id=28740},
-		},
-		locations = {
-			{encounterID=0, instanceID=66, source="att"},
-		},
-	},
-	[66890] = {
-		itemID = 66890,
-		name = "Auto-Decoding Band",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:66890::::::::90:251:::::::::|h[Auto-Decoding Band]|h|r",
-		icon = 133384,
-		isTransmog = false,
-		questSources = {
-			{id=28740},
-		},
-		locations = {
-			{encounterID=0, instanceID=66, source="att"},
-		},
-	},
-	[66891] = {
-		itemID = 66891,
-		name = "Pauldrons of Unholy Rituals",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:66891::::::::90:251:::::::::|h[Pauldrons of Unholy Rituals]|h|r",
-		icon = 427634,
-		isTransmog = true,
-		questSources = {
-			{id=28814},
-		},
-		locations = {
-			{encounterID=0, instanceID=67, source="att"},
-		},
-	},
-	[66892] = {
-		itemID = 66892,
-		name = "Band of the One Hundred and One",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:66892::::::::90:251:::::::::|h[Band of the One Hundred and One]|h|r",
-		icon = 422795,
-		isTransmog = true,
-		questSources = {
-			{id=28814},
-		},
-		locations = {
-			{encounterID=0, instanceID=67, source="att"},
-		},
-	},
-	[66893] = {
-		itemID = 66893,
-		name = "High Priestess' Signet",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:66893::::::::90:251:::::::::|h[High Priestess' Signet]|h|r",
-		icon = 414303,
-		isTransmog = false,
-		questSources = {
-			{id=28814},
-		},
-		locations = {
-			{encounterID=0, instanceID=67, source="att"},
-		},
-	},
-	[66894] = {
-		itemID = 66894,
-		name = "Leggings of the Lost Child",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:66894::::::::90:251:::::::::|h[Leggings of the Lost Child]|h|r",
-		icon = 134638,
-		isTransmog = true,
-		questSources = {
-			{id=28824},
-		},
-		locations = {
-			{encounterID=0, instanceID=67, source="att"},
-		},
-	},
-	[66896] = {
-		itemID = 66896,
-		name = "Stonecore Belt",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:66896::::::::90:251:::::::::|h[Stonecore Belt]|h|r",
-		icon = 436835,
-		isTransmog = true,
-		questSources = {
-			{id=28824},
-		},
-		locations = {
-			{encounterID=0, instanceID=67, source="att"},
-		},
-	},
-	[66897] = {
-		itemID = 66897,
-		name = "Crystal Shimmer Cloak",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:66897::::::::90:251:::::::::|h[Crystal Shimmer Cloak]|h|r",
-		icon = 463832,
-		isTransmog = true,
-		questSources = {
-			{id=28824},
-		},
-		locations = {
-			{encounterID=0, instanceID=67, source="att"},
-		},
-	},
-	[66898] = {
-		itemID = 66898,
-		name = "Cloak of Itesh",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:66898::::::::90:251:::::::::|h[Cloak of Itesh]|h|r",
-		icon = 463832,
-		isTransmog = true,
-		questSources = {
-			{id=28779},
-		},
-		locations = {
-			{encounterID=0, instanceID=68, source="att"},
-		},
-	},
-	[66899] = {
-		itemID = 66899,
-		name = "Leggings of the Vortex Pinnacle",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:66899::::::::90:251:::::::::|h[Leggings of the Vortex Pinnacle]|h|r",
-		icon = 430976,
-		isTransmog = true,
-		questSources = {
-			{id=28779},
-		},
-		locations = {
-			{encounterID=0, instanceID=68, source="att"},
-		},
-	},
-	[66900] = {
-		itemID = 66900,
-		name = "Band of the Dead End",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:66900::::::::90:251:::::::::|h[Band of the Dead End]|h|r",
-		icon = 133410,
-		isTransmog = false,
-		questSources = {
-			{id=28779},
-		},
-		locations = {
-			{encounterID=0, instanceID=68, source="att"},
-		},
-	},
-	[66901] = {
-		itemID = 66901,
-		name = "Greaves of Orsis",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:66901::::::::90:251:::::::::|h[Greaves of Orsis]|h|r",
-		icon = 427633,
-		isTransmog = true,
-		questSources = {
-			{id=28760},
-		},
-		locations = {
-			{encounterID=0, instanceID=68, source="att"},
-		},
-	},
-	[66902] = {
-		itemID = 66902,
-		name = "Token of Gratitude",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:66902::::::::90:251:::::::::|h[Token of Gratitude]|h|r",
-		icon = 133322,
-		isTransmog = false,
-		questSources = {
-			{id=28760},
-		},
-		locations = {
-			{encounterID=0, instanceID=68, source="att"},
-		},
-	},
-	[66903] = {
-		itemID = 66903,
-		name = "Caliph's Band",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:66903::::::::90:251:::::::::|h[Caliph's Band]|h|r",
-		icon = 414302,
-		isTransmog = false,
-		questSources = {
-			{id=28760},
-		},
-		locations = {
-			{encounterID=0, instanceID=68, source="att"},
-		},
-	},
-	[66905] = {
-		itemID = 66905,
-		name = "Clandestine Spaulders",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:66905::::::::90:251:::::::::|h[Clandestine Spaulders]|h|r",
-		icon = 436842,
-		isTransmog = true,
-		questSources = {
-			{id=28781},
-		},
-		locations = {
-			{encounterID=0, instanceID=69, source="att"},
-		},
-	},
-	[66906] = {
-		itemID = 66906,
-		name = "Bracers of the Lost City",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:66906::::::::90:251:::::::::|h[Bracers of the Lost City]|h|r",
-		icon = 132606,
-		isTransmog = true,
-		questSources = {
-			{id=28781},
-		},
-		locations = {
-			{encounterID=0, instanceID=69, source="att"},
-		},
-	},
-	[66907] = {
-		itemID = 66907,
-		name = "Captain Hadan's Pauldrons",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:66907::::::::90:251:::::::::|h[Captain Hadan's Pauldrons]|h|r",
-		icon = 467767,
-		isTransmog = true,
-		questSources = {
-			{id=28781},
-		},
-		locations = {
-			{encounterID=0, instanceID=69, source="att"},
-		},
-	},
-	[66908] = {
-		itemID = 66908,
-		name = "Treads of the Neferset",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:66908::::::::90:251:::::::::|h[Treads of the Neferset]|h|r",
-		icon = 430970,
-		isTransmog = true,
-		questSources = {
-			{id=28783},
-		},
-		locations = {
-			{encounterID=0, instanceID=69, source="att"},
-		},
-	},
-	[66909] = {
-		itemID = 66909,
-		name = "Ramkahen Front Boots",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:66909::::::::90:251:::::::::|h[Ramkahen Front Boots]|h|r",
-		icon = 427628,
-		isTransmog = true,
-		questSources = {
-			{id=28783},
-		},
-		locations = {
-			{encounterID=0, instanceID=69, source="att"},
-		},
-	},
-	[66910] = {
-		itemID = 66910,
-		name = "Blight-Lifter's Mantle",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:66910::::::::90:251:::::::::|h[Blight-Lifter's Mantle]|h|r",
-		icon = 422809,
-		isTransmog = true,
-		questSources = {
-			{id=28783},
-		},
-		locations = {
-			{encounterID=0, instanceID=69, source="att"},
-		},
-	},
-	[66911] = {
-		itemID = 66911,
-		name = "Offline Greaves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:66911::::::::90:251:::::::::|h[Offline Greaves]|h|r",
-		icon = 427633,
-		isTransmog = true,
-		questSources = {
-			{id=28746},
-		},
-		locations = {
-			{encounterID=0, instanceID=70, source="att"},
-		},
-	},
-	[66913] = {
-		itemID = 66913,
-		name = "Repository Gauntlets",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:66913::::::::90:251:::::::::|h[Repository Gauntlets]|h|r",
-		icon = 427631,
-		isTransmog = true,
-		questSources = {
-			{id=28746},
-		},
-		locations = {
-			{encounterID=0, instanceID=70, source="att"},
-		},
-	},
-	[66914] = {
-		itemID = 66914,
-		name = "Boots of the Hard Way",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:66914::::::::90:251:::::::::|h[Boots of the Hard Way]|h|r",
-		icon = 436836,
-		isTransmog = true,
-		questSources = {
-			{id=28746},
-		},
-		locations = {
-			{encounterID=0, instanceID=70, source="att"},
-		},
-	},
-	[66915] = {
-		itemID = 66915,
-		name = "Treasure Hunter's Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:66915::::::::90:251:::::::::|h[Treasure Hunter's Gloves]|h|r",
-		icon = 430973,
-		isTransmog = true,
-		questSources = {
-			{id=28753},
-		},
-		locations = {
-			{encounterID=0, instanceID=70, source="att"},
-		},
-	},
-	[66917] = {
-		itemID = 66917,
-		name = "True Archaeologist's Bracers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:66917::::::::90:251:::::::::|h[True Archaeologist's Bracers]|h|r",
-		icon = 422799,
-		isTransmog = true,
-		questSources = {
-			{id=28753},
-		},
-		locations = {
-			{encounterID=0, instanceID=70, source="att"},
-		},
-	},
-	[66921] = {
-		itemID = 66921,
-		name = "Helm of Reorigination",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:66921::::::::90:251:::::::::|h[Helm of Reorigination]|h|r",
-		icon = 133084,
-		isTransmog = true,
-		questSources = {
-			{id=28753},
-		},
-		locations = {
-			{encounterID=0, instanceID=70, source="att"},
-		},
-	},
-	[66933] = {
-		itemID = 66933,
-		name = "Breastplate of the Witness",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:66933::::::::90:251:::::::::|h[Breastplate of the Witness]|h|r",
-		icon = 427630,
-		isTransmog = true,
-		questSources = {
-			{id=28854},
-		},
-		locations = {
-			{encounterID=0, instanceID=71, source="att"},
-		},
-	},
-	[66934] = {
-		itemID = 66934,
-		name = "Gloves of Baleflame",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:66934::::::::90:251:::::::::|h[Gloves of Baleflame]|h|r",
-		icon = 132959,
-		isTransmog = true,
-		questSources = {
-			{id=28854},
-		},
-		locations = {
-			{encounterID=0, instanceID=71, source="att"},
-		},
-	},
-	[66935] = {
-		itemID = 66935,
-		name = "Eradicator's Bracers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:66935::::::::90:251:::::::::|h[Eradicator's Bracers]|h|r",
-		icon = 132606,
-		isTransmog = true,
-		questSources = {
-			{id=28854},
-		},
-		locations = {
-			{encounterID=0, instanceID=71, source="att"},
-		},
-	},
-	[66936] = {
-		itemID = 66936,
-		name = "Helm of Secret Knowledge",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:66936::::::::90:251:::::::::|h[Helm of Secret Knowledge]|h|r",
-		icon = 436840,
-		isTransmog = true,
-		questSources = {
-			{id=28853},
-		},
-		locations = {
-			{encounterID=0, instanceID=71, source="att"},
-		},
-	},
-	[66937] = {
-		itemID = 66937,
-		name = "Sandals of the Courier",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:66937::::::::90:251:::::::::|h[Sandals of the Courier]|h|r",
-		icon = 422797,
-		isTransmog = true,
-		questSources = {
-			{id=28853},
-		},
-		locations = {
-			{encounterID=0, instanceID=71, source="att"},
-		},
-	},
-	[66938] = {
-		itemID = 66938,
-		name = "Tooranu's Spaulders",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:66938::::::::90:251:::::::::|h[Tooranu's Spaulders]|h|r",
-		icon = 430977,
-		isTransmog = true,
-		questSources = {
-			{id=28853},
-		},
-		locations = {
-			{encounterID=0, instanceID=71, source="att"},
-		},
-	},
-	[66943] = {
-		itemID = 66943,
-		name = "Treasures from Grim Batol",
-		expansionID = 4,
-		quality = 1,
-		classID = 15,
-		subclassID = 0,
-		itemType = "Miscellaneous",
-		itemSubType = "Junk",
-		link = "|cnIQ1:|Hitem:66943::::::::90:251:::::::::|h[Treasures from Grim Batol]|h|r",
-		icon = 132594,
-		isTransmog = false,
-		questSources = {
-			{id=28852},
-		},
-		locations = {
-			{encounterID=0, instanceID=71, source="att"},
 		},
 	},
 	[66998] = {
@@ -30695,22 +25377,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
-	[72798] = {
-		itemID = 72798,
-		name = "Cord of Lost Hope",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ4:|Hitem:72798::::::::90:251:::::::::|h[Cord of Lost Hope]|h|r",
-		icon = 537803,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
 	[72799] = {
 		itemID = 72799,
 		name = "Dead End Boots",
@@ -30725,22 +25391,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72799] = {
-		itemID = 72799,
-		name = "Dead End Boots",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ4:|Hitem:72799::::::::90:251:::::::::|h[Dead End Boots]|h|r",
-		icon = 132550,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72800] = {
@@ -30759,22 +25409,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
-	[72800] = {
-		itemID = 72800,
-		name = "Gauntlets of Temporal Interference",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72800::::::::90:251:::::::::|h[Gauntlets of Temporal Interference]|h|r",
-		icon = 533754,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
 	[72801] = {
 		itemID = 72801,
 		name = "Breastplate of Sorrow",
@@ -30789,22 +25423,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72801] = {
-		itemID = 72801,
-		name = "Breastplate of Sorrow",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72801::::::::90:251:::::::::|h[Breastplate of Sorrow]|h|r",
-		icon = 533753,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72802] = {
@@ -30823,22 +25441,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
-	[72802] = {
-		itemID = 72802,
-		name = "Time Traveler's Leggings",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:72802::::::::90:251:::::::::|h[Time Traveler's Leggings]|h|r",
-		icon = 532094,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
 	[72803] = {
 		itemID = 72803,
 		name = "Girdle of Lost Heroes",
@@ -30853,22 +25455,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72803] = {
-		itemID = 72803,
-		name = "Girdle of Lost Heroes",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72803::::::::90:251:::::::::|h[Girdle of Lost Heroes]|h|r",
-		icon = 533750,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72804] = {
@@ -30887,22 +25473,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
-	[72804] = {
-		itemID = 72804,
-		name = "Dragonshrine Scepter",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ4:|Hitem:72804::::::::90:251:::::::::|h[Dragonshrine Scepter]|h|r",
-		icon = 530958,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
 	[72805] = {
 		itemID = 72805,
 		name = "Gloves of the Hollow",
@@ -30917,22 +25487,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72805] = {
-		itemID = 72805,
-		name = "Gloves of the Hollow",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ4:|Hitem:72805::::::::90:251:::::::::|h[Gloves of the Hollow]|h|r",
-		icon = 537807,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72806] = {
@@ -30951,22 +25505,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
-	[72806] = {
-		itemID = 72806,
-		name = "Echoing Headguard",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ4:|Hitem:72806::::::::90:251:::::::::|h[Echoing Headguard]|h|r",
-		icon = 537536,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
 	[72807] = {
 		itemID = 72807,
 		name = "Waistguard of Lost Time",
@@ -30983,22 +25521,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
-	[72807] = {
-		itemID = 72807,
-		name = "Waistguard of Lost Time",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72807::::::::90:251:::::::::|h[Waistguard of Lost Time]|h|r",
-		icon = 533750,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
 	[72808] = {
 		itemID = 72808,
 		name = "Jaina's Staff",
@@ -31013,23 +25535,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=285, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72808] = {
-		itemID = 72808,
-		name = "Jaina's Staff",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ4:|Hitem:72808::::::::90:251:::::::::|h[Jaina's Staff]|h|r",
-		icon = 531596,
-		isTransmog = true,
-		locations = {
-			{encounterID=285, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72809] = {
@@ -31046,23 +25551,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=285, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72809] = {
-		itemID = 72809,
-		name = "Ward of Incantations",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 6,
-		itemType = "Armor",
-		itemSubType = "Shields",
-		link = "|cnIQ4:|Hitem:72809::::::::90:251:::::::::|h[Ward of Incantations]|h|r",
-		icon = 536020,
-		isTransmog = true,
-		locations = {
-			{encounterID=285, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72810] = {
@@ -31079,23 +25567,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=323, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72810] = {
-		itemID = 72810,
-		name = "Windrunner's Bow",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 2,
-		itemType = "Weapon",
-		itemSubType = "Bows",
-		link = "|cnIQ4:|Hitem:72810::::::::90:251:::::::::|h[Windrunner's Bow]|h|r",
-		icon = 536821,
-		isTransmog = true,
-		locations = {
-			{encounterID=323, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72811] = {
@@ -31112,23 +25583,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=323, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72811] = {
-		itemID = 72811,
-		name = "Cloak of the Banshee Queen",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:72811::::::::90:251:::::::::|h[Cloak of the Banshee Queen]|h|r",
-		icon = 531415,
-		isTransmog = true,
-		locations = {
-			{encounterID=323, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72812] = {
@@ -31145,23 +25599,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=283, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72812] = {
-		itemID = 72812,
-		name = "Crescent Moon",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ4:|Hitem:72812::::::::90:251:::::::::|h[Crescent Moon]|h|r",
-		icon = 533573,
-		isTransmog = true,
-		locations = {
-			{encounterID=283, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72813] = {
@@ -31178,23 +25615,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=283, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72813] = {
-		itemID = 72813,
-		name = "Whisperwind Robes",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:72813::::::::90:251:::::::::|h[Whisperwind Robes]|h|r",
-		icon = 532091,
-		isTransmog = true,
-		locations = {
-			{encounterID=283, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72814] = {
@@ -31211,23 +25631,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=340, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72814] = {
-		itemID = 72814,
-		name = "Axe of the Tauren Chieftains",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 1,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Axes",
-		link = "|cnIQ4:|Hitem:72814::::::::90:251:::::::::|h[Axe of the Tauren Chieftains]|h|r",
-		icon = 535989,
-		isTransmog = true,
-		locations = {
-			{encounterID=340, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72815] = {
@@ -31244,23 +25647,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=340, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72815] = {
-		itemID = 72815,
-		name = "Bloodhoof Legguards",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72815::::::::90:251:::::::::|h[Bloodhoof Legguards]|h|r",
-		icon = 533756,
-		isTransmog = true,
-		locations = {
-			{encounterID=340, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72816] = {
@@ -31277,23 +25663,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72816] = {
-		itemID = 72816,
-		name = "Distortion Greaves",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ4:|Hitem:72816::::::::90:251:::::::::|h[Distortion Greaves]|h|r",
-		icon = 537538,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72817] = {
@@ -31310,23 +25679,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72817] = {
-		itemID = 72817,
-		name = "Time Altered Legguards",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72817::::::::90:251:::::::::|h[Time Altered Legguards]|h|r",
-		icon = 533756,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72818] = {
@@ -31343,23 +25695,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72818] = {
-		itemID = 72818,
-		name = "Breastplate of Tarnished Bronze",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72818::::::::90:251:::::::::|h[Breastplate of Tarnished Bronze]|h|r",
-		icon = 533753,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72819] = {
@@ -31376,23 +25711,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72819] = {
-		itemID = 72819,
-		name = "Chrono Boots",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72819::::::::90:251:::::::::|h[Chrono Boots]|h|r",
-		icon = 533751,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72820] = {
@@ -31409,23 +25727,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72820] = {
-		itemID = 72820,
-		name = "Crown of Epochs",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72820::::::::90:251:::::::::|h[Crown of Epochs]|h|r",
-		icon = 533755,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72821] = {
@@ -31442,23 +25743,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72821] = {
-		itemID = 72821,
-		name = "Temporal Pauldrons",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72821::::::::90:251:::::::::|h[Temporal Pauldrons]|h|r",
-		icon = 533757,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72822] = {
@@ -31475,23 +25759,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72822] = {
-		itemID = 72822,
-		name = "Jagged Edge of Time",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ4:|Hitem:72822::::::::90:251:::::::::|h[Jagged Edge of Time]|h|r",
-		icon = 526763,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72823] = {
@@ -31508,23 +25775,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72823] = {
-		itemID = 72823,
-		name = "Timeway Headgear",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ4:|Hitem:72823::::::::90:251:::::::::|h[Timeway Headgear]|h|r",
-		icon = 537808,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72824] = {
@@ -31541,23 +25791,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72824] = {
-		itemID = 72824,
-		name = "Time Twisted Tunic",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ4:|Hitem:72824::::::::90:251:::::::::|h[Time Twisted Tunic]|h|r",
-		icon = 537806,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72825] = {
@@ -31574,23 +25807,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72825] = {
-		itemID = 72825,
-		name = "Mantle of Time",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:72825::::::::90:251:::::::::|h[Mantle of Time]|h|r",
-		icon = 532095,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72826] = {
@@ -31607,23 +25823,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72826] = {
-		itemID = 72826,
-		name = "Robes of Fate",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:72826::::::::90:251:::::::::|h[Robes of Fate]|h|r",
-		icon = 532091,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72827] = {
@@ -31640,7 +25839,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=290, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72828] = {
@@ -31657,7 +25855,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=290, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72829] = {
@@ -31674,7 +25871,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=290, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72830] = {
@@ -31691,7 +25887,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=290, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72831] = {
@@ -31708,7 +25903,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=290, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72832] = {
@@ -31725,7 +25919,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=290, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72833] = {
@@ -31742,7 +25935,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=291, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72834] = {
@@ -31759,7 +25951,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=291, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72835] = {
@@ -31776,7 +25967,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=291, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72836] = {
@@ -31793,7 +25983,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=291, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72837] = {
@@ -31810,7 +25999,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=291, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72838] = {
@@ -31827,7 +26015,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=291, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72839] = {
@@ -31844,7 +26031,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=292, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72840] = {
@@ -31861,7 +26047,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=292, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72841] = {
@@ -31878,7 +26063,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=292, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72842] = {
@@ -31895,7 +26079,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=292, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72843] = {
@@ -31912,7 +26095,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=292, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72844] = {
@@ -31929,7 +26111,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=292, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72845] = {
@@ -31946,7 +26127,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=292, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72846] = {
@@ -31963,7 +26143,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=292, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72847] = {
@@ -31980,7 +26159,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=292, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72848] = {
@@ -31997,7 +26175,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=292, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72849] = {
@@ -32014,23 +26191,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=322, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72849] = {
-		itemID = 72849,
-		name = "Wayfinder Boots",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ4:|Hitem:72849::::::::90:251:::::::::|h[Wayfinder Boots]|h|r",
-		icon = 537804,
-		isTransmog = true,
-		locations = {
-			{encounterID=322, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72850] = {
@@ -32047,23 +26207,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=322, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72850] = {
-		itemID = 72850,
-		name = "Surestride Boots",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ4:|Hitem:72850::::::::90:251:::::::::|h[Surestride Boots]|h|r",
-		icon = 132550,
-		isTransmog = true,
-		locations = {
-			{encounterID=322, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72851] = {
@@ -32080,42 +26223,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=322, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72851] = {
-		itemID = 72851,
-		name = "Chillbane Belt",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:72851::::::::90:251:::::::::|h[Chillbane Belt]|h|r",
-		icon = 532088,
-		isTransmog = true,
-		locations = {
-			{encounterID=322, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72852] = {
-		itemID = 72852,
-		name = "Archivist's Gloves",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:72852::::::::90:251:::::::::|h[Archivist's Gloves]|h|r",
-		icon = 532092,
-		isTransmog = true,
-		questSources = {
-			{id=30097},
-		},
-		locations = {
-			{encounterID=0, instanceID=184, source="att"},
 		},
 	},
 	[72853] = {
@@ -32132,23 +26239,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=322, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72853] = {
-		itemID = 72853,
-		name = "Arcurion Legguards",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72853::::::::90:251:::::::::|h[Arcurion Legguards]|h|r",
-		icon = 533756,
-		isTransmog = true,
-		locations = {
-			{encounterID=322, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72854] = {
@@ -32165,23 +26255,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=322, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72854] = {
-		itemID = 72854,
-		name = "Iceward Cloak",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:72854::::::::90:251:::::::::|h[Iceward Cloak]|h|r",
-		icon = 531415,
-		isTransmog = true,
-		locations = {
-			{encounterID=322, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72855] = {
@@ -32198,23 +26271,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=342, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72855] = {
-		itemID = 72855,
-		name = "Corrupted Carapace",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 6,
-		itemType = "Armor",
-		itemSubType = "Shields",
-		link = "|cnIQ4:|Hitem:72855::::::::90:251:::::::::|h[Corrupted Carapace]|h|r",
-		icon = 536648,
-		isTransmog = true,
-		locations = {
-			{encounterID=342, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72856] = {
@@ -32231,23 +26287,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=342, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72856] = {
-		itemID = 72856,
-		name = "Pauldrons of Midnight Whispers",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ4:|Hitem:72856::::::::90:251:::::::::|h[Pauldrons of Midnight Whispers]|h|r",
-		icon = 537539,
-		isTransmog = true,
-		locations = {
-			{encounterID=342, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72857] = {
@@ -32264,42 +26303,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=342, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72857] = {
-		itemID = 72857,
-		name = "Leggings of Blinding Speed",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ4:|Hitem:72857::::::::90:251:::::::::|h[Leggings of Blinding Speed]|h|r",
-		icon = 537809,
-		isTransmog = true,
-		locations = {
-			{encounterID=342, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72858] = {
-		itemID = 72858,
-		name = "Safeguard Gloves",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:72858::::::::90:251:::::::::|h[Safeguard Gloves]|h|r",
-		icon = 532092,
-		isTransmog = true,
-		questSources = {
-			{id=30103},
-		},
-		locations = {
-			{encounterID=0, instanceID=186, source="att"},
 		},
 	},
 	[72859] = {
@@ -32316,23 +26319,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=342, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72859] = {
-		itemID = 72859,
-		name = "Dawnslayer Helm",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ4:|Hitem:72859::::::::90:251:::::::::|h[Dawnslayer Helm]|h|r",
-		icon = 537536,
-		isTransmog = true,
-		locations = {
-			{encounterID=342, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72860] = {
@@ -32349,23 +26335,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=342, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72860] = {
-		itemID = 72860,
-		name = "Mandible of the Old Ones",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ4:|Hitem:72860::::::::90:251:::::::::|h[Mandible of the Old Ones]|h|r",
-		icon = 538490,
-		isTransmog = true,
-		locations = {
-			{encounterID=342, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72861] = {
@@ -32382,23 +26351,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72861] = {
-		itemID = 72861,
-		name = "Pauldrons of the Dragonblight",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72861::::::::90:251:::::::::|h[Pauldrons of the Dragonblight]|h|r",
-		icon = 533757,
-		isTransmog = true,
-		locations = {
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72862] = {
@@ -32415,23 +26367,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72862] = {
-		itemID = 72862,
-		name = "Fanged Tentacle",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ4:|Hitem:72862::::::::90:251:::::::::|h[Fanged Tentacle]|h|r",
-		icon = 530806,
-		isTransmog = true,
-		locations = {
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72863] = {
@@ -32448,23 +26383,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72863] = {
-		itemID = 72863,
-		name = "Stalk of Corruption",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ4:|Hitem:72863::::::::90:251:::::::::|h[Stalk of Corruption]|h|r",
-		icon = 534176,
-		isTransmog = true,
-		locations = {
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72864] = {
@@ -32481,23 +26399,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72864] = {
-		itemID = 72864,
-		name = "Pauldrons of Conviction",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72864::::::::90:251:::::::::|h[Pauldrons of Conviction]|h|r",
-		icon = 533757,
-		isTransmog = true,
-		locations = {
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72865] = {
@@ -32514,23 +26415,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72865] = {
-		itemID = 72865,
-		name = "Mantle of False Virtue",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:72865::::::::90:251:::::::::|h[Mantle of False Virtue]|h|r",
-		icon = 532095,
-		isTransmog = true,
-		locations = {
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72866] = {
@@ -32547,23 +26431,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72866] = {
-		itemID = 72866,
-		name = "Treachery's Bite",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ4:|Hitem:72866::::::::90:251:::::::::|h[Treachery's Bite]|h|r",
-		icon = 535282,
-		isTransmog = true,
-		locations = {
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72867] = {
@@ -32580,23 +26447,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72867] = {
-		itemID = 72867,
-		name = "Clattering Claw",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 13,
-		itemType = "Weapon",
-		itemSubType = "Fist Weapons",
-		link = "|cnIQ4:|Hitem:72867::::::::90:251:::::::::|h[Clattering Claw]|h|r",
-		icon = 536830,
-		isTransmog = true,
-		locations = {
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72868] = {
@@ -32613,23 +26463,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72868] = {
-		itemID = 72868,
-		name = "Desecrated Shoulderguards",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ4:|Hitem:72868::::::::90:251:::::::::|h[Desecrated Shoulderguards]|h|r",
-		icon = 537810,
-		isTransmog = true,
-		locations = {
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72869] = {
@@ -32646,23 +26479,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72869] = {
-		itemID = 72869,
-		name = "Dragonsmaw Blaster",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 3,
-		itemType = "Weapon",
-		itemSubType = "Guns",
-		link = "|cnIQ4:|Hitem:72869::::::::90:251:::::::::|h[Dragonsmaw Blaster]|h|r",
-		icon = 528947,
-		isTransmog = true,
-		locations = {
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72870] = {
@@ -32679,346 +26495,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72870] = {
-		itemID = 72870,
-		name = "Betrayer's Pauldrons",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ4:|Hitem:72870::::::::90:251:::::::::|h[Betrayer's Pauldrons]|h|r",
-		icon = 537539,
-		isTransmog = true,
-		locations = {
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72871] = {
-		itemID = 72871,
-		name = "Crescent Wand",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 19,
-		itemType = "Weapon",
-		itemSubType = "Wands",
-		link = "|cnIQ4:|Hitem:72871::::::::90:251:::::::::|h[Crescent Wand]|h|r",
-		icon = 533900,
-		isTransmog = true,
-		questSources = {
-			{id=30097},
-		},
-		locations = {
-			{encounterID=0, instanceID=184, source="att"},
-		},
-	},
-	[72872] = {
-		itemID = 72872,
-		name = "Time Strand Gauntlets",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72872::::::::90:251:::::::::|h[Time Strand Gauntlets]|h|r",
-		icon = 533754,
-		isTransmog = true,
-		questSources = {
-			{id=30097},
-		},
-		locations = {
-			{encounterID=0, instanceID=184, source="att"},
-		},
-	},
-	[72873] = {
-		itemID = 72873,
-		name = "Bronze Blaster",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 3,
-		itemType = "Weapon",
-		itemSubType = "Guns",
-		link = "|cnIQ4:|Hitem:72873::::::::90:251:::::::::|h[Bronze Blaster]|h|r",
-		icon = 528947,
-		isTransmog = true,
-		questSources = {
-			{id=30096},
-		},
-		locations = {
-			{encounterID=0, instanceID=184, source="att"},
-		},
-	},
-	[72874] = {
-		itemID = 72874,
-		name = "Boots of the Forked Road",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ4:|Hitem:72874::::::::90:251:::::::::|h[Boots of the Forked Road]|h|r",
-		icon = 537804,
-		isTransmog = true,
-		questSources = {
-			{id=30096},
-		},
-		locations = {
-			{encounterID=0, instanceID=184, source="att"},
-		},
-	},
-	[72875] = {
-		itemID = 72875,
-		name = "Time Twister's Gauntlets",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ4:|Hitem:72875::::::::90:251:::::::::|h[Time Twister's Gauntlets]|h|r",
-		icon = 537535,
-		isTransmog = true,
-		questSources = {
-			{id=30096},
-		},
-		locations = {
-			{encounterID=0, instanceID=184, source="att"},
-		},
-	},
-	[72876] = {
-		itemID = 72876,
-		name = "Ironfeather Longbow",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 2,
-		itemType = "Weapon",
-		itemSubType = "Bows",
-		link = "|cnIQ4:|Hitem:72876::::::::90:251:::::::::|h[Ironfeather Longbow]|h|r",
-		icon = 531414,
-		isTransmog = true,
-		questSources = {
-			{id=30101},
-		},
-		locations = {
-			{encounterID=0, instanceID=185, source="att"},
-		},
-	},
-	[72877] = {
-		itemID = 72877,
-		name = "Chain of the Demon Hunter",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ4:|Hitem:72877::::::::90:251:::::::::|h[Chain of the Demon Hunter]|h|r",
-		icon = 537532,
-		isTransmog = true,
-		questSources = {
-			{id=30101},
-		},
-		locations = {
-			{encounterID=0, instanceID=185, source="att"},
-		},
-	},
-	[72878] = {
-		itemID = 72878,
-		name = "Demonic Skull",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ4:|Hitem:72878::::::::90:251:::::::::|h[Demonic Skull]|h|r",
-		icon = 133729,
-		isTransmog = true,
-		questSources = {
-			{id=30101},
-		},
-		locations = {
-			{encounterID=0, instanceID=185, source="att"},
-		},
-	},
-	[72879] = {
-		itemID = 72879,
-		name = "Boots of the Treacherous Path",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72879::::::::90:251:::::::::|h[Boots of the Treacherous Path]|h|r",
-		icon = 533751,
-		isTransmog = true,
-		questSources = {
-			{id=30101},
-		},
-		locations = {
-			{encounterID=0, instanceID=185, source="att"},
-		},
-	},
-	[72880] = {
-		itemID = 72880,
-		name = "Alurmi's Ring",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ4:|Hitem:72880::::::::90:251:::::::::|h[Alurmi's Ring]|h|r",
-		icon = 524772,
-		isTransmog = false,
-		questSources = {
-			{id=30104},
-		},
-		locations = {
-			{encounterID=0, instanceID=185, source="att"},
-		},
-	},
-	[72881] = {
-		itemID = 72881,
-		name = "Treads of the Past",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:72881::::::::90:251:::::::::|h[Treads of the Past]|h|r",
-		icon = 533751,
-		isTransmog = true,
-		questSources = {
-			{id=30104},
-		},
-		locations = {
-			{encounterID=0, instanceID=185, source="att"},
-		},
-	},
-	[72882] = {
-		itemID = 72882,
-		name = "Chronicler's Chestguard",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ4:|Hitem:72882::::::::90:251:::::::::|h[Chronicler's Chestguard]|h|r",
-		icon = 537806,
-		isTransmog = true,
-		questSources = {
-			{id=30104},
-		},
-		locations = {
-			{encounterID=0, instanceID=185, source="att"},
-		},
-	},
-	[72883] = {
-		itemID = 72883,
-		name = "Historian's Sash",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:72883::::::::90:251:::::::::|h[Historian's Sash]|h|r",
-		icon = 532088,
-		isTransmog = true,
-		questSources = {
-			{id=30104},
-		},
-		locations = {
-			{encounterID=0, instanceID=185, source="att"},
-		},
-	},
-	[72884] = {
-		itemID = 72884,
-		name = "Writhing Wand",
-		expansionID = 4,
-		quality = 4,
-		classID = 2,
-		subclassID = 19,
-		itemType = "Weapon",
-		itemSubType = "Wands",
-		link = "|cnIQ4:|Hitem:72884::::::::90:251:::::::::|h[Writhing Wand]|h|r",
-		icon = 533269,
-		isTransmog = true,
-		questSources = {
-			{id=30105},
-		},
-		locations = {
-			{encounterID=0, instanceID=186, source="att"},
-		},
-	},
-	[72886] = {
-		itemID = 72886,
-		name = "Thrall's Gratitude",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ4:|Hitem:72886::::::::90:251:::::::::|h[Thrall's Gratitude]|h|r",
-		icon = 534273,
-		isTransmog = false,
-		questSources = {
-			{id=30105},
-		},
-		locations = {
-			{encounterID=0, instanceID=186, source="att"},
-		},
-	},
-	[72887] = {
-		itemID = 72887,
-		name = "Cinch of the World Shaman",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ4:|Hitem:72887::::::::90:251:::::::::|h[Cinch of the World Shaman]|h|r",
-		icon = 537532,
-		isTransmog = true,
-		questSources = {
-			{id=30103},
-		},
-		locations = {
-			{encounterID=0, instanceID=186, source="att"},
-		},
-	},
-	[72888] = {
-		itemID = 72888,
-		name = "Ring of the Loyal Companion",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ4:|Hitem:72888::::::::90:251:::::::::|h[Ring of the Loyal Companion]|h|r",
-		icon = 531973,
-		isTransmog = false,
-		questSources = {
-			{id=30103},
-		},
-		locations = {
-			{encounterID=0, instanceID=186, source="att"},
 		},
 	},
 	[72897] = {
@@ -33033,27 +26509,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ4:|Hitem:72897::::::::90:251:::::::::|h[Arrow of Time]|h|r",
 		icon = 249173,
 		isTransmog = false,
-		spellID = 102658,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72897] = {
-		itemID = 72897,
-		name = "Arrow of Time",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ4:|Hitem:72897::::::::90:251:::::::::|h[Arrow of Time]|h|r",
-		icon = 249173,
-		isTransmog = false,
-		spellID = 102658,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72898] = {
@@ -33068,10 +26525,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ4:|Hitem:72898::::::::90:251:::::::::|h[Foul Gift of the Demon Lord]|h|r",
 		icon = 135799,
 		isTransmog = false,
-		spellID = 109908,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=292, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72899] = {
@@ -33086,10 +26541,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ4:|Hitem:72899::::::::90:251:::::::::|h[Varo'then's Brooch]|h|r",
 		icon = 526765,
 		isTransmog = false,
-		spellID = 109888,
 		locations = {
 			{encounterID=0, instanceID=185, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=292, instanceID=185, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72900] = {
@@ -33104,27 +26557,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ4:|Hitem:72900::::::::90:251:::::::::|h[Veil of Lies]|h|r",
 		icon = 237022,
 		isTransmog = false,
-		spellID = 102666,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72900] = {
-		itemID = 72900,
-		name = "Veil of Lies",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ4:|Hitem:72900::::::::90:251:::::::::|h[Veil of Lies]|h|r",
-		icon = 237022,
-		isTransmog = false,
-		spellID = 102666,
-		locations = {
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[72901] = {
@@ -33139,27 +26573,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ4:|Hitem:72901::::::::90:251:::::::::|h[Rosary of Light]|h|r",
 		icon = 133290,
 		isTransmog = false,
-		spellID = 110008,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[72901] = {
-		itemID = 72901,
-		name = "Rosary of Light",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ4:|Hitem:72901::::::::90:251:::::::::|h[Rosary of Light]|h|r",
-		icon = 133290,
-		isTransmog = false,
-		spellID = 110008,
-		locations = {
-			{encounterID=341, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[73479] = {
@@ -35108,23 +28523,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=322, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[76150] = {
-		itemID = 76150,
-		name = "Evergreen Wristbands",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ4:|Hitem:76150::::::::90:251:::::::::|h[Evergreen Wristbands]|h|r",
-		icon = 537805,
-		isTransmog = true,
-		locations = {
-			{encounterID=322, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[76151] = {
@@ -35141,269 +28539,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=342, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[76151] = {
-		itemID = 76151,
-		name = "Cloak of Subtle Light",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:76151::::::::90:251:::::::::|h[Cloak of Subtle Light]|h|r",
-		icon = 531415,
-		isTransmog = true,
-		locations = {
-			{encounterID=342, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[76152] = {
-		itemID = 76152,
-		name = "Cowl of Destiny",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:76152::::::::90:251:::::::::|h[Cowl of Destiny]|h|r",
-		icon = 532093,
-		isTransmog = true,
-		questSources = {
-			{id=30096},
-		},
-		locations = {
-			{encounterID=0, instanceID=184, source="att"},
-		},
-	},
-	[76153] = {
-		itemID = 76153,
-		name = "Signet of the Twilight Prophet",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ4:|Hitem:76153::::::::90:251:::::::::|h[Signet of the Twilight Prophet]|h|r",
-		icon = 525788,
-		isTransmog = false,
-		questSources = {
-			{id=30105},
-		},
-		locations = {
-			{encounterID=0, instanceID=186, source="att"},
-		},
-	},
-	[76154] = {
-		itemID = 76154,
-		name = "Breastplate of Despair",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:76154::::::::90:251:::::::::|h[Breastplate of Despair]|h|r",
-		icon = 533753,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att"},
-		},
-	},
-	[76154] = {
-		itemID = 76154,
-		name = "Breastplate of Despair",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:76154::::::::90:251:::::::::|h[Breastplate of Despair]|h|r",
-		icon = 533753,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att"},
-		},
-	},
-	[76156] = {
-		itemID = 76156,
-		name = "Bindings of the End Times",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:76156::::::::90:251:::::::::|h[Bindings of the End Times]|h|r",
-		icon = 533752,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att"},
-		},
-	},
-	[76156] = {
-		itemID = 76156,
-		name = "Bindings of the End Times",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:76156::::::::90:251:::::::::|h[Bindings of the End Times]|h|r",
-		icon = 533752,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att"},
-		},
-	},
-	[76157] = {
-		itemID = 76157,
-		name = "Waterworn Handguards",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ4:|Hitem:76157::::::::90:251:::::::::|h[Waterworn Handguards]|h|r",
-		icon = 537807,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=185, source="att"},
-		},
-	},
-	[76158] = {
-		itemID = 76158,
-		name = "Courtier's Slippers",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:76158::::::::90:251:::::::::|h[Courtier's Slippers]|h|r",
-		icon = 532089,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=185, source="att"},
-		},
-	},
-	[76159] = {
-		itemID = 76159,
-		name = "Legion Bindings",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ4:|Hitem:76159::::::::90:251:::::::::|h[Legion Bindings]|h|r",
-		icon = 537533,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=185, source="att"},
-		},
-	},
-	[76160] = {
-		itemID = 76160,
-		name = "Drapes of the Dragonshrine",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:76160::::::::90:251:::::::::|h[Drapes of the Dragonshrine]|h|r",
-		icon = 531415,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=186, source="att"},
-		},
-	},
-	[76160] = {
-		itemID = 76160,
-		name = "Drapes of the Dragonshrine",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ4:|Hitem:76160::::::::90:251:::::::::|h[Drapes of the Dragonshrine]|h|r",
-		icon = 531415,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=186, source="att"},
-		},
-	},
-	[76161] = {
-		itemID = 76161,
-		name = "Gauntlets of the Twilight Hour",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ4:|Hitem:76161::::::::90:251:::::::::|h[Gauntlets of the Twilight Hour]|h|r",
-		icon = 537535,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=186, source="att"},
-		},
-	},
-	[76161] = {
-		itemID = 76161,
-		name = "Gauntlets of the Twilight Hour",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ4:|Hitem:76161::::::::90:251:::::::::|h[Gauntlets of the Twilight Hour]|h|r",
-		icon = 537535,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=186, source="att"},
-		},
-	},
-	[76162] = {
-		itemID = 76162,
-		name = "Twilight Amulet",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ4:|Hitem:76162::::::::90:251:::::::::|h[Twilight Amulet]|h|r",
-		icon = 530250,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=186, source="att"},
-		},
-	},
-	[76162] = {
-		itemID = 76162,
-		name = "Twilight Amulet",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ4:|Hitem:76162::::::::90:251:::::::::|h[Twilight Amulet]|h|r",
-		icon = 530250,
-		isTransmog = false,
-		locations = {
-			{encounterID=0, instanceID=186, source="att"},
 		},
 	},
 	[76212] = {
@@ -41298,23 +34433,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=333, instanceID=187, source="att", difficulties={{id=7,name="Looking For Raid"}}},
 		},
 	},
-	[120138] = {
-		itemID = 120138,
-		name = "Tome of Polymorph: Monkey",
-		expansionID = 4,
-		quality = 3,
-		classID = 9,
-		subclassID = 0,
-		itemType = "Recipe",
-		itemSubType = "Book",
-		link = "|cnIQ3:|Hitem:120138::::::::90:251:::::::::|h[Tome of Polymorph: Monkey]|h|r",
-		icon = 133739,
-		isTransmog = false,
-		spellID = 161354,
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
 	[122195] = {
 		itemID = 122195,
 		name = "Music Roll: Legends of Azeroth",
@@ -41376,82 +34494,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=197, instanceID=78, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
-	[131684] = {
-		itemID = 131684,
-		name = "Packleader's Chain Spaulders",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:131684::::::::90:251:::::::::|h[Packleader's Chain Spaulders]|h|r",
-		icon = 135044,
-		isTransmog = true,
-		questSources = {
-			{id=27968, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[131685] = {
-		itemID = 131685,
-		name = "Boots of Painful Cost",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:131685::::::::90:251:::::::::|h[Boots of Painful Cost]|h|r",
-		icon = 132558,
-		isTransmog = true,
-		questSources = {
-			{id=27968, faction="Horde"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[131686] = {
-		itemID = 131686,
-		name = "Packleader's Chain Spaulders",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:131686::::::::90:251:::::::::|h[Packleader's Chain Spaulders]|h|r",
-		icon = 135044,
-		isTransmog = true,
-		questSources = {
-			{id=27998, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
-	[131687] = {
-		itemID = 131687,
-		name = "Boots of Painful Cost",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:131687::::::::90:251:::::::::|h[Boots of Painful Cost]|h|r",
-		icon = 132558,
-		isTransmog = true,
-		questSources = {
-			{id=27998, faction="Alliance"},
-		},
-		locations = {
-			{encounterID=0, instanceID=64, source="att"},
-		},
-	},
 	[132556] = {
 		itemID = 132556,
 		name = "Smelter's Britches",
@@ -41466,23 +34508,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[132556] = {
-		itemID = 132556,
-		name = "Smelter's Britches",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:132556::::::::90:251:::::::::|h[Smelter's Britches]|h|r",
-		icon = 134582,
-		isTransmog = true,
-		locations = {
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[132566] = {
@@ -41499,23 +34524,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[132566] = {
-		itemID = 132566,
-		name = "Dark Lupine Wraps",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:132566::::::::90:251:::::::::|h[Dark Lupine Wraps]|h|r",
-		icon = 132606,
-		isTransmog = true,
-		locations = {
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[132567] = {
@@ -41532,23 +34540,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[132567] = {
-		itemID = 132567,
-		name = "Blindwatcher's Chain",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:132567::::::::90:251:::::::::|h[Blindwatcher's Chain]|h|r",
-		icon = 132492,
-		isTransmog = true,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[132568] = {
@@ -41565,23 +34556,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[132568] = {
-		itemID = 132568,
-		name = "Shadowfang Pauldrons",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:132568::::::::90:251:::::::::|h[Shadowfang Pauldrons]|h|r",
-		icon = 135039,
-		isTransmog = true,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[133179] = {
@@ -41598,23 +34572,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133179] = {
-		itemID = 133179,
-		name = "Lightning Whelk Axe",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ3:|Hitem:133179::::::::90:251:::::::::|h[Lightning Whelk Axe]|h|r",
-		icon = 433447,
-		isTransmog = true,
-		locations = {
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133180] = {
@@ -41631,23 +34588,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133180] = {
-		itemID = 133180,
-		name = "Periwinkle Cloak",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133180::::::::90:251:::::::::|h[Periwinkle Cloak]|h|r",
-		icon = 462530,
-		isTransmog = true,
-		locations = {
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133181] = {
@@ -41664,23 +34604,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133181] = {
-		itemID = 133181,
-		name = "Wrasse Handwraps",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133181::::::::90:251:::::::::|h[Wrasse Handwraps]|h|r",
-		icon = 430973,
-		isTransmog = true,
-		locations = {
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133182] = {
@@ -41697,23 +34620,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133182] = {
-		itemID = 133182,
-		name = "Aurelian Miter",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133182::::::::90:251:::::::::|h[Aurelian Miter]|h|r",
-		icon = 422805,
-		isTransmog = true,
-		locations = {
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133183] = {
@@ -41730,23 +34636,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133183] = {
-		itemID = 133183,
-		name = "Entwined Nereis",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133183::::::::90:251:::::::::|h[Entwined Nereis]|h|r",
-		icon = 133383,
-		isTransmog = false,
-		locations = {
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133184] = {
@@ -41763,23 +34652,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=102, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133184] = {
-		itemID = 133184,
-		name = "Cerith Spire Staff",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:133184::::::::90:251:::::::::|h[Cerith Spire Staff]|h|r",
-		icon = 450937,
-		isTransmog = true,
-		locations = {
-			{encounterID=102, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133185] = {
@@ -41796,23 +34668,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=102, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133185] = {
-		itemID = 133185,
-		name = "Harp Shell Pauldrons",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133185::::::::90:251:::::::::|h[Harp Shell Pauldrons]|h|r",
-		icon = 427634,
-		isTransmog = true,
-		locations = {
-			{encounterID=102, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133186] = {
@@ -41829,23 +34684,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=102, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133186] = {
-		itemID = 133186,
-		name = "Caridean Epaulets",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133186::::::::90:251:::::::::|h[Caridean Epaulets]|h|r",
-		icon = 436842,
-		isTransmog = true,
-		locations = {
-			{encounterID=102, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133187] = {
@@ -41862,23 +34700,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=102, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133187] = {
-		itemID = 133187,
-		name = "Chromis Chestpiece",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133187::::::::90:251:::::::::|h[Chromis Chestpiece]|h|r",
-		icon = 430972,
-		isTransmog = true,
-		locations = {
-			{encounterID=102, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133188] = {
@@ -41895,23 +34716,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=102, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133188] = {
-		itemID = 133188,
-		name = "Eagle Ray Cloak",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133188::::::::90:251:::::::::|h[Eagle Ray Cloak]|h|r",
-		icon = 464508,
-		isTransmog = true,
-		locations = {
-			{encounterID=102, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133189] = {
@@ -41928,23 +34732,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=103, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133189] = {
-		itemID = 133189,
-		name = "Anthia's Ring",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133189::::::::90:251:::::::::|h[Anthia's Ring]|h|r",
-		icon = 414303,
-		isTransmog = false,
-		locations = {
-			{encounterID=103, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133190] = {
@@ -41961,23 +34748,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=103, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133190] = {
-		itemID = 133190,
-		name = "Decapod Slippers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133190::::::::90:251:::::::::|h[Decapod Slippers]|h|r",
-		icon = 132546,
-		isTransmog = true,
-		locations = {
-			{encounterID=103, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133191] = {
@@ -41994,23 +34764,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=103, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133191] = {
-		itemID = 133191,
-		name = "Anomuran Helm",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133191::::::::90:251:::::::::|h[Anomuran Helm]|h|r",
-		icon = 427632,
-		isTransmog = true,
-		locations = {
-			{encounterID=103, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133192] = {
@@ -42025,27 +34778,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133192::::::::90:251:::::::::|h[Porcelain Crab]|h|r",
 		icon = 237239,
 		isTransmog = false,
-		spellID = 92175,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=103, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133192] = {
-		itemID = 133192,
-		name = "Porcelain Crab",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133192::::::::90:251:::::::::|h[Porcelain Crab]|h|r",
-		icon = 237239,
-		isTransmog = false,
-		spellID = 92175,
-		locations = {
-			{encounterID=103, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133193] = {
@@ -42062,23 +34796,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133193] = {
-		itemID = 133193,
-		name = "Wentletrap Vest",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133193::::::::90:251:::::::::|h[Wentletrap Vest]|h|r",
-		icon = 430972,
-		isTransmog = true,
-		locations = {
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133194] = {
@@ -42095,23 +34812,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133194] = {
-		itemID = 133194,
-		name = "Nautilus Ring",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133194::::::::90:251:::::::::|h[Nautilus Ring]|h|r",
-		icon = 134434,
-		isTransmog = false,
-		locations = {
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133195] = {
@@ -42128,23 +34828,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133195] = {
-		itemID = 133195,
-		name = "Triton Legplates",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133195::::::::90:251:::::::::|h[Triton Legplates]|h|r",
-		icon = 427633,
-		isTransmog = true,
-		locations = {
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133196] = {
@@ -42161,23 +34844,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133196] = {
-		itemID = 133196,
-		name = "Whitefin Axe",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 1,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Axes",
-		link = "|cnIQ3:|Hitem:133196::::::::90:251:::::::::|h[Whitefin Axe]|h|r",
-		icon = 438760,
-		isTransmog = true,
-		locations = {
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133197] = {
@@ -42192,27 +34858,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133197::::::::90:251:::::::::|h[Might of the Ocean]|h|r",
 		icon = 135228,
 		isTransmog = false,
-		spellID = 91340,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133197] = {
-		itemID = 133197,
-		name = "Might of the Ocean",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133197::::::::90:251:::::::::|h[Might of the Ocean]|h|r",
-		icon = 135228,
-		isTransmog = false,
-		spellID = 91340,
-		locations = {
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133198] = {
@@ -42229,23 +34876,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133198] = {
-		itemID = 133198,
-		name = "Mnemiopsis Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133198::::::::90:251:::::::::|h[Mnemiopsis Gloves]|h|r",
-		icon = 422803,
-		isTransmog = true,
-		locations = {
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133199] = {
@@ -42262,23 +34892,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133199] = {
-		itemID = 133199,
-		name = "Pipefish Cord",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133199::::::::90:251:::::::::|h[Pipefish Cord]|h|r",
-		icon = 466966,
-		isTransmog = false,
-		locations = {
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133200] = {
@@ -42295,23 +34908,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=103, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133200] = {
-		itemID = 133200,
-		name = "Bioluminescent Lamp",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133200::::::::90:251:::::::::|h[Bioluminescent Lamp]|h|r",
-		icon = 134551,
-		isTransmog = true,
-		locations = {
-			{encounterID=103, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133201] = {
@@ -42326,27 +34922,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133201::::::::90:251:::::::::|h[Sea Star]|h|r",
 		icon = 132779,
 		isTransmog = false,
-		spellID = 91136,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133201] = {
-		itemID = 133201,
-		name = "Sea Star",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133201::::::::90:251:::::::::|h[Sea Star]|h|r",
-		icon = 132779,
-		isTransmog = false,
-		spellID = 91136,
-		locations = {
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133202] = {
@@ -42363,23 +34940,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133202] = {
-		itemID = 133202,
-		name = "Abalone Plate Armor",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133202::::::::90:251:::::::::|h[Abalone Plate Armor]|h|r",
-		icon = 427630,
-		isTransmog = true,
-		locations = {
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133203] = {
@@ -42396,23 +34956,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=102, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133203] = {
-		itemID = 133203,
-		name = "Barnacle Pendant",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133203::::::::90:251:::::::::|h[Barnacle Pendant]|h|r",
-		icon = 133297,
-		isTransmog = false,
-		locations = {
-			{encounterID=102, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133204] = {
@@ -42429,23 +34972,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=102, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133204] = {
-		itemID = 133204,
-		name = "Ring of the Great Whale",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133204::::::::90:251:::::::::|h[Ring of the Great Whale]|h|r",
-		icon = 133392,
-		isTransmog = false,
-		locations = {
-			{encounterID=102, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133205] = {
@@ -42462,23 +34988,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133205] = {
-		itemID = 133205,
-		name = "Alpheus Legguards",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133205::::::::90:251:::::::::|h[Alpheus Legguards]|h|r",
-		icon = 427633,
-		isTransmog = true,
-		locations = {
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133206] = {
@@ -42493,27 +35002,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133206::::::::90:251:::::::::|h[Key to the Endless Chamber]|h|r",
 		icon = 134244,
 		isTransmog = false,
-		spellID = 92093,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133206] = {
-		itemID = 133206,
-		name = "Key to the Endless Chamber",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133206::::::::90:251:::::::::|h[Key to the Endless Chamber]|h|r",
-		icon = 134244,
-		isTransmog = false,
-		spellID = 92093,
-		locations = {
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133207] = {
@@ -42530,23 +35020,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133207] = {
-		itemID = 133207,
-		name = "Fist of Pained Senses",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 13,
-		itemType = "Weapon",
-		itemSubType = "Fist Weapons",
-		link = "|cnIQ3:|Hitem:133207::::::::90:251:::::::::|h[Fist of Pained Senses]|h|r",
-		icon = 357559,
-		isTransmog = true,
-		locations = {
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133208] = {
@@ -42563,23 +35036,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133208] = {
-		itemID = 133208,
-		name = "Cinnabar Shoulders",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133208::::::::90:251:::::::::|h[Cinnabar Shoulders]|h|r",
-		icon = 427634,
-		isTransmog = true,
-		locations = {
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133209] = {
@@ -42596,23 +35052,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133209] = {
-		itemID = 133209,
-		name = "Dolomite Adorned Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133209::::::::90:251:::::::::|h[Dolomite Adorned Gloves]|h|r",
-		icon = 422803,
-		isTransmog = true,
-		locations = {
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133210] = {
@@ -42629,23 +35068,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133210] = {
-		itemID = 133210,
-		name = "Phosphorescent Ring",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133210::::::::90:251:::::::::|h[Phosphorescent Ring]|h|r",
-		icon = 133407,
-		isTransmog = false,
-		locations = {
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133211] = {
@@ -42662,23 +35084,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133211] = {
-		itemID = 133211,
-		name = "Rose Quartz Band",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133211::::::::90:251:::::::::|h[Rose Quartz Band]|h|r",
-		icon = 133410,
-		isTransmog = false,
-		locations = {
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133212] = {
@@ -42695,23 +35100,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133212] = {
-		itemID = 133212,
-		name = "Deep Delving Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133212::::::::90:251:::::::::|h[Deep Delving Gloves]|h|r",
-		icon = 436839,
-		isTransmog = true,
-		locations = {
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133213] = {
@@ -42728,23 +35116,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133213] = {
-		itemID = 133213,
-		name = "Quicksilver Blade",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:133213::::::::90:251:::::::::|h[Quicksilver Blade]|h|r",
-		icon = 460716,
-		isTransmog = true,
-		locations = {
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133214] = {
@@ -42761,23 +35132,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133214] = {
-		itemID = 133214,
-		name = "Hematite Plate Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133214::::::::90:251:::::::::|h[Hematite Plate Gloves]|h|r",
-		icon = 427631,
-		isTransmog = true,
-		locations = {
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133215] = {
@@ -42794,23 +35148,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133215] = {
-		itemID = 133215,
-		name = "Pendant of the Lightless Grotto",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133215::::::::90:251:::::::::|h[Pendant of the Lightless Grotto]|h|r",
-		icon = 133303,
-		isTransmog = false,
-		locations = {
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133216] = {
@@ -42825,27 +35162,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133216::::::::90:251:::::::::|h[Tendrils of Burrowing Dark]|h|r",
 		icon = 463569,
 		isTransmog = false,
-		spellID = 90899,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133216] = {
-		itemID = 133216,
-		name = "Tendrils of Burrowing Dark",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133216::::::::90:251:::::::::|h[Tendrils of Burrowing Dark]|h|r",
-		icon = 463569,
-		isTransmog = false,
-		spellID = 90899,
-		locations = {
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133217] = {
@@ -42862,23 +35180,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133217] = {
-		itemID = 133217,
-		name = "Elementium Scale Bracers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133217::::::::90:251:::::::::|h[Elementium Scale Bracers]|h|r",
-		icon = 132606,
-		isTransmog = true,
-		locations = {
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133218] = {
@@ -42895,23 +35196,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133218] = {
-		itemID = 133218,
-		name = "Belt of the Ringworm",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133218::::::::90:251:::::::::|h[Belt of the Ringworm]|h|r",
-		icon = 427627,
-		isTransmog = true,
-		locations = {
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133219] = {
@@ -42928,23 +35212,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133219] = {
-		itemID = 133219,
-		name = "Sword of the Bottomless Pit",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 8,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Swords",
-		link = "|cnIQ3:|Hitem:133219::::::::90:251:::::::::|h[Sword of the Bottomless Pit]|h|r",
-		icon = 464981,
-		isTransmog = true,
-		locations = {
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133220] = {
@@ -42961,23 +35228,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133220] = {
-		itemID = 133220,
-		name = "Darkling Staff",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:133220::::::::90:251:::::::::|h[Darkling Staff]|h|r",
-		icon = 446916,
-		isTransmog = true,
-		locations = {
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133221] = {
@@ -42994,23 +35244,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133221] = {
-		itemID = 133221,
-		name = "Helm of Numberless Shadows",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133221::::::::90:251:::::::::|h[Helm of Numberless Shadows]|h|r",
-		icon = 436840,
-		isTransmog = true,
-		locations = {
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133222] = {
@@ -43025,27 +35258,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133222::::::::90:251:::::::::|h[Magnetite Mirror]|h|r",
 		icon = 135252,
 		isTransmog = false,
-		spellID = 91352,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133222] = {
-		itemID = 133222,
-		name = "Magnetite Mirror",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133222::::::::90:251:::::::::|h[Magnetite Mirror]|h|r",
-		icon = 135252,
-		isTransmog = false,
-		spellID = 91352,
-		locations = {
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133223] = {
@@ -43062,23 +35276,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133223] = {
-		itemID = 133223,
-		name = "Elementium Fang",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:133223::::::::90:251:::::::::|h[Elementium Fang]|h|r",
-		icon = 460717,
-		isTransmog = true,
-		locations = {
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133224] = {
@@ -43093,27 +35290,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133224::::::::90:251:::::::::|h[Leaden Despair]|h|r",
 		icon = 394617,
 		isTransmog = false,
-		spellID = 92185,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133224] = {
-		itemID = 133224,
-		name = "Leaden Despair",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133224::::::::90:251:::::::::|h[Leaden Despair]|h|r",
-		icon = 394617,
-		isTransmog = false,
-		spellID = 92185,
-		locations = {
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133225] = {
@@ -43130,23 +35308,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133225] = {
-		itemID = 133225,
-		name = "Slippers of the Twilight Prophet",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133225::::::::90:251:::::::::|h[Slippers of the Twilight Prophet]|h|r",
-		icon = 422797,
-		isTransmog = true,
-		locations = {
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133226] = {
@@ -43163,23 +35324,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133226] = {
-		itemID = 133226,
-		name = "Prophet's Scepter",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133226::::::::90:251:::::::::|h[Prophet's Scepter]|h|r",
-		icon = 134558,
-		isTransmog = true,
-		locations = {
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133227] = {
@@ -43194,27 +35338,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133227::::::::90:251:::::::::|h[Tear of Blood]|h|r",
 		icon = 136168,
 		isTransmog = false,
-		spellID = 91140,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133227] = {
-		itemID = 133227,
-		name = "Tear of Blood",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133227::::::::90:251:::::::::|h[Tear of Blood]|h|r",
-		icon = 136168,
-		isTransmog = false,
-		spellID = 91140,
-		locations = {
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133228] = {
@@ -43231,23 +35356,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133228] = {
-		itemID = 133228,
-		name = "Cowl of the Unseen World",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133228::::::::90:251:::::::::|h[Cowl of the Unseen World]|h|r",
-		icon = 430974,
-		isTransmog = true,
-		locations = {
-			{encounterID=113, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133229] = {
@@ -43264,23 +35372,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133229] = {
-		itemID = 133229,
-		name = "Heavy Geode Mace",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:133229::::::::90:251:::::::::|h[Heavy Geode Mace]|h|r",
-		icon = 460671,
-		isTransmog = true,
-		locations = {
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133230] = {
@@ -43297,23 +35388,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133230] = {
-		itemID = 133230,
-		name = "Wand of Dark Worship",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 19,
-		itemType = "Weapon",
-		itemSubType = "Wands",
-		link = "|cnIQ3:|Hitem:133230::::::::90:251:::::::::|h[Wand of Dark Worship]|h|r",
-		icon = 461149,
-		isTransmog = true,
-		locations = {
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133231] = {
@@ -43330,23 +35404,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133231] = {
-		itemID = 133231,
-		name = "Skin of Stone",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133231::::::::90:251:::::::::|h[Skin of Stone]|h|r",
-		icon = 464508,
-		isTransmog = true,
-		locations = {
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133232] = {
@@ -43363,23 +35420,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133232] = {
-		itemID = 133232,
-		name = "Stratosphere Belt",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133232::::::::90:251:::::::::|h[Stratosphere Belt]|h|r",
-		icon = 422795,
-		isTransmog = true,
-		locations = {
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133233] = {
@@ -43396,23 +35436,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133233] = {
-		itemID = 133233,
-		name = "Biting Wind",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:133233::::::::90:251:::::::::|h[Biting Wind]|h|r",
-		icon = 465081,
-		isTransmog = true,
-		locations = {
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133234] = {
@@ -43429,23 +35452,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133234] = {
-		itemID = 133234,
-		name = "Headcover of Fog",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133234::::::::90:251:::::::::|h[Headcover of Fog]|h|r",
-		icon = 427632,
-		isTransmog = true,
-		locations = {
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133235] = {
@@ -43462,23 +35468,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133235] = {
-		itemID = 133235,
-		name = "Fallen Snow Shoulderguards",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133235::::::::90:251:::::::::|h[Fallen Snow Shoulderguards]|h|r",
-		icon = 430977,
-		isTransmog = true,
-		locations = {
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133236] = {
@@ -43495,23 +35484,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133236] = {
-		itemID = 133236,
-		name = "Red Sky Pendant",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133236::::::::90:251:::::::::|h[Red Sky Pendant]|h|r",
-		icon = 133305,
-		isTransmog = false,
-		locations = {
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133237] = {
@@ -43528,23 +35500,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133237] = {
-		itemID = 133237,
-		name = "Mantle of Bestilled Winds",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133237::::::::90:251:::::::::|h[Mantle of Bestilled Winds]|h|r",
-		icon = 436842,
-		isTransmog = true,
-		locations = {
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133238] = {
@@ -43561,23 +35516,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133238] = {
-		itemID = 133238,
-		name = "Amulet of Tender Breath",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133238::::::::90:251:::::::::|h[Amulet of Tender Breath]|h|r",
-		icon = 466972,
-		isTransmog = false,
-		locations = {
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133239] = {
@@ -43594,23 +35532,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133239] = {
-		itemID = 133239,
-		name = "Hail-Strung Belt",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133239::::::::90:251:::::::::|h[Hail-Strung Belt]|h|r",
-		icon = 430969,
-		isTransmog = true,
-		locations = {
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133240] = {
@@ -43627,23 +35548,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133240] = {
-		itemID = 133240,
-		name = "Axe of the Eclipse",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ3:|Hitem:133240::::::::90:251:::::::::|h[Axe of the Eclipse]|h|r",
-		icon = 433447,
-		isTransmog = true,
-		locations = {
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133241] = {
@@ -43660,23 +35564,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133241] = {
-		itemID = 133241,
-		name = "Skyshard Ring",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133241::::::::90:251:::::::::|h[Skyshard Ring]|h|r",
-		icon = 414293,
-		isTransmog = false,
-		locations = {
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133242] = {
@@ -43693,23 +35580,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133242] = {
-		itemID = 133242,
-		name = "Lightningflash",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 3,
-		itemType = "Weapon",
-		itemSubType = "Guns",
-		link = "|cnIQ3:|Hitem:133242::::::::90:251:::::::::|h[Lightningflash]|h|r",
-		icon = 446108,
-		isTransmog = true,
-		locations = {
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133243] = {
@@ -43726,23 +35596,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133243] = {
-		itemID = 133243,
-		name = "Legguards of Winnowing Wind",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133243::::::::90:251:::::::::|h[Legguards of Winnowing Wind]|h|r",
-		icon = 427633,
-		isTransmog = true,
-		locations = {
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133244] = {
@@ -43759,23 +35612,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133244] = {
-		itemID = 133244,
-		name = "Gloves of Haze",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133244::::::::90:251:::::::::|h[Gloves of Haze]|h|r",
-		icon = 436839,
-		isTransmog = true,
-		locations = {
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133245] = {
@@ -43792,23 +35628,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133245] = {
-		itemID = 133245,
-		name = "Billowing Cape",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133245::::::::90:251:::::::::|h[Billowing Cape]|h|r",
-		icon = 464508,
-		isTransmog = true,
-		locations = {
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133246] = {
@@ -43823,27 +35642,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133246::::::::90:251:::::::::|h[Heart of Thunder]|h|r",
 		icon = 136099,
 		isTransmog = false,
-		spellID = 413419,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133246] = {
-		itemID = 133246,
-		name = "Heart of Thunder",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133246::::::::90:251:::::::::|h[Heart of Thunder]|h|r",
-		icon = 136099,
-		isTransmog = false,
-		spellID = 413419,
-		locations = {
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133247] = {
@@ -43860,23 +35660,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133247] = {
-		itemID = 133247,
-		name = "Shadow of Perfect Bliss",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133247::::::::90:251:::::::::|h[Shadow of Perfect Bliss]|h|r",
-		icon = 465110,
-		isTransmog = true,
-		locations = {
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133248] = {
@@ -43893,23 +35676,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133248] = {
-		itemID = 133248,
-		name = "Ring of Frozen Rain",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133248::::::::90:251:::::::::|h[Ring of Frozen Rain]|h|r",
-		icon = 414303,
-		isTransmog = false,
-		locations = {
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133249] = {
@@ -43926,23 +35692,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133249] = {
-		itemID = 133249,
-		name = "Lunar Halo",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133249::::::::90:251:::::::::|h[Lunar Halo]|h|r",
-		icon = 427632,
-		isTransmog = true,
-		locations = {
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133250] = {
@@ -43959,23 +35708,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133250] = {
-		itemID = 133250,
-		name = "Leggings of Iridescent Clouds",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133250::::::::90:251:::::::::|h[Leggings of Iridescent Clouds]|h|r",
-		icon = 422807,
-		isTransmog = true,
-		locations = {
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133251] = {
@@ -43992,23 +35724,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133251] = {
-		itemID = 133251,
-		name = "Thundercall",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 3,
-		itemType = "Weapon",
-		itemSubType = "Guns",
-		link = "|cnIQ3:|Hitem:133251::::::::90:251:::::::::|h[Thundercall]|h|r",
-		icon = 446108,
-		isTransmog = true,
-		locations = {
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133252] = {
@@ -44023,27 +35738,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133252::::::::90:251:::::::::|h[Rainsong]|h|r",
 		icon = 132844,
 		isTransmog = false,
-		spellID = 91144,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133252] = {
-		itemID = 133252,
-		name = "Rainsong",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133252::::::::90:251:::::::::|h[Rainsong]|h|r",
-		icon = 132844,
-		isTransmog = false,
-		spellID = 91144,
-		locations = {
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133253] = {
@@ -44060,23 +35756,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133253] = {
-		itemID = 133253,
-		name = "Darksky Treads",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133253::::::::90:251:::::::::|h[Darksky Treads]|h|r",
-		icon = 427628,
-		isTransmog = true,
-		locations = {
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133254] = {
@@ -44093,23 +35772,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=117, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133254] = {
-		itemID = 133254,
-		name = "Kaleki Cloak",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133254::::::::90:251:::::::::|h[Kaleki Cloak]|h|r",
-		icon = 463832,
-		isTransmog = true,
-		locations = {
-			{encounterID=117, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133255] = {
@@ -44126,23 +35788,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=117, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133255] = {
-		itemID = 133255,
-		name = "Spirit Creeper Ring",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133255::::::::90:251:::::::::|h[Spirit Creeper Ring]|h|r",
-		icon = 414304,
-		isTransmog = false,
-		locations = {
-			{encounterID=117, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133256] = {
@@ -44159,23 +35804,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=117, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133256] = {
-		itemID = 133256,
-		name = "Greaves of Wu the Elder",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133256::::::::90:251:::::::::|h[Greaves of Wu the Elder]|h|r",
-		icon = 427628,
-		isTransmog = true,
-		locations = {
-			{encounterID=117, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133257] = {
@@ -44192,23 +35820,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=117, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133257] = {
-		itemID = 133257,
-		name = "Seliza's Spear",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 6,
-		itemType = "Weapon",
-		itemSubType = "Polearms",
-		link = "|cnIQ3:|Hitem:133257::::::::90:251:::::::::|h[Seliza's Spear]|h|r",
-		icon = 442729,
-		isTransmog = true,
-		locations = {
-			{encounterID=117, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133258] = {
@@ -44225,23 +35836,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=117, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133258] = {
-		itemID = 133258,
-		name = "Ionic Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133258::::::::90:251:::::::::|h[Ionic Gloves]|h|r",
-		icon = 430973,
-		isTransmog = true,
-		locations = {
-			{encounterID=117, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133259] = {
@@ -44258,25 +35852,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133259] = {
-		itemID = 133259,
-		name = "Resonant Kris",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:133259::::::::90:251:::::::::|h[Resonant Kris]|h|r",
-		icon = 458774,
-		isTransmog = true,
-		locations = {
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133260] = {
@@ -44293,23 +35868,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133260] = {
-		itemID = 133260,
-		name = "Tauntka's Necklace",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133260::::::::90:251:::::::::|h[Tauntka's Necklace]|h|r",
-		icon = 466966,
-		isTransmog = false,
-		locations = {
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133261] = {
@@ -44326,25 +35884,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133261] = {
-		itemID = 133261,
-		name = "Balkar's Waders",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133261::::::::90:251:::::::::|h[Balkar's Waders]|h|r",
-		icon = 430976,
-		isTransmog = true,
-		locations = {
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133262] = {
@@ -44361,23 +35900,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133262] = {
-		itemID = 133262,
-		name = "Greaves of Wu the Younger",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133262::::::::90:251:::::::::|h[Greaves of Wu the Younger]|h|r",
-		icon = 427628,
-		isTransmog = true,
-		locations = {
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133263] = {
@@ -44394,23 +35916,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133263] = {
-		itemID = 133263,
-		name = "Ring of the Darkest Day",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133263::::::::90:251:::::::::|h[Ring of the Darkest Day]|h|r",
-		icon = 133396,
-		isTransmog = false,
-		locations = {
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133264] = {
@@ -44427,23 +35932,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133264] = {
-		itemID = 133264,
-		name = "Sand Silk Wristband",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133264::::::::90:251:::::::::|h[Sand Silk Wristband]|h|r",
-		icon = 422799,
-		isTransmog = true,
-		locations = {
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133265] = {
@@ -44460,23 +35948,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133265] = {
-		itemID = 133265,
-		name = "Barim's Main Gauche",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:133265::::::::90:251:::::::::|h[Barim's Main Gauche]|h|r",
-		icon = 464119,
-		isTransmog = true,
-		locations = {
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133266] = {
@@ -44493,23 +35964,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133266] = {
-		itemID = 133266,
-		name = "Veneficial Band",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133266::::::::90:251:::::::::|h[Veneficial Band]|h|r",
-		icon = 414293,
-		isTransmog = false,
-		locations = {
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133267] = {
@@ -44526,23 +35980,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133267] = {
-		itemID = 133267,
-		name = "Sand Dune Belt",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133267::::::::90:251:::::::::|h[Sand Dune Belt]|h|r",
-		icon = 427627,
-		isTransmog = true,
-		locations = {
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133268] = {
@@ -44557,27 +35994,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133268::::::::90:251:::::::::|h[Heart of Solace]|h|r",
 		icon = 237546,
 		isTransmog = false,
-		spellID = 91365,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133268] = {
-		itemID = 133268,
-		name = "Heart of Solace",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133268::::::::90:251:::::::::|h[Heart of Solace]|h|r",
-		icon = 237546,
-		isTransmog = false,
-		spellID = 91365,
-		locations = {
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133269] = {
@@ -44592,27 +36010,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133269::::::::90:251:::::::::|h[Tia's Grace]|h|r",
 		icon = 249172,
 		isTransmog = false,
-		spellID = 92090,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133269] = {
-		itemID = 133269,
-		name = "Tia's Grace",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133269::::::::90:251:::::::::|h[Tia's Grace]|h|r",
-		icon = 249172,
-		isTransmog = false,
-		spellID = 92090,
-		locations = {
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133270] = {
@@ -44629,23 +36028,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133270] = {
-		itemID = 133270,
-		name = "Crafty's Gaiters",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133270::::::::90:251:::::::::|h[Crafty's Gaiters]|h|r",
-		icon = 436836,
-		isTransmog = true,
-		locations = {
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133271] = {
@@ -44662,23 +36044,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133271] = {
-		itemID = 133271,
-		name = "Hammer of Sparks",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:133271::::::::90:251:::::::::|h[Hammer of Sparks]|h|r",
-		icon = 430975,
-		isTransmog = true,
-		locations = {
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133272] = {
@@ -44695,23 +36060,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133272] = {
-		itemID = 133272,
-		name = "Geordan's Cloak",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133272::::::::90:251:::::::::|h[Geordan's Cloak]|h|r",
-		icon = 463832,
-		isTransmog = true,
-		locations = {
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133273] = {
@@ -44728,23 +36076,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133273] = {
-		itemID = 133273,
-		name = "Ring of Three Lights",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133273::::::::90:251:::::::::|h[Ring of Three Lights]|h|r",
-		icon = 133419,
-		isTransmog = false,
-		locations = {
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133274] = {
@@ -44761,23 +36092,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133274] = {
-		itemID = 133274,
-		name = "Mantle of Master Cho",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133274::::::::90:251:::::::::|h[Mantle of Master Cho]|h|r",
-		icon = 422809,
-		isTransmog = true,
-		locations = {
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133275] = {
@@ -44792,27 +36106,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133275::::::::90:251:::::::::|h[Sorrowsong]|h|r",
 		icon = 136046,
 		isTransmog = false,
-		spellID = 91003,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133275] = {
-		itemID = 133275,
-		name = "Sorrowsong",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133275::::::::90:251:::::::::|h[Sorrowsong]|h|r",
-		icon = 136046,
-		isTransmog = false,
-		spellID = 91003,
-		locations = {
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133276] = {
@@ -44829,23 +36124,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133276] = {
-		itemID = 133276,
-		name = "Leggings of the Path",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133276::::::::90:251:::::::::|h[Leggings of the Path]|h|r",
-		icon = 134651,
-		isTransmog = true,
-		locations = {
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133277] = {
@@ -44862,23 +36140,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133277] = {
-		itemID = 133277,
-		name = "Zora's Ward",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 6,
-		itemType = "Armor",
-		itemSubType = "Shields",
-		link = "|cnIQ3:|Hitem:133277::::::::90:251:::::::::|h[Zora's Ward]|h|r",
-		icon = 463011,
-		isTransmog = true,
-		locations = {
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133278] = {
@@ -44895,25 +36156,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133278] = {
-		itemID = 133278,
-		name = "Evelyn's Belt",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133278::::::::90:251:::::::::|h[Evelyn's Belt]|h|r",
-		icon = 422795,
-		isTransmog = true,
-		locations = {
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133279] = {
@@ -44930,23 +36172,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133279] = {
-		itemID = 133279,
-		name = "Mirage Ring",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133279::::::::90:251:::::::::|h[Mirage Ring]|h|r",
-		icon = 414303,
-		isTransmog = false,
-		locations = {
-			{encounterID=119, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133280] = {
@@ -44963,23 +36188,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133280] = {
-		itemID = 133280,
-		name = "Oasis Bracers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133280::::::::90:251:::::::::|h[Oasis Bracers]|h|r",
-		icon = 132615,
-		isTransmog = true,
-		locations = {
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133281] = {
@@ -44994,27 +36202,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133281::::::::90:251:::::::::|h[Impetuous Query]|h|r",
 		icon = 134394,
 		isTransmog = false,
-		spellID = 92200,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133281] = {
-		itemID = 133281,
-		name = "Impetuous Query",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133281::::::::90:251:::::::::|h[Impetuous Query]|h|r",
-		icon = 134394,
-		isTransmog = false,
-		spellID = 92200,
-		locations = {
-			{encounterID=118, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133356] = {
@@ -45031,23 +36220,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133356] = {
-		itemID = 133356,
-		name = "Crystalgrinder Bracers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133356::::::::90:251:::::::::|h[Crystalgrinder Bracers]|h|r",
-		icon = 436837,
-		isTransmog = true,
-		locations = {
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133357] = {
@@ -45064,23 +36236,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133357] = {
-		itemID = 133357,
-		name = "Earth-Strength Legguards",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133357::::::::90:251:::::::::|h[Earth-Strength Legguards]|h|r",
-		icon = 430976,
-		isTransmog = true,
-		locations = {
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133358] = {
@@ -45097,23 +36252,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133358] = {
-		itemID = 133358,
-		name = "Old One Eye's Cowl",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133358::::::::90:251:::::::::|h[Old One Eye's Cowl]|h|r",
-		icon = 436840,
-		isTransmog = true,
-		locations = {
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133359] = {
@@ -45130,23 +36268,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133359] = {
-		itemID = 133359,
-		name = "Ironshell Pendant",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133359::::::::90:251:::::::::|h[Ironshell Pendant]|h|r",
-		icon = 133307,
-		isTransmog = false,
-		locations = {
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133360] = {
@@ -45163,23 +36284,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=103, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133360] = {
-		itemID = 133360,
-		name = "Stonespeaker's Spare Cinch",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133360::::::::90:251:::::::::|h[Stonespeaker's Spare Cinch]|h|r",
-		icon = 430969,
-		isTransmog = true,
-		locations = {
-			{encounterID=103, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133361] = {
@@ -45196,23 +36300,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133361] = {
-		itemID = 133361,
-		name = "Choker of Stolen Thunder",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133361::::::::90:251:::::::::|h[Choker of Stolen Thunder]|h|r",
-		icon = 133326,
-		isTransmog = false,
-		locations = {
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133362] = {
@@ -45229,23 +36316,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133362] = {
-		itemID = 133362,
-		name = "Billowing Skydrape",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133362::::::::90:251:::::::::|h[Billowing Skydrape]|h|r",
-		icon = 462530,
-		isTransmog = true,
-		locations = {
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133364] = {
@@ -45262,23 +36332,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133364] = {
-		itemID = 133364,
-		name = "Crystal-Chained Lodestone",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133364::::::::90:251:::::::::|h[Crystal-Chained Lodestone]|h|r",
-		icon = 466970,
-		isTransmog = false,
-		locations = {
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133365] = {
@@ -45295,23 +36348,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133365] = {
-		itemID = 133365,
-		name = "Crystalpowder Amice",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133365::::::::90:251:::::::::|h[Crystalpowder Amice]|h|r",
-		icon = 422809,
-		isTransmog = true,
-		locations = {
-			{encounterID=111, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133366] = {
@@ -45328,23 +36364,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133366] = {
-		itemID = 133366,
-		name = "Fractured Earthstone Necklace",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133366::::::::90:251:::::::::|h[Fractured Earthstone Necklace]|h|r",
-		icon = 337782,
-		isTransmog = false,
-		locations = {
-			{encounterID=112, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133367] = {
@@ -45361,23 +36380,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133367] = {
-		itemID = 133367,
-		name = "Barnacled Shell Buckler",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 6,
-		itemType = "Armor",
-		itemSubType = "Shields",
-		link = "|cnIQ3:|Hitem:133367::::::::90:251:::::::::|h[Barnacled Shell Buckler]|h|r",
-		icon = 463011,
-		isTransmog = true,
-		locations = {
-			{encounterID=101, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133368] = {
@@ -45394,23 +36396,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133368] = {
-		itemID = 133368,
-		name = "Salty Shell-Studded Girdle",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133368::::::::90:251:::::::::|h[Salty Shell-Studded Girdle]|h|r",
-		icon = 436835,
-		isTransmog = true,
-		locations = {
-			{encounterID=104, instanceID=65, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133369] = {
@@ -45427,23 +36412,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133369] = {
-		itemID = 133369,
-		name = "Ionized Choker",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133369::::::::90:251:::::::::|h[Ionized Choker]|h|r",
-		icon = 133301,
-		isTransmog = false,
-		locations = {
-			{encounterID=114, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133370] = {
@@ -45460,23 +36428,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133370] = {
-		itemID = 133370,
-		name = "Sandals of the West Wind",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133370::::::::90:251:::::::::|h[Sandals of the West Wind]|h|r",
-		icon = 422797,
-		isTransmog = true,
-		locations = {
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133371] = {
@@ -45493,23 +36444,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133371] = {
-		itemID = 133371,
-		name = "Thundercleaver Axe",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 1,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Axes",
-		link = "|cnIQ3:|Hitem:133371::::::::90:251:::::::::|h[Thundercleaver Axe]|h|r",
-		icon = 438760,
-		isTransmog = true,
-		locations = {
-			{encounterID=115, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133372] = {
@@ -45526,23 +36460,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133372] = {
-		itemID = 133372,
-		name = "Ion-Cage Signet",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133372::::::::90:251:::::::::|h[Ion-Cage Signet]|h|r",
-		icon = 133374,
-		isTransmog = false,
-		locations = {
-			{encounterID=116, instanceID=68, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133373] = {
@@ -45559,23 +36476,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=117, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133373] = {
-		itemID = 133373,
-		name = "Necklace of Rumbling Earth",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133373::::::::90:251:::::::::|h[Necklace of Rumbling Earth]|h|r",
-		icon = 525133,
-		isTransmog = false,
-		locations = {
-			{encounterID=117, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133375] = {
@@ -45592,23 +36492,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133375] = {
-		itemID = 133375,
-		name = "Crackling Geode Mace",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:133375::::::::90:251:::::::::|h[Crackling Geode Mace]|h|r",
-		icon = 460671,
-		isTransmog = true,
-		locations = {
-			{encounterID=110, instanceID=67, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133376] = {
@@ -45625,23 +36508,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133376] = {
-		itemID = 133376,
-		name = "Sceptre of Swirling Winds",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:133376::::::::90:251:::::::::|h[Sceptre of Swirling Winds]|h|r",
-		icon = 430975,
-		isTransmog = true,
-		locations = {
-			{encounterID=122, instanceID=69, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133385] = {
@@ -45660,22 +36526,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
-	[133385] = {
-		itemID = 133385,
-		name = "Cord of Lost Hope",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133385::::::::90:251:::::::::|h[Cord of Lost Hope]|h|r",
-		icon = 537803,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
 	[133386] = {
 		itemID = 133386,
 		name = "Dead End Boots",
@@ -45690,22 +36540,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133386] = {
-		itemID = 133386,
-		name = "Dead End Boots",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133386::::::::90:251:::::::::|h[Dead End Boots]|h|r",
-		icon = 132550,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133387] = {
@@ -45724,22 +36558,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
-	[133387] = {
-		itemID = 133387,
-		name = "Gauntlets of Temporal Interference",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133387::::::::90:251:::::::::|h[Gauntlets of Temporal Interference]|h|r",
-		icon = 533754,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
 	[133388] = {
 		itemID = 133388,
 		name = "Breastplate of Sorrow",
@@ -45754,22 +36572,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133388] = {
-		itemID = 133388,
-		name = "Breastplate of Sorrow",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133388::::::::90:251:::::::::|h[Breastplate of Sorrow]|h|r",
-		icon = 533753,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133389] = {
@@ -45788,22 +36590,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
-	[133389] = {
-		itemID = 133389,
-		name = "Time Traveler's Leggings",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133389::::::::90:251:::::::::|h[Time Traveler's Leggings]|h|r",
-		icon = 532094,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
 	[133390] = {
 		itemID = 133390,
 		name = "Girdle of Lost Heroes",
@@ -45818,22 +36604,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133390] = {
-		itemID = 133390,
-		name = "Girdle of Lost Heroes",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133390::::::::90:251:::::::::|h[Girdle of Lost Heroes]|h|r",
-		icon = 533750,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133391] = {
@@ -45852,22 +36622,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
-	[133391] = {
-		itemID = 133391,
-		name = "Dragonshrine Scepter",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:133391::::::::90:251:::::::::|h[Dragonshrine Scepter]|h|r",
-		icon = 530958,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
 	[133392] = {
 		itemID = 133392,
 		name = "Gloves of the Hollow",
@@ -45882,22 +36636,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133392] = {
-		itemID = 133392,
-		name = "Gloves of the Hollow",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133392::::::::90:251:::::::::|h[Gloves of the Hollow]|h|r",
-		icon = 537807,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133393] = {
@@ -45916,22 +36654,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
-	[133393] = {
-		itemID = 133393,
-		name = "Echoing Headguard",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133393::::::::90:251:::::::::|h[Echoing Headguard]|h|r",
-		icon = 537536,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
 	[133394] = {
 		itemID = 133394,
 		name = "Waistguard of Lost Time",
@@ -45948,22 +36670,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
-	[133394] = {
-		itemID = 133394,
-		name = "Waistguard of Lost Time",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133394::::::::90:251:::::::::|h[Waistguard of Lost Time]|h|r",
-		icon = 533750,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
 	[133395] = {
 		itemID = 133395,
 		name = "Jaina's Staff",
@@ -45978,23 +36684,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=285, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133395] = {
-		itemID = 133395,
-		name = "Jaina's Staff",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 10,
-		itemType = "Weapon",
-		itemSubType = "Staves",
-		link = "|cnIQ3:|Hitem:133395::::::::90:251:::::::::|h[Jaina's Staff]|h|r",
-		icon = 531596,
-		isTransmog = true,
-		locations = {
-			{encounterID=285, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133396] = {
@@ -46011,23 +36700,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=285, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133396] = {
-		itemID = 133396,
-		name = "Ward of Incantations",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 6,
-		itemType = "Armor",
-		itemSubType = "Shields",
-		link = "|cnIQ3:|Hitem:133396::::::::90:251:::::::::|h[Ward of Incantations]|h|r",
-		icon = 536020,
-		isTransmog = true,
-		locations = {
-			{encounterID=285, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133397] = {
@@ -46044,23 +36716,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=323, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133397] = {
-		itemID = 133397,
-		name = "Windrunner's Bow",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 2,
-		itemType = "Weapon",
-		itemSubType = "Bows",
-		link = "|cnIQ3:|Hitem:133397::::::::90:251:::::::::|h[Windrunner's Bow]|h|r",
-		icon = 536821,
-		isTransmog = true,
-		locations = {
-			{encounterID=323, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133398] = {
@@ -46077,23 +36732,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=323, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133398] = {
-		itemID = 133398,
-		name = "Cloak of the Banshee Queen",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133398::::::::90:251:::::::::|h[Cloak of the Banshee Queen]|h|r",
-		icon = 531415,
-		isTransmog = true,
-		locations = {
-			{encounterID=323, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133399] = {
@@ -46110,23 +36748,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=283, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133399] = {
-		itemID = 133399,
-		name = "Crescent Moon",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 0,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Axes",
-		link = "|cnIQ3:|Hitem:133399::::::::90:251:::::::::|h[Crescent Moon]|h|r",
-		icon = 533573,
-		isTransmog = true,
-		locations = {
-			{encounterID=283, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133400] = {
@@ -46143,23 +36764,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=283, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133400] = {
-		itemID = 133400,
-		name = "Whisperwind Robes",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133400::::::::90:251:::::::::|h[Whisperwind Robes]|h|r",
-		icon = 532091,
-		isTransmog = true,
-		locations = {
-			{encounterID=283, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133401] = {
@@ -46176,23 +36780,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=340, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133401] = {
-		itemID = 133401,
-		name = "Axe of the Tauren Chieftains",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 1,
-		itemType = "Weapon",
-		itemSubType = "Two-Handed Axes",
-		link = "|cnIQ3:|Hitem:133401::::::::90:251:::::::::|h[Axe of the Tauren Chieftains]|h|r",
-		icon = 535989,
-		isTransmog = true,
-		locations = {
-			{encounterID=340, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133402] = {
@@ -46209,23 +36796,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=340, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133402] = {
-		itemID = 133402,
-		name = "Bloodhoof Legguards",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133402::::::::90:251:::::::::|h[Bloodhoof Legguards]|h|r",
-		icon = 533756,
-		isTransmog = true,
-		locations = {
-			{encounterID=340, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133403] = {
@@ -46242,23 +36812,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133403] = {
-		itemID = 133403,
-		name = "Distortion Greaves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133403::::::::90:251:::::::::|h[Distortion Greaves]|h|r",
-		icon = 537538,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133404] = {
@@ -46275,23 +36828,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133404] = {
-		itemID = 133404,
-		name = "Time Altered Legguards",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133404::::::::90:251:::::::::|h[Time Altered Legguards]|h|r",
-		icon = 533756,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133405] = {
@@ -46308,23 +36844,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133405] = {
-		itemID = 133405,
-		name = "Breastplate of Tarnished Bronze",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133405::::::::90:251:::::::::|h[Breastplate of Tarnished Bronze]|h|r",
-		icon = 533753,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133406] = {
@@ -46341,23 +36860,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133406] = {
-		itemID = 133406,
-		name = "Chrono Boots",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133406::::::::90:251:::::::::|h[Chrono Boots]|h|r",
-		icon = 533751,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133407] = {
@@ -46374,23 +36876,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133407] = {
-		itemID = 133407,
-		name = "Crown of Epochs",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133407::::::::90:251:::::::::|h[Crown of Epochs]|h|r",
-		icon = 533755,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133408] = {
@@ -46407,23 +36892,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133408] = {
-		itemID = 133408,
-		name = "Temporal Pauldrons",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133408::::::::90:251:::::::::|h[Temporal Pauldrons]|h|r",
-		icon = 533757,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133409] = {
@@ -46440,23 +36908,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133409] = {
-		itemID = 133409,
-		name = "Jagged Edge of Time",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:133409::::::::90:251:::::::::|h[Jagged Edge of Time]|h|r",
-		icon = 526763,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133410] = {
@@ -46473,23 +36924,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133410] = {
-		itemID = 133410,
-		name = "Timeway Headgear",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133410::::::::90:251:::::::::|h[Timeway Headgear]|h|r",
-		icon = 537808,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133411] = {
@@ -46506,23 +36940,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133411] = {
-		itemID = 133411,
-		name = "Time Twisted Tunic",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133411::::::::90:251:::::::::|h[Time Twisted Tunic]|h|r",
-		icon = 537806,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133412] = {
@@ -46539,23 +36956,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133412] = {
-		itemID = 133412,
-		name = "Mantle of Time",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133412::::::::90:251:::::::::|h[Mantle of Time]|h|r",
-		icon = 532095,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133413] = {
@@ -46572,23 +36972,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133413] = {
-		itemID = 133413,
-		name = "Robes of Fate",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133413::::::::90:251:::::::::|h[Robes of Fate]|h|r",
-		icon = 532091,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133414] = {
@@ -46607,22 +36990,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
-	[133414] = {
-		itemID = 133414,
-		name = "Archivist's Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133414::::::::90:251:::::::::|h[Archivist's Gloves]|h|r",
-		icon = 532092,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
 	[133415] = {
 		itemID = 133415,
 		name = "Crescent Wand",
@@ -46637,22 +37004,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133415] = {
-		itemID = 133415,
-		name = "Crescent Wand",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 19,
-		itemType = "Weapon",
-		itemSubType = "Wands",
-		link = "|cnIQ3:|Hitem:133415::::::::90:251:::::::::|h[Crescent Wand]|h|r",
-		icon = 533900,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133416] = {
@@ -46671,22 +37022,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
-	[133416] = {
-		itemID = 133416,
-		name = "Time Strand Gauntlets",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133416::::::::90:251:::::::::|h[Time Strand Gauntlets]|h|r",
-		icon = 533754,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
 	[133417] = {
 		itemID = 133417,
 		name = "Bronze Blaster",
@@ -46701,23 +37036,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133417] = {
-		itemID = 133417,
-		name = "Bronze Blaster",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 3,
-		itemType = "Weapon",
-		itemSubType = "Guns",
-		link = "|cnIQ3:|Hitem:133417::::::::90:251:::::::::|h[Bronze Blaster]|h|r",
-		icon = 528947,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133418] = {
@@ -46736,22 +37054,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
-	[133418] = {
-		itemID = 133418,
-		name = "Boots of the Forked Road",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:133418::::::::90:251:::::::::|h[Boots of the Forked Road]|h|r",
-		icon = 537804,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
 	[133419] = {
 		itemID = 133419,
 		name = "Time Twister's Gauntlets",
@@ -46766,23 +37068,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133419] = {
-		itemID = 133419,
-		name = "Time Twister's Gauntlets",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133419::::::::90:251:::::::::|h[Time Twister's Gauntlets]|h|r",
-		icon = 537535,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133420] = {
@@ -46797,27 +37082,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:133420::::::::90:251:::::::::|h[Arrow of Time]|h|r",
 		icon = 249173,
 		isTransmog = false,
-		spellID = 102658,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133420] = {
-		itemID = 133420,
-		name = "Arrow of Time",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:133420::::::::90:251:::::::::|h[Arrow of Time]|h|r",
-		icon = 249173,
-		isTransmog = false,
-		spellID = 102658,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133421] = {
@@ -46834,23 +37100,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133421] = {
-		itemID = 133421,
-		name = "Cowl of Destiny",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:133421::::::::90:251:::::::::|h[Cowl of Destiny]|h|r",
-		icon = 532093,
-		isTransmog = true,
-		locations = {
-			{encounterID=289, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[133422] = {
@@ -46869,22 +37118,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
-	[133422] = {
-		itemID = 133422,
-		name = "Breastplate of Despair",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133422::::::::90:251:::::::::|h[Breastplate of Despair]|h|r",
-		icon = 533753,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
 	[133424] = {
 		itemID = 133424,
 		name = "Bindings of the End Times",
@@ -46896,38 +37129,6 @@ OneWoWItems_Cataclysm = {
 		itemSubType = "Plate",
 		link = "|cnIQ3:|Hitem:133424::::::::90:251:::::::::|h[Bindings of the End Times]|h|r",
 		icon = 533752,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133424] = {
-		itemID = 133424,
-		name = "Bindings of the End Times",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:133424::::::::90:251:::::::::|h[Bindings of the End Times]|h|r",
-		icon = 533752,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[133428] = {
-		itemID = 133428,
-		name = "Time-Desiccated Girdle",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:133428::::::::90:251:::::::::|h[Time-Desiccated Girdle]|h|r",
-		icon = 537532,
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
@@ -46946,7 +37147,7 @@ OneWoWItems_Cataclysm = {
 		icon = 537532,
 		isTransmog = true,
 		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=24,name="Timewalking"}}},
+			{encounterID=0, instanceID=184, source="journal", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[138802] = {
@@ -46989,27 +37190,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=155, instanceID=74, source="att"},
 		},
 	},
-	[142273] = {
-		itemID = 142273,
-		name = "Ensemble: Blackened Defias Armor",
-		expansionID = 4,
-		quality = 3,
-		classID = 0,
-		subclassID = 8,
-		itemType = "Consumable",
-		itemSubType = "Other",
-		link = "|cnIQ3:|Hitem:142273::::::::90:251:::::::::|h[Ensemble: Blackened Defias Armor]|h|r",
-		icon = 132723,
-		isTransmog = false,
-		spellID = 229863,
-		questID = 42778,
-		questSources = {
-			{id=42778},
-		},
-		locations = {
-			{encounterID=0, instanceID=63, source="att"},
-		},
-	},
 	[151062] = {
 		itemID = 151062,
 		name = "Armbands of Exiled Architects",
@@ -47024,23 +37204,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[151062] = {
-		itemID = 151062,
-		name = "Armbands of Exiled Architects",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:151062::::::::90:251:::::::::|h[Armbands of Exiled Architects]|h|r",
-		icon = 422799,
-		isTransmog = true,
-		locations = {
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[151063] = {
@@ -47057,23 +37220,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[151063] = {
-		itemID = 151063,
-		name = "Gear-Marked Gauntlets",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:151063::::::::90:251:::::::::|h[Gear-Marked Gauntlets]|h|r",
-		icon = 427631,
-		isTransmog = true,
-		locations = {
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[151064] = {
@@ -47090,23 +37236,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[151064] = {
-		itemID = 151064,
-		name = "Vest of the Curious Visitor",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:151064::::::::90:251:::::::::|h[Vest of the Curious Visitor]|h|r",
-		icon = 132656,
-		isTransmog = true,
-		locations = {
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[151065] = {
@@ -47123,23 +37252,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[151065] = {
-		itemID = 151065,
-		name = "Old Friend's Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:151065::::::::90:251:::::::::|h[Old Friend's Gloves]|h|r",
-		icon = 430973,
-		isTransmog = true,
-		locations = {
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[151066] = {
@@ -47156,23 +37268,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[151066] = {
-		itemID = 151066,
-		name = "Missing Diplomat's Pauldrons",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:151066::::::::90:251:::::::::|h[Missing Diplomat's Pauldrons]|h|r",
-		icon = 427634,
-		isTransmog = true,
-		locations = {
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[151067] = {
@@ -47189,23 +37284,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[151067] = {
-		itemID = 151067,
-		name = "Boots of Lingering Sorrow",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:151067::::::::90:251:::::::::|h[Boots of Lingering Sorrow]|h|r",
-		icon = 422797,
-		isTransmog = true,
-		locations = {
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[151068] = {
@@ -47222,23 +37300,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[151068] = {
-		itemID = 151068,
-		name = "Boots of the Predator",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:151068::::::::90:251:::::::::|h[Boots of the Predator]|h|r",
-		icon = 436836,
-		isTransmog = true,
-		locations = {
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[151069] = {
@@ -47255,23 +37316,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[151069] = {
-		itemID = 151069,
-		name = "Breastplate of the Stilled Heart",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:151069::::::::90:251:::::::::|h[Breastplate of the Stilled Heart]|h|r",
-		icon = 430972,
-		isTransmog = true,
-		locations = {
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[151070] = {
@@ -47288,23 +37332,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[151070] = {
-		itemID = 151070,
-		name = "Gloves of the Greymane Wall",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:151070::::::::90:251:::::::::|h[Gloves of the Greymane Wall]|h|r",
-		icon = 427631,
-		isTransmog = true,
-		locations = {
-			{encounterID=98, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[151071] = {
@@ -47321,23 +37348,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[151071] = {
-		itemID = 151071,
-		name = "Gloves of the Uplifted Cup",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:151071::::::::90:251:::::::::|h[Gloves of the Uplifted Cup]|h|r",
-		icon = 132959,
-		isTransmog = true,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[151072] = {
@@ -47354,23 +37364,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[151072] = {
-		itemID = 151072,
-		name = "Worgen Hunter's Helm",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:151072::::::::90:251:::::::::|h[Worgen Hunter's Helm]|h|r",
-		icon = 430974,
-		isTransmog = true,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[151073] = {
@@ -47387,23 +37380,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[151073] = {
-		itemID = 151073,
-		name = "Greaves of the Misguided",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:151073::::::::90:251:::::::::|h[Greaves of the Misguided]|h|r",
-		icon = 427633,
-		isTransmog = true,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"}}},
 		},
 	},
 	[152966] = {
@@ -47694,7 +37670,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=103, instanceID=65, source="att"},
 		},
 	},
 	[157587] = {
@@ -47711,7 +37686,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=101, instanceID=65, source="att"},
 		},
 	},
 	[157588] = {
@@ -47728,7 +37702,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=101, instanceID=65, source="att"},
 		},
 	},
 	[157589] = {
@@ -47745,7 +37718,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=65, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=104, instanceID=65, source="att"},
 		},
 	},
 	[157590] = {
@@ -47762,7 +37734,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=110, instanceID=67, source="att"},
 		},
 	},
 	[157591] = {
@@ -47779,7 +37750,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=110, instanceID=67, source="att"},
 		},
 	},
 	[157592] = {
@@ -47796,7 +37766,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=110, instanceID=67, source="att"},
 		},
 	},
 	[157593] = {
@@ -47813,7 +37782,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=111, instanceID=67, source="att"},
 		},
 	},
 	[157594] = {
@@ -47830,7 +37798,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=111, instanceID=67, source="att"},
 		},
 	},
 	[157595] = {
@@ -47847,7 +37814,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=67, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=112, instanceID=67, source="att"},
 		},
 	},
 	[157596] = {
@@ -47864,7 +37830,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=131, instanceID=71, source="att"},
 		},
 	},
 	[157597] = {
@@ -47881,7 +37846,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=132, instanceID=71, source="att"},
 		},
 	},
 	[157598] = {
@@ -47898,7 +37862,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=133, instanceID=71, source="att"},
 		},
 	},
 	[157599] = {
@@ -47915,7 +37878,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=122, instanceID=69, source="att"},
 		},
 	},
 	[157600] = {
@@ -47932,7 +37894,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=69, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=117, instanceID=69, source="att"},
 		},
 	},
 	[157601] = {
@@ -47949,7 +37910,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=114, instanceID=68, source="att"},
 		},
 	},
 	[157602] = {
@@ -47966,7 +37926,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=114, instanceID=68, source="att"},
 		},
 	},
 	[157603] = {
@@ -47983,7 +37942,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=114, instanceID=68, source="att"},
 		},
 	},
 	[157604] = {
@@ -48000,7 +37958,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=115, instanceID=68, source="att"},
 		},
 	},
 	[157605] = {
@@ -48017,7 +37974,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=68, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=115, instanceID=68, source="att"},
 		},
 	},
 	[157606] = {
@@ -48036,22 +37992,6 @@ OneWoWItems_Cataclysm = {
 			{encounterID=0, instanceID=184, source="journal", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
-	[157606] = {
-		itemID = 157606,
-		name = "Time-Desiccated Girdle",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ4:|Hitem:157606::::::::90:251:::::::::|h[Time-Desiccated Girdle]|h|r",
-		icon = 537532,
-		isTransmog = true,
-		locations = {
-			{encounterID=0, instanceID=184, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
 	[157607] = {
 		itemID = 157607,
 		name = "Gently Gnawed Hauberk",
@@ -48066,7 +38006,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=108, instanceID=66, source="att"},
 		},
 	},
 	[157608] = {
@@ -48083,7 +38022,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=105, instanceID=66, source="att"},
 		},
 	},
 	[157609] = {
@@ -48100,7 +38038,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=127, instanceID=70, source="att"},
 		},
 	},
 	[157610] = {
@@ -48117,7 +38054,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=107, instanceID=66, source="att"},
 		},
 	},
 	[157611] = {
@@ -48134,7 +38070,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=70, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=126, instanceID=70, source="att"},
 		},
 	},
 	[157612] = {
@@ -48151,7 +38086,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=131, instanceID=71, source="att"},
 		},
 	},
 	[157613] = {
@@ -48168,7 +38102,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=132, instanceID=71, source="att"},
 		},
 	},
 	[157614] = {
@@ -48185,7 +38118,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=133, instanceID=71, source="att"},
 		},
 	},
 	[157615] = {
@@ -48202,7 +38134,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=71, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=134, instanceID=71, source="att"},
 		},
 	},
 	[157616] = {
@@ -48219,23 +38150,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=186, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=342, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[157616] = {
-		itemID = 157616,
-		name = "Chestguard of Futility",
-		expansionID = 4,
-		quality = 4,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ4:|Hitem:157616::::::::90:251:::::::::|h[Chestguard of Futility]|h|r",
-		icon = 533753,
-		isTransmog = true,
-		locations = {
-			{encounterID=342, instanceID=186, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[157617] = {
@@ -48252,23 +38166,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[157617] = {
-		itemID = 157617,
-		name = "Wolfshide Vest",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:157617::::::::90:251:::::::::|h[Wolfshide Vest]|h|r",
-		icon = 436838,
-		isTransmog = true,
-		locations = {
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[157628] = {
@@ -48285,23 +38182,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[157628] = {
-		itemID = 157628,
-		name = "Gold-Flecked Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:157628::::::::90:251:::::::::|h[Gold-Flecked Gloves]|h|r",
-		icon = 132957,
-		isTransmog = true,
-		locations = {
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[157752] = {
@@ -48318,23 +38198,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[157752] = {
-		itemID = 157752,
-		name = "Armbands of Exiled Architects",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:157752::::::::90:251:::::::::|h[Armbands of Exiled Architects]|h|r",
-		icon = 422799,
-		isTransmog = true,
-		locations = {
-			{encounterID=90, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[157753] = {
@@ -48351,23 +38214,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[157753] = {
-		itemID = 157753,
-		name = "Vest of the Curious Visitor",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:157753::::::::90:251:::::::::|h[Vest of the Curious Visitor]|h|r",
-		icon = 132656,
-		isTransmog = true,
-		locations = {
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[157754] = {
@@ -48384,23 +38230,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[157754] = {
-		itemID = 157754,
-		name = "Old Friend's Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:157754::::::::90:251:::::::::|h[Old Friend's Gloves]|h|r",
-		icon = 430973,
-		isTransmog = true,
-		locations = {
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[157755] = {
@@ -48417,23 +38246,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=2,name="Heroic"}}},
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[157755] = {
-		itemID = 157755,
-		name = "Missing Diplomat's Pauldrons",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:157755::::::::90:251:::::::::|h[Missing Diplomat's Pauldrons]|h|r",
-		icon = 427634,
-		isTransmog = true,
-		locations = {
-			{encounterID=91, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[171640] = {
@@ -54968,14 +44780,12 @@ OneWoWItems_Cataclysm = {
 	},
 	[175159] = {
 		itemID = 175159,
-		name = "Sinister Shadows",
+		name = "Item 175159",
 		expansionID = 4,
-		quality = 3,
 		classID = 15,
 		subclassID = 4,
 		itemType = "Miscellaneous",
 		itemSubType = "Other",
-		link = "|cnIQ3:|Hitem:175159::::::::90:251:::::::::|h[Sinister Shadows]|h|r",
 		icon = 136197,
 		isTransmog = false,
 		spellID = 319246,
@@ -54999,27 +44809,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:188490::::::::90:251:::::::::|h[Grace of the Herald]|h|r",
 		icon = 134228,
 		isTransmog = false,
-		spellID = 92088,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=106, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188490] = {
-		itemID = 188490,
-		name = "Grace of the Herald",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:188490::::::::90:251:::::::::|h[Grace of the Herald]|h|r",
-		icon = 134228,
-		isTransmog = false,
-		spellID = 92088,
-		locations = {
-			{encounterID=106, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188491] = {
@@ -55036,23 +44827,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=106, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188491] = {
-		itemID = 188491,
-		name = "Corla's Baton",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 19,
-		itemType = "Weapon",
-		itemSubType = "Wands",
-		link = "|cnIQ3:|Hitem:188491::::::::90:251:::::::::|h[Corla's Baton]|h|r",
-		icon = 458010,
-		isTransmog = true,
-		locations = {
-			{encounterID=106, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188492] = {
@@ -55069,23 +44843,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=106, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188492] = {
-		itemID = 188492,
-		name = "Armbands of Change",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:188492::::::::90:251:::::::::|h[Armbands of Change]|h|r",
-		icon = 132615,
-		isTransmog = true,
-		locations = {
-			{encounterID=106, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188493] = {
@@ -55102,23 +44859,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=106, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188493] = {
-		itemID = 188493,
-		name = "Renouncer's Cowl",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:188493::::::::90:251:::::::::|h[Renouncer's Cowl]|h|r",
-		icon = 430974,
-		isTransmog = true,
-		locations = {
-			{encounterID=106, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188494] = {
@@ -55135,23 +44875,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=106, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188494] = {
-		itemID = 188494,
-		name = "Signet of Transformation",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:188494::::::::90:251:::::::::|h[Signet of Transformation]|h|r",
-		icon = 414303,
-		isTransmog = false,
-		locations = {
-			{encounterID=106, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188495] = {
@@ -55168,23 +44891,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=107, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188495] = {
-		itemID = 188495,
-		name = "Quicksilver Amulet",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:188495::::::::90:251:::::::::|h[Quicksilver Amulet]|h|r",
-		icon = 133320,
-		isTransmog = false,
-		locations = {
-			{encounterID=107, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188496] = {
@@ -55201,23 +44907,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=107, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188496] = {
-		itemID = 188496,
-		name = "Bracers of Cooled Anger",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:188496::::::::90:251:::::::::|h[Bracers of Cooled Anger]|h|r",
-		icon = 427629,
-		isTransmog = true,
-		locations = {
-			{encounterID=107, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188497] = {
@@ -55234,23 +44923,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=107, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188497] = {
-		itemID = 188497,
-		name = "Steelbender's Masterpiece",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 15,
-		itemType = "Weapon",
-		itemSubType = "Daggers",
-		link = "|cnIQ3:|Hitem:188497::::::::90:251:::::::::|h[Steelbender's Masterpiece]|h|r",
-		icon = 460715,
-		isTransmog = true,
-		locations = {
-			{encounterID=107, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188498] = {
@@ -55267,23 +44939,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=107, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188498] = {
-		itemID = 188498,
-		name = "Heat Wave Leggings",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:188498::::::::90:251:::::::::|h[Heat Wave Leggings]|h|r",
-		icon = 430976,
-		isTransmog = true,
-		locations = {
-			{encounterID=107, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188499] = {
@@ -55300,23 +44955,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=107, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188499] = {
-		itemID = 188499,
-		name = "Burned Gatherings",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:188499::::::::90:251:::::::::|h[Burned Gatherings]|h|r",
-		icon = 464508,
-		isTransmog = true,
-		locations = {
-			{encounterID=107, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188500] = {
@@ -55333,23 +44971,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=108, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188500] = {
-		itemID = 188500,
-		name = "Beauty's Silken Ribbon",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:188500::::::::90:251:::::::::|h[Beauty's Silken Ribbon]|h|r",
-		icon = 422795,
-		isTransmog = true,
-		locations = {
-			{encounterID=108, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188501] = {
@@ -55366,23 +44987,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=108, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188501] = {
-		itemID = 188501,
-		name = "Beauty's Favorite Bone",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:188501::::::::90:251:::::::::|h[Beauty's Favorite Bone]|h|r",
-		icon = 133727,
-		isTransmog = true,
-		locations = {
-			{encounterID=108, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188502] = {
@@ -55399,23 +45003,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=108, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188502] = {
-		itemID = 188502,
-		name = "Kibble",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:188502::::::::90:251:::::::::|h[Kibble]|h|r",
-		icon = 133387,
-		isTransmog = false,
-		locations = {
-			{encounterID=108, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188503] = {
@@ -55432,23 +45019,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=108, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188503] = {
-		itemID = 188503,
-		name = "Beauty's Plate",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:188503::::::::90:251:::::::::|h[Beauty's Plate]|h|r",
-		icon = 427630,
-		isTransmog = true,
-		locations = {
-			{encounterID=108, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188504] = {
@@ -55465,23 +45035,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=108, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188504] = {
-		itemID = 188504,
-		name = "Beauty's Chew Toy",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:188504::::::::90:251:::::::::|h[Beauty's Chew Toy]|h|r",
-		icon = 436841,
-		isTransmog = true,
-		locations = {
-			{encounterID=108, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188505] = {
@@ -55498,23 +45051,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=105, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188505] = {
-		itemID = 188505,
-		name = "Skullcracker Ring",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:188505::::::::90:251:::::::::|h[Skullcracker Ring]|h|r",
-		icon = 133389,
-		isTransmog = false,
-		locations = {
-			{encounterID=105, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188506] = {
@@ -55531,23 +45067,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=105, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188506] = {
-		itemID = 188506,
-		name = "Inquisition Robes",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:188506::::::::90:251:::::::::|h[Inquisition Robes]|h|r",
-		icon = 422801,
-		isTransmog = true,
-		locations = {
-			{encounterID=105, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188507] = {
@@ -55564,23 +45083,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=105, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188507] = {
-		itemID = 188507,
-		name = "Torturer's Mercy",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:188507::::::::90:251:::::::::|h[Torturer's Mercy]|h|r",
-		icon = 442728,
-		isTransmog = true,
-		locations = {
-			{encounterID=105, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188508] = {
@@ -55597,23 +45099,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=105, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188508] = {
-		itemID = 188508,
-		name = "Manacles of Pain",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:188508::::::::90:251:::::::::|h[Manacles of Pain]|h|r",
-		icon = 132606,
-		isTransmog = true,
-		locations = {
-			{encounterID=105, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188509] = {
@@ -55630,23 +45115,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=105, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188509] = {
-		itemID = 188509,
-		name = "Shield of the Iron Maiden",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 6,
-		itemType = "Armor",
-		itemSubType = "Shields",
-		link = "|cnIQ3:|Hitem:188509::::::::90:251:::::::::|h[Shield of the Iron Maiden]|h|r",
-		icon = 463011,
-		isTransmog = true,
-		locations = {
-			{encounterID=105, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188510] = {
@@ -55663,23 +45131,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188510] = {
-		itemID = 188510,
-		name = "Twitching Shadows",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:188510::::::::90:251:::::::::|h[Twitching Shadows]|h|r",
-		icon = 463832,
-		isTransmog = true,
-		locations = {
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188511] = {
@@ -55696,23 +45147,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188511] = {
-		itemID = 188511,
-		name = "Amber Messenger",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 2,
-		itemType = "Weapon",
-		itemSubType = "Bows",
-		link = "|cnIQ3:|Hitem:188511::::::::90:251:::::::::|h[Amber Messenger]|h|r",
-		icon = 450267,
-		isTransmog = true,
-		locations = {
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188512] = {
@@ -55729,23 +45163,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188512] = {
-		itemID = 188512,
-		name = "Raz's Pauldrons",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:188512::::::::90:251:::::::::|h[Raz's Pauldrons]|h|r",
-		icon = 427634,
-		isTransmog = true,
-		locations = {
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188513] = {
@@ -55762,23 +45179,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188513] = {
-		itemID = 188513,
-		name = "Carrier Wave Pendant",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:188513::::::::90:251:::::::::|h[Carrier Wave Pendant]|h|r",
-		icon = 466968,
-		isTransmog = false,
-		locations = {
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188514] = {
@@ -55793,27 +45193,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ3:|Hitem:188514::::::::90:251:::::::::|h[Witching Hourglass]|h|r",
 		icon = 133018,
 		isTransmog = false,
-		spellID = 90888,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188514] = {
-		itemID = 188514,
-		name = "Witching Hourglass",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:188514::::::::90:251:::::::::|h[Witching Hourglass]|h|r",
-		icon = 133018,
-		isTransmog = false,
-		spellID = 90888,
-		locations = {
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188515] = {
@@ -55830,23 +45211,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188515] = {
-		itemID = 188515,
-		name = "Willowy Crown",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:188515::::::::90:251:::::::::|h[Willowy Crown]|h|r",
-		icon = 237042,
-		isTransmog = true,
-		locations = {
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188516] = {
@@ -55863,23 +45227,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188516] = {
-		itemID = 188516,
-		name = "Crepuscular Shield",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 6,
-		itemType = "Armor",
-		itemSubType = "Shields",
-		link = "|cnIQ3:|Hitem:188516::::::::90:251:::::::::|h[Crepuscular Shield]|h|r",
-		icon = 463011,
-		isTransmog = true,
-		locations = {
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188517] = {
@@ -55896,23 +45243,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188517] = {
-		itemID = 188517,
-		name = "Clutches of Dying Light",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:188517::::::::90:251:::::::::|h[Clutches of Dying Light]|h|r",
-		icon = 427631,
-		isTransmog = true,
-		locations = {
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188518] = {
@@ -55929,23 +45259,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188518] = {
-		itemID = 188518,
-		name = "Kyrstel Mantle",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:188518::::::::90:251:::::::::|h[Kyrstel Mantle]|h|r",
-		icon = 422809,
-		isTransmog = true,
-		locations = {
-			{encounterID=109, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188519] = {
@@ -55962,23 +45275,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=108, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188519] = {
-		itemID = 188519,
-		name = "Gently Gnawed Hauberk",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:188519::::::::90:251:::::::::|h[Gently Gnawed Hauberk]|h|r",
-		icon = 430972,
-		isTransmog = true,
-		locations = {
-			{encounterID=108, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188520] = {
@@ -55995,23 +45291,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=105, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188520] = {
-		itemID = 188520,
-		name = "Groundrumble Boots",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:188520::::::::90:251:::::::::|h[Groundrumble Boots]|h|r",
-		icon = 427628,
-		isTransmog = true,
-		locations = {
-			{encounterID=105, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[188521] = {
@@ -56028,74 +45307,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=66, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=107, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188521] = {
-		itemID = 188521,
-		name = "Heat-Shielded Tunic",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:188521::::::::90:251:::::::::|h[Heat-Shielded Tunic]|h|r",
-		icon = 436838,
-		isTransmog = true,
-		locations = {
-			{encounterID=107, instanceID=66, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[188693] = {
-		itemID = 188693,
-		name = "Pouch of Red Rose Petals",
-		expansionID = 4,
-		quality = 2,
-		classID = 15,
-		subclassID = 4,
-		itemType = "Miscellaneous",
-		itemSubType = "Other",
-		link = "|cnIQ2:|Hitem:188693::::::::90:251:::::::::|h[Pouch of Red Rose Petals]|h|r",
-		icon = 133638,
-		isTransmog = false,
-		spellID = 27571,
-		locations = {
-			{encounterID=0, instanceID=66, source="att", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-		},
-	},
-	[188693] = {
-		itemID = 188693,
-		name = "Pouch of Red Rose Petals",
-		expansionID = 4,
-		quality = 2,
-		classID = 15,
-		subclassID = 4,
-		itemType = "Miscellaneous",
-		itemSubType = "Other",
-		link = "|cnIQ2:|Hitem:188693::::::::90:251:::::::::|h[Pouch of Red Rose Petals]|h|r",
-		icon = 133638,
-		isTransmog = false,
-		spellID = 27571,
-		locations = {
-			{encounterID=0, instanceID=66, source="att", difficulties={{id=1,name="Normal"}}},
-		},
-	},
-	[188693] = {
-		itemID = 188693,
-		name = "Pouch of Red Rose Petals",
-		expansionID = 4,
-		quality = 2,
-		classID = 15,
-		subclassID = 4,
-		itemType = "Miscellaneous",
-		itemSubType = "Other",
-		link = "|cnIQ2:|Hitem:188693::::::::90:251:::::::::|h[Pouch of Red Rose Petals]|h|r",
-		icon = 133638,
-		isTransmog = false,
-		spellID = 27571,
-		locations = {
-			{encounterID=0, instanceID=66, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[191734] = {
@@ -56161,23 +45372,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2613, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224731] = {
-		itemID = 224731,
-		name = "Ogre-Sized Belt",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:224731::::::::90:251:::::::::|h[Ogre-Sized Belt]|h|r",
-		icon = 132499,
-		isTransmog = true,
-		locations = {
-			{encounterID=2613, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224732] = {
@@ -56194,23 +45388,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2613, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224732] = {
-		itemID = 224732,
-		name = "Foreman's Handwraps",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:224732::::::::90:251:::::::::|h[Foreman's Handwraps]|h|r",
-		icon = 133806,
-		isTransmog = true,
-		locations = {
-			{encounterID=2613, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224733] = {
@@ -56227,23 +45404,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2613, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224733] = {
-		itemID = 224733,
-		name = "Watchman's Boots",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:224733::::::::90:251:::::::::|h[Watchman's Boots]|h|r",
-		icon = 132539,
-		isTransmog = true,
-		locations = {
-			{encounterID=2613, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224734] = {
@@ -56260,23 +45420,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2613, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224734] = {
-		itemID = 224734,
-		name = "Defias Spiked Pauldrons",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:224734::::::::90:251:::::::::|h[Defias Spiked Pauldrons]|h|r",
-		icon = 135042,
-		isTransmog = true,
-		locations = {
-			{encounterID=2613, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224735] = {
@@ -56293,23 +45436,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = false,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2613, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224735] = {
-		itemID = 224735,
-		name = "Blackened Bone Necklace",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:224735::::::::90:251:::::::::|h[Blackened Bone Necklace]|h|r",
-		icon = 466969,
-		isTransmog = false,
-		locations = {
-			{encounterID=2613, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224736] = {
@@ -56326,23 +45452,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224736] = {
-		itemID = 224736,
-		name = "Shredder Teeth",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 13,
-		itemType = "Weapon",
-		itemSubType = "Fist Weapons",
-		link = "|cnIQ3:|Hitem:224736::::::::90:251:::::::::|h[Shredder Teeth]|h|r",
-		icon = 4636988,
-		isTransmog = true,
-		locations = {
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224737] = {
@@ -56359,23 +45468,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224737] = {
-		itemID = 224737,
-		name = "Goblin Treekickers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:224737::::::::90:251:::::::::|h[Goblin Treekickers]|h|r",
-		icon = 132583,
-		isTransmog = true,
-		locations = {
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224738] = {
@@ -56392,23 +45484,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224738] = {
-		itemID = 224738,
-		name = "Logger's Wristguards",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:224738::::::::90:251:::::::::|h[Logger's Wristguards]|h|r",
-		icon = 132602,
-		isTransmog = true,
-		locations = {
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224739] = {
@@ -56425,23 +45500,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224739] = {
-		itemID = 224739,
-		name = "Lumbermaster's Mantle",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:224739::::::::90:251:::::::::|h[Lumbermaster's Mantle]|h|r",
-		icon = 135038,
-		isTransmog = true,
-		locations = {
-			{encounterID=2626, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224740] = {
@@ -56458,23 +45516,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2628, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224740] = {
-		itemID = 224740,
-		name = "Forgemasters's Faceshield",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:224740::::::::90:251:::::::::|h[Forgemasters's Faceshield]|h|r",
-		icon = 133124,
-		isTransmog = true,
-		locations = {
-			{encounterID=2628, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224741] = {
@@ -56491,23 +45532,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2628, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224741] = {
-		itemID = 224741,
-		name = "Defias Scimitar",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 7,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Swords",
-		link = "|cnIQ3:|Hitem:224741::::::::90:251:::::::::|h[Defias Scimitar]|h|r",
-		icon = 135667,
-		isTransmog = true,
-		locations = {
-			{encounterID=2628, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224742] = {
@@ -56524,23 +45548,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224742] = {
-		itemID = 224742,
-		name = "Smite's Pistol",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 3,
-		itemType = "Weapon",
-		itemSubType = "Guns",
-		link = "|cnIQ3:|Hitem:224742::::::::90:251:::::::::|h[Smite's Pistol]|h|r",
-		icon = 134536,
-		isTransmog = true,
-		locations = {
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224744] = {
@@ -56557,23 +45564,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224744] = {
-		itemID = 224744,
-		name = "Defias Cuirass",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:224744::::::::90:251:::::::::|h[Defias Cuirass]|h|r",
-		icon = 323417,
-		isTransmog = true,
-		locations = {
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224745] = {
@@ -56590,23 +45580,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224745] = {
-		itemID = 224745,
-		name = "Blackguard Slippers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:224745::::::::90:251:::::::::|h[Blackguard Slippers]|h|r",
-		icon = 132567,
-		isTransmog = true,
-		locations = {
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224746] = {
@@ -56623,23 +45596,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224746] = {
-		itemID = 224746,
-		name = "Thief's Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:224746::::::::90:251:::::::::|h[Thief's Gloves]|h|r",
-		icon = 133816,
-		isTransmog = true,
-		locations = {
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224747] = {
@@ -56656,23 +45612,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224747] = {
-		itemID = 224747,
-		name = "Buccaneer's Bludgeon",
-		expansionID = 4,
-		quality = 3,
-		classID = 2,
-		subclassID = 4,
-		itemType = "Weapon",
-		itemSubType = "One-Handed Maces",
-		link = "|cnIQ3:|Hitem:224747::::::::90:251:::::::::|h[Buccaneer's Bludgeon]|h|r",
-		icon = 133059,
-		isTransmog = true,
-		locations = {
-			{encounterID=2629, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224748] = {
@@ -56689,23 +45628,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2630, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224748] = {
-		itemID = 224748,
-		name = "Captain's Tricorne",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:224748::::::::90:251:::::::::|h[Captain's Tricorne]|h|r",
-		icon = 2055032,
-		isTransmog = true,
-		locations = {
-			{encounterID=2630, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224749] = {
@@ -56722,23 +45644,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2630, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224749] = {
-		itemID = 224749,
-		name = "Goblin Griptreads",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:224749::::::::90:251:::::::::|h[Goblin Griptreads]|h|r",
-		icon = 323410,
-		isTransmog = true,
-		locations = {
-			{encounterID=2630, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224753] = {
@@ -56755,23 +45660,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2630, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224753] = {
-		itemID = 224753,
-		name = "Pirate Captain's Girdle",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:224753::::::::90:251:::::::::|h[Pirate Captain's Girdle]|h|r",
-		icon = 307765,
-		isTransmog = true,
-		locations = {
-			{encounterID=2630, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224754] = {
@@ -56788,23 +45676,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2631, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224754] = {
-		itemID = 224754,
-		name = "Guildmaster's Leggings",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:224754::::::::90:251:::::::::|h[Guildmaster's Leggings]|h|r",
-		icon = 134656,
-		isTransmog = true,
-		locations = {
-			{encounterID=2631, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224755] = {
@@ -56821,23 +45692,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2631, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224755] = {
-		itemID = 224755,
-		name = "Defias Knifeguards",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:224755::::::::90:251:::::::::|h[Defias Knifeguards]|h|r",
-		icon = 236976,
-		isTransmog = true,
-		locations = {
-			{encounterID=2631, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224756] = {
@@ -56854,23 +45708,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2632, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224756] = {
-		itemID = 224756,
-		name = "Cookie's Special Flavors",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:224756::::::::90:251:::::::::|h[Cookie's Special Flavors]|h|r",
-		icon = 134751,
-		isTransmog = true,
-		locations = {
-			{encounterID=2632, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224757] = {
@@ -56887,23 +45724,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2632, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224757] = {
-		itemID = 224757,
-		name = "Master Chef's Gloves",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:224757::::::::90:251:::::::::|h[Master Chef's Gloves]|h|r",
-		icon = 134470,
-		isTransmog = true,
-		locations = {
-			{encounterID=2632, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224758] = {
@@ -56920,23 +45740,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2632, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224758] = {
-		itemID = 224758,
-		name = "Stolen Stormwind Helmet",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:224758::::::::90:251:::::::::|h[Stolen Stormwind Helmet]|h|r",
-		icon = 133070,
-		isTransmog = true,
-		locations = {
-			{encounterID=2632, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
 		},
 	},
 	[224759] = {
@@ -56953,279 +45756,6 @@ OneWoWItems_Cataclysm = {
 		isTransmog = true,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=24,name="Timewalking"}}},
-			{encounterID=2632, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[224759] = {
-		itemID = 224759,
-		name = "Pirate's Bracers",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:224759::::::::90:251:::::::::|h[Pirate's Bracers]|h|r",
-		icon = 132601,
-		isTransmog = true,
-		locations = {
-			{encounterID=2632, instanceID=63, source="att", difficulties={{id=24,name="Timewalking"}}},
-		},
-	},
-	[238938] = {
-		itemID = 238938,
-		name = "Vest of the Curious Visitor",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:238938::::::::90:251:::::::::|h[Vest of the Curious Visitor]|h|r",
-		icon = 132656,
-		isTransmog = true,
-		locations = {
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238938] = {
-		itemID = 238938,
-		name = "Vest of the Curious Visitor",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:238938::::::::90:251:::::::::|h[Vest of the Curious Visitor]|h|r",
-		icon = 132656,
-		isTransmog = true,
-		locations = {
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238939] = {
-		itemID = 238939,
-		name = "Missing Diplomat's Pauldrons",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:238939::::::::90:251:::::::::|h[Missing Diplomat's Pauldrons]|h|r",
-		icon = 427634,
-		isTransmog = true,
-		locations = {
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238939] = {
-		itemID = 238939,
-		name = "Missing Diplomat's Pauldrons",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:238939::::::::90:251:::::::::|h[Missing Diplomat's Pauldrons]|h|r",
-		icon = 427634,
-		isTransmog = true,
-		locations = {
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238940] = {
-		itemID = 238940,
-		name = "Defias Brotherhood Vest",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:238940::::::::90:251:::::::::|h[Defias Brotherhood Vest]|h|r",
-		icon = 436838,
-		isTransmog = true,
-		locations = {
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238940] = {
-		itemID = 238940,
-		name = "Defias Brotherhood Vest",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 2,
-		itemType = "Armor",
-		itemSubType = "Leather",
-		link = "|cnIQ3:|Hitem:238940::::::::90:251:::::::::|h[Defias Brotherhood Vest]|h|r",
-		icon = 436838,
-		isTransmog = true,
-		locations = {
-			{encounterID=89, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238976] = {
-		itemID = 238976,
-		name = "Blinders of the Follower",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:238976::::::::90:251:::::::::|h[Blinders of the Follower]|h|r",
-		icon = 422805,
-		isTransmog = true,
-		locations = {
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238976] = {
-		itemID = 238976,
-		name = "Blinders of the Follower",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 1,
-		itemType = "Armor",
-		itemSubType = "Cloth",
-		link = "|cnIQ3:|Hitem:238976::::::::90:251:::::::::|h[Blinders of the Follower]|h|r",
-		icon = 422805,
-		isTransmog = true,
-		locations = {
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238977] = {
-		itemID = 238977,
-		name = "Iron Will Girdle",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:238977::::::::90:251:::::::::|h[Iron Will Girdle]|h|r",
-		icon = 427627,
-		isTransmog = true,
-		locations = {
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238977] = {
-		itemID = 238977,
-		name = "Iron Will Girdle",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:238977::::::::90:251:::::::::|h[Iron Will Girdle]|h|r",
-		icon = 427627,
-		isTransmog = true,
-		locations = {
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238978] = {
-		itemID = 238978,
-		name = "Burden of Lost Humanity",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:238978::::::::90:251:::::::::|h[Burden of Lost Humanity]|h|r",
-		icon = 430977,
-		isTransmog = true,
-		locations = {
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238978] = {
-		itemID = 238978,
-		name = "Burden of Lost Humanity",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 3,
-		itemType = "Armor",
-		itemSubType = "Mail",
-		link = "|cnIQ3:|Hitem:238978::::::::90:251:::::::::|h[Burden of Lost Humanity]|h|r",
-		icon = 430977,
-		isTransmog = true,
-		locations = {
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238979] = {
-		itemID = 238979,
-		name = "Phantom Armor",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:238979::::::::90:251:::::::::|h[Phantom Armor]|h|r",
-		icon = 132627,
-		isTransmog = true,
-		locations = {
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238979] = {
-		itemID = 238979,
-		name = "Phantom Armor",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 4,
-		itemType = "Armor",
-		itemSubType = "Plate",
-		link = "|cnIQ3:|Hitem:238979::::::::90:251:::::::::|h[Phantom Armor]|h|r",
-		icon = 132627,
-		isTransmog = true,
-		locations = {
-			{encounterID=99, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238984] = {
-		itemID = 238984,
-		name = "Baroness Silverlaine's Locket",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:238984::::::::90:251:::::::::|h[Baroness Silverlaine's Locket]|h|r",
-		icon = 466968,
-		isTransmog = false,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
-		},
-	},
-	[238984] = {
-		itemID = 238984,
-		name = "Baroness Silverlaine's Locket",
-		expansionID = 4,
-		quality = 3,
-		classID = 4,
-		subclassID = 0,
-		itemType = "Armor",
-		itemSubType = "Miscellaneous",
-		link = "|cnIQ3:|Hitem:238984::::::::90:251:::::::::|h[Baroness Silverlaine's Locket]|h|r",
-		icon = 466968,
-		isTransmog = false,
-		locations = {
-			{encounterID=97, instanceID=64, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 	[244655] = {
@@ -57240,10 +45770,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ2:|Hitem:244655::::::::90:251:::::::::|h[Gilnean Circular Rug]|h|r",
 		icon = 7417271,
 		isTransmog = false,
-		spellID = 1237784,
 		locations = {
 			{encounterID=0, instanceID=64, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=100, instanceID=64, source="att", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
 		},
 	},
 	[248332] = {
@@ -57258,11 +45786,8 @@ OneWoWItems_Cataclysm = {
 		link = "|cnIQ2:|Hitem:248332::::::::90:251:::::::::|h[Stormwind Footlocker]|h|r",
 		icon = 7423637,
 		isTransmog = false,
-		spellID = 1246969,
 		locations = {
 			{encounterID=0, instanceID=63, source="journal", difficulties={{id=1,name="Normal"},{id=2,name="Heroic"}}},
-			{encounterID=93, instanceID=63, source="att", difficulties={{id=1,name="Normal"}}},
-			{encounterID=95, instanceID=63, source="att", difficulties={{id=2,name="Heroic"}}},
 		},
 	},
 }

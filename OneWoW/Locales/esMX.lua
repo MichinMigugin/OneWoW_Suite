@@ -164,7 +164,7 @@ ns.Locale:Register(ADDON_NAME, "esMX", {
     ["WHATS_NEW_H_AUTOMOUNT_TITLE"] = "Montura automática",
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Montura automática se pausa en combate y en otras situaciones con auras restringidas, detecta el sigilo sin escanear beneficios secretos y ya no da error cuando los datos de aura están restringidos. Las descripciones emergentes de Monturas de jugadores usan la misma protección.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
-    ["WHATS_NEW_H_JOURNAL_BODY"] = "Las listas de Journal de Midnight ahora incluyen La Gruta Mareal, Abismo Venenoso y Altar de los Colmillos.",
+    ["WHATS_NEW_H_JOURNAL_BODY"] = "El Journal de Midnight ahora incluye encuentros y botín de La Gruta Mareal, Abismo Venenoso y Altar de los Colmillos.",
     ["CMD_TOGGLE_ONEWOW"] = "Alternar OneWoW",
     ["CMD_KEYWORD_HELP"] = "Abrir la ayuda de palabras clave de búsqueda",
     ["CMD_OPEN_ALTTRACKER"] = "Abrir AltTracker",
