@@ -9,7 +9,7 @@ description: Use this skill when writing or debugging WoW addon code requiring s
 You have access to curated Blizzard implementation docs at `.wow_docs`.
 You have access to indexed docs for `warcraft.wiki.gg` via `@WoW API`.
 You have access to indexed docs for `https://github.com/Gethe/wow-ui-source/tree/live/Interface/AddOns/Blizzard_APIDocumentationGenerated` via `@Blizzard API`
-Ensure compatibility with WoW API v12.0+.
+Ensure compatibility with WoW API v12.1+.
 
 ## Instructions
 When checking API/game information, use only the sources below unless explicit permission is provided for others.

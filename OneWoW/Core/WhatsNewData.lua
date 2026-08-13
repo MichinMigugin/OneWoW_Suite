@@ -14,12 +14,7 @@ local _, ns = ...
 
 ns.WhatsNewData = {
     highlights = {
-        { titleKey = "HOME_TAB",                      bodyKey = "WHATS_NEW_H_HOME_BODY" },
-        { titleKey = "WHATS_NEW_H_SLASH_TITLE",       bodyKey = "WHATS_NEW_H_SLASH_BODY" },
-        { titleKey = "WHATS_NEW_H_SETTINGS_TITLE",    bodyKey = "WHATS_NEW_H_SETTINGS_BODY" },
-        { titleKey = "WHATS_NEW_H_PORTALS_TITLE",     bodyKey = "WHATS_NEW_H_PORTALS_BODY" },
-        { titleKey = "WHATS_NEW_H_TRADESKILLS_TITLE", bodyKey = "WHATS_NEW_H_TRADESKILLS_BODY" },
-        { titleKey = "WHATS_NEW_H_QUESTS_TITLE",      bodyKey = "WHATS_NEW_H_QUESTS_BODY" },
-        { titleKey = "MAIL",                          bodyKey = "WHATS_NEW_H_MAIL_BODY" },
+        { titleKey = "WHATS_NEW_H_AUTOMOUNT_TITLE", bodyKey = "WHATS_NEW_H_AUTOMOUNT_BODY" },
+        { titleKey = "WHATS_NEW_H_JOURNAL_TITLE",   bodyKey = "WHATS_NEW_H_JOURNAL_BODY" },
     },
 }

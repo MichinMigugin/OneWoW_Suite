@@ -2,7 +2,7 @@
 """Ketho / lua-language-server WoW API compliance audit for OneWoW Suite.
 
 Transparent audit reproducible by reviewers: sumneko LuaLS + Ketho wow-api
-Annotations/Core, Retail 12.0 targeting, project .luarc.json globals merged
+Annotations/Core, Retail 12.1 targeting, project .luarc.json globals merged
 with Ketho's known-global list (minus deprecated APIs and annotated C_* tables).
 
 Usage (from repo root):

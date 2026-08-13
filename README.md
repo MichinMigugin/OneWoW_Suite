@@ -1,6 +1,6 @@
 # OneWoW Suite
 
-**A modular World of Warcraft addon suite for Retail 12.0+.** One shared hub, unified themes, eleven locales, and optional feature addons you enable only when you need them.
+**A modular World of Warcraft addon suite for Retail 12.1+.** One shared hub, unified themes, eleven locales, and optional feature addons you enable only when you need them.
 
 **Website:** https://wow2.xyz/
 

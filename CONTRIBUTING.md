@@ -88,7 +88,7 @@ QoL external modules use per-module locale scopes — see [OneWoW_QoL/DEVELOPERS
 
 ## Code Standards
 
-- **Target:** WoW Retail 12.0+ — prefer `C_*` namespace APIs and `Enum.*` constants
+- **Target:** WoW Retail 12.1+ — prefer `C_*` namespace APIs and `Enum.*` constants
 - **Localization:** `L["STRING_KEY"]` for scoped strings; bare globals for Blizzard terms; see LOCALES.md
 - **SavedVariables:** use `OneWoW_GUI.DB` — see [OneWoW/Docs/DATABASE.md](OneWoW/Docs/DATABASE.md)
 - **UI:** use `OneWoW_GUI` components — see [OneWoW/Docs/GUI.md](OneWoW/Docs/GUI.md)

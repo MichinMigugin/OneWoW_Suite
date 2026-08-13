@@ -6,7 +6,7 @@ others that read `AGENTS.md`). Cursor does **not** need this file — it loads
 
 ## Project
 
-OneWoW Suite is a World of Warcraft **Retail 12.0+** Lua addon suite: a
+OneWoW Suite is a World of Warcraft **Retail 12.1+** Lua addon suite: a
 multi-load-unit monorepo of cooperating addons (`OneWoW_Bags`, `OneWoW_Catalog`,
 `OneWoW_AltTracker`, `OneWoW_QoL`, …) orchestrated by the core hub in
 [`OneWoW/`](OneWoW/). The shared UI/DB toolkit is published as the global
@@ -52,7 +52,7 @@ guards that paper over broken invariants. Full rule:
 Condensed from [`.cursor/rules/WoW-Lua-Addon-Development.mdc`](.cursor/rules/WoW-Lua-Addon-Development.mdc)
 — read the full rule for depth.
 
-- **Target Retail 12.0+ only.** No Classic/multi-version compat. Every `C_*`
+- **Target Retail 12.1+ only.** No Classic/multi-version compat. Every `C_*`
   namespace, `Enum.*` table, and modern Blizzard global is guaranteed present at
   load — do **not** write existence guards for them (see `No-Defensive-Guards`).
 - **Prefer `C_*` namespace APIs.** Many legacy globals were removed in 12.0

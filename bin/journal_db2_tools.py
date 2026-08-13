@@ -22,7 +22,7 @@ DEFAULT_DB2 = SUITE_ROOT / ".wow_db2"
 DEFAULT_OUT = SUITE_ROOT / "OneWoW_CatalogData_Journal" / "Data" / "Generated"
 DATA_DIR = SUITE_ROOT / "OneWoW_CatalogData_Journal" / "Data"
 
-BUILD_PIN = "12.0.7.68887"
+BUILD_PIN = "12.1.0.69283"
 CURRENT_SEASON_EXPANSION = 9000
 
 REQUIRED_FOR_GENERATE = (

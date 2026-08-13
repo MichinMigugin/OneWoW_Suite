@@ -1,15 +1,6 @@
 {
   "wow_docs_root": ".",
   "sources": {
-    "wow-ui-source": {
-      "url": "https://github.com/Gethe/wow-ui-source.git",
-      "branch": "live",
-      "scan_roots": [
-        "Interface/AddOns"
-      ],
-      "last_synced_commit": "eb941aad028d73ddc69e3e8ef4da709f4d3cd744",
-      "last_synced_date": "2026-08-12"
-    },
     "blizzard-interface-resources": {
       "url": "https://github.com/Ketho/BlizzardInterfaceResources.git",
       "branch": "live",
@@ -17,7 +8,16 @@
         "Resources"
       ],
       "last_synced_commit": "774b2c550366245b5b7fa84688307fa891960632",
-      "last_synced_date": "2026-08-12"
+      "last_synced_date": "2026-08-13"
+    },
+    "wow-ui-source": {
+      "url": "https://github.com/Gethe/wow-ui-source.git",
+      "branch": "live",
+      "scan_roots": [
+        "Interface/AddOns"
+      ],
+      "last_synced_commit": "710f59e457317676c0f699e6addaf2c405c2a1a4",
+      "last_synced_date": "2026-08-13"
     }
   },
   "default_source": "wow-ui-source",

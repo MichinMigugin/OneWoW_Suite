@@ -6,8 +6,14 @@
 
 ---
 
-*No user-facing changes this release for AltTracker, Bags, Catalog, Mail, Notes, Portals, Shopping List, or Trackers.*
+# Catalog
+## Journal
+- Midnight Journal listings now include The Tidebound Grotto, The Venomous Abyss, and Altar of Fangs.
 
 ---
 
-- **Last Updated**: Aug 12, 2026
+*No user-facing changes this release for AltTracker, Bags, Mail, Notes, Portals, Shopping List, or Trackers.*
+
+---
+
+- **Last Updated**: Aug 13, 2026

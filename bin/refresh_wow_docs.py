@@ -163,7 +163,7 @@ def write_manifest(manifest_path: Path, manifest: dict, sources: dict, default_s
         "default_source": default_source,
         "files": dict(sorted(manifest["files"].items())),
     }
-    manifest_path.write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
+    manifest_path.write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def print_diff_since(cache: Path, prev: str, new: str, paths: list[str], source_name: str) -> None:

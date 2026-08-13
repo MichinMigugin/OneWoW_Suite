@@ -6,7 +6,7 @@ tools such as [`bin/journal_db2_tools.py`](../bin/journal_db2_tools.py). This is
 
 ## Build
 
-**`12.0.7.68887`**
+**`12.1.0.69283`**
 
 Bump this string whenever you replace CSVs with a newer client extract.
 
