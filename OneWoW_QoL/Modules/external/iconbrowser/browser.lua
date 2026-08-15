@@ -12,6 +12,7 @@ if not M then return end
 local OneWoW_GUI = OneWoW_GUI
 
 local CreateFrame = CreateFrame
+local Mixin = Mixin
 local CreateFromMixins = CreateFromMixins
 local CallbackRegistryMixin = CallbackRegistryMixin
 local CreateScrollBoxListGridView = CreateScrollBoxListGridView
@@ -142,6 +143,215 @@ local function AddCategoryList(parent, list, browser)
     end
 end
 
+-- Mixin first in Create: SetDataProvider and SetupMenu call these methods
+-- synchronously, so they must exist before those APIs run.
+local BrowserFrameMixin = {}
+
+function BrowserFrameMixin:GetVisibleCount()
+    if self.filteredIndices then
+        return #self.filteredIndices
+    end
+    return M.Catalog.GetNumIcons()
+end
+
+function BrowserFrameMixin:GetVisibleInfo(proxyIndex)
+    if self.filteredIndices then
+        local sourceIndex = self.filteredIndices[proxyIndex]
+        return sourceIndex and M.Catalog.GetIconInfo(sourceIndex) or nil
+    end
+    return M.Catalog.GetIconInfo(proxyIndex)
+end
+
+function BrowserFrameMixin:IsFiltering()
+    return self.searchQuery ~= "" or next(self.filterCategories) ~= nil
+end
+
+function BrowserFrameMixin:NotifyProvider()
+    if self.provider then
+        self.provider:TriggerEvent("OnSizeChanged")
+    end
+end
+
+function BrowserFrameMixin:CancelSearch()
+    if self.searchJob then
+        self.searchJob:Cancel()
+        self.searchJob = nil
+    end
+    self.ProgressOverlay:Hide()
+end
+
+function BrowserFrameMixin:Rebuild()
+    self:CancelSearch()
+    if not self:IsFiltering() then
+        self.filteredIndices = nil
+        self:NotifyProvider()
+        return
+    end
+
+    local active = {}
+    for category, on in pairs(self.filterCategories) do
+        if on then
+            tinsert(active, category)
+        end
+    end
+    local predicate = M.Catalog.CategoryPredicate(active)
+    local query = self.searchQuery
+    local results = {}
+    local total = M.Catalog.GetNumIcons()
+    self.searchTotal = total
+    self.searched = 0
+    self.ProgressOverlay:Show()
+    self.ProgressOverlay.ProgressBar:SetValue(0)
+
+    self.searchJob = OneWoW.ChunkedJob.Start({
+        budgetMs = 8,
+        run = function(shouldYield)
+            local n = 0
+            for index, info in M.Catalog.EnumerateIcons() do
+                local ok = true
+                if predicate and not predicate(index) then
+                    ok = false
+                end
+                if ok and not M.Catalog.NameMatches(info, query) then
+                    ok = false
+                end
+                if ok then
+                    tinsert(results, index)
+                end
+                n = n + 1
+                self.searched = n
+                OneWoW.ChunkedJob.YieldIfNeeded(shouldYield)
+            end
+        end,
+        onProgress = function()
+            if self.searchTotal > 0 then
+                self.ProgressOverlay.ProgressBar:SetValue(self.searched / self.searchTotal)
+            end
+        end,
+        onComplete = function()
+            self.searchJob = nil
+            self.filteredIndices = results
+            self.ProgressOverlay:Hide()
+            self:NotifyProvider()
+        end,
+        onCancel = function()
+            self.searchJob = nil
+            self.ProgressOverlay:Hide()
+        end,
+    })
+end
+
+function BrowserFrameMixin:SetSearchQuery(text)
+    local query = NormalizeQuery(text)
+    if self.searchQuery == query then
+        return
+    end
+    self.searchQuery = query
+    self:Rebuild()
+end
+
+function BrowserFrameMixin:ToggleCategory(category)
+    if self.filterCategories[category] then
+        self.filterCategories[category] = nil
+    else
+        self.filterCategories[category] = true
+    end
+    self:Rebuild()
+end
+
+function BrowserFrameMixin:ClearFilters()
+    wipe(self.filterCategories)
+    self.searchQuery = ""
+    self.SearchBox:SetText("")
+    self.SearchBox:RestorePlaceholder()
+    self:Rebuild()
+end
+
+function BrowserFrameMixin:SetSelectedFile(fileID)
+    self.selectedFile = fileID
+    self:NotifyProvider()
+end
+
+function BrowserFrameMixin:SetupFilterMenu(root)
+    local spec = M.Catalog.GetFilterSpec()
+
+    AddCategoryCheckbox(root, SPELLS, spec.ability, self)
+    AddCategoryCheckbox(root, ACHIEVEMENTS, spec.achievement, self)
+    AddCategoryCheckbox(root, AUCTION_CATEGORY_HOUSING, spec.housing, self)
+    root:CreateDivider()
+
+    local classMenu = root:CreateButton(CLASS)
+    AddCategoryList(classMenu, spec.classes, self)
+
+    local cultureMenu = root:CreateButton(L["ICONBROWSER_CULTURE"])
+    AddCategoryList(cultureMenu, spec.cultures, self)
+
+    local weaponMenu = root:CreateButton(AUCTION_CATEGORY_WEAPONS)
+    AddCategoryCheckbox(weaponMenu, AUCTION_CATEGORY_WEAPONS, spec.weaponAll, self)
+    weaponMenu:CreateDivider()
+    weaponMenu:CreateTitle(MELEE)
+    AddCategoryList(weaponMenu, spec.melee, self)
+    weaponMenu:CreateDivider()
+    weaponMenu:CreateTitle(AUCTION_SUBCATEGORY_RANGED)
+    AddCategoryList(weaponMenu, spec.ranged, self)
+
+    local armorMenu = root:CreateButton(AUCTION_CATEGORY_ARMOR)
+    AddCategoryList(armorMenu, spec.armorTypes, self)
+    armorMenu:CreateDivider()
+    armorMenu:CreateTitle(ALL_INVENTORY_SLOTS)
+    AddCategoryList(armorMenu, spec.slots, self)
+
+    local magicMenu = root:CreateButton(STRING_SCHOOL_MAGIC)
+    AddCategoryList(magicMenu, spec.magic, self)
+
+    local factionMenu = root:CreateButton(FACTION)
+    AddCategoryList(factionMenu, spec.factions, self)
+
+    local profMenu = root:CreateButton(TRADE_SKILLS)
+    AddCategoryCheckbox(profMenu, TRADE_SKILLS, spec.professionAll, self)
+    profMenu:CreateDivider()
+    AddCategoryList(profMenu, spec.professions, self)
+
+    local itemMenu = root:CreateButton(ITEMS)
+    AddCategoryCheckbox(itemMenu, ITEMS, spec.itemAll, self)
+    itemMenu:CreateDivider()
+    AddCategoryList(itemMenu, spec.items, self)
+end
+
+function BrowserFrameMixin:OnIconSelected(info)
+    if not info or not info.file then
+        return
+    end
+    self.selectedFile = info.file
+    if self.customSelectCallback then
+        self.customSelectCallback(info.file, info)
+    end
+    local popup = self.popup
+    if popup and popup.BorderBox and popup.BorderBox.SelectedIconArea then
+        popup.BorderBox.SelectedIconArea.SelectedIconButton:SetIconTexture(info.file)
+        popup.selectedIconTexture = info.file
+        popup.selectedIconIndex = nil
+        if popup.SetSelectedIconText then
+            popup:SetSelectedIconText()
+        end
+        if popup.BorderBox.OkayButton then
+            popup.BorderBox.OkayButton:Enable()
+        end
+    end
+    self:NotifyProvider()
+end
+
+function BrowserFrameMixin:SyncPopupSelection()
+    local popup = self.popup
+    if not popup or not popup.BorderBox or not popup.BorderBox.SelectedIconArea then
+        return
+    end
+    local current = popup.BorderBox.SelectedIconArea.SelectedIconButton:GetIconTexture()
+    if current then
+        self:SetSelectedFile(current)
+    end
+end
+
 function Browser.Create(parent, opts)
     opts = opts or {}
     local stride = opts.stride or DEFAULT_STRIDE
@@ -149,6 +359,7 @@ function Browser.Create(parent, opts)
     local height = opts.height
 
     local frame = CreateFrame("Frame", nil, parent)
+    Mixin(frame, BrowserFrameMixin)
     if width and height then
         frame:SetSize(width, height)
     end
@@ -254,211 +465,6 @@ function Browser.Create(parent, opts)
     filter:SetupMenu(function(_, rootDescription)
         frame:SetupFilterMenu(rootDescription)
     end)
-
-    function frame:GetVisibleCount()
-        if self.filteredIndices then
-            return #self.filteredIndices
-        end
-        return M.Catalog.GetNumIcons()
-    end
-
-    function frame:GetVisibleInfo(proxyIndex)
-        if self.filteredIndices then
-            local sourceIndex = self.filteredIndices[proxyIndex]
-            return sourceIndex and M.Catalog.GetIconInfo(sourceIndex) or nil
-        end
-        return M.Catalog.GetIconInfo(proxyIndex)
-    end
-
-    function frame:IsFiltering()
-        return self.searchQuery ~= "" or next(self.filterCategories) ~= nil
-    end
-
-    function frame:NotifyProvider()
-        if self.provider then
-            self.provider:TriggerEvent("OnSizeChanged")
-        end
-    end
-
-    function frame:CancelSearch()
-        if self.searchJob then
-            self.searchJob:Cancel()
-            self.searchJob = nil
-        end
-        self.ProgressOverlay:Hide()
-    end
-
-    function frame:Rebuild()
-        self:CancelSearch()
-        if not self:IsFiltering() then
-            self.filteredIndices = nil
-            self:NotifyProvider()
-            return
-        end
-
-        local active = {}
-        for category, on in pairs(self.filterCategories) do
-            if on then
-                tinsert(active, category)
-            end
-        end
-        local predicate = M.Catalog.CategoryPredicate(active)
-        local query = self.searchQuery
-        local results = {}
-        local total = M.Catalog.GetNumIcons()
-        self.searchTotal = total
-        self.searched = 0
-        self.ProgressOverlay:Show()
-        self.ProgressOverlay.ProgressBar:SetValue(0)
-
-        self.searchJob = OneWoW.ChunkedJob.Start({
-            budgetMs = 8,
-            run = function(shouldYield)
-                local n = 0
-                for index, info in M.Catalog.EnumerateIcons() do
-                    local ok = true
-                    if predicate and not predicate(index) then
-                        ok = false
-                    end
-                    if ok and not M.Catalog.NameMatches(info, query) then
-                        ok = false
-                    end
-                    if ok then
-                        tinsert(results, index)
-                    end
-                    n = n + 1
-                    self.searched = n
-                    OneWoW.ChunkedJob.YieldIfNeeded(shouldYield)
-                end
-            end,
-            onProgress = function()
-                if self.searchTotal > 0 then
-                    self.ProgressOverlay.ProgressBar:SetValue(self.searched / self.searchTotal)
-                end
-            end,
-            onComplete = function()
-                self.searchJob = nil
-                self.filteredIndices = results
-                self.ProgressOverlay:Hide()
-                self:NotifyProvider()
-            end,
-            onCancel = function()
-                self.searchJob = nil
-                self.ProgressOverlay:Hide()
-            end,
-        })
-    end
-
-    function frame:SetSearchQuery(text)
-        local query = NormalizeQuery(text)
-        if self.searchQuery == query then
-            return
-        end
-        self.searchQuery = query
-        self:Rebuild()
-    end
-
-    function frame:ToggleCategory(category)
-        if self.filterCategories[category] then
-            self.filterCategories[category] = nil
-        else
-            self.filterCategories[category] = true
-        end
-        self:Rebuild()
-    end
-
-    function frame:ClearFilters()
-        wipe(self.filterCategories)
-        self.searchQuery = ""
-        self.SearchBox:SetText("")
-        self.SearchBox:RestorePlaceholder()
-        self:Rebuild()
-    end
-
-    function frame:SetSelectedFile(fileID)
-        self.selectedFile = fileID
-        self:NotifyProvider()
-    end
-
-    function frame:SetupFilterMenu(root)
-        local spec = M.Catalog.GetFilterSpec()
-
-        AddCategoryCheckbox(root, SPELLS, spec.ability, self)
-        AddCategoryCheckbox(root, ACHIEVEMENTS, spec.achievement, self)
-        AddCategoryCheckbox(root, AUCTION_CATEGORY_HOUSING, spec.housing, self)
-        root:CreateDivider()
-
-        local classMenu = root:CreateButton(CLASS)
-        AddCategoryList(classMenu, spec.classes, self)
-
-        local cultureMenu = root:CreateButton(L["ICONBROWSER_CULTURE"])
-        AddCategoryList(cultureMenu, spec.cultures, self)
-
-        local weaponMenu = root:CreateButton(AUCTION_CATEGORY_WEAPONS)
-        AddCategoryCheckbox(weaponMenu, AUCTION_CATEGORY_WEAPONS, spec.weaponAll, self)
-        weaponMenu:CreateDivider()
-        weaponMenu:CreateTitle(MELEE)
-        AddCategoryList(weaponMenu, spec.melee, self)
-        weaponMenu:CreateDivider()
-        weaponMenu:CreateTitle(AUCTION_SUBCATEGORY_RANGED)
-        AddCategoryList(weaponMenu, spec.ranged, self)
-
-        local armorMenu = root:CreateButton(AUCTION_CATEGORY_ARMOR)
-        AddCategoryList(armorMenu, spec.armorTypes, self)
-        armorMenu:CreateDivider()
-        armorMenu:CreateTitle(ALL_INVENTORY_SLOTS)
-        AddCategoryList(armorMenu, spec.slots, self)
-
-        local magicMenu = root:CreateButton(STRING_SCHOOL_MAGIC)
-        AddCategoryList(magicMenu, spec.magic, self)
-
-        local factionMenu = root:CreateButton(FACTION)
-        AddCategoryList(factionMenu, spec.factions, self)
-
-        local profMenu = root:CreateButton(TRADE_SKILLS)
-        AddCategoryCheckbox(profMenu, TRADE_SKILLS, spec.professionAll, self)
-        profMenu:CreateDivider()
-        AddCategoryList(profMenu, spec.professions, self)
-
-        local itemMenu = root:CreateButton(ITEMS)
-        AddCategoryCheckbox(itemMenu, ITEMS, spec.itemAll, self)
-        itemMenu:CreateDivider()
-        AddCategoryList(itemMenu, spec.items, self)
-    end
-
-    function frame:OnIconSelected(info)
-        if not info or not info.file then
-            return
-        end
-        self.selectedFile = info.file
-        if self.customSelectCallback then
-            self.customSelectCallback(info.file, info)
-        end
-        local popup = self.popup
-        if popup and popup.BorderBox and popup.BorderBox.SelectedIconArea then
-            popup.BorderBox.SelectedIconArea.SelectedIconButton:SetIconTexture(info.file)
-            popup.selectedIconTexture = info.file
-            popup.selectedIconIndex = nil
-            if popup.SetSelectedIconText then
-                popup:SetSelectedIconText()
-            end
-            if popup.BorderBox.OkayButton then
-                popup.BorderBox.OkayButton:Enable()
-            end
-        end
-        self:NotifyProvider()
-    end
-
-    function frame:SyncPopupSelection()
-        local popup = self.popup
-        if not popup or not popup.BorderBox or not popup.BorderBox.SelectedIconArea then
-            return
-        end
-        local current = popup.BorderBox.SelectedIconArea.SelectedIconButton:GetIconTexture()
-        if current then
-            self:SetSelectedFile(current)
-        end
-    end
 
     frame:SetScript("OnShow", function(myself)
         myself.SearchBox:SetFocus()

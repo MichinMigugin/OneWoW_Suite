@@ -10,6 +10,7 @@
 ### QoL
 #### Icon Browser
 - Icon pickers for macros, bank tabs, guild bank tabs, equipment sets, and transmog outfits now have search and category filters.
+- Icon pickers no longer error on login when Icon Browser is enabled.
 
 #### Portals
 - ESC Portals keeps the Season 1 flyout and adds a Season 2 row. Each can be shown or hidden from Portals settings. Midnight Season 2 dungeon teleports are included, and the Midnight expansion flyout lists the new dungeons.
