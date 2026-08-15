@@ -134,9 +134,16 @@ function ns:ShouldStripJunkOverlays(isJunk)
     return isJunk and db.global.stripJunkOverlays and not self:IsAltShowActive()
 end
 
+function ns:IsBagsUIEnabled()
+    return self:GetDB().global.enableBagsUI
+end
+
 function ns:IsBankUIEnabled()
-    local db = self:GetDB()
-    return db.global.enableBankUI ~= false
+    return self:GetDB().global.enableBankUI
+end
+
+function ns:IsGuildBankUIEnabled()
+    return self:GetDB().global.enableGuildBankUI
 end
 
 function ns:EnsureCategoryModification(categoryName)
@@ -910,7 +917,7 @@ function ns:OnBankOpened()
         if self.BankGUI and self.BankGUI:IsShown() then
             self.BankGUI:Hide()
         end
-        if self.db.global.autoOpenWithBank then
+        if self.db.global.autoOpenWithBank and self:IsBagsUIEnabled() then
             self.GUI:Show()
         end
         return
@@ -935,7 +942,7 @@ function ns:OnBankOpened()
 
     self.BankGUI:Show()
 
-    if self.db.global.autoOpenWithBank then
+    if self.db.global.autoOpenWithBank and self:IsBagsUIEnabled() then
         self.GUI:Show()
     end
 
@@ -1126,13 +1133,13 @@ function ns:QueueGuildBankRefresh()
 end
 
 function ns:OnGuildBankOpened()
-    self.guildBankOpen = self:IsBankUIEnabled()
-    if not self:IsBankUIEnabled() then
+    self.guildBankOpen = self:IsGuildBankUIEnabled()
+    if not self:IsGuildBankUIEnabled() then
         self:RestoreGuildBankFrame()
         if self.GuildBankGUI and self.GuildBankGUI:IsShown() then
             self.GuildBankGUI:Hide()
         end
-        if self.db.global.autoOpenWithBank then
+        if self.db.global.autoOpenWithBank and self:IsBagsUIEnabled() then
             self.GUI:Show()
         end
         return
@@ -1156,7 +1163,7 @@ function ns:OnGuildBankOpened()
     self:MarkGuildOverlaysDirty("open")
     self.GuildBankGUI:Show()
 
-    if self.db.global.autoOpenWithBank then
+    if self.db.global.autoOpenWithBank and self:IsBagsUIEnabled() then
         self.GUI:Show()
     end
 
@@ -1164,7 +1171,7 @@ function ns:OnGuildBankOpened()
 end
 
 function ns:OnGuildBankClosed()
-    if not self:IsBankUIEnabled() then
+    if not self:IsGuildBankUIEnabled() then
         self.guildBankOpen = false
         self:RestoreGuildBankFrame()
         return
@@ -1332,8 +1339,7 @@ function ns:RegisterSlashCommands()
 end
 
 function ns:ShouldHideBlizzardBagsBar()
-    local db = self.db
-    return db.global.hideBlizzardBagsBar == true
+    return self:IsBagsUIEnabled() and self.db.global.hideBlizzardBagsBar
 end
 
 function ns:UpdateBlizzardBagsBarVisibility()
@@ -1356,12 +1362,51 @@ function ns:UpdateBlizzardBagsBarVisibility()
     end
 end
 
+function ns:ApplyBagBindingOverrides()
+    local bindingFrame = self.bindingFrame
+    if not bindingFrame then return end
+
+    ClearOverrideBindings(bindingFrame)
+    if not self:IsBagsUIEnabled() then return end
+
+    local bindings = {
+        "TOGGLEBACKPACK",
+        "TOGGLEBAG1",
+        "TOGGLEBAG2",
+        "TOGGLEBAG3",
+        "TOGGLEBAG4",
+        "TOGGLEREAGENTBAG",
+        "OPENALLBAGS",
+    }
+
+    for _, binding in ipairs(bindings) do
+        local key1, key2 = GetBindingKey(binding)
+        if key1 then
+            SetOverrideBinding(bindingFrame, true, key1, "CLICK OneWoW_BagsBindingFrame:LeftButton")
+        end
+        if key2 then
+            SetOverrideBinding(bindingFrame, true, key2, "CLICK OneWoW_BagsBindingFrame:LeftButton")
+        end
+    end
+end
+
+function ns:SetupBagBindingOverrides()
+    -- SetOverrideBinding is protected, so defer until protected actions are
+    -- allowed (combat lockdown / Combat / Encounter / keystone / PvP) — but NOT
+    -- the Map restriction, so bindings still set up inside a Delve out of combat.
+    -- One-shot: a re-run (e.g. UPDATE_BINDINGS) replaces any pending request.
+    OneWoW.Restriction.RunWhenUnrestricted("protected", "OneWoW_Bags.bindings", function()
+        ns:ApplyBagBindingOverrides()
+    end)
+end
+
 function ns:HookBlizzardBags()
     local function IsMerchantVisible()
         return MerchantFrame and MerchantFrame:IsShown()
     end
 
     local function OpenOurBags(source)
+        if not ns:IsBagsUIEnabled() then return end
         if source == "auto" and IsMerchantVisible() then
             return
         end
@@ -1369,6 +1414,7 @@ function ns:HookBlizzardBags()
     end
 
     local function ToggleOurBags()
+        if not ns:IsBagsUIEnabled() then return end
         ns.GUI:Toggle()
     end
 
@@ -1379,55 +1425,31 @@ function ns:HookBlizzardBags()
     end)
     self.bindingFrame = bindingFrame
 
-    local function ApplyBindingOverrides()
-        ClearOverrideBindings(bindingFrame)
-
-        local bindings = {
-            "TOGGLEBACKPACK",
-            "TOGGLEBAG1",
-            "TOGGLEBAG2",
-            "TOGGLEBAG3",
-            "TOGGLEBAG4",
-            "TOGGLEREAGENTBAG",
-            "OPENALLBAGS",
-        }
-
-        for _, binding in ipairs(bindings) do
-            local key1, key2 = GetBindingKey(binding)
-            if key1 then
-                SetOverrideBinding(bindingFrame, true, key1, "CLICK OneWoW_BagsBindingFrame:LeftButton")
-            end
-            if key2 then
-                SetOverrideBinding(bindingFrame, true, key2, "CLICK OneWoW_BagsBindingFrame:LeftButton")
-            end
-        end
-    end
-
-    local function SetupBindingOverrides()
-        -- SetOverrideBinding is protected, so defer until protected actions are
-        -- allowed (combat lockdown / Combat / Encounter / keystone / PvP) — but NOT
-        -- the Map restriction, so bindings still set up inside a Delve out of combat.
-        -- One-shot: a re-run (e.g. UPDATE_BINDINGS) replaces any pending request.
-        OneWoW.Restriction.RunWhenUnrestricted("protected", "OneWoW_Bags.bindings", ApplyBindingOverrides)
-    end
-
     bindingFrame:SetScript("OnEvent", function(_, event)
         if event == "UPDATE_BINDINGS" then
-            SetupBindingOverrides()
+            ns:SetupBagBindingOverrides()
         end
     end)
     bindingFrame:RegisterEvent("UPDATE_BINDINGS")
-    SetupBindingOverrides()
+    self:SetupBagBindingOverrides()
 
     for i = 1, 13 do
         local frame = _G["ContainerFrame" .. i]
         if frame then
-            frame:HookScript("OnShow", function(myself) myself:Hide() end)
+            frame:HookScript("OnShow", function(myself)
+                if ns:IsBagsUIEnabled() then
+                    myself:Hide()
+                end
+            end)
         end
     end
 
     if ContainerFrameCombinedBags then
-        ContainerFrameCombinedBags:HookScript("OnShow", function(myself) myself:Hide() end)
+        ContainerFrameCombinedBags:HookScript("OnShow", function(myself)
+            if ns:IsBagsUIEnabled() then
+                myself:Hide()
+            end
+        end)
     end
 
     hooksecurefunc("OpenBackpack", function() OpenOurBags("auto") end)
@@ -1480,7 +1502,7 @@ function ns:OnMerchantShow()
     self.vendorInteractionActive = true
     self.vendorCloseGuardActive = false
     self.vendorAutoOpenedBags = false
-    if not self.db.global.autoOpen then
+    if not self.db.global.autoOpen or not self:IsBagsUIEnabled() then
         return
     end
     self.vendorAutoOpenedBags = true

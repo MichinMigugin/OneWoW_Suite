@@ -204,7 +204,7 @@ The `ns` object provides:
 - **Cache invalidation:** `InvalidateCategorization(scope)` — refreshes `Categories` from `customCategoriesV2` / `recentItemDuration` / `recentItems`, clears category caches (`categoryCache` + `baseCategoryCache`); if `scope == "props"` then `OneWoW.PredicateEngine:InvalidatePropsCache()`, else full `OneWoW.PredicateEngine:InvalidateCache()`. **`InvalidateItemIDs(idSet)`** — surgical eviction after coalesced `GET_ITEM_INFO_RECEIVED` so identity-tier caches survive for unrelated items while streaming completes.
 - **Blizzard hooks:** `HookBlizzardBags`, `BlizzardBankHost` (`SuppressBankFrame` / `PrepareBlizzardBankPanel` / `RestoreBankFrame`), `SuppressGuildBankFrame`, `RestoreGuildBankFrame`
 - **Guild bank orchestration:** `RefreshGuildBankContents`, `QueueGuildBankRefresh`, `TrackGuildBankTransferTab`, `TrackGuildBankTransferSource`, `ProcessPendingGuildBankTransferTabs`, `PurgeClearSource`, plus internal coalescing state for cross-tab moves
-- **Helpers:** `GetDB`, `GetItemSortMode`, `SortButtons`, `ShouldDimJunkItem`, `ShouldStripJunkOverlays`, `EnsureCategoryModification`, `EnsureBuiltinCategoryAddedItems`, `IsAltShowActive`, `SetAltShowActive`, `IsBankUIEnabled`, `ReinitForLanguage`, `ApplyItemButtonMixin`, `HookPetCageTooltip`, `GetMoneyDialog`, `ShowMoneyDialog`, `UpdateSlotsForItemIDs`
+- **Helpers:** `GetDB`, `GetItemSortMode`, `SortButtons`, `ShouldDimJunkItem`, `ShouldStripJunkOverlays`, `EnsureCategoryModification`, `EnsureBuiltinCategoryAddedItems`, `IsAltShowActive`, `SetAltShowActive`, `IsBagsUIEnabled`, `IsBankUIEnabled`, `IsGuildBankUIEnabled`, `ReinitForLanguage`, `ApplyItemButtonMixin`, `HookPetCageTooltip`, `GetMoneyDialog`, `ShowMoneyDialog`, `UpdateSlotsForItemIDs`
 - **Shared tables:** `SectionDefaults`, `CategoryViewHelpers`, `BarHelpers` (see Key Components)
 
 ---
@@ -644,9 +644,9 @@ Shared: `bankShowWarband` (active mode), `bankFramePosition`, `collapsedBankCate
 
 ### Behavior
 
-`autoOpen`, `autoClose`, `autoOpenWithBank`, `locked`, `bankLocked`, `enableBankUI`, `enableBankOverlays`, `enableWarbandBankOverlays`, `altToShow`, `enableExpansionFilter`, `enableBankExpansionFilter`, `enableWarbandBankExpansionFilter`, `enableInventorySlots`, `stackItems`
+`autoOpen`, `autoClose`, `autoOpenWithBank`, `locked`, `bankLocked`, `enableBagsUI`, `enableBankUI`, `enableGuildBankUI`, `enableBankOverlays`, `enableWarbandBankOverlays`, `altToShow`, `enableExpansionFilter`, `enableBankExpansionFilter`, `enableWarbandBankExpansionFilter`, `enableInventorySlots`, `stackItems`
 
-`enableBankUI` and `bankLocked` are single shared keys mirrored into both Personal Bank and Warband Bank settings tabs via cross-tab UI sync.
+`enableBagsUI`, `enableBankUI`, and `enableGuildBankUI` are the three replacement gates, shown together on the General settings tab. Personal and warband share one window and one `enableBankUI` key; they are not independently enabled. `bankLocked` is still mirrored on both bank tabs via cross-tab UI sync.
 
 ### Visual
 
@@ -709,7 +709,7 @@ The addon folder includes `API/` (`README.md`, `INTEGRATION_GUIDE.md`, `INDEX.md
 
 ### Bags
 
-`hooksecurefunc` on Blizzard open/close/toggle bag functions; `ContainerFrame1..13` and `ContainerFrameCombinedBags` OnShow hides; override bindings on a secure button where applicable.
+`hooksecurefunc` on Blizzard open/close/toggle bag functions; `ContainerFrame1..13` and `ContainerFrameCombinedBags` OnShow hides; override bindings on a secure button where applicable. All of that stands down while `enableBagsUI` is off (`/1wbags` and the minimap still open the OneWoW window so settings stay reachable).
 
 ### Bank — `Core/BlizzardBankHost.lua`
 
@@ -739,7 +739,7 @@ API surface (also wrapped on `ns`):
 
 ### Guild bank
 
-`SuppressGuildBankFrame` / `RestoreGuildBankFrame` — alpha and position, preserve OnHide hook. (Weaker than the bank host; no `BankPanel`-style item grid is shown under the custom guild UI today.)
+`SuppressGuildBankFrame` / `RestoreGuildBankFrame` — alpha and position, preserve OnHide hook. Gated by `enableGuildBankUI` (not `enableBankUI`). (Weaker than the bank host; no `BankPanel`-style item grid is shown under the custom guild UI today.)
 
 ---
 

@@ -305,11 +305,15 @@ function GUI:Show()
     Categories:BeginRecentExpiryTicker()
 end
 
-function GUI:Hide()
+function GUI:HideWindow()
     Categories:EndRecentExpiryTicker()
     if MainWindow then
         MainWindow:Hide()
     end
+end
+
+function GUI:Hide()
+    self:HideWindow()
     Settings:Hide()
 end
 

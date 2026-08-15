@@ -12,8 +12,14 @@
 
 ---
 
-*No user-facing changes this release for AltTracker, Bags, Mail, Notes, Portals, Shopping List, or Trackers.*
+# Bags
+## Settings
+- Bags settings → General has three replacement toggles: Bags, Bank (personal and warband together), and Guild Bank.
 
 ---
 
-- **Last Updated**: Aug 13, 2026
+*No user-facing changes this release for AltTracker, Mail, Notes, Portals, Shopping List, or Trackers.*
+
+---
+
+- **Last Updated**: Aug 15, 2026

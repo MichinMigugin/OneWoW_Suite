@@ -40,6 +40,7 @@ end
 local SETTINGS_SECTION_KEYS = { "TAB_GENERAL", "TAB_BAGS", "TAB_PERSONAL_BANK", "TAB_WARBAND_BANK", "TAB_GUILD_BANK" }
 local activeSettingsSection = 1
 local settingsSectionDropdownText = nil
+local BroadcastSharedEnable
 
 local tabContents = {}
 
@@ -247,6 +248,52 @@ local function BuildGeneralTab(sc, db)
         end
         return OFF
     end
+
+    stack:AddCard("bags:general:replacement", L["SECTION_REPLACEMENT_WINDOWS"], function(content, w)
+        local y = 0
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_ENABLE_BAGS"],
+            description = L["DESC_ENABLE_BAGS"],
+            isEnabled = true,
+            value = db.global.enableBagsUI,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("enableBagsUI", newVal)
+            end,
+        })
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_ENABLE_BANK"],
+            description = L["DESC_ENABLE_BANK"],
+            isEnabled = true,
+            value = db.global.enableBankUI,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("enableBankUI", newVal)
+                BroadcastSharedEnable(newVal)
+            end,
+        })
+
+        y = OneWoW_GUI:CreateToggleRow(content, {
+            yOffset = y,
+            contentWidth = w,
+            label = L["SETTING_ENABLE_GUILD_BANK"],
+            description = L["DESC_ENABLE_GUILD_BANK"],
+            isEnabled = true,
+            value = db.global.enableGuildBankUI,
+            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
+            onValueChange = function(newVal)
+                ApplySetting("enableGuildBankUI", newVal)
+            end,
+        })
+
+        return math.max(1, abs(y))
+    end)
 
     stack:AddCard("bags:general:display", DISPLAY, function(content, w)
         local y = 0
@@ -863,14 +910,10 @@ local MODE_KEYS = {
     },
 }
 
-local sharedEnableRefreshers = {}
 local sharedLockRefreshers = {}
 local sharedApplyEnabledFns = {}
 
-local function BroadcastSharedEnable(newVal)
-    for i = 1, #sharedEnableRefreshers do
-        sharedEnableRefreshers[i](true, newVal)
-    end
+BroadcastSharedEnable = function(newVal)
     for i = 1, #sharedApplyEnabledFns do
         sharedApplyEnabledFns[i](newVal)
     end
@@ -884,7 +927,6 @@ local function BroadcastSharedLock(newVal)
 end
 
 local function ResetSharedBankRefreshers()
-    sharedEnableRefreshers = {}
     sharedLockRefreshers = {}
     sharedApplyEnabledFns = {}
 end
@@ -903,7 +945,7 @@ local function BuildBankTabFor(mode, sc, db)
     local cardPrefix = "bags:bank:" .. mode
 
     local dependents = {}
-    local sharedEnableIdx, sharedLockIdx
+    local sharedLockIdx
 
     local function addToggle(refresh, getValue)
         tinsert(dependents, function(enabled)
@@ -946,27 +988,6 @@ local function BuildBankTabFor(mode, sc, db)
     stack:AddCard(cardPrefix .. ":top", BankSectionTitle(keys), function(content, w)
         wipe(dependents)
         local y = 0
-
-        local enableRefresh
-        y, enableRefresh = OneWoW_GUI:CreateToggleRow(content, {
-            yOffset = y,
-            contentWidth = w,
-            label = L["SETTING_ENABLE_BANK"],
-            description = L["DESC_ENABLE_BANK"],
-            isEnabled = true,
-            value = db.global.enableBankUI,
-            onLabel = L["TOGGLE_ON"], offLabel = L["TOGGLE_OFF"],
-            onValueChange = function(newVal)
-                ApplySetting("enableBankUI", newVal)
-                BroadcastSharedEnable(newVal)
-            end,
-        })
-        if sharedEnableIdx then
-            sharedEnableRefreshers[sharedEnableIdx] = enableRefresh
-        else
-            tinsert(sharedEnableRefreshers, enableRefresh)
-            sharedEnableIdx = #sharedEnableRefreshers
-        end
 
         local lockRefresh
         y, lockRefresh = OneWoW_GUI:CreateToggleRow(content, {

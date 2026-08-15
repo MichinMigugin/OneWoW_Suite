@@ -150,8 +150,13 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TOGGLE_OFF"] = "Off",
 
     ["SECTION_PERSONAL_BANK"] = "Personal Bank",
+    ["SECTION_REPLACEMENT_WINDOWS"] = "Replacement Windows",
+    ["SETTING_ENABLE_BAGS"] = "Enable Bags UI",
+    ["DESC_ENABLE_BAGS"] = "Replace the default bags window with the OneWoW Bags interface.",
     ["SETTING_ENABLE_BANK"] = "Enable Bank UI",
-    ["DESC_ENABLE_BANK"] = "Replace the default bank window with the OneWoW Bags interface.",
+    ["DESC_ENABLE_BANK"] = "Replace the default personal and warband bank with the OneWoW Bags interface. They share one window.",
+    ["SETTING_ENABLE_GUILD_BANK"] = "Enable Guild Bank UI",
+    ["DESC_ENABLE_GUILD_BANK"] = "Replace the default guild bank window with the OneWoW Bags interface.",
     ["SETTING_BANK_OVERLAYS"] = "Bank Item Overlays",
     ["DESC_BANK_OVERLAYS"] = "Show item overlays on personal bank and guild bank item slots.",
 

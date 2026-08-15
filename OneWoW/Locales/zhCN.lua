@@ -164,6 +164,7 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "自动坐骑会在战斗及其他光环受限情况下暂停，无需扫描保密增益即可检测潜行，并在光环数据受限时不再报错。玩家坐骑的鼠标提示使用同样的保护。",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "至暗之夜的 Journal 现已包含潮缚石窟、烈毒之渊和毒牙祭坛的首领与掉落。",
+    ["WHATS_NEW_H_BAGS_UI_BODY"] = "在背包设置 → 常规中，可以分别替换背包、银行（个人与战团一起）和公会银行。关闭背包界面即可保留默认背包，同时继续用 OneWoW 打开银行。",
     ["CMD_TOGGLE_ONEWOW"] = "切换 OneWoW",
     ["CMD_KEYWORD_HELP"] = "打开搜索关键词帮助",
     ["CMD_OPEN_ALTTRACKER"] = "打开 AltTracker",

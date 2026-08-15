@@ -164,6 +164,7 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "자동 탈것은 전투 및 다른 오라 제한 상황에서 감지를 멈추고, 비밀 강화 효과를 검사하지 않고 은신을 감지하며, 오라 데이터가 제한되어도 오류가 나지 않습니다. 플레이어 탈것 툴팁도 같은 보호를 사용합니다.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "한밤 Journal에 해일결속 동굴, 맹독 심연, 송곳니의 제단의 우두머리와 전리품이 포함됩니다.",
+    ["WHATS_NEW_H_BAGS_UI_BODY"] = "가방 설정 → 일반에서 가방, 은행(개인과 전투부대 함께), 길드 은행을 각각 따로 대체할 수 있습니다. 가방 UI를 끄면 기본 가방을 유지하면서 은행은 OneWoW를 계속 사용할 수 있습니다.",
     ["CMD_TOGGLE_ONEWOW"] = "OneWoW 전환",
     ["CMD_KEYWORD_HELP"] = "검색 키워드 도움말 열기",
     ["CMD_OPEN_ALTTRACKER"] = "AltTracker 열기",

@@ -43,6 +43,7 @@ Full reference: [Search syntax](Bags-Search-Syntax).
 * Lock window position
 * Highlight recently acquired items
 * Optional Shopping List integration for what you still need
+* **Replacement Windows** on Bags settings → General: Bags, Bank (personal and warband together), and Guild Bank. `/1wbags` still opens OneWoW Bags so you can turn a replacement back on.
 
 ### Layout tweaks
 

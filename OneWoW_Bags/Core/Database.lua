@@ -49,7 +49,9 @@ local defaults = {
         enableInventorySlots = false,
         itemSort = "none",
         hideScrollBar = false,
+        enableBagsUI = true,
         enableBankUI = true,
+        enableGuildBankUI = true,
         enableBankOverlays = true,
         bankShowWarband = false,
         bankViewMode = "list",
@@ -133,6 +135,7 @@ function ns:InitializeDatabase()
     })
     ns.db = db
     ns:MigrateRarityToQualityBorder()
+    ns:MigrateGuildBankUIEnable()
 end
 
 --- One-time: Bags rarityColor / bank / warband toggles → Overlay Quality Border.
@@ -148,6 +151,17 @@ function ns:MigrateRarityToQualityBorder()
 
     OneWoW.SettingsFeatureRegistry:SetEnabled("overlays", "qualityborder", anyOn)
     g._migratedRarityToQualityBorder = true
+end
+
+--- One-time: Enable Bank UI used to gate guild bank too. Players who already
+--- turned it off keep Blizzard guild bank until they opt in separately.
+function ns:MigrateGuildBankUIEnable()
+    local g = ns.db.global
+    if g._migratedGuildBankUIEnable then return end
+    if g.enableBankUI == false then
+        g.enableGuildBankUI = false
+    end
+    g._migratedGuildBankUIEnable = true
 end
 
 --- Return the addon database handle after initialization.

@@ -151,8 +151,13 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TOGGLE_OFF"] = "關",
 
     ["SECTION_PERSONAL_BANK"] = "個人銀行",
+    ["SECTION_REPLACEMENT_WINDOWS"] = "取代視窗",
+    ["SETTING_ENABLE_BAGS"] = "啟用背包介面",
+    ["DESC_ENABLE_BAGS"] = "以 OneWoW Bags 介面取代預設背包視窗。",
     ["SETTING_ENABLE_BANK"] = "啟用銀行介面",
-    ["DESC_ENABLE_BANK"] = "以 OneWoW Bags 介面取代預設銀行視窗。",
+    ["DESC_ENABLE_BANK"] = "以 OneWoW Bags 介面取代預設的個人銀行和戰隊銀行。兩者共用同一個視窗。",
+    ["SETTING_ENABLE_GUILD_BANK"] = "啟用公會銀行介面",
+    ["DESC_ENABLE_GUILD_BANK"] = "以 OneWoW Bags 介面取代預設公會銀行視窗。",
     ["SETTING_BANK_OVERLAYS"] = "銀行物品覆層",
     ["DESC_BANK_OVERLAYS"] = "在個人銀行與公會銀行物品欄顯示物品覆層。",
 

@@ -151,8 +151,13 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TOGGLE_OFF"] = "Aus",
 
     ["SECTION_PERSONAL_BANK"] = "Persönliche Bank",
+    ["SECTION_REPLACEMENT_WINDOWS"] = "Ersatzfenster",
+    ["SETTING_ENABLE_BAGS"] = "Taschen-UI aktivieren",
+    ["DESC_ENABLE_BAGS"] = "Ersetzt das Standard-Taschenfenster durch die OneWoW-Bags-Oberfläche.",
     ["SETTING_ENABLE_BANK"] = "Bank-UI aktivieren",
-    ["DESC_ENABLE_BANK"] = "Ersetzt das Standard-Bankfenster durch die OneWoW-Bags-Oberfläche.",
+    ["DESC_ENABLE_BANK"] = "Ersetzt die Standard-Bank (persönlich und Kriegsmeute) durch die OneWoW-Bags-Oberfläche. Beide teilen sich ein Fenster.",
+    ["SETTING_ENABLE_GUILD_BANK"] = "Gildenbank-UI aktivieren",
+    ["DESC_ENABLE_GUILD_BANK"] = "Ersetzt das Standard-Gildenbankfenster durch die OneWoW-Bags-Oberfläche.",
     ["SETTING_BANK_OVERLAYS"] = "Bank-Gegenstands-Overlays",
     ["DESC_BANK_OVERLAYS"] = "Zeigt Gegenstand-Overlays in der persönlichen Bank und der Gildenbank an.",
 

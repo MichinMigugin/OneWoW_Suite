@@ -217,18 +217,29 @@ SettingsController.appliers = {
     locked = function(_, db, value)
         db.global.locked = value
     end,
+    enableBagsUI = function(self, db, value)
+        db.global.enableBagsUI = value
+        if not value and self.addon.GUI:IsShown() then
+            -- Hide() also closes Settings; keep the dialog open on this toggle.
+            self.addon.GUI:HideWindow()
+        end
+        self.addon:SetupBagBindingOverrides()
+        self.addon:UpdateBlizzardBagsBarVisibility()
+    end,
     enableBankUI = function(self, db, value)
         db.global.enableBankUI = value
         if value then return end
         if self.addon.RestoreBankFrame then
             self.addon:RestoreBankFrame()
         end
-        if self.addon.RestoreGuildBankFrame then
-            self.addon:RestoreGuildBankFrame()
-        end
         if self.addon.BankGUI and self.addon.BankGUI:IsShown() then
             self.addon.BankGUI:Hide()
         end
+    end,
+    enableGuildBankUI = function(self, db, value)
+        db.global.enableGuildBankUI = value
+        if value then return end
+        self.addon:RestoreGuildBankFrame()
         if self.addon.GuildBankGUI and self.addon.GuildBankGUI:IsShown() then
             self.addon.GuildBankGUI:Hide()
         end

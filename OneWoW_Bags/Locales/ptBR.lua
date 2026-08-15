@@ -151,8 +151,13 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["TOGGLE_OFF"] = "Desligado",
 
     ["SECTION_PERSONAL_BANK"] = "Banco pessoal",
+    ["SECTION_REPLACEMENT_WINDOWS"] = "Janelas de substituição",
+    ["SETTING_ENABLE_BAGS"] = "Ativar interface das bolsas",
+    ["DESC_ENABLE_BAGS"] = "Substitui a janela de bolsas padrão pela interface do OneWoW Bags.",
     ["SETTING_ENABLE_BANK"] = "Ativar interface do banco",
-    ["DESC_ENABLE_BANK"] = "Substitui a janela de banco padrão pela interface do OneWoW Bags.",
+    ["DESC_ENABLE_BANK"] = "Substitui o banco pessoal e o banco do Bando de Guerra pela interface do OneWoW Bags. Eles compartilham uma única janela.",
+    ["SETTING_ENABLE_GUILD_BANK"] = "Ativar interface do banco da guilda",
+    ["DESC_ENABLE_GUILD_BANK"] = "Substitui a janela de banco da guilda padrão pela interface do OneWoW Bags.",
     ["SETTING_BANK_OVERLAYS"] = "Sobreposições de itens do banco",
     ["DESC_BANK_OVERLAYS"] = "Mostra sobreposições de itens nos espaços do banco pessoal e do banco da guilda.",
 

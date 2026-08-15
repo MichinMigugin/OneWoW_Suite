@@ -47,6 +47,7 @@
 - Lock window position to prevent accidental movement
 - Show bags bar for quick switching
 - Integrate with Shopping List to track what you need
+- Enable Bags, Bank (personal and warband together), and Guild Bank replacement from Bags settings → General
 
 ### Settings & Organization
 - Sort by priority or alphabetically

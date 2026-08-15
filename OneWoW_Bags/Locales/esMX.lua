@@ -151,8 +151,13 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["TOGGLE_OFF"] = "Desactivado",
 
     ["SECTION_PERSONAL_BANK"] = "Banco personal",
+    ["SECTION_REPLACEMENT_WINDOWS"] = "Ventanas de reemplazo",
+    ["SETTING_ENABLE_BAGS"] = "Activar interfaz de bolsas",
+    ["DESC_ENABLE_BAGS"] = "Reemplaza la ventana de bolsas predeterminada por la interfaz de OneWoW Bags.",
     ["SETTING_ENABLE_BANK"] = "Activar interfaz del banco",
-    ["DESC_ENABLE_BANK"] = "Reemplaza la ventana del banco predeterminada por la interfaz de OneWoW Bags.",
+    ["DESC_ENABLE_BANK"] = "Reemplaza el banco personal y el de la banda guerrera por la interfaz de OneWoW Bags. Comparten una sola ventana.",
+    ["SETTING_ENABLE_GUILD_BANK"] = "Activar interfaz del banco de hermandad",
+    ["DESC_ENABLE_GUILD_BANK"] = "Reemplaza la ventana del banco de hermandad predeterminada por la interfaz de OneWoW Bags.",
     ["SETTING_BANK_OVERLAYS"] = "Superposiciones del banco",
     ["DESC_BANK_OVERLAYS"] = "Muestra superposiciones de objetos en las ranuras del banco personal y del banco de hermandad.",
 

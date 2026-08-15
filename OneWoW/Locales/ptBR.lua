@@ -164,6 +164,7 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["WHATS_NEW_H_AUTOMOUNT_BODY"] = "Montaria automática pausa em combate e em outras situações com auras restritas, detecta furtividade sem varrer bônus secretos e não dá mais erro quando os dados de aura estão restritos. As dicas de Montarias dos jogadores usam a mesma proteção.",
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "O Journal de Midnight agora inclui encontros e saque de Gruta Marejante, Abismo Peçonhento e Altar das Presas.",
+    ["WHATS_NEW_H_BAGS_UI_BODY"] = "Em Configurações de Bolsas → Geral, você pode substituir independentemente Bolsas, Banco (pessoal e Bando de Guerra juntos) e Banco da guilda. Desative a interface de Bolsas para manter as bolsas padrão e continuar usando o OneWoW no banco.",
     ["CMD_TOGGLE_ONEWOW"] = "Alternar OneWoW",
     ["CMD_KEYWORD_HELP"] = "Abrir a ajuda de palavras-chave de busca",
     ["CMD_OPEN_ALTTRACKER"] = "Abrir AltTracker",

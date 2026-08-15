@@ -151,8 +151,13 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
     ["TOGGLE_OFF"] = "Spento",
 
     ["SECTION_PERSONAL_BANK"] = "Banca personale",
+    ["SECTION_REPLACEMENT_WINDOWS"] = "Finestre di sostituzione",
+    ["SETTING_ENABLE_BAGS"] = "Attiva interfaccia borse",
+    ["DESC_ENABLE_BAGS"] = "Sostituisce la finestra delle borse predefinita con l'interfaccia di OneWoW Bags.",
     ["SETTING_ENABLE_BANK"] = "Attiva interfaccia banca",
-    ["DESC_ENABLE_BANK"] = "Sostituisce la finestra della banca predefinita con l'interfaccia di OneWoW Bags.",
+    ["DESC_ENABLE_BANK"] = "Sostituisce la banca personale e la banca della Brigata con l'interfaccia di OneWoW Bags. Condividono una sola finestra.",
+    ["SETTING_ENABLE_GUILD_BANK"] = "Attiva interfaccia banca di gilda",
+    ["DESC_ENABLE_GUILD_BANK"] = "Sostituisce la finestra della banca di gilda predefinita con l'interfaccia di OneWoW Bags.",
     ["SETTING_BANK_OVERLAYS"] = "Sovrapposizioni oggetti banca",
     ["DESC_BANK_OVERLAYS"] = "Mostra le sovrapposizioni oggetti negli scomparti della banca personale e della banca di gilda.",
 
