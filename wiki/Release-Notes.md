@@ -3,7 +3,7 @@
 - **Status**: Draft
 
 ### Home
-- Donate is no longer on Home. Discord and OneWoW Home stay on the same row.
+- Updated Home links.
 
 ---
 
