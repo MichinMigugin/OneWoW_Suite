@@ -57,8 +57,7 @@ ns.Locale:RegisterShared("frFR", {
     ["VALUE_DISPLAY_REGIONAL"] = "Utiliser le séparateur de milliers régional (locale du client)",
     ["VALUE_DISPLAY_WHITE"] = "Utiliser des valeurs blanches (mode lettres ; aspect classique si désactivé)",
 
-    -- Footer links (Discord / OneWoW are proper nouns)
-    ["LINK_DONATE"] = "Faire un don",
+    -- Footer links (Discord / OneWoW Home are proper nouns)
     ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)

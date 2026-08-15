@@ -57,8 +57,7 @@ ns.Locale:RegisterShared("ptBR", {
     ["VALUE_DISPLAY_REGIONAL"] = "Usar agrupamento numérico regional (idioma do cliente)",
     ["VALUE_DISPLAY_WHITE"] = "Usar valores em branco (modo letras; visual clássico quando desativado)",
 
-    -- Footer links (Discord / OneWoW are proper nouns)
-    ["LINK_DONATE"] = "Doar",
+    -- Footer links (Discord / OneWoW Home are proper nouns)
     ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)

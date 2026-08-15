@@ -57,8 +57,7 @@ ns.Locale:RegisterShared("zhTW", {
     ["VALUE_DISPLAY_REGIONAL"] = "使用區域數字分組（用戶端地區設定）",
     ["VALUE_DISPLAY_WHITE"] = "使用白色數值（字母模式；關閉時為經典外觀）",
 
-    -- Footer links (Discord / OneWoW are proper nouns)
-    ["LINK_DONATE"] = "贊助",
+    -- Footer links (Discord / OneWoW Home are proper nouns)
     ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)

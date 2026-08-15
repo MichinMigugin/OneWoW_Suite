@@ -58,7 +58,6 @@ ns.Locale:RegisterShared("enUS", {
     ["VALUE_DISPLAY_WHITE"] = "Use white values (letter mode; classic look when off)",
 
     -- Footer links (Discord / OneWoW Home are proper nouns)
-    ["LINK_DONATE"] = "Donate",
     ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)

@@ -57,8 +57,7 @@ ns.Locale:RegisterShared("ruRU", {
     ["VALUE_DISPLAY_REGIONAL"] = "Использовать региональную группировку цифр (язык клиента)",
     ["VALUE_DISPLAY_WHITE"] = "Использовать белые значения (режим букв; классический вид, если выключено)",
 
-    -- Footer links (Discord / OneWoW are proper nouns)
-    ["LINK_DONATE"] = "Поддержать",
+    -- Footer links (Discord / OneWoW Home are proper nouns)
     ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)

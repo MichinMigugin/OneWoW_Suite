@@ -1,5 +1,10 @@
 # OneWoW Suite Changelog
 
+## Home
+- Donate is no longer on Home. Discord and OneWoW Home stay on the same row.
+
+---
+
 # QoL
 ## Portals
 - ESC Portals keeps the Season 1 flyout and adds a Season 2 row. Each can be shown or hidden from Portals settings. Midnight Season 2 dungeon teleports are included, and the Midnight expansion flyout lists the new dungeons.

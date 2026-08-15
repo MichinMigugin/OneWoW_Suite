@@ -58,8 +58,7 @@ ns.Locale:RegisterShared("esMX", {
     ["VALUE_DISPLAY_REGIONAL"] = "Usar agrupación numérica regional (idioma del cliente)",
     ["VALUE_DISPLAY_WHITE"] = "Usar valores en blanco (modo letras; aspecto clásico si está desactivado)",
 
-    -- Footer links (Discord / OneWoW are proper nouns)
-    ["LINK_DONATE"] = "Donar",
+    -- Footer links (Discord / OneWoW Home are proper nouns)
     ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)

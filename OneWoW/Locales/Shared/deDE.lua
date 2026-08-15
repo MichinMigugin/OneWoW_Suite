@@ -57,8 +57,7 @@ ns.Locale:RegisterShared("deDE", {
     ["VALUE_DISPLAY_REGIONAL"] = "Regionale Zifferngruppierung verwenden (Client-Sprache)",
     ["VALUE_DISPLAY_WHITE"] = "Weiße Werte verwenden (Buchstabenmodus; klassische Optik wenn aus)",
 
-    -- Footer links (Discord / OneWoW are proper nouns)
-    ["LINK_DONATE"] = "Spenden",
+    -- Footer links (Discord / OneWoW Home are proper nouns)
     ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)

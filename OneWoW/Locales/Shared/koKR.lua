@@ -57,8 +57,7 @@ ns.Locale:RegisterShared("koKR", {
     ["VALUE_DISPLAY_REGIONAL"] = "지역 숫자 구분 사용 (클라이언트 로캘)",
     ["VALUE_DISPLAY_WHITE"] = "흰색 수치 사용 (문자 모드, 끄면 클래식 모양)",
 
-    -- Footer links (Discord / OneWoW are proper nouns)
-    ["LINK_DONATE"] = "후원",
+    -- Footer links (Discord / OneWoW Home are proper nouns)
     ["LINK_ONEWOW_HOME"] = "OneWoW Home",
 
     -- Minimap section labels (faction icon names come from FACTION_* globals)

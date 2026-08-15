@@ -85,9 +85,8 @@ function UI:CreateHomeTab(parent)
     logo:SetTexture("Interface\\AddOns\\OneWoW\\Media\\neutral-large.png")
     yOffset = yOffset - 140
 
-    -- What's New (Home-only); Discord / Donate / OneWoW Home match former Settings labels+URLs.
+    -- What's New (Home-only); Discord / OneWoW Home match former Settings labels+URLs.
     local DISCORD_URL = "https://discord.gg/6vnabDVnDu"
-    local DONATE_URL = "https://buymeacoffee.com/migugin"
     local WEBSITE_URL = "https://wow2.xyz/"
 
     local linksRow = CreateFrame("Frame", nil, content)
@@ -115,15 +114,6 @@ function UI:CreateHomeTab(parent)
     })
     websiteBtn:SetPoint("RIGHT", linksRow, "RIGHT", -5, 0)
 
-    local donateBtn = OneWoW_GUI:CreateTextLink(linksRow, {
-        text = L["LINK_DONATE"],
-        fontSize = 14,
-        onClick = function()
-            OneWoW_GUI:ShowCopyURLDialog(L["LINK_DONATE"], DONATE_URL)
-        end,
-    })
-    donateBtn:SetPoint("RIGHT", websiteBtn, "LEFT", -20, 0)
-
     local discordBtn = OneWoW_GUI:CreateTextLink(linksRow, {
         text = L["DISCORD"],
         fontSize = 14,
@@ -131,7 +121,7 @@ function UI:CreateHomeTab(parent)
             OneWoW_GUI:ShowCopyURLDialog(L["DISCORD"], DISCORD_URL)
         end,
     })
-    discordBtn:SetPoint("RIGHT", donateBtn, "LEFT", -20, 0)
+    discordBtn:SetPoint("RIGHT", websiteBtn, "LEFT", -20, 0)
 
     yOffset = yOffset - 28
 
