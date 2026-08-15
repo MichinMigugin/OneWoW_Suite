@@ -407,11 +407,12 @@ OneWoW.Locale:Register(ADDON_NAME, "itIT", {
 
     ["EXPAC_FILTER_BTN"] = "Espansione",
     ["EXPAC_FILTER_ALL"] = "Tutte le espansioni",
+    ["EXPAC_FILTER_N"] = "%d espansioni",
     ["EXPAC_UNKNOWN"] = "Espansione sconosciuta",
     ["EXPAC_FALLBACK"] = "Espansione %d",
     ["SETTING_ENABLE_EXPAC_FILTER"] = "Attiva filtro espansione",
-    ["DESC_ENABLE_EXPAC_FILTER"] = "Aggiunge un menu a discesa alla barra dell'intestazione per filtrare gli oggetti per espansione. Utile per farmare contenuti vecchi.",
-    ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "Aggiunge un menu a discesa alla barra dell'intestazione della banca per filtrare gli oggetti per espansione.",
+    ["DESC_ENABLE_EXPAC_FILTER"] = "Aggiunge un menu a discesa alla barra dell'intestazione per filtrare gli oggetti per una o più espansioni. Utile per farmare contenuti vecchi.",
+    ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "Aggiunge un menu a discesa alla barra dell'intestazione della banca per filtrare gli oggetti per una o più espansioni.",
 
     ["COMPARTMENT_TOGGLE"] = "Clicca per alternare le borse",
 

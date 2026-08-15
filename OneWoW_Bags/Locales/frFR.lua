@@ -407,11 +407,12 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
 
     ["EXPAC_FILTER_BTN"] = "Extension",
     ["EXPAC_FILTER_ALL"] = "Toutes les extensions",
+    ["EXPAC_FILTER_N"] = "%d extensions",
     ["EXPAC_UNKNOWN"] = "Extension inconnue",
     ["EXPAC_FALLBACK"] = "Extension %d",
     ["SETTING_ENABLE_EXPAC_FILTER"] = "Activer le filtre d'extension",
-    ["DESC_ENABLE_EXPAC_FILTER"] = "Ajoute un menu déroulant à la barre d'en-tête pour filtrer les objets par extension. Utile pour farmer d'anciens contenus.",
-    ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "Ajoute un menu déroulant à la barre d'en-tête de banque pour filtrer les objets par extension.",
+    ["DESC_ENABLE_EXPAC_FILTER"] = "Ajoute un menu déroulant à la barre d'en-tête pour filtrer les objets par une ou plusieurs extensions. Utile pour farmer d'anciens contenus.",
+    ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "Ajoute un menu déroulant à la barre d'en-tête de banque pour filtrer les objets par une ou plusieurs extensions.",
 
     ["COMPARTMENT_TOGGLE"] = "Clic pour afficher ou masquer les sacs",
 

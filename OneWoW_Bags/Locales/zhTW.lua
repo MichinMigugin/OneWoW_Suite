@@ -407,11 +407,12 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
 
     ["EXPAC_FILTER_BTN"] = "資料片",
     ["EXPAC_FILTER_ALL"] = "所有資料片",
+    ["EXPAC_FILTER_N"] = "%d 個資料片",
     ["EXPAC_UNKNOWN"] = "未知資料片",
     ["EXPAC_FALLBACK"] = "資料片 %d",
     ["SETTING_ENABLE_EXPAC_FILTER"] = "啟用資料片篩選",
-    ["DESC_ENABLE_EXPAC_FILTER"] = "在標題列新增一個下拉選單，依資料片篩選物品。刷舊內容時很有用。",
-    ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "在銀行標題列新增一個下拉選單，依資料片篩選物品。",
+    ["DESC_ENABLE_EXPAC_FILTER"] = "在標題列新增一個下拉選單，可依一個或多個資料片篩選物品。刷舊內容時很有用。",
+    ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "在銀行標題列新增一個下拉選單，可依一個或多個資料片篩選物品。",
 
     ["COMPARTMENT_TOGGLE"] = "點擊切換背包",
 

@@ -33,6 +33,7 @@ Category **search rules** use the same language as the search bar — see [Searc
 
 * Type in the search bar to filter what you see
 * Plain text matches names; `#keywords`, operators, and properties unlock advanced filters
+* Optional **Expansion** dropdown on the header bar (enable in Bags settings) — pick one or more expansions; the filter clears when you close the window
 * Save frequent expressions as **Search Shortcuts** (hub: **OneWoW Settings → Search Shortcuts**; Bags also has a Save control on the search bar)
 
 Full reference: [Search syntax](Bags-Search-Syntax).

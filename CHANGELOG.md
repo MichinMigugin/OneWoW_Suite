@@ -16,6 +16,9 @@
 ## Settings
 - Bags settings → General has three replacement toggles: Bags, Bank (personal and warband together), and Guild Bank.
 
+## Filters
+- Expansion filter can include more than one expansion at once. The menu is taller so two more expansions stay visible.
+
 ---
 
 *No user-facing changes this release for AltTracker, Mail, Notes, Portals, Shopping List, or Trackers.*

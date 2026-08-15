@@ -515,13 +515,42 @@ function WH:FilterBySearch(buttons, searchText, dest)
     return filtered
 end
 
---- Filter item buttons to a single expansion ID.
+--- Normalize an expansion filter to a set of IDs, or nil for all.
+---@param value table<number, boolean>|number|string|nil
+---@return table<number, boolean>|nil
+function WH:NormalizeExpansionFilter(value)
+    if value == nil or value == "ALL" then
+        return nil
+    end
+    if type(value) == "number" then
+        return { [value] = true }
+    end
+    if type(value) ~= "table" then
+        return nil
+    end
+
+    local set = {}
+    local n = 0
+    for id, on in pairs(value) do
+        if on and type(id) == "number" then
+            set[id] = true
+            n = n + 1
+        end
+    end
+    if n == 0 then
+        return nil
+    end
+    return set
+end
+
+--- Filter item buttons to one or more expansion IDs.
 ---@param buttons table[]
----@param expacFilter number|nil
+---@param expacFilter table<number, boolean>|number|nil
 ---@param dest table[]|nil
 ---@return table[] buttons
 function WH:FilterByExpansion(buttons, expacFilter, dest)
-    if expacFilter == nil then
+    local filterSet = self:NormalizeExpansionFilter(expacFilter)
+    if filterSet == nil then
         return buttons
     end
 
@@ -530,7 +559,7 @@ function WH:FilterByExpansion(buttons, expacFilter, dest)
     for _, button in ipairs(buttons) do
         if button.owb_hasItem and button.owb_itemInfo and button.owb_itemInfo.itemID then
             local expansionID = self:GetButtonExpansionID(button)
-            if expansionID == expacFilter then
+            if filterSet[expansionID] then
                 tinsert(filtered, button)
             end
         end

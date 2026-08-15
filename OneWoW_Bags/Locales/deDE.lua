@@ -407,11 +407,12 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
 
     ["EXPAC_FILTER_BTN"] = "Erweiterung",
     ["EXPAC_FILTER_ALL"] = "Alle Erweiterungen",
+    ["EXPAC_FILTER_N"] = "%d Erweiterungen",
     ["EXPAC_UNKNOWN"] = "Unbekannte Erweiterung",
     ["EXPAC_FALLBACK"] = "Erweiterung %d",
     ["SETTING_ENABLE_EXPAC_FILTER"] = "Erweiterungsfilter aktivieren",
-    ["DESC_ENABLE_EXPAC_FILTER"] = "Fügt der Kopfzeile ein Dropdown zur Filterung nach Erweiterung hinzu. Nützlich beim Farmen alter Inhalte.",
-    ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "Fügt der Bank-Kopfzeile ein Dropdown zur Filterung nach Erweiterung hinzu.",
+    ["DESC_ENABLE_EXPAC_FILTER"] = "Fügt der Kopfzeile ein Dropdown zur Filterung nach einer oder mehreren Erweiterungen hinzu. Nützlich beim Farmen alter Inhalte.",
+    ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "Fügt der Bank-Kopfzeile ein Dropdown zur Filterung nach einer oder mehreren Erweiterungen hinzu.",
 
     ["COMPARTMENT_TOGGLE"] = "Klicken, um Taschen umzuschalten",
 

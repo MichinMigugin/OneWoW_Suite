@@ -16,6 +16,8 @@ ns.Constants = {
         TRACKER_CELL_WIDTH = 76,
         TRACKER_CELL_HEIGHT = 20,
         TRACKER_CELL_GAP = 4,
+        -- AttachFilterMenu default cap is 314; two extra checkbox rows (26px).
+        EXPAC_FILTER_MENU_HEIGHT = 366,
     }),
 
     ICON_SIZES = {

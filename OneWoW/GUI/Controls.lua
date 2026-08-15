@@ -535,6 +535,9 @@ function OneWoW_GUI:AttachFilterMenu(dropdown, options)
                 end)
 
                 row.checkbox = cb
+                if item.onBind then
+                    item.onBind(cb)
+                end
                 -- Strip UI escape codes so class-colored names still filter by plain text.
                 local filterSrc = item.filterKey or item.text or ""
                 local filterKey = tostring(filterSrc)

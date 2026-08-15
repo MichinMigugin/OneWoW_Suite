@@ -407,11 +407,12 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
 
     ["EXPAC_FILTER_BTN"] = "Expansão",
     ["EXPAC_FILTER_ALL"] = "Todas as expansões",
+    ["EXPAC_FILTER_N"] = "%d expansões",
     ["EXPAC_UNKNOWN"] = "Expansão desconhecida",
     ["EXPAC_FALLBACK"] = "Expansão %d",
     ["SETTING_ENABLE_EXPAC_FILTER"] = "Ativar filtro de expansão",
-    ["DESC_ENABLE_EXPAC_FILTER"] = "Adiciona um menu suspenso à barra de cabeçalho para filtrar itens por expansão. Útil ao farmar conteúdo antigo.",
-    ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "Adiciona um menu suspenso à barra de cabeçalho do banco para filtrar itens por expansão.",
+    ["DESC_ENABLE_EXPAC_FILTER"] = "Adiciona um menu suspenso à barra de cabeçalho para filtrar itens por uma ou mais expansões. Útil ao farmar conteúdo antigo.",
+    ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "Adiciona um menu suspenso à barra de cabeçalho do banco para filtrar itens por uma ou mais expansões.",
 
     ["COMPARTMENT_TOGGLE"] = "Clique para alternar bolsas",
 

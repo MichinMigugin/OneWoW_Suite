@@ -26,6 +26,7 @@
 ### Search & Filter
 - Search items by name
 - Filter by which bag you're looking in
+- Optional header expansion filter (one or more expansions)
 - Quick access to specific item types
 - Shows free slot count
 

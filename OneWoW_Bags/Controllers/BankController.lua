@@ -119,11 +119,7 @@ function BankController:GetExpansionFilter()
 end
 
 function BankController:SetExpansionFilter(value)
-    if value == "ALL" then
-        self.addon.activeBankExpansionFilter = nil
-    else
-        self.addon.activeBankExpansionFilter = value
-    end
+    self.addon.activeBankExpansionFilter = ns.WindowHelpers:NormalizeExpansionFilter(value)
     self.addon:RequestLayoutRefresh("bank")
 end
 

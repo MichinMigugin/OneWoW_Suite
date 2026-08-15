@@ -407,11 +407,12 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
 
     ["EXPAC_FILTER_BTN"] = "资料片",
     ["EXPAC_FILTER_ALL"] = "所有资料片",
+    ["EXPAC_FILTER_N"] = "%d 个资料片",
     ["EXPAC_UNKNOWN"] = "未知资料片",
     ["EXPAC_FALLBACK"] = "资料片 %d",
     ["SETTING_ENABLE_EXPAC_FILTER"] = "启用资料片筛选",
-    ["DESC_ENABLE_EXPAC_FILTER"] = "在标题栏添加一个下拉菜单，按资料片筛选物品。刷旧内容时很有用。",
-    ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "在银行标题栏添加一个下拉菜单，按资料片筛选物品。",
+    ["DESC_ENABLE_EXPAC_FILTER"] = "在标题栏添加一个下拉菜单，可按一个或多个资料片筛选物品。刷旧内容时很有用。",
+    ["DESC_ENABLE_BANK_EXPAC_FILTER"] = "在银行标题栏添加一个下拉菜单，可按一个或多个资料片筛选物品。",
 
     ["COMPARTMENT_TOGGLE"] = "点击切换背包",
 

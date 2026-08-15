@@ -9,16 +9,38 @@ local WH = ns.WindowHelpers
 local C_Timer = C_Timer
 
 local floor = math.floor
+local format = string.format
 local ipairs = ipairs
 local max = math.max
 local min = math.min
+local next = next
+local pairs = pairs
 local strgsub = string.gsub
 local strtrim = strtrim
 local tinsert = tinsert
+local type = type
 local CreateFrame = CreateFrame
 local IsMouseButtonDown = IsMouseButtonDown
 local StaticPopupDialogs = StaticPopupDialogs
 local StaticPopup_Show = StaticPopup_Show
+
+local function FormatExpacDropdownText(filter)
+    local set = WH:NormalizeExpansionFilter(filter)
+    if not set then
+        return L["EXPAC_FILTER_BTN"]
+    end
+
+    local count = 0
+    local onlyID
+    for id in pairs(set) do
+        count = count + 1
+        onlyID = id
+    end
+    if count == 1 then
+        return OneWoW:GetExpansionName(onlyID) or L["EXPAC_FILTER_BTN"]
+    end
+    return format(L["EXPAC_FILTER_N"], count)
+end
 
 ns.InfoBarFactory = {}
 
@@ -517,37 +539,117 @@ function ns.InfoBarFactory:Create(config)
                 width = 130, height = 22, text = L["EXPAC_FILTER_BTN"],
             })
             expacDropdown:SetPoint("TOPLEFT", viewModeDropdown, "TOPRIGHT", 8, 0)
+
+            local function CurrentExpacFilter()
+                local controller = GetController()
+                if controller and controller.GetExpansionFilter then
+                    return controller:GetExpansionFilter()
+                end
+                return ns[ef.filterKey]
+            end
+
+            local function RefreshExpacLabel()
+                expacText:SetText(FormatExpacDropdownText(CurrentExpacFilter()))
+            end
+
+            local function ApplyExpacSelection(value)
+                local controller = GetController()
+                if config.onExpansionFilterChanged then
+                    config.onExpansionFilterChanged(value, nil, controller)
+                elseif controller and controller.SetExpansionFilter then
+                    controller:SetExpansionFilter(value)
+                end
+                RefreshExpacLabel()
+            end
+
             OneWoW_GUI:AttachFilterMenu(expacDropdown, {
                 searchable = false,
+                menuHeight = Constants.GUI.EXPAC_FILTER_MENU_HEIGHT,
                 buildItems = function()
-                    local items = { { text = L["EXPAC_FILTER_ALL"], value = "ALL" } }
+                    local selected = WH:NormalizeExpansionFilter(CurrentExpacFilter())
+                    local widgets = { exp = {} }
+                    local items = {
+                        {
+                            type = "checkbox",
+                            text = L["EXPAC_FILTER_ALL"],
+                            checked = selected == nil,
+                            onBind = function(cb)
+                                widgets.all = cb
+                            end,
+                            onToggle = function(checked)
+                                if checked then
+                                    ApplyExpacSelection(nil)
+                                    for _, cb in pairs(widgets.exp) do
+                                        cb:SetChecked(false)
+                                    end
+                                elseif widgets.all then
+                                    widgets.all:SetChecked(true)
+                                end
+                            end,
+                        },
+                    }
                     for _, id in ipairs(WH:GetKnownExpansionIDs()) do
                         local expansionName = OneWoW:GetExpansionName(id)
                         if expansionName then
-                            tinsert(items, { text = expansionName, value = id })
+                            tinsert(items, {
+                                type = "checkbox",
+                                text = expansionName,
+                                checked = selected and selected[id] == true,
+                                onBind = function(cb)
+                                    widgets.exp[id] = cb
+                                end,
+                                onToggle = function(checked)
+                                    local set = WH:NormalizeExpansionFilter(CurrentExpacFilter()) or {}
+                                    if checked then
+                                        set[id] = true
+                                    else
+                                        set[id] = nil
+                                    end
+                                    if next(set) == nil then
+                                        ApplyExpacSelection(nil)
+                                        if widgets.all then
+                                            widgets.all:SetChecked(true)
+                                        end
+                                    else
+                                        ApplyExpacSelection(set)
+                                        if widgets.all then
+                                            widgets.all:SetChecked(false)
+                                        end
+                                    end
+                                end,
+                            })
                         end
                     end
                     return items
                 end,
-                getActiveValue = function()
-                    local controller = GetController()
-                    local v = controller and controller.GetExpansionFilter and controller:GetExpansionFilter() or ns[ef.filterKey]
-                    return (v == nil) and "ALL" or v
-                end,
-                onSelect = function(value, text)
-                    local controller = GetController()
-                    if config.onExpansionFilterChanged then
-                        config.onExpansionFilterChanged(value, text, controller)
-                    elseif controller and controller.SetExpansionFilter then
-                        controller:SetExpansionFilter(value)
-                    end
-                    if value == "ALL" then
-                        expacText:SetText(L["EXPAC_FILTER_BTN"])
-                    else
-                        expacText:SetText(text)
-                    end
-                end,
             })
+            expacDropdown:HookScript("OnEnter", function(myself)
+                local filter = WH:NormalizeExpansionFilter(CurrentExpacFilter())
+                if not filter then
+                    return
+                end
+                local names = {}
+                for _, id in ipairs(WH:GetKnownExpansionIDs()) do
+                    if filter[id] then
+                        local expansionName = OneWoW:GetExpansionName(id)
+                        if expansionName then
+                            tinsert(names, expansionName)
+                        end
+                    end
+                end
+                if #names < 2 then
+                    return
+                end
+                GameTooltip:SetOwner(myself, "ANCHOR_TOP")
+                GameTooltip:SetText(format(L["EXPAC_FILTER_N"], #names), 1, 1, 1)
+                for _, expansionName in ipairs(names) do
+                    GameTooltip:AddLine(expansionName, 0.85, 0.85, 0.85)
+                end
+                GameTooltip:Show()
+            end)
+            expacDropdown:HookScript("OnLeave", function()
+                GameTooltip:Hide()
+            end)
             infoBarFrame.expacDropdown = expacDropdown
             infoBarFrame.expacText = expacText
         end
@@ -757,12 +859,7 @@ function ns.InfoBarFactory:Create(config)
             infoBarFrame.expacDropdown:SetShown(showExpac == true)
             if showExpac and infoBarFrame.expacText then
                 local activeFilter = controller and controller.GetExpansionFilter and controller:GetExpansionFilter() or ns[ef.filterKey]
-                if activeFilter == nil then
-                    infoBarFrame.expacText:SetText(L["EXPAC_FILTER_BTN"])
-                else
-                    local expName = OneWoW:GetExpansionName(activeFilter)
-                    infoBarFrame.expacText:SetText(expName)
-                end
+                infoBarFrame.expacText:SetText(FormatExpacDropdownText(activeFilter))
             end
         end
 

@@ -126,11 +126,7 @@ function BagsController:GetExpansionFilter()
 end
 
 function BagsController:SetExpansionFilter(value)
-    if value == "ALL" then
-        self.addon.activeExpansionFilter = nil
-    else
-        self.addon.activeExpansionFilter = value
-    end
+    self.addon.activeExpansionFilter = ns.WindowHelpers:NormalizeExpansionFilter(value)
     self.addon:RequestLayoutRefresh("bags")
 end
 
