@@ -5,6 +5,11 @@
 ### QoL
 #### Portals
 - ESC Portals keeps the Season 1 flyout and adds a Season 2 row. Each can be shown or hidden from Portals settings. Midnight Season 2 dungeon teleports are included, and the Midnight expansion flyout lists the new dungeons.
+- Dungeons & Raids on the Portals tab now includes Midnight.
+- ESC Midnight column shows its icon, Season 2 appears when its toggle is on, and ESC portal icons fill their slots.
+- Portals tab details open with every section expanded.
+- Portals Settings has an ESC icon size slider. The ESC strip also has a slider under the Settings icon so you can resize icons while the menu is open. Portal icons line up with the top of the game menu.
+- ESC Dungeons, Raids, and previous-season flyouts can list portals you have not learned yet, dimmed. A Portals setting shows or hides those unknown portals. The current season always lists every portal.
 
 #### Fixes
 - Auto Mount pauses polling in combat and other aura-restricted situations (12.1), detects stealth without scanning secret buffs, and no longer errors when aura data is restricted. Play Mounts tooltips use the same guard.

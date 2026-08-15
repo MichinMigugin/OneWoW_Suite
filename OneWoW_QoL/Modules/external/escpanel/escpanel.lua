@@ -99,7 +99,7 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
         local ph0 = GetPortalHubDB()
         local panelsSide = (ph0 and ph0.escPanelsSide == "right") and "right" or "left"
         local portalsSide = (ph0 and ph0.escPortalsSide == "left") and "left" or "right"
-        local currentIconSize = (ph0 and ph0.escIconSize) or 32
+        local currentIconSize = (ph0 and ph0.escIconSize) or 40
 
         local iconSizeLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         iconSizeLabel:SetPoint("TOPLEFT", descText, "BOTTOMLEFT", 0, -gap)
@@ -187,7 +187,7 @@ function ESCPanelModule:CreateCustomDetail(detailScrollChild, yOffset, _, regist
             local pr = (p and p.escPortalsSide == "left") and "left" or "right"
             panelsDDText:SetText(ps == "right" and (L["ESCPANEL_SIDE_RIGHT"]) or (L["ESCPANEL_SIDE_LEFT"]))
             portalsDDText:SetText(pr == "left" and (L["ESCPANEL_SIDE_LEFT"]) or (L["ESCPANEL_SIDE_RIGHT"]))
-            local sz = (p and p.escIconSize) or 32
+            local sz = (p and p.escIconSize) or 40
             if iconSizeSlider.slider:GetValue() ~= sz then
                 iconSizeSlider.slider:SetValue(sz)
             end

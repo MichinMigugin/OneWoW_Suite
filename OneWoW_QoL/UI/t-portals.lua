@@ -504,18 +504,10 @@ function ns.UI.CreatePortalsTab(parent)
 		return math.max(1, rows * (iconSize + gap) - (rows > 0 and gap or 0))
 	end
 
-	local function IsUnknownCardKey(key)
-		return type(key) == "string" and key:find(":unknown", 1, true) ~= nil
-	end
-
 	local function MakeStack(host)
 		local stack = OneWoW_GUI:CreateCardStack(host, {
 			getCollapsed = function(key)
-				local stored = collapsedCards[key]
-				if stored ~= nil then
-					return stored
-				end
-				return IsUnknownCardKey(key)
+				return collapsedCards[key] == true
 			end,
 			setCollapsed = function(key, collapsed)
 				collapsedCards[key] = collapsed
@@ -603,6 +595,42 @@ function ns.UI.CreatePortalsTab(parent)
 				buttonWidth = 50,
 			})
 
+			local sizeLabel = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+			OneWoW_GUI:SetFontBaseSize(sizeLabel, 12)
+			OneWoW_GUI:SafeSetFont(sizeLabel, OneWoW_GUI:GetFont(), 12)
+			sizeLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 12, rowY)
+			sizeLabel:SetJustifyH("LEFT")
+			sizeLabel:SetText(L["PORTAL_ESC_ICON_SIZE"])
+			sizeLabel:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
+
+			local sizeDesc = content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+			OneWoW_GUI:SetFontBaseSize(sizeDesc, 10)
+			OneWoW_GUI:SafeSetFont(sizeDesc, OneWoW_GUI:GetFont(), 10)
+			sizeDesc:SetPoint("TOPLEFT", sizeLabel, "BOTTOMLEFT", 0, -3)
+			sizeDesc:SetWidth(math.max(50, contentWidth - 24))
+			sizeDesc:SetJustifyH("LEFT")
+			sizeDesc:SetWordWrap(true)
+			sizeDesc:SetText(L["PORTAL_ESC_ICON_SIZE_DESC"])
+			sizeDesc:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
+
+			local sliderY = rowY - sizeLabel:GetStringHeight() - 3 - sizeDesc:GetStringHeight() - 6
+			local sizeSlider = OneWoW_GUI:CreateSlider(content, {
+				width = math.min(220, math.max(120, contentWidth - 24)),
+				minVal = 20,
+				maxVal = 64,
+				step = 2,
+				currentVal = ph.escIconSize or 40,
+				fmt = "%dpx",
+				onChange = function(val)
+					OneWoW:GetPortalHub().escIconSize = val
+					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+						ns.PortalHubEsc:Reload()
+					end
+				end,
+			})
+			sizeSlider:SetPoint("TOPLEFT", content, "TOPLEFT", 12, sliderY)
+			rowY = sliderY - 36 - 10
+
 			rowY = OneWoW_GUI:CreateToggleRow(content, {
 				yOffset = rowY,
 				contentWidth = contentWidth,
@@ -626,7 +654,7 @@ function ns.UI.CreatePortalsTab(parent)
 				contentWidth = contentWidth,
 				label = L["PORTAL_SHOW_SEASON1"],
 				description = L["PORTAL_SHOW_SEASON1_DESC"],
-				value = ph.showSeason1,
+				value = ph.showSeason1 ~= false,
 				isEnabled = true,
 				onValueChange = function(newVal)
 					OneWoW:GetPortalHub().showSeason1 = newVal
@@ -644,10 +672,28 @@ function ns.UI.CreatePortalsTab(parent)
 				contentWidth = contentWidth,
 				label = L["PORTAL_SHOW_SEASON2"],
 				description = L["PORTAL_SHOW_SEASON2_DESC"],
-				value = ph.showSeason2,
+				value = ph.showSeason2 ~= false,
 				isEnabled = true,
 				onValueChange = function(newVal)
 					OneWoW:GetPortalHub().showSeason2 = newVal
+					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+						ns.PortalHubEsc:Reload()
+					end
+				end,
+				onLabel = L["FEATURES_ON"],
+				offLabel = L["FEATURES_OFF"],
+				buttonWidth = 50,
+			})
+
+			rowY = OneWoW_GUI:CreateToggleRow(content, {
+				yOffset = rowY,
+				contentWidth = contentWidth,
+				label = L["PORTAL_ESC_SHOW_UNKNOWN"],
+				description = L["PORTAL_ESC_SHOW_UNKNOWN_DESC"],
+				value = ph.escShowUnknown ~= false,
+				isEnabled = true,
+				onValueChange = function(newVal)
+					OneWoW:GetPortalHub().escShowUnknown = newVal
 					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
 						ns.PortalHubEsc:Reload()
 					end

@@ -8,7 +8,7 @@ local Nested = ns.NestedFlyouts
 
 local activeNested = {}
 
-local function CreateInstanceButton(_, parent, iconSize, yOffset, expansions, showAll, config, growLeft)
+local function CreateInstanceButton(_, parent, iconSize, yOffset, expansions, config, growLeft)
 	local mainButton = CreateFrame("Button", nil, parent)
 	mainButton:SetSize(iconSize, iconSize)
 	if growLeft then
@@ -16,7 +16,7 @@ local function CreateInstanceButton(_, parent, iconSize, yOffset, expansions, sh
 	else
 		mainButton:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
 	end
-	mainButton:SetNormalTexture(config.icon)
+	ns.PortalHubFlyouts:ApplyButtonIcon(mainButton, config.icon)
 
 	mainButton.text = OneWoW_GUI:CreateFS(mainButton, 8)
 	mainButton.text:SetPoint("BOTTOM", mainButton, "BOTTOM", 0, 2)
@@ -38,7 +38,7 @@ local function CreateInstanceButton(_, parent, iconSize, yOffset, expansions, sh
 	local expButtons = {}
 	local validExpansions = {}
 	for _, expData in ipairs(expansions) do
-		if #expData.portals > 0 or (showAll and expData.id == "mid") then
+		if #expData.portals > 0 then
 			table.insert(validExpansions, expData)
 		end
 	end
@@ -50,7 +50,7 @@ local function CreateInstanceButton(_, parent, iconSize, yOffset, expansions, sh
 		expButton:SetSize(iconSize, iconSize)
 		local xPad = (growLeft and (#validExpansions - i) or (i - 1)) * iconSize
 		expButton:SetPoint("TOPLEFT", expFlyout, "TOPLEFT", xPad, 0)
-		expButton:SetNormalTexture(expData.icon)
+		ns.PortalHubFlyouts:ApplyButtonIcon(expButton, expData.icon)
 
 		expButton.text = OneWoW_GUI:CreateFS(expButton, 8)
 		expButton.text:SetPoint("BOTTOM", expButton, "BOTTOM", 0, 2)
@@ -167,16 +167,16 @@ local function CreateInstanceButton(_, parent, iconSize, yOffset, expansions, sh
 	return mainButton
 end
 
-function Nested:CreateDungeonsButton(parent, iconSize, yOffset, expansions, showAll, growLeft)
-	return CreateInstanceButton(self, parent, iconSize, yOffset, expansions, showAll, {
+function Nested:CreateDungeonsButton(parent, iconSize, yOffset, expansions, growLeft)
+	return CreateInstanceButton(self, parent, iconSize, yOffset, expansions, {
 		icon = "Interface\\Icons\\Achievement_Boss_Archaedas",
 		label = L["SETTINGS_PORTALHUB_DUNGEONS"],
 		tooltip = L["SETTINGS_PORTALHUB_DUNGEONS"],
 	}, growLeft)
 end
 
-function Nested:CreateRaidsButton(parent, iconSize, yOffset, expansions, showAll, growLeft)
-	return CreateInstanceButton(self, parent, iconSize, yOffset, expansions, showAll, {
+function Nested:CreateRaidsButton(parent, iconSize, yOffset, expansions, growLeft)
+	return CreateInstanceButton(self, parent, iconSize, yOffset, expansions, {
 		icon = 4062765,
 		label = L["SETTINGS_PORTALHUB_RAIDS"],
 		tooltip = L["SETTINGS_PORTALHUB_RAIDS"],

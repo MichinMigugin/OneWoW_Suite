@@ -15,6 +15,27 @@ local flyoutButtons = {}
 local instanceStatsFrame = nil
 local lastAutoUpdatedInstance = nil
 local autoUpdateRegistered = false
+local iconSizeSlider = nil
+local rebuildingStrip = false
+local ESC_ICON_SLIDER_WIDTH = 120
+
+local function RecycleStripButtons()
+	for _, button in ipairs(secureButtons) do
+		if button.Recycle then button:Recycle() end
+	end
+	for _, button in ipairs(flyoutButtons) do
+		if button.Recycle then button:Recycle() end
+	end
+	secureButtons = {}
+	flyoutButtons = {}
+
+	if ns.PortalHubFlyouts then
+		ns.PortalHubFlyouts:RecycleAll()
+	end
+	if ns.NestedFlyouts then
+		ns.NestedFlyouts:RecycleAll()
+	end
+end
 
 function EscMenu:Initialize()
 	self:HookGameMenu()
@@ -83,6 +104,7 @@ end
 local STRIP_GAP = 6
 local PADDING_MENU_LEFT = 40
 local PADDING_MENU_RIGHT = 10
+local STRIP_Y_OFFSET = 0
 
 function EscMenu:GetPortalEdgeOffsetFromMenu(portalsSide, panelsSide)
 	local gm = GameMenuFrame
@@ -117,22 +139,23 @@ function EscMenu:SyncEscLayout()
 
 	local portalsSide = ph.escPortalsSide == "left" and "left" or "right"
 	local panelsSide = ph.escPanelsSide == "right" and "right" or "left"
-	local iconSize = ph.escIconSize or 40
-	local yStart = -(iconSize / 2) - 10
 	local ox = self:GetPortalEdgeOffsetFromMenu(portalsSide, panelsSide)
 
 	if ph.escPortalsEnabled then
 		if portalsSide == "left" and leftFrame and leftFrame:IsShown() then
 			leftFrame:ClearAllPoints()
-			leftFrame:SetPoint("TOPRIGHT", GameMenuFrame, "TOPLEFT", ox, yStart)
+			leftFrame:SetPoint("TOPRIGHT", GameMenuFrame, "TOPLEFT", ox, STRIP_Y_OFFSET)
 		elseif portalsSide == "right" and rightFrame and rightFrame:IsShown() then
 			rightFrame:ClearAllPoints()
-			rightFrame:SetPoint("TOPLEFT", GameMenuFrame, "TOPRIGHT", ox, yStart)
+			rightFrame:SetPoint("TOPLEFT", GameMenuFrame, "TOPRIGHT", ox, STRIP_Y_OFFSET)
 		end
 	end
 end
 
 function EscMenu:HidePortalFrames()
+	if iconSizeSlider and GameTooltip:GetOwner() == iconSizeSlider then
+		GameTooltip:Hide()
+	end
 	if ns.PortalHubFlyouts then
 		ns.PortalHubFlyouts:RecycleAll()
 	end
@@ -149,21 +172,7 @@ end
 function EscMenu:ShowPortalFrames()
 	if not GameMenuFrame then return end
 
-	for _, button in ipairs(secureButtons) do
-		if button.Recycle then button:Recycle() end
-	end
-	for _, button in ipairs(flyoutButtons) do
-		if button.Recycle then button:Recycle() end
-	end
-	secureButtons = {}
-	flyoutButtons = {}
-
-	if ns.PortalHubFlyouts then
-		ns.PortalHubFlyouts:RecycleAll()
-	end
-	if ns.NestedFlyouts then
-		ns.NestedFlyouts:RecycleAll()
-	end
+	RecycleStripButtons()
 
 	if not leftFrame then
 		leftFrame = CreateFrame("Frame", "OneWoWPortalLeft", GameMenuFrame)
@@ -176,7 +185,6 @@ function EscMenu:ShowPortalFrames()
 
 	local iconSize = OneWoW:GetPortalHub().escIconSize or 40
 	local iconGap = 2
-	local yStart = -(iconSize / 2) - 10
 
 	local ph = OneWoW:GetPortalHub() or {}
 	local panelsSide = ph.escPanelsSide == "right" and "right" or "left"
@@ -192,13 +200,13 @@ function EscMenu:ShowPortalFrames()
 	if ph.escPortalsEnabled then
 		if portalsSide == "left" then
 			leftFrame:ClearAllPoints()
-			leftFrame:SetPoint("TOPRIGHT", GameMenuFrame, "TOPLEFT", ox, yStart)
+			leftFrame:SetPoint("TOPRIGHT", GameMenuFrame, "TOPLEFT", ox, STRIP_Y_OFFSET)
 			self:BuildPortalStrip(leftFrame, iconSize, iconGap, true)
 			leftFrame:Show()
 		end
 		if portalsSide == "right" then
 			rightFrame:ClearAllPoints()
-			rightFrame:SetPoint("TOPLEFT", GameMenuFrame, "TOPRIGHT", ox, yStart)
+			rightFrame:SetPoint("TOPLEFT", GameMenuFrame, "TOPRIGHT", ox, STRIP_Y_OFFSET)
 			self:BuildPortalStrip(rightFrame, iconSize, iconGap, false)
 			rightFrame:Show()
 		end
@@ -222,11 +230,89 @@ function EscMenu:BuildLeftSide()
 	end
 end
 
+function EscMenu:PlaceIconSizeSlider(parent, yOffset, growLeft)
+	local ph = OneWoW:GetPortalHub()
+	local size = (ph and ph.escIconSize) or 40
+
+	if not iconSizeSlider or iconSizeSlider:GetParent() ~= parent then
+		if iconSizeSlider then
+			iconSizeSlider:Hide()
+			iconSizeSlider:SetParent(nil)
+			iconSizeSlider = nil
+		end
+		iconSizeSlider = OneWoW_GUI:CreateSlider(parent, {
+			width = ESC_ICON_SLIDER_WIDTH,
+			minVal = 20,
+			maxVal = 64,
+			step = 2,
+			currentVal = size,
+			fmt = "%dpx",
+			onChange = function(val)
+				local hub = OneWoW:GetPortalHub()
+				if not hub or hub.escIconSize == val or rebuildingStrip then
+					return
+				end
+				hub.escIconSize = val
+				EscMenu:ReloadStripPreservingSlider()
+			end,
+		})
+		local sl = iconSizeSlider.slider
+		OneWoW_GUI:ConfigureOptionsSliderEnds(sl, "", "")
+		if sl.Low then sl.Low:Hide() end
+		if sl.High then sl.High:Hide() end
+		iconSizeSlider:SetScript("OnEnter", function(self)
+			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			GameTooltip:SetText(L["PORTAL_ESC_ICON_SIZE"], 1, 1, 1)
+			GameTooltip:AddLine(L["PORTAL_ESC_ICON_SIZE_DESC"], nil, nil, nil, true)
+			GameTooltip:Show()
+		end)
+		iconSizeSlider:SetScript("OnLeave", function()
+			GameTooltip:Hide()
+		end)
+	elseif iconSizeSlider.slider:GetValue() ~= size then
+		iconSizeSlider.slider:SetValue(size)
+	end
+
+	iconSizeSlider:ClearAllPoints()
+	if growLeft then
+		iconSizeSlider:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, yOffset)
+	else
+		iconSizeSlider:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
+	end
+	iconSizeSlider:Show()
+	return iconSizeSlider:GetHeight()
+end
+
+function EscMenu:ReloadStripPreservingSlider()
+	if not GameMenuFrame or not GameMenuFrame:IsShown() then return end
+	if OneWoW.Restriction.IsProtectedActionBlocked() then return end
+	local ph = OneWoW:GetPortalHub()
+	if not ph or not ph.escEnabled or not ph.escPortalsEnabled then return end
+
+	local portalsSide = ph.escPortalsSide == "left" and "left" or "right"
+	local parent = portalsSide == "left" and leftFrame or rightFrame
+	if not parent or not parent:IsShown() then
+		self:ShowPortalFrames()
+		return
+	end
+
+	rebuildingStrip = true
+	RecycleStripButtons()
+	self:SyncEscLayout()
+	self:BuildPortalStrip(parent, ph.escIconSize or 40, 2, portalsSide == "left")
+	rebuildingStrip = false
+end
+
 function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 	local ph = OneWoW:GetPortalHub()
-	if not ph or not ph.escPortalsEnabled then return end
-	-- ESC never lists portals the player cannot use (showAllOnEsc ignored).
+	if not ph or not ph.escPortalsEnabled then
+		if iconSizeSlider then iconSizeSlider:Hide() end
+		return
+	end
+	-- Class, profession, mage, and item flyouts stay known-only.
 	local showAll = false
+	local showUnknown = ph.escShowUnknown ~= false
+	local currentSeason = ns.PortalHubDetection:GetCurrentSeasonNumber()
 	local flyoutOrient = growLeft and "LEFT" or "RIGHT"
 	local yOffset = 0
 	local xOffset = 0
@@ -347,16 +433,17 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 	yOffset = yOffset - (iconSize + iconGap)
 
 	if ns.NestedFlyouts then
+		local midIcon = C_Spell.GetSpellTexture(1254400) or C_Spell.GetSpellTexture(1254572) or 5872031
 		local dungeonExpansions = {
-			{id = "mid", label = "MID", icon = "Interface\\Icons\\Spell_Arcane_Portal_Silvermoon", portals = ns.PortalHubDetection:GetDungeonPortals("mid", showAll)},
-			{id = "tww", label = "TWW", icon = 5872031, portals = ns.PortalHubDetection:GetDungeonPortals("tww", showAll)},
-			{id = "df", label = "DF", icon = 4640496, portals = ns.PortalHubDetection:GetDungeonPortals("df", showAll)},
-			{id = "sl", label = "SL", icon = 236798, portals = ns.PortalHubDetection:GetDungeonPortals("sl", showAll)},
-			{id = "bfa", label = "BFA", icon = 1869493, portals = ns.PortalHubDetection:GetDungeonPortals("bfa", showAll)},
-			{id = "legion", label = "LEG", icon = 1260827, portals = ns.PortalHubDetection:GetDungeonPortals("legion", showAll)},
-			{id = "wod", label = "WoD", icon = 1413856, portals = ns.PortalHubDetection:GetDungeonPortals("wod", showAll)},
-			{id = "mop", label = "MoP", icon = 328269, portals = ns.PortalHubDetection:GetDungeonPortals("mop", showAll)},
-			{id = "cata", label = "CAT", icon = 574788, portals = ns.PortalHubDetection:GetDungeonPortals("cata", showAll)},
+			{id = "mid", label = "MID", icon = midIcon, portals = ns.PortalHubDetection:GetDungeonPortals("mid", showUnknown)},
+			{id = "tww", label = "TWW", icon = 5872031, portals = ns.PortalHubDetection:GetDungeonPortals("tww", showUnknown)},
+			{id = "df", label = "DF", icon = 4640496, portals = ns.PortalHubDetection:GetDungeonPortals("df", showUnknown)},
+			{id = "sl", label = "SL", icon = 236798, portals = ns.PortalHubDetection:GetDungeonPortals("sl", showUnknown)},
+			{id = "bfa", label = "BFA", icon = 1869493, portals = ns.PortalHubDetection:GetDungeonPortals("bfa", showUnknown)},
+			{id = "legion", label = "LEG", icon = 1260827, portals = ns.PortalHubDetection:GetDungeonPortals("legion", showUnknown)},
+			{id = "wod", label = "WoD", icon = 1413856, portals = ns.PortalHubDetection:GetDungeonPortals("wod", showUnknown)},
+			{id = "mop", label = "MoP", icon = 328269, portals = ns.PortalHubDetection:GetDungeonPortals("mop", showUnknown)},
+			{id = "cata", label = "CAT", icon = 574788, portals = ns.PortalHubDetection:GetDungeonPortals("cata", showUnknown)},
 		}
 
 		local hasDungeons = false
@@ -368,21 +455,21 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 		end
 
 		if hasDungeons then
-			local dungeonButton = ns.NestedFlyouts:CreateDungeonsButton(parent, iconSize, yOffset, dungeonExpansions, showAll, growLeft)
+			local dungeonButton = ns.NestedFlyouts:CreateDungeonsButton(parent, iconSize, yOffset, dungeonExpansions, growLeft)
 			table.insert(flyoutButtons, dungeonButton)
 			yOffset = yOffset - (iconSize + iconGap)
 		end
 
 		local raidExpansions = {
-			{id = "mid", label = "MID", icon = "Interface\\Icons\\Spell_Arcane_Portal_Silvermoon", portals = ns.PortalHubDetection:GetRaidPortals("mid", showAll)},
-			{id = "tww", label = "TWW", icon = 5872031, portals = ns.PortalHubDetection:GetRaidPortals("tww", showAll)},
-			{id = "df", label = "DF", icon = 4640496, portals = ns.PortalHubDetection:GetRaidPortals("df", showAll)},
-			{id = "sl", label = "SL", icon = 236798, portals = ns.PortalHubDetection:GetRaidPortals("sl", showAll)},
-			{id = "bfa", label = "BFA", icon = 1869493, portals = ns.PortalHubDetection:GetRaidPortals("bfa", showAll)},
-			{id = "legion", label = "LEG", icon = 1260827, portals = ns.PortalHubDetection:GetRaidPortals("legion", showAll)},
-			{id = "wod", label = "WoD", icon = 1413856, portals = ns.PortalHubDetection:GetRaidPortals("wod", showAll)},
-			{id = "mop", label = "MoP", icon = 328269, portals = ns.PortalHubDetection:GetRaidPortals("mop", showAll)},
-			{id = "cata", label = "CAT", icon = 574788, portals = ns.PortalHubDetection:GetRaidPortals("cata", showAll)},
+			{id = "mid", label = "MID", icon = midIcon, portals = ns.PortalHubDetection:GetRaidPortals("mid", showUnknown)},
+			{id = "tww", label = "TWW", icon = 5872031, portals = ns.PortalHubDetection:GetRaidPortals("tww", showUnknown)},
+			{id = "df", label = "DF", icon = 4640496, portals = ns.PortalHubDetection:GetRaidPortals("df", showUnknown)},
+			{id = "sl", label = "SL", icon = 236798, portals = ns.PortalHubDetection:GetRaidPortals("sl", showUnknown)},
+			{id = "bfa", label = "BFA", icon = 1869493, portals = ns.PortalHubDetection:GetRaidPortals("bfa", showUnknown)},
+			{id = "legion", label = "LEG", icon = 1260827, portals = ns.PortalHubDetection:GetRaidPortals("legion", showUnknown)},
+			{id = "wod", label = "WoD", icon = 1413856, portals = ns.PortalHubDetection:GetRaidPortals("wod", showUnknown)},
+			{id = "mop", label = "MoP", icon = 328269, portals = ns.PortalHubDetection:GetRaidPortals("mop", showUnknown)},
+			{id = "cata", label = "CAT", icon = 574788, portals = ns.PortalHubDetection:GetRaidPortals("cata", showUnknown)},
 		}
 
 		local hasRaids = false
@@ -394,34 +481,32 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 		end
 
 		if hasRaids then
-			local raidButton = ns.NestedFlyouts:CreateRaidsButton(parent, iconSize, yOffset, raidExpansions, showAll, growLeft)
+			local raidButton = ns.NestedFlyouts:CreateRaidsButton(parent, iconSize, yOffset, raidExpansions, growLeft)
 			table.insert(flyoutButtons, raidButton)
 			yOffset = yOffset - (iconSize + iconGap)
 		end
 	end
 
-	if ph.showSeason1 then
-		local season1Portals = ns.PortalHubDetection:GetSeasonPortals(1, false)
-		if #season1Portals > 0 then
-			local seasonIcon = C_Spell.GetSpellTexture(1254400) or "Interface\\Icons\\Achievement_Boss_Archaedas"
-			local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
-				parent, seasonIcon, iconSize, 0, yOffset, season1Portals, flyoutOrient, "S.1", growLeft
-			)
-			table.insert(flyoutButtons, button)
-			yOffset = yOffset - (iconSize + iconGap)
-		end
+	if ph.showSeason1 ~= false then
+		local season1ShowAll = (currentSeason == 1) or showUnknown
+		local season1Portals = ns.PortalHubDetection:GetSeasonPortals(1, season1ShowAll)
+		local seasonIcon = C_Spell.GetSpellTexture(1254400) or 4062765
+		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
+			parent, seasonIcon, iconSize, 0, yOffset, season1Portals, flyoutOrient, "S.1", growLeft
+		)
+		table.insert(flyoutButtons, button)
+		yOffset = yOffset - (iconSize + iconGap)
 	end
 
-	if ph.showSeason2 then
-		local season2Portals = ns.PortalHubDetection:GetSeasonPortals(2, false)
-		if #season2Portals > 0 then
-			local seasonIcon = C_Spell.GetSpellTexture(1286812) or "Interface\\Icons\\Achievement_Boss_Archaedas"
-			local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
-				parent, seasonIcon, iconSize, 0, yOffset, season2Portals, flyoutOrient, "S.2", growLeft
-			)
-			table.insert(flyoutButtons, button)
-			yOffset = yOffset - (iconSize + iconGap)
-		end
+	if ph.showSeason2 ~= false then
+		local season2ShowAll = (currentSeason == 2) or showUnknown
+		local season2Portals = ns.PortalHubDetection:GetSeasonPortals(2, season2ShowAll)
+		local seasonIcon = C_Spell.GetSpellTexture(1286812) or C_Spell.GetSpellTexture(393256) or 4062765
+		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
+			parent, seasonIcon, iconSize, 0, yOffset, season2Portals, flyoutOrient, "S.2", growLeft
+		)
+		table.insert(flyoutButtons, button)
+		yOffset = yOffset - (iconSize + iconGap)
 	end
 
 	if ns.PortalHubItems then
@@ -439,6 +524,8 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 
 	local openButton = self:CreateOpenHubButton(parent, 0, yOffset, iconSize, growLeft)
 	table.insert(secureButtons, openButton)
+	yOffset = yOffset - (iconSize + iconGap)
+	self:PlaceIconSizeSlider(parent, yOffset, growLeft)
 end
 
 function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSize, growLeft)
@@ -453,6 +540,7 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 
 	button.cooldownFrame = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
 	button.cooldownFrame:SetAllPoints()
+	ns.PortalHubFlyouts:ApplyButtonIcon(button)
 
 	button.text = OneWoW_GUI:CreateFS(button, 8)
 	button.text:SetPoint("BOTTOM", button, "BOTTOM", 0, 2)
@@ -514,20 +602,20 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 		local item = Item:CreateFromItemID(6948)
 		item:ContinueOnItemLoad(function()
 			local icon = item:GetItemIcon()
-			if icon then button:SetNormalTexture(icon) end
+			if icon then button.icon:SetTexture(icon) end
 		end)
 	elseif portalData.type == "toy" then
 		button:SetAttribute("type", "toy")
 		button:SetAttribute("toy", portalData.id)
 		local _, _, icon = C_ToyBox.GetToyInfo(portalData.id)
 		if icon then
-			button:SetNormalTexture(icon)
+			button.icon:SetTexture(icon)
 		else
 			local item = Item:CreateFromItemID(portalData.id)
 			item:ContinueOnItemLoad(function()
 				local itemIcon = item:GetItemIcon()
 				if itemIcon then
-					button:SetNormalTexture(itemIcon)
+					button.icon:SetTexture(itemIcon)
 				end
 			end)
 		end
@@ -546,13 +634,13 @@ function EscMenu:CreatePortalButton(parent, portalData, xOffset, yOffset, iconSi
 		local item = Item:CreateFromItemID(portalData.id)
 		item:ContinueOnItemLoad(function()
 			local icon = item:GetItemIcon()
-			if icon then button:SetNormalTexture(icon) end
+			if icon then button.icon:SetTexture(icon) end
 		end)
 	elseif portalData.type == "spell" then
 		button:SetAttribute("type", "spell")
 		button:SetAttribute("spell", portalData.id)
 		local icon = C_Spell.GetSpellTexture(portalData.id)
-		if icon then button:SetNormalTexture(icon) end
+		if icon then button.icon:SetTexture(icon) end
 		if ns.PortalData and ns.PortalData:GetShortName(portalData.id) then
 			button.text:SetText(ns.PortalData:GetShortName(portalData.id))
 		end
@@ -648,7 +736,7 @@ function EscMenu:CreateOpenHubButton(parent, xOffset, yOffset, iconSize, growLef
 	else
 		button:SetPoint("LEFT", parent, "TOPLEFT", xOffset, yOffset)
 	end
-	button:SetNormalTexture("Interface\\Icons\\INV_Misc_Book_09")
+	ns.PortalHubFlyouts:ApplyButtonIcon(button, "Interface\\Icons\\INV_Misc_Book_09")
 
 	button:SetScript("OnClick", function()
 		HideUIPanel(GameMenuFrame)

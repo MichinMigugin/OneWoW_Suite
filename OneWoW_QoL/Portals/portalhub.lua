@@ -287,6 +287,7 @@ function PortalHub:GetCategories()
 		name = L["Dungeons & Raids"],
 		icon = "Interface\\Icons\\Achievement_Boss_Archaedas",
 		subcategories = {
+			{id = "mid", name = EXPANSION_NAME11},
 			{id = "tww", name = L["The War Within"]},
 			{id = "df", name = L["Dragonflight"]},
 			{id = "sl", name = L["Shadowlands"]},
@@ -381,7 +382,7 @@ function PortalHub:GetPortalsForCategory(categoryID, showAll)
 		return allAbilities
 	elseif categoryID == "instances" then
 		local allPortals = {}
-		local expansions = {"tww", "df", "sl", "bfa", "legion", "wod", "mop", "cata", "wotlk"}
+		local expansions = {"mid", "tww", "df", "sl", "bfa", "legion", "wod", "mop", "cata", "wotlk"}
 		for _, exp in ipairs(expansions) do
 			local dungeons = ns.PortalHubDetection:GetDungeonPortals(exp, showAll)
 			for _, d in ipairs(dungeons) do
@@ -393,7 +394,7 @@ function PortalHub:GetPortalsForCategory(categoryID, showAll)
 			end
 		end
 		return allPortals
-	elseif categoryID == "tww" or categoryID == "df" or categoryID == "sl" or
+	elseif categoryID == "mid" or categoryID == "tww" or categoryID == "df" or categoryID == "sl" or
 		   categoryID == "bfa" or categoryID == "legion" or categoryID == "wod" or
 		   categoryID == "mop" or categoryID == "cata" or categoryID == "wotlk" then
 		local allPortals = {}

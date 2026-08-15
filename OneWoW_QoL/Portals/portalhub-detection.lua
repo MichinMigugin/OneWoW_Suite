@@ -39,6 +39,43 @@ local housingEventFrame = CreateFrame("Frame")
 local HOUSING_ATLAS_TELEPORT = "dashboard-panel-homestone-teleport-button"
 local HOUSING_ATLAS_RETURN = "dashboard-panel-homestone-teleport-out-button"
 
+local MAX_EXPANSION_SEASON_ORDINAL = 12
+
+---@param portals table
+---@param spellID number
+---@param showAll boolean
+local function AppendSpellPortal(portals, spellID, showAll)
+	local known = C_SpellBook.IsSpellKnown(spellID)
+	if known or showAll then
+		tinsert(portals, {type = "spell", id = spellID, available = known})
+	end
+end
+
+--- Per-expansion season ordinal from live Mythic+ APIs (1, 2, 3…).
+---@return number|nil
+function Detection:GetCurrentSeasonNumber()
+	local displayNum = C_MythicPlus.GetCurrentSeasonValues()
+	if displayNum and displayNum > 0 and displayNum <= MAX_EXPANSION_SEASON_ORDINAL then
+		return displayNum
+	end
+	local uiSeason = C_MythicPlus.GetCurrentUIDisplaySeason()
+	if uiSeason and uiSeason > 0 and uiSeason <= MAX_EXPANSION_SEASON_ORDINAL then
+		return uiSeason
+	end
+	if C_MythicPlus.GetCurrentSeason() == -1 then
+		C_MythicPlus.RequestMapInfo()
+		displayNum = C_MythicPlus.GetCurrentSeasonValues()
+		if displayNum and displayNum > 0 and displayNum <= MAX_EXPANSION_SEASON_ORDINAL then
+			return displayNum
+		end
+		uiSeason = C_MythicPlus.GetCurrentUIDisplaySeason()
+		if uiSeason and uiSeason > 0 and uiSeason <= MAX_EXPANSION_SEASON_ORDINAL then
+			return uiSeason
+		end
+	end
+	return nil
+end
+
 local function ApplyPendingHousingCallbacks()
 	if OneWoW.Restriction.IsProtectedActionBlocked() then
 		OneWoW.Restriction.RunWhenUnrestricted("protected", "OneWoW_QoL.portalhub.housing", ApplyPendingHousingCallbacks)
@@ -474,22 +511,15 @@ function Detection:GetDungeonPortals(expansion, showAll)
 	local faction = UnitFactionGroup("player")
 	for _, spellID in ipairs(spells) do
 		if spellID then
-			if C_SpellBook.IsSpellKnown(spellID) or showAll then
-				table.insert(portals, {type = "spell", id = spellID})
-			end
+			AppendSpellPortal(portals, spellID, showAll)
 		end
 	end
 
 	if expansion == "bfa" or not expansion then
 		local siegeID = faction == "Alliance" and 445418 or 464256
 		local motherID = faction == "Alliance" and 467553 or 467555
-
-		if C_SpellBook.IsSpellKnown(siegeID) or showAll then
-			table.insert(portals, {type = "spell", id = siegeID})
-		end
-		if C_SpellBook.IsSpellKnown(motherID) or showAll then
-			table.insert(portals, {type = "spell", id = motherID})
-		end
+		AppendSpellPortal(portals, siegeID, showAll)
+		AppendSpellPortal(portals, motherID, showAll)
 	end
 
 	return portals
@@ -527,9 +557,7 @@ function Detection:GetRaidPortals(expansion, showAll)
 	end
 
 	for _, spellID in ipairs(spells) do
-		if C_SpellBook.IsSpellKnown(spellID) or showAll then
-			table.insert(portals, {type = "spell", id = spellID})
-		end
+		AppendSpellPortal(portals, spellID, showAll)
 	end
 
 	return portals
@@ -678,13 +706,11 @@ function Detection:GetSeasonPortals(season, showAll)
 	local portals = {}
 	local seasonSpells = SEASON_PORTAL_SPELLS[season]
 	for _, spellID in ipairs(seasonSpells) do
-		if C_SpellBook.IsSpellKnown(spellID) or showAll then
-			table.insert(portals, {type = "spell", id = spellID})
-		end
+		AppendSpellPortal(portals, spellID, showAll)
 	end
 	return portals
 end
 
 function Detection:GetCurrentSeasonPortals(showAll)
-	return self:GetSeasonPortals(2, showAll)
+	return self:GetSeasonPortals(self:GetCurrentSeasonNumber() or 2, showAll)
 end

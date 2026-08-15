@@ -6,6 +6,22 @@ local L = ns.L
 ns.PortalHubFlyouts = ns.PortalHubFlyouts or {}
 local Flyouts = ns.PortalHubFlyouts
 
+--- Fill a button with an icon that tracks the button size.
+--- SetNormalTexture leaves a default-sized stamp that looks tiny on ESC slots.
+---@param button Button
+---@param texture number|string|nil
+function Flyouts:ApplyButtonIcon(button, texture)
+	local icon = button.icon
+	if not icon then
+		icon = button:CreateTexture(nil, "BACKGROUND")
+		icon:SetAllPoints()
+		button.icon = icon
+	end
+	if texture then
+		icon:SetTexture(texture)
+	end
+end
+
 local flyoutFramesPool = {}
 local flyoutButtonsPool = {}
 local activeFlyouts = {}
@@ -75,6 +91,14 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 			self:SetParent(nil)
 			self:Hide()
 			self.text:SetText("")
+			self:SetAlpha(1)
+			if self.icon then
+				self.icon:SetDesaturated(false)
+			end
+			self:SetAttribute("type", nil)
+			self:SetAttribute("spell", nil)
+			self:SetAttribute("toy", nil)
+			self:SetAttribute("item", nil)
 			if self.cooldownFrame then
 				self.cooldownFrame:Clear()
 			end
@@ -88,10 +112,18 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 	button:EnableMouse(true)
 	button:RegisterForClicks("AnyDown", "AnyUp")
 	button:SetAttribute("useOnKeyDown", true)
+	button:SetAttribute("type", nil)
+	button:SetAttribute("spell", nil)
+	button:SetAttribute("toy", nil)
+	button:SetAttribute("item", nil)
+
+	local isAvailable = portalData.available ~= false
 
 	if portalData.type == "toy" then
-		button:SetAttribute("type", "toy")
-		button:SetAttribute("toy", portalData.id)
+		if isAvailable then
+			button:SetAttribute("type", "toy")
+			button:SetAttribute("toy", portalData.id)
+		end
 		local _, _, icon = C_ToyBox.GetToyInfo(portalData.id)
 		if icon then
 			button.icon:SetTexture(icon)
@@ -105,8 +137,10 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 			end)
 		end
 	elseif portalData.type == "item" then
-		button:SetAttribute("type", "item")
-		button:SetAttribute("item", "item:" .. portalData.id)
+		if isAvailable then
+			button:SetAttribute("type", "item")
+			button:SetAttribute("item", "item:" .. portalData.id)
+		end
 		local item = Item:CreateFromItemID(portalData.id)
 		item:ContinueOnItemLoad(function()
 			local icon = item:GetItemIcon()
@@ -115,8 +149,10 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 			end
 		end)
 	elseif portalData.type == "spell" then
-		button:SetAttribute("type", "spell")
-		button:SetAttribute("spell", portalData.id)
+		if isAvailable then
+			button:SetAttribute("type", "spell")
+			button:SetAttribute("spell", portalData.id)
+		end
 		local icon = C_Spell.GetSpellTexture(portalData.id)
 		if icon then
 			button.icon:SetTexture(icon)
@@ -127,7 +163,18 @@ function Flyouts:CreateFlyoutButton(flyoutFrame, portalData, xOffset, yOffset, i
 		end
 	end
 
+	if isAvailable then
+		button:SetAlpha(1)
+		button.icon:SetDesaturated(false)
+	else
+		button:SetAlpha(0.5)
+		button.icon:SetDesaturated(true)
+	end
+
 	button:SetScript("PostClick", function(_, mouseButton)
+		if not isAvailable then
+			return
+		end
 		if mouseButton == "LeftButton" then
 			if ns.PortalHubFlyouts then
 				ns.PortalHubFlyouts:RecycleAll()
