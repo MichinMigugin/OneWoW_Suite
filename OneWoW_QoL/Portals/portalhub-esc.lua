@@ -260,8 +260,8 @@ function EscMenu:PlaceIconSizeSlider(parent, yOffset, growLeft)
 		OneWoW_GUI:ConfigureOptionsSliderEnds(sl, "", "")
 		if sl.Low then sl.Low:Hide() end
 		if sl.High then sl.High:Hide() end
-		iconSizeSlider:SetScript("OnEnter", function(self)
-			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		iconSizeSlider:SetScript("OnEnter", function(myself)
+			GameTooltip:SetOwner(myself, "ANCHOR_RIGHT")
 			GameTooltip:SetText(L["PORTAL_ESC_ICON_SIZE"], 1, 1, 1)
 			GameTooltip:AddLine(L["PORTAL_ESC_ICON_SIZE_DESC"], nil, nil, nil, true)
 			GameTooltip:Show()

@@ -4,7 +4,7 @@ local OneWoW = OneWoW
 local OneWoW_GUI = OneWoW_GUI
 
 local tinsert, tremove, wipe = tinsert, tremove, wipe
-local ipairs, type = ipairs, type
+local ipairs = ipairs
 local CreateFrame = CreateFrame
 local C_Timer = C_Timer
 
