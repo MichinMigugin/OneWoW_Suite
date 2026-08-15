@@ -165,6 +165,8 @@ ns.Locale:Register(ADDON_NAME, "enUS", {
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "Midnight Journal now includes encounters and loot for The Tidebound Grotto, The Venomous Abyss, and Altar of Fangs.",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "Bags settings → General can replace Bags, Bank (personal and warband together), and Guild Bank independently. Turn off Bags UI to keep the default bags while still using OneWoW for bank.",
+    ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Icon Browser",
+    ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL Features includes Icon Browser. Search and filter icons when you pick a macro, bank tab, guild bank tab, equipment set, or transmog outfit icon.",
     ["CMD_TOGGLE_ONEWOW"] = "Toggle OneWoW",
     ["CMD_KEYWORD_HELP"] = "Open Search Keywords help",
     ["CMD_OPEN_ALTTRACKER"] = "Open AltTracker",

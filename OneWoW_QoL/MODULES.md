@@ -4,7 +4,7 @@ Catalog of toggleable features under `Modules/external/`. Each module is indepen
 
 Module authors: [DEVELOPERS.md](DEVELOPERS.md). Suite docs: [OneWoW/Docs/README.md](../OneWoW/Docs/README.md).
 
-**34 modules** across 5 categories (matches `module.lua` `category` values in the Features UI).
+**35 modules** across 5 categories (matches `module.lua` `category` values in the Features UI).
 
 ---
 
@@ -115,6 +115,13 @@ Drag Blizzard UI frames to reposition them. Use Ctrl+Scroll to scale. Positions 
 Hides the most common red error messages (out of mana, out of range, target needs to be in front, spell not ready, etc.) so the center of your screen stays clean during fights.
 
 - **Module id:** `hideerrors` · **Folder:** `Modules/external/hideerrors/`
+
+### Icon Browser
+
+Replaces the default icon picker on macros, bank tabs, guild bank tabs, equipment sets, and transmog outfits with a searchable list and category filters. On by default. Stays off if the IconBrowser addon is also loaded.
+
+- **Module id:** `iconbrowser` · **Folder:** `Modules/external/iconbrowser/`
+- **Docs:** [Docs/Modules/iconbrowser.md](Docs/Modules/iconbrowser.md)
 
 ### Inspect Gear
 

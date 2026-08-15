@@ -28,7 +28,7 @@ Hands-off helpers: **Auto Repair**, **Fast Loot**, **Auto Mount**, **Auto Open**
 
 ### Interface
 
-UI and map tools: **AFK Panel**, **Auto Delete**, **ESC Menu Panel**, **Bag Bar** (items matched by [search expressions](Bags-Search-Syntax)), **Quest Item Bar**, **Professions Panel**, **Character Info Sheet**, **Coords Display**, **Cursor Enhancer**, **Frame Mover**, combat-error spam filter, **Inspect Gear**, **LFG Lockouts**, minimap/world map tools, **Minimap Button Collector**, **Player Mounts**, **Prey Hunt Bar**, and more.
+UI and map tools: **AFK Panel**, **Auto Delete**, **ESC Menu Panel**, **Bag Bar** (items matched by [search expressions](Bags-Search-Syntax)), **Quest Item Bar**, **Professions Panel**, **Character Info Sheet**, **Coords Display**, **Cursor Enhancer**, **Frame Mover**, combat-error spam filter, **Icon Browser** (searchable icon picker for macros, bank tabs, and transmog outfits), **Inspect Gear**, **LFG Lockouts**, minimap/world map tools, **Minimap Button Collector**, **Player Mounts**, **Prey Hunt Bar**, and more.
 
 ### Social
 
@@ -44,7 +44,7 @@ UI and map tools: **AFK Panel**, **Auto Delete**, **ESC Menu Panel**, **Bag Bar*
 
 Built-in with QoL (not separate toggles): toast-style alerts and portal data used by the hub / ESC panel.
 
-There are **34** external modules. The full labeled catalog lives in the repo ([MODULES.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_QoL/MODULES.md)).
+There are **35** external modules. The full labeled catalog lives in the repo ([MODULES.md](https://github.com/kellewic/OneWoW_Suite/blob/main/OneWoW_QoL/MODULES.md)).
 
 ---
 

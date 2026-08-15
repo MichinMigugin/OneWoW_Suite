@@ -165,6 +165,8 @@ ns.Locale:Register(ADDON_NAME, "ptBR", {
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "O Journal de Midnight agora inclui encontros e saque de Gruta Marejante, Abismo Peçonhento e Altar das Presas.",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "Em Configurações de Bolsas → Geral, você pode substituir independentemente Bolsas, Banco (pessoal e Bando de Guerra juntos) e Banco da guilda. Desative a interface de Bolsas para manter as bolsas padrão e continuar usando o OneWoW no banco.",
+    ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Navegador de ícones",
+    ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Os Recursos de QoL incluem o Navegador de ícones. Pesquise e filtre ícones ao escolher o de uma macro, aba do banco, aba do banco da guilda, conjunto de equipamento ou traje de transmogrificação.",
     ["CMD_TOGGLE_ONEWOW"] = "Alternar OneWoW",
     ["CMD_KEYWORD_HELP"] = "Abrir a ajuda de palavras-chave de busca",
     ["CMD_OPEN_ALTTRACKER"] = "Abrir AltTracker",

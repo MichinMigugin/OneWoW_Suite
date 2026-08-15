@@ -165,6 +165,8 @@ ns.Locale:Register(ADDON_NAME, "koKR", {
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "한밤 Journal에 해일결속 동굴, 맹독 심연, 송곳니의 제단의 우두머리와 전리품이 포함됩니다.",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "가방 설정 → 일반에서 가방, 은행(개인과 전투부대 함께), 길드 은행을 각각 따로 대체할 수 있습니다. 가방 UI를 끄면 기본 가방을 유지하면서 은행은 OneWoW를 계속 사용할 수 있습니다.",
+    ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — 아이콘 브라우저",
+    ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL 기능에 아이콘 브라우저가 있습니다. 매크로, 은행 탭, 길드 은행 탭, 장비 구성, 형상변환 복장 아이콘을 고를 때 검색하고 필터할 수 있습니다.",
     ["CMD_TOGGLE_ONEWOW"] = "OneWoW 전환",
     ["CMD_KEYWORD_HELP"] = "검색 키워드 도움말 열기",
     ["CMD_OPEN_ALTTRACKER"] = "AltTracker 열기",

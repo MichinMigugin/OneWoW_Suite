@@ -17,5 +17,6 @@ ns.WhatsNewData = {
         { titleKey = "WHATS_NEW_H_AUTOMOUNT_TITLE", bodyKey = "WHATS_NEW_H_AUTOMOUNT_BODY" },
         { titleKey = "WHATS_NEW_H_JOURNAL_TITLE",   bodyKey = "WHATS_NEW_H_JOURNAL_BODY" },
         { titleKey = "MODULE_BAGS",                 bodyKey = "WHATS_NEW_H_BAGS_UI_BODY" },
+        { titleKey = "WHATS_NEW_H_ICONBROWSER_TITLE", bodyKey = "WHATS_NEW_H_ICONBROWSER_BODY" },
     },
 }

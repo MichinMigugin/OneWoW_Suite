@@ -165,6 +165,8 @@ ns.Locale:Register(ADDON_NAME, "zhTW", {
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "至暗之夜的 Journal 現已包含浪縛岩窟、劇毒深淵和毒牙祭壇的首領與掉落。",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "在背包設定 → 一般中，可以分別取代背包、銀行（個人與戰隊一起）和公會銀行。關閉背包介面即可保留預設背包，同時繼續用 OneWoW 開啟銀行。",
+    ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — 圖示瀏覽器",
+    ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL 功能現已包含圖示瀏覽器。選擇巨集、銀行分頁、公會銀行分頁、裝備設定或塑形套裝圖示時可搜尋並篩選。",
     ["CMD_TOGGLE_ONEWOW"] = "切換 OneWoW",
     ["CMD_KEYWORD_HELP"] = "開啟搜尋關鍵字說明",
     ["CMD_OPEN_ALTTRACKER"] = "開啟 AltTracker",

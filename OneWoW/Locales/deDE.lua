@@ -165,6 +165,8 @@ ns.Locale:Register(ADDON_NAME, "deDE", {
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "Das Midnight-Journal enthält jetzt Begegnungen und Beute für Die Gezeitengebundene Grotte, Der Giftige Abgrund und Altar der Fänge.",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "Unter Taschen-Einstellungen → Allgemein könnt ihr Taschen, Bank (persönlich und Kriegsmeute gemeinsam) und Gildenbank unabhängig ersetzen. Schaltet die Taschen-UI aus, um die Standardtaschen zu behalten und OneWoW weiter für die Bank zu nutzen.",
+    ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Symbolbrowser",
+    ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Unter QoL-Funktionen gibt es den Symbolbrowser. Damit lassen sich Symbole für Makros, Banktabs, Gildenbanktabs, Ausrüstungssets und Transmog-Outfits suchen und filtern.",
     ["CMD_TOGGLE_ONEWOW"] = "OneWoW umschalten",
     ["CMD_KEYWORD_HELP"] = "Hilfe zu Suchbegriffen öffnen",
     ["CMD_OPEN_ALTTRACKER"] = "AltTracker öffnen",

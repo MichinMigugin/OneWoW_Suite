@@ -166,6 +166,8 @@ ns.Locale:Register(ADDON_NAME, "esMX", {
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "El Journal de Midnight ahora incluye encuentros y botín de La Gruta Mareal, Abismo Venenoso y Altar de los Colmillos.",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "En Ajustes de bolsas → General puedes reemplazar por separado Bolsas, Banco (personal y banda guerrera juntos) y Banco de hermandad. Desactiva la interfaz de bolsas para conservar las bolsas predeterminadas y seguir usando OneWoW para el banco.",
+    ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Navegador de iconos",
+    ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Funciones de QoL incluye el módulo Navegador de iconos. Busca y filtra iconos al elegir el de una macro, pestaña de banco, pestaña de banco de hermandad, conjunto de equipo o atuendo de transfiguración.",
     ["CMD_TOGGLE_ONEWOW"] = "Alternar OneWoW",
     ["CMD_KEYWORD_HELP"] = "Abrir la ayuda de palabras clave de búsqueda",
     ["CMD_OPEN_ALTTRACKER"] = "Abrir AltTracker",

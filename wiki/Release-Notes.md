@@ -8,6 +8,9 @@
 ---
 
 ### QoL
+#### Icon Browser
+- Icon pickers for macros, bank tabs, guild bank tabs, equipment sets, and transmog outfits now have search and category filters.
+
 #### Portals
 - ESC Portals keeps the Season 1 flyout and adds a Season 2 row. Each can be shown or hidden from Portals settings. Midnight Season 2 dungeon teleports are included, and the Midnight expansion flyout lists the new dungeons.
 - Dungeons & Raids on the Portals tab now includes Midnight.
@@ -54,7 +57,7 @@
 
 ---
 
-- **Last Updated**: Aug 15, 2026
+- **Last Updated**: Aug 16, 2026
 
 ## R6.2608.1105
 

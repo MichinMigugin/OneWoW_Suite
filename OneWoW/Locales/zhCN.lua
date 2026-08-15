@@ -165,6 +165,8 @@ ns.Locale:Register(ADDON_NAME, "zhCN", {
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "至暗之夜的 Journal 现已包含潮缚石窟、烈毒之渊和毒牙祭坛的首领与掉落。",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "在背包设置 → 常规中，可以分别替换背包、银行（个人与战团一起）和公会银行。关闭背包界面即可保留默认背包，同时继续用 OneWoW 打开银行。",
+    ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — 图标浏览器",
+    ["WHATS_NEW_H_ICONBROWSER_BODY"] = "QoL 功能现已包含图标浏览器。选择宏、银行标签、公会银行标签、装备方案或幻化套装图标时可搜索并筛选。",
     ["CMD_TOGGLE_ONEWOW"] = "切换 OneWoW",
     ["CMD_KEYWORD_HELP"] = "打开搜索关键词帮助",
     ["CMD_OPEN_ALTTRACKER"] = "打开 AltTracker",

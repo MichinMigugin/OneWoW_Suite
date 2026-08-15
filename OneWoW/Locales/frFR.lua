@@ -165,6 +165,8 @@ ns.Locale:Register(ADDON_NAME, "frFR", {
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "Le Journal Midnight inclut désormais les rencontres et le butin de La grotte des Marées, L’abîme Venimeux et Autel des crochets.",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "Dans les réglages Sacs → Général, vous pouvez remplacer indépendamment les sacs, la banque (personnelle et bataillon ensemble) et la banque de guilde. Désactivez l’interface Sacs pour garder les sacs par défaut tout en utilisant OneWoW pour la banque.",
+    ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Navigateur d’icônes",
+    ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Les fonctionnalités QoL incluent le Navigateur d’icônes. Recherchez et filtrez les icônes des macros, onglets de banque, onglets de banque de guilde, ensembles d’équipement et tenues de transmogrification.",
     ["CMD_TOGGLE_ONEWOW"] = "Basculer OneWoW",
     ["CMD_KEYWORD_HELP"] = "Ouvrir l'aide des mots-clés de recherche",
     ["CMD_OPEN_ALTTRACKER"] = "Ouvrir AltTracker",

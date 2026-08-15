@@ -165,6 +165,8 @@ ns.Locale:Register(ADDON_NAME, "itIT", {
     ["WHATS_NEW_H_JOURNAL_TITLE"] = "Catalog — Journal",
     ["WHATS_NEW_H_JOURNAL_BODY"] = "Il Journal di Midnight ora include scontri e bottino di Grotta Vincolata alla Marea, Abissi Velenosi e Altare delle Zanne.",
     ["WHATS_NEW_H_BAGS_UI_BODY"] = "In Impostazioni Borse → Generale puoi sostituire in modo indipendente Borse, Banca (personale e Brigata insieme) e Banca di gilda. Disattiva l'interfaccia Borse per mantenere le borse predefinite e usare comunque OneWoW per la banca.",
+    ["WHATS_NEW_H_ICONBROWSER_TITLE"] = "QoL — Browser delle icone",
+    ["WHATS_NEW_H_ICONBROWSER_BODY"] = "Le funzioni QoL includono il Browser delle icone. Cerca e filtra le icone di macro, schede della banca, schede della banca di gilda, set di equipaggiamento e outfit di trasmogrificazione.",
     ["CMD_TOGGLE_ONEWOW"] = "Attiva/disattiva OneWoW",
     ["CMD_KEYWORD_HELP"] = "Apri l'aiuto sulle parole chiave di ricerca",
     ["CMD_OPEN_ALTTRACKER"] = "Apri AltTracker",
