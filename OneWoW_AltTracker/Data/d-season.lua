@@ -3,10 +3,8 @@ local _, ns = ...
 ns.SeasonData = ns.SeasonData or {}
 
 ns.SeasonData.raids = {
-    {key = "dreamrift",  label = "The Dreamrift",        short = "Dream"},
-    {key = "voidspire",  label = "The Voidspire",         short = "Void"},
-    {key = "marchquel",  label = "March on Quel'Danas",  short = "March"},
-    {key = "sporefall",  label = "Sporefall",             short = "Spore"},
+    {key = "venomous",   label = "The Venomous Abyss",   short = "Abyss"},
+    {key = "tidebound",  label = "The Tidebound Grotto", short = "Tide"},
 }
 
 ns.SeasonData.raidDifficulties = {
@@ -17,14 +15,14 @@ ns.SeasonData.raidDifficulties = {
 }
 
 ns.SeasonData.dungeons = {
-    {key = "sd1", name = "Magisters' Terrace",     short = "MAGT",  mapID = 558},
-    {key = "sd2", name = "Maisara Caverns",         short = "MAIS",  mapID = 560},
-    {key = "sd3", name = "Nexus-Point Xenas",       short = "XENA",  mapID = 559},
-    {key = "sd4", name = "Windrunner Spire",        short = "WSPIR", mapID = 557},
-    {key = "sd5", name = "Algeth'ar Academy",       short = "ACAD",  mapID = 402},
-    {key = "sd6", name = "Seat of the Triumvirate", short = "SEAT",  mapID = 239},
-    {key = "sd7", name = "Skyreach",                short = "SKY",   mapID = 161},
-    {key = "sd8", name = "Pit of Saron",            short = "POS",   mapID = 556},
+    {key = "sd1", name = "Altar of Fangs",          short = "FANG",  mapID = 0},
+    {key = "sd2", name = "Murder Row",              short = "MURD",  mapID = 0},
+    {key = "sd3", name = "Den of Nalorakk",         short = "NALO",  mapID = 0},
+    {key = "sd4", name = "The Blinding Vale",       short = "VALE",  mapID = 0},
+    {key = "sd5", name = "Voidscar Arena",          short = "VOID",  mapID = 0},
+    {key = "sd6", name = "Ruby Life Pools",         short = "RLP",   mapID = 399},
+    {key = "sd7", name = "Kings' Rest",             short = "KR",    mapID = 249},
+    {key = "sd8", name = "Temple of Sethraliss",    short = "TOS",   mapID = 250},
 }
 
 local raidCache = nil
@@ -57,6 +55,34 @@ local function BuildRaidCache()
     end
 
     return cache
+end
+
+local function ChallengeNamesMatch(a, b)
+    if a == b then return true end
+    if not a or not b then return false end
+    return (a:gsub("^The ", "")) == (b:gsub("^The ", ""))
+end
+
+--- Fill `dung.mapID` from `C_ChallengeMode.GetMapTable()` when the hardcoded
+--- ID is missing or stale. Matches `dung.name` to `GetMapUIInfo`.
+---@param dung table
+---@return number|nil mapID
+function ns.SeasonData:ResolveDungeonMapID(dung)
+    if dung.mapID and dung.mapID > 0 then
+        local name = C_ChallengeMode.GetMapUIInfo(dung.mapID)
+        if name then
+            return dung.mapID
+        end
+    end
+    local mapTable = C_ChallengeMode.GetMapTable()
+    for _, id in ipairs(mapTable) do
+        local name = C_ChallengeMode.GetMapUIInfo(id)
+        if ChallengeNamesMatch(name, dung.name) then
+            dung.mapID = id
+            return id
+        end
+    end
+    return dung.mapID
 end
 
 function ns.SeasonData:GetRaidCache()
@@ -102,4 +128,53 @@ function ns.SeasonData:GetRaidEncounters(raidEntry)
         index = index + 1
     end
     return encounters
+end
+
+-- EXPANSION_SEASON_NAME uses a per-expansion ordinal (1, 2, 3…), not the
+-- content season UID from C_SeasonInfo.GetCurrentDisplaySeasonID.
+local MAX_EXPANSION_SEASON_ORDINAL = 12
+
+---@return number|nil
+local function SeasonOrdinalFromAPI()
+    local displayNum = C_MythicPlus.GetCurrentSeasonValues()
+    if displayNum and displayNum > 0 and displayNum <= MAX_EXPANSION_SEASON_ORDINAL then
+        return displayNum
+    end
+    local uiSeason = C_MythicPlus.GetCurrentUIDisplaySeason()
+    if uiSeason and uiSeason > 0 and uiSeason <= MAX_EXPANSION_SEASON_ORDINAL then
+        return uiSeason
+    end
+    return nil
+end
+
+--- Per-expansion season ordinal from live Mythic+ APIs.
+---@return number|nil
+function ns.SeasonData:GetCurrentSeasonNumber()
+    local ordinal = SeasonOrdinalFromAPI()
+    if ordinal then
+        return ordinal
+    end
+    if C_MythicPlus.GetCurrentSeason() == -1 then
+        C_MythicPlus.RequestMapInfo()
+        return SeasonOrdinalFromAPI()
+    end
+    return nil
+end
+
+--- Localized tooltip-style label (`EXPANSION_SEASON_NAME`), e.g. "Midnight Season 2".
+---@return string|nil
+function ns.SeasonData:GetCurrentSeasonLabel()
+    local seasonNum = self:GetCurrentSeasonNumber()
+    if not seasonNum then
+        return nil
+    end
+    local expName = OneWoW:GetExpansionName(LE_EXPANSION_LEVEL_CURRENT)
+    if not expName then
+        local displayExpID = C_SeasonInfo.GetCurrentDisplaySeasonExpansion()
+        expName = displayExpID and OneWoW:GetExpansionName(displayExpID)
+    end
+    if not expName then
+        return nil
+    end
+    return EXPANSION_SEASON_NAME:format(expName, seasonNum)
 end

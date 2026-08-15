@@ -73,3 +73,4 @@ UI\t-items.lua
 UI\t-actionbars.lua
 UI\t-lockouts.lua
 UI\t-settings.lua
+UI\SeasonStatus.lua

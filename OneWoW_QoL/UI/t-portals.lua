@@ -624,12 +624,30 @@ function ns.UI.CreatePortalsTab(parent)
 			rowY = OneWoW_GUI:CreateToggleRow(content, {
 				yOffset = rowY,
 				contentWidth = contentWidth,
-				label = L["PORTAL_SHOW_SEASONAL"],
-				description = L["PORTAL_SHOW_SEASONAL_DESC"],
-				value = ph.showSeasonal ~= false,
+				label = L["PORTAL_SHOW_SEASON1"],
+				description = L["PORTAL_SHOW_SEASON1_DESC"],
+				value = ph.showSeason1,
 				isEnabled = true,
 				onValueChange = function(newVal)
-					OneWoW:GetPortalHub().showSeasonal = newVal
+					OneWoW:GetPortalHub().showSeason1 = newVal
+					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
+						ns.PortalHubEsc:Reload()
+					end
+				end,
+				onLabel = L["FEATURES_ON"],
+				offLabel = L["FEATURES_OFF"],
+				buttonWidth = 50,
+			})
+
+			rowY = OneWoW_GUI:CreateToggleRow(content, {
+				yOffset = rowY,
+				contentWidth = contentWidth,
+				label = L["PORTAL_SHOW_SEASON2"],
+				description = L["PORTAL_SHOW_SEASON2_DESC"],
+				value = ph.showSeason2,
+				isEnabled = true,
+				onValueChange = function(newVal)
+					OneWoW:GetPortalHub().showSeason2 = newVal
 					if ns.PortalHubEsc and ns.PortalHubEsc.Reload then
 						ns.PortalHubEsc:Reload()
 					end

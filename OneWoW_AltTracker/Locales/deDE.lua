@@ -452,6 +452,7 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["STATUS_BIDDING"] = "Bieten",
     ["STATUS_OK"] = "OK",
     ["STATUS_REVIEW"] = "Prüfen",
+    ["STATUS_TITLE"] = "Aktuell verfolgt",
     ["SUBTAB_ACTIONBARS"] = "Aktionsleisten",
     ["SUBTAB_FINANCIALS"] = "Finanzen",
     ["ITEMS_COL_VENDOR"] = "Händler$",

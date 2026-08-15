@@ -400,15 +400,28 @@ function EscMenu:BuildPortalStrip(parent, iconSize, iconGap, growLeft)
 		end
 	end
 
-	local showSeasonal = OneWoW:GetPortalHub().showSeasonal ~= false
-	local seasonPortals = showSeasonal and ns.PortalHubDetection:GetCurrentSeasonPortals(false) or {}
-	if #seasonPortals > 0 then
-		local seasonIcon = C_Spell.GetSpellTexture(1254400) or "Interface\\Icons\\Achievement_Boss_Archaedas"
-		local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
-			parent, seasonIcon, iconSize, 0, yOffset, seasonPortals, flyoutOrient, "S.1", growLeft
-		)
-		table.insert(flyoutButtons, button)
-		yOffset = yOffset - (iconSize + iconGap)
+	if ph.showSeason1 then
+		local season1Portals = ns.PortalHubDetection:GetSeasonPortals(1, false)
+		if #season1Portals > 0 then
+			local seasonIcon = C_Spell.GetSpellTexture(1254400) or "Interface\\Icons\\Achievement_Boss_Archaedas"
+			local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
+				parent, seasonIcon, iconSize, 0, yOffset, season1Portals, flyoutOrient, "S.1", growLeft
+			)
+			table.insert(flyoutButtons, button)
+			yOffset = yOffset - (iconSize + iconGap)
+		end
+	end
+
+	if ph.showSeason2 then
+		local season2Portals = ns.PortalHubDetection:GetSeasonPortals(2, false)
+		if #season2Portals > 0 then
+			local seasonIcon = C_Spell.GetSpellTexture(1286812) or "Interface\\Icons\\Achievement_Boss_Archaedas"
+			local button = ns.PortalHubFlyouts:CreateFlyoutParentButton(
+				parent, seasonIcon, iconSize, 0, yOffset, season2Portals, flyoutOrient, "S.2", growLeft
+			)
+			table.insert(flyoutButtons, button)
+			yOffset = yOffset - (iconSize + iconGap)
+		end
 	end
 
 	if ns.PortalHubItems then

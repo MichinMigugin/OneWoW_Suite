@@ -10,6 +10,7 @@ local KNOWN_BOSS_NAMES = {
     [92034] = "Thorm'belan",
     [96472] = "Nexus-Captain Leth'ir",
     [96473] = "Imperator Pertinax",
+    [97128] = "Nymrissa Wavecaller",
 }
 
 function Module:CollectData(charKey, charData)

@@ -95,7 +95,12 @@ local function OnEnable()
     OneWoW:RegisterMinimap("OneWoW_AltTracker", ns.L["CTX_OPEN_ALTTRACKER"], "alttracker", nil)
 end
 
-function OneWoW_AltTracker:SlashCommandHandler()
+function OneWoW_AltTracker:SlashCommandHandler(msg)
+    local cmd = strtrim(msg or ""):lower()
+    if cmd == "status" then
+        ns.SeasonStatus:Show()
+        return
+    end
     OneWoW.UI:Show("alttracker")
 end
 

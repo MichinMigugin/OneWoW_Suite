@@ -451,6 +451,7 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["STATUS_BIDDING"] = "입찰 중",
     ["STATUS_OK"] = "양호",
     ["STATUS_REVIEW"] = "검토",
+    ["STATUS_TITLE"] = "현재 추적 중",
     ["SUBTAB_ACTIONBARS"] = "행동 단축바",
     ["SUBTAB_FINANCIALS"] = "재정",
     ["ITEMS_COL_VENDOR"] = "상인$",

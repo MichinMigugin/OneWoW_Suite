@@ -452,6 +452,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ptBR", {
     ["STATUS_BIDDING"] = "Dando lance",
     ["STATUS_OK"] = "OK",
     ["STATUS_REVIEW"] = "Revisar",
+    ["STATUS_TITLE"] = "Rastreamento atual",
     ["SUBTAB_ACTIONBARS"] = "Barras de ação",
     ["SUBTAB_FINANCIALS"] = "Finanças",
     ["ITEMS_COL_VENDOR"] = "Vendedor$",

@@ -19,6 +19,7 @@ Re-open the feature picker anytime from **Settings → Manage Features** (link o
 | [Bags](Bags) | `/1wbags` | Toggle the Bags UI |
 | [Notes](Notes) | `/1wn` | Open Notes in the hub |
 | [AltTracker](AltTracker) | `/1wat` | Open AltTracker in the hub |
+| [AltTracker](AltTracker) | `/1wat status` | Show the current season and lists Progress is tracking |
 | [Catalog](Catalog) | `/1wcat` | Open Catalog in the hub |
 | [Trackers](Trackers) | `/1wt` | Open Trackers in the hub |
 | [QoL](QoL) | `/1wqol` | Open QoL in the hub |

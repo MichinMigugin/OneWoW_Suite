@@ -424,6 +424,7 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["STATUS_BIDDING"] = "Bidding",
     ["STATUS_OK"] = "OK",
     ["STATUS_REVIEW"] = "Review",
+    ["STATUS_TITLE"] = "Currently Tracking",
     ["SUBTAB_ACTIONBARS"] = "Action Bars",
     ["SUBTAB_FINANCIALS"] = "Financials",
     ["ITEMS_COL_VENDOR"] = "Vendor$",

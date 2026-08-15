@@ -442,11 +442,11 @@ function Detection:GetDungeonPortals(expansion, showAll)
 	local portals = {}
 
 	local dungeonsByExpansion = {
-		mid = {1254572, 1254400, 1254563, 1254559},
+		mid = {1254572, 1254400, 1254563, 1254559, 1286812, 1286809, 1286807, 1286801, 1286804},
 		tww = {445417, 445440, 445416, 445441, 445414, 1237215, 1216786, 445444, 445443, 445269},
 		df = {393273, 393279, 393267, 424197, 393283, 393276, 393262, 393256, 393222},
 		sl = {354468, 354465, 354464, 354462, 354463, 354469, 354466, 367416, 354467},
-		bfa = {424187, 410071, 373274, 410074, 424167},
+		bfa = {424187, 410071, 373274, 410074, 424167, 1286831, 1286828},
 		legion = {424153, 393766, 424163, 393764, 373262, 410078, 252631, 1254551},
 		wod = {159897, 159895, 159901, 159900, 159896, 159899, 159898, 159902, 1254557},
 		mop = {131225, 131222, 131232, 131231, 131229, 131228, 131206, 131205, 131204},
@@ -651,9 +651,8 @@ function Detection:GetHousingPortal()
 	return nil
 end
 
-function Detection:GetCurrentSeasonPortals(showAll)
-	local portals = {}
-	local seasonSpells = {
+local SEASON_PORTAL_SPELLS = {
+	[1] = {
 		1254400,
 		1254572,
 		1254559,
@@ -662,11 +661,30 @@ function Detection:GetCurrentSeasonPortals(showAll)
 		1254555,
 		1254551,
 		1254557,
-	}
+	},
+	[2] = {
+		1286812,
+		1286809,
+		1286807,
+		1286801,
+		1286804,
+		393256,
+		1286831,
+		1286828,
+	},
+}
+
+function Detection:GetSeasonPortals(season, showAll)
+	local portals = {}
+	local seasonSpells = SEASON_PORTAL_SPELLS[season]
 	for _, spellID in ipairs(seasonSpells) do
 		if C_SpellBook.IsSpellKnown(spellID) or showAll then
 			table.insert(portals, {type = "spell", id = spellID})
 		end
 	end
 	return portals
+end
+
+function Detection:GetCurrentSeasonPortals(showAll)
+	return self:GetSeasonPortals(2, showAll)
 end

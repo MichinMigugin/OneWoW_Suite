@@ -1,6 +1,9 @@
 # OneWoW Suite Changelog
 
 # QoL
+## Portals
+- ESC Portals keeps the Season 1 flyout and adds a Season 2 row. Each can be shown or hidden from Portals settings. Midnight Season 2 dungeon teleports are included, and the Midnight expansion flyout lists the new dungeons.
+
 ## Fixes
 - Auto Mount pauses polling in combat and other aura-restricted situations (12.1), detects stealth without scanning secret buffs, and no longer errors when aura data is restricted. Play Mounts tooltips use the same guard.
 
@@ -21,7 +24,21 @@
 
 ---
 
-*No user-facing changes this release for AltTracker, Mail, Notes, Portals, Shopping List, or Trackers.*
+# AltTracker
+## Progress
+- Progress tracks Midnight Season 2: Venomous Abyss and Tidebound Grotto, the new Mythic+ dungeon pool, Mistcrests, and Nymrissa Wavecaller.
+
+## Commands
+- `/1wat status` opens a dialog of the current season, raids, Mythic+ dungeons, world bosses, weeklies, and currencies Progress is tracking.
+
+---
+
+# Trackers
+- The bundled Midnight weekly tracker now follows Season 2 Mistcrests.
+
+---
+
+*No user-facing changes this release for Mail, Notes, or Shopping List.*
 
 ---
 

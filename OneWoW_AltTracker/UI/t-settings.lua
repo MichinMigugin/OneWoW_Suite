@@ -453,55 +453,65 @@ function ns.UI.CreateSettingsTab(parent)
     end
 
     local CHECKLIST_ITEMS = {
-        {section = "Summary Tab"},
-        {key = "s_maxlevel",  label = "Verify Max Player Level",                   auto = true,  value = function() return "Level " .. (GetMaxPlayerLevel and GetMaxPlayerLevel() or "?") end, file = "Auto-detected via API"},
-        {key = "s_ilvl",      label = "Verify iLvl range for new content",          auto = false, value = function() return "Manual check required" end, file = "No single file - check new content tooltips"},
-        {key = "s_toc",       label = "Update ## Interface in all TOC files",        auto = false, value = function() local _, b = GetBuildInfo(); return "Current build: " .. (b or "?") end, file = "All .toc files"},
-
         {section = "Progress Tab"},
-        {key = "p_currencies", label = "Verify Tracked Currency IDs (change per season)", auto = false, value = GetCurrencyIDsDisplay, file = "OneWoW_AltTracker/Core/Database.lua + Override System"},
-        {key = "p_bosses",    label = "Verify World Boss Quest IDs",                auto = false, value = GetBossQuestIDsDisplay, file = "OneWoW_AltTracker_Endgame/Modules/WorldBoss.lua + Database.lua"},
-        {key = "p_boss_names",label = "Update KNOWN_BOSS_NAMES lookup table",       auto = false, value = function() return "See WorldBoss.lua and t-progress.lua" end, file = "OneWoW_AltTracker_Endgame/Modules/WorldBoss.lua, UI/t-progress.lua, UI/t-settings.lua"},
-        {key = "p_dungeons",  label = "M+ Dungeon List",                            auto = true,  value = function() return "Auto via C_ChallengeMode.GetMapTable()" end, file = "No change needed"},
-        {key = "p_raids",     label = "Raid Lockout Tracking",                      auto = true,  value = function() return "Auto via GetSavedInstanceInfo()" end, file = "No change needed"},
-        {key = "p_vault",     label = "Great Vault Activity Types",                 auto = true,  value = function() return "Auto via C_WeeklyRewards.GetActivities()" end, file = "No change needed"},
+        {key = "p_raids_cols", label = "Update d-season.lua raid columns for the current season", auto = false, value = function()
+            local sd = ns.SeasonData
+            local parts = {}
+            for _, raid in ipairs(sd.raids) do
+                table.insert(parts, raid.label)
+            end
+            return #parts > 0 and table.concat(parts, ", ") or "None"
+        end, file = "OneWoW_AltTracker/Data/d-season.lua"},
+        {key = "p_dungeons_cols", label = "Update d-season.lua M+ dungeon columns and challenge mapIDs", auto = false, value = function()
+            local sd = ns.SeasonData
+            local parts = {}
+            for _, dung in ipairs(sd.dungeons) do
+                table.insert(parts, dung.name)
+            end
+            return #parts > 0 and table.concat(parts, ", ") or "None"
+        end, file = "OneWoW_AltTracker/Data/d-season.lua (mapIDs also resolve via C_ChallengeMode.GetMapTable)"},
+        {key = "p_currencies", label = "Verify tracked crest/currency IDs and SEASON_CURRENCIES sync", auto = false, value = GetCurrencyIDsDisplay, file = "OneWoW_AltTracker/Data/d-overrides.lua + UI/t-progress.lua"},
+        {key = "p_bosses",    label = "Verify world boss / lair quest IDs",                auto = false, value = GetBossQuestIDsDisplay, file = "OneWoW_AltTracker/Data/d-overrides.lua"},
+        {key = "p_boss_names",label = "Update KNOWN_BOSS_NAMES in both files",       auto = false, value = function() return "WorldBoss.lua and t-progress.lua must stay in sync" end, file = "OneWoW_AltTracker_Endgame/Modules/WorldBoss.lua, OneWoW_AltTracker/UI/t-progress.lua"},
+        {key = "p_weeklies",  label = "Verify weekly activity quest IDs", auto = false, value = function()
+            local list = ns:GetProgressList("weeklyActivityQuests")
+            local parts = {}
+            for _, entry in ipairs(list) do
+                table.insert(parts, entry.key or "?")
+            end
+            return #parts > 0 and table.concat(parts, ", ") or "None"
+        end, file = "OneWoW_AltTracker/Data/d-overrides.lua (no in-game override editor)"},
+        {key = "p_lockouts",  label = "Raid lockout collection",                      auto = true,  value = function() return "GetSavedInstanceInfo()" end, file = "OneWoW_AltTracker_Endgame/Modules/Raids.lua"},
+        {key = "p_vault",     label = "Great Vault activity types",                 auto = true,  value = function() return "C_WeeklyRewards.GetActivities()" end, file = "OneWoW_AltTracker_Endgame/Modules/GreatVault.lua"},
+
+        {section = "Portals"},
+        {key = "po_s1", label = "Keep S.1 seasonal portal spell list valid", auto = false, value = function() return "Midnight S1 Path-of spells on the ESC S.1 row" end, file = "OneWoW_QoL/Portals/portalhub-detection.lua SEASON_PORTAL_SPELLS[1]"},
+        {key = "po_s2", label = "Update S.2 seasonal portal spell list and ShortNames", auto = false, value = function() return "Midnight S2 Path-of spells on the ESC S.2 row" end, file = "OneWoW_QoL/Portals/portalhub-detection.lua SEASON_PORTAL_SPELLS[2] + Data/ShortNames.lua"},
+        {key = "po_mid", label = "Add new Midnight dungeon/raid portals to the MID expansion flyout", auto = false, value = function() return "dungeonsByExpansion.mid and raidsByExpansion.mid" end, file = "OneWoW_QoL/Portals/portalhub-detection.lua"},
+        {key = "po_toggles", label = "ESC settings: showSeason1 and showSeason2 toggles", auto = false, value = function() return "Portals settings card" end, file = "OneWoW/Core/Database.lua + OneWoW_QoL/UI/t-portals.lua"},
+
+        {section = "Bags / Search"},
+        {key = "ba_bonus", label = "Update CURRENT_SEASON_BONUS_IDS for crafted/voidforged gear", auto = false, value = function() return "Dump bonus IDs from an S2 crafted or voidforged item via /petooltip" end, file = "OneWoW/Services/PredicateEngine.lua"},
+        {key = "ba_label", label = "Season tooltip label (Midnight Season N)", auto = true, value = function() return "C_MythicPlus + EXPANSION_SEASON_NAME" end, file = "OneWoW/Services/PredicateEngine.lua"},
+
+        {section = "Trackers"},
+        {key = "tr_preset", label = "Bump bundled Midnight weekly tracker version and IDs", auto = false, value = function() return "Crests, delves, prey, weeklies" end, file = "OneWoW_Trackers/Core/TrackerPresets.lua bundled_midnight_routine"},
 
         {section = "Bank / Storage Tab"},
-        {key = "b_bags",      label = "Bag container IDs: 0=Backpack, 1-4=Bags, 5=Reagent", auto = true, value = function() return "Verified - using C_Container.GetContainerNumSlots(0-5)" end, file = "OneWoW_AltTracker_Storage/Modules/Bags.lua"},
-        {key = "b_pbank",     label = "Personal Bank bag IDs (6-10)",               auto = true,  value = function() return "Using bankBagID = 5 + tabIndex" end, file = "OneWoW_AltTracker_Storage/Modules/PersonalBank.lua"},
-        {key = "b_warband",   label = "Warband Bank bag IDs (12+)",                 auto = true,  value = function() return "Using warbandBagID = 11 + tabIndex" end, file = "OneWoW_AltTracker_Storage/Modules/WarbandBank.lua"},
-        {key = "b_maxslots",  label = "Verify max bag/bank slot counts still valid", auto = false, value = function() return "Manual check - Blizzard may add new bank tabs" end, file = "Check above files if new tab types added"},
+        {key = "b_bags",      label = "Bag container IDs: 0=Backpack, 1-4=Bags, 5=Reagent", auto = true, value = function() return "C_Container.GetContainerNumSlots(0-5)" end, file = "OneWoW_AltTracker_Storage/Modules/Bags.lua"},
+        {key = "b_pbank",     label = "Personal Bank bag IDs (6-10)",               auto = true,  value = function() return "bankBagID = 5 + tabIndex" end, file = "OneWoW_AltTracker_Storage/Modules/PersonalBank.lua"},
+        {key = "b_warband",   label = "Warband Bank bag IDs (12+)",                 auto = true,  value = function() return "warbandBagID = 11 + tabIndex" end, file = "OneWoW_AltTracker_Storage/Modules/WarbandBank.lua"},
+        {key = "b_maxslots",  label = "Verify max bag/bank slot counts still valid", auto = false, value = function() return "Only if Blizzard adds new bank tab types" end, file = "OneWoW_AltTracker_Storage/Modules/"},
 
         {section = "Equipment Tab"},
-        {key = "e_slots",     label = "Verify equipment slot IDs 1-19 still valid", auto = false, value = function() return "Standard slots (Head=1 through Tabard=19)" end, file = "OneWoW_AltTracker_Character/Modules/Equipment.lua"},
-        {key = "e_tier",      label = "Update tier set item tracking for new season", auto = false, value = function() return "Check if new tier bonuses use new slot IDs" end, file = "UI/t-equipment.lua"},
-        {key = "e_ilvl",      label = "Verify GetAverageItemLevel() still returns correct values", auto = true, value = function() return "API call - verify in-game accuracy" end, file = "OneWoW_AltTracker_Character/Modules/Equipment.lua"},
+        {key = "e_slots",     label = "Verify equipment slot IDs 1-19 still valid", auto = false, value = function() return "Head=1 through Tabard=19" end, file = "OneWoW_AltTracker_Character/Modules/Equipment.lua"},
+        {key = "e_tier",      label = "Tier set count uses item.setID from the API", auto = true, value = function() return "No hardcoded tier item IDs" end, file = "OneWoW_AltTracker/UI/t-equipment.lua"},
+        {key = "e_ilvl",      label = "GetAverageItemLevel()", auto = true, value = function() return "API call" end, file = "OneWoW_AltTracker_Character/Modules/Equipment.lua"},
 
-        {section = "Professions Tab"},
-        {key = "pr_cooldowns", label = "Verify profession cooldown names/IDs",       auto = false, value = function() return "Manual check - cooldowns change per expansion" end, file = "OneWoW_AltTracker_Character/Modules/ (professions file)"},
-        {key = "pr_maxskill",  label = "Verify max skill level (100 per expansion)", auto = false, value = function() return "Check if max profession level changed" end, file = "Professions collection module"},
-        {key = "pr_tools",     label = "Verify tool/accessory slot IDs unchanged",   auto = false, value = function() return "Tool slots can change each expansion" end, file = "Professions collection module"},
-        {key = "pr_new",       label = "Check for any new professions added",        auto = false, value = function() return "Unlikely but verify with GetNumSkillLines()" end, file = "Professions collection module"},
-
-        {section = "Auctions Tab"},
-        {key = "au_nothing",   label = "No seasonal updates required",               auto = true,  value = function() return "Auction API is stable" end, file = "Nothing to change"},
-
-        {section = "Financials Tab"},
-        {key = "fi_events",    label = "Verify gold tracking events still fire",     auto = false, value = function() return "PLAYER_MONEY, SellCursorItem, C_MerchantFrame.SellAllJunkItems, PLAYER_INTERACTION_MANAGER_FRAME_SHOW" end, file = "OneWoW_AltTracker_Accounting/"},
-        {key = "fi_costs",     label = "Verify repair/vendor/AH cost hooks",         auto = false, value = function() return "OneWoW.Merchant + C_AuctionHouse.CancelAuction + C_Bank.PurchaseBankTab" end, file = "OneWoW_AltTracker_Accounting/"},
-
-        {section = "Items Tab"},
-        {key = "it_ah",        label = "Verify Items tab AH prices read from cache",  auto = false, value = function() return "Open Items tab; confirm AH column from OneWoW_AHPrices (AH Prices panel scan first) or Auctionator/TSM per setting" end, file = "OneWoW_AltTracker/UI/t-items.lua + OneWoW_AltTracker_Auctions/Core/AHPriceCache.lua"},
-
-        {section = "Profiles / Settings"},
-        {key = "ps_backup",    label = "Verify saved variable backup and restore",    auto = false, value = function() return "Test export/import of profile data" end, file = "OneWoW_AltTracker/Core/"},
-        {key = "ps_keybinds",  label = "Check for new WoW keybind categories",       auto = false, value = function() return "GetNumBindings() - check for new binding types" end, file = "OneWoW_AltTracker_Character/Modules/ActionBars.lua"},
-        {key = "ps_settings",  label = "Check for new WoW settings modules/panels",  auto = false, value = function() return "Blizzard may add new CVars or settings panels" end, file = "OneWoW_AltTracker_Character/Modules/"},
-
-        {section = "General / Compatibility"},
-        {key = "g_interface",  label = "Update ## Interface version in all TOC files", auto = false, value = function() local _, _, _, intVersion = GetBuildInfo(); return "Current: " .. (intVersion or "?") end, file = "All .toc files - ## Interface line"},
-        {key = "g_midnight",   label = "Check MIDNIGHT.md for Midnight compatibility changes", auto = false, value = function() return "Secure buttons, action handling, etc." end, file = "See /home/pals/w2xyz/wow/MIDNIGHT.md"},
-        {key = "g_api",        label = "Run full API verification pass on new APIs used", auto = false, value = function() return "Verify all WoW APIs on warcraft.wiki.gg" end, file = "All collection module files"},
+        {section = "General"},
+        {key = "s_maxlevel",  label = "Max player level",                   auto = true,  value = function() return "Level " .. GetMaxPlayerLevel() end, file = "GetMaxPlayerLevel()"},
+        {key = "g_interface",  label = "Update ## Interface in TOC files when the build changes", auto = false, value = function() local _, _, _, intVersion = GetBuildInfo(); return "Current: " .. (intVersion or "?") end, file = "All .toc files - ## Interface line"},
+        {key = "g_journal",   label = "Regenerate Journal DB2 if season instances moved", auto = false, value = function() return "python bin/journal_db2_tools.py generate" end, file = "OneWoW_CatalogData_Journal/Data/Generated/"},
     }
 
     local function OpenChecklistDialog()

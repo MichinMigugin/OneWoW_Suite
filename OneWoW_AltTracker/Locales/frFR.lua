@@ -452,6 +452,7 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["STATUS_BIDDING"] = "Enchère en cours",
     ["STATUS_OK"] = "OK",
     ["STATUS_REVIEW"] = "À vérifier",
+    ["STATUS_TITLE"] = "Suivi actuel",
     ["SUBTAB_ACTIONBARS"] = "Barres d'action",
     ["SUBTAB_FINANCIALS"] = "Finances",
     ["ITEMS_COL_VENDOR"] = "Vendeur$",

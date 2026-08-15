@@ -452,6 +452,7 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["STATUS_BIDDING"] = "Ставка",
     ["STATUS_OK"] = "ОК",
     ["STATUS_REVIEW"] = "Проверить",
+    ["STATUS_TITLE"] = "Сейчас отслеживается",
     ["SUBTAB_ACTIONBARS"] = "Панели команд",
     ["SUBTAB_FINANCIALS"] = "Финансы",
     ["ITEMS_COL_VENDOR"] = "Торговец$",

@@ -22,7 +22,11 @@ end
 
 local function GetSeasonDungeons()
     local sd = GetSeasonData()
-    return (sd and sd.dungeons) or {}
+    local list = sd.dungeons
+    for _, dung in ipairs(list) do
+        sd:ResolveDungeonMapID(dung)
+    end
+    return list
 end
 
 local function GetSeasonRaids()
@@ -36,11 +40,11 @@ local function GetRaidDifficulties()
 end
 
 local SEASON_CURRENCIES = {
-    {key = "cur_3383", currencyID = 3383, name = "Adventurer Dawncrest", width = 45},
-    {key = "cur_3341", currencyID = 3341, name = "Veteran Dawncrest",    width = 45},
-    {key = "cur_3343", currencyID = 3343, name = "Champion Dawncrest",   width = 45},
-    {key = "cur_3345", currencyID = 3345, name = "Hero Dawncrest",       width = 45},
-    {key = "cur_3347", currencyID = 3347, name = "Myth Dawncrest",       width = 45},
+    {key = "cur_3442", currencyID = 3442, name = "Adventurer Mistcrest", width = 45},
+    {key = "cur_3443", currencyID = 3443, name = "Veteran Mistcrest",    width = 45},
+    {key = "cur_3444", currencyID = 3444, name = "Champion Mistcrest",   width = 45},
+    {key = "cur_3440", currencyID = 3440, name = "Hero Mistcrest",       width = 45},
+    {key = "cur_3446", currencyID = 3446, name = "Myth Mistcrest",       width = 45},
     {key = "cur_3303", currencyID = 3303, name = "Untethered Coin",      width = 50},
     {key = "cur_3309", currencyID = 3309, name = "Hellstone Shard",      width = 45},
     {key = "cur_3378", currencyID = 3378, name = "Dawnlight Manaflux",   width = 50},
@@ -232,6 +236,7 @@ local KNOWN_BOSS_NAMES = {
     [92034] = "Thorm'belan",
     [96472] = "Nexus-Captain Leth'ir",
     [96473] = "Imperator Pertinax",
+    [97128] = "Nymrissa Wavecaller",
 }
 
 local function GetWorldBossKilled(endgameData)

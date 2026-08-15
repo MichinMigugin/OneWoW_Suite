@@ -452,6 +452,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["STATUS_BIDDING"] = "竞价中",
     ["STATUS_OK"] = "正常",
     ["STATUS_REVIEW"] = "待检查",
+    ["STATUS_TITLE"] = "当前追踪",
     ["SUBTAB_ACTIONBARS"] = "动作条",
     ["SUBTAB_FINANCIALS"] = "财务",
     ["ITEMS_COL_VENDOR"] = "商人$",

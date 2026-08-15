@@ -452,6 +452,7 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["STATUS_BIDDING"] = "競標中",
     ["STATUS_OK"] = "正常",
     ["STATUS_REVIEW"] = "待檢查",
+    ["STATUS_TITLE"] = "目前追蹤",
     ["SUBTAB_ACTIONBARS"] = "動作條",
     ["SUBTAB_FINANCIALS"] = "財務",
     ["ITEMS_COL_VENDOR"] = "商人$",
