@@ -18,7 +18,6 @@ local pairs = pairs
 local strgsub = string.gsub
 local strtrim = strtrim
 local tinsert = tinsert
-local type = type
 local CreateFrame = CreateFrame
 local IsMouseButtonDown = IsMouseButtonDown
 local StaticPopupDialogs = StaticPopupDialogs
