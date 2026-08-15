@@ -1,7 +1,8 @@
 # `.wow_db2` — client DB2 extracts
 
 Hand-extracted **World of Warcraft Retail** DB2 tables (CSV), used by offline
-tools such as [`bin/journal_db2_tools.py`](../bin/journal_db2_tools.py). This is
+tools such as [`bin/journal_db2_tools.py`](../bin/journal_db2_tools.py) and
+[`bin/season_bonus_list_ids.py`](../bin/season_bonus_list_ids.py). This is
 **not** FrameXML and is **not** synced by `refresh_wow_docs.py`.
 
 ## Build
@@ -18,6 +19,7 @@ docs live under [`docs/`](docs/):
 | Group | Doc | Tables (examples) |
 | --- | --- | --- |
 | Journal (EJ) | [`docs/journal.md`](docs/journal.md) | `Journal*`, `MapDifficulty*`, `Difficulty`, `DungeonEncounter` |
+| Item bonus seasons | [`docs/item-bonus-seasons.md`](docs/item-bonus-seasons.md) | `ItemBonusListGroup`, `ItemBonusListGroupEntry`, `DisplaySeason` |
 | Conditions (shared) | *(cross-links only for now)* | `PlayerCondition`, `*XCondition`, `GlobalPlayerCondition*` |
 
 Future groups (achievements, etc.) get their own `docs/<group>.md` with a
@@ -32,6 +34,9 @@ Journal (MapID, criteria, etc.).
   does **not** evaluate these in-addon yet.
 - **Journal ↔ Map:** `JournalInstance.MapID` aligns with `MapDifficulty.MapID`.
 - **Journal ↔ Combat:** `JournalEncounter.DungeonEncounterID` → `DungeonEncounter`.
+- **Item bonus seasons:** `DisplaySeason` is a season dictionary only — it does
+  **not** join to `ItemBonusListGroup`. PvE track list IDs are generated from a
+  curated group map; see [`docs/item-bonus-seasons.md`](docs/item-bonus-seasons.md).
 
 ## Refreshing extracts
 
@@ -39,7 +44,9 @@ Journal (MapID, criteria, etc.).
 2. Drop/replace the CSVs here (semicolon-delimited headers matching current
    files).
 3. Update the **Build** line above.
-4. Re-run `python bin/journal_db2_tools.py generate` (and `validate` as needed).
+4. Re-run generators for the groups you changed:
+   - Journal: `python bin/journal_db2_tools.py generate` (and `validate` as needed)
+   - Named-season bonus lists: `python bin/season_bonus_list_ids.py generate`
 
 ## Related
 

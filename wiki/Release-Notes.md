@@ -40,6 +40,7 @@
 
 #### Search
 - `#disenchantable` (`#de`) now finds items that can be disenchanted.
+- `#midnights1` and `#midnights2` find Midnight Season 1 and Season 2 items. `#currentseason` still means whatever season is live now.
 
 ---
 

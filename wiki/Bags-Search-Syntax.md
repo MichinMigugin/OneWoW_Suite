@@ -195,6 +195,12 @@ These follow the **tooltip’s current bind line** (so something that was BoE an
 * Expansions: `#currentexpansion`, `#classic`, `#tbc`, `#wotlk`, `#cata`, `#mop`, `#wod`, `#legion`, `#bfa`, `#shadowlands`, `#dragonflight`, `#warwithin` (`#tww`), `#midnight`, …
 * Source (from item link creation context, when available): `#raid` `#dungeon` `#delves` `#worldquest` `#pvp` `#store`
 
+### Season
+
+* `#currentseason` (`#activeseason`) — gear and tokens for **whatever PvE season is live now**. Last season’s leftover track gear does not match.
+* `#midnights1` (`#midnightseason1`) — Midnight Season 1. Stays Season 1 after Season 2/3 start.
+* `#midnights2` (`#midnightseason2`) — Midnight Season 2. While S2 is live this overlaps `#currentseason` on that season’s track gear; it is not the same keyword.
+
 ### Collectibles and transmog
 
 | Keyword | Matches |

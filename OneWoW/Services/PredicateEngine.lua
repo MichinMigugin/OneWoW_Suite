@@ -13,6 +13,8 @@
 --   - Lazy tooltip metatable for the few remaining tooltip-only fields
 --   - #currentseason: expansion guard + gear checks + season tooltip line
 --     (CURRENT_SEASON_BONUS_IDS + EXPANSION_FIRST_GLOBAL_MPLUS_SEASON; see PREDICATE_ENGINE.md)
+--   - #midnights1 / #midnights2: frozen Midnight track list IDs + season tooltip
+--     label (generated SeasonTrackBonusListIDs; gray headers match)
 -- ============================================================================
 
 local _, ns = ...
@@ -78,6 +80,7 @@ local Scanner = ns.TooltipScanner
 local ITEM_ID_OVERRIDES = ns.ItemIDOverrides
 local HS_IDS = ns.HearthstoneIDs
 local GEAR_TOKEN_IDS = ns.GearTokenIDs
+local SEASON_TRACK_BONUS_LIST_IDS = ns.SeasonTrackBonusListIDs
 
 local BATTLE_PET_CAGE_ID = 82800
 local BATTLE_PET_TYPES = {
@@ -119,13 +122,17 @@ local CURRENT_SEASON_BONUS_IDS = {
     [13654] = true, -- Voidforged
     [13655] = true, -- Voidforged
     [12066] = true, -- Radiance Crafted
+    [13786] = true, -- Sporefused: Myth
 }
 
 -- First C_MythicPlus.GetCurrentSeason() global ID per expansion (ordinal 1 in tooltips).
--- Update when a new expansion begins; see warcraft.wiki.gg seasonal pages.
+-- DisplaySeason.Season for that expansion's first row; update when a new expansion begins.
 local EXPANSION_FIRST_GLOBAL_MPLUS_SEASON = {
-    [Enum.ExpansionLevel.Midnight] = 41,
+    [Enum.ExpansionLevel.Midnight] = 17,
 }
+
+local MIDNIGHT_EXPANSION_ID = Enum.ExpansionLevel.Midnight
+local MIDNIGHT_SEASON_TRACK_LISTS = SEASON_TRACK_BONUS_LIST_IDS[MIDNIGHT_EXPANSION_ID]
 
 local UPGRADE_PATH_PATTERN = ITEM_UPGRADE_TOOLTIP_FORMAT_STRING
     and ("^" .. ITEM_UPGRADE_TOOLTIP_FORMAT_STRING:gsub("%%s", ".*"):gsub("%%d", ".*"))
@@ -380,6 +387,10 @@ local FLAG_REGISTRY = {
     isenchanted             = "isEnchanted",
     iscurrentseason         = "isCurrentSeason",
     isactiveseason          = "isCurrentSeason",
+    ismidnights1            = "isMidnightS1",
+    ismidnightseason1       = "isMidnightS1",
+    ismidnights2            = "isMidnightS2",
+    ismidnightseason2       = "isMidnightS2",
 
     -- Tooltip-derived flags (lazy)
     hasuseability           = "hasUseAbility",
@@ -1106,6 +1117,8 @@ RegisterKeyword("professionequipment", function(p) return p.isProfessionEquipmen
 RegisterKeyword("upgradeable",      function(p) return p.isUpgradeable end)
 RegisterKeyword("fullyupgraded",    function(p) return p.isFullyUpgraded end)
 RegisterKeyword({"currentseason", "activeseason"}, function(p) return p.isCurrentSeason == true end)
+RegisterKeyword({"midnights1", "midnightseason1"}, function(p) return p.isMidnightS1 == true end)
+RegisterKeyword({"midnights2", "midnightseason2"}, function(p) return p.isMidnightS2 == true end)
 
 -- ---- 7.22  Tooltip-text keywords ----
 -- These trigger the lazy tooltip scan on first access to tooltipText.
@@ -1732,15 +1745,22 @@ local function GetTooltipLineText(row)
 end
 
 ---@param bonusIDs table|nil
+---@param lookup table|nil
 ---@return boolean
-local function HasCurrentSeasonBonusID(bonusIDs)
-    if not bonusIDs then return false end
+local function BonusIDsIntersect(bonusIDs, lookup)
+    if not bonusIDs or not lookup then return false end
     for _, bonusID in ipairs(bonusIDs) do
-        if CURRENT_SEASON_BONUS_IDS[bonusID] then
+        if lookup[bonusID] then
             return true
         end
     end
     return false
+end
+
+---@param bonusIDs table|nil
+---@return boolean
+local function HasCurrentSeasonBonusID(bonusIDs)
+    return BonusIDsIntersect(bonusIDs, CURRENT_SEASON_BONUS_IDS)
 end
 
 --- Equipment branch: true/false, or nil when tooltip data is still unavailable.
@@ -1773,20 +1793,22 @@ local function CheckEquipmentCurrentSeason(props, tooltipData)
     return seen
 end
 
---- True when a tooltip line mentions the current season label. Blizzard renders
+--- True when a tooltip line mentions the season label. Blizzard renders
 --- standalone season headers via GameTooltip_AddDisabledLine; do not skip
---- DisabledLine rows. Gray is only rejected for standalone headers (entire line
---- equals the label) so outdated season markers on old gear do not match while
---- embedded mentions in use text (e.g. socket items) still match.
+--- DisabledLine rows. For #currentseason, gray standalone headers are rejected
+--- so leftover stamps on old gear do not match while embedded mentions in use
+--- text still match. Named-season keywords (#midnights1 / #midnights2) pass
+--- allowGrayHeader so those leftover headers do match.
 ---@param row table|nil
----@param currentLabel string
+---@param seasonLabel string
+---@param allowGrayHeader boolean|nil
 ---@return boolean
-local function TooltipLineMentionsSeason(row, currentLabel)
-    if not row or not currentLabel or currentLabel == "" then return false end
+local function TooltipLineMentionsSeason(row, seasonLabel, allowGrayHeader)
+    if not row or not seasonLabel or seasonLabel == "" then return false end
     local text = GetTooltipLineText(row)
     if text == "" then return false end
-    if strfind(text, currentLabel, 1, true) == nil then return false end
-    if text == currentLabel and IsGrayTooltipLine(row) then
+    if strfind(text, seasonLabel, 1, true) == nil then return false end
+    if not allowGrayHeader and text == seasonLabel and IsGrayTooltipLine(row) then
         return false
     end
     return true
@@ -1795,13 +1817,14 @@ end
 --- Scan structured tooltip lines, then fall back to concatenated tooltip body
 --- (same source as tooltip~ / props.tooltipText).
 ---@param props table
----@param currentLabel string
+---@param seasonLabel string
+---@param allowGrayHeader boolean|nil
 ---@return boolean
-local function CheckSeasonTooltipMention(props, currentLabel)
+local function CheckSeasonTooltipMention(props, seasonLabel, allowGrayHeader)
     local tooltipData = GetPropsTooltipData(props)
     if tooltipData and tooltipData.lines then
         for index = 1, #tooltipData.lines do
-            if TooltipLineMentionsSeason(tooltipData.lines[index], currentLabel) then
+            if TooltipLineMentionsSeason(tooltipData.lines[index], seasonLabel, allowGrayHeader) then
                 return true
             end
         end
@@ -1816,7 +1839,7 @@ local function CheckSeasonTooltipMention(props, currentLabel)
     if tt == "" and hyperlink then
         tt = GetTooltipTextByHyperlink(hyperlink)
     end
-    return tt ~= "" and strfind(tt, currentLabel, 1, true) ~= nil
+    return tt ~= "" and strfind(tt, seasonLabel, 1, true) ~= nil
 end
 
 ---@param props table
@@ -1876,6 +1899,70 @@ local function ResolveIsCurrentSeason(props)
 
     rawset(props, "isCurrentSeason", result)
     rawset(props, "_currentSeasonResolved", true)
+end
+
+-- ---------- Named Midnight seasons (#midnights1 / #midnights2) ----------
+-- Frozen PvE track list IDs plus tooltip label. Gray season headers match.
+-- Not an alias of #currentseason.
+
+local namedSeasonLabelCache = {}
+
+---@param expansionID number
+---@param ordinal number
+---@return string|nil
+local function GetNamedSeasonLabel(expansionID, ordinal)
+    local cacheKey = tostring(expansionID) .. ":" .. tostring(ordinal)
+    local cached = namedSeasonLabelCache[cacheKey]
+    if cached ~= nil then
+        return cached or nil
+    end
+    local expName = ns:GetExpansionName(expansionID)
+    local label = expName and EXPANSION_SEASON_NAME:format(expName, ordinal) or false
+    namedSeasonLabelCache[cacheKey] = label
+    return label or nil
+end
+
+--- Lazily resolves props.isMidnightS1 / isMidnightS2 together on first access.
+---@param props table
+local function ResolveNamedSeasons(props)
+    local expansionID = rawget(props, "expansionID")
+    local itemID = rawget(props, "id")
+
+    if expansionID >= 0 and expansionID ~= MIDNIGHT_EXPANSION_ID then
+        rawset(props, "isMidnightS1", false)
+        rawset(props, "isMidnightS2", false)
+        rawset(props, "_namedSeasonsResolved", true)
+        return
+    end
+
+    if expansionID == -1 and itemID and not C_Item.IsItemDataCachedByID(itemID) then
+        C_Item.RequestLoadItemDataByID(itemID)
+        rawset(props, "_tooltipDataMissing", true)
+        return
+    end
+
+    local bonusIDs = rawget(props, "bonusIDs")
+    local s1 = BonusIDsIntersect(bonusIDs, MIDNIGHT_SEASON_TRACK_LISTS[1])
+    local s2 = BonusIDsIntersect(bonusIDs, MIDNIGHT_SEASON_TRACK_LISTS[2])
+
+    if not s1 or not s2 then
+        if not HasAnyTooltipBody(props) then
+            rawset(props, "_tooltipDataMissing", true)
+            return
+        end
+        if not s1 then
+            local label = GetNamedSeasonLabel(MIDNIGHT_EXPANSION_ID, 1)
+            s1 = label and CheckSeasonTooltipMention(props, label, true) or false
+        end
+        if not s2 then
+            local label = GetNamedSeasonLabel(MIDNIGHT_EXPANSION_ID, 2)
+            s2 = label and CheckSeasonTooltipMention(props, label, true) or false
+        end
+    end
+
+    rawset(props, "isMidnightS1", s1)
+    rawset(props, "isMidnightS2", s2)
+    rawset(props, "_namedSeasonsResolved", true)
 end
 
 -- ============================================================================
@@ -2154,6 +2241,11 @@ local CURRENT_SEASON_FIELDS_SET = {
     isCurrentSeason = true,
 }
 
+local NAMED_SEASON_FIELDS_SET = {
+    isMidnightS1 = true,
+    isMidnightS2 = true,
+}
+
 -- Bind fields
 local BIND_FIELDS_SET = {
     isSoulbound = true,
@@ -2275,6 +2367,12 @@ local propsMT = {
             end
             return rawget(self, key)
         end
+        if NAMED_SEASON_FIELDS_SET[key] then
+            if not rawget(self, "_namedSeasonsResolved") then
+                ResolveNamedSeasons(self)
+            end
+            return rawget(self, key)
+        end
         return nil
     end
 }
@@ -2347,7 +2445,7 @@ local function PopulateBaseProps(props, itemID, hyperlink)
     props.isKnowledge = false
     props.isEnchanted = false
     props.isCrafted = false
-    -- isCurrentSeason: lazy via propsMT (tooltip/bonus-ID resolution); do not preset here.
+    -- isCurrentSeason / isMidnightS1 / isMidnightS2: lazy via propsMT; do not preset here.
     props.bonusIDs = nil
 
     -- Slot-state defaults (BuildProps overlay may overwrite per slot).
@@ -3719,6 +3817,7 @@ function PE:InvalidateCache()
     wipe(characterUsableCache)
     wipe(combineSchematicCache)
     currentSeasonLabelCache = nil
+    wipe(namedSeasonLabelCache)
     knownProfs = nil
 end
 
@@ -3986,6 +4085,21 @@ function PE:DumpTooltipDebug(itemID, bagID, slotID, hyperlink)
             tostring(props.isCurrentSeason),
             tostring(rawget(props, "_currentSeasonResolved")),
             tostring(rawget(props, "_tooltipDataMissing"))
+        ))
+        print(DEBUG_PREFIX .. format(
+            ": props.isMidnightS1=%s isMidnightS2=%s namedResolved=%s",
+            tostring(props.isMidnightS1),
+            tostring(props.isMidnightS2),
+            tostring(rawget(props, "_namedSeasonsResolved"))
+        ))
+        local s1Label = GetNamedSeasonLabel(MIDNIGHT_EXPANSION_ID, 1)
+        local s2Label = GetNamedSeasonLabel(MIDNIGHT_EXPANSION_ID, 2)
+        print(DEBUG_PREFIX .. format(
+            ": midnightS1Label=%q mention=%s midnightS2Label=%q mention=%s",
+            s1Label or "nil",
+            tostring(s1Label and CheckSeasonTooltipMention(props, s1Label, true)),
+            s2Label or "nil",
+            tostring(s2Label and CheckSeasonTooltipMention(props, s2Label, true))
         ))
         if currentLabel then
             print(DEBUG_PREFIX .. format(

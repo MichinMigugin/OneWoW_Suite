@@ -762,10 +762,14 @@ For `#knowledge`, see **Consumable Subtypes** (same predicate).
 | `#champion` | Items on the Champion upgrade track |
 | `#hero` | Items on the Hero upgrade track |
 | `#myth` | Items on the Myth upgrade track |
-| `#currentseason` | Items tagged for the **current PvE season** (alias: `#activeseason`). Expansion guard rejects wrong-expansion items without tooltip work. Equipment: current-season bonus IDs on the link and/or upgrade-track tooltip heuristics. All types: tooltip lines mentioning the active display season label (`EXPANSION_SEASON_NAME`, e.g. `Midnight Season 1` on tokens, or embedded in use text like socket items). Gray/outdated season lines are ignored. Not the same as `#currentexpansion` — older seasons within the same expansion do not match. |
+| `#currentseason` | Items tagged for the **current PvE season** (alias: `#activeseason`). Expansion guard rejects wrong-expansion items without tooltip work. Equipment: current-season bonus IDs on the link and/or upgrade-track tooltip heuristics. All types: tooltip lines mentioning the active display season label (`EXPANSION_SEASON_NAME`, e.g. `Midnight Season 2` on tokens, or embedded in use text like socket items). Gray/outdated season lines are ignored. Not the same as `#currentexpansion` — older seasons within the same expansion do not match. Not the same as `#midnights1` / `#midnights2`, which stay pinned to Midnight Season 1 / 2. |
 | `#activeseason` | Alias of `#currentseason` (Baganator/Syndicator import compatibility) |
+| `#midnights1` | Midnight **Season 1** PvE track gear (bonus list IDs on the link) and items whose tooltip mentions `Midnight Season 1`, including gray leftover headers. Alias: `#midnightseason1`. Does not move when a new season starts. |
+| `#midnights2` | Midnight **Season 2** PvE track gear and `Midnight Season 2` tooltip mentions (including gray headers). Alias: `#midnightseason2`. While S2 is live this overlaps `#currentseason` on track gear; it is not an alias. |
 
-> **`#currentseason` maintenance:** update `CURRENT_SEASON_BONUS_IDS` in `PredicateEngine.lua` each season when Blizzard adds new crafted/voidforged bonus IDs. At the start of a **new expansion**, also add that expansion's first global M+ season ID to `EXPANSION_FIRST_GLOBAL_MPLUS_SEASON` (the ordinal `1` in tooltip labels like `Midnight Season 1`; see warcraft.wiki.gg seasonal pages). Debug tooltip/season matching in-game with `/petooltip`.
+> **`#currentseason` maintenance:** update `CURRENT_SEASON_BONUS_IDS` in `PredicateEngine.lua` each season when Blizzard adds new crafted/voidforged bonus IDs. At the start of a **new expansion**, also add that expansion's first global M+ season ID to `EXPANSION_FIRST_GLOBAL_MPLUS_SEASON` (`DisplaySeason.Season` for ordinal 1; Midnight = 17). Debug tooltip/season matching in-game with `/petooltip`.
+>
+> **Named Midnight seasons:** list IDs are generated (`python bin/season_bonus_list_ids.py generate`). Adding Midnight S3 is a new group block in that mapping plus `#midnights3`, not a change to `#midnights1` / `#midnights2`.
 
 **Related properties:** `upgradelevel` and `upgrademax` are numeric comparisons from
 `C_Item.GetItemUpgradeInfo` (current and max upgrade tier). `maxlevel` is the
@@ -1135,6 +1139,10 @@ read more like natural conditions.
 | `IsUpgradeTrack` | `#upgradetrack` |
 | `IsCurrentSeason` | `#currentseason` |
 | `IsActiveSeason` | `#activeseason` |
+| `IsMidnightS1` | `#midnights1` |
+| `IsMidnightSeason1` | `#midnightseason1` |
+| `IsMidnightS2` | `#midnights2` |
+| `IsMidnightSeason2` | `#midnightseason2` |
 | `IsProfessionEquipment` | `#professionequipment` |
 | `IsEquipped` | `#equipped` |
 | `IsEquippable` | `#gear` |

@@ -1,0 +1,15 @@
+ID;Field_9_2_0_42174_000_lang;Season;Field_9_2_0_41827_001;ExpansionID;Field_10_0_2_45779_004;DelvesSeasonID
+10;Defeat %d Castle Nathria Raid |4Boss:Bosses;5;1;8;1;0
+11;Defeat %d Sanctum of Domination Raid |4Boss:Bosses;6;2;8;1;0
+12;Defeat %d Sepulcher of the First Ones Raid |4Boss:Bosses;7;3;8;1;0
+17;Defeat %d Fated Raid |4Boss:Bosses;8;4;8;1;0
+19;Defeat %d Vault of the Incarnates |4Boss:Bosses;9;1;9;2;0
+21;Defeat %d Aberrus, the Shadowed Crucible |4Boss:Bosses;10;2;9;2;0
+22;Defeat %d Amirdrassil, the Dream's Hope |4Boss:Bosses;11;3;9;2;0
+23;Defeat %d Awakened Raid |4Boss:Bosses;12;4;9;2;0
+24;Defeat %d Nerub-ar Palace |4Boss:Bosses;13;1;10;3;1
+25;Defeat %d Liberation of Undermine |4Boss:Bosses;14;2;10;3;2
+30;Defeat %d Manaforge Omega |4Boss:Bosses;15;3;10;3;3
+31;;16;4;10;0;0
+34;Defeat %d Midnight |4Season 1 Boss:Season 1 Bosses;17;1;11;4;4
+37;Defeat %d Midnight Season 2 |4Boss:Bosses;18;2;11;4;5

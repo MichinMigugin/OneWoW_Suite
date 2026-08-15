@@ -2,7 +2,7 @@
 
 PredicateEngine is a shared expression engine published on the `OneWoW` global as `OneWoW.PredicateEngine` (a core service in `OneWoW/Services/`). It turns textual expressions such as `#epic & ilvl>=600` or `haste>=200` into compiled predicate functions over a rich per-item property table. Any OneWoW addon that has `OneWoW` as a dependency can use it.
 
-Source: [`OneWoW/Services/PredicateEngine.lua`](../Services/PredicateEngine.lua). Curated / generated ID sets (`ItemIDOverrides`, `HearthstoneIDs`, `GearTokenIDs`) live under [`OneWoW/Services/PredicateEngine/`](../Services/PredicateEngine/) and load before the engine via TOC (same pattern as Disenchant allow/block lists).
+Source: [`OneWoW/Services/PredicateEngine.lua`](../Services/PredicateEngine.lua). Curated / generated ID sets (`ItemIDOverrides`, `HearthstoneIDs`, `GearTokenIDs`, `SeasonTrackBonusListIDs`) live under [`OneWoW/Services/PredicateEngine/`](../Services/PredicateEngine/) and load before the engine via TOC (same pattern as Disenchant allow/block lists).
 
 For the user-facing expression syntax (the full keyword catalog, operator semantics, examples), see [`OneWoW_Bags/Docs/SEARCH_SYNTAX.md`](../../OneWoW_Bags/Docs/SEARCH_SYNTAX.md). Suite architecture context: [`ARCHITECTURE.md`](ARCHITECTURE.md). This document is the **developer reference** for the API surface, caches, and extension points.
 
@@ -31,7 +31,7 @@ Two layers:
 - Strict soulbound: character-only; account-bound does **not** match `#soulbound`.
 - `~` is literal string-contains only. Negation uses `!` or `not`.
 - `${CONSTANT}` curly-brace syntax for named constants and parameters (e.g. `quality==${EPIC}` resolves to `quality==4` before tokenizing).
-- Lazy tooltip metatable for the few remaining tooltip-only fields. The same metatable also drives lazy bind resolution, lazy stat resolution (`C_Item.GetItemStats` on first access), and lazy `#currentseason` resolution (`isCurrentSeason`).
+- Lazy tooltip metatable for the few remaining tooltip-only fields. The same metatable also drives lazy bind resolution, lazy stat resolution (`C_Item.GetItemStats` on first access), lazy `#currentseason` resolution (`isCurrentSeason`), and lazy `#midnights1` / `#midnights2` resolution (`isMidnightS1` / `isMidnightS2`).
 
 ### Tokenizer notes
 
@@ -261,10 +261,26 @@ Identity props also expose `bonusIDs` (parsed once per item link in `PopulateBas
 
 **Maintenance (each season / expansion):**
 
-- `CURRENT_SEASON_BONUS_IDS` — crafted/voidforged bonus IDs on item links.
-- `EXPANSION_FIRST_GLOBAL_MPLUS_SEASON` — when a new expansion starts, add its first global `C_MythicPlus.GetCurrentSeason()` ID (ordinal 1 in tooltips; see warcraft.wiki.gg seasonal pages).
+- `CURRENT_SEASON_BONUS_IDS` — crafted/voidforged bonus IDs on item links (include Syndicator's current-season crafted suffixes such as Sporefused `13786`).
+- `EXPANSION_FIRST_GLOBAL_MPLUS_SEASON` — when a new expansion starts, add its first global `C_MythicPlus.GetCurrentSeason()` ID. That value is `DisplaySeason.Season` for the expansion’s ordinal-1 row (Midnight = 17). Fallback only; primary ordinal still comes from `GetCurrentSeasonValues()` / `GetCurrentUIDisplaySeason()`.
 
 **Debug:** `/petooltip` or `/owpetooltip` dumps `C_TooltipInfo` lines and season-label diagnostics to chat (hover a bag slot, tooltip, or pass an item link).
+
+### Named Midnight seasons (`isMidnightS1` / `isMidnightS2`)
+
+Registered keywords: `#midnights1` (`#midnightseason1`), `#midnights2` (`#midnightseason2`). Verbose: `IsMidnightS1`, `IsMidnightSeason1`, `IsMidnightS2`, `IsMidnightSeason2`.
+
+These are **frozen** to Midnight PvE seasons. They do not move when the live season changes. `#currentseason` remains the shifting “whatever is live now” keyword; while Midnight S2 is live, S2 track gear typically matches both `#midnights2` and `#currentseason`.
+
+Resolution is **lazy** on first read of `props.isMidnightS1` or `props.isMidnightS2` (one pass fills both):
+
+1. **Expansion guard** — if `expansionID >= 0` and `expansionID ~= Enum.ExpansionLevel.Midnight`, both false.
+2. **Track list IDs** — identity-cached `props.bonusIDs` against generated `ns.SeasonTrackBonusListIDs[11][ordinal]` (sequence **1–8** only). Sequence 9+ crafted stamps (Voidforged `13653`/`13654`) stay on `#currentseason`, not `#midnights1`.
+3. **Tooltip label** — `EXPANSION_SEASON_NAME:format(MidnightName, ordinal)` (e.g. `Midnight Season 1`). **Gray standalone headers match** (the opposite of `#currentseason`) so leftover S1 stamps still classify.
+
+**Maintenance:** curated group IDs live in [`bin/season_bonus_list_ids.py`](../../bin/season_bonus_list_ids.py). After a new Midnight season’s `ItemBonusListGroup` block appears in `.wow_db2`, add those groups to the mapping and run `python bin/season_bonus_list_ids.py generate`. See [`.wow_db2/docs/item-bonus-seasons.md`](../../.wow_db2/docs/item-bonus-seasons.md). There is no DisplaySeason FK.
+
+**Debug:** `/petooltip` also prints `#midnights1` / `#midnights2` hits.
 
 ---
 

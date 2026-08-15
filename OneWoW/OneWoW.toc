@@ -116,7 +116,7 @@ Core\WhatsNew.lua
 # DO NOT reorder within this block: TooltipScanner before PredicateEngine (PE
 # captures ns.TooltipScanner at file scope); ItemLevel before PredicateEngine +
 # upgrade-detection (they capture ns.ItemLevel at file scope); PredicateEngine
-# data files (item-overrides / hearthstones / geartokens) before PredicateEngine.lua;
+# data files (item-overrides / hearthstones / geartokens / season-bonus-lists) before PredicateEngine.lua;
 # PredicateEngine before upgrade-detection + disenchant + tooltip-engine (they
 # capture PE at file scope); Disenchant allowlist/blocklist before disenchant.lua;
 # ItemPrices + RecipeKnownUtil before the overlay engine that consumes them;
@@ -128,6 +128,7 @@ Services\ItemLevel.lua
 Services\PredicateEngine\item-overrides.lua
 Services\PredicateEngine\hearthstones.lua
 Services\PredicateEngine\geartokens.lua
+Services\PredicateEngine\season-bonus-lists.lua
 Services\PredicateEngine.lua
 Services\SearchCatalog.lua
 Services\SearchExpand.lua
