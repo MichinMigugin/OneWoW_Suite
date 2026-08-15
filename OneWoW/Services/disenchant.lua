@@ -83,12 +83,6 @@ function Disenchant:IsDisenchantable(item)
 end
 
 -- PE keywords — same registration pattern as UpgradeDetection / #upgrade.
-if PE and PE.RegisterKeyword then
-    PE:RegisterKeyword({"disenchantable", "de"}, function(p)
-        local itemID = p.itemID
-        if not itemID then
-            return false
-        end
-        return Disenchant:IsDisenchantable(itemID)
-    end)
-end
+PE:RegisterKeyword({"disenchantable", "de"}, function(p)
+    return p.id and Disenchant:IsDisenchantable(p.id)
+end)

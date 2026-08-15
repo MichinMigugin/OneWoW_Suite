@@ -38,6 +38,9 @@
 #### Filters
 - Expansion filter can include more than one expansion at once. The menu is taller so two more expansions stay visible.
 
+#### Search
+- `#disenchantable` (`#de`) now finds items that can be disenchanted.
+
 ---
 
 ### AltTracker
@@ -54,7 +57,13 @@
 
 ---
 
-*No user-facing changes this release for Mail, Notes, or Shopping List.*
+### Mail
+#### Shipments
+- Disenchantables now matches items that can be disenchanted.
+
+---
+
+*No user-facing changes this release for Notes or Shopping List.*
 
 ---
 
