@@ -118,6 +118,9 @@ function OneWoW_ShoppingList:OnAddonLoaded()
 
     OneWoW_GUI:RegisterSettingsCallback("OnLanguageChanged", OneWoW_ShoppingList, function()
         ns.ApplyLanguage()
+        ns.ProfessionUI:ApplyLanguage()
+        ns.OrdersUI:ApplyLanguage()
+        ns.CatalogIntegration:ApplyLanguage()
         if ns.MainWindow then
             local wasShown = ns.MainWindow:IsShown()
             ns.MainWindow:Rebuild()

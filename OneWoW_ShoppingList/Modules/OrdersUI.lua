@@ -75,28 +75,31 @@ local function GetActiveOrDefaultListName()
     return lists.defaultList or lists.activeList or ns.MAIN_LIST_KEY
 end
 
-local function CreateTextButton(parent, width, label)
-    local b = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    b:SetSize(width, 30)
-    b:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-        insets   = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    b:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    b:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-    b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    b.text:SetPoint("CENTER")
-    b.text:SetText(label)
-    b.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-    return b
-end
-
 local openBtn
 local makeListBtn
 local addToActiveBtn
 local addToListBtn
+
+local function ApplyLabels()
+    if not makeListBtn then return end
+    makeListBtn:SetFitText(L["OWSL_PROF_BTN_MAKE_LIST"])
+    addToActiveBtn:SetFitText(L["OWSL_PROF_BTN_ADD_TO_ACTIVE"])
+    addToListBtn:SetFitText(L["OWSL_PROF_BTN_ADD_TO_LIST"])
+end
+
+local function AttachOrderTooltip(btn, onEnter)
+    btn:HookScript("OnEnter", onEnter)
+    btn:HookScript("OnLeave", function() GameTooltip:Hide() end)
+end
+
+local function CreateFitOrderButton(parent, label)
+    return OneWoW_GUI:CreateFitTextButton(parent, {
+        text = label,
+        height = 30,
+        minWidth = 40,
+        paddingX = 16,
+    })
+end
 
 local function UpdateButtonsState()
     local details = GetOrderDetailsFrame()
@@ -548,33 +551,31 @@ local function CreateButtons(details)
     end)
     openBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    makeListBtn = CreateTextButton(details, 90, L["OWSL_PROF_BTN_MAKE_LIST"])
+    makeListBtn = CreateFitOrderButton(details, L["OWSL_PROF_BTN_MAKE_LIST"])
     makeListBtn:SetPoint("RIGHT", openBtn, "LEFT", -5, 0)
     makeListBtn:SetScript("OnClick", function()
         MakeNewListAndAddMissing()
     end)
-    makeListBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    AttachOrderTooltip(makeListBtn, function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
         GameTooltip:SetText(L["OWSL_TT_MAKE_LIST_TITLE"], 1, 1, 1)
         GameTooltip:AddLine(L["OWSL_TT_MAKE_LIST_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
-    makeListBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    addToActiveBtn = CreateTextButton(details, 130, L["OWSL_PROF_BTN_ADD_TO_ACTIVE"])
+    addToActiveBtn = CreateFitOrderButton(details, L["OWSL_PROF_BTN_ADD_TO_ACTIVE"])
     addToActiveBtn:SetPoint("RIGHT", makeListBtn, "LEFT", -5, 0)
     addToActiveBtn:SetScript("OnClick", function()
         AddMissingToList(GetActiveOrDefaultListName())
     end)
-    addToActiveBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    AttachOrderTooltip(addToActiveBtn, function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
         GameTooltip:SetText("Add missing reagents", 1, 1, 1)
         GameTooltip:AddLine("Adds missing basic reagents from this crafting order to your active/default shopping list.", 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
-    addToActiveBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    addToListBtn = CreateTextButton(details, 110, L["OWSL_PROF_BTN_ADD_TO_LIST"])
+    addToListBtn = CreateFitOrderButton(details, L["OWSL_PROF_BTN_ADD_TO_LIST"])
     addToListBtn:SetPoint("RIGHT", addToActiveBtn, "LEFT", -5, 0)
     addToListBtn:SetScript("OnClick", function()
         local parentLists = ns.ShoppingList:GetParentLists()
@@ -588,15 +589,24 @@ local function CreateButtons(details)
             end
         end)
     end)
-    addToListBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    AttachOrderTooltip(addToListBtn, function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
         GameTooltip:SetText("Add missing reagents to list", 1, 1, 1)
         GameTooltip:AddLine("Choose a shopping list to receive missing basic reagents from this crafting order.", 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
-    addToListBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    -- Own buttons only — never the Blizzard order details frame.
+    OneWoW_GUI:RegisterFontRoot(makeListBtn, ApplyLabels)
+    OneWoW_GUI:RegisterFontRoot(addToActiveBtn)
+    OneWoW_GUI:RegisterFontRoot(addToListBtn)
 
     OrdersUI:UpdateVisibility()
+end
+
+--- Refresh docked orders-page button labels after a language change.
+function OrdersUI:ApplyLanguage()
+    ApplyLabels()
 end
 
 function OrdersUI:UpdateVisibility()

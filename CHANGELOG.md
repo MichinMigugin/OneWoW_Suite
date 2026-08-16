@@ -2,6 +2,7 @@
 
 ## Home
 - Updated Home links.
+- Hub search results and the minimap menu no longer error when they close after the mouse leaves.
 
 ---
 
@@ -21,6 +22,7 @@
 ## Fixes
 - Auto Mount pauses polling in combat and other aura-restricted situations (12.1), detects stealth without scanning secret buffs, and no longer errors when aura data is restricted. Play Mounts tooltips use the same guard.
 - Cursor Enhancer class-color labels display correctly in Russian, Korean, Chinese, and accented European text.
+- World map coordinates no longer error while the map is open.
 
 ---
 
@@ -67,7 +69,14 @@
 
 ---
 
-*No user-facing changes this release for Notes or Shopping List.*
+# Shopping List
+## Fixes
+- Shopping-list buttons on professions, craft orders, and Catalog follow the suite language and font when you change them. No reload needed.
+- The shopping list window no longer errors when you open it or move the mouse over a list.
+
+---
+
+*No user-facing changes this release for Notes.*
 
 ---
 

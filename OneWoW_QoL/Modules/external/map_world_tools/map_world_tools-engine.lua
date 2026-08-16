@@ -343,7 +343,7 @@ local function UpdateCoordOverlay()
     local sc = WorldMapFrame.ScrollContainer
 
     local x, y = sc:GetNormalizedCursorPosition()
-    if x and y and x > 0 and y > 0 and MouseIsOver(sc) then
+    if x and y and x > 0 and y > 0 and sc:IsMouseOver() then
         cCursor.x:SetFormattedText("%s: %.1f, %.1f", L["MAPWORLD_CURSOR"],
             (math.floor(x * 1000 + 0.5)) / 10, (math.floor(y * 1000 + 0.5)) / 10)
     else

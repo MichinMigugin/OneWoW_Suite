@@ -3,8 +3,6 @@ local L = ns.L
 
 local OneWoW_GUI = OneWoW_GUI
 
-local BACKDROP_INNER_NO_INSETS = OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
-
 ns.CatalogIntegration = {}
 local CatalogIntegration = ns.CatalogIntegration
 
@@ -17,6 +15,24 @@ local buttonsCreated = false
 
 local function GetDB()
     return ns.db
+end
+
+local function ApplyLabels()
+    if not makeListBtn then return end
+    makeListBtn:SetFitText(L["OWSL_PROF_BTN_MAKE_LIST"])
+    addToActiveBtn:SetFitText(L["OWSL_PROF_BTN_ADD_TO_ACTIVE"])
+end
+
+local function AttachCatalogTooltip(btn, titleKey, descKey)
+    btn:HookScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_TOP")
+        GameTooltip:SetText(L[titleKey], 1, 1, 1)
+        GameTooltip:AddLine(L[descKey], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    btn:HookScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
 end
 
 local function HideButtons()
@@ -35,92 +51,44 @@ local function CreateButtons(statusBar)
     if buttonsCreated then return end
     buttonsCreated = true
 
-    addToActiveBtn = CreateFrame("Button", nil, statusBar, "BackdropTemplate")
-    addToActiveBtn:SetSize(100, 21)
+    addToActiveBtn = OneWoW_GUI:CreateFitTextButton(statusBar, {
+        text = L["OWSL_PROF_BTN_ADD_TO_ACTIVE"],
+        height = 21,
+        minWidth = 40,
+        paddingX = 16,
+    })
     addToActiveBtn:SetPoint("RIGHT", statusBar, "RIGHT", -6, 0)
-    addToActiveBtn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    addToActiveBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    addToActiveBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-
-    addToActiveBtn.text = addToActiveBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    addToActiveBtn.text:SetPoint("CENTER")
-    addToActiveBtn.text:SetText(L["OWSL_PROF_BTN_ADD_TO_ACTIVE"])
-    addToActiveBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    addToActiveBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(L["OWSL_TT_ADD_TO_ACTIVE_TITLE"], 1, 1, 1)
-        GameTooltip:AddLine(L["OWSL_TT_ADD_TO_ACTIVE_DESC"], 0.8, 0.8, 0.8, true)
-        GameTooltip:Show()
-    end)
-    addToActiveBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        GameTooltip:Hide()
-    end)
     addToActiveBtn:SetScript("OnClick", function()
         CatalogIntegration:AddToActiveList()
     end)
+    AttachCatalogTooltip(addToActiveBtn, "OWSL_TT_ADD_TO_ACTIVE_TITLE", "OWSL_TT_ADD_TO_ACTIVE_DESC")
 
-    makeListBtn = CreateFrame("Button", nil, statusBar, "BackdropTemplate")
-    makeListBtn:SetSize(80, 21)
+    makeListBtn = OneWoW_GUI:CreateFitTextButton(statusBar, {
+        text = L["OWSL_PROF_BTN_MAKE_LIST"],
+        height = 21,
+        minWidth = 40,
+        paddingX = 16,
+    })
     makeListBtn:SetPoint("RIGHT", addToActiveBtn, "LEFT", -4, 0)
-    makeListBtn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    makeListBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    makeListBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-
-    makeListBtn.text = makeListBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    makeListBtn.text:SetPoint("CENTER")
-    makeListBtn.text:SetText(L["OWSL_PROF_BTN_MAKE_LIST"])
-    makeListBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
-    makeListBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(L["OWSL_TT_MAKE_LIST_TITLE"], 1, 1, 1)
-        GameTooltip:AddLine(L["OWSL_TT_MAKE_LIST_DESC"], 0.8, 0.8, 0.8, true)
-        GameTooltip:Show()
-    end)
-    makeListBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        GameTooltip:Hide()
-    end)
     makeListBtn:SetScript("OnClick", function()
         CatalogIntegration:MakeNewList()
     end)
+    AttachCatalogTooltip(makeListBtn, "OWSL_TT_MAKE_LIST_TITLE", "OWSL_TT_MAKE_LIST_DESC")
 
-    openListBtn = CreateFrame("Button", nil, statusBar, "BackdropTemplate")
-    openListBtn:SetSize(21, 21)
+    openListBtn = OneWoW_GUI:CreateAtlasIconButton(statusBar, {
+        atlas = "Perks-ShoppingCart",
+        width = 21,
+        height = 21,
+        iconInset = 3,
+    })
     openListBtn:SetPoint("RIGHT", makeListBtn, "LEFT", -4, 0)
-    openListBtn:SetBackdrop(BACKDROP_INNER_NO_INSETS)
-    openListBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    openListBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-
-    openListBtn.icon = openListBtn:CreateTexture(nil, "ARTWORK")
-    openListBtn.icon:SetSize(14, 14)
-    openListBtn.icon:SetPoint("CENTER")
-    openListBtn.icon:SetAtlas("Perks-ShoppingCart")
-
-    openListBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_HOVER"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER_HOVER"))
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(L["OWSL_WINDOW_TITLE"], 1, 1, 1)
-        GameTooltip:AddLine(L["OWSL_MM_CLICK_TO_OPEN"], 0.8, 0.8, 0.8, true)
-        GameTooltip:Show()
-    end)
-    openListBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-        self:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-        GameTooltip:Hide()
-    end)
     openListBtn:SetScript("OnClick", function()
-        if ns.MainWindow then ns.MainWindow:Toggle() end
+        ns.MainWindow:Toggle()
     end)
+    AttachCatalogTooltip(openListBtn, "OWSL_WINDOW_TITLE", "OWSL_MM_CLICK_TO_OPEN")
+
+    OneWoW_GUI:RegisterFontRoot(makeListBtn, ApplyLabels)
+    OneWoW_GUI:RegisterFontRoot(addToActiveBtn)
 
     HideButtons()
 end
@@ -215,6 +183,11 @@ function CatalogIntegration:AddToActiveList()
         if ns.MainWindow.RefreshSidebar then ns.MainWindow:RefreshSidebar() end
         if ns.MainWindow.RefreshItemList then ns.MainWindow:RefreshItemList() end
     end
+end
+
+--- Refresh Catalog tradeskill button labels after a language change.
+function CatalogIntegration:ApplyLanguage()
+    ApplyLabels()
 end
 
 local function TryRegister()

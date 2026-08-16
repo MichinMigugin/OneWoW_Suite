@@ -197,8 +197,8 @@ local function StartDismissWatcher()
             self.timeOutside = nil
             return
         end
-        local overBox = MouseIsOver(searchBox)
-        local overResults = MouseIsOver(self)
+        local overBox = searchBox:IsMouseOver()
+        local overResults = self:IsMouseOver()
         if not overBox and not overResults then
             if not self.timeOutside then self.timeOutside = 0 end
             self.timeOutside = self.timeOutside + elapsed

@@ -67,8 +67,7 @@ function CopyTextModule:ExtractAnything()
             for _, region in ipairs(regions) do
                 pcall(function()
                     if region:GetObjectType() == "FontString" and region:IsVisible() then
-                        local ok2, over = pcall(MouseIsOver, region)
-                        if ok2 and over then
+                        if region:IsMouseOver() then
                             table.insert(fontStrings, region)
                         end
                     end

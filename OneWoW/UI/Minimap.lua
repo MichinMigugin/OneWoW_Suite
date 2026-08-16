@@ -122,7 +122,7 @@ local function ShowContextMenu(anchorFrame)
 
     local timeOutside = 0
     contextMenu:SetScript("OnUpdate", function(self, elapsed)
-        if not MouseIsOver(contextMenu) and not MouseIsOver(anchorFrame) then
+        if not contextMenu:IsMouseOver() and not anchorFrame:IsMouseOver() then
             timeOutside = timeOutside + elapsed
             if timeOutside > 0.5 then
                 self:Hide()

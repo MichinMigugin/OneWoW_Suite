@@ -119,10 +119,37 @@ local makeListBtn
 local addToActiveBtn
 local addToListBtn
 
+local function ApplyLabels()
+    if not makeListBtn then return end
+    makeListBtn:SetFitText(L["OWSL_PROF_BTN_MAKE_LIST"])
+    addToActiveBtn:SetFitText(L["OWSL_PROF_BTN_ADD_TO_ACTIVE"])
+    addToListBtn:SetFitText(L["OWSL_PROF_BTN_ADD_TO_LIST"])
+end
+
+local function AttachProfTooltip(btn, titleKey, descKey)
+    btn:HookScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
+        ShowProfButtonTooltip(titleKey, descKey)
+        GameTooltip:Show()
+    end)
+    btn:HookScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+end
+
+local function CreateFitProfButton(parent, label)
+    return OneWoW_GUI:CreateFitTextButton(parent, {
+        text = label,
+        height = 30,
+        minWidth = 40,
+        paddingX = 16,
+    })
+end
+
 local function CreateButtons(schematicForm)
     if openBtn then return end
 
-    openBtn = CreateFrame("Button", nil, schematicForm, "BackdropTemplate")
+    openBtn = CreateFrame("Button", nil, schematicForm)
     openBtn:SetSize(30, 30)
     openBtn:SetPoint("BOTTOMRIGHT", schematicForm, "BOTTOMRIGHT", -10, 10)
     openBtn:SetNormalAtlas("Perks-ShoppingCart")
@@ -131,33 +158,18 @@ local function CreateButtons(schematicForm)
     openBtn:GetHighlightTexture():SetAlpha(0.5)
 
     openBtn:SetScript("OnClick", function()
-        if ns.MainWindow then ns.MainWindow:Toggle() end
+        ns.MainWindow:Toggle()
     end)
-    openBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    openBtn:SetScript("OnEnter", function(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
         GameTooltip:SetText(L["OWSL_TT_OPEN_LIST_TITLE"], 1, 1, 1)
         GameTooltip:AddLine(L["OWSL_TT_OPEN_LIST_DESC"], 0.8, 0.8, 0.8, true)
         GameTooltip:Show()
     end)
     openBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-    makeListBtn = CreateFrame("Button", nil, schematicForm, "BackdropTemplate")
-    makeListBtn:SetSize(90, 30)
+    makeListBtn = CreateFitProfButton(schematicForm, L["OWSL_PROF_BTN_MAKE_LIST"])
     makeListBtn:SetPoint("RIGHT", openBtn, "LEFT", -5, 0)
-    makeListBtn:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-        insets   = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    makeListBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    makeListBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-
-    makeListBtn.text = makeListBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    makeListBtn.text:SetPoint("CENTER")
-    makeListBtn.text:SetText(L["OWSL_PROF_BTN_MAKE_LIST"])
-    makeListBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
     makeListBtn:SetScript("OnClick", function()
         local recipeID, recipeInfo = GetCurrentRecipeInfo()
         if not recipeID or not recipeInfo then return end
@@ -180,31 +192,10 @@ local function CreateButtons(schematicForm)
             end
         end)
     end)
+    AttachProfTooltip(makeListBtn, "OWSL_TT_MAKE_LIST_TITLE", "OWSL_TT_MAKE_LIST_DESC")
 
-    makeListBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        ShowProfButtonTooltip("OWSL_TT_MAKE_LIST_TITLE", "OWSL_TT_MAKE_LIST_DESC")
-        GameTooltip:Show()
-    end)
-    makeListBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-    addToActiveBtn = CreateFrame("Button", nil, schematicForm, "BackdropTemplate")
-    addToActiveBtn:SetSize(100, 30)
+    addToActiveBtn = CreateFitProfButton(schematicForm, L["OWSL_PROF_BTN_ADD_TO_ACTIVE"])
     addToActiveBtn:SetPoint("RIGHT", makeListBtn, "LEFT", -5, 0)
-    addToActiveBtn:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-        insets   = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    addToActiveBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    addToActiveBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-
-    addToActiveBtn.text = addToActiveBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    addToActiveBtn.text:SetPoint("CENTER")
-    addToActiveBtn.text:SetText(L["OWSL_PROF_BTN_ADD_TO_ACTIVE"])
-    addToActiveBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
     addToActiveBtn:SetScript("OnClick", function()
         local recipeID = GetCurrentRecipeInfo()
         if not recipeID then return end
@@ -219,31 +210,10 @@ local function CreateButtons(schematicForm)
             end
         end)
     end)
+    AttachProfTooltip(addToActiveBtn, "OWSL_TT_ADD_TO_ACTIVE_TITLE", "OWSL_TT_ADD_TO_ACTIVE_DESC")
 
-    addToActiveBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        ShowProfButtonTooltip("OWSL_TT_ADD_TO_ACTIVE_TITLE", "OWSL_TT_ADD_TO_ACTIVE_DESC")
-        GameTooltip:Show()
-    end)
-    addToActiveBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-    addToListBtn = CreateFrame("Button", nil, schematicForm, "BackdropTemplate")
-    addToListBtn:SetSize(100, 30)
+    addToListBtn = CreateFitProfButton(schematicForm, L["OWSL_PROF_BTN_ADD_TO_LIST"])
     addToListBtn:SetPoint("RIGHT", addToActiveBtn, "LEFT", -5, 0)
-    addToListBtn:SetBackdrop({
-        bgFile   = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-        insets   = { left = 1, right = 1, top = 1, bottom = 1 },
-    })
-    addToListBtn:SetBackdropColor(OneWoW_GUI:GetThemeColor("BTN_NORMAL"))
-    addToListBtn:SetBackdropBorderColor(OneWoW_GUI:GetThemeColor("BTN_BORDER"))
-
-    addToListBtn.text = addToListBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    addToListBtn.text:SetPoint("CENTER")
-    addToListBtn.text:SetText(L["OWSL_PROF_BTN_ADD_TO_LIST"])
-    addToListBtn.text:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_PRIMARY"))
-
     addToListBtn:SetScript("OnClick", function()
         local recipeID = GetCurrentRecipeInfo()
         if not recipeID then return end
@@ -252,13 +222,12 @@ local function CreateButtons(schematicForm)
             ShowAddToListMenu(recipeID, quantity)
         end)
     end)
+    AttachProfTooltip(addToListBtn, "OWSL_TT_ADD_TO_LIST_TITLE", "OWSL_TT_ADD_TO_LIST_DESC")
 
-    addToListBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        ShowProfButtonTooltip("OWSL_TT_ADD_TO_LIST_TITLE", "OWSL_TT_ADD_TO_LIST_DESC")
-        GameTooltip:Show()
-    end)
-    addToListBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    -- Own buttons only — never the Blizzard schematic form.
+    OneWoW_GUI:RegisterFontRoot(makeListBtn, ApplyLabels)
+    OneWoW_GUI:RegisterFontRoot(addToActiveBtn)
+    OneWoW_GUI:RegisterFontRoot(addToListBtn)
 end
 
 function GetDB()
@@ -277,6 +246,11 @@ function ProfessionUI:Initialize()
             ProfessionUI:HookProfessionsFrame()
         end)
     end
+end
+
+--- Refresh docked profession-frame button labels after a language change.
+function ProfessionUI:ApplyLanguage()
+    ApplyLabels()
 end
 
 function ProfessionUI:UpdateVisibility()

@@ -108,7 +108,7 @@ local function CreateListRow(parent)
     row.deleteBtn:SetScript("OnEnter", function(self) self:GetNormalTexture():SetAlpha(1.0) end)
     row.deleteBtn:SetScript("OnLeave", function(self)
         self:GetNormalTexture():SetAlpha(0.5)
-        if not MouseIsOver(row) then
+        if not row:IsMouseOver() then
             self:Hide()
             if not row.data or not row.data.isSelected then
                 row:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
@@ -874,7 +874,7 @@ function MainWindow:RefreshSidebar()
             if not myself.data or not myself.data.isSelected then
                 myself:SetBackdropColor(OneWoW_GUI:GetThemeColor("BG_TERTIARY"))
             end
-            if myself.deleteBtn and not MouseIsOver(myself.deleteBtn) then
+            if myself.deleteBtn and not myself.deleteBtn:IsMouseOver() then
                 myself.deleteBtn:Hide()
             end
         end)
