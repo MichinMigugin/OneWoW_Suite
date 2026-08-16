@@ -119,7 +119,9 @@ Internal helpers that aren't on a hot path don't need full annotation. Reserve t
 Suite UI fonts are player-selectable. Decorative Unicode (★, ▸, ✓, emoji, …) often
 missing from those faces and renders as boxes or blank. **Do not** use glyphs as
 icons in `SetText` / menu labels. Use textures, atlases, or `OneWoW_GUI` helpers
-(`CreateFavoriteToggleButton`, Media icons, …). Depth: `onewow-gui-ui` skill.
+(`CreateFavoriteToggleButton`, Media icons, …). Typographic punctuation in
+player-facing strings uses the ASCII table in the `onewow-gui-ui` skill (`>>`,
+`...`, ` - `, `"x"`). Depth: `onewow-gui-ui` skill.
 
 ## Related rules
 

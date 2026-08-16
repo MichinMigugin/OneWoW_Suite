@@ -32,8 +32,8 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["CURSORENHANCER_ONLY_MOUSELOOK"] = "Only While Mouse Look",
     ["CURSORENHANCER_ONLY_MOUSELOOK_TIP"] = "When enabled, the cursor ring only appears while you are turning the camera (mouse look). The system cursor is hidden in that mode; the ring stands in for it.",
     ["CURSORENHANCER_TRAIL_FADE"] = "Trail Fade Time",
-    ["CURSORENHANCER_USE_CLASS_COLOR"] = "ì§ì—… ìƒ‰ìƒ ì‚¬ìš©",
-    ["CURSORENHANCER_USE_CLASS_COLOR_TIP"] = "ì„ íƒí•˜ë©´ ìœ„ ìƒ‰ìƒ ì„¤ì •ì„ ë¬´ì‹œí•˜ê³  ì§ì—… ìƒ‰ìƒì„ ì‚¬ìš©í•©ë‹ˆë‹¤.",
+    ["CURSORENHANCER_USE_CLASS_COLOR"] = "직업 색상 사용",
+    ["CURSORENHANCER_USE_CLASS_COLOR_TIP"] = "선택하면 위 색상 설정을 무시하고 직업 색상을 사용합니다.",
     ["CURSORENHANCER_ENABLE_GCD"] = "Enable GCD Circle",
     ["CURSORENHANCER_ENABLE_CAST"] = "Enable Cast Bar Circle",
     ["CURSORENHANCER_RING_TEXTURE"] = "Ring Texture",
@@ -95,5 +95,5 @@ OneWoW.Locale:Register(M._scope, "koKR", {
     ["CURSORENHANCER_MODE_USE_GLOBAL_TIP"] = "크기, 오프셋, 불투명도, 마우스 시야는 전역 모양을 따릅니다.",
     ["CURSORENHANCER_MODE_LOOK_CUSTOM_TIP"] = "이 상황에서만 크기, 오프셋, 불투명도, 마우스 시야를 재정의합니다.",
     ["CURSORENHANCER_CONFLICT_ALERT"] = "Two or more enabled situations claim the same place and combat context. Drag to set priority, or change/disable one.",
-    ["CURSORENHANCER_CONFLICT_TIP"] = "Conflicts with another enabled situation (same place Ã— combat).",
+    ["CURSORENHANCER_CONFLICT_TIP"] = "Conflicts with another enabled situation (same place x combat).",
 })

@@ -150,6 +150,7 @@ All under `bin/` unless noted; run from the repo root.
 | Tool | Purpose | When |
 |---|---|---|
 | `locale_verify.py [Locales… \| files… \| (none)]` | **Parity gate.** Per locale vs `enUS`: key parity (missing/extra), matching printf specifiers (`%s`/`%d`/`%d%%`), and duplicate keys (checks `enUS` too). Accepts Locales dirs, individual locale files (mapped to their scope), or no args (scans every scope). Exits non-zero. | After every locale edit. **Wired as the `locale-parity` pre-commit hook** (runs on changed locale files; a changed `enUS.lua` re-checks all siblings). |
+| `check_locale_encoding.py [Locales… \| files… \| (none)]` | **Encoding gate.** Register() string values must be real UTF-8, not Windows-1252 mojibake of UTF-8 (`ÐŸÐ¾Ñ‡Ñ‚Ð°` instead of `Почта`). Comments are ignored. Same args as `locale_verify`. | After locale edits, especially paste/import from a Windows editor. **Wired as the `locale-encoding` pre-commit hook** (changed `Locales/*.lua`). |
 | `locale_keydiff.py [--scope X] [--consolidate]` | **Value analysis.** Flags Blizzard-global adoption candidates (B), cross-scope consolidation (C), and name-match traps (E); `--scope` prints a delete/blizzard/consolidate/translate worklist. Reads the enUS GlobalStrings (§4). | Before adding keys; when auditing a scope. |
 | `locale_gen.py --enus … --locale … [--existing …] [--dict …] --out …` | Regenerate a locale file from the `enUS` template, overlaying existing translations + a `--dict` JSON; preserves layout/comments/escapes; handles addon-table **and** module-style headers; unmapped keys fall back to `enUS` (reported as TODO). | Authoring/refilling a whole locale. |
 | `gen_esmx.py <Locales…>` | Generate `esMX` from `esES` + apply the Latin-American term map (`LATAM_SUBS`: `presionar`, `mouse`) + machine-draft header. Re-runnable (terms live in the tool). | After any `esES` change. |
@@ -169,9 +170,28 @@ All under `bin/` unless noted; run from the repo root.
    using the official Blizzard term per language (§4); head a fresh machine draft with
    `-- Machine-drafted — <loc>, pending native review.`. Don't hand-edit `esMX` — run `gen_esmx.py`.
 4. Keep `%s`/`%d`/`|c…|r`/`\n` byte-identical across every locale file.
-5. **Gate before done:** `locale_keydiff.py --scope <Scope>` (no new keys in the BLIZZARD or
-   CONSOLIDATE buckets unless you intend to route them) **and** `locale_verify.py <Locales>`
-   (must exit 0).
+5. **Punctuation in string values** (not comments): use the ASCII table below. Do not put
+   typographic Unicode (`→`, `—`, `…`, `«»`) in locale values — suite fonts omit those
+   glyphs. CJK fullwidth punctuation (`。` `，` `「」`) is legitimate script, not this table.
+6. **Gate before done:** `locale_keydiff.py --scope <Scope>` (no new keys in the BLIZZARD or
+   CONSOLIDATE buckets unless you intend to route them), `locale_verify.py <Locales>`,
+   and `check_locale_encoding.py <Locales>` (must exit 0).
+
+**ASCII punctuation (locale values and player-facing Lua):**
+
+| Glyph | ASCII |
+| --- | --- |
+| `→` / `←` | `>>` / `<<` (spaces around, same as existing Mail Lua) |
+| `…` | `...` |
+| `—` / `–` in a sentence | ` - ` |
+| standalone empty placeholder | `-` |
+| `×` | `x` (quantity: `" x"` / `"%s x%d"`) |
+| middle dot as a list separator | `\|` with spaces (`gold \| items`) |
+| `«` `»` `“` `”` `„` | ASCII `"` |
+| `‘` `’` | ASCII `'` |
+
+Icon-like glyphs (`★`, `▸`, `✓`, `●`, `○`, emoji) stay textures/atlases, not ASCII
+fake-icons. Expand carets stay ASCII `>` / `v`. Comments may keep em dashes.
 
 **Banned:** enUS-only additions; `L["KEY"] or "literal"` fallbacks (a miss already shows the
 key name — use `OneWoW.Locale:GetOptional(scope, key)` for genuinely optional text); a scoped

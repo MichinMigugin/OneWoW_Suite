@@ -52,6 +52,25 @@ Draft translations for the 10 non-enUS files in the same edit. Flag as machine-d
 **Don't hand-author `esMX`** — run `python bin/gen_esmx.py <Locales>` (mirrors `esES` + applies
 LatAm terms).
 
+## ASCII punctuation in locale values
+
+Locale **string values** (not comments) use the same ASCII punctuation table as UI Lua
+(`onewow-gui-ui`). Typographic Unicode (`→`, `—`, `…`, `«»`) is missing from suite fonts.
+
+| Glyph | ASCII |
+| --- | --- |
+| `→` / `←` | `>>` / `<<` (spaces around) |
+| `…` | `...` |
+| `—` / `–` in a sentence | ` - ` |
+| standalone empty placeholder | `-` |
+| `×` | `x` (quantity: `" x"` / `"%s x%d"`) |
+| middle dot as a list separator | `\|` with spaces (`gold \| items`) |
+| `«` `»` `“` `”` `„` | ASCII `"` |
+| `‘` `’` | ASCII `'` |
+
+CJK fullwidth punctuation (`。` `，` `「」`) is legitimate script — leave it. Icon-like
+glyphs stay textures/atlases. Durable copy: `OneWoW/Docs/LOCALES.md`.
+
 ## Blizzard terms (align, don't guess)
 
 For established WoW terminology (Warband, Auction House, professions, difficulties, slots, …) use
@@ -119,10 +138,12 @@ Task is **not done** until:
 
 1. `python bin/locale_keydiff.py --scope <Scope>` — no new keys in BLIZZARD/CONSOLIDATE buckets.
 2. `python bin/locale_verify.py <Locales/path>` — exit 0, all locales `N/N OK`.
+3. `python bin/check_locale_encoding.py <Locales/path>` — exit 0 (no CP1252-mojibake in values).
 
 `locale_verify.py` is also wired as the **`locale-parity` pre-commit hook** — it runs
 automatically on changed locale files and blocks the commit on any parity/spec/duplicate
-failure. Still run it yourself before marking the task done; don't rely on the hook to catch
+failure. `check_locale_encoding.py` is the **`locale-encoding`** hook on the same glob.
+Still run both yourself before marking the task done; don't rely on the hook to catch
 problems late.
 
 ## Deep reference

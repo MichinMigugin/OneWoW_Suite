@@ -22,6 +22,7 @@
 
 #### Fixes
 - Auto Mount pauses polling in combat and other aura-restricted situations (12.1), detects stealth without scanning secret buffs, and no longer errors when aura data is restricted. Play Mounts tooltips use the same guard.
+- Cursor Enhancer class-color labels display correctly in Russian, Korean, Chinese, and accented European text.
 
 ---
 
@@ -61,6 +62,10 @@
 ### Mail
 #### Shipments
 - Disenchantables now matches items that can be disenchanted.
+
+#### Fixes
+- Mail tabs and translated labels show the right language again instead of garbled characters (including Russian, Korean, Chinese, and accented European text).
+- The Mail window follows the suite font when you change it. No reload needed.
 
 ---
 

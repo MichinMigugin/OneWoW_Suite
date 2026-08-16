@@ -252,6 +252,23 @@ strings, and ordinary ASCII punctuation (`-`, `/`, `:`, and deliberately ASCII
 expand carets like `>` / `v`). If it would be an **icon** in a modern UI kit, ship a
 texture/atlas (or extend `OneWoW_GUI`) — do not paste a glyph into a FontString.
 
+**Typographic Unicode in player-facing strings** (Lua literals and locale values) uses
+this ASCII table so every suite font can draw it. Comments may keep em dashes. CJK
+fullwidth punctuation (`。` `，` `「」`) is legitimate script, not this table.
+
+| Glyph | ASCII |
+| --- | --- |
+| `→` / `←` | `>>` / `<<` (spaces around) |
+| `…` | `...` |
+| `—` / `–` in a sentence | ` - ` |
+| standalone empty placeholder | `-` |
+| `×` | `x` (quantity: `" x"` / `"%s x%d"`) |
+| middle dot as a list separator | `\|` with spaces (`gold \| items`) |
+| `«` `»` `“` `”` `„` | ASCII `"` |
+| `‘` `’` | ASCII `'` |
+
+Same table: `onewow-locale-workflow`, `OneWoW/Docs/GUI.md`, `OneWoW/Docs/LOCALES.md`.
+
 ## Review checklist — anti-patterns to flag
 
 1. **Raw `CreateFrame`/`CreateFontString` for components OneWoW_GUI provides.** Buttons, edit boxes, scroll frames, section headers, skinned icons, dropdowns, panels — all have helpers. Search the README catalog before approving raw widget construction.

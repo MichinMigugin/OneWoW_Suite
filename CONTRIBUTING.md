@@ -46,11 +46,13 @@ QoL external modules use per-module locale scopes — see [OneWoW_QoL/DEVELOPERS
 4. **Verify before submitting:**
    - `python bin/locale_keydiff.py --scope <Scope>`
    - `python bin/locale_verify.py <path/to/Locales>` (must exit 0; also runs as the `locale-parity` pre-commit hook)
+   - `python bin/check_locale_encoding.py <path/to/Locales>` (must exit 0; also runs as the `locale-encoding` pre-commit hook)
 
 ### Translation guidelines
 
 - Every user-visible string must be localized — no English fallbacks in UI code
 - Keep `%s`, `%d`, `|c…|r`, and `\n` byte-identical across all locale files
+- Locale **values** use ASCII punctuation (`>>`, `...`, ` - `); see `OneWoW/Docs/LOCALES.md`. CJK fullwidth punctuation is allowed. Comments are out of scope.
 - Align game terminology to Blizzard GlobalStrings (see LOCALES.md §4)
 - Test in-game with the client set to your target language
 

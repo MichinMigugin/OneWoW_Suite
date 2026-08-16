@@ -41,6 +41,9 @@ translated, Blizzard-term alignment). This rule is the checklist agents must fol
   that key in each locale. **Do not assume an existing suite translation is canonical — verify.**
 - **Don't hand-author `esMX`** — run `python bin/gen_esmx.py <Locales>` (mirrors `esES` + LatAm terms).
 - Keep `%s`, `%d`, `|c…|r`, and `\n` identical across every locale file.
+- **No typographic Unicode in locale values** (`→`, `—`, `…`, `«»`). Use the ASCII
+  punctuation table in the `onewow-locale-workflow` skill. CJK fullwidth is allowed;
+  comments are out of scope.
 - **Mind different meanings per language** (value identity ≠ translation identity): a word that's
   one English string can need different translations by sense (`Close` verb vs adjective) or
   gender/number (`Rested`, color names). Don't fold distinct senses onto one key; keep matched
@@ -51,11 +54,13 @@ translated, Blizzard-term alignment). This rule is the checklist agents must fol
 ```bash
 python bin/locale_keydiff.py --scope <AddonName>
 python bin/locale_verify.py <path/to/that/addon's/Locales>
+python bin/check_locale_encoding.py <path/to/that/addon's/Locales>
 ```
 
 - **`locale_keydiff`**: new keys must **not** land in the **BLIZZARD** or **CONSOLIDATE**
   buckets unless you intentionally fix routing first.
 - **`locale_verify`**: must exit **0** (key parity + matching format specifiers).
+- **`check_locale_encoding`**: must exit **0** (no CP1252-mojibake in string values).
 
 ## Banned
 

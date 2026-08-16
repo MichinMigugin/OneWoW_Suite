@@ -300,6 +300,16 @@ repos:
         language: python
         files: (^|/)Locales/.*\.lua$
 
+      - id: locale-encoding
+        name: Locale values are real UTF-8 (not CP1252 mojibake)
+        description: |
+          For each changed Locales/*.lua file, checks Register() string values
+          for Windows-1252 mojibake of UTF-8 (e.g. ÐŸÐ¾Ñ‡Ñ‚Ð° instead of
+          Почта). Comments are ignored. See OneWoW/Docs/LOCALES.md.
+        entry: python bin/check_locale_encoding.py
+        language: python
+        files: (^|/)Locales/.*\.lua$
+
       - id: tooltip-globalstrings-patterns
         name: TooltipScanner GlobalStrings pattern coverage
         description: |

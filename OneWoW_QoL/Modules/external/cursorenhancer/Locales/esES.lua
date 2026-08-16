@@ -33,7 +33,7 @@ OneWoW.Locale:Register(M._scope, "esES", {
     ["CURSORENHANCER_ONLY_MOUSELOOK_TIP"] = "Si esta activado, el anillo solo aparece mientras giras la camara (mouse look). El cursor del sistema esta oculto; el anillo lo sustituye.",
     ["CURSORENHANCER_TRAIL_FADE"] = "Trail Fade Time",
     ["CURSORENHANCER_USE_CLASS_COLOR"] = "Usar color de clase",
-    ["CURSORENHANCER_USE_CLASS_COLOR_TIP"] = "Si estÃ¡ marcada, se ignora el color de arriba y se usa el color de tu clase.",
+    ["CURSORENHANCER_USE_CLASS_COLOR_TIP"] = "Si está marcada, se ignora el color de arriba y se usa el color de tu clase.",
     ["CURSORENHANCER_ENABLE_GCD"] = "Enable GCD Circle",
     ["CURSORENHANCER_ENABLE_CAST"] = "Enable Cast Bar Circle",
     ["CURSORENHANCER_RING_TEXTURE"] = "Ring Texture",

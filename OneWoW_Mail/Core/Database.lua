@@ -81,7 +81,7 @@ function ns:InitializeDatabase()
     -- deleting a named expression anywhere in the suite can report what it
     -- would cost here instead of silently breaking these.
     OneWoW.SearchCatalog:RegisterExpressionSource("mail_shipments", {
-        sourceLabel = "Mail — Shipments",
+        sourceLabel = "Mail - Shipments",
         Enumerate = function()
             local out = {}
             for i, shipment in ipairs(ns.db.global.mail.shipments) do

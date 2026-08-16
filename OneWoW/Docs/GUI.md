@@ -116,6 +116,22 @@ icon substitutes). Player-selected suite fonts often lack those glyphs. Prefer
 textures, atlases, or helpers such as `CreateFavoriteToggleButton`. See agent skill
 `onewow-gui-ui`.
 
+Typographic punctuation in player-facing strings (Lua and locale values) uses ASCII:
+
+| Glyph | ASCII |
+| --- | --- |
+| `→` / `←` | `>>` / `<<` (spaces around) |
+| `…` | `...` |
+| `—` / `–` in a sentence | ` - ` |
+| standalone empty placeholder | `-` |
+| `×` | `x` (quantity: `" x"` / `"%s x%d"`) |
+| middle dot as a list separator | `\|` with spaces (`gold \| items`) |
+| `«` `»` `“` `”` `„` | ASCII `"` |
+| `‘` `’` | ASCII `'` |
+
+CJK fullwidth punctuation (`。` `，` `「」`) is legitimate script. Comments may keep
+em dashes. Expand carets stay ASCII `>` / `v`.
+
 ### Get the current font file path
 ```lua
 local fontPath = OneWoW_GUI:GetFont()

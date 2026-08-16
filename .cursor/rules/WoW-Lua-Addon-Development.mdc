@@ -362,7 +362,7 @@ end)
 13. **Static strings in UI code.** See `onewow-gui-ui` skill.
 14. **Defensive nil-chain guards on DB-initialized keys.** See `onewow-database-api` skill.
 15. **Calling `InCombatLockdown` / `C_RestrictedActions.GetAddOnRestrictionState` / `C_RestrictedActions.IsAddOnRestrictionActive` directly.** Route through `OneWoW.Restriction.IsAddonRestricted()` (broad, incl. Map), `IsProtectedActionBlocked()` (protected actions, excl. Map), or `IsInCombat()` (combat-only UX/perf) — defer with `RunWhenUnrestricted`. Enforced by the `restriction-funnel` hook (§5).
-16. **Decorative Unicode glyphs as UI icons** (★, ▸, ✓, emoji in `SetText` / labels). Suite fonts do not all include them — use textures/atlases. See `onewow-gui-ui` skill.
+16. **Decorative Unicode glyphs as UI icons** (★, ▸, ✓, emoji in `SetText` / labels). Suite fonts do not all include them — use textures/atlases. Typographic punctuation in player-facing strings uses the ASCII table in the `onewow-gui-ui` skill (`>>`, `...`, ` - `).
 
 ## Reference Links
 

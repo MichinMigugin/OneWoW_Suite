@@ -57,7 +57,7 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["CURSORENHANCER_SWIPE_FILL"] = "Fill Instead of Empty",
     ["CURSORENHANCER_SECTION_PIPS"] = "Resource Pips",
     ["CURSORENHANCER_PIPS_ENABLE"] = "Default for New Situations",
-    ["CURSORENHANCER_PIPS_ENABLE_TIP"] = "When adding a situation card, include Resource Pips in its show set by default. Runtime visibility still comes from each situation — enable Resource Pips on the active card to see class power (Soul Shards, Holy Power, combo points, and so on) on the cursor ring.",
+    ["CURSORENHANCER_PIPS_ENABLE_TIP"] = "When adding a situation card, include Resource Pips in its show set by default. Runtime visibility still comes from each situation - enable Resource Pips on the active card to see class power (Soul Shards, Holy Power, combo points, and so on) on the cursor ring.",
     ["CURSORENHANCER_PIP_SIZE"] = "Pip Size",
     ["CURSORENHANCER_PIP_OFFSET_X"] = "Horizontal Offset from Ring",
     ["CURSORENHANCER_PIP_OFFSET_Y"] = "Vertical Offset from Ring",
@@ -98,5 +98,5 @@ OneWoW.Locale:Register(M._scope, "enUS", {
     ["CURSORENHANCER_MODE_USE_GLOBAL_TIP"] = "Size, offsets, opacity, and mouse look follow Global Look & Feel.",
     ["CURSORENHANCER_MODE_LOOK_CUSTOM_TIP"] = "Override size, offsets, opacity, and mouse look for this situation only.",
     ["CURSORENHANCER_CONFLICT_ALERT"] = "Two or more enabled situations claim the same place and combat context. Drag to set priority, or change/disable one.",
-    ["CURSORENHANCER_CONFLICT_TIP"] = "Conflicts with another enabled situation (same place × combat).",
+    ["CURSORENHANCER_CONFLICT_TIP"] = "Conflicts with another enabled situation (same place x combat).",
 })

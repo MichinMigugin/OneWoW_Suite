@@ -514,7 +514,7 @@ function SendQueue:Start(jobs, onDone, opts)
         local gold = job.money or 0
         local short, full, itemCount = ns.RunLog.FormatLoot(gold, items)
         if short == "" then
-            short = "—"
+            short = "-"
         end
         ns.RunLog:Add("info", JobShipmentName(job), job.target, string.format(L["LOG_SEND_OK"], short), {
             detail = full ~= "" and full or nil,

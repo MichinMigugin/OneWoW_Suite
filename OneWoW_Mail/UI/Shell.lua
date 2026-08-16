@@ -379,6 +379,8 @@ function Shell:Ensure()
     end
 
     tinsert(UISpecialFrames, "OneWoW_MailShell")
+    -- Standalone mailbox window is outside the hub rebuild; opt in to live font changes.
+    OneWoW_GUI:RegisterFontRoot(shellFrame)
     return shellFrame
 end
 
@@ -462,6 +464,7 @@ function Shell:FullReset()
         ns.Compose:OnHide()
     end
     if shellFrame then
+        OneWoW_GUI:UnregisterFontRoot(shellFrame)
         hideFromMailClosed = true
         shellFrame:Hide()
         hideFromMailClosed = false

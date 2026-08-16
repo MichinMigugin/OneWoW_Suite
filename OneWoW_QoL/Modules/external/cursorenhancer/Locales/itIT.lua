@@ -95,5 +95,5 @@ OneWoW.Locale:Register(M._scope, "itIT", {
     ["CURSORENHANCER_MODE_USE_GLOBAL_TIP"] = "Dimensione, offset, opacita e mouse look seguono l'aspetto globale.",
     ["CURSORENHANCER_MODE_LOOK_CUSTOM_TIP"] = "Sovrascrive dimensione, offset, opacita e mouse look solo per questa situazione.",
     ["CURSORENHANCER_CONFLICT_ALERT"] = "Two or more enabled situations claim the same place and combat context. Drag to set priority, or change/disable one.",
-    ["CURSORENHANCER_CONFLICT_TIP"] = "Conflicts with another enabled situation (same place Ã— combat).",
+    ["CURSORENHANCER_CONFLICT_TIP"] = "Conflicts with another enabled situation (same place x combat).",
 })

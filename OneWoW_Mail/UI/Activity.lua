@@ -117,7 +117,7 @@ local function FormatIntentLine(intent)
         ns.ItemLabel.RequestLoadIfNeeded(intent.itemID, intent.link)
     end
     if intent.quantity then
-        return name .. " ×" .. intent.quantity
+        return name .. " x" .. intent.quantity
     end
     return name
 end

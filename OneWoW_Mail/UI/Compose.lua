@@ -311,7 +311,7 @@ local function DoSend()
     ns.SendResult:Listen(function()
         local short, full = ns.RunLog.FormatLoot(gold, items)
         if short == "" then
-            short = "—"
+            short = "-"
         end
         local detail = full
         if cod > 0 then
