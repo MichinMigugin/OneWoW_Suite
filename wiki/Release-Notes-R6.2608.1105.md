@@ -124,4 +124,3 @@
 
 * [CHANGELOG.md](https://github.com/kellewic/OneWoW_Suite/blob/main/CHANGELOG.md)
 * In-game: Home → What’s New (highlights only)
-
