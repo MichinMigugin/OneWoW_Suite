@@ -47,7 +47,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["FARM_OPEN_ONEWOW_TT"]             = "OneWoW 기본 창 열기 (툴팁 섹션에 TSM 가격 문자열 등 모든 가치 옵션이 있습니다).",
 
     ["TRACKER_IMPORT"]                  = "가져오기",
-    ["TRACKER_PRESET"]                  = "프리셋",
     ["TRACKER_RESTORE"]                 = "예시 복원",
     ["TRACKER_PIN"]                     = "고정",
     ["TRACKER_UNPIN"]                   = "고정 해제",
@@ -60,10 +59,8 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRACKER_UNFAV"]                   = "즐겨찾기 해제",
     ["TRACKER_ALL_TYPES"]              = "모든 유형",
     ["TRACKER_ALL_CATEGORIES"]         = "모든 분류",
-    ["TRACKER_LIST_TITLE"]             = "목록",
-    ["TRACKER_DETAIL_TITLE"]           = "세부 정보",
     ["TRACKER_SELECT"]                 = "세부 정보를 보려면 목록을 선택하세요.",
-    ["TRACKER_EMPTY"]                  = "아직 목록이 없습니다. '새로 만들기'를 눌러 만들거나 '프리셋'으로 빠르게 설정하세요.",
+    ["TRACKER_EMPTY"]                  = "아직 목록이 없습니다. 만들기를 눌러 만드세요.",
 
     ["TRACKER_NEW_LIST"]               = "새 목록",
     ["TRACKER_EDIT_LIST"]              = "목록 편집",
@@ -95,8 +92,6 @@ OneWoW.Locale:Register(ADDON_NAME, "koKR", {
     ["TRACKER_IMPORT_HINT"]           = "내보낸 목록이나 가이드 마크업을 아래에 붙여넣으세요:",
     ["TRACKER_IMPORT_BTN"]            = "가져오기",
     ["TRACKER_IMPORT_FAILED"]         = "가져오기에 실패했습니다.",
-
-    ["TRACKER_PRESET_TITLE"]          = "프리셋으로 만들기",
 
     ["TRACKER_LIST_TODO"]             = "할 일",
     ["TRACKER_LIST_REPEATING"]        = "반복",

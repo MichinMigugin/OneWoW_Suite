@@ -47,7 +47,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["FARM_OPEN_ONEWOW_TT"]             = "開啟 OneWoW 主視窗（提示框區段包含完整的價值選項，例如 TSM 價格字串）。",
 
     ["TRACKER_IMPORT"]                  = "匯入",
-    ["TRACKER_PRESET"]                  = "預設",
     ["TRACKER_RESTORE"]                 = "還原範例",
     ["TRACKER_PIN"]                     = "釘選",
     ["TRACKER_UNPIN"]                   = "取消釘選",
@@ -60,10 +59,8 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TRACKER_UNFAV"]                   = "取消最愛",
     ["TRACKER_ALL_TYPES"]              = "所有類型",
     ["TRACKER_ALL_CATEGORIES"]         = "所有分類",
-    ["TRACKER_LIST_TITLE"]             = "清單",
-    ["TRACKER_DETAIL_TITLE"]           = "詳情",
     ["TRACKER_SELECT"]                 = "選擇一個清單以檢視其詳情。",
-    ["TRACKER_EMPTY"]                  = "尚無清單。點擊「新增」建立一個，或點擊「預設」快速設定。",
+    ["TRACKER_EMPTY"]                  = "尚無清單。點擊「新建」建立一個。",
 
     ["TRACKER_NEW_LIST"]               = "新增清單",
     ["TRACKER_EDIT_LIST"]              = "編輯清單",
@@ -95,8 +92,6 @@ OneWoW.Locale:Register(ADDON_NAME, "zhTW", {
     ["TRACKER_IMPORT_HINT"]           = "在下方貼上匯出的清單或攻略標記：",
     ["TRACKER_IMPORT_BTN"]            = "匯入",
     ["TRACKER_IMPORT_FAILED"]         = "匯入失敗。",
-
-    ["TRACKER_PRESET_TITLE"]          = "從預設建立",
 
     ["TRACKER_LIST_TODO"]             = "待辦",
     ["TRACKER_LIST_REPEATING"]        = "重複",

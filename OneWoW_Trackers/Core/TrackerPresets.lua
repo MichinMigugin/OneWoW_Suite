@@ -359,7 +359,7 @@ local BUNDLED_GUIDES = {
                         },
                         {
                             label = "Presets",
-                            description = "Use the Preset button to quickly add common tracking setups: Great Vault, Renown, Professions, Weeklies, and more.",
+                            description = "Use New to quickly add common tracking setups: Great Vault, Renown, Professions, Weeklies, and more.",
                             trackType = "manual",
                             max = 1,
                             objectives = {},

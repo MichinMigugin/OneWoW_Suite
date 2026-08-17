@@ -11,7 +11,7 @@
 ### Lists
 
 * Create lists by type: guide, daily, weekly, todo, repeating, or farm value
-* Organize with categories, favorites, and filters (including hide completed)
+* Organize with categories, favorites, and filters. Hide Done drops finished lists; Hide completed on an open list (and on its pin) hides finished steps and empty sections.
 * Author sections and steps; import, export, and share lists
 * Start from bundled presets and examples
 

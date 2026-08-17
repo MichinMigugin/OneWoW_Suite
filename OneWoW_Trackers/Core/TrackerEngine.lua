@@ -128,6 +128,15 @@ function TE:IsSectionVisible(section)
     return true
 end
 
+function TE:HasIncompleteVisibleStep(listID, section)
+    for _, step in ipairs(section.steps or {}) do
+        if self:IsStepVisible(step, section) and not TD:IsStepComplete(listID, section.key, step.key) then
+            return true
+        end
+    end
+    return false
+end
+
 local function BuildIndices()
     wipe(lootIndex)
     wipe(npcIndex)

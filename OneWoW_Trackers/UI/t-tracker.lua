@@ -32,7 +32,6 @@ function ns.UI.CreateTrackerTab(parent)
     local TD = ns.TrackerData
     local TE = ns.TrackerEngine
     local TP = ns.TrackerPresets
-    if not TD or not TE then return end
 
     local selectedListID = nil
     local filterType = "all"
@@ -40,46 +39,59 @@ function ns.UI.CreateTrackerTab(parent)
     local searchFilter = ""
     local hideCompleted = false
     local listRows = {}
+    local detailRows = {}
+    local dragRows = {}
+    local ClearDetail
 
-    local controlPanel = OneWoW_GUI:CreateFrame(parent, {
-        height   = 75,
-        backdrop = BACKDROP_INNER_NO_INSETS,
-        bgColor  = "BG_SECONDARY",
-        borderColor = "BORDER_SUBTLE",
-    })
-    controlPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
-    controlPanel:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
+    local LEFT_W = ns.Constants.GUI.LEFT_PANEL_WIDTH
+    local GAP = ns.Constants.GUI.PANEL_GAP
+    local HDR_H = 86
+    local DD_W = math.floor((LEFT_W - 16 - 6) / 2)
 
-    local newBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, {
-        text = NEW,
+    local leftHeader = OneWoW_GUI:CreateFilterBar(parent, { height = HDR_H, offset = 0 })
+    leftHeader:ClearAllPoints()
+    leftHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
+    leftHeader:SetWidth(LEFT_W)
+
+    local rightHeader = OneWoW_GUI:CreateFilterBar(parent, { height = HDR_H, offset = 0 })
+    rightHeader:ClearAllPoints()
+    rightHeader:SetPoint("TOPLEFT", leftHeader, "TOPRIGHT", GAP, 0)
+    rightHeader:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
+
+    local clearBtn = OneWoW_GUI:CreateFitTextButton(leftHeader, {
+        text = L["CLEAR"],
         height = 26,
+        minWidth = 34,
     })
-    newBtn:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -10)
+    clearBtn:SetPoint("TOPRIGHT", leftHeader, "TOPRIGHT", -8, -8)
 
-    local importBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, {
-        text = L["TRACKER_IMPORT"],
+    local searchBox = OneWoW_GUI:CreateEditBox(leftHeader, {
         height = 26,
+        placeholderText = L["SEARCH"],
+        onTextChanged = function(text)
+            searchFilter = text or ""
+            if parent.RefreshList then
+                parent.RefreshList()
+            end
+        end,
     })
-    importBtn:SetPoint("LEFT", newBtn, "RIGHT", 6, 0)
+    searchBox:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -8)
+    searchBox:SetPoint("TOPRIGHT", clearBtn, "TOPLEFT", -4, 0)
 
-    local presetBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, {
-        text = L["TRACKER_PRESET"],
-        height = 26,
-    })
-    presetBtn:SetPoint("LEFT", importBtn, "RIGHT", 6, 0)
+    clearBtn:SetScript("OnClick", function()
+        searchBox:SetText("")
+        searchBox:ClearFocus()
+        searchBox:RestorePlaceholder()
+        searchFilter = ""
+        parent.RefreshList()
+    end)
 
-    local restoreBtn = OneWoW_GUI:CreateFitTextButton(controlPanel, {
-        text = L["TRACKER_RESTORE"],
-        height = 26,
-    })
-    restoreBtn:SetPoint("LEFT", presetBtn, "RIGHT", 6, 0)
-
-    local typeDropdown, typeText = OneWoW_GUI:CreateDropdown(controlPanel, {
-        width = 120,
+    local typeDropdown, typeText = OneWoW_GUI:CreateDropdown(leftHeader, {
+        width = DD_W,
         height = 26,
         text = L["TRACKER_ALL_TYPES"],
     })
-    typeDropdown:SetPoint("TOPLEFT", controlPanel, "TOPLEFT", 10, -42)
+    typeDropdown:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -38)
 
     OneWoW_GUI:AttachFilterMenu(typeDropdown, {
         buildItems = function()
@@ -100,12 +112,12 @@ function ns.UI.CreateTrackerTab(parent)
         getActiveValue = function() return filterType end,
     })
 
-    local catDropdown, catText = OneWoW_GUI:CreateDropdown(controlPanel, {
-        width = 140,
+    local catDropdown, catText = OneWoW_GUI:CreateDropdown(leftHeader, {
+        width = DD_W,
         height = 26,
         text = L["TRACKER_ALL_CATEGORIES"],
     })
-    catDropdown:SetPoint("LEFT", typeDropdown, "RIGHT", 6, 0)
+    catDropdown:SetPoint("TOPLEFT", typeDropdown, "TOPRIGHT", 6, 0)
 
     OneWoW_GUI:AttachFilterMenu(catDropdown, {
         buildItems = function()
@@ -126,45 +138,43 @@ function ns.UI.CreateTrackerTab(parent)
         getActiveValue = function() return filterCategory end,
     })
 
-    local searchBox = OneWoW_GUI:CreateEditBox(controlPanel, {
-        width = 180,
-        height = 26,
-        placeholderText = L["SEARCH"],
+    local hideCompletedCheck = OneWoW_GUI:CreateCheckbox(leftHeader, {
+        label = L["TRACKER_HIDE_DONE"],
+        onClick = function(myself)
+            hideCompleted = myself:GetChecked()
+            parent.RefreshList()
+        end,
     })
-    searchBox:SetPoint("LEFT", catDropdown, "RIGHT", 6, 0)
-    searchBox:SetScript("OnTextChanged", function(self)
-        searchFilter = self:GetSearchText() or ""
-        parent.RefreshList()
-    end)
+    hideCompletedCheck:SetPoint("TOPLEFT", leftHeader, "TOPLEFT", 8, -64)
 
-    local hideCompletedCheck = OneWoW_GUI:CreateCheckbox(controlPanel, { label = L["TRACKER_HIDE_DONE"] })
-    hideCompletedCheck:SetPoint("LEFT", searchBox, "RIGHT", 10, 0)
-    hideCompletedCheck:SetScript("OnClick", function(self)
-        hideCompleted = self:GetChecked()
-        parent.RefreshList()
-        if selectedListID then
-            parent.ShowDetail(selectedListID)
-        end
-    end)
+    local newBtn = OneWoW_GUI:CreateFitTextButton(rightHeader, {
+        text = NEW,
+        height = 26,
+    })
+    newBtn:SetPoint("TOPLEFT", rightHeader, "TOPLEFT", 8, -8)
 
-    local LEFT_PANEL_WIDTH = OneWoW_GUI.Constants.GUI.LEFT_PANEL_WIDTH
-    local GAP = OneWoW_GUI.Constants.GUI.PANEL_GAP
+    local importBtn = OneWoW_GUI:CreateFitTextButton(rightHeader, {
+        text = L["TRACKER_IMPORT"],
+        height = 26,
+    })
+    importBtn:SetPoint("LEFT", newBtn, "RIGHT", 6, 0)
+
+    local restoreBtn = OneWoW_GUI:CreateFitTextButton(rightHeader, {
+        text = L["TRACKER_RESTORE"],
+        height = 26,
+    })
+    restoreBtn:SetPoint("LEFT", importBtn, "RIGHT", 6, 0)
 
     local listPanel = OneWoW_GUI:CreateFrame(parent, {
-        width    = LEFT_PANEL_WIDTH,
+        width    = LEFT_W,
         backdrop = BACKDROP_INNER_NO_INSETS,
         borderColor = "BORDER_SUBTLE",
     })
-    listPanel:SetPoint("TOPLEFT", controlPanel, "BOTTOMLEFT", 0, -GAP)
+    listPanel:SetPoint("TOPLEFT", leftHeader, "BOTTOMLEFT", 0, -GAP)
     listPanel:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
 
-    local listTitle = OneWoW_GUI:CreateFS(listPanel, 12)
-    listTitle:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 10, -8)
-    listTitle:SetText(L["TRACKER_LIST_TITLE"])
-    listTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
-
     local listScrollFrame, listScrollChild = OneWoW_GUI:CreateScrollFrame(listPanel, {})
-    listScrollFrame:SetPoint("TOPLEFT", listTitle, "BOTTOMLEFT", 0, -6)
+    listScrollFrame:SetPoint("TOPLEFT", listPanel, "TOPLEFT", 6, -6)
     listScrollFrame:SetPoint("BOTTOMRIGHT", listPanel, "BOTTOMRIGHT", -6, 4)
 
     local detailPanel = OneWoW_GUI:CreateFrame(parent, {
@@ -176,12 +186,46 @@ function ns.UI.CreateTrackerTab(parent)
 
     local detailTitle = OneWoW_GUI:CreateFS(detailPanel, 12)
     detailTitle:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 10, -8)
-    detailTitle:SetText(L["TRACKER_DETAIL_TITLE"])
+    detailTitle:SetJustifyH("LEFT")
     detailTitle:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_ACCENT"))
+    detailTitle:Hide()
+
+    local hideStepsCheck = OneWoW_GUI:CreateCheckbox(detailPanel, {
+        label = L["TRACKER_PIN_HIDE_COMPLETED"],
+        labelSide = "left",
+        onClick = function(myself)
+            local list = selectedListID and TD:GetList(selectedListID)
+            if not list then return end
+            list.pinnedHideCompleted = myself:GetChecked() and true or false
+            parent.ShowDetail(list.id)
+            TE:RefreshAllPinnedWindows()
+        end,
+    })
+    hideStepsCheck:SetPoint("TOPRIGHT", detailPanel, "TOPRIGHT", -8, -4)
+    hideStepsCheck:Hide()
+    local function HideStepsTooltip(myself)
+        GameTooltip:SetOwner(myself, "ANCHOR_LEFT")
+        GameTooltip:SetText(L["TRACKER_PIN_HIDE_COMPLETED"], 1, 1, 1)
+        GameTooltip:AddLine(L["TRACKER_PIN_HIDE_COMPLETED_DESC"], 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end
+    hideStepsCheck:SetScript("OnEnter", HideStepsTooltip)
+    hideStepsCheck:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    hideStepsCheck.label:SetScript("OnEnter", HideStepsTooltip)
+    hideStepsCheck.label:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    detailTitle:SetPoint("RIGHT", hideStepsCheck.label, "LEFT", -8, 0)
 
     local detailScrollFrame, detailScrollChild = OneWoW_GUI:CreateScrollFrame(detailPanel, {})
-    detailScrollFrame:SetPoint("TOPLEFT", detailTitle, "BOTTOMLEFT", 0, -6)
-    detailScrollFrame:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -6, 4)
+    local function LayoutDetailScroll()
+        detailScrollFrame:ClearAllPoints()
+        if hideStepsCheck:IsShown() then
+            detailScrollFrame:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 6, -34)
+        else
+            detailScrollFrame:SetPoint("TOPLEFT", detailPanel, "TOPLEFT", 6, -6)
+        end
+        detailScrollFrame:SetPoint("BOTTOMRIGHT", detailPanel, "BOTTOMRIGHT", -6, 4)
+    end
+    LayoutDetailScroll()
 
     local emptyLabel = OneWoW_GUI:CreateFS(detailPanel, 12)
     emptyLabel:SetPoint("CENTER", detailPanel, "CENTER", 0, 0)
@@ -295,6 +339,21 @@ function ns.UI.CreateTrackerTab(parent)
             searchFilter ~= "" and searchFilter or nil
         )
 
+        if hideCompleted then
+            local visible = {}
+            for _, listData in ipairs(lists) do
+                local skip = false
+                if listData.listType ~= "farmvalue" then
+                    local done, total = TD:GetListCompletion(listData.id)
+                    skip = total > 0 and done >= total
+                end
+                if not skip then
+                    tinsert(visible, listData)
+                end
+            end
+            lists = visible
+        end
+
         local yOffset = 0
         for _, listData in ipairs(lists) do
             local row = CreateListRow(listData, yOffset)
@@ -307,22 +366,37 @@ function ns.UI.CreateTrackerTab(parent)
         if #lists == 0 then
             if not listPanel.emptyText then
                 listPanel.emptyText = OneWoW_GUI:CreateFS(listPanel, 12)
-                listPanel.emptyText:SetPoint("CENTER", listPanel, "CENTER", 0, -20)
+                listPanel.emptyText:SetPoint("CENTER", listPanel, "CENTER", 0, 0)
                 listPanel.emptyText:SetTextColor(OneWoW_GUI:GetThemeColor("TEXT_MUTED"))
-                listPanel.emptyText:SetWidth(LEFT_PANEL_WIDTH - 40)
+                listPanel.emptyText:SetWidth(LEFT_W - 40)
                 listPanel.emptyText:SetWordWrap(true)
             end
             listPanel.emptyText:SetText(L["TRACKER_EMPTY"])
             listPanel.emptyText:Show()
-        elseif listPanel.emptyText then
-            listPanel.emptyText:Hide()
+            selectedListID = nil
+            TE:SetObservedList(nil)
+            if ClearDetail then ClearDetail() end
+        else
+            if listPanel.emptyText then
+                listPanel.emptyText:Hide()
+            end
+            local visible = false
+            for _, listData in ipairs(lists) do
+                if listData.id == selectedListID then
+                    visible = true
+                    break
+                end
+            end
+            if not visible then
+                selectedListID = lists[1].id
+                if parent.ShowDetail then
+                    parent.ShowDetail(selectedListID)
+                end
+            end
         end
     end
 
-    local detailRows = {}
-
     local dragState = nil
-    local dragRows = {}
     local ghostFrame, dropIndicator
 
     local function EnsureDragUI()
@@ -424,14 +498,16 @@ function ns.UI.CreateTrackerTab(parent)
         TE:RefreshAllPinnedWindows()
     end
 
-    local function ClearDetail()
+    ClearDetail = function()
         for _, row in ipairs(detailRows) do
             if row.Hide then row:Hide() end
         end
         wipe(detailRows)
         wipe(dragRows)
         emptyLabel:Show()
-        detailTitle:SetText(L["TRACKER_DETAIL_TITLE"])
+        detailTitle:Hide()
+        hideStepsCheck:Hide()
+        LayoutDetailScroll()
     end
 
     function parent.ShowDetail(listID)
@@ -450,6 +526,10 @@ function ns.UI.CreateTrackerTab(parent)
 
         emptyLabel:Hide()
         detailTitle:SetText(list.title or "Untitled")
+        detailTitle:Show()
+        hideStepsCheck:SetChecked(list.pinnedHideCompleted and true or false)
+        hideStepsCheck:Show()
+        LayoutDetailScroll()
 
         local yOffset = 0
 
@@ -558,14 +638,12 @@ function ns.UI.CreateTrackerTab(parent)
         local deleteBtn = OneWoW_GUI:CreateFitTextButton(headerFrame, { text = DELETE, height = 22 })
         deleteBtn:SetPoint("LEFT", resetBtn, "RIGHT", 4, 0)
         deleteBtn:SetScript("OnClick", function()
-            if list._bundledID and TP then
+            if list._bundledID then
                 TP:OnBundledDeleted(list._bundledID)
             end
             TE:DestroyPinnedWindow(list.id)
             TD:RemoveList(list.id)
             selectedListID = nil
-            TE:SetObservedList(nil)
-            ClearDetail()
             parent.RefreshList()
         end)
 
@@ -613,6 +691,7 @@ function ns.UI.CreateTrackerTab(parent)
 
         for secIdx, sec in ipairs(list.sections) do
           if TE:IsSectionVisible(sec) then
+          if not list.pinnedHideCompleted or TE:HasIncompleteVisibleStep(list.id, sec) then
             yOffset = yOffset - 8
 
             local secHeader = CreateFrame("Button", nil, detailScrollChild, "BackdropTemplate")
@@ -718,7 +797,7 @@ function ns.UI.CreateTrackerTab(parent)
 
           if not sec.collapsed then
             for stepIdx, step in ipairs(sec.steps or {}) do
-              if TE:IsStepVisible(step, sec) and not (hideCompleted and TD:IsStepComplete(list.id, sec.key, step.key)) then
+              if TE:IsStepVisible(step, sec) and not (list.pinnedHideCompleted and TD:IsStepComplete(list.id, sec.key, step.key)) then
                 local sp = TD:GetStepProgress(list.id, sec.key, step.key)
                 local rosterCompleters = step.rosterMode and TD:GetRosterCompleters(list.id, step.key) or nil
                 local isComplete
@@ -1006,55 +1085,37 @@ function ns.UI.CreateTrackerTab(parent)
             end
           end
           end
+          end
         end
 
         detailScrollChild:SetHeight(math.max(1, math.abs(yOffset) + 20))
     end
 
     newBtn:SetScript("OnClick", function()
-        if ns.TrackerEditor then
-            ns.TrackerEditor:ShowNewListDialog(function(newList)
-                if newList then
-                    selectedListID = newList.id
-                    TE:RebuildIndices()
-                    parent.RefreshList()
-                    parent.ShowDetail(newList.id)
-                end
-            end)
-        end
+        ns.TrackerEditor:ShowNewListDialog(function(newList)
+            if newList then
+                selectedListID = newList.id
+                TE:RebuildIndices()
+                parent.RefreshList()
+                parent.ShowDetail(newList.id)
+            end
+        end)
     end)
 
     importBtn:SetScript("OnClick", function()
-        if ns.TrackerEditor then
-            ns.TrackerEditor:ShowImportDialog(function(imported)
-                if imported then
-                    selectedListID = imported.id
-                    TE:RebuildIndices()
-                    parent.RefreshList()
-                    parent.ShowDetail(imported.id)
-                end
-            end)
-        end
-    end)
-
-    presetBtn:SetScript("OnClick", function()
-        if ns.TrackerEditor then
-            ns.TrackerEditor:ShowPresetDialog(function(newList)
-                if newList then
-                    selectedListID = newList.id
-                    TE:RebuildIndices()
-                    parent.RefreshList()
-                    parent.ShowDetail(newList.id)
-                end
-            end)
-        end
+        ns.TrackerEditor:ShowImportDialog(function(imported)
+            if imported then
+                selectedListID = imported.id
+                TE:RebuildIndices()
+                parent.RefreshList()
+                parent.ShowDetail(imported.id)
+            end
+        end)
     end)
 
     restoreBtn:SetScript("OnClick", function()
-        if TP then
-            TP:RestoreBundledContent()
-            parent.RefreshList()
-        end
+        TP:RestoreBundledContent()
+        parent.RefreshList()
     end)
 
     TE:RegisterCallback("OnScanComplete", function()

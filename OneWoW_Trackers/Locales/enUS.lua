@@ -46,7 +46,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["FARM_OPEN_ONEWOW_TT"]             = "Open the main OneWoW window (Tooltips section has full Value options, e.g. TSM price string).",
 
     ["TRACKER_IMPORT"]                  = "Import",
-    ["TRACKER_PRESET"]                  = "Preset",
     ["TRACKER_RESTORE"]                 = "Restore Examples",
     ["TRACKER_PIN"]                     = "Pin",
     ["TRACKER_UNPIN"]                   = "Unpin",
@@ -59,10 +58,8 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_UNFAV"]                   = "Unfavorite",
     ["TRACKER_ALL_TYPES"]               = "All Types",
     ["TRACKER_ALL_CATEGORIES"]          = "All Categories",
-    ["TRACKER_LIST_TITLE"]              = "Lists",
-    ["TRACKER_DETAIL_TITLE"]            = "Details",
     ["TRACKER_SELECT"]                  = "Select a list to view its details.",
-    ["TRACKER_EMPTY"]                   = "No lists yet. Click 'New' to create one, or 'Preset' for quick setup.",
+    ["TRACKER_EMPTY"]                   = "No lists yet. Click New to create one.",
 
     ["TRACKER_NEW_LIST"]                = "New List",
     ["TRACKER_EDIT_LIST"]               = "Edit List",
@@ -94,8 +91,6 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["TRACKER_IMPORT_HINT"]             = "Paste an exported list or guide markup below:",
     ["TRACKER_IMPORT_BTN"]              = "Import",
     ["TRACKER_IMPORT_FAILED"]           = "Import failed.",
-
-    ["TRACKER_PRESET_TITLE"]            = "Create from Preset",
 
     ["TRACKER_LIST_TODO"]               = "To-Do",
     ["TRACKER_LIST_REPEATING"]          = "Repeating",

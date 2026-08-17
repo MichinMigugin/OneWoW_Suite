@@ -256,22 +256,7 @@ function TP:Create(listID)
 
         for _, sec in ipairs(currentList.sections) do
           if TE:IsSectionVisible(sec) then
-
-            local shouldRenderSection = true
-            if hideCompleted then
-                shouldRenderSection = false
-                for _, step in ipairs(sec.steps or {}) do
-                    if TE:IsStepVisible(step, sec) then
-                        local sp = TD:GetStepProgress(listID, sec.key, step.key)
-                        if not sp.completed then
-                            shouldRenderSection = true
-                            break
-                        end
-                    end
-                end
-            end
-
-           if shouldRenderSection then
+           if not hideCompleted or TE:HasIncompleteVisibleStep(listID, sec) then
             local secDone, secTotal = TD:GetSectionCompletion(listID, sec.key)
 
             local secHeader = AcquireSection(scrollChild)

@@ -1413,7 +1413,3 @@ function TE_UI:ShowImportDialog(callback)
 
     dialog:Show()
 end
-
-function TE_UI:ShowPresetDialog(callback)
-    self:ShowNewListDialog(callback)
-end

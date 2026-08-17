@@ -47,7 +47,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["FARM_OPEN_ONEWOW_TT"]             = "Открыть главное окно OneWoW (раздел «Подсказки» содержит все параметры ценности, напр. строку цены TSM).",
 
     ["TRACKER_IMPORT"]                  = "Импорт",
-    ["TRACKER_PRESET"]                  = "Шаблон",
     ["TRACKER_RESTORE"]                 = "Восстановить примеры",
     ["TRACKER_PIN"]                     = "Закрепить",
     ["TRACKER_UNPIN"]                   = "Открепить",
@@ -60,10 +59,8 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TRACKER_UNFAV"]                   = "Из избранного",
     ["TRACKER_ALL_TYPES"]              = "Все типы",
     ["TRACKER_ALL_CATEGORIES"]         = "Все категории",
-    ["TRACKER_LIST_TITLE"]             = "Списки",
-    ["TRACKER_DETAIL_TITLE"]           = "Подробности",
     ["TRACKER_SELECT"]                 = "Выберите список, чтобы увидеть подробности.",
-    ["TRACKER_EMPTY"]                  = "Списков пока нет. Нажмите «Создать», чтобы добавить, или «Шаблон» для быстрой настройки.",
+    ["TRACKER_EMPTY"]                  = "Списков пока нет. Нажмите Создать, чтобы добавить.",
 
     ["TRACKER_NEW_LIST"]               = "Новый список",
     ["TRACKER_EDIT_LIST"]              = "Изменить список",
@@ -95,8 +92,6 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["TRACKER_IMPORT_HINT"]           = "Вставьте экспортированный список или разметку руководства ниже:",
     ["TRACKER_IMPORT_BTN"]            = "Импорт",
     ["TRACKER_IMPORT_FAILED"]         = "Не удалось импортировать.",
-
-    ["TRACKER_PRESET_TITLE"]          = "Создать из шаблона",
 
     ["TRACKER_LIST_TODO"]             = "Список дел",
     ["TRACKER_LIST_REPEATING"]        = "Повторяющийся",

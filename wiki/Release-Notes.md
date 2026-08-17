@@ -60,6 +60,8 @@
 - The bundled Midnight weekly tracker now follows Season 2 Mistcrests.
 - Currency, item, level, item-level, reputation, and renown steps show the real target (for example 659/1000) and complete against that target, not 1.
 - Holiday and event-gated steps stay visible until the in-game calendar has loaded, instead of hiding when the calendar is still empty.
+- Tracker filters sit above the list, with Clear next to search. New, Import, and Restore Examples sit above the details. The first list opens automatically. The extra Preset button is gone; New still offers the same templates.
+- Hide Done hides finished lists. Each open list has Hide completed on the detail title (the same setting as the pinned window), and it hides finished steps and empty sections.
 
 ---
 

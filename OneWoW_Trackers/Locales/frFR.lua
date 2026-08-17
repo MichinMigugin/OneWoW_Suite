@@ -47,7 +47,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["FARM_OPEN_ONEWOW_TT"]             = "Ouvrir la fenêtre principale OneWoW (la section Infobulles contient toutes les options de Valeur, p. ex. la chaîne de prix TSM).",
 
     ["TRACKER_IMPORT"]                  = "Importer",
-    ["TRACKER_PRESET"]                  = "Préréglage",
     ["TRACKER_RESTORE"]                 = "Restaurer les exemples",
     ["TRACKER_PIN"]                     = "Épingler",
     ["TRACKER_UNPIN"]                   = "Détacher",
@@ -60,10 +59,8 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TRACKER_UNFAV"]                   = "Retirer des favoris",
     ["TRACKER_ALL_TYPES"]              = "Tous les types",
     ["TRACKER_ALL_CATEGORIES"]         = "Toutes les catégories",
-    ["TRACKER_LIST_TITLE"]             = "Listes",
-    ["TRACKER_DETAIL_TITLE"]           = "Détails",
     ["TRACKER_SELECT"]                 = "Sélectionnez une liste pour voir ses détails.",
-    ["TRACKER_EMPTY"]                  = "Aucune liste pour l'instant. Cliquez sur « Nouveau » pour en créer une, ou sur « Préréglage » pour une configuration rapide.",
+    ["TRACKER_EMPTY"]                  = "Aucune liste pour l'instant. Cliquez sur Nouvelle pour en créer une.",
 
     ["TRACKER_NEW_LIST"]               = "Nouvelle liste",
     ["TRACKER_EDIT_LIST"]              = "Modifier la liste",
@@ -95,8 +92,6 @@ OneWoW.Locale:Register(ADDON_NAME, "frFR", {
     ["TRACKER_IMPORT_HINT"]            = "Collez une liste exportée ou un balisage de guide ci-dessous :",
     ["TRACKER_IMPORT_BTN"]             = "Importer",
     ["TRACKER_IMPORT_FAILED"]          = "Échec de l'importation.",
-
-    ["TRACKER_PRESET_TITLE"]           = "Créer à partir d'un préréglage",
 
     ["TRACKER_LIST_TODO"]              = "À faire",
     ["TRACKER_LIST_REPEATING"]         = "Répétable",

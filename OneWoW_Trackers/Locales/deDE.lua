@@ -47,7 +47,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["FARM_OPEN_ONEWOW_TT"]             = "Das OneWoW-Hauptfenster öffnen (der Bereich Tooltips enthält alle Wert-Optionen, z. B. die TSM-Preiszeichenkette).",
 
     ["TRACKER_IMPORT"]                  = "Importieren",
-    ["TRACKER_PRESET"]                  = "Vorlage",
     ["TRACKER_RESTORE"]                 = "Beispiele wiederherstellen",
     ["TRACKER_PIN"]                     = "Anheften",
     ["TRACKER_UNPIN"]                   = "Lösen",
@@ -60,10 +59,8 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TRACKER_UNFAV"]                   = "Favorit entfernen",
     ["TRACKER_ALL_TYPES"]              = "Alle Typen",
     ["TRACKER_ALL_CATEGORIES"]         = "Alle Kategorien",
-    ["TRACKER_LIST_TITLE"]             = "Listen",
-    ["TRACKER_DETAIL_TITLE"]           = "Details",
     ["TRACKER_SELECT"]                 = "Wähle eine Liste, um ihre Details zu sehen.",
-    ["TRACKER_EMPTY"]                  = "Noch keine Listen. Klicke auf „Neu“, um eine zu erstellen, oder auf „Vorlage“ für eine schnelle Einrichtung.",
+    ["TRACKER_EMPTY"]                  = "Noch keine Listen. Klicke auf Neu, um eine zu erstellen.",
 
     ["TRACKER_NEW_LIST"]               = "Neue Liste",
     ["TRACKER_EDIT_LIST"]              = "Liste bearbeiten",
@@ -95,8 +92,6 @@ OneWoW.Locale:Register(ADDON_NAME, "deDE", {
     ["TRACKER_IMPORT_HINT"]           = "Füge unten eine exportierte Liste oder Guide-Markup ein:",
     ["TRACKER_IMPORT_BTN"]            = "Importieren",
     ["TRACKER_IMPORT_FAILED"]         = "Import fehlgeschlagen.",
-
-    ["TRACKER_PRESET_TITLE"]          = "Aus Vorlage erstellen",
 
     ["TRACKER_LIST_TODO"]             = "To-do",
     ["TRACKER_LIST_REPEATING"]        = "Wiederkehrend",

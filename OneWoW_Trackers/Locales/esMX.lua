@@ -47,7 +47,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["FARM_OPEN_ONEWOW_TT"]             = "Abrir la ventana principal de OneWoW (la sección Descripciones tiene todas las opciones de Valor, p. ej. la cadena de precio de TSM).",
 
     ["TRACKER_IMPORT"]                  = "Importar",
-    ["TRACKER_PRESET"]                  = "Preajuste",
     ["TRACKER_RESTORE"]                 = "Restaurar ejemplos",
     ["TRACKER_PIN"]                     = "Fijar",
     ["TRACKER_UNPIN"]                   = "Desfijar",
@@ -60,10 +59,8 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["TRACKER_UNFAV"]                   = "Quitar de favoritos",
     ["TRACKER_ALL_TYPES"]              = "Todos los tipos",
     ["TRACKER_ALL_CATEGORIES"]         = "Todas las categorías",
-    ["TRACKER_LIST_TITLE"]             = "Listas",
-    ["TRACKER_DETAIL_TITLE"]           = "Detalles",
     ["TRACKER_SELECT"]                 = "Selecciona una lista para ver sus detalles.",
-    ["TRACKER_EMPTY"]                  = "Aún no hay listas. Haz clic en «Nuevo» para crear una, o en «Preajuste» para una configuración rápida.",
+    ["TRACKER_EMPTY"]                  = "Aún no hay listas. Haz clic en Nuevo para crear una.",
 
     ["TRACKER_NEW_LIST"]               = "Nueva lista",
     ["TRACKER_EDIT_LIST"]              = "Editar lista",
@@ -95,8 +92,6 @@ OneWoW.Locale:Register(ADDON_NAME, "esMX", {
     ["TRACKER_IMPORT_HINT"]           = "Pega abajo una lista exportada o marcado de guía:",
     ["TRACKER_IMPORT_BTN"]            = "Importar",
     ["TRACKER_IMPORT_FAILED"]         = "Error al importar.",
-
-    ["TRACKER_PRESET_TITLE"]          = "Crear desde preajuste",
 
     ["TRACKER_LIST_TODO"]             = "Pendientes",
     ["TRACKER_LIST_REPEATING"]        = "Repetible",
