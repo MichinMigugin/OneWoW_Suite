@@ -1,6 +1,8 @@
 local _, ns = ...
 
 local OneWoW_GUI = OneWoW_GUI
+local MAX_ACCOUNT_MACROS = Constants.MacroConsts.MAX_ACCOUNT_MACROS
+local MAX_CHARACTER_MACROS = Constants.MacroConsts.MAX_CHARACTER_MACROS
 
 local UI = ns.UI
 

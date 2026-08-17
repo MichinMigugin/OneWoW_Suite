@@ -5,6 +5,8 @@ local OneWoW_GUI = OneWoW_GUI
 local C_Spell, C_Item = C_Spell, C_Item
 local C_ActionBar, C_SpellBook = C_ActionBar, C_SpellBook
 local C_SpecializationInfo = C_SpecializationInfo
+local MAX_ACCOUNT_MACROS = Constants.MacroConsts.MAX_ACCOUNT_MACROS
+local MAX_CHARACTER_MACROS = Constants.MacroConsts.MAX_CHARACTER_MACROS
 
 ns.ActionBars = {}
 local Module = ns.ActionBars

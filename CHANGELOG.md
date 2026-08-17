@@ -3,6 +3,7 @@
 ## Home
 - Updated Home links.
 - Hub search results and the minimap menu no longer error when they close after the mouse leaves.
+- Character profiles no longer error when saving or restoring macros.
 
 ---
 
@@ -51,6 +52,9 @@
 
 ## Commands
 - `/1wat status` opens a dialog of the current season, raids, Mythic+ dungeons, world bosses, weeklies, and currencies Progress is tracking.
+
+## Fixes
+- Saving an action bar set no longer errors.
 
 ---
 
