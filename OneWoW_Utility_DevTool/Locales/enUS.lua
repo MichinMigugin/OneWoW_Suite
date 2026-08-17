@@ -233,6 +233,12 @@ OneWoW.Locale:Register(ADDON_NAME, "enUS", {
     ["ERR_CLEAR_ON_RELOAD"] = "Clear errors on /reload",
     ["ERR_KEEP_SESSIONS_LABEL"] = "Keep sessions:",
     ["ERR_KEEP_SESSIONS_VALUE"] = "%d",
+    ["ERR_DEVMODE"] = "DEVMODE",
+    ["ERR_DEVMODE_FLASH"] = "Flash",
+    ["ERR_DEVMODE_MORE"] = "and %d more",
+    ["ERR_DEVMODE_ON"] = "DEVMODE on",
+    ["ERR_DEVMODE_OFF"] = "DEVMODE off",
+    ["ERR_DEVMODE_EMPTY"] = "No errors yet",
     ["ERR_EXPORT_CF_STACK"] = "Stack / locals (markdown for CurseForge):",
 
     ["BTN_TOGGLE_ANALYSIS"] = "Analysis",

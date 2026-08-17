@@ -80,6 +80,12 @@
 
 ---
 
+### DevTool
+#### Errors
+- DEVMODE shows a floating error list when there are Lua errors, including leftover ones. Left-click a row for details; right-click opens the Errors tab. New rows can flash (on by default). Clear errors to hide it. `/1wdt devmode` toggles it.
+
+---
+
 *No user-facing changes this release for Notes.*
 
 ---

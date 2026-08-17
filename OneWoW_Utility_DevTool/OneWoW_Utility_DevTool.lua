@@ -468,6 +468,7 @@ end
 
 function OneWoW_Utility_DevTool:ApplyTheme()
     OneWoW_GUI:ApplyTheme(ns)
+    ns.ErrorFloat:ApplyTheme()
 end
 
 function OneWoW_Utility_DevTool:ApplyLanguage()
@@ -486,6 +487,9 @@ function ns:RebuildUI()
                 if self.UI and self.UI.Show then self.UI:Show() end
             end)
         end
+    end
+    if self.ErrorFloat:IsShown() then
+        self.ErrorFloat:Refresh(nil, false)
     end
 end
 
@@ -538,6 +542,19 @@ SlashCmdList["ONEWOW_DEVTOOL"] = function(msg)
             ns.InstallNotice:ResetAck()
             ns.InstallNotice:Show(true)
         end
+        return
+    end
+
+    if msg == "devmode" then
+        local db = ns.db.global.errorDB
+        db.devMode = not db.devMode
+        ns:Print(db.devMode and L["ERR_DEVMODE_ON"] or L["ERR_DEVMODE_OFF"])
+        if db.devMode then
+            ns.ErrorFloat:ShowNow()
+        else
+            ns.ErrorFloat:Hide()
+        end
+        ns.ErrorFloat:SyncSettingsFromDB()
         return
     end
 

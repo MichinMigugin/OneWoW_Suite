@@ -233,6 +233,12 @@ OneWoW.Locale:Register(ADDON_NAME, "ruRU", {
     ["ERR_CLEAR_ON_RELOAD"] = "Очищать ошибки при /reload",
     ["ERR_KEEP_SESSIONS_LABEL"] = "Хранить сессий:",
     ["ERR_KEEP_SESSIONS_VALUE"] = "%d",
+    ["ERR_DEVMODE"] = "DEVMODE",
+    ["ERR_DEVMODE_FLASH"] = "Вспышка",
+    ["ERR_DEVMODE_MORE"] = "и еще %d",
+    ["ERR_DEVMODE_ON"] = "DEVMODE включен",
+    ["ERR_DEVMODE_OFF"] = "DEVMODE выключен",
+    ["ERR_DEVMODE_EMPTY"] = "Ошибок пока нет",
     ["ERR_EXPORT_CF_STACK"] = "Стек / локальные (markdown для CurseForge):",
 
     ["BTN_TOGGLE_ANALYSIS"] = "Анализ",

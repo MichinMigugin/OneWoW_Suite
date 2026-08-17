@@ -435,6 +435,7 @@ function ErrorLogger:Initialize()
 
     C_Timer.After(2, function()
         ErrorLogger:UpdateErrorBadge()
+        ns.ErrorFloat:ShowSessionErrors()
     end)
 end
 
@@ -529,6 +530,7 @@ function ErrorLogger:_afterNewOrUpdated(errObj)
     EventRegistry:TriggerEvent(captureEventName(), errObj)
     self:ScheduleUIRefresh()
     self:UpdateErrorBadge()
+    ns.ErrorFloat:OnError(errObj)
 end
 
 function ErrorLogger:ScheduleUIRefresh()
@@ -861,6 +863,7 @@ function ErrorLogger:ClearErrors()
     self.currentError = nil
     self:UpdateUI()
     self:UpdateErrorBadge()
+    ns.ErrorFloat:Hide()
 
     if ns.LuaConsoleTab then
         local noErr = L["LABEL_NO_ERROR"]

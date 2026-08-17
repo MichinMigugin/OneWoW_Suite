@@ -234,6 +234,12 @@ OneWoW.Locale:Register(ADDON_NAME, "zhCN", {
     ["ERR_CLEAR_ON_RELOAD"] = "在 /reload 时清除错误",
     ["ERR_KEEP_SESSIONS_LABEL"] = "保留会话：",
     ["ERR_KEEP_SESSIONS_VALUE"] = "%d",
+    ["ERR_DEVMODE"] = "DEVMODE",
+    ["ERR_DEVMODE_FLASH"] = "闪烁",
+    ["ERR_DEVMODE_MORE"] = "还有 %d 条",
+    ["ERR_DEVMODE_ON"] = "DEVMODE 已开启",
+    ["ERR_DEVMODE_OFF"] = "DEVMODE 已关闭",
+    ["ERR_DEVMODE_EMPTY"] = "还没有错误",
     ["ERR_EXPORT_CF_STACK"] = "堆栈 / 局部变量（用于 CurseForge 的 markdown）：",
 
     ["BTN_TOGGLE_ANALYSIS"] = "分析",

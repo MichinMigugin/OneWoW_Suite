@@ -6,6 +6,7 @@
 
 ## RequiredDeps: OneWoW
 ## OptionalDeps: !BugGrabber
+## DefaultState: disabled
 ## LoadOnDemand: 1
 ## Category: OneWoW
 ## Group: OneWoW
@@ -17,6 +18,7 @@
 ## X-Website: https://wow2.xyz/
 ## X-Category: |cFFFFD100OneWoW|r
 ## X-BugGrabber-Display: OneWow
+
 
 # Locales
 Locales\enUS.lua
@@ -63,6 +65,7 @@ Modules\ErrorExport.lua
 Modules\StackColorizer.lua
 Modules\ErrorAnalyzer.lua
 Modules\ErrorLogger.lua
+Modules\ErrorFloat.lua
 Modules\EventMonitor.lua
 Modules\ColorTools.lua
 Modules\GlobalsBrowser.lua
