@@ -6,7 +6,7 @@ local OneWoW_GUI = OneWoW_GUI
 ns.TrackerPinned = {}
 local TP = ns.TrackerPinned
 
-local ipairs, format, tinsert, tremove, math_max, math_abs = ipairs, format, tinsert, tremove, math.max, math.abs
+local ipairs, format, tinsert, tremove, pairs, math_max, math_abs = ipairs, format, tinsert, tremove, pairs, math.max, math.abs
 local GetTime, IsShiftKeyDown = GetTime, IsShiftKeyDown
 
 local BACKDROP_SOFT = OneWoW_GUI.Constants.BACKDROP_SOFT or OneWoW_GUI.Constants.BACKDROP_INNER_NO_INSETS
@@ -122,7 +122,6 @@ end
 function TP:Create(listID)
     local TD = ns.TrackerData
     local TE = ns.TrackerEngine
-    if not TD or not TE then return nil end
 
     local list = TD:GetList(listID)
     if not list then return nil end
@@ -691,4 +690,63 @@ function TP:Create(listID)
     frame:Refresh()
     frame:Show()
     return frame
+end
+
+local windows = {}
+
+--- Live overlay frame for a list, if shown.
+---@param listID string
+---@return Frame|nil
+function TP:Get(listID)
+    return windows[listID]
+end
+
+--- Show or reuse the overlay for a list. Sets `list.pinned`.
+---@param listID string
+---@return Frame|nil
+function TP:Show(listID)
+    local existing = windows[listID]
+    if existing then
+        existing:Show()
+        return existing
+    end
+    local win = self:Create(listID)
+    if not win then return nil end
+    windows[listID] = win
+    local list = ns.TrackerData:GetList(listID)
+    list.pinned = true
+    return win
+end
+
+--- Hide the overlay and clear `list.pinned`.
+---@param listID string
+function TP:Destroy(listID)
+    local win = windows[listID]
+    if win then
+        win:Hide()
+        windows[listID] = nil
+    end
+    local list = ns.TrackerData:GetList(listID)
+    if list then
+        list.pinned = false
+    end
+end
+
+function TP:RefreshAll()
+    for _, win in pairs(windows) do
+        win:Refresh()
+        OneWoW_GUI:ApplyFontToFrame(win)
+    end
+end
+
+--- Recreate overlays for lists that were pinned last session.
+function TP:RestoreAll()
+    local lists = ns.TrackerData:GetListsDB()
+    for listID, list in pairs(lists) do
+        if list.pinned then
+            C_Timer.After(1, function()
+                ns.TrackerEngine:CreatePinnedWindow(listID)
+            end)
+        end
+    end
 end

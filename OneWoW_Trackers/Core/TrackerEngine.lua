@@ -1,7 +1,5 @@
 local _, ns = ...
 
-local OneWoW_GUI = OneWoW_GUI
-
 local Inventory = OneWoW.Inventory
 
 ns.TrackerEngine = {}
@@ -22,7 +20,6 @@ local next = next
 local lastScanTime = 0
 local SCAN_THROTTLE = 1.0
 local initialized = false
-local pinnedWindows = {}
 local callbacks = {}
 local scanPending = false
 local refreshPending = false
@@ -553,19 +550,8 @@ function TE:RebuildIndices()
 end
 
 function TE:CreatePinnedWindow(listID)
-    if not ns.TrackerPinned then return end
-    local list = TD:GetList(listID)
-    if not list then return end
-
-    if pinnedWindows[listID] then
-        pinnedWindows[listID]:Show()
-        return pinnedWindows[listID]
-    end
-
-    local win = ns.TrackerPinned:Create(listID)
+    local win = ns.TrackerPinned:Show(listID)
     if win then
-        pinnedWindows[listID] = win
-        list.pinned = true
         BuildIndices()
         self:EvaluateList(listID)
     end
@@ -573,30 +559,16 @@ function TE:CreatePinnedWindow(listID)
 end
 
 function TE:DestroyPinnedWindow(listID)
-    if pinnedWindows[listID] then
-        pinnedWindows[listID]:Hide()
-        pinnedWindows[listID] = nil
-    end
-    local list = TD:GetList(listID)
-    if list then
-        list.pinned = false
-    end
+    ns.TrackerPinned:Destroy(listID)
     BuildIndices()
 end
 
 function TE:GetPinnedWindow(listID)
-    return pinnedWindows[listID]
+    return ns.TrackerPinned:Get(listID)
 end
 
 function TE:RefreshAllPinnedWindows()
-    for _, win in pairs(pinnedWindows) do
-        if win then
-            if win.Refresh then
-                win:Refresh()
-            end
-            OneWoW_GUI:ApplyFontToFrame(win)
-        end
-    end
+    ns.TrackerPinned:RefreshAll()
 end
 
 --- Notify hub UI and all pinned windows that manual progress changed.
@@ -606,14 +578,7 @@ function TE:NotifyProgressChanged()
 end
 
 function TE:RestorePinnedWindows()
-    local lists = TD:GetListsDB()
-    for listID, list in pairs(lists) do
-        if list.pinned then
-            C_Timer.After(1, function()
-                TE:CreatePinnedWindow(listID)
-            end)
-        end
-    end
+    ns.TrackerPinned:RestoreAll()
 end
 
 function TE:GetTrackTypeDisplayName(trackType)

@@ -21,15 +21,18 @@
 OneWoW_Trackers.lua          — thin lifecycle root, hub registration
 Core/Database.lua            — schema, init bridges (incl. legacy Notes SV drain)
 Core/API.lua                 — OneWoW_Trackers_API (cross-unit surface)
-Core/TrackerData.lua         — list/section/step model, import/export
+Core/TrackerData.lua         — list/section/step CRUD, progress, roster
+Core/Resets.lua              — daily/weekly/custom-timer + weekly-reset region
+ImportExport/Serialize.lua   — OWT1 export/import (methods on TrackerData)
+ImportExport/Markup.lua      — markup parse → list CRUD (methods on TrackerData)
 Core/Evaluators/             — live step evaluation by family (registry first)
-Core/TrackerEngine.lua       — event engine, auto-complete, pinned lifecycle
+Core/TrackerEngine.lua       — event engine, auto-complete; pin show/destroy is thin
 Core/TrackerPresets.lua      — bundled presets and examples
 Core/TrackerMap.lua          — world-map pin provider
 Core/Constants.lua           — GUI constants (inherits suite defaults)
 UI/t-tracker.lua             — hub tab (browser + detail)
 UI/ui-tracker-editor.lua     — create/edit dialogs
-UI/ui-tracker-pinned.lua     — pinned overlay windows
+UI/ui-tracker-pinned.lua     — pinned overlay windows (owns overlay frames)
 UI/ui-tracker-map.lua        — map integration hooks
 UI/ui-tracker-farmvalue.lua  — farm value tab UI
 ```

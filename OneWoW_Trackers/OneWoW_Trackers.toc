@@ -38,6 +38,9 @@ Locales\itIT.lua
 Core\Database.lua
 Core\API.lua
 Core\TrackerData.lua
+Core\Resets.lua
+ImportExport\Serialize.lua
+ImportExport\Markup.lua
 Core\Evaluators\Registry.lua
 Core\Evaluators\Quest.lua
 Core\Evaluators\Currency.lua
